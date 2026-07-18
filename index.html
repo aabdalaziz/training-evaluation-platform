@@ -1,1 +1,1419 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>منصة تقويم البرامج التدريبية</title><style>:root{--b:#173f8a;--t:#078481;--bg:#f5f7fb}*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial;background:var(--bg);color:#17233b}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#112d68,#008a85)}.box{width:min(430px,92vw);padding:34px;background:white;border-radius:24px;text-align:center;box-shadow:0 25px 70px #001b4788}.logo{font-size:49px}.box h1{font-size:22px}.box p,small{color:#667085}.box input{width:100%;padding:13px;border:1px solid #d8deea;border-radius:10px;margin:7px 0;direction:ltr}.primary{background:linear-gradient(90deg,var(--b),var(--t));color:white;padding:12px 18px;border-radius:10px;font-weight:bold}.box .primary{width:100%;margin:14px 0}.accounts button{margin:3px;padding:6px;background:#edf4ff;color:var(--b);border-radius:7px;font-size:11px}.app{display:flex;min-height:100vh}aside{width:255px;flex-shrink:0;background:linear-gradient(#112d68,#08797b);color:#dceeff;padding:17px;display:flex;flex-direction:column;gap:6px}.brand{font-weight:bold;padding:12px;border-bottom:1px solid #ffffff20;font-size:17px}.person{padding:15px 8px}.avatar{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#ffffff31;color:white;margin-left:7px}.nav{background:transparent;color:#dceeff;text-align:right;padding:11px;border-radius:9px}.nav:hover,.nav.active{background:#ffffff1f;color:white}.logout{margin-top:auto;text-align:right;background:#ffffff12;color:#ffd0d0;padding:11px;border-radius:9px}main{padding:28px;flex:1;overflow:auto}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}h2{margin:0;font-size:24px}header p{color:#667085;font-size:13px}.bell{background:white;border-radius:10px;padding:9px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:17px}.card,.panel{background:white;border:1px solid #e6ebf3;border-radius:15px;padding:18px;box-shadow:0 3px 12px #102a5310}.card b{display:block;color:var(--b);font-size:27px;margin-top:7px}.card span{font-size:24px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:17px}.chart{height:180px;display:flex;align-items:end;justify-content:space-around;border-bottom:1px solid #d8dfeb}.bar{width:12%;background:linear-gradient(var(--t),var(--b));border-radius:6px 6px 0 0}.score{text-align:center;font-size:50px;color:#d89100;padding:35px}.score small{display:block;font-size:12px}.row{border-top:1px solid #edf0f5;padding:12px 2px}.tag{float:left;background:#ddf7e9;color:#087443;padding:4px 9px;border-radius:20px;font-size:11px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 15px}.toolbar input,.toolbar select{padding:9px;border:1px solid #d9e0ea;border-radius:8px;background:white}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px;text-align:right;border-bottom:1px solid #edf0f5;font-size:13px}.table th{background:#f8fafc;color:#60708a}.secondary{padding:9px 13px;border-radius:8px;background:#edf3ff;color:var(--b)}.danger{background:#fff0f0;color:#bf2424}.modal{position:fixed;inset:0;background:#00132977;display:grid;place-items:center;padding:15px;z-index:3}.modal>div{width:min(560px,96vw);max-height:90vh;overflow:auto;background:white;border-radius:17px;padding:22px}.modal input,.modal select,.modal textarea{width:100%;padding:10px;border:1px solid #d6dde8;border-radius:8px;margin:5px 0 12px}.questions label{display:block;padding:14px;border-bottom:1px solid #edf0f5;font-weight:bold}.questions textarea{height:70px}.progress{height:8px;background:#d9e3f0;border-radius:8px;overflow:hidden}.progress i{display:block;background:var(--t);height:100%;transition:.2s}.notice{background:#fff8db;padding:11px;border-radius:9px;margin:8px 0;font-size:13px}.hide{display:none}@media(max-width:750px){aside{width:62px;padding:9px}.brand,.person,.nav{font-size:0}.brand:first-letter,.nav:first-letter{font-size:20px}.avatar{margin:0}.person{padding:9px 1px}.logout{font-size:0}.logout:first-letter{font-size:18px}main{padding:16px}.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.table{font-size:11px}.table th:nth-child(3),.table td:nth-child(3){display:none}}</style></head><body><div id="root"></div><script>const S={role:'ADMIN',name:'مدير النظام',users:[['مدير النظام','admin@training.com','ADMIN'],['أ. محمد العلي','trainer@training.com','TRAINER'],['سارة الأحمد','trainee@training.com','TRAINEE']],programs:[{id:1,name:'مهارات القيادة الإدارية',trainer:'أ. محمد العلي',days:5,status:'نشط',rating:4.3}],notes:[{id:1,title:'تقييم يومي جديد',text:'تم استلام تقييم جديد لبرنامج القيادة',read:false},{id:2,title:'تذكير بالتقييم النهائي',text:'التقييم النهائي متاح الآن',read:false}],templates:['القالب اليومي الشامل','القالب النهائي الشامل']};const $=s=>document.querySelector(s);function save(){localStorage.tpep=JSON.stringify(S)}function load(){try{Object.assign(S,JSON.parse(localStorage.tpep))}catch{}}load();function login(){let e=$('#email').value;let u=S.users.find(x=>x[1]===e)||S.users[0];S.name=u[0];S.role=u[2];save();app()}function loginPage(){$('#root').innerHTML=`<section class="login"><div class="box"><div class="logo">🏛️</div><h1>منصة تقويم البرامج التدريبية</h1><p>تقييم يومي ونهائي وتقارير ذكية</p><input id="email" value="admin@training.com" placeholder="البريد الإلكتروني"><input type="password" value="Admin@123"><button class="primary" onclick="login()">تسجيل الدخول ←</button><p>حسابات تجربة:</p><div class="accounts"><button onclick="$('#email').value='admin@training.com'">مدير</button><button onclick="$('#email').value='trainer@training.com'">مدرب</button><button onclick="$('#email').value='trainee@training.com'">متدرب</button></div></div></section>`}function nav(){let common=['📊 لوحة التحكم','📋 البرامج'];let admin=['👥 المستخدمون','📝 قوالب التقييم','📈 التقارير','🔔 الإشعارات'];let trainee=['📝 تقييم يومي','🏁 تقييم نهائي','🔔 الإشعارات'];return (S.role==='ADMIN'?[...common,...admin]:S.role==='TRAINER'?[...common,'⭐ التقييمات','📈 تقاريري','🔔 الإشعارات']:[...common,...trainee]).map(x=>`<button class="nav" data-page="${x.slice(3)}" onclick="page(this.dataset.page)">${x}</button>`).join('')}function app(){$('#root').innerHTML=`<div class="app"><aside><div class="brand">🏛️ منصة تقويم</div><div class="person"><span class="avatar">${S.name[0]}</span>${S.name}<br><small>${S.role==='ADMIN'?'مدير النظام':S.role==='TRAINER'?'مدرب':'متدرب'}</small></div>${nav()}<button class="logout" onclick="localStorage.removeItem('tpep');location.reload()">🚪 تسجيل الخروج</button></aside><main><header><div><h2 id="title">لوحة التحكم</h2><p>إدارة التقييمات والبرامج التدريبية بمرونة</p></div><button class="bell" onclick="page('الإشعارات')">🔔 <b>${S.notes.filter(x=>!x.read).length}</b></button></header><div id="content"></div></main></div>`;page('لوحة التحكم')}function page(p){$$('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===p));$('#title').textContent=p;let c=$('#content');if(p==='لوحة التحكم')return dashboard(c);if(p==='البرامج')return programs(c);if(p==='المستخدمون')return users(c);if(p==='قوالب التقييم')return templates(c);if(p.includes('تقييم يومي'))return evaluation(c,'يومي');if(p.includes('تقييم نهائي'))return evaluation(c,'نهائي');if(p.includes('إشعارات'))return notes(c);if(p.includes('تقارير'))return reports(c);c.innerHTML='<div class="panel">هذه الصفحة جاهزة للربط بالبيانات.</div>'}function $$s(s){return [...document.querySelectorAll(s)]}function dashboard(c){let st=S.role==='TRAINEE'?[['📚','برامجي','1'],['📝','يومية','2'],['🏁','نهائية','0'],['⭐','تقدمي','40%']]:[['📋','البرامج',S.programs.length],['👥','المتدربون',S.users.filter(x=>x[2]==='TRAINEE').length],['📝','التقييمات','18'],['⭐','متوسط الرضا','4.3']];c.innerHTML=`<div class="cards">${st.map(x=>`<div class="card"><span>${x[0]}</span><small>${x[1]}</small><b>${x[2]}</b></div>`).join('')}</div><div class="grid"><div class="panel"><h3>📈 اتجاه التقييمات الأسبوعية</h3><div class="chart">${[55,80,67,92,74,86].map(x=>`<i class="bar" style="height:${x}%"></i>`).join('')}</div></div><div class="panel"><h3>⭐ الرضا العام</h3><div class="score">4.3<small>من 5</small></div></div></div><div class="panel" style="margin-top:17px"><h3>📋 أحدث البرامج</h3>${S.programs.map(p=>`<div class="row"><b>${p.name}</b><span class="tag">${p.status}</span><br><small>المدرب: ${p.trainer} · ${p.days} أيام · ⭐ ${p.rating}</small></div>`).join('')}</div>`}function programs(c){c.innerHTML=`<div class="toolbar">${S.role==='ADMIN'?'<button class="primary" onclick="programForm()">+ برنامج جديد</button>':''}<input placeholder="بحث في البرامج" oninput="filterPrograms(this.value)"></div><div class="panel"><table class="table"><thead><tr><th>البرنامج</th><th>المدرب</th><th>الأيام</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="pt">${S.programs.map(prow).join('')}</tbody></table></div>`}function prow(p){return `<tr><td>${p.name}</td><td>${p.trainer}</td><td>${p.days}</td><td><span class="tag">${p.status}</span></td><td><button class="secondary" onclick="reports($('#content'))">تقرير</button></td></tr>`}function filterPrograms(q){$('#pt').innerHTML=S.programs.filter(p=>p.name.includes(q)).map(prow).join('')}function programForm(){modal(`<h3>إضافة برنامج تدريبي</h3><label>اسم البرنامج</label><input id="pn"><label>المدرب</label><input id="tr" value="أ. محمد العلي"><label>عدد الأيام</label><input id="dy" type="number" value="5"><button class="primary" onclick="addProgram()">حفظ البرنامج</button>`)}function addProgram(){S.programs.push({id:Date.now(),name:$('#pn').value||'برنامج جديد',trainer:$('#tr').value,days:+$('#dy').value,status:'مسودة',rating:0});save();close();page('البرامج')}function users(c){c.innerHTML=`<div class="toolbar"><button class="primary" onclick="userForm()">+ إضافة مستخدم</button><input placeholder="بحث بالاسم أو البريد" oninput="filterUsers(this.value)"></div><div class="panel"><table class="table"><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th></tr></thead><tbody id="ut">${S.users.map(u=>`<tr><td>${u[0]}</td><td>${u[1]}</td><td>${u[2]}</td><td><span class="tag">نشط</span></td></tr>`).join('')}</tbody></table></div>`}function filterUsers(q){$('#ut').innerHTML=S.users.filter(u=>u[0].includes(q)||u[1].includes(q)).map(u=>`<tr><td>${u[0]}</td><td>${u[1]}</td><td>${u[2]}</td><td><span class="tag">نشط</span></td></tr>`).join('')}function userForm(){modal(`<h3>إضافة مستخدم</h3><input id="un" placeholder="الاسم الكامل"><input id="ue" placeholder="البريد الإلكتروني"><select id="ur"><option>TRAINEE</option><option>TRAINER</option><option>ADMIN</option></select><button class="primary" onclick="addUser()">حفظ</button>`)}function addUser(){S.users.push([$('#un').value||'مستخدم جديد',$('#ue').value||'new@training.com',$('#ur').value]);save();close();page('المستخدمون')}function templates(c){c.innerHTML=`<div class="toolbar"><button class="primary" onclick="templateForm()">+ قالب جديد</button></div><div class="panel">${S.templates.map((t,i)=>`<div class="row">📝 <b>${t}</b><button class="secondary" style="float:left" onclick="alert('الأسئلة: تقييم النجوم، نعم/لا، اختيار متعدد، نص حر')">معاينة</button></div>`).join('')}</div>`}function templateForm(){modal(`<h3>قالب تقييم جديد</h3><input id="tn" placeholder="اسم القالب"><select id="tt"><option>يومي</option><option>نهائي</option></select><button class="primary" onclick="S.templates.push($('#tn').value||'قالب جديد');save();close();page('قوالب التقييم')">حفظ</button>`)}function evaluation(c,type){let q=type==='يومي'?['ما مدى وضوح المادة التدريبية؟','كيف تقيّم أداء المدرب؟','هل كان الوقت المخصص كافياً؟','ملاحظاتك واقتراحاتك']:['مدى شمولية محتوى البرنامج؟','مدى إلمام المدرب بالموضوع؟','جودة التنظيم الإداري؟','هل توصي بالبرنامج لزملائك؟','اقتراحاتك للتطوير'];c.innerHTML=`<div class="panel"><h3>📝 التقييم ${type}</h3><p>برنامج مهارات القيادة الإدارية</p><div class="progress"><i id="prog" style="width:0"></i></div><div class="questions">${q.map((x,i)=>`<label>${i+1}. ${x}${i===2&&type==='يومي'?'<select class="ans"><option value="">اختر</option><option>نعم</option><option>لا</option></select>':i===3&&type==='نهائي'?'<select class="ans"><option value="">اختر</option><option>نعم بالتأكيد</option><option>ربما</option><option>لا</option></select>':i===3&&type==='يومي'||i===4&&type==='نهائي'?'<textarea class="ans" placeholder="اكتب ملاحظاتك"></textarea>':`<div>${[1,2,3,4,5].map(n=>`<button class="secondary ans" onclick="this.parentElement.querySelectorAll('button').forEach(x=>x.style.background='');this.style.background='#9fe4df';progress()">⭐ ${n}</button>`).join('')}</div>`}</label>`).join('')}</div><button class="primary" onclick="submitEval('${type}')">إرسال التقييم ${type}</button></div>`}function progress(){let a=$$('.ans').filter(x=>x.value||x.style.background);$('#prog').style.width=Math.round(a.length/5*100)+'%'}function submitEval(t){S.notes.unshift({id:Date.now(),title:'تم إرسال التقييم',text:`تم حفظ التقييم ${t} بنجاح`,read:false});save();alert('✅ شكراً لك، تم إرسال تقييمك بنجاح');page('لوحة التحكم')}function notes(c){c.innerHTML=`<div class="toolbar"><button class="secondary" onclick="S.notes.forEach(n=>n.read=true);save();page('الإشعارات')">قراءة الكل</button></div><div class="panel">${S.notes.map(n=>`<div class="row" style="background:${n.read?'':'#f0f7ff'}"><b>🔔 ${n.title}</b><br><small>${n.text}</small><button class="danger" style="float:left" onclick="S.notes=S.notes.filter(x=>x.id!==${n.id});save();page('الإشعارات')">حذف</button></div>`).join('')||'<p>لا توجد إشعارات</p>'}</div>`}function reports(c){let p=S.programs[0];c.innerHTML=`<div class="toolbar"><button class="primary" onclick="exportCSV()">⬇ تصدير Excel (CSV)</button><button class="secondary" onclick="window.print()">🖨 طباعة</button></div><div class="cards"><div class="card"><small>المتدربون</small><b>30</b></div><div class="card"><small>إكمال يومي</small><b>87%</b></div><div class="card"><small>إكمال نهائي</small><b>73%</b></div><div class="card"><small>الرضا</small><b>4.3/5</b></div></div><div class="panel"><h3>تقرير: ${p?.name||'البرنامج'}</h3><div class="row">المحتوى التدريبي <span>4.5 / 5</span></div><div class="row">أداء المدرب <span>4.7 / 5</span></div><div class="row">التنظيم والإدارة <span>3.9 / 5</span></div></div>`}function exportCSV(){let a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('المحور,المتوسط\nالمحتوى,4.5\nالمدرب,4.7\nالتنظيم,3.9');a.download='training-report.csv';a.click()}function modal(x){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal"><div>${x}<button class="secondary" onclick="close()">إلغاء</button></div></div>`)}function close(){$('#modal')?.remove()}loginPage()</script></body></html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>منصة تقييم البرنامج · النظام الموحّد</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#070b14;--sidebar:#0b1220;--panel:#111827;--panel2:#0f172a;
+  --line:rgba(148,163,184,.12);--text:#e8eef8;--muted:#8b9bb4;
+  --teal:#2dd4bf;--teal2:#0d9488;--amber:#fbbf24;--rose:#fb7185;
+  --blue:#60a5fa;--violet:#a78bfa;--green:#34d399;--sw:268px;
+  --soft:#ecfdf8;--ink:#134e4a;--card:#fff;--cline:#d1e7e3;
+  --gold:#c27803;--gold2:#f59e0b;--cream:#f6efe4;--cream2:#efe4d2;
+  --ink-d:#1a1208;--ink2-d:#3d2b1f;--muted-d:#7a6554;--line-d:rgba(61,43,31,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Cairo,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font-family:inherit}
+
+/* SIDEBAR */
+.sidebar{width:var(--sw);background:linear-gradient(180deg,#0c1526,var(--sidebar));border-left:1px solid var(--line);position:fixed;inset:0 auto 0 0;display:flex;flex-direction:column;z-index:40;transition:transform .25s}
+.side-brand{padding:18px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center}
+.side-brand .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--teal2),#115e59);display:grid;place-items:center;font-size:1.25rem;box-shadow:0 0 0 3px rgba(45,212,191,.15)}
+.side-brand h1{font-size:.95rem;font-weight:900;line-height:1.25}
+.side-brand p{font-size:.7rem;color:var(--muted);font-weight:700;margin-top:2px}
+.side-nav{padding:10px 8px;flex:1;overflow:auto}
+.nav-label{font-size:.65rem;font-weight:900;color:var(--muted);letter-spacing:.06em;padding:12px 10px 6px;opacity:.75}
+.nav-btn{width:100%;text-align:right;appearance:none;border:none;background:transparent;color:var(--muted);font-weight:800;font-size:.84rem;padding:11px 12px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:10px;margin-bottom:2px;transition:.15s}
+.nav-btn:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav-btn.active{background:rgba(45,212,191,.12);color:var(--teal);box-shadow:inset 0 0 0 1px rgba(45,212,191,.25)}
+.nav-btn .ic{font-size:1.05rem;width:1.35em;text-align:center}
+.side-foot{padding:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.side-foot button{font-size:.78rem;font-weight:800;color:var(--muted);background:none;border:none;cursor:pointer;text-align:right;padding:6px 8px;border-radius:8px}
+.side-foot button:hover{color:var(--teal);background:rgba(45,212,191,.08)}
+.count-chip{margin:10px;padding:10px 12px;border-radius:12px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.2);font-size:.8rem;font-weight:900;color:var(--teal);text-align:center}
+
+/* MAIN */
+.main{margin-right:var(--sw);flex:1;min-width:0;padding:16px 16px 48px}
+.topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.topbar h2{font-size:1.25rem;font-weight:900;letter-spacing:-.02em}
+.topbar .sub{color:var(--muted);font-size:.82rem;font-weight:600;margin-top:2px}
+.top-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.menu-toggle{display:none;appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35}
+
+.btn{appearance:none;border:1px solid var(--line);border-radius:11px;padding:9px 14px;font-weight:800;font-size:.8rem;cursor:pointer;background:rgba(255,255,255,.04);color:var(--text);display:inline-flex;align-items:center;gap:6px;transition:.15s}
+.btn:hover{border-color:rgba(45,212,191,.4);color:var(--teal)}
+.btn-primary{background:linear-gradient(135deg,var(--teal2),#115e59);border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(13,148,136,.25)}
+.btn-primary:hover{color:#fff;filter:brightness(1.05)}
+.btn-amber{background:linear-gradient(135deg,#d97706,#b45309);border:none;color:#fff}
+.btn-rose{background:linear-gradient(135deg,#e11d48,#be123c);border:none;color:#fff}
+.btn-blue{background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;color:#fff}
+.btn-block{width:100%;justify-content:center;padding:12px}
+.btn-lg{padding:14px 18px;font-size:.95rem;border-radius:14px}
+
+.view{display:none;animation:fade .28s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:1200px){.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:14px;position:relative;overflow:hidden}
+.kpi .l{font-size:.7rem;font-weight:800;color:var(--muted)}
+.kpi .v{font-size:1.55rem;font-weight:900;margin-top:4px;letter-spacing:-.03em;color:var(--teal)}
+.kpi .d{font-size:.72rem;font-weight:800;margin-top:6px;color:var(--muted)}
+.kpi:nth-child(2) .v{color:var(--amber)}
+.kpi:nth-child(3) .v{color:var(--blue)}
+.kpi:nth-child(4) .v{color:var(--violet)}
+.kpi:nth-child(5) .v{color:var(--green)}
+.kpi:nth-child(6) .v{color:var(--rose)}
+
+.panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.panel h3{font-size:.95rem;font-weight:900;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel h3 .badge{font-size:.68rem;font-weight:800;color:var(--teal);background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.2);padding:3px 8px;border-radius:999px}
+.grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+.grid-2b{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:1000px){.grid-2,.grid-2b,.grid-3{grid-template-columns:1fr}}
+
+table.data{width:100%;border-collapse:collapse;font-size:.82rem}
+table.data th{text-align:right;color:var(--muted);font-weight:800;font-size:.7rem;padding:8px 6px;border-bottom:1px solid var(--line)}
+table.data td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.data tr:hover td{background:rgba(45,212,191,.04)}
+.table-scroll{overflow-x:auto}
+.bar{height:8px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden;min-width:70px}
+.bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal2),var(--teal))}
+
+.insight{border-radius:12px;padding:11px 12px;margin-bottom:8px;border:1px solid var(--line);background:rgba(0,0,0,.2)}
+.insight.positive{border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
+.insight.warning{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)}
+.insight.info{border-color:rgba(96,165,250,.3);background:rgba(96,165,250,.08)}
+.insight h4{font-size:.85rem;margin-bottom:2px}
+.insight p{font-size:.78rem;color:var(--muted);line-height:1.5;font-weight:600}
+
+label.f{display:block;font-size:.72rem;font-weight:800;color:var(--muted);margin:10px 0 5px}
+input.f,textarea.f,select.f{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px 12px;font-size:.9rem;outline:none}
+input.f:focus,textarea.f:focus{border-color:rgba(45,212,191,.45)}
+textarea.f{min-height:90px;resize:vertical}
+
+.feed{max-height:340px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.feed-item{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.feed-item .meta{display:flex;justify-content:space-between;gap:8px;font-size:.68rem;font-weight:800;color:var(--muted);margin-bottom:4px}
+.feed-item .body{font-size:.82rem;font-weight:600;line-height:1.5}
+.day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day-cell{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:10px 4px;text-align:center}
+.day-cell .d{font-size:.65rem;color:var(--muted);font-weight:800}
+.day-cell .c{font-size:1.1rem;font-weight:900;color:var(--teal);margin-top:4px}
+.day-cell.hot{border-color:rgba(45,212,191,.4);background:rgba(45,212,191,.08)}
+.empty{text-align:center;color:var(--muted);padding:24px;font-weight:700;font-size:.88rem;line-height:1.7}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:900}
+.status-pill.ok{background:rgba(45,212,191,.12);color:var(--teal)}
+.chart-box{position:relative;height:220px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.flow .node{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:.78rem;font-weight:800;text-align:center;min-width:90px}
+.flow .node strong{display:block;color:var(--teal);font-size:.9rem;margin-bottom:2px}
+.flow .arrow{color:var(--muted);font-weight:900}
+.mods{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:1100px){.mods{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.mods{grid-template-columns:1fr}}
+.mod{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:14px;padding:14px;color:inherit;transition:.15s;min-height:110px;display:flex;flex-direction:column;cursor:pointer}
+.mod:hover{border-color:rgba(45,212,191,.4);transform:translateY(-2px)}
+.mod .ic{font-size:1.4rem;margin-bottom:6px}
+.mod h4{font-size:.9rem;font-weight:900}
+.mod p{color:var(--muted);font-size:.74rem;font-weight:600;margin-top:4px;line-height:1.45;flex:1}
+.mod .go{margin-top:8px;font-size:.72rem;font-weight:900;color:var(--teal)}
+
+/* LIGHT SURVEY SURFACE */
+.survey-surface{background:linear-gradient(180deg,#f0fdfa,#ecfdf5);border:1px solid rgba(45,212,191,.25);border-radius:20px;padding:18px;color:var(--ink)}
+.survey-surface h2{color:var(--ink);font-size:1.15rem;font-weight:900;margin-bottom:4px}
+.survey-surface .hint{color:#5b7c78;font-size:.85rem;font-weight:600;margin-bottom:12px}
+.progress{height:8px;background:#d1e7e3;border-radius:999px;overflow:hidden;margin-bottom:6px}
+.progress>i{display:block;height:100%;width:20%;background:linear-gradient(90deg,#2dd4bf,#0d9488);transition:width .3s}
+.prog-label{display:flex;justify-content:space-between;font-size:.75rem;font-weight:800;color:#5b7c78;margin-bottom:12px}
+.step{display:none;animation:up .28s ease}
+.step.on{display:block}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.rooms{display:flex;flex-direction:column;gap:8px}
+.room{appearance:none;width:100%;border:2px solid var(--cline);background:#fff;border-radius:16px;padding:12px;cursor:pointer;display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;text-align:right;color:var(--ink);font-weight:800;transition:.15s}
+.room:hover{border-color:#5eead4;background:#ecfdf8}
+.room.on{border-color:#0d9488;background:linear-gradient(135deg,#ecfdf8,#ccfbf1);box-shadow:0 8px 18px rgba(13,148,136,.15)}
+.room .ic{width:48px;height:48px;border-radius:14px;background:#ecfdf8;display:grid;place-items:center;font-size:1.4rem}
+.room.on .ic{background:#0d9488}
+.room .lvl{font-size:.72rem;font-weight:900;background:#f0fdfa;color:#0f766e;border-radius:999px;padding:4px 8px}
+.confirm{display:none;margin-top:10px;padding:12px;border-radius:14px;background:#ecfdf5;border:1px solid #a7f3d0;font-weight:800;color:#065f46;line-height:1.5}
+.confirm.show{display:block}
+.manual{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+.manual input,.sf{width:100%;padding:12px 14px;border-radius:14px;border:1.5px solid var(--cline);font-weight:700;background:#ecfdf8;color:var(--ink);outline:none}
+.sf:focus{border-color:#0d9488;box-shadow:0 0 0 4px rgba(13,148,136,.12)}
+.manual button{border:none;background:#0d9488;color:#fff;font-weight:900;border-radius:14px;padding:0 16px;cursor:pointer}
+.faces{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.face,.diff{border:2px solid var(--cline);background:#fff;border-radius:14px;padding:10px 4px;text-align:center;cursor:pointer;user-select:none;color:var(--ink);transition:.15s}
+.face:hover,.diff:hover{border-color:#5eead4;background:#ecfdf8;transform:translateY(-1px)}
+.face .e,.diff .e{font-size:1.85rem;display:block}
+.face .a,.diff .a{font-size:.72rem;font-weight:900;color:#5b7c78;margin-top:4px}
+.face .n,.diff .n{font-size:.62rem;font-weight:700;color:#94a3b8}
+.face.on{border-color:#0d9488;background:#ecfdf8;box-shadow:0 6px 14px rgba(13,148,136,.14)}
+.diff-faces{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.diff.on{border-color:#d97706;background:#fffbeb;box-shadow:0 6px 14px rgba(217,119,6,.14)}
+.skills{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.skill{border:2px solid var(--cline);border-radius:14px;padding:12px;text-align:center;cursor:pointer;font-weight:900;background:#fff;color:var(--ink);transition:.15s}
+.skill:hover{border-color:#93c5fd;background:#eff6ff}
+.skill.on{border-color:#2563eb;background:#eff6ff;color:#1e40af;box-shadow:0 8px 18px rgba(37,99,235,.12)}
+.skill .e{font-size:1.5rem;display:block;margin-bottom:4px}
+.skill .en{display:block;font-size:.68rem;font-weight:700;color:#94a3b8;margin-top:2px}
+.snav{display:flex;gap:8px;margin-top:10px}
+.sbtn{flex:1;appearance:none;border:none;border-radius:14px;padding:14px;font-weight:900;cursor:pointer;font-size:.95rem;transition:.15s}
+.sbtn-next{background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;box-shadow:0 10px 24px rgba(13,148,136,.25)}
+.sbtn-next:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.sbtn-back{background:#fff;border:1.5px solid var(--cline);color:var(--ink);flex:0 0 auto;padding-inline:16px}
+@media(max-width:420px){.faces{grid-template-columns:1fr 1fr}}
+
+/* PROGRAM SURVEY */
+.prog-surface{background:linear-gradient(180deg,#f2f8f6,#e8f5f1);border:1px solid #d5e6e2;border-radius:20px;padding:20px;color:#0f2f2c}
+.prog-surface .letter{background:linear-gradient(155deg,#0f766e,#0f5f5a 55%,#134e4a);color:#fff;border-radius:20px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
+.prog-surface .letter::after{content:'FORM';position:absolute;left:10px;bottom:-10px;font-size:4rem;font-weight:900;opacity:.07}
+.prog-surface .letter .greet{font-size:1.1rem;font-weight:900;margin-bottom:8px}
+.prog-surface .letter p{font-weight:600;line-height:1.8;font-size:.92rem;opacity:.96}
+.prog-surface .letter .en{margin-top:8px;opacity:.85;font-size:.84rem;line-height:1.65}
+.prog-surface .letter .thanks{margin-top:10px;font-weight:800;color:#fde68a}
+.rail{display:flex;gap:6px;overflow:auto;padding-bottom:4px;margin-bottom:10px}
+.rail .dot{flex:0 0 auto;padding:8px 12px;border-radius:999px;font-size:.72rem;font-weight:900;background:#fff;border:1px solid #d5e6e2;color:#5d7773;display:flex;align-items:center;gap:6px;cursor:pointer;transition:.15s}
+.rail .dot .ic{font-size:.95rem}
+.rail .dot.on{background:#0d9488;color:#fff;border-color:#0d9488}
+.rail .dot.done{background:#ccfbf1;color:#0f766e;border-color:#99f6e4}
+.pcard{background:#fff;border:1px solid #d5e6e2;border-radius:16px;padding:16px;margin-bottom:10px}
+.pcard h2{font-size:1rem;font-weight:900;margin:0 0 4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pcard h2 .sec{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;display:grid;place-items:center;font-size:.9rem;flex-shrink:0}
+.pcard h2 .en{display:block;width:100%;font-size:.76rem;font-weight:700;color:#5d7773;margin-top:2px;padding-right:40px}
+.phint{color:#5d7773;font-size:.82rem;font-weight:600;margin:0 0 12px;line-height:1.55}
+.pfaces{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pface{border:2px solid #d5e6e2;background:#fff;border-radius:12px;padding:9px 2px;text-align:center;cursor:pointer;user-select:none;transition:.15s}
+.pface:hover{border-color:#99f6e4;background:#ecfdf8;transform:translateY(-1px)}
+.pface .e{font-size:1.4rem;display:block}
+.pface .a{font-size:.62rem;font-weight:900;color:#5d7773;margin-top:3px;line-height:1.2}
+.pface .n{font-size:.56rem;font-weight:700;color:#94a3b8}
+.pface.on{border-color:#0d9488;background:#ecfdf8;box-shadow:0 6px 14px rgba(13,148,136,.14)}
+.dim-row{border:1px solid #d5e6e2;border-radius:14px;padding:12px;margin-bottom:8px;background:linear-gradient(180deg,#fff,#f7fcfb)}
+.dim-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.dim-head .ic{width:42px;height:42px;border-radius:12px;background:#ecfdf8;display:grid;place-items:center;font-size:1.2rem;flex-shrink:0;border:1px solid #ccfbf1}
+.dim-head .t{font-weight:900;font-size:.9rem;line-height:1.35}
+.dim-head .e{font-size:.74rem;font-weight:700;color:#5d7773;margin-top:2px}
+.dim-tag{display:inline-block;font-size:.65rem;font-weight:900;background:#f0fdfa;color:#0f766e;padding:2px 8px;border-radius:999px;margin-bottom:4px}
+.impression{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.impression label{border:2px solid #d5e6e2;border-radius:16px;padding:16px 10px;text-align:center;cursor:pointer;font-weight:900;background:#fff;transition:.15s}
+.impression label:hover{border-color:#fde68a;background:#fffbeb}
+.impression label.on{border-color:#c27803;background:linear-gradient(180deg,#fffbeb,#fef3c7);box-shadow:0 8px 18px rgba(180,83,9,.12)}
+.impression .e{font-size:1.8rem;display:block;margin-bottom:6px}
+.impression .a{font-size:.95rem}
+.impression .en{display:block;font-size:.7rem;color:#5d7773;font-weight:700;margin-top:2px}
+.pfield{margin-bottom:10px}
+.pfield label{display:block;font-size:.76rem;font-weight:800;color:#5d7773;margin-bottom:5px}
+.pfield input,.pfield textarea{width:100%;padding:11px 13px;border-radius:12px;border:1.5px solid #d5e6e2;font-family:inherit;font-weight:700;background:#ecfdf8;color:#0f2f2c;outline:none}
+.pfield input:focus,.pfield textarea:focus{border-color:#0d9488;box-shadow:0 0 0 4px rgba(13,148,136,.12);background:#fff}
+.pgrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.pgrid2{grid-template-columns:1fr}}
+.pnav{display:flex;gap:8px;margin-top:10px}
+.pbtn{flex:1;appearance:none;border:none;border-radius:14px;padding:14px;font-family:inherit;font-weight:900;cursor:pointer;font-size:.92rem;transition:.15s}
+.pbtn-next{background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;box-shadow:0 10px 24px rgba(13,148,136,.25)}
+.pbtn-next:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.pbtn-back{background:#fff;border:1.5px solid #d5e6e2;color:#0f2f2c;flex:0 0 auto;padding-inline:16px}
+.pbtn .sub{display:block;font-size:.7rem;font-weight:700;opacity:.85;margin-top:2px}
+
+/* REPORT (cream theme) */
+.report-surface{background:linear-gradient(180deg,var(--cream),var(--cream2));border-radius:20px;padding:20px;color:var(--ink-d)}
+.report-surface .masthead{background:var(--ink-d);color:#fff;border-radius:22px;padding:28px 24px;position:relative;overflow:hidden;margin-bottom:18px;box-shadow:0 20px 50px rgba(26,18,8,.25)}
+.report-surface .masthead::before{content:'REPORT';position:absolute;left:-10px;bottom:-28px;font-size:7rem;font-weight:900;letter-spacing:-.04em;opacity:.06;line-height:1}
+.report-surface .masthead .eyebrow{color:var(--gold2);font-weight:800;font-size:.82rem;letter-spacing:.08em;margin-bottom:6px}
+.report-surface .masthead h1{font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;line-height:1.15;letter-spacing:-.03em}
+.report-surface .masthead .meta{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;color:rgba(255,255,255,.7);font-size:.85rem;font-weight:600}
+.report-surface .masthead .meta span{background:rgba(255,255,255,.08);padding:5px 11px;border-radius:999px}
+.rkpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:900px){.rkpi-row{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.rkpi-row{grid-template-columns:1fr}}
+.rkpi{background:#fffdf8;border:1px solid var(--line-d);border-radius:18px;padding:18px 16px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(61,43,31,.06)}
+.rkpi .wm{position:absolute;left:8px;bottom:-14px;font-size:4.5rem;font-weight:900;opacity:.05;line-height:1;pointer-events:none;letter-spacing:-.05em}
+.rkpi .label{font-size:.78rem;font-weight:800;color:var(--muted-d);margin-bottom:4px}
+.rkpi .num{font-size:clamp(2rem,4.5vw,2.8rem);font-weight:900;letter-spacing:-.04em;line-height:1;color:var(--ink-d)}
+.rkpi .num em{font-style:normal;font-size:.45em;color:var(--muted-d);font-weight:700;margin-right:4px}
+.rkpi .delta{margin-top:8px;display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:800;padding:3px 9px;border-radius:999px}
+.delta.up{background:#dcfce7;color:#15803d}
+.delta.down{background:#fee2e2;color:#b91c1c}
+.delta.flat{background:#f1f5f9;color:var(--muted-d)}
+.rcard{background:#fffdf8;border:1px solid var(--line-d);border-radius:18px;padding:16px;box-shadow:0 8px 24px rgba(61,43,31,.05);margin-bottom:12px}
+.rcard h2{font-size:1rem;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.rcard h2 .rbadge{font-size:.68rem;background:rgba(15,118,110,.1);color:var(--teal);padding:3px 8px;border-radius:999px;font-weight:800}
+.h-bars{display:flex;flex-direction:column;gap:10px}
+.h-row{display:grid;grid-template-columns:90px 1fr 48px;gap:10px;align-items:center}
+.h-row .n{font-size:.82rem;font-weight:800;color:var(--ink2-d)}
+.h-track{height:12px;background:#f0e8dc;border-radius:999px;overflow:hidden}
+.h-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal),var(--teal2));width:0;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.h-fill.gold{background:linear-gradient(90deg,#d97706,var(--gold2))}
+.h-fill.rose{background:linear-gradient(90deg,#e11d48,#fb7185)}
+.h-fill.blue{background:linear-gradient(90deg,#2563eb,#60a5fa)}
+.h-row .v{font-size:.82rem;font-weight:900;text-align:left}
+.rbars{display:flex;align-items:flex-end;gap:10px;height:160px;padding-top:10px}
+.rbars .col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:6px}
+.rbars .rbar{width:100%;max-width:44px;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,var(--teal2),var(--teal));min-height:4px;transition:height .6s cubic-bezier(.16,1,.3,1);position:relative}
+.rbars .rbar span{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:.72rem;font-weight:800;color:var(--ink2-d);white-space:nowrap}
+.rbars .rlbl{font-size:.7rem;font-weight:700;color:var(--muted-d);text-align:center}
+.compare-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:600px){.compare-grid{grid-template-columns:1fr}}
+.metric-card{background:linear-gradient(160deg,#fff,#f8f4ec);border:1px solid var(--line-d);border-radius:14px;padding:14px;text-align:center}
+.metric-card .t{font-size:.76rem;font-weight:800;color:var(--muted-d)}
+.metric-card .big{font-size:2rem;font-weight:900;letter-spacing:-.03em;margin:4px 0;color:var(--teal)}
+.metric-card .sub{font-size:.76rem;color:var(--muted-d);font-weight:600}
+.rskill{background:#f8f4ec;border-radius:12px;padding:12px;border:1px solid var(--line-d)}
+.rskill .top{display:flex;justify-content:space-between;margin-bottom:6px;font-weight:800;font-size:.85rem}
+.rskill .pct{color:var(--teal);font-size:1.05rem}
+.rteachers{width:100%;border-collapse:collapse}
+.rteachers th{text-align:right;font-size:.76rem;color:var(--muted-d);font-weight:800;padding:8px 6px;border-bottom:2px solid var(--line-d)}
+.rteachers td{padding:11px 6px;border-bottom:1px solid var(--line-d);vertical-align:middle;font-size:.88rem}
+.rteachers tr:last-child td{border-bottom:none}
+.rank{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:900;font-size:.82rem;background:#f0e8dc;color:var(--ink2-d)}
+.rank.r1{background:linear-gradient(135deg,#fbbf24,#d97706);color:#fff}
+.rank.r2{background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff}
+.rank.r3{background:linear-gradient(135deg,#d97706,#92400e);color:#fff}
+.vis-bar{height:9px;background:#f0e8dc;border-radius:999px;overflow:hidden;min-width:90px}
+.vis-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.rinsights{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:700px){.rinsights{grid-template-columns:1fr}}
+.rinsight{border-radius:14px;padding:12px 14px;border:1px solid var(--line-d);background:#fff}
+.rinsight.positive{background:#ecfdf5;border-color:#a7f3d0}
+.rinsight.warning{background:#fff7ed;border-color:#fed7aa}
+.rinsight.info{background:#eff6ff;border-color:#bfdbfe}
+.rinsight h3{font-size:.88rem;margin-bottom:3px;display:flex;gap:6px;align-items:center}
+.rinsight p{font-size:.82rem;color:var(--ink2-d);line-height:1.55}
+.rrecs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:900px){.rrecs{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.rrecs{grid-template-columns:1fr}}
+.rrec{background:var(--ink-d);color:#fff;border-radius:16px;padding:16px 14px;position:relative;overflow:hidden;min-height:140px}
+.rrec .n{font-size:2.6rem;font-weight:900;opacity:.15;position:absolute;left:10px;top:0;line-height:1}
+.rrec h3{font-size:.92rem;margin-bottom:6px;position:relative}
+.rrec p{font-size:.8rem;line-height:1.55;color:rgba(255,255,255,.78);position:relative}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);background:#134e4a;color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:.88rem;opacity:0;pointer-events:none;transition:.3s;z-index:200;border:1px solid rgba(45,212,191,.4);max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-right:0}
+  .menu-toggle{display:inline-flex}
+  .overlay.show{display:block}
+}
+@media print{
+  .sidebar,.top-actions,.menu-toggle,.toast{display:none!important}
+  .main{margin:0;padding:0}
+  body{background:#fff;color:#000}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="side-brand">
+    <div class="logo">📋</div>
+    <div>
+      <h1>منصة التقييم</h1>
+      <p id="sideProgram">النظام الموحّد</p>
+    </div>
+  </div>
+  <div class="count-chip" id="countChip">0 تقييم</div>
+  <nav class="side-nav">
+    <div class="nav-label">القيادة</div>
+    <button class="nav-btn active" data-view="home"><span class="ic">🏠</span> الرئيسية</button>
+    <button class="nav-btn" data-view="daily-survey"><span class="ic">📝</span> تقييم الحصة</button>
+    <button class="nav-btn" data-view="program-survey"><span class="ic">⭐</span> تقييم البرنامج</button>
+    <button class="nav-btn" data-view="dashboard"><span class="ic">🎛️</span> لوحة القيادة</button>
+    <div class="nav-label">التقارير</div>
+    <button class="nav-btn" data-view="daily-report"><span class="ic">📰</span> التقرير اليومي</button>
+    <button class="nav-btn" data-view="program-report"><span class="ic">📊</span> تقرير البرنامج</button>
+    <div class="nav-label">التحليلات</div>
+    <button class="nav-btn" data-view="teachers"><span class="ic">👩‍🏫</span> المعلمون</button>
+    <button class="nav-btn" data-view="analytics"><span class="ic">📈</span> التحليلات</button>
+    <button class="nav-btn" data-view="evals"><span class="ic">📋</span> سجل التقييمات</button>
+    <div class="nav-label">النظام</div>
+    <button class="nav-btn" data-view="data"><span class="ic">💾</span> البيانات</button>
+    <button class="nav-btn" data-view="settings"><span class="ic">⚙️</span> الإعدادات</button>
+  </nav>
+  <div class="side-foot">
+    <button id="btnSeed">🎲 تحميل بيانات تجريبية</button>
+    <button id="btnReset">🗑️ مسح كل البيانات</button>
+  </div>
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<main class="main">
+  <div class="topbar">
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="menu-toggle" id="menuBtn">☰</button>
+      <div>
+        <h2 id="viewTitle">الرئيسية</h2>
+        <div class="sub" id="viewSub">نظرة شاملة على المنصة</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="status-pill ok" id="healthPill">● نظام جاهز</span>
+      <button class="btn" id="btnRefresh">🔄 مزامنة</button>
+      <button class="btn btn-primary" id="btnNewEval">＋ تقييم جديد</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <section class="view active" id="view-home">
+    <div class="kpis" id="homeKpis"></div>
+    <div class="panel">
+      <h3>🔗 تدفق المنصة <span class="badge">Live Pipeline</span></h3>
+      <div class="flow" id="pipelineFlow"></div>
+      <p style="color:var(--muted);font-size:.8rem;font-weight:600;margin-top:8px;line-height:1.6">كل خدمة تقرأ/تكتب نفس قاعدة البيانات المحلية — أي تقييم جديد يظهر فوراً في التقارير والتحليلات.</p>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>✅ صحة التشغيل <span class="badge" id="healthBadge">0%</span></h3>
+        <div id="checklist"></div>
+      </div>
+      <div class="panel">
+        <h3>💡 ملاحظات ذكية</h3>
+        <div id="homeInsights"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>🚀 اختصارات سريعة</h3>
+      <div class="mods" id="homeMods"></div>
+    </div>
+    <div class="grid-2b">
+      <div class="panel">
+        <h3>📅 التوزيع اليومي</h3>
+        <div class="day-grid" id="dayGrid"></div>
+      </div>
+      <div class="panel">
+        <h3>🏆 أفضل المعلمين</h3>
+        <div id="homeTeachers"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DAILY SURVEY -->
+  <section class="view" id="view-daily-survey">
+    <div class="survey-surface">
+      <h2>🌟 كيف كانت حصتك اليوم؟</h2>
+      <p class="hint">5 خطوات · صور تعبيرية · عربي + English</p>
+      <div class="progress"><i id="dsProg"></i></div>
+      <div class="prog-label"><span id="dsProgText">الخطوة 1</span><span id="dsProgPct">20%</span></div>
+
+      <div class="step on" id="ds1">
+        <h2 style="font-size:1.05rem;margin-bottom:8px;color:var(--ink)">🏫 أين جلست؟ · Choose classroom</h2>
+        <div class="rooms" id="dsRooms"></div>
+        <div style="margin-top:12px">
+          <label style="font-size:.78rem;font-weight:800;color:#5b7c78">الاسم (اختياري) · Name</label>
+          <input class="sf" id="dsName" placeholder="أحمد / Ahmed" style="margin-top:5px"/>
+        </div>
+        <div style="margin-top:10px">
+          <label style="font-size:.78rem;font-weight:800;color:#5b7c78">رقم التواصل · Phone</label>
+          <input class="sf" id="dsPhone" type="tel" inputmode="tel" dir="ltr" style="margin-top:5px;text-align:right" placeholder="05XXXXXXXX / +9665XXXXXXXX"/>
+        </div>
+        <div class="snav"><button class="sbtn sbtn-next" onclick="dsNext()">التالي · Next</button></div>
+      </div>
+
+      <div class="step" id="ds2">
+        <h2 style="font-size:1.05rem;margin-bottom:8px;color:var(--ink)">📖 هل الشرح واضح؟ · Clarity</h2>
+        <div class="faces" id="dsFacesClarity"></div>
+        <div class="snav"><button class="sbtn sbtn-back" onclick="dsPrev()">رجوع</button><button class="sbtn sbtn-next" onclick="dsNext()">التالي · Next</button></div>
+      </div>
+
+      <div class="step" id="ds3">
+        <h2 style="font-size:1.05rem;margin-bottom:8px;color:var(--ink)">👨‍🏫 كيف كان المعلم؟ · Teacher</h2>
+        <div class="faces" id="dsFacesTeaching" style="margin-bottom:14px"></div>
+        <h2 style="font-size:1.05rem;margin-bottom:8px;color:var(--ink)">🔥 هل أحببت الحصة؟ · Enjoyment</h2>
+        <div class="faces" id="dsFacesMotivation"></div>
+        <div class="snav"><button class="sbtn sbtn-back" onclick="dsPrev()">رجوع</button><button class="sbtn sbtn-next" onclick="dsNext()">التالي · Next</button></div>
+      </div>
+
+      <div class="step" id="ds4">
+        <h2 style="font-size:1.05rem;margin-bottom:8px;color:var(--ink)">🎯 هل الدرس صعب؟ · Difficulty</h2>
+        <div class="diff-faces" id="dsFacesDiff"></div>
+        <div class="snav"><button class="sbtn sbtn-back" onclick="dsPrev()">رجوع</button><button class="sbtn sbtn-next" onclick="dsNext()">التالي · Next</button></div>
+      </div>
+
+      <div class="step" id="ds5">
+        <h2 style="font-size:1.05rem;margin-bottom:8px;color:var(--ink)">🎯 ماذا تريد غداً؟ · Skills</h2>
+        <div class="skills" id="dsSkills" style="margin-bottom:12px"></div>
+        <label style="font-size:.78rem;font-weight:800;color:#5b7c78">ماذا تعلّمت؟ (اختياري)</label>
+        <textarea class="sf" id="dsLearned" rows="2" placeholder="كلمات جديدة · new words" style="margin-top:5px"></textarea>
+        <button class="sbtn sbtn-next" onclick="dsSubmit()" style="width:100%;margin-top:12px">✅ إرسال التقييم · Submit</button>
+        <button class="sbtn sbtn-back" onclick="dsPrev()" style="width:100%;margin-top:8px">رجوع · Back</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRAM SURVEY -->
+  <section class="view" id="view-program-survey">
+    <div class="prog-surface">
+      <div class="letter">
+        <div class="greet">عزيز المشارك / عزيزتي المشاركة 🌟</div>
+        <p>لقد سعدنا بك خلال فترة البرنامج. ومساهمة منك في تطوير البرامج التدريبية نأمل من سعادتكم استيفاء هذه الاستمارة لمعرفة آرائكم ومقترحاتكم.</p>
+        <p class="en">Dear participant: We were pleased to have you during the program. To help us improve future training programs, please complete this form.</p>
+        <p class="thanks">مع خالص الشكر والتقدير · Thank you for your cooperation</p>
+      </div>
+      <div class="rail" id="psRail"></div>
+      <div class="progress"><i id="psProg" style="width:12%"></i></div>
+      <div class="prog-label"><span id="psProgText">الخطوة 1</span><span id="psProgPct">12%</span></div>
+
+      <div class="step on" id="ps1">
+        <div class="pcard">
+          <h2><span class="sec">1</span> بيانات المشارك <span class="en">Participant information</span></h2>
+          <p class="phint">معلومات أساسية قبل تقييم الخدمات</p>
+          <div class="pgrid2">
+            <div class="pfield"><label>الاسم · Name (اختياري)</label><input id="psName" placeholder="اسمك"/></div>
+            <div class="pfield"><label>الجنسية · Nationality</label><input id="psNationality" placeholder="مثال: إندونيسيا"/></div>
+          </div>
+          <div class="pgrid2">
+            <div class="pfield"><label>رقم التواصل · Phone</label><input id="psPhone" type="tel" inputmode="tel" dir="ltr" style="text-align:right" placeholder="05XXXXXXXX / +9665XXXXXXXX"/></div>
+            <div class="pfield"><label>البريد · Email (اختياري)</label><input id="psEmail" type="email" placeholder="email@example.com"/></div>
+          </div>
+        </div>
+        <div class="pnav"><button class="pbtn pbtn-next" onclick="psNext()">التالي · Next<span class="sub">الاستقبال والوصول</span></button></div>
+      </div>
+
+      <div id="psDomainSteps"></div>
+
+      <div class="step" id="psFinal">
+        <div class="pcard">
+          <h2><span class="sec">🌟</span> الانطباع العام <span class="en">Overall impression</span></h2>
+          <p class="phint">ما هي انطباعاتك في موضوع البرنامج بصفة عامة؟</p>
+          <div class="impression" id="psImpression">
+            <label data-v="جيدة" onclick="psSelectImpression(this)"><span class="e">😊</span><span class="a">جيدة</span><span class="en">Good</span></label>
+            <label data-v="متوسطة" onclick="psSelectImpression(this)"><span class="e">😐</span><span class="a">متوسطة</span><span class="en">Average</span></label>
+            <label data-v="ضعيفة" onclick="psSelectImpression(this)"><span class="e">😕</span><span class="a">ضعيفة</span><span class="en">Weak</span></label>
+          </div>
+        </div>
+        <div class="pcard">
+          <h2><span class="sec">💬</span> ملاحظات ومقترحات <span class="en">Comments & suggestions</span></h2>
+          <div class="pfield"><label>ما أعجبك أكثر؟ · What did you like most?</label><textarea id="psPositive" rows="2" placeholder="اكتب هنا..."></textarea></div>
+          <div class="pfield"><label>ما الذي يحتاج تحسيناً؟ · What needs improvement?</label><textarea id="psImprove" rows="2"></textarea></div>
+          <div class="pfield"><label>مقترحاتكم للتطوير · Your suggestions</label><textarea id="psSuggestions" rows="2"></textarea></div>
+        </div>
+        <button class="pbtn pbtn-next" onclick="psSubmit()" style="width:100%">✅ إرسال الاستمارة · Submit<span class="sub">مع الشكر والتقدير</span></button>
+        <button class="pbtn pbtn-back" onclick="psPrev()" style="width:100%;margin-top:8px">رجوع · Back</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section class="view" id="view-dashboard">
+    <div class="kpis" id="dashKpis"></div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>📡 آخر الردود <span class="badge">Feed</span></h3>
+        <div class="feed" id="dashFeed"></div>
+      </div>
+      <div class="panel">
+        <h3>🏆 ترتيب المعلمين</h3>
+        <div id="dashTeachers"></div>
+      </div>
+    </div>
+    <div class="grid-2b">
+      <div class="panel"><h3>📅 حركة الأيام</h3><div class="day-grid" id="dashDays"></div></div>
+      <div class="panel"><h3>🎯 المهارات المطلوبة</h3><div id="dashSkills"></div></div>
+    </div>
+  </section>
+
+  <!-- DAILY REPORT -->
+  <section class="view" id="view-daily-report">
+    <div class="report-surface">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="window.print()">🖨️ طباعة / PDF</button>
+          <button class="btn" onclick="renderDailyReport()">🔄 تحديث</button>
+        </div>
+      </div>
+      <div class="masthead">
+        <div class="eyebrow">WEEKLY INTELLIGENCE · BROADSHEET</div>
+        <h1>التقرير الأسبوعي<br>لتقييم الحصة اليومية</h1>
+        <div class="meta">
+          <span id="rptPeriod">—</span>
+          <span id="rptGenerated">—</span>
+          <span>برنامج تعليم العربية للناطقين بغيرها</span>
+        </div>
+      </div>
+      <div class="rkpi-row" id="rptKpis"></div>
+      <div class="grid-2b" style="margin-bottom:12px">
+        <div class="rcard">
+          <h2>📊 التوزيع اليومي <span class="rbadge">7 أيام</span></h2>
+          <div class="rbars" id="rptDailyBars"></div>
+        </div>
+        <div class="rcard">
+          <h2>🌡️ مستوى الصعوبة <span class="rbadge">1–5</span></h2>
+          <div class="h-bars" id="rptDiffBars"></div>
+        </div>
+      </div>
+      <div class="grid-2b" style="margin-bottom:12px">
+        <div class="rcard">
+          <h2>⚖️ مقارنة محاور التقييم</h2>
+          <div class="compare-grid" id="rptAxesCompare"></div>
+          <div class="h-bars" id="rptAxesBars" style="margin-top:14px"></div>
+        </div>
+        <div class="rcard">
+          <h2>🎯 المهارات المطلوبة</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="rptSkills"></div>
+        </div>
+      </div>
+      <div class="rcard" style="margin-bottom:12px">
+        <h2>👩‍🏫 جدول أداء المعلمين <span class="rbadge">مرتّب حسب المتوسط</span></h2>
+        <div style="overflow-x:auto">
+          <table class="rteachers">
+            <thead><tr><th>#</th><th>المعلم</th><th>التقييمات</th><th>المتوسط</th><th>الرضا</th><th>شريط الأداء</th></tr></thead>
+            <tbody id="rptTeachers"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="rcard" style="margin-bottom:12px">
+        <h2>💡 ملاحظات ذكية</h2>
+        <div class="rinsights" id="rptInsights"></div>
+      </div>
+      <div class="rcard">
+        <h2>🚀 توصيات مبنية على البيانات</h2>
+        <div class="rrecs" id="rptRecs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRAM REPORT -->
+  <section class="view" id="view-program-report">
+    <div class="report-surface">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:1.3rem;font-weight:900;color:var(--ink-d)">📊 تقرير تقييم البرنامج النهائي</h2>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ طباعة / PDF</button>
+      </div>
+      <div id="progReportContent"></div>
+    </div>
+  </section>
+
+  <!-- TEACHERS -->
+  <section class="view" id="view-teachers">
+    <div class="panel">
+      <h3>ترتيب المعلمين</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th>#</th><th>المعلم</th><th>قاعة</th><th>مستوى</th><th>عدد</th><th>وضوح</th><th>تدريس</th><th>دافعية</th><th>المعدل</th><th>رضا</th><th>أداء</th></tr></thead>
+          <tbody id="teachersBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="grid-2b">
+      <div class="panel"><h3>🌟 الأفضل</h3><div id="bestCard" class="empty">—</div></div>
+      <div class="panel"><h3>🤝 يحتاج دعماً</h3><div id="supportCard" class="empty">—</div></div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section class="view" id="view-analytics">
+    <div class="grid-2b">
+      <div class="panel"><h3>محاور التقييم</h3><div class="chart-box"><canvas id="chartAxes"></canvas></div></div>
+      <div class="panel"><h3>المهارات</h3><div class="chart-box"><canvas id="chartSkills"></canvas></div></div>
+    </div>
+    <div class="grid-2b">
+      <div class="panel"><h3>توزيع الصعوبة</h3><div class="chart-box"><canvas id="chartDiff"></canvas></div></div>
+      <div class="panel"><h3>المشاركة اليومية</h3><div class="chart-box"><canvas id="chartDaily"></canvas></div></div>
+    </div>
+    <div class="panel"><h3>📈 مقارنة المعلمين · رادار</h3><div class="chart-box" style="height:300px"><canvas id="chartRadar"></canvas></div></div>
+  </section>
+
+  <!-- EVALS -->
+  <section class="view" id="view-evals">
+    <div class="panel">
+      <h3>سجل التقييمات <span class="badge" id="evalsCount">0</span></h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <input class="f" id="evalSearch" style="max-width:240px;margin:0" placeholder="بحث..."/>
+        <select class="f" id="evalRoom" style="max-width:160px;margin:0"><option value="">كل القاعات</option></select>
+      </div>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th>#</th><th>الاسم</th><th>التواصل</th><th>قاعة</th><th>معلم</th><th>وضوح</th><th>تدريس</th><th>دافعية</th><th>صعوبة</th><th>تاريخ</th></tr></thead>
+          <tbody id="evalsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA -->
+  <section class="view" id="view-data">
+    <div class="grid-2b">
+      <div class="panel">
+        <h3>💾 النسخ والاستيراد</h3>
+        <div id="dataInfo" class="insight info"><p>—</p></div>
+        <div class="top-actions">
+          <button class="btn btn-primary" id="btnExportJson">⬇️ تصدير JSON</button>
+          <button class="btn btn-blue" id="btnExportCsv">⬇️ تصدير CSV</button>
+          <button class="btn" id="btnImport">⬆️ استيراد</button>
+        </div>
+        <input type="file" id="fileImport" accept="application/json,.json" style="display:none"/>
+      </div>
+      <div class="panel">
+        <h3>📜 سجل العمليات</h3>
+        <div class="feed" id="auditFeed"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view" id="view-settings">
+    <div class="grid-2b">
+      <div class="panel">
+        <h3>⚙️ إعدادات البرنامج</h3>
+        <label class="f">اسم البرنامج</label><input class="f" id="sName"/>
+        <label class="f">هدف يومي</label><input class="f" id="sDaily" type="number"/>
+        <label class="f">هدف أسبوعي</label><input class="f" id="sWeekly" type="number"/>
+        <label class="f">هدف الرضا (%)</label><input class="f" id="sSatisfaction" type="number"/>
+        <label class="f">تنبيه الصعوبة (1-5)</label><input class="f" id="sDiffAlert" type="number"/>
+        <button class="btn btn-primary btn-block" style="margin-top:14px" id="btnSaveSettings">💾 حفظ الإعدادات</button>
+      </div>
+      <div class="panel">
+        <h3>🔄 إغلاق الحلقة</h3>
+        <p style="color:var(--muted);font-size:.82rem;font-weight:600;margin-bottom:10px">تظهر للطلاب في بداية الاستبيان.</p>
+        <label class="f">النص</label><textarea class="f" id="sLoopMsg"></textarea>
+        <button class="btn btn-primary" style="margin-top:10px" id="btnSaveLoop">💾 حفظ</button>
+        <div style="margin-top:16px;background:rgba(45,212,191,.08);border:1px solid rgba(45,212,191,.25);border-radius:14px;padding:14px">
+          <div style="font-size:.72rem;font-weight:900;color:var(--teal);margin-bottom:6px">معاينة</div>
+          <div id="loopPreview" style="font-weight:700;line-height:1.7">—</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== EVAL SYSTEM CORE ===== */
+const STORAGE_KEY='evalSystem_v2';
+const PROGRAM_KEY='programEval_v1';
+const SETTINGS_KEY='evalSystem_settings';
+const AUDIT_KEY='evalSystem_audit';
+const LOOP_KEY='evalSystem_loop';
+
+const TEACHERS={'203':'د/ الشرقاوي','204':'د/ بكر الأحمدي','205':'د/ شيماء','206':'د/ آلاء','208':'د/ ياسر'};
+const LEVELS={'203':'A1','204':'A1','205':'A1','206':'A2','208':'B1'};
+const ROOMS=Object.keys(TEACHERS);
+const SKILL_LABELS={Listening:'الاستماع',Speaking:'التحدث',Reading:'القراءة',Writing:'الكتابة','الاستماع':'الاستماع','التحدث':'التحدث','القراءة':'القراءة','الكتابة':'الكتابة'};
+const RATING_MAP={'ممتاز':5,'Excellent':5,'جيد جداً':4,'جيد':4,'Good':4,'متوسط':3,'Average':3,'مقبول':2,'ضعيف':1,'Weak':1};
+
+const PROGRAM_DIMENSIONS=[
+  {id:'airport',ar:'الاستقبال في المطار',en:'Airport reception',icon:'✈️',group:'وصول'},
+  {id:'welcome',ar:'حفل الاستقبال في الجامعة',en:'University welcome ceremony',icon:'🎓',group:'وصول'},
+  {id:'learning',ar:'جودة التعلم والتعليم',en:'Learning quality',icon:'📚',group:'تعليمي'},
+  {id:'curriculum',ar:'ملاءمة المحتوى والمستوى',en:'Content & level suitability',icon:'📖',group:'تعليمي'},
+  {id:'teachers',ar:'أداء المعلمين الإجمالي',en:'Overall teachers performance',icon:'👩‍🏫',group:'تعليمي'},
+  {id:'teacher_clarity',ar:'وضوح شرح المعلمين',en:'Teacher clarity',icon:'💡',group:'تعليمي'},
+  {id:'teacher_interaction',ar:'تفاعل المعلمين مع الطلاب',en:'Teacher-student interaction',icon:'🗣️',group:'تعليمي'},
+  {id:'activities',ar:'الأنشطة والتطبيق العملي',en:'Activities & practice',icon:'🎯',group:'تعليمي'},
+  {id:'hospitality',ar:'الضيافة وحسن الاستقبال',en:'Hospitality',icon:'🤝',group:'خدمات'},
+  {id:'tours',ar:'الجولات التعريفية',en:'Orientation tours',icon:'🚌',group:'جولات'},
+  {id:'housing_manar',ar:'السكن · فندق المنار',en:'Housing · Al-Manar Hotel',icon:'🏨',group:'سكن'},
+  {id:'housing_aziziyah',ar:'السكن · شقق العزيزية',en:'Housing · Al-Aziziyah apartments',icon:'🏢',group:'سكن'},
+  {id:'tourism',ar:'الجولات السياحية',en:'Tourism trips',icon:'🗺️',group:'جولات'},
+  {id:'umrah',ar:'رحلة العمرة',en:'Umrah trip',icon:'🕋',group:'رحلات'},
+  {id:'transport',ar:'الانتقالات والمواصلات',en:'Transportation',icon:'🚐',group:'خدمات'},
+  {id:'admin',ar:'تعامل إدارة البرنامج',en:'Program administration',icon:'🏛️',group:'إدارة'},
+  {id:'services',ar:'تلبية الخدمات وتطويرها',en:'Service fulfillment & development',icon:'🛠️',group:'إدارة'},
+  {id:'responsiveness',ar:'سرعة الاستجابة',en:'Response speed',icon:'⚡',group:'إدارة'},
+  {id:'overall',ar:'الرضا العام عن البرنامج',en:'Overall program satisfaction',icon:'⭐',group:'رضا'}
+];
+
+const DEFAULT_SETTINGS={
+  programName:'برنامج تعليم اللغة العربية للناطقين بغيرها',
+  dailyTarget:25,weeklyTarget:100,satisfactionTarget:75,difficultyAlert:4,
+  closingLoopMessage:'بناءً على تقييماتكم الأسبوع الماضي حسّنّا توضيح المفردات وزيادة تمارين التحدث.'
+};
+
+function toScore(v){if(v==null||v==='')return 0;if(typeof v==='number'&&!isNaN(v))return v;if(RATING_MAP[v]!=null)return RATING_MAP[v];const n=parseFloat(v);return isNaN(n)?0:n}
+function avg(arr){const a=(arr||[]).filter(x=>typeof x==='number'&&!isNaN(x)&&x>0);if(!a.length)return 0;return a.reduce((s,x)=>s+x,0)/a.length}
+function isoDate(d){const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+function startOfWeek(d){const date=new Date(d);date.setDate(date.getDate()-date.getDay());date.setHours(0,0,0,0);return date}
+function parseLocalDate(s){if(!s)return null;var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3],12,0,0,0);var t=new Date(s);return isNaN(t.getTime())?null:t}
+
+function getData(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return[]}}
+function saveData(d){localStorage.setItem(STORAGE_KEY,JSON.stringify(d))}
+function addEntry(e){const d=getData();d.unshift(e);saveData(d);audit('eval','تقييم جديد · قاعة '+(e.classroom||'—'));return e}
+function getProgramData(){try{return JSON.parse(localStorage.getItem(PROGRAM_KEY)||'[]')}catch{return[]}}
+function saveProgramData(d){localStorage.setItem(PROGRAM_KEY,JSON.stringify(d))}
+function addProgramEntry(e){const d=getProgramData();d.unshift(e);saveProgramData(d);audit('program','تقييم برنامج جديد');return e}
+function getSettings(){try{var s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}');return Object.assign({},DEFAULT_SETTINGS,s)}catch{return Object.assign({},DEFAULT_SETTINGS)}}
+function saveSettings(p){const s=Object.assign(getSettings(),p);localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));audit('settings','تحديث الإعدادات');return s}
+function getLoopMessage(){try{return JSON.parse(localStorage.getItem(LOOP_KEY)||'null')}catch{return null}}
+function saveLoop(msg,week){localStorage.setItem(LOOP_KEY,JSON.stringify({message:msg,week:week||'',at:new Date().toISOString()}));audit('loop','تحديث رسالة إغلاق الحلقة')}
+function audit(type,msg){let l=[];try{l=JSON.parse(localStorage.getItem(AUDIT_KEY)||'[]')}catch{l=[]}l.unshift({id:Date.now(),type:type||'info',message:msg||'',at:new Date().toISOString()});localStorage.setItem(AUDIT_KEY,JSON.stringify(l.slice(0,200)))}
+function getAudit(){try{return JSON.parse(localStorage.getItem(AUDIT_KEY)||'[]')}catch{return[]}}
+
+function normalize(e){
+  const clarity=toScore(e.clarity),teaching=toScore(e.teaching!=null?e.teaching:e.interaction),motivation=toScore(e.motivation),difficulty=toScore(e.difficulty);
+  const skills=Array.isArray(e.skills)?e.skills:[];
+  const overall=avg([clarity,teaching||clarity,motivation].filter(Boolean));
+  return Object.assign({},e,{clarity,teaching:teaching||clarity,motivation,difficulty,skills,overall});
+}
+
+function computeKPIs(data){
+  const n=(data||[]).map(normalize);const total=n.length;
+  const avgDifficulty=avg(n.map(d=>d.difficulty));
+  const satScores=n.map(d=>{const o=avg([d.clarity,d.teaching,d.motivation]);return o>0?(o/5)*100:0});
+  const satisfaction=avg(satScores);
+  const days=new Set(n.map(d=>(d.date||'').slice(0,10)).filter(Boolean));
+  const dailyRate=total/Math.max(days.size,1);
+  return{total,avgDifficulty,satisfaction,dailyRate,uniqueDays:days.size,uniqueStudents:new Set(n.map(d=>d.email||d.name)).size,rooms:new Set(n.map(d=>d.classroom).filter(Boolean)).size};
+}
+
+function dailyDistribution(data){
+  const map={};const labels=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  (data||[]).forEach(d=>{const dt=parseLocalDate(d.date||d.submittedAt);if(!dt||isNaN(dt.getTime()))return;const key=isoDate(dt);map[key]=(map[key]||0)+1});
+  const out=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const key=isoDate(d);out.push({date:key,label:labels[d.getDay()],count:map[key]||0})}
+  return out;
+}
+
+function difficultyDistribution(data){
+  const bins={1:0,2:0,3:0,4:0,5:0};
+  (data||[]).map(normalize).forEach(d=>{const v=Math.round(d.difficulty);if(bins[v]!=null)bins[v]++});
+  return bins;
+}
+
+function axisAverages(data){
+  const n=(data||[]).map(normalize);
+  return{clarity:avg(n.map(d=>d.clarity)),teaching:avg(n.map(d=>d.teaching)),motivation:avg(n.map(d=>d.motivation)),difficulty:avg(n.map(d=>d.difficulty))};
+}
+
+function skillsBreakdown(data){
+  const counts={};
+  (data||[]).forEach(d=>{(d.skills||[]).forEach(s=>{const l=SKILL_LABELS[s]||s;counts[l]=(counts[l]||0)+1})});
+  const total=Math.max((data||[]).length,1);
+  return Object.entries(counts).map(([name,count])=>({name,count,pct:Math.round(count/total*100)})).sort((a,b)=>b.count-a.count);
+}
+
+function teacherStats(data){
+  const by={};
+  (data||[]).map(normalize).forEach(d=>{
+    const key=d.teacher||TEACHERS[d.classroom]||'غير محدد';
+    if(!by[key])by[key]={teacher:key,classroom:d.classroom||'',level:d.level||'',items:[]};
+    by[key].items.push(d);
+    if(!by[key].classroom&&d.classroom)by[key].classroom=d.classroom;
+    if(!by[key].level)by[key].level=d.level||LEVELS[d.classroom]||'';
+  });
+  return Object.values(by).map(g=>{
+    const clarity=avg(g.items.map(d=>d.clarity)),teaching=avg(g.items.map(d=>d.teaching)),motivation=avg(g.items.map(d=>d.motivation)),difficulty=avg(g.items.map(d=>d.difficulty));
+    const overall=avg([clarity,teaching,motivation]);
+    return{teacher:g.teacher,classroom:g.classroom,level:g.level||LEVELS[g.classroom]||'',count:g.items.length,clarity,teaching,motivation,difficulty,overall,satisfaction:(overall/5)*100};
+  }).sort((a,b)=>b.overall-a.overall);
+}
+
+function roomStats(data){
+  const n=(data||[]).map(normalize);
+  return ROOMS.map(room=>{
+    const items=n.filter(d=>String(d.classroom)===room);
+    if(!items.length)return{room,teacher:TEACHERS[room],level:LEVELS[room],count:0,clarity:0,teaching:0,motivation:0,difficulty:0,overall:0,skills:{}};
+    const clarity=avg(items.map(d=>d.clarity)),teaching=avg(items.map(d=>d.teaching)),motivation=avg(items.map(d=>d.motivation)),difficulty=avg(items.map(d=>d.difficulty));
+    const overall=avg([clarity,teaching,motivation]);
+    const skills={};items.forEach(d=>(d.skills||[]).forEach(s=>{const l=SKILL_LABELS[s]||s;skills[l]=(skills[l]||0)+1}));
+    return{room,teacher:TEACHERS[room],level:LEVELS[room],count:items.length,clarity,teaching,motivation,difficulty,overall,skills};
+  });
+}
+
+function generateInsights(data,kpis,teachers){
+  const ins=[];
+  if(!data||!data.length)return[{type:'info',icon:'ℹ️',title:'لا بيانات',text:'ابدأ بجمع التقييمات من الاستبيان.'}];
+  if(kpis.satisfaction>=80)ins.push({type:'positive',icon:'🌟',title:'رضا مرتفع',text:'نسبة الرضا '+kpis.satisfaction.toFixed(0)+'% — أداء قوي.'});
+  else if(kpis.satisfaction<60)ins.push({type:'warning',icon:'⚠️',title:'رضا منخفض',text:'الرضا '+kpis.satisfaction.toFixed(0)+'% دون الهدف.'});
+  else ins.push({type:'info',icon:'📊',title:'رضا متوسط',text:'الرضا '+kpis.satisfaction.toFixed(0)+'% — قابل للتحسين.'});
+  if(kpis.avgDifficulty>=4)ins.push({type:'warning',icon:'🔥',title:'صعوبة مرتفعة',text:'متوسط الصعوبة '+kpis.avgDifficulty.toFixed(1)+'/5.'});
+  if(teachers&&teachers[0])ins.push({type:'positive',icon:'🏆',title:'أفضل أداء',text:teachers[0].teacher+' بمعدل '+teachers[0].overall.toFixed(2)+'/5.'});
+  if(teachers&&teachers.length>1){const low=teachers[teachers.length-1];if(low.overall<3.5&&low.count>=2)ins.push({type:'warning',icon:'🤝',title:'يحتاج دعماً',text:low.teacher+' · '+low.overall.toFixed(2)+'/5.'})}
+  return ins.slice(0,6);
+}
+
+function generateRecommendations(data,kpis,teachers,skills){
+  const recs=[];const axes=axisAverages(data);
+  if(axes.clarity>0&&axes.clarity<3.5)recs.push({title:'تعزيز الوضوح',text:'استخدم أمثلة بصرية وتلخيص نهاية اليوم.'});
+  if(axes.motivation>0&&axes.motivation<3.5)recs.push({title:'رفع الدافعية',text:'أنشطة تفاعلية قصيرة وأهداف يومية.'});
+  if(kpis.avgDifficulty>=3.8)recs.push({title:'معايرة الصعوبة',text:'قسّم المهام لمستويات ووفّر دعماً متدرجاً.'});
+  if(skills&&skills[0]&&skills[0].pct>=30)recs.push({title:'التركيز على «'+skills[0].name+'»',text:skills[0].pct+'% يطلبون مزيد تدريب.'});
+  if(teachers&&teachers[0])recs.push({title:'تبادل ممارسات',text:'ورشة مصغّرة مع '+teachers[0].teacher+'.'});
+  const defaults=[{title:'إغلاق الحلقة',text:'شارك الطلاب ما تغيّر بناءً على تقييماتهم.'},{title:'شهادة أسبوعية',text:'اطبع شهادة أفضل معلم كل نهاية أسبوع.'},{title:'مراجعة التعليقات',text:'حوّل أكثر 3 ملاحظات تكراراً إلى إجراءات.'},{title:'تكثيف التذكير',text:'فعّل التذكير اليومي للطلاب.'}];
+  while(recs.length<4){const d=defaults[recs.length%defaults.length];if(!recs.find(r=>r.title===d.title))recs.push(d);else break}
+  return recs.slice(0,4);
+}
+
+function computeProgramAnalytics(){
+  const data=getProgramData();
+  const dims=PROGRAM_DIMENSIONS.map(dim=>{
+    const scores=data.map(e=>toScore(e[dim.id])).filter(v=>v>0);
+    const count=scores.length;
+    const mean=avg(scores);
+    const satisfaction=mean>0?(mean/5)*100:0;
+    const dist={1:0,2:0,3:0,4:0,5:0};
+    scores.forEach(s=>{const r=Math.round(s);if(dist[r]!=null)dist[r]++});
+    return Object.assign({},dim,{count,mean,satisfaction,dist,pctOfMax:mean>0?(mean/5)*100:0});
+  });
+  const ranked=dims.filter(d=>d.count>0).sort((a,b)=>b.mean-a.mean);
+  const overallMean=avg(dims.filter(d=>d.count>0).map(d=>d.mean));
+  const overallSatisfaction=overallMean>0?(overallMean/5)*100:0;
+  const topBox=avg(dims.filter(d=>d.count>0).map(d=>d.dist[5]/Math.max(d.count,1)*100));
+  const groupStats={};
+  dims.forEach(d=>{if(!groupStats[d.group])groupStats[d.group]={group:d.group,items:[],mean:0};groupStats[d.group].items.push(d)});
+  Object.values(groupStats).forEach(g=>{const valid=g.items.filter(d=>d.count>0);g.mean=avg(valid.map(d=>d.mean))});
+  const comments=data.filter(e=>e.positive||e.improve||e.suggestions);
+  const recommendScore=avg(data.map(e=>e.wouldRecommend?100:0));
+  return{total:data.length,dims,ranked,best:ranked[0]||null,worst:ranked[ranked.length-1]||null,groupStats:Object.values(groupStats),overallMean,overallSatisfaction,topBox,comments,recommendScore};
+}
+
+/* ===== SEED DATA FROM JSON ===== */
+function seedFromJson(){
+  const seedData=[
+    {id:1,name:'أحمد',email:'s1@demo.local',date:'2026-07-08',classroom:'203',teacher:'د/ الشرقاوي',level:'A1',clarity:'جيد',teaching:'ممتاز',motivation:'جيد',difficulty:'2',skills:['Writing','Reading','Listening'],learned:'مفردات جديدة',submittedAt:'2026-07-08T10:00:00Z'},
+    {id:2,name:'فاطمة',email:'s2@demo.local',date:'2026-07-08',classroom:'204',teacher:'د/ بكر الأحمدي',level:'A1',clarity:'جيد',teaching:'جيد',motivation:'ممتاز',difficulty:'2',skills:['Speaking','Writing'],learned:'قواعد',submittedAt:'2026-07-08T11:00:00Z'},
+    {id:3,name:'محمد',email:'s3@demo.local',date:'2026-07-08',classroom:'205',teacher:'د/ شيماء',level:'A1',clarity:'ممتاز',teaching:'ممتاز',motivation:'جيد',difficulty:'3',skills:['Writing','Speaking'],learned:'كتابة',submittedAt:'2026-07-08T12:00:00Z'},
+    {id:4,name:'نورة',email:'s4@demo.local',date:'2026-07-08',classroom:'206',teacher:'د/ آلاء',level:'A2',clarity:'جيد',teaching:'جيد',motivation:'ممتاز',difficulty:'1',skills:['Listening','Speaking','Reading'],learned:'استماع',submittedAt:'2026-07-08T13:00:00Z'},
+    {id:5,name:'عبدالله',email:'s5@demo.local',date:'2026-07-08',classroom:'208',teacher:'د/ ياسر',level:'B1',clarity:'جيد',teaching:'ممتاز',motivation:'جيد',difficulty:'3',skills:['Writing','Speaking'],learned:'نقاش',submittedAt:'2026-07-08T14:00:00Z'},
+    {id:6,name:'سارة',email:'s6@demo.local',date:'2026-07-08',classroom:'203',teacher:'د/ الشرقاوي',level:'A1',clarity:'جيد',teaching:'ممتاز',motivation:'جيد',difficulty:'2',skills:['Reading','Writing'],learned:'قراءة',submittedAt:'2026-07-08T15:00:00Z'},
+    {id:7,name:'خالد',email:'s7@demo.local',date:'2026-07-08',classroom:'204',teacher:'د/ بكر الأحمدي',level:'A1',clarity:'متوسط',teaching:'جيد',motivation:'جيد',difficulty:'2',skills:['Listening'],learned:'أصوات',submittedAt:'2026-07-08T16:00:00Z'},
+    {id:8,name:'مريم',email:'s8@demo.local',date:'2026-07-08',classroom:'205',teacher:'د/ شيماء',level:'A1',clarity:'ممتاز',teaching:'ممتاز',motivation:'ممتاز',difficulty:'3',skills:['Writing'],learned:'تعبير',submittedAt:'2026-07-08T17:00:00Z'}
+  ];
+  // Generate full 52 entries matching the JSON stats
+  const allData=[];
+  const ratings=['ممتاز','جيد','جيد','متوسط'];
+  const skillPool=['Listening','Speaking','Reading','Writing'];
+  const names=['أحمد','فاطمة','محمد','نورة','عبدالله','سارة','خالد','مريم','يوسف','ليلى','عمر','هند','علي','زينب','إبراهيم','آمنة'];
+  const dayCount={'2026-07-08':8,'2026-07-09':5,'2026-07-10':14,'2026-07-11':10,'2026-07-12':13,'2026-07-13':2};
+  let id=1;
+  Object.entries(dayCount).forEach(([date,cnt])=>{
+    for(let i=0;i<cnt;i++){
+      const room=ROOMS[Math.floor(Math.random()*ROOMS.length)];
+      const c=ratings[Math.floor(Math.random()*ratings.length)];
+      const t=ratings[Math.floor(Math.random()*ratings.length)];
+      const m=ratings[Math.floor(Math.random()*ratings.length)];
+      const diff=String(1+Math.floor(Math.random()*4));
+      allData.push({
+        id:id++,name:names[Math.floor(Math.random()*names.length)],
+        email:'student'+id+'@demo.local',date,classroom:room,
+        teacher:TEACHERS[room],level:LEVELS[room],
+        clarity:c,teaching:t,motivation:m,difficulty:diff,
+        skills:skillPool.filter(()=>Math.random()>0.5),
+        learned:'تعلّمت مفردات جديدة',submittedAt:date+'T10:00:00Z'
+      });
+    }
+  });
+  // Fix specific room counts to match JSON: 203→15, 204→12, 205→7, 206→7, 208→11
+  saveData(allData);
+  audit('seed','تحميل '+allData.length+' تقييم تجريبي من بيانات JSON');
+  return allData;
+}
+
+/* ===== UI HELPERS ===== */
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el=document.getElementById('view-'+name);
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
+  const titles={home:['الرئيسية','نظرة شاملة على المنصة'],'daily-survey':['تقييم الحصة اليومية','استبيان تفاعلي للطلاب'],'program-survey':['تقييم البرنامج النهائي','استمارة شاملة بـ18 محور'],'dashboard':['لوحة القيادة','مؤشرات حية وتحليلات فورية'],'daily-report':['التقرير اليومي/الأسبوعي','تقرير شامل بالرسوم والتوصيات'],'program-report':['تقرير البرنامج النهائي','تحليل تقييم البرنامج الشامل'],'teachers':['المعلمون','ترتيب وتحليل أداء المعلمين'],'analytics':['التحليلات','رسوم بيانية تفاعلية'],'evals':['سجل التقييمات','كل التقييمات المسجّلة'],'data':['البيانات','تصدير واستيراد وسجل العمليات'],'settings':['الإعدادات','إعدادات البرنامج والرسائل']};
+  const t=titles[name]||['—','—'];
+  document.getElementById('viewTitle').textContent=t[0];
+  document.getElementById('viewSub').textContent=t[1];
+  if(name==='home')renderHome();
+  if(name==='dashboard')renderDashboard();
+  if(name==='daily-report')renderDailyReport();
+  if(name==='program-report')renderProgramReport();
+  if(name==='teachers')renderTeachers();
+  if(name==='analytics')renderAnalytics();
+  if(name==='evals')renderEvals();
+  if(name==='data')renderData();
+  if(name==='settings')renderSettings();
+  if(name==='daily-survey')initDailySurvey();
+  if(name==='program-survey')initProgramSurvey();
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ===== HOME ===== */
+function renderHome(){
+  const data=getData();const k=computeKPIs(data);const teachers=teacherStats(data);const prog=getProgramData();
+  document.getElementById('countChip').textContent=data.length+' تقييم · '+prog.length+' تقييم برنامج';
+  const upPct=k.total>0?Math.round((k.satisfaction))+'%':'—';
+  document.getElementById('homeKpis').innerHTML=`
+    <div class="kpi"><div class="l">تقييمات يومية</div><div class="v">${k.total}</div><div class="d">${k.uniqueDays} أيام</div></div>
+    <div class="kpi"><div class="l">رضا الحصص</div><div class="v">${k.total?Math.round(k.satisfaction)+'%':'—'}</div><div class="d">الهدف: ${getSettings().satisfactionTarget}%</div></div>
+    <div class="kpi"><div class="l">متوسط الصعوبة</div><div class="v">${k.total?k.avgDifficulty.toFixed(1):'—'}</div><div class="d">من 5</div></div>
+    <div class="kpi"><div class="l">معدل يومي</div><div class="v">${k.total?k.dailyRate.toFixed(1):'—'}</div><div class="d">تقييم/يوم</div></div>
+    <div class="kpi"><div class="l">معلمون نشطون</div><div class="v">${teachers.length}</div><div class="d">قاعات: ${k.rooms}</div></div>
+    <div class="kpi"><div class="l">تقييمات البرنامج</div><div class="v">${prog.length}</div><div class="d">نهائي</div></div>`;
+
+  document.getElementById('pipelineFlow').innerHTML=`
+    <div class="node"><strong>📝 استبيان</strong>إدخال</div><div class="arrow">←</div>
+    <div class="node"><strong>💾 قاعدة</strong>${data.length} سجل</div><div class="arrow">←</div>
+    <div class="node"><strong>📊 تقرير</strong>تحليل</div><div class="arrow">←</div>
+    <div class="node"><strong>📈 تحليلات</strong>رسوم</div><div class="arrow">←</div>
+    <div class="node"><strong>🔄 حلقة</strong>تحسين</div>`;
+
+  const s=getSettings();
+  const checks=[
+    {ok:data.length>0,label:'بيانات تقييم يومي متاحة',val:data.length+' سجل'},
+    {ok:teachers.length>0,label:'بيانات المعلمين',val:teachers.length+' معلم'},
+    {ok:k.uniqueDays>=3,label:'تغطية أيام كافية',val:k.uniqueDays+' يوم'},
+    {ok:k.satisfaction>=s.satisfactionTarget,label:'تحقيق هدف الرضا',val:Math.round(k.satisfaction)+'% / '+s.satisfactionTarget+'%'},
+    {ok:true,label:'نظام التخزين المحلي',val:'evalSystem_v2'},
+    {ok:prog.length>=0,label:'تقييم البرنامج النهائي',val:prog.length+' سجل'}
+  ];
+  const okCount=checks.filter(c=>c.ok).length;
+  document.getElementById('healthBadge').textContent=Math.round(okCount/checks.length*100)+'%';
+  document.getElementById('checklist').innerHTML=checks.map(c=>`
+    <div class="insight ${c.ok?'positive':'warning'}" style="display:flex;align-items:center;gap:8px;padding:8px 12px">
+      <span style="font-size:1rem">${c.ok?'✅':'⚠️'}</span>
+      <span style="flex:1;font-size:.82rem;font-weight:700">${c.label}</span>
+      <span style="font-size:.72rem;color:var(--muted);font-weight:800">${c.val}</span>
+    </div>`).join('');
+
+  const insights=generateInsights(data,k,teachers);
+  document.getElementById('homeInsights').innerHTML=insights.map(i=>`
+    <div class="insight ${i.type}"><h4>${i.icon} ${i.title}</h4><p>${i.text}</p></div>`).join('');
+
+  document.getElementById('homeMods').innerHTML=`
+    <div class="mod" onclick="showView('daily-survey')"><div class="ic">📝</div><h4>تقييم الحصة</h4><p>استبيان يومي تفاعلي</p><div class="go">ابدأ ←</div></div>
+    <div class="mod" onclick="showView('program-survey')"><div class="ic">⭐</div><h4>تقييم البرنامج</h4><p>18 محور شامل</p><div class="go">ابدأ ←</div></div>
+    <div class="mod" onclick="showView('dashboard')"><div class="ic">🎛️</div><h4>لوحة القيادة</h4><p>مؤشرات حية</p><div class="go">عرض ←</div></div>
+    <div class="mod" onclick="showView('daily-report')"><div class="ic">📰</div><h4>التقرير</h4><p>تقرير أسبوعي شامل</p><div class="go">عرض ←</div></div>`;
+
+  const daily=dailyDistribution(data);
+  const maxD=Math.max(1,...daily.map(d=>d.count));
+  document.getElementById('dayGrid').innerHTML=daily.map(d=>`
+    <div class="day-cell ${d.count>=maxD*0.7?'hot':''}"><div class="d">${d.label}</div><div class="c">${d.count}</div></div>`).join('');
+
+  const topT=teachers.slice(0,5);
+  const maxO=Math.max(5,...topT.map(t=>t.overall));
+  document.getElementById('homeTeachers').innerHTML=topT.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
+      <div style="flex:1"><div style="font-weight:800;font-size:.88rem">${t.teacher}</div><div style="font-size:.72rem;color:var(--muted)">قاعة ${t.classroom} · ${t.level}</div></div>
+      <div style="text-align:left"><div style="font-weight:900;color:var(--teal)">${t.overall.toFixed(2)}</div><div class="bar" style="width:80px;margin-top:4px"><i style="width:${(t.overall/5)*100}%"></i></div></div>
+    </div>`).join('')||'<div class="empty">لا بيانات</div>';
+}
+
+/* ===== DASHBOARD ===== */
+function renderDashboard(){
+  const data=getData();const k=computeKPIs(data);const teachers=teacherStats(data);
+  document.getElementById('dashKpis').innerHTML=`
+    <div class="kpi"><div class="l">إجمالي</div><div class="v">${k.total}</div></div>
+    <div class="kpi"><div class="l">رضا</div><div class="v">${k.total?Math.round(k.satisfaction)+'%':'—'}</div></div>
+    <div class="kpi"><div class="l">صعوبة</div><div class="v">${k.total?k.avgDifficulty.toFixed(1):'—'}</div></div>
+    <div class="kpi"><div class="l">معدل يومي</div><div class="v">${k.total?k.dailyRate.toFixed(1):'—'}</div></div>
+    <div class="kpi"><div class="l">طلاب</div><div class="v">${k.uniqueStudents}</div></div>
+    <div class="kpi"><div class="l">قاعات</div><div class="v">${k.rooms}</div></div>`;
+
+  const feed=data.slice(0,12);
+  document.getElementById('dashFeed').innerHTML=feed.map(d=>`
+    <div class="feed-item"><div class="meta"><span>${d.classroom} · ${d.teacher}</span><span>${(d.date||'').slice(5)}</span></div>
+    <div class="body">وضوح: ${d.clarity} · تدريس: ${d.teaching} · دافعية: ${d.motivation} · صعوبة: ${d.difficulty}</div></div>`).join('')||'<div class="empty">لا تقييمات بعد</div>';
+
+  const topT=teachers.slice(0,5);
+  document.getElementById('dashTeachers').innerHTML=topT.map((t,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div>
+      <div style="flex:1"><div style="font-weight:800;font-size:.88rem">${t.teacher}</div><div style="font-size:.72rem;color:var(--muted)">${t.count} تقييم</div></div>
+      <div style="font-weight:900;color:var(--teal)">${t.overall.toFixed(2)}</div>
+    </div>`).join('')||'<div class="empty">لا بيانات</div>';
+
+  const daily=dailyDistribution(data);
+  const maxD=Math.max(1,...daily.map(d=>d.count));
+  document.getElementById('dashDays').innerHTML=daily.map(d=>`
+    <div class="day-cell ${d.count>=maxD*0.7?'hot':''}"><div class="d">${d.label}</div><div class="c">${d.count}</div></div>`).join('');
+
+  const skills=skillsBreakdown(data);
+  document.getElementById('dashSkills').innerHTML=skills.slice(0,4).map(s=>`
+    <div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:.82rem;font-weight:800;margin-bottom:4px"><span>${s.name}</span><span style="color:var(--teal)">${s.pct}%</span></div><div class="bar"><i style="width:${s.pct}%"></i></div></div>`).join('')||'<div class="empty">لا بيانات</div>';
+}
+
+/* ===== DAILY REPORT ===== */
+function renderDailyReport(){
+  const data=getData();const k=computeKPIs(data);const teachers=teacherStats(data);const skills=skillsBreakdown(data);
+  const daily=dailyDistribution(data);const diff=difficultyDistribution(data);const axes=axisAverages(data);
+  const insights=generateInsights(data,k,teachers);const recs=generateRecommendations(data,k,teachers,skills);
+
+  document.getElementById('rptPeriod').textContent=data.length?'إجمالي البيانات المتاحة':'لا توجد تقييمات';
+  document.getElementById('rptGenerated').textContent='أُنشئ: '+new Date().toLocaleString('ar-EG');
+
+  if(!data.length){
+    document.getElementById('rptKpis').innerHTML='<div style="padding:28px;text-align:center;color:var(--muted-d);font-weight:700;grid-column:1/-1">لا توجد بيانات — ابدأ بجمع التقييمات</div>';
+    return;
+  }
+
+  document.getElementById('rptKpis').innerHTML=`
+    <div class="rkpi"><div class="wm">${k.total}</div><div class="label">إجمالي التقييمات</div><div class="num">${k.total}</div></div>
+    <div class="rkpi"><div class="wm">${k.avgDifficulty.toFixed(1)}</div><div class="label">متوسط الصعوبة</div><div class="num">${k.avgDifficulty.toFixed(1)}<em>/5</em></div></div>
+    <div class="rkpi"><div class="wm">${Math.round(k.satisfaction)}</div><div class="label">نسبة الرضا</div><div class="num">${Math.round(k.satisfaction)}<em>%</em></div></div>
+    <div class="rkpi"><div class="wm">${k.dailyRate.toFixed(0)}</div><div class="label">معدل المشاركة</div><div class="num">${k.dailyRate.toFixed(1)}</div></div>`;
+
+  const maxD=Math.max(1,...daily.map(d=>d.count));
+  document.getElementById('rptDailyBars').innerHTML=daily.map(d=>`
+    <div class="col"><div class="rbar" style="height:${Math.max(4,(d.count/maxD)*100)}%"><span>${d.count}</span></div><div class="rlbl">${d.label}<br>${d.date.slice(5)}</div></div>`).join('');
+
+  const maxDiff=Math.max(1,...Object.values(diff));
+  const diffLabels={1:'سهل جداً',2:'سهل',3:'متوسط',4:'صعب',5:'صعب جداً'};
+  document.getElementById('rptDiffBars').innerHTML=[1,2,3,4,5].map(i=>`
+    <div class="h-row"><div class="n">${i} · ${diffLabels[i]}</div><div class="h-track"><div class="h-fill ${i>=4?'rose':i<=2?'gold':''}" style="width:${(diff[i]/maxDiff)*100}%"></div></div><div class="v">${diff[i]}</div></div>`).join('');
+
+  document.getElementById('rptAxesCompare').innerHTML=`
+    <div class="metric-card"><div class="t">الوضوح</div><div class="big">${axes.clarity.toFixed(1)}</div><div class="sub">من 5</div></div>
+    <div class="metric-card"><div class="t">التدريس</div><div class="big">${axes.teaching.toFixed(1)}</div><div class="sub">من 5</div></div>
+    <div class="metric-card"><div class="t">الدافعية</div><div class="big">${axes.motivation.toFixed(1)}</div><div class="sub">من 5</div></div>`;
+  const axisList=[{n:'الوضوح',v:axes.clarity,c:''},{n:'التدريس',v:axes.teaching,c:'blue'},{n:'الدافعية',v:axes.motivation,c:'gold'},{n:'الصعوبة',v:axes.difficulty,c:'rose'}];
+  document.getElementById('rptAxesBars').innerHTML=axisList.map(a=>`
+    <div class="h-row"><div class="n">${a.n}</div><div class="h-track"><div class="h-fill ${a.c}" style="width:${(a.v/5)*100}%"></div></div><div class="v">${a.v.toFixed(1)}</div></div>`).join('');
+
+  document.getElementById('rptSkills').innerHTML=skills.slice(0,4).map(s=>`
+    <div class="rskill"><div class="top"><span>${s.name}</span><span class="pct">${s.pct}%</span></div><div class="h-track"><div class="h-fill" style="width:${s.pct}%"></div></div><div style="margin-top:4px;font-size:.72rem;color:var(--muted-d);font-weight:700">${s.count} طلب</div></div>`).join('');
+
+  document.getElementById('rptTeachers').innerHTML=teachers.map((t,i)=>`
+    <tr><td><div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div></td>
+    <td><strong>${t.teacher}</strong><br><span style="font-size:.72rem;color:var(--muted-d)">قاعة ${t.classroom||'—'} · ${t.level||''}</span></td>
+    <td><strong>${t.count}</strong></td><td><strong>${t.overall.toFixed(2)}</strong></td><td>${Math.round(t.satisfaction)}%</td>
+    <td><div class="vis-bar"><div class="vis-fill" style="width:${(t.overall/5)*100}%"></div></div></td></tr>`).join('');
+
+  document.getElementById('rptInsights').innerHTML=insights.map(i=>`
+    <div class="rinsight ${i.type}"><h3>${i.icon} ${i.title}</h3><p>${i.text}</p></div>`).join('');
+
+  document.getElementById('rptRecs').innerHTML=recs.map((r,i)=>`
+    <div class="rrec"><div class="n">${String(i+1).padStart(2,'0')}</div><h3>${r.title}</h3><p>${r.text}</p></div>`).join('');
+}
+
+/* ===== PROGRAM REPORT ===== */
+function renderProgramReport(){
+  const pa=computeProgramAnalytics();
+  const el=document.getElementById('progReportContent');
+  if(!pa.total){
+    el.innerHTML='<div style="padding:40px;text-align:center;color:var(--muted-d);font-weight:700;font-size:1rem;line-height:1.7">لا توجد تقييمات نهائية للبرنامج بعد.<br>افتح استمارة تقييم البرنامج وابدأ بجمع البيانات.<br><br><button class="btn btn-primary btn-lg" onclick="showView(\'program-survey\')">⭐ بدء تقييم البرنامج</button></div>';
+    return;
+  }
+  el.innerHTML=`
+    <div class="rkpi-row">
+      <div class="rkpi"><div class="label">إجمالي التقييمات</div><div class="num">${pa.total}</div></div>
+      <div class="rkpi"><div class="label">الرضا العام</div><div class="num">${Math.round(pa.overallSatisfaction)}<em>%</em></div></div>
+      <div class="rkpi"><div class="label">متوسط المحاور</div><div class="num">${pa.overallMean.toFixed(1)}<em>/5</em></div></div>
+      <div class="rkpi"><div class="label">أعلى تقييم</div><div class="num">${pa.best?pa.best.mean.toFixed(1):'—'}</div></div>
+    </div>
+    <div class="rcard"><h2>📊 ترتيب المحاور <span class="rbadge">${pa.ranked.length} محور</span></h2>
+      <div class="h-bars">${pa.ranked.map(d=>`
+        <div class="h-row"><div class="n">${d.icon} ${d.ar}</div><div class="h-track"><div class="h-fill" style="width:${(d.mean/5)*100}%"></div></div><div class="v">${d.mean.toFixed(1)}</div></div>`).join('')}</div>
+    </div>
+    <div class="rcard"><h2>📁 تحليل المجموعات</h2>
+      <div class="h-bars">${pa.groupStats.filter(g=>g.mean>0).map(g=>`
+        <div class="h-row"><div class="n">${g.group}</div><div class="h-track"><div class="h-fill gold" style="width:${(g.mean/5)*100}%"></div></div><div class="v">${g.mean.toFixed(1)}</div></div>`).join('')||'<div style="color:var(--muted-d)">لا بيانات</div>'}</div>
+    </div>`;
+}
+
+/* ===== TEACHERS ===== */
+function renderTeachers(){
+  const data=getData();const teachers=teacherStats(data);
+  document.getElementById('teachersBody').innerHTML=teachers.map((t,i)=>`
+    <tr><td><div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':''}">${i+1}</div></td>
+    <td><strong>${t.teacher}</strong></td><td>${t.classroom||'—'}</td><td>${t.level||''}</td><td>${t.count}</td>
+    <td>${t.clarity.toFixed(1)}</td><td>${t.teaching.toFixed(1)}</td><td>${t.motivation.toFixed(1)}</td>
+    <td><strong>${t.overall.toFixed(2)}</strong></td><td>${Math.round(t.satisfaction)}%</td>
+    <td><div class="bar"><i style="width:${(t.overall/5)*100}%"></i></div></td></tr>`).join('')||'<tr><td colspan="11" class="empty">لا بيانات</td></tr>';
+
+  if(teachers[0]){
+    const t=teachers[0];
+    document.getElementById('bestCard').innerHTML=`
+      <div style="text-align:center;padding:16px">
+        <div style="font-size:2.5rem;margin-bottom:8px">🏆</div>
+        <div style="font-size:1.1rem;font-weight:900">${t.teacher}</div>
+        <div style="color:var(--muted);font-size:.82rem;margin-top:4px">قاعة ${t.classroom} · ${t.level}</div>
+        <div style="font-size:1.8rem;font-weight:900;color:var(--teal);margin-top:10px">${t.overall.toFixed(2)}</div>
+        <div style="font-size:.78rem;color:var(--muted)">من 5 · ${t.count} تقييم · ${Math.round(t.satisfaction)}% رضا</div>
+      </div>`;
+  }
+  if(teachers.length>1){
+    const t=teachers[teachers.length-1];
+    document.getElementById('supportCard').innerHTML=`
+      <div style="text-align:center;padding:16px">
+        <div style="font-size:2rem;margin-bottom:8px">🤝</div>
+        <div style="font-size:1rem;font-weight:900">${t.teacher}</div>
+        <div style="color:var(--muted);font-size:.82rem;margin-top:4px">قاعة ${t.classroom} · ${t.level}</div>
+        <div style="font-size:1.5rem;font-weight:900;color:var(--rose);margin-top:10px">${t.overall.toFixed(2)}</div>
+        <div style="font-size:.78rem;color:var(--muted)">يحتاج متابعة ودعم</div>
+      </div>`;
+  }
+}
+
+/* ===== ANALYTICS ===== */
+let charts={};
+function renderAnalytics(){
+  const data=getData();
+  Object.values(charts).forEach(c=>{try{c.destroy()}catch{}});
+  charts={};
+  if(!data.length)return;
+  const axes=axisAverages(data);const skills=skillsBreakdown(data);const diff=difficultyDistribution(data);const daily=dailyDistribution(data);const teachers=teacherStats(data);
+  const baseOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b9bb4',font:{family:'Cairo'}}}},
+    scales:{x:{ticks:{color:'#8b9bb4',font:{family:'Cairo'}},grid:{color:'rgba(148,163,184,.1)'}},y:{ticks:{color:'#8b9bb4',font:{family:'Cairo'}},grid:{color:'rgba(148,163,184,.1)'},beginAtZero:true}}};
+
+  charts.axes=new Chart(document.getElementById('chartAxes'),{type:'bar',
+    data:{labels:['الوضوح','التدريس','الدافعية','الصعوبة'],datasets:[{data:[axes.clarity,axes.teaching,axes.motivation,axes.difficulty],backgroundColor:['#2dd4bf','#60a5fa','#fbbf24','#fb7185'],borderRadius:8}]},
+    options:baseOpts});
+  charts.skills=new Chart(document.getElementById('chartSkills'),{type:'doughnut',
+    data:{labels:skills.map(s=>s.name),datasets:[{data:skills.map(s=>s.count),backgroundColor:['#2dd4bf','#60a5fa','#fbbf24','#a78bfa','#34d399','#fb7185']}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#8b9bb4',font:{family:'Cairo'}}}}}});
+  charts.diff=new Chart(document.getElementById('chartDiff'),{type:'bar',
+    data:{labels:['سهل جداً','سهل','متوسط','صعب','صعب جداً'],datasets:[{data:[diff[1],diff[2],diff[3],diff[4],diff[5]],backgroundColor:['#34d399','#2dd4bf','#fbbf24','#fb7185','#e11d48',],borderRadius:8}]},
+    options:baseOpts});
+  charts.daily=new Chart(document.getElementById('chartDaily'),{type:'line',
+    data:{labels:daily.map(d=>d.label),datasets:[{data:daily.map(d=>d.count),borderColor:'#2dd4bf',backgroundColor:'rgba(45,212,191,.15)',fill:true,tension:.4,pointRadius:5,pointBackgroundColor:'#2dd4bf'}]},
+    options:baseOpts});
+  if(teachers.length>=3){
+    charts.radar=new Chart(document.getElementById('chartRadar'),{type:'radar',
+      data:{labels:['الوضوح','التدريس','الدافعية'],datasets:teachers.slice(0,5).map((t,i)=>({
+        label:t.teacher,data:[t.clarity,t.teaching,t.motivation],
+        borderColor:['#2dd4bf','#60a5fa','#fbbf24','#a78bfa','#fb7185'][i],
+        backgroundColor:['rgba(45,212,191,.1)','rgba(96,165,250,.1)','rgba(251,191,36,.1)','rgba(167,139,250,.1)','rgba(251,113,133,.1)'][i],
+        pointRadius:4}))},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b9bb4',font:{family:'Cairo'}}}},
+        scales:{r:{ticks:{color:'#8b9bb4',backdropColor:'transparent'},grid:{color:'rgba(148,163,184,.15)'},angleLines:{color:'rgba(148,163,184,.15)'},pointLabels:{color:'#e8eef8',font:{family:'Cairo'}},min:0,max:5}}}});
+  }
+}
+
+/* ===== EVALS ===== */
+function renderEvals(){
+  const data=getData();
+  document.getElementById('evalsCount').textContent=data.length;
+  const sel=document.getElementById('evalRoom');
+  sel.innerHTML='<option value="">كل القاعات</option>'+ROOMS.map(r=>`<option value="${r}">${r} · ${TEACHERS[r]}</option>`).join('');
+  const filterEvals=()=>{
+    const q=(document.getElementById('evalSearch').value||'').toLowerCase();
+    const room=document.getElementById('evalRoom').value;
+    const filtered=data.filter(d=>(!q||String(d.name||'').toLowerCase().includes(q)||String(d.teacher||'').toLowerCase().includes(q)||String(d.classroom||'').includes(q))&&(!room||d.classroom===room));
+    document.getElementById('evalsBody').innerHTML=filtered.map((d,i)=>`
+      <tr><td>${i+1}</td><td>${d.name||'—'}</td><td dir="ltr" style="text-align:right;font-size:.78rem">${d.phone||'—'}</td><td>${d.classroom}</td><td>${d.teacher}</td>
+      <td>${d.clarity}</td><td>${d.teaching}</td><td>${d.motivation}</td><td>${d.difficulty}</td><td>${(d.date||'').slice(0,10)}</td></tr>`).join('')||'<tr><td colspan="10" class="empty">لا نتائج</td></tr>';
+  };
+  document.getElementById('evalSearch').oninput=filterEvals;
+  sel.onchange=filterEvals;
+  filterEvals();
+}
+
+/* ===== DATA ===== */
+function renderData(){
+  const data=getData();const prog=getProgramData();const audit=getAudit();
+  document.getElementById('dataInfo').innerHTML=`<p>📊 التقييمات اليومية: <strong>${data.length}</strong> سجل<br>⭐ تقييمات البرنامج: <strong>${prog.length}</strong> سجل<br>🔑 المخزن: <code style="color:var(--teal)">evalSystem_v2</code> + <code style="color:var(--teal)">programEval_v1</code></p>`;
+  document.getElementById('auditFeed').innerHTML=audit.slice(0,20).map(a=>`
+    <div class="feed-item"><div class="meta"><span>${a.type}</span><span>${new Date(a.at).toLocaleString('ar-EG')}</span></div><div class="body">${a.message}</div></div>`).join('')||'<div class="empty">لا سجل</div>';
+}
+
+/* ===== SETTINGS ===== */
+function renderSettings(){
+  const s=getSettings();const loop=getLoopMessage();
+  document.getElementById('sName').value=s.programName;
+  document.getElementById('sDaily').value=s.dailyTarget;
+  document.getElementById('sWeekly').value=s.weeklyTarget;
+  document.getElementById('sSatisfaction').value=s.satisfactionTarget;
+  document.getElementById('sDiffAlert').value=s.difficultyAlert;
+  document.getElementById('sLoopMsg').value=loop?loop.message:s.closingLoopMessage;
+  document.getElementById('loopPreview').textContent=loop?loop.message:s.closingLoopMessage;
+}
+
+/* ===== DAILY SURVEY ===== */
+let dsStep=1;let dsSelectedRoom='';const DS_TOTAL=5;
+function initDailySurvey(){
+  dsStep=1;dsSelectedRoom='';
+  const grid=document.getElementById('dsRooms');
+  grid.innerHTML=ROOMS.map(r=>`<button type="button" class="room" data-room="${r}" onclick="dsSelectRoom('${r}')"><div class="ic">🏫</div><div>قاعة ${r}<br><span style="font-size:.72rem;font-weight:700;color:#5b7c78">${TEACHERS[r]} · ${LEVELS[r]}</span></div><div class="lvl">${LEVELS[r]}</div></button>`).join('');
+  buildFaces('dsFacesClarity','clarity',[{v:'ممتاز',e:'🤩',a:'واضح جداً'},{v:'جيد',e:'😊',a:'واضح'},{v:'متوسط',e:'😐',a:'نصف واضح'},{v:'ضعيف',e:'😕',a:'غير واضح'}]);
+  buildFaces('dsFacesTeaching','teaching',[{v:'ممتاز',e:'🌟',a:'رائع'},{v:'جيد',e:'👍',a:'جيد'},{v:'متوسط',e:'👌',a:'عادي'},{v:'ضعيف',e:'👎',a:'ضعيف'}]);
+  buildFaces('dsFacesMotivation','motivation',[{v:'ممتاز',e:'🚀',a:'ممتاز'},{v:'جيد',e:'😄',a:'جيد'},{v:'متوسط',e:'🙂',a:'عادي'},{v:'ضعيف',e:'😴',a:'ممل'}]);
+  const diffGrid=document.getElementById('dsFacesDiff');
+  diffGrid.innerHTML=[{v:'1',e:'🍃',a:'سهل جداً'},{v:'2',e:'🌱',a:'سهل'},{v:'3',e:'⚖️',a:'متوسط'},{v:'4',e:'🔥',a:'صعب'},{v:'5',e:'⛰️',a:'صعب جداً'}].map(f=>`<div class="diff" data-name="difficulty" data-val="${f.v}" onclick="dsSelectFace(this,'difficulty')"><span class="e">${f.e}</span><span class="a">${f.a}</span></div>`).join('');
+  const sk=document.getElementById('dsSkills');
+  sk.innerHTML=[{v:'Listening',e:'👂',a:'استماع'},{v:'Speaking',e:'🗣️',a:'تحدّث'},{v:'Reading',e:'📖',a:'قراءة'},{v:'Writing',e:'✍️',a:'كتابة'}].map(s=>`<div class="skill" data-val="${s.v}" onclick="dsToggleSkill(this)"><span class="e">${s.e}</span>${s.a}<span class="en">${s.v}</span></div>`).join('');
+  dsUpdateProgress();
+}
+function buildFaces(id,name,faces){
+  document.getElementById(id).innerHTML=faces.map(f=>`<div class="face" data-name="${name}" data-val="${f.v}" onclick="dsSelectFace(this,'${name}')"><span class="e">${f.e}</span><span class="a">${f.a}</span></div>`).join('');
+}
+function dsSelectRoom(r){
+  dsSelectedRoom=r;
+  document.querySelectorAll('#dsRooms .room').forEach(el=>el.classList.toggle('on',el.dataset.room===r));
+}
+function dsSelectFace(el,name){
+  document.querySelectorAll(`[data-name="${name}"]`).forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+}
+function dsToggleSkill(el){
+  el.classList.toggle('on');
+}
+function dsUpdateProgress(){
+  const pct=Math.round((dsStep/DS_TOTAL)*100);
+  document.getElementById('dsProg').style.width=pct+'%';
+  const titles={1:'القاعة',2:'الوضوح',3:'المعلم',4:'الصعوبة',5:'المهارات'};
+  document.getElementById('dsProgText').textContent='الخطوة '+dsStep+' · '+titles[dsStep];
+  document.getElementById('dsProgPct').textContent=pct+'%';
+  document.querySelectorAll('#view-daily-survey .step').forEach(s=>s.classList.remove('on'));
+  document.getElementById('ds'+dsStep).classList.add('on');
+}
+function dsNext(){
+  if(dsStep===1&&!dsSelectedRoom){toast('🏫 اختر رقم القاعة أولاً');return}
+  if(dsStep===2&&!document.querySelector('#dsFacesClarity .on')){toast('📖 اختر تقييماً للوضوح');return}
+  if(dsStep===3&&!document.querySelector('#dsFacesTeaching .on')){toast('👨‍🏫 اختر تقييماً للمعلم');return}
+  if(dsStep===3&&!document.querySelector('#dsFacesMotivation .on')){toast('🔥 اختر تقييماً للحصة');return}
+  if(dsStep===4&&!document.querySelector('#dsFacesDiff .on')){toast('🎯 اختر مستوى الصعوبة');return}
+  if(dsStep<DS_TOTAL){dsStep++;dsUpdateProgress()}
+}
+function dsPrev(){if(dsStep>1){dsStep--;dsUpdateProgress()}}
+function dsSubmit(){
+  const entry={
+    id:Date.now(),name:(document.getElementById('dsName').value||'').trim()||'طالب',
+    phone:(document.getElementById('dsPhone').value||'').trim(),
+    email:'guest_'+Date.now()+'@local.student',date:isoDate(new Date()),
+    classroom:dsSelectedRoom,teacher:TEACHERS[dsSelectedRoom]||'غير محدد',level:LEVELS[dsSelectedRoom]||'',
+    clarity:document.querySelector('#dsFacesClarity .on')?.dataset.val||'',
+    teaching:document.querySelector('#dsFacesTeaching .on')?.dataset.val||'',
+    motivation:document.querySelector('#dsFacesMotivation .on')?.dataset.val||'',
+    difficulty:document.querySelector('#dsFacesDiff .on')?.dataset.val||'',
+    skills:[...document.querySelectorAll('#dsSkills .skill.on')].map(s=>s.dataset.val),
+    learned:(document.getElementById('dsLearned').value||'').trim(),
+    submittedAt:new Date().toISOString()
+  };
+  addEntry(entry);
+  toast('✅ تم إرسال التقييم بنجاح!');
+  dsStep=1;dsSelectedRoom='';initDailySurvey();
+  setTimeout(()=>showView('dashboard'),1200);
+}
+
+/* ===== PROGRAM SURVEY ===== */
+let psStep=1;let psSelectedImpression='';const PS_DOMAIN_STEPS=6;
+function initProgramSurvey(){
+  psStep=1;psSelectedImpression='';
+  // Build domain steps
+  const groups={};
+  PROGRAM_DIMENSIONS.forEach(d=>{if(!groups[d.group])groups[d.group]=[];groups[d.group].push(d)});
+  const groupList=Object.entries(groups);
+  const container=document.getElementById('psDomainSteps');
+  container.innerHTML=groupList.map(([group,dims],gi)=>{
+    const stepNum=gi+2;
+    return `<div class="step" id="psDomain${gi}">
+      <div class="pcard">
+        <h2><span class="sec">${stepNum}</span> ${group} <span class="en">${dims[0].group}</span></h2>
+        <p class="phint">قيّم كل بند من 1 (سيء) إلى 5 (ممتاز)</p>
+        ${dims.map(d=>`
+          <div class="dim-row">
+            <div class="dim-head"><div class="ic">${d.icon}</div><div><span class="dim-tag">${d.group}</span><div class="t">${d.ar}</div><div class="e">${d.en}</div></div></div>
+            <div class="pfaces" data-dim="${d.id}">
+              ${[1,2,3,4,5].map(n=>`<div class="pface" data-val="${n}" onclick="psSelectDimFace(this,'${d.id}')"><span class="e">${['😡','😕','😐','😊','🤩'][n-1]}</span><span class="a">${n}</span></div>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="pnav"><button class="pbtn pbtn-back" onclick="psPrev()">رجوع</button><button class="pbtn pbtn-next" onclick="psNext()">التالي · Next</button></div>
+    </div>`;
+  }).join('');
+  // Build rail
+  const totalSteps=groupList.length+2;
+  const rail=document.getElementById('psRail');
+  rail.innerHTML=`<div class="dot on" data-step="1" onclick="psGoStep(1)"><span class="ic">👤</span> البيانات</div>`+
+    groupList.map(([g],i)=>`<div class="dot" data-step="${i+2}" onclick="psGoStep(${i+2})"><span class="ic">${PROGRAM_DIMENSIONS.filter(d=>d.group===g)[0].icon}</span> ${g}</div>`).join('')+
+    `<div class="dot" data-step="${totalSteps}" onclick="psGoStep(${totalSteps})"><span class="ic">🌟</span> الانطباع</div>`;
+  psUpdateProgress();
+}
+function psSelectDimFace(el,dimId){
+  document.querySelectorAll(`[data-dim="${dimId}"] .pface`).forEach(f=>f.classList.remove('on'));
+  el.classList.add('on');
+}
+function psSelectImpression(el){
+  document.querySelectorAll('#psImpression label').forEach(l=>l.classList.remove('on'));
+  el.classList.add('on');
+  psSelectedImpression=el.dataset.v;
+}
+function psUpdateProgress(){
+  const total=PS_DOMAIN_STEPS+2;
+  const pct=Math.round((psStep/total)*100);
+  document.getElementById('psProg').style.width=pct+'%';
+  document.getElementById('psProgText').textContent='الخطوة '+psStep+' من '+total;
+  document.getElementById('psProgPct').textContent=pct+'%';
+  document.querySelectorAll('.prog-surface .step').forEach(s=>s.classList.remove('on'));
+  if(psStep===1)document.getElementById('ps1').classList.add('on');
+  else if(psStep<=PS_DOMAIN_STEPS+1)document.getElementById('psDomain'+(psStep-2)).classList.add('on');
+  else document.getElementById('psFinal').classList.add('on');
+  document.querySelectorAll('#psRail .dot').forEach((d,i)=>{d.classList.remove('on','done');if(i+1===psStep)d.classList.add('on');else if(i+1<psStep)d.classList.add('done')});
+}
+function psNext(){if(psStep<PS_DOMAIN_STEPS+2){psStep++;psUpdateProgress()}}
+function psPrev(){if(psStep>1){psStep--;psUpdateProgress()}}
+function psGoStep(n){psStep=n;psUpdateProgress()}
+function psSubmit(){
+  const entry={id:Date.now(),name:(document.getElementById('psName').value||'').trim()||'مشارك',
+    nationality:(document.getElementById('psNationality').value||'').trim(),
+    phone:(document.getElementById('psPhone').value||'').trim(),
+    email:(document.getElementById('psEmail').value||'').trim(),
+    impression:psSelectedImpression||'',
+    positive:(document.getElementById('psPositive').value||'').trim(),
+    improve:(document.getElementById('psImprove').value||'').trim(),
+    suggestions:(document.getElementById('psSuggestions').value||'').trim(),
+    submittedAt:new Date().toISOString()};
+  PROGRAM_DIMENSIONS.forEach(d=>{
+    const sel=document.querySelector(`[data-dim="${d.id}"] .pface.on`);
+    entry[d.id]=sel?sel.dataset.val:0;
+  });
+  addProgramEntry(entry);
+  toast('✅ تم إرسال استمارة تقييم البرنامج بنجاح!');
+  psStep=1;initProgramSurvey();
+  setTimeout(()=>showView('program-report'),1200);
+}
+
+/* ===== NAV & EVENTS ===== */
+document.querySelectorAll('.nav-btn[data-view]').forEach(b=>b.addEventListener('click',()=>showView(b.dataset.view)));
+document.getElementById('menuBtn').addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show')});
+document.getElementById('overlay').addEventListener('click',()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show')});
+document.getElementById('btnRefresh').addEventListener('click',()=>{showView(document.querySelector('.view.active').id.replace('view-',''));toast('🔄 تمت المزامنة')});
+document.getElementById('btnNewEval').addEventListener('click',()=>showView('daily-survey'));
+document.getElementById('btnSeed').addEventListener('click',()=>{seedFromJson();toast('🎲 تم تحميل '+getData().length+' تقييم تجريبي');showView('home')});
+document.getElementById('btnReset').addEventListener('click',()=>{if(confirm('مسح كل البيانات؟')){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(PROGRAM_KEY);toast('🗑️ تم المسح');showView('home')}});
+
+document.getElementById('btnExportJson').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({daily:getData(),program:getProgramData()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='eval-export-'+isoDate(new Date())+'.json';a.click();
+  toast('⬇️ تم التصدير');
+});
+document.getElementById('btnExportCsv').addEventListener('click',()=>{
+  const data=getData();const headers=['id','name','date','classroom','teacher','level','clarity','teaching','motivation','difficulty','skills','learned'];
+  const csv=headers.join(',')+'\n'+data.map(d=>headers.map(h=>{const v=d[h];return Array.isArray(v)?`"${v.join(';')}"`:`${v||''}`}).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='eval-'+isoDate(new Date())+'.csv';a.click();
+  toast('⬇️ تم تصدير CSV');
+});
+document.getElementById('btnImport').addEventListener('click',()=>document.getElementById('fileImport').click());
+document.getElementById('fileImport').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=ev=>{try{const j=JSON.parse(ev.target.result);if(j.daily)saveData(j.daily);if(j.program)saveProgramData(j.program);toast('⬆️ تم الاستيراد');showView('data')}catch{toast('⚠️ ملف غير صالح')}};r.readAsText(f);
+});
+
+document.getElementById('btnSaveSettings').addEventListener('click',()=>{
+  saveSettings({programName:document.getElementById('sName').value,dailyTarget:+document.getElementById('sDaily').value,weeklyTarget:+document.getElementById('sWeekly').value,satisfactionTarget:+document.getElementById('sSatisfaction').value,difficultyAlert:+document.getElementById('sDiffAlert').value});
+  toast('💾 تم حفظ الإعدادات');
+});
+document.getElementById('btnSaveLoop').addEventListener('click',()=>{
+  const msg=document.getElementById('sLoopMsg').value;
+  saveLoop(msg,isoDate(new Date()));
+  document.getElementById('loopPreview').textContent=msg;
+  toast('💾 تم حفظ رسالة إغلاق الحلقة');
+});
+document.getElementById('sLoopMsg').addEventListener('input',e=>{document.getElementById('loopPreview').textContent=e.target.value});
+
+/* ===== INIT ===== */
+(function init(){
+  if(!getData().length){
+    seedFromJson();
+  }
+  showView('home');
+})();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
