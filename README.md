@@ -1,9 +1,12 @@
-# منصة تقويم البرامج التدريبية
-منصة عربية RTL لإدارة البرامج والتقييم اليومي والنهائي والتقارير.
+# Global Training Evaluation Platform — Next.js
 
-## التشغيل
-1. `docker compose up -d`
-2. انسخ `server/.env.example` إلى `server/.env` ثم `cd server && npm install && npx prisma migrate dev --name init && npm run seed && npm run dev`
-3. في نافذة أخرى: `cd client && npm install && npm run dev`
+## Local start
+```bash
+cp .env.example .env.local
+npm install
+npm run dev
+```
 
-حسابات التجربة: `admin@training.com / Admin@123`، `trainer@training.com / Trainer@123`، `trainee@training.com / Trainee@123`.
+## Vercel environment variables
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Supabase Settings → API.
+Never add `SUPABASE_SERVICE_ROLE_KEY` to the browser or commit it.
