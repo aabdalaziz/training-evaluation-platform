@@ -23,8 +23,6 @@ const CSS = `
 .tab-off:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
 .inp { background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; color: #1e293b; font-size: 13.5px; fontFamily: inherit; outline: none; width: 100%; transition: .2s; margin-bottom: 10px; }
 .inp:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-.btn { background: linear-gradient(135deg,#10b981,#0d9488); color: #fff; border: none; border-radius: 12px; padding: 12px 24px; cursor: pointer; font-weight: 800; font-size: 14px; width: 100%; transition: .2s; }
-.btn:hover { opacity: .9; }
 .tbl { width: 100%; border-collapse: collapse; margin-top: 10px; }
 .th { padding: 12px; text-align: right; font-weight: 700; font-size: 13px; color: #64748b; border-bottom: 2px solid #eef2f6; }
 .td { padding: 14px 12px; font-size: 13.5px; border-bottom: 1px solid #f1f5f9; }
@@ -395,7 +393,7 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
       <Card>
         <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>💬 ملاحظات ومرئيات المشاركين النصية</h3>
         {r.comments.length > 0 ? r.comments.map((c, i) => (
-          <div key={i} style={{ background: "#fff", border_right: "4px solid " + p.accent, borderRadius: 12, padding: 12, marginBottom: 8, fontSize: 13, color: "#475569", lineHeight: 1.7 }}>{c}</div>
+          <div key={i} style={{ background: "#fff", borderRight: "4px solid " + p.accent, borderRadius: 12, padding: 12, marginBottom: 8, fontSize: 13, color: "#475569", lineHeight: 1.7 }}>{c}</div>
         )) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: 20 }}>لا توجد تعليقات أو ملاحظات نصية مسجلة.</p>}
       </Card>
     </div>
