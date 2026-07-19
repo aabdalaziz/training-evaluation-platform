@@ -39,6 +39,7 @@ type Rep = { count: number; avg: number; axes: Ax[]; comments: string[]; dist: n
 
 const TEAL = "#10b981";
 const DARK = "#0b1220";
+const WEEKDAYS_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
 function statusOf(v: number): { t: string; bg: string; fg: string } {
   const val = Number(v) || 0;
@@ -63,7 +64,6 @@ export default function ReportsPage() {
 
   const [load, setLoad] = useState(true);
   const [err, setErr] = useState("");
-  const [msg, setMsg] = useState("");
   const [tab, setTab] = useState("dashboard");
 
   const db = supabase();
@@ -94,9 +94,13 @@ export default function ReportsPage() {
     setMounted(true);
     let on = true;
     (async () => {
-      const s = await db.auth.getSession();
-      if (!s.data?.session) { router.push("/login"); return; }
-      if (on) { await fetchAllData(); setLoad(false); }
+      try {
+        const s = await db.auth.getSession();
+        if (!s.data?.session) { router.push("/login"); return; }
+        if (on) { await fetchAllData(); setLoad(false); }
+      } catch (e: any) {
+        if (on) { setErr(e.message || "خطأ في الجلسة"); setLoad(false); }
+      }
     })();
     return () => { on = false; };
   }, []);
@@ -136,7 +140,7 @@ export default function ReportsPage() {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
-      dayMap[key] = { wd: d.toLocaleDateString("ar-SA", { weekday: "long" }), dt: pad(d.getMonth() + 1) + "-" + pad(d.getDate()), count: 0 };
+      dayMap[key] = { wd: WEEKDAYS_AR[d.getDay()] || "يوم", dt: pad(d.getMonth() + 1) + "-" + pad(d.getDate()), count: 0 };
     }
     
     list.forEach(r => {
@@ -233,6 +237,12 @@ export default function ReportsPage() {
     );
   }
 
+  // دالة توليد التاريخ واليوم العربي بشكل فني آمن
+  const getArabicHeaderDate = () => {
+    const d = new Date();
+    return `${WEEKDAYS_AR[d.getDay()]} - ${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+  };
+
   return (
     <div className="rw" style={S.wrap}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -243,7 +253,7 @@ export default function ReportsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
             <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg,#10b981,#0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🏆</div>
             <div>
-              <div style={{ fontWeight: "900", fontSize: "15px" }}>لوحة الأداء والجودة</div>
+              <div style={{ fontWeight: 900, fontSize: "15px" }}>لوحة الأداء والجودة</div>
               <div style={{ fontSize: "11px", color: "#94a3b8" }}>النظام المركزي الموحد</div>
             </div>
           </div>
@@ -256,8 +266,8 @@ export default function ReportsPage() {
           </div>
 
           <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,.08)", paddingTop: "14px" }}>
-            <button onClick={() => router.push("/admin/management")} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#cbd5e1", cursor: "pointer", padding: "10px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", marginBottom: "8px" }}>🏫 إدارة القاعات والمدربين</button>
-            <button onClick={() => router.push("/dashboard")} style={{ width: "100%", background: "transparent", border: "none", color: "#64748b", cursor: "pointer", textAlign: "right", padding: "8px 10px", fontSize: "13px", fontWeight: "600" }}>← لوحة التحكم العامة</button>
+            <button onClick={() => router.push("/admin/management")} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#cbd5e1", cursor: "pointer", padding: "10px", borderRadius: "10px", fontSize: "13px", fontWeight: 700, marginBottom: "8px" }}>🏫 إدارة القاعات والمدربين</button>
+            <button onClick={() => router.push("/dashboard")} style={{ width: "100%", background: "transparent", border: "none", color: "#64748b", cursor: "pointer", textAlign: "right", padding: "8px 10px", fontSize: "13px", fontWeight: 600 }}>← لوحة التحكم العامة</button>
           </div>
         </aside>
 
@@ -269,7 +279,7 @@ export default function ReportsPage() {
             <div style={S.headerBgText}>REPORT</div>
             <div style={{ position: "relative" }}>
               <span style={S.headerBadge}>تقرير الأداء السنوي والتحليلي المطور</span>
-              <h1 style={{ fontSize: "30px", fontWeight: "900", margin: 0 }}>{tab === "dashboard" ? "التقرير العام المتكامل" : tab === "teachers" ? "أداء المعلمين المرتبط بالقاعة" : `تقييم ${tab === "daily" ? "الحصة اليومية" : "البرنامج النهائي"}`}</h1>
+              <h1 style={{ fontSize: "30px", fontWeight: 900, margin: 0 }}>{tab === "dashboard" ? "التقرير العام المتكامل" : tab === "teachers" ? "أداء المعلمين المرتبط بالقاعة" : `تقييم ${tab === "daily" ? "الحصة اليومية" : "البرنامج النهائي"}`}</h1>
               <p style={{ color: "#94a3b8", margin: "4px 0 0", fontSize: "13px" }}>توليد تلقائي فوري لمعايير الجودة والامتثال والرضا والتقييم الفردي</p>
             </div>
           </div>
@@ -321,11 +331,11 @@ function Overview(p: { daily: Rep; final: Rep; classrooms: any[]; best: any }) {
         {p.best ? (
           <div style={S.bestCard}>
             <span style={{ fontSize: "44px" }}>🏆</span>
-            <span style={{ fontSize: "11px", color: "#10b981", fontWeight: "800", textTransform: "uppercase", letterSpacing: "1.5px" }}>عضو هيئة التدريس الأكثر تميزاً</span>
-            <h2 style={{ fontSize: "24px", fontWeight: "900", margin: "6px 0 2px", color: "#fff" }}>{p.best.name || "—"}</h2>
+            <span style={{ fontSize: "11px", color: "#10b981", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1.5px" }}>عضو هيئة التدريس الأكثر تميزاً</span>
+            <h2 style={{ fontSize: "24px", fontWeight: 900, margin: "6px 0 2px", color: "#fff" }}>{p.best.name || "—"}</h2>
             <p style={{ color: "#94a3b8", fontSize: "12px", margin: "0 0 12px" }}>قاعة {p.best.rooms || "—"} ({p.best.levels || "—"})</p>
             <div style={{ background: "rgba(16,185,129,.15)", border: "1px solid #10b981", borderRadius: "12px", padding: "8px 20px" }}>
-              <span style={{ fontSize: "13px", color: "#5eead4", fontWeight: "700" }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"} / 5</span>
+              <span style={{ fontSize: "13px", color: "#5eead4", fontWeight: 700 }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"} / 5</span>
             </div>
           </div>
         ) : (
@@ -356,14 +366,14 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
 
       <div className="g2" style={{ marginBottom: "16px" }}>
         <Card>
-          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>🎯 توزيع التقييم الإجمالي بالنجوم</h3>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>🎯 توزيع التقييم الإجمالي بالنجوم</h3>
           {[5, 4, 3, 2, 1].map(s => {
             const idx = s - 1;
             const distVal = r.dist && r.dist[idx] ? r.dist[idx] : 0;
             const w = maxDi > 0 ? (distVal / maxDi) * 100 : 0;
             return (
               <div key={s} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                <span style={{ width: "55px", fontSize: "11px", fontWeight: "700", color: "#7c6f5a" }}>{s} نجوم</span>
+                <span style={{ width: "55px", fontSize: "11px", fontWeight: 700, color: "#7c6f5a" }}>{s} نجوم</span>
                 <div style={{ flex: 1, height: "11px", background: "#f0e9db", borderRadius: "8px", overflow: "hidden" }}>
                   <div style={{ width: (isNaN(w) ? 0 : w) + "%", height: "100%", background: dColors[idx], borderRadius: "8px" }} />
                 </div>
@@ -374,7 +384,7 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
         </Card>
 
         <Card>
-          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>💡 التحليل الذكي والتوصيات</h3>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>💡 التحليل الذكي والتوصيات</h3>
           <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "12px", padding: "12px", marginBottom: "10px" }}><b style={{ color: "#047857", fontSize: "13px" }}>✅ نقطة القوة المتميزة</b><p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#334155" }}>{top ? top.label + " (" + Number(top.value).toFixed(2) + "/5)" : "—"}</p></div>
           <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "12px", padding: "12px" }}><b style={{ color: "#b45309", fontSize: "13px" }}>🎯 مجال التطوير المستهدف</b><p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#334155" }}>{low ? low.label + " (" + Number(low.value).toFixed(2) + "/5)" : "—"}</p></div>
         </Card>
@@ -382,7 +392,7 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
 
       <div className="g2" style={{ marginBottom: "16px" }}>
         <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}><h3 style={{ margin: 0, fontSize: "16px", fontWeight: "800" }}>📊 التوزيع اليومي</h3><span style={{ background: "#d1fae5", color: "#047857", borderRadius: "999px", padding: "3px 12px", fontSize: "11px", fontWeight: "800" }}>7 أيام</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}><h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>📊 التوزيع اليومي</h3><span style={{ background: "#d1fae5", color: "#047857", borderRadius: "999px", padding: "3px 12px", fontSize: "11px", fontWeight: 800 }}>7 أيام</span></div>
           <svg viewBox="0 0 360 180" style={{ width: "100%", height: "auto" }}>
             <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#0d9488"/></linearGradient></defs>
             {(r.days || []).map((d, i) => {
@@ -403,13 +413,13 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
         </Card>
         
         <Card>
-          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>⚖️ مقارنة المحاور الأساسية</h3>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>⚖️ مقارنة المحاور الأساسية</h3>
           {(r.sections || []).length > 0 ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               {r.sections.map((s, i) => (
                 <div key={i} style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
-                  <div style={{ fontSize: "12px", color: "#9a8f7d", fontWeight: "700", marginBottom: "6px" }}>{s.name}</div>
-                  <div style={{ fontSize: "28px", fontWeight: "900", color: "#10b981" }}>{Number(s.value || 0).toFixed(1)}</div>
+                  <div style={{ fontSize: "12px", color: "#9a8f7d", fontWeight: 700, marginBottom: "6px" }}>{s.name}</div>
+                  <div style={{ fontSize: "28px", fontWeight: 900, color: "#10b981" }}>{Number(s.value || 0).toFixed(1)}</div>
                 </div>
               ))}
             </div>
@@ -418,14 +428,14 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
       </div>
 
       <Card style={{ marginBottom: "16px" }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>📈 نتائج أداء المحاور التفصيلي</h3>
+        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>📈 نتائج أداء المحاور التفصيلي</h3>
         {(r.axes || []).length > 0 ? r.axes.map((a, i) => {
           if (!a) return null;
           const s = statusOf(a.value);
           return (
             <div key={i} style={S.axisRow}>
               <div style={S.axisMeta}>
-                <div style={S.axisLabelWrap}><span style={S.secTag}>{a.section}</span><span style={{ fontSize: "13.5px", fontWeight: "700" }}>{a.label}</span></div>
+                <div style={S.axisLabelWrap}><span style={S.secTag}>{a.section}</span><span style={{ fontSize: "13.5px", fontWeight: 700 }}>{a.label}</span></div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ ...S.statusPill, background: s.bg, color: s.fg }}>{s.t}</span><b style={{ minWidth: "50px", textAlign: "left", color: p.accent, fontSize: "15px" }}>{Number(a.value || 0).toFixed(2)}/5</b></div>
               </div>
               <div style={S.track}><div style={{ ...S.fillGrad, width: (Number(a.value || 0) / 5 * 100) + "%", background: "linear-gradient(90deg," + p.accent + ",#10b981)" }} /></div>
@@ -435,7 +445,7 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
       </Card>
 
       <Card>
-        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>💬 ملاحظات ومرئيات المشاركين النصية</h3>
+        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>💬 ملاحظات ومرئيات المشاركين النصية</h3>
         {(r.comments || []).length > 0 ? r.comments.map((c, i) => (
           <div key={i} style={S.commentCard}>{c}</div>
         )) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: "20px" }}>لا توجد تعليقات أو ملاحظات نصية مسجلة.</p>}
@@ -452,15 +462,15 @@ function TeachersView(p: { data: any[]; best: any }) {
         <div style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", borderRadius: "22px", padding: "20px", color: "#fff", marginBottom: "16px", display: "flex", alignItems: "center", gap: "16px", border: "1px solid #10b981" }}>
           <span style={{ fontSize: "40px" }}>🏆</span>
           <div>
-            <div style={{ fontSize: "11px", color: "#10b981", fontWeight: "800" }}>عضو هيئة التدريس الأعلى أداءً بالقاعات</div>
-            <h3 style={{ margin: "2px 0 0", fontSize: "20px", fontWeight: "900" }}>{p.best.name || "—"}</h3>
+            <div style={{ fontSize: "11px", color: "#10b981", fontWeight: 800 }}>عضو هيئة التدريس الأعلى أداءً بالقاعات</div>
+            <h3 style={{ margin: "2px 0 0", fontSize: "20px", fontWeight: 900 }}>{p.best.name || "—"}</h3>
             <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8" }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"}/5 (إجمالي الاستجابات: {p.best.count} تقييم)</p>
           </div>
         </div>
       )}
 
       <Card>
-        <h3 style={{ margin: "0 0 14px", fontSize: "16px", fontWeight: "800" }}>📋 ترتيب المعلمين ومقارنة الأداء الأكاديمي المباشر</h3>
+        <h3 style={{ margin: "0 0 14px", fontSize: "16px", fontWeight: 800 }}>📋 ترتيب المعلمين ومقارنة الأداء الأكاديمي المباشر</h3>
         <div style={{ overflowX: "auto" }}>
           <table className="tbl">
             <thead>
@@ -486,14 +496,14 @@ function TeachersView(p: { data: any[]; best: any }) {
                     <td className="td" style={{ fontWeight: "800", color: idx === 0 ? "#10b981" : "#475569" }}>{idx + 1}</td>
                     <td className="td" style={{ fontWeight: "800", color: "#111" }}>{t.name || "—"}</td>
                     <td className="td" style={{ fontWeight: "700" }}>{t.rooms || "—"}</td>
-                    <td className="td"><span style={{ background: "#e2e8f0", padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700" }}>{t.levels || "—"}</span></td>
+                    <td className="td"><span style={{ background: "#e2e8f0", padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 700 }}>{t.levels || "—"}</span></td>
                     <td className="td">{t.count || 0}</td>
-                    <td className="td" style={{ color: "#2563eb", fontWeight: "700" }}>{t.count ? Number(t.clarity || 0).toFixed(2) : "—"}</td>
-                    <td className="td" style={{ color: "#10b981", fontWeight: "700" }}>{t.count ? Number(t.teach || 0).toFixed(2) : "—"}</td>
-                    <td className="td" style={{ color: "#b45309", fontWeight: "700" }}>{t.count ? Number(t.drive || 0).toFixed(2) : "—"}</td>
-                    <td className="td" style={{ fontSize: "15px", fontWeight: "900", color: "#0f172a" }}>{t.count ? Number(t.avg || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#2563eb", fontWeight: 700 }}>{t.count ? Number(t.clarity || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#10b981", fontWeight: 700 }}>{t.count ? Number(t.teach || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#b45309", fontWeight: 700 }}>{t.count ? Number(t.drive || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ fontSize: "15px", fontWeight: 900, color: "#0f172a" }}>{t.count ? Number(t.avg || 0).toFixed(2) : "—"}</td>
                     <td className="td">
-                      <span style={{ background: t.count ? s.bg : "#f1f5f9", color: t.count ? s.fg : "#64748b", borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: "800" }}>
+                      <span style={{ background: t.count ? s.bg : "#f1f5f9", color: t.count ? s.fg : "#64748b", borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: 800 }}>
                         {t.count ? s.t : "لا يوجد تقييم"}
                       </span>
                     </td>
@@ -531,7 +541,7 @@ function Card(p: { children: any; style?: any }) {
 
 function CD(p: { children: any; st?: any }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: "20px", padding: "18px", boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: "14px", ...p.st }}>
+    <div style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: "20px", padding: "18px", boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: 14, ...p.st }}>
       {p.children}
     </div>
   );
@@ -540,7 +550,7 @@ function CD(p: { children: any; st?: any }) {
 // ==========================================
 // الأنماط البرمجية المقاومة للـ Hydration والـ snake_case
 // ==========================================
-const S: Record<string, CSSProperties> = {
+const S = {
   wrap: { direction: "rtl", fontFamily: "Cairo, Tahoma, sans-serif", background: "#f2ecdf", minHeight: "100vh", padding: "16px", color: "#1a1a1a" },
   loading: { background: "#f2ecdf", minHeight: "100vh", padding: "80px", textAlign: "center", color: "#64748b" },
   spinner: { width: "48px", height: "48px", border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
@@ -556,8 +566,8 @@ const S: Record<string, CSSProperties> = {
   axisMeta: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" },
   axisLabelWrap: { display: "flex", alignItems: "center", gap: "8px" },
   secTag: { background: "#f0e9db", color: "#7c6f5a", borderRadius: "7px", padding: "2px 9px", fontSize: "11px", fontWeight: "700" },
-  statusPill: { borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: "800" },
+  statusPill: { borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: 800 },
   track: { height: "10px", background: "#f0e9db", borderRadius: "8px", overflow: "hidden" },
   fillGrad: { height: "100%", borderRadius: "8px" },
-  commentCard: { background: "#fff", borderRight: "4px solid #10b981", borderRadius: "12px", padding: "12px", marginBottom: "8px", fontSize: "13px", color: "#475569", lineHeight: "1.7" }
+  commentCard: { background: "#fff", borderRight: "4px solid #10b981", borderRadius: "12px", padding: "12px", marginBottom: "8px", fontSize: "13px", color: "#475569", lineHeight: 1.7 }
 };
