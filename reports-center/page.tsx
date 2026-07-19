@@ -51,6 +51,7 @@ function pad(n: number): string { return n < 10 ? "0" + n : "" + n; }
 
 export default function ReportsPage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [rows, setRows] = useState<Ev[]>([]);
   const [ans, setAns] = useState<An[]>([]);
   const [qs, setQs] = useState<Qu[]>([]);
@@ -90,6 +91,7 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     let on = true;
     (async () => {
       const s = await db.auth.getSession();
@@ -221,18 +223,18 @@ export default function ReportsPage() {
     return valid.length > 0 ? valid[0] : null;
   }, [teacherPerformance]);
 
-  if (load) {
+  if (!mounted || load) {
     return (
-      <div className="rw" style={{ background: "#f2ecdf", minHeight: "100vh", padding: 80, textAlign: "center", color: "#64748b" }}>
+      <div className="rw" style={S.loading}>
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <div style={{ width: 48, height: 48, border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }}></div>
+        <div style={S.spinner}></div>
         <p>جارٍ تحميل لوحة جودة الأداء والتحليلات...</p>
       </div>
     );
   }
 
   return (
-    <div className="rw" style={{ background: "#f2ecdf", minHeight: "100vh", padding: 16, color: "#1a1a1a" }}>
+    <div className="rw" style={S.wrap}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="lay">
         
@@ -263,10 +265,10 @@ export default function ReportsPage() {
         <div className="main">
           
           {/* ترويسة الصفحة التنفيذية المقتبسة من مرجعك الفاخر */}
-          <div style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#0b1220,#111827)", borderRadius: 24, padding: 24, color: "#fff", marginBottom: 16 }}>
-            <div style={{ position: "absolute", left: 16, top: 0, fontSize: 80, fontWeight: 900, color: "rgba(255,255,255,.04)", letterSpacing: 4 }}>REPORT</div>
+          <div style={S.headerCard}>
+            <div style={S.headerBgText}>REPORT</div>
             <div style={{ position: "relative" }}>
-              <span style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 999, padding: "4px 12px", fontSize: 11, fontWeight: 700, color: "#e2e8f0", display: "inline-block", marginBottom: 6 }}>تقرير الأداء السنوي والتحليلي المطور</span>
+              <span style={S.headerBadge}>تقرير الأداء السنوي والتحليلي المطور</span>
               <h1 style={{ fontSize: 30, fontWeight: 900, margin: 0 }}>{tab === "dashboard" ? "التقرير العام المتكامل" : tab === "teachers" ? "أداء المعلمين المرتبط بالقاعة" : `تقييم ${tab === "daily" ? "الحصة اليومية" : "البرنامج النهائي"}`}</h1>
               <p style={{ color: "#94a3b8", margin: "4px 0 0", fontSize: 13 }}>توليد تلقائي فوري لمعايير الجودة والامتثال والرضا والتقييم الفردي</p>
             </div>
@@ -281,7 +283,7 @@ export default function ReportsPage() {
           {/* 3. تقرير البرنامج النهائي */}
           {tab === "final" && <ReportView rep={final} accent="#10b981" name="التقرير النهائي للبرنامج" sub="مؤشر رضا المستفيدين الأكاديمي الشامل عن البرنامج ككل" />}
 
-          {/* 4. تقرير أداء المعلمين والقاعات (الإضافة المحدثة الفاخرة) */}
+          {/* 4. تقرير أداء المعلمين والقاعات */}
           {tab === "teachers" && <TeachersView data={teacherPerformance} best={bestTeacher} />}
 
         </div>
@@ -316,7 +318,7 @@ function Overview(p: { daily: Rep; final: Rep; classrooms: any[]; best: any }) {
         </Card>
 
         {p.best ? (
-          <Card style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", border: "1px solid #10b981" }}>
+          <div style={S.bestCard}>
             <span style={{ fontSize: 44 }}>🏆</span>
             <span style={{ fontSize: 11, color: "#10b981", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5 }}>عضو هيئة التدريس الأكثر تميزاً</span>
             <h2 style={{ fontSize: 24, fontWeight: 900, margin: "6px 0 2px", color: "#fff" }}>{p.best.name || "—"}</h2>
@@ -324,7 +326,7 @@ function Overview(p: { daily: Rep; final: Rep; classrooms: any[]; best: any }) {
             <div style={{ background: "rgba(16,185,129,.15)", border: "1px solid #10b981", borderRadius: 12, padding: "8px 20px" }}>
               <span style={{ fontSize: 13, color: "#5eead4", fontWeight: 700 }}>متوسط التقييم العام: {p.best.avg ? p.best.avg.toFixed(2) : "0.00"} / 5</span>
             </div>
-          </Card>
+          </div>
         ) : (
           <Card><p style={{ color: "#94a3b8", textAlign: "center", padding: 40 }}>لا توجد تقييمات مسجلة للمدربين بعد.</p></Card>
         )}
@@ -420,12 +422,12 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
           if (!a) return null;
           const s = statusOf(a.value);
           return (
-            <div key={i} style={{ background: "#fff", border: "1px solid #f0e9db", borderRadius: 14, padding: 13, marginBottom: 10 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ background: "#f0e9db", color: "#7c6f5a", borderRadius: 7, padding: "2px 9px", fontSize: 11, fontWeight: 700 }}>{a.section}</span><span style={{ fontSize: 13.5, fontWeight: 700 }}>{a.label}</span></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ background: s.bg, color: s.fg, borderRadius: 999, padding: "3px 11px", fontSize: 11, fontWeight: 800 }}>{s.t}</span><b style={{ minWidth: 50, textAlign: "left", color: p.accent, fontSize: 15 }}>{a.value.toFixed(2)}/5</b></div>
+            <div key={i} style={S.axisRow}>
+              <div style={S.axisMeta}>
+                <div style={S.axisLabelWrap}><span style={S.secTag}>{a.section}</span><span style={{ fontSize: 13.5, fontWeight: 700 }}>{a.label}</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ ...S.statusPill, background: s.bg, color: s.fg }}>{s.t}</span><b style={{ minWidth: 50, textAlign: "left", color: p.accent, fontSize: 15 }}>{a.value.toFixed(2)}/5</b></div>
               </div>
-              <div style={{ height: 10, background: "#f0e9db", borderRadius: 8, overflow: "hidden" }}><div style={{ width: (a.value / 5 * 100) + "%", height: "100%", background: "linear-gradient(90deg," + p.accent + ",#10b981)", borderRadius: 8 }} /></div>
+              <div style={S.track}><div style={{ ...S.fillGrad, width: (a.value / 5 * 100) + "%", background: "linear-gradient(90deg," + p.accent + ",#10b981)" }} /></div>
             </div>
           );
         }) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: 20 }}>لا توجد بيانات لهذا التبويب حالياً.</p>}
@@ -434,7 +436,7 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
       <Card>
         <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>💬 ملاحظات ومرئيات المشاركين النصية</h3>
         {r.comments.length > 0 ? r.comments.map((c, i) => (
-          <div key={i} style={{ background: "#fff", borderRight: "4px solid " + p.accent, borderRadius: 12, padding: 12, marginBottom: 8, fontSize: 13, color: "#475569", lineHeight: 1.7 }}>{c}</div>
+          <div key={i} style={S.commentCard}>{c}</div>
         )) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: 20 }}>لا توجد تعليقات أو ملاحظات نصية مسجلة.</p>}
       </Card>
     </div>
@@ -507,14 +509,14 @@ function TeachersView(p: { data: any[]; best: any }) {
 
 function KpiCard(p: { label: string; value: any; suffix?: string; subtitle?: string; ghost: string }) {
   return (
-    <Card style={{ position: "relative", overflow: "hidden", borderRight: "4px solid #10b981" }}>
-      <div style={{ position: "absolute", left: 10, top: 4, fontSize: 60, fontWeight: 900, color: "rgba(16,185,129,0.04)" }}>{p.ghost || ""}</div>
+    <div style={S.kpiCard}>
+      <div style={S.kpiGhost}>{p.ghost || ""}</div>
       <div style={{ position: "relative" }}>
-        <div style={{ fontSize: 13, color: "#9a8f7d", fontWeight: 700, marginBottom: 4 }}>{p.label || ""}</div>
-        <div style={{ fontSize: 38, fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>{p.value}{p.suffix || ""}</div>
+        <div style={S.kpiLabel}>{p.label || ""}</div>
+        <div style={S.kpiVal}>{p.value}{p.suffix || ""}</div>
         {p.subtitle && <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{p.subtitle}</div>}
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -533,3 +535,28 @@ function CD(p: { children: any; st?: any }) {
     </div>
   );
 }
+
+// ==========================================
+// الأنماط البرمجية المقاومة للـ Hydration والـ snake_case
+// ==========================================
+const S: Record<string, CSSProperties> = {
+  wrap: { direction: "rtl", fontFamily: "Cairo, Tahoma, sans-serif", background: "#f2ecdf", minHeight: "100vh", padding: 16, color: "#1a1a1a" },
+  loading: { background: "#f2ecdf", minHeight: "100vh", padding: 80, textAlign: "center", color: "#64748b" },
+  spinner: { width: 48, height: 48, border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
+  headerCard: { position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#0b1220,#111827)", borderRadius: 24, padding: 24, color: "#fff", marginBottom: 16 },
+  headerBgText: { position: "absolute", left: 16, top: 0, fontSize: 80, fontWeight: 900, color: "rgba(255,255,255,.04)", letterSpacing: 4 },
+  headerBadge: { background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 999, padding: "4px 12px", fontSize: 11, fontWeight: 700, color: "#e2e8f0", display: "inline-block", marginBottom: 6 },
+  kpiCard: { position: "relative", overflow: "hidden", borderRight: "4px solid #10b981", background: "#fffdf9", borderTop: "1px solid #e8decb", borderBottom: "1px solid #e8decb", borderLeft: "1px solid #e8decb", borderRadius: 22, padding: 22, boxShadow: "0 6px 18px rgba(60,40,10,0.04)" },
+  kpiGhost: { position: "absolute", left: 10, top: 4, fontSize: 60, fontWeight: 900, color: "rgba(16,185,129,0.04)" },
+  kpiLabel: { fontSize: 13, color: "#9a8f7d", fontWeight: 700, marginBottom: 4 },
+  kpiVal: { fontSize: 38, fontWeight: 900, color: "#0f172a", lineHeight: 1 },
+  bestCard: { background: "linear-gradient(135deg, #0f172a, #1e293b)", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", border: "1px solid #10b981", borderRadius: 22, padding: 22 },
+  axisRow: { background: "#fff", border: "1px solid #f0e9db", borderRadius: 14, padding: 13, marginBottom: 10 },
+  axisMeta: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 6 },
+  axisLabelWrap: { display: "flex", alignItems: "center", gap: 8 },
+  secTag: { background: "#f0e9db", color: "#7c6f5a", borderRadius: 7, padding: "2px 9px", fontSize: 11, fontWeight: 700 },
+  statusPill: { borderRadius: 999, padding: "3px 11px", fontSize: 11, fontWeight: 800 },
+  track: { height: 10, background: "#f0e9db", borderRadius: 8, overflow: "hidden" },
+  fillGrad: { height: "100%", borderRadius: 8 },
+  commentCard: { background: "#fff", borderRight: "4px solid #10b981", borderRadius: 12, padding: 12, marginBottom: 8, fontSize: 13, color: "#475569", lineHeight: 1.7 }
+};
