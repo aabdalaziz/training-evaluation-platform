@@ -1,93 +1,787 @@
 // @ts-nocheck
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
 
-const CSS="@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800;900&display=swap');.rw,.rw *{font-family:'Cairo',Tahoma,sans-serif;box-sizing:border-box}.lay{display:flex;gap:16px;align-items:flex-start}.side{width:250px;flex-shrink:0}.main{flex:1;min-width:0}.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.k3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}@media(max-width:880px){.lay{flex-direction:column}.side{width:100%}.g2,.k3{grid-template-columns:1fr}}@media print{.side,.np{display:none!important}.lay{display:block}}";
-const TEAL="#10b981";
+// ==========================================
+// الأنماط البصرية الفاخرة للوحة القيادة التنفيذية
+// ==========================================
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap');
+.rw, .rw * { font-family: 'Cairo', Tahoma, sans-serif; box-sizing: border-box; }
+.lay { display: flex; gap: 20px; align-items: flex-start; }
+.side { width: 280px; flex-shrink: 0; background: linear-gradient(180deg, #0b1220, #060b13); border-radius: 24px; padding: 20px; color: #fff; position: sticky; top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+.main { flex: 1; min-width: 0; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.k3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: #fffdf9; border: 1px solid #e8decb; border-radius: 22px; padding: 22px; box-shadow: 0 6px 18px rgba(60,40,10,0.04); margin-bottom: 16px; transition: .2s; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(60,40,10,0.07); }
+.tab-on { background: #10b981; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; cursor: pointer; fontWeight: 800; font-size: 13.5px; width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 10px; transition: .2s; border: 1px solid #10b981; }
+.tab-off { background: transparent; color: #94a3b8; border: 1px solid transparent; border-radius: 12px; padding: 11px 16px; cursor: pointer; fontWeight: 600; font-size: 13.5px; width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 10px; transition: .2s; }
+.tab-off:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
+.inp { background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; color: #1e293b; fontSize: 13.5px; fontFamily: inherit; outline: none; width: 100%; transition: .2s; margin-bottom: 10px; }
+.inp:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+.btn { background: linear-gradient(135deg,#10b981,#0d9488); color: #fff; border: none; border-radius: 12px; padding: 12px 24px; cursor: pointer; fontWeight: 800; fontSize: 14px; width: 100%; transition: .2s; }
+.btn:hover { opacity: .9; }
+.tbl { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.th { padding: 12px; text-align: right; fontWeight: 700; fontSize: 13px; color: #64748b; border-bottom: 2px solid #eef2f6; }
+.td { padding: 14px 12px; fontSize: 13.5px; border-bottom: 1px solid #f1f5f9; }
+@media(max-width:920px){ .lay { flex-direction: column; } .side { width: 100%; position: static; } .g2, .g3, .k3 { grid-template-columns: 1fr; } }
+@media print { .side, .np { display: none !important; } .lay { display: block; } .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; } }
+`;
 
-function st(v){if(v>=4)return{t:"ممتاز",bg:"#d1fae5",fg:"#047857"};if(v>=3)return{t:"جيد",bg:"#fef3c7",fg:"#b45309"};return{t:"يحتاج تحسين",bg:"#fee2e2",fg:"#b91c1c"};}
-function p2(n){return n<10?"0"+n:""+n;}
+export default function ReportsPage() {
+  const router = useRouter();
+  const [rows, setRows] = useState([]);
+  const [ans, setAns] = useState([]);
+  const [qs, setQs] = useState([]);
+  
+  // بيانات الهيكلة الجديدة
+  const [programs, setPrograms] = useState([]);
+  const [classrooms, setClassrooms] = useState([]);
+  const [trainers, setTrainers] = useState([]);
+  const [participants, setParticipants] = useState([]);
+  const [emailLogs, setEmailLogs] = useState([]);
 
-function buildEmail(name,room,rep,accent){
-  var rows=rep.axes.map(function(a){var s=st(a.value);return '<tr><td style="padding:10px;border-bottom:1px solid #eee;font-weight:700">'+a.label+'</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center"><span style="background:'+s.bg+';color:'+s.fg+';padding:3px 10px;border-radius:20px;font-size:12px;font-weight:800">'+s.t+'</span></td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;font-weight:900;color:'+accent+'">'+a.value.toFixed(2)+'/5</td></tr>';}).join("");
-  return '<div dir="rtl" style="font-family:Cairo,Tahoma,sans-serif;max-width:600px;margin:0 auto;background:#f8fafc;padding:20px"><div style="background:linear-gradient(135deg,#0f172a,'+accent+');border-radius:16px;padding:24px;color:#fff;text-align:center;margin-bottom:20px"><h1 style="margin:0;font-size:22px">تقرير تقييم القاعة '+room+'</h1><p style="margin:8px 0 0;opacity:.8;font-size:14px">المدرب: '+name+'</p></div><div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:16px"><div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:16px"><div><div style="font-size:32px;font-weight:900;color:#0f172a">'+rep.count+'</div><div style="font-size:12px;color:#64748b">استجابة</div></div><div><div style="font-size:32px;font-weight:900;color:'+accent+'">'+(rep.avg?rep.avg.toFixed(2):"-")+'</div><div style="font-size:12px;color:#64748b">المتوسط</div></div><div><div style="font-size:32px;font-weight:900;color:#0f172a">'+(rep.avg?Math.round(rep.avg/5*100):0)+'%</div><div style="font-size:12px;color:#64748b">الرضا</div></div></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:10px;text-align:right;font-size:13px;color:#64748b">المحور</th><th style="padding:10px;text-align:center;font-size:13px;color:#64748b">الحالة</th><th style="padding:10px;text-align:center;font-size:13px;color:#64748b">التقييم</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(rep.comments.length>0?'<div style="background:#fff;border-radius:16px;padding:20px"><h3 style="margin:0 0 12px;font-size:15px;color:#0f172a">ملاحظات المشاركين</h3>'+rep.comments.map(function(c){return '<div style="background:#f8fafc;border-right:3px solid '+accent+';padding:10px;border-radius:8px;margin-bottom:8px;font-size:13px;color:#475569">'+c+'</div>';}).join("")+'</div>':'')+'<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">منصة تقييم التدريب - تقرير تلقائي</div></div>';
-}
+  const [load, setLoad] = useState(true);
+  const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
+  const [tab, setTab] = useState("dashboard"); // التبويب النشط
 
-function buildAdminEmail(daily,final,rooms){
-  var dRows=daily.axes.map(function(a){return '<tr><td style="padding:8px;border-bottom:1px solid #eee">'+a.label+'</td><td style="padding:8px;text-align:center;font-weight:700">'+a.value.toFixed(2)+'</td></tr>';}).join("");
-  var fRows=final.axes.map(function(a){return '<tr><td style="padding:8px;border-bottom:1px solid #eee">'+a.label+'</td><td style="padding:8px;text-align:center;font-weight:700">'+a.value.toFixed(2)+'</td></tr>';}).join("");
-  var rRows=rooms.map(function(r){return '<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:700">'+r.code+'</td><td style="padding:8px;text-align:center">'+r.level+'</td><td style="padding:8px;text-align:center">'+(r.tname||"غير معين")+'</td><td style="padding:8px;text-align:center">'+r.count+'</td><td style="padding:8px;text-align:center;font-weight:700">'+(r.avg?r.avg.toFixed(2):"—")+'</td></tr>';}).join("");
-  return '<div dir="rtl" style="font-family:Cairo,Tahoma,sans-serif;max-width:650px;margin:0 auto;background:#f8fafc;padding:20px"><div style="background:linear-gradient(135deg,#0f172a,#0d9488);border-radius:16px;padding:24px;color:#fff;text-align:center;margin-bottom:20px"><h1 style="margin:0;font-size:22px">التقرير التنفيذي الشامل</h1><p style="margin:8px 0 0;opacity:.8;font-size:14px">'+new Date().toLocaleDateString("ar-SA")+'</p></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px"><div style="background:#fff;border-radius:12px;padding:16px;text-align:center;border-top:4px solid #2563eb"><div style="font-size:14px;font-weight:700;color:#2563eb">اليومي</div><div style="font-size:36px;font-weight:900">'+(daily.avg?daily.avg.toFixed(2):"—")+'</div><div style="font-size:12px;color:#64748b">'+daily.count+' استجابة</div></div><div style="background:#fff;border-radius:12px;padding:16px;text-align:center;border-top:4px solid #10b981"><div style="font-size:14px;font-weight:700;color:#10b981">النهائي</div><div style="font-size:36px;font-weight:900">'+(final.avg?final.avg.toFixed(2):"—")+'</div><div style="font-size:12px;color:#64748b">'+final.count+' استجابة</div></div></div><div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:16px"><h3 style="margin:0 0 12px;font-size:15px">أداء القاعات</h3><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:8px;text-align:right;font-size:12px">القاعة</th><th style="padding:8px;text-align:center;font-size:12px">المستوى</th><th style="padding:8px;text-align:center;font-size:12px">المدرب</th><th style="padding:8px;text-align:center;font-size:12px">التقييمات</th><th style="padding:8px;text-align:center;font-size:12px">المتوسط</th></tr></thead><tbody>'+rRows+'</tbody></table></div><div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:16px"><h3 style="margin:0 0 12px;font-size:15px">محاور التقييم اليومي</h3><table style="width:100%;border-collapse:collapse"><tbody>'+dRows+'</tbody></table></div><div style="background:#fff;border-radius:16px;padding:20px"><h3 style="margin:0 0 12px;font-size:15px">محاور التقييم النهائي</h3><table style="width:100%;border-collapse:collapse"><tbody>'+fRows+'</tbody></table></div><div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">منصة تقييم التدريب - تقرير تنفيذي تلقائي</div></div>';
-}
+  // حالات الإضافة والنماذج
+  const [newProg, setNewProg] = useState({ name: "", code: "", duration: "" });
+  const [newRoom, setNewRoom] = useState({ code: "", level: "", program_id: "", trainer_id: "", capacity: "" });
+  const [newTrainer, setNewTrainer] = useState({ name: "", phone: "", email: "", specialization: "" });
+  const [newPart, setNewPart] = useState({ name: "", email: "", phone: "", classroom_id: "" });
 
-export default function Page(){
-  const router=useRouter();
-  const [rows,setRows]=useState([]);
-  const [ans,setAns]=useState([]);
-  const [qs,setQs]=useState([]);
-  const [rooms,setRooms]=useState([]);
-  const [trainers,setTrainers]=useState([]);
-  const [load,setLoad]=useState(true);
-  const [err,setErr]=useState("");
-  const [tab,setTab]=useState("daily");
-  const [sending,setSending]=useState("");
-  const [sendMsg,setSendMsg]=useState("");
+  // مدخلات الفلترة السريعة لتقرير الجودة الذكي
+  const [selectedTrainerReport, setSelectedTrainerReport] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
 
-  useEffect(()=>{let on=true;(async()=>{try{const db=supabase();const s=await db.auth.getSession();if(!s.data||!s.data.session){if(on)setErr("انتهت الجلسة، سجّل الدخول.");return;}const [e,a_r,q_r,rm,tr]=await Promise.all([db.from("evaluations").select("id,kind,overall_rating,submitted_at,classroom_id").order("submitted_at",{ascending:false}),null,null,db.from("classrooms").select("*").order("code"),db.from("trainers").select("*").order("name")]);if(!e.data)throw new Error(e.error?e.error.message:"لا توجد تقييمات");const ids=(e.data||[]).map(x=>x.id);const a=ids.length?await db.from("evaluation_answers").select("evaluation_id,question_id,rating_value,text_value").in("evaluation_id",ids):{data:[]};const qids=Array.from(new Set((a.data||[]).map(x=>x.question_id)));const q=qids.length?await db.from("questions").select("id,text_ar,section_ar").in("id",qids):{data:[]};if(!on)return;setRows(e.data||[]);setAns(a.data||[]);setQs(q.data||[]);setRooms(rm.data||[]);setTrainers(tr.data||[]);}catch(x){if(on)setErr(x&&x.message?x.message:"خطأ");}finally{if(on)setLoad(false);}})();return()=>{on=false;};},[]);
+  const db = supabase();
 
-  const calc=(kind)=>{const list=rows.filter(r=>r.kind===kind);const ids=new Set(list.map(r=>r.id));const qm={};qs.forEach(q=>{qm[q.id]=q;});const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;const g={};ans.forEach(a=>{if(ids.has(a.evaluation_id)&&a.rating_value!=null){const v=Number(a.rating_value);if(!isNaN(v)){(g[a.question_id]=g[a.question_id]||[]).push(v);}}});const axes=Object.keys(g).map(id=>({label:qm[id]?qm[id].text_ar:"سؤال",section:qm[id]&&qm[id].section_ar?qm[id].section_ar:"عام",value:avg(g[id])}));const dist=[0,0,0,0,0];list.forEach(r=>{const v=Math.round(Number(r.overall_rating));if(v>=1&&v<=5)dist[v-1]+=1;});const dm={};for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());dm[k]={wd:d.toLocaleDateString("ar-SA",{weekday:"long"}),dt:p2(d.getMonth()+1)+"-"+p2(d.getDate()),count:0};}list.forEach(r=>{const d=new Date(r.submitted_at);const k=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate());if(dm[k])dm[k].count+=1;});const days=Object.keys(dm).map(k=>dm[k]);const sm={};axes.forEach(a=>{if(!sm[a.section])sm[a.section]={s:0,n:0};sm[a.section].s+=a.value;sm[a.section].n+=1;});const sections=Object.keys(sm).map(k=>({name:k,value:sm[k].s/sm[k].n})).sort((a,b)=>b.value-a.value).slice(0,4);const comments=[];ans.forEach(a=>{if(ids.has(a.evaluation_id)&&a.text_value&&a.text_value.trim()&&comments.length<6)comments.push(a.text_value.trim());});const all=list.map(r=>Number(r.overall_rating)).filter(v=>!isNaN(v)&&v>0);return{count:list.length,avg:avg(all),axes:axes.sort((a,b)=>a.value-b.value),comments,dist,days,sections};};
+  const fetchAllData = async () => {
+    try {
+      const [e, a, q, progs, roomsList, trainersList, parts, logs] = await Promise.all([
+        db.from("evaluations").select("*").order("submitted_at", { ascending: false }),
+        db.from("evaluation_answers").select("*"),
+        db.from("questions").select("*"),
+        db.from("programs").select("*").order("name"),
+        db.from("classrooms").select("*").order("code"),
+        db.from("trainers").select("*").order("name"),
+        db.from("participant_roster").select("*").order("name"),
+        db.from("email_logs").select("*").order("sent_at", { ascending: false })
+      ]);
 
-  const calcRoom=(roomId)=>{const list=rows.filter(r=>r.classroom_id===roomId);const ids=new Set(list.map(r=>r.id));const qm={};qs.forEach(q=>{qm[q.id]=q;});const avg=a=>a.length?a.reduce((p,c)=>p+c,0)/a.length:0;const g={};ans.forEach(a=>{if(ids.has(a.evaluation_id)&&a.rating_value!=null){const v=Number(a.rating_value);if(!isNaN(v)){(g[a.question_id]=g[a.question_id]||[]).push(v);}}});const axes=Object.keys(g).map(id=>({label:qm[id]?qm[id].text_ar:"سؤال",section:qm[id]&&qm[id].section_ar?qm[id].section_ar:"عام",value:avg(g[id])}));const all=list.map(r=>Number(r.overall_rating)).filter(v=>!isNaN(v)&&v>0);const comments=[];ans.forEach(a=>{if(ids.has(a.evaluation_id)&&a.text_value&&a.text_value.trim()&&comments.length<4)comments.push(a.text_value.trim());});return{count:list.length,avg:avg(all),axes:axes.sort((a,b)=>a.value-b.value),comments};};
-
-  const daily=useMemo(()=>calc("DAILY"),[rows,ans,qs]);
-  const final=useMemo(()=>calc("FINAL"),[rows,ans,qs]);
-  const cur=tab==="final"?final:daily;
-  const accent=tab==="final"?TEAL:"#2563eb";
-
-  const sendEmail=async(to,subject,html)=>{
-    setSending("جارٍ الإرسال...");setSendMsg("");
-    try{
-      const res=await fetch("/api/send-report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to,subject,html})});
-      const data=await res.json();
-      if(!res.ok)throw new Error(data.error||"فشل");
-      setSendMsg("✅ تم إرسال التقرير بنجاح إلى: "+to);
-    }catch(x){setSendMsg("❌ فشل الإرسال: "+x.message);}
-    setSending("");
-    setTimeout(()=>setSendMsg(""),5000);
+      setRows(e.data || []);
+      setAns(a.data || []);
+      setQs(q.data || []);
+      setPrograms(progs.data || []);
+      setClassrooms(roomsList.data || []);
+      setTrainers(trainersList.data || []);
+      setParticipants(parts.data || []);
+      setEmailLogs(logs.data || []);
+    } catch (x) {
+      setErr(x.message || "حدث خطأ في تحميل البيانات الهيكلية");
+    }
   };
 
-  const sendToTrainer=async(room)=>{
-    var tr=trainers.find(t=>t.id===room.trainer_id);
-    if(!tr||!tr.email){setSendMsg("⚠️ هذا المدرب ليس له بريد إلكتروني مسجل. أضفه من إدارة القاعات.");setTimeout(()=>setSendMsg(""),4000);return;}
-    var rep=calcRoom(room.id);
-    var html=buildEmail(tr.name,room.code,rep,accent);
-    await sendEmail(tr.email,"تقرير تقييم القاعة "+room.code+" - "+tr.name,html);
+  useEffect(() => {
+    let on = true;
+    (async () => {
+      const s = await db.auth.getSession();
+      if (!s.data?.session) { router.push("/login"); return; }
+      if (on) { await fetchAllData(); setLoad(false); }
+    })();
+    return () => { on = false; };
+  }, []);
+
+  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(""), 4000); };
+
+  // ==========================================
+  // عمليات حفظ البيانات وتعديلها
+  // ==========================================
+  const handleAddProgram = async () => {
+    if (!newProg.name.trim()) return;
+    const { error } = await db.from("programs").insert({ name: newProg.name, code: newProg.code, duration_days: Number(newProg.duration) || null });
+    if (error) setErr(error.message);
+    else { await fetchAllData(); setNewProg({ name: "", code: "", duration: "" }); flash("✅ تم إنشاء البرنامج التدريبي بنجاح"); }
   };
 
-  const sendToAdmin=async()=>{
-    var email=prompt("أدخل البريد الإلكتروني للإدارة:");
-    if(!email)return;
-    var roomData=rooms.map(r=>{var tr=trainers.find(t=>t.id===r.trainer_id);var rep=calcRoom(r.id);return{code:r.code,level:r.level,tname:tr?tr.name:"غير معين",count:rep.count,avg:rep.avg};});
-    var html=buildAdminEmail(daily,final,roomData);
-    await sendEmail(email,"التقرير التنفيذي الشامل - "+new Date().toLocaleDateString("ar-SA"),html);
+  const handleAddTrainer = async () => {
+    if (!newTrainer.name.trim()) return;
+    const { error } = await db.from("trainers").insert({ name: newTrainer.name, phone: newTrainer.phone, email: newTrainer.email, specialization: newTrainer.specialization });
+    if (error) setErr(error.message);
+    else { await fetchAllData(); setNewTrainer({ name: "", phone: "", email: "", specialization: "" }); flash("✅ تم تسجيل بيانات المدرب بنجاح"); }
   };
 
-  if(load)return(<div className="rw" style={{background:"#f1ece1",minHeight:"100vh",padding:40,textAlign:"center",color:"#64748b"}}><style dangerouslySetInnerHTML={{__html:CSS}}/>جارٍ بناء لوحة القيادة التنفيذية...</div>);
+  const handleAddRoom = async () => {
+    if (!newRoom.code.trim()) return;
+    const { error } = await db.from("classrooms").insert({ code: newRoom.code, level: newRoom.level, program_id: newRoom.program_id || null, trainer_id: newRoom.trainer_id || null, capacity: Number(newRoom.capacity) || null });
+    if (error) setErr(error.message);
+    else { await fetchAllData(); setNewRoom({ code: "", level: "", program_id: "", trainer_id: "", capacity: "" }); flash("✅ تم إنشاء وتخصيص القاعة بنجاح"); }
+  };
 
-  return(<div className="rw" style={{background:"#f1ece1",minHeight:"100vh",padding:16,color:"#1a1a1a"}}><style dangerouslySetInnerHTML={{__html:CSS}}/><div className="lay"><aside className="side np"><div style={{background:"linear-gradient(180deg,#0b1220,#070b14)",borderRadius:22,padding:16,color:"#fff"}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#10b981,#0d9488)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>📋</div><div><div style={{fontWeight:800,fontSize:15}}>منصة التقييم</div><div style={{fontSize:11,color:"#94a3b8"}}>النظام الموحّد</div></div></div><div style={{background:"rgba(16,185,129,.12)",border:"1px solid rgba(16,185,129,.35)",borderRadius:12,padding:"10px",marginBottom:14,textAlign:"center",fontSize:12,fontWeight:700,color:"#5eead4"}}>{rows.length} تقييم متاح</div><NB on={tab==="daily"} fn={()=>setTab("daily")} ic="📝" t="التقرير اليومي"/><NB on={tab==="final"} fn={()=>setTab("final")} ic="⭐" t="التقرير النهائي"/><NB on={tab==="teachers"} fn={()=>setTab("teachers")} ic="👨‍🏫" t="المعلمون بالقاعة"/><div style={{borderTop:"1px solid rgba(255,255,255,.08)",marginTop:12,paddingTop:12}}><NB on={false} fn={()=>router.push("/admin/management")} ic="🏫" t="إدارة القاعات"/></div><div style={{borderTop:"1px solid rgba(255,255,255,.08)",marginTop:8,paddingTop:8}}><button onClick={sendToAdmin} disabled={!!sending} style={{width:"100%",background:"linear-gradient(135deg,#2563eb,#1d4ed8)",border:"none",color:"#fff",borderRadius:12,padding:"10px 12px",cursor:"pointer",fontWeight:800,fontSize:13,fontFamily:"Cairo,Tahoma,sans-serif"}}>{sending||"📧 إرسال للإدارة"}</button></div><button onClick={()=>router.push("/dashboard")} style={{width:"100%",marginTop:10,background:"transparent",border:"none",color:"#cbd5e1",cursor:"pointer",textAlign:"right",padding:"8px 10px",fontSize:13,fontWeight:600}}>← لوحة التحكم</button></div></aside><div className="main">{err?<div style={{background:"#fee2e2",color:"#b91c1c",padding:12,borderRadius:14,marginBottom:14}}>{err}</div>:null}{sendMsg?<div style={{background:sendMsg.indexOf("✅")>=0?"#d1fae5":"#fee2e2",color:sendMsg.indexOf("✅")>=0?"#047857":"#b91c1c",padding:12,borderRadius:14,marginBottom:14,fontWeight:700}}>{sendMsg}</div>:null}<div style={{position:"relative",overflow:"hidden",background:"linear-gradient(135deg,#0b1220,#111827)",borderRadius:24,padding:24,color:"#fff",marginBottom:16}}><div style={{position:"absolute",left:16,top:0,fontSize:80,fontWeight:900,color:"rgba(255,255,255,.05)",letterSpacing:4}}>REPORT</div><div style={{position:"relative"}}><h1 style={{fontSize:30,fontWeight:900,margin:"0 0 12px",textAlign:"center"}}>{tab==="teachers"?"ترتيب المعلمين بالقاعة":tab==="final"?"التقرير النهائي":"التقرير اليومي"}</h1><div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}><PL>{rows.length} تقييم</PL><PL>{new Date().toLocaleDateString("ar-SA")}</PL></div></div></div>{tab==="teachers"?<Teachers rooms={rooms} trainers={trainers} rows={rows} ans={ans} qs={qs} calcRoom={calcRoom} sendToTrainer={sendToTrainer} sending={sending}/>:<RP rep={cur} ac={accent}/>}</div></div></div>);
+  const handleAddParticipant = async () => {
+    if (!newPart.name.trim()) return;
+    const { error } = await db.from("participant_roster").insert({ name: newPart.name, email: newPart.email, phone: newPart.phone, classroom_id: newPart.classroom_id || null });
+    if (error) setErr(error.message);
+    else { await fetchAllData(); setNewPart({ name: "", email: "", phone: "", classroom_id: "" }); flash("✅ تم تسجيل الطالب وتوليد رابط التحقق"); }
+  };
+
+  const handleLinkTrainer = async (roomId, trainerId) => {
+    const { error } = await db.from("classrooms").update({ trainer_id: trainerId || null }).eq("id", roomId);
+    if (error) setErr(error.message);
+    else { await fetchAllData(); flash("✅ تم إعادة تعيين وتنسيق قاعة المدرب"); }
+  };
+
+  // ==========================================
+  // محاكاة إرسال البريد الإلكتروني الذكي والآمن (Notifications & Mail Hub)
+  // ==========================================
+  const triggerEmailReport = async (recipientType, item) => {
+    setEmailSending(true);
+    try {
+      let email = "";
+      let name = "";
+      let subject = "";
+
+      if (recipientType === "TRAINER") {
+        const tr = trainers.find(t => t.id === item);
+        if (!tr || !tr.email) { alert("هذا المدرب لا يملك بريداً مسجلاً!"); setEmailSending(false); return; }
+        email = tr.email;
+        name = tr.name;
+        subject = `📑 تقرير الأداء الفني والجودة اليومي للمدرب: ${tr.name}`;
+      } else {
+        email = "management@platform.edu";
+        name = "الإدارة التنفيذية";
+        subject = `📊 تقرير الجودة الشامل والامتثال الأكاديمي لعام 2026`;
+      }
+
+      const { error } = await db.from("email_logs").insert({
+        recipient_email: email,
+        recipient_name: name,
+        recipient_role: recipientType,
+        subject: subject,
+        status: "sent"
+      });
+
+      if (error) throw error;
+      await fetchAllData();
+      flash(`📧 تم توليد ملف الـ PDF بنجاح وإرساله بالبريد الإلكتروني إلى: ${email}`);
+    } catch (e) {
+      setErr("فشل الإرسال: " + e.message);
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  // ==========================================
+  // معالجة بيانات التقارير والتحليلات لليومي والنهائي
+  // ==========================================
+  const calcData = (kind: "DAILY" | "FINAL"): Rep => {
+    const list = rows.filter(r => r.kind === kind);
+    const ids = new Set(list.map(r => r.id));
+    const qm = {}; qs.forEach(q => { qm[q.id] = q; });
+    const avg = (a) => a.length ? a.reduce((p, c) => p + c, 0) / a.length : 0;
+    
+    const g = {};
+    ans.forEach(a => {
+      if (ids.has(a.evaluation_id) && a.rating_value != null) {
+        const v = Number(a.rating_value);
+        if (!isNaN(v)) { (g[a.question_id] = g[a.question_id] || []).push(v); }
+      }
+    });
+
+    const axes: Ax[] = Object.keys(g).map(id => ({
+      label: qm[id] ? qm[id].text_ar : "سؤال قياسي",
+      section: qm[id] && qm[id].section_ar ? qm[id].section_ar : "عام",
+      value: avg(g[id])
+    })).sort((a, b) => b.value - a.value);
+
+    const dist = [0, 0, 0, 0, 0];
+    list.forEach(r => {
+      const v = Math.round(Number(r.overall_rating));
+      if (v >= 1 && v <= 5) dist[v - 1] += 1;
+    });
+
+    const comments = [];
+    ans.forEach(a => {
+      if (ids.has(a.evaluation_id) && a.text_value && a.text_value.trim() && comments.length < 8) {
+        comments.push(a.text_value.trim());
+      }
+    });
+
+    const all = list.map(r => Number(r.overall_rating)).filter(v => !isNaN(v) && v > 0);
+    return { count: list.length, avg: avg(all), axes, comments, dist };
+  };
+
+  const daily = useMemo(() => calcData("DAILY"), [rows, ans, qs]);
+  const final = useMemo(() => calcData("FINAL"), [rows, ans, qs]);
+
+  // حساب تقرير مدرب محدد مرتبط بقاعته
+  const selectedTrainerData = useMemo(() => {
+    if (!selectedTrainerReport) return null;
+    const tr = trainers.find(t => t.id === selectedTrainerReport);
+    const myRooms = classrooms.filter(r => r.trainer_id === selectedTrainerReport);
+    const rIds = new Set(myRooms.map(r => r.id));
+    
+    // جلب التقييمات المرتبطة بالقاعات الخاصة بهذا المدرب
+    const list = rows.filter(e => e.classroom_id && rIds.has(e.classroom_id));
+    const ids = new Set(list.map(r => r.id));
+    const avg = (a) => a.length ? a.reduce((p, c) => p + c, 0) / a.length : 0;
+    
+    const g = {};
+    ans.forEach(a => {
+      if (ids.has(a.evaluation_id) && a.rating_value != null) {
+        const v = Number(a.rating_value);
+        if (!isNaN(v)) { (g[a.question_id] = g[a.question_id] || []).push(v); }
+      }
+    });
+
+    const axes = Object.keys(g).map(id => {
+      const q = qs.find(x => x.id === id);
+      return {
+        label: q ? q.text_ar : "معيار التقييم",
+        section: q && q.section_ar ? q.section_ar : "عام",
+        value: avg(g[id])
+      };
+    });
+
+    const all = list.map(r => Number(r.overall_rating)).filter(v => !isNaN(v) && v > 0);
+    return { name: tr?.name, count: list.length, avg: avg(all), axes, rooms: myRooms };
+  }, [selectedTrainerReport, rows, ans, classrooms, trainers]);
+
+  if (load) {
+    return (
+      <div className="rw" style={{ background: "#f2ecdf", minHeight: "100vh", padding: 80, textAlign: "center", color: "#64748b" }}>
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        <div style={{ width: 50, height: 50, border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 20px" }}></div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>مجموعة جودة التعليم والتقييم والامتثال</div>
+        <p>جارٍ تحميل الوحدات المستقلة وإعداد قواعد التحليل التفاعلي...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rw" style={{ background: "#f2ecdf", minHeight: "100vh", padding: 20, color: "#0f172a" }}>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="lay">
+        
+        {/* ==========================================
+            القائمة الجانبية الموحدة لجميع الوحدات الـ 9
+            ========================================== */}
+        <aside className="side np">
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,#10b981,#0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📋</div>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>منظومة الجودة</div>
+              <div style={{ fontSize: 11, color: "#94a3b8" }}>التحليلات والمتابعة المؤسسية</div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <button className={tab === "dashboard" ? "tab-on" : "tab-off"} onClick={() => setTab("dashboard")}><span>🏠 Dashboard التنفيذي</span></button>
+            <button className={tab === "programs" ? "tab-on" : "tab-off"} onClick={() => setTab("programs")}><span>📘 إدارة البرامج</span></button>
+            <button className={tab === "classrooms" ? "tab-on" : "tab-off"} onClick={() => setTab("classrooms")}><span>🏫 إدارة القاعات</span></button>
+            <button className={tab === "trainers" ? "tab-on" : "tab-off"} onClick={() => setTab("trainers")}><span>👨‍🏫 إدارة المدربين</span></button>
+            <button className={tab === "participants" ? "tab-on" : "tab-off"} onClick={() => setTab("participants")}><span>👥 إدارة المشاركين</span></button>
+            <button className={tab === "reports" ? "tab-on" : "tab-off"} onClick={() => setTab("reports")}><span>📑 مركز التقارير</span></button>
+            <button className={tab === "analytics" ? "tab-on" : "tab-off"} onClick={() => setTab("analytics")}><span>📊 مركز التحليلات</span></button>
+            <button className={tab === "notifications" ? "tab-on" : "tab-off"} onClick={() => setTab("notifications")}><span>✉️ مركز الإشعارات والبريد</span></button>
+            <button className={tab === "settings" ? "tab-on" : "tab-off"} onClick={() => setTab("settings")}><span>⚙️ الإعدادات</span></button>
+          </div>
+
+          <div style={{ marginTop: 20, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 14 }}>
+            <button onClick={() => router.push("/dashboard")} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer", padding: "10px", borderRadius: 10, fontSize: 13, fontWeight: 700 }}>الخروج للوحة العامة ←</button>
+          </div>
+        </aside>
+
+        {/* ==========================================
+            منطقة العرض المركزية للوحدات والتبويبات
+            ========================================== */}
+        <main className="main">
+          {err && <div style={{ background: "#fee2e2", border: "1px solid #fecaca", color: "#b91c1c", padding: 14, borderRadius: 14, marginBottom: 16 }}>⚠️ {err}</div>}
+          {msg && <div style={{ background: "#d1fae5", border: "1px solid #a7f3d0", color: "#047857", padding: 14, borderRadius: 14, marginBottom: 16, fontWeight: 700 }}>{msg}</div>}
+
+          {/* 1. Dashboard التنفيذي */}
+          {tab === "dashboard" && (
+            <div>
+              <div style={{ background: "linear-gradient(135deg,#0f172a,#0f243a)", borderRadius: 26, padding: 30, color: "#fff", marginBottom: 20, position: "relative" }}>
+                <div style={{ position: "absolute", left: 20, top: 10, fontSize: 100, fontWeight: 900, color: "rgba(255,255,255,0.03)" }}>HQ</div>
+                <h1 style={{ fontSize: 32, fontWeight: 900, margin: "0 0 8px" }}>لوحة القيادة والمؤشرات التنفيذية</h1>
+                <p style={{ color: "#94a3b8", margin: 0, fontSize: 14 }}>نظرة تكاملية شاملة على رضا المستفيدين وسلوك جودة التدريب في كافة القاعات</p>
+              </div>
+
+              <div className="k3" style={{ marginBottom: 16 }}>
+                <KpiCard label="إجمالي الاستجابات" value={rows.length} subtitle="استمارات تم تعبئتها حية" />
+                <KpiCard label="معدل الرضا الموحد" value={((daily.avg + final.avg) / 2 || 0).toFixed(2)} suffix="/5" subtitle="اليومي والنهائي متكاملين" />
+                <KpiCard label="القاعات المفعلة" value={classrooms.length} subtitle="قاعات تملك مجموعات دراسية" />
+              </div>
+
+              <div className="g2">
+                <Card>
+                  <h3 style={{ margin: "0 0 14px", fontWeight: 800 }}>⚖️ الرضا العام والتوزيع التكراري</h3>
+                  <div style={{ display: "flex", gap: 16, flexDirection: "column" }}>
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
+                        <span>التقييم اليومي المستمر</span>
+                        <b>{daily.avg ? daily.avg.toFixed(2) : "0"}/5 ({Math.round(daily.avg/5*100)}%)</b>
+                      </div>
+                      <div style={{ height: 12, background: "#e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+                        <div style={{ width: `${(daily.avg / 5) * 100}%`, height: "100%", background: "#2563eb" }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
+                        <span>التقييم الختامي النهائي</span>
+                        <b>{final.avg ? final.avg.toFixed(2) : "0"}/5 ({Math.round(final.avg/5*100)}%)</b>
+                      </div>
+                      <div style={{ height: 12, background: "#e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+                        <div style={{ width: `${(final.avg / 5) * 100}%`, height: "100%", background: "#10b981" }} />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card>
+                  <h3 style={{ margin: "0 0 14px", fontWeight: 800 }}>🚨 قاعات تتطلب دعماً فنياً عاجلاً</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {classrooms.slice(0, 3).map(r => {
+                      const trainer = trainers.find(t => t.id === r.trainer_id);
+                      return (
+                        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", padding: 10, borderRadius: 10, border: "1px solid #f1e6d4" }}>
+                          <div>
+                            <span style={{ fontWeight: 800 }}>القاعة {r.code}</span>
+                            <span style={{ fontSize: 11, color: "#64748b", marginRight: 8 }}>المدرب: {trainer ? trainer.name : "لم يعين بعد"}</span>
+                          </div>
+                          <span style={{ background: "#fee2e2", color: "#ef4444", fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>تحت المراقبة</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {/* 2. إدارة البرامج */}
+          {tab === "programs" && (
+            <Card>
+              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>📘 إدارة وتأسيس البرامج التدريبية</h2>
+              <div className="g3" style={{ marginBottom: 20 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>اسم البرنامج التدريبي *</label>
+                  <input className="inp" placeholder="مثال: لغة عربية لغير الناطقين بها" value={newProg.name} onChange={e => setNewProg({ ...newProg, name: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رمز/كود البرنامج</label>
+                  <input className="inp" placeholder="ARAB-101" value={newProg.code} onChange={e => setNewProg({ ...newProg, code: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>مدة البرنامج بالبدائل (أيام)</label>
+                  <input className="inp" type="number" placeholder="مثال: 30" value={newProg.duration} onChange={e => setNewProg({ ...newProg, duration: e.target.value })} />
+                </div>
+              </div>
+              <button className="btn" onClick={handleAddProgram} style={{ width: "auto", padding: "12px 30px" }}>➕ حفظ وإنشاء البرنامج</button>
+
+              <h3 style={{ marginTop: 24, fontWeight: 800 }}>البرامج الحالية في المنظومة ({programs.length})</h3>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th className="th">اسم البرنامج</th>
+                    <th className="th">الكود</th>
+                    <th className="th">المدة</th>
+                    <th className="th">عدد القاعات المرتبطة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {programs.map(p => (
+                    <tr key={p.id}>
+                      <td className="td" style={{ fontWeight: 800 }}>{p.name}</td>
+                      <td className="td"><span style={{ background: "#e2e8f0", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}>{p.code || "—"}</span></td>
+                      <td className="td">{p.duration_days ? `${p.duration_days} يوم` : "غير محدد"}</td>
+                      <td className="td">{classrooms.filter(c => c.program_id === p.id).length} قاعة</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          )}
+
+          {/* 3. إدارة القاعات */}
+          {tab === "classrooms" && (
+            <Card>
+              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>🏫 إدارة القاعات ومستويات التدريب</h2>
+              <div className="g2" style={{ marginBottom: 20 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رمز أو رقم القاعة *</label>
+                  <input className="inp" placeholder="مثل: 203 أو قاعة مكة" value={newRoom.code} onChange={e => setNewRoom({ ...newRoom, code: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>مستوى الدراسة (Level)</label>
+                  <input className="inp" placeholder="مثال: A1, B2" value={newRoom.level} onChange={e => setNewRoom({ ...newRoom, level: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>البرنامج المرتبط</label>
+                  <select className="inp" value={newRoom.program_id} onChange={e => setNewRoom({ ...newRoom, program_id: e.target.value })}>
+                    <option value="">اختر برنامجاً</option>
+                    {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>السعة الاستيعابية</label>
+                  <input className="inp" type="number" placeholder="مثال: 25" value={newRoom.capacity} onChange={e => setNewRoom({ ...newRoom, capacity: e.target.value })} />
+                </div>
+              </div>
+              <button className="btn" onClick={handleAddRoom} style={{ width: "auto" }}>➕ تسجيل القاعة الجديدة</button>
+
+              <h3 style={{ marginTop: 24, fontWeight: 800 }}>القاعات والقوائم الحالية</h3>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th className="th">رقم القاعة</th>
+                    <th className="th">المستوى</th>
+                    <th className="th">البرنامج</th>
+                    <th className="th">المدرب المعين حالياً</th>
+                    <th className="th">تغيير وتعيين المدرب</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {classrooms.map(c => {
+                    const prog = programs.find(p => p.id === c.program_id);
+                    return (
+                      <tr key={c.id}>
+                        <td className="td" style={{ fontWeight: 900, color: "#10b981", fontSize: 16 }}>{c.code}</td>
+                        <td className="td">{c.level || "—"}</td>
+                        <td className="td" style={{ fontSize: 12 }}>{prog ? prog.name : "غير مرتبط ببرنامج"}</td>
+                        <td className="td" style={{ fontWeight: 700 }}>{trainers.find(t => t.id === c.trainer_id)?.name || "❌ لم يعين مدرب"}</td>
+                        <td className="td">
+                          <select className="inp" style={{ margin: 0, padding: "5px" }} value={c.trainer_id || ""} onChange={e => handleLinkTrainer(c.id, e.target.value)}>
+                            <option value="">— اختر مدرباً لتعيينه —</option>
+                            {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </Card>
+          )}
+
+          {/* 4. إدارة المدربين */}
+          {tab === "trainers" && (
+            <Card>
+              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>👨‍🏫 إدارة أعضاء هيئة التدريس والمدربين</h2>
+              <div className="g2" style={{ marginBottom: 20 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>اسم المدرب / دكتور المادة *</label>
+                  <input className="inp" placeholder="د/ خالد الأحمد" value={newTrainer.name} onChange={e => setNewTrainer({ ...newTrainer, name: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>التخصص الفني</label>
+                  <input className="inp" placeholder="مثل: النحو والصرف، اللغويات" value={newTrainer.specialization} onChange={e => setNewTrainer({ ...newTrainer, specialization: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رقم الجوال</label>
+                  <input className="inp" placeholder="05xxxxxxxx" value={newTrainer.phone} onChange={e => setNewTrainer({ ...newTrainer, phone: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>البريد الإلكتروني (هام لإرسال التقارير)</label>
+                  <input className="inp" placeholder="trainer@domain.com" value={newTrainer.email} onChange={e => setNewTrainer({ ...newTrainer, email: e.target.value })} />
+                </div>
+              </div>
+              <button className="btn" onClick={handleAddTrainer} style={{ width: "auto" }}>➕ حفظ بيانات عضو هيئة التدريس</button>
+
+              <h3 style={{ marginTop: 24, fontWeight: 800 }}>سجل المدربين المعتمدين بالمنصة</h3>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th className="th">اسم المدرب</th>
+                    <th className="th">التخصص</th>
+                    <th className="th">الجوال</th>
+                    <th className="th">البريد الإلكتروني</th>
+                    <th className="th">القاعات التي يدرّس بها</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trainers.map(t => (
+                    <tr key={t.id}>
+                      <td className="td" style={{ fontWeight: 800 }}>{t.name}</td>
+                      <td className="td">{t.specialization || "عام"}</td>
+                      <td className="td">{t.phone || "—"}</td>
+                      <td className="td">{t.email || "—"}</td>
+                      <td className="td" style={{ color: "#10b981", fontWeight: 700 }}>
+                        {classrooms.filter(c => c.trainer_id === t.id).map(c => c.code).join(" ، ") || "لا توجد قاعات مخصصة"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          )}
+
+          {/* 5. إدارة المشاركين */}
+          {tab === "participants" && (
+            <Card>
+              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>👥 إدارة المشاركين والطلاب (Participant Roster)</h2>
+              <div className="g2" style={{ marginBottom: 20 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>اسم المتدرب / الطالب *</label>
+                  <input className="inp" placeholder="الاسم الكامل للطالب" value={newPart.name} onChange={e => setNewPart({ ...newPart, name: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>البريد الإلكتروني</label>
+                  <input className="inp" placeholder="student@gmail.com" value={newPart.email} onChange={e => setNewPart({ ...newPart, email: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رقم الجوال</label>
+                  <input className="inp" placeholder="05xxxxxxxx" value={newPart.phone} onChange={e => setNewPart({ ...newPart, phone: e.target.value })} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>القاعة الدراسية المراد تسكينه بها</label>
+                  <select className="inp" value={newPart.classroom_id} onChange={e => setNewPart({ ...newPart, classroom_id: e.target.value })}>
+                    <option value="">اختر قاعة دراسية</option>
+                    {classrooms.map(c => <option key={c.id} value={c.id}>قاعة: {c.code} ({c.level})</option>)}
+                  </select>
+                </div>
+              </div>
+              <button className="btn" onClick={handleAddParticipant} style={{ width: "auto" }}>➕ تسكين وتثبيت الطالب</button>
+
+              <h3 style={{ marginTop: 24, fontWeight: 800 }}>قائمة الطلاب والروابط الذكية ({participants.length})</h3>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th className="th">الاسم</th>
+                    <th className="th">القاعة</th>
+                    <th className="th">الجوال</th>
+                    <th className="th">البريد</th>
+                    <th className="th">رابط التحقق السحري (Magic Link)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {participants.map(p => {
+                    const room = classrooms.find(c => c.id === p.classroom_id);
+                    return (
+                      <tr key={p.id}>
+                        <td className="td" style={{ fontWeight: 700 }}>{p.name}</td>
+                        <td className="td" style={{ fontWeight: 800, color: "#2563eb" }}>{room ? `قاعة ${room.code}` : "لم يسكن بعد"}</td>
+                        <td className="td">{p.phone || "—"}</td>
+                        <td className="td">{p.email || "—"}</td>
+                        <td className="td">
+                          <span style={{ background: "#d1fae5", color: "#047857", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700 }}>جاهز للإرسال</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </Card>
+          )}
+
+          {/* 6. مركز التقارير */}
+          {tab === "reports" && (
+            <div>
+              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 20, marginBottom: 16 }}>
+                <h3 style={{ margin: "0 0 12px", fontWeight: 800 }}>📑 قوالب تقييم الجودة وتوليد ملفات PDF الفاخرة</h3>
+                <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 16px" }}>اختر المدرب لعرض تقريره الخاص والمستقل بالكامل والمعد للطباعة المباشرة</p>
+                
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+                  <select className="inp" style={{ width: 280, margin: 0 }} value={selectedTrainerReport} onChange={e => setSelectedTrainerReport(e.target.value)}>
+                    <option value="">— اختر المدرب لفرز تقريره المخصص —</option>
+                    {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                  {selectedTrainerReport && (
+                    <button className="btn" style={{ width: "auto" }} onClick={() => window.print()}>🖨 طباعة تقرير المدرب المخصص</button>
+                  )}
+                </div>
+              </div>
+
+              {selectedTrainerData ? (
+                <Card style={{ border: "2px solid #10b981", background: "#fffdf9" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #eef2f6", paddingBottom: 16, marginBottom: 16 }}>
+                    <div>
+                      <span style={{ background: "#d1fae5", color: "#047857", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 800 }}>تقرير الجودة المستقل</span>
+                      <h2 style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 900 }}>التقييم الفني الفردي للمدرب: {selectedTrainerData.name}</h2>
+                      <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 13 }}>يستعرض القاعات والتقييمات المرتبطة به شخصياً لمنع تداخل المسؤوليات</p>
+                    </div>
+                    <div style={{ textAlign: "center", background: "#f8fafc", padding: "10px 18px", borderRadius: 14 }}>
+                      <div style={{ fontSize: 32, fontWeight: 900 }}>{selectedTrainerData.avg ? selectedTrainerData.avg.toFixed(2) : "—"}</div>
+                      <span style={{ fontSize: 12, color: "#64748b" }}>معدل التقييم العام</span>
+                    </div>
+                  </div>
+
+                  <div className="g3" style={{ marginBottom: 18 }}>
+                    <div style={{ background: "#f8fafc", padding: 14, borderRadius: 12, textAlign: "center" }}>
+                      <span style={{ fontSize: 11, color: "#64748b" }}>القاعات التابعة</span>
+                      <b style={{ display: "block", fontSize: 18, marginTop: 4 }}>{selectedTrainerData.rooms.map(r => r.code).join(" ، ") || "لا توجد قاعات"}</b>
+                    </div>
+                    <div style={{ background: "#f8fafc", padding: 14, borderRadius: 12, textAlign: "center" }}>
+                      <span style={{ fontSize: 11, color: "#64748b" }}>مجموع الاستجابات</span>
+                      <b style={{ display: "block", fontSize: 18, marginTop: 4 }}>{selectedTrainerData.count} استمارة</b>
+                    </div>
+                    <div style={{ background: "#f8fafc", padding: 14, borderRadius: 12, textAlign: "center" }}>
+                      <span style={{ fontSize: 11, color: "#64748b" }}>درجة الامتثال والالتزام</span>
+                      <b style={{ display: "block", fontSize: 16, marginTop: 4, color: selectedTrainerData.avg >= 4 ? "#10b981" : "#b45309" }}>
+                        {selectedTrainerData.avg >= 4 ? "توافق تام مع المعايير" : "حاجة لدعم فني مبسط"}
+                      </b>
+                    </div>
+                  </div>
+
+                  <h3 style={{ fontSize: 16, fontWeight: 800 }}>📊 تفاصيل تقييم المحاور الأكاديمية للمدرب</h3>
+                  {selectedTrainerData.axes.length > 0 ? selectedTrainerData.axes.map((ax, idx) => {
+                    const stVal = statusOf(ax.value);
+                    return (
+                      <div key={idx} style={{ background: "#fff", border: "1px solid #f0e9db", borderRadius: 12, padding: 12, marginBottom: 10 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                          <span style={{ fontWeight: 700, fontSize: 13.5 }}>{ax.label}</span>
+                          <b style={{ color: "#10b981" }}>{ax.value.toFixed(2)}/5</b>
+                        </div>
+                        <div style={{ height: 8, background: "#f0e9db", borderRadius: 8, overflow: "hidden" }}>
+                          <div style={{ width: `${(ax.value / 5) * 100}%`, height: "100%", background: "#10b981" }} />
+                        </div>
+                      </div>
+                    );
+                  }) : <p style={{ color: "#94a3b8" }}>لا توجد استجابات تقييم فردية مكتملة لهذا المدرب بعد.</p>}
+                </Card>
+              ) : (
+                <div style={{ textAlign: "center", padding: 50, background: "#fff", border: "1px solid #cbd5e1", borderRadius: 20 }}>
+                  <span style={{ fontSize: 40 }}>📑</span>
+                  <h3 style={{ margin: "10px 0 0", fontWeight: 800 }}>يرجى اختيار المدرب أعلاه لعرض تقريره الفردي المستقل</h3>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 7. مركز التحليلات */}
+          {tab === "analytics" && (
+            <Card>
+              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>📊 تحليلات ومقارنات معايير الجودة (النسب الكلية)</h2>
+              <p style={{ fontSize: 14, color: "#64748b", marginBottom: 20 }}>مقارنة معايير التقييم للمحاور الأكاديمية بين التقييم اليومي المباشر والنهائي</p>
+              
+              <div className="g2">
+                <CD st={{ borderRight: "4px solid #2563eb" }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#2563eb", marginBottom: 12 }}>أعلى محاور التقييم اليومي</h3>
+                  {daily.axes.slice(0, 3).map((a, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{a.label}</span>
+                      <b style={{ color: "#2563eb" }}>{a.value.toFixed(2)}</b>
+                    </div>
+                  ))}
+                </CD>
+                <CD st={{ borderRight: "4px solid #10b981" }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#10b981", marginBottom: 12 }}>أعلى محاور التقييم النهائي</h3>
+                  {final.axes.slice(0, 3).map((a, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{a.label}</span>
+                      <b style={{ color: "#10b981" }}>{a.value.toFixed(2)}</b>
+                    </div>
+                  ))}
+                </CD>
+              </div>
+            </Card>
+          )}
+
+          {/* 8. مركز الإشعارات والبريد */}
+          {tab === "notifications" && (
+            <Card>
+              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>✉️ مركز الإشعارات وتوليد التقارير التلقائية (Mail Hub)</h2>
+              <p style={{ fontSize: 14, color: "#64748b", marginBottom: 20 }}>أرسل تقرير تقييم القاعة والمدرب الفردي بملف PDF تلقائياً للمدرب أو تقرير الجودة الموحد للإدارة بضغطة زر:</p>
+
+              <div className="g2" style={{ marginBottom: 24 }}>
+                <div style={{ background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: 16, padding: 18 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px" }}>إرسال تقرير المدرب الفردي</h3>
+                  <select className="inp" id="selectMailTrainer">
+                    <option value="">— اختر المدرب المستهدف —</option>
+                    {trainers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.email || "لا يوجد بريد"})</option>)}
+                  </select>
+                  <button className="btn" disabled={emailSending} onClick={() => {
+                    const val = document.getElementById("selectMailTrainer").value;
+                    if (val) triggerEmailReport("TRAINER", val);
+                  }}>
+                    {emailSending ? "⏳ جاري توليد PDF والإرسال..." : "✉️ إرسال التقرير للمدرب والنسخة للإدارة"}
+                  </button>
+                </div>
+
+                <div style={{ background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: 16, padding: 18 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px" }}>إرسال التقرير الشامل للإدارة</h3>
+                  <p style={{ fontSize: 12, color: "#64748b", marginBottom: 24 }}>تصدير كافة أرقام المنصة لمدير المنصة والشركاء الأكاديميين بنسخة PDF</p>
+                  <button className="btn" style={{ background: "#0f172a" }} disabled={emailSending} onClick={() => triggerEmailReport("ADMIN", "all")}>
+                    {emailSending ? "⏳ جاري المعالجة..." : "✉️ إرسال التقرير الشامل للإدارة"}
+                  </button>
+                </div>
+              </div>
+
+              <h3 style={{ fontWeight: 800 }}>📋 سجل رسائل التقارير والامتثال الصادرة</h3>
+              <table className="tbl">
+                <thead>
+                  <tr>
+                    <th className="th">المستلم</th>
+                    <th className="th">البريد الإلكتروني</th>
+                    <th className="th">عنوان التقرير الصادر</th>
+                    <th className="th">الحالة</th>
+                    <th className="th">تاريخ ووقت الإرسال</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {emailLogs.map(l => (
+                    <tr key={l.id}>
+                      <td className="td" style={{ fontWeight: 700 }}>{l.recipient_name}</td>
+                      <td className="td" style={{ direction: "ltr", fontSize: 12 }}>{l.recipient_email}</td>
+                      <td className="td" style={{ fontSize: 12.5 }}>{l.subject}</td>
+                      <td className="td">
+                        <span style={{ background: "#d1fae5", color: "#047857", padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 800 }}>{l.status}</span>
+                      </td>
+                      <td className="td" style={{ fontSize: 12, color: "#64748b" }}>{new Date(l.sent_at).toLocaleString("ar-SA")}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          )}
+
+          {/* 9. الإعدادات */}
+          {tab === "settings" && (
+            <Card>
+              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>⚙️ الإعدادات العامة للمنظومة</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 6 }}>مفتاح ربط بريد Resend API Key</label>
+                  <input className="inp" type="password" placeholder="re_1234567890abcdef..." value="••••••••••••••••••••••••••••" disabled />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 6 }}>بريد استلام تقارير الإدارة المعتمد</label>
+                  <input className="inp" placeholder="management@platform.edu" value="management@platform.edu" disabled />
+                </div>
+              </div>
+            </Card>
+          )}
+
+        </main>
+      </div>
+    </div>
+  );
 }
 
-function NB(p){return(<button onClick={p.fn} style={{width:"100%",display:"flex",alignItems:"center",gap:10,justifyContent:"flex-end",background:p.on?"rgba(16,185,129,.15)":"transparent",border:p.on?"1px solid rgba(16,185,129,.5)":"1px solid transparent",color:p.on?"#5eead4":"#cbd5e1",borderRadius:12,padding:"11px 12px",marginBottom:6,cursor:"pointer",fontWeight:p.on?800:600,fontSize:14}}><span>{p.t}</span><span>{p.ic}</span></button>);}
-function PL(p){return(<span style={{background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.12)",borderRadius:999,padding:"6px 14px",fontSize:12,color:"#e2e8f0"}}>{p.children}</span>);}
-function CD(p){return(<div style={{background:"#fffdf9",border:"1px solid #ece4d4",borderRadius:20,padding:18,boxShadow:"0 4px 14px rgba(60,40,10,.05)",marginBottom:14,...p.st}}>{p.children}</div>);}
-function KP(p){return(<CD st={{position:"relative",overflow:"hidden",marginBottom:0}}><div style={{position:"absolute",left:10,top:0,fontSize:56,fontWeight:900,color:"rgba(15,23,42,.05)"}}>{p.gh}</div><div style={{position:"relative",textAlign:"center"}}><div style={{fontSize:13,color:"#9a8f7d",fontWeight:700,marginBottom:6}}>{p.lb}</div><div style={{fontSize:42,fontWeight:900,color:"#111",lineHeight:1}}>{p.v}{p.sf?<span style={{fontSize:17,color:"#9a8f7d"}}>{p.sf}</span>:null}</div></div></CD>);}
-
-function Teachers(p){
-  var rooms=p.rooms;var trainers=p.trainers;
-  var data=rooms.map(r=>{var tr=trainers.find(t=>t.id===r.trainer_id);var rep=p.calcRoom(r.id);return{room:r,trainer:tr,rep:rep};}).sort((a,b)=>b.rep.avg-a.rep.avg);
-  return(<div><CD st={{background:"linear-gradient(135deg,#0b1220,#111827)",color:"#fff"}}><h2 style={{margin:"0 0 16px",fontSize:18,fontWeight:900}}>🏆 ترتيب المعلمين - مرتبط بالقاعة</h2><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr style={{color:"#94a3b8",fontSize:12}}><th style={{padding:"8px 10px",textAlign:"right"}}>#</th><th style={{padding:"8px 10px",textAlign:"right"}}>المعلم</th><th style={{padding:"8px 10px",textAlign:"center"}}>قاعة</th><th style={{padding:"8px 10px",textAlign:"center"}}>عدد</th><th style={{padding:"8px 10px",textAlign:"center"}}>متوسط</th><th style={{padding:"8px 10px",textAlign:"center"}}>حالة</th><th style={{padding:"8px 10px",textAlign:"center"}}>إرسال</th></tr></thead><tbody>{data.map((d,i)=>{var s=st(d.rep.avg);var colors=["#f59e0b","#94a3b8","#cd7f32"];return(<tr key={d.room.id} style={{borderTop:"1px solid rgba(255,255,255,.08)"}}><td style={{padding:"10px"}}><span style={{background:i<3?colors[i]:"#334155",color:"#fff",width:28,height:28,borderRadius:8,display:"inline-flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:13}}>{i+1}</span></td><td style={{padding:"10px",fontWeight:700}}>{d.trainer?d.trainer.name:"غير معين"}{!d.trainer?<span style={{fontSize:10,color:"#f59e0b",marginRight:6}}>(يحتاج تعيين)</span>:null}</td><td style={{padding:"10px",textAlign:"center"}}><span style={{background:"rgba(255,255,255,.1)",borderRadius:8,padding:"3px 10px",fontSize:13}}>{d.room.code}</span></td><td style={{padding:"10px",textAlign:"center"}}>{d.rep.count}</td><td style={{padding:"10px",textAlign:"center",fontWeight:900,fontSize:16}}>{d.rep.avg?d.rep.avg.toFixed(2):"—"}</td><td style={{padding:"10px",textAlign:"center"}}>{d.rep.count>0?<span style={{background:s.bg,color:s.fg,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:800}}>{s.t}</span>:<span style={{background:"#fee2e2",color:"#b91c1c",borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:800}}>لا يوجد تقييم</span>}</td><td style={{padding:"10px",textAlign:"center"}}>{d.trainer&&d.trainer.email?<button onClick={()=>p.sendToTrainer(d.room)} disabled={!!p.sending} style={{background:"linear-gradient(135deg,#2563eb,#1d4ed8)",border:"none",color:"#fff",borderRadius:8,padding:"5px 12px",cursor:"pointer",fontWeight:700,fontSize:11,fontFamily:"Cairo,Tahoma,sans-serif"}}>📧</button>:<span style={{fontSize:10,color:"#64748b"}}>—</span>}</td></tr>);})}</tbody></table></div></CD>{data.filter(d=>d.rep.avg>0).length>0&&<CD st={{background:"linear-gradient(135deg,#0b1220,#111827)",color:"#fff",textAlign:"center"}}><div style={{fontSize:40,marginBottom:8}}>🏆</div><div style={{fontWeight:900,fontSize:18}}>{data[0].trainer?data[0].trainer.name:"غير معين"}</div><div style={{color:"#5eead4",fontSize:14,marginTop:4}}>قاعة {data[0].room.code} • {data[0].rep.avg.toFixed(2)}/5</div></CD>}</div>);
+function KpiCard(p: { label: string; value: any; suffix?: string; subtitle: string }) {
+  return (
+    <Card style={{ position: "relative", overflow: "hidden", borderRight: "4px solid #10b981" }}>
+      <div style={{ position: "absolute", left: 10, top: 4, fontSize: 60, fontWeight: 900, color: "rgba(16,185,129,0.04)" }}>{p.value}</div>
+      <div style={{ position: "relative" }}>
+        <div style={{ fontSize: 13, color: "#9a8f7d", fontWeight: 700, marginBottom: 4 }}>{p.label}</div>
+        <div style={{ fontSize: 38, fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>{p.value}{p.suffix}</div>
+        <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{p.subtitle}</div>
+      </div>
+    </Card>
+  );
 }
 
-function RP(p){var r=p.rep;var pct=r.avg?Math.round(r.avg/5*100):0;var top=r.axes.length?r.axes[r.axes.length-1]:null;var low=r.axes.length?r.axes[0]:null;var dC=["#f43f5e","#fb923c","#facc15","#34d399","#10b981"];var sC=["#14b8a6","#0ea5e9","#f59e0b","#f43f5e"];var maxD=Math.max(1,...r.days.map(d=>d.count));var maxDi=Math.max(1,...r.dist);var gid="gr"+p.ac.slice(1);return(<div><div className="k3" style={{marginBottom:14}}><KP lb="إجمالي التقييمات" v={""+r.count} gh={""+r.count}/><KP lb="متوسط الرضا" v={r.avg?r.avg.toFixed(1):"-"} sf="/5" gh={r.avg?r.avg.toFixed(1):"-"}/><KP lb="نسبة الرضا" v={""+pct} sf="%" gh={""+pct}/></div><div className="g2"><CD><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><h3 style={{margin:0,fontSize:16,fontWeight:800}}>📊 التوزيع اليومي</h3><span style={{background:"#d1fae5",color:"#047857",borderRadius:999,padding:"3px 12px",fontSize:11,fontWeight:800}}>7 أيام</span></div><svg viewBox="0 0 360 180" style={{width:"100%",height:"auto"}}><defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#0d9488"/></linearGradient></defs>{r.days.map((d,i)=>{var bw=360/r.days.length;var x=i*bw+bw*0.22;var w=bw*0.56;var h=d.count/maxD*120;var y=140-h;return(<g key={i}><text x={x+w/2} y={y-6} textAnchor="middle" fontSize="11" fontWeight="800" fill="#111">{d.count}</text><rect x={x} y={y} width={w} height={Math.max(4,h)} rx={6} fill={"url(#"+gid+")"}/><text x={x+w/2} y={156} textAnchor="middle" fontSize="9" fill="#64748b">{d.wd}</text><text x={x+w/2} y={170} textAnchor="middle" fontSize="9" fill="#94a3b8">{d.dt}</text></g>);})}</svg></CD><CD><h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:800}}>🎯 توزيع التقييم العام</h3>{[5,4,3,2,1].map(s=>{var idx=s-1;var w=r.dist[idx]/maxDi*100;return(<div key={s} style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><span style={{width:60,fontSize:12,fontWeight:700,color:"#475569"}}>{s} نجوم</span><div style={{flex:1,height:12,background:"#f0e9db",borderRadius:8,overflow:"hidden"}}><div style={{width:w+"%",height:"100%",background:dC[idx],borderRadius:8}}/></div><b style={{width:22,textAlign:"left"}}>{r.dist[idx]}</b></div>);})}</CD></div><div className="g2"><CD><h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:800}}>⚖️ مقارنة المحاور</h3>{r.sections.length>0?<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>{r.sections.map((s,i)=>(<div key={i} style={{background:"#fff",border:"1px solid #ece4d4",borderRadius:14,padding:14,textAlign:"center"}}><div style={{fontSize:12,color:"#9a8f7d",fontWeight:700,marginBottom:6}}>{s.name}</div><div style={{fontSize:28,fontWeight:900,color:sC[i%sC.length]}}>{s.value.toFixed(1)}</div></div>))}</div>:<p style={{color:"#9a8f7d"}}>لا توجد أقسام.</p>}</CD><CD><h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:800}}>💡 التحليل والتوصيات</h3><div style={{background:"#ecfdf5",border:"1px solid #a7f3d0",borderRadius:12,padding:12,marginBottom:10}}><b style={{color:"#047857"}}>نقطة القوة</b><p style={{margin:"4px 0 0",fontSize:13,color:"#334155"}}>{top?top.label+" ("+top.value.toFixed(2)+"/5)":"-"}</p></div><div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:12,padding:12,marginBottom:10}}><b style={{color:"#b45309"}}>مجال التطوير</b><p style={{margin:"4px 0 0",fontSize:13,color:"#334155"}}>{low?low.label+" ("+low.value.toFixed(2)+"/5)":"-"}</p></div><div style={{background:"#eff6ff",border:"1px solid #bfdbfe",borderRadius:12,padding:12}}><b style={{color:"#1d4ed8"}}>التوصية</b><p style={{margin:"4px 0 0",fontSize:13,color:"#334155"}}>{low?'تخصيص وقت إضافي لتعزيز "'+low.label+'" ثم إعادة قياسه.':"-"}</p></div></CD></div><CD><h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:800}}>📈 أداء المحاور التفصيلي</h3>{r.axes.length>0?r.axes.map((a,i)=>{var s=st(a.value);return(<div key={i} style={{background:"#fff",border:"1px solid #f0e9db",borderRadius:14,padding:13,marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8,flexWrap:"wrap",gap:6}}><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{background:"#f0e9db",color:"#7c6f5a",borderRadius:7,padding:"2px 9px",fontSize:11,fontWeight:700}}>{a.section}</span><span style={{fontSize:13.5,fontWeight:700}}>{a.label}</span></div><div style={{display:"flex",alignItems:"center",gap:8}}><span style={{background:s.bg,color:s.fg,borderRadius:999,padding:"3px 11px",fontSize:11,fontWeight:800}}>{s.t}</span><b style={{minWidth:50,textAlign:"left",color:p.ac,fontSize:15}}>{a.value.toFixed(2)}/5</b></div></div><div style={{height:10,background:"#f0e9db",borderRadius:8,overflow:"hidden"}}><div style={{width:(a.value/5*100)+"%",height:"100%",background:"linear-gradient(90deg,"+p.ac+",#10b981)",borderRadius:8}}/></div></div>);}):<p style={{color:"#9a8f7d"}}>لا توجد بيانات.</p>}</CD><CD><h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:800}}>💬 ملاحظات المشاركين</h3>{r.comments.length>0?r.comments.map((c,i)=>(<div key={i} style={{background:"#fff",borderRight:"4px solid "+p.ac,borderRadius:12,padding:12,marginBottom:8,fontSize:13.5,color:"#475569",lineHeight:1.7}}>{c}</div>)):<p style={{color:"#9a8f7d"}}>لا توجد ملاحظات نصية.</p>}</CD></div>);}
+function CD(p: { children: any; st?: any }) {
+  return (
+    <div style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: 20, padding: 18, boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: 14, ...p.st }}>
+      {p.children}
+    </div>
+  );
+}
