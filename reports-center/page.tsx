@@ -56,7 +56,6 @@ export default function ReportsPage() {
   const [ans, setAns] = useState<An[]>([]);
   const [qs, setQs] = useState<Qu[]>([]);
   
-  // بيانات الهيكلة الجديدة
   const [programs, setPrograms] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
   const [trainers, setTrainers] = useState([]);
@@ -228,7 +227,7 @@ export default function ReportsPage() {
       <div className="rw" style={S.loading}>
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
         <div style={S.spinner}></div>
-        <p>جارٍ تحميل لوحة جودة الأداء والتحليلات...</p>
+        <p>جاري تحميل لوحة الأداء والجودة...</p>
       </div>
     );
   }
