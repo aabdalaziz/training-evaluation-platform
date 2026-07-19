@@ -240,24 +240,24 @@ export default function ReportsPage() {
         
         {/* القائمة الجانبية الفاخرة للتحكم بالأقسام */}
         <aside className="side np">
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#10b981,#0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🏆</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+            <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg,#10b981,#0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🏆</div>
             <div>
-              <div style={{ fontWeight: 900, fontSize: 15 }}>لوحة الأداء والجودة</div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>النظام المركزي الموحد</div>
+              <div style={{ fontWeight: "900", fontSize: "15px" }}>لوحة الأداء والجودة</div>
+              <div style={{ fontSize: "11px", color: "#94a3b8" }}>النظام المركزي الموحد</div>
             </div>
           </div>
           
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <button className={tab === "dashboard" ? "tab-on" : "tab-off"} onClick={() => setTab("dashboard")}><span>🏠 نظرة شاملة</span></button>
             <button className={tab === "daily" ? "tab-on" : "tab-off"} onClick={() => setTab("daily")}><span>📝 التقرير اليومي</span></button>
             <button className={tab === "final" ? "tab-on" : "tab-off"} onClick={() => setTab("final")}><span>⭐ التقرير النهائي</span></button>
             <button className={tab === "teachers" ? "tab-on" : "tab-off"} onClick={() => setTab("teachers")}><span>👨‍🏫 تقييم المعلمين والقاعات</span></button>
           </div>
 
-          <div style={{ marginTop: 18, borderTop: "1px solid rgba(255,255,255,.08)", paddingTop: 14 }}>
-            <button onClick={() => router.push("/admin/management")} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#cbd5e1", cursor: "pointer", padding: "10px", borderRadius: 10, fontSize: 13, fontWeight: 700, marginBottom: 8 }}>🏫 إدارة القاعات والمدربين</button>
-            <button onClick={() => router.push("/dashboard")} style={{ width: "100%", background: "transparent", border: "none", color: "#64748b", cursor: "pointer", textAlign: "right", padding: "8px 10px", fontSize: 13, fontWeight: 600 }}>← لوحة التحكم العامة</button>
+          <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,.08)", paddingTop: "14px" }}>
+            <button onClick={() => router.push("/admin/management")} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#cbd5e1", cursor: "pointer", padding: "10px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", marginBottom: "8px" }}>🏫 إدارة القاعات والمدربين</button>
+            <button onClick={() => router.push("/dashboard")} style={{ width: "100%", background: "transparent", border: "none", color: "#64748b", cursor: "pointer", textAlign: "right", padding: "8px 10px", fontSize: "13px", fontWeight: "600" }}>← لوحة التحكم العامة</button>
           </div>
         </aside>
 
@@ -269,8 +269,8 @@ export default function ReportsPage() {
             <div style={S.headerBgText}>REPORT</div>
             <div style={{ position: "relative" }}>
               <span style={S.headerBadge}>تقرير الأداء السنوي والتحليلي المطور</span>
-              <h1 style={{ fontSize: 30, fontWeight: 900, margin: 0 }}>{tab === "dashboard" ? "التقرير العام المتكامل" : tab === "teachers" ? "أداء المعلمين المرتبط بالقاعة" : `تقييم ${tab === "daily" ? "الحصة اليومية" : "البرنامج النهائي"}`}</h1>
-              <p style={{ color: "#94a3b8", margin: "4px 0 0", fontSize: 13 }}>توليد تلقائي فوري لمعايير الجودة والامتثال والرضا والتقييم الفردي</p>
+              <h1 style={{ fontSize: "30px", fontWeight: "900", margin: 0 }}>{tab === "dashboard" ? "التقرير العام المتكامل" : tab === "teachers" ? "أداء المعلمين المرتبط بالقاعة" : `تقييم ${tab === "daily" ? "الحصة اليومية" : "البرنامج النهائي"}`}</h1>
+              <p style={{ color: "#94a3b8", margin: "4px 0 0", fontSize: "13px" }}>توليد تلقائي فوري لمعايير الجودة والامتثال والرضا والتقييم الفردي</p>
             </div>
           </div>
 
@@ -301,7 +301,7 @@ function Overview(p: { daily: Rep; final: Rep; classrooms: any[]; best: any }) {
   const max = Math.max(5, Number(d.avg || 0), Number(f.avg || 0));
   return (
     <div>
-      <div className="k3" style={{ marginBottom: 16 }}>
+      <div className="k3" style={{ marginBottom: "16px" }}>
         <KpiCard label="إجمالي الاستجابات الحية" value={Number(d.count || 0) + Number(f.count || 0)} suffix=" استمارة" ghost={String(Number(d.count || 0) + Number(f.count || 0))} />
         <KpiCard label="معدل الرضا اليومي" value={d.avg ? Number(d.avg).toFixed(2) : "—"} suffix="/5" ghost={d.avg ? Number(d.avg).toFixed(1) : "—"} />
         <KpiCard label="معدل الرضا النهائي" value={f.avg ? Number(f.avg).toFixed(2) : "—"} suffix="/5" ghost={f.avg ? Number(f.avg).toFixed(1) : "—"} />
@@ -309,27 +309,27 @@ function Overview(p: { daily: Rep; final: Rep; classrooms: any[]; best: any }) {
 
       <div className="g2">
         <Card>
-          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>⚖️ مقارنة أداء الرضا الأكاديمي</h3>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>⚖️ مقارنة أداء الرضا الأكاديمي</h3>
           <svg viewBox="0 0 300 180" style={{ width: "100%", height: "auto" }}>
-            {[0, 0.5, 1].map((fr, i) => { const y = 20 + 120 * (1 - fr); return (<g key={i}><line x1={40} y1={y} x2={280} y2={y} stroke="#ece4d4" strokeDasharray="3,3" /><text x={34} y={y + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{(max * fr).toFixed(1)}</text></g>); })}
-            <g><rect x={80} y={140 - (Number(d.avg || 0) / max) * 120} width={45} height={(Number(d.avg || 0) / max) * 120} rx={6} fill="#2563eb" /><text x={102} y={140 - (Number(d.avg || 0) / max) * 120 - 8} textAnchor="middle" fontSize="13" fontWeight="900" fill="#111">{d.avg ? Number(d.avg).toFixed(2) : "—"}</text><text x={102} y={158} textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">اليومي</text></g>
-            <g><rect x={175} y={140 - (Number(f.avg || 0) / max) * 120} width={45} height={(Number(f.avg || 0) / max) * 120} rx={6} fill="#10b981" /><text x={197} y={140 - (Number(f.avg || 0) / max) * 120 - 8} textAnchor="middle" fontSize="13" fontWeight="900" fill="#111">{f.avg ? Number(f.avg).toFixed(2) : "—"}</text><text x={197} y={158} textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">النهائي</text></g>
-            <line x1={40} y1={140} x2={280} y2={140} stroke="#d6cdba" strokeWidth={1.5} />
+            {[0, 0.5, 1].map((fr, i) => { const y = 20 + 120 * (1 - fr); return (<g key={i}><line x1="40" y1={y} x2="280" y2={y} stroke="#ece4d4" strokeDasharray="3,3" /><text x="34" y={y + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{(max * fr).toFixed(1)}</text></g>); })}
+            <g><rect x="80" y={140 - (Number(d.avg || 0) / max) * 120} width="45" height={(Number(d.avg || 0) / max) * 120} rx="6" fill="#2563eb" /><text x="102" y={140 - (Number(d.avg || 0) / max) * 120 - 8} textAnchor="middle" fontSize="13" fontWeight="900" fill="#111">{d.avg ? Number(d.avg).toFixed(2) : "—"}</text><text x="102" y="158" textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">اليومي</text></g>
+            <g><rect x="175" y={140 - (Number(f.avg || 0) / max) * 120} width="45" height={(Number(f.avg || 0) / max) * 120} rx="6" fill="#10b981" /><text x="197" y={140 - (Number(f.avg || 0) / max) * 120 - 8} textAnchor="middle" fontSize="13" fontWeight="900" fill="#111">{f.avg ? Number(f.avg).toFixed(2) : "—"}</text><text x="197" y="158" textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">النهائي</text></g>
+            <line x1="40" y1="140" x2="280" y2="140" stroke="#d6cdba" strokeWidth="1.5" />
           </svg>
         </Card>
 
         {p.best ? (
           <div style={S.bestCard}>
-            <span style={{ fontSize: 44 }}>🏆</span>
-            <span style={{ fontSize: 11, color: "#10b981", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5 }}>عضو هيئة التدريس الأكثر تميزاً</span>
-            <h2 style={{ fontSize: 24, fontWeight: 900, margin: "6px 0 2px", color: "#fff" }}>{p.best.name || "—"}</h2>
-            <p style={{ color: "#94a3b8", fontSize: 12, margin: "0 0 12px" }}>قاعة {p.best.rooms || "—"} ({p.best.levels || "—"})</p>
-            <div style={{ background: "rgba(16,185,129,.15)", border: "1px solid #10b981", borderRadius: 12, padding: "8px 20px" }}>
-              <span style={{ fontSize: 13, color: "#5eead4", fontWeight: 700 }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"} / 5</span>
+            <span style={{ fontSize: "44px" }}>🏆</span>
+            <span style={{ fontSize: "11px", color: "#10b981", fontWeight: "800", textTransform: "uppercase", letterSpacing: "1.5px" }}>عضو هيئة التدريس الأكثر تميزاً</span>
+            <h2 style={{ fontSize: "24px", fontWeight: "900", margin: "6px 0 2px", color: "#fff" }}>{p.best.name || "—"}</h2>
+            <p style={{ color: "#94a3b8", fontSize: "12px", margin: "0 0 12px" }}>قاعة {p.best.rooms || "—"} ({p.best.levels || "—"})</p>
+            <div style={{ background: "rgba(16,185,129,.15)", border: "1px solid #10b981", borderRadius: "12px", padding: "8px 20px" }}>
+              <span style={{ fontSize: "13px", color: "#5eead4", fontWeight: "700" }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"} / 5</span>
             </div>
           </div>
         ) : (
-          <Card><p style={{ color: "#94a3b8", textAlign: "center", padding: 40 }}>لا توجد تقييمات مسجلة للمدربين بعد.</p></Card>
+          <Card><p style={{ color: "#94a3b8", textAlign: "center", padding: "40px" }}>لا توجد تقييمات مسجلة للمدربين بعد.</p></Card>
         )}
       </div>
     </div>
@@ -344,45 +344,45 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
   const maxDi = Math.max(1, ...(r.dist || [1]));
   const dColors = ["#f43f5e", "#fb923c", "#facc15", "#34d399", "#10b981"];
   const daysLen = r.days && r.days.length ? r.days.length : 1;
-  const bw = 360 / daysLen;
+  const bw = daysLen > 0 ? 360 / daysLen : 360;
   const maxD = Math.max(1, ...(r.days || []).map((d: any) => d?.count || 0));
   return (
     <div>
-      <div className="k3" style={{ marginBottom: 16 }}>
+      <div className="k3" style={{ marginBottom: "16px" }}>
         <KpiCard label="إجمالي الاستجابات" value={r.count} suffix=" استمارة" ghost={String(r.count)} />
         <KpiCard label="متوسط الرضا العام" value={r.avg ? Number(r.avg).toFixed(2) : "—"} suffix="/5" ghost={r.avg ? Number(r.avg).toFixed(1) : "—"} />
         <KpiCard label="نسبة الرضا المئوية" value={pct} suffix="%" ghost={String(pct)} />
       </div>
 
-      <div className="g2" style={{ marginBottom: 16 }}>
+      <div className="g2" style={{ marginBottom: "16px" }}>
         <Card>
-          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>🎯 توزيع التقييم الإجمالي بالنجوم</h3>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>🎯 توزيع التقييم الإجمالي بالنجوم</h3>
           {[5, 4, 3, 2, 1].map(s => {
             const idx = s - 1;
             const distVal = r.dist && r.dist[idx] ? r.dist[idx] : 0;
             const w = maxDi > 0 ? (distVal / maxDi) * 100 : 0;
             return (
-              <div key={s} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <span style={{ width: 55, fontSize: 11, fontWeight: 700, color: "#7c6f5a" }}>{s} نجوم</span>
-                <div style={{ flex: 1, height: 11, background: "#f0e9db", borderRadius: 8, overflow: "hidden" }}>
-                  <div style={{ width: (isNaN(w) ? 0 : w) + "%", height: "100%", background: dColors[idx], borderRadius: 8 }} />
+              <div key={s} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                <span style={{ width: "55px", fontSize: "11px", fontWeight: "700", color: "#7c6f5a" }}>{s} نجوم</span>
+                <div style={{ flex: 1, height: "11px", background: "#f0e9db", borderRadius: "8px", overflow: "hidden" }}>
+                  <div style={{ width: (isNaN(w) ? 0 : w) + "%", height: "100%", background: dColors[idx], borderRadius: "8px" }} />
                 </div>
-                <b style={{ width: 20, textAlign: "left", fontSize: 12 }}>{distVal}</b>
+                <b style={{ width: "20px", textAlign: "left", fontSize: "12px" }}>{distVal}</b>
               </div>
             );
           })}
         </Card>
 
         <Card>
-          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>💡 التحليل الذكي والتوصيات</h3>
-          <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 12, padding: 12, marginBottom: 10 }}><b style={{ color: "#047857", fontSize: 13 }}>✅ نقطة القوة المتميزة</b><p style={{ margin: "4px 0 0", fontSize: 12.5, color: "#334155" }}>{top ? top.label + " (" + Number(top.value).toFixed(2) + "/5)" : "—"}</p></div>
-          <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: 12 }}><b style={{ color: "#b45309", fontSize: 13 }}>🎯 مجال التطوير المستهدف</b><p style={{ margin: "4px 0 0", fontSize: 12.5, color: "#334155" }}>{low ? low.label + " (" + Number(low.value).toFixed(2) + "/5)" : "—"}</p></div>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>💡 التحليل الذكي والتوصيات</h3>
+          <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "12px", padding: "12px", marginBottom: "10px" }}><b style={{ color: "#047857", fontSize: "13px" }}>✅ نقطة القوة المتميزة</b><p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#334155" }}>{top ? top.label + " (" + Number(top.value).toFixed(2) + "/5)" : "—"}</p></div>
+          <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "12px", padding: "12px" }}><b style={{ color: "#b45309", fontSize: "13px" }}>🎯 مجال التطوير المستهدف</b><p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#334155" }}>{low ? low.label + " (" + Number(low.value).toFixed(2) + "/5)" : "—"}</p></div>
         </Card>
       </div>
 
-      <div className="g2" style={{ marginBottom: 16 }}>
+      <div className="g2" style={{ marginBottom: "16px" }}>
         <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>📊 التوزيع اليومي</h3><span style={{ background: "#d1fae5", color: "#047857", borderRadius: 999, padding: "3px 12px", fontSize: 11, fontWeight: 800 }}>7 أيام</span></div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}><h3 style={{ margin: 0, fontSize: "16px", fontWeight: "800" }}>📊 التوزيع اليومي</h3><span style={{ background: "#d1fae5", color: "#047857", borderRadius: "999px", padding: "3px 12px", fontSize: "11px", fontWeight: "800" }}>7 أيام</span></div>
           <svg viewBox="0 0 360 180" style={{ width: "100%", height: "auto" }}>
             <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#0d9488"/></linearGradient></defs>
             {(r.days || []).map((d, i) => {
@@ -403,42 +403,42 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
         </Card>
         
         <Card>
-          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>⚖️ مقارنة المحاور الأساسية</h3>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>⚖️ مقارنة المحاور الأساسية</h3>
           {(r.sections || []).length > 0 ? (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               {r.sections.map((s, i) => (
-                <div key={i} style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: 14, padding: 14, textAlign: "center" }}>
-                  <div style={{ fontSize: 12, color: "#9a8f7d", fontWeight: 700, marginBottom: 6 }}>{s.name}</div>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: "#10b981" }}>{Number(s.value || 0).toFixed(1)}</div>
+                <div key={i} style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
+                  <div style={{ fontSize: "12px", color: "#9a8f7d", fontWeight: "700", marginBottom: "6px" }}>{s.name}</div>
+                  <div style={{ fontSize: "28px", fontWeight: "900", color: "#10b981" }}>{Number(s.value || 0).toFixed(1)}</div>
                 </div>
               ))}
             </div>
-          ) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: 20 }}>لا توجد أقسام مسجلة.</p>}
+          ) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: "20px" }}>لا توجد أقسام مسجلة.</p>}
         </Card>
       </div>
 
-      <Card style={{ marginBottom: 16 }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>📈 نتائج أداء المحاور التفصيلي</h3>
+      <Card style={{ marginBottom: "16px" }}>
+        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>📈 نتائج أداء المحاور التفصيلي</h3>
         {(r.axes || []).length > 0 ? r.axes.map((a, i) => {
           if (!a) return null;
           const s = statusOf(a.value);
           return (
             <div key={i} style={S.axisRow}>
               <div style={S.axisMeta}>
-                <div style={S.axisLabelWrap}><span style={S.secTag}>{a.section}</span><span style={{ fontSize: 13.5, fontWeight: 700 }}>{a.label}</span></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ ...S.statusPill, background: s.bg, color: s.fg }}>{s.t}</span><b style={{ minWidth: 50, textAlign: "left", color: p.accent, fontSize: 15 }}>{Number(a.value || 0).toFixed(2)}/5</b></div>
+                <div style={S.axisLabelWrap}><span style={S.secTag}>{a.section}</span><span style={{ fontSize: "13.5px", fontWeight: "700" }}>{a.label}</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ ...S.statusPill, background: s.bg, color: s.fg }}>{s.t}</span><b style={{ minWidth: "50px", textAlign: "left", color: p.accent, fontSize: "15px" }}>{Number(a.value || 0).toFixed(2)}/5</b></div>
               </div>
               <div style={S.track}><div style={{ ...S.fillGrad, width: (Number(a.value || 0) / 5 * 100) + "%", background: "linear-gradient(90deg," + p.accent + ",#10b981)" }} /></div>
             </div>
           );
-        }) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: 20 }}>لا توجد بيانات لهذا التبويب حالياً.</p>}
+        }) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: "20px" }}>لا توجد بيانات لهذا التبويب حالياً.</p>}
       </Card>
 
       <Card>
-        <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>💬 ملاحظات ومرئيات المشاركين النصية</h3>
+        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "800" }}>💬 ملاحظات ومرئيات المشاركين النصية</h3>
         {(r.comments || []).length > 0 ? r.comments.map((c, i) => (
           <div key={i} style={S.commentCard}>{c}</div>
-        )) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: 20 }}>لا توجد تعليقات أو ملاحظات نصية مسجلة.</p>}
+        )) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: "20px" }}>لا توجد تعليقات أو ملاحظات نصية مسجلة.</p>}
       </Card>
     </div>
   );
@@ -449,18 +449,18 @@ function TeachersView(p: { data: any[]; best: any }) {
   return (
     <div>
       {p.best && (
-        <div style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", borderRadius: 22, padding: 20, color: "#fff", marginBottom: 16, display: "flex", alignItems: "center", gap: 16, border: "1px solid #10b981" }}>
-          <span style={{ fontSize: 40 }}>🏆</span>
+        <div style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", borderRadius: "22px", padding: "20px", color: "#fff", marginBottom: "16px", display: "flex", alignItems: "center", gap: "16px", border: "1px solid #10b981" }}>
+          <span style={{ fontSize: "40px" }}>🏆</span>
           <div>
-            <div style={{ fontSize: 11, color: "#10b981", fontWeight: 800 }}>عضو هيئة التدريس الأعلى أداءً بالقاعات</div>
-            <h3 style={{ margin: "2px 0 0", fontSize: 20, fontWeight: 900 }}>{p.best.name || "—"}</h3>
-            <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"}/5 (إجمالي الاستجابات: {p.best.count} تقييم)</p>
+            <div style={{ fontSize: "11px", color: "#10b981", fontWeight: "800" }}>عضو هيئة التدريس الأعلى أداءً بالقاعات</div>
+            <h3 style={{ margin: "2px 0 0", fontSize: "20px", fontWeight: "900" }}>{p.best.name || "—"}</h3>
+            <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8" }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"}/5 (إجمالي الاستجابات: {p.best.count} تقييم)</p>
           </div>
         </div>
       )}
 
       <Card>
-        <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 800 }}>📋 ترتيب المعلمين ومقارنة الأداء الأكاديمي المباشر</h3>
+        <h3 style={{ margin: "0 0 14px", fontSize: "16px", fontWeight: "800" }}>📋 ترتيب المعلمين ومقارنة الأداء الأكاديمي المباشر</h3>
         <div style={{ overflowX: "auto" }}>
           <table className="tbl">
             <thead>
@@ -483,17 +483,17 @@ function TeachersView(p: { data: any[]; best: any }) {
                 const s = statusOf(t.avg || 0);
                 return (
                   <tr key={t.id || idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                    <td className="td" style={{ fontWeight: 800, color: idx === 0 ? "#10b981" : "#475569" }}>{idx + 1}</td>
-                    <td className="td" style={{ fontWeight: 800, color: "#111" }}>{t.name || "—"}</td>
-                    <td className="td" style={{ fontWeight: 700 }}>{t.rooms || "—"}</td>
-                    <td className="td"><span style={{ background: "#e2e8f0", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 }}>{t.levels || "—"}</span></td>
+                    <td className="td" style={{ fontWeight: "800", color: idx === 0 ? "#10b981" : "#475569" }}>{idx + 1}</td>
+                    <td className="td" style={{ fontWeight: "800", color: "#111" }}>{t.name || "—"}</td>
+                    <td className="td" style={{ fontWeight: "700" }}>{t.rooms || "—"}</td>
+                    <td className="td"><span style={{ background: "#e2e8f0", padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700" }}>{t.levels || "—"}</span></td>
                     <td className="td">{t.count || 0}</td>
-                    <td className="td" style={{ color: "#2563eb", fontWeight: 700 }}>{t.count ? Number(t.clarity || 0).toFixed(2) : "—"}</td>
-                    <td className="td" style={{ color: "#10b981", fontWeight: 700 }}>{t.count ? Number(t.teach || 0).toFixed(2) : "—"}</td>
-                    <td className="td" style={{ color: "#b45309", fontWeight: 700 }}>{t.count ? Number(t.drive || 0).toFixed(2) : "—"}</td>
-                    <td className="td" style={{ fontSize: 15, fontWeight: 900, color: "#0f172a" }}>{t.count ? Number(t.avg || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#2563eb", fontWeight: "700" }}>{t.count ? Number(t.clarity || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#10b981", fontWeight: "700" }}>{t.count ? Number(t.teach || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#b45309", fontWeight: "700" }}>{t.count ? Number(t.drive || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ fontSize: "15px", fontWeight: "900", color: "#0f172a" }}>{t.count ? Number(t.avg || 0).toFixed(2) : "—"}</td>
                     <td className="td">
-                      <span style={{ background: t.count ? s.bg : "#f1f5f9", color: t.count ? s.fg : "#64748b", borderRadius: 999, padding: "3px 11px", fontSize: 11, fontWeight: 800 }}>
+                      <span style={{ background: t.count ? s.bg : "#f1f5f9", color: t.count ? s.fg : "#64748b", borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: "800" }}>
                         {t.count ? s.t : "لا يوجد تقييم"}
                       </span>
                     </td>
@@ -515,7 +515,7 @@ function KpiCard(p: { label: string; value: any; suffix?: string; subtitle?: str
       <div style={{ position: "relative" }}>
         <div style={S.kpiLabel}>{p.label || ""}</div>
         <div style={S.kpiVal}>{p.value}{p.suffix || ""}</div>
-        {p.subtitle && <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{p.subtitle}</div>}
+        {p.subtitle && <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>{p.subtitle}</div>}
       </div>
     </div>
   );
@@ -523,7 +523,7 @@ function KpiCard(p: { label: string; value: any; suffix?: string; subtitle?: str
 
 function Card(p: { children: any; style?: any }) { 
   return (
-    <div style={{ background: "#fffdf9", border: "1px solid #e8decb", borderRadius: 20, padding: 20, boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: 14, ...p.style }}>
+    <div style={{ background: "#fffdf9", border: "1px solid #e8decb", borderRadius: "20px", padding: "20px", boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: "14px", ...p.style }}>
       {p.children}
     </div>
   ); 
@@ -531,7 +531,7 @@ function Card(p: { children: any; style?: any }) {
 
 function CD(p: { children: any; st?: any }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: 20, padding: 18, boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: 14, ...p.st }}>
+    <div style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: "20px", padding: "18px", boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: "14px", ...p.st }}>
       {p.children}
     </div>
   );
@@ -541,23 +541,23 @@ function CD(p: { children: any; st?: any }) {
 // الأنماط البرمجية المقاومة للـ Hydration والـ snake_case
 // ==========================================
 const S: Record<string, CSSProperties> = {
-  wrap: { direction: "rtl", fontFamily: "Cairo, Tahoma, sans-serif", background: "#f2ecdf", minHeight: "100vh", padding: 16, color: "#1a1a1a" },
-  loading: { background: "#f2ecdf", minHeight: "100vh", padding: 80, textAlign: "center", color: "#64748b" },
-  spinner: { width: 48, height: 48, border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
-  headerCard: { position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#0b1220,#111827)", borderRadius: 24, padding: 24, color: "#fff", marginBottom: 16 },
-  headerBgText: { position: "absolute", left: 16, top: 0, fontSize: 80, fontWeight: 900, color: "rgba(255,255,255,.04)", letterSpacing: 4 },
-  headerBadge: { background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 999, padding: "4px 12px", fontSize: 11, fontWeight: 700, color: "#e2e8f0", display: "inline-block", marginBottom: 6 },
-  kpiCard: { position: "relative", overflow: "hidden", borderRight: "4px solid #10b981", background: "#fffdf9", borderTop: "1px solid #e8decb", borderBottom: "1px solid #e8decb", borderLeft: "1px solid #e8decb", borderRadius: 22, padding: 22, boxShadow: "0 6px 18px rgba(60,40,10,0.04)" },
-  kpiGhost: { position: "absolute", left: 10, top: 4, fontSize: 60, fontWeight: 900, color: "rgba(16,185,129,0.04)" },
-  kpiLabel: { fontSize: 13, color: "#9a8f7d", fontWeight: 700, marginBottom: 4 },
-  kpiVal: { fontSize: 38, fontWeight: 900, color: "#0f172a", lineHeight: 1 },
-  bestCard: { background: "linear-gradient(135deg, #0f172a, #1e293b)", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", border: "1px solid #10b981", borderRadius: 22, padding: 22 },
-  axisRow: { background: "#fff", border: "1px solid #f0e9db", borderRadius: 14, padding: 13, marginBottom: 10 },
-  axisMeta: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 6 },
-  axisLabelWrap: { display: "flex", alignItems: "center", gap: 8 },
-  secTag: { background: "#f0e9db", color: "#7c6f5a", borderRadius: 7, padding: "2px 9px", fontSize: 11, fontWeight: 700 },
-  statusPill: { borderRadius: 999, padding: "3px 11px", fontSize: 11, fontWeight: 800 },
-  track: { height: 10, background: "#f0e9db", borderRadius: 8, overflow: "hidden" },
-  fillGrad: { height: "100%", borderRadius: 8 },
-  commentCard: { background: "#fff", borderRight: "4px solid #10b981", borderRadius: 12, padding: 12, marginBottom: 8, fontSize: 13, color: "#475569", lineHeight: 1.7 }
+  wrap: { direction: "rtl", fontFamily: "Cairo, Tahoma, sans-serif", background: "#f2ecdf", minHeight: "100vh", padding: "16px", color: "#1a1a1a" },
+  loading: { background: "#f2ecdf", minHeight: "100vh", padding: "80px", textAlign: "center", color: "#64748b" },
+  spinner: { width: "48px", height: "48px", border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
+  headerCard: { position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#0b1220,#111827)", borderRadius: "24px", padding: "24px", color: "#fff", marginBottom: "16px" },
+  headerBgText: { position: "absolute", left: "16px", top: 0, fontSize: "80px", fontWeight: 900, color: "rgba(255,255,255,.04)", letterSpacing: "4px" },
+  headerBadge: { background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: "999px", padding: "4px 12px", fontSize: "11px", fontWeight: "700", color: "#e2e8f0", display: "inline-block", marginBottom: "6px" },
+  kpiCard: { position: "relative", overflow: "hidden", borderRight: "4px solid #10b981", background: "#fffdf9", borderTop: "1px solid #e8decb", borderBottom: "1px solid #e8decb", borderLeft: "1px solid #e8decb", borderRadius: "22px", padding: "22px", boxShadow: "0 6px 18px rgba(60,40,10,0.04)" },
+  kpiGhost: { position: "absolute", left: "10px", top: "4px", fontSize: "60px", fontWeight: 900, color: "rgba(16,185,129,0.04)" },
+  kpiLabel: { fontSize: "13px", color: "#9a8f7d", fontWeight: "700", marginBottom: "4px" },
+  kpiVal: { fontSize: "38px", fontWeight: 900, color: "#0f172a", lineHeight: "1" },
+  bestCard: { background: "linear-gradient(135deg, #0f172a, #1e293b)", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", border: "1px solid #10b981", borderRadius: "22px", padding: "22px" },
+  axisRow: { background: "#fff", border: "1px solid #f0e9db", borderRadius: "14px", padding: "13px", marginBottom: "10px" },
+  axisMeta: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" },
+  axisLabelWrap: { display: "flex", alignItems: "center", gap: "8px" },
+  secTag: { background: "#f0e9db", color: "#7c6f5a", borderRadius: "7px", padding: "2px 9px", fontSize: "11px", fontWeight: "700" },
+  statusPill: { borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: "800" },
+  track: { height: "10px", background: "#f0e9db", borderRadius: "8px", overflow: "hidden" },
+  fillGrad: { height: "100%", borderRadius: "8px" },
+  commentCard: { background: "#fff", borderRight: "4px solid #10b981", borderRadius: "12px", padding: "12px", marginBottom: "8px", fontSize: "13px", color: "#475569", lineHeight: "1.7" }
 };
