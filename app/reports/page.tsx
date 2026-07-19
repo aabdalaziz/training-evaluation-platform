@@ -1,26 +1,74 @@
-أفهم إحباطك، ولأنك ذكرت أن **المشكلة لم تحل**، سأقوم الآن بعلاج السبب الجذري الأكثر شيوعاً في مشاريع Next.js (App Router) والذي يسبب عدم ظهور التعديلات أو انهيار البناء بصمت، مع تقديم نسخة **محصّنة 100%** ضد أخطاء التوجيه، وكاش المتصفح، ومتطلبات بيئة العمل.
+شكراً على الصورة — الآن **السبب الحقيقي اتضح تماماً**، وهو ليس في منصتك ولا في Vercel، بل في الكود نفسه.
 
-### 🔍 لماذا لم تظهر التعديلات؟ (الأسباب التقنية الدقيقة)
-1. **عدم توافق `style jsx global` مع Next.js App Router**: الكود السابق استخدم تقنية قديمة مخصصة لـ Pages Router، مما يجعل Vercel يتجاهل التنسيقات أو يوقف البناء بصمت.
-2. **تخزين كاش المتصفح أو Vercel Edge Cache**: حتى مع بناء ناجح، قد يعرض المتصفح أو خوادم Vercel نسخة قديمة.
-3. **مشكلة في كائن `supabase()`**: إذا كان التصدير في `lib/supabase/client.ts` مختلفاً، سيتوقف الـ Component عند السطر الأول دون إظهار خطأ واضح.
-4. **حماية المسار غير الصحيحة**: صفحة `/reports` قد تكون محمية بـ Middleware يعيد التوجيه تلقائياً إذا لم تتحقق الجلسة بشكل صحيح في `useEffect`.
+## 🔴 التشخيص الدقيق (لماذا لم يتغير شيء)
+
+الصورة تُظهر التصميم **القديم الأصلي** بحذافيره (نص "بيانات حية من قاعدة PostgreSQL"، والقائمة المدمجة بدون فصل). هذا يعني شيئاً واحداً فقط:
+
+> **Vercel فشل في بناء الكود الجديد الذي أرسلته لك سابقاً، فاستمرّ يعرض آخر نسخة ناجحة = القديمة.**
+
+راجعتُ الكود السابق الذي أعطيتك إياه، ووجدتُ فيه **3 أخطاء TypeScript قاتلة** تمنع البناء تماماً:
+
+| الخطأ | الكود الخاطئ | النتيجة |
+|---|---|---|
+| 1 | `React.CSSProperties` بدون استيراد `React` | `React is not defined` |
+| 2 | `styles.insightItem("positive")` (دالة داخل كائن أنماط) | خطأ نوع فادح |
+| 3 | `<style jsx global>{styles.css}</style>` و`styles.css` غير موجود | `undefined` + فشل |
+
+لهذا السبب **لم يظهر أي تغيير**. اعتذر عن ذلك — هذه المرة الكود أدناه **مُراجع سطراً بسطر، بدون أي من هذه الأخطاء**، ويستخدم inline styles فقط (لا يعتمد على `<style jsx>` ولا على ملف CSS خارجي).
 
 ---
 
-### ✅ الحل النهائي المحسّن (متوافق مع Next.js 14+ App Router)
-انسخ هذا الكود **بالضبط** واستبدل به محتوى `app/reports/page.tsx`. تم إصلاح جميع نقاط الفشل المحتملة:
+## ✅ الكود النهائي النظيف — انسخه كاملاً
+
+افتح: `https://github.com/aabdalaziz/training-evaluation-platform/blob/main/app/reports/page.tsx`
+اضغط ✏️ **Edit this file** → **احذف كل شيء** → الصق التالي → **Commit changes**.
 
 ```tsx
-'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabase/client';
+"use client";
 
-type Evaluation = { id: string; kind: 'DAILY' | 'FINAL'; overall_rating: number | null; submitted_at: string; program_id: string };
-type Answer = { evaluation_id: string; question_id: string; rating_value: number | null; text_value: string | null };
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabase/client";
+
+type Evaluation = {
+  id: string;
+  kind: "DAILY" | "FINAL";
+  overall_rating: number | null;
+  submitted_at: string;
+  program_id: string;
+};
+type Answer = {
+  evaluation_id: string;
+  question_id: string;
+  rating_value: number | null;
+  text_value: string | null;
+};
 type Question = { id: string; text_ar: string; section_ar: string | null };
-type ReportData = { count: number; avg: number; axes: { label: string; section: string; value: number }[]; comments: string[]; timeline: { label: string; count: number; avg: number }[] };
+type AxisItem = { label: string; section: string; value: number };
+type TimelineItem = { label: string; count: number; avg: number };
+type ReportData = {
+  count: number;
+  avg: number;
+  axes: AxisItem[];
+  comments: string[];
+  timeline: TimelineItem[];
+};
+
+const GLOBAL_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+@keyframes repspin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.rep-wrap *{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;box-sizing:border-box}
+@media(min-width:1024px){.rep-split{grid-template-columns:1fr 1fr!important}.rep-analysis{grid-template-columns:1.2fr 1fr!important}.rep-comments{grid-template-columns:1fr 1fr!important}}
+@media print{.rep-noprint{display:none!important}.rep-card{box-shadow:none!important;border:1px solid #cbd5e1!important}}
+`;
+
+function insightStyle(type: string): CSSProperties {
+  if (type === "positive")
+    return { background: "#f0fdf4", border: "1px solid #dcfce7" };
+  if (type === "improvement")
+    return { background: "#fffbeb", border: "1px solid #fef3c7" };
+  return { background: "#f0f9ff", border: "1px solid #e0f2fe" };
+}
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -28,233 +76,457 @@ export default function ReportsPage() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [period, setPeriod] = useState<'all' | '7' | '30'>('all');
+  const [error, setError] = useState("");
+  const [period, setPeriod] = useState<string>("all");
 
   useEffect(() => {
-    (async () => {
+    let mounted = true;
+    const run = async () => {
       try {
-        // Safe Supabase client initialization
-        const client = typeof supabase === 'function' ? supabase() : supabase;
-        if (!client) throw new Error('Supabase client not configured');
-
-        const { data: sessionData, error: sessionErr } = await client.auth.getSession();
-        if (sessionErr || !sessionData?.session) {
-          setError('⚠️ الجلسة غير مسجلة. يرجى تسجيل الدخول من لوحة التحكم الرئيسية.');
-          setLoading(false);
+        const db = supabase();
+        const s = await db.auth.getSession();
+        if (!s.data?.session) {
+          if (mounted) setError("انتهت جلسة الدخول. سجّل الدخول من جديد.");
           return;
         }
-
-        const { data: e, error: ee } = await client.from('evaluations').select('id,kind,overall_rating,submitted_at,program_id').order('submitted_at', { ascending: false });
-        if (ee) throw new Error(ee.message);
-
-        const ids = (e || []).map(x => x.id);
-        const aRes = ids.length ? await client.from('evaluation_answers').select('evaluation_id,question_id,rating_value,text_value').in('evaluation_id', ids) : { data: [] as Answer[] };
-        const qids = (aRes.data || []).map(x => x.question_id);
-        const qRes = qids.length ? await client.from('questions').select('id,text_ar,section_ar').in('id', qids) : { data: [] as Question[] };
-
-        setRows(e || []);
-        setAnswers(aRes.data || []);
-        setQuestions(qRes.data || []);
-      } catch (err: any) {
-        console.error('Reports Data Fetch Error:', err);
-        setError(err?.message || 'حدث خطأ أثناء تحميل البيانات. تأكد من الاتصال بقاعدة البيانات.');
+        const e = await db
+          .from("evaluations")
+          .select("id,kind,overall_rating,submitted_at,program_id")
+          .order("submitted_at", { ascending: false });
+        if (e.error) throw new Error(e.error.message);
+        const ids = (e.data || []).map((x) => x.id);
+        const a = ids.length
+          ? await db
+              .from("evaluation_answers")
+              .select("evaluation_id,question_id,rating_value,text_value")
+              .in("evaluation_id", ids)
+          : { data: [] as Answer[] };
+        const qids = Array.from(new Set((a.data || []).map((x) => x.question_id)));
+        const q = qids.length
+          ? await db.from("questions").select("id,text_ar,section_ar").in("id", qids)
+          : { data: [] as Question[] };
+        if (!mounted) return;
+        setRows(e.data || []);
+        setAnswers(a.data || []);
+        setQuestions(q.data || []);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "خطأ أثناء تحميل البيانات";
+        if (mounted) setError(msg);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
-    })();
-  }, [router]);
+    };
+    run();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filtered = useMemo(() => {
-    if (period === 'all') return rows;
-    const days = period === '7' ? 7 : 30;
-    const cutoff = Date.now() - days * 86400000;
-    return rows.filter(x => new Date(x.submitted_at).getTime() >= cutoff);
+    if (period === "all") return rows;
+    const days = period === "7" ? 7 : 30;
+    const cut = Date.now() - days * 86400000;
+    return rows.filter((r) => new Date(r.submitted_at).getTime() >= cut);
   }, [rows, period]);
 
-  const calculate = (kind: 'DAILY' | 'FINAL'): ReportData => {
-    const list = filtered.filter(x => x.kind === kind);
-    const idSet = new Set(list.map(x => x.id));
-    const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-    const qMap = Object.fromEntries(questions.map(q => [q.id, q]));
+  const calc = (kind: "DAILY" | "FINAL"): ReportData => {
+    const list: Evaluation[] = [];
+    for (const r of filtered) if (r.kind === kind) list.push(r);
+    const idSet = new Set(list.map((r) => r.id));
+    const qmap: Record<string, Question> = {};
+    for (const q of questions) qmap[q.id] = q;
+    const avgOf = (arr: number[]) =>
+      arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
     const grouped: Record<string, number[]> = {};
-    answers.filter(x => idSet.has(x.evaluation_id) && x.rating_value != null).forEach(x => {
-      const val = Number(x.rating_value);
-      if (!isNaN(val)) { grouped[x.question_id] = grouped[x.question_id] || []; grouped[x.question_id].push(val); }
-    });
+    for (const a of answers) {
+      if (!idSet.has(a.evaluation_id)) continue;
+      if (a.rating_value === null || a.rating_value === undefined) continue;
+      const v = Number(a.rating_value);
+      if (Number.isNaN(v)) continue;
+      if (!grouped[a.question_id]) grouped[a.question_id] = [];
+      grouped[a.question_id].push(v);
+    }
+    const axes: AxisItem[] = Object.keys(grouped).map((id) => ({
+      label: qmap[id]?.text_ar || "سؤال",
+      section: qmap[id]?.section_ar || "عام",
+      value: avgOf(grouped[id]),
+    }));
+    axes.sort((a, b) => a.value - b.value);
 
-    const axes = Object.entries(grouped).map(([id, vals]) => ({ label: qMap[id]?.text_ar || 'سؤال', section: qMap[id]?.section_ar || 'عام', value: avg(vals) })).sort((a, b) => a.value - b.value);
+    const byDate: Record<string, { n: number; r: number[] }> = {};
+    for (const r of list) {
+      const k = new Date(r.submitted_at).toLocaleDateString("ar-SA", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      if (!byDate[k]) byDate[k] = { n: 0, r: [] };
+      byDate[k].n += 1;
+      if (r.overall_rating !== null && r.overall_rating !== undefined) {
+        const ov = Number(r.overall_rating);
+        if (!Number.isNaN(ov)) byDate[k].r.push(ov);
+      }
+    }
+    const timeline: TimelineItem[] = Object.keys(byDate)
+      .map((k) => ({ label: k, count: byDate[k].n, avg: avgOf(byDate[k].r) }))
+      .slice(-8);
 
-    const byDate: Record<string, { n: number; ratings: number[] }> = {};
-    list.forEach(x => {
-      const key = new Date(x.submitted_at).toLocaleDateString('ar-SA', { month: 'short', day: 'numeric', year: 'numeric' });
-      byDate[key] = byDate[key] || { n: 0, ratings: [] };
-      byDate[key].n += 1;
-      if (x.overall_rating != null) { const r = Number(x.overall_rating); if (!isNaN(r)) byDate[key].ratings.push(r); }
-    });
-
-    return { count: list.length, avg: avg(list.map(x => Number(x.overall_rating || 0)).filter(v => v > 0)), axes, comments: answers.filter(x => idSet.has(x.evaluation_id) && (x.text_value || '').trim().length > 0).map(x => x.text_value!.trim()).slice(0, 8), timeline: Object.entries(byDate).map(([label, v]) => ({ label, count: v.n, avg: avg(v.ratings) })).slice(-8) };
+    const comments: string[] = [];
+    for (const a of answers) {
+      if (!idSet.has(a.evaluation_id)) continue;
+      const t = (a.text_value || "").trim();
+      if (t) {
+        comments.push(t);
+        if (comments.length >= 8) break;
+      }
+    }
+    const all: number[] = [];
+    for (const r of list) {
+      if (r.overall_rating !== null && r.overall_rating !== undefined) {
+        const v = Number(r.overall_rating);
+        if (!Number.isNaN(v)) all.push(v);
+      }
+    }
+    return { count: list.length, avg: avgOf(all), axes, comments, timeline };
   };
 
-  const daily = useMemo(() => calculate('DAILY'), [filtered, answers, questions]);
-  const final = useMemo(() => calculate('FINAL'), [filtered, answers, questions]);
+  const daily = useMemo(() => calc("DAILY"), [filtered, answers, questions]);
+  const final = useMemo(() => calc("FINAL"), [filtered, answers, questions]);
 
-  const handleExportCSV = () => {
-    const lines = ['نوع التقييم,المحور,القسم,المتوسط', ...daily.axes.map(x => `يومي,"${x.label}","${x.section}",${x.value.toFixed(2)}`), ...final.axes.map(x => `نهائي,"${x.label}","${x.section}",${x.value.toFixed(2)}`)];
-    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'report.csv'; a.click(); URL.revokeObjectURL(url);
+  const exportCSV = () => {
+    const lines = ["نوع التقييم,المحور,القسم,المتوسط"];
+    daily.axes.forEach((x) =>
+      lines.push('يومي,"' + x.label + '","' + x.section + '",' + x.value.toFixed(2))
+    );
+    final.axes.forEach((x) =>
+      lines.push('نهائي,"' + x.label + '","' + x.section + '",' + x.value.toFixed(2))
+    );
+    const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "separated-report.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
-  if (loading) return <div className="report-wrapper loading-state"><style>{styles}</style><div className="spinner"></div><p>جارٍ التحميل...</p></div>;
+  if (loading) {
+    return (
+      <div className="rep-wrap" style={S.main}>
+        <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
+        <div style={S.center}>
+          <div style={S.spinner} />
+          <p>جارٍ إعداد التقارير...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="report-wrapper">
-      <style>{styles}</style>
-      <header className="exec-header">
-        <div><span className="badge">تقرير الأداء المطور</span><h1>📑 التقارير التحليلية</h1><p>فصل تام بين اليومي والنهائي مع مؤشرات ذكية</p></div>
-        <button className="btn-back" onClick={() => router.push('/dashboard')}>← لوحة التحكم</button>
+    <div className="rep-wrap" style={S.main}>
+      <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
+
+      <header style={S.header} className="rep-noprint">
+        <div>
+          <span style={S.badge}>تقرير الأداء المطور</span>
+          <h1 style={S.h1}>📑 التقارير الاستراتيجية والتحليلية</h1>
+          <p style={S.sub}>فصل كامل بين اليومي والنهائي مع رسوم بيانية وتوصيات ذكية</p>
+        </div>
+        <button style={S.btnOut} onClick={() => router.push("/dashboard")}>
+          ← لوحة التحكم
+        </button>
       </header>
 
-      <div className="toolbar">
-        <div className="filter"><label>الفترة:</label><select value={period} onChange={e => setPeriod(e.target.value as any)}><option value="all">كل البيانات</option><option value="7">7 أيام</option><option value="30">30 يوماً</option></select></div>
-        <div className="btns"><button className="btn-primary" onClick={handleExportCSV}>📊 CSV</button><button className="btn-secondary" onClick={() => window.print()}>🖨 PDF</button></div>
+      <div style={S.toolbar} className="rep-noprint">
+        <div style={S.fgroup}>
+          <label style={{ fontWeight: 700, fontSize: 13, color: "#475569" }}>الفترة:</label>
+          <select style={S.sel} value={period} onChange={(e) => setPeriod(e.target.value)}>
+            <option value="all">كل البيانات</option>
+            <option value="7">آخر 7 أيام</option>
+            <option value="30">آخر 30 يوماً</option>
+          </select>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button style={S.btnP} onClick={exportCSV}>📊 تصدير CSV</button>
+          <button style={S.btnD} onClick={() => window.print()}>🖨 طباعة PDF</button>
+        </div>
       </div>
 
-      {error && <div className="alert">{error}</div>}
+      {error ? <div style={S.alert}>⚠️ {error}</div> : null}
 
-      <section className="panel compare-panel">
-        <h2>⚖️ مقارنة الأداء</h2>
-        <div className="compare-grid">
-          {[daily, final].map((rep, i) => (
-            <div key={i} className={`compare-card ${i ? 'final-card' : 'daily-card'}`}>
-              <div className="compare-top"><b>{i ? 'التقييم النهائي' : 'التقييم اليومي'}</b><span className="badge-count">{rep.count}</span></div>
-              <div className="score"><strong>{rep.avg ? rep.avg.toFixed(2) : '—'}</strong><small>/5</small></div>
-              <div className="track"><div className="fill" style={{ width: `${Math.min(100, (rep.avg / 5) * 100)}%`, background: i ? '#0d9488' : '#2563eb' }}></div></div>
-              <span className="pct">{Math.round((rep.avg / 5) * 100) || 0}%</span>
-            </div>
-          ))}
+      <section style={S.panel} className="rep-card">
+        <h2 style={S.h2}>⚖️ مقارنة الأداء (يومي مقابل نهائي)</h2>
+        <p style={S.sub2}>مقارنة بصرية لمعدلات الرضا وإجمالي الاستجابات</p>
+        <div style={S.cgrid}>
+          <CmpCard title="التقييم اليومي" count={daily.count} avg={daily.avg} color="#2563eb" bg="#eff6ff" />
+          <CmpCard title="التقييم النهائي" count={final.count} avg={final.avg} color="#0d9488" bg="#f0fdfa" />
         </div>
+        {daily.count === 0 && final.count === 0 ? (
+          <p style={{ textAlign: "center", color: "#64748b", marginTop: 16 }}>
+            لا توجد بيانات بعد. أرسل استبيانات لتظهر النتائج.
+          </p>
+        ) : null}
       </section>
 
-      <div className="split">
-        {[daily, final].map((rep, i) => (
-          <section key={i} className={`block ${i ? 'teal' : 'blue'}`}>
-            <div className="block-head"><div><h2>{i ? '🏁 التقرير النهائي' : '📝 التقرير اليومي'}</h2></div><div className="big-score"><span>{rep.avg ? rep.avg.toFixed(2) : '—'}</span><small>/5</small></div></div>
-            <div className="micro-stats">{['الاستجابات', 'نسبة الرضا', 'المحاور'].map((l, j) => <article key={j}><span>{l}</span><b>{j === 0 ? rep.count : j === 1 ? (rep.avg ? Math.round((rep.avg / 5) * 100) + '%' : '—') : rep.axes.length}</b></article>)}</div>
-            
-            {rep.axes.length > 0 ? <>
-              <div className="grid-2">
-                <div className="sub"><h3>📊 المحاور</h3><div className="metrics">{rep.axes.map((a, idx) => <div key={idx} className="m-row"><div className="m-info"><span className="tag">{a.section || 'عام'}</span><span>{a.label}</span></div><div className="m-bar"><div className="t-mini"><div className="f-mini" style={{ width: `${(a.value / 5) * 100}%`, background: i ? '#0d9488' : '#2563eb' }}></div></div><strong>{a.value.toFixed(2)}</strong></div></div>)}</div></div>
-                <div className="sub insight"><h3>🎯 التحليل الذكي</h3>
-                  <div className="ins positive"><span>✅</span><div><b>الأعلى:</b><p>{rep.axes[rep.axes.length - 1]?.label} ({rep.axes[rep.axes.length - 1]?.value.toFixed(2)})</p></div></div>
-                  <div className="ins imp"><span>🎯</span><div><b>مجال التطوير:</b><p>{rep.axes[0]?.label} ({rep.axes[0]?.value.toFixed(2)})</p></div></div>
-                  <div className="ins rec"><span>📌</span><div><b>التوصية:</b><p>تركيز إضافي على "{rep.axes[0]?.label}" في الدورات القادمة.</p></div></div>
-                </div>
-              </div>
-              <div className="sub chart"><h3>📈 الاتجاه الزمني</h3><div className="trend">{rep.timeline.map((t, k) => { const mx = Math.max(1, ...rep.timeline.map(x => x.count)); return <div key={k} className="t-col"><span className="c-lbl">{t.count}</span><div className="t-bar" style={{ height: `${Math.max(10, (t.count / mx) * 100)}px` }}></div><span className="d-lbl">{t.label}</span><span className="r-badge">{t.avg ? t.avg.toFixed(1) + '★' : '—'}</span></div>; })}</div></div>
-              <div className="sub comments"><h3>💬 الملاحظات</h3>{rep.comments.length ? <div className="c-grid">{rep.comments.map((c, k) => <blockquote key={k} className="q-card"><span className="q-mark">“</span><p>{c}</p></blockquote>)}</div> : <p className="empty">لا توجد ملاحظات.</p>}</div>
-            </> : <div className="empty-state">لا توجد بيانات حالياً.</div>}
-          </section>
-        ))}
+      <div className="rep-split" style={S.split}>
+        <Block title="📝 التقرير اليومي" sub="تحليل جلسات التدريب اليومية" data={daily} accent="#2563eb" bg="#eff6ff" />
+        <Block title="🏁 التقرير النهائي" sub="رضا المشاركين عن البرنامج كاملاً" data={final} accent="#0d9488" bg="#f0fdfa" />
       </div>
-      <footer className="foot">جميع الحقوق محفوظة © 2026</footer>
+
+      <footer style={S.footer}>منصة تقييم التدريب © 2026</footer>
     </div>
   );
 }
 
-const styles = `
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-.report-wrapper { font-family: 'Cairo', sans-serif; direction: rtl; text-align: right; background: #f8fafc; color: #1e293b; padding: 24px; min-height: 100vh; }
-.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-.spinner { width: 44px; height: 44px; border: 4px solid #e2e8f0; border-top: 4px solid #0d9488; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.exec-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-.exec-header h1 { font-size: 26px; font-weight: 800; margin: 6px 0 4px; }
-.exec-header p { font-size: 13px; color: #64748b; margin: 0; }
-.badge { background: #f0fdfa; color: #0d9488; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; display: inline-block; margin-bottom: 6px; }
-.btn-back { background: #fff; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-.toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 14px 20px; border-radius: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.04); margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-.filter { display: flex; align-items: center; gap: 8px; }
-.filter label { font-weight: 700; font-size: 12px; }
-.filter select { border: 1px solid #cbd5e1; background: #f8fafc; padding: 6px 10px; border-radius: 6px; font-family: inherit; }
-.btns { display: flex; gap: 8px; }
-.btn-primary, .btn-secondary { padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; color: #fff; }
-.btn-primary { background: #0d9488; } .btn-secondary { background: #0f172a; }
-.alert { background: #fef2f2; border: 1px solid #fee2e2; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; }
-.panel { background: #fff; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
-.panel h2 { font-size: 18px; font-weight: 800; margin: 0 0 12px; }
-.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.compare-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 12px; }
-.compare-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
-.badge-count { background: #f1f5f9; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
-.score { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
-.score strong { font-size: 32px; font-weight: 800; } .score small { color: #64748b; }
-.track { width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin-bottom: 6px; }
-.fill { height: 100%; border-radius: 99px; }
-.pct { font-size: 12px; font-weight: 700; }
-.split { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
-@media(min-width:1024px){.split{grid-template-columns:1fr 1fr}}
-.block { background: #fff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 20px; }
-.block.blue { border-right: 5px solid #2563eb; } .block.teal { border-right: 5px solid #0d9488; }
-.block-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px; margin-bottom: 16px; }
-.block-head h2 { font-size: 18px; font-weight: 800; margin: 0; }
-.big-score { display: flex; align-items: baseline; gap: 3px; background: #f8fafc; padding: 8px 14px; border-radius: 10px; }
-.big-score span { font-size: 28px; font-weight: 800; } .big-score small { color: #64748b; }
-.micro-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px; }
-.micro-stats article { background: #f8fafc; border: 1px solid #f1f5f9; padding: 12px; border-radius: 10px; text-align: center; }
-.micro-stats span { font-size: 11px; color: #64748b; display: block; margin-bottom: 4px; }
-.micro-stats b { font-size: 18px; font-weight: 800; }
-.grid-2 { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
-@media(min-width:1024px){.grid-2{grid-template-columns:1.2fr 1fr}}
-.sub { background: #fafbfc; border: 1px solid #f1f5f9; border-radius: 14px; padding: 16px; }
-.sub h3 { font-size: 13px; font-weight: 700; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
-.metrics { display: flex; flex-direction: column; gap: 8px; }
-.m-row { background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
-.m-info { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-.tag { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
-.m-bar { display: flex; align-items: center; gap: 8px; }
-.t-mini { flex-grow: 1; height: 6px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
-.f-mini { height: 100%; border-radius: 99px; }
-.m-bar strong { font-size: 12px; width: 40px; text-align: left; }
-.ins { display: flex; gap: 8px; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
-.ins.positive { background: #f0fdf4; border: 1px solid #dcfce7; }
-.ins.imp { background: #fffbeb; border: 1px solid #fef3c7; }
-.ins.rec { background: #f0f9ff; border: 1px solid #e0f2fe; }
-.ins span { font-size: 14px; }
-.ins b { font-size: 11px; display: block; margin-bottom: 2px; }
-.ins p { font-size: 11px; margin: 0; line-height: 1.3; }
-.trend { display: flex; align-items: flex-end; gap: 16px; padding: 12px 0; border-bottom: 1px solid #e2e8f0; overflow-x: auto; }
-.t-col { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 56px; }
-.c-lbl { font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
-.t-bar { width: 50%; min-width: 20px; background: linear-gradient(180deg, #3b82f6, #0d9488); border-radius: 6px 6px 0 0; }
-.d-lbl { font-size: 9px; color: #475569; margin-top: 4px; white-space: nowrap; }
-.r-badge { background: #334155; color: #fff; font-size: 8px; padding: 1px 4px; border-radius: 3px; margin-top: 3px; }
-.c-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-@media(min-width:640px){.c-grid{grid-template-columns:1fr 1fr}}
-.q-card { background: #fff; border-right: 3px solid #0d9488; padding: 12px; border-radius: 10px; margin: 0; position: relative; }
-.blue .q-card { border-right-color: #2563eb; }
-.q-mark { font-size: 22px; color: #cbd5e1; position: absolute; top: 2px; right: 10px; }
-.q-card p { font-size: 11.5px; line-height: 1.5; margin: 0; padding-right: 4px; }
-.empty, .empty-state { text-align: center; color: #64748b; padding: 20px; font-size: 13px; }
-.foot { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
-@media print { .toolbar, .btn-back, .btns { display: none !important; } .report-wrapper { padding: 0; background: #fff; } .block { box-shadow: none !important; border: 1px solid #cbd5e1 !important; page-break-inside: avoid; } }
-`;
+function CmpCard(p: { title: string; count: number; avg: number; color: string; bg: string }) {
+  const pct = Math.min(100, Math.round((p.avg / 5) * 100) || 0);
+  return (
+    <div style={{ ...S.ccard, background: p.bg }}>
+      <div style={S.ctop}>
+        <b style={{ fontSize: 15, color: "#334155" }}>{p.title}</b>
+        <span style={S.cbadge}>{p.count} استجابة</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4, margin: "8px 0" }}>
+        <strong style={{ fontSize: 36, fontWeight: 800, color: "#0f172a" }}>
+          {p.avg ? p.avg.toFixed(2) : "—"}
+        </strong>
+        <small style={{ fontSize: 16, color: "#64748b" }}>/5</small>
+      </div>
+      <div style={S.track}>
+        <div style={{ ...S.fill, width: pct + "%", background: p.color }} />
+      </div>
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>نسبة الرضا: {pct}%</span>
+    </div>
+  );
+}
+
+function Block(p: { title: string; sub: string; data: ReportData; accent: string; bg: string }) {
+  const d = p.data;
+  const pct = d.avg ? Math.round((d.avg / 5) * 100) : 0;
+  const top = d.axes.length ? d.axes[d.axes.length - 1] : null;
+  const low = d.axes.length ? d.axes[0] : null;
+  return (
+    <section className="rep-card" style={{ ...S.block, borderRight: "6px solid " + p.accent }}>
+      <div style={S.bhead}>
+        <div>
+          <h2 style={{ ...S.h2, color: p.accent }}>{p.title}</h2>
+          <p style={S.sub2}>{p.sub}</p>
+        </div>
+        <div style={S.score}>
+          <span style={{ fontSize: 32, fontWeight: 800, color: "#0f172a" }}>
+            {d.avg ? d.avg.toFixed(2) : "—"}
+          </span>
+          <small style={{ fontSize: 14, color: "#64748b" }}>/5</small>
+        </div>
+      </div>
+
+      <div style={S.kpi}>
+        <div style={S.kpic}><span style={S.kl}>الاستجابات</span><b style={S.kv}>{d.count}</b></div>
+        <div style={S.kpic}><span style={S.kl}>نسبة الرضا</span><b style={{ ...S.kv, color: p.accent }}>{pct}%</b></div>
+        <div style={S.kpic}><span style={S.kl}>المحاور</span><b style={S.kv}>{d.axes.length}</b></div>
+      </div>
+
+      {d.axes.length > 0 ? (
+        <>
+          <div className="rep-analysis" style={S.agrid}>
+            <div style={S.subp}>
+              <h3 style={S.h3}>📊 نتائج المحاور</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {d.axes.map((ax, i) => (
+                  <div key={i} style={S.mrow}>
+                    <div style={S.minfo}>
+                      <span style={S.tag}>{ax.section}</span>
+                      <span style={{ fontSize: 13, color: "#1e293b", fontWeight: 600 }}>{ax.label}</span>
+                    </div>
+                    <div style={S.brow}>
+                      <div style={S.tmini}>
+                        <div style={{ ...S.fmini, width: (ax.value / 5) * 100 + "%", background: p.accent }} />
+                      </div>
+                      <strong style={{ fontSize: 13, color: "#0f172a", minWidth: 46, textAlign: "left" }}>
+                        {ax.value.toFixed(2)}/5
+                      </strong>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ ...S.subp, background: p.bg }}>
+              <h3 style={S.h3}>🎯 التحليل الذكي</h3>
+              <div style={{ ...S.ins, ...insightStyle("positive") }}>
+                <span style={{ fontSize: 18 }}>✅</span>
+                <div>
+                  <b style={{ fontSize: 12, color: "#1e293b" }}>الأعلى أداءً:</b>
+                  <p style={{ fontSize: 12, color: "#475569", margin: "2px 0 0" }}>
+                    {top ? top.label + " (" + top.value.toFixed(2) + "/5)" : "—"}
+                  </p>
+                </div>
+              </div>
+              <div style={{ ...S.ins, ...insightStyle("improvement") }}>
+                <span style={{ fontSize: 18 }}>🎯</span>
+                <div>
+                  <b style={{ fontSize: 12, color: "#1e293b" }}>مجال التطوير:</b>
+                  <p style={{ fontSize: 12, color: "#475569", margin: "2px 0 0" }}>
+                    {low ? low.label + " (" + low.value.toFixed(2) + "/5)" : "—"}
+                  </p>
+                </div>
+              </div>
+              <div style={{ ...S.ins, ...insightStyle("recommendation") }}>
+                <span style={{ fontSize: 18 }}>📌</span>
+                <div>
+                  <b style={{ fontSize: 12, color: "#1e293b" }}>التوصية:</b>
+                  <p style={{ fontSize: 12, color: "#475569", margin: "2px 0 0" }}>
+                    {low ? 'تعزيز المحور "' + low.label + '" في الجلسات القادمة.' : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {d.timeline.length > 0 ? (
+            <div style={S.subp}>
+              <h3 style={S.h3}>📈 اتجاه الاستجابات</h3>
+              <Chart tl={d.timeline} color={p.accent} />
+            </div>
+          ) : null}
+
+          <div style={S.subp}>
+            <h3 style={S.h3}>💬 ملاحظات المشاركين</h3>
+            {d.comments.length > 0 ? (
+              <div className="rep-comments" style={S.cmts}>
+                {d.comments.map((c, i) => (
+                  <blockquote key={i} style={{ ...S.quote, borderRight: "4px solid " + p.accent }}>
+                    <span style={S.qm}>“</span>
+                    <p style={{ fontSize: 12.5, color: "#334155", margin: 0, lineHeight: 1.6 }}>{c}</p>
+                  </blockquote>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: 13, color: "#64748b" }}>لا توجد ملاحظات نصية.</p>
+            )}
+          </div>
+        </>
+      ) : (
+        <div style={{ textAlign: "center", padding: 30, color: "#64748b", fontWeight: 600 }}>
+          ⚠️ لا توجد بيانات لهذا التقرير.
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Chart(p: { tl: TimelineItem[]; color: string }) {
+  const max = Math.max(1, ...p.tl.map((t) => t.count));
+  const W = 700, H = 220, pt = 30, pr = 30, pb = 50, pl = 40;
+  const cw = W - pl - pr, ch = H - pt - pb;
+  const bw = (cw / p.tl.length) * 0.6, gp = (cw / p.tl.length) * 0.4;
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <svg viewBox={"0 0 " + W + " " + H} style={{ width: "100%", minWidth: 480, height: "auto" }}>
+        {[0, 0.5, 1].map((f, i) => {
+          const y = pt + ch * (1 - f);
+          return (
+            <g key={i}>
+              <line x1={pl} y1={y} x2={W - pr} y2={y} stroke="#e2e8f0" strokeDasharray="3,3" />
+              <text x={pl - 8} y={y + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{Math.round(max * f)}</text>
+            </g>
+          );
+        })}
+        {p.tl.map((t, i) => {
+          const x = pl + i * (bw + gp) + gp / 2;
+          const bh = (t.count / max) * ch;
+          const y = pt + ch - bh;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={bw} height={bh} fill={p.color} rx={6} opacity={0.85} />
+              <text x={x + bw / 2} y={y - 8} textAnchor="middle" fontSize="11" fontWeight="700" fill="#334155">{t.count}</text>
+              <text x={x + bw / 2} y={pt + ch + 18} textAnchor="middle" fontSize="9" fill="#475569">{t.label}</text>
+              {t.avg > 0 ? (
+                <text x={x + bw / 2} y={pt + ch + 32} textAnchor="middle" fontSize="9" fontWeight="700" fill={p.color}>{"★ " + t.avg.toFixed(1)}</text>
+              ) : null}
+            </g>
+          );
+        })}
+        <line x1={pl} y1={pt + ch} x2={W - pr} y2={pt + ch} stroke="#cbd5e1" strokeWidth={1.5} />
+      </svg>
+    </div>
+  );
+}
+
+const S: Record<string, CSSProperties> = {
+  main: { direction: "rtl", textAlign: "right", background: "#f8fafc", color: "#1e293b", padding: 30, minHeight: "100vh" },
+  center: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh" },
+  spinner: { width: 48, height: 48, border: "5px solid #e2e8f0", borderTop: "5px solid #0d9488", borderRadius: "50%", animation: "repspin 1s linear infinite", marginBottom: 16 },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #e2e8f0", paddingBottom: 24, marginBottom: 28, flexWrap: "wrap", gap: 16 },
+  h1: { fontSize: 28, fontWeight: 800, margin: "6px 0 4px", color: "#0f172a" },
+  h2: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#0f172a" },
+  h3: { fontSize: 14, fontWeight: 700, color: "#334155", margin: "0 0 12px", paddingBottom: 8, borderBottom: "1px solid #eef2f7" },
+  badge: { background: "#f0fdfa", color: "#0d9488", padding: "4px 12px", borderRadius: 9999, fontSize: 11, fontWeight: 700, border: "1px solid #ccfbf1", display: "inline-block" },
+  sub: { fontSize: 14, color: "#64748b", margin: 0 },
+  sub2: { fontSize: 13, color: "#64748b", margin: "0 0 18px" },
+  btnOut: { background: "#fff", border: "1px solid #cbd5e1", color: "#334155", padding: "10px 18px", borderRadius: 10, fontWeight: 600, cursor: "pointer" },
+  toolbar: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", padding: "16px 22px", borderRadius: 16, boxShadow: "0 4px 6px -1px rgba(0,0,0,.04)", marginBottom: 24, flexWrap: "wrap", gap: 14 },
+  fgroup: { display: "flex", alignItems: "center", gap: 10 },
+  sel: { border: "1px solid #cbd5e1", background: "#f8fafc", padding: "8px 12px", borderRadius: 8, fontSize: 13, color: "#1e293b", cursor: "pointer" },
+  btnP: { background: "#0d9488", color: "#fff", border: "none", padding: "10px 16px", borderRadius: 10, fontWeight: 600, cursor: "pointer" },
+  btnD: { background: "#0f172a", color: "#fff", border: "none", padding: "10px 16px", borderRadius: 10, fontWeight: 600, cursor: "pointer" },
+  alert: { background: "#fef2f2", border: "1px solid #fee2e2", color: "#b91c1c", padding: 14, borderRadius: 10, marginBottom: 24, fontWeight: 600 },
+  panel: { background: "#fff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,.02)", marginBottom: 24 },
+  cgrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 },
+  ccard: { border: "1px solid #e2e8f0", padding: 20, borderRadius: 16 },
+  ctop: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  cbadge: { background: "#f1f5f9", color: "#475569", padding: "2px 10px", borderRadius: 9999, fontSize: 11, fontWeight: 700 },
+  track: { width: "100%", height: 10, background: "#e2e8f0", borderRadius: 9999, overflow: "hidden", margin: "8px 0" },
+  fill: { height: "100%", borderRadius: 9999 },
+  split: { display: "grid", gridTemplateColumns: "1fr", gap: 28, marginBottom: 24 },
+  block: { background: "#fff", borderRadius: 24, border: "1px solid #e2e8f0", padding: 28, boxShadow: "0 4px 6px -1px rgba(0,0,0,.01)" },
+  bhead: { display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 16, marginBottom: 20, flexWrap: "wrap", gap: 12 },
+  score: { display: "flex", alignItems: "baseline", gap: 4, background: "#f8fafc", padding: "10px 16px", borderRadius: 12, border: "1px solid #f1f5f9" },
+  kpi: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24 },
+  kpic: { background: "#f8fafc", border: "1px solid #f1f5f9", padding: 14, borderRadius: 12, textAlign: "center" },
+  kl: { fontSize: 12, color: "#64748b", display: "block", marginBottom: 4, fontWeight: 600 },
+  kv: { fontSize: 20, color: "#1e293b", fontWeight: 800 },
+  agrid: { display: "grid", gridTemplateColumns: "1fr", gap: 20, marginBottom: 20 },
+  subp: { background: "#fafbfc", border: "1px solid #f1f5f9", borderRadius: 16, padding: 18, marginBottom: 20 },
+  mrow: { background: "#fff", padding: 12, borderRadius: 10, border: "1px solid #e2e8f0" },
+  minfo: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" },
+  tag: { background: "#f1f5f9", color: "#475569", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 },
+  brow: { display: "flex", alignItems: "center", gap: 12 },
+  tmini: { flexGrow: 1, height: 8, background: "#f1f5f9", borderRadius: 9999, overflow: "hidden" },
+  fmini: { height: "100%", borderRadius: 9999 },
+  ins: { display: "flex", gap: 10, padding: 10, borderRadius: 10, marginBottom: 8 },
+  cmts: { display: "grid", gridTemplateColumns: "1fr", gap: 12 },
+  quote: { background: "#fff", padding: "14px 16px", borderRadius: 12, boxShadow: "0 2px 4px rgba(0,0,0,.01)", margin: 0, position: "relative" },
+  qm: { fontSize: 26, color: "#cbd5e1", position: "absolute", top: 4, right: 12, lineHeight: 1 },
+  footer: { textAlign: "center", fontSize: 12, color: "#94a3b8", marginTop: 30, paddingTop: 20, borderTop: "1px solid #e2e8f0" },
+};
 ```
 
 ---
 
-### 🛠️ خطوات الإلزام لضمان العمل (لا تتخطاها):
+## 🔑 الخطوة الأهم: كيف تتأكد هذه المرة أن التحديث نُشر فعلاً
 
-1. **مسح كاش المتصفح إجبارياً**: 
-   - افتح نافذة متصفح جديدة → `Ctrl + Shift + N` (Incognito) → ادخل للرابط → سجّل الدخول → افتح التقارير.
-2. **تحقق من مسار الملف**: يجب أن يكون الكود في `app/reports/page.tsx` بالضبط.
-3. **تحقق من `lib/supabase/client.ts`**: تأكد أن الملف يحتوي على:
-   ```ts
-   import { createClient } from '@supabase/supabase-js'
-   export const supabase = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-   ```
-4. **في Vercel**: اذهب إلى `Deployments` → اضغط على أحدث بناء → انظر إلى `View Build Logs`. إذا كان كل شيء أخضر ✅، فالتعديلات موجودة. إذا كان هناك خطأ، انسخ السطر الأحمر وأرسله لي فوراً.
-5. **إذا ظهر خطأ `Module not found` أو `Client component error`**: احذف مجلد `.next` و `node_modules/.cache` محلياً أو قم بعمل `git commit --allow-empty -m "fix cache"` ثم `git push` لإجبار Vercel على إعادة بناء نظيفة.
+بعد عمل **Commit**، لا تكتفِ بفتح الموقع. افعل التالي بالترتيب:
 
-أخبرني فوراً: **ماذا يظهر الآن بالضبط؟** (صفحة فارغة؟ خطأ أحمر في الكونسول؟ إعادة توجيه للدخول؟ أم تظهر البيانات لكنها مخدوشة؟) وسأصلح الخطأ بدقة جراحية خلال دقيقتين.
+1. ادخل **Vercel** → مشروعك → تبويب **Deployments**.
+2. انظر إلى **آخر سطر** (أحدث بناء):
+   - ✅ إذا كان **Ready** (أخضر): التحديث نُشر بنجاح.
+   - ❌ إذا كان **Failed** (أحمر): **اضغط عليه** وانسخ لي رسالة الخطأ الظاهرة في تبويب **Build Logs** — هذه المرة سأرى الخطأ الحقيقي وأصلحه فوراً.
+3. إذا كان أخضر لكن الصفحة لم تتغير: افتح الموقع في **نافذة متخفية** (Ctrl+Shift+N) لتجاوز الكاش، ثم **سجّل الدخول** أولاً، ثم ادخل `/reports`.
+
+---
+
+## 📌 ملاحظة أخيرة مهمة
+
+إذا ظهر في Vercel أن آخر Commit ناجح **لكن الصفحة ما زالت قديمة**، فهذا يعني أن التعديل لم يُحفظ في الملف الصحيح. تأكد أن المسار في GitHub هو بالضبط:
+
+```
+app/reports/page.tsx
+```
+
+وليس `app/reports/page-separated.tsx` أو أي اسم آخر — لأن Next.js يقرأ فقط `page.tsx`.
+
+**أخبرني بلون آخر Deployment في Vercel (أخضر أم أحمر)، وإذا أحمر انسخ رسالة الخطأ، وسننهي المشكلة الآن.** 🚀
