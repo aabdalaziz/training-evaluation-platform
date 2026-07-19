@@ -1,106 +1,283 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabase/client';
+"use client";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabase/client";
+
+type Evaluation = { id: string; kind: "DAILY" | "FINAL"; overall_rating: number | null; submitted_at: string; program_id: string };
+type Answer = { evaluation_id: string; question_id: string; rating_value: number | null; text_value: string | null };
+type Question = { id: string; text_ar: string; section_ar: string | null };
+type AxisItem = { label: string; section: string; value: number };
+type TimelineItem = { label: string; count: number; avg: number };
+type ReportData = { count: number; avg: number; axes: AxisItem[]; comments: string[]; timeline: TimelineItem[] };
+
+const CSS = "@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');@keyframes rspin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.rw *{font-family:'Cairo',Tahoma,sans-serif;box-sizing:border-box}@media(min-width:1024px){.rsplit{grid-template-columns:1fr 1fr!important}.ran{grid-template-columns:1.2fr 1fr!important}.rcm{grid-template-columns:1fr 1fr!important}}@media print{.rnp{display:none!important}}";
+
+function ins(t: string): CSSProperties {
+  if (t === "p") return { background: "#f0fdf4", border: "1px solid #dcfce7" };
+  if (t === "i") return { background: "#fffbeb", border: "1px solid #fef3c7" };
+  return { background: "#f0f9ff", border: "1px solid #e0f2fe" };
+}
 
 export default function ReportsPage() {
   const router = useRouter();
-  const [data, setData] = useState<any>(null);
+  const [rows, setRows] = useState<Evaluation[]>([]);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [period, setPeriod] = useState("all");
 
   useEffect(() => {
-    (async () => {
+    let on = true;
+    const run = async () => {
       try {
-        const client = typeof supabase === 'function' ? supabase() : supabase;
-        const { data: { session } } = await client.auth.getSession();
-        if (!session) { setLoading(false); return; }
-
-        const { data: evals } = await client.from('evaluations').select('*').order('submitted_at', { ascending: false });
-        const { data: answers } = await client.from('evaluation_answers').select('*');
-        const { data: questions } = await client.from('questions').select('*');
-
-        setData({ evals: evals || [], answers: answers || [], questions: questions || [] });
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    })();
+        const db = supabase();
+        const s = await db.auth.getSession();
+        if (!s.data || !s.data.session) { if (on) setError("انتهت جلسة الدخول. سجّل الدخول من جديد."); return; }
+        const e = await db.from("evaluations").select("id,kind,overall_rating,submitted_at,program_id").order("submitted_at", { ascending: false });
+        if (e.error) throw new Error(e.error.message);
+        const ids = (e.data || []).map((x) => x.id);
+        const a = ids.length ? await db.from("evaluation_answers").select("evaluation_id,question_id,rating_value,text_value").in("evaluation_id", ids) : { data: [] as Answer[] };
+        const qids = Array.from(new Set((a.data || []).map((x) => x.question_id)));
+        const q = qids.length ? await db.from("questions").select("id,text_ar,section_ar").in("id", qids) : { data: [] as Question[] };
+        if (!on) return;
+        setRows(e.data || []); setAnswers(a.data || []); setQuestions(q.data || []);
+      } catch (err: unknown) {
+        if (on) setError(err instanceof Error ? err.message : "خطأ في تحميل البيانات");
+      } finally { if (on) setLoading(false); }
+    };
+    run();
+    return () => { on = false; };
   }, []);
 
-  if (loading) return <div style={{padding:40,fontFamily:'Cairo',textAlign:'center'}}>جارٍ التحميل...</div>;
-  if (!data) return <div style={{padding:40,fontFamily:'Cairo',textAlign:'center'}}>يرجى تسجيل الدخول</div>;
+  const filtered = useMemo(() => {
+    if (period === "all") return rows;
+    const days = period === "7" ? 7 : 30;
+    const cut = Date.now() - days * 86400000;
+    return rows.filter((r) => new Date(r.submitted_at).getTime() >= cut);
+  }, [rows, period]);
 
-  const daily = data.evals.filter((e:any) => e.kind === 'DAILY');
-  const final_ = data.evals.filter((e:any) => e.kind === 'FINAL');
-  const dailyAvg = daily.length > 0 ? (daily.reduce((s:number,e:any)=>s+Number(e.overall_rating||0),0)/daily.length) : 0;
-  const finalAvg = final_.length > 0 ? (final_.reduce((s:number,e:any)=>s+Number(e.overall_rating||0),0)/final_.length) : 0;
+  const calc = (kind: "DAILY" | "FINAL"): ReportData => {
+    const list: Evaluation[] = [];
+    for (const r of filtered) if (r.kind === kind) list.push(r);
+    const idSet = new Set(list.map((r) => r.id));
+    const qmap: Record<string, Question> = {};
+    for (const q of questions) qmap[q.id] = q;
+    const avgOf = (arr: number[]) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0);
+    const grouped: Record<string, number[]> = {};
+    for (const a of answers) {
+      if (!idSet.has(a.evaluation_id)) continue;
+      if (a.rating_value === null || a.rating_value === undefined) continue;
+      const v = Number(a.rating_value);
+      if (Number.isNaN(v)) continue;
+      if (!grouped[a.question_id]) grouped[a.question_id] = [];
+      grouped[a.question_id].push(v);
+    }
+    const axes: AxisItem[] = Object.keys(grouped).map((id) => ({ label: qmap[id] ? qmap[id].text_ar : "سؤال", section: qmap[id] && qmap[id].section_ar ? qmap[id].section_ar : "عام", value: avgOf(grouped[id]) }));
+    axes.sort((a, b) => a.value - b.value);
+    const byDate: Record<string, { n: number; r: number[] }> = {};
+    for (const r of list) {
+      const k = new Date(r.submitted_at).toLocaleDateString("ar-SA", { month: "short", day: "numeric", year: "numeric" });
+      if (!byDate[k]) byDate[k] = { n: 0, r: [] };
+      byDate[k].n += 1;
+      if (r.overall_rating !== null && r.overall_rating !== undefined) { const ov = Number(r.overall_rating); if (!Number.isNaN(ov)) byDate[k].r.push(ov); }
+    }
+    const timeline: TimelineItem[] = Object.keys(byDate).map((k) => ({ label: k, count: byDate[k].n, avg: avgOf(byDate[k].r) })).slice(-8);
+    const comments: string[] = [];
+    for (const a of answers) { if (!idSet.has(a.evaluation_id)) continue; const t = (a.text_value || "").trim(); if (t) { comments.push(t); if (comments.length >= 8) break; } }
+    const all: number[] = [];
+    for (const r of list) { if (r.overall_rating !== null && r.overall_rating !== undefined) { const v = Number(r.overall_rating); if (!Number.isNaN(v)) all.push(v); } }
+    return { count: list.length, avg: avgOf(all), axes: axes, comments: comments, timeline: timeline };
+  };
+
+  const daily = useMemo(() => calc("DAILY"), [filtered, answers, questions]);
+  const final = useMemo(() => calc("FINAL"), [filtered, answers, questions]);
+
+  const csv = () => {
+    const lines = ["نوع,المحور,القسم,المتوسط"];
+    daily.axes.forEach((x) => lines.push("يومي," + x.label + "," + x.section + "," + x.value.toFixed(2)));
+    final.axes.forEach((x) => lines.push("نهائي," + x.label + "," + x.section + "," + x.value.toFixed(2)));
+    const blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "report.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  };
+
+  if (loading) {
+    return (<div className="rw" style={S.main}><style dangerouslySetInnerHTML={{ __html: CSS }} /><div style={S.ctr}><div style={S.spin} /><p>جارٍ إعداد التقارير...</p></div></div>);
+  }
 
   return (
-    <div style={{direction:'rtl',fontFamily:'Cairo,sans-serif',padding:20,background:'#f8fafc',minHeight:'100vh'}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'3px solid #0d9488',paddingBottom:15,marginBottom:25}}>
+    <div className="rw" style={S.main}>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <header style={S.hd} className="rnp">
         <div>
-          <span style={{background:'#f0fdfa',color:'#0d9488',padding:'4px 12px',borderRadius:99,fontSize:12,fontWeight:700}}>تقرير الأداء المطور</span>
-          <h1 style={{color:'#0f172a',margin:'8px 0 4px',fontSize:28,fontWeight:800}}>📑 التقارير التحليلية</h1>
-          <p style={{color:'#64748b',margin:0,fontSize:14}}>فصل تام بين اليومي والنهائي مع مؤشرات ذكية</p>
+          <span style={S.badge}>تقرير الأداء المطور</span>
+          <h1 style={S.h1}>التقارير الاستراتيجية والتحليلية</h1>
+          <p style={S.sub}>فصل كامل بين اليومي والنهائي مع رسوم بيانية وتوصيات ذكية</p>
         </div>
-        <button onClick={()=>router.push('/dashboard')} style={{background:'#fff',border:'1px solid #cbd5e1',padding:'10px 18px',borderRadius:10,fontWeight:600,cursor:'pointer'}}>← لوحة التحكم</button>
-      </div>
-
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:25}}>
-        <div style={{background:'#fff',borderRight:'6px solid #2563eb',padding:22,borderRadius:14,boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
-            <b style={{color:'#334155'}}>التقييم اليومي</b>
-            <span style={{background:'#f1f5f9',padding:'2px 10px',borderRadius:99,fontSize:11,fontWeight:700}}>{daily.length} استجابة</span>
-          </div>
-          <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:10}}>
-            <strong style={{fontSize:36,fontWeight:800,color:'#0f172a'}}>{dailyAvg.toFixed(2)}</strong>
-            <small style={{color:'#64748b',fontSize:16}}>/5</small>
-          </div>
-          <div style={{height:10,background:'#e2e8f0',borderRadius:99,overflow:'hidden',marginBottom:8}}>
-            <div style={{height:'100%',width:`${(dailyAvg/5)*100}%`,background:'linear-gradient(90deg,#2563eb,#3b82f6)',borderRadius:99}}/>
-          </div>
-          <span style={{fontSize:13,fontWeight:700,color:'#334155'}}>معدل رضا {Math.round((dailyAvg/5)*100)}%</span>
+        <button style={S.bOut} onClick={() => router.push("/dashboard")}>لوحة التحكم</button>
+      </header>
+      <div style={S.bar} className="rnp">
+        <div style={S.fg}>
+          <label style={{ fontWeight: 700, fontSize: 13, color: "#475569" }}>الفترة:</label>
+          <select style={S.sel} value={period} onChange={(e) => setPeriod(e.target.value)}>
+            <option value="all">كل البيانات</option>
+            <option value="7">آخر 7 أيام</option>
+            <option value="30">آخر 30 يوماً</option>
+          </select>
         </div>
-
-        <div style={{background:'#fff',borderRight:'6px solid #0d9488',padding:22,borderRadius:14,boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
-          <div style={{display:'flex',justifyContent:'space-between',marginBottom:12}}>
-            <b style={{color:'#334155'}}>التقييم النهائي</b>
-            <span style={{background:'#f1f5f9',padding:'2px 10px',borderRadius:99,fontSize:11,fontWeight:700}}>{final_.length} استجابة</span>
-          </div>
-          <div style={{display:'flex',alignItems:'baseline',gap:4,marginBottom:10}}>
-            <strong style={{fontSize:36,fontWeight:800,color:'#0f172a'}}>{finalAvg.toFixed(2)}</strong>
-            <small style={{color:'#64748b',fontSize:16}}>/5</small>
-          </div>
-          <div style={{height:10,background:'#e2e8f0',borderRadius:99,overflow:'hidden',marginBottom:8}}>
-            <div style={{height:'100%',width:`${(finalAvg/5)*100}%`,background:'linear-gradient(90deg,#0d9488,#0f766e)',borderRadius:99}}/>
-          </div>
-          <span style={{fontSize:13,fontWeight:700,color:'#334155'}}>معدل رضا {Math.round((finalAvg/5)*100)}%</span>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button style={S.bP} onClick={csv}>تصدير CSV</button>
+          <button style={S.bD} onClick={() => window.print()}>طباعة PDF</button>
         </div>
       </div>
-
-      <div style={{background:'#fff',padding:22,borderRadius:14,boxShadow:'0 2px 8px rgba(0,0,0,0.06)',marginBottom:20}}>
-        <h2 style={{color:'#0f172a',marginTop:0,fontSize:18,fontWeight:800,borderBottom:'1px solid #f1f5f9',paddingBottom:10}}>📊 نتائج المحاور</h2>
-        {data.questions.map((q:any) => {
-          const related = data.answers.filter((a:any) => a.question_id === q.id && a.rating_value != null);
-          const avg = related.length ? related.reduce((s:number,a:any)=>s+Number(a.rating_value),0)/related.length : 0;
-          return (
-            <div key={q.id} style={{marginBottom:12,padding:12,background:'#f8fafc',borderRadius:10,border:'1px solid #e2e8f0'}}>
-              <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,alignItems:'center'}}>
-                <div>
-                  <span style={{background:'#f1f5f9',padding:'2px 8px',borderRadius:6,fontSize:11,fontWeight:700,color:'#475569',marginLeft:8}}>{q.section_ar || 'عام'}</span>
-                  <span style={{fontWeight:600,fontSize:13}}>{q.text_ar}</span>
-                </div>
-                <strong style={{color:'#0d9488',fontSize:14}}>{avg.toFixed(2)}/5</strong>
-              </div>
-              <div style={{height:8,background:'#e2e8f0',borderRadius:4,overflow:'hidden'}}>
-                <div style={{height:'100%',width:`${(avg/5)*100}%`,background:'linear-gradient(90deg,#2563eb,#0d9488)',borderRadius:4,transition:'width 0.5s'}}/>
-              </div>
-            </div>
-          );
-        })}
+      {error ? <div style={S.alert}>{error}</div> : null}
+      <section style={S.panel}>
+        <h2 style={S.h2}>مقارنة الأداء (يومي مقابل نهائي)</h2>
+        <p style={S.sub2}>مقارنة بصرية لمعدلات الرضا وإجمالي الاستجابات</p>
+        <div style={S.cg}>
+          <Cmp title="التقييم اليومي" count={daily.count} avg={daily.avg} color="#2563eb" bg="#eff6ff" />
+          <Cmp title="التقييم النهائي" count={final.count} avg={final.avg} color="#0d9488" bg="#f0fdfa" />
+        </div>
+        {daily.count === 0 && final.count === 0 ? <p style={{ textAlign: "center", color: "#64748b", marginTop: 16 }}>لا توجد بيانات بعد.</p> : null}
+      </section>
+      <div className="rsplit" style={S.split}>
+        <Block title="التقرير اليومي" sub="تحليل جلسات التدريب اليومية" data={daily} ac="#2563eb" bg="#eff6ff" />
+        <Block title="التقرير النهائي" sub="رضا المشاركين عن البرنامج كاملاً" data={final} ac="#0d9488" bg="#f0fdfa" />
       </div>
-
-      <div style={{textAlign:'center',fontSize:12,color:'#94a3b8',marginTop:30,paddingTop:20,borderTop:'1px solid #e2e8f0'}}>
-        جميع الحقوق محفوظة © 2026
-      </div>
+      <footer style={S.ft}>منصة تقييم التدريب 2026</footer>
     </div>
   );
 }
+
+function Cmp(p: { title: string; count: number; avg: number; color: string; bg: string }) {
+  const pct = Math.min(100, Math.round((p.avg / 5) * 100) || 0);
+  return (
+    <div style={{ ...S.cc, background: p.bg }}>
+      <div style={S.ct}><b style={{ fontSize: 15, color: "#334155" }}>{p.title}</b><span style={S.cb}>{p.count} استجابة</span></div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4, margin: "8px 0" }}>
+        <strong style={{ fontSize: 36, fontWeight: 800, color: "#0f172a" }}>{p.avg ? p.avg.toFixed(2) : "-"}</strong>
+        <small style={{ fontSize: 16, color: "#64748b" }}>/5</small>
+      </div>
+      <div style={S.tr}><div style={{ ...S.fl, width: pct + "%", background: p.color }} /></div>
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#334155" }}>نسبة الرضا: {pct}%</span>
+    </div>
+  );
+}
+
+function Block(p: { title: string; sub: string; data: ReportData; ac: string; bg: string }) {
+  const d = p.data;
+  const pct = d.avg ? Math.round((d.avg / 5) * 100) : 0;
+  const top = d.axes.length ? d.axes[d.axes.length - 1] : null;
+  const low = d.axes.length ? d.axes[0] : null;
+  return (
+    <section style={{ ...S.blk, borderRight: "6px solid " + p.ac }}>
+      <div style={S.bh}>
+        <div><h2 style={{ ...S.h2, color: p.ac }}>{p.title}</h2><p style={S.sub2}>{p.sub}</p></div>
+        <div style={S.sc}><span style={{ fontSize: 32, fontWeight: 800, color: "#0f172a" }}>{d.avg ? d.avg.toFixed(2) : "-"}</span><small style={{ fontSize: 14, color: "#64748b" }}>/5</small></div>
+      </div>
+      <div style={S.kpi}>
+        <div style={S.kc}><span style={S.kl}>الاستجابات</span><b style={S.kv}>{d.count}</b></div>
+        <div style={S.kc}><span style={S.kl}>نسبة الرضا</span><b style={{ ...S.kv, color: p.ac }}>{pct}%</b></div>
+        <div style={S.kc}><span style={S.kl}>المحاور</span><b style={S.kv}>{d.axes.length}</b></div>
+      </div>
+      {d.axes.length > 0 ? (
+        <>
+          <div className="ran" style={S.ag}>
+            <div style={S.sp}>
+              <h3 style={S.h3}>نتائج المحاور</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {d.axes.map((ax, i) => (
+                  <div key={i} style={S.mr}>
+                    <div style={S.mi}><span style={S.tg}>{ax.section}</span><span style={{ fontSize: 13, color: "#1e293b", fontWeight: 600 }}>{ax.label}</span></div>
+                    <div style={S.br}><div style={S.tm}><div style={{ ...S.fm, width: (ax.value / 5) * 100 + "%", background: p.ac }} /></div><strong style={{ fontSize: 13, color: "#0f172a", minWidth: 46, textAlign: "left" }}>{ax.value.toFixed(2)}/5</strong></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ ...S.sp, background: p.bg }}>
+              <h3 style={S.h3}>التحليل الذكي</h3>
+              <div style={{ ...S.in, ...ins("p") }}><span style={{ fontSize: 18 }}>+</span><div><b style={{ fontSize: 12, color: "#1e293b" }}>الأعلى أداءً:</b><p style={{ fontSize: 12, color: "#475569", margin: "2px 0 0" }}>{top ? top.label + " (" + top.value.toFixed(2) + "/5)" : "-"}</p></div></div>
+              <div style={{ ...S.in, ...ins("i") }}><span style={{ fontSize: 18 }}>!</span><div><b style={{ fontSize: 12, color: "#1e293b" }}>مجال التطوير:</b><p style={{ fontSize: 12, color: "#475569", margin: "2px 0 0" }}>{low ? low.label + " (" + low.value.toFixed(2) + "/5)" : "-"}</p></div></div>
+              <div style={{ ...S.in, ...ins("r") }}><span style={{ fontSize: 18 }}>*</span><div><b style={{ fontSize: 12, color: "#1e293b" }}>التوصية:</b><p style={{ fontSize: 12, color: "#475569", margin: "2px 0 0" }}>{low ? "تعزيز المحور " + low.label + " في الجلسات القادمة." : "-"}</p></div></div>
+            </div>
+          </div>
+          {d.timeline.length > 0 ? <div style={S.sp}><h3 style={S.h3}>اتجاه الاستجابات</h3><Chart tl={d.timeline} color={p.ac} /></div> : null}
+          <div style={S.sp}>
+            <h3 style={S.h3}>ملاحظات المشاركين</h3>
+            {d.comments.length > 0 ? (
+              <div className="rcm" style={S.cm}>
+                {d.comments.map((c, i) => (<blockquote key={i} style={{ ...S.qt, borderRight: "4px solid " + p.ac }}><p style={{ fontSize: 12.5, color: "#334155", margin: 0, lineHeight: 1.6 }}>{c}</p></blockquote>))}
+              </div>
+            ) : (<p style={{ fontSize: 13, color: "#64748b" }}>لا توجد ملاحظات نصية.</p>)}
+          </div>
+        </>
+      ) : (<div style={{ textAlign: "center", padding: 30, color: "#64748b", fontWeight: 600 }}>لا توجد بيانات لهذا التقرير.</div>)}
+    </section>
+  );
+}
+
+function Chart(p: { tl: TimelineItem[]; color: string }) {
+  const max = Math.max(1, ...p.tl.map((t) => t.count));
+  const W = 700, H = 220, pt = 30, pr = 30, pb = 50, pl = 40;
+  const cw = W - pl - pr, ch = H - pt - pb;
+  const bw = (cw / p.tl.length) * 0.6, gp = (cw / p.tl.length) * 0.4;
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <svg viewBox={"0 0 " + W + " " + H} style={{ width: "100%", minWidth: 480, height: "auto" }}>
+        {[0, 0.5, 1].map((f, i) => { const y = pt + ch * (1 - f); return (<g key={i}><line x1={pl} y1={y} x2={W - pr} y2={y} stroke="#e2e8f0" strokeDasharray="3,3" /><text x={pl - 8} y={y + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{Math.round(max * f)}</text></g>); })}
+        {p.tl.map((t, i) => { const x = pl + i * (bw + gp) + gp / 2; const bh = (t.count / max) * ch; const y = pt + ch - bh; return (<g key={i}><rect x={x} y={y} width={bw} height={bh} fill={p.color} rx={6} opacity={0.85} /><text x={x + bw / 2} y={y - 8} textAnchor="middle" fontSize="11" fontWeight="700" fill="#334155">{t.count}</text><text x={x + bw / 2} y={pt + ch + 18} textAnchor="middle" fontSize="9" fill="#475569">{t.label}</text>{t.avg > 0 ? <text x={x + bw / 2} y={pt + ch + 32} textAnchor="middle" fontSize="9" fontWeight="700" fill={p.color}>{t.avg.toFixed(1)}</text> : null}</g>); })}
+        <line x1={pl} y1={pt + ch} x2={W - pr} y2={pt + ch} stroke="#cbd5e1" strokeWidth={1.5} />
+      </svg>
+    </div>
+  );
+}
+
+const S: Record<string, CSSProperties> = {
+  main: { direction: "rtl", textAlign: "right", background: "#f8fafc", color: "#1e293b", padding: 30, minHeight: "100vh" },
+  ctr: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh" },
+  spin: { width: 48, height: 48, border: "5px solid #e2e8f0", borderTop: "5px solid #0d9488", borderRadius: "50%", animation: "rspin 1s linear infinite", marginBottom: 16 },
+  hd: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #e2e8f0", paddingBottom: 24, marginBottom: 28, flexWrap: "wrap", gap: 16 },
+  h1: { fontSize: 28, fontWeight: 800, margin: "6px 0 4px", color: "#0f172a" },
+  h2: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#0f172a" },
+  h3: { fontSize: 14, fontWeight: 700, color: "#334155", margin: "0 0 12px", paddingBottom: 8, borderBottom: "1px solid #eef2f7" },
+  badge: { background: "#f0fdfa", color: "#0d9488", padding: "4px 12px", borderRadius: 9999, fontSize: 11, fontWeight: 700, border: "1px solid #ccfbf1", display: "inline-block" },
+  sub: { fontSize: 14, color: "#64748b", margin: 0 },
+  sub2: { fontSize: 13, color: "#64748b", margin: "0 0 18px" },
+  bOut: { background: "#fff", border: "1px solid #cbd5e1", color: "#334155", padding: "10px 18px", borderRadius: 10, fontWeight: 600, cursor: "pointer" },
+  bar: { display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", padding: "16px 22px", borderRadius: 16, boxShadow: "0 4px 6px -1px rgba(0,0,0,.04)", marginBottom: 24, flexWrap: "wrap", gap: 14 },
+  fg: { display: "flex", alignItems: "center", gap: 10 },
+  sel: { border: "1px solid #cbd5e1", background: "#f8fafc", padding: "8px 12px", borderRadius: 8, fontSize: 13, color: "#1e293b", cursor: "pointer" },
+  bP: { background: "#0d9488", color: "#fff", border: "none", padding: "10px 16px", borderRadius: 10, fontWeight: 600, cursor: "pointer" },
+  bD: { background: "#0f172a", color: "#fff", border: "none", padding: "10px 16px", borderRadius: 10, fontWeight: 600, cursor: "pointer" },
+  alert: { background: "#fef2f2", border: "1px solid #fee2e2", color: "#b91c1c", padding: 14, borderRadius: 10, marginBottom: 24, fontWeight: 600 },
+  panel: { background: "#fff", borderRadius: 20, padding: 24, border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,.02)", marginBottom: 24 },
+  cg: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 },
+  cc: { border: "1px solid #e2e8f0", padding: 20, borderRadius: 16 },
+  ct: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  cb: { background: "#f1f5f9", color: "#475569", padding: "2px 10px", borderRadius: 9999, fontSize: 11, fontWeight: 700 },
+  tr: { width: "100%", height: 10, background: "#e2e8f0", borderRadius: 9999, overflow: "hidden", margin: "8px 0" },
+  fl: { height: "100%", borderRadius: 9999 },
+  split: { display: "grid", gridTemplateColumns: "1fr", gap: 28, marginBottom: 24 },
+  blk: { background: "#fff", borderRadius: 24, border: "1px solid #e2e8f0", padding: 28, boxShadow: "0 4px 6px -1px rgba(0,0,0,.01)" },
+  bh: { display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: 16, marginBottom: 20, flexWrap: "wrap", gap: 12 },
+  sc: { display: "flex", alignItems: "baseline", gap: 4, background: "#f8fafc", padding: "10px 16px", borderRadius: 12, border: "1px solid #f1f5f9" },
+  kpi: { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24 },
+  kc: { background: "#f8fafc", border: "1px solid #f1f5f9", padding: 14, borderRadius: 12, textAlign: "center" },
+  kl: { fontSize: 12, color: "#64748b", display: "block", marginBottom: 4, fontWeight: 600 },
+  kv: { fontSize: 20, color: "#1e293b", fontWeight: 800 },
+  ag: { display: "grid", gridTemplateColumns: "1fr", gap: 20, marginBottom: 20 },
+  sp: { background: "#fafbfc", border: "1px solid #f1f5f9", borderRadius: 16, padding: 18, marginBottom: 20 },
+  mr: { background: "#fff", padding: 12, borderRadius: 10, border: "1px solid #e2e8f0" },
+  mi: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" },
+  tg: { background: "#f1f5f9", color: "#475569", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700 },
+  br: { display: "flex", alignItems: "center", gap: 12 },
+  tm: { flexGrow: 1, height: 8, background: "#f1f5f9", borderRadius: 9999, overflow: "hidden" },
+  fm: { height: "100%", borderRadius: 9999 },
+  in: { display: "flex", gap: 10, padding: 10, borderRadius: 10, marginBottom: 8 },
+  cm: { display: "grid", gridTemplateColumns: "1fr", gap: 12 },
+  qt: { background: "#fff", padding: "14px 16px", borderRadius: 12, boxShadow: "0 2px 4px rgba(0,0,0,.01)", margin: 0 },
+  ft: { textAlign: "center", fontSize: 12, color: "#94a3b8", marginTop: 30, paddingTop: 20, borderTop: "1px solid #e2e8f0" }
+};
