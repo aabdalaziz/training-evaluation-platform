@@ -18,61 +18,64 @@ const CSS = `
 .k3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .card { background: #fffdf9; border: 1px solid #e8decb; border-radius: 22px; padding: 22px; box-shadow: 0 6px 18px rgba(60,40,10,0.04); margin-bottom: 16px; transition: .2s; }
 .card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(60,40,10,0.07); }
-.tab-on { background: #10b981; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; cursor: pointer; fontWeight: 800; font-size: 13.5px; width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 10px; transition: .2s; border: 1px solid #10b981; }
-.tab-off { background: transparent; color: #94a3b8; border: 1px solid transparent; border-radius: 12px; padding: 11px 16px; cursor: pointer; fontWeight: 600; font-size: 13.5px; width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 10px; transition: .2s; }
+.tab-on { background: #10b981; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; cursor: pointer; font-weight: 800; font-size: 13.5px; width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 10px; transition: .2s; border: 1px solid #10b981; }
+.tab-off { background: transparent; color: #94a3b8; border: 1px solid transparent; border-radius: 12px; padding: 11px 16px; cursor: pointer; font-weight: 600; font-size: 13.5px; width: 100%; display: flex; align-items: center; justify-content: flex-end; gap: 10px; transition: .2s; }
 .tab-off:hover { color: #f1f5f9; background: rgba(255,255,255,0.03); }
-.inp { background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; color: #1e293b; fontSize: 13.5px; fontFamily: inherit; outline: none; width: 100%; transition: .2s; margin-bottom: 10px; }
+.inp { background: #fff; border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; color: #1e293b; font-size: 13.5px; font-family: inherit; outline: none; width: 100%; transition: .2s; margin-bottom: 10px; }
 .inp:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
-.btn { background: linear-gradient(135deg,#10b981,#0d9488); color: #fff; border: none; border-radius: 12px; padding: 12px 24px; cursor: pointer; fontWeight: 800; fontSize: 14px; width: 100%; transition: .2s; }
-.btn:hover { opacity: .9; }
 .tbl { width: 100%; border-collapse: collapse; margin-top: 10px; }
-.th { padding: 12px; text-align: right; fontWeight: 700; fontSize: 13px; color: #64748b; border-bottom: 2px solid #eef2f6; }
-.td { padding: 14px 12px; fontSize: 13.5px; border-bottom: 1px solid #f1f5f9; }
+.th { padding: 12px; text-align: right; font-weight: 700; font-size: 13px; color: #64748b; border-bottom: 2px solid #eef2f6; }
+.td { padding: 14px 12px; font-size: 13.5px; border-bottom: 1px solid #f1f5f9; }
 @media(max-width:920px){ .lay { flex-direction: column; } .side { width: 100%; position: static; } .g2, .g3, .k3 { grid-template-columns: 1fr; } }
 @media print { .side, .np { display: none !important; } .lay { display: block; } .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; } }
 `;
 
+type Ev = { id: string; kind: string; overall_rating: number | null; submitted_at: string; classroom_id: string | null };
+type An = { evaluation_id: string; question_id: string; rating_value: number | null; text_value: string | null };
+type Qu = { id: string; text_ar: string; section_ar: string | null };
+type Ax = { label: string; section: string; value: number };
+type Day = { wd: string; dt: string; count: number };
+type Rep = { count: number; avg: number; axes: Ax[]; comments: string[]; dist: number[]; days: Day[]; sections: { name: string; value: number }[] };
+
+const TEAL = "#10b981";
+const DARK = "#0b1220";
+const WEEKDAYS_AR = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+
+function statusOf(v: number): { t: string; bg: string; fg: string } {
+  const val = Number(v) || 0;
+  if (val >= 4) return { t: "ممتاز", bg: "#d1fae5", fg: "#047857" };
+  if (val >= 3) return { t: "جيد", bg: "#fef3c7", fg: "#b45309" };
+  return { t: "يحتاج تحسين", bg: "#fee2e2", fg: "#b91c1c" };
+}
+
+function pad(n: number): string { return n < 10 ? "0" + n : "" + n; }
+
 export default function ReportsPage() {
   const router = useRouter();
-  const [rows, setRows] = useState([]);
-  const [ans, setAns] = useState([]);
-  const [qs, setQs] = useState([]);
+  const [mounted, setMounted] = useState(false);
+  const [rows, setRows] = useState<Ev[]>([]);
+  const [ans, setAns] = useState<An[]>([]);
+  const [qs, setQs] = useState<Qu[]>([]);
   
-  // بيانات الهيكلة الجديدة
   const [programs, setPrograms] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
   const [trainers, setTrainers] = useState([]);
-  const [participants, setParticipants] = useState([]);
-  const [emailLogs, setEmailLogs] = useState([]);
 
   const [load, setLoad] = useState(true);
   const [err, setErr] = useState("");
-  const [msg, setMsg] = useState("");
-  const [tab, setTab] = useState("dashboard"); // التبويب النشط
-
-  // حالات الإضافة والنماذج
-  const [newProg, setNewProg] = useState({ name: "", code: "", duration: "" });
-  const [newRoom, setNewRoom] = useState({ code: "", level: "", program_id: "", trainer_id: "", capacity: "" });
-  const [newTrainer, setNewTrainer] = useState({ name: "", phone: "", email: "", specialization: "" });
-  const [newPart, setNewPart] = useState({ name: "", email: "", phone: "", classroom_id: "" });
-
-  // مدخلات الفلترة السريعة لتقرير الجودة الذكي
-  const [selectedTrainerReport, setSelectedTrainerReport] = useState("");
-  const [emailSending, setEmailSending] = useState(false);
+  const [tab, setTab] = useState("dashboard");
 
   const db = supabase();
 
   const fetchAllData = async () => {
     try {
-      const [e, a, q, progs, roomsList, trainersList, parts, logs] = await Promise.all([
+      const [e, a, q, progs, roomsList, trainersList] = await Promise.all([
         db.from("evaluations").select("*").order("submitted_at", { ascending: false }),
         db.from("evaluation_answers").select("*"),
         db.from("questions").select("*"),
         db.from("programs").select("*").order("name"),
         db.from("classrooms").select("*").order("code"),
         db.from("trainers").select("*").order("name"),
-        db.from("participant_roster").select("*").order("name"),
-        db.from("email_logs").select("*").order("sent_at", { ascending: false })
       ]);
 
       setRows(e.data || []);
@@ -81,707 +84,477 @@ export default function ReportsPage() {
       setPrograms(progs.data || []);
       setClassrooms(roomsList.data || []);
       setTrainers(trainersList.data || []);
-      setParticipants(parts.data || []);
-      setEmailLogs(logs.data || []);
-    } catch (x) {
+    } catch (x: any) {
       setErr(x.message || "حدث خطأ في تحميل البيانات الهيكلية");
     }
   };
 
   useEffect(() => {
+    setMounted(true);
     let on = true;
     (async () => {
-      const s = await db.auth.getSession();
-      if (!s.data?.session) { router.push("/login"); return; }
-      if (on) { await fetchAllData(); setLoad(false); }
+      try {
+        const s = await db.auth.getSession();
+        if (!s.data?.session) { router.push("/login"); return; }
+        if (on) { await fetchAllData(); setLoad(false); }
+      } catch (e: any) {
+        if (on) { setErr(e.message || "خطأ في الجلسة"); setLoad(false); }
+      }
     })();
     return () => { on = false; };
   }, []);
 
-  const flash = (m) => { setMsg(m); setTimeout(() => setMsg(""), 4000); };
-
-  // ==========================================
-  // عمليات حفظ البيانات وتعديلها
-  // ==========================================
-  const handleAddProgram = async () => {
-    if (!newProg.name.trim()) return;
-    const { error } = await db.from("programs").insert({ name: newProg.name, code: newProg.code, duration_days: Number(newProg.duration) || null });
-    if (error) setErr(error.message);
-    else { await fetchAllData(); setNewProg({ name: "", code: "", duration: "" }); flash("✅ تم إنشاء البرنامج التدريبي بنجاح"); }
-  };
-
-  const handleAddTrainer = async () => {
-    if (!newTrainer.name.trim()) return;
-    const { error } = await db.from("trainers").insert({ name: newTrainer.name, phone: newTrainer.phone, email: newTrainer.email, specialization: newTrainer.specialization });
-    if (error) setErr(error.message);
-    else { await fetchAllData(); setNewTrainer({ name: "", phone: "", email: "", specialization: "" }); flash("✅ تم تسجيل بيانات المدرب بنجاح"); }
-  };
-
-  const handleAddRoom = async () => {
-    if (!newRoom.code.trim()) return;
-    const { error } = await db.from("classrooms").insert({ code: newRoom.code, level: newRoom.level, program_id: newRoom.program_id || null, trainer_id: newRoom.trainer_id || null, capacity: Number(newRoom.capacity) || null });
-    if (error) setErr(error.message);
-    else { await fetchAllData(); setNewRoom({ code: "", level: "", program_id: "", trainer_id: "", capacity: "" }); flash("✅ تم إنشاء وتخصيص القاعة بنجاح"); }
-  };
-
-  const handleAddParticipant = async () => {
-    if (!newPart.name.trim()) return;
-    const { error } = await db.from("participant_roster").insert({ name: newPart.name, email: newPart.email, phone: newPart.phone, classroom_id: newPart.classroom_id || null });
-    if (error) setErr(error.message);
-    else { await fetchAllData(); setNewPart({ name: "", email: "", phone: "", classroom_id: "" }); flash("✅ تم تسجيل الطالب وتوليد رابط التحقق"); }
-  };
-
-  const handleLinkTrainer = async (roomId, trainerId) => {
-    const { error } = await db.from("classrooms").update({ trainer_id: trainerId || null }).eq("id", roomId);
-    if (error) setErr(error.message);
-    else { await fetchAllData(); flash("✅ تم إعادة تعيين وتنسيق قاعة المدرب"); }
-  };
-
-  // ==========================================
-  // محاكاة إرسال البريد الإلكتروني الذكي والآمن (Notifications & Mail Hub)
-  // ==========================================
-  const triggerEmailReport = async (recipientType, item) => {
-    setEmailSending(true);
-    try {
-      let email = "";
-      let name = "";
-      let subject = "";
-
-      if (recipientType === "TRAINER") {
-        const tr = trainers.find(t => t.id === item);
-        if (!tr || !tr.email) { alert("هذا المدرب لا يملك بريداً مسجلاً!"); setEmailSending(false); return; }
-        email = tr.email;
-        name = tr.name;
-        subject = `📑 تقرير الأداء الفني والجودة اليومي للمدرب: ${tr.name}`;
-      } else {
-        email = "management@platform.edu";
-        name = "الإدارة التنفيذية";
-        subject = `📊 تقرير الجودة الشامل والامتثال الأكاديمي لعام 2026`;
-      }
-
-      const { error } = await db.from("email_logs").insert({
-        recipient_email: email,
-        recipient_name: name,
-        recipient_role: recipientType,
-        subject: subject,
-        status: "sent"
-      });
-
-      if (error) throw error;
-      await fetchAllData();
-      flash(`📧 تم توليد ملف الـ PDF بنجاح وإرساله بالبريد الإلكتروني إلى: ${email}`);
-    } catch (e) {
-      setErr("فشل الإرسال: " + e.message);
-    } finally {
-      setEmailSending(false);
-    }
-  };
-
-  // ==========================================
-  // معالجة بيانات التقارير والتحليلات لليومي والنهائي
-  // ==========================================
-  const calcData = (kind: "DAILY" | "FINAL"): Rep => {
-    const list = rows.filter(r => r.kind === kind);
+  const calc = (kind: "DAILY" | "FINAL"): Rep => {
+    const list = (rows || []).filter(r => r && r.kind === kind);
     const ids = new Set(list.map(r => r.id));
-    const qm = {}; qs.forEach(q => { qm[q.id] = q; });
-    const avg = (a) => a.length ? a.reduce((p, c) => p + c, 0) / a.length : 0;
+    const qm: Record<string, Qu> = {}; (qs || []).forEach(q => { if (q) qm[q.id] = q; });
+    const avg = (a: number[]) => a.length ? a.reduce((p, c) => p + c, 0) / a.length : 0;
     
-    const g = {};
-    ans.forEach(a => {
-      if (ids.has(a.evaluation_id) && a.rating_value != null) {
+    const g: Record<string, number[]> = {};
+    (ans || []).forEach(a => {
+      if (a && ids.has(a.evaluation_id) && a.rating_value != null) {
         const v = Number(a.rating_value);
         if (!isNaN(v)) { (g[a.question_id] = g[a.question_id] || []).push(v); }
       }
     });
 
     const axes: Ax[] = Object.keys(g).map(id => ({
-      label: qm[id] ? qm[id].text_ar : "سؤال قياسي",
+      label: qm[id] ? qm[id].text_ar : "سؤال التقييم",
       section: qm[id] && qm[id].section_ar ? qm[id].section_ar : "عام",
       value: avg(g[id])
     })).sort((a, b) => b.value - a.value);
 
     const dist = [0, 0, 0, 0, 0];
     list.forEach(r => {
+      if (!r) return;
       const v = Math.round(Number(r.overall_rating));
       if (v >= 1 && v <= 5) dist[v - 1] += 1;
     });
 
-    const comments = [];
-    ans.forEach(a => {
-      if (ids.has(a.evaluation_id) && a.text_value && a.text_value.trim() && comments.length < 8) {
+    const dayMap: any = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+      dayMap[key] = { wd: WEEKDAYS_AR[d.getDay()] || "يوم", dt: pad(d.getMonth() + 1) + "-" + pad(d.getDate()), count: 0 };
+    }
+    
+    list.forEach(r => {
+      if (!r || !r.submitted_at) return;
+      const d = new Date(r.submitted_at);
+      if (isNaN(d.getTime())) return;
+      const key = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+      if (dayMap[key]) dayMap[key].count += 1;
+    });
+    const days: Day[] = Object.keys(dayMap).map(k => dayMap[k]);
+
+    const sm: any = {};
+    axes.forEach(a => {
+      if (!a) return;
+      if (!sm[a.section]) sm[a.section] = { s: 0, n: 0 };
+      sm[a.section].s += a.value;
+      sm[a.section].n += 1;
+    });
+    const sections = Object.keys(sm).map(k => ({ name: k, value: sm[k].s / sm[k].n })).sort((a, b) => b.value - a.value).slice(0, 4);
+
+    const comments: string[] = [];
+    (ans || []).forEach(a => {
+      if (a && ids.has(a.evaluation_id) && a.text_value && a.text_value.trim() && comments.length < 6) {
         comments.push(a.text_value.trim());
       }
     });
 
-    const all = list.map(r => Number(r.overall_rating)).filter(v => !isNaN(v) && v > 0);
-    return { count: list.length, avg: avg(all), axes, comments, dist };
+    const all = list.map(r => r && Number(r.overall_rating)).filter(v => v !== null && v !== undefined && !isNaN(v) && v > 0);
+    return { count: list.length, avg: avg(all), axes, comments, dist, days, sections };
   };
 
-  const daily = useMemo(() => calcData("DAILY"), [rows, ans, qs]);
-  const final = useMemo(() => calcData("FINAL"), [rows, ans, qs]);
+  const daily = useMemo(() => calc("DAILY"), [rows, ans, qs]);
+  const final = useMemo(() => calc("FINAL"), [rows, ans, qs]);
 
-  // حساب تقرير مدرب محدد مرتبط بقاعته
-  const selectedTrainerData = useMemo(() => {
-    if (!selectedTrainerReport) return null;
-    const tr = trainers.find(t => t.id === selectedTrainerReport);
-    const myRooms = classrooms.filter(r => r.trainer_id === selectedTrainerReport);
-    const rIds = new Set(myRooms.map(r => r.id));
-    
-    // جلب التقييمات المرتبطة بالقاعات الخاصة بهذا المدرب
-    const list = rows.filter(e => e.classroom_id && rIds.has(e.classroom_id));
-    const ids = new Set(list.map(r => r.id));
-    const avg = (a) => a.length ? a.reduce((p, c) => p + c, 0) / a.length : 0;
-    
-    const g = {};
-    ans.forEach(a => {
-      if (ids.has(a.evaluation_id) && a.rating_value != null) {
+  const teacherPerformance = useMemo(() => {
+    return (trainers || []).map(t => {
+      if (!t || !t.id) return null;
+      const myRooms = (classrooms || []).filter(c => c && c.trainer_id === t.id);
+      const roomIds = new Set(myRooms.map(c => c && c.id).filter(Boolean));
+      
+      const myEvals = (rows || []).filter(r => r && r.classroom_id && roomIds.has(r.classroom_id));
+      const evalIds = new Set(myEvals.map(e => e.id));
+      const avg = (a: number[]) => a.length ? a.reduce((p, c) => p + c, 0) / a.length : 0;
+
+      const clarityScores: number[] = [];
+      const teachScores: number[] = [];
+      const driveScores: number[] = [];
+
+      (ans || []).forEach(a => {
+        if (!a || !evalIds.has(a.evaluation_id)) return;
         const v = Number(a.rating_value);
-        if (!isNaN(v)) { (g[a.question_id] = g[a.question_id] || []).push(v); }
-      }
-    });
+        if (isNaN(v)) return;
+        const q = (qs || []).find(x => x && x.id === a.question_id);
+        if (!q) return;
 
-    const axes = Object.keys(g).map(id => {
-      const q = qs.find(x => x.id === id);
+        const text = q.text_ar || "";
+        if (text.includes("وضوح") || text.includes("شرح")) clarityScores.push(v);
+        else if (text.includes("أسلوب") || text.includes("تدريس")) teachScores.push(v);
+        else if (text.includes("دافعيتك") || text.includes("تفاعلك")) driveScores.push(v);
+      });
+
+      const overall = myEvals.map(r => r && Number(r.overall_rating)).filter(v => v !== null && v !== undefined && !isNaN(v) && v > 0);
+
       return {
-        label: q ? q.text_ar : "معيار التقييم",
-        section: q && q.section_ar ? q.section_ar : "عام",
-        value: avg(g[id])
+        id: t.id,
+        name: t.name,
+        specialization: t.specialization || "لغويات",
+        rooms: myRooms.map(r => r.code).join("، ") || "لم تُحدد قاعة",
+        levels: Array.from(new Set(myRooms.map(r => r.level).filter(Boolean))).join("، ") || "—",
+        count: myEvals.length,
+        avg: avg(overall),
+        clarity: avg(clarityScores),
+        teach: avg(teachScores),
+        drive: avg(driveScores)
       };
-    });
+    }).filter(Boolean).sort((a, b) => b.avg - a.avg);
+  }, [trainers, classrooms, rows, ans, qs]);
 
-    const all = list.map(r => Number(r.overall_rating)).filter(v => !isNaN(v) && v > 0);
-    return { name: tr?.name, count: list.length, avg: avg(all), axes, rooms: myRooms };
-  }, [selectedTrainerReport, rows, ans, classrooms, trainers]);
+  const bestTeacher = useMemo(() => {
+    const valid = (teacherPerformance || []).filter(t => t && t.count > 0);
+    return valid.length > 0 ? valid[0] : null;
+  }, [teacherPerformance]);
 
-  if (load) {
+  if (!mounted || load) {
     return (
-      <div className="rw" style={{ background: "#f2ecdf", minHeight: "100vh", padding: 80, textAlign: "center", color: "#64748b" }}>
+      <div className="rw" style={S.loading}>
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <div style={{ width: 50, height: 50, border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 20px" }}></div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: "#0f172a" }}>مجموعة جودة التعليم والتقييم والامتثال</div>
-        <p>جارٍ تحميل الوحدات المستقلة وإعداد قواعد التحليل التفاعلي...</p>
+        <div style={S.spinner}></div>
+        <p>جاري تحميل لوحة الأداء والجودة...</p>
       </div>
     );
   }
 
   return (
-    <div className="rw" style={{ background: "#f2ecdf", minHeight: "100vh", padding: 20, color: "#0f172a" }}>
+    <div className="rw" style={S.wrap}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="lay">
         
-        {/* ==========================================
-            القائمة الجانبية الموحدة لجميع الوحدات الـ 9
-            ========================================== */}
+        {/* القائمة الجانبية الفاخرة للتحكم بالأقسام */}
         <aside className="side np">
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,#10b981,#0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>📋</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+            <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg,#10b981,#0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🏆</div>
             <div>
-              <div style={{ fontWeight: 900, fontSize: 16 }}>منظومة الجودة</div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>التحليلات والمتابعة المؤسسية</div>
+              <div style={{ fontWeight: 900, fontSize: "15px" }}>لوحة الأداء والجودة</div>
+              <div style={{ fontSize: "11px", color: "#94a3b8" }}>النظام المركزي الموحد</div>
             </div>
           </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <button className={tab === "dashboard" ? "tab-on" : "tab-off"} onClick={() => setTab("dashboard")}><span>🏠 Dashboard التنفيذي</span></button>
-            <button className={tab === "programs" ? "tab-on" : "tab-off"} onClick={() => setTab("programs")}><span>📘 إدارة البرامج</span></button>
-            <button className={tab === "classrooms" ? "tab-on" : "tab-off"} onClick={() => setTab("classrooms")}><span>🏫 إدارة القاعات</span></button>
-            <button className={tab === "trainers" ? "tab-on" : "tab-off"} onClick={() => setTab("trainers")}><span>👨‍🏫 إدارة المدربين</span></button>
-            <button className={tab === "participants" ? "tab-on" : "tab-off"} onClick={() => setTab("participants")}><span>👥 إدارة المشاركين</span></button>
-            <button className={tab === "reports" ? "tab-on" : "tab-off"} onClick={() => setTab("reports")}><span>📑 مركز التقارير</span></button>
-            <button className={tab === "analytics" ? "tab-on" : "tab-off"} onClick={() => setTab("analytics")}><span>📊 مركز التحليلات</span></button>
-            <button className={tab === "notifications" ? "tab-on" : "tab-off"} onClick={() => setTab("notifications")}><span>✉️ مركز الإشعارات والبريد</span></button>
-            <button className={tab === "settings" ? "tab-on" : "tab-off"} onClick={() => setTab("settings")}><span>⚙️ الإعدادات</span></button>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <button className={tab === "dashboard" ? "tab-on" : "tab-off"} onClick={() => setTab("dashboard")}><span>🏠 نظرة شاملة</span></button>
+            <button className={tab === "daily" ? "tab-on" : "tab-off"} onClick={() => setTab("daily")}><span>📝 التقرير اليومي</span></button>
+            <button className={tab === "final" ? "tab-on" : "tab-off"} onClick={() => setTab("final")}><span>⭐ التقرير النهائي</span></button>
+            <button className={tab === "teachers" ? "tab-on" : "tab-off"} onClick={() => setTab("teachers")}><span>👨‍🏫 تقييم المعلمين والقاعات</span></button>
           </div>
 
-          <div style={{ marginTop: 20, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 14 }}>
-            <button onClick={() => router.push("/dashboard")} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", cursor: "pointer", padding: "10px", borderRadius: 10, fontSize: 13, fontWeight: 700 }}>الخروج للوحة العامة ←</button>
+          <div style={{ marginTop: "18px", borderTop: "1px solid rgba(255,255,255,.08)", paddingTop: "14px" }}>
+            <button onClick={() => router.push("/admin/management")} style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#cbd5e1", cursor: "pointer", padding: "10px", borderRadius: "10px", fontSize: "13px", fontWeight: 700, marginBottom: "8px" }}>🏫 إدارة القاعات والمدربين</button>
+            <button onClick={() => router.push("/dashboard")} style={{ width: "100%", background: "transparent", border: "none", color: "#64748b", cursor: "pointer", textAlign: "right", padding: "8px 10px", fontSize: "13px", fontWeight: 600 }}>← لوحة التحكم العامة</button>
           </div>
         </aside>
 
-        {/* ==========================================
-            منطقة العرض المركزية للوحدات والتبويبات
-            ========================================== */}
-        <main className="main">
-          {err && <div style={{ background: "#fee2e2", border: "1px solid #fecaca", color: "#b91c1c", padding: 14, borderRadius: 14, marginBottom: 16 }}>⚠️ {err}</div>}
-          {msg && <div style={{ background: "#d1fae5", border: "1px solid #a7f3d0", color: "#047857", padding: 14, borderRadius: 14, marginBottom: 16, fontWeight: 700 }}>{msg}</div>}
-
-          {/* 1. Dashboard التنفيذي */}
-          {tab === "dashboard" && (
-            <div>
-              <div style={{ background: "linear-gradient(135deg,#0f172a,#0f243a)", borderRadius: 26, padding: 30, color: "#fff", marginBottom: 20, position: "relative" }}>
-                <div style={{ position: "absolute", left: 20, top: 10, fontSize: 100, fontWeight: 900, color: "rgba(255,255,255,0.03)" }}>HQ</div>
-                <h1 style={{ fontSize: 32, fontWeight: 900, margin: "0 0 8px" }}>لوحة القيادة والمؤشرات التنفيذية</h1>
-                <p style={{ color: "#94a3b8", margin: 0, fontSize: 14 }}>نظرة تكاملية شاملة على رضا المستفيدين وسلوك جودة التدريب في كافة القاعات</p>
-              </div>
-
-              <div className="k3" style={{ marginBottom: 16 }}>
-                <KpiCard label="إجمالي الاستجابات" value={rows.length} subtitle="استمارات تم تعبئتها حية" />
-                <KpiCard label="معدل الرضا الموحد" value={((daily.avg + final.avg) / 2 || 0).toFixed(2)} suffix="/5" subtitle="اليومي والنهائي متكاملين" />
-                <KpiCard label="القاعات المفعلة" value={classrooms.length} subtitle="قاعات تملك مجموعات دراسية" />
-              </div>
-
-              <div className="g2">
-                <Card>
-                  <h3 style={{ margin: "0 0 14px", fontWeight: 800 }}>⚖️ الرضا العام والتوزيع التكراري</h3>
-                  <div style={{ display: "flex", gap: 16, flexDirection: "column" }}>
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-                        <span>التقييم اليومي المستمر</span>
-                        <b>{daily.avg ? daily.avg.toFixed(2) : "0"}/5 ({Math.round(daily.avg/5*100)}%)</b>
-                      </div>
-                      <div style={{ height: 12, background: "#e2e8f0", borderRadius: 8, overflow: "hidden" }}>
-                        <div style={{ width: `${(daily.avg / 5) * 100}%`, height: "100%", background: "#2563eb" }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>
-                        <span>التقييم الختامي النهائي</span>
-                        <b>{final.avg ? final.avg.toFixed(2) : "0"}/5 ({Math.round(final.avg/5*100)}%)</b>
-                      </div>
-                      <div style={{ height: 12, background: "#e2e8f0", borderRadius: 8, overflow: "hidden" }}>
-                        <div style={{ width: `${(final.avg / 5) * 100}%`, height: "100%", background: "#10b981" }} />
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-
-                <Card>
-                  <h3 style={{ margin: "0 0 14px", fontWeight: 800 }}>🚨 قاعات تتطلب دعماً فنياً عاجلاً</h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {classrooms.slice(0, 3).map(r => {
-                      const trainer = trainers.find(t => t.id === r.trainer_id);
-                      return (
-                        <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", padding: 10, borderRadius: 10, border: "1px solid #f1e6d4" }}>
-                          <div>
-                            <span style={{ fontWeight: 800 }}>القاعة {r.code}</span>
-                            <span style={{ fontSize: 11, color: "#64748b", marginRight: 8 }}>المدرب: {trainer ? trainer.name : "لم يعين بعد"}</span>
-                          </div>
-                          <span style={{ background: "#fee2e2", color: "#ef4444", fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>تحت المراقبة</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Card>
-              </div>
+        {/* منطقة المحتوى المركزية */}
+        <div className="main">
+          
+          {/* ترويسة الصفحة التنفيذية المقتبسة من مرجعك الفاخر */}
+          <div style={S.headerCard}>
+            <div style={S.headerBgText}>REPORT</div>
+            <div style={{ position: "relative" }}>
+              <span style={S.headerBadge}>تقرير الأداء السنوي والتحليلي المطور</span>
+              <h1 style={{ fontSize: "30px", fontWeight: 900, margin: 0 }}>{tab === "dashboard" ? "التقرير العام المتكامل" : tab === "teachers" ? "أداء المعلمين المرتبط بالقاعة" : `تقييم ${tab === "daily" ? "الحصة اليومية" : "البرنامج النهائي"}`}</h1>
+              <p style={{ color: "#94a3b8", margin: "4px 0 0", fontSize: "13px" }}>توليد تلقائي فوري لمعايير الجودة والامتثال والرضا والتقييم الفردي</p>
             </div>
-          )}
+          </div>
 
-          {/* 2. إدارة البرامج */}
-          {tab === "programs" && (
-            <Card>
-              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>📘 إدارة وتأسيس البرامج التدريبية</h2>
-              <div className="g3" style={{ marginBottom: 20 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>اسم البرنامج التدريبي *</label>
-                  <input className="inp" placeholder="مثال: لغة عربية لغير الناطقين بها" value={newProg.name} onChange={e => setNewProg({ ...newProg, name: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رمز/كود البرنامج</label>
-                  <input className="inp" placeholder="ARAB-101" value={newProg.code} onChange={e => setNewProg({ ...newProg, code: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>مدة البرنامج بالبدائل (أيام)</label>
-                  <input className="inp" type="number" placeholder="مثال: 30" value={newProg.duration} onChange={e => setNewProg({ ...newProg, duration: e.target.value })} />
-                </div>
-              </div>
-              <button className="btn" onClick={handleAddProgram} style={{ width: "auto", padding: "12px 30px" }}>➕ حفظ وإنشاء البرنامج</button>
+          {/* 1. التبويب العام للوحة الشاملة */}
+          {tab === "dashboard" && <Overview daily={daily} final={final} classrooms={classrooms} best={bestTeacher} />}
 
-              <h3 style={{ marginTop: 24, fontWeight: 800 }}>البرامج الحالية في المنظومة ({programs.length})</h3>
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th className="th">اسم البرنامج</th>
-                    <th className="th">الكود</th>
-                    <th className="th">المدة</th>
-                    <th className="th">عدد القاعات المرتبطة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {programs.map(p => (
-                    <tr key={p.id}>
-                      <td className="td" style={{ fontWeight: 800 }}>{p.name}</td>
-                      <td className="td"><span style={{ background: "#e2e8f0", padding: "3px 8px", borderRadius: 6, fontSize: 12 }}>{p.code || "—"}</span></td>
-                      <td className="td">{p.duration_days ? `${p.duration_days} يوم` : "غير محدد"}</td>
-                      <td className="td">{classrooms.filter(c => c.program_id === p.id).length} قاعة</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-          )}
+          {/* 2. تقرير الحصة اليومية */}
+          {tab === "daily" && <ReportView rep={daily} accent="#2563eb" name="التقرير اليومي المطور" sub="تحليل وتقييم جلسات التدريب اليومية وتفاعل الحضور" />}
 
-          {/* 3. إدارة القاعات */}
-          {tab === "classrooms" && (
-            <Card>
-              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>🏫 إدارة القاعات ومستويات التدريب</h2>
-              <div className="g2" style={{ marginBottom: 20 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رمز أو رقم القاعة *</label>
-                  <input className="inp" placeholder="مثل: 203 أو قاعة مكة" value={newRoom.code} onChange={e => setNewRoom({ ...newRoom, code: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>مستوى الدراسة (Level)</label>
-                  <input className="inp" placeholder="مثال: A1, B2" value={newRoom.level} onChange={e => setNewRoom({ ...newRoom, level: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>البرنامج المرتبط</label>
-                  <select className="inp" value={newRoom.program_id} onChange={e => setNewRoom({ ...newRoom, program_id: e.target.value })}>
-                    <option value="">اختر برنامجاً</option>
-                    {programs.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>السعة الاستيعابية</label>
-                  <input className="inp" type="number" placeholder="مثال: 25" value={newRoom.capacity} onChange={e => setNewRoom({ ...newRoom, capacity: e.target.value })} />
-                </div>
-              </div>
-              <button className="btn" onClick={handleAddRoom} style={{ width: "auto" }}>➕ تسجيل القاعة الجديدة</button>
+          {/* 3. تقرير البرنامج النهائي */}
+          {tab === "final" && <ReportView rep={final} accent="#10b981" name="التقرير النهائي للبرنامج" sub="مؤشر رضا المستفيدين الأكاديمي الشامل عن البرنامج ككل" />}
 
-              <h3 style={{ marginTop: 24, fontWeight: 800 }}>القاعات والقوائم الحالية</h3>
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th className="th">رقم القاعة</th>
-                    <th className="th">المستوى</th>
-                    <th className="th">البرنامج</th>
-                    <th className="th">المدرب المعين حالياً</th>
-                    <th className="th">تغيير وتعيين المدرب</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {classrooms.map(c => {
-                    const prog = programs.find(p => p.id === c.program_id);
-                    return (
-                      <tr key={c.id}>
-                        <td className="td" style={{ fontWeight: 900, color: "#10b981", fontSize: 16 }}>{c.code}</td>
-                        <td className="td">{c.level || "—"}</td>
-                        <td className="td" style={{ fontSize: 12 }}>{prog ? prog.name : "غير مرتبط ببرنامج"}</td>
-                        <td className="td" style={{ fontWeight: 700 }}>{trainers.find(t => t.id === c.trainer_id)?.name || "❌ لم يعين مدرب"}</td>
-                        <td className="td">
-                          <select className="inp" style={{ margin: 0, padding: "5px" }} value={c.trainer_id || ""} onChange={e => handleLinkTrainer(c.id, e.target.value)}>
-                            <option value="">— اختر مدرباً لتعيينه —</option>
-                            {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                          </select>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Card>
-          )}
+          {/* 4. تقرير أداء المعلمين والقاعات */}
+          {tab === "teachers" && <TeachersView data={teacherPerformance} best={bestTeacher} />}
 
-          {/* 4. إدارة المدربين */}
-          {tab === "trainers" && (
-            <Card>
-              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>👨‍🏫 إدارة أعضاء هيئة التدريس والمدربين</h2>
-              <div className="g2" style={{ marginBottom: 20 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>اسم المدرب / دكتور المادة *</label>
-                  <input className="inp" placeholder="د/ خالد الأحمد" value={newTrainer.name} onChange={e => setNewTrainer({ ...newTrainer, name: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>التخصص الفني</label>
-                  <input className="inp" placeholder="مثل: النحو والصرف، اللغويات" value={newTrainer.specialization} onChange={e => setNewTrainer({ ...newTrainer, specialization: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رقم الجوال</label>
-                  <input className="inp" placeholder="05xxxxxxxx" value={newTrainer.phone} onChange={e => setNewTrainer({ ...newTrainer, phone: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>البريد الإلكتروني (هام لإرسال التقارير)</label>
-                  <input className="inp" placeholder="trainer@domain.com" value={newTrainer.email} onChange={e => setNewTrainer({ ...newTrainer, email: e.target.value })} />
-                </div>
-              </div>
-              <button className="btn" onClick={handleAddTrainer} style={{ width: "auto" }}>➕ حفظ بيانات عضو هيئة التدريس</button>
-
-              <h3 style={{ marginTop: 24, fontWeight: 800 }}>سجل المدربين المعتمدين بالمنصة</h3>
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th className="th">اسم المدرب</th>
-                    <th className="th">التخصص</th>
-                    <th className="th">الجوال</th>
-                    <th className="th">البريد الإلكتروني</th>
-                    <th className="th">القاعات التي يدرّس بها</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {trainers.map(t => (
-                    <tr key={t.id}>
-                      <td className="td" style={{ fontWeight: 800 }}>{t.name}</td>
-                      <td className="td">{t.specialization || "عام"}</td>
-                      <td className="td">{t.phone || "—"}</td>
-                      <td className="td">{t.email || "—"}</td>
-                      <td className="td" style={{ color: "#10b981", fontWeight: 700 }}>
-                        {classrooms.filter(c => c.trainer_id === t.id).map(c => c.code).join(" ، ") || "لا توجد قاعات مخصصة"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-          )}
-
-          {/* 5. إدارة المشاركين */}
-          {tab === "participants" && (
-            <Card>
-              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>👥 إدارة المشاركين والطلاب (Participant Roster)</h2>
-              <div className="g2" style={{ marginBottom: 20 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>اسم المتدرب / الطالب *</label>
-                  <input className="inp" placeholder="الاسم الكامل للطالب" value={newPart.name} onChange={e => setNewPart({ ...newPart, name: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>البريد الإلكتروني</label>
-                  <input className="inp" placeholder="student@gmail.com" value={newPart.email} onChange={e => setNewPart({ ...newPart, email: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>رقم الجوال</label>
-                  <input className="inp" placeholder="05xxxxxxxx" value={newPart.phone} onChange={e => setNewPart({ ...newPart, phone: e.target.value })} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 700, display: "block", marginBottom: 4 }}>القاعة الدراسية المراد تسكينه بها</label>
-                  <select className="inp" value={newPart.classroom_id} onChange={e => setNewPart({ ...newPart, classroom_id: e.target.value })}>
-                    <option value="">اختر قاعة دراسية</option>
-                    {classrooms.map(c => <option key={c.id} value={c.id}>قاعة: {c.code} ({c.level})</option>)}
-                  </select>
-                </div>
-              </div>
-              <button className="btn" onClick={handleAddParticipant} style={{ width: "auto" }}>➕ تسكين وتثبيت الطالب</button>
-
-              <h3 style={{ marginTop: 24, fontWeight: 800 }}>قائمة الطلاب والروابط الذكية ({participants.length})</h3>
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th className="th">الاسم</th>
-                    <th className="th">القاعة</th>
-                    <th className="th">الجوال</th>
-                    <th className="th">البريد</th>
-                    <th className="th">رابط التحقق السحري (Magic Link)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {participants.map(p => {
-                    const room = classrooms.find(c => c.id === p.classroom_id);
-                    return (
-                      <tr key={p.id}>
-                        <td className="td" style={{ fontWeight: 700 }}>{p.name}</td>
-                        <td className="td" style={{ fontWeight: 800, color: "#2563eb" }}>{room ? `قاعة ${room.code}` : "لم يسكن بعد"}</td>
-                        <td className="td">{p.phone || "—"}</td>
-                        <td className="td">{p.email || "—"}</td>
-                        <td className="td">
-                          <span style={{ background: "#d1fae5", color: "#047857", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700 }}>جاهز للإرسال</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Card>
-          )}
-
-          {/* 6. مركز التقارير */}
-          {tab === "reports" && (
-            <div>
-              <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 20, marginBottom: 16 }}>
-                <h3 style={{ margin: "0 0 12px", fontWeight: 800 }}>📑 قوالب تقييم الجودة وتوليد ملفات PDF الفاخرة</h3>
-                <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 16px" }}>اختر المدرب لعرض تقريره الخاص والمستقل بالكامل والمعد للطباعة المباشرة</p>
-                
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-                  <select className="inp" style={{ width: 280, margin: 0 }} value={selectedTrainerReport} onChange={e => setSelectedTrainerReport(e.target.value)}>
-                    <option value="">— اختر المدرب لفرز تقريره المخصص —</option>
-                    {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
-                  {selectedTrainerReport && (
-                    <button className="btn" style={{ width: "auto" }} onClick={() => window.print()}>🖨 طباعة تقرير المدرب المخصص</button>
-                  )}
-                </div>
-              </div>
-
-              {selectedTrainerData ? (
-                <Card style={{ border: "2px solid #10b981", background: "#fffdf9" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "2px solid #eef2f6", paddingBottom: 16, marginBottom: 16 }}>
-                    <div>
-                      <span style={{ background: "#d1fae5", color: "#047857", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 800 }}>تقرير الجودة المستقل</span>
-                      <h2 style={{ margin: "6px 0 0", fontSize: 24, fontWeight: 900 }}>التقييم الفني الفردي للمدرب: {selectedTrainerData.name}</h2>
-                      <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 13 }}>يستعرض القاعات والتقييمات المرتبطة به شخصياً لمنع تداخل المسؤوليات</p>
-                    </div>
-                    <div style={{ textAlign: "center", background: "#f8fafc", padding: "10px 18px", borderRadius: 14 }}>
-                      <div style={{ fontSize: 32, fontWeight: 900 }}>{selectedTrainerData.avg ? selectedTrainerData.avg.toFixed(2) : "—"}</div>
-                      <span style={{ fontSize: 12, color: "#64748b" }}>معدل التقييم العام</span>
-                    </div>
-                  </div>
-
-                  <div className="g3" style={{ marginBottom: 18 }}>
-                    <div style={{ background: "#f8fafc", padding: 14, borderRadius: 12, textAlign: "center" }}>
-                      <span style={{ fontSize: 11, color: "#64748b" }}>القاعات التابعة</span>
-                      <b style={{ display: "block", fontSize: 18, marginTop: 4 }}>{selectedTrainerData.rooms.map(r => r.code).join(" ، ") || "لا توجد قاعات"}</b>
-                    </div>
-                    <div style={{ background: "#f8fafc", padding: 14, borderRadius: 12, textAlign: "center" }}>
-                      <span style={{ fontSize: 11, color: "#64748b" }}>مجموع الاستجابات</span>
-                      <b style={{ display: "block", fontSize: 18, marginTop: 4 }}>{selectedTrainerData.count} استمارة</b>
-                    </div>
-                    <div style={{ background: "#f8fafc", padding: 14, borderRadius: 12, textAlign: "center" }}>
-                      <span style={{ fontSize: 11, color: "#64748b" }}>درجة الامتثال والالتزام</span>
-                      <b style={{ display: "block", fontSize: 16, marginTop: 4, color: selectedTrainerData.avg >= 4 ? "#10b981" : "#b45309" }}>
-                        {selectedTrainerData.avg >= 4 ? "توافق تام مع المعايير" : "حاجة لدعم فني مبسط"}
-                      </b>
-                    </div>
-                  </div>
-
-                  <h3 style={{ fontSize: 16, fontWeight: 800 }}>📊 تفاصيل تقييم المحاور الأكاديمية للمدرب</h3>
-                  {selectedTrainerData.axes.length > 0 ? selectedTrainerData.axes.map((ax, idx) => {
-                    const stVal = statusOf(ax.value);
-                    return (
-                      <div key={idx} style={{ background: "#fff", border: "1px solid #f0e9db", borderRadius: 12, padding: 12, marginBottom: 10 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                          <span style={{ fontWeight: 700, fontSize: 13.5 }}>{ax.label}</span>
-                          <b style={{ color: "#10b981" }}>{ax.value.toFixed(2)}/5</b>
-                        </div>
-                        <div style={{ height: 8, background: "#f0e9db", borderRadius: 8, overflow: "hidden" }}>
-                          <div style={{ width: `${(ax.value / 5) * 100}%`, height: "100%", background: "#10b981" }} />
-                        </div>
-                      </div>
-                    );
-                  }) : <p style={{ color: "#94a3b8" }}>لا توجد استجابات تقييم فردية مكتملة لهذا المدرب بعد.</p>}
-                </Card>
-              ) : (
-                <div style={{ textAlign: "center", padding: 50, background: "#fff", border: "1px solid #cbd5e1", borderRadius: 20 }}>
-                  <span style={{ fontSize: 40 }}>📑</span>
-                  <h3 style={{ margin: "10px 0 0", fontWeight: 800 }}>يرجى اختيار المدرب أعلاه لعرض تقريره الفردي المستقل</h3>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 7. مركز التحليلات */}
-          {tab === "analytics" && (
-            <Card>
-              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>📊 تحليلات ومقارنات معايير الجودة (النسب الكلية)</h2>
-              <p style={{ fontSize: 14, color: "#64748b", marginBottom: 20 }}>مقارنة معايير التقييم للمحاور الأكاديمية بين التقييم اليومي المباشر والنهائي</p>
-              
-              <div className="g2">
-                <CD st={{ borderRight: "4px solid #2563eb" }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#2563eb", marginBottom: 12 }}>أعلى محاور التقييم اليومي</h3>
-                  {daily.axes.slice(0, 3).map((a, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{a.label}</span>
-                      <b style={{ color: "#2563eb" }}>{a.value.toFixed(2)}</b>
-                    </div>
-                  ))}
-                </CD>
-                <CD st={{ borderRight: "4px solid #10b981" }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#10b981", marginBottom: 12 }}>أعلى محاور التقييم النهائي</h3>
-                  {final.axes.slice(0, 3).map((a, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f1f5f9" }}>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{a.label}</span>
-                      <b style={{ color: "#10b981" }}>{a.value.toFixed(2)}</b>
-                    </div>
-                  ))}
-                </CD>
-              </div>
-            </Card>
-          )}
-
-          {/* 8. مركز الإشعارات والبريد */}
-          {tab === "notifications" && (
-            <Card>
-              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>✉️ مركز الإشعارات وتوليد التقارير التلقائية (Mail Hub)</h2>
-              <p style={{ fontSize: 14, color: "#64748b", marginBottom: 20 }}>أرسل تقرير تقييم القاعة والمدرب الفردي بملف PDF تلقائياً للمدرب أو تقرير الجودة الموحد للإدارة بضغطة زر:</p>
-
-              <div className="g2" style={{ marginBottom: 24 }}>
-                <div style={{ background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: 16, padding: 18 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px" }}>إرسال تقرير المدرب الفردي</h3>
-                  <select className="inp" id="selectMailTrainer">
-                    <option value="">— اختر المدرب المستهدف —</option>
-                    {trainers.map(t => <option key={t.id} value={t.id}>{t.name} ({t.email || "لا يوجد بريد"})</option>)}
-                  </select>
-                  <button className="btn" disabled={emailSending} onClick={() => {
-                    const val = document.getElementById("selectMailTrainer").value;
-                    if (val) triggerEmailReport("TRAINER", val);
-                  }}>
-                    {emailSending ? "⏳ جاري توليد PDF والإرسال..." : "✉️ إرسال التقرير للمدرب والنسخة للإدارة"}
-                  </button>
-                </div>
-
-                <div style={{ background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: 16, padding: 18 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px" }}>إرسال التقرير الشامل للإدارة</h3>
-                  <p style={{ fontSize: 12, color: "#64748b", marginBottom: 24 }}>تصدير كافة أرقام المنصة لمدير المنصة والشركاء الأكاديميين بنسخة PDF</p>
-                  <button className="btn" style={{ background: "#0f172a" }} disabled={emailSending} onClick={() => triggerEmailReport("ADMIN", "all")}>
-                    {emailSending ? "⏳ جاري المعالجة..." : "✉️ إرسال التقرير الشامل للإدارة"}
-                  </button>
-                </div>
-              </div>
-
-              <h3 style={{ fontWeight: 800 }}>📋 سجل رسائل التقارير والامتثال الصادرة</h3>
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th className="th">المستلم</th>
-                    <th className="th">البريد الإلكتروني</th>
-                    <th className="th">عنوان التقرير الصادر</th>
-                    <th className="th">الحالة</th>
-                    <th className="th">تاريخ ووقت الإرسال</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {emailLogs.map(l => (
-                    <tr key={l.id}>
-                      <td className="td" style={{ fontWeight: 700 }}>{l.recipient_name}</td>
-                      <td className="td" style={{ direction: "ltr", fontSize: 12 }}>{l.recipient_email}</td>
-                      <td className="td" style={{ fontSize: 12.5 }}>{l.subject}</td>
-                      <td className="td">
-                        <span style={{ background: "#d1fae5", color: "#047857", padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 800 }}>{l.status}</span>
-                      </td>
-                      <td className="td" style={{ fontSize: 12, color: "#64748b" }}>{new Date(l.sent_at).toLocaleString("ar-SA")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-          )}
-
-          {/* 9. الإعدادات */}
-          {tab === "settings" && (
-            <Card>
-              <h2 style={{ margin: "0 0 16px", fontWeight: 900 }}>⚙️ الإعدادات العامة للمنظومة</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 6 }}>مفتاح ربط بريد Resend API Key</label>
-                  <input className="inp" type="password" placeholder="re_1234567890abcdef..." value="••••••••••••••••••••••••••••" disabled />
-                </div>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 6 }}>بريد استلام تقارير الإدارة المعتمد</label>
-                  <input className="inp" placeholder="management@platform.edu" value="management@platform.edu" disabled />
-                </div>
-              </div>
-            </Card>
-          )}
-
-        </main>
+        </div>
       </div>
     </div>
   );
 }
 
-function KpiCard(p: { label: string; value: any; suffix?: string; subtitle: string }) {
+// ==========================================
+// المكونات الفرعية التفاعلية للوحة القيادة
+// ==========================================
+function Overview(p: { daily: Rep; final: Rep; classrooms: any[]; best: any }) {
+  const d = p.daily || { count: 0, avg: 0 };
+  const f = p.final || { count: 0, avg: 0 };
+  const max = Math.max(5, Number(d.avg || 0), Number(f.avg || 0));
   return (
-    <Card style={{ position: "relative", overflow: "hidden", borderRight: "4px solid #10b981" }}>
-      <div style={{ position: "absolute", left: 10, top: 4, fontSize: 60, fontWeight: 900, color: "rgba(16,185,129,0.04)" }}>{p.value}</div>
-      <div style={{ position: "relative" }}>
-        <div style={{ fontSize: 13, color: "#9a8f7d", fontWeight: 700, marginBottom: 4 }}>{p.label}</div>
-        <div style={{ fontSize: 38, fontWeight: 900, color: "#0f172a", lineHeight: 1 }}>{p.value}{p.suffix}</div>
-        <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>{p.subtitle}</div>
+    <div>
+      <div className="k3" style={{ marginBottom: "16px" }}>
+        <KpiCard label="إجمالي الاستجابات الحية" value={Number(d.count || 0) + Number(f.count || 0)} suffix=" استمارة" ghost={String(Number(d.count || 0) + Number(f.count || 0))} />
+        <KpiCard label="معدل الرضا اليومي" value={d.avg ? Number(d.avg).toFixed(2) : "—"} suffix="/5" ghost={d.avg ? Number(d.avg).toFixed(1) : "—"} />
+        <KpiCard label="معدل الرضا النهائي" value={f.avg ? Number(f.avg).toFixed(2) : "—"} suffix="/5" ghost={f.avg ? Number(f.avg).toFixed(1) : "—"} />
       </div>
-    </Card>
+
+      <div className="g2">
+        <Card>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>⚖️ مقارنة أداء الرضا الأكاديمي</h3>
+          <svg viewBox="0 0 300 180" style={{ width: "100%", height: "auto" }}>
+            {[0, 0.5, 1].map((fr, i) => { const y = 20 + 120 * (1 - fr); return (<g key={i}><line x1={40} y1={y} x2={280} y2={y} stroke="#ece4d4" strokeDasharray="3,3" /><text x="34" y={y + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{(max * fr).toFixed(1)}</text></g>); })}
+            <g><rect x="80" y={140 - (Number(d.avg || 0) / max) * 120} width="45" height={(Number(d.avg || 0) / max) * 120} rx={6} fill="#2563eb" /><text x="102" y="140 - (Number(d.avg || 0) / max) * 120 - 8} textAnchor="middle" fontSize="13" fontWeight="900" fill="#111">{d.avg ? Number(d.avg).toFixed(2) : "—"}</text><text x="102" y="158" textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">اليومي</text></g>
+            <g><rect x="175" y={140 - (Number(f.avg || 0) / max) * 120} width="45" height={(Number(f.avg || 0) / max) * 120} rx={6} fill="#10b981" /><text x="197" y={140 - (Number(f.avg || 0) / max) * 120 - 8} textAnchor="middle" fontSize="13" fontWeight="900" fill="#111">{f.avg ? Number(f.avg).toFixed(2) : "—"}</text><text x="197" y="158" textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">النهائي</text></g>
+            <line x1="40" y1="140" x2="280" y2="140" stroke="#d6cdba" strokeWidth="1.5" />
+          </svg>
+        </Card>
+
+        {p.best ? (
+          <div style={S.bestCard}>
+            <span style={{ fontSize: "44px" }}>🏆</span>
+            <span style={{ fontSize: "11px", color: "#10b981", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1.5px" }}>عضو هيئة التدريس الأكثر تميزاً</span>
+            <h2 style={{ fontSize: "24px", fontWeight: 900, margin: "6px 0 2px", color: "#fff" }}>{p.best.name || "—"}</h2>
+            <p style={{ color: "#94a3b8", fontSize: "12px", margin: "0 0 12px" }}>قاعة {p.best.rooms || "—"} ({p.best.levels || "—"})</p>
+            <div style={{ background: "rgba(16,185,129,.15)", border: "1px solid #10b981", borderRadius: "12px", padding: "8px 20px" }}>
+              <span style={{ fontSize: "13px", color: "#5eead4", fontWeight: 700 }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"} / 5</span>
+            </div>
+          </div>
+        ) : (
+          <Card><p style={{ color: "#94a3b8", textAlign: "center", padding: "40px" }}>لا توجد تقييمات مسجلة للمدربين بعد.</p></Card>
+        )}
+      </div>
+    </div>
   );
+}
+
+function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) {
+  const r = p.rep || { count: 0, avg: 0, axes: [], comments: [], dist: [0,0,0,0,0], days: [], sections: [] };
+  const pct = r.avg ? Math.round((Number(r.avg) / 5) * 100) : 0;
+  const top = r.axes && r.axes.length ? r.axes[r.axes.length - 1] : null;
+  const low = r.axes && r.axes.length ? r.axes[0] : null;
+  const maxDi = Math.max(1, ...(r.dist || [1]));
+  const dColors = ["#f43f5e", "#fb923c", "#facc15", "#34d399", "#10b981"];
+  const daysLen = r.days && r.days.length ? r.days.length : 1;
+  const bw = daysLen > 0 ? 360 / daysLen : 360;
+  const maxD = Math.max(1, ...(r.days || []).map((d: any) => d?.count || 0));
+  return (
+    <div>
+      <div className="k3" style={{ marginBottom: "16px" }}>
+        <KpiCard label="إجمالي الاستجابات" value={r.count} suffix=" استمارة" ghost={String(r.count)} />
+        <KpiCard label="متوسط الرضا العام" value={r.avg ? Number(r.avg).toFixed(2) : "—"} suffix="/5" ghost={r.avg ? Number(r.avg).toFixed(1) : "—"} />
+        <KpiCard label="نسبة الرضا المئوية" value={pct} suffix="%" ghost={String(pct)} />
+      </div>
+
+      <div className="g2" style={{ marginBottom: "16px" }}>
+        <Card>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>🎯 توزيع التقييم الإجمالي بالنجوم</h3>
+          {[5, 4, 3, 2, 1].map(s => {
+            const idx = s - 1;
+            const distVal = r.dist && r.dist[idx] ? r.dist[idx] : 0;
+            const w = maxDi > 0 ? (distVal / maxDi) * 100 : 0;
+            return (
+              <div key={s} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                <span style={{ width: "55px", fontSize: "11px", fontWeight: 700, color: "#7c6f5a" }}>{s} نجوم</span>
+                <div style={{ flex: 1, height: "11px", background: "#f0e9db", borderRadius: "8px", overflow: "hidden" }}>
+                  <div style={{ width: (isNaN(w) ? 0 : w) + "%", height: "100%", background: dColors[idx], borderRadius: "8px" }} />
+                </div>
+                <b style={{ width: "20px", textAlign: "left", fontSize: "12px" }}>{distVal}</b>
+              </div>
+            );
+          })}
+        </Card>
+
+        <Card>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>💡 التحليل الذكي والتوصيات</h3>
+          <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: "12px", padding: "12px", marginBottom: "10px" }}><b style={{ color: "#047857", fontSize: "13px" }}>✅ نقطة القوة المتميزة</b><p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#334155" }}>{top ? top.label + " (" + Number(top.value).toFixed(2) + "/5)" : "—"}</p></div>
+          <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "12px", padding: "12px" }}><b style={{ color: "#b45309", fontSize: "13px" }}>🎯 مجال التطوير المستهدف</b><p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#334155" }}>{low ? low.label + " (" + Number(low.value).toFixed(2) + "/5)" : "—"}</p></div>
+        </Card>
+      </div>
+
+      <div className="g2" style={{ marginBottom: "16px" }}>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}><h3 style={{ margin: 0, fontSize: "16px", fontWeight: 800 }}>📊 التوزيع اليومي</h3><span style={{ background: "#d1fae5", color: "#047857", borderRadius: "999px", padding: "3px 12px", fontSize: "11px", fontWeight: 800 }}>7 أيام</span></div>
+          <svg viewBox="0 0 360 180" style={{ width: "100%", height: "auto" }}>
+            <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#0d9488"/></linearGradient></defs>
+            {(r.days || []).map((d, i) => {
+              const x = i * bw + bw * 0.22;
+              const w = bw * 0.56;
+              const h = (Number(d.count || 0) / maxD) * 120;
+              const y = 140 - h;
+              return (
+                <g key={i}>
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fontSize="11" fontWeight="800" fill="#111">{d.count}</text>
+                  <rect x={x} y={y} width={w} height={Math.max(4, h)} rx={6} fill="url(#chartGrad)" />
+                  <text x={x + w / 2} y={156} textAnchor="middle" fontSize="9" fill="#64748b">{d.wd}</text>
+                  <text x={x + w / 2} y={170} textAnchor="middle" fontSize="9" fill="#94a3b8">{d.dt}</text>
+                </g>
+              );
+            })}
+          </svg>
+        </Card>
+        
+        <Card>
+          <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>⚖️ مقارنة المحاور الأساسية</h3>
+          {(r.sections || []).length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              {r.sections.map((s, i) => (
+                <div key={i} style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: "14px", padding: "14px", textAlign: "center" }}>
+                  <div style={{ fontSize: "12px", color: "#9a8f7d", fontWeight: 700, marginBottom: "6px" }}>{s.name}</div>
+                  <div style={{ fontSize: "28px", fontWeight: 900, color: "#10b981" }}>{Number(s.value || 0).toFixed(1)}</div>
+                </div>
+              ))}
+            </div>
+          ) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: "20px" }}>لا توجد أقسام مسجلة.</p>}
+        </Card>
+      </div>
+
+      <Card style={{ marginBottom: "16px" }}>
+        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>📈 نتائج أداء المحاور التفصيلي</h3>
+        {(r.axes || []).length > 0 ? r.axes.map((a, i) => {
+          if (!a) return null;
+          const s = statusOf(a.value);
+          return (
+            <div key={i} style={S.axisRow}>
+              <div style={S.axisMeta}>
+                <div style={S.axisLabelWrap}><span style={S.secTag}>{a.section}</span><span style={{ fontSize: "13.5px", fontWeight: 700 }}>{a.label}</span></div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ ...S.statusPill, background: s.bg, color: s.fg }}>{s.t}</span><b style={{ minWidth: "50px", textAlign: "left", color: p.accent, fontSize: "15px" }}>{Number(a.value || 0).toFixed(2)}/5</b></div>
+              </div>
+              <div style={S.track}><div style={{ ...S.fillGrad, width: (Number(a.value || 0) / 5 * 100) + "%", background: "linear-gradient(90deg," + p.accent + ",#10b981)" }} /></div>
+            </div>
+          );
+        }) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: "20px" }}>لا توجد بيانات لهذا التبويب حالياً.</p>}
+      </Card>
+
+      <Card>
+        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: 800 }}>💬 ملاحظات ومرئيات المشاركين النصية</h3>
+        {(r.comments || []).length > 0 ? r.comments.map((c, i) => (
+          <div key={i} style={S.commentCard}>{c}</div>
+        )) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: "20px" }}>لا توجد تعليقات أو ملاحظات نصية مسجلة.</p>}
+      </Card>
+    </div>
+  );
+}
+
+function TeachersView(p: { data: any[]; best: any }) {
+  const teacherList = p.data || [];
+  return (
+    <div>
+      {p.best && (
+        <div style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", borderRadius: "22px", padding: "20px", color: "#fff", marginBottom: "16px", display: "flex", alignItems: "center", gap: "16px", border: "1px solid #10b981" }}>
+          <span style={{ fontSize: "40px" }}>🏆</span>
+          <div>
+            <div style={{ fontSize: "11px", color: "#10b981", fontWeight: 800 }}>عضو هيئة التدريس الأعلى أداءً بالقاعات</div>
+            <h3 style={{ margin: "2px 0 0", fontSize: "20px", fontWeight: 900 }}>{p.best.name || "—"}</h3>
+            <p style={{ margin: 0, fontSize: "12px", color: "#94a3b8" }}>متوسط التقييم العام: {p.best.avg ? Number(p.best.avg).toFixed(2) : "0.00"}/5 (إجمالي الاستجابات: {p.best.count} تقييم)</p>
+          </div>
+        </div>
+      )}
+
+      <Card>
+        <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 800 }}>📋 ترتيب المعلمين ومقارنة الأداء الأكاديمي المباشر</h3>
+        <div style={{ overflowX: "auto" }}>
+          <table className="tbl">
+            <thead>
+              <tr style={{ background: "#f8fafc" }}>
+                <th className="th">الترتيب</th>
+                <th className="th">المعلم / المحاضر</th>
+                <th className="th">القاعة</th>
+                <th className="th">المستوى</th>
+                <th className="th">الاستجابات</th>
+                <th className="th">وضوح الشرح</th>
+                <th className="th">أسلوب التدريس</th>
+                <th className="th">تفاعل الطلاب</th>
+                <th className="th">المعدل العام</th>
+                <th className="th">الحالة الأكاديمية</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teacherList.map((t, idx) => {
+                if (!t) return null;
+                const s = statusOf(t.avg || 0);
+                return (
+                  <tr key={t.id || idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <td className="td" style={{ fontWeight: "800", color: idx === 0 ? "#10b981" : "#475569" }}>{idx + 1}</td>
+                    <td className="td" style={{ fontWeight: "800", color: "#111" }}>{t.name || "—"}</td>
+                    <td className="td" style={{ fontWeight: "700" }}>{t.rooms || "—"}</td>
+                    <td className="td"><span style={{ background: "#e2e8f0", padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 700 }}>{t.levels || "—"}</span></td>
+                    <td className="td">{t.count || 0}</td>
+                    <td className="td" style={{ color: "#2563eb", fontWeight: 700 }}>{t.count ? Number(t.clarity || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#10b981", fontWeight: 700 }}>{t.count ? Number(t.teach || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ color: "#b45309", fontWeight: 700 }}>{t.count ? Number(t.drive || 0).toFixed(2) : "—"}</td>
+                    <td className="td" style={{ fontSize: "15px", fontWeight: 900, color: "#0f172a" }}>{t.count ? Number(t.avg || 0).toFixed(2) : "—"}</td>
+                    <td className="td">
+                      <span style={{ background: t.count ? s.bg : "#f1f5f9", color: t.count ? s.fg : "#64748b", borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: 800 }}>
+                        {t.count ? s.t : "لا يوجد تقييم"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function KpiCard(p: { label: string; value: any; suffix?: string; subtitle?: string; ghost: string }) {
+  return (
+    <div style={S.kpiCard}>
+      <div style={S.kpiGhost}>{p.ghost || ""}</div>
+      <div style={{ position: "relative" }}>
+        <div style={S.kpiLabel}>{p.label || ""}</div>
+        <div style={S.kpiVal}>{p.value}{p.suffix || ""}</div>
+        {p.subtitle && <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>{p.subtitle}</div>}
+      </div>
+    </div>
+  );
+}
+
+function Card(p: { children: any; style?: any }) { 
+  return (
+    <div style={{ background: "#fffdf9", border: "1px solid #e8decb", borderRadius: "20px", padding: "20px", boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: "14px", ...p.style }}>
+      {p.children}
+    </div>
+  ); 
 }
 
 function CD(p: { children: any; st?: any }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: 20, padding: 18, boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: 14, ...p.st }}>
+    <div style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: "20px", padding: "18px", boxShadow: "0 4px 14px rgba(60,40,10,.05)", marginBottom: "14px", ...p.st }}>
       {p.children}
     </div>
   );
 }
+
+// ==========================================
+// الأنماط البرمجية المقاومة للـ Hydration والـ snake_case
+// ==========================================
+const S = {
+  wrap: { direction: "rtl", fontFamily: "Cairo, Tahoma, sans-serif", background: "#f2ecdf", minHeight: "100vh", padding: "16px", color: "#1a1a1a" },
+  loading: { background: "#f2ecdf", minHeight: "100vh", padding: "80px", textAlign: "center", color: "#64748b" },
+  spinner: { width: "48px", height: "48px", border: "5px solid #e2e8f0", borderTop: "5px solid #10b981", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
+  headerCard: { position: "relative", overflow: "hidden", background: "linear-gradient(135deg,#0b1220,#111827)", borderRadius: "24px", padding: "24px", color: "#fff", marginBottom: "16px" },
+  headerBgText: { position: "absolute", left: "16px", top: 0, fontSize: "80px", fontWeight: 900, color: "rgba(255,255,255,.04)", letterSpacing: "4px" },
+  headerBadge: { background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: "999px", padding: "4px 12px", fontSize: "11px", fontWeight: "700", color: "#e2e8f0", display: "inline-block", marginBottom: "6px" },
+  kpiCard: { position: "relative", overflow: "hidden", borderRight: "4px solid #10b981", background: "#fffdf9", borderTop: "1px solid #e8decb", borderBottom: "1px solid #e8decb", borderLeft: "1px solid #e8decb", borderRadius: "22px", padding: "22px", boxShadow: "0 6px 18px rgba(60,40,10,0.04)" },
+  kpiGhost: { position: "absolute", left: "10px", top: "4px", fontSize: "60px", fontWeight: 900, color: "rgba(16,185,129,0.04)" },
+  kpiLabel: { fontSize: "13px", color: "#9a8f7d", fontWeight: "700", marginBottom: "4px" },
+  kpiVal: { fontSize: "38px", fontWeight: 900, color: "#0f172a", lineHeight: "1" },
+  bestCard: { background: "linear-gradient(135deg, #0f172a, #1e293b)", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center", border: "1px solid #10b981", borderRadius: "22px", padding: "22px" },
+  axisRow: { background: "#fff", border: "1px solid #f0e9db", borderRadius: "14px", padding: "13px", marginBottom: "10px" },
+  axisMeta: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" },
+  axisLabelWrap: { display: "flex", alignItems: "center", gap: "8px" },
+  secTag: { background: "#f0e9db", color: "#7c6f5a", borderRadius: "7px", padding: "2px 9px", fontSize: "11px", fontWeight: "700" },
+  statusPill: { borderRadius: "999px", padding: "3px 11px", fontSize: "11px", fontWeight: 800 },
+  track: { height: "10px", background: "#f0e9db", borderRadius: "8px", overflow: "hidden" },
+  fillGrad: { height: "100%", borderRadius: "8px" },
+  commentCard: { background: "#fff", borderRight: "4px solid #10b981", borderRadius: "12px", padding: "12px", marginBottom: "8px", fontSize: "13px", color: "#475569", lineHeight: 1.7 }
+};
