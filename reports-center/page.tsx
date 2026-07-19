@@ -41,8 +41,9 @@ const TEAL = "#10b981";
 const DARK = "#0b1220";
 
 function statusOf(v: number): { t: string; bg: string; fg: string } {
-  if (v >= 4) return { t: "ممتاز", bg: "#d1fae5", fg: "#047857" };
-  if (v >= 3) return { t: "جيد", bg: "#fef3c7", fg: "#b45309" };
+  const val = Number(v) || 0;
+  if (val >= 4) return { t: "ممتاز", bg: "#d1fae5", fg: "#047857" };
+  if (val >= 3) return { t: "جيد", bg: "#fef3c7", fg: "#b45309" };
   return { t: "يحتاج تحسين", bg: "#fee2e2", fg: "#b91c1c" };
 }
 
@@ -339,6 +340,9 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
   const low = r.axes.length ? r.axes[0] : null;
   const maxDi = Math.max(1, ...(r.dist || [1]));
   const dColors = ["#f43f5e", "#fb923c", "#facc15", "#34d399", "#10b981"];
+  const daysLen = r.days && r.days.length ? r.days.length : 1;
+  const bw = 360 / daysLen;
+  const maxD = Math.max(1, ...(r.days || []).map((d: any) => d?.count || 0));
   return (
     <div>
       <div className="k3" style={{ marginBottom: 16 }}>
@@ -370,6 +374,43 @@ function ReportView(p: { rep: Rep; accent: string; name: string; sub: string }) 
           <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>💡 التحليل الذكي والتوصيات</h3>
           <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", borderRadius: 12, padding: 12, marginBottom: 10 }}><b style={{ color: "#047857", fontSize: 13 }}>✅ نقطة القوة المتميزة</b><p style={{ margin: "4px 0 0", fontSize: 12.5, color: "#334155" }}>{top ? top.label + " (" + top.value.toFixed(2) + "/5)" : "—"}</p></div>
           <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 12, padding: 12 }}><b style={{ color: "#b45309", fontSize: 13 }}>🎯 مجال التطوير المستهدف</b><p style={{ margin: "4px 0 0", fontSize: 12.5, color: "#334155" }}>{low ? low.label + " (" + low.value.toFixed(2) + "/5)" : "—"}</p></div>
+        </Card>
+      </div>
+
+      <div className="g2" style={{ marginBottom: 16 }}>
+        <Card>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}><h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>📊 التوزيع اليومي</h3><span style={{ background: "#d1fae5", color: "#047857", borderRadius: 999, padding: "3px 12px", fontSize: 11, fontWeight: 800 }}>7 أيام</span></div>
+          <svg viewBox="0 0 360 180" style={{ width: "100%", height: "auto" }}>
+            <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#34d399"/><stop offset="100%" stopColor="#0d9488"/></linearGradient></defs>
+            {(r.days || []).map((d, i) => {
+              const x = i * bw + bw * 0.22;
+              const w = bw * 0.56;
+              const h = (d.count / maxD) * 120;
+              const y = 140 - h;
+              return (
+                <g key={i}>
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fontSize="11" fontWeight="800" fill="#111">{d.count}</text>
+                  <rect x={x} y={y} width={w} height={Math.max(4, h)} rx={6} fill="url(#chartGrad)" />
+                  <text x={x + w / 2} y={156} textAnchor="middle" fontSize="9" fill="#64748b">{d.wd}</text>
+                  <text x={x + w / 2} y={170} textAnchor="middle" fontSize="9" fill="#94a3b8">{d.dt}</text>
+                </g>
+              );
+            })}
+          </svg>
+        </Card>
+        
+        <Card>
+          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 800 }}>⚖️ مقارنة المحاور الأساسية</h3>
+          {(r.sections || []).length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {r.sections.map((s, i) => (
+                <div key={i} style={{ background: "#fff", border: "1px solid #ece4d4", borderRadius: 14, padding: 14, textAlign: "center" }}>
+                  <div style={{ fontSize: 12, color: "#9a8f7d", fontWeight: 700, marginBottom: 6 }}>{s.name}</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: "#10b981" }}>{s.value.toFixed(1)}</div>
+                </div>
+              ))}
+            </div>
+          ) : <p style={{ color: "#9a8f7d", textAlign: "center", padding: 20 }}>لا توجد أقسام مسجلة.</p>}
         </Card>
       </div>
 
