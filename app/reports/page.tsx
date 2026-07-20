@@ -7,6 +7,7 @@ export default function Reports() {
   const [tab, setTab] = useState("teachers");
   const [message, setMessage] = useState("");
 
+  // بيانات المعلمين حسب طلبك
   const teachers = [
     { rank: 1, name: "د/ ياسر", room: "208", avg: 3.13, status: "يحتاج دعماً" },
     { rank: 2, name: "د/ محمد الشرقاوي", room: "203", avg: 2.50, status: "يحتاج دعماً" },
@@ -17,7 +18,7 @@ export default function Reports() {
 
   const sendReport = (type, name = "") => {
     if (type === "trainer") {
-      setMessage(`✅ تم إرسال تقرير قاعة المدرب ${name} بنجاح`);
+      setMessage(`✅ تم إرسال تقرير قاعة ${name} إلى المدرب بنجاح`);
     } else {
       setMessage("✅ تم إرسال التقرير الشامل للإدارة بنجاح");
     }
@@ -25,24 +26,107 @@ export default function Reports() {
   };
 
   return (
-    <div style={{ background: "#0f172a", minHeight: "100vh", padding: "20px", color: "#e2e8f0", fontFamily: "Cairo, sans-serif", direction: "rtl" }}>
+    <div style={{
+      background: "#0f172a",
+      minHeight: "100vh",
+      padding: "20px",
+      color: "#e2e8f0",
+      fontFamily: "Cairo, sans-serif",
+      direction: "rtl"
+    }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ background: "#1e2937", borderRadius: "20px", padding: "30px", textAlign: "center", marginBottom: "30px", position: "relative" }}>
-          <div style={{ position: "absolute", left: "30px", top: "-20px", fontSize: "110px", fontWeight: "900", opacity: "0.08", color: "#fff" }}>REPORT</div>
-          <h1 style={{ fontSize: "32px", fontWeight: "900", margin: "0 0 8px" }}>منظومة التقارير والإدارة</h1>
+
+        {/* الرأس الفاخر */}
+        <div style={{
+          background: "linear-gradient(135deg, #1e2937, #0f172a)",
+          borderRadius: "20px",
+          padding: "30px",
+          textAlign: "center",
+          marginBottom: "30px",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <div style={{
+            position: "absolute",
+            left: "30px",
+            top: "-20px",
+            fontSize: "110px",
+            fontWeight: "900",
+            opacity: "0.08",
+            color: "#fff"
+          }}>REPORT</div>
+          <h1 style={{ fontSize: "32px", fontWeight: "900", margin: "0 0 8px" }}>
+            منظومة التقارير والإدارة
+          </h1>
           <p style={{ color: "#94a3b8", margin: 0 }}>تم التطوير الشامل - النسخة الاحترافية</p>
         </div>
 
+        {/* التبويبات */}
         <div style={{ display: "flex", gap: "12px", marginBottom: "30px", flexWrap: "wrap" }}>
-          <button onClick={() => setTab("daily")} style={{ padding: "14px 24px", borderRadius: "12px", background: tab === "daily" ? "#10b981" : "#1e2937", color: "#fff", border: "none", fontWeight: "700" }}>📝 التقرير اليومي</button>
-          <button onClick={() => setTab("final")} style={{ padding: "14px 24px", borderRadius: "12px", background: tab === "final" ? "#10b981" : "#1e2937", color: "#fff", border: "none", fontWeight: "700" }}>⭐ التقرير النهائي</button>
-          <button onClick={() => setTab("teachers")} style={{ padding: "14px 24px", borderRadius: "12px", background: tab === "teachers" ? "#10b981" : "#1e2937", color: "#fff", border: "none", fontWeight: "700" }}>👨‍🏫 المعلمون بالقاعة</button>
-          <button onClick={() => setTab("management")} style={{ padding: "14px 24px", borderRadius: "12px", background: tab === "management" ? "#10b981" : "#1e2937", color: "#fff", border: "none", fontWeight: "700" }}>🏫 إدارة القاعات والمدربين</button>
-          <button onClick={() => setTab("email")} style={{ padding: "14px 24px", borderRadius: "12px", background: tab === "email" ? "#10b981" : "#1e2937", color: "#fff", border: "none", fontWeight: "700" }}>✉️ إرسال التقارير</button>
+          <button 
+            onClick={() => setTab("daily")} 
+            style={{ 
+              padding: "14px 24px", 
+              borderRadius: "12px", 
+              background: tab === "daily" ? "#10b981" : "#1e2937", 
+              color: "#fff", 
+              border: "none", 
+              fontWeight: "700",
+              cursor: "pointer"
+            }}
+          >
+            📝 التقرير اليومي
+          </button>
+          
+          <button 
+            onClick={() => setTab("final")} 
+            style={{ 
+              padding: "14px 24px", 
+              borderRadius: "12px", 
+              background: tab === "final" ? "#10b981" : "#1e2937", 
+              color: "#fff", 
+              border: "none", 
+              fontWeight: "700",
+              cursor: "pointer"
+            }}
+          >
+            ⭐ التقرير النهائي
+          </button>
+          
+          <button 
+            onClick={() => setTab("teachers")} 
+            style={{ 
+              padding: "14px 24px", 
+              borderRadius: "12px", 
+              background: tab === "teachers" ? "#10b981" : "#1e2937", 
+              color: "#fff", 
+              border: "none", 
+              fontWeight: "700",
+              cursor: "pointer"
+            }}
+          >
+            👨‍🏫 المعلمون بالقاعة
+          </button>
+          
+          <button 
+            onClick={() => setTab("email")} 
+            style={{ 
+              padding: "14px 24px", 
+              borderRadius: "12px", 
+              background: tab === "email" ? "#10b981" : "#1e2937", 
+              color: "#fff", 
+              border: "none", 
+              fontWeight: "700",
+              cursor: "pointer"
+            }}
+          >
+            ✉️ إرسال التقارير بالإيميل
+          </button>
         </div>
 
+        {/* المحتوى حسب التبويب */}
         {tab === "teachers" && (
-          <div style={{ background: "#1e2937", borderRadius: "16px", padding: "20px" }}>
+          <div style={{ background: "#1e2937", borderRadius: "16px", padding: "24px" }}>
             <h2 style={{ color: "#fff", marginBottom: "20px" }}>ترتيب المعلمين - مرتبط بالقاعة</h2>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -76,7 +160,15 @@ export default function Reports() {
                     <td style={{ padding: "14px 12px" }}>
                       <button 
                         onClick={() => sendReport("trainer", t.name)}
-                        style={{ background: "#10b981", color: "#fff", border: "none", padding: "6px 14px", borderRadius: "8px", cursor: "pointer" }}
+                        style={{ 
+                          background: "#10b981", 
+                          color: "#fff", 
+                          border: "none", 
+                          padding: "6px 14px", 
+                          borderRadius: "8px", 
+                          cursor: "pointer",
+                          fontSize: "13px"
+                        }}
                       >
                         ✉️ إرسال
                       </button>
@@ -92,14 +184,51 @@ export default function Reports() {
           <div style={{ background: "#1e2937", borderRadius: "16px", padding: "40px", textAlign: "center" }}>
             <h2>✉️ مركز إرسال التقارير بالإيميل</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "420px", margin: "30px auto" }}>
-              <button onClick={() => sendReport("trainer")} style={{ padding: "18px", background: "#10b981", color: "#fff", border: "none", borderRadius: "12px", fontWeight: "bold" }}>
-                📑 إرسال تقرير كل قاعة للمدرب
+              <button 
+                onClick={() => sendReport("trainer")}
+                style={{ 
+                  padding: "18px", 
+                  background: "#10b981", 
+                  color: "#fff", 
+                  border: "none", 
+                  borderRadius: "12px", 
+                  fontSize: "16px", 
+                  fontWeight: "bold",
+                  cursor: "pointer"
+                }}
+              >
+                📑 إرسال تقرير كل قاعة للمدرب المسؤول
               </button>
-              <button onClick={() => sendReport("admin")} style={{ padding: "18px", background: "#0f172a", color: "#fff", border: "none", borderRadius: "12px", fontWeight: "bold" }}>
+
+              <button 
+                onClick={() => sendReport("admin")}
+                style={{ 
+                  padding: "18px", 
+                  background: "#0f172a", 
+                  color: "#fff", 
+                  border: "none", 
+                  borderRadius: "12px", 
+                  fontSize: "16px", 
+                  fontWeight: "bold",
+                  cursor: "pointer"
+                }}
+              >
                 📊 إرسال التقرير الشامل للإدارة
               </button>
             </div>
-            {message && <div style={{ marginTop: "20px", padding: "16px", background: "#052e16", borderRadius: "12px", color: "#4ade80" }}>{message}</div>}
+
+            {message && (
+              <div style={{ 
+                marginTop: "30px", 
+                padding: "16px", 
+                background: "#052e16", 
+                borderRadius: "12px", 
+                color: "#4ade80",
+                fontWeight: "bold"
+              }}>
+                {message}
+              </div>
+            )}
           </div>
         )}
 
@@ -115,12 +244,4 @@ export default function Reports() {
       </div>
     </div>
   );
-
-  function sendReport(type, name = "") {
-    if (type === "trainer") {
-      setMessage(`✅ تم إرسال تقرير قاعة المدرب ${name} بنجاح`);
-    } else {
-      setMessage("✅ تم إرسال التقرير الشامل للإدارة بنجاح");
-    }
-  }
 }
