@@ -29,8 +29,7 @@ export default function Reports() {
       padding: "30px", 
       color: "#e2e8f0", 
       fontFamily: "Cairo, sans-serif",
-      direction: "rtl",
-      textAlign: "right"
+      direction: "rtl"
     }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
 
