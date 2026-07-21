@@ -29,7 +29,8 @@ export default function Reports() {
       padding: "30px", 
       color: "#e2e8f0", 
       fontFamily: "Cairo, sans-serif",
-      direction: "rtl"
+      direction: "rtl",
+      textAlign: "right"
     }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
 
@@ -64,7 +65,11 @@ export default function Reports() {
           <button onClick={() => setTab("email")} style={tabStyle(tab === "email")}>✉️ إرسال التقارير بالإيميل</button>
         </div>
 
-        {message && <div style={{ background: "#052e16", color: "#4ade80", padding: "16px", borderRadius: "12px", marginBottom: "20px", fontWeight: "bold" }}>{message}</div>}
+        {message && (
+          <div style={{ background: "#052e16", color: "#4ade80", padding: "16px", borderRadius: "12px", marginBottom: "20px", fontWeight: "bold" }}>
+            {message}
+          </div>
+        )}
 
         {tab === "teachers" && (
           <div style={{ background: "#1e2937", borderRadius: "16px", padding: "24px" }}>
