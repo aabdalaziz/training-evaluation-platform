@@ -171,7 +171,7 @@ export default function ManagementPage() {
   const pName = (pid) => {
     if (!pid) return "—";
     const p = programs.find(x => x.id === pid);
-    return p ? p.name : "—";
+    return p ? .select("id,name_ar,name_en")_ar_ar : "—";
   };
 
   if (!mounted || load) {
@@ -303,7 +303,7 @@ export default function ManagementPage() {
                 <label className="mg-label">البرنامج</label>
                 <select className="mg-input" value={nr.program_id} onChange={(e) => setNr({ ...nr, program_id: e.target.value })}>
                   <option value="">— اختر البرنامج —</option>
-                  {programs.map((p) => <option key={p.id} value={p.id}>{p.name_ar}</option>)}
+                  {programs.map((p) => <option key={p.id} value={p.id}>{.select("id,name_ar,name_en")_ar_ar}</option>)}
                 </select>
                 <label className="mg-label">المدرب</label>
                 <select className="mg-input" value={nr.trainer_id} onChange={(e) => setNr({ ...nr, trainer_id: e.target.value })}>
