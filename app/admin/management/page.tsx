@@ -62,7 +62,7 @@ export default function ManagementPage() {
       const [t, c, p] = await Promise.all([
         db.from("trainers").select("*").order("name"),
         db.from("classrooms").select("*").order("code"),
-        db.from("programs").select("id,name").order("name"),
+        db.from("programs").select("id,name_ar_ar").order("name"),
       ]);
       setTrainers(t.data || []);
       setClassrooms(c.data || []);
@@ -303,7 +303,7 @@ export default function ManagementPage() {
                 <label className="mg-label">البرنامج</label>
                 <select className="mg-input" value={nr.program_id} onChange={(e) => setNr({ ...nr, program_id: e.target.value })}>
                   <option value="">— اختر البرنامج —</option>
-                  {programs.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {programs.map((p) => <option key={p.id} value={p.id}>{p.name_ar}</option>)}
                 </select>
                 <label className="mg-label">المدرب</label>
                 <select className="mg-input" value={nr.trainer_id} onChange={(e) => setNr({ ...nr, trainer_id: e.target.value })}>
