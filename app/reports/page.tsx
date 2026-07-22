@@ -543,8 +543,14 @@ export default function ReportsPage() {
 </aside>
 
         {/* Main */}
-        <div className="main">
-
+        <div className="report-header">
+  <img src="/logo-upm.png" alt="UPM" />
+  <div className="report-header-text">
+    <b>{lang === "ar" ? "جامعة الأمير مقرن بن عبدالعزيز" : "University of Prince Mugrin"}</b>
+    <span>{lang === "ar" ? "المركز العالمي لتعليم اللغة العربية — منصة الجودة والتقييم" : "World Center for Arabic Language — Quality Platform"}</span>
+  </div>
+  <img src="/logo-center.png" alt="Center" />
+</div>
           {/* Dashboard */}
           {tab === "dashboard" && (
             <div>
