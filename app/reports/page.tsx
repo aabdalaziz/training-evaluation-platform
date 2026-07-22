@@ -504,25 +504,43 @@ export default function ReportsPage() {
       <div className="lay">
         {/* Sidebar */}
         <aside className="side noprint">
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "28px" }}>
-            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "linear-gradient(135deg,#10b981,#0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>📊</div>
-            <div>
-              <div style={{ fontWeight: 900, fontSize: "18px" }}>{t.title}</div>
-              <div style={{ fontSize: "12px", color: "#94a3b8" }}>{t.sub}</div>
-            </div>
-          </div>
+  <div className="brand-card">
+    <div className="brand-logos">
+      <img src="/logo-upm.png" alt="جامعة الأمير مقرن" className="brand-logo" />
+      <div className="brand-divider" />
+      <img src="/logo-center.png" alt="المركز العالمي" className="brand-logo" />
+    </div>
+    <div className="brand-name">{t.title}</div>
+    <div className="brand-tag">{t.sub}</div>
+  </div>
 
-          <button className={tab === "dashboard" ? "ton" : "tof"} onClick={() => setTab("dashboard")}><span>{t.tab1}</span><span>🏢</span></button>
-          <button className={tab === "daily" ? "ton" : "tof"} onClick={() => setTab("daily")}><span>{t.tab2}</span><span>📈</span></button>
-          <button className={tab === "final" ? "ton" : "tof"} onClick={() => setTab("final")}><span>{t.tab3}</span><span>🏁</span></button>
-          <button className={tab === "participants" ? "ton" : "tof"} onClick={() => setTab("participants")}><span>{t.tab4}</span><span>👥</span></button>
-          <button className={tab === "cert" ? "ton" : "tof"} onClick={() => setTab("cert")}><span>{t.tab5}</span><span>🏆</span></button>
+  <button className={tab === "dashboard" ? "ton" : "tof"} onClick={() => setTab("dashboard")}>
+    <span className="nav-label"><span className="nav-ico">📊</span>{t.tab1}</span>
+  </button>
+  <button className={tab === "daily" ? "ton" : "tof"} onClick={() => setTab("daily")}>
+    <span className="nav-label"><span className="nav-ico">📅</span>{t.tab2}</span>
+  </button>
+  <button className={tab === "final" ? "ton" : "tof"} onClick={() => setTab("final")}>
+    <span className="nav-label"><span className="nav-ico">🏁</span>{t.tab3}</span>
+  </button>
+  <button className={tab === "participants" ? "ton" : "tof"} onClick={() => setTab("participants")}>
+    <span className="nav-label"><span className="nav-ico">👥</span>{t.tab4}</span>
+  </button>
+  <button className={tab === "cert" ? "ton" : "tof"} onClick={() => setTab("cert")}>
+    <span className="nav-label"><span className="nav-ico">🏆</span>{t.tab5}</span>
+  </button>
 
-          <div style={{ marginTop: "24px", borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: "16px" }}>
-            <button onClick={() => setLang(lang === "ar" ? "en" : "ar")} style={{ width: "100%", background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", padding: "12px", borderRadius: "12px", fontSize: "14px", fontWeight: 700, cursor: "pointer", marginBottom: "8px" }}>🌐 {t.lang}</button>
-            <button onClick={() => router.push("/admin/management")} style={{ width: "100%", background: "transparent", border: "1px solid #334155", color: "#cbd5e1", cursor: "pointer", padding: "12px", borderRadius: "12px", fontSize: "14px", fontWeight: 700 }}>⚙️ {lang === "ar" ? "الإدارة" : "Admin"}</button>
-          </div>
-        </aside>
+  <div style={{ marginTop: "20px", borderTop: "1px solid rgba(255,255,255,.12)", paddingTop: "16px" }}>
+    <button onClick={() => setLang(lang === "ar" ? "en" : "ar")} style={{ width: "100%", background: "rgba(193,154,61,.18)", border: "1px solid rgba(193,154,61,.45)", color: "#f0d9a8", padding: "12px", borderRadius: "12px", fontSize: "14px", fontWeight: 800, cursor: "pointer", marginBottom: "8px", fontFamily: "inherit" }}>
+      🌐 {t.lang}
+    </button>
+    <button onClick={() => router.push("/admin/management")} style={{ width: "100%", background: "transparent", border: "1px solid #33465e", color: "#b6c6d8", cursor: "pointer", padding: "12px", borderRadius: "12px", fontSize: "14px", fontWeight: 800, fontFamily: "inherit" }}>
+      ⚙️ {lang === "ar" ? "الإدارة" : "Admin"}
+    </button>
+  </div>
+
+  <div className="side-copy">{lang === "ar" ? "جامعة الأمير مقرن بن عبدالعزيز" : "University of Prince Mugrin"}</div>
+</aside>
 
         {/* Main */}
         <div className="main">
