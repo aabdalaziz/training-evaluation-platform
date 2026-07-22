@@ -2,87 +2,108 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { dict } from "../lib/i18n"; // استيراد القاموس
 
 export default function HomePage() {
   const router = useRouter();
   const [currentUrl, setCurrentUrl] = useState("");
+  const [lang, setLang] = useState("ar"); // اللغة الافتراضية
 
   useEffect(() => {
-    // الحصول على الرابط الفعلي للمنصة لتوليد الباركود
     if (typeof window !== "undefined") {
       setCurrentUrl(window.location.origin);
+      // استرجاع اللغة من التخزين إن وجدت
+      const savedLang = localStorage.getItem("platform_lang");
+      if (savedLang) setLang(savedLang);
     }
   }, []);
 
+  const toggleLang = () => {
+    const newLang = lang === "ar" ? "en" : "ar";
+    setLang(newLang);
+    localStorage.setItem("platform_lang", newLang);
+  };
+
+  const t = dict[lang];
+
   return (
-    <main style={{ direction: "rtl", fontFamily: "Cairo, Tahoma, sans-serif", background: "#f2ecdf", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", color: "#0b1220" }}>
+    <main style={{ 
+      direction: t.dir, 
+      fontFamily: lang === 'ar' ? "'Cairo', sans-serif" : "'Inter', sans-serif", 
+      background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)", // خلفية متدرجة فاتحة
+      minHeight: "100vh", 
+      display: "flex", 
+      flexDirection: "column", 
+      alignItems: "center", 
+      padding: "30px 20px", 
+      color: "#0f172a" 
+    }}>
       
-      {/* الترويسة والشعار */}
-      <div style={{ textAlign: "center", marginBottom: "40px" }}>
-        <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "linear-gradient(135deg, #10b981, #0d9488)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px", margin: "0 auto 20px", boxShadow: "0 10px 25px rgba(16,185,129,0.3)" }}>
-          🏆
+      {/* زر تبديل اللغة أعلى الصفحة */}
+      <div style={{ width: "100%", maxWidth: "900px", display: "flex", justifyContent: "flex-end", marginBottom: "20px" }}>
+        <button onClick={toggleLang} style={{ background: "#fff", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "8px 16px", fontWeight: "bold", cursor: "pointer", boxShadow: "0 4px 6px rgba(0,0,0,0.02)", display: "flex", alignItems: "center", gap: "8px" }}>
+          🌐 {t.switchLang}
+        </button>
+      </div>
+
+      {/* الترويسة والشعار بتصميم زجاجي */}
+      <div style={{ textAlign: "center", marginBottom: "50px", background: "rgba(255,255,255,0.6)", backdropFilter: "blur(10px)", padding: "40px", borderRadius: "30px", border: "1px solid rgba(255,255,255,0.8)", boxShadow: "0 20px 40px rgba(0,0,0,0.03)", width: "100%", maxWidth: "900px" }}>
+        <div style={{ width: "90px", height: "90px", borderRadius: "28px", background: "linear-gradient(135deg, #10b981, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "45px", margin: "0 auto 20px", boxShadow: "0 15px 30px rgba(16,185,129,0.3)" }}>
+          🏅
         </div>
-        <h1 style={{ fontSize: "36px", fontWeight: 900, color: "#0f172a", margin: "0 0 10px" }}>منصة الجودة والتقييم</h1>
-        <p style={{ fontSize: "16px", color: "#64748b", margin: 0, maxWidth: "500px", lineHeight: "1.6" }}>
-          مرحباً بك في النظام المركزي الموحد لتقييم جودة البرامج التدريبية. يرجى اختيار نوع التقييم المطلوب أدناه.
+        <h1 style={{ fontSize: "42px", fontWeight: 900, color: "#0f172a", margin: "0 0 15px", letterSpacing: lang === 'en' ? "-1px" : "0" }}>{t.platformName}</h1>
+        <p style={{ fontSize: "18px", color: "#475569", margin: "0 auto", maxWidth: "600px", lineHeight: "1.7" }}>
+          {lang === 'ar' ? 'مرحباً بك في النظام المركزي لتقييم جودة البرامج التدريبية. يرجى اختيار نوع التقييم المطلوب.' : 'Welcome to the Central System for Training Quality Evaluation. Please select the required evaluation type.'}
         </p>
       </div>
 
-      {/* أزرار التقييم للطلاب */}
-      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", justifyContent: "center", width: "100%", maxWidth: "800px", marginBottom: "50px" }}>
+      {/* أزرار التقييم بلمسة إبداعية */}
+      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", justifyContent: "center", width: "100%", maxWidth: "900px", marginBottom: "60px" }}>
         
-        {/* بطاقة التقييم اليومي */}
-        <div onClick={() => router.push('/evaluate/daily')} style={{ flex: "1 1 300px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "24px", padding: "30px", textAlign: "center", cursor: "pointer", transition: "all 0.3s ease", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", position: "relative", overflow: "hidden" }} 
-             onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} 
-             onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-          <div style={{ position: "absolute", top: "-20px", right: "-20px", fontSize: "120px", opacity: 0.03 }}>📝</div>
-          <div style={{ fontSize: "40px", marginBottom: "15px" }}>📝</div>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#2563eb", margin: "0 0 10px" }}>التقييم اليومي</h2>
-          <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 20px", lineHeight: "1.6" }}>خاص بتقييم المدرب وأداء الحصة التدريبية لهذا اليوم.</p>
-          <button style={{ width: "100%", background: "#eff6ff", color: "#2563eb", border: "none", padding: "12px", borderRadius: "12px", fontWeight: "bold", fontSize: "15px", cursor: "pointer" }}>ابدأ التقييم ←</button>
+        <div onClick={() => router.push('/evaluate/daily')} style={{ flex: "1 1 350px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "30px", padding: "40px 30px", textAlign: "center", cursor: "pointer", transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)", boxShadow: "0 10px 30px rgba(37,99,235,0.05)", position: "relative", overflow: "hidden" }} 
+             onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(37,99,235,0.1)'; }} 
+             onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(37,99,235,0.05)'; }}>
+          <div style={{ position: "absolute", top: "-30px", right: lang === 'ar' ? "-30px" : "auto", left: lang === 'en' ? "-30px" : "auto", fontSize: "150px", opacity: 0.02, transform: lang === 'ar' ? "rotate(15deg)" : "rotate(-15deg)" }}>📝</div>
+          <div style={{ fontSize: "50px", marginBottom: "20px", display: "inline-block", padding: "20px", background: "#eff6ff", borderRadius: "24px" }}>📝</div>
+          <h2 style={{ fontSize: "26px", fontWeight: 900, color: "#2563eb", margin: "0 0 12px" }}>{t.evalDailyTitle}</h2>
+          <p style={{ color: "#64748b", fontSize: "15px", margin: "0 0 30px", lineHeight: "1.6" }}>{t.evalDailySub}</p>
+          <button style={{ width: "100%", background: "linear-gradient(135deg, #3b82f6, #2563eb)", color: "#fff", border: "none", padding: "16px", borderRadius: "16px", fontWeight: "bold", fontSize: "16px", cursor: "pointer", boxShadow: "0 8px 20px rgba(37,99,235,0.2)" }}>{t.startEval}</button>
         </div>
 
-        {/* بطاقة التقييم النهائي */}
-        <div onClick={() => router.push('/evaluate/final')} style={{ flex: "1 1 300px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "24px", padding: "30px", textAlign: "center", cursor: "pointer", transition: "all 0.3s ease", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", position: "relative", overflow: "hidden" }}
-             onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'} 
-             onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-          <div style={{ position: "absolute", top: "-20px", right: "-20px", fontSize: "120px", opacity: 0.03 }}>⭐</div>
-          <div style={{ fontSize: "40px", marginBottom: "15px" }}>⭐</div>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#10b981", margin: "0 0 10px" }}>التقييم النهائي</h2>
-          <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 20px", lineHeight: "1.6" }}>خاص بالتقييم الشامل للبرنامج التدريبي والخدمات اللوجستية.</p>
-          <button style={{ width: "100%", background: "#ecfdf5", color: "#10b981", border: "none", padding: "12px", borderRadius: "12px", fontWeight: "bold", fontSize: "15px", cursor: "pointer" }}>ابدأ التقييم ←</button>
+        <div onClick={() => router.push('/evaluate/final')} style={{ flex: "1 1 350px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "30px", padding: "40px 30px", textAlign: "center", cursor: "pointer", transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)", boxShadow: "0 10px 30px rgba(16,185,129,0.05)", position: "relative", overflow: "hidden" }}
+             onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = '0 20px 40px rgba(16,185,129,0.1)'; }} 
+             onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 30px rgba(16,185,129,0.05)'; }}>
+          <div style={{ position: "absolute", top: "-30px", right: lang === 'ar' ? "-30px" : "auto", left: lang === 'en' ? "-30px" : "auto", fontSize: "150px", opacity: 0.02, transform: lang === 'ar' ? "rotate(15deg)" : "rotate(-15deg)" }}>⭐</div>
+          <div style={{ fontSize: "50px", marginBottom: "20px", display: "inline-block", padding: "20px", background: "#ecfdf5", borderRadius: "24px" }}>⭐</div>
+          <h2 style={{ fontSize: "26px", fontWeight: 900, color: "#10b981", margin: "0 0 12px" }}>{t.evalFinalTitle}</h2>
+          <p style={{ color: "#64748b", fontSize: "15px", margin: "0 0 30px", lineHeight: "1.6" }}>{t.evalFinalSub}</p>
+          <button style={{ width: "100%", background: "linear-gradient(135deg, #10b981, #059669)", color: "#fff", border: "none", padding: "16px", borderRadius: "16px", fontWeight: "bold", fontSize: "16px", cursor: "pointer", boxShadow: "0 8px 20px rgba(16,185,129,0.2)" }}>{t.startEval}</button>
         </div>
         
       </div>
 
-      {/* منطقة الباركود (QR Codes) للإدارة */}
       {currentUrl && (
-        <div style={{ background: "#fffdf9", border: "1px solid #e8decb", borderRadius: "24px", padding: "30px", width: "100%", maxWidth: "800px", textAlign: "center", boxShadow: "0 4px 15px rgba(60,40,10,0.04)" }}>
-          <h3 style={{ margin: "0 0 5px", fontSize: "18px", fontWeight: 800, color: "#0f172a" }}>📷 باركود الوصول السريع للطلاب (QR Code)</h3>
-          <p style={{ color: "#9a8f7d", fontSize: "13px", marginBottom: "24px" }}>يمكن للإدارة طباعة هذه الرموز أو عرضها على الشاشة ليقوم الطلاب بمسحها بجوالاتهم.</p>
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "30px", padding: "40px", width: "100%", maxWidth: "900px", textAlign: "center", boxShadow: "0 10px 30px rgba(0,0,0,0.02)" }}>
+          <h3 style={{ margin: "0 0 10px", fontSize: "22px", fontWeight: 900, color: "#0f172a" }}>📷 {t.qrTitle}</h3>
+          <p style={{ color: "#64748b", fontSize: "15px", marginBottom: "30px" }}>{lang === 'ar' ? 'قم بمسح الكود بكاميرا الجوال للوصول المباشر.' : 'Scan the code with your phone camera for direct access.'}</p>
           
           <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", justifyContent: "center" }}>
-            
-            <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <b style={{ color: "#2563eb", marginBottom: "15px", fontSize: "15px" }}>باركود التقييم اليومي</b>
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUrl}/evaluate/daily`} alt="Daily QR" style={{ width: "150px", height: "150px" }} />
-              <a href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${currentUrl}/evaluate/daily`} download="Daily_Evaluation_QR.png" target="_blank" style={{ marginTop: "15px", fontSize: "12px", color: "#64748b", textDecoration: "none", background: "#f1f5f9", padding: "6px 12px", borderRadius: "6px", fontWeight: "bold" }}>📥 تحميل صورة الباركود</a>
+            <div style={{ background: "#f8fafc", padding: "24px", borderRadius: "20px", border: "1px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <b style={{ color: "#2563eb", marginBottom: "16px", fontSize: "16px" }}>{t.evalDailyTitle}</b>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentUrl}/evaluate/daily`} alt="Daily QR" style={{ width: "180px", height: "180px", borderRadius: "12px" }} />
             </div>
 
-            <div style={{ background: "#fff", padding: "20px", borderRadius: "16px", border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", alignItems: "center" }}>
-              <b style={{ color: "#10b981", marginBottom: "15px", fontSize: "15px" }}>باركود التقييم النهائي</b>
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentUrl}/evaluate/final`} alt="Final QR" style={{ width: "150px", height: "150px" }} />
-              <a href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${currentUrl}/evaluate/final`} download="Final_Evaluation_QR.png" target="_blank" style={{ marginTop: "15px", fontSize: "12px", color: "#64748b", textDecoration: "none", background: "#f1f5f9", padding: "6px 12px", borderRadius: "6px", fontWeight: "bold" }}>📥 تحميل صورة الباركود</a>
+            <div style={{ background: "#f8fafc", padding: "24px", borderRadius: "20px", border: "1px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <b style={{ color: "#10b981", marginBottom: "16px", fontSize: "16px" }}>{t.evalFinalTitle}</b>
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${currentUrl}/evaluate/final`} alt="Final QR" style={{ width: "180px", height: "180px", borderRadius: "12px" }} />
             </div>
-
           </div>
         </div>
       )}
 
-      {/* زر الدخول للإدارة */}
-      <div style={{ marginTop: "40px", borderTop: "1px solid #e2e8f0", paddingTop: "20px", width: "100%", maxWidth: "800px", textAlign: "center" }}>
-        <button onClick={() => router.push('/login')} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}>
-          🔒 دخول مشرفي النظام والإدارة
+      <div style={{ marginTop: "50px", width: "100%", maxWidth: "900px", textAlign: "center" }}>
+        <button onClick={() => router.push('/login')} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "14px", fontWeight: "bold", padding: "10px 20px" }}>
+          {t.adminLogin}
         </button>
       </div>
     </main>
