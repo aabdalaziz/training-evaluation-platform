@@ -16,14 +16,13 @@ export default function GuestEvaluationPage() {
   const [classroomId, setClassroomId] = useState('');
   const [answers, setAnswers] = useState({});
   
-  // بيانات الطالب (ستُستخدم لتمييز التقييم ومنع التكرار بدل حساب المستخدم)
   const [studentInfo, setStudentInfo] = useState({ full_name: '', phone: '', email: '', nationality: '' });
   const [templateId, setTemplateId] = useState(null);
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [isSuccess, setIsSuccess] = useState(false); // لإظهار شاشة الشكر النهائية
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     let on = true;
@@ -109,15 +108,12 @@ export default function GuestEvaluationPage() {
     setMessage('');
     
     try {
-      // 1. حفظ أو تحديث بيانات الطالب في جدول الـ profiles كزائر (بدون Auth)
-      // نستخدم الإيميل كمعرف فريد للزائر
-      const traineeFakeId = studentInfo.email.trim().toLowerCase(); 
-      
+      const guestEmail = studentInfo.email.trim().toLowerCase(); 
       const ratings = questions.map(q => Number(answers[q.id])).filter(x => !isNaN(x) && x > 0);
       const today = new Date().toISOString().slice(0, 10);
       
-      // 2. منع التكرار بناءً على الإيميل واليوم والقاعة
-      let duplicateQuery = db.from('evaluations').select('id').eq('program_id', programId).eq('trainee_id', traineeFakeId).eq('kind', kind === 'daily' ? 'DAILY' : 'FINAL');
+      // منع التكرار بناءً على الإيميل بدلاً من الـ trainee_id
+      let duplicateQuery = db.from('evaluations').select('id').eq('program_id', programId).eq('guest_email', guestEmail).eq('kind', kind === 'daily' ? 'DAILY' : 'FINAL');
       if (kind === 'daily') {
         duplicateQuery = duplicateQuery.eq('classroom_id', classroomId).eq('evaluation_date', today);
       }
@@ -129,11 +125,14 @@ export default function GuestEvaluationPage() {
         return;
       }
 
-      // 3. إدخال التقييم
+      // إدخال التقييم مع بيانات الزائر في الأعمدة الجديدة
       const { data: ev, error } = await db.from('evaluations').insert({
         program_id: programId,
         template_id: templateId,
-        trainee_id: traineeFakeId, // نخزن الإيميل هنا لتمييز الطالب
+        trainee_id: null, // نعطيه null لأنه زائر
+        guest_email: guestEmail,
+        guest_name: studentInfo.full_name.trim(),
+        guest_phone: studentInfo.phone.trim(),
         classroom_id: kind === 'daily' ? classroomId : null,
         kind: kind === 'daily' ? 'DAILY' : 'FINAL',
         evaluation_date: today,
@@ -142,7 +141,6 @@ export default function GuestEvaluationPage() {
 
       if (error || !ev) throw error || new Error('تعذر حفظ التقييم');
 
-      // 4. إدخال الإجابات
       const rows = questions.map(q => {
         const value = answers[q.id] || '';
         return {
@@ -157,7 +155,7 @@ export default function GuestEvaluationPage() {
       const { error: answerError } = await db.from('evaluation_answers').insert(rows);
       if (answerError) throw answerError;
       
-      setIsSuccess(true); // إخفاء النموذج وإظهار رسالة الشكر
+      setIsSuccess(true); 
     } catch (err) {
       setMessage(err.message || 'حدث خطأ غير متوقع');
     } finally {
@@ -168,10 +166,10 @@ export default function GuestEvaluationPage() {
   if (loading) return <main style={{ textAlign: "center", padding: "80px", fontFamily: "Cairo, sans-serif", color: "#64748b" }}>جارٍ تجهيز الاستبيان التدريبي…</main>;
 
   if (isSuccess) return (
-    <main style={{ direction: "rtl", fontFamily: "Cairo, sans-serif", maxWidth: "600px", margin: "100px auto", padding: "40px", textAlign: "center", background: "#fff", borderRadius: "24px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-      <div style={{ fontSize: "60px", marginBottom: "20px" }}>✅</div>
-      <h1 style={{ color: "#047857", marginBottom: "10px" }}>شكراً لمشاركتك!</h1>
-      <p style={{ color: "#64748b", fontSize: "15px", lineHeight: "1.6" }}>تم تسجيل تقييمك بنجاح. رأيك يهمنا جداً في تطوير وتحسين جودة البرامج التدريبية.<br/>يمكنك الآن إغلاق هذه الصفحة.</p>
+    <main style={{ direction: "rtl", fontFamily: "Cairo, sans-serif", maxWidth: "600px", margin: "100px auto", padding: "40px", textAlign: "center", background: "#fff", borderRadius: "24px", boxShadow: "0 10px 30px rgba(0,0,0,0.05)", borderTop: "8px solid #10b981" }}>
+      <div style={{ fontSize: "70px", marginBottom: "20px" }}>✅</div>
+      <h1 style={{ color: "#047857", marginBottom: "10px", fontWeight: "900", fontSize: "28px" }}>شكراً لك!</h1>
+      <p style={{ color: "#64748b", fontSize: "16px", lineHeight: "1.6", fontWeight: "600" }}>تم استلام تقييمك بنجاح واعتماده.<br/>ملاحظاتك تساعدنا في تطوير وتحسين جودة البرامج التدريبية.<br/>يمكنك الآن إغلاق هذه الصفحة.</p>
     </main>
   );
 
