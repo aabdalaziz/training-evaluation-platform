@@ -25,7 +25,7 @@ export async function POST(request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Quality Platform <reports@resend.dev>',
+        from: 'Quality Platform <reports@yourdomain.com>',
         to: trainer_email,
         subject: `تقرير القاعة ${room_code}`,
         html: `
