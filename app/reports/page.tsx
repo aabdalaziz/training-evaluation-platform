@@ -69,7 +69,7 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 
-const TEAL = "#10b981";
+const TEAL = "#0d9488"; const TEAL_DARK = "#0f766e"; const BLUE = "#2563eb"; const NAVY = "#173a5e"; const GOLD = "#c19a3d";
 const BLUE = "#2563eb";
 
 const dict = {
