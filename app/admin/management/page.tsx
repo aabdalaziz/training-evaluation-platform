@@ -4,13 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase/client";
 
-// ==========================================
-// الأنماط البصرية المتسقة مع الهوية الفاخرة والداكنة للمنصة
-// ==========================================
 const CSS_STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
 .mg-wrap, .mg-wrap * { font-family: 'Cairo', Tahoma, sans-serif; box-sizing: border-box; }
-.mg-wrap { direction: rtl; text-align: right; background-color: #f2ecdf; min-height: 100vh; padding: 24px; color: #0b1220; }
+.mg-wrap { direction: rtl; text-align: right; background: #f2ecdf; min-height: 100vh; padding: 24px; color: #0b1220; }
 .mg-head { position: relative; overflow: hidden; background: linear-gradient(135deg, #0b1220, #111827); border-radius: 24px; padding: 24px; color: #fff; margin-bottom: 20px; }
 .mg-head-bg { position: absolute; left: 16px; top: 0; font-size: 70px; font-weight: 900; color: rgba(255,255,255,0.04); letter-spacing: 4px; }
 .mg-head-badge { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 4px 12px; font-size: 11px; font-weight: 700; color: #e2e8f0; display: inline-block; margin-bottom: 6px; }
@@ -62,7 +59,7 @@ export default function ManagementPage() {
       const [t, c, p] = await Promise.all([
         db.from("trainers").select("*").order("name"),
         db.from("classrooms").select("*").order("code"),
-        db.from("programs").select("id,name_ar_ar").order("name"),
+        db.from("programs").select("id,name_ar").order("name_ar"),
       ]);
       setTrainers(t.data || []);
       setClassrooms(c.data || []);
@@ -159,7 +156,7 @@ export default function ManagementPage() {
       await loadAll();
       flash("🔗 تم ربط المدرب بالقاعة");
     } catch (e) {
-      setErr("فشل ال ربط: " + (e && e.message ? e.message : ""));
+      setErr("فشل الربط: " + (e && e.message ? e.message : ""));
     }
   };
 
@@ -171,7 +168,7 @@ export default function ManagementPage() {
   const pName = (pid) => {
     if (!pid) return "—";
     const p = programs.find(x => x.id === pid);
-    return p ? .select("id,name_ar,name_en")_ar_ar : "—";
+    return p ? p.name_ar : "—";
   };
 
   if (!mounted || load) {
@@ -303,7 +300,7 @@ export default function ManagementPage() {
                 <label className="mg-label">البرنامج</label>
                 <select className="mg-input" value={nr.program_id} onChange={(e) => setNr({ ...nr, program_id: e.target.value })}>
                   <option value="">— اختر البرنامج —</option>
-                  {programs.map((p) => <option key={p.id} value={p.id}>{.select("id,name_ar,name_en")_ar_ar}</option>)}
+                  {programs.map((p) => <option key={p.id} value={p.id}>{p.name_ar}</option>)}
                 </select>
                 <label className="mg-label">المدرب</label>
                 <select className="mg-input" value={nr.trainer_id} onChange={(e) => setNr({ ...nr, trainer_id: e.target.value })}>
