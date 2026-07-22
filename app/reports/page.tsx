@@ -127,7 +127,24 @@ const CSS = `
 .sel:focus, .inp:focus{ border-color:#2563eb; box-shadow:0 0 0 4px rgba(37,99,235,.12); }
 .fgrid{ display:grid; grid-template-columns: repeat(5, 1fr); gap:12px; }
 .btn2{ width:auto; padding:12px 16px; border-radius:12px; border:1px solid #cbd5e1; background:#fff; color:#0f172a; font-weight:900; cursor:pointer; }
-.noprint{}
+.noprint{}.side { background: linear-gradient(160deg, #0f2740 0%, #173a5e 55%, #0d9488 130%); box-shadow: 0 20px 50px rgba(15,39,64,.25); padding: 22px; }
+.brand-card { background: #ffffff; border-radius: 18px; padding: 16px 14px; margin-bottom: 22px; text-align: center; border-bottom: 4px solid #c19a3d; }
+.brand-logos { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.brand-logo { height: 56px; width: auto; object-fit: contain; }
+.brand-divider { width: 1px; height: 44px; background: #e2e8f0; }
+.brand-name { color: #173a5e; font-weight: 900; font-size: 16px; margin-top: 10px; }
+.brand-tag { color: #0d9488; font-weight: 800; font-size: 12px; margin-top: 2px; }
+.ton { background: linear-gradient(135deg, #0d9488, #0f766e); border-inline-start: 4px solid #c19a3d; padding: 13px 16px; box-shadow: 0 8px 20px rgba(13,148,136,.35); }
+.tof { border: 1px solid rgba(255,255,255,0.06); border-inline-start: 4px solid transparent; padding: 13px 16px; }
+.tof:hover { border-inline-start-color: #c19a3d; }
+.nav-label { display: flex; align-items: center; gap: 10px; }
+.nav-ico { width: 30px; height: 30px; border-radius: 9px; background: rgba(255,255,255,0.14); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+.report-header { background: #fff; border: 1px solid #e2e8f0; border-bottom: 4px solid #0d9488; border-radius: 18px; padding: 12px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.report-header img { height: 48px; width: auto; object-fit: contain; }
+.report-header-text { text-align: center; }
+.report-header-text b { display: block; color: #173a5e; font-size: 16px; font-weight: 900; }
+.report-header-text span { color: #0d9488; font-size: 12px; font-weight: 800; }
+.side-copy { margin-top: 16px; text-align: center; color: rgba(255,255,255,.45); font-size: 11px; font-weight: 700; }
 
 /* ===== Delete Warning Modal ===== */
 .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; animation: fadeIn 0.2s ease; }
