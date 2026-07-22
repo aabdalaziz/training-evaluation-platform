@@ -740,7 +740,11 @@ export default function ReportsPage() {
 
               {certBest ? (
                 <div className="card" style={{ textAlign: "center", padding: "40px", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", border: "4px solid #d97706" }}>
-                  <h1 style={{ fontSize: "36px", fontWeight: 900, color: "#d97706", marginBottom: "8px" }}>{lang === "ar" ? "شهادة تميز وإشادة" : "Certificate of Excellence"}</h1>
+                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+  <img src="/logo-upm.png" alt="UPM" style={{ height: 64 }} />
+  <img src="/logo-center.png" alt="Center" style={{ height: 64 }} />
+</div>
+                   <h1 style={{ fontSize: "36px", fontWeight: 900, color: "#d97706", marginBottom: "8px" }}>{lang === "ar" ? "شهادة تميز وإشادة" : "Certificate of Excellence"}</h1>
                   <p style={{ color: "#64748b", marginBottom: "24px" }}>{lang === "ar" ? "يمنح هذا التكريم لأفضل مدرب" : "This award is granted to the best trainer"}</p>
                   <h2 style={{ fontSize: "48px", fontWeight: 900, color: "#10b981", marginBottom: "16px" }}>{certBest.trainer}</h2>
                   <p style={{ fontSize: "20px", color: "#334155" }}>
