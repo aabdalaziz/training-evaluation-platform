@@ -14,7 +14,6 @@ function stdDev(xs){return Math.sqrt(variance(xs));}
 function normTxt(v){return String(v||"").trim().toLowerCase().replace(/\s+/g," ");}
 function dateKey(d){const x=new Date(d);if(isNaN(x.getTime()))return "";return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;}
 
-/* الهدف المرجعي العالمي للرضا */
 const TARGET=4.2;
 
 function filterRowsBy(baseRows,classrooms,fixedKind,f){
@@ -56,13 +55,11 @@ function buildStats(values,respondents=0){
     lowPct:xs.length?(low/xs.length)*100:0,neutralPct:xs.length?(mid/xs.length)*100:0,highPct:xs.length?(high/xs.length)*100:0,
     lowCount:low,neutralCount:mid,highCount:high,dist};
 }
-
-/* تصنيف عالمي رباعي المستويات */
 function perfLevel(m,lang){
-  if(m>=4.2)return{key:"EX",label:lang==="ar"?"ممتاز":"Excellent",bg:"#d1fae5",fg:"#047857",score:4};
-  if(m>=3.7)return{key:"GD",label:lang==="ar"?"جيد":"Good",bg:"#ccfbf1",fg:"#0f766e",score:3};
-  if(m>=3.0)return{key:"WT",label:lang==="ar"?"مراقبة":"Watch",bg:"#fef3c7",fg:"#b45309",score:2};
-  return{key:"RSK",label:lang==="ar"?"خطر":"At risk",bg:"#fee2e2",fg:"#b91c1c",score:1};
+  if(m>=4.2)return{label:lang==="ar"?"ممتاز":"Excellent",bg:"#d1fae5",fg:"#047857"};
+  if(m>=3.7)return{label:lang==="ar"?"جيد":"Good",bg:"#ccfbf1",fg:"#0f766e"};
+  if(m>=3.0)return{label:lang==="ar"?"مراقبة":"Watch",bg:"#fef3c7",fg:"#b45309"};
+  return{label:lang==="ar"?"خطر":"At risk",bg:"#fee2e2",fg:"#b91c1c"};
 }
 function riskLevel(s,lang){
   const n=s?.respondents||0,m=s?.mean||0,sd=s?.stddev||0,low=s?.lowPct||0;
@@ -77,15 +74,14 @@ function summaryFrom(ca,lang){
   const s=buildStats(xs,resp);
   return{...s,risk:riskLevel(s,lang),perf:perfLevel(s.mean,lang)};
 }
-
-/* الحكم التنفيذي */
-function verdictOf(summary,lang){
+function verdictOf(summary,lang,ctx){
   const m=summary.mean,n=summary.respondents;
+  const c=ctx||(lang==="ar"?"المؤشر العام":"Overall index");
   if(n<5)return{tone:"gray",title:lang==="ar"?"بيانات غير كافية للحكم":"Insufficient data",text:lang==="ar"?"حجم العينة الحالي لا يسمح بإصدار حكم موثوق. يُوصى بزيادة عدد الاستجابات قبل اتخاذ قرارات.":"Sample too small for a reliable verdict."};
-  if(m>=4.2)return{tone:"green",title:lang==="ar"?"أداء ممتاز يفوق المعيار الدولي":"Excellent — above benchmark",text:lang==="ar"?`المؤشر العام ${m.toFixed(2)}/5 يتجاوز الهدف المرجعي (${TARGET}). الأداء مطمئن، ويُوصى بتوثيق الممارسات الناجحة وتعميمها.`:`Overall index ${m.toFixed(2)}/5 exceeds the ${TARGET} benchmark.`};
-  if(m>=3.7)return{tone:"teal",title:lang==="ar"?"أداء جيد مع فرص للارتقاء":"Good with headroom",text:lang==="ar"?`المؤشر العام ${m.toFixed(2)}/5 جيد، والفجوة إلى الامتياز ${(TARGET-m).toFixed(2)} درجة. التركيز على المحاور الأدنى سيرفع المؤشر سريعًا.`:`Index ${m.toFixed(2)}/5; gap to excellence is ${(TARGET-m).toFixed(2)}.`};
-  if(m>=3.0)return{tone:"amber",title:lang==="ar"?"أداء مقبول يحتاج خطة تحسين":"Acceptable — improvement plan needed",text:lang==="ar"?`المؤشر العام ${m.toFixed(2)}/5 دون الهدف المرجعي بفجوة ${(TARGET-m).toFixed(2)} درجة. تُوجد محاور تستدعي تدخلًا منظمًا خلال أسبوعين.`:`Index ${m.toFixed(2)}/5; ${(TARGET-m).toFixed(2)} below target.`};
-  return{tone:"red",title:lang==="ar"?"مستوى خطر — يتطلب تدخلًا عاجلًا":"At risk — urgent action required",text:lang==="ar"?`المؤشر العام ${m.toFixed(2)}/5 منخفض بوضوح عن المعيار الدولي. يُوصى بخطة معالجة فورية للمحاور الحمراء ومراجعة أسبوعية.`:`Index ${m.toFixed(2)}/5 is well below benchmark; immediate remediation advised.`};
+  if(m>=4.2)return{tone:"green",title:lang==="ar"?"أداء ممتاز يفوق المعيار الدولي":"Excellent — above benchmark",text:lang==="ar"?`${c} ${m.toFixed(2)}/5 يتجاوز الهدف المرجعي (${TARGET}). الأداء مطمئن، ويُوصى بتوثيق الممارسات الناجحة وتعميمها.`:`${c} ${m.toFixed(2)}/5 exceeds the ${TARGET} benchmark.`};
+  if(m>=3.7)return{tone:"teal",title:lang==="ar"?"أداء جيد مع فرص للارتقاء":"Good with headroom",text:lang==="ar"?`${c} ${m.toFixed(2)}/5 جيد، والفجوة إلى الامتياز ${(TARGET-m).toFixed(2)} درجة. التركيز على المحاور الأدنى سيرفع المؤشر سريعًا.`:`${c} ${m.toFixed(2)}/5; gap to excellence is ${(TARGET-m).toFixed(2)}.`};
+  if(m>=3.0)return{tone:"amber",title:lang==="ar"?"أداء مقبول يحتاج خطة تحسين":"Acceptable — improvement plan needed",text:lang==="ar"?`${c} ${m.toFixed(2)}/5 دون الهدف المرجعي بفجوة ${(TARGET-m).toFixed(2)} درجة. تُوجد محاور تستدعي تدخلًا منظمًا خلال أسبوعين.`:`${c} ${m.toFixed(2)}/5; ${(TARGET-m).toFixed(2)} below target.`};
+  return{tone:"red",title:lang==="ar"?"مستوى خطر — يتطلب تدخلًا عاجلًا":"At risk — urgent action required",text:lang==="ar"?`${c} ${m.toFixed(2)}/5 منخفض بوضوح عن المعيار الدولي. يُوصى بخطة معالجة فورية للمحاور الحمراء ومراجعة أسبوعية.`:`${c} ${m.toFixed(2)}/5 is well below benchmark; immediate remediation advised.`};
 }
 
 /* ============ Axes & Recommendations ============ */
@@ -166,7 +162,6 @@ function buildRoomRanking(ca,rows,classrooms,trainers){
   for(const c of classrooms||[]){const st=agg.get(c.id);if(!st?.cnt)continue;const tr=(trainers||[]).find(t=>t.id===c.trainer_id);out.push({id:c.id,code:c.code||"—",trainer:tr?.name||"—",avg:st.sum/st.cnt,count:st.cnt});}
   return out.sort((a,b)=>b.avg-a.avg);
 }
-/* ترتيب المدربين من محاور التعليم فقط (عدالة التقييم) */
 function buildTrainerRanking(ca,rows,classrooms,trainers){
   const evalRoom=new Map((rows||[]).map(r=>[r.id,r.classroom_id]));
   const roomTrainer=new Map((classrooms||[]).map(c=>[c.id,c.trainer_id]));
@@ -239,8 +234,8 @@ const dict={
     reset:"إعادة تعيين",search:"بحث (اسم/بريد/جوال)",reveal:"إظهار البيانات",hide:"إخفاء البيانات",export:"تصدير Excel",
     print:"طباعة التقرير",minResponses:"حد أدنى للاستجابات",sample:"عدد الاستبانات",clear:"إفراغ",purge:"حذف الاستجابات",
     executiveHint:"تقرير تنفيذي بمعايير دولية: مؤشرات، فجوات أداء، توصيات بأولويات.",
-    dailyHint:"تحليل إحصائي لأداء الحصص والمدربين والتجربة اليومية.",
-    finalHint:"تحليل رضا المشاركين عن التعليم والخدمات وإدارة البرنامج.",
+    dailyHint:"تحليل إحصائي لأداء الحصص والمدربين والتجربة اليومية مقابل الهدف المرجعي.",
+    finalHint:"تحليل رضا المشاركين عن التعليم والخدمات وإدارة البرنامج مقابل الهدف المرجعي.",
     participantsHint:"فلترة حسب القاعة + المدرب + الفترة، مع بحث وتصدير."},
   en:{dir:"ltr",font:"'Inter', sans-serif",title:"BI Dashboard",sub:"Central Analytics",
     tab1:"Executive Summary",tab2:"Daily Report",tab3:"Final Report",tab4:"Participants",tab5:"Certificate",
@@ -248,26 +243,12 @@ const dict={
     reset:"Reset",search:"Search (name/email/phone)",reveal:"Show data",hide:"Hide data",export:"Export Excel",
     print:"Print Report",minResponses:"Min responses",sample:"Forms",clear:"Clear",purge:"Delete Responses",
     executiveHint:"Executive report to international standards: KPIs, performance gaps, prioritized recommendations.",
-    dailyHint:"Statistical analysis of sessions, trainers, and daily experience.",
-    finalHint:"Satisfaction analysis for education, services, and program management.",
+    dailyHint:"Statistical analysis of sessions, trainers, and daily experience vs benchmark.",
+    finalHint:"Satisfaction analysis for education, services, and program management vs benchmark.",
     participantsHint:"Filter by room + trainer + date range, with search and export."}
 };
 
 /* ============ Components ============ */
-function GaugeChart({score,color}){
-  const v=Number(score||0);const pct=Math.max(0,Math.min(100,(v/5)*100));
-  const r=55,C=Math.PI*r;
-  return(
-    <div style={{textAlign:"center",position:"relative",height:85,width:150,margin:"0 auto"}}>
-      <svg width="150" height="85" viewBox="0 0 150 85">
-        <path d="M 15 75 A 55 55 0 0 1 135 75" fill="none" stroke="#f1f5f9" strokeWidth="16" strokeLinecap="round"/>
-        <path d="M 15 75 A 55 55 0 0 1 135 75" fill="none" stroke={color} strokeWidth="16" strokeLinecap="round"
-          strokeDasharray={C} strokeDashoffset={C-(pct/100)*C} style={{transition:"stroke-dashoffset 1.2s"}}/>
-      </svg>
-      <div style={{position:"absolute",bottom:-5,left:0,right:0,fontSize:28,fontWeight:900,direction:"ltr"}}>{v?v.toFixed(2):"0.00"}</div>
-    </div>
-  );
-}
 function MetricCard({title,value,sub,color=BLUE,icon="📊",badge}){
   return(
     <div className="mcard" style={{borderBottomColor:color}}>
@@ -298,19 +279,19 @@ function DistributionChart({stats,lang}){
     </div>
   );
 }
-function TrendChart({data,lang,color=BLUE,target=TARGET}){
+function TrendChart({data,lang,color=BLUE}){
   const isAr=lang==="ar";
   if(!data?.some(d=>d.count>0))return<div className="empty">{isAr?"لا توجد بيانات كافية للاتجاه.":"Not enough trend data."}</div>;
   const W=680,H=260,PX=42,PT=24,PB=42,cw=W-PX*2,ch=H-PT-PB;
   const pts=data.map((d,i)=>({...d,x:PX+(i*cw)/Math.max(data.length-1,1),y:d.avg===null?null:PT+(1-d.avg/5)*ch})).filter(p=>p.y!==null);
   const path=pts.map((p,i)=>`${i===0?"M":"L"} ${p.x} ${p.y}`).join(" ");
-  const ty=PT+(1-target/5)*ch;
+  const ty=PT+(1-TARGET/5)*ch;
   return(
     <div style={{width:"100%",overflowX:"auto"}}>
       <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:560,height:"auto"}}>
         {[1,2,3,4,5].map(v=>{const y=PT+(1-v/5)*ch;return(<g key={v}><line x1={PX} x2={W-PX} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="4 4"/><text x="12" y={y+4} fill="#64748b" fontSize="12">{v}</text></g>);})}
         <line x1={PX} x2={W-PX} y1={ty} y2={ty} stroke={GOLD} strokeWidth="2.5" strokeDasharray="8 5"/>
-        <text x={W-PX+2} y={ty+4} fill={GOLD} fontSize="11" fontWeight="900">{isAr?`الهدف ${target}`:`Target ${target}`}</text>
+        <text x={W-PX+2} y={ty+4} fill={GOLD} fontSize="11" fontWeight="900">{isAr?`الهدف ${TARGET}`:`Target ${TARGET}`}</text>
         <path d={path} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
         {pts.map((p,i)=>(
           <g key={i}>
@@ -323,8 +304,6 @@ function TrendChart({data,lang,color=BLUE,target=TARGET}){
     </div>
   );
 }
-
-/* جدول المحاور بمعيار Scorecard العالمي: نتيجة + هدف + فجوة + حالة */
 function ScorecardTable({title,items,lang}){
   const isAr=lang==="ar";
   if(!items?.length)return(<div className="card"><h3 className="ctitle">{title}</h3><div className="empty">{isAr?"لا توجد بيانات للمحاور.":"No axis data."}</div></div>);
@@ -366,8 +345,6 @@ function ScorecardTable({title,items,lang}){
     </div>
   );
 }
-
-/* التوصيات التنفيذية ذات الأولوية */
 function PriorityActions({items,lang}){
   const isAr=lang==="ar";
   const acts=(items||[]).filter(x=>x.risk.key==="HIGH"||x.risk.key==="MED").slice(0,5);
@@ -397,8 +374,6 @@ function PriorityActions({items,lang}){
     </div>
   );
 }
-
-/* نقاط القوة والفجوات */
 function StrengthsGaps({items,lang}){
   const isAr=lang==="ar";
   const sorted=[...(items||[])].sort((a,b)=>b.mean-a.mean);
@@ -425,22 +400,20 @@ function StrengthsGaps({items,lang}){
     </div>
   );
 }
-
-/* مقارنة مع المتوسط المؤسسي */
-function ComparisonBars({title,data,avgLine,lang,nameKey="code",subKey="trainer"}){
+function ComparisonBars({title,data,avgLine,lang}){
   const isAr=lang==="ar";
   if(!data?.length)return(<div className="card"><h3 className="ctitle">{title}</h3><div className="empty">{isAr?"لا توجد بيانات.":"No data."}</div></div>);
   return(
     <div className="card">
       <h3 className="ctitle">{title}</h3>
-      <p className="cdesc">{isAr?`مقارنة بالمتوسط المؤسسي ${avgLine.toFixed(2)} والهدف ${TARGET}`:`Compared to institutional average ${avgLine.toFixed(2)} and target ${TARGET}`}</p>
-      {data.map((r,i)=>{
+      <p className="cdesc">{isAr?`مقارنة بالمتوسط ${avgLine.toFixed(2)} والهدف ${TARGET}`:`Compared to average ${avgLine.toFixed(2)} and target ${TARGET}`}</p>
+      {data.map((r)=>{
         const diff=r.avg-avgLine;
         const col=r.avg>=TARGET?TEAL:r.avg>=3.7?"#0ea5e9":r.avg>=3?ORANGE:RED;
         return(
         <div key={r.id} style={{marginBottom:13}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:14,fontWeight:800,gap:8}}>
-            <span>{r[nameKey]} <span style={{color:"#94a3b8",fontWeight:700}}>({r[subKey]})</span></span>
+            <span>{r.label} <span style={{color:"#94a3b8",fontWeight:700}}>({r.sub})</span></span>
             <span style={{direction:"ltr",fontWeight:900}}>
               <span style={{color:col}}>{r.avg.toFixed(2)}</span>
               <span style={{color:diff>=0?"#047857":"#b91c1c",fontSize:12,marginInlineStart:8}}>{diff>=0?"▲":"▼"} {Math.abs(diff).toFixed(2)}</span>
@@ -448,19 +421,18 @@ function ComparisonBars({title,data,avgLine,lang,nameKey="code",subKey="trainer"
           </div>
           <div className="cmptrack">
             <div className="cmpfill" style={{width:`${(r.avg/5)*100}%`,background:col}}/>
-            <div className="cmpline" style={{insetInlineStart:`${(avgLine/5)*100}%`}} title={isAr?"المتوسط المؤسسي":"Institutional avg"}/>
-            <div className="cmpline gold" style={{insetInlineStart:`${(TARGET/5)*100}%`}} title={isAr?"الهدف":"Target"}/>
+            <div className="cmpline" style={{insetInlineStart:`${(avgLine/5)*100}%`}}/>
+            <div className="cmpline gold" style={{insetInlineStart:`${(TARGET/5)*100}%`}}/>
           </div>
-          <small style={{color:"#94a3b8",fontWeight:700}}>{isAr?`استبانات: ${r.count??r.respondents}`:`Forms: ${r.count??r.respondents}`}</small>
+          <small style={{color:"#94a3b8",fontWeight:700}}>{isAr?`استبانات: ${r.count}`:`Forms: ${r.count}`}</small>
         </div>);})}
       <div className="legend">
-        <span><i style={{background:"#64748b"}}/> {isAr?"المتوسط المؤسسي":"Institutional avg"}</span>
+        <span><i style={{background:"#64748b"}}/> {isAr?"متوسط التقرير":"Report average"}</span>
         <span><i style={{background:GOLD}}/> {isAr?"الهدف":"Target"} {TARGET}</span>
       </div>
     </div>
   );
 }
-
 function HeatMap({data,lang}){
   const isAr=lang==="ar";
   if(!data?.axes?.length||!data?.rooms?.length)
@@ -485,42 +457,46 @@ function HeatMap({data,lang}){
   );
 }
 
-function RiskTable({title,items,lang}){
-  return <ScorecardTable title={title} items={items} lang={lang}/>;
-}
-
-function InsightsPanel({items,summary,lang}){
+/* ترويسة تقرير رسمية + حكم تنفيذي (مكوّن مشترك لكل التقارير) */
+function ReportHero({title,sub,accent,verdict,score,perfLabel,lang,onPrint}){
   const isAr=lang==="ar";
-  const concerns=(items||[]).filter(x=>x.risk.key==="HIGH"||x.risk.key==="MED").slice(0,3);
-  const strengths=(items||[]).filter(x=>x.risk.key==="LOW").slice(0,3);
   return(
-    <div className="card">
-      <h3 className="ctitle">{isAr?"🧠 القراءة التنفيذية والتوصيات":"🧠 Executive Insights"}</h3>
-      <div className="igrid">
-        <div className="ibox danger">
-          <h4>{isAr?"مناطق تحتاج تدخلًا":"Areas requiring action"}</h4>
-          {concerns.length?concerns.map((x,i)=>(
-            <div className="irow" key={i}>
-              <b>{x.axisLabel}</b>
-              <span>{isAr?`متوسط ${x.mean.toFixed(2)}/5، منخفض ${x.lowPct.toFixed(0)}%، انحراف ${x.stddev.toFixed(2)}`:`Mean ${x.mean.toFixed(2)}/5, low ${x.lowPct.toFixed(0)}%, SD ${x.stddev.toFixed(2)}`}</span>
-              <small>{x.recommendation}</small>
-            </div>)):<p>{isAr?"لا توجد منطقة قلق واضحة حاليًا.":"No clear risk area."}</p>}
+    <div>
+      <div className="rep-meta" style={{borderInlineStartColor:accent}}>
+        <div>
+          <div className="rep-title">{title}</div>
+          <div className="rep-sub" style={{color:accent}}>{sub}</div>
         </div>
-        <div className="ibox success">
-          <h4>{isAr?"نقاط القوة":"Strengths"}</h4>
-          {strengths.length?strengths.map((x,i)=>(
-            <div className="irow" key={i}>
-              <b>{x.axisLabel}</b>
-              <span>{isAr?`متوسط ${x.mean.toFixed(2)}/5، رضا مرتفع ${x.highPct.toFixed(0)}%`:`Mean ${x.mean.toFixed(2)}/5, high ${x.highPct.toFixed(0)}%`}</span>
-              <small>{x.recommendation}</small>
-            </div>)):<p>{isAr?"لا توجد بيانات كافية.":"Insufficient data."}</p>}
+        <div className="rep-side">
+          <div>{isAr?"تاريخ الإصدار":"Issued"}: <b>{new Intl.DateTimeFormat(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"}).format(new Date())}</b></div>
+          <div>{isAr?"الهدف المرجعي":"Benchmark"}: <b className="ltr">{TARGET}/5</b></div>
         </div>
       </div>
-      <div className="cnote">
-        <b>{isAr?"ملاحظة جودة البيانات: ":"Data note: "}</b>
-        {summary.respondents<5?(isAr?"حجم العينة منخفض؛ النتائج إشارة أولية فقط.":"Small sample; early indication only.")
-          :(isAr?`التحليل مبني على ${summary.respondents} استبانة و ${summary.measurements} قياسًا رقميًا.`:`Based on ${summary.respondents} forms and ${summary.measurements} measurements.`)}
+      <div className={`verdict ${verdict.tone}`}>
+        <div className="vicon">{verdict.tone==="green"?"🟢":verdict.tone==="teal"?"🔵":verdict.tone==="amber"?"🟠":verdict.tone==="red"?"🔴":"⚪"}</div>
+        <div style={{flex:1}}>
+          <div className="vtitle">{verdict.title}</div>
+          <div className="vtext">{verdict.text}</div>
+        </div>
+        <div className="vscore">
+          <div className="vnum ltr">{Number(score||0).toFixed(2)}</div>
+          <div className="vof">/5 — {perfLabel}</div>
+        </div>
+        <button className="vprint noprint" onClick={onPrint}>🖨️ {isAr?"طباعة التقرير":"Print"}</button>
       </div>
+    </div>
+  );
+}
+function ReportFooter({lang}){
+  const isAr=lang==="ar";
+  const d=new Intl.DateTimeFormat(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"}).format(new Date());
+  return(
+    <div className="rep-footer">
+      <div>
+        <b>{isAr?"دليل قراءة التقرير:":"How to read:"}</b>{" "}
+        {isAr?`ممتاز ≥${TARGET} | جيد ≥3.7 | مراقبة ≥3.0 | خطر <3.0 — "الفجوة" تقاس من الهدف ${TARGET}. N أقل من 5 = بيانات إرشادية فقط.`:`Excellent ≥${TARGET} | Good ≥3.7 | Watch ≥3.0 | Risk <3.0 — Gap measured from ${TARGET}. N<5 = indicative only.`}
+      </div>
+      <div className="ltr" style={{whiteSpace:"nowrap"}}>{isAr?"منصة الجودة والتقييم":"Quality Platform"} — {d}</div>
     </div>
   );
 }
@@ -606,16 +582,10 @@ export default function ReportsPage(){
 
   const cleanAnswers=useMemo(()=>collapseDuplicateAnswers(ans,qs),[ans,qs]);
 
-  /* Dashboard */
+  /* ===== Dashboard ===== */
   const dashRows=useMemo(()=>filterRowsBy(rows,classrooms,null,dashF),[rows,classrooms,dashF]);
   const dashIds=useMemo(()=>new Set(dashRows.map(r=>r.id)),[dashRows]);
   const dashAns=useMemo(()=>answersFor(cleanAnswers,dashIds),[cleanAnswers,dashIds]);
-  const dashDailyRows=useMemo(()=>dashRows.filter(r=>r.kind==="DAILY"),[dashRows]);
-  const dashFinalRows=useMemo(()=>dashRows.filter(r=>r.kind==="FINAL"),[dashRows]);
-  const dashDailyIds=useMemo(()=>new Set(dashDailyRows.map(r=>r.id)),[dashDailyRows]);
-  const dashFinalIds=useMemo(()=>new Set(dashFinalRows.map(r=>r.id)),[dashFinalRows]);
-  const dashDailySummary=useMemo(()=>summaryFrom(answersFor(cleanAnswers,dashDailyIds),lang),[cleanAnswers,dashDailyIds,lang]);
-  const dashFinalSummary=useMemo(()=>summaryFrom(answersFor(cleanAnswers,dashFinalIds),lang),[cleanAnswers,dashFinalIds,lang]);
   const dashSummary=useMemo(()=>summaryFrom(dashAns,lang),[dashAns,lang]);
   const dashAxis=useMemo(()=>buildAxisStats(dashAns,lang),[dashAns,lang]);
   const dashTrend=useMemo(()=>buildTrend(dashRows,lang),[dashRows,lang]);
@@ -623,26 +593,35 @@ export default function ReportsPage(){
   const dashTrainerRank=useMemo(()=>buildTrainerRanking(dashAns,dashRows,classrooms,trainers),[dashAns,dashRows,classrooms,trainers]);
   const dashHeat=useMemo(()=>buildHeatMap(dashAns,dashRows,classrooms,lang),[dashAns,dashRows,classrooms,lang]);
   const dashHighRisk=useMemo(()=>dashAxis.filter(x=>x.risk.key==="HIGH").length,[dashAxis]);
-  const verdict=useMemo(()=>verdictOf(dashSummary,lang),[dashSummary,lang]);
-  const reportDate=useMemo(()=>new Intl.DateTimeFormat(isAr?"ar-SA":"en-US",{year:"numeric",month:"long",day:"numeric"}).format(new Date()),[isAr]);
+  const dashVerdict=useMemo(()=>verdictOf(dashSummary,lang),[dashSummary,lang]);
 
-  /* Daily */
+  /* ===== Daily ===== */
   const dailyRows=useMemo(()=>filterRowsBy(rows,classrooms,"DAILY",dailyF),[rows,classrooms,dailyF]);
   const dailyIds=useMemo(()=>new Set(dailyRows.map(r=>r.id)),[dailyRows]);
   const dailyAns=useMemo(()=>answersFor(cleanAnswers,dailyIds),[cleanAnswers,dailyIds]);
   const dailySummary=useMemo(()=>summaryFrom(dailyAns,lang),[dailyAns,lang]);
   const dailyAxis=useMemo(()=>buildAxisStats(dailyAns,lang),[dailyAns,lang]);
   const dailyTrend=useMemo(()=>buildTrend(dailyRows,lang),[dailyRows,lang]);
+  const dailyRoomRank=useMemo(()=>buildRoomRanking(dailyAns,dailyRows,classrooms,trainers),[dailyAns,dailyRows,classrooms,trainers]);
+  const dailyTrainerRank=useMemo(()=>buildTrainerRanking(dailyAns,dailyRows,classrooms,trainers),[dailyAns,dailyRows,classrooms,trainers]);
+  const dailyHeat=useMemo(()=>buildHeatMap(dailyAns,dailyRows,classrooms,lang),[dailyAns,dailyRows,classrooms,lang]);
+  const dailyHighRisk=useMemo(()=>dailyAxis.filter(x=>x.risk.key==="HIGH").length,[dailyAxis]);
+  const dailyVerdict=useMemo(()=>verdictOf(dailySummary,lang,isAr?"مؤشر الأداء اليومي":"Daily performance index"),[dailySummary,lang,isAr]);
 
-  /* Final */
+  /* ===== Final ===== */
   const finalRows=useMemo(()=>filterRowsBy(rows,classrooms,"FINAL",finalF),[rows,classrooms,finalF]);
   const finalIds=useMemo(()=>new Set(finalRows.map(r=>r.id)),[finalRows]);
   const finalAns=useMemo(()=>answersFor(cleanAnswers,finalIds),[cleanAnswers,finalIds]);
   const finalSummary=useMemo(()=>summaryFrom(finalAns,lang),[finalAns,lang]);
   const finalAxis=useMemo(()=>buildAxisStats(finalAns,lang),[finalAns,lang]);
   const finalTrend=useMemo(()=>buildTrend(finalRows,lang),[finalRows,lang]);
+  const finalRoomRank=useMemo(()=>buildRoomRanking(finalAns,finalRows,classrooms,trainers),[finalAns,finalRows,classrooms,trainers]);
+  const finalTrainerRank=useMemo(()=>buildTrainerRanking(finalAns,finalRows,classrooms,trainers),[finalAns,finalRows,classrooms,trainers]);
+  const finalHeat=useMemo(()=>buildHeatMap(finalAns,finalRows,classrooms,lang),[finalAns,finalRows,classrooms,lang]);
+  const finalHighRisk=useMemo(()=>finalAxis.filter(x=>x.risk.key==="HIGH").length,[finalAxis]);
+  const finalVerdict=useMemo(()=>verdictOf(finalSummary,lang,isAr?"مؤشر الرضا الختامي":"Final satisfaction index"),[finalSummary,lang,isAr]);
 
-  /* Participants */
+  /* ===== Participants ===== */
   const partRows=useMemo(()=>filterRowsBy(rows,classrooms,null,partF),[rows,classrooms,partF]);
   const partRoomData=useMemo(()=>{
     const byClass=new Map();
@@ -665,7 +644,7 @@ export default function ReportsPage(){
     return out.sort((a,b)=>String(a.code).localeCompare(String(b.code)));
   },[partRows,classrooms,trainers,partF.q]);
 
-  /* Certificate */
+  /* ===== Certificate ===== */
   const certRows=useMemo(()=>filterRowsBy(rows,classrooms,null,certF),[rows,classrooms,certF]);
   const certIds=useMemo(()=>new Set(certRows.map(r=>r.id)),[certRows]);
   const certAns=useMemo(()=>answersFor(cleanAnswers,certIds),[cleanAnswers,certIds]);
@@ -673,10 +652,10 @@ export default function ReportsPage(){
   const certBest=useMemo(()=>{
     const b=certTrainerRank.find(r=>r.respondents>=Number(certF.min||3));
     if(!b)return null;
-    return{trainer:b.name,avg:b.avg,count:b.respondents,code:certRows.find(r=>{const c=classrooms.find(x=>x.trainer_id===b.id);return c&&r.classroom_id===c.id;})? (classrooms.find(x=>x.trainer_id===b.id)?.code||"—"):"—"};
-  },[certTrainerRank,certF.min,certRows,classrooms]);
+    return{trainer:b.name,avg:b.avg,count:b.respondents};
+  },[certTrainerRank,certF.min]);
 
-  /* FiltersBar */
+  /* ===== FiltersBar ===== */
   const FiltersBar=({value,setValue,count,withQuery=false,withMin=false})=>{
     const rooms=value?.trainerId&&value.trainerId!=="ALL"?classrooms.filter(c=>c.trainer_id===value.trainerId):classrooms;
     useEffect(()=>{
@@ -759,7 +738,7 @@ export default function ReportsPage(){
 
         {/* Main */}
         <div className="main">
-          <div className="report-header">
+          <div className="report-header noprint">
             <img src="/logos/upm.png" alt="UPM"/>
             <div className="report-header-text">
               <b>{isAr?"جامعة الأمير مقرن بن عبدالعزيز":"University of Prince Mugrin"}</b>
@@ -768,46 +747,24 @@ export default function ReportsPage(){
             <img src="/logos/center.png" alt="Center"/>
           </div>
 
-          {/* ===== Executive Dashboard (معايير عالمية) ===== */}
+          {/* ===== Executive Dashboard ===== */}
           {tab==="dashboard"&&(
             <div>
-              {/* ترويسة التقرير الرسمية */}
-              <div className="rep-meta">
-                <div>
-                  <div className="rep-title">{isAr?"التقرير التنفيذي لمؤشرات الجودة والتقييم":"Executive Quality & Evaluation Report"}</div>
-                  <div className="rep-sub">{isAr?"برنامج تعليم اللغة العربية للناطقين بغيرها":"Arabic Language Program for Non-Native Speakers"}</div>
-                </div>
-                <div className="rep-side">
-                  <div>{isAr?"تاريخ الإصدار":"Issued"}: <b>{reportDate}</b></div>
-                  <div>{isAr?"الهدف المرجعي":"Benchmark"}: <b className="ltr">{TARGET}/5</b></div>
-                </div>
-              </div>
+              <ReportHero
+                title={isAr?"التقرير التنفيذي لمؤشرات الجودة والتقييم":"Executive Quality & Evaluation Report"}
+                sub={isAr?"برنامج تعليم اللغة العربية للناطقين بغيرها":"Arabic Language Program for Non-Native Speakers"}
+                accent={GOLD} verdict={dashVerdict} score={dashSummary.mean} perfLabel={dashSummary.perf.label} lang={lang}
+                onPrint={()=>window.print()}/>
 
               <FiltersBar value={dashF} setValue={setDashF} count={dashRows.length}/>
 
-              {/* الحكم التنفيذي */}
-              <div className={`verdict ${verdict.tone}`}>
-                <div className="vicon">{verdict.tone==="green"?"🟢":verdict.tone==="teal"?"🔵":verdict.tone==="amber"?"🟠":verdict.tone==="red"?"🔴":"⚪"}</div>
-                <div style={{flex:1}}>
-                  <div className="vtitle">{verdict.title}</div>
-                  <div className="vtext">{verdict.text}</div>
-                </div>
-                <div className="vscore">
-                  <div className="vnum ltr">{dashSummary.mean.toFixed(2)}</div>
-                  <div className="vof">/5 — {dashSummary.perf.label}</div>
-                </div>
-                <button className="vprint noprint" onClick={()=>window.print()}>🖨️ {t.print}</button>
-              </div>
-
-              {/* KPIs مقابل الأهداف */}
               <div className="g4">
                 <MetricCard icon="📝" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={dashRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={dashRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#d1fae5",fg:"#047857"}:dashRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fef3c7",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fee2e2",fg:"#b91c1c"}}/>
-                <MetricCard icon="📊" color={dashSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${dashSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dashSummary.median.toFixed(2)} — الفجوة من الهدف: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`:`Median: ${dashSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`} badge={{label:dashSummary.perf.label,bg:dashSummary.perf.bg,fg:dashSummary.perf.fg}}/>
+                <MetricCard icon="📊" color={dashSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${dashSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dashSummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`:`Median: ${dashSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`} badge={{label:dashSummary.perf.label,bg:dashSummary.perf.bg,fg:dashSummary.perf.fg}}/>
                 <MetricCard icon="⚠️" color={dashHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={dashHighRisk} sub={isAr?"محاور تتطلب تدخلًا فوريًا":"Axes needing immediate action"}/>
-                <MetricCard icon="📉" color={ORANGE} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${dashSummary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا من إجمالي القياسات":"Dissatisfaction share"}/>
+                <MetricCard icon="📉" color={ORANGE} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${dashSummary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا":"Dissatisfaction share"}/>
               </div>
 
-              {/* نقاط القوة والفجوات */}
               <StrengthsGaps items={dashAxis} lang={lang}/>
 
               <div className="g2">
@@ -815,84 +772,86 @@ export default function ReportsPage(){
                 <div className="card"><h3 className="ctitle">{isAr?"📈 الاتجاه مقابل الهدف — آخر 7 أيام بيانات":"📈 Trend vs Target — Last 7 Data Days"}</h3><TrendChart data={dashTrend} lang={lang} color={BLUE}/></div>
               </div>
 
-              {/* بطاقة الأداء العالمية */}
               <ScorecardTable title={isAr?"🛡️ بطاقة أداء المحاور (Scorecard)":"🛡️ Axis Scorecard"} items={dashAxis} lang={lang}/>
-
-              {/* التوصيات ذات الأولوية */}
               <PriorityActions items={dashAxis} lang={lang}/>
 
-              {/* مقارنة القاعات بالمتوسط المؤسسي */}
-              <ComparisonBars title={isAr?"🏫 مقارنة القاعات بالمتوسط المؤسسي":"🏫 Rooms vs Institutional Average"} data={dashRanking} avgLine={dashSummary.mean} lang={lang} nameKey="code" subKey="trainer"/>
-
-              {/* ترتيب المدربين — محاور التعليم فقط */}
-              <ComparisonBars title={isAr?"👨‍🏫 ترتيب المدربين — محاور التعليم فقط":"👨‍🏫 Trainer Ranking — Education Axes Only"} data={dashTrainerRank.map(x=>({id:x.id,code:x.name,trainer:isAr?"تعليم":"education",avg:x.avg,count:x.respondents}))} avgLine={dashSummary.mean} lang={lang} nameKey="code" subKey="trainer"/>
+              <ComparisonBars title={isAr?"🏫 مقارنة القاعات بالمتوسط المؤسسي":"🏫 Rooms vs Institutional Average"} data={dashRanking.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={dashSummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"👨‍🏫 ترتيب المدربين — محاور التعليم فقط":"👨‍🏫 Trainer Ranking — Education Axes Only"} data={dashTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={dashSummary.mean} lang={lang}/>
 
               <HeatMap data={dashHeat} lang={lang}/>
-
-              {/* تذييل رسمي + دليل القراءة */}
-              <div className="rep-footer">
-                <div>
-                  <b>{isAr?"دليل قراءة التقرير:":"How to read:"}</b>{" "}
-                  {isAr?`ممتاز ≥${TARGET} | جيد ≥3.7 | مراقبة ≥3.0 | خطر <3.0 — "الفجوة" تقاس من الهدف ${TARGET}. N أقل من 5 = بيانات إرشادية فقط.`:`Excellent ≥${TARGET} | Good ≥3.7 | Watch ≥3.0 | Risk <3.0 — Gap measured from ${TARGET}. N<5 = indicative only.`}
-                </div>
-                <div className="ltr" style={{whiteSpace:"nowrap"}}>{isAr?"منصة الجودة والتقييم":"Quality Platform"} — {reportDate}</div>
-              </div>
+              <ReportFooter lang={lang}/>
             </div>
           )}
 
-          {/* ===== Daily ===== */}
+          {/* ===== Daily Report (مطوّر بنفس المعايير) ===== */}
           {tab==="daily"&&(
             <div>
-              <div className="card" style={{borderInlineStart:`6px solid ${BLUE}`}}>
-                <h1 style={{fontSize:28,fontWeight:900,marginBottom:8,color:BLUE}}>{t.tab2}</h1>
-                <p style={{color:"#64748b",margin:0}}>{t.dailyHint}</p>
-              </div>
+              <ReportHero
+                title={isAr?"التقرير اليومي لأداء الحصص التدريبية":"Daily Sessions Performance Report"}
+                sub={isAr?"تحليل إحصائي يومي مقابل الهدف المرجعي":"Daily statistical analysis vs benchmark"}
+                accent={BLUE} verdict={dailyVerdict} score={dailySummary.mean} perfLabel={dailySummary.perf.label} lang={lang}
+                onPrint={()=>window.print()}/>
 
               <FiltersBar value={dailyF} setValue={setDailyF} count={dailyRows.length}/>
 
               <div className="g4">
-                <MetricCard icon="📝" color={BLUE} title={isAr?"الاستبانات":"Forms"} value={dailySummary.respondents} sub={isAr?"استجابات يومية صالحة":"Valid daily forms"}/>
-                <MetricCard icon="📊" color={BLUE} title={isAr?"المتوسط":"Mean"} value={`${dailySummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dailySummary.median.toFixed(2)}`:`Median: ${dailySummary.median.toFixed(2)}`} badge={{label:dailySummary.perf.label,bg:dailySummary.perf.bg,fg:dailySummary.perf.fg}}/>
+                <MetricCard icon="📝" color={BLUE} title={isAr?"الاستبانات":"Forms"} value={dailySummary.respondents} sub={isAr?"استجابات يومية صالحة":"Valid daily forms"} badge={dailySummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#d1fae5",fg:"#047857"}:dailySummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fef3c7",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fee2e2",fg:"#b91c1c"}}/>
+                <MetricCard icon="📊" color={dailySummary.mean>=TARGET?TEAL:BLUE} title={isAr?"المتوسط":"Mean"} value={`${dailySummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dailySummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-dailySummary.mean).toFixed(2)}`:`Median: ${dailySummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dailySummary.mean).toFixed(2)}`} badge={{label:dailySummary.perf.label,bg:dailySummary.perf.bg,fg:dailySummary.perf.fg}}/>
                 <MetricCard icon="↔️" color={ORANGE} title={isAr?"الانحراف المعياري":"Std Dev"} value={dailySummary.stddev.toFixed(2)} sub={isAr?"ارتفاعه = تذبذب التجربة":"Higher = less consistent"}/>
-                <MetricCard icon="⚠️" color={RED} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${dailySummary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا":"Dissatisfaction"}/>
-              </div>
-
-              <div className="g2">
-                <div className="card"><h3 className="ctitle">{isAr?"📊 توزيع التقييمات":"📊 Distribution"}</h3><DistributionChart stats={dailySummary} lang={lang}/></div>
-                <div className="card"><h3 className="ctitle">{isAr?"📈 الاتجاه اليومي مقابل الهدف":"📈 Daily Trend vs Target"}</h3><TrendChart data={dailyTrend} lang={lang} color={BLUE}/></div>
+                <MetricCard icon="⚠️" color={dailyHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={dailyHighRisk} sub={isAr?`منخفض 1–2: ${dailySummary.lowPct.toFixed(0)}%`:`Low 1–2: ${dailySummary.lowPct.toFixed(0)}%`}/>
               </div>
 
               <StrengthsGaps items={dailyAxis} lang={lang}/>
+
+              <div className="g2">
+                <div className="card"><h3 className="ctitle">{isAr?"📊 توزيع تقييمات الحصص":"📊 Session Distribution"}</h3><DistributionChart stats={dailySummary} lang={lang}/></div>
+                <div className="card"><h3 className="ctitle">{isAr?"📈 الاتجاه اليومي مقابل الهدف":"📈 Daily Trend vs Target"}</h3><TrendChart data={dailyTrend} lang={lang} color={BLUE}/></div>
+              </div>
+
               <ScorecardTable title={isAr?"🛡️ بطاقة أداء المحاور اليومية":"🛡️ Daily Scorecard"} items={dailyAxis} lang={lang}/>
               <PriorityActions items={dailyAxis} lang={lang}/>
+
+              <ComparisonBars title={isAr?"🏫 مقارنة القاعات — الأداء اليومي":"🏫 Rooms Comparison — Daily"} data={dailyRoomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={dailySummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"👨‍🏫 ترتيب المدربين — الأداء اليومي (محاور التعليم)":"👨‍🏫 Trainer Ranking — Daily (Education Axes)"} data={dailyTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={dailySummary.mean} lang={lang}/>
+
+              <HeatMap data={dailyHeat} lang={lang}/>
+              <ReportFooter lang={lang}/>
             </div>
           )}
 
-          {/* ===== Final ===== */}
+          {/* ===== Final Report (مطوّر بنفس المعايير) ===== */}
           {tab==="final"&&(
             <div>
-              <div className="card" style={{borderInlineStart:`6px solid ${TEAL}`}}>
-                <h1 style={{fontSize:28,fontWeight:900,marginBottom:8,color:TEAL_DARK}}>{t.tab3}</h1>
-                <p style={{color:"#64748b",margin:0}}>{t.finalHint}</p>
-              </div>
+              <ReportHero
+                title={isAr?"التقرير الختامي للبرنامج التدريبي":"Final Program Evaluation Report"}
+                sub={isAr?"رضا المشاركين عن التعليم والخدمات وإدارة البرنامج":"Participant satisfaction: education, services & management"}
+                accent={TEAL} verdict={finalVerdict} score={finalSummary.mean} perfLabel={finalSummary.perf.label} lang={lang}
+                onPrint={()=>window.print()}/>
 
               <FiltersBar value={finalF} setValue={setFinalF} count={finalRows.length}/>
 
               <div className="g4">
-                <MetricCard icon="📝" color={TEAL} title={isAr?"الاستبانات":"Forms"} value={finalSummary.respondents} sub={isAr?"استجابات ختامية صالحة":"Valid final forms"}/>
-                <MetricCard icon="📊" color={TEAL} title={isAr?"المتوسط":"Mean"} value={`${finalSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${finalSummary.median.toFixed(2)}`:`Median: ${finalSummary.median.toFixed(2)}`} badge={{label:finalSummary.perf.label,bg:finalSummary.perf.bg,fg:finalSummary.perf.fg}}/>
+                <MetricCard icon="📝" color={TEAL} title={isAr?"الاستبانات":"Forms"} value={finalSummary.respondents} sub={isAr?"استجابات ختامية صالحة":"Valid final forms"} badge={finalSummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#d1fae5",fg:"#047857"}:finalSummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fef3c7",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fee2e2",fg:"#b91c1c"}}/>
+                <MetricCard icon="📊" color={finalSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المتوسط":"Mean"} value={`${finalSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${finalSummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-finalSummary.mean).toFixed(2)}`:`Median: ${finalSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-finalSummary.mean).toFixed(2)}`} badge={{label:finalSummary.perf.label,bg:finalSummary.perf.bg,fg:finalSummary.perf.fg}}/>
                 <MetricCard icon="↔️" color={ORANGE} title={isAr?"الانحراف المعياري":"Std Dev"} value={finalSummary.stddev.toFixed(2)} sub={isAr?"تذبذب تجربة المشاركين":"Experience consistency"}/>
-                <MetricCard icon="⚠️" color={RED} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${finalSummary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا":"Dissatisfaction"}/>
-              </div>
-
-              <div className="g2">
-                <div className="card"><h3 className="ctitle">{isAr?"📊 توزيع التقييمات":"📊 Distribution"}</h3><DistributionChart stats={finalSummary} lang={lang}/></div>
-                <div className="card"><h3 className="ctitle">{isAr?"📈 اتجاه الرضا الختامي مقابل الهدف":"📈 Final Trend vs Target"}</h3><TrendChart data={finalTrend} lang={lang} color={TEAL}/></div>
+                <MetricCard icon="⚠️" color={finalHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={finalHighRisk} sub={isAr?`منخفض 1–2: ${finalSummary.lowPct.toFixed(0)}%`:`Low 1–2: ${finalSummary.lowPct.toFixed(0)}%`}/>
               </div>
 
               <StrengthsGaps items={finalAxis} lang={lang}/>
+
+              <div className="g2">
+                <div className="card"><h3 className="ctitle">{isAr?"📊 توزيع تقييمات البرنامج":"📊 Program Distribution"}</h3><DistributionChart stats={finalSummary} lang={lang}/></div>
+                <div className="card"><h3 className="ctitle">{isAr?"📈 اتجاه الرضا الختامي مقابل الهدف":"📈 Final Trend vs Target"}</h3><TrendChart data={finalTrend} lang={lang} color={TEAL}/></div>
+              </div>
+
               <ScorecardTable title={isAr?"🛡️ بطاقة أداء البرنامج":"🛡️ Program Scorecard"} items={finalAxis} lang={lang}/>
               <PriorityActions items={finalAxis} lang={lang}/>
+
+              <ComparisonBars title={isAr?"🏫 مقارنة القاعات — التقييم الختامي":"🏫 Rooms Comparison — Final"} data={finalRoomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={finalSummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"👨‍🏫 ترتيب المدربين — التقييم الختامي (محاور التعليم)":"👨‍🏫 Trainer Ranking — Final (Education Axes)"} data={finalTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={finalSummary.mean} lang={lang}/>
+
+              <HeatMap data={finalHeat} lang={lang}/>
+              <ReportFooter lang={lang}/>
             </div>
           )}
 
@@ -1075,13 +1034,11 @@ const CSS=`
 .report-header-text b{display:block;color:#173a5e;font-size:16px;font-weight:900;}
 .report-header-text span{color:#0d9488;font-size:12px;font-weight:800;}
 
-/* Executive report meta */
+/* Report meta & verdict */
 .rep-meta{background:#fff;border:1px solid #e2e8f0;border-inline-start:6px solid #c19a3d;border-radius:18px;padding:18px 22px;margin-bottom:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;}
 .rep-title{color:#173a5e;font-size:20px;font-weight:900;}
 .rep-sub{color:#0d9488;font-size:13px;font-weight:800;margin-top:3px;}
 .rep-side{color:#64748b;font-size:13px;font-weight:700;line-height:1.8;text-align:end;}
-
-/* Verdict banner */
 .verdict{border-radius:20px;padding:22px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:2px solid;}
 .verdict.green{background:#f0fdf4;border-color:#86efac;}
 .verdict.teal{background:#f0fdfa;border-color:#5eead4;}
@@ -1102,8 +1059,6 @@ const CSS=`
 .mbadge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:900;margin-inline-start:auto;}
 .mval{font-size:32px;font-weight:900;margin-top:12px;direction:ltr;unicode-bidi:plaintext;}
 .msub{color:#94a3b8;font-size:12px;margin-top:6px;font-weight:700;}
-.gtitle{color:#64748b;font-size:15px;font-weight:900;margin-bottom:12px;}
-.gsub{color:#94a3b8;font-size:12px;font-weight:800;margin-top:10px;}
 
 /* Distribution */
 .dbar{height:22px;width:100%;display:flex;overflow:hidden;border-radius:999px;background:#f1f5f9;margin:20px 0;}
@@ -1119,10 +1074,8 @@ const CSS=`
 .irow{display:grid;gap:4px;padding:10px 0;border-bottom:1px solid rgba(148,163,184,.22);}
 .irow:last-child{border-bottom:0;}
 .irow span{color:#475569;font-size:13px;font-weight:700;}
-.irow small{color:#64748b;line-height:1.7;}
-.cnote{margin-top:16px;background:#f8fafc;border-radius:12px;padding:12px;color:#475569;font-size:13px;line-height:1.7;}
 
-/* Risk/perf badges */
+/* Badges & gaps */
 .rbadge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900;white-space:nowrap;}
 .gapok{color:#047857;font-weight:900;}
 .gapmid{color:#b45309;font-weight:900;}
@@ -1138,22 +1091,22 @@ const CSS=`
 .prbadge.pr-med{background:#fef3c7;color:#b45309;}
 .pmeta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:#64748b;font-size:12px;font-weight:800;}
 
-/* Comparison bars */
-.cmptrack{position:relative;height:10px;background:#f1f5f9;border-radius:999px;overflow:visible;margin-bottom:6px;}
+/* Comparison */
+.cmptrack{position:relative;height:10px;background:#f1f5f9;border-radius:999px;margin-bottom:6px;}
 .cmpfill{height:100%;border-radius:999px;transition:width .6s ease;}
 .cmpline{position:absolute;top:-4px;bottom:-4px;width:3px;background:#64748b;border-radius:2px;}
 .cmpline.gold{background:#c19a3d;}
 .legend{display:flex;gap:18px;margin-top:12px;color:#64748b;font-size:12px;font-weight:800;flex-wrap:wrap;}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-inline-end:6px;vertical-align:-2px;}
 
-/* Heat map */
+/* Heat */
 .heat{width:100%;border-collapse:collapse;min-width:700px;}
 .heat th{border-bottom:2px solid #e2e8f0;padding:12px;color:#64748b;text-align:center;font-size:13px;}
 .heat td{border-bottom:1px solid #f1f5f9;padding:12px;text-align:center;}
 .haxis{text-align:start !important;min-width:170px;color:#0f172a;font-weight:900;}
 .hcell{display:inline-flex;min-width:56px;justify-content:center;padding:8px;border-radius:10px;font-size:13px;font-weight:900;direction:ltr;}
 
-/* Report footer */
+/* Footer */
 .rep-footer{background:#fff;border:1px solid #e2e8f0;border-top:4px solid #173a5e;border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:#475569;font-size:12px;font-weight:700;line-height:1.8;}
 
 /* Modal */
