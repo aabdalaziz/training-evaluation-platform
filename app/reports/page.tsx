@@ -171,9 +171,15 @@ function heatColor(avg,count){
 }
 function maskEmail(e){if(!e||!e.includes("@"))return"—";const[u,d]=e.split("@");return`${u.slice(0,2)}***@${d}`;}
 function maskPhone(p){if(!p)return"—";const c=String(p).replace(/\s+/g,"");if(c.length<6)return"***";return c.replace(/(\d{2})\d+(\d{2})/,"$1******$2");}
+
+/* تصدير CSV سليم: BOM للعربية + الجوالات كنص */
 function downloadCSV(filename,rows){
-  const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const csv=rows.map(r=>r.map(esc).join(",")).join("\n");
+  const esc=v=>{
+    const s=String(v??"");
+    if(/^\+?[\d\s\-()]{7,}$/.test(s.trim()))return`="${s.replace(/"/g,'""')}"`;
+    return`"${s.replace(/"/g,'""')}"`;
+  };
+  const csv="\uFEFF"+rows.map(r=>r.map(esc).join(",")).join("\r\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
   const url=URL.createObjectURL(blob);
   const a=document.createElement("a");a.href=url;a.download=filename;
@@ -187,7 +193,7 @@ const dict={
   ar:{dir:"rtl",font:"'Tajawal', sans-serif",title:"لوحة ذكاء الأعمال",sub:"النظام المركزي للتحليلات",
     tab1:"الملخص التنفيذي",tab2:"التقرير اليومي",tab3:"التقرير النهائي",tab4:"سجل المشاركين",tab5:"شهادة التميز",
     lang:"English",noData:"لا توجد بيانات ضمن الفلاتر الحالية.",filters:"الفلاتر",allTrainers:"كل المدربين",allRooms:"كل القاعات",
-    reset:"إعادة تعيين",search:"بحث (اسم/بريد/جوال)",reveal:"إظهار البيانات",hide:"إخفاء البيانات",export:"تصدير CSV",
+    reset:"إعادة تعيين",search:"بحث (اسم/بريد/جوال)",reveal:"إظهار البيانات",hide:"إخفاء البيانات",export:"تصدير Excel",
     print:"طباعة",minResponses:"حد أدنى للاستجابات",sample:"عدد الاستبانات",clear:"إفراغ",purge:"حذف الاستجابات",
     executiveHint:"قراءة تحليلية لمؤشرات الجودة والرضا ومناطق القلق والتوصيات.",
     dailyHint:"تحليل إحصائي لأداء الحصص والمدربين والتجربة اليومية.",
@@ -196,7 +202,7 @@ const dict={
   en:{dir:"ltr",font:"'Inter', sans-serif",title:"BI Dashboard",sub:"Central Analytics",
     tab1:"Executive Summary",tab2:"Daily Report",tab3:"Final Report",tab4:"Participants",tab5:"Certificate",
     lang:"العربية",noData:"No data for current filters.",filters:"Filters",allTrainers:"All trainers",allRooms:"All rooms",
-    reset:"Reset",search:"Search (name/email/phone)",reveal:"Show data",hide:"Hide data",export:"Export CSV",
+    reset:"Reset",search:"Search (name/email/phone)",reveal:"Show data",hide:"Hide data",export:"Export Excel",
     print:"Print",minResponses:"Min responses",sample:"Forms",clear:"Clear",purge:"Delete Responses",
     executiveHint:"Analytical view of quality, satisfaction, risk areas and recommendations.",
     dailyHint:"Statistical analysis of sessions, trainers, and daily experience.",
