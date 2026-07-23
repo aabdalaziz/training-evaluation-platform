@@ -84,6 +84,60 @@ function verdictOf(summary,lang,ctx){
   return{tone:"red",title:lang==="ar"?"مستوى خطر — يتطلب تدخلًا عاجلًا":"At risk — urgent action required",text:lang==="ar"?`${c} ${m.toFixed(2)}/5 منخفض بوضوح عن المعيار الدولي. يُوصى بخطة معالجة فورية للمحاور الحمراء ومراجعة أسبوعية.`:`${c} ${m.toFixed(2)}/5 is well below benchmark; immediate remediation advised.`};
 }
 
+/* ============ القراءة التحليلية التلقائية ============ */
+function buildNarrative({summary,axis,trend,lang,kind}){
+  const isAr=lang==="ar";
+  const n=summary.respondents;
+  if(n<1)return null;
+  const m=summary.mean,med=summary.median;
+  const hp=summary.highPct,np=summary.neutralPct,lp=summary.lowPct;
+  const kindAr=kind==="daily"?"التقييم اليومي للحصص التدريبية":kind==="final"?"التقييم الختامي للبرنامج":"تقييم البرنامج";
+  const kindEn=kind==="daily"?"the daily sessions evaluation":kind==="final"?"the final program evaluation":"the program evaluation";
+  const v=perfLevel(m,lang);
+
+  const edu=axis.filter(x=>x.cat==="education"||x.cat==="trainer").sort((a,b)=>b.mean-a.mean);
+  const topEdu=edu[0];
+  let praise="";
+  if(topEdu){
+    const pc=Math.round(topEdu.highPct*topEdu.measurements/100);
+    praise=isAr
+      ?`وفي صلب التجربة التعليمية، أشاد ${pc} مشاركًا (${topEdu.highPct.toFixed(0)}%) بـ"${topEdu.axisLabel}" مسجلًا ${topEdu.mean.toFixed(2)}/5، وهو ما يعكس ثقة المتدربين بالكفاءة التدريسية.`
+      :`On the teaching side, ${pc} participants (${topEdu.highPct.toFixed(0)}%) praised "${topEdu.axisLabel}" at ${topEdu.mean.toFixed(2)}/5, reflecting strong trainee confidence in instructional quality.`;
+  }
+
+  const strengths=axis.filter(x=>x.mean>=3.7).sort((a,b)=>b.mean-a.mean).slice(0,2);
+  const concerns=axis.filter(x=>x.mean<3.7).sort((a,b)=>a.mean-b.mean).slice(0,1);
+  const names=strengths.map(x=>`"${x.axisLabel}" (${x.mean.toFixed(2)}/5)`).join(isAr?" و":" and ");
+  const strengthTxt=names?(isAr?`تصدّر ${names} قائمة نقاط القوة.`:`Leading strengths were ${names}.`):"";
+  const c=concerns[0];
+  const concernTxt=c
+    ?(isAr?`في المقابل، سجّل "${c.axisLabel}" أدنى المستويات بمتوسط ${c.mean.toFixed(2)}/5 ونسبة تقييمات منخفضة بلغت ${c.lowPct.toFixed(0)}%${c.stddev>=1?` مع انحراف معياري مرتفع (${c.stddev.toFixed(2)}) يدل على تفاوت التجربة بين المشاركين`:""}، مما يستدعي تدخلًا منظمًا وفق التوصيات الواردة أدناه.`
+      :`Conversely, "${c.axisLabel}" scored lowest at ${c.mean.toFixed(2)}/5 with ${c.lowPct.toFixed(0)}% low ratings${c.stddev>=1?` and a high SD (${c.stddev.toFixed(2)}) indicating inconsistent experience`:""}, requiring structured intervention per the recommendations below.`)
+    :(isAr?"ولم تسجّل أي محاور مستويات مقلقة تستدعي تدخلًا عاجلًا.":"No axis recorded concerning levels requiring urgent intervention.");
+
+  const tAvgs=(trend||[]).filter(t=>t.avg!==null).map(t=>t.avg);
+  let trendTxt="";
+  if(tAvgs.length>=2){
+    const d=tAvgs[tAvgs.length-1]-tAvgs[0];
+    if(Math.abs(d)<0.15)trendTxt=isAr?"وأظهر الاتجاه الزمني استقرارًا نسبيًا في الأداء خلال آخر 7 أيام بيانات.":"The trend showed relative stability over the last 7 data days.";
+    else if(d>0)trendTxt=isAr?`وأظهر الاتجاه الزمني تحسنًا ملحوظًا بمقدار ${d.toFixed(2)} درجة خلال آخر 7 أيام بيانات.`:`The trend improved by ${d.toFixed(2)} over the last 7 data days.`;
+    else trendTxt=isAr?`وأظهر الاتجاه الزمني تراجعًا بمقدار ${Math.abs(d).toFixed(2)} درجة يستدعي المتابعة الدقيقة.`:`The trend declined by ${Math.abs(d).toFixed(2)}, requiring close monitoring.`;
+  }
+
+  if(isAr){
+    return{
+      p1:`بلغ عدد الاستبانات المحللة في ${kindAr} ${n} استبانة ضمن الفلاتر المحددة. سجّل المؤشر العام ${m.toFixed(2)} من 5 بوسيط ${med.toFixed(2)}، ليصنّف الأداء ضمن مستوى "${v.label}" قياسًا بالهدف المرجعي (${TARGET}/5). وأبدى ${hp.toFixed(0)}% من المشاركين رضًا مرتفعًا (4–5 نجوم)، فيما توزّعت ${np.toFixed(0)}% عند التقييم المحايد (3 نجوم)، وبقيت نسبة غير الراضين (1–2 نجمة) عند ${lp.toFixed(0)}%.`,
+      p2:`${strengthTxt} ${praise} ${concernTxt}`,
+      p3:`${trendTxt} وتؤكد هذه القراءة أهمية تعزيز نقاط القوة وتوثيق ممارساتها، بالتوازي مع معالجة الفجوات المرصودة ضمن إطار زمني محدد ومؤشرات نجاح قابلة للقياس.`
+    };
+  }
+  return{
+    p1:`A total of ${n} valid forms were analyzed for ${kindEn}. The overall index reached ${m.toFixed(2)}/5 with a median of ${med.toFixed(2)}, classifying performance as "${v.label}" against the ${TARGET}/5 benchmark. ${hp.toFixed(0)}% expressed high satisfaction (4–5 stars), ${np.toFixed(0)}% were neutral (3 stars), and dissatisfaction (1–2 stars) stood at ${lp.toFixed(0)}%.`,
+    p2:`${strengthTxt} ${praise} ${concernTxt}`,
+    p3:`${trendTxt} This analysis underscores the importance of reinforcing strengths and documenting best practices, while addressing identified gaps within defined timeframes and measurable success indicators.`
+  };
+}
+
 /* ============ Axes & Recommendations ============ */
 function axisCategory(ar="",en=""){
   const s=`${ar} ${en}`.toLowerCase();
@@ -457,7 +511,21 @@ function HeatMap({data,lang}){
   );
 }
 
-/* ترويسة تقرير رسمية + حكم تنفيذي (مكوّن مشترك لكل التقارير) */
+/* بطاقة القراءة التحليلية */
+function NarrativeCard({narrative,lang,accent}){
+  const isAr=lang==="ar";
+  if(!narrative)return null;
+  return(
+    <div className="card narr" style={{borderInlineStart:`6px solid ${accent}`}}>
+      <h3 className="ctitle">{isAr?"📝 القراءة التحليلية للتقرير":"📝 Analytical Reading"}</h3>
+      <p className="ntext">{narrative.p1}</p>
+      <p className="ntext">{narrative.p2}</p>
+      {narrative.p3&&<p className="ntext">{narrative.p3}</p>}
+    </div>
+  );
+}
+
+/* ترويسة تقرير رسمية + حكم تنفيذي */
 function ReportHero({title,sub,accent,verdict,score,perfLabel,lang,onPrint}){
   const isAr=lang==="ar";
   return(
@@ -594,6 +662,7 @@ export default function ReportsPage(){
   const dashHeat=useMemo(()=>buildHeatMap(dashAns,dashRows,classrooms,lang),[dashAns,dashRows,classrooms,lang]);
   const dashHighRisk=useMemo(()=>dashAxis.filter(x=>x.risk.key==="HIGH").length,[dashAxis]);
   const dashVerdict=useMemo(()=>verdictOf(dashSummary,lang),[dashSummary,lang]);
+  const dashNarr=useMemo(()=>buildNarrative({summary:dashSummary,axis:dashAxis,trend:dashTrend,lang,kind:"dashboard"}),[dashSummary,dashAxis,dashTrend,lang]);
 
   /* ===== Daily ===== */
   const dailyRows=useMemo(()=>filterRowsBy(rows,classrooms,"DAILY",dailyF),[rows,classrooms,dailyF]);
@@ -607,6 +676,7 @@ export default function ReportsPage(){
   const dailyHeat=useMemo(()=>buildHeatMap(dailyAns,dailyRows,classrooms,lang),[dailyAns,dailyRows,classrooms,lang]);
   const dailyHighRisk=useMemo(()=>dailyAxis.filter(x=>x.risk.key==="HIGH").length,[dailyAxis]);
   const dailyVerdict=useMemo(()=>verdictOf(dailySummary,lang,isAr?"مؤشر الأداء اليومي":"Daily performance index"),[dailySummary,lang,isAr]);
+  const dailyNarr=useMemo(()=>buildNarrative({summary:dailySummary,axis:dailyAxis,trend:dailyTrend,lang,kind:"daily"}),[dailySummary,dailyAxis,dailyTrend,lang]);
 
   /* ===== Final ===== */
   const finalRows=useMemo(()=>filterRowsBy(rows,classrooms,"FINAL",finalF),[rows,classrooms,finalF]);
@@ -620,6 +690,7 @@ export default function ReportsPage(){
   const finalHeat=useMemo(()=>buildHeatMap(finalAns,finalRows,classrooms,lang),[finalAns,finalRows,classrooms,lang]);
   const finalHighRisk=useMemo(()=>finalAxis.filter(x=>x.risk.key==="HIGH").length,[finalAxis]);
   const finalVerdict=useMemo(()=>verdictOf(finalSummary,lang,isAr?"مؤشر الرضا الختامي":"Final satisfaction index"),[finalSummary,lang,isAr]);
+  const finalNarr=useMemo(()=>buildNarrative({summary:finalSummary,axis:finalAxis,trend:finalTrend,lang,kind:"final"}),[finalSummary,finalAxis,finalTrend,lang]);
 
   /* ===== Participants ===== */
   const partRows=useMemo(()=>filterRowsBy(rows,classrooms,null,partF),[rows,classrooms,partF]);
@@ -758,6 +829,8 @@ export default function ReportsPage(){
 
               <FiltersBar value={dashF} setValue={setDashF} count={dashRows.length}/>
 
+              <NarrativeCard narrative={dashNarr} lang={lang} accent={GOLD}/>
+
               <div className="g4">
                 <MetricCard icon="📝" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={dashRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={dashRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#d1fae5",fg:"#047857"}:dashRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fef3c7",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fee2e2",fg:"#b91c1c"}}/>
                 <MetricCard icon="📊" color={dashSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${dashSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dashSummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`:`Median: ${dashSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`} badge={{label:dashSummary.perf.label,bg:dashSummary.perf.bg,fg:dashSummary.perf.fg}}/>
@@ -783,7 +856,7 @@ export default function ReportsPage(){
             </div>
           )}
 
-          {/* ===== Daily Report (مطوّر بنفس المعايير) ===== */}
+          {/* ===== Daily Report ===== */}
           {tab==="daily"&&(
             <div>
               <ReportHero
@@ -793,6 +866,8 @@ export default function ReportsPage(){
                 onPrint={()=>window.print()}/>
 
               <FiltersBar value={dailyF} setValue={setDailyF} count={dailyRows.length}/>
+
+              <NarrativeCard narrative={dailyNarr} lang={lang} accent={BLUE}/>
 
               <div className="g4">
                 <MetricCard icon="📝" color={BLUE} title={isAr?"الاستبانات":"Forms"} value={dailySummary.respondents} sub={isAr?"استجابات يومية صالحة":"Valid daily forms"} badge={dailySummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#d1fae5",fg:"#047857"}:dailySummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fef3c7",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fee2e2",fg:"#b91c1c"}}/>
@@ -819,7 +894,7 @@ export default function ReportsPage(){
             </div>
           )}
 
-          {/* ===== Final Report (مطوّر بنفس المعايير) ===== */}
+          {/* ===== Final Report ===== */}
           {tab==="final"&&(
             <div>
               <ReportHero
@@ -829,6 +904,8 @@ export default function ReportsPage(){
                 onPrint={()=>window.print()}/>
 
               <FiltersBar value={finalF} setValue={setFinalF} count={finalRows.length}/>
+
+              <NarrativeCard narrative={finalNarr} lang={lang} accent={TEAL}/>
 
               <div className="g4">
                 <MetricCard icon="📝" color={TEAL} title={isAr?"الاستبانات":"Forms"} value={finalSummary.respondents} sub={isAr?"استجابات ختامية صالحة":"Valid final forms"} badge={finalSummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#d1fae5",fg:"#047857"}:finalSummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fef3c7",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fee2e2",fg:"#b91c1c"}}/>
@@ -1052,6 +1129,11 @@ const CSS=`
 .vnum{font-size:44px;font-weight:900;color:#0f172a;}
 .vof{color:#64748b;font-size:13px;font-weight:800;}
 .vprint{background:#0f172a;color:#fff;border:none;padding:12px 18px;border-radius:12px;font-weight:900;cursor:pointer;font-family:inherit;}
+
+/* Narrative */
+.narr{background:linear-gradient(135deg,#ffffff,#f8fafc);}
+.ntext{color:#334155;font-size:14.5px;font-weight:600;line-height:2;margin:0 0 12px;text-align:justify;}
+.ntext:last-child{margin-bottom:0;}
 
 /* Metric cards */
 .mcard{background:#fff;border:1px solid #e2e8f0;border-bottom:5px solid #2563eb;padding:20px;border-radius:22px;min-height:140px;box-shadow:0 8px 28px rgba(15,23,42,.035);}
