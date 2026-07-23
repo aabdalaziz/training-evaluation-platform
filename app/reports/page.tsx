@@ -782,8 +782,8 @@ export default function ReportsPage(){
               {certBest?(
                 <div className="card" style={{textAlign:"center",padding:40,background:"linear-gradient(135deg, #fffbeb, #fef3c7)",border:`4px solid ${GOLD}`}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-                    <img src="/logo-upm.png" alt="UPM" style={{height:64}}/>
-                    <img src="/logo-center.png" alt="Center" style={{height:64}}/>
+                    <img src="/logo-upm.png" alt="UPM" style={{height:99}}/>
+                    <img src="/logo-center.png" alt="Center" style={{height:99}}/>
                   </div>
                   <h1 style={{fontSize:36,fontWeight:900,color:GOLD,marginBottom:8}}>{isAr?"شهادة تميز وإشادة":"Certificate of Excellence"}</h1>
                   <p style={{color:"#64748b",marginBottom:24}}>{isAr?"تُمنح لأفضل مدرب وفق متوسط الأداء وحجم العينة":"Awarded to the best trainer by average and sample size"}</p>
@@ -877,7 +877,7 @@ const CSS=`
 .side{width:300px;flex-shrink:0;background:linear-gradient(160deg,#0f2740 0%,#173a5e 55%,#0d9488 130%);border-radius:24px;padding:22px;color:#fff;position:sticky;top:24px;height:fit-content;box-shadow:0 20px 50px rgba(15,39,64,.25);}
 .brand-card{background:#fff;border-radius:18px;padding:16px 14px;margin-bottom:22px;text-align:center;border-bottom:4px solid #c19a3d;}
 .brand-logos{display:flex;align-items:center;justify-content:center;gap:12px;}
-.brand-logo{height:56px;width:auto;object-fit:contain;}
+.brand-logo{height:88px;width:auto;object-fit:contain;}
 .brand-divider{width:1px;height:44px;background:#e2e8f0;}
 .brand-name{color:#173a5e;font-weight:900;font-size:16px;margin-top:10px;}
 .brand-tag{color:#0d9488;font-weight:800;font-size:12px;margin-top:2px;}
@@ -889,7 +889,7 @@ const CSS=`
 .ton .nav-ico{background:rgba(255,255,255,0.22);}
 .side-copy{margin-top:16px;text-align:center;color:rgba(255,255,255,.45);font-size:11px;font-weight:700;}
 .report-header{background:#fff;border:1px solid #e2e8f0;border-bottom:4px solid #0d9488;border-radius:18px;padding:12px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
-.report-header img{height:48px;width:auto;object-fit:contain;}
+.report-header img{height:71px;width:auto;object-fit:contain;}
 .report-header-text{text-align:center;}
 .report-header-text b{display:block;color:#173a5e;font-size:16px;font-weight:900;}
 .report-header-text span{color:#0d9488;font-size:12px;font-weight:800;}
