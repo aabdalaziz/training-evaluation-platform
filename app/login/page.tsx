@@ -1,57 +1,109 @@
-'use client';
+// @ts-nocheck
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase/client';
+export async function POST(req: Request) {
+  try {
+    const { confirmCode, filters, kind } = await req.json();
 
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const router = useRouter();
-
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    setError('');
-    setBusy(true);
-
-    try {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        throw new Error('لم يتم إعداد متغيرات Supabase في Vercel.');
-      }
-
-      const request = supabase().auth.signInWithPassword({ email: email.trim(), password });
-      const timeout = new Promise<never>((_, reject) =>
-        window.setTimeout(() => reject(new Error('انتهت مهلة الاتصال بـ Supabase. تحقق من Project URL والمفتاح العام ثم أعد النشر.')), 15000)
-      );
-      const { error: authError } = await Promise.race([request, timeout]);
-
-      if (authError) {
-        throw new Error(authError.message === 'Invalid login credentials'
-          ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.'
-          : authError.message);
-      }
-
-      router.push('/dashboard');
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'حدث خطأ غير متوقع أثناء تسجيل الدخول.');
-    } finally {
-      setBusy(false);
+    // 1) كود التأكيد
+    if (String(confirmCode) !== "9999") {
+      return NextResponse.json({ success: false, error: "كود التأكيد غير صحيح" }, { status: 400 });
     }
-  }
 
-  return (
-    <main className="auth">
-      <form onSubmit={submit}>
-        <div className="emblem">🏛️</div>
-        <h1>تسجيل الدخول</h1>
-        <p>منصة تقويم البرامج التدريبية</p>
-        {error && <div className="error">⚠️ {error}</div>}
-        <label>البريد الإلكتروني<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-        <label>كلمة المرور<input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-        <button className="button" disabled={busy}>{busy ? 'جارٍ التحقق...' : 'دخول آمن ←'}</button>
-      </form>
-    </main>
-  );
+    // 2) الأنواع المسموحة فقط
+    if (!["DAILY", "FINAL", "BOTH"].includes(String(kind))) {
+      return NextResponse.json({ success: false, error: "نوع غير مسموح" }, { status: 400 });
+    }
+
+    // 3) التحقق من المستخدم
+    const auth = req.headers.get("authorization") || "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
+    if (!token) return NextResponse.json({ success: false, error: "Missing token" }, { status: 401 });
+
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!SUPABASE_URL || !ANON_KEY || !SERVICE_KEY) {
+      return NextResponse.json({ success: false, error: "Server not configured" }, { status: 500 });
+    }
+
+    const authClient = createClient(SUPABASE_URL, ANON_KEY);
+    const { data: u, error: uErr } = await authClient.auth.getUser(token);
+    if (uErr || !u?.user?.email) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const adminEmail = u.user.email.toLowerCase();
+    // 4) Verify the real platform role from PostgreSQL, not a hard-coded email list.
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: profile, error: profileErr } = await admin
+      .from("profiles").select("role").eq("id", u.user.id).single();
+    if (profileErr || !["SUPER_ADMIN", "ADMIN"].includes(profile?.role)) {
+      return NextResponse.json({ success: false, error: "غير مصرح (للإدارة فقط)" }, { status: 403 });
+    }
+
+    // 5) Client with Service Role is used only on this server route for deletion.
+
+    // 6) تحديد الاستبانات المستهدفة حسب الفلاتر
+    let q = admin.from("evaluations").select("id");
+
+    if (kind === "DAILY") q = q.eq("kind", "DAILY");
+    if (kind === "FINAL") q = q.eq("kind", "FINAL");
+    if (kind === "BOTH") q = q.in("kind", ["DAILY", "FINAL"]);
+
+    if (filters?.classroomId && filters.classroomId !== "ALL") {
+      q = q.eq("classroom_id", filters.classroomId);
+    } else if (filters?.trainerId && filters.trainerId !== "ALL") {
+      const { data: rooms } = await admin.from("classrooms").select("id").eq("trainer_id", filters.trainerId);
+      const roomIds = (rooms || []).map((r) => r.id);
+      if (!roomIds.length) {
+        return NextResponse.json({ success: true, deleted: { evaluations: 0, answers: 0 } });
+      }
+      q = q.in("classroom_id", roomIds);
+    }
+
+    if (filters?.from) q = q.gte("submitted_at", new Date(filters.from).toISOString());
+    if (filters?.to) {
+      const to = new Date(filters.to);
+      to.setHours(23, 59, 59, 999);
+      q = q.lte("submitted_at", to.toISOString());
+    }
+
+    const { data: evals, error: evalErr } = await q;
+    if (evalErr) throw evalErr;
+
+    const ids = (evals || []).map((e) => e.id);
+    if (!ids.length) {
+      return NextResponse.json({ success: true, deleted: { evaluations: 0, answers: 0 } });
+    }
+
+    // 7) حذف نهائي: الإجابات أولًا ثم الاستبانات
+    let deletedAnswers = 0;
+    let deletedEvals = 0;
+
+    const CHUNK = 500;
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const chunk = ids.slice(i, i + CHUNK);
+
+      const aDel = await admin.from("evaluation_answers").delete().in("evaluation_id", chunk).select("id");
+      if (aDel.error) throw aDel.error;
+      deletedAnswers += (aDel.data || []).length;
+
+      const eDel = await admin.from("evaluations").delete().in("id", chunk).select("id");
+      if (eDel.error) throw eDel.error;
+      deletedEvals += (eDel.data || []).length;
+    }
+
+    // 8) سجل تدقيق (اختياري — يعمل فقط إذا أنشأت الجدول)
+    await admin.from("purge_logs").insert({
+      admin_email: adminEmail, kind, filters,
+      deleted_evaluations: deletedEvals,
+      deleted_answers: deletedAnswers
+    }).catch(() => {});
+
+    return NextResponse.json({ success: true, deleted: { evaluations: deletedEvals, answers: deletedAnswers } });
+  } catch (e) {
+    return NextResponse.json({ success: false, error: e?.message || "Server error" }, { status: 500 });
+  }
 }
