@@ -87,7 +87,13 @@ export default function GuestEvaluationPage() {
   }, {}), [questions]);
 
   const set = (id, v) => setAnswers(x => ({ ...x, [id]: v }));
-  const requiredMissing = questions.filter(q => q.is_required && (!answers[q.id] || !answers[q.id].trim()));
+  const toggleMulti = (id, option) => setAnswers(prev => {
+    const current = Array.isArray(prev[id]) ? prev[id] : [];
+    const next = current.includes(option) ? current.filter(x => x !== option) : [...current, option];
+    return { ...prev, [id]: next };
+  });
+  const hasAnswer = (value) => Array.isArray(value) ? value.length > 0 : !!String(value || '').trim();
+  const requiredMissing = questions.filter(q => q.is_required && !hasAnswer(answers[q.id]));
 
   async function submit(e) {
     e.preventDefault();
@@ -148,6 +154,7 @@ export default function GuestEvaluationPage() {
           question_id: q.id,
           rating_value: ['RATING_5', 'STARS', 'LIKERT_5'].includes(q.kind) ? Number(value) || null : null,
           selected_option: ['SINGLE_CHOICE', 'YES_NO'].includes(q.kind) ? value || null : null,
+          selected_options: q.kind === 'MULTI_CHOICE' ? (Array.isArray(value) ? value : []) : [],
           text_value: ['SHORT_TEXT', 'LONG_TEXT'].includes(q.kind) ? value || null : null
         };
       });
@@ -270,6 +277,18 @@ export default function GuestEvaluationPage() {
                         {o}
                       </button>
                     ))}
+                  </div>
+                )}
+                
+                {q.kind === 'MULTI_CHOICE' && (
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+                    {(q.options || []).map((o) => {
+                      const selected = Array.isArray(answers[q.id]) && answers[q.id].includes(o);
+                      return <button key={o} type="button" onClick={() => toggleMulti(q.id, o)}
+                        style={{ padding: "8px 20px", borderRadius: "20px", border: selected ? "2px solid #10b981" : "1px solid #cbd5e1", background: selected ? "#d1fae5" : "#fff", color: selected ? "#047857" : "#475569", fontSize: "13px", fontWeight: "bold", cursor: "pointer" }}>
+                        {selected ? "✓ " : ""}{o}
+                      </button>
+                    })}
                   </div>
                 )}
                 
