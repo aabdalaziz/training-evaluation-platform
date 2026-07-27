@@ -417,6 +417,22 @@ function LeadershipVisuals({items,summary,lang}){
   </div>
 }
 
+function AccommodationComparison({rows,answers,lang}){
+  const isAr=lang==="ar";
+  const evalType=new Map((rows||[]).map(r=>[r.id,r.accommodation_type]));
+  const groups={"فندق المنار":[],"شقق الإسكان العزيزية":[]};
+  for(const a of answers||[]){
+    const type=evalType.get(a.evaluation_id);const text=`${a.question?.section_ar||""} ${a.question?.text_ar||""}`;
+    const v=safeRating(a.rating_value);
+    if(!groups[type]||v===null)continue;
+    if(/سكن|فندق|العزيزية/.test(text))groups[type].push(v);
+  }
+  const data=Object.entries(groups).map(([name,vals])=>{const m=mean(vals),high=vals.length?vals.filter(v=>v>=4).length/vals.length*100:0,low=vals.length?vals.filter(v=>v<=2).length/vals.length*100:0;return{name,vals,m,high,low,count:new Set((rows||[]).filter(r=>r.accommodation_type===name).map(r=>r.id)).size}});
+  const valid=data.filter(x=>x.vals.length);if(!valid.length)return <div className="card"><h3 className="ctitle">{isAr?"🏨 تحليل الإقامة والسكن":"🏨 Accommodation comparison"}</h3><div className="empty">{isAr?"لا توجد بيانات سكن مصنفة بعد. سيظهر التحليل بعد أن يحدد المشاركون مكان الإقامة في التقييم النهائي.":"No classified accommodation data yet."}</div></div>;
+  const best=[...valid].sort((a,b)=>b.m-a.m)[0],worst=[...valid].sort((a,b)=>a.m-b.m)[0];
+  return <div className="card" style={{border:"2px solid #d8b561",background:"linear-gradient(135deg,#fffdf5,#fff)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 style={{margin:0,color:"#8a6518"}}>{isAr?"🏨 تحليل الإقامة والسكن":"🏨 Accommodation comparison"}</h2><p style={{color:"#64748b",margin:"6px 0"}}>{isAr?"مقارنة عادلة بين فندق المنار وشقق الإسكان العزيزية وفق مكان إقامة المشارك الفعلي.":"Fair comparison based on each participant's actual accommodation."}</p></div><span className="rbadge" style={{background:"#fff3cd",color:"#8a6518"}}>{isAr?`الأفضل: ${best.name}`:`Best: ${best.name}`}</span></div><div className="g2" style={{marginTop:16}}>{data.map(x=>{const good=x.m>=4.2;return <div key={x.name} className="card" style={{boxShadow:"none",borderTop:`5px solid ${x.name===best.name?"#059669":"#d97706"}`}}><h3 className="ctitle">{x.name}</h3><div className="g2"><MetricCard icon="⭐" color={good?TEAL:ORANGE} title={isAr?"المتوسط":"Mean"} value={x.vals.length?`${x.m.toFixed(2)}/5`:"—"} sub={isAr?`${x.count} مشارك`:`${x.count} participants`}/><MetricCard icon="📈" color={TEAL} title={isAr?"رضا مرتفع":"High rating"} value={`${x.high.toFixed(0)}%`} sub={isAr?`منخفض: ${x.low.toFixed(0)}%`:`Low: ${x.low.toFixed(0)}%`}/></div><div style={{height:16,background:"#e2e8f0",borderRadius:10,overflow:"hidden",marginTop:12}}><div style={{height:"100%",width:`${x.m/5*100}%`,background:x.name===best.name?"#0d9488":"#d97706"}}/></div></div>})}</div><div className="verdict" style={{marginTop:16,borderInlineStart:"5px solid #8a6518"}}><b>{isAr?"القراءة التنفيذية: ":"Executive reading: "}</b>{best.name===worst.name?(isAr?"تتوفر بيانات لسكن واحد فقط؛ يلزم جمع بيانات السكن الآخر قبل المقارنة.":"Only one accommodation group has data."):(isAr?`تفوق ${best.name} على ${worst.name} بفارق ${(best.m-worst.m).toFixed(2)} نقطة. يوصى بمراجعة أسباب الفجوة وملاحظات المشاركين في ${worst.name}.`:`${best.name} outperformed ${worst.name} by ${(best.m-worst.m).toFixed(2)} points.`)}</div></div>
+}
+
 function FinalAxisDetail({item,lang}){
   const isAr=lang==="ar";
   if(!item)return null;
@@ -974,6 +990,7 @@ export default function ReportsPage(){
 
               <LeadershipVisuals items={finalAxis} summary={finalSummary} lang={lang}/>
               <StrengthsGaps items={finalAxis} lang={lang}/>
+              <AccommodationComparison rows={finalRows} answers={finalAns} lang={lang}/>
 
               <div className="g2">
                 <div className="card"><h3 className="ctitle">{isAr?"📊 توزيع تقييمات البرنامج":"📊 Program Distribution"}</h3><DistributionChart stats={finalSummary} lang={lang}/></div>
