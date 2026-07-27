@@ -399,6 +399,24 @@ function ScorecardTable({title,items,lang,onSelect}){
     </div>
   );
 }
+function LeadershipVisuals({items,summary,lang}){
+  const isAr=lang==="ar";
+  if(!items?.length)return null;
+  const top=[...items].sort((a,b)=>b.mean-a.mean).slice(0,3);
+  const bottom=[...items].sort((a,b)=>a.mean-b.mean).slice(0,3);
+  const W=420,H=300,cx=210,cy=145,R=100;
+  const points=(vals)=>vals.map((v,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/vals.length);const r=R*(v/5);return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`}).join(" ");
+  const grid=(n)=>points(items.map(()=>n));
+  return <div className="card" style={{marginTop:16,border:"2px solid #dbe7ef",background:"linear-gradient(135deg,#fbfdff,#f4fbfa)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 style={{margin:0,color:NAVY}}>{isAr?"لوحة القيادة البصرية للتقرير الختامي":"Executive visual dashboard"}</h2><p style={{margin:"6px 0",color:"#64748b"}}>{isAr?"قراءة بصرية للمحاور النهائية مقابل المستهدف القيادي 4.20/5":"Final axes versus 4.20/5 leadership benchmark"}</p></div><span className="rbadge" style={{background:summary.mean>=TARGET?"#d1fae5":"#fef3c7",color:summary.mean>=TARGET?"#047857":"#b45309"}}>{isAr?`المؤشر العام ${summary.mean.toFixed(2)}/5`:`Overall ${summary.mean.toFixed(2)}/5`}</span></div>
+    <div className="g2" style={{marginTop:18}}>
+      <div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"المخطط الراداري للمحاور":"Axis radar"}</h3><svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxHeight:330}}>{[1,2,3,4,5].map(n=><polygon key={n} points={grid(n)} fill="none" stroke="#dbe5ec" strokeWidth="1"/>)}{items.map((x,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/items.length);const tx=cx+(R+23)*Math.cos(a),ty=cy+(R+23)*Math.sin(a);return <g key={x.axisLabel}><line x1={cx} y1={cy} x2={cx+R*Math.cos(a)} y2={cy+R*Math.sin(a)} stroke="#e5edf2"/><text x={tx} y={ty} textAnchor="middle" fontSize="11" fill="#45566e">{x.axisLabel}</text></g>})}<polygon points={points(items.map(x=>x.mean))} fill="rgba(13,148,136,.20)" stroke="#0d9488" strokeWidth="3"/>{items.map((x,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/items.length),r=R*(x.mean/5);return <circle key={i} cx={cx+r*Math.cos(a)} cy={cy+r*Math.sin(a)} r="4" fill="#0d9488"/>})}</svg></div>
+      <div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"خريطة أولويات القرار":"Decision priority map"}</h3><div style={{position:"relative",height:285,border:"1px solid #dbe5ec",borderRadius:12,background:"linear-gradient(135deg,#fff1f2 0 50%,#f0fdf4 50% 100%)",overflow:"hidden"}}><div style={{position:"absolute",inset:"50% 0 auto 0",borderTop:"1px dashed #94a3b8"}}/><div style={{position:"absolute",top:8,right:10,fontSize:11,color:"#b91c1c",fontWeight:800}}>{isAr?"مخاطر أعلى":"Higher risk"}</div><div style={{position:"absolute",bottom:8,left:10,fontSize:11,color:"#047857",fontWeight:800}}>{isAr?"أداء أعلى":"Higher performance"}</div>{items.map((x,i)=>{const left=Math.max(5,Math.min(87,(x.mean/5)*88));const top=Math.max(8,Math.min(82,100-x.lowPct));return <div key={i} title={`${x.axisLabel}: ${x.mean.toFixed(2)}/5`} style={{position:"absolute",left:`${left}%`,top:`${top}%`,transform:"translate(-50%,-50%)",width:34,height:34,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:11,fontWeight:900,color:"#fff",background:x.risk?.key==="HIGH"?"#dc2626":x.mean>=TARGET?"#059669":"#d97706",boxShadow:"0 3px 8px #0003"}}>{x.axisLabel.slice(0,2)}</div>})}</div><p style={{fontSize:12,color:"#64748b",lineHeight:1.7}}>{isAr?"كل نقطة تمثل محوراً؛ اليسار يعني أداء أقل، والأعلى يعني نسبة تقييمات منخفضة أكبر.":"Each dot is an axis: left means lower performance, top means more low ratings."}</p></div>
+    </div>
+    <div className="g2" style={{marginTop:16}}><div className="card" style={{boxShadow:"none",borderTop:"4px solid #059669"}}><h3 className="ctitle">{isAr?"أعلى المحاور أداءً":"Top strengths"}</h3>{top.map((x,i)=><div key={x.axisLabel} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #edf2f5"}}><span>{i+1}. {x.axisLabel}</span><b style={{color:"#047857"}}>{x.mean.toFixed(2)}/5</b></div>)}</div><div className="card" style={{boxShadow:"none",borderTop:"4px solid #dc2626"}}><h3 className="ctitle">{isAr?"أولويات التحسين":"Improvement priorities"}</h3>{bottom.map((x,i)=><div key={x.axisLabel} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #edf2f5"}}><span>{i+1}. {x.axisLabel}</span><b style={{color:x.mean<3?"#b91c1c":"#b45309"}}>{x.mean.toFixed(2)}/5</b></div>)}</div></div>
+  </div>
+}
+
 function FinalAxisDetail({item,lang}){
   const isAr=lang==="ar";
   if(!item)return null;
@@ -935,6 +953,7 @@ export default function ReportsPage(){
                 <MetricCard icon="⚠️" color={finalHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={finalHighRisk} sub={isAr?`منخفض 1–2: ${finalSummary.lowPct.toFixed(0)}%`:`Low 1–2: ${finalSummary.lowPct.toFixed(0)}%`}/>
               </div>
 
+              <LeadershipVisuals items={finalAxis} summary={finalSummary} lang={lang}/>
               <StrengthsGaps items={finalAxis} lang={lang}/>
 
               <div className="g2">
