@@ -16,7 +16,7 @@ export default function GuestEvaluationPage() {
   const [classroomId, setClassroomId] = useState('');
   const [answers, setAnswers] = useState({});
   
-  const [studentInfo, setStudentInfo] = useState({ full_name: '', phone: '', email: '', nationality: '', gender: '' });
+  const [studentInfo, setStudentInfo] = useState({ full_name: '', phone: '', email: '', nationality: '', gender: '', accommodation_type: '' });
   const [templateId, setTemplateId] = useState(null);
   
   const [loading, setLoading] = useState(true);
@@ -101,6 +101,10 @@ export default function GuestEvaluationPage() {
       setMessage('يرجى تعبئة الاسم، رقم الجوال، البريد الإلكتروني، والنوع الاجتماعي. / Please complete name, phone, email and gender.');
       return;
     }
+    if (kind === 'final' && !studentInfo.accommodation_type) {
+      setMessage('يرجى اختيار مكان الإقامة. / Please select your accommodation.');
+      return;
+    }
     if (kind === 'daily' && !classroomId) {
       setMessage('يرجى اختيار القاعة. / Please select your classroom.');
       return;
@@ -131,9 +135,8 @@ export default function GuestEvaluationPage() {
         return;
       }
 
-      // Store accommodation only for final evaluation, so housing comparison is fair.
-      const accommodationQuestion = questions.find(q => q.text_ar === 'أين كانت إقامتك أثناء البرنامج؟');
-      const accommodationType = kind === 'final' && accommodationQuestion ? (answers[accommodationQuestion.id] || null) : null;
+      // Accommodation is a required participant field in final evaluation.
+      const accommodationType = kind === 'final' ? studentInfo.accommodation_type : null;
 
       // إدخال التقييم مع بيانات الزائر في الأعمدة الجديدة
       const { data: ev, error } = await db.from('evaluations').insert({
@@ -229,6 +232,17 @@ export default function GuestEvaluationPage() {
                 <option value="أنثى">أنثى / Female</option>
               </select>
             </label>
+            {kind === 'final' && (
+              <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
+                مكان الإقامة أثناء البرنامج / Accommodation during the program *
+                <select required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", background: "#f8fafc" }} value={studentInfo.accommodation_type} onChange={e => setStudentInfo({ ...studentInfo, accommodation_type: e.target.value })}>
+                  <option value="">- اختر مكان الإقامة / Select accommodation -</option>
+                  <option value="فندق المنار">فندق المنار / Al-Manar Hotel</option>
+                  <option value="شقق الإسكان العزيزية">شقق الإسكان العزيزية / Al-Aziziyah Apartments</option>
+                  <option value="إقامة أخرى">إقامة أخرى / Other accommodation</option>
+                </select>
+              </label>
+            )}
             
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569", gridColumn: kind === 'daily' ? "1 / 2" : "1 / -1" }}>
               البرنامج التدريبي / Training program *
