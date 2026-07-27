@@ -358,7 +358,7 @@ function TrendChart({data,lang,color=BLUE}){
     </div>
   );
 }
-function ScorecardTable({title,items,lang}){
+function ScorecardTable({title,items,lang,onSelect}){
   const isAr=lang==="ar";
   if(!items?.length)return(<div className="card"><h3 className="ctitle">{title}</h3><div className="empty">{isAr?"لا توجد بيانات للمحاور.":"No axis data."}</div></div>);
   return(
@@ -381,7 +381,7 @@ function ScorecardTable({title,items,lang}){
             {items.map((x,i)=>{
               const gapCls=x.gap>0.5?"gapbad":x.gap>0?"gapmid":"gapok";
               return(
-              <tr key={i}>
+              <tr key={i} onClick={()=>onSelect&&onSelect(x)} style={{cursor:onSelect?"pointer":"default"}} title={onSelect?(isAr?"اضغط لعرض التحليل التفصيلي":"Click for detailed analysis"):""}>
                 <td className="td" style={{fontWeight:900,minWidth:140}}>{x.axisLabel}</td>
                 <td className="td ltr">{x.respondents}</td>
                 <td className="td ltr" style={{fontWeight:900}}>{x.mean.toFixed(2)}</td>
@@ -398,6 +398,23 @@ function ScorecardTable({title,items,lang}){
       </div>
     </div>
   );
+}
+function FinalAxisDetail({item,lang}){
+  const isAr=lang==="ar";
+  if(!item)return null;
+  const level=item.mean>=TARGET?{t:isAr?"ممتاز":"Excellent",c:"#047857",bg:"#ecfdf5"}:item.mean>=3.7?{t:isAr?"جيد":"Good",c:"#0f766e",bg:"#ecfeff"}:item.mean>=3?{t:isAr?"يحتاج متابعة":"Watch",c:"#b45309",bg:"#fffbeb"}:{t:isAr?"أولوية عاجلة":"Urgent",c:"#b91c1c",bg:"#fff1f2"};
+  const bars=(item.dist||[0,0,0,0,0]);
+  const action=item.mean>=TARGET?(isAr?"توثيق الممارسات الناجحة وتعميمها على البرامج القادمة.":"Document and scale the successful practice."):item.mean>=3.7?(isAr?"خطة تحسين مستهدفة لرفع المحور إلى المستوى الممتاز خلال الدورة القادمة.":"Targeted improvement plan for the next cycle."):(isAr?"خطة معالجة محددة بمسؤول واضح ومراجعة أسبوعية حتى بلوغ المستهدف.":"Named owner and weekly remediation review until target is met.");
+  return <div className="card" style={{border:"2px solid #0d9488",background:"linear-gradient(135deg,#f0fdfa,#fff)",marginTop:16}}>
+    <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}><div><h2 style={{margin:0,color:"#0f766e"}}>{isAr?"التحليل التفصيلي للمحور: ":"Axis drilldown: "}{item.axisLabel}</h2><p style={{color:"#64748b",margin:"6px 0 0"}}>{isAr?"يتم تحديث هذا التحليل من بيانات التقييم النهائي فقط.":"This drilldown uses final-evaluation data only."}</p></div><span className="rbadge" style={{background:level.bg,color:level.c,fontSize:14}}>{level.t}</span></div>
+    <div className="g4" style={{marginTop:18}}>
+      <MetricCard icon="📊" color={TEAL} title={isAr?"المتوسط":"Mean"} value={`${item.mean.toFixed(2)}/5`} sub={isAr?"نتيجة المحور":"Axis score"}/>
+      <MetricCard icon="👥" color={BLUE} title={isAr?"العينة":"Responses"} value={item.respondents} sub={isAr?"مشارك أجابوا على المحور":"Participants"}/>
+      <MetricCard icon="⭐" color={TEAL} title={isAr?"رضا مرتفع":"High ratings"} value={`${item.highPct.toFixed(0)}%`} sub={isAr?"تقييم 4 أو 5":"Ratings 4–5"}/>
+      <MetricCard icon="⚠️" color={item.gap>0?RED:TEAL} title={isAr?"الفجوة عن الهدف":"Gap to target"} value={`${Math.abs(item.gap).toFixed(2)}`} sub={item.gap>0?(isAr?"دون الهدف 4.20":"Below 4.20 target"):(isAr?"حقق المستهدف":"Target met")}/>
+    </div>
+    <div className="g2" style={{marginTop:12}}><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"توزيع الدرجات 1–5":"Rating distribution"}</h3>{bars.map((n,i)=>{const pct=item.measurements?Math.round(n/item.measurements*100):0;return <div key={i} style={{display:"grid",gridTemplateColumns:"80px 1fr 70px",gap:10,alignItems:"center",margin:"10px 0"}}><b>{i+1} / 5</b><div style={{height:12,background:"#e2e8f0",borderRadius:9,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:i<2?"#dc2626":i===2?"#d97706":"#0d9488"}}/></div><span>{n} ({pct}%)</span></div>})}</div><div className="card" style={{boxShadow:"none",background:level.bg}}><h3 className="ctitle">{isAr?"القراءة والتوصية":"Insight & action"}</h3><p style={{lineHeight:2,color:"#334155"}}>{isAr?`حقق محور ${item.axisLabel} متوسطاً قدره ${item.mean.toFixed(2)} من 5، بوسيط ${item.median.toFixed(2)} وانحراف معياري ${item.stddev.toFixed(2)}. بلغت نسبة التقييمات المنخفضة ${item.lowPct.toFixed(0)}%.`:`${item.axisLabel} achieved ${item.mean.toFixed(2)}/5 with median ${item.median.toFixed(2)} and standard deviation ${item.stddev.toFixed(2)}.`}</p><hr style={{border:0,borderTop:"1px solid #cbd5e1"}}/><p style={{lineHeight:1.8}}><b>{isAr?"الإجراء التنفيذي: ":"Action: "}</b>{action}</p><p><b>{isAr?"المسؤول: ":"Owner: "}</b>{item.owner|| (isAr?"إدارة البرنامج":"Program management")}</p><p><b>{isAr?"الأولوية: ":"Priority: "}</b>{item.risk?.label}</p></div></div>
+  </div>
 }
 function PriorityActions({items,lang}){
   const isAr=lang==="ar";
@@ -589,6 +606,7 @@ export default function ReportsPage(){
   const[partF,setPartF]=useState({trainerId:"ALL",classroomId:"ALL",from:"",to:"",q:""});
   const[partKind,setPartKind]=useState("ALL"); // ALL | DAILY | FINAL
   const[revealPII,setRevealPII]=useState(false);
+  const[selectedFinalAxis,setSelectedFinalAxis]=useState(null);
   const[certF,setCertF]=useState({trainerId:"ALL",classroomId:"ALL",...emptyRange,min:3});
 
   const[purgeOpen,setPurgeOpen]=useState(false);
@@ -924,7 +942,8 @@ export default function ReportsPage(){
                 <div className="card"><h3 className="ctitle">{isAr?"📈 اتجاه الرضا الختامي مقابل الهدف":"📈 Final Trend vs Target"}</h3><TrendChart data={finalTrend} lang={lang} color={TEAL}/></div>
               </div>
 
-              <ScorecardTable title={isAr?"🛡️ بطاقة أداء البرنامج":"🛡️ Program Scorecard"} items={finalAxis} lang={lang}/>
+              <ScorecardTable title={isAr?"🛡️ بطاقة أداء البرنامج — اضغط على أي محور للتحليل التفصيلي":"🛡️ Program Scorecard — click an axis for drilldown"} items={finalAxis} lang={lang} onSelect={setSelectedFinalAxis}/>
+              <FinalAxisDetail item={selectedFinalAxis||finalAxis[0]} lang={lang}/>
               <PriorityActions items={finalAxis} lang={lang}/>
 
               <ComparisonBars title={isAr?"🏫 مقارنة القاعات — التقييم الختامي":"🏫 Rooms Comparison — Final"} data={finalRoomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={finalSummary.mean} lang={lang}/>
@@ -975,7 +994,7 @@ export default function ReportsPage(){
                     <thead><tr><th className="th">{isAr?"الاسم":"Name"}</th><th className="th">{isAr?"الجوال":"Phone"}</th><th className="th">{isAr?"البريد":"Email"}</th></tr></thead>
                     <tbody>
                       {r.students.map((s,i)=>(
-                        <tr key={i}>
+                        <tr key={i} onClick={()=>onSelect&&onSelect(x)} style={{cursor:onSelect?"pointer":"default"}} title={onSelect?(isAr?"اضغط لعرض التحليل التفصيلي":"Click for detailed analysis"):""}>
                           <td className="td">{s.name||"—"}</td>
                           <td className="td ltr">{revealPII?(s.phone||"—"):maskPhone(s.phone)}</td>
                           <td className="td ltr" style={{color:BLUE}}>{revealPII?(s.email||"—"):maskEmail(s.email)}</td>
