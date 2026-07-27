@@ -98,11 +98,11 @@ export default function GuestEvaluationPage() {
   async function submit(e) {
     e.preventDefault();
     if (!studentInfo.full_name?.trim() || !studentInfo.phone?.trim() || !studentInfo.email?.trim() || !studentInfo.gender) {
-      setMessage('يرجى تعبئة الاسم، رقم الجوال، البريد الإلكتروني، والنوع الاجتماعي.');
+      setMessage('يرجى تعبئة الاسم، رقم الجوال، البريد الإلكتروني، والنوع الاجتماعي. / Please complete name, phone, email and gender.');
       return;
     }
     if (kind === 'daily' && !classroomId) {
-      setMessage('يرجى اختيار القاعة.');
+      setMessage('يرجى اختيار القاعة. / Please select your classroom.');
       return;
     }
     if (requiredMissing.length > 0) {
@@ -189,7 +189,7 @@ export default function GuestEvaluationPage() {
   return (
     <main style={{ direction: "rtl", fontFamily: "Cairo, sans-serif", maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
       <header style={{ textAlign: "center", marginBottom: "30px", paddingBottom: "20px", borderBottom: "2px solid #e2e8f0" }}>
-        <b style={{ fontSize: "20px", color: "#0f172a", display: "block" }}>{kind === 'daily' ? '📝 التقييم اليومي لجلسات التدريب' : '🏁 التقييم الختامي للبرنامج التدريبي'}</b>
+        <b style={{ fontSize: "20px", color: "#0f172a", display: "block" }}>{kind === 'daily' ? '📝 التقييم اليومي لجلسات التدريب / Daily Session Evaluation' : '🏁 التقييم الختامي للبرنامج التدريبي / Final Program Evaluation'}</b>
         <div style={{ fontSize: "13px", color: "#64748b", marginTop: "5px" }}>Evaluation Form - منصة الجودة</div>
       </header>
 
