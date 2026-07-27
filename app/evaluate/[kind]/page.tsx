@@ -131,6 +131,10 @@ export default function GuestEvaluationPage() {
         return;
       }
 
+      // Store accommodation only for final evaluation, so housing comparison is fair.
+      const accommodationQuestion = questions.find(q => q.text_ar === 'أين كانت إقامتك أثناء البرنامج؟');
+      const accommodationType = kind === 'final' && accommodationQuestion ? (answers[accommodationQuestion.id] || null) : null;
+
       // إدخال التقييم مع بيانات الزائر في الأعمدة الجديدة
       const { data: ev, error } = await db.from('evaluations').insert({
         program_id: programId,
@@ -139,6 +143,7 @@ export default function GuestEvaluationPage() {
         guest_email: guestEmail,
         guest_name: studentInfo.full_name.trim(),
         guest_phone: studentInfo.phone.trim(),
+        accommodation_type: accommodationType,
         classroom_id: kind === 'daily' ? classroomId : null,
         kind: kind === 'daily' ? 'DAILY' : 'FINAL',
         evaluation_date: today,
