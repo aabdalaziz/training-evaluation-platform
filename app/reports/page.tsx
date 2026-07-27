@@ -587,6 +587,7 @@ export default function ReportsPage(){
   const[dailyF,setDailyF]=useState({trainerId:"ALL",classroomId:"ALL",...emptyRange});
   const[finalF,setFinalF]=useState({trainerId:"ALL",classroomId:"ALL",...emptyRange});
   const[partF,setPartF]=useState({trainerId:"ALL",classroomId:"ALL",from:"",to:"",q:""});
+  const[partKind,setPartKind]=useState("ALL"); // ALL | DAILY | FINAL
   const[revealPII,setRevealPII]=useState(false);
   const[certF,setCertF]=useState({trainerId:"ALL",classroomId:"ALL",...emptyRange,min:3});
 
@@ -693,16 +694,18 @@ export default function ReportsPage(){
   const finalNarr=useMemo(()=>buildNarrative({summary:finalSummary,axis:finalAxis,trend:finalTrend,lang,kind:"final"}),[finalSummary,finalAxis,finalTrend,lang]);
 
   /* ===== Participants ===== */
-  const partRows=useMemo(()=>filterRowsBy(rows,classrooms,null,partF),[rows,classrooms,partF]);
+  const partRows=useMemo(()=>filterRowsBy(rows,classrooms,partKind==="ALL"?null:partKind,partF),[rows,classrooms,partF,partKind]);
   const partRoomData=useMemo(()=>{
     const byClass=new Map();
     for(const e of partRows){
-      if(!e.classroom_id)continue;
-      const s={name:e.guest_name||e.profile?.full_name||"—",email:e.guest_email||e.profile?.email||"",phone:e.guest_phone||e.profile?.phone||""};
-      const arr=byClass.get(e.classroom_id)||[];arr.push(s);byClass.set(e.classroom_id,arr);
+      // Final evaluations normally have no classroom. Keep them under a dedicated final group.
+      const groupId=e.classroom_id || "FINAL_PARTICIPANTS";
+      const s={name:e.guest_name||e.profile?.full_name||"—",email:e.guest_email||e.profile?.email||"",phone:e.guest_phone||e.profile?.phone||"",kind:e.kind||"FINAL"};
+      const arr=byClass.get(groupId)||[];arr.push(s);byClass.set(groupId,arr);
     }
     const out=[];const q=normTxt(partF.q);
-    for(const c of classrooms){
+    const groups=[...classrooms,{id:"FINAL_PARTICIPANTS",code:isAr?"مشاركو التقييم النهائي":"Final evaluation participants",trainer_id:null}];
+    for(const c of groups){
       const students=byClass.get(c.id)||[];
       if(!students.length)continue;
       const seen=new Set();const uniq=[];
@@ -944,13 +947,16 @@ export default function ReportsPage(){
 
               <div className="card noprint" style={{padding:16,display:"flex",gap:12,flexWrap:"wrap",justifyContent:"space-between",alignItems:"center"}}>
                 <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+                  <button className={`btn2 ${partKind==="ALL"?"active-filter":""}`} onClick={()=>setPartKind("ALL")}>📋 {isAr?"الكل":"All"}</button>
+                  <button className={`btn2 ${partKind==="DAILY"?"active-filter":""}`} onClick={()=>setPartKind("DAILY")}>📅 {isAr?"اليومي":"Daily"}</button>
+                  <button className={`btn2 ${partKind==="FINAL"?"active-filter":""}`} onClick={()=>setPartKind("FINAL")}>🏁 {isAr?"النهائي":"Final"}</button>
                   <button className="btn2" onClick={()=>setRevealPII(v=>!v)}>🔒 {revealPII?t.hide:t.reveal}</button>
                   <button className="btn2" onClick={()=>{
                     const flat=[];
                     for(const r of partRoomData)for(const s of r.students)flat.push([r.code,r.trainer,s.name,s.phone,s.email]);
                     downloadCSV("participants.csv",[[isAr?"القاعة":"Room",isAr?"المدرب":"Trainer",isAr?"الاسم":"Name",isAr?"الجوال":"Phone",isAr?"البريد":"Email"],...flat]);
                   }}>⬇️ {t.export}</button>
-                  <button className="btn2" onClick={()=>{setPartF({trainerId:"ALL",classroomId:"ALL",from:"",to:"",q:""});setRevealPII(false);}}>🧹 {t.clear}</button>
+                  <button className="btn2" onClick={()=>{setPartF({trainerId:"ALL",classroomId:"ALL",from:"",to:"",q:""});setPartKind("ALL");setRevealPII(false);}}>🧹 {t.clear}</button>
                   <button className="btn2" style={{borderColor:"#fca5a5",color:RED}} onClick={()=>setPurgeOpen(true)}>🗑️ {t.purge}</button>
                 </div>
                 <div className="badge" style={{background:"#f1f5f9",color:"#0f172a"}}>{isAr?"قاعات":"Rooms"}: {partRoomData.length}</div>
@@ -959,7 +965,7 @@ export default function ReportsPage(){
               {partRoomData.map(r=>(
                 <div key={r.id} className="card" style={{padding:0,overflow:"hidden"}}>
                   <div style={{background:"#f8fafc",padding:16,borderBottom:"1px solid #e2e8f0",display:"flex",gap:16,alignItems:"center"}}>
-                    <b style={{fontSize:18,color:TEAL}}>{(isAr?"قاعة ":"Room ")+r.code}</b>
+                    <b style={{fontSize:18,color:TEAL}}>{r.id==="FINAL_PARTICIPANTS"?r.code:((isAr?"قاعة ":"Room ")+r.code)}</b>
                     <span style={{color:"#64748b"}}>{(isAr?"المدرب: ":"Trainer: ")+r.trainer}</span>
                     <span style={{background:"#dbeafe",color:"#1d4ed8",padding:"4px 12px",borderRadius:999,fontSize:12,fontWeight:900,marginInlineStart:"auto"}}>
                       {r.students.length} {isAr?"مشارك":"participants"}
