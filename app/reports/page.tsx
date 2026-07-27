@@ -434,6 +434,24 @@ function FinalAxisDetail({item,lang}){
     <div className="g2" style={{marginTop:12}}><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"توزيع الدرجات 1–5":"Rating distribution"}</h3>{bars.map((n,i)=>{const pct=item.measurements?Math.round(n/item.measurements*100):0;return <div key={i} style={{display:"grid",gridTemplateColumns:"80px 1fr 70px",gap:10,alignItems:"center",margin:"10px 0"}}><b>{i+1} / 5</b><div style={{height:12,background:"#e2e8f0",borderRadius:9,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:i<2?"#dc2626":i===2?"#d97706":"#0d9488"}}/></div><span>{n} ({pct}%)</span></div>})}</div><div className="card" style={{boxShadow:"none",background:level.bg}}><h3 className="ctitle">{isAr?"القراءة والتوصية":"Insight & action"}</h3><p style={{lineHeight:2,color:"#334155"}}>{isAr?`حقق محور ${item.axisLabel} متوسطاً قدره ${item.mean.toFixed(2)} من 5، بوسيط ${item.median.toFixed(2)} وانحراف معياري ${item.stddev.toFixed(2)}. بلغت نسبة التقييمات المنخفضة ${item.lowPct.toFixed(0)}%.`:`${item.axisLabel} achieved ${item.mean.toFixed(2)}/5 with median ${item.median.toFixed(2)} and standard deviation ${item.stddev.toFixed(2)}.`}</p><hr style={{border:0,borderTop:"1px solid #cbd5e1"}}/><p style={{lineHeight:1.8}}><b>{isAr?"الإجراء التنفيذي: ":"Action: "}</b>{action}</p><p><b>{isAr?"المسؤول: ":"Owner: "}</b>{item.owner|| (isAr?"إدارة البرنامج":"Program management")}</p><p><b>{isAr?"الأولوية: ":"Priority: "}</b>{item.risk?.label}</p></div></div>
   </div>
 }
+function AllFinalAxisPrintDetails({items,lang}){
+  const isAr=lang==="ar";
+  if(!items?.length)return null;
+  return <div className="print-axis-all">
+    <div className="print-title">{isAr?"الملحق التحليلي: القراءة التفصيلية لجميع محاور التقييم النهائي":"Analytical Appendix: Detailed Reading of All Final Axes"}</div>
+    {items.map((item,i)=>{
+      const level=item.mean>=TARGET?(isAr?"ممتاز":"Excellent"):item.mean>=3.7?(isAr?"جيد":"Good"):item.mean>=3?(isAr?"يحتاج متابعة":"Watch"):(isAr?"أولوية عاجلة":"Urgent");
+      const action=item.mean>=TARGET?(isAr?"توثيق الممارسات الناجحة وتعميمها.":"Document and scale successful practice."):item.mean>=3.7?(isAr?"خطة تحسين مستهدفة للوصول إلى مستوى التميز.":"Targeted plan to reach excellence."):(isAr?"خطة معالجة بمسؤول واضح ومراجعة أسبوعية.":"Remediation plan with named owner and weekly review.");
+      return <article key={item.axisLabel} className="print-axis-card">
+        <div className="print-axis-head"><b>{i+1}. {item.axisLabel}</b><span>{level}</span></div>
+        <div className="print-axis-kpis"><span>{isAr?"المتوسط":"Mean"}: <b>{item.mean.toFixed(2)}/5</b></span><span>{isAr?"الوسيط":"Median"}: <b>{item.median.toFixed(2)}</b></span><span>{isAr?"العينة":"Sample"}: <b>{item.respondents}</b></span><span>{isAr?"رضا مرتفع":"High ratings"}: <b>{item.highPct.toFixed(0)}%</b></span><span>{isAr?"الفجوة":"Gap"}: <b>{Math.abs(item.gap).toFixed(2)}</b></span></div>
+        <p>{isAr?`حقق محور ${item.axisLabel} متوسطاً قدره ${item.mean.toFixed(2)} من 5. بلغت نسبة التقييمات المرتفعة ${item.highPct.toFixed(0)}%، ومنخفضة التقييم ${item.lowPct.toFixed(0)}%.`:`${item.axisLabel} scored ${item.mean.toFixed(2)}/5 with ${item.highPct.toFixed(0)}% high ratings and ${item.lowPct.toFixed(0)}% low ratings.`}</p>
+        <p><b>{isAr?"التوصية التنفيذية: ":"Action: "}</b>{action} <b>{isAr?"المسؤول: ":"Owner: "}</b>{item.owner|| (isAr?"إدارة البرنامج":"Program management")}.</p>
+      </article>
+    })}
+  </div>
+}
+
 function PriorityActions({items,lang}){
   const isAr=lang==="ar";
   const acts=(items||[]).filter(x=>x.risk.key==="HIGH"||x.risk.key==="MED").slice(0,5);
@@ -963,6 +981,7 @@ export default function ReportsPage(){
 
               <ScorecardTable title={isAr?"🛡️ بطاقة أداء البرنامج — اضغط على أي محور للتحليل التفصيلي":"🛡️ Program Scorecard — click an axis for drilldown"} items={finalAxis} lang={lang} onSelect={setSelectedFinalAxis}/>
               <FinalAxisDetail item={selectedFinalAxis||finalAxis[0]} lang={lang}/>
+              <AllFinalAxisPrintDetails items={finalAxis} lang={lang}/>
               <PriorityActions items={finalAxis} lang={lang}/>
 
               <ComparisonBars title={isAr?"🏫 مقارنة القاعات — التقييم الختامي":"🏫 Rooms Comparison — Final"} data={finalRoomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={finalSummary.mean} lang={lang}/>
@@ -1275,5 +1294,5 @@ const CSS=`
 .verdict{flex-direction:column;align-items:flex-start;}
 .vscore{margin-inline-start:0;}
 }
-@media print{.side,.noprint{display:none !important;}.rw{padding:0;background:#fff;}.card,.verdict,.rep-meta{box-shadow:none !important;break-inside:avoid;}}
+.print-axis-all{display:none}.print-axis-card{border:1px solid #cbd5e1;border-radius:8px;padding:14px;margin:12px 0;background:#fff}.print-axis-head{display:flex;justify-content:space-between;border-bottom:1px solid #e2e8f0;padding-bottom:8px;color:#0f3b63}.print-axis-kpis{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin:10px 0}.print-axis-card p{font-size:13px;line-height:1.8;margin:7px 0;color:#334155}@media print{.side,.noprint{display:none !important;}.rw{padding:0;background:#fff;}.card,.verdict,.rep-meta{box-shadow:none !important;break-inside:avoid;}.print-axis-all{display:block;break-before:page}.print-axis-card{break-inside:avoid;}}
 `;
