@@ -194,6 +194,12 @@ function buildAxisStats(ca,lang){
   }
   return out.sort((a,b)=>b.risk.score-a.risk.score||b.lowPct-a.lowPct||a.mean-b.mean);
 }
+function buildIndicatorStats(ca,lang){
+  const groups=new Map();
+  for(const a of ca||[]){const v=safeRating(a.rating_value);if(v===null)continue;const q=a.question||{};const key=q.id||a.question_id;const g=groups.get(key)||{id:key,indicator:q.text_ar||q.text_en||"—",axis:q.section_ar||"عام",values:[],resp:new Set()};g.values.push(v);g.resp.add(a.evaluation_id);groups.set(key,g);}
+  return Array.from(groups.values()).map(g=>{const st=buildStats(g.values,g.resp.size);const risk=riskLevel(st,lang);const rec=recFor(g.axis,g.indicator,risk.key,lang);return{...st,indicator:g.indicator,axis:g.axis,risk,perf:perfLevel(st.mean,lang),gap:TARGET-st.mean,recommendation:rec.text,owner:rec.owner,days:rec.days};}).sort((a,b)=>b.risk.score-a.risk.score||a.mean-b.mean);
+}
+
 function buildTrend(rows,lang){
   const valid=(rows||[]).filter(r=>r?.submitted_at&&safeRating(r?.overall_rating)!==null)
     .map(r=>({...r,d:new Date(r.submitted_at)})).filter(r=>!isNaN(r.d.getTime()));
@@ -431,6 +437,13 @@ function AccommodationComparison({rows,answers,lang}){
   const valid=data.filter(x=>x.vals.length);if(!valid.length)return <div className="card"><h3 className="ctitle">{isAr?"🏨 تحليل الإقامة والسكن":"🏨 Accommodation comparison"}</h3><div className="empty">{isAr?"لا توجد بيانات سكن مصنفة بعد. سيظهر التحليل بعد أن يحدد المشاركون مكان الإقامة في التقييم النهائي.":"No classified accommodation data yet."}</div></div>;
   const best=[...valid].sort((a,b)=>b.m-a.m)[0],worst=[...valid].sort((a,b)=>a.m-b.m)[0];
   return <div className="card" style={{border:"2px solid #d8b561",background:"linear-gradient(135deg,#fffdf5,#fff)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 style={{margin:0,color:"#8a6518"}}>{isAr?"🏨 تحليل الإقامة والسكن":"🏨 Accommodation comparison"}</h2><p style={{color:"#64748b",margin:"6px 0"}}>{isAr?"مقارنة عادلة بين فندق المنار وشقق الإسكان العزيزية وفق مكان إقامة المشارك الفعلي.":"Fair comparison based on each participant's actual accommodation."}</p></div><span className="rbadge" style={{background:"#fff3cd",color:"#8a6518"}}>{isAr?`الأفضل: ${best.name}`:`Best: ${best.name}`}</span></div><div className="g2" style={{marginTop:16}}>{data.map(x=>{const good=x.m>=4.2;return <div key={x.name} className="card" style={{boxShadow:"none",borderTop:`5px solid ${x.name===best.name?"#059669":"#d97706"}`}}><h3 className="ctitle">{x.name}</h3><div className="g2"><MetricCard icon="⭐" color={good?TEAL:ORANGE} title={isAr?"المتوسط":"Mean"} value={x.vals.length?`${x.m.toFixed(2)}/5`:"—"} sub={isAr?`${x.count} مشارك`:`${x.count} participants`}/><MetricCard icon="📈" color={TEAL} title={isAr?"رضا مرتفع":"High rating"} value={`${x.high.toFixed(0)}%`} sub={isAr?`منخفض: ${x.low.toFixed(0)}%`:`Low: ${x.low.toFixed(0)}%`}/></div><div style={{height:16,background:"#e2e8f0",borderRadius:10,overflow:"hidden",marginTop:12}}><div style={{height:"100%",width:`${x.m/5*100}%`,background:x.name===best.name?"#0d9488":"#d97706"}}/></div></div>})}</div><div className="verdict" style={{marginTop:16,borderInlineStart:"5px solid #8a6518"}}><b>{isAr?"القراءة التنفيذية: ":"Executive reading: "}</b>{best.name===worst.name?(isAr?"تتوفر بيانات لسكن واحد فقط؛ يلزم جمع بيانات السكن الآخر قبل المقارنة.":"Only one accommodation group has data."):(isAr?`تفوق ${best.name} على ${worst.name} بفارق ${(best.m-worst.m).toFixed(2)} نقطة. يوصى بمراجعة أسباب الفجوة وملاحظات المشاركين في ${worst.name}.`:`${best.name} outperformed ${worst.name} by ${(best.m-worst.m).toFixed(2)} points.`)}</div></div>
+}
+
+function IndicatorAnalysis({items,lang}){
+  const isAr=lang==="ar";
+  if(!items?.length)return null;
+  const gaps=[...items].sort((a,b)=>b.gap-a.gap).slice(0,10), strengths=[...items].sort((a,b)=>b.mean-a.mean).slice(0,5);
+  return <div className="card" style={{marginTop:16,border:"2px solid #2563eb",background:"linear-gradient(135deg,#f8fbff,#fff)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 style={{margin:0,color:"#1d4ed8"}}>{isAr?"🔎 تحليل المؤشرات التفصيلية":"🔎 Indicator-level analysis"}</h2><p style={{margin:"6px 0",color:"#64748b"}}>{isAr?"التحليل لكل سؤال على حدة؛ المحور للتصنيف فقط.":"Each question is analyzed independently; axes are only for grouping."}</p></div><span className="rbadge" style={{background:"#dbeafe",color:"#1d4ed8"}}>{items.length} {isAr?"مؤشر":"indicators"}</span></div><div className="g2" style={{marginTop:16}}><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"أكبر فجوات الأداء":"Largest performance gaps"}</h3>{gaps.map((x,i)=><div key={x.id} style={{padding:"10px 0",borderBottom:"1px solid #e5edf5"}}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{i+1}. {x.indicator}</b><span style={{color:x.gap>0.5?"#b91c1c":"#b45309",fontWeight:900}}>{x.mean.toFixed(2)}/5</span></div><small style={{color:"#64748b"}}>{x.axis} · {isAr?"الفجوة":"Gap"}: {Math.max(0,x.gap).toFixed(2)} · {isAr?"منخفض":"Low"}: {x.lowPct.toFixed(0)}%</small><div style={{height:9,background:"#e2e8f0",borderRadius:8,overflow:"hidden",marginTop:6}}><div style={{height:"100%",width:`${x.mean/5*100}%`,background:x.gap>0.5?"#dc2626":"#d97706"}}/></div></div>)}</div><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"أقوى المؤشرات":"Top performing indicators"}</h3>{strengths.map((x,i)=><div key={x.id} style={{padding:"10px 0",borderBottom:"1px solid #e5edf5"}}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{i+1}. {x.indicator}</b><span style={{color:"#047857",fontWeight:900}}>{x.mean.toFixed(2)}/5</span></div><small style={{color:"#64748b"}}>{x.axis} · {isAr?"رضا مرتفع":"High rating"}: {x.highPct.toFixed(0)}%</small><div style={{height:9,background:"#e2e8f0",borderRadius:8,overflow:"hidden",marginTop:6}}><div style={{height:"100%",width:`${x.mean/5*100}%`,background:"#059669"}}/></div></div>)}</div></div><div className="twrap" style={{marginTop:16}}><table className="tbl"><thead><tr><th className="th">{isAr?"المحور":"Axis"}</th><th className="th">{isAr?"المؤشر / السؤال":"Indicator / Question"}</th><th className="th">N</th><th className="th">{isAr?"المتوسط":"Mean"}</th><th className="th">{isAr?"الوسيط":"Median"}</th><th className="th">{isAr?"الانحراف":"SD"}</th><th className="th">{isAr?"منخفض":"Low"}</th><th className="th">{isAr?"مرتفع":"High"}</th><th className="th">{isAr?"الفجوة":"Gap"}</th><th className="th">{isAr?"القرار":"Decision"}</th></tr></thead><tbody>{items.map(x=><tr key={x.id}><td className="td">{x.axis}</td><td className="td" style={{fontWeight:800,minWidth:250}}>{x.indicator}</td><td className="td ltr">{x.respondents}</td><td className="td ltr">{x.mean.toFixed(2)}</td><td className="td ltr">{x.median.toFixed(2)}</td><td className="td ltr">{x.stddev.toFixed(2)}</td><td className="td ltr">{x.lowPct.toFixed(0)}%</td><td className="td ltr">{x.highPct.toFixed(0)}%</td><td className="td ltr" style={{color:x.gap>0.5?"#b91c1c":"#047857"}}>{Math.abs(x.gap).toFixed(2)}</td><td className="td"><span className="rbadge" style={{background:x.risk.bg,color:x.risk.fg}}>{x.risk.label}</span></td></tr>)}</tbody></table></div></div>
 }
 
 function FinalAxisDetail({item,lang}){
@@ -756,6 +769,7 @@ export default function ReportsPage(){
   const finalAns=useMemo(()=>answersFor(cleanAnswers,finalIds),[cleanAnswers,finalIds]);
   const finalSummary=useMemo(()=>summaryFrom(finalAns,lang),[finalAns,lang]);
   const finalAxis=useMemo(()=>buildAxisStats(finalAns,lang),[finalAns,lang]);
+  const finalIndicators=useMemo(()=>buildIndicatorStats(finalAns,lang),[finalAns,lang]);
   const finalTrend=useMemo(()=>buildTrend(finalRows,lang),[finalRows,lang]);
   const finalRoomRank=useMemo(()=>buildRoomRanking(finalAns,finalRows,classrooms,trainers),[finalAns,finalRows,classrooms,trainers]);
   const finalTrainerRank=useMemo(()=>buildTrainerRanking(finalAns,finalRows,classrooms,trainers),[finalAns,finalRows,classrooms,trainers]);
@@ -990,6 +1004,7 @@ export default function ReportsPage(){
 
               <LeadershipVisuals items={finalAxis} summary={finalSummary} lang={lang}/>
               <StrengthsGaps items={finalAxis} lang={lang}/>
+              <IndicatorAnalysis items={finalIndicators} lang={lang}/>
               <AccommodationComparison rows={finalRows} answers={finalAns} lang={lang}/>
 
               <div className="g2">
