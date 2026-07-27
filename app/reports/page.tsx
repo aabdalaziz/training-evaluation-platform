@@ -1013,7 +1013,7 @@ export default function ReportsPage(){
                     <thead><tr><th className="th">{isAr?"الاسم":"Name"}</th><th className="th">{isAr?"الجوال":"Phone"}</th><th className="th">{isAr?"البريد":"Email"}</th></tr></thead>
                     <tbody>
                       {r.students.map((s,i)=>(
-                        <tr key={i} onClick={()=>onSelect&&onSelect(x)} style={{cursor:onSelect?"pointer":"default"}} title={onSelect?(isAr?"اضغط لعرض التحليل التفصيلي":"Click for detailed analysis"):""}>
+                        <tr key={i}>
                           <td className="td">{s.name||"—"}</td>
                           <td className="td ltr">{revealPII?(s.phone||"—"):maskPhone(s.phone)}</td>
                           <td className="td ltr" style={{color:BLUE}}>{revealPII?(s.email||"—"):maskEmail(s.email)}</td>
