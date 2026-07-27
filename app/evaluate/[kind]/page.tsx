@@ -16,7 +16,7 @@ export default function GuestEvaluationPage() {
   const [classroomId, setClassroomId] = useState('');
   const [answers, setAnswers] = useState({});
   
-  const [studentInfo, setStudentInfo] = useState({ full_name: '', phone: '', email: '', nationality: '' });
+  const [studentInfo, setStudentInfo] = useState({ full_name: '', phone: '', email: '', nationality: '', gender: '' });
   const [templateId, setTemplateId] = useState(null);
   
   const [loading, setLoading] = useState(true);
@@ -97,8 +97,8 @@ export default function GuestEvaluationPage() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!studentInfo.full_name?.trim() || !studentInfo.phone?.trim() || !studentInfo.email?.trim()) {
-      setMessage('يرجى تعبئة الاسم، رقم الجوال، والبريد الإلكتروني.');
+    if (!studentInfo.full_name?.trim() || !studentInfo.phone?.trim() || !studentInfo.email?.trim() || !studentInfo.gender) {
+      setMessage('يرجى تعبئة الاسم، رقم الجوال، البريد الإلكتروني، والنوع الاجتماعي.');
       return;
     }
     if (kind === 'daily' && !classroomId) {
@@ -143,6 +143,7 @@ export default function GuestEvaluationPage() {
         guest_email: guestEmail,
         guest_name: studentInfo.full_name.trim(),
         guest_phone: studentInfo.phone.trim(),
+        guest_gender: studentInfo.gender,
         accommodation_type: accommodationType,
         classroom_id: kind === 'daily' ? classroomId : null,
         kind: kind === 'daily' ? 'DAILY' : 'FINAL',
@@ -219,6 +220,14 @@ export default function GuestEvaluationPage() {
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
               الجنسية
               <input style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} value={studentInfo.nationality} onChange={e => setStudentInfo({ ...studentInfo, nationality: e.target.value })} />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
+              النوع الاجتماعي *
+              <select required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", background: "#f8fafc" }} value={studentInfo.gender} onChange={e => setStudentInfo({ ...studentInfo, gender: e.target.value })}>
+                <option value="">- اختر النوع الاجتماعي -</option>
+                <option value="ذكر">ذكر</option>
+                <option value="أنثى">أنثى</option>
+              </select>
             </label>
             
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569", gridColumn: kind === 'daily' ? "1 / 2" : "1 / -1" }}>
