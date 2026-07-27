@@ -194,7 +194,7 @@ export default function GuestEvaluationPage() {
       </header>
 
       <form onSubmit={submit}>
-        <p style={{ textAlign: "center", color: "#64748b", fontSize: "14px", marginBottom: "30px" }}>يُرجى تعبئة البيانات بدقة. الحقول المعلَّمة (*) إلزامية.</p>
+        <p style={{ textAlign: "center", color: "#64748b", fontSize: "14px", marginBottom: "30px" }}>يُرجى تعبئة البيانات بدقة. الحقول المعلَّمة (*) إلزامية. / Please complete all required fields marked (*).</p>
         
         {message && (
           <div style={{ padding: "16px", borderRadius: "12px", marginBottom: "20px", fontWeight: "bold", textAlign: "center", background: message.includes('⚠️') ? "#fee2e2" : "#f1f5f9", color: message.includes('⚠️') ? "#b91c1c" : "#0f172a" }}>
@@ -203,46 +203,46 @@ export default function GuestEvaluationPage() {
         )}
 
         <section style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", marginBottom: "20px", boxShadow: "0 4px 6px rgba(0,0,0,0.02)" }}>
-          <h2 style={{ fontSize: "16px", color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "10px", marginBottom: "16px" }}>بيانات المشارك الأساسية</h2>
+          <h2 style={{ fontSize: "16px", color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "10px", marginBottom: "16px" }}>بيانات المشارك الأساسية / Participant Information</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
-              الاسم الكامل الثلاثي *
+              الاسم الكامل الثلاثي / Full name *
               <input required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} value={studentInfo.full_name} onChange={e => setStudentInfo({ ...studentInfo, full_name: e.target.value })} />
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
-              البريد الإلكتروني (لتأكيد المشاركة) *
+              البريد الإلكتروني لتأكيد المشاركة / Email address *
               <input required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", direction: "ltr" }} type="email" placeholder="example@email.com" value={studentInfo.email} onChange={e => setStudentInfo({ ...studentInfo, email: e.target.value })} />
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
-              رقم الجوال *
+              رقم الجوال / Mobile number *
               <input required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", direction: "ltr" }} placeholder="05xxxxxxxx" value={studentInfo.phone} onChange={e => setStudentInfo({ ...studentInfo, phone: e.target.value })} />
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
-              الجنسية
+              الجنسية / Nationality
               <input style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none" }} value={studentInfo.nationality} onChange={e => setStudentInfo({ ...studentInfo, nationality: e.target.value })} />
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
-              النوع الاجتماعي *
+              النوع الاجتماعي / Gender *
               <select required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", background: "#f8fafc" }} value={studentInfo.gender} onChange={e => setStudentInfo({ ...studentInfo, gender: e.target.value })}>
-                <option value="">- اختر النوع الاجتماعي -</option>
-                <option value="ذكر">ذكر</option>
-                <option value="أنثى">أنثى</option>
+                <option value="">- اختر النوع الاجتماعي / Select gender -</option>
+                <option value="ذكر">ذكر / Male</option>
+                <option value="أنثى">أنثى / Female</option>
               </select>
             </label>
             
             <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569", gridColumn: kind === 'daily' ? "1 / 2" : "1 / -1" }}>
-              البرنامج التدريبي *
+              البرنامج التدريبي / Training program *
               <select required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", background: "#f8fafc" }} value={programId} onChange={e => setProgramId(e.target.value)}>
-                <option value="">- اختر البرنامج -</option>
+                <option value="">- اختر البرنامج / Select program -</option>
                 {programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}
               </select>
             </label>
             
             {kind === 'daily' && (
               <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "13px", fontWeight: "bold", color: "#475569" }}>
-                القاعة الدراسية التي حضرت بها *
+                القاعة الدراسية التي حضرت بها / Classroom attended *
                 <select required style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", outline: "none", background: "#f8fafc" }} value={classroomId} onChange={e => setClassroomId(e.target.value)}>
-                  <option value="">- اختر القاعة -</option>
+                  <option value="">- اختر القاعة / Select classroom -</option>
                   {classrooms.map(c => <option key={c.id} value={c.id}>قاعة {c.code} {c.level ? `(${c.level})` : ''}</option>)}
                 </select>
               </label>
@@ -306,8 +306,8 @@ export default function GuestEvaluationPage() {
                   </div>
                 )}
                 
-                {q.kind === 'SHORT_TEXT' && <input placeholder="اكتب إجابتك هنا..." value={answers[q.id] || ''} onChange={e => set(q.id, e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", marginTop: "8px" }} />}
-                {q.kind === 'LONG_TEXT' && <textarea placeholder="اكتب ملاحظاتك وتفاصيلها هنا..." value={answers[q.id] || ''} onChange={e => set(q.id, e.target.value)} rows={4} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", marginTop: "8px", resize: "vertical" }} />}
+                {q.kind === 'SHORT_TEXT' && <input placeholder="اكتب إجابتك هنا... / Write your answer here..." value={answers[q.id] || ''} onChange={e => set(q.id, e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", marginTop: "8px" }} />}
+                {q.kind === 'LONG_TEXT' && <textarea placeholder="اكتب ملاحظاتك وتفاصيلها هنا... / Write your comments here..." value={answers[q.id] || ''} onChange={e => set(q.id, e.target.value)} rows={4} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #cbd5e1", outline: "none", marginTop: "8px", resize: "vertical" }} />}
               </div>
             ))}
           </section>
