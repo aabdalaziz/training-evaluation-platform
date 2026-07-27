@@ -1,3 +1,40 @@
-/* Global navigation — add this to app/style.css */
-.global-nav{min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:9px max(18px,calc((100% - 1280px)/2));background:#fff;border-bottom:1px solid #dfe7ef;box-shadow:0 2px 10px rgba(16,44,85,.05);position:sticky;top:0;z-index:100}
-.global-brand{font-weight:900;color:#102c55;text-decoration:none;white-space:nowrap}.global-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.global-btn{border:1px solid #ced9e6;background:#fff;border-radius:8px;padding:8px 12px;color:#183b70;font:inherit;font-size:13px;font-weight:800;text-decoration:none;cursor:pointer}.global-btn:hover{background:#edf6f7;border-color:#078981}.global-btn.danger{color:#b42318;border-color:#f1b8b3}.global-btn.danger:hover{background:#fff1f0}@media(max-width:560px){.global-brand span{display:none}.global-nav{padding:8px 12px}.global-btn{padding:7px 9px;font-size:12px}}
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabase/client';
+
+export default function GlobalNavigation() {
+  const db = supabase();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    db.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+    const { data: listener } = db.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  async function logout() {
+    await db.auth.signOut();
+    router.push('/');
+    router.refresh();
+  }
+
+  return (
+    <nav className="global-nav" aria-label="التنقل العام">
+      <Link href="/" className="global-brand">🏛️ <span>منصة التقويم</span></Link>
+      <div className="global-actions">
+        {pathname !== '/' && <Link href="/" className="global-btn">⌂ الرئيسية</Link>}
+        {loggedIn ? <>
+          {pathname !== '/dashboard' && <Link href="/dashboard" className="global-btn">📊 لوحة التحكم</Link>}
+          <button type="button" className="global-btn danger" onClick={logout}>🚪 خروج</button>
+        </> : pathname !== '/login' ? <Link href="/login" className="global-btn">🔐 دخول الإدارة</Link> : null}
+      </div>
+    </nav>
+  );
+}
