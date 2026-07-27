@@ -417,6 +417,13 @@ function LeadershipVisuals({items,summary,lang}){
   </div>
 }
 
+function GenderComparison({rows,lang}){
+  const isAr=lang==="ar";
+  const groups=["ذكر","أنثى"].map(g=>{const x=(rows||[]).filter(r=>r.guest_gender===g&&safeRating(r.overall_rating)!==null);const vals=x.map(r=>Number(r.overall_rating));return{g,count:x.length,avg:mean(vals),high:vals.length?vals.filter(v=>v>=4).length/vals.length*100:0}});
+  const valid=groups.filter(x=>x.count);if(!valid.length)return <div className="card"><h3 className="ctitle">{isAr?"تحليل النوع الاجتماعي":"Gender analysis"}</h3><div className="empty">{isAr?"لا توجد بيانات نوع اجتماعي بعد. سيظهر التحليل بعد إرسال تقييمات جديدة.":"No gender data yet."}</div></div>;
+  return <div className="card" style={{border:"2px solid #7c3aed",background:"linear-gradient(135deg,#faf5ff,#fff)"}}><h2 style={{margin:0,color:"#6d28d9"}}>{isAr?"👥 تحليل النتائج حسب النوع الاجتماعي":"👥 Gender-based analysis"}</h2><p style={{color:"#64748b"}}>{isAr?"تظهر المقارنة المجمعة فقط ولا تظهر بيانات المشاركين الشخصية.":"Aggregate comparison only; personal data is not displayed."}</p><div className="g2">{groups.map(x=><div key={x.g} className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{x.g}</h3><div className="g2"><MetricCard icon="👥" color={BLUE} title={isAr?"العينة":"Sample"} value={x.count} sub={isAr?"تقييم نهائي":"Final evaluations"}/><MetricCard icon="⭐" color="#7c3aed" title={isAr?"المتوسط":"Mean"} value={x.count?`${x.avg.toFixed(2)}/5`:"—"} sub={isAr?`رضا مرتفع ${x.high.toFixed(0)}%`:""}/></div><div style={{height:16,background:"#e9d5ff",borderRadius:10,overflow:"hidden",marginTop:12}}><div style={{height:"100%",width:`${x.count?x.avg/5*100:0}%`,background:"#7c3aed"}}/></div></div>)}</div></div>
+}
+
 function FinalAxisDetail({item,lang}){
   const isAr=lang==="ar";
   if(!item)return null;
@@ -974,6 +981,7 @@ export default function ReportsPage(){
 
               <LeadershipVisuals items={finalAxis} summary={finalSummary} lang={lang}/>
               <StrengthsGaps items={finalAxis} lang={lang}/>
+              <GenderComparison rows={finalRows} lang={lang}/>
 
               <div className="g2">
                 <div className="card"><h3 className="ctitle">{isAr?"📊 توزيع تقييمات البرنامج":"📊 Program Distribution"}</h3><DistributionChart stats={finalSummary} lang={lang}/></div>
