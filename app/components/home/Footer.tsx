@@ -69,3 +69,4 @@ export default function Footer() {
     </footer>
   );
 }
+Create Footer component
