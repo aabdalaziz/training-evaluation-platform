@@ -1,5 +1,6 @@
 'use client';
 
+import TrafficLightBoard from './TrafficLightBoard';
 import RiskMonitor from './RiskMonitor';
 import DecisionOfTheDay from './DecisionOfTheDay';
 import EnterpriseRadar from './EnterpriseRadar';
@@ -50,6 +51,8 @@ export default function CommandCenter() {
         <ExecutiveStatusBar />
 
         <OrganizationPulse />
+
+        <TrafficLightBoard />
 
         <ExecutiveTasks />
         <KPIGrid />
