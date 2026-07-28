@@ -1,5 +1,6 @@
 'use client';
 
+import TodaysAgenda from './TodaysAgenda';
 import QuickInsights from './QuickInsights';
 import TodayKPIs from './TodayKPIs';
 import InstitutionTrend from './InstitutionTrend';
@@ -54,6 +55,8 @@ export default function CommandCenter() {
         <RiskMonitor />
         
         <ExecutiveStatusBar />
+
+        <TodaysAgenda />
 
         <OrganizationPulse />
 
