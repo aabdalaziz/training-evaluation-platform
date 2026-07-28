@@ -1,5 +1,6 @@
 'use client';
 
+import ProgramStatistics from './ProgramStatistics';
 import ProgramStatusCard from './ProgramStatusCard';
 
 const programs = [
@@ -69,6 +70,7 @@ export default function ProgramDashboard() {
           >
             إدارة جميع البرامج التدريبية والدبلومات من مكان واحد.
           </p>
+      <ProgramStatistics />
         </div>
 
         <div
