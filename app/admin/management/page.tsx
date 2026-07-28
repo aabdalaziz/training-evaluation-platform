@@ -24,12 +24,15 @@ export default function ManagementPage() {
   const db = supabase();
 
   const loadAll = async () => {
-    const [tr, cl] = await Promise.all([
-      db.from("trainers").select("*").order("name", { ascending: true }),
-      db.from("classrooms").select("*").order("code", { ascending: true })
-    ]);
-    setTrainers(tr.data || []);
-    setClassrooms(cl.data || []);
+   const [tr, cl, pg] = await Promise.all([
+  db.from("trainers").select("*").order("name", { ascending: true }),
+  db.from("classrooms").select("*").order("code", { ascending: true }),
+  db.from("programs").select("id,name_ar").order("name_ar")
+]);
+
+setTrainers(tr.data || []);
+setClassrooms(cl.data || []);
+setPrograms(pg.data || []);
   };
 
   useEffect(() => {
@@ -61,13 +64,37 @@ export default function ManagementPage() {
     if (error) { flash(error.message); return; }
     await loadAll(); flash(ar ? "تم الحذف" : "Deleted");
   };
-  const addClassroom = async () => {
-    if (!cCode.trim()) { flash(ar ? "رمز القاعة مطلوب" : "Code required"); return; }
-    const { error } = await db.from("classrooms").insert({ code: cCode.trim(), trainer_id: cTrainer || null });
-    if (error) { flash(error.message); return; }
-    setCCode(""); setCTrainer("");
-    await loadAll(); flash(ar ? "تمت إضافة القاعة" : "Room added");
-  };
+ const addClassroom = async () => {
+  if (!cCode.trim()) {
+    flash(ar ? "رمز القاعة مطلوب" : "Code required");
+    return;
+  }
+
+  if (!cProgram) {
+    flash(ar ? "يرجى اختيار البرنامج" : "Please select a program");
+    return;
+  }
+
+  const { error } = await db.from("classrooms").insert({
+    code: cCode.trim(),
+    program_id: cProgram,
+    level: cLevel.trim() || null,
+    trainer_id: cTrainer || null
+  });
+
+  if (error) {
+    flash(error.message);
+    return;
+  }
+
+  setCCode("");
+  setCProgram("");
+  setCLevel("");
+  setCTrainer("");
+
+  await loadAll();
+  flash(ar ? "تمت إضافة القاعة" : "Room added");
+};
   const linkRoom = async (roomId, trainerId) => {
     const { error } = await db.from("classrooms").update({ trainer_id: trainerId || null }).eq("id", roomId);
     if (error) flash(error.message); else await loadAll();
@@ -151,7 +178,36 @@ export default function ManagementPage() {
             <div className="card">
               <h3 className="ct">➕ {ar ? "إضافة قاعة" : "Add room"}</h3>
               <label className="lb2">{ar ? "رمز القاعة *" : "Room code *"}</label>
-              <input className="inp" value={cCode} onChange={e => setCCode(e.target.value)} placeholder="203 / A1" />
+              <label className="lb2">
+  {ar ? "البرنامج *" : "Program *"}
+</label>
+
+<select
+  className="inp"
+  value={cProgram}
+  onChange={e => setCProgram(e.target.value)}
+>
+  <option value="">
+    {ar ? "اختر البرنامج" : "Select program"}
+  </option>
+
+  {programs.map(p => (
+    <option key={p.id} value={p.id}>
+      {p.name_ar}
+    </option>
+  ))}
+</select>
+
+<label className="lb2">
+  {ar ? "المستوى" : "Level"}
+</label>
+
+<input
+  className="inp"
+  value={cLevel}
+  onChange={e => setCLevel(e.target.value)}
+  placeholder={ar ? "مبتدئ / متوسط / متقدم" : "Beginner / Intermediate / Advanced"}
+/>
               <label className="lb2">{ar ? "المدرب" : "Trainer"}</label>
               <select className="inp" value={cTrainer} onChange={e => setCTrainer(e.target.value)}>
                 <option value="">{ar ? "بدون مدرب" : "No trainer"}</option>
