@@ -1,9 +1,10 @@
 'use client';
 
-import CommandCenter from "./components/sections/CommandCenter";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabase/client';
+import CommandCenter from './components/sections/CommandCenter';
 import { supabase } from '../../lib/supabase/client';
 
 type Profile = { full_name: string; role: string; organization_id: string; phone: string | null };
@@ -148,6 +149,22 @@ export default function Dashboard() {
     programs={programs}
     stats={evalStats}
     onRefresh={load}
+  />
+)}
+        {view === 'programs' && (
+  <Programs
+    programs={programs}
+    showForm={showForm}
+    editing={editing}
+    form={form}
+    saving={saving}
+    setForm={setForm}
+    openAdd={openAdd}
+    openEdit={openEdit}
+    closeForm={closeForm}
+    saveProgram={saveProgram}
+    setStatus={setStatus}
+    deleteProgram={deleteProgram}
   />
 )}
         {view === 'evaluations' && <Evaluations stats={evalStats} />}
