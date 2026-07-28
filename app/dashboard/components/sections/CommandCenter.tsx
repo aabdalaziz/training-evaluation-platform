@@ -1,5 +1,6 @@
 'use client';
 
+import InstitutionTrend from './InstitutionTrend';
 import TrafficLightBoard from './TrafficLightBoard';
 import RiskMonitor from './RiskMonitor';
 import DecisionOfTheDay from './DecisionOfTheDay';
@@ -53,6 +54,8 @@ export default function CommandCenter() {
         <OrganizationPulse />
 
         <TrafficLightBoard />
+
+        <InstitutionTrend />
 
         <ExecutiveTasks />
         <KPIGrid />
