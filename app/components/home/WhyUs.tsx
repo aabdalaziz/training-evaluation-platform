@@ -1,6 +1,5 @@
 'use client';
 
-import WhyUs from './components/home/WhyUs';
 const features = [
   {
     icon: '🎓',
