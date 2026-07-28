@@ -1,5 +1,6 @@
 'use client';
 
+import OpportunityCenter from './OpportunityCenter';
 import TodaysAgenda from './TodaysAgenda';
 import QuickInsights from './QuickInsights';
 import TodayKPIs from './TodayKPIs';
@@ -68,6 +69,8 @@ export default function CommandCenter() {
 
         <ExecutiveTasks />
         <KPIGrid />
+
+        <OpportunityCenter />
 
         <InstitutionalExcellence />
 
