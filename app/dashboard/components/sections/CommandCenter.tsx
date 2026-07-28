@@ -1,5 +1,7 @@
 'use client';
 
+import RecentDecisions from './RecentDecisions';
+<LiveActivity />
 import ExecutiveSummary from './ExecutiveSummary';
 import KPIGrid from './KPIGrid';
 import WelcomeBanner from '../layout/WelcomeBanner';
