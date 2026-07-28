@@ -1,3 +1,4 @@
+import CommandCenter from "./components/sections/CommandCenter";
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -140,14 +141,14 @@ export default function Dashboard() {
           <button className="outline" onClick={load}>🔄 تحديث</button>
         </header>
         {notice && <div className="error">{notice}</div>}
-        {view === 'dashboard' && <DashboardHome programs={programs} stats={evalStats} onPrograms={() => setView('programs')} />}
-        {view === 'programs' && (
-          <Programs
-            programs={programs} showForm={showForm} editing={editing} form={form} saving={saving}
-            setForm={setForm} openAdd={openAdd} openEdit={openEdit} closeForm={closeForm}
-            saveProgram={saveProgram} setStatus={setStatus} deleteProgram={deleteProgram}
-          />
-        )}
+        {view === "dashboard" && (
+  <CommandCenter
+    profile={profile}
+    programs={programs}
+    stats={evalStats}
+    onRefresh={load}
+  />
+)}
         {view === 'evaluations' && <Evaluations stats={evalStats} />}
         {view === 'reports' && <Reports programs={programs} stats={evalStats} />}
         {view === 'settings' && <Settings profile={profile} updateProfile={updateProfile} />}
