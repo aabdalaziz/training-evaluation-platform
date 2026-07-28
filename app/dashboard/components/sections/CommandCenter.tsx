@@ -1,5 +1,6 @@
 'use client';
 
+import KPIGrid from './KPIGrid';
 import WelcomeBanner from '../layout/WelcomeBanner';
 import ExecutiveStatusBar from '../layout/ExecutiveStatusBar';
 
@@ -39,6 +40,7 @@ export default function CommandCenter() {
         <OrganizationPulse />
 
         <ExecutiveTasks />
+        <KPIGrid />
 
         <InstitutionalExcellence />
 
