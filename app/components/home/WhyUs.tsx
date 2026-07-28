@@ -5,7 +5,7 @@ const features = [
     icon: '🎓',
     title: 'إدارة التعليم والتدريب',
     description:
-      'إدارة البرامج، الدورات، الدبلومات، والمتدربين من مكان واحد.',
+      'إدارة البرامج والدورات والمتدربين في منصة واحدة.',
     color: '#2563eb',
   },
   {
@@ -17,41 +17,66 @@ const features = [
   },
   {
     icon: '📝',
-    title: 'التقييمات الذكية',
+    title: 'تقييمات ذكية',
     description:
-      'تحليل كل سؤال ومؤشر وفجوة بصورة مستقلة.',
+      'تحليل كل سؤال ومؤشر بصورة مستقلة.',
     color: '#ea580c',
   },
   {
     icon: '🤖',
     title: 'الذكاء التنفيذي',
     description:
-      'تحويل البيانات إلى توصيات عملية وخطط تحسين.',
+      'تحويل البيانات إلى توصيات عملية.',
     color: '#7c3aed',
   },
 ];
 
 export default function WhyUs() {
   return (
-        <Footer />
+    <section
+      style={{
+        maxWidth: 1280,
+        margin: '70px auto',
+        padding: '0 24px',
+      }}
+    >
+      <div
+        style={{
+          textAlign: 'center',
+          marginBottom: 40,
+        }}
+      >
+        <h2
+          style={{
+            margin: 0,
+            color: '#14466B',
+            fontSize: 38,
+            fontWeight: 900,
+          }}
+        >
+          ⭐ لماذا بوابة التميز؟
+        </h2>
+
         <p
           style={{
             maxWidth: 850,
-            margin: '18px auto',
+            margin: '20px auto',
             color: '#64748b',
             lineHeight: 2,
             fontSize: 18,
           }}
         >
-          لأننا لا نعرض البيانات فقط...
-          بل نحولها إلى معلومات، ثم إلى قرارات، ثم إلى تحسين مستمر.
+          منصة موحدة لإدارة التعليم والتدريب،
+          وقياس الجودة،
+          وتحويل البيانات إلى قرارات تنفيذية.
         </p>
       </div>
 
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))',
+          gridTemplateColumns:
+            'repeat(auto-fit,minmax(260px,1fr))',
           gap: 24,
         }}
       >
@@ -60,10 +85,11 @@ export default function WhyUs() {
             key={item.title}
             style={{
               background: '#fff',
-              borderRadius: 22,
+              borderRadius: 20,
               padding: 28,
               borderTop: `6px solid ${item.color}`,
-              boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+              boxShadow:
+                '0 10px 25px rgba(15,23,42,.05)',
             }}
           >
             <div
