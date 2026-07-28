@@ -1,5 +1,6 @@
 'use client';
 
+import WhyUs from './components/home/WhyUs';
 const features = [
   {
     icon: '🎓',
@@ -33,30 +34,7 @@ const features = [
 
 export default function WhyUs() {
   return (
-    <section
-      style={{
-        maxWidth: 1280,
-        margin: '70px auto',
-        padding: '0 24px',
-      }}
-    >
-      <div
-        style={{
-          textAlign: 'center',
-          marginBottom: 40,
-        }}
-      >
-        <h2
-          style={{
-            margin: 0,
-            fontSize: 40,
-            color: '#14466B',
-            fontWeight: 900,
-          }}
-        >
-          ⭐ لماذا بوابة التميز؟
-        </h2>
-
+        <Footer />
         <p
           style={{
             maxWidth: 850,
