@@ -1,5 +1,6 @@
 'use client';
 
+import DecisionOfTheDay from './DecisionOfTheDay';
 import EnterpriseRadar from './EnterpriseRadar';
 import EnterpriseRadar from './EnterpriseRadar';
 import GoalsProgress from './GoalsProgress';
@@ -41,6 +42,8 @@ export default function CommandCenter() {
         <WelcomeBanner />
 
         <ExecutiveSummary />
+
+        <DecisionOfTheDay />
         
         <ExecutiveStatusBar />
 
