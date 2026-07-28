@@ -4,6 +4,7 @@ import Hero from './components/home/Hero';
 import PortalActions from './components/home/PortalActions';
 import PortalStatistics from './components/home/PortalStatistics';
 import PortalServices from './components/home/PortalServices';
+import WhyUs from './components/home/WhyUs';
 
 export default function HomePage() {
   return (
@@ -11,6 +12,7 @@ export default function HomePage() {
       style={{
         background: '#f4f7fb',
         minHeight: '100vh',
+        overflow: 'hidden',
       }}
     >
       <Hero />
@@ -21,10 +23,12 @@ export default function HomePage() {
 
       <PortalServices />
 
+      <WhyUs />
+
       <section
         style={{
           maxWidth: 1280,
-          margin: '60px auto',
+          margin: '70px auto',
           padding: '0 24px',
         }}
       >
@@ -33,61 +37,63 @@ export default function HomePage() {
             background: '#ffffff',
             borderRadius: 24,
             padding: 40,
-            textAlign: 'center',
             boxShadow: '0 10px 30px rgba(15,23,42,.05)',
           }}
         >
-          <h2
+          <div
             style={{
-              margin: 0,
-              color: '#14466B',
-              fontSize: 36,
-              fontWeight: 900,
+              textAlign: 'center',
+              marginBottom: 40,
             }}
           >
-            ⭐ لماذا بوابة التميز؟
-          </h2>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 40,
+                fontWeight: 900,
+                color: '#14466B',
+              }}
+            >
+              🤝 شركاء النجاح
+            </h2>
 
-          <p
-            style={{
-              maxWidth: 900,
-              margin: '20px auto',
-              color: '#64748b',
-              lineHeight: 2,
-              fontSize: 18,
-            }}
-          >
-            منصة موحدة لإدارة التعليم والتدريب والتعلم الإلكتروني،
-            وقياس الجودة، وتحليل النتائج، وتحويل البيانات إلى قرارات
-            تنفيذية تساعد المؤسسات على تحقيق التميز.
-          </p>
+            <p
+              style={{
+                marginTop: 14,
+                color: '#64748b',
+                fontSize: 18,
+              }}
+            >
+              نفخر بشراكاتنا مع المؤسسات التعليمية والتدريبية.
+            </p>
+          </div>
 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))',
-              gap: 20,
-              marginTop: 40,
+              gridTemplateColumns:
+                'repeat(auto-fit,minmax(220px,1fr))',
+              gap: 24,
             }}
           >
-            <Feature
-              icon="🎓"
-              title="إدارة التعليم"
+                        <Partner
+              title="جامعة الأمير مقرن"
+              subtitle="University Partner"
             />
 
-            <Feature
-              icon="📊"
-              title="تقارير تنفيذية"
+            <Partner
+              title="مركز تعليم اللغة العربية"
+              subtitle="Arabic Language Center"
             />
 
-            <Feature
-              icon="📝"
-              title="تقييمات ذكية"
+            <Partner
+              title="مركز التدريب"
+              subtitle="Training Center"
             />
 
-            <Feature
-              icon="🤖"
-              title="ذكاء تنفيذي"
+            <Partner
+              title="شريك إستراتيجي"
+              subtitle="Strategic Partner"
             />
           </div>
         </div>
@@ -95,78 +101,79 @@ export default function HomePage() {
 
       <footer
         style={{
-          marginTop: 70,
-          padding: '40px 20px',
+          marginTop: 80,
           background: '#14466B',
           color: '#fff',
-          textAlign: 'center',
+          padding: '60px 24px',
         }}
       >
-        <h3
+        <div
           style={{
-            margin: 0,
-            fontWeight: 900,
+            maxWidth: 1280,
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns:
+              '2fr 1fr 1fr',
+            gap: 40,
           }}
         >
-          🏛 بوابة التميز للتعليم والتطوير
-        </h3>
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontWeight: 900,
+                fontSize: 30,
+              }}
+            >
+              🏛 بوابة التميز للتعليم والتطوير
+            </h2>
 
-        <p
-          style={{
-            marginTop: 14,
-            opacity: .9,
-          }}
-        >
-          Excellence Portal for Education & Development
-        </p>
+            <p
+              style={{
+                marginTop: 18,
+                lineHeight: 2,
+                opacity: .9,
+              }}
+            >
+              منصة موحدة لإدارة التعليم والتدريب،
+              وقياس الجودة، وتحويل البيانات إلى
+              قرارات تنفيذية ذكية.
+            </p>
+          </div>
 
-        <p
-          style={{
-            marginTop: 25,
-            opacity: .75,
-            fontSize: 14,
-          }}
-        >
-          © 2026 جميع الحقوق محفوظة
-        </p>
-      </footer>
-    </main>
-  );
-}
+          <div>
+            <h3
+              style={{
+                marginTop: 0,
+                marginBottom: 18,
+              }}
+            >
+              روابط سريعة
+            </h3>
 
-function Feature({
-  icon,
-  title,
-}: {
-  icon: string;
-  title: string;
-}) {
-  return (
-    <div
-      style={{
-        padding: 24,
-        borderRadius: 18,
-        background: '#f8fafc',
-      }}
-    >
-      <div
-        style={{
-          fontSize: 42,
-          marginBottom: 16,
-        }}
-      >
-        {icon}
-      </div>
+            <FooterLink text="دخول الإدارة" />
 
-      <div
-        style={{
-          color: '#14466B',
-          fontWeight: 900,
-          fontSize: 18,
-        }}
-      >
-        {title}
-      </div>
-    </div>
-  );
-}
+            <FooterLink text="التقييم اليومي" />
+
+            <FooterLink text="التقييم النهائي" />
+
+            <FooterLink text="التحقق من الشهادات" />
+          </div>
+
+          <div>
+            <h3
+              style={{
+                marginTop: 0,
+                marginBottom: 18,
+              }}
+            >
+              تواصل معنا
+            </h3>
+
+            <FooterLink text="support@example.com" />
+
+            <FooterLink text="+966 50 000 0000" />
+
+            <FooterLink text="المدينة المنورة" />
+          </div>
+        </div>
