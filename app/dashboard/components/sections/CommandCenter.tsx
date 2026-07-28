@@ -1,5 +1,6 @@
 'use client';
 
+import RiskMonitor from './RiskMonitor';
 import DecisionOfTheDay from './DecisionOfTheDay';
 import EnterpriseRadar from './EnterpriseRadar';
 import EnterpriseRadar from './EnterpriseRadar';
@@ -44,6 +45,8 @@ export default function CommandCenter() {
         <ExecutiveSummary />
 
         <DecisionOfTheDay />
+
+        <RiskMonitor />
         
         <ExecutiveStatusBar />
 
