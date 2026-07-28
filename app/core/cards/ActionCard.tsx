@@ -83,3 +83,50 @@ export default function ActionCard({
     </button>
   );
 }
+<ActionCard
+  title="إنشاء برنامج"
+  subtitle="Training Program"
+  icon="📚"
+  color="#2563eb"
+  href="/dashboard?view=programs"
+/>
+
+<ActionCard
+  title="إنشاء قاعة"
+  subtitle="Classroom"
+  icon="🏫"
+  color="#059669"
+  href="/admin/management"
+/>
+
+<ActionCard
+  title="إنشاء مدرب"
+  subtitle="Trainer"
+  icon="👨‍🏫"
+  color="#7c3aed"
+  href="/admin/management"
+/>
+
+<ActionCard
+  title="التقييم اليومي"
+  subtitle="Daily Evaluation"
+  icon="📝"
+  color="#ea580c"
+  href="/evaluate/daily"
+/>
+
+<ActionCard
+  title="التقييم النهائي"
+  subtitle="Final Evaluation"
+  icon="🏁"
+  color="#dc2626"
+  href="/evaluate/final"
+/>
+
+<ActionCard
+  title="التقارير"
+  subtitle="Reports"
+  icon="📊"
+  color="#0891b2"
+  href="/reports"
+/>
