@@ -1,63 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
-type Action = {
-  title: string;
-  subtitle: string;
-  icon: string;
-  color: string;
-  href: string;
-};
-
-const actions: Action[] = [
-  {
-    title: 'إنشاء برنامج',
-    subtitle: 'New Program',
-    icon: '📚',
-    color: '#2563eb',
-    href: '/dashboard?view=programs',
-  },
-  {
-    title: 'إضافة قاعة',
-    subtitle: 'New Classroom',
-    icon: '🏫',
-    color: '#059669',
-    href: '/admin/management',
-  },
-  {
-    title: 'إضافة مدرب',
-    subtitle: 'New Trainer',
-    icon: '👨‍🏫',
-    color: '#7c3aed',
-    href: '/admin/management',
-  },
-  {
-    title: 'التقييم اليومي',
-    subtitle: 'Daily Evaluation',
-    icon: '📝',
-    color: '#ea580c',
-    href: '/evaluate/daily',
-  },
-  {
-    title: 'التقييم النهائي',
-    subtitle: 'Final Evaluation',
-    icon: '🏁',
-    color: '#dc2626',
-    href: '/evaluate/final',
-  },
-  {
-    title: 'التقارير',
-    subtitle: 'Reports',
-    icon: '📊',
-    color: '#0891b2',
-    href: '/reports',
-  },
-];
+import ActionCard from '../../../core/cards/ActionCard';
 
 export default function OperationsCenter() {
-  const router = useRouter();
-
   return (
     <section
       style={{
@@ -93,10 +38,9 @@ export default function OperationsCenter() {
             style={{
               marginTop: 8,
               color: '#64748b',
-              fontSize: 14,
             }}
           >
-            أكثر العمليات استخداماً في مكان واحد.
+            الوصول السريع إلى أكثر العمليات استخدامًا.
           </p>
         </div>
       </div>
@@ -104,72 +48,57 @@ export default function OperationsCenter() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns:
-            'repeat(auto-fit,minmax(190px,1fr))',
+          gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))',
           gap: 18,
         }}
       >
-        {actions.map((action) => (
-          <button
-            key={action.title}
-            onClick={() => router.push(action.href)}
-            style={{
-              border: '1px solid #e2e8f0',
-              background: '#fff',
-              borderRadius: 18,
-              padding: 22,
-              cursor: 'pointer',
-              transition: '.25s',
-              textAlign: 'center',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow =
-                '0 14px 30px rgba(15,23,42,.10)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 18,
-                margin: '0 auto 16px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                background: action.color,
-                color: '#fff',
-                fontSize: 30,
-              }}
-            >
-              {action.icon}
-            </div>
+        <ActionCard
+          title="إنشاء برنامج"
+          subtitle="Training Program"
+          icon="📚"
+          color="#2563eb"
+          href="/dashboard?view=programs"
+        />
 
-            <div
-              style={{
-                fontSize: 17,
-                fontWeight: 900,
-                color: '#14466B',
-              }}
-            >
-              {action.title}
-            </div>
+        <ActionCard
+          title="إنشاء قاعة"
+          subtitle="Classroom"
+          icon="🏫"
+          color="#059669"
+          href="/admin/management"
+        />
 
-            <div
-              style={{
-                marginTop: 8,
-                color: '#64748b',
-                fontSize: 13,
-              }}
-            >
-              {action.subtitle}
-            </div>
-          </button>
-        ))}
+        <ActionCard
+          title="إضافة مدرب"
+          subtitle="Trainer"
+          icon="👨‍🏫"
+          color="#7c3aed"
+          href="/admin/management"
+        />
+
+        <ActionCard
+          title="التقييم اليومي"
+          subtitle="Daily Evaluation"
+          icon="📝"
+          color="#ea580c"
+          href="/evaluate/daily"
+        />
+
+        <ActionCard
+          title="التقييم النهائي"
+          subtitle="Final Evaluation"
+          icon="🏁"
+          color="#dc2626"
+          href="/evaluate/final"
+        />
+
+        <ActionCard
+          title="التقارير"
+          subtitle="Executive Reports"
+          icon="📊"
+          color="#0891b2"
+          href="/reports"
+        />
       </div>
     </section>
   );
