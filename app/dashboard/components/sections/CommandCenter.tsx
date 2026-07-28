@@ -1,5 +1,6 @@
 'use client';
 
+import GoalsProgress from './GoalsProgress';
 import RecentDecisions from './RecentDecisions';
 import ExecutiveSummary from './ExecutiveSummary';
 import KPIGrid from './KPIGrid';
@@ -47,6 +48,8 @@ export default function CommandCenter() {
         <KPIGrid />
 
         <InstitutionalExcellence />
+
+        <GoalsProgress />
 
         <TodayOverview />
 
