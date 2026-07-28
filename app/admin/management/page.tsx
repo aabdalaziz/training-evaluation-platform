@@ -17,7 +17,7 @@ export default function ManagementPage() {
   const [tName, setTName] = useState("");
   const [tPhone, setTPhone] = useState("");
   const [tEmail, setTEmail] = useState("");
-  const [cCode, setCCode] = useState("");
+  const [cCode, setCCode] = useState(""); const [cProgram, setCProgram] = useState(""); const [cLevel, setCLevel] = useState(""); const [programs, setPrograms] = useState([]);
   const [cTrainer, setCTrainer] = useState("");
   const [msg, setMsg] = useState("");
   const ar = lang === "ar";
