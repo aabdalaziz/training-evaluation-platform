@@ -143,12 +143,7 @@ export default function Dashboard() {
         </header>
         {notice && <div className="error">{notice}</div>}
         {view === "dashboard" && (
-  <CommandCenter
-    profile={profile}
-    programs={programs}
-    stats={evalStats}
-    onRefresh={load}
-  />
+  <CommandCenter />
 )}
         {view === 'programs' && (
   <Programs
