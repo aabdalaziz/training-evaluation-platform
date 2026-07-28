@@ -1,131 +1,48 @@
 'use client';
 
-import React from 'react';
-
-type StatCardProps = {
+type Props = {
   title: string;
-  subtitle?: string;
   value: string | number;
-  icon?: React.ReactNode;
-  color?: 'blue' | 'green' | 'orange' | 'red' | 'purple';
-  onClick?: () => void;
-};
-
-const COLORS = {
-  blue: {
-    bg: '#eff6ff',
-    border: '#bfdbfe',
-    text: '#1d4ed8',
-    accent: '#2563eb',
-  },
-  green: {
-    bg: '#ecfdf5',
-    border: '#a7f3d0',
-    text: '#047857',
-    accent: '#10b981',
-  },
-  orange: {
-    bg: '#fff7ed',
-    border: '#fdba74',
-    text: '#c2410c',
-    accent: '#f97316',
-  },
-  red: {
-    bg: '#fef2f2',
-    border: '#fca5a5',
-    text: '#b91c1c',
-    accent: '#ef4444',
-  },
-  purple: {
-    bg: '#faf5ff',
-    border: '#d8b4fe',
-    text: '#7e22ce',
-    accent: '#9333ea',
-  },
+  subtitle?: string;
+  icon: string;
+  color: string;
+  trend?: string;
 };
 
 export default function StatCard({
   title,
-  subtitle,
   value,
+  subtitle,
   icon,
-  color = 'blue',
-  onClick,
-}: StatCardProps) {
-  const c = COLORS[color];
-
+  color,
+  trend,
+}: Props) {
   return (
     <div
-      onClick={onClick}
       style={{
         background: '#fff',
-        borderRadius: 18,
-        border: `1px solid ${c.border}`,
-        overflow: 'hidden',
-        cursor: onClick ? 'pointer' : 'default',
-        transition: '.2s',
-        boxShadow: '0 8px 24px rgba(15,23,42,.05)',
+        borderRadius: 22,
+        padding: 24,
+        borderTop: `6px solid ${color}`,
+        boxShadow: '0 12px 30px rgba(15,23,42,.06)',
+        transition: '.25s',
       }}
     >
       <div
         style={{
-          height: 6,
-          background: c.accent,
-        }}
-      />
-
-      <div
-        style={{
-          padding: 22,
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 16,
+          marginBottom: 22,
         }}
       >
-        <div>
-          <div
-            style={{
-              fontSize: 14,
-              color: '#64748b',
-              fontWeight: 700,
-              marginBottom: 6,
-            }}
-          >
-            {title}
-          </div>
-
-          <div
-            style={{
-              fontSize: 34,
-              fontWeight: 900,
-              color: c.text,
-              lineHeight: 1,
-            }}
-          >
-            {value}
-          </div>
-
-          {subtitle && (
-            <div
-              style={{
-                marginTop: 10,
-                fontSize: 12,
-                color: '#64748b',
-                fontWeight: 700,
-              }}
-            >
-              {subtitle}
-            </div>
-          )}
-        </div>
-
         <div
           style={{
             width: 64,
             height: 64,
-            borderRadius: 16,
-            background: c.bg,
+            borderRadius: 18,
+            background: color,
+            color: '#fff',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -134,7 +51,56 @@ export default function StatCard({
         >
           {icon}
         </div>
+
+        {trend && (
+          <div
+            style={{
+              background: '#dcfce7',
+              color: '#15803d',
+              padding: '6px 10px',
+              borderRadius: 20,
+              fontWeight: 800,
+              fontSize: 12,
+            }}
+          >
+            {trend}
+          </div>
+        )}
       </div>
+
+      <div
+        style={{
+          fontSize: 42,
+          fontWeight: 900,
+          color: '#14466B',
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </div>
+
+      <div
+        style={{
+          marginTop: 12,
+          fontSize: 18,
+          fontWeight: 800,
+          color: '#334155',
+        }}
+      >
+        {title}
+      </div>
+
+      {subtitle && (
+        <div
+          style={{
+            marginTop: 8,
+            color: '#64748b',
+            fontSize: 14,
+          }}
+        >
+          {subtitle}
+        </div>
+      )}
     </div>
   );
 }
