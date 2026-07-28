@@ -4,6 +4,7 @@ import Hero from './components/home/Hero';
 import PortalActions from './components/home/PortalActions';
 import PortalStatistics from './components/home/PortalStatistics';
 import PortalServices from './components/home/PortalServices';
+import Footer from './components/home/Footer';
 
 export default function HomePage() {
   return (
@@ -93,43 +94,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer
-        style={{
-          marginTop: 70,
-          padding: '40px 20px',
-          background: '#14466B',
-          color: '#fff',
-          textAlign: 'center',
-        }}
-      >
-        <h3
-          style={{
-            margin: 0,
-            fontWeight: 900,
-          }}
-        >
-          🏛 بوابة التميز للتعليم والتطوير
-        </h3>
-
-        <p
-          style={{
-            marginTop: 14,
-            opacity: .9,
-          }}
-        >
-          Excellence Portal for Education & Development
-        </p>
-
-        <p
-          style={{
-            marginTop: 25,
-            opacity: .75,
-            fontSize: 14,
-          }}
-        >
-          © 2026 جميع الحقوق محفوظة
-        </p>
-      </footer>
+<Footer />
     </main>
   );
 }
