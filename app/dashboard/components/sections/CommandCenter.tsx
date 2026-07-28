@@ -1,5 +1,6 @@
 'use client';
 
+import QuickInsights from './QuickInsights';
 import TodayKPIs from './TodayKPIs';
 import InstitutionTrend from './InstitutionTrend';
 import TrafficLightBoard from './TrafficLightBoard';
@@ -59,6 +60,8 @@ export default function CommandCenter() {
         <TrafficLightBoard />
 
         <InstitutionTrend />
+
+        <QuickInsights />
 
         <ExecutiveTasks />
         <KPIGrid />
