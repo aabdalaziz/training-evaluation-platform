@@ -2,17 +2,17 @@
 
 import WelcomeBanner from '../layout/WelcomeBanner';
 import ExecutiveStatusBar from '../layout/ExecutiveStatusBar';
-import TodaysMission from './TodaysMission';
+
+import OrganizationPulse from './OrganizationPulse';
+import ExecutiveTasks from './ExecutiveTasks';
 import TodayOverview from './TodayOverview';
-import InstitutionalExcellence from '../cards/InstitutionalExcellence';
-import SystemHealthCard from '../cards/SystemHealthCard';
 import OperationsCenter from './OperationsCenter';
-import DecisionCenter from './DecisionCenter';
 import AlertCenter from './AlertCenter';
 import ExecutiveAdvisor from './ExecutiveAdvisor';
 import PerformanceTrends from './PerformanceTrends';
-import ProgramsNeedingAttention from './ProgramsNeedingAttention';
 import DailyTimeline from './DailyTimeline';
+
+import InstitutionalExcellence from '../cards/InstitutionalExcellence';
 
 export default function CommandCenter() {
   return (
@@ -36,33 +36,21 @@ export default function CommandCenter() {
 
         <ExecutiveStatusBar />
 
-        <TodaysMission />
+        <OrganizationPulse />
+
+        <ExecutiveTasks />
 
         <InstitutionalExcellence />
 
         <TodayOverview />
 
-        <SystemHealthCard
-          status="healthy"
-          items={[
-            'جميع الخدمات تعمل بصورة طبيعية',
-            'لا توجد أخطاء في إرسال التقييمات',
-            'جميع البرامج مرتبطة بقوالب التقييم',
-            'آخر نسخة احتياطية تمت بنجاح',
-          ]}
-        />
-
         <OperationsCenter />
-
-        <DecisionCenter />
 
         <AlertCenter />
 
         <ExecutiveAdvisor />
 
         <PerformanceTrends />
-
-        <ProgramsNeedingAttention />
 
         <DailyTimeline />
       </div>
