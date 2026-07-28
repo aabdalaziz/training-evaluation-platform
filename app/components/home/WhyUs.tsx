@@ -10,16 +10,16 @@ const features = [
   },
   {
     icon: '📊',
-    title: 'مؤشرات تنفيذية',
+    title: 'تقارير تنفيذية',
     description:
-      'لوحات قيادة وتقارير تدعم متخذ القرار بمعلومات لحظية.',
+      'لوحات قيادة ومؤشرات أداء تساعد متخذ القرار.',
     color: '#16a34a',
   },
   {
     icon: '📝',
-    title: 'تقييمات ذكية',
+    title: 'التقييمات الذكية',
     description:
-      'التقييم اليومي والنهائي مع تحليل كل سؤال ومؤشر على حدة.',
+      'تحليل كل سؤال ومؤشر وفجوة بصورة مستقلة.',
     color: '#ea580c',
   },
   {
@@ -50,8 +50,8 @@ export default function WhyUs() {
           style={{
             margin: 0,
             fontSize: 40,
-            fontWeight: 900,
             color: '#14466B',
+            fontWeight: 900,
           }}
         >
           ⭐ لماذا بوابة التميز؟
@@ -59,36 +59,34 @@ export default function WhyUs() {
 
         <p
           style={{
-            marginTop: 15,
+            maxWidth: 850,
+            margin: '18px auto',
             color: '#64748b',
+            lineHeight: 2,
             fontSize: 18,
-            lineHeight: 1.8,
-            maxWidth: 800,
-            marginInline: 'auto',
           }}
         >
-          لأننا لا نجمع البيانات فقط...
-          بل نحولها إلى قرارات تساعد المؤسسة على التطوير المستمر.
+          لأننا لا نعرض البيانات فقط...
+          بل نحولها إلى معلومات، ثم إلى قرارات، ثم إلى تحسين مستمر.
         </p>
       </div>
 
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns:
-            'repeat(auto-fit,minmax(260px,1fr))',
+          gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))',
           gap: 24,
         }}
       >
-        {features.map((feature) => (
+        {features.map((item) => (
           <div
-            key={feature.title}
+            key={item.title}
             style={{
               background: '#fff',
               borderRadius: 22,
               padding: 28,
-              borderTop: `6px solid ${feature.color}`,
-              boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+              borderTop: `6px solid ${item.color}`,
+              boxShadow: '0 10px 25px rgba(15,23,42,.05)',
             }}
           >
             <div
@@ -96,16 +94,16 @@ export default function WhyUs() {
                 width: 70,
                 height: 70,
                 borderRadius: 18,
-                background: feature.color,
+                background: item.color,
+                color: '#fff',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                color: '#fff',
                 fontSize: 34,
-                marginBottom: 22,
+                marginBottom: 20,
               }}
             >
-              {feature.icon}
+              {item.icon}
             </div>
 
             <h3
@@ -113,10 +111,9 @@ export default function WhyUs() {
                 margin: 0,
                 color: '#14466B',
                 fontWeight: 900,
-                fontSize: 22,
               }}
             >
-              {feature.title}
+              {item.title}
             </h3>
 
             <p
@@ -124,10 +121,9 @@ export default function WhyUs() {
                 marginTop: 14,
                 color: '#64748b',
                 lineHeight: 1.9,
-                fontSize: 15,
               }}
             >
-              {feature.description}
+              {item.description}
             </p>
           </div>
         ))}
