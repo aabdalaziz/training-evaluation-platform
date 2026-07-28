@@ -1,5 +1,6 @@
 'use client';
 
+import TodayKPIs from './TodayKPIs';
 import InstitutionTrend from './InstitutionTrend';
 import TrafficLightBoard from './TrafficLightBoard';
 import RiskMonitor from './RiskMonitor';
@@ -44,6 +45,8 @@ export default function CommandCenter() {
         <WelcomeBanner />
 
         <ExecutiveSummary />
+
+        <TodayKPIs />
 
         <DecisionOfTheDay />
 
