@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase/client';
 import CommandCenter from './components/sections/CommandCenter';
-import { supabase } from '../../lib/supabase/client';
 
 type Profile = { full_name: string; role: string; organization_id: string; phone: string | null };
 type Program = {
