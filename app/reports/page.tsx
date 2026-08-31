@@ -48,7 +48,9 @@ function collapseDuplicateAnswers(answers,questions){
 function answersFor(ca,ids){return (ca||[]).filter(a=>ids.has(a.evaluation_id));}
 
 function buildStats(values,respondents=0){
-  const xs=(values||[]).filter(v=>safeRating(v)!==null);
+  const xs = (values || [])
+  .map(v => safeRating(v))
+  .filter(v => v !== null);
   const dist=[0,0,0,0,0];
   xs.forEach(v=>{const r=Math.round(v);if(r>=1&&r<=5)dist[r-1]+=1;});
   const low=xs.filter(v=>v<=2).length,mid=xs.filter(v=>v>2&&v<4).length,high=xs.filter(v=>v>=4).length;
@@ -69,7 +71,7 @@ function riskLevel(s,lang){
   if(m<3.7||low>=10||sd>=1)return{key:"MED",score:2,label:lang==="ar"?"تحتاج مراقبة":"Watch",bg:"#fef3c7",fg:"#b45309"};
   return{key:"LOW",score:1,label:lang==="ar"?"مطمئن":"Good",bg:"#d1fae5",fg:"#047857"};
 }
-function summaryFrom(ca,lang){
+function const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(ca,lang){
   const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);
   const resp=new Set((ca||[]).map(a=>a.evaluation_id)).size;
   const s=buildStats(xs,resp);
@@ -422,7 +424,7 @@ function ScorecardTable({title,items,lang,onSelect}){
                 <td className="td ltr" style={{fontWeight:900}}>{x.mean.toFixed(2)}</td>
                 <td className="td ltr">{x.median.toFixed(2)}</td>
                 <td className="td ltr">{x.stddev.toFixed(2)}</td>
-                <td className="td ltr" style={{color:"#94a3b8"}}>{TARGET.toFixed(1)}</td>
+                <td className="td ltr" style={{color:"#64748b"}}>{TARGET.toFixed(1)}</td>
                 <td className={`td ltr ${gapCls}`}>{x.gap>0?"-":""}{Math.abs(x.gap).toFixed(2)}{x.gap<=0?" ✓":""}</td>
                 <td className="td ltr">{x.lowPct.toFixed(0)}%</td>
                 <td className="td"><span className="rbadge" style={{background:x.perf.bg,color:x.perf.fg}}>{x.perf.label}</span></td>
@@ -790,7 +792,7 @@ const setLang = (v: string) => {
   const dashRows=useMemo(()=>filterRowsBy(rows,classrooms,null,dashF),[rows,classrooms,dashF]);
   const dashIds=useMemo(()=>new Set(dashRows.map(r=>r.id)),[dashRows]);
   const dashAns=useMemo(()=>answersFor(cleanAnswers,dashIds),[cleanAnswers,dashIds]);
-  const dashSummary=useMemo(()=>summaryFrom(dashAns,lang),[dashAns,lang]);
+  const dashSummary=useMemo(()=>const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(dashAns,lang),[dashAns,lang]);
   const dashAxis=useMemo(()=>buildAxisStats(dashAns,lang),[dashAns,lang]);
   const dashTrend=useMemo(()=>buildTrend(dashRows,dashAns,lang),[dashRows,dashAns,lang]);
   const dashRanking=useMemo(()=>buildRoomRanking(dashAns,dashRows,classrooms,trainers),[dashAns,dashRows,classrooms,trainers]);
@@ -804,7 +806,7 @@ const setLang = (v: string) => {
   const dailyRows=useMemo(()=>filterRowsBy(rows,classrooms,"DAILY",dailyF),[rows,classrooms,dailyF]);
   const dailyIds=useMemo(()=>new Set(dailyRows.map(r=>r.id)),[dailyRows]);
   const dailyAns=useMemo(()=>answersFor(cleanAnswers,dailyIds),[cleanAnswers,dailyIds]);
-  const dailySummary=useMemo(()=>summaryFrom(dailyAns,lang),[dailyAns,lang]);
+  const dailySummary=useMemo(()=>const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(dailyAns,lang),[dailyAns,lang]);
   const dailyAxis=useMemo(()=>buildAxisStats(dailyAns,lang),[dailyAns,lang]);
   const dailyTrend=useMemo(()=>buildTrend(dailyRows,dailyAns,lang),[dailyRows,dailyAns,lang]);
   const dailyRoomRank=useMemo(()=>buildRoomRanking(dailyAns,dailyRows,classrooms,trainers),[dailyAns,dailyRows,classrooms,trainers]);
@@ -818,7 +820,7 @@ const setLang = (v: string) => {
   const finalRows=useMemo(()=>filterRowsBy(rows,classrooms,"FINAL",finalF),[rows,classrooms,finalF]);
   const finalIds=useMemo(()=>new Set(finalRows.map(r=>r.id)),[finalRows]);
   const finalAns=useMemo(()=>answersFor(cleanAnswers,finalIds),[cleanAnswers,finalIds]);
-  const finalSummary=useMemo(()=>summaryFrom(finalAns,lang),[finalAns,lang]);
+  const finalSummary=useMemo(()=>const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(finalAns,lang),[finalAns,lang]);
   const finalAxis=useMemo(()=>buildAxisStats(finalAns,lang),[finalAns,lang]);
   const finalIndicators=useMemo(()=>buildIndicatorStats(finalAns,lang),[finalAns,lang]);
   const finalTrend=useMemo(()=>buildTrend(finalRows,finalAns,lang),[finalRows,finalAns,lang]);
@@ -1231,7 +1233,7 @@ const CSS=`
 .card{background:#fff;border:1px solid #e2e8f0;border-radius:24px;padding:26px;margin-bottom:20px;box-shadow:0 8px 28px rgba(15,23,42,.035);}
 .ctitle{margin:0 0 10px;font-size:19px;font-weight:900;color:#0f172a;}
 .cdesc{color:#64748b;margin:0 0 16px;font-size:13px;font-weight:700;}
-.empty{color:#94a3b8;text-align:center;padding:32px 12px;font-weight:800;}
+.empty{color:#64748b;text-align:center;padding:32px 12px;font-weight:800;}
 .ltr{direction:ltr;unicode-bidi:plaintext;}
 .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;}
 .tbl{width:100%;border-collapse:collapse;}
