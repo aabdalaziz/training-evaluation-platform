@@ -1215,7 +1215,7 @@ const CSS=`
 .noprint{}
 
 /* Sidebar identity */
-.side{width:300px;flex-shrink:0;background:linear-gradient(160deg,#0f2740 0%,#173a5e 55%,#0d9488 130%);border-radius:24px;padding:22px;color:#fff;position:sticky;top:24px;height:fit-content;box-shadow:0 20px 50px rgba(15,39,64,.25);}
+.side{width:300px;flex-shrink:0;background:linear-gradient(160deg,#0f2740 0%,#173a5e 55%,#0d9488 130%);border-radius:24px;padding:22px;color:#fff;position:sticky;top:24px;height:fit-content;max-height:calc(100vh - 48px);overflow-y:auto;box-shadow:0 20px 50px rgba(15,39,64,.25);}
 .brand-card{background:#fff;border-radius:18px;padding:16px 14px;margin-bottom:22px;text-align:center;border-bottom:4px solid #c19a3d;}
 .brand-logos{display:flex;align-items:center;justify-content:center;gap:12px;}
 .brand-logo{height:56px;width:auto;object-fit:contain;}
