@@ -272,6 +272,12 @@ function heatColor(avg,count){
 }
 function maskEmail(e){if(!e||!e.includes("@"))return"—";const[u,d]=e.split("@");return`${u.slice(0,2)}***@${d}`;}
 function maskPhone(p){if(!p)return"—";const c=String(p).replace(/\s+/g,"");if(c.length<6)return"***";return c.replace(/(\d{2})\d+(\d{2})/,"$1******$2");}
+function buildExportFilename(kind: string, program: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  const safeP = (program || "All").replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, "_");
+  const safeK = (kind || "Report").replace(/[^a-zA-Z0-9]/g, "_");
+  return `Report_${safeK}_${safeP}_${date}.csv`;
+}
 function downloadCSV(filename,rows){
   const esc=v=>{
     const s=String(v??"");
@@ -1068,7 +1074,7 @@ export default function ReportsPage(){
                   <button className="btn2" onClick={()=>{
                     const flat=[];
                     for(const r of partRoomData)for(const s of r.students)flat.push([r.code,r.trainer,s.name,s.phone,s.email]);
-                    downloadCSV("participants.csv",[[isAr?"القاعة":"Room",isAr?"المدرب":"Trainer",isAr?"الاسم":"Name",isAr?"الجوال":"Phone",isAr?"البريد":"Email"],...flat]);
+                    downloadCSV(buildExportFilename("Participants", partF.classroomId !== "ALL" ? partF.classroomId : "All"),[[isAr?"القاعة":"Room",isAr?"المدرب":"Trainer",isAr?"الاسم":"Name",isAr?"الجوال":"Phone",isAr?"البريد":"Email"],...flat]);
                   }}>⬇️ {t.export}</button>
                   <button className="btn2" onClick={()=>{setPartF({trainerId:"ALL",classroomId:"ALL",from:"",to:"",q:""});setPartKind("ALL");setRevealPII(false);}}>🧹 {t.clear}</button>
                   <button className="btn2" style={{borderColor:"#fca5a5",color:RED}} onClick={()=>setPurgeOpen(true)}>🗑️ {t.purge}</button>
