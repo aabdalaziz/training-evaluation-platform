@@ -1236,7 +1236,7 @@ const CSS=`
 .mtop{display:flex;align-items:center;gap:8px;color:#64748b;font-weight:900;font-size:14px;flex-wrap:wrap;}
 .mbadge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:900;margin-inline-start:auto;}
 .mval{font-size:32px;font-weight:900;margin-top:12px;direction:ltr;unicode-bidi:plaintext;}
-.msub{color:#94a3b8;font-size:12px;margin-top:6px;font-weight:700;}
+.msub{color:#64748b;font-size:12px;margin-top:6px;font-weight:700;}
 
 /* Distribution */
 .dbar{height:22px;width:100%;display:flex;overflow:hidden;border-radius:999px;background:#f1f5f9;margin:20px 0;}
