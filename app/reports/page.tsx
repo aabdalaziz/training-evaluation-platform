@@ -784,7 +784,7 @@ export default function ReportsPage(){
   const finalSummary=useMemo(()=>summaryFrom(finalAns,lang),[finalAns,lang]);
   const finalAxis=useMemo(()=>buildAxisStats(finalAns,lang),[finalAns,lang]);
   const finalIndicators=useMemo(()=>buildIndicatorStats(finalAns,lang),[finalAns,lang]);
-  const finalTrend=useMemo(()=>buildTrend(finalRows,lang),[finalRows,lang]);
+  const finalTrend=useMemo(()=>buildTrend(finalRows,finalAns,lang),[finalRows,finalAns,lang]);
   const finalRoomRank=useMemo(()=>buildRoomRanking(finalAns,finalRows,classrooms,trainers),[finalAns,finalRows,classrooms,trainers]);
   const finalTrainerRank=useMemo(()=>buildTrainerRanking(finalAns,finalRows,classrooms,trainers),[finalAns,finalRows,classrooms,trainers]);
   const finalHeat=useMemo(()=>buildHeatMap(finalAns,finalRows,classrooms,lang),[finalAns,finalRows,classrooms,lang]);
