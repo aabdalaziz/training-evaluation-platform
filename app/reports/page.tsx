@@ -11,7 +11,7 @@ function safeRating(v){const n=Number(v);return Number.isFinite(n)&&n>=1&&n<=5?n
 function mean(xs){return xs?.length?xs.reduce((a,b)=>a+b,0)/xs.length:0;}
 function median(xs){if(!xs?.length)return 0;const a=[...xs].sort((x,y)=>x-y);const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}
 function variance(xs){if(!xs||xs.length<2)return 0;const m=mean(xs);return xs.reduce((s,x)=>s+(x-m)**2,0)/(xs.length-1);}
-function stdDev(xs){return Math.sqrt(variance(xs));}
+function stdDev(xs){return Math.Fsqrt(variance(xs));}
 function normTxt(v){return String(v||"").trim().toLowerCase().replace(/\s+/g," ");}
 function dateKey(d){const x=new Date(d);if(isNaN(x.getTime()))return "";return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;}
 
@@ -662,7 +662,16 @@ function ReportFooter({lang}){
 /* ============ Main Page ============ */
 export default function ReportsPage(){
   const router=useRouter();
-  const[lang,setLang]=useState("ar");
+  const [lang, setLangState] = useState(() => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("reports_lang") || "ar";
+  }
+  return "ar";
+});
+const setLang = (v: string) => {
+  setLangState(v);
+  if (typeof window !== "undefined") localStorage.setItem("reports_lang", v);
+};
   const[mounted,setMounted]=useState(false);
   const[rows,setRows]=useState([]);
   const[ans,setAns]=useState([]);
