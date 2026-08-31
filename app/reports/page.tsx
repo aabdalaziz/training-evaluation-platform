@@ -201,17 +201,39 @@ function buildIndicatorStats(ca,lang){
   return Array.from(groups.values()).map(g=>{const st=buildStats(g.values,g.resp.size);const risk=riskLevel(st,lang);const rec=recFor(g.axis,g.indicator,risk.key,lang);return{...st,indicator:g.indicator,axis:g.axis,risk,perf:perfLevel(st.mean,lang),gap:TARGET-st.mean,recommendation:rec.text,owner:rec.owner,days:rec.days};}).sort((a,b)=>b.risk.score-a.risk.score||a.mean-b.mean);
 }
 
-function buildTrend(rows,lang){
-  const valid=(rows||[]).filter(r=>r?.submitted_at&&safeRating(r?.overall_rating)!==null)
-    .map(r=>({...r,d:new Date(r.submitted_at)})).filter(r=>!isNaN(r.d.getTime()));
-  if(!valid.length)return[];
-  const latest=new Date(Math.max(...valid.map(r=>r.d.getTime())));
-  latest.setHours(0,0,0,0);
-  const map=new Map();
-  for(let i=6;i>=0;i--){const day=new Date(latest);day.setDate(latest.getDate()-i);map.set(dateKey(day),{date:day,values:[]});}
-  valid.forEach(r=>{const b=map.get(dateKey(r.d));if(b)b.values.push(Number(r.overall_rating));});
-  const loc=lang==="ar"?"ar-SA":"en-US";
-  return Array.from(map.values()).map(x=>({label:new Intl.DateTimeFormat(loc,{weekday:"short",day:"numeric"}).format(x.date),count:x.values.length,avg:x.values.length?mean(x.values):null}));
+function buildTrend(rows: any[], answers: any[], lang: string) {
+  const evalBuckets = new Map<string, number[]>();
+  for (const a of answers || []) {
+    const v = safeRating(a?.rating_value);
+    if (v === null) continue;
+    const bucket = evalBuckets.get(a.evaluation_id) || [];
+    bucket.push(v);
+    evalBuckets.set(a.evaluation_id, bucket);
+  }
+  const evalMeans = new Map<string, number>();
+  for (const [eid, vals] of evalBuckets) {
+    evalMeans.set(eid, mean(vals));
+  }
+  const valid = (rows || [])
+    .filter((r) => r?.submitted_at && evalMeans.has(r.id))
+    .map((r) => ({ ...r, d: new Date(r.submitted_at), avg: evalMeans.get(r.id)! }))
+    .filter((r) => !isNaN(r.d.getTime()));
+  if (!valid.length) return [];
+  const latest = new Date(Math.max(...valid.map((r) => r.d.getTime())));
+  latest.setHours(0, 0, 0, 0);
+  const map = new Map<string, { date: Date; values: number[] }>();
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(latest);
+    day.setDate(latest.getDate() - i);
+    map.set(dateKey(day), { date: day, values: [] });
+  }
+  valid.forEach((r) => { const b = map.get(dateKey(r.d)); if (b) b.values.push(r.avg); });
+  const loc = lang === "ar" ? "ar-SA" : "en-US";
+  return Array.from(map.values()).map((x) => ({
+    label: new Intl.DateTimeFormat(loc, { weekday: "short", day: "numeric" }).format(x.date),
+    count: x.values.length,
+    avg: x.values.length ? mean(x.values) : null,
+  }));
 }
 function buildRoomRanking(ca,rows,classrooms,trainers){
   const evalRoom=new Map((rows||[]).map(r=>[r.id,r.classroom_id]));
@@ -770,7 +792,7 @@ const setLang = (v: string) => {
   const dashAns=useMemo(()=>answersFor(cleanAnswers,dashIds),[cleanAnswers,dashIds]);
   const dashSummary=useMemo(()=>summaryFrom(dashAns,lang),[dashAns,lang]);
   const dashAxis=useMemo(()=>buildAxisStats(dashAns,lang),[dashAns,lang]);
-  const dashTrend=useMemo(()=>buildTrend(dashRows,lang),[dashRows,lang]);
+  const dashTrend=useMemo(()=>buildTrend(dashRows,dashAns,lang),[dashRows,dashAns,lang]);
   const dashRanking=useMemo(()=>buildRoomRanking(dashAns,dashRows,classrooms,trainers),[dashAns,dashRows,classrooms,trainers]);
   const dashTrainerRank=useMemo(()=>buildTrainerRanking(dashAns,dashRows,classrooms,trainers),[dashAns,dashRows,classrooms,trainers]);
   const dashHeat=useMemo(()=>buildHeatMap(dashAns,dashRows,classrooms,lang),[dashAns,dashRows,classrooms,lang]);
@@ -784,7 +806,7 @@ const setLang = (v: string) => {
   const dailyAns=useMemo(()=>answersFor(cleanAnswers,dailyIds),[cleanAnswers,dailyIds]);
   const dailySummary=useMemo(()=>summaryFrom(dailyAns,lang),[dailyAns,lang]);
   const dailyAxis=useMemo(()=>buildAxisStats(dailyAns,lang),[dailyAns,lang]);
-  const dailyTrend=useMemo(()=>buildTrend(dailyRows,lang),[dailyRows,lang]);
+  const dailyTrend=useMemo(()=>buildTrend(dailyRows,dailyAns,lang),[dailyRows,dailyAns,lang]);
   const dailyRoomRank=useMemo(()=>buildRoomRanking(dailyAns,dailyRows,classrooms,trainers),[dailyAns,dailyRows,classrooms,trainers]);
   const dailyTrainerRank=useMemo(()=>buildTrainerRanking(dailyAns,dailyRows,classrooms,trainers),[dailyAns,dailyRows,classrooms,trainers]);
   const dailyHeat=useMemo(()=>buildHeatMap(dailyAns,dailyRows,classrooms,lang),[dailyAns,dailyRows,classrooms,lang]);
@@ -1143,7 +1165,7 @@ const setLang = (v: string) => {
                   <button onClick={()=>window.print()} className="btn2 noprint" style={{marginTop:24,background:NAVY,color:"#fff"}}>🖨️ {t.print}</button>
                 </div>
               ):(
-                <div className="card" style={{textAlign:"center",padding:60}}><p style={{color:"#94a3b8",fontSize:18}}>{t.noData}</p></div>
+                <div className="card" style={{textAlign:"center",padding:60}}><p style={{color:"#64748b",fontSize:18}}>{t.noData}</p></div>
               )}
             </div>
           )}
