@@ -11,7 +11,7 @@ function safeRating(v){const n=Number(v);return Number.isFinite(n)&&n>=1&&n<=5?n
 function mean(xs){return xs?.length?xs.reduce((a,b)=>a+b,0)/xs.length:0;}
 function median(xs){if(!xs?.length)return 0;const a=[...xs].sort((x,y)=>x-y);const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}
 function variance(xs){if(!xs||xs.length<2)return 0;const m=mean(xs);return xs.reduce((s,x)=>s+(x-m)**2,0)/(xs.length-1);}
-function stdDev(xs){return Math.Fsqrt(variance(xs));}
+function stdDev(xs){return Math.sqrt(variance(xs));}
 function normTxt(v){return String(v||"").trim().toLowerCase().replace(/\s+/g," ");}
 function dateKey(d){const x=new Date(d);if(isNaN(x.getTime()))return "";return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;}
 
@@ -338,10 +338,10 @@ const dict={
 };
 
 /* ============ Components ============ */
-function MetricCard({title,value,sub,color=BLUE,icon="📊",badge}){
+function MetricCard({title,value,sub,color=BLUE,icon="📊",badge,tooltip}:{title:string;value:string|number;sub?:string;color?:string;icon?:string;badge?:{label:string;bg:string;fg:string};tooltip?:string}){
   return(
-    <div className="mcard" style={{borderBottomColor:color}}>
-      <div className="mtop"><span>{icon}</span><span>{title}</span>{badge&&<span className="mbadge" style={{background:badge.bg,color:badge.fg}}>{badge.label}</span>}</div>
+    <div className="mcard" style={{borderBottomColor:color}} title={tooltip} role="group" aria-label={`${title}: ${value}`}>
+      <div className="mtop"><span aria-hidden="true">{icon}</span><span>{title}</span>{badge&&<span className="mbadge" style={{background:badge.bg,color:badge.fg}}>{badge.label}</span>}</div>
       <div className="mval">{value}</div>
       {sub&&<div className="msub">{sub}</div>}
     </div>
