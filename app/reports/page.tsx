@@ -358,7 +358,7 @@ function TrendChart({data,lang,color=BLUE}){
             <circle cx={p.x} cy={p.y} r="6" fill="#fff" stroke={color} strokeWidth="4"/>
             <text x={p.x} y={p.y-14} textAnchor="middle" fill="#0f172a" fontSize="12" fontWeight="800">{p.avg.toFixed(2)}</text>
             <text x={p.x} y={H-16} textAnchor="middle" fill="#64748b" fontSize="11">{p.label}</text>
-            <text x={p.x} y={H-2} textAnchor="middle" fill="#94a3b8" fontSize="10">N={p.count}</text>
+            <text x={p.x} y={H-2} textAnchor="middle" fill="#64748b" fontSize="10">N={p.count}</text>
           </g>))}
       </svg>
     </div>
@@ -550,7 +550,7 @@ function ComparisonBars({title,data,avgLine,lang}){
         return(
         <div key={r.id} style={{marginBottom:13}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:14,fontWeight:800,gap:8}}>
-            <span>{r.label} <span style={{color:"#94a3b8",fontWeight:700}}>({r.sub})</span></span>
+            <span>{r.label} <span style={{color:"#64748b",fontWeight:700}}>({r.sub})</span></span>
             <span style={{direction:"ltr",fontWeight:900}}>
               <span style={{color:col}}>{r.avg.toFixed(2)}</span>
               <span style={{color:diff>=0?"#047857":"#b91c1c",fontSize:12,marginInlineStart:8}}>{diff>=0?"▲":"▼"} {Math.abs(diff).toFixed(2)}</span>
@@ -561,7 +561,7 @@ function ComparisonBars({title,data,avgLine,lang}){
             <div className="cmpline" style={{insetInlineStart:`${(avgLine/5)*100}%`}}/>
             <div className="cmpline gold" style={{insetInlineStart:`${(TARGET/5)*100}%`}}/>
           </div>
-          <small style={{color:"#94a3b8",fontWeight:700}}>{isAr?`استبانات: ${r.count}`:`Forms: ${r.count}`}</small>
+          <small style={{color:"#64748b",fontWeight:700}}>{isAr?`استبانات: ${r.count}`:`Forms: ${r.count}`}</small>
         </div>);})}
       <div className="legend">
         <span><i style={{background:"#64748b"}}/> {isAr?"متوسط التقرير":"Report average"}</span>
