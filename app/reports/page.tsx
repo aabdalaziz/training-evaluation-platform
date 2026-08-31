@@ -71,11 +71,22 @@ function riskLevel(s,lang){
   if(m<3.7||low>=10||sd>=1)return{key:"MED",score:2,label:lang==="ar"?"تحتاج مراقبة":"Watch",bg:"#fef3c7",fg:"#b45309"};
   return{key:"LOW",score:1,label:lang==="ar"?"مطمئن":"Good",bg:"#d1fae5",fg:"#047857"};
 }
-function const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(ca,lang){
-  const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);
-  const resp=new Set((ca||[]).map(a=>a.evaluation_id)).size;
-  const s=buildStats(xs,resp);
-  return{...s,risk:riskLevel(s,lang),perf:perfLevel(s.mean,lang)};
+function summaryFrom(ca, lang) {
+  const xs = (ca || [])
+    .map(a => safeRating(a.rating_value))
+    .filter(v => v !== null);
+
+  const resp = new Set(
+    (ca || []).map(a => a.evaluation_id)
+  ).size;
+
+  const s = buildStats(xs, resp);
+
+  return {
+    ...s,
+    risk: riskLevel(s, lang),
+    perf: perfLevel(s.mean, lang)
+  };
 }
 function verdictOf(summary,lang,ctx){
   const m=summary.mean,n=summary.respondents;
