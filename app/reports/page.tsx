@@ -906,15 +906,15 @@ export default function ReportsPage(){
             <div className="brand-tag">{t.sub}</div>
           </div>
 
-          <button className={tab==="dashboard"?"ton":"tof"} onClick={()=>setTab("dashboard")}><span className="nav-label"><span className="nav-ico">📊</span>{t.tab1}</span></button>
-          <button className={tab==="daily"?"ton":"tof"} onClick={()=>setTab("daily")}><span className="nav-label"><span className="nav-ico">📅</span>{t.tab2}</span></button>
-          <button className={tab==="final"?"ton":"tof"} onClick={()=>setTab("final")}><span className="nav-label"><span className="nav-ico">🏁</span>{t.tab3}</span></button>
-          <button className={tab==="participants"?"ton":"tof"} onClick={()=>setTab("participants")}><span className="nav-label"><span className="nav-ico">👥</span>{t.tab4}</span></button>
-          <button className={tab==="cert"?"ton":"tof"} onClick={()=>setTab("cert")}><span className="nav-label"><span className="nav-ico">🏆</span>{t.tab5}</span></button>
+          <button className={tab==="dashboard"?"ton":"tof"} onClick={()=>setTab("dashboard")} aria-label={t.tab1} aria-current={tab==="dashboard"?"page":undefined} role="tab"><span className="nav-label"><span className="nav-ico" aria-hidden="true">📊</span>{t.tab1}</span></button>
+          <button className={tab==="daily"?"ton":"tof"} onClick={()=>setTab("daily")} aria-label={t.tab2} aria-current={tab==="daily"?"page":undefined} role="tab"><span className="nav-label"><span className="nav-ico" aria-hidden="true">📅</span>{t.tab2}</span></button>
+          <button className={tab==="final"?"ton":"tof"} onClick={()=>setTab("final")} aria-label={t.tab3} aria-current={tab==="final"?"page":undefined} role="tab"><span className="nav-label"><span className="nav-ico" aria-hidden="true">🏁</span>{t.tab3}</span></button>
+          <button className={tab==="participants"?"ton":"tof"} onClick={()=>setTab("participants")} aria-label={t.tab4} aria-current={tab==="participants"?"page":undefined} role="tab"><span className="nav-label"><span className="nav-ico" aria-hidden="true">👥</span>{t.tab4}</span></button>
+          <button className={tab==="cert"?"ton":"tof"} onClick={()=>setTab("cert")} aria-label={t.tab5} aria-current={tab==="cert"?"page":undefined} role="tab"><span className="nav-label"><span className="nav-ico" aria-hidden="true">🏆</span>{t.tab5}</span></button>
 
           <div style={{marginTop:20,borderTop:"1px solid rgba(255,255,255,.12)",paddingTop:16}}>
-            <button onClick={()=>setLang(isAr?"en":"ar")} style={{width:"100%",background:"rgba(193,154,61,.18)",border:"1px solid rgba(193,154,61,.45)",color:"#f0d9a8",padding:12,borderRadius:12,fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:8,fontFamily:"inherit"}}>🌐 {t.lang}</button>
-            <button onClick={()=>router.push("/admin/management")} style={{width:"100%",background:"transparent",border:"1px solid #33465e",color:"#b6c6d8",cursor:"pointer",padding:12,borderRadius:12,fontSize:14,fontWeight:800,fontFamily:"inherit"}}>⚙️ {isAr?"الإدارة":"Admin"}</button>
+            <button onClick={()=>setLang(isAr?"en":"ar")} aria-label={isAr?"Switch to English":"التبديل إلى العربية"} style={{width:"100%",background:"rgba(193,154,61,.18)",border:"1px solid rgba(193,154,61,.45)",color:"#f0d9a8",padding:12,borderRadius:12,fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:8,fontFamily:"inherit"}}>🌐 {t.lang}</button>
+            <button onClick={()=>router.push("/admin/management")} aria-label={isAr?"لوحة الإدارة":"Admin panel"} style={{width:"100%",background:"transparent",border:"1px solid #33465e",color:"#b6c6d8",cursor:"pointer",padding:12,borderRadius:12,fontSize:14,fontWeight:800,fontFamily:"inherit"}}>⚙️ {isAr?"الإدارة":"Admin"}</button>
           </div>
           <div className="side-copy">{isAr?"جامعة الأمير مقرن بن عبدالعزيز":"University of Prince Mugrin"}</div>
         </aside>
