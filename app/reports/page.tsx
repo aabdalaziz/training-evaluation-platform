@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
+import ErrorState from "./components/ErrorState";
 
 /* ============ Helpers ============ */
 function safeRating(v){const n=Number(v);return Number.isFinite(n)&&n>=1&&n<=5?n:null;}
@@ -663,6 +664,7 @@ export default function ReportsPage(){
   const[classrooms,setClassrooms]=useState([]);
   const[trainers,setTrainers]=useState([]);
   const[load,setLoad]=useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const[tab,setTab]=useState("dashboard");
 
   const emptyRange={from:"",to:""};
@@ -685,16 +687,28 @@ export default function ReportsPage(){
   const t=dict[lang];const isAr=lang==="ar";
   const db=supabase();
 
-  const fetchAllData=async()=>{
-    const[e,a,q,c,tr]=await Promise.all([
-      db.from("evaluations").select("*").order("submitted_at",{ascending:false}),
-      db.from("evaluation_answers").select("*"),
-      db.from("questions").select("*"),
-      db.from("classrooms").select("*"),
-      db.from("trainers").select("*")
-    ]);
-    setRows(e.data||[]);setAns(a.data||[]);setQs(q.data||[]);
-    setClassrooms(c.data||[]);setTrainers(tr.data||[]);
+    const fetchAllData = async () => {
+    setFetchError(null);
+    try {
+      const [e, a, q, c, tr] = await Promise.all([
+        db.from("evaluations").select("*").order("submitted_at", { ascending: false }),
+        db.from("evaluation_answers").select("*"),
+        db.from("questions").select("*"),
+        db.from("classrooms").select("*"),
+        db.from("trainers").select("*"),
+      ]);
+      const errors = [e, a, q, c, tr].filter((r) => r.error);
+      if (errors.length > 0) {
+        throw new Error(errors.map((r) => r.error!.message).join(" | "));
+      }
+      setRows(e.data || []);
+      setAns(a.data || []);
+      setQs(q.data || []);
+      setClassrooms(c.data || []);
+      setTrainers(tr.data || []);
+    } catch (err: any) {
+      setFetchError(err?.message || (isAr ? "خطأ غير معروف" : "Unknown error"));
+    }
   };
 
   useEffect(()=>{
@@ -868,7 +882,17 @@ export default function ReportsPage(){
   return(
     <div className="rw" style={{direction:t.dir,fontFamily:t.font}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
-
+      {fetchError && (
+        <ErrorState
+          message={fetchError}
+          onRetry={async () => {
+            setLoad(true);
+            await fetchAllData();
+            setLoad(false);
+          }}
+          lang={lang}
+        />
+      )}
       <div className="lay">
         {/* Sidebar */}
         <aside className="side noprint">
