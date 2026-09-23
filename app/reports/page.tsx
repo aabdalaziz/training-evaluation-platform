@@ -803,7 +803,10 @@ const setLang = (v: string) => {
   const dashRows=useMemo(()=>filterRowsBy(rows,classrooms,null,dashF),[rows,classrooms,dashF]);
   const dashIds=useMemo(()=>new Set(dashRows.map(r=>r.id)),[dashRows]);
   const dashAns=useMemo(()=>answersFor(cleanAnswers,dashIds),[cleanAnswers,dashIds]);
-  const dashSummary=useMemo(()=>const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(dashAns,lang),[dashAns,lang]);
+  const dashSummary = useMemo(
+  () => summaryFrom(dashAns, lang),
+  [dashAns, lang]
+);
   const dashAxis=useMemo(()=>buildAxisStats(dashAns,lang),[dashAns,lang]);
   const dashTrend=useMemo(()=>buildTrend(dashRows,dashAns,lang),[dashRows,dashAns,lang]);
   const dashRanking=useMemo(()=>buildRoomRanking(dashAns,dashRows,classrooms,trainers),[dashAns,dashRows,classrooms,trainers]);
@@ -817,7 +820,10 @@ const setLang = (v: string) => {
   const dailyRows=useMemo(()=>filterRowsBy(rows,classrooms,"DAILY",dailyF),[rows,classrooms,dailyF]);
   const dailyIds=useMemo(()=>new Set(dailyRows.map(r=>r.id)),[dailyRows]);
   const dailyAns=useMemo(()=>answersFor(cleanAnswers,dailyIds),[cleanAnswers,dailyIds]);
-  const dailySummary=useMemo(()=>const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(dailyAns,lang),[dailyAns,lang]);
+   const dailySummary = useMemo(
+  () => summaryFrom(dailyAns, lang),
+  [dailyAns, lang]
+);
   const dailyAxis=useMemo(()=>buildAxisStats(dailyAns,lang),[dailyAns,lang]);
   const dailyTrend=useMemo(()=>buildTrend(dailyRows,dailyAns,lang),[dailyRows,dailyAns,lang]);
   const dailyRoomRank=useMemo(()=>buildRoomRanking(dailyAns,dailyRows,classrooms,trainers),[dailyAns,dailyRows,classrooms,trainers]);
@@ -831,7 +837,7 @@ const setLang = (v: string) => {
   const finalRows=useMemo(()=>filterRowsBy(rows,classrooms,"FINAL",finalF),[rows,classrooms,finalF]);
   const finalIds=useMemo(()=>new Set(finalRows.map(r=>r.id)),[finalRows]);
   const finalAns=useMemo(()=>answersFor(cleanAnswers,finalIds),[cleanAnswers,finalIds]);
-  const finalSummary=useMemo(()=>const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);(finalAns,lang),[finalAns,lang]);
+   
   const finalAxis=useMemo(()=>buildAxisStats(finalAns,lang),[finalAns,lang]);
   const finalIndicators=useMemo(()=>buildIndicatorStats(finalAns,lang),[finalAns,lang]);
   const finalTrend=useMemo(()=>buildTrend(finalRows,finalAns,lang),[finalRows,finalAns,lang]);
@@ -841,7 +847,10 @@ const setLang = (v: string) => {
   const finalHighRisk=useMemo(()=>finalAxis.filter(x=>x.risk.key==="HIGH").length,[finalAxis]);
   const finalVerdict=useMemo(()=>verdictOf(finalSummary,lang,isAr?"مؤشر الرضا الختامي":"Final satisfaction index"),[finalSummary,lang,isAr]);
   const finalNarr=useMemo(()=>buildNarrative({summary:finalSummary,axis:finalAxis,trend:finalTrend,lang,kind:"final"}),[finalSummary,finalAxis,finalTrend,lang]);
-
+const finalSummary = useMemo(
+  () => summaryFrom(finalAns, lang),
+  [finalAns, lang]
+);
   /* ===== Participants ===== */
   const partRows=useMemo(()=>filterRowsBy(rows,classrooms,partKind==="ALL"?null:partKind,partF),[rows,classrooms,partF,partKind]);
   const partRoomData=useMemo(()=>{
