@@ -838,6 +838,7 @@ const setLang = (v: string) => {
   const finalIds=useMemo(()=>new Set(finalRows.map(r=>r.id)),[finalRows]);
   const finalAns=useMemo(()=>answersFor(cleanAnswers,finalIds),[cleanAnswers,finalIds]);
    
+  const finalSummary=useMemo(()=>summaryFrom(finalAns,lang),[finalAns,lang]);
   const finalAxis=useMemo(()=>buildAxisStats(finalAns,lang),[finalAns,lang]);
   const finalIndicators=useMemo(()=>buildIndicatorStats(finalAns,lang),[finalAns,lang]);
   const finalTrend=useMemo(()=>buildTrend(finalRows,finalAns,lang),[finalRows,finalAns,lang]);
@@ -847,10 +848,6 @@ const setLang = (v: string) => {
   const finalHighRisk=useMemo(()=>finalAxis.filter(x=>x.risk.key==="HIGH").length,[finalAxis]);
   const finalVerdict=useMemo(()=>verdictOf(finalSummary,lang,isAr?"مؤشر الرضا الختامي":"Final satisfaction index"),[finalSummary,lang,isAr]);
   const finalNarr=useMemo(()=>buildNarrative({summary:finalSummary,axis:finalAxis,trend:finalTrend,lang,kind:"final"}),[finalSummary,finalAxis,finalTrend,lang]);
-const finalSummary = useMemo(
-  () => summaryFrom(finalAns, lang),
-  [finalAns, lang]
-);
   /* ===== Participants ===== */
   const partRows=useMemo(()=>filterRowsBy(rows,classrooms,partKind==="ALL"?null:partKind,partF),[rows,classrooms,partF,partKind]);
   const partRoomData=useMemo(()=>{
