@@ -970,6 +970,7 @@ const setLang = (v: string) => {
 
           <div style={{marginTop:20,borderTop:"1px solid rgba(255,255,255,.12)",paddingTop:16}}>
             <button onClick={()=>setLang(isAr?"en":"ar")} aria-label={isAr?"Switch to English":"التبديل إلى العربية"} style={{width:"100%",background:"rgba(193,154,61,.18)",border:"1px solid rgba(193,154,61,.45)",color:"#f0d9a8",padding:12,borderRadius:12,fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:8,fontFamily:"inherit"}}>🌐 {t.lang}</button>
+            <button onClick={()=>router.push("/reports/center")} aria-label={isAr?"مركز التقارير":"Reports Center"} style={{width:"100%",marginBottom:8,background:"linear-gradient(135deg,#047857,#0d9488)",border:"1px solid rgba(201,162,75,.45)",color:"#fff",cursor:"pointer",padding:12,borderRadius:12,fontSize:14,fontWeight:900,fontFamily:"inherit"}}>📑 {isAr?"مركز التقارير — 12 نوعًا":"Reports Center — 12 types"}</button>
             <button onClick={()=>router.push("/admin/management")} aria-label={isAr?"لوحة الإدارة":"Admin panel"} style={{width:"100%",background:"transparent",border:"1px solid #33465e",color:"#b6c6d8",cursor:"pointer",padding:12,borderRadius:12,fontSize:14,fontWeight:800,fontFamily:"inherit"}}>⚙️ {isAr?"الإدارة":"Admin"}</button>
           </div>
           <div className="side-copy">{isAr?"جامعة الأمير مقرن بن عبدالعزيز":"University of Prince Mugrin"}</div>

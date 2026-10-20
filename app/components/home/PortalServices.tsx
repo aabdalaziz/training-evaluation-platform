@@ -32,10 +32,10 @@ const services = [
     color: '#ea580c',
   },
   {
-    title: 'التقارير',
-    desc: 'تقارير تنفيذية وتحليلية',
-    icon: '📊',
-    href: '/reports',
+    title: 'مركز التقارير',
+    desc: 'تنفيذية · تشغيلية · تحليلية · دعم القرار',
+    icon: '📑',
+    href: '/reports/center',
     color: '#0891b2',
   },
   {

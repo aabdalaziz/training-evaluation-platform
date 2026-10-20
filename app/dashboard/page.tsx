@@ -300,6 +300,9 @@ function Reports({ programs, stats }: { programs: Program[]; stats: { daily: num
         <h2>التقرير التحليلي / Analytical Report</h2>
         <p>{stats.daily ? `تم استلام ${stats.daily} تقييماً يومياً ومتوسط الرضا ${stats.avg.toFixed(1)} من 5.` : 'ابدأ بجمع التقييمات لإنتاج التقرير التفصيلي لكل مؤشر.'}</p>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Link href="/reports/center" style={{ background: '#14466B', color: '#fff', padding: '12px 24px', borderRadius: 10, textDecoration: 'none', display: 'inline-block', fontWeight: 800 }}>
+            📑 مركز التقارير (12 نوعًا) / Reports Center
+          </Link>
           <Link href="/reports" style={{ background: '#0d9488', color: '#fff', padding: '12px 24px', borderRadius: 10, textDecoration: 'none', display: 'inline-block', fontWeight: 800 }}>
             فتح التقرير التحليلي الكامل / Open Full Report
           </Link>

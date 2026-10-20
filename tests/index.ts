@@ -3,3 +3,4 @@
  * Node 20+ (which does not auto-discover .ts files) and on all platforms.
  */
 import './remoteLearningSurvey.test';
+import './reportsCenter.test';
