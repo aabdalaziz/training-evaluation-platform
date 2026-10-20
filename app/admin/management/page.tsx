@@ -141,6 +141,7 @@ setPrograms(pg.data || []);
           </div>
           <div className="top-actions">
             <button className="ghost" onClick={() => setLang(ar ? "en" : "ar")}>🌐 {ar ? "English" : "العربية"}</button>
+            <button className="ghost" onClick={() => router.push("/admin/survey-settings")}>💻 {ar ? "إعدادات استطلاع التعلم عن بُعد" : "Remote survey settings"}</button>
             <button className="ghost" onClick={() => router.push("/reports")}>📊 {ar ? "التقارير" : "Reports"}</button>
           </div>
         </div>
