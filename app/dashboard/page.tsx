@@ -280,6 +280,7 @@ function Evaluations({ stats }: { stats: { daily: number; final: number; avg: nu
         <div className="toolbar">
           <a className="button" href="/evaluate/daily">📝 الاستبيان اليومي / Daily</a>
           <a className="outline" href="/evaluate/final">🏁 الاستبيان النهائي / Final</a>
+          <a className="outline" href="/survey/remote-learning" target="_blank" rel="noreferrer">💻 استطلاع التعلم عن بُعد / Remote Survey</a>
         </div>
       </div>
     </>
@@ -298,9 +299,14 @@ function Reports({ programs, stats }: { programs: Program[]; stats: { daily: num
       <div className="panel">
         <h2>التقرير التحليلي / Analytical Report</h2>
         <p>{stats.daily ? `تم استلام ${stats.daily} تقييماً يومياً ومتوسط الرضا ${stats.avg.toFixed(1)} من 5.` : 'ابدأ بجمع التقييمات لإنتاج التقرير التفصيلي لكل مؤشر.'}</p>
-        <Link href="/reports" style={{ background: '#0d9488', color: '#fff', padding: '12px 24px', borderRadius: 10, textDecoration: 'none', display: 'inline-block', fontWeight: 800 }}>
-          فتح التقرير التحليلي الكامل / Open Full Report
-        </Link>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Link href="/reports" style={{ background: '#0d9488', color: '#fff', padding: '12px 24px', borderRadius: 10, textDecoration: 'none', display: 'inline-block', fontWeight: 800 }}>
+            فتح التقرير التحليلي الكامل / Open Full Report
+          </Link>
+          <Link href="/reports/remote-survey" style={{ background: '#fff', color: '#14466B', border: '1px solid #cbd5e1', padding: '12px 24px', borderRadius: 10, textDecoration: 'none', display: 'inline-block', fontWeight: 800 }}>
+            💻 نتائج استطلاع التعلم عن بُعد / Remote Survey Results
+          </Link>
+        </div>
       </div>
     </>
   );
