@@ -60,12 +60,12 @@ function ReportsCenter() {
         const s = await db.auth.getSession();
         if (!s.data?.session) { router.push('/login'); return; }
         const [ev, an, qs, cl, tr, pg] = await Promise.all([
-          db.from('evaluations').select('id,program_id,classroom_id,kind,submitted_at,evaluation_date,overall_rating,guest_email,guest_phone,guest_gender,accommodation_type,trainee_id').order('submitted_at', { ascending: false }),
-          db.from('evaluation_answers').select('evaluation_id,question_id,rating_value,text_value,selected_option'),
-          db.from('questions').select('id,question_key,kind,text_ar,text_en,section_ar,section_en,order_index'),
-          db.from('classrooms').select('id,code,program_id,trainer_id,delivery_mode,level'),
-          db.from('trainers').select('id,name'),
-          db.from('programs').select('id,name_ar,name_en,delivery_mode,status'),
+          db.from('evaluations').select('*').order('submitted_at', { ascending: false }),
+          db.from('evaluation_answers').select('*'),
+          db.from('questions').select('*'),
+          db.from('classrooms').select('*'),
+          db.from('trainers').select('*'),
+          db.from('programs').select('*'),
         ]);
         const err = [ev, an, qs, cl, tr, pg].find(r => r.error)?.error;
         if (err) throw err;
