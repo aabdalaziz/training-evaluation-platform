@@ -9,7 +9,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { downloadCSV, safeFilename } from '../../../lib/export/csv';
 import { downloadXlsx, type Sheet } from '../../../lib/export/xlsx';
-import { PERIOD_PRESETS, REPORTS, REPORT_GROUPS, reportById, type ReportDef, type SectionId } from '../../../lib/reports/catalog';
+import { downloadPptx, type PptSlide } from '../../../lib/export/pptx';
+import { AUDIENCES, PERIOD_PRESETS, REPORTS, REPORT_GROUPS, reportById, type ReportDef, type SectionId } from '../../../lib/reports/catalog';
+import { Icon, REPORT_ICON } from '../../../lib/ui/icons';
 import {
   TARGET, THRESHOLDS, PERF_LABEL, RISK_LABEL, KIND_LABEL, CATEGORY_LABEL,
   actionsToTable, applyFilters, briefText, buildComments, buildEvaluations, buildFacts, commentsToTable, factsOf, groupBy,
@@ -44,6 +46,8 @@ function ReportsCenter() {
     gender: params.get('gender') || '', deliveryMode: (params.get('mode') as Filters['deliveryMode']) || '',
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [audience, setAudience] = useState<(typeof AUDIENCES)[number]['id']>('all');
+  const visibleReports = useMemo(() => REPORTS.filter(r => audience === 'all' || r.audienceKey === audience), [audience]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
@@ -187,6 +191,46 @@ function ReportsCenter() {
     const t = mainTables()[0] || { name: 'kpis', rows: kpisToTable(k, lang) };
     downloadCSV(`${fileBase()}-${safeFilename(t.name)}.csv`, t.rows); flash(ar ? '✅ تم تنزيل CSV' : '✅ CSV downloaded');
   };
+  const exportPptx = () => {
+    const slides: PptSlide[] = [];
+    slides.push({ title, subtitle: scopeText, bullets: [`${ar ? 'الجمهور' : 'Audience'}: ${report.audience[lang]}`, `${ar ? 'تاريخ الإعداد' : 'Generated'}: ${today} · Asia/Riyadh`, ar ? 'منصة تقويم البرامج التدريبية — النتائج مجمّعة ولا تعرض هوية المشاركين' : 'Training Evaluation Platform — aggregated, anonymous results'] });
+    if (k.responses) {
+      slides.push({ title: ar ? 'المؤشرات الرئيسية' : 'Key indicators', bullets: [
+        `${ar ? 'المتوسط العام' : 'Overall mean'}: ${k.mean.toFixed(2)}/5 — ${ar ? 'الهدف' : 'target'} ${TARGET} (${ar ? 'الفجوة' : 'gap'} ${(k.mean - TARGET).toFixed(2)})`,
+        `${ar ? 'الاستجابات' : 'Responses'}: ${k.responses} — ${ar ? 'المشاركون' : 'participants'}: ${k.participants}`,
+        `${ar ? 'رضا مرتفع (4–5)' : 'High (4–5)'}: ${k.highPct.toFixed(0)}% — ${ar ? 'منخفض (1–2)' : 'low (1–2)'}: ${k.lowPct.toFixed(0)}%`,
+        `${ar ? 'التصنيف' : 'Band'}: ${PERF_LABEL[k.perf][lang]} — ${ar ? 'المخاطر' : 'risk'}: ${RISK_LABEL[k.risk][lang]}`,
+        ...(cmp && cmp.deltaMean !== null ? [`${ar ? 'مقارنة بالفترة السابقة' : 'vs previous period'}: ${cmp.deltaMean >= 0 ? '▲' : '▼'} ${Math.abs(cmp.deltaMean).toFixed(2)}`] : []),
+      ] });
+      if (story.length) slides.push({ title: ar ? 'القراءة التحليلية' : 'Analytical reading', bullets: story.slice(0, 6) });
+    } else {
+      slides.push({ title: ar ? 'لا توجد استجابات' : 'No responses', bullets: [ar ? 'لا توجد استجابات ضمن هذا النطاق — وسّع الفترة أو أزل بعض الفلاتر.' : 'No responses in this scope.'] });
+    }
+    for (const t of mainTables()) {
+      if (!t.rows.length || t.rows.length === 1) continue;
+      const body = t.rows.slice(1);
+      for (let i = 0; i < body.length && i < 39; i += 13) {
+        const chunk = body.slice(i, i + 13);
+        slides.push({ title: t.name + (body.length > 13 ? ` (${Math.floor(i / 13) + 1}/${Math.min(3, Math.ceil(body.length / 13))})` : ''), table: [t.rows[0], ...chunk] });
+      }
+    }
+    if (actions.length) slides.push({ title: ar ? 'القرارات المطلوبة' : 'Decisions required', bullets: actions.slice(0, 6).map(a => `${a.label}: ${a.recommendation} (${ar ? 'خلال' : 'within'} ${a.dueDays} ${ar ? 'يوم' : 'days'} — ${a.owner})`) });
+    downloadPptx(fileBase(), slides, { rtl: ar, footer: ar ? 'منصة تقويم البرامج التدريبية · جامعة الأمير مقرن' : 'Training Evaluation Platform · Prince Mugrin University' });
+    flash(ar ? '✅ تم تنزيل عرض PowerPoint' : '✅ PowerPoint downloaded');
+  };
+  const exportWord = () => {
+    const doc = document.querySelector('.rc-doc');
+    if (!doc) return;
+    const css = `body{font-family:Tajawal,Tahoma,Arial,sans-serif;direction:${ar ? 'rtl' : 'ltr'};color:#0f172a;font-size:12pt}
+      h1{color:#0f2a4e;font-size:20pt;margin:0 0 6pt}h2,h3{color:#0f2a4e;margin:14pt 0 6pt}
+      table{border-collapse:collapse;width:100%;margin:8pt 0}th,td{border:1px solid #cbd5e1;padding:4pt 6pt;font-size:10.5pt}th{background:#eef2f7}
+      .noprint{display:none}.rc-muted{color:#64748b}p{line-height:1.7;margin:4pt 0}`;
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${title}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body>${doc.innerHTML}</body></html>`;
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${fileBase()}.doc`; a.click(); URL.revokeObjectURL(a.href);
+    flash(ar ? '✅ تم تنزيل ملف Word' : '✅ Word file downloaded');
+  };
+
   const copyBrief = async () => {
     const txt = briefText(title, k, axes, actions, lang, scopeText);
     try { await navigator.clipboard.writeText(txt); flash(ar ? '✅ نُسخ الموجز — الصقه في واتساب أو البريد' : '✅ Brief copied'); } catch { window.prompt('Copy:', txt); }
@@ -229,12 +273,15 @@ function ReportsCenter() {
       <div className="rc-lay">
         {/* ===== catalog sidebar ===== */}
         <aside className={`rc-side noprint ${menuOpen ? 'open' : ''}`}>
-          {REPORT_GROUPS.map(g => (
+          <div className="rc-aud" role="tablist" aria-label={ar ? 'الفئة المستهدفة' : 'Audience'}>
+            {AUDIENCES.map(a => <button key={a.id} role="tab" aria-selected={audience === a.id} className={audience === a.id ? 'on' : ''} onClick={() => setAudience(a.id)}>{ar ? a.ar : a.en}</button>)}
+          </div>
+          {REPORT_GROUPS.filter(g => visibleReports.some(r => r.group === g.id)).map(g => (
             <div key={g.id} className="rc-group">
               <div className="rc-group-title">{ar ? g.ar : g.en}</div>
-              {REPORTS.filter(r => r.group === g.id).map(r => (
+              {visibleReports.filter(r => r.group === g.id).map(r => (
                 <button key={r.id} className={`rc-item ${r.id === reportId ? 'on' : ''}`} onClick={() => pickReport(r.id)} title={r.desc[lang]}>
-                  <span className="rc-item-ico">{r.icon}</span>
+                  <span className="rc-item-ico"><Icon name={REPORT_ICON[r.id] || 'reports'} size={18} /></span>
                   <span className="rc-item-txt"><b>{r.title[lang]}</b><small>{r.decision[lang]}</small></span>
                 </button>
               ))}
@@ -298,6 +345,8 @@ function ReportsCenter() {
               <button className="rc-btn primary" onClick={exportXlsx}>📗 Excel</button>
               <button className="rc-btn" onClick={exportCsv}>📄 CSV</button>
               <button className="rc-btn" onClick={() => window.print()}>🖨️ {ar ? 'طباعة / PDF' : 'Print / PDF'}</button>
+              <button className="rc-btn" onClick={exportWord}>📘 {ar ? 'تصدير Word' : 'Export Word'}</button>
+              <button className="rc-btn" onClick={exportPptx}>📙 {ar ? 'تصدير PowerPoint' : 'Export PowerPoint'}</button>
               <button className="rc-btn" onClick={copyBrief}>📋 {ar ? 'نسخ الموجز' : 'Copy brief'}</button>
               <button className="rc-btn" onClick={copyLink}>🔗 {ar ? 'نسخ الرابط' : 'Copy link'}</button>
               <button className="rc-btn" onClick={savePreset}>⭐ {ar ? 'حفظ كتقرير' : 'Save preset'}</button>
@@ -309,7 +358,7 @@ function ReportsCenter() {
             <header className="rc-doc-head">
               <div className="rc-logos"><img src="/logos/upm.png" alt="UPM" /><img src="/logos/center.png" alt="Center" /></div>
               <div className="rc-doc-title">
-                <div className="rc-kicker">{report.icon} {REPORT_GROUPS.find(g => g.id === report.group)?.[lang]}</div>
+                <div className="rc-kicker"><Icon name={REPORT_ICON[report.id] || 'reports'} size={14} /> {REPORT_GROUPS.find(g => g.id === report.group)?.[lang]} · {ar ? 'الجمهور' : 'Audience'}: {report.audience[lang]}</div>
                 <h1>{title}</h1>
                 <p>{report.desc[lang]}</p>
                 <div className="rc-meta">
@@ -324,7 +373,7 @@ function ReportsCenter() {
             {evals.length === 0 && <div className="rc-empty">{ar ? 'لا توجد استجابات ضمن هذا النطاق. وسّع الفترة أو أزل بعض الفلاتر.' : 'No responses in this scope. Widen the period or remove filters.'}</div>}
 
             {report.sections.map(sec => (
-              <Section key={sec} id={sec} lang={lang} ctx={{ k, axes, trainers, programs, classrooms, questions, daily, weekly, cmp, actions, comments, keywords, story, evals, facts, lk, report }} />
+              <Section key={sec} id={sec} lang={lang} ctx={{ k, axes, trainers, programs, classrooms, questions, daily, weekly, cmp, actions, comments, keywords, story, evals, facts, lk, report, programId: filters.programId }} />
             ))}
 
             <footer className="rc-doc-foot">
@@ -342,7 +391,7 @@ function ReportsCenter() {
 type Ctx = {
   k: Kpis; axes: GroupRow[]; trainers: GroupRow[]; programs: GroupRow[]; classrooms: GroupRow[]; questions: GroupRow[];
   daily: SeriesPoint[]; weekly: GroupRow[]; cmp: Comparison | null; actions: Action[]; comments: Comment[];
-  keywords: { word: string; count: number }[]; story: string[]; evals: Evaluation[]; facts: Fact[]; lk: Lookups; report: ReportDef;
+  keywords: { word: string; count: number }[]; story: string[]; evals: Evaluation[]; facts: Fact[]; lk: Lookups; report: ReportDef; programId?: string;
 };
 
 function Section({ id, lang, ctx }: { id: SectionId; lang: Lang; ctx: Ctx }) {
@@ -350,6 +399,8 @@ function Section({ id, lang, ctx }: { id: SectionId; lang: Lang; ctx: Ctx }) {
   const { k, axes, trainers, programs, classrooms, questions, daily, weekly, cmp, actions, comments, keywords, story, evals, facts, lk } = ctx;
   switch (id) {
     case 'kpis': return <KpiStrip k={k} cmp={cmp} lang={lang} />;
+    case 'programProfile': return <ProgramProfile programId={ctx.programId} lk={lk} lang={lang} />;
+    case 'priorityGauge': return <PriorityGauge actions={actions} k={k} lang={lang} />;
     case 'verdict': return <Verdict k={k} lang={lang} />;
     case 'narrative': return <Card title={ar ? '📝 القراءة التحليلية' : '📝 Analytical reading'}>{story.map((p, i) => <p key={i} className="rc-p">{p}</p>)}</Card>;
     case 'strengthsGaps': return <StrengthsGaps axes={axes} lang={lang} />;
@@ -378,6 +429,66 @@ function Section({ id, lang, ctx }: { id: SectionId; lang: Lang; ctx: Ctx }) {
     case 'rawTable': return <Card title={ar ? `🗂️ الاستجابات (${evals.length})` : `🗂️ Responses (${evals.length})`}><SimpleTable rows={rawToTable(evals.slice(0, 500), lk, lang)} />{evals.length > 500 && <div className="rc-muted">{ar ? 'يُعرض أول 500 صف — التصدير يشمل الكل.' : 'First 500 rows shown — export includes all.'}</div>}</Card>;
     default: return null;
   }
+}
+
+/* ===== ملف البرنامج المهني (مقدمة/أهداف/مخرجات) — يظهر عند اختيار برنامج واحد ===== */
+function ProgramProfile({ programId, lk, lang }: { programId?: string; lk: Lookups; lang: Lang }) {
+  const ar = lang === 'ar';
+  const p = programId ? lk.programs.find(x => x.id === programId) : undefined;
+  if (!p) return <div className="rc-hint">{ar ? 'اختر برنامجًا من الفلاتر لإظهار المقدمة والأهداف والمخرجات الخاصة به في التقرير.' : 'Select a program in the filters to include its overview, objectives and outcomes.'}</div>;
+  const pick = (a?: string | null, b?: string | null) => (ar ? a || b : b || a) || '';
+  const lines = (t: string) => t.split(/\r?\n/).map(x => x.replace(/^[-•*\d.)\s]+/, '').trim()).filter(Boolean);
+  const intro = pick(p.intro_ar, p.intro_en), objectives = lines(pick(p.objectives_ar, p.objectives_en)), outcomes = lines(pick(p.outcomes_ar, p.outcomes_en)), audience = pick(p.audience_ar, p.audience_en);
+  const empty = !intro && !objectives.length && !outcomes.length && !audience;
+  return (
+    <Card title={ar ? `📘 ملف البرنامج: ${p.name_ar || p.name_en}` : `📘 Program profile: ${p.name_en || p.name_ar}`}>
+      <div className="rc-profile-meta">
+        {p.start_date && <span>{ar ? 'الفترة' : 'Period'}: <bdi>{p.start_date} → {p.end_date || '…'}</bdi></span>}
+        {p.delivery_mode && <span>{ar ? 'التنفيذ' : 'Mode'}: {p.delivery_mode === 'remote' ? (ar ? 'عن بُعد' : 'Remote') : (ar ? 'حضوري' : 'On-site')}</span>}
+        {audience && <span>{ar ? 'الفئة المستهدفة' : 'Audience'}: {audience}</span>}
+      </div>
+      {empty && <div className="rc-muted">{ar ? 'لم تُدخل بيانات المحتوى المهني لهذا البرنامج بعد — تُضاف من لوحة التحكم ← البرامج ← تعديل ← «المحتوى المهني للتقرير».' : 'No professional content yet — add it from Dashboard → Programs → Edit.'}</div>}
+      {intro && <p className="rc-p">{intro}</p>}
+      <div className="rc-profile-cols">
+        {objectives.length > 0 && <div><h4>{ar ? 'الأهداف' : 'Objectives'}</h4><ol>{objectives.map((o, i) => <li key={i}>{o}</li>)}</ol></div>}
+        {outcomes.length > 0 && <div><h4>{ar ? 'المخرجات المتوقعة' : 'Expected outcomes'}</h4><ol>{outcomes.map((o, i) => <li key={i}>{o}</li>)}</ol></div>}
+      </div>
+    </Card>
+  );
+}
+
+/* ===== عدّاد أولوية التدخل — من سجل المخاطر الحقيقي ===== */
+function PriorityGauge({ actions, k, lang }: { actions: Action[]; k: Kpis; lang: Lang }) {
+  const ar = lang === 'ar';
+  if (!k.responses) return null;
+  const top = actions[0];
+  // 0–100: الفجوة عن الهدف (حتى 1.2 درجة) 50% + نسبة التقييمات المنخفضة (حتى 25%) 30% + عدد بنود الخطر العالي 20%
+  const gapScore = Math.min(1, Math.max(0, TARGET - k.mean) / 1.2) * 50;
+  const lowScore = Math.min(1, k.lowPct / 25) * 30;
+  const highCount = actions.filter(a => a.priority === 'HIGH').length;
+  const riskScore = Math.min(1, highCount / 3) * 20;
+  const score = Math.round(gapScore + lowScore + riskScore);
+  const level = score >= 60 ? 2 : score >= 30 ? 1 : 0;
+  const color = ['#059669', '#d97706', '#dc2626'][level];
+  const label = ar ? ['متابعة اعتيادية', 'تدخل خلال الأسبوع', 'تدخل فوري'][level] : ['Routine follow-up', 'Act this week', 'Immediate action'][level];
+  const r = 44, c = 2 * Math.PI * r, dash = (score / 100) * c;
+  return (
+    <Card title={ar ? '🎯 أولوية التدخل' : '🎯 Intervention priority'}>
+      <div className="rc-gauge">
+        <svg width="120" height="120" viewBox="0 0 120 120" aria-label={`${score}/100`}>
+          <circle cx="60" cy="60" r={r} fill="none" stroke="#e2e8f0" strokeWidth="12" />
+          <circle cx="60" cy="60" r={r} fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={`${dash} ${c - dash}`} transform="rotate(-90 60 60)" />
+          <text x="60" y="56" textAnchor="middle" fontSize="26" fontWeight="900" fill={color}>{score}</text>
+          <text x="60" y="76" textAnchor="middle" fontSize="11" fill="#64748b">/100</text>
+        </svg>
+        <div className="rc-gauge-txt">
+          <b style={{ color }}>{label}</b>
+          <div className="rc-muted">{ar ? `الفجوة عن الهدف ${Math.max(0, TARGET - k.mean).toFixed(2)} · تقييمات منخفضة ${k.lowPct.toFixed(0)}% · بنود خطر عالٍ ${highCount}` : `Gap ${Math.max(0, TARGET - k.mean).toFixed(2)} · low ratings ${k.lowPct.toFixed(0)}% · high-risk items ${highCount}`}</div>
+          {top && <div className="rc-gauge-top">{ar ? 'القرار المطلوب أولًا:' : 'First decision:'} <b>{top.label}</b> — {top.recommendation}</div>}
+        </div>
+      </div>
+    </Card>
+  );
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
@@ -661,7 +772,7 @@ body{margin:0;background:#f1f5f9}
 .rc-item{width:100%;display:flex;gap:10px;align-items:flex-start;background:transparent;border:1px solid transparent;border-radius:12px;padding:9px 10px;cursor:pointer;font-family:inherit;text-align:start;color:#0f172a}
 .rc-item:hover{background:#f8fafc}
 .rc-item.on{background:linear-gradient(135deg,#e0f2f1,#ecfeff);border-color:#99f6e4}
-.rc-item-ico{font-size:20px;line-height:1}
+.rc-item-ico{line-height:1;color:#0f2a4e;display:inline-flex}.rc-item.on .rc-item-ico{color:#078981}.rc-aud{display:flex;gap:4px;background:#eef2f7;padding:4px;border-radius:10px;margin:4px 0 10px}.rc-aud button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 4px;font:inherit;font-size:12px;font-weight:800;color:#475569;cursor:pointer}.rc-aud button.on{background:#fff;color:#0f2a4e;box-shadow:0 1px 3px rgba(15,23,42,.12)}.rc-kicker svg{vertical-align:-2px}
 .rc-item-txt{display:flex;flex-direction:column;gap:2px}
 .rc-item-txt b{font-size:14px}
 .rc-item-txt small{font-size:11px;color:#64748b;font-weight:700;line-height:1.4}
@@ -676,7 +787,7 @@ body{margin:0;background:#f1f5f9}
 .rc-filters select,.rc-filters input[type=date]{border:1px solid #cbd5e1;border-radius:10px;padding:9px 10px;font-family:inherit;font-weight:700;background:#fff;color:#0f172a;font-size:13px}
 .rc-check{flex-direction:row!important;align-items:center;gap:8px!important;padding-bottom:8px}
 .rc-link{background:transparent;border:0;color:${TEAL};font-weight:900;cursor:pointer;font-family:inherit;padding:8px}
-.rc-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0}
+.rc-hint{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700}.rc-profile-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:800;color:#475569;margin-bottom:8px}.rc-profile-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.rc-profile-cols h4{margin:6px 0;color:#0f2a4e;font-size:14px}.rc-profile-cols ol{margin:0;padding-inline-start:20px;line-height:1.9;font-size:13px}.rc-gauge{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.rc-gauge-txt{flex:1;min-width:220px;font-size:13px;line-height:1.8}.rc-gauge-txt>b{font-size:16px}.rc-gauge-top{margin-top:6px;background:#f8fafc;border-radius:10px;padding:8px 10px}@media(max-width:700px){.rc-profile-cols{grid-template-columns:1fr}}.rc-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed #e2e8f0}
 .rc-btn{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px 14px;font-family:inherit;font-weight:800;cursor:pointer;font-size:13px;color:#0f172a}
 .rc-btn:hover{background:#f8fafc}
 .rc-btn.primary{background:linear-gradient(135deg,#047857,${TEAL});color:#fff;border-color:transparent}
