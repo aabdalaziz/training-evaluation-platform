@@ -18,6 +18,7 @@ export default function ManagementPage() {
   const [tPhone, setTPhone] = useState("");
   const [tEmail, setTEmail] = useState("");
   const [cCode, setCCode] = useState(""); const [cProgram, setCProgram] = useState(""); const [cLevel, setCLevel] = useState(""); const [programs, setPrograms] = useState([]);
+  const [cPeriod, setCPeriod] = useState(""); const [cTime, setCTime] = useState("");
   const [cTrainer, setCTrainer] = useState("");
   const [msg, setMsg] = useState("");
   const ar = lang === "ar";
@@ -27,7 +28,7 @@ export default function ManagementPage() {
    const [tr, cl, pg] = await Promise.all([
   db.from("trainers").select("*").order("name", { ascending: true }),
   db.from("classrooms").select("*").order("code", { ascending: true }),
-  db.from("programs").select("id,name_ar").order("name_ar")
+  db.from("programs").select("id,name_ar,delivery_mode").order("name_ar")
 ]);
 
 setTrainers(tr.data || []);
@@ -64,22 +65,38 @@ setPrograms(pg.data || []);
     if (error) { flash(error.message); return; }
     await loadAll(); flash(ar ? "تم الحذف" : "Deleted");
   };
- const addClassroom = async () => {
-  if (!cCode.trim()) {
-    flash(ar ? "رمز القاعة مطلوب" : "Code required");
-    return;
-  }
+ const selectedProgram = programs.find(p => p.id === cProgram);
+ const isRemote = selectedProgram?.delivery_mode === "remote";
+ const PERIODS = [
+   { v: "morning", ar: "صباحي", en: "Morning" },
+   { v: "evening", ar: "مسائي", en: "Evening" },
+   { v: "night",   ar: "ليلي",  en: "Night" },
+ ];
 
+ const addClassroom = async () => {
   if (!cProgram) {
     flash(ar ? "يرجى اختيار البرنامج" : "Please select a program");
     return;
   }
 
+  let code = "";
+  if (isRemote) {
+    if (!cPeriod) { flash(ar ? "يرجى اختيار التوقيت" : "Please select the timing"); return; }
+    if (!cLevel.trim()) { flash(ar ? "يرجى إدخال المستوى" : "Please enter the level"); return; }
+    const periodLabel = PERIODS.find(x => x.v === cPeriod)?.ar || cPeriod;
+    code = [ar ? "عن بعد" : "Remote", periodLabel + (cTime.trim() ? ` ${cTime.trim()}` : ""), cLevel.trim()].join(" - ");
+  } else {
+    if (!cCode.trim()) { flash(ar ? "رقم / اسم القاعة مطلوب" : "Room number / name required"); return; }
+    code = cCode.trim();
+  }
+
   const { error } = await db.from("classrooms").insert({
-    code: cCode.trim(),
+    code,
     program_id: cProgram,
     level: cLevel.trim() || null,
-    trainer_id: cTrainer || null
+    trainer_id: cTrainer || null,
+    delivery_mode: isRemote ? "remote" : "onsite",
+    schedule: isRemote ? [cPeriod, cTime.trim()].filter(Boolean).join(" ") : null
   });
 
   if (error) {
@@ -91,6 +108,8 @@ setPrograms(pg.data || []);
   setCProgram("");
   setCLevel("");
   setCTrainer("");
+  setCPeriod("");
+  setCTime("");
 
   await loadAll();
   flash(ar ? "تمت إضافة القاعة" : "Room added");
@@ -177,37 +196,48 @@ setPrograms(pg.data || []);
           <div className="grid2">
             <div className="card">
               <h3 className="ct">➕ {ar ? "إضافة قاعة" : "Add room"}</h3>
-              <label className="lb2">{ar ? "رمز القاعة *" : "Room code *"}</label>
-              <label className="lb2">
-  {ar ? "البرنامج *" : "Program *"}
-</label>
+              <label className="lb2">{ar ? "البرنامج *" : "Program *"}</label>
+              <select className="inp" value={cProgram} onChange={e => { setCProgram(e.target.value); setCCode(""); setCPeriod(""); setCTime(""); }}>
+                <option value="">{ar ? "اختر البرنامج" : "Select program"}</option>
+                {programs.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.delivery_mode === "remote" ? "💻 " : "🏫 "}{p.name_ar}
+                  </option>
+                ))}
+              </select>
 
-<select
-  className="inp"
-  value={cProgram}
-  onChange={e => setCProgram(e.target.value)}
->
-  <option value="">
-    {ar ? "اختر البرنامج" : "Select program"}
-  </option>
+              {cProgram && (
+                <div className={isRemote ? "mode-badge remote" : "mode-badge onsite"}>
+                  {isRemote ? (ar ? "💻 برنامج عن بعد" : "💻 Remote program") : (ar ? "🏫 برنامج حضوري" : "🏫 On-site program")}
+                </div>
+              )}
 
-  {programs.map(p => (
-    <option key={p.id} value={p.id}>
-      {p.name_ar}
-    </option>
-  ))}
-</select>
+              {cProgram && !isRemote && (
+                <>
+                  <label className="lb2">{ar ? "رقم / اسم القاعة *" : "Room number / name *"}</label>
+                  <input className="inp" value={cCode} onChange={e => setCCode(e.target.value)} placeholder={ar ? "مثال: 101 أو قاعة الملك فهد" : "e.g. 101 or Main Hall"} />
+                  <label className="lb2">{ar ? "المستوى" : "Level"}</label>
+                  <input className="inp" value={cLevel} onChange={e => setCLevel(e.target.value)} placeholder={ar ? "مبتدئ / متوسط / متقدم" : "Beginner / Intermediate / Advanced"} />
+                </>
+              )}
 
-<label className="lb2">
-  {ar ? "المستوى" : "Level"}
-</label>
-
-<input
-  className="inp"
-  value={cLevel}
-  onChange={e => setCLevel(e.target.value)}
-  placeholder={ar ? "مبتدئ / متوسط / متقدم" : "Beginner / Intermediate / Advanced"}
-/>
+              {cProgram && isRemote && (
+                <>
+                  <label className="lb2">{ar ? "التوقيت *" : "Timing *"}</label>
+                  <select className="inp" value={cPeriod} onChange={e => setCPeriod(e.target.value)}>
+                    <option value="">{ar ? "اختر التوقيت" : "Select timing"}</option>
+                    {PERIODS.map(x => <option key={x.v} value={x.v}>{ar ? x.ar : x.en}</option>)}
+                  </select>
+                  <label className="lb2">{ar ? "الوقت (اختياري)" : "Time (optional)"}</label>
+                  <input className="inp" value={cTime} onChange={e => setCTime(e.target.value)} placeholder={ar ? "مثال: 4:00 – 6:00 م" : "e.g. 4:00 – 6:00 PM"} />
+                  <label className="lb2">{ar ? "المستوى *" : "Level *"}</label>
+                  <input className="inp" value={cLevel} onChange={e => setCLevel(e.target.value)} placeholder={ar ? "مبتدئ / متوسط / متقدم" : "Beginner / Intermediate / Advanced"} />
+                  <div className="preview">
+                    {ar ? "سيُحفظ باسم: " : "Will be saved as: "}
+                    <b>{[ar ? "عن بعد" : "Remote", (PERIODS.find(x => x.v === cPeriod)?.[ar ? "ar" : "en"] || "…") + (cTime.trim() ? ` ${cTime.trim()}` : ""), cLevel.trim() || "…"].join(" - ")}</b>
+                  </div>
+                </>
+              )}
               <label className="lb2">{ar ? "المدرب" : "Trainer"}</label>
               <select className="inp" value={cTrainer} onChange={e => setCTrainer(e.target.value)}>
                 <option value="">{ar ? "بدون مدرب" : "No trainer"}</option>
@@ -227,11 +257,17 @@ setPrograms(pg.data || []);
               <h3 className="ct">🏫 {ar ? "القاعات والربط بالمدرب" : "Rooms & trainer linking"}</h3>
               <div className="tw">
                 <table className="tbl">
-                  <thead><tr><th className="th">{ar ? "القاعة" : "Room"}</th><th className="th">{ar ? "المدرب" : "Trainer"}</th><th className="th"></th></tr></thead>
+                  <thead><tr><th className="th">{ar ? "القاعة" : "Room"}</th><th className="th">{ar ? "النوع" : "Type"}</th><th className="th">{ar ? "البرنامج" : "Program"}</th><th className="th">{ar ? "المدرب" : "Trainer"}</th><th className="th"></th></tr></thead>
                   <tbody>
                     {classrooms.map(c => (
                       <tr key={c.id}>
                         <td className="td nm">{c.code}</td>
+                        <td className="td">
+                          <span className={c.delivery_mode === "remote" ? "pill remote" : "pill onsite"}>
+                            {c.delivery_mode === "remote" ? (ar ? "💻 عن بعد" : "💻 Remote") : (ar ? "🏫 حضوري" : "🏫 On-site")}
+                          </span>
+                        </td>
+                        <td className="td lt">{programs.find(p => p.id === c.program_id)?.name_ar || "—"}</td>
                         <td className="td">
                           <select className="mini-sel" value={c.trainer_id || ""} onChange={e => linkRoom(c.id, e.target.value)}>
                             <option value="">{ar ? "بدون مدرب" : "No trainer"}</option>
@@ -241,7 +277,7 @@ setPrograms(pg.data || []);
                         <td className="td"><button className="del" onClick={() => deleteClassroom(c.id)}>🗑️</button></td>
                       </tr>
                     ))}
-                    {!classrooms.length && <tr><td className="td es" colSpan={3}>{ar ? "لا توجد قاعات" : "No rooms"}</td></tr>}
+                    {!classrooms.length && <tr><td className="td es" colSpan={5}>{ar ? "لا توجد قاعات" : "No rooms"}</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -258,6 +294,13 @@ const CSS = `
 *{box-sizing:border-box;}
 :root{--upm-navy:#14466B;--upm-navy-2:#0d3049;--upm-emerald:#00897B;--upm-teal:#1FA39A;--upm-gold:#C9A24B;}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.mode-badge{margin:10px 0 4px;padding:8px 12px;border-radius:10px;font-weight:800;font-size:13px;display:inline-block;}
+.mode-badge.onsite{background:#e0f2fe;color:#0369a1;}
+.mode-badge.remote{background:#ede9fe;color:#6d28d9;}
+.pill{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;}
+.pill.onsite{background:#e0f2fe;color:#0369a1;}
+.pill.remote{background:#ede9fe;color:#6d28d9;}
+.preview{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f1f5f9;color:#334155;font-size:13px;}
 body{margin:0;background:#f4f6f8;}
 .mg{min-height:100vh;background:#f4f6f8;font-family:Tajawal,Arial,sans-serif;color:#0f172a;padding-bottom:40px;}
 .ls{display:flex;align-items:center;justify-content:center;background:var(--upm-navy);}
