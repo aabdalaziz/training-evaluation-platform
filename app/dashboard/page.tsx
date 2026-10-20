@@ -22,15 +22,17 @@ type Program = {
   id: string; name_ar: string; name_en: string | null; description_ar?: string | null;
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'; start_date: string | null; end_date: string | null; created_at: string;
   delivery_mode: 'onsite' | 'remote' | null;
+  intro_ar?: string | null; intro_en?: string | null; objectives_ar?: string | null; objectives_en?: string | null; outcomes_ar?: string | null; outcomes_en?: string | null; audience_ar?: string | null; audience_en?: string | null;
 };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id: string | null; delivery_mode: string | null; level_id?: string | null; level?: string | null };
 type Trainer = { id: string; name: string };
 type View = 'overview' | 'programs' | 'evaluations' | 'reports' | 'settings';
-type FormState = { name_ar: string; name_en: string; description_ar: string; start_date: string; end_date: string; delivery_mode: 'onsite' | 'remote' };
+type FormState = { name_ar: string; name_en: string; description_ar: string; start_date: string; end_date: string; delivery_mode: 'onsite' | 'remote'; intro_ar: string; intro_en: string; objectives_ar: string; objectives_en: string; outcomes_ar: string; outcomes_en: string; audience_ar: string; audience_en: string };
 type Range = '7d' | '14d' | '30d' | 'all';
 
 const NAVY = '#14466B', TEAL = '#0d9488', GOLD = '#C9A24B';
-const emptyForm: FormState = { name_ar: '', name_en: '', description_ar: '', start_date: '', end_date: '', delivery_mode: 'onsite' };
+const PROFILE_KEYS = ['intro_ar', 'intro_en', 'objectives_ar', 'objectives_en', 'outcomes_ar', 'outcomes_en', 'audience_ar', 'audience_en'] as const;
+const emptyForm: FormState = { name_ar: '', name_en: '', description_ar: '', start_date: '', end_date: '', delivery_mode: 'onsite', intro_ar: '', intro_en: '', objectives_ar: '', objectives_en: '', outcomes_ar: '', outcomes_en: '', audience_ar: '', audience_en: '' };
 const STATUS_STYLE: Record<Program['status'], { bg: string; color: string; label: string }> = {
   DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'مسودة' }, ACTIVE: { bg: '#d1fae5', color: '#047857', label: 'نشط' },
   COMPLETED: { bg: '#dbeafe', color: '#1d4ed8', label: 'مكتمل' }, CANCELLED: { bg: '#fee2e2', color: '#b91c1c', label: 'ملغى' },
@@ -77,7 +79,7 @@ const PATHS: Record<IconName, string> = {
 function Icon({ name, size = 20, color = 'currentColor', stroke = 2 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={PATHS[name]} /></svg>;
 }
-const REPORT_ICON: Record<string, IconName> = { executive: 'shield', trainers: 'users', programs: 'book', classrooms: 'school', axes: 'compass', questions: 'question', trend: 'trend', comparison: 'scale', participation: 'users', qualitative: 'chat', actions: 'target', raw: 'folder' };
+const REPORT_ICON: Record<string, IconName> = { trainer_card: 'star', executive: 'shield', trainers: 'users', programs: 'book', classrooms: 'school', axes: 'compass', questions: 'question', trend: 'trend', comparison: 'scale', participation: 'users', qualitative: 'chat', actions: 'target', raw: 'folder' };
 
 /* ============================================================ page */
 export default function Dashboard() {
@@ -133,13 +135,13 @@ export default function Dashboard() {
 
   /* ---------- programs CRUD (unchanged behaviour) ---------- */
   function openAdd() { setEditing(null); setForm(emptyForm); setShowForm(true); }
-  function openEdit(p: Program) { setEditing(p); setForm({ name_ar: p.name_ar || '', name_en: p.name_en || '', description_ar: p.description_ar || '', start_date: p.start_date || '', end_date: p.end_date || '', delivery_mode: p.delivery_mode || 'onsite' }); setShowForm(true); }
+  function openEdit(p: Program) { setEditing(p); setForm({ name_ar: p.name_ar || '', name_en: p.name_en || '', description_ar: p.description_ar || '', start_date: p.start_date || '', end_date: p.end_date || '', delivery_mode: p.delivery_mode || 'onsite', ...Object.fromEntries(PROFILE_KEYS.map(k => [k, String((p as any)[k] || '')])) as Record<(typeof PROFILE_KEYS)[number], string> }); setShowForm(true); }
   function closeForm() { setShowForm(false); setEditing(null); setForm(emptyForm); }
   async function saveProgram(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); if (!profile) return;
     if (!form.name_ar.trim()) { notify('اسم البرنامج بالعربية مطلوب.'); return; }
     setSaving(true);
-    const payload = { name_ar: form.name_ar.trim(), name_en: form.name_en.trim() || null, description_ar: form.description_ar.trim() || null, start_date: form.start_date || null, end_date: form.end_date || null, delivery_mode: form.delivery_mode };
+    const payload = { name_ar: form.name_ar.trim(), name_en: form.name_en.trim() || null, description_ar: form.description_ar.trim() || null, start_date: form.start_date || null, end_date: form.end_date || null, delivery_mode: form.delivery_mode, ...Object.fromEntries(PROFILE_KEYS.map(k => [k, form[k].trim() || null])) };
     const res = editing ? await db.from('programs').update(payload).eq('id', editing.id) : await db.from('programs').insert({ organization_id: profile.organization_id, status: 'DRAFT', ...payload });
     setSaving(false);
     if (res.error) { notify('تعذر الحفظ: ' + res.error.message); return; }
@@ -286,6 +288,7 @@ export default function Dashboard() {
           <Link href="/admin/management" className="db-navlink"><Icon name="admin" size={20} /><span><b>لوحة الإدارة</b><small>المدربون · القاعات · المستويات</small></span></Link>
           <Link href="/reports/center" className="db-navlink"><Icon name="chart" size={20} /><span><b>مركز التقارير</b><small>تنفيذية · تشغيلية · تحليلية</small></span></Link>
           <Link href="/reports/remote-survey" className="db-navlink"><Icon name="laptop" size={20} /><span><b>استطلاع التعلم عن بُعد</b><small>{raw?.remoteResponses || 0} استجابة</small></span></Link>
+          <Link href="/admin/data-lifecycle" className="db-navlink"><Icon name="trash" size={20} /><span><b>دورة حياة البيانات</b><small>معاينة وتفريغ منضبط</small></span></Link>
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
       </aside>
@@ -418,6 +421,19 @@ export default function Dashboard() {
                   <label>تاريخ البداية<input type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} /></label>
                   <label>تاريخ النهاية<input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} /></label>
                   <label className="wide">الوصف<textarea rows={3} value={form.description_ar} onChange={e => setForm({ ...form, description_ar: e.target.value })} /></label>
+                  <details className="wide db-details" open={!!(form.intro_ar || form.objectives_ar || form.outcomes_ar)}>
+                    <summary><Icon name="book" size={16} /> المحتوى المهني للتقرير (يظهر تلقائيًا في الموجز التنفيذي ومقارنة البرامج وبطاقة المدرب)</summary>
+                    <div className="db-form-grid">
+                      <label>مقدمة البرنامج (عربي)<textarea rows={3} value={form.intro_ar} onChange={e => setForm({ ...form, intro_ar: e.target.value })} /></label>
+                      <label>Program overview (English)<textarea rows={3} dir="ltr" value={form.intro_en} onChange={e => setForm({ ...form, intro_en: e.target.value })} /></label>
+                      <label>الأهداف — كل هدف في سطر<textarea rows={4} value={form.objectives_ar} onChange={e => setForm({ ...form, objectives_ar: e.target.value })} /></label>
+                      <label>Objectives — one per line<textarea rows={4} dir="ltr" value={form.objectives_en} onChange={e => setForm({ ...form, objectives_en: e.target.value })} /></label>
+                      <label>المخرجات المتوقعة — كل مخرج في سطر<textarea rows={4} value={form.outcomes_ar} onChange={e => setForm({ ...form, outcomes_ar: e.target.value })} /></label>
+                      <label>Expected outcomes — one per line<textarea rows={4} dir="ltr" value={form.outcomes_en} onChange={e => setForm({ ...form, outcomes_en: e.target.value })} /></label>
+                      <label>الفئة المستهدفة (عربي)<input value={form.audience_ar} onChange={e => setForm({ ...form, audience_ar: e.target.value })} /></label>
+                      <label>Target audience (English)<input dir="ltr" value={form.audience_en} onChange={e => setForm({ ...form, audience_en: e.target.value })} /></label>
+                    </div>
+                  </details>
                 </div>
                 <div className="db-row"><button className="db-btn primary" disabled={saving}>{saving ? 'جارٍ الحفظ…' : editing ? 'حفظ التعديلات' : 'حفظ كمسودة'}</button><button type="button" className="db-btn" onClick={closeForm}>إلغاء</button></div>
               </form>
@@ -728,7 +744,7 @@ body{margin:0;background:#f1f5f9}
 .db-pills{display:flex;gap:6px;flex-wrap:wrap}
 .db-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.db-pwmsg{display:flex;gap:8px;align-items:center;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:800;margin-bottom:12px}.db-pwmsg.ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}.db-pwmsg.err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
 .db-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:800;color:#475569}
-.db-form label.wide{grid-column:1/-1}
+.db-form label.wide{grid-column:1/-1}.db-details{grid-column:1/-1;border:1px dashed #cbd5e1;border-radius:12px;padding:10px 12px;background:#f8fafc}.db-details summary{cursor:pointer;font-weight:800;font-size:13px;color:#0f2a4e;display:flex;gap:8px;align-items:center;list-style:none}.db-details summary::-webkit-details-marker{display:none}.db-details[open] summary{margin-bottom:10px}
 .db-form input,.db-form select,.db-form textarea{border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-family:inherit;font-weight:700;font-size:13px;color:#0f172a;background:#fff}
 @media(max-width:1100px){.db-g3{grid-template-columns:1fr}.db-hero{grid-template-columns:1fr}}
 @media(max-width:900px){.db{grid-template-columns:1fr}.db{background:#f1f5f9}.db-side{display:none;position:fixed;inset:0;z-index:50;height:auto}.db-side.open{display:flex}.db-burger{display:block}.db-g2{grid-template-columns:1fr}.db-form-grid{grid-template-columns:1fr}.db-hero-score{font-size:42px}}
