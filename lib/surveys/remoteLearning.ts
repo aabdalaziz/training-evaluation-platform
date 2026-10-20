@@ -190,11 +190,31 @@ export function scheduleLabel(s: Schedule | undefined | null, lang: Lang): strin
  * A human-readable, *distinguishing* label for a group:
  * "G-2 · B1 · Dr. Yasser"  (+ section name if present)
  */
+/**
+ * Effective level of a classroom. Uses `level_id` when set; otherwise falls back
+ * to matching the legacy free-text `classrooms.level` against the level code or
+ * name (case-insensitive). This keeps rooms created from the admin panel linked
+ * to the survey without re-entering data anywhere else.
+ */
+export function resolveLevel(c: Classroom, levels: Level[]): Level | undefined {
+  if (c.level_id) {
+    const byId = levels.find(l => l.id === c.level_id);
+    if (byId) return byId;
+  }
+  const txt = (c.level || '').trim().toLowerCase();
+  if (!txt) return undefined;
+  const scoped = levels.filter(l => !l.program_id || l.program_id === c.program_id);
+  return scoped.find(l => l.code.trim().toLowerCase() === txt)
+    || scoped.find(l => (l.name_ar || '').trim().toLowerCase() === txt || (l.name_en || '').trim().toLowerCase() === txt);
+}
+export function resolveLevelId(c: Classroom, levels: Level[]): string | null {
+  return resolveLevel(c, levels)?.id || null;
+}
 export function classroomLabel(
   c: Classroom, ctx: { trainers: Trainer[]; levels: Level[] }, lang: Lang,
 ): string {
   const trainer = ctx.trainers.find(x => x.id === c.trainer_id);
-  const level = ctx.levels.find(x => x.id === c.level_id);
+  const level = resolveLevel(c, ctx.levels);
   const parts = [
     c.section_name ? `${c.code} (${c.section_name})` : c.code,
     level ? level.code : (c.level || ''),
@@ -221,10 +241,11 @@ export function levelsForProgram(levels: Level[], programId: string | null | und
 export function classroomsFor(
   classrooms: Classroom[],
   f: { programId?: string; levelId?: string; trainerId?: string },
+  levels: Level[] = [],
 ): Classroom[] {
   return classrooms.filter(c =>
     (!f.programId || c.program_id === f.programId) &&
-    (!f.levelId || c.level_id === f.levelId) &&
+    (!f.levelId || (levels.length ? resolveLevelId(c, levels) : c.level_id) === f.levelId) &&
     (!f.trainerId || c.trainer_id === f.trainerId),
   );
 }
@@ -233,8 +254,9 @@ export function classroomsFor(
 export function trainersFor(
   trainers: Trainer[], classrooms: Classroom[],
   f: { programId?: string; levelId?: string },
+  levels: Level[] = [],
 ): Trainer[] {
-  const ids = new Set(classroomsFor(classrooms, f).map(c => c.trainer_id).filter(Boolean));
+  const ids = new Set(classroomsFor(classrooms, f, levels).map(c => c.trainer_id).filter(Boolean));
   return trainers.filter(t => ids.has(t.id)).sort((a, b) => a.name.localeCompare(b.name));
 }
 

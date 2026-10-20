@@ -6,7 +6,7 @@ import { supabase } from '../../../lib/supabase/client';
 import {
   ATTENDANCE, DIFFICULTIES, SCALE, STATEMENTS, SURVEY_INTRO, SURVEY_TITLE, UI,
   buildPayload, classroomLabel, classroomsFor, emptyDraft, levelLabel, levelsForProgram,
-  remotePrograms, scheduleLabel, schedulesFor, t, toggleDifficulty, trainersFor, validateDraft,
+  remotePrograms, resolveLevelId, scheduleLabel, schedulesFor, t, toggleDifficulty, trainersFor, validateDraft,
   type Classroom, type Draft, type Lang, type Level, type Program, type Schedule, type Trainer,
   type ValidationError,
 } from '../../../lib/surveys/remoteLearning';
@@ -89,7 +89,7 @@ function SurveyForm() {
         setDraft(d => ({
           ...d,
           programId: cls?.program_id || (progs.some(x => x.id === qProgram) ? qProgram : (progs.length === 1 ? progs[0].id : '')),
-          levelId: cls?.level_id || '',
+          levelId: cls ? (resolveLevelId(cls, (l.data || []) as Level[]) || '') : '',
           trainerId: cls?.trainer_id || '',
           classroomId: cls?.id || '',
           scheduleId: qSchedule,
@@ -107,12 +107,12 @@ function SurveyForm() {
   /* ---------------- cascading option lists ---------------- */
   const levelOptions = useMemo(() => levelsForProgram(levels, draft.programId), [levels, draft.programId]);
   const trainerOptions = useMemo(
-    () => trainersFor(trainers, classrooms, { programId: draft.programId, levelId: draft.levelId }),
-    [trainers, classrooms, draft.programId, draft.levelId],
+    () => trainersFor(trainers, classrooms, { programId: draft.programId, levelId: draft.levelId }, levels),
+    [trainers, classrooms, levels, draft.programId, draft.levelId],
   );
   const groupOptions = useMemo(
-    () => classroomsFor(classrooms, { programId: draft.programId, levelId: draft.levelId, trainerId: draft.trainerId }),
-    [classrooms, draft.programId, draft.levelId, draft.trainerId],
+    () => classroomsFor(classrooms, { programId: draft.programId, levelId: draft.levelId, trainerId: draft.trainerId }, levels),
+    [classrooms, levels, draft.programId, draft.levelId, draft.trainerId],
   );
   const scheduleOptions = useMemo(() => schedulesFor(schedules, draft.classroomId), [schedules, draft.classroomId]);
 
@@ -129,7 +129,7 @@ function SurveyForm() {
   const onTrainer = (v: string) => upd({ trainerId: v, classroomId: '', scheduleId: '' });
   const onGroup = (v: string) => {
     const c = classrooms.find(x => x.id === v);
-    upd({ classroomId: v, scheduleId: '', levelId: c?.level_id || draft.levelId, trainerId: c?.trainer_id || draft.trainerId });
+    upd({ classroomId: v, scheduleId: '', levelId: (c && resolveLevelId(c, levels)) || draft.levelId, trainerId: c?.trainer_id || draft.trainerId });
   };
 
   const hasError = (field: string) => errors.some(e => e.field === field);

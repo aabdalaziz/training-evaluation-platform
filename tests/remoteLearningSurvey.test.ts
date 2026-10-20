@@ -8,7 +8,7 @@ import {
   STATEMENTS, SCALE, DIFFICULTIES, ATTENDANCE, DAYS, UI, SURVEY_INTRO,
   applyFilters, buildPayload, classroomLabel, classroomsFor, compareGroups, emptyDraft,
   formatTime, groupKey, levelsForProgram, remotePrograms, responsesToCsvRows, scheduleLabel,
-  schedulesFor, statementStats, summarize, summaryToCsvRows, t, todayRiyadh, toggleDifficulty,
+  resolveLevelId, schedulesFor, statementStats, summarize, summaryToCsvRows, t, todayRiyadh, toggleDifficulty,
   trainersFor, validateDraft,
   type Classroom, type Draft, type Level, type Program, type ResponseRow, type Schedule, type Trainer,
 } from '../lib/surveys/remoteLearning';
@@ -135,6 +135,23 @@ describe('cascading filters (level → trainer → group → schedule)', () => {
   test('classroomsFor narrows by program + level + trainer', () => {
     assert.deepEqual(classroomsFor(classrooms, { programId: 'p-remote', levelId: 'l-b1', trainerId: 't-yasser' }).map(c => c.id), ['c-g1']);
     assert.deepEqual(classroomsFor(classrooms, { programId: 'p-remote', levelId: 'l-b1' }).map(c => c.id), ['c-g1', 'c-g2']);
+  });
+  test('legacy rooms with free-text level are auto-linked to program_levels (no re-entry needed)', () => {
+    const legacy: Classroom[] = [
+      { id: 'c-old1', code: 'OLD-1', program_id: 'p-remote', trainer_id: 't-shaimaa', level_id: null, level: 'b1' },        // by code (case-insensitive)
+      { id: 'c-old2', code: 'OLD-2', program_id: 'p-remote', trainer_id: 't-shaimaa', level_id: null, level: 'مبتدئ 1' },   // by Arabic name
+      { id: 'c-old3', code: 'OLD-3', program_id: 'p-remote', trainer_id: 't-shaimaa', level_id: null, level: 'غير معروف' }, // no match
+      { id: 'c-old4', code: 'OLD-4', program_id: 'p-remote', trainer_id: 't-shaimaa', level_id: null, level: 'X' },         // X belongs to another program → no match
+    ];
+    assert.equal(resolveLevelId(legacy[0], levels), 'l-b1');
+    assert.equal(resolveLevelId(legacy[1], levels), 'l-a1');
+    assert.equal(resolveLevelId(legacy[2], levels), null);
+    assert.equal(resolveLevelId(legacy[3], levels), null);
+    assert.equal(resolveLevelId(classrooms[0], levels), 'l-b1', 'explicit level_id wins');
+    const all = [...classrooms, ...legacy];
+    assert.deepEqual(classroomsFor(all, { programId: 'p-remote', levelId: 'l-b1' }, levels).map(c => c.id), ['c-g1', 'c-g2', 'c-old1']);
+    assert.ok(trainersFor(trainers, all, { programId: 'p-remote', levelId: 'l-a1' }, levels).some(x => x.id === 't-shaimaa'));
+    assert.equal(classroomLabel(legacy[0], { trainers, levels }, 'en'), 'OLD-1 · B1 · Dr. Shaimaa');
   });
   test('schedulesFor returns active schedules of that group only, sorted by day', () => {
     assert.deepEqual(schedulesFor(schedules, 'c-g1').map(s => s.id), ['s-g1-sun', 's-g1-tue']);

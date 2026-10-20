@@ -108,7 +108,7 @@ export default function RemoteSurveyReportPage() {
           </div>
           <div className="rr-actions">
             <button className="rr-ghost" onClick={() => setLang(ar ? 'en' : 'ar')}>🌐 {ar ? 'English' : 'العربية'}</button>
-            <button className="rr-ghost" onClick={() => router.push('/admin/survey-settings')}>⚙️ {ar ? 'الإعدادات' : 'Settings'}</button>
+            <button className="rr-ghost" onClick={() => router.push('/admin/management?tab=rooms')}>🏫 {ar ? 'لوحة الإدارة (المجموعات والمدربون)' : 'Admin panel (groups & trainers)'}</button>
             <button className="rr-ghost" onClick={() => router.push('/reports')}>📑 {ar ? 'التقارير الأخرى' : 'Other reports'}</button>
             <button className="rr-ghost" onClick={() => window.print()}>🖨️ {ar ? 'طباعة' : 'Print'}</button>
           </div>
