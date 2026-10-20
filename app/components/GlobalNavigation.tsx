@@ -4,23 +4,24 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase/client';
+import { Icon, type IconName } from '../../lib/ui/icons';
 
-const I = {
-  home: 'M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V11z',
-  dashboard: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
-  logout: 'M10 17l5-5-5-5M15 12H3M21 3v18',
-  login: 'M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3',
-  building: 'M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2',
-};
-const Ic = ({ d, size = 16 }: { d: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
-);
+/** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
+const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
+  { href: '/dashboard', label: 'لوحة القيادة', icon: 'dashboard', match: p => p.startsWith('/dashboard') },
+  { href: '/admin/management', label: 'مركز الإدارة', icon: 'admin', match: p => p.startsWith('/admin/management') || p.startsWith('/admin/survey-settings') },
+  { href: '/reports/center', label: 'مركز التقارير', icon: 'reports', match: p => p.startsWith('/reports/center') },
+  { href: '/reports', label: 'اللوحة التحليلية', icon: 'chart', match: p => p === '/reports' || p.startsWith('/reports/executive') },
+  { href: '/reports/remote-survey', label: 'استطلاع عن بُعد', icon: 'laptop', match: p => p.startsWith('/reports/remote-survey') },
+  { href: '/admin/data-lifecycle', label: 'دورة حياة البيانات', icon: 'trash', match: p => p.startsWith('/admin/data-lifecycle') },
+];
 
 export default function GlobalNavigation() {
   const db = supabase();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() || '/';
   const [loggedIn, setLoggedIn] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     db.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
@@ -28,21 +29,43 @@ export default function GlobalNavigation() {
     return () => listener.subscription.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => { setOpen(false); }, [pathname]);
 
-  // The dashboard ships its own full application chrome (sidebar + header).
-  if (pathname?.startsWith('/dashboard')) return null;
+  // لوحة التحكم تملك قائمتها الجانبية الكاملة
+  if (pathname.startsWith('/dashboard')) return null;
 
   async function logout() { await db.auth.signOut(); router.push('/'); router.refresh(); }
 
+  const adminArea = loggedIn && (pathname.startsWith('/admin') || pathname.startsWith('/reports') || pathname.startsWith('/command-center') || pathname.startsWith('/final-analysis'));
+
+  /* ===== شريط إداري موحّد ===== */
+  if (adminArea) {
+    return (
+      <nav className="global-nav admin" aria-label="التنقل الإداري">
+        <Link href="/dashboard" className="global-brand"><Icon name="shield" size={18} /> <span>منصة التقويم</span></Link>
+        <button type="button" className="global-burger" aria-label="القائمة" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
+        <div className={`global-links ${open ? 'open' : ''}`}>
+          {ADMIN_NAV.map(n => (
+            <Link key={n.href} href={n.href} className={`global-link ${n.match(pathname) ? 'on' : ''}`} aria-current={n.match(pathname) ? 'page' : undefined}>
+              <Icon name={n.icon} size={16} /> {n.label}
+            </Link>
+          ))}
+          <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
+        </div>
+      </nav>
+    );
+  }
+
+  /* ===== شريط عام (الصفحات العامة) ===== */
   return (
     <nav className="global-nav" aria-label="التنقل العام">
-      <Link href="/" className="global-brand"><Ic d={I.building} size={18} /> <span>منصة التقويم</span></Link>
+      <Link href="/" className="global-brand"><Icon name="shield" size={18} /> <span>منصة التقويم</span></Link>
       <div className="global-actions">
-        {pathname !== '/' && <Link href="/" className="global-btn"><Ic d={I.home} /> الرئيسية</Link>}
+        {pathname !== '/' && <Link href="/" className="global-btn"><Icon name="home" size={16} /> الرئيسية</Link>}
         {loggedIn ? <>
-          <Link href="/dashboard" className="global-btn"><Ic d={I.dashboard} /> لوحة التحكم</Link>
-          <button type="button" className="global-btn danger" onClick={logout}><Ic d={I.logout} /> خروج</button>
-        </> : pathname !== '/login' ? <Link href="/login" className="global-btn"><Ic d={I.login} /> دخول الإدارة</Link> : null}
+          <Link href="/dashboard" className="global-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
+          <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
+        </> : pathname !== '/login' ? <Link href="/login" className="global-btn"><Icon name="login" size={16} /> دخول الإدارة</Link> : null}
       </div>
     </nav>
   );
