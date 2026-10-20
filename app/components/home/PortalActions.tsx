@@ -25,6 +25,13 @@ const actions = [
     color: '#16a34a',
   },
   {
+    title: 'استطلاع التعلم عن بُعد',
+    subtitle: 'Remote Learning Survey (Teams)',
+    icon: '💻',
+    href: '/survey/remote-learning',
+    color: '#0d9488',
+  },
+  {
     title: 'التحقق من الشهادات',
     subtitle: 'Certificates',
     icon: '📜',
