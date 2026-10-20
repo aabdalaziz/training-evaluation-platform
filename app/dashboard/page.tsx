@@ -12,15 +12,16 @@ type Program = {
   description_ar?: string | null;
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
   start_date: string | null; end_date: string | null; created_at: string;
+  delivery_mode: 'onsite' | 'remote' | null;
 };
 type View = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'settings';
-type FormState = { name_ar: string; name_en: string; description_ar: string; start_date: string; end_date: string };
+type FormState = { name_ar: string; name_en: string; description_ar: string; start_date: string; end_date: string; delivery_mode: 'onsite' | 'remote' };
 
 const labels: Record<View, string> = {
   dashboard: '📊 لوحة التحكم', programs: '📋 البرامج التدريبية',
   evaluations: '📝 التقييمات', reports: '📑 التقارير', settings: '⚙️ الإعدادات'
 };
-const emptyForm: FormState = { name_ar: '', name_en: '', description_ar: '', start_date: '', end_date: '' };
+const emptyForm: FormState = { name_ar: '', name_en: '', description_ar: '', start_date: '', end_date: '', delivery_mode: 'onsite' };
 
 const STATUS_STYLE: Record<Program['status'], { bg: string; color: string; label: string }> = {
   DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'مسودة / Draft' },
@@ -50,7 +51,7 @@ export default function Dashboard() {
     if (!user) { router.replace('/login'); return; }
     const [p, pr, d, f] = await Promise.all([
       db.from('profiles').select('full_name,role,organization_id,phone').eq('id', user.id).single(),
-      db.from('programs').select('id,name_ar,name_en,description_ar,status,start_date,end_date,created_at').order('created_at', { ascending: false }),
+      db.from('programs').select('id,name_ar,name_en,description_ar,status,start_date,end_date,created_at,delivery_mode').order('created_at', { ascending: false }),
       db.from('evaluations').select('overall_rating', { count: 'exact', head: false }).eq('kind', 'DAILY'),
       db.from('evaluations').select('id', { count: 'exact', head: false }).eq('kind', 'FINAL')
     ]);
@@ -70,7 +71,8 @@ export default function Dashboard() {
     setForm({
       name_ar: p.name_ar || '', name_en: p.name_en || '',
       description_ar: p.description_ar || '',
-      start_date: p.start_date || '', end_date: p.end_date || ''
+      start_date: p.start_date || '', end_date: p.end_date || '',
+      delivery_mode: p.delivery_mode || 'onsite'
     });
     setShowForm(true);
   }
@@ -86,7 +88,8 @@ export default function Dashboard() {
       name_en: form.name_en.trim() || null,
       description_ar: form.description_ar.trim() || null,
       start_date: form.start_date || null,
-      end_date: form.end_date || null
+      end_date: form.end_date || null,
+      delivery_mode: form.delivery_mode
     };
     if (editing) {
       const { error } = await db.from('programs').update(payload).eq('id', editing.id);
@@ -210,6 +213,12 @@ function Programs(props: {
           <label>الاسم بالإنجليزية / English name
             <input style={field} value={form.name_en} onChange={e => setForm({ ...form, name_en: e.target.value })} />
           </label>
+          <label>نوع البرنامج * / Delivery mode *
+            <select style={field} value={form.delivery_mode} onChange={e => setForm({ ...form, delivery_mode: e.target.value as 'onsite' | 'remote' })}>
+              <option value="onsite">🏫 حضوري / On-site</option>
+              <option value="remote">💻 عن بعد / Remote</option>
+            </select>
+          </label>
           <label>تاريخ البداية / Start date
             <input style={field} type="date" value={form.start_date} onChange={e => setForm({ ...form, start_date: e.target.value })} />
           </label>
@@ -234,6 +243,9 @@ function Programs(props: {
             <div className="program" key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap', padding: '14px', borderBottom: '1px solid #eef2f6' }}>
               <div style={{ flex: 1, minWidth: '220px' }}>
                 <b>{p.name_ar}</b> {p.name_en && <span style={{ color: '#64748b', fontSize: '12px' }}>/ {p.name_en}</span>}
+                <span style={{ marginInlineStart: 8, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: p.delivery_mode === 'remote' ? '#ede9fe' : '#e0f2fe', color: p.delivery_mode === 'remote' ? '#6d28d9' : '#0369a1' }}>
+                  {p.delivery_mode === 'remote' ? '💻 عن بعد' : '🏫 حضوري'}
+                </span>
                 <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '12px' }}>
                   {p.start_date || 'بدون تاريخ'} {p.end_date ? ' — ' + p.end_date : ''}
                 </p>
