@@ -5,21 +5,31 @@
  */
 export type ReportId =
   | 'executive' | 'trainers' | 'programs' | 'classrooms' | 'axes' | 'questions'
-  | 'trend' | 'comparison' | 'participation' | 'qualitative' | 'actions' | 'raw';
+  | 'trend' | 'comparison' | 'participation' | 'qualitative' | 'actions' | 'raw' | 'trainer_card';
 
 export type SectionId =
   | 'kpis' | 'verdict' | 'narrative' | 'strengthsGaps' | 'axisBars' | 'trendLine' | 'distribution'
   | 'trainerTable' | 'trainerBars' | 'programTable' | 'classroomTable' | 'heatmap' | 'questionTable'
-  | 'periodCompare' | 'weeklyTable' | 'participationTables' | 'comments' | 'keywords' | 'actions' | 'rawTable';
+  | 'periodCompare' | 'weeklyTable' | 'participationTables' | 'comments' | 'keywords' | 'actions' | 'rawTable'
+  | 'programProfile' | 'priorityGauge';
 
 export type ReportDef = {
   id: ReportId; icon: string; group: 'executive' | 'operations' | 'analysis' | 'decision';
   title: { ar: string; en: string }; desc: { ar: string; en: string };
   audience: { ar: string; en: string }; decision: { ar: string; en: string };
+  /** الفئة المستهدفة للتبديل السريع (القيادة / المشرف / المدرب) */
+  audienceKey: 'leadership' | 'supervisor' | 'trainer';
   sections: SectionId[];
   /** default filter overrides when opening this report */
   defaults?: { kind?: 'ALL' | 'DAILY' | 'FINAL'; compare?: boolean; preset?: string };
 };
+
+export const AUDIENCES: { id: 'all' | ReportDef['audienceKey']; ar: string; en: string }[] = [
+  { id: 'all', ar: 'الكل', en: 'All' },
+  { id: 'leadership', ar: 'القيادة', en: 'Leadership' },
+  { id: 'supervisor', ar: 'المشرف', en: 'Supervisor' },
+  { id: 'trainer', ar: 'المدرب', en: 'Trainer' },
+];
 
 export const REPORT_GROUPS: { id: ReportDef['group']; ar: string; en: string }[] = [
   { id: 'executive', ar: 'تقارير تنفيذية', en: 'Executive' },
@@ -30,16 +40,16 @@ export const REPORT_GROUPS: { id: ReportDef['group']; ar: string; en: string }[]
 
 export const REPORTS: ReportDef[] = [
   {
-    id: 'executive', icon: '🏛️', group: 'executive',
+    id: 'executive', audienceKey: 'leadership', icon: '🏛️', group: 'executive',
     title: { ar: 'الموجز التنفيذي', en: 'Executive brief' },
     desc: { ar: 'صفحة واحدة: المؤشرات مقابل الهدف، الحكم العام، أبرز القوة والفجوات، وأهم 3 قرارات.', en: 'One page: KPIs vs target, verdict, top strengths/gaps and the 3 key decisions.' },
     audience: { ar: 'الإدارة العليا', en: 'Senior management' },
     decision: { ar: 'هل الأداء ضمن المستهدف؟ وأين نتدخل أولًا؟', en: 'Is performance on target? Where do we intervene first?' },
-    sections: ['kpis', 'verdict', 'narrative', 'strengthsGaps', 'axisBars', 'trendLine', 'actions'],
+    sections: ['programProfile', 'kpis', 'verdict', 'priorityGauge', 'narrative', 'strengthsGaps', 'axisBars', 'trendLine', 'actions'],
     defaults: { compare: true },
   },
   {
-    id: 'trainers', icon: '👨‍🏫', group: 'operations',
+    id: 'trainers', audienceKey: 'supervisor', icon: '👨‍🏫', group: 'operations',
     title: { ar: 'أداء المدربين', en: 'Trainer performance' },
     desc: { ar: 'ترتيب المدربين بالمتوسط والعينة ونسبة التقييمات المنخفضة والتفاوت والاتجاه، مع تصنيف المخاطر.', en: 'Trainer ranking by mean, sample, low-rating %, variance and trend, with risk flags.' },
     audience: { ar: 'المشرف الأكاديمي', en: 'Academic supervision' },
@@ -48,15 +58,15 @@ export const REPORTS: ReportDef[] = [
     defaults: { kind: 'DAILY' },
   },
   {
-    id: 'programs', icon: '📚', group: 'operations',
+    id: 'programs', audienceKey: 'leadership', icon: '📚', group: 'operations',
     title: { ar: 'مقارنة البرامج', en: 'Program comparison' },
     desc: { ar: 'كل برنامج: الاستجابات، المشاركون، المتوسط اليومي والختامي، الفجوة والمخاطر.', en: 'Per program: responses, participants, daily vs final means, gap and risk.' },
     audience: { ar: 'إدارة البرامج', en: 'Program management' },
     decision: { ar: 'أي البرامج تُوسَّع وأيها يُعاد تصميمه؟', en: 'Which programs to scale and which to redesign?' },
-    sections: ['kpis', 'programTable', 'axisBars', 'actions'],
+    sections: ['programProfile', 'kpis', 'programTable', 'axisBars', 'actions'],
   },
   {
-    id: 'classrooms', icon: '🏫', group: 'operations',
+    id: 'classrooms', audienceKey: 'supervisor', icon: '🏫', group: 'operations',
     title: { ar: 'القاعات والمجموعات', en: 'Rooms & groups' },
     desc: { ar: 'أداء كل قاعة/مجموعة مع مدربها، وخريطة حرارية للمحاور × القاعات.', en: 'Each room/group with its trainer, plus an axes × rooms heat map.' },
     audience: { ar: 'التشغيل اليومي', en: 'Daily operations' },
@@ -65,7 +75,7 @@ export const REPORTS: ReportDef[] = [
     defaults: { kind: 'DAILY' },
   },
   {
-    id: 'axes', icon: '🧭', group: 'analysis',
+    id: 'axes', audienceKey: 'supervisor', icon: '🧭', group: 'analysis',
     title: { ar: 'تحليل المحاور', en: 'Axis analysis' },
     desc: { ar: 'متوسط كل محور، التوزيع، الفجوة للهدف، والتصنيف (ممتاز/جيد/مراقبة/خطر).', en: 'Each axis: mean, distribution, gap to target and rating band.' },
     audience: { ar: 'إدارة الجودة', en: 'Quality office' },
@@ -73,7 +83,7 @@ export const REPORTS: ReportDef[] = [
     sections: ['kpis', 'axisBars', 'distribution', 'strengthsGaps', 'actions'],
   },
   {
-    id: 'questions', icon: '❓', group: 'analysis',
+    id: 'questions', audienceKey: 'supervisor', icon: '❓', group: 'analysis',
     title: { ar: 'تحليل الأسئلة', en: 'Question analysis' },
     desc: { ar: 'أدق مستوى: كل سؤال بمتوسطه وتوزيعه ونسبة المنخفض — لاكتشاف السبب الجذري.', en: 'Finest grain: every question with mean, distribution and low % — to find root causes.' },
     audience: { ar: 'المحللون', en: 'Analysts' },
@@ -81,7 +91,7 @@ export const REPORTS: ReportDef[] = [
     sections: ['kpis', 'questionTable'],
   },
   {
-    id: 'trend', icon: '📈', group: 'analysis',
+    id: 'trend', audienceKey: 'leadership', icon: '📈', group: 'analysis',
     title: { ar: 'الاتجاه الزمني', en: 'Time trend' },
     desc: { ar: 'المتوسط يوميًا وأسبوعيًا مع متوسط متحرك وخط الهدف، وجدول أسبوعي.', en: 'Daily and weekly mean with moving average and target line, plus weekly table.' },
     audience: { ar: 'إدارة البرامج', en: 'Program management' },
@@ -89,7 +99,7 @@ export const REPORTS: ReportDef[] = [
     sections: ['kpis', 'trendLine', 'weeklyTable'],
   },
   {
-    id: 'comparison', icon: '⚖️', group: 'analysis',
+    id: 'comparison', audienceKey: 'leadership', icon: '⚖️', group: 'analysis',
     title: { ar: 'مقارنة الفترات', en: 'Period comparison' },
     desc: { ar: 'الفترة الحالية مقابل فترة سابقة مساوية لها: التغير في المتوسط والاستجابات ونسب الرضا.', en: 'Current period vs an equal previous period: change in mean, responses and satisfaction shares.' },
     audience: { ar: 'الإدارة العليا', en: 'Senior management' },
@@ -98,7 +108,7 @@ export const REPORTS: ReportDef[] = [
     defaults: { compare: true, preset: '30d' },
   },
   {
-    id: 'participation', icon: '👥', group: 'operations',
+    id: 'participation', audienceKey: 'supervisor', icon: '👥', group: 'operations',
     title: { ar: 'المشاركة والاستجابة', en: 'Participation & response' },
     desc: { ar: 'حجم الاستجابات حسب اليوم/القاعة/البرنامج/النوع، المشاركون الفريدون، والجنس والإقامة.', en: 'Response volume by day/room/program/kind, unique participants, gender and accommodation.' },
     audience: { ar: 'التشغيل', en: 'Operations' },
@@ -106,7 +116,7 @@ export const REPORTS: ReportDef[] = [
     sections: ['kpis', 'participationTables'],
   },
   {
-    id: 'qualitative', icon: '💬', group: 'analysis',
+    id: 'qualitative', audienceKey: 'supervisor', icon: '💬', group: 'analysis',
     title: { ar: 'التعليقات النوعية', en: 'Qualitative feedback' },
     desc: { ar: 'كل التعليقات المفتوحة مع الانطباع (إيجابي/سلبي) والكلمات الأكثر تكرارًا.', en: 'All open comments with sentiment and most frequent keywords.' },
     audience: { ar: 'إدارة الجودة', en: 'Quality office' },
@@ -114,7 +124,7 @@ export const REPORTS: ReportDef[] = [
     sections: ['keywords', 'comments'],
   },
   {
-    id: 'actions', icon: '🎯', group: 'decision',
+    id: 'actions', audienceKey: 'leadership', icon: '🎯', group: 'decision',
     title: { ar: 'سجل المخاطر وخطة الإجراءات', en: 'Risk register & action plan' },
     desc: { ar: 'قائمة إجراءات مولّدة تلقائيًا مرتبة بالأولوية والأثر، مع المسؤول والمدة ومؤشر النجاح.', en: 'Auto-generated actions ranked by priority and impact, with owner, due and success KPI.' },
     audience: { ar: 'لجنة الجودة', en: 'Quality committee' },
@@ -122,7 +132,16 @@ export const REPORTS: ReportDef[] = [
     sections: ['kpis', 'actions'],
   },
   {
-    id: 'raw', icon: '🗂️', group: 'decision',
+    id: 'trainer_card', audienceKey: 'trainer', icon: '🪪', group: 'operations',
+    title: { ar: 'بطاقة تغذية راجعة للمدرب', en: 'Trainer feedback card' },
+    desc: { ar: 'نتائج القاعة/المدرب المختار بصياغة تطويرية ودون هوية المشاركين: المحاور، نقاط القوة، فرص التحسين، والتعليقات مجمّعة.', en: 'Selected room/trainer results in developmental language without participant identity: axes, strengths, improvement areas and aggregated comments.' },
+    audience: { ar: 'المدرب', en: 'Trainer' },
+    decision: { ar: 'ما الذي يحافظ عليه المدرب وما الذي يطوّره في الأسبوع القادم؟', en: 'What should the trainer keep doing and improve next week?' },
+    sections: ['programProfile', 'kpis', 'verdict', 'axisBars', 'strengthsGaps', 'questionTable', 'keywords', 'actions'],
+    defaults: { kind: 'DAILY', compare: true },
+  },
+  {
+    id: 'raw', audienceKey: 'supervisor', icon: '🗂️', group: 'decision',
     title: { ar: 'البيانات التفصيلية', en: 'Detailed data' },
     desc: { ar: 'جدول الاستجابات بعد التصفية (بدون بيانات شخصية) للتصدير والتحليل الخارجي.', en: 'Filtered responses table (no personal data) for export and external analysis.' },
     audience: { ar: 'المحللون', en: 'Analysts' },
