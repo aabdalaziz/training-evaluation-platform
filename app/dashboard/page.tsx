@@ -156,6 +156,37 @@ export default function Dashboard() {
     if (error) { notify('تعذر الحذف (قد تكون هناك بيانات مرتبطة): ' + error.message); return; }
     notify('✓ تم حذف البرنامج'); load();
   }
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  async function changePassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const current = String(fd.get('current_password') || '');
+    const next = String(fd.get('new_password') || '');
+    const confirm = String(fd.get('confirm_password') || '');
+    setPwMsg(null);
+    if (next.length < 8) { setPwMsg({ ok: false, text: 'كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف.' }); return; }
+    if (!/[A-Za-z]/.test(next) || !/[0-9]/.test(next)) { setPwMsg({ ok: false, text: 'يجب أن تحتوي كلمة المرور على حروف وأرقام معًا.' }); return; }
+    if (next !== confirm) { setPwMsg({ ok: false, text: 'تأكيد كلمة المرور غير مطابق.' }); return; }
+    if (next === current) { setPwMsg({ ok: false, text: 'كلمة المرور الجديدة مطابقة للحالية.' }); return; }
+    setPwBusy(true);
+    try {
+      const email = (await db.auth.getUser()).data.user?.email;
+      if (!email) throw new Error('تعذر تحديد حساب المستخدم.');
+      // تحقق من كلمة المرور الحالية قبل التغيير
+      const { error: verifyErr } = await db.auth.signInWithPassword({ email, password: current });
+      if (verifyErr) throw new Error('كلمة المرور الحالية غير صحيحة.');
+      const { error } = await db.auth.updateUser({ password: next });
+      if (error) throw new Error(error.message);
+      form.reset();
+      setPwMsg({ ok: true, text: 'تم تغيير كلمة المرور بنجاح. استخدم الكلمة الجديدة في الدخول القادم.' });
+      notify('✓ تم تغيير كلمة المرور');
+    } catch (err: any) {
+      setPwMsg({ ok: false, text: err?.message || 'تعذر تغيير كلمة المرور.' });
+    } finally { setPwBusy(false); }
+  }
+
   async function updateProfile(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault(); if (!profile) return;
     const fd = new FormData(e.currentTarget);
@@ -472,8 +503,19 @@ export default function Dashboard() {
                 <label>رقم الجوال<input name="phone" defaultValue={profile.phone || ''} /></label>
                 <label>الصلاحية<input disabled value={ROLE_LABEL[profile.role] || profile.role} /></label>
               </div>
-              <p className="db-muted">لتغيير كلمة المرور استخدم إعادة التعيين الآمن من Supabase Auth.</p>
               <button className="db-btn primary">حفظ التعديلات</button>
+            </form>
+
+            <form className="db-card db-form" onSubmit={changePassword} style={{ maxWidth: 640 }} autoComplete="off">
+              <div className="db-ct"><Icon name="shield" size={18} /> تغيير كلمة المرور</div>
+              <div className="db-form-grid">
+                <label className="wide">كلمة المرور الحالية<input type="password" name="current_password" required autoComplete="current-password" /></label>
+                <label>كلمة المرور الجديدة<input type="password" name="new_password" required minLength={8} autoComplete="new-password" /></label>
+                <label>تأكيد كلمة المرور الجديدة<input type="password" name="confirm_password" required minLength={8} autoComplete="new-password" /></label>
+              </div>
+              <p className="db-muted">8 أحرف على الأقل وتتضمن حروفًا وأرقامًا. سيُطلب منك التحقق بكلمة المرور الحالية أولًا.</p>
+              {pwMsg && <div className={`db-pwmsg ${pwMsg.ok ? 'ok' : 'err'}`} role="status"><Icon name={pwMsg.ok ? 'check' : 'alert'} size={16} /> {pwMsg.text}</div>}
+              <button className="db-btn primary" disabled={pwBusy}>{pwBusy ? 'جارٍ التغيير…' : 'تغيير كلمة المرور'}</button>
             </form>
           </div>
         )}
@@ -684,7 +726,7 @@ body{margin:0;background:#f1f5f9}
 .db-tbl td{padding:9px 8px;border-bottom:1px solid #f1f5f9;text-align:center;font-weight:700;vertical-align:middle}
 .db-tbl td.l{text-align:start}
 .db-pills{display:flex;gap:6px;flex-wrap:wrap}
-.db-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.db-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}.db-pwmsg{display:flex;gap:8px;align-items:center;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:800;margin-bottom:12px}.db-pwmsg.ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}.db-pwmsg.err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
 .db-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:800;color:#475569}
 .db-form label.wide{grid-column:1/-1}
 .db-form input,.db-form select,.db-form textarea{border:1px solid #cbd5e1;border-radius:10px;padding:10px;font-family:inherit;font-weight:700;font-size:13px;color:#0f172a;background:#fff}
