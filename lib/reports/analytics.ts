@@ -24,7 +24,12 @@ export type RawQuestion = {
 };
 export type Classroom = { id: string; code: string; program_id?: string | null; trainer_id?: string | null; delivery_mode?: string | null; level?: string | null };
 export type Trainer = { id: string; name: string };
-export type Program = { id: string; name_ar: string; name_en?: string | null; delivery_mode?: string | null; status?: string | null };
+export type Program = {
+  id: string; name_ar: string; name_en?: string | null; delivery_mode?: string | null; status?: string | null;
+  start_date?: string | null; end_date?: string | null;
+  intro_ar?: string | null; intro_en?: string | null; objectives_ar?: string | null; objectives_en?: string | null;
+  outcomes_ar?: string | null; outcomes_en?: string | null; audience_ar?: string | null; audience_en?: string | null;
+};
 
 export type Lookups = { classrooms: Classroom[]; trainers: Trainer[]; programs: Program[]; questions: RawQuestion[] };
 
