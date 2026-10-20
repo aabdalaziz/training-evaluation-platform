@@ -89,6 +89,7 @@ export default function Dashboard() {
   const [view, setView] = useState<View>('overview');
   const [range, setRange] = useState<Range>('7d');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Program | null>(null);
@@ -109,15 +110,17 @@ export default function Dashboard() {
     } catch { /* ignore */ }
     const [p, pr, ev, an, qs, cl, tr, sc, rr] = await Promise.all([
       db.from('profiles').select('full_name,role,organization_id,phone').eq('id', user.id).single(),
-      db.from('programs').select('id,name_ar,name_en,description_ar,status,start_date,end_date,created_at,delivery_mode').order('created_at', { ascending: false }),
-      db.from('evaluations').select('id,program_id,classroom_id,kind,submitted_at,evaluation_date,overall_rating,guest_email,guest_phone,guest_gender,accommodation_type,trainee_id').order('submitted_at', { ascending: false }),
-      db.from('evaluation_answers').select('evaluation_id,question_id,rating_value'),
-      db.from('questions').select('id,question_key,kind,text_ar,text_en,section_ar,section_en'),
-      db.from('classrooms').select('id,code,program_id,trainer_id,delivery_mode,level_id,level'),
-      db.from('trainers').select('id,name'),
+      db.from('programs').select('*').order('created_at', { ascending: false }),
+      db.from('evaluations').select('*').order('submitted_at', { ascending: false }),
+      db.from('evaluation_answers').select('*'),
+      db.from('questions').select('*'),
+      db.from('classrooms').select('*'),
+      db.from('trainers').select('*'),
       db.from('class_schedules').select('id,classroom_id,is_active'),
       db.from('remote_learning_survey_responses').select('id', { count: 'exact', head: true }),
     ]);
+    const failed = [p, pr, ev, an, qs, cl, tr].map(r => r.error?.message).filter(Boolean) as string[];
+    setLoadError(failed.length ? Array.from(new Set(failed)).join(' | ') : null);
     setProfile(p.data as Profile);
     setPrograms((pr.data || []) as Program[]);
     setRaw({ evaluations: ev.data || [], answers: an.data || [], questions: qs.data || [], classrooms: (cl.data || []) as Classroom[], trainers: (tr.data || []) as Trainer[], schedules: sc.data || [], remoteResponses: rr.count || 0 });
@@ -271,6 +274,8 @@ export default function Dashboard() {
             <button className="db-btn" onClick={load}><Icon name="refresh" size={16} /> تحديث</button>
           </div>
         </header>
+
+        {loadError && <div className="db-loaderr" role="alert"><Icon name="alert" size={18} /> <span>تعذّر تحميل بعض البيانات من قاعدة البيانات: <bdi>{loadError}</bdi></span></div>}
 
         {/* ================= OVERVIEW ================= */}
         {view === 'overview' && (
@@ -584,7 +589,7 @@ body{margin:0;background:#f1f5f9}
 .db-nav-sep{font-size:10px;font-weight:900;color:#7fa6bf;letter-spacing:.5px;padding:10px 10px 2px;border-top:1px solid rgba(255,255,255,.08);margin-top:6px}
 .db-logout{display:flex;gap:8px;align-items:center;justify-content:center;background:rgba(220,38,38,.15);border:1px solid rgba(252,165,165,.3);color:#fecaca;border-radius:12px;padding:10px;cursor:pointer;font-family:inherit;font-weight:800}
 /* main */
-.db-main{min-width:0}
+.db-main{min-width:0}.db-loaderr{margin:14px 22px -6px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;display:flex;gap:8px;align-items:center;font-weight:800;font-size:13px}
 .db-top{display:flex;align-items:center;gap:14px;padding:16px 24px;background:#fff;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:20;flex-wrap:wrap}
 .db-burger{display:none;background:#f1f5f9;border:0;border-radius:10px;padding:6px 10px;font-size:18px;cursor:pointer}
 .db-top-title{flex:1;min-width:220px}
