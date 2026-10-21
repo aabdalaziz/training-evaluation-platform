@@ -1,7 +1,7 @@
 import React from 'react';
 
 /** مجموعة أيقونات SVG خطّية موحّدة للمنصة (بدل الرموز التعبيرية) */
-export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag';
+export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop';
 
 export const ICON_PATHS: Record<IconName, string> = {
   dashboard: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
@@ -38,6 +38,20 @@ export const ICON_PATHS: Record<IconName, string> = {
   chat: 'M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z',
   folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z',
   flag: 'M4 22V4m0 0h12l-2 4 2 4H4',
+  download: 'M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2',
+  print: 'M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z',
+  doc: 'M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm9 0v5h5M8 13h8M8 17h6',
+  slides: 'M3 4h18v12H3zM12 16v4M8 20h8M7 12l3-3 3 2 4-4',
+  copy: 'M8 8h12v12H8zM16 8V4H4v12h4',
+  table: 'M3 5h18v14H3zM3 10h18M3 15h18M9 5v14M15 5v14',
+  globe: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 0c-3 3-3 15 0 18m0-18c3 3 3 15 0 18M3 12h18',
+  filter: 'M3 5h18l-7 8v6l-4 2v-8L3 5z',
+  save: 'M5 3h11l3 3v15H5zM8 3v6h7V3M8 21v-7h8v7',
+  mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
+  x: 'M6 6l12 12M18 6L6 18',
+  play: 'M7 5l12 7-12 7z',
+  pause: 'M7 5h4v14H7zM13 5h4v14h-4z',
+  stop: 'M6 6h12v12H6z',
 };
 
 export function Icon({ name, size = 20, color = 'currentColor', stroke = 2, className }: { name: IconName; size?: number; color?: string; stroke?: number; className?: string }) {
