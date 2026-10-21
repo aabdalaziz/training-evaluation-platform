@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     if (
       profileError ||
       !profile ||
-      !["SUPER_ADMIN", "ADMIN"].includes(profile.role)
+      !["PLATFORM_ADMIN", "SUPER_ADMIN", "ADMIN"].includes(String(profile.role).toUpperCase())
     ) {
       return NextResponse.json(
         { success: false, error: "غير مصرح (للإدارة فقط)" },
