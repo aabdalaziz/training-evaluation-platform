@@ -12,7 +12,7 @@ import {
   type Schedule, type Trainer,
 } from '../../../lib/surveys/remoteLearning';
 
-const NAVY = '#14466B', TEAL = '#0d9488', RED = '#dc2626', AMBER = '#d97706', GREEN = '#16a34a';
+const NAVY = '#0f2a4e', TEAL = '#0b8a83', RED = '#dc2626', AMBER = '#d97706', GREEN = '#16a34a';
 
 export default function RemoteSurveyReportPage() {
   const router = useRouter();
