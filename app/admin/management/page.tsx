@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase/client";
 
-const EMERALD = "#00897B", TEAL = "#1FA39A", NAVY = "#14466B", RED = "#dc2626";
+const EMERALD = "#00897B", TEAL = "#1FA39A", NAVY = "#0f2a4e", RED = "#dc2626";
 
 /* Days of week — 0 = Sunday (matches class_schedules.day_of_week) */
 const DAYS = [
