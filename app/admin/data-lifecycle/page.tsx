@@ -101,7 +101,7 @@ export default function DataLifecyclePage() {
     finally { setBusy(null); }
   }
 
-  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(role);
+  const isAdmin = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'].includes(String(role).toUpperCase());
   const canConfirm = confirmText.trim() === 'حذف' && confirmCode.trim().length >= 4 && !busy;
 
   if (!ready) return <div className="dl" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
@@ -122,7 +122,7 @@ export default function DataLifecyclePage() {
         </nav>
       </header>
 
-      {!isAdmin && <div className="dl-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة فقط (ADMIN / SUPER_ADMIN). صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
+      {!isAdmin && <div className="dl-alert err"><Icon name="alert" size={18} /> هذه الصفحة لمديري المنصة فقط (PLATFORM_ADMIN / ADMIN). صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
 
       <div className="dl-alert warn">
         <Icon name="alert" size={18} />
