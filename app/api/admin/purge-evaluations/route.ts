@@ -4,10 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: Request) {
   try {
-    const { confirmCode, filters, kind } = await req.json();
+    const { confirmCode, filters, kind, preview } = await req.json();
+    const dryRun = preview === true;
 
-    // رمز تأكيد الحذف
-    if (String(confirmCode) !== "9999") {
+    // رمز تأكيد الحذف (غير مطلوب في وضع المعاينة)
+    const PURGE_CODE = process.env.PURGE_CONFIRM_CODE || "9999";
+    if (!dryRun && String(confirmCode) !== PURGE_CODE) {
       return NextResponse.json(
         { success: false, error: "كود التأكيد غير صحيح" },
         { status: 400 }
@@ -95,6 +97,10 @@ export async function POST(req: Request) {
       query = query.in("kind", ["DAILY", "FINAL"]);
     }
 
+    // فلترة البرنامج
+    if (filters?.programId && filters.programId !== "ALL") {
+      query = query.eq("program_id", filters.programId);
+    }
     // فلترة القاعة
     if (filters?.classroomId && filters.classroomId !== "ALL") {
       query = query.eq("classroom_id", filters.classroomId);
@@ -145,6 +151,24 @@ export async function POST(req: Request) {
     if (evaluationsError) throw evaluationsError;
 
     const evaluationIds = (evaluations || []).map((item) => item.id);
+
+    // وضع المعاينة: إرجاع الأعداد فقط دون أي حذف
+    if (dryRun) {
+      let answersCount = 0;
+      for (let index = 0; index < evaluationIds.length; index += 500) {
+        const batch = evaluationIds.slice(index, index + 500);
+        const { count } = await admin
+          .from("evaluation_answers")
+          .select("id", { count: "exact", head: true })
+          .in("evaluation_id", batch);
+        answersCount += count || 0;
+      }
+      return NextResponse.json({
+        success: true,
+        preview: true,
+        counts: { evaluations: evaluationIds.length, answers: answersCount },
+      });
+    }
 
     if (!evaluationIds.length) {
       return NextResponse.json({
