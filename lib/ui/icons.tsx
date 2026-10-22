@@ -1,7 +1,7 @@
 import React from 'react';
 
 /** مجموعة أيقونات SVG خطّية موحّدة للمنصة (بدل الرموز التعبيرية) */
-export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send';
+export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send' | 'bell' | 'inbox';
 
 export const ICON_PATHS: Record<IconName, string> = {
   dashboard: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
@@ -56,6 +56,8 @@ export const ICON_PATHS: Record<IconName, string> = {
   certificate: 'M3 5h18v11H3zM7 9h10M7 12h6M15 16v6l2.5-1.5L20 22v-6',
   search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2l-4.3-4.3',
   send: 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z',
+  bell: 'M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',
+  inbox: 'M22 12h-6l-2 3h-4l-2-3H2M5.5 5.1L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1z',
 };
 
 export function Icon({ name, size = 20, color = 'currentColor', stroke = 2, className }: { name: IconName; size?: number; color?: string; stroke?: number; className?: string }) {
