@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase/client';
 
-import LoginHero from '../components/login/LoginHero';
+import { AuthShell } from '../components/login/AuthCard';
 import LoginCard from '../components/login/LoginCard';
 
 /* ترجمة أشهر رسائل Supabase إلى سبب واضح بالعربية */
@@ -73,29 +73,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        background: '#F4F7FB',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '30px',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1400,
-          width: '100%',
-          display: 'grid',
-          gridTemplateColumns: '1.2fr .8fr',
-          gap: 30,
-        }}
-      >
-        <LoginHero />
-
-        <LoginCard onSubmit={handleLogin} loading={loading} error={error} />
-      </div>
-    </main>
+    <AuthShell>
+      <LoginCard onSubmit={handleLogin} loading={loading} error={error} />
+    </AuthShell>
   );
 }
