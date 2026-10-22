@@ -9,3 +9,5 @@ import './impact.test';
 import './impact-import.test';
 import './attendance.test';
 import './behavior.test';
+import './notifications.test';
+import './me.test';
