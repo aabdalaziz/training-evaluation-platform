@@ -1,6 +1,6 @@
 /**
  * /api/impact/generate
- *  POST — توليد بنود أداة قياس الأثر بالذكاء الاصطناعي وفق أهداف ومحاور البرنامج (دفعات متوازية + إزالة التكرار).
+ *  POST — توليد بنود أداة قياس الأثر بالذكاء الاصطناعي وفق أهداف ومحاور البرنامج (دفعة واحدة لكل طلب؛ المتصفح ينسّق الدفعات).
  *  GET  — فحص إعداد الذكاء الاصطناعي: هل المفتاح صالح؟ أي نموذج سيُستخدم؟ (للمشرفين)
  *
  * body: GenerateSpec (انظر lib/impact/generate.ts)
@@ -13,8 +13,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { buildPlan, buildPrompt, dedupeQuestions, normalizeSpec, offlineGenerate, orderByPlan, parseModelOutput, planTotal, splitBatches } from '../../../../lib/impact/generate';
-import type { DraftQuestion } from '../../../../lib/impact/import';
+import { buildPlan, buildPrompt, dedupeQuestions, normalizeSpec, offlineGenerate, orderByPlan, parseBatch, parseModelOutput, planTotal, splitBatches } from '../../../../lib/impact/generate';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -79,8 +78,8 @@ async function resolveModel(provider: Provider, key: string): Promise<{ model: s
 }
 
 /* ---------------------------------------------------------------- استدعاء النموذج */
-async function callModel(provider: Provider, key: string, model: string, system: string, user: string): Promise<string> {
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 50000);
+async function callModel(provider: Provider, key: string, model: string, system: string, user: string, deadline: number): Promise<string> {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), Math.max(5000, deadline - Date.now()));
   try {
     if (provider === 'gemini') {
       const body: any = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json' } };
@@ -109,19 +108,30 @@ async function callModel(provider: Provider, key: string, model: string, system:
     return (j?.content || []).map((c: any) => c.text || '').join('');
   } finally { clearTimeout(t); }
 }
-/** يجرّب النموذج المرشّح ثم البدائل عند 404/أخطاء النموذج غير المتاح */
-async function callWithFallback(provider: Provider, key: string, candidates: string[], system: string, user: string): Promise<{ text: string; model: string }> {
-  let lastErr: any;
-  for (const model of candidates) {
-    try { return { text: await callModel(provider, key, model, system, user), model }; }
-    catch (e: any) { lastErr = e; const msg = String(e?.message || ''); if (!(e?.status === 404 || /not found|not supported|deprecated|retired|does not exist|unsupported|invalid model/i.test(msg))) throw e; }
+const RETRY_RE = /retry (?:in|after) ([\d.]+)\s*s/i;
+const retryAfterOf = (e: any): number => { const m = String(e?.message || '').match(RETRY_RE); const v = m ? Math.ceil(Number(m[1])) : 0; return Math.min(90, Math.max(5, v || 15)); };
+const isModelGone = (e: any) => e?.status === 404 || /not found|not supported|deprecated|retired|does not exist|unsupported|invalid model/i.test(String(e?.message || ''));
+const isBusy = (e: any) => e?.status === 429 || e?.status === 503 || e?.status === 500 || /quota|rate|high demand|overloaded|try again|RESOURCE_EXHAUSTED|UNAVAILABLE/i.test(String(e?.message || ''));
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+/**
+ * يجرّب النموذج المرشّح ثم البدائل: نموذج غير متاح → التالي؛ ضغط/حصة (429/503) → النموذج التالي، وإن نفدت كلها
+ * ينتظر المدة المقترحة إن سمحت ميزانية الوقت ثم يعيد المحاولة؛ وإلا يرمي خطأ يحمل retry_after ليعيد المتصفح المحاولة.
+ */
+async function callWithFallback(provider: Provider, key: string, candidates: string[], system: string, user: string, deadline: number): Promise<{ text: string; model: string }> {
+  let lastErr: any; const dead = new Set<string>();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let busyErr: any = null;
+    for (const model of candidates) {
+      if (dead.has(model)) continue;
+      try { return { text: await callModel(provider, key, model, system, user, deadline), model }; }
+      catch (e: any) { lastErr = e; if (isModelGone(e)) { dead.add(model); continue; } if (isBusy(e)) { busyErr = busyErr || e; continue; } throw e; }
+    }
+    if (!busyErr) break;
+    const wait = retryAfterOf(busyErr);
+    if (Date.now() + wait * 1000 + 15000 > deadline) throw Object.assign(new Error(busyErr.message), { status: 429, retry_after: wait });
+    await sleep(wait * 1000);
   }
-  throw lastErr || new Error('no model');
-}
-async function mapLimit<T, R>(items: T[], limit: number, fn: (x: T, i: number) => Promise<R>): Promise<R[]> {
-  const out: R[] = new Array(items.length); let i = 0;
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => { while (i < items.length) { const k = i++; out[k] = await fn(items[k], k); } }));
-  return out;
+  throw Object.assign(lastErr || new Error('no model'), { retry_after: isBusy(lastErr) ? retryAfterOf(lastErr) : undefined });
 }
 
 /* ---------------------------------------------------------------- المصادقة */
@@ -167,12 +177,20 @@ export async function GET(req: Request) {
 }
 
 /* ---------------------------------------------------------------- POST: التوليد */
+/**
+ * body = GenerateSpec (+ اختياريًا batch: AxisPlan[] و batch_index و batch_count).
+ *  - مع batch: يولّد هذه الدفعة فقط (المتصفح ينفّذ الدفعات تباعًا ويعرض التقدم ويعيد المحاولة عند 429).
+ *  - بدون batch: يولّد الخطة كاملة تباعًا ضمن ميزانية الوقت (توافق مع الإصدار السابق).
+ */
 export async function POST(req: Request) {
+  const started = Date.now(); const deadline = started + 52000;
   try {
     const a = await authorize(req); if (!a.ok) return a.res;
     const body = await req.json().catch(() => ({}));
     const spec = normalizeSpec(body);
     const plan = buildPlan(spec);
+    const batch = parseBatch(body?.batch, spec.axes);
+    const batchIndex = Math.max(0, Number(body?.batch_index) || 0), batchCount = Math.max(1, Number(body?.batch_count) || 1);
     const { key, provider } = readKey();
     if (!key || body.offline === true) {
       const r = offlineGenerate(spec);
@@ -184,20 +202,35 @@ export async function POST(req: Request) {
       const fallback = offlineGenerate(spec);
       return NextResponse.json({ success: true, mode: 'offline', plan, requested: planTotal(plan), questions: fallback.questions, warnings: [`تعذر التحقق من مفتاح الذكاء الاصطناعي (${provider}): ${e?.message || e} — استخدم زر «فحص إعداد الذكاء الاصطناعي» لمعرفة السبب.`, ...fallback.warnings] });
     }
-    const batches = splitBatches(plan);
-    const warnings: string[] = []; const all: DraftQuestion[] = []; let usedModel = candidates[0]; let failed = 0;
-    await mapLimit(batches, 3, async (batch, i) => {
-      const { system, user } = buildPrompt(spec, batch, i, batches.length);
+    const fixDomains = (qs: ReturnType<typeof parseModelOutput>['questions'], axes: string[]) => { for (const q of qs) { if (!axes.includes(q.domain_ar)) { const hit = axes.find(ax => q.domain_ar.includes(ax) || ax.includes(q.domain_ar)); q.domain_ar = hit || axes[0]; } } return qs; };
+
+    // ---- دفعة واحدة (الوضع الافتراضي من الواجهة)
+    if (batch) {
+      const { system, user } = buildPrompt(spec, batch, batchIndex, batchCount);
       try {
-        const { text, model } = await callWithFallback(provider, key, candidates, system, user); usedModel = model;
+        const { text, model } = await callWithFallback(provider, key, candidates, system, user, deadline);
         const parsed = parseModelOutput(text);
-        // نضمن أن domain_ar ضمن محاور الدفعة
-        const axes = batch.map(b => b.axis);
-        for (const q of parsed.questions) { if (!axes.includes(q.domain_ar)) { const hit = axes.find(ax => q.domain_ar.includes(ax) || ax.includes(q.domain_ar)); q.domain_ar = hit || axes[0]; } }
-        all.push(...parsed.questions); warnings.push(...parsed.warnings.filter(w => !/لم يُنتج النموذج/.test(w)));
+        const questions = fixDomains(parsed.questions, batch.map(b => b.axis));
+        return NextResponse.json({ success: true, mode: 'ai', provider, model, batch_index: batchIndex, requested: planTotal(batch), questions, warnings: parsed.warnings.filter(w => !/لم يُنتج النموذج/.test(w)) });
+      } catch (e: any) {
+        const status = e?.retry_after ? 429 : 502;
+        return NextResponse.json({ success: false, error: `${e?.message || e}`, retry_after: e?.retry_after || null, batch_index: batchIndex }, { status });
+      }
+    }
+
+    // ---- الخطة كاملة في طلب واحد (توافق)
+    const batches = splitBatches(plan);
+    const warnings: string[] = []; const all: ReturnType<typeof parseModelOutput>['questions'] = []; let usedModel = candidates[0]; let failed = 0;
+    for (let i = 0; i < batches.length; i++) {
+      if (Date.now() > deadline - 12000) { warnings.push(`توقف التوليد عند الدفعة ${i}/${batches.length} بسبب حد وقت الخادم — استخدم الواجهة المحدّثة التي تولّد الدفعات تباعًا.`); failed += batches.length - i; break; }
+      const { system, user } = buildPrompt(spec, batches[i], i, batches.length);
+      try {
+        const { text, model } = await callWithFallback(provider, key, candidates, system, user, deadline); usedModel = model;
+        const parsed = parseModelOutput(text);
+        all.push(...fixDomains(parsed.questions, batches[i].map(b => b.axis))); warnings.push(...parsed.warnings.filter(w => !/لم يُنتج النموذج/.test(w)));
         if (!parsed.questions.length) failed++;
-      } catch (e: any) { failed++; warnings.push(`الدفعة ${i + 1}/${batches.length} (${batch.map(b => b.axis).join('، ')}): ${e?.message || e}`); }
-    });
+      } catch (e: any) { failed++; warnings.push(`الدفعة ${i + 1}/${batches.length} (${batches[i].map(b => b.axis).join('، ')}): ${e?.message || e}`); }
+    }
     if (!all.length) {
       const fallback = offlineGenerate(spec);
       return NextResponse.json({ success: true, mode: 'offline', plan, requested: planTotal(plan), questions: fallback.questions, warnings: [`تعذر الاتصال بمزوّد الذكاء الاصطناعي (${provider}/${usedModel}).`, ...warnings, ...fallback.warnings] });
