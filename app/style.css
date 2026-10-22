@@ -62,7 +62,7 @@ bdi,.ltr{direction:ltr;unicode-bidi:plaintext}
 .global-link.on svg{opacity:1}
 .global-links .global-btn{margin-inline-start:8px}
 @media(max-width:560px){.global-brand span{display:none}.global-nav{padding:8px 12px}.global-btn{padding:7px 9px;font-size:12px}}
-@media(max-width:1480px){.global-link{padding:8px 9px;font-size:12.5px;gap:5px}.global-links .global-btn{padding:7px 10px;font-size:12px}}
-@media(max-width:1200px){.global-burger{display:block}.global-links{display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px;flex-direction:column;align-items:stretch;box-shadow:var(--shadow)}.global-links.open{display:flex}.global-nav{position:sticky}}
+@media(max-width:1480px){.global-link{padding:8px 7px;font-size:12px;gap:4px}.global-links .global-btn{padding:7px 9px;font-size:12px;margin-inline-start:4px}.global-nav.admin{gap:8px}}
+@media(max-width:1280px){.global-burger{display:block}.global-links{display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px;flex-direction:column;align-items:stretch;box-shadow:var(--shadow)}.global-links.open{display:flex}.global-nav{position:sticky}}
 /* إصلاح الخط: ضمان استخدام Tajawal المحمّل عبر next/font في كل الصفحات */
-.aa,.at,.aw,.ct,.dl,.ev,.ia,.im,.ir,.mg,.rr,.rs-center,.rs-wrap,.st,.vf,.bf,.fu,.tr{font-family:var(--font-ar),Tajawal,Arial,sans-serif!important}
+.aa,.at,.aw,.ct,.dl,.ev,.ia,.im,.ir,.mg,.rr,.rs-center,.rs-wrap,.st,.vf,.bf,.fu,.tr,.me,.nt{font-family:var(--font-ar),Tajawal,Arial,sans-serif!important}
