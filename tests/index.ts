@@ -7,3 +7,4 @@ import './reportsCenter.test';
 import './certificates.test';
 import './impact.test';
 import './impact-import.test';
+import './attendance.test';
