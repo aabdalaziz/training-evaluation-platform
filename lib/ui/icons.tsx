@@ -1,7 +1,7 @@
 import React from 'react';
 
 /** مجموعة أيقونات SVG خطّية موحّدة للمنصة (بدل الرموز التعبيرية) */
-export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop';
+export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send';
 
 export const ICON_PATHS: Record<IconName, string> = {
   dashboard: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
@@ -52,6 +52,10 @@ export const ICON_PATHS: Record<IconName, string> = {
   play: 'M7 5l12 7-12 7z',
   pause: 'M7 5h4v14H7zM13 5h4v14h-4z',
   stop: 'M6 6h12v12H6z',
+  award: 'M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12zm0-9v3l2 1M8.5 13.5L7 22l5-3 5 3-1.5-8.5',
+  certificate: 'M3 5h18v11H3zM7 9h10M7 12h6M15 16v6l2.5-1.5L20 22v-6',
+  search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm10 2l-4.3-4.3',
+  send: 'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z',
 };
 
 export function Icon({ name, size = 20, color = 'currentColor', stroke = 2, className }: { name: IconName; size?: number; color?: string; stroke?: number; className?: string }) {
