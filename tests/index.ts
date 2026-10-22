@@ -8,3 +8,4 @@ import './certificates.test';
 import './impact.test';
 import './impact-import.test';
 import './attendance.test';
+import './behavior.test';
