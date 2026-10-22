@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
@@ -10,6 +10,7 @@ import { TEMPLATES, MCQ_KEYS, emptyMcq, impactUrl, makeToken } from '../../../li
 import { parseInstrumentText, parseRows, parseAnswerKey, applyAnswerKey, csvTemplate, validateQuestions, KEY_AR } from '../../../lib/impact/import';
 import type { DraftQuestion } from '../../../lib/impact/import';
 import { readInstrumentFile } from '../../../lib/impact/office';
+import { normalizeSpec, buildPlan, splitBatches, planTotal, dedupeQuestions, orderByPlan } from '../../../lib/impact/generate';
 import type { ImpactAssessment, ImpactQuestion, Phase, QuestionKind } from '../../../lib/impact/model';
 
 type Program = { id: string; name_ar: string; name_en?: string | null; status?: string | null; description_ar?: string | null; objectives_ar?: string | null; outcomes_ar?: string | null };
@@ -46,11 +47,12 @@ function Inner() {
   const [upText, setUpText] = useState(''); const [upKey, setUpKey] = useState(''); const [upName, setUpName] = useState(''); const [upRows, setUpRows] = useState<string[][] | null>(null);
   const [preview, setPreview] = useState<{ questions: DraftQuestion[]; warnings: string[]; source: string } | null>(null);
   const [ai, setAi] = useState({ objectives: '', axes: 'المعرفة\nالمهارة\nالتطبيق', count_mode: 'per_axis' as 'per_axis' | 'total', scale_count: 3, mcq_count: 3, tf_count: 0, level: 'intermediate' as 'basic' | 'intermediate' | 'advanced', audience: '', bilingual: false, notes: '', variety: true, mcq_style: 'mixed' as 'mixed' | 'concept' | 'scenario' });
-  const [aiBusy, setAiBusy] = useState(false); const [aiMode, setAiMode] = useState('');
+  const [aiBusy, setAiBusy] = useState(false); const [aiMode, setAiMode] = useState(''); const aiStop = useRef(false);
   const [aiCheck, setAiCheck] = useState<{ busy: boolean; text: string; ok?: boolean }>({ busy: false, text: '' });
   const AI_MAX = { perAxis: 40, total: 200 };
   const aiAxes = ai.axes.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
   const aiExpected = ai.count_mode === 'total' ? ai.scale_count + ai.mcq_count + ai.tf_count : Math.max(1, aiAxes.length) * (ai.scale_count + ai.mcq_count + ai.tf_count);
+  const aiBatches = aiExpected ? splitBatches(buildPlan(normalizeSpec({ ...ai, axes: aiAxes }))).length : 0;
   const [busy, setBusy] = useState(false);
   const [qrFor, setQrFor] = useState<{ a: ImpactAssessment; phase: Phase } | null>(null);
 
@@ -136,16 +138,45 @@ function Inner() {
     const obj = [p.objectives_ar, p.outcomes_ar].filter(Boolean).join('\n').trim();
     setAi(a => ({ ...a, objectives: obj || a.objectives }));
   }
+  /** التوليد بالذكاء الاصطناعي: الخطة تُقسَّم إلى دفعات تُرسل تباعًا (كل دفعة طلب مستقل) مع عرض التقدم وإعادة المحاولة عند ضغط المزوّد */
   async function runAi() {
-    setAiBusy(true); setError(''); setAiMode('');
+    setAiBusy(true); setError(''); setAiMode(''); aiStop.current = false;
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
     try {
       const session = (await db.auth.getSession()).data.session; if (!session) throw new Error('انتهت الجلسة — سجّل الدخول مجددًا');
       const p = programs.find(x => x.id === form.program_id);
-      const r = await fetch('/api/impact/generate', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ ...ai, axes: aiAxes, program_name: p?.name_ar || form.title_ar, program_desc: p?.description_ar || '' }) });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j?.success) throw new Error(j?.error || `HTTP ${r.status}`);
-      setAiMode(j.mode === 'ai' ? `تم التوليد بـ ${j.provider} / ${j.model}${j.batches > 1 ? ` على ${j.batches} دفعات` : ''}` : 'وضع التوليد المحلي');
-      setPreview({ questions: j.questions || [], warnings: j.warnings || [], source: j.mode === 'ai' ? 'الذكاء الاصطناعي' : 'المولّد المحلي' });
+      const spec = normalizeSpec({ ...ai, axes: aiAxes, program_name: p?.name_ar || form.title_ar, program_desc: p?.description_ar || '' });
+      const plan = buildPlan(spec); const batches = splitBatches(plan); const requested = planTotal(plan);
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` };
+      const all: DraftQuestion[] = []; const warnings: string[] = []; let model = ''; let failed = 0;
+      const publish = (done: number, note: string) => {
+        const dd = dedupeQuestions(all); const qs = orderByPlan(dd.questions, spec.axes);
+        setPreview({ questions: qs, warnings: [...warnings, ...(dd.removed ? [`أُزيل ${dd.removed} بندًا مكررًا.`] : [])], source: 'الذكاء الاصطناعي' });
+        setAiMode(`${note} — الدفعة ${done}/${batches.length} · ${qs.length} من ${requested} بندًا${model ? ` · ${model}` : ''}`);
+      };
+      for (let i = 0; i < batches.length; i++) {
+        if (aiStop.current) { warnings.push(`أوقف المستخدم التوليد بعد الدفعة ${i}/${batches.length}.`); break; }
+        let ok = false;
+        for (let attempt = 1; attempt <= 3 && !ok && !aiStop.current; attempt++) {
+          setAiMode(`جارٍ توليد الدفعة ${i + 1}/${batches.length}${attempt > 1 ? ` (محاولة ${attempt})` : ''} · ${all.length} بندًا حتى الآن`);
+          const r = await fetch('/api/impact/generate', { method: 'POST', headers, body: JSON.stringify({ ...spec, batch: batches[i], batch_index: i, batch_count: batches.length }) });
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j?.success && j.mode === 'offline') {
+            // لا مفتاح صالح: الخادم أرجع الأداة كاملة من المولّد المحلي
+            setAiMode('وضع التوليد المحلي'); setPreview({ questions: j.questions || [], warnings: j.warnings || [], source: 'المولّد المحلي' }); setAiBusy(false); return;
+          }
+          if (r.ok && j?.success) { all.push(...(j.questions || [])); warnings.push(...(j.warnings || [])); model = j.model || model; ok = true; publish(i + 1, 'تم'); break; }
+          if (r.status === 401 || r.status === 403) throw new Error(j?.error || 'غير مصرح');
+          const wait = Math.min(90, Number(j?.retry_after) || (r.status === 429 ? 20 : 6));
+          if (attempt < 3) { for (let t = wait; t > 0 && !aiStop.current; t--) { setAiMode(`المزوّد مشغول (الدفعة ${i + 1}/${batches.length}) — إعادة المحاولة بعد ${t} ث · ${all.length} بندًا حتى الآن`); await sleep(1000); } }
+          else { failed++; warnings.push(`الدفعة ${i + 1}/${batches.length} (${batches[i].map(b => b.axis).join('، ')}): ${j?.error || `HTTP ${r.status}`}`); }
+        }
+      }
+      const dd = dedupeQuestions(all); const qs = orderByPlan(dd.questions, spec.axes);
+      if (!qs.length) throw new Error(warnings[warnings.length - 1] || 'تعذر التوليد');
+      if (qs.length < requested) warnings.push(`أُنتج ${qs.length} بندًا من أصل ${requested} مطلوبًا${failed ? ` (تعذرت ${failed} دفعة)` : ''} — يمكنك إعادة التوليد ثم «إضافة إلى البنود الحالية».`);
+      setPreview({ questions: qs, warnings: [...warnings, ...(dd.removed ? [`أُزيل ${dd.removed} بندًا مكررًا.`] : [])], source: 'الذكاء الاصطناعي' });
+      setAiMode(`تم التوليد بـ ${model || 'الذكاء الاصطناعي'}${batches.length > 1 ? ` على ${batches.length} دفعات` : ''} · ${qs.length} من ${requested} بندًا`);
     } catch (e: any) { setError(e?.message || 'تعذر التوليد'); }
     setAiBusy(false);
   }
@@ -351,9 +382,9 @@ function Inner() {
                   <label className="ia-span2">ملاحظات للمولّد (اختياري)<input value={ai.notes} onChange={e => setAi(a => ({ ...a, notes: e.target.value }))} placeholder="مثال: ركّز على التطبيق العملي، تجنّب المصطلحات الإنجليزية، اجعل السيناريوهات من بيئة المدرسة…" /></label>
                   <label className="ia-check" style={{ alignSelf: 'end' }}><input type="checkbox" checked={ai.variety} onChange={e => setAi(a => ({ ...a, variety: e.target.checked }))} /> تنويع الصياغة ومستويات بلوم (تذكر → تقويم)</label>
                   <label className="ia-check" style={{ alignSelf: 'end' }}><input type="checkbox" checked={ai.bilingual} onChange={e => setAi(a => ({ ...a, bilingual: e.target.checked }))} /> ترجمة إنجليزية للبنود</label>
-                  <div className="ia-span3"><small className={aiExpected > AI_MAX.total ? 'ia-bad' : 'ia-muted'}>الإجمالي المتوقع: <b>{aiExpected}</b> بندًا على {aiAxes.length || 1} محور{aiExpected > AI_MAX.total ? ` — يتجاوز الحد الأقصى (${AI_MAX.total}) وسيُقلَّص تلقائيًا` : aiExpected > 60 ? ' — الأعداد الكبيرة تُولَّد على دفعات وقد تستغرق حتى دقيقة' : ''}</small></div>
+                  <div className="ia-span3"><small className={aiExpected > AI_MAX.total ? 'ia-bad' : 'ia-muted'}>الإجمالي المتوقع: <b>{aiExpected}</b> بندًا على {aiAxes.length || 1} محور{aiExpected > AI_MAX.total ? ` — يتجاوز الحد الأقصى (${AI_MAX.total}) وسيُقلَّص تلقائيًا` : aiBatches > 1 ? ` — تُولَّد على ${aiBatches} دفعات متتابعة (≈ ${aiBatches * 20} ثانية، وقد تطول مع ضغط المزوّد)` : ''}</small></div>
                 </div>
-                <div className="ia-row"><button className="ia-btn primary" onClick={runAi} disabled={aiBusy || aiExpected === 0}><Icon name="star" size={14} /> {aiBusy ? 'جارٍ التوليد…' : 'توليد الأداة'}</button><button className="ia-btn" onClick={checkAi} disabled={aiCheck.busy}><Icon name="shield" size={14} /> فحص إعداد الذكاء الاصطناعي</button>{aiMode && <small className="ia-muted">{aiMode}</small>}<small className="ia-muted">يُراجع الخبير البنود المولّدة ويعدّلها قبل الحفظ؛ الإجابات الصحيحة قابلة للتعديل.</small></div>
+                <div className="ia-row"><button className="ia-btn primary" onClick={runAi} disabled={aiBusy || aiExpected === 0}><Icon name="star" size={14} /> {aiBusy ? 'جارٍ التوليد…' : 'توليد الأداة'}</button>{aiBusy && <button className="ia-btn" onClick={() => { aiStop.current = true; }}><Icon name="stop" size={14} /> إيقاف</button>}<button className="ia-btn" onClick={checkAi} disabled={aiCheck.busy}><Icon name="shield" size={14} /> فحص إعداد الذكاء الاصطناعي</button>{aiMode && <small className="ia-muted">{aiMode}</small>}<small className="ia-muted">يُراجع الخبير البنود المولّدة ويعدّلها قبل الحفظ؛ الإجابات الصحيحة قابلة للتعديل.</small></div>
                 {aiCheck.text && <div className={`ia-note ${aiCheck.ok === false ? 'bad' : aiCheck.ok ? 'ok' : ''}`}>{aiCheck.text}</div>}
               </div>
             )}
