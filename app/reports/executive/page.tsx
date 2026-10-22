@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase/client";
+import { Icon } from "../../../lib/ui/icons";
 
 /* ============ Helpers ============ */
 function safeRating(v){const n=Number(v);return Number.isFinite(n)&&n>=1&&n<=5?n:null;}
@@ -56,17 +57,17 @@ function buildStats(values,respondents=0){
     lowCount:low,neutralCount:mid,highCount:high,dist};
 }
 function perfLevel(m,lang){
-  if(m>=4.2)return{label:lang==="ar"?"ممتاز":"Excellent",bg:"#d1fae5",fg:"#047857"};
-  if(m>=3.7)return{label:lang==="ar"?"جيد":"Good",bg:"#ccfbf1",fg:"#0f766e"};
-  if(m>=3.0)return{label:lang==="ar"?"مراقبة":"Watch",bg:"#fef3c7",fg:"#b45309"};
-  return{label:lang==="ar"?"خطر":"At risk",bg:"#fee2e2",fg:"#b91c1c"};
+  if(m>=4.2)return{label:lang==="ar"?"ممتاز":"Excellent",bg:"#eafaf0",fg:"#15803d"};
+  if(m>=3.7)return{label:lang==="ar"?"جيد":"Good",bg:"#ccfbf1",fg:"#086f69"};
+  if(m>=3.0)return{label:lang==="ar"?"مراقبة":"Watch",bg:"#fff7e6",fg:"#b45309"};
+  return{label:lang==="ar"?"خطر":"At risk",bg:"#fef2f2",fg:"#b91c1c"};
 }
 function riskLevel(s,lang){
   const n=s?.respondents||0,m=s?.mean||0,sd=s?.stddev||0,low=s?.lowPct||0;
   if(n<5)return{key:"NA",score:0,label:lang==="ar"?"بيانات غير كافية":"Insufficient",bg:"#f1f5f9",fg:"#64748b"};
-  if(m<3||low>=20||sd>=1.2)return{key:"HIGH",score:3,label:lang==="ar"?"منطقة قلق":"High risk",bg:"#fee2e2",fg:"#b91c1c"};
-  if(m<3.7||low>=10||sd>=1)return{key:"MED",score:2,label:lang==="ar"?"تحتاج مراقبة":"Watch",bg:"#fef3c7",fg:"#b45309"};
-  return{key:"LOW",score:1,label:lang==="ar"?"مطمئن":"Good",bg:"#d1fae5",fg:"#047857"};
+  if(m<3||low>=20||sd>=1.2)return{key:"HIGH",score:3,label:lang==="ar"?"منطقة قلق":"High risk",bg:"#fef2f2",fg:"#b91c1c"};
+  if(m<3.7||low>=10||sd>=1)return{key:"MED",score:2,label:lang==="ar"?"تحتاج مراقبة":"Watch",bg:"#fff7e6",fg:"#b45309"};
+  return{key:"LOW",score:1,label:lang==="ar"?"مطمئن":"Good",bg:"#eafaf0",fg:"#15803d"};
 }
 function summaryFrom(ca,lang){
   const xs=(ca||[]).map(a=>safeRating(a.rating_value)).filter(v=>v!==null);
@@ -203,20 +204,20 @@ function buildHeatMap(ca,rows,classrooms,lang){
 }
 function heatColor(avg,count){
   if(!count||avg===null)return{bg:"#f8fafc",fg:"#94a3b8"};
-  if(avg<3)return{bg:"#fee2e2",fg:"#b91c1c"};
-  if(avg<3.7)return{bg:"#fef3c7",fg:"#b45309"};
+  if(avg<3)return{bg:"#fef2f2",fg:"#b91c1c"};
+  if(avg<3.7)return{bg:"#fff7e6",fg:"#b45309"};
   if(avg<4.2)return{bg:"#dcfce7",fg:"#15803d"};
   return{bg:"#bbf7d0",fg:"#166534"};
 }
 
 /* ============ Identity ============ */
-const TEAL="#0d9488",TEAL_DARK="#0f766e",BLUE="#2563eb",NAVY="#173a5e",GOLD="#c19a3d",RED="#dc2626",ORANGE="#d97706";
+const TEAL="#0b8a83",TEAL_DARK="#086f69",BLUE="#1d4ed8",NAVY="#0f2a4e",GOLD="#c9a24b",RED="#b91c1c",ORANGE="#b45309",GREEN="#15803d";
 
 /* ============ Components ============ */
-function MetricCard({title,value,sub,color=BLUE,icon="📊",badge}){
+function MetricCard({title,value,sub,color=BLUE,icon="chart",badge}){
   return(
     <div className="mcard" style={{borderBottomColor:color}}>
-      <div className="mtop"><span>{icon}</span><span>{title}</span>{badge&&<span className="mbadge" style={{background:badge.bg,color:badge.fg}}>{badge.label}</span>}</div>
+      <div className="mtop"><span className="mico" style={{color}} aria-hidden="true"><Icon name={icon} size={16}/></span><span>{title}</span>{badge&&<span className="mbadge" style={{background:badge.bg,color:badge.fg}}>{badge.label}</span>}</div>
       <div className="mval">{value}</div>
       {sub&&<div className="msub">{sub}</div>}
     </div>
@@ -225,8 +226,8 @@ function MetricCard({title,value,sub,color=BLUE,icon="📊",badge}){
 function DistributionChart({stats,lang}){
   const isAr=lang==="ar";const total=stats?.measurements||0;
   const items=[
-    {label:isAr?"منخفض 1–2":"Low 1–2",value:stats?.lowCount||0,pct:stats?.lowPct||0,color:"#ef4444"},
-    {label:isAr?"محايد 3":"Neutral 3",value:stats?.neutralCount||0,pct:stats?.neutralPct||0,color:"#f59e0b"},
+    {label:isAr?"منخفض 1–2":"Low 1–2",value:stats?.lowCount||0,pct:stats?.lowPct||0,color:"#b91c1c"},
+    {label:isAr?"محايد 3":"Neutral 3",value:stats?.neutralCount||0,pct:stats?.neutralPct||0,color:"#b45309"},
     {label:isAr?"مرتفع 4–5":"High 4–5",value:stats?.highCount||0,pct:stats?.highPct||0,color:"#10b981"}
   ];
   if(!total)return<div className="empty">{isAr?"لا توجد استجابات.":"No responses."}</div>;
@@ -253,7 +254,7 @@ function TrendChart({data,lang,color=BLUE}){
   return(
     <div style={{width:"100%",overflowX:"auto"}}>
       <svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",minWidth:560,height:"auto"}}>
-        {[1,2,3,4,5].map(v=>{const y=PT+(1-v/5)*ch;return(<g key={v}><line x1={PX} x2={W-PX} y1={y} y2={y} stroke="#e2e8f0" strokeDasharray="4 4"/><text x="12" y={y+4} fill="#64748b" fontSize="12">{v}</text></g>);})}
+        {[1,2,3,4,5].map(v=>{const y=PT+(1-v/5)*ch;return(<g key={v}><line x1={PX} x2={W-PX} y1={y} y2={y} stroke="#e4eaf2" strokeDasharray="4 4"/><text x="12" y={y+4} fill="#64748b" fontSize="12">{v}</text></g>);})}
         <line x1={PX} x2={W-PX} y1={ty} y2={ty} stroke={GOLD} strokeWidth="2.5" strokeDasharray="8 5"/>
         <text x={W-PX+2} y={ty+4} fill={GOLD} fontSize="11" fontWeight="900">{isAr?`الهدف ${TARGET}`:`Target ${TARGET}`}</text>
         <path d={path} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -268,12 +269,12 @@ function TrendChart({data,lang,color=BLUE}){
     </div>
   );
 }
-function ScorecardTable({title,items,lang}){
+function ScorecardTable({title,icon,items,lang}){
   const isAr=lang==="ar";
-  if(!items?.length)return(<div className="card"><h3 className="ctitle">{title}</h3><div className="empty">{isAr?"لا توجد بيانات للمحاور.":"No axis data."}</div></div>);
+  if(!items?.length)return(<div className="card"><h3 className="ctitle">{icon&&<Icon name={icon} size={18}/>}<span>{title}</span></h3><div className="empty">{isAr?"لا توجد بيانات للمحاور.":"No axis data."}</div></div>);
   return(
     <div className="card">
-      <h3 className="ctitle">{title}</h3>
+      <h3 className="ctitle">{icon&&<Icon name={icon} size={18}/>}<span>{title}</span></h3>
       <p className="cdesc">{isAr?`بطاقة أداء المحاور مقابل الهدف المرجعي ${TARGET}/5 — مرتبة من الأعلى فجوة.`:`Axis scorecard vs ${TARGET}/5 benchmark — sorted by largest gap.`}</p>
       <div className="twrap">
         <table className="tbl">
@@ -314,7 +315,7 @@ function PriorityActions({items,lang}){
   const acts=(items||[]).filter(x=>x.risk.key==="HIGH"||x.risk.key==="MED").slice(0,5);
   return(
     <div className="card">
-      <h3 className="ctitle">{isAr?"🎯 التوصيات التنفيذية ذات الأولوية":"🎯 Prioritized Executive Actions"}</h3>
+      <h3 className="ctitle"><Icon name="target" size={18}/><span>{isAr?"التوصيات التنفيذية ذات الأولوية":"Prioritized Executive Actions"}</span></h3>
       {acts.length?acts.map((x,i)=>{
         const pr=x.risk.key==="HIGH"?{label:isAr?"أولوية عالية":"High priority",cls:"pr-high"}:{label:isAr?"أولوية متوسطة":"Medium priority",cls:"pr-med"};
         return(
@@ -328,9 +329,9 @@ function PriorityActions({items,lang}){
             </div>
             <div style={{color:"#475569",fontSize:13,lineHeight:1.8}}>{x.recommendation}</div>
             <div className="pmeta">
-              <span>👤 {isAr?"المسؤول: ":"Owner: "}{x.owner}</span>
-              <span>⏱️ {isAr?"الإطار الزمني: ":"Timeframe: "}{x.days} {isAr?"يوم":"days"}</span>
-              <span>🎯 {isAr?"مؤشر النجاح: الوصول إلى ":"Success: reach "}{TARGET}+</span>
+              <span><Icon name="users" size={13}/> {isAr?"المسؤول: ":"Owner: "}{x.owner}</span>
+              <span><Icon name="clock" size={13}/> {isAr?"الإطار الزمني: ":"Timeframe: "}{x.days} {isAr?"يوم":"days"}</span>
+              <span><Icon name="target" size={13}/> {isAr?"مؤشر النجاح: الوصول إلى ":"Success: reach "}{TARGET}+</span>
             </div>
           </div>
         </div>);})
@@ -346,7 +347,7 @@ function StrengthsGaps({items,lang}){
   return(
     <div className="igrid" style={{marginBottom:20}}>
       <div className="ibox success">
-        <h4>{isAr?"💪 أبرز نقاط القوة":"💪 Top Strengths"}</h4>
+        <h4><Icon name="star" size={18}/><span>{isAr?"أبرز نقاط القوة":"Top Strengths"}</span></h4>
         {strengths.length?strengths.map((x,i)=>(
           <div className="irow" key={i}>
             <b>{x.axisLabel}</b>
@@ -354,7 +355,7 @@ function StrengthsGaps({items,lang}){
           </div>)):<p>{isAr?"لا توجد بيانات كافية.":"Insufficient data."}</p>}
       </div>
       <div className="ibox danger">
-        <h4>{isAr?"⚠️ أبرز فجوات الأداء":"⚠️ Top Performance Gaps"}</h4>
+        <h4><Icon name="alert" size={18}/><span>{isAr?"أبرز فجوات الأداء":"Top Performance Gaps"}</span></h4>
         {gaps.length?gaps.map((x,i)=>(
           <div className="irow" key={i}>
             <b>{x.axisLabel}</b>
@@ -364,12 +365,12 @@ function StrengthsGaps({items,lang}){
     </div>
   );
 }
-function ComparisonBars({title,data,avgLine,lang}){
+function ComparisonBars({title,icon,data,avgLine,lang}){
   const isAr=lang==="ar";
-  if(!data?.length)return(<div className="card"><h3 className="ctitle">{title}</h3><div className="empty">{isAr?"لا توجد بيانات.":"No data."}</div></div>);
+  if(!data?.length)return(<div className="card"><h3 className="ctitle">{icon&&<Icon name={icon} size={18}/>}<span>{title}</span></h3><div className="empty">{isAr?"لا توجد بيانات.":"No data."}</div></div>);
   return(
     <div className="card">
-      <h3 className="ctitle">{title}</h3>
+      <h3 className="ctitle">{icon&&<Icon name={icon} size={18}/>}<span>{title}</span></h3>
       <p className="cdesc">{isAr?`مقارنة بالمتوسط المؤسسي ${avgLine.toFixed(2)} والهدف ${TARGET}`:`Compared to institutional average ${avgLine.toFixed(2)} and target ${TARGET}`}</p>
       {data.map((r)=>{
         const diff=r.avg-avgLine;
@@ -380,7 +381,7 @@ function ComparisonBars({title,data,avgLine,lang}){
             <span>{r.label} <span style={{color:"#94a3b8",fontWeight:700}}>({r.sub})</span></span>
             <span style={{direction:"ltr",fontWeight:900}}>
               <span style={{color:col}}>{r.avg.toFixed(2)}</span>
-              <span style={{color:diff>=0?"#047857":"#b91c1c",fontSize:12,marginInlineStart:8}}>{diff>=0?"▲":"▼"} {Math.abs(diff).toFixed(2)}</span>
+              <span style={{color:diff>=0?"#15803d":"#b91c1c",fontSize:12,marginInlineStart:8}}>{diff>=0?"▲":"▼"} {Math.abs(diff).toFixed(2)}</span>
             </span>
           </div>
           <div className="cmptrack">
@@ -400,10 +401,10 @@ function ComparisonBars({title,data,avgLine,lang}){
 function HeatMap({data,lang}){
   const isAr=lang==="ar";
   if(!data?.axes?.length||!data?.rooms?.length)
-    return(<div className="card"><h3 className="ctitle">{isAr?"🗺️ الخريطة الحرارية (محاور × قاعات)":"🗺️ Heat Map"}</h3><div className="empty">{isAr?"لا توجد بيانات كافية.":"Not enough data."}</div></div>);
+    return(<div className="card"><h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × قاعات)":"Heat Map"}</span></h3><div className="empty">{isAr?"لا توجد بيانات كافية.":"Not enough data."}</div></div>);
   return(
     <div className="card">
-      <h3 className="ctitle">{isAr?"🗺️ الخريطة الحرارية (محاور × قاعات)":"🗺️ Heat Map (Axes × Rooms)"}</h3>
+      <h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × قاعات)":"Heat Map (Axes × Rooms)"}</span></h3>
       <p className="cdesc">{isAr?"الأحمر منخفض، الأصفر متابعة، الأخضر جيد.":"Red low, yellow watch, green good."}</p>
       <div className="twrap">
         <table className="heat">
@@ -485,7 +486,7 @@ export default function ExecutiveReportPage(){
 
   if(!mounted||load){
     return(
-      <div className="ex" style={{display:"flex",justifyContent:"center",alignItems:"center",minHeight:"100vh",background:NAVY}}>
+      <div className="ex" style={{display:"flex",justifyContent:"center",alignItems:"center",minHeight:"100vh"}}>
         <style dangerouslySetInnerHTML={{__html:CSS}}/>
         <div className="spin"/>
       </div>
@@ -496,27 +497,23 @@ export default function ExecutiveReportPage(){
     <div className="ex" style={{direction:isAr?"rtl":"ltr"}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
 
-      {/* Header */}
-      <header className="hd noprint">
-        <div className="hd-in">
-          <div className="br">
-            <img src="/logos/upm.png" alt="UPM" className="hlogo"/>
-            <div className="hdiv"/>
-            <img src="/logos/center.png" alt="Center" className="hlogo"/>
-            <div>
-              <div className="t1">{isAr?"التقرير التنفيذي لجودة البرنامج":"Executive Quality Report"}</div>
-              <div className="t2">{isAr?"لوحة القيادة للإدارة العليا · المركز العالمي لتعليم اللغة العربية":"Leadership Dashboard · Global Arabic Language Center"}</div>
+      <div className="wrap">
+        <header className="rp-head noprint">
+          <div className="rp-brand">
+            <img src="/logos/upm.png" alt="UPM" className="rp-logo"/>
+            <div className="rp-logo-sep"/>
+            <img src="/logos/center.png" alt="Center" className="rp-logo"/>
+            <div className="rp-brand-text">
+              <b>{isAr?"التقرير التنفيذي لجودة البرنامج":"Executive Quality Report"}</b>
+              <span>{isAr?"لوحة القيادة للإدارة العليا · المركز العالمي لتعليم اللغة العربية":"Leadership Dashboard · World Center for Arabic Language"}</span>
             </div>
           </div>
-          <div className="ha">
-            <button className="gh" onClick={()=>setLang(isAr?"en":"ar")}>🌐 {isAr?"English":"العربية"}</button>
-            <button className="gh" onClick={()=>router.push("/reports")}>📑 {isAr?"التقرير التفصيلي":"Detailed"}</button>
-            <button className="gh gold" onClick={()=>window.print()}>🖨️ {isAr?"طباعة":"Print"}</button>
+          <div className="rp-actions">
+            <button className="rp-act" onClick={()=>setLang(isAr?"en":"ar")}><Icon name="globe" size={16}/><span>{isAr?"English":"العربية"}</span></button>
+            <button className="rp-act" onClick={()=>router.push("/reports")}><Icon name="chart" size={16}/><span>{isAr?"اللوحة التفصيلية":"Detailed"}</span></button>
+            <button className="rp-act primary" onClick={()=>window.print()}><Icon name="print" size={16}/><span>{isAr?"طباعة":"Print"}</span></button>
           </div>
-        </div>
-      </header>
-
-      <div className="wrap">
+        </header>
         {/* ترويسة التقرير */}
         <div className="rep-meta">
           <div>
@@ -532,8 +529,8 @@ export default function ExecutiveReportPage(){
         {/* الفلاتر */}
         <div className="card noprint" style={{padding:16}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:10,alignItems:"center",gap:10}}>
-            <b style={{color:"#0f172a"}}>{isAr?"الفلاتر":"Filters"}</b>
-            <span className="badge" style={{background:"#eef2ff",color:"#3730a3",direction:"ltr"}}>{isAr?"عدد الاستبانات":"Forms"}: {fRows.length}</span>
+            <b style={{color:NAVY,display:"inline-flex",alignItems:"center",gap:6}}><Icon name="filter" size={15}/>{isAr?"الفلاتر":"Filters"}</b>
+            <span className="badge" style={{background:"#eef4ff",color:"#1d4ed8",direction:"ltr"}}>{isAr?"عدد الاستبانات":"Forms"}: {fRows.length}</span>
           </div>
           <div className="fgrid">
             <select className="sel" value={f.trainerId} onChange={e=>setF(o=>({...o,trainerId:e.target.value,classroomId:"ALL"}))}>
@@ -552,7 +549,7 @@ export default function ExecutiveReportPage(){
 
         {/* الحكم التنفيذي */}
         <div className={`verdict ${verdict.tone}`}>
-          <div className="vicon">{verdict.tone==="green"?"🟢":verdict.tone==="teal"?"🔵":verdict.tone==="amber"?"🟠":verdict.tone==="red"?"🔴":"⚪"}</div>
+          <div className={`vicon ${verdict.tone}`} aria-hidden="true"><Icon name={verdict.tone==="green"?"check":verdict.tone==="teal"?"star":verdict.tone==="amber"?"alert":verdict.tone==="red"?"alert":"question"} size={28}/></div>
           <div style={{flex:1}}>
             <div className="vtitle">{verdict.title}</div>
             <div className="vtext">{verdict.text}</div>
@@ -565,29 +562,29 @@ export default function ExecutiveReportPage(){
 
         {/* KPIs */}
         <div className="g4">
-          <MetricCard icon="📝" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={fRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={fRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#d1fae5",fg:"#047857"}:fRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fef3c7",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fee2e2",fg:"#b91c1c"}}/>
-          <MetricCard icon="📊" color={summary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${summary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${summary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-summary.mean).toFixed(2)}`:`Median: ${summary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-summary.mean).toFixed(2)}`} badge={{label:summary.perf.label,bg:summary.perf.bg,fg:summary.perf.fg}}/>
-          <MetricCard icon="⚠️" color={highRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={highRisk} sub={isAr?"محاور تتطلب تدخلًا فوريًا":"Axes needing immediate action"}/>
-          <MetricCard icon="📉" color={ORANGE} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${summary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا من إجمالي القياسات":"Dissatisfaction share"}/>
+          <MetricCard icon="doc" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={fRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={fRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#eafaf0",fg:"#15803d"}:fRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fff7e6",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fef2f2",fg:"#b91c1c"}}/>
+          <MetricCard icon="chart" color={summary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${summary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${summary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-summary.mean).toFixed(2)}`:`Median: ${summary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-summary.mean).toFixed(2)}`} badge={{label:summary.perf.label,bg:summary.perf.bg,fg:summary.perf.fg}}/>
+          <MetricCard icon="alert" color={highRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={highRisk} sub={isAr?"محاور تتطلب تدخلًا فوريًا":"Axes needing immediate action"}/>
+          <MetricCard icon="trend" color={ORANGE} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${summary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا من إجمالي القياسات":"Dissatisfaction share"}/>
         </div>
 
         <StrengthsGaps items={axis} lang={lang}/>
 
         <div className="g2">
-          <div className="card"><h3 className="ctitle">{isAr?"📊 توزيع الرضا العام":"📊 Satisfaction Distribution"}</h3><DistributionChart stats={summary} lang={lang}/></div>
-          <div className="card"><h3 className="ctitle">{isAr?"📈 الاتجاه مقابل الهدف — آخر 7 أيام بيانات":"📈 Trend vs Target — Last 7 Data Days"}</h3><TrendChart data={trend} lang={lang} color={BLUE}/></div>
+          <div className="card"><h3 className="ctitle"><Icon name="chart" size={18}/><span>{isAr?"توزيع الرضا العام":"Satisfaction Distribution"}</span></h3><DistributionChart stats={summary} lang={lang}/></div>
+          <div className="card"><h3 className="ctitle"><Icon name="trend" size={18}/><span>{isAr?"الاتجاه مقابل الهدف — آخر 7 أيام بيانات":"Trend vs Target — Last 7 Data Days"}</span></h3><TrendChart data={trend} lang={lang} color={BLUE}/></div>
         </div>
 
-        <ScorecardTable title={isAr?"🛡️ بطاقة أداء المحاور (Scorecard)":"🛡️ Axis Scorecard"} items={axis} lang={lang}/>
+        <ScorecardTable title={isAr?"بطاقة أداء المحاور (Scorecard)":"Axis Scorecard"} icon="shield" items={axis} lang={lang}/>
         <PriorityActions items={axis} lang={lang}/>
 
         <ComparisonBars
-          title={isAr?"🏫 مقارنة القاعات بالمتوسط المؤسسي":"🏫 Rooms vs Institutional Average"}
+          title={isAr?"مقارنة القاعات بالمتوسط المؤسسي":"Rooms vs Institutional Average"} icon="school"
           data={roomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))}
           avgLine={summary.mean} lang={lang}/>
 
         <ComparisonBars
-          title={isAr?"👨‍🏫 ترتيب المدربين — محاور التعليم فقط (تقييم عادل)":"👨‍🏫 Trainer Ranking — Education Axes Only (Fair)"}
+          title={isAr?"ترتيب المدربين — محاور التعليم فقط (تقييم عادل)":"Trainer Ranking — Education Axes Only (Fair)"} icon="users"
           data={trainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))}
           avgLine={summary.mean} lang={lang}/>
 
@@ -608,136 +605,205 @@ export default function ExecutiveReportPage(){
 
 /* ============ CSS ============ */
 const CSS=`
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box;}
-body{margin:0;}
-.ex{background:#f4f6f8;min-height:100vh;font-family:'Tajawal',sans-serif;color:#0f172a;}
-.spin{width:60px;height:60px;border:6px solid rgba(255,255,255,.1);border-top-color:#0d9488;border-radius:50%;animation:sp 1s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg);}}
-.wrap{max-width:1200px;margin:0 auto;padding:24px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin{width:56px;height:56px;border:6px solid #e4eaf2;border-top-color:#0b8a83;border-radius:50%;animation:spin 1s linear infinite;}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:16px;}
+.wrap>.card,.wrap>.g2,.wrap>.g4,.wrap>.rep-meta,.wrap>.verdict{margin-bottom:0;}
+.ex{--navy:#0f2a4e;--teal:#0b8a83;--teal-soft:#e6f4f3;--teal-line:#b7e1dd;--gold:#c9a24b;--gold-soft:#fbf5e4;--gold-line:#ead9a6;--bg:#f3f6fa;--line:#e4eaf2;--line-2:#cfd9e6;--ink:#0f172a;--ink-2:#334155;--muted:#64748b;--ok:#15803d;--ok-soft:#eafaf0;--ok-line:#b7e4c7;--info:#1d4ed8;--info-soft:#eef4ff;--info-line:#c3d4fb;--warn:#b45309;--warn-soft:#fff7e6;--warn-line:#f5d9a3;--bad:#b91c1c;--bad-soft:#fef2f2;--bad-line:#f6c4c4;--r:14px;--sh:0 1px 2px rgba(15,42,78,.05),0 6px 18px rgba(15,42,78,.05);
+  background:var(--bg);min-height:100vh;padding:20px max(16px,calc((100% - 1320px)/2)) 40px;color:var(--ink);font-family:inherit;}
+.lay{display:flex;flex-direction:column;gap:16px;}
+.main{flex:1;min-width:0;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px;}
+.g2>*,.g4>*,.igrid>*{min-width:0;}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px;margin-bottom:16px;box-shadow:var(--sh);}
+.ctitle{margin:0 0 8px;font-size:17px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+.ctitle svg{color:var(--teal);flex-shrink:0;}
+.cdesc{color:var(--muted);margin:0 0 14px;font-size:13px;font-weight:600;}
+.empty{color:var(--muted);text-align:center;padding:28px 12px;font-weight:700;}
 .ltr{direction:ltr;unicode-bidi:plaintext;}
-.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;}
-.noprint{}
-
-/* Header */
-.hd{background:linear-gradient(135deg,#0f2740,#173a5e);color:#fff;position:sticky;top:0;z-index:50;box-shadow:0 10px 30px rgba(15,39,64,.25);}
-.hd-in{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
-.br{display:flex;align-items:center;gap:12px;}
-.hlogo{height:44px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:4px 8px;}
-.hdiv{width:1px;height:36px;background:rgba(255,255,255,.25);}
-.t1{font-size:17px;font-weight:900;}
-.t2{font-size:11px;color:#b6c6d8;font-weight:700;margin-top:2px;}
-.ha{display:flex;gap:8px;flex-wrap:wrap;}
-.gh{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;padding:10px 14px;border-radius:11px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;}
-.gh:hover{background:rgba(255,255,255,.2);}
-.gh.gold{background:rgba(193,154,61,.25);border-color:rgba(193,154,61,.5);color:#f0d9a8;}
-
-/* Cards & grids */
-.card{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:24px;margin-bottom:20px;box-shadow:0 8px 28px rgba(15,23,42,.035);}
-.ctitle{margin:0 0 10px;font-size:19px;font-weight:900;color:#0f172a;}
-.cdesc{color:#64748b;margin:0 0 16px;font-size:13px;font-weight:700;}
-.empty{color:#94a3b8;text-align:center;padding:32px 12px;font-weight:800;}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:20px;}
-
-/* Filters */
-.sel,.inp{width:100%;padding:12px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;font-weight:800;outline:none;font-family:inherit;}
-.sel:focus,.inp:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.12);}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid transparent;}
+.tbl{width:100%;border-collapse:collapse;}
+.th{padding:12px;font-weight:800;font-size:12.5px;color:var(--muted);border-bottom:2px solid var(--line);text-align:start;white-space:nowrap;background:#f8fafc;}
+.td{padding:12px;font-size:13px;border-bottom:1px solid #f1f5f9;font-weight:600;vertical-align:top;}
+.twrap{width:100%;overflow-x:auto;}
+.twrap .tbl{min-width:1000px;}
+.sel,.inp{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line-2);background:#fff;font-weight:700;outline:none;font-family:inherit;font-size:13.5px;color:var(--ink);}
+.sel:focus,.inp:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(11,138,131,.14);}
 .fgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.btn2{width:auto;padding:10px 14px;border-radius:10px;border:1px solid var(--line-2);background:#fff;color:var(--ink);font-weight:800;cursor:pointer;font-family:inherit;font-size:13px;display:inline-flex;align-items:center;gap:6px;transition:background .15s,border-color .15s;}
+.btn2:hover{background:#f8fafc;border-color:var(--teal-line);}
+.btn2.active-filter{background:var(--teal-soft);border-color:var(--teal-line);color:var(--teal);}
+.btn2 svg{flex-shrink:0;}
+.noprint{}
+.print-only{display:none;}
 
-/* Report meta */
-.rep-meta{background:#fff;border:1px solid #e2e8f0;border-inline-start:6px solid #c19a3d;border-radius:18px;padding:18px 22px;margin-bottom:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;}
-.rep-title{color:#173a5e;font-size:20px;font-weight:900;}
-.rep-sub{color:#0d9488;font-size:13px;font-weight:800;margin-top:3px;}
-.rep-side{color:#64748b;font-size:13px;font-weight:700;line-height:1.8;text-align:end;}
+/* Header card */
+.rp-head{background:#fff;border:1px solid var(--line);border-top:4px solid var(--gold);border-radius:var(--r);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:var(--sh);}
+.rp-brand{display:flex;align-items:center;gap:14px;min-width:0;}
+.rp-logo{height:48px;width:auto;object-fit:contain;}
+.rp-logo-sep{width:1px;height:40px;background:var(--line);}
+.rp-brand-text{display:flex;flex-direction:column;min-width:0;}
+.rp-brand-text b{color:var(--navy);font-size:17px;font-weight:800;}
+.rp-brand-text span{color:var(--muted);font-size:12px;font-weight:600;}
+.rp-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.rp-act{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;border:1px solid var(--line-2);background:#fff;color:var(--ink-2);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s;}
+.rp-act:hover{background:#f8fafc;border-color:var(--teal-line);color:var(--navy);}
+.rp-act.primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+.rp-act.primary:hover{background:#086f69;color:#fff;}
 
-/* Verdict */
-.verdict{border-radius:20px;padding:22px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:2px solid;}
-.verdict.green{background:#f0fdf4;border-color:#86efac;}
-.verdict.teal{background:#f0fdfa;border-color:#5eead4;}
-.verdict.amber{background:#fffbeb;border-color:#fcd34d;}
-.verdict.red{background:#fef2f2;border-color:#fca5a5;}
-.verdict.gray{background:#f8fafc;border-color:#cbd5e1;}
-.vicon{font-size:34px;}
-.vtitle{font-size:20px;font-weight:900;color:#0f172a;}
-.vtext{color:#475569;font-size:14px;font-weight:700;line-height:1.8;margin-top:4px;max-width:720px;}
+/* Tabs strip */
+.side{display:flex;gap:6px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:8px;box-shadow:var(--sh);}
+.ton,.tof{flex:1 1 auto;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:background .15s,color .15s;}
+.ton{background:var(--navy);color:#fff;border:1px solid var(--navy);box-shadow:inset 0 -3px 0 var(--gold);}
+.tof{background:transparent;color:var(--ink-2);border:1px solid transparent;}
+.tof:hover{background:var(--teal-soft);color:var(--teal);}
+.nav-label{display:flex;align-items:center;gap:9px;}
+.nav-ico{width:28px;height:28px;border-radius:8px;background:rgba(15,42,78,.06);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--teal);}
+.ton .nav-ico{background:rgba(255,255,255,.16);color:#fff;}
+
+/* Report header (print only) */
+.report-header{background:#fff;border:1px solid var(--line);border-bottom:4px solid var(--teal);border-radius:var(--r);padding:12px 20px;margin-bottom:16px;align-items:center;justify-content:space-between;gap:16px;}
+.report-header img{height:48px;width:auto;object-fit:contain;}
+.report-header-text{text-align:center;}
+.report-header-text b{display:block;color:var(--navy);font-size:16px;font-weight:800;}
+.report-header-text span{color:var(--teal);font-size:12px;font-weight:700;}
+
+/* Report meta & verdict */
+.rep-meta{background:#fff;border:1px solid var(--line);border-inline-start:6px solid var(--gold);border-radius:var(--r);padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;box-shadow:var(--sh);}
+.rep-title{color:var(--navy);font-size:20px;font-weight:800;}
+.rep-sub{color:var(--teal);font-size:13px;font-weight:700;margin-top:3px;}
+.rep-side{color:var(--muted);font-size:13px;font-weight:600;line-height:1.8;text-align:end;}
+.rep-side b{color:var(--ink);}
+.verdict{border-radius:var(--r);padding:20px 22px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1px solid;}
+.verdict.green{background:var(--ok-soft);border-color:var(--ok-line);}
+.verdict.teal{background:var(--teal-soft);border-color:var(--teal-line);}
+.verdict.amber{background:var(--warn-soft);border-color:var(--warn-line);}
+.verdict.red{background:var(--bad-soft);border-color:var(--bad-line);}
+.verdict.gray{background:#f8fafc;border-color:var(--line-2);}
+.vicon{width:52px;height:52px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:#fff;flex-shrink:0;border:1px solid var(--line);}
+.vicon.green{color:var(--ok);border-color:var(--ok-line);}
+.vicon.teal{color:var(--teal);border-color:var(--teal-line);}
+.vicon.amber{color:var(--warn);border-color:var(--warn-line);}
+.vicon.red{color:var(--bad);border-color:var(--bad-line);}
+.vicon.gray{color:var(--muted);}
+.vtitle{font-size:19px;font-weight:800;color:var(--navy);}
+.vtext{color:var(--ink-2);font-size:14px;font-weight:600;line-height:1.8;margin-top:4px;max-width:720px;}
 .vscore{text-align:center;margin-inline-start:auto;}
-.vnum{font-size:44px;font-weight:900;color:#0f172a;}
-.vof{color:#64748b;font-size:13px;font-weight:800;}
+.vnum{font-size:42px;font-weight:900;color:var(--navy);line-height:1.1;}
+.vof{color:var(--muted);font-size:13px;font-weight:700;}
+.vprint{background:var(--navy);color:#fff;border:none;padding:11px 16px;border-radius:10px;font-weight:800;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;font-size:13px;}
+.vprint:hover{background:#163b6e;}
 
-/* Metrics */
-.mcard{background:#fff;border:1px solid #e2e8f0;border-bottom:5px solid #2563eb;padding:20px;border-radius:22px;min-height:140px;box-shadow:0 8px 28px rgba(15,23,42,.035);}
-.mtop{display:flex;align-items:center;gap:8px;color:#64748b;font-weight:900;font-size:14px;flex-wrap:wrap;}
-.mbadge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:900;margin-inline-start:auto;}
-.mval{font-size:32px;font-weight:900;margin-top:12px;direction:ltr;unicode-bidi:plaintext;}
-.msub{color:#94a3b8;font-size:12px;margin-top:6px;font-weight:700;}
+/* Narrative */
+.narr{border-inline-start:4px solid var(--teal);}
+.ntext{color:var(--ink-2);font-size:14.5px;font-weight:500;line-height:2;margin:0 0 12px;text-align:justify;}
+.ntext:last-child{margin-bottom:0;}
+
+/* Metric cards */
+.mcard{background:#fff;border:1px solid var(--line);border-bottom:4px solid var(--info);padding:18px;border-radius:var(--r);min-height:130px;box-shadow:var(--sh);}
+.mtop{display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:800;font-size:13.5px;flex-wrap:wrap;}
+.mico{width:28px;height:28px;border-radius:8px;background:#f3f6fa;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mbadge{padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;margin-inline-start:auto;}
+.mval{font-size:30px;font-weight:900;margin-top:10px;direction:ltr;unicode-bidi:plaintext;color:var(--navy);}
+.msub{color:var(--muted);font-size:12px;margin-top:6px;font-weight:600;}
 
 /* Distribution */
-.dbar{height:22px;width:100%;display:flex;overflow:hidden;border-radius:999px;background:#f1f5f9;margin:20px 0;}
+.dbar{height:20px;width:100%;display:flex;overflow:hidden;border-radius:999px;background:#f1f5f9;margin:18px 0;}
 .dlist{display:grid;gap:10px;}
-.ditem{display:flex;align-items:center;gap:8px;color:#334155;font-size:14px;font-weight:800;}
+.ditem{display:flex;align-items:center;gap:8px;color:var(--ink-2);font-size:14px;font-weight:700;}
 
 /* Insights */
 .igrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.ibox{padding:18px;border-radius:16px;border:1px solid #e2e8f0;background:#fff;}
-.ibox h4{margin:0 0 12px;font-size:16px;font-weight:900;}
-.ibox.danger{background:#fff7f7;border-color:#fecaca;}
-.ibox.success{background:#f0fdf4;border-color:#bbf7d0;}
+.ibox{padding:18px;border-radius:var(--r);border:1px solid var(--line);background:#fff;box-shadow:var(--sh);}
+.ibox h4{margin:0 0 12px;font-size:15.5px;font-weight:800;display:flex;align-items:center;gap:8px;color:var(--navy);}
+.ibox.danger{background:var(--bad-soft);border-color:var(--bad-line);}
+.ibox.danger h4 svg{color:var(--bad);}
+.ibox.success{background:var(--ok-soft);border-color:var(--ok-line);}
+.ibox.success h4 svg{color:var(--ok);}
 .irow{display:grid;gap:4px;padding:10px 0;border-bottom:1px solid rgba(148,163,184,.22);}
 .irow:last-child{border-bottom:0;}
-.irow span{color:#475569;font-size:13px;font-weight:700;}
+.irow span{color:var(--ink-2);font-size:13px;font-weight:600;}
 
-/* Tables */
-.tbl{width:100%;border-collapse:collapse;}
-.th{padding:13px;font-weight:900;font-size:13px;color:#64748b;border-bottom:2px solid #eef2f6;text-align:start;white-space:nowrap;}
-.td{padding:13px;font-size:13px;border-bottom:1px solid #f1f5f9;font-weight:700;vertical-align:top;}
-.twrap{width:100%;overflow-x:auto;}
-.twrap .tbl{min-width:1000px;}
-.rbadge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:900;white-space:nowrap;}
-.gapok{color:#047857;font-weight:900;}
-.gapmid{color:#b45309;font-weight:900;}
-.gapbad{color:#b91c1c;font-weight:900;}
+/* Badges & gaps */
+.rbadge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;}
+.gapok{color:var(--ok);font-weight:800;}
+.gapmid{color:var(--warn);font-weight:800;}
+.gapbad{color:var(--bad);font-weight:800;}
 
 /* Priority actions */
-.paction{display:flex;gap:14px;padding:16px;border:1px solid #e2e8f0;border-radius:16px;margin-bottom:12px;background:#fff;}
-.pnum{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;flex-shrink:0;color:#fff;}
-.pnum.ph{background:#dc2626;}
-.pnum.pm{background:#d97706;}
-.prbadge{padding:4px 11px;border-radius:999px;font-size:11px;font-weight:900;}
-.prbadge.pr-high{background:#fee2e2;color:#b91c1c;}
-.prbadge.pr-med{background:#fef3c7;color:#b45309;}
-.pmeta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:#64748b;font-size:12px;font-weight:800;}
+.paction{display:flex;gap:14px;padding:16px;border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;background:#fff;}
+.pnum{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;flex-shrink:0;color:#fff;}
+.pnum.ph{background:var(--bad);}
+.pnum.pm{background:var(--warn);}
+.prbadge{padding:4px 11px;border-radius:999px;font-size:11px;font-weight:800;}
+.prbadge.pr-high{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad-line);}
+.prbadge.pr-med{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line);}
+.pmeta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:12px;font-weight:700;}
+.pmeta span{display:inline-flex;align-items:center;gap:4px;}
 
 /* Comparison */
 .cmptrack{position:relative;height:10px;background:#f1f5f9;border-radius:999px;margin-bottom:6px;}
 .cmpfill{height:100%;border-radius:999px;transition:width .6s ease;}
-.cmpline{position:absolute;top:-4px;bottom:-4px;width:3px;background:#64748b;border-radius:2px;}
-.cmpline.gold{background:#c19a3d;}
-.legend{display:flex;gap:18px;margin-top:12px;color:#64748b;font-size:12px;font-weight:800;flex-wrap:wrap;}
+.cmpline{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--muted);border-radius:2px;}
+.cmpline.gold{background:var(--gold);}
+.legend{display:flex;gap:18px;margin-top:12px;color:var(--muted);font-size:12px;font-weight:700;flex-wrap:wrap;}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-inline-end:6px;vertical-align:-2px;}
 
 /* Heat */
 .heat{width:100%;border-collapse:collapse;min-width:700px;}
-.heat th{border-bottom:2px solid #e2e8f0;padding:12px;color:#64748b;text-align:center;font-size:13px;}
+.heat th{border-bottom:2px solid var(--line);padding:12px;color:var(--muted);text-align:center;font-size:13px;background:#f8fafc;}
 .heat td{border-bottom:1px solid #f1f5f9;padding:12px;text-align:center;}
-.haxis{text-align:start !important;min-width:170px;color:#0f172a;font-weight:900;}
-.hcell{display:inline-flex;min-width:56px;justify-content:center;padding:8px;border-radius:10px;font-size:13px;font-weight:900;direction:ltr;}
+.haxis{text-align:start !important;min-width:170px;color:var(--ink);font-weight:800;}
+.hcell{display:inline-flex;min-width:56px;justify-content:center;padding:8px;border-radius:8px;font-size:13px;font-weight:800;direction:ltr;}
 
 /* Footer */
-.rep-footer{background:#fff;border:1px solid #e2e8f0;border-top:4px solid #173a5e;border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:#475569;font-size:12px;font-weight:700;line-height:1.8;}
+.rep-footer{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:var(--r);padding:16px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--ink-2);font-size:12px;font-weight:600;line-height:1.8;}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-box{background:#fff;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.35);animation:slideUp .25s ease;}
+.modal-head{background:var(--bad);color:#fff;padding:20px 24px;display:flex;align-items:center;gap:14px;}
+.modal-head-icon{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-head h3{margin:0;font-size:19px;font-weight:800;}
+.modal-head p{margin:4px 0 0;font-size:13px;opacity:.9;font-weight:600;}
+.modal-body{padding:22px 24px;}
+.modal-warning-list{background:var(--bad-soft);border:1px solid var(--bad-line);border-radius:12px;padding:14px 18px;margin:0 0 18px;padding-inline-start:34px;}
+.modal-warning-list li{color:#991b1b;font-size:13.5px;font-weight:600;margin-bottom:6px;line-height:1.7;}
+.modal-warning-list li:last-child{margin-bottom:0;}
+.modal-label{display:block;font-size:13px;font-weight:800;color:var(--ink-2);margin-bottom:6px;}
+.kind-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.kind-option{border:2px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;font-weight:800;font-size:13px;color:var(--muted);transition:all .15s ease;background:#fff;}
+.kind-ico{display:flex;justify-content:center;margin-bottom:4px;}
+.kind-option:hover{border-color:var(--bad-line);}
+.kind-option.selected{border-color:var(--bad);background:var(--bad-soft);color:var(--bad);}
+.code-input{width:100%;padding:14px;border-radius:12px;border:2px solid var(--line);font-size:22px;font-weight:900;text-align:center;letter-spacing:10px;direction:ltr;outline:none;transition:border .15s ease;font-family:inherit;}
+.code-input:focus{border-color:var(--bad);box-shadow:0 0 0 4px rgba(185,28,28,.1);}
+.code-input.error{border-color:var(--bad);background:var(--bad-soft);animation:shake .3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+.modal-footer{padding:16px 24px 22px;display:flex;gap:12px;}
+.modal-btn-cancel{flex:1;padding:13px;border-radius:10px;border:1px solid var(--line-2);background:#fff;color:var(--ink-2);font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}
+.modal-btn-delete{flex:1;padding:13px;border-radius:10px;border:none;background:var(--bad);color:#fff;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}
+.modal-btn-delete:disabled{background:#f6c4c4;cursor:not-allowed;}
+.modal-result{margin-top:14px;padding:12px 16px;border-radius:10px;font-weight:700;font-size:14px;line-height:1.7;}
+.modal-result.success{background:var(--ok-soft);color:var(--ok);}
+.modal-result.error{background:var(--bad-soft);color:var(--bad);}
 
 @media(max-width:1150px){.g4{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:950px){
+.ex{padding:12px 12px 32px;}
 .g2,.g4,.igrid{grid-template-columns:1fr;}
 .fgrid{grid-template-columns:1fr;}
+.rp-head{flex-direction:column;align-items:stretch;}
+.rp-brand{justify-content:center;flex-wrap:wrap;text-align:center;}
+.rp-actions{justify-content:center;}
+.ton,.tof{flex:1 1 45%;font-size:13px;padding:9px 10px;}
 .verdict{flex-direction:column;align-items:flex-start;}
 .vscore{margin-inline-start:0;}
-.hd{position:static;}
 }
-@media print{
-.noprint,.hd{display:none !important;}
-.ex{background:#fff;}
-.wrap{padding:0;max-width:100%;}
-.card,.verdict,.rep-meta{box-shadow:none !important;break-inside:avoid;}
-}
+.print-axis-all{display:none}.print-axis-card{border:1px solid #cfd9e6;border-radius:8px;padding:14px;margin:12px 0;background:#fff}.print-axis-head{display:flex;justify-content:space-between;border-bottom:1px solid #e4eaf2;padding-bottom:8px;color:#0f2a4e}.print-axis-kpis{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin:10px 0}.print-axis-card p{font-size:13px;line-height:1.8;margin:7px 0;color:#334155}.print-axis-chart{margin:12px 0;padding:12px;background:#f8fafc;border:1px solid #e4eaf2;border-radius:8px}.print-chart-title{font-weight:800;color:#0f2a4e;margin-bottom:8px}.print-legend{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0 10px}.print-legend span{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:800}.l-red{background:#fef2f2!important;color:#991b1b!important;border:1px solid #b91c1c}.l-amber{background:#fff7e6!important;color:#92400e!important;border:1px solid #b45309}.l-green{background:#eafaf0!important;color:#065f46!important;border:1px solid #15803d}.print-chart-row,.print-target-row{display:grid;grid-template-columns:65px 1fr 70px;gap:8px;align-items:center;margin:7px 0;font-size:12px}.print-chart-track{height:10px;background:#e4eaf2;border-radius:8px;overflow:hidden}.print-chart-track i{display:block;height:100%;border-radius:8px}
+@media print{html,body,*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.side,.noprint,.rp-head{display:none !important;}.print-only{display:flex;}.ex{padding:0;background:#fff;}.card,.verdict,.rep-meta,.mcard{box-shadow:none !important;break-inside:avoid;}.print-axis-all{display:block;break-before:page}.print-axis-card{break-inside:avoid;background:#fff!important}.print-chart-track{border:1px solid #cfd9e6!important;background:#e4eaf2!important}.print-chart-track i{opacity:1!important}.print-legend{display:flex!important;}}
 `;
