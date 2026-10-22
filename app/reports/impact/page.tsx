@@ -89,6 +89,7 @@ function Inner() {
           <Link href="/dashboard" className="ir-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
           <Link href="/admin/impact" className="ir-btn"><Icon name="target" size={16} /> إدارة الأدوات</Link>
           <Link href="/reports/center" className="ir-btn"><Icon name="chart" size={16} /> مركز التقارير</Link>
+          <Link href="/reports/transfer" className="ir-btn"><Icon name="trend" size={16} /> نقل الأثر (المستوى 3)</Link>
           <button className="ir-btn" onClick={() => window.print()} disabled={!a}><Icon name="print" size={16} /> طباعة / PDF</button>
           <button className="ir-btn" onClick={exportCsv} disabled={!a || !pairs.length}><Icon name="download" size={16} /> CSV</button>
         </nav>
