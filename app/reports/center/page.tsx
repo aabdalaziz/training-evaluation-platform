@@ -8,8 +8,9 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { downloadCSV, safeFilename } from '../../../lib/export/csv';
-import { downloadXlsx, type Sheet } from '../../../lib/export/xlsx';
-import { downloadPptx, type PptSlide } from '../../../lib/export/pptx';
+import { buildXlsx, downloadXlsx, type Sheet } from '../../../lib/export/xlsx';
+import { buildPptx, downloadPptx, type PptSlide } from '../../../lib/export/pptx';
+import { buildReportEmailHtml, mailSubject, parseRecipients, toBase64 } from '../../../lib/email/report-mail';
 import { AUDIENCES, PERIOD_PRESETS, REPORTS, REPORT_GROUPS, reportById, type ReportDef, type SectionId } from '../../../lib/reports/catalog';
 import { Icon, REPORT_ICON } from '../../../lib/ui/icons';
 import {
@@ -180,18 +181,17 @@ function ReportsCenter() {
     if (s.has('rawTable')) t.push({ name: dim('البيانات', 'Data'), rows: rawToTable(evals, lk, lang) });
     return t;
   };
-  const exportXlsx = () => {
-    const sheets: Sheet[] = [
+  const xlsxSheets = (): Sheet[] => [
       { name: ar ? 'الملخص' : 'Summary', rtl: ar, rows: [[ar ? 'التقرير' : 'Report', title], [ar ? 'النطاق' : 'Scope', scopeText], [ar ? 'تاريخ الإنشاء' : 'Generated', `${today} (Asia/Riyadh)`], [], ...kpisToTable(k, lang)] },
       ...mainTables().map(t => ({ name: t.name, rows: t.rows, rtl: ar })),
-    ];
-    downloadXlsx(fileBase(), sheets); flash(ar ? '✅ تم تنزيل ملف Excel' : '✅ Excel downloaded');
-  };
+  ];
+  const exportXlsx = () => { downloadXlsx(fileBase(), xlsxSheets()); flash(ar ? '✅ تم تنزيل ملف Excel' : '✅ Excel downloaded'); };
   const exportCsv = () => {
     const t = mainTables()[0] || { name: 'kpis', rows: kpisToTable(k, lang) };
     downloadCSV(`${fileBase()}-${safeFilename(t.name)}.csv`, t.rows); flash(ar ? '✅ تم تنزيل CSV' : '✅ CSV downloaded');
   };
-  const exportPptx = () => {
+  const PPT_OPTS = { rtl: ar, footer: ar ? 'منصة تقويم البرامج التدريبية · جامعة الأمير مقرن' : 'Training Evaluation Platform · Prince Mugrin University' };
+  const pptxSlides = (): PptSlide[] => {
     const slides: PptSlide[] = [];
     slides.push({ title, subtitle: scopeText, bullets: [`${ar ? 'الجمهور' : 'Audience'}: ${report.audience[lang]}`, `${ar ? 'تاريخ الإعداد' : 'Generated'}: ${today} · Asia/Riyadh`, ar ? 'منصة تقويم البرامج التدريبية — النتائج مجمّعة ولا تعرض هوية المشاركين' : 'Training Evaluation Platform — aggregated, anonymous results'] });
     if (k.responses) {
@@ -215,9 +215,45 @@ function ReportsCenter() {
       }
     }
     if (actions.length) slides.push({ title: ar ? 'القرارات المطلوبة' : 'Decisions required', bullets: actions.slice(0, 6).map(a => `${a.label}: ${a.recommendation} (${ar ? 'خلال' : 'within'} ${a.dueDays} ${ar ? 'يوم' : 'days'} — ${a.owner})`) });
-    downloadPptx(fileBase(), slides, { rtl: ar, footer: ar ? 'منصة تقويم البرامج التدريبية · جامعة الأمير مقرن' : 'Training Evaluation Platform · Prince Mugrin University' });
-    flash(ar ? '✅ تم تنزيل عرض PowerPoint' : '✅ PowerPoint downloaded');
+    return slides;
   };
+  const exportPptx = () => { downloadPptx(fileBase(), pptxSlides(), PPT_OPTS); flash(ar ? '✅ تم تنزيل عرض PowerPoint' : '✅ PowerPoint downloaded'); };
+  /* ---------------- email ---------------- */
+  const MAIL_KEY = 'rc_mail_recipients_v1';
+  const [mail, setMail] = useState({ open: false, to: '', note: '', xlsx: true, pptx: false, subscribe: false, days: 7, sending: false, error: '' });
+  const openMail = () => { let to = ''; try { to = localStorage.getItem(MAIL_KEY) || ''; } catch { /* ignore */ } setMail(m => ({ ...m, open: true, to: m.to || to, error: '' })); };
+  const sendMail = async () => {
+    const to = parseRecipients(mail.to);
+    if (!to.length) { setMail(m => ({ ...m, error: ar ? 'أدخل بريدًا إلكترونيًا صحيحًا واحدًا على الأقل (افصل بين العناوين بفاصلة)' : 'Enter at least one valid email (comma-separated)' })); return; }
+    setMail(m => ({ ...m, sending: true, error: '' }));
+    try {
+      const session = (await db.auth.getSession()).data.session;
+      if (!session) throw new Error(ar ? 'انتهت الجلسة — سجّل الدخول مجددًا' : 'Session expired');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` };
+      const { data: prof } = await db.from('profiles').select('full_name').eq('id', session.user.id).single();
+      const attachments: { filename: string; content: string }[] = [];
+      if (mail.xlsx) attachments.push({ filename: `${fileBase()}.xlsx`, content: toBase64(buildXlsx(xlsxSheets())) });
+      if (mail.pptx) attachments.push({ filename: `${fileBase()}.pptx`, content: toBase64(buildPptx(pptxSlides(), PPT_OPTS)) });
+      const html = buildReportEmailHtml({
+        lang, title, scope: scopeText, generatedAt: today, audience: report.audience[lang], k, deltaMean: cmp?.deltaMean ?? null, story, actions,
+        link: window.location.href, note: mail.note.trim() || undefined, senderName: prof?.full_name || session.user.email || undefined, attachments: attachments.map(a => a.filename),
+      });
+      const res = await fetch('/api/reports/email', { method: 'POST', headers, body: JSON.stringify({ action: 'send', to, subject: mailSubject({ lang, title, scope: scopeText, k }), html, attachments, meta: { reportId, scope: scopeText } }) });
+      const j = await res.json();
+      if (!j.success) throw new Error(j.error || 'Send failed');
+      if (mail.subscribe) {
+        const subFilters = { programId: effFilters.programId || '', trainerId: effFilters.trainerId || '', classroomId: effFilters.classroomId || '', kind: effFilters.kind || 'ALL', deliveryMode: effFilters.deliveryMode || '', days: mail.days };
+        const r2 = await fetch('/api/reports/email', { method: 'POST', headers, body: JSON.stringify({ action: 'subscribe', to, reportId, filters: subFilters, lang, label: `${title} — ${scopeText}` }) });
+        const j2 = await r2.json(); if (!j2.success) throw new Error((ar ? 'أُرسلت الرسالة لكن تعذّر حفظ الاشتراك: ' : 'Sent, but subscription failed: ') + (j2.error || ''));
+      }
+      try { localStorage.setItem(MAIL_KEY, to.join(', ')); } catch { /* ignore */ }
+      setMail(m => ({ ...m, open: false, sending: false }));
+      flash(ar ? `✅ أُرسل التقرير إلى ${to.length} مستلم${mail.subscribe ? ' وتم تفعيل الملخص الأسبوعي' : ''}` : `✅ Sent to ${to.length} recipient(s)${mail.subscribe ? ' · weekly digest enabled' : ''}`);
+    } catch (e: any) {
+      setMail(m => ({ ...m, sending: false, error: e?.message || 'Error' }));
+    }
+  };
+
   const exportWord = () => {
     const doc = document.querySelector('.rc-doc');
     if (!doc) return;
@@ -252,6 +288,33 @@ function ReportsCenter() {
     <div className="rc" dir={ar ? 'rtl' : 'ltr'}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {toast && <div className="rc-toast noprint">{toast}</div>}
+      {mail.open && (
+        <div className="rc-modal noprint" role="dialog" aria-modal="true" onClick={e => { if (e.target === e.currentTarget && !mail.sending) setMail(m => ({ ...m, open: false })); }}>
+          <div className="rc-modal-box">
+            <div className="rc-modal-head"><b><Icon name="mail" size={18} /> {ar ? 'إرسال التقرير بالبريد الإلكتروني' : 'Email this report'}</b><button className="rc-x" onClick={() => setMail(m => ({ ...m, open: false }))} aria-label="close">✕</button></div>
+            <p className="rc-modal-sub">{title} · {scopeText}</p>
+            <label className="rc-field"><span>{ar ? 'المستلمون (افصل بينهم بفاصلة)' : 'Recipients (comma-separated)'}</span>
+              <textarea rows={2} dir="ltr" value={mail.to} onChange={e => setMail(m => ({ ...m, to: e.target.value }))} placeholder="dean@upm.edu.sa, quality@upm.edu.sa" /></label>
+            <label className="rc-field"><span>{ar ? 'رسالة مرافقة (اختياري)' : 'Message (optional)'}</span>
+              <textarea rows={3} value={mail.note} onChange={e => setMail(m => ({ ...m, note: e.target.value }))} placeholder={ar ? 'مثال: مرفق تقرير الأسبوع — يرجى الاطلاع على بند الإجراءات قبل اجتماع الأحد.' : 'e.g. Weekly report attached — please review the actions before Sunday.'} /></label>
+            <div className="rc-modal-row">
+              <label className="rc-check"><input type="checkbox" checked={mail.xlsx} onChange={e => setMail(m => ({ ...m, xlsx: e.target.checked }))} /><span>{ar ? 'إرفاق Excel' : 'Attach Excel'}</span></label>
+              <label className="rc-check"><input type="checkbox" checked={mail.pptx} onChange={e => setMail(m => ({ ...m, pptx: e.target.checked }))} /><span>{ar ? 'إرفاق PowerPoint' : 'Attach PowerPoint'}</span></label>
+            </div>
+            <div className="rc-modal-sub2">
+              <label className="rc-check"><input type="checkbox" checked={mail.subscribe} onChange={e => setMail(m => ({ ...m, subscribe: e.target.checked }))} /><span>{ar ? 'إرسال ملخص أسبوعي تلقائي لهؤلاء المستلمين (كل أحد 8 صباحًا)' : 'Also send an automatic weekly digest to these recipients (Sundays 08:00)'}</span></label>
+              {mail.subscribe && <select value={mail.days} onChange={e => setMail(m => ({ ...m, days: Number(e.target.value) }))}><option value={7}>{ar ? 'نافذة 7 أيام' : '7-day window'}</option><option value={14}>{ar ? 'نافذة 14 يومًا' : '14-day window'}</option><option value={30}>{ar ? 'نافذة 30 يومًا' : '30-day window'}</option></select>}
+            </div>
+            {mail.error && <div className="rc-error" style={{ marginTop: 10 }}>{mail.error}</div>}
+            <div className="rc-modal-actions">
+              <button className="rc-btn" onClick={() => setMail(m => ({ ...m, open: false }))} disabled={mail.sending}>{ar ? 'إلغاء' : 'Cancel'}</button>
+              <button className="rc-btn primary" onClick={sendMail} disabled={mail.sending}><Icon name="mail" size={15} /> {mail.sending ? (ar ? 'جارٍ الإرسال…' : 'Sending…') : (ar ? 'إرسال الآن' : 'Send now')}</button>
+            </div>
+            <p className="rc-modal-foot">{ar ? 'تُرسل الرسالة من عنوان المنصة ويُسجَّل الإرسال في سجل التدقيق. الرد على الرسالة يصل إلى بريدك.' : 'Sent from the platform address and logged in the audit trail; replies go to your inbox.'}</p>
+          </div>
+        </div>
+      )}
+
 
       {/* ===== header ===== */}
       <header className="rc-top noprint">
@@ -357,6 +420,8 @@ function ReportsCenter() {
               <button className="rc-btn" onClick={copyBrief}><Icon name="copy" size={15} /> {ar ? 'نسخ الموجز' : 'Copy brief'}</button>
               <button className="rc-btn" onClick={copyLink}><Icon name="link" size={15} /> {ar ? 'نسخ الرابط' : 'Copy link'}</button>
               <button className="rc-btn gold" onClick={savePreset}><Icon name="star" size={15} /> {ar ? 'حفظ كتقرير' : 'Save preset'}</button>
+              <span className="rc-sep" />
+              <button className="rc-btn navy" onClick={openMail}><Icon name="mail" size={15} /> {ar ? 'إرسال بالبريد' : 'Email report'}</button>
             </div>
           </section>
 
@@ -821,6 +886,24 @@ const CSS = `
 .rc-btn.primary svg{color:#fff;opacity:1}
 .rc-btn.primary:hover{background:var(--teal-2);border-color:var(--teal-2);color:#fff}
 .rc-btn.gold{background:var(--gold-soft);border-color:var(--gold-line);color:#7a5c0f}.rc-btn.gold svg{color:var(--gold);opacity:1}
+.rc-btn.navy{background:var(--navy);border-color:var(--navy);color:#fff}.rc-btn.navy svg{color:#fff;opacity:1}.rc-btn.navy:hover{background:var(--navy-2);color:#fff}
+.rc-btn:disabled{opacity:.6;cursor:not-allowed}
+/* ---------- email modal ---------- */
+.rc-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:200;padding:16px}
+.rc-modal-box{width:min(620px,100%);background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;box-shadow:0 24px 60px rgba(15,23,42,.3);max-height:92vh;overflow:auto}
+.rc-modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.rc-modal-head b{display:inline-flex;align-items:center;gap:8px;font-size:16px;color:var(--navy)}.rc-modal-head b svg{color:var(--teal)}
+.rc-modal-sub{margin:4px 0 14px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.rc-field{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:10px}
+.rc-field textarea{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;color:var(--ink);background:var(--surface);line-height:1.7;resize:vertical}
+.rc-field textarea:focus{outline:0;border-color:var(--teal);box-shadow:var(--ring)}
+.rc-modal-row{display:flex;gap:10px;flex-wrap:wrap}
+.rc-modal-sub2{margin-top:10px;padding:10px 12px;background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rc-modal-sub2 .rc-check{background:transparent;border:0;padding:0;height:auto}
+.rc-modal .rc-check{display:inline-flex;align-items:center;gap:8px}.rc-modal .rc-check input{margin:0}
+.rc-modal-sub2 select{border:1px solid var(--line-2);border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;background:#fff}
+.rc-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.rc-modal-foot{margin:10px 0 0;font-size:11.5px;color:var(--muted-2);font-weight:700;line-height:1.7}
+
 /* ---------- report document ---------- */
 .rc-doc{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px;box-shadow:var(--shadow-sm)}
 .rc-doc-head{display:flex;gap:18px;align-items:flex-start;border-bottom:2px solid var(--gold);padding-bottom:16px;margin-bottom:18px}
