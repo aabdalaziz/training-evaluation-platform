@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase/client';
 import { Icon, type IconName } from '../../lib/ui/icons';
+import NotificationBell from './NotificationBell';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
@@ -53,6 +54,7 @@ export default function GlobalNavigation() {
               <Icon name={n.icon} size={16} /> {n.label}
             </Link>
           ))}
+          <NotificationBell />
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
         </div>
       </nav>
