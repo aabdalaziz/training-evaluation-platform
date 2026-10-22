@@ -1,12 +1,14 @@
 /**
  * /api/followups/send — إرسال روابط متابعة الأثر السلوكي (كيركباتريك 3)
  *  POST { followup_id, mode: 'send'|'remind'|'test', test_email? }  — من لوحة الإدارة (Bearer <access_token> لمستخدم إداري)
- *  GET  ?key=<CRON_SECRET>  — التشغيل التلقائي اليومي (vercel.json): يرسل الحملات التي بلغ موعدها، ويذكّر بعد remind_after_days
+ *  GET  ?key=<CRON_SECRET>  — التشغيل التلقائي اليومي (vercel.json): يرسل الحملات التي بلغ موعدها، ويذكّر بعد remind_after_days،
+ *                            ثم يشغّل فحص مركز الإشعارات (notifications_scan) ويراسل الإدارة بالجديد
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, (للـ Cron) CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { dispatchFollowup } from '../../../../lib/behavior/mail';
+import { runNotificationScan } from '../../../../lib/notifications/scan';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -72,5 +74,8 @@ export async function GET(req: Request) {
       if (due <= new Date()) out.push(dry ? { followup_id: f.id, mode: 'remind', recipients, dry: true } : await dispatchFollowup(db, f, site, 'remind'));
     }
   }
-  return NextResponse.json({ success: true, today, processed: out.length, results: out });
+  // فحص الإشعارات اليومي (نفس الـ Cron — بلا حاجة لمهمة Cron إضافية)
+  let notifications: any = null;
+  if (!dry) { try { notifications = await runNotificationScan(db, { source: 'cron', site, email: url.searchParams.get('email') !== '0' }); } catch (e: any) { notifications = { ok: false, error: e?.message || String(e) }; } }
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications });
 }
