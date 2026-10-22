@@ -314,6 +314,7 @@ export default function Dashboard() {
           <Link href="/reports/remote-survey" className="db-navlink"><Icon name="laptop" size={20} /><span><b>استطلاع التعلم عن بُعد</b><small>{raw?.remoteResponses || 0} استجابة</small></span></Link>
           <Link href="/admin/certificates" className="db-navlink"><Icon name="certificate" size={20} /><span><b>الشهادات الإلكترونية</b><small>إصدار · تحقق QR · إرسال</small></span></Link>
           <Link href="/admin/awards" className="db-navlink"><Icon name="award" size={20} /><span><b>تكريم المدربين</b><small>لوحة الشرف الشهرية</small></span></Link>
+          <Link href="/admin/impact" className="db-navlink"><Icon name="target" size={20} /><span><b>قياس أثر التدريب</b><small>قبلي / بعدي · الكسب المعياري</small></span></Link>
           <Link href="/admin/data-lifecycle" className="db-navlink"><Icon name="trash" size={20} /><span><b>دورة حياة البيانات</b><small>معاينة وتفريغ منضبط</small></span></Link>
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
@@ -557,6 +558,7 @@ export default function Dashboard() {
             <div className="db-row">
               <Link href="/reports" className="db-btn">اللوحة التحليلية التفصيلية</Link>
               <Link href="/reports/remote-survey" className="db-btn">نتائج استطلاع التعلم عن بُعد</Link>
+              <Link href="/reports/impact" className="db-btn">تقرير أثر التدريب (قبلي/بعدي)</Link>
             </div>
           </div>
         )}
