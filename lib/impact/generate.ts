@@ -21,7 +21,7 @@ export type GenerateSpec = {
 };
 export type AxisPlan = { axis: string; scale: number; mcq: number; tf: number };
 
-export const GEN_LIMITS = { maxAxes: 15, maxPerAxis: 40, maxTotal: 200, batchItems: 18 };
+export const GEN_LIMITS = { maxAxes: 15, maxPerAxis: 40, maxTotal: 200, batchItems: 24 };
 
 export function normalizeSpec(raw: any): GenerateSpec {
   const count_mode: CountMode = raw?.count_mode === 'total' ? 'total' : 'per_axis';
@@ -66,8 +66,15 @@ export function buildPlan(s: GenerateSpec): AxisPlan[] {
   return plan;
 }
 export const planTotal = (plan: AxisPlan[]) => plan.reduce((s, p) => s + p.scale + p.mcq + p.tf, 0);
+/** قراءة دفعة مرسلة من المتصفح والتحقق منها */
+export function parseBatch(raw: any, axes: string[]): AxisPlan[] | null {
+  if (!Array.isArray(raw) || !raw.length) return null;
+  const n = (v: any) => Math.max(0, Math.min(GEN_LIMITS.maxPerAxis, Math.round(Number(v) || 0)));
+  const out = raw.map((b: any) => ({ axis: String(b?.axis || '').trim(), scale: n(b?.scale), mcq: n(b?.mcq), tf: n(b?.tf) })).filter(b => b.axis && axes.includes(b.axis) && b.scale + b.mcq + b.tf > 0);
+  return out.length && planTotal(out) <= GEN_LIMITS.batchItems * 2 ? out : null;
+}
 
-/** تقسيم الخطة إلى دفعات صغيرة يستوعبها النموذج (≈18 بندًا للدفعة) */
+/** تقسيم الخطة إلى دفعات صغيرة يستوعبها النموذج (≈24 بندًا للدفعة) — تُنفَّذ من المتصفح دفعة بعد دفعة */
 export function splitBatches(plan: AxisPlan[], size = GEN_LIMITS.batchItems): AxisPlan[][] {
   const units: AxisPlan[] = [];
   for (const p of plan) {
