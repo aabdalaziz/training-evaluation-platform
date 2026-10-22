@@ -313,6 +313,7 @@ export default function Dashboard() {
           <Link href="/admin/management" className="db-navlink"><Icon name="admin" size={20} /><span><b>لوحة الإدارة</b><small>المدربون · القاعات · المستويات</small></span></Link>
           <Link href="/reports/center" className="db-navlink"><Icon name="chart" size={20} /><span><b>مركز التقارير</b><small>تنفيذية · تشغيلية · تحليلية</small></span></Link>
           <Link href="/reports/remote-survey" className="db-navlink"><Icon name="laptop" size={20} /><span><b>استطلاع التعلم عن بُعد</b><small>{raw?.remoteResponses || 0} استجابة</small></span></Link>
+          <Link href="/admin/attendance" className="db-navlink"><Icon name="check" size={20} /><span><b>الحضور الرقمي</b><small>جلسات QR · نسب الحضور</small></span></Link>
           <Link href="/admin/certificates" className="db-navlink"><Icon name="certificate" size={20} /><span><b>الشهادات الإلكترونية</b><small>إصدار · تحقق QR · إرسال</small></span></Link>
           <Link href="/admin/awards" className="db-navlink"><Icon name="award" size={20} /><span><b>تكريم المدربين</b><small>لوحة الشرف الشهرية</small></span></Link>
           <Link href="/admin/impact" className="db-navlink"><Icon name="target" size={20} /><span><b>قياس أثر التدريب</b><small>قبلي / بعدي · الكسب المعياري</small></span></Link>
