@@ -7,9 +7,12 @@ import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { qrSvg } from '../../../lib/certificates/qr';
 import { TEMPLATES, MCQ_KEYS, emptyMcq, impactUrl, makeToken } from '../../../lib/impact/model';
+import { parseInstrumentText, parseRows, parseAnswerKey, applyAnswerKey, csvTemplate, validateQuestions, KEY_AR } from '../../../lib/impact/import';
+import type { DraftQuestion } from '../../../lib/impact/import';
+import { readInstrumentFile } from '../../../lib/impact/office';
 import type { ImpactAssessment, ImpactQuestion, Phase, QuestionKind } from '../../../lib/impact/model';
 
-type Program = { id: string; name_ar: string; name_en?: string | null; status?: string | null };
+type Program = { id: string; name_ar: string; name_en?: string | null; status?: string | null; description_ar?: string | null; objectives_ar?: string | null; outcomes_ar?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null };
 type Counts = { pre: number; post: number; paired: number };
 type Draft = Omit<ImpactQuestion, 'id'> & { id?: string; _tmp: string };
@@ -38,6 +41,12 @@ function Inner() {
   const [form, setForm] = useState({ program_id: '', classroom_id: '', title_ar: '', title_en: '', intro_ar: '', scale_max: 5, identity_hint_ar: 'آخر 4 أرقام من رقم الهوية/الإقامة + سنة الميلاد (مثال: 4821-1998)', status: 'open' as ImpactAssessment['status'], pre_open: true, post_open: false });
   const [qs, setQs] = useState<Draft[]>([]);
   const [template, setTemplate] = useState('competency');
+  // طرق البناء: يدوي / رفع ملف / ذكاء اصطناعي
+  const [build, setBuild] = useState<'manual' | 'upload' | 'ai'>('manual');
+  const [upText, setUpText] = useState(''); const [upKey, setUpKey] = useState(''); const [upName, setUpName] = useState(''); const [upRows, setUpRows] = useState<string[][] | null>(null);
+  const [preview, setPreview] = useState<{ questions: DraftQuestion[]; warnings: string[]; source: string } | null>(null);
+  const [ai, setAi] = useState({ objectives: '', axes: 'المعرفة\nالمهارة\nالتطبيق', scale_per_axis: 2, mcq_per_axis: 2, tf_per_axis: 0, level: 'intermediate' as 'basic' | 'intermediate' | 'advanced', audience: '', bilingual: false, notes: '' });
+  const [aiBusy, setAiBusy] = useState(false); const [aiMode, setAiMode] = useState('');
   const [busy, setBusy] = useState(false);
   const [qrFor, setQrFor] = useState<{ a: ImpactAssessment; phase: Phase } | null>(null);
 
@@ -47,14 +56,14 @@ function Inner() {
       if (!user) { router.replace('/login'); return; }
       const [p, pg, cl] = await Promise.all([
         db.from('profiles').select('role,organization_id,full_name').eq('id', user.id).single(),
-        db.from('programs').select('id,name_ar,name_en,status').order('name_ar'),
+        db.from('programs').select('id,name_ar,name_en,status,description_ar,objectives_ar,outcomes_ar').order('name_ar'),
         db.from('classrooms').select('id,code,program_id').order('code'),
       ]);
       setRole(String(p.data?.role || '')); setOrgId(p.data?.organization_id || null); setMe({ id: user.id, name: p.data?.full_name || user.email || '' });
       setPrograms(((pg.data || []) as Program[]).filter(x => x.status !== 'CANCELLED')); setClassrooms((cl.data || []) as Classroom[]);
       await load();
       setReady(true);
-      if (params.get('new') === '1') startNew();
+      if (params.get('new') === '1') startNew(((pg.data || []) as Program[]).filter(x => x.status !== 'CANCELLED'));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -74,22 +83,75 @@ function Inner() {
   const pName = (id: string | null) => programs.find(p => p.id === id)?.name_ar || '—';
   const cCode = (id: string | null) => classrooms.find(c => c.id === id)?.code || '';
 
-  function startNew() {
+  function startNew(list: Program[] = programs) {
     setEditing(null);
-    setForm({ program_id: programs[0]?.id || '', classroom_id: '', title_ar: '', title_en: '', intro_ar: 'يهدف هذا القياس إلى معرفة أثر البرنامج على معارفك ومهاراتك. لا توجد إجابات صحيحة أو خاطئة في بنود التقدير الذاتي — أجب بصراحة.', scale_max: 5, identity_hint_ar: 'آخر 4 أرقام من رقم الهوية/الإقامة + سنة الميلاد (مثال: 4821-1998)', status: 'open', pre_open: true, post_open: false });
-    applyTemplate('competency'); setMode('edit');
+    setForm({ program_id: list[0]?.id || '', classroom_id: '', title_ar: '', title_en: '', intro_ar: 'يهدف هذا القياس إلى معرفة أثر البرنامج على معارفك ومهاراتك. لا توجد إجابات صحيحة أو خاطئة في بنود التقدير الذاتي — أجب بصراحة.', scale_max: 5, identity_hint_ar: 'آخر 4 أرقام من رقم الهوية/الإقامة + سنة الميلاد (مثال: 4821-1998)', status: 'open', pre_open: true, post_open: false });
+    applyTemplate('competency'); setBuild('manual'); setPreview(null); setUpText(''); setUpKey(''); setUpRows(null); setUpName(''); setMode('edit');
   }
   function applyTemplate(id: string) {
     setTemplate(id);
     const t = TEMPLATES.find(x => x.id === id);
     setQs((t?.questions || []).map((q, i) => ({ ...q, order_no: i + 1, _tmp: Math.random().toString(36).slice(2) })));
   }
+  /* ---------- رفع أداة جاهزة ---------- */
+  async function onUploadFile(f: File | null) {
+    if (!f) return; setError(''); setUpName(f.name);
+    try {
+      const r = await readInstrumentFile(f);
+      if (r.kind === 'rows') { setUpRows(r.rows); setUpText(r.rows.map(x => x.join(' | ')).join('\n')); }
+      else { setUpRows(null); setUpText(r.text); }
+    } catch (e: any) { setError(e?.message || 'تعذر قراءة الملف'); }
+  }
+  async function onKeyFile(f: File | null) {
+    if (!f) return;
+    try { const r = await readInstrumentFile(f); setUpKey(r.kind === 'rows' ? r.rows.map(x => x.join(' ')).join('\n') : r.text); } catch (e: any) { setError(e?.message || 'تعذر قراءة ملف الإجابة'); }
+  }
+  function runParse() {
+    setError('');
+    const res = upRows ? parseRows(upRows) : parseInstrumentText(upText);
+    const warnings = [...res.warnings];
+    if (upKey.trim()) { const k = parseAnswerKey(upKey); const ap = applyAnswerKey(res.questions, k); warnings.push(`نموذج الإجابة: طُبّق على ${ap.applied} سؤالًا${ap.missing.length ? ` — بلا إجابة: ${ap.missing.join('، ')}` : ''}.`); }
+    const mcqNoKey = res.questions.filter(q => q.kind === 'mcq' && !q.correct_key).length;
+    if (mcqNoKey) warnings.push(`${mcqNoKey} سؤال معرفي بلا إجابة صحيحة — حدّدها في المحرر قبل الحفظ.`);
+    setPreview({ questions: res.questions, warnings, source: upName || 'نص ملصوق' });
+  }
+  function adoptPreview(mode: 'replace' | 'append') {
+    if (!preview) return;
+    const base = mode === 'append' ? qs : [];
+    const add = preview.questions.map((q, i) => ({ ...q, order_no: base.length + i + 1, _tmp: Math.random().toString(36).slice(2) }));
+    setQs([...base, ...add]); setPreview(null); setBuild('manual'); flash(`أُضيف ${add.length} بندًا إلى المحرر — راجعها ثم احفظ`);
+    setTimeout(() => document.getElementById('ia-editor')?.scrollIntoView({ behavior: 'smooth' }), 50);
+  }
+  function downloadTemplate() {
+    const blob = new Blob([csvTemplate()], { type: 'text/csv;charset=utf-8' }); const u = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = u; a.download = 'قالب-أداة-قياس-الأثر.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 2000);
+  }
+  /* ---------- توليد بالذكاء الاصطناعي ---------- */
+  function prefillAi(pid: string) {
+    const p = programs.find(x => x.id === pid); if (!p) return;
+    const obj = [p.objectives_ar, p.outcomes_ar].filter(Boolean).join('\n').trim();
+    setAi(a => ({ ...a, objectives: obj || a.objectives }));
+  }
+  async function runAi() {
+    setAiBusy(true); setError(''); setAiMode('');
+    try {
+      const session = (await db.auth.getSession()).data.session; if (!session) throw new Error('انتهت الجلسة — سجّل الدخول مجددًا');
+      const p = programs.find(x => x.id === form.program_id);
+      const r = await fetch('/api/impact/generate', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ ...ai, axes: ai.axes.split(/\r?\n/).map(x => x.trim()).filter(Boolean), program_name: p?.name_ar || form.title_ar, program_desc: p?.description_ar || '' }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j?.success) throw new Error(j?.error || `HTTP ${r.status}`);
+      setAiMode(j.mode === 'ai' ? `تم التوليد بـ ${j.provider} / ${j.model}` : 'وضع التوليد المحلي');
+      setPreview({ questions: j.questions || [], warnings: j.warnings || [], source: j.mode === 'ai' ? 'الذكاء الاصطناعي' : 'المولّد المحلي' });
+    } catch (e: any) { setError(e?.message || 'تعذر التوليد'); }
+    setAiBusy(false);
+  }
+
   async function startEdit(a: ImpactAssessment) {
     setEditing(a);
     setForm({ program_id: a.program_id || '', classroom_id: a.classroom_id || '', title_ar: a.title_ar, title_en: a.title_en || '', intro_ar: a.intro_ar || '', scale_max: a.scale_max, identity_hint_ar: a.identity_hint_ar, status: a.status, pre_open: a.pre_open, post_open: a.post_open });
     const { data } = await db.from('impact_questions').select('*').eq('assessment_id', a.id).order('order_no');
     setQs(((data || []) as ImpactQuestion[]).map(q => ({ ...q, _tmp: q.id })));
-    setMode('edit');
+    setBuild('manual'); setPreview(null); setMode('edit');
   }
 
   function updQ(i: number, patch: Partial<Draft>) { setQs(s => s.map((q, j) => j === i ? { ...q, ...patch } : q)); }
@@ -102,7 +164,7 @@ function Inner() {
     if (!form.title_ar.trim()) { setError('اكتب عنوان الأداة.'); return; }
     const valid = qs.filter(q => q.text_ar.trim());
     if (!valid.length) { setError('أضف بندًا واحدًا على الأقل.'); return; }
-    for (const q of valid) if (q.kind === 'mcq' && (q.options.filter(o => o.ar.trim()).length < 2 || !q.correct_key)) { setError(`السؤال ${q.order_no}: يحتاج خيارين على الأقل وتحديد الإجابة الصحيحة.`); return; }
+    const verrs = validateQuestions(valid); if (verrs.length) { setError(verrs.slice(0, 3).join(' ')); return; }
     setBusy(true); setError('');
     try {
       let id = editing?.id;
@@ -159,7 +221,7 @@ function Inner() {
         <nav className="ia-nav">
           <Link href="/dashboard" className="ia-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
           <Link href="/reports/impact" className="ia-btn"><Icon name="trend" size={16} /> تقرير الأثر</Link>
-          {allowed && mode === 'list' && <button className="ia-btn primary" onClick={startNew}><Icon name="plus" size={16} /> أداة جديدة</button>}
+          {allowed && mode === 'list' && <button className="ia-btn primary" onClick={() => startNew()}><Icon name="plus" size={16} /> أداة جديدة</button>}
         </nav>
       </header>
       {!allowed && <div className="ia-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة.</div>}
@@ -168,7 +230,7 @@ function Inner() {
       {mode === 'list' && (
         <section className="ia-card">
           <h2><Icon name="folder" size={18} /> أدوات القياس <span className="ia-pill">{list.length}</span></h2>
-          {!list.length && <div className="ia-empty"><Icon name="target" size={34} /><b>لا توجد أدوات بعد</b><span>ابدأ بـ «أداة جديدة» — تحصل على قالب جاهز من 8 بنود يمكن تعديله خلال دقيقة.</span>{allowed && <button className="ia-btn primary" onClick={startNew}><Icon name="plus" size={16} /> أداة جديدة</button>}</div>}
+          {!list.length && <div className="ia-empty"><Icon name="target" size={34} /><b>لا توجد أدوات بعد</b><span>ابدأ بـ «أداة جديدة» — تحصل على قالب جاهز من 8 بنود يمكن تعديله خلال دقيقة.</span>{allowed && <button className="ia-btn primary" onClick={() => startNew()}><Icon name="plus" size={16} /> أداة جديدة</button>}</div>}
           <div className="ia-list">
             {list.map(a => {
               const c = counts[a.id] || { pre: 0, post: 0, paired: 0 };
@@ -231,14 +293,65 @@ function Inner() {
           </section>
 
           <section className="ia-card">
-            <h2><Icon name="question" size={18} /> البنود <span className="ia-pill">{qs.length}</span></h2>
-            {!editing && <div className="ia-templates">{TEMPLATES.map(t => <button key={t.id} className={`ia-tpl ${template === t.id ? 'on' : ''}`} onClick={() => applyTemplate(t.id)}><b>{t.ar}</b><small>{t.desc}</small></button>)}</div>}
+            <h2><Icon name="question" size={18} /> طريقة بناء الأداة</h2>
+            <div className="ia-modes">
+              <button className={`ia-mode ${build === 'manual' ? 'on' : ''}`} onClick={() => setBuild('manual')}><Icon name="edit" size={18} /><b>بناء يدوي</b><small>قالب جاهز أو من الصفر: نوع السؤال، النص، 4 بدائل، نموذج الإجابة</small></button>
+              <button className={`ia-mode ${build === 'upload' ? 'on' : ''}`} onClick={() => setBuild('upload')}><Icon name="folder" size={18} /><b>رفع أداة جاهزة</b><small>Word / Excel / CSV / نص + نموذج الإجابة — وتقوم المنصة بالإعداد</small></button>
+              <button className={`ia-mode ${build === 'ai' ? 'on' : ''}`} onClick={() => { setBuild('ai'); prefillAi(form.program_id); }}><Icon name="star" size={18} /><b>توليد بالذكاء الاصطناعي</b><small>وفق أهداف البرنامج ومحاوره: بنود مقياس + أسئلة معرفية بإجاباتها</small></button>
+            </div>
+
+            {build === 'manual' && !editing && <div className="ia-templates">{TEMPLATES.map(t => <button key={t.id} className={`ia-tpl ${template === t.id ? 'on' : ''}`} onClick={() => applyTemplate(t.id)}><b>{t.ar}</b><small>{t.desc}</small></button>)}</div>}
+
+            {build === 'upload' && (
+              <div className="ia-panel">
+                <div className="ia-grid">
+                  <label className="ia-span2">١) ملف الأداة (docx / xlsx / csv / txt)<input type="file" accept=".docx,.xlsx,.csv,.tsv,.txt,.md" onChange={e => onUploadFile(e.target.files?.[0] || null)} />{upName && <small className="ia-muted">تمت قراءة: {upName}{upRows ? ` — ${upRows.length} صفًا` : ''}</small>}</label>
+                  <label>أو قالب Excel جاهز<button type="button" className="ia-btn" onClick={downloadTemplate}><Icon name="download" size={14} /> تنزيل القالب (CSV)</button></label>
+                  <label className="ia-span3">أو الصق نص الأداة<textarea rows={6} value={upText} onChange={e => { setUpText(e.target.value); setUpRows(null); }} placeholder={'المحور: المعرفة\n1. ما المقصود بـ…؟\nأ. البديل الأول\nب. البديل الثاني *\nج. البديل الثالث\nد. البديل الرابع\n2. أستطيع تطبيق … دون مساعدة   (بند بلا بدائل = مقياس 1–5)'} dir="auto" /></label>
+                  <label className="ia-span2">٢) نموذج الإجابة (اختياري إن كانت الإجابة محدّدة بعلامة * داخل الأداة)<textarea rows={2} value={upKey} onChange={e => setUpKey(e.target.value)} placeholder="1-ب  2-أ  3-د  4-ج   أو سطر لكل سؤال: 1. ب" dir="auto" /></label>
+                  <label>أو ملف نموذج الإجابة<input type="file" accept=".docx,.xlsx,.csv,.txt" onChange={e => onKeyFile(e.target.files?.[0] || null)} /></label>
+                </div>
+                <div className="ia-row"><button className="ia-btn primary" onClick={runParse} disabled={!upText.trim() && !upRows}><Icon name="refresh" size={14} /> تحليل الأداة وإعدادها</button><small className="ia-muted">الصيغ المفهومة: ترقيم 1. / 1) / س1 — البدائل أ. ب. ج. د. أو A. B. C. D. — عناوين المحاور «المحور: …» — علامة * أو ✓ بعد البديل الصحيح.</small></div>
+              </div>
+            )}
+
+            {build === 'ai' && (
+              <div className="ia-panel">
+                <div className="ia-grid">
+                  <label className="ia-span3">أهداف/مخرجات البرنامج (تُقرأ تلقائيًا من بطاقة البرنامج إن وُجدت)<textarea rows={4} value={ai.objectives} onChange={e => setAi(a => ({ ...a, objectives: e.target.value }))} placeholder={'أن يتمكن المتدرب من…\nأن يميّز المتدرب بين…'} /></label>
+                  <label>محاور البرنامج (محور في كل سطر)<textarea rows={4} value={ai.axes} onChange={e => setAi(a => ({ ...a, axes: e.target.value }))} /></label>
+                  <label>الفئة المستهدفة<input value={ai.audience} onChange={e => setAi(a => ({ ...a, audience: e.target.value }))} placeholder="مثال: معلمو المرحلة الابتدائية" /></label>
+                  <label>المستوى<select value={ai.level} onChange={e => setAi(a => ({ ...a, level: e.target.value as any }))}><option value="basic">أساسي</option><option value="intermediate">متوسط</option><option value="advanced">متقدم</option></select></label>
+                  <label>بنود تقدير ذاتي لكل محور<input type="number" min={0} max={8} value={ai.scale_per_axis} onChange={e => setAi(a => ({ ...a, scale_per_axis: Number(e.target.value) }))} /></label>
+                  <label>أسئلة اختيار من متعدد (4 بدائل) لكل محور<input type="number" min={0} max={8} value={ai.mcq_per_axis} onChange={e => setAi(a => ({ ...a, mcq_per_axis: Number(e.target.value) }))} /></label>
+                  <label>أسئلة صح/خطأ لكل محور<input type="number" min={0} max={8} value={ai.tf_per_axis} onChange={e => setAi(a => ({ ...a, tf_per_axis: Number(e.target.value) }))} /></label>
+                  <label className="ia-span2">ملاحظات للمولّد (اختياري)<input value={ai.notes} onChange={e => setAi(a => ({ ...a, notes: e.target.value }))} placeholder="مثال: ركّز على التطبيق العملي، تجنّب المصطلحات الإنجليزية…" /></label>
+                  <label className="ia-check" style={{ alignSelf: 'end' }}><input type="checkbox" checked={ai.bilingual} onChange={e => setAi(a => ({ ...a, bilingual: e.target.checked }))} /> ترجمة إنجليزية للبنود</label>
+                </div>
+                <div className="ia-row"><button className="ia-btn primary" onClick={runAi} disabled={aiBusy}><Icon name="star" size={14} /> {aiBusy ? 'جارٍ التوليد…' : 'توليد الأداة'}</button>{aiMode && <small className="ia-muted">{aiMode}</small>}<small className="ia-muted">يُراجع الخبير البنود المولّدة ويعدّلها قبل الحفظ؛ الإجابات الصحيحة قابلة للتعديل.</small></div>
+              </div>
+            )}
+
+            {preview && (
+              <div className="ia-preview">
+                <div className="ia-preview-head"><b><Icon name="check" size={16} /> تم إعداد {preview.questions.length} بندًا من {preview.source}</b><span className="ia-muted">{preview.questions.filter(q => q.kind === 'scale').length} مقياس · {preview.questions.filter(q => q.kind === 'mcq').length} معرفي · {Array.from(new Set(preview.questions.map(q => q.domain_ar))).length} محور</span></div>
+                {preview.warnings.length > 0 && <ul className="ia-warn">{preview.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>}
+                <ol className="ia-preview-list">
+                  {preview.questions.map(q => <li key={q.order_no}><span className={`ia-kind ${q.kind}`}>{q.kind === 'mcq' ? (q.options.length === 2 ? 'صح/خطأ' : 'اختيار') : 'مقياس'}</span><span className="ia-muted">[{q.domain_ar}]</span> {q.text_ar}{q.kind === 'mcq' && <div className="ia-preview-opts">{q.options.map(o => <span key={o.k} className={o.k === q.correct_key ? 'ok' : ''}>{KEY_AR[o.k] || o.k}. {o.ar}</span>)}{!q.correct_key && <span className="bad">بلا إجابة</span>}</div>}</li>)}
+                </ol>
+                <div className="ia-row"><button className="ia-btn primary" onClick={() => adoptPreview('replace')} disabled={!preview.questions.length}><Icon name="check" size={14} /> اعتماد البنود (استبدال المحرر)</button><button className="ia-btn" onClick={() => adoptPreview('append')} disabled={!preview.questions.length}><Icon name="plus" size={14} /> إضافة إلى البنود الحالية</button><button className="ia-btn" onClick={() => setPreview(null)}>إلغاء</button></div>
+              </div>
+            )}
+          </section>
+
+          <section className="ia-card" id="ia-editor">
+            <h2><Icon name="edit" size={18} /> البنود <span className="ia-pill">{qs.length}</span> <small className="ia-muted">نوع السؤال → نص السؤال → البدائل (4 للاختيار من متعدد) → نموذج الإجابة</small></h2>
             <div className="ia-qs">
               {qs.map((q, i) => (
                 <div className="ia-q" key={q._tmp}>
                   <div className="ia-q-top">
                     <span className="ia-qn">{q.order_no}</span>
-                    <select value={q.kind} onChange={e => updQ(i, e.target.value === 'mcq' ? { ...emptyMcq(), text_ar: q.text_ar, domain_ar: q.domain_ar } : { kind: 'scale', options: [], correct_key: null })}><option value="scale">مقياس تقدير</option><option value="mcq">سؤال معرفي</option></select>
+                    <select value={q.kind === 'mcq' && q.options.length === 2 && /^(صحيح|خطأ)$/.test(q.options[0]?.ar || '') ? 'tf' : q.kind} onChange={e => updQ(i, e.target.value === 'mcq' ? { ...emptyMcq(), text_ar: q.text_ar, domain_ar: q.domain_ar } : e.target.value === 'tf' ? { kind: 'mcq', options: [{ k: 'a', ar: 'صحيح' }, { k: 'b', ar: 'خطأ' }], correct_key: 'a' } : { kind: 'scale', options: [], correct_key: null })}><option value="scale">مقياس تقدير (1–5)</option><option value="mcq">اختيار من متعدد (4 بدائل)</option><option value="tf">صح / خطأ</option></select>
                     <input className="ia-dom" value={q.domain_ar} onChange={e => updQ(i, { domain_ar: e.target.value })} placeholder="المحور" list="ia-domains" />
                     <div className="ia-q-tools"><button className="ia-ic" onClick={() => moveQ(i, -1)} disabled={i === 0}>↑</button><button className="ia-ic" onClick={() => moveQ(i, 1)} disabled={i === qs.length - 1}>↓</button><button className="ia-ic danger" onClick={() => delQ(i)}><Icon name="trash" size={14} /></button></div>
                   </div>
@@ -254,7 +367,7 @@ function Inner() {
                         </div>
                       ))}
                       {q.options.length < MCQ_KEYS.length && <button className="ia-btn small" onClick={() => updQ(i, { options: [...q.options, { k: MCQ_KEYS[q.options.length], ar: '' }] })}><Icon name="plus" size={12} /> خيار</button>}
-                      <small className="ia-muted">حدّد الإجابة الصحيحة بالدائرة. تُحتسب نسبة الصواب لكل مرحلة.</small>
+                      <small className="ia-muted"><b>نموذج الإجابة:</b> حدّد البديل الصحيح بالدائرة{q.correct_key ? ` — الإجابة الحالية: ${KEY_AR[q.correct_key] || q.correct_key}` : ' — لم تُحدَّد بعد'}. تُحتسب نسبة الصواب لكل مرحلة.</small>
                     </div>
                   )}
                 </div>
@@ -345,7 +458,17 @@ const CSS = `
 .ia-qr{display:inline-block;padding:10px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px}.ia-qr svg{display:block}
 .ia-url{display:block;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#334155;word-break:break-all;margin-bottom:6px}
 .ia-print small{display:block;color:#64748b;font-weight:700;font-size:12px}
+.ia-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.ia-mode{border:2px solid #e2e8f0;background:#fff;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px;align-items:flex-start;font:inherit;cursor:pointer;text-align:start;color:${NAVY}}.ia-mode b{font-size:14.5px}.ia-mode small{color:#64748b;font-weight:700;line-height:1.6}.ia-mode.on{border-color:#0b8a83;background:#ecfdf5}
+.ia-panel{border:1px dashed #cbd5e1;border-radius:14px;padding:14px;background:#fbfdff;margin-bottom:12px}.ia-span2{grid-column:span 2}
+.ia input[type=file]{padding:8px;background:#fff}
+.ia-preview{border:1px solid #a7f3d0;background:#f0fdf9;border-radius:14px;padding:14px;margin-top:10px}
+.ia-preview-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}.ia-preview-head b{color:#047857;display:flex;gap:6px;align-items:center}
+.ia-warn{margin:0 0 10px;padding:8px 26px 8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;font-size:12.5px;font-weight:700;line-height:1.8}
+.ia-preview-list{margin:0;padding:0 20px 0 0;max-height:340px;overflow:auto;font-size:13px;font-weight:700;line-height:1.8;display:flex;flex-direction:column;gap:4px}
+.ia-kind{display:inline-block;font-size:10.5px;font-weight:900;border-radius:999px;padding:1px 8px;background:#e0f2fe;color:#075985;margin-inline-end:6px}.ia-kind.mcq{background:#fef3c7;color:#92400e}
+.ia-preview-opts{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;font-weight:700;color:#475569;margin:2px 0 4px}.ia-preview-opts span{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:1px 8px}.ia-preview-opts span.ok{background:#dcfce7;border-color:#86efac;color:#166534}.ia-preview-opts span.bad{background:#fee2e2;border-color:#fecaca;color:#991b1b}
 .ia-toast{position:fixed;bottom:18px;inset-inline-start:18px;background:${NAVY};color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:120}
 @media print{.ia>*:not(.ia-modal){display:none!important}.ia{padding:0;background:#fff}.ia-modal{position:static;background:#fff;padding:0}.ia-modal-box{max-width:none;box-shadow:none}.ia-noprint{display:none!important}.ia-qr svg{width:360px;height:360px}}
-@media(max-width:980px){.ia-item{grid-template-columns:1fr}.ia-item-actions{flex-direction:row;flex-wrap:wrap}.ia-grid,.ia-templates{grid-template-columns:1fr}.ia{padding:12px}}
+@media(max-width:980px){.ia-modes{grid-template-columns:1fr}.ia-span2{grid-column:auto}.ia-item{grid-template-columns:1fr}.ia-item-actions{flex-direction:row;flex-wrap:wrap}.ia-grid,.ia-templates{grid-template-columns:1fr}.ia{padding:12px}}
 `;
