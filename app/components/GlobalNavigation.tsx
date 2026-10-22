@@ -9,6 +9,7 @@ import { Icon, type IconName } from '../../lib/ui/icons';
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
   { href: '/dashboard', label: 'لوحة القيادة', icon: 'dashboard', match: p => p.startsWith('/dashboard') },
+  { href: '/command-center', label: 'غرفة القيادة', icon: 'play', match: p => p.startsWith('/command-center') },
   { href: '/admin/management', label: 'مركز الإدارة', icon: 'admin', match: p => p.startsWith('/admin/management') || p.startsWith('/admin/survey-settings') },
   { href: '/reports/center', label: 'مركز التقارير', icon: 'reports', match: p => p.startsWith('/reports/center') },
   { href: '/reports', label: 'اللوحة التحليلية', icon: 'chart', match: p => p === '/reports' || p.startsWith('/reports/executive') },
