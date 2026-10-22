@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseInstrumentText, parseAnswerKey, applyAnswerKey, parseCsv, parseRows, letterToKey, csvTemplate, validateQuestions } from '../lib/impact/import';
-import { parseModelOutput, offlineGenerate, normalizeSpec, buildPrompt, buildPlan, planTotal, splitBatches, dedupeQuestions } from '../lib/impact/generate';
+import { parseModelOutput, offlineGenerate, normalizeSpec, buildPrompt, buildPlan, planTotal, splitBatches, dedupeQuestions, parseBatch } from '../lib/impact/generate';
 
 test('import: letters normalize', () => {
   assert.equal(letterToKey('أ.'), 'a'); assert.equal(letterToKey('ب)'), 'b'); assert.equal(letterToKey('C'), 'c'); assert.equal(letterToKey('٤'), 'd'); assert.equal(letterToKey('x'), null);
@@ -93,9 +93,10 @@ test('generate: plan distributes totals, caps at 200, splits into batches', () =
   const big = buildPlan(normalizeSpec({ axes: ['أ', 'ب', 'ج', 'د', 'هـ', 'و'], count_mode: 'per_axis', scale_count: 40, mcq_count: 40 }));
   assert.equal(planTotal(big), 200);
   const batches = splitBatches(big);
-  assert.ok(batches.length >= 11 && batches.every(b => planTotal(b) <= 18));
+  assert.ok(batches.length >= 8 && batches.every(b => planTotal(b) <= 24));
   assert.equal(batches.reduce((s, b) => s + planTotal(b), 0), 200);
-  const one = splitBatches(plan); assert.equal(one.length, 2); // 19 بندًا > 18
+  const one = splitBatches(plan); assert.equal(one.length, 1); // 19 بندًا ≤ 24
+  assert.deepEqual(parseBatch(batches[0], big.map(p => p.axis)), batches[0]); assert.equal(parseBatch([{ axis: 'غريب', scale: 3 }], ['أ']), null);
 });
 
 test('generate: offline stems are varied across axes and dedupe works', () => {
