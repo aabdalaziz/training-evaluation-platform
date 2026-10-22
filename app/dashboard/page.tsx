@@ -309,6 +309,7 @@ export default function Dashboard() {
             </button>
           ))}
           <div className="db-nav-sep">الإدارة</div>
+          <Link href="/command-center" className="db-navlink"><Icon name="play" size={20} /><span><b>غرفة القيادة</b><small>شاشة عرض حية · تحديث تلقائي</small></span></Link>
           <Link href="/admin/management" className="db-navlink"><Icon name="admin" size={20} /><span><b>لوحة الإدارة</b><small>المدربون · القاعات · المستويات</small></span></Link>
           <Link href="/reports/center" className="db-navlink"><Icon name="chart" size={20} /><span><b>مركز التقارير</b><small>تنفيذية · تشغيلية · تحليلية</small></span></Link>
           <Link href="/reports/remote-survey" className="db-navlink"><Icon name="laptop" size={20} /><span><b>استطلاع التعلم عن بُعد</b><small>{raw?.remoteResponses || 0} استجابة</small></span></Link>
