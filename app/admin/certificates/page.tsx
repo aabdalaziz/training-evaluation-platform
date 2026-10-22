@@ -9,6 +9,8 @@ import { renderCertificate, jpegsToPdf, downloadBytes, DEFAULT_SETTINGS, KIND_LA
 import type { CertKind, CertSettings } from '../../../lib/certificates/render';
 import { loadSettings, saveSettings, insertCertificates, renderRows, emailRendered, previewData, rowToData, verifyUrl, pdfFilename, SETTINGS_FIELDS } from '../../../lib/certificates/issue';
 import type { CertRow, IssueInput } from '../../../lib/certificates/issue';
+import { summarize, eligible } from '../../../lib/attendance/model';
+import type { AttendanceRecord } from '../../../lib/attendance/model';
 
 type Program = { id: string; name_ar: string | null; name_en: string | null; status?: string | null; start_date?: string | null; end_date?: string | null; delivery_mode?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id: string | null };
@@ -58,6 +60,7 @@ export default function CertificatesPage() {
   const [hours, setHours] = useState<number>(DEFAULT_SETTINGS.default_hours);
   const [start, setStart] = useState(''); const [end, setEnd] = useState('');
   const [recText, setRecText] = useState('');
+  const [minAtt, setMinAtt] = useState<number>(80);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [previewIdx, setPreviewIdx] = useState(0);
   const [note, setNote] = useState('');
@@ -149,6 +152,27 @@ export default function CertificatesPage() {
       setRecText(prev => [prev.trim(), ...lines].filter(Boolean).join('\n'));
       flash(`✓ استُورد ${lines.length} متدربًا من قائمة المسجلين`);
     } catch (e: any) { setError('تعذر الاستيراد من المسجلين: ' + e.message); } finally { setBusy(''); }
+  }
+
+  async function importFromAttendance() {
+    if (!programId) { setError('اختر البرنامج أولًا'); return; }
+    setBusy('import'); setError('');
+    try {
+      let q = db.from('attendance_sessions').select('id').eq('program_id', programId);
+      if (classroomId) q = q.eq('classroom_id', classroomId);
+      const { data: ss, error } = await q.limit(1000);
+      if (error) throw new Error(error.message);
+      const sessions = (ss || []) as { id: string }[];
+      if (!sessions.length) { setError('لا توجد جلسات حضور لهذا البرنامج — أنشئها من صفحة الحضور الرقمي'); return; }
+      const { data: rc, error: e2 } = await db.from('attendance_records').select('session_id,full_name,email,phone,identity_key,status').in('session_id', sessions.map(x => x.id)).limit(20000);
+      if (e2) throw new Error(e2.message);
+      const summary = summarize(sessions, (rc || []) as AttendanceRecord[]);
+      const ok = eligible(summary, minAtt);
+      if (!ok.length) { setError(`لا أحد يستوفي حد الحضور ${minAtt}% (${summary.length} متدربًا في ${sessions.length} جلسة)`); return; }
+      const lines = ok.map(p => (p.email ? `${p.name}, ${p.email}` : p.name));
+      setRecText(prev => [prev.trim(), ...lines].filter(Boolean).join('\n'));
+      flash(`✓ استُورد ${ok.length} متدربًا مستوفيًا لحد الحضور ${minAtt}% (استُبعد ${summary.length - ok.length})`);
+    } catch (e: any) { setError('تعذر الاستيراد من الحضور: ' + e.message); } finally { setBusy(''); }
   }
 
   /* ---------- issue ---------- */
@@ -266,6 +290,7 @@ export default function CertificatesPage() {
             <div className="ct-import">
               <button className="ct-btn" onClick={importFromEvaluations} disabled={!programId || !!busy}><Icon name="evaluations" size={15} /> استيراد من التقييمات</button>
               <button className="ct-btn" onClick={importFromEnrollments} disabled={!programId || !!busy}><Icon name="school" size={15} /> استيراد من المسجلين</button>
+              <span className="ct-att"><button className="ct-btn" onClick={importFromAttendance} disabled={!programId || !!busy}><Icon name="check" size={15} /> استيراد من سجل الحضور</button><label>≥ <input type="number" min={0} max={100} value={minAtt} onChange={e => setMinAtt(Number(e.target.value))} /> %</label></span>
               <span className="ct-muted">أو الصق القائمة: <b>اسم, بريد</b> في كل سطر (البريد اختياري للتنزيل، مطلوب للإرسال)</span>
             </div>
             <textarea className="ct-ta" rows={7} value={recText} onChange={e => setRecText(e.target.value)} placeholder={'محمد بن أحمد العتيبي, mohammed@example.com\nسارة القحطاني, sara@example.com\nخالد الحربي'} />
@@ -415,6 +440,7 @@ const CSS = `
 .ct-ta{resize:vertical;line-height:1.7;margin-top:6px}
 .ct-check{flex-direction:row!important;align-items:center;gap:8px!important;padding-top:22px}.ct-check input{width:auto}
 .ct-import{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.ct-att{display:inline-flex;align-items:center;gap:6px}.ct-att label{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#475569;white-space:nowrap;margin:0}.ct-att input{width:64px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;font-weight:800}
 .ct-muted{color:#64748b;font-size:12.5px;font-weight:700}
 .ct-count{background:#eef2f7;color:${NAVY};border-radius:999px;padding:2px 10px;font-size:12px}
 .ct-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
