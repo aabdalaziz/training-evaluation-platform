@@ -45,8 +45,12 @@ function Inner() {
   const [build, setBuild] = useState<'manual' | 'upload' | 'ai'>('manual');
   const [upText, setUpText] = useState(''); const [upKey, setUpKey] = useState(''); const [upName, setUpName] = useState(''); const [upRows, setUpRows] = useState<string[][] | null>(null);
   const [preview, setPreview] = useState<{ questions: DraftQuestion[]; warnings: string[]; source: string } | null>(null);
-  const [ai, setAi] = useState({ objectives: '', axes: 'المعرفة\nالمهارة\nالتطبيق', scale_per_axis: 2, mcq_per_axis: 2, tf_per_axis: 0, level: 'intermediate' as 'basic' | 'intermediate' | 'advanced', audience: '', bilingual: false, notes: '' });
+  const [ai, setAi] = useState({ objectives: '', axes: 'المعرفة\nالمهارة\nالتطبيق', count_mode: 'per_axis' as 'per_axis' | 'total', scale_count: 3, mcq_count: 3, tf_count: 0, level: 'intermediate' as 'basic' | 'intermediate' | 'advanced', audience: '', bilingual: false, notes: '', variety: true, mcq_style: 'mixed' as 'mixed' | 'concept' | 'scenario' });
   const [aiBusy, setAiBusy] = useState(false); const [aiMode, setAiMode] = useState('');
+  const [aiCheck, setAiCheck] = useState<{ busy: boolean; text: string; ok?: boolean }>({ busy: false, text: '' });
+  const AI_MAX = { perAxis: 40, total: 200 };
+  const aiAxes = ai.axes.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  const aiExpected = ai.count_mode === 'total' ? ai.scale_count + ai.mcq_count + ai.tf_count : Math.max(1, aiAxes.length) * (ai.scale_count + ai.mcq_count + ai.tf_count);
   const [busy, setBusy] = useState(false);
   const [qrFor, setQrFor] = useState<{ a: ImpactAssessment; phase: Phase } | null>(null);
 
@@ -137,13 +141,26 @@ function Inner() {
     try {
       const session = (await db.auth.getSession()).data.session; if (!session) throw new Error('انتهت الجلسة — سجّل الدخول مجددًا');
       const p = programs.find(x => x.id === form.program_id);
-      const r = await fetch('/api/impact/generate', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ ...ai, axes: ai.axes.split(/\r?\n/).map(x => x.trim()).filter(Boolean), program_name: p?.name_ar || form.title_ar, program_desc: p?.description_ar || '' }) });
+      const r = await fetch('/api/impact/generate', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ ...ai, axes: aiAxes, program_name: p?.name_ar || form.title_ar, program_desc: p?.description_ar || '' }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j?.success) throw new Error(j?.error || `HTTP ${r.status}`);
-      setAiMode(j.mode === 'ai' ? `تم التوليد بـ ${j.provider} / ${j.model}` : 'وضع التوليد المحلي');
+      setAiMode(j.mode === 'ai' ? `تم التوليد بـ ${j.provider} / ${j.model}${j.batches > 1 ? ` على ${j.batches} دفعات` : ''}` : 'وضع التوليد المحلي');
       setPreview({ questions: j.questions || [], warnings: j.warnings || [], source: j.mode === 'ai' ? 'الذكاء الاصطناعي' : 'المولّد المحلي' });
     } catch (e: any) { setError(e?.message || 'تعذر التوليد'); }
     setAiBusy(false);
+  }
+
+  async function checkAi() {
+    setAiCheck({ busy: true, text: 'جارٍ الفحص…' });
+    try {
+      const session = (await db.auth.getSession()).data.session; if (!session) throw new Error('انتهت الجلسة — سجّل الدخول مجددًا');
+      const r = await fetch('/api/impact/generate', { headers: { Authorization: `Bearer ${session.access_token}` } });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j?.success) throw new Error(j?.error || `HTTP ${r.status}`);
+      if (!j.configured) setAiCheck({ busy: false, ok: false, text: j.hint });
+      else if (j.valid) setAiCheck({ busy: false, ok: true, text: `✓ المفتاح صالح (${j.provider}) — النموذج: ${j.model}${j.model_env ? '' : ' (اكتُشف تلقائيًا)'}` });
+      else setAiCheck({ busy: false, ok: false, text: `✗ ${j.error} — ${j.hint} (المفتاح: ${j.key_masked}، الطول ${j.key_length})` });
+    } catch (e: any) { setAiCheck({ busy: false, ok: false, text: e?.message || 'تعذر الفحص' }); }
   }
 
   async function startEdit(a: ImpactAssessment) {
@@ -322,13 +339,22 @@ function Inner() {
                   <label>محاور البرنامج (محور في كل سطر)<textarea rows={4} value={ai.axes} onChange={e => setAi(a => ({ ...a, axes: e.target.value }))} /></label>
                   <label>الفئة المستهدفة<input value={ai.audience} onChange={e => setAi(a => ({ ...a, audience: e.target.value }))} placeholder="مثال: معلمو المرحلة الابتدائية" /></label>
                   <label>المستوى<select value={ai.level} onChange={e => setAi(a => ({ ...a, level: e.target.value as any }))}><option value="basic">أساسي</option><option value="intermediate">متوسط</option><option value="advanced">متقدم</option></select></label>
-                  <label>بنود تقدير ذاتي لكل محور<input type="number" min={0} max={8} value={ai.scale_per_axis} onChange={e => setAi(a => ({ ...a, scale_per_axis: Number(e.target.value) }))} /></label>
-                  <label>أسئلة اختيار من متعدد (4 بدائل) لكل محور<input type="number" min={0} max={8} value={ai.mcq_per_axis} onChange={e => setAi(a => ({ ...a, mcq_per_axis: Number(e.target.value) }))} /></label>
-                  <label>أسئلة صح/خطأ لكل محور<input type="number" min={0} max={8} value={ai.tf_per_axis} onChange={e => setAi(a => ({ ...a, tf_per_axis: Number(e.target.value) }))} /></label>
-                  <label className="ia-span2">ملاحظات للمولّد (اختياري)<input value={ai.notes} onChange={e => setAi(a => ({ ...a, notes: e.target.value }))} placeholder="مثال: ركّز على التطبيق العملي، تجنّب المصطلحات الإنجليزية…" /></label>
+                  <div className="ia-span3 ia-row" style={{ gap: 18 }}>
+                    <b>توزيع العدد:</b>
+                    <label className="ia-check"><input type="radio" name="count_mode" checked={ai.count_mode === 'per_axis'} onChange={() => setAi(a => ({ ...a, count_mode: 'per_axis', scale_count: Math.min(a.scale_count, AI_MAX.perAxis), mcq_count: Math.min(a.mcq_count, AI_MAX.perAxis), tf_count: Math.min(a.tf_count, AI_MAX.perAxis) }))} /> لكل محور</label>
+                    <label className="ia-check"><input type="radio" name="count_mode" checked={ai.count_mode === 'total'} onChange={() => setAi(a => ({ ...a, count_mode: 'total' }))} /> إجمالي للأداة (يوزَّع تلقائيًا على المحاور)</label>
+                  </div>
+                  <label>بنود تقدير ذاتي {ai.count_mode === 'total' ? '(إجمالي)' : '(لكل محور)'}<input type="number" min={0} max={ai.count_mode === 'total' ? AI_MAX.total : AI_MAX.perAxis} value={ai.scale_count} onChange={e => setAi(a => ({ ...a, scale_count: Math.max(0, Number(e.target.value) || 0) }))} /></label>
+                  <label>أسئلة اختيار من متعدد (4 بدائل) {ai.count_mode === 'total' ? '(إجمالي)' : '(لكل محور)'}<input type="number" min={0} max={ai.count_mode === 'total' ? AI_MAX.total : AI_MAX.perAxis} value={ai.mcq_count} onChange={e => setAi(a => ({ ...a, mcq_count: Math.max(0, Number(e.target.value) || 0) }))} /></label>
+                  <label>أسئلة صح/خطأ {ai.count_mode === 'total' ? '(إجمالي)' : '(لكل محور)'}<input type="number" min={0} max={ai.count_mode === 'total' ? AI_MAX.total : AI_MAX.perAxis} value={ai.tf_count} onChange={e => setAi(a => ({ ...a, tf_count: Math.max(0, Number(e.target.value) || 0) }))} /></label>
+                  <label>نمط الأسئلة المعرفية<select value={ai.mcq_style} onChange={e => setAi(a => ({ ...a, mcq_style: e.target.value as any }))}><option value="mixed">مزيج (مفاهيم + مواقف تطبيقية)</option><option value="concept">مفاهيمية مباشرة</option><option value="scenario">مواقف تطبيقية (سيناريوهات)</option></select></label>
+                  <label className="ia-span2">ملاحظات للمولّد (اختياري)<input value={ai.notes} onChange={e => setAi(a => ({ ...a, notes: e.target.value }))} placeholder="مثال: ركّز على التطبيق العملي، تجنّب المصطلحات الإنجليزية، اجعل السيناريوهات من بيئة المدرسة…" /></label>
+                  <label className="ia-check" style={{ alignSelf: 'end' }}><input type="checkbox" checked={ai.variety} onChange={e => setAi(a => ({ ...a, variety: e.target.checked }))} /> تنويع الصياغة ومستويات بلوم (تذكر → تقويم)</label>
                   <label className="ia-check" style={{ alignSelf: 'end' }}><input type="checkbox" checked={ai.bilingual} onChange={e => setAi(a => ({ ...a, bilingual: e.target.checked }))} /> ترجمة إنجليزية للبنود</label>
+                  <div className="ia-span3"><small className={aiExpected > AI_MAX.total ? 'ia-bad' : 'ia-muted'}>الإجمالي المتوقع: <b>{aiExpected}</b> بندًا على {aiAxes.length || 1} محور{aiExpected > AI_MAX.total ? ` — يتجاوز الحد الأقصى (${AI_MAX.total}) وسيُقلَّص تلقائيًا` : aiExpected > 60 ? ' — الأعداد الكبيرة تُولَّد على دفعات وقد تستغرق حتى دقيقة' : ''}</small></div>
                 </div>
-                <div className="ia-row"><button className="ia-btn primary" onClick={runAi} disabled={aiBusy}><Icon name="star" size={14} /> {aiBusy ? 'جارٍ التوليد…' : 'توليد الأداة'}</button>{aiMode && <small className="ia-muted">{aiMode}</small>}<small className="ia-muted">يُراجع الخبير البنود المولّدة ويعدّلها قبل الحفظ؛ الإجابات الصحيحة قابلة للتعديل.</small></div>
+                <div className="ia-row"><button className="ia-btn primary" onClick={runAi} disabled={aiBusy || aiExpected === 0}><Icon name="star" size={14} /> {aiBusy ? 'جارٍ التوليد…' : 'توليد الأداة'}</button><button className="ia-btn" onClick={checkAi} disabled={aiCheck.busy}><Icon name="shield" size={14} /> فحص إعداد الذكاء الاصطناعي</button>{aiMode && <small className="ia-muted">{aiMode}</small>}<small className="ia-muted">يُراجع الخبير البنود المولّدة ويعدّلها قبل الحفظ؛ الإجابات الصحيحة قابلة للتعديل.</small></div>
+                {aiCheck.text && <div className={`ia-note ${aiCheck.ok === false ? 'bad' : aiCheck.ok ? 'ok' : ''}`}>{aiCheck.text}</div>}
               </div>
             )}
 
@@ -464,6 +490,10 @@ const CSS = `
 .ia input[type=file]{padding:8px;background:#fff}
 .ia-preview{border:1px solid #a7f3d0;background:#f0fdf9;border-radius:14px;padding:14px;margin-top:10px}
 .ia-preview-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px}.ia-preview-head b{color:#047857;display:flex;gap:6px;align-items:center}
+.ia-bad{color:#b91c1c;font-weight:800}
+.ia-note{margin-top:8px;padding:8px 12px;border-radius:10px;font-size:12.5px;font-weight:700;line-height:1.8;background:#f1f5f9;border:1px solid #e2e8f0;color:#334155}
+.ia-note.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+.ia-note.bad{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 .ia-warn{margin:0 0 10px;padding:8px 26px 8px 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;color:#9a3412;font-size:12.5px;font-weight:700;line-height:1.8}
 .ia-preview-list{margin:0;padding:0 20px 0 0;max-height:340px;overflow:auto;font-size:13px;font-weight:700;line-height:1.8;display:flex;flex-direction:column;gap:4px}
 .ia-kind{display:inline-block;font-size:10.5px;font-weight:900;border-radius:999px;padding:1px 8px;background:#e0f2fe;color:#075985;margin-inline-end:6px}.ia-kind.mcq{background:#fef3c7;color:#92400e}
