@@ -4,3 +4,4 @@
  */
 import './remoteLearningSurvey.test';
 import './reportsCenter.test';
+import './certificates.test';
