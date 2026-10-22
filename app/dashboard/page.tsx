@@ -5,7 +5,7 @@
  * lib/reports/analytics.ts — the same engine used by the Reports Center — so the
  * dashboard, the reports and the exports always agree.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase/client';
@@ -24,7 +24,11 @@ type Program = {
   status: 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED'; start_date: string | null; end_date: string | null; created_at: string;
   delivery_mode: 'onsite' | 'remote' | null;
   intro_ar?: string | null; intro_en?: string | null; objectives_ar?: string | null; objectives_en?: string | null; outcomes_ar?: string | null; outcomes_en?: string | null; audience_ar?: string | null; audience_en?: string | null;
+  approval_status?: ApprovalStatus | null; approval_note?: string | null; rejection_reason?: string | null;
+  submitted_at?: string | null; reviewed_at?: string | null; approved_at?: string | null;
 };
+type ApprovalStatus = 'DRAFT' | 'PENDING_REVIEW' | 'REVIEWED' | 'APPROVED' | 'REJECTED';
+type ApprovalLog = { id: string; program_id: string; from_status: string | null; to_status: ApprovalStatus; actor_name: string | null; actor_role: string | null; comment: string | null; created_at: string };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id: string | null; delivery_mode: string | null; level_id?: string | null; level?: string | null };
 type Trainer = { id: string; name: string };
 type View = 'overview' | 'programs' | 'evaluations' | 'reports' | 'settings';
@@ -38,7 +42,16 @@ const STATUS_STYLE: Record<Program['status'], { bg: string; color: string; label
   DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'مسودة' }, ACTIVE: { bg: '#d1fae5', color: '#047857', label: 'نشط' },
   COMPLETED: { bg: '#dbeafe', color: '#1d4ed8', label: 'مكتمل' }, CANCELLED: { bg: '#fee2e2', color: '#b91c1c', label: 'ملغى' },
 };
-const ROLE_LABEL: Record<string, string> = { PLATFORM_ADMIN: 'مدير المنصة', ADMIN: 'مدير', MANAGER: 'مدير برامج', TRAINER: 'مدرب', USER: 'مستخدم' };
+const APPROVAL_STYLE: Record<ApprovalStatus, { bg: string; color: string; label: string; hint: string }> = {
+  DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'لم يُرسل', hint: 'البرنامج مسودة ولم يُرسل للمراجعة بعد' },
+  PENDING_REVIEW: { bg: '#fff7e6', color: '#b45309', label: 'بانتظار المراجعة', hint: 'أُرسل من مدير البرامج وينتظر المراجعة' },
+  REVIEWED: { bg: '#eef4ff', color: '#1d4ed8', label: 'تمت المراجعة', hint: 'روجع وينتظر اعتماد محلل الجودة / مدير المنصة' },
+  APPROVED: { bg: '#eafaf0', color: '#15803d', label: 'معتمد', hint: 'معتمد — يمكن تفعيله' },
+  REJECTED: { bg: '#fef2f2', color: '#b91c1c', label: 'مرفوض', hint: 'رُفض — راجع السبب وعدّل ثم أعد الإرسال' },
+};
+const APPROVER_ROLES = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'QUALITY_ANALYST'];
+const SUBMITTER_ROLES = [...APPROVER_ROLES, 'PROGRAM_MANAGER'];
+const ROLE_LABEL: Record<string, string> = { PLATFORM_ADMIN: 'مدير المنصة', SUPER_ADMIN: 'مدير عام', ADMIN: 'مدير', PROGRAM_MANAGER: 'مدير برامج', QUALITY_ANALYST: 'محلل جودة', MANAGER: 'مدير برامج', TRAINER: 'مدرب', USER: 'مستخدم' };
 
 /* الأيقونات: من المكتبة الموحّدة lib/ui/icons */
 const REPORT_ICON: Record<string, IconName> = { trainer_card: 'star', executive: 'shield', trainers: 'users', programs: 'book', classrooms: 'school', axes: 'compass', questions: 'question', trend: 'trend', comparison: 'scale', participation: 'users', qualitative: 'chat', actions: 'target', raw: 'folder' };
@@ -114,6 +127,39 @@ export default function Dashboard() {
     if (error) { notify('تعذر تحديث الحالة: ' + error.message); return; }
     notify('✓ تم تحديث حالة البرنامج'); load();
   }
+  /* ---------- approval workflow ---------- */
+  const roleU = String(profile?.role || '').toUpperCase();
+  const canApprove = APPROVER_ROLES.includes(roleU);
+  const canSubmit = SUBMITTER_ROLES.includes(roleU);
+  const [apModal, setApModal] = useState<{ program: Program; to: ApprovalStatus; note: string; busy: boolean } | null>(null);
+  const [historyFor, setHistoryFor] = useState<string | null>(null);
+  const [history, setHistory] = useState<ApprovalLog[]>([]);
+  const AP_ACTION: Record<ApprovalStatus, { title: string; cta: string; needNote: boolean; help: string }> = {
+    PENDING_REVIEW: { title: 'إرسال البرنامج للمراجعة', cta: 'إرسال للمراجعة', needNote: false, help: 'سيظهر البرنامج في قائمة انتظار المراجعة لدى مدير البرامج ومحلل الجودة.' },
+    REVIEWED: { title: 'تأكيد مراجعة البرنامج', cta: 'تمت المراجعة', needNote: false, help: 'تؤكد أن المحتوى والأهداف والجدول روجعت وهي جاهزة للاعتماد.' },
+    APPROVED: { title: 'اعتماد البرنامج', cta: 'اعتماد', needNote: false, help: 'بعد الاعتماد يمكن تفعيل البرنامج وفتح التقييمات عليه. يُسجَّل اسمك ووقت الاعتماد.' },
+    REJECTED: { title: 'رفض البرنامج', cta: 'رفض', needNote: true, help: 'سبب الرفض إلزامي ويُرسل لمدير البرامج ليعدّل ويعيد الإرسال.' },
+    DRAFT: { title: 'إعادة البرنامج إلى مسودة', cta: 'إعادة لمسودة', needNote: false, help: 'يلغي الاعتماد الحالي ويعيد البرنامج إلى بداية الدورة.' },
+  };
+  function openApproval(program: Program, to: ApprovalStatus) { setApModal({ program, to, note: '', busy: false }); }
+  async function applyApproval() {
+    if (!apModal) return;
+    const { program, to, note } = apModal;
+    if (AP_ACTION[to].needNote && !note.trim()) { notify('سبب الرفض مطلوب.'); return; }
+    setApModal(m => m && { ...m, busy: true });
+    const payload: Record<string, unknown> = { approval_status: to, approval_note: note.trim() || null };
+    if (to === 'REJECTED') payload.rejection_reason = note.trim();
+    const { error } = await db.from('programs').update(payload).eq('id', program.id);
+    if (error) { setApModal(m => m && { ...m, busy: false }); notify('تعذر تنفيذ الإجراء: ' + error.message); return; }
+    setApModal(null); notify(`✓ ${AP_ACTION[to].cta}: ${program.name_ar}`); load();
+    if (historyFor === program.id) loadHistory(program.id);
+  }
+  async function loadHistory(programId: string) {
+    if (historyFor === programId) { setHistoryFor(null); return; }
+    const { data } = await db.from('program_approvals').select('*').eq('program_id', programId).order('created_at', { ascending: false });
+    setHistory((data || []) as ApprovalLog[]); setHistoryFor(programId);
+  }
+  const pendingMine = programs.filter(p => (canApprove && ['PENDING_REVIEW', 'REVIEWED'].includes(p.approval_status || 'DRAFT')) || (roleU === 'PROGRAM_MANAGER' && (p.approval_status || 'DRAFT') === 'REJECTED'));
   async function deleteProgram(p: Program) {
     if (!window.confirm(`حذف البرنامج "${p.name_ar}" نهائيًا؟\nإن كانت له تقييمات أو قاعات مرتبطة فقد يرفض النظام الحذف حفاظًا على البيانات.`)) return;
     const { error } = await db.from('programs').delete().eq('id', p.id);
@@ -226,6 +272,22 @@ export default function Dashboard() {
     <div className="db" dir="rtl">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {notice && <div className="db-toast">{notice}</div>}
+      {apModal && (
+        <div className="db-modal" role="dialog" aria-modal="true" onClick={e => { if (e.target === e.currentTarget && !apModal.busy) setApModal(null); }}>
+          <div className="db-modal-box">
+            <div className="db-ct" style={{ marginBottom: 8 }}><Icon name="shield" size={18} /> {AP_ACTION[apModal.to].title}</div>
+            <p className="db-modal-p"><b>{apModal.program.name_ar}</b>{apModal.program.name_en ? <small className="db-muted"> · {apModal.program.name_en}</small> : null}</p>
+            <p className="db-modal-help">{AP_ACTION[apModal.to].help}</p>
+            <label className="db-modal-field">{apModal.to === 'REJECTED' ? 'سبب الرفض *' : 'ملاحظة (اختياري)'}
+              <textarea rows={3} value={apModal.note} onChange={e => setApModal(m => m && { ...m, note: e.target.value })} placeholder={apModal.to === 'REJECTED' ? 'مثال: الأهداف غير قابلة للقياس، ويلزم تحديد الفئة المستهدفة.' : 'مثال: روجع الجدول الزمني مع المدربين.'} />
+            </label>
+            <div className="db-row" style={{ justifyContent: 'flex-end' }}>
+              <button className="db-btn" onClick={() => setApModal(null)} disabled={apModal.busy}>إلغاء</button>
+              <button className={`db-btn ${apModal.to === 'REJECTED' ? 'danger' : 'primary'}`} onClick={applyApproval} disabled={apModal.busy}>{apModal.busy ? 'جارٍ التنفيذ…' : AP_ACTION[apModal.to].cta}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== sidebar ===== */}
       <aside className={`db-side ${menuOpen ? 'open' : ''}`}>
@@ -373,6 +435,11 @@ export default function Dashboard() {
               </div>
               <button className="db-btn primary" onClick={openAdd}><Icon name="plus" size={16} /> برنامج جديد</button>
             </div>
+            {pendingMine.length > 0 && (
+              <div className="db-alert amber db-queue"><span className="db-alert-dot" />
+                <div style={{ flex: 1 }}><b>بانتظار إجراءك: {pendingMine.length} برنامج</b><div className="db-muted">{pendingMine.map(p => `${p.name_ar} (${APPROVAL_STYLE[p.approval_status || 'DRAFT'].label})`).join(' · ')}</div></div>
+              </div>
+            )}
             {showForm && (
               <form className="db-card db-form" onSubmit={saveProgram}>
                 <div className="db-ct"><Icon name={editing ? 'edit' : 'plus'} size={18} /> {editing ? 'تعديل البرنامج' : 'إضافة برنامج تدريبي'}</div>
@@ -402,29 +469,50 @@ export default function Dashboard() {
             )}
             <section className="db-card">
               <div className="db-ct"><Icon name="programs" size={18} /> البرامج التدريبية ({programs.length})</div>
-              {programs.length ? <div className="db-tw"><table className="db-tbl"><thead><tr><th>البرنامج</th><th>التنفيذ</th><th>الفترة</th><th>القاعات</th><th>الاستجابات</th><th>المتوسط</th><th>الحالة</th><th></th></tr></thead><tbody>
+              {programs.length ? <div className="db-tw"><table className="db-tbl"><thead><tr><th>البرنامج</th><th>التنفيذ</th><th>الفترة</th><th>القاعات</th><th>الاستجابات</th><th>المتوسط</th><th>الحالة</th><th>الاعتماد</th><th></th></tr></thead><tbody>
                 {programs.map(p => {
                   const st = STATUS_STYLE[p.status];
+                  const ap: ApprovalStatus = p.approval_status || 'DRAFT';
+                  const aps = APPROVAL_STYLE[ap];
                   const pe = allEvals.filter(e => e.program_id === p.id);
                   const pk = computeKpis(pe, facts);
                   const nRooms = (raw?.classrooms || []).filter(c => c.program_id === p.id).length;
-                  return (
-                    <tr key={p.id}>
+                  return (<Fragment key={p.id}>
+                    <tr>
                       <td className="l"><b>{p.name_ar}</b>{p.name_en && <small className="db-muted">{p.name_en}</small>}</td>
                       <td><span className="db-badge" style={{ background: p.delivery_mode === 'remote' ? '#ede9fe' : '#e0f2fe', color: p.delivery_mode === 'remote' ? '#6d28d9' : '#0369a1' }}>{p.delivery_mode === 'remote' ? 'عن بُعد' : 'حضوري'}</span></td>
                       <td className="ltr">{p.start_date || '—'}{p.end_date ? ` → ${p.end_date}` : ''}</td>
                       <td>{nRooms}</td><td>{pk.responses}</td>
                       <td className="ltr" style={{ fontWeight: 900, color: pk.responses ? PERF_LABEL[pk.perf].color : '#94a3b8' }}>{pk.responses ? pk.mean.toFixed(2) : '—'}</td>
                       <td><span className="db-badge" style={{ background: st.bg, color: st.color }}>{st.label}</span></td>
-                      <td><div className="db-row" style={{ gap: 4, flexWrap: 'nowrap' }}>
+                      <td><button className="db-ap-pill" title={`${aps.hint}${p.approved_at ? ` · اعتُمد ${p.approved_at.slice(0, 10)}` : p.submitted_at ? ` · أُرسل ${p.submitted_at.slice(0, 10)}` : ''} — اضغط لعرض السجل`} style={{ background: aps.bg, color: aps.color }} onClick={() => loadHistory(p.id)}>{aps.label}{ap === 'REJECTED' && p.rejection_reason ? <small>{p.rejection_reason}</small> : null}</button></td>
+                      <td className="db-acts"><div className="db-row" style={{ gap: 4, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
                         <button className="db-ic" title="تعديل" onClick={() => openEdit(p)}><Icon name="edit" size={15} /></button>
-                        {p.status === 'DRAFT' && <button className="db-btn sm soft ok" onClick={() => setStatus(p.id, 'ACTIVE')}><Icon name="play" size={12} /> تفعيل</button>}
+                        {canSubmit && (ap === 'DRAFT' || ap === 'REJECTED') && p.status !== 'CANCELLED' && <button className="db-btn sm soft info" onClick={() => openApproval(p, 'PENDING_REVIEW')}><Icon name="arrow" size={12} /> {ap === 'REJECTED' ? 'إعادة الإرسال' : 'إرسال للمراجعة'}</button>}
+                        {canSubmit && ap === 'PENDING_REVIEW' && <button className="db-btn sm soft info" onClick={() => openApproval(p, 'REVIEWED')}><Icon name="check" size={12} /> تمت المراجعة</button>}
+                        {canApprove && (ap === 'PENDING_REVIEW' || ap === 'REVIEWED') && <button className="db-btn sm soft ok" onClick={() => openApproval(p, 'APPROVED')}><Icon name="shield" size={12} /> اعتماد</button>}
+                        {canApprove && (ap === 'PENDING_REVIEW' || ap === 'REVIEWED') && <button className="db-btn sm soft warn" onClick={() => openApproval(p, 'REJECTED')}><Icon name="x" size={12} /> رفض</button>}
+                        {canApprove && ap === 'APPROVED' && p.status === 'DRAFT' && <button className="db-btn sm soft" title="إلغاء الاعتماد" onClick={() => openApproval(p, 'DRAFT')}><Icon name="refresh" size={12} /> إلغاء الاعتماد</button>}
+                        {p.status === 'DRAFT' && ap === 'APPROVED' && <button className="db-btn sm soft ok" onClick={() => setStatus(p.id, 'ACTIVE')}><Icon name="play" size={12} /> تفعيل</button>}
                         {p.status === 'ACTIVE' && <button className="db-btn sm soft info" onClick={() => setStatus(p.id, 'COMPLETED')}><Icon name="check" size={12} /> إنهاء</button>}
                         {p.status !== 'CANCELLED' && <button className="db-btn sm soft warn" onClick={() => setStatus(p.id, 'CANCELLED')}><Icon name="pause" size={12} /> تعطيل</button>}
                         <Link className="db-ic" title="تقرير البرنامج" href={`/reports/center?type=executive&program=${p.id}`}><Icon name="reports" size={15} /></Link>
                         <button className="db-ic danger" title="حذف" onClick={() => deleteProgram(p)}><Icon name="trash" size={15} /></button>
                       </div></td>
-                    </tr>);
+                    </tr>
+                    {historyFor === p.id && (
+                      <tr key={p.id + '-h'} className="db-hist-row"><td colSpan={9}>
+                        <div className="db-hist">
+                          <div className="db-hist-head"><Icon name="clock" size={15} /> سجل اعتماد «{p.name_ar}»<button className="db-link" onClick={() => setHistoryFor(null)}>إغلاق</button></div>
+                          {history.length === 0 ? <div className="db-muted">لا توجد انتقالات مسجّلة بعد — سيبدأ السجل مع أول إرسال للمراجعة.</div> : (
+                            <ol className="db-timeline">
+                              {history.map(h => <li key={h.id}><span className="db-tl-dot" style={{ background: APPROVAL_STYLE[h.to_status]?.color || '#94a3b8' }} /><div><b>{APPROVAL_STYLE[h.to_status]?.label || h.to_status}</b>{h.from_status && <span className="db-muted"> ← {APPROVAL_STYLE[h.from_status as ApprovalStatus]?.label || h.from_status}</span>}<div className="db-muted">{h.actor_name || '—'}{h.actor_role ? ` · ${ROLE_LABEL[h.actor_role] || h.actor_role}` : ''} · <bdi>{new Date(h.created_at).toLocaleString('ar-SA', { dateStyle: 'medium', timeStyle: 'short' })}</bdi></div>{h.comment && <div className="db-hist-note">{h.comment}</div>}</div></li>)}
+                            </ol>
+                          )}
+                        </div>
+                      </td></tr>
+                    )}
+                  </Fragment>);
                 })}
               </tbody></table></div> : <div className="db-empty">لا توجد برامج. أضف برنامجًا جديدًا.</div>}
             </section>
@@ -721,6 +809,25 @@ const CSS = `
 .db-quick-ico.big{width:50px;height:50px;margin-bottom:8px}
 .db-formcard h3{margin:0 0 4px;font-size:16px;color:var(--navy)}
 .db-formcard p{margin:0 0 12px;line-height:1.7}
+/* approval workflow */
+.db-tbl td.l{min-width:200px}.db-tbl td.db-acts{min-width:210px;max-width:260px}
+.db-queue{align-items:flex-start}
+.db-ap-pill{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;border-radius:10px;padding:4px 10px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;white-space:nowrap;line-height:1.5;text-align:start}
+.db-ap-pill small{font-weight:700;font-size:10.5px;opacity:.85;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-ap-pill:hover{filter:brightness(.96)}
+.db-btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}.db-btn.danger:hover{background:#991b1b;color:#fff}
+.db-hist-row td{background:var(--surface-2)!important;text-align:start!important;padding:12px 16px!important}
+.db-hist-head{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--navy);margin-bottom:8px}.db-hist-head .db-link{margin-inline-start:auto}
+.db-timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.db-timeline li{display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.db-tl-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;box-shadow:0 0 0 3px rgba(15,23,42,.05)}
+.db-hist-note{margin-top:3px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-weight:700;color:var(--ink-2)}
+.db-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:120;padding:16px}
+.db-modal-box{width:min(540px,100%);background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;box-shadow:0 24px 60px rgba(15,23,42,.3)}
+.db-modal-p{margin:0 0 4px;font-size:15px}.db-modal-help{margin:0 0 12px;font-size:12.5px;color:var(--muted);font-weight:700;line-height:1.7}
+.db-modal-field{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:12px}
+.db-modal-field textarea{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;line-height:1.7;resize:vertical}
+.db-modal-field textarea:focus{outline:0;border-color:var(--teal);box-shadow:var(--ring)}
 /* table / form */
 .db-tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
 .db-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
