@@ -11,6 +11,7 @@ const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: strin
   { href: '/dashboard', label: 'لوحة القيادة', icon: 'dashboard', match: p => p.startsWith('/dashboard') },
   { href: '/command-center', label: 'غرفة القيادة', icon: 'play', match: p => p.startsWith('/command-center') },
   { href: '/admin/management', label: 'مركز الإدارة', icon: 'admin', match: p => p.startsWith('/admin/management') || p.startsWith('/admin/survey-settings') },
+  { href: '/admin/attendance', label: 'الحضور', icon: 'check', match: p => p.startsWith('/admin/attendance') },
   { href: '/reports/center', label: 'مركز التقارير', icon: 'reports', match: p => p.startsWith('/reports/center') },
   { href: '/reports', label: 'اللوحة التحليلية', icon: 'chart', match: p => p === '/reports' || p.startsWith('/reports/executive') },
   { href: '/reports/remote-survey', label: 'استطلاع عن بُعد', icon: 'laptop', match: p => p.startsWith('/reports/remote-survey') },
