@@ -7,7 +7,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
-import { downloadCSV, safeFilename } from '../../../lib/export/csv';
+import { downloadCSV } from '../../../lib/export/csv';
 import { buildXlsx, downloadXlsx, type Sheet } from '../../../lib/export/xlsx';
 import { buildPptx, downloadPptx, type PptSlide } from '../../../lib/export/pptx';
 import { buildReportEmailHtml, mailSubject, parseRecipients, toBase64 } from '../../../lib/email/report-mail';
@@ -152,7 +152,8 @@ function ReportsCenter() {
 
   /* ---------------- exports ---------------- */
   const title = report.title[lang];
-  const fileBase = () => safeFilename(`${ar ? 'تقرير' : 'report'}-${report.id}-${today}`);
+  const cleanName = (x: string) => x.replace(/[^a-zA-Z0-9\u0600-\u06FF_-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  const fileBase = () => cleanName(`${ar ? 'تقرير' : 'report'}-${report.id}-${today}`);
   const mainTables = (): { name: string; rows: (string | number)[][] }[] => {
     const t: { name: string; rows: (string | number)[][] }[] = [];
     const dim = (a: string, e: string) => (ar ? a : e);
@@ -188,7 +189,7 @@ function ReportsCenter() {
   const exportXlsx = () => { downloadXlsx(fileBase(), xlsxSheets()); flash(ar ? '✅ تم تنزيل ملف Excel' : '✅ Excel downloaded'); };
   const exportCsv = () => {
     const t = mainTables()[0] || { name: 'kpis', rows: kpisToTable(k, lang) };
-    downloadCSV(`${fileBase()}-${safeFilename(t.name)}.csv`, t.rows); flash(ar ? '✅ تم تنزيل CSV' : '✅ CSV downloaded');
+    downloadCSV(`${fileBase()}-${cleanName(t.name)}.csv`, t.rows); flash(ar ? '✅ تم تنزيل CSV' : '✅ CSV downloaded');
   };
   const PPT_OPTS = { rtl: ar, footer: ar ? 'منصة تقويم البرامج التدريبية · جامعة الأمير مقرن' : 'Training Evaluation Platform · Prince Mugrin University' };
   const pptxSlides = (): PptSlide[] => {
