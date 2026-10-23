@@ -32,6 +32,7 @@ export type HealthRaw = {
   counts: { programs: number; programs_active: number; classrooms: number; trainers: number; questions: number; evaluations: number; evaluations_7d: number; subscriptions_active: number; open_notifications: number; critical_notifications: number; profiles: number; profiles_no_role: number; audit_rows: number; outcome_kpis: number; certificates: number };
   integrity: { active_programs_without_rooms: string[]; rooms_without_trainer: string[]; trainers_without_rooms: string[]; active_programs_silent_14d: string[]; programs_ended_still_active: string[] };
   ai?: { configured: boolean; provider: string };
+  backup?: { last: string | null; rows: number | null };
   errors: string[];
 };
 
@@ -87,6 +88,15 @@ export function evaluateHealth(raw: HealthRaw): HealthCheck[] {
   out.push({ id: 'data:roles', group: 'data', label: 'مستخدمون بلا دور', status: c.profiles_no_role ? 'warn' : 'ok', detail: c.profiles_no_role ? `${c.profiles_no_role} من ${c.profiles} — لن يستطيعوا الدخول للوحات` : `${c.profiles} مستخدمًا، كلهم بأدوار` });
   out.push({ id: 'data:notif', group: 'data', label: 'التنبيهات المفتوحة', status: c.critical_notifications ? 'warn' : 'ok', detail: `${c.open_notifications} مفتوحة · ${c.critical_notifications} حرجة`, href: '/admin/notifications' });
   out.push({ id: 'data:audit', group: 'data', label: 'سجل التدقيق', status: c.audit_rows >= 0 ? 'ok' : 'warn', detail: `${c.audit_rows} سجلًا`, href: '/admin/audit' });
+  // 5ب) النسخ الاحتياطي الشامل (K2)
+  if (raw.backup) {
+    const days = hoursSince(raw.backup.last, now); const d = days == null ? null : Math.floor(days / 24);
+    const hasData = c.evaluations > 0 || c.programs > 0;
+    out.push({ id: 'data:backup', group: 'data', label: 'آخر نسخة احتياطية شاملة', href: '/admin/backup',
+      status: d == null ? (hasData ? 'warn' : 'info') : d > 30 ? 'warn' : 'ok',
+      detail: d == null ? 'لم تُؤخذ نسخة بعد' : d === 0 ? `اليوم · ${raw.backup.rows ?? 0} صفًا` : `منذ ${d} يومًا · ${raw.backup.rows ?? 0} صفًا`,
+      hint: d == null || d > 30 ? 'افتح «النسخ الاحتياطي» وصدّر Excel أو JSON (يُنصح بنسخة شهرية).' : undefined });
+  }
   // 6) الذكاء الاصطناعي
   out.push({ id: 'ai', group: 'ai', label: 'مزوّد الذكاء الاصطناعي', status: raw.ai?.configured ? 'ok' : 'info', detail: raw.ai?.configured ? `مضبوط (${raw.ai.provider}) — اضغط «اختبر النموذج» للتحقق الفعلي` : 'غير مضبوط — يُستخدم البديل المحلي القائم على القواعد' });
   for (const e of raw.errors) out.push({ id: `err:${e.slice(0, 20)}`, group: 'data', label: 'خطأ أثناء الفحص', status: 'warn', detail: e });
@@ -112,8 +122,8 @@ export function healthCsv(checks: HealthCheck[]): string[][] {
 export function healthAlerts(checks: HealthCheck[]): { dedupe_key: string; severity: 'warn' | 'critical'; title: string; body: string; href: string }[] {
   const out: { dedupe_key: string; severity: 'warn' | 'critical'; title: string; body: string; href: string }[] = [];
   for (const c of checks) {
-    if (c.status !== 'bad' && !(c.status === 'warn' && c.group === 'cron')) continue;
-    if (c.group === 'env' || c.group === 'cron' || c.group === 'mail' || c.id === 'db') out.push({ dedupe_key: `health:${c.id}`, severity: c.status === 'bad' ? 'critical' : 'warn', title: `صحة المنصة: ${c.label}`, body: c.detail, href: '/admin/health' });
+    if (c.status !== 'bad' && !(c.status === 'warn' && (c.group === 'cron' || c.id === 'data:backup'))) continue;
+    if (c.group === 'env' || c.group === 'cron' || c.group === 'mail' || c.id === 'db' || c.id === 'data:backup') out.push({ dedupe_key: `health:${c.id}`, severity: c.status === 'bad' ? 'critical' : 'warn', title: `صحة المنصة: ${c.label}`, body: c.detail, href: '/admin/health' });
   }
   return out;
 }
