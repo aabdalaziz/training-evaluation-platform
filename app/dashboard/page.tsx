@@ -322,6 +322,7 @@ export default function Dashboard() {
           <Link href="/admin/impact" className="db-navlink"><Icon name="target" size={20} /><span><b>قياس أثر التدريب</b><small>قبلي / بعدي · الكسب المعياري</small></span></Link>
           <Link href="/admin/outcomes" className="db-navlink"><Icon name="flag" size={20} /><span><b>مؤشرات النتائج</b><small>المستوى 4 · خط أساس ومستهدف</small></span></Link>
           <Link href="/reports/chain" className="db-navlink"><Icon name="trend" size={20} /><span><b>سلسلة الأثر 1→4</b><small>كيركباتريك في صفحة واحدة</small></span></Link>
+          <Link href="/reports/program" className="db-navlink"><Icon name="doc" size={20} /><span><b>بطاقة البرنامج الشاملة</b><small>صفحة واحدة لصانع القرار · PDF · Excel</small></span></Link>
           <Link href="/admin/data-lifecycle" className="db-navlink"><Icon name="trash" size={20} /><span><b>دورة حياة البيانات</b><small>معاينة وتفريغ منضبط</small></span></Link>
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
