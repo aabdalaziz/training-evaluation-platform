@@ -330,6 +330,7 @@ export default function Dashboard() {
           <Link href="/admin/templates" className="db-navlink"><Icon name="doc" size={20} /><span><b>قوالب التقييم</b><small>الأسئلة · الربط بالبرامج · معاينة</small></span></Link>
           <Link href="/admin/readiness" className="db-navlink"><Icon name="compass" size={20} /><span><b>جاهزية البرنامج</b><small>قائمة تحقق من الإعداد حتى الإغلاق</small></span></Link>
           <Link href="/help" className="db-navlink"><Icon name="question" size={20} /><span><b>دليل الاستخدام</b><small>رحلة البرنامج · أسئلة شائعة</small></span></Link>
+          <Link href="/admin/inbox" className="db-navlink"><Icon name="inbox" size={20} /><span><b>رسائل بوابة أَثَر</b><small>طلبات «تواصل معنا» من الموقع العام</small></span></Link>
           <Link href="/admin/backup" className="db-navlink"><Icon name="save" size={20} /><span><b>النسخ الاحتياطي والأرشفة</b><small>تصدير شامل Excel/JSON وأرشفة البرامج</small></span></Link>
           <Link href="/admin/data-lifecycle" className="db-navlink"><Icon name="trash" size={20} /><span><b>دورة حياة البيانات</b><small>معاينة وتفريغ منضبط</small></span></Link>
         </nav>
