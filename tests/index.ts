@@ -11,3 +11,4 @@ import './attendance.test';
 import './behavior.test';
 import './notifications.test';
 import './me.test';
+import './outcomes.test';
