@@ -14,3 +14,4 @@ import './me.test';
 import './outcomes.test';
 import './program-report.test';
 import './cohorts.test';
+import './audit.test';
