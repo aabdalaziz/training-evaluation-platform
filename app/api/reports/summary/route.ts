@@ -33,6 +33,7 @@ export async function POST(req: Request) {
     const facts = await loadSummaryFacts(db, { programId: body.program ? String(body.program) : undefined, days: Number(body.days) || 30 });
     const ai = body.ai === false ? { configured: false, provider: 'none' as string } : await aiCaller(30000);
     const summary = await generateExecSummary(facts, { callAi: ai.call }, 30000);
+    if (service) { try { await db.from('audit_logs').insert({ actor_id: u.user.id, actor_email: u.user.email || null, actor_role: String((profile as any)?.role || ''), action: 'exec_summary', entity_type: 'ai', entity_label: facts.scope, source: 'app', metadata: { period: facts.period, source: summary.source, model: summary.model || null, provider: ai.provider } }); } catch { /* اختياري */ } }
     return NextResponse.json({ success: true, summary, facts, ai: { configured: ai.configured, provider: ai.provider, error: ai.error } });
   } catch (e: any) { return bad(e?.message || 'تعذر بناء الملخص', 500); }
 }
