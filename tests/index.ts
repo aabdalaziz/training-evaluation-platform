@@ -18,3 +18,4 @@ import './audit.test';
 import './health.test';
 import './access.test';
 import './templates.test';
+import './readiness.test';
