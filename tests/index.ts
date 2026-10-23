@@ -13,3 +13,4 @@ import './notifications.test';
 import './me.test';
 import './outcomes.test';
 import './program-report.test';
+import './cohorts.test';
