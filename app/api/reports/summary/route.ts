@@ -25,12 +25,18 @@ export async function POST(req: Request) {
   const { data: u, error: uErr } = await userClient.auth.getUser(token);
   if (uErr || !u?.user) return bad('جلسة المستخدم غير صالحة', 401);
   const { data: profile } = await userClient.from('profiles').select('role').eq('id', u.user.id).single();
-  if (!ALLOWED.includes(String((profile as any)?.role || '').toUpperCase())) return bad('غير مصرح', 403);
+  const role = String((profile as any)?.role || '').toUpperCase();
+  if (!ALLOWED.includes(role)) return bad('غير مصرح', 403);
+  // J3: مدير برنامج مرتبط ببرامج → يُقصر الملخص عليها
+  let allowedPrograms: string[] | null = null;
+  if (role === 'PROGRAM_MANAGER') { const { data: pm } = await userClient.from('program_managers').select('program_id').eq('profile_id', u.user.id); const ids = ((pm || []) as any[]).map(r => r.program_id); if (ids.length) allowedPrograms = ids; }
 
   const body = await req.json().catch(() => ({}));
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY; const db = service ? createClient(SUPABASE_URL, service) : userClient;
   try {
-    const facts = await loadSummaryFacts(db, { programId: body.program ? String(body.program) : undefined, days: Number(body.days) || 30 });
+    const programId = body.program ? String(body.program) : undefined;
+    if (programId && allowedPrograms && !allowedPrograms.includes(programId)) return bad('هذا البرنامج خارج نطاق صلاحيتك', 403);
+    const facts = await loadSummaryFacts(db, { programId, days: Number(body.days) || 30, allowedPrograms });
     const ai = body.ai === false ? { configured: false, provider: 'none' as string } : await aiCaller(30000);
     const summary = await generateExecSummary(facts, { callAi: ai.call }, 30000);
     if (service) { try { await db.from('audit_logs').insert({ actor_id: u.user.id, actor_email: u.user.email || null, actor_role: String((profile as any)?.role || ''), action: 'exec_summary', entity_type: 'ai', entity_label: facts.scope, source: 'app', metadata: { period: facts.period, source: summary.source, model: summary.model || null, provider: ai.provider } }); } catch { /* اختياري */ } }
