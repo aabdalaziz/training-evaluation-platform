@@ -90,6 +90,7 @@ function Inner() {
           <Link href="/admin/impact" className="ir-btn"><Icon name="target" size={16} /> إدارة الأدوات</Link>
           <Link href="/reports/center" className="ir-btn"><Icon name="chart" size={16} /> مركز التقارير</Link>
           <Link href="/reports/transfer" className="ir-btn"><Icon name="trend" size={16} /> نقل الأثر (المستوى 3)</Link>
+          <Link href="/reports/chain" className="ir-btn"><Icon name="flag" size={16} /> سلسلة الأثر 1→4</Link>
           <button className="ir-btn" onClick={() => window.print()} disabled={!a}><Icon name="print" size={16} /> طباعة / PDF</button>
           <button className="ir-btn" onClick={exportCsv} disabled={!a || !pairs.length}><Icon name="download" size={16} /> CSV</button>
         </nav>
