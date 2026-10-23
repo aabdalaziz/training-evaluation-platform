@@ -13,6 +13,8 @@ export type TableSpec = {
   /** أعمدة تُستبعد من Excel (تقنية/حساسة) */
   hide?: string[];
   order?: string;
+  /** مفتاح التعارض عند الاستعادة (upsert) — الافتراضي id */
+  conflict?: string;
 };
 
 export const CATALOG: TableSpec[] = [
@@ -22,19 +24,31 @@ export const CATALOG: TableSpec[] = [
   { table: 'class_schedules', label: 'الجداول', programKey: 'via:classroom' },
   { table: 'evaluation_templates', label: 'قوالب التقييم', programKey: null },
   { table: 'questions', label: 'الأسئلة', programKey: null, order: 'order_index' },
-  { table: 'program_evaluation_templates', label: 'ربط القوالب', programKey: 'program_id' },
+  { table: 'program_levels', label: 'مستويات البرامج', programKey: 'program_id', order: 'sort_order' },
+  { table: 'program_approvals', label: 'اعتمادات البرامج', programKey: 'program_id' },
+  { table: 'program_managers', label: 'مديرو البرامج', programKey: 'program_id', conflict: 'profile_id,program_id' },
+  { table: 'program_evaluation_templates', label: 'ربط القوالب', programKey: 'program_id', conflict: 'program_id,template_id' },
   { table: 'evaluations', label: 'التقييمات', programKey: 'program_id', hide: ['respondent_hash'], order: 'submitted_at' },
   { table: 'evaluation_answers', label: 'إجابات التقييم', programKey: 'via:evaluation' },
   { table: 'attendance_sessions', label: 'جلسات الحضور', programKey: 'program_id', hide: ['token'] },
   { table: 'attendance_records', label: 'سجلات الحضور', programKey: 'via:session' as any, hide: ['identity_key'] },
   { table: 'certificates', label: 'الشهادات', programKey: 'program_id' },
   { table: 'impact_assessments', label: 'أدوات الأثر', programKey: 'program_id', hide: ['token'] },
+  { table: 'impact_questions', label: 'أسئلة الأثر', programKey: 'via:assessment' as any, order: 'order_index' },
+  { table: 'impact_responses', label: 'استجابات الأثر', programKey: 'via:assessment' as any },
   { table: 'behavior_followups', label: 'متابعات نقل الأثر', programKey: 'program_id', hide: ['token'] },
+  { table: 'behavior_questions', label: 'أسئلة المتابعة', programKey: 'via:followup' as any, order: 'order_index' },
+  { table: 'behavior_responses', label: 'استجابات المتابعة', programKey: 'via:followup' as any },
   { table: 'outcome_kpis', label: 'مؤشرات النتائج', programKey: 'program_id' },
   { table: 'outcome_measurements', label: 'قياسات المؤشرات', programKey: 'via:kpi' as any },
   { table: 'remote_learning_survey_responses', label: 'استطلاع التعلم عن بُعد', programKey: 'program_id' },
   { table: 'trainer_awards', label: 'تكريم المدربين', programKey: null },
+  { table: 'report_subscriptions', label: 'اشتراكات التقارير', programKey: null },
+  { table: 'certificate_settings', label: 'إعدادات الشهادات', programKey: null, conflict: 'organization_id' },
 ];
+
+/** جداول لا تُقيَّد ببرنامج وتُستبعد من نسخة البرنامج الواحد */
+const GLOBAL_ONLY = new Set(['trainer_awards', 'report_subscriptions', 'certificate_settings']);
 
 export const ALWAYS_HIDE = ['organization_id'];
 
@@ -49,6 +63,8 @@ export function scopeToProgram(data: Dataset, programId: string): Dataset {
   const evalIds = new Set((data.evaluations || []).filter(r => r.program_id === programId).map(r => r.id));
   const sessionIds = new Set((data.attendance_sessions || []).filter(r => r.program_id === programId).map(r => r.id));
   const kpiIds = new Set((data.outcome_kpis || []).filter(r => r.program_id === programId).map(r => r.id));
+  const impactIds = new Set((data.impact_assessments || []).filter(r => r.program_id === programId).map(r => r.id));
+  const followupIds = new Set((data.behavior_followups || []).filter(r => r.program_id === programId).map(r => r.id));
   const tplIds = new Set((data.program_evaluation_templates || []).filter(r => r.program_id === programId).map(r => r.template_id));
   for (const spec of CATALOG) {
     const rows = data[spec.table] || [];
@@ -60,7 +76,9 @@ export function scopeToProgram(data: Dataset, programId: string): Dataset {
     else if (spec.programKey === 'via:evaluation') out[spec.table] = rows.filter(r => evalIds.has(r.evaluation_id));
     else if ((spec.programKey as string) === 'via:session') out[spec.table] = rows.filter(r => sessionIds.has(r.session_id));
     else if ((spec.programKey as string) === 'via:kpi') out[spec.table] = rows.filter(r => kpiIds.has(r.kpi_id));
-    else if (spec.programKey === null) out[spec.table] = spec.table === 'trainer_awards' ? [] : rows;
+    else if ((spec.programKey as string) === 'via:assessment') out[spec.table] = rows.filter(r => impactIds.has(r.assessment_id));
+    else if ((spec.programKey as string) === 'via:followup') out[spec.table] = rows.filter(r => followupIds.has(r.followup_id));
+    else if (spec.programKey === null) out[spec.table] = GLOBAL_ONLY.has(spec.table) ? [] : rows;
     else out[spec.table] = rows.filter(r => r[spec.programKey as string] === programId);
   }
   return out;
