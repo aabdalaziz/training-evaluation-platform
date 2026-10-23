@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js';
 import { dispatchFollowup } from '../../../../lib/behavior/mail';
 import { runNotificationScan } from '../../../../lib/notifications/scan';
 import { runTraineeMail } from '../../../../lib/notifications/trainee-mail';
+import { cronHeartbeat } from '../../../../lib/health/collect';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -82,5 +83,7 @@ export async function GET(req: Request) {
   // بريد المتدربين التلقائي: فتح التقييم النهائي · إصدار الشهادة (TRAINEE_MAIL=0 للتعطيل · dry=1 للمعاينة)
   let trainee_mail: any = null;
   try { trainee_mail = await runTraineeMail(db, site, { dry }); } catch (e: any) { trainee_mail = { ok: false, error: e?.message || String(e) }; }
+  // نبضة الكرون اليومي (لصفحة صحة المنصة)
+  if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
   return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail });
 }
