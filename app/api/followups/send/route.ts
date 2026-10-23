@@ -2,13 +2,15 @@
  * /api/followups/send — إرسال روابط متابعة الأثر السلوكي (كيركباتريك 3)
  *  POST { followup_id, mode: 'send'|'remind'|'test', test_email? }  — من لوحة الإدارة (Bearer <access_token> لمستخدم إداري)
  *  GET  ?key=<CRON_SECRET>  — التشغيل التلقائي اليومي (vercel.json): يرسل الحملات التي بلغ موعدها، ويذكّر بعد remind_after_days،
- *                            ثم يشغّل فحص مركز الإشعارات (notifications_scan) ويراسل الإدارة بالجديد
+ *                            ثم يشغّل فحص مركز الإشعارات (notifications_scan) ويراسل الإدارة بالجديد،
+ *                            ثم بريد المتدربين التلقائي (فتح التقييم النهائي · إصدار الشهادة) — TRAINEE_MAIL=0 للتعطيل
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, (للـ Cron) CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { dispatchFollowup } from '../../../../lib/behavior/mail';
 import { runNotificationScan } from '../../../../lib/notifications/scan';
+import { runTraineeMail } from '../../../../lib/notifications/trainee-mail';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -77,5 +79,8 @@ export async function GET(req: Request) {
   // فحص الإشعارات اليومي (نفس الـ Cron — بلا حاجة لمهمة Cron إضافية)
   let notifications: any = null;
   if (!dry) { try { notifications = await runNotificationScan(db, { source: 'cron', site, email: url.searchParams.get('email') !== '0' }); } catch (e: any) { notifications = { ok: false, error: e?.message || String(e) }; } }
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications });
+  // بريد المتدربين التلقائي: فتح التقييم النهائي · إصدار الشهادة (TRAINEE_MAIL=0 للتعطيل · dry=1 للمعاينة)
+  let trainee_mail: any = null;
+  try { trainee_mail = await runTraineeMail(db, site, { dry }); } catch (e: any) { trainee_mail = { ok: false, error: e?.message || String(e) }; }
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail });
 }
