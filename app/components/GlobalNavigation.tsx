@@ -35,8 +35,9 @@ export default function GlobalNavigation() {
   }, []);
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  // لوحة التحكم تملك قائمتها الجانبية الكاملة
+  // لوحة التحكم تملك قائمتها الجانبية الكاملة، وصفحات بوابة أَثَر العامة تملك رأسها الخاص (PortalShell)
   if (pathname.startsWith('/dashboard')) return null;
+  if (pathname === '/' || pathname === '/about' || pathname === '/contact' || pathname === '/services' || pathname.startsWith('/services/')) return null;
 
   async function logout() { await db.auth.signOut(); router.push('/'); router.refresh(); }
 
