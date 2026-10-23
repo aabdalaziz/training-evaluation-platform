@@ -91,8 +91,12 @@ export async function collectHealth(db: SupabaseClient, now = new Date()): Promi
     last_failure: tm.filter(r => r.ok === false).sort((a, b) => String(b.sent_at).localeCompare(String(a.sent_at)))[0]?.error || null,
   };
 
+  // آخر نسخة احتياطية شاملة (K2) — الجدول قد لا يكون موجودًا قبل تنفيذ SQL
+  let backup: { last: string | null; rows: number | null } | undefined;
+  try { const { data, error } = await db.from('backup_log').select('created_at,total_rows').order('created_at', { ascending: false }).limit(1); if (!error) { const r = (data as any[] || [])[0]; backup = { last: r?.created_at || null, rows: r ? Number(r.total_rows || 0) : null }; } } catch { backup = undefined; }
+
   const { key, provider } = readKey();
-  return { now: iso, env: envStatus(), db: { ok: dbOk, latencyMs: dbOk ? latencyMs : null, error: dbErr }, crons, mail7d, counts, integrity, ai: { configured: !!key, provider }, errors };
+  return { now: iso, env: envStatus(), db: { ok: dbOk, latencyMs: dbOk ? latencyMs : null, error: dbErr }, crons, mail7d, counts, integrity, ai: { configured: !!key, provider }, backup, errors };
 }
 
 /** مزامنة تنبيهات الجرس: إنشاء الجديد وحلّ ما زال */
