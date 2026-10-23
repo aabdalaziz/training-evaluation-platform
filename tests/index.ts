@@ -19,3 +19,4 @@ import './health.test';
 import './access.test';
 import './templates.test';
 import './readiness.test';
+import './backup.test';
