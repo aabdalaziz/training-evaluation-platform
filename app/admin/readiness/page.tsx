@@ -31,7 +31,7 @@ function Inner() {
       const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single();
       if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
       const [p, c, s, l, t, q, e, a, ce, im, fu, k] = await Promise.all([
-        db.from('programs').select('id,name_ar,status,start_date,end_date,delivery_mode').order('start_date', { ascending: false }),
+        db.from('programs').select('id,name_ar,status,start_date,end_date,delivery_mode,archived_at').is('archived_at', null).order('start_date', { ascending: false }),
         db.from('classrooms').select('id,program_id,trainer_id,code'),
         db.from('class_schedules').select('classroom_id,is_active'),
         db.from('program_evaluation_templates').select('program_id,template_id,is_active'),
@@ -45,7 +45,7 @@ function Inner() {
         db.from('outcome_kpis').select('program_id'),
       ]);
       const firstErr = [p, c, l, t, q].find(r => r.error)?.error; if (firstErr) setError(firstErr.message);
-      const programs = (p.data || []) as ProgramRow[];
+      const programs = ((p.data || []) as any[]).filter(r => !r.archived_at) as ProgramRow[]; // المؤرشفة لا تُعرض
       const base: Omit<ReadinessInput, 'program'> = {
         classrooms: (c.data || []) as any[], schedules: (s.data || []) as any[], links: (l.data || []) as any[], templates: (t.data || []) as any[], questions: (q.data || []) as any[],
         evaluations: (e.data || []) as any[], attendance: (a.data || []) as any[], certificates: (ce.data || []) as any[], impact: (im.data || []) as any[], followups: (fu.data || []) as any[], kpis: (k.data || []) as any[], today,
