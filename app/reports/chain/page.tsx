@@ -115,6 +115,7 @@ function Inner() {
           <Link href="/admin/outcomes" className="ch-btn"><Icon name="flag" size={16} /> مؤشرات النتائج</Link>
           <Link href="/reports/impact" className="ch-btn"><Icon name="target" size={16} /> المستوى 2</Link>
           <Link href="/reports/transfer" className="ch-btn"><Icon name="trend" size={16} /> المستوى 3</Link>
+          <Link href={`/reports/program${programId ? `?program=${programId}` : ''}`} className="ch-btn"><Icon name="doc" size={16} /> بطاقة البرنامج</Link>
           <button className="ch-btn" onClick={() => window.print()}><Icon name="print" size={16} /> طباعة / PDF</button>
           <button className="ch-btn" onClick={exportCsv} disabled={!visible.length}><Icon name="download" size={16} /> CSV</button>
         </nav>
