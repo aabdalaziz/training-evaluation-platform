@@ -15,6 +15,8 @@ import {
 import { REPORTS } from '../../../../lib/reports/catalog';
 import { buildReportEmailHtml, mailSubject } from '../../../../lib/email/report-mail';
 import { sendViaResend } from '../../../../lib/email/resend';
+import { generateExecSummary, summaryHtml, factsFrom } from '../../../../lib/ai/exec-summary';
+import { aiCaller } from '../../../../lib/ai/summary-data';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,6 +58,7 @@ export async function GET(req: Request) {
     g.emails.push(s.email); g.ids.push(s.id); groups.set(key, g);
   }
 
+  const aiRef: { current: Awaited<ReturnType<typeof aiCaller>> | null } = { current: null };
   const results: { report: string; to: number; ok: boolean; error?: string }[] = [];
   for (const g of Array.from(groups.values())) {
     try {
@@ -75,7 +78,17 @@ export async function GET(req: Request) {
       const title = `${ar ? 'الملخص الأسبوعي' : 'Weekly digest'} — ${report.title[g.lang]}`;
       const q = new URLSearchParams({ type: report.id, lang: g.lang, preset: days === 30 ? '30d' : days === 14 ? '14d' : '7d', compare: '1' });
       if (f.programId) q.set('program', f.programId); if (f.trainerId) q.set('trainer', f.trainerId); if (f.classroomId) q.set('classroom', f.classroomId);
-      const html = buildReportEmailHtml({ lang: g.lang, title, scope, generatedAt: today, audience: report.audience[g.lang], k, deltaMean: cmp?.deltaMean ?? null, story, actions, link: `${site}/reports/center?${q.toString()}` });
+      let html = buildReportEmailHtml({ lang: g.lang, title, scope, generatedAt: today, audience: report.audience[g.lang], k, deltaMean: cmp?.deltaMean ?? null, story, actions, link: `${site}/reports/center?${q.toString()}` });
+      // الملخص التنفيذي الذكي (عربي) — يُدرج أعلى القراءة التحليلية؛ بديل محلي عند غياب AI_API_KEY
+      if (ar && url.searchParams.get('ai') !== '0') {
+        try {
+          const programsG = groupBy('program', evals, facts, lk, 'ar'); const trainersG = groupBy('trainer', evals, facts, lk, 'ar');
+          const sf = factsFrom({ scope: programName || 'كل البرامج', period: `آخر ${days} يومًا (${f.from} → ${f.to})`, generatedAt: today, k, cmp, axes, programs: programsG, trainers: trainersG, actions });
+          aiRef.current = aiRef.current || await aiCaller(20000);
+          const sum = await generateExecSummary(sf, { callAi: aiRef.current.call }, 20000);
+          html = html.replace('<div style="height:14px"></div>', '<div style="height:14px"></div>' + summaryHtml(sum));
+        } catch { /* الملخص اختياري */ }
+      }
       const subject = mailSubject({ lang: g.lang, title, scope, k });
       if (!dryRun) {
         await sendViaResend({ to: g.emails, subject, html, tags: [{ name: 'kind', value: 'digest' }] });
