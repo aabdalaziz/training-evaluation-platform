@@ -16,3 +16,4 @@ import './program-report.test';
 import './cohorts.test';
 import './audit.test';
 import './health.test';
+import './access.test';
