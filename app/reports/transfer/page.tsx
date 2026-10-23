@@ -84,6 +84,7 @@ function Inner() {
           <Link href="/dashboard" className="tr-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
           <Link href="/admin/followup" className="tr-btn"><Icon name="settings" size={16} /> إدارة الحملات</Link>
           <Link href="/reports/impact" className="tr-btn"><Icon name="target" size={16} /> القبلي/البعدي</Link>
+          <Link href="/reports/chain" className="tr-btn"><Icon name="flag" size={16} /> سلسلة الأثر 1→4</Link>
           <button className="tr-btn" onClick={() => window.print()} disabled={!f}><Icon name="print" size={16} /> طباعة / PDF</button>
           <button className="tr-btn" onClick={exportCsv} disabled={!f || !s.pairs.length}><Icon name="download" size={16} /> CSV</button>
         </nav>
