@@ -328,6 +328,8 @@ export default function Dashboard() {
           <Link href="/admin/health" className="db-navlink"><Icon name="check" size={20} /><span><b>صحة المنصة</b><small>الإعدادات · الكرون · البريد · سلامة البيانات</small></span></Link>
           <Link href="/admin/access" className="db-navlink"><Icon name="users" size={20} /><span><b>نطاق الوصول</b><small>ربط مديري البرامج ببرامجهم</small></span></Link>
           <Link href="/admin/templates" className="db-navlink"><Icon name="doc" size={20} /><span><b>قوالب التقييم</b><small>الأسئلة · الربط بالبرامج · معاينة</small></span></Link>
+          <Link href="/admin/readiness" className="db-navlink"><Icon name="compass" size={20} /><span><b>جاهزية البرنامج</b><small>قائمة تحقق من الإعداد حتى الإغلاق</small></span></Link>
+          <Link href="/help" className="db-navlink"><Icon name="question" size={20} /><span><b>دليل الاستخدام</b><small>رحلة البرنامج · أسئلة شائعة</small></span></Link>
           <Link href="/admin/data-lifecycle" className="db-navlink"><Icon name="trash" size={20} /><span><b>دورة حياة البيانات</b><small>معاينة وتفريغ منضبط</small></span></Link>
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
