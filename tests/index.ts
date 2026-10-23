@@ -17,3 +17,4 @@ import './cohorts.test';
 import './audit.test';
 import './health.test';
 import './access.test';
+import './templates.test';
