@@ -8,11 +8,14 @@ import { Icon } from '../../../lib/ui/icons';
 import { downloadXlsx, buildXlsx } from '../../../lib/export/xlsx';
 import { CATALOG, scopeToProgram, counts, totalRows, buildSheets, manifest, jsonPayload, backupFilename, backupStatus, daysSince, archiveCandidates, splitArchive, tableLabel } from '../../../lib/backup/model';
 import type { Dataset, ArchivableProgram, BackupStatus } from '../../../lib/backup/model';
+import { parseBackup, restorePlan, chunk, emptyResult, summarize, strategyLabel } from '../../../lib/backup/restore';
+import type { ParsedBackup, Strategy, TableResult } from '../../../lib/backup/restore';
 
 const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b';
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const ADMINS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'];
-type Tab = 'backup' | 'archive' | 'log';
+const RESTORERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN'];
+type Tab = 'backup' | 'archive' | 'restore' | 'log';
 type LogRow = { id: string; created_at: string; actor_name: string | null; format: string; scope_label: string | null; total_rows: number; bytes: number; tables: Record<string, number> };
 
 const fmtDate = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
@@ -29,6 +32,12 @@ export default function BackupPage() {
   const [data, setData] = useState<Dataset | null>(null); const [missing, setMissing] = useState<string[]>([]);
   const [busy, setBusy] = useState(''); const [archiving, setArchiving] = useState('');
   const canWrite = ADMINS.includes(me.role);
+  const canRestore = RESTORERS.includes(me.role);
+  // الاستعادة
+  const [parsed, setParsed] = useState<ParsedBackup | null>(null); const [fileName, setFileName] = useState('');
+  const [selTables, setSelTables] = useState<string[]>([]); const [strategy, setStrategy] = useState<Strategy>('add');
+  const [results, setResults] = useState<TableResult[]>([]); const [checked, setChecked] = useState(false); const [confirmWord, setConfirmWord] = useState('');
+  const [progress, setProgress] = useState('');
   const today = new Date().toISOString().slice(0, 10);
 
   async function loadMeta() {
@@ -121,6 +130,45 @@ export default function BackupPage() {
     setArchiving('');
   }
 
+  async function onFile(f: File | null) {
+    setParsed(null); setResults([]); setChecked(false); setConfirmWord(''); setError('');
+    if (!f) return;
+    if (f.size > 60 * 1024 * 1024) { setError('الملف أكبر من 60 MB — قسّم النسخة حسب البرنامج'); return; }
+    try { const text = await f.text(); const pb = parseBackup(text); setParsed(pb); setFileName(f.name); setSelTables(pb.tables.map(t => t.table)); }
+    catch (e: any) { setError(e?.message || String(e)); }
+  }
+
+  async function token(): Promise<string> { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
+
+  async function runRestore(mode: 'dry' | Strategy) {
+    if (!parsed) return;
+    const plan = restorePlan(parsed, selTables); if (!plan.length) { setError('لم تُختر جداول تحوي صفوفًا'); return; }
+    setBusy(mode === 'dry' ? 'جارٍ فحص النسخة مقابل قاعدة البيانات…' : 'جارٍ الاستعادة…'); setError(''); setNotice('');
+    const tk = await token(); const out: TableResult[] = [];
+    for (const t of plan) {
+      const r = emptyResult(t.table, t.label, t.rows.length); out.push(r); setResults([...out]);
+      const parts = chunk(t.rows); let i = 0;
+      for (const part of parts) {
+        i++; setProgress(`${t.label}: دفعة ${i}/${parts.length}`);
+        try {
+          const res = await fetch('/api/admin/restore', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ table: t.table, rows: part, mode }) });
+          const j = await res.json();
+          if (!res.ok || !j.success) { r.failed += part.length; r.error = j.error || `HTTP ${res.status}`; break; }
+          r.existing += Number(j.existing || 0); r.inserted += Number(j.inserted || 0); r.updated += Number(j.updated || 0); r.skipped += Number(j.skipped || 0);
+        } catch (e: any) { r.failed += part.length; r.error = e?.message || String(e); break; }
+        setResults([...out]);
+      }
+    }
+    setResults([...out]); setProgress(''); setBusy('');
+    const sum = summarize(out);
+    if (mode === 'dry') { setChecked(true); setNotice(`الفحص اكتمل: ${sum.total} صفًا في ${sum.tables} جدولًا — ${sum.total - out.reduce((a, r) => a + r.existing, 0)} جديد · ${out.reduce((a, r) => a + r.existing, 0)} موجود مسبقًا${sum.failed ? ` · ${sum.failed} تعذّر فحصه` : ''}`); }
+    else {
+      setNotice(`الاستعادة اكتملت: ${sum.inserted} صف أُضيف · ${sum.updated} حُدّث · ${sum.skipped} تُرك كما هو${sum.failed ? ` · ${sum.failed} فشل` : ''}`);
+      try { await fetch('/api/admin/restore', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ log: { file: fileName, strategy: mode, ...sum, tables: out.map(r => ({ table: r.table, inserted: r.inserted, updated: r.updated, skipped: r.skipped, failed: r.failed })) } }) }); } catch { /* اختياري */ }
+      setConfirmWord(''); setChecked(false); setData(null); await loadMeta();
+    }
+  }
+
   if (!ready) return <div className="bk" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
   const scoped = data ? (scope === 'all' ? data : scopeToProgram(data, scope)) : null;
   const scopedCounts = scoped ? counts(scoped) : null;
@@ -154,6 +202,7 @@ export default function BackupPage() {
       <div className="bk-tabs" role="tablist">
         <button className={`bk-tab ${tab === 'backup' ? 'on' : ''}`} onClick={() => setTab('backup')}><Icon name="download" size={15} /> النسخ الاحتياطي</button>
         <button className={`bk-tab ${tab === 'archive' ? 'on' : ''}`} onClick={() => setTab('archive')}><Icon name="folder" size={15} /> الأرشفة {candidates.length ? <i className="bk-badge">{candidates.length}</i> : null}</button>
+        <button className={`bk-tab ${tab === 'restore' ? 'on' : ''}`} onClick={() => setTab('restore')}><Icon name="refresh" size={15} /> الاستعادة</button>
         <button className={`bk-tab ${tab === 'log' ? 'on' : ''}`} onClick={() => setTab('log')}><Icon name="clock" size={15} /> السجل</button>
       </div>
 
@@ -233,6 +282,60 @@ export default function BackupPage() {
         </section>
       )}
 
+      {tab === 'restore' && (
+        <section className="bk-card">
+          <div className="bk-card-head"><h2><Icon name="refresh" size={18} /> الاستعادة من نسخة JSON</h2><span>ارفع ملف نسخة احتياطية (JSON) → افحصه بلا تغيير → ثم نفّذ. الاستعادة تعمل بصلاحيات الخادم وتُسجَّل كاملة في التدقيق.</span></div>
+          {!canRestore && <div className="bk-alert">الاستعادة متاحة لمدير المنصة (PLATFORM_ADMIN / SUPER_ADMIN) فقط.</div>}
+          <div className="bk-form">
+            <label>ملف النسخة (JSON)
+              <input type="file" accept=".json,application/json" disabled={!canRestore} onChange={e => onFile(e.target.files?.[0] || null)} />
+            </label>
+            <div className="bk-strats">
+              <label className="bk-radio"><input type="radio" name="strategy" checked={strategy === 'add'} onChange={() => setStrategy('add')} /> {strategyLabel('add')}</label>
+              <label className="bk-radio"><input type="radio" name="strategy" checked={strategy === 'replace'} onChange={() => setStrategy('replace')} /> {strategyLabel('replace')}</label>
+            </div>
+          </div>
+          {parsed && (
+            <>
+              <div className="bk-manifest">
+                <b>{fileName}</b>
+                <span>{parsed.manifest ? <>أُنشئت <bdi>{fmtDate(parsed.manifest.generated_at)}</bdi> · النطاق: {parsed.manifest.scope_label} · {parsed.manifest.total_rows} صفًا</> : 'بلا فهرس (manifest) — سيُستعاد ما يُعرف من الجداول'}</span>
+                {parsed.warnings.length > 0 && <ul className="bk-warns">{parsed.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>}
+              </div>
+              <div className="bk-tsel">
+                <div className="bk-tsel-head"><b>الجداول ({selTables.length}/{parsed.tables.length})</b>
+                  <button className="bk-link" onClick={() => setSelTables(parsed.tables.map(t => t.table))}>الكل</button>
+                  <button className="bk-link muted" onClick={() => setSelTables([])}>لا شيء</button></div>
+                <div className="bk-tgrid">
+                  {parsed.tables.map(t => <label key={t.table} className={`bk-tcheck ${selTables.includes(t.table) ? 'on' : ''}`}><input type="checkbox" checked={selTables.includes(t.table)} onChange={e => setSelTables(e.target.checked ? [...selTables, t.table] : selTables.filter(x => x !== t.table))} /> <span>{t.label}</span><small>{t.rows}</small></label>)}
+                </div>
+              </div>
+              <div className="bk-actions">
+                <button className="bk-btn" disabled={!!busy || !canRestore || !selTables.length} onClick={() => runRestore('dry')}><Icon name="search" size={16} /> فحص بلا تغيير</button>
+                <input className="bk-confirm" placeholder="اكتب: استعادة" value={confirmWord} onChange={e => setConfirmWord(e.target.value)} disabled={!checked} />
+                <button className="bk-btn primary" disabled={!!busy || !canRestore || !checked || confirmWord.trim() !== 'استعادة'} onClick={() => { if (window.confirm(`تنفيذ الاستعادة؟\nالاستراتيجية: ${strategyLabel(strategy)}`)) runRestore(strategy); }}><Icon name="play" size={16} /> تنفيذ الاستعادة</button>
+              </div>
+              {busy && <div className="bk-busy"><Icon name="refresh" size={14} /> {busy} {progress && <small>— {progress}</small>}</div>}
+              {results.length > 0 && (
+                <div className="bk-tablewrap"><table className="bk-table">
+                  <thead><tr><th>الجدول</th><th>في النسخة</th><th>موجود مسبقًا</th><th>أُضيف</th><th>حُدّث</th><th>تُرك</th><th>فشل</th></tr></thead>
+                  <tbody>{results.map(r => <tr key={r.table} className={r.failed ? 'bad' : ''}><td>{r.label}<br /><small className="bk-small" dir="ltr">{r.table}</small></td><td>{r.total}</td><td>{r.existing}</td><td>{r.inserted}</td><td>{r.updated}</td><td>{r.skipped}</td><td>{r.failed}{r.error && <div className="bk-err">{r.error}</div>}</td></tr>)}</tbody>
+                </table></div>
+              )}
+            </>
+          )}
+          <div className="bk-how">
+            <b>كيف تعمل الاستعادة؟</b>
+            <ul>
+              <li>تُرسَل الصفوف على دفعات (400 صف) إلى الخادم الذي يكتبها بصلاحيات الخدمة بترتيب الاعتماديات (البرامج → القاعات → القوالب → التقييمات → الإجابات …).</li>
+              <li><b>إضافة الناقص</b>: الصفوف التي لها نفس المعرّف في قاعدة البيانات لا تُمس. <b>استبدال المطابق</b>: تُحدَّث بقيم النسخة.</li>
+              <li>لا تُحذف أي بيانات أبدًا. كل تغيير يمرّ عبر محفّزات التدقيق ويُسجَّل ملخّص العملية في سجل التدقيق.</li>
+              <li>الاستعادة على مشروع Supabase مختلف تتطلب تنفيذ ملفات SQL للمنصة أولًا (الجداول نفسها).</li>
+            </ul>
+          </div>
+        </section>
+      )}
+
       {tab === 'log' && (
         <section className="bk-card">
           <div className="bk-card-head"><h2><Icon name="clock" size={18} /> سجل النسخ الاحتياطي</h2><span>آخر 30 عملية</span></div>
@@ -284,7 +387,14 @@ const CSS = `
 .bk-link{font-size:11.5px;font-weight:900;color:${TEAL};text-decoration:none;border:1px solid #99f6e4;border-radius:7px;padding:4px 8px;background:#f0fdfa;white-space:nowrap}
 .bk-empty{text-align:center;padding:18px 10px;color:#64748b;font-size:12.5px;border:1px dashed #e2e8f0;border-radius:12px}
 .bk-tablewrap{overflow-x:auto}.bk-table{width:100%;border-collapse:collapse;font-size:12.5px}.bk-table th{text-align:right;background:#f8fafc;color:#475569;font-weight:800;padding:8px 10px;border-bottom:1px solid #e2e8f0;white-space:nowrap}.bk-table td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}.bk-small{font-size:11.5px;color:#64748b}
+.bk-strats{display:flex;flex-direction:column;gap:6px}.bk-radio{display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:700;color:#334155;cursor:pointer}
+.bk-form input[type=file]{font:inherit;font-size:12.5px;padding:7px;border:1px dashed #cbd5e1;border-radius:10px;background:#f8fafc;max-width:100%}
+.bk-manifest{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin:10px 0;font-size:12.5px}.bk-manifest b{display:block;direction:ltr;text-align:right;color:${NAVY}}.bk-manifest span{color:#475569}.bk-warns{margin:6px 0 0;padding-inline-start:18px;color:#9a3412;font-size:12px}
+.bk-tsel{margin:10px 0}.bk-tsel-head{display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px}.bk-tsel-head .bk-link{border:0;background:transparent;cursor:pointer;font:inherit;font-size:12px;font-weight:900;color:${TEAL}}.bk-tsel-head .bk-link.muted{color:#64748b}
+.bk-tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.bk-tcheck{display:flex;gap:8px;align-items:center;border:1px solid #e2e8f0;border-radius:10px;padding:7px 10px;font-size:12.5px;cursor:pointer;background:#fff}.bk-tcheck.on{border-color:${TEAL};background:#f0fdfa}.bk-tcheck span{flex:1}.bk-tcheck small{color:#64748b;font-weight:800}
+.bk-confirm{font:inherit;font-size:13px;padding:9px 11px;border:1px solid #cbd5e1;border-radius:10px;width:160px}.bk-confirm:disabled{background:#f1f5f9}
+.bk-table tr.bad td{background:#fef2f2}.bk-err{font-size:11.5px;color:#b91c1c;font-weight:700;margin-top:3px}
 .bk-fmt{font-size:11px;font-weight:900;border-radius:6px;padding:2px 7px;background:#dcfce7;color:#166534}.bk-fmt.json{background:#dbeafe;color:#1e40af}
-@media(max-width:1100px){.bk-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:900px){.bk{padding:12px}.bk-kpis{grid-template-columns:repeat(2,1fr)}.bk-two{grid-template-columns:1fr}.bk-grid{grid-template-columns:repeat(2,1fr)}.bk-form label{min-width:100%}}
+@media(max-width:1100px){.bk-grid{grid-template-columns:repeat(3,1fr)}.bk-tgrid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.bk{padding:12px}.bk-kpis{grid-template-columns:repeat(2,1fr)}.bk-two{grid-template-columns:1fr}.bk-grid{grid-template-columns:repeat(2,1fr)}.bk-form label{min-width:100%}.bk-tgrid{grid-template-columns:repeat(2,1fr)}}
 `;
