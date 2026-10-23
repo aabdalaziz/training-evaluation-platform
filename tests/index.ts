@@ -20,3 +20,4 @@ import './access.test';
 import './templates.test';
 import './readiness.test';
 import './backup.test';
+import './portal.test';
