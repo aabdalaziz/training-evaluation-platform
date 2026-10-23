@@ -10,7 +10,7 @@ import { factsFrom } from './exec-summary';
 import type { SummaryFacts } from './exec-summary';
 import { readKey, resolveModel, callWithFallback } from './provider';
 
-export async function loadSummaryFacts(db: SupabaseClient, opts: { programId?: string; days?: number }): Promise<SummaryFacts> {
+export async function loadSummaryFacts(db: SupabaseClient, opts: { programId?: string; days?: number; allowedPrograms?: string[] | null }): Promise<SummaryFacts> {
   const days = Math.max(1, Math.min(365, Number(opts.days) || 30));
   const [ev, an, qs, cl, tr, pg, nt, ia, ir, fu, bq, br, ss, ar, ok, om] = await Promise.all([
     db.from('evaluations').select('*').limit(20000), db.from('evaluation_answers').select('*').limit(200000), db.from('questions').select('*'),
@@ -21,8 +21,12 @@ export async function loadSummaryFacts(db: SupabaseClient, opts: { programId?: s
     db.from('attendance_sessions').select('id,program_id'), db.from('attendance_records').select('session_id,full_name,email,phone,identity_key,status').limit(50000),
     db.from('outcome_kpis').select('*'), db.from('outcome_measurements').select('*').limit(20000),
   ]);
-  const lk: Lookups = { classrooms: (cl.data || []) as any[], trainers: (tr.data || []) as any[], programs: (pg.data || []) as any[], questions: (qs.data || []) as any[] };
-  const all = buildEvaluations((ev.data || []) as any[], (an.data || []) as any[], lk);
+  // نطاق مدير البرنامج (J3): قصر البرامج والتقييمات على المسموح
+  const allowed = opts.allowedPrograms ? new Set(opts.allowedPrograms) : null;
+  const programsAll = ((pg.data || []) as any[]).filter(p => !allowed || allowed.has(p.id));
+  const evRows = ((ev.data || []) as any[]).filter(e => !allowed || allowed.has(e.program_id));
+  const lk: Lookups = { classrooms: ((cl.data || []) as any[]).filter(c => !allowed || allowed.has(c.program_id)), trainers: (tr.data || []) as any[], programs: programsAll, questions: (qs.data || []) as any[] };
+  const all = buildEvaluations(evRows, (an.data || []) as any[], lk);
   const facts = buildFacts((an.data || []) as any[], (qs.data || []) as any[]);
   const today = riyadhDate(new Date().toISOString());
   const f: Filters = { programId: opts.programId || undefined, kind: 'ALL', from: addDays(today, -(days - 1)), to: today };
@@ -35,7 +39,7 @@ export async function loadSummaryFacts(db: SupabaseClient, opts: { programId?: s
   const actions = evals.length ? riskRegister(evals, facts, lk, 'ar') : [];
   let chain_index: number | null = null;
   try {
-    const rows = buildChain({ programs: lk.programs.filter((p: any) => !opts.programId || p.id === opts.programId) as any, evaluations: (ev.data || []) as any[], answers: (an.data || []) as any[], assessments: (ia.data || []) as any[], impactResponses: (ir.data || []) as any[], followups: (fu.data || []) as any[], questions: (bq.data || []) as any[], behaviorResponses: (br.data || []) as any[], sessions: (ss.data || []) as any[], records: (ar.data || []) as any[], kpis: (ok.data || []) as any[], measurements: (om.data || []) as any[] });
+    const rows = buildChain({ programs: lk.programs.filter((p: any) => !opts.programId || p.id === opts.programId) as any, evaluations: evRows, answers: (an.data || []) as any[], assessments: (ia.data || []) as any[], impactResponses: (ir.data || []) as any[], followups: (fu.data || []) as any[], questions: (bq.data || []) as any[], behaviorResponses: (br.data || []) as any[], sessions: (ss.data || []) as any[], records: (ar.data || []) as any[], kpis: (ok.data || []) as any[], measurements: (om.data || []) as any[] });
     chain_index = portfolioSummary(rows.filter(r => r.s.levels > 0)).index.mean;
   } catch { /* optional */ }
   const programName = opts.programId ? (lk.programs.find((p: any) => p.id === opts.programId) as any)?.name_ar : null;
