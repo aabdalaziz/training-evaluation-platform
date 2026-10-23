@@ -17,6 +17,7 @@ import { buildReportEmailHtml, mailSubject } from '../../../../lib/email/report-
 import { sendViaResend } from '../../../../lib/email/resend';
 import { generateExecSummary, summaryHtml, factsFrom } from '../../../../lib/ai/exec-summary';
 import { aiCaller } from '../../../../lib/ai/summary-data';
+import { cronHeartbeat } from '../../../../lib/health/collect';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,7 +46,7 @@ export async function GET(req: Request) {
 
   const { data: subs, error: sErr } = await db.from('report_subscriptions').select('*').eq('active', true);
   if (sErr) return NextResponse.json({ success: false, error: sErr.message }, { status: 500 });
-  if (!subs?.length) return NextResponse.json({ success: true, sent: 0, auditCleanup, message: 'لا توجد اشتراكات نشطة' });
+  if (!subs?.length) { if (!dryRun) await cronHeartbeat(db, 'digest', { groups: 0, sent: 0, auditCleanup }); return NextResponse.json({ success: true, sent: 0, auditCleanup, message: 'لا توجد اشتراكات نشطة' }); }
 
   // تحميل البيانات مرة واحدة
   const [ev, an, qs, cl, tr, pg] = await Promise.all([
@@ -109,5 +110,6 @@ export async function GET(req: Request) {
       results.push({ report: g.report_id, to: g.emails.length, ok: false, error: e?.message });
     }
   }
+  if (!dryRun) await cronHeartbeat(db, 'digest', { groups: results.length, sent: results.filter(r => r.ok).reduce((s, r) => s + r.to, 0), auditCleanup });
   return NextResponse.json({ success: true, dryRun, auditCleanup, groups: results.length, sent: results.filter(r => r.ok).reduce((s, r) => s + r.to, 0), results });
 }
