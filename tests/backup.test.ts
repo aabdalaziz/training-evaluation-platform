@@ -119,3 +119,47 @@ test('health: backup check — absent before SQL, ok ≤30d, warn >30d raises be
   const never = evaluateHealth(rawHealth({ last: null, rows: null })).find(c => c.id === 'data:backup')!; assert.equal(never.status, 'warn'); assert.equal(never.detail, 'لم تُؤخذ نسخة بعد');
   assert.ok(!healthAlerts(ok ? evaluateHealth(rawHealth({ last: '2026-10-10T00:00:00Z', rows: 1 })) : []).some(a => a.dedupe_key === 'health:data:backup'));
 });
+
+import { parseBackup, restorePlan, chunk, conflictKey, rowKey, summarize, emptyResult } from '../lib/backup/restore';
+
+test('restore: parseBackup validates structure, orders by catalog, warns on unknown tables/rows', () => {
+  assert.throws(() => parseBackup('nope'), /JSON/);
+  assert.throws(() => parseBackup('[1,2]'), /بنية/);
+  const d = data(); const m = manifest(d, 'all', 'كل البيانات', NOW);
+  const text = jsonPayload({ ...d, mystery: [{ id: 1 }], evaluations: [...d.evaluations, { program_id: 'p1' }] } as any, m);
+  const pb = parseBackup(text);
+  assert.equal(pb.manifest?.scope, 'all');
+  assert.ok(pb.warnings.some(w => w.includes('mystery')));
+  assert.ok(pb.warnings.some(w => w.includes('التقييمات') && w.includes('1 صفًا بلا مفتاح')));
+  const order = pb.tables.map(t => t.table);
+  assert.ok(order.indexOf('programs') < order.indexOf('classrooms') && order.indexOf('evaluations') < order.indexOf('evaluation_answers'));
+  // بنية {table: rows} مباشرة
+  const pb2 = parseBackup(JSON.stringify({ programs: [{ id: 'x', name_ar: 'y' }] })); assert.equal(pb2.manifest, null); assert.equal(pb2.tables.length, 1);
+  assert.throws(() => parseBackup(JSON.stringify({ unknown: [] })), /أي جدول معروف/);
+});
+
+test('restore: plan keeps only selected tables with keyed rows; chunking; conflict keys', () => {
+  const d = data(); const pb = parseBackup(jsonPayload(d, manifest(d, 'all', 'x', NOW)));
+  const plan = restorePlan(pb, ['evaluation_answers', 'programs', 'certificates']);
+  assert.deepEqual(plan.map(p => p.table), ['programs', 'evaluation_answers']);
+  assert.equal(plan[1].rows.length, 3);
+  assert.equal(chunk([1, 2, 3, 4, 5], 2).length, 3); assert.equal(chunk([], 2).length, 0);
+  assert.equal(conflictKey('programs'), 'id'); assert.equal(conflictKey('program_evaluation_templates'), 'program_id,template_id'); assert.equal(conflictKey('certificate_settings'), 'organization_id');
+  assert.equal(rowKey({ program_id: 'p1', template_id: 't1' }, 'program_id,template_id'), 'p1|t1');
+  const pet = restorePlan(parseBackup(JSON.stringify({ program_evaluation_templates: [{ program_id: 'p', template_id: 't' }, { program_id: 'p' }] })), ['program_evaluation_templates']);
+  assert.equal(pet[0].rows.length, 1, 'rows missing part of composite key are dropped');
+});
+
+test('restore: summarize totals', () => {
+  const a = emptyResult('programs', 'البرامج', 5); a.inserted = 3; a.skipped = 2; a.existing = 2;
+  const b = emptyResult('questions', 'الأسئلة', 10); b.updated = 10; b.existing = 10; b.failed = 0;
+  assert.deepEqual(summarize([a, b]), { tables: 2, total: 15, inserted: 3, updated: 10, skipped: 2, failed: 0 });
+});
+
+test('backup: extended catalog scopes impact/behavior children by assessment/followup', () => {
+  const d = { ...data(), impact_assessments: [{ id: 'ia1', program_id: 'p1' }, { id: 'ia2', program_id: 'p2' }], impact_questions: [{ id: 'iq1', assessment_id: 'ia1' }, { id: 'iq2', assessment_id: 'ia2' }],
+    behavior_followups: [{ id: 'bf1', program_id: 'p2' }], behavior_responses: [{ id: 'br1', followup_id: 'bf1' }], report_subscriptions: [{ id: 'rs1' }], certificate_settings: [{ organization_id: 'o' }] } as Dataset;
+  const s1 = scopeToProgram(d, 'p1'); assert.deepEqual(s1.impact_questions.map(r => r.id), ['iq1']); assert.equal(s1.behavior_responses.length, 0); assert.equal(s1.report_subscriptions.length, 0);
+  const s2 = scopeToProgram(d, 'p2'); assert.deepEqual(s2.behavior_responses.map(r => r.id), ['br1']);
+  assert.ok(CATALOG.length >= 27); assert.equal(counts(d).certificate_settings, 1);
+});
