@@ -65,4 +65,4 @@ bdi,.ltr{direction:ltr;unicode-bidi:plaintext}
 @media(max-width:1480px){.global-link{padding:8px 7px;font-size:12px;gap:4px}.global-links .global-btn{padding:7px 9px;font-size:12px;margin-inline-start:4px}.global-nav.admin{gap:8px}}
 @media(max-width:1280px){.global-burger{display:block}.global-links{display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px;flex-direction:column;align-items:stretch;box-shadow:var(--shadow)}.global-links.open{display:flex}.global-nav{position:sticky}}
 /* إصلاح الخط: ضمان استخدام Tajawal المحمّل عبر next/font في كل الصفحات */
-.aa,.at,.aw,.ct,.dl,.ev,.ia,.im,.ir,.mg,.rr,.rs-center,.rs-wrap,.st,.vf,.bf,.fu,.tr,.me,.nt,.oc,.ch,.pr,.co,.au,.he,.ac,.tp,.rd,.hp{font-family:var(--font-ar),Tajawal,Arial,sans-serif!important}
+.aa,.at,.aw,.ct,.dl,.ev,.ia,.im,.ir,.mg,.rr,.rs-center,.rs-wrap,.st,.vf,.bf,.fu,.tr,.me,.nt,.oc,.ch,.pr,.co,.au,.he,.ac,.tp,.rd,.hp,.bk{font-family:var(--font-ar),Tajawal,Arial,sans-serif!important}
