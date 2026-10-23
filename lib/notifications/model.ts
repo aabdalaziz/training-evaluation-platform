@@ -4,7 +4,7 @@
 export type Severity = 'info' | 'warn' | 'critical';
 export type NotificationKind =
   | 'followup_missing' | 'followup_silent' | 'followup_manual_due' | 'session_unclosed'
-  | 'certificates_missing' | 'impact_post_pending' | 'low_transfer' | 'program_overdue' | 'manual';
+  | 'certificates_missing' | 'impact_post_pending' | 'low_transfer' | 'program_overdue' | 'system_health' | 'manual';
 
 export type Notification = {
   id: string; organization_id?: string | null; kind: NotificationKind | string; severity: Severity;
@@ -23,6 +23,7 @@ export const KIND_LABEL: Record<string, { ar: string; icon: string }> = {
   impact_post_pending:  { ar: 'قياس الأثر', icon: 'target' },
   low_transfer:         { ar: 'نقل الأثر', icon: 'alert' },
   program_overdue:      { ar: 'البرامج', icon: 'programs' },
+  system_health:        { ar: 'صحة المنصة', icon: 'shield' },
   manual:               { ar: 'عام', icon: 'bell' },
 };
 export const SEVERITY_LABEL: Record<Severity, string> = { info: 'معلومة', warn: 'تنبيه', critical: 'حرج' };
