@@ -33,7 +33,7 @@ function Inner() {
     const [{ data: i, error }, { data: s }] = await Promise.all([db.from('portal_invoices').select('*').eq('id', id).maybeSingle(), db.from('portal_payment_settings').select('*').eq('id', 1).maybeSingle()]);
     if (error) setErr(error.message);
     setInv((i as Invoice) || null); setSettings((s as PaymentSettings) || null);
-    if ((i as Invoice)?.program_id) { const { data: p } = await db.from('programs').select('name_ar,name_en').eq('id', (i as Invoice).program_id).maybeSingle(); setProgramName(String((lang === 'en' && (p as any)?.name_en) || (p as any)?.name_ar || '')); }
+    if ((i as Invoice)?.program_id) { const { data: p } = await db.from('programs').select('name_ar,name_en').eq('id', (i as Invoice).program_id).maybeSingle(); setProgramName(String((lang === 'en' && (p as any)?.name_en) || (p as any)?.name_ar || '')); } else setProgramName(String((i as Invoice)?.description || ''));
     setLoaded(true);
   }
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [id]);
@@ -119,7 +119,7 @@ function Inner() {
           <div className="pt-box pt-invoice">
             <div className="pt-invtop"><span className={`pt-invstatus ${inv.status}`}>{invStatusLabel(inv.status, lang)}</span><button type="button" className="pt-btn ghost small" onClick={downloadPdf} disabled={busy || !settings}><Icon name="download" size={14} /> PDF</button></div>
             <table className="pt-invtable"><tbody>
-              <tr><td>{lang === 'ar' ? 'البيان' : 'Description'}</td><td>{lang === 'en' ? `Registration fee: ${programName}` : inv.description}</td></tr>
+              <tr><td>{lang === 'ar' ? 'البيان' : 'Description'}</td><td>{lang === 'en' && inv.program_id ? `Registration fee: ${programName}` : inv.description}</td></tr>
               <tr><td>{lang === 'ar' ? 'المجموع قبل الضريبة' : 'Subtotal'}</td><td><bdi>{money(inv.subtotal, inv.currency, lang)}</bdi></td></tr>
               <tr><td>{lang === 'ar' ? `ضريبة القيمة المضافة (${Number(inv.vat_rate)}%)` : `VAT (${Number(inv.vat_rate)}%)`}</td><td><bdi>{money(inv.vat_amount, inv.currency, lang)}</bdi></td></tr>
               <tr className="tot"><td>{lang === 'ar' ? 'الإجمالي المستحق' : 'Total due'}</td><td><bdi>{money(inv.total, inv.currency, lang)}</bdi></td></tr>
