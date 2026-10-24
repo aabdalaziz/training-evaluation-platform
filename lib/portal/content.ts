@@ -107,14 +107,14 @@ export const SERVICES: Service[] = [
     cta: { label: { ar: 'تصفّح الدبلومات', en: 'Browse diplomas' }, href: '/programs?type=diploma' },
   },
   {
-    slug: 'consulting', icon: 'compass', tone: 'info', status: 'soon', phase: 'P4',
+    slug: 'consulting', icon: 'compass', tone: 'info', status: 'live',
     title: { ar: 'الاستشارات', en: 'Consulting' },
     short: { ar: 'استشارات إدارية وأكاديمية وتعليمية، وجودة واعتماد المؤسسات.', en: 'Management, academic and educational consulting, plus institutional quality and accreditation.' },
     long: [
       { ar: 'نرافق المؤسسات من التشخيص إلى التحسين: هياكل وحوكمة، تصميم برامج ومناهج، تطوير أداء المعلمين، وبناء أنظمة الجودة والاستعداد للاعتماد.', en: 'We accompany institutions from diagnosis to improvement: structures and governance, program and curriculum design, teacher performance, quality systems and accreditation readiness.' },
     ],
     features: [{ ar: 'إدارية', en: 'Management' }, { ar: 'أكاديمية', en: 'Academic' }, { ar: 'تعليمية', en: 'Educational' }, { ar: 'جودة واعتماد', en: 'Quality & accreditation' }],
-    cta: { label: { ar: 'اطلب استشارة', en: 'Request a consultation' }, href: '/contact?service=consulting' },
+    cta: { label: { ar: 'اطلب استشارة', en: 'Request a consultation' }, href: '/consulting' },
   },
   {
     slug: 'resources', icon: 'folder', tone: 'ok', status: 'soon', phase: 'P5',
@@ -168,6 +168,7 @@ export const NAV: { href: string; label: T }[] = [
   { href: '/', label: { ar: 'الرئيسية', en: 'Home' } },
   { href: '/services', label: { ar: 'الخدمات', en: 'Services' } },
   { href: '/programs', label: { ar: 'البرامج', en: 'Programs' } },
+  { href: '/consulting', label: { ar: 'الاستشارات', en: 'Consulting' } },
   { href: '/about', label: { ar: 'من نحن', en: 'About' } },
   { href: '/contact', label: { ar: 'تواصل', en: 'Contact' } },
 ];
