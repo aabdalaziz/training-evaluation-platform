@@ -93,7 +93,7 @@ export const SERVICES: Service[] = [
     ],
     features: [{ ar: 'تحليل احتياج قبل التصميم', en: 'Needs analysis first' }, { ar: 'قياس قبلي/بعدي', en: 'Pre/post measurement' }, { ar: 'متابعة نقل الأثر', en: 'Transfer follow-up' }, { ar: 'تقرير أثر للجهة', en: 'Impact report for the client' }],
     modes: [{ ar: 'حضوري', en: 'On-site' }, { ar: 'عن بُعد', en: 'Online' }],
-    cta: { label: { ar: 'تصفّح البرامج', en: 'Browse programs' }, href: '/#programs' },
+    cta: { label: { ar: 'تصفّح البرامج', en: 'Browse programs' }, href: '/programs' },
   },
   {
     slug: 'diplomas', icon: 'school', tone: 'gold', status: 'live',
@@ -104,7 +104,7 @@ export const SERVICES: Service[] = [
     ],
     features: [{ ar: 'مستويات متتابعة', en: 'Sequential levels' }, { ar: 'شراكة أكاديمية', en: 'Academic partnership' }, { ar: 'تقويم مستمر', en: 'Continuous evaluation' }, { ar: 'شهادة معتمدة', en: 'Accredited certificate' }],
     modes: [{ ar: 'حضوري', en: 'On-site' }, { ar: 'عن بُعد', en: 'Online' }],
-    cta: { label: { ar: 'اطلب تفاصيل الدبلومات', en: 'Request diploma details' }, href: '/contact?service=diplomas' },
+    cta: { label: { ar: 'تصفّح الدبلومات', en: 'Browse diplomas' }, href: '/programs?type=diploma' },
   },
   {
     slug: 'consulting', icon: 'compass', tone: 'info', status: 'soon', phase: 'P4',
@@ -167,7 +167,7 @@ export const CROSS = [
 export const NAV: { href: string; label: T }[] = [
   { href: '/', label: { ar: 'الرئيسية', en: 'Home' } },
   { href: '/services', label: { ar: 'الخدمات', en: 'Services' } },
-  { href: '/#programs', label: { ar: 'البرامج', en: 'Programs' } },
+  { href: '/programs', label: { ar: 'البرامج', en: 'Programs' } },
   { href: '/about', label: { ar: 'من نحن', en: 'About' } },
   { href: '/contact', label: { ar: 'تواصل', en: 'Contact' } },
 ];
@@ -197,7 +197,8 @@ export const UI = {
   ends: { ar: 'ينتهي', en: 'Ends' } as T,
   ongoing: { ar: 'جارٍ الآن', en: 'Ongoing' } as T,
   upcoming: { ar: 'قادم', en: 'Upcoming' } as T,
-  register: { ar: 'سجّل اهتمامك', en: 'Register interest' } as T,
+  register: { ar: 'التفاصيل والتسجيل', en: 'Details & registration' } as T,
+  allPrograms: { ar: 'كل البرامج', en: 'All programs' } as T,
   vision: { ar: 'رؤيتنا', en: 'Our vision' } as T,
   mission: { ar: 'رسالتنا', en: 'Our mission' } as T,
   values: { ar: 'قيمنا', en: 'Our values' } as T,
