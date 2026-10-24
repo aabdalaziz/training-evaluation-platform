@@ -2,11 +2,11 @@
 
 // صندوق رسائل البوابة (أَثَر) — قراءة ومعالجة رسائل «تواصل معنا»
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { CONTACT_SUBJECTS, t } from '../../../lib/portal/content';
+import PortalAdminTabs from '../../components/PortalAdminTabs';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 type Msg = { id: string; created_at: string; name: string; email: string; phone: string | null; organization: string | null; subject: string; message: string; lang: string; page: string | null; status: string; handled_at: string | null; notes: string | null };
@@ -55,8 +55,8 @@ export default function InboxPage() {
       <div className="ib-wrap">
         <header className="ib-head">
           <div><span className="ib-kicker"><Icon name="inbox" size={14} /> بوابة أَثَر</span><h1>صندوق رسائل التواصل</h1><p>رسائل الزوار من صفحة «تواصل معنا» — عالجها ثم علّمها كمُنجزة.</p></div>
-          <div className="ib-acts"><Link href="/" className="ib-btn ghost" target="_blank"><Icon name="globe" size={15} /> فتح البوابة</Link><Link href="/dashboard" className="ib-btn ghost"><Icon name="dashboard" size={15} /> لوحة القيادة</Link></div>
         </header>
+        <PortalAdminTabs counts={{ '/admin/inbox': counts.new }} />
         {error && <div className="ib-err">{error}</div>}
         <div className="ib-tabs">
           {([['new', `جديدة (${counts.new})`], ['handled', `منجزة (${counts.handled})`], ['spam', `مزعجة (${counts.spam})`], ['all', 'الكل']] as [Filter, string][]).map(([k, l]) => <button key={k} type="button" className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}</button>)}
