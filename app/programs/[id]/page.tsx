@@ -20,7 +20,7 @@ function Inner() {
   const { lang } = useLang(); const params = useParams<{ id: string }>(); const sp = useSearchParams(); const id = String(params?.id || '');
   const db = useMemo(() => supabase(), []);
   const [p, setP] = useState<CatalogProgram | null>(null); const [counts, setCounts] = useState<Counts | null>(null); const [loaded, setLoaded] = useState(false);
-  const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [mine, setMine] = useState<Enrollment | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [mine, setMine] = useState<Enrollment | null>(null); const [inv, setInv] = useState<{ id: string; invoice_no: string; status: string; total: number; currency: string } | null>(null);
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false);
   const [f, setF] = useState<EnrollForm>({ full_name: '', email: '', phone: '', organization: '', city: '', notes: '' });
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
@@ -35,6 +35,7 @@ function Inner() {
           setUser({ id: u.id, email: u.email || '' }); setF(x => ({ ...x, email: u.email || '', full_name: String(u.user_metadata?.full_name || '') }));
           const { data: e } = await db.from('portal_enrollments').select('*').eq('program_id', id).eq('user_id', u.id).maybeSingle();
           setMine((e as Enrollment) || null);
+          if (e && (e as Enrollment).status === 'approved') { const { data: i } = await db.from('portal_invoices').select('id,invoice_no,status,total,currency').eq('enrollment_id', (e as Enrollment).id).neq('status', 'cancelled').maybeSingle(); setInv((i as any) || null); }
           try { localStorage.removeItem(RESUME_KEY); } catch { /* ignore */ }
         }
       } catch { /* يبقى فارغًا */ }
@@ -111,6 +112,8 @@ function Inner() {
               {ok && <div className="pt-alert ok" style={{ marginTop: 10 }}>{ok}</div>}
               {mine.decision_note && <p className="pt-note">{mine.decision_note}</p>}
               {mine.status === 'pending' && !ok && <p className="pt-muted">{lang === 'ar' ? 'طلبك قيد المراجعة — ستصلك النتيجة بالبريد.' : 'Your application is under review — the decision will arrive by email.'}</p>}
+              {mine.status === 'approved' && inv && inv.status !== 'paid' && inv.status !== 'waived' && <div className="pt-paybox"><b>{lang === 'ar' ? `فاتورة ${inv.invoice_no}` : `Invoice ${inv.invoice_no}`}</b><span><bdi>{new Intl.NumberFormat(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en', { style: 'currency', currency: inv.currency || 'SAR', maximumFractionDigits: 2 }).format(Number(inv.total))}</bdi> · {inv.status === 'under_review' ? (lang === 'ar' ? 'الإيصال قيد المراجعة' : 'receipt under review') : (lang === 'ar' ? 'بانتظار السداد' : 'awaiting payment')}</span><Link href={`/pay/${inv.id}`} className="pt-btn small"><Icon name="shield" size={14} /> {lang === 'ar' ? 'ادفع الآن' : 'Pay now'}</Link></div>}
+              {mine.status === 'approved' && inv && (inv.status === 'paid' || inv.status === 'waived') && <p className="pt-muted">{lang === 'ar' ? `✓ السداد مؤكّد (${inv.invoice_no}) — ` : `✓ Payment confirmed (${inv.invoice_no}) — `}<Link href={`/pay/${inv.id}`}>{lang === 'ar' ? 'عرض الفاتورة' : 'View invoice'}</Link></p>}
               {mine.status === 'approved' && <p className="pt-muted">{lang === 'ar' ? 'مبروك! تابع بريدك لتفاصيل الالتحاق، وستجد البرنامج في بوابة المتدرب عند بدئه.' : 'Congratulations! Watch your inbox for enrolment details; the program will appear in your student portal once it starts.'}</p>}
               {['pending', 'waitlisted'].includes(mine.status) && <button type="button" className="pt-btn ghost small" disabled={busy} onClick={cancel}><Icon name="x" size={14} /> {lang === 'ar' ? 'إلغاء الطلب' : 'Cancel application'}</button>}
               <div style={{ marginTop: 12 }}><Link href="/me" className="pt-more">{t(UI.student, lang)} <Icon name="arrow" size={13} /></Link></div>
@@ -152,7 +155,7 @@ function Inner() {
 const CSS = `
 .pt-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.pt-facts>div{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 14px;color:#0b8a83}.pt-facts span{display:flex;flex-direction:column;color:#0f172a}.pt-facts small{font-size:11.5px;color:#64748b;font-weight:800}.pt-facts b{font-size:14px}
 .pt-sticky{position:sticky;top:84px}
-.pt-status{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;background:#f1f5f9;color:#334155}.pt-status.approved{background:#ecfdf5;color:#065f46}.pt-status.pending{background:#eff6ff;color:#1e40af}.pt-status.waitlisted{background:#fff7ed;color:#9a3412}.pt-status.rejected,.pt-status.cancelled{background:#f1f5f9;color:#475569}.pt-status b{font-size:16px}.pt-status small{font-size:12px;opacity:.85}
+.pt-status{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;background:#f1f5f9;color:#334155}.pt-status.approved{background:#ecfdf5;color:#065f46}.pt-status.pending{background:#eff6ff;color:#1e40af}.pt-status.waitlisted{background:#fff7ed;color:#9a3412}.pt-status.rejected,.pt-status.cancelled{background:#f1f5f9;color:#475569}.pt-status b{font-size:16px}.pt-paybox{display:grid;gap:6px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f}.pt-paybox b{color:#0f2a4e;font-size:14px}.pt-paybox a{justify-self:start}.pt-status small{font-size:12px;opacity:.85}
 .pt-muted{color:#64748b;font-size:13.5px;line-height:1.8;margin:8px 0}.pt-note{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#334155;line-height:1.7}
 .pt-aside-foot{margin-top:14px;padding-top:12px;border-top:1px dashed #e2e8f0;font-size:12.5px;color:#64748b;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pt-aside-foot a{color:#0b8a83;font-weight:800}
 .pt-tag.off{background:#f1f5f9;color:#475569}
