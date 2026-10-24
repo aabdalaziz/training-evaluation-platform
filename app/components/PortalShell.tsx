@@ -3,7 +3,8 @@
 // غلاف البوابة العامة (أَثَر): رأس + تذييل + مبدّل اللغة + أنماط مشتركة ببادئة .pt
 import { createContext, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
 import { ACRONYM, BRAND, CONTACT, NAV, PARTNERS, SERVICES, UI, t } from '../../lib/portal/content';
 import type { Lang } from '../../lib/portal/content';
@@ -30,6 +31,15 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/';
   useEffect(() => { try { const s = localStorage.getItem('athar_lang'); if (s === 'en' || s === 'ar') setLangState(s); } catch { /* ignore */ } }, []);
   useEffect(() => { setOpen(false); }, [pathname]);
+  // استئناف التسجيل بعد العودة من رابط الدخول بالبريد (إن أعادنا Supabase إلى الصفحة الرئيسية)
+  const router = useRouter();
+  useEffect(() => {
+    try {
+      const resume = localStorage.getItem('athar_resume');
+      if (!resume || pathname.startsWith('/programs/')) return;
+      supabase().auth.getSession().then(({ data }) => { if (data.session) { localStorage.removeItem('athar_resume'); router.replace(resume); } });
+    } catch { /* ignore */ }
+  }, [pathname, router]);
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem('athar_lang', l); } catch { /* ignore */ } };
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
   const year = new Date().getFullYear();
