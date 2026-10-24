@@ -22,8 +22,8 @@ function Home() {
     (async () => {
       try {
         const db = supabase();
-        const { data } = await db.from('programs').select('id,name_ar,name_en,delivery_mode,status,start_date,end_date,audience_ar,intro_ar').order('start_date', { ascending: true }).limit(60);
-        setPrograms(publicPrograms(((data || []) as PublicProgram[]), new Date().toISOString().slice(0, 10)).slice(0, 6));
+        const { data } = await db.from('programs').select('id,name_ar,name_en,delivery_mode,status,start_date,end_date,audience_ar,intro_ar,archived_at,is_public').order('start_date', { ascending: true }).limit(60);
+        setPrograms(publicPrograms(((data || []) as (PublicProgram & { is_public?: boolean | null })[]).filter(p => p.is_public !== false), new Date().toISOString().slice(0, 10)).slice(0, 6));
       } catch { /* تبقى القائمة فارغة */ }
       setLoaded(true);
     })();
@@ -81,10 +81,11 @@ function Home() {
                 <h3>{programName(p, lang)}</h3>
                 <p>{p.intro_ar || p.audience_ar || ''}</p>
                 <div className="pt-dates"><span><Icon name="calendar" size={13} /> {t(UI.starts, lang)} <bdi>{fmtDate(p.start_date, lang)}</bdi></span>{p.end_date && <span>{t(UI.ends, lang)} <bdi>{fmtDate(p.end_date, lang)}</bdi></span>}</div>
-                <Link href={`/contact?service=training&program=${encodeURIComponent(p.name_ar)}`} className="pt-btn ghost small"><Icon name="send" size={14} /> {t(UI.register, lang)}</Link>
+                <Link href={`/programs/${p.id}`} className="pt-btn ghost small"><Icon name="arrow" size={14} /> {t(UI.register, lang)}</Link>
               </article>
             ))}
           </div>
+          <div style={{ textAlign: 'center', marginTop: 22 }}><Link href="/programs" className="pt-btn navy"><Icon name="calendar" size={16} /> {t(UI.allPrograms, lang)}</Link></div>
         </div>
       </section>
 
@@ -126,7 +127,7 @@ function Home() {
             <p>{t(UI.ctaSub, lang)}</p>
             <div className="pt-heroacts">
               <a href={BRAND.placementUrl} target="_blank" rel="noreferrer" className="pt-btn light"><Icon name="target" size={16} /> {lang === 'ar' ? 'اختبار مِعيار' : 'Miaar test'}</a>
-              <Link href="/#programs" className="pt-btn outline"><Icon name="calendar" size={16} /> {t(UI.programs, lang)}</Link>
+              <Link href="/programs" className="pt-btn outline"><Icon name="calendar" size={16} /> {t(UI.programs, lang)}</Link>
               <Link href="/contact" className="pt-btn outline"><Icon name="chat" size={16} /> {t(UI.contactUs, lang)}</Link>
             </div>
           </div>
