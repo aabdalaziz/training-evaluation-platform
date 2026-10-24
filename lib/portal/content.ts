@@ -159,7 +159,7 @@ export const SERVICES: Service[] = [
 ];
 
 export const CROSS = [
-  { icon: 'shield' as IconName, title: { ar: 'الدفع الآمن', en: 'Secure payment' }, desc: { ar: 'فواتير إلكترونية ودفع عبر مدى والبطاقات وApple Pay، أو تحويل بنكي موثّق — يُطلق في المرحلة P3.', en: 'E-invoices and payment via mada, cards and Apple Pay, or verified bank transfer — launching in phase P3.' } },
+  { icon: 'shield' as IconName, title: { ar: 'الدفع الآمن', en: 'Secure payment' }, desc: { ar: 'فاتورة إلكترونية فور قبولك، وسداد بتحويل بنكي موثّق بالإيصال أو عبر مدى والبطاقات وApple Pay.', en: 'An e-invoice the moment you are accepted; pay by verified bank transfer or via mada, cards and Apple Pay.' } },
   { icon: 'users' as IconName, title: { ar: 'حساب واحد لكل شيء', en: 'One account for everything' }, desc: { ar: 'برامجك وفواتيرك وشهاداتك ونتيجة مِعيار في مكان واحد.', en: 'Your programs, invoices, certificates and Miaar result in one place.' } },
   { icon: 'globe' as IconName, title: { ar: 'عربي / English', en: 'Arabic / English' }, desc: { ar: 'واجهة واستمارات ثنائية اللغة للمتعلمين الدوليين.', en: 'Bilingual interface and forms for international learners.' } },
 ];
