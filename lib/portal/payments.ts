@@ -82,7 +82,7 @@ export function invoiceEmail(inv: Invoice, programName: string, siteUrl: string)
   const lang: Lang = inv.lang === 'en' ? 'en' : 'ar'; const url = `${siteUrl}/pay/${inv.id}`;
   const subject = lang === 'ar' ? `فاتورة ${inv.invoice_no} — ${programName}` : `Invoice ${inv.invoice_no} — ${programName}`;
   const html = shell(lang, `<p style="margin:0 0 10px">${lang === 'ar' ? 'مرحبًا' : 'Dear'} ${esc(inv.customer_name)}،</p>
-    <p style="margin:0 0 10px">${lang === 'ar' ? `صدرت فاتورة رسوم التسجيل في <b>${esc(programName)}</b>.` : `Your registration invoice for <b>${esc(programName)}</b> has been issued.`}</p>
+    <p style="margin:0 0 10px">${inv.program_id ? (lang === 'ar' ? `صدرت فاتورة رسوم التسجيل في <b>${esc(programName)}</b>.` : `Your registration invoice for <b>${esc(programName)}</b> has been issued.`) : (lang === 'ar' ? `صدرت فاتورة <b>${esc(programName || inv.description)}</b>.` : `Your invoice for <b>${esc(programName || inv.description)}</b> has been issued.`)}</p>
     <table style="border-collapse:collapse;width:100%;font-size:14px"><tr><td style="padding:6px 0;color:#64748b">${lang === 'ar' ? 'رقم الفاتورة' : 'Invoice no.'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}"><b>${esc(inv.invoice_no)}</b></td></tr><tr><td style="padding:6px 0;color:#64748b">${lang === 'ar' ? 'الإجمالي شامل الضريبة' : 'Total incl. VAT'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}"><b>${money(inv.total, inv.currency, lang)}</b></td></tr>${inv.due_date ? `<tr><td style="padding:6px 0;color:#64748b">${lang === 'ar' ? 'آخر موعد للسداد' : 'Due date'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}">${inv.due_date}</td></tr>` : ''}</table>
     <p style="margin:14px 0 0"><a href="${url}" style="background:#0b8a83;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'عرض الفاتورة والدفع' : 'View invoice & pay'}</a></p>`);
   return { subject, html };
@@ -91,7 +91,7 @@ export function receiptEmail(inv: Invoice, programName: string, siteUrl: string)
   const lang: Lang = inv.lang === 'en' ? 'en' : 'ar';
   const subject = lang === 'ar' ? `تأكيد السداد — ${inv.invoice_no}` : `Payment confirmed — ${inv.invoice_no}`;
   const html = shell(lang, `<p style="margin:0 0 10px">${lang === 'ar' ? 'مرحبًا' : 'Dear'} ${esc(inv.customer_name)}،</p>
-    <p style="margin:0 0 10px">${lang === 'ar' ? `تم تأكيد سداد الفاتورة <b>${esc(inv.invoice_no)}</b> بمبلغ <b>${money(inv.total, inv.currency, lang)}</b> لبرنامج <b>${esc(programName)}</b>. شكرًا لك — مقعدك مؤكّد.` : `Payment of <b>${money(inv.total, inv.currency, lang)}</b> for invoice <b>${esc(inv.invoice_no)}</b> (<b>${esc(programName)}</b>) is confirmed. Thank you — your seat is secured.`}</p>
+    <p style="margin:0 0 10px">${lang === 'ar' ? `تم تأكيد سداد الفاتورة <b>${esc(inv.invoice_no)}</b> بمبلغ <b>${money(inv.total, inv.currency, lang)}</b> ${inv.program_id ? 'لبرنامج' : 'عن'} <b>${esc(programName || inv.description)}</b>. شكرًا لك${inv.program_id ? ' — مقعدك مؤكّد' : ' — سنباشر العمل وفق الاتفاق'}.` : `Payment of <b>${money(inv.total, inv.currency, lang)}</b> for invoice <b>${esc(inv.invoice_no)}</b> (<b>${esc(programName || inv.description)}</b>) is confirmed. Thank you${inv.program_id ? ' — your seat is secured' : ' — work will proceed as agreed'}.`}</p>
     <p style="margin:14px 0 0"><a href="${siteUrl}/pay/${inv.id}" style="background:#0f2a4e;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'تنزيل الفاتورة PDF' : 'Download invoice PDF'}</a></p>`);
   return { subject, html };
 }
@@ -135,7 +135,7 @@ export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void
   const heads = [rtl ? 'البيان' : 'Description', rtl ? 'الكمية' : 'Qty', rtl ? 'السعر' : 'Price', rtl ? 'المجموع' : 'Amount'];
   heads.forEach((h, i) => text(h, cols[i] + dir * 24, y + 43, 24, { color: '#fff', weight: '800', align: i === 0 ? (rtl ? 'right' : 'left') : (rtl ? 'right' : 'left') }));
   y += 64;
-  const desc = rtl ? `${inv.description}` : `Registration fee: ${d.programName}`;
+  const desc = rtl || !inv.program_id ? `${inv.description}` : `Registration fee: ${d.programName}`;
   text(desc, cols[0] + dir * 24, y + 56, 27, { weight: '700', max: 730 }); text('1', cols[1] + dir * 24, y + 56, 27); text(money(inv.subtotal, inv.currency, lang), cols[2] + dir * 24, y + 56, 27); text(money(inv.subtotal, inv.currency, lang), cols[3] + dir * 24, y + 56, 27, { weight: '800' });
   y += 90; ctx.fillStyle = '#e2e8f0'; ctx.fillRect(L, y, R - L, 2); y += 40;
   // totals
