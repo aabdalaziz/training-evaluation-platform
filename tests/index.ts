@@ -24,3 +24,4 @@ import './portal.test';
 import './catalog.test';
 import './payments.test';
 import './webhook.test';
+import './consulting.test';
