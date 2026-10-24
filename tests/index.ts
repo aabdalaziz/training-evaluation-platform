@@ -23,3 +23,4 @@ import './backup.test';
 import './portal.test';
 import './catalog.test';
 import './payments.test';
+import './webhook.test';
