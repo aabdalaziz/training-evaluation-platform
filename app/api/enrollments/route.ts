@@ -8,6 +8,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendViaResend } from '../../../lib/email/resend';
 import { decisionEmail } from '../../../lib/portal/catalog';
+import { money } from '../../../lib/portal/payments';
+import type { Invoice } from '../../../lib/portal/payments';
 import type { Enrollment, EnrollStatus } from '../../../lib/portal/catalog';
 
 export const runtime = 'nodejs';
@@ -61,11 +63,17 @@ export async function POST(req: Request) {
   if (body.action === 'decide') {
     if (!a.staff) return bad('غير مصرح — للموظفين فقط', 403);
     const status = String(body?.status || '') as EnrollStatus; if (!DECISIONS.includes(status)) return bad('حالة غير صالحة');
-    const note = body?.note ? String(body.note).slice(0, 1000) : null;
+    let note: string | null = body?.note ? String(body.note).slice(0, 1000) : null;
     const patch = status === 'pending' ? { status, decided_by: null, decided_at: null, decision_note: null } : { status, decided_by: a.user.id, decided_at: new Date().toISOString(), decision_note: note };
     const { error: uErr } = await a.db.from('portal_enrollments').update(patch).eq('id', id);
     if (uErr) return bad(uErr.message, 500);
-    let mail_error: string | null = null;
+    let mail_error: string | null = null; let invoice_id: string | null = null;
+    if (status === 'approved') {
+      // الفاتورة تُصدر تلقائيًا بمحفّز قاعدة البيانات عند القبول (إن كان للبرنامج رسوم)
+      const { data: inv } = await a.db.from('portal_invoices').select('*').eq('enrollment_id', id).neq('status', 'cancelled').maybeSingle();
+      if (inv) invoice_id = (inv as Invoice).id;
+      if (inv && (inv as Invoice).status !== 'paid') { const i = inv as Invoice; const lang = en.lang === 'en' ? 'en' : 'ar'; const pay = `${site}/pay/${i.id}`; note = `${note ? note + '\n' : ''}${lang === 'ar' ? `فاتورة رقم ${i.invoice_no} بمبلغ ${money(i.total, i.currency, 'ar')} — ادفع من هنا: ${pay}` : `Invoice ${i.invoice_no}, total ${money(i.total, i.currency, 'en')} — pay here: ${pay}`}`; }
+    }
     if (status !== 'pending' && body?.notify !== false) {
       try {
         const m = decisionEmail({ ...en, status }, programName, status, note, site);
@@ -73,7 +81,7 @@ export async function POST(req: Request) {
         await a.db.from('portal_enrollments').update({ notified_at: new Date().toISOString() }).eq('id', id);
       } catch (err: any) { mail_error = String(err?.message || err); }
     }
-    return NextResponse.json({ success: true, status, mail_error });
+    return NextResponse.json({ success: true, status, mail_error, invoice_id });
   }
   return bad('action غير معروف');
 }
