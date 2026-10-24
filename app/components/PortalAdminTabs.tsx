@@ -9,6 +9,7 @@ import type { IconName } from '../../lib/ui/icons';
 const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/enrollments', label: 'طلبات التسجيل', icon: 'users' },
   { href: '/admin/payments', label: 'المدفوعات', icon: 'shield' },
+  { href: '/admin/consulting', label: 'الاستشارات', icon: 'compass' },
   { href: '/admin/catalog', label: 'نشر البرامج', icon: 'globe' },
   { href: '/admin/inbox', label: 'رسائل التواصل', icon: 'inbox' },
 ];
