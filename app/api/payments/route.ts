@@ -35,7 +35,7 @@ async function who(req: Request) {
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
   return { user: u.user, role, staff: STAFF.includes(role), db: service ? createClient(URL_, service) : userClient, userDb: userClient };
 }
-async function programName(db: any, id: string | null | undefined) { if (!id) return ''; const { data } = await db.from('programs').select('name_ar').eq('id', id).maybeSingle(); return String((data as any)?.name_ar || ''); }
+async function programName(db: any, inv: { program_id?: string | null; description?: string | null }) { if (!inv.program_id) return String(inv.description || ''); const { data } = await db.from('programs').select('name_ar').eq('id', inv.program_id).maybeSingle(); return String((data as any)?.name_ar || inv.description || ''); }
 async function mail(fn: () => Promise<any>): Promise<string | null> { try { await fn(); return null; } catch (e: any) { return String(e?.message || e); } }
 
 export async function POST(req: Request) {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     if (error) return bad(error.message, 500);
     if (!invId) return NextResponse.json({ success: true, invoice_id: null, message: 'البرنامج مجاني أو بلا رسوم محددة — لا فاتورة' });
     const { data: inv } = await a.db.from('portal_invoices').select('*').eq('id', invId).single();
-    const m = invoiceEmail(inv as Invoice, await programName(a.db, (inv as Invoice).program_id), site);
+    const m = invoiceEmail(inv as Invoice, await programName(a.db, inv as Invoice), site);
     const mail_error = await mail(() => sendViaResend({ to: [(inv as Invoice).customer_email], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: 'invoice' }] }));
     return NextResponse.json({ success: true, invoice_id: invId, mail_error });
   }
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   const id = String(body?.id || ''); if (!id) return bad('id مطلوب');
   const { data: invRow } = await a.db.from('portal_invoices').select('*').eq('id', id).maybeSingle();
   if (!invRow) return bad('الفاتورة غير موجودة', 404);
-  const inv = invRow as Invoice; const pname = await programName(a.db, inv.program_id);
+  const inv = invRow as Invoice; const pname = await programName(a.db, inv);
   const isOwner = inv.user_id === a.user.id;
 
   if (action === 'send') {
