@@ -37,7 +37,7 @@ export default function GlobalNavigation() {
 
   // لوحة التحكم تملك قائمتها الجانبية الكاملة، وصفحات بوابة أَثَر العامة تملك رأسها الخاص (PortalShell)
   if (pathname.startsWith('/dashboard')) return null;
-  if (pathname === '/' || pathname === '/about' || pathname === '/contact' || pathname === '/services' || pathname.startsWith('/services/')) return null;
+  if (pathname === '/' || pathname === '/about' || pathname === '/contact' || pathname === '/services' || pathname.startsWith('/services/') || pathname === '/programs' || pathname.startsWith('/programs/')) return null;
 
   async function logout() { await db.auth.signOut(); router.push('/'); router.refresh(); }
 
