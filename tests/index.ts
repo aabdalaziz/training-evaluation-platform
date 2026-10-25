@@ -28,3 +28,4 @@ import './consulting.test';
 import './resources.test';
 import './live.test';
 import './placement.test';
+import './profile.test';
