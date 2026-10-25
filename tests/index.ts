@@ -26,3 +26,4 @@ import './payments.test';
 import './webhook.test';
 import './consulting.test';
 import './resources.test';
+import './live.test';
