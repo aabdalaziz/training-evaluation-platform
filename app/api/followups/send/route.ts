@@ -4,6 +4,7 @@
  *  GET  ?key=<CRON_SECRET>  — التشغيل التلقائي اليومي (vercel.json): يرسل الحملات التي بلغ موعدها، ويذكّر بعد remind_after_days،
  *                            ثم يشغّل فحص مركز الإشعارات (notifications_scan) ويراسل الإدارة بالجديد،
  *                            ثم بريد المتدربين التلقائي (فتح التقييم النهائي · إصدار الشهادة) — TRAINEE_MAIL=0 للتعطيل
+ *                            ثم تذكيرات جلسات البث المباشر لبوابة أَثَر (خلال 30 ساعة)
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, (للـ Cron) CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL
  */
 import { NextResponse } from 'next/server';
@@ -12,6 +13,7 @@ import { dispatchFollowup } from '../../../../lib/behavior/mail';
 import { runNotificationScan } from '../../../../lib/notifications/scan';
 import { runTraineeMail } from '../../../../lib/notifications/trainee-mail';
 import { cronHeartbeat } from '../../../../lib/health/collect';
+import { runLiveReminders } from '../../../../lib/portal/live-cron';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -83,7 +85,10 @@ export async function GET(req: Request) {
   // بريد المتدربين التلقائي: فتح التقييم النهائي · إصدار الشهادة (TRAINEE_MAIL=0 للتعطيل · dry=1 للمعاينة)
   let trainee_mail: any = null;
   try { trainee_mail = await runTraineeMail(db, site, { dry }); } catch (e: any) { trainee_mail = { ok: false, error: e?.message || String(e) }; }
+  // تذكيرات جلسات البث المباشر (أَثَر · P6): الجلسات خلال 30 ساعة القادمة التي لم تُذكَّر بعد
+  let live_reminders: any = null;
+  try { live_reminders = await runLiveReminders(db, site, { dry }); } catch (e: any) { live_reminders = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders });
 }
