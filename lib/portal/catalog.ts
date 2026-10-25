@@ -11,6 +11,7 @@ export type CatalogProgram = {
   fee?: number | string | null; currency?: string | null; seats?: number | null; program_type?: string | null;
   is_public?: boolean | null; registration_open?: boolean | null; registration_deadline?: string | null;
   location_ar?: string | null; location_en?: string | null; hours?: number | null;
+  cefr_level?: string | null;
 };
 export type Counts = { program_id: string; approved: number; pending: number; waitlisted: number };
 export type RegState = 'open' | 'waitlist' | 'full' | 'closed' | 'deadline' | 'ended';
