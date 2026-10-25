@@ -14,6 +14,7 @@ import { runNotificationScan } from '../../../../lib/notifications/scan';
 import { runTraineeMail } from '../../../../lib/notifications/trainee-mail';
 import { cronHeartbeat } from '../../../../lib/health/collect';
 import { runLiveReminders } from '../../../../lib/portal/live-cron';
+import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -88,7 +89,10 @@ export async function GET(req: Request) {
   // تذكيرات جلسات البث المباشر (أَثَر · P6): الجلسات خلال 30 ساعة القادمة التي لم تُذكَّر بعد
   let live_reminders: any = null;
   try { live_reminders = await runLiveReminders(db, site, { dry }); } catch (e: any) { live_reminders = { ok: false, error: e?.message || String(e) }; }
+  // مزامنة نتائج مِعيار اليومية (أَثَر · P7) — تعمل فقط إن كانت MIAAR_* مضبوطة
+  let placements: any = null;
+  if (!dry && miaarClient()) { try { placements = await syncPlacements(db, { limit: 300 }); } catch (e: any) { placements = { ok: false, error: e?.message || String(e) }; } }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, placements });
 }
