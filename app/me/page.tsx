@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
+import ProgramResources from '../components/ProgramResources';
 import type { IconName } from '../../lib/ui/icons';
 import { CERT_KIND_AR, STATUS_AR, attendancePct, attendanceTone, buildTasks, isRunning, type MePortal, type Task } from '../../lib/me/model';
 
@@ -134,6 +135,7 @@ export default function MePage() {
                   {p.impact.map(a => <span key={a.token} className="me-inline">{a.pre_open && <a className="me-btn" href={`/impact/${a.token}?phase=pre`}><Icon name="target" size={15} /> القياس القبلي</a>}{a.post_open && <a className="me-btn" href={`/impact/${a.token}?phase=post`}><Icon name="target" size={15} /> القياس البعدي</a>}</span>)}
                   {p.followups.map(f => f.answered ? <span key={f.token} className="me-done"><Icon name="check" size={13} /> متابعة الأثر: تم</span> : <a key={f.token} className="me-btn" href={`/followup/${f.token}?role=trainee`}><Icon name="trend" size={15} /> متابعة أثر التدريب</a>)}
                 </div>
+                <ProgramResources programId={p.id} compact />
               </article>
             );
           })}
