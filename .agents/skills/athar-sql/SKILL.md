@@ -54,6 +54,7 @@ union all select 'do_x()', count(*) from pg_proc where proname = 'portal_do_x';
 - Roles are stored in `profiles.role` (text, uppercase); compare with `upper(role::text)` if enum.
 
 ## Pitfalls (learned in production)
+- **Legacy (pre-repo) tables — `programs`, `classrooms`, `trainers`, `evaluations`, `evaluation_templates`, `profiles` — differ from the mock.** Never assume a column or table: `evaluations` has `submitted_at` (no `created_at`), `kind` columns may be Postgres enums (`evaluation_kind`) → always compare as `x.kind::text`; there is NO `public.enrollments` table (use `portal_enrollments`). Before shipping any function that touches these tables, end the migration with a `missing columns (must be 0)` check built from `information_schema.columns` (see `20261113_me_portal_fix.sql`).
 - `42P13`: changing a function's return type requires `drop function` first.
 - New functions get EXECUTE for `anon`/`authenticated` by default → `revoke` for service-only RPCs.
 - PostgREST `insert().select()` from the client requires a SELECT policy for the role.
