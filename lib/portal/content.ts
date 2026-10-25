@@ -134,14 +134,14 @@ export const SERVICES: Service[] = [
     cta: { label: { ar: 'تصفّح المستودع', en: 'Browse the repository' }, href: '/resources' },
   },
   {
-    slug: 'live', icon: 'play', tone: 'warn', status: 'soon', phase: 'P6',
-    title: { ar: 'قنوات البث المتزامن', en: 'Live Streaming Channels' },
-    short: { ar: 'جلسات مباشرة وندوات وورش عبر قنوات بث متزامن مع تسجيلات لاحقة.', en: 'Live sessions, webinars and workshops via synchronous channels with recordings.' },
+    slug: 'live', icon: 'play', tone: 'warn', status: 'live',
+    title: { ar: 'التعلّم المباشر والهجين', en: 'Live & Hybrid Learning' },
+    short: { ar: 'جلسات الشعب والندوات والورش عبر Teams وZoom وMeet وقاعة أَثَر — بقاعات متوازية وحضور رقمي وتسجيلات.', en: 'Class sessions, webinars and workshops on Teams, Zoom, Meet and Athar Room — parallel rooms, digital attendance and recordings.' },
     long: [
-      { ar: 'جدول بث واضح، صفحة قناة لكل برنامج، انضمام بنقرة (YouTube Live / Zoom / Teams)، حضور رقمي مرتبط بالجلسة، وتسجيلات متاحة للمسجّلين.', en: 'A clear schedule, a channel page per program, one-click join (YouTube Live / Zoom / Teams), session-linked digital attendance and recordings for enrolled learners.' },
+      { ar: 'كل شعبة قاعة مستقلة بمدربها ورابطها، والمتدرب يُسكن في شعبته تلقائيًا بعد السداد ويرى جلساته في بوابته. جدول واضح، انضمام بنقرة قبل الموعد بـ15 دقيقة، حضور رقمي مرتبط بالجلسة، تسجيلات لاحقة، وكل جلسة موسومة بالمهارات التي تنمّيها.', en: 'Every section is an independent room with its own trainer and link; trainees are auto-placed after payment and see their sessions in their portal. Clear schedule, one-click join 15 minutes before start, session-linked digital attendance, recordings, and skill tagging for every session.' },
     ],
-    features: [{ ar: 'جدول البث', en: 'Schedule' }, { ar: 'انضمام بنقرة', en: 'One-click join' }, { ar: 'حضور رقمي', en: 'Digital attendance' }, { ar: 'تسجيلات', en: 'Recordings' }],
-    cta: { label: { ar: 'أبلغني عند الإطلاق', en: 'Notify me at launch' }, href: '/contact?service=live' },
+    features: [{ ar: 'قاعات متوازية بلا حد', en: 'Unlimited parallel rooms' }, { ar: 'Teams · Zoom · Meet · قاعة أَثَر', en: 'Teams · Zoom · Meet · Athar Room' }, { ar: 'حضور رقمي', en: 'Digital attendance' }, { ar: 'تسجيلات ومهارات', en: 'Recordings & skills' }],
+    cta: { label: { ar: 'جدول الجلسات', en: 'Session schedule' }, href: '/live' },
   },
   {
     slug: 'evaluation', icon: 'scale', tone: 'navy', status: 'live',
@@ -177,6 +177,7 @@ export const NAV: { href: string; label: T }[] = [
   { href: '/programs', label: { ar: 'البرامج', en: 'Programs' } },
   { href: '/consulting', label: { ar: 'الاستشارات', en: 'Consulting' } },
   { href: '/resources', label: { ar: 'الحقائب', en: 'Resources' } },
+  { href: '/live', label: { ar: 'البث المباشر', en: 'Live' } },
   { href: '/about', label: { ar: 'من نحن', en: 'About' } },
   { href: '/contact', label: { ar: 'تواصل', en: 'Contact' } },
 ];
