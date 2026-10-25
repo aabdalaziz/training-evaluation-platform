@@ -49,3 +49,14 @@ test('placement: distribution, latest-per-email, Excel', () => {
   const dist = levelDistribution(Array.from(latest.values())); assert.equal(dist.find(d => d.level === 'B2')?.n, 1); assert.equal(dist.find(d => d.level === 'A1')?.pct, 50); assert.equal(dist.find(d => d.level === 'C2')?.n, 0);
   const sh = placementsSheet([P({ ...parseMiaarReport(REPORT), id: 'z' } as Placement)]); assert.equal(sh.rows.length, 2); assert.equal(sh.rows[1][1], 'سارة أحمد'); assert.equal(sh.rows[1][7], 'B2'); assert.equal(sh.rows[1][10], 'B1 (60%)'); assert.equal(sh.widths.length, sh.rows[0].length);
 });
+
+import { resolveMiaarUrl } from '../lib/portal/placement-sync';
+test('placement: Mi‘yar URL normalisation (dashboard links, paths, bare refs)', () => {
+  assert.equal(resolveMiaarUrl('https://jpujqwqhgnbvxwxaqmdv.supabase.co'), 'https://jpujqwqhgnbvxwxaqmdv.supabase.co');
+  assert.equal(resolveMiaarUrl(' https://jpujqwqhgnbvxwxaqmdv.supabase.co/ '), 'https://jpujqwqhgnbvxwxaqmdv.supabase.co');
+  assert.equal(resolveMiaarUrl('https://jpujqwqhgnbvxwxaqmdv.supabase.co/rest/v1'), 'https://jpujqwqhgnbvxwxaqmdv.supabase.co');
+  assert.equal(resolveMiaarUrl('https://supabase.com/dashboard/project/jpujqwqhgnbvxwxaqmdv/settings/api-keys'), 'https://jpujqwqhgnbvxwxaqmdv.supabase.co');
+  assert.equal(resolveMiaarUrl('jpujqwqhgnbvxwxaqmdv'), 'https://jpujqwqhgnbvxwxaqmdv.supabase.co');
+  assert.equal(resolveMiaarUrl('jpujqwqhgnbvxwxaqmdv.supabase.co'), 'https://jpujqwqhgnbvxwxaqmdv.supabase.co');
+  assert.equal(resolveMiaarUrl(''), null); assert.equal(resolveMiaarUrl('sb_secret_abc'), null);
+});
