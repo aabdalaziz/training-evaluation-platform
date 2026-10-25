@@ -82,5 +82,5 @@ test('consulting: invoice emails/wording adapt when invoice has no program', () 
 
 test('consulting: portal content now exposes consulting as live', () => {
   const s = serviceBySlug('consulting')!; assert.equal(s.status, 'live'); assert.equal(s.cta.href, '/consulting'); assert.equal((s as any).phase, undefined);
-  assert.ok(NAV.some(n => n.href === '/consulting')); assert.equal(SERVICES.filter(x => x.status === 'live').length, 7);
+  assert.ok(NAV.some(n => n.href === '/consulting')); assert.equal(SERVICES.filter(x => x.status === 'live').length, 8);
 });
