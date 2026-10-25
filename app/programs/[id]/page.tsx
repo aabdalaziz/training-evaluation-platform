@@ -10,6 +10,7 @@ import { PortalShell, useLang } from '../../components/PortalShell';
 import { UI, t, programName, fmtDate, deliveryLabel, BRAND } from '../../../lib/portal/content';
 import { typeLabel, feeLabel, regState, REG_LABEL, canApply, seatsLeft, durationLabel, pick, lines, validateEnrollment, statusLabel } from '../../../lib/portal/catalog';
 import type { CatalogProgram, Counts, Enrollment, EnrollForm } from '../../../lib/portal/catalog';
+import ProgramResources from '../../components/ProgramResources';
 
 export default function ProgramPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -100,6 +101,7 @@ function Inner() {
           {objectives.length > 0 && <div className="pt-box"><h3><Icon name="target" size={18} /> {lang === 'ar' ? 'الأهداف' : 'Objectives'}</h3><ul>{objectives.map((x, i) => <li key={i}><Icon name="check" size={15} /> {x}</li>)}</ul></div>}
           {outcomes.length > 0 && <div className="pt-box"><h3><Icon name="award" size={18} /> {lang === 'ar' ? 'المخرجات' : 'Outcomes'}</h3><ul>{outcomes.map((x, i) => <li key={i}><Icon name="check" size={15} /> {x}</li>)}</ul></div>}
           {audience && <div className="pt-box"><h3><Icon name="users" size={18} /> {lang === 'ar' ? 'الفئة المستهدفة' : 'Who is it for'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155' }}>{audience}</p></div>}
+          <ProgramResources programId={p.id} lang={lang} />
           <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر منصة التقويم، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>
         </div>
 
