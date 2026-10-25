@@ -12,9 +12,9 @@ import type { CatalogProgram, Counts } from '../../../lib/portal/catalog';
 import { t } from '../../../lib/portal/content';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
-const SELECT = 'id,name_ar,name_en,status,delivery_mode,start_date,end_date,archived_at,fee,currency,seats,program_type,is_public,registration_open,registration_deadline,location_ar,location_en,hours,intro_ar,audience_ar';
-type Form = { fee: string; currency: string; seats: string; program_type: string; is_public: boolean; registration_open: boolean; registration_deadline: string; location_ar: string; location_en: string; hours: string };
-const toForm = (p: CatalogProgram): Form => ({ fee: p.fee === null || p.fee === undefined ? '' : String(p.fee), currency: p.currency || 'SAR', seats: p.seats ? String(p.seats) : '', program_type: p.program_type || 'course', is_public: p.is_public !== false, registration_open: p.registration_open !== false, registration_deadline: p.registration_deadline || '', location_ar: p.location_ar || '', location_en: p.location_en || '', hours: p.hours ? String(p.hours) : '' });
+const SELECT = 'id,name_ar,name_en,status,delivery_mode,start_date,end_date,archived_at,cefr_level,fee,currency,seats,program_type,is_public,registration_open,registration_deadline,location_ar,location_en,hours,intro_ar,audience_ar';
+type Form = { fee: string; currency: string; seats: string; program_type: string; is_public: boolean; registration_open: boolean; registration_deadline: string; location_ar: string; location_en: string; hours: string; cefr_level: string };
+const toForm = (p: CatalogProgram): Form => ({ fee: p.fee === null || p.fee === undefined ? '' : String(p.fee), currency: p.currency || 'SAR', seats: p.seats ? String(p.seats) : '', program_type: p.program_type || 'course', is_public: p.is_public !== false, registration_open: p.registration_open !== false, registration_deadline: p.registration_deadline || '', location_ar: p.location_ar || '', location_en: p.location_en || '', hours: p.hours ? String(p.hours) : '', cefr_level: p.cefr_level || '' });
 
 export default function CatalogAdminPage() {
   const db = useMemo(() => supabase(), []); const router = useRouter();
@@ -43,7 +43,7 @@ export default function CatalogAdminPage() {
     const fee = f.fee.trim() === '' ? null : Number(f.fee); const seats = f.seats.trim() === '' ? null : parseInt(f.seats, 10); const hours = f.hours.trim() === '' ? null : parseInt(f.hours, 10);
     if (fee !== null && (!isFinite(fee) || fee < 0)) { setError('الرسوم يجب أن تكون رقمًا موجبًا (أو اتركها فارغة = عند التواصل، أو 0 = مجاني).'); setBusy(''); return; }
     if (seats !== null && (!isFinite(seats) || seats < 1)) { setError('عدد المقاعد يجب أن يكون 1 فأكثر، أو اتركه فارغًا = غير محدود.'); setBusy(''); return; }
-    const { error: e } = await db.from('programs').update({ fee, currency: f.currency, seats, hours, program_type: f.program_type, is_public: f.is_public, registration_open: f.registration_open, registration_deadline: f.registration_deadline || null, location_ar: f.location_ar.trim() || null, location_en: f.location_en.trim() || null }).eq('id', id);
+    const { error: e } = await db.from('programs').update({ fee, currency: f.currency, seats, hours, program_type: f.program_type, cefr_level: f.cefr_level || null, is_public: f.is_public, registration_open: f.registration_open, registration_deadline: f.registration_deadline || null, location_ar: f.location_ar.trim() || null, location_en: f.location_en.trim() || null }).eq('id', id);
     if (e) setError(e.message); else { setNotice('تم الحفظ — التغيير ظاهر فورًا في البوابة.'); setEdit(null); setF(null); await load(); }
     setBusy('');
   }
@@ -78,6 +78,7 @@ export default function CatalogAdminPage() {
                   <label>العملة<select value={f.currency} onChange={e => setF({ ...f, currency: e.target.value })}><option value="SAR">ر.س SAR</option><option value="USD">USD</option><option value="EUR">EUR</option></select></label>
                   <label>المقاعد (فارغ = غير محدود)<input dir="ltr" inputMode="numeric" value={f.seats} onChange={e => setF({ ...f, seats: e.target.value })} placeholder="25" /></label>
                   <label>الساعات التدريبية<input dir="ltr" inputMode="numeric" value={f.hours} onChange={e => setF({ ...f, hours: e.target.value })} placeholder="40" /></label>
+                  <label>مستوى CEFR المستهدف (لبرامج العربية — للتوصية والإسكان)<select value={f.cefr_level} onChange={e => setF({ ...f, cefr_level: e.target.value })}><option value="">— غير محدد —</option>{['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(l => <option key={l} value={l}>{l}</option>)}</select></label>
                   <label>آخر موعد للتسجيل<input type="date" dir="ltr" value={f.registration_deadline} onChange={e => setF({ ...f, registration_deadline: e.target.value })} /></label>
                   <label>المكان (عربي)<input value={f.location_ar} onChange={e => setF({ ...f, location_ar: e.target.value })} placeholder="المدينة المنورة — قاعة 3 / Teams" /></label>
                   <label>Location (EN)<input dir="ltr" value={f.location_en} onChange={e => setF({ ...f, location_en: e.target.value })} /></label>
