@@ -27,3 +27,4 @@ import './webhook.test';
 import './consulting.test';
 import './resources.test';
 import './live.test';
+import './placement.test';
