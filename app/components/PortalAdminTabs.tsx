@@ -13,6 +13,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/live', label: 'البث المباشر', icon: 'play' },
   { href: '/admin/resources', label: 'الحقائب', icon: 'folder' },
   { href: '/admin/skills', label: 'المهارات والجهات', icon: 'target' },
+  { href: '/admin/placements', label: 'مِعيار', icon: 'scale' },
   { href: '/admin/catalog', label: 'نشر البرامج', icon: 'globe' },
   { href: '/admin/inbox', label: 'رسائل التواصل', icon: 'inbox' },
 ];
