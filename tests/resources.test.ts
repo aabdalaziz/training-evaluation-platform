@@ -122,5 +122,5 @@ test('resources: sheets and stats', () => {
 
 test('resources: portal content exposes the repository as live', () => {
   const s = serviceBySlug('resources')!; assert.equal(s.status, 'live'); assert.equal(s.cta.href, '/resources'); assert.equal((s as any).phase, undefined);
-  assert.ok(NAV.some(n => n.href === '/resources')); assert.equal(SERVICES.filter(x => x.status === 'soon').length, 1);
+  assert.ok(NAV.some(n => n.href === '/resources')); assert.equal(SERVICES.filter(x => x.status === 'soon').length, 0);
 });
