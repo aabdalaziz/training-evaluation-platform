@@ -124,14 +124,14 @@ export const SERVICES: Service[] = [
     cta: { label: { ar: 'اطلب استشارة', en: 'Request a consultation' }, href: '/consulting' },
   },
   {
-    slug: 'resources', icon: 'folder', tone: 'ok', status: 'soon', phase: 'P5',
+    slug: 'resources', icon: 'folder', tone: 'ok', status: 'live',
     title: { ar: 'مستودع الحقائب التدريبية', en: 'Training Resources Repository' },
     short: { ar: 'حقائب تدريبية وأدلة ومواد تعليمية جاهزة، مصنّفة بمستويات وصول.', en: 'Ready training kits, guides and learning materials with tiered access.' },
     long: [
       { ar: 'مكتبة رقمية منظمة: حقائب كاملة (دليل المدرب، دليل المتدرب، العروض، الأنشطة، أدوات التقييم)، مع نسخ وإصدارات، وبحث، وروابط تحميل آمنة.', en: 'An organised digital library: complete kits (trainer guide, trainee guide, slides, activities, assessment tools) with versions, search and secure download links.' },
     ],
-    features: [{ ar: 'تصنيف حسب المجال والمستوى', en: 'By domain and level' }, { ar: 'إصدارات وتحديثات', en: 'Versions and updates' }, { ar: 'وصول عام / مسجّل / مشترٍ', en: 'Public / member / purchased' }, { ar: 'روابط تحميل آمنة', en: 'Secure downloads' }],
-    cta: { label: { ar: 'أبلغني عند الإطلاق', en: 'Notify me at launch' }, href: '/contact?service=resources' },
+    features: [{ ar: 'موسومة بالمهارات والقطاع', en: 'Tagged by skill and sector' }, { ar: 'إصدارات وتحديثات', en: 'Versions and updates' }, { ar: 'وصول عام / مسجّل / برنامج / جهة', en: 'Public / member / program / organization' }, { ar: 'روابط تحميل آمنة وسجل تعلّم', en: 'Secure downloads & learning log' }],
+    cta: { label: { ar: 'تصفّح المستودع', en: 'Browse the repository' }, href: '/resources' },
   },
   {
     slug: 'live', icon: 'play', tone: 'warn', status: 'soon', phase: 'P6',
@@ -176,6 +176,7 @@ export const NAV: { href: string; label: T }[] = [
   { href: '/services', label: { ar: 'الخدمات', en: 'Services' } },
   { href: '/programs', label: { ar: 'البرامج', en: 'Programs' } },
   { href: '/consulting', label: { ar: 'الاستشارات', en: 'Consulting' } },
+  { href: '/resources', label: { ar: 'الحقائب', en: 'Resources' } },
   { href: '/about', label: { ar: 'من نحن', en: 'About' } },
   { href: '/contact', label: { ar: 'تواصل', en: 'Contact' } },
 ];
