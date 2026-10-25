@@ -17,7 +17,7 @@ test('portal: brand + 8 services with unique slugs and both languages', () => {
   assert.equal(serviceBySlug('placement')?.cta.href, 'https://miaar-placement-test.vercel.app');
   assert.equal(serviceBySlug('evaluation')?.cta.href, '/login');
   assert.equal(serviceBySlug('nope'), undefined);
-  assert.equal(SERVICES.filter(s => s.status === 'soon').length, 2);
+  assert.equal(SERVICES.filter(s => s.status === 'soon').length, 1);
 });
 
 test('portal: TRACE acronym maps letters to real services', () => {
@@ -27,7 +27,7 @@ test('portal: TRACE acronym maps letters to real services', () => {
 });
 
 test('portal: content blocks are bilingual and complete', () => {
-  assert.equal(ABOUT.values.length, 4); assert.equal(ABOUT.method.length, 3); assert.equal(PARTNERS.length, 3); assert.equal(CROSS.length, 3); assert.equal(NAV.length, 6);
+  assert.equal(ABOUT.values.length, 4); assert.equal(ABOUT.method.length, 3); assert.equal(PARTNERS.length, 3); assert.equal(CROSS.length, 3); assert.equal(NAV.length, 7);
   for (const x of [ABOUT.intro, ABOUT.vision, ABOUT.mission, BRAND.tagline, BRAND.promise, ...ABOUT.values.map(v => v.desc), ...ABOUT.method.map(m => m.desc), ...NAV.map(n => n.label), ...Object.values(UI)]) assert.ok(x.ar.length > 0 && x.en.length > 0);
   assert.equal(t({ ar: 'أ', en: '' }, 'en'), 'أ', 'falls back to Arabic');
   assert.equal(CONTACT_SUBJECTS.length, 8);
