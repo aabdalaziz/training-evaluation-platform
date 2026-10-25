@@ -27,7 +27,7 @@ export const BRAND = {
 
 export const CONTACT = {
   email: 'info@athar-portal.sa',
-  phone: '+966 5X XXX XXXX',
+  phone: '+966 56 444 0406',
   city: { ar: 'المدينة المنورة، المملكة العربية السعودية', en: 'Madinah, Saudi Arabia' } as T,
   hours: { ar: 'الأحد – الخميس · 8:00 ص – 4:00 م', en: 'Sun – Thu · 8:00 – 16:00' } as T,
   social: [
