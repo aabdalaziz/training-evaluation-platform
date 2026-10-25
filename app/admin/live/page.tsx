@@ -1,0 +1,250 @@
+'use client';
+// © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
+// بوابة أَثَر — إدارة التعلّم المباشر: لوحة البث (القاعات المتوازية) · الجلسات والسلاسل · الشعب والسعة والإسكان · التذكيرات · الحضور · Excel
+
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { supabase } from '../../../lib/supabase/client';
+import { Icon } from '../../../lib/ui/icons';
+import { downloadXlsx } from '../../../lib/export/xlsx';
+import { safeFilename } from '../../../lib/export/csv';
+import PortalAdminTabs from '../../components/PortalAdminTabs';
+import { PROVIDERS, KINDS, SESSION_ACCESS, WEEKDAYS, EMPTY_SESSION, validateSession, sessionPayload, sessionToForm, expandSeries, conflicts, timeState, STATE_LABEL, fmtWhen, fmtRange, isoToRiyadh, liveBoard, placementPlan, occupancyTone, classroomLabel, trainerName, providerLabel, kindLabel, sessionAccessLabel, atharRoomUrl, sessionsSheet, roomsSheet, groupByDay } from '../../../lib/portal/live';
+import type { LiveSession, SessionForm, Classroom, Trainer, Provider, SessionStatus } from '../../../lib/portal/live';
+import { SECTORS_FALLBACK, skillName } from '../../../lib/portal/skills';
+import type { Skill, Sector, Organization } from '../../../lib/portal/skills';
+
+const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
+const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
+type Prog = { id: string; name_ar: string; status?: string | null; fee?: number | null; archived_at?: string | null };
+type Enr = { id: string; full_name: string; email: string; classroom_id?: string | null; program_id: string; status: string; placed_at?: string | null };
+type Tab = 'board' | 'sessions' | 'rooms';
+
+export default function Page() { return <Suspense fallback={null}><LiveAdmin /></Suspense>; }
+
+function LiveAdmin() {
+  const db = useMemo(() => supabase(), []); const router = useRouter(); const sp = useSearchParams();
+  const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [me, setMe] = useState<{ id: string; role: string } | null>(null);
+  const [tab, setTab] = useState<Tab>((sp.get('tab') as Tab) || 'board'); const [now, setNow] = useState<Date>(new Date());
+  const [sessions, setSessions] = useState<LiveSession[]>([]); const [rooms, setRooms] = useState<Classroom[]>([]); const [trainers, setTrainers] = useState<Trainer[]>([]); const [progs, setProgs] = useState<Prog[]>([]); const [counts, setCounts] = useState<Record<string, number>>({}); const [attCounts, setAttCounts] = useState<Record<string, number>>({});
+  const [skills, setSkills] = useState<Skill[]>([]); const [sectors, setSectors] = useState<Sector[]>(SECTORS_FALLBACK); const [orgs, setOrgs] = useState<Organization[]>([]); const [resources, setResources] = useState<{ id: string; title_ar: string }[]>([]); const [hosts, setHosts] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<SessionForm | null>(null); const [editing, setEditing] = useState<string | null>(null); const [busy, setBusy] = useState('');
+  const [fProg, setFProg] = useState('all'); const [fRoom, setFRoom] = useState('all'); const [fWhen, setFWhen] = useState<'upcoming' | 'past' | 'all'>('upcoming'); const [open, setOpen] = useState<string | null>(sp.get('open')); const [rec, setRec] = useState('');
+  const [roomProg, setRoomProg] = useState(''); const [enrs, setEnrs] = useState<Enr[]>([]); const [roomEdit, setRoomEdit] = useState<Classroom | null>(null); const [newRoom, setNewRoom] = useState<{ code: string; section_name: string; trainer_id: string; capacity: string; provider: Provider; join_url: string; host_url: string } | null>(null);
+  const canWrite = !!me && WRITERS.includes(me.role);
+
+  async function load() {
+    const since = new Date(Date.now() - 30 * 86400000).toISOString();
+    const [{ data: s, error: e1 }, { data: cr }, { data: tr }, { data: pg }, { data: cn }, { data: sk }, { data: sec }, { data: og }, { data: rs }, { data: hp }] = await Promise.all([
+      db.from('portal_sessions').select('*').gte('starts_at', since).order('starts_at').limit(2000),
+      db.from('classrooms').select('*').order('code'),
+      db.from('trainers').select('id,name,email').order('name'),
+      db.from('programs').select('id,name_ar,status,fee,archived_at').is('archived_at', null).order('start_date', { ascending: false }).limit(300),
+      db.rpc('portal_classroom_counts'),
+      db.from('portal_skills').select('*').eq('active', true).order('code'), db.from('portal_sectors').select('*').eq('active', true).order('sort'), db.from('portal_organizations').select('*').eq('active', true).order('name_ar'),
+      db.from('portal_resources').select('id,title_ar').eq('status', 'published').order('title_ar'), db.from('portal_session_private').select('session_id,host_url'),
+    ]);
+    if (e1) { setError(e1.message); return; }
+    const list = (s || []) as LiveSession[]; setSessions(list); setTrainers((tr || []) as Trainer[]); setProgs((pg || []) as Prog[]);
+    const pids = new Set(((pg || []) as Prog[]).map(p => p.id)); setRooms(((cr || []) as Classroom[]).filter(c => pids.has(c.program_id)));
+    const c: Record<string, number> = {}; for (const x of ((cn || []) as any[])) c[x.classroom_id] = Number(x.placed); setCounts(c);
+    setSkills((sk || []) as Skill[]); if (sec && (sec as any[]).length) setSectors(sec as Sector[]); setOrgs((og || []) as Organization[]); setResources((rs || []) as any[]);
+    const h: Record<string, string> = {}; for (const x of ((hp || []) as any[])) if (x.host_url) h[x.session_id] = x.host_url; setHosts(h);
+    const aids = list.map(x => x.attendance_session_id).filter(Boolean) as string[];
+    if (aids.length) { const { data: ar } = await db.from('attendance_records').select('session_id').in('session_id', aids.slice(0, 400)); const a: Record<string, number> = {}; for (const r of ((ar || []) as any[])) a[r.session_id] = (a[r.session_id] || 0) + 1; setAttCounts(a); }
+  }
+  async function loadEnrs(pid: string) { if (!pid) { setEnrs([]); return; } const { data } = await db.from('portal_enrollments').select('id,full_name,email,classroom_id,program_id,status,placed_at').eq('program_id', pid).eq('status', 'approved').order('full_name'); setEnrs((data || []) as Enr[]); }
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/live'); return; }
+      const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); const role = String((prof as any)?.role || '').toUpperCase(); if (!STAFF.includes(role)) { router.replace('/dashboard'); return; }
+      setMe({ id: user.id, role }); await load(); setReady(true);
+    })();
+    const iv = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(iv);
+  }, [db, router]);
+  useEffect(() => { loadEnrs(roomProg); }, [roomProg]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const run = async (key: string, fn: () => Promise<string | void>) => { setBusy(key); setError(''); setNotice(''); try { const m = await fn(); if (m) setNotice(m); await load(); if (roomProg) await loadEnrs(roomProg); } catch (e: any) { setError(e.message || String(e)); } setBusy(''); };
+  async function api(body: any) { const { data: s } = await db.auth.getSession(); const r = await fetch('/api/live', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token || ''}` }, body: JSON.stringify(body) }); const j = await r.json(); if (!j.success) throw new Error(j.error || 'فشل الطلب'); return j; }
+
+  const roomMap = useMemo(() => new Map(rooms.map(r => [r.id, r])), [rooms]); const trMap = useMemo(() => new Map(trainers.map(x => [x.id, x])), [trainers]); const pgMap = useMemo(() => new Map(progs.map(p => [p.id, p.name_ar])), [progs]);
+  const board = useMemo(() => liveBoard(sessions, now), [sessions, now]);
+  const shown = useMemo(() => sessions.filter(s => (fProg === 'all' || s.program_id === fProg) && (fRoom === 'all' || s.classroom_id === fRoom) && (fWhen === 'all' || (fWhen === 'upcoming' ? ['upcoming', 'soon', 'live'].includes(timeState(s, now)) : ['ended', 'cancelled'].includes(timeState(s, now))))), [sessions, fProg, fRoom, fWhen, now]);
+  const formRooms = useMemo(() => rooms.filter(r => !form?.program_id || r.program_id === form.program_id), [rooms, form?.program_id]);
+  const roomList = useMemo(() => rooms.filter(r => !roomProg || r.program_id === roomProg), [rooms, roomProg]);
+  const unplaced = useMemo(() => enrs.filter(e => !e.classroom_id), [enrs]);
+  const plan = useMemo(() => roomProg ? placementPlan(roomList, counts, unplaced.length) : [], [roomProg, roomList, counts, unplaced.length]);
+  const previewDates = useMemo(() => form && form.mode === 'series' ? expandSeries({ start_date: form.date, end_date: form.series_end, weekdays: form.weekdays, time: form.time, duration_min: form.duration_min }) : [], [form]);
+  const formConflicts = useMemo(() => { if (!form || !form.date || !form.time) return []; const dates = form.mode === 'series' ? previewDates : [new Date(`${form.date}T${form.time}:00+03:00`).toISOString()]; const out: LiveSession[] = []; for (const d of dates) out.push(...conflicts(sessions, { id: editing || undefined, starts_at: d, duration_min: form.duration_min, trainer_id: form.trainer_id || null, classroom_id: form.classroom_id || null })); return out; }, [form, previewDates, sessions, editing]);
+
+  const startNew = (preset?: Partial<SessionForm>) => { setEditing(null); setForm({ ...EMPTY_SESSION, date: new Date(Date.now() + 86400000).toISOString().slice(0, 10), ...preset }); setTab('sessions'); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const pickRoom = (cid: string) => { const r = roomMap.get(cid); setForm(f => f ? { ...f, classroom_id: cid, program_id: r?.program_id || f.program_id, trainer_id: f.trainer_id || r?.trainer_id || '', provider: (r?.provider as Provider) || f.provider, join_url: f.join_url || r?.join_url || '', host_url: f.host_url || r?.host_url || '' } : f); };
+  const save = () => run('save', async () => {
+    if (!form || !me) return; const v = validateSession(form); if (v) throw new Error(v);
+    if (formConflicts.length && !window.confirm(`يوجد ${formConflicts.length} تعارض (نفس المدرب أو الشعبة في الوقت نفسه). المتابعة؟`)) return;
+    if (editing) { const p = sessionPayload(form, new Date(`${form.date}T${form.time}:00+03:00`).toISOString(), null, me.id); const { status: _s, created_by: _c, series_id: _r, ...patch } = p as any; const { error } = await db.from('portal_sessions').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', editing); if (error) throw error; await db.from('portal_session_private').upsert({ session_id: editing, host_url: form.host_url.trim() || null }); setForm(null); return 'تم حفظ الجلسة.'; }
+    const dates = form.mode === 'series' ? previewDates : [new Date(`${form.date}T${form.time}:00+03:00`).toISOString()]; const seriesId = form.mode === 'series' ? crypto.randomUUID() : null;
+    const rows = dates.map(d => sessionPayload(form, d, seriesId, me.id)); const { data, error } = await db.from('portal_sessions').insert(rows).select('id'); if (error) throw error;
+    if (form.host_url.trim()) await db.from('portal_session_private').insert(((data || []) as any[]).map(x => ({ session_id: x.id, host_url: form.host_url.trim() })));
+    setForm(null); return dates.length > 1 ? `أُنشئت سلسلة من ${dates.length} جلسة.` : 'أُنشئت الجلسة.';
+  });
+  const setStatus = (s: LiveSession, status: SessionStatus) => run('st' + s.id, async () => { if (status === 'cancelled' && !window.confirm(`إلغاء «${s.title_ar}»؟`)) return; await api({ action: 'status', session_id: s.id, status }); return 'تم تحديث الحالة.'; });
+  const remind = (s: LiveSession) => run('rm' + s.id, async () => { const j = await api({ action: 'remind', session_id: s.id }); return `أُرسل التذكير إلى ${j.sent} من ${j.total}${j.mail_error ? ` — أخطاء: ${j.mail_error}` : ''}`; });
+  const saveRec = (s: LiveSession) => run('rec' + s.id, async () => { const { error } = await db.from('portal_sessions').update({ recording_url: rec.trim() || null, updated_at: new Date().toISOString() }).eq('id', s.id); if (error) throw error; return 'حُفظ رابط التسجيل.'; });
+  const removeSession = (s: LiveSession, series: boolean) => run('del' + s.id, async () => { if (!window.confirm(series ? 'حذف كل الجلسات القادمة في هذه السلسلة؟' : `حذف «${s.title_ar}»؟`)) return; let q = db.from('portal_sessions').delete(); q = series && s.series_id ? q.eq('series_id', s.series_id).gte('starts_at', new Date().toISOString()) : q.eq('id', s.id); const { error } = await q; if (error) throw error; setOpen(null); return 'تم الحذف.'; });
+  const place = (force = false) => run('place', async () => { const j = await api({ action: 'place', program_id: roomProg, force }); return `أُسكن ${j.placed} متدربًا في ${j.rooms} شعبة${j.pending ? ` — ${j.pending} بانتظار السداد` : ''}.`; });
+  const move = (e: Enr, cid: string) => run('mv' + e.id, async () => { const { error } = await db.from('portal_enrollments').update({ classroom_id: cid || null, placed_at: cid ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', e.id); if (error) throw error; });
+  const saveRoom = () => run('room', async () => { if (!roomEdit) return; const { id, ...rest } = roomEdit; const { error } = await db.from('classrooms').update({ section_name: rest.section_name || null, trainer_id: rest.trainer_id || null, capacity: Number(rest.capacity) || 30, provider: rest.provider || 'teams', join_url: rest.join_url || null, host_url: rest.host_url || null, placement_open: rest.placement_open !== false }).eq('id', id); if (error) throw error; setRoomEdit(null); return 'حُفظت الشعبة.'; });
+  const createRoom = () => run('newroom', async () => { if (!newRoom || !roomProg) return; if (!newRoom.code.trim()) throw new Error('رمز الشعبة مطلوب'); const p = progs.find(x => x.id === roomProg); const { error } = await db.from('classrooms').insert({ program_id: roomProg, code: newRoom.code.trim().toUpperCase(), section_name: newRoom.section_name.trim() || null, trainer_id: newRoom.trainer_id || null, capacity: Number(newRoom.capacity) || 30, provider: newRoom.provider, join_url: newRoom.join_url.trim() || null, host_url: newRoom.host_url.trim() || null, delivery_mode: 'remote', portal_created: true, organization_id: (p as any)?.organization_id || null }); if (error) throw error; setNewRoom(null); return 'أُنشئت الشعبة.'; });
+  const toggleWd = (d: number) => setForm(f => f ? { ...f, weekdays: f.weekdays.includes(d) ? f.weekdays.filter(x => x !== d) : [...f.weekdays, d].sort() } : f);
+  const joinUrl = (s: LiveSession) => s.provider === 'athar' ? atharRoomUrl(s.id, s.title_ar) : (s.join_url || '');
+
+  if (!ready) return <div className="en"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="en-wrap"><div className="en-card en-muted">جارٍ التحميل…</div></div></div>;
+  return (
+    <div className="en"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="en-wrap">
+        <header className="en-head"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>التعلّم المباشر والهجين</h1><p>قاعات متوازية بلا حد: كل شعبة لها مدربها ورابطها، والمتدرب يُسكن تلقائيًا بعد السداد، وكل جلسة تفتح حضورًا رقميًا وتُسجَّل في سجل التعلّم.</p></div>
+          <div className="en-acts">{canWrite && <button type="button" className="en-btn" onClick={() => startNew()}><Icon name="plus" size={14} /> جلسة / سلسلة</button>}<Link href="/live" target="_blank" className="en-btn ghost"><Icon name="globe" size={14} /> الصفحة العامة</Link></div></header>
+        <PortalAdminTabs counts={{ '/admin/live': board.live.length }} />
+        {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok">{notice}</div>}
+        <div className="en-tabs lv-tabs"><button type="button" className={tab === 'board' ? 'on' : ''} onClick={() => setTab('board')}><i className={board.live.length ? 'dot' : ''} /> لوحة البث ({board.live.length})</button><button type="button" className={tab === 'sessions' ? 'on' : ''} onClick={() => setTab('sessions')}><Icon name="calendar" size={13} /> الجلسات ({sessions.length})</button><button type="button" className={tab === 'rooms' ? 'on' : ''} onClick={() => setTab('rooms')}><Icon name="users" size={13} /> الشعب والإسكان ({rooms.length})</button></div>
+
+        {tab === 'board' && <>
+          <div className="en-card en-seats"><span className="en-seat live"><b>{board.live.length}</b><span>مباشر الآن</span></span><span className="en-seat"><b>{board.soon.length}</b><span>تبدأ خلال 15 د</span></span><span className="en-seat"><b>{board.today.length}</b><span>جلسات اليوم</span></span><span className="en-seat"><b>{board.endedToday}</b><span>انتهت اليوم</span></span><span className="en-seat"><b>{board.upcoming.length}</b><span>قادمة</span></span><span className="en-muted" style={{ marginInlineStart: 'auto' }}>آخر تحديث {now.toLocaleTimeString('ar-SA-u-nu-latn', { hour: '2-digit', minute: '2-digit' })}</span></div>
+          {[...board.live, ...board.soon].length === 0 && <div className="en-card en-muted">لا قاعات مباشرة الآن. {board.upcoming[0] && <>التالية: <b>{board.upcoming[0].title_ar}</b> — {fmtWhen(board.upcoming[0].starts_at, 'ar')}</>}</div>}
+          <div className="lv-board">{[...board.live, ...board.soon].map(s => { const st = timeState(s, now); const r = roomMap.get(s.classroom_id || ''); return (
+            <div key={s.id} className={`lv-room ${st}`}>
+              <div className="lv-roomhead"><span className={`en-tag ${st}`}>{st === 'live' && <i />}{STATE_LABEL[st].ar}</span><span className="en-muted">{fmtRange(s, 'ar')}</span></div>
+              <b>{s.title_ar}</b>
+              <small>{pgMap.get(s.program_id || '') || kindLabel(s.kind, 'ar')}{r ? ` · ${classroomLabel(r, 'ar')}` : ''}</small>
+              <div className="lv-roomstats"><span><Icon name="users" size={13} /> {s.classroom_id ? `${counts[s.classroom_id] || 0} مُسكَن` : 'عامة'}</span><span><Icon name="check" size={13} /> {attCounts[s.attendance_session_id || ''] || 0} حضور</span><span><Icon name="laptop" size={13} /> {providerLabel(s.provider, 'ar')}</span><span>{trainerName(trMap.get(s.trainer_id || '')) || s.speaker_name || <em className="lv-warn">بلا مدرب</em>}</span></div>
+              <div className="en-acts">{hosts[s.id] && <a className="en-btn" href={hosts[s.id]} target="_blank" rel="noreferrer"><Icon name="play" size={13} /> دخول المضيف</a>}{joinUrl(s) && <a className="en-btn ghost" href={joinUrl(s)} target="_blank" rel="noreferrer">رابط المتدربين</a>}{canWrite && st !== 'live' && <button type="button" className="en-btn ok" onClick={() => setStatus(s, 'live')} disabled={!!busy}>بدء البث</button>}{canWrite && st === 'live' && <button type="button" className="en-btn warn" onClick={() => setStatus(s, 'ended')} disabled={!!busy}>إنهاء</button>}<button type="button" className="en-btn ghost" onClick={() => { setTab('sessions'); setOpen(s.id); setFWhen('all'); }}>التفاصيل</button></div>
+            </div>); })}</div>
+          {board.today.length > 0 && <div className="en-card"><h3 className="lv-h3"><Icon name="calendar" size={16} /> جدول اليوم ({board.today.length})</h3><div className="lv-today">{board.today.map(s => { const st = timeState(s, now); return <div key={s.id} className={`lv-trow ${st}`}><b dir="ltr">{fmtRange(s, 'ar')}</b><span>{s.title_ar}</span><small>{classroomLabel(roomMap.get(s.classroom_id || ''), 'ar') || kindLabel(s.kind, 'ar')}</small><small>{trainerName(trMap.get(s.trainer_id || '')) || s.speaker_name || '—'}</small><span className={`en-tag ${st}`}>{STATE_LABEL[st].ar}</span></div>; })}</div></div>}
+        </>}
+
+        {tab === 'sessions' && <>
+          {form && <div className="en-card lv-form">
+            <h2><Icon name={editing ? 'edit' : 'plus'} size={18} /> {editing ? 'تحرير الجلسة' : 'جلسة جديدة'}</h2>
+            {!editing && <div className="en-tabs"><button type="button" className={form.mode === 'single' ? 'on' : ''} onClick={() => setForm({ ...form, mode: 'single' })}>جلسة واحدة</button><button type="button" className={form.mode === 'series' ? 'on' : ''} onClick={() => setForm({ ...form, mode: 'series' })}>سلسلة أسبوعية</button></div>}
+            <div className="lv-g4">
+              <label className="en-note">النوع<select value={form.kind} onChange={e => setForm({ ...form, kind: e.target.value as any, access: e.target.value === 'class' ? 'program' : form.access === 'program' ? 'public' : form.access })}>{KINDS.map(k => <option key={k.value} value={k.value}>{k.label.ar}</option>)}</select></label>
+              <label className="en-note">البرنامج {form.kind === 'class' && '*'}<select value={form.program_id} onChange={e => setForm({ ...form, program_id: e.target.value, classroom_id: '' })}><option value="">— بدون —</option>{progs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
+              <label className="en-note">الشعبة (القاعة) {form.kind === 'class' && '*'}<select value={form.classroom_id} onChange={e => pickRoom(e.target.value)}><option value="">— بدون —</option>{formRooms.map(r => <option key={r.id} value={r.id}>{classroomLabel(r, 'ar')} · {counts[r.id] || 0}/{r.capacity || 30}</option>)}</select></label>
+              <label className="en-note">المدرب<select value={form.trainer_id} onChange={e => setForm({ ...form, trainer_id: e.target.value })}><option value="">— بدون —</option>{trainers.map(x => <option key={x.id} value={x.id}>{trainerName(x)}</option>)}</select></label>
+            </div>
+            <div className="lv-g2"><label className="en-note">عنوان الجلسة (عربي) *<input value={form.title_ar} onChange={e => setForm({ ...form, title_ar: e.target.value })} /></label><label className="en-note">Title (English)<input dir="ltr" value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })} /></label></div>
+            <div className="lv-g2"><label className="en-note">الوصف<textarea value={form.description_ar} onChange={e => setForm({ ...form, description_ar: e.target.value })} /></label><label className="en-note">المتحدث (إن لم يكن من قائمة المدربين)<input value={form.speaker_name} onChange={e => setForm({ ...form, speaker_name: e.target.value })} /></label></div>
+            <div className="lv-g4">
+              <label className="en-note">{form.mode === 'series' ? 'تاريخ البداية' : 'التاريخ'} *<input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></label>
+              <label className="en-note">وقت البداية (الرياض) *<input type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} /></label>
+              <label className="en-note">المدة (دقيقة)<input type="number" min={15} max={600} value={form.duration_min} onChange={e => setForm({ ...form, duration_min: Number(e.target.value) })} /></label>
+              {form.mode === 'series' ? <label className="en-note">تاريخ النهاية *<input type="date" value={form.series_end} onChange={e => setForm({ ...form, series_end: e.target.value })} /></label> : <label className="en-note">السعة (للندوات)<input type="number" value={form.capacity} onChange={e => setForm({ ...form, capacity: e.target.value })} placeholder="بلا حد" /></label>}
+            </div>
+            {form.mode === 'series' && <div className="lv-wd"><b>أيام الأسبوع *</b>{WEEKDAYS.map(d => <button type="button" key={d.value} className={form.weekdays.includes(d.value) ? 'on' : ''} onClick={() => toggleWd(d.value)}>{d.label.ar}</button>)}<span className="en-muted">{previewDates.length ? `= ${previewDates.length} جلسة` : ''}</span></div>}
+            <div className="lv-prov"><b>المنصة</b><div className="lv-provgrid">{PROVIDERS.map(p => <label key={p.value} className={`lv-pv ${form.provider === p.value ? 'on' : ''}`}><input type="radio" name="prov" checked={form.provider === p.value} onChange={() => setForm({ ...form, provider: p.value })} /><span><b>{p.label.ar}</b><small>{p.hint.ar}</small></span></label>)}</div>
+              {form.provider !== 'athar' && <div className="lv-g2"><label className="en-note">رابط انضمام المتدربين *<input dir="ltr" value={form.join_url} onChange={e => setForm({ ...form, join_url: e.target.value })} placeholder="https://…" /></label><label className="en-note">رابط المضيف (للمدرب — لا يظهر للمتدربين)<input dir="ltr" value={form.host_url} onChange={e => setForm({ ...form, host_url: e.target.value })} placeholder="https://…" /></label></div>}
+              {form.provider === 'athar' && <div className="en-muted">ستُنشأ غرفة متصفح فورية تلقائيًا لكل جلسة (Jitsi مفتوح المصدر) — بلا حسابات، ويمكن استضافتها على نطاق أَثَر لاحقًا.</div>}
+            </div>
+            <div className="lv-g4">
+              <label className="en-note">الوصول<select value={form.access} onChange={e => setForm({ ...form, access: e.target.value as any })}>{SESSION_ACCESS.map(a => <option key={a.value} value={a.value}>{a.label.ar}</option>)}</select></label>
+              <label className="en-note">الجهة {form.access === 'org' && '*'}<select value={form.organization_id} onChange={e => setForm({ ...form, organization_id: e.target.value })}><option value="">—</option>{orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>
+              <label className="en-note">القطاع<select value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })}><option value="">—</option>{sectors.map(s => <option key={s.code} value={s.code}>{s.name_ar}</option>)}</select></label>
+              <label className="en-note">حقيبة مرتبطة<select value={form.resource_id} onChange={e => setForm({ ...form, resource_id: e.target.value })}><option value="">—</option>{resources.map(r => <option key={r.id} value={r.id}>{r.title_ar}</option>)}</select></label>
+            </div>
+            <div className="lv-skills"><b>المهارات ({form.skills.length})</b><div className="lv-skgrid">{skills.map(s => <button type="button" key={s.id} className={form.skills.includes(s.id) ? 'on' : ''} onClick={() => setForm({ ...form, skills: form.skills.includes(s.id) ? form.skills.filter(x => x !== s.id) : [...form.skills, s.id] })}><small>{s.code}</small>{skillName(s, 'ar')}</button>)}</div></div>
+            {formConflicts.length > 0 && <div className="en-err">⚠ تعارض محتمل ({formConflicts.length}): {formConflicts.slice(0, 3).map(c => `${c.title_ar} — ${fmtWhen(c.starts_at, 'ar')}`).join(' · ')}</div>}
+            <div className="en-acts"><button type="button" className="en-btn ok" disabled={busy === 'save'} onClick={save}><Icon name="save" size={14} /> {editing ? 'حفظ' : form.mode === 'series' ? `إنشاء ${previewDates.length || ''} جلسة` : 'إنشاء الجلسة'}</button><button type="button" className="en-btn ghost" onClick={() => setForm(null)}>إلغاء</button></div>
+          </div>}
+
+          <div className="en-tools">
+            <div className="en-tabs">{(['upcoming', 'past', 'all'] as const).map(w => <button type="button" key={w} className={fWhen === w ? 'on' : ''} onClick={() => setFWhen(w)}>{w === 'upcoming' ? 'القادمة' : w === 'past' ? 'السابقة' : 'الكل'}</button>)}</div>
+            <select value={fProg} onChange={e => { setFProg(e.target.value); setFRoom('all'); }}><option value="all">كل البرامج</option>{progs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select>
+            <select value={fRoom} onChange={e => setFRoom(e.target.value)}><option value="all">كل الشعب</option>{rooms.filter(r => fProg === 'all' || r.program_id === fProg).map(r => <option key={r.id} value={r.id}>{classroomLabel(r, 'ar')}</option>)}</select>
+            <button type="button" className="en-btn ghost" onClick={() => downloadXlsx(safeFilename('athar_sessions', 'xlsx'), [sessionsSheet(shown, roomMap, trMap, pgMap)])} disabled={!shown.length}><Icon name="download" size={14} /> Excel ({shown.length})</button>
+            <button type="button" className="en-btn ghost" onClick={() => run('r', async () => undefined)}><Icon name="refresh" size={14} /> تحديث</button>
+          </div>
+          {shown.length === 0 && <div className="en-card en-muted">لا جلسات ضمن هذه التصفية.</div>}
+          {groupByDay(shown).map(g => <div key={g.day} className="lv-daygroup"><h3 className="lv-h3"><Icon name="calendar" size={15} /> {fmtWhen(g.items[0].starts_at, 'ar', { date: true, weekday: true })} <small>{g.items.length}</small></h3>
+            {g.items.map(s => { const st = timeState(s, now); const isOpen = open === s.id; const r = roomMap.get(s.classroom_id || ''); return (
+              <div key={s.id} className={`en-card en-row ${st}`}>
+                <div className="en-top" onClick={() => { setOpen(isOpen ? null : s.id); setRec(s.recording_url || ''); }}>
+                  <div className="en-who"><b dir="ltr" className="lv-t">{fmtRange(s, 'ar')}</b><b>{s.title_ar}</b><span className={`en-tag ${st}`}>{STATE_LABEL[st].ar}</span>{s.series_id && <span className="en-tag">سلسلة</span>}{s.recording_url && <span className="en-tag rec">تسجيل</span>}</div>
+                  <div className="en-meta"><span>{kindLabel(s.kind, 'ar')}</span>{s.program_id && <>·<span>{pgMap.get(s.program_id)}</span></>}{r && <>·<span>{classroomLabel(r, 'ar')}</span></>}·<span>{trainerName(trMap.get(s.trainer_id || '')) || s.speaker_name || '—'}</span>·<span>{providerLabel(s.provider, 'ar')}</span>·<span><Icon name="check" size={12} /> {attCounts[s.attendance_session_id || ''] || 0}</span></div>
+                </div>
+                {isOpen && <div className="en-body">
+                  <div className="en-details"><span>الوصول: <b>{sessionAccessLabel(s.access, 'ar')}</b></span>{s.classroom_id && <span>المُسكَنون: <b>{counts[s.classroom_id] || 0}</b></span>}<span>الحضور: <b>{attCounts[s.attendance_session_id || ''] || 0}</b></span>{s.reminder_sent_at && <span>آخر تذكير: {fmtWhen(s.reminder_sent_at, 'ar')}</span>}{joinUrl(s) && <a href={joinUrl(s)} target="_blank" rel="noreferrer">رابط المتدربين ↗</a>}{hosts[s.id] && <a href={hosts[s.id]} target="_blank" rel="noreferrer">رابط المضيف ↗</a>}<Link href={`/live/${s.id}`} target="_blank">الصفحة العامة ↗</Link>{s.attendance_session_id && <Link href={`/admin/attendance?open=${s.attendance_session_id}`}>سجل الحضور ↗</Link>}</div>
+                  {canWrite && <div className="lv-recrow"><label className="en-note">رابط التسجيل بعد الجلسة<input dir="ltr" value={rec} onChange={e => setRec(e.target.value)} placeholder="https://… (YouTube / Drive / Stream)" /></label><button type="button" className="en-btn ghost" disabled={!!busy} onClick={() => saveRec(s)}>حفظ</button></div>}
+                  {canWrite && <div className="en-acts">
+                    <button type="button" className="en-btn ghost" onClick={() => { setEditing(s.id); setForm(sessionToForm(s, hosts[s.id] || '')); window.scrollTo({ top: 0, behavior: 'smooth' }); }}><Icon name="edit" size={14} /> تحرير</button>
+                    <button type="button" className="en-btn" disabled={!!busy || st === 'ended' || st === 'cancelled'} onClick={() => remind(s)}><Icon name="mail" size={14} /> إرسال تذكير</button>
+                    {st !== 'live' && st !== 'ended' && st !== 'cancelled' && <button type="button" className="en-btn ok" disabled={!!busy} onClick={() => setStatus(s, 'live')}><Icon name="play" size={14} /> بدء البث</button>}
+                    {st === 'live' && <button type="button" className="en-btn warn" disabled={!!busy} onClick={() => setStatus(s, 'ended')}><Icon name="stop" size={14} /> إنهاء</button>}
+                    {st !== 'cancelled' && st !== 'ended' && <button type="button" className="en-btn ghost" disabled={!!busy} onClick={() => setStatus(s, 'cancelled')}>إلغاء الجلسة</button>}
+                    {st === 'cancelled' && <button type="button" className="en-btn ghost" disabled={!!busy} onClick={() => setStatus(s, 'scheduled')}>إعادة الجدولة</button>}
+                    <button type="button" className="en-btn ghost" style={{ marginInlineStart: 'auto', color: '#991b1b' }} disabled={!!busy} onClick={() => removeSession(s, false)}><Icon name="trash" size={14} /> حذف</button>
+                    {s.series_id && <button type="button" className="en-btn ghost" style={{ color: '#991b1b' }} disabled={!!busy} onClick={() => removeSession(s, true)}>حذف بقية السلسلة</button>}
+                  </div>}
+                </div>}
+              </div>); })}
+          </div>)}
+        </>}
+
+        {tab === 'rooms' && <>
+          <div className="en-tools"><select value={roomProg} onChange={e => { setRoomProg(e.target.value); setRoomEdit(null); setNewRoom(null); }}><option value="">— اختر البرنامج —</option>{progs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select>
+            {roomProg && canWrite && <button type="button" className="en-btn" onClick={() => setNewRoom({ code: `SEC-${String(roomList.length + 1).padStart(2, '0')}`, section_name: `شعبة ${roomList.length + 1}`, trainer_id: '', capacity: '30', provider: 'teams', join_url: '', host_url: '' })}><Icon name="plus" size={14} /> شعبة جديدة</button>}
+            <button type="button" className="en-btn ghost" onClick={() => downloadXlsx(safeFilename('athar_sections', 'xlsx'), [roomsSheet(roomList, counts, trMap, pgMap)])} disabled={!roomList.length}><Icon name="download" size={14} /> Excel</button></div>
+          {!roomProg && <div className="en-card en-muted">اختر برنامجًا لعرض شعبه وإسكان متدربيه. إجمالي الشعب: {rooms.length} · المُسكَنون: {Object.values(counts).reduce((a, b) => a + b, 0)}.</div>}
+          {roomProg && <>
+            <div className="en-card en-seats"><span className="en-seat"><b>{roomList.length}</b><span>شعبة</span></span><span className="en-seat"><b>{enrs.length}</b><span>مقبول</span></span><span className="en-seat"><b>{enrs.length - unplaced.length}</b><span>مُسكَن</span></span><span className={`en-seat ${unplaced.length ? 'warn' : ''}`}><b>{unplaced.length}</b><span>غير مُسكَن</span></span>
+              {canWrite && unplaced.length > 0 && <div className="en-acts" style={{ marginInlineStart: 'auto' }}><button type="button" className="en-btn ok" disabled={busy === 'place'} onClick={() => place(false)}><Icon name="users" size={14} /> إسكان المسدّدين</button><button type="button" className="en-btn ghost" disabled={busy === 'place'} onClick={() => { if (window.confirm('إسكان كل المقبولين حتى غير المسدّدين؟')) place(true); }}>إسكان الجميع</button></div>}</div>
+            {unplaced.length > 0 && <div className="en-card en-muted">خطة الإسكان التلقائي: {plan.map(p => `${p.code} ← ${p.take}`).join(' · ')}{plan.some(p => !p.classroom_id) && ' (ستُنشأ شعب جديدة بسعة 30)'}.</div>}
+            {newRoom && <div className="en-card lv-form"><h2><Icon name="plus" size={16} /> شعبة جديدة</h2><div className="lv-g4"><label className="en-note">الرمز<input dir="ltr" value={newRoom.code} onChange={e => setNewRoom({ ...newRoom, code: e.target.value })} /></label><label className="en-note">الاسم<input value={newRoom.section_name} onChange={e => setNewRoom({ ...newRoom, section_name: e.target.value })} /></label><label className="en-note">المدرب<select value={newRoom.trainer_id} onChange={e => setNewRoom({ ...newRoom, trainer_id: e.target.value })}><option value="">—</option>{trainers.map(x => <option key={x.id} value={x.id}>{trainerName(x)}</option>)}</select></label><label className="en-note">السعة<input type="number" value={newRoom.capacity} onChange={e => setNewRoom({ ...newRoom, capacity: e.target.value })} /></label><label className="en-note">المنصة الافتراضية<select value={newRoom.provider} onChange={e => setNewRoom({ ...newRoom, provider: e.target.value as Provider })}>{PROVIDERS.map(p => <option key={p.value} value={p.value}>{p.label.ar}</option>)}</select></label><label className="en-note">رابط القاعة الثابت (متدربون)<input dir="ltr" value={newRoom.join_url} onChange={e => setNewRoom({ ...newRoom, join_url: e.target.value })} /></label><label className="en-note">رابط المضيف<input dir="ltr" value={newRoom.host_url} onChange={e => setNewRoom({ ...newRoom, host_url: e.target.value })} /></label></div><div className="en-acts"><button type="button" className="en-btn ok" disabled={busy === 'newroom'} onClick={createRoom}>إنشاء</button><button type="button" className="en-btn ghost" onClick={() => setNewRoom(null)}>إلغاء</button></div></div>}
+            <div className="lv-rooms">{roomList.map(r => { const placed = counts[r.id] || 0; const cap = r.capacity || 30; const tone = occupancyTone(placed, cap); const members = enrs.filter(e => e.classroom_id === r.id); const isEdit = roomEdit?.id === r.id; return (
+              <div key={r.id} className={`en-card lv-roomcard ${tone}`}>
+                <div className="lv-roomtop"><div><b>{classroomLabel(r, 'ar')}</b><small>{trainerName(trMap.get(r.trainer_id || '')) || <em className="lv-warn">بلا مدرب</em>} · {providerLabel(r.provider || 'teams', 'ar')}{r.placement_open === false && ' · الإسكان مغلق'}</small></div><div className="lv-occ"><b>{placed}</b>/{cap}<div className="lv-bar"><i style={{ width: `${Math.min(100, Math.round(placed / cap * 100))}%` }} /></div></div></div>
+                {!isEdit && canWrite && <div className="en-acts"><button type="button" className="en-btn ghost" onClick={() => setRoomEdit({ ...r })}><Icon name="edit" size={13} /> إعداد الشعبة</button><button type="button" className="en-btn ghost" onClick={() => startNew({ kind: 'class', program_id: r.program_id, classroom_id: r.id, trainer_id: r.trainer_id || '', provider: (r.provider as Provider) || 'teams', join_url: r.join_url || '', host_url: r.host_url || '', mode: 'series' })}><Icon name="calendar" size={13} /> جدولة سلسلة</button></div>}
+                {isEdit && roomEdit && <div className="lv-roomedit"><div className="lv-g4"><label className="en-note">الاسم<input value={roomEdit.section_name || ''} onChange={e => setRoomEdit({ ...roomEdit, section_name: e.target.value })} /></label><label className="en-note">المدرب<select value={roomEdit.trainer_id || ''} onChange={e => setRoomEdit({ ...roomEdit, trainer_id: e.target.value })}><option value="">—</option>{trainers.map(x => <option key={x.id} value={x.id}>{trainerName(x)}</option>)}</select></label><label className="en-note">السعة<input type="number" value={roomEdit.capacity || 30} onChange={e => setRoomEdit({ ...roomEdit, capacity: Number(e.target.value) })} /></label><label className="en-note">المنصة<select value={roomEdit.provider || 'teams'} onChange={e => setRoomEdit({ ...roomEdit, provider: e.target.value })}>{PROVIDERS.map(p => <option key={p.value} value={p.value}>{p.label.ar}</option>)}</select></label><label className="en-note">رابط القاعة الثابت<input dir="ltr" value={roomEdit.join_url || ''} onChange={e => setRoomEdit({ ...roomEdit, join_url: e.target.value })} /></label><label className="en-note">رابط المضيف<input dir="ltr" value={roomEdit.host_url || ''} onChange={e => setRoomEdit({ ...roomEdit, host_url: e.target.value })} /></label><label className="cs-chk" style={{ alignSelf: 'end' }}><input type="checkbox" checked={roomEdit.placement_open !== false} onChange={e => setRoomEdit({ ...roomEdit, placement_open: e.target.checked })} /> الإسكان مفتوح</label></div><div className="en-acts"><button type="button" className="en-btn ok" disabled={busy === 'room'} onClick={saveRoom}>حفظ</button><button type="button" className="en-btn ghost" onClick={() => setRoomEdit(null)}>إلغاء</button></div></div>}
+                <details className="lv-members"><summary>المتدربون ({members.length})</summary>{members.length === 0 && <span className="en-muted">لا متدربين بعد.</span>}{members.map(e => <div key={e.id} className="lv-member"><span>{e.full_name}</span><small dir="ltr">{e.email}</small>{canWrite && <select value={e.classroom_id || ''} onChange={ev => move(e, ev.target.value)} disabled={!!busy}><option value="">— إلغاء الإسكان —</option>{roomList.map(x => <option key={x.id} value={x.id}>{x.code}</option>)}</select>}</div>)}</details>
+              </div>); })}</div>
+            {unplaced.length > 0 && <div className="en-card"><h3 className="lv-h3"><Icon name="alert" size={15} /> غير مُسكَنين ({unplaced.length})</h3>{unplaced.map(e => <div key={e.id} className="lv-member"><span>{e.full_name}</span><small dir="ltr">{e.email}</small>{canWrite && <select value="" onChange={ev => ev.target.value && move(e, ev.target.value)} disabled={!!busy}><option value="">إسكان يدوي في…</option>{roomList.map(x => <option key={x.id} value={x.id}>{classroomLabel(x, 'ar')} ({counts[x.id] || 0}/{x.capacity || 30})</option>)}</select>}</div>)}</div>}
+          </>}
+        </>}
+      </div>
+    </div>
+  );
+}
+
+const CSS = `
+.en{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif}
+.en-wrap{max-width:1080px;margin:0 auto;display:grid;gap:12px}
+.en-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.en-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.en-head p{margin:0;color:#64748b;font-size:14px;max-width:760px}.en-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#0b8a83}
+.en-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px}.en-muted{color:#64748b;font-size:13.5px}
+.en-seats{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.en-seat{text-align:start;border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:8px 14px;display:grid;gap:2px;min-width:92px}.en-seat b{font-size:18px;color:#0f2a4e}.en-seat span{font-size:11.5px;color:#64748b}.en-seat.live{border-color:#fca5a5;background:#fef2f2}.en-seat.live b{color:#b91c1c}.en-seat.warn{border-color:#fcd34d;background:#fffbeb}
+.en-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.en-tabs{display:flex;gap:6px;flex-wrap:wrap}.en-tabs button{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;color:#334155;display:inline-flex;gap:5px;align-items:center}.en-tabs button.on{background:#0f2a4e;border-color:#0f2a4e;color:#fff}.lv-tabs button{padding:9px 16px;font-size:13.5px}.lv-tabs i.dot{width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block}
+.en-tools select,.en-tools input{font:inherit;font-size:13px;border:1px solid #cbd5e1;border-radius:10px;padding:8px 10px;background:#fff}
+.en-row.live{border-inline-start:4px solid #dc2626}.en-row.soon{border-inline-start:4px solid #d97706}.en-row.upcoming{border-inline-start:4px solid #0b8a83}.en-row.ended,.en-row.cancelled{opacity:.75}
+.en-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer}.en-who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#64748b}.en-who b{color:#0f2a4e;font-size:15px}.lv-t{font-size:13px!important;color:#0b8a83!important;background:#f0fdfa;border-radius:8px;padding:2px 8px}
+.en-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:#64748b}
+.en-tag{border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:900;background:#f1f5f9;color:#475569;display:inline-flex;gap:5px;align-items:center}.en-tag.live{background:#fee2e2;color:#991b1b}.en-tag.live i{width:7px;height:7px;border-radius:50%;background:#dc2626}.en-tag.soon{background:#fff7ed;color:#9a3412}.en-tag.upcoming{background:#f0fdfa;color:#0b8a83}.en-tag.rec{background:#fdf6e3;color:#9a7417}
+.en-body{margin-top:12px;border-top:1px dashed #e2e8f0;padding-top:12px;display:grid;gap:12px}.en-details{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#64748b}.en-details a{color:#0b8a83;font-weight:800}
+.en-note{display:grid;gap:4px;font-size:12.5px;font-weight:800;color:#334155}.en-note textarea,.en-note input,.en-note select{font:inherit;font-size:13.5px;border:1px solid #cbd5e1;border-radius:10px;padding:8px 10px;background:#fff;font-weight:500}.en-note textarea{min-height:56px;resize:vertical}
+.en-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.en-btn{display:inline-flex;gap:6px;align-items:center;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;text-decoration:none;background:#0f2a4e;color:#fff;border:1px solid #0f2a4e}.en-btn.ok{background:#059669;border-color:#059669}.en-btn.warn{background:#d97706;border-color:#d97706}.en-btn.ghost{background:#fff;color:#0f2a4e;border-color:#cbd5e1}.en-btn:disabled{opacity:.6;cursor:not-allowed}
+.en-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}.en-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}
+.cs-chk{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:#334155;font-weight:800}
+.lv-h3{margin:0 0 10px;font-size:15px;color:#0f2a4e;display:flex;gap:6px;align-items:center}.lv-h3 small{color:#64748b;font-weight:600}
+.lv-board{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.lv-room{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px;display:grid;gap:8px}.lv-room.live{border-color:#fca5a5;box-shadow:0 0 0 3px rgba(220,38,38,.08)}.lv-room.soon{border-color:#fcd34d}.lv-roomhead{display:flex;justify-content:space-between;align-items:center}.lv-room>b{font-size:16px;color:#0f172a}.lv-room>small{color:#64748b}.lv-roomstats{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:#334155}.lv-roomstats span{display:inline-flex;gap:4px;align-items:center}.lv-warn{color:#b91c1c;font-style:normal;font-weight:800}
+.lv-today{display:grid;gap:4px}.lv-trow{display:grid;grid-template-columns:120px 1fr 160px 160px auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.lv-trow b{color:#0b8a83}.lv-trow small{color:#64748b}.lv-trow.live{background:#fff7f7}
+.lv-form{display:grid;gap:12px;border:2px solid #0b8a83}.lv-form h2{margin:0;font-size:18px;color:#0f2a4e;display:flex;gap:8px;align-items:center}.lv-g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.lv-g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.lv-wd{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.lv-wd b{font-size:13px;color:#0f2a4e;margin-inline-end:6px}.lv-wd button{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}.lv-wd button.on{background:#0b8a83;border-color:#0b8a83;color:#fff}
+.lv-prov{display:grid;gap:10px;border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#fcfcfd}.lv-prov>b{font-size:13.5px;color:#0f2a4e}.lv-provgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.lv-pv{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;cursor:pointer;background:#fff}.lv-pv.on{border-color:#0b8a83;background:#f0fdfa}.lv-pv span{display:grid;gap:2px}.lv-pv b{font-size:13px;color:#0f172a}.lv-pv small{font-size:11px;color:#64748b;line-height:1.5}
+.lv-skills{display:grid;gap:6px}.lv-skills>b{font-size:13.5px;color:#0f2a4e}.lv-skgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:160px;overflow:auto}.lv-skgrid button{text-align:start;border:1px solid #e2e8f0;background:#fff;border-radius:10px;padding:6px 10px;font:inherit;font-size:12.5px;cursor:pointer;display:grid}.lv-skgrid button small{color:#0b8a83;font-weight:900;font-size:10.5px;direction:ltr;text-align:start}.lv-skgrid button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.lv-skgrid button.on small{color:#c9a24b}
+.lv-recrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.lv-daygroup{display:grid;gap:8px}
+.lv-rooms{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.lv-roomcard{display:grid;gap:10px;border-inline-start:4px solid #0b8a83}.lv-roomcard.warn{border-inline-start-color:#d97706}.lv-roomcard.full{border-inline-start-color:#dc2626}.lv-roomtop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.lv-roomtop b{font-size:15px;color:#0f172a;display:block}.lv-roomtop small{color:#64748b;font-size:12.5px}.lv-occ{text-align:center;min-width:90px;font-size:12.5px;color:#64748b}.lv-occ b{font-size:18px;color:#0f2a4e}.lv-bar{height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:4px}.lv-bar i{display:block;height:100%;background:#0b8a83}.lv-roomcard.warn .lv-bar i{background:#d97706}.lv-roomcard.full .lv-bar i{background:#dc2626}
+.lv-roomedit{display:grid;gap:10px;border:1px dashed #0b8a83;border-radius:12px;padding:10px}
+.lv-members summary{cursor:pointer;font-size:13px;font-weight:800;color:#0f2a4e}.lv-member{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.lv-member small{color:#64748b}.lv-member select{font:inherit;font-size:12px;border:1px solid #cbd5e1;border-radius:8px;padding:4px 6px}
+@media(max-width:900px){.lv-board,.lv-rooms,.lv-g4,.lv-skgrid{grid-template-columns:1fr 1fr}.lv-provgrid{grid-template-columns:1fr 1fr}.lv-trow{grid-template-columns:100px 1fr auto}.lv-trow small{display:none}}
+@media(max-width:700px){.lv-board,.lv-rooms,.lv-g2,.lv-g4,.lv-skgrid,.lv-provgrid{grid-template-columns:1fr}.lv-member{grid-template-columns:1fr}}
+`;
