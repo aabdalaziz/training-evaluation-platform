@@ -212,3 +212,76 @@ export function registeredEmail(s: LiveSession, pageUrl: string, lang: Lang, nam
   const title = sessionTitle(s, lang); const when = fmtWhen(s.starts_at, lang);
   return { subject: lang === 'ar' ? `تم تسجيلك: ${title}` : `You're registered: ${title}`, html: shell(title, `<p>${lang === 'ar' ? `مرحبًا ${esc(name || '')}، تم تسجيلك في الجلسة.` : `Hello ${esc(name || '')}, you are registered.`}</p><p><b>${esc(when)}</b> (${lang === 'ar' ? 'توقيت الرياض' : 'Riyadh time'})</p><p>${lang === 'ar' ? 'سيصلك رابط الانضمام في التذكير قبل الموعد، ويمكنك الدخول من صفحة الجلسة:' : 'The join link arrives with the reminder; you can also join from the session page:'} <a href="${pageUrl}">${pageUrl}</a></p>`, lang) };
 }
+
+// ============================ P6-ب ============================
+// ---------- أنشطة ما بعد الجلسة ----------
+export type ActivityKind = 'mcq' | 'reflection' | 'self_rating';
+export type Activity = { id: string; session_id: string; created_at?: string; kind: ActivityKind; prompt_ar: string; prompt_en?: string | null; options: string[]; correct?: number | null; skill_id?: string | null; sort: number; active: boolean };
+export type ActivityAnswer = { choice?: number; text?: string; rating?: number };
+export type ActivityResponse = { id: string; activity_id: string; session_id: string; user_id: string; email?: string | null; answer: ActivityAnswer; score?: number | null; created_at?: string };
+export const ACTIVITY_KINDS: { value: ActivityKind; label: T; hint: T }[] = [
+  { value: 'mcq', label: { ar: 'سؤال اختيار من متعدد', en: 'Multiple choice' }, hint: { ar: 'يُصحَّح تلقائيًا', en: 'Auto-graded' } },
+  { value: 'reflection', label: { ar: 'تأمل كتابي', en: 'Written reflection' }, hint: { ar: 'ما أهم ما تعلّمته؟ كيف ستطبقه؟', en: 'Key takeaway and how you will apply it' } },
+  { value: 'self_rating', label: { ar: 'تقييم ذاتي للمهارة (1–5)', en: 'Skill self-rating (1–5)' }, hint: { ar: 'يُسجَّل كدليل مهارة في الملف', en: 'Recorded as skill evidence' } },
+];
+export const activityKindLabel = (v: string, lang: Lang) => lab(ACTIVITY_KINDS, v as ActivityKind, lang);
+export function activityPrompt(a: Pick<Activity, 'prompt_ar' | 'prompt_en'>, lang: Lang): string { return (lang === 'en' && a.prompt_en) ? a.prompt_en : a.prompt_ar; }
+export type ActivityForm = { kind: ActivityKind; prompt_ar: string; prompt_en: string; options: string[]; correct: number; skill_id: string };
+export const EMPTY_ACTIVITY: ActivityForm = { kind: 'mcq', prompt_ar: '', prompt_en: '', options: ['', '', '', ''], correct: 0, skill_id: '' };
+export function validateActivity(f: ActivityForm): string | null {
+  if (f.prompt_ar.trim().length < 5) return 'نص النشاط مطلوب (5 أحرف على الأقل)';
+  if (f.kind === 'mcq') { const opts = f.options.map(o => o.trim()).filter(Boolean); if (opts.length < 2) return 'أدخل خيارين على الأقل'; if (!(f.correct >= 0 && f.correct < f.options.length) || !f.options[f.correct]?.trim()) return 'حدد الإجابة الصحيحة'; }
+  if (f.kind === 'self_rating' && !f.skill_id) return 'التقييم الذاتي يحتاج مهارة مرتبطة';
+  return null;
+}
+export function activityPayload(f: ActivityForm, sessionId: string, sort: number, createdBy: string) {
+  const options = f.kind === 'mcq' ? f.options.map(o => o.trim()) : [];
+  const nonEmpty = options.map((o, i) => ({ o, i })).filter(x => x.o);
+  const correct = f.kind === 'mcq' ? nonEmpty.findIndex(x => x.i === f.correct) : null;
+  return { session_id: sessionId, kind: f.kind, prompt_ar: f.prompt_ar.trim(), prompt_en: f.prompt_en.trim() || null, options: nonEmpty.map(x => x.o), correct, skill_id: f.skill_id || null, sort, created_by: createdBy, active: true };
+}
+/** الدرجة: اختيار 100/0 · تقييم ذاتي rating×20 · تأمل بلا درجة */
+export function scoreAnswer(a: Pick<Activity, 'kind' | 'correct' | 'options'>, ans: ActivityAnswer): number | null {
+  if (a.kind === 'mcq') { if (typeof ans.choice !== 'number' || ans.choice < 0 || ans.choice >= (a.options || []).length) return null; return a.correct !== null && a.correct !== undefined && ans.choice === a.correct ? 100 : 0; }
+  if (a.kind === 'self_rating') { const r = Number(ans.rating); return r >= 1 && r <= 5 ? r * 20 : null; }
+  return null;
+}
+export function validateAnswer(a: Pick<Activity, 'kind' | 'options'>, ans: ActivityAnswer): string | null {
+  if (a.kind === 'mcq' && (typeof ans.choice !== 'number' || ans.choice < 0 || ans.choice >= (a.options || []).length)) return 'اختر إجابة';
+  if (a.kind === 'reflection' && String(ans.text || '').trim().length < 10) return 'اكتب تأملك (10 أحرف على الأقل)';
+  if (a.kind === 'self_rating' && !(Number(ans.rating) >= 1 && Number(ans.rating) <= 5)) return 'اختر تقييمًا من 1 إلى 5';
+  return null;
+}
+export function activityStats(acts: Activity[], responses: ActivityResponse[]) {
+  return acts.map(a => { const rs = responses.filter(r => r.activity_id === a.id); const scored = rs.filter(r => typeof r.score === 'number'); return { activity_id: a.id, responses: rs.length, avg: scored.length ? Math.round(scored.reduce((s, r) => s + Number(r.score), 0) / scored.length) : null, correct: a.kind === 'mcq' ? rs.filter(r => Number(r.score) === 100).length : null }; });
+}
+
+// ---------- ملف التقويم ICS ----------
+function icsEsc(s: string): string { return String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;'); }
+function icsDate(iso: string): string { return new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z'); }
+export function icsForSessions(rows: LiveSession[], site: string, lang: Lang): string {
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Athar//Live Learning//AR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', `X-WR-CALNAME:${icsEsc(lang === 'ar' ? 'أَثَر — جلساتي' : 'Athar — My sessions')}`];
+  for (const s of rows) {
+    const url = `${site}/live/${s.id}`; const join = s.provider === 'athar' ? atharRoomUrl(s.id, s.title_ar) : (s.join_url || '');
+    lines.push('BEGIN:VEVENT', `UID:athar-${s.id}@athar-portal`, `DTSTAMP:${icsDate(new Date().toISOString())}`, `DTSTART:${icsDate(s.starts_at)}`, `DTEND:${icsDate(endsAt(s).toISOString())}`,
+      `SUMMARY:${icsEsc(sessionTitle(s, lang))}`, `DESCRIPTION:${icsEsc((lang === 'ar' ? 'المنصة: ' : 'Platform: ') + providerLabel(s.provider, lang) + (join ? `\n${lang === 'ar' ? 'رابط الانضمام: ' : 'Join: '}${join}` : '') + `\n${url}`)}`,
+      `LOCATION:${icsEsc(join || providerLabel(s.provider, lang))}`, `URL:${url}`, 'BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', `DESCRIPTION:${icsEsc(sessionTitle(s, lang))}`, 'END:VALARM', 'END:VEVENT');
+  }
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n') + '\r\n';
+}
+export function icsFilename(s: LiveSession | null, series: boolean): string { const base = s ? (s.title_en || 'athar-session').replace(/[^\w-]+/g, '-').toLowerCase().slice(0, 40) : 'athar-sessions'; return `${base || 'athar'}${series ? '-series' : ''}.ics`; }
+
+// ---------- التذكير التلقائي (يُستدعى من الـcron اليومي) ----------
+/** الجلسات التي تستحق تذكيرًا: تبدأ خلال النافذة ولم يُرسل لها تذكير ولم تُلغَ */
+export function dueForReminder(rows: LiveSession[], now: Date, windowHours = 30): LiveSession[] {
+  const lo = now.getTime(); const hi = lo + windowHours * 3600000;
+  return rows.filter(s => s.status === 'scheduled' && !s.reminder_sent_at && new Date(s.starts_at).getTime() > lo && new Date(s.starts_at).getTime() <= hi);
+}
+
+// ---------- جدول المدرب ----------
+export function trainerWeek(rows: LiveSession[], trainerIds: string[], now: Date): { today: LiveSession[]; week: { day: string; items: LiveSession[] }[] } {
+  const mine = rows.filter(s => s.trainer_id && trainerIds.includes(s.trainer_id) && s.status !== 'cancelled');
+  const today = localDay(now.toISOString()); const end = new Date(now.getTime() + 7 * 86400000);
+  return { today: mine.filter(s => localDay(s.starts_at) === today).sort((a, b) => a.starts_at.localeCompare(b.starts_at)), week: groupByDay(mine.filter(s => localDay(s.starts_at) > today && new Date(s.starts_at) <= end)) };
+}
