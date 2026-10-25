@@ -4,15 +4,24 @@ import { createClient } from '@supabase/supabase-js';
 import { parseMiaarReport, placementValid, evidenceSkills, effectiveLevel } from './placement';
 import type { MiaarReportRow } from './placement';
 
+/** يفحص إعدادات مِعيار ويُرجع رسالة الخطأ (بلا أسرار) أو null إن كانت سليمة */
+export function miaarConfigError(): string | null {
+  const url = (process.env.MIAAR_SUPABASE_URL || '').trim(); const key = (process.env.MIAAR_SERVICE_ROLE_KEY || '').trim();
+  if (!url && !key) return 'MIAAR_SUPABASE_URL و MIAAR_SERVICE_ROLE_KEY غير مضبوطين في Vercel';
+  if (!url) return 'MIAAR_SUPABASE_URL غير مضبوط في Vercel';
+  if (!key) return 'MIAAR_SERVICE_ROLE_KEY غير مضبوط في Vercel';
+  try { const u = new URL(url); if (!/^https?:$/.test(u.protocol) || !u.hostname.includes('.')) throw new Error('x'); } catch { return `MIAAR_SUPABASE_URL غير صالح («${url.slice(0, 24)}…») — يجب أن يكون رابط المشروع مثل https://xxxxxxxx.supabase.co`; }
+  if (!/^(sb_secret_|eyJ)/.test(key)) return 'MIAAR_SERVICE_ROLE_KEY لا يبدو مفتاحًا سريًا (يبدأ بـ sb_secret_ أو eyJ)';
+  return null;
+}
 export function miaarClient() {
-  const url = process.env.MIAAR_SUPABASE_URL; const key = process.env.MIAAR_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  if (miaarConfigError()) return null;
+  try { return createClient((process.env.MIAAR_SUPABASE_URL || '').trim(), (process.env.MIAAR_SERVICE_ROLE_KEY || '').trim(), { auth: { persistSession: false, autoRefreshToken: false } }); } catch { return null; }
 }
 
 /** يستورد التقارير الجديدة (أو تقارير بريد معيّن). يُرجع عدد المستورد/المحدّث. */
 export async function syncPlacements(db: any, opts: { email?: string; limit?: number; since?: string | null } = {}) {
-  const miaar = miaarClient(); if (!miaar) return { ok: false, error: 'MIAAR_SUPABASE_URL / MIAAR_SERVICE_ROLE_KEY غير مضبوطين في Vercel' };
+  const cfg = miaarConfigError(); const miaar = miaarClient(); if (cfg || !miaar) return { ok: false, error: cfg || 'تعذّر إنشاء اتصال مِعيار' };
   let q = miaar.from('placement_reports').select('id, submission_id, test_version, candidate_email, created_at, report').order('created_at', { ascending: false }).limit(opts.limit || 500);
   if (opts.email) q = q.ilike('candidate_email', opts.email);
   if (opts.since) q = q.gte('created_at', opts.since);
@@ -22,17 +31,18 @@ export async function syncPlacements(db: any, opts: { email?: string; limit?: nu
   const have = new Set(((existing || []) as any[]).map(x => x.external_id));
   const { data: sk } = await db.from('portal_skills').select('id,code').in('code', ['ATH-AR-004', 'ATH-AR-005', 'ATH-AR-006']);
   const codeToId = new Map<string, string>(((sk || []) as any[]).map(x => [x.code, x.id]));
-  let imported = 0, skipped = 0; const errors: string[] = [];
-  for (const row of rows) {
-    if (have.has(String(row.id))) { skipped++; continue; }
-    const p = parseMiaarReport(row); if (!placementValid(p)) { skipped++; continue; }
-    const { data: ins, error: e } = await db.from('portal_placements').insert(p).select('id,user_id').single();
-    if (e) { errors.push(`${p.email}: ${e.message}`); continue; }
-    imported++;
-    const level = effectiveLevel(p);
-    await db.from('portal_learning_events').insert({ user_id: (ins as any)?.user_id || null, email: p.email, verb: 'assessed', object_type: 'placement', object_id: (ins as any).id, skills: evidenceSkills(p, codeToId), context: { source: 'miaar', level, demonstrated: p.demonstrated_level, percent: p.overall_percent, skills: p.skills, taken_at: p.taken_at } });
-    // لقطة المستوى على التسجيلات التي لا تحمل مستوى بعد
-    if (level) await db.from('portal_enrollments').update({ placement_level: level, placement_id: (ins as any).id }).ilike('email', p.email).is('placement_level', null);
-  }
-  return { ok: true, fetched: rows.length, imported, skipped, errors: errors.length ? errors.slice(0, 5) : undefined };
+  let skipped = 0; const errors: string[] = [];
+  const fresh = rows.filter(r => { if (have.has(String(r.id))) { skipped++; return false; } return true; }).map(parseMiaarReport).filter(p => { if (!placementValid(p)) { skipped++; return false; } return true; });
+  if (!fresh.length) return { ok: true, fetched: rows.length, imported: 0, skipped };
+  // إدراج دفعة واحدة (سرعة + ضمن مهلة الخادم)
+  const { data: ins, error: e } = await db.from('portal_placements').insert(fresh).select('id,external_id,email,user_id');
+  if (e) return { ok: false, error: `أَثَر: ${e.message}`, fetched: rows.length, imported: 0, skipped };
+  const byExt = new Map<string, any>(((ins || []) as any[]).map(x => [x.external_id, x]));
+  const events = fresh.map(p => { const row = byExt.get(p.external_id); return row ? { user_id: row.user_id || null, email: p.email, verb: 'assessed', object_type: 'placement', object_id: row.id, skills: evidenceSkills(p, codeToId), context: { source: 'miaar', level: effectiveLevel(p), demonstrated: p.demonstrated_level, percent: p.overall_percent, skills: p.skills, taken_at: p.taken_at } } : null; }).filter(Boolean);
+  if (events.length) { const { error: ee } = await db.from('portal_learning_events').insert(events); if (ee) errors.push(`events: ${ee.message}`); }
+  // لقطة المستوى على التسجيلات التي لا تحمل مستوى بعد (أحدث نتيجة لكل بريد)
+  const latest = new Map<string, { level: string; id: string }>();
+  for (const p of [...fresh].sort((a, b) => a.taken_at.localeCompare(b.taken_at))) { const lv = effectiveLevel(p); const row = byExt.get(p.external_id); if (lv && row) latest.set(p.email, { level: lv, id: row.id }); }
+  for (const [email, x] of latest) { const { error: ue } = await db.from('portal_enrollments').update({ placement_level: x.level, placement_id: x.id }).ilike('email', email).is('placement_level', null); if (ue) { errors.push(`enrollments: ${ue.message}`); break; } }
+  return { ok: true, fetched: rows.length, imported: fresh.length, skipped, errors: errors.length ? errors.slice(0, 5) : undefined };
 }
