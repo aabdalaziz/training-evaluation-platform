@@ -17,7 +17,7 @@ export type LiveSession = {
   skills: string[]; sector?: string | null; access: SessionAccess; organization_id?: string | null; capacity?: number | null; lang?: string | null;
   status: SessionStatus; attendance_session_id?: string | null; reminder_sent_at?: string | null; notes?: string | null;
 };
-export type Classroom = { id: string; code: string; section_name?: string | null; program_id: string; trainer_id?: string | null; delivery_mode?: string | null; level?: string | null; capacity?: number | null; provider?: string | null; join_url?: string | null; host_url?: string | null; placement_open?: boolean | null; portal_created?: boolean | null };
+export type Classroom = { id: string; code: string; section_name?: string | null; program_id: string; trainer_id?: string | null; delivery_mode?: string | null; level?: string | null; capacity?: number | null; provider?: string | null; join_url?: string | null; host_url?: string | null; placement_open?: boolean | null; portal_created?: boolean | null; cefr_level?: string | null };
 export type Trainer = { id: string; full_name?: string | null; name?: string | null; email?: string | null };
 export type Registration = { id: string; session_id: string; user_id?: string | null; email: string; full_name?: string | null; organization?: string | null; created_at?: string };
 
