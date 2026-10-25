@@ -10,6 +10,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/enrollments', label: 'طلبات التسجيل', icon: 'users' },
   { href: '/admin/payments', label: 'المدفوعات', icon: 'shield' },
   { href: '/admin/consulting', label: 'الاستشارات', icon: 'compass' },
+  { href: '/admin/live', label: 'البث المباشر', icon: 'play' },
   { href: '/admin/resources', label: 'الحقائب', icon: 'folder' },
   { href: '/admin/skills', label: 'المهارات والجهات', icon: 'target' },
   { href: '/admin/catalog', label: 'نشر البرامج', icon: 'globe' },
