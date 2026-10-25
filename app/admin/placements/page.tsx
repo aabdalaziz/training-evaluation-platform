@@ -23,7 +23,7 @@ export default function Page() { return <Suspense fallback={null}><PlacementsAdm
 function PlacementsAdmin() {
   const db = useMemo(() => supabase(), []); const router = useRouter();
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState('');
-  const [rows, setRows] = useState<Placement[]>([]); const [progs, setProgs] = useState<Prog[]>([]); const [enrs, setEnrs] = useState<Enr[]>([]); const [configured, setConfigured] = useState<boolean | null>(null);
+  const [rows, setRows] = useState<Placement[]>([]); const [progs, setProgs] = useState<Prog[]>([]); const [enrs, setEnrs] = useState<Enr[]>([]); const [configured, setConfigured] = useState<boolean | null>(null); const [cfgError, setCfgError] = useState('');
   const [level, setLevel] = useState<'all' | Cefr>('all'); const [q, setQ] = useState(''); const [open, setOpen] = useState<string | null>(null); const [latestOnly, setLatestOnly] = useState(true);
 
   async function load() {
@@ -34,7 +34,7 @@ function PlacementsAdmin() {
       fetch('/api/placements').then(x => x.json()).catch(() => null),
     ]);
     if (e1) { setError(e1.message); return; }
-    setRows((p || []) as Placement[]); setProgs((pg || []) as Prog[]); setEnrs((en || []) as Enr[]); setConfigured(cfg ? !!cfg.configured : null);
+    setRows((p || []) as Placement[]); setProgs((pg || []) as Prog[]); setEnrs((en || []) as Enr[]); setConfigured(cfg ? !!cfg.configured : null); setCfgError(cfg?.error || '');
   }
   useEffect(() => { (async () => {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/placements'); return; }
@@ -42,7 +42,7 @@ function PlacementsAdmin() {
     await load(); setReady(true);
   })(); }, [db, router]);
 
-  const sync = async () => { setBusy('sync'); setError(''); setNotice(''); try { const { data: s } = await db.auth.getSession(); const j = await fetch('/api/placements', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token || ''}` }, body: JSON.stringify({ action: 'sync' }) }).then(x => x.json()); if (!j.success) throw new Error(j.error || 'فشلت المزامنة'); setNotice(`تمت المزامنة: ${j.fetched} تقريرًا من مِعيار · ${j.imported} جديد · ${j.skipped} موجود مسبقًا${j.errors ? ' · أخطاء: ' + j.errors.join(' | ') : ''}`); await load(); } catch (e: any) { setError(e.message || String(e)); } setBusy(''); };
+  const sync = async () => { setBusy('sync'); setError(''); setNotice(''); try { const { data: s } = await db.auth.getSession(); const r = await fetch('/api/placements', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token || ''}` }, body: JSON.stringify({ action: 'sync' }) }); const txt = await r.text(); let j: any = null; try { j = JSON.parse(txt); } catch { throw new Error(`الخادم لم يُرجع ردًا صالحًا (${r.status}) — غالبًا إعداد MIAAR_* غير صحيح أو انتهت المهلة`); } if (!j.success) throw new Error(j.error || 'فشلت المزامنة'); setNotice(`تمت المزامنة: ${j.fetched} تقريرًا من مِعيار · ${j.imported} جديد · ${j.skipped} موجود مسبقًا${j.errors ? ' · أخطاء: ' + j.errors.join(' | ') : ''}`); await load(); } catch (e: any) { setError(e.message || String(e)); } setBusy(''); };
 
   const base = useMemo(() => latestOnly ? Array.from(latestByEmail(rows).values()) : rows, [rows, latestOnly]);
   const shown = useMemo(() => base.filter(p => (level === 'all' || effectiveLevel(p) === level) && (!q.trim() || `${p.full_name || ''} ${p.email} ${p.phone || ''}`.toLowerCase().includes(q.trim().toLowerCase()))), [base, level, q]);
@@ -58,7 +58,7 @@ function PlacementsAdmin() {
         <header className="en-head"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>نتائج مِعيار — اختبار تحديد المستوى</h1><p>كل نتيجة تُستورد من مِعيار وتُسجَّل كدليل مهارة (استماع · قراءة · قواعد ومفردات) في ملف المتعلم، وتوجّه الإسكان في الشعب والتوصية بالبرامج.</p></div>
           <div className="en-acts"><button type="button" className="en-btn" onClick={sync} disabled={busy === 'sync' || configured === false}><Icon name="refresh" size={14} /> {busy === 'sync' ? 'جارٍ المزامنة…' : 'مزامنة من مِعيار'}</button><a className="en-btn ghost" href="https://miaar-placement-test.vercel.app" target="_blank" rel="noreferrer"><Icon name="arrow" size={14} /> فتح مِعيار</a></div></header>
         <PortalAdminTabs />
-        {configured === false && <div className="en-err">الربط مع مِعيار غير مفعّل: أضف في Vercel المتغيّرين <code>MIAAR_SUPABASE_URL</code> و<code>MIAAR_SERVICE_ROLE_KEY</code> (من مشروع مِعيار في Supabase) ثم Redeploy. تُزامَن النتائج تلقائيًا كل صباح، ويمكنك المزامنة يدويًا من الزر أعلاه.</div>}
+        {configured === false && <div className="en-err">{cfgError ? `إعداد مِعيار: ${cfgError}. ` : ''}الربط مع مِعيار غير مفعّل: أضف في Vercel المتغيّرين <code>MIAAR_SUPABASE_URL</code> و<code>MIAAR_SERVICE_ROLE_KEY</code> (من مشروع مِعيار في Supabase) ثم Redeploy. تُزامَن النتائج تلقائيًا كل صباح، ويمكنك المزامنة يدويًا من الزر أعلاه.</div>}
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok">{notice}</div>}
 
         <div className="en-card pl-dist">
