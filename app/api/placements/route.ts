@@ -7,10 +7,11 @@
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { syncPlacements, miaarClient } from '../../../lib/portal/placement-sync';
+import { syncPlacements, miaarClient, miaarConfigError } from '../../../lib/portal/placement-sync';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
 
@@ -25,7 +26,7 @@ async function ctx(req: Request) {
   return { user: { id: data.user.id, email: String(data.user.email || '').toLowerCase() }, staff: WRITERS.includes(String((prof as any)?.role || '').toUpperCase()), db: createClient(URL_, SERVICE) };
 }
 
-export async function GET() { return NextResponse.json({ success: true, configured: !!miaarClient() }); }
+export async function GET() { const err = miaarConfigError(); return NextResponse.json({ success: true, configured: !err && !!miaarClient(), error: err || undefined }); }
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error;
@@ -34,9 +35,9 @@ export async function POST(req: Request) {
   if (action === 'mine') {
     const sync = await syncPlacements(c.db, { email: c.user.email, limit: 20 });
     const { data } = await c.db.from('portal_placements').select('*').ilike('email', c.user.email).order('taken_at', { ascending: false }).limit(5);
-    return NextResponse.json({ success: true, configured: sync.ok || !String((sync as any).error || '').includes('MIAAR_'), synced: sync, placements: data || [] });
+    return NextResponse.json({ success: true, configured: !miaarConfigError(), synced: sync, placements: data || [] });
   }
   if (!c.staff) return bad('غير مصرّح', 403);
-  if (action === 'sync') { const r = await syncPlacements(c.db, { since: body.since || null, limit: Number(body.limit) || 500 }); return NextResponse.json({ success: r.ok, ...r }); }
+  if (action === 'sync') { try { const r = await syncPlacements(c.db, { since: body.since || null, limit: Math.min(Number(body.limit) || 200, 500) }); return NextResponse.json({ success: r.ok, ...r }); } catch (e: any) { return bad(String(e?.message || e), 500); } }
   return bad('إجراء غير معروف');
 }
