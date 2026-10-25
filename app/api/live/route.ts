@@ -6,12 +6,14 @@
  *  POST { action: 'remind', session_id }                       → موظف: تذكير بالبريد لمتدربي الشعبة/البرنامج والمسجّلين
  *  POST { action: 'place', program_id, force? }                → موظف: إسكان المقبولين المسدّدين (أو الجميع مع force) عبر RPC portal_place_enrollment
  *  POST { action: 'status', session_id, status }               → موظف: live | ended | cancelled | scheduled
+ *  POST { action: 'answer', activity_id, answer }               → مستخدم: إجابة نشاط ما بعد الجلسة ⇒ تصحيح + حدث assessed موسوم بالمهارة
+ *  POST { action: 'recording', session_id }                     → أي زائر/مستخدم: رابط التسجيل (حسب RLS) + حدث viewed
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendViaResend } from '../../../lib/email/resend';
-import { reminderEmail, registeredEmail, atharRoomUrl } from '../../../lib/portal/live';
-import type { LiveSession } from '../../../lib/portal/live';
+import { reminderEmail, registeredEmail, atharRoomUrl, scoreAnswer, validateAnswer } from '../../../lib/portal/live';
+import type { LiveSession, Activity, ActivityAnswer } from '../../../lib/portal/live';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -69,6 +71,28 @@ export async function POST(req: Request) {
     const lang = (s as any).lang === 'en' ? 'en' : 'ar'; const m = registeredEmail(s as LiveSession, `${site}/live/${id}`, lang, full_name);
     const mail_error = await mail(() => sendViaResend({ to: [user.email], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: 'live_registered' }] }));
     return NextResponse.json({ success: true, mail_error });
+  }
+
+  if (action === 'recording') {
+    const id = String(body.session_id || ''); if (!UUID.test(id)) return bad('معرّف غير صالح');
+    const { data: s } = await userDb.from('portal_sessions').select('id,recording_url,skills,program_id').eq('id', id).maybeSingle();
+    if (!s || !(s as any).recording_url) return bad('التسجيل غير متاح لك', 403);
+    await db.from('portal_learning_events').insert({ user_id: user?.id || null, email: user?.email || null, verb: 'viewed', object_type: 'recording', object_id: id, skills: (s as any).skills || [], context: { program_id: (s as any).program_id } });
+    return NextResponse.json({ success: true, url: (s as any).recording_url });
+  }
+
+  if (action === 'answer') {
+    if (!user) return bad('يرجى تسجيل الدخول أولاً', 401);
+    const aid = String(body.activity_id || ''); if (!UUID.test(aid)) return bad('معرّف النشاط غير صالح');
+    const { data: a } = await userDb.from('portal_session_activities').select('*').eq('id', aid).maybeSingle(); // RLS: يرى النشاط من يرى الجلسة
+    if (!a) return bad('النشاط غير متاح لك', 403);
+    const act = a as Activity; const ans: ActivityAnswer = { choice: typeof body.answer?.choice === 'number' ? body.answer.choice : undefined, text: body.answer?.text ? String(body.answer.text).slice(0, 2000) : undefined, rating: body.answer?.rating !== undefined ? Number(body.answer.rating) : undefined };
+    const v = validateAnswer(act, ans); if (v) return bad(v);
+    const score = scoreAnswer(act, ans);
+    const { error } = await db.from('portal_activity_responses').upsert({ activity_id: aid, session_id: act.session_id, user_id: user.id, email: user.email, answer: ans, score }, { onConflict: 'activity_id,user_id' });
+    if (error) return bad(error.message, 500);
+    await db.from('portal_learning_events').insert({ user_id: user.id, email: user.email, verb: 'assessed', object_type: 'activity', object_id: aid, skills: act.skill_id ? [act.skill_id] : [], context: { session_id: act.session_id, kind: act.kind, score } });
+    return NextResponse.json({ success: true, score, correct: act.kind === 'mcq' ? act.correct : null });
   }
 
   if (!staff) return bad('غير مصرّح', 403);
