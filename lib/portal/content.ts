@@ -11,7 +11,12 @@ export const BRAND = {
   full: { ar: 'أَثَر — بوابة التعليم والتدريب والتطوير', en: 'Athar · TRACE — Education, Training & Development Portal' } as T,
   tagline: { ar: 'نتعلّم، نتدرّب، نتطوّر… ونقيس الأثر', en: 'Learn. Train. Grow. Prove it.' } as T,
   promise: { ar: 'بوابة واحدة تجمع تعليم العربية للناطقين بغيرها، والبرامج التدريبية والدبلومات، والاستشارات، والحقائب، والبث المباشر — ويحكمها قياس حقيقي للأثر قبل التعلّم وأثناءه وبعده.', en: 'One portal for Arabic for non-native speakers, professional training and diplomas, consulting, resources and live channels — governed by real impact measurement before, during and after learning.' } as T,
-  legal: { ar: 'بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T,
+  /** مالك الحقوق الفكرية للمنصة والهوية والمنهجيات */
+  owner: { ar: 'د. أحمد محمد عبدالعزيز بدوي', en: 'Dr. Ahmed Mohamed Abdelaziz Badawi' } as T,
+  /** الكيان التجاري المشغِّل حاليًا (الفواتير والتعاقدات) — لا يحمل أي حق ملكية */
+  legal: { ar: 'شركة بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T,
+  operatedBy: { ar: 'تُشغَّل تجاريًا عبر', en: 'Commercially operated by' } as T,
+  copyrightYear: 2026,
   colors: { navy: '#0f2a4e', teal: '#0b8a83', gold: '#c9a24b' },
   /** الاختصار الإنجليزي الرسمي: TRACE = أثر، وحروفه أوائل الخدمات */
   acronym: 'TRACE',
@@ -33,6 +38,8 @@ export const CONTACT = {
 };
 
 export const ABOUT = {
+  /** بيان الملكية — يُعرض في «من نحن» */
+  ownership: { ar: 'أَثَر مشروع فكري ومهني للدكتور أحمد محمد عبدالعزيز بدوي: فكرته ومنهجيته (TRACE) وتصميمه ومحتواه ملك حصري له. الجهات الأكاديمية والمؤسسات المذكورة في البوابة هي جهات عمل وتعاون، ويُدار النشاط التجاري حاليًا عبر شركة بوابة التميز للاستشارات والتدريب.', en: 'Athar is the intellectual and professional project of Dr. Ahmed Mohamed Abdelaziz Badawi; its concept, TRACE methodology, design and content are his exclusive property. The institutions named on this portal are employers and collaborators; commercial operations currently run through CenterGate for Excellence.' } as T,
   intro: { ar: 'أَثَر بوابة متكاملة تجمع تحت سقف واحد ثلاث رحلات: التعليم، والتدريب، والتطوير المؤسسي — وتربطها بمنظومة قياس تبدأ قبل الرحلة باختبار «مِعيار»، وتستمر أثناءها بمنصة التقويم، وتُثبت نتائجها بعدها بقياس الأثر وفق مستويات كيركباتريك الأربعة.', en: 'Athar is an integrated portal bringing together three journeys — education, training and institutional development — bound by a measurement system that starts before the journey (Miaar placement test), continues during it (the Evaluation Platform) and proves results after it through Kirkpatrick levels 1–4.' } as T,
   vision: { ar: 'أن نكون المرجع الأول في المنطقة لحلول التعليم والتدريب التي تُثبت أثرها بالأرقام.', en: 'To be the region’s first reference for education and training solutions that prove their impact with numbers.' } as T,
   mission: { ar: 'تقديم برامج وخدمات تعليمية وتدريبية واستشارية عالية الجودة، تُصمَّم على احتياج حقيقي، وتُنفَّذ بخبرات متخصصة، وتُقاس نتائجها بشفافية.', en: 'To deliver high-quality education, training and consulting services designed on real needs, delivered by specialists, and measured transparently.' } as T,
@@ -50,9 +57,9 @@ export const ABOUT = {
 };
 
 export const PARTNERS = [
-  { logo: '/logos/upm.png', name: { ar: 'جامعة الأمير مقرن بن عبدالعزيز', en: 'Prince Mugrin University' } as T, role: { ar: 'الجهة الأكاديمية', en: 'Academic partner' } as T },
-  { logo: '/logos/center.png', name: { ar: 'المركز العالمي لتعليم اللغة العربية', en: 'Global Center for Teaching Arabic' } as T, role: { ar: 'مركز متخصص', en: 'Specialised centre' } as T },
-  { logo: '/logos/gate.png', name: { ar: 'بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T, role: { ar: 'الشريك الإستراتيجي', en: 'Strategic partner' } as T, wide: true },
+  { logo: '/logos/upm.png', name: { ar: 'جامعة الأمير مقرن بن عبدالعزيز', en: 'Prince Mugrin University' } as T, role: { ar: 'جهة عمل وتعاون أكاديمي', en: 'Employer & academic collaborator' } as T },
+  { logo: '/logos/center.png', name: { ar: 'المركز العالمي لتعليم اللغة العربية', en: 'Global Center for Teaching Arabic' } as T, role: { ar: 'جهة تعاون متخصصة', en: 'Specialised collaborator' } as T },
+  { logo: '/logos/gate.png', name: { ar: 'شركة بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T, role: { ar: 'الكيان التجاري المشغِّل حاليًا', en: 'Current operating entity' } as T, wide: true },
 ];
 
 /** خريطة الاختصار TRACE → الخدمات (تُعرض في الرئيسية والتذييل) */
@@ -184,7 +191,7 @@ export const UI = {
   noPrograms: { ar: 'لا توجد برامج معلنة حاليًا — تواصل معنا لمعرفة المواعيد القادمة.', en: 'No programs announced at the moment — contact us for upcoming dates.' } as T,
   method: { ar: 'منهجية أَثَر', en: 'The Athar method' } as T,
   methodSub: { ar: 'قبل · أثناء · بعد', en: 'Before · During · After' } as T,
-  partners: { ar: 'شركاؤنا', en: 'Our partners' } as T,
+  partners: { ar: 'جهات العمل والتعاون', en: 'Employers & collaborators' } as T,
   ctaTitle: { ar: 'جاهز لتبدأ رحلة لها أثر؟', en: 'Ready for a journey with impact?' } as T,
   ctaSub: { ar: 'اختبر مستواك، أو تصفّح البرامج، أو حدّثنا عن احتياج مؤسستك.', en: 'Take the test, browse programs, or tell us about your institution’s needs.' } as T,
   contactUs: { ar: 'تواصل معنا', en: 'Contact us' } as T,
