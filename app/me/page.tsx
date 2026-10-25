@@ -9,6 +9,8 @@ import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
 import ProgramResources from '../components/ProgramResources';
 import UpcomingSessions from '../components/UpcomingSessions';
+import PlacementCard from '../components/PlacementCard';
+import { AtharMark } from '../components/PortalShell';
 import type { IconName } from '../../lib/ui/icons';
 import { CERT_KIND_AR, STATUS_AR, attendancePct, attendanceTone, buildTasks, isRunning, type MePortal, type Task } from '../../lib/me/model';
 
@@ -58,8 +60,8 @@ export default function MePage() {
   const shell = (child: React.ReactNode) => <main className="me" dir="rtl"><style>{CSS}</style><div className="me-wrap">{child}</div></main>;
   const head = (
     <header className="me-card me-head">
-      <div className="me-logos"><img src="/logos/upm.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /><img src="/logos/gate.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
-      <div className="me-kicker"><Icon name="school" size={14} /> بوابة المتدرب</div>
+      <div className="me-brand"><a href="/" className="me-brandlink"><AtharMark size={36} /><span><b>أَثَر</b><small>بوابة التعليم والتدريب والتطوير</small></span></a><nav className="me-quick"><a href="/me/skills"><Icon name="target" size={14} /> ملفي المهاري</a><a href="/live"><Icon name="play" size={14} /> الجلسات</a><a href="/resources"><Icon name="folder" size={14} /> الحقائب</a><a href="/programs"><Icon name="programs" size={14} /> البرامج</a></nav></div>
+      <div className="me-kicker"><Icon name="school" size={14} /> بوابة المتدرب — حسابك الموحّد في أَثَر</div>
       {me ? <>
         <h1>مرحبًا، {me.name}</h1>
         <p className="me-sub"><span dir="ltr">{me.email}</span> · {me.programs.length} برنامج · {allCerts.length} شهادة{running.length ? ` · ${running.length} برنامج جارٍ` : ''}</p>
@@ -92,10 +94,12 @@ export default function MePage() {
   return shell(<>
     {head}
     {error && <div className="me-msg bad"><Icon name="alert" size={16} /><span>{error}</span></div>}
+    {me && <PlacementCard />}
     {me && <>
       <nav className="me-tabs">
         <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}><Icon name="evaluations" size={16} /> المطلوب مني {tasks.length ? <i>{tasks.length}</i> : null}</button>
         <button className={tab === 'programs' ? 'on' : ''} onClick={() => setTab('programs')}><Icon name="programs" size={16} /> برامجي <i>{me.programs.length}</i></button>
+        <a className="me-tablink" href="/me/skills"><Icon name="target" size={16} /> مهاراتي</a>
         <button className={tab === 'certs' ? 'on' : ''} onClick={() => setTab('certs')}><Icon name="certificate" size={16} /> شهاداتي <i>{allCerts.length}</i></button>
       </nav>
 
@@ -172,7 +176,7 @@ const CSS = `
 .me-wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .me-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
 .me-head{border-top:5px solid #c9a24b;gap:4px}
-.me-logos{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.me-logos img{height:46px;object-fit:contain}
+.me-brand{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}.me-brandlink{display:flex;gap:10px;align-items:center;text-decoration:none;color:#0f2a4e}.me-brandlink b{display:block;font-size:20px;line-height:1}.me-brandlink small{color:#64748b;font-size:11.5px}.me-quick{display:flex;gap:6px;flex-wrap:wrap}.me-quick a{display:inline-flex;gap:5px;align-items:center;border:1px solid #e2e8f0;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:800;color:#0f2a4e;text-decoration:none;background:#f8fafc}.me-quick a:hover{border-color:#0b8a83}
 .me-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
 .me-head h1{margin:2px 0;font-size:22px;color:#0f2a4e}
 .me-sub{margin:4px 0 0;font-size:13.5px;line-height:1.8;color:#334155;background:#f8fafc;border-radius:10px;padding:10px 12px}
@@ -189,6 +193,7 @@ const CSS = `
 .me-btn.primary{background:#0f2a4e;color:#fff;border-color:#0f2a4e;padding:13px 22px;font-size:15px}.me-btn.primary:hover{background:#163b6e;color:#fff}.me-btn:disabled{opacity:.5;cursor:not-allowed}
 .me-btn.gold{background:#fbf5e4;border-color:#ead9a6;color:#8a6a14}.me-btn.gold:hover{border-color:#c9a24b;color:#6b5210}
 .me-tabs{display:flex;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:6px}
+.me-tabs .me-tablink{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:10px 8px;font-size:13.5px;font-weight:800;color:#0b8a83;text-decoration:none;background:#f0fdfa}
 .me-tabs button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:transparent;border-radius:10px;padding:10px 8px;font:inherit;font-size:13.5px;font-weight:900;color:#475569;cursor:pointer;min-width:0}
 .me-tabs button.on{background:#0f2a4e;color:#fff}.me-tabs i{font-style:normal;background:rgba(15,42,78,.08);border-radius:999px;padding:0 7px;font-size:11px}.me-tabs button.on i{background:rgba(255,255,255,.2)}
 .me-stack{display:flex;flex-direction:column;gap:10px}
