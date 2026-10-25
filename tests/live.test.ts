@@ -102,3 +102,41 @@ test('live: portal content — all eight services are live', () => {
   const s = serviceBySlug('live')!; assert.equal(s.status, 'live'); assert.equal(s.cta.href, '/live'); assert.equal((s as any).phase, undefined);
   assert.ok(NAV.some(n => n.href === '/live')); assert.equal(SERVICES.filter(x => x.status === 'live').length, 8); assert.equal(NAV.length, 8);
 });
+
+// ============================ P6-ب ============================
+import { ACTIVITY_KINDS, activityKindLabel, activityPrompt, EMPTY_ACTIVITY, validateActivity, activityPayload, scoreAnswer, validateAnswer, activityStats, icsForSessions, icsFilename, dueForReminder, trainerWeek } from '../lib/portal/live';
+import type { Activity, ActivityResponse } from '../lib/portal/live';
+
+const A = (o: Partial<Activity>): Activity => ({ id: 'a1', session_id: 's1', kind: 'mcq', prompt_ar: 'ما المقصود بالأثر؟', options: ['أ', 'ب', 'ج'], correct: 1, sort: 0, active: true, ...o });
+
+test('live-b: activities — validation, payload, scoring', () => {
+  assert.equal(ACTIVITY_KINDS.length, 3); assert.equal(activityKindLabel('self_rating', 'ar'), 'تقييم ذاتي للمهارة (1–5)'); assert.equal(activityPrompt(A({ prompt_en: 'What?' }), 'en'), 'What?'); assert.equal(activityPrompt(A({}), 'en'), 'ما المقصود بالأثر؟');
+  assert.equal(validateActivity({ ...EMPTY_ACTIVITY }), 'نص النشاط مطلوب (5 أحرف على الأقل)');
+  assert.equal(validateActivity({ ...EMPTY_ACTIVITY, prompt_ar: 'سؤال طويل كفاية', options: ['أ', '', '', ''] }), 'أدخل خيارين على الأقل');
+  assert.equal(validateActivity({ ...EMPTY_ACTIVITY, prompt_ar: 'سؤال طويل كفاية', options: ['أ', 'ب', '', ''], correct: 3 }), 'حدد الإجابة الصحيحة');
+  assert.equal(validateActivity({ ...EMPTY_ACTIVITY, prompt_ar: 'سؤال طويل كفاية', options: ['أ', 'ب', '', ''], correct: 1 }), null);
+  assert.equal(validateActivity({ ...EMPTY_ACTIVITY, kind: 'self_rating', prompt_ar: 'قيّم تمكّنك' }), 'التقييم الذاتي يحتاج مهارة مرتبطة');
+  assert.equal(validateActivity({ ...EMPTY_ACTIVITY, kind: 'reflection', prompt_ar: 'ما أهم ما تعلّمته؟' }), null);
+  const p = activityPayload({ ...EMPTY_ACTIVITY, prompt_ar: 'سؤال', options: ['أ', '', 'ج', 'د'], correct: 2, skill_id: 'k1' }, 's1', 3, 'u1');
+  assert.deepEqual(p.options, ['أ', 'ج', 'د']); assert.equal(p.correct, 1, 'correct index re-mapped after dropping empty options'); assert.equal(p.sort, 3); assert.equal(p.skill_id, 'k1');
+  assert.equal(activityPayload({ ...EMPTY_ACTIVITY, kind: 'reflection', prompt_ar: 'تأمل' }, 's1', 0, 'u1').correct, null);
+  assert.equal(scoreAnswer(A({}), { choice: 1 }), 100); assert.equal(scoreAnswer(A({}), { choice: 0 }), 0); assert.equal(scoreAnswer(A({}), { choice: 9 }), null); assert.equal(scoreAnswer(A({ kind: 'self_rating' }), { rating: 4 }), 80); assert.equal(scoreAnswer(A({ kind: 'self_rating' }), { rating: 7 }), null); assert.equal(scoreAnswer(A({ kind: 'reflection' }), { text: 'x' }), null);
+  assert.equal(validateAnswer(A({}), {}), 'اختر إجابة'); assert.equal(validateAnswer(A({ kind: 'reflection' }), { text: 'قصير' }), 'اكتب تأملك (10 أحرف على الأقل)'); assert.equal(validateAnswer(A({ kind: 'self_rating' }), { rating: 0 }), 'اختر تقييمًا من 1 إلى 5'); assert.equal(validateAnswer(A({}), { choice: 2 }), null);
+  const rs: ActivityResponse[] = [{ id: 'r1', activity_id: 'a1', session_id: 's1', user_id: 'u1', answer: { choice: 1 }, score: 100 }, { id: 'r2', activity_id: 'a1', session_id: 's1', user_id: 'u2', answer: { choice: 0 }, score: 0 }, { id: 'r3', activity_id: 'a2', session_id: 's1', user_id: 'u1', answer: { text: 'x' }, score: null }];
+  assert.deepEqual(activityStats([A({}), A({ id: 'a2', kind: 'reflection' })], rs), [{ activity_id: 'a1', responses: 2, avg: 50, correct: 1 }, { activity_id: 'a2', responses: 1, avg: null, correct: null }]);
+});
+
+test('live-b: ICS calendar export', () => {
+  const ics = icsForSessions([S({ title_ar: 'جلسة, تجريبية', title_en: 'Intro; test', provider: 'zoom', join_url: 'https://zoom.us/j/1' }), S({ id: 'bbbbbbbb-0000-4000-8000-000000000002', starts_at: '2026-11-22T16:00:00Z', provider: 'athar' })], 'https://athar-portal.vercel.app', 'en');
+  assert.ok(ics.startsWith('BEGIN:VCALENDAR\r\n')); assert.ok(ics.endsWith('END:VCALENDAR\r\n')); assert.equal((ics.match(/BEGIN:VEVENT/g) || []).length, 2);
+  assert.ok(ics.includes('DTSTART:20261120T160000Z') && ics.includes('DTEND:20261120T173000Z')); assert.ok(ics.includes('SUMMARY:Intro\\; test')); assert.ok(ics.includes('LOCATION:https://zoom.us/j/1')); assert.ok(ics.includes('https://meet.jit.si/athar-bbbbbbbb-')); assert.ok(ics.includes('TRIGGER:-PT15M')); assert.ok(ics.includes('URL:https://athar-portal.vercel.app/live/aaaaaaaa-0000-4000-8000-000000000001'));
+  assert.equal(icsFilename(S({ title_en: 'Unit 3: Design!' }), false), 'unit-3-design-.ics'); assert.equal(icsFilename(S({}), true), 'athar-session-series.ics'); assert.equal(icsFilename(null, false), 'athar-sessions.ics');
+});
+
+test('live-b: automatic reminders window + trainer week', () => {
+  const now = at('2026-11-19T06:00:00Z');
+  const rows = [S({ id: 'a', starts_at: '2026-11-19T16:00:00Z' }), S({ id: 'b', starts_at: '2026-11-20T16:00:00Z' }), S({ id: 'c', starts_at: '2026-11-19T16:00:00Z', reminder_sent_at: '2026-11-18T06:00:00Z' }), S({ id: 'd', starts_at: '2026-11-19T16:00:00Z', status: 'cancelled' }), S({ id: 'e', starts_at: '2026-11-19T05:00:00Z' })];
+  assert.deepEqual(dueForReminder(rows, now).map(s => s.id), ['a'], 'within 30h, not yet reminded, not cancelled, not past'); assert.deepEqual(dueForReminder(rows, now, 48).map(s => s.id), ['a', 'b']);
+  const wk = trainerWeek([S({ id: 't1', trainer_id: 'tr1', starts_at: '2026-11-19T16:00:00Z' }), S({ id: 't2', trainer_id: 'tr1', starts_at: '2026-11-21T16:00:00Z' }), S({ id: 't3', trainer_id: 'tr2', starts_at: '2026-11-19T17:00:00Z' }), S({ id: 't4', trainer_id: 'tr1', starts_at: '2026-11-30T16:00:00Z' })], ['tr1'], now);
+  assert.deepEqual(wk.today.map(s => s.id), ['t1']); assert.deepEqual(wk.week.map(g => g.items.map(i => i.id)), [['t2']]);
+});
