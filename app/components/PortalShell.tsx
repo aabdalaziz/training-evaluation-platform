@@ -42,7 +42,6 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   }, [pathname, router]);
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem('athar_lang', l); } catch { /* ignore */ } };
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
-  const year = new Date().getFullYear();
 
   return (
     <LangCtx.Provider value={{ lang, setLang }}>
@@ -102,7 +101,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
           <div className="pt-partnersrow">
             {PARTNERS.map(p => <span key={p.logo} className="pt-partnerchip"><img src={p.logo} alt={t(p.name, lang)} /><span>{t(p.name, lang)}</span></span>)}
           </div>
-          <div className="pt-copy">© {year} {t(BRAND.legal, lang)} · {t(BRAND.name, lang)} — {t(UI.rights, lang)}</div>
+          <div className="pt-copy">© {BRAND.copyrightYear} {t(BRAND.owner, lang)} · {t(BRAND.name, lang)} — {t(UI.rights, lang)}<br /><small>{t(BRAND.operatedBy, lang)} {t(BRAND.legal, lang)}</small></div>
         </footer>
       </div>
     </LangCtx.Provider>
@@ -170,7 +169,7 @@ const CSS = `
 .pt-social{display:flex;gap:8px}.pt-social a{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;text-decoration:none}
 .pt-contactlist li{display:flex;gap:8px;align-items:center}
 .pt-partnersrow{max-width:1200px;margin:30px auto 0;padding:18px 18px 0;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:10px;flex-wrap:wrap;justify-content:center}.pt-partnerchip{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:6px 12px;color:${NAVY};font-size:12px;font-weight:800}.pt-partnerchip img{height:28px;width:auto}
-.pt-copy{text-align:center;font-size:12.5px;color:rgba(255,255,255,.6);margin-top:18px}
+.pt-copy{text-align:center;font-size:12.5px;color:rgba(255,255,255,.6);margin-top:18px;line-height:1.9}.pt-copy small{font-size:11.5px;color:rgba(255,255,255,.45)}
 @media(max-width:1000px){.pt-grid{grid-template-columns:repeat(2,1fr)}.pt-grid.three{grid-template-columns:repeat(2,1fr)}.pt-herogrid{grid-template-columns:1fr}.pt-hero h1{font-size:34px}.pt-steps,.pt-programs,.pt-cross{grid-template-columns:1fr 1fr}.pt-footgrid{grid-template-columns:1fr 1fr}.pt-two{grid-template-columns:1fr}}
 @media(max-width:760px){.pt-nav{display:none;position:absolute;top:100%;inset-inline:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:10px 18px 16px;flex-direction:column;align-items:stretch;gap:2px}.pt-nav.open{display:flex}.pt-navactions{display:flex}.pt-burger{display:inline-flex;align-items:center;justify-content:center}.pt-grid,.pt-grid.three,.pt-grid.two,.pt-steps,.pt-programs,.pt-cross,.pt-vm,.pt-form .row{grid-template-columns:1fr}.pt-sec{padding:44px 0}.pt-hero{padding:56px 0 64px}.pt-hero h1{font-size:28px}.pt-sechead h2{font-size:24px}.pt-footgrid{grid-template-columns:1fr}.pt-pagehead h1{font-size:28px}.pt-cta{padding:32px 20px}.pt-cta h2{font-size:24px}}
 `;
