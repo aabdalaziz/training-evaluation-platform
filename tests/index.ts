@@ -30,3 +30,4 @@ import './live.test';
 import './placement.test';
 import './profile.test';
 import './org.test';
+import './sector-impact.test';
