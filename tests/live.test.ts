@@ -100,7 +100,7 @@ test('live: board + sheets + emails', () => {
 
 test('live: portal content — all eight services are live', () => {
   const s = serviceBySlug('live')!; assert.equal(s.status, 'live'); assert.equal(s.cta.href, '/live'); assert.equal((s as any).phase, undefined);
-  assert.ok(NAV.some(n => n.href === '/live')); assert.equal(SERVICES.filter(x => x.status === 'live').length, 8); assert.equal(NAV.length, 8);
+  assert.ok(NAV.some(n => n.href === '/live')); assert.equal(SERVICES.filter(x => x.status === 'live').length, 8); assert.equal(NAV.length, 9);
 });
 
 // ============================ P6-ب ============================
