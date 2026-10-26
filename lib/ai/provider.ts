@@ -63,7 +63,9 @@ export async function resolveModel(provider: Provider, key: string): Promise<{ m
 export type CallOpts = { fast?: boolean };
 /** fast: للمهام التفاعلية (شخصية محاكاة، مستشار، رفيق) — يعطّل «التفكير» في نماذج Gemini Flash لتقليل زمن الاستجابة؛ وإن رفض النموذج الإعداد يُعاد الطلب بدونه */
 export async function callModel(provider: Provider, key: string, model: string, system: string, user: string, deadline: number, opts: CallOpts = {}): Promise<string> {
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), Math.max(5000, deadline - Date.now()));
+  // في الوضع السريع تُحدَّد مهلة كل محاولة بـ 9 ثوانٍ كحدّ أقصى حتى لا يستهلك طلبٌ معلّق الميزانية كلها، وينتقل التنفيذ إلى النموذج التالي
+  const perCall = opts.fast ? Math.min(Math.max(3000, deadline - Date.now()), 9000) : Math.max(5000, deadline - Date.now());
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), perCall);
   try {
     if (provider === 'gemini') {
       const fast = !!opts.fast && /flash/i.test(model);
@@ -103,6 +105,7 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
  * يجرّب النموذج المرشّح ثم البدائل: نموذج غير متاح → التالي؛ ضغط/حصة (429/503) → النموذج التالي، وإن نفدت كلها
  * ينتظر المدة المقترحة إن سمحت ميزانية الوقت ثم يعيد المحاولة؛ وإلا يرمي خطأ يحمل retry_after ليعيد المتصفح المحاولة.
  */
+function isAborted(e: any): boolean { return !!e && (e.name === 'AbortError' || /aborted/i.test(String(e?.message || ''))); }
 export async function callWithFallback(provider: Provider, key: string, candidates: string[], system: string, user: string, deadline: number, opts: CallOpts = {}): Promise<{ text: string; model: string }> {
   let lastErr: any; const dead = new Set<string>();
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -110,11 +113,11 @@ export async function callWithFallback(provider: Provider, key: string, candidat
     for (const model of candidates) {
       if (dead.has(model)) continue;
       try { return { text: await callModel(provider, key, model, system, user, deadline, opts), model }; }
-      catch (e: any) { lastErr = e; if (isModelGone(e)) { dead.add(model); continue; } if (isBusy(e)) { busyErr = busyErr || e; continue; } throw e; }
+      catch (e: any) { lastErr = e; if (isModelGone(e)) { dead.add(model); continue; } if (isBusy(e) || (opts.fast && isAborted(e))) { busyErr = busyErr || e; continue; } throw e; }
     }
     if (!busyErr) break;
-    const wait = retryAfterOf(busyErr);
-    if (Date.now() + wait * 1000 + 15000 > deadline) throw Object.assign(new Error(busyErr.message), { status: 429, retry_after: wait });
+    const wait = isAborted(busyErr) ? 0 : retryAfterOf(busyErr);
+    if (Date.now() + wait * 1000 + (opts.fast ? 4000 : 15000) > deadline) throw Object.assign(new Error(busyErr.message), { status: isAborted(busyErr) ? 504 : 429, retry_after: wait });
     await sleep(wait * 1000);
   }
   throw Object.assign(lastErr || new Error('no model'), { retry_after: isBusy(lastErr) ? retryAfterOf(lastErr) : undefined });
