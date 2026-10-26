@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
 import { ACRONYM, BRAND, CONTACT, NAV, PARTNERS, SERVICES, UI, t } from '../../lib/portal/content';
 import type { Lang } from '../../lib/portal/content';
+import Athir from './Athir';
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
 export const useLang = () => useContext(LangCtx);
@@ -66,6 +67,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {children}
+        <Athir />
 
         <footer className="pt-footer">
           <div className="pt-footgrid">
