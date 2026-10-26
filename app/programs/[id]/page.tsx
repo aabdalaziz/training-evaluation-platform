@@ -1,6 +1,7 @@
 'use client';
 
-// أَثَر — صفحة البرنامج + التسجيل (رابط دخول بالبريد ثم نموذج الطلب)
+// © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
+// أَثَر — صفحة البرنامج + التسجيل (رابط دخول بالبريد ثم نموذج الطلب) + JSON-LD (schema.org/Course) للكتالوج المفتوح (P8-ج)
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
@@ -13,6 +14,8 @@ import type { CatalogProgram, Counts, Enrollment, EnrollForm } from '../../../li
 import ProgramResources from '../../components/ProgramResources';
 import UpcomingSessions from '../../components/UpcomingSessions';
 import PlacementCard from '../../components/PlacementCard';
+import { courseJsonLd, jsonLdScript, normalizeSite } from '../../../lib/portal/open';
+import type { SkillLite } from '../../../lib/portal/open';
 
 export default function ProgramPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -26,7 +29,7 @@ function Inner() {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [mine, setMine] = useState<Enrollment | null>(null); const [inv, setInv] = useState<{ id: string; invoice_no: string; status: string; total: number; currency: string } | null>(null);
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false);
   const [f, setF] = useState<EnrollForm>({ full_name: '', email: '', phone: '', organization: '', city: '', notes: '' });
-  const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
+  const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [ldSkills, setLdSkills] = useState<SkillLite[]>([]);
   const today = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
@@ -34,6 +37,7 @@ function Inner() {
       try {
         const [{ data }, { data: c }, { data: { user: u } }] = await Promise.all([db.from('programs').select(SELECT).eq('id', id).maybeSingle(), db.rpc('portal_enrollment_counts'), db.auth.getUser()]);
         setP((data as CatalogProgram) || null); setCounts(((c || []) as Counts[]).find(x => x.program_id === id) || null);
+        if (data) { try { const { data: ps } = await db.from('portal_program_skills').select('skill_id').eq('program_id', id); const ids = ((ps || []) as { skill_id: string }[]).map(x => x.skill_id); if (ids.length) { const { data: sk } = await db.from('portal_skills').select('id,code,name_ar,name_en,domain,saqf_level,cefr_level,sdaia_code').in('id', ids); setLdSkills((sk || []) as SkillLite[]); } } catch { /* اختياري */ } }
         if (u) {
           setUser({ id: u.id, email: u.email || '' }); setF(x => ({ ...x, email: u.email || '', full_name: String(u.user_metadata?.full_name || '') }));
           const { data: e } = await db.from('portal_enrollments').select('*').eq('program_id', id).eq('user_id', u.id).maybeSingle();
@@ -153,6 +157,7 @@ function Inner() {
           <div className="pt-aside-foot"><Icon name="target" size={14} /> {lang === 'ar' ? 'جديد في العربية؟' : 'New to Arabic?'} <a href={BRAND.placementUrl} target="_blank" rel="noreferrer">{lang === 'ar' ? 'حدّد مستواك مع مِعيار' : 'Take the Miaar test'}</a></div>
         </aside>
       </div></section>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(courseJsonLd(p, normalizeSite(typeof window !== 'undefined' ? window.location.origin : ''), today, ldSkills, counts)) }} />
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
     </main>
   );
