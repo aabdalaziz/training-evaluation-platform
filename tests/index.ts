@@ -31,3 +31,4 @@ import './placement.test';
 import './profile.test';
 import './org.test';
 import './sector-impact.test';
+import './ai-athar.test';
