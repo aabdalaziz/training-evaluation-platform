@@ -8,6 +8,8 @@ import { Icon, type IconName } from '../../lib/ui/icons';
 import NotificationBell from './NotificationBell';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
+// صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
+const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay'];
 const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
   { href: '/dashboard', label: 'لوحة القيادة', icon: 'dashboard', match: p => p.startsWith('/dashboard') },
   { href: '/command-center', label: 'غرفة القيادة', icon: 'play', match: p => p.startsWith('/command-center') },
@@ -37,7 +39,7 @@ export default function GlobalNavigation() {
 
   // لوحة التحكم تملك قائمتها الجانبية الكاملة، وصفحات بوابة أَثَر العامة تملك رأسها الخاص (PortalShell)
   if (pathname.startsWith('/dashboard')) return null;
-  if (pathname === '/' || pathname === '/about' || pathname === '/contact' || pathname === '/services' || pathname.startsWith('/services/') || pathname === '/programs' || pathname.startsWith('/programs/')) return null;
+  if (pathname === '/' || PORTAL_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))) return null;
 
   async function logout() { await db.auth.signOut(); router.push('/'); router.refresh(); }
 
