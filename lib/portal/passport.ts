@@ -43,7 +43,7 @@ export function buildPassport(inp: PassportInput): PassportData {
     publicId: profile.public_id, url, qrText: sharePublic ? url : `${site}/me/skills`, issuedAt: fmtDay(now, lang), sharePublic,
     kpis: { skills: levels.length, strong: levels.filter(l => l.confidence >= 70).length, approved: levels.filter(l => l.approved_level).length, credentials: credentials.length },
     domains, credentials,
-    footer: ar ? `صادر إلكترونيًا من بوابة أَثَر بتاريخ ${fmtDay(now, 'ar')} · © ${BRAND.copyrightYear} ${BRAND.owner.ar}` : `Issued electronically by Athar · TRACE on ${fmtDay(now, 'en')} · © ${BRAND.copyrightYear} ${BRAND.owner.en}`,
+    footer: ar ? `${BRAND.motto.ar} · صادر إلكترونيًا من بوابة أَثَر بتاريخ ${fmtDay(now, 'ar')} · © ${BRAND.copyrightYear} ${BRAND.owner.ar}` : `${BRAND.motto.en} · Issued electronically by Athar · TRACE on ${fmtDay(now, 'en')} · © ${BRAND.copyrightYear} ${BRAND.owner.en}`,
     verifyHint: sharePublic ? (ar ? 'امسح الرمز لعرض الملف المهاري الحي والتحقق من الشهادات.' : 'Scan to open the live skills profile and verify credentials.') : (ar ? 'الملف خاص؛ تحقق من كل شهادة عبر رمزها في athar-portal.vercel.app/credential' : 'Profile is private; verify each credential by its code at athar-portal.vercel.app/credential'),
   };
 }
