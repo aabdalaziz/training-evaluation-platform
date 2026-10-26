@@ -271,7 +271,7 @@ export function buildAdvisorPrompt(q: string, f: AdvisorFacts, lang: Lang, perso
 }
 export function parseAdvisor(raw: any, f: AdvisorFacts): AdvisorAnswer | null {
   const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || typeof j !== 'object') return null; const a = S(j.answer_ar, 1200); if (!a) return null;
-  const allowed = new Set<string>([...f.services.map(s => s.href), ...f.programs.map(p => `/programs/${p.id}`), ...f.sessions.map(s => `/live/${s.id}`), '/programs', '/live', '/resources', '/consulting', '/contact', '/sim', '/me', '/me/skills', '/verify', '/org', '/ai']);
+  const allowed = new Set<string>([...f.services.map(s => s.href), ...f.programs.map(p => `/programs/${p.id}`), ...f.sessions.map(s => `/live/${s.id}`), '/programs', '/live', '/resources', '/consulting', '/contact', '/sim', '/me', '/me/skills', '/me/twin', '/verify', '/org', '/ai']);
   const links = (Array.isArray(j.links) ? j.links : []).map((l: any) => ({ label: S(l?.label, 60), href: S(l?.href, 120) })).filter((l: any) => l.label && allowed.has(l.href)).slice(0, 3);
   return { answer_ar: a, links, handoff: !!j.handoff, confidence: Math.max(0, Math.min(1, N(j.confidence) ?? 0.6)) };
 }
@@ -300,6 +300,7 @@ export function localHello(c: CompanionContext): CompanionHello {
   else { nudge = 'أخبرني بهدف واحد تريد تحقيقه هذا الشهر، وسأبني عليه كل ما أقترحه لك.'; }
   if (!actions.some(a => a.href === '/sim')) actions.push({ label: 'جرّب محاكاة', href: '/sim' });
   if (!actions.some(a => a.href === '/me/skills')) actions.push({ label: 'ملفي المهاري', href: '/me/skills' });
+  if (c.weakest && (c.weakest.days_since ?? 0) >= 30 && !actions.some(a => a.href === '/me/twin')) actions.unshift({ label: 'متى تصدأ مهاراتي؟', href: '/me/twin' });
   return { greeting, nudge, actions: actions.slice(0, 3) };
 }
 export function buildHelloPrompt(c: CompanionContext): { system: string; user: string } {
@@ -308,7 +309,7 @@ export function buildHelloPrompt(c: CompanionContext): { system: string; user: s
 }
 export function parseHello(raw: any): CompanionHello | null {
   const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || !S(j.greeting)) return null;
-  const ok = (h: string) => ['/sim', '/me/skills', '/#daily', '/programs'].includes(h) || /^\/live\/[\w-]+$/.test(h);
+  const ok = (h: string) => ['/sim', '/me/skills', '/me/twin', '/#daily', '/programs'].includes(h) || /^\/live\/[\w-]+$/.test(h);
   return { greeting: S(j.greeting, 200), nudge: S(j.nudge, 260), actions: (Array.isArray(j.actions) ? j.actions : []).map((a: any) => ({ label: S(a?.label, 40), href: S(a?.href, 80) })).filter((a: any) => a.label && ok(a.href)).slice(0, 3) };
 }
 export function buildMemoryPrompt(prev: string, history: { role: string; text: string }[]): { system: string; user: string } {
