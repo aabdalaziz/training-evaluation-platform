@@ -35,7 +35,7 @@ function Home() {
       <section className="pt-hero">
         <div className="pt-wrap pt-herogrid">
           <div>
-            <span className="pt-heropill"><Icon name="scale" size={14} /> {lang === 'ar' ? 'أَثَر · TRACE — نقيس قبل · نُحسّن أثناء · نُثبت بعد' : 'Athar · TRACE — Measure before · Improve during · Prove after'}</span>
+            <span className="pt-heropill"><Icon name="star" size={14} /> {t(BRAND.tagline, lang)}</span>
             <h1>{lang === 'ar' ? <>حلول متكاملة في <em>التعليم</em> و<em>التدريب</em> و<em>التطوير</em></> : <>Integrated solutions in <em>Education</em>, <em>Training</em> &amp; <em>Development</em></>}</h1>
             <p>{t(BRAND.promise, lang)}</p>
             <div className="pt-heroacts">
