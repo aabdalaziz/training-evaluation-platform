@@ -9,7 +9,12 @@ export const t = (x: T, lang: Lang): string => x[lang] || x.ar;
 export const BRAND = {
   name: { ar: 'أَثَر', en: 'Athar' } as T,
   full: { ar: 'أَثَر — بوابة التعليم والتدريب والتطوير', en: 'Athar · TRACE — Education, Training & Development Portal' } as T,
-  tagline: { ar: 'نتعلّم، نتدرّب، نتطوّر… ونقيس الأثر', en: 'Learn. Train. Grow. Prove it.' } as T,
+  /** الشعار المعتمد (P9): التدريب ما بعد الذكاء الاصطناعي */
+  tagline: { ar: 'التدريب ما بعد الذكاء الاصطناعي — نبني القدرة ونُثبت الأثر', en: 'Post-AI training — build capability, prove impact.' } as T,
+  /** الصيغة القصيرة للشارات والرؤوس */
+  motto: { ar: 'نبني القدرة ونُثبت الأثر', en: 'Build capability. Prove impact.' } as T,
+  /** صيغة التوقيع في الشهادات والجواز */
+  signature: { ar: 'أَثَر | التدريب ما بعد الذكاء الاصطناعي — نبني القدرة ونُثبت الأثر', en: 'Athar · TRACE — Post-AI Training: Build capability. Prove impact.' } as T,
   promise: { ar: 'بوابة واحدة تجمع تعليم العربية للناطقين بغيرها، والبرامج التدريبية والدبلومات، والاستشارات، والحقائب، والبث المباشر — ويحكمها قياس حقيقي للأثر قبل التعلّم وأثناءه وبعده.', en: 'One portal for Arabic for non-native speakers, professional training and diplomas, consulting, resources and live channels — governed by real impact measurement before, during and after learning.' } as T,
   /** مالك الحقوق الفكرية للمنصة والهوية والمنهجيات */
   owner: { ar: 'د. أحمد محمد عبدالعزيز بدوي', en: 'Dr. Ahmed Mohamed Abdelaziz Badawi' } as T,
