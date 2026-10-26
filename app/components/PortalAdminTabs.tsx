@@ -15,6 +15,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/skills', label: 'المهارات والجهات', icon: 'target' },
   { href: '/admin/placements', label: 'مِعيار', icon: 'scale' },
   { href: '/admin/credentials', label: 'الشهادات الرقمية', icon: 'award' },
+  { href: '/admin/sector-impact', label: 'تقارير الأثر', icon: 'chart' },
   { href: '/admin/catalog', label: 'نشر البرامج', icon: 'globe' },
   { href: '/admin/inbox', label: 'رسائل التواصل', icon: 'inbox' },
 ];
