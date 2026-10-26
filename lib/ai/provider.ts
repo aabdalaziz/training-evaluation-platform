@@ -60,13 +60,17 @@ export async function resolveModel(provider: Provider, key: string): Promise<{ m
 }
 
 /* ---------------------------------------------------------------- استدعاء النموذج */
-export async function callModel(provider: Provider, key: string, model: string, system: string, user: string, deadline: number): Promise<string> {
+export type CallOpts = { fast?: boolean };
+/** fast: للمهام التفاعلية (شخصية محاكاة، مستشار، رفيق) — يعطّل «التفكير» في نماذج Gemini Flash لتقليل زمن الاستجابة؛ وإن رفض النموذج الإعداد يُعاد الطلب بدونه */
+export async function callModel(provider: Provider, key: string, model: string, system: string, user: string, deadline: number, opts: CallOpts = {}): Promise<string> {
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), Math.max(5000, deadline - Date.now()));
   try {
     if (provider === 'gemini') {
-      const body: any = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json' } };
+      const fast = !!opts.fast && /flash/i.test(model);
+      const body: any = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json', ...(fast ? { thinkingConfig: { thinkingBudget: 0 } } : {}) } };
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal, body: JSON.stringify(body) });
       const j: any = await r.json().catch(() => ({}));
+      if (!r.ok && fast && r.status === 400 && /thinking|budget/i.test(String(j?.error?.message || ''))) { clearTimeout(t); return callModel(provider, key, model, system, user, deadline, { fast: false }); }
       if (!r.ok) throw Object.assign(new Error(j?.error?.message || `Gemini HTTP ${r.status}`), { status: r.status });
       const fin = j?.candidates?.[0]?.finishReason; const text = (j?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('');
       if (!text && fin) throw new Error(`Gemini finishReason=${fin}`);
@@ -99,13 +103,13 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
  * يجرّب النموذج المرشّح ثم البدائل: نموذج غير متاح → التالي؛ ضغط/حصة (429/503) → النموذج التالي، وإن نفدت كلها
  * ينتظر المدة المقترحة إن سمحت ميزانية الوقت ثم يعيد المحاولة؛ وإلا يرمي خطأ يحمل retry_after ليعيد المتصفح المحاولة.
  */
-export async function callWithFallback(provider: Provider, key: string, candidates: string[], system: string, user: string, deadline: number): Promise<{ text: string; model: string }> {
+export async function callWithFallback(provider: Provider, key: string, candidates: string[], system: string, user: string, deadline: number, opts: CallOpts = {}): Promise<{ text: string; model: string }> {
   let lastErr: any; const dead = new Set<string>();
   for (let attempt = 0; attempt < 3; attempt++) {
     let busyErr: any = null;
     for (const model of candidates) {
       if (dead.has(model)) continue;
-      try { return { text: await callModel(provider, key, model, system, user, deadline), model }; }
+      try { return { text: await callModel(provider, key, model, system, user, deadline, opts), model }; }
       catch (e: any) { lastErr = e; if (isModelGone(e)) { dead.add(model); continue; } if (isBusy(e)) { busyErr = busyErr || e; continue; } throw e; }
     }
     if (!busyErr) break;
