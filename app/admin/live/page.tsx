@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — إدارة التعلّم المباشر: لوحة البث (القاعات المتوازية) · الجلسات والسلاسل · الشعب والسعة والإسكان · التذكيرات · الحضور · Excel
+// بوابة أَثَر — إدارة التعلّم المباشر (+ مسودّات أنشطة ذكية P9-أ): لوحة البث (القاعات المتوازية) · الجلسات والسلاسل · الشعب والسعة والإسكان · التذكيرات · الحضور · Excel
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -14,6 +14,7 @@ import { PROVIDERS, KINDS, SESSION_ACCESS, WEEKDAYS, EMPTY_SESSION, validateSess
 import type { LiveSession, SessionForm, Classroom, Trainer, Provider, SessionStatus, Activity, ActivityResponse, ActivityForm } from '../../../lib/portal/live';
 import { SECTORS_FALLBACK, skillName } from '../../../lib/portal/skills';
 import type { Skill, Sector, Organization } from '../../../lib/portal/skills';
+import type { ActivityItem } from '../../../lib/ai/prompts';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
@@ -32,6 +33,14 @@ function LiveAdmin() {
   const [form, setForm] = useState<SessionForm | null>(null); const [editing, setEditing] = useState<string | null>(null); const [busy, setBusy] = useState('');
   const [fProg, setFProg] = useState('all'); const [fRoom, setFRoom] = useState('all'); const [fWhen, setFWhen] = useState<'upcoming' | 'past' | 'all'>('upcoming'); const [open, setOpen] = useState<string | null>(sp.get('open')); const [rec, setRec] = useState('');
   const [acts, setActs] = useState<Activity[]>([]); const [actRes, setActRes] = useState<ActivityResponse[]>([]); const [af, setAf] = useState<ActivityForm | null>(null);
+  const [drafts, setDrafts] = useState<{ items: ActivityItem[]; source: string } | null>(null); const [aiErr, setAiErr] = useState('');
+  async function suggestActs(sessionId: string) {
+    if (!af) return; setBusy('ai'); setAiErr(''); setDrafts(null);
+    try { const { data: sess } = await db.auth.getSession(); const tk = sess.session?.access_token || ''; const j = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ purpose: 'activity_draft', lang: 'ar', session_id: sessionId, kind: af.kind, count: 3, skill_id: af.skill_id || null }) }).then(x => x.json()); if (!j.success) throw new Error(j.error || 'تعذّر الاقتراح'); setDrafts({ items: j.data.items, source: j.source }); }
+    catch (e: any) { setAiErr(String(e?.message || e)); }
+    setBusy('');
+  }
+  const useDraft = (it: ActivityItem) => { if (!af) return; setAf({ ...af, kind: it.kind, prompt_ar: it.prompt_ar, prompt_en: it.prompt_en || '', options: it.kind === 'mcq' ? [...it.options, '', '', '', ''].slice(0, 4) : af.options, correct: it.kind === 'mcq' ? it.correct : af.correct, skill_id: it.skill_id || af.skill_id }); };
   const [roomProg, setRoomProg] = useState(''); const [enrs, setEnrs] = useState<Enr[]>([]); const [roomEdit, setRoomEdit] = useState<Classroom | null>(null); const [newRoom, setNewRoom] = useState<{ code: string; section_name: string; trainer_id: string; capacity: string; provider: Provider; join_url: string; host_url: string; cefr_level: string } | null>(null);
   const canWrite = !!me && WRITERS.includes(me.role);
 
@@ -188,9 +197,11 @@ function LiveAdmin() {
                     {canWrite && !af && <button type="button" className="en-btn ghost" onClick={() => setAf({ ...EMPTY_ACTIVITY, skill_id: (s.skills || [])[0] || '' })}><Icon name="plus" size={13} /> إضافة نشاط</button>}
                     {af && <div className="lv-actform">
                       <div className="lv-g4"><label className="en-note">النوع<select value={af.kind} onChange={e => setAf({ ...af, kind: e.target.value as any })}>{ACTIVITY_KINDS.map(k => <option key={k.value} value={k.value}>{k.label.ar}</option>)}</select></label><label className="en-note">المهارة المرتبطة {af.kind === 'self_rating' && '*'}<select value={af.skill_id} onChange={e => setAf({ ...af, skill_id: e.target.value })}><option value="">—</option>{skills.map(k => <option key={k.id} value={k.id}>{k.code} · {skillName(k, 'ar')}</option>)}</select></label></div>
+                      <div className="lv-ai"><button type="button" className="en-btn ghost" disabled={busy === 'ai'} onClick={() => suggestActs(s.id)}><Icon name="star" size={13} /> {busy === 'ai' ? 'جارٍ الاقتراح…' : 'اقتراح 3 مسودّات بالذكاء الاصطناعي'}</button><small className="en-muted">مسودّات تراجعها وتعدّلها قبل الحفظ — <Link href="/ai">السياسة</Link></small>{aiErr && <span className="en-err" style={{ padding: '4px 8px' }}>{aiErr}</span>}
+                        {drafts && <div className="lv-drafts">{drafts.items.map((it, i) => <div key={i} className="lv-draft"><div><b>{it.prompt_ar}</b>{it.kind === 'mcq' && <small>{it.options.map((o, k) => <span key={k} className={k === it.correct ? 'ok' : ''}>{o}</span>)}</small>}{it.rationale && <small className="en-muted">{it.rationale}</small>}</div><button type="button" className="en-btn ok" onClick={() => useDraft(it)}>استخدام</button></div>)}<small className="en-muted">المصدر: {drafts.source === 'ai' ? 'نموذج ذكاء اصطناعي' : 'بديل محلي'}</small></div>}</div>
                       <label className="en-note">نص النشاط *<textarea value={af.prompt_ar} onChange={e => setAf({ ...af, prompt_ar: e.target.value })} placeholder={af.kind === 'mcq' ? 'السؤال…' : af.kind === 'reflection' ? 'ما أهم ما تعلّمته اليوم وكيف ستطبقه خلال أسبوع؟' : 'قيّم تمكّنك من هذه المهارة بعد الجلسة'} /></label>
                       {af.kind === 'mcq' && <div className="lv-opts">{af.options.map((o, k) => <label key={k} className={`lv-optrow ${af.correct === k ? 'on' : ''}`}><input type="radio" name="correct" checked={af.correct === k} onChange={() => setAf({ ...af, correct: k })} title="الإجابة الصحيحة" /><input value={o} onChange={e => { const options = [...af.options]; options[k] = e.target.value; setAf({ ...af, options }); }} placeholder={`الخيار ${k + 1}`} /></label>)}<small className="en-muted">حدد الإجابة الصحيحة بالدائرة.</small></div>}
-                      <div className="en-acts"><button type="button" className="en-btn ok" disabled={busy === 'act'} onClick={() => saveAct(s)}><Icon name="save" size={13} /> حفظ النشاط</button><button type="button" className="en-btn ghost" onClick={() => setAf(null)}>إلغاء</button></div>
+                      <div className="en-acts"><button type="button" className="en-btn ok" disabled={busy === 'act'} onClick={() => saveAct(s)}><Icon name="save" size={13} /> حفظ النشاط</button><button type="button" className="en-btn ghost" onClick={() => { setAf(null); setDrafts(null); }}>إلغاء</button></div>
                     </div>}
                   </div>
                   {canWrite && <div className="en-acts">
@@ -260,6 +271,7 @@ const CSS = `
 .lv-skills{display:grid;gap:6px}.lv-skills>b{font-size:13.5px;color:#0f2a4e}.lv-skgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-height:160px;overflow:auto}.lv-skgrid button{text-align:start;border:1px solid #e2e8f0;background:#fff;border-radius:10px;padding:6px 10px;font:inherit;font-size:12.5px;cursor:pointer;display:grid}.lv-skgrid button small{color:#0b8a83;font-weight:900;font-size:10.5px;direction:ltr;text-align:start}.lv-skgrid button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.lv-skgrid button.on small{color:#c9a24b}
 .lv-recrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.lv-daygroup{display:grid;gap:8px}
 .lv-act{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;background:#fff}.lv-act.off{opacity:.55}.lv-act b{display:block;font-size:13.5px;color:#0f172a}.lv-act small{color:#64748b;font-size:12px}
+.lv-ai{display:grid;gap:6px;justify-items:start}.lv-drafts{display:grid;gap:6px;width:100%;margin-top:4px}.lv-draft{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;background:#f3fbfa;border:1px solid #cfe9e6;border-radius:10px;padding:8px 10px}.lv-draft b{display:block;font-size:13.5px;color:#0f2a4e}.lv-draft small{display:block;font-size:12px;color:#475569;margin-top:2px}.lv-draft small span{display:inline-block;margin-inline-end:8px}.lv-draft small span.ok{color:#0b8a83;font-weight:800}.lv-draft small span.ok::before{content:'✓ '}
 .lv-actform{display:grid;gap:10px;border:1px dashed #0b8a83;border-radius:12px;padding:12px;background:#fff}.lv-opts{display:grid;gap:6px}.lv-optrow{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;border:1px solid #e2e8f0;border-radius:10px;padding:4px 8px}.lv-optrow.on{border-color:#059669;background:#ecfdf5}.lv-optrow input[type=text],.lv-optrow input:not([type]){font:inherit;font-size:13px;border:0;outline:0;background:transparent;padding:6px}
 .lv-rooms{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.lv-roomcard{display:grid;gap:10px;border-inline-start:4px solid #0b8a83}.lv-roomcard.warn{border-inline-start-color:#d97706}.lv-roomcard.full{border-inline-start-color:#dc2626}.lv-roomtop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.lv-roomtop b{font-size:15px;color:#0f172a;display:block}.lv-roomtop small{color:#64748b;font-size:12.5px}.lv-occ{text-align:center;min-width:90px;font-size:12.5px;color:#64748b}.lv-occ b{font-size:18px;color:#0f2a4e}.lv-bar{height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:4px}.lv-bar i{display:block;height:100%;background:#0b8a83}.lv-roomcard.warn .lv-bar i{background:#d97706}.lv-roomcard.full .lv-bar i{background:#dc2626}
 .lv-roomedit{display:grid;gap:10px;border:1px dashed #0b8a83;border-radius:12px;padding:10px}
