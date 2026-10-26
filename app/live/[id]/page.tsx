@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — صفحة الجلسة: الموعد والعدّ التنازلي، الانضمام (Teams/Zoom/Meet/قاعة أَثَر)، التسجيل للندوات، الحضور، المهارات، التسجيل اللاحق والمواد
+// أَثَر — صفحة الجلسة: الموعد والعدّ التنازلي، الانضمام (Teams/Zoom/Meet/قاعة أَثَر)، التسجيل للندوات، الحضور، المهارات، التسجيل اللاحق والمواد + JSON-LD (schema.org/Event) للكتالوج المفتوح (P8-ج)
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import type { LiveSession, TimeState, Classroom, Registration, Activity, Activit
 import { skillName, domainLabel, frameworkBadges } from '../../../lib/portal/skills';
 import type { Skill } from '../../../lib/portal/skills';
 import { resTitle } from '../../../lib/portal/resources';
+import { eventJsonLd, jsonLdScript, normalizeSite } from '../../../lib/portal/open';
 
 export default function SessionPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
@@ -147,6 +148,7 @@ function Inner() {
           {user && <small className="pt-muted" style={{ display: 'block', marginTop: 8 }}>{lang === 'ar' ? 'مسجّل الدخول بـ' : 'Signed in as'} <bdi>{user.email}</bdi></small>}
         </aside>
       </div></section>
+      {s.access === 'public' && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(eventJsonLd(s, normalizeSite(typeof window !== 'undefined' ? window.location.origin : ''), program, skills)) }} />}
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
     </main>
   );
