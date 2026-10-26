@@ -5,15 +5,18 @@
  *  مبادئ الحوكمة المضمّنة في كل مطالبة: لا اختلاق، الاعتماد على الحقائق المُمرَّرة فقط، تمييز عدم اليقين، لا قرار نهائي بشأن أشخاص، الإنسان يعتمد.
  */
 import type { Lang } from '../portal/content';
+import type { Scenario, Turn } from '../portal/sim';
 
-export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft';
+export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion';
 /** حدود الاستخدام لكل مستخدم خلال 24 ساعة */
-export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40 };
+export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150 };
 export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   impact_brief: { ar: 'موجز تنفيذي لتقرير الأثر', en: 'Impact executive brief' },
   learner_plan: { ar: 'خطة تطوير شخصية', en: 'Personal development plan' },
   org_brief: { ar: 'توصيات للجهة', en: 'Organization recommendations' },
   activity_draft: { ar: 'مسودّات أنشطة للمدرب', en: 'Trainer activity drafts' },
+  sim_turn: { ar: 'شخصية المحاكاة', en: 'Simulation persona' }, sim_score: { ar: 'تقييم المحاكاة', en: 'Simulation scoring' },
+  daily_skill: { ar: 'كل يوم مهارة', en: 'Daily skill' }, advisor: { ar: 'مستشارك: اسأل وأنا أجيب', en: 'Your advisor' }, companion: { ar: 'أثير — المدرب الرفيق', en: 'Athir — AI companion' },
 };
 export const AI_DISCLAIMER = { ar: 'مُولَّد بمساعدة الذكاء الاصطناعي من بياناتك في أَثَر — للاسترشاد، والقرار النهائي للإنسان.', en: 'AI-assisted, generated from your Athar data — for guidance; final decisions stay human.' };
 
@@ -210,3 +213,106 @@ export function localActivityDraft(f: ActivityFacts, lang: Lang): ActivityDraft 
   };
   return { items: Array.from({ length: Math.min(5, Math.max(1, f.want.count)) }, (_, i) => mk(i)) };
 }
+
+// ================================================================ 5) المحاكاة — شخصية ودور (P10)
+export function buildSimTurnPrompt(s: Scenario, turns: Turn[], lang: Lang): { system: string; user: string } {
+  const p = s.persona; const n = turns.filter(t => t.role === 'learner').length; const last = n >= s.max_turns;
+  const system = `أنت تمثّل شخصية في محاكاة تدريبية داخل بوابة «أَثَر». الشخصية: ${p.name} — ${p.role}. سماتها: ${p.traits.join('، ')}.
+الموقف: ${s.situation_ar}
+قواعد صارمة: (1) ابقَ في الشخصية تمامًا ولا تخرج منها ولا تشرح ولا تقيّم. (2) تحدّث كما يتحدث هذا الشخص فعلًا (${p.voice === 'child' ? 'طفل: جمل قصيرة، عفوية، عامية خفيفة مفهومة' : 'بالغ: عربية مفهومة بلمسة عامية خليجية خفيفة'}). (3) ردّك 1–3 جمل فقط. (4) استجب بواقعية لما يفعله المتعلم: إن أحسن تجاوب تدريجيًا، وإن أخطأ أو كان عامًا أظهر أثر ذلك دون تلقين. (5) لا تحلّ المشكلة بدلًا عنه. (6) أعد JSON فقط: {"reply": string}.${last ? ' (7) هذا آخر دور: اختم الموقف بشكل طبيعي.' : ''}`;
+  const user = `الحوار حتى الآن:\n${turns.map(t => `${t.role === 'persona' ? p.name : 'المتعلم'}: ${t.text}`).join('\n')}\n\nردّ ${p.name} الآن (JSON فقط).`;
+  return { system, user };
+}
+export function parseSimTurn(raw: any): string | null { const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; const r = S(j?.reply, 400); return r || null; }
+
+export function buildSimScorePrompt(s: Scenario, turns: Turn[], lang: Lang): { system: string; user: string } {
+  const system = systemBase(lang, 'مقيّم أداء مهني يحكم على حوار محاكاة وفق معيار معلن، بإنصاف وتحديد، ويكتب ملاحظات يمكن للمتعلم تطبيقها فورًا');
+  const schema = `{"criteria":[{"key": string (من المعيار فقط), "score": number 0-100, "note": string (≤ 160 حرفًا، تذكر ما قاله المتعلم حرفيًا)}], "strengths": string[1-3], "improve": string[1-3], "expert_path": string (كيف كان سيتصرف خبير في 2–3 جمل), "closing_ar": string (جملة تشجيع صادقة)}`;
+  const user = `الهدف: ${s.goal_ar}\nالمعيار: ${JSON.stringify(s.rubric)}\nالحوار:\n${turns.map(t => `${t.role === 'persona' ? s.persona.name : 'المتعلم'}: ${t.text}`).join('\n')}\n\nقيّم أداء المتعلم فقط (لا الشخصية). لا تُكافئ الطول ولا الكلام العام. المخطط:\n${schema}`;
+  return { system, user };
+}
+
+// ================================================================ 6) كل يوم مهارة (P10)
+export type DailyLesson = { title_ar: string; hook_ar: string; idea_ar: string; example_ar: string; challenge: { question_ar: string; options: string[]; correct: number; explain_ar: string }; apply_ar: string };
+export type DailySkillFacts = { skill: { id: string; code: string; name_ar: string; name_en?: string | null; domain: string; description_ar?: string | null }; day: string; weekday_ar: string };
+export function buildDailyPrompt(f: DailySkillFacts, lang: Lang): { system: string; user: string } {
+  const system = systemBase(lang, 'مصمم تعلّم مصغّر يكتب درس «كل يوم مهارة»: ثلاث دقائق قراءة، فكرة واحدة عميقة، مثال من واقع المعلمين والمدربين العرب، وتحدٍّ من سؤال واحد');
+  const schema = `{"title_ar": string (≤ 60), "hook_ar": string (جملة تشويق تبدأ بموقف حقيقي), "idea_ar": string (3–4 جمل: الفكرة الجوهرية ولماذا تعمل), "example_ar": string (مثال ملموس خطوة بخطوة), "challenge": {"question_ar": string (موقف قصير يتطلب حكمًا), "options": string[4] (متقاربة ومعقولة), "correct": number (0-3), "explain_ar": string (لماذا هذا الخيار، ولماذا الأقرب خطأ)}, "apply_ar": string (إجراء واحد يُنفَّذ اليوم خلال 10 دقائق)}`;
+  const user = `المهارة: ${f.skill.code} — ${f.skill.name_ar}${f.skill.description_ar ? ` — ${f.skill.description_ar}` : ''} (المجال: ${f.skill.domain}). اليوم: ${f.weekday_ar} ${f.day}.\nالمطلوب: درس اليوم. تجنّب العموميات والمواعظ؛ ركّز على فكرة واحدة قابلة للتطبيق. المخطط:\n${schema}`;
+  return { system, user };
+}
+export function parseDaily(raw: any): DailyLesson | null {
+  const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || typeof j !== 'object' || !j.challenge) return null;
+  const options = arr(j.challenge.options, 4, 200); const correct = Math.min(3, Math.max(0, Math.round(N(j.challenge.correct) ?? 0)));
+  const d: DailyLesson = { title_ar: S(j.title_ar, 80), hook_ar: S(j.hook_ar, 300), idea_ar: S(j.idea_ar, 900), example_ar: S(j.example_ar, 900), challenge: { question_ar: S(j.challenge.question_ar, 400), options, correct, explain_ar: S(j.challenge.explain_ar, 500) }, apply_ar: S(j.apply_ar, 300) };
+  return d.title_ar && d.idea_ar && options.length === 4 && d.challenge.question_ar ? d : null;
+}
+export function localDaily(f: DailySkillFacts): DailyLesson {
+  const n = f.skill.name_ar;
+  return {
+    title_ar: `${n}: ابدأ بالنتيجة لا بالنشاط`, hook_ar: `في آخر مرة خططت فيها لجلسة حول «${n}»، هل بدأت بما سيفعله المتعلم… أم بما ستقوله أنت؟`,
+    idea_ar: `الفكرة الجوهرية: صِف السلوك الذي تريد رؤيته في نهاية الجلسة بجملة يمكن ملاحظتها، ثم صمّم النشاط عكسيًا. هذا يحوّل «${n}» من معرفة تُشرح إلى قدرة تُمارَس، ويجعل التقويم جزءًا من التصميم لا ملحقًا به. الأدلة تُظهر أن التصميم العكسي يرفع نقل الأثر لأن كل دقيقة تخدم السلوك المستهدف.`,
+    example_ar: `بدل «سأشرح ${n}»: اكتب «سيُنتج المتعلم مثالًا واحدًا صحيحًا ويشرح لماذا هو صحيح». ثم: (1) مثال نموذجي منك، (2) محاولة ثنائية، (3) إنتاج فردي يُعرض في الدردشة، (4) تغذية راجعة على محاولة واحدة أمام الجميع.`,
+    challenge: { question_ar: `معلم يريد تنمية «${n}». أي صياغة هدف تمكّنه من قياس الأثر في نهاية الجلسة؟`, options: ['أن يتعرف المتعلم على مفهوم المهارة وأهميتها', 'أن يُنتج المتعلم مثالًا صحيحًا ويبرّر صحته أمام زميل', 'أن يستمع المتعلم إلى شرح وافٍ مع أمثلة', 'أن يناقش المتعلم أهمية المهارة في عمله'], correct: 1, explain_ar: 'الخيار الثاني يصف سلوكًا قابلًا للملاحظة (يُنتج ويبرّر)؛ أما «يتعرف» و«يستمع» و«يناقش» فأفعال لا يمكن التحقق منها مباشرة.' },
+    apply_ar: `خذ جلستك القادمة واكتب هدفها بصيغة «سيفعل المتعلم…» خلال 10 دقائق، ثم احذف أي نشاط لا يخدم هذا الفعل.`,
+  };
+}
+
+// ================================================================ 7) مستشارك: اسأل وأنا أجيب (P10)
+export type AdvisorFacts = { services: { title: string; href: string; summary: string }[]; programs: { id: string; name: string; fee?: number | null; start?: string | null; open: boolean; delivery?: string | null }[]; sessions: { id: string; title: string; when: string; free: boolean }[]; resources: number; contact: { email: string; phone: string }; profile?: { name?: string; skills: { name: string; level: number }[]; enrollments: string[] } | null };
+export type AdvisorAnswer = { answer_ar: string; links: { label: string; href: string }[]; handoff: boolean; confidence: number };
+export function buildAdvisorPrompt(q: string, f: AdvisorFacts, lang: Lang, persona: 'advisor' | 'companion' = 'advisor'): { system: string; user: string } {
+  const role = persona === 'companion'
+    ? 'أنت «أثير»، المدرب الرفيق في أَثَر: صوت دافئ، مباشر، يعرف ملف المتعلم ويشجّعه بصدق دون مبالغة، ويقترح خطوة واحدة واضحة'
+    : 'أنت «مستشارك» في بوابة أَثَر: ترد على أسئلة الزوار عن الخدمات والبرامج والتعلّم بوضوح وأمانة، وتعرف متى تحوّل السؤال إلى مستشار بشري';
+  const system = systemBase(lang, role) + `\nقواعد إضافية: أجب في 2–5 جمل بالعربية الواضحة. اذكر برامج/جلسات/روابط من الحقائق فقط. إن كان السؤال شخصيًا معقدًا (تعاقد، سعر خاص، شكوى، حالة طبية/قانونية) أو خارج نطاق أَثَر فاجعل handoff=true واشرح أنك ستحوّله لمستشار بشري. لا تعد بما ليس في الحقائق. أعد JSON: {"answer_ar": string, "links": [{"label": string, "href": string (من الحقائق فقط)}] (0-3), "handoff": boolean, "confidence": number 0-1}`;
+  const user = `الحقائق (JSON):\n${JSON.stringify(f)}\n\nالسؤال: ${q}`;
+  return { system, user };
+}
+export function parseAdvisor(raw: any, f: AdvisorFacts): AdvisorAnswer | null {
+  const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || typeof j !== 'object') return null; const a = S(j.answer_ar, 1200); if (!a) return null;
+  const allowed = new Set<string>([...f.services.map(s => s.href), ...f.programs.map(p => `/programs/${p.id}`), ...f.sessions.map(s => `/live/${s.id}`), '/programs', '/live', '/resources', '/consulting', '/contact', '/sim', '/me', '/me/skills', '/verify', '/org', '/ai']);
+  const links = (Array.isArray(j.links) ? j.links : []).map((l: any) => ({ label: S(l?.label, 60), href: S(l?.href, 120) })).filter((l: any) => l.label && allowed.has(l.href)).slice(0, 3);
+  return { answer_ar: a, links, handoff: !!j.handoff, confidence: Math.max(0, Math.min(1, N(j.confidence) ?? 0.6)) };
+}
+export function localAdvisor(q: string, f: AdvisorFacts): AdvisorAnswer {
+  const t = q.toLowerCase(); const has = (...w: string[]) => w.some(x => t.includes(x)); const open = f.programs.filter(p => p.open);
+  if (has('سعر', 'رسوم', 'تكلفة', 'بكم', 'كم ال', 'price', 'fee', 'cost')) { const withFee = open.filter(p => p.fee); return { answer_ar: withFee.length ? `الرسوم تختلف بحسب البرنامج: ${withFee.slice(0, 3).map(p => `«${p.name}» ${p.fee} ر.س`).join('، ')}. للجهات والمجموعات أسعار تعاقدية — أحوّلك لمستشار بشري إن أردت عرضًا.` : 'الرسوم تُعلن في صفحة كل برنامج، وللجهات أسعار تعاقدية. أرسل تفاصيلك وسيتواصل معك مستشار.', links: withFee.slice(0, 2).map(p => ({ label: p.name, href: `/programs/${p.id}` })).concat([{ label: 'كل البرامج', href: '/programs' }]), handoff: !withFee.length, confidence: 0.6 }; }
+  if (has('برنامج', 'برامج', 'دورة', 'دورات', 'دبلوم', 'تسجيل', 'سجل', 'مفتوح', 'program', 'course', 'enrol')) return { answer_ar: open.length ? `المفتوح للتسجيل الآن: ${open.slice(0, 3).map(p => `«${p.name}»${p.start ? ` (يبدأ ${p.start})` : ''}`).join('، ')}. التسجيل من صفحة البرنامج، ويبدأ ملفك المهاري بالتشكّل من أول نشاط.` : 'لا برامج مفتوحة للتسجيل في هذه اللحظة؛ اشترك في التنبيهات من صفحة البرامج وسنخبرك فور فتح باب التسجيل.', links: open.slice(0, 2).map(p => ({ label: p.name, href: `/programs/${p.id}` })).concat([{ label: 'كل البرامج', href: '/programs' }]), handoff: false, confidence: 0.7 };
+  if (has('جلسة', 'ندوة', 'بث', 'مباشر', 'ورشة', 'webinar', 'live')) return { answer_ar: f.sessions.length ? `أقرب الجلسات: ${f.sessions.slice(0, 3).map(s => `«${s.title}» ${s.when}${s.free ? ' (مجانية)' : ''}`).join('، ')}. التسجيل بضغطة من صفحة الجلسة وتصلك تذكيرات تلقائية.` : 'لا جلسات قادمة معلنة الآن؛ تابع صفحة البث المباشر.', links: f.sessions.slice(0, 2).map(s => ({ label: s.title, href: `/live/${s.id}` })).concat([{ label: 'البث المباشر', href: '/live' }]), handoff: false, confidence: 0.7 };
+  if (has('شهادة', 'تحقق', 'certificate', 'verify')) return { answer_ar: 'شهادات أَثَر رقمية قابلة للتحقق لحظيًا برمز أو QR وفق معيار Open Badges 3.0، ومرتبطة بالمهارات المُثبتة في ملفك المهاري.', links: [{ label: 'التحقق من شهادة', href: '/verify' }, { label: 'ملفي المهاري', href: '/me/skills' }], handoff: false, confidence: 0.8 };
+  if (has('استشار', 'جهة', 'شركة', 'مؤسسة', 'موظفين', 'تعاقد', 'consult')) return { answer_ar: 'نقدّم للجهات: تحليل احتياج، تصميم برامج بمخرجات قابلة للقياس، قياس أثر قبل/أثناء/بعد، وبوابة خاصة ترى فيها الجهة أثر التدريب على منسوبيها. سأحوّل طلبك إلى مستشار بشري ليتواصل معك خلال يوم عمل.', links: [{ label: 'الاستشارات', href: '/consulting' }, { label: 'بوابة الجهات', href: '/org' }], handoff: true, confidence: 0.7 };
+  if (has('محاكاة', 'تجربة', 'جرب', 'أثير', 'sim')) return { answer_ar: 'جرّب محاكاة الأداء الآن: تتقمّص دور معلم أمام طالب حقيقي الملامح، وتحصل على تقييم بمعيار معلن — بلا تسجيل للتجربة الأولى.', links: [{ label: 'المحاكيات', href: '/sim' }], handoff: false, confidence: 0.8 };
+  return { answer_ar: `شكرًا لسؤالك. أَثَر بوابة تجمع ${f.services.slice(0, 3).map(s => s.title).join('، ')} وغيرها، ويحكمها قياس حقيقي للأثر. أخبرني بما تريد تحقيقه بالضبط (تعلّم العربية؟ برنامج لجهة؟ شهادة؟) أو اترك بريدك ليجيبك مستشار بشري.`, links: [{ label: 'الخدمات', href: '/programs' }, { label: 'تواصل', href: '/contact' }], handoff: false, confidence: 0.4 };
+}
+
+// ================================================================ 8) أثير — تحية مبادِرة وذاكرة (P10)
+export type CompanionContext = { name: string; visits: number; last_seen_days: number | null; goals: string[]; summary: string; weakest: { name: string; level: number; days_since: number | null } | null; strongest: { name: string; level: number } | null; daily_done: boolean; next_session: { title: string; when: string; id: string } | null; page: string; hour: number };
+export type CompanionHello = { greeting: string; nudge: string; actions: { label: string; href: string }[] };
+export function localHello(c: CompanionContext): CompanionHello {
+  const first = c.name ? c.name.split(' ')[0] : ''; const time = c.hour < 12 ? 'صباح الخير' : c.hour < 17 ? 'مساء الخير' : 'مساء النور';
+  const greeting = c.visits <= 1 ? `${time}${first ? ` يا ${first}` : ''}! أنا أثير — رفيقك في أَثَر. سأتعلم معك خطوة خطوة، وأذكّرك حين تصدأ مهارة، وأضعك في مواقف حقيقية لتتدرب بأمان.` : `${time}${first ? ` يا ${first}` : ''}، سعيد بعودتك${c.last_seen_days && c.last_seen_days > 6 ? ` بعد ${c.last_seen_days} يومًا` : ''}.`;
+  let nudge = ''; const actions: { label: string; href: string }[] = [];
+  if (c.weakest && c.weakest.days_since !== null && c.weakest.days_since > 14) { nudge = `لاحظت أن «${c.weakest.name}» لم تُمارَس منذ ${c.weakest.days_since} يومًا ومستواها ${c.weakest.level}/5 — خمس دقائق في محاكاة تكفي لإنعاشها.`; actions.push({ label: 'ابدأ محاكاة', href: '/sim' }); }
+  else if (!c.daily_done) { nudge = 'مهارة اليوم جاهزة — ثلاث دقائق قراءة وسؤال واحد، وتُضاف دليلًا في ملفك.'; actions.push({ label: 'مهارة اليوم', href: '/#daily' }); }
+  else if (c.next_session) { nudge = `جلستك القادمة «${c.next_session.title}» ${c.next_session.when}. هل تريد أن أجهّز لك ثلاثة أسئلة قبلها؟`; actions.push({ label: 'الجلسة', href: `/live/${c.next_session.id}` }); }
+  else if (c.goals.length) { nudge = `هدفك: «${c.goals[0]}». ${c.strongest ? `قوتك اليوم في «${c.strongest.name}» (${c.strongest.level}/5).` : ''} ما رأيك بخطوة واحدة نحوه اليوم؟`; actions.push({ label: 'خطتي', href: '/me/skills' }); }
+  else { nudge = 'أخبرني بهدف واحد تريد تحقيقه هذا الشهر، وسأبني عليه كل ما أقترحه لك.'; }
+  if (!actions.some(a => a.href === '/sim')) actions.push({ label: 'جرّب محاكاة', href: '/sim' });
+  if (!actions.some(a => a.href === '/me/skills')) actions.push({ label: 'ملفي المهاري', href: '/me/skills' });
+  return { greeting, nudge, actions: actions.slice(0, 3) };
+}
+export function buildHelloPrompt(c: CompanionContext): { system: string; user: string } {
+  const system = systemBase('ar', 'أنت «أثير» المدرب الرفيق: تحية شخصية قصيرة ثم دفعة واحدة مبادِرة مبنية على الحقائق (لا أكثر من دفعة)، بلغة دافئة غير مبالغ فيها') + `\nأعد JSON: {"greeting": string (≤ 160), "nudge": string (≤ 220, تذكر رقمًا أو اسمًا من الحقائق), "actions": [{"label": string, "href": string (من: /sim, /me/skills, /#daily, /live/<id>, /programs)}] (1-3)}`;
+  return { system, user: `حقائق المتعلم: ${JSON.stringify(c)}` };
+}
+export function parseHello(raw: any): CompanionHello | null {
+  const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || !S(j.greeting)) return null;
+  const ok = (h: string) => ['/sim', '/me/skills', '/#daily', '/programs'].includes(h) || /^\/live\/[\w-]+$/.test(h);
+  return { greeting: S(j.greeting, 200), nudge: S(j.nudge, 260), actions: (Array.isArray(j.actions) ? j.actions : []).map((a: any) => ({ label: S(a?.label, 40), href: S(a?.href, 80) })).filter((a: any) => a.label && ok(a.href)).slice(0, 3) };
+}
+export function buildMemoryPrompt(prev: string, history: { role: string; text: string }[]): { system: string; user: string } {
+  const system = systemBase('ar', 'كاتب ذاكرة موجزة لمساعد تعلّم: تلخّص ما يهم مستقبلًا فقط (أهداف، تفضيلات، صعوبات، التزامات) في ≤ 400 حرف، بلا بيانات حساسة ولا اقتباسات حرفية') + '\nأعد JSON: {"summary": string}';
+  return { system, user: `الذاكرة السابقة: ${prev || '(فارغة)'}\nالمحادثة الأخيرة:\n${history.map(h => `${h.role}: ${h.text}`).join('\n')}` };
+}
+export function parseMemory(raw: any): string | null { const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; const v = S(j?.summary, 400); return v || null; }
