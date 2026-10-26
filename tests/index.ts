@@ -33,3 +33,4 @@ import './org.test';
 import './sector-impact.test';
 import './ai-athar.test';
 import './sim.test';
+import './twin.test';
