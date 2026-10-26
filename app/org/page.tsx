@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — بوابة الجهات (B2B): لوحة أثر التدريب على المنسوبين، تأكيد الأعضاء، الدعوات، التسجيل الجماعي، حقائب الجهة، تقرير قابل للطباعة
+// أَثَر — بوابة الجهات (B2B + توصيات ذكية P9-أ): لوحة أثر التدريب على المنسوبين، تأكيد الأعضاء، الدعوات، التسجيل الجماعي، حقائب الجهة، تقرير قابل للطباعة
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -14,6 +14,8 @@ import { orgKpis, topSkills, memberRows, memberStatusLabel, memberRoleLabel, MEM
 import type { Dashboard } from '../../lib/portal/org';
 import { levelName } from '../../lib/portal/profile';
 import { domainLabel } from '../../lib/portal/skills';
+import { AI_DISCLAIMER } from '../../lib/ai/prompts';
+import type { OrgBrief } from '../../lib/ai/prompts';
 import { typeLabel } from '../../lib/portal/resources';
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
@@ -30,7 +32,9 @@ function Inner() {
 
   async function token() { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
   async function api(body: any) { const tk = await token(); const r = await fetch('/api/org', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify(body) }); const txt = await r.text(); let j: any; try { j = JSON.parse(txt); } catch { throw new Error(`رد غير صالح (${r.status})`); } if (!j.success) throw new Error(j.error || 'خطأ'); return j; }
-  async function loadDash(id: string) { if (!id) { setD(null); return; } setBusy('dash'); setErr(''); try { const j = await api({ action: 'dashboard', org_id: id }); setD(j.dashboard as Dashboard); } catch (e: any) { setErr(e.message); } setBusy(''); }
+  const [brief, setBrief] = useState<{ data: OrgBrief; source: string } | null>(null);
+  async function aiBrief() { if (!orgId) return; setBusy('ai'); setErr(''); try { const tk = await token(); const j = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ purpose: 'org_brief', lang, org_id: orgId }) }).then(x => x.json()); if (!j.success) throw new Error(j.error || 'خطأ'); setBrief({ data: j.data, source: j.source }); } catch (e: any) { setErr(String(e?.message || e)); } setBusy(''); }
+  async function loadDash(id: string) { setBrief(null); if (!id) { setD(null); return; } setBusy('dash'); setErr(''); try { const j = await api({ action: 'dashboard', org_id: id }); setD(j.dashboard as Dashboard); } catch (e: any) { setErr(e.message); } setBusy(''); }
   useEffect(() => { (async () => {
     try { const { data: { user: u } } = await db.auth.getUser(); if (!u) { setLoaded(true); return; } setUser({ id: u.id, email: u.email || '' }); try { localStorage.removeItem(RESUME_KEY); } catch { /* ignore */ }
       const j = await api({ action: 'me' }); setStaff(!!j.staff); setMemberships(j.memberships || []);
@@ -72,6 +76,12 @@ function Inner() {
           {busy === 'dash' && !d && <div className="pt-empty">…</div>}
 
           {d && k && tab === 'impact' && <div className="og-grid">
+            <div className="og-ai"><div><b><Icon name="star" size={16} /> {lang === 'ar' ? 'توصيات ذكية للجهة' : 'Smart recommendations'}</b><small>{lang === 'ar' ? 'يلخّص المساعد فجوات المنسوبين ويقترح برامج — دون تسمية أفراد، والقرار لكم.' : 'Summarises gaps and suggests programs — no individuals named; you decide.'}</small></div><button type="button" className="pt-btn" disabled={busy === 'ai'} onClick={aiBrief}>{busy === 'ai' ? (lang === 'ar' ? 'جارٍ التحليل…' : 'Analysing…') : brief ? (lang === 'ar' ? 'تحديث' : 'Refresh') : (lang === 'ar' ? 'اقترح' : 'Suggest')}</button>
+              {brief && <div className="og-brief"><div className="og-briefhead"><b>{brief.data.headline}</b><span className={`og-src ${brief.source}`}>{brief.source === 'ai' ? 'AI' : (lang === 'ar' ? 'محلي' : 'local')}</span></div>
+                <div className="og-briefgrid"><div><h4>{lang === 'ar' ? 'أبرز النقاط' : 'Highlights'}</h4><ul>{brief.data.highlights.map((x, i) => <li key={i}>{x}</li>)}</ul></div><div><h4>{lang === 'ar' ? 'الفجوات' : 'Gaps'}</h4><ul>{brief.data.gaps.map((x, i) => <li key={i}>{x}</li>)}</ul></div><div><h4>{lang === 'ar' ? 'التوصيات' : 'Recommendations'}</h4><ul>{brief.data.recommendations.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+                  {brief.data.suggested_programs.length > 0 && <div><h4>{lang === 'ar' ? 'برامج مقترحة' : 'Suggested programs'}</h4><ul>{brief.data.suggested_programs.map((x, i) => <li key={i}>{x.program_id ? <Link href={`/programs/${x.program_id}`}>{x.name}</Link> : x.name} — <small>{x.why}</small></li>)}</ul></div>}</div>
+                <small className="pt-muted">{AI_DISCLAIMER[lang]} · <Link href="/ai">{lang === 'ar' ? 'سياسة الذكاء الاصطناعي' : 'AI policy'}</Link></small></div>}
+            </div>
             <div className="og-kpis">
               {[[k.members, lang === 'ar' ? 'منسوب مؤكد' : 'members'], [k.learners, lang === 'ar' ? 'متدرب مقبول' : 'learners'], [k.programs, lang === 'ar' ? 'برنامج' : 'programs'], [k.attendance !== null ? `${k.attendance}%` : '—', lang === 'ar' ? 'متوسط الحضور' : 'attendance'], [k.credentials, lang === 'ar' ? 'شهادة رقمية' : 'credentials'], [k.skillAvg ?? '—', lang === 'ar' ? 'متوسط مستوى المهارات' : 'avg skill level'], [k.placements, lang === 'ar' ? 'اختبار مِعيار' : 'placements'], [k.downloads, lang === 'ar' ? 'تنزيل حقيبة' : 'downloads']].map(([v, l], i) => <div key={i} className="og-kpi"><b>{v as any}</b><small>{l as string}</small></div>)}
             </div>
@@ -112,7 +122,9 @@ const CSS = `
 .og-pick{margin-top:12px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:8px 12px;font:inherit}.og-pick option{color:#0f172a}
 .og-notice{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:10px 14px;margin-bottom:12px;color:#9a3412;font-weight:800;font-size:13.5px}
 .og-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}.og-tabs button{border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:9px 16px;font:inherit;font-weight:800;font-size:13.5px;color:#334155;cursor:pointer;display:inline-flex;gap:6px;align-items:center}.og-tabs button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.og-tabs i{font-style:normal;background:#dc2626;color:#fff;border-radius:999px;padding:0 7px;font-size:11px}
-.og-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.og-grid>.og-kpis{grid-column:1/-1}
+.og-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.og-grid>.og-kpis{grid-column:1/-1}.og-grid>.og-ai{grid-column:1/-1}
+.og-ai{display:grid;grid-template-columns:1fr auto;gap:10px 14px;align-items:center;border:1px solid #cfe9e6;background:#f3fbfa;border-radius:16px;padding:14px 18px}.og-ai>div>b{display:flex;gap:6px;align-items:center;color:#0f2a4e;font-size:15px}.og-ai>div>small{display:block;color:#64748b;font-size:12.5px;margin-top:2px}.og-brief{grid-column:1/-1;border-top:1px dashed #cfe9e6;padding-top:10px}.og-briefhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.og-briefhead b{color:#0f2a4e}.og-src{font-size:11px;padding:2px 8px;border-radius:999px;background:#e2e8f0;color:#475569}.og-src.ai{background:#0b8a83;color:#fff}.og-briefgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin-top:6px}.og-briefgrid h4{margin:6px 0 2px;font-size:12.5px;color:#0b8a83}.og-briefgrid ul{margin:0;padding-inline-start:18px;font-size:13px;line-height:1.7;color:#334155}.og-briefgrid a{color:#0b8a83}
+@media(max-width:760px){.og-briefgrid{grid-template-columns:1fr}.og-ai{grid-template-columns:1fr}}
 .og-kpis{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}.og-kpi{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px 12px;display:grid;gap:2px}.og-kpi b{font-size:22px;color:#0f2a4e}.og-kpi small{color:#64748b;font-size:11.5px}.og-kpis.compact .og-kpi b{font-size:18px}
 .og-skills{display:grid;gap:8px}.og-skill{display:grid;grid-template-columns:1fr 120px auto;gap:10px;align-items:center}.og-skill b{display:block;font-size:13.5px;color:#0f172a}.og-skill small{color:#64748b;font-size:11.5px}.og-bar{height:8px;border-radius:999px;background:#e2e8f0;overflow:hidden}.og-bar i{display:block;height:100%;background:#0b8a83}.og-avg{font-size:12px;color:#0f2a4e;white-space:nowrap}
 .og-levels{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;height:110px;align-items:end}.og-lv{display:grid;grid-template-rows:1fr auto auto;height:100%;justify-items:center;align-items:end;border:1px solid #e2e8f0;border-radius:10px;padding:4px}.og-lv i{display:block;width:60%;background:#0f2a4e;border-radius:6px 6px 0 0}.og-lv b{font-size:12px;direction:ltr}.og-lv small{font-size:11px;color:#64748b}
