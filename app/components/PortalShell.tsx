@@ -88,6 +88,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
                 <li><Link href="/me">{t(UI.student, lang)}</Link></li>
                 <li><Link href="/org">{lang === 'ar' ? 'بوابة الجهات' : 'Organizations portal'}</Link></li>
                 <li><Link href="/me/skills">{lang === 'ar' ? 'ملفي المهاري' : 'My skills profile'}</Link></li>
+                <li><Link href="/me/twin">{lang === 'ar' ? 'توأمي المهاري' : 'My skills twin'}</Link></li>
                 <li><Link href="/verify">{t(UI.verify, lang)}</Link></li>
                 <li><Link href="/ai">{lang === 'ar' ? 'الذكاء الاصطناعي المسؤول' : 'Responsible AI'}</Link></li>
                 <li><Link href={BRAND.evaluationUrl}>{t(UI.admin, lang)}</Link></li>
