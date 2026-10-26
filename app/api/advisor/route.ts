@@ -79,5 +79,6 @@ export async function POST(req: Request) {
   if (user) await logAi(db, { user_id: user.id, email: user.email, role: 'USER', purpose: 'advisor', result: res, context: { page } });
   const id = (globalThis as any).crypto?.randomUUID ? (globalThis as any).crypto.randomUUID() : `${Date.now()}`;
   await db.from('portal_advisor_questions').insert({ id, name: S(body.name, 120) || null, email: user?.email || S(body.email, 160).toLowerCase() || null, question, answer: res.data.answer_ar, source: res.source, model: res.model, handoff: res.data.handoff, lang, page, user_id: user?.id || null });
-  return NextResponse.json({ success: true, id, answer: res.data.answer_ar, links: res.data.links, handoff: res.data.handoff, confidence: res.data.confidence, source: res.source });
+  // diag: تشخيص غير حساس (النموذج/الزمن/سبب الرجوع للبديل) لمتابعة جودة الخدمة
+  return NextResponse.json({ success: true, id, answer: res.data.answer_ar, links: res.data.links, handoff: res.data.handoff, confidence: res.data.confidence, source: res.source, diag: { model: res.model, ms: res.ms, error: res.error } });
 }
