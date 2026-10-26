@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — تقارير الأثر القطاعية (P8-ج): مؤشرات موحّدة بحسب القطاع/المهارة/الجهة/الفترة، مقارنة الجهات، سرد تنفيذي، Excel وطباعة، وتصنيف البرامج بالقطاعات
+// بوابة أَثَر — تقارير الأثر القطاعية (P8-ج + موجز ذكي P9-أ): مؤشرات موحّدة بحسب القطاع/المهارة/الجهة/الفترة، مقارنة الجهات، سرد تنفيذي، Excel وطباعة، وتصنيف البرامج بالقطاعات
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,8 @@ import type { ImpactReport, ImpactFilters } from '../../../lib/portal/impact';
 import { domainLabel, skillName } from '../../../lib/portal/skills';
 import type { Skill, Sector, Organization } from '../../../lib/portal/skills';
 import { typeLabel } from '../../../lib/portal/catalog';
+import { AI_DISCLAIMER } from '../../../lib/ai/prompts';
+import type { ImpactBrief, ImpactFacts } from '../../../lib/ai/prompts';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
@@ -60,6 +62,24 @@ function SectorImpact() {
   const tt = useMemo(() => totals(report), [report]); const pRows = useMemo(() => programRows(report), [report]); const oRows = useMemo(() => orgRows(report), [report]); const sRows = useMemo(() => skillRows(report), [report]); const secRows = useMemo(() => sectorRows(report), [report]);
   const names = { sector: sectors.find(s => s.code === (applied?.sector || ''))?.name_ar, skill: (() => { const s = skills.find(x => x.id === (applied?.skill || '')); return s ? `${s.code} ${s.name_ar}` : undefined; })(), org: orgs.find(o => o.id === (applied?.org || ''))?.name_ar };
   const scope = applied ? scopeLabel(applied, names, 'ar') : ''; const story = useMemo(() => (applied ? narrative(tt, 'ar', scope) : []), [tt, applied, scope]);
+  const [brief, setBrief] = useState<{ data: ImpactBrief; source: string; model?: string | null } | null>(null);
+  async function aiBrief() {
+    if (!applied) return; setBusy('ai'); setError(''); setBrief(null);
+    try {
+      const { data: sess } = await db.auth.getSession(); const tk = sess.session?.access_token || '';
+      const facts: ImpactFacts = {
+        scope: scope || 'كل الخدمات', period: `${applied.from} → ${applied.to}`,
+        totals: { programs: tt.programs, learners: tt.learners, orgs: tt.orgs, hours: tt.hours, credentials: tt.credentials, skillsProven: tt.skillsProven, skillsApproved: tt.skillsApproved, attendanceRate: tt.attendance.rate, satisfactionMean: tt.satisfaction.mean, satisfactionN: tt.satisfaction.n, pre: tt.prepost.pre, post: tt.prepost.post, improvement: tt.prepost.improvement, transferMean: tt.transfer.mean, transferN: tt.transfer.n, placements: tt.placements.total, events: tt.events.total },
+        programs: pRows.slice(0, 15).map(p => ({ name: p.name_ar, learners: p.learners, attendance: p.attendanceRate, satisfaction: p.satisfaction?.mean ?? null, improvement: p.improvement, sector: p.sector || null })),
+        skills: sRows.slice(0, 12).map(k => ({ name: `${k.code} ${k.name_ar}`, learners: k.learners, avg: k.avg_level })),
+        sectors: secRows.slice(0, 12).map(x => ({ name: x.name_ar, learners: x.learners })),
+        orgs: oRows.slice(0, 12).map(o => ({ name: o.name_ar, learners: o.learners, attendance: null })),
+      };
+      const j = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ purpose: 'impact_brief', lang: 'ar', facts }) }).then(x => x.json());
+      if (!j.success) throw new Error(j.error || 'تعذّر توليد الموجز'); setBrief({ data: j.data, source: j.source, model: j.model });
+    } catch (e: any) { setError(String(e?.message || e)); }
+    setBusy('');
+  }
   const maxLearners = Math.max(1, ...oRows.map(o => o.learners), ...secRows.map(s => s.learners));
   const unclassified = progs.filter(p => !p.sector).length;
   const classRows = progs.filter(p => !classQ || p.name_ar.includes(classQ));
@@ -69,7 +89,7 @@ function SectorImpact() {
     <div className="en im"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="en-wrap">
         <header className="en-head no-print"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>تقارير الأثر القطاعية</h1><p>مؤشرات موحّدة عبر كل الخدمات: التسجيل والحضور والشهادات ومِعيار والملف المهاري، مع الرضا والقياس القبلي/البعدي ونقل الأثر من منصة التقويم — بحسب القطاع أو المهارة أو الجهة أو الفترة. للجهات الحكومية والممولين ولوحات المتابعة.</p></div>
-          <div className="en-acts"><button type="button" className="en-btn ghost" disabled={!applied} onClick={() => downloadXlsx(safeFilename('athar_sector_impact', 'xlsx'), impactSheets(report, applied!, names))}><Icon name="download" size={14} /> Excel</button><button type="button" className="en-btn ghost" disabled={!applied} onClick={() => window.print()}><Icon name="print" size={14} /> طباعة / PDF</button><Link href="/admin/skills" className="en-btn ghost"><Icon name="target" size={14} /> المهارات والجهات</Link></div></header>
+          <div className="en-acts"><button type="button" className="en-btn ghost" disabled={!applied} onClick={() => downloadXlsx(safeFilename('athar_sector_impact', 'xlsx'), impactSheets(report, applied!, names))}><Icon name="download" size={14} /> Excel</button><button type="button" className="en-btn ghost" disabled={!applied} onClick={() => window.print()}><Icon name="print" size={14} /> طباعة / PDF</button><button type="button" className="en-btn ok im-ai" disabled={!applied || busy === 'ai'} onClick={aiBrief}><Icon name="star" size={14} /> {busy === 'ai' ? 'جارٍ التوليد…' : 'موجز ذكي'}</button><Link href="/admin/skills" className="en-btn ghost"><Icon name="target" size={14} /> المهارات والجهات</Link></div></header>
         <div className="no-print"><PortalAdminTabs /></div>
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok no-print">{notice}</div>}
 
@@ -99,6 +119,13 @@ function SectorImpact() {
           {/* السرد التنفيذي */}
           <div className="en-card im-story"><h3><Icon name="doc" size={16} /> الخلاصة التنفيذية</h3><ul>{story.map((s, i) => <li key={i}>{s}</li>)}</ul>
             {tt.placements.total > 0 && <div className="im-levels">{tt.placements.levels.map(l => <span key={l.level}><b>{l.level}</b> {l.n}</span>)}</div>}
+            {brief && <div className="im-brief"><div className="im-briefhead"><b><Icon name="star" size={14} /> {brief.data.headline}</b><span className={`im-src ${brief.source}`}>{brief.source === 'ai' ? `نموذج: ${brief.model || 'AI'}` : 'بديل محلي'}</span></div>
+              <div className="im-briefgrid">
+                <div><h4>أبرز النتائج</h4><ul>{brief.data.findings.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+                <div><h4>التوصيات</h4><ul>{brief.data.recommendations.map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+                {brief.data.risks.length > 0 && <div><h4>مخاطر وفجوات قياس</h4><ul>{brief.data.risks.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
+                {brief.data.next_quarter.length > 0 && <div><h4>الربع القادم</h4><ul>{brief.data.next_quarter.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
+              </div><small className="im-disc">{AI_DISCLAIMER.ar} · <Link href="/ai">سياسة الذكاء الاصطناعي المسؤول</Link></small></div>}
             <small className="en-muted">المنهجية: المتعلمون = تسجيلات مقبولة ضمن الفترة؛ الساعات = ساعات البرنامج × متعلموه؛ الحضور = حاضرون ÷ (جلسات × متعلمون)؛ الرضا من بنود التقويم (1–5)؛ القبلي/البعدي من أداة قياس الأثر (0–100)؛ نقل الأثر = متوسط نسبة التطبيق من المشرفين والمتدربين؛ المهارة «مُثبتة» عند مستوى ≥ 3 وثقة ≥ 35%.</small></div>
 
           {/* الجداول */}
@@ -153,6 +180,8 @@ const CSS = `
 .sk-table{overflow:auto;padding:0}.sk-table table{width:100%;border-collapse:collapse;font-size:13px}.sk-table th{background:#f1f5f9;color:#334155;font-size:12px;text-align:start;padding:9px 10px;white-space:nowrap}.sk-table td{padding:9px 10px;border-top:1px solid #f1f5f9;vertical-align:top}.sk-table td b{color:#0f172a;font-size:13.5px}.sk-table td small{display:block;color:#64748b;font-size:11.5px;margin-top:2px}.sk-table tr.off{opacity:.65}.sk-table select{font:inherit;font-size:12.5px;border:1px solid #cbd5e1;border-radius:8px;padding:5px 8px;background:#fff}
 .im-filters{display:grid;gap:10px}.im-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
 .im-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.im-kpi{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 14px;display:grid;gap:2px}.im-kpi b{font-size:24px;color:#0f2a4e;line-height:1.1;direction:ltr;text-align:start}.im-kpi span{font-size:12.5px;color:#334155;font-weight:800}.im-kpi small{font-size:11px;color:#64748b}.im-kpi.na b{color:#94a3b8}
+.im-brief{margin-top:12px;border:1px solid #cfe9e6;background:#f3fbfa;border-radius:12px;padding:12px 14px}.im-briefhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.im-briefhead b{display:flex;gap:6px;align-items:center;color:#0f2a4e;font-size:15px}.im-src{font-size:11px;padding:2px 8px;border-radius:999px;background:#e2e8f0;color:#475569}.im-src.ai{background:#0b8a83;color:#fff}.im-briefgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:8px}.im-briefgrid h4{margin:6px 0 2px;font-size:12.5px;color:#0b8a83}.im-briefgrid ul{margin:0;padding-inline-start:18px;font-size:13.5px;line-height:1.8}.im-disc{display:block;margin-top:8px;color:#64748b;font-size:11.5px}.im-disc a{color:#0b8a83}
+@media(max-width:760px){.im-briefgrid{grid-template-columns:1fr}}
 .im-story h3{margin:0 0 8px;font-size:15px;color:#0f2a4e;display:flex;gap:6px;align-items:center}.im-story ul{margin:0 0 8px;padding-inline-start:20px;font-size:14px;line-height:1.9;color:#0f172a}.im-levels{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.im-levels span{border:1px solid #e2e8f0;border-radius:999px;padding:3px 10px;font-size:12.5px;color:#334155;background:#f8fafc}.im-levels b{color:#0b8a83;margin-inline-end:4px}
 .im-bar{display:inline-flex;align-items:center;gap:6px;min-width:90px}.im-bar i{display:block;height:8px;border-radius:4px;background:#0b8a83;min-width:2px;max-width:80px;flex:none}.im-bar.wide i{max-width:140px;width:140px}.im-bar em{font-style:normal;font-weight:800;color:#0f2a4e;font-size:12.5px}
 .im-bar.wide{position:relative}.im-bar.wide i{background:linear-gradient(90deg,#0b8a83,#0f2a4e)}
