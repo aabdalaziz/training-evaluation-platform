@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — ملفي المهاري: خريطة المهارات بالمجالات (محسوبة + معتمدة)، الأدلة، الشهادات الرقمية، ما التالي، إعدادات المشاركة والرابط العام
+// أَثَر — ملفي المهاري: خريطة المهارات بالمجالات (محسوبة + معتمدة)، الأدلة، الشهادات الرقمية، ما التالي، إعدادات المشاركة والرابط العام + جواز المهارات PDF (P8-ج)
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -14,6 +14,8 @@ import { displayLevel, levelName, confidenceLabel, EVIDENCE_LABEL, SHARE_MODES, 
 import type { SkillLevelRow, Credential, ShareMode } from '../../../lib/portal/profile';
 import { resTitle } from '../../../lib/portal/resources';
 import type { Resource } from '../../../lib/portal/resources';
+import { buildPassport, downloadPassport } from '../../../lib/portal/passport';
+import { normalizeSite } from '../../../lib/portal/open';
 
 export default function SkillsPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
@@ -36,6 +38,12 @@ function Inner() {
 
   async function sendLink(e: React.FormEvent) { e.preventDefault(); setErr(''); const em = email.trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { setErr(lang === 'ar' ? 'البريد الإلكتروني غير صالح' : 'Invalid email'); return; } setBusy('link'); try { localStorage.setItem(RESUME_KEY, '/me/skills'); } catch { /* ignore */ } const { error } = await db.auth.signInWithOtp({ email: em, options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/me/skills` } }); setBusy(''); if (error) setErr(error.message); else setSent(true); }
   async function share(mode: ShareMode, extra: Record<string, string> = {}) { setBusy('share'); setErr(''); setOk(''); try { const tk = await token(); const j = await fetch('/api/profile', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ action: 'share', share_mode: mode, ...extra }) }).then(x => x.json()); if (!j.success) setErr(j.error); else { setProfile(j.profile); setEdit(null); setOk(lang === 'ar' ? 'حُفظت الإعدادات.' : 'Saved.'); } } catch (x: any) { setErr(String(x?.message || x)); } setBusy(''); }
+  async function passport() {
+    setBusy('pdf'); setErr(''); setOk('');
+    try { const d = buildPassport({ profile: profile || { public_id: '', share_mode: 'private' }, email: user?.email, levels, skills, credentials: creds, site: normalizeSite(window.location.origin), lang }); const n = await downloadPassport(d); setOk(lang === 'ar' ? `نُزّل جواز المهارات (${n} ${n === 1 ? 'صفحة' : 'صفحات'}).` : `Passport downloaded (${n} page${n === 1 ? '' : 's'}).`); }
+    catch (e: any) { setErr(String(e?.message || e)); }
+    setBusy('');
+  }
   function downloadBadge(c: Credential) { const blob = new Blob([JSON.stringify(c.badge || {}, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `athar-credential-${c.verify_code}.json`; document.body.appendChild(a); a.click(); a.remove(); }
 
   const byDomain = useMemo(() => DOMAINS.map(d => ({ d, items: levels.filter(l => skills.get(l.skill_id)?.domain === d.value).sort((a, b) => displayLevel(b) - displayLevel(a)) })).filter(x => x.items.length), [levels, skills]);
@@ -48,7 +56,7 @@ function Inner() {
         <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/me">{lang === 'ar' ? 'بوابة المتدرب' : 'Student portal'}</Link> / <span>{lang === 'ar' ? 'ملفي المهاري' : 'My skills profile'}</span></div>
         <h1>{lang === 'ar' ? 'ملفي المهاري' : 'My Skills Profile'}</h1>
         <p>{lang === 'ar' ? 'كل مهارة هنا مبنية على أدلة حقيقية: اختبار مِعيار، البرامج والجلسات، الأنشطة، والشهادات — مربوطة بالأطر المرجعية (SAQF · SDAIA · CEFR). المستوى المحسوب مؤشر، والمعتمد يضعه مدرب أو الإدارة.' : 'Every skill here rests on real evidence — Mi‘yar, programs and sessions, activities and credentials — mapped to SAQF, SDAIA and CEFR. Computed levels are indicators; approved levels are set by a trainer or admin.'}</p>
-        {user && levels.length > 0 && <div className="sk-kpis"><span><b>{levels.length}</b> {lang === 'ar' ? 'مهارة بأدلة' : 'skills with evidence'}</span><span><b>{strong}</b> {lang === 'ar' ? 'بأدلة قوية' : 'strong evidence'}</span><span><b>{approvedCount}</b> {lang === 'ar' ? 'معتمدة' : 'approved'}</span><span><b>{creds.filter(c => credentialStatus(c) === 'valid').length}</b> {lang === 'ar' ? 'شهادة رقمية' : 'credentials'}</span></div>}
+        {user && levels.length > 0 && <div className="sk-kpis"><span><b>{levels.length}</b> {lang === 'ar' ? 'مهارة بأدلة' : 'skills with evidence'}</span><span><b>{strong}</b> {lang === 'ar' ? 'بأدلة قوية' : 'strong evidence'}</span><span><b>{approvedCount}</b> {lang === 'ar' ? 'معتمدة' : 'approved'}</span><span><b>{creds.filter(c => credentialStatus(c) === 'valid').length}</b> {lang === 'ar' ? 'شهادة رقمية' : 'credentials'}</span><button type="button" className="pt-btn light small sk-pdf" disabled={busy === 'pdf'} onClick={passport}><Icon name="download" size={13} /> {busy === 'pdf' ? '…' : (lang === 'ar' ? 'جواز المهارات PDF' : 'Skills passport PDF')}</button></div>}
       </div></section>
 
       <section className="pt-sec"><div className="pt-wrap">
@@ -87,7 +95,7 @@ function Inner() {
 }
 
 const CSS = `
-.sk-kpis{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:13.5px;color:rgba(255,255,255,.85)}.sk-kpis b{font-size:20px;color:#fff;margin-inline-end:4px}
+.sk-kpis{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:13.5px;color:rgba(255,255,255,.85);align-items:center}.sk-kpis b{font-size:20px;color:#fff;margin-inline-end:4px}.sk-pdf{margin-inline-start:auto}
 .sk-dom h3{display:flex;align-items:center;gap:8px}.sk-dom h3 small{color:#64748b;font-weight:600}.sk-dot{width:12px;height:12px;border-radius:50%;background:#0f2a4e;display:inline-block}.sk-dot.teal{background:#0b8a83}.sk-dot.gold{background:#c9a24b}.sk-dot.ok{background:#047857}.sk-dot.violet{background:#6d28d9}.sk-dot.sky{background:#0284c7}.sk-dot.warn{background:#d97706}.sk-dot.rose{background:#be123c}
 .sk-list{display:grid;gap:8px}.sk-item{border:1px solid #e2e8f0;border-radius:12px;background:#fff;overflow:hidden}.sk-item.open{border-color:#0b8a83}.sk-row{width:100%;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:10px 14px;background:transparent;border:0;font:inherit;text-align:start;cursor:pointer}
 .sk-name b{display:block;font-size:14.5px;color:#0f172a}.sk-name small{color:#64748b;font-size:12px;direction:ltr;display:block;text-align:start}
