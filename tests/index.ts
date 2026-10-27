@@ -36,3 +36,4 @@ import './sim.test';
 import './twin.test';
 import './missions.test';
 import './contracts.test';
+import './p13.test';
