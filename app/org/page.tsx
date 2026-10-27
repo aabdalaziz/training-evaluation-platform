@@ -17,11 +17,14 @@ import { domainLabel } from '../../lib/portal/skills';
 import { AI_DISCLAIMER } from '../../lib/ai/prompts';
 import type { OrgBrief } from '../../lib/ai/prompts';
 import { typeLabel } from '../../lib/portal/resources';
+import { MILESTONE_LABEL, MS_STATUS_LABEL, STATUS_LABEL as C_STATUS, HEALTH_LABEL, money, contractUrl } from '../../lib/portal/contracts';
+import type { ContractState, ContractStatus } from '../../lib/portal/contracts';
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
 type Org = { id: string; name_ar: string; name_en?: string | null; sector?: string | null; email_domain?: string | null; city?: string | null };
-type Tab = 'impact' | 'members' | 'bulk' | 'resources' | 'report';
+type Tab = 'impact' | 'members' | 'bulk' | 'resources' | 'contracts' | 'report';
+type ContractItem = { contract: { id: string; title_ar: string; total_amount: number; currency: string; status: ContractStatus; cohort_size: number; token: string; program_name?: string; delivered_at?: string | null }; state: ContractState };
 
 function Inner() {
   const { lang } = useLang(); const db = useMemo(() => supabase(), []);
@@ -33,8 +36,10 @@ function Inner() {
   async function token() { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
   async function api(body: any) { const tk = await token(); const r = await fetch('/api/org', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify(body) }); const txt = await r.text(); let j: any; try { j = JSON.parse(txt); } catch { throw new Error(`رد غير صالح (${r.status})`); } if (!j.success) throw new Error(j.error || 'خطأ'); return j; }
   const [brief, setBrief] = useState<{ data: OrgBrief; source: string } | null>(null);
+  const [contracts, setContracts] = useState<ContractItem[] | null>(null);
+  async function loadContracts(id: string) { if (!id) { setContracts(null); return; } try { const tk = await token(); const j = await fetch(`/api/contracts?org=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${tk}` } }).then(r => r.json()); setContracts(j.success ? j.items : []); } catch { setContracts([]); } }
   async function aiBrief() { if (!orgId) return; setBusy('ai'); setErr(''); try { const tk = await token(); const j = await fetch('/api/ai', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ purpose: 'org_brief', lang, org_id: orgId }) }).then(x => x.json()); if (!j.success) throw new Error(j.error || 'خطأ'); setBrief({ data: j.data, source: j.source }); } catch (e: any) { setErr(String(e?.message || e)); } setBusy(''); }
-  async function loadDash(id: string) { setBrief(null); if (!id) { setD(null); return; } setBusy('dash'); setErr(''); try { const j = await api({ action: 'dashboard', org_id: id }); setD(j.dashboard as Dashboard); } catch (e: any) { setErr(e.message); } setBusy(''); }
+  async function loadDash(id: string) { setBrief(null); void loadContracts(id); if (!id) { setD(null); return; } setBusy('dash'); setErr(''); try { const j = await api({ action: 'dashboard', org_id: id }); setD(j.dashboard as Dashboard); } catch (e: any) { setErr(e.message); } setBusy(''); }
   useEffect(() => { (async () => {
     try { const { data: { user: u } } = await db.auth.getUser(); if (!u) { setLoaded(true); return; } setUser({ id: u.id, email: u.email || '' }); try { localStorage.removeItem(RESUME_KEY); } catch { /* ignore */ }
       const j = await api({ action: 'me' }); setStaff(!!j.staff); setMemberships(j.memberships || []);
@@ -72,7 +77,7 @@ function Inner() {
         {loaded && user && org && <>
           {err && <div className="pt-alert err">{err}</div>}{ok && <div className="pt-alert ok">{ok}</div>}
           {pendingMembers.length > 0 && tab !== 'members' && <div className="og-notice"><Icon name="bell" size={16} /> {lang === 'ar' ? `${pendingMembers.length} عضو جديد من نطاق بريد جهتكم بانتظار تأكيدك.` : `${pendingMembers.length} new member(s) from your email domain await your confirmation.`} <button type="button" className="pt-btn small" onClick={() => setTab('members')}>{lang === 'ar' ? 'مراجعة' : 'Review'}</button></div>}
-          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}</button>)}</div>
+          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
           {busy === 'dash' && !d && <div className="pt-empty">…</div>}
 
           {d && k && tab === 'impact' && <div className="og-grid">
@@ -104,6 +109,19 @@ function Inner() {
 
           {d && tab === 'resources' && <div className="pt-box"><h3><Icon name="folder" size={18} /> {lang === 'ar' ? 'حقائب مخصصة لجهتكم' : 'Resources for your organization'}</h3>{d.resources.length === 0 && <p className="pt-muted">{lang === 'ar' ? 'لا حقائب خاصة بعد — يمكن طلب تصميم حقيبة من الاستشارات.' : 'No private resources yet.'}</p>}<div className="pt-chips">{d.resources.map(r => <Link key={r.id} href={`/resources/${r.id}`} className="pt-chip">{lang === 'en' && r.title_en ? r.title_en : r.title_ar} · {typeLabel(r.type, lang)} · ↓{r.downloads}</Link>)}</div><p className="pt-muted" style={{ marginTop: 10 }}>{lang === 'ar' ? 'منسوبوكم المؤكدون يصلون إليها تلقائيًا ببريد الجهة.' : 'Confirmed members access them automatically.'}</p></div>}
 
+          {tab === 'contracts' && <div className="pt-box og-contracts">
+            <h3><Icon name="scale" size={18} /> {lang === 'ar' ? 'عقود الأثر — تدفعون ثمن النتيجة لا المقعد' : 'Impact contracts — pay for outcomes, not seats'}</h3>
+            <p className="pt-muted">{lang === 'ar' ? 'لكل عقد صفحة حية تُحدَّث من أدلة الأثر نفسها: دفعة عند التسليم، دفعة عند تأكيد مشرفيكم لأدلة من قلب العمل، ودفعة عند ظهور الأثر المستدام خلال 90 يومًا. لا يُفرَج عن أي دفعة إلا بقرار بشري موثَّق.' : 'Every contract has a live page computed from the evidence itself: a payment on delivery, one when your supervisors confirm workplace evidence, and one when sustained impact appears within 90 days.'}</p>
+            {contracts === null && <p className="pt-muted">…</p>}
+            {contracts && contracts.length === 0 && <p className="pt-muted">{lang === 'ar' ? 'لا عقود أثر نشطة لجهتكم بعد — اطلبوا عرضًا من الاستشارات.' : 'No active impact contracts yet.'} <Link href="/consulting" className="pt-btn small light" style={{ marginInlineStart: 8 }}>{lang === 'ar' ? 'اطلب عرض عقد أثر' : 'Request a proposal'}</Link></p>}
+            {contracts && contracts.length > 0 && <div className="og-cgrid">{contracts.map(({ contract: c, state: s }) => <article key={c.id} className="og-c" data-h={s.health}>
+              <div className="og-c-top"><div><b>{c.title_ar}</b><small>{c.program_name || ''} · {lang === 'ar' ? `${c.cohort_size} منسوبًا` : `${c.cohort_size} people`} · {money(c.total_amount, c.currency, lang)}</small></div><span className="og-tag" style={{ background: C_STATUS[c.status].color, color: '#fff' }}>{t(C_STATUS[c.status], lang)}</span></div>
+              <div className="og-c-ms">{s.milestones.map(m => <div key={m.key} className={`og-c-m ${m.status}`} style={{ flex: m.pct }}><i style={{ width: `${m.progress}%` }} /><span>{t(MILESTONE_LABEL[m.key], lang)} {m.pct}%</span><small>{t(MS_STATUS_LABEL[m.status], lang)}</small></div>)}</div>
+              <div className="og-c-k"><span><b>{money(s.paid, c.currency, lang)}</b> {lang === 'ar' ? 'أُفرج عنه' : 'released'}</span>{s.due > 0 && <span className="due"><b>{money(s.due, c.currency, lang)}</b> {lang === 'ar' ? 'مستحق الآن' : 'due now'}</span>}<span><b>{s.evidenced}/{s.cohort}</b> {lang === 'ar' ? 'أدلة مؤكَّدة' : 'confirmed'}</span><span><b>{t(HEALTH_LABEL[s.health], lang)}</b></span></div>
+              {s.next[0] && <p className="pt-muted og-c-next"><Icon name="compass" size={13} /> {t(s.next[0], lang)}</p>}
+              <Link href={contractUrl(c.token)} className="pt-btn small">{lang === 'ar' ? 'الصفحة الحية للعقد' : 'Open live page'}</Link>
+            </article>)}</div>}
+          </div>}
           {d && k && tab === 'report' && <div className="og-report pt-box">
             <div className="og-rephead"><div><b>{lang === 'ar' ? 'تقرير أثر التدريب' : 'Training Impact Report'}</b><h2>{org.name_ar}</h2><small>{lang === 'ar' ? 'صادر من أَثَر · ' : 'Issued by Athar · '}<bdi>{fmtDate(new Date().toISOString(), lang)}</bdi></small></div><button type="button" className="pt-btn no-print" onClick={() => window.print()}><Icon name="print" size={14} /> {lang === 'ar' ? 'طباعة / حفظ PDF' : 'Print / Save PDF'}</button></div>
             <div className="og-kpis compact">{[[k.members, 'منسوب'], [k.learners, 'متدرب'], [k.programs, 'برنامج'], [k.attendance !== null ? `${k.attendance}%` : '—', 'حضور'], [k.credentials, 'شهادة'], [k.skillAvg ?? '—', 'متوسط المهارات'], [k.placements, 'مِعيار'], [k.assessed, 'تقويم']].map(([v, l], i) => <div key={i} className="og-kpi"><b>{v as any}</b><small>{l as string}</small></div>)}</div>
@@ -136,6 +154,10 @@ const CSS = `
 .og-report{grid-column:1/-1}.og-rephead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}.og-rephead b{color:#0b8a83;font-size:13px}.og-rephead h2{margin:4px 0;font-size:24px;color:#0f2a4e}.og-rephead small{color:#64748b}
 .og-report h3{margin:18px 0 8px;font-size:15px;color:#0f2a4e}.og-table{width:100%;border-collapse:collapse;font-size:13px}.og-table th{background:#f1f5f9;color:#334155;padding:8px 10px;text-align:start;font-size:12px}.og-table td{padding:8px 10px;border-top:1px solid #f1f5f9}.og-foot{margin-top:18px;color:#64748b;font-size:12px;text-align:center}
 .pt-muted{color:#64748b;font-size:13.5px;line-height:1.8}
+.og-cgrid{display:grid;gap:12px;margin-top:10px}.og-c{border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px;background:#fff;border-inline-start:5px solid #0b8a83}.og-c[data-h=due]{border-inline-start-color:#c9a24b;box-shadow:0 8px 24px rgba(201,162,75,.18)}.og-c[data-h=attention]{border-inline-start-color:#f59e0b}.og-c[data-h=settled]{border-inline-start-color:#16a34a}
+.og-c-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.og-c-top b{display:block;font-size:15px;color:#0f2a4e}.og-c-top small{color:#64748b;font-size:12px}
+.og-c-ms{display:flex;gap:6px;margin:12px 0 8px}.og-c-m{position:relative;background:#f1f5f9;border-radius:10px;padding:8px 10px 6px;overflow:hidden;min-width:0}.og-c-m i{position:absolute;left:0;top:0;bottom:0;background:#e2e8f0;z-index:0;transition:width .8s}.og-c-m.progress i{background:#ccfbf1}.og-c-m.due i{background:#fde68a}.og-c-m.released i{background:#bbf7d0}.og-c-m span,.og-c-m small{position:relative;z-index:1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.og-c-m span{font-size:12px;font-weight:800;color:#0f2a4e}.og-c-m small{font-size:11px;color:#475569}
+.og-c-k{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#475569;margin-bottom:8px}.og-c-k b{color:#0f2a4e}.og-c-k .due b{color:#b45309}.og-c-next{margin:0 0 10px;font-size:13px}
 @media(max-width:900px){.og-grid{grid-template-columns:1fr}.og-kpis{grid-template-columns:repeat(4,1fr)}.og-mem{grid-template-columns:1fr}.og-skill{grid-template-columns:1fr}}
 @media print{.pt-header,.pt-footer,.pt-pagehead,.og-tabs,.no-print,.og-notice{display:none!important}.og-report{border:0;box-shadow:none}.pt-main{padding:0}}
 `;
