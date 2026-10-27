@@ -3,6 +3,7 @@
  * أَثَر — «موقف اليوم» (كل يوم بناء · P13-أ): بدل سؤال واختيار، نطرح موقفًا/قضية/حالة فيها توتر خفي؛ يكتب الممارس كيف يتصرّف بكلماته،
  *  ثم نعيد له «مرآة الأداء»: وصف أدائه، ما ظهر من جداراته (بمستوى تقديري)، ما لم يره، احتياجاته التطويرية، وخطوة اليوم — ويُودَع شاهدًا في ملفه.
  *  الموقف يرتبط بالمناسبة (شهر اللغة العربية، شهر الجودة، يوم المرأة، يوم اليتيم، اليوم الوطني…) حين توجد، وبأحد المجالات الاثني عشر دائمًا.
+ *  P13-ب: جولة ثانية «ماذا لو؟» (معلومة جديدة تختبر المعيار الغائب) + مقارنة مجهولة «كيف تصرّف N شخصًا آخر اليوم».
  *  التوليد بالذكاء الاصطناعي اختياري؛ بنك محلي غني يضمن الجودة حين يتعذّر النموذج. التقويم المحلي اصطلاحي (تغطية معايير) لا حكمًا نهائيًا على إنسان.
  */
 import { parseJsonLoose } from '../ai/prompts';
@@ -198,3 +199,83 @@ export function streakOf(days: string[], today: string): number {
 /** ملخص يُشارَك (بلا بيانات شخصية) */
 export function caseShareText(c: DailyCase, e: CaseEvaluation): string { return `موقف اليوم في أَثَر: «${c.title_ar}» — تعاملتُ معه بمستوى ${BAND_LABEL[e.band].ar}. جرّبه: /#daily`; }
 export const DOMAIN_OF_DAY = (dayIso: string): DomainCode => HUMAN_DOMAINS[dayIndexOf(dayIso) % HUMAN_DOMAINS.length].code;
+
+// ====================================================================== «ماذا لو؟» — الجولة الثانية (P13-ب)
+/** أثير يضيف معلومة جديدة تُغيّر الصورة ويطلب القرار مرة أخرى: هل يثبت الممارس أم يراجع؟ وهل يتعامل مع المعيار الذي غاب عنه؟ */
+export type WhatIf = { text_ar: string; ask_ar: string; tests: RubricCode; source: 'local' | 'ai'; model?: string | null };
+export type Round2 = {
+  whatif: WhatIf; response: string; score: number; band: Band; shift: number; stance: 'held' | 'revised' | 'unclear';
+  verdict_ar: string; adaptability_ar: string; rubric_hits: { code: RubricCode; hit: 0 | 1 | 2 }[]; source: 'local' | 'ai'; model?: string | null;
+};
+const WHATIF_TPL: Record<RubricCode, (c: DailyCase, party: string) => { text: string; ask: string }> = {
+  frame: (c) => ({ text: `بعد ساعة تكتشف أن ما بدا لك المشكلة كان عرَضًا فقط: ${c.twist_ar} والقضية الحقيقية أعمق مما في ردّك الأول.`, ask: 'هل يتغيّر تعريفك للمشكلة؟ أعد صياغة القضية في جملة واحدة، ثم قل ما الذي يتغيّر في تصرّفك.' }),
+  parties: (c, party) => ({ text: `${party} يرسل لك رسالة قصيرة الآن: «سمعت ما تنوي فعله. لم يسألني أحد.» — وهذا الطرف يستطيع أن يوقف قرارك أو يدعمه.`, ask: 'ماذا ترد خلال عشر دقائق، وكيف تُدخل هذا الطرف في القرار دون أن تفقد زمام الموقف؟' }),
+  options: (c) => ({ text: `الخيار الذي اخترته أُغلق فجأة لسبب خارج يدك (ميزانية، قرار أعلى، أو غياب شخص أساسي). ${c.twist_ar}`, ask: 'ما البديل الثاني والثالث؟ واختر بينهما بمعيار معلن في سطر.' }),
+  action: () => ({ text: 'مديرك يطلب منك الآن خطة مكتوبة في خمسة أسطر لتعميمها خلال ساعة: ماذا، متى، من المسؤول.', ask: 'اكتب الخطة بخطوات مرقّمة ولكل خطوة زمن ومسؤول.' }),
+  ethics: () => ({ text: 'يُعرض عليك حل يُغلق الموقف بهدوء بشرط ألا يُوثَّق شيء وألا يعرف أحد خارج الغرفة.', ask: 'هل تقبل؟ ولماذا؟ وما الذي ستفصح عنه ولمن، حتى لو كلّفك ذلك؟' }),
+  human_loop: () => ({ text: 'نظام ذكي تستخدمه جهتك يخرج الآن بتوصية جاهزة وواثقة لهذا الموقف بالضبط — وتعرف أنه أصاب في 80% من الحالات السابقة.', ask: 'هل تعتمدها؟ وما الذي تتحقق منه قبل ذلك، وأين يبقى القرار بشريًا؟' }),
+  presence: (c, party) => ({ text: `${party} أمامك الآن وجهًا لوجه، متوتر، ويقول: «أريد أن أعرف ما سيحدث لي.»`, ask: 'ما أول جملتين تقولهما حرفيًا؟ وماذا تفعل قبل أن تتحدث عن القرار؟' }),
+  follow_up: () => ({ text: 'نفّذتَ قرارك. مرّت 30 يومًا، وكل شيء يبدو هادئًا — لكن لا أحد قاس شيئًا.', ask: 'كيف تعرف أن قرارك عمل فعلًا؟ حدّد علامة نجاح واحدة، وموعدًا، ومن يراجعها معك.' }),
+};
+export function whatIfFor(c: DailyCase, ev: CaseEvaluation): WhatIf {
+  const order = [...ev.rubric_hits].sort((a, b) => a.hit - b.hit || (c.rubric.find(r => r.code === b.code)?.weight || 1) - (c.rubric.find(r => r.code === a.code)?.weight || 1));
+  const tests = (order[0]?.code || 'follow_up') as RubricCode; const party = c.parties_ar[1] || c.parties_ar[0] || 'أحد الأطراف';
+  const t = WHATIF_TPL[tests](c, party);
+  return { text_ar: t.text, ask_ar: t.ask, tests, source: 'local', model: null };
+}
+export function buildWhatIfPrompt(c: DailyCase, response: string, ev: CaseEvaluation): { system: string; user: string } {
+  const w = whatIfFor(c, ev);
+  const system = 'أنت «أثير» رفيق أَثَر. تضيف إلى موقف تدريبي معلومة جديدة واحدة واقعية تُغيّر الصورة وتختبر المعيار الذي غاب عن ردّ الممارس، ثم تطلب القرار مرة أخرى. جملتان إلى أربع، بلا وعظ، JSON فقط: {"text_ar": string, "ask_ar": string}.';
+  const user = `الموقف: ${c.title_ar}\n${c.situation_ar}\nالتعقيد الخفي: ${c.twist_ar}\nالأطراف: ${c.parties_ar.join('، ')}\nالمعيار الذي غاب: ${RUBRIC_LABEL[w.tests].ar} (${RUBRIC_LABEL[w.tests].hint_ar})\nردّ الممارس الأول:\n"""${String(response).slice(0, 1500)}"""\nمقترح محلي يمكنك تحسينه: ${w.text_ar} — ${w.ask_ar}`;
+  return { system, user };
+}
+export function parseWhatIf(raw: any, local: WhatIf): WhatIf | null {
+  const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || typeof j !== 'object') return null;
+  const text = S(j.text_ar, 600); const ask = S(j.ask_ar, 300); if (text.length < 30 || ask.length < 10) return null;
+  return { ...local, text_ar: text, ask_ar: ask, source: 'ai' };
+}
+const HELD = ['أبقى', 'أثبت', 'لا أغيّر', 'لا اغير', 'لن أغيّر', 'لن اغير', 'لا أعدّل', 'لا اعدل', 'لا أتراجع', 'لا اتراجع', 'نفس القرار', 'أتمسّك', 'اتمسك', 'ما زلت', 'مازلت', 'لن أتراجع', 'لن اتراجع', 'أصرّ', 'اصر'];
+const REVISED = ['أغيّر', 'اغير', 'أتراجع', 'اتراجع', 'أعدّل', 'اعدل', 'أراجع قراري', 'اراجع قراري', 'بدلًا', 'بدلا', 'أعيد النظر', 'اعيد النظر', 'الآن أرى', 'الان اري', 'كنت مخطئ', 'أخطأت', 'اخطات', 'أوقف', 'اوقف', 'أؤجل', 'اؤجل'];
+export function evaluateRound2(c: DailyCase, w: WhatIf, first: CaseEvaluation, response: string): Round2 {
+  const ev2 = localEvaluate(c, response); const t = norm(response);
+  // عبارات الثبات (ومنها النفي: «لا أغيّر»، «لن أتراجع») تُحذف قبل البحث عن عبارات المراجعة حتى لا يُحسب النفي مراجعةً
+  const heldHits = HELD.map(norm).filter(k => t.includes(k)); let rest = t; for (const k of heldHits) rest = rest.split(k).join(' ');
+  const held = heldHits.length > 0; const revised = REVISED.some(k => rest.includes(norm(k)));
+  const stance: Round2['stance'] = revised ? 'revised' : held ? 'held' : 'unclear';
+  const before = first.rubric_hits.find(h => h.code === w.tests)?.hit ?? 0; const after = ev2.rubric_hits.find(h => h.code === w.tests)?.hit ?? 0;
+  // الفرق يُقاس بتغطية المعايير (البنية) لا بطول النص — الجولة الثانية قرار مركّز لا مقال
+  const cover = (hits: { code: RubricCode; hit: number }[]) => { const rub = c.rubric.length ? c.rubric : R(); const ws = rub.reduce((a, r) => a + r.weight * 2, 0) || 1; return Math.round(100 * rub.reduce((a, r) => a + r.weight * (hits.find(h => h.code === r.code)?.hit || 0), 0) / ws); };
+  const shift = cover(ev2.rubric_hits) - cover(first.rubric_hits); const lbl = RUBRIC_LABEL[w.tests];
+  const handled = after > before || after === 2;
+  const verdict = [
+    handled ? `حين تغيّرت الصورة تعاملتَ مع ما كان غائبًا في ردّك الأول — ${lbl.ar} — وهذا هو جوهر «ماذا لو».` : `المعلومة الجديدة كانت تختبر «${lbl.ar}» تحديدًا، ولم يظهر في ردّك الثاني بوضوح: ${lbl.hint_ar}؟`,
+    stance === 'revised' ? ' راجعتَ قرارك صراحةً، وهذا ليس ضعفًا؛ القدرة على التعديل أمام معلومة جديدة من أندر ما يُقاس.' : stance === 'held' ? ' ثبتَّ على قرارك مع تعليل؛ الثبات المعلَّل قوة ما دام قد أخذ المعلومة الجديدة بالحسبان.' : ' لم يتضح هل غيّرتَ قرارك أم ثبتَّ عليه — قل ذلك صراحةً في المرة القادمة؛ الوضوح جزء من القرار.',
+  ].join('');
+  const adapt = shift >= 10 ? 'مرونتك أمام المستجدّ عالية: ردّك الثاني أعمق من الأول.' : shift <= -10 ? 'انكمش ردّك حين تعقّد الموقف؛ تدرّب على أن تُبقي البنية نفسها (أطراف، بدائل، خطوات، متابعة) حتى تحت الضغط.' : 'حافظتَ على مستواك حين تغيّرت الصورة — اتساق جيد.';
+  return { whatif: w, response, score: ev2.score, band: ev2.band, shift, stance, verdict_ar: verdict, adaptability_ar: adapt, rubric_hits: ev2.rubric_hits, source: 'local', model: null };
+}
+
+// ====================================================================== المقارنة المجهولة: «كيف تصرّف N شخصًا آخر اليوم»
+export type Crowd = { n: number; bands: Record<Band, number>; avg: number; rubric_rates: { code: RubricCode; rate: number }[]; most_missed: RubricCode | null; stances?: { held: number; revised: number } };
+export function crowdOf(rows: { score?: number | null; band?: string | null; evaluation?: any; round2?: any }[]): Crowd {
+  const bands: Record<Band, number> = { emerging: 0, capable: 0, distinguished: 0, exceptional: 0 }; let sum = 0; let n = 0;
+  const hits: Record<string, { got: number; n: number }> = {}; const st = { held: 0, revised: 0 };
+  for (const r of rows) {
+    const sc = Number(r.score); if (!Number.isFinite(sc)) continue; n++; sum += sc; const b = (r.band && (r.band as Band) in bands ? r.band : bandOf(sc)) as Band; bands[b]++;
+    const rh = Array.isArray(r.evaluation?.rubric_hits) ? r.evaluation.rubric_hits : [];
+    for (const h of rh) { const k = String(h.code); hits[k] = hits[k] || { got: 0, n: 0 }; hits[k].n++; if (Number(h.hit) >= 1) hits[k].got++; }
+    if (r.round2?.stance === 'held') st.held++; if (r.round2?.stance === 'revised') st.revised++;
+  }
+  const rates = RUBRIC_CODES.filter(c => hits[c]).map(c => ({ code: c, rate: Math.round(100 * hits[c].got / hits[c].n) })).sort((a, b) => b.rate - a.rate);
+  const mostMissed = rates.length ? rates[rates.length - 1].code : null;
+  return { n, bands, avg: n ? Math.round(sum / n) : 0, rubric_rates: rates, most_missed: mostMissed, stances: st };
+}
+export function crowdLine(me: CaseEvaluation | null, crowd: Crowd, rows: { score?: number | null }[] = []): string {
+  if (!crowd.n) return 'أنت أول من تعامل مع هذا الموقف اليوم.';
+  const others = me ? Math.max(0, crowd.n - 1) : crowd.n;
+  const people = (n: number, other: boolean) => n === 1 ? (other ? 'شخص واحد آخر' : 'شخص واحد') : n === 2 ? (other ? 'شخصان آخران' : 'شخصان') : n <= 10 ? `${n} ${other ? 'أشخاص آخرون' : 'أشخاص'}` : `${n} ${other ? 'شخصًا آخر' : 'شخصًا'}`;
+  if (!me) return `تعامل ${people(others, false)} مع هذا الموقف اليوم؛ متوسط المرآة ${crowd.avg}.`;
+  const below = rows.filter(r => Number(r.score) < me.score).length; const pct = Math.round(100 * below / Math.max(1, rows.length));
+  const miss = crowd.most_missed ? ` أكثر معيار غاب عن الجميع: ${RUBRIC_LABEL[crowd.most_missed].ar}.` : '';
+  return others === 0 ? `أنت أول من تعامل مع هذا الموقف اليوم — عُد مساءً لترى كيف تصرّف الآخرون.` : `تعامل ${people(others, true)} مع هذا الموقف اليوم؛ ردّك أعلى من ${pct}% منهم.${miss}`;
+}
