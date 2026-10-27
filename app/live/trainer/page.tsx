@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — جدول المدرب: جلساتي اليوم وهذا الأسبوع عبر كل القاعات، برابط المضيف، وبدء البث وتصدير التقويم
+// أَثَر — جدول المدرب: جلساتي اليوم وهذا الأسبوع عبر كل القاعات، برابط المضيف، وبدء البث وتصدير التقويم — ومنه «الطيار المساعد الحي» لكل جلسة (P13-ب)
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -55,7 +55,7 @@ function Inner() {
     <div className={`tr-row ${st}`}>
       <div className="tr-time"><b dir="ltr">{fmtRange(s, lang)}</b><span className={`tr-st ${st}`}>{st === 'live' && <i />}{STATE_LABEL[st][lang]}</span>{st === 'upcoming' && <small>{countdown(s.starts_at, n, lang)}</small>}</div>
       <div className="tr-body"><b>{sessionTitle(s, lang)}</b><small>{r ? classroomLabel(r, lang) : ''}{r ? ' · ' : ''}{providerLabel(s.provider, lang)} · <Icon name="check" size={12} /> {att[s.attendance_session_id || ''] || 0} {lang === 'ar' ? 'حضور' : 'present'}</small></div>
-      <div className="tr-acts">{joinOf(s) && <a className={`pt-btn small ${st === 'live' || st === 'soon' ? 'gold' : 'light'}`} href={joinOf(s)} target="_blank" rel="noreferrer"><Icon name="play" size={14} /> {hosts[s.id] ? (lang === 'ar' ? 'دخول المضيف' : 'Host link') : (lang === 'ar' ? 'انضم' : 'Join')}</a>}{(st === 'soon' || st === 'upcoming') && <button type="button" className="pt-btn ghost small" disabled={busy === s.id} onClick={() => setLive(s, 'live')}>{lang === 'ar' ? 'بدء البث' : 'Go live'}</button>}{st === 'live' && <button type="button" className="pt-btn ghost small" disabled={busy === s.id} onClick={() => setLive(s, 'ended')}>{lang === 'ar' ? 'إنهاء' : 'End'}</button>}<Link href={`/live/${s.id}`} className="pt-btn ghost small">{lang === 'ar' ? 'الصفحة' : 'Page'}</Link></div>
+      <div className="tr-acts"><Link className={`pt-btn small ${st === 'live' ? 'gold' : 'ghost'}`} href={`/live/copilot/${s.id}`} title={lang === 'ar' ? 'الطيار المساعد الحي' : 'Live co-pilot'}><Icon name="compass" size={14} /> {lang === 'ar' ? 'الطيار' : 'Co-pilot'}</Link>{joinOf(s) && <a className={`pt-btn small ${st === 'live' || st === 'soon' ? 'gold' : 'light'}`} href={joinOf(s)} target="_blank" rel="noreferrer"><Icon name="play" size={14} /> {hosts[s.id] ? (lang === 'ar' ? 'دخول المضيف' : 'Host link') : (lang === 'ar' ? 'انضم' : 'Join')}</a>}{(st === 'soon' || st === 'upcoming') && <button type="button" className="pt-btn ghost small" disabled={busy === s.id} onClick={() => setLive(s, 'live')}>{lang === 'ar' ? 'بدء البث' : 'Go live'}</button>}{st === 'live' && <button type="button" className="pt-btn ghost small" disabled={busy === s.id} onClick={() => setLive(s, 'ended')}>{lang === 'ar' ? 'إنهاء' : 'End'}</button>}<Link href={`/live/${s.id}`} className="pt-btn ghost small">{lang === 'ar' ? 'الصفحة' : 'Page'}</Link></div>
     </div>); };
 
   return (
