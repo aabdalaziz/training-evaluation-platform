@@ -1,15 +1,19 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/daily — «كل يوم مهارة» (بوابة أَثَر · P10)
- *  GET                      → درس اليوم {day, skill, lesson, source} (+ {answered, streak} إن كان Bearer صالحًا)
- *  POST { choice }          → تسجيل إجابة التحدي: للمستخدم تُحفظ مرة واحدة يوميًا وتُودَع حدث تعلّم (object_type=daily)؛ للزائر تُعاد النتيجة فقط
- *  التوليد: مهارة اليوم تُختار بتدوير حتمي على المهارات النشطة (نفس المهارة للجميع)، ويُكتب الدرس مرة واحدة ويُخزَّن في portal_daily_skill؛ بديل محلي إن تعذّر النموذج.
+ * /api/daily — «موقف اليوم» (كل يوم بناء · P13-أ) — يحلّ محل «كل يوم مهارة» (سؤال واختيار) بموقف/قضية/حالة وردّ حرّ ومرآة أداء
+ *  GET                       → موقف اليوم {day, case, event, participants} (+ {mine: {response, evaluation}, streak, total} إن كان Bearer صالحًا)
+ *  POST { response }         → تقويم الردّ: «مرآة الأداء» (وصف الأداء، ما ظهر من الجدارات، ما لم يره، الاحتياجات، خطوة اليوم)
+ *                              للمستخدم تُحفظ مرة واحدة يوميًا وتُودَع شاهدًا في portal_learning_events (object_type=daily_case)؛ للزائر تُعاد المرآة فقط
+ *  الموقف يُختار من المناسبة الفاعلة (اليوم/الشهر) ثم المجال الدوري من المجالات الاثني عشر؛ يُكتب مرة واحدة يوميًا (ذكاء اصطناعي أو البنك المحلي) ويُخزَّن في portal_daily_cases.
+ *  التقويم: تغطية معايير محلية شفافة + تحسين بالذكاء الاصطناعي حين يتوفر — والنص لا يحكم على الشخص بل على تصرّفه في هذا الموقف.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { runAi } from '../../../lib/ai/athar';
-import { buildDailyPrompt, parseDaily, localDaily } from '../../../lib/ai/prompts';
-import type { DailyLesson, DailySkillFacts } from '../../../lib/ai/prompts';
+import { runAi, logAi } from '../../../lib/ai/athar';
+import { eventsFor, upcomingEvents, EVENTS, FAMILIES } from '../../../lib/portal/lexicon';
+import type { CalendarEvent } from '../../../lib/portal/lexicon';
+import { CASE_BANK, pickSeed, seedToCase, buildCasePrompt, parseCase, localEvaluate, buildEvalPrompt, parseEval, streakOf, eventLine, MIN_RESPONSE_CHARS, MAX_RESPONSE_CHARS, DOMAIN_OF_DAY, dayIndexOf } from '../../../lib/portal/daily-case';
+import type { DailyCase, CaseEvaluation } from '../../../lib/portal/daily-case';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,7 +22,6 @@ const bad = (error: string, status = 400) => NextResponse.json({ success: false,
 const WEEKDAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 /** يوم أَثَر بتوقيت الرياض (UTC+3) */
 function riyadhDay(d = new Date()): string { return new Date(d.getTime() + 3 * 3600000).toISOString().slice(0, 10); }
-const FALLBACK_SKILL = { id: '', code: 'ATH-PD-001', name_ar: 'تصميم البرامج التدريبية', name_en: 'Training program design', domain: 'pedagogy', description_ar: 'تحليل الاحتياج، صياغة الأهداف، بناء الحقيبة.' };
 
 async function ctx(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -31,57 +34,93 @@ async function ctx(req: Request) {
   return { db, user: { id: data.user.id, email: String(data.user.email || '').toLowerCase() } };
 }
 
-async function todayLesson(db: any): Promise<{ day: string; skill: DailySkillFacts['skill']; lesson: DailyLesson; source: string; model: string | null }> {
-  const day = riyadhDay();
-  const { data: cached } = await db.from('portal_daily_skill').select('day,skill_id,lesson,source,model').eq('day', day).maybeSingle();
-  const { data: skills } = await db.from('portal_skills').select('id,code,name_ar,name_en,domain,description_ar').eq('active', true).order('code');
-  const list: DailySkillFacts['skill'][] = (skills || []).length ? (skills as any[]) : [FALLBACK_SKILL];
-  if (cached && (cached as any).lesson) { const sk = list.find(x => x.id === (cached as any).skill_id) || list[0]; return { day, skill: sk, lesson: (cached as any).lesson, source: (cached as any).source || 'cache', model: (cached as any).model || null }; }
-  const dayIndex = Math.floor(new Date(day + 'T00:00:00Z').getTime() / 86400000); const skill = list[dayIndex % list.length];
-  const facts: DailySkillFacts = { skill, day, weekday_ar: WEEKDAYS[new Date(day + 'T00:00:00Z').getUTCDay()] };
-  const p = buildDailyPrompt(facts, 'ar');
-  const res = await runAi<DailyLesson>({ system: p.system, user: p.user, parse: raw => parseDaily(raw), local: () => localDaily(facts), budgetMs: 25000 });
-  // تخزين (تجاهل تعارض السباق)
-  await db.from('portal_daily_skill').insert({ day, skill_id: skill.id || null, lesson: res.data, source: res.source, model: res.model });
-  return { day, skill, lesson: res.data, source: res.source, model: res.model };
+/** التقويم المدمج + مناسبات الإدارة */
+async function calendar(db: any): Promise<CalendarEvent[]> {
+  try {
+    const { data } = await db.from('portal_calendar_events').select('code,name_ar,name_en,month,day,kind,domains,theme_ar').eq('active', true);
+    const extra: CalendarEvent[] = ((data || []) as any[]).map(r => ({ code: String(r.code), name: { ar: String(r.name_ar), en: String(r.name_en || r.name_ar) }, month: Number(r.month), day: r.day === null || r.day === undefined ? null : Number(r.day), kind: (['national', 'international', 'month'].includes(r.kind) ? r.kind : 'international') as CalendarEvent['kind'], domains: Array.isArray(r.domains) ? r.domains : [], theme: { ar: String(r.theme_ar || ''), en: String(r.theme_ar || '') } }));
+    return [...extra, ...EVENTS];
+  } catch { return EVENTS; }
 }
-function streakOf(days: string[], today: string): number {
-  const set = new Set(days); let n = 0; let d = new Date(today + 'T00:00:00Z');
-  if (!set.has(today)) d = new Date(d.getTime() - 86400000);
-  while (set.has(d.toISOString().slice(0, 10))) { n++; d = new Date(d.getTime() - 86400000); }
-  return n;
+function rowToCase(r: any): DailyCase {
+  return { id: r.id, day: String(r.day).slice(0, 10), slug: r.slug, title_ar: r.title_ar, scene_ar: r.scene_ar || '', role_ar: r.role_ar || '', situation_ar: r.situation_ar, twist_ar: r.twist_ar || '', ask_ar: r.ask_ar || '', parties_ar: Array.isArray(r.parties_ar) ? r.parties_ar : [], domain_code: r.domain_code, family: r.family || 'judgment_accountability', horizon: (r.horizon || 2035) as any, skill_codes: Array.isArray(r.skill_codes) ? r.skill_codes : [], skill_ids: Array.isArray(r.skill_ids) ? r.skill_ids : [], event_code: r.event_code || null, event_name_ar: r.event_name_ar || null, rubric: Array.isArray(r.rubric) ? r.rubric : [], source: r.source || 'local', model: r.model || null };
 }
+async function todayCase(db: any): Promise<{ c: DailyCase; events: ReturnType<typeof eventsFor> }> {
+  const day = riyadhDay(); const cal = await calendar(db); const active = eventsFor(day, cal);
+  const { data: cached } = await db.from('portal_daily_cases').select('*').eq('day', day).maybeSingle();
+  if (cached) return { c: rowToCase(cached), events: active };
+  // اختيار البذرة (مناسبة أولًا) ثم ربط المهارات
+  const { seed, event } = pickSeed(day, CASE_BANK, active);
+  const { data: skills } = await db.from('portal_skills').select('id,code,name_ar,domain_code,future_family').eq('active', true);
+  const list = (skills || []) as { id: string; code: string; name_ar: string; domain_code?: string | null; future_family?: string | null }[];
+  const byCode = new Map(list.map(s => [s.code, s]));
+  let skillRows = seed.skill_codes.map(c => byCode.get(c)).filter(Boolean) as typeof list;
+  if (!skillRows.length) skillRows = list.filter(s => s.domain_code === seed.domain_code).slice(0, 2);
+  const skillIds = skillRows.map(s => s.id); const skillCodes = skillRows.length ? skillRows.map(s => s.code) : seed.skill_codes;
+  const local = seedToCase({ ...seed, skill_codes: skillCodes }, day, event, skillIds);
+  // توليد بالذكاء الاصطناعي (إن توفر) لموقف جديد في نفس المجال/المناسبة؛ البديل المحلي هو البنك
+  const { data: recent } = await db.from('portal_daily_cases').select('slug').order('day', { ascending: false }).limit(30);
+  const avoid = ((recent || []) as any[]).map(r => String(r.slug));
+  const domain = event ? seed.domain_code : DOMAIN_OF_DAY(day); const family = seed.family || FAMILIES[dayIndexOf(day) % FAMILIES.length].code;
+  const p = buildCasePrompt({ day, weekday_ar: WEEKDAYS[new Date(day + 'T00:00:00Z').getUTCDay()], event, domain, family, skills: skillRows.map(s => ({ code: s.code, name_ar: s.name_ar })), avoid_slugs: avoid });
+  const res = await runAi<DailyCase>({ system: p.system, user: p.user, parse: raw => parseCase(raw, { day, domain, family, horizon: seed.horizon, skill_codes: skillCodes, skill_ids: skillIds, event }), local: () => local, budgetMs: 25000 });
+  const c = res.data; c.model = res.model;
+  const { data: ins } = await db.from('portal_daily_cases').insert({ day, slug: c.slug, title_ar: c.title_ar, scene_ar: c.scene_ar, role_ar: c.role_ar, situation_ar: c.situation_ar, twist_ar: c.twist_ar, ask_ar: c.ask_ar, parties_ar: c.parties_ar, domain_code: c.domain_code, family: c.family, horizon: c.horizon, skill_codes: c.skill_codes, skill_ids: c.skill_ids || [], event_code: c.event_code || null, event_name_ar: c.event_name_ar || null, rubric: c.rubric, source: res.source === 'ai' ? 'ai' : 'local', model: res.model }).select('*').maybeSingle();
+  if (ins) return { c: rowToCase(ins), events: active };
+  // سباق: صفّ آخر أُدرج قبلنا
+  const { data: again } = await db.from('portal_daily_cases').select('*').eq('day', day).maybeSingle();
+  return { c: again ? rowToCase(again) : c, events: active };
+}
+/** النسخة العامة: نخفي التعقيد الخفي حتى يُرسل الردّ */
+const publicCase = (c: DailyCase, reveal: boolean) => ({ ...c, twist_ar: reveal ? c.twist_ar : '', rubric: c.rubric.map(r => r.code) });
 
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
-  const t = await todayLesson(db);
-  const pub = { ...t.lesson, challenge: { ...t.lesson.challenge, correct: -1, explain_ar: '' } }; // لا نكشف الإجابة قبل المحاولة
-  let answered: null | { choice: number; correct: boolean } = null; let streak = 0; let total = 0;
+  const { c: cs, events } = await todayCase(db);
+  const ev = events.find(e => e.event.code === cs.event_code) || events[0] || null;
+  let mine: null | { response: string; evaluation: CaseEvaluation } = null; let streak = 0; let total = 0;
   if (user) {
-    const { data: rows } = await db.from('portal_daily_answers').select('day,choice,correct').eq('user_id', user.id).order('day', { ascending: false }).limit(120);
-    const mine = (rows || []) as any[]; total = mine.length; const today = mine.find(r => r.day === t.day); if (today) answered = { choice: today.choice, correct: !!today.correct };
-    streak = streakOf(mine.map(r => String(r.day).slice(0, 10)), t.day);
+    const { data: rows } = await db.from('portal_daily_case_responses').select('day,response,evaluation').eq('user_id', user.id).order('day', { ascending: false }).limit(120);
+    const list = (rows || []) as any[]; total = list.length; const today = list.find(r => String(r.day).slice(0, 10) === cs.day); if (today) mine = { response: today.response, evaluation: today.evaluation };
+    streak = streakOf(list.map(r => String(r.day).slice(0, 10)), cs.day);
   }
-  const { count } = await db.from('portal_daily_answers').select('id', { count: 'exact', head: true }).eq('day', t.day);
-  return NextResponse.json({ success: true, day: t.day, skill: t.skill, lesson: answered ? t.lesson : pub, source: t.source, answered, streak, total, participants: count || 0 });
+  const { count } = await db.from('portal_daily_case_responses').select('id', { count: 'exact', head: true }).eq('day', cs.day);
+  return NextResponse.json({ success: true, day: cs.day, case: publicCase(cs, !!mine), event: ev ? { code: ev.event.code, name_ar: ev.event.name.ar, name_en: ev.event.name.en, theme_ar: ev.event.theme.ar, line_ar: eventLine(ev, 'ar'), line_en: eventLine(ev, 'en'), exact: ev.exact, kind: ev.event.kind } : null, upcoming: upcomingEvents(cs.day, await calendar(db)).filter(e => e.event.code !== cs.event_code).slice(0, 3).map(e => ({ code: e.event.code, name_ar: e.event.name.ar, line_ar: eventLine(e, 'ar'), line_en: eventLine(e, 'en') })), mine, streak, total, participants: count || 0, limits: { min: MIN_RESPONSE_CHARS, max: MAX_RESPONSE_CHARS } });
 }
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   let body: any = {}; try { body = await req.json(); } catch { /* فارغ */ }
-  const choice = Number(body.choice); if (!Number.isInteger(choice) || choice < 0 || choice > 3) return bad('اختر إجابة');
-  const t = await todayLesson(db); const correct = choice === t.lesson.challenge.correct;
-  let streak = 0;
+  const response = String(body.response || '').trim();
+  if (response.length < MIN_RESPONSE_CHARS) return bad(`اكتب كيف تتصرّف فعلًا — ${MIN_RESPONSE_CHARS} حرفًا على الأقل`);
+  if (response.length > MAX_RESPONSE_CHARS) return bad(`الردّ طويل جدًا (الحد ${MAX_RESPONSE_CHARS} حرفًا)`);
+  const { c: cs } = await todayCase(db);
   if (user) {
-    const { data: prev } = await db.from('portal_daily_answers').select('id,choice,correct').eq('user_id', user.id).eq('day', t.day).maybeSingle();
-    if (!prev) {
-      await db.from('portal_daily_answers').insert({ day: t.day, user_id: user.id, email: user.email, choice, correct });
-      if (t.skill.id) await db.from('portal_learning_events').insert({ user_id: user.id, email: user.email, verb: 'assessed', object_type: 'daily', object_id: t.day, skills: [t.skill.id], context: { score: correct ? 100 : 40, day: t.day, skill_code: t.skill.code } });
-    }
-    const { data: rows } = await db.from('portal_daily_answers').select('day').eq('user_id', user.id).order('day', { ascending: false }).limit(120);
-    streak = streakOf(((rows || []) as any[]).map(r => String(r.day).slice(0, 10)), t.day);
-  } else {
-    await db.from('portal_daily_answers').insert({ day: t.day, user_id: null, email: null, choice, correct });
+    const { data: prev } = await db.from('portal_daily_case_responses').select('id,response,evaluation').eq('user_id', user.id).eq('day', cs.day).maybeSingle();
+    if (prev) return NextResponse.json({ success: true, saved: true, already: true, evaluation: (prev as any).evaluation, case: publicCase(cs, true), streak: 0 });
   }
-  return NextResponse.json({ success: true, correct, correct_index: t.lesson.challenge.correct, explain_ar: t.lesson.challenge.explain_ar, apply_ar: t.lesson.apply_ar, streak, saved: !!user });
+  // تقويم: محلي دائمًا، ثم تحسين بالذكاء الاصطناعي (للمستخدمين المسجّلين فقط — حوكمة الاستخدام)
+  const local = localEvaluate(cs, response); let evaluation: CaseEvaluation = local;
+  if (user) {
+    const p = buildEvalPrompt(cs, response);
+    const res = await runAi<CaseEvaluation>({ system: p.system, user: p.user, parse: raw => parseEval(raw, local), local: () => local, budgetMs: 25000 });
+    evaluation = { ...res.data, model: res.model };
+    await logAi(db, { user_id: user.id, email: user.email, role: 'user', purpose: 'daily_case_eval', result: res, context: { day: cs.day, slug: cs.slug, chars: response.length } });
+  }
+  // أسماء المهارات (للعرض)
+  if (cs.skill_ids && cs.skill_ids.length) {
+    const { data: sk } = await db.from('portal_skills').select('id,code,name_ar').in('id', cs.skill_ids);
+    const names = new Map(((sk || []) as any[]).map(s => [s.code, s.name_ar])); evaluation.skills = evaluation.skills.map(s => ({ ...s, label_ar: names.get(s.code) || s.label_ar }));
+  }
+  let streak = 0; let saved = false;
+  if (user) {
+    const { error } = await db.from('portal_daily_case_responses').insert({ case_id: cs.id, day: cs.day, user_id: user.id, email: user.email, response, evaluation, band: evaluation.band, score: evaluation.score, source: evaluation.source, model: evaluation.model || null, chars: response.length });
+    saved = !error;
+    if (saved && cs.skill_ids && cs.skill_ids.length) await db.from('portal_learning_events').insert({ user_id: user.id, email: user.email, verb: 'assessed', object_type: 'daily_case', object_id: cs.day, skills: cs.skill_ids, context: { score: evaluation.score, band: evaluation.band, day: cs.day, title: cs.title_ar, domain_code: cs.domain_code, event_code: cs.event_code || null } });
+    const { data: rows } = await db.from('portal_daily_case_responses').select('day').eq('user_id', user.id).order('day', { ascending: false }).limit(120);
+    streak = streakOf(((rows || []) as any[]).map(r => String(r.day).slice(0, 10)), cs.day);
+  } else {
+    await db.from('portal_daily_case_responses').insert({ case_id: cs.id, day: cs.day, user_id: null, email: null, response: response.slice(0, 600), evaluation: { band: evaluation.band, score: evaluation.score }, band: evaluation.band, score: evaluation.score, source: evaluation.source, chars: response.length });
+  }
+  return NextResponse.json({ success: true, saved, evaluation, case: publicCase(cs, true), streak });
 }
