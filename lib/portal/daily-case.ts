@@ -95,7 +95,8 @@ export function eventLine(ev: ActiveEvent | null, lang: 'ar' | 'en'): string | n
   if (!ev) return null; const n = lang === 'ar' ? ev.event.name.ar : ev.event.name.en;
   if (ev.event.kind === 'month') return lang === 'ar' ? `نحن في ${n}` : `This is ${n}`;
   if (ev.exact) return lang === 'ar' ? `اليوم: ${n}` : `Today: ${n}`;
-  return lang === 'ar' ? `بعد ${ev.distance} ${ev.distance === 1 ? 'يوم' : 'أيام'}: ${n}` : `In ${ev.distance} day(s): ${n}`;
+  const d = ev.distance; const ar = d === 1 ? 'بعد يوم واحد' : d === 2 ? 'بعد يومين' : d <= 10 ? `بعد ${d} أيام` : `بعد ${d} يومًا`;
+  return lang === 'ar' ? `${ar}: ${n}` : `In ${d} ${d === 1 ? 'day' : 'days'}: ${n}`;
 }
 
 // ====================================================================== توليد موقف بالذكاء الاصطناعي (اختياري)
