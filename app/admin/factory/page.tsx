@@ -9,7 +9,7 @@ import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { HUMAN_DOMAINS, FAMILIES, HORIZONS, HORIZON_LABEL, SECTORS_2062, domainByCode, familyName } from '../../../lib/portal/lexicon';
-import { STAGES, LIFE_STAGES, INSTITUTIONS, EMPTY_NEED, validateNeed, stageLabel } from '../../../lib/portal/factory';
+import { STAGES, LIFE_STAGES, INSTITUTIONS, EMPTY_NEED, validateNeed, stageLabel, contractUrlFor } from '../../../lib/portal/factory';
 import type { Draft, Need, Stage } from '../../../lib/portal/factory';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -83,6 +83,7 @@ export default function AdminFactoryPage() {
                 {sel.stage === 'designed' && <button className="fc-btn gold" disabled={!!busy} onClick={() => run('approve')}><Icon name="check" size={14} /> اعتمد المخطط → راجع</button>}
                 {sel.stage === 'reviewed' && <button className="fc-btn gold" disabled={!!busy} onClick={() => run('publish', { skill_ids: pubSkills })}><Icon name="globe" size={14} /> انشر برنامجًا مسودّة</button>}
                 {sel.stage === 'published' && sel.program_id && <a className="fc-btn ghost" href="/admin/catalog"><Icon name="link" size={14} /> نشر البرامج</a>}
+                {sel.stage === 'published' && <a className="fc-btn gold" href={contractUrlFor(sel)} title="مؤشرات الأثر تصبح أهداف عقد قائم على النتائج (60/25/15)"><Icon name="scale" size={14} /> اقترح عقد أثر</a>}
                 <button className="fc-btn ghost small" disabled={!!busy} onClick={() => run('foresight')}>أعد الاستشراف</button>
                 {sel.foresight && <button className="fc-btn ghost small" disabled={!!busy} onClick={() => run('design')}>أعد التصميم</button>}
                 {sel.design && <button className="fc-btn ghost small" disabled={!!busy} onClick={() => run('review')}>أعد المراجعة</button>}
