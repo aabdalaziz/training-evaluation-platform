@@ -6,14 +6,17 @@ import type { Skill } from './skills';
 import { levelRank } from './placement';
 
 // ---------- الأدلة والأوزان (القرار 1: مؤشر محسوب + اعتماد يدوي) ----------
-export type EvidenceKind = 'placement' | 'program_completed' | 'activity' | 'attended' | 'credential' | 'viewed' | 'simulation' | 'daily';
-export const EVIDENCE_WEIGHT: Record<EvidenceKind, number> = { placement: 1.0, credential: 0.9, program_completed: 0.8, simulation: 0.45, activity: 0.4, attended: 0.3, daily: 0.15, viewed: 0.1 };
+export type EvidenceKind = 'placement' | 'program_completed' | 'activity' | 'attended' | 'credential' | 'viewed' | 'simulation' | 'daily' | 'mission';
+export const EVIDENCE_WEIGHT: Record<EvidenceKind, number> = { placement: 1.0, credential: 0.9, program_completed: 0.8, simulation: 0.45, mission: 0.5, activity: 0.4, attended: 0.3, daily: 0.15, viewed: 0.1 };
 /** وزن المحاكاة بعد اعتماد مدرب بشري (P10) */
 export const SIMULATION_APPROVED_WEIGHT = 0.7;
+/** وزن مهمة من قلب العمل بعد تأكيد المشرف المباشر (P12-أ) — أقوى دليل عملي بعد اختبار مِعيار */
+export const MISSION_CONFIRMED_WEIGHT = 0.85;
 export const EVIDENCE_LABEL: Record<EvidenceKind, T> = {
   placement: { ar: 'اختبار مِعيار', en: 'Mi‘yar placement test' }, credential: { ar: 'شهادة رقمية', en: 'Digital credential' }, program_completed: { ar: 'إتمام برنامج', en: 'Program completion' },
   activity: { ar: 'نشاط تقويمي', en: 'Assessment activity' }, attended: { ar: 'حضور جلسة', en: 'Session attendance' }, viewed: { ar: 'اطلاع على مادة', en: 'Resource engagement' },
   simulation: { ar: 'محاكاة أداء', en: 'Performance simulation' }, daily: { ar: 'تحدّي «كل يوم مهارة»', en: 'Daily skill challenge' },
+  mission: { ar: 'مهمة من قلب العمل', en: 'Workflow mission' },
 };
 export type LearningEventRow = { id?: number | string; at: string; user_id?: string | null; email?: string | null; verb: string; object_type: string; object_id: string; skills: string[]; context?: Record<string, any> | null };
 export type Evidence = { kind: EvidenceKind; verb: string; object_type: string; object_id: string; level: number; weight: number; at: string; label?: string };
@@ -34,12 +37,13 @@ export function evidenceFromEvent(ev: LearningEventRow, skillMeta: Map<string, P
       level = cefrToLevel(per?.level) ?? cefrToLevel(ctx.level); label = per ? `${per.level} · ${per.percent}%` : String(ctx.level || '');
     } else if (ev.verb === 'assessed' && ev.object_type === 'activity') { kind = 'activity'; const sc = Number(ctx.score); if (Number.isFinite(sc)) { level = ctx.kind === 'self_rating' ? Math.max(1, Math.round(sc / 20)) : percentToLevel(sc, base); label = `${Math.round(sc)}%`; } }
     else if (ev.verb === 'assessed' && ev.object_type === 'simulation') { if (ctx.rejected) continue; kind = 'simulation'; const sc = Number(ctx.score); if (Number.isFinite(sc)) { level = percentToLevel(sc, base); label = `${Math.round(sc)}% · ${String(ctx.title || ctx.scenario || '')}${ctx.approved ? ' ✓' : ''}`; } }
+    else if (ev.verb === 'assessed' && ev.object_type === 'mission') { if (ctx.returned) continue; kind = 'mission'; const sc = Number(ctx.score); level = Number.isFinite(sc) ? percentToLevel(sc, base) : base; label = `${String(ctx.title || '')}${ctx.confirmed ? ' ✓' : ''}`; }
     else if (ev.verb === 'assessed' && ev.object_type === 'daily') { kind = 'daily'; const sc = Number(ctx.score); level = Number.isFinite(sc) && sc >= 60 ? base : Math.max(1, base - 1); label = String(ctx.day || ''); }
     else if (ev.verb === 'completed' && ev.object_type === 'program') { kind = 'program_completed'; level = base; label = String(ctx.program_name || ''); }
     else if (ev.verb === 'issued' && ev.object_type === 'credential') { kind = 'credential'; level = cefrToLevel(ctx.level) ?? base; label = String(ctx.title || ''); }
     else if (ev.verb === 'attended' || (ev.verb === 'joined' && ev.object_type === 'session')) { kind = 'attended'; level = base; }
     else if (['viewed', 'downloaded', 'registered'].includes(ev.verb)) { kind = 'viewed'; level = Math.max(1, base - 1); }
-    if (kind && level !== null) out.push({ skill_id: sid, e: { kind, verb: ev.verb, object_type: ev.object_type, object_id: ev.object_id, level: Math.max(1, Math.min(5, level)), weight: kind === 'simulation' && ctx.approved ? SIMULATION_APPROVED_WEIGHT : EVIDENCE_WEIGHT[kind], at: ev.at, label } });
+    if (kind && level !== null) out.push({ skill_id: sid, e: { kind, verb: ev.verb, object_type: ev.object_type, object_id: ev.object_id, level: Math.max(1, Math.min(5, level)), weight: kind === 'simulation' && ctx.approved ? SIMULATION_APPROVED_WEIGHT : kind === 'mission' && ctx.confirmed ? MISSION_CONFIRMED_WEIGHT : EVIDENCE_WEIGHT[kind], at: ev.at, label } });
   }
   return out;
 }
