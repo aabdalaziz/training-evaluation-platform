@@ -5,6 +5,8 @@
  *  POST { response }         → تقويم الردّ: «مرآة الأداء» (وصف الأداء، ما ظهر من الجدارات، ما لم يره، الاحتياجات، خطوة اليوم)
  *                              للمستخدم تُحفظ مرة واحدة يوميًا وتُودَع شاهدًا في portal_learning_events (object_type=daily_case)؛ للزائر تُعاد المرآة فقط
  *  الموقف يُختار من المناسبة الفاعلة (اليوم/الشهر) ثم المجال الدوري من المجالات الاثني عشر؛ يُكتب مرة واحدة يوميًا (ذكاء اصطناعي أو البنك المحلي) ويُخزَّن في portal_daily_cases.
+ *  P13-ب: POST { action: 'whatif' } → أثير يضيف معلومة جديدة ويطلب القرار ثانية؛ POST { action: 'whatif', response } → تقويم الجولة الثانية (ثبات/مراجعة، مرونة)
+ *          GET يعيد أيضًا crowd: مقارنة مجهولة «كيف تصرّف N شخصًا آخر اليوم» (توزيع المستويات، المعيار الأكثر غيابًا)
  *  التقويم: تغطية معايير محلية شفافة + تحسين بالذكاء الاصطناعي حين يتوفر — والنص لا يحكم على الشخص بل على تصرّفه في هذا الموقف.
  */
 import { NextResponse } from 'next/server';
@@ -12,8 +14,8 @@ import { createClient } from '@supabase/supabase-js';
 import { runAi, logAi } from '../../../lib/ai/athar';
 import { eventsFor, upcomingEvents, EVENTS, FAMILIES } from '../../../lib/portal/lexicon';
 import type { CalendarEvent } from '../../../lib/portal/lexicon';
-import { CASE_BANK, pickSeed, seedToCase, buildCasePrompt, parseCase, localEvaluate, buildEvalPrompt, parseEval, streakOf, eventLine, MIN_RESPONSE_CHARS, MAX_RESPONSE_CHARS, DOMAIN_OF_DAY, dayIndexOf } from '../../../lib/portal/daily-case';
-import type { DailyCase, CaseEvaluation } from '../../../lib/portal/daily-case';
+import { CASE_BANK, pickSeed, seedToCase, buildCasePrompt, parseCase, localEvaluate, buildEvalPrompt, parseEval, streakOf, eventLine, MIN_RESPONSE_CHARS, MAX_RESPONSE_CHARS, DOMAIN_OF_DAY, dayIndexOf, whatIfFor, buildWhatIfPrompt, parseWhatIf, evaluateRound2, crowdOf, crowdLine } from '../../../lib/portal/daily-case';
+import type { DailyCase, CaseEvaluation, WhatIf, Round2 } from '../../../lib/portal/daily-case';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -74,23 +76,32 @@ async function todayCase(db: any): Promise<{ c: DailyCase; events: ReturnType<ty
 /** النسخة العامة: نخفي التعقيد الخفي حتى يُرسل الردّ */
 const publicCase = (c: DailyCase, reveal: boolean) => ({ ...c, twist_ar: reveal ? c.twist_ar : '', rubric: c.rubric.map(r => r.code) });
 
+/** المقارنة المجهولة: صفوف اليوم (بلا هوية) → توزيع المستويات ومعدلات المعايير وجملة المقارنة */
+async function crowdFor(db: any, day: string, userId: string | null, mine: CaseEvaluation | null) {
+  const { data } = await db.from('portal_daily_case_responses').select('user_id,score,band,evaluation,round2').eq('day', day).limit(800);
+  const rows = ((data || []) as any[]); const others = userId ? rows.filter(r => r.user_id !== userId) : rows;
+  const crowd = crowdOf(rows); return { crowd, line: crowdLine(mine, crowd, others) };
+}
+
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const { c: cs, events } = await todayCase(db);
   const ev = events.find(e => e.event.code === cs.event_code) || events[0] || null;
-  let mine: null | { response: string; evaluation: CaseEvaluation } = null; let streak = 0; let total = 0;
+  let mine: null | { response: string; evaluation: CaseEvaluation; round2?: Partial<Round2> | null } = null; let streak = 0; let total = 0;
   if (user) {
-    const { data: rows } = await db.from('portal_daily_case_responses').select('day,response,evaluation').eq('user_id', user.id).order('day', { ascending: false }).limit(120);
-    const list = (rows || []) as any[]; total = list.length; const today = list.find(r => String(r.day).slice(0, 10) === cs.day); if (today) mine = { response: today.response, evaluation: today.evaluation };
+    const { data: rows } = await db.from('portal_daily_case_responses').select('day,response,evaluation,round2').eq('user_id', user.id).order('day', { ascending: false }).limit(120);
+    const list = (rows || []) as any[]; total = list.length; const today = list.find(r => String(r.day).slice(0, 10) === cs.day); if (today) mine = { response: today.response, evaluation: today.evaluation, round2: today.round2 || null };
     streak = streakOf(list.map(r => String(r.day).slice(0, 10)), cs.day);
   }
   const { count } = await db.from('portal_daily_case_responses').select('id', { count: 'exact', head: true }).eq('day', cs.day);
-  return NextResponse.json({ success: true, day: cs.day, case: publicCase(cs, !!mine), event: ev ? { code: ev.event.code, name_ar: ev.event.name.ar, name_en: ev.event.name.en, theme_ar: ev.event.theme.ar, line_ar: eventLine(ev, 'ar'), line_en: eventLine(ev, 'en'), exact: ev.exact, kind: ev.event.kind } : null, upcoming: upcomingEvents(cs.day, await calendar(db)).filter(e => e.event.code !== cs.event_code).slice(0, 3).map(e => ({ code: e.event.code, name_ar: e.event.name.ar, line_ar: eventLine(e, 'ar'), line_en: eventLine(e, 'en') })), mine, streak, total, participants: count || 0, limits: { min: MIN_RESPONSE_CHARS, max: MAX_RESPONSE_CHARS } });
+  const crowd = await crowdFor(db, cs.day, user?.id || null, mine?.evaluation || null);
+  return NextResponse.json({ success: true, day: cs.day, case: publicCase(cs, !!mine), crowd: crowd.crowd, crowd_line: crowd.line, event: ev ? { code: ev.event.code, name_ar: ev.event.name.ar, name_en: ev.event.name.en, theme_ar: ev.event.theme.ar, line_ar: eventLine(ev, 'ar'), line_en: eventLine(ev, 'en'), exact: ev.exact, kind: ev.event.kind } : null, upcoming: upcomingEvents(cs.day, await calendar(db)).filter(e => e.event.code !== cs.event_code).slice(0, 3).map(e => ({ code: e.event.code, name_ar: e.event.name.ar, line_ar: eventLine(e, 'ar'), line_en: eventLine(e, 'en') })), mine, streak, total, participants: count || 0, limits: { min: MIN_RESPONSE_CHARS, max: MAX_RESPONSE_CHARS } });
 }
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   let body: any = {}; try { body = await req.json(); } catch { /* فارغ */ }
+  if (body.action === 'whatif') return whatIf(db, user, body);
   const response = String(body.response || '').trim();
   if (response.length < MIN_RESPONSE_CHARS) return bad(`اكتب كيف تتصرّف فعلًا — ${MIN_RESPONSE_CHARS} حرفًا على الأقل`);
   if (response.length > MAX_RESPONSE_CHARS) return bad(`الردّ طويل جدًا (الحد ${MAX_RESPONSE_CHARS} حرفًا)`);
@@ -123,4 +134,32 @@ export async function POST(req: Request) {
     await db.from('portal_daily_case_responses').insert({ case_id: cs.id, day: cs.day, user_id: null, email: null, response: response.slice(0, 600), evaluation: { band: evaluation.band, score: evaluation.score }, band: evaluation.band, score: evaluation.score, source: evaluation.source, chars: response.length });
   }
   return NextResponse.json({ success: true, saved, evaluation, case: publicCase(cs, true), streak });
+}
+
+/** «ماذا لو؟» — الجولة الثانية (للمستخدمين المسجّلين الذين أجابوا اليوم) */
+async function whatIf(db: any, user: { id: string; email: string } | null, body: any) {
+  if (!user) return bad('سجّل الدخول لتلعب جولة «ماذا لو؟»', 401);
+  const { c: cs } = await todayCase(db);
+  const { data: row } = await db.from('portal_daily_case_responses').select('id,response,evaluation,round2').eq('user_id', user.id).eq('day', cs.day).maybeSingle();
+  if (!row) return bad('اكتب ردّك على موقف اليوم أولًا');
+  const first = (row as any).evaluation as CaseEvaluation; const existing = ((row as any).round2 || null) as Partial<Round2> | null;
+  const response = String(body.response || '').trim();
+  if (!response) {
+    if (existing?.whatif) return NextResponse.json({ success: true, whatif: existing.whatif, round2: existing.response ? existing : null });
+    const local = whatIfFor(cs, first); const p = buildWhatIfPrompt(cs, (row as any).response, first);
+    const res = await runAi<WhatIf>({ system: p.system, user: p.user, parse: raw => parseWhatIf(raw, local), local: () => local, budgetMs: 20000 });
+    const w: WhatIf = { ...res.data, model: res.model };
+    await logAi(db, { user_id: user.id, email: user.email, role: 'user', purpose: 'daily_case_whatif', result: res, context: { day: cs.day, slug: cs.slug, tests: w.tests } });
+    await db.from('portal_daily_case_responses').update({ round2: { whatif: w } }).eq('id', (row as any).id);
+    return NextResponse.json({ success: true, whatif: w, round2: null });
+  }
+  if (!existing?.whatif) return bad('اطلب «ماذا لو؟» أولًا');
+  if (existing.response) return NextResponse.json({ success: true, whatif: existing.whatif, round2: existing, already: true });
+  if (response.length < 40) return bad('اكتب قرارك الثاني في 40 حرفًا على الأقل');
+  if (response.length > MAX_RESPONSE_CHARS) return bad(`الردّ طويل جدًا (الحد ${MAX_RESPONSE_CHARS} حرفًا)`);
+  const r2 = evaluateRound2(cs, existing.whatif as WhatIf, first, response);
+  await db.from('portal_daily_case_responses').update({ round2: r2 }).eq('id', (row as any).id);
+  if (cs.skill_ids && cs.skill_ids.length) await db.from('portal_learning_events').insert({ user_id: user.id, email: user.email, verb: 'assessed', object_type: 'daily_case', object_id: `${cs.day}:r2`, skills: cs.skill_ids, context: { score: r2.score, band: r2.band, day: cs.day, title: cs.title_ar, round: 2, stance: r2.stance, shift: r2.shift, tests: r2.whatif.tests } });
+  const crowd = await crowdFor(db, cs.day, user.id, first);
+  return NextResponse.json({ success: true, whatif: existing.whatif, round2: r2, crowd: crowd.crowd, crowd_line: crowd.line });
 }
