@@ -7,9 +7,9 @@
 import type { Lang } from '../portal/content';
 import type { Scenario, Turn } from '../portal/sim';
 
-export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion';
+export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion' | 'mission_check' | 'mission_suggest';
 /** حدود الاستخدام لكل مستخدم خلال 24 ساعة */
-export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150 };
+export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150, mission_check: 30, mission_suggest: 20 };
 export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   impact_brief: { ar: 'موجز تنفيذي لتقرير الأثر', en: 'Impact executive brief' },
   learner_plan: { ar: 'خطة تطوير شخصية', en: 'Personal development plan' },
@@ -17,6 +17,7 @@ export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   activity_draft: { ar: 'مسودّات أنشطة للمدرب', en: 'Trainer activity drafts' },
   sim_turn: { ar: 'شخصية المحاكاة', en: 'Simulation persona' }, sim_score: { ar: 'تقييم المحاكاة', en: 'Simulation scoring' },
   daily_skill: { ar: 'كل يوم مهارة', en: 'Daily skill' }, advisor: { ar: 'مستشارك: اسأل وأنا أجيب', en: 'Your advisor' }, companion: { ar: 'أثير — المدرب الرفيق', en: 'Athir — AI companion' },
+  mission_check: { ar: 'فحص أولي لدليل مهمة عمل', en: 'Workflow mission first check' }, mission_suggest: { ar: 'اقتراح مهمات عمل لبرنامج', en: 'Mission suggestions' },
 };
 export const AI_DISCLAIMER = { ar: 'مُولَّد بمساعدة الذكاء الاصطناعي من بياناتك في أَثَر — للاسترشاد، والقرار النهائي للإنسان.', en: 'AI-assisted, generated from your Athar data — for guidance; final decisions stay human.' };
 
@@ -271,7 +272,7 @@ export function buildAdvisorPrompt(q: string, f: AdvisorFacts, lang: Lang, perso
 }
 export function parseAdvisor(raw: any, f: AdvisorFacts): AdvisorAnswer | null {
   const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || typeof j !== 'object') return null; const a = S(j.answer_ar, 1200); if (!a) return null;
-  const allowed = new Set<string>([...f.services.map(s => s.href), ...f.programs.map(p => `/programs/${p.id}`), ...f.sessions.map(s => `/live/${s.id}`), '/programs', '/live', '/resources', '/consulting', '/contact', '/sim', '/me', '/me/skills', '/me/twin', '/verify', '/org', '/ai']);
+  const allowed = new Set<string>([...f.services.map(s => s.href), ...f.programs.map(p => `/programs/${p.id}`), ...f.sessions.map(s => `/live/${s.id}`), '/programs', '/live', '/resources', '/consulting', '/contact', '/sim', '/me', '/me/skills', '/me/twin', '/me/missions', '/verify', '/org', '/ai']);
   const links = (Array.isArray(j.links) ? j.links : []).map((l: any) => ({ label: S(l?.label, 60), href: S(l?.href, 120) })).filter((l: any) => l.label && allowed.has(l.href)).slice(0, 3);
   return { answer_ar: a, links, handoff: !!j.handoff, confidence: Math.max(0, Math.min(1, N(j.confidence) ?? 0.6)) };
 }
@@ -309,7 +310,7 @@ export function buildHelloPrompt(c: CompanionContext): { system: string; user: s
 }
 export function parseHello(raw: any): CompanionHello | null {
   const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || !S(j.greeting)) return null;
-  const ok = (h: string) => ['/sim', '/me/skills', '/me/twin', '/#daily', '/programs'].includes(h) || /^\/live\/[\w-]+$/.test(h);
+  const ok = (h: string) => ['/sim', '/me/skills', '/me/twin', '/me/missions', '/#daily', '/programs'].includes(h) || /^\/live\/[\w-]+$/.test(h);
   return { greeting: S(j.greeting, 200), nudge: S(j.nudge, 260), actions: (Array.isArray(j.actions) ? j.actions : []).map((a: any) => ({ label: S(a?.label, 40), href: S(a?.href, 80) })).filter((a: any) => a.label && ok(a.href)).slice(0, 3) };
 }
 export function buildMemoryPrompt(prev: string, history: { role: string; text: string }[]): { system: string; user: string } {
