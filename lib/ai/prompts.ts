@@ -7,9 +7,9 @@
 import type { Lang } from '../portal/content';
 import type { Scenario, Turn } from '../portal/sim';
 
-export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion' | 'mission_check' | 'mission_suggest';
+export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion' | 'mission_check' | 'mission_suggest' | 'daily_case' | 'daily_case_eval' | 'factory_foresight' | 'factory_design' | 'factory_review';
 /** حدود الاستخدام لكل مستخدم خلال 24 ساعة */
-export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150, mission_check: 30, mission_suggest: 20 };
+export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150, mission_check: 30, mission_suggest: 20, daily_case: 3, daily_case_eval: 6, factory_foresight: 20, factory_design: 20, factory_review: 20 };
 export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   impact_brief: { ar: 'موجز تنفيذي لتقرير الأثر', en: 'Impact executive brief' },
   learner_plan: { ar: 'خطة تطوير شخصية', en: 'Personal development plan' },
@@ -18,6 +18,8 @@ export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   sim_turn: { ar: 'شخصية المحاكاة', en: 'Simulation persona' }, sim_score: { ar: 'تقييم المحاكاة', en: 'Simulation scoring' },
   daily_skill: { ar: 'كل يوم مهارة', en: 'Daily skill' }, advisor: { ar: 'مستشارك: اسأل وأنا أجيب', en: 'Your advisor' }, companion: { ar: 'أثير — المدرب الرفيق', en: 'Athir — AI companion' },
   mission_check: { ar: 'فحص أولي لدليل مهمة عمل', en: 'Workflow mission first check' }, mission_suggest: { ar: 'اقتراح مهمات عمل لبرنامج', en: 'Mission suggestions' },
+  daily_case: { ar: 'كتابة «موقف اليوم»', en: 'Daily case writing' }, daily_case_eval: { ar: 'مرآة الأداء لموقف اليوم', en: 'Daily case performance mirror' },
+  factory_foresight: { ar: 'مصنع البرامج — محلل الاحتياج', en: 'Program factory — needs analyst' }, factory_design: { ar: 'مصنع البرامج — المصمم التعليمي', en: 'Program factory — instructional designer' }, factory_review: { ar: 'مصنع البرامج — مراجع الجودة', en: 'Program factory — QA reviewer' },
 };
 export const AI_DISCLAIMER = { ar: 'مُولَّد بمساعدة الذكاء الاصطناعي من بياناتك في أَثَر — للاسترشاد، والقرار النهائي للإنسان.', en: 'AI-assisted, generated from your Athar data — for guidance; final decisions stay human.' };
 
