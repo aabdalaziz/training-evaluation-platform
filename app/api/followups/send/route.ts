@@ -6,6 +6,7 @@
  *                            ثم بريد المتدربين التلقائي (فتح التقييم النهائي · إصدار الشهادة) — TRAINEE_MAIL=0 للتعطيل
  *                            ثم تذكيرات جلسات البث المباشر لبوابة أَثَر (خلال 30 ساعة)
  *                            ثم نبض «الشهادة الحية» للمشتركين (أَثَر · P11): بريد مجمّع عند تغيّر مستوى/حالة مهارة (أسبوعيًا على الأكثر)
+ *                            ثم إشعار «موقف اليوم» (Web Push · أَثَر · P13-ب) لكل اشتراك نشط — يعمل فقط إن كانت VAPID_* مضبوطة
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, (للـ Cron) CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL
  */
 import { NextResponse } from 'next/server';
@@ -18,6 +19,7 @@ import { runLiveReminders } from '../../../../lib/portal/live-cron';
 import { runCredentialWatch } from '../../../../lib/portal/twin-cron';
 import { runMissionCycle } from '../../../../lib/portal/missions-cron';
 import { runContractPulse } from '../../../../lib/portal/contracts-cron';
+import { runDailyPush } from '../../../../lib/portal/push';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -105,7 +107,15 @@ export async function GET(req: Request) {
   // مزامنة نتائج مِعيار اليومية (أَثَر · P7) — تعمل فقط إن كانت MIAAR_* مضبوطة
   let placements: any = null;
   try { if (!dry && miaarClient()) placements = await syncPlacements(db, { limit: 300 }); } catch (e: any) { placements = { ok: false, error: e?.message || String(e) }; }
+  // إشعار «موقف اليوم» (أَثَر · P13-ب): يضمن وجود موقف اليوم ثم يرسل لكل اشتراك نشط لم يُرسَل له اليوم
+  let daily_push: any = null;
+  try {
+    const rDay = new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
+    let { data: dc } = await db.from('portal_daily_cases').select('title_ar,event_name_ar').eq('day', rDay).maybeSingle();
+    if (!dc && !dry) { try { await fetch(`${site}/api/daily`, { cache: 'no-store' }); } catch { /* تجاهل */ } ({ data: dc } = await db.from('portal_daily_cases').select('title_ar,event_name_ar').eq('day', rDay).maybeSingle()); }
+    daily_push = await runDailyPush(db, site, rDay, (dc as any) || null, { dry });
+  } catch (e: any) { daily_push = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push });
 }
