@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — الصفحة الرئيسية الحيّة (P10): مسرح «الآن في أَثَر» · كل يوم مهارة · مستشارك: اسأل وأنا أجيب · جلسة حوار (محاكاة فورية + الجلسة القادمة) · شريط TRACE
+// أَثَر — الصفحة الرئيسية الحيّة (P10): مسرح «الآن في أَثَر» · كل يوم بناء: موقف اليوم (P13-أ) · مستشارك: اسأل وأنا أجيب · جلسة حوار (محاكاة فورية + الجلسة القادمة) · شريط TRACE
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase/client';
@@ -11,10 +11,14 @@ import { buildFeed, countdown, typewriter } from '../lib/portal/home';
 import type { FeedItem, FeedProgram, FeedSession } from '../lib/portal/home';
 import { DEMO_SCENARIO, bandLabel } from '../lib/portal/sim';
 import type { Turn, SimScore } from '../lib/portal/sim';
+import { domainByCode, familyName, HORIZON_LABEL } from '../lib/portal/lexicon';
+import { BAND_LABEL, RUBRIC_LABEL } from '../lib/portal/daily-case';
 
 export default function HomePage() { return <PortalShell><Home /></PortalShell>; }
 
-type Daily = { day: string; skill: { code: string; name_ar: string; name_en?: string | null; domain: string }; lesson: { title_ar: string; hook_ar: string; idea_ar: string; example_ar: string; challenge: { question_ar: string; options: string[]; correct: number; explain_ar: string }; apply_ar: string }; answered: null | { choice: number; correct: boolean }; streak: number; participants: number; source: string };
+type DailyCaseT = { title_ar: string; scene_ar: string; role_ar: string; situation_ar: string; twist_ar: string; ask_ar: string; parties_ar: string[]; domain_code: string; family: string; horizon: number; source: string };
+type CaseEval = { band: 'emerging' | 'capable' | 'distinguished' | 'exceptional'; score: number; performance_ar: string; strengths_ar: string[]; blind_spot_ar: string; needs_ar: string[]; next_step_ar: string; skills: { code: string; label_ar: string; level: number }[]; rubric_hits: { code: string; hit: number }[]; recommend: { label_ar: string; href: string }[]; source: string };
+type Daily = { day: string; case: DailyCaseT; event: null | { code: string; name_ar: string; name_en: string; theme_ar: string; line_ar: string; line_en: string; exact: boolean; kind: string }; upcoming: { code: string; name_ar: string; line_ar: string; line_en: string }[]; mine: null | { response: string; evaluation: CaseEval }; streak: number; participants: number; limits: { min: number; max: number } };
 
 function Home() {
   const { lang } = useLang(); const ar = lang === 'ar';
@@ -33,7 +37,7 @@ function Home() {
     <main className="pt-main hm">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <Hero feed={feed} now={now} lang={lang} counters={{ open: openCount, sessions: upcoming, ...counters }} />
-      <DailySkill lang={lang} tok={tok} />
+      <DailyCase lang={lang} tok={tok} />
       <Advisor lang={lang} tok={tok} />
       <Dialogue lang={lang} tok={tok} sessions={sessions} now={now} />
       <section className="pt-sec hm-trace">
@@ -49,8 +53,8 @@ function Home() {
 }
 
 /* ------------------------------------------------ البطل + مسرح «الآن في أَثَر» ------------------------------------------------ */
-const WORDS_AR = ['نبني القدرة', 'نُثبت الأثر', 'نتدرّب في مواقف حقيقية', 'نتعلّم كل يوم مهارة', 'نسأل… ونجد من يجيب'];
-const WORDS_EN = ['we build capability', 'we prove impact', 'we rehearse real situations', 'we learn one skill a day', 'we ask — and get answers'];
+const WORDS_AR = ['نبني القدرة', 'نُثبت الأثر', 'نتدرّب في مواقف حقيقية', 'نبني كل يوم جدارة', 'نسأل… ونجد من يجيب'];
+const WORDS_EN = ['we build capability', 'we prove impact', 'we rehearse real situations', 'we build one competency a day', 'we ask — and get answers'];
 function Hero({ feed, now, lang, counters }: { feed: FeedItem[]; now: number; lang: 'ar' | 'en'; counters: { open: number; sessions: number; resources: number; credentials: number; sims: number } }) {
   const ar = lang === 'ar'; const words = ar ? WORDS_AR : WORDS_EN; const [w, setW] = useState(0); const [i, setI] = useState(0); const [hold, setHold] = useState(false);
   useEffect(() => { const id = setInterval(() => setW(x => (x + 1) % words.length), 2600); return () => clearInterval(id); }, [words.length]);
@@ -62,10 +66,11 @@ function Hero({ feed, now, lang, counters }: { feed: FeedItem[]; now: number; la
         <div>
           <span className="pt-heropill"><Icon name="star" size={14} /> {t(BRAND.tagline, lang)}</span>
           <h1>{ar ? <>التدريب ما بعد الذكاء الاصطناعي:<br /><em key={w} className="hm-word">{words[w]}</em></> : <>Post‑AI training:<br /><em key={w} className="hm-word">{words[w]}</em></>}</h1>
-          <p>{ar ? 'هنا لا تقرأ عن التدريب — تعيشه: محاكيات تضعك في الموقف، مهارة واحدة عميقة كل يوم، مستشار يجيبك الآن، وملف مهاري يتشكّل من أدلة حقيقية يعتمدها خبراء.' : 'You do not read about training here — you live it: simulators that put you in the situation, one deep skill a day, an advisor who answers now, and a skills profile built from real evidence approved by experts.'}</p>
+          <p>{ar ? 'هنا لا تقرأ عن التدريب — تعيشه: محاكيات تضعك في الموقف، موقف واحد كل يوم يكشف كيف تفكّر، مستشار يجيبك الآن، وملف مهاري يتشكّل من أدلة حقيقية يعتمدها خبراء.' : 'You do not read about training here — you live it: simulators that put you in the situation, one real situation a day that shows how you think, an advisor who answers now, and a skills profile built from real evidence approved by experts.'}</p>
           <div className="pt-heroacts">
             <Link href="/sim" className="pt-btn gold"><Icon name="play" size={16} /> {ar ? 'جرّب محاكاة — 3 دقائق' : 'Try a simulation — 3 min'}</Link>
-            <a href="#daily" className="pt-btn light"><Icon name="target" size={16} /> {ar ? 'مهارة اليوم' : "Today's skill"}</a>
+            <a href="#daily" className="pt-btn light"><Icon name="target" size={16} /> {ar ? 'موقف اليوم' : "Today's case"}</a>
+            <Link href="/2062" className="pt-btn outline"><Icon name="star" size={16} /> {ar ? 'عِش يومك في 2062' : 'Live your day in 2062'}</Link>
             <a href="#advisor" className="pt-btn outline"><Icon name="chat" size={16} /> {ar ? 'اسأل مستشارك' : 'Ask your advisor'}</a>
           </div>
           <div className="hm-counters">
@@ -90,64 +95,73 @@ function Hero({ feed, now, lang, counters }: { feed: FeedItem[]; now: number; la
   );
 }
 
-/* ------------------------------------------------ كل يوم مهارة ------------------------------------------------ */
-function DailySkill({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
-  const ar = lang === 'ar'; const [d, setD] = useState<Daily | null>(null); const [err, setErr] = useState(''); const [phase, setPhase] = useState<'read' | 'challenge' | 'done'>('read'); const [left, setLeft] = useState(60); const [choice, setChoice] = useState<number | null>(null);
-  const [result, setResult] = useState<null | { correct: boolean; correct_index: number; explain_ar: string; apply_ar: string; streak: number; saved: boolean; timeout?: boolean }>(null); const [showEx, setShowEx] = useState(false); const [localStreak, setLocalStreak] = useState(0);
+/* ------------------------------------------------ كل يوم بناء: موقف اليوم (P13-أ) ------------------------------------------------ */
+const HINTS_AR = ['اكتب ما تفعله فعلًا، لا ما تؤمن به', 'سمِّ الأطراف وتحدّث معهم في ردّك', 'رتّب خطواتك بزمن: اليوم، غدًا، بعد شهر', 'إن كان في الموقف نظام ذكي: كيف تتحقق منه؟', 'كيف ستعرف لاحقًا أن قرارك عمل؟'];
+const HINTS_EN = ['Write what you would actually do, not what you believe', 'Name the parties and talk to them in your answer', 'Order your steps in time: today, tomorrow, in a month', 'If an AI system is involved: how do you verify it?', 'How will you know later that your decision worked?'];
+function DailyCase({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
+  const ar = lang === 'ar'; const [d, setD] = useState<Daily | null>(null); const [err, setErr] = useState(''); const [text, setText] = useState(''); const [busy, setBusy] = useState(false);
+  const [ev, setEv] = useState<CaseEval | null>(null); const [revealed, setRevealed] = useState<DailyCaseT | null>(null); const [saved, setSaved] = useState(false); const [streak, setStreak] = useState(0); const [showMine, setShowMine] = useState(false);
   const hdr = useCallback(() => ({ 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }), [tok]);
-  useEffect(() => { fetch('/api/daily', { headers: hdr() }).then(r => r.json()).then(j => { if (j?.success) { setD(j); if (j.answered) { setPhase('done'); setChoice(j.answered.choice); setResult({ correct: j.answered.correct, correct_index: j.lesson.challenge.correct, explain_ar: j.lesson.challenge.explain_ar, apply_ar: j.lesson.apply_ar, streak: j.streak, saved: true }); } } else setErr(j?.error || 'x'); }).catch(() => setErr('x')); try { setLocalStreak(Number(localStorage.getItem('athar_daily_streak') || 0)); } catch { /* ignore */ } }, [hdr]);
-  useEffect(() => { if (phase !== 'challenge') return; if (left <= 0) { answer(null, true); return; } const id = setTimeout(() => setLeft(l => l - 1), 1000); return () => clearTimeout(id); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [phase, left]);
-  async function answer(c: number | null, timeout = false) {
-    if (phase === 'done' || !d) return; setPhase('done'); setChoice(c);
-    try {
-      const j = await fetch('/api/daily', { method: 'POST', headers: hdr(), body: JSON.stringify({ choice: c ?? 0 }) }).then(r => r.json());
-      if (j?.success) {
-        const correct = !timeout && c !== null && j.correct; let streak = j.streak;
-        if (!j.saved) { try { const last = localStorage.getItem('athar_daily_last'); const prev = Number(localStorage.getItem('athar_daily_streak') || 0); const y = new Date(Date.now() - 86400000).toISOString().slice(0, 10); streak = last === d.day ? prev : (last === y ? prev + 1 : 1); localStorage.setItem('athar_daily_last', d.day); localStorage.setItem('athar_daily_streak', String(streak)); setLocalStreak(streak); } catch { /* ignore */ } }
-        setResult({ correct, correct_index: j.correct_index, explain_ar: j.explain_ar, apply_ar: j.apply_ar, streak, saved: j.saved, timeout });
-      } else setErr(j?.error || 'x');
-    } catch { setErr('x'); }
+  useEffect(() => { fetch('/api/daily', { headers: hdr() }).then(r => r.json()).then(j => { if (j?.success) { setD(j); setStreak(j.streak || 0); if (j.mine) { setEv(j.mine.evaluation); setText(j.mine.response); setRevealed(j.case); setSaved(true); } } else setErr(j?.error || 'x'); }).catch(() => setErr('x')); }, [hdr]);
+  async function submit() {
+    if (!d || busy || text.trim().length < (d.limits?.min || 80)) return; setBusy(true); setErr('');
+    try { const j = await fetch('/api/daily', { method: 'POST', headers: hdr(), body: JSON.stringify({ response: text }) }).then(r => r.json()); if (j?.success) { setEv(j.evaluation); setRevealed(j.case); setSaved(!!j.saved); if (j.streak) setStreak(j.streak); } else setErr(j?.error || 'x'); } catch { setErr('x'); }
+    setBusy(false);
   }
-  const ring = 2 * Math.PI * 22; const streak = result?.streak ?? d?.streak ?? localStreak;
+  const c = revealed || d?.case; const min = d?.limits?.min || 80; const left = Math.max(0, min - text.trim().length); const dom = c ? domainByCode(c.domain_code) : null; const band = ev ? BAND_LABEL[ev.band] : null; const ring = 2 * Math.PI * 26;
   return (
     <section className="pt-sec alt hm-daily" id="daily">
       <div className="pt-wrap">
-        <div className="hm-sechead"><div><span className="pt-kicker"><Icon name="target" size={14} /> {ar ? 'كل يوم مهارة' : 'A skill a day'}</span><h2>{ar ? 'ثلاث دقائق… فكرة واحدة تغيّر طريقة عملك' : 'Three minutes — one idea that changes how you work'}</h2></div>
-          <div className="hm-streak" title={ar ? 'أيام متتالية' : 'Day streak'}><b>{streak}</b><span>{ar ? 'يوم متتالٍ' : 'day streak'}</span>{d && <small>{d.participants} {ar ? 'شاركوا اليوم' : 'answered today'}</small>}</div></div>
+        <div className="hm-sechead"><div><span className="pt-kicker"><Icon name="target" size={14} /> {ar ? 'كل يوم بناء · موقف اليوم' : 'Daily build · today’s case'}</span><h2>{ar ? 'موقف واحد… يكشف كيف تفكّر، لا كم تعرف' : 'One situation — it shows how you think, not how much you know'}</h2><p className="hm-dailysub">{ar ? 'لا سؤال ولا خيارات. موقف حقيقي فيه توتر خفي؛ تكتب كيف تتصرّف بكلماتك، ونعيد لك مرآة أدائك: ما ظهر من جداراتك، وما لم تره، وما تحتاجه.' : 'No quiz, no options. A real situation with a hidden tension; you write how you would act, and we hand you a mirror: what your response showed, what you missed, what you need.'}</p></div>
+          <div className="hm-streak" title={ar ? 'أيام متتالية' : 'Day streak'}><b>{streak}</b><span>{ar ? 'يوم متتالٍ' : 'day streak'}</span>{d && <small>{d.participants} {ar ? 'تعاملوا معه اليوم' : 'answered today'}</small>}</div></div>
+        {d?.event && <div className={`hm-event ${d.event.kind}`}><Icon name="calendar" size={15} /> <b>{ar ? d.event.line_ar : d.event.line_en}</b>{d.event.theme_ar && <span>— {d.event.theme_ar}</span>}</div>}
         {!d && !err && <div className="hm-skel" />}
-        {err && <div className="pt-box pt-empty">{ar ? 'تعذّر تحميل مهارة اليوم الآن.' : 'Could not load today’s skill.'}</div>}
-        {d && (
-          <div className="hm-dailygrid">
-            <article className="hm-lesson">
-              <div className="hm-lessonmeta"><span className="hm-chip navy">{d.skill.code}</span><span className="hm-chip">{(lang === 'en' && d.skill.name_en) || d.skill.name_ar}</span><span className="hm-chip gold">{d.day}</span>{d.source === 'ai' && <span className="hm-chip teal">{ar ? 'كُتب اليوم بالذكاء الاصطناعي · يراجعه فريق أَثَر' : 'Written today by AI · reviewed by Athar'}</span>}</div>
-              <h3>{d.lesson.title_ar}</h3>
-              <p className="hm-hook">{d.lesson.hook_ar}</p>
-              <p className="hm-idea">{d.lesson.idea_ar}</p>
-              <button type="button" className="hm-more" onClick={() => setShowEx(s => !s)}>{showEx ? (ar ? 'إخفاء المثال' : 'Hide example') : (ar ? 'أرني مثالًا تطبيقيًا' : 'Show me an applied example')} <Icon name="arrow" size={13} /></button>
-              {showEx && <div className="hm-example">{d.lesson.example_ar}</div>}
+        {err && !d && <div className="pt-box pt-empty">{ar ? 'تعذّر تحميل موقف اليوم الآن.' : 'Could not load today’s case.'}</div>}
+        {d && c && (
+          <div className="hm-casegrid">
+            <article className="hm-case">
+              <div className="hm-lessonmeta">{dom && <span className={`hm-chip ${dom.tone}`}>{dom.h} · {t(dom.name, lang)}</span>}<span className="hm-chip">{familyName(c.family, lang)}</span><span className="hm-chip gold">{t(HORIZON_LABEL[c.horizon as 2035], lang)}</span>{c.source === 'ai' && <span className="hm-chip teal">{ar ? 'كُتب اليوم بالذكاء الاصطناعي · يراجعه فريق أَثَر' : 'Written today by AI · reviewed by Athar'}</span>}</div>
+              <h3>{c.title_ar}</h3>
+              <p className="hm-scene"><Icon name="compass" size={14} /> {c.scene_ar}</p>
+              <p className="hm-role">{c.role_ar}</p>
+              <p className="hm-situation">{c.situation_ar}</p>
+              {!!c.parties_ar?.length && <div className="hm-parties"><small>{ar ? 'الأطراف' : 'Parties'}</small>{c.parties_ar.map((x, k) => <span key={k}>{x}</span>)}</div>}
+              <div className="hm-ask"><b>{ar ? 'المطلوب منك' : 'Your task'}</b><p>{c.ask_ar}</p></div>
+              {revealed?.twist_ar && <div className="hm-twist"><b>{ar ? 'التعقيد الخفي الذي كان في الموقف' : 'The hidden complication'}</b><p>{revealed.twist_ar}</p></div>}
             </article>
-            <aside className="hm-challenge">
-              <div className="hm-chhead"><b>{ar ? 'تحدّي اليوم' : 'Today’s challenge'}</b>
-                {phase === 'challenge' && <svg width="52" height="52" viewBox="0 0 52 52" className="hm-ring"><circle cx="26" cy="26" r="22" /><circle cx="26" cy="26" r="22" strokeDasharray={ring} strokeDashoffset={ring * (1 - left / 60)} /><text x="26" y="30" textAnchor="middle">{left}</text></svg>}
-                {phase === 'read' && <span className="hm-chip">60 {ar ? 'ثانية' : 's'}</span>}</div>
-              {phase === 'read' && <><p>{ar ? 'سؤال واحد يتطلب حكمًا مهنيًا. حين تضغط «ابدأ» يبدأ عدّ تنازلي من 60 ثانية — كما في الموقف الحقيقي.' : 'One question that needs professional judgement. Press start and a 60‑second countdown begins — like the real situation.'}</p><button type="button" className="pt-btn gold" onClick={() => { setPhase('challenge'); setLeft(60); }}><Icon name="play" size={15} /> {ar ? 'ابدأ التحدي' : 'Start'}</button></>}
-              {phase !== 'read' && (
+            <aside className="hm-respond">
+              {!ev ? (
                 <>
-                  <p className="hm-q">{d.lesson.challenge.question_ar}</p>
-                  <div className="hm-opts">{d.lesson.challenge.options.map((o, k) => { const st = phase === 'done' && result ? (k === result.correct_index ? 'ok' : k === choice ? 'bad' : '') : (k === choice ? 'sel' : ''); return <button key={k} type="button" className={st} disabled={phase === 'done'} onClick={() => answer(k)}><i>{['أ', 'ب', 'ج', 'د'][k]}</i>{o}</button>; })}</div>
-                  {phase === 'done' && result && (
-                    <div className={`hm-verdict ${result.correct ? 'ok' : 'bad'}`}>
-                      <b>{result.timeout ? (ar ? 'انتهى الوقت' : 'Time is up') : result.correct ? (ar ? 'إجابة صحيحة — حكم مهني سليم' : 'Correct — sound professional judgement') : (ar ? 'ليست الأدق — وهذا ما نتعلم منه' : 'Not the best option — and that is the point')}</b>
-                      <p>{result.explain_ar}</p>
-                      <div className="hm-apply"><Icon name="flag" size={15} /> <span><b>{ar ? 'طبّقها اليوم:' : 'Apply today:'}</b> {result.apply_ar}</span></div>
-                      <small>{result.saved ? (ar ? 'أُضيفت دليلًا في ملفك المهاري.' : 'Logged as evidence in your skills profile.') : (ar ? 'سجّل الدخول ليُحفظ تقدّمك دليلًا في ملفك المهاري.' : 'Sign in to save this as evidence in your profile.')} <Link href="/me/skills">{ar ? 'ملفي المهاري' : 'My skills'}</Link></small>
-                    </div>
-                  )}
+                  <div className="hm-chhead"><b>{ar ? 'كيف تتصرّف؟' : 'How would you act?'}</b><span className="hm-chip">{text.trim().length}/{d.limits?.max || 2500}</span></div>
+                  <textarea value={text} onChange={e => setText(e.target.value)} maxLength={d.limits?.max || 2500} rows={9} placeholder={ar ? 'اكتب هنا بكلماتك: ماذا تفعل أولًا، مع من تتحدث، ما البدائل، ما الذي لن تفعله، وكيف ستتأكد لاحقًا…' : 'Write in your own words: what you do first, whom you talk to, the alternatives, what you will not do, and how you will verify later…'} disabled={busy} />
+                  <ul className="hm-hints">{(ar ? HINTS_AR : HINTS_EN).map(h => <li key={h}><Icon name="check" size={12} /> {h}</li>)}</ul>
+                  <div className="hm-respacts"><button type="button" className="pt-btn gold" onClick={submit} disabled={busy || left > 0}>{busy ? (ar ? 'أقرأ ردّك بعناية…' : 'Reading carefully…') : (ar ? 'أرني مرآة أدائي' : 'Show me my mirror')} <Icon name="arrow" size={14} /></button>{left > 0 && <small>{ar ? `${left} حرفًا على الأقل بعد` : `${left} more characters`}</small>}</div>
+                  {busy && <div className="hm-think light"><i /><i /><i /> {ar ? 'أقارن ردّك بمعايير الموقف وأطرافه وتعقيده الخفي…' : 'Comparing your answer with the case criteria, parties and hidden twist…'}</div>}
+                  {err && err !== 'x' && <div className="hm-err">{err}</div>}
+                  {!tok && <small className="hm-note">{ar ? 'يمكنك التجربة بلا تسجيل؛ سجّل الدخول ليُحفظ ردّك شاهدًا في ملفك المهني وتُحسَّن المرآة بالذكاء الاصطناعي.' : 'Try without signing in; sign in to save your answer as evidence and get the AI-enhanced mirror.'} <Link href="/login">{ar ? 'تسجيل الدخول' : 'Sign in'}</Link></small>}
                 </>
+              ) : (
+                <div className="hm-mirror">
+                  <div className="hm-mirrorhead">
+                    <svg width="64" height="64" viewBox="0 0 64 64" className="hm-ring big"><circle cx="32" cy="32" r="26" /><circle cx="32" cy="32" r="26" strokeDasharray={ring} strokeDashoffset={ring * (1 - ev.score / 100)} /><text x="32" y="37" textAnchor="middle">{ev.score}</text></svg>
+                    <div><small>{ar ? 'مرآة الأداء' : 'Performance mirror'}</small><b className={`hm-band ${band?.tone}`}>{ar ? band?.ar : band?.en}</b><span>{ev.source === 'ai' ? (ar ? 'بالذكاء الاصطناعي + معايير الموقف' : 'AI + case criteria') : (ar ? 'بمعايير الموقف — تقدير اصطلاحي' : 'Case criteria — indicative')}</span></div>
+                  </div>
+                  <p className="hm-perf">{ev.performance_ar}</p>
+                  {!!ev.strengths_ar.length && <div className="hm-mblock ok"><b>{ar ? 'ما ظهر عندك' : 'What showed'}</b><ul>{ev.strengths_ar.map((x, k) => <li key={k}>{x}</li>)}</ul></div>}
+                  <div className="hm-mblock warn"><b>{ar ? 'ما لم تره' : 'What you missed'}</b><p>{ev.blind_spot_ar}</p></div>
+                  <div className="hm-mblock"><b>{ar ? 'احتياجاتك التطويرية' : 'Your development needs'}</b><ul>{ev.needs_ar.map((x, k) => <li key={k}>{x}</li>)}</ul></div>
+                  <div className="hm-apply"><Icon name="flag" size={15} /> <span><b>{ar ? 'خطوة اليوم:' : 'Today’s step:'}</b> {ev.next_step_ar}</span></div>
+                  <div className="hm-rub">{ev.rubric_hits.map(h => { const rl = (RUBRIC_LABEL as Record<string, { ar: string; en: string; hint_ar: string }>)[h.code]; return <span key={h.code} className={`h${h.hit}`} title={rl?.hint_ar}>{ar ? rl?.ar : rl?.en}</span>; })}</div>
+                  {!!ev.skills.length && <div className="hm-skills">{ev.skills.map(s => <span key={s.code}><b>{s.label_ar}</b><i>{'●'.repeat(s.level)}{'○'.repeat(5 - s.level)}</i></span>)}</div>}
+                  <div className="pt-chips">{ev.recommend.map((r, k) => <Link key={k} href={r.href} className="pt-btn light small">{r.label_ar}</Link>)}</div>
+                  <small className="hm-note">{saved ? (ar ? 'حُفظ ردّك شاهدًا في ملفك المهني (موقف اليوم).' : 'Saved as evidence in your profile.') : (ar ? 'سجّل الدخول ليُحفظ ردّك شاهدًا في ملفك المهني.' : 'Sign in to save this as evidence.')} <Link href="/me/map">{ar ? 'خريطة جداراتي' : 'My competency map'}</Link> · <button type="button" className="hm-linkbtn" onClick={() => setShowMine(v => !v)}>{showMine ? (ar ? 'إخفاء ردّي' : 'Hide my answer') : (ar ? 'عرض ردّي' : 'Show my answer')}</button></small>
+                  {showMine && <div className="hm-mine">{text}</div>}
+                </div>
               )}
             </aside>
           </div>
         )}
+        {!!d?.upcoming?.length && <div className="hm-upcoming"><small>{ar ? 'مواقف قادمة مرتبطة بمناسبات:' : 'Upcoming event-linked cases:'}</small>{d.upcoming.map(u => <span key={u.code}>{ar ? u.line_ar : u.line_en}</span>)}</div>}
       </div>
     </section>
   );
@@ -317,6 +331,33 @@ const CSS = `
 .hm-tracerow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-width:760px;margin:0 auto 18px}.hm-tracecell{display:grid;justify-items:center;gap:4px;padding:14px 8px;border-radius:16px;background:#fff;border:1px solid #e2e8f0;text-decoration:none;color:#0f2a4e;transition:transform .2s,border-color .2s}.hm-tracecell:hover{transform:translateY(-3px);border-color:#0b8a83}.hm-tracecell b{font-size:26px;color:#0b8a83;line-height:1}.hm-tracecell span{font-size:12.5px;font-weight:700}
 .hm-services{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:28px}.hm-svc{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid #e2e8f0;background:#fff;color:#0f2a4e;font-size:13.5px;font-weight:700;text-decoration:none}.hm-svc:hover{border-color:#0b8a83;color:#0b8a83}
 .hm-final{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:linear-gradient(135deg,#0f2a4e,#0b6b66);color:#fff;border-radius:24px;padding:26px 30px}.hm-final b{display:block;font-size:20px;font-weight:900}.hm-final small{display:block;font-size:13.5px;opacity:.85;margin-top:4px;max-width:560px;line-height:1.7}.hm-final .pt-btn.outline.dark{border-color:#fff;color:#fff}.hm-final .pt-btn.outline.dark:hover{background:#fff;color:#0f2a4e}
-@media (max-width:980px){.hm-hero .pt-herogrid,.hm-dailygrid,.hm-advgrid,.hm-dlggrid{grid-template-columns:1fr}.hm-tracerow{grid-template-columns:repeat(5,1fr)}.hm-stagefoot{grid-template-columns:repeat(2,1fr)}.hm-crit div{grid-template-columns:110px 1fr 32px}}
+
+.hm-dailysub{margin:8px 0 0;max-width:720px;font-size:14.5px;line-height:1.9;color:#475569}
+.hm-event{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:-8px 0 18px;padding:10px 16px;border-radius:14px;background:#fdf6e3;border:1px solid #f1dfae;color:#7c5a00;font-size:14px}.hm-event span{color:#92400e}.hm-event.national{background:#eefaf5;border-color:#bfe7d7;color:#065f46}
+.hm-casegrid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;align-items:start}
+.hm-case{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:26px}.hm-case h3{margin:0 0 10px;font-size:25px;color:#0f2a4e;font-weight:900;line-height:1.4}
+.hm-scene{display:flex;gap:6px;align-items:flex-start;margin:0 0 8px;font-size:14px;color:#64748b;font-style:italic;line-height:1.8}
+.hm-role{display:inline-block;margin:0 0 12px;padding:5px 12px;border-radius:999px;background:#0f2a4e;color:#fff;font-size:13px;font-weight:800}
+.hm-situation{font-size:16px;line-height:2;color:#1e293b;margin:0 0 12px}
+.hm-parties{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.hm-parties small{color:#64748b;font-weight:800}.hm-parties span{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;border:1px dashed #94a3b8;color:#334155}
+.hm-ask{background:#f3fbfa;border:1px solid #cfe9e6;border-radius:14px;padding:14px 16px}.hm-ask b{display:block;color:#0b8a83;margin-bottom:4px}.hm-ask p{margin:0;font-size:15px;line-height:1.9;color:#0f172a;font-weight:700}
+.hm-twist{margin-top:12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:14px 16px}.hm-twist b{display:block;color:#9a3412;margin-bottom:4px}.hm-twist p{margin:0;font-size:14.5px;line-height:1.9;color:#7c2d12}
+.hm-respond{background:#0f2a4e;color:#fff;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.hm-respond textarea{width:100%;box-sizing:border-box;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;padding:14px;font:inherit;font-size:15px;line-height:1.9;resize:vertical;min-height:200px}.hm-respond textarea::placeholder{color:rgba(255,255,255,.5)}.hm-respond textarea:focus{outline:2px solid #c9a24b;background:rgba(255,255,255,.12)}
+.hm-hints{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:12.5px;color:rgba(255,255,255,.75)}.hm-hints li{display:flex;gap:6px;align-items:center}
+.hm-respacts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.hm-respacts small{color:rgba(255,255,255,.7)}
+.hm-think.light{color:rgba(255,255,255,.85)}.hm-think.light i{background:#c9a24b}
+.hm-note{font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.8}.hm-note a{color:#f1dfae}.hm-linkbtn{background:none;border:0;color:#f1dfae;font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0}
+.hm-mirror{display:grid;gap:12px}.hm-mirrorhead{display:flex;gap:14px;align-items:center}.hm-mirrorhead small{display:block;color:rgba(255,255,255,.7);font-size:12px}.hm-mirrorhead span{display:block;font-size:11.5px;color:rgba(255,255,255,.6)}
+.hm-band{display:inline-block;font-size:20px;font-weight:900;margin:2px 0}.hm-band.gold{color:#f1dfae}.hm-band.navy{color:#bfe0ff}.hm-band.teal{color:#9fe3dd}.hm-band.warn{color:#fcd9a0}
+.hm-ring.big circle{stroke-width:5}.hm-ring.big text{font-size:16px}
+.hm-perf{margin:0;font-size:15px;line-height:1.95;background:#fff;color:#0f172a;border-radius:14px;padding:14px 16px}
+.hm-mblock{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 14px}.hm-mblock b{display:block;margin-bottom:4px;font-size:13px;color:#f1dfae}.hm-mblock ul{margin:0;padding-inline-start:18px;font-size:13.5px;line-height:1.8}.hm-mblock p{margin:0;font-size:13.5px;line-height:1.8}.hm-mblock.ok b{color:#9fe3dd}.hm-mblock.warn{background:rgba(201,162,75,.18)}.hm-mblock.warn b{color:#fcd9a0}
+.hm-rub{display:flex;gap:5px;flex-wrap:wrap}.hm-rub span{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.6)}.hm-rub span.h1{background:rgba(201,162,75,.35);color:#fff;border-color:transparent}.hm-rub span.h2{background:#0b8a83;color:#fff;border-color:transparent}
+.hm-skills{display:flex;gap:8px;flex-wrap:wrap}.hm-skills span{display:grid;background:#fff;color:#0f172a;border-radius:10px;padding:6px 10px;font-size:12.5px}.hm-skills i{font-style:normal;color:#c9a24b;letter-spacing:2px;font-size:11px}
+.hm-mine{white-space:pre-wrap;background:rgba(255,255,255,.08);border-radius:12px;padding:12px;font-size:13.5px;line-height:1.8;color:rgba(255,255,255,.85)}
+.hm-upcoming{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px;font-size:12.5px;color:#64748b}.hm-upcoming span{padding:3px 10px;border-radius:999px;background:#eef2f7;color:#334155;font-weight:800}
+.hm-chip.violet{background:#ede9fe;color:#5b21b6}.hm-chip.rose{background:#ffe4e6;color:#9f1239}.hm-chip.sky{background:#e0f2fe;color:#075985}.hm-chip.ok{background:#dcfce7;color:#166534}.hm-chip.warn{background:#fef3c7;color:#92400e}
+@media (max-width:980px){.hm-hero .pt-herogrid,.hm-dailygrid,.hm-casegrid,.hm-advgrid,.hm-dlggrid{grid-template-columns:1fr}.hm-tracerow{grid-template-columns:repeat(5,1fr)}.hm-stagefoot{grid-template-columns:repeat(2,1fr)}.hm-crit div{grid-template-columns:110px 1fr 32px}}
 @media (prefers-reduced-motion:reduce){.hm .hm-word,.hm-stagecard,.hm-score,.hm-live i{animation:none}}
 `;
