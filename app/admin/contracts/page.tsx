@@ -9,6 +9,7 @@ import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { parsePeople } from '../../../lib/portal/org';
+import { contractPrefillFromQuery } from '../../../lib/portal/factory';
 import { EMPTY_CONTRACT_FORM, MILESTONE_LABEL, MS_STATUS_LABEL, STATUS_LABEL, HEALTH_LABEL, money, pctOf, milestoneAmounts, normalizeSplit, contractUrl, contractToForm, validateContract } from '../../../lib/portal/contracts';
 import type { Contract, ContractForm, ContractState, CohortPerson, MilestoneKey, PersonFacts, Release } from '../../../lib/portal/contracts';
 
@@ -22,7 +23,7 @@ export default function AdminContractsPage() {
   const db = supabase(); const router = useRouter();
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [tok, setTok] = useState(''); const [busy, setBusy] = useState('');
   const [data, setData] = useState<Data | null>(null); const [tab, setTab] = useState<'portfolio' | 'new'>('portfolio'); const [selId, setSelId] = useState<string | null>(null); const [note, setNote] = useState(''); const [deliverAt, setDeliverAt] = useState('');
-  const [form, setForm] = useState<ContractForm>(EMPTY_CONTRACT_FORM); const [editId, setEditId] = useState<string | null>(null); const [proposing, setProposing] = useState(false);
+  const [form, setForm] = useState<ContractForm>(EMPTY_CONTRACT_FORM); const [editId, setEditId] = useState<string | null>(null); const [proposing, setProposing] = useState(false); const [fromFactory, setFromFactory] = useState<string>('');
   const H = (tk = tok) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` });
   async function load(tk = tok) { const j = await fetch('/api/contracts?admin=1', { headers: H(tk) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
   async function post(body: any) { setBusy(body.action); setError(''); setOk(''); try { const j = await fetch('/api/contracts', { method: 'POST', headers: H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'خطأ'); return j; } catch (e: any) { setError(e?.message || 'خطأ'); return null; } finally { setBusy(''); } }
@@ -30,6 +31,8 @@ export default function AdminContractsPage() {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/contracts'); return; }
     const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
     const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || ''; setTok(tk); await load(tk); setReady(true);
+    // جسر مصنع البرامج (P13-ب): /admin/contracts?new=1&from_factory=…&program=…&title=…&split=60/25/15&targets=60/90/50&notes=…
+    try { const pre = contractPrefillFromQuery(window.location.search); if (pre) { setForm(f => ({ ...f, program_id: pre.program_id, title_ar: pre.title_ar || f.title_ar, split: pre.split, targets: pre.targets, notes: pre.notes })); setFromFactory(pre.factory_draft_id); setTab('new'); setOk('مُقترح من مصنع البرامج: مؤشرات الأثر أصبحت أهداف العقد وتقسيم الدفعات 60/25/15 — أكمل الجهة والمبلغ والمجموعة ثم احفظ.'); window.history.replaceState(null, '', '/admin/contracts'); } } catch { /* بلا تعبئة */ }
   })(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const sel = useMemo(() => data?.items.find(i => i.contract.id === selId) || null, [data, selId]);
@@ -46,7 +49,7 @@ export default function AdminContractsPage() {
     } catch (e: any) { setError(e?.message || 'خطأ'); } finally { setProposing(false); }
   }
   function pickOrg(id: string) { const o = data?.orgs.find(x => x.id === id); setForm(f => ({ ...f, organization_id: id, contact_email: f.contact_email || o?.contact_email || '', contact_name: f.contact_name || o?.contact_name || '', title_ar: f.title_ar || (o ? `عقد أثر — ${o.name_ar}` : '') })); }
-  async function save() { const j = await post({ action: editId ? 'update' : 'create', id: editId, form, cohort }); if (j) { setOk(editId ? 'حُدّثت المسودة' : 'أُنشئت مسودة العقد — راجعها ثم فعّلها'); setForm(EMPTY_CONTRACT_FORM); setEditId(null); await load(); setTab('portfolio'); setSelId(j.contract.id); } }
+  async function save() { const j = await post({ action: editId ? 'update' : 'create', id: editId, form, cohort, factory_draft_id: fromFactory || undefined }); if (j) { setOk(editId ? 'حُدّثت المسودة' : 'أُنشئت مسودة العقد — راجعها ثم فعّلها'); setForm(EMPTY_CONTRACT_FORM); setEditId(null); setFromFactory(''); await load(); setTab('portfolio'); setSelId(j.contract.id); } }
   function edit(c: Contract) { setForm(contractToForm(c)); setEditId(c.id); setTab('new'); }
   async function act(action: string, extra: any = {}) { const j = await post({ action, id: selId, ...extra }); if (j) { setOk(action === 'activate' ? (j.mailed ? 'فُعِّل العقد وأُرسل الرابط الحي للجهة' : 'فُعِّل العقد (لم يُرسل بريد — لا بريد اتصال أو RESEND غير مضبوط)') : action === 'deliver' ? 'أُثبت التسليم — فُتحت نافذة الأثر' : action === 'release' ? `أُفرج عن الدفعة · مذكرة ${j.release?.memo_no}${j.mailed ? ' · أُبلغت الجهة' : ''}` : action === 'cancel' ? 'أُلغي العقد' : 'تم'); setNote(''); await load(); } }
   async function pulse(dry: boolean) { const j = await post({ action: 'pulse', dry }); if (j) { const r = j.result; setOk(`${dry ? 'معاينة' : 'تنفيذ'} النبض: فُحص ${r.checked} · إشعارات ${dry ? r.previews.length : r.notified}${r.previews?.length ? ` — ${r.previews.slice(0, 3).map((p: any) => p.subject).join(' | ')}` : ''}${r.errors?.length ? ` · أخطاء: ${r.errors.join('; ')}` : ''}`); } }
@@ -103,7 +106,7 @@ export default function AdminContractsPage() {
 
         {tab === 'new' && <div className="ac-grid2">
           <div className="ac-card">
-            <h3>{editId ? 'تعديل مسودة العقد' : 'عقد أثر جديد'}</h3>
+            <h3>{editId ? 'تعديل مسودة العقد' : 'عقد أثر جديد'}{fromFactory && <span className="ac-fromfactory" title={`مسودة المصنع ${fromFactory.slice(0, 8)}`}><Icon name="compass" size={12} /> من مصنع البرامج</span>}</h3>
             <label>الجهة<select value={form.organization_id} onChange={e => pickOrg(e.target.value)}><option value="">— اختر —</option>{data?.orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>
             <label>البرنامج (اختياري — يحصر الشهادات والمهمات به)<select value={form.program_id} onChange={e => setForm(f => ({ ...f, program_id: e.target.value }))}><option value="">— كل البرامج —</option>{data?.programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
             <label>عنوان العقد<input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder="عقد أثر — تدريب معلمي المرحلة المتوسطة" /></label>
@@ -132,6 +135,7 @@ export default function AdminContractsPage() {
 }
 
 const CSS = `
+.ac-fromfactory{display:inline-flex;align-items:center;gap:4px;margin-inline-start:8px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;vertical-align:middle}
 .ac{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;direction:rtl}
 .ac-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}
 .ac-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.ac-head p{margin:0;color:#64748b;font-size:14px;line-height:1.7;max-width:900px}.ac-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b8a83}
