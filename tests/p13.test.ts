@@ -88,7 +88,7 @@ test('daily case: deterministic pick per day, event-aware on occasions, varies a
   assert.ok(HUMAN_DOMAINS.some(d => d.code === DOMAIN_OF_DAY('2026-11-10')));
   const c = seedToCase(nat.seed, '2026-09-23', nat.event, ['sk1']); assert.equal(c.day, '2026-09-23'); assert.equal(c.event_code, 'national_day'); assert.deepEqual(c.skill_ids, ['sk1']); assert.ok(c.title_ar && c.rubric.length >= 3);
   assert.match(eventLine(nat.event, 'ar') || '', /اليوم الوطني/); assert.equal(eventLine(null, 'ar'), null);
-  const pre = eventsFor('2026-12-16')[0]; assert.match(eventLine(pre, 'ar') || '', /يومين|بعد/);
+  const pre = eventsFor('2026-12-16')[0]; assert.equal(eventLine(pre, 'ar'), 'بعد يومين: اليوم العالمي للغة العربية'); assert.match(eventLine({ ...pre, distance: 15 }, 'ar') || '', /^بعد 15 يومًا/); assert.match(eventLine({ ...pre, distance: 5 }, 'ar') || '', /^بعد 5 أيام/); assert.match(eventLine({ ...pre, distance: 1 }, 'en') || '', /^In 1 day:/);
 });
 
 test('daily case: local evaluation rewards parties, options, human loop, follow-up; punishes blind delegation', () => {
