@@ -4,6 +4,7 @@
  *  تبدأ من الاحتياج الإنساني (القطاع × المجال × المرحلة × المؤسسة × الأفق × الفجوة) لا من الموضوع، وتمرّ بأربع محطات:
  *  محلل الاحتياج (استشراف) → المصمم التعليمي (مخطط برنامج قابل للتشغيل) → مراجع الجودة (قائمة فحص ودليل الأسلوب) → الاعتماد البشري (النشر كبرنامج مسودّة)
  *  كل محطة لها بديل محلي كامل؛ الذكاء الاصطناعي يُحسّن ولا يقرّر. المصطلحات وفق المعجم (LEXICON-ATHAR-AR).
+ *  P13-ب: جسر المصنع ↔ عقود الأثر — contractProposalFrom/contractUrlFor: مؤشرات الأثر تصبح أهداف عقد 60/25/15 بضغطة «اقترح عقد أثر».
  */
 import { parseJsonLoose } from '../ai/prompts';
 import { HUMAN_DOMAINS, FAMILIES, HORIZON_LABEL, SECTORS_2062, domainByCode, familyByCode, sectorByCode, lexiconIssues } from './lexicon';
@@ -179,3 +180,30 @@ export function factoryStats(drafts: Draft[]): { total: number; by_stage: Record
 }
 export const FACTORY_SECTORS = SECTORS_2062;
 export const FACTORY_FAMILIES = FAMILIES;
+
+// ====================================================================== جسر المصنع ↔ عقود الأثر (P13-ب)
+/** مقترح عقد أثر من مسودة منشورة: مؤشرات الأثر تصبح أهداف العقد، والتقسيم 60/25/15 (أو ما اقترحه المصمم) يصبح تقسيم الدفعات */
+export type ContractProposal = { title_ar: string; program_id: string | null; split: { delivery: number; evidence: number; impact: number }; targets: { evidence_rate: number; impact_days: number; impact_rate: number }; notes: string; indicators: string[]; price_hint_sar: number; factory_draft_id: string };
+export function contractProposalFrom(d: Draft): ContractProposal {
+  const des = d.design; const fs = d.foresight;
+  const indicators = (des?.impact_indicators_ar?.length ? des.impact_indicators_ar : fs?.indicators_ar || []).slice(0, 5);
+  const sp = des?.contract_split && des.contract_split.delivery + des.contract_split.evidence + des.contract_split.impact === 100 ? des.contract_split : { delivery: 60, evidence: 25, impact: 15 };
+  const horizonDays = d.need.horizon >= 2050 ? 120 : 90;
+  const targets = { evidence_rate: des && des.saqf_level >= 6 ? 70 : 60, impact_days: horizonDays, impact_rate: 50 };
+  const title = `عقد أثر — ${des?.brand_ar || d.title_ar}`;
+  const notes = [`مُقترح من مصنع البرامج (مسودة ${d.id.slice(0, 8)}).`, indicators.length ? `مؤشرات الأثر المتعاقد عليها: ${indicators.map((x, i) => `${i + 1}) ${x}`).join(' ')}` : '', des ? `المدة: ${des.hours} ساعة / ${des.weeks} أسابيع · مستوى الإطار الوطني للمؤهلات: ${des.saqf_level} · السعر الاسترشادي للمتدرب: ${des.price_hint_sar} ر.س` : '', fs?.scarce_ar ? `القدرة النادرة المستهدفة: ${fs.scarce_ar}` : ''].filter(Boolean).join('\n');
+  return { title_ar: title, program_id: d.program_id || null, split: sp, targets, notes, indicators, price_hint_sar: des?.price_hint_sar || 0, factory_draft_id: d.id };
+}
+/** رابط صفحة العقود مع التعبئة المسبقة (يُقرأ من window.location في صفحة العقود) */
+export function contractUrlFor(d: Draft): string {
+  const p = contractProposalFrom(d); const q = new URLSearchParams({ new: '1', from_factory: d.id, program: p.program_id || '', title: p.title_ar, split: `${p.split.delivery}/${p.split.evidence}/${p.split.impact}`, targets: `${p.targets.evidence_rate}/${p.targets.impact_days}/${p.targets.impact_rate}`, notes: p.notes.slice(0, 1200) });
+  return `/admin/contracts?${q.toString()}`;
+}
+/** قراءة التعبئة المسبقة من سلسلة الاستعلام (صفحة العقود) */
+export function contractPrefillFromQuery(search: string): null | { program_id: string; title_ar: string; split: { delivery: number; evidence: number; impact: number }; targets: { evidence_rate: number; impact_days: number; impact_rate: number }; notes: string; factory_draft_id: string } {
+  const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search); if (q.get('new') !== '1') return null;
+  const nums = (s: string | null, n: number, def: number[]) => { const a = String(s || '').split('/').map(x => Number(x)); return a.length === n && a.every(x => Number.isFinite(x) && x >= 0) ? a : def; };
+  const sp = nums(q.get('split'), 3, [60, 25, 15]); const tg = nums(q.get('targets'), 3, [60, 90, 50]);
+  const split = sp[0] + sp[1] + sp[2] === 100 ? { delivery: sp[0], evidence: sp[1], impact: sp[2] } : { delivery: 60, evidence: 25, impact: 15 };
+  return { program_id: String(q.get('program') || ''), title_ar: String(q.get('title') || '').slice(0, 160), split, targets: { evidence_rate: Math.min(100, tg[0]), impact_days: Math.min(365, tg[1]), impact_rate: Math.min(100, tg[2]) }, notes: String(q.get('notes') || '').slice(0, 1200), factory_draft_id: String(q.get('from_factory') || '') };
+}
