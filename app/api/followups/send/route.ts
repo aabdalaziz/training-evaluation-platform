@@ -17,6 +17,7 @@ import { cronHeartbeat } from '../../../../lib/health/collect';
 import { runLiveReminders } from '../../../../lib/portal/live-cron';
 import { runCredentialWatch } from '../../../../lib/portal/twin-cron';
 import { runMissionCycle } from '../../../../lib/portal/missions-cron';
+import { runContractPulse } from '../../../../lib/portal/contracts-cron';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -98,10 +99,13 @@ export async function GET(req: Request) {
   // مهمات في قلب العمل: إسناد بعد شهادة الإتمام، تذكير، انتهاء (أَثَر · P12-أ)
   let missions: any = null;
   try { missions = await runMissionCycle(db, site, { dry }); } catch (e: any) { missions = { ok: false, error: e?.message || String(e) }; }
+  // نبض عقود الأثر: إشعار عند استحقاق دفعة أو اقتراب إغلاق نافذة الأثر — بلا إفراج آلي (أَثَر · P12-ب)
+  let contracts: any = null;
+  try { contracts = await runContractPulse(db, site, { dry }); } catch (e: any) { contracts = { ok: false, error: e?.message || String(e) }; }
   // مزامنة نتائج مِعيار اليومية (أَثَر · P7) — تعمل فقط إن كانت MIAAR_* مضبوطة
   let placements: any = null;
   try { if (!dry && miaarClient()) placements = await syncPlacements(db, { limit: 300 }); } catch (e: any) { placements = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, placements });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements });
 }
