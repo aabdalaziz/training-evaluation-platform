@@ -91,7 +91,7 @@ export async function POST(req: Request) {
     if (!form) return bad('بيانات ناقصة'); const err = validateContract(form, cohort); if (err) return bad(err);
     const payload = contractPayload(form, cohort);
     if (action === 'create') {
-      const { data, error } = await db.from('portal_impact_contracts').insert({ ...payload, created_by: user.id, token: contractToken(), status: 'draft' }).select(CONTRACT_COLS).single(); if (error) return bad(error.message);
+      const fd = String(body.factory_draft_id || ''); const { data, error } = await db.from('portal_impact_contracts').insert({ ...payload, created_by: user.id, token: contractToken(), status: 'draft', ...(/^[0-9a-f-]{36}$/i.test(fd) ? { factory_draft_id: fd } : {}) }).select(CONTRACT_COLS).single(); if (error) return bad(error.message);
       return NextResponse.json({ success: true, contract: rowToContract(data) });
     }
     const cur = await load(db, String(body.id || '')); if (!cur) return bad('العقد غير موجود', 404); if (cur.status !== 'draft') return bad('لا يُعدَّل إلا عقد في حالة مسودة');
