@@ -26,6 +26,7 @@ function Inner() {
   const [user, setUser] = useState<{ id: string; email: string; name: string } | null>(null); const [reg, setReg] = useState<Registration | null>(null); const [regCount, setRegCount] = useState<number | null>(null);
   const [now, setNow] = useState<Date | null>(null); const [loaded, setLoaded] = useState(false); const [visible, setVisible] = useState(true);
   const [email, setEmail] = useState(''); const [name, setName] = useState(''); const [org, setOrg] = useState(''); const [sent, setSent] = useState(false); const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
+  const [memo, setMemo] = useState<null | { title_ar: string; summary_ar: string; highlights_ar: string[]; gaps_ar: string[]; next_ar: string[]; trainer_note_ar?: string; attendance: { joined: number; registered: number } }>(null);
   const [acts, setActs] = useState<Activity[]>([]); const [mine, setMine] = useState<Record<string, ActivityResponse>>({}); const [draft, setDraft] = useState<Record<string, ActivityAnswer>>({}); const [actErr, setActErr] = useState<Record<string, string>>({}); const [series, setSeries] = useState<LiveSession[]>([]);
 
   async function token(): Promise<string> { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
@@ -46,6 +47,7 @@ function Inner() {
           setRoom(cr || null); setProgram(pg || null); setSkills((sk || []) as Skill[]); setResource(rs || null); if (at && (at as any).status === 'open') setAttendToken((at as any).token);
           const [{ data: ac }, { data: ser }] = await Promise.all([db.from('portal_session_activities').select('*').eq('session_id', id).eq('active', true).order('sort'), ses.series_id ? db.from('portal_sessions').select('*').eq('series_id', ses.series_id).neq('status', 'cancelled').order('starts_at') : Promise.resolve({ data: [] as any[] })]);
           setActs((ac || []) as Activity[]); setSeries((ser || []) as LiveSession[]);
+          if (u) { try { const { data: mm } = await db.from('portal_session_memos').select('memo,status').eq('session_id', id).eq('status', 'approved').maybeSingle(); if (mm && (mm as any).memo) setMemo((mm as any).memo); } catch { /* لا محضر */ } }
           if (u && (ac || []).length) { const { data: my } = await db.from('portal_activity_responses').select('*').eq('session_id', id).eq('user_id', u.id); const m: Record<string, ActivityResponse> = {}; for (const r of ((my || []) as ActivityResponse[])) m[r.activity_id] = r; setMine(m); }
           if (u && ['public', 'registered'].includes(ses.access)) { const [{ data: r }, { count }] = await Promise.all([db.from('portal_session_registrations').select('*').eq('session_id', id).eq('user_id', u.id).maybeSingle(), db.from('portal_session_registrations').select('id', { count: 'exact', head: true }).eq('session_id', id)]); setReg((r as Registration) || null); setRegCount(count ?? null); }
         }
@@ -108,6 +110,14 @@ function Inner() {
           {skills.length > 0 && <div className="pt-box"><h3><Icon name="target" size={18} /> {lang === 'ar' ? 'المهارات التي تنمّيها' : 'Skills developed'}</h3><div className="ls-skills">{skills.map(k => <div key={k.id} className="ls-skill"><div><b>{skillName(k, lang)}</b><small>{k.code} · {domainLabel(k.domain, lang)}</small></div><div className="ls-fw">{frameworkBadges(k).map(b => <span key={b.k} className={b.k}>{b.label}</span>)}</div></div>)}</div></div>}
           {(program || resource) && <div className="pt-box"><h3><Icon name="link" size={18} /> {lang === 'ar' ? 'مرتبط بـ' : 'Linked to'}</h3><div className="pt-chips">{program && <Link href={`/programs/${program.id}`} className="pt-btn light small"><Icon name="programs" size={14} /> {programName(program as any, lang)}</Link>}{resource && <Link href={`/resources/${resource.id}`} className="pt-btn light small"><Icon name="folder" size={14} /> {resTitle(resource, lang)}</Link>}</div></div>}
           {s.recording_url && <div className="pt-box ls-rec"><h3><Icon name="play" size={18} /> {lang === 'ar' ? 'تسجيل الجلسة' : 'Session recording'}</h3><button type="button" className="pt-btn" disabled={busy === 'rec'} onClick={watch}><Icon name="play" size={15} /> {busy === 'rec' ? '…' : (lang === 'ar' ? 'مشاهدة التسجيل' : 'Watch recording')}</button></div>}
+          {memo && <section className="pt-box ls-memo" id="memo"><h3><Icon name="doc" size={18} /> {lang === 'ar' ? 'محضر الأثر' : 'Impact memo'} <small>{lang === 'ar' ? 'اعتمده المدرب' : 'approved by the trainer'}</small></h3>
+            <p className="ls-memosum">{memo.summary_ar}</p>
+            <div className="ls-memogrid">
+              {!!memo.highlights_ar?.length && <div className="ok"><b>{lang === 'ar' ? 'ما ظهر' : 'What showed'}</b><ul>{memo.highlights_ar.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
+              {!!memo.next_ar?.length && <div><b>{lang === 'ar' ? 'الخطوة التالية' : 'Next'}</b><ul>{memo.next_ar.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
+            </div>
+            {memo.trainer_note_ar && <p className="ls-memonote"><b>{lang === 'ar' ? 'كلمة المدرب:' : 'Trainer:'}</b> {memo.trainer_note_ar}</p>}
+          </section>}
           {acts.length > 0 && (st === 'live' || st === 'ended') && <div className="pt-box ls-acts"><h3><Icon name="evaluations" size={18} /> {lang === 'ar' ? 'نشاط ما بعد الجلسة' : 'Post-session activity'} <small>({Object.keys(mine).length}/{acts.length})</small></h3>
             {!user && <p className="pt-muted">{lang === 'ar' ? 'سجّل الدخول للإجابة — تُحفظ إجاباتك كدليل مهارة في ملفك.' : 'Sign in to answer — responses are saved as skill evidence.'}</p>}
             <div className="ls-actlist">{acts.map((a, i) => { const done = mine[a.id]; const d = draft[a.id] || {}; const sk = a.skill_id ? skills.find(k => k.id === a.skill_id) : null; return (
@@ -155,6 +165,7 @@ function Inner() {
 }
 
 const CSS = `
+.ls-memo h3 small{font-weight:400;color:#64748b;font-size:12px;margin-inline-start:6px}.ls-memosum{font-size:15px;line-height:1.9;color:#1e293b}.ls-memogrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.ls-memogrid{grid-template-columns:1fr}}.ls-memogrid>div{background:#f8fafc;border-radius:12px;padding:10px 12px}.ls-memogrid>div.ok{background:#ecfdf5}.ls-memogrid b{display:block;font-size:13px;color:#0f2a4e;margin-bottom:4px}.ls-memogrid ul{margin:0;padding:0 18px;font-size:13px;line-height:1.8;color:#334155}.ls-memonote{background:#fffbeb;border-radius:10px;padding:8px 12px;font-size:14px;margin-top:10px}
 .ls-tags{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;font-weight:800;margin-bottom:10px}.ls-tags span{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:4px 10px}.ls-state.live{background:#dc2626!important}.ls-state.live i{width:8px;height:8px;border-radius:50%;background:#fff}.ls-state.soon{background:#d97706!important}.ls-state.ended{background:#475569!important}.ls-state.cancelled{background:#7f1d1d!important}
 .ls-when{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:15px;color:rgba(255,255,255,.9)}.ls-when b{color:#c9a24b}
 .ls-skills{display:grid;gap:8px}.ls-skill{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc}.ls-skill b{display:block;font-size:14px;color:#0f172a}.ls-skill small{color:#64748b;font-size:12px}
