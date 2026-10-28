@@ -22,6 +22,7 @@ import { runContractPulse } from '../../../../lib/portal/contracts-cron';
 import { runDailyPush } from '../../../../lib/portal/push';
 import { refreshGraph, ensureWeeklyLesson } from '../../../../lib/portal/evidence-cron';
 import { runLoop } from '../../../../lib/portal/loop-cron';
+import { runOutreach } from '../../../../lib/portal/outreach-cron';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -138,7 +139,10 @@ export async function GET(req: Request) {
   // P15 — الحلقة المغلقة: اقتراحات من الذاكرة + توقّعات القدرة للجهات (بعد تحديث الذاكرة مباشرة؛ لا كرون جديد)
   let loop: any = null;
   try { loop = await runLoop(db, today, { dry }); } catch (e: any) { loop = { ok: false, error: e?.message || String(e) }; }
+  // P16 — الإبلاغ متعدد القنوات: إعادة محاولة الرسائل المؤجَّلة (ساعات الهدوء) ثم إسقاطها في «قائمة اليد»، وتنظيف السجل القديم
+  let outreach: any = null;
+  try { outreach = await runOutreach(db, { dry }); } catch (e: any) { outreach = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach });
 }
