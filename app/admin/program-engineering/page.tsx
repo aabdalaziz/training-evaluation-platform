@@ -22,14 +22,16 @@ export default function ProgramEngineeringPage() {
   const db = supabase(); const router = useRouter();
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [tok, setTok] = useState(''); const [busy, setBusy] = useState('');
   const [data, setData] = useState<Data | null>(null); const [tab, setTab] = useState<'board' | 'new'>('board'); const [selId, setSelId] = useState<string | null>(null); const [need, setNeed] = useState<Need>(EMPTY_NEED); const [pubSkills, setPubSkills] = useState<string[]>([]); const [notes, setNotes] = useState('');
-  const H = (tk = tok) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` });
+  // رمز جلسة حديث قبل كل نداء (getSession يجدّد الرمز المنتهي تلقائيًا) — كي لا تظهر «جلسة غير صالحة» بعد ترك الصفحة مفتوحة طويلًا
+  const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
+  const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
   // P15 — فجوات حقيقية من الذاكرة الحية (الحلقة المغلقة): تُملأ بالنقر في نموذج الاحتياج
   type Gap = { fingerprint: string; title_ar: string; why_ar: string; evidence: { label: string; value: string }[]; target: any; score: number };
   const [gaps, setGaps] = useState<Gap[] | null>(null); const [gapsNote, setGapsNote] = useState('');
   async function loadGaps() { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; const j = await fetch('/api/loop?gaps=1', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setGaps([]); setGapsNote(j?.error || 'تعذّر قراءة الذاكرة'); return; } setGaps(j.gaps || []); setGapsNote(j.empty || ''); }
   function useGap(g: Gap) { const t = g.target || {}; const known = SECTORS_2062.some(x => x.code === t.sector); setNeed({ ...need, sector: known ? t.sector : need.sector, gap_ar: String(t.gap_ar || g.why_ar || ''), audience_ar: need.audience_ar || `منسوبو جهات قطاع ${t.sector || ''}`.trim() }); setGapsNote('مُلئ الاحتياج من الذاكرة — راجعه ثم ابدأ الاستشراف'); }
-  async function load(tk = tok) { const j = await fetch('/api/factory', { headers: H(tk) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
-  async function post(body: any): Promise<any> { setBusy(body.action); setError(''); setOk(''); try { const j = await fetch('/api/factory', { method: 'POST', headers: H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'خطأ'); await load(); return j; } catch (e: any) { setError(e.message); return null; } finally { setBusy(''); } }
+  async function load(tk?: string) { const j = await fetch('/api/factory', { headers: await H(tk) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
+  async function post(body: any): Promise<any> { setBusy(body.action); setError(''); setOk(''); try { const j = await fetch('/api/factory', { method: 'POST', headers: await H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'خطأ'); await load(); return j; } catch (e: any) { setError(e.message); return null; } finally { setBusy(''); } }
   useEffect(() => { (async () => {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/program-engineering'); return; }
     const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
