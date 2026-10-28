@@ -14,6 +14,8 @@ import { createClient } from '@supabase/supabase-js';
 import { sendViaResend } from '../../../lib/email/resend';
 import { computeSkillLevels, buildBadge, verifyCode, publicId, validateIssue, completionEligible } from '../../../lib/portal/profile';
 import type { LearningEventRow, IssueForm } from '../../../lib/portal/profile';
+import { buildCredentialDoc, didWeb } from '../../../lib/portal/vc';
+import { ensureKeyRow, signAndStoreCredential, signerFromEnv } from '../../../lib/portal/vc-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -100,23 +102,29 @@ export async function POST(req: Request) {
     if (error) return bad(error.message, 500); return NextResponse.json({ success: true });
   }
   if (action === 'revoke') {
-    const { error } = await db.from('portal_credentials').update({ revoked_at: new Date().toISOString(), revoke_reason: String(body.reason || '').slice(0, 300) || null }).eq('id', String(body.id || '')); if (error) return bad(error.message, 500); return NextResponse.json({ success: true });
+    const { error } = await db.from('portal_credentials').update({ revoked_at: new Date().toISOString(), revoke_reason: String(body.reason || '').slice(0, 300) || null }).eq('id', String(body.id || '')); if (error) return bad(error.message, 500);
+    // P17: الإلغاء يُعلَن في قائمة الحالة الموقَّعة
+    await db.from('portal_vc_issuances').update({ revoked_at: new Date().toISOString(), revoke_reason: String(body.reason || '').slice(0, 300) || null }).eq('credential_id', String(body.id || '')).then(() => null, () => null);
+    return NextResponse.json({ success: true });
   }
   if (action === 'issue') {
     const f = body.form as IssueForm; const recipients = (Array.isArray(body.recipients) ? body.recipients : []).map((r: any) => ({ email: String(r.email || '').trim().toLowerCase(), full_name: String(r.full_name || '').trim() || null })).filter((r: any) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email));
     const v = validateIssue(f, recipients.length); if (v) return bad(v);
     const { data: sk } = f.skills?.length ? await db.from('portal_skills').select('id,code,name_ar,name_en,saqf_level,cefr_level,sdaia_code').in('id', f.skills) : { data: [] as any[] };
-    const validUntil = f.valid_years ? new Date(Date.now() + Number(f.valid_years) * 365.25 * 86400000).toISOString() : null; let issued = 0; const errors: string[] = []; const notify = body.notify !== false;
+    const validUntil = f.valid_years ? new Date(Date.now() + Number(f.valid_years) * 365.25 * 86400000).toISOString() : null; let issued = 0; let signedCount = 0; const errors: string[] = []; const notify = body.notify !== false;
+    const signer = signerFromEnv(process.env, site); if (signer) await ensureKeyRow(db, signer);
     for (const r of recipients) {
       const base = { user_id: null as string | null, email: r.email, full_name: r.full_name, kind: f.kind, title_ar: f.title_ar.trim(), title_en: f.title_en.trim() || null, description_ar: f.description_ar.trim() || null, program_id: f.program_id || null, session_id: null, skills: f.skills || [], level: f.level || null, hours: f.hours ? Number(f.hours) : null, verify_code: verifyCode(), issued_at: new Date().toISOString(), valid_until: validUntil, revoked_at: null, revoke_reason: null, issued_by: user.id };
       const badge = buildBadge({ id: '', ...base }, (sk || []) as any[], site);
       const { data: ins, error } = await db.from('portal_credentials').insert({ ...base, badge }).select('id,user_id').single(); if (error) { errors.push(`${r.email}: ${error.message}`); continue; }
       issued++;
+      // P17: توقيع تشفيري فوري (Ed25519) إن كان المفتاح مضبوطًا — وإلا تبقى قابلة للتوقيع لاحقًا من «المفتاح والتوقيع»
+      if (signer) { try { const cred = { ...base, id: (ins as any).id, user_id: (ins as any).user_id || null }; await signAndStoreCredential(db, cred, signer, idx => buildCredentialDoc(cred as any, (sk || []) as any[], site, didWeb(site), idx), user.id); signedCount++; } catch (e: any) { errors.push(`${r.email}: توقيع — ${e?.message || e}`); } }
       await db.from('portal_learning_events').insert({ user_id: (ins as any).user_id || null, email: r.email, verb: 'issued', object_type: 'credential', object_id: (ins as any).id, skills: f.skills || [], context: { kind: f.kind, title: base.title_ar, level: f.level || null, program_id: f.program_id || null } });
       if ((ins as any).user_id) await recompute(db, (ins as any).user_id, r.email);
       if (notify) { const url = `${site}/credential/${base.verify_code}`; try { await sendViaResend({ to: [r.email], subject: `شهادتك الرقمية من أَثَر: ${base.title_ar}`, html: `<div dir="rtl" style="font-family:Tahoma,Arial;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden"><div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="color:#c9a24b;font-size:12px;font-weight:bold">أَثَر — شهادة رقمية قابلة للتحقق</div><div style="font-size:18px;font-weight:bold;margin-top:4px">${base.title_ar}</div></div><div style="padding:20px 22px;font-size:14px;line-height:1.9;color:#0f172a"><p>مرحبًا ${r.full_name || ''}،</p><p>صدرت لك شهادة رقمية${base.level ? ` بمستوى <b>${base.level}</b>` : ''}. رمز التحقق: <b dir="ltr">${base.verify_code}</b></p><p><a href="${url}" style="display:inline-block;background:#0b8a83;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:bold">عرض الشهادة والتحقق منها</a></p><p style="color:#64748b;font-size:12.5px">يمكنك مشاركة الرابط مع جهة العمل أو إضافته إلى LinkedIn، وستجد ملفك المهاري في ${site}/me/skills</p></div><div style="padding:12px 22px;background:#f8fafc;color:#64748b;font-size:11.5px">© 2026 د. أحمد محمد عبدالعزيز بدوي — أَثَر</div></div>`, tags: [{ name: 'kind', value: 'credential_issued' }] }); } catch (e: any) { errors.push(`${r.email}: بريد — ${e?.message || e}`); } }
     }
-    return NextResponse.json({ success: true, issued, errors: errors.length ? errors.slice(0, 5) : undefined });
+    return NextResponse.json({ success: true, issued, signed: signedCount, errors: errors.length ? errors.slice(0, 5) : undefined });
   }
   return bad('إجراء غير معروف');
 }
