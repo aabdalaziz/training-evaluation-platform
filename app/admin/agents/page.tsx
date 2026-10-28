@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // إدارة أَثَر — الوكلاء المفوَّضون (P14-ب): مفاتيح الجهات · طلبات الوكلاء (اعتماد بشري) · السجل · «جرّب كوكيل» قبل منح أي مفتاح
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
@@ -23,7 +23,9 @@ export default function AdminAgentsPage() {
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [tok, setTok] = useState(''); const [data, setData] = useState<Data | null>(null); const [tab, setTab] = useState<'requests' | 'keys' | 'log' | 'sandbox'>('requests');
   const [form, setForm] = useState({ name: '', organization_id: '', scopes: DEFAULT_SCOPES as Scope[], daily_limit: 200, expires_days: 365, note: '' }); const [issued, setIssued] = useState<{ key: string; name: string } | null>(null); const [busy, setBusy] = useState('');
   const [note, setNote] = useState<Record<string, string>>({}); const [sbTool, setSbTool] = useState('skill_fit'); const [sbArgs, setSbArgs] = useState(SAMPLE.skill_fit); const [sbOut, setSbOut] = useState<any>(null);
-  const hdr = useMemo(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }), [tok]);
+  // رمز جلسة حديث قبل كل نداء (getSession يجدّد الرمز المنتهي تلقائيًا) — كي لا تفشل العمليات بعد ترك الصفحة مفتوحة طويلًا
+  const fresh = useCallback(async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk !== tok) setTok(tk); return tk; }, [db, tok]);
+  const hdr = useCallback(async () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${await fresh()}` }), [fresh]);
   async function load(tk: string) { const j = await fetch('/api/agents', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
   useEffect(() => {
     (async () => {
@@ -33,11 +35,11 @@ export default function AdminAgentsPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  async function post(body: any) { return fetch('/api/agents', { method: 'POST', headers: hdr, body: JSON.stringify(body) }).then(r => r.json()).catch(() => null); }
-  async function createKey() { setBusy('key'); const j = await post({ action: 'key_create', ...form, organization_id: form.organization_id || null }); if (!j?.success) setError(j?.error || 'تعذّر الإنشاء'); else { setIssued({ key: j.key, name: form.name }); setForm(f => ({ ...f, name: '', note: '' })); await load(tok); } setBusy(''); }
-  async function revoke(id: string) { if (!confirm('إبطال المفتاح فورًا؟ لا يمكن التراجع.')) return; setBusy(id); await post({ action: 'key_revoke', id }); await load(tok); setBusy(''); }
-  async function decide(id: string, status: 'approved' | 'rejected') { setBusy(id); const j = await post({ action: 'decide', id, status, note: note[id] || '' }); if (!j?.success) setError(j?.error || 'تعذّر الحفظ'); await load(tok); setBusy(''); }
-  async function runSandbox() { setBusy('sb'); setSbOut(null); let args: any = {}; try { args = JSON.parse(sbArgs || '{}'); } catch { setSbOut({ success: false, error: 'JSON غير صالح' }); setBusy(''); return; } const j = await fetch('/api/agent', { method: 'POST', headers: hdr, body: JSON.stringify({ tool: sbTool, args, sandbox: true }) }).then(r => r.json()).catch(e => ({ success: false, error: String(e) })); setSbOut(j); await load(tok); setBusy(''); }
+  async function post(body: any) { return fetch('/api/agents', { method: 'POST', headers: await hdr(), body: JSON.stringify(body) }).then(r => r.json()).catch(() => null); }
+  async function createKey() { setBusy('key'); const j = await post({ action: 'key_create', ...form, organization_id: form.organization_id || null }); if (!j?.success) setError(j?.error || 'تعذّر الإنشاء'); else { setIssued({ key: j.key, name: form.name }); setForm(f => ({ ...f, name: '', note: '' })); await load(await fresh()); } setBusy(''); }
+  async function revoke(id: string) { if (!confirm('إبطال المفتاح فورًا؟ لا يمكن التراجع.')) return; setBusy(id); await post({ action: 'key_revoke', id }); await load(await fresh()); setBusy(''); }
+  async function decide(id: string, status: 'approved' | 'rejected') { setBusy(id); const j = await post({ action: 'decide', id, status, note: note[id] || '' }); if (!j?.success) setError(j?.error || 'تعذّر الحفظ'); await load(await fresh()); setBusy(''); }
+  async function runSandbox() { setBusy('sb'); setSbOut(null); let args: any = {}; try { args = JSON.parse(sbArgs || '{}'); } catch { setSbOut({ success: false, error: 'JSON غير صالح' }); setBusy(''); return; } const j = await fetch('/api/agent', { method: 'POST', headers: await hdr(), body: JSON.stringify({ tool: sbTool, args, sandbox: true }) }).then(r => r.json()).catch(e => ({ success: false, error: String(e) })); setSbOut(j); await load(await fresh()); setBusy(''); }
 
   if (!ready) return <div className="ag"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="ag-wrap"><div className="ag-card">{error ? <span className="ag-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   const pending = (data?.requests || []).filter(r => r.status === 'pending');
