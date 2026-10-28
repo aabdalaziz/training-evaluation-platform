@@ -6,7 +6,7 @@
  *  GET  ?session=<id>                                       → غرف جلسة حية (مسجّل دخول)
  *  POST { action:'create', kind:'dialogue'|'consult', title?, prompt?, minutes? }            → غرفة واحدة (أي مستخدم مسجّل · 3 غرف مفتوحة كحد أقصى)
  *  POST { action:'breakouts', session_id, count?, prompt?, minutes? }                        → غرف صغيرة لجلسة (موظف/مدرب الجلسة/منشئها)
- *  POST { action:'note', code, text }                                                        → سطر الغرفة الذي تعود به إلى الجلسة (يظهر في الطيار والمحضر)
+ *  POST { action:'note', code, text }                                                        → سطر الغرفة الذي تعود به إلى الجلسة (يظهر في الميسِّر والمحضر)
  *  POST { action:'close', code }                                                             → إغلاق (المنشئ/موظف)
  */
 import { NextResponse } from 'next/server';
