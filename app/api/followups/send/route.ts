@@ -115,7 +115,18 @@ export async function GET(req: Request) {
     if (!dc && !dry) { try { await fetch(`${site}/api/daily`, { cache: 'no-store' }); } catch { /* تجاهل */ } ({ data: dc } = await db.from('portal_daily_cases').select('title_ar,event_name_ar').eq('day', rDay).maybeSingle()); }
     daily_push = await runDailyPush(db, site, rDay, (dc as any) || null, { dry });
   } catch (e: any) { daily_push = { ok: false, error: e?.message || String(e) }; }
+  // تنظيف الوسائط والغرف (أَثَر · P13-ج): حذف التسجيلات غير المعتمدة بعد 180 يومًا من المخزن والسجل، وإغلاق الغرف المفتوحة منذ أكثر من 6 ساعات
+  let media_cleanup: any = null;
+  try {
+    const nowIso = new Date().toISOString();
+    const { data: expired } = await db.from('portal_media').select('id,path').neq('status', 'approved').lt('expires_at', nowIso).limit(100);
+    const paths = ((expired || []) as any[]).map(m => m.path); const ids = ((expired || []) as any[]).map(m => m.id);
+    if (!dry && ids.length) { try { await db.storage.from('athar-media').remove(paths); } catch { /* ignore */ } await db.from('portal_learning_events').delete().eq('object_type', 'media').in('object_id', ids); await db.from('portal_media').delete().in('id', ids); }
+    const { data: stale } = await db.from('portal_rooms').select('id').eq('status', 'open').lt('created_at', new Date(Date.now() - 6 * 3600000).toISOString()).limit(200);
+    const roomIds = ((stale || []) as any[]).map(r => r.id); if (!dry && roomIds.length) await db.from('portal_rooms').update({ status: 'closed', closed_at: nowIso }).in('id', roomIds);
+    media_cleanup = { ok: true, media_deleted: ids.length, rooms_closed: roomIds.length, dry };
+  } catch (e: any) { media_cleanup = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup });
 }
