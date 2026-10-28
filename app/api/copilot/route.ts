@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/copilot — «الطيار المساعد الحي» للجلسات المباشرة (أَثَر · P13-ب)
+ * /api/copilot — «الميسِّر الحي» للجلسات المباشرة (أَثَر · P13-ب)
  *  يصل إليه: موظفو البوابة، أو مدرب الجلسة (trainers.email = بريد المستخدم و portal_sessions.trainer_id = trainers.id)، أو من أنشأ الجلسة.
  *  GET  ?id=<session>                                   → { session, pulse, suggestions, notes, log, memo, skills }
  *  POST { action:'accept',  session_id, suggestion }    → تنفيذ مقترح: إنشاء نشاط (activity) أو تذكير الغائبين (remind) — بضغطة واحدة، والقرار للمدرب
