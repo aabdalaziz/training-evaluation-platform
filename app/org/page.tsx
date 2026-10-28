@@ -2,6 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // أَثَر — بوابة الجهات (B2B + توصيات ذكية P9-أ): لوحة أثر التدريب على المنسوبين، تأكيد الأعضاء، الدعوات، التسجيل الجماعي، حقائب الجهة، تقرير قابل للطباعة
 
+import { peopleN, evN } from '../../lib/portal/evidence';
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase/client';
@@ -34,6 +35,12 @@ function Inner() {
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false); const [inviteText, setInviteText] = useState(''); const [bulkText, setBulkText] = useState(''); const [bulkProg, setBulkProg] = useState(''); const [bulkNote, setBulkNote] = useState('');
 
   async function token() { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
+  // P15 — توقّع القدرة المؤسسية («طقس القدرة»): اتجاه مهارات الجهة خلال 90 يومًا من أدلة المنسوبين المؤكَّدين — بلا أسماء
+  type Wx = { forecasts: { skill_id: string; name_ar: string; trend: 'rising' | 'steady' | 'fading' | 'unknown'; slope: number; people: number; evidence: number; steps: { title_ar: string; why_ar: string }[] }[]; line: string; members: number; events: number; steps: { title_ar: string; why_ar: string }[]; min_people: number };
+  const [wx, setWx] = useState<Wx | null>(null); const [wxErr, setWxErr] = useState('');
+  useEffect(() => { if (!orgId) { setWx(null); return; } (async () => { setWx(null); setWxErr(''); const tk = await token(); const j = await fetch(`/api/loop?org=${encodeURIComponent(orgId)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setWxErr(j?.error || 'x'); return; } setWx(j); })(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId]);
+  const TREND_TXT = { rising: ['ترتفع', 'rising'], steady: ['تستقر', 'steady'], fading: ['تذوي', 'fading'], unknown: ['لا دليل كافٍ', 'not enough evidence'] } as const;
   async function api(body: any) { const tk = await token(); const r = await fetch('/api/org', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify(body) }); const txt = await r.text(); let j: any; try { j = JSON.parse(txt); } catch { throw new Error(`رد غير صالح (${r.status})`); } if (!j.success) throw new Error(j.error || 'خطأ'); return j; }
   const [brief, setBrief] = useState<{ data: OrgBrief; source: string } | null>(null);
   const [contracts, setContracts] = useState<ContractItem[] | null>(null);
@@ -80,6 +87,18 @@ function Inner() {
           <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
           {busy === 'dash' && !d && <div className="pt-empty">…</div>}
 
+          {d && k && tab === 'impact' && <div className="og-wx" data-testid="org-weather">
+            <div className="og-wxhead"><div><b><Icon name="trend" size={16} /> {lang === 'ar' ? 'توقّع القدرة المؤسسية — 90 يومًا' : 'Organizational capability forecast — 90 days'}</b><small>{lang === 'ar' ? '«طقس القدرة»: أي مهارات جهتكم ترتفع أو تذوي بحسب أدلة المنسوبين المؤكَّدين — بلا أسماء، وحين لا يكفي الدليل نقولها.' : 'Which of your skills are rising or fading, from confirmed members’ evidence — no names; when evidence is thin we say so.'}</small></div>
+              {wx && <span className="og-wxline">{wx.line}</span>}</div>
+            {!wx && !wxErr && <p className="pt-muted">{lang === 'ar' ? 'جارٍ قراءة الذاكرة…' : 'Reading memory…'}</p>}
+            {wxErr && <p className="pt-muted">{lang === 'ar' ? 'لا دليل كافٍ بعد — سيظهر التوقّع حين يترك منسوبوكم المؤكَّدون أدلة تعلّم.' : 'Not enough evidence yet.'}</p>}
+            {wx && !wx.forecasts.length && <p className="pt-muted">{lang === 'ar' ? `لا دليل كافٍ بعد: ${wx.members} منسوبًا مؤكَّدًا و${wx.events} دليلًا — التوقّع يحتاج أدلة في نافذتين متتاليتين من 45 يومًا.` : `Not enough evidence yet: ${wx.members} confirmed members, ${wx.events} evidence events.`}</p>}
+            {wx && wx.forecasts.length > 0 && <>
+              <div className="og-wxgrid">{wx.forecasts.slice(0, 8).map(f => <div key={f.skill_id} className={`og-wxs ${f.trend}`}><b>{f.name_ar}</b><span>{TREND_TXT[f.trend][lang === 'ar' ? 0 : 1]}</span><small>{lang === 'ar' ? `${peopleN(f.people)} · ${evN(f.evidence)}` : `${f.people} people · ${f.evidence} evidence`}{f.people < (wx.min_people || 5) ? (lang === 'ar' ? ' · تقديري' : ' · indicative') : ''}</small></div>)}</div>
+              {wx.steps.length > 0 && <div className="og-wxsteps"><h4>{lang === 'ar' ? (wx.steps.length >= 3 ? 'ثلاث خطوات تغيّر التوقّع' : wx.steps.length === 2 ? 'خطوتان تغيّران التوقّع' : 'خطوة تغيّر التوقّع') : 'Steps that change the forecast'}</h4><ol>{wx.steps.slice(0, 3).map((s, i) => <li key={i}><b>{s.title_ar}</b> — {s.why_ar}</li>)}</ol></div>}
+              {!wx.steps.length && <p className="pt-muted">{lang === 'ar' ? 'لا خطوات مقترحة الآن — حافظوا على الإيقاع.' : 'No suggested steps right now — keep the rhythm.'}</p>}
+            </>}
+          </div>}
           {d && k && tab === 'impact' && <div className="og-grid">
             <div className="og-ai"><div><b><Icon name="star" size={16} /> {lang === 'ar' ? 'توصيات ذكية للجهة' : 'Smart recommendations'}</b><small>{lang === 'ar' ? 'يلخّص المساعد فجوات المنسوبين ويقترح برامج — دون تسمية أفراد، والقرار لكم.' : 'Summarises gaps and suggests programs — no individuals named; you decide.'}</small></div><button type="button" className="pt-btn" disabled={busy === 'ai'} onClick={aiBrief}>{busy === 'ai' ? (lang === 'ar' ? 'جارٍ التحليل…' : 'Analysing…') : brief ? (lang === 'ar' ? 'تحديث' : 'Refresh') : (lang === 'ar' ? 'اقترح' : 'Suggest')}</button>
               {brief && <div className="og-brief"><div className="og-briefhead"><b>{brief.data.headline}</b><span className={`og-src ${brief.source}`}>{brief.source === 'ai' ? 'AI' : (lang === 'ar' ? 'محلي' : 'local')}</span></div>
@@ -137,6 +156,7 @@ function Inner() {
 }
 
 const CSS = `
+.og-wx{border:1px solid #cfe9e6;background:linear-gradient(135deg,#f6fffe,#fff);border-radius:14px;padding:14px 16px;margin-bottom:14px}.og-wxhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}.og-wxhead b{display:flex;gap:6px;align-items:center;color:#0f2a4e;font-size:15px}.og-wxhead small{display:block;color:#64748b;font-size:12px;margin-top:2px;max-width:640px;line-height:1.6}.og-wxline{background:#0f2a4e;color:#fde68a;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800}.og-wxgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;margin-top:10px}.og-wxs{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;display:grid;gap:2px;border-inline-start:4px solid #94a3b8}.og-wxs b{font-size:13px;color:#0f2a4e}.og-wxs span{font-size:12px;font-weight:800}.og-wxs small{font-size:11px;color:#94a3b8}.og-wxs.rising{border-inline-start-color:#0b8a83}.og-wxs.rising span{color:#0b8a83}.og-wxs.fading{border-inline-start-color:#dc2626}.og-wxs.fading span{color:#dc2626}.og-wxs.steady span{color:#64748b}.og-wxs.unknown span{color:#94a3b8}.og-wxsteps{margin-top:10px}.og-wxsteps h4{margin:0 0 4px;font-size:13px;color:#0f2a4e}.og-wxsteps ol{margin:0;padding-inline-start:20px;font-size:13px;color:#334155;line-height:1.8}
 .og-pick{margin-top:12px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:8px 12px;font:inherit}.og-pick option{color:#0f172a}
 .og-notice{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff7ed;border:1px solid #fdba74;border-radius:14px;padding:10px 14px;margin-bottom:12px;color:#9a3412;font-weight:800;font-size:13.5px}
 .og-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}.og-tabs button{border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:9px 16px;font:inherit;font-weight:800;font-size:13.5px;color:#334155;cursor:pointer;display:inline-flex;gap:6px;align-items:center}.og-tabs button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.og-tabs i{font-style:normal;background:#dc2626;color:#fff;border-radius:999px;padding:0 7px;font-size:11px}
