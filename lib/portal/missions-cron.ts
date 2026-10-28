@@ -15,9 +15,11 @@ import type { Mission, MissionTemplate, MissionEvidence, AiCheck } from './missi
 
 export const MISSION_COLS = 'id,created_at,template_id,user_id,email,full_name,program_id,skills,title_ar,brief_ar,evidence_mode,rubric,token,confirm_token,status,due_at,sent_at,submitted_at,evidence,ai,supervisor_email,supervisor_name,confirmed_at,confirmed_by,confirm_note,reminders';
 
-export async function mail(to: string, m: { subject: string; html: string }): Promise<boolean> {
-  try { await sendViaResend({ to: [to], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: 'mission' }] }); return true; } catch { return false; }
+/** إرسال عبر محرك الإبلاغ متعدد القنوات (P16): النوع يحدّد قالب واتساب، والرابط/الاسم/المعلمات تُغذّي متغيراته؛ الرسالة لا تضيع (قائمة اليد عند الفشل) */
+export async function mail(to: string, m: { subject: string; html: string }, x: { kind?: string; url?: string; ref?: string; name?: string | null; params?: Record<string, string> } = {}): Promise<boolean> {
+  try { await sendViaResend({ to: [to], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: x.kind || 'mission' }], kind: x.kind || 'mission', url: x.url, ref: x.ref, name: x.name || null, params: x.params }); return true; } catch { return false; }
 }
+const arDays = (n: number) => n <= 0 ? 'اليوم' : n === 1 ? 'يوم واحد' : n === 2 ? 'يومان' : n <= 10 ? `${n} أيام` : `${n} يومًا`;
 
 /** إعادة حساب مستويات المهارات لمستخدم (نفس منطق /api/profile) — تُستدعى بعد إدخال/تأكيد دليل مهمة */
 export async function recomputeSkills(db: any, userId: string | null, email: string): Promise<number> {
@@ -44,7 +46,7 @@ export async function assignMission(db: any, tpl: MissionTemplate, person: Perso
   const row = { template_id: tpl.id, user_id: person.user_id || await userIdByEmail(db, email), email, full_name: person.full_name || null, program_id: tpl.program_id || null, skills: tpl.skills || [], title_ar: tpl.title_ar, brief_ar: tpl.brief_ar, evidence_mode: tpl.evidence_mode, rubric: tpl.rubric || [], token: missionToken(), confirm_token: missionToken(), status: 'assigned', due_at: dueAt(now, tpl.due_days), sent_at: null as string | null, reminders: 0 };
   if (opts.dry) return { ...row, id: 'dry', created_at: now.toISOString() } as Mission;
   const { data: ins, error } = await db.from('portal_missions').insert(row).select(MISSION_COLS).single(); if (error || !ins) return null;
-  if (opts.send !== false) { const ok = await mail(email, missionMailHtml(ins, missionUrl(site, ins.token), opts.programName)); if (ok) await db.from('portal_missions').update({ sent_at: now.toISOString() }).eq('id', ins.id); return { ...ins, sent_at: ok ? now.toISOString() : null }; }
+  if (opts.send !== false) { const ok = await mail(email, missionMailHtml(ins, missionUrl(site, ins.token), opts.programName), { kind: 'mission_assigned', url: missionUrl(site, ins.token), ref: ins.id, name: ins.full_name, params: { title: ins.title_ar, due: arDays(daysLeft(ins.due_at, now)) } }); if (ok) await db.from('portal_missions').update({ sent_at: now.toISOString() }).eq('id', ins.id); return { ...ins, sent_at: ok ? now.toISOString() : null }; }
   return ins;
 }
 
@@ -67,7 +69,7 @@ export async function submitMission(db: any, m: Mission, ev: MissionEvidence, su
   if ((old || []).length) await db.from('portal_learning_events').update({ context: evRow.context, at: now.toISOString() }).eq('id', old[0].id); else await db.from('portal_learning_events').insert(evRow);
   await recomputeSkills(db, m.user_id || null, m.email);
   let supervisor_mailed = false;
-  if (patch.supervisor_email) supervisor_mailed = await mail(patch.supervisor_email, supervisorMailHtml({ ...m, ...patch }, ai, confirmUrl(site, m.confirm_token)));
+  if (patch.supervisor_email) supervisor_mailed = await mail(patch.supervisor_email, supervisorMailHtml({ ...m, ...patch }, ai, confirmUrl(site, m.confirm_token)), { kind: 'mission_confirm', url: confirmUrl(site, m.confirm_token), ref: m.id, name: patch.supervisor_name || null, params: { title: m.title_ar, learner: m.full_name || m.email } });
   return { mission: { ...m, ...patch } as Mission, ai, supervisor_mailed };
 }
 
@@ -79,7 +81,7 @@ export async function decideMission(db: any, m: Mission, decision: 'confirmed' |
   const ctx = { ...((old || [])[0]?.context || missionEvent(m, m.ai?.score ?? 0, false).context), confirmed: decision === 'confirmed', returned: decision === 'returned' };
   if ((old || []).length) await db.from('portal_learning_events').update({ context: ctx }).eq('id', old[0].id); else await db.from('portal_learning_events').insert({ ...missionEvent(m, m.ai?.score ?? 0, decision === 'confirmed'), context: ctx });
   await recomputeSkills(db, m.user_id || null, m.email);
-  await mail(m.email, confirmedMailHtml({ ...m, confirmed_by: by.name }, `${site}/me/twin`, decision === 'returned', by.note));
+  await mail(m.email, confirmedMailHtml({ ...m, confirmed_by: by.name }, `${site}/me/twin`, decision === 'returned', by.note), { kind: 'mission_result', url: decision === 'returned' ? missionUrl(site, m.token) : `${site}/me/twin`, ref: m.id, name: m.full_name });
   return { ...m, ...patch } as Mission;
 }
 
@@ -103,7 +105,7 @@ export async function runMissionCycle(db: any, site: string, opts: { dry?: boole
     }
     // تذكير واحد قبل يومين من المهلة أو بعد تجاوزها
     const { data: due } = await db.from('portal_missions').select(MISSION_COLS).eq('status', 'assigned').lt('reminders', 1).lte('due_at', addDays(now, 2)).limit(300);
-    for (const m of (due || []) as Mission[]) { if (daysLeft(m.due_at, now) < -7) continue; if (!dry) { await mail(m.email, reminderMailHtml(m, missionUrl(site, m.token))); await db.from('portal_missions').update({ reminders: (m.reminders || 0) + 1 }).eq('id', m.id); } out.reminded++; }
+    for (const m of (due || []) as Mission[]) { if (daysLeft(m.due_at, now) < -7) continue; if (!dry) { await mail(m.email, reminderMailHtml(m, missionUrl(site, m.token)), { kind: 'mission_reminder', url: missionUrl(site, m.token), ref: m.id, name: m.full_name, params: { title: m.title_ar, left: arDays(daysLeft(m.due_at, now)) } }); await db.from('portal_missions').update({ reminders: (m.reminders || 0) + 1 }).eq('id', m.id); } out.reminded++; }
     // انتهاء المهلة بعد 7 أيام
     const { data: late } = await db.from('portal_missions').select('id').eq('status', 'assigned').lt('due_at', addDays(now, -7)).limit(500);
     if ((late || []).length && !dry) await db.from('portal_missions').update({ status: 'expired' }).in('id', (late as any[]).map(x => x.id));
