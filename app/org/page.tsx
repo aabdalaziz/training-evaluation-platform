@@ -20,11 +20,13 @@ import type { OrgBrief } from '../../lib/ai/prompts';
 import { typeLabel } from '../../lib/portal/resources';
 import { MILESTONE_LABEL, MS_STATUS_LABEL, STATUS_LABEL as C_STATUS, HEALTH_LABEL, money, contractUrl } from '../../lib/portal/contracts';
 import type { ContractState, ContractStatus } from '../../lib/portal/contracts';
+import { WEATHER_LABEL, CONF_LABEL } from '../../lib/portal/observatory';
+import type { OrgPosition } from '../../lib/portal/observatory';
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
 type Org = { id: string; name_ar: string; name_en?: string | null; sector?: string | null; email_domain?: string | null; city?: string | null };
-type Tab = 'impact' | 'members' | 'bulk' | 'resources' | 'contracts' | 'report';
+type Tab = 'impact' | 'members' | 'bulk' | 'resources' | 'contracts' | 'observatory' | 'report';
 type ContractItem = { contract: { id: string; title_ar: string; total_amount: number; currency: string; status: ContractStatus; cohort_size: number; token: string; program_name?: string; delivered_at?: string | null }; state: ContractState };
 
 function Inner() {
@@ -40,6 +42,12 @@ function Inner() {
   const [wx, setWx] = useState<Wx | null>(null); const [wxErr, setWxErr] = useState('');
   useEffect(() => { if (!orgId) { setWx(null); return; } (async () => { setWx(null); setWxErr(''); const tk = await token(); const j = await fetch(`/api/loop?org=${encodeURIComponent(orgId)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setWxErr(j?.error || 'x'); return; } setWx(j); })(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
+  // P18 — المرصد: موقع الجهة مقابل قطاعها (بلا أسماء منافسين) + اشتراك «أبلغني» + الظهور بالاسم كـ«مساهم في المرصد»
+  type ObsOrg = { position: OrgPosition; org: { id: string; name_ar: string; sector: string | null; observatory_public: boolean; observatory_watch: boolean; has_contact: boolean }; computed_at: string };
+  const [obs, setObs] = useState<ObsOrg | null>(null); const [obsErr, setObsErr] = useState(''); const [obsBusy, setObsBusy] = useState('');
+  async function loadObs(id: string, keep = false) { if (!keep) setObs(null); setObsErr(''); try { const tk = await token(); const j = await fetch(`/api/observatory?view=org&org=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()); if (!j.success) throw new Error(j.error); setObs(j); } catch (e: any) { setObsErr(e.message || String(e)); } }
+  useEffect(() => { if (tab === 'observatory' && orgId) void loadObs(orgId); }, [tab, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  async function obsPrefs(patch: { watch?: boolean; public?: boolean }) { if (!orgId || obsBusy) return; setObsBusy(patch.watch !== undefined ? 'watch' : 'public'); setObsErr(''); try { const tk = await token(); const j = await fetch('/api/observatory', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ action: 'org_prefs', org: orgId, ...patch }) }).then(r => r.json()); if (!j.success) throw new Error(j.error); await loadObs(orgId, true); } catch (e: any) { setObsErr(e.message || String(e)); } setObsBusy(''); }
   const TREND_TXT = { rising: ['ترتفع', 'rising'], steady: ['تستقر', 'steady'], fading: ['تذوي', 'fading'], unknown: ['لا دليل كافٍ', 'not enough evidence'] } as const;
   async function api(body: any) { const tk = await token(); const r = await fetch('/api/org', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify(body) }); const txt = await r.text(); let j: any; try { j = JSON.parse(txt); } catch { throw new Error(`رد غير صالح (${r.status})`); } if (!j.success) throw new Error(j.error || 'خطأ'); return j; }
   const [brief, setBrief] = useState<{ data: OrgBrief; source: string } | null>(null);
@@ -84,7 +92,7 @@ function Inner() {
         {loaded && user && org && <>
           {err && <div className="pt-alert err">{err}</div>}{ok && <div className="pt-alert ok">{ok}</div>}
           {pendingMembers.length > 0 && tab !== 'members' && <div className="og-notice"><Icon name="bell" size={16} /> {lang === 'ar' ? `${pendingMembers.length} عضو جديد من نطاق بريد جهتكم بانتظار تأكيدك.` : `${pendingMembers.length} new member(s) from your email domain await your confirmation.`} <button type="button" className="pt-btn small" onClick={() => setTab('members')}>{lang === 'ar' ? 'مراجعة' : 'Review'}</button></div>}
-          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
+          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['observatory', 'المرصد', 'Observatory'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
           {busy === 'dash' && !d && <div className="pt-empty">…</div>}
 
           {d && k && tab === 'impact' && <div className="og-wx" data-testid="org-weather">
@@ -141,6 +149,32 @@ function Inner() {
               <Link href={contractUrl(c.token)} className="pt-btn small">{lang === 'ar' ? 'الصفحة الحية للعقد' : 'Open live page'}</Link>
             </article>)}</div>}
           </div>}
+          {tab === 'observatory' && <div className="og-grid og-obs" data-testid="org-obs">
+            <div className="pt-box"><h3><Icon name="globe" size={18} /> {lang === 'ar' ? 'موقع جهتكم في طقس القطاع' : 'Your position in the sector weather'}</h3>
+              {obsErr && <p className="pt-alert err">{obsErr}</p>}{!obs && !obsErr && <p className="pt-muted">…</p>}
+              {obs && <>
+                {obs.position.sector_report ? <div className="og-obs-sec" style={{ borderColor: WEATHER_LABEL[obs.position.sector_report.weather].color }}><span className="og-obs-ico">{WEATHER_LABEL[obs.position.sector_report.weather].icon}</span><div><b>{lang === 'ar' ? obs.position.sector_report.name_ar : obs.position.sector_report.name_en}</b><small>{lang === 'ar' ? 'طقس القطاع' : 'Sector weather'}: {lang === 'ar' ? WEATHER_LABEL[obs.position.sector_report.weather].ar : WEATHER_LABEL[obs.position.sector_report.weather].en}{obs.position.sector_report.cell ? ` · ${lang === 'ar' ? 'مؤشر القطاع' : 'sector index'} ${obs.position.sector_report.cell.index} · ${lang === 'ar' ? CONF_LABEL[obs.position.sector_report.cell.confidence].ar : CONF_LABEL[obs.position.sector_report.cell.confidence].en}` : ` · ${lang === 'ar' ? 'القطاع مكتوم حاليًا (أقل من حدّ النشر)' : 'sector suppressed (below threshold)'}`}</small></div></div> : <p className="pt-muted">{lang === 'ar' ? 'لم يُحدَّد قطاع لجهتكم أو لا بيانات للقطاع بعد.' : 'No sector set or no sector data yet.'}</p>}
+                <div className="og-obs-pos" data-testid="org-obs-position">
+                  <div><span>{lang === 'ar' ? 'مؤشر جهتكم' : 'Your index'}</span><b>{obs.position.org_index ?? '—'}</b></div>
+                  <div><span>{lang === 'ar' ? 'مؤشر القطاع' : 'Sector index'}</span><b>{obs.position.sector_report?.cell?.index ?? '—'}</b></div>
+                  <div><span>{lang === 'ar' ? 'المستوى من الأدلة' : 'Evidence level'}</span><b>{obs.position.org_level ?? '—'}</b></div>
+                  <div><span>{lang === 'ar' ? 'منسوبون بمستويات' : 'Members with levels'}</span><b>{obs.position.members_band}</b></div>
+                  <div><span>{lang === 'ar' ? 'المئين في القطاع' : 'Percentile in sector'}</span><b>{obs.position.percentile !== null ? `${obs.position.percentile}%` : '—'}</b></div>
+                </div>
+                <p className="pt-muted">{obs.position.note_ar}</p>
+                {obs.position.sector_report && (obs.position.sector_report.rising.length > 0 || obs.position.sector_report.cooling.length > 0) && <div className="og-obs-sig"><div><h4>☀ {lang === 'ar' ? 'يصعد في قطاعكم' : 'Rising in your sector'}</h4>{obs.position.sector_report.rising.map(g => <p key={g.skill_id}><b>{lang === 'ar' ? g.name_ar : g.name_en || g.name_ar}</b> <small>+{g.delta} · {lang === 'ar' ? g.why_ar : g.why_en}</small></p>)}{!obs.position.sector_report.rising.length && <p className="pt-muted">—</p>}</div><div><h4>🌧 {lang === 'ar' ? 'يبرد في قطاعكم' : 'Cooling in your sector'}</h4>{obs.position.sector_report.cooling.map(g => <p key={g.skill_id}><b>{lang === 'ar' ? g.name_ar : g.name_en || g.name_ar}</b> <small>{g.delta} · {lang === 'ar' ? g.why_ar : g.why_en}</small></p>)}{!obs.position.sector_report.cooling.length && <p className="pt-muted">—</p>}</div></div>}
+                <small className="pt-muted">{lang === 'ar' ? 'المقارنة مع القطاع بلا أسماء جهات أخرى، ولا يرى أحد موقعكم. ' : 'No other organisation is named, and nobody sees your position. '}<Link href="/observatory" target="_blank">{lang === 'ar' ? 'المرصد العام ↗' : 'Public observatory ↗'}</Link></small>
+              </>}
+            </div>
+            <div className="pt-box"><h3><Icon name="bell" size={18} /> {lang === 'ar' ? 'اشتراك المرصد' : 'Observatory subscription'}</h3>
+              {obs && <>
+                <label className="og-obs-opt"><input type="checkbox" checked={obs.org.observatory_watch} disabled={!!obsBusy} onChange={e => obsPrefs({ watch: e.target.checked })} data-testid="org-obs-watch" /><div><b>{lang === 'ar' ? 'أبلغني حين يتغيّر طقس قطاعي' : 'Notify me when my sector weather changes'}</b><small>{lang === 'ar' ? `يصل إشعار إلى بريد الجهة${obs.org.has_contact ? '' : ' (لم يُسجَّل بريد تواصل للجهة بعد — يضيفه فريق أَثَر)'} بأي قناة متاحة.` : 'A message reaches the organisation contact via any available channel.'}</small></div></label>
+                <label className="og-obs-opt"><input type="checkbox" checked={obs.org.observatory_public} disabled={!!obsBusy} onChange={e => obsPrefs({ public: e.target.checked })} data-testid="org-obs-optin" /><div><b>{lang === 'ar' ? 'الظهور بالاسم كـ«مساهم في المرصد»' : 'Appear by name as an “observatory contributor”'}</b><small>{lang === 'ar' ? 'يظهر اسم جهتكم فقط في قائمة المساهمين بالصفحة العامة — لا أرقام ولا موقع ولا أفراد. يمكن التراجع في أي وقت.' : 'Only your organisation name appears in the public contributors list — no numbers, position or individuals. Reversible anytime.'}</small></div></label>
+                <small className="pt-muted">{lang === 'ar' ? 'الافتراضي: خاص. لا يظهر اسم جهتكم في أي مكان دون هذا الإذن.' : 'Default: private. Your name appears nowhere without this consent.'}</small>
+              </>}
+            </div>
+          </div>}
+
           {d && k && tab === 'report' && <div className="og-report pt-box">
             <div className="og-rephead"><div><b>{lang === 'ar' ? 'تقرير أثر التدريب' : 'Training Impact Report'}</b><h2>{org.name_ar}</h2><small>{lang === 'ar' ? 'صادر من أَثَر · ' : 'Issued by Athar · '}<bdi>{fmtDate(new Date().toISOString(), lang)}</bdi></small></div><button type="button" className="pt-btn no-print" onClick={() => window.print()}><Icon name="print" size={14} /> {lang === 'ar' ? 'طباعة / حفظ PDF' : 'Print / Save PDF'}</button></div>
             <div className="og-kpis compact">{[[k.members, 'منسوب'], [k.learners, 'متدرب'], [k.programs, 'برنامج'], [k.attendance !== null ? `${k.attendance}%` : '—', 'حضور'], [k.credentials, 'شهادة'], [k.skillAvg ?? '—', 'متوسط المهارات'], [k.placements, 'مِعيار'], [k.assessed, 'تقويم']].map(([v, l], i) => <div key={i} className="og-kpi"><b>{v as any}</b><small>{l as string}</small></div>)}</div>
@@ -179,5 +213,9 @@ const CSS = `
 .og-c-ms{display:flex;gap:6px;margin:12px 0 8px}.og-c-m{position:relative;background:#f1f5f9;border-radius:10px;padding:8px 10px 6px;overflow:hidden;min-width:0}.og-c-m i{position:absolute;left:0;top:0;bottom:0;background:#e2e8f0;z-index:0;transition:width .8s}.og-c-m.progress i{background:#ccfbf1}.og-c-m.due i{background:#fde68a}.og-c-m.released i{background:#bbf7d0}.og-c-m span,.og-c-m small{position:relative;z-index:1;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.og-c-m span{font-size:12px;font-weight:800;color:#0f2a4e}.og-c-m small{font-size:11px;color:#475569}
 .og-c-k{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#475569;margin-bottom:8px}.og-c-k b{color:#0f2a4e}.og-c-k .due b{color:#b45309}.og-c-next{margin:0 0 10px;font-size:13px}
 @media(max-width:900px){.og-grid{grid-template-columns:1fr}.og-kpis{grid-template-columns:repeat(4,1fr)}.og-mem{grid-template-columns:1fr}.og-skill{grid-template-columns:1fr}}
+.og-obs-sec{display:flex;gap:12px;align-items:center;border-inline-start:5px solid #0b8a83;background:#f8fafc;border-radius:12px;padding:10px 14px;margin-bottom:10px}.og-obs-ico{font-size:30px}.og-obs-sec small{display:block;color:#64748b;font-size:12px}
+.og-obs-pos{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}.og-obs-pos div{background:#f1f5f9;border-radius:12px;padding:8px 10px;display:flex;flex-direction:column}.og-obs-pos span{font-size:11px;color:#64748b}.og-obs-pos b{font-size:22px;color:#0f2a4e}
+.og-obs-sig{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}.og-obs-sig h4{margin:0 0 4px;font-size:13px;color:#334155}.og-obs-sig p{margin:0 0 6px;font-size:13px}.og-obs-sig small{color:#64748b;display:block}
+.og-obs-opt{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:8px;cursor:pointer}.og-obs-opt input{margin-top:4px}.og-obs-opt small{display:block;color:#64748b;font-size:12px}
 @media print{.pt-header,.pt-footer,.pt-pagehead,.og-tabs,.no-print,.og-notice{display:none!important}.og-report{border:0;box-shadow:none}.pt-main{padding:0}}
 `;
