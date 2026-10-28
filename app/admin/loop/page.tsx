@@ -43,7 +43,7 @@ export default function AdminLoopPage() {
     if (status === 'accepted' && s.kind === 'mission') { body.template_id = tpl; body.emails = emails.split(/[\s,;،]+/).filter(Boolean); }
     const j = await fetch('/api/loop', { method: 'POST', headers: await hdr(), body: JSON.stringify(body) }).then(r => r.json()).catch(() => null); setBusy('');
     if (!j?.success) { setMsg(j?.error || 'تعذّر حفظ القرار'); return; }
-    const o = j.outcome; setMsg(status === 'dismissed' ? 'سُجّل التجاهل — ستتعلّم الحلقة من ذلك.' : o?.kind === 'program_draft' ? 'اعتُمد: أُنشئت مسودة برنامج في «هندسة البرامج التدريبية».' : o?.kind === 'missions' ? `اعتُمد: أُسندت ${o.created} مهمة من ${o.emails} بريدًا.` : 'اعتُمد وسُجّل الأثر.');
+    const o = j.outcome; setMsg(status === 'dismissed' ? 'سُجّل التجاهل — ستتعلّم الحلقة من ذلك.' : o?.kind === 'program_draft' ? 'اعتُمد: أُنشئت مسودة برنامج في «هندسة البرامج التدريبية».' : o?.kind === 'missions' ? `اعتُمد: أُسندت ${o.created === 1 ? 'مهمة واحدة' : o.created === 2 ? 'مهمتان' : `${o.created} مهمات`} من ${o.emails} بريدًا${o.skipped?.length ? ` (تُخطّي ${o.skipped.length} لديهم المهمة مسبقًا)` : ''}.` : 'اعتُمد وسُجّل الأثر.');
     setOpen(null); setNote(''); setEmails(''); await load();
   }
   const list = (data?.suggestions || []).filter(s => (filter === 'draft' ? s.status === 'draft' : s.status !== 'draft')).filter(s => kind === 'all' || s.kind === kind);
