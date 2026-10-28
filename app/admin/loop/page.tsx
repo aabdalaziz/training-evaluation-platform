@@ -24,7 +24,7 @@ export default function AdminLoopPage() {
   const db = supabase(); const router = useRouter();
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [tok, setTok] = useState(''); const [data, setData] = useState<Data | null>(null);
   const [busy, setBusy] = useState<string>(''); const [msg, setMsg] = useState(''); const [filter, setFilter] = useState<'draft' | 'decided'>('draft'); const [kind, setKind] = useState<SuggestionKind | 'all'>('all');
-  const [open, setOpen] = useState<string | null>(null); const [note, setNote] = useState(''); const [tpl, setTpl] = useState(''); const [emails, setEmails] = useState('');
+  const [open, setOpen] = useState<string | null>(null); const [note, setNote] = useState(''); const [tpl, setTpl] = useState(''); const [emails, setEmails] = useState(''); const [reach, setReach] = useState<{ email: string; level: 'green' | 'yellow' | 'grey'; label: string; why: string }[] | null>(null);
   const fresh = useCallback(async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk !== tok) setTok(tk); return tk; }, [db, tok]);
   const hdr = useCallback(async () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${await fresh()}` }), [fresh]);
   async function load(tk?: string) { const j = await fetch('/api/loop', { headers: { Authorization: `Bearer ${tk || await fresh()}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setError(''); setData(j); }
@@ -36,6 +36,7 @@ export default function AdminLoopPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  async function checkReach() { const list = emails.split(/[\s,;،]+/).filter(x => x.includes('@')); if (!list.length) { setReach(null); return; } const j = await fetch(`/api/notify?reach=${encodeURIComponent(list.join(','))}`, { headers: await hdr(), cache: 'no-store' }).then(r => r.json()).catch(() => null); setReach(j?.success ? j.reach : null); }
   async function run() { if (busy) return; setBusy('run'); setMsg(''); const j = await fetch('/api/loop', { method: 'POST', headers: await hdr(), body: JSON.stringify({ action: 'run' }) }).then(r => r.json()).catch(() => null); setBusy(''); if (!j?.success) { setMsg(j?.error || 'تعذّر التشغيل'); return; } setMsg(j.error ? j.error : `اكتملت الدورة: ${j.proposed} اقتراحًا جديدًا · ${j.expired} انتهى · ${j.forecasts} توقّعًا لـ${j.orgs} جهة`); await load(); }
   async function decide(s: Sugg, status: 'accepted' | 'dismissed') {
     if (busy) return; setBusy(s.id); setMsg('');
@@ -83,7 +84,8 @@ export default function AdminLoopPage() {
                 {s.status === 'draft' && (open !== s.id ? <div className="lp-acts"><button className="lp-btn" onClick={() => { setOpen(s.id); setNote(''); setTpl(s.target?.template_id || ''); setEmails(''); }} data-testid="loop-open">قرّر</button><span className="lp-muted">ينتهي {fmt(s.expires_at)}</span></div> : (
                   <div className="lp-decide">
                     {s.kind === 'mission' && <><label>قالب المهمة<select value={tpl} onChange={e => setTpl(e.target.value)}><option value="">— اختر —</option>{(data?.templates || []).map(t => <option key={t.id} value={t.id}>{t.title_ar}</option>)}</select></label>
-                      <label>بريد المتعلمين (مفصولة بفواصل)<textarea value={emails} onChange={e => setEmails(e.target.value)} rows={2} placeholder="name@org.sa, …" /></label></>}
+                      <label>بريد المتعلمين (مفصولة بفواصل)<textarea value={emails} onChange={e => setEmails(e.target.value)} onBlur={checkReach} rows={2} placeholder="name@org.sa, …" /></label>
+                      {reach && reach.length > 0 && <div className="lp-reach" data-testid="loop-reach"><b>نبض الوصول قبل الإسناد:</b> {reach.map(r => <span key={r.email} className={`lp-rc ${r.level}`} title={r.why}><i /> <bdi dir="ltr">{r.email}</bdi> — {r.label}</span>)}<small>{reach.filter(r => r.level === 'grey').length ? `${reach.filter(r => r.level === 'grey').length} بلا قناة آلية: ستصلهم رسائلهم عبر «قائمة اليد» في الإبلاغ متعدد القنوات.` : 'كل العناوين لها قناة.'}</small></div>}</>}
                     {s.kind === 'program' && <p className="lp-hint">القبول يُنشئ مسودة احتياج في «هندسة البرامج التدريبية» مملوءة بالقطاع والفجوة — لتكمل الفريق هناك.</p>}
                     <label>ملاحظة (اختيارية)<input value={note} onChange={e => setNote(e.target.value)} maxLength={600} placeholder="لماذا قبلت/تجاهلت؟ — تتعلّم الحلقة منها" /></label>
                     <div className="lp-acts"><button className="lp-btn ok" disabled={busy === s.id} onClick={() => decide(s, 'accepted')} data-testid="loop-accept">اقبل ونفّذ</button><button className="lp-btn warn" disabled={busy === s.id} onClick={() => decide(s, 'dismissed')} data-testid="loop-dismiss">تجاهل</button><button className="lp-btn ghost" onClick={() => setOpen(null)}>إلغاء</button></div>
@@ -122,6 +124,7 @@ const CSS = `
 .lp-ev{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.lp-ev span{font-size:11px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:3px 8px;color:#334155}.lp-ev i{font-style:normal;color:#94a3b8;margin-inline-end:4px}
 .lp-out{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:#166534}
 .lp-acts{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.lp-btn{background:#0f2a4e;color:#fff;border:0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}.lp-btn.ok{background:#0b8a83}.lp-btn.warn{background:#fff;color:#b91c1c;border:1px solid #fecaca}.lp-btn.ghost{background:transparent;color:#64748b;border:1px solid #e2e8f0}.lp-btn:disabled{opacity:.6}
+.lp-reach{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:#334155;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px}.lp-reach b{color:#0f2a4e}.lp-reach small{flex-basis:100%;color:#64748b}.lp-rc{display:inline-flex;align-items:center;gap:4px}.lp-rc i{width:9px;height:9px;border-radius:50%;background:#94a3b8;display:inline-block}.lp-rc.green i{background:#0b8a83}.lp-rc.yellow i{background:#f59e0b}.lp-rc.grey i{background:#cbd5e1}
 .lp-decide{margin-top:10px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:12px;display:grid;gap:8px}.lp-decide label{display:grid;gap:4px;font-size:12px;color:#475569;font-weight:700}.lp-decide input,.lp-decide select,.lp-decide textarea{font-family:inherit;font-size:13px;border:1px solid #cbd5e1;border-radius:8px;padding:8px}.lp-hint{margin:0;font-size:12px;color:#0e7490}
 .lp-tbl{width:100%;border-collapse:collapse;font-size:13px}.lp-tbl th{text-align:start;color:#64748b;font-weight:700;border-bottom:1px solid #e2e8f0;padding:6px}.lp-tbl td{padding:6px;border-bottom:1px solid #f1f5f9}
 .lp-foot{text-align:center;color:#94a3b8;font-size:12px;margin:8px 0 0}
