@@ -56,6 +56,6 @@ export const KIND_LABEL_AR: Record<string, string> = {
   certificate_issued: 'شهادة صادرة', certificate: 'شهادة', enrollment_ack: 'استلام طلب تسجيل', enrollment_accepted: 'قبول تسجيل', enrollment_rejected: 'اعتذار تسجيل', enrollment_waitlisted: 'قائمة انتظار',
   invoice: 'فاتورة', receipt: 'إيصال', consult_received: 'استلام طلب استشارة', consult_new: 'طلب استشارة جديد', consult_quote: 'عرض سعر', consult_response: 'ردّ على عرض', consult_status: 'حالة استشارة', consult_update: 'تحديث استشارة',
   agent_request: 'طلب وكيل', org_invite: 'دعوة جهة', org_admin: 'تعيين مدير جهة', org_bulk: 'طلب تسجيل جماعي', notice: 'إشعار', test: 'إرسال تجريبي',
-  behavior_followup: 'متابعة أثر التدريب', final_open: 'فتح التقييم الختامي', copilot_remind: 'تذكير الميسِّر', live_reminder_auto: 'تذكير جلسة (تلقائي)', credential_issued: 'شهادة رقمية صادرة', digest: 'موجز التقارير', report: 'تقرير', notifications: 'تنبيهات المنصة', receipt_review: 'إيصال للمراجعة', enrollment_new: 'طلب تسجيل جديد',
+  behavior_followup: 'متابعة أثر التدريب', final_open: 'فتح التقييم الختامي', copilot_remind: 'تذكير الميسِّر', live_reminder_auto: 'تذكير جلسة (تلقائي)', credential_issued: 'شهادة رقمية صادرة', digest: 'موجز التقارير', observatory_weather: 'تغيّر طقس القطاع (المرصد)', report: 'تقرير', notifications: 'تنبيهات المنصة', receipt_review: 'إيصال للمراجعة', enrollment_new: 'طلب تسجيل جديد',
 };
 export const kindLabel = (k: string) => KIND_LABEL_AR[k] || k;
