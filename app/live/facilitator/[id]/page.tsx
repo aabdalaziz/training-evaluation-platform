@@ -32,10 +32,14 @@ function Inner() {
   const loadRooms = useCallback(async (t: string) => { try { const j = await fetch(`/api/rooms?session=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()); if (j?.success) setRooms(j.rooms || []); } catch { /* ignore */ } }, [id]);
   async function openRooms(prompt?: string) { setBusy('rooms'); try { const j = await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'breakouts', session_id: id, count: roomN, minutes: roomMin, prompt: (prompt ?? roomPrompt) || undefined }) }).then(r => r.json()); if (j?.success) { setFlash(ar ? `فُتحت ${(j.rooms || []).length} غرف — ظهرت للمشاركين في صفحة الجلسة.` : `${(j.rooms || []).length} rooms opened — visible to participants on the session page.`); await loadRooms(tok); await load(tok); } else setErr(j?.error || 'x'); } catch { /* ignore */ } setBusy(''); }
   async function closeRooms() { setBusy('rooms'); for (const r of rooms.filter(x => x.status === 'open')) await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'close', code: r.code }) }); await loadRooms(tok); setBusy(''); }
+  // P15 — بطاقة الصف من الذاكرة الحية: ما أثبته كل متعلم (بمفتاح مجهول) · ما لم يُفحص · قناته الأقوى — بلا درجات
+  type ClassCard = { cards: { key: string; proven: { name_ar: string; weight: number }[]; unexamined: { name_ar: string }[]; best_channel_ar: string | null; evidence: number; one_channel: boolean }[]; summary: { never: { name_ar: string; unexamined: number }[]; one_channel: number; no_evidence: number; hints: string[] }; focus: { name_ar: string; evidence: number; status: 'strong' | 'weak' | 'none' }[]; skills: { id: string; name_ar: string }[]; learners: number; note: string | null };
+  const [cls, setCls] = useState<ClassCard | null>(null); const [clsOpen, setClsOpen] = useState(false);
+  const loadClass = useCallback(async (t: string) => { try { const j = await fetch(`/api/loop?session=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()); if (j?.success) setCls(j); } catch { /* ignore */ } }, [id]);
   const load = useCallback(async (t: string) => {
     try { const j = await fetch(`/api/copilot?id=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()); if (j?.success) { setD(j); setErr(''); } else setErr(j?.error || 'x'); } catch { setErr('x'); }
   }, [id]);
-  useEffect(() => { (async () => { const { data: s } = await db.auth.getSession(); const t = s.session?.access_token || ''; setTok(t); if (!t) { setErr('login'); return; } await load(t); await loadRooms(t); })(); }, [db, load, loadRooms]);
+  useEffect(() => { (async () => { const { data: s } = await db.auth.getSession(); const t = s.session?.access_token || ''; setTok(t); if (!t) { setErr('login'); return; } await load(t); await loadRooms(t); await loadClass(t); })(); }, [db, load, loadRooms, loadClass]);
   useEffect(() => { if (!tok) return; timer.current = setInterval(() => { setTick(x => x + 1); load(tok); }, 20000); return () => { if (timer.current) clearInterval(timer.current); }; }, [tok, load]);
   async function post(body: any) { const j = await fetch('/api/copilot', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ ...body, session_id: id }) }).then(r => r.json()); if (!j?.success) { setErr(j?.error || 'x'); return null; } return j; }
   async function accept(s: Suggestion) { setBusy(s.code); const j = await post({ action: 'accept', suggestion: s, prompt_ar: editPrompt[s.code] }); setBusy(''); if (j) { await load(tok); setFlash(j.created === 'activity' ? (ar ? 'أُنشئ النشاط وظهر للمشاركين الآن.' : 'Activity created and visible to participants.') : j.created === 'remind' ? (ar ? `أُرسل تذكير إلى ${j.sent} من ${j.absent} غائبًا.` : `Reminder sent to ${j.sent} of ${j.absent}.`) : (ar ? 'سُجّل.' : 'Logged.')); setTimeout(() => setFlash(''), 5000); } }
@@ -73,6 +77,23 @@ function Inner() {
             </section>
 
             {flash && <div className="cp-flash"><Icon name="check" size={14} /> {flash}</div>}
+
+            {/* P15 — بطاقة الصف */}
+            <section className="cp-class" data-testid="class-card">
+              <div className="cp-classhead"><h2><Icon name="compass" size={16} /> {ar ? 'بطاقة الصف — من الذاكرة الحية' : 'Class card — from the living memory'} <small>{ar ? 'ما أثبته كل متعلم قبل اليوم، وما لم يُفحص قط — مفاتيح مجهولة وبلا درجات' : 'What each learner has proven before today, and what was never examined — anonymous keys, no grades'}</small></h2>
+                {cls && cls.cards.length > 0 && <button type="button" className="pt-btn light small" onClick={() => setClsOpen(o => !o)} data-testid="class-toggle">{clsOpen ? (ar ? 'إخفاء المتعلمين' : 'Hide learners') : (ar ? `بطاقات المتعلمين (${cls.cards.length})` : `Learner cards (${cls.cards.length})`)}</button>}</div>
+              {!cls ? <div className="cp-empty">{ar ? 'جارٍ قراءة الذاكرة…' : 'Reading memory…'}</div> : !cls.cards.length ? <div className="cp-empty">{cls.note || (ar ? 'لا دليل كافٍ بعد.' : 'Not enough evidence yet.')}</div> : (
+                <>
+                  <ul className="cp-hints">{cls.summary.hints.length ? cls.summary.hints.map((h, i) => <li key={i}>{h}</li>) : <li>{ar ? 'لا دليل كافٍ بعد لتوجيه محدّد — الصف يبدأ من نقطة متقاربة.' : 'Not enough evidence for a specific hint yet.'}</li>}</ul>
+                  {cls.focus.length > 0 && <div className="cp-focus">{cls.focus.map(f => <span key={f.name_ar} className={`cp-fx ${f.status}`}>{f.name_ar} · {f.status === 'none' ? (ar ? 'بلا دليل من البرنامج' : 'no program evidence') : f.status === 'weak' ? (ar ? 'دليل ضعيف' : 'weak evidence') : (ar ? 'دليل قوي' : 'strong evidence')}</span>)}</div>}
+                  {clsOpen && <div className="cp-cards">{cls.cards.map(c => <div key={c.key} className="cp-lc"><b>{c.key}</b>
+                    {!c.evidence ? <span className="cp-lcnone">{ar ? 'لا دليل سابق' : 'No prior evidence'}</span> : <>
+                      {c.proven.length > 0 && <span>{ar ? 'أثبت: ' : 'Proven: '}{c.proven.slice(0, 3).map(p => p.name_ar).join('، ')}</span>}
+                      {c.unexamined.length > 0 && <span className="cp-lcun">{ar ? 'لم يُفحص: ' : 'Unexamined: '}{c.unexamined.slice(0, 3).map(u => u.name_ar).join('، ')}</span>}
+                      {c.best_channel_ar && <span className="cp-lcch">{ar ? 'ينجح عبر: ' : 'Best channel: '}{c.best_channel_ar}{c.one_channel ? (ar ? ' (قناة واحدة فقط)' : ' (single channel)') : ''}</span>}</>}
+                  </div>)}</div>}
+                </>)}
+            </section>
 
             <div className="cp-grid">
               <section className="cp-col">
@@ -167,6 +188,7 @@ const CSS = `
 .cp-tile{position:relative;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 14px;overflow:hidden}.cp-tile small{display:block;color:#64748b;font-size:12px}.cp-tile b{display:block;font-size:28px;color:#0f2a4e;line-height:1.2}.cp-tile span{font-size:12px;color:#475569}.cp-tile em{position:absolute;bottom:0;right:0;left:auto;height:3px;background:#0b8a83}
 .cp-flash{margin:12px 0;padding:10px 14px;border-radius:12px;background:#ecfdf5;color:#065f46;font-weight:700;display:flex;gap:8px;align-items:center}
 .cp-err{margin:12px 0;padding:10px 14px;border-radius:12px;background:#fef2f2;color:#991b1b}
+.cp-class{margin-top:16px;background:#fff;border:1px solid #cfe9e6;border-radius:14px;padding:14px 16px}.cp-classhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}.cp-class h2{margin:0;font-size:15px;color:#0f2a4e;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.cp-class h2 small{font-weight:400;color:#64748b;font-size:12px}.cp-hints{margin:10px 0 0;padding-inline-start:18px;font-size:13px;color:#0f2a4e;line-height:1.8}.cp-focus{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.cp-fx{font-size:11px;border-radius:999px;padding:3px 9px;background:#f1f5f9;color:#475569}.cp-fx.none{background:#fee2e2;color:#991b1b}.cp-fx.weak{background:#fef3c7;color:#92400e}.cp-fx.strong{background:#dcfce7;color:#166534}.cp-cards{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-top:10px}.cp-lc{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;display:grid;gap:3px;font-size:12px;color:#334155}.cp-lc b{color:#0f2a4e}.cp-lcnone{color:#94a3b8}.cp-lcun{color:#b45309}.cp-lcch{color:#0b8a83}
 .cp-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;margin-top:18px}@media(max-width:900px){.cp-grid{grid-template-columns:1fr}}
 .cp-col h2{font-size:17px;color:#0f2a4e;display:flex;gap:8px;align-items:center;margin:0 0 10px;flex-wrap:wrap}.cp-col h2 small{font-weight:400;color:#64748b;font-size:12px}
 .cp-empty{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:14px;color:#475569;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
