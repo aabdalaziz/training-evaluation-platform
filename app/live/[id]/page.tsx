@@ -14,6 +14,8 @@ import type { LiveSession, TimeState, Classroom, Registration, Activity, Activit
 import { skillName, domainLabel, frameworkBadges } from '../../../lib/portal/skills';
 import type { Skill } from '../../../lib/portal/skills';
 import { resTitle } from '../../../lib/portal/resources';
+import { assignRoom } from '../../../lib/portal/media';
+import type { Room } from '../../../lib/portal/media';
 import { eventJsonLd, jsonLdScript, normalizeSite } from '../../../lib/portal/open';
 
 export default function SessionPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
@@ -27,6 +29,7 @@ function Inner() {
   const [now, setNow] = useState<Date | null>(null); const [loaded, setLoaded] = useState(false); const [visible, setVisible] = useState(true);
   const [email, setEmail] = useState(''); const [name, setName] = useState(''); const [org, setOrg] = useState(''); const [sent, setSent] = useState(false); const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
   const [memo, setMemo] = useState<null | { title_ar: string; summary_ar: string; highlights_ar: string[]; gaps_ar: string[]; next_ar: string[]; trainer_note_ar?: string; attendance: { joined: number; registered: number } }>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [acts, setActs] = useState<Activity[]>([]); const [mine, setMine] = useState<Record<string, ActivityResponse>>({}); const [draft, setDraft] = useState<Record<string, ActivityAnswer>>({}); const [actErr, setActErr] = useState<Record<string, string>>({}); const [series, setSeries] = useState<LiveSession[]>([]);
 
   async function token(): Promise<string> { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
@@ -54,7 +57,9 @@ function Inner() {
       } catch { /* يبقى فارغًا */ }
       setNow(new Date()); setLoaded(true);
     })();
-    const iv = setInterval(() => setNow(new Date()), 15000); return () => clearInterval(iv);
+    const loadRooms = async () => { try { const { data: { user: u } } = await db.auth.getUser(); if (!u) return; const { data: rr } = await db.from('portal_rooms').select('*').eq('session_id', id).eq('status', 'open').order('created_at'); setRooms(((rr || []) as Room[])); } catch { /* لا غرف */ } };
+    loadRooms();
+    const iv = setInterval(() => { setNow(new Date()); loadRooms(); }, 15000); return () => clearInterval(iv);
   }, [db, id]);
 
   async function sendLink(e: React.FormEvent) {
@@ -118,6 +123,10 @@ function Inner() {
             </div>
             {memo.trainer_note_ar && <p className="ls-memonote"><b>{lang === 'ar' ? 'كلمة المدرب:' : 'Trainer:'}</b> {memo.trainer_note_ar}</p>}
           </section>}
+          {user && rooms.length > 0 && (() => { const mine = assignRoom(user.id, rooms); return mine ? <div className="pt-box ls-room" data-testid="my-room"><h3><Icon name="users" size={18} /> {lang === 'ar' ? 'غرفتك الصغيرة الآن' : 'Your small room now'} <small>{lang === 'ar' ? `${mine.minutes} دقائق · حتى ${mine.max_peers} أشخاص` : `${mine.minutes} min · up to ${mine.max_peers}`}</small></h3>
+            {mine.prompt && <p className="ls-roomprompt">{mine.prompt}</p>}
+            <div className="ls-roomrow"><a href={`/room/${mine.code}`} target="_blank" rel="noreferrer" className="pt-btn gold"><Icon name="play" size={15} /> {lang === 'ar' ? 'ادخل غرفتك' : 'Enter your room'} <b dir="ltr">{mine.code}</b></a><small>{lang === 'ar' ? 'فيديو من داخل أَثَر — بلا تطبيق. عودوا بسطر واحد.' : 'In-Athar video — no app. Come back with one line.'}</small></div>
+          </div> : null; })()}
           {acts.length > 0 && (st === 'live' || st === 'ended') && <div className="pt-box ls-acts"><h3><Icon name="evaluations" size={18} /> {lang === 'ar' ? 'نشاط ما بعد الجلسة' : 'Post-session activity'} <small>({Object.keys(mine).length}/{acts.length})</small></h3>
             {!user && <p className="pt-muted">{lang === 'ar' ? 'سجّل الدخول للإجابة — تُحفظ إجاباتك كدليل مهارة في ملفك.' : 'Sign in to answer — responses are saved as skill evidence.'}</p>}
             <div className="ls-actlist">{acts.map((a, i) => { const done = mine[a.id]; const d = draft[a.id] || {}; const sk = a.skill_id ? skills.find(k => k.id === a.skill_id) : null; return (
@@ -172,6 +181,7 @@ const CSS = `
 .ls-fw{display:flex;gap:5px;flex-wrap:wrap}.ls-fw span{font-size:10.5px;font-weight:900;border-radius:6px;padding:3px 7px;background:#e2e8f0;color:#334155;direction:ltr}.ls-fw .saqf{background:#dcfce7;color:#166534}.ls-fw .sdaia{background:#ede9fe;color:#5b21b6}.ls-fw .cefr{background:#dbeafe;color:#1e40af}
 .ls-rec{background:#fdf6e3;border-color:#f3e3b3}
 .ls-cal{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ls-room{border:2px solid #c9a24b;background:#fffbeb}.ls-room h3{display:flex;gap:8px;align-items:center;margin:0 0 8px}.ls-room h3 small{color:#64748b;font-weight:600;font-size:12px}.ls-roomprompt{margin:0 0 10px;color:#134e4a;background:#f0fdfa;border-radius:10px;padding:8px 10px;line-height:1.7}.ls-roomrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.ls-roomrow a b{font-family:ui-monospace,monospace;letter-spacing:.12em;margin-inline-start:6px}.ls-roomrow small{color:#64748b}
 .ls-acts h3 small{color:#64748b;font-weight:600}.ls-actlist{display:grid;gap:12px}.ls-act{border:1px solid #e2e8f0;border-radius:14px;padding:14px;display:grid;gap:10px;background:#fff}.ls-act.done{background:#f8fafc}
 .ls-acthead{display:flex;gap:10px;align-items:flex-start}.ls-actn{width:26px;height:26px;border-radius:50%;background:#0f2a4e;color:#fff;display:inline-grid;place-items:center;font-size:12.5px;font-weight:900;flex:none}.ls-acthead b{display:block;font-size:14.5px;color:#0f172a;line-height:1.6}.ls-acthead small{color:#64748b;font-size:12px}
 .ls-opts{display:grid;gap:6px}.ls-opt{display:flex;gap:8px;align-items:center;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:13.5px}.ls-opt.on{border-color:#0b8a83;background:#f0fdfa}.ls-opt.right{border-color:#059669;background:#ecfdf5}.ls-opt.wrong{border-color:#dc2626;background:#fef2f2}.ls-opt.hint{border-color:#059669;border-style:dashed}
