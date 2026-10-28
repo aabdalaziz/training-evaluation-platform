@@ -24,9 +24,11 @@ export default function AdminContractsPage() {
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [tok, setTok] = useState(''); const [busy, setBusy] = useState('');
   const [data, setData] = useState<Data | null>(null); const [tab, setTab] = useState<'portfolio' | 'new'>('portfolio'); const [selId, setSelId] = useState<string | null>(null); const [note, setNote] = useState(''); const [deliverAt, setDeliverAt] = useState('');
   const [form, setForm] = useState<ContractForm>(EMPTY_CONTRACT_FORM); const [editId, setEditId] = useState<string | null>(null); const [proposing, setProposing] = useState(false); const [fromFactory, setFromFactory] = useState<string>('');
-  const H = (tk = tok) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` });
-  async function load(tk = tok) { const j = await fetch('/api/contracts?admin=1', { headers: H(tk) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
-  async function post(body: any) { setBusy(body.action); setError(''); setOk(''); try { const j = await fetch('/api/contracts', { method: 'POST', headers: H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'خطأ'); return j; } catch (e: any) { setError(e?.message || 'خطأ'); return null; } finally { setBusy(''); } }
+  // رمز جلسة حديث قبل كل نداء (getSession يجدّد الرمز المنتهي تلقائيًا) — كي لا تظهر «جلسة غير صالحة» بعد ترك الصفحة مفتوحة طويلًا
+  const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
+  const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
+  async function load(tk?: string) { const j = await fetch('/api/contracts?admin=1', { headers: await H(tk) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
+  async function post(body: any) { setBusy(body.action); setError(''); setOk(''); try { const j = await fetch('/api/contracts', { method: 'POST', headers: await H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'خطأ'); return j; } catch (e: any) { setError(e?.message || 'خطأ'); return null; } finally { setBusy(''); } }
   useEffect(() => { (async () => {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/contracts'); return; }
     const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
@@ -43,7 +45,7 @@ export default function AdminContractsPage() {
 
   async function propose() {
     if (!form.organization_id) { setError('اختر الجهة أولًا'); return; } setProposing(true); setError('');
-    try { const j = await fetch(`/api/contracts?admin=1&propose=1&org=${encodeURIComponent(form.organization_id)}&program=${encodeURIComponent(form.program_id)}`, { headers: H() }).then(r => r.json()); if (!j.success) throw new Error(j.error);
+    try { const j = await fetch(`/api/contracts?admin=1&propose=1&org=${encodeURIComponent(form.organization_id)}&program=${encodeURIComponent(form.program_id)}`, { headers: await H() }).then(r => r.json()); if (!j.success) throw new Error(j.error);
       const list = (j.cohort || []) as CohortPerson[]; setForm(f => ({ ...f, cohort_text: list.map(p => (p.full_name ? `${p.full_name} <${p.email}>` : p.email)).join('\n') || f.cohort_text, contact_email: f.contact_email || j.contact_email || '', contact_name: f.contact_name || j.contact_name || '' }));
       setOk(list.length ? `اقتُرح ${list.length} منسوبًا من تسجيلات البرنامج المنتمين للجهة — عدّل القائمة كما تشاء` : 'لا تسجيلات مطابقة — الصق القائمة يدويًا');
     } catch (e: any) { setError(e?.message || 'خطأ'); } finally { setProposing(false); }
