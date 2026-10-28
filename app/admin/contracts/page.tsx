@@ -31,8 +31,8 @@ export default function AdminContractsPage() {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/contracts'); return; }
     const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
     const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || ''; setTok(tk); await load(tk); setReady(true);
-    // جسر مصنع البرامج (P13-ب): /admin/contracts?new=1&from_factory=…&program=…&title=…&split=60/25/15&targets=60/90/50&notes=…
-    try { const pre = contractPrefillFromQuery(window.location.search); if (pre) { setForm(f => ({ ...f, program_id: pre.program_id, title_ar: pre.title_ar || f.title_ar, split: pre.split, targets: pre.targets, notes: pre.notes })); setFromFactory(pre.factory_draft_id); setTab('new'); setOk('مُقترح من مصنع البرامج: مؤشرات الأثر أصبحت أهداف العقد وتقسيم الدفعات 60/25/15 — أكمل الجهة والمبلغ والمجموعة ثم احفظ.'); window.history.replaceState(null, '', '/admin/contracts'); } } catch { /* بلا تعبئة */ }
+    // جسر هندسة البرامج التدريبية (P13-ب): /admin/contracts?new=1&from_factory=…&program=…&title=…&split=60/25/15&targets=60/90/50&notes=…
+    try { const pre = contractPrefillFromQuery(window.location.search); if (pre) { setForm(f => ({ ...f, program_id: pre.program_id, title_ar: pre.title_ar || f.title_ar, split: pre.split, targets: pre.targets, notes: pre.notes })); setFromFactory(pre.factory_draft_id); setTab('new'); setOk('مُقترح من هندسة البرامج التدريبية: مؤشرات الأثر أصبحت أهداف العقد وتقسيم الدفعات 60/25/15 — أكمل الجهة والمبلغ والمجموعة ثم احفظ.'); window.history.replaceState(null, '', '/admin/contracts'); } } catch { /* بلا تعبئة */ }
   })(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const sel = useMemo(() => data?.items.find(i => i.contract.id === selId) || null, [data, selId]);
@@ -106,7 +106,7 @@ export default function AdminContractsPage() {
 
         {tab === 'new' && <div className="ac-grid2">
           <div className="ac-card">
-            <h3>{editId ? 'تعديل مسودة العقد' : 'عقد أثر جديد'}{fromFactory && <span className="ac-fromfactory" title={`مسودة المصنع ${fromFactory.slice(0, 8)}`}><Icon name="compass" size={12} /> من مصنع البرامج</span>}</h3>
+            <h3>{editId ? 'تعديل مسودة العقد' : 'عقد أثر جديد'}{fromFactory && <span className="ac-fromfactory" title={`مسودة الهندسة ${fromFactory.slice(0, 8)}`}><Icon name="compass" size={12} /> من هندسة البرامج التدريبية</span>}</h3>
             <label>الجهة<select value={form.organization_id} onChange={e => pickOrg(e.target.value)}><option value="">— اختر —</option>{data?.orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>
             <label>البرنامج (اختياري — يحصر الشهادات والمهمات به)<select value={form.program_id} onChange={e => setForm(f => ({ ...f, program_id: e.target.value }))}><option value="">— كل البرامج —</option>{data?.programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
             <label>عنوان العقد<input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder="عقد أثر — تدريب معلمي المرحلة المتوسطة" /></label>
