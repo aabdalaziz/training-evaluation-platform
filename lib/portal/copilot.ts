@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * أَثَر — «الطيار المساعد الحي» (P13-ب): يجلس بجوار المدرب أثناء الجلسة المباشرة.
+ * أَثَر — «الميسِّر الحي» (P13-ب): يجلس بجوار المدرب أثناء الجلسة المباشرة.
  *  يقرأ نبض الجلسة (الحضور، الاستجابات، آخر نشاط، الزمن المنقضي) ويقترح — لا يقرّر —: سؤال نبض، موقفًا قصيرًا، تأملًا، غرف نقاش، تذكيرًا للغائبين، تغيير إيقاع.
  *  بعد الجلسة يولّد «محضر الأثر»: ما حدث فعلًا (حضور، منحنى التفاعل، ما ظهر من الجدارات، الفجوات، الخطوة التالية) — ويعتمده المدرب قبل أن يراه المشاركون.
  *  القواعد محلية وشفافة؛ الذكاء الاصطناعي يحسّن سرد المحضر فقط. المبدأ: الآلة تقترح، والإنسان يقرّر.
@@ -80,7 +80,7 @@ export function suggest(p: Pulse, ctx: { title_ar: string; skills: SkillRef[]; d
   const push = (s: Suggestion) => { if (!done.has(s.code) && !skip.has(s.code)) out.push(s); };
   if (p.status !== 'live') {
     if (p.status === 'ended') push({ code: 'memo', kind: 'close', priority: 1, title_ar: 'أنشئ محضر الأثر', why_ar: 'انتهت الجلسة — المحضر يحوّلها من «حدث» إلى «شاهد».', how_ar: 'اضغط «أنشئ محضر الأثر»، راجعه، ثم اعتمده ليراه المشاركون.' });
-    else push({ code: 'start', kind: 'pace', priority: 2, title_ar: 'ابدأ الجلسة من جدول المدرب', why_ar: 'الطيار يقرأ النبض فقط حين تكون الجلسة «جارية».', how_ar: 'من جدول المدرب اضغط «بدء» ثم عُد هنا.' });
+    else push({ code: 'start', kind: 'pace', priority: 2, title_ar: 'ابدأ الجلسة من جدول المدرب', why_ar: 'الميسِّر يقرأ النبض فقط حين تكون الجلسة «جارية».', how_ar: 'من جدول المدرب اضغط «بدء» ثم عُد هنا.' });
     return out;
   }
   // 1) الافتتاح
@@ -124,7 +124,7 @@ export function buildLocalMemo(input: {
   if (p.join_rate >= 0.7) highlights.push(`حضور قوي: انضمّ ${p.joined} من ${p.registered} مسجّلًا (${Math.round(p.join_rate * 100)}%).`);
   if (peak.responses > 0) highlights.push(`ذروة التفاعل في الدقيقة ${peak.min}–${peak.min + 10} (${peak.responses} استجابة).`);
   if (refTexts.length) highlights.push(`${refTexts.length} التزامًا مكتوبًا بالتطبيق — تدخل ملفات المشاركين شواهدَ.`);
-  if (input.accepted.length) highlights.push(`المدرب استجاب لمقترحات الطيار (${input.accepted.length}) أثناء الجلسة — تيسير حيّ لا سيناريو جامد.`);
+  if (input.accepted.length) highlights.push(`المدرب استجاب لمقترحات الميسِّر (${input.accepted.length}) أثناء الجلسة — تيسير حيّ لا سيناريو جامد.`);
   const gaps: string[] = [];
   if (p.registered >= 5 && p.join_rate < 0.6) gaps.push(`غاب ${p.registered - p.joined} من المسجّلين — راجع التوقيت أو التذكير قبل 24 ساعة.`);
   if (acts.length === 0) gaps.push('لم يُطرح أي نشاط قياس؛ لا يمكن إثبات الفهم من الحضور وحده.');
