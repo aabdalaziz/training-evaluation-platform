@@ -24,6 +24,8 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/contracts', label: 'عقود الأثر', icon: 'scale' },
   { href: '/admin/program-engineering', label: 'هندسة البرامج التدريبية', icon: 'compass' },
   { href: '/admin/media', label: 'الأداء المُشاهَد', icon: 'play' },
+  { href: '/admin/evidence', label: 'قاعدة الأدلة', icon: 'compass' },
+  { href: '/admin/agents', label: 'الوكلاء المفوَّضون', icon: 'users' },
 ];
 
 export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<string, number>> }) {
