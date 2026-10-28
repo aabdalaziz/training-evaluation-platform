@@ -23,6 +23,7 @@ import { runDailyPush } from '../../../../lib/portal/push';
 import { refreshGraph, ensureWeeklyLesson } from '../../../../lib/portal/evidence-cron';
 import { runLoop } from '../../../../lib/portal/loop-cron';
 import { runOutreach } from '../../../../lib/portal/outreach-cron';
+import { runObservatory } from '../../../../lib/portal/observatory-cron';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -142,7 +143,10 @@ export async function GET(req: Request) {
   // P16 — الإبلاغ متعدد القنوات: إعادة محاولة الرسائل المؤجَّلة (ساعات الهدوء) ثم إسقاطها في «قائمة اليد»، وتنظيف السجل القديم
   let outreach: any = null;
   try { outreach = await runOutreach(db, { dry }); } catch (e: any) { outreach = { ok: false, error: e?.message || String(e) }; }
+  // P18 — مرصد القدرة البشرية: لقطة يومية مجهولة الهوية + إبلاغ الجهات المشتركة بتغيّر طقس قطاعها
+  let observatory: any = null;
+  try { observatory = await runObservatory(db, { dry }); } catch (e: any) { observatory = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach, observatory });
 }
