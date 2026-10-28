@@ -28,6 +28,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/agents', label: 'الوكلاء المفوَّضون', icon: 'users' },
   { href: '/admin/loop', label: 'التحسين المستمر بالأدلة', icon: 'refresh' },
   { href: '/admin/outreach', label: 'الإبلاغ متعدد القنوات', icon: 'send' },
+  { href: '/admin/observatory', label: 'مرصد القدرة البشرية', icon: 'globe' },
 ];
 
 export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<string, number>> }) {
