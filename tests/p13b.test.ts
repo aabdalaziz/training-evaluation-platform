@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// اختبارات P13-ب: إشعارات الويب (RFC 8291 متجهات رسمية · VAPID) · الطيار المساعد الحي (النبض، المقترحات، محضر الأثر) · «ماذا لو؟» والمقارنة المجهولة · جسر المصنع ↔ عقود الأثر
+// اختبارات P13-ب: إشعارات الويب (RFC 8291 متجهات رسمية · VAPID) · الميسِّر الحي (النبض، المقترحات، محضر الأثر) · «ماذا لو؟» والمقارنة المجهولة · جسر الهندسة ↔ عقود الأثر
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPublicKey, verify } from 'crypto';
@@ -61,10 +61,10 @@ test('push: subscription validation + daily message + runDailyPush (sent/gone/sk
   const dry = await runDailyPush(db, 'https://athar.example', '2026-10-28', { title_ar: 'x' }, { env, fetchImpl, dry: true }); assert.equal(dry.sent, 2, 'dry run counts without sending');
   const off = await runDailyPush(db, 'https://athar.example', '2026-10-28', { title_ar: 'x' }, { env: {} as any, fetchImpl }); assert.equal(off.reason, 'vapid_missing', 'no keys → graceful skip');
   const bad = await sendPush(subs[0] as any, { title: 't', body: 'b' }, { ...k, subject: 'mailto:x@y.z' }, { fetchImpl: async () => { throw new Error('net'); } }); assert.equal(bad.ok, false, 'network error is reported, not thrown');
-  assert.equal(AI_LIMITS.copilot_memo, 20, 'copilot_memo limit'); assert.equal(AI_LIMITS.daily_case_whatif, 4, 'whatif limit'); assert.ok(AI_PURPOSE_LABEL.copilot_memo.ar.includes('الطيار'), 'label');
+  assert.equal(AI_LIMITS.copilot_memo, 20, 'copilot_memo limit'); assert.equal(AI_LIMITS.daily_case_whatif, 4, 'whatif limit'); assert.ok(AI_PURPOSE_LABEL.copilot_memo.ar.includes('الميسِّر'), 'label');
 });
 
-// ====================================================================== الطيار المساعد
+// ====================================================================== الميسِّر
 const T0 = new Date('2026-10-28T06:00:00Z');
 const at = (min: number) => new Date(T0.getTime() + min * 60000).toISOString();
 const SES = { id: 's1', status: 'live', starts_at: T0.toISOString(), duration_min: 60 };
@@ -134,7 +134,7 @@ test('crowd: anonymous aggregate + comparison line with Arabic number grammar', 
   const many = crowdOf(Array.from({ length: 12 }, (_, i) => ({ user_id: `u${i}`, score: 50 }))); assert.ok(crowdLine(null, many, []).includes('12 شخصًا'), '11+ → شخصًا');
 });
 
-// ====================================================================== جسر المصنع ↔ العقود
+// ====================================================================== جسر الهندسة ↔ العقود
 test('factory bridge: proposal carries indicators/split/targets, URL round-trips through the contracts prefill', () => {
   const need: Need = { ...EMPTY_NEED, sector: 'health', domain_code: 'judgment', family: 'judgment_accountability', stage: 'adulthood', institution: 'work', horizon: 2035, audience_ar: 'مشرفو الجودة', gap_ar: 'الاعتماد على المؤشرات بلا شواهد' };
   const fs = localForesight(need); const des = localDesign(need, fs);
@@ -142,7 +142,7 @@ test('factory bridge: proposal carries indicators/split/targets, URL round-trips
   const p = contractProposalFrom(d);
   assert.ok(p.title_ar.startsWith('عقد أثر — '), 'title'); assert.equal(p.split.delivery + p.split.evidence + p.split.impact, 100, 'split sums to 100'); assert.ok(p.indicators.length >= 3, 'indicators from design'); assert.ok(p.notes.includes('مؤشرات الأثر') && p.notes.includes('1)'), 'notes enumerate indicators'); assert.equal(p.targets.impact_days, 90, '2035 → 90 days');
   const url = contractUrlFor(d); assert.ok(url.startsWith('/admin/contracts?new=1'), 'url'); const pre = contractPrefillFromQuery(url.slice(url.indexOf('?')))!;
-  assert.equal(pre.program_id, d.program_id, 'program id'); assert.equal(pre.title_ar, p.title_ar, 'title'); assert.deepEqual(pre.split, p.split, 'split'); assert.deepEqual(pre.targets, p.targets, 'targets'); assert.equal(pre.factory_draft_id, d.id, 'draft id'); assert.ok(pre.notes.includes('مصنع البرامج'), 'notes');
+  assert.equal(pre.program_id, d.program_id, 'program id'); assert.equal(pre.title_ar, p.title_ar, 'title'); assert.deepEqual(pre.split, p.split, 'split'); assert.deepEqual(pre.targets, p.targets, 'targets'); assert.equal(pre.factory_draft_id, d.id, 'draft id'); assert.ok(pre.notes.includes('هندسة البرامج التدريبية'), 'notes');
   assert.equal(contractPrefillFromQuery('?tab=new'), null, 'no new=1 → null'); assert.deepEqual(contractPrefillFromQuery('?new=1&split=70/70/70')!.split, { delivery: 60, evidence: 25, impact: 15 }, 'bad split → default');
   const far: Draft = { ...d, need: { ...need, horizon: 2050 }, design: null, foresight: null }; const pf = contractProposalFrom(far); assert.equal(pf.targets.impact_days, 120, '2050 → 120 days'); assert.deepEqual(pf.split, { delivery: 60, evidence: 25, impact: 15 }, 'no design → default split');
 });
