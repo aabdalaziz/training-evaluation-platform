@@ -137,9 +137,12 @@ export async function POST(req: Request) {
         const tplId = String(body.template_id || ''); const emails: string[] = Array.isArray(body.emails) ? body.emails.map((e: any) => String(e).toLowerCase().trim()).filter((e: string) => /.+@.+\..+/.test(e)).slice(0, 60) : [];
         if (!UUID.test(tplId)) return bad('اختر قالب مهمة أولًا'); if (!emails.length) return bad('أدخل بريدًا واحدًا على الأقل');
         const { data: tpl } = await db.from('portal_mission_templates').select('*').eq('id', tplId).maybeSingle(); if (!tpl) return bad('القالب غير موجود', 404);
-        const site = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, ''); let created = 0;
-        for (const email of emails) { const m = await assignMission(db, tpl as any, { email }, site); if (m) created++; }
-        outcome = { kind: 'missions', created, template_id: tplId, emails: emails.length };
+        const site = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, ''); let created = 0; const skipped: string[] = []; const failed: string[] = [];
+        const { data: dup } = await db.from('portal_missions').select('email').eq('template_id', tplId).in('email', emails); const dupSet = new Set(((dup || []) as any[]).map(d => String(d.email || '').toLowerCase()));
+        for (const email of emails) { if (dupSet.has(email)) { skipped.push(email); continue; } const m = await assignMission(db, tpl as any, { email }, site); if (m) created++; else failed.push(email); }
+        // لا نحسم الاقتراح إن لم يُسنَد شيء — يبقى بانتظار قرار كي يعاد بمتعلمين آخرين، مع سبب صريح
+        if (!created) return bad(skipped.length && !failed.length ? `لم تُسند أي مهمة: ${skipped.length === 1 ? 'هذا البريد لديه' : 'هذه العناوين لديها'} المهمة نفسها من هذا القالب مسبقًا (${skipped.join('، ')}). اختر متعلمين آخرين أو قالبًا آخر.` : `تعذّر إنشاء المهمة لـ ${failed.join('، ')}${skipped.length ? ` (ولدى ${skipped.join('، ')} المهمة مسبقًا)` : ''} — تحقق من القالب وأعد المحاولة.`, 409);
+        outcome = { kind: 'missions', created, template_id: tplId, emails: emails.length, skipped, failed };
       } else { outcome = { kind: (s as any).kind, noted: true }; }
     }
     const { error: ue } = await db.from('portal_loop_suggestions').update({ status, decided_by: user.id, decided_at: new Date().toISOString(), note, outcome }).eq('id', id);
