@@ -19,8 +19,8 @@ export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   daily_skill: { ar: 'كل يوم مهارة', en: 'Daily skill' }, advisor: { ar: 'مستشارك: اسأل وأنا أجيب', en: 'Your advisor' }, companion: { ar: 'أثير — المدرب الرفيق', en: 'Athir — AI companion' },
   mission_check: { ar: 'فحص أولي لدليل مهمة عمل', en: 'Workflow mission first check' }, mission_suggest: { ar: 'اقتراح مهمات عمل لبرنامج', en: 'Mission suggestions' },
   daily_case: { ar: 'كتابة «موقف اليوم»', en: 'Daily case writing' }, daily_case_eval: { ar: 'مرآة الأداء لموقف اليوم', en: 'Daily case performance mirror' },
-  factory_foresight: { ar: 'مصنع البرامج — محلل الاحتياج', en: 'Program factory — needs analyst' }, factory_design: { ar: 'مصنع البرامج — المصمم التعليمي', en: 'Program factory — instructional designer' }, factory_review: { ar: 'مصنع البرامج — مراجع الجودة', en: 'Program factory — QA reviewer' },
-  daily_case_whatif: { ar: '«ماذا لو؟» — الجولة الثانية لموقف اليوم', en: 'Daily case — what-if round' }, copilot_memo: { ar: 'الطيار المساعد — محضر الأثر', en: 'Live co-pilot — impact memo' },
+  factory_foresight: { ar: 'هندسة البرامج التدريبية — محلل الاحتياج', en: 'Program engineering — needs analyst' }, factory_design: { ar: 'هندسة البرامج التدريبية — المصمم التعليمي', en: 'Program engineering — instructional designer' }, factory_review: { ar: 'هندسة البرامج التدريبية — مراجع الجودة', en: 'Program engineering — QA reviewer' },
+  daily_case_whatif: { ar: '«ماذا لو؟» — الجولة الثانية لموقف اليوم', en: 'Daily case — what-if round' }, copilot_memo: { ar: 'الميسِّر — محضر الأثر', en: 'Live facilitator — impact memo' },
 };
 export const AI_DISCLAIMER = { ar: 'مُولَّد بمساعدة الذكاء الاصطناعي من بياناتك في أَثَر — للاسترشاد، والقرار النهائي للإنسان.', en: 'AI-assisted, generated from your Athar data — for guidance; final decisions stay human.' };
 
