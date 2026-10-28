@@ -144,7 +144,7 @@ function DailyCase({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
             <aside className="hm-respond">
               {!ev ? (
                 <>
-                  <div className="hm-chhead"><b>{ar ? 'كيف تتصرّف؟' : 'How would you act?'}</b><span className="hm-chip">{text.trim().length}/{d.limits?.max || 2500}</span></div>
+                  <div className="hm-chhead"><b>{ar ? 'كيف تتصرّف؟' : 'How would you act?'}</b></div>
                   <Channel lang={lang} value={text} onChange={setText} maxLength={d.limits?.max || 2500} rows={9} tok={tok} context={{ type: 'daily_case', id: c.day || null, skills: c.skill_ids || [], title: c.title_ar, parties: c.parties_ar || [] }} placeholder={ar ? 'اكتب هنا بكلماتك: ماذا تفعل أولًا، مع من تتحدث، ما البدائل، ما الذي لن تفعله، وكيف ستتأكد لاحقًا…' : 'Write in your own words: what you do first, whom you talk to, the alternatives, what you will not do, and how you will verify later…'} disabled={busy} testId="daily-channel" />
                   <ul className="hm-hints">{(ar ? HINTS_AR : HINTS_EN).map(h => <li key={h}><Icon name="check" size={12} /> {h}</li>)}</ul>
                   <div className="hm-respacts"><button type="button" className="pt-btn gold" onClick={submit} disabled={busy || left > 0}>{busy ? (ar ? 'أقرأ ردّك بعناية…' : 'Reading carefully…') : (ar ? 'أرني مرآة أدائي' : 'Show me my mirror')} <Icon name="arrow" size={14} /></button>{left > 0 && <small>{ar ? `${left} حرفًا على الأقل بعد` : `${left} more characters`}</small>}</div>
