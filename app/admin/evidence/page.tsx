@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // إدارة أَثَر — قاعدة الأدلة المؤسسية «الذاكرة الحية» (P14-أ): اسأل الذاكرة بالأدلة · كوكبة الأثر · درس الأسبوع (يعتمده إنسان) · موجز الأدلة للطباعة
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
@@ -22,7 +22,9 @@ export default function AdminEvidencePage() {
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [tok, setTok] = useState(''); const [data, setData] = useState<Data | null>(null);
   const [q, setQ] = useState(''); const [busy, setBusy] = useState(false); const [ans, setAns] = useState<{ answer: EvidenceAnswer; source: string; model: string | null; query_id: string | null } | null>(null);
   const [pick, setPick] = useState<string | null>(null); const [story, setStory] = useState<string[]>([]); const [refreshing, setRefreshing] = useState(false); const [tab, setTab] = useState<'ask' | 'map' | 'lessons'>('ask');
-  const hdr = useMemo(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }), [tok]);
+  // رمز جلسة حديث قبل كل نداء (getSession يجدّد الرمز المنتهي تلقائيًا) — كي لا تفشل العمليات بعد ترك الصفحة مفتوحة طويلًا
+  const fresh = useCallback(async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk !== tok) setTok(tk); return tk; }, [db, tok]);
+  const hdr = useCallback(async () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${await fresh()}` }), [fresh]);
 
   async function load(tk: string) { const j = await fetch('/api/evidence?graph=1', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
   useEffect(() => {
@@ -35,14 +37,14 @@ export default function AdminEvidencePage() {
   }, []);
   async function ask(question?: string) {
     const text = (question ?? q).trim(); if (text.length < 4 || busy) return; setBusy(true); setAns(null); setQ(text);
-    const j = await fetch('/api/evidence', { method: 'POST', headers: hdr, body: JSON.stringify({ action: 'ask', question: text }) }).then(r => r.json()).catch(() => null);
+    const j = await fetch('/api/evidence', { method: 'POST', headers: await hdr(), body: JSON.stringify({ action: 'ask', question: text }) }).then(r => r.json()).catch(() => null);
     if (!j?.success) setError(j?.error || 'تعذّر السؤال'); else if (j.empty) setError(j.error); else { setError(''); setAns({ answer: j.answer, source: j.source, model: j.model, query_id: j.query_id }); }
-    setBusy(false); await load(tok);
+    setBusy(false); await load(await fresh());
   }
-  async function refresh() { setRefreshing(true); const j = await fetch('/api/evidence', { method: 'POST', headers: hdr, body: JSON.stringify({ action: 'refresh' }) }).then(r => r.json()).catch(() => null); if (!j?.success) setError(j?.refresh?.error || j?.error || 'تعذّر التحديث'); else setError(''); await load(tok); setRefreshing(false); }
-  async function decideLesson(id: string, status: 'approved' | 'rejected') { await fetch('/api/evidence', { method: 'POST', headers: hdr, body: JSON.stringify({ action: 'lesson', id, status }) }); await load(tok); }
-  async function draftLesson() { const j = await fetch('/api/evidence', { method: 'POST', headers: hdr, body: JSON.stringify({ action: 'lesson_draft' }) }).then(r => r.json()); if (!j?.lesson?.created) setError(j?.lesson?.error || 'لا أدلة كافية لدرس هذا الأسبوع بعد (≥ 5 أشخاص).'); await load(tok); }
-  async function openNode(id: string) { setPick(id); setStory([]); const j = await fetch(`/api/evidence?node=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${tok}` } }).then(r => r.json()); setStory(j?.story || []); }
+  async function refresh() { setRefreshing(true); const j = await fetch('/api/evidence', { method: 'POST', headers: await hdr(), body: JSON.stringify({ action: 'refresh' }) }).then(r => r.json()).catch(() => null); if (!j?.success) setError(j?.refresh?.error || j?.error || 'تعذّر التحديث'); else setError(''); await load(await fresh()); setRefreshing(false); }
+  async function decideLesson(id: string, status: 'approved' | 'rejected') { await fetch('/api/evidence', { method: 'POST', headers: await hdr(), body: JSON.stringify({ action: 'lesson', id, status }) }); await load(await fresh()); }
+  async function draftLesson() { const j = await fetch('/api/evidence', { method: 'POST', headers: await hdr(), body: JSON.stringify({ action: 'lesson_draft' }) }).then(r => r.json()); if (!j?.lesson?.created) setError(j?.lesson?.error || 'لا أدلة كافية لدرس هذا الأسبوع بعد (≥ 5 أشخاص).'); await load(await fresh()); }
+  async function openNode(id: string) { setPick(id); setStory([]); const j = await fetch(`/api/evidence?node=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${await fresh()}` } }).then(r => r.json()); setStory(j?.story || []); }
   function printBrief() { window.print(); }
 
   if (!ready) return <div className="ev"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="ev-wrap"><div className="ev-card">{error ? <span className="ev-err">{error}</span> : 'جارٍ فتح الذاكرة…'}</div></div></div>;
