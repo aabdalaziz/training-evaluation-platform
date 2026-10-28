@@ -111,7 +111,7 @@ function Inner() {
             </div>}
             <section className="rm-notes">
               <b><Icon name="flag" size={15} /> {ar ? 'السطر الذي نعود به' : 'The line we bring back'}</b>
-              <p className="rm-noteshint">{ar ? 'بعد الحوار: جملة واحدة تلخّص ما اتفقتم عليه. تظهر للمدرب في الطيار وتدخل محضر الأثر.' : 'After the talk: one line summarising what you agreed. It reaches the trainer’s co-pilot and the impact memo.'}</p>
+              <p className="rm-noteshint">{ar ? 'بعد الحوار: جملة واحدة تلخّص ما اتفقتم عليه. تظهر للمدرب في الميسِّر وتدخل محضر الأثر.' : 'After the talk: one line summarising what you agreed. It reaches the trainer’s facilitator and the impact memo.'}</p>
               <div className="rm-noterow"><input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder={ar ? 'اتفقنا على…' : 'We agreed that…'} /><VoiceButton lang={lang} onText={t => setNote(x => (x ? x + ' ' : '') + t)} /><button type="button" className="pt-btn gold small" onClick={saveNote} disabled={noteBusy || note.trim().length < 3}>{ar ? 'أرسل' : 'Send'}</button></div>
               {!!notes.length && <ul className="rm-notelist">{notes.slice().reverse().map((n, k) => <li key={k}><b>{n.name || ''}</b> {n.text}</li>)}</ul>}
             </section>
