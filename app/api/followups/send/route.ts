@@ -20,6 +20,7 @@ import { runCredentialWatch } from '../../../../lib/portal/twin-cron';
 import { runMissionCycle } from '../../../../lib/portal/missions-cron';
 import { runContractPulse } from '../../../../lib/portal/contracts-cron';
 import { runDailyPush } from '../../../../lib/portal/push';
+import { refreshGraph, ensureWeeklyLesson } from '../../../../lib/portal/evidence-cron';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -126,7 +127,14 @@ export async function GET(req: Request) {
     const roomIds = ((stale || []) as any[]).map(r => r.id); if (!dry && roomIds.length) await db.from('portal_rooms').update({ status: 'closed', closed_at: nowIso }).in('id', roomIds);
     media_cleanup = { ok: true, media_deleted: ids.length, rooms_closed: roomIds.length, dry };
   } catch (e: any) { media_cleanup = { ok: false, error: e?.message || String(e) }; }
+  // قاعدة الأدلة المؤسسية (أَثَر · P14): إعادة بناء الرسم البياني من الجداول الموجودة + مسودة «درس الأسبوع» + تنظيف سجل الوكلاء الأقدم من 180 يومًا
+  let evidence: any = null;
+  try {
+    const g = await refreshGraph(db, { dry }); const lesson = await ensureWeeklyLesson(db, today, undefined, { dry });
+    let agent_log_purged = 0; if (!dry) { const { data: old } = await db.from('portal_agent_log').select('id').lt('at', new Date(Date.now() - 180 * 86400000).toISOString()).limit(500); const ids = ((old || []) as any[]).map(r => r.id); if (ids.length) { await db.from('portal_agent_log').delete().in('id', ids); agent_log_purged = ids.length; } }
+    evidence = { ok: g.ok && lesson.ok, nodes: g.nodes, edges: g.edges, lesson: lesson.created ? lesson.title : null, week: lesson.week, agent_log_purged, dry, error: g.error || lesson.error || undefined };
+  } catch (e: any) { evidence = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence });
 }
