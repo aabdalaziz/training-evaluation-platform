@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // أَثَر — توأمي المهاري (P11): كوكبة المهارات عبر الزمن (الماضي ← الآن ← +سنة)، الطزاجة والصدأ، «أين سأكون بعد 90 يومًا؟»،
-// ماذا لو أخذت هذا البرنامج، أرخص مسار إلى مستوى مستهدف، شهاداتي الحية، وحقوقي في توأمي (تصدير/محو). حساب نقيّ في المتصفح — بلا نموذج لغوي.
+// ماذا لو أخذت هذا البرنامج، أرخص مسار إلى مستوى مستهدف، شهاداتي الحية، محفظتي السيادية (P17: شهادات موقَّعة + لقطة قدرة)، وحقوقي في توأمي (تصدير/محو). حساب نقيّ في المتصفح — بلا نموذج لغوي.
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import type { Skill } from '../../../lib/portal/skills';
 import { levelName, EVIDENCE_LABEL, credentialTitle } from '../../../lib/portal/profile';
 import { twinSkill, projectSkill, levelAt, levelAtPast, freshnessAfter, constellation, cheapestPath, statusLabel, STATUS_LABEL, rustSentence, pulseOf, fmtLevel, RUST_THRESHOLD, FADE_THRESHOLD } from '../../../lib/portal/twin';
 import type { TwinSkill, PlannedActivity, PathOption, TwinStatus } from '../../../lib/portal/twin';
+import SovereignWallet from '../../components/SovereignWallet';
 
 export default function TwinPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
@@ -148,6 +149,7 @@ function Inner() {
           <div className="tw-bottom">
             {b.credentials.length > 0 && <div className="pt-box"><h3><Icon name="award" size={18} /> {ar ? 'شهاداتي الحية' : 'My living credentials'}</h3><p className="pt-muted">{ar ? 'الشهادة في أَثَر ليست PDF: عنوان دائم يعرض مستواك الحالي وطزاجة مهاراتك وسلسلة أدلتك، ويمكن لجهة عملك الاشتراك فيه. أنت تتحكم: أوقف «الحية» لتعود شهادة تقليدية.' : 'Credentials here are not PDFs: a permanent address showing your current level, freshness and evidence chain. Employers can subscribe. You control it.'}</p>
               <div className="tw-creds">{b.credentials.map(c => <div key={c.id} className={`tw-cred ${c.revoked_at ? 'off' : ''}`}><div><b>{credentialTitle(c, lang)}</b><small><span dir="ltr">{c.verify_code}</span> · <bdi>{fmtDate(c.issued_at, lang)}</bdi></small></div><div className="pt-chips"><label className={`tw-switch ${c.live ? 'on' : ''}`}><input type="checkbox" checked={!!c.live} disabled={busy === `live:${c.id}` || !!c.revoked_at} onChange={() => toggleLive(c)} /><span /> {ar ? 'حية' : 'Live'}</label><Link href={`/credential/${c.verify_code}`} target="_blank" className="pt-btn light small"><Icon name="globe" size={13} /> {ar ? 'فتح' : 'Open'}</Link></div></div>)}</div></div>}
+            <SovereignWallet lang={lang} credentials={b.credentials} />
             <div className="pt-box tw-rights"><h3><Icon name="shield" size={18} /> {ar ? 'حقوقي في توأمي' : 'My rights over my twin'}</h3><p className="pt-muted">{ar ? 'توأمك ملكك: صدّره بصيغة JSON مفتوحة لتنقله أينما شئت، أو امحُ أحداث تعلّمك ومستويات مهاراتك وذاكرة أثير نهائيًا (الشهادات الصادرة تبقى لأنها وثائق رسمية).' : 'Your twin is yours: export it as open JSON, or permanently erase your learning events, skill levels and Athir memory (issued credentials remain as official documents).'}</p>
               <div className="tw-rightsrow"><button type="button" className="pt-btn light small" disabled={busy === 'export'} onClick={exportTwin}><Icon name="download" size={13} /> {ar ? 'تصدير توأمي (JSON)' : 'Export my twin (JSON)'}</button><div className="tw-forget"><input value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={ar ? 'اكتب: امحُ توأمي' : 'Type: امحُ توأمي'} /><button type="button" className="pt-btn ghost small danger" disabled={busy === 'forget' || confirm.trim() !== 'امحُ توأمي'} onClick={forget}><Icon name="trash" size={13} /> {ar ? 'محو نهائي' : 'Erase'}</button></div></div>
               {ok && <div className="pt-alert ok">{ok}</div>}{err && <div className="pt-alert err">{err}</div>}
