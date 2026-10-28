@@ -23,6 +23,11 @@ export default function ProgramEngineeringPage() {
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [tok, setTok] = useState(''); const [busy, setBusy] = useState('');
   const [data, setData] = useState<Data | null>(null); const [tab, setTab] = useState<'board' | 'new'>('board'); const [selId, setSelId] = useState<string | null>(null); const [need, setNeed] = useState<Need>(EMPTY_NEED); const [pubSkills, setPubSkills] = useState<string[]>([]); const [notes, setNotes] = useState('');
   const H = (tk = tok) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` });
+  // P15 — فجوات حقيقية من الذاكرة الحية (الحلقة المغلقة): تُملأ بالنقر في نموذج الاحتياج
+  type Gap = { fingerprint: string; title_ar: string; why_ar: string; evidence: { label: string; value: string }[]; target: any; score: number };
+  const [gaps, setGaps] = useState<Gap[] | null>(null); const [gapsNote, setGapsNote] = useState('');
+  async function loadGaps() { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; const j = await fetch('/api/loop?gaps=1', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setGaps([]); setGapsNote(j?.error || 'تعذّر قراءة الذاكرة'); return; } setGaps(j.gaps || []); setGapsNote(j.empty || ''); }
+  function useGap(g: Gap) { const t = g.target || {}; const known = SECTORS_2062.some(x => x.code === t.sector); setNeed({ ...need, sector: known ? t.sector : need.sector, gap_ar: String(t.gap_ar || g.why_ar || ''), audience_ar: need.audience_ar || `منسوبو جهات قطاع ${t.sector || ''}`.trim() }); setGapsNote('مُلئ الاحتياج من الذاكرة — راجعه ثم ابدأ الاستشراف'); }
   async function load(tk = tok) { const j = await fetch('/api/factory', { headers: H(tk) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
   async function post(body: any): Promise<any> { setBusy(body.action); setError(''); setOk(''); try { const j = await fetch('/api/factory', { method: 'POST', headers: H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'خطأ'); await load(); return j; } catch (e: any) { setError(e.message); return null; } finally { setBusy(''); } }
   useEffect(() => { (async () => {
@@ -52,6 +57,12 @@ export default function ProgramEngineeringPage() {
         {st && <div className="fc-card fc-kpis"><span><b>{st.total}</b> مسودّة</span>{STAGES.map(s => <span key={s.code}><b style={{ color: STAGE_COLOR[s.code] }}>{st.by_stage[s.code] || 0}</b> {s.label_ar}</span>)}<span className="fc-sep" />{HORIZONS.map(h => <span key={h}><b>{st.horizons[String(h)] || 0}</b> {h}</span>)}</div>}
         <div className="fc-tabs"><button className={tab === 'board' ? 'on' : ''} onClick={() => setTab('board')}>لوحة الهندسة ({data?.drafts.length || 0})</button><button className={tab === 'new' ? 'on' : ''} onClick={() => setTab('new')}>احتياج جديد</button></div>
 
+        {tab === 'new' && <div className="fc-card fc-mem" data-testid="factory-memory">
+          <h3><Icon name="compass" size={14} /> من الذاكرة — فجوات حقيقية بدليل</h3>
+          <p className="fc-muted">قطاعات تحتاج مهارات لم يتركْ عليها أي برنامج دليلًا كافيًا. النقر يملأ الاحتياج أدناه؛ والقرار لك.</p>
+          {gaps === null ? <button type="button" className="pt-btn small" onClick={loadGaps} data-testid="factory-memory-load">اقرأ الذاكرة</button> : !gaps.length ? <p className="fc-muted">{gapsNote || 'لا دليل كافٍ بعد — لا فجوات مؤكَّدة في الذاكرة الآن.'}</p> : (
+            <><p className="fc-muted" data-testid="factory-memory-note">{gapsNote}</p><div className="fc-gaps">{gaps.map(g => <button key={g.fingerprint} type="button" className="fc-gap" onClick={() => useGap(g)}><b>{g.title_ar}</b><span>{g.why_ar}</span><small>{(g.evidence || []).slice(0, 4).map(e => `${e.label}: ${e.value}`).join(' · ')}</small></button>)}</div></>)}
+        </div>}
         {tab === 'new' && <div className="fc-card">
           <h3>1) صِف الاحتياج — لا الموضوع</h3>
           <div className="fc-row">
@@ -128,6 +139,7 @@ export default function ProgramEngineeringPage() {
 }
 
 const CSS = `
+.fc-mem{border-color:#cfe9e6;background:#f6fffe}.fc-muted{color:#64748b;font-size:12px;margin:0 0 8px}.fc-gaps{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}.fc-gap{text-align:start;background:#fff;border:1px solid #e2e8f0;border-inline-start:4px solid #c9a24b;border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;display:grid;gap:4px}.fc-gap b{font-size:13px;color:#0f2a4e}.fc-gap span{font-size:12px;color:#475569;line-height:1.6}.fc-gap small{font-size:11px;color:#94a3b8}.fc-gap:hover{border-color:#0b8a83}
 .fc{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;direction:rtl}
 .fc-wrap{max-width:1200px;margin:0 auto;display:grid;gap:12px}
 .fc-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.fc-head p{margin:0;color:#64748b;font-size:14px;line-height:1.8;max-width:960px}.fc-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b8a83}
