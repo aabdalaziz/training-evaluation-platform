@@ -7,9 +7,9 @@
 import type { Lang } from '../portal/content';
 import type { Scenario, Turn } from '../portal/sim';
 
-export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion' | 'mission_check' | 'mission_suggest' | 'daily_case' | 'daily_case_eval' | 'factory_foresight' | 'factory_design' | 'factory_review' | 'daily_case_whatif' | 'copilot_memo';
+export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion' | 'mission_check' | 'mission_suggest' | 'daily_case' | 'daily_case_eval' | 'factory_foresight' | 'factory_design' | 'factory_review' | 'daily_case_whatif' | 'copilot_memo' | 'evidence_query' | 'agent_reply';
 /** حدود الاستخدام لكل مستخدم خلال 24 ساعة */
-export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150, mission_check: 30, mission_suggest: 20, daily_case: 3, daily_case_eval: 6, factory_foresight: 20, factory_design: 20, factory_review: 20, daily_case_whatif: 4, copilot_memo: 20 };
+export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150, mission_check: 30, mission_suggest: 20, daily_case: 3, daily_case_eval: 6, factory_foresight: 20, factory_design: 20, factory_review: 20, daily_case_whatif: 4, copilot_memo: 20, evidence_query: 60, agent_reply: 200 };
 export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   impact_brief: { ar: 'موجز تنفيذي لتقرير الأثر', en: 'Impact executive brief' },
   learner_plan: { ar: 'خطة تطوير شخصية', en: 'Personal development plan' },
@@ -20,7 +20,7 @@ export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
   mission_check: { ar: 'فحص أولي لدليل مهمة عمل', en: 'Workflow mission first check' }, mission_suggest: { ar: 'اقتراح مهمات عمل لبرنامج', en: 'Mission suggestions' },
   daily_case: { ar: 'كتابة «موقف اليوم»', en: 'Daily case writing' }, daily_case_eval: { ar: 'مرآة الأداء لموقف اليوم', en: 'Daily case performance mirror' },
   factory_foresight: { ar: 'هندسة البرامج التدريبية — محلل الاحتياج', en: 'Program engineering — needs analyst' }, factory_design: { ar: 'هندسة البرامج التدريبية — المصمم التعليمي', en: 'Program engineering — instructional designer' }, factory_review: { ar: 'هندسة البرامج التدريبية — مراجع الجودة', en: 'Program engineering — QA reviewer' },
-  daily_case_whatif: { ar: '«ماذا لو؟» — الجولة الثانية لموقف اليوم', en: 'Daily case — what-if round' }, copilot_memo: { ar: 'الميسِّر — محضر الأثر', en: 'Live facilitator — impact memo' },
+  daily_case_whatif: { ar: '«ماذا لو؟» — الجولة الثانية لموقف اليوم', en: 'Daily case — what-if round' }, copilot_memo: { ar: 'الميسِّر — محضر الأثر', en: 'Live facilitator — impact memo' }, evidence_query: { ar: 'قاعدة الأدلة — اختيار السؤال المؤسسي', en: 'Evidence base — question routing' }, agent_reply: { ar: 'الوكلاء المفوَّضون — صياغة الرد', en: 'Authorized agents — reply phrasing' },
 };
 export const AI_DISCLAIMER = { ar: 'مُولَّد بمساعدة الذكاء الاصطناعي من بياناتك في أَثَر — للاسترشاد، والقرار النهائي للإنسان.', en: 'AI-assisted, generated from your Athar data — for guidance; final decisions stay human.' };
 
@@ -321,3 +321,16 @@ export function buildMemoryPrompt(prev: string, history: { role: string; text: s
   return { system, user: `الذاكرة السابقة: ${prev || '(فارغة)'}\nالمحادثة الأخيرة:\n${history.map(h => `${h.role}: ${h.text}`).join('\n')}` };
 }
 export function parseMemory(raw: any): string | null { const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; const v = S(j?.summary, 400); return v || null; }
+
+// ================================================================ P14-أ) قاعدة الأدلة المؤسسية — توجيه السؤال إلى قالب معتمد (لا SQL حرّ)
+export type EvidencePick = { template: string; skill?: string | null; sector?: string | null; org?: string | null; program?: string | null; year?: number | null };
+export function buildEvidenceRoutePrompt(question: string, templates: { id: string; title_ar: string; example_ar: string; needs?: string[] }[], entities: { skills: { id: string; name: string }[]; sectors: { code: string; name: string }[]; orgs: { id: string; name: string }[]; programs: { id: string; name: string }[] }): { system: string; user: string } {
+  const system = systemBase('ar', 'موجّه أسئلة لقاعدة أدلة مؤسسية: تختار قالب السؤال الأنسب من قائمة مغلقة وتستخرج معاملاته من قوائم الكيانات المُمرَّرة فقط. لا تكتب استعلامات ولا أرقامًا ولا تجب عن السؤال نفسه.') + '\nأعد JSON فقط: {"template":"<id من القائمة>","skill":"<id أو null>","sector":"<code أو null>","org":"<id أو null>","program":"<id أو null>","year":<سنة أو null>}';
+  const user = `السؤال: ${S(question, 400)}\nالقوالب:\n${templates.map(t => `- ${t.id}: ${t.title_ar} (مثال: ${t.example_ar})${t.needs?.length ? ` [يحتاج: ${t.needs.join('،')}]` : ''}`).join('\n')}\nالمهارات: ${entities.skills.slice(0, 80).map(x => `${x.id}=${x.name}`).join(' | ')}\nالقطاعات: ${entities.sectors.map(x => `${x.code}=${x.name}`).join(' | ')}\nالجهات: ${entities.orgs.slice(0, 60).map(x => `${x.id}=${x.name}`).join(' | ')}\nالبرامج: ${entities.programs.slice(0, 60).map(x => `${x.id}=${x.name}`).join(' | ')}`;
+  return { system, user };
+}
+export function parseEvidencePick(raw: any, allowed: string[]): EvidencePick | null {
+  const j = typeof raw === 'string' ? parseJsonLoose(raw) : raw; if (!j || typeof j !== 'object') return null; const t = S(j.template, 60); if (!allowed.includes(t)) return null;
+  const id = (v: unknown) => { const x = S(v, 80); return x && x !== 'null' ? x : null; }; const y = N(j.year);
+  return { template: t, skill: id(j.skill), sector: id(j.sector), org: id(j.org), program: id(j.program), year: y && y >= 2020 && y <= 2049 ? y : null };
+}
