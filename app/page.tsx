@@ -44,6 +44,7 @@ function Home() {
       <Hero feed={feed} now={now} lang={lang} counters={{ open: openCount, sessions: upcoming, ...counters }} />
       <DailyCase lang={lang} tok={tok} />
       <Advisor lang={lang} tok={tok} />
+      <Memory lang={lang} />
       <Dialogue lang={lang} tok={tok} sessions={sessions} now={now} />
       <section className="pt-sec hm-trace">
         <div className="pt-wrap">
@@ -245,6 +246,25 @@ function Advisor({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
 }
 
 /* ------------------------------------------------ جلسة حوار: محاكاة فورية + الجلسة القادمة ------------------------------------------------ */
+// P14-أ — «الذاكرة الحية»: ثلاثة خيوط أثر مجهّلة لليوم من قاعدة الأدلة المؤسسية (مجموعات ≥ 5 فقط · بلا أسماء) + درس الأسبوع المعتمد. تختفي كليًا إن لم تكن هناك خيوط.
+type MemThread = { icon: 'spark' | 'compass' | 'target'; text_ar: string; text_en: string };
+function Memory({ lang }: { lang: 'ar' | 'en' }) {
+  const ar = lang === 'ar'; const [d, setD] = useState<null | { threads: MemThread[]; lesson: { week: string; title_ar: string; body_ar: string } | null; nodes: number }>(null); const [shown, setShown] = useState(0);
+  useEffect(() => { fetch('/api/evidence?threads=1', { cache: 'no-store' }).then(r => r.json()).then(j => { if (j?.success && Array.isArray(j.threads) && j.threads.length) setD({ threads: j.threads.slice(0, 3), lesson: j.lesson || null, nodes: j.nodes || 0 }); }).catch(() => {}); }, []);
+  useEffect(() => { if (!d) return; setShown(0); const id = setInterval(() => setShown(s => { if (s >= d.threads.length) { clearInterval(id); return s; } return s + 1; }), 650); return () => clearInterval(id); }, [d]);
+  if (!d) return null;
+  const ICON: Record<MemThread['icon'], 'star' | 'compass' | 'target'> = { spark: 'star', compass: 'compass', target: 'target' };
+  return (
+    <section className="pt-sec hm-memory" id="memory" data-testid="home-memory">
+      <div className="pt-wrap">
+        <div className="hm-sechead"><div><span className="pt-kicker"><Icon name="compass" size={14} /> {ar ? 'الذاكرة الحية · قاعدة الأدلة المؤسسية' : 'Living memory · institutional evidence base'}</span><h2>{ar ? 'ثلاثة خيوط أثر من ذاكرة أَثَر اليوم' : 'Three threads of impact from Athar’s memory today'}</h2><p className="hm-dailysub">{ar ? `كل برنامج وجلسة وشهادة تُنسج في شبكة معرفية حيّة من ${d.nodes} عقدة؛ نعرض منها يوميًا ما تثبته مجموعات لا أفراد — بلا أسماء.` : `Every program, session and credential is woven into a living graph of ${d.nodes} nodes; each day we surface what groups — never individuals — have proven.`}</p></div><Link href="/agents" className="hm-memlink">{ar ? 'للوكلاء: المكتب الزجاجي ←' : 'For agents: the glass office →'}</Link></div>
+        <div className="hm-threads">{d.threads.map((th, i) => <article key={i} className={`hm-thread ${i < shown ? 'in' : ''}`}><span className={`hm-thicon ${th.icon}`}><Icon name={ICON[th.icon]} size={18} /></span><p>{ar ? th.text_ar : th.text_en}</p><small>{ar ? 'دليل مجمّع · مجموعة ≥ 5' : 'Aggregated evidence · group ≥ 5'}</small></article>)}</div>
+        {d.lesson && <aside className="hm-lesson"><span className="hm-lessonk">{ar ? `درس الأسبوع · ${d.lesson.week}` : `Lesson of the week · ${d.lesson.week}`}</span><b>{d.lesson.title_ar}</b><p>{d.lesson.body_ar}</p><small>{ar ? 'صاغته الذاكرة واعتمده إنسان' : 'Drafted from memory, approved by a human'}</small></aside>}
+      </div>
+    </section>
+  );
+}
+
 function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string; sessions: FeedSession[]; now: number }) {
   const ar = lang === 'ar'; const s = DEMO_SCENARIO; const [turns, setTurns] = useState<Turn[]>([]); const [text, setText] = useState(''); const [busy, setBusy] = useState(false); const [score, setScore] = useState<SimScore | null>(null); const [started, setStarted] = useState(false); const listRef = useRef<HTMLDivElement>(null);
   const next = sessions.filter(x => Date.parse(x.starts_at) > now - 3600000).sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0]; const cd = next ? countdown(next.starts_at, now, lang) : null;
@@ -321,6 +341,12 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
 }
 
 const CSS = `
+.hm-memory{background:linear-gradient(180deg,#f6f8fb,#eef5f4);padding:56px 0}.hm-memlink{font-size:13px;font-weight:800;color:#0b8a83;white-space:nowrap}
+.hm-threads{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}@media(max-width:820px){.hm-threads{grid-template-columns:1fr}}
+.hm-thread{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:18px 18px 14px;display:grid;gap:8px;align-content:start;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}.hm-thread.in{opacity:1;transform:none}
+.hm-thread p{margin:0;font-size:15px;line-height:1.8;color:#0f2a4e;font-weight:700}.hm-thread small{color:#94a3b8;font-size:11.5px}
+.hm-thicon{width:38px;height:38px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff;background:#0b8a83}.hm-thicon.spark{background:#c9a24b;color:#0f2a4e}.hm-thicon.target{background:#0f2a4e}
+.hm-lesson{margin-top:16px;background:#0f2a4e;color:#fff;border-radius:18px;padding:18px 22px;display:grid;gap:6px}.hm-lessonk{font-size:12px;font-weight:900;color:#c9a24b}.hm-lesson b{font-size:17px}.hm-lesson p{margin:0;font-size:14px;line-height:1.8;color:#e2e8f0}.hm-lesson small{color:#94a3b8;font-size:11.5px}
 .hm .hm-word{display:inline-block;animation:hmWord .6s ease}@keyframes hmWord{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .hm-hero.pt-hero{padding:64px 0 72px}.hm-hero .pt-herogrid{grid-template-columns:1.05fr .95fr;align-items:start}
 .hm-counters{display:flex;gap:18px;flex-wrap:wrap;margin-top:28px}.hm-counters div{display:grid}.hm-counters b{font-size:26px;font-weight:900;color:#c9a24b;line-height:1}.hm-counters span{font-size:12px;color:rgba(255,255,255,.75)}
