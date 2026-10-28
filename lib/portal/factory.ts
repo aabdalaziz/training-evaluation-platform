@@ -1,10 +1,10 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * أَثَر — منظومة تصميم البرامج المدعومة بالذكاء الاصطناعي («مصنع البرامج» · P13-أ)
+ * أَثَر — منظومة تصميم البرامج المدعومة بالذكاء الاصطناعي («هندسة البرامج التدريبية» · P13-أ)
  *  تبدأ من الاحتياج الإنساني (القطاع × المجال × المرحلة × المؤسسة × الأفق × الفجوة) لا من الموضوع، وتمرّ بأربع محطات:
  *  محلل الاحتياج (استشراف) → المصمم التعليمي (مخطط برنامج قابل للتشغيل) → مراجع الجودة (قائمة فحص ودليل الأسلوب) → الاعتماد البشري (النشر كبرنامج مسودّة)
  *  كل محطة لها بديل محلي كامل؛ الذكاء الاصطناعي يُحسّن ولا يقرّر. المصطلحات وفق المعجم (LEXICON-ATHAR-AR).
- *  P13-ب: جسر المصنع ↔ عقود الأثر — contractProposalFrom/contractUrlFor: مؤشرات الأثر تصبح أهداف عقد 60/25/15 بضغطة «اقترح عقد أثر».
+ *  P13-ب: جسر الهندسة ↔ عقود الأثر — contractProposalFrom/contractUrlFor: مؤشرات الأثر تصبح أهداف عقد 60/25/15 بضغطة «اقترح عقد أثر».
  */
 import { parseJsonLoose } from '../ai/prompts';
 import { HUMAN_DOMAINS, FAMILIES, HORIZON_LABEL, SECTORS_2062, domainByCode, familyByCode, sectorByCode, lexiconIssues } from './lexicon';
@@ -172,7 +172,7 @@ export function programPayload(d: Design, n: Need): Record<string, unknown> {
 }
 export function nextStage(s: Stage): Stage | null { const i = STAGES.findIndex(x => x.code === s); return i >= 0 && i < STAGES.length - 1 ? STAGES[i + 1].code : null; }
 export function stageLabel(s: Stage): string { return STAGES.find(x => x.code === s)?.label_ar || s; }
-/** ملخص المحفظة للوحة المصنع */
+/** ملخص المحفظة للوحة الهندسة */
 export function factoryStats(drafts: Draft[]): { total: number; by_stage: Record<Stage, number>; by_domain: { code: DomainCode; h: string; n: number }[]; horizons: Record<string, number> } {
   const by_stage: Record<Stage, number> = { foresight: 0, designed: 0, reviewed: 0, published: 0 }; const horizons: Record<string, number> = { 2035: 0, 2050: 0, 2070: 0 }; const dm = new Map<DomainCode, number>();
   for (const d of drafts) { by_stage[d.stage] = (by_stage[d.stage] || 0) + 1; horizons[String(d.need.horizon)] = (horizons[String(d.need.horizon)] || 0) + 1; dm.set(d.need.domain_code, (dm.get(d.need.domain_code) || 0) + 1); }
@@ -181,7 +181,7 @@ export function factoryStats(drafts: Draft[]): { total: number; by_stage: Record
 export const FACTORY_SECTORS = SECTORS_2062;
 export const FACTORY_FAMILIES = FAMILIES;
 
-// ====================================================================== جسر المصنع ↔ عقود الأثر (P13-ب)
+// ====================================================================== جسر الهندسة ↔ عقود الأثر (P13-ب)
 /** مقترح عقد أثر من مسودة منشورة: مؤشرات الأثر تصبح أهداف العقد، والتقسيم 60/25/15 (أو ما اقترحه المصمم) يصبح تقسيم الدفعات */
 export type ContractProposal = { title_ar: string; program_id: string | null; split: { delivery: number; evidence: number; impact: number }; targets: { evidence_rate: number; impact_days: number; impact_rate: number }; notes: string; indicators: string[]; price_hint_sar: number; factory_draft_id: string };
 export function contractProposalFrom(d: Draft): ContractProposal {
@@ -191,7 +191,7 @@ export function contractProposalFrom(d: Draft): ContractProposal {
   const horizonDays = d.need.horizon >= 2050 ? 120 : 90;
   const targets = { evidence_rate: des && des.saqf_level >= 6 ? 70 : 60, impact_days: horizonDays, impact_rate: 50 };
   const title = `عقد أثر — ${des?.brand_ar || d.title_ar}`;
-  const notes = [`مُقترح من مصنع البرامج (مسودة ${d.id.slice(0, 8)}).`, indicators.length ? `مؤشرات الأثر المتعاقد عليها: ${indicators.map((x, i) => `${i + 1}) ${x}`).join(' ')}` : '', des ? `المدة: ${des.hours} ساعة / ${des.weeks} أسابيع · مستوى الإطار الوطني للمؤهلات: ${des.saqf_level} · السعر الاسترشادي للمتدرب: ${des.price_hint_sar} ر.س` : '', fs?.scarce_ar ? `القدرة النادرة المستهدفة: ${fs.scarce_ar}` : ''].filter(Boolean).join('\n');
+  const notes = [`مُقترح من هندسة البرامج التدريبية (مسودة ${d.id.slice(0, 8)}).`, indicators.length ? `مؤشرات الأثر المتعاقد عليها: ${indicators.map((x, i) => `${i + 1}) ${x}`).join(' ')}` : '', des ? `المدة: ${des.hours} ساعة / ${des.weeks} أسابيع · مستوى الإطار الوطني للمؤهلات: ${des.saqf_level} · السعر الاسترشادي للمتدرب: ${des.price_hint_sar} ر.س` : '', fs?.scarce_ar ? `القدرة النادرة المستهدفة: ${fs.scarce_ar}` : ''].filter(Boolean).join('\n');
   return { title_ar: title, program_id: d.program_id || null, split: sp, targets, notes, indicators, price_hint_sar: des?.price_hint_sar || 0, factory_draft_id: d.id };
 }
 /** رابط صفحة العقود مع التعبئة المسبقة (يُقرأ من window.location في صفحة العقود) */
