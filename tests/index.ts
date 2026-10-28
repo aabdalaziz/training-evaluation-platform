@@ -40,3 +40,4 @@ import './p13.test';
 import './p13b.test';
 import './p13c.test';
 import './p14.test';
+import './p15.test';
