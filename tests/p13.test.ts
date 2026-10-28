@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // اختبارات P13-أ: المعجم (المجالات H1–H12، العائلات F1–F8، تقويم المناسبات، خريطة الجدارات ومؤشراتها)، «كل يوم بناء» (اختيار الموقف حسب
-// اليوم والمناسبة، التقويم المحلي للاستجابات، التحليل الآمن لمخرجات الذكاء الاصطناعي، السلسلة)، ومصنع البرامج (التحقق، الاستشراف، التصميم، المراجعة، حمولة النشر).
+// اليوم والمناسبة، التقويم المحلي للاستجابات، التحليل الآمن لمخرجات الذكاء الاصطناعي، السلسلة)، وهندسة البرامج التدريبية (التحقق، الاستشراف، التصميم، المراجعة، حمولة النشر).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { HUMAN_DOMAINS, FAMILIES, EVENTS, SECTORS_2062, eventsFor, upcomingEvents, legacyToDomain, domainByCode, domainMap, balanceIndex, hcri, readinessIndex, indexBand, weakestDomains, lexiconIssues, HORIZONS } from '../lib/portal/lexicon';
@@ -134,7 +134,7 @@ test('daily case: AI purposes/limits and evidence weight registered', () => {
   const low = evidenceFromEvent({ verb: 'assessed', object_type: 'daily_case', object_id: 'c2', at: '2026-11-10T05:00:00Z', skills: ['s1'], context: { score: 20, band: 'emerging' } } as any, meta as any); assert.ok(low[0].e.level <= ev[0].e.level, 'level scales with score');
 });
 
-// ---------------------------------------------------------------- مصنع البرامج
+// ---------------------------------------------------------------- هندسة البرامج التدريبية
 const NEED: Need = { ...EMPTY_NEED, sector: 'health', domain_code: 'judgment', family: 'judgment_accountability', stage: 'adulthood', institution: 'work', horizon: 2035, audience_ar: 'مشرفو الأقسام في المستشفيات', gap_ar: 'يقبلون توصيات النظام الذكي بلا تحقق ولا يوثقون قراراتهم حين تتعارض الأنظمة ولا يكتبون حدود تفويض واضحة' };
 
 test('factory: need validation and payload normalisation', () => {
