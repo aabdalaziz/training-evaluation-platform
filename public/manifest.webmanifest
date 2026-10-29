@@ -1,11 +1,12 @@
 {
   "name": "أَثَر | التدريب ما بعد الذكاء الاصطناعي",
   "short_name": "أَثَر",
-  "description": "نبني القدرة ونُثبت الأثر — موقف اليوم، خريطة جداراتك، شهادتك الحية، وجلساتك المباشرة.",
+  "description": "أَثَر في الجيب: محفظتك السيادية بلا اتصال، صندوق الأدلة الميداني، موقف اليوم، وبطاقة قدرتك.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "dir": "rtl",
   "lang": "ar",
@@ -17,9 +18,16 @@
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": { "title": "title", "text": "text", "files": [{ "name": "files", "accept": ["image/jpeg", "image/png", "image/webp", "audio/*"] }] }
+  },
   "shortcuts": [
     { "name": "موقف اليوم", "short_name": "موقف اليوم", "url": "/#daily", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "خريطة جداراتي", "short_name": "جداراتي", "url": "/me/map", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "جلساتي المباشرة", "short_name": "المباشر", "url": "/live", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "بطاقة قدرتي", "short_name": "بطاقتي", "url": "/me/card", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "صندوق الأدلة", "short_name": "الصندوق", "url": "/offline#outbox", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "مرصد القدرة", "short_name": "المرصد", "url": "/observatory", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
