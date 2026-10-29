@@ -1,0 +1,113 @@
+MANIFEST — P23 «مجالس أَثَر» (مجالس الأقران) — 2026-10-29
+© 2026 د. أحمد محمد عبدالعزيز بدوي — جميع الحقوق محفوظة
+
+الأساس: main HEAD 30e881c (P22). الحزمة: p23-files.zip (31 ملفًا: 15 جديدًا + 16 معدَّلًا) + SQL واحد.
+QA محلي: tsc نظيف · 422/422 اختبار وحدة (منها 11 جديدة) · بناء ناجح · E2E p23 60/60 · p22 75/75 · p20 56/56
+
+789  SQL   789-p23-councils.sql   (6 جداول + 3 RPC + RLS — آمن لإعادة التشغيل)
+
+— ملفات جديدة —
+790  NEW  lib/councils/registry.ts
+      الثوابت (5–7 · ≥2 جهة · 6 أسابيع · عودة 14 يومًا · k≥5) · ميثاق المجلس v2026-10 · الأنواع · النصاب · دوران الكرسي · المواضيع العشرة · الدائرة العامة المجهولة
+      sha256 ee242cfaa73081cb61e273269faf568795399de602b23c3d962d8ef88ce90ed1
+791  NEW  lib/councils/match.ts
+      المُوفِّق: يقرأ محفظة القدرة والمتقدمين ويقترح تشكيلات متقاربة المستوى متنوعة الجهات (الطاقم يعتمد)
+      sha256 294982cc46a9829c960c2f76080503c00a9d24eb16dda8e52d9b2b90319cd888
+792  NEW  lib/councils/scribe.ts
+      كاتب المجلس: تجهيل المداولة (عضو 1/2/…) → ذكاء اصطناعي أو ملخص محلي صادق · لا أسماء · لا حكم
+      sha256 2b7f5f75715f3aecf74969241c023ba3226b7718a20818d5e3bdd0ef2c1b6164
+793  NEW  lib/councils/mirror.ts
+      مرآة المجلس: أسئلة/نصائح/أدلة/التزامات/عودات — مقارنة بالذات (الدورة السابقة) لا بالآخرين
+      sha256 a58bf737629a38bf557351e230b99df0cb640d6f216d91d4dd21dcb9afef027f
+794  NEW  lib/councils/attest.ts
+      شهادة الأقران: تحقق · إنشاء · مَن يعتمد (مدير الجهة أولًا ثم الطاقم) · اعتماد → حدث تعلّم بوزن 0.4 → 0.75
+      sha256 3385931ea2620bc52ae530f0332210b5f183915aabcec0de696731fc07e3249d
+795  NEW  lib/councils/badge.ts
+      شهادة عضو مجلس: الأهلية (3 دورات · 3 شهادات معتمدة · عودة) · وثيقة OpenBadge موقَّعة Ed25519 بأرقام فقط
+      sha256 0cb6feec4ffc38a23f7f300198af5029918c9bd94deb2a7389e8eccc86b0797b
+796  NEW  lib/councils/cron.ts
+      الحارس الزمني: تذكير العودة · إغلاق الدورة (احتساب الفاعلين · دوران الكرسي · مرآة) · تذكير الشهادات المعلّقة · الشهادات المستحقة
+      sha256 5cf3e067e7eb8eefba48f395f5dd17969bd1ca8034d73f46c22230a8f2a048da
+797  NEW  lib/councils/wisdom.ts
+      خريطة الحكمة: الأنماط المتكررة (k≥5 أشخاص و≥2 جهة) بلا أسماء
+      sha256 01c4e52de2aab5cfe087f1d51f4c0744ca682a1023bae40b970a693c2b04b061
+798  NEW  app/api/councils/route.ts
+      قاعة المجلس (العضو): GET الهيكل · apply · sign_charter · open_case · post · commit · return · close_case · attest · decide_attestation (مدير الجهة) · request_badge · الوكيل المفوَّض commit فقط
+      sha256 08edfc32682a1bfe2e67b8b701ac97883787d5d90b2de1ffa2d60f565b316c4f
+799  NEW  app/api/councils/admin/route.ts
+      الإدارة (الطاقم): اقتراحات المُوفِّق · create · add/remove_member · activate (نصاب) · set_chair · close_cycle · pause/resume/close · decide_attestation (احتياطًا) · wisdom_to_engineering
+      sha256 1b074bda8410d895a4b484d411fc948f97ca834b362107ccec7a84d1fbb64b71
+800  NEW  app/api/councils/public/route.ts
+      الدوائر الحيّة العامة المجهولة + خريطة الحكمة + الميثاق (CORS · s-maxage=300)
+      sha256 d6eab6c13eb73099840f5f0e5ee52b8d4bc9d6b2b4ce76a7e6012ca4c954b2ed
+801  NEW  app/councils/page.tsx
+      الصفحة العامة /councils: دوائر حيّة بحلقات المقاعد · الحركات الخمس · خريطة الحكمة · الميثاق · طلب مقعد
+      sha256 c0fb05354a01c62ed90eb8740fd0c7e7ed35affd1c821d23ec840915e05fbc2d
+802  NEW  app/me/council/page.tsx
+      قاعة المجلس /me/council: القضية (نص/صوت/فيديو) · التزاماتي · مرآتي · شهادات الأقران · الأعضاء والميثاق · غرفة حية
+      sha256 5a330a961013feda32181db406d378e72e14c9804c936f30561ced34e0acc0fb
+803  NEW  app/admin/councils/page.tsx
+      /admin/councils: المجالس · تشكيل مجلس (المُوفِّق) · المتقدمون · شهادات للاعتماد · خريطة الحكمة → هندسة البرامج التدريبية
+      sha256 5e4e53e7846075fd97b736dc55c08f35ff461804fc331babbe4150eb53c17d2a
+804  NEW  tests/p23.test.ts
+      11 اختبار وحدة للمجالس
+      sha256 1c5865065282bb49e3cfe97f00916b8f2a37061e12a259e1f07ea47822fe774f
+
+— ملفات معدَّلة (استبدال كامل) —
+805  MOD  lib/vault/registry.ts
+      الخزنة تعرف جداول المجالس (5 إدخالات) + مفتاحا الشهادة (من/لمن) + كاتب المجلس غير شخصي
+      sha256 6e2311377ee3af17538d8323961a66fac3e467d095ded5552d2cf8e37dd4501c
+806  MOD  lib/vault/erasure.ts
+      النسيان يجهّل بالمفاتيح الإضافية (alsoKeys)
+      sha256 5807b359828bfd4a1da299401a85218cbc81db43d87cb3ad0e68ebab82d6fdd5
+807  MOD  lib/portal/profile.ts
+      نوع دليل جديد «peer» (0.4 · معتمد 0.75) — لا يغيّر المستوى المعتمد دون إنسان
+      sha256 b7ad120626c7105643629f603158a3c6b0a707c7183cd1c8d6e065bb2babc2ee
+808  MOD  lib/portal/oauth.ts
+      نطاق council:write للوكلاء
+      sha256 bfd3447d857732a0bd2efab8ca5a7a39b90c68851ad8cd529cdd26475451dd9a
+809  MOD  lib/portal/mcp.ts
+      أداتا my_council و council_commit
+      sha256 a5b12e753201bd48ddd587b3e931da8b6158392f2b8f0898e96b74e58bb32967
+810  MOD  lib/portal/mcp-server.ts
+      تنفيذ الأداتين عبر /api/councils (تفويض داخلي)
+      sha256 f7f608808fa9c47e8d0dce054512d8815227a64d05a67547ff4d31cbe7240980
+811  MOD  lib/portal/content.ts
+      «المجالس» في القائمة العامة
+      sha256 c3c70d575fee75403e47192fa0462c595e233e3d7b5646e94e843112b072f82b
+812  MOD  lib/ai/prompts.ts
+      غرض council_scribe
+      sha256 ffd742788053fdd1067d750330147e36d551d74da68b8ca6f164ece9f8fa8526
+813  MOD  lib/shield/ratelimit.ts
+      حد council_write_ip (90/ساعة)
+      sha256 62d908d94a1723aa9b2d10097d8780b8879b33a03bf35b687e57453401e9e4a8
+814  MOD  app/api/followups/send/route.ts
+      الكرون يشغّل runCouncils بعد الخزنة ويُرجع councils{}
+      sha256 11d63865cfafbae0027e4efcdf0850cac2eac390000ae3b4c25df4e9401829e8
+815  MOD  app/me/page.tsx
+      رابط «مجلسي»
+      sha256 ac47195d5b9a368f28daca23f16405e3536b80184bc30dcaf9f386757f794e97
+816  MOD  app/components/PortalAdminTabs.tsx
+      تبويب «مجالس أَثَر»
+      sha256 274939aba7b731cff1d5bef17fbec1a3bd5ae2712429eabb98dbabcd7f027a5d
+817  MOD  tests/index.ts
+      استيراد p23
+      sha256 dd3dfff057f68c8a9371bd1e07b1bcc177847b35f71fc6d1bd4b22258488bb18
+818  MOD  tests/p20.test.ts
+      النطاقات 4→5
+      sha256 2e8742871b133cb8387fbe835ce9afe9f4e1148229e6608decb42e1637e199ce
+819  MOD  tests/live.test.ts
+      NAV 9→10
+      sha256 c6bedb4ded5a543898830c45ad13de306eb5bd05ec9754c464da7e9179c8433a
+820  MOD  tests/portal.test.ts
+      NAV 9→10
+      sha256 ab39db2a250168bf86f787e305fd3c40c92ea46cd723989d9c01cf1eb89d2ba9
+
+آخر رقم: 820
+
+ملاحظات تصميم:
+- AI = كاتب لا قاضٍ: يصل إليه نص مجهول (عضو 1/2/…) ولا تُرسل أسماء أو جهات؛ يعمل بلا ذكاء اصطناعي بملخص محلي صادق.
+- شهادة الأقران حدث تعلّم موزون (0.4 ثم 0.75 بعد اعتماد إنسان) ولا تغيّر المستوى المعتمد (P8).
+- الدوائر العامة بلا أسماء/جهات/نص القضية؛ خريطة الحكمة لا تُظهر نمطًا إلا من ≥5 أشخاص و≥2 جهة.
+- لا كرون جديد (داخل /api/followups/send) · لا حزم npm جديدة · لا متغيرات بيئة جديدة.
+- الرسائل (دعوة/انعقاد/قضية/عودة/شهادة/مرآة) تمر عبر notify() الحالية — التفعيل الفعلي للبريد/واتساب مؤجَّل كما تقرر.
