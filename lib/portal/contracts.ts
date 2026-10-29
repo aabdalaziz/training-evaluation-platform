@@ -6,17 +6,20 @@
  *   «أدلة الأثر» 25% → تستحق عندما تبلغ نسبة المنسوبين الذين أكّد مشرفوهم مهمةً من قلب العمل (P12-أ) الهدفَ (افتراضيًا 60%).
  *   «أثر 90 يومًا» 15% → تستحق عند انقضاء نافذة الأثر (90 يومًا من التسليم) بحسب نسبة «الأثر المستدام» (دليل مؤرَّخ بعد 30 يومًا من التسليم
  *     لدى من لديه مهمة مؤكَّدة)؛ وإن لم تُبلَغ النسبة المستهدفة فالدفعة **تناسبية** (عدالة للطرفين) — لا «كل شيء أو لا شيء».
- *  كل الأرقام هنا شفافة ومشتقة من أدلة موجودة أصلًا (شهادات الإتمام، المهمات، أدلة الملف المهاري). لا ذكاء اصطناعي في الحساب.
+ *   «العودة» (P24 — اختيارية، افتراضيًا 10% للعقود الجديدة) → تستحق عند إغلاق النافذة بحسب نسبة من عادوا بالتزام حقيقي في مجالس أَثَر (عودة موثَّقة بما حدث فعلًا)
+ *     بعد التسليم — تناسبية كذلك. «الجهة لا تدفع للمقعد؛ تدفع للعودة». العقود القائمة (ثلاث دفعات) لا تتغير: return = 0 يعني لا دفعة رابعة.
+ *  كل الأرقام هنا شفافة ومشتقة من أدلة موجودة أصلًا (شهادات الإتمام، المهمات، أدلة الملف المهاري، عودات المجالس). لا ذكاء اصطناعي في الحساب.
  */
 import type { Lang, T } from './content';
 import { t } from './content';
 import { randomCode } from './profile';
 
-export type MilestoneKey = 'delivery' | 'evidence' | 'impact';
+export type MilestoneKey = 'delivery' | 'evidence' | 'impact' | 'return';
+export const MILESTONE_KEYS: MilestoneKey[] = ['delivery', 'evidence', 'impact', 'return'];
 export type ContractStatus = 'draft' | 'active' | 'settled' | 'cancelled';
 export type MilestoneStatus = 'locked' | 'progress' | 'due' | 'released';
 export type Split = Record<MilestoneKey, number>;
-export type Targets = { evidence_rate: number; impact_days: number; impact_rate: number };
+export type Targets = { evidence_rate: number; impact_days: number; impact_rate: number; return_rate: number };
 export type CohortPerson = { email: string; full_name?: string | null };
 export type Contract = {
   id: string; created_at: string; created_by?: string | null; organization_id: string; program_id?: string | null; title_ar: string;
@@ -26,28 +29,30 @@ export type Contract = {
 };
 export type Release = { id: string; contract_id: string; milestone: MilestoneKey; pct: number; amount: number; memo_no: string; released_at: string; released_by?: string | null; released_by_name?: string | null; note?: string | null; snapshot?: Record<string, unknown> };
 /** حقائق الأثر لشخص واحد من الشريحة — تُجمَع من الخادم وتُمرَّر للمحرّك */
-export type PersonFacts = { email: string; completed: boolean; confirmed_missions: number; submitted_missions: number; evidence_at: string[] };
+export type PersonFacts = { email: string; completed: boolean; confirmed_missions: number; submitted_missions: number; evidence_at: string[]; returns_at?: string[] };
 export type Facts = { people: PersonFacts[]; releases: Release[] };
 export type MilestoneState = {
   key: MilestoneKey; pct: number; amount: number; payable: number; status: MilestoneStatus; progress: number; metric: T; detail: T; prorata: boolean; release?: Release;
 };
 export type ContractState = {
-  milestones: MilestoneState[]; cohort: number; completers: number; evidenced: number; submitted: number; sustained: number;
+  milestones: MilestoneState[]; cohort: number; completers: number; evidenced: number; submitted: number; sustained: number; returned: number;
   window: { opens?: string; closes?: string; days_left?: number; open: boolean; closed: boolean };
   paid: number; due: number; remaining: number; next: T[]; health: 'draft' | 'on_track' | 'attention' | 'due' | 'settled' | 'cancelled';
 };
 export type ContractForm = { organization_id: string; program_id: string; title_ar: string; contact_email: string; contact_name: string; cohort_text: string; total_amount: string; currency: string; split: Split; targets: Targets; start_at: string; notes: string };
 
-export const SPLIT_DEFAULT: Split = { delivery: 60, evidence: 25, impact: 15 };
-export const TARGETS_DEFAULT: Targets = { evidence_rate: 60, impact_days: 90, impact_rate: 50 };
+export const SPLIT_DEFAULT: Split = { delivery: 55, evidence: 20, impact: 15, return: 10 }; // P24: الجديد يحمل «دفعة العودة»
+export const SPLIT_LEGACY: Split = { delivery: 60, evidence: 25, impact: 15, return: 0 };
+export const TARGETS_DEFAULT: Targets = { evidence_rate: 60, impact_days: 90, impact_rate: 50, return_rate: 25 };
 export const SUSTAIN_AFTER_DAYS = 30; // دليل بعد 30 يومًا من التسليم = «أثر مستدام» لا حماسة ما بعد البرنامج
 export const EMPTY_CONTRACT_FORM: ContractForm = { organization_id: '', program_id: '', title_ar: '', contact_email: '', contact_name: '', cohort_text: '', total_amount: '', currency: 'SAR', split: { ...SPLIT_DEFAULT }, targets: { ...TARGETS_DEFAULT }, start_at: '', notes: '' };
 
-export const MILESTONE_LABEL: Record<MilestoneKey, T> = { delivery: { ar: 'التسليم', en: 'Delivery' }, evidence: { ar: 'أدلة الأثر', en: 'Impact evidence' }, impact: { ar: 'أثر 90 يومًا', en: '90-day impact' } };
+export const MILESTONE_LABEL: Record<MilestoneKey, T> = { delivery: { ar: 'التسليم', en: 'Delivery' }, evidence: { ar: 'أدلة الأثر', en: 'Impact evidence' }, impact: { ar: 'أثر 90 يومًا', en: '90-day impact' }, return: { ar: 'العودة', en: 'Return' } };
 export const MILESTONE_DESC: Record<MilestoneKey, T> = {
   delivery: { ar: 'يُفرَج عنها عندما يُثبت فريق أَثَر تسليم البرنامج للشريحة المتفق عليها.', en: 'Released once Athar confirms the program was delivered to the agreed cohort.' },
   evidence: { ar: 'تستحق عندما يؤكد المشرفون المباشرون أدلة من قلب العمل للنسبة المستهدفة من المنسوبين.', en: 'Due when direct supervisors confirm workplace evidence for the target share of the cohort.' },
   impact: { ar: 'تستحق عند انقضاء نافذة 90 يومًا بحسب نسبة الأثر المستدام — وتناسبيًا إن لم تُبلَغ النسبة.', en: 'Due when the 90-day window closes, by the sustained-impact share — pro-rata if the target is missed.' },
+  return: { ar: 'تستحق عند إغلاق النافذة بحسب نسبة من عادوا في مجالس أَثَر بالتزام حقيقي وقالوا ما حدث فعلًا — تناسبيًا. الجهة لا تدفع للمقعد؛ تدفع للعودة.', en: 'Due when the window closes, by the share of the cohort who returned on a real commitment in an Athar peer council — pro-rata. You pay for the return, not the seat.' },
 };
 export const STATUS_LABEL: Record<ContractStatus, T & { color: string }> = {
   draft: { ar: 'مسودة', en: 'Draft', color: '#64748b' }, active: { ar: 'نشط', en: 'Active', color: '#0b8a83' }, settled: { ar: 'مُسوّى', en: 'Settled', color: '#c9a24b' }, cancelled: { ar: 'ملغى', en: 'Cancelled', color: '#b91c1c' },
@@ -67,28 +72,31 @@ export const addDays = (iso: string, d: number) => new Date(new Date(iso).getTim
 
 export function normalizeSplit(s: Partial<Split> | null | undefined): Split {
   const n = (x: unknown, d: number) => { const v = Number(x); return isFinite(v) && v >= 0 ? Math.round(v) : d; };
-  const out = { delivery: n(s?.delivery, SPLIT_DEFAULT.delivery), evidence: n(s?.evidence, SPLIT_DEFAULT.evidence), impact: n(s?.impact, SPLIT_DEFAULT.impact) };
-  return out.delivery + out.evidence + out.impact === 100 ? out : { ...SPLIT_DEFAULT };
+  // العقود القائمة (ثلاثة مفاتيح) تبقى كما هي: غياب return = 0 — لا دفعة رابعة تُفرض بأثر رجعي
+  const out = { delivery: n(s?.delivery, SPLIT_DEFAULT.delivery), evidence: n(s?.evidence, SPLIT_DEFAULT.evidence), impact: n(s?.impact, SPLIT_DEFAULT.impact), return: n((s as any)?.return, s && (s.delivery !== undefined || s.evidence !== undefined || s.impact !== undefined) ? 0 : SPLIT_DEFAULT.return) };
+  return out.delivery + out.evidence + out.impact + out.return === 100 ? out : { ...SPLIT_DEFAULT };
 }
 export function normalizeTargets(x: Partial<Targets> | null | undefined): Targets {
   const c = (v: unknown, d: number, lo: number, hi: number) => { const n = Number(v); return isFinite(n) ? Math.min(hi, Math.max(lo, Math.round(n))) : d; };
-  return { evidence_rate: c(x?.evidence_rate, 60, 10, 100), impact_days: c(x?.impact_days, 90, 30, 365), impact_rate: c(x?.impact_rate, 50, 10, 100) };
+  return { evidence_rate: c(x?.evidence_rate, 60, 10, 100), impact_days: c(x?.impact_days, 90, 30, 365), impact_rate: c(x?.impact_rate, 50, 10, 100), return_rate: c(x?.return_rate, TARGETS_DEFAULT.return_rate, 5, 100) };
 }
 export function milestoneAmounts(total: number, split: Split): Record<MilestoneKey, number> {
-  const d = round2(total * split.delivery / 100), e = round2(total * split.evidence / 100);
-  return { delivery: d, evidence: e, impact: round2(total - d - e) };
+  const d = round2(total * split.delivery / 100), e = round2(total * split.evidence / 100), r = round2(total * (split.return || 0) / 100);
+  return { delivery: d, evidence: e, impact: round2(total - d - e - r), return: r };
 }
 
 /** الحالة الحية للعقد من حقائق الأثر — بلا أي ذكاء اصطناعي */
 export function computeState(c: Contract, f: Facts, now: Date = new Date()): ContractState {
   const cohort = c.cohort.length; const amounts = milestoneAmounts(Number(c.total_amount) || 0, normalizeSplit(c.split)); const tg = normalizeTargets(c.targets);
   const byEmail = new Map(f.people.map(p => [p.email.toLowerCase(), p]));
-  const people = c.cohort.map(p => byEmail.get(p.email.toLowerCase()) || { email: p.email, completed: false, confirmed_missions: 0, submitted_missions: 0, evidence_at: [] });
+  const people = c.cohort.map(p => byEmail.get(p.email.toLowerCase()) || { email: p.email, completed: false, confirmed_missions: 0, submitted_missions: 0, evidence_at: [], returns_at: [] });
   const completers = people.filter(p => p.completed).length; const evidenced = people.filter(p => p.confirmed_missions > 0).length; const submitted = people.filter(p => p.submitted_missions > 0 || p.confirmed_missions > 0).length;
   const rel = (k: MilestoneKey) => f.releases.find(r => r.milestone === k);
   const delivered = c.delivered_at ? new Date(c.delivered_at) : null;
   const opens = delivered ? addDays(c.delivered_at!, SUSTAIN_AFTER_DAYS) : undefined; const closes = delivered ? addDays(c.delivered_at!, tg.impact_days) : undefined;
   const sustained = delivered ? people.filter(p => p.confirmed_missions > 0 && p.evidence_at.some(a => new Date(a).getTime() >= new Date(opens!).getTime())).length : 0;
+  // P24 — العودة: عاد في مجلس أَثَر بالتزام حقيقي بعد التسليم وقبل إغلاق النافذة (أي نتيجة: نجح/تعثّر/تغيّر فهمي — الصدق هو المعيار)
+  const returned = delivered ? people.filter(p => (p.returns_at || []).some(a => { const t = new Date(a).getTime(); return t >= delivered.getTime() && (!closes || t <= new Date(closes).getTime() + DAY); })).length : 0;
   const days_left = closes ? Math.max(0, Math.ceil((new Date(closes).getTime() - now.getTime()) / DAY)) : undefined;
   const windowClosed = !!closes && now.getTime() >= new Date(closes).getTime();
   const ms: MilestoneState[] = [];
@@ -107,6 +115,12 @@ export function computeState(c: Contract, f: Facts, now: Date = new Date()): Con
     ms.push({ key: 'impact', pct: c.split.impact, amount: amounts.impact, payable, status, progress: r ? 100 : Math.round(ratio * 100), prorata: !r && ratio < 1 && windowClosed, release: r,
       metric: { ar: `${sustained}/${cohort} أثر مستدام بعد ${SUSTAIN_AFTER_DAYS} يومًا (${rate}% · الهدف ${tg.impact_rate}%)`, en: `${sustained}/${cohort} sustained impact after ${SUSTAIN_AFTER_DAYS} days (${rate}% · target ${tg.impact_rate}%)` },
       detail: !delivered ? { ar: 'تُفتح النافذة عند إثبات التسليم', en: 'Window opens on delivery confirmation' } : windowClosed ? { ar: ratio >= 1 ? 'اكتملت النافذة والهدف مُحقَّق' : `اكتملت النافذة — الدفعة تناسبية ${Math.round(ratio * 100)}% من قيمتها`, en: ratio >= 1 ? 'Window closed — target met' : `Window closed — pro-rata ${Math.round(ratio * 100)}% of value` } : { ar: `تُغلق النافذة بعد ${days_left} يومًا (${fmtD(closes, 'ar')})`, en: `Window closes in ${days_left} days (${fmtD(closes, 'en')})` } }); }
+  // 4) العودة (P24 — فقط إن حمل العقد دفعة عودة؛ تناسبية مثل الأثر)
+  if ((c.split.return || 0) > 0) { const r = rel('return'); const rate = pctOf(returned, cohort); const ratio = Math.min(1, tg.return_rate ? rate / tg.return_rate : 0); const payable = r ? Number(r.amount) : round2(amounts.return * ratio);
+    const status: MilestoneStatus = r ? 'released' : !delivered ? 'locked' : windowClosed ? 'due' : 'progress';
+    ms.push({ key: 'return', pct: c.split.return, amount: amounts.return, payable, status, progress: r ? 100 : Math.round(ratio * 100), prorata: !r && ratio < 1 && windowClosed, release: r,
+      metric: { ar: `${returned}/${cohort} عادوا في مجلس أَثَر بالتزام حقيقي (${rate}% · الهدف ${tg.return_rate}%)`, en: `${returned}/${cohort} returned on a real commitment in a peer council (${rate}% · target ${tg.return_rate}%)` },
+      detail: !delivered ? { ar: 'تُفتح مع نافذة الأثر عند إثبات التسليم', en: 'Opens with the impact window on delivery confirmation' } : windowClosed ? { ar: ratio >= 1 ? 'اكتملت النافذة والهدف مُحقَّق' : `اكتملت النافذة — الدفعة تناسبية ${Math.round(ratio * 100)}% من قيمتها`, en: ratio >= 1 ? 'Window closed — target met' : `Window closed — pro-rata ${Math.round(ratio * 100)}% of value` } : { ar: `كل عودة موثَّقة قبل ${fmtD(closes, 'ar')} ترفع الدفعة — الجهة لا تدفع للمقعد؛ تدفع للعودة`, en: `Every documented return before ${fmtD(closes, 'en')} raises this payment` } }); }
   const paid = round2(f.releases.reduce((s, r) => s + Number(r.amount || 0), 0)); const due = round2(ms.filter(m => m.status === 'due').reduce((s, m) => s + m.payable, 0));
   const remaining = round2(Math.max(0, (Number(c.total_amount) || 0) - paid - due));
   const next: T[] = [];
@@ -115,10 +129,11 @@ export function computeState(c: Contract, f: Facts, now: Date = new Date()): Con
     const ev = ms[1]; if (ev.status === 'progress') next.push({ ar: `تأكيد المشرفين لمهمات ${Math.max(1, Math.ceil(cohort * tg.evidence_rate / 100) - evidenced)} منسوبًا يُحرّك دفعة «أدلة الأثر»`, en: `${Math.max(1, Math.ceil(cohort * tg.evidence_rate / 100) - evidenced)} more supervisor confirmations unlock the evidence payment` });
     if (ev.status === 'due' || ms[0].status === 'due') next.push({ ar: 'دفعة مستحقة — بانتظار اعتماد أَثَر وإشعار الجهة بمذكرة الإفراج', en: 'A payment is due — awaiting Athar release memo' });
     if (delivered && !windowClosed && !ms[2].release) next.push({ ar: `كل دليل بعد ${fmtD(opens, 'ar')} يرفع نسبة الأثر المستدام (الآن ${pctOf(sustained, cohort)}%)`, en: `Every evidence after ${fmtD(opens, 'en')} raises sustained impact (now ${pctOf(sustained, cohort)}%)` });
+    if (delivered && !windowClosed && ms[3] && !ms[3].release) next.push({ ar: `كل منسوب يعود في مجلس أَثَر بالتزامه قبل إغلاق النافذة يرفع «دفعة العودة» (الآن ${pctOf(returned, cohort)}% · الهدف ${tg.return_rate}%)`, en: `Every cohort member who returns on a council commitment before the window closes raises the return payment (now ${pctOf(returned, cohort)}%)` });
   }
   const allReleased = ms.every(m => m.status === 'released');
   const health: ContractState['health'] = c.status === 'draft' ? 'draft' : c.status === 'cancelled' ? 'cancelled' : c.status === 'settled' || allReleased ? 'settled' : ms.some(m => m.status === 'due') ? 'due' : (delivered && days_left !== undefined && days_left <= 21 && pctOf(sustained, cohort) < tg.impact_rate) || (ms[1].status === 'progress' && delivered && (now.getTime() - delivered.getTime()) / DAY > 45) ? 'attention' : 'on_track';
-  return { milestones: ms, cohort, completers, evidenced, submitted, sustained, window: { opens, closes, days_left, open: !!delivered && !windowClosed, closed: windowClosed }, paid, due, remaining, next, health };
+  return { milestones: ms, cohort, completers, evidenced, submitted, sustained, returned, window: { opens, closes, days_left, open: !!delivered && !windowClosed, closed: windowClosed }, paid, due, remaining, next, health };
 }
 
 /** أحداث جديدة تستحق إشعارًا (للكرون) — تُقارن بالأعلام المحفوظة في العقد لعدم التكرار */
@@ -127,6 +142,7 @@ export function pulseEvents(c: Contract, s: ContractState, now: Date = new Date(
   const ev = s.milestones[1], im = s.milestones[2];
   if (ev.status === 'due' && !f.evidence_due_at) out.push({ key: 'evidence_due_at', subject: { ar: `دفعة «أدلة الأثر» أصبحت مستحقة — ${c.title_ar}`, en: `Impact-evidence payment is due — ${c.title_ar}` }, body: { ar: `${ev.metric.ar}. الدفعة ${money(ev.payable, c.currency, 'ar')} بانتظار اعتماد فريق أَثَر.`, en: `${ev.metric.en}. ${money(ev.payable, c.currency, 'en')} awaits Athar release.` } });
   if (im.status === 'due' && !f.impact_due_at) out.push({ key: 'impact_due_at', subject: { ar: `اكتملت نافذة أثر 90 يومًا — ${c.title_ar}`, en: `90-day impact window closed — ${c.title_ar}` }, body: { ar: `${im.metric.ar}. ${im.detail.ar}. الدفعة ${money(im.payable, c.currency, 'ar')}.`, en: `${im.metric.en}. ${im.detail.en}. ${money(im.payable, c.currency, 'en')}.` } });
+  const rt = s.milestones[3]; if (rt && rt.status === 'due' && !f.return_due_at) out.push({ key: 'return_due_at', subject: { ar: `دفعة «العودة» أصبحت مستحقة — ${c.title_ar}`, en: `Return payment is due — ${c.title_ar}` }, body: { ar: `${rt.metric.ar}. ${rt.detail.ar}. الدفعة ${money(rt.payable, c.currency, 'ar')}.`, en: `${rt.metric.en}. ${rt.detail.en}. ${money(rt.payable, c.currency, 'en')}.` } });
   if (s.window.open && s.window.days_left !== undefined && s.window.days_left <= 14 && !f.impact_closing_at && im.progress < 100) out.push({ key: 'impact_closing_at', subject: { ar: `تبقّى ${s.window.days_left} يومًا على إغلاق نافذة الأثر — ${c.title_ar}`, en: `${s.window.days_left} days left in the impact window — ${c.title_ar}` }, body: { ar: `${im.metric.ar}. كل دليل مؤكَّد الآن يرفع الدفعة الأخيرة.`, en: `${im.metric.en}. Every confirmed evidence now raises the final payment.` } });
   void now; return out;
 }
@@ -136,7 +152,7 @@ export function memoNo(seq: number, year = new Date().getFullYear()) { return `A
 export function validateContract(f: ContractForm, cohort: CohortPerson[]): string | null {
   if (!f.organization_id) return 'اختر الجهة'; if (!f.title_ar.trim() || f.title_ar.trim().length < 6) return 'اكتب عنوان العقد (6 أحرف على الأقل)';
   const total = Number(f.total_amount); if (!isFinite(total) || total <= 0) return 'قيمة العقد يجب أن تكون رقمًا أكبر من صفر';
-  const sp = f.split; if (Math.round(Number(sp.delivery) + Number(sp.evidence) + Number(sp.impact)) !== 100) return 'مجموع الدفعات يجب أن يساوي 100%';
+  const sp = f.split; if (Math.round(Number(sp.delivery) + Number(sp.evidence) + Number(sp.impact) + Number(sp.return || 0)) !== 100) return 'مجموع الدفعات يجب أن يساوي 100%';
   if (!cohort.length) return 'الصق قائمة المنسوبين المشمولين بالعقد (بريد في كل سطر)';
   if (f.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.contact_email.trim())) return 'بريد جهة الاتصال غير صالح';
   return null;
@@ -153,7 +169,7 @@ export function publicContract(c: Contract) {
   const { cohort, flags, created_by, contact_email, notes, ...rest } = c; void flags; void created_by; void contact_email; void notes;
   return { ...rest, cohort_size: cohort.length };
 }
-export function releaseSnapshot(s: ContractState) { return { cohort: s.cohort, completers: s.completers, evidenced: s.evidenced, submitted: s.submitted, sustained: s.sustained, window: s.window, at: new Date().toISOString() }; }
+export function releaseSnapshot(s: ContractState) { return { cohort: s.cohort, completers: s.completers, evidenced: s.evidenced, submitted: s.submitted, sustained: s.sustained, returned: s.returned, window: s.window, at: new Date().toISOString() }; }
 
 /** قصة العقد في أسطر — للصفحة الحية والبريد (بلا ذكاء اصطناعي) */
 export function contractStory(c: Contract, s: ContractState, lang: Lang): string[] {
@@ -161,6 +177,7 @@ export function contractStory(c: Contract, s: ContractState, lang: Lang): string
   out.push(L({ ar: `شريحة من ${s.cohort} منسوبًا؛ أتمّ البرنامج ${s.completers} (${pctOf(s.completers, s.cohort)}%).`, en: `A cohort of ${s.cohort}; ${s.completers} completed (${pctOf(s.completers, s.cohort)}%).` }));
   out.push(L({ ar: `${s.evidenced} منهم أكّد مشرفوهم دليلًا من قلب العمل، و${s.submitted} أرسلوا دليلًا.`, en: `${s.evidenced} have supervisor-confirmed workplace evidence; ${s.submitted} submitted.` }));
   if (s.window.open || s.window.closed) out.push(L({ ar: `الأثر المستدام (دليل بعد ${SUSTAIN_AFTER_DAYS} يومًا من التسليم): ${s.sustained} (${pctOf(s.sustained, s.cohort)}%)${s.window.open ? ` — تبقّى ${s.window.days_left} يومًا في النافذة` : ' — النافذة مغلقة'}.`, en: `Sustained impact: ${s.sustained} (${pctOf(s.sustained, s.cohort)}%)${s.window.open ? ` — ${s.window.days_left} days left` : ' — window closed'}.` }));
+  if ((c.split.return || 0) > 0 && (s.window.open || s.window.closed)) out.push(L({ ar: `العودة (عاد في مجلس أَثَر بالتزام حقيقي بعد التسليم): ${s.returned} (${pctOf(s.returned, s.cohort)}%) — الجهة لا تدفع للمقعد؛ تدفع للعودة.`, en: `Returns (came back on a real council commitment after delivery): ${s.returned} (${pctOf(s.returned, s.cohort)}%).` }));
   out.push(L({ ar: `أُفرج عن ${money(s.paid, c.currency, 'ar')} · مستحق الآن ${money(s.due, c.currency, 'ar')} · متبقٍ مرتبط بالأثر ${money(s.remaining, c.currency, 'ar')}.`, en: `Released ${money(s.paid, c.currency, 'en')} · due now ${money(s.due, c.currency, 'en')} · remaining tied to impact ${money(s.remaining, c.currency, 'en')}.` }));
   return out;
 }
@@ -170,7 +187,7 @@ const btn = (href: string, label: string) => `<p style="margin:18px 0"><a href="
 const esc = (s: string) => String(s || '').replace(/[<>&]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[ch] as string));
 
 export function activationMailHtml(c: Contract, url: string) {
-  return { subject: `عقد أثر نشط: ${c.title_ar} — صفحة حية لحالة العقد`, html: shell('عقدكم مع أَثَر أصبح حيًّا', `<p>مرحبًا ${esc(c.contact_name || '')}،</p><p>فُعِّل عقد الأثر <b>${esc(c.title_ar)}</b> بقيمة <b>${money(Number(c.total_amount), c.currency, 'ar')}</b> على ثلاث دفعات مرتبطة بالنتيجة: <b>${c.split.delivery}%</b> عند التسليم، <b>${c.split.evidence}%</b> عند أدلة الأثر المؤكَّدة من مشرفيكم، <b>${c.split.impact}%</b> عند أثر ${normalizeTargets(c.targets).impact_days} يومًا.</p><p>هذه الصفحة تُحدَّث لحظيًا من أدلة الأثر نفسها — لا تقارير لاحقة:</p>${btn(url, 'افتح صفحة العقد الحية')}<p style="font-size:12px;color:#64748b">الرابط خاص بجهتكم؛ شاركوه مع من يلزم داخليًا.</p>`) };
+  return { subject: `عقد أثر نشط: ${c.title_ar} — صفحة حية لحالة العقد`, html: shell('عقدكم مع أَثَر أصبح حيًّا', `<p>مرحبًا ${esc(c.contact_name || '')}،</p><p>فُعِّل عقد الأثر <b>${esc(c.title_ar)}</b> بقيمة <b>${money(Number(c.total_amount), c.currency, 'ar')}</b> على ${(c.split.return || 0) > 0 ? 'أربع' : 'ثلاث'} دفعات مرتبطة بالنتيجة: <b>${c.split.delivery}%</b> عند التسليم، <b>${c.split.evidence}%</b> عند أدلة الأثر المؤكَّدة من مشرفيكم، <b>${c.split.impact}%</b> عند أثر ${normalizeTargets(c.targets).impact_days} يومًا${(c.split.return || 0) > 0 ? `، و<b>${c.split.return}%</b> «دفعة العودة» حين يعود منسوبوكم في مجالس أَثَر بالتزام حقيقي — لا تدفعون للمقعد؛ تدفعون للعودة` : ''}.</p><p>هذه الصفحة تُحدَّث لحظيًا من أدلة الأثر نفسها — لا تقارير لاحقة:</p>${btn(url, 'افتح صفحة العقد الحية')}<p style="font-size:12px;color:#64748b">الرابط خاص بجهتكم؛ شاركوه مع من يلزم داخليًا.</p>`) };
 }
 export function releaseMailHtml(c: Contract, r: Release, s: ContractState, url: string) {
   const m = s.milestones.find(x => x.key === r.milestone)!;

@@ -12,7 +12,7 @@ import { fastToken } from '../components/Pocket';
 import { supabase } from '../../lib/supabase/client';
 
 type Circle = { code: string; title_ar: string; domain: string | null; sector_code: string | null; status: string; cycle_no: number; cycle_ends_at: string | null; members: number; orgs: number; seats_open: number; case: { status: string; theme: string | null; theme_ar: string; opened_days: number; questions: number; advice: number; evidence: number; voices: number } | null; pulse: 'lively' | 'steady' | 'quiet'; cases_total: number; returns: number };
-type Data = { circles: Circle[]; wisdom: { pattern: string; label_ar: string; cases: number; persons: number; orgs: number; councils: number }[]; totals: any; themes: { code: string; label: string }[]; charter: { version: string; clauses: { id: string; title: string; body: string }[] }; rules: any; privacy_ar: string };
+type Data = { circles: Circle[]; wisdom: { pattern: string; label_ar: string; cases: number; persons: number; orgs: number; councils: number }[]; totals: any; themes: { code: string; label: string }[]; org_charter?: { version: string; clauses: { id: string; title: string; body: string }[]; orgs: { organization_id: string; org_name: string; signed_at: string; expires_at: string; code: string | null }[] }; charter: { version: string; clauses: { id: string; title: string; body: string }[] }; rules: any; privacy_ar: string };
 const MOVES = [
   { n: '①', t: 'القضية', d: 'عضو يحمل موقف عمل حقيقي: ما الذي أواجهه؟ ما خياراتي؟ ما الذي أخشاه؟ — نصًّا أو صوتًا أو فيديو.' },
   { n: '②', t: 'المداولة', d: 'الأقران يسألون قبل أن ينصحوا. المجلس يعدّ الأسئلة والنصائح — وسيظهر ذلك في مرآة كل عضو.' },
@@ -62,6 +62,14 @@ function Inner() {
         <section className="cn-sec" id="charter"><h2><Icon name="scale" size={18} /> ميثاق المجلس <small>v{d.charter.version}</small></h2>
           <div className="cn-charter">{d.charter.clauses.map(c => <div key={c.id} className="pt-box"><h3>{c.title}</h3><p>{c.body}</p></div>)}</div>
           <p className="cn-muted">{d.privacy_ar}</p>
+        </section>
+      )}
+
+      {d && d.org_charter && (
+        <section className="cn-sec" id="orgs" data-testid="org-charter-sec"><h2><Icon name="award" size={18} /> جهات موقِّعة على ميثاق الجهة <small>v{d.org_charter.version}</small></h2>
+          <p className="cn-muted">الجهة الموقِّعة تتعهد سنويًا — بوثيقة موقَّعة Ed25519 قابلة للتحقق — بأن تمنح منسوبيها وقتًا للمجالس داخل الدوام، وتحترم السرية، ولا تستعمل المرآة ولا المداولات في التقييم الوظيفي، ولا تطلب أسماء. اسم الجهة هنا بقرارها هي.</p>
+          {!d.org_charter.orgs.length ? <p className="cn-quiet">لم توقّع جهة بعد. مديرو الجهات يوقّعون من <Link href="/org">بوابة الجهات</Link> ← «ميثاق الجهة».</p> : <div className="cn-orgs">{d.org_charter.orgs.map(o => <a key={o.organization_id} className="cn-org" href={o.code ? `/verify/vc?code=${encodeURIComponent(o.code)}` : '#orgs'} target={o.code ? '_blank' : undefined} rel="noreferrer"><i><Icon name="check" size={14} /></i><b>{o.org_name}</b><small>موقِّعة منذ {new Date(o.signed_at).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory')} · حتى {new Date(o.expires_at).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory')}{o.code ? ' · تحقق' : ''}</small></a>)}</div>}
+          <details className="cn-orgclauses"><summary>بنود ميثاق الجهة الأربعة</summary><div className="cn-charter" style={{ marginTop: 10 }}>{d.org_charter.clauses.map(c => <div key={c.id} className="pt-box"><h3>{c.title}</h3><p>{c.body}</p></div>)}</div></details>
         </section>
       )}
 
@@ -123,6 +131,7 @@ const CSS = `
 .cn-empty{text-align:center;color:#334155}.cn-empty b{display:block;margin:8px 0 4px;color:#0f2a4e;font-size:17px}.cn-empty p{margin:0;color:#64748b}
 .cn-moves{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;counter-reset:m}.cn-moves li{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px;display:flex;gap:12px}.cn-n{font-size:26px;color:#c9a24b;font-weight:900;line-height:1}.cn-moves b{display:block;color:#0f2a4e;margin-bottom:4px}.cn-moves p{margin:0;font-size:13px;line-height:1.8;color:#334155}
 .cn-wisdom{display:grid;gap:10px}.cn-wis{position:relative;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 16px;overflow:hidden}.cn-wis:before{content:'';position:absolute;inset:0 auto 0 0;width:var(--w);background:linear-gradient(90deg,rgba(11,138,131,.12),rgba(201,162,75,.12))}.cn-wis b{position:relative;display:block;color:#0f2a4e}.cn-wis span{position:relative;font-size:12px;color:#64748b}
+.cn-orgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin:10px 0}.cn-org{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;border:1px solid #cfe9e6;background:linear-gradient(135deg,#f3fbfa,#fff);border-radius:14px;padding:10px 12px;text-decoration:none;color:#0f2a4e}.cn-org i{grid-row:1/3;width:30px;height:30px;border-radius:999px;background:#0b8a83;color:#fff;display:grid;place-items:center}.cn-org b{font-size:14px}.cn-org small{color:#64748b;font-size:11.5px}.cn-orgclauses summary{cursor:pointer;color:#0b8a83;font-weight:800;font-size:13px}
 .cn-charter{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:10px}.cn-charter h3{font-size:15px}.cn-charter p{margin:0;font-size:13px;line-height:1.85;color:#334155}
 .cn-apply{background:#f8fafc;border:1px solid #e2e8f0;border-radius:22px;padding:22px}.cn-form{display:grid;gap:12px;max-width:620px}.cn-form label{display:grid;gap:6px;font-size:13px;font-weight:800;color:#334155}.cn-form input,.cn-form textarea{font:inherit;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;background:#fff}
 @media (max-width:640px){.cn-hero h1{font-size:26px}.cn-circle{flex-direction:column;text-align:center}}

@@ -21,6 +21,7 @@ import { delegateFromHeaders } from '../../../lib/portal/oauth';
 import { notify } from '../../../lib/portal/notify';
 import { signerFromEnv } from '../../../lib/portal/vc-server';
 import { didWeb } from '../../../lib/portal/vc';
+import { charterForPerson } from '../../../lib/org-impact/charter';
 import { randomCode } from '../../../lib/portal/profile';
 import { limitFor, tooMany } from '../../../lib/shield/ratelimit';
 import { COUNCIL_COLS, MEMBER_COLS, CASE_COLS, POST_COLS, ATTEST_COLS, CHARTER_AR, CHARTER_VERSION, CASE_MIN_CHARS, POST_MIN_CHARS, RETURN_DAYS, quorum, activeMembers, returnDue, lower, feedFromPosts, themeLabel, STATUS_AR, CASE_STATUS_AR } from '../../../lib/councils/registry';
@@ -102,8 +103,9 @@ export async function GET(req: Request) {
   // شهادة عضو مجلس
   const [{ data: allCases }, { data: allAtts }, { data: badge }] = await Promise.all([db.from('portal_council_cases').select('id,author_email,returned_at,cycle_no').ilike('author_email', me.email).limit(500), db.from('portal_council_attestations').select('from_email,to_email,status,cycle_no').or(`from_email.ilike.${me.email},to_email.ilike.${me.email}`).limit(1000), db.from('portal_vc_issuances').select('code,issued_at').eq('kind', 'council_badge').ilike('email', me.email).is('revoked_at', null).limit(1)]);
   const stats = badgeStats(me.email, mem, (allCases || []) as Case[], (allAtts || []) as Attestation[]);
+  const orgCharter = await charterForPerson(db, me).catch(() => null); // P24 — هل وقّعت جهتي ميثاق الجهة؟
   const invitedView = await Promise.all(invited.map(async m => { const { data: c } = await db.from('portal_councils').select('id,title_ar,domain,cycle_weeks,status').eq('id', m.council_id).maybeSingle(); return c ? { member_id: m.id, council: c } : null; }));
-  return NextResponse.json({ success: true, me: { id: me.id, email: me.email, name: me.name, staff: me.staff, delegate: me.delegate }, halls, applied, invitations: invitedView.filter(Boolean), badge: { stats, eligibility: badgeEligibility(stats), issued: (badge || [])[0] ? { code: badge![0].code, issued_at: badge![0].issued_at, verify_url: `${S}/verify/vc?code=${encodeURIComponent(badge![0].code)}` } : null }, charter: { version: CHARTER_VERSION, clauses: CHARTER_AR }, constants: { return_days: RETURN_DAYS } }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ success: true, me: { id: me.id, email: me.email, name: me.name, staff: me.staff, delegate: me.delegate }, halls, applied, invitations: invitedView.filter(Boolean), badge: { stats, eligibility: badgeEligibility(stats), issued: (badge || [])[0] ? { code: badge![0].code, issued_at: badge![0].issued_at, verify_url: `${S}/verify/vc?code=${encodeURIComponent(badge![0].code)}` } : null }, charter: { version: CHARTER_VERSION, clauses: CHARTER_AR }, org_charter: orgCharter, constants: { return_days: RETURN_DAYS } }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(req: Request) {

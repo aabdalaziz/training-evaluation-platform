@@ -26,6 +26,7 @@ import { GET as dailyGET, POST as dailyPOST } from '../../app/api/daily/route';
 import { GET as missionsGET } from '../../app/api/missions/route';
 import { POST as vcPOST } from '../../app/api/vc/route';
 import { GET as obsGET } from '../../app/api/observatory/route';
+import { GET as charterGET } from '../../app/api/org/charter/route';
 import { GET as didGET } from '../../app/.well-known/did.json/route';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Agent-Key, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id', 'Access-Control-Expose-Headers': 'MCP-Protocol-Version, WWW-Authenticate', 'Cache-Control': 'no-store' };
@@ -148,6 +149,12 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
     const result = { computed_at: snap.computed_at, window: snap.window, totals: snap.totals, sectors: sectors.map(pick), domains: dq || !q ? domains.map(d => ({ domain: d.domain, performance_index: { key: d.weather, ar: TREND_AR[d.weather] || d.weather, en: TREND_EN[d.weather] || d.weather }, delta_level: d.delta, capability_index: d.cell?.index ?? null })) : [], method_ar: snap.method_ar, license: 'CC BY 4.0 — مرصد أَثَر للقدرة البشرية', page: `${c.site}/observatory` };
     await log(c, name, true, { sector: q || null, n: sectors.length }); if (q && !sectors.length) return toolContent(`لا قطاع بهذا الاسم «${args.sector}» — القطاعات المتاحة: ${(snap.sectors || []).map((s: any) => `${s.code} (${s.name_ar})`).join('، ')}`, { error: 'sector_not_found', available: (snap.sectors || []).map((s: any) => s.code) }, true);
     return toolContent(summarize(result), result);
+  }
+  if (name === 'org_charter_verify') {
+    const q = new URLSearchParams(); if (args.code) q.set('code', String(args.code)); else if (args.org_name) q.set('org_name', String(args.org_name)); else q.set('public', '1');
+    const j = await asJson(await charterGET(internal(c, `/api/org/charter?${q.toString()}`))); if (!j?.success) { await log(c, name, false); return toolContent('تعذّر القراءة | Unavailable', { error: 'unavailable' }, true); }
+    const result = args.code || args.org_name ? { query: j.query, signed: !!j.signed, charter: j.charter, note_ar: j.note_ar, pledge_en: 'Time inside working hours · confidentiality (Chatham House) · council mirrors/deliberations never used in appraisal · no names requested', page: `${c.site}/councils#orgs` } : { version: j.version, signatories: (j.orgs || []).map((o: any) => ({ org_name: o.org_name, signed_at: o.signed_at, expires_at: o.expires_at, verify_url: o.verify_url })), clauses_ar: (j.clauses || []).map((x: any) => x.title), page: `${c.site}/councils#orgs` };
+    await log(c, name, true, { q: String(args.code || args.org_name || 'all').slice(0, 80) }); return toolContent(summarize(result), result);
   }
   if (c.actor.tier !== 'personal') return toolContent('تحتاج تفويضًا شخصيًا', { error: 'not_authorized' }, true);
   if (name === 'my_wallet') {

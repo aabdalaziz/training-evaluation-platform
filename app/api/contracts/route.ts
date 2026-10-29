@@ -8,7 +8,7 @@
  *  POST { action:'update', id, form, cohort }      → WRITERS: تعديل مسودة
  *  POST { action:'activate', id }                  → WRITERS: تفعيل + بريد للجهة برابط الصفحة الحية
  *  POST { action:'deliver', id, at? }              → WRITERS: إثبات التسليم (قرار بشري) → تُفتح نافذة الأثر
- *  POST { action:'release', id, milestone, note? } → WRITERS: الإفراج عن دفعة مستحقة بمذكرة مرقّمة + بريد
+ *  POST { action:'release', id, milestone, note? } → WRITERS: الإفراج عن دفعة مستحقة بمذكرة مرقّمة + بريد (milestone: delivery|evidence|impact|return — الأخيرة P24 «دفعة العودة»)
  *  POST { action:'cancel', id }                    → WRITERS: إلغاء
  *  POST { action:'pulse', dry? }                   → الطاقم: تشغيل/معاينة نبض العقود الآن
  */
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, delivered_at: at.toISOString() });
   }
   if (action === 'release') {
-    const key = String(body.milestone || '') as MilestoneKey; if (!['delivery', 'evidence', 'impact'].includes(key)) return bad('دفعة غير معروفة');
+    const key = String(body.milestone || '') as MilestoneKey; if (!['delivery', 'evidence', 'impact', 'return'].includes(key)) return bad('دفعة غير معروفة'); if (key === 'return' && !(cur.split.return > 0)) return bad('هذا العقد بلا دفعة عودة');
     const r = await releaseMilestone(db, cur, key, { id: user.id, name: user.name }, body.note ? String(body.note).slice(0, 400) : null, site(), now); if (r.error) return bad(r.error);
     return NextResponse.json({ success: true, release: r.release, state: r.state, mailed: r.mailed });
   }

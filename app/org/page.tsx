@@ -1,6 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — بوابة الجهات (B2B + توصيات ذكية P9-أ): لوحة أثر التدريب على المنسوبين، تأكيد الأعضاء، الدعوات، التسجيل الجماعي، حقائب الجهة، تقرير قابل للطباعة
+// أَثَر — بوابة الجهات (B2B + توصيات ذكية P9-أ + «أثر الجهة» P24): لوحة أثر التدريب على المنسوبين، تأكيد الأعضاء، الدعوات، التسجيل الجماعي، حقائب الجهة، تقرير قابل للطباعة،
+// وتبويبا P24: «صدى الجهة» (خيوط مجهولة k ≥ 5 · إحاطة 90 ثانية · مرآة الجهة) و«الميثاق والمقاعد» (ميثاق الجهة الموقَّع Ed25519 · مقاعد الجهة وتوأمة المجالس · اعتماد شهادات الأقران مركزيًا)
 
 import { peopleN, evN } from '../../lib/portal/evidence';
 import { Suspense, useEffect, useMemo, useState } from 'react';
@@ -22,11 +23,12 @@ import { MILESTONE_LABEL, MS_STATUS_LABEL, STATUS_LABEL as C_STATUS, HEALTH_LABE
 import type { ContractState, ContractStatus } from '../../lib/portal/contracts';
 import { WEATHER_LABEL, CONF_LABEL } from '../../lib/portal/observatory';
 import type { OrgPosition } from '../../lib/portal/observatory';
+import { OrgImpact } from '../components/OrgImpact';
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
 type Org = { id: string; name_ar: string; name_en?: string | null; sector?: string | null; email_domain?: string | null; city?: string | null };
-type Tab = 'impact' | 'members' | 'bulk' | 'resources' | 'contracts' | 'observatory' | 'report';
+type Tab = 'impact' | 'echo' | 'members' | 'bulk' | 'resources' | 'contracts' | 'charter' | 'observatory' | 'report';
 type ContractItem = { contract: { id: string; title_ar: string; total_amount: number; currency: string; status: ContractStatus; cohort_size: number; token: string; program_name?: string; delivered_at?: string | null }; state: ContractState };
 
 function Inner() {
@@ -92,7 +94,7 @@ function Inner() {
         {loaded && user && org && <>
           {err && <div className="pt-alert err">{err}</div>}{ok && <div className="pt-alert ok">{ok}</div>}
           {pendingMembers.length > 0 && tab !== 'members' && <div className="og-notice"><Icon name="bell" size={16} /> {lang === 'ar' ? `${pendingMembers.length} عضو جديد من نطاق بريد جهتكم بانتظار تأكيدك.` : `${pendingMembers.length} new member(s) from your email domain await your confirmation.`} <button type="button" className="pt-btn small" onClick={() => setTab('members')}>{lang === 'ar' ? 'مراجعة' : 'Review'}</button></div>}
-          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['observatory', 'المرصد', 'Observatory'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
+          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['echo', 'صدى الجهة', 'Echo'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['charter', 'الميثاق والمقاعد', 'Charter & seats'], ['observatory', 'المرصد', 'Observatory'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
           {busy === 'dash' && !d && <div className="pt-empty">…</div>}
 
           {d && k && tab === 'impact' && <div className="og-wx" data-testid="org-weather">
@@ -136,9 +138,11 @@ function Inner() {
 
           {d && tab === 'resources' && <div className="pt-box"><h3><Icon name="folder" size={18} /> {lang === 'ar' ? 'حقائب مخصصة لجهتكم' : 'Resources for your organization'}</h3>{d.resources.length === 0 && <p className="pt-muted">{lang === 'ar' ? 'لا حقائب خاصة بعد — يمكن طلب تصميم حقيبة من الاستشارات.' : 'No private resources yet.'}</p>}<div className="pt-chips">{d.resources.map(r => <Link key={r.id} href={`/resources/${r.id}`} className="pt-chip">{lang === 'en' && r.title_en ? r.title_en : r.title_ar} · {typeLabel(r.type, lang)} · ↓{r.downloads}</Link>)}</div><p className="pt-muted" style={{ marginTop: 10 }}>{lang === 'ar' ? 'منسوبوكم المؤكدون يصلون إليها تلقائيًا ببريد الجهة.' : 'Confirmed members access them automatically.'}</p></div>}
 
+          {tab === 'echo' && <OrgImpact orgId={orgId} orgName={org.name_ar} lang={lang} token={token} view="echo" />}
+          {tab === 'charter' && <OrgImpact orgId={orgId} orgName={org.name_ar} lang={lang} token={token} view="charter" />}
           {tab === 'contracts' && <div className="pt-box og-contracts">
             <h3><Icon name="scale" size={18} /> {lang === 'ar' ? 'عقود الأثر — تدفعون ثمن النتيجة لا المقعد' : 'Impact contracts — pay for outcomes, not seats'}</h3>
-            <p className="pt-muted">{lang === 'ar' ? 'لكل عقد صفحة حية تُحدَّث من أدلة الأثر نفسها: دفعة عند التسليم، دفعة عند تأكيد مشرفيكم لأدلة من قلب العمل، ودفعة عند ظهور الأثر المستدام خلال 90 يومًا. لا يُفرَج عن أي دفعة إلا بقرار بشري موثَّق.' : 'Every contract has a live page computed from the evidence itself: a payment on delivery, one when your supervisors confirm workplace evidence, and one when sustained impact appears within 90 days.'}</p>
+            <p className="pt-muted">{lang === 'ar' ? 'لكل عقد صفحة حية تُحدَّث من أدلة الأثر نفسها: دفعة عند التسليم، دفعة عند تأكيد مشرفيكم لأدلة من قلب العمل، ودفعة عند ظهور الأثر المستدام خلال 90 يومًا — والعقود الجديدة تحمل «دفعة العودة»: تستحق حين يعود منسوبوكم في مجالس أَثَر بالتزام حقيقي. الجهة لا تدفع للمقعد؛ تدفع للعودة. لا يُفرَج عن أي دفعة إلا بقرار بشري موثَّق.' : 'Every contract has a live page computed from the evidence itself: a payment on delivery, one when your supervisors confirm workplace evidence, one when sustained impact appears within 90 days — and new contracts carry a “return payment”, due when your people return on a real peer-council commitment. You pay for the return, not the seat.'}</p>
             {contracts === null && <p className="pt-muted">…</p>}
             {contracts && contracts.length === 0 && <p className="pt-muted">{lang === 'ar' ? 'لا عقود أثر نشطة لجهتكم بعد — اطلبوا عرضًا من الاستشارات.' : 'No active impact contracts yet.'} <Link href="/consulting" className="pt-btn small light" style={{ marginInlineStart: 8 }}>{lang === 'ar' ? 'اطلب عرض عقد أثر' : 'Request a proposal'}</Link></p>}
             {contracts && contracts.length > 0 && <div className="og-cgrid">{contracts.map(({ contract: c, state: s }) => <article key={c.id} className="og-c" data-h={s.health}>

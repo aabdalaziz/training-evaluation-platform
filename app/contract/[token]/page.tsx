@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — الصفحة الحية لعقد الأثر (P12-ب): الجهة ترى حالة عقدها لحظيًا — ثلاث دفعات مرتبطة بالنتيجة (60/25/15)، عدّادات الأدلة،
+// أَثَر — الصفحة الحية لعقد الأثر (P12-ب + P24 «دفعة العودة»): الجهة ترى حالة عقدها لحظيًا — ثلاث أو أربع دفعات مرتبطة بالنتيجة (55/20/15/10 أو 60/25/15)، عدّادات الأدلة،
 // نافذة أثر 90 يومًا، «ما الذي يُحرّك الدفعة التالية»، ومذكرات الإفراج. بلا تسجيل دخول برابط خاص؛ أعداد لا أسماء.
 
 import { Suspense, useEffect, useState } from 'react';
@@ -38,7 +38,7 @@ function Inner() {
         {c ? <>
           <div className="ic-org"><span className="ic-badge" style={{ '--c': STATUS_LABEL[c.status].color } as any}>{L(STATUS_LABEL[c.status])}</span>{c.org_name && <span className="ic-orgname"><Icon name="school" size={14} /> {c.org_name}</span>}{s && <span className="ic-health" data-h={s.health}><Icon name={s.health === 'due' ? 'bell' : s.health === 'attention' ? 'alert' : 'check'} size={13} /> {L(HEALTH_LABEL[s.health])}</span>}</div>
           <h1>{c.title_ar}</h1>
-          <p className="pt-lead">{ar ? `عقد أثر بقيمة ${money(c.total_amount, c.currency, 'ar')} — تُدفع ثمن النتيجة لا المقعد: ${c.split.delivery}% عند التسليم، ${c.split.evidence}% عند أدلة الأثر المؤكَّدة من مشرفيكم، ${c.split.impact}% عند أثر ${c.targets.impact_days} يومًا. هذه الصفحة تُحدَّث من الأدلة نفسها، لا من تقارير لاحقة.` : `An outcome contract worth ${money(c.total_amount, c.currency, 'en')} — paid for results, not seats: ${c.split.delivery}% on delivery, ${c.split.evidence}% on supervisor-confirmed evidence, ${c.split.impact}% on ${c.targets.impact_days}-day impact. This page is computed from the evidence itself.`}</p>
+          <p className="pt-lead">{ar ? `عقد أثر بقيمة ${money(c.total_amount, c.currency, 'ar')} — تُدفع ثمن النتيجة لا المقعد: ${c.split.delivery}% عند التسليم، ${c.split.evidence}% عند أدلة الأثر المؤكَّدة من مشرفيكم، ${c.split.impact}% عند أثر ${c.targets.impact_days} يومًا${(c.split.return || 0) > 0 ? `، و${c.split.return}% «دفعة العودة» حين يعود منسوبوكم في مجالس أَثَر بالتزام حقيقي — لا تدفعون للمقعد؛ تدفعون للعودة` : ''}. هذه الصفحة تُحدَّث من الأدلة نفسها، لا من تقارير لاحقة.` : `An outcome contract worth ${money(c.total_amount, c.currency, 'en')} — paid for results, not seats: ${c.split.delivery}% on delivery, ${c.split.evidence}% on supervisor-confirmed evidence, ${c.split.impact}% on ${c.targets.impact_days}-day impact${(c.split.return || 0) > 0 ? `, and ${c.split.return}% when your people return on a real peer-council commitment — you pay for the return, not the seat` : ''}. This page is computed from the evidence itself.`}</p>
           <div className="pt-chips ic-meta">{c.program_name && <span className="pt-chip"><Icon name="book" size={13} /> {c.program_name}</span>}<span className="pt-chip"><Icon name="users" size={13} /> {ar ? `${c.cohort_size} منسوبًا` : `${c.cohort_size} people`}</span>{c.start_at && <span className="pt-chip"><Icon name="calendar" size={13} /> {ar ? 'بدأ' : 'Started'} {fmtDate(c.start_at, lang)}</span>}{v?.generated_at && <span className="pt-chip ic-live"><i /> {ar ? 'حي · يتجدد كل دقيقة' : 'Live · refreshes every minute'}</span>}</div>
         </> : <h1>{ar ? 'عقد أثر' : 'Impact contract'}</h1>}
       </div></section>
@@ -53,7 +53,7 @@ function Inner() {
             <div className="ic-money-k"><div><b>{money(s.paid, c.currency, lang)}</b><small>{ar ? 'أُفرج عنه' : 'Released'}</small></div><div className="due"><b>{money(s.due, c.currency, lang)}</b><small>{ar ? 'مستحق الآن' : 'Due now'}</small></div><div><b>{money(s.remaining, c.currency, lang)}</b><small>{ar ? 'مرتبط بالأثر القادم' : 'Tied to upcoming impact'}</small></div><div className="tot"><b>{money(c.total_amount, c.currency, lang)}</b><small>{ar ? 'قيمة العقد' : 'Contract value'}</small></div></div>
           </div>
 
-          {/* الدفعات الثلاث */}
+          {/* الدفعات (ثلاث أو أربع) */}
           <div className="ic-ms">
             {s.milestones.map((m: MilestoneState) => <article key={m.key} className="pt-box ic-m" data-st={m.status}>
               <Ring value={m.progress} color={MS_COLOR[m.status]} label={`${m.pct}%`} sub={money(m.payable, c.currency, lang)} />
@@ -107,7 +107,7 @@ const CSS = `
 .ic-meta{margin-top:12px}.ic-live i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:icp 1.8s infinite;margin-inline-end:6px}@keyframes icp{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
 .ic-money{margin-bottom:16px}.ic-bar{height:14px;border-radius:999px;background:#e2e8f0;overflow:hidden;display:flex}.ic-bar i{display:block;height:100%}.ic-bar .paid{background:#16a34a}.ic-bar .due{background:#c9a24b}
 .ic-money-k{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.ic-money-k div{border-inline-start:3px solid #16a34a;padding-inline-start:10px}.ic-money-k div.due{border-color:#c9a24b}.ic-money-k div:nth-child(3){border-color:#94a3b8}.ic-money-k div.tot{border-color:#0f2a4e}.ic-money-k b{display:block;font-size:20px;color:#0f2a4e}.ic-money-k small{color:#64748b;font-size:12px}
-.ic-ms{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}.ic-m{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;border-top:4px solid #94a3b8}.ic-m[data-st=progress]{border-top-color:#0b8a83}.ic-m[data-st=due]{border-top-color:#c9a24b;box-shadow:0 10px 30px rgba(201,162,75,.25)}.ic-m[data-st=released]{border-top-color:#16a34a}
+.ic-ms{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:16px}.ic-m{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;border-top:4px solid #94a3b8}.ic-m[data-st=progress]{border-top-color:#0b8a83}.ic-m[data-st=due]{border-top-color:#c9a24b;box-shadow:0 10px 30px rgba(201,162,75,.25)}.ic-m[data-st=released]{border-top-color:#16a34a}
 .ic-ring{position:relative;display:grid;place-items:center}.ic-ring svg{position:absolute;inset:0}.ic-ring-txt{position:relative;text-align:center}.ic-ring-txt b{display:block;font-size:24px;color:#0f2a4e}.ic-ring-txt small{color:#475569;font-size:11.5px;font-weight:700}
 .ic-m-body{width:100%}.ic-m-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.ic-m-top h3{margin:0;font-size:16px}.ic-st{font-size:11.5px;font-weight:800;color:var(--c);border:1.5px solid var(--c);border-radius:999px;padding:3px 10px;white-space:nowrap}
 .ic-metric{margin:8px 0 2px;font-weight:700;color:#0f2a4e;font-size:13.5px}.ic-rel{margin:6px 0 0;font-size:12.5px;color:#16a34a;font-weight:700;display:flex;gap:6px;align-items:center;justify-content:center}

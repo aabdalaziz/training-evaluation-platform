@@ -1,7 +1,8 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * أَثَر — عقود الأثر (P12-ب) — خادم فقط: جمع حقائق الأثر، الحالة الحية، الإفراج عن الدفعات، ونبض العقود في الكرون اليومي
- *  الحقائق تُقرأ من بيانات موجودة أصلًا: شهادات الإتمام (التسليم)، مهمات P12-أ المؤكَّدة (أدلة الأثر)، أدلة الملف المهاري المؤرَّخة (الأثر المستدام).
+ *  الحقائق تُقرأ من بيانات موجودة أصلًا: شهادات الإتمام (التسليم)، مهمات P12-أ المؤكَّدة (أدلة الأثر)، أدلة الملف المهاري المؤرَّخة (الأثر المستدام)،
+ *  وعودات مجالس أَثَر الموثَّقة (P24 «دفعة العودة» — portal_council_cases.returned_at لمنسوبي الشريحة).
  *  لا دفعة تُفرَج دون إنسان: الكرون يُشعر فقط («أصبحت مستحقة»)، والطاقم يعتمد بمذكرة إفراج مرقّمة مع لقطة من المؤشرات.
  */
 import { sendViaResend } from '../email/resend';
@@ -24,7 +25,7 @@ const chunk = <T,>(a: T[], n = 200) => { const out: T[][] = []; for (let i = 0; 
 
 /** حقائق الأثر لشريحة العقد */
 export async function loadFacts(db: any, c: Contract): Promise<Facts> {
-  const emails = Array.from(new Set(c.cohort.map(p => p.email.toLowerCase()))); const by = new Map<string, PersonFacts>(emails.map(e => [e, { email: e, completed: false, confirmed_missions: 0, submitted_missions: 0, evidence_at: [] }]));
+  const emails = Array.from(new Set(c.cohort.map(p => p.email.toLowerCase()))); const by = new Map<string, PersonFacts>(emails.map(e => [e, { email: e, completed: false, confirmed_missions: 0, submitted_missions: 0, evidence_at: [], returns_at: [] }]));
   const userIds = new Map<string, string>();
   for (const part of chunk(emails)) {
     let q = db.from('portal_credentials').select('email,user_id,program_id,revoked_at').eq('kind', 'program_completion').is('revoked_at', null).in('email', part); if (c.program_id) q = q.eq('program_id', c.program_id);
@@ -32,6 +33,9 @@ export async function loadFacts(db: any, c: Contract): Promise<Facts> {
     let mq = db.from('portal_missions').select('email,user_id,status,program_id').in('email', part); if (c.program_id) mq = mq.eq('program_id', c.program_id);
     const { data: ms } = await mq; for (const r of (ms || []) as any[]) { const p = by.get(String(r.email).toLowerCase()); if (!p) continue; if (r.status === 'confirmed') p.confirmed_missions++; else if (r.status === 'submitted') p.submitted_missions++; if (r.user_id) userIds.set(String(r.email).toLowerCase(), r.user_id); }
     const { data: ens } = await db.from('portal_enrollments').select('email,user_id').in('email', part).not('user_id', 'is', null); for (const r of (ens || []) as any[]) userIds.set(String(r.email).toLowerCase(), r.user_id);
+    // P24 — العودة في مجالس أَثَر (أي نتيجة؛ الصدق هو المعيار) — يُعدّ تاريخها فقط، لا نصّها
+    const { data: rets } = await db.from('portal_council_cases').select('author_email,returned_at').in('author_email', part).not('returned_at', 'is', null).then((r: any) => r, () => ({ data: [] }));
+    for (const r of (rets || []) as any[]) { const p = by.get(String(r.author_email).toLowerCase()); if (p && r.returned_at) (p.returns_at = p.returns_at || []).push(String(r.returned_at)); }
   }
   const ids = Array.from(new Set(userIds.values())); const emailOf = new Map<string, string[]>(); userIds.forEach((uid, em) => emailOf.set(uid, [...(emailOf.get(uid) || []), em]));
   for (const part of chunk(ids)) {
@@ -90,4 +94,4 @@ export async function runContractPulse(db: any, site: string, opts: { dry?: bool
 }
 
 /** للمحاسبة: جدول الدفعات المتوقعة */
-export function schedule(c: Contract) { const a = milestoneAmounts(c.total_amount, c.split); return (['delivery', 'evidence', 'impact'] as MilestoneKey[]).map(k => ({ key: k, pct: c.split[k], amount: a[k] })); }
+export function schedule(c: Contract) { const a = milestoneAmounts(c.total_amount, c.split); return (['delivery', 'evidence', 'impact', 'return'] as MilestoneKey[]).filter(k => (c.split[k] || 0) > 0).map(k => ({ key: k, pct: c.split[k], amount: a[k] })); }

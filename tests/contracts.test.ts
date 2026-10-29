@@ -7,15 +7,17 @@ import type { Contract, Facts, PersonFacts } from '../lib/portal/contracts';
 
 const NOW = new Date('2026-12-20T08:00:00Z');
 const cohort = ['a@org.sa', 'b@org.sa', 'c@org.sa', 'd@org.sa', 'e@org.sa'].map(email => ({ email, full_name: null }));
-const base: Contract = { id: 'c1', created_at: '2026-11-01T00:00:00Z', organization_id: 'o1', program_id: 'p3', title_ar: 'عقد أثر — تدريب معلمي المتوسطة', cohort, total_amount: 100000, currency: 'SAR', split: { delivery: 60, evidence: 25, impact: 15 }, targets: { evidence_rate: 60, impact_days: 90, impact_rate: 50 }, status: 'active', token: 'T'.repeat(24), start_at: '2026-11-01', delivered_at: null, flags: {}, contact_email: 'x@org.sa' };
+const base: Contract = { id: 'c1', created_at: '2026-11-01T00:00:00Z', organization_id: 'o1', program_id: 'p3', title_ar: 'عقد أثر — تدريب معلمي المتوسطة', cohort, total_amount: 100000, currency: 'SAR', split: { delivery: 60, evidence: 25, impact: 15, return: 0 }, targets: { evidence_rate: 60, impact_days: 90, impact_rate: 50, return_rate: 25 }, status: 'active', token: 'T'.repeat(24), start_at: '2026-11-01', delivered_at: null, flags: {}, contact_email: 'x@org.sa' };
 const pf = (email: string, o: Partial<PersonFacts> = {}): PersonFacts => ({ email, completed: false, confirmed_missions: 0, submitted_missions: 0, evidence_at: [], ...o });
 
 test('contracts: split normalisation and amounts', () => {
-  assert.deepEqual(normalizeSplit({ delivery: 50, evidence: 30, impact: 20 }), { delivery: 50, evidence: 30, impact: 20 });
-  assert.deepEqual(normalizeSplit({ delivery: 50, evidence: 30, impact: 10 }), { delivery: 60, evidence: 25, impact: 15 }, 'falls back when sum != 100');
-  assert.deepEqual(milestoneAmounts(100000, { delivery: 60, evidence: 25, impact: 15 }), { delivery: 60000, evidence: 25000, impact: 15000 });
-  assert.equal(milestoneAmounts(1000, { delivery: 33, evidence: 33, impact: 34 }).impact, 340, 'rounding lands on the last milestone');
-  assert.deepEqual(normalizeTargets({ evidence_rate: 500, impact_days: 10, impact_rate: 0 }), { evidence_rate: 100, impact_days: 30, impact_rate: 10 });
+  assert.deepEqual(normalizeSplit({ delivery: 50, evidence: 30, impact: 20 }), { delivery: 50, evidence: 30, impact: 20, return: 0 }, 'legacy 3-key split keeps working: return = 0');
+  assert.deepEqual(normalizeSplit({ delivery: 50, evidence: 30, impact: 10 }), { delivery: 55, evidence: 20, impact: 15, return: 10 }, 'falls back to the P24 default when sum != 100');
+  assert.deepEqual(normalizeSplit(null), { delivery: 55, evidence: 20, impact: 15, return: 10 }, 'empty split = new default with return payment');
+  assert.deepEqual(milestoneAmounts(100000, { delivery: 60, evidence: 25, impact: 15, return: 0 }), { delivery: 60000, evidence: 25000, impact: 15000, return: 0 });
+  assert.deepEqual(milestoneAmounts(100000, { delivery: 55, evidence: 20, impact: 15, return: 10 }), { delivery: 55000, evidence: 20000, impact: 15000, return: 10000 });
+  assert.equal(milestoneAmounts(1000, { delivery: 33, evidence: 33, impact: 34, return: 0 }).impact, 340, 'rounding lands on the impact milestone');
+  assert.deepEqual(normalizeTargets({ evidence_rate: 500, impact_days: 10, impact_rate: 0 }), { evidence_rate: 100, impact_days: 30, impact_rate: 10, return_rate: 25 });
   assert.equal(contractToken().length, 24); assert.match(memoNo(7, 2026), /^ATH-IC-2026-0007$/);
 });
 
@@ -70,7 +72,7 @@ test('contracts: form validation, payload and round-trip', () => {
   assert.ok(validateContract(EMPTY_CONTRACT_FORM, []));
   const f = { ...EMPTY_CONTRACT_FORM, organization_id: 'o1', title_ar: 'عقد أثر — مدارس النخبة', total_amount: '120000', contact_email: 'bad' };
   assert.equal(validateContract(f, cohort), 'بريد جهة الاتصال غير صالح');
-  assert.equal(validateContract({ ...f, contact_email: 'ok@org.sa', split: { delivery: 70, evidence: 25, impact: 15 } }, cohort), 'مجموع الدفعات يجب أن يساوي 100%');
+  assert.equal(validateContract({ ...f, contact_email: 'ok@org.sa', split: { delivery: 70, evidence: 25, impact: 15, return: 0 } }, cohort), 'مجموع الدفعات يجب أن يساوي 100%');
   const good = { ...f, contact_email: 'OK@Org.sa' }; assert.equal(validateContract(good, cohort), null);
   const p = contractPayload(good, cohort); assert.equal(p.total_amount, 120000); assert.equal(p.contact_email, 'ok@org.sa'); assert.equal(p.program_id, null); assert.equal(p.cohort.length, 5);
   const back = contractToForm({ ...base, cohort: [{ email: 'a@org.sa', full_name: 'أحمد' }, { email: 'b@org.sa' }] }); assert.equal(back.cohort_text, 'أحمد <a@org.sa>\nb@org.sa'); assert.equal(back.total_amount, '100000');

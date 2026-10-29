@@ -12,7 +12,7 @@ import { fastToken } from '../../components/Pocket';
 import { Channel } from '../../components/Channel';
 import { supabase } from '../../../lib/supabase/client';
 
-type Hall = any; type Data = { me: any; halls: Hall[]; applied: any; invitations: { member_id: number; council: any }[]; badge: { stats: any; eligibility: { ok: boolean; missing_ar: string[] }; issued: { code: string; verify_url: string } | null }; charter: { version: string; clauses: { id: string; title: string; body: string }[] }; constants: { return_days: number } };
+type Hall = any; type Data = { me: any; halls: Hall[]; applied: any; invitations: { member_id: number; council: any }[]; org_charter?: { organization_id: string; org_name: string; signed: boolean; expires_at: string | null; code: string | null } | null; badge: { stats: any; eligibility: { ok: boolean; missing_ar: string[] }; issued: { code: string; verify_url: string } | null }; charter: { version: string; clauses: { id: string; title: string; body: string }[] }; constants: { return_days: number } };
 const fmt = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium' }) : '—');
 const KIND_AR: Record<string, string> = { question: 'سؤال', advice: 'نصيحة', evidence: 'دليل', return_note: 'عودة' };
 const daysLeft = (iso: string | null) => iso ? Math.ceil((new Date(iso).getTime() - Date.now()) / 864e5) : null;
@@ -46,6 +46,9 @@ function Inner() {
           <button className="pt-btn gold" disabled={!!busy} onClick={() => act({ action: 'sign_charter', council_id: inv.council.id }, 'وقّعت الميثاق')}><Icon name="check" size={15} /> أوقّع الميثاق وأنضم</button>
         </section>
       ))}
+      {d && d.org_charter && (
+        <p className={`hl-orgcharter ${d.org_charter.signed ? 'ok' : 'no'}`} data-testid="org-charter-line"><Icon name={d.org_charter.signed ? 'check' : 'shield'} size={14} /> {d.org_charter.signed ? <>جهتك <b>{d.org_charter.org_name}</b> وقّعت «ميثاق الجهة»: وقت داخل الدوام · سرية · لا تقييم وظيفي بالمرآة ولا بالمداولات · لا أسماء{d.org_charter.code && <> — <a href={`/verify/vc?code=${encodeURIComponent(d.org_charter.code)}`} target="_blank" rel="noreferrer">تحقق</a></>}</> : <>جهتك <b>{d.org_charter.org_name}</b> لم توقّع «ميثاق الجهة» بعد — ما تراه هنا يبقى لك وحدك على كل حال؛ والجهة لا ترى مرآتك.</>}</p>
+      )}
       {d && !d.halls.length && !d.invitations.length && (
         <section className="pt-box hl-empty" data-testid="no-council">
           {d.applied ? <><Icon name="clock" size={28} /><b>طلبك قائم منذ {fmt(d.applied.created_at)}</b><p>المُوفِّق يراه عند التشكيل التالي: حين يكتمل مجلس يناسب مستواك وجهتك تصلك دعوة لتوقيع الميثاق.</p>{d.applied.note && <p className="hl-muted">{d.applied.note}</p>}</> : <><Icon name="compass" size={28} /><b>لست في مجلس بعد</b><p>المجالس أقران من جهات مختلفة حول مواقف حقيقية. <Link href="/councils#apply" className="pt-btn small">اطلب مقعدًا</Link></p></>}
@@ -174,6 +177,7 @@ function Inner() {
 const CSS = `
 .hl{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:1000px;margin:0 auto;padding:28px 18px 60px}
 .hl-head h1{margin:4px 0 6px;font-size:30px;color:#0f2a4e}.hl-head p{margin:0 0 18px;color:#475569;line-height:1.9}
+.hl-orgcharter{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-radius:12px;padding:9px 14px;font-size:13px;margin:0 0 12px}.hl-orgcharter.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}.hl-orgcharter.no{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}.hl-orgcharter a{color:#0b8a83}
 .hl-muted{color:#64748b;font-size:13px;line-height:1.8}.hl-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.hl-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.hl-ok-inline{color:#065f46;font-weight:800;display:flex;gap:6px;align-items:center}
 .hl-invite{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;background:linear-gradient(135deg,#fffbeb,#fff);border:1px solid #fcd34d;border-radius:18px;padding:18px;margin:12px 0}.hl-invite ul{margin:8px 0 0;padding-inline-start:18px;font-size:13px;line-height:1.8;color:#334155}
 .hl-empty{text-align:center;color:#334155}.hl-empty b{display:block;margin:8px 0 4px;color:#0f2a4e;font-size:17px}
