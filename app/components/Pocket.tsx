@@ -22,8 +22,15 @@ export const VALUE_EVENT = 'athar:value';
 /** تُستدعى من الصفحات بعد لحظة قيمة (إصدار شهادة، ردّ موقف، تسليم دليل) */
 export function valueMoment(kind: string) { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(VALUE_EVENT, { detail: kind })); }
 /** جلسة سريعة: getSession قد تعلّق بلا اتصال (محاولات تجديد الرمز) — نسابقها بمهلة ثم نقرأ الرمز المخزَّن محليًا (يكفي لقراءة الكاش) */
-export async function fastToken(db: ReturnType<typeof supabase>, ms = 2500): Promise<string> {
-  const stored = () => { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ''; if (k.startsWith('sb-') && k.endsWith('-auth-token')) { const v = JSON.parse(localStorage.getItem(k) || 'null'); const t = v?.access_token || v?.currentSession?.access_token; if (t) return String(t); } } } catch { /* ignore */ } return ''; };
+export async function fastToken(db: ReturnType<typeof supabase>, ms = 3500): Promise<string> {
+  // الجلسة لدى @supabase/ssr في كعكات sb-<ref>-auth-token(.0,.1…) بقيمة JSON أو base64-JSON؛ وبعض العملاء في localStorage
+  const parse = (raw: string) => { try { let r = raw; if (r.startsWith('base64-')) { const b = r.slice(7).replace(/-/g, '+').replace(/_/g, '/'); r = new TextDecoder().decode(Uint8Array.from(atob(b.padEnd(b.length + ((4 - (b.length % 4)) % 4), '=')), c => c.charCodeAt(0))); } const v = JSON.parse(r); return String(v?.access_token || v?.currentSession?.access_token || ''); } catch { return ''; } };
+  const stored = () => {
+    try { const jar: Record<string, string> = {}; document.cookie.split(';').forEach(c => { const i = c.indexOf('='); if (i > 0) jar[c.slice(0, i).trim()] = c.slice(i + 1).trim(); });
+      const names = Object.keys(jar).filter(k => k.startsWith('sb-') && k.includes('-auth-token') && !k.includes('code-verifier')); if (names.length) { const base = names[0].replace(/\.\d+$/, ''); const chunks = names.filter(n => n === base || n.startsWith(base + '.')).sort((a, b) => (Number(a.split('.').pop()) || 0) - (Number(b.split('.').pop()) || 0)); const t = parse(decodeURIComponent(chunks.map(n => jar[n]).join(''))); if (t) return t; } } catch { /* ignore */ }
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ''; if (k.startsWith('sb-') && k.endsWith('-auth-token')) { const t = parse(localStorage.getItem(k) || ''); if (t) return t; } } } catch { /* ignore */ }
+    return '';
+  };
   try { const r = await Promise.race([db.auth.getSession().then(x => x.data.session?.access_token || ''), new Promise<null>(res => setTimeout(() => res(null), ms))]); return r === null ? stored() : (r || stored()); } catch { return stored(); }
 }
 export const isStandalone = () => typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true);
