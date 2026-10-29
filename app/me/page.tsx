@@ -105,6 +105,7 @@ export default function MePage() {
         <a className="me-tablink" href="/me/twin"><Icon name="star" size={16} /> توأمي</a>
         <a className="me-tablink" href="/me/missions"><Icon name="flag" size={16} /> مهماتي</a>
         <a className="me-tablink" href="/me/council"><Icon name="users" size={16} /> مجلسي</a>
+        <a className="me-tablink" href="/me/journey"><Icon name="compass" size={16} /> رحلتي</a>
         <a className="me-tablink" href="/me/data"><Icon name="shield" size={16} /> ذاكرتي</a>
         <button className={tab === 'certs' ? 'on' : ''} onClick={() => setTab('certs')}><Icon name="certificate" size={16} /> شهاداتي <i>{allCerts.length}</i></button>
       </nav>

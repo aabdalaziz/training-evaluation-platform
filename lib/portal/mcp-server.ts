@@ -27,6 +27,7 @@ import { GET as missionsGET } from '../../app/api/missions/route';
 import { POST as vcPOST } from '../../app/api/vc/route';
 import { GET as obsGET } from '../../app/api/observatory/route';
 import { GET as charterGET } from '../../app/api/org/charter/route';
+import { GET as journeyGET } from '../../app/api/journey/route';
 import { GET as didGET } from '../../app/.well-known/did.json/route';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Agent-Key, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id', 'Access-Control-Expose-Headers': 'MCP-Protocol-Version, WWW-Authenticate', 'Cache-Control': 'no-store' };
@@ -165,6 +166,11 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
   if (name === 'my_data_summary') {
     const j = await asJson(await vaultGET(internal(c, '/api/vault?view=summary'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة الخزنة', { error: 'failed' }, true); }
     const result = { ...j.summary, note_ar: 'للتصدير أو التصحيح أو النسيان: صاحب الحساب من /me/data — الوكيل يقرأ فقط.' };
+    await log(c, name, true); return toolContent(summarize(result), result);
+  }
+  if (name === 'my_journey') {
+    const j = await asJson(await journeyGET(internal(c, '/api/journey?view=summary'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة الرحلة', { error: 'failed' }, true); }
+    const result = { ...j.summary, note_ar: 'الفصول مشتقة من أحداث مسجَّلة فقط. المشاركة والكتابة لصاحب الرحلة من /me/journey — الوكيل يقرأ فقط.' };
     await log(c, name, true); return toolContent(summarize(result), result);
   }
   if (name === 'my_council') {
