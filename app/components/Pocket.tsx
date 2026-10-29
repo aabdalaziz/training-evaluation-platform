@@ -21,6 +21,11 @@ export const useOutbox = () => { const c = useContext(PocketCtx); if (!c) throw 
 export const VALUE_EVENT = 'athar:value';
 /** تُستدعى من الصفحات بعد لحظة قيمة (إصدار شهادة، ردّ موقف، تسليم دليل) */
 export function valueMoment(kind: string) { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(VALUE_EVENT, { detail: kind })); }
+/** جلسة سريعة: getSession قد تعلّق بلا اتصال (محاولات تجديد الرمز) — نسابقها بمهلة ثم نقرأ الرمز المخزَّن محليًا (يكفي لقراءة الكاش) */
+export async function fastToken(db: ReturnType<typeof supabase>, ms = 2500): Promise<string> {
+  const stored = () => { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ''; if (k.startsWith('sb-') && k.endsWith('-auth-token')) { const v = JSON.parse(localStorage.getItem(k) || 'null'); const t = v?.access_token || v?.currentSession?.access_token; if (t) return String(t); } } } catch { /* ignore */ } return ''; };
+  try { const r = await Promise.race([db.auth.getSession().then(x => x.data.session?.access_token || ''), new Promise<null>(res => setTimeout(() => res(null), ms))]); return r === null ? stored() : (r || stored()); } catch { return stored(); }
+}
 export const isStandalone = () => typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true);
 
 export function PocketProvider({ children }: { children: React.ReactNode }) {
@@ -28,7 +33,7 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
   const [online, setOnline] = useState(true); const [items, setItems] = useState<OutboxItem[]>([]); const [syncing, setSyncing] = useState(false); const [lastSync, setLastSync] = useState<string | null>(null); const [lastReport, setLastReport] = useState('');
   const [swVersion, setSwVersion] = useState<string | null>(null); const [waiting, setWaiting] = useState<ServiceWorker | null>(null); const [install, setInstall] = useState<'none' | 'prompt' | 'ios_hint'>('none'); const [toast, setToast] = useState('');
   const promptRef = useRef<any>(null); const wantReload = useRef(false); const supported = typeof window !== 'undefined' && hasPocket(); const busy = useRef(false);
-  const token = useCallback(async () => { try { return (await db.auth.getSession()).data.session?.access_token || ''; } catch { return ''; } }, [db]);
+  const token = useCallback(() => fastToken(db), [db]);
 
   const refresh = useCallback(async () => { if (!supported) return; try { setItems(await listItems()); } catch { /* ignore */ } }, [supported]);
   const sync = useCallback(async () => {
@@ -69,12 +74,12 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
         if (reg.waiting && navigator.serviceWorker.controller) setWaiting(reg.waiting);
-        reg.addEventListener('updatefound', () => { const nw = reg.installing; nw?.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) setWaiting(nw); }); });
+        reg.addEventListener('updatefound', () => { const nw = reg.installing; nw?.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller && reg.waiting === nw) setWaiting(nw); if (nw.state === 'activated' || nw.state === 'redundant') setWaiting(w => (w === nw ? null : w)); }); });
         const done = await kvGet<string>('activated').catch(() => undefined); if (done !== POCKET_VERSION) { await kvSet('activated', POCKET_VERSION).catch(() => undefined); const tok = await token(); fetch('/api/pocket', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }, body: JSON.stringify({ action: 'activated', version: POCKET_VERSION, standalone: isStandalone(), platform: /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop' }) }).catch(() => null); }
       } catch { /* بلا PWA */ }
     }, 1200);
     // إعادة التحميل فقط حين يطلب المستخدم التحديث (لا عند أول تثبيت لعامل الخدمة — claim لا يجب أن يقطع الصفحة)
-    const onCtrl = () => { if (!wantReload.current) return; wantReload.current = false; location.reload(); }; navigator.serviceWorker.addEventListener('controllerchange', onCtrl);
+    const onCtrl = () => { setWaiting(null); if (!wantReload.current) return; wantReload.current = false; location.reload(); }; navigator.serviceWorker.addEventListener('controllerchange', onCtrl);
     return () => { clearTimeout(t); navigator.serviceWorker.removeEventListener('message', onMsg); navigator.serviceWorker.removeEventListener('controllerchange', onCtrl); };
   }, [sync, token]);
 
@@ -109,7 +114,7 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
       {children}
       {showBar && (
         <div dir="rtl" data-testid="pocket-bar" style={{ position: 'fixed', bottom: 12, insetInlineStart: 12, insetInlineEnd: 12, zIndex: 60, display: 'grid', gap: 6, justifyItems: 'center', pointerEvents: 'none' }}>
-          {waiting && <div style={pill('#0f2a4e')}><span>نسخة جديدة من أَثَر جاهزة</span><button onClick={() => { wantReload.current = true; waiting.postMessage({ type: 'SKIP_WAITING' }); }} style={btn}>حدّث الآن</button></div>}
+          {waiting && <div style={pill('#0f2a4e')}><span>نسخة جديدة من أَثَر جاهزة</span><button onClick={() => { wantReload.current = true; try { waiting.postMessage({ type: 'SKIP_WAITING' }); } catch { /* ignore */ } setTimeout(() => { if (wantReload.current) { wantReload.current = false; location.reload(); } }, 1500); }} style={btn} data-testid="sw-update">حدّث الآن</button></div>}
           {install === 'prompt' && <div style={pill('#0b8a83')} data-testid="install-prompt"><span>ثبّت أَثَر في جيبك — محفظتك وصندوق أدلتك يعملان بلا اتصال</span><button onClick={doInstall} style={btn}>تثبيت</button><button onClick={dismissInstall} style={{ ...btn, background: 'transparent', color: '#fff' }}>لاحقًا</button></div>}
           {install === 'ios_hint' && <div style={pill('#0b8a83')} data-testid="install-ios"><span>على iPhone: زر المشاركة ثم «إضافة إلى الشاشة الرئيسية» — لتعمل المحفظة والصندوق بلا اتصال</span><button onClick={dismissInstall} style={btn}>فهمت</button></div>}
           {!online && <div style={pill('#7c2d12')} data-testid="offline-pill"><span>بلا اتصال — ما تكتبه يُحفظ في صندوق الأدلة ويُرسل تلقائيًا حين يعود الاتصال</span>{items.length > 0 && <b>{items.length}</b>}</div>}

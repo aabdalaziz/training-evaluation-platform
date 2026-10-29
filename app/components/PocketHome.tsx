@@ -9,7 +9,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useOutbox } from './Pocket';
+import { fastToken, useOutbox } from './Pocket';
 import { Icon } from '../../lib/ui/icons';
 import { LEVEL_NAME_AR, OUTBOX_LABEL, offlineLine } from '../../lib/portal/pocket';
 import { supabase } from '../../lib/supabase/client';
@@ -26,7 +26,7 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
   const ob = useOutbox(); const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [bundle, setBundle] = useState<Fetched<Bundle> | null>(null); const [daily, setDaily] = useState<Fetched<any> | null>(null);
   const [text, setText] = useState(''); const [msg, setMsg] = useState(''); const [queuedDay, setQueuedDay] = useState('');
-  useEffect(() => { db.auth.getSession().then(({ data }) => setTok(data.session?.access_token || '')); }, [db]);
+  useEffect(() => { fastToken(db).then(setTok); }, [db]);
   useEffect(() => { if (tok === null) return; (async () => { const [b, d] = await Promise.all([tok ? getJson<Bundle>('/api/pocket?view=bundle', tok) : Promise.resolve(null), getJson<any>('/api/daily', tok)]); setBundle(b); setDaily(d); })(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [tok, ob.online]);
   const queuedDaily = ob.items.find(i => i.kind === 'daily');
   const queue = async () => {

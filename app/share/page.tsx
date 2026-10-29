@@ -10,7 +10,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PortalShell, useLang } from '../components/PortalShell';
-import { useOutbox } from '../components/Pocket';
+import { fastToken, useOutbox } from '../components/Pocket';
 import { takeShared } from '../../lib/portal/pocket-db';
 import { LIMITS } from '../../lib/portal/pocket';
 import { supabase } from '../../lib/supabase/client';
@@ -23,7 +23,7 @@ function Inner() {
   const [files, setFiles] = useState<{ name: string; type: string; blob: Blob; url: string }[]>([]); const [missions, setMissions] = useState<M[] | null>(null); const [pick, setPick] = useState(''); const [tokenIn, setTokenIn] = useState(''); const [caption, setCaption] = useState(''); const [msg, setMsg] = useState(''); const [done, setDone] = useState(false); const [sharedText, setSharedText] = useState('');
   useEffect(() => { (async () => {
     try { const got = await takeShared(); if (got.length) setFiles(got.map(f => { const blob = new Blob([f.buf], { type: f.type }); return { name: f.name, type: f.type, blob, url: URL.createObjectURL(blob) }; })); const t = got.find(x => x.text || x.title); if (t) setSharedText(t.text || t.title || ''); } catch { /* ignore */ }
-    try { const tok = (await db.auth.getSession()).data.session?.access_token; if (!tok) { setMissions([]); return; } const r = await fetch('/api/missions', { headers: { Authorization: `Bearer ${tok}` } }); const j = await r.json().catch(() => null); const open = ((j?.missions || []) as M[]).filter(m => m.status === 'assigned' || m.status === 'returned'); setMissions(open); if (open.length === 1) setPick(open[0].token); } catch { setMissions([]); }
+    try { const tok = await fastToken(db); if (!tok) { setMissions([]); return; } const r = await fetch('/api/missions', { headers: { Authorization: `Bearer ${tok}` } }); const j = await r.json().catch(() => null); const open = ((j?.missions || []) as M[]).filter(m => m.status === 'assigned' || m.status === 'returned'); setMissions(open); if (open.length === 1) setPick(open[0].token); } catch { setMissions([]); }
   })(); }, [db]);
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => { const list = Array.from(e.target.files || []).slice(0, 3).map(f => ({ name: f.name, type: f.type, blob: f as Blob, url: URL.createObjectURL(f) })); setFiles(list); };
   const tokenOf = () => { const raw = tokenIn.trim(); const m = raw.match(/\/m\/([A-Za-z0-9_-]{8,})/); return pick || (m ? m[1] : raw); };

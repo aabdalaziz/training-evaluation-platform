@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PortalShell, useLang } from '../../components/PortalShell';
-import { useOutbox, valueMoment } from '../../components/Pocket';
+import { fastToken, useOutbox, valueMoment } from '../../components/Pocket';
 import { capabilityCard, cardSvg, offlineLine } from '../../../lib/portal/pocket';
 import { qrSvg } from '../../../lib/certificates/qr';
 import { supabase } from '../../../lib/supabase/client';
@@ -19,7 +19,7 @@ export default function CardPage() { return <PortalShell><Inner /></PortalShell>
 function Inner() {
   const { lang } = useLang(); const ar = lang === 'ar'; const ob = useOutbox(); const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [b, setB] = useState<Bundle | null>(null); const [cachedAt, setCachedAt] = useState<string | null>(null); const [stale, setStale] = useState(false); const [status, setStatus] = useState(0); const [msg, setMsg] = useState('');
-  useEffect(() => { db.auth.getSession().then(({ data }) => setTok(data.session?.access_token || '')); }, [db]);
+  useEffect(() => { fastToken(db).then(setTok); }, [db]);
   useEffect(() => { if (!tok) return; (async () => { try { const r = await fetch('/api/pocket?view=bundle', { headers: { Authorization: `Bearer ${tok}` } }); setStatus(r.status); setCachedAt(r.headers.get('X-Athar-Cached-At')); setStale(r.headers.get('X-Athar-Cache') === 'stale'); const j = await r.json().catch(() => null); if (j?.success) setB(j); } catch { setStatus(0); } })(); }, [tok, ob.online]);
   const site = typeof location !== 'undefined' ? location.origin : (b?.site || '');
   const card = b ? capabilityCard({ name: b.profile.name, email: b.profile.email, levels: b.levels, snapshot: b.snapshot, fingerprint: b.fingerprint, site }) : null;
