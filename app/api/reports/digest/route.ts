@@ -7,6 +7,7 @@
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL.
  */
 import { NextResponse } from 'next/server';
+import { cronAuthorized } from '../../../../lib/shield/body';
 import { createClient } from '@supabase/supabase-js';
 import {
   addDays, applyFilters, buildEvaluations, buildFacts, groupBy, kpis, narrative, periodComparison, riskRegister, riyadhDate, timeSeries,
@@ -25,9 +26,7 @@ export const maxDuration = 60;
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const secret = process.env.CRON_SECRET;
-  const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '') || url.searchParams.get('key') || '';
-  if (!secret || given !== secret) return NextResponse.json({ success: false, error: 'unauthorized' }, { status: 401 });
+  if (!cronAuthorized(req)) return NextResponse.json({ success: false, error: 'unauthorized' }, { status: 401 });
 
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL; const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !SERVICE_KEY) return NextResponse.json({ success: false, error: 'SUPABASE_SERVICE_ROLE_KEY مطلوب' }, { status: 500 });

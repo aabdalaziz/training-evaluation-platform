@@ -7,6 +7,7 @@
  *  لا بيانات اتصال لصاحب الشهادة تُعرض؛ التفعيل/الإيقاف بيد صاحبها عبر /api/twin {action:'live'}.
  */
 import { NextResponse } from 'next/server';
+import { limitFor, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { createClient } from '@supabase/supabase-js';
 import { buildLiving } from '../../../lib/portal/twin';
 import { randomCode } from '../../../lib/portal/profile';
@@ -18,9 +19,6 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
-const hits = new Map<string, { n: number; t: number }>();
-function allow(ip: string, limit = 12): boolean { const now = Date.now(); const h = hits.get(ip); if (!h || now - h.t > 3600000) { hits.set(ip, { n: 1, t: now }); return true; } h.n++; return h.n <= limit; }
-const ipOf = (req: Request) => (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'local';
 const S = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
 const esc = (s: string) => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch] as string));
 
@@ -46,7 +44,7 @@ export async function POST(req: Request) {
     if (error) return bad(error.message); return NextResponse.json({ success: true, removed: (data || []).length });
   }
   if (action === 'watch') {
-    if (!allow(ipOf(req))) return bad('محاولات كثيرة — حاول لاحقًا', 429);
+    { const rl = await limitFor(db, 'credential_ip', ipOf(req)); if (!rl.allowed) return tooMany(rl); }
     const code = S(body.code, 40).toUpperCase(); const email = S(body.email, 160).toLowerCase(); const name = S(body.name, 120); const organization = S(body.organization, 160);
     if (!code) return bad('رمز الشهادة مطلوب'); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return bad('أدخل بريدًا صالحًا');
     const { data: cred } = await db.from('portal_credentials').select('id,verify_code,title_ar,full_name,live,revoked_at').ilike('verify_code', code).maybeSingle();

@@ -10,6 +10,9 @@
 import { NextResponse } from 'next/server';
 import { normalizeSite } from '../../../lib/portal/open';
 import { validateAuthorizeParams, redirectWith, sha256hex, PSCOPE_LABEL, CODE_TTL_S, AGO_AR } from '../../../lib/portal/oauth';
+import { limitFor, ipOf, tooMany } from '../../../lib/shield/ratelimit';
+import { securityEvent, burst } from '../../../lib/shield/guard';
+import { readJson } from '../../../lib/shield/body';
 import { svc, who, clientInfo, newCode } from '../../../lib/portal/oauth-server';
 
 export const runtime = 'nodejs';
@@ -29,10 +32,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500); const user = await who(req, db); if (!user) return bad('سجّل الدخول', 401);
-  const site = normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin); const body = await req.json().catch(() => ({})); const action = String(body?.action || '');
-  if (action === 'revoke') { const id = String(body?.id || ''); if (!id) return bad('معرّف ناقص'); const { error } = await db.from('portal_delegations').update({ revoked_at: new Date().toISOString() }).eq('id', id).eq('user_id', user.id); if (error) return bad(error.message, 500); return NextResponse.json({ success: true }); }
+  const site = normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin); const ip = ipOf(req);
+  const rj = await readJson(req, { maxBytes: 16 * 1024, allowEmpty: true }); if (!rj.ok) return bad(rj.error, rj.status); const body = rj.body || {}; const action = String(body?.action || '');
+  if (action === 'describe') { const rl = await limitFor(db, 'oauth_describe_ip', ip); if (!rl.allowed) return tooMany(rl); }
+  if (action === 'revoke') { const id = String(body?.id || ''); if (!id) return bad('معرّف ناقص'); const { error } = await db.from('portal_delegations').update({ revoked_at: new Date().toISOString() }).eq('id', id).eq('user_id', user.id); if (error) return bad(error.message, 500); await securityEvent(db, { severity: 'info', kind: 'delegation_revoked', actor: id.slice(0, 8), ip, user_id: user.id, user_email: user.email }); return NextResponse.json({ success: true }); }
   const v = validateAuthorizeParams(body?.params || {}, site); if (!v.ok) return NextResponse.json({ success: false, error: v.error_description, oauth_error: v.error }, { status: 400 });
-  const p = v.p; const ci = await clientInfo(db, p.client_id, p.redirect_uri); if (!ci.ok) return NextResponse.json({ success: false, error: ci.error_description, oauth_error: ci.error }, { status: 400 });
+  const p = v.p; const ci = await clientInfo(db, p.client_id, p.redirect_uri); if (!ci.ok) { if (ci.error === 'invalid_request' || /redirect/i.test(ci.error_description || '')) await burst(db, `bad_redirect:${ip}`, 3600, 2, { severity: 'warn', kind: 'bad_redirect', actor: p.client_id, ip, user_id: user.id, meta: { redirect_uri: p.redirect_uri } }); return NextResponse.json({ success: false, error: ci.error_description, oauth_error: ci.error }, { status: 400 }); }
   const c = ci.c;
   if (action === 'describe') {
     const { data: prev } = await db.from('portal_delegations').select('id,scopes,created_at').eq('user_id', user.id).eq('client_id', p.client_id).is('revoked_at', null).maybeSingle();
@@ -45,6 +50,7 @@ export async function POST(req: Request) {
     if (delegationId) { const { error } = await db.from('portal_delegations').update({ scopes: p.scopes, client_name: c.client_name }).eq('id', delegationId); if (error) return bad(error.message, 500); }
     else { const { data: ins, error } = await db.from('portal_delegations').insert({ user_id: user.id, email: user.email, client_id: p.client_id, client_name: c.client_name, scopes: p.scopes }).select('id').maybeSingle(); if (error || !ins) return bad(error?.message || 'تعذّر الحفظ', 500); delegationId = (ins as any).id; }
     const code = newCode(); const { error: ce } = await db.from('portal_oauth_codes').insert({ code_hash: sha256hex(code), delegation_id: delegationId, client_id: p.client_id, redirect_uri: p.redirect_uri, code_challenge: p.code_challenge, resource: p.resource, scopes: p.scopes, expires_at: new Date(Date.now() + CODE_TTL_S * 1000).toISOString() }); if (ce) return bad(ce.message, 500);
+    await securityEvent(db, { severity: 'info', kind: 'delegation_created', actor: c.client_name || p.client_id, ip, user_id: user.id, user_email: user.email, meta: { client: p.client_id, scopes: p.scopes, renewed: !!(prev as any)?.id } });
     return NextResponse.json({ success: true, redirect: redirectWith(p.redirect_uri, { code, state: p.state, iss: site }) });
   }
   return bad('إجراء غير معروف');

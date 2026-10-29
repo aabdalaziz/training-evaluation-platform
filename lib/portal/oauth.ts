@@ -31,6 +31,13 @@ export const sha256hex = (s: string) => createHash('sha256').update(s).digest('h
 export function secretFromEnv(env: Record<string, string | undefined>): Buffer {
   const base = env.VC_SIGNING_KEY || env.CRON_SECRET || 'athar-dev-only'; return createHmac('sha256', base).update('athar-oauth-v1').digest();
 }
+/** P21: المفتاح الحالي + السابق (TOKEN_SECRET_PREV) أثناء التدوير — التوقيع بالحالي فقط، والتحقق بكليهما */
+export function secretsFromEnv(env: Record<string, string | undefined>): Buffer[] {
+  const out = [secretFromEnv(env)]; const prev = String(env.TOKEN_SECRET_PREV || '').trim();
+  if (prev && prev !== (env.VC_SIGNING_KEY || '')) out.push(createHmac('sha256', prev).update('athar-oauth-v1').digest());
+  return out;
+}
+export const keyId = (secret: Buffer) => createHash('sha256').update(secret).digest('hex').slice(0, 8);
 
 export type TokenTyp = 'at' | 'rt' | 'dg';
 export type TokenClaims = { typ: TokenTyp; sub: string; email: string; name?: string; del: string; client: string; client_name?: string; scopes: PScope[]; aud: string; iss: string; iat: number; exp: number; jti?: string };
@@ -39,11 +46,12 @@ export function signToken(c: TokenClaims, secret: Buffer): string {
   return `athar_${c.typ}.${payload}.${sig}`;
 }
 export const isOauthToken = (s: unknown) => /^athar_(at|rt|dg)\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(String(s || ''));
-export function verifyToken(token: string, secret: Buffer, nowMs = Date.now(), expectTyp?: TokenTyp): TokenClaims | null {
+export function verifyToken(token: string, secret: Buffer | Buffer[], nowMs = Date.now(), expectTyp?: TokenTyp): TokenClaims | null {
   try {
     const m = /^athar_(at|rt|dg)\.([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec(String(token || '')); if (!m) return null;
-    const [, typ, payload, sig] = m; const want = b64u(createHmac('sha256', secret).update(`${typ}.${payload}`).digest());
-    const a = Buffer.from(sig); const b = Buffer.from(want); if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+    const [, typ, payload, sig] = m; const secrets = Array.isArray(secret) ? secret : [secret]; const a = Buffer.from(sig);
+    let okSig = false; for (const sec of secrets) { const b = Buffer.from(b64u(createHmac('sha256', sec).update(`${typ}.${payload}`).digest())); if (a.length === b.length && timingSafeEqual(a, b)) { okSig = true; break; } }
+    if (!okSig) return null;
     const c = JSON.parse(b64uDecode(payload).toString('utf8')) as TokenClaims; if (c.typ !== typ) return null; if (expectTyp && c.typ !== expectTyp) return null;
     if (!c.exp || c.exp * 1000 < nowMs) return null; if (!c.sub || !c.del) return null; c.scopes = parseScopes(c.scopes); return c;
   } catch { return null; }
@@ -108,7 +116,7 @@ export const AGO_AR = (ms: number) => { const m = Math.max(1, Math.round(ms / 60
 export type Delegate = { id: string; email: string; name: string; del: string; client: string; scopes: PScope[] };
 export const DELEGATE_HEADER = 'x-athar-delegate';
 export function delegateFromHeaders(headers: Headers, env: Record<string, string | undefined>, nowMs = Date.now()): Delegate | null {
-  const h = headers.get(DELEGATE_HEADER) || ''; if (!h) return null; const c = verifyToken(h, secretFromEnv(env), nowMs, 'dg'); if (!c) return null;
+  const h = headers.get(DELEGATE_HEADER) || ''; if (!h) return null; const c = verifyToken(h, secretsFromEnv(env), nowMs, 'dg'); if (!c) return null;
   return { id: c.sub, email: c.email, name: c.name || '', del: c.del, client: c.client_name || c.client, scopes: c.scopes };
 }
 export function mintDelegate(d: { sub: string; email: string; name?: string; del: string; client: string; client_name?: string; scopes: PScope[] }, site: string, env: Record<string, string | undefined>, nowMs = Date.now()): string {

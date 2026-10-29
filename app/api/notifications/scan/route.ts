@@ -5,6 +5,7 @@
  *  يحتاج: SUPABASE_SERVICE_ROLE_KEY (للـ GET)، RESEND_API_KEY (اختياري لبريد الملخص)، NOTIFY_EMAILS (اختياري)
  */
 import { NextResponse } from 'next/server';
+import { cronAuthorized } from '../../../../lib/shield/body';
 import { createClient } from '@supabase/supabase-js';
 import { runNotificationScan } from '../../../../lib/notifications/scan';
 
@@ -33,9 +34,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const secret = process.env.CRON_SECRET;
-  const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '') || url.searchParams.get('key') || '';
-  if (!secret || given !== secret) return bad('unauthorized', 401);
+  if (!cronAuthorized(req)) return bad('unauthorized', 401);
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !key) return bad('SUPABASE_SERVICE_ROLE_KEY مطلوب', 500);
   const db = createClient(SUPABASE_URL, key);

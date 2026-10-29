@@ -9,6 +9,7 @@
  *  القاعدة: كل كتابة (عرض سعر/حجز/غرفة) = طلب ينتظر اعتماد إنسان؛ لا التزام مالي آلي. كل نداء يُسجَّل في portal_agent_log.
  */
 import { NextResponse } from 'next/server';
+import { readJson } from '../../../lib/shield/body';
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'crypto';
 import { AGENT_TOOLS, toolByName, isAgentKey, allowCall, validateArgs, fitPrograms, findSkillNode, indicativeQuote, pluginManifest, publicLogLine, ANON_SCOPES, ANON_DAILY_LIMIT, ALL_SCOPES } from '../../../lib/portal/agents';
@@ -66,7 +67,7 @@ async function resolveActor(req: Request, db: any, body: any): Promise<{ actor: 
 
 export async function POST(req: Request) {
   const t0 = Date.now(); const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY; if (!URL_ || !SERVICE) return fail('إعدادات الخادم غير مكتملة', 'Server not configured', 500);
-  const db = createClient(URL_, SERVICE, { auth: { persistSession: false } }); const body = await req.json().catch(() => ({}));
+  const db = createClient(URL_, SERVICE, { auth: { persistSession: false } }); const rj = await readJson(req, { allowEmpty: true }); if (!rj.ok) return NextResponse.json({ success: false, error: rj.error, error_en: rj.error_en }, { status: rj.status, headers: H }); const body = rj.body || {};
   const tool = toolByName(String(body?.tool || '')); if (!tool) return json({ success: false, error: 'أداة غير معروفة', error_en: 'Unknown tool', tools: AGENT_TOOLS.map(t => t.name) }, 400);
   const r = await resolveActor(req, db, body); if ('error' in r) return r.error; const actor = r.actor; const nowIso = new Date().toISOString();
   const logMeta: Record<string, unknown> = { key: actor.kind === 'key' ? actor.key.id : null, org: actor.kind === 'key' ? actor.key.organization_id : null, org_sector: actor.kind === 'key' ? actor.key.org_sector : null, sandbox: actor.kind === 'sandbox', anon: actor.kind === 'anon', transport: req.headers.get('x-athar-transport') || 'http', proto: req.headers.get('x-athar-proto') || null, client: safeDecode(req.headers.get('x-athar-client')) };

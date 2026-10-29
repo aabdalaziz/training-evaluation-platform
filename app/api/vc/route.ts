@@ -13,6 +13,7 @@
  *  POST { action:'generate_key' }              (موظفون) → بذرة مفتاح جديدة تُعرض مرة واحدة لنسخها إلى Vercel (لا تُخزَّن)
  */
 import { NextResponse } from 'next/server';
+import { limitFor, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { createClient } from '@supabase/supabase-js';
 import { normalizeSite } from '../../../lib/portal/open';
 import { displayLevel, randomCode } from '../../../lib/portal/profile';
@@ -27,9 +28,6 @@ const bad = (error: string, status = 400) => NextResponse.json({ success: false,
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type, Authorization', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
 const VC_HEADERS = { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
-const hits = new Map<string, { n: number; t: number }>();
-function allow(ip: string, limit: number): boolean { const now = Date.now(); const h = hits.get(ip); if (!h || now - h.t > 3600000) { hits.set(ip, { n: 1, t: now }); return true; } h.n++; return h.n <= limit; }
-const ipOf = (req: Request) => (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'local';
 const ISS_COLS = 'id,code,kind,credential_id,user_id,email,full_name,title_ar,kid,status_index,issued_at,expires_at,revoked_at,created_at';
 
 function service() { const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY; if (!URL_ || !SERVICE) return null; return createClient(URL_, SERVICE, { auth: { persistSession: false } }); }
@@ -115,7 +113,7 @@ export async function POST(req: Request) {
   const db = service(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500); const site = siteOf(req); const did = didWeb(site);
   let body: any = {}; try { body = await req.json(); } catch { /* فارغ */ } const action = String(body.action || '');
   if (action === 'verify') {
-    if (!allow(ipOf(req), 120)) return bad('محاولات كثيرة — حاول لاحقًا', 429);
+    { const rl = await limitFor(db, 'vc_ip', ipOf(req)); if (!rl.allowed) return tooMany(rl); }
     let doc = body.vc; if (typeof doc === 'string') { try { doc = JSON.parse(doc); } catch { return bad('الملف ليس JSON صالحًا'); } }
     if (!doc || typeof doc !== 'object') return bad('أرسل الوثيقة في الحقل vc');
     const signer = signerFromEnv(process.env, site); const res = await verifyDocument(doc, await resolverFor(db, site, signer), statusChecker(db, site));

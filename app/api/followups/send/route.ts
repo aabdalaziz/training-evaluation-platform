@@ -10,6 +10,7 @@
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, (للـ Cron) CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL
  */
 import { NextResponse } from 'next/server';
+import { cronAuthorized } from '../../../../lib/shield/body';
 import { createClient } from '@supabase/supabase-js';
 import { dispatchFollowup } from '../../../../lib/behavior/mail';
 import { runNotificationScan } from '../../../../lib/notifications/scan';
@@ -24,6 +25,7 @@ import { refreshGraph, ensureWeeklyLesson } from '../../../../lib/portal/evidenc
 import { runLoop } from '../../../../lib/portal/loop-cron';
 import { runOutreach } from '../../../../lib/portal/outreach-cron';
 import { runObservatory } from '../../../../lib/portal/observatory-cron';
+import { runShield } from '../../../../lib/shield/cron';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -67,9 +69,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const secret = process.env.CRON_SECRET;
-  const given = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '') || url.searchParams.get('key') || '';
-  if (!secret || given !== secret) return bad('unauthorized', 401);
+  if (!cronAuthorized(req)) return bad('unauthorized', 401);
   const db = serviceDb();
   if (!db) return bad('SUPABASE_SERVICE_ROLE_KEY مطلوب', 500);
   const dry = url.searchParams.get('dry') === '1';
@@ -146,7 +146,10 @@ export async function GET(req: Request) {
   // P18 — مرصد القدرة البشرية: لقطة يومية مجهولة الهوية + إبلاغ الجهات المشتركة بتغيّر مؤشر أداء قطاعها
   let observatory: any = null;
   try { observatory = await runObservatory(db, { dry }); } catch (e: any) { observatory = { ok: false, error: e?.message || String(e) }; }
+  // P21 — درع أَثَر: تنظيف + تمرين ذاتي يومي + تنبيه بالأحداث الحرجة المعلّقة
+  let shield: any = null;
+  try { shield = await runShield(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { shield = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach, observatory });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach, observatory, shield });
 }

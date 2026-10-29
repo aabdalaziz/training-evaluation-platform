@@ -13,8 +13,11 @@ import { normalizeSite } from './open';
 import { isAgentKey } from './agents';
 import { ERR, MCP_LATEST, MCP_VERSIONS, META, discoverResult, initializeResult, okResult, errResult, parseRpc, isNotification, versionOf, toolsListResult, mcpToolByName, toolAllowed, toolContent, summarize, resourcesFor, RESOURCES, LEXICON_MD, PROMPTS, promptMessages, cacheable } from './mcp';
 import type { Tier, McpVersion, Rpc } from './mcp';
-import { verifyToken, secretFromEnv, mcpResource, wwwAuthenticate, mintDelegate, PERSONAL_DAILY_LIMIT, DELEGATE_HEADER } from './oauth';
+import { verifyToken, secretsFromEnv, mcpResource, wwwAuthenticate, mintDelegate, PERSONAL_DAILY_LIMIT, DELEGATE_HEADER } from './oauth';
 import type { PScope, TokenClaims } from './oauth';
+import { readJson, PUBLIC_MAX_BYTES } from '../shield/body';
+import { rateLimit, limitFor, tooMany, LIMITS } from '../shield/ratelimit';
+import { burst } from '../shield/guard';
 import { POST as agentPOST } from '../../app/api/agent/route';
 import { GET as pocketGET } from '../../app/api/pocket/route';
 import { GET as dailyGET, POST as dailyPOST } from '../../app/api/daily/route';
@@ -41,7 +44,7 @@ async function resolveActor(req: Request, db: any, mode: 'auth' | 'public', S: s
   const key = isAgentKey(xkey) ? xkey : isAgentKey(bearer) ? bearer : '';
   if (key) { const { data } = await db.from('portal_agent_keys').select('id,name,scopes,revoked_at,expires_at').eq('key_hash', sha256(key)).maybeSingle(); if (!data || (data as any).revoked_at) return { res: unauthorized(S, 'invalid_token', 'Unknown or revoked agent key') }; return { actor: { tier: 'key', key, scopes: (data as any).scopes || [], name: (data as any).name } }; }
   if (bearer.startsWith('athar_')) {
-    const c = verifyToken(bearer, secretFromEnv(process.env), Date.now(), 'at'); if (!c || c.aud.replace(/\/+$/, '') !== mcpResource(S)) return { res: unauthorized(S, 'invalid_token', 'Expired or invalid access token') };
+    const c = verifyToken(bearer, secretsFromEnv(process.env), Date.now(), 'at'); if (!c || c.aud.replace(/\/+$/, '') !== mcpResource(S)) return { res: unauthorized(S, 'invalid_token', 'Expired or invalid access token') };
     const { data: d } = await db.from('portal_delegations').select('id,user_id,email,client_id,client_name,scopes,revoked_at').eq('id', c.del).maybeSingle(); if (!d || (d as any).revoked_at) return { res: unauthorized(S, 'invalid_token', 'Authorization was revoked by the user') };
     return { actor: { tier: 'personal', user: { id: c.sub, email: c.email, name: c.name || '' }, del: c.del, client: c.client, client_name: (d as any).client_name || c.client_name || c.client, scopes: ((d as any).scopes || []) as PScope[], direct: false } };
   }
@@ -62,10 +65,13 @@ export async function handleMcp(req: Request, mode: 'auth' | 'public'): Promise<
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return jsonRes({ error: 'Use POST with a JSON-RPC 2.0 message (MCP Streamable HTTP; JSON responses, no SSE stream).', endpoint: mode === 'auth' ? `${S}/mcp` : `${S}/mcp/public`, public_endpoint: `${S}/mcp/public`, docs: `${S}/agents`, protocolVersions: MCP_VERSIONS }, 405, { Allow: 'POST, OPTIONS' });
   const db = svc(); if (!db) return jsonRes(errResult(null, ERR.INTERNAL, 'Server not configured'), 500);
-  let body: unknown; try { body = await req.json(); } catch { return jsonRes(errResult(null, ERR.PARSE, 'Invalid JSON'), 400); }
+  const ip0 = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
+  const rj = await readJson(req, { maxBytes: PUBLIC_MAX_BYTES }); if (!rj.ok) { if (rj.reason !== 'invalid') await burst(db, `body:${ip0}`, 3600, 5, { severity: 'info', kind: 'body_rejected', actor: '/mcp', ip: ip0, meta: { reason: rj.reason } }); return jsonRes(errResult(null, rj.reason === 'too_large' ? ERR.INVALID_REQUEST : ERR.PARSE, rj.error_en), rj.status); } const body: unknown = rj.body;
   const parsed = parseRpc(body); if (!parsed.ok) return jsonRes(errResult(null, parsed.code, parsed.message), 400);
   const header = req.headers.get('mcp-protocol-version');
-  const a = await resolveActor(req, db, mode, S); if ('res' in a) return a.res;
+  const a = await resolveActor(req, db, mode, S);
+  if ('res' in a) { if (a.res.status === 401) { const b401 = await rateLimit(db, `mcp_401_ip:${ip0}`, LIMITS.mcp_401_ip.w, LIMITS.mcp_401_ip.n); if (!b401.allowed) { await burst(db, `mcp401:${ip0}`, 3600, 0, { severity: 'warn', kind: 'mcp_401_burst', actor: mode === 'auth' ? '/mcp' : '/mcp/public', ip: ip0, meta: { count: b401.count } }); return tooMany(b401, 'محاولات كثيرة بلا تفويض'); } } return a.res; }
+  if (a.actor.tier === 'anon') { const rlp = await limitFor(db, 'mcp_public_ip', ip0); if (!rlp.allowed) return tooMany(rlp, 'تجاوزت حد الاستخدام المجهول لهذه الساعة — سجّل مفتاح جهة أو فوّض حسابك'); }
   const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown';
   const out: Rpc[] = []; let negotiated: McpVersion = MCP_LATEST;
   for (const m of parsed.msgs) {

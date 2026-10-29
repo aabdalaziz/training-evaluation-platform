@@ -51,6 +51,7 @@ export function waParams(kind: string, d: Record<string, string>): string[] {
 }
 
 export const KIND_LABEL_AR: Record<string, string> = {
+  security_alert: 'تنبيه أمني (درع أَثَر)', security_user_alert: 'تنبيه أمني لحسابك',
   mission_assigned: 'إسناد مهمة', mission: 'مهمة', mission_reminder: 'تذكير بمهمة', mission_confirm: 'طلب تأكيد مشرف', mission_result: 'نتيجة مهمة',
   contract: 'عقد أثر', live_reminder: 'تذكير جلسة', live_registered: 'تسجيل جلسة', live_now: 'الجلسة بدأت', credential_pulse: 'نبض الشهادة الحية', credential_watch: 'متابعة شهادة',
   certificate_issued: 'شهادة صادرة', certificate: 'شهادة', enrollment_ack: 'استلام طلب تسجيل', enrollment_accepted: 'قبول تسجيل', enrollment_rejected: 'اعتذار تسجيل', enrollment_waitlisted: 'قائمة انتظار',

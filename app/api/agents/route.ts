@@ -9,6 +9,8 @@
  *  الإنسان هو من يعتمد — الوكيل لا يلزم أَثَر بشيء.
  */
 import { NextResponse } from 'next/server';
+import { securityEvent } from '../../../lib/shield/guard';
+import { AGENT_KEY_GRACE_H } from '../../../lib/shield/keys';
 import { createClient } from '@supabase/supabase-js';
 import { createHash, randomBytes } from 'crypto';
 import { keyFromBytes, keyPrefix, ALL_SCOPES, DEFAULT_SCOPES } from '../../../lib/portal/agents';
@@ -62,7 +64,18 @@ export async function POST(req: Request) {
     const key = keyFromBytes(randomBytes(32)); const days = Math.max(0, Math.min(730, Number(body?.expires_days) || 0));
     const row = { created_by: user.id, organization_id: body?.organization_id || null, name, prefix: keyPrefix(key), key_hash: sha256(key), scopes, daily_limit: Math.max(10, Math.min(5000, Number(body?.daily_limit) || 200)), expires_at: days ? new Date(Date.now() + days * 86400000).toISOString() : null, note: String(body?.note || '').slice(0, 400) || null };
     const { data, error } = await db.from('portal_agent_keys').insert(row).select('id,prefix,name,scopes,daily_limit,expires_at').maybeSingle(); if (error) return bad(error.message, 500);
+    await securityEvent(db, { severity: 'info', kind: 'key_created', actor: name, user_id: user.id, meta: { id: (data as any)?.id, scopes } });
     return NextResponse.json({ success: true, key, record: data, warning: 'يُعرض المفتاح الكامل مرة واحدة فقط — انسخه الآن وسلّمه للجهة عبر قناة آمنة.' });
+  }
+  if (action === 'key_rotate') { // P21: مفتاح جديد بالصلاحيات نفسها، والقديم يعمل 24 ساعة ثم ينتهي
+    const id = String(body?.id || ''); if (!id) return bad('معرّف ناقص');
+    const { data: old } = await db.from('portal_agent_keys').select('id,name,organization_id,scopes,daily_limit,note,revoked_at').eq('id', id).maybeSingle(); if (!old || (old as any).revoked_at) return bad('المفتاح غير موجود أو مُبطل', 404);
+    const o = old as any; const key = keyFromBytes(randomBytes(32)); const grace = new Date(Date.now() + AGENT_KEY_GRACE_H * 3600000).toISOString();
+    const row = { created_by: user.id, organization_id: o.organization_id, name: o.name, prefix: keyPrefix(key), key_hash: sha256(key), scopes: o.scopes, daily_limit: o.daily_limit, expires_at: null, note: `مدوَّر من ${id.slice(0, 8)} · ${o.note || ''}`.slice(0, 400) };
+    const { data, error } = await db.from('portal_agent_keys').insert(row).select('id,prefix,name,scopes,daily_limit,expires_at').maybeSingle(); if (error) return bad(error.message, 500);
+    await db.from('portal_agent_keys').update({ expires_at: grace, note: `${o.note || ''} · يُبطل آليًا بعد التدوير ${grace.slice(0, 16)}`.slice(0, 400) }).eq('id', id);
+    await securityEvent(db, { severity: 'info', kind: 'key_rotated', actor: o.name, user_id: user.id, meta: { old: id, new: (data as any)?.id, grace_until: grace } });
+    return NextResponse.json({ success: true, key, record: data, warning: `المفتاح القديم يبقى صالحًا ${AGENT_KEY_GRACE_H} ساعة ثم يُبطل آليًا — سلّم الجديد للجهة الآن.` });
   }
   if (action === 'key_revoke') { const id = String(body?.id || ''); if (!id) return bad('معرّف ناقص'); const { error } = await db.from('portal_agent_keys').update({ revoked_at: new Date().toISOString() }).eq('id', id); if (error) return bad(error.message, 500); return NextResponse.json({ success: true }); }
   if (action === 'decide') {

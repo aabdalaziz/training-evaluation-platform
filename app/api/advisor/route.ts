@@ -7,6 +7,7 @@
  *  الحوكمة: لا وعود خارج الحقائق، تحويل بشري عند الشك، حدّ 20 سؤالًا/ساعة لكل IP، بلا تخزين لبيانات غير ضرورية.
  */
 import { NextResponse } from 'next/server';
+import { limitFor, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { createClient } from '@supabase/supabase-js';
 import { runAi, logAi } from '../../../lib/ai/athar';
 import { buildAdvisorPrompt, parseAdvisor, localAdvisor, parseJsonLoose } from '../../../lib/ai/prompts';
@@ -19,9 +20,6 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
 const langOf = (v: unknown): Lang => (v === 'en' ? 'en' : 'ar');
-const hits = new Map<string, { n: number; t: number }>();
-function allow(ip: string, limit = 20): boolean { const now = Date.now(); const h = hits.get(ip); if (!h || now - h.t > 3600000) { hits.set(ip, { n: 1, t: now }); return true; } h.n++; return h.n <= limit; }
-const ipOf = (req: Request) => (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'local';
 const S = (v: unknown, n: number) => String(v ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
 const PROG_COLS = 'id,name_ar,name_en,start_date,end_date,registration_open,registration_deadline,fee,delivery_mode,program_type,intro_ar,audience_ar,status,archived_at,is_public,seats';
 const SESS_COLS = 'id,kind,title_ar,title_en,speaker_name,starts_at,duration_min,access,status,description_ar,provider,capacity';
@@ -72,7 +70,7 @@ export async function POST(req: Request) {
   }
 
   const question = S(body.question, 600); if (question.length < 3) return bad('اكتب سؤالك');
-  if (!user && !allow(ipOf(req))) return bad('بلغت حدّ الأسئلة لهذه الساعة — اترك بريدك وسيجيبك مستشار بشري', 429);
+  if (!user) { const rl = await limitFor(db, 'advisor_ip', ipOf(req)); if (!rl.allowed) return tooMany(rl, 'بلغت حدّ الأسئلة لهذه الساعة — اترك بريدك وسيجيبك مستشار بشري'); }
   const f = await liveFacts(db); const facts = advisorFacts(f.programs, f.sessions, f.counters.resources, f.nowIso, lang);
   const p = buildAdvisorPrompt(question, facts, lang, 'advisor');
   const res = await runAi<AdvisorAnswer>({ system: p.system, user: p.user, parse: raw => parseAdvisor(parseJsonLoose(raw), facts), local: () => localAdvisor(question, facts), budgetMs: 18000 });

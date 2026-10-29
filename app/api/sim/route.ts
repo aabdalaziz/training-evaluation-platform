@@ -12,6 +12,7 @@
  *  الحوكمة: الذكاء الاصطناعي يمثّل الشخصية ويقترح الدرجة؛ الدليل لا يصبح معتمدًا إلا بقرار بشري. للزوار حدّ 40 دورًا/ساعة لكل IP.
  */
 import { NextResponse } from 'next/server';
+import { limitFor, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { createClient } from '@supabase/supabase-js';
 import { runAi, aiUsage, logAi } from '../../../lib/ai/athar';
 import { buildSimTurnPrompt, parseSimTurn, buildSimScorePrompt, parseJsonLoose } from '../../../lib/ai/prompts';
@@ -27,9 +28,6 @@ const bad = (error: string, status = 400) => NextResponse.json({ success: false,
 const SCEN_COLS = 'id,slug,title_ar,title_en,situation_ar,goal_ar,persona,skills,rubric,max_turns,minutes,level,audience,status,demo';
 
 // حدّ بسيط للزوار (في الذاكرة لكل نسخة خادم)
-const hits = new Map<string, { n: number; t: number }>();
-function allowAnon(ip: string, limit = 40): boolean { const now = Date.now(); const h = hits.get(ip); if (!h || now - h.t > 3600000) { hits.set(ip, { n: 1, t: now }); return true; } h.n++; return h.n <= limit; }
-const ipOf = (req: Request) => (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'local';
 
 async function ctx(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -109,7 +107,7 @@ export async function POST(req: Request) {
 
   const s = await loadScenario(db, String(body.scenario || body.scenario_id || body.slug || '')); if (!s) return bad('السيناريو غير موجود', 404);
   const anonDemo = !user; if (anonDemo && !s.demo) return bad('هذا السيناريو يتطلب تسجيل الدخول — جرّب سيناريو العرض أولًا', 401);
-  if (anonDemo && !allowAnon(ipOf(req))) return bad('بلغت حدّ التجربة للزوار هذه الساعة — سجّل الدخول لمتابعة التدريب', 429);
+  if (anonDemo) { const rl = await limitFor(db, 'sim_anon_ip', ipOf(req)); if (!rl.allowed) return tooMany(rl, 'بلغت حدّ التجربة للزوار هذه الساعة — سجّل الدخول لمتابعة التدريب'); }
 
   if (action === 'start') {
     const turns: Turn[] = [{ role: 'persona', text: s.persona.opening_ar, at: now() }];
