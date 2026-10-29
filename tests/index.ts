@@ -49,3 +49,4 @@ import './p19.test';
 import './p20.test';
 import './p21.test';
 import './p22.test';
+import './p23.test';

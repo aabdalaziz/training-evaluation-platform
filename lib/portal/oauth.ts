@@ -8,13 +8,14 @@
  */
 import { createHmac, createHash, randomBytes, timingSafeEqual } from 'crypto';
 
-export type PScope = 'wallet:read' | 'daily:write' | 'missions:read' | 'snapshot:issue';
-export const PERSONAL_SCOPES: PScope[] = ['wallet:read', 'daily:write', 'missions:read', 'snapshot:issue'];
+export type PScope = 'wallet:read' | 'daily:write' | 'missions:read' | 'snapshot:issue' | 'council:write';
+export const PERSONAL_SCOPES: PScope[] = ['wallet:read', 'daily:write', 'missions:read', 'snapshot:issue', 'council:write'];
 export const PSCOPE_LABEL: Record<PScope, { ar: string; en: string; detail_ar: string; risk: 'low' | 'medium' | 'high' }> = {
   'wallet:read': { ar: 'قراءة محفظتي', en: 'Read my wallet', detail_ar: 'مستوياتي المعتمدة، شهاداتي، وآخر لقطة قدرة — للقراءة فقط', risk: 'low' },
   'daily:write': { ar: 'موقف اليوم معي', en: 'Daily case with me', detail_ar: 'قراءة موقف اليوم وإرسال ردّي باسمي (مرة واحدة يوميًا، يُقيَّم بمرآة الأداء)', risk: 'medium' },
   'missions:read': { ar: 'قراءة مهامي', en: 'Read my missions', detail_ar: 'مهامي المفتوحة في قلب العمل ومواعيدها وما ينقصها من أدلة', risk: 'low' },
   'snapshot:issue': { ar: 'إصدار لقطة قدرة باسمي', en: 'Issue a capability snapshot', detail_ar: 'يُصدر لقطة قدرة موقَّعة (90 يومًا) قابلة للتحقق — أعلى صلاحية؛ امنحها لمساعد تثق به فقط', risk: 'high' },
+  'council:write': { ar: 'مجلسي معي', en: 'My council with me', detail_ar: 'قراءة مجلسي (القضية الجارية، التزاماتي، موعد عودتي، مرآتي) وصياغة التزام باسمي بعد تأكيدي الصريح — لا يفتح قضية ولا يشهد ولا ينشر', risk: 'medium' },
 };
 export const ACCESS_TTL_S = 3600; export const REFRESH_TTL_S = 30 * 86400; export const CODE_TTL_S = 300; export const DELEGATE_TTL_S = 60; export const PERSONAL_DAILY_LIMIT = 500;
 

@@ -38,7 +38,7 @@ test('P20 PKCE S256 والنطاقات وروابط العودة', () => {
   const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'; const challenge = b64u(createHash('sha256').update(verifier).digest());
   assert.ok(pkceOk(verifier, challenge), 'التحدي يطابق'); assert.ok(!pkceOk(verifier + 'x', challenge), 'محقِّق مختلف يفشل');
   assert.deepEqual(parseScopes('wallet:read bogus daily:write wallet:read'), ['wallet:read', 'daily:write'], 'تصفية وإزالة تكرار');
-  assert.deepEqual(parseScopes(''), [], 'فارغ'); assert.equal(PERSONAL_SCOPES.length, 4, 'أربعة نطاقات شخصية');
+  assert.deepEqual(parseScopes(''), [], 'فارغ'); assert.equal(PERSONAL_SCOPES.length, 5, 'خمسة نطاقات شخصية (P23: council:write)');
   for (const s of PERSONAL_SCOPES) assert.ok(PSCOPE_LABEL[s].ar.length > 3 && PSCOPE_LABEL[s].detail_ar.length > 10, `تسمية عربية وتفصيل: ${s}`);
   assert.equal(PSCOPE_LABEL['snapshot:issue'].risk, 'high', 'إصدار لقطة = خطورة عالية');
   assert.ok(redirectOk('https://claude.ai/api/mcp/auth_callback'), 'https مقبول'); assert.ok(redirectOk('http://localhost:3000/cb'), 'localhost مقبول'); assert.ok(redirectOk('http://127.0.0.1:8080/cb'), 'loopback مقبول');

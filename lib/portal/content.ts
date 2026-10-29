@@ -184,6 +184,7 @@ export const NAV: { href: string; label: T }[] = [
   { href: '/resources', label: { ar: 'الحقائب', en: 'Resources' } },
   { href: '/live', label: { ar: 'البث المباشر', en: 'Live' } },
   { href: '/sim', label: { ar: 'المحاكيات', en: 'Simulators' } },
+  { href: '/councils', label: { ar: 'المجالس', en: 'Councils' } },
   { href: '/about', label: { ar: 'من نحن', en: 'About' } },
   { href: '/contact', label: { ar: 'تواصل', en: 'Contact' } },
 ];

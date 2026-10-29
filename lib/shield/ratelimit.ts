@@ -52,6 +52,7 @@ export const LIMITS = {
   mcp_public_ip: { w: 3600, n: 120 }, mcp_401_ip: { w: 3600, n: 20 },
   vc_ip: { w: 3600, n: 120 }, credential_ip: { w: 3600, n: 12 }, advisor_ip: { w: 3600, n: 20 }, sim_anon_ip: { w: 3600, n: 40 },
   vuln_report_ip: { w: 3600, n: 3 }, csp_ip: { w: 60, n: 30 },
+  council_write_ip: { w: 3600, n: 90 }, // P23: نشر/التزام/شهادة
   oauth_token_drill: { w: 60, n: 5 }, // التمرين الذاتي: دلو منفصل صغير (ترويسة X-Athar-Drill) حتى لا يلوّث دلو الـ IP الحقيقي
 } as const;
 export type LimitName = keyof typeof LIMITS;

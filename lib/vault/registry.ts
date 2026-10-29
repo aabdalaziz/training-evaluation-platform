@@ -16,6 +16,8 @@ export type RegistryEntry = {
   userCol: string | null; emailCol: string | null; piiCols: string[];
   policy: Policy; retentionDays: number | null; tsCol: string | null; retainNote_ar?: string;
   access: Access[]; legacy?: boolean; exportSelect?: string;
+  /** مفاتيح ربط إضافية لصفوف تخص شخصين (مثل شهادة أقران: الشاهد والمشهود له) — تُعامل بالسياسة نفسها عند النسيان */
+  alsoKeys?: { userCol: string | null; emailCol: string | null }[];
 };
 
 export const BASIS_AR: Record<Basis, string> = { contract: 'تنفيذ عقد/خدمة طلبتها', consent: 'موافقتك الصريحة (قابلة للسحب)', legitimate: 'مصلحة مشروعة (تشغيل الخدمة وأمنها)', legal: 'التزام نظامي' };
@@ -47,6 +49,12 @@ export const REGISTRY: RegistryEntry[] = [
   { table: 'portal_placements', label_ar: 'اختبار تحديد المستوى (مِعيار)', label_en: 'Placement results', category: 'learning', purpose_ar: 'مستواك اللغوي لتسكينك', basis: 'contract', data_ar: 'الاسم · البريد · الجوال · النتيجة', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name', 'phone'], policy: 'anonymize', retentionDays: 5 * Y, tsCol: 'created_at', access: ['self', 'staff'] },
   { table: 'portal_evidence_queries', label_ar: 'أسئلتي لقاعدة الأدلة', label_en: 'Evidence queries', category: 'learning', purpose_ar: 'الإجابة من الأدلة وتحسينها', basis: 'legitimate', data_ar: 'السؤال · الجواب', userCol: 'user_id', emailCol: 'email', piiCols: ['question'], policy: 'delete', retentionDays: Y, tsCol: 'created_at', access: ['self', 'staff'] },
   { table: 'portal_twin_exports', label_ar: 'تصديرات توأمي', label_en: 'Twin exports', category: 'learning', purpose_ar: 'سجل ما صدّرته', basis: 'legitimate', data_ar: 'الوقت · الفعل', userCol: 'user_id', emailCol: null, piiCols: ['events', 'levels'], policy: 'delete', retentionDays: Y, tsCol: 'at', access: ['self'] },
+  // مجالس أَثَر (P23) — المداولات تُجهَّل (يبقى سياق الأقران بلا هوية)، والعضوية تُحذف
+  { table: 'portal_councils', label_ar: 'المجالس التي أرأسها', label_en: 'Councils (chair)', category: 'learning', purpose_ar: 'كرسي المجلس يدور بين الأعضاء — نحفظ بريد الكرسي الحالي', basis: 'contract', data_ar: 'بريد الكرسي', userCol: null, emailCol: 'chair_email', piiCols: [], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'staff'] },
+  { table: 'portal_council_members', label_ar: 'عضويتي في مجالس الأقران', label_en: 'Council membership', category: 'learning', purpose_ar: 'مقعدك في المجلس وتوقيعك على الميثاق ودوراتك المكتملة', basis: 'consent', data_ar: 'الاسم · البريد · الجهة · الدور · الدورات', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name', 'note'], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'org', 'staff', 'agents'] },
+  { table: 'portal_council_cases', label_ar: 'قضاياي في المجلس', label_en: 'Council cases', category: 'learning', purpose_ar: 'الموقف الذي حملته والتزامك وعودتك', basis: 'consent', data_ar: 'العنوان · الموقف · الالتزام · العودة', userCol: 'author_user_id', emailCol: 'author_email', piiCols: [], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'staff'], retainNote_ar: 'تبقى القضية بلا هوية حتى لا ينهار سياق الأقران' },
+  { table: 'portal_council_posts', label_ar: 'مداخلاتي في المداولات', label_en: 'Council posts', category: 'learning', purpose_ar: 'أسئلتك ونصائحك وأدلتك في المجلس (مرآتك)', basis: 'consent', data_ar: 'النوع · النص · وسائط', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'staff'] },
+  { table: 'portal_council_attestations', label_ar: 'شهادات الأقران (لي ومني)', label_en: 'Peer attestations', category: 'learning', purpose_ar: 'دليل أقران على مهارة محددة يعتمده إنسان ويغذّي خيط الأثر', basis: 'consent', data_ar: 'الشاهد · المشهود له · المهارة · الدليل · القرار', userCol: 'from_user_id', emailCol: 'from_email', piiCols: [], alsoKeys: [{ userCol: 'to_user_id', emailCol: 'to_email' }], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'org', 'staff'] },
   // شهاداتي
   { table: 'portal_credentials', label_ar: 'شهاداتي الرقمية', label_en: 'Digital credentials', category: 'credentials', purpose_ar: 'إثبات إنجازك للجهات (Open Badges)', basis: 'contract', data_ar: 'الاسم · البريد · العنوان · المهارات · رمز التحقق', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'الشهادة الصادرة وثيقة باسمك؛ تُحتفظ ما دامت صالحة + 5 سنوات لحق الجهات في التحقق، ويمكنك طلب إلغائها.', access: ['self', 'org', 'staff', 'agents', 'public'] },
   { table: 'portal_vc_issuances', label_ar: 'الإصدارات الموقَّعة (VC)', label_en: 'Signed issuances', category: 'credentials', purpose_ar: 'التحقق اللامركزي من شهاداتك ولقطاتك', basis: 'contract', data_ar: 'الاسم · البريد · الوثيقة الموقَّعة', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'سجل الإصدار يلزم للتحقق وقائمة الإلغاء؛ يبقى حتى انتهاء الصلاحية + 5 سنوات.', access: ['self', 'public', 'agents'] },
@@ -86,6 +94,7 @@ export const NON_PERSONAL_TABLES = [
   'portal_scenarios', 'portal_daily_cases', 'portal_daily_skill', 'portal_calendar_events', 'portal_mission_templates', 'portal_program_drafts', 'portal_loop_suggestions', 'portal_loop_decisions', 'portal_graph_nodes', 'portal_graph_edges', 'portal_graph_lessons',
   'portal_capability_forecasts', 'portal_observatory_snapshots', 'portal_observatory_issues', 'portal_consulting_quotes', 'portal_consulting_updates', 'portal_consulting_milestones', 'portal_contract_releases', 'portal_payment_settings',
   'portal_agent_keys', 'portal_agent_log', 'portal_agent_requests', 'portal_oauth_clients', 'portal_oauth_codes', 'portal_signing_keys', 'portal_rate_buckets', 'portal_incidents', 'portal_retention_log',
+  'portal_council_scribe',
 ];
 
 /** أين تعيش البيانات ومن يعالجها نيابة عنا — بصدق */

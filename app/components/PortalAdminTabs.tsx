@@ -31,6 +31,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/observatory', label: 'مرصد القدرة البشرية', icon: 'globe' },
   { href: '/admin/shield', label: 'درع أَثَر', icon: 'shield' },
   { href: '/admin/vault', label: 'خزنة أَثَر', icon: 'folder' },
+  { href: '/admin/councils', label: 'مجالس أَثَر', icon: 'users' },
 ];
 
 export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<string, number>> }) {

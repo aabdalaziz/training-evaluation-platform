@@ -6,8 +6,10 @@ import type { Skill } from './skills';
 import { levelRank } from './placement';
 
 // ---------- الأدلة والأوزان (القرار 1: مؤشر محسوب + اعتماد يدوي) ----------
-export type EvidenceKind = 'placement' | 'program_completed' | 'activity' | 'attended' | 'credential' | 'viewed' | 'simulation' | 'daily' | 'mission' | 'daily_case' | 'media';
-export const EVIDENCE_WEIGHT: Record<EvidenceKind, number> = { placement: 1.0, credential: 0.9, program_completed: 0.8, media: 0.6, simulation: 0.45, mission: 0.5, activity: 0.4, daily_case: 0.35, attended: 0.3, daily: 0.15, viewed: 0.1 };
+export type EvidenceKind = 'placement' | 'program_completed' | 'activity' | 'attended' | 'credential' | 'viewed' | 'simulation' | 'daily' | 'mission' | 'daily_case' | 'media' | 'peer';
+export const EVIDENCE_WEIGHT: Record<EvidenceKind, number> = { placement: 1.0, credential: 0.9, program_completed: 0.8, media: 0.6, simulation: 0.45, mission: 0.5, peer: 0.4, activity: 0.4, daily_case: 0.35, attended: 0.3, daily: 0.15, viewed: 0.1 };
+/** وزن شهادة أقران بعد اعتماد إنسان (مدير جهة/طاقم) (P23) — دليل مُسنَد من ممارس شهد الدورة */
+export const PEER_APPROVED_WEIGHT = 0.75;
 /** وزن تسجيل أداء (فيديو/صوت) بعد اعتماد مراجع بشري (P13-ج) — أداء مُشاهَد لا مكتوب */
 export const MEDIA_APPROVED_WEIGHT = 0.85;
 /** وزن المحاكاة بعد اعتماد مدرب بشري (P10) */
@@ -20,6 +22,7 @@ export const EVIDENCE_LABEL: Record<EvidenceKind, T> = {
   simulation: { ar: 'محاكاة أداء', en: 'Performance simulation' }, daily: { ar: 'تحدّي «كل يوم مهارة»', en: 'Daily skill challenge' },
   mission: { ar: 'مهمة من قلب العمل', en: 'Workflow mission' }, daily_case: { ar: 'موقف اليوم — ردّ حرّ بمرآة أداء', en: 'Daily case — free response with performance mirror' },
   media: { ar: 'أداء مُشاهَد (فيديو/صوت)', en: 'Observed performance (video/audio)' },
+  peer: { ar: 'شهادة أقران من مجلس أَثَر', en: 'Peer attestation (Athar council)' },
 };
 export type LearningEventRow = { id?: number | string; at: string; user_id?: string | null; email?: string | null; verb: string; object_type: string; object_id: string; skills: string[]; context?: Record<string, any> | null };
 export type Evidence = { kind: EvidenceKind; verb: string; object_type: string; object_id: string; level: number; weight: number; at: string; label?: string };
@@ -42,13 +45,14 @@ export function evidenceFromEvent(ev: LearningEventRow, skillMeta: Map<string, P
     else if (ev.verb === 'assessed' && ev.object_type === 'simulation') { if (ctx.rejected) continue; kind = 'simulation'; const sc = Number(ctx.score); if (Number.isFinite(sc)) { level = percentToLevel(sc, base); label = `${Math.round(sc)}% · ${String(ctx.title || ctx.scenario || '')}${ctx.approved ? ' ✓' : ''}`; } }
     else if (ev.verb === 'assessed' && ev.object_type === 'mission') { if (ctx.returned) continue; kind = 'mission'; const sc = Number(ctx.score); level = Number.isFinite(sc) ? percentToLevel(sc, base) : base; label = `${String(ctx.title || '')}${ctx.confirmed ? ' ✓' : ''}`; }
     else if (ev.verb === 'assessed' && ev.object_type === 'media') { if (ctx.rejected) continue; kind = 'media'; const sc = ctx.score === null || ctx.score === undefined || ctx.score === '' ? NaN : Number(ctx.score); level = Number.isFinite(sc) ? percentToLevel(sc, base) : base; label = `${String(ctx.title || '')}${ctx.kind === 'video' ? ' · فيديو' : ' · صوت'}${ctx.approved ? ' ✓' : ''}`; }
+    else if (ev.verb === 'attested' && ev.object_type === 'council') { if (ctx.declined) continue; kind = 'peer'; level = base; label = `${String(ctx.title || 'شهادة أقران')}${ctx.approved ? ' ✓' : ''}`; }
     else if (ev.verb === 'assessed' && ev.object_type === 'daily_case') { kind = 'daily_case'; const sc = Number(ctx.score); level = Number.isFinite(sc) ? percentToLevel(sc, base) : base; label = `${String(ctx.title || ctx.day || '')} · ${String(ctx.band || '')}`; }
     else if (ev.verb === 'assessed' && ev.object_type === 'daily') { kind = 'daily'; const sc = Number(ctx.score); level = Number.isFinite(sc) && sc >= 60 ? base : Math.max(1, base - 1); label = String(ctx.day || ''); }
     else if (ev.verb === 'completed' && ev.object_type === 'program') { kind = 'program_completed'; level = base; label = String(ctx.program_name || ''); }
     else if (ev.verb === 'issued' && ev.object_type === 'credential') { kind = 'credential'; level = cefrToLevel(ctx.level) ?? base; label = String(ctx.title || ''); }
     else if (ev.verb === 'attended' || (ev.verb === 'joined' && ev.object_type === 'session')) { kind = 'attended'; level = base; }
     else if (['viewed', 'downloaded', 'registered'].includes(ev.verb)) { kind = 'viewed'; level = Math.max(1, base - 1); }
-    if (kind && level !== null) out.push({ skill_id: sid, e: { kind, verb: ev.verb, object_type: ev.object_type, object_id: ev.object_id, level: Math.max(1, Math.min(5, level)), weight: kind === 'simulation' && ctx.approved ? SIMULATION_APPROVED_WEIGHT : kind === 'mission' && ctx.confirmed ? MISSION_CONFIRMED_WEIGHT : kind === 'media' && ctx.approved ? MEDIA_APPROVED_WEIGHT : EVIDENCE_WEIGHT[kind], at: ev.at, label } });
+    if (kind && level !== null) out.push({ skill_id: sid, e: { kind, verb: ev.verb, object_type: ev.object_type, object_id: ev.object_id, level: Math.max(1, Math.min(5, level)), weight: kind === 'simulation' && ctx.approved ? SIMULATION_APPROVED_WEIGHT : kind === 'mission' && ctx.confirmed ? MISSION_CONFIRMED_WEIGHT : kind === 'media' && ctx.approved ? MEDIA_APPROVED_WEIGHT : kind === 'peer' && ctx.approved ? PEER_APPROVED_WEIGHT : EVIDENCE_WEIGHT[kind], at: ev.at, label } });
   }
   return out;
 }

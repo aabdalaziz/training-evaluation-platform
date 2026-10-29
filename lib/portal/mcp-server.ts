@@ -21,6 +21,7 @@ import { burst } from '../shield/guard';
 import { POST as agentPOST } from '../../app/api/agent/route';
 import { GET as pocketGET } from '../../app/api/pocket/route';
 import { GET as vaultGET } from '../../app/api/vault/route';
+import { GET as councilGET, POST as councilPOST } from '../../app/api/councils/route';
 import { GET as dailyGET, POST as dailyPOST } from '../../app/api/daily/route';
 import { GET as missionsGET } from '../../app/api/missions/route';
 import { POST as vcPOST } from '../../app/api/vc/route';
@@ -53,7 +54,7 @@ async function resolveActor(req: Request, db: any, mode: 'auth' | 'public', S: s
     const U = process.env.NEXT_PUBLIC_SUPABASE_URL!; const A = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!; const userDb = createClient(U, A, { global: { headers: { Authorization: `Bearer ${bearer}` } } }); const { data } = await userDb.auth.getUser(bearer);
     if (!data?.user) return { res: unauthorized(S, 'invalid_token', 'Invalid token') };
     const { data: prof } = await db.from('profiles').select('full_name').eq('id', data.user.id).maybeSingle();
-    return { actor: { tier: 'personal', user: { id: data.user.id, email: String(data.user.email || '').toLowerCase(), name: String((prof as any)?.full_name || data.user.user_metadata?.full_name || '') }, del: 'direct', client: 'direct', client_name: 'جلسة المستخدم مباشرة', scopes: ['wallet:read', 'daily:write', 'missions:read', 'snapshot:issue'], direct: true } };
+    return { actor: { tier: 'personal', user: { id: data.user.id, email: String(data.user.email || '').toLowerCase(), name: String((prof as any)?.full_name || data.user.user_metadata?.full_name || '') }, del: 'direct', client: 'direct', client_name: 'جلسة المستخدم مباشرة', scopes: ['wallet:read', 'daily:write', 'missions:read', 'snapshot:issue', 'council:write'], direct: true } };
   }
   if (mode === 'auth') return { res: unauthorized(S) };
   return { actor: { tier: 'anon', ip } };
@@ -158,6 +159,21 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
     const j = await asJson(await vaultGET(internal(c, '/api/vault?view=summary'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة الخزنة', { error: 'failed' }, true); }
     const result = { ...j.summary, note_ar: 'للتصدير أو التصحيح أو النسيان: صاحب الحساب من /me/data — الوكيل يقرأ فقط.' };
     await log(c, name, true); return toolContent(summarize(result), result);
+  }
+  if (name === 'my_council') {
+    const j = await asJson(await councilGET(internal(c, '/api/councils?view=summary'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة المجلس', { error: 'failed' }, true); }
+    const result = { ...j.summary, confidentiality_ar: 'ما يُقال في المجلس يبقى فيه — لا تنقل محتواه إلى غير المستخدم.' };
+    await log(c, name, true); return toolContent(summarize(result), result);
+  }
+  if (name === 'council_commit') {
+    if (args.confirm !== true) return toolContent('يلزم تأكيد صريح من المستخدم (confirm: true) | Explicit user confirmation required', { error: 'confirm_required' }, true);
+    const s = await asJson(await councilGET(internal(c, '/api/councils?view=summary'))); const cur = ((s?.summary?.councils || []) as any[]).find(h => h.current_case?.can_commit)?.current_case; 
+    const hall = ((s?.summary?.councils || []) as any[]).find(h => h.current_case?.can_commit); if (!cur || !hall) { await log(c, name, false, { write: true }); return toolContent('لا قضية جارية من فتحك في طور المداولة | No open case authored by the user', { error: 'no_open_case' }, true); }
+    const full = await asJson(await councilGET(internal(c, '/api/councils'))); const caseId = ((full?.halls || []) as any[]).find(h => h.council?.title_ar === hall.title_ar)?.current?.id; if (!caseId) { await log(c, name, false, { write: true }); return toolContent('تعذّر تحديد القضية', { error: 'failed' }, true); }
+    const j = await asJson(await councilPOST(internal(c, '/api/councils', { method: 'POST', body: { action: 'commit', case_id: caseId, commitment: String(args.commitment || ''), confirm: true } })));
+    if (!j?.success) { await log(c, name, false, { write: true }); return toolContent(j?.error || 'تعذّر', { error: j?.error || 'failed' }, true); }
+    const result = { committed: true, case_title: cur.title_ar, commitment: j.case?.commitment_ar, return_due_at: j.return_due_at, scribe_summary: j.scribe?.summary_ar || null, page: `${c.site}/me/council` };
+    await log(c, name, true, { write: true }); return toolContent(summarize(result), result);
   }
   if (name === 'my_daily') {
     const response = String(args.response || '').trim();

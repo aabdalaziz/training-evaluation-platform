@@ -27,7 +27,7 @@ test('portal: TRACE acronym maps letters to real services', () => {
 });
 
 test('portal: content blocks are bilingual and complete', () => {
-  assert.equal(ABOUT.values.length, 4); assert.equal(ABOUT.method.length, 3); assert.equal(PARTNERS.length, 3); assert.equal(CROSS.length, 3); assert.equal(NAV.length, 9);
+  assert.equal(ABOUT.values.length, 4); assert.equal(ABOUT.method.length, 3); assert.equal(PARTNERS.length, 3); assert.equal(CROSS.length, 3); assert.equal(NAV.length, 10);
   for (const x of [ABOUT.intro, ABOUT.vision, ABOUT.mission, BRAND.tagline, BRAND.promise, ...ABOUT.values.map(v => v.desc), ...ABOUT.method.map(m => m.desc), ...NAV.map(n => n.label), ...Object.values(UI)]) assert.ok(x.ar.length > 0 && x.en.length > 0);
   assert.equal(t({ ar: 'أ', en: '' }, 'en'), 'أ', 'falls back to Arabic');
   assert.equal(CONTACT_SUBJECTS.length, 9);

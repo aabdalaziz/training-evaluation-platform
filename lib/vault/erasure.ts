@@ -62,6 +62,7 @@ export async function executeErasure(db: any, q: QueueRow, site: string, env: Re
     try {
       if (r.policy === 'delete') { const { data, error } = await db.rpc('vault_delete', { p_table: r.table, p_user: r.userCol ? q.user_id : null, p_email: r.emailCol ? q.email : null, p_user_col: r.userCol, p_email_col: r.emailCol }); counts[r.table] = { action: 'delete', rows: error ? null : Number(data ?? 0), note: error ? 'تعذّر' : undefined }; }
       else { const { data, error } = await db.rpc('vault_anonymize', { p_table: r.table, p_user: r.userCol ? q.user_id : null, p_email: r.emailCol ? q.email : null, p_user_col: r.userCol, p_email_col: r.emailCol, p_null_cols: r.piiCols }); counts[r.table] = { action: 'anonymize', rows: error ? null : Number(data ?? 0), note: error ? 'تعذّر' : undefined }; }
+      for (const k of r.alsoKeys || []) { try { const { data } = await db.rpc(r.policy === 'delete' ? 'vault_delete' : 'vault_anonymize', { p_table: r.table, p_user: k.userCol ? q.user_id : null, p_email: k.emailCol ? q.email : null, p_user_col: k.userCol, p_email_col: k.emailCol, ...(r.policy === 'delete' ? {} : { p_null_cols: [] }) }); counts[r.table].rows = (counts[r.table].rows || 0) + Number(data ?? 0); } catch { /* */ } }
     } catch { counts[r.table] = { action: r.policy, rows: null, note: 'تعذّر' }; }
   }
   // الشهادات الصادرة تبقى (نظامًا) لكن نُجهِّل البريد في سجل الإصدار إن لم تعد صالحة — لا نلمس الصالحة لأن التحقق يحتاجها
