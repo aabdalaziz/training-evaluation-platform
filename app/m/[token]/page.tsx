@@ -11,6 +11,7 @@ import { PortalShell, useLang } from '../../components/PortalShell';
 import { fmtDate } from '../../../lib/portal/content';
 import { MODE_LABEL, MODE_HINT, MIN_WORDS, statusLabel, STATUS_LABEL, daysLeft, urgency, wordCount, evidenceReady, waShare, supervisorShareText } from '../../../lib/portal/missions';
 import type { Mission, MissionEvidence, AiCheck } from '../../../lib/portal/missions';
+import { useOutbox, valueMoment } from '../../components/Pocket';
 
 export default function MissionPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 type View = { ok: boolean; mission?: Omit<Mission, 'confirm_token' | 'supervisor_email'>; file_url?: string | null; skills?: { id: string; code: string; name_ar: string; name_en: string }[]; program?: string | null; has_supervisor?: boolean };
@@ -23,7 +24,7 @@ function Inner() {
   const [file, setFile] = useState<{ blob: Blob; name: string; type: string; url: string } | null>(null); const [dur, setDur] = useState(0); const [transcript, setTranscript] = useState('');
   const [rec, setRec] = useState<'idle' | 'recording' | 'done'>('idle'); const recRef = useRef<MediaRecorder | null>(null); const chunks = useRef<Blob[]>([]); const timer = useRef<any>(null); const srRef = useRef<any>(null);
   const [sup, setSup] = useState({ name: '', email: '' }); const [result, setResult] = useState<{ ai: AiCheck; confirm_url: string; supervisor_mailed: boolean } | null>(null); const [copied, setCopied] = useState(false);
-  const now = useMemo(() => new Date(), []);
+  const now = useMemo(() => new Date(), []); const ob = useOutbox(); const [queued, setQueued] = useState<{ id: string; offline: boolean } | null>(null);
 
   useEffect(() => { (async () => { try { const j = await fetch(`/api/m?token=${encodeURIComponent(token)}`).then(x => x.json()); setV(j.success ? j : { ok: false }); } catch { setV({ ok: false }); } })(); }, [token]);
   useEffect(() => () => { try { timer.current && clearInterval(timer.current); srRef.current?.stop?.(); recRef.current?.state === 'recording' && recRef.current.stop(); } catch { /* ignore */ } }, []);
@@ -57,15 +58,28 @@ function Inner() {
   function stopRec() { try { timer.current && clearInterval(timer.current); timer.current = null; srRef.current?.stop?.(); srRef.current = null; if (recRef.current?.state === 'recording') recRef.current.stop(); } catch { /* ignore */ } }
   function resetRec() { setFile(null); setDur(0); setTranscript(''); setRec('idle'); }
 
+  /** بلا اتصال (أو فشل شبكي): الدليل يدخل صندوق الأدلة الميداني مشفَّرًا ويُرسل تلقائيًا حين يعود الاتصال — بتاريخ التقاطه */
+  async function queueOffline(): Promise<boolean> {
+    if (!m) return false;
+    const r = await ob.enqueue('mission', { token, title: m.title_ar, evidence: { text: text || undefined, caption: caption || undefined, link: link || undefined, transcript: transcript || undefined, duration_s: dur || undefined }, supervisor_email: sup.email || undefined, supervisor_name: sup.name || undefined }, file ? new File([file.blob], file.name, { type: file.type }) : null);
+    if (!r.ok) { setErr(r.reason_ar || (ar ? 'تعذّر الحفظ' : 'Could not save')); return false; }
+    setQueued({ id: r.id || '', offline: !navigator.onLine }); valueMoment('mission_submitted'); window.scrollTo({ top: 0, behavior: 'smooth' }); return true;
+  }
   async function submit() {
     if (!m) return; setBusy('submit'); setErr('');
+    const ready = evidenceReady(mode, { text: text || undefined, caption: caption || undefined, link: link || undefined, transcript: transcript || undefined, file_path: file ? 'x/' : undefined } as MissionEvidence);
+    if (typeof navigator !== 'undefined' && !navigator.onLine) { if (ready) { setErr(ready); setBusy(''); return; } await queueOffline(); setBusy(''); return; }
     try {
       let up: any = null;
       if (file) { const fd = new FormData(); fd.append('token', token); fd.append('file', new File([file.blob], file.name, { type: file.type })); up = await fetch('/api/m', { method: 'POST', body: fd }).then(x => x.json()); if (!up.success) throw new Error(up.error || 'upload'); }
       const payload = { action: 'submit', token, evidence: { text: text || undefined, caption: caption || undefined, link: link || undefined, transcript: transcript || undefined, duration_s: dur || undefined, file_path: up?.file_path, file_type: up?.file_type, file_name: up?.file_name, size: up?.size }, supervisor_email: sup.email || undefined, supervisor_name: sup.name || undefined };
       const j = await fetch('/api/m', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).then(x => x.json()); if (!j.success) throw new Error(j.error || 'submit');
-      setResult({ ai: j.ai, confirm_url: j.confirm_url, supervisor_mailed: !!j.supervisor_mailed }); setV(x => x ? { ...x, mission: j.mission, has_supervisor: !!sup.email || x.has_supervisor } : x); window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (e: any) { setErr(e?.message || (ar ? 'تعذّر الإرسال' : 'Failed')); } finally { setBusy(''); }
+      setResult({ ai: j.ai, confirm_url: j.confirm_url, supervisor_mailed: !!j.supervisor_mailed }); setV(x => x ? { ...x, mission: j.mission, has_supervisor: !!sup.email || x.has_supervisor } : x); valueMoment('mission_submitted'); window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (e: any) {
+      const network = e instanceof TypeError || !navigator.onLine; // انقطاع أثناء الرفع → الصندوق
+      if (network && await queueOffline()) return;
+      setErr(e?.message || (ar ? 'تعذّر الإرسال' : 'Failed'));
+    } finally { setBusy(''); }
   }
   const copy = async (s: string) => { try { await navigator.clipboard.writeText(s); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ } };
   const left = m ? daysLeft(m.due_at, now) : 0; const urg = m ? urgency(m.due_at, now) : 'ok';
@@ -84,6 +98,11 @@ function Inner() {
         {v && !v.ok && <div className="pt-box pt-empty"><Icon name="alert" size={30} /><h3>{ar ? 'الرابط غير صالح' : 'Invalid link'}</h3><p>{ar ? 'تحقق من الرابط في بريدك، أو اطلب من فريق أَثَر إعادة إرساله.' : 'Check the link in your email or ask the Athar team to resend it.'}</p></div>}
         {err && <div className="pt-alert err" style={{ marginBottom: 12 }}>{err}</div>}
 
+        {m && queued && !result && <div className="ms-result" data-testid="mission-queued" style={{ background: '#fff7ed', border: '1px solid #fdba74' }}>
+          <div><h3 style={{ margin: '0 0 6px', color: '#9a3412' }}><Icon name="inbox" size={18} /> {ar ? 'دليلك في صندوق الأدلة الميداني' : 'Your evidence is in the field outbox'}</h3>
+            <p style={{ margin: 0, lineHeight: 1.9 }}>{queued.offline ? (ar ? 'لا اتصال الآن. حُفظ الدليل مشفَّرًا على جهازك وسيُرسل تلقائيًا حين يعود الاتصال — ويُسجَّل بتاريخ التقاطه لا بتاريخ وصوله. يمكنك إغلاق الصفحة.' : 'Offline now. Evidence is encrypted on this device and will upload automatically when you reconnect — stamped with capture time.') : (ar ? 'انقطع الاتصال أثناء الرفع؛ حُفظ الدليل وسيُعاد إرساله تلقائيًا.' : 'Connection dropped during upload; saved and will retry automatically.')}</p>
+            <p style={{ margin: '6px 0 0' }}><Link href="/offline#outbox">{ar ? 'افتح صندوق الأدلة' : 'Open the outbox'}</Link></p></div>
+        </div>}
         {m && result && <div className="ms-result">
           <div className="ms-ring" style={{ ['--p' as any]: result.ai.score }}><b>{result.ai.score}%</b><small>{ar ? 'فحص أولي' : 'first check'}</small></div>
           <div className="ms-restxt">

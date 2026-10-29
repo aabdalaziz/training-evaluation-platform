@@ -1,6 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // إدارة أَثَر — الإبلاغ متعدد القنوات «نبض الوصول» (P16): صحة القنوات · قائمة اليد · سجل التسليم · قوالب واتساب · إرسال تجريبي
+// + «نبض الجيب» (P19): تثبيتات التطبيق، مزامنات صندوق الأدلة (والمتأخرة)، تفاعل الإشعارات، إصدارات عامل الخدمة
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
@@ -12,6 +13,7 @@ type Row = { id: number; kind: string; kind_ar: string; ref_id: string | null; t
 type Health = { channels: { whatsapp: boolean; email: boolean; email_test: boolean; push: boolean; from: string; admin_phone: string | null; site: string }; stats: Record<string, { total: number; sent: number; delivered: number; failed: number; manual: number; last_ok: string | null }>; manual_count: number; learned: { lines: string[]; enough: boolean }; templates_count: number };
 type Tpl = { name: string; label_ar: string; category: string; body_ar: string; vars: string[] };
 type Tab = 'health' | 'manual' | 'log' | 'templates' | 'test';
+type Pulse = { installs: number; synced: number; late: number; rejected: number; push_acted: number; push_sent: number; act_rate: number | null; versions: Record<string, number>; last_sync: string | null };
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 const CH_AR: Record<string, string> = { whatsapp: 'واتساب', email: 'بريد', push: 'إشعار فوري', manual: 'تسليم يدوي' };
 const ST_TONE: Record<string, string> = { queued: '#64748b', sent: '#2563eb', delivered: '#0b8a83', read: '#0b8a83', failed: '#dc2626', manual: '#b45309', done: '#0f2a4e' };
@@ -23,11 +25,11 @@ export default function AdminOutreachPage() {
   const [health, setHealth] = useState<Health | null>(null); const [manual, setManual] = useState<Row[] | null>(null); const [adminPhone, setAdminPhone] = useState<string | null>(null);
   const [log, setLog] = useState<Row[] | null>(null); const [tpls, setTpls] = useState<Tpl[] | null>(null); const [lang, setLang] = useState('ar');
   const [fStatus, setFStatus] = useState(''); const [fChannel, setFChannel] = useState(''); const [fQ, setFQ] = useState('');
-  const [busy, setBusy] = useState(''); const [msg, setMsg] = useState(''); const [testTo, setTestTo] = useState(''); const [copied, setCopied] = useState<number | string | null>(null);
+  const [busy, setBusy] = useState(''); const [msg, setMsg] = useState(''); const [testTo, setTestTo] = useState(''); const [copied, setCopied] = useState<number | string | null>(null); const [pulse, setPulse] = useState<{ pulse: Pulse; push_subscriptions: number } | null>(null);
   const fresh = useCallback(async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk !== tok) setTok(tk); return tk; }, [db, tok]);
   const hdr = useCallback(async () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${await fresh()}` }), [fresh]);
   const get = useCallback(async (qs: string) => fetch(`/api/notify?${qs}`, { headers: await hdr(), cache: 'no-store' }).then(r => r.json()).catch(() => null), [hdr]);
-  async function loadHealth() { const j = await get('view=health'); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setError(''); setHealth(j); }
+  async function loadHealth() { const j = await get('view=health'); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setError(''); setHealth(j); fetch('/api/pocket?view=pulse', { headers: await hdr(), cache: 'no-store' }).then(r => r.json()).then(p => { if (p?.success) setPulse({ pulse: p.pulse, push_subscriptions: p.push_subscriptions || 0 }); }).catch(() => null); }
   async function loadManual() { const j = await get('view=manual'); if (j?.success) { setManual(j.rows); setAdminPhone(j.admin_phone || null); } }
   async function loadLog() { const p = new URLSearchParams({ view: 'log' }); if (fStatus) p.set('status', fStatus); if (fChannel) p.set('channel', fChannel); if (fQ) p.set('q', fQ); const j = await get(p.toString()); if (j?.success) setLog(j.rows); }
   async function loadTpls() { const j = await get('view=templates'); if (j?.success) { setTpls(j.templates); setLang(j.lang || 'ar'); } }
@@ -69,6 +71,16 @@ export default function AdminOutreachPage() {
             <div className="ou-card"><h3>{chip(ch.email, ch.email_test)} البريد</h3><p>{!ch.email ? 'غير مضبوط — RESEND_API_KEY مفقود' : ch.email_test ? <>⚠ <b>وضع الاختبار</b>: المرسِل <code dir="ltr">{ch.from}</code> لا يصل إلا لصاحب حساب Resend. اضبط REPORTS_FROM_EMAIL بنطاق متحقَّق.</> : <>المرسِل: <code dir="ltr">{ch.from}</code></>}</p>{stat(st.email)}</div>
             <div className="ou-card"><h3>{chip(ch.push)} الإشعار الفوري</h3><p>{ch.push ? 'مضبوط (VAPID) — يصل لمن فعّله من متصفحه' : 'غير مضبوط — مفاتيح VAPID مفقودة'}</p>{stat(st.push)}</div>
             <div className="ou-card"><h3>{chip(true)} قائمة اليد</h3><p>تعمل دائمًا. {ch.admin_phone ? <>زر «افتح في واتساب» يفتح محادثة من هاتف الإدارة <code dir="ltr">{ch.admin_phone}</code>.</> : 'أضف OUTREACH_ADMIN_PHONE ليُفتح واتساب الإداري مباشرة بالنص الجاهز.'}</p>{stat(st.manual)}</div>
+            <div className="ou-card ou-span" data-testid="out-pulse"><h3>{chip(!!pulse)} نبض الجيب — تطبيق أَثَر (آخر 30 يومًا)</h3>
+              {!pulse ? <p className="ou-muted">…</p> : <>
+                <p style={{ display: 'flex', gap: 14, flexWrap: 'wrap', margin: '4px 0' }}>
+                  <span>تثبيتات: <b>{pulse.pulse.installs}</b></span><span>مزامنات صندوق الأدلة: <b>{pulse.pulse.synced}</b>{pulse.pulse.late ? <> (منها <b style={{ color: '#b45309' }}>{pulse.pulse.late}</b> التُقطت قبل أكثر من 48 ساعة من وصولها)</> : null}</span><span>مرفوضات: <b>{pulse.pulse.rejected}</b></span>
+                  <span>مشتركو الإشعار النشطون: <b>{pulse.push_subscriptions}</b></span><span>تفاعل مع إشعار (فتح/قرأته): <b>{pulse.pulse.push_acted}</b>{pulse.pulse.act_rate !== null ? <> · {pulse.pulse.act_rate}% ممن وصلهم</> : null}</span>
+                  <span>آخر مزامنة: <b>{fmt(pulse.pulse.last_sync)}</b></span>
+                </p>
+                <p className="ou-muted" style={{ margin: 0 }}>إصدارات عامل الخدمة الفعّالة: {Object.keys(pulse.pulse.versions).length ? Object.entries(pulse.pulse.versions).map(([v, n]) => <code key={v} dir="ltr" style={{ marginInlineEnd: 8 }}>{v}×{n}</code>) : '—'} · الأدلة الملتقطة بلا اتصال تُسجَّل بتاريخ التقاطها لا بتاريخ وصولها.</p>
+              </>}
+            </div>
             <div className="ou-card ou-span"><h3><Icon name="refresh" size={14} /> ما تعلّمته أَثَر عن القنوات</h3>{health?.learned.enough ? <ul>{health.learned.lines.map((l, i) => <li key={i}>{l}</li>)}</ul> : <p className="ou-muted">لا دليل كافٍ بعد — يحتاج ≥ 5 أشخاص لكل قناة أُسندت إليهم مهمة عبرها.</p>}</div>
           </section>
         )}

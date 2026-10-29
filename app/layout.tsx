@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Tajawal } from 'next/font/google';
 import './style.css';
 import GlobalNavigation from './components/GlobalNavigation';
-import { PwaRegister } from './components/Pwa';
+import { PocketProvider } from './components/Pocket';
 
 // خط عربي موحّد يُحمَّل مع البناء (بدون طلبات خارجية وقت التشغيل ولا وميض عند التحميل)
 const tajawal = Tajawal({ subsets: ['arabic', 'latin'], weight: ['400', '500', '700', '800', '900'], display: 'swap', variable: '--font-ar' });
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   applicationName: 'أَثَر',
   openGraph: { title: 'أَثَر — بوابة التعليم والتدريب والتطوير', description: 'نتعلّم، نتدرّب، نتطوّر… ونقيس الأثر', type: 'website', locale: 'ar_SA', siteName: 'أَثَر' },
   robots: { index: true, follow: true },
-  // تطبيق ويب تقدّمي (PWA · P13-ب): قابل للتثبيت على الجوال، مع إشعار «موقف اليوم»
+  // تطبيق ويب تقدّمي («أَثَر في الجيب» · P19): محفظة سيادية بلا اتصال، صندوق أدلة ميداني، share_target، إشعار «موقف اليوم»
   manifest: '/manifest.webmanifest',
   appleWebApp: { capable: true, title: 'أَثَر', statusBarStyle: 'default' },
   icons: { icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }], apple: '/icons/apple-touch-icon.png' },
@@ -26,9 +26,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body className={tajawal.className}>
-        <GlobalNavigation />
-        {children}
-        <PwaRegister />
+        <PocketProvider>
+          <GlobalNavigation />
+          {children}
+        </PocketProvider>
       </body>
     </html>
   );

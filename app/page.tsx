@@ -14,6 +14,7 @@ import type { Turn, SimScore } from '../lib/portal/sim';
 import { domainByCode, familyName, HORIZON_LABEL } from '../lib/portal/lexicon';
 import { BAND_LABEL, RUBRIC_LABEL } from '../lib/portal/daily-case';
 import { PushOptIn } from './components/Pwa';
+import { useOutbox, valueMoment } from './components/Pocket';
 import { Channel, ReadAloud, VoiceButton } from './components/Channel';
 
 export default function HomePage() { return <PortalShell><Home /></PortalShell>; }
@@ -109,6 +110,7 @@ function DailyCase({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
   const [ev, setEv] = useState<CaseEval | null>(null); const [revealed, setRevealed] = useState<DailyCaseT | null>(null); const [saved, setSaved] = useState(false); const [streak, setStreak] = useState(0); const [showMine, setShowMine] = useState(false);
   const [wi, setWi] = useState<WhatIfT | null>(null); const [r2, setR2] = useState<Round2T | null>(null); const [r2text, setR2text] = useState(''); const [wiBusy, setWiBusy] = useState(false); const [crowd, setCrowd] = useState<CrowdT | null>(null); const [crowdLine, setCrowdLine] = useState('');
   const hdr = useCallback(() => ({ 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }), [tok]);
+  const ob = useOutbox(); const [queued, setQueued] = useState(false);
   useEffect(() => { fetch('/api/daily', { headers: hdr() }).then(r => r.json()).then(j => { if (j?.success) { setD(j); setStreak(j.streak || 0); if (j.crowd) { setCrowd(j.crowd); setCrowdLine(j.crowd_line || ''); } if (j.mine) { setEv(j.mine.evaluation); setText(j.mine.response); setRevealed(j.case); setSaved(true); const rr = j.mine.round2; if (rr?.whatif) setWi(rr.whatif as WhatIfT); if (rr?.response) setR2(rr as Round2T); } } else setErr(j?.error || 'x'); }).catch(() => setErr('x')); }, [hdr]);
   const refreshCrowd = useCallback(() => { fetch('/api/daily', { headers: hdr() }).then(r => r.json()).then(j => { if (j?.success && j.crowd) { setCrowd(j.crowd); setCrowdLine(j.crowd_line || ''); } }).catch(() => { /* تجاهل */ }); }, [hdr]);
   async function whatIf(withAnswer?: boolean) {
@@ -116,9 +118,15 @@ function DailyCase({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
     try { const j = await fetch('/api/daily', { method: 'POST', headers: hdr(), body: JSON.stringify({ action: 'whatif', ...(withAnswer ? { response: r2text } : {}) }) }).then(r => r.json()); if (j?.success) { if (j.whatif) setWi(j.whatif); if (j.round2?.response) setR2(j.round2); if (j.crowd) { setCrowd(j.crowd); setCrowdLine(j.crowd_line || ''); } } else setErr(j?.error || 'x'); } catch { setErr('x'); }
     setWiBusy(false);
   }
+  /** بلا اتصال: الردّ يدخل صندوق الأدلة الميداني (أَثَر في الجيب) ويُقوَّم حين يعود الاتصال — بتاريخ كتابته */
+  async function queueOffline(): Promise<boolean> {
+    if (!d || !tok) return false; const r = await ob.enqueue('daily', { day: d.day, response: text.trim(), title: d.case?.title_ar || '' }); if (!r.ok) { setErr(r.reason_ar || 'x'); return false; }
+    setQueued(true); valueMoment('daily_answered'); return true;
+  }
   async function submit() {
     if (!d || busy || text.trim().length < (d.limits?.min || 80)) return; setBusy(true); setErr('');
-    try { const j = await fetch('/api/daily', { method: 'POST', headers: hdr(), body: JSON.stringify({ response: text }) }).then(r => r.json()); if (j?.success) { setEv(j.evaluation); setRevealed(j.case); setSaved(!!j.saved); if (j.streak) setStreak(j.streak); refreshCrowd(); } else setErr(j?.error || 'x'); } catch { setErr('x'); }
+    if (typeof navigator !== 'undefined' && !navigator.onLine && tok) { await queueOffline(); setBusy(false); return; }
+    try { const j = await fetch('/api/daily', { method: 'POST', headers: hdr(), body: JSON.stringify({ response: text }) }).then(r => r.json()); if (j?.success) { setEv(j.evaluation); setRevealed(j.case); setSaved(!!j.saved); if (j.streak) setStreak(j.streak); refreshCrowd(); if (j.saved) valueMoment('daily_answered'); } else setErr(j?.error || 'x'); } catch { if (tok && await queueOffline()) { setBusy(false); return; } setErr('x'); }
     setBusy(false);
   }
   const c = revealed || d?.case; const min = d?.limits?.min || 80; const left = Math.max(0, min - text.trim().length); const dom = c ? domainByCode(c.domain_code) : null; const band = ev ? BAND_LABEL[ev.band] : null; const ring = 2 * Math.PI * 26;
@@ -151,6 +159,7 @@ function DailyCase({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
                   <div className="hm-respacts"><button type="button" className="pt-btn gold" onClick={submit} disabled={busy || left > 0}>{busy ? (ar ? 'أقرأ ردّك بعناية…' : 'Reading carefully…') : (ar ? 'أرني مرآة أدائي' : 'Show me my mirror')} <Icon name="arrow" size={14} /></button>{left > 0 && <small>{ar ? `${left} حرفًا على الأقل بعد` : `${left} more characters`}</small>}</div>
                   {busy && <div className="hm-think light"><i /><i /><i /> {ar ? 'أقارن ردّك بمعايير الموقف وأطرافه وتعقيده الخفي…' : 'Comparing your answer with the case criteria, parties and hidden twist…'}</div>}
                   {err && err !== 'x' && <div className="hm-err">{err}</div>}
+                  {queued && <div className="hm-ok" data-testid="daily-queued"><Icon name="inbox" size={15} /> {ar ? 'لا اتصال الآن — حُفظ ردّك في صندوق الأدلة الميداني وسيُقوَّم تلقائيًا حين يعود الاتصال، بتاريخ كتابته.' : 'Offline — your answer is saved in the field outbox and will be evaluated automatically when you reconnect, stamped with the time you wrote it.'} <Link href="/offline#outbox">{ar ? 'الصندوق' : 'Outbox'}</Link></div>}
                   {!tok && <small className="hm-note">{ar ? 'يمكنك التجربة بلا تسجيل؛ سجّل الدخول ليُحفظ ردّك شاهدًا في ملفك المهني وتُحسَّن المرآة بالذكاء الاصطناعي.' : 'Try without signing in; sign in to save your answer as evidence and get the AI-enhanced mirror.'} <Link href="/login">{ar ? 'تسجيل الدخول' : 'Sign in'}</Link></small>}
                 </>
               ) : (
