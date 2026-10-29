@@ -1,0 +1,125 @@
+// © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
+/**
+ * خزنة أَثَر (P22) — «السجل»: مصدر الحقيقة الوحيد لكل بيانات شخصية تحفظها أَثَر (PDPL).
+ *  لكل جدول: ما البيانات · لماذا · الأساس النظامي · كم نحتفظ · ماذا يحدث عند النسيان · من يصل · مفاتيح الربط.
+ *  منه تُولَّد: «ذاكرتي» (/me/data) · إشعار الخصوصية (/privacy) · RoPA (/admin/vault) · سياسات الاحتفاظ (الكرون) · خطة النسيان.
+ *  اختبار الوحدة p22 يقارن هذا السجل بكل الجداول المستعملة في الكود: جدول يحمل بيانات شخصية ولم يُسجَّل = فشل.
+ */
+export type Basis = 'contract' | 'consent' | 'legitimate' | 'legal';
+export type Policy = 'delete' | 'anonymize' | 'retain_legal' | 'none';
+export type Access = 'self' | 'org' | 'staff' | 'agents' | 'public';
+export type Category = 'identity' | 'learning' | 'credentials' | 'commerce' | 'communication' | 'agents' | 'operations' | 'security';
+
+export type RegistryEntry = {
+  table: string; label_ar: string; label_en: string; category: Category;
+  purpose_ar: string; basis: Basis; data_ar: string;
+  userCol: string | null; emailCol: string | null; piiCols: string[];
+  policy: Policy; retentionDays: number | null; tsCol: string | null; retainNote_ar?: string;
+  access: Access[]; legacy?: boolean; exportSelect?: string;
+};
+
+export const BASIS_AR: Record<Basis, string> = { contract: 'تنفيذ عقد/خدمة طلبتها', consent: 'موافقتك الصريحة (قابلة للسحب)', legitimate: 'مصلحة مشروعة (تشغيل الخدمة وأمنها)', legal: 'التزام نظامي' };
+export const POLICY_AR: Record<Policy, string> = { delete: 'يُحذف فورًا', anonymize: 'يُجهَّل (يبقى في الإحصاءات بلا هوية)', retain_legal: 'يُحتفظ به نظامًا لمدة محددة', none: 'لا بيانات شخصية' };
+export const CATEGORY_AR: Record<Category, string> = { identity: 'هويتي وحسابي', learning: 'أثري التدريبي', credentials: 'شهاداتي ومحفظتي', commerce: 'طلباتي وفواتيري', communication: 'تواصلي وتفضيلاتي', agents: 'وكلائي وتفويضاتي', operations: 'التشغيل', security: 'الأمن' };
+export const ACCESS_AR: Record<Access, string> = { self: 'أنت', org: 'جهتك (بموافقتك/عضويتك)', staff: 'طاقم أَثَر', agents: 'وكلاؤك المفوَّضون', public: 'عام (بقرارك)' };
+
+const Y = 365;
+export const REGISTRY: RegistryEntry[] = [
+  // هويتي
+  { table: 'profiles', label_ar: 'الحساب', label_en: 'Account profile', category: 'identity', purpose_ar: 'تسجيل الدخول والدور والاسم', basis: 'contract', data_ar: 'الاسم · البريد · الدور · الجهة', userCol: 'id', emailCol: null, piiCols: ['full_name'], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'staff'], legacy: true, exportSelect: 'id,full_name,role,organization_id,created_at' },
+  { table: 'portal_profiles', label_ar: 'ملفي العام', label_en: 'Public profile', category: 'identity', purpose_ar: 'اسم العرض والمشاركة العامة لملفك المهاري', basis: 'consent', data_ar: 'اسم العرض · العنوان المهني · المدينة · وضع المشاركة', userCol: 'user_id', emailCol: null, piiCols: ['display_name', 'headline', 'city'], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'public'] },
+  { table: 'portal_companion_memory', label_ar: 'ذاكرة أثير', label_en: 'Companion memory', category: 'identity', purpose_ar: 'يتذكر المرافق أهدافك وتفضيلاتك ليخدمك', basis: 'consent', data_ar: 'ملخص · أهداف · تفضيلات · زيارات', userCol: 'user_id', emailCol: null, piiCols: ['summary', 'goals', 'prefs'], policy: 'delete', retentionDays: null, tsCol: null, access: ['self'] },
+  { table: 'portal_org_members', label_ar: 'عضويتي في الجهات', label_en: 'Organization membership', category: 'identity', purpose_ar: 'ربطك بجهتك لتقارير الأثر المؤسسي', basis: 'consent', data_ar: 'البريد · الاسم · الجهة · الدور', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name'], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'org', 'staff'] },
+  // أثري التدريبي
+  { table: 'portal_enrollments', label_ar: 'طلبات التسجيل', label_en: 'Enrollment requests', category: 'learning', purpose_ar: 'قبولك في البرامج وتسكينك', basis: 'contract', data_ar: 'الاسم · البريد · الجوال · الجهة · المدينة · القرار', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name', 'phone', 'organization', 'city', 'notes'], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'staff'] },
+  { table: 'enrollments', label_ar: 'التسكين في الشعب', label_en: 'Class placements', category: 'learning', purpose_ar: 'شعبتك وحضورك', basis: 'contract', data_ar: 'معرّف المتدرب · الشعبة', userCol: 'trainee_id', emailCol: null, piiCols: [], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'staff'], legacy: true },
+  { table: 'attendance_records', label_ar: 'سجلات الحضور', label_en: 'Attendance', category: 'learning', purpose_ar: 'إثبات حضورك للجلسات (شرط الشهادة)', basis: 'contract', data_ar: 'الاسم · البريد · الجوال · وقت الحضور', userCol: 'trainee_id', emailCol: 'email', piiCols: ['full_name', 'phone', 'identity_key'], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'staff'], legacy: true },
+  { table: 'evaluations', label_ar: 'تقييماتي للبرامج', label_en: 'Program evaluations', category: 'learning', purpose_ar: 'رأيك في البرامج لتحسينها', basis: 'legitimate', data_ar: 'بريد/اسم الضيف · التقييم', userCol: 'trainee_id', emailCol: 'guest_email', piiCols: ['guest_name', 'guest_phone'], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['staff'], legacy: true },
+  { table: 'portal_session_registrations', label_ar: 'تسجيلاتي في الجلسات الحية', label_en: 'Live session registrations', category: 'learning', purpose_ar: 'مقعدك وتذكيرك', basis: 'contract', data_ar: 'الاسم · البريد · الجهة', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name', 'organization'], policy: 'delete', retentionDays: 2 * Y, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_activity_responses', label_ar: 'إجاباتي في أنشطة الجلسات', label_en: 'Session activity answers', category: 'learning', purpose_ar: 'التفاعل الحي وقياس الفهم', basis: 'contract', data_ar: 'الإجابة · الدرجة', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'anonymize', retentionDays: 3 * Y, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_learning_events', label_ar: 'أحداث التعلّم (خيط الأثر)', label_en: 'Learning events', category: 'learning', purpose_ar: 'حساب مستويات مهاراتك وأثرك', basis: 'contract', data_ar: 'الفعل · الموضوع · المهارات · السياق', userCol: 'user_id', emailCol: 'email', piiCols: ['context'], policy: 'anonymize', retentionDays: 5 * Y, tsCol: 'at', access: ['self', 'org', 'staff', 'agents'] },
+  { table: 'portal_skill_levels', label_ar: 'مستويات مهاراتي', label_en: 'Skill levels', category: 'learning', purpose_ar: 'محفظة القدرة: المستوى المحسوب والمعتمد', basis: 'contract', data_ar: 'المهارة · المستوى · الثقة · الاعتماد', userCol: 'user_id', emailCol: null, piiCols: [], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'org', 'staff', 'agents'] },
+  { table: 'portal_daily_case_responses', label_ar: 'ردودي على «كل يوم بناء»', label_en: 'Daily case responses', category: 'learning', purpose_ar: 'مرآة الأداء اليومية', basis: 'consent', data_ar: 'الرد · التقييم · الدرجة', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'anonymize', retentionDays: 3 * Y, tsCol: 'created_at', access: ['self', 'agents'] },
+  { table: 'portal_daily_answers', label_ar: 'اختياراتي اليومية', label_en: 'Daily picks', category: 'learning', purpose_ar: 'مهارة اليوم', basis: 'consent', data_ar: 'الاختيار', userCol: 'user_id', emailCol: null, piiCols: [], policy: 'anonymize', retentionDays: 2 * Y, tsCol: 'created_at', access: ['self'] },
+  { table: 'portal_sim_runs', label_ar: 'تشغيلات المحاكي', label_en: 'Simulation runs', category: 'learning', purpose_ar: 'التدريب على المواقف وتقييمه', basis: 'consent', data_ar: 'الأدوار · الدرجة', userCol: 'user_id', emailCol: null, piiCols: ['turns'], policy: 'anonymize', retentionDays: 3 * Y, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_missions', label_ar: 'مهمات العمل', label_en: 'Work missions', category: 'learning', purpose_ar: 'نقل الأثر إلى العمل وتأكيد المشرف', basis: 'contract', data_ar: 'الاسم · البريد · المشرف · الدليل', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name', 'supervisor_email', 'supervisor_name', 'evidence'], policy: 'anonymize', retentionDays: null, tsCol: null, access: ['self', 'org', 'staff', 'agents'] },
+  { table: 'portal_media', label_ar: 'الأداء المُشاهَد (صوت/فيديو)', label_en: 'Performance media', category: 'learning', purpose_ar: 'دليل أداء مرئي يراجعه بشر', basis: 'consent', data_ar: 'ملف · نصّ مفرَّغ', userCol: 'user_id', emailCol: 'email', piiCols: ['transcript', 'path', 'title'], policy: 'delete', retentionDays: 2 * Y, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_placements', label_ar: 'اختبار تحديد المستوى (مِعيار)', label_en: 'Placement results', category: 'learning', purpose_ar: 'مستواك اللغوي لتسكينك', basis: 'contract', data_ar: 'الاسم · البريد · الجوال · النتيجة', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name', 'phone'], policy: 'anonymize', retentionDays: 5 * Y, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_evidence_queries', label_ar: 'أسئلتي لقاعدة الأدلة', label_en: 'Evidence queries', category: 'learning', purpose_ar: 'الإجابة من الأدلة وتحسينها', basis: 'legitimate', data_ar: 'السؤال · الجواب', userCol: 'user_id', emailCol: 'email', piiCols: ['question'], policy: 'delete', retentionDays: Y, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_twin_exports', label_ar: 'تصديرات توأمي', label_en: 'Twin exports', category: 'learning', purpose_ar: 'سجل ما صدّرته', basis: 'legitimate', data_ar: 'الوقت · الفعل', userCol: 'user_id', emailCol: null, piiCols: ['events', 'levels'], policy: 'delete', retentionDays: Y, tsCol: 'at', access: ['self'] },
+  // شهاداتي
+  { table: 'portal_credentials', label_ar: 'شهاداتي الرقمية', label_en: 'Digital credentials', category: 'credentials', purpose_ar: 'إثبات إنجازك للجهات (Open Badges)', basis: 'contract', data_ar: 'الاسم · البريد · العنوان · المهارات · رمز التحقق', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'الشهادة الصادرة وثيقة باسمك؛ تُحتفظ ما دامت صالحة + 5 سنوات لحق الجهات في التحقق، ويمكنك طلب إلغائها.', access: ['self', 'org', 'staff', 'agents', 'public'] },
+  { table: 'portal_vc_issuances', label_ar: 'الإصدارات الموقَّعة (VC)', label_en: 'Signed issuances', category: 'credentials', purpose_ar: 'التحقق اللامركزي من شهاداتك ولقطاتك', basis: 'contract', data_ar: 'الاسم · البريد · الوثيقة الموقَّعة', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'سجل الإصدار يلزم للتحقق وقائمة الإلغاء؛ يبقى حتى انتهاء الصلاحية + 5 سنوات.', access: ['self', 'public', 'agents'] },
+  { table: 'certificates', label_ar: 'شهادات الحضور/الإتمام', label_en: 'Certificates', category: 'credentials', purpose_ar: 'شهادات المنصة القديمة برقم تسلسلي', basis: 'contract', data_ar: 'الاسم · البريد · الجوال · البرنامج', userCol: null, emailCol: 'recipient_email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'وثيقة صادرة باسمك تُحتفظ 5 سنوات بعد الإصدار.', access: ['self', 'staff', 'public'], legacy: true },
+  { table: 'portal_credential_watchers', label_ar: 'متابعو شهادتي', label_en: 'Credential watchers', category: 'credentials', purpose_ar: 'جهة طلبت متابعة شهادتك الحية (بموافقتها)', basis: 'consent', data_ar: 'بريد المتابع · اسمه', userCol: null, emailCol: 'email', piiCols: ['name', 'organization'], policy: 'delete', retentionDays: null, tsCol: null, access: ['staff'] },
+  // طلباتي وفواتيري
+  { table: 'portal_invoices', label_ar: 'فواتيري', label_en: 'Invoices', category: 'commerce', purpose_ar: 'الدفع والمحاسبة', basis: 'legal', data_ar: 'الاسم · البريد · الجوال · الجهة · المبلغ', userCol: 'user_id', emailCol: 'customer_email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'السجلات المحاسبية تُحتفظ 10 سنوات وفق أنظمة الدفاتر التجارية والزكاة والضريبة.', access: ['self', 'staff'] },
+  { table: 'portal_consulting_requests', label_ar: 'طلبات الاستشارة', label_en: 'Consulting requests', category: 'commerce', purpose_ar: 'تقديم الاستشارة وعرض السعر', basis: 'contract', data_ar: 'الاسم · البريد · الجوال · الجهة · التفاصيل', userCol: 'user_id', emailCol: 'email', piiCols: ['full_name', 'phone', 'details', 'goals'], policy: 'anonymize', retentionDays: 5 * Y, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_org_requests', label_ar: 'طلبات الجهة', label_en: 'Organization requests', category: 'commerce', purpose_ar: 'تسجيل مجموعات من جهتك', basis: 'contract', data_ar: 'بريد الطالب · الأشخاص · العدد', userCol: 'requested_by', emailCol: 'requester_email', piiCols: ['people', 'note'], policy: 'anonymize', retentionDays: 5 * Y, tsCol: 'created_at', access: ['org', 'staff'] },
+  { table: 'portal_impact_contracts', label_ar: 'عقود الأثر', label_en: 'Impact contracts', category: 'commerce', purpose_ar: 'التعاقد مع جهتك على نتائج', basis: 'legal', data_ar: 'اسم وبريد جهة الاتصال', userCol: null, emailCol: 'contact_email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'العقود الموقَّعة تُحتفظ 10 سنوات.', access: ['org', 'staff'] },
+  // تواصلي
+  { table: 'portal_contact_prefs', label_ar: 'تفضيلات التواصل', label_en: 'Contact preferences', category: 'communication', purpose_ar: 'كيف ومتى نراسلك (بريد/واتساب/دفع)', basis: 'consent', data_ar: 'البريد · الجوال · القناة · ساعات الهدوء', userCol: 'user_id', emailCol: 'email', piiCols: ['phone_e164'], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'staff'] },
+  { table: 'portal_push_subscriptions', label_ar: 'اشتراكات التنبيهات', label_en: 'Push subscriptions', category: 'communication', purpose_ar: 'إرسال تنبيهات المتصفح التي فعّلتها', basis: 'consent', data_ar: 'نقطة الدفع · المتصفح', userCol: 'user_id', emailCol: 'email', piiCols: ['endpoint', 'p256dh', 'auth', 'ua'], policy: 'delete', retentionDays: Y, tsCol: 'created_at', access: ['self'] },
+  { table: 'portal_message_log', label_ar: 'سجل الرسائل المرسلة إليّ', label_en: 'Message log', category: 'communication', purpose_ar: 'إثبات الإرسال والتسليم وتفادي التكرار', basis: 'legitimate', data_ar: 'البريد · الجوال · الموضوع · الحالة', userCol: null, emailCol: 'to_email', piiCols: ['to_phone', 'to_name', 'payload'], policy: 'anonymize', retentionDays: Y, tsCol: 'created_at', access: ['staff'] },
+  { table: 'trainee_mail_log', label_ar: 'سجل بريد المتدربين', label_en: 'Trainee mail log', category: 'communication', purpose_ar: 'تفادي تكرار الرسائل', basis: 'legitimate', data_ar: 'البريد · النوع', userCol: null, emailCol: 'email', piiCols: [], policy: 'delete', retentionDays: Y, tsCol: 'sent_at', access: ['staff'] },
+  { table: 'portal_contact_messages', label_ar: 'رسائلي عبر نموذج التواصل', label_en: 'Contact form messages', category: 'communication', purpose_ar: 'الرد على استفسارك', basis: 'legitimate', data_ar: 'الاسم · البريد · الجوال · الرسالة', userCol: null, emailCol: 'email', piiCols: ['name', 'phone', 'message', 'organization'], policy: 'delete', retentionDays: 2 * Y, tsCol: 'created_at', access: ['staff'] },
+  { table: 'portal_advisor_questions', label_ar: 'أسئلتي للمستشار', label_en: 'Advisor questions', category: 'communication', purpose_ar: 'الإجابة وتحويلك لمستشار بشري عند الحاجة', basis: 'legitimate', data_ar: 'الاسم · البريد · السؤال', userCol: 'user_id', emailCol: 'email', piiCols: ['name', 'question'], policy: 'delete', retentionDays: Y, tsCol: 'created_at', access: ['staff'] },
+  { table: 'report_subscriptions', label_ar: 'اشتراكات التقارير', label_en: 'Report subscriptions', category: 'communication', purpose_ar: 'إرسال التقارير الدورية التي طلبتها', basis: 'consent', data_ar: 'البريد · التقرير · التكرار', userCol: null, emailCol: 'email', piiCols: [], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'staff'], legacy: true },
+  // وكلائي
+  { table: 'portal_delegations', label_ar: 'تفويضات وكلائي', label_en: 'Agent delegations', category: 'agents', purpose_ar: 'سماحك لمساعد ذكي بالوصول إلى محفظتك بنطاقات محددة', basis: 'consent', data_ar: 'البريد · العميل · النطاقات · آخر استخدام', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'delete', retentionDays: null, tsCol: null, access: ['self', 'staff'] },
+  { table: 'portal_ai_log', label_ar: 'سجل استخدام الذكاء الاصطناعي', label_en: 'AI usage log', category: 'agents', purpose_ar: 'الحدود اليومية والشفافية (ما أُرسل: أحجام فقط لا نصوص)', basis: 'legitimate', data_ar: 'الغرض · المزوّد · الأحجام', userCol: 'user_id', emailCol: 'email', piiCols: ['context'], policy: 'anonymize', retentionDays: 180, tsCol: 'created_at', access: ['self', 'staff'] },
+  { table: 'portal_copilot_log', label_ar: 'سجل الميسِّر في الجلسات', label_en: 'Facilitator log', category: 'agents', purpose_ar: 'اقتراحات الميسِّر وقراراتك عليها', basis: 'legitimate', data_ar: 'النوع · الحمولة', userCol: 'user_id', emailCol: null, piiCols: ['payload'], policy: 'delete', retentionDays: 180, tsCol: 'created_at', access: ['staff'] },
+  // التشغيل والأمن
+  { table: 'audit_logs', label_ar: 'سجل التدقيق', label_en: 'Audit log', category: 'operations', purpose_ar: 'إثبات من فعل ماذا (حماية الجميع)', basis: 'legitimate', data_ar: 'الفاعل · الفعل · الكيان', userCol: 'actor_id', emailCol: null, piiCols: ['actor_email'], policy: 'anonymize', retentionDays: 3 * Y, tsCol: 'created_at', access: ['staff'], legacy: true },
+  { table: 'portal_security_events', label_ar: 'أحداث درع أَثَر', label_en: 'Security events', category: 'security', purpose_ar: 'كشف الهجمات وإبلاغك بها', basis: 'legitimate', data_ar: 'النوع · IP مُقنَّع · المعرّف', userCol: 'user_id', emailCol: null, piiCols: ['ip'], policy: 'anonymize', retentionDays: 2 * Y, tsCol: 'at', access: ['staff'] },
+  { table: 'portal_dsr_requests', label_ar: 'طلباتي في الخزنة', label_en: 'Data subject requests', category: 'security', purpose_ar: 'إثبات تنفيذ حقوقك في المدة النظامية', basis: 'legal', data_ar: 'البريد · النوع · المواعيد', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'سجل الطلب يُحتفظ 3 سنوات كإثبات للامتثال (بلا تفاصيلك بعد التنفيذ).', access: ['self', 'staff'] },
+  { table: 'portal_consents', label_ar: 'دفتر موافقاتي', label_en: 'Consent ledger', category: 'security', purpose_ar: 'إثبات ما وافقت عليه ومتى سحبته', basis: 'legal', data_ar: 'البريد · النطاق · التواريخ', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'إثبات الموافقة/السحب يُحتفظ 3 سنوات.', access: ['self', 'staff'] },
+  { table: 'portal_erasure_queue', label_ar: 'طلب النسيان', label_en: 'Erasure queue', category: 'security', purpose_ar: 'تنفيذ النسيان بعد الحجر وإصدار إيصاله', basis: 'legal', data_ar: 'البريد (يُجزَّأ بعد التنفيذ) · الخطة · الإيصال', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'إيصال النسيان يبقى 3 سنوات ببصمة لا باسم.', access: ['self', 'staff'] },
+];
+
+/** جداول يستعملها الكود ولا تحمل بيانات شخصية (أو تحمل بيانات طاقم إداري فقط ضمن عقد العمل) — مذكورة صراحة حتى يكتمل اختبار التغطية */
+export const NON_PERSONAL_TABLES = [
+  'programs', 'program_levels', 'program_approvals', 'program_managers', 'program_evaluation_templates', 'evaluation_templates', 'evaluation_answers', 'questions', 'classrooms', 'class_schedules', 'trainers', 'trainer_awards',
+  'behavior_followups', 'behavior_questions', 'behavior_responses', 'impact_assessments', 'impact_questions', 'impact_responses', 'remote_learning_survey_responses', 'outcome_kpis', 'outcome_measurements',
+  'notifications', 'notification_runs', 'certificate_settings', 'backup_log', 'attendance_sessions', 'placement_reports',
+  'portal_organizations', 'portal_sectors', 'portal_skills', 'portal_program_skills', 'portal_sessions', 'portal_session_activities', 'portal_session_memos', 'portal_session_private', 'portal_rooms', 'portal_resources', 'portal_resource_files',
+  'portal_scenarios', 'portal_daily_cases', 'portal_daily_skill', 'portal_calendar_events', 'portal_mission_templates', 'portal_program_drafts', 'portal_loop_suggestions', 'portal_loop_decisions', 'portal_graph_nodes', 'portal_graph_edges', 'portal_graph_lessons',
+  'portal_capability_forecasts', 'portal_observatory_snapshots', 'portal_observatory_issues', 'portal_consulting_quotes', 'portal_consulting_updates', 'portal_consulting_milestones', 'portal_contract_releases', 'portal_payment_settings',
+  'portal_agent_keys', 'portal_agent_log', 'portal_agent_requests', 'portal_oauth_clients', 'portal_oauth_codes', 'portal_signing_keys', 'portal_rate_buckets', 'portal_incidents', 'portal_retention_log',
+];
+
+/** أين تعيش البيانات ومن يعالجها نيابة عنا — بصدق */
+export const PROCESSORS = [
+  { id: 'supabase', name: 'Supabase (قاعدة البيانات والمصادقة والملفات)', role: 'التخزين الأساسي', region_ar: 'مركز بيانات المزوّد المختار للمشروع (خارج المملكة ما لم يُهاجَر)', data_ar: 'كل ما في هذا السجل', basis: 'contract' as Basis },
+  { id: 'vercel', name: 'Vercel (الاستضافة والتنفيذ)', role: 'تشغيل البوابة', region_ar: 'شبكة عالمية؛ المعالجة عابرة لا تخزين دائم', data_ar: 'الطلبات أثناء المعالجة · سجلات تقنية قصيرة', basis: 'contract' as Basis },
+  { id: 'ai', name: 'مزوّد الذكاء الاصطناعي (OpenAI/Gemini/Anthropic حسب الإعداد)', role: 'المرافق «أثير» · مرآة الأداء · الميسِّر · المحاكي', region_ar: 'خارج المملكة', data_ar: 'نصوص المحادثة والردود فقط — بلا اسمك أو بريدك؛ لا تُستخدم للتدريب حسب شروط المزوّد', basis: 'consent' as Basis },
+  { id: 'resend', name: 'Resend (البريد)', role: 'إرسال الرسائل', region_ar: 'خارج المملكة', data_ar: 'بريدك · اسمك · نصّ الرسالة', basis: 'contract' as Basis },
+  { id: 'moyasar', name: 'Moyasar (الدفع)', role: 'بوابة الدفع', region_ar: 'المملكة العربية السعودية', data_ar: 'بيانات البطاقة تُدخل لدى المزوّد مباشرة ولا تمرّ بنا', basis: 'contract' as Basis },
+  { id: 'whatsapp', name: 'Meta WhatsApp Business (عند التفعيل)', role: 'رسائل واتساب التي وافقت عليها', region_ar: 'خارج المملكة', data_ar: 'جوالك · نصّ الرسالة', basis: 'consent' as Basis },
+  { id: 'miaar', name: 'مِعيار (اختبار تحديد المستوى — تطبيق شقيق)', role: 'مزامنة نتائج تحديد المستوى', region_ar: 'كما أعلاه (Supabase/Vercel)', data_ar: 'البريد · الاسم · النتيجة', basis: 'contract' as Basis },
+];
+
+/** الحقوق كما ينصّ عليها النظام — تُعرض في الإشعار و«ذاكرتي» */
+export const RIGHTS_AR = [
+  { id: 'informed', title: 'أن تعرف', body: 'ما نجمع ولماذا وكم ومع من — هذه الصفحة تُولَّد من سجل المعالجة نفسه فلا تتقادم.' },
+  { id: 'access', title: 'أن تطّلع وتأخذ نسخة', body: 'من «ذاكرتي» فورًا: ملف JSON قابل للنقل ونسخة عربية مقروءة — لا انتظار 30 يومًا.' },
+  { id: 'correct', title: 'أن تصحّح', body: 'أي حقل غير دقيق؛ نردّ خلال 30 يومًا (وتمديد 30 بسبب مكتوب تُخبر به).' },
+  { id: 'erase', title: 'أن تُنسى', body: 'حذف ما يمكن حذفه وتجهيل ما يخدم الإحصاءات، مع إبقاء ما يلزمنا نظامًا (شهادات صادرة، فواتير) بمدة محددة — وتعرف ذلك قبل أن تقرر.' },
+  { id: 'withdraw', title: 'أن تسحب موافقتك', body: 'من المكان نفسه الذي أعطيتها فيه: واتساب، التنبيهات، مشاركة الملف، تفويضات الوكلاء.' },
+  { id: 'object', title: 'أن تعترض', body: 'على معالجة بعينها؛ نوقفها أو نشرح لماذا لا نستطيع.' },
+];
+
+export const DSR_DAYS = 30; export const DSR_EXTENSION_DAYS = 30; export const INCIDENT_HOURS = 72; export const ERASURE_HOLD_DAYS = 7;
+/** يبقى true حتى يراجع مستشار نظامي الإشعار ويُزال الوسم من هنا */
+export const NOTICE_DRAFT = true;
+export const NOTICE_VERSION = '2026-10-29';
+
+export const byTable = (t: string) => REGISTRY.find(r => r.table === t) || null;
+export const personalTables = () => REGISTRY.filter(r => r.policy !== 'none');
+export const countsSpec = () => personalTables().map(r => ({ t: r.table, u: r.userCol, e: r.emailCol }));
+export const retentionRules = () => REGISTRY.filter(r => r.retentionDays && r.tsCol);
+/** ماذا يحدث لكل صنف عند النسيان — للعرض قبل القرار */
+export function erasurePlan() {
+  const del = REGISTRY.filter(r => r.policy === 'delete'); const anon = REGISTRY.filter(r => r.policy === 'anonymize'); const keep = REGISTRY.filter(r => r.policy === 'retain_legal');
+  return { delete: del.map(r => ({ table: r.table, label_ar: r.label_ar })), anonymize: anon.map(r => ({ table: r.table, label_ar: r.label_ar })), retain: keep.map(r => ({ table: r.table, label_ar: r.label_ar, note_ar: r.retainNote_ar || '' })) };
+}

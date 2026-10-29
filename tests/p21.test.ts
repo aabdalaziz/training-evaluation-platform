@@ -36,7 +36,7 @@ function fakeDb(opts: { rpcFail?: boolean } = {}) {
         if (q._limit) rows = rows.slice(0, q._limit);
         return { data: q._single ? rows[0] || null : rows, error: null };
       };
-      q.select = () => q; q.eq = (c: string, v: any) => { q._f.push({ op: 'eq', c, v }); return q; }; q.gte = (c: string, v: any) => { q._f.push({ op: 'gte', c, v }); return q; }; q.lt = (c: string, v: any) => { q._f.push({ op: 'lt', c, v }); return q; }; q.is = (c: string) => { q._f.push({ op: 'is', c }); return q; };
+      q.select = () => q; q.eq = (c: string, v: any) => { q._f.push({ op: 'eq', c, v }); return q; }; q.gte = (c: string, v: any) => { q._f.push({ op: 'gte', c, v }); return q; }; q.lt = (c: string, v: any) => { q._f.push({ op: 'lt', c, v }); return q; }; q.is = (c: string) => { q._f.push({ op: 'is', c }); return q; }; q.in = (c: string, v: any[]) => { q._f.push({ op: 'in', c, v }); return q; };
       q.order = (c: string, o: any) => { q._order = { c, asc: !!o?.ascending }; return q; }; q.limit = (n: number) => { q._limit = n; return q; }; q.maybeSingle = () => { q._single = true; return q; }; q.single = q.maybeSingle;
       q.insert = (p: any) => { q._op = 'insert'; q._payload = p; return q; }; q.update = (p: any) => { q._op = 'update'; q._payload = p; return q; };
       q.then = (res: any, rej: any) => Promise.resolve(run()).then(res, rej);
@@ -117,7 +117,7 @@ test('P21 الحارس: الأحداث تُحفظ، الحرج يُنبّه ال
   const s = await shieldSummary(db, 30); assert.equal(s.total, 3, 'ملخص 3 أحداث'); assert.equal(s.open_critical, 1, 'حرج واحد مفتوح'); assert.equal(s.by_kind.token_reuse, 1, 'حسب النوع');
 });
 
-test('P21 التمرين الذاتي: يشنّ 13 اختبارًا على خادم وهمي ويقرأ النتيجة بدقة (ناجح/فاشل)', async () => {
+test('P21 التمرين الذاتي: يشنّ 14 اختبارًا على خادم وهمي ويقرأ النتيجة بدقة (ناجح/فاشل)', async () => {
   _resetMem(); const db = fakeDb(); const env = { VC_SIGNING_KEY: K1, NEXT_PUBLIC_SITE_URL: 'https://t.example' } as any;
   const H = { 'strict-transport-security': 'max-age=63072000', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin', 'permissions-policy': 'camera=(self)', 'content-security-policy': "frame-ancestors 'none'" };
   let tokenHits = 0;
@@ -130,10 +130,12 @@ test('P21 التمرين الذاتي: يشنّ 13 اختبارًا على خا�
     if (p === '/oauth/token') { tokenHits++; if (init?.headers?.['X-Athar-Drill'] && tokenHits > 5) return new Response('{}', { status: 429 }); return new Response(JSON.stringify({ error: 'invalid_grant' }), { status: 400 }); }
     if (p === '/oauth/register') return new Response('{}', { status: 400 });
     if (p === '/.well-known/security.txt') return new Response(securityTxt(env, new Date()));
+    if (p === '/privacy') return new Response('<html>privacy</html>', { headers: H });
+    if (p === '/.well-known/privacy.json') return new Response(JSON.stringify({ controller: { name: 'x' }, processing: new Array(12).fill({ id: 't' }) }));
     return new Response('nf', { status: 404 });
   };
   const r = await runDrill('https://t.example', env, db, goodServer);
-  assert.equal(r.total, 13, '13 اختبارًا'); assert.equal(r.passed, 13, `كلها ناجحة: ${r.checks.filter(c => !c.ok).map(c => c.id + ':' + c.detail).join(' | ')}`);
+  assert.equal(r.total, 14, '14 اختبارًا'); assert.equal(r.passed, 14, `كلها ناجحة: ${r.checks.filter(c => !c.ok).map(c => c.id + ':' + c.detail).join(' | ')}`);
   assert.ok(r.checks.find(c => c.id === 'rate_limit')!.detail.includes('429'), 'يذكر 429');
   const weakServer: typeof fetch = async (input: any, init?: any) => { const p = new URL(String(input)).pathname; if (p === '/') return new Response('ok'); if (p === '/mcp') return new Response('{}', { status: 200 }); if (p === '/oauth/token') return new Response('{}', { status: 400 }); return goodServer(input, init); };
   const w = await runDrill('https://t.example', { ...env, NEXT_PUBLIC_LEAK: 'sk_live_1234567890' }, db, weakServer);

@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /admin/shield — درع أَثَر (P21): غرفة عمليات الأمن للطاقم
- *  التمرين الذاتي (13 اختبارًا حيًا) · الأحداث (حرج/تحذير/معلومة) مع «عولج» · المفاتيح وخطة التدوير بلا انقطاع · RLS · حدود المعدل · قائمة «تحتاج يدًا بشرية».
+ *  التمرين الذاتي (14 اختبارًا حيًا) · الأحداث (حرج/تحذير/معلومة) مع «عولج» · المفاتيح وخطة التدوير بلا انقطاع · RLS · حدود المعدل · قائمة «تحتاج يدًا بشرية».
  *  القاعدة: ما يمكن للآلة فحصه تفحصه كل يوم وتُظهره هنا؛ وما يحتاج قرارًا بشريًا يُعرض كخطوات واضحة.
  */
 import { useCallback, useEffect, useState } from 'react';
@@ -67,7 +67,7 @@ export default function AdminShieldPage() {
         {tab === 'drill' && (
           <section className="sh-card" data-testid="shield-drill">
             <div className="sh-row"><h2>الدرع يختبر نفسه</h2><button type="button" className="pt-btn" onClick={runDrill} disabled={busy === 'drill'} data-testid="drill-run">{busy === 'drill' ? 'جارٍ التمرين (~20 ثانية)…' : 'شنّ التمرين الآن'}</button></div>
-            <p className="sh-muted">13 اختبارًا آمنًا يشنّها الخادم على نفسه: الترويسات، رفض الرموز المزوّرة، PKCE/الأكواد، حدود المعدل (قصف حقيقي حتى 429)، حجم/عمق JSON، RLS على كل الجداول، security.txt، المفاتيح. يعمل تلقائيًا كل يوم ضمن الكرون الحالي ويُسجَّل حدثًا.</p>
+            <p className="sh-muted">14 اختبارًا آمنًا يشنّها الخادم على نفسه: الترويسات، رفض الرموز المزوّرة، PKCE/الأكواد، حدود المعدل (قصف حقيقي حتى 429)، حجم/عمق JSON، RLS على كل الجداول، security.txt، المفاتيح، خزنة البيانات (الخصوصية والمهل النظامية). يعمل تلقائيًا كل يوم ضمن الكرون الحالي ويُسجَّل حدثًا.</p>
             {!drill && <p className="sh-muted">لا تمرين بعد — اضغط «شنّ التمرين الآن».</p>}
             {drill && <ul className="sh-checks">{drill.checks.map(c => <li key={c.id} className={c.ok ? 'ok' : 'fail'} data-testid={`check-${c.id}`}><span className="sh-mark">{c.ok ? '✓' : '✗'}</span><div><b>{c.title_ar}</b><small>{c.detail}</small></div></li>)}</ul>}
             {drill && <p className="sh-muted">اكتمل في {Math.round(drill.ms / 100) / 10} ث · {drill.passed}/{drill.total}</p>}

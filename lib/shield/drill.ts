@@ -94,6 +94,10 @@ export async function runDrill(site: string, env: Record<string, string | undefi
   const st = await f('/.well-known/security.txt'); const stt = st ? await st.text().catch(() => '') : ''; const sc = securityTxtCheck(stt); add('security_txt', 'security.txt صالح (RFC 9116)', !!st && st.status === 200 && sc.ok, st ? (sc.ok ? 'صالح' : sc.problems.join(' · ')) : 'لا استجابة');
   // 13 حالة المفاتيح (معلومة)
   const ki = keyInfo(env); add('keys', 'مفاتيح التوقيع مضبوطة (لا مفتاح تطوير)', ki.master_set && !ki.fallback_dev, ki.master_set ? `kid ${ki.oauth_kid}${ki.prev_set ? ` · prev ${ki.prev_kid}` : ''}` : 'VC_SIGNING_KEY غير مضبوط');
+  // 14 خزنة أَثَر (P22): إشعار الخصوصية حيّ · privacy.json · لا طلب بيانات متأخرًا عن مهلته النظامية
+  const pv = await f('/privacy'); const pj = await f('/.well-known/privacy.json'); let pjOk = false; try { const j = pj ? await pj.json() : null; pjOk = !!j && Array.isArray(j.processing) && j.processing.length > 10 && !!j.controller; } catch { /* */ }
+  let late: number | null = null; try { const { data, error } = await db.from('portal_dsr_requests').select('id').in('status', ['open', 'extended']).lt('due_at', new Date().toISOString()).limit(50); late = error ? null : (data || []).length; } catch { /* */ }
+  add('vault', 'خزنة أَثَر: إشعار الخصوصية حيّ ولا طلب بيانات متأخرًا', !!pv && pv.status === 200 && pjOk && late === 0, `${pv ? `/privacy ${pv.status}` : 'لا استجابة'} · privacy.json ${pjOk ? 'صالح' : 'ناقص'} · ${late === null ? 'جدول الطلبات غير متاح (SQL 761)' : late === 0 ? 'لا طلبات متأخرة' : `${late} طلب متأخر`}`);
   const passed = checks.filter(c => c.ok).length;
   return { at: new Date().toISOString(), passed, total: checks.length, checks, ms: Date.now() - t0 };
 }

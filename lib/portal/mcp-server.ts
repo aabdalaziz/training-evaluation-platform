@@ -20,6 +20,7 @@ import { rateLimit, limitFor, tooMany, LIMITS } from '../shield/ratelimit';
 import { burst } from '../shield/guard';
 import { POST as agentPOST } from '../../app/api/agent/route';
 import { GET as pocketGET } from '../../app/api/pocket/route';
+import { GET as vaultGET } from '../../app/api/vault/route';
 import { GET as dailyGET, POST as dailyPOST } from '../../app/api/daily/route';
 import { GET as missionsGET } from '../../app/api/missions/route';
 import { POST as vcPOST } from '../../app/api/vc/route';
@@ -151,6 +152,11 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
   if (name === 'my_wallet') {
     const j = await asJson(await pocketGET(internal(c, '/api/pocket?view=bundle'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة المحفظة', { error: 'failed' }, true); }
     const result = { holder: { name: j.profile?.name, email: j.profile?.email }, issuer_did: j.did, did_document: j.did_url, levels: (j.levels || []).map((l: any) => ({ skill: l.name_ar, code: l.code, level: l.level, level_name_ar: ['', 'مبتدئ', 'متقدم مبتدئ', 'كفء', 'متمكن', 'خبير'][Math.round(l.level)] || null, approved: !!l.approved })), credentials: (j.credentials || []).map((x: any) => ({ title: x.title_ar, code: x.verify_code, issued_at: x.issued_at, url: `${c.site}/credential/${encodeURIComponent(x.verify_code)}` })), snapshot: j.snapshot ? { code: j.snapshot.code, issued_at: j.snapshot.issued_at, expires_at: j.snapshot.expires_at, verify_url: `${c.site}/verify/vc?code=${encodeURIComponent(j.snapshot.code)}` } : null, card_url: `${c.site}/me/card`, generated_at: j.generated_at };
+    await log(c, name, true); return toolContent(summarize(result), result);
+  }
+  if (name === 'my_data_summary') {
+    const j = await asJson(await vaultGET(internal(c, '/api/vault?view=summary'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة الخزنة', { error: 'failed' }, true); }
+    const result = { ...j.summary, note_ar: 'للتصدير أو التصحيح أو النسيان: صاحب الحساب من /me/data — الوكيل يقرأ فقط.' };
     await log(c, name, true); return toolContent(summarize(result), result);
   }
   if (name === 'my_daily') {

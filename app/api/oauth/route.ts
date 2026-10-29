@@ -18,7 +18,7 @@ import { svc, who, clientInfo, newCode } from '../../../lib/portal/oauth-server'
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
-const TOOL_AR: Record<string, string> = { my_wallet: 'قرأ محفظتك', my_daily: 'موقف اليوم', my_missions: 'قرأ مهامك', issue_snapshot: 'أصدر لقطة قدرة', discover_programs: 'استكشف البرامج', verify_credential: 'تحقق من شهادة', capability_trend: 'قرأ مؤشر الأداء' };
+const TOOL_AR: Record<string, string> = { my_wallet: 'قرأ محفظتك', my_data_summary: 'قرأ موجز بياناتك (الخزنة)', my_daily: 'موقف اليوم', my_missions: 'قرأ مهامك', issue_snapshot: 'أصدر لقطة قدرة', discover_programs: 'استكشف البرامج', verify_credential: 'تحقق من شهادة', capability_trend: 'قرأ مؤشر الأداء' };
 
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500); const user = await who(req, db); if (!user) return bad('سجّل الدخول', 401);

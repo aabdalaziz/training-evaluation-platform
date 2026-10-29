@@ -58,5 +58,6 @@ export const KIND_LABEL_AR: Record<string, string> = {
   invoice: 'فاتورة', receipt: 'إيصال', consult_received: 'استلام طلب استشارة', consult_new: 'طلب استشارة جديد', consult_quote: 'عرض سعر', consult_response: 'ردّ على عرض', consult_status: 'حالة استشارة', consult_update: 'تحديث استشارة',
   agent_request: 'طلب وكيل', org_invite: 'دعوة جهة', org_admin: 'تعيين مدير جهة', org_bulk: 'طلب تسجيل جماعي', notice: 'إشعار', test: 'إرسال تجريبي',
   behavior_followup: 'متابعة أثر التدريب', final_open: 'فتح التقييم الختامي', copilot_remind: 'تذكير الميسِّر', live_reminder_auto: 'تذكير جلسة (تلقائي)', credential_issued: 'شهادة رقمية صادرة', digest: 'موجز التقارير', observatory_weather: 'تغيّر مؤشر أداء القطاع (المرصد)', report: 'تقرير', notifications: 'تنبيهات المنصة', receipt_review: 'إيصال للمراجعة', enrollment_new: 'طلب تسجيل جديد',
+  dsr_received: 'طلب بيانات (الخزنة)', dsr_due: 'مهلة طلب بيانات', erasure_confirm: 'تأكيد النسيان', erasure_receipt: 'إيصال النسيان', incident_due: 'حادثة بيانات', correction_received: 'استلام طلب تصحيح',
 };
 export const kindLabel = (k: string) => KIND_LABEL_AR[k] || k;
