@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — مرصد القدرة البشرية (P18): «طقس القدرة» العام — خريطة قطاعات حيّة، مؤشر أَثَر، إشارات مبكرة، الحقيقة والادعاء، العدد الربعي الموقَّع، بيانات مفتوحة CC BY 4.0
+// أَثَر — مرصد القدرة البشرية (P18): «مؤشر الأداء» العام — خريطة قطاعات حيّة، مؤشر أَثَر، إشارات مبكرة، الحقيقة والادعاء، العدد الربعي الموقَّع، بيانات مفتوحة CC BY 4.0
 // لا أسماء ولا معرّفات هنا أبدًا: كل خلية ≥ 5 أشخاص و≥ 2 جهة، الأعداد شرائح، والكتم مسجَّل بسببه. ?issue=2026-Q4 يعرض عددًا منشورًا مجمَّدًا قابلًا للطباعة والتحقق.
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
@@ -28,13 +28,13 @@ function Inner() {
     } catch (e: any) { setErr(e.message || String(e)); } setLoaded(true); })(); }, [issueQ]);
   const s = snap; const sectors = s?.sectors || []; const live = sectors.filter(x => x.cell); const cur = useMemo(() => sectors.find(x => x.code === sel) || live[0] || null, [sectors, live, sel]);
   const W = (w: Weather) => WEATHER_LABEL[w]; const lbl = (w: Weather) => ar ? W(w).ar : W(w).en;
-  const headline = useMemo(() => { if (!live.length) return ar ? 'المرصد يجمع أدلته — لا خلية بلغت حدّ النشر بعد' : 'The observatory is gathering evidence — no cell has reached the publication threshold yet'; const up = live.filter(x => x.weather === 'rising').length, down = live.filter(x => x.weather === 'cooling').length; return ar ? `${up} ${up === 1 ? 'قطاع صاعد' : 'قطاعات صاعدة'} · ${down} ${down === 1 ? 'قطاع يبرد' : 'قطاعات تبرد'} · ${live.length - up - down} مستقر` : `${up} rising · ${down} cooling · ${live.length - up - down} stable`; }, [live, ar]);
+  const headline = useMemo(() => { if (!live.length) return ar ? 'المرصد يجمع أدلته — لا خلية بلغت حدّ النشر بعد' : 'The observatory is gathering evidence — no cell has reached the publication threshold yet'; const up = live.filter(x => x.weather === 'rising').length, down = live.filter(x => x.weather === 'cooling').length; return ar ? `${up} ${up === 1 ? 'قطاع صاعد' : 'قطاعات صاعدة'} · ${down} ${down === 1 ? 'قطاع متراجع' : 'قطاعات متراجعة'} · ${live.length - up - down} مستقر` : `${up} rising · ${down} declining · ${live.length - up - down} stable`; }, [live, ar]);
 
   return <div className="obs" dir={ar ? 'rtl' : 'ltr'} data-testid="obs-page">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <header className="obs-hero">
       <div className="obs-kicker">{ar ? 'مرصد أَثَر للقدرة البشرية' : 'Athar Human Capability Observatory'}{issue && <span className="obs-chip" data-testid="obs-issue-chip">{ar ? 'العدد' : 'Issue'} {issue.quarter}</span>}</div>
-      <h1>{ar ? 'طقس القدرة' : 'Capability weather'} <span className="obs-day">{s ? fmtDate(s.computed_at, lang) : ''}</span></h1>
+      <h1>{ar ? 'مؤشر الأداء' : 'Performance index'} <span className="obs-day">{s ? fmtDate(s.computed_at, lang) : ''}</span></h1>
       <p className="obs-lead" data-testid="obs-headline">{loaded ? headline : (ar ? '…' : '…')}</p>
       <p className="obs-sub">{ar ? `من أدلة أداء حقيقية — لا استبيانات. لا أسماء، لا جهات بلا إذنها، ولا خلية بأقل من ${K_PERSONS} أشخاص و${K_ORGS} جهة.` : `From real performance evidence — not surveys. No names, no organisations without consent, no cell below ${K_PERSONS} persons and ${K_ORGS} organisations.`}</p>
       {s && <div className="obs-totals" data-testid="obs-totals"><span>{ar ? 'أشخاص' : 'People'} <b>{s.totals.people}</b></span><span>{ar ? 'جهات' : 'Organisations'} <b>{s.totals.orgs}</b></span><span>{ar ? 'أدلة' : 'Evidence'} <b>{s.totals.evidence}</b></span><span>{ar ? 'قطاعات منشورة' : 'Sectors published'} <b>{s.totals.sectors_published}</b></span><span>{ar ? 'مكتومة' : 'Suppressed'} <b>{s.totals.sectors_suppressed}</b></span></div>}
@@ -42,7 +42,7 @@ function Inner() {
     {err && <div className="pt-alert err">{err}</div>}
     {issue && <section className="obs-editorial pt-box" data-testid="obs-editorial"><h2>{ar ? 'افتتاحية العدد' : 'Editorial'}</h2><p>{issue.editorial_ar || (ar ? '—' : '—')}</p>
       <div className="obs-row">{issue.signed && issue.verify_url ? <a className="pt-btn" href={issue.verify_url} data-testid="obs-verify"><Icon name="shield" size={16} /> {ar ? 'تحقّق من توقيع العدد' : 'Verify issue signature'} · {issue.vc_code}</a> : <span className="obs-muted">{ar ? 'هذا العدد غير موقَّع' : 'This issue is unsigned'}</span>}
-        <a className="pt-btn ghost" href={`/api/observatory?issue=${encodeURIComponent(issue.quarter)}&format=csv`}>CSV</a><a className="pt-btn ghost" href={`/api/observatory?issue=${encodeURIComponent(issue.quarter)}`}>JSON</a><button className="pt-btn ghost" onClick={() => window.print()}>{ar ? 'طباعة' : 'Print'}</button><Link className="pt-btn ghost" href="/observatory">{ar ? 'الطقس الحي' : 'Live weather'}</Link></div></section>}
+        <a className="pt-btn ghost" href={`/api/observatory?issue=${encodeURIComponent(issue.quarter)}&format=csv`}>CSV</a><a className="pt-btn ghost" href={`/api/observatory?issue=${encodeURIComponent(issue.quarter)}`}>JSON</a><button className="pt-btn ghost" onClick={() => window.print()}>{ar ? 'طباعة' : 'Print'}</button><Link className="pt-btn ghost" href="/observatory">{ar ? 'المؤشر الحي' : 'Live weather'}</Link></div></section>}
 
     {/* خريطة القطاعات */}
     <section className="obs-map" data-testid="obs-map">
@@ -64,8 +64,8 @@ function Inner() {
         <div className="pt-box obs-signals" data-testid="obs-signals">
           <h2>{ar ? 'إشارات مبكرة' : 'Early signals'}</h2>
           <div className="obs-sig-cols">
-            <div><h3>☀ {ar ? 'تصعد' : 'Rising'}</h3>{cur.rising.length ? cur.rising.map(g => <div key={g.skill_id} className="obs-sig up"><b>{ar ? g.name_ar : g.name_en || g.name_ar}</b><span>+{g.delta} · {g.people}</span><small>{ar ? 'لماذا: ' : 'Why: '}{ar ? g.why_ar : g.why_en}</small></div>) : <p className="obs-muted">{ar ? 'لا إشارة كافية' : 'No sufficient signal'}</p>}</div>
-            <div><h3>🌧 {ar ? 'تبرد' : 'Cooling'}</h3>{cur.cooling.length ? cur.cooling.map(g => <div key={g.skill_id} className="obs-sig down"><b>{ar ? g.name_ar : g.name_en || g.name_ar}</b><span>{g.delta} · {g.people}</span><small>{ar ? 'لماذا: ' : 'Why: '}{ar ? g.why_ar : g.why_en}</small></div>) : <p className="obs-muted">{ar ? 'لا إشارة كافية' : 'No sufficient signal'}</p>}</div>
+            <div><h3>↗ {ar ? 'تصعد' : 'Rising'}</h3>{cur.rising.length ? cur.rising.map(g => <div key={g.skill_id} className="obs-sig up"><b>{ar ? g.name_ar : g.name_en || g.name_ar}</b><span>+{g.delta} · {g.people}</span><small>{ar ? 'لماذا: ' : 'Why: '}{ar ? g.why_ar : g.why_en}</small></div>) : <p className="obs-muted">{ar ? 'لا إشارة كافية' : 'No sufficient signal'}</p>}</div>
+            <div><h3>↘ {ar ? 'تتراجع' : 'Declining'}</h3>{cur.cooling.length ? cur.cooling.map(g => <div key={g.skill_id} className="obs-sig down"><b>{ar ? g.name_ar : g.name_en || g.name_ar}</b><span>{g.delta} · {g.people}</span><small>{ar ? 'لماذا: ' : 'Why: '}{ar ? g.why_ar : g.why_en}</small></div>) : <p className="obs-muted">{ar ? 'لا إشارة كافية' : 'No sufficient signal'}</p>}</div>
           </div>
         </div>
       </div>

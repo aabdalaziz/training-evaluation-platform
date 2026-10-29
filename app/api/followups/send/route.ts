@@ -143,7 +143,7 @@ export async function GET(req: Request) {
   // P16 — الإبلاغ متعدد القنوات: إعادة محاولة الرسائل المؤجَّلة (ساعات الهدوء) ثم إسقاطها في «قائمة اليد»، وتنظيف السجل القديم
   let outreach: any = null;
   try { outreach = await runOutreach(db, { dry }); } catch (e: any) { outreach = { ok: false, error: e?.message || String(e) }; }
-  // P18 — مرصد القدرة البشرية: لقطة يومية مجهولة الهوية + إبلاغ الجهات المشتركة بتغيّر طقس قطاعها
+  // P18 — مرصد القدرة البشرية: لقطة يومية مجهولة الهوية + إبلاغ الجهات المشتركة بتغيّر مؤشر أداء قطاعها
   let observatory: any = null;
   try { observatory = await runObservatory(db, { dry }); } catch (e: any) { observatory = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)

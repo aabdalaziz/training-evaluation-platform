@@ -1,9 +1,9 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * أَثَر — مرصد القدرة البشرية (P18) — الطبقة النقية: من مستويات وأدلة مجهولة الهوية إلى إشارة عامة آمنة
- *  • «طقس القدرة» لكل قطاع: صاعد ☀ / مستقر ⛅ / يبرد 🌧 — من اتجاه مستوى الأدلة ونشاطها في آخر 90 يومًا مقارنة بما قبلها
+ *  • «مؤشر الأداء» لكل قطاع: صاعد ↗ / مستقر → / متراجع ↘ — من اتجاه مستوى الأدلة ونشاطها في آخر 90 يومًا مقارنة بما قبلها
  *  • «مؤشر أَثَر للقدرة» 0–100 لكل قطاع/مجال (المستوى 1–5 من الأدلة + الثقة)، مقرَّب إلى أقرب 5
- *  • «إشارات مبكرة»: مهارات تصعد وتبرد في كل قطاع مع «لماذا» من مزيج الأدلة — بلا أي معرّف
+ *  • «إشارات مبكرة»: مهارات تصعد وتتراجع في كل قطاع مع «لماذا» من مزيج الأدلة — بلا أي معرّف
  *  • «الحقيقة والادعاء»: المستوى المحسوب من الأدلة مقابل ما ادّعاه الناس عن أنفسهم (التقييم الذاتي)
  *  • الخصوصية قواعد ثابتة: k ≥ 5 أشخاص و≥ 2 جهة لكل خلية قطاعية، الأعداد شرائح لا أرقامًا، لا أسماء، كتم مسجَّل بسببه
  */
@@ -13,8 +13,8 @@ export const OBS_VERSION = '1.0';
 export const K_PERSONS = 5; export const K_ORGS = 2; export const WINDOW_DAYS = 90;
 export type Weather = 'rising' | 'stable' | 'cooling' | 'unknown';
 export const WEATHER_LABEL: Record<Weather, { ar: string; en: string; icon: string; color: string }> = {
-  rising: { ar: 'صاعد', en: 'Rising', icon: '☀', color: '#0b8a83' }, stable: { ar: 'مستقر', en: 'Stable', icon: '⛅', color: '#c9a24b' },
-  cooling: { ar: 'يبرد', en: 'Cooling', icon: '🌧', color: '#b45309' }, unknown: { ar: 'لا دليل كافٍ', en: 'Not enough evidence', icon: '·', color: '#94a3b8' },
+  rising: { ar: 'صاعد', en: 'Rising', icon: '↗', color: '#0b8a83' }, stable: { ar: 'مستقر', en: 'Stable', icon: '→', color: '#c9a24b' },
+  cooling: { ar: 'متراجع', en: 'Declining', icon: '↘', color: '#b45309' }, unknown: { ar: 'لا دليل كافٍ', en: 'Not enough evidence', icon: '·', color: '#94a3b8' },
 };
 export type Band = '5–9' | '10–49' | '50–199' | '200+';
 export const band = (n: number): Band => (n >= 200 ? '200+' : n >= 50 ? '50–199' : n >= 10 ? '10–49' : '5–9');
@@ -112,7 +112,7 @@ export function computeSnapshot(inp: ObsInput): Snapshot {
     sectors: sectors.sort((a, b) => (b.cell?.index ?? -1) - (a.cell?.index ?? -1)), domains: domains.sort((a, b) => (b.cell?.index ?? -1) - (a.cell?.index ?? -1)), suppressed_log: log,
     method_ar: [
       'المصدر: مستويات مهارات محسوبة من أدلة أداء (اختبارات مِعيار، مهام من قلب العمل مؤكدة من مشرف، أداء مُشاهَد، محاكاة، إتمام برامج) بأوزان P8، والمعتمَد بشريًا يتقدم على المحسوب.',
-      `الطقس: مقارنة مستوى الأدلة ونشاطها في آخر ${WINDOW_DAYS} يومًا بالـ${WINDOW_DAYS} يومًا التي قبلها (صاعد ≥ +0.15 مستوى أو نشاط +25%؛ يبرد ≤ −0.15 أو −25%).`,
+      `مؤشر الأداء: مقارنة مستوى الأدلة ونشاطها في آخر ${WINDOW_DAYS} يومًا بالـ${WINDOW_DAYS} يومًا التي قبلها (صاعد ≥ +0.15 مستوى أو نشاط +25%؛ متراجع ≤ −0.15 أو −25%).`,
       'المؤشر 0–100: 85% من موقع المستوى على سلّم 1–5 + حتى 15 نقطة من ثقة الأدلة، مقرَّب إلى أقرب 5.',
       `الخصوصية: لا خلية بأقل من ${K_PERSONS} أشخاص أو ${K_ORGS} جهة؛ الأعداد شرائح لا أرقامًا؛ لا أسماء أفراد ولا جهات بلا إذنها؛ كل كتم مسجَّل بسببه.`,
       'الحقيقة والادعاء: متوسط التقييم الذاتي (1–5) مقابل المستوى المحسوب من الأدلة للأشخاص أنفسهم؛ موجب = ادعاء أعلى من الدليل.',
@@ -167,7 +167,7 @@ export function snapshotCsv(s: Snapshot): string {
   for (const d of s.domains) rows.push(['domain', d.domain, '', '', d.weather, d.delta, d.cell?.index ?? '', d.cell?.level ?? '', d.cell?.confidence ?? 'suppressed', d.cell?.people ?? '', d.cell?.orgs ?? '', d.cell?.approved_pct ?? '', s.computed_at, s.version, 'CC BY 4.0']);
   return '\uFEFF' + rows.map(r => r.map(esc).join(',')).join('\n');
 }
-/** تغيّر الطقس بين لقطتين — لإبلاغ الجهات المشتركة */
+/** تغيّر مؤشر الأداء بين لقطتين — لإبلاغ الجهات المشتركة */
 export function weatherChanges(prev: Snapshot | null, next: Snapshot): { code: string; name_ar: string; from: Weather; to: Weather }[] {
   if (!prev) return []; const out: { code: string; name_ar: string; from: Weather; to: Weather }[] = [];
   for (const s of next.sectors) { const p = prev.sectors.find(x => x.code === s.code); if (p && p.weather !== s.weather && s.weather !== 'unknown' && p.weather !== 'unknown') out.push({ code: s.code, name_ar: s.name_ar, from: p.weather, to: s.weather }); }

@@ -89,6 +89,7 @@ export function pluginManifest(site: string) {
     description_for_model: 'Athar (TRACE) is an Arabic learning & development portal. Tools: discover_programs, skill_fit (evidence-based: which program proved to raise a skill), request_quote, reserve_seats, verify_credential, impact_report, open_dialogue_room, request_status. All write actions create human-approved requests; never promise a binding price or seat. Auth: header X-Agent-Key (atk_…) issued to organizations by Athar staff; discovery and verify work without a key at reduced limits.',
     auth: { type: 'user_http', authorization_type: 'bearer', instructions: 'Send X-Agent-Key: atk_… (or Authorization: Bearer atk_…). Keys are issued per organization by Athar staff; request one at ' + site + '/agents' },
     api: { type: 'athar_tools', url: `${site}/api/agent`, method: 'POST', body: '{ "tool": "<name>", "args": { … } }', manifest: `${site}/api/agent` },
+    mcp: { url: `${site}/mcp`, public_url: `${site}/mcp/public`, transport: 'streamable-http', protocol_versions: ['2026-07-28', '2025-11-25', '2025-06-18', '2025-03-26'], authorization: `${site}/.well-known/oauth-protected-resource/mcp` },
     logo_url: `${site}/icons/icon-192.png`, contact_email: 'info@athar-portal.sa', legal_info_url: `${site}/agents`,
     tools: AGENT_TOOLS.map(t => ({ name: t.name, scope: t.scope, writes: t.writes, description: t.desc_en, description_ar: t.desc_ar, parameters: { type: 'object', properties: Object.fromEntries(t.params.map(p => [p.name, { type: p.type, description: p.desc_en }])), required: t.params.filter(p => p.required).map(p => p.name) } })),
     governance: { human_in_the_loop: true, binding_commitments_by_agents: false, data_minimization: 'no individual names in reports', log_retention_days: 180 },
@@ -104,7 +105,7 @@ export const AGENT_CANNOT_AR = ['رؤية أسماء المتعلمين أو د�
 const AGO_AR = (ms: number) => { const m = Math.max(1, Math.round(ms / 60000)); if (m < 60) return `قبل ${m} دقيقة`; const h = Math.round(m / 60); if (h < 24) return `قبل ${h} ساعة`; return `قبل ${Math.round(h / 24)} يومًا`; };
 const TOOL_VERB_AR: Record<string, string> = { discover_programs: 'استكشف البرامج', skill_fit: 'سأل عن برنامج أثبت رفع مهارة', request_quote: 'طلب عرض سعر (ينتظر إنسانًا)', reserve_seats: 'حجز مقاعد مبدئيًا (ينتظر إنسانًا)', verify_credential: 'تحقق من شهادة', impact_report: 'طلب تقرير أثر مجهّلًا', open_dialogue_room: 'فتح غرفة حوار مع مستشار', request_status: 'تابع حالة طلب' };
 export function publicLogLine(row: { at: string; tool: string; ok: boolean; meta?: any }, nowMs: number): string {
-  const who = row.meta?.sandbox ? 'وكيل تجريبي (طاقم أَثَر)' : row.meta?.org_sector ? `وكيل جهة في قطاع ${row.meta.org_sector}` : row.meta?.key ? 'وكيل جهة مفوَّض' : 'وكيل عام (بلا مفتاح)';
+  const who = row.meta?.sandbox ? 'وكيل تجريبي (طاقم أَثَر)' : row.meta?.org_sector ? `وكيل جهة في قطاع ${row.meta.org_sector}` : row.meta?.key ? 'وكيل جهة مفوَّض' : row.meta?.tier === 'personal' || String(row.meta?.ip || '').startsWith('dg:') ? 'مساعد شخصي مفوَّض (عبر MCP)' : row.meta?.transport === 'mcp' ? 'وكيل عام (عبر MCP)' : 'وكيل عام (بلا مفتاح)';
   return `${who} ${TOOL_VERB_AR[row.tool] || row.tool}${row.ok ? '' : ' — رُفض'} · ${AGO_AR(nowMs - new Date(row.at).getTime())}`;
 }
 /** الطلبات المسموح بها بلا مفتاح (اكتشاف وتحقق فقط · حد يومي أدنى) */

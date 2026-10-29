@@ -18,11 +18,13 @@ import { TEMPLATES } from '../../../lib/portal/evidence';
 import { roomCode, ROOM_DEFAULT_PROMPT } from '../../../lib/portal/media';
 import { normalizeSite } from '../../../lib/portal/open';
 import { sendViaResend } from '../../../lib/email/resend';
+import { delegateFromHeaders, PERSONAL_DAILY_LIMIT } from '../../../lib/portal/oauth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
+const safeDecode = (s: string | null) => { if (!s) return null; try { return decodeURIComponent(s).slice(0, 120); } catch { return s.slice(0, 120); } };
 const H = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Agent-Key', 'Cache-Control': 'no-store' };
 const json = (body: any, status = 200) => NextResponse.json(body, { status, headers: H });
 const fail = (error_ar: string, error_en: string, status = 400) => json({ success: false, error: error_ar, error_en }, status);
@@ -57,6 +59,8 @@ async function resolveActor(req: Request, db: any, body: any): Promise<{ actor: 
     if (data?.user) { const { data: prof } = await db.from('profiles').select('role').eq('id', data.user.id).maybeSingle(); if (STAFF.includes(String((prof as any)?.role || '').toUpperCase())) return { actor: { kind: 'sandbox', userId: data.user.id, email: String(data.user.email || '') } }; }
     return { error: fail('وضع التجربة للطاقم فقط', 'Sandbox is staff-only', 403) };
   }
+  // P20: نداء من خادم MCP بتفويض شخصي → الأدوات العامة فقط، والحد اليومي يُحسب على التفويض لا على عنوان IP المشترك
+  const dg = delegateFromHeaders(req.headers, process.env); if (dg) return { actor: { kind: 'anon', ip: `dg:${dg.del}` } };
   const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'unknown'; return { actor: { kind: 'anon', ip } };
 }
 
@@ -65,7 +69,7 @@ export async function POST(req: Request) {
   const db = createClient(URL_, SERVICE, { auth: { persistSession: false } }); const body = await req.json().catch(() => ({}));
   const tool = toolByName(String(body?.tool || '')); if (!tool) return json({ success: false, error: 'أداة غير معروفة', error_en: 'Unknown tool', tools: AGENT_TOOLS.map(t => t.name) }, 400);
   const r = await resolveActor(req, db, body); if ('error' in r) return r.error; const actor = r.actor; const nowIso = new Date().toISOString();
-  const logMeta: Record<string, unknown> = { key: actor.kind === 'key' ? actor.key.id : null, org: actor.kind === 'key' ? actor.key.organization_id : null, org_sector: actor.kind === 'key' ? actor.key.org_sector : null, sandbox: actor.kind === 'sandbox', anon: actor.kind === 'anon' };
+  const logMeta: Record<string, unknown> = { key: actor.kind === 'key' ? actor.key.id : null, org: actor.kind === 'key' ? actor.key.organization_id : null, org_sector: actor.kind === 'key' ? actor.key.org_sector : null, sandbox: actor.kind === 'sandbox', anon: actor.kind === 'anon', transport: req.headers.get('x-athar-transport') || 'http', proto: req.headers.get('x-athar-proto') || null, client: safeDecode(req.headers.get('x-athar-client')) };
   const log = async (ok: boolean, extra: Record<string, unknown> = {}) => { try { await db.from('portal_agent_log').insert({ key_id: actor.kind === 'key' ? actor.key.id : null, tool: tool.name, ok, ms: Date.now() - t0, meta: { ...logMeta, ...extra } }); } catch { /* تجاهل */ } };
   // التفويض والحدود
   if (actor.kind === 'key') {
@@ -75,7 +79,7 @@ export async function POST(req: Request) {
   } else if (actor.kind === 'anon') {
     if (!ANON_SCOPES.includes(tool.scope)) { await log(false, { denied: 'key_required' }); return fail('هذه الأداة تحتاج مفتاح وكيل مفوَّض — اطلبه عبر /agents', 'This tool requires an authorized agent key — see /agents', 401); }
     const { count } = await db.from('portal_agent_log').select('id', { count: 'exact', head: true }).is('key_id', null).contains('meta', { anon: true, ip: actor.ip }).gte('at', todayStart()); logMeta.ip = actor.ip;
-    if ((count || 0) >= ANON_DAILY_LIMIT) { await log(false, { denied: 'anon_limit' }); return fail('تجاوزت حد الاستخدام بلا مفتاح', 'Anonymous daily limit reached', 429); }
+    if ((count || 0) >= (actor.ip.startsWith('dg:') ? PERSONAL_DAILY_LIMIT : ANON_DAILY_LIMIT)) { await log(false, { denied: 'anon_limit' }); return fail('تجاوزت حد الاستخدام بلا مفتاح', 'Anonymous daily limit reached', 429); }
   }
   const v = validateArgs(tool, body?.args); if (!v.ok) { await log(false, { invalid: v.error_en }); return fail(v.error_ar, v.error_en, 422); }
   const a = v.args; const S = site(); const orgId = actor.kind === 'key' ? actor.key.organization_id || null : null; const keyId = actor.kind === 'key' ? actor.key.id : null; const sandbox = actor.kind === 'sandbox';

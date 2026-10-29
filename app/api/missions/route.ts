@@ -13,6 +13,7 @@ import { normalizeSite } from '../../../lib/portal/open';
 import { MISSION_COLS, assignMission, decideMission, runMissionCycle, mail } from '../../../lib/portal/missions-cron';
 import { transferStats, starterFor, suggestPrompt, parseSuggest, templatePayload, validateTemplate, reminderMailHtml, missionUrl } from '../../../lib/portal/missions';
 import type { Mission, MissionTemplate, TemplateForm } from '../../../lib/portal/missions';
+import { delegateFromHeaders } from '../../../lib/portal/oauth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,7 @@ async function ctx(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!URL_ || !ANON || !SERVICE) return { error: bad('إعدادات الخادم غير مكتملة', 500) };
   const db = createClient(URL_, SERVICE, { auth: { persistSession: false } });
+  const dg = delegateFromHeaders(req.headers, process.env); if (dg && dg.scopes.includes('missions:read') && req.method === 'GET') return { db, user: { id: dg.id, email: dg.email, name: dg.name }, role: 'LEARNER', staff: false }; // P20: وكيل مفوَّض شخصيًا (قراءة فقط)
   const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token) return { error: bad('يلزم تسجيل الدخول', 401) };
   const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } });

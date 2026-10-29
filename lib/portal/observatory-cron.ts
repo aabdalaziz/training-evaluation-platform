@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — مرصد القدرة البشرية (P18): طبقة قاعدة البيانات — تحميل مجهول الهوية → حساب اللقطة → تخزينها → إبلاغ الجهات المشتركة حين يتغيّر طقس قطاعها
+// أَثَر — مرصد القدرة البشرية (P18): طبقة قاعدة البيانات — تحميل مجهول الهوية → حساب اللقطة → تخزينها → إبلاغ الجهات المشتركة حين يتغيّر مؤشر الأداء قطاعها
 // تُستدعى من السلسلة اليومية الحالية (/api/followups/send) — لا كرون جديد — ومن غرفة التحرير («حدّث الآن»)
 import { computeSnapshot, weatherChanges, WEATHER_LABEL } from './observatory';
 import type { ObsInput, Snapshot, Person, PersonLevel, Claim, SkillLite, SectorLite } from './observatory';
@@ -37,7 +37,7 @@ export async function latestSnapshot(db: any): Promise<{ id: string; computed_at
   const rows = await safe<any[]>(db.from('portal_observatory_snapshots').select('id,computed_at,data').order('computed_at', { ascending: false }).limit(1), []); return rows[0] || null;
 }
 
-/** الدورة: لقطة جديدة + إبلاغ الجهات المشتركة بتغيّر الطقس (مرة لكل تغيّر، عبر P16 بالقنوات المتاحة) */
+/** الدورة: لقطة جديدة + إبلاغ الجهات المشتركة بتغيّر مؤشر الأداء (مرة لكل تغيّر، عبر P16 بالقنوات المتاحة) */
 export async function runObservatory(db: any, opts: { dry?: boolean; now?: Date; env?: NodeJS.ProcessEnv; site?: string } = {}): Promise<{ ok: boolean; sectors: number; published: number; suppressed: number; changes: number; notified: number; dry: boolean; error?: string }> {
   const dry = !!opts.dry;
   try {
@@ -57,8 +57,8 @@ export async function runObservatory(db: any, opts: { dry?: boolean; now?: Date;
       for (const o of orgs) {
         const ch = changes.find(c => c.code === o.sector); if (!ch || !o.contact_email) continue;
         const ref = `obs:${o.id}:${ch.code}:${now.toISOString().slice(0, 10)}`;
-        const subject = `طقس قطاعكم تغيّر: ${ch.name_ar} ${WEATHER_LABEL[ch.from].icon} → ${WEATHER_LABEL[ch.to].icon} ${WEATHER_LABEL[ch.to].ar}`;
-        const html = `<div dir="rtl" style="font-family:Tahoma,Arial;line-height:1.9"><p>مرصد أَثَر للقدرة البشرية رصد تغيّرًا في طقس قطاع «${ch.name_ar}»: من <b>${WEATHER_LABEL[ch.from].ar}</b> إلى <b>${WEATHER_LABEL[ch.to].ar}</b>.</p><p>موقع جهتكم مقابل القطاع في بوابة الجهة → تبويب «المرصد».</p><p><a href="${site}/org">${site}/org</a> · <a href="${site}/observatory">المرصد العام</a></p><p style="color:#64748b;font-size:12px">لا أسماء ولا بيانات فردية في المرصد — خلايا مكتومة دون 5 أشخاص أو جهتين. لإيقاف هذه الرسائل: بوابة الجهة → المرصد → «أبلغني».</p></div>`;
+        const subject = `مؤشر أداء قطاعكم تغيّر: ${ch.name_ar} ${WEATHER_LABEL[ch.from].icon} → ${WEATHER_LABEL[ch.to].icon} ${WEATHER_LABEL[ch.to].ar}`;
+        const html = `<div dir="rtl" style="font-family:Tahoma,Arial;line-height:1.9"><p>مرصد أَثَر للقدرة البشرية رصد تغيّرًا في مؤشر أداء قطاع «${ch.name_ar}»: من <b>${WEATHER_LABEL[ch.from].ar}</b> إلى <b>${WEATHER_LABEL[ch.to].ar}</b>.</p><p>موقع جهتكم مقابل القطاع في بوابة الجهة → تبويب «المرصد».</p><p><a href="${site}/org">${site}/org</a> · <a href="${site}/observatory">المرصد العام</a></p><p style="color:#64748b;font-size:12px">لا أسماء ولا بيانات فردية في المرصد — خلايا مكتومة دون 5 أشخاص أو جهتين. لإيقاف هذه الرسائل: بوابة الجهة → المرصد → «أبلغني».</p></div>`;
         try { const d = await notify(db, { kind: 'observatory_weather', to: { email: o.contact_email, name: o.name_ar }, subject, html, url: `${site}/org`, ref, params: { sector: ch.name_ar, to: WEATHER_LABEL[ch.to].ar } }, { env: opts.env, now }); if (d.ok && !d.duplicate) notified++; } catch { /* قناة غير متاحة — تبقى في قائمة اليد */ }
       }
     }

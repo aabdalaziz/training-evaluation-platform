@@ -14,6 +14,7 @@ import { createClient } from '@supabase/supabase-js';
 import { runAi, logAi } from '../../../lib/ai/athar';
 import { eventsFor, upcomingEvents, EVENTS, FAMILIES } from '../../../lib/portal/lexicon';
 import type { CalendarEvent } from '../../../lib/portal/lexicon';
+import { delegateFromHeaders } from '../../../lib/portal/oauth';
 import { CASE_BANK, pickSeed, seedToCase, buildCasePrompt, parseCase, localEvaluate, buildEvalPrompt, parseEval, streakOf, eventLine, MIN_RESPONSE_CHARS, MAX_RESPONSE_CHARS, DOMAIN_OF_DAY, dayIndexOf, whatIfFor, buildWhatIfPrompt, parseWhatIf, evaluateRound2, crowdOf, crowdLine } from '../../../lib/portal/daily-case';
 import type { DailyCase, CaseEvaluation, WhatIf, Round2 } from '../../../lib/portal/daily-case';
 
@@ -29,6 +30,7 @@ async function ctx(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!URL_ || !ANON || !SERVICE) return { error: bad('إعدادات الخادم غير مكتملة', 500) };
   const db = createClient(URL_, SERVICE, { auth: { persistSession: false } });
+  const dg = delegateFromHeaders(req.headers, process.env); if (dg && dg.scopes.includes('daily:write')) return { db, user: { id: dg.id, email: dg.email } as null | { id: string; email: string } }; // P20: وكيل مفوَّض شخصيًا
   const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token) return { db, user: null as null | { id: string; email: string } };
   const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } });

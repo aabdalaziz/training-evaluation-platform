@@ -10,7 +10,7 @@
  *  POST (طاقم) { action:'refresh' }                   → حساب لقطة جديدة الآن
  *  POST (طاقم) { action:'draft', quarter, editorial_ar, suppressed[] } → حفظ مسودة العدد (من آخر لقطة)
  *  POST (طاقم) { action:'publish', quarter }          → اعتماد ونشر: تجميد البيانات + توقيع VC (إن وُجد المفتاح) + تسجيل في portal_vc_issuances (kind=dataset)
- *  POST (مدير جهة) { action:'org_prefs', org, watch?, public? } → «أبلغني حين يتغيّر طقس قطاعي» / «مساهم في المرصد»
+ *  POST (مدير جهة) { action:'org_prefs', org, watch?, public? } → «أبلغني حين يتغيّر مؤشر أداء قطاعي» / «مساهم في المرصد»
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';

@@ -22,7 +22,17 @@ function Inner() {
         <span className="gl-kicker"><Icon name="globe" size={14} /> أَثَر للوكلاء · المكتب الزجاجي</span>
         <h1>وكيلك الذكي مرحَّب به هنا — ويرى الجميع ما يفعل</h1>
         <p>في 2026 لا يتصفح مدير التدريب موقعنا دائمًا؛ وكيله يفعل. لذلك بنينا لأَثَر بابًا للوكلاء: يكتشف البرامج، يسأل <b>قاعدة الأدلة المؤسسية</b> «أي برنامج أثبت فعلًا رفع هذه المهارة؟»، يطلب عرضًا، يحجز، ويتحقق من شهادة. وكل التزام — سعر أو مقعد — يمرّ على إنسان قبل أن يصبح وعدًا. جدران هذا المكتب زجاجية: سجلّ التعاملات عام ومجهّل.</p>
-        <div className="gl-actions"><a className="pt-btn gold" href="#tools">الأدوات الثماني</a><a className="pt-btn light" href="/.well-known/ai-plugin.json" target="_blank" rel="noreferrer"><Icon name="link" size={14} /> بطاقة الاكتشاف</a><a className="pt-btn light" href="/api/agent" target="_blank" rel="noreferrer">/api/agent</a></div>
+        <div className="gl-actions"><a className="pt-btn gold" href="#mcp">أضف أَثَر إلى مساعدك (MCP)</a><a className="pt-btn light" href="#tools">الأدوات</a><a className="pt-btn light" href="/.well-known/ai-plugin.json" target="_blank" rel="noreferrer"><Icon name="link" size={14} /> بطاقة الاكتشاف</a><a className="pt-btn light" href="/api/agent" target="_blank" rel="noreferrer">/api/agent</a></div>
+      </section>
+
+      <section className="gl-card gl-mcp" id="mcp" data-testid="mcp-section">
+        <div className="gl-livehead"><h2><Icon name="link" size={16} /> سفارة أَثَر — خادم MCP رسمي</h2><span>Model Context Protocol · 2026-07-28 + توافق خلفي</span></div>
+        <p>لا تحتاج برمجة خاصة بعد اليوم: أي مساعد يدعم MCP (ChatGPT · Claude · Cursor · وكلاء جهتك) يضيف أَثَر بلصق رابط واحد — فيرى الأدوات نفسها، ويتحقق من الشهادات، ويقرأ <b>مؤشر الأداء</b> من المرصد، ويطلب عرض سعر ينتظر إنسانًا. والمتعلم يمنح مساعده <b>أدوات «أنا»</b> (محفظتي · موقف اليوم معي · مهامي) بشاشة موافقة عربية ونطاقات دقيقة يبطلها متى شاء من <Link href="/me/agents">وكلائي</Link>.</p>
+        <div className="gl-urls">
+          <div><small>مفوَّض (تفويض شخصي OAuth 2.1 أو مفتاح جهة)</small><code dir="ltr">{site}/mcp</code><button type="button" className="pt-btn light small" onClick={() => { navigator.clipboard?.writeText(`${site}/mcp`); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>{copied ? 'نُسخ' : 'نسخ'}</button></div>
+          <div><small>عام بلا هوية (اكتشاف · تحقق · مؤشر الأداء)</small><code dir="ltr">{site}/mcp/public</code></div>
+        </div>
+        <ul className="gl-mcp-list"><li><b>الاكتشاف الآلي:</b> <code dir="ltr">/.well-known/oauth-protected-resource/mcp</code> → <code dir="ltr">/.well-known/oauth-authorization-server</code> (PKCE S256 · resource indicators · Client ID Metadata Documents · تسجيل ديناميكي للتوافق)</li><li><b>الطبقات:</b> عام (60 نداءً/يوم لكل عنوان) · جهة (حسب مفتاحها) · شخصي (500/يوم لكل تفويض) — وكل نداء يظهر خلف الزجاج أعلاه.</li><li><b>الموارد:</b> <code dir="ltr">athar://observatory/latest</code> · <code dir="ltr">athar://programs/open</code> · <code dir="ltr">athar://did</code> · <code dir="ltr">athar://lexicon</code> · <b>المطالبات:</b> رشّح لي برنامجًا بدليل · تحقق قبل التوظيف · موجز مؤشر الأداء · درّبني على موقف اليوم.</li></ul>
       </section>
 
       <section className="gl-two">
@@ -78,5 +88,6 @@ const CSS = `
 .gl-badge{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 8px}.gl-badge.r{background:#e6f4f1;color:#0b8a83}.gl-badge.w{background:#fdf6e3;color:#9a6b00}
 .gl-steps{margin:0;padding-inline-start:20px;font-size:14px;color:#1e293b;line-height:1.9}.gl-steps a{color:#0b8a83}
 .gl-code pre{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:14px;font-size:12.5px;line-height:1.7;overflow:auto;text-align:left;margin:0 0 10px}
+.gl-mcp{border-top:4px solid #c9a24b}.gl-mcp p{margin:6px 0 10px;font-size:14px;color:#1e293b;line-height:1.9}.gl-mcp b{color:#0f2a4e}.gl-urls{display:grid;gap:8px}.gl-urls div{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.gl-urls small{color:#64748b;font-size:12px;min-width:220px}.gl-urls code{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:7px 12px;font-size:13px}.gl-mcp-list{margin:12px 0 0;padding-inline-start:18px;font-size:13px;color:#334155;line-height:1.9}
 .gl-foot{text-align:center;color:#64748b;font-size:13px}.gl-foot a{color:#0b8a83}
 `;

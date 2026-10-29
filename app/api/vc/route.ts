@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import { normalizeSite } from '../../../lib/portal/open';
 import { displayLevel, randomCode } from '../../../lib/portal/profile';
 import { buildCredentialDoc, buildSnapshotDoc, buildStatusListDoc, didWeb, didWebUrl, documentDigest, keyFingerprint, multikey, snapshotCode, type SnapshotLevel, type VerifyCheck } from '../../../lib/portal/vc';
+import { delegateFromHeaders } from '../../../lib/portal/oauth';
 import { SKILL_META_COLS, encodeStatusList, ensureKeyRow, generateSeed, keyFromSeed, localResolver, sha256, signAndStoreCredential, signDocument, signedStatusList, signerFromEnv, statusBit, verifyDocument, type KeyResolver, type Signer } from '../../../lib/portal/vc-server';
 
 export const runtime = 'nodejs';
@@ -33,6 +34,7 @@ const ISS_COLS = 'id,code,kind,credential_id,user_id,email,full_name,title_ar,ki
 
 function service() { const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY; if (!URL_ || !SERVICE) return null; return createClient(URL_, SERVICE, { auth: { persistSession: false } }); }
 async function who(req: Request, db: any): Promise<{ id: string; email: string; name: string; staff: boolean } | null> {
+  const dg = delegateFromHeaders(req.headers, process.env); if (dg && dg.scopes.includes('snapshot:issue')) return { id: dg.id, email: dg.email, name: dg.name, staff: false }; // P20: وكيل مفوَّض شخصيًا
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token || !URL_ || !ANON) return null; const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } }); const { data } = await userDb.auth.getUser(token); if (!data?.user) return null;
   const { data: prof } = await db.from('profiles').select('role,full_name').eq('id', data.user.id).maybeSingle();

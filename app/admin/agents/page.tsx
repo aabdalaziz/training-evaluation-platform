@@ -13,14 +13,16 @@ const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUA
 type KeyRow = { id: string; created_at: string; organization_id: string | null; org_name: string | null; name: string; prefix: string; scopes: Scope[]; daily_limit: number; expires_at: string | null; revoked_at: string | null; last_used_at: string | null; uses: number; note: string | null };
 type Req = { id: string; created_at: string; kind: 'quote' | 'reserve' | 'dialogue' | 'report'; payload: any; status: string; response: any; decided_at: string | null; note: string | null; org_name: string | null; key_name: string | null };
 type LogRow = { id: number; at: string; tool: string; ok: boolean; ms: number; meta: any; key_name: string | null };
-type Data = { keys: KeyRow[]; requests: Req[]; log: LogRow[]; orgs: { id: string; name_ar: string }[]; stats: { keys: number; pending: number; calls: number } };
+type Tally = { k: string; n: number }[];
+type Data = { keys: KeyRow[]; requests: Req[]; log: LogRow[]; orgs: { id: string; name_ar: string }[]; stats: { keys: number; pending: number; calls: number }; mcp?: { calls_7d: number; errors_7d: number; by_proto: Tally; by_tier: Tally; top_tools: Tally; clients: Tally; delegations_active: number; registered_clients: number; last_call: string | null } };
+const TIER_AR: Record<string, string> = { anon: 'عام (بلا هوية)', key: 'مفتاح جهة', personal: 'تفويض شخصي' };
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 const KIND = { quote: 'عرض سعر', reserve: 'حجز مقاعد', dialogue: 'غرفة حوار', report: 'تقرير' };
 const SAMPLE: Record<string, string> = { discover_programs: '{ "q": "", "limit": 5 }', skill_fit: '{ "skill": "التقويم" }', request_quote: '{ "program_id": "<id>", "seats": 25, "contact_email": "hr@org.sa" }', reserve_seats: '{ "program_id": "<id>", "participants": [{ "full_name": "نورة", "email": "n@org.sa" }], "contact_email": "hr@org.sa" }', verify_credential: '{ "code": "ATH-XXXX-XXXX" }', impact_report: '{ }', open_dialogue_room: '{ "topic": "برنامج لمعلمي المتوسطة", "contact_email": "hr@org.sa" }', request_status: '{ "request_id": "<id>" }' };
 
 export default function AdminAgentsPage() {
   const db = supabase(); const router = useRouter();
-  const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [tok, setTok] = useState(''); const [data, setData] = useState<Data | null>(null); const [tab, setTab] = useState<'requests' | 'keys' | 'log' | 'sandbox'>('requests');
+  const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [tok, setTok] = useState(''); const [data, setData] = useState<Data | null>(null); const [tab, setTab] = useState<'requests' | 'keys' | 'log' | 'sandbox' | 'embassy'>('requests');
   const [form, setForm] = useState({ name: '', organization_id: '', scopes: DEFAULT_SCOPES as Scope[], daily_limit: 200, expires_days: 365, note: '' }); const [issued, setIssued] = useState<{ key: string; name: string } | null>(null); const [busy, setBusy] = useState('');
   const [note, setNote] = useState<Record<string, string>>({}); const [sbTool, setSbTool] = useState('skill_fit'); const [sbArgs, setSbArgs] = useState(SAMPLE.skill_fit); const [sbOut, setSbOut] = useState<any>(null);
   // رمز جلسة حديث قبل كل نداء (getSession يجدّد الرمز المنتهي تلقائيًا) — كي لا تفشل العمليات بعد ترك الصفحة مفتوحة طويلًا
@@ -50,7 +52,7 @@ export default function AdminAgentsPage() {
         <PortalAdminTabs counts={{ '/admin/agents': pending.length }} />
         {error && <div className="ag-err">{error}</div>}
         <div className="ag-kpis"><span><b>{pending.length}</b> طلبًا ينتظر قرارك</span><span><b>{(data?.keys || []).filter(k => !k.revoked_at).length}</b> مفتاحًا نشطًا</span><span><b>{data?.log?.length ?? 0}</b> نداءً أخيرًا</span></div>
-        <div className="ag-tabs"><button className={tab === 'requests' ? 'on' : ''} onClick={() => setTab('requests')}>الطلبات {pending.length ? <i>{pending.length}</i> : null}</button><button className={tab === 'keys' ? 'on' : ''} onClick={() => setTab('keys')}>المفاتيح</button><button className={tab === 'log' ? 'on' : ''} onClick={() => setTab('log')}>السجل</button><button className={tab === 'sandbox' ? 'on' : ''} onClick={() => setTab('sandbox')}>جرّب كوكيل</button></div>
+        <div className="ag-tabs"><button className={tab === 'requests' ? 'on' : ''} onClick={() => setTab('requests')}>الطلبات {pending.length ? <i>{pending.length}</i> : null}</button><button className={tab === 'keys' ? 'on' : ''} onClick={() => setTab('keys')}>المفاتيح</button><button className={tab === 'log' ? 'on' : ''} onClick={() => setTab('log')}>السجل</button><button className={tab === 'sandbox' ? 'on' : ''} onClick={() => setTab('sandbox')}>جرّب كوكيل</button><button className={tab === 'embassy' ? 'on' : ''} onClick={() => setTab('embassy')} data-testid="tab-embassy">السفارة (MCP)</button></div>
 
         {tab === 'requests' && (
           <section className="ag-card" data-testid="agent-requests">
@@ -87,7 +89,21 @@ export default function AdminAgentsPage() {
 
         {tab === 'log' && (
           <section className="ag-card" data-testid="agent-log">
-            <table className="ag-table"><thead><tr><th>الوقت</th><th>الوكيل</th><th>الأداة</th><th>النتيجة</th><th>زمن</th></tr></thead><tbody>{(data?.log || []).map(l => <tr key={l.id}><td>{fmt(l.at)}</td><td>{l.meta?.sandbox ? 'تجريبي (طاقم)' : l.key_name || (l.meta?.anon ? `بلا مفتاح · ${l.meta?.ip || ''}` : '—')}</td><td><code>{l.tool}</code></td><td>{l.ok ? '✓' : `✗ ${l.meta?.denied || l.meta?.invalid || l.meta?.error || ''}`}</td><td>{l.ms} م.ث</td></tr>)}{!data?.log?.length && <tr><td colSpan={5} className="ag-muted">لا نداءات بعد.</td></tr>}</tbody></table>
+            <table className="ag-table"><thead><tr><th>الوقت</th><th>الوكيل</th><th>الأداة</th><th>النتيجة</th><th>زمن</th></tr></thead><tbody>{(data?.log || []).map(l => <tr key={l.id}><td>{fmt(l.at)}</td><td>{l.meta?.sandbox ? 'تجريبي (طاقم)' : l.key_name || (l.meta?.tier === 'personal' ? `تفويض شخصي · ${l.meta?.client || ''}` : l.meta?.anon ? `${l.meta?.transport === 'mcp' ? 'MCP عام' : 'بلا مفتاح'} · ${String(l.meta?.ip || '').startsWith('dg:') ? 'تفويض شخصي' : l.meta?.ip || ''}` : '—')}</td><td><code>{l.tool}</code></td><td>{l.ok ? '✓' : `✗ ${l.meta?.denied || l.meta?.invalid || l.meta?.error || ''}`}</td><td>{l.ms} م.ث</td></tr>)}{!data?.log?.length && <tr><td colSpan={5} className="ag-muted">لا نداءات بعد.</td></tr>}</tbody></table>
+          </section>
+        )}
+
+        {tab === 'embassy' && (
+          <section className="ag-card" data-testid="agent-embassy">
+            <h3>سفارة أَثَر — خادم MCP</h3><p className="ag-muted">أَثَر خادم MCP رسمي: <code dir="ltr">{typeof location !== 'undefined' ? location.origin : ''}/mcp</code> (مفوَّض) · <code dir="ltr">/mcp/public</code> (عام). المتعلمون يفوّضون مساعديهم من شاشة الموافقة ويبطلون من «وكلائي»؛ الجهات تستخدم مفاتيحها نفسها.</p>
+            <div className="ag-kpis"><span><b>{data?.mcp?.calls_7d ?? 0}</b> نداءً خلال 7 أيام</span><span><b>{data?.mcp?.errors_7d ?? 0}</b> مرفوض/خطأ</span><span><b>{data?.mcp?.delegations_active ?? 0}</b> تفويضًا شخصيًا نشطًا</span><span><b>{data?.mcp?.registered_clients ?? 0}</b> عميلًا مسجَّلًا</span><span><b>{data?.mcp?.last_call ? fmt(data.mcp.last_call) : '—'}</b> آخر نداء</span></div>
+            <div className="ag-grid3">
+              <div><h4>نسخ البروتوكول</h4>{(data?.mcp?.by_proto || []).length ? (data?.mcp?.by_proto || []).map(x => <div key={x.k} className="ag-row"><code dir="ltr">{x.k}</code><b>{x.n}</b></div>) : <p className="ag-muted">لا نداءات بعد.</p>}</div>
+              <div><h4>الطبقات</h4>{(data?.mcp?.by_tier || []).map(x => <div key={x.k} className="ag-row"><span>{TIER_AR[x.k] || x.k}</span><b>{x.n}</b></div>)}</div>
+              <div><h4>الأدوات الأكثر نداءً</h4>{(data?.mcp?.top_tools || []).map(x => <div key={x.k} className="ag-row"><code dir="ltr">{x.k}</code><b>{x.n}</b></div>)}</div>
+            </div>
+            {(data?.mcp?.clients || []).length > 0 && <div><h4>العملاء (المساعدون)</h4>{(data?.mcp?.clients || []).map(x => <div key={x.k} className="ag-row"><span>{x.k}</span><b>{x.n}</b></div>)}</div>}
+            <p className="ag-muted">الاكتشاف: <code dir="ltr">/.well-known/oauth-protected-resource/mcp</code> · <code dir="ltr">/.well-known/oauth-authorization-server</code> · التسجيل الديناميكي <code dir="ltr">/oauth/register</code>. القاعدة ثابتة: الكتابة المؤسسية تنتظر اعتمادًا بشريًا هنا في تبويب «الطلبات».</p>
           </section>
         )}
 
@@ -109,6 +125,7 @@ const CSS = `
 .ag-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}
 .ag-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.ag-head p{margin:0;color:#64748b;font-size:14px;line-height:1.7;max-width:900px}.ag-head a{color:#0b8a83}.ag-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b8a83}
 .ag-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px}.ag-card h3{margin:0 0 8px;font-size:16px;color:#0f2a4e}.ag-err{color:#b91c1c;font-size:13px}.ag-muted{color:#64748b;font-size:13.5px}
+.ag-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px}.ag-grid3 h4,.ag h4{margin:0 0 6px;font-size:14px;color:#0f2a4e}.ag-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#334155;padding:5px 0;border-bottom:1px dashed #e2e8f0}.ag-row b{color:#0f2a4e}
 .ag-kpis{display:flex;gap:16px;font-size:14px;color:#475569;flex-wrap:wrap}.ag-kpis b{color:#0f2a4e;font-size:20px;margin-inline-end:4px}
 .ag-tabs{display:flex;gap:6px;flex-wrap:wrap}.ag-tabs button{border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#475569;cursor:pointer}.ag-tabs button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.ag-tabs i{font-style:normal;background:#c9a24b;color:#0f2a4e;border-radius:999px;padding:0 7px;font-size:11px;margin-inline-start:4px}
 .ag-req{border:1px solid #e2e8f0;border-radius:14px;padding:12px 14px;margin-bottom:10px}.ag-req.pending{border-color:#c9a24b;background:#fffdf7}.ag-reqhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ag-reqhead b{color:#0f2a4e}.ag-reqhead small{color:#64748b;font-size:12px}

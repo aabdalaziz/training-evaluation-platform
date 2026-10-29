@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // أَثَر — منظومة التحسين المستمر القائمة على الأدلة «الحلقة المغلقة» (P15) — منطق نقي بلا شبكة
 //   الذاكرة (قاعدة الأدلة) تُغذّي: هندسة البرامج (فجوات حقيقية) · الميسِّر الحي (بطاقة الصف) · المهمات (إغلاق أضعف قناة)
-//   · الجهات («طقس القدرة» = توقّع القدرة المؤسسية 90 يومًا) · ثم تتعلم من قرارات الإنسان.
+//   · الجهات («مؤشر الأداء» = توقّع القدرة المؤسسية 90 يومًا) · ثم تتعلم من قرارات الإنسان.
 //   كل اقتراح يحمل برهانه، أو يقول «لا دليل كافٍ بعد». الإنسان يعتمد.
 import type { Graph, GraphEdge } from './evidence';
 import { PUBLIC_MIN_PEOPLE, CHANNEL_LABEL, evN, peopleN, learnerN, arCount } from './evidence';
@@ -91,7 +91,7 @@ export function classSummary(cards: LearnerCard[], sessionSkills: string[], skil
   return { never, one_channel: oneChannel, no_evidence: noEvidence, hints: hints.slice(0, 3) };
 }
 
-// ---------------------------------------------------------------- 5) توقّع القدرة المؤسسية («طقس القدرة»): نافذتان 45 يومًا
+// ---------------------------------------------------------------- 5) توقّع القدرة المؤسسية («مؤشر الأداء»): نافذتان 45 يومًا
 export type Trend = 'rising' | 'steady' | 'fading' | 'unknown';
 export type Forecast = { skill_id: string; name_ar: string; trend: Trend; slope: number; recent_weight: number; prior_weight: number; evidence: number; people: number; steps: { title_ar: string; why_ar: string; kind: 'mission' | 'session' | 'program' | 'simulation' }[] };
 export const TREND_AR: Record<Trend, string> = { rising: 'ترتفع', steady: 'تستقر', fading: 'تذوي', unknown: 'لا دليل كافٍ' };

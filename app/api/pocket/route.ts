@@ -20,6 +20,7 @@ import { submitMission, MISSION_COLS } from '../../../lib/portal/missions-cron';
 import { evidencePath, fileExt, MAX_UPLOAD } from '../../../lib/portal/missions';
 import type { Mission, MissionEvidence } from '../../../lib/portal/missions';
 import { LIMITS, pulseOf, type SyncResult } from '../../../lib/portal/pocket';
+import { delegateFromHeaders } from '../../../lib/portal/oauth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,7 @@ const ISS_COLS = 'id,code,kind,credential_id,user_id,email,full_name,title_ar,ki
 
 function svc() { const U = process.env.NEXT_PUBLIC_SUPABASE_URL; const S = process.env.SUPABASE_SERVICE_ROLE_KEY; if (!U || !S) return null; return createClient(U, S, { auth: { persistSession: false } }); }
 async function who(req: Request, db: any): Promise<{ id: string; email: string; name: string; staff: boolean } | null> {
+  const dg = delegateFromHeaders(req.headers, process.env); if (dg && dg.scopes.includes('wallet:read')) return { id: dg.id, email: dg.email, name: dg.name, staff: false }; // P20: وكيل مفوَّض شخصيًا
   const U = process.env.NEXT_PUBLIC_SUPABASE_URL; const A = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!token || !U || !A) return null; const userDb = createClient(U, A, { global: { headers: { Authorization: `Bearer ${token}` } } }); const { data } = await userDb.auth.getUser(token); if (!data?.user) return null;
   const { data: prof } = await db.from('profiles').select('role,full_name').eq('id', data.user.id).maybeSingle();

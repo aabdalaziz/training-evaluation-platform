@@ -46,6 +46,7 @@ function Home() {
       <DailyCase lang={lang} tok={tok} />
       <Advisor lang={lang} tok={tok} />
       <Memory lang={lang} />
+      <Embassy lang={lang} />
       <Dialogue lang={lang} tok={tok} sessions={sessions} now={now} />
       <section className="pt-sec hm-trace">
         <div className="pt-wrap">
@@ -257,6 +258,15 @@ function Advisor({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
 /* ------------------------------------------------ جلسة حوار: محاكاة فورية + الجلسة القادمة ------------------------------------------------ */
 // P14-أ — «الذاكرة الحية»: ثلاثة خيوط أثر مجهّلة لليوم من قاعدة الأدلة المؤسسية (مجموعات ≥ 5 فقط · بلا أسماء) + درس الأسبوع المعتمد. تختفي كليًا إن لم تكن هناك خيوط.
 type MemThread = { icon: 'spark' | 'compass' | 'target'; text_ar: string; text_en: string };
+function Embassy({ lang }: { lang: 'ar' | 'en' }) {
+  const ar = lang === 'ar';
+  return (
+    <section className="pt-sec hm-embsec"><div className="pt-wrap">
+      <a className="hm-embassy" href="/agents#mcp" data-testid="home-embassy"><span className="hm-embk"><Icon name="link" size={14} /> {ar ? 'سفارة أَثَر · MCP' : 'Athar Embassy · MCP'}</span><b>{ar ? 'أَثَر داخل مساعدك الذكي' : 'Athar inside your AI assistant'}</b><p>{ar ? 'الصق رابطًا واحدًا في ChatGPT أو Claude أو وكيل جهتك: يتحقق من الشهادات، يقرأ مؤشر الأداء، يرشّح برنامجًا بدليل — ومحفظتك بإذنك أنت.' : 'Paste one link into ChatGPT, Claude or your organization’s agent: verify credentials, read the performance index, recommend by evidence — and your wallet, with your consent.'}</p><code dir="ltr">athar-portal.vercel.app/mcp</code></a>
+    </div></section>
+  );
+}
+
 function Memory({ lang }: { lang: 'ar' | 'en' }) {
   const ar = lang === 'ar'; const [d, setD] = useState<null | { threads: MemThread[]; lesson: { week: string; title_ar: string; body_ar: string } | null; nodes: number }>(null); const [shown, setShown] = useState(0);
   useEffect(() => { fetch('/api/evidence?threads=1', { cache: 'no-store' }).then(r => r.json()).then(j => { if (j?.success && Array.isArray(j.threads) && j.threads.length) setD({ threads: j.threads.slice(0, 3), lesson: j.lesson || null, nodes: j.nodes || 0 }); }).catch(() => {}); }, []);
@@ -367,6 +377,7 @@ const CSS = `
 .hm-badge{font-size:11.5px;font-weight:900;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.2)}.hm-stagecard h3{margin:0;font-size:21px;line-height:1.4;font-weight:900}.hm-stagecard p{margin:0;font-size:13.5px;opacity:.9;line-height:1.7}
 .hm-cd{display:flex;gap:8px;margin:4px 0}.hm-cd span{display:grid;justify-items:center;min-width:52px;padding:6px 4px;border-radius:10px;background:rgba(255,255,255,.15)}.hm-cd b{font-size:20px;font-weight:900;line-height:1}.hm-cd small{font-size:10.5px;opacity:.85}
 .hm-stagefoot{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.hm-stagefoot button{text-align:start;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:7px 8px;color:#fff;cursor:pointer;font:inherit;display:grid;gap:2px;min-width:0}.hm-stagefoot button.on{background:rgba(255,255,255,.14)}.hm-stagefoot small{font-size:10px;color:#c9a24b;font-weight:800}.hm-stagefoot span{font-size:11.5px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.hm-embsec{padding:0 0 36px}.hm-embassy{display:grid;gap:6px;padding:16px 18px;border-radius:16px;background:linear-gradient(135deg,#0f2a4e,#0b8a83);color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.18)}.hm-embassy b{font-size:16px}.hm-embassy p{margin:0;font-size:13.5px;line-height:1.8;color:#e2e8f0;max-width:760px}.hm-embk{font-size:12px;font-weight:900;color:#f6e2a8;display:inline-flex;gap:6px;align-items:center}.hm-embassy code{justify-self:start;background:rgba(255,255,255,.12);border-radius:8px;padding:4px 10px;font-size:12.5px;color:#fff}
 .hm-sechead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:26px}.hm-sechead h2{margin:4px 0 0;font-size:28px;color:#0f2a4e;font-weight:900}.hm-sechead.light h2{color:#fff}.hm-sechead.light .pt-kicker{color:#c9a24b}
 .hm-streak{display:grid;justify-items:center;padding:10px 18px;border-radius:16px;background:#fff7e6;border:1px solid #f1dfae}.hm-streak b{font-size:28px;font-weight:900;color:#9a6b00;line-height:1}.hm-streak span{font-size:12px;color:#9a6b00}.hm-streak small{font-size:11px;color:#64748b}
 .hm-skel{height:220px;border-radius:20px;background:linear-gradient(90deg,#eef2f7,#f8fafc,#eef2f7);background-size:200% 100%;animation:hmSk 1.4s infinite}@keyframes hmSk{to{background-position:-200% 0}}

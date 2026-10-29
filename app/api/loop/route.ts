@@ -4,7 +4,7 @@
  *  GET  (موظفون)                       → { suggestions, learned, forecasts, stats }         لوحة /admin/loop
  *  GET  ?gaps=1 (موظفون)               → { gaps }                                            فجوات حقيقية لهندسة البرامج («من الذاكرة»)
  *  GET  ?session=<id> (موظف/مدرب/منشئ) → { cards, summary, focus, skills }                 بطاقة الصف للميسِّر (مفاتيح مجهولة، بلا درجات)
- *  GET  ?org=<id> (موظف/عضو مؤكَّد)    → { forecasts, line, members, events, steps }        «طقس القدرة» لصفحة الجهة
+ *  GET  ?org=<id> (موظف/عضو مؤكَّد)    → { forecasts, line, members, events, steps }        «مؤشر الأداء» لصفحة الجهة
  *  POST { action:'decide', id, status:'accepted'|'dismissed', note?, template_id?, emails? } → قرار بشري + أثر (مسودة برنامج / مهمات)
  *  POST { action:'run', dry? } (موظفون) → تشغيل الدورة الآن
  *  المبدأ: الذاكرة تقترح، الإنسان يقرّر، والأثر يُسجَّل — وحين لا يكفي الدليل تقول الشاشة ذلك صراحة.
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const u = new URL(req.url); const org = u.searchParams.get('org'); const session = u.searchParams.get('session'); const gaps = u.searchParams.get('gaps');
 
-  // ---- طقس القدرة لجهة
+  // ---- مؤشر الأداء لجهة
   if (org) {
     if (!UUID.test(org)) return bad('معرّف غير صالح');
     if (!user.staff && !(await isOrgMember(db, user, org))) return bad('لست عضوًا مؤكَّدًا في هذه الجهة', 403);

@@ -40,8 +40,18 @@ export async function GET(req: Request) {
     db.from('portal_organizations').select('id,name_ar,sector').eq('active', true).order('name_ar').limit(300),
   ]);
   const orgName = new Map(((orgs || []) as any[]).map(o => [o.id, o.name_ar])); const keyName = new Map(((keys || []) as any[]).map(k => [k.id, k.name]));
+  // P20 — «السفارة»: نداءات MCP في 7 أيام (توزيع نسخ البروتوكول والطبقات والأدوات) + التفويضات الشخصية النشطة
+  const since7 = new Date(Date.now() - 7 * 86400000).toISOString();
+  const [{ data: mcpRows }, { count: delegations }, { count: clients }] = await Promise.all([
+    db.from('portal_agent_log').select('tool,ok,meta,at').contains('meta', { transport: 'mcp' }).gte('at', since7).order('at', { ascending: false }).limit(5000),
+    db.from('portal_delegations').select('id', { count: 'exact', head: true }).is('revoked_at', null),
+    db.from('portal_oauth_clients').select('id', { count: 'exact', head: true }),
+  ]);
+  const tally = (rows: any[], f: (r: any) => string | null) => { const m: Record<string, number> = {}; for (const r of rows) { const k = f(r); if (k) m[k] = (m[k] || 0) + 1; } return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({ k, n })); };
+  const mr = (mcpRows || []) as any[];
+  const mcp = { calls_7d: mr.length, errors_7d: mr.filter(r => !r.ok).length, by_proto: tally(mr, r => r.meta?.proto || null), by_tier: tally(mr, r => r.meta?.tier || (r.meta?.anon ? 'anon' : r.meta?.key ? 'key' : null)), top_tools: tally(mr, r => r.tool).slice(0, 8), clients: tally(mr, r => r.meta?.client || null).slice(0, 8), delegations_active: Number(delegations || 0), registered_clients: Number(clients || 0), last_call: mr[0]?.at || null };
   const pending = ((requests || []) as any[]).filter(r => r.status === 'pending'); const rest = ((requests || []) as any[]).filter(r => r.status !== 'pending');
-  return NextResponse.json({ success: true, keys: ((keys || []) as any[]).map(k => ({ ...k, org_name: orgName.get(k.organization_id) || null })), requests: [...pending, ...rest].map(r => ({ ...r, org_name: orgName.get(r.organization_id) || null, key_name: keyName.get(r.key_id) || null })), log: ((log || []) as any[]).map(l => ({ ...l, key_name: keyName.get(l.key_id) || null })), orgs: orgs || [], scopes: ALL_SCOPES, stats: { keys: (keys || []).length, pending: pending.length, calls: (log || []).length } });
+  return NextResponse.json({ success: true, keys: ((keys || []) as any[]).map(k => ({ ...k, org_name: orgName.get(k.organization_id) || null })), requests: [...pending, ...rest].map(r => ({ ...r, org_name: orgName.get(r.organization_id) || null, key_name: keyName.get(r.key_id) || null })), log: ((log || []) as any[]).map(l => ({ ...l, key_name: keyName.get(l.key_id) || null })), orgs: orgs || [], scopes: ALL_SCOPES, stats: { keys: (keys || []).length, pending: pending.length, calls: (log || []).length }, mcp });
 }
 
 export async function POST(req: Request) {
