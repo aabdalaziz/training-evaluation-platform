@@ -21,6 +21,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/sim', label: 'المحاكيات وأثير', icon: 'play' },
   { href: '/admin/twin', label: 'توأم المؤسسة', icon: 'star' },
   { href: '/admin/missions', label: 'مهمات العمل', icon: 'flag' },
+  { href: '/admin/directory', label: 'هيئة أَثَر', icon: 'certificate' },
   { href: '/admin/contracts', label: 'عقود الأثر', icon: 'scale' },
   { href: '/admin/program-engineering', label: 'هندسة البرامج التدريبية', icon: 'compass' },
   { href: '/admin/media', label: 'الأداء المُشاهَد', icon: 'play' },
