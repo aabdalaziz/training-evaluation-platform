@@ -3,7 +3,7 @@ name: athar-feature
 description: Build a complete feature phase for the Athar portal (Next.js 14 + Supabase) end-to-end — SQL, pure lib, API route, learner/public/admin pages, MCP tool, vault registry, cron hook, tests, mock fixtures, Playwright E2E, one-zip GitHub delivery. Use when asked to add a new module/phase (P30+) to github.com/aabdalaziz/training-evaluation-platform. Updated after P29 (mutual pledge — the first two-party feature) and P29-أ (actionable gate screens).
 ---
 
-# Athar — build a feature phase (post-P30 pattern)
+# Athar — build a feature phase (post-P31 pattern)
 
 ## Order of work (never reorder)
 1. **Proposal first** (`P<N>-PROPOSAL-AR.txt`, Arabic, 1–2 pages): the idea in one sentence, the five "movements" of the experience, what stays private, what gets signed, what the agent may read, what the cron does, the DB tables, the constants. Wait for approval. Read `athar-product` before writing it.
@@ -48,6 +48,13 @@ description: Build a complete feature phase for the Athar portal (Next.js 14 + S
 - Deep links from notifications must be honoured by the target page: `/org` ignored `?org=<id>` for years (opened the first org); read `window.location.search` in the first effect and pre-select (960).
 - **WCAG 2.2 AA is part of done** (standing rule since P30): a 3 px `:focus-visible` ring on every control of the new CSS prefix, text + `aria-label` beside colour dots, `role=status` messages with a labelled close button and no auto-timeout, `radiogroup` with `aria-label`, ≥ 24 px targets. The E2E asserts the dot text and tabs into the component to check `outlineWidth === '3px'`.
 - Notify **both** parties on the moment that completes a shared artifact (second signature, joint decision) — P30 first notified only the party who did *not* act; assert both `to_email`s in E2E.
+- A public-facing registry (P31 `lib/directory`): one row, two faces — never two tables for «experts» and «trainers». Keep three views in the pure lib: `publicView` (strips contact/staff/meta, applies per-section visibility), `ownerView` (no `staff_only`), staff (everything). Derived «witness» lines come from records only; the member may hide the block, never edit a line. Order public lists by `updated_at desc, name` — no stars/ranking/featured.
+- Labels for closed-list codes (services, modes, domains) must reach **every** surface that prints them: the public page, the owner form groups and the admin list (P31 shipped raw `pedagogy`/`consulting` twice before E2E screenshots caught it). Return `*_ar` maps from the API rather than translating in each page.
+- Scope "no email/phone" assertions to the component (`dir-card`, `vc-summary`), never the whole body — the footer contains `info@athar-portal.sa`.
+- Admin lists with a default filter (`submitted`) hide rows in E2E after the flow finished — click «الكل» (last `.am-filters` button) before waiting for rows.
+- Anything copied to a public bucket on approval must be removed on suspension/withdrawal/erasure and re-published on reinstatement; assert `photo_public_path` null/non-null on both transitions.
+- Camera/file inputs (P31-ب): hidden `<input type=file>` keeps its `data-testid` (Playwright `set_input_files` works on hidden inputs); «التقط» uses `getUserMedia` on fine pointers and `capture="user"` on coarse ones; E2E launches Chromium with `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream` and a context `permissions=['camera']`, waits for `video.videoWidth > 0`, then snaps to a JPEG `File`.
+- AI that fills a form (P31-ب `parse_cv`): the API returns `fields` + `filled_keys` + `notes_ar` + `source`; the page merges (empty-only by default, `overwrite` opt-in), keeps a `prevForm` ref for «تراجع», and never saves. Add the purpose to `AiPurpose`, `AI_LIMITS`, `AI_PURPOSE_LABEL` and the `/ai` services table; log counts only. Attachments go through `runAi({ attachments })`; Word is unpacked by `docxText` (no npm). Vercel body limit 4.5 MB → cap files at 3 MB before base64.
 
 ## Delivery message (Arabic)
 Table (number · path · role), QA line (tsc · tests N/N · build · E2E N/N), "ideas that emerged" (the owner welcomes them), then the 3 steps (SQL with expected counts → upload zip → verify URLs). After «تم»: verify every file with `cmp` against `raw.githubusercontent.com/<sha>/<path>` (URL-encode `[`), check the Vercel status API, smoke-test live routes, and close the phase explicitly with the next file number.
