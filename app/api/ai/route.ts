@@ -30,11 +30,11 @@ async function ctx(req: Request, optional = false) {
   if (!URL_ || !ANON || !SERVICE) return { error: bad('إعدادات الخادم غير مكتملة', 500) };
   const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   const db = createClient(URL_, SERVICE, { auth: { persistSession: false } });
-  if (!token) return optional ? { db, user: null, role: '', staff: false } : { error: bad('يرجى تسجيل الدخول أولاً', 401) };
+  if (!token) return optional ? { db, userDb: db, user: null, role: '', staff: false } : { error: bad('يرجى تسجيل الدخول أولاً', 401) };
   const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } });
-  const { data } = await userDb.auth.getUser(token); if (!data?.user) return optional ? { db, user: null, role: '', staff: false } : { error: bad('جلسة المستخدم غير صالحة', 401) };
+  const { data } = await userDb.auth.getUser(token); if (!data?.user) return optional ? { db, userDb: db, user: null, role: '', staff: false } : { error: bad('جلسة المستخدم غير صالحة', 401) };
   const { data: prof } = await userDb.from('profiles').select('role,full_name').eq('id', data.user.id).maybeSingle(); const role = String((prof as any)?.role || '').toUpperCase();
-  return { db, user: { id: data.user.id, email: String(data.user.email || '').toLowerCase(), name: String((prof as any)?.full_name || data.user.user_metadata?.full_name || '') }, role, staff: STAFF.includes(role) };
+  return { db, userDb, user: { id: data.user.id, email: String(data.user.email || '').toLowerCase(), name: String((prof as any)?.full_name || data.user.user_metadata?.full_name || '') }, role, staff: STAFF.includes(role) };
 }
 async function isOrgAdmin(db: any, orgId: string, user: { id: string; email: string }) {
   const { data } = await db.from('portal_org_members').select('id').eq('organization_id', orgId).eq('role', 'org_admin').eq('status', 'confirmed').or(`user_id.eq.${user.id},email.ilike.${user.email}`).limit(1);
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
   if (purpose === 'org_brief') {
     const orgId = String(body.org_id || ''); if (!orgId) return bad('معرّف الجهة مطلوب');
     if (!(c.staff || await isOrgAdmin(db, orgId, user))) return bad('غير مصرّح — أنت لست مدير هذه الجهة', 403);
-    const { data: d, error } = await db.rpc('portal_org_dashboard', { p_org: orgId }); if (error || !d?.ok) return bad(error?.message || d?.error || 'تعذّر تحميل لوحة الجهة', 500);
+    const { data: d, error } = await c.userDb.rpc('portal_org_dashboard', { p_org: orgId }); /* بجلسة المستخدم: الدالة تتحقق من auth.uid() */ if (error || !d?.ok) return bad(error?.message || d?.error || 'تعذّر تحميل لوحة الجهة', 500);
     const k = orgKpis(d); const ts = topSkills(d, 10);
     const byProg = new Map<string, { name: string; learners: number; present: number; sessions: number }>();
     for (const e of (d.enrollments || []) as any[]) { if (e.status !== 'approved') continue; const x = byProg.get(e.program_id) || { name: String(e.program || e.program_id), learners: 0, present: 0, sessions: 0 }; x.learners++; x.present += Number(e.attendance?.present) || 0; x.sessions += Number(e.attendance?.sessions) || 0; byProg.set(e.program_id, x); }
