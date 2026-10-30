@@ -2,7 +2,7 @@
 
 > دستور البناء لأي وكيل برمجي أو مطوّر يعمل على هذا المستودع. اقرأه كاملًا قبل أي تعديل.
 > Build constitution for any coding agent or developer. Read fully before changing anything.
-> Last updated: 2026-10-30 (after P26 «رحلة الجهة»). Production HEAD at that time: `f304247`.
+> Last updated: 2026-10-30 (after P27 «أفق الممارس»). Production HEAD at that time: `ef15a89`.
 
 ## 0. Ownership — الملكية (read first)
 - All intellectual property in this repository — code, data model, UI, the brand «أَثَر / Athar · TRACE», methodologies and content — is the **exclusive property of Dr. Ahmed Mohamed Abdelaziz Badawi (د. أحمد محمد عبدالعزيز بدوي)**. See `COPYRIGHT.md` and `LICENSE`.
@@ -14,16 +14,16 @@
 ## 1. What this repository is
 - One Next.js 14 (App Router, TypeScript) + Supabase (Postgres, Auth, Storage, RLS) application deployed on Vercel (Hobby). Zero runtime npm additions since P1.
 - Two faces, one codebase:
-  - **Public portal «أَثَر»** at `/` — the institution homepage and the whole learner/organization/agent experience (P1–P26, see §6).
+  - **Public portal «أَثَر»** at `/` — the institution homepage and the whole learner/organization/agent experience (P1–P27, see §6).
   - **Evaluation platform «منصة التقويم»** — the original training-evaluation product (surveys, attendance, impact follow-up, certificates, KPIs, reports). It remains one service of the portal. Do not break it.
-- Production: https://athar-portal.vercel.app (alias: training-evaluation-platform.vercel.app). Supabase project `nybinzuqwhcctgwcimru`. 85 `portal_*` tables, all with RLS.
+- Production: https://athar-portal.vercel.app (alias: training-evaluation-platform.vercel.app). Supabase project `nybinzuqwhcctgwcimru`. 90 `portal_*` tables, all with RLS.
 - Language: Arabic-first (RTL) with English parity on the public portal. Admin and learner pages are Arabic. **Terminology matters**: official professional names in contracts/certificates/admin UI; narrative names only on the homepage, `/2062` and «أثير». Renames already applied: «هندسة البرامج التدريبية» (not مصنع), «الميسِّر» (not الطيار المساعد), «مؤشر الأداء» (not طقس).
 - Companion documents: `docs/OPERATIONS-AR.md` (legacy platform ops), `docs/SHIELD-AR.md` (security posture), `docs/RELEASE-*.md` (phase release notes), `supabase/migrations/*` (every SQL ever applied, in order).
 
 ## 2. Non-negotiable rules
 1. **No new npm dependencies.** Use `fetch`, Canvas, WebCrypto/`node:crypto`, built-ins. PDFs on Canvas (`lib/certificates/render.ts`), Excel via `lib/export/xlsx.ts`, Ed25519 via `lib/portal/vc-server.ts`.
-2. **No new Vercel cron jobs and no new env vars** unless the owner approves explicitly. Scheduled work piggybacks on the daily `/api/followups/send` chain (see `runCouncils`, `runJourney`, vault/observatory/outreach runners) — add a `runX(db, { dry, site })` and wire it there.
-3. **Whole-file deliverables.** The owner edits only through the GitHub website. Deliver one code zip with `app/ lib/ tests/` at its root (dragged into `/upload/main` → one commit), SQL as a separate `.sql` + `.txt` twin, and Arabic step guide. Dot-dirs (`.agents`, `.well-known`) go through `/new/main?filename=` or `/edit/main/...` links. Numbering is global and sequential (next number is stated in the latest `MANIFEST-P*-AR.txt`; after P26 it is **880**).
+2. **No new Vercel cron jobs and no new env vars** unless the owner approves explicitly. Scheduled work piggybacks on the daily `/api/followups/send` chain (see `runCouncils`, `runJourney`, `runOrgJourney`, `runHorizon`, vault/observatory/outreach runners) — add a `runX(db, { dry, site })` and wire it there.
+3. **Whole-file deliverables.** The owner edits only through the GitHub website. Deliver one code zip with `app/ lib/ tests/` at its root (dragged into `/upload/main` → one commit), SQL as a separate `.sql` + `.txt` twin, and Arabic step guide. Dot-dirs (`.agents`, `.well-known`) go through `/new/main?filename=` or `/edit/main/...` links. Numbering is global and sequential (next number is stated in the latest `MANIFEST-P*-AR.txt`; after P27 it is **900**).
 4. **SQL migrations are idempotent** (`if not exists`, `create or replace`, DO blocks for constraints/policies) and end with ONE `union all` diagnostic query whose expected counts are stated in the step guide. Commit a copy under `supabase/migrations/`.
 5. **Row Level Security on every new table.** Learner rows: `user_id = auth.uid()` (+ email fallback where legacy rows have no user_id). Writes go through server routes with the service role; `revoke insert, update, delete … from anon, authenticated` when the client must never write.
 6. **Zero hydration errors.** `<style dangerouslySetInnerHTML={{ __html: CSS }} />`; client-only values start as `null` and are set in `useEffect`; page files export only the default component (+ `dynamic`/`runtime` when needed).
@@ -34,9 +34,10 @@
     - **AI assists, a human approves.** Computed levels ≠ approved levels. AI output is labelled and editable; nothing AI-written is published or stored as fact without an explicit user/staff action.
     - **No personal identifiers reach AI models.** Anonymize («عضو 1/2…») before `runAi`; declared in `/.well-known/privacy.json`.
     - **k ≥ 5 (and ≥ 2 organizations where relevant) for any aggregate shown to anyone else.** Never lower it for small groups — say «below quorum» honestly instead.
-    - **Private by default; selective disclosure; revocable.** Shares/badges/charters are Ed25519-signed OpenBadge documents (`portal_vc_issuances`, kinds `credential|snapshot|dataset|council_badge|org_charter|journey|org_journey`), verifiable at `/verify/vc?code=`, and revocation is always one click.
+    - **Private by default; selective disclosure; revocable.** Shares/badges/charters are Ed25519-signed OpenBadge documents (`portal_vc_issuances`, kinds `credential|snapshot|dataset|council_badge|org_charter|journey|org_journey|horizon`), verifiable at `/verify/vc?code=`, and revocation is always one click.
     - **Compare only with self**, never rank people or organizations.
     - **The user's own words only.** Quotes attributed to a person come from their own text; a peer's words are never attributed to them.
+    - **Derived from events, never self-reported.** Progress («الدرب») is computed live from recorded events after a signed date; no progress bars, no percentages, no «mark as done» buttons.
     - **Not «تقليدي».** The owner rejects dashboards/tables/reports as the shape of new features. Build experiences (story chapters, rooms, mirrors, councils, letters to one's future self); official terminology stays in admin/contract surfaces.
     - **Every interaction accepts text, voice or video** through the single `Channel` component (`app/components/Channel.tsx`, media in `portal_media`).
 
@@ -63,11 +64,13 @@
 | Organization impact (P24) | `lib/org-impact/*` (`auth.ts` has `svc/who/bad/siteOf`), `app/api/org/*`, `app/components/OrgImpact.tsx` | echo k=5 · 28 d · self-mirror 90 d · charter `ATH-OC` · return payment 55/20/15/10 |
 | Practitioner journey (P25) | `lib/journey/*` (`registry.ts` pure chapter builder, `load.ts`, `share.ts`, `cron.ts`), `app/api/journey`, `app/me/journey`, `app/journey/[code]` | chapters derived from events only; share `ATH-J` 12 months; time capsule 365 d; `attachPeers` adds the count-only «الفصل المشترك» from the org journey (never in the public share) |
 | Organization journey (P26) | `lib/org-journey/*` (`registry.ts` `buildOrgChapters` k=5 by quarter × kind, `load.ts`, `share.ts`, `cron.ts` `runOrgJourney`), `app/api/org/journey`, `app/components/OrgJourney.tsx` (tab `journey` in `/org`), `app/org-journey/[code]`, `/councils#yearbooks` | org_admin writes, staff reads; yearbook `ATH-OY` 12 months (one per org on the public shelf, opt-in); org capsule 365 d delivered to the org admins of that day; MCP public `org_yearbook` |
+| Practitioner horizon (P27) | `lib/horizon/*` (`registry.ts` pure: eligibility ≥3 chapters, local scenario, `proposePledges`, `buildPath`, `reviewText`, `horizonSummary`; `load.ts` `loadHorizonState`/`scenarioDraft`; `pledge.ts` Ed25519 `ATH-HZ` kind `horizon`; `cron.ts` `runHorizon`), `app/api/horizon`, `app/me/horizon` | one active horizon per user; scenario «أنا في 2036» never leaves the owner (not in VC, verify page, agent summary or org views); 3 pledge options from platform-witnessable actions, exactly one chosen; path from events after `signed_at`; day-182 single in-app nudge; day-365 review (renew → new draft horizon, archive) with 30-day window then auto-archive; journey chapters `horizon_pledged/reviewed` from events; org journey kind `pledge` (count only, k=5); MCP personal `my_horizon` |
 | Learner home | `app/me/page.tsx` | add a `me-tablink` for every new learner surface |
 | Admin tabs | `app/components/PortalAdminTabs.tsx` | add a tab for every new admin page |
 | Evaluation platform (legacy) | `app/dashboard`, `app/reports`, `app/impact`, `app/attend`, `lib/{surveys,attendance,impact,outcomes,…}` | `profiles.role` is a Postgres ENUM in prod → `upper(role::text)` |
+| Route truth | — | «كل يوم مهارة» lives on the homepage (`/#daily`), the vault page is `/me/data`, councils at `/councils`, missions `/me/missions`. There is no `/me/daily` or `/me/vault` — check `app/` before linking (bug fixed in 898–899) |
 | Icons | `lib/ui/icons.tsx` | fixed `IconName` union — type `Record<string, IconName>` maps |
-| Tests | `tests/*.test.ts` + `tests/index.ts` | `npx tsx tests/index.ts`; 443 tests after P26 |
+| Tests | `tests/*.test.ts` + `tests/index.ts` | `npx tsx tests/index.ts`; 449 tests after P27 |
 | Local QA | `tools/mock-supabase.py`, `tools/shot-p*.py` | kept in the owner's workspace (`dashboard-redesign/tools`), not in the repo |
 | Migrations | `supabase/migrations/YYYYMMDD_portal_pN.sql` | applied manually in the Supabase SQL editor; keep the folder complete |
 
@@ -77,13 +80,13 @@
 - Org admins: `portal_org_members.role='org_admin' and status='confirmed'` (`isOrgAdmin`).
 
 ## 5. Skills (detailed playbooks)
-- `.agents/skills/athar-feature/SKILL.md` — how to build a complete phase end-to-end (current pattern, post-P26).
+- `.agents/skills/athar-feature/SKILL.md` — how to build a complete phase end-to-end (current pattern, post-P27).
 - `.agents/skills/athar-product/SKILL.md` — how to design a phase that the owner will not call «تقليدي» (principles, checklists, examples).
 - `.agents/skills/athar-sql/SKILL.md` — migrations, RLS, RPCs, diagnostics.
 - `.agents/skills/athar-ui/SKILL.md` — PortalShell, `pt-*`, RTL, Canvas PDFs, known pitfalls.
 - `.agents/skills/athar-qa/SKILL.md` — tsc → tests → build → mock → Playwright → delivery verification.
 
 ## 6. Roadmap context (all LIVE unless noted)
-P1 identity · P2 catalog+enrollment · P3 payments · P4 consulting · P5 resources+skills+events · P6 live/hybrid · P7 مِعيار · P8 skill profile+orgs · P9 homepage · P10 living memory («الذاكرة الحية») · P11 program engineering · P12 simulations+missions · P13 كل يوم مهارة · أثير · channel (text/voice/video) · foresight · P14 impact threads · P15 glass office · P16 messaging (channels; activation deferred) · P17 sovereign wallet (Ed25519) · P18 observatory · P19 PWA · P20 embassy/MCP/OAuth 2.1 (real-Claude validated) · P21 shield · P22 vault (PDPL) · P23 councils · P24 organization impact · P25 practitioner journey · P26 organization journey («رحلة الجهة»: chapters k≥5 by quarter, «ما تغيّر فينا», yearbook `ATH-OY`, org letter to itself).
+P1 identity · P2 catalog+enrollment · P3 payments · P4 consulting · P5 resources+skills+events · P6 live/hybrid · P7 مِعيار · P8 skill profile+orgs · P9 homepage · P10 living memory («الذاكرة الحية») · P11 program engineering · P12 simulations+missions · P13 كل يوم مهارة · أثير · channel (text/voice/video) · foresight · P14 impact threads · P15 glass office · P16 messaging (channels; activation deferred) · P17 sovereign wallet (Ed25519) · P18 observatory · P19 PWA · P20 embassy/MCP/OAuth 2.1 (real-Claude validated) · P21 shield · P22 vault (PDPL) · P23 councils · P24 organization impact · P25 practitioner journey · P26 organization journey («رحلة الجهة»: chapters k≥5 by quarter, «ما تغيّر فينا», yearbook `ATH-OY`, org letter to itself) · P27 practitioner horizon («أفق الممارس» / «رسالتي من 2036»: private ten-year scenario → three one-year steps → signed pledge `ATH-HZ` → event-derived path → annual review).
 Pending by owner decision: P21-ب CSP enforce; Resend domain + `REPORTS_FROM_EMAIL`; WhatsApp (direct Meta vs BSP); SDAIA controller registration, legal review → `NOTICE_DRAFT=false`; DPAs.
-Candidate next phases (ideas raised in `docs/RELEASE-P26-AR.md` §7): «ليلة الكتاب» (live reading room when a yearbook is issued), «رفّ القطاع» (sector thread once ≥5 orgs publish), «الفصل القادم» (facilitator suggests one step to complete a near-quorum chapter); operations pause (email/WhatsApp activation) awaits owner decisions.
+Candidate next phases (ideas raised in `docs/RELEASE-P26-AR.md` §7 and `docs/RELEASE-P27-AR.md` §7): «عهدان متقابلان» (two practitioners pledge one step each to the other; the path witnesses both), «أفق الجهة» (an organization's ten-year horizon written by its admin, with a k≥5 pledge count), a `/2062` thread of anonymized horizon fragments (opt-in, k≥5), «ليلة الكتاب», «رفّ القطاع», «الفصل القادم»; operations pause (email/WhatsApp activation) awaits owner decisions.
