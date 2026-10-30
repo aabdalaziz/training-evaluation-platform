@@ -130,7 +130,7 @@ function Inner() {
           </section>)}
 
         <ul className="hz-privacy">{d.rules.privacy_ar.map((t, i) => <li key={i}><Icon name="shield" size={12} /> {t}</li>)}</ul>
-        <p className="hz-foot"><Icon name="shield" size={12} /> أفقك وعهدك ملكك: يُحفظان في <Link href="/me/data">خزنة أَثَر</Link>، ويُصدَّران ويُمحيان بطلبك. المراجعة تصبح فصلًا في <Link href="/me/journey">رحلتك</Link>.</p>
+        <p className="hz-foot"><Icon name="shield" size={12} /> أفقك وعهدك ملكك: يُحفظان في <Link href="/me/data">خزنة أَثَر</Link>، ويُصدَّران ويُمحيان بطلبك. المراجعة تصبح فصلًا في <Link href="/me/journey">رحلتك</Link>. ولا أحد يفي بعهده وحده: <Link href="/me/pair">عهدان متقابلان — خطوة لك وخطوة لي</Link>.</p>
       </>)}
     </main>
   );

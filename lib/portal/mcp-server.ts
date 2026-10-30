@@ -30,6 +30,7 @@ import { GET as charterGET } from '../../app/api/org/charter/route';
 import { GET as journeyGET } from '../../app/api/journey/route';
 import { GET as orgJourneyGET } from '../../app/api/org/journey/route';
 import { GET as horizonGET } from '../../app/api/horizon/route';
+import { GET as pairGET } from '../../app/api/pair/route';
 import { GET as didGET } from '../../app/.well-known/did.json/route';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Agent-Key, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id', 'Access-Control-Expose-Headers': 'MCP-Protocol-Version, WWW-Authenticate', 'Cache-Control': 'no-store' };
@@ -185,7 +186,8 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
   }
   if (name === 'my_horizon') {
     const j = await asJson(await horizonGET(internal(c, '/api/horizon?view=summary'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة الأفق', { error: 'failed' }, true); }
-    const result = { ...j.summary, note_ar: 'الأفق نصٌّ خاص لا يُعاد هنا. الدرب مشتق من أحداث مسجَّلة لا من تصريح. الكتابة والعهد والمراجعة لصاحبها من /me/horizon — الوكيل يقرأ فقط.' };
+    const pj = await asJson(await pairGET(internal(c, '/api/pair?view=summary'))).catch(() => null);
+    const result = { ...j.summary, pair: pj?.success ? pj.summary : null, note_ar: 'الأفق نصٌّ خاص لا يُعاد هنا. العهد المتقابل (pair): حالته وخطوتي وحالة خطوة صاحبي فقط — بلا اسمه. الدرب مشتق من أحداث مسجَّلة لا من تصريح. الكتابة والعهد والمراجعة لصاحبها من /me/horizon — الوكيل يقرأ فقط.' };
     await log(c, name, true); return toolContent(summarize(result), result);
   }
   if (name === 'my_council') {
