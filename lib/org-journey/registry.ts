@@ -18,7 +18,7 @@ export const ORG_SHARE_CODE_PREFIX = 'ATH-OY';
 export const MAX_ORG_SHARE_CHAPTERS = 40;
 export { K_ORG };
 
-export type OrgChapterKind = 'daily' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'pledge' | 'charter' | 'twinning' | 'contract';
+export type OrgChapterKind = 'daily' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'pledge' | 'charter' | 'twinning' | 'contract' | 'org_pledge';
 export type OrgEvent = { person: string; at: string; theme?: string | null };     // person = بريد أو معرّف (لا يُنشر أبدًا)
 export type OrgJourneyInput = {
   members: string[];                                        // بُرُد المنسوبين المؤكَّدين (صغيرة الحروف)
@@ -33,6 +33,8 @@ export type OrgJourneyInput = {
   charters: { signed_at: string; renewed: boolean }[];      // مستوى الجهة
   twinnings: { at: string; orgs: number }[];                // مجالس ضمّت منسوبينا مع ≥ 1 جهة أخرى (تاريخ أول عضوية لنا)
   contracts: { delivered_at: string; returned: boolean }[]; // عقود أثر سُلِّمت (وهل أُفرجت دفعة العودة)
+  org_pledge_chapters?: OrgChapter[];                       // فصول «عهد الجهة» (P28) — تُبنى في lib/org-horizon/registry.ts وتُدمج هنا كفصول مستوى الجهة
+  path_events?: { daily: OrgEvent[]; joins: { person: string; at: string; council: string }[]; returns: { person: string; at: string; council: string | null }[] }; // P28 — خام لدرب عهد الجهة
 };
 export type OrgChapter = {
   key: string; kind: OrgChapterKind; quarter: string; at: string;   // at = آخر حدث في الفصل
@@ -44,7 +46,7 @@ export type OrgBelow = { quarter: string; kind: OrgChapterKind; label_ar: string
 export type OrgMirrorRow = { kind: OrgChapterKind; label_ar: string; now: number | null; prev: number | null; read_ar: string };
 export type OrgJourney = { version: string; k: number; members: number; chapters: OrgChapter[]; eras: { label: string; keys: string[] }[]; below: OrgBelow[]; mirror: OrgMirrorRow[]; arc_ar: string; year_label: string; first_at: string | null; privacy_ar: string[] };
 
-export const ORG_KIND_AR: Record<OrgChapterKind, string> = { daily: 'أول موقف', mission: 'مهام أكّدها المشرفون', council: 'انضمام إلى المجالس', return: 'عودات بما حدث', attestation: 'شهادات أقران معتمدة', level: 'مستويات اعتمدها بشر', credential: 'اعتمادات', pledge: 'عهود مع النفس', charter: 'ميثاق الجهة', twinning: 'توأمة', contract: 'عقد أثر' };
+export const ORG_KIND_AR: Record<OrgChapterKind, string> = { daily: 'أول موقف', mission: 'مهام أكّدها المشرفون', council: 'انضمام إلى المجالس', return: 'عودات بما حدث', attestation: 'شهادات أقران معتمدة', level: 'مستويات اعتمدها بشر', credential: 'اعتمادات', pledge: 'عهود مع النفس', charter: 'ميثاق الجهة', twinning: 'توأمة', contract: 'عقد أثر' , org_pledge: 'عهد الجهة' };
 export const PRIVACY_ORG_JOURNEY_AR = ['لا فصل من أقل من 5 أشخاص — دائمًا', 'أعداد وحقب فقط؛ لا أسماء ولا نصوص أفراد', 'الجهة تُقارَن بسنتها السابقة لا بجهة أخرى', 'ما يُنشر موقَّع وقابل للإلغاء بنقرة', 'الذكاء الاصطناعي يقترح المقدمة من كلمات الجهة وحدها ولا يحفظها'];
 
 export const quarterOf = (iso: string) => { const d = new Date(iso); return `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`; };
@@ -53,7 +55,7 @@ const fmtD = (iso: string) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-
 const nPeople = (n: number) => n === 1 ? 'شخص واحد' : n === 2 ? 'شخصان' : n <= 10 ? `${n} أشخاص` : `${n} شخصًا`;
 const topTheme = (evs: OrgEvent[]) => { const m = new Map<string, number>(); for (const e of evs) if (e.theme) m.set(e.theme, (m.get(e.theme) || 0) + 1); let best: string | null = null, bn = 0; m.forEach((n, t) => { if (n > bn) { bn = n; best = t; } }); return best ? themeLabel(best) : null; };
 
-const WHAT: Record<Exclude<OrgChapterKind, 'charter' | 'twinning' | 'contract'>, (n: number, theme: string | null) => [string, string]> = {
+const WHAT: Record<Exclude<OrgChapterKind, 'charter' | 'twinning' | 'contract' | 'org_pledge'>, (n: number, theme: string | null) => [string, string]> = {
   daily: n => [`${nPeople(n)} واجهوا أول موقف لهم`, `في «كل يوم مهارة» كتب ${nPeople(n)} من منسوبيكم — لأول مرة — كيف يتصرّفون في موقف حقيقي، بكلماتهم لا بخيارات جاهزة.`],
   mission: n => [`${nPeople(n)} نقلوا التعلّم إلى قلب العمل`, `مهام أكّد المشرفون أنها حدثت فعلًا لـ${nPeople(n)} — الأثر هنا شهادة مشرف لا تقرير متدرب.`],
   council: n => [`${nPeople(n)} جلسوا مع أقران من جهات أخرى`, `وقّع ${nPeople(n)} ميثاق مجلس أقران وجلسوا إلى طاولة لا تضم جهتهم وحدها.`],
@@ -82,6 +84,7 @@ export function buildOrgChapters(inp: OrgJourneyInput, k = K_ORG): { chapters: O
   const tw = [...inp.twinnings].sort((a, b) => a.at.localeCompare(b.at))[0];
   if (tw) chapters.push({ key: `${quarterOf(tw.at)}:twinning`, kind: 'twinning', quarter: quarterOf(tw.at), at: tw.at, people: null, title_ar: 'أول مجلس توأمة', what_ar: `جلس منسوبونا لأول مرة في مجلس يضم ${tw.orgs >= 3 ? `${tw.orgs} جهات` : 'جهتين'} — لا مجلس من جهة واحدة.`, theme_ar: null });
   for (const ct of inp.contracts) chapters.push({ key: `${quarterOf(ct.delivered_at)}:contract:${ct.delivered_at.slice(0, 10)}`, kind: 'contract', quarter: quarterOf(ct.delivered_at), at: ct.delivered_at, people: null, title_ar: ct.returned ? 'عقد أثر اكتمل بدفعة العودة' : 'عقد أثر سُلِّم', what_ar: ct.returned ? 'اكتمل عقد أثر حتى دفعته الأخيرة — دُفعت للعودة لا للمقعد.' : 'سُلِّم برنامج ضمن عقد أثر وبدأت نافذة الأثر.', theme_ar: null });
+  for (const oc of inp.org_pledge_chapters || []) chapters.push(oc);
   chapters.sort((a, b) => a.at.localeCompare(b.at) || a.key.localeCompare(b.key));
   below.sort((a, b) => b.quarter.localeCompare(a.quarter) || b.people - a.people);
   return { chapters, below };
@@ -104,7 +107,7 @@ export function orgArc(chapters: OrgChapter[], members: number): string {
   if (!chapters.length) return members ? `${members} منسوبًا مؤكَّدًا — ولم يكتمل أي فصل جماعي بعد؛ الفصل الأول يحتاج خمسة أشخاص يعيشون الحدث نفسه.` : 'لا منسوبين مؤكَّدين بعد — رحلة الجهة تبدأ من منسوبيها.';
   const q = Array.from(new Set(chapters.map(c => c.quarter))); const people = Math.max(...chapters.map(c => c.people || 0));
   const kinds = new Set(chapters.map(c => c.kind)); const parts = [`${chapters.length} ${chapters.length === 1 ? 'فصل' : chapters.length <= 10 ? 'فصول' : 'فصلًا'} عبر ${q.length === 1 ? 'ربع واحد' : q.length === 2 ? 'ربعين' : `${q.length} أرباع`}`];
-  if (people) parts.push(`أكبر فصل عاشه ${nPeople(people)}`); if (kinds.has('return')) parts.push('منسوبوكم يعودون بما حدث'); if (kinds.has('level')) parts.push('مستويات اعتمدها بشر'); if (kinds.has('charter')) parts.push('جهة موقِّعة على الميثاق'); if (kinds.has('contract')) parts.push('عقد أثر اكتمل');
+  if (people) parts.push(`أكبر فصل عاشه ${nPeople(people)}`); if (kinds.has('return')) parts.push('منسوبوكم يعودون بما حدث'); if (kinds.has('level')) parts.push('مستويات اعتمدها بشر'); if (kinds.has('org_pledge')) parts.push('جهة عاهدت نفسها على خطوة لسنة'); if (kinds.has('charter')) parts.push('جهة موقِّعة على الميثاق'); if (kinds.has('contract')) parts.push('عقد أثر اكتمل');
   return parts.join(' · ') + '.';
 }
 

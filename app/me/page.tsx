@@ -11,6 +11,7 @@ import ProgramResources from '../components/ProgramResources';
 import UpcomingSessions from '../components/UpcomingSessions';
 import PlacementCard from '../components/PlacementCard';
 import ContactPrefs from '../components/ContactPrefs';
+import OrgPledgeBanner from '../components/OrgPledgeBanner';
 import { AtharMark } from '../components/PortalShell';
 import type { IconName } from '../../lib/ui/icons';
 import { CERT_KIND_AR, STATUS_AR, attendancePct, attendanceTone, buildTasks, isRunning, type MePortal, type Task } from '../../lib/me/model';
@@ -97,6 +98,7 @@ export default function MePage() {
     {error && <div className="me-msg bad"><Icon name="alert" size={16} /><span>{error}</span></div>}
     {me && <PlacementCard />}
     {me && <ContactPrefs />}
+    {me && <OrgPledgeBanner />}
     {me && <>
       <nav className="me-tabs">
         <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}><Icon name="evaluations" size={16} /> المطلوب مني {tasks.length ? <i>{tasks.length}</i> : null}</button>
