@@ -1,13 +1,13 @@
 ---
 name: athar-feature
-description: Build a complete feature phase for the Athar portal (Next.js 14 + Supabase) end-to-end — SQL, pure lib, API route, learner/public/admin pages, MCP tool, vault registry, cron hook, tests, mock fixtures, Playwright E2E, one-zip GitHub delivery. Use when asked to add a new module/phase (P26+) to github.com/aabdalaziz/training-evaluation-platform. Updated after P25.
+description: Build a complete feature phase for the Athar portal (Next.js 14 + Supabase) end-to-end — SQL, pure lib, API route, learner/public/admin pages, MCP tool, vault registry, cron hook, tests, mock fixtures, Playwright E2E, one-zip GitHub delivery. Use when asked to add a new module/phase (P27+) to github.com/aabdalaziz/training-evaluation-platform. Updated after P26.
 ---
 
-# Athar — build a feature phase (post-P25 pattern)
+# Athar — build a feature phase (post-P26 pattern)
 
 ## Order of work (never reorder)
 1. **Proposal first** (`P<N>-PROPOSAL-AR.txt`, Arabic, 1–2 pages): the idea in one sentence, the five "movements" of the experience, what stays private, what gets signed, what the agent may read, what the cron does, the DB tables, the constants. Wait for approval. Read `athar-product` before writing it.
-2. **Read**: `AGENTS.md`, the previous two phases (`lib/councils/*`, `lib/org-impact/*`, `lib/journey/*`) — copy their shapes, not older ones.
+2. **Read**: `AGENTS.md`, the previous two phases (`lib/journey/*`, `lib/org-journey/*`; `lib/org-impact/auth.ts` for org-admin auth) — copy their shapes, not older ones. An organization-facing feature is a **tab inside `/org`** (`app/org/page.tsx` + `?tab=`), not a new top-level page.
 3. **SQL** `supabase/migrations/YYYYMMDD_portal_pN.sql` (see `athar-sql`): tables with `user_id uuid` + `email text` (legacy rows have no user_id), `status text check (…)`, `meta jsonb default '{}'`, RLS own-read, `revoke` writes from anon/authenticated when only the server writes, extend `portal_vc_issuances_kind_check` if a new signed document kind is added, ONE diagnostic `union all` at the end with expected counts.
 4. **Pure library** `lib/<module>/registry.ts`: constants (`*_DAYS`, `*_MONTHS`, `MAX_*`, `K = 5`), types, builders from plain inputs, validators returning `string | null` (Arabic), code formats (`ATH-XX-XXXX-XXXX` via `randomCode(4)` from `lib/portal/profile.ts`), local (non-AI) text builders. No DB, no `process.env` → unit-testable.
 5. **DB layer** `lib/<module>/load.ts` (`Promise.all` of `.or(\`user_id.eq.${id},email.ilike.${email}\`)` queries, every query wrapped so one failure yields `[]`), `share.ts`/`badge.ts` for signed documents (copy `lib/journey/share.ts`: insert issuance → `signDocument` with `status_index` → update `vc` + `documentDigest`), `cron.ts` exporting `runX(db, { dry, site, now })` returning `{ ok, counts…, errors[] }`.
