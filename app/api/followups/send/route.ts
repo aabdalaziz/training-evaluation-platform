@@ -29,6 +29,7 @@ import { runShield } from '../../../../lib/shield/cron';
 import { runVault } from '../../../../lib/vault/cron';
 import { runCouncils } from '../../../../lib/councils/cron';
 import { runJourney } from '../../../../lib/journey/cron';
+import { runOrgJourney } from '../../../../lib/org-journey/cron';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -161,7 +162,10 @@ export async function GET(req: Request) {
   // P25 رحلة الممارس: تسليم «رسالة إلى نفسي بعد سنة» في موعدها + انتهاء النسخ المشتركة
   let journey: any = null;
   try { journey = await runJourney(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { journey = { ok: false, error: e?.message || String(e) }; }
+  // P26 رحلة الجهة: تسليم «رسالة الجهة إلى نفسها» إلى مديريها الحاليين + انتهاء كتب السنة
+  let org_journey: any = null;
+  try { org_journey = await runOrgJourney(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { org_journey = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach, observatory, shield, vault, councils, journey });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach, observatory, shield, vault, councils, journey, org_journey });
 }

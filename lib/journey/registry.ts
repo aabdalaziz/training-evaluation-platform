@@ -25,6 +25,14 @@ export type Chapter = {
   ref: { type: string; id: string } | null;      // مرجع داخلي (لا يُنشر)
   public_ok: boolean;                            // أيمكن نشره في النسخة العامة؟ (قضايا المجلس: العنوان والالتزام فقط — بكلمات صاحبها)
 };
+/** الفصل المشترك (P26): كم زميلًا في جهتي عاش فصلًا من النوع نفسه في الربع نفسه — عدد فقط (k ≥ 5)، لا أسماء؛ لا يُنشر في النسخة العامة */
+export type Peers = { people: number; org_name: string; quarter: string };
+export const quarterKeyOf = (iso: string) => { const d = new Date(iso); return `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`; };
+export function attachPeers<T extends { kind: string; at: string }>(chapters: T[], orgChapters: { kind: string; quarter: string; people: number | null }[], orgName: string): (T & { peers: Peers | null })[] {
+  const idx = new Map<string, number>(); for (const oc of orgChapters) if (oc.people !== null && oc.people > 0) idx.set(`${oc.quarter}:${oc.kind}`, oc.people);
+  return chapters.map(c => { const q = quarterKeyOf(c.at); const n = idx.get(`${q}:${c.kind}`); return { ...c, peers: n ? { people: n, org_name: orgName, quarter: q } : null }; });
+}
+export const peersText = (p: Peers) => `${p.people} من زملائك في «${p.org_name}» عاشوا فصلًا مثله في الربع نفسه — عدد لا أسماء.`;
 export type JourneyInput = {
   events: { at: string; verb: string; object_type: string; object_id: string; skills: string[]; context: any }[];
   daily: { created_at: string; response: string; band: string | null; score: number | null; case_title: string | null }[];

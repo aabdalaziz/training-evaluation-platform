@@ -24,11 +24,12 @@ import type { ContractState, ContractStatus } from '../../lib/portal/contracts';
 import { WEATHER_LABEL, CONF_LABEL } from '../../lib/portal/observatory';
 import type { OrgPosition } from '../../lib/portal/observatory';
 import { OrgImpact } from '../components/OrgImpact';
+import { OrgJourney } from '../components/OrgJourney';
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
 type Org = { id: string; name_ar: string; name_en?: string | null; sector?: string | null; email_domain?: string | null; city?: string | null };
-type Tab = 'impact' | 'echo' | 'members' | 'bulk' | 'resources' | 'contracts' | 'charter' | 'observatory' | 'report';
+type Tab = 'impact' | 'echo' | 'journey' | 'members' | 'bulk' | 'resources' | 'contracts' | 'charter' | 'observatory' | 'report';
 type ContractItem = { contract: { id: string; title_ar: string; total_amount: number; currency: string; status: ContractStatus; cohort_size: number; token: string; program_name?: string; delivered_at?: string | null }; state: ContractState };
 
 function Inner() {
@@ -39,6 +40,7 @@ function Inner() {
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false); const [inviteText, setInviteText] = useState(''); const [bulkText, setBulkText] = useState(''); const [bulkProg, setBulkProg] = useState(''); const [bulkNote, setBulkNote] = useState('');
 
   async function token() { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
+  useEffect(() => { if (typeof window === 'undefined') return; const t = new URLSearchParams(window.location.search).get('tab'); if (t && ['impact', 'echo', 'journey', 'members', 'bulk', 'resources', 'contracts', 'charter', 'observatory', 'report'].includes(t)) setTab(t as Tab); }, []);
   // P15 — توقّع القدرة المؤسسية («مؤشر الأداء»): اتجاه مهارات الجهة خلال 90 يومًا من أدلة المنسوبين المؤكَّدين — بلا أسماء
   type Wx = { forecasts: { skill_id: string; name_ar: string; trend: 'rising' | 'steady' | 'fading' | 'unknown'; slope: number; people: number; evidence: number; steps: { title_ar: string; why_ar: string }[] }[]; line: string; members: number; events: number; steps: { title_ar: string; why_ar: string }[]; min_people: number };
   const [wx, setWx] = useState<Wx | null>(null); const [wxErr, setWxErr] = useState('');
@@ -94,7 +96,7 @@ function Inner() {
         {loaded && user && org && <>
           {err && <div className="pt-alert err">{err}</div>}{ok && <div className="pt-alert ok">{ok}</div>}
           {pendingMembers.length > 0 && tab !== 'members' && <div className="og-notice"><Icon name="bell" size={16} /> {lang === 'ar' ? `${pendingMembers.length} عضو جديد من نطاق بريد جهتكم بانتظار تأكيدك.` : `${pendingMembers.length} new member(s) from your email domain await your confirmation.`} <button type="button" className="pt-btn small" onClick={() => setTab('members')}>{lang === 'ar' ? 'مراجعة' : 'Review'}</button></div>}
-          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['echo', 'صدى الجهة', 'Echo'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['charter', 'الميثاق والمقاعد', 'Charter & seats'], ['observatory', 'المرصد', 'Observatory'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
+          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['echo', 'صدى الجهة', 'Echo'], ['journey', 'رحلة الجهة', 'Journey'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['charter', 'الميثاق والمقاعد', 'Charter & seats'], ['observatory', 'المرصد', 'Observatory'], ['report', 'التقرير', 'Report']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
           {busy === 'dash' && !d && <div className="pt-empty">…</div>}
 
           {d && k && tab === 'impact' && <div className="og-wx" data-testid="org-weather">
@@ -140,6 +142,7 @@ function Inner() {
 
           {tab === 'echo' && <OrgImpact orgId={orgId} orgName={org.name_ar} lang={lang} token={token} view="echo" />}
           {tab === 'charter' && <OrgImpact orgId={orgId} orgName={org.name_ar} lang={lang} token={token} view="charter" />}
+          {tab === 'journey' && <OrgJourney orgId={orgId} orgName={org.name_ar} lang={lang} token={token} />}
           {tab === 'contracts' && <div className="pt-box og-contracts">
             <h3><Icon name="scale" size={18} /> {lang === 'ar' ? 'عقود الأثر — تدفعون ثمن النتيجة لا المقعد' : 'Impact contracts — pay for outcomes, not seats'}</h3>
             <p className="pt-muted">{lang === 'ar' ? 'لكل عقد صفحة حية تُحدَّث من أدلة الأثر نفسها: دفعة عند التسليم، دفعة عند تأكيد مشرفيكم لأدلة من قلب العمل، ودفعة عند ظهور الأثر المستدام خلال 90 يومًا — والعقود الجديدة تحمل «دفعة العودة»: تستحق حين يعود منسوبوكم في مجالس أَثَر بالتزام حقيقي. الجهة لا تدفع للمقعد؛ تدفع للعودة. لا يُفرَج عن أي دفعة إلا بقرار بشري موثَّق.' : 'Every contract has a live page computed from the evidence itself: a payment on delivery, one when your supervisors confirm workplace evidence, one when sustained impact appears within 90 days — and new contracts carry a “return payment”, due when your people return on a real peer-council commitment. You pay for the return, not the seat.'}</p>

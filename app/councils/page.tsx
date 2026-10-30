@@ -12,6 +12,7 @@ import { fastToken } from '../components/Pocket';
 import { supabase } from '../../lib/supabase/client';
 
 type Circle = { code: string; title_ar: string; domain: string | null; sector_code: string | null; status: string; cycle_no: number; cycle_ends_at: string | null; members: number; orgs: number; seats_open: number; case: { status: string; theme: string | null; theme_ar: string; opened_days: number; questions: number; advice: number; evidence: number; voices: number } | null; pulse: 'lively' | 'steady' | 'quiet'; cases_total: number; returns: number };
+type Yearbook = { code: string; org_name: string; year_label: string; intro_ar: string | null; chapters: { key: string; title_ar: string; people: number | null; quarter_ar: string }[]; created_at: string; expires_at: string; verify_url: string | null; views: number; k: number; url: string };
 type Data = { circles: Circle[]; wisdom: { pattern: string; label_ar: string; cases: number; persons: number; orgs: number; councils: number }[]; totals: any; themes: { code: string; label: string }[]; org_charter?: { version: string; clauses: { id: string; title: string; body: string }[]; orgs: { organization_id: string; org_name: string; signed_at: string; expires_at: string; code: string | null }[] }; charter: { version: string; clauses: { id: string; title: string; body: string }[] }; rules: any; privacy_ar: string };
 const MOVES = [
   { n: '①', t: 'القضية', d: 'عضو يحمل موقف عمل حقيقي: ما الذي أواجهه؟ ما خياراتي؟ ما الذي أخشاه؟ — نصًّا أو صوتًا أو فيديو.' },
@@ -25,8 +26,9 @@ export default function CouncilsPage() { return <PortalShell><Inner /></PortalSh
 function Inner() {
   const { lang } = useLang(); const ar = lang === 'ar'; const db = useMemo(() => supabase(), []);
   const [d, setD] = useState<Data | null>(null); const [err, setErr] = useState(''); const [tok, setTok] = useState<string | null>(null);
+  const [books, setBooks] = useState<Yearbook[] | null>(null);
   const [form, setForm] = useState({ domain: '', sector: '', note: '' }); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false); const [applied, setApplied] = useState(false);
-  useEffect(() => { fetch('/api/councils/public', { cache: 'no-store' }).then(r => r.json()).then(j => j?.success ? setD(j) : setErr('تعذّر تحميل المجالس')).catch(() => setErr('تعذّر تحميل المجالس')); fastToken(db).then(t => setTok(t || '')); }, [db]);
+  useEffect(() => { fetch('/api/councils/public', { cache: 'no-store' }).then(r => r.json()).then(j => j?.success ? setD(j) : setErr('تعذّر تحميل المجالس')).catch(() => setErr('تعذّر تحميل المجالس')); fastToken(db).then(t => setTok(t || '')); fetch('/api/org/journey?public=1', { cache: 'no-store' }).then(r => r.json()).then(j => setBooks(j?.success ? (j.items || []) : [])).catch(() => setBooks([])); }, [db]);
   useEffect(() => { if (!tok) return; fetch('/api/councils', { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then(r => r.json()).then(j => { if (j?.success && (j.applied || (j.halls || []).length)) setApplied(true); }).catch(() => null); }, [tok]);
   async function apply() {
     setBusy(true); const j = await fetch('/api/councils', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'apply', ...form }) }).then(r => r.json()).catch(() => null); setBusy(false);
@@ -73,6 +75,12 @@ function Inner() {
         </section>
       )}
 
+      <section className="cn-sec cn-shelf" id="yearbooks" data-testid="yearbooks"><h2><Icon name="book" size={18} /> رفّ كتب السنة</h2>
+        <p className="cn-muted">ما تعلّمته جهة كاملة في سنة — فصولًا لا أرقامًا: كل فصل عدد أشخاص (لا يقل عن خمسة) وحقبة وكلمات الجهة نفسها. الجهة تختار ما تنشره، والكتاب موقَّع ويُسحب بنقرة. لا أسماء ولا مقارنات بين الجهات.</p>
+        {books === null ? <p className="cn-quiet">نفتح الرفّ…</p> : !books.length ? <p className="cn-quiet">الرفّ فارغ بعد. مديرو الجهات يصدرون كتاب سنتهم من <Link href="/org?tab=journey">بوابة الجهات</Link> ← «رحلة الجهة».</p> : (
+          <div className="cn-books">{books.map(b => <a key={b.code} className="cn-book" href={b.url} data-testid="yearbook"><span className="cn-bookyear">{b.year_label}</span><b>{b.org_name}</b><small>{b.chapters.length} فصلًا · {b.chapters[0]?.quarter_ar || ''}{b.chapters.length > 1 ? ` ← ${b.chapters[b.chapters.length - 1].quarter_ar}` : ''}</small>{b.intro_ar && <p>{b.intro_ar.length > 140 ? b.intro_ar.slice(0, 140) + '…' : b.intro_ar}</p>}<i>{b.verify_url ? 'موقَّع · ' : ''}{b.views} قراءة</i></a>)}</div>)}
+      </section>
+
       <section className="cn-sec cn-apply" id="apply"><h2><Icon name="flag" size={18} /> اطلب مقعدًا</h2>
         {tok === '' && <p>المجالس للممارسين المسجّلين في أَثَر. <Link href="/login?next=/councils#apply" className="pt-btn small">سجّل الدخول لطلب مقعد</Link></p>}
         {tok && applied && <p className="cn-ok"><Icon name="check" size={16} /> {msg || 'طلبك قائم — المُوفِّق يراه عند التشكيل التالي.'} <Link href="/me/council">قاعة المجلس</Link></p>}
@@ -113,6 +121,7 @@ function CircleCard({ c }: { c: Circle }) {
 }
 
 const CSS = `
+.cn-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px}.cn-book{display:flex;flex-direction:column;gap:4px;background:linear-gradient(160deg,#0f2a4e,#0b8a83);color:#fff;border-radius:16px;padding:16px;text-decoration:none;min-height:150px;position:relative;overflow:hidden;box-shadow:inset 6px 0 0 #c9a24b}.cn-book:hover{transform:translateY(-2px)}.cn-bookyear{color:#c9a24b;font-weight:900;font-size:20px}.cn-book b{font-size:16px;line-height:1.5}.cn-book small{color:#cbd5e1;font-size:12px}.cn-book p{margin:6px 0 0;font-size:12.5px;line-height:1.75;color:#e2e8f0}.cn-book i{margin-top:auto;font-style:normal;font-size:11px;color:#cbd5e1;padding-top:8px}
 .cn{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 .cn-hero{background:radial-gradient(1200px 400px at 80% -20%,rgba(11,138,131,.18),transparent),linear-gradient(135deg,#0f2a4e,#123a66);color:#fff;border-radius:24px;padding:36px 30px;margin-bottom:28px}
 .cn-hero .pt-kicker{color:#c9a24b}.cn-hero h1{margin:6px 0 10px;font-size:34px;line-height:1.3}.cn-hero p{margin:0;max-width:820px;line-height:1.95;font-size:16px;color:#e2e8f0}

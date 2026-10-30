@@ -13,7 +13,7 @@ import { fastToken } from '../../components/Pocket';
 import { Channel, ReadAloud } from '../../components/Channel';
 import { supabase } from '../../../lib/supabase/client';
 
-type Chapter = { key: string; kind: string; at: string; title_ar: string; what_ar: string; quote_ar: string | null; level: { skill_ar: string; to: number; from: number | null } | null };
+type Chapter = { key: string; kind: string; at: string; title_ar: string; what_ar: string; quote_ar: string | null; level: { skill_ar: string; to: number; from: number | null } | null; peers?: { people: number; org_name: string; quarter: string } | null };
 type Note = { id: number; chapter_key: string; body_ar: string; media_id: string | null; kind: string; updated_at: string };
 type Share = { id: string; code: string; created_at: string; display_name: string; chapter_keys: string[]; status: string; expires_at: string; views: number; url: string; verify_url: string | null };
 type Capsule = { id: number; created_at: string; body_ar: string; media_id: string | null; deliver_at: string; delivered_at: string | null; status: string; snapshot_then: any; snapshot_now: any; meta: any };
@@ -76,6 +76,7 @@ function Inner() {
                       <h3>{ch.title_ar}</h3><p className="jr-what">{ch.what_ar}</p>
                       {ch.level && <p className="jr-level"><Icon name="trend" size={13} /> {ch.level.skill_ar}: {ch.level.from !== null ? <>{ch.level.from} ← {ch.level.to}</> : <>المستوى {ch.level.to}</>}</p>}
                       {ch.quote_ar && <blockquote className="jr-quote">«{ch.quote_ar}»<small>بكلماتك يومها</small></blockquote>}
+                      {ch.peers && <p className="jr-peers" data-testid="peers" title="الفصل المشترك — من رحلة الجهة (P26): عدد فقط، لا أسماء، ولا يُنشر في نسختك العامة"><Icon name="users" size={13} /> الفصل المشترك: {ch.peers.people} من زملائك في «{ch.peers.org_name}» عاشوا فصلًا مثله في الربع نفسه</p>}
                       {n && !open && <div className="jr-note" data-testid="note"><b>ما تغيّر فيّ</b><p>{n.body_ar || '(تسجيل صوتي)'}</p><small>{fmt(n.updated_at)}</small></div>}
                       {!open ? <div className="jr-rowbtns"><button className="pt-btn ghost small" onClick={() => startNote(ch)} data-testid="note-edit"><Icon name="edit" size={13} /> {n ? 'عدّل ما تغيّر فيّ' : 'ما الذي تغيّر فيّ هنا؟'}</button>{n && <button className="pt-btn ghost small" disabled={!!busy} onClick={() => act({ action: 'note_delete', chapter_key: ch.key })}><Icon name="trash" size={13} /> احذف</button>}</div>
                         : <div className="jr-edit">
@@ -160,6 +161,7 @@ const CSS = `
 .jr-card h3{margin:6px 0 4px;font-size:17px;color:#0f2a4e}.jr-what{margin:0;line-height:1.85;color:#334155;font-size:14px}.jr-level{display:inline-flex;gap:6px;align-items:center;margin:8px 0 0;background:#fdf6e3;color:#7c5a10;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800}
 .jr-quote{margin:10px 0 0;padding:10px 14px;border-inline-start:3px solid #c9a24b;background:#fffdf7;border-radius:0 10px 10px 0;line-height:1.9;font-size:14px;color:#1e293b}.jr-quote small{display:block;color:#94a3b8;font-size:11px;margin-top:4px}.jr-quote.big{font-size:16px;white-space:pre-wrap}
 .jr-note{margin:10px 0 0;background:#ecfeff;border:1px solid #a5f3fc;border-radius:12px;padding:10px 14px}.jr-note b{color:#155e75;font-size:12px}.jr-note p{margin:4px 0;white-space:pre-wrap;line-height:1.85;font-size:14px}.jr-note small{color:#64748b;font-size:11px}
+.jr-peers{display:inline-flex;gap:6px;align-items:center;margin:8px 0 0;background:#eef6ff;color:#1e3a8a;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800}
 .jr-rowbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}.jr-edit{margin-top:10px}
 .jr-stack{display:grid;gap:14px}.jr-in{width:100%;box-sizing:border-box;font:inherit;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;margin:6px 0;background:#fff}.jr-opt{display:block;font-size:13px;font-weight:800;color:#334155;margin:8px 0}.jr-check{display:flex;gap:8px;align-items:center}
 .jr-pick{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px;max-height:320px;overflow:auto;border:1px solid #e2e8f0;border-radius:12px;padding:8px}.jr-pick li label{display:flex;gap:8px;align-items:baseline;padding:4px 6px;border-radius:8px;cursor:pointer}.jr-pick li label:hover{background:#f8fafc}.jr-pick small{color:#64748b}

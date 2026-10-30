@@ -28,6 +28,7 @@ import { POST as vcPOST } from '../../app/api/vc/route';
 import { GET as obsGET } from '../../app/api/observatory/route';
 import { GET as charterGET } from '../../app/api/org/charter/route';
 import { GET as journeyGET } from '../../app/api/journey/route';
+import { GET as orgJourneyGET } from '../../app/api/org/journey/route';
 import { GET as didGET } from '../../app/.well-known/did.json/route';
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Agent-Key, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id', 'Access-Control-Expose-Headers': 'MCP-Protocol-Version, WWW-Authenticate', 'Cache-Control': 'no-store' };
@@ -156,6 +157,14 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
     const j = await asJson(await charterGET(internal(c, `/api/org/charter?${q.toString()}`))); if (!j?.success) { await log(c, name, false); return toolContent('تعذّر القراءة | Unavailable', { error: 'unavailable' }, true); }
     const result = args.code || args.org_name ? { query: j.query, signed: !!j.signed, charter: j.charter, note_ar: j.note_ar, pledge_en: 'Time inside working hours · confidentiality (Chatham House) · council mirrors/deliberations never used in appraisal · no names requested', page: `${c.site}/councils#orgs` } : { version: j.version, signatories: (j.orgs || []).map((o: any) => ({ org_name: o.org_name, signed_at: o.signed_at, expires_at: o.expires_at, verify_url: o.verify_url })), clauses_ar: (j.clauses || []).map((x: any) => x.title), page: `${c.site}/councils#orgs` };
     await log(c, name, true, { q: String(args.code || args.org_name || 'all').slice(0, 80) }); return toolContent(summarize(result), result);
+  }
+  if (name === 'org_yearbook') {
+    const q = args.code ? `code=${encodeURIComponent(String(args.code))}&count=0` : 'public=1';
+    const j = await asJson(await orgJourneyGET(internal(c, `/api/org/journey?${q}`))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر القراءة | Unavailable', { error: j?.error ? 'not_found' : 'unavailable' }, true); }
+    const ch = (x: any) => ({ key: x.key, quarter_ar: x.quarter_ar, people: x.people, title_ar: x.title_ar, what_ar: x.what_ar, in_our_words_ar: x.note_ar || null });
+    const result = args.code ? { code: j.code, org_name: j.org_name, year_label: j.year_label, intro_ar: j.intro_ar, chapters: (j.chapters || []).map(ch), k: j.k, expires_at: j.expires_at, verify_url: j.verify_url, page: `${c.site}/org-journey/${encodeURIComponent(String(j.code))}`, note_ar: j.note_ar }
+      : { yearbooks: (j.items || []).map((y: any) => ({ code: y.code, org_name: y.org_name, year_label: y.year_label, chapters: (y.chapters || []).length, intro_ar: y.intro_ar, url: y.url, verify_url: y.verify_url })), note_ar: j.note_ar, page: `${c.site}/councils#yearbooks` };
+    await log(c, name, true, { code: String(args.code || 'shelf').slice(0, 40) }); return toolContent(summarize(result), result);
   }
   if (c.actor.tier !== 'personal') return toolContent('تحتاج تفويضًا شخصيًا', { error: 'not_authorized' }, true);
   if (name === 'my_wallet') {

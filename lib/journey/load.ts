@@ -2,7 +2,8 @@
 /** رحلة الممارس — قراءة المدخلات من قاعدة البيانات (كلها جداول موجودة) + مقدمة اختيارية بالذكاء الاصطناعي من كلمات المستخدم نفسه */
 import { runAi, logAi } from '../ai/athar';
 import { lower } from '../councils/registry';
-import { buildJourney, INTRO_MAX_CHARS } from './registry';
+import { buildJourney, INTRO_MAX_CHARS, attachPeers } from './registry';
+import { loadOrgJourney } from '../org-journey/load';
 import type { JourneyInput, Journey, Chapter } from './registry';
 
 export type Me = { id: string; email: string; name?: string };
@@ -39,7 +40,15 @@ export async function loadJourneyInput(db: any, me: Me): Promise<JourneyInput> {
     cases: arr<any>(cs), attestations: arr<any>(at), levels: arr<any>(lv), credentials: arr<any>(cr), skills,
   };
 }
-export async function loadJourney(db: any, me: Me, now = Date.now()): Promise<Journey> { return buildJourney(await loadJourneyInput(db, me), now); }
+export async function loadJourney(db: any, me: Me, now = Date.now(), withPeers = true): Promise<Journey> {
+  const j = buildJourney(await loadJourneyInput(db, me), now); if (!withPeers || !j.chapters.length) return j;
+  // الفصل المشترك (P26): إن كنتُ منسوبًا مؤكَّدًا لجهة، أُلحق بكل فصل عدد زملائي الذين عاشوا فصلًا مثله في الربع نفسه (من فصول الجهة k ≥ 5 فقط)
+  try {
+    const { data: mem } = await db.from('portal_org_members').select('organization_id').eq('status', 'confirmed').or(orMe(me, 'user_id', 'email')).limit(1); const orgId = (mem as any[])?.[0]?.organization_id;
+    if (!orgId) return j; const { data: org } = await db.from('portal_organizations').select('name_ar').eq('id', orgId).maybeSingle(); const oj = await loadOrgJourney(db, orgId, now);
+    return { ...j, chapters: attachPeers(j.chapters, oj.chapters, String((org as any)?.name_ar || 'جهتك')) };
+  } catch { return j; }
+}
 
 /** مقدمة الرحلة — من كلمات المستخدم نفسه (تعليقاته واقتباساته) لا من رأي النموذج؛ تُعلَّم «بالذكاء الاصطناعي» ويستطيع تعديلها قبل النشر */
 export async function journeyIntro(db: any, me: Me, j: Journey, notes: { chapter_key: string; body_ar: string }[]): Promise<{ text: string; source: 'ai' | 'local'; model: string | null }> {
