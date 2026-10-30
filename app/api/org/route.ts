@@ -58,8 +58,11 @@ export async function POST(req: Request) {
 
   if (action === 'dashboard') {
     if (!orgId) return bad('معرّف الجهة مطلوب'); if (!(await needsOrgAdmin())) return bad('غير مصرّح — أنت لست مدير هذه الجهة', 403);
-    const { data, error } = await db.rpc('portal_org_dashboard', { p_org: orgId }); // بصلاحية الخدمة بعد التحقق أعلاه
-    if (error) return bad(error.message, 500); return NextResponse.json({ success: true, dashboard: data });
+    // بجلسة المستخدم لا بمفتاح الخدمة: الدالة تتحقق داخليًا من auth.uid() (موظف أو مدير جهة) وتُرجع {ok:false,error:'forbidden'} مع مفتاح الخدمة لأن auth.uid() فارغ
+    const { data, error } = await userDb.rpc('portal_org_dashboard', { p_org: orgId });
+    if (error) return bad(error.message, 500);
+    if (!data || (data as any).ok === false) return bad((data as any)?.error === 'forbidden' ? 'غير مصرّح — أنت لست مدير هذه الجهة' : String((data as any)?.error || 'تعذّر تحميل لوحة الجهة'), (data as any)?.error === 'forbidden' ? 403 : 500);
+    return NextResponse.json({ success: true, dashboard: data });
   }
   if (action === 'member_status') {
     const { data: m } = await db.from('portal_org_members').select('id,organization_id,email,status').eq('id', String(body.member_id || '')).maybeSingle(); if (!m) return bad('العضو غير موجود', 404);
