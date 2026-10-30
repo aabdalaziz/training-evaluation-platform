@@ -62,7 +62,7 @@ function Inner() {
         </nav>
 
         {tab === 'river' && (!chapters.length ? (
-          <section className="pt-box jr-empty"><Icon name="compass" size={26} /><b>الصفحة الأولى بيضاء</b><p className="jr-muted">فصولك تُكتب من أفعالك لا من أقوالك. ابدأ من <Link href="/me/daily">كل يوم مهارة</Link> أو <Link href="/me/missions">مهامك</Link>.</p></section>
+          <section className="pt-box jr-empty"><Icon name="compass" size={26} /><b>الصفحة الأولى بيضاء</b><p className="jr-muted">فصولك تُكتب من أفعالك لا من أقوالك. ابدأ من <Link href="/#daily">كل يوم مهارة</Link> أو <Link href="/me/missions">مهامك</Link>.</p></section>
         ) : (
           <section className="jr-river" data-testid="river">
             {d.journey.eras.map(era => (
@@ -137,7 +137,7 @@ function Inner() {
                 {c.body_ar && <ReadAloud text={c.body_ar} lang={lang} label="اسمعها" />}
               </article>))}
           </section>)}
-        <p className="jr-foot"><Icon name="shield" size={12} /> رحلتك ملكك: تُحفظ في <Link href="/me/vault">خزنة أَثَر</Link>، وتُصدَّر وتُمحى بطلبك. الفصول مشتقة من أحداث مسجَّلة ولا يُضاف إليها شيء بغير فعلٍ منك أو اعتمادٍ من إنسان.</p>
+        <p className="jr-foot"><Icon name="shield" size={12} /> رحلتك ملكك: تُحفظ في <Link href="/me/data">خزنة أَثَر</Link>، وتُصدَّر وتُمحى بطلبك. الفصول مشتقة من أحداث مسجَّلة ولا يُضاف إليها شيء بغير فعلٍ منك أو اعتمادٍ من إنسان.</p>
       </>)}
     </main>
   );

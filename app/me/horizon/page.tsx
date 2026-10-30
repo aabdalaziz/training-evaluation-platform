@@ -52,7 +52,7 @@ function Inner() {
         {!d.eligible.ok && !h && (
           <section className="pt-box hz-empty" data-testid="hz-elig"><Icon name="flag" size={26} /><b>الأفق يُكتب بعد {d.eligible.min} فصول</b><p className="hz-muted">{d.eligible.read_ar}</p>
             <div className="hz-dots">{Array.from({ length: d.eligible.min }, (_, i) => <i key={i} className={i < d.eligible.chapters ? 'on' : ''} />)}</div>
-            <p className="hz-muted">فصولك تُكتب من أفعالك: <Link href="/me/daily">كل يوم مهارة</Link> · <Link href="/me/missions">مهامي</Link> · <Link href="/councils">المجالس</Link> · <Link href="/me/journey">رحلتي</Link></p></section>)}
+            <p className="hz-muted">فصولك تُكتب من أفعالك: <Link href="/#daily">كل يوم مهارة</Link> · <Link href="/me/missions">مهامي</Link> · <Link href="/councils">المجالس</Link> · <Link href="/me/journey">رحلتي</Link></p></section>)}
 
         {(d.eligible.ok || h) && (<>
           {/* 1) الأفق */}
@@ -130,7 +130,7 @@ function Inner() {
           </section>)}
 
         <ul className="hz-privacy">{d.rules.privacy_ar.map((t, i) => <li key={i}><Icon name="shield" size={12} /> {t}</li>)}</ul>
-        <p className="hz-foot"><Icon name="shield" size={12} /> أفقك وعهدك ملكك: يُحفظان في <Link href="/me/vault">خزنة أَثَر</Link>، ويُصدَّران ويُمحيان بطلبك. المراجعة تصبح فصلًا في <Link href="/me/journey">رحلتك</Link>.</p>
+        <p className="hz-foot"><Icon name="shield" size={12} /> أفقك وعهدك ملكك: يُحفظان في <Link href="/me/data">خزنة أَثَر</Link>، ويُصدَّران ويُمحيان بطلبك. المراجعة تصبح فصلًا في <Link href="/me/journey">رحلتك</Link>.</p>
       </>)}
     </main>
   );
