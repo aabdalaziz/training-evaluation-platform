@@ -41,6 +41,7 @@ function Inner() {
     { p: 'learner_plan', who: ar ? 'المتعلم' : 'Learner', where: ar ? 'ملفي المهاري' : 'My skills profile', href: '/me/skills' },
     { p: 'org_brief', who: ar ? 'مدير الجهة' : 'Organization admin', where: ar ? 'بوابة الجهات' : 'Organizations portal', href: '/org' },
     { p: 'activity_draft', who: ar ? 'المدرب والإدارة' : 'Trainer & staff', where: ar ? 'إدارة البث المباشر' : 'Live sessions admin', href: '/admin/live' },
+    { p: 'cv_extract', who: ar ? 'عضو هيئة أَثَر' : 'Athar Faculty member', where: ar ? 'سيرتي في هيئة أَثَر — «ابدأ من سيرتك الذاتية»' : 'My Athar Faculty profile — start from your CV', href: '/me/directory' },
   ];
 
   return (

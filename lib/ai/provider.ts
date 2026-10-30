@@ -60,7 +60,13 @@ export async function resolveModel(provider: Provider, key: string): Promise<{ m
 }
 
 /* ---------------------------------------------------------------- استدعاء النموذج */
-export type CallOpts = { fast?: boolean };
+export type Attachment = { mime: string; data_b64: string; name?: string };
+/** attachments: ملفات تُرفق بالمطالبة (PDF/صور) — Gemini: inlineData · OpenAI: image_url/file · Anthropic: image/document. لا تُحتسب في input_chars */
+export type CallOpts = { fast?: boolean; attachments?: Attachment[] };
+const isImage = (m: string) => /^image\//i.test(m);
+function geminiParts(user: string, att: Attachment[]) { return [{ text: user }, ...att.map(a => ({ inlineData: { mimeType: a.mime, data: a.data_b64 } }))]; }
+function openaiContent(user: string, att: Attachment[]) { return att.length ? [{ type: 'text', text: user }, ...att.map(a => isImage(a.mime) ? { type: 'image_url', image_url: { url: `data:${a.mime};base64,${a.data_b64}` } } : { type: 'file', file: { filename: a.name || 'file.pdf', file_data: `data:${a.mime};base64,${a.data_b64}` } })] : user; }
+function anthropicContent(user: string, att: Attachment[]) { return att.length ? [{ type: 'text', text: user }, ...att.map(a => isImage(a.mime) ? { type: 'image', source: { type: 'base64', media_type: a.mime, data: a.data_b64 } } : { type: 'document', source: { type: 'base64', media_type: a.mime, data: a.data_b64 } })] : user; }
 /** fast: للمهام التفاعلية (شخصية محاكاة، مستشار، رفيق) — يعطّل «التفكير» في نماذج Gemini Flash لتقليل زمن الاستجابة؛ وإن رفض النموذج الإعداد يُعاد الطلب بدونه */
 export async function callModel(provider: Provider, key: string, model: string, system: string, user: string, deadline: number, opts: CallOpts = {}): Promise<string> {
   // في الوضع السريع تُحدَّد مهلة كل محاولة بـ 9 ثوانٍ كحدّ أقصى حتى لا يستهلك طلبٌ معلّق الميزانية كلها، وينتقل التنفيذ إلى النموذج التالي
@@ -69,10 +75,10 @@ export async function callModel(provider: Provider, key: string, model: string, 
   try {
     if (provider === 'gemini') {
       const fast = !!opts.fast && /flash/i.test(model);
-      const body: any = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json', ...(fast ? { thinkingConfig: { thinkingBudget: 0 } } : {}) } };
+      const body: any = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: geminiParts(user, opts.attachments || []) }], generationConfig: { temperature: 0.7, responseMimeType: 'application/json', ...(fast ? { thinkingConfig: { thinkingBudget: 0 } } : {}) } };
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal, body: JSON.stringify(body) });
       const j: any = await r.json().catch(() => ({}));
-      if (!r.ok && fast && r.status === 400 && /thinking|budget/i.test(String(j?.error?.message || ''))) { clearTimeout(t); return callModel(provider, key, model, system, user, deadline, { fast: false }); }
+      if (!r.ok && fast && r.status === 400 && /thinking|budget/i.test(String(j?.error?.message || ''))) { clearTimeout(t); return callModel(provider, key, model, system, user, deadline, { ...opts, fast: false }); }
       if (!r.ok) throw Object.assign(new Error(j?.error?.message || `Gemini HTTP ${r.status}`), { status: r.status });
       const fin = j?.candidates?.[0]?.finishReason; const text = (j?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || '').join('');
       if (!text && fin) throw new Error(`Gemini finishReason=${fin}`);
@@ -81,7 +87,7 @@ export async function callModel(provider: Provider, key: string, model: string, 
     if (provider === 'openai') {
       const r = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, signal: ctl.signal,
-        body: JSON.stringify({ model, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+        body: JSON.stringify({ model, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: system }, { role: 'user', content: openaiContent(user, opts.attachments || []) }] }),
       });
       const j: any = await r.json().catch(() => ({}));
       if (!r.ok) throw Object.assign(new Error(j?.error?.message || `OpenAI HTTP ${r.status}`), { status: r.status });
@@ -89,7 +95,7 @@ export async function callModel(provider: Provider, key: string, model: string, 
     }
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' }, signal: ctl.signal,
-      body: JSON.stringify({ model, max_tokens: 16000, temperature: 0.7, system, messages: [{ role: 'user', content: user }] }),
+      body: JSON.stringify({ model, max_tokens: 16000, temperature: 0.7, system, messages: [{ role: 'user', content: anthropicContent(user, opts.attachments || []) }] }),
     });
     const j: any = await r.json().catch(() => ({}));
     if (!r.ok) throw Object.assign(new Error(j?.error?.message || `Anthropic HTTP ${r.status}`), { status: r.status });

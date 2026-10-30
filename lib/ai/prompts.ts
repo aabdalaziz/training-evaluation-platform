@@ -7,10 +7,11 @@
 import type { Lang } from '../portal/content';
 import type { Scenario, Turn } from '../portal/sim';
 
-export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion' | 'mission_check' | 'mission_suggest' | 'daily_case' | 'daily_case_eval' | 'factory_foresight' | 'factory_design' | 'factory_review' | 'daily_case_whatif' | 'copilot_memo' | 'evidence_query' | 'agent_reply' | 'council_scribe';
+export type AiPurpose = 'impact_brief' | 'learner_plan' | 'org_brief' | 'activity_draft' | 'sim_turn' | 'sim_score' | 'daily_skill' | 'advisor' | 'companion' | 'mission_check' | 'mission_suggest' | 'daily_case' | 'daily_case_eval' | 'factory_foresight' | 'factory_design' | 'factory_review' | 'daily_case_whatif' | 'copilot_memo' | 'evidence_query' | 'agent_reply' | 'council_scribe' | 'cv_extract';
 /** حدود الاستخدام لكل مستخدم خلال 24 ساعة */
-export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150, mission_check: 30, mission_suggest: 20, daily_case: 3, daily_case_eval: 6, factory_foresight: 20, factory_design: 20, factory_review: 20, daily_case_whatif: 4, copilot_memo: 20, evidence_query: 60, agent_reply: 200, council_scribe: 40 };
+export const AI_LIMITS: Record<AiPurpose, number> = { impact_brief: 30, learner_plan: 6, org_brief: 12, activity_draft: 40, sim_turn: 120, sim_score: 20, daily_skill: 3, advisor: 40, companion: 150, mission_check: 30, mission_suggest: 20, daily_case: 3, daily_case_eval: 6, factory_foresight: 20, factory_design: 20, factory_review: 20, daily_case_whatif: 4, copilot_memo: 20, evidence_query: 60, agent_reply: 200, council_scribe: 40, cv_extract: 8 };
 export const AI_PURPOSE_LABEL: Record<AiPurpose, { ar: string; en: string }> = {
+  cv_extract: { ar: 'هيئة أَثَر — استخراج حقول السيرة من ملف (أنت تراجع)', en: 'Athar Faculty — CV field extraction (you review)' },
   council_scribe: { ar: 'كاتب المجلس (مجالس أَثَر)', en: 'Council scribe' },
   impact_brief: { ar: 'موجز تنفيذي لتقرير الأثر', en: 'Impact executive brief' },
   learner_plan: { ar: 'خطة تطوير شخصية', en: 'Personal development plan' },

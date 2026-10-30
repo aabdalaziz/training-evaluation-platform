@@ -7,7 +7,7 @@
  *  الحفظ مسودةً متى شئت؛ الإرسال للاعتماد حين تكتمل؛ بعد الاعتماد تبقى صفحتك ظاهرة وتعديلاتك تذهب للمراجعة.
  *  WCAG 2.2 AA: كل حقل بعنوان مرئي · أخطاء بنص وربط aria · لا رسائل تختفي بمؤقّت · تركيز مرئي · أزرار بنص · حجم الصورة ونوعها مذكوران قبل الرفع.
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../../lib/ui/icons';
 import { PortalShell } from '../../components/PortalShell';
@@ -27,18 +27,63 @@ const ROWS: { key: keyof Form; title: string; icon: any; cols: { k: string; l: s
   { key: 'publications', title: 'المنشورات والأعمال', icon: 'book', cols: [{ k: 'title', l: 'العنوان' }, { k: 'type', l: 'النوع (كتاب · ورقة · دليل…)' }, { k: 'year', l: 'السنة', w: 90 }, { k: 'url', l: 'رابط (اختياري)' }], max: 20 },
 ];
 
+const CameraIcon = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" /><circle cx="12" cy="13" r="3.5" /></svg>;
 export default function Page() { return <PortalShell><Inner /></PortalShell>; }
 function Inner() {
   const db = useMemo(() => supabase(), []); const [tok, setTok] = useState<string | null>(null);
   const [d, setD] = useState<any>(null); const [f, setF] = useState<Form>(EMPTY); const [dirty, setDirty] = useState(false); const [err, setErr] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState('');
   const [photoConsent, setPhotoConsent] = useState(false); const [note, setNote] = useState<Record<string, string>>({});
+  // P31-ب: اختيار الصورة (من الجهاز / الكاميرا) + «ابدأ من سيرتك الذاتية»
+  const [photoMenu, setPhotoMenu] = useState(false); const [cam, setCam] = useState<MediaStream | null>(null); const videoRef = useRef<HTMLVideoElement | null>(null); const fileRef = useRef<HTMLInputElement | null>(null); const capRef = useRef<HTMLInputElement | null>(null);
+  const [cvBusy, setCvBusy] = useState(false); const [cvRes, setCvRes] = useState<any>(null); const [cvOverwrite, setCvOverwrite] = useState(false); const prevForm = useRef<Form | null>(null);
+  useEffect(() => { if (cam && videoRef.current) { videoRef.current.srcObject = cam; videoRef.current.play().catch(() => {}); } return () => { if (cam) cam.getTracks().forEach(t => t.stop()); }; }, [cam]);
   useEffect(() => { fastToken(db).then(t => setTok(t || '')); }, [db]);
   const load = useCallback(async (t: string) => { const j = await fetch('/api/directory?mine=1', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (j?.success) { setD(j); setF(fromProfile(j.profile || j.prefill)); setDirty(false); setErr(''); } else setErr(j?.error || 'تعذّر التحميل'); }, []);
   useEffect(() => { if (tok) load(tok); }, [tok, load]);
   const set = <K extends keyof Form>(k: K, v: Form[K]) => { setF(x => ({ ...x, [k]: v })); setDirty(true); };
   async function act(body: any): Promise<any> { setBusy(body.action); setErr(''); setMsg(''); const j = await fetch('/api/directory', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify(body) }).then(r => r.json()).catch(() => null); setBusy(''); if (!j?.success) { setErr(j?.error || 'تعذّر'); return null; } if (j.message_ar) setMsg(j.message_ar); if (tok) await load(tok); return j; }
   const save = () => act({ action: 'save', ...f, coverage: f.coverage.split(/[،,]/).map(s => s.trim()).filter(Boolean) });
-  async function onPhoto(file: File | undefined) { if (!file) return; if (file.size > (d?.rules.photo_max_bytes || 2097152)) { setErr('حجم الصورة حتى 2 ميجابايت'); return; } const b64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = rej; r.readAsDataURL(file); }); await act({ action: 'photo', file_b64: b64, file_type: file.type, consent: photoConsent }); }
+  const toB64 = (file: Blob) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = rej; r.readAsDataURL(file); });
+  async function onPhoto(file: File | undefined) {
+    if (!file) return; setPhotoMenu(false); if (file.size > (d?.rules.photo_max_bytes || 2097152)) { setErr('حجم الصورة حتى 2 ميجابايت'); return; }
+    if (!d?.profile) { if (!f.name_ar.trim()) { setErr('اكتب اسمك أولًا ثم أضف الصورة — تُحفظ المسودة تلقائيًا'); return; } const saved = await save(); if (!saved) return; }
+    const b64 = await toB64(file); await act({ action: 'photo', file_b64: b64, file_type: file.type, consent: photoConsent });
+  }
+  /** الكاميرا: على الأجهزة اللمسية نفتح كاميرا الجهاز مباشرة (input capture)؛ على سطح المكتب معاينة داخل الصفحة عبر getUserMedia، وإن تعذّر نعود إلى اختيار ملف */
+  async function startCamera() {
+    setPhotoMenu(false); const coarse = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+    if (coarse || !navigator.mediaDevices?.getUserMedia) { capRef.current?.click(); return; }
+    try { const st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 960 } }, audio: false }); setCam(st); }
+    catch { setErr('تعذّر فتح الكاميرا — اختر صورة من الجهاز'); capRef.current?.click(); }
+  }
+  function stopCamera() { setCam(null); }
+  async function snap() {
+    const v = videoRef.current; if (!v || !v.videoWidth) { setErr('الكاميرا لم تجهز بعد'); return; }
+    const side = Math.min(v.videoWidth, v.videoHeight, 900); const c = document.createElement('canvas'); c.width = side; c.height = side; const ctx = c.getContext('2d'); if (!ctx) return;
+    ctx.drawImage(v, (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side, 0, 0, side, side);
+    const blob = await new Promise<Blob | null>(res => c.toBlob(res, 'image/jpeg', 0.88)); stopCamera(); if (!blob) { setErr('تعذّر التقاط الصورة'); return; }
+    await onPhoto(new File([blob], 'camera.jpg', { type: 'image/jpeg' }));
+  }
+  const isEmpty = (v: any) => Array.isArray(v) ? v.length === 0 : !v || !String(v).trim();
+  /** يدمج ما استُخرج: الحقول الفارغة تُملأ دائمًا؛ المملوءة تُستبدل فقط إن اختار العضو ذلك — مع «تراجع» */
+  function applyCv(fields: Record<string, any>, overwrite: boolean): string[] {
+    prevForm.current = f; const applied: string[] = []; const next: any = { ...f };
+    for (const k of Object.keys(fields)) { if (!(k in EMPTY)) continue; let v = fields[k]; if (k === 'coverage' && Array.isArray(v)) v = v.join('، '); if (v == null || isEmpty(v)) continue; if (!overwrite && !isEmpty((f as any)[k])) continue; next[k] = v; applied.push(k); }
+    if (applied.length) { setF(next); setDirty(true); }
+    return applied;
+  }
+  async function onCv(file: File | undefined) {
+    if (!file) return; const max = d?.rules?.cv?.max_bytes || 3145728; if (file.size > max) { setErr('حجم ملف السيرة حتى 3 ميجابايت'); return; }
+    setCvBusy(true); setErr(''); setMsg(''); setCvRes(null);
+    try {
+      const b64 = await toB64(file); const j = await fetch('/api/directory', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'parse_cv', file_b64: b64, file_type: file.type, file_name: file.name }) }).then(r => r.json()).catch(() => null);
+      if (!j?.success) { setErr(j?.error || 'تعذّرت قراءة السيرة'); return; }
+      const applied = applyCv(j.fields || {}, cvOverwrite); const skipped = (j.filled_keys || []).filter((k: string) => !applied.includes(k));
+      setCvRes({ ...j, applied, applied_ar: applied.map(k => j.filled_ar?.[j.filled_keys.indexOf(k)] || k), skipped_ar: skipped.map((k: string) => j.filled_ar?.[j.filled_keys.indexOf(k)] || k) });
+      window.setTimeout(() => document.getElementById('h-id')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    } finally { setCvBusy(false); if (fileRef.current) { /* لا شيء */ } }
+  }
+  function undoCv() { if (prevForm.current) { setF(prevForm.current); prevForm.current = null; setDirty(true); setCvRes(null); setMsg('أُعيدت الحقول كما كانت قبل القراءة.'); } }
   if (tok === '') return <main className="dr" dir="rtl"><style dangerouslySetInnerHTML={{ __html: DR_CSS + CSS }} /><p className="dr-err" role="alert">سجّل الدخول لتفتح سيرتك في هيئة أَثَر.</p><p><Link href="/me" className="pt-btn ghost small">حسابي</Link></p></main>;
   if (!d) return <main className="dr" dir="rtl"><style dangerouslySetInnerHTML={{ __html: DR_CSS + CSS }} /><p className="dr-count" role="status">{err || 'جارٍ فتح سيرتك…'}</p></main>;
   const p = d.profile; const rules = d.rules; const st: string = p?.status || 'none'; const issues: string[] = p?.issues || [];
@@ -69,6 +114,25 @@ function Inner() {
       {msg && <p className="dr-ok" role="status" data-testid="me-msg">{msg} <button className="me-x" onClick={() => setMsg('')} aria-label="إغلاق الرسالة">×</button></p>}
       {err && <p className="dr-err" role="alert" data-testid="me-err">{err} <button className="me-x" onClick={() => setErr('')} aria-label="إغلاق الرسالة">×</button></p>}
 
+      <section className="me-sec me-cv" aria-labelledby="h-cv" data-testid="me-cv">
+        <h2 id="h-cv"><Icon name="doc" size={16} /> ابدأ من سيرتك الذاتية <small>اختياري · أَثَر يقرأ وأنت تراجع</small></h2>
+        <p className="dr-muted">ارفع سيرتك الذاتية (PDF · Word · نص · أو صورة) ويقترح أَثَر منها ما يملأ الحقول أدناه. لا شيء يُحفظ قبل أن تراجعه وتضغط «احفظ».</p>
+        <div className="me-btns">
+          <label className={`pt-btn gold small me-file ${cvBusy ? 'is-busy' : ''}`}><Icon name="plus" size={14} /> {cvBusy ? 'أَثَر يقرأ سيرتك…' : 'ارفع سيرتي الذاتية'}<input type="file" accept={rules.cv?.accept || '.pdf,.docx,.txt,image/*'} onChange={e => { onCv(e.target.files?.[0]); e.target.value = ''; }} disabled={cvBusy || !!busy} data-testid="me-cv-file" /></label>
+          <label className="me-consent" style={{ margin: 0 }}><input type="checkbox" checked={cvOverwrite} onChange={e => setCvOverwrite(e.target.checked)} data-testid="me-cv-overwrite" /> استبدل ما كتبته سابقًا بما يُستخرج (وإلا تُملأ الحقول الفارغة فقط)</label>
+        </div>
+        {cvBusy && <p className="dr-count" role="status" aria-live="polite">جارٍ قراءة الملف واستخراج الحقول — قد يستغرق حتى 45 ثانية…</p>}
+        {cvRes && <div className="me-cvres" role="status" aria-live="polite" data-testid="me-cv-result">
+          <p><b>{cvRes.message_ar}</b></p>
+          {cvRes.applied_ar?.length > 0 && <p>مُلئ الآن: {cvRes.applied_ar.join(' · ')}.</p>}
+          {cvRes.skipped_ar?.length > 0 && <p className="dr-muted">تُرك كما كتبته أنت: {cvRes.skipped_ar.join(' · ')} — فعِّل «استبدل» إن أردت أخذ ما في الملف.</p>}
+          {cvRes.notes_ar?.length > 0 && <ul className="me-issues">{cvRes.notes_ar.map((n: string, i: number) => <li key={i}><Icon name="alert" size={12} /> {n}</li>)}</ul>}
+          <p className="dr-fine">{cvRes.disclaimer_ar}{cvRes.source === 'local' ? ' · (قراءة بالقواعد — الذكاء الاصطناعي غير مفعّل هنا)' : ''}</p>
+          <div className="me-btns">{cvRes.applied?.length > 0 && <button type="button" className="pt-btn ghost small" onClick={undoCv} data-testid="me-cv-undo">تراجع عن التعبئة</button>}<button type="button" className="pt-btn light small" onClick={() => setCvRes(null)} aria-label="إغلاق نتيجة القراءة">إغلاق</button></div>
+        </div>}
+        <p className="dr-fine">{rules.cv?.privacy_ar}</p>
+      </section>
+
       <form className="me-form" onSubmit={e => { e.preventDefault(); save(); }}>
         <section className="me-sec" aria-labelledby="h-id"><h2 id="h-id"><Icon name="users" size={16} /> الوجه والهوية</h2>
           <fieldset className="dr-fs"><legend>أنا في الهيئة بصفة</legend>{(['expert', 'trainer'] as const).map(fc => <label key={fc}><input type="checkbox" checked={f.faces.includes(fc)} onChange={() => set('faces', toggle(f.faces, fc))} data-testid={`me-face-${fc}`} /> {rules.faces_ar[fc]}</label>)}</fieldset>
@@ -84,17 +148,32 @@ function Inner() {
 
         <section className="me-sec" aria-labelledby="h-photo"><h2 id="h-photo"><Icon name="star" size={16} /> الصورة الشخصية <small>إلزامية للاعتماد</small></h2>
           <div className="me-photo">
-            <Avatar src={d.photo_preview_url || d.photo_url} name={f.name_ar || '؟'} size={120} />
+            <div className="me-avatar-wrap">
+              <button type="button" className="me-avatar-btn" onClick={() => setPhotoMenu(v => !v)} aria-haspopup="menu" aria-expanded={photoMenu} aria-label={p?.photo_path ? 'غيّر الصورة الشخصية: من الجهاز أو بالكاميرا' : 'أضف صورة شخصية: من الجهاز أو بالكاميرا'} disabled={!!busy || !!cam} data-testid="me-photo-btn">
+                <Avatar src={d.photo_preview_url || d.photo_url} name={f.name_ar || '؟'} size={120} />
+                <span className="me-avatar-cam" aria-hidden="true"><CameraIcon /></span>
+              </button>
+              {photoMenu && <div className="me-photo-menu" role="menu" aria-label="مصدر الصورة" data-testid="me-photo-menu">
+                <button type="button" role="menuitem" className="pt-btn ghost small" onClick={() => { setPhotoMenu(false); fileRef.current?.click(); }} data-testid="me-photo-pick"><Icon name="folder" size={14} /> اختر صورة من الجهاز</button>
+                <button type="button" role="menuitem" className="pt-btn ghost small" onClick={startCamera} data-testid="me-photo-cam"><CameraIcon /> التقط صورة بالكاميرا</button>
+                <button type="button" role="menuitem" className="pt-btn light small" onClick={() => setPhotoMenu(false)}>إلغاء</button>
+              </div>}
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { onPhoto(e.target.files?.[0]); e.target.value = ''; }} disabled={!!busy} data-testid="me-photo-file" className="me-hidden" tabIndex={-1} aria-hidden="true" />
+              <input ref={capRef} type="file" accept="image/*" capture="user" onChange={e => { onPhoto(e.target.files?.[0]); e.target.value = ''; }} disabled={!!busy} data-testid="me-photo-capture" className="me-hidden" tabIndex={-1} aria-hidden="true" />
+            </div>
             <div>
-              <p className="dr-muted">صورة واضحة للوجه · JPEG أو PNG أو WebP · حتى 2 ميجابايت. تُحفظ في مخزن خاص، ولا تُنشر إلا بعد موافقتك المؤرَّخة واعتماد الطاقم.</p>
-              {!p ? <p className="dr-muted"><b>احفظ سيرتك أولًا</b> ثم ارفع الصورة.</p> : (<>
-                <label className="me-consent"><input type="checkbox" checked={photoConsent} onChange={e => setPhotoConsent(e.target.checked)} data-testid="me-consent" /> أوافق على ظهور صورتي في دليل هيئة أَثَر العام (تُسجَّل الموافقة بتاريخ اليوم)</label>
-                <label className="pt-btn ghost small me-file"><Icon name="plus" size={14} /> {p.photo_path ? 'استبدل الصورة' : 'ارفع الصورة'}<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => onPhoto(e.target.files?.[0])} disabled={!!busy} data-testid="me-photo-file" /></label>
-                {p.photo_path && !p.photo_consent_at && <button type="button" className="pt-btn small" disabled={!!busy} onClick={() => act({ action: 'photo_consent', consent: true })} data-testid="me-consent-btn">سجّل موافقتي على ظهور الصورة</button>}
-                {p.photo_consent_at && <p className="dr-ok" style={{ margin: '6px 0 0' }} data-testid="me-consent-ok">موافقتك مسجَّلة بتاريخ {fmtD(p.photo_consent_at)}</p>}
-              </>)}
+              <p className="dr-muted">اضغط على مساحة الصورة لاختيار صورة من جهازك أو التقاطها بالكاميرا. صورة واضحة للوجه · JPEG أو PNG أو WebP · حتى 2 ميجابايت. تُحفظ في مخزن خاص، ولا تُنشر إلا بعد موافقتك المؤرَّخة واعتماد الطاقم.</p>
+              {!p && <p className="dr-muted">اكتب اسمك أولًا؛ عند إضافة الصورة تُحفظ المسودة تلقائيًا.</p>}
+              <label className="me-consent"><input type="checkbox" checked={photoConsent} onChange={e => setPhotoConsent(e.target.checked)} data-testid="me-consent" /> أوافق على ظهور صورتي في دليل هيئة أَثَر العام (تُسجَّل الموافقة بتاريخ اليوم)</label>
+              {p?.photo_path && !p.photo_consent_at && <button type="button" className="pt-btn small" disabled={!!busy} onClick={() => act({ action: 'photo_consent', consent: true })} data-testid="me-consent-btn">سجّل موافقتي على ظهور الصورة</button>}
+              {p?.photo_consent_at && <p className="dr-ok" style={{ margin: '6px 0 0' }} data-testid="me-consent-ok">موافقتك مسجَّلة بتاريخ {fmtD(p.photo_consent_at)}</p>}
             </div>
           </div>
+          {cam && <div className="me-cam" role="dialog" aria-modal="false" aria-label="التقاط صورة بالكاميرا" data-testid="me-cam">
+            <video ref={videoRef} autoPlay playsInline muted aria-label="معاينة الكاميرا" />
+            <div className="me-btns"><button type="button" className="pt-btn small" onClick={snap} data-testid="me-cam-snap"><CameraIcon /> التقط</button><button type="button" className="pt-btn ghost small" onClick={stopCamera}>إلغاء</button></div>
+            <p className="dr-fine">تُقصّ الصورة مربّعة وتُرسل مباشرة إلى مخزنك الخاص — لا تُحفظ على الجهاز.</p>
+          </div>}
         </section>
 
         <section className="me-sec" aria-labelledby="h-sum"><h2 id="h-sum"><Icon name="doc" size={16} /> ملخص السيرة * <small>{f.summary_ar.length} / {rules.summary_max} · {rules.summary_min} حرفًا على الأقل</small></h2>
@@ -165,5 +244,11 @@ const CSS = `
 .me-rows{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:8px}.me-rows li{display:flex;gap:6px;align-items:flex-end}.me-rows li .dr-in{margin-top:4px}.me-rowgrid{flex-wrap:wrap;border:1px solid #e2e8f0;border-radius:12px;padding:8px 10px}.me-rowgrid .dr-lbl{flex:1 1 160px;font-size:12px}.me-del{font:inherit;border:1px solid #fecaca;background:#fff;color:#991b1b;border-radius:10px;padding:8px;cursor:pointer;min-width:36px;min-height:36px}
 .me-savebar{position:sticky;bottom:0;background:rgba(255,255,255,.95);border-top:1px solid #e2e8f0;padding:10px 0;display:flex;gap:12px;align-items:center;z-index:2}
 .me-engs{list-style:none;margin:0;padding:0;display:grid;gap:10px}.me-eng{border:1px solid #cbd5e1;border-radius:16px;padding:12px 14px;background:#fff}.me-eng.s-proposed{border-color:#c9a24b;background:#fffdf7}.me-eng.s-active{border-color:#0b8a83;background:#f0fdfa}.me-enghead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.me-enghead b{color:#0f2a4e;font-size:16px}.me-scope{white-space:pre-wrap;line-height:1.85;color:#1e293b;margin:6px 0}.me-engact{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}.me-engact .grow{flex:1 1 220px}
+.me-avatar-wrap{position:relative;display:inline-block}.me-avatar-btn{position:relative;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;display:block}.me-avatar-btn:focus-visible{outline:3px solid #0b6f69;outline-offset:3px}.me-avatar-btn:disabled{cursor:default;opacity:.7}
+.me-avatar-cam{position:absolute;inset-inline-end:2px;bottom:2px;width:34px;height:34px;border-radius:50%;background:#0f2a4e;color:#fff;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(15,42,78,.3)}.me-avatar-btn:hover .me-avatar-cam{background:#0b6f69}
+.me-photo-menu{position:absolute;top:calc(100% + 8px);inset-inline-start:0;z-index:5;display:grid;gap:6px;min-width:230px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:8px;box-shadow:0 12px 30px rgba(15,42,78,.18)}.me-photo-menu .pt-btn{justify-content:flex-start}
+.me-hidden{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
+.me-cam{margin-top:12px;border:1px solid #e2e8f0;border-radius:14px;padding:10px;background:#f8fafc;max-width:460px}.me-cam video{display:block;width:100%;max-height:360px;border-radius:10px;background:#000;object-fit:cover;transform:scaleX(-1)}
+.me-cv{border-color:#c9a24b;background:linear-gradient(180deg,#fffdf7,#fff)}.me-cv .is-busy{opacity:.7;pointer-events:none}.me-cvres{margin-top:10px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:12px;padding:10px 12px}.me-cvres p{margin:4px 0}
 @media (max-width:760px){.me-grid2{grid-template-columns:1fr}.me-photo{grid-template-columns:1fr}}
 `;

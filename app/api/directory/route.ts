@@ -6,6 +6,7 @@
  *  GET  ?slug=<slug>                              (عام)  → صفحة العضو العامة + «ما شهده أَثَر» (مشتق من السجلات؛ لا يُكتب باليد)
  *  GET  ?mine=1                                   (مسجّل) → سيرتي كاملة (بلا حقول الطاقم) · «ما شهده أَثَر» · عقودي · تعبئة مسبقة لمدرب منصة التقييم · meta
  *  POST (مسجّل) { action }  save{...fields} · photo{file_b64,file_type} · photo_consent{consent:true} · submit · withdraw · relist · engagement{id, op:sign|change|decline, note_ar?, confirm}
+ *               parse_cv{file_b64,file_type,file_name} (P31-ب) → حقول مستخرَجة من ملف السيرة (PDF/Word/نص/صورة) — لا تُحفظ؛ العضو يراجع ثم save
  *  POST (عام)   { action:'request', slug, kind, full_name, email, phone?, organization?, title, details } → طلب عبر أَثَر (لا بريد العضو ولا هاتفه يظهران لأحد)
  */
 import { NextResponse } from 'next/server';
@@ -20,6 +21,9 @@ import { DIRECTORY_VERSION, TAGLINE_AR, FACE_AR, FACE_TITLE_AR, STATUS_AR, SERVI
 import type { Profile, Engagement, Face } from '../../../lib/directory/registry';
 import { loadMyProfile, loadProfileBySlug, loadPublicProfiles, loadMeta, resolveNames, legacyTrainer, witnessFacts, loadEngagements, loadEngagement } from '../../../lib/directory/load';
 import { signEngagement } from '../../../lib/directory/card';
+import { runAi, aiUsage, logAi, aiStatus } from '../../../lib/ai/athar';
+import { AI_DISCLAIMER } from '../../../lib/ai/prompts';
+import { CV_MAX_BYTES, CV_ACCEPT, CV_TYPES, CV_PRIVACY_AR, CV_FIELD_AR, cvToText, buildCvPrompt, parseCvExtract, localCvExtract, filledKeys } from '../../../lib/directory/cv';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
@@ -34,7 +38,7 @@ async function who(req: Request, db: any): Promise<Who | null> {
   const { data: prof } = await db.from('profiles').select('full_name').eq('id', data.user.id).maybeSingle();
   return { id: data.user.id, email: lower(data.user.email), name: String((prof as any)?.full_name || data.user.user_metadata?.full_name || '') };
 }
-const RULES = { version: DIRECTORY_VERSION, tagline_ar: TAGLINE_AR, faces_ar: FACE_AR, face_titles_ar: FACE_TITLE_AR, status_ar: STATUS_AR, services: SERVICES.map(s => ({ code: s, name_ar: SERVICE_AR[s] })), modes: MODES.map(m => ({ code: m, name_ar: MODE_AR[m] })), languages: Object.entries(LANG_AR).map(([code, name_ar]) => ({ code, name_ar })), sections: SECTIONS.map(s => ({ code: s, name_ar: SECTION_AR[s], default: DEFAULT_VISIBILITY[s] })), summary_min: SUMMARY_MIN, summary_max: SUMMARY_MAX, achievements_max: ACHIEVEMENTS_MAX, achievement_len: ACHIEVEMENT_LEN, skills_max: SKILLS_MAX, sectors_max: SECTORS_MAX, photo_max_bytes: PHOTO_MAX_BYTES, photo_types: PHOTO_TYPES, page: SEARCH_PAGE };
+const RULES = { version: DIRECTORY_VERSION, cv: { accept: CV_ACCEPT, max_bytes: CV_MAX_BYTES, privacy_ar: CV_PRIVACY_AR, ai: aiStatus().enabled }, tagline_ar: TAGLINE_AR, faces_ar: FACE_AR, face_titles_ar: FACE_TITLE_AR, status_ar: STATUS_AR, services: SERVICES.map(s => ({ code: s, name_ar: SERVICE_AR[s] })), modes: MODES.map(m => ({ code: m, name_ar: MODE_AR[m] })), languages: Object.entries(LANG_AR).map(([code, name_ar]) => ({ code, name_ar })), sections: SECTIONS.map(s => ({ code: s, name_ar: SECTION_AR[s], default: DEFAULT_VISIBILITY[s] })), summary_min: SUMMARY_MIN, summary_max: SUMMARY_MAX, achievements_max: ACHIEVEMENTS_MAX, achievement_len: ACHIEVEMENT_LEN, skills_max: SKILLS_MAX, sectors_max: SECTORS_MAX, photo_max_bytes: PHOTO_MAX_BYTES, photo_types: PHOTO_TYPES, page: SEARCH_PAGE };
 const PRIVACY_AR = 'لا يظهر بريدك ولا هاتفك لأحد؛ الطلبات تصل عبر أَثَر وحده. كل قسم من سيرتك له مفتاح ظهور بيدك، و«ما شهده أَثَر» يُشتقّ من سجلات المنصة ولا يُكتب باليد.';
 
 async function witnessOf(db: any, p: Profile, engagements?: Engagement[]) {
@@ -105,6 +109,22 @@ export async function POST(req: Request) {
           if (error || !data) return bad(error?.message || 'تعذّر إنشاء السيرة', 500); p = data as Profile;
         } else { const patch: Record<string, any> = { ...base }; if (p.status === 'changes_requested') patch.status = 'draft'; p = await patchMine(reviewFlag(p, patch)); }
         return NextResponse.json({ success: true, profile: ownerView(p), message_ar: p.status === 'approved' ? 'حُفظت التعديلات — سيراجعها الطاقم وتبقى صفحتك المعتمدة ظاهرة.' : 'حُفظت المسودة.' });
+      }
+      case 'parse_cv': {
+        if (p?.status === 'suspended') return bad('السيرة موقوفة — تواصل مع أَثَر', 409);
+        const type = String(body.file_type || '').toLowerCase().split(';')[0].trim(); const name = String(body.file_name || '').slice(0, 120);
+        const kind = CV_TYPES[type] || (/\.docx$/i.test(name) ? 'docx' : /\.(txt|md)$/i.test(name) ? 'text' : /\.pdf$/i.test(name) ? 'pdf' : null);
+        if (!kind) return bad('الملف: PDF أو Word (.docx) أو نص أو صورة (JPEG/PNG/WebP)');
+        let bytes: Buffer; try { bytes = Buffer.from(String(body.file_b64 || ''), 'base64'); } catch { return bad('ملف تالف'); }
+        if (!bytes.length || bytes.length > CV_MAX_BYTES) return bad('حجم ملف السيرة حتى 3 ميجابايت');
+        const usage = await aiUsage(db, me.id, 'cv_extract'); if (!usage.allowed) return bad(`بلغت حدّ قراءة السير اليوم (${usage.limit}) — أكمل الحقول يدويًا أو عُد غدًا`, 429);
+        const meta = await loadMeta(db); const text = cvToText(kind, bytes); const attach = text ? [] : [{ mime: kind === 'pdf' ? 'application/pdf' : (type || 'image/jpeg'), data_b64: bytes.toString('base64'), name: name || (kind === 'pdf' ? 'cv.pdf' : 'cv') }];
+        if (kind === 'docx' && !text) return bad('تعذّرت قراءة ملف Word — احفظه بصيغة .docx حديثة أو PDF');
+        const prompt = buildCvPrompt(meta, text, { has_attachment: attach.length > 0, file_kind: kind });
+        const res = await runAi({ system: prompt.system, user: prompt.user, attachments: attach, budgetMs: 45000, fast: false, parse: raw => parseCvExtract(raw, meta), local: () => localCvExtract(text, meta) });
+        await logAi(db, { user_id: me.id, email: me.email, role: 'USER', purpose: 'cv_extract', result: res, context: { kind, bytes: bytes.length, text_chars: text ? text.length : 0, filled: filledKeys(res.data.fields).length } });
+        const keys = filledKeys(res.data.fields);
+        return NextResponse.json({ success: true, fields: res.data.fields, filled_keys: keys, filled_ar: keys.map(k => CV_FIELD_AR[k]), notes_ar: res.data.notes_ar, source: res.source, model: res.model, privacy_ar: CV_PRIVACY_AR, disclaimer_ar: AI_DISCLAIMER.ar, message_ar: keys.length ? `قرأ أَثَر سيرتك واقترح ${keys.length} حقلًا — راجعها وعدّل ما تشاء ثم احفظ.` : 'لم أستطع استخراج حقول من هذا الملف — جرّب ملفًا أوضح أو اكتب الحقول بنفسك.' });
       }
       case 'photo': {
         if (!p) return bad('احفظ سيرتك أولًا ثم ارفع الصورة');

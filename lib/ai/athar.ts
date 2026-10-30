@@ -5,6 +5,7 @@
  *  ويسجّل كل استدعاء في portal_ai_log (بلا محتوى شخصي) ويطبّق حدود الاستخدام لكل مستخدم/غرض خلال 24 ساعة.
  */
 import { readKey, resolveModel, callWithFallback } from './provider';
+import type { Attachment } from './provider';
 import { AI_LIMITS } from './prompts';
 import type { AiPurpose } from './prompts';
 
@@ -19,15 +20,16 @@ export function aiStatus(): { enabled: boolean; provider: string | null } {
 /**
  * ينفّذ مطالبة ويحلّل الناتج؛ عند غياب المفتاح أو فشل الاستدعاء/التحليل يعود للبديل المحلي — لا يرمي أبدًا.
  * budgetMs: ميزانية الوقت الكلية (ضمن maxDuration للمسار). fast: وضع تفاعلي (افتراضيًا حين تكون الميزانية < 30 ثانية) يعطّل «التفكير» في نماذج Flash لتقليل زمن الاستجابة.
+ * attachments: ملفات (PDF/صور) تُرفق بالمطالبة للنماذج متعددة الوسائط (P31-ب: قراءة السيرة الذاتية) — لا تُسجَّل ولا تُحفظ.
  */
-export async function runAi<T>(p: { system: string; user: string; parse: (raw: string) => T | null; local: () => T; budgetMs?: number; fast?: boolean }): Promise<AiResult<T>> {
+export async function runAi<T>(p: { system: string; user: string; parse: (raw: string) => T | null; local: () => T; budgetMs?: number; fast?: boolean; attachments?: Attachment[] }): Promise<AiResult<T>> {
   const t0 = Date.now(); const { key, provider } = readKey(); const input_chars = p.system.length + p.user.length;
   if (!key) return { data: p.local(), source: 'local', provider: null, model: null, ms: Date.now() - t0, input_chars, output_chars: 0, error: null };
   const deadline = t0 + (p.budgetMs ?? 40000);
   try {
     const { candidates } = await resolveModel(provider, key);
     const fast = p.fast ?? ((p.budgetMs ?? 40000) < 30000);
-    const r = await Promise.race([callWithFallback(provider, key, candidates, p.system, p.user, deadline, { fast }), new Promise<never>((_, rej) => setTimeout(() => rej(new Error('ai_timeout')), Math.max(5000, deadline - Date.now())))]);
+    const r = await Promise.race([callWithFallback(provider, key, candidates, p.system, p.user, deadline, { fast, attachments: p.attachments }), new Promise<never>((_, rej) => setTimeout(() => rej(new Error('ai_timeout')), Math.max(5000, deadline - Date.now())))]);
     const parsed = p.parse(r.text);
     if (!parsed) return { data: p.local(), source: 'local', provider, model: r.model, ms: Date.now() - t0, input_chars, output_chars: r.text.length, error: 'unparseable' };
     return { data: parsed, source: 'ai', provider, model: r.model, ms: Date.now() - t0, input_chars, output_chars: r.text.length, error: null };
