@@ -6,11 +6,13 @@
  *  → عهد الجهة (وثيقة ATH-OH باسم الجهة · 365 يومًا · تُسحب بنقرة · يُخبَر المنسوبون بعنوانها) → أين نحن من خطوتنا (أعداد أشخاص متمايزين من الأحداث بعد التوقيع؛ لا أسماء ولا نسبة)
  *  → ما وعدنا / ما وقع (مراجعة سنة الجهة → نجدّد أو نطوي؛ تصبح فصلًا في رحلة الجهة).
  *  الأفق لا يغادر الجهة: الطاقم يرى الحالة بلا نصه؛ الوثيقة تعرض عنوان العهد وتاريخه ومن وقّعه بصفته فقط.
+ *  P30: أسفل التبويب قسم «عهود الجهة مع منسوبيها» (مكوّن OrgPair بوجه الجهة).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Icon, type IconName } from '../../lib/ui/icons';
 import { Channel, ReadAloud } from './Channel';
+import { OrgPair } from './OrgPair';
 
 type Lang = 'ar' | 'en';
 type Props = { orgId: string; orgName: string; lang: Lang; token: () => Promise<string> };
@@ -132,6 +134,7 @@ export function OrgHorizon({ orgId, orgName, lang, token }: Props) {
             {d.past.map(({ horizon: ph, pledge: pp }) => <article key={ph.id} className="oh-pastrow"><div><b>{ph.decision === 'renew' ? 'جُدّد' : 'طُوي'} {fmt(ph.reviewed_at || ph.created_at)}</b>{pp && <p>«{pp.title_ar}» — {d.rules.kinds_ar[pp.kind] || pp.kind}</p>}{ph.review_note_ar && !ph.hidden && <blockquote className="oh-quote">{ph.review_note_ar}<small>ما تغيّر فينا — بكلمات الجهة</small></blockquote>}</div></article>)}
           </section>)}
 
+        <OrgPair side="org" lang={lang} token={token} orgId={orgId} orgName={orgName} />
         <ul className="oh-privacy">{d.rules.privacy_ar.map((t, i) => <li key={i}><Icon name="shield" size={12} /> {t}</li>)}</ul>
         <p className="oh-foot"><Icon name="shield" size={12} /> أفق الجهة وعهدها ملك الجهة؛ يُذكر الكاتب والموقِّع بصفتهما ويُحفظان في <Link href="/me/data">خزنة أَثَر</Link>. المراجعة تصبح فصلًا في <Link href="/org?tab=journey">رحلة الجهة</Link>.</p>
       </>)}

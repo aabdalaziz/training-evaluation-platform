@@ -5,6 +5,7 @@
  *  من دائرتي (دعوة بالبريد؛ الردّ واحد لا يكشف عضوية أحد) → خطوة أطلبها منك (كلٌّ يقترح لصاحبه من خطوات تشهدها المنصة) → توقيعان (وثيقة ATH-MP واحدة بحاملَين)
  *  → أين نحن من عهدنا (دربي كاملًا · حالة خطوة صاحبي فقط · مرآة مشتركة بلا حكم) → ما وعدنا بعضَنا / ما وقع (كلمات صاحبي تُفتح بعد كلماتي → نجدّد أو نطوي).
  *  لا ذكاء اصطناعي بين الإنسانين؛ الكلمات لهما.
+ *  P30: تبويب «مع جهتي» (?with=org) — عهد الممارس وجهته عبر مكوّن OrgPair.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -13,6 +14,7 @@ import { PortalShell, useLang } from '../../components/PortalShell';
 import { fastToken } from '../../components/Pocket';
 import { Channel } from '../../components/Channel';
 import { supabase } from '../../../lib/supabase/client';
+import { OrgPair } from '../../components/OrgPair';
 
 type Step = { kind: string; title_ar: string; why_ar: string; target: any; proposed_by: 'a' | 'b'; proposed_at: string; accepted_at: string | null; rework: number };
 type Option = { kind: string; title_ar: string; why_ar: string; target: any };
@@ -46,6 +48,9 @@ function Inner() {
   const { lang } = useLang(); const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [d, setD] = useState<Data | null>(null); const [err, setErr] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState('');
   const [email, setEmail] = useState(''); const [why, setWhy] = useState(''); const [nameMode, setNameMode] = useState<'full' | 'first' | 'anon'>('first');
+  const [withOrg, setWithOrg] = useState(false);
+  useEffect(() => { try { const q = new URLSearchParams(window.location.search); setWithOrg(q.get('with') === 'org'); } catch { /* لا شيء */ } }, []);
+  const switchTo = (org: boolean) => { setWithOrg(org); try { const u = new URL(window.location.href); if (org) u.searchParams.set('with', 'org'); else u.searchParams.delete('with'); window.history.replaceState(null, '', u.toString()); } catch { /* لا شيء */ } };
   const [peek, setPeek] = useState(-1); const [pick, setPick] = useState(-1); const [ptitle, setPtitle] = useState(''); const [pwhy, setPwhy] = useState(''); const [stitle, setStitle] = useState(''); const [review, setReview] = useState('');
   useEffect(() => { fastToken(db).then(t => setTok(t || '')); }, [db]);
   const load = useCallback(async (t: string) => { const j = await fetch('/api/pair', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (j?.success) { setD(j); setErr(''); } else setErr(j?.error || 'تعذّر التحميل'); }, []);
@@ -68,9 +73,11 @@ function Inner() {
       <header className="pp-head"><span className="pt-kicker"><Icon name="users" size={14} /> العهد المتقابل</span><h1>عهدان متقابلان<small> — خطوة لك وخطوة لي</small></h1>
         <p>لا أحد يفي بعهده وحده. تدعو زميلًا من دائرتك، يطلب كلٌّ منكما من صاحبه خطوة واحدة لسنة، وتوقّعان وثيقة واحدة بتوقيعين — والدرب يشهد للاثنين، والمراجعة تُقرأ معًا. لا ذكاء اصطناعي بينكما؛ الكلمات لكما.</p></header>
       {tok === '' && <section className="pt-box"><p>سجّل الدخول لفتح عهدك. <Link href="/login?next=/me/pair">تسجيل الدخول</Link></p></section>}
-      {err && <div className="pp-err" role="alert">{err}</div>}{msg && <div className="pp-ok" role="status">{msg}</div>}
-      {tok && !d && !err && <section className="pt-box"><p className="pp-muted">نقرأ فصولك…</p></section>}
-      {d && (<>
+      {tok && <div className="pp-tabs" role="tablist" aria-label="مع من؟"><button type="button" role="tab" aria-selected={!withOrg} className={!withOrg ? 'on' : ''} data-testid="pp-tab-peer" onClick={() => switchTo(false)}><Icon name="users" size={14} /> مع زميل</button><button type="button" role="tab" aria-selected={withOrg} className={withOrg ? 'on' : ''} data-testid="pp-tab-org" onClick={() => switchTo(true)}><Icon name="school" size={14} /> مع جهتي</button></div>}
+      {tok && withOrg && <OrgPair side="member" lang={lang} token={() => Promise.resolve(tok)} />}
+      {!withOrg && err && <div className="pp-err" role="alert">{err}</div>}{!withOrg && msg && <div className="pp-ok" role="status">{msg}</div>}
+      {tok && !withOrg && !d && !err && <section className="pt-box"><p className="pp-muted">نقرأ فصولك…</p></section>}
+      {d && !withOrg && (<>
         <ol className="pp-stepper" aria-label="الحركات الخمس">{MOVES.map((m, i) => <li key={m.title} className={(i + 1 < stage ? 'done' : i + 1 === stage ? 'on' : '') + (peek === i ? ' peek' : '')}><button type="button" aria-expanded={peek === i} data-testid={`pp-step-${i + 1}`} onClick={() => setPeek(peek === i ? -1 : i)}><span>{i + 1}</span>{m.title}</button></li>)}</ol>
         {peek >= 0 && (<aside className="pp-peek" data-testid="pp-peek" role="note"><div className="pp-sechead"><h3><span className="pp-num">{peek + 1}</span> {MOVES[peek].title}{peek + 1 === stage ? <small className="pp-now">أنت هنا الآن</small> : peek + 1 < stage ? <small className="pp-now done">مرّت</small> : <small className="pp-now next">قادمة</small>}</h3><button type="button" className="pt-btn ghost small" onClick={() => setPeek(-1)}>إغلاق</button></div>
           <p>{MOVES[peek].what}</p><p className="pp-muted">{MOVES[peek].see}</p>
@@ -198,6 +205,7 @@ function Inner() {
 }
 
 const CSS = `
+.pp-tabs{display:inline-flex;gap:4px;background:#e2e8f0;border-radius:999px;padding:4px;margin:0 0 12px}.pp-tabs button{all:unset;cursor:pointer;display:inline-flex;gap:6px;align-items:center;font:inherit;font-weight:900;font-size:14px;color:#1e293b;padding:7px 16px;border-radius:999px}.pp-tabs button.on{background:#0f2a4e;color:#fff}.pp-tabs button:focus-visible{outline:3px solid #0f2a4e;outline-offset:2px}
 .pp{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:920px;margin:0 auto;padding:28px 18px 60px}
 .pp-head h1{margin:4px 0 6px;font-size:30px;color:#0f2a4e}.pp-head h1 small{font-size:16px;color:#0b8a83;font-weight:800}.pp-head p{margin:0 0 18px;color:#475569;line-height:1.9}
 .pp-muted{color:#64748b;font-size:13px;line-height:1.8}.pp-muted.light{color:#cbd5e1}.pp-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.pp-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}

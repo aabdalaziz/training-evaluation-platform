@@ -66,7 +66,7 @@ function Inner() {
       const adminOrgIds = new Set((j.memberships || []).filter((m: any) => m.role === 'org_admin' && m.status === 'confirmed').map((m: any) => m.organization_id));
       const list: Org[] = j.staff ? j.all_orgs : (j.orgs || []).filter((o: Org) => adminOrgIds.has(o.id)); setOrgs(list);
       const { data: p } = await db.from('programs').select('id,name_ar,name_en,fee').eq('is_public', true).is('archived_at', null).order('start_date', { ascending: false }).limit(200); setProgs((p || []) as any[]);
-      if (list.length) { setOrgId(list[0].id); await loadDash(list[0].id); }
+      if (list.length) { let want = ''; try { want = new URLSearchParams(window.location.search).get('org') || ''; } catch { /* لا شيء */ } const first = list.find(o => o.id === want) || list[0]; setOrgId(first.id); await loadDash(first.id); }  // P30: روابط الإشعارات ?org=<id> تفتح الجهة المقصودة
     } catch (e: any) { setErr(e.message); } setLoaded(true); })(); }, [db]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function sendLink(e: React.FormEvent) { e.preventDefault(); setErr(''); const em = email.trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { setErr(lang === 'ar' ? 'البريد الإلكتروني غير صالح' : 'Invalid email'); return; } setBusy('link'); try { localStorage.setItem(RESUME_KEY, '/org'); } catch { /* ignore */ } const { error } = await db.auth.signInWithOtp({ email: em, options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/org` } }); setBusy(''); if (error) setErr(error.message); else setSent(true); }

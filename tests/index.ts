@@ -56,3 +56,4 @@ import './p26.test';
 import './p27.test';
 import './p28.test';
 import './p29.test';
+import './p30.test';

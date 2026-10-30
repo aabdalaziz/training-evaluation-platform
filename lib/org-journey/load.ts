@@ -39,6 +39,7 @@ export async function loadOrgJourneyInput(db: any, orgId: string): Promise<OrgJo
     const cm = await safe(db.from('portal_council_members').select('council_id,organization_id,status').in('council_id', part).in('status', ['active', 'left']).limit(5000));
     for (const cid of part) { const orgs = new Set(cm.filter((m: any) => m.council_id === cid && m.organization_id).map((m: any) => m.organization_id)); if (orgs.size >= 2 && orgs.has(orgId)) { const at = joins.filter(j => j.council_id === cid).map(j => j.joined_at).sort()[0]; if (at) twinnings.push({ at, orgs: orgs.size }); } }
   }
+  const orgPairRows = await safe(db.from('portal_org_pair_pledges').select('member_email,signed_at,status').eq('organization_id', orgId).not('signed_at', 'is', null).limit(5000));
   const [charters, contracts, orgPledges] = await Promise.all([
     safe(db.from('portal_org_charters').select('signed_at,status,meta').eq('organization_id', orgId).order('signed_at', { ascending: true }).limit(50)),
     safe(db.from('portal_impact_contracts').select('id,delivered_at,status').eq('organization_id', orgId).not('delivered_at', 'is', null).limit(200)),
@@ -58,6 +59,7 @@ export async function loadOrgJourneyInput(db: any, orgId: string): Promise<OrgJo
     credentials: creds.map(c => ev(c.email, c.issued_at)),
     pledges: pledges.filter(p => p.status !== 'revoked').map(p => ev(p.email, p.signed_at)),
     pairs: pairs.filter(p => p.status !== 'revoked').map(p => ev(p.email, p.signed_at)),
+    org_pairs: orgPairRows.filter((p: any) => p.status !== 'revoked').map((p: any) => ev(p.member_email, p.signed_at)),
     charters: charters.map((c: any, i: number) => ({ signed_at: c.signed_at, renewed: i > 0 })),
     twinnings, contracts: contracts.map((c: any) => ({ delivered_at: c.delivered_at, returned: returned.has(c.id) })),
     org_pledge_chapters: orgPledgeChapters(orgPledges.map((p: any) => ({ signed_at: p.signed_at, title_ar: p.title_ar, kind: p.kind, status: p.status, reviewed_at: p.meta?.reviewed_at || null, decision: p.meta?.decision || null, complete: p.meta?.complete ?? null, note_ar: null })), quarterOf),

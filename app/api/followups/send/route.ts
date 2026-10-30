@@ -33,6 +33,7 @@ import { runOrgJourney } from '../../../../lib/org-journey/cron';
 import { runHorizon } from '../../../../lib/horizon/cron';
 import { runOrgHorizon } from '../../../../lib/org-horizon/cron';
 import { runPair } from '../../../../lib/pair/cron';
+import { runOrgPair } from '../../../../lib/org-pair/cron';
 import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
@@ -177,7 +178,10 @@ export async function GET(req: Request) {
   // P29 العهد المتقابل: انقضاء الدعوات والمهل · «خطوة صاحبك وقعت» · منتصف السنة · فتح المراجعة المشتركة · طيّ ما لم يُراجَع
   let pair: any = null;
   try { pair = await runPair(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { pair = { ok: false, error: e?.message || String(e) }; }
+  // P30 عهد الممارس وجهته: المهل نفسها — انقضاء · «خطوة … وقعت» · منتصف السنة · المراجعة · الطيّ
+  let org_pair: any = null;
+  try { org_pair = await runOrgPair(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { org_pair = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, media_cleanup, evidence, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair });
 }
