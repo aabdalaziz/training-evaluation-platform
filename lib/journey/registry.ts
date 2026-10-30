@@ -17,7 +17,7 @@ export const DAILY_MILESTONES = [10, 30, 100];  // «عشرة مواقف» · «
 export const SHARE_CODE_PREFIX = 'ATH-J';
 export const MAX_SHARE_CHAPTERS = 40;
 
-export type ChapterKind = 'placement' | 'daily' | 'simulation' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'badge';
+export type ChapterKind = 'placement' | 'daily' | 'simulation' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'badge' | 'horizon';
 export type Chapter = {
   key: string; kind: ChapterKind; at: string; title_ar: string; what_ar: string;
   quote_ar: string | null;                       // كلمات المستخدم نفسه فقط
@@ -87,6 +87,11 @@ export function buildChapters(inp: JourneyInput): Chapter[] {
   // 9) شهادة عضو مجلس
   const bd = byAt(inp.events.filter(e => e.object_type === 'council_badge' && e.verb === 'issued'), 'at')[0];
   if (bd) out.push({ key: 'council_badge', kind: 'badge', at: bd.at, title_ar: 'شهادة عضو مجلس', what_ar: `صدرت لي شهادة عضو مجلس أَثَر موقَّعة${bd.context?.code ? ` (${bd.context.code})` : ''}.`, quote_ar: null, level: null, ref: { type: 'vc', id: bd.object_id }, public_ok: true });
+  // 10) أفق الممارس (P27): العهد الموقَّع والمراجعة السنوية — من أحداث مسجَّلة؛ الاقتباس من كلمات صاحبه يوم المراجعة
+  for (const e of byAt(inp.events.filter(e => e.object_type === 'horizon' && (e.verb === 'pledged' || e.verb === 'reviewed')), 'at')) {
+    if (e.verb === 'pledged') out.push({ key: `horizon_pledged:${e.object_id}`, kind: 'horizon', at: e.at, title_ar: 'قطعتُ عهدًا مع نفسي', what_ar: `خطوة واحدة لسنة واحدة${e.context?.kind ? ` (${({ council: 'مجلس أقران', mission: 'مهمة من قلب العمل', daily: 'كل يوم مهارة', level: 'مستوى معتمد', credential: 'شهادة قرين' } as Record<string, string>)[e.context.kind] || e.context.kind})` : ''} — وثيقة موقَّعة باسمي${e.context?.code ? ` (${e.context.code})` : ''}، والدرب يُكتب من أفعالي.`, quote_ar: null, level: null, ref: { type: 'horizon', id: e.object_id }, public_ok: true });
+    else out.push({ key: `horizon_reviewed:${e.object_id}`, kind: 'horizon', at: e.at, title_ar: e.context?.decision === 'renew' ? 'راجعتُ عهدي وجدّدتُ أفقي' : 'راجعتُ عهدي وطويتُ أفقي', what_ar: `بعد سنة من «${e.context?.title || 'عهدي'}»: ${e.context?.complete ? 'ما وعدتُ به وقع — بشهادة الأحداث.' : 'وقع بعضه ولم يقع بعضه — وكتبتُ ما تغيّر.'}`, quote_ar: clip(e.context?.note_ar), level: null, ref: { type: 'horizon', id: e.object_id }, public_ok: true });
+  }
   // ترتيب زمني + «from» للمستويات اللاحقة في المهارة نفسها
   out.sort((a, b) => a.at.localeCompare(b.at) || a.key.localeCompare(b.key));
   const seen = new Map<string, number>(); for (const c of out) if (c.level) { const prev = seen.get(c.level.skill_id); c.level.from = prev ?? null; seen.set(c.level.skill_id, c.level.to); }
@@ -94,7 +99,7 @@ export function buildChapters(inp: JourneyInput): Chapter[] {
 }
 
 export function buildJourney(inp: JourneyInput, now = Date.now()): Journey {
-  const chapters = buildChapters(inp); const counts = { placement: 0, daily: 0, simulation: 0, mission: 0, council: 0, return: 0, attestation: 0, level: 0, credential: 0, badge: 0 } as Record<ChapterKind, number>;
+  const chapters = buildChapters(inp); const counts = { placement: 0, daily: 0, simulation: 0, mission: 0, council: 0, return: 0, attestation: 0, level: 0, credential: 0, badge: 0, horizon: 0 } as Record<ChapterKind, number>;
   for (const c of chapters) counts[c.kind]++;
   const first = chapters[0]?.at || null; const days = first ? Math.max(0, Math.floor((now - new Date(first).getTime()) / 864e5)) : 0;
   const eras: { label: string; keys: string[] }[] = []; for (const c of chapters) { const d = new Date(c.at); const label = d.toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { year: 'numeric', month: 'long' }); const e = eras[eras.length - 1]; if (e && e.label === label) e.keys.push(c.key); else eras.push({ label, keys: [c.key] }); }
@@ -107,7 +112,7 @@ export function arcSentence(chapters: Chapter[], days: number): string {
   const k = (kind: ChapterKind) => chapters.filter(c => c.kind === kind).length; const lv = chapters.filter(c => c.level).length;
   const parts: string[] = [`بدأت الرحلة في ${fmtD(chapters[0].at)}${days ? ` — قبل ${days} يومًا` : ''}`, `${chapters.length} ${chapters.length === 1 ? 'فصل' : chapters.length <= 10 ? 'فصول' : 'فصلًا'} حتى اليوم`];
   if (k('daily')) parts.push('مواقف واجهتَها بكلماتك'); if (k('mission')) parts.push('أثر أكّده مشرفك من قلب العمل'); if (k('council') || k('return')) parts.push(k('return') ? 'قضية حملتَها إلى أقرانك وعدتَ بما حدث' : 'قضية حملتَها إلى أقرانك');
-  if (k('attestation')) parts.push('قرين شهد لك'); if (lv) parts.push(`${lv} ${lv === 1 ? 'مستوى اعتمده إنسان' : 'مستويات اعتمدها بشر'}`); if (k('credential')) parts.push(`${k('credential')} ${k('credential') === 1 ? 'شهادة' : 'شهادات'}`);
+  if (k('attestation')) parts.push('قرين شهد لك'); if (k('horizon')) parts.push('عهد مع نفسك'); if (lv) parts.push(`${lv} ${lv === 1 ? 'مستوى اعتمده إنسان' : 'مستويات اعتمدها بشر'}`); if (k('credential')) parts.push(`${k('credential')} ${k('credential') === 1 ? 'شهادة' : 'شهادات'}`);
   return parts.join(' · ') + '.';
 }
 

@@ -13,17 +13,18 @@ export async function loadOrgJourneyInput(db: any, orgId: string): Promise<OrgJo
   const rows = (mem || []) as { email: string; user_id: string | null }[];
   const members = Array.from(new Set(rows.map(m => lower(m.email)).filter(Boolean))); const userIds = Array.from(new Set(rows.map(m => m.user_id).filter(Boolean))) as string[];
   const emailOfUser = new Map<string, string>(); for (const m of rows) if (m.user_id) emailOfUser.set(m.user_id, lower(m.email));
-  const daily: any[] = [], missions: any[] = [], joins: any[] = [], cases: any[] = [], atts: any[] = [], creds: any[] = [];
+  const daily: any[] = [], missions: any[] = [], joins: any[] = [], cases: any[] = [], atts: any[] = [], creds: any[] = [], pledges: any[] = [];
   for (const part of chunk(members)) {
-    const [d, ms, j, c, a, cr] = await Promise.all([
+    const [d, ms, j, c, a, cr, pl] = await Promise.all([
       safe(db.from('portal_daily_case_responses').select('email,created_at').in('email', part).order('created_at', { ascending: true }).limit(20000)),
       safe(db.from('portal_missions').select('email,confirmed_at,skills').in('email', part).not('confirmed_at', 'is', null).limit(5000)),
       safe(db.from('portal_council_members').select('email,council_id,joined_at,status').in('email', part).not('joined_at', 'is', null).limit(5000)),
       safe(db.from('portal_council_cases').select('author_email,returned_at,theme').in('author_email', part).not('returned_at', 'is', null).limit(5000)),
       safe(db.from('portal_council_attestations').select('to_email,decided_at,status').in('to_email', part).eq('status', 'approved').limit(5000)),
       safe(db.from('portal_credentials').select('email,issued_at,revoked_at').in('email', part).is('revoked_at', null).limit(5000)),
+      safe(db.from('portal_horizon_pledges').select('email,signed_at,status').in('email', part).not('signed_at', 'is', null).limit(5000)),
     ]);
-    daily.push(...d); missions.push(...ms); joins.push(...j); cases.push(...c); atts.push(...a); creds.push(...cr);
+    daily.push(...d); missions.push(...ms); joins.push(...j); cases.push(...c); atts.push(...a); creds.push(...cr); pledges.push(...pl);
   }
   const levels: any[] = []; for (const part of chunk(userIds)) levels.push(...await safe(db.from('portal_skill_levels').select('user_id,approved_at,approved_level').in('user_id', part).not('approved_at', 'is', null).limit(5000)));
   // أول موقف لكل شخص
@@ -50,6 +51,7 @@ export async function loadOrgJourneyInput(db: any, orgId: string): Promise<OrgJo
     attestations: atts.map(a => ev(a.to_email, a.decided_at)),
     levels: levels.map(l => ev(emailOfUser.get(l.user_id) || l.user_id, l.approved_at)),
     credentials: creds.map(c => ev(c.email, c.issued_at)),
+    pledges: pledges.filter(p => p.status !== 'revoked').map(p => ev(p.email, p.signed_at)),
     charters: charters.map((c: any, i: number) => ({ signed_at: c.signed_at, renewed: i > 0 })),
     twinnings, contracts: contracts.map((c: any) => ({ delivered_at: c.delivered_at, returned: returned.has(c.id) })),
   };

@@ -18,7 +18,7 @@ export const ORG_SHARE_CODE_PREFIX = 'ATH-OY';
 export const MAX_ORG_SHARE_CHAPTERS = 40;
 export { K_ORG };
 
-export type OrgChapterKind = 'daily' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'charter' | 'twinning' | 'contract';
+export type OrgChapterKind = 'daily' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'pledge' | 'charter' | 'twinning' | 'contract';
 export type OrgEvent = { person: string; at: string; theme?: string | null };     // person = بريد أو معرّف (لا يُنشر أبدًا)
 export type OrgJourneyInput = {
   members: string[];                                        // بُرُد المنسوبين المؤكَّدين (صغيرة الحروف)
@@ -29,6 +29,7 @@ export type OrgJourneyInput = {
   attestations: OrgEvent[];                                 // شهادات أقران معتمدة (المشهود له)
   levels: OrgEvent[];                                       // مستويات اعتمدها بشر
   credentials: OrgEvent[];                                  // اعتمادات صادرة
+  pledges?: OrgEvent[];                                     // عهود أفق وقّعها منسوبون (P27) — عدد فقط، لا موضوعات
   charters: { signed_at: string; renewed: boolean }[];      // مستوى الجهة
   twinnings: { at: string; orgs: number }[];                // مجالس ضمّت منسوبينا مع ≥ 1 جهة أخرى (تاريخ أول عضوية لنا)
   contracts: { delivered_at: string; returned: boolean }[]; // عقود أثر سُلِّمت (وهل أُفرجت دفعة العودة)
@@ -43,7 +44,7 @@ export type OrgBelow = { quarter: string; kind: OrgChapterKind; label_ar: string
 export type OrgMirrorRow = { kind: OrgChapterKind; label_ar: string; now: number | null; prev: number | null; read_ar: string };
 export type OrgJourney = { version: string; k: number; members: number; chapters: OrgChapter[]; eras: { label: string; keys: string[] }[]; below: OrgBelow[]; mirror: OrgMirrorRow[]; arc_ar: string; year_label: string; first_at: string | null; privacy_ar: string[] };
 
-export const ORG_KIND_AR: Record<OrgChapterKind, string> = { daily: 'أول موقف', mission: 'مهام أكّدها المشرفون', council: 'انضمام إلى المجالس', return: 'عودات بما حدث', attestation: 'شهادات أقران معتمدة', level: 'مستويات اعتمدها بشر', credential: 'اعتمادات', charter: 'ميثاق الجهة', twinning: 'توأمة', contract: 'عقد أثر' };
+export const ORG_KIND_AR: Record<OrgChapterKind, string> = { daily: 'أول موقف', mission: 'مهام أكّدها المشرفون', council: 'انضمام إلى المجالس', return: 'عودات بما حدث', attestation: 'شهادات أقران معتمدة', level: 'مستويات اعتمدها بشر', credential: 'اعتمادات', pledge: 'عهود مع النفس', charter: 'ميثاق الجهة', twinning: 'توأمة', contract: 'عقد أثر' };
 export const PRIVACY_ORG_JOURNEY_AR = ['لا فصل من أقل من 5 أشخاص — دائمًا', 'أعداد وحقب فقط؛ لا أسماء ولا نصوص أفراد', 'الجهة تُقارَن بسنتها السابقة لا بجهة أخرى', 'ما يُنشر موقَّع وقابل للإلغاء بنقرة', 'الذكاء الاصطناعي يقترح المقدمة من كلمات الجهة وحدها ولا يحفظها'];
 
 export const quarterOf = (iso: string) => { const d = new Date(iso); return `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`; };
@@ -60,13 +61,14 @@ const WHAT: Record<Exclude<OrgChapterKind, 'charter' | 'twinning' | 'contract'>,
   attestation: n => [`أقرانٌ شهدوا لـ${nPeople(n)}`, `شهادات أقران على سلوك رُئي فعلًا، اعتمدها إنسان، لـ${nPeople(n)} من منسوبيكم.`],
   level: n => [`مستويات اعتمدها بشر لـ${nPeople(n)}`, `اعتُمد مستوى مهارة — بقرار بشري لا بحساب — لـ${nPeople(n)}.`],
   credential: n => [`اعتمادات موقَّعة لـ${nPeople(n)}`, `صدرت اعتمادات رقمية موقَّعة وقابلة للتحقق لـ${nPeople(n)}.`],
+  pledge: n => [`${nPeople(n)} عاهدوا أنفسهم على خطوة لسنة`, `كتب ${nPeople(n)} من منسوبيكم أفقهم لعشر سنوات ووقّعوا عهدًا واحدًا لسنة واحدة — ما عاهدوا عليه يخصّهم؛ الجهة ترى العدد فقط.`],
 };
 
 /** الفصول الجماعية: لكل ربع ولكل نوع، عدد الأشخاص المتميزين؛ يظهر الفصل إن بلغ k */
 export function buildOrgChapters(inp: OrgJourneyInput, k = K_ORG): { chapters: OrgChapter[]; below: OrgBelow[] } {
   const chapters: OrgChapter[] = []; const below: OrgBelow[] = [];
   const members = new Set(inp.members.map(m => String(m).toLowerCase()));
-  const groups: [OrgChapterKind, OrgEvent[]][] = [['daily', inp.daily_first], ['mission', inp.missions], ['council', inp.joins], ['return', inp.returns], ['attestation', inp.attestations], ['level', inp.levels], ['credential', inp.credentials]];
+  const groups: [OrgChapterKind, OrgEvent[]][] = [['daily', inp.daily_first], ['mission', inp.missions], ['council', inp.joins], ['return', inp.returns], ['attestation', inp.attestations], ['level', inp.levels], ['credential', inp.credentials], ['pledge', inp.pledges || []]];
   for (const [kind, evs] of groups) {
     const byQ = new Map<string, OrgEvent[]>();
     for (const e of evs) { if (!e.at) continue; if (members.size && e.person && members.has(String(e.person).toLowerCase()) === false && !/^[0-9a-f-]{36}$/i.test(e.person)) continue; const q = quarterOf(e.at); byQ.set(q, [...(byQ.get(q) || []), e]); }
