@@ -1,43 +1,59 @@
 ---
-name: athar-feature
-description: Build a complete feature phase for the Athar portal (Next.js 14 + Supabase) end-to-end — SQL, pure lib, API route, learner/public/admin pages, MCP tool, vault registry, cron hook, tests, mock fixtures, Playwright E2E, one-zip GitHub delivery. Use when asked to add a new module/phase (P29+) to github.com/aabdalaziz/training-evaluation-platform. Updated after P28 and the first real organization in production.
+name: athar-product
+description: Design a new Athar phase the owner will approve — the product principles behind P10–P28 (AI assists / human approves, k≥5, own words, selective disclosure, signed and revocable, compare with self, text/voice/video, no dashboards). Use before writing any proposal, naming any feature, or deciding what an agent/AI/organization may see. Includes the vocabulary and a pre-proposal checklist.
 ---
 
-# Athar — build a feature phase (post-P28 pattern)
+# Athar — designing a phase that is not «تقليدي»
 
-## Order of work (never reorder)
-1. **Proposal first** (`P<N>-PROPOSAL-AR.txt`, Arabic, 1–2 pages): the idea in one sentence, the five "movements" of the experience, what stays private, what gets signed, what the agent may read, what the cron does, the DB tables, the constants. Wait for approval. Read `athar-product` before writing it.
-2. **Read**: `AGENTS.md`, the previous two phases (`lib/horizon/*`, `lib/org-horizon/*`; `lib/journey/load.ts` `loadJourneyInput` is the single source of a person's events, `lib/org-journey/load.ts` `loadOrgJourneyInput` of an organization's; `lib/org-impact/auth.ts` `orgCtx` for org-admin auth) — copy their shapes, not older ones. An organization-facing feature is a **tab inside `/org`** (`app/org/page.tsx` + `?tab=`) rendered by an `app/components/OrgX.tsx` component, not a new top-level page; a member-facing echo of it is one banner component on `/me` (`OrgPledgeBanner` pattern, `?mine=1` endpoint).
-3. **SQL** `supabase/migrations/YYYYMMDD_portal_pN.sql` (see `athar-sql`): tables with `user_id uuid` + `email text` (legacy rows have no user_id), `status text check (…)`, `meta jsonb default '{}'`, RLS own-read, `revoke` writes from anon/authenticated when only the server writes, extend `portal_vc_issuances_kind_check` if a new signed document kind is added, ONE diagnostic `union all` at the end with expected counts.
-4. **Pure library** `lib/<module>/registry.ts`: constants (`*_DAYS`, `*_MONTHS`, `MAX_*`, `K = 5`), types, builders from plain inputs, validators returning `string | null` (Arabic), code formats (`ATH-XX-XXXX-XXXX` via `randomCode(4)` from `lib/portal/profile.ts`), local (non-AI) text builders. No DB, no `process.env` → unit-testable.
-5. **DB layer** `lib/<module>/load.ts` (reuse `loadJourneyInput(db, me)` instead of re-querying events; a personal "state" loader returns `{ input, chapters, <current>, <past> }`) (`Promise.all` of `.or(\`user_id.eq.${id},email.ilike.${email}\`)` queries, every query wrapped so one failure yields `[]`), `share.ts`/`badge.ts` for signed documents (copy `lib/journey/share.ts`: insert issuance → `signDocument` with `status_index` → update `vc` + `documentDigest`), `cron.ts` exporting `runX(db, { dry, site, now })` returning `{ ok, counts…, errors[] }` — every scheduled effect must be idempotent (`meta.nudged_at`, status transitions, `.gt('review_at', now)` guards) because the daily cron re-runs; dry runs count only.
-6. **AI (optional)**: `runAi({ system, user, parse, local, budgetMs, fast })` + `logAi(db, {...purpose})` from `lib/ai/athar.ts`. Always provide `local` fallback; feed only anonymized text or the user's own words; label the result (`source: 'ai' | 'local'`); never persist without a user action. Reuse an existing `AiPurpose` from `lib/ai/prompts.ts`.
-7. **API** `app/api/<module>/route.ts`: `runtime='nodejs'`, `dynamic='force-dynamic'`, `maxDuration=60`; `svc()` service client for tables **after** the route authorized the caller, but **any RPC that authorizes itself via `auth.uid()`/`auth.jwt()` (`portal_org_dashboard`, `portal_impact_report`, …) is called on the user's session client (`userDb`) and its `ok` is checked before the result reaches a page** (917–919); `who(req, db)` accepting both Bearer users and `delegateFromHeaders` with the right `pscope`; delegates may only read; `limitFor(db, 'council_write_ip', ipOf(req))` (or a new named bucket in `lib/shield/ratelimit.ts`) on POST; `{ action }` switch; `confirm: true` required for anything that publishes/signs/seals; public reads return `Cache-Control: public, s-maxage=…` + `Access-Control-Allow-Origin: *`; private reads `no-store`. Log learner actions to `portal_learning_events`.
-8. **Pages**: learner `app/me/<module>/page.tsx` (`'use client'`, `PortalShell`, `useLang`, `fastToken(db)` from `app/components/Pocket.tsx`, `Channel` for any text/voice/video input, `data-testid` on every interactive block, `<style dangerouslySetInnerHTML>` with a unique class prefix); public `app/<module>/[code]/page.tsx` (`useParams`, explicit 404/410 states); admin page only when staff must decide something.
-9. **Patches** (each is a whole-file replacement): `app/me/page.tsx` nav tab · `lib/portal/mcp.ts` tool entry (`tiers`, `pscope`, `kind: 'personal'`, `readOnlyHint`) · `lib/portal/mcp-server.ts` handler via `internal(c, '/api/<module>?view=summary')` · `lib/vault/registry.ts` one RoPA row per new personal table (unit test fails otherwise) · `app/api/followups/send/route.ts` cron hook + result key · `PortalAdminTabs.tsx` if admin page.
-10. **Tests** `tests/pN.test.ts` (copy `fakeDb` from `tests/p26.test.ts`; `assert.ok` always with a message; pin `now` and pass it to `structuralChecks(doc, now)`), import in `tests/index.ts`.
-11. **Mock**: `tools/mock-supabase.py` — add the new tables to the insert whitelist and a defaults branch (bigserial vs uuid ids!), copy the patched mock back to `dashboard-redesign/tools/` immediately.
-12. **QA** per `athar-qa`, then **E2E** `tools/shot-pN.py` (API checks + OAuth delegate flow + cron + Playwright screenshots). Look at the screenshots. Include an **empty/real-shaped organization** fixture (one admin, no members, no events) and open every `/org` tab — the P24–P28 org UI ran against a real org for the first time on 2026-10-30 and crashed on a shape the seeded fixtures never produced.
-14. **Production smoke with the demo org**: after deploy, open `/org` as the owner (org «جامعة أَثَر», a fictional demo organization) and click every tab; the global `app/error.tsx` boundary will show the exact `TypeError` if something is off — read it before touching code.
-13. **Package** `dashboard-redesign/phase6-pN/`: `files/<repo paths>`, `pN-code-only.zip` (zip `app lib tests` from inside `files/`), `NNN-pN-<name>.sql` + `.sql.txt` twin, `MANIFEST-PN-AR.txt` (numbered: SQL, NEW files, MOD files, sha256 each, next number), `STEPS-PN-AR.txt` (SQL → expected counts → upload zip → verify URLs), `SHA256-PN.txt`, `shots/`. Present the zip, then SQL and STEPS.
+The owner (د. أحمد بدوي) explicitly rejected incremental, dashboard-style features ("more reports, tables, foresight grids"). Approved phases share one shape: **a human experience with a few clear movements, honest limits, and a signed artifact the person controls.** Use this before any proposal.
 
-## Conventions that bit us
-- Keys that can repeat (same skill approved twice) must include the distinguishing value (`level_approved:<skill>:<level>`).
-- `Record<string, IconName>` for icon maps; `Icon` names are a fixed union.
-- Routes must never export anything but handlers/config.
-- Arabic in HTTP headers → `encodeURIComponent`.
-- Browser caches `s-maxage` responses → client fetches needing fresh state use `cache: 'no-store'`.
-- Cron runs other syncs first (e.g. مِعيار placement) — E2E expectations must be computed after the cron, not hard-coded.
-- Mock `/auth/v1/user` returns the admin for ANY token → test 401 without a token, not 403 for other users.
-- Event-derived progress compares ISO strings against `signed_at` **and** `now` — E2E fixtures dated in the future are invisible; seed events between the signed date and now.
-- Buttons inside dark cards need their own `light` variant in the page CSS (`pt-btn ghost` is navy-on-white).
-- Link only to routes that exist in `app/` (`/#daily`, `/me/data`, `/councils`, `/me/missions`) — `/me/daily` and `/me/vault` never existed (fixed in 898–899).
-- Rate limits: reuse `limitFor(db, 'council_write_ip', ipOf(req))` for personal writes; E2E runs need a fresh `X-Forwarded-For` per step group.
-- Service key ≠ user: under the service role `auth.uid()` is null. RPCs with internal `portal_is_staff()/portal_is_org_admin()` checks silently return `{ok:false,error:'forbidden'}` → `d.members.filter` crashed `/org` in production (P8 code, found in P28). The mock now answers `forbidden` to `Bearer svc` on `portal_org_dashboard` so E2E catches a regression.
-- `/org` loads the first org's dashboard asynchronously and re-selects it; Playwright tests that switch organizations wait for `oh-scenario|oh-elig` + ~900 ms before `select_option` (`go_org` helper).
-- Pages never assume API shapes: guard `if (!j.x || j.x.ok === false || !Array.isArray(j.x.items)) throw new Error(...)` and show the message; the app-wide `app/error.tsx` (self-contained, inline CSS, no imports) is the last line, not the first.
-- Organizations exist in production only when seeded by SQL (`portal_organizations` + confirmed `org_admin` membership, `source='admin'`). Before saying «works», confirm the feature has data to run on.
-- A gate with two conditions shows both honestly (`members n/5 · chapters n/2` dot rows) — never collapse them into one «not eligible».
+Naming note (P28): the owner rejected three «acceptable» narrative titles («رسالتنا من 2036 / نحن في 2036 / نجم الجهة البعيد») as «ليست جاذبة ومعبرة». The accepted one, «عشر سنوات وخطوة», states the whole mechanic in three words (a ten-year horizon, a one-step pledge). Propose titles that *say the mechanic*, not titles that *decorate* it — and explain why in the delivery.
 
-## Delivery message (Arabic)
-Table (number · path · role), QA line (tsc · tests N/N · build · E2E N/N), "ideas that emerged" (the owner welcomes them), then the 3 steps (SQL with expected counts → upload zip → verify URLs). After «تم»: verify every file with `cmp` against `raw.githubusercontent.com/<sha>/<path>` (URL-encode `[`), check the Vercel status API, smoke-test live routes, and close the phase explicitly with the next file number.
+## 1. The eight principles (owner-approved, cumulative since P10)
+1. **AI assists, a human approves.** Computed level ≠ approved level. Supervisors confirm missions, org admins approve peer attestations, staff approve councils. AI text is labelled (`source: 'ai' | 'local'`), editable, and never stored as fact without a click.
+2. **No identifiers to models.** Anonymize («عضو 1/2…») or pass only the user's own words; declare it in `privacy.json`.
+3. **k ≥ 5, never lowered.** Any aggregate shown to someone else needs ≥ 5 people (and ≥ 2 organizations for council/observatory data). Below quorum → say so («لم يكتمل النصاب بعد») instead of showing numbers.
+4. **Compare only with self.** Mirrors compare the same person/organization with their previous cycle/quarter. No rankings, no "better than".
+5. **Private by default, selective disclosure, revocable.** The person chooses what is shown (chapters, name mode, quotes). Anything shared is an Ed25519 OpenBadge in `portal_vc_issuances` (`ATH-XX-XXXX-XXXX`), verifiable at `/verify/vc?code=`, with an expiry and a one-click revoke that also kills the public URL.
+6. **Own words only.** Quotes attributed to a person come from their own text (daily-case answers, commitments, returns, notes). A peer's or AI's words are never attributed to them.
+7. **Derived from events, not self-asserted.** Chapters, badges, echoes and paths are computed from recorded events (`portal_learning_events`, confirmed missions, approved levels…). Users write *what changed in them*, not *what they achieved*. No progress bars, no percentages, no «mark done» (P27 «الدرب»). For organizations: distinct-people counts only (k=5), never member names — not even to the org admin (P28 «درب الجهة»).
+8. **Every input is text, voice or video** via the single `Channel` component; every output that matters can be read aloud (`ReadAloud`).
+
+## 2. Shape of an approved phase (copy this structure in the proposal)
+- **One sentence** the owner can repeat («الجهة لا تدفع للمقعد؛ تدفع للعودة» · «ليست سجلًّا ولا تقريرًا»).
+- **Five movements** (P23: case → deliberation → commitment → return → attestation; P25: chapters → my note → shared version → verify → letter to myself; P26: org chapters k≥5 → «ما تغيّر فينا» → yearbook → shelf → org letter to itself; P27: horizon «أنا في 2036» → three one-year steps → pledge → path from events → annual review «ما وعدتُ / ما وقع»; P28: org horizon «نحن في 2036» (after 5 members + 2 chapters) → three of six collective steps → org pledge `ATH-OH` → path as distinct-people counts → «ما وعدنا / ما وقع» + a one-line echo to every member on `/me`).
+- **A time element**: cycles (6 weeks), windows (28 d echo, 90 d mirror, 30 d review), expiry (12 months), delay (365-day capsule/review), one gentle mid-way nudge (day 182, in-app/push only). Time runs inside the existing daily cron.
+- **A signed artifact** with its own code prefix: `ATH-IC` contracts · `ATH-OC` org charter · `ATH-CB` council badge · `ATH-J` journey · `ATH-OY` org yearbook · `ATH-HZ` horizon pledge · `ATH-OH` org pledge.
+- **What the agent may do**: one read-only MCP tool (`my_*`) with a `pscope`; writing/publishing stays with the person (`council_commit` is the only agent write, and it requires explicit confirmation).
+- **What the organization may see**: aggregates (k≥5), its own mirror, charters it signed — never its people's content.
+- **Honest empty states**: «الصفحة الأولى بيضاء», «لم يكتمل النصاب», «ما لم يُكشف ليس غيابًا», «ما لم يُراجَع ليس فشلًا».
+- **A gate that must be earned, not bought**: the horizon opens only after 3 real chapters (an organization's after 2 chapters **and** 5 confirmed members — one condition per thing that must be true for the step to be witnessable); the three steps are only actions the platform can witness. A feature that can be «completed» by typing is not an Athar feature.
+- **Collective steps are sized by k**: an org pledge counts 5 distinct people doing the thing, so a fulfilled pledge is automatically a quorum chapter in the org journey — the same number tells the story everywhere.
+- **Something that stays absolutely private**: P27's scenario is never in the VC, the verify page, the agent summary or any org view — only its character count leaves the owner's account. Decide the private core in the proposal.
+- **Vault row** for every personal table (delete vs anonymize decided in the proposal).
+- **Zero**: new npm deps, new cron, new env, new tables for things derivable from events.
+
+## 3. Vocabulary (use the official term in admin/contracts, the narrative term on the homepage / 2062 / أثير)
+الذاكرة الحية · خيط الأثر · المكتب الزجاجي · محفظة القدرة السيادية · مرصد أَثَر · أَثَر في الجيب · سفارة أَثَر · مؤشر الأداء (not طقس) · درع أَثَر · خزنة أَثَر · مجالس أَثَر (المجلس · الميثاق · الكرسي · القضية · المداولة · الالتزام · العودة · المُوفِّق · كاتب المجلس · مرآة المجلس · خريطة الحكمة) · أثر الجهة (صدى الجهة · إحاطة 90 ثانية · مرآة الجهة · دفعة العودة · ميثاق الجهة · مقاعد الجهة · توأمة المجالس) · رحلة الممارس (رحلتي · الفصل · الحقبة · ما الذي تغيّر فيّ · نسخة للمشاركة · رسالة إلى نفسي بعد سنة · أين كنت / أين صرت) · رحلة الجهة (الفصل الجماعي · فصول تقترب · ما تغيّر فينا · مرآة السنة · كتاب السنة · رفّ كتب السنة · رسالة الجهة إلى نفسها · الفصل المشترك) · أفق الممارس (official: أفق الممارس · عهد الأفق · المراجعة السنوية — narrative: رسالتي من 2036 · أنا في 2036 · ثلاث خطوات لسنة · عهد مع نفسي · أين أنا من عهدي · ما وعدتُ / ما وقع · ما تغيّر · عهود مع النفس) · أفق الجهة (official: أفق الجهة · عهد الجهة · مراجعة سنة الجهة — narrative: عشر سنوات وخطوة · نحن في 2036 · أين نحن من عهدنا · ما وعدنا / ما وقع · ما تغيّر فينا · «جهتك عاهدت نفسها على خطوة») · هندسة البرامج التدريبية (not مصنع) · الميسِّر (not الطيار المساعد) · كل يوم مهارة (situation → own handling → performance mirror; never MCQ).
+
+## 4. Pre-proposal checklist (all must be "yes")
+- [ ] Could a person explain it to a colleague in one sentence without the word "dashboard"?
+- [ ] Does every number shown to a third party pass k≥5 / ≥2 orgs, or is the below-quorum state designed?
+- [ ] Is every quote the person's own words?
+- [ ] Is there a human approval step wherever AI or computation produces a claim about a person?
+- [ ] Is the shared artifact signed, time-limited and revocable — and is "not disclosed ≠ absent" stated?
+- [ ] Does the agent get at most one read-only tool? Does the organization see only aggregates/its own mirror?
+- [ ] Does time live inside `/api/followups/send`? No new env/cron/deps?
+- [ ] Are the official and narrative names both chosen and placed on the right surfaces?
+- [ ] Did you list "ideas that emerged" — the owner asks for them every phase?
+
+## 5. Candidates already discussed with the owner
+- ~~Collective journey~~ — shipped as P26 «رحلة الجهة». ~~Letter from 2036~~ — shipped as P27 «أفق الممارس». ~~Org horizon~~ — shipped as P28 «عشر سنوات وخطوة».
+- **«عهدان متقابلان» (P29 candidate, owner-preferred next)**: two practitioners (same council or same org) each pledge one step *to the other* — and now also practitioner ↔ organization, since both hold pledges (P27/P28); one signed document with two holders, the path witnesses both, the annual review is read together. Almost no new tables (a `pair_id` on pledges).
+- **«التقاء العهود»**: when a member's pledge kind matches their org's, one line in «أفقي» («عهدك يلتقي عهد جهتك») and a k≥5 count in the org journey.
+- **«رفّ العهود»** on `/2062`: once ≥5 orgs in one sector signed a pledge this year, one anonymous line («خمس جهات في قطاع التعليم عاهدت هذه السنة على مجالس تعود»).
+- **`/2062` horizon thread**: opt-in anonymized fragments of horizons (own words, k≥5, no names) as a living «what practitioners see in 2036» on the futures page.
+- **«ليلة الكتاب»**: when an org issues its yearbook, a short live room where members read the chapters together (reuses P6/P13-ج live infra).
+- **«رفّ القطاع»**: once ≥5 orgs in one sector publish yearbooks, an anonymous homepage thread «ما تعلّمه القطاع هذه السنة» (same k rule).
+- **«الفصل القادم»**: from «فصول تقترب», the facilitator proposes one step (council seats · a mission) that would complete the quorum — org admin decides.
+- **Operations pause**: Resend domain + `REPORTS_FROM_EMAIL`, WhatsApp decision (direct Meta vs BSP), SDAIA registration, CSP enforce — requires owner decisions, not code first.
