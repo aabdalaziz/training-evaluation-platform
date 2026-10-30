@@ -1,6 +1,6 @@
 ---
 name: athar-product
-description: Design a new Athar phase the owner will approve — the product principles behind P10–P25 (AI assists / human approves, k≥5, own words, selective disclosure, signed and revocable, compare with self, text/voice/video, no dashboards). Use before writing any proposal, naming any feature, or deciding what an agent/AI/organization may see. Includes the vocabulary and a pre-proposal checklist.
+description: Design a new Athar phase the owner will approve — the product principles behind P10–P26 (AI assists / human approves, k≥5, own words, selective disclosure, signed and revocable, compare with self, text/voice/video, no dashboards). Use before writing any proposal, naming any feature, or deciding what an agent/AI/organization may see. Includes the vocabulary and a pre-proposal checklist.
 ---
 
 # Athar — designing a phase that is not «تقليدي»
@@ -19,9 +19,9 @@ The owner (د. أحمد بدوي) explicitly rejected incremental, dashboard-sty
 
 ## 2. Shape of an approved phase (copy this structure in the proposal)
 - **One sentence** the owner can repeat («الجهة لا تدفع للمقعد؛ تدفع للعودة» · «ليست سجلًّا ولا تقريرًا»).
-- **Five movements** (P23: case → deliberation → commitment → return → attestation; P25: chapters → my note → shared version → verify → letter to myself).
+- **Five movements** (P23: case → deliberation → commitment → return → attestation; P25: chapters → my note → shared version → verify → letter to myself; P26: org chapters k≥5 → «ما تغيّر فينا» → yearbook → shelf → org letter to itself).
 - **A time element**: cycles (6 weeks), windows (28 d echo, 90 d mirror), expiry (12 months), delay (365-day capsule). Time runs inside the existing daily cron.
-- **A signed artifact** with its own code prefix: `ATH-IC` contracts · `ATH-OC` org charter · `ATH-CB` council badge · `ATH-J` journey.
+- **A signed artifact** with its own code prefix: `ATH-IC` contracts · `ATH-OC` org charter · `ATH-CB` council badge · `ATH-J` journey · `ATH-OY` org yearbook.
 - **What the agent may do**: one read-only MCP tool (`my_*`) with a `pscope`; writing/publishing stays with the person (`council_commit` is the only agent write, and it requires explicit confirmation).
 - **What the organization may see**: aggregates (k≥5), its own mirror, charters it signed — never its people's content.
 - **Honest empty states**: «الصفحة الأولى بيضاء», «لم يكتمل النصاب», «ما لم يُكشف ليس غيابًا».
@@ -29,7 +29,7 @@ The owner (د. أحمد بدوي) explicitly rejected incremental, dashboard-sty
 - **Zero**: new npm deps, new cron, new env, new tables for things derivable from events.
 
 ## 3. Vocabulary (use the official term in admin/contracts, the narrative term on the homepage / 2062 / أثير)
-الذاكرة الحية · خيط الأثر · المكتب الزجاجي · محفظة القدرة السيادية · مرصد أَثَر · أَثَر في الجيب · سفارة أَثَر · مؤشر الأداء (not طقس) · درع أَثَر · خزنة أَثَر · مجالس أَثَر (المجلس · الميثاق · الكرسي · القضية · المداولة · الالتزام · العودة · المُوفِّق · كاتب المجلس · مرآة المجلس · خريطة الحكمة) · أثر الجهة (صدى الجهة · إحاطة 90 ثانية · مرآة الجهة · دفعة العودة · ميثاق الجهة · مقاعد الجهة · توأمة المجالس) · رحلة الممارس (رحلتي · الفصل · الحقبة · ما الذي تغيّر فيّ · نسخة للمشاركة · رسالة إلى نفسي بعد سنة · أين كنت / أين صرت) · هندسة البرامج التدريبية (not مصنع) · الميسِّر (not الطيار المساعد) · كل يوم مهارة (situation → own handling → performance mirror; never MCQ).
+الذاكرة الحية · خيط الأثر · المكتب الزجاجي · محفظة القدرة السيادية · مرصد أَثَر · أَثَر في الجيب · سفارة أَثَر · مؤشر الأداء (not طقس) · درع أَثَر · خزنة أَثَر · مجالس أَثَر (المجلس · الميثاق · الكرسي · القضية · المداولة · الالتزام · العودة · المُوفِّق · كاتب المجلس · مرآة المجلس · خريطة الحكمة) · أثر الجهة (صدى الجهة · إحاطة 90 ثانية · مرآة الجهة · دفعة العودة · ميثاق الجهة · مقاعد الجهة · توأمة المجالس) · رحلة الممارس (رحلتي · الفصل · الحقبة · ما الذي تغيّر فيّ · نسخة للمشاركة · رسالة إلى نفسي بعد سنة · أين كنت / أين صرت) · رحلة الجهة (الفصل الجماعي · فصول تقترب · ما تغيّر فينا · مرآة السنة · كتاب السنة · رفّ كتب السنة · رسالة الجهة إلى نفسها · الفصل المشترك) · هندسة البرامج التدريبية (not مصنع) · الميسِّر (not الطيار المساعد) · كل يوم مهارة (situation → own handling → performance mirror; never MCQ).
 
 ## 4. Pre-proposal checklist (all must be "yes")
 - [ ] Could a person explain it to a colleague in one sentence without the word "dashboard"?
@@ -43,5 +43,8 @@ The owner (د. أحمد بدوي) explicitly rejected incremental, dashboard-sty
 - [ ] Did you list "ideas that emerged" — the owner asks for them every phase?
 
 ## 5. Candidates already discussed with the owner
-- **Collective journey** of an organization: what a whole organization learned in a year, as chapters not numbers (k≥5, self-comparison, signed yearly letter from the org to itself).
+- ~~Collective journey~~ — shipped as P26 «رحلة الجهة».
+- **«ليلة الكتاب»**: when an org issues its yearbook, a short live room where members read the chapters together (reuses P6/P13-ج live infra).
+- **«رفّ القطاع»**: once ≥5 orgs in one sector publish yearbooks, an anonymous homepage thread «ما تعلّمه القطاع هذه السنة» (same k rule).
+- **«الفصل القادم»**: from «فصول تقترب», the facilitator proposes one step (council seats · a mission) that would complete the quorum — org admin decides.
 - **Operations pause**: Resend domain + `REPORTS_FROM_EMAIL`, WhatsApp decision (direct Meta vs BSP), SDAIA registration, CSP enforce — requires owner decisions, not code first.
