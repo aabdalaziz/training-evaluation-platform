@@ -59,7 +59,7 @@ export function splitPairs(pairs: Pair[], me: Me, now = Date.now()) {
 }
 
 export type PairState = {
-  me: Me; eligible: ReturnType<typeof pairEligibility>; chapters: number; input: JourneyInput;
+  me: Me; eligible: ReturnType<typeof pairEligibility>; chapters: number; chapter_kinds: string[]; input: JourneyInput;
   live: Pair | null; side: Side | null; invites_in: Pair[]; invite_out: Pair | null; past: Pair[];
   my_path: ReturnType<typeof pairPath> | null; my_state: StepState | null; partner_state: StepState | null; horizon_kind: PledgeKind | null;
 };
@@ -74,7 +74,7 @@ export async function loadPairState(db: any, me: Me, now = Date.now()): Promise<
     if (ms) { my_path = pairPath(ms, live.signed_at, mineJ.input, now); my_state = stepState(my_path, live.signed_at); }
     if (ps) partner_state = await partnerState(db, live, other(side), now);
   }
-  return { me, eligible: pairEligibility(mineJ.chapters), chapters: mineJ.chapters.length, input: mineJ.input, live, side, invites_in: invitesIn, invite_out: inviteOut, past, my_path, my_state, partner_state, horizon_kind: (arr<any>(hz)[0]?.kind as PledgeKind) || null };
+  return { me, eligible: pairEligibility(mineJ.chapters), chapters: mineJ.chapters.length, chapter_kinds: Array.from(new Set(mineJ.chapters.map(c => c.kind))), input: mineJ.input, live, side, invites_in: invitesIn, invite_out: inviteOut, past, my_path, my_state, partner_state, horizon_kind: (arr<any>(hz)[0]?.kind as PledgeKind) || null };
 }
 /** حالة خطوة طرف (يُستخدم للطرف الآخر وللمهام المجدولة) */
 export async function partnerState(db: any, p: Pair, side: Side, now = Date.now()): Promise<StepState> {

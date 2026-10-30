@@ -60,7 +60,7 @@ export async function GET(req: Request) {
   const review_text = rOpen && p && side && myStep && ptStep && p.signed_at ? pairReviewText({ name: nameFor(p, side), step: myStep, state: st.my_state || stepState(null) }, { name: nameFor(p, other(side)), step: ptStep, state: st.partner_state || stepState(null) }, p.signed_at, Number(p.meta?.chapters_then?.[side] ?? 0), st.chapters) : null;
   const mirror = p && side && p.signed_at && st.my_state && st.partner_state ? pairMirror(p.signed_at, st.my_state, st.partner_state, nameFor(p, other(side)), now) : null;
   const options = p && side && p.status === 'proposing' ? ((p.meta || {})[`options_for_${other(side)}`] || null) : null;
-  return NextResponse.json({ success: true, me: { id: me.id, email: me.email, name: me.name, delegate: me.delegate }, eligible: st.eligible, chapters: st.chapters,
+  return NextResponse.json({ success: true, me: { id: me.id, email: me.email, name: me.name, delegate: me.delegate }, eligible: st.eligible, chapters: st.chapters, chapter_kinds: st.chapter_kinds,
     pair: view ? { ...view, verify_url: view.vc_issuance_id && view.code ? `${site}/verify/vc?code=${encodeURIComponent(view.code)}` : null, options, my_rework_left: Math.max(0, PAIR_REWORK_MAX - Number((p!.meta || {})[`rework_${side}`] || 0)) } : null,
     invites_in: st.invites_in.map(i => inviteView(i, me)), invite_out: st.invite_out ? inviteView(st.invite_out, me) : null,
     my_path: st.my_path, my_state: st.my_state, partner_state: st.partner_state, mirror, review_open: rOpen, review_text, meets_horizon: meetsHorizon(myStep, st.horizon_kind), horizon_kind: st.horizon_kind,
