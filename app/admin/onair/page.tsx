@@ -11,17 +11,18 @@ import Link from 'next/link';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
-import { GRADE_LABEL, WEEKDAY_AR, P34_NAMES_AR } from '../../../lib/onair/registry';
+import { GRADE_LABEL, WEEKDAY_AR, P34_NAMES_AR, P35_NAMES_AR } from '../../../lib/onair/registry';
 import type { Grade } from '../../../lib/onair/registry';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
-type Tab = 'now' | 'escalations' | 'faq' | 'people' | 'golden' | 'echo';
+type Tab = 'now' | 'escalations' | 'faq' | 'people' | 'golden' | 'echo' | 'season';
 
 export default function AdminOnAirPage() {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
   const [ready, setReady] = useState(false); const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
-  const [tab, setTab] = useState<Tab>('now'); const [gold, setGold] = useState({ title_ar: 'ساعة الهواء الذهبية', weekday: 2, from: '20:00', duration_min: 60 }); const [echoDay, setEchoDay] = useState<Record<string, string>>({}); const [echoEdit, setEchoEdit] = useState<Record<string, any>>({}); const [note, setNote] = useState<Record<string, string>>({}); const [faq, setFaq] = useState<Record<string, { q: string; a: string }>>({}); const [thread, setThread] = useState<Record<string, any[]>>({}); const [interpEmail, setInterpEmail] = useState('');
+  const [tab, setTab] = useState<Tab>('now'); const [gold, setGold] = useState({ title_ar: 'ساعة الهواء الذهبية', weekday: 2, from: '20:00', duration_min: 60 });
+  const [sea, setSea] = useState({ title_ar: 'موسم الهواء', invite_ar: '', from_day: '', to_day: '' });   /* P35 */ const [echoDay, setEchoDay] = useState<Record<string, string>>({}); const [echoEdit, setEchoEdit] = useState<Record<string, any>>({}); const [note, setNote] = useState<Record<string, string>>({}); const [faq, setFaq] = useState<Record<string, { q: string; a: string }>>({}); const [thread, setThread] = useState<Record<string, any[]>>({}); const [interpEmail, setInterpEmail] = useState('');
   const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
   const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
   async function load(tk?: string) { const j = await fetch('/api/admin/onair', { headers: await H(tk), cache: 'no-store' }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
@@ -45,7 +46,7 @@ export default function AdminOnAirPage() {
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         {data?.pending_sql && <div className="am-err" role="alert">لم يُنفَّذ ملف SQL الخاص بـ P33 بعد (<code>20261210_portal_p33_onair.sql</code>) — نفّذه أولًا ثم أعد التحميل.</div>}
         {st && <div className="am-kpis" data-testid="ao-kpis"><span className="g"><b>{st.present}</b> على الهواء الآن</span><span><b>{st.month.asked}</b> طلبًا هذا الشهر</span><span><b>{st.month.done}</b> اكتمل</span><span><b>{st.month.expired}</b> بلا ردّ</span><span><b>{st.month.escalated}</b> صُعّد</span><span><b>{st.month.avg_response_min ?? '—'}</b> د متوسط أول ردّ</span><span><b>{st.interpreters}</b> مترجمًا معتمَدًا</span><span className="am-cycle"><Link href="/on-air" className="am-btn ghost small">الصفحة العامة</Link></span></div>}
-        <div className="am-tabs" role="tablist">{([['now', `الآن (${present.length} · صفّ ${queue.length})`], ['escalations', `التصعيدات والاستشارات (${esc.length})`], ['faq', 'أسئلة أجاب عنها الهواء'], ['people', 'المترجمون والإنزال'], ['golden', `✦ ${P34_NAMES_AR.golden}`], ['echo', `${P34_NAMES_AR.echo} (${(data?.echo_candidates || []).length})`]] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} data-testid={`ao-tab-${k}`}>{l}</button>)}</div>
+        <div className="am-tabs" role="tablist">{([['now', `الآن (${present.length} · صفّ ${queue.length})`], ['escalations', `التصعيدات والاستشارات (${esc.length})`], ['faq', 'أسئلة أجاب عنها الهواء'], ['people', 'المترجمون والإنزال'], ['golden', `✦ ${P34_NAMES_AR.golden}`], ['echo', `${P34_NAMES_AR.echo} (${(data?.echo_candidates || []).length})`], ['season', `❂ ${P35_NAMES_AR.season}`]] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} data-testid={`ao-tab-${k}`}>{l}</button>)}</div>
 
         {tab === 'now' && <div className="am-grid2">
           <div className="am-card" data-testid="ao-present"><h3>من على الهواء الآن <small>— بالأسماء؛ لا أحد يُجبر على الصعود ولا يُسأل عن النزول</small></h3>
@@ -105,6 +106,22 @@ export default function AdminOnAirPage() {
           </form>
         </div>}
 
+        {tab === 'season' && <div className="am-card" data-testid="ao-season"><h3>❂ {P35_NAMES_AR.season} <small>— أسبوع أو أسبوعان يعلن فيهما الطاقم موسمًا، فتعلن كلُّ جهةٍ ساعتها الذهبية من صفحتها؛ تضيء الخريطة جهةً بعد جهة، ويُذكَّر منسوبو الجهة الصاعدون قبل ساعتهم، وبعد الموسم تصدر الجهة «وثيقة موسم» موقَّعة (ATH-OS). لا تعهّد فردي ولا ترتيب</small></h3>
+          {data?.season && <div className="ao-req" data-testid="ao-season-row"><b>{data.season.title_ar}</b> · {data.season.from_day} → {data.season.to_day} · <span className="am-st" style={{ background: data.season.phase === 'live' ? '#0e7490' : data.season.phase === 'after' ? '#64748b' : '#0f2a4e' }}>{data.season.phrase}</span> · <b>{data.season.orgs}</b> جهات أعلنت{data.season.invite_ar ? <> · «{data.season.invite_ar}»</> : null} <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'season_off', id: data.season.id })} data-testid="ao-season-off">أغلق الموسم</button>
+            {(data.season.slots || []).length > 0 && <ul className="ao-slots">{data.season.slots.map((x: any) => <li key={x.id} data-testid="ao-season-slot"><b>{x.org_name_ar}</b> · {x.weekday_ar} {x.from} · {x.duration_min} دقيقة · {x.public_name ? 'بالاسم على الخريطة' : 'بلا اسم'}</li>)}</ul>}
+          </div>}
+          {!data?.season && <div className="am-empty">لا موسم معلَنًا.</div>}
+          {data?.whisper && <div className="ao-req" data-testid="ao-whisper-row">🤟 {P35_NAMES_AR.whisper} جارية الآن: <b>{data.whisper.title_ar}</b> · الغرفة {data.whisper.room_code}</div>}
+          {(data?.echo_back || []).length > 0 && <div className="ao-req" data-testid="ao-echo-back"><b>↩ {P35_NAMES_AR.echo_back}</b> — {data.echo_back.map((e: any) => <span key={e.id}>يوم {e.day}: <b>{e.returns}</b> تدرّبوا · </span>)}<small>يُخطَر صاحب السؤال ومن حلّه عند 5 و25 و100 (من الكرون القائم)</small></div>}
+          <form className="ao-form" onSubmit={e => { e.preventDefault(); post({ action: 'season_set', ...sea }); }}>
+            <label>العنوان<input value={sea.title_ar} onChange={e => setSea(g => ({ ...g, title_ar: e.target.value.slice(0, 80) }))} data-testid="ao-season-title" /></label>
+            <label>من يوم<input type="date" value={sea.from_day} onChange={e => setSea(g => ({ ...g, from_day: e.target.value }))} required data-testid="ao-season-from" /></label>
+            <label>إلى يوم<input type="date" value={sea.to_day} onChange={e => setSea(g => ({ ...g, to_day: e.target.value }))} required data-testid="ao-season-to" /></label>
+            <label>دعوة قصيرة (اختياري)<input value={sea.invite_ar} onChange={e => setSea(g => ({ ...g, invite_ar: e.target.value.slice(0, 200) }))} placeholder="مثال: أسبوعٌ نرفع فيه أيدينا معًا" data-testid="ao-season-invite" /></label>
+            <button type="submit" className="am-btn" disabled={!!busy} data-testid="ao-season-set">{data?.season ? 'استبدله بموسم جديد' : 'أعلن الموسم'}</button>
+          </form>
+        </div>}
+
         {tab === 'echo' && <div className="am-card" data-testid="ao-echo"><h3>{P34_NAMES_AR.echo} <small>— سؤال حُلّ على الهواء وأذن صاحبه: يصوغ الذكاء الاصطناعي منه مسودّة «مهارة اليوم» (بعد تجهيل البريد والأرقام والروابط)، وأنت تراجع وتختار اليوم وتعتمد؛ في يومه يسبق التوليد الآلي</small></h3>
           <h4 className="ao-h4">أسئلة أذن أصحابها ({(data?.echo_candidates || []).length})</h4>
           {!(data?.echo_candidates || []).length && <div className="am-empty">لا أسئلة بإذن بعد — الإذن يُعطى في خطوة «ما الذي تغيّر؟».</div>}
@@ -134,6 +151,7 @@ export default function AdminOnAirPage() {
 }
 
 const CSS = `
+.ao-slots{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:13px}
 .ao-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;margin-top:10px}.ao-form label{font-weight:800;color:#0f2a4e;font-size:13px}.ao-form label.wide{grid-column:1/-1}.ao-form input,.ao-form select,.ao-form textarea{display:block;width:100%;margin-top:4px;border:1.5px solid #cbd5e1;border-radius:10px;padding:9px;font:inherit;font-weight:400;min-height:44px;background:#fff}
 .ao-h4{margin:14px 0 6px;font-size:14px;color:#0f2a4e}.ao-text{margin:6px 0;color:#334155;line-height:1.7}.ao-actions{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1}.ao-echo{display:block}
 .am{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;direction:rtl}

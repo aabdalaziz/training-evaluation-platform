@@ -60,6 +60,7 @@ export type Presence = {
   user_id: string; email: string; face: Face; receives: Grade[]; domains: string[]; alt_link: string | null;
   on_air_until: string | null; grounded_at: string | null; grounded_note: string | null; meta: Record<string, any>; updated_at?: string;
   text_only?: boolean; mentor_user_id?: string | null; mentor_status?: MentorStatus | null; shadow_left?: number;   // P34
+  reverse_left?: number; reverse_user_id?: string | null;   // P35 ميراث متبادل
 };
 export const isOnAir = (p: Pick<Presence, 'on_air_until' | 'grounded_at'>, now = Date.now()) => !p.grounded_at && !!p.on_air_until && Date.parse(p.on_air_until) > now;
 export const minutesLeft = (p: Pick<Presence, 'on_air_until'>, now = Date.now()) => p.on_air_until ? Math.max(0, Math.ceil((Date.parse(p.on_air_until) - now) / 60000)) : 0;
@@ -75,6 +76,7 @@ export type Request = {
   id: number | string; kind: Grade; status: Status; asker_user_id: string | null; asker_email: string | null; asker_alias: string; domain: string | null; text_ar: string;
   receiver_user_id: string | null; room_code: string | null; taken_at: string | null; done_at: string | null; outcome: Outcome | null; what_changed_ar: string | null;
   duration_min: number | null; meta: Record<string, any>; created_at: string; org_id?: string | null;   // P34 هواء الجهة
+  org_hold_until?: string | null;   // P35 أمانة إلى جهة
 };
 export const alias = (rnd: () => number = Math.random) => `سائل ${1000 + Math.floor(rnd() * 9000)}`;
 
@@ -277,3 +279,120 @@ export function orgAirLine(x: { hours_given: number; meetings_given: number; hou
   if (x.askers >= STATS_K) parts.push(`و${x.askers} من منسوبيها سألوا`);
   return parts.join(' ');
 }
+
+// ───────────────────────────── P35 «موسم الهواء» ─────────────────────────────
+export const P35_NAMES_AR = { season: 'موسم الهواء', echo_back: 'صدى يعود', org_hold: 'أمانة إلى جهة', reverse: 'ميراث متبادل', when: 'الهواء على الخريطة بالزمن', whisper: 'همسة المترجم' } as const;
+export const ORG_HOLD_HOURS = 24;              // الأمانة في عهدة الجهة ثم الهواء العام
+export const ECHO_BACK_STEPS = [5, 25, 100];   // «سؤالك علّم N شخصًا» — k≥5 ثم درجات
+export const WHEN_WEEKS = 8;                   // الخريطة بالزمن: آخر 8 أسابيع
+export const PRESENCE_LOG_DAYS = 90;           // سجل الحضور يُحذف بعد 90 يومًا
+export const WHEN_K = 5;                       // مدينة تظهر إن حضر منها 5 أشخاص مختلفين
+export const WHISPER_MINUTES = 10;             // همسة المترجم
+export const SEASON_K = 5;                     // عدد اللقاءات في وثيقة الموسم يُذكر من 5
+export const SEASON_MAX_DAYS = 14;
+
+/** 1) موسم الهواء */
+export type Season = { id: number | string; title_ar: string; invite_ar: string | null; from_day: string; to_day: string; active: boolean };
+export type SeasonSlot = { id: number | string; season_id: number | string; org_id: string; weekday: number; from_min: number; duration_min: number; public_name: boolean };
+export const riyadhDay = (d: Date | number = new Date()) => new Date((typeof d === 'number' ? d : d.getTime()) + 3 * 3600000).toISOString().slice(0, 10);
+export function cleanSeason(b: any): { ok: true; s: Omit<Season, 'id' | 'active'> } | { ok: false; error: string } {
+  const title_ar = cleanText(b?.title_ar, 80) || 'موسم الهواء'; const invite_ar = cleanText(b?.invite_ar, 200) || null;
+  const from_day = String(b?.from_day || '').slice(0, 10), to_day = String(b?.to_day || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from_day) || !/^\d{4}-\d{2}-\d{2}$/.test(to_day)) return { ok: false, error: 'حدّد يوم البداية ويوم النهاية' };
+  const span = (Date.parse(to_day) - Date.parse(from_day)) / 86400000; if (!(span >= 0 && span <= SEASON_MAX_DAYS)) return { ok: false, error: `الموسم من يوم إلى ${SEASON_MAX_DAYS} يومًا` };
+  return { ok: true, s: { title_ar, invite_ar, from_day, to_day } };
+}
+export function cleanSlot(b: any): { ok: true; s: Pick<SeasonSlot, 'weekday' | 'from_min' | 'duration_min' | 'public_name'> } | { ok: false; error: string } {
+  const g = cleanGolden({ ...b, title_ar: 'x' }); if (!g.ok) return g;
+  return { ok: true, s: { weekday: g.g.weekday, from_min: g.g.from_min, duration_min: g.g.duration_min, public_name: b?.public_name === true } };
+}
+/** حالة الموسم بتوقيت الرياض: قادم (أيام) · جارٍ (أيام متبقية) · انتهى */
+export function seasonState(s: Pick<Season, 'from_day' | 'to_day'>, now = new Date()): { phase: 'before' | 'live' | 'after'; days_to: number; days_left: number; today: string } {
+  const today = riyadhDay(now); const d = (a: string, b: string) => Math.round((Date.parse(a) - Date.parse(b)) / 86400000);
+  if (today < s.from_day) return { phase: 'before', days_to: d(s.from_day, today), days_left: 0, today };
+  if (today > s.to_day) return { phase: 'after', days_to: 0, days_left: 0, today };
+  return { phase: 'live', days_to: 0, days_left: d(s.to_day, today) + 1, today };
+}
+export function seasonPhraseAr(st: ReturnType<typeof seasonState>): string {
+  if (st.phase === 'before') return st.days_to === 1 ? 'يبدأ غدًا' : st.days_to === 2 ? 'يبدأ بعد يومين' : `يبدأ بعد ${st.days_to} أيام`;
+  if (st.phase === 'live') return st.days_left === 1 ? 'جارٍ — يومه الأخير' : `جارٍ — بقي ${st.days_left === 2 ? 'يومان' : st.days_left + ' أيام'}`;
+  return 'انتهى';
+}
+/** هل تقع ساعة الجهة داخل أيام الموسم؟ تُعاد أول وقوع (ISO) أو null */
+export function slotOccursAt(s: Pick<SeasonSlot, 'weekday' | 'from_min'>, season: Pick<Season, 'from_day' | 'to_day'>): string | null {
+  for (let i = 0; i <= SEASON_MAX_DAYS; i++) {
+    const day = new Date(Date.parse(season.from_day) + i * 86400000); const key = day.toISOString().slice(0, 10); if (key > season.to_day) break;
+    if (day.getUTCDay() === s.weekday) return new Date(day.getTime() + s.from_min * 60000 - 3 * 3600000).toISOString();   // الرياض → UTC
+  }
+  return null;
+}
+export function seasonLine(x: { orgs: number; meetings: number; phase: 'before' | 'live' | 'after' }): string {
+  const o = x.orgs === 0 ? 'لم تعلن جهة ساعتها بعد' : x.orgs === 1 ? 'جهة واحدة أعلنت ساعتها' : x.orgs === 2 ? 'جهتان أعلنتا ساعتيهما' : `${x.orgs} جهات أعلنت ساعاتها`;
+  if (x.phase === 'after') return `${o} · ${x.meetings >= SEASON_K ? `${x.meetings} لقاءً على الهواء في الموسم` : 'لقاءات الموسم تُذكر من خمسة'}`;
+  return o;
+}
+export const seasonCode = (rnd: () => string) => `ATH-OS-${rnd().slice(0, 4).toUpperCase()}-${rnd().slice(0, 4).toUpperCase()}`;
+export function seasonDocTitle(orgName: string, season: Pick<Season, 'title_ar' | 'from_day'>) { return `وثيقة موسم — ${orgName} · ${season.title_ar} ${season.from_day.slice(0, 4)}`; }
+export function seasonDocNarrative(orgName: string, season: Pick<Season, 'title_ar' | 'from_day' | 'to_day'>, meetings: number) {
+  return `شاركت ${orgName} في «${season.title_ar}» (${season.from_day} → ${season.to_day}) بساعة هواء ذهبية أعلنها مديرها${meetings >= SEASON_K ? `، واستقبل منسوبوها ${meetings} لقاءً على الهواء خلاله` : ''}. الحضور قرار شخصي لمنسوبيها، والأرقام من لقاءات فعلية سجّلتها المنصة.`;
+}
+
+/** 3) أمانة إلى جهة: تبقى في عهدة الجهة ORG_HOLD_HOURS ثم تصير عامة — بالقراءة */
+export const orgHoldUntil = (createdIso: string, hours = ORG_HOLD_HOURS) => new Date(Date.parse(createdIso) + hours * 3600000).toISOString();
+export const holdReleased = (r: { org_id?: string | null; org_hold_until?: string | null }, now = Date.now()) => !!r.org_id && !!r.org_hold_until && now >= Date.parse(r.org_hold_until);
+/** الجهة الفعّالة للطلب الآن (null = الهواء العام) */
+export const effectiveOrg = (r: { org_id?: string | null; org_hold_until?: string | null }, now = Date.now()): string | null => (r.org_id && !holdReleased(r, now) ? String(r.org_id) : null);
+
+/** 2) صدى يعود */
+export function echoBackLine(n: number, role: 'receiver' | 'asker'): string | null {
+  if (n < ECHO_BACK_STEPS[0]) return null;
+  const who = n === 1 ? 'شخص واحد' : n === 2 ? 'شخصان' : n <= 10 ? `${n} أشخاص` : `${n} شخصًا`;
+  return role === 'receiver' ? `السؤال الذي حللته صار «مهارة يوم» وتدرّب عليها ${who}` : `سؤالك علّم ${who}`;
+}
+/** أعلى درجة بلغها العدد (0 إن لم يبلغ 5) */
+export const echoBackStep = (n: number) => ECHO_BACK_STEPS.filter(s => n >= s).pop() || 0;
+
+/** 4) ميراث متبادل */
+export function canReverse(mentor: { id: string; reverse_left?: number; reverse_user_id?: string | null; legacy_complete?: string[] }, mentee: Pick<Presence, 'user_id' | 'mentor_user_id' | 'mentor_status'>): { ok: true } | { ok: false; error: string } {
+  if (mentee.mentor_user_id !== mentor.id) return { ok: false, error: 'لم ترافق هذا العضو' };
+  if ((mentor.legacy_complete || []).includes(mentee.user_id)) return { ok: false, error: 'اكتمل الميراث بينكما' };
+  if (mentee.mentor_status !== 'done') return { ok: false, error: 'يُعطى الدور بعد اكتمال الطلبات الخمسة' };
+  if ((mentor.reverse_left || 0) > 0) return { ok: false, error: 'لديك دور معكوس معلّق بالفعل' };
+  return { ok: true };
+}
+/** عند «أستقبل»: المرافِق نفسه يُظلَّل مرة واحدة لمن رافقه (الدور المعكوس) */
+export function reverseOnTake(p: Pick<Presence, 'reverse_left' | 'reverse_user_id'> & { meta?: Record<string, any> }): { shadow_user_id: string | null; patch: Record<string, any> | null; complete_with: string | null } {
+  if (!(p.reverse_left && p.reverse_left > 0) || !p.reverse_user_id) return { shadow_user_id: null, patch: null, complete_with: null };
+  const done: string[] = Array.isArray(p.meta?.legacy_complete) ? p.meta!.legacy_complete : [];
+  return { shadow_user_id: p.reverse_user_id, patch: { reverse_left: 0, reverse_user_id: null, meta: { ...(p.meta || {}), legacy_complete: Array.from(new Set([...done, p.reverse_user_id])) } }, complete_with: p.reverse_user_id };
+}
+
+/** 5) الهواء على الخريطة بالزمن — شبكة 7×24 لكل مدينة: 0 لا شيء · 1 نادرًا · 2 أحيانًا · 3 غالبًا (كثافة أسابيع، بلا أعداد أشخاص) */
+export type WhenGrid = { weeks: number; cities: { key: string; ar: string; cells: number[][] }[] };
+export function whenGrid(logs: { user_id: string; city_key: string | null; started_at: string; ended_at: string | null }[], now = new Date(), weeks = WHEN_WEEKS, k = WHEN_K): WhenGrid {
+  const since = now.getTime() - weeks * 7 * 86400000; const byCity: Record<string, { users: Set<string>; weekCells: Record<string, Set<string>> }> = {};
+  for (const l of logs) {
+    if (!l.city_key || !CITY_POINTS[l.city_key]) continue; const s = Date.parse(l.started_at); if (!(s >= since)) continue;
+    const e = Math.min(Date.parse(l.ended_at || '') || s + 3600000, s + 4 * 3600000, now.getTime()); if (!(e > s)) continue;
+    const c = byCity[l.city_key] || (byCity[l.city_key] = { users: new Set(), weekCells: {} }); c.users.add(l.user_id);
+    for (let t = s; t < e; t += 3600000) { const r = new Date(t + 3 * 3600000); const cell = `${r.getUTCDay()}:${r.getUTCHours()}`; (c.weekCells[cell] || (c.weekCells[cell] = new Set())).add(weekKey(new Date(t))); }
+  }
+  const cities = Object.entries(byCity).filter(([, c]) => c.users.size >= k).map(([key, c]) => {
+    const cells = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+    for (const [cell, ws] of Object.entries(c.weekCells)) { const [d, h] = cell.split(':').map(Number); const ratio = ws.size / weeks; cells[d][h] = ratio >= 0.5 ? 3 : ratio >= 0.2 ? 2 : 1; }
+    return { key, ar: CITY_POINTS[key].ar, cells };
+  }).sort((a, b) => a.ar.localeCompare(b.ar, 'ar'));
+  return { weeks, cities };
+}
+export const WHEN_LEVEL_AR = ['—', 'نادرًا', 'أحيانًا', 'غالبًا'];
+
+/** 6) همسة المترجم */
+export const isWhisper = (r: { meta?: Record<string, any> | null }) => !!r?.meta?.whisper;
+export function canWhisper(p: Pick<Presence, 'face' | 'on_air_until' | 'grounded_at'> | null, lastWhisperIso: string | null | undefined, now = new Date()): { ok: true } | { ok: false; error: string } {
+  if (!p || p.face !== 'interpreter') return { ok: false, error: 'الهمسة للمترجم المعتمَد' };
+  if (!isOnAir(p, now.getTime())) return { ok: false, error: 'اصعد إلى الهواء أولًا' };
+  if (lastWhisperIso && riyadhDay(Date.parse(lastWhisperIso)) === riyadhDay(now)) return { ok: false, error: 'همسة واحدة في اليوم' };
+  return { ok: true };
+}
+export const whisperEndsAt = (startedIso: string) => new Date(Date.parse(startedIso) + WHISPER_MINUTES * 60000).toISOString();
+export const whisperOver = (r: Pick<Request, 'status' | 'taken_at' | 'meta'>, now = Date.now()) => isWhisper(r) && r.status === 'taken' && !!r.taken_at && now >= Date.parse(whisperEndsAt(r.taken_at));

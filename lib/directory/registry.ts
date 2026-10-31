@@ -170,8 +170,9 @@ export type WitnessFacts = {
   councils_chaired: number; attestations_approved: number; levels_approved: number; missions_confirmed: number;
   engagements_consult: number; engagements_train: number; engagement_years: [string, string] | null; org_charter: string | null;
   on_air_hours: number; on_air_meetings: number; // P33 «أَثَر معك»: من اللقاءات الفعلية
+  on_air_legacy?: number; // P35 «ميراث متبادل»: ميراث مكتمل (رافق ثم رُوفق)
 };
-export const EMPTY_WITNESS: WitnessFacts = { programs: 0, classrooms: 0, program_years: null, councils_chaired: 0, attestations_approved: 0, levels_approved: 0, missions_confirmed: 0, engagements_consult: 0, engagements_train: 0, engagement_years: null, org_charter: null, on_air_hours: 0, on_air_meetings: 0 };
+export const EMPTY_WITNESS: WitnessFacts = { programs: 0, classrooms: 0, program_years: null, councils_chaired: 0, attestations_approved: 0, levels_approved: 0, missions_confirmed: 0, engagements_consult: 0, engagements_train: 0, engagement_years: null, org_charter: null, on_air_hours: 0, on_air_meetings: 0, on_air_legacy: 0 };
 const n2 = (n: number, one: string, two: string, many: string, acc: string) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${many}` : `${n} ${acc}`;
 const span = (y: [string, string] | null) => y ? (y[0] === y[1] ? `في ${y[0]}` : `بين ${y[0]} و${y[1]}`) : '';
 export function witnessLines(f: WitnessFacts): { key: string; text: string }[] {
@@ -183,6 +184,7 @@ export function witnessLines(f: WitnessFacts): { key: string; text: string }[] {
   if (f.missions_confirmed > 0) out.push({ key: 'missions', text: `أكّد بصفته مشرفًا ${n2(f.missions_confirmed, 'مهمة واحدة من قلب العمل', 'مهمتين من قلب العمل', 'مهام من قلب العمل', 'مهمة من قلب العمل')}` });
   const eng = f.engagements_consult + f.engagements_train;
   if (eng > 0) { const parts = [f.engagements_consult ? n2(f.engagements_consult, 'استشارة واحدة', 'استشارتان', 'استشارات', 'استشارة') : '', f.engagements_train ? n2(f.engagements_train, 'تدريب واحد', 'تدريبان', 'تدريبات', 'تدريبًا') : ''].filter(Boolean).join(' و'); out.push({ key: 'engagements', text: `نفّذ ${n2(eng, 'مهمة واحدة', 'مهمتين', 'مهام', 'مهمة')} بعقود تعاون مع أَثَر (${parts}) ${span(f.engagement_years)}`.trim() }); }
+  if ((f.on_air_legacy || 0) > 0) { const n = f.on_air_legacy || 0; out.push({ key: 'on_air_legacy', text: `أتمّ ميراث هواء متبادلًا ${n === 1 ? 'مع زميل' : n === 2 ? 'مع زميلين' : `مع ${n} زملاء`} — رافق ورُوفق` }); }
   if (f.on_air_meetings > 0) { const m = f.on_air_meetings; out.push({ key: 'on_air', text: `كان على الهواء في «أَثَر معك» ${f.on_air_hours} ساعة · ${m === 1 ? 'لقاءً واحدًا' : m === 2 ? 'لقاءين' : m <= 10 ? `${m} لقاءات` : `${m} لقاءً`}` }); }
   if (f.org_charter) out.push({ key: 'charter', text: `جهته «${f.org_charter}» وقّعت ميثاق أَثَر` });
   return out;

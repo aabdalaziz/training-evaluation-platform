@@ -14,6 +14,8 @@ import type { EchoDraft } from '../../../../lib/onair/registry';
 import { runAi, aiUsage, logAi } from '../../../../lib/ai/athar';
 import type { Presence, Request as OnAirRequest } from '../../../../lib/onair/registry';
 import { loadPeople, messagesOf, patchRequest, postMessage, upsertPresence, goldenList, echoList, echoCandidates, saveEcho, setEcho, getRequest } from '../../../../lib/onair/load';
+import { seasonView, setSeason, offSeason, echoReturns, whisperNow } from '../../../../lib/onair/load';   // P35
+import { cleanSeason, seasonPhraseAr, seasonState, P35_NAMES_AR } from '../../../../lib/onair/registry';   // P35
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -58,7 +60,13 @@ export async function GET(req: Request) {
   const echoedIds = new Set(echoes.map((e: any) => String(e.request_id)));
   const echo_candidates = cands.filter(r => !echoedIds.has(String(r.id))).map(r => ({ id: r.id, kind_ar: GRADE_LABEL[r.kind].ar, domain: r.domain, text_ar: r.text_ar, receiver_ar: nameOf(r.receiver_user_id), done_at: r.done_at }));
   const bottles = all.filter(r => r.status === 'open' && isBottle(r)).length;
-  return NextResponse.json({ success: true, pending_sql: false, present, queue, escalations, recent, grounded, interpreters, stats, golden: goldenView, echoes, echo_candidates, bottles });
+  // P35: الموسم (الجهات بأسمائها للطاقم) · صدى يعود لكل صدى منشور · الهمسة الجارية
+  const season0 = await seasonView(db, now); let season: any = null;
+  if (season0) { const slotsRaw = await db.from('portal_onair_season_slots').select('id,org_id,weekday,from_min,duration_min,public_name').eq('season_id', season0.id).limit(500).then((x: any) => (x.data || []) as any[], () => [] as any[]); const orgRows = slotsRaw.length ? await db.from('portal_organizations').select('id,name_ar').in('id', slotsRaw.map((x: any) => x.org_id)).limit(500).then((x: any) => (x.data || []) as any[], () => [] as any[]) : [];
+    season = { ...season0, slots: slotsRaw.map((x: any) => ({ ...x, org_name_ar: String(orgRows.find((o: any) => String(o.id) === String(x.org_id))?.name_ar || 'جهة'), weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min) })) }; }
+  const echo_back = await Promise.all(echoes.filter((e: any) => e.status === 'published').slice(0, 30).map(async (e: any) => ({ id: e.id, request_id: e.request_id, day: e.day, returns: await echoReturns(db, e) })));
+  const whisper = await whisperNow(db, now.getTime());
+  return NextResponse.json({ success: true, pending_sql: false, present, queue, escalations, recent, grounded, interpreters, stats, golden: goldenView, echoes, echo_candidates, bottles, season, echo_back, whisper, names35_ar: P35_NAMES_AR });
 }
 
 export async function POST(req: Request) {
@@ -105,6 +113,12 @@ export async function POST(req: Request) {
     const st = goldenState(data, new Date()); return NextResponse.json({ success: true, golden: { ...data, weekday_ar: WEEKDAY_AR[data.weekday], from: hhmm(data.from_min), countdown_ar: countdownAr(st.minutes_to), live: st.live }, note_ar: `أُعلنت «${data.title_ar}» — ${WEEKDAY_AR[data.weekday]} ${hhmm(data.from_min)} (${data.duration_min} دقيقة)` });
   }
   if (action === 'golden_off') { await db.from('portal_onair_golden').update({ active: false }).eq('id', b.id); return NextResponse.json({ success: true }); }
+  // ── P35 ──
+  if (action === 'season_set') {   // 1) موسم الهواء — واحد نشط (يُغلق السابق)
+    const c = cleanSeason(b); if (!c.ok) return bad(c.error);
+    try { const s = await setSeason(db, c.s, user.id); const st = seasonPhraseAr(seasonState(s, new Date())); return NextResponse.json({ success: true, season: s, note_ar: `أُعلن «${s.title_ar}» (${s.from_day} → ${s.to_day}) — ${st}. تعلن الجهات ساعاتها من /org?tab=onair.` }); } catch (e: any) { return bad(e?.message || 'تعذّر', 500); }
+  }
+  if (action === 'season_off') { await offSeason(db, b.id); return NextResponse.json({ success: true }); }
   if (action === 'echo_make') {   // 3) صدى السؤال — مسودّة بالذكاء الاصطناعي من سؤال أذن صاحبه (مجهّلًا)
     const r = await getRequest(db, b.id); if (!r || r.status !== 'done') return bad('الصدى من سؤال محلول');
     if (!r.meta?.echo_ok) return bad('لم يأذن السائل بذلك', 403);

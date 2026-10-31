@@ -9,10 +9,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../lib/ui/icons';
 import { PortalShell, useLang } from '../components/PortalShell';
-import { openOnAir, OnAirMap } from '../components/OnAir';
+import { openOnAir, OnAirMap, WhenStrip } from '../components/OnAir';
 import { fastToken } from '../components/Pocket';
 import { supabase } from '../../lib/supabase/client';
-import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES, P34_NAMES_AR, BOTTLE_AR, BOTTLE_HOURS, SHADOW_REQUESTS } from '../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES, P34_NAMES_AR, BOTTLE_AR, BOTTLE_HOURS, SHADOW_REQUESTS, P35_NAMES_AR, WHISPER_MINUTES } from '../../lib/onair/registry';
 import type { Grade } from '../../lib/onair/registry';
 
 export default function OnAirPage() { return <PortalShell><Inner /></PortalShell>; }
@@ -24,7 +24,7 @@ function Inner() {
     const load = async () => { const tk = await fastToken(supabase()).catch(() => ''); const r = await fetch('/api/onair?now=1', { cache: 'no-store', headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(x => x.json()).catch(() => null); if (!alive) return; if (r?.success) setD(r); else setErr(r?.error || 'تعذّر التحميل'); };
     load(); const id = setInterval(load, 30000); return () => { alive = false; clearInterval(id); };
   }, []);
-  const present: any[] = d?.present || []; const st = d?.stats; const faq: any[] = d?.faq || []; const upcoming: any[] = d?.upcoming || []; const golden = d?.golden || null;
+  const present: any[] = d?.present || []; const st = d?.stats; const faq: any[] = d?.faq || []; const upcoming: any[] = d?.upcoming || []; const golden = d?.golden || null; const season = d?.season || null; const whisper = d?.whisper || null;
   const [pnote, setPnote] = useState('');
   async function pledge(on: boolean) { const tk = await fastToken(supabase()).catch(() => ''); if (!tk) { setPnote(ar ? 'سجّل الدخول أولًا' : 'Sign in first'); return; } const r = await fetch('/api/onair', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ action: 'pledge', on }) }).then(x => x.json()).catch(() => null); setPnote(r?.note_ar || r?.error || ''); if (r?.success) setD((x: any) => x ? { ...x, golden: { ...x.golden, ...r.golden } } : x); }
   const forGrade = (g: Grade) => present.filter(p => (p.receives || []).includes(g)).length;
@@ -55,6 +55,33 @@ function Inner() {
         </div>}
         {!!d?.bottles && <p className="oap-bottles" data-testid="oap-bottles">🤲 <b>{d.bottles}</b> {ar ? `${BOTTLE_AR} في عهدة الهواء — تنتظر أول من يصعد` : 'entrusted questions waiting'}</p>}
       </div>
+    </section>
+
+    {whisper && <section className="pt-box oap-whisper" data-testid="oap-whisper" aria-live="polite"><span className="oap-whisper-ic" aria-hidden="true">🤟</span>
+      <div><h2>{ar ? `${P35_NAMES_AR.whisper} — الآن` : 'Interpreter’s whisper — now'}</h2><p><b>{whisper.title_ar}</b>{whisper.interpreter_name_ar ? ` · ${whisper.interpreter_name_ar}` : ''} · {ar ? `غرفة مفتوحة للجميع ${WHISPER_MINUTES} دقائق — تنتهي ${new Date(whisper.ends_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}` : `open room ${WHISPER_MINUTES} min`}</p></div>
+      <Link href={`/room/${whisper.room_code}`} className="pt-btn gold" data-testid="oap-whisper-join">{ar ? 'ادخل الغرفة' : 'Join'}</Link>
+    </section>}
+
+    <section className="pt-box oap-two" id="season">
+      <div><h2>{ar ? P35_NAMES_AR.season : 'On-Air Season'}</h2>
+        {!season && <p className="pt-muted" data-testid="oap-season-none">{ar ? 'لا موسم معلَنًا الآن — حين يُعلن الطاقم موسمًا (أسبوعًا أو أسبوعين)، تعلن كلُّ جهةٍ ساعتها الذهبية فيه، فتضيء خريطة المملكة جهةً بعد جهة، وتحصل الجهة بعده على «وثيقة موسم» موقَّعة.' : 'No season announced yet.'}</p>}
+        {season && <div className="oap-season" data-testid="oap-season" data-phase={season.phase}>
+          <p className="oap-gold-big">{season.phrase}</p>
+          <p><b>{season.title_ar}</b> · {season.from_day} → {season.to_day}</p>
+          {season.invite_ar && <p className="oap-season-inv">«{season.invite_ar}»</p>}
+          <p className="oap-gold-n" data-testid="oap-season-line">{season.line}</p>
+          <ul className="oap-slots" data-testid="oap-season-slots">{(season.slots || []).map((x: any) => <li key={x.id}><b>{x.weekday_ar} {x.from}</b> · {x.duration_min} {ar ? 'دقيقة' : 'min'}{x.org_name_ar ? <span> · {x.org_name_ar}</span> : <span className="pt-muted"> · {ar ? 'جهة (بلا اسم)' : 'an organization'}</span>}</li>)}</ul>
+          {season.phase !== 'after' && <p className="pt-muted">{ar ? 'مدير الجهة يعلن ساعتها من «جهتي ← أَثَر معك». منسوبوها يُذكَّرون قبلها بساعة، والصعود يبقى قرارًا شخصيًا.' : 'Org admins announce their hour from the organization page.'}</p>}
+        </div>}
+      </div>
+      <div><h2>{ar ? 'خريطة الموسم' : 'Season map'}</h2>
+        {season && season.map?.length > 0 ? <><OnAirMap map={{ points: season.map, total: season.orgs, other: 0 }} lang={lang} compact /><p className="pt-muted">{ar ? `${season.orgs} ${season.orgs === 1 ? 'جهة' : season.orgs === 2 ? 'جهتان' : 'جهات'} على الخريطة — بمدن الجهات، أعداد بلا أسماء إلا بإذن مدير الجهة.` : 'Organizations by city.'}</p></> : <p className="pt-muted" data-testid="oap-season-map-empty">{ar ? 'تضيء الخريطة جهةً بعد جهة حين تُعلن الجهات ساعاتها.' : 'The map lights up as organizations announce their hours.'}</p>}
+      </div>
+    </section>
+
+    <section className="pt-box"><h2>{ar ? P35_NAMES_AR.when : 'When is the air lit?'}</h2>
+      <p className="pt-muted">{ar ? 'لا «الآن» فقط — متى يُضاء الهواء عادةً في كل مدينة؟ كثافة آخر ثمانية أسابيع بتوقيت الرياض: نادرًا · أحيانًا · غالبًا. تظهر المدينة إن صعد منها خمسة أشخاص مختلفون، بلا أسماء ولا أعداد، ويُحذف السجل بعد 90 يومًا.' : 'Not only now — when is the air usually lit in each city? Density over the last eight weeks.'}</p>
+      <WhenStrip lang={lang} />
     </section>
 
     <section className="pt-box"><h2>{ar ? 'من على الهواء الآن' : 'On air now'}</h2>
@@ -116,6 +143,8 @@ const CSS = `
 .oap-faq details{border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px}.oap-faq summary{cursor:pointer;font-weight:800;color:#0f2a4e;min-height:24px}.oap-faq summary small{color:#64748b;font-weight:400}.oap-faq p{margin:8px 0 0;color:#334155;line-height:1.8;white-space:pre-wrap}
 .oap-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 10px}.oap-kpis span{background:#f8fafc;border-radius:12px;padding:10px 12px;color:#334155;display:flex;flex-direction:column;gap:2px;font-size:13px}.oap-kpis b{font-size:22px;color:#0f2a4e}
 .oap-two{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}@media(max-width:760px){.oap-two{grid-template-columns:1fr}}
+.oap-season{background:linear-gradient(135deg,#ecfeff,#cffafe);border:1px solid #a5f3fc;border-radius:16px;padding:14px 16px;color:#164e63}.oap-season p{margin:0 0 6px;color:#164e63;font-size:15px}.oap-season .oap-gold-big{color:#0e7490}.oap-season-inv{font-style:italic}.oap-slots{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px;font-size:14px}
+.oap-whisper{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fdf4ff;border-color:#f0abfc}.oap-whisper h2{margin:0 0 4px;font-size:18px}.oap-whisper p{margin:0;color:#701a75}.oap-whisper-ic{font-size:30px}
 .oap-golden{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-radius:16px;padding:14px 16px;color:#78350f}.oap-golden p{margin:0 0 6px;color:#78350f;font-size:15px}.oap-gold-big{font-size:26px;font-weight:900;color:#92400e}.oap-gold-n b{font-size:20px}
 .oap-bottles{margin:12px 0 0;background:#f0f9ff;border:1px solid #bae6fd;color:#0c4a6e;border-radius:12px;padding:8px 12px;font-weight:700}
 .oap-how{margin:0 0 10px;padding-inline-start:20px;color:#334155;line-height:1.9}

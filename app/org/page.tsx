@@ -26,6 +26,7 @@ import type { OrgPosition } from '../../lib/portal/observatory';
 import { OrgImpact } from '../components/OrgImpact';
 import { OrgJourney } from '../components/OrgJourney';
 import { OrgHorizon } from '../components/OrgHorizon';
+import { OrgSeason } from '../components/OrgSeason';   // P35 «موسم الهواء» + «أمانة إلى جهة»
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
@@ -52,8 +53,8 @@ function Inner() {
   const [obs, setObs] = useState<ObsOrg | null>(null); const [obsErr, setObsErr] = useState(''); const [obsBusy, setObsBusy] = useState('');
   async function loadObs(id: string, keep = false) { if (!keep) setObs(null); setObsErr(''); try { const tk = await token(); const j = await fetch(`/api/observatory?view=org&org=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()); if (!j.success) throw new Error(j.error); setObs(j); } catch (e: any) { setObsErr(e.message || String(e)); } }
   useEffect(() => { if (tab === 'observatory' && orgId) void loadObs(orgId); }, [tab, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [air, setAir] = useState<any>(null);   // P34 «هواء الجهة»
-  useEffect(() => { if (tab !== 'onair' || !orgId) return; (async () => { setAir(null); const tk = await token(); const j = await fetch(`/api/onair?org=${encodeURIComponent(orgId)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); setAir(j?.success ? j : { error: j?.error || '—' }); })(); }, [tab, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [air, setAir] = useState<any>(null); const [airN, setAirN] = useState(0);   // P34 «هواء الجهة» · P35 إعادة التحميل بعد إعلان الساعة
+  useEffect(() => { if (tab !== 'onair' || !orgId) return; (async () => { setAir((a: any) => (a && a.success && airN ? a : null)); const tk = await token(); const j = await fetch(`/api/onair?org=${encodeURIComponent(orgId)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); setAir(j?.success ? j : { error: j?.error || '—' }); })(); }, [tab, orgId, airN]); // eslint-disable-line react-hooks/exhaustive-deps
   async function obsPrefs(patch: { watch?: boolean; public?: boolean }) { if (!orgId || obsBusy) return; setObsBusy(patch.watch !== undefined ? 'watch' : 'public'); setObsErr(''); try { const tk = await token(); const j = await fetch('/api/observatory', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ action: 'org_prefs', org: orgId, ...patch }) }).then(r => r.json()); if (!j.success) throw new Error(j.error); await loadObs(orgId, true); } catch (e: any) { setObsErr(e.message || String(e)); } setObsBusy(''); }
   const TREND_TXT = { rising: ['ترتفع', 'rising'], steady: ['تستقر', 'steady'], fading: ['تذوي', 'fading'], unknown: ['لا دليل كافٍ', 'not enough evidence'] } as const;
   async function api(body: any) { const tk = await token(); const r = await fetch('/api/org', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify(body) }); const txt = await r.text(); let j: any; try { j = JSON.parse(txt); } catch { throw new Error(`رد غير صالح (${r.status})`); } if (!j.success) throw new Error(j.error || 'خطأ'); return j; }
@@ -192,6 +193,7 @@ function Inner() {
             {air?.error && <p className="pt-muted">{air.error}</p>}
             {air?.stats && <div className="og-air-kpis" data-testid="org-onair-kpis"><span><b>{air.stats.hours_given}</b>{lang === 'ar' ? 'ساعة قدّمها منسوبوكم' : 'hours given'}</span><span><b>{air.stats.meetings_given}</b>{lang === 'ar' ? 'لقاءً استقبلوه' : 'meetings received'}</span><span><b>{air.stats.askers || `< ${air.stats.k}`}</b>{lang === 'ar' ? 'من منسوبيكم سألوا' : 'members asked'}</span><span><b>{air.stats.internal || `< ${air.stats.k}`}</b>{lang === 'ar' ? 'طلبًا داخل الجهة' : 'internal requests'}</span><span><b>{air.stats.present_now}</b>{lang === 'ar' ? 'من منسوبيكم على الهواء الآن' : 'on air now'}</span></div>}
             {air?.line_ar && <p className="og-air-line" data-testid="org-onair-line">{air.line_ar}</p>}
+            {air?.success && <OrgSeason orgId={orgId} air={air} lang={lang} token={token} onChange={() => setAirN(n => n + 1)} />}
             <p><Link href="/on-air" className="pt-btn ghost small">{lang === 'ar' ? 'صفحة الهواء' : 'On-air page'}</Link> <Link href="/me/onair" className="pt-btn ghost small">{lang === 'ar' ? 'أستقبل' : 'Receive'}</Link></p>
           </div>}
           {d && k && tab === 'report' && <div className="og-report pt-box">
