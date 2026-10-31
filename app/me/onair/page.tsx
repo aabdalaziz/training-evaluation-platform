@@ -13,7 +13,7 @@ import { PortalShell, useLang } from '../../components/PortalShell';
 import { Thread, openOnAir } from '../../components/OnAir';
 import { fastToken } from '../../components/Pocket';
 import { supabase } from '../../../lib/supabase/client';
-import { GRADES, GRADE_LABEL, WEEKDAY_AR, ON_AIR_MINUTES, ON_AIR_MAX_MINUTES, MAX_WINDOWS, CERT_HOURS, CERT_MEETINGS } from '../../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, WEEKDAY_AR, ON_AIR_MINUTES, ON_AIR_MAX_MINUTES, MAX_WINDOWS, CERT_HOURS, CERT_MEETINGS, P34_NAMES_AR, SHADOW_REQUESTS, BOTTLE_AR } from '../../../lib/onair/registry';
 import type { Grade } from '../../../lib/onair/registry';
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
@@ -25,14 +25,14 @@ function Inner() {
   const { lang } = useLang(); const ar = lang === 'ar'; const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [d, setD] = useState<any>(null); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [tab, setTab] = useState<Tab>('receive'); const [thread, setThread] = useState<{ id: string | number; receiver: boolean } | null>(null);
-  const [face, setFace] = useState(''); const [receives, setReceives] = useState<Grade[]>(['quick', 'session']); const [domains, setDomains] = useState(''); const [alt, setAlt] = useState(''); const [minutes, setMinutes] = useState(ON_AIR_MINUTES);
+  const [face, setFace] = useState(''); const [receives, setReceives] = useState<Grade[]>(['quick', 'session']); const [domains, setDomains] = useState(''); const [alt, setAlt] = useState(''); const [minutes, setMinutes] = useState(ON_AIR_MINUTES); const [textOnly, setTextOnly] = useState(false); const [adoptEmail, setAdoptEmail] = useState('');
   const [win, setWin] = useState({ weekday: 0, from: '10:00', to: '11:00', note: '' }); const [colleagues, setColleagues] = useState<any[]>([]); const [hand, setHand] = useState<Record<string, string>>({});
   useEffect(() => { fastToken(db).then(t => setTok(t || '')); }, [db]);
   const H = useCallback(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }), [tok]);
   const load = useCallback(async () => {
     if (!tok) return; const j = await fetch('/api/onair?mine=1', { headers: H(), cache: 'no-store' }).then(r => r.json()).catch(() => null);
     if (!j?.success) { setErr(j?.error || 'تعذّر التحميل'); return; } setD(j);
-    if (j.presence) { setFace(j.presence.face); setReceives(j.presence.receives || []); setDomains((j.presence.domains || []).join('، ')); setAlt(j.presence.alt_link || ''); } else if (j.faces?.length) setFace(f => f || j.faces[0].key);
+    if (j.presence) { setFace(j.presence.face); setReceives(j.presence.receives || []); setDomains((j.presence.domains || []).join('، ')); setAlt(j.presence.alt_link || ''); setTextOnly(!!j.presence.text_only); } else if (j.faces?.length) setFace(f => f || j.faces[0].key);
     const n = await fetch('/api/onair?now=1', { headers: H(), cache: 'no-store' }).then(r => r.json()).catch(() => null); if (n?.success) setColleagues((n.present || []).filter((p: any) => p.user_id && p.user_id !== j.me.id));
   }, [tok, H]);
   useEffect(() => { load(); }, [load]);
@@ -42,7 +42,7 @@ function Inner() {
     setBusy(body.action); setErr(''); setOk('');
     try { const j = await fetch('/api/onair', { method: 'POST', headers: H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'فشل'); if (j.note_ar) setOk(j.note_ar); await load(); return j; } catch (e: any) { setErr(e.message); return null; } finally { setBusy(''); }
   }
-  const goOn = () => post({ action: 'presence', on: true, face, receives, domains: domains.split(/[،,]/).map(s => s.trim()).filter(Boolean), alt_link: alt, minutes });
+  const goOn = () => post({ action: 'presence', on: true, face, receives, domains: domains.split(/[،,]/).map(s => s.trim()).filter(Boolean), alt_link: alt, minutes, text_only: textOnly });
   const toMin = (s: string) => { const [h, m] = s.split(':').map(Number); return (h || 0) * 60 + (m || 0); };
   if (tok === '') return <main className="pt-main oam"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box"><p>{ar ? 'سجّل الدخول لتستقبل أو لترى طلباتك. ' : 'Sign in. '}<Link href="/login?next=/me/onair" className="pt-btn navy small">{ar ? 'تسجيل الدخول' : 'Sign in'}</Link></p></section></main>;
   if (!d) return <main className="pt-main oam"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box"><p className="pt-muted">{err || '…'}</p></section></main>;
@@ -56,6 +56,14 @@ function Inner() {
 
     {tab === 'receive' && !thread && <>
       {!d.can_receive && <section className="pt-box" data-testid="oam-cannot"><h2>{ar ? 'من يصعد إلى الهواء؟' : 'Who goes on air?'}</h2><p className="pt-muted">{ar ? 'أعضاء هيئة أَثَر المعتمَدون (خبراء ومدرّبون)، وطاقم أَثَر، ومترجمو لغة الإشارة الذين اعتمدهم الطاقم. ابدأ بسيرتك في الهيئة — وعند اعتمادها يظهر زر «أستقبل» هنا.' : 'Approved Athar Faculty members, staff, and staff-approved interpreters.'}</p><p><Link href="/me/directory" className="pt-btn navy small">{ar ? 'سيرتي في هيئة أَثَر' : 'My Faculty profile'}</Link> <button type="button" className="pt-btn ghost small" onClick={() => openOnAir()}>{ar ? 'أريد أن أسأل بدلًا من ذلك' : 'I want to ask instead'}</button></p></section>}
+      {d.mentor && d.mentor.status === 'invited' && <section className="pt-box oam-invite" data-testid="oam-mentor-invite"><h2>{ar ? P34_NAMES_AR.legacy : 'Legacy'}</h2>
+        <p>{ar ? <><b>{d.mentor.name_ar}</b> — من حاملي «شهادة حضور على الهواء» — يعرض مرافقتك في أول {SHADOW_REQUESTS} طلبات تستقبلها: يقرأ الخيط معك ولا يكتب فيه ولا يُسأل عنك.</> : <><b>{d.mentor.name_ar}</b> offers to shadow your first {SHADOW_REQUESTS} requests (read-only).</>}</p>
+        <div className="oam-actions"><button type="button" className="pt-btn gold small" disabled={!!busy} onClick={() => post({ action: 'mentor_reply', ok: true })} data-testid="oam-mentor-accept">{ar ? 'أقبل المرافقة' : 'Accept'}</button><button type="button" className="pt-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'mentor_reply', ok: false })} data-testid="oam-mentor-decline">{ar ? 'لا، شكرًا' : 'Decline'}</button></div>
+      </section>}
+      {d.golden && d.can_receive && <section className="pt-box oam-golden" data-testid="oam-golden" data-live={d.golden.live ? '1' : '0'}><h2>✦ {d.golden.title_ar}</h2>
+        <p>{ar ? <>{d.golden.live ? <b>جارية الآن — اصعد!</b> : <b>{d.golden.countdown_ar}</b>} · {d.golden.weekday_ar} {d.golden.from} · <b data-testid="oam-golden-pledged">{d.golden.pledged}</b> تعهّدوا هذا الأسبوع</> : <>{d.golden.live ? 'Live now' : d.golden.countdown_ar} · {d.golden.pledged} pledged</>}</p>
+        <button type="button" className={`pt-btn ${d.golden.mine ? 'ghost' : 'gold'} small`} disabled={!!busy} onClick={() => post({ action: 'pledge', on: !d.golden.mine })} data-testid="oam-pledge">{d.golden.mine ? (ar ? 'ألغِ تعهّدي' : 'Withdraw') : (ar ? 'أتعهّد بالحضور' : 'I pledge')}</button>
+      </section>}
       {d.can_receive && <section className={`pt-box oam-on ${p?.on_air ? 'live' : ''}`} data-testid="oam-presence">
         <h2>{p?.on_air ? (ar ? `على الهواء — ${p.minutes_left} دقيقة متبقية` : `On air — ${p.minutes_left} min left`) : (ar ? 'اصعد إلى الهواء' : 'Go on air')}</h2>
         {p?.grounded_at && <p className="oam-err" role="alert">{ar ? `أُنزلت من الهواء بقرار الطاقم: ${p.grounded_note || ''}` : 'Grounded by staff.'}</p>}
@@ -65,6 +73,7 @@ function Inner() {
           <label className="oam-f">{ar ? 'مجالاتي (افصل بفاصلة)' : 'My domains (comma-separated)'}<input value={domains} onChange={e => setDomains(e.target.value)} placeholder={ar ? 'تقويم البرامج، التدريب التنفيذي…' : 'program evaluation, …'} data-testid="oam-domains" /></label>
           <label className="oam-f">{ar ? 'رابطي البديل للجلسات (اختياري — Teams/Zoom/Meet)' : 'My alternative link (optional)'}<input value={alt} onChange={e => setAlt(e.target.value)} placeholder="https://" dir="ltr" data-testid="oam-alt" /><small className="pt-muted">{ar ? 'إن تركته فارغًا تُفتح غرفة أَثَر تلقائيًا (ترجمة حيّة + مقعد مترجم).' : 'Leave empty to use an Athar room (live captions + interpreter seat).'}</small></label>
           <label className="oam-f">{ar ? 'كم دقيقة؟' : 'How long?'}<select value={minutes} onChange={e => setMinutes(Number(e.target.value))} data-testid="oam-minutes">{[30, 60, 90, 120, ON_AIR_MAX_MINUTES].map(m => <option key={m} value={m}>{m} {ar ? 'دقيقة' : 'min'}</option>)}</select></label>
+          <label className="oam-f oam-chk"><input type="checkbox" checked={textOnly} onChange={e => setTextOnly(e.target.checked)} data-testid="oam-text-only" /> {ar ? `نصّ فقط — «${P34_NAMES_AR.quiet}»` : 'Text only — Quiet Air'}<small className="pt-muted">{ar ? 'لمن لا يستطيع الصوت أو يفضّل الهدوء؛ يُقدَّم لك من يفضّل النص.' : 'For those who cannot or prefer not to use voice.'}</small></label>
         </div>
         <div className="oam-actions">
           <button type="button" className="pt-btn gold" disabled={!!busy || !receives.length} onClick={goOn} data-testid="oam-go">{p?.on_air ? (ar ? 'جدّد وحدّث' : 'Renew & update') : (ar ? 'أستقبل — اصعد إلى الهواء' : 'Receive — go on air')}</button>
@@ -76,7 +85,8 @@ function Inner() {
       {d.can_receive && <section className="pt-box" data-testid="oam-queue"><h2>{ar ? `الصفّ (${queue.length})` : `Queue (${queue.length})`} <small className="pt-muted">{ar ? '— مرتَّب: مجالك أولًا ثم الأقدم؛ أول «أستقبل» يأخذه' : ''}</small></h2>
         {!p?.on_air && <p className="pt-muted">{ar ? 'الصفّ يظهر لمن على الهواء.' : 'The queue shows while on air.'}</p>}
         {p?.on_air && !queue.length && <p className="pt-muted">{ar ? 'لا طلبات الآن — وجودك وحده رسالة.' : 'No requests right now.'}</p>}
-        <ul className="oam-list">{p?.on_air && queue.map(r => <li key={r.id} data-testid="oam-q"><div><b>{r.kind_ar}</b> · <small>{r.asker_alias}{r.domain ? ` · ${r.domain}` : ''} · {fmt(r.created_at)}{r.interpreter_wanted ? ' · يطلب مترجم إشارة' : ''}</small><p>{r.text_ar}</p></div>
+        {p?.on_air && d.bottles > 0 && <p className="oam-bottles" data-testid="oam-bottles">🍾 {ar ? `${d.bottles} «${BOTTLE_AR}» انتظرتك — تأتي أولًا في الصفّ.` : `${d.bottles} bottles waiting.`}</p>}
+        <ul className="oam-list">{p?.on_air && queue.map(r => <li key={r.id} data-testid="oam-q"><div><b>{r.kind_ar}</b> · <small>{r.bottle ? `🍾 ${BOTTLE_AR} · ` : ''}{r.org_scoped ? 'هواء الجهة · ' : ''}{r.prefer_text ? 'يفضّل النص · ' : ''}{r.asker_alias}{r.domain ? ` · ${r.domain}` : ''} · {fmt(r.created_at)}{r.interpreter_wanted ? ' · يطلب مترجم إشارة' : ''}</small><p>{r.text_ar}</p></div>
           <div className="oam-actions"><button type="button" className="pt-btn gold small" disabled={!!busy} onClick={async () => { const j = await post({ action: 'take', id: r.id }); if (j) setThread({ id: r.id, receiver: true }); }} data-testid="oam-take">{ar ? 'أستقبل' : 'Take'}</button>{r.asker_user_id && <button type="button" className="pt-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'block', user_id: r.asker_user_id })}>{ar ? 'احجب' : 'Block'}</button>}</div></li>)}</ul>
       </section>}
 
@@ -105,6 +115,14 @@ function Inner() {
         {hours.eligible && <button type="button" className="pt-btn gold small" disabled={!!busy} onClick={() => post({ action: 'cert' })} data-testid="oam-cert-btn">{d.cert ? (ar ? 'جدّد الشهادة بساعاتي الحالية' : 'Renew with current hours') : (ar ? 'أصدر شهادتي' : 'Issue my certificate')}</button>}
         {!hours.eligible && <p className="pt-muted" data-testid="oam-cert-gap">{ar ? `بقي ${Math.max(0, CERT_HOURS - hours.hours).toFixed(1)} ساعة و${Math.max(0, CERT_MEETINGS - hours.meetings)} لقاءً.` : 'Not yet eligible.'}</p>}
       </section>}
+
+      {d.can_receive && (d.can_adopt || d.mentor || (d.mentees || []).length > 0) && <section className="pt-box" data-testid="oam-legacy"><h2>{ar ? P34_NAMES_AR.legacy : 'Legacy'} <small className="pt-muted">{ar ? `— حامل ATH-OA يرافق مُستقبِلًا جديدًا في أول ${SHADOW_REQUESTS} طلبات: يقرأ ولا يكتب، ولا تُحسب له ساعات` : ''}</small></h2>
+        {d.mentor && d.mentor.status === 'accepted' && <p className="pt-muted" data-testid="oam-my-mentor">{ar ? `يرافقك ${d.mentor.name_ar} — بقي ${d.mentor.shadow_left} من ${SHADOW_REQUESTS}.` : `${d.mentor.name_ar} shadows you — ${d.mentor.shadow_left} left.`}</p>}
+        {d.mentor && d.mentor.status === 'done' && <p className="pt-muted">{ar ? `اكتملت مرافقة ${d.mentor.name_ar} — الهواء لك الآن.` : 'Shadowing complete.'}</p>}
+        {(d.mentees || []).length > 0 && <ul className="oam-wins" data-testid="oam-mentees">{d.mentees.map((m: any) => <li key={m.user_id}><b>{m.name_ar}</b> <small>· {m.status === 'invited' ? (ar ? 'بانتظار قبوله' : 'invited') : m.status === 'accepted' ? (ar ? `بقي ${m.shadow_left}` : `${m.shadow_left} left`) : m.status === 'done' ? (ar ? 'اكتملت' : 'done') : (ar ? 'رفض' : 'declined')}</small></li>)}</ul>}
+        {(d.shadowed || []).length > 0 && <><h3 className="oam-h3">{ar ? 'خيوط أرافقها (قراءة فقط)' : 'Shadowed threads'}</h3><ul className="oam-list">{d.shadowed.map((r: any) => <li key={r.id} data-testid="oam-shadowed"><div><b>{r.kind_ar}</b> · <small>{r.asker_alias} · {r.status_ar} · {fmt(r.created_at)}</small><p>{r.text_ar}</p></div><div className="oam-actions"><button type="button" className="pt-btn ghost small" onClick={() => setThread({ id: r.id, receiver: false })} data-testid="oam-shadow-open">{ar ? 'اقرأ الخيط' : 'Read'}</button></div></li>)}</ul></>}
+        {d.can_adopt && <form className="oam-adopt" onSubmit={e => { e.preventDefault(); post({ action: 'adopt', email: adoptEmail }).then(j => { if (j) setAdoptEmail(''); }); }}><label>{ar ? 'بريد مُستقبِل جديد أرافقه' : 'Email of a newcomer to shadow'}<input type="email" value={adoptEmail} onChange={e => setAdoptEmail(e.target.value)} dir="ltr" required data-testid="oam-adopt-email" /></label><button type="submit" className="pt-btn navy small" disabled={!!busy || !adoptEmail} data-testid="oam-adopt">{ar ? 'أعرض المرافقة' : 'Offer to shadow'}</button></form>}
+      </section>}
     </>}
 
     {tab === 'asks' && !thread && <section className="pt-box" data-testid="oam-asks"><h2>{ar ? 'طلباتي' : 'My requests'}</h2>
@@ -130,5 +148,9 @@ const CSS = `
 .oam-hand{display:inline-flex;gap:6px;align-items:center}.oam-hand select{border:1.5px solid #cbd5e1;border-radius:10px;padding:8px;font:inherit;min-height:40px;background:#fff;max-width:240px}
 .oam-wins{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}.oam-wins li{display:flex;gap:8px;align-items:center;color:#334155}.oam-wins small{color:#475569}
 .oam-win{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:end}.oam-win label{font-weight:800;color:#0f2a4e;font-size:13px}.oam-win input,.oam-win select{display:block;width:100%;margin-top:4px;border:1.5px solid #cbd5e1;border-radius:10px;padding:9px;font:inherit;font-weight:400;min-height:44px;background:#fff}
+.oam-chk{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.oam-chk input{width:20px;height:20px;accent-color:#0b6f69;margin:0}.oam-chk small{font-weight:400;flex-basis:100%}
+.oam-invite{border:2px solid #7c3aed;background:#faf5ff}.oam-invite p{color:#4c1d95;line-height:1.8;margin:0 0 6px}.oam-golden{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a}.oam-golden p{color:#78350f;margin:0 0 8px}
+.oam-bottles{background:#f0f9ff;border:1px solid #bae6fd;color:#0c4a6e;border-radius:12px;padding:8px 12px;margin:0 0 8px;font-weight:700}.oam-h3{font-size:15px;color:#0f2a4e;margin:12px 0 6px}
+.oam-adopt{display:flex;flex-wrap:wrap;gap:8px;align-items:end;margin-top:10px}.oam-adopt label{font-weight:800;color:#0f2a4e;font-size:13px;flex:1;min-width:220px}.oam-adopt input{display:block;width:100%;margin-top:4px;border:1.5px solid #cbd5e1;border-radius:10px;padding:9px;font:inherit;min-height:44px}
 .oam-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:0 0 10px}.oam-kpis span{background:#f8fafc;border-radius:12px;padding:10px 12px;color:#334155;display:flex;flex-direction:column;font-size:13px}.oam-kpis b{font-size:22px;color:#0f2a4e}
 `;

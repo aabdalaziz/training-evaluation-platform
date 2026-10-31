@@ -4,13 +4,14 @@
  *  1) دعوة مدربي منصة التقييم القائمة الذين لا سيرة لهم بعد (مرة واحدة لكل بريد — ref `directory:invite:<email>`؛ حدّ 25 يوميًّا).
  *  2) تذكير سنوي لأعضاء الهيئة المعتمدين الذين لم يحدّثوا سيرتهم منذ 365 يومًا (مرة في السنة — meta.reminded_at).
  *  3) P33 «أَثَر معك»: تذكير صاحب النافذة المعلنة إن كانت تبدأ خلال 24 ساعة (مرة لكل نافذة ويوم — ref `onair:window:<id>:<date>`).
+ *  4) P34 «ساعة الهواء الذهبية»: تذكير المتعهّدين قبل 60 دقيقة (مرة لكل تعهّد — reminded_at).
  */
 import { notify } from '../portal/notify';
 import { UPDATE_REMINDER_DAYS, TAGLINE_AR, lower } from './registry';
 import type { Profile } from './registry';
 
 const INVITE_BATCH = 25;
-export type DirectoryCronResult = { ok: true; dry: boolean; invited: number; reminded: number; skipped_invites: number; windows_reminded?: number } | { ok: false; error: string };
+export type DirectoryCronResult = { ok: true; dry: boolean; invited: number; reminded: number; skipped_invites: number; windows_reminded?: number; golden_reminded?: number } | { ok: false; error: string };
 
 export async function runDirectory(db: any, opts: { dry?: boolean; site: string; now?: Date } = { site: '' }): Promise<DirectoryCronResult> {
   const dry = !!opts.dry; const now = opts.now || new Date(); const site = opts.site.replace(/\/+$/, '');
@@ -59,6 +60,7 @@ export async function runDirectory(db: any, opts: { dry?: boolean; site: string;
           text: `أعلنتَ نافذة «أَثَر معك» ${WEEKDAY_AR[w.weekday]} من ${hhmm(w.from_min)} إلى ${hhmm(w.to_min)}${w.note_ar ? ` (${w.note_ar})` : ''}. حين يحين الوقت اضغط «أستقبل» من ${site}/me/onair — الصعود بيدك، ولا يصعد أحد عنك.`, url: `${site}/me/onair` });
       }
     } catch { /* قبل تنفيذ SQL الخاص بـ P33 */ }
-    return { ok: true, dry, invited, reminded, skipped_invites: skipped, windows_reminded: windows };
+    let golden = 0; try { const { remindGolden } = await import('../onair/load'); golden = await remindGolden(db, site, now, dry); } catch { /* قبل SQL P34 */ }
+    return { ok: true, dry, invited, reminded, skipped_invites: skipped, windows_reminded: windows, golden_reminded: golden };
   } catch (e: any) { return { ok: false, error: e?.message || String(e) }; }
 }

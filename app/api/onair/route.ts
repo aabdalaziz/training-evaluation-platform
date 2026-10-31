@@ -11,6 +11,8 @@
  *   ask {kind, domain?, text, alias?}   (المجهول: quick فقط، طلب واحد مفتوح، معدّل IP)
  *   take {id} · message {id, text, t?} · close {id, outcome, t?} · changed {id, what_changed, t?} · cancel {id, t?}
  *   block {user_id} · unblock {user_id} · handover {id, to} · cert
+ *  P34 «الهواء يتّسع»: ask{bottle,prefer_text,org_id} · echo_ok {id,ok,t?} · pledge {on} · adopt {email} · mentor_reply {ok} · text_only في presence
+ *   GET ?now=1 يضيف golden · map · bottles(عدد) ؛ GET ?mine=1 يضيف orgs · golden · mentor · mentees · shadowed · bottles
  *  لا يصل أي احتياج (P32) إلى هنا إلا عَلَم «مترجم إشارة مطلوب» الذي يختاره الطالب بنفسه في الطلب.
  */
 import { NextResponse } from 'next/server';
@@ -23,9 +25,9 @@ import { didWeb } from '../../../lib/portal/vc';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { notify } from '../../../lib/portal/notify';
 import { runAi, aiUsage, logAi } from '../../../lib/ai/athar';
-import { GRADES, GRADE_LABEL, GRADE_HINT, FACES, FACE_AR, FACE_EN, STATUS_AR, OUTCOME_AR, ON_AIR_MINUTES, ON_AIR_MAX_MINUTES, QUICK_TIMEOUT_MIN, QUICK_CLOSE_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, MAX_OPEN_PER_ASKER, MAX_OPEN_ANON, MAX_WINDOWS, TEXT_MIN, TEXT_MAX, MSG_MAX, CHANGED_MAX, CERT_HOURS, CERT_MEETINGS, WEEKDAY_AR, TAGLINE_AR, cleanGrades, cleanDomains, cleanLink, cleanText, cleanWindow, allowedFaces, goOnAir, isOnAir, minutesLeft, alias as mkAlias, canTake, canClose, nextStatus, rankQueue, nextWindowAt, hhmm, summaryPrompt, localSummary, sessionEndsAt } from '../../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, GRADE_HINT, FACES, FACE_AR, FACE_EN, STATUS_AR, OUTCOME_AR, ON_AIR_MINUTES, ON_AIR_MAX_MINUTES, QUICK_TIMEOUT_MIN, QUICK_CLOSE_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, MAX_OPEN_PER_ASKER, MAX_OPEN_ANON, MAX_WINDOWS, TEXT_MIN, TEXT_MAX, MSG_MAX, CHANGED_MAX, CERT_HOURS, CERT_MEETINGS, WEEKDAY_AR, TAGLINE_AR, cleanGrades, cleanDomains, cleanLink, cleanText, cleanWindow, allowedFaces, goOnAir, isOnAir, minutesLeft, alias as mkAlias, canTake, canClose, nextStatus, rankQueue, nextWindowAt, hhmm, summaryPrompt, localSummary, sessionEndsAt, isBottle, BOTTLE_AR, BOTTLE_HOURS, SHADOW_REQUESTS, P34_NAMES_AR, canAdopt, shadowOnTake, countdownAr, orgAirLine } from '../../../lib/onair/registry';
 import type { Face, Grade, Outcome, Presence, Request as OnAirRequest } from '../../../lib/onair/registry';
-import { loadPeople, directoryFacesOf, presentNow, myPresence, upsertPresence, windowsOf, getRequest, openRequests, activeFor, askedBy, countOpenBy, insertRequest, patchRequest, settleStale, messagesOf, postMessage, hoursFor, existingCert, issueOnAirCert, loadPublicStats, presentView, callReceivers } from '../../../lib/onair/load';
+import { loadPeople, directoryFacesOf, presentNow, myPresence, upsertPresence, windowsOf, getRequest, openRequests, activeFor, askedBy, countOpenBy, insertRequest, patchRequest, settleStale, messagesOf, postMessage, hoursFor, existingCert, issueOnAirCert, loadPublicStats, presentView, callReceivers, orgsOf, orgMemberIds, orgAirStats, goldenNow, pledgeGolden, liveMapOf, bottlesOpen, menteesOf, shadowedFor, echoOf } from '../../../lib/onair/load';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -47,6 +49,7 @@ async function who(req: Request, db: any): Promise<Who | null> {
 }
 const META = { tagline_ar: TAGLINE_AR, grades: GRADES.map(g => ({ key: g, label: GRADE_LABEL[g], hint: GRADE_HINT[g] })), faces: FACES.map(f => ({ key: f, ar: FACE_AR[f], en: FACE_EN[f] })), status_ar: STATUS_AR, outcome_ar: OUTCOME_AR, weekdays_ar: WEEKDAY_AR,
   limits: { on_air_minutes: ON_AIR_MINUTES, on_air_max_minutes: ON_AIR_MAX_MINUTES, quick_timeout_min: QUICK_TIMEOUT_MIN, quick_close_min: QUICK_CLOSE_MIN, session_minutes: SESSION_MINUTES, session_extend_minutes: SESSION_EXTEND_MINUTES, max_open: MAX_OPEN_PER_ASKER, max_open_anon: MAX_OPEN_ANON, max_windows: MAX_WINDOWS, text_min: TEXT_MIN, text_max: TEXT_MAX, cert_hours: CERT_HOURS, cert_meetings: CERT_MEETINGS } };
+const P34_META = { names_ar: P34_NAMES_AR, bottle_hours: BOTTLE_HOURS, shadow_requests: SHADOW_REQUESTS };
 const PRIVACY_AR = 'الحضور معلَن بإرادة أصحابه؛ الأسماء خلف تسجيل الدخول. لا يصل احتياجك (إن كتبته في «احتياجاتي») إلى أحد هنا — إلا إن طلبت بنفسك مترجم إشارة. لا نجوم ولا تقييم: «ما الذي تغيّر؟» يقرؤه من ساعدك وحده.';
 
 /** هل يملك الطالب هذا الطلب (مسجّل أو مجهول بتوكنه)؟ */
@@ -56,13 +59,14 @@ function viewOf(r: OnAirRequest, me: Who | null, t: string, presence?: Presence 
   const { meta, asker_email, ...rest } = r as any;
   return { ...rest, status_ar: STATUS_AR[r.status], kind_ar: GRADE_LABEL[r.kind].ar, outcome_ar: r.outcome ? OUTCOME_AR[r.outcome] : null, i_am: asker ? 'asker' : receiver ? 'receiver' : me?.staff ? 'staff' : 'none',
     what_changed_ar: receiver || asker || me?.staff ? r.what_changed_ar : null, alt_link: asker && r.status === 'taken' && presence?.alt_link ? presence.alt_link : null, interpreter_wanted: !!meta?.interpreter_wanted,
+    bottle: isBottle(r), prefer_text: !!meta?.prefer_text, org_scoped: !!r.org_id, echo_ok: !!meta?.echo_ok, shadow: !!meta?.shadow_user_id, i_shadow: !!me && meta?.shadow_user_id === me.id,
     session_ends_at: r.kind === 'session' && r.taken_at ? sessionEndsAt(r.taken_at, !!meta?.extended) : null, extended: !!meta?.extended, closes_at: r.kind === 'quick' && r.taken_at ? new Date(Date.parse(r.taken_at) + QUICK_CLOSE_MIN * 60000).toISOString() : null };
 }
 
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500);
   const u = new URL(req.url); const now = new Date(); const pub = publicUrlOf(db);
-  if (u.searchParams.get('meta') === '1') return NextResponse.json({ success: true, meta: META, privacy_ar: PRIVACY_AR });
+  if (u.searchParams.get('meta') === '1') return NextResponse.json({ success: true, meta: { ...META, p34: P34_META }, privacy_ar: PRIVACY_AR });
   if (u.searchParams.get('now') === '1') {
     const me = await who(req, db); const present = await presentNow(db, now); const people = await loadPeople(db, present.map(p => p.user_id), pub);
     const view = presentView(present, people, now.getTime()).map(p => me ? p : { ...p, name_ar: null, slug: null, photo_url: null, title_ar: null, user_id: null });
@@ -71,29 +75,46 @@ export async function GET(req: Request) {
     // «أسئلة أجاب عنها الهواء»: ما اعتمده الطاقم بصياغة عامة (بلا أسماء)
     const { data: fq } = await db.from('portal_onair_requests').select('id,domain,meta,done_at').in('status', ['done', 'escalated']).order('created_at', { ascending: false }).limit(300);
     const faq = ((fq || []) as any[]).filter(r => r.meta?.faq?.question_ar).slice(0, 30).map(r => ({ id: r.id, domain: r.domain, question_ar: r.meta.faq.question_ar, answer_ar: r.meta.faq.answer_ar, at: r.meta.faq.approved_at }));
-    return NextResponse.json({ success: true, present: view, count: present.length, stats, upcoming, faq, signed_in: !!me, privacy_ar: PRIVACY_AR, tagline_ar: TAGLINE_AR });
+    const [golden, map, bottles] = await Promise.all([goldenNow(db, me, now), liveMapOf(db, present), bottlesOpen(db)]);
+    return NextResponse.json({ success: true, present: view, count: present.length, stats, upcoming, faq, signed_in: !!me, privacy_ar: PRIVACY_AR, tagline_ar: TAGLINE_AR,
+      golden: golden ? { id: golden.id, title_ar: golden.title_ar, weekday_ar: WEEKDAY_AR[golden.weekday], from: hhmm(golden.from_min), duration_min: golden.duration_min, live: golden.live, starts_at: golden.starts_at, ends_at: golden.ends_at, minutes_to: golden.minutes_to, countdown_ar: countdownAr(golden.minutes_to), pledged: golden.pledged, mine: golden.mine } : null,
+      map, bottles: bottles.length, names_ar: P34_NAMES_AR, orgs: me ? await orgsOf(db, me) : [] });
   }
   const me = await who(req, db);
   if (u.searchParams.get('request')) {
     const t = String(u.searchParams.get('t') || ''); const r0 = await getRequest(db, u.searchParams.get('request')!); if (!r0) return bad('لا طلب بهذا الرقم', 404);
     const [r] = await settleStale(db, [r0], now.getTime());
-    if (!ownsAsk(r, me, t) && !(me && (r.receiver_user_id === me.id || me.staff))) return bad('ليس طلبك', 403);
+    const iShadow = !!me && r.meta?.shadow_user_id === me.id;   // ميراث الهواء: المرافق يقرأ فقط
+    if (!ownsAsk(r, me, t) && !(me && (r.receiver_user_id === me.id || me.staff || iShadow))) return bad('ليس طلبك', 403);
     const presence = r.receiver_user_id ? await myPresence(db, r.receiver_user_id) : null; const people = r.receiver_user_id ? await loadPeople(db, [r.receiver_user_id], pub) : {};
     const rp = r.receiver_user_id ? people[r.receiver_user_id] : null;
-    return NextResponse.json({ success: true, request: viewOf(r, me, t, presence), messages: await messagesOf(db, r.id), receiver: r.receiver_user_id ? { name_ar: rp?.name_ar || (presence?.face === 'staff' ? 'طاقم أَثَر' : 'عضو هيئة أَثَر'), face_ar: presence ? FACE_AR[presence.face] : null, photo_url: rp?.photo_url || null, slug: rp?.slug || null } : null });
+    return NextResponse.json({ success: true, request: viewOf(r, me, t, presence), messages: await messagesOf(db, r.id), echo: me?.staff || r.receiver_user_id === me?.id ? await echoOf(db, r.id) : null, receiver: r.receiver_user_id ? { name_ar: rp?.name_ar || (presence?.face === 'staff' ? 'طاقم أَثَر' : 'عضو هيئة أَثَر'), face_ar: presence ? FACE_AR[presence.face] : null, photo_url: rp?.photo_url || null, slug: rp?.slug || null } : null });
   }
   if (!me) return bad('يلزم تسجيل الدخول', 401);
+  if (u.searchParams.get('org')) {   // 5) هواء الجهة — أرقام مجمّعة لمنسوبي الجهة (عضو مؤكَّد أو طاقم)
+    const orgId = String(u.searchParams.get('org')); const mine = await orgsOf(db, me); if (!me.staff && !mine.some(o => o.id === orgId)) return bad('لست من منسوبي هذه الجهة', 403);
+    const st = await orgAirStats(db, orgId); const ids = await orgMemberIds(db, orgId); const present_now = (await presentNow(db, now)).filter(p => ids.has(p.user_id)).length;
+    return NextResponse.json({ success: true, stats: { ...st, present_now }, line_ar: orgAirLine(st) });
+  }
   if (u.searchParams.get('mine') === '1') {
     const [presence, dirFaces, wins, hours, cert, active0, open0, asks0] = await Promise.all([myPresence(db, me.id), directoryFacesOf(db, me.id), windowsOf(db, me.id), hoursFor(db, me.id), existingCert(db, me.id), activeFor(db, me.id), openRequests(db), askedBy(db, me.id)]);
     const faces = allowedFaces({ directoryFaces: dirFaces, isStaff: me.staff, interpreterOk: !!presence?.meta?.interpreter_ok });
     const active = await settleStale(db, active0, now.getTime()); const open = (await settleStale(db, open0, now.getTime())).filter(r => r.status === 'open');
     const blocked: string[] = Array.isArray(presence?.meta?.blocked) ? presence!.meta.blocked : [];
-    const queue = presence ? rankQueue(open.filter(r => !r.asker_user_id || (r.asker_user_id !== me.id && !blocked.includes(r.asker_user_id))), { receives: presence.receives, domains: presence.domains }) : [];
+    const myOrgs = await orgsOf(db, me); const myOrgIds = new Set(myOrgs.map(o => o.id));
+    const queue = presence ? rankQueue(open.filter(r => (!r.asker_user_id || (r.asker_user_id !== me.id && !blocked.includes(r.asker_user_id))) && (!r.org_id || myOrgIds.has(String(r.org_id)))), { receives: presence.receives, domains: presence.domains, text_only: !!presence.text_only }) : [];
+    const [golden, mentees, shadowed, mentorP] = await Promise.all([goldenNow(db, me, now), menteesOf(db, me.id), shadowedFor(db, me.id), presence?.mentor_user_id ? loadPeople(db, [presence.mentor_user_id], pub, true) : Promise.resolve({} as any)]);
+    const menteePeople = await loadPeople(db, mentees.map(m => m.user_id), pub, true);
     const asks = await settleStale(db, asks0, now.getTime());
     return NextResponse.json({ success: true, me: { id: me.id, name: me.name, staff: me.staff }, presence: presence ? { ...presence, on_air: isOnAir(presence, now.getTime()), minutes_left: minutesLeft(presence, now.getTime()), alt_link: presence.alt_link, meta: { interpreter_ok: !!presence.meta?.interpreter_ok, blocked_n: blocked.length } } : null,
       faces: faces.map(f => ({ key: f, ar: FACE_AR[f] })), can_receive: faces.length > 0, windows: wins.map(w => ({ ...w, weekday_ar: WEEKDAY_AR[w.weekday], from: hhmm(w.from_min), to: hhmm(w.to_min) })),
       hours, cert: cert ? { code: cert.code, issued_at: cert.issued_at, verify_url: `${siteOf(req)}/verify/vc?code=${encodeURIComponent(cert.code)}` } : null,
-      active: active.filter(r => r.status === 'taken').map(r => viewOf(r, me, '', presence)), queue: queue.map(r => viewOf(r, me, '', presence)), asks: asks.map(r => viewOf(r, me, '')), meta: META, privacy_ar: PRIVACY_AR });
+      active: active.filter(r => r.status === 'taken').map(r => viewOf(r, me, '', presence)), queue: queue.map(r => viewOf(r, me, '', presence)), asks: asks.map(r => viewOf(r, me, '')), meta: { ...META, p34: P34_META }, privacy_ar: PRIVACY_AR,
+      orgs: myOrgs, golden: golden ? { id: golden.id, title_ar: golden.title_ar, weekday_ar: WEEKDAY_AR[golden.weekday], from: hhmm(golden.from_min), live: golden.live, minutes_to: golden.minutes_to, countdown_ar: countdownAr(golden.minutes_to), pledged: golden.pledged, mine: golden.mine, week_key: golden.week_key } : null,
+      bottles: queue.filter(isBottle).length, text_only: !!presence?.text_only,
+      mentor: presence?.mentor_user_id ? { user_id: presence.mentor_user_id, name_ar: (mentorP as any)[presence.mentor_user_id]?.name_ar || 'عضو هيئة أَثَر', status: presence.mentor_status || null, shadow_left: presence.shadow_left || 0 } : null,
+      mentees: mentees.map(m => ({ user_id: m.user_id, name_ar: menteePeople[m.user_id]?.name_ar || 'عضو هيئة أَثَر', status: m.mentor_status || null, shadow_left: m.shadow_left || 0 })),
+      shadowed: shadowed.map(r => viewOf(r, me, '')), can_adopt: hours.eligible });
   }
   return bad('طلب غير معروف');
 }
@@ -114,17 +135,23 @@ export async function POST(req: Request) {
       if ((await countOpenBy(db, null, ipH)) >= MAX_OPEN_ANON) return bad('لديك طلب مفتوح بالفعل — انتظر ردّه أو ألغِه');
     } else if ((await countOpenBy(db, me.id, null)) >= MAX_OPEN_PER_ASKER) return bad(`لديك ${MAX_OPEN_PER_ASKER} طلبات مفتوحة — أغلق واحدًا أولًا`);
     const present = await presentNow(db, now);
-    const anyone = present.some(p => p.receives.includes(kind));
-    if (kind !== 'consult' && !anyone) return NextResponse.json({ success: false, nobody: true, error: 'لا أحد على الهواء لهذه الدرجة الآن', alternatives_ar: ['احجز نافذة قادمة من /on-air', 'اترك رسالة للطاقم من «تواصل»', 'اسأل أثير الآن (ذكاء اصطناعي — ليس إنسانًا)'] }, { status: 409 });
+    // 5) هواء الجهة: الطلب داخل جهتي فقط (عضو مؤكَّد)
+    let org_id: string | null = null; if (me && body.org_id) { const mine = await orgsOf(db, me); if (!mine.some(o => o.id === String(body.org_id))) return bad('لست عضوًا مؤكَّدًا في هذه الجهة'); org_id = String(body.org_id); }
+    const orgSet = org_id ? await orgMemberIds(db, org_id) : null;
+    const anyone = present.some(p => p.receives.includes(kind) && (!orgSet || orgSet.has(p.user_id)));
+    // 8) رسالة في زجاجة: لا أحد الآن → نحفظ السؤال 72 ساعة بدل رفضه (إن اختار السائل)
+    const bottle = kind !== 'consult' && !anyone && body.bottle === true;
+    if (kind !== 'consult' && !anyone && !bottle) return NextResponse.json({ success: false, nobody: true, error: org_id ? 'لا أحد من جهتك على الهواء الآن' : 'لا أحد على الهواء لهذه الدرجة الآن', can_bottle: true, bottle_ar: `اترك «${BOTTLE_AR}» — يبقى سؤالك ${BOTTLE_HOURS} ساعة ويجده أول من يصعد`, alternatives_ar: ['احجز نافذة قادمة من /on-air', 'اترك رسالة للطاقم من «تواصل»', 'اسأل أثير الآن (ذكاء اصطناعي — ليس إنسانًا)'] }, { status: 409 });
     const token = me ? null : anonToken();
-    const r = await insertRequest(db, { kind, status: kind === 'consult' ? 'escalated' : 'open', asker_user_id: me?.id || null, asker_email: me?.email || null, asker_alias: cleanText(body.alias, 40) || (me?.name ? me.name.split(' ')[0] : mkAlias()), domain, text_ar: text, ip_hash: ipH, meta: { ...(token ? { anon_token: token } : {}), ...(body.interpreter_wanted === true ? { interpreter_wanted: true } : {}), site_lang: 'ar' } });
+    const r = await insertRequest(db, { kind, status: kind === 'consult' ? 'escalated' : 'open', asker_user_id: me?.id || null, asker_email: me?.email || null, asker_alias: cleanText(body.alias, 40) || (me?.name ? me.name.split(' ')[0] : mkAlias()), domain, text_ar: text, ip_hash: ipH, org_id, meta: { ...(token ? { anon_token: token } : {}), ...(body.interpreter_wanted === true ? { interpreter_wanted: true } : {}), ...(body.prefer_text === true ? { prefer_text: true } : {}), ...(bottle ? { bottle: true } : {}), site_lang: 'ar' } });
+    if (bottle) await postMessage(db, r.id, 'system', `${BOTTLE_AR}: لا أحد على الهواء الآن — سيجدها أول من يصعد خلال ${BOTTLE_HOURS} ساعة`).catch(() => null);
     await postMessage(db, r.id, 'asker', text).catch(() => null);
     let called = 0;
     if (kind === 'consult') { try { await notify(db, { kind: 'onair_consult', to: { email: process.env.ADMIN_EMAILS?.split(',')[0]?.trim() || null, name: 'طاقم أَثَر' }, ref: `onair:consult:${r.id}`, subject: `طلب استشارة من «على الهواء» — ${r.asker_alias}`, text: `${text}\n\nافتح: ${site}/admin/onair`, url: `${site}/admin/onair` }); } catch { /* يتابع */ } }
     else called = await callReceivers(db, r, present, site);
-    return NextResponse.json({ success: true, request: viewOf(r, me, token || ''), t: token, called, note_ar: kind === 'consult' ? 'وصلت الطاقم؛ سيفتح عقد التعاون مع العضو ويعود إليك.' : `نادينا ${called} من الحاضرين — إن لم يردّ أحد خلال ${QUICK_TIMEOUT_MIN} دقائق نعرض البدائل.` });
+    return NextResponse.json({ success: true, request: viewOf(r, me, token || ''), t: token, called, note_ar: kind === 'consult' ? 'وصلت الطاقم؛ سيفتح عقد التعاون مع العضو ويعود إليك.' : bottle ? `حُفظت رسالتك في زجاجة — أول من يصعد على الهواء يجدها أولًا، وسنخبرك${me ? ' في إشعاراتك' : ' هنا عند عودتك'}.` : `نادينا ${called} من الحاضرين — إن لم يردّ أحد خلال ${QUICK_TIMEOUT_MIN} دقائق نعرض البدائل.` });
   }
-  if (['message', 'close', 'changed', 'cancel', 'extend'].includes(action)) {
+  if (['message', 'close', 'changed', 'cancel', 'extend', 'echo_ok'].includes(action)) {
     const r0 = await getRequest(db, body.id); if (!r0) return bad('لا طلب بهذا الرقم', 404); const [r] = await settleStale(db, [r0], now.getTime());
     const asker = ownsAsk(r, me, t); const receiver = !!me && r.receiver_user_id === me.id;
     if (!asker && !receiver && !me?.staff) return bad('ليس طلبك', 403);
@@ -152,6 +179,7 @@ export async function POST(req: Request) {
       }
       return NextResponse.json({ success: true, request: viewOf(x!, me, t), summary });
     }
+    if (action === 'echo_ok') { if (!asker) return bad('الإذن للطالب وحده'); const ok = body.ok !== false; const x = await patchRequest(db, r.id, { meta: { ...r.meta, echo_ok: ok } }); return NextResponse.json({ success: true, request: viewOf(x!, me, t), note_ar: ok ? 'شكرًا — قد يصبح سؤالك (مجهّلًا) «مهارة اليوم» بعد اعتماد الطاقم.' : 'لن يُستخدم سؤالك.' }); }
     if (action === 'changed') { if (!asker) return bad('«ما الذي تغيّر؟» للطالب وحده'); const w = cleanText(body.what_changed, CHANGED_MAX); const x = await patchRequest(db, r.id, { what_changed_ar: w || null }); return NextResponse.json({ success: true, request: viewOf(x!, me, t), note_ar: 'يقرؤها من ساعدك وحده، وتُحسب له لقاءً في «ما شهده أَثَر».' }); }
   }
 
@@ -167,8 +195,10 @@ export async function POST(req: Request) {
     const domains = cleanDomains(body.domains ?? presence?.domains ?? []); const alt_link = body.alt_link === undefined ? presence?.alt_link || null : cleanLink(body.alt_link);
     if (body.alt_link && !alt_link) return bad('الرابط البديل يجب أن يبدأ بـ https://');
     const on = body.on !== false; const until = on ? goOnAir(Number(body.minutes) || ON_AIR_MINUTES, now.getTime()) : null;
-    const row = await upsertPresence(db, { user_id: me.id, email: me.email, face, receives, domains, alt_link, on_air_until: until, meta: { ...(presence?.meta || {}), ...(on ? { last_on_at: iso } : {}) } });
-    return NextResponse.json({ success: true, presence: { ...row, on_air: isOnAir(row!, now.getTime()), minutes_left: minutesLeft(row!, now.getTime()) }, note_ar: on ? `أنت على الهواء ${minutesLeft(row!, now.getTime())} دقيقة — ينطفئ وحده؛ جدّد متى شئت.` : 'نزلت من الهواء.' });
+    const text_only = body.text_only === undefined ? !!presence?.text_only : body.text_only === true;   // 2) الهواء الصامت
+    const row = await upsertPresence(db, { user_id: me.id, email: me.email, face, receives, domains, alt_link, text_only, on_air_until: until, meta: { ...(presence?.meta || {}), ...(on ? { last_on_at: iso } : {}) } });
+    const bottles = on ? (await bottlesOpen(db)).filter(b => receives.includes(b.kind)).length : 0;   // 8) أول من يصعد يجد الزجاجات
+    return NextResponse.json({ success: true, presence: { ...row, on_air: isOnAir(row!, now.getTime()), minutes_left: minutesLeft(row!, now.getTime()) }, bottles, note_ar: on ? `أنت على الهواء ${minutesLeft(row!, now.getTime())} دقيقة — ينطفئ وحده؛ جدّد متى شئت.${bottles ? ` في الصفّ ${bottles} ${BOTTLE_AR} تنتظرك.` : ''}` : 'نزلت من الهواء.' });
   }
   if (action === 'off') { if (!presence) return bad('لست على الهواء'); const row = await upsertPresence(db, { user_id: me.id, email: me.email, on_air_until: null }); return NextResponse.json({ success: true, presence: { ...row, on_air: false, minutes_left: 0 } }); }
   if (action === 'window_add') {
@@ -182,11 +212,14 @@ export async function POST(req: Request) {
     if (!presence || !isOnAir(presence, now.getTime())) return bad('اصعد إلى الهواء أولًا', 403);
     const r = await getRequest(db, body.id); if (!r) return bad('لا طلب بهذا الرقم', 404); const c = canTake(r, me.id); if (!c.ok) return bad(c.error, 409);
     if (!presence.receives.includes(r.kind)) return bad('لا تستقبل هذه الدرجة');
+    if (r.org_id && !(await orgMemberIds(db, String(r.org_id))).has(me.id)) return bad('هذا الطلب داخل جهةٍ لست من منسوبيها', 403);
+    const sh = shadowOnTake(presence);   // 4) ميراث الهواء
     let room_code: string | null = null;
     if (r.kind === 'session' && !presence.alt_link) { const code = randomCode(6); const { error } = await db.from('portal_rooms').insert({ code, title: `جلسة دعم · ${r.asker_alias}`, kind: 'support', created_by: me.id, prompt: r.text_ar.slice(0, 200), status: 'open', max_peers: 3, minutes: SESSION_MINUTES, notes: [] }); if (!error) room_code = code; }
     // سباق: أول من يحدّث الصف المفتوح
-    const { data: x, error } = await db.from('portal_onair_requests').update({ status: 'taken', receiver_user_id: me.id, taken_at: iso, room_code }).eq('id', r.id).eq('status', 'open').select('id').maybeSingle();
+    const { data: x, error } = await db.from('portal_onair_requests').update({ status: 'taken', receiver_user_id: me.id, taken_at: iso, room_code, ...(sh.shadow_user_id ? { meta: { ...r.meta, shadow_user_id: sh.shadow_user_id } } : {}) }).eq('id', r.id).eq('status', 'open').select('id').maybeSingle();
     if (error || !x) return bad('سبقك زميل إلى هذا الطلب', 409);
+    if (sh.patch) { await upsertPresence(db, { user_id: me.id, email: me.email, ...sh.patch }).catch(() => null); const mp = await myPresence(db, sh.shadow_user_id!); if (mp?.email) { try { await notify(db, { kind: 'onair_shadow', to: { email: mp.email, name: null }, ref: `onair:shadow:${r.id}`, subject: 'ظلّ على الهواء: من ترافقه استقبل طلبًا', text: `${r.asker_alias}: «${r.text_ar.slice(0, 120)}» — تقرأ الخيط من ${site}/me/onair`, url: `${site}/me/onair` }); } catch { /* يتابع */ } } }
     await postMessage(db, r.id, 'system', `${me.name ? me.name.split(' ')[0] : FACE_AR[presence.face]} معك الآن${room_code ? ` — الغرفة ${room_code}` : presence.alt_link && r.kind === 'session' ? ' — عبر رابط العضو' : ''}`).catch(() => null);
     if (r.asker_email) { try { await notify(db, { kind: 'onair_taken', to: { email: r.asker_email, name: null }, ref: `onair:taken:${r.id}`, subject: 'أحدهم معك الآن على الهواء', text: `ردّ على طلبك «${r.text_ar.slice(0, 80)}». افتح: ${site}/me/onair?r=${r.id}`, url: `${site}/me/onair?r=${r.id}` }); } catch { /* يتابع */ } }
     const full = await getRequest(db, r.id); return NextResponse.json({ success: true, request: viewOf(full!, me, '', presence), room_url: room_code ? `${site}/room/${room_code}` : null });
@@ -203,6 +236,23 @@ export async function POST(req: Request) {
     const blocked: string[] = Array.isArray(presence.meta?.blocked) ? presence.meta.blocked : []; const next = action === 'block' ? Array.from(new Set([...blocked, uid])).slice(0, 200) : blocked.filter(x => x !== uid);
     await upsertPresence(db, { user_id: me.id, email: me.email, meta: { ...presence.meta, blocked: next } }); return NextResponse.json({ success: true, blocked_n: next.length });
   }
+  if (action === 'pledge') {   // 1) ساعة الهواء الذهبية
+    const dirFaces = await directoryFacesOf(db, me.id); if (!dirFaces.length && !me.staff && !presence) return bad('التعهّد لأعضاء الهيئة والطاقم', 403);
+    const g = await goldenNow(db, me, now); if (!g) return bad('لا ساعة ذهبية معلَنة بعد');
+    await pledgeGolden(db, g.id, me, g.week_key, body.on !== false); const g2 = await goldenNow(db, me, now);
+    return NextResponse.json({ success: true, golden: { id: g2!.id, pledged: g2!.pledged, mine: g2!.mine, countdown_ar: countdownAr(g2!.minutes_to), live: g2!.live }, note_ar: body.on !== false ? `تعهّدت — نذكّرك قبل الساعة بـ60 دقيقة. معك ${Math.max(0, g2!.pledged - 1)} آخرون.` : 'أُلغي تعهّدك.' });
+  }
+  if (action === 'adopt') {   // 4) ميراث الهواء: حامل ATH-OA يرافق مُستقبِلًا جديدًا
+    const hours = await hoursFor(db, me.id); const email = lower(body.email); if (!email) return bad('بريد من ترافقه؟');
+    const { data: prof } = await db.from('profiles').select('id').eq('email', email).maybeSingle(); let uid = (prof as any)?.id ? String((prof as any).id) : '';
+    if (!uid) { const { data: dp } = await db.from('portal_directory_profiles').select('user_id').eq('email', email).maybeSingle(); uid = (dp as any)?.user_id ? String((dp as any).user_id) : ''; }
+    if (!uid) return bad('لا حساب بهذا البريد — يسجّل الدخول مرة أولًا');
+    const mentee = await myPresence(db, uid); const c = canAdopt({ eligible: hours.eligible, id: me.id }, mentee ? { user_id: mentee.user_id, mentor_status: mentee.mentor_status, shadow_left: mentee.shadow_left } : { user_id: uid, mentor_status: null, shadow_left: 0 }); if (!c.ok) return bad(c.error);
+    await upsertPresence(db, { user_id: uid, email, ...(mentee ? {} : { face: 'expert', receives: ['quick', 'session'] as Grade[], domains: [] }), mentor_user_id: me.id, mentor_status: 'invited', shadow_left: SHADOW_REQUESTS });
+    try { await notify(db, { kind: 'onair_mentor', to: { email, name: null }, ref: `onair:mentor:${me.id}:${uid}`, subject: `${me.name || 'عضو هيئة أَثَر'} يعرض مرافقتك على الهواء`, text: `«ميراث الهواء»: يرافقك في أول ${SHADOW_REQUESTS} طلبات تستقبلها (يقرأ ولا يتدخّل). اقبل أو ارفض من ${site}/me/onair`, url: `${site}/me/onair` }); } catch { /* يتابع */ }
+    return NextResponse.json({ success: true, note_ar: 'أُرسلت الدعوة — تبدأ المرافقة حين يقبل.' });
+  }
+  if (action === 'mentor_reply') { if (!presence?.mentor_user_id || presence.mentor_status !== 'invited') return bad('لا دعوة مرافقة معلّقة'); const ok = body.ok !== false; await upsertPresence(db, { user_id: me.id, email: me.email, mentor_status: ok ? 'accepted' : 'declined', ...(ok ? {} : { shadow_left: 0 }) }); return NextResponse.json({ success: true, note_ar: ok ? `قبلت — يرافقك في أول ${SHADOW_REQUESTS} طلبات.` : 'رفضت المرافقة.' }); }
   if (action === 'cert') {
     const hours = await hoursFor(db, me.id); const have = await existingCert(db, me.id);
     if (have && Number(have.vc?._athar?.hours || 0) >= hours.hours) return NextResponse.json({ success: true, code: have.code, verify_url: `${site}/verify/vc?code=${encodeURIComponent(have.code)}`, note_ar: 'شهادتك الحالية تغطّي ساعاتك' });

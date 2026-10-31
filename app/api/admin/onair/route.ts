@@ -4,12 +4,16 @@
  *  GET  → الحاضرون الآن (بالأسماء والبريد) · الصفّ الحي · التصعيدات والاستشارات · آخر 50 لقاءً (بلا نصوص الخيوط) · المُنزَلون · إحصاءات الشهر · pending_sql
  *  POST ground {user_id, note} · unground {user_id} · interpreter {user_id, ok} · resolve {id, note?} · faq {id, question_ar, answer_ar} (يُحفظ كسؤال شائع معتمَد في meta — يُعرض في /on-air)
  *  الطاقم يرى التصعيدات لا الخيوط؛ خيط «عون سريع» لا يُفتح إلا إن صُعّد إليه.
+ *  P34: golden_set {title_ar, weekday, from_min, duration_min} · golden_off {id} · echo_make {id} (الذكاء الاصطناعي يصوغ مسودّة «مهارة اليوم» من سؤال أذن صاحبه) · echo_set {id, status, day?, draft?}
+ *       GET يضيف golden · echoes · echo_candidates · bottles
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { FACE_AR, GRADE_LABEL, STATUS_AR, OUTCOME_AR, isOnAir, minutesLeft, avgResponseMin, cleanText } from '../../../../lib/onair/registry';
+import { FACE_AR, GRADE_LABEL, STATUS_AR, OUTCOME_AR, isOnAir, minutesLeft, avgResponseMin, cleanText, cleanGolden, goldenState, countdownAr, WEEKDAY_AR, hhmm, echoPrompt, localEcho, parseEcho, scrubPii, localSummary, isBottle } from '../../../../lib/onair/registry';
+import type { EchoDraft } from '../../../../lib/onair/registry';
+import { runAi, aiUsage, logAi } from '../../../../lib/ai/athar';
 import type { Presence, Request as OnAirRequest } from '../../../../lib/onair/registry';
-import { loadPeople, messagesOf, patchRequest, postMessage, upsertPresence } from '../../../../lib/onair/load';
+import { loadPeople, messagesOf, patchRequest, postMessage, upsertPresence, goldenList, echoList, echoCandidates, saveEcho, setEcho, getRequest } from '../../../../lib/onair/load';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -46,7 +50,15 @@ export async function GET(req: Request) {
   const recent = all.filter(r => ['done', 'expired', 'cancelled'].includes(r.status) || r.meta?.resolved_at).slice(0, 50).map(v);
   const done = all.filter(r => r.status === 'done');
   const stats = { month: { asked: all.length, done: done.length, expired: all.filter(r => r.status === 'expired').length, escalated: all.filter(r => r.status === 'escalated').length, avg_response_min: avgResponseMin(all.filter(r => r.taken_at)), minutes: done.reduce((a, r) => a + (Number(r.duration_min) || 0), 0) }, present: present.length, receivers_total: rows.length, grounded: grounded.length, interpreters: interpreters.length };
-  return NextResponse.json({ success: true, pending_sql: false, present, queue, escalations, recent, grounded, interpreters, stats });
+  // P34
+  const golden = (await goldenList(db)).map(g => { const st = goldenState(g, now); return { ...g, weekday_ar: WEEKDAY_AR[g.weekday], from: hhmm(g.from_min), live: st.live, countdown_ar: countdownAr(st.minutes_to), starts_at: st.starts_at }; });
+  const pledges = golden.length ? await db.from('portal_onair_golden_pledges').select('golden_id,week_key').in('golden_id', golden.map(g => g.id)).limit(2000).then((x: any) => (x.data || []) as any[], () => [] as any[]) : [];
+  const goldenView = golden.map(g => ({ ...g, pledged: pledges.filter((p: any) => String(p.golden_id) === String(g.id) && p.week_key === goldenState(g, now).week_key).length }));
+  const [echoes, cands] = await Promise.all([echoList(db), echoCandidates(db)]);
+  const echoedIds = new Set(echoes.map((e: any) => String(e.request_id)));
+  const echo_candidates = cands.filter(r => !echoedIds.has(String(r.id))).map(r => ({ id: r.id, kind_ar: GRADE_LABEL[r.kind].ar, domain: r.domain, text_ar: r.text_ar, receiver_ar: nameOf(r.receiver_user_id), done_at: r.done_at }));
+  const bottles = all.filter(r => r.status === 'open' && isBottle(r)).length;
+  return NextResponse.json({ success: true, pending_sql: false, present, queue, escalations, recent, grounded, interpreters, stats, golden: goldenView, echoes, echo_candidates, bottles });
 }
 
 export async function POST(req: Request) {
@@ -84,6 +96,32 @@ export async function POST(req: Request) {
     const q = cleanText(b.question_ar, 200), a = cleanText(b.answer_ar, 800); if (q.length < 8 || a.length < 12) return bad('السؤال والجواب بصياغة عامة — بلا أسماء ولا تفاصيل شخصية');
     const x = await patchRequest(db, (r as any).id, { meta: { ...((r as any).meta || {}), faq: { question_ar: q, answer_ar: a, approved_by: user.id, approved_at: iso } } });
     return NextResponse.json({ success: true, request: x, note_ar: 'أُضيف إلى «أسئلة أجاب عنها الهواء» في /on-air' });
+  }
+  // ── P34 ──
+  if (action === 'golden_set') {   // 1) ساعة الهواء الذهبية — واحدة فعّالة
+    const g = cleanGolden(b); if (!g.ok) return bad(g.error);
+    await db.from('portal_onair_golden').update({ active: false }).eq('active', true);
+    const { data, error } = await db.from('portal_onair_golden').insert({ ...g.g, active: true, created_by: user.id }).select('id,title_ar,weekday,from_min,duration_min,active').single(); if (error) return bad(error.message, 500);
+    const st = goldenState(data, new Date()); return NextResponse.json({ success: true, golden: { ...data, weekday_ar: WEEKDAY_AR[data.weekday], from: hhmm(data.from_min), countdown_ar: countdownAr(st.minutes_to), live: st.live }, note_ar: `أُعلنت «${data.title_ar}» — ${WEEKDAY_AR[data.weekday]} ${hhmm(data.from_min)} (${data.duration_min} دقيقة)` });
+  }
+  if (action === 'golden_off') { await db.from('portal_onair_golden').update({ active: false }).eq('id', b.id); return NextResponse.json({ success: true }); }
+  if (action === 'echo_make') {   // 3) صدى السؤال — مسودّة بالذكاء الاصطناعي من سؤال أذن صاحبه (مجهّلًا)
+    const r = await getRequest(db, b.id); if (!r || r.status !== 'done') return bad('الصدى من سؤال محلول');
+    if (!r.meta?.echo_ok) return bad('لم يأذن السائل بذلك', 403);
+    const msgs = await messagesOf(db, r.id); const input = { text_ar: scrubPii(r.text_ar), summary_ar: scrubPii(localSummary(msgs)), domain: r.domain };
+    const p = echoPrompt(input); const usage = await aiUsage(db, user.id, 'onair_echo');
+    const res = usage.allowed ? await runAi<EchoDraft>({ system: p.system, user: p.user, parse: raw => parseEcho(JSON.parse(String(raw).replace(/^```json|```$/g, '').trim())), local: () => localEcho(input), budgetMs: 12000 }) : null;
+    const draft: EchoDraft = { ...(res ? res.data : localEcho(input)), domain_code: r.domain || null };
+    if (res) await logAi(db, { user_id: user.id, email: user.email, role: 'ADMIN', purpose: 'onair_echo', result: res, context: { request_id: r.id } });
+    const e = await saveEcho(db, r.id, draft, res?.model || null, user.id);
+    return NextResponse.json({ success: true, echo: e, source: res?.source || 'local', note_ar: 'صيغت المسودّة — راجعها واختر يومًا ثم اعتمد.' });
+  }
+  if (action === 'echo_set') {
+    const status = ['draft', 'approved', 'rejected'].includes(String(b.status)) ? String(b.status) : undefined; const day = b.day === undefined ? undefined : (String(b.day || '').match(/^\d{4}-\d{2}-\d{2}$/) ? String(b.day) : null);
+    const draft = b.draft ? parseEcho(b.draft) : undefined; if (b.draft && !draft) return bad('المسودّة ناقصة (عنوان · موقف · مطلوب · معياران على الأقل)');
+    if (status === 'approved' && !(day || (await db.from('portal_onair_echoes').select('day').eq('id', b.id).maybeSingle()).data?.day)) return bad('اختر يوم النشر قبل الاعتماد');
+    const e = await setEcho(db, b.id, { ...(status ? { status } : {}), ...(day !== undefined ? { day } : {}), ...(draft ? { draft: { ...draft, domain_code: b.draft?.domain_code || null } } : {}) });
+    return NextResponse.json({ success: true, echo: e, note_ar: status === 'approved' ? 'اعتُمد — سيظهر «مهارة اليوم» في يومه.' : 'حُفظ.' });
   }
   return bad('إجراء غير معروف');
 }

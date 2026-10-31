@@ -16,7 +16,8 @@ import { eventsFor, upcomingEvents, EVENTS, FAMILIES } from '../../../lib/portal
 import type { CalendarEvent } from '../../../lib/portal/lexicon';
 import { delegateFromHeaders } from '../../../lib/portal/oauth';
 import { CASE_BANK, pickSeed, seedToCase, buildCasePrompt, parseCase, localEvaluate, buildEvalPrompt, parseEval, streakOf, eventLine, MIN_RESPONSE_CHARS, MAX_RESPONSE_CHARS, DOMAIN_OF_DAY, dayIndexOf, whatIfFor, buildWhatIfPrompt, parseWhatIf, evaluateRound2, crowdOf, crowdLine } from '../../../lib/portal/daily-case';
-import type { DailyCase, CaseEvaluation, WhatIf, Round2 } from '../../../lib/portal/daily-case';
+import type { DailyCase, CaseEvaluation, WhatIf, Round2, RubricItem } from '../../../lib/portal/daily-case';
+import { echoForDay } from '../../../lib/onair/load';   // P34 «صدى السؤال»
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -53,6 +54,19 @@ async function todayCase(db: any): Promise<{ c: DailyCase; events: ReturnType<ty
   const day = riyadhDay(); const cal = await calendar(db); const active = eventsFor(day, cal);
   const { data: cached } = await db.from('portal_daily_cases').select('*').eq('day', day).maybeSingle();
   if (cached) return { c: rowToCase(cached), events: active };
+  // P34 «صدى السؤال»: مسودّة اعتمدها الطاقم من سؤال حُلّ على الهواء (بإذن صاحبه) تسبق التوليد
+  const echo = await echoForDay(db, day);
+  if (echo?.draft?.title_ar) {
+    const d = echo.draft as { title_ar: string; situation_ar: string; ask_ar: string; rubric: string[]; domain_code?: string | null };
+    const codes: RubricItem['code'][] = ['frame', 'options', 'action', 'follow_up', 'ethics'];
+    const rubric: RubricItem[] = codes.map((code, i) => ({ code, weight: i < 3 ? 2 : 1, look_for: d.rubric[i] ? [d.rubric[i]] : undefined }));
+    const domain_code = (d.domain_code || DOMAIN_OF_DAY(day)) as DailyCase['domain_code'];
+    const c: DailyCase = { day, slug: `echo-${String(echo.request_id)}`, title_ar: d.title_ar, scene_ar: 'سؤال حقيقي وصل إلى «أَثَر معك — على الهواء» وأُعيدت صياغته بإذن صاحبه.', role_ar: 'أنت المُستقبِل على الهواء', situation_ar: d.situation_ar, twist_ar: '', ask_ar: d.ask_ar, parties_ar: ['السائل', 'المُستقبِل'], domain_code, family: 'judgment_accountability' as DailyCase['family'], horizon: 2035 as DailyCase['horizon'], skill_codes: [], skill_ids: [], event_code: null, event_name_ar: 'صدى السؤال', rubric, source: 'human', model: null };
+    const { data: ins } = await db.from('portal_daily_cases').insert({ day, slug: c.slug, title_ar: c.title_ar, scene_ar: c.scene_ar, role_ar: c.role_ar, situation_ar: c.situation_ar, twist_ar: c.twist_ar, ask_ar: c.ask_ar, parties_ar: c.parties_ar, domain_code: c.domain_code, family: c.family, horizon: c.horizon, skill_codes: [], skill_ids: [], event_code: null, event_name_ar: c.event_name_ar, rubric: c.rubric, source: 'human', model: null }).select('*').maybeSingle();
+    await db.from('portal_onair_echoes').update({ status: 'published' }).eq('id', echo.id).then(() => null, () => null);
+    if (ins) return { c: rowToCase(ins), events: active };
+    return { c, events: active };
+  }
   // اختيار البذرة (مناسبة أولًا) ثم ربط المهارات
   const { seed, event } = pickSeed(day, CASE_BANK, active);
   const { data: skills } = await db.from('portal_skills').select('id,code,name_ar,domain_code,future_family').eq('active', true);

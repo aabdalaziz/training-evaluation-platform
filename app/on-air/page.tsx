@@ -9,10 +9,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../lib/ui/icons';
 import { PortalShell, useLang } from '../components/PortalShell';
-import { openOnAir } from '../components/OnAir';
+import { openOnAir, OnAirMap } from '../components/OnAir';
 import { fastToken } from '../components/Pocket';
 import { supabase } from '../../lib/supabase/client';
-import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES } from '../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES, P34_NAMES_AR, BOTTLE_HOURS, SHADOW_REQUESTS } from '../../lib/onair/registry';
 import type { Grade } from '../../lib/onair/registry';
 
 export default function OnAirPage() { return <PortalShell><Inner /></PortalShell>; }
@@ -24,7 +24,9 @@ function Inner() {
     const load = async () => { const tk = await fastToken(supabase()).catch(() => ''); const r = await fetch('/api/onair?now=1', { cache: 'no-store', headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(x => x.json()).catch(() => null); if (!alive) return; if (r?.success) setD(r); else setErr(r?.error || 'تعذّر التحميل'); };
     load(); const id = setInterval(load, 30000); return () => { alive = false; clearInterval(id); };
   }, []);
-  const present: any[] = d?.present || []; const st = d?.stats; const faq: any[] = d?.faq || []; const upcoming: any[] = d?.upcoming || [];
+  const present: any[] = d?.present || []; const st = d?.stats; const faq: any[] = d?.faq || []; const upcoming: any[] = d?.upcoming || []; const golden = d?.golden || null;
+  const [pnote, setPnote] = useState('');
+  async function pledge(on: boolean) { const tk = await fastToken(supabase()).catch(() => ''); if (!tk) { setPnote(ar ? 'سجّل الدخول أولًا' : 'Sign in first'); return; } const r = await fetch('/api/onair', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ action: 'pledge', on }) }).then(x => x.json()).catch(() => null); setPnote(r?.note_ar || r?.error || ''); if (r?.success) setD((x: any) => x ? { ...x, golden: { ...x.golden, ...r.golden } } : x); }
   const forGrade = (g: Grade) => present.filter(p => (p.receives || []).includes(g)).length;
   return <main className="pt-main oap" dir={ar ? 'rtl' : 'ltr'}><style dangerouslySetInnerHTML={{ __html: CSS }} />
     <header className="oap-h"><span className="pt-kicker"><Icon name="chat" size={14} /> {ar ? 'أَثَر معك' : 'Athar with you'}</span><h1>{ar ? 'على الهواء — اسأل الآن، فثمّة إنسان يسمعك' : 'On air — ask now, a human is listening'}</h1>
@@ -39,11 +41,27 @@ function Inner() {
       <p className="pt-muted">{ar ? `«عونٌ سريع» متاح للجميع ولو بلا حساب — باسم مستعار. إن لم يردّ أحد خلال ${QUICK_TIMEOUT_MIN} دقائق نعرض عليك البدائل فورًا. «جلسة دعم» ${SESSION_MINUTES} دقيقة في غرفة أَثَر (أو عبر رابط العضو) مع ترجمة حيّة ومقعد مترجم إشارة، وتُمدَّد ${SESSION_EXTEND_MINUTES} دقائق مرة واحدة. «استشارة» تُحال إلى طلبات الاستشارة في هيئة أَثَر.` : `Quick help is open to everyone, even without an account.`}</p>
     </section>
 
+    <section className="pt-box oap-two">
+      <div><h2>{ar ? P34_NAMES_AR.map : 'Live presence map'}</h2><OnAirMap map={d?.map} lang={lang} /><p className="pt-muted">{ar ? 'المدينة من الملف العام المعتمَد في «هيئة أَثَر» — أعداد بلا أسماء. من لم يُعلن مدينة يُعدّ بلا نقطة.' : 'City from the public Faculty profile — counts only, no names.'}</p></div>
+      <div><h2>{ar ? P34_NAMES_AR.golden : 'Golden Hour'}</h2>
+        {!golden && <p className="pt-muted" data-testid="oap-golden-none">{ar ? 'لم يُعلن الطاقم ساعة ذهبية بعد — حين تُعلن، يتواعد فيها أعضاء الهيئة على الصعود معًا فتصبح البوابة ساعةً كاملة غرفةً مفتوحة.' : 'No Golden Hour announced yet.'}</p>}
+        {golden && <div className="oap-golden" data-testid="oap-golden" data-live={golden.live ? '1' : '0'}>
+          <p className="oap-gold-big">{golden.live ? (ar ? 'جارية الآن' : 'Live now') : golden.countdown_ar}</p>
+          <p><b>{golden.title_ar}</b> · {golden.weekday_ar} {golden.from} · {golden.duration_min} {ar ? 'دقيقة' : 'min'}</p>
+          <p className="oap-gold-n"><b data-testid="oap-golden-pledged">{golden.pledged}</b> {ar ? 'تعهّدوا بالحضور هذا الأسبوع' : 'pledged this week'}</p>
+          {d?.signed_in && <p><button type="button" className={`pt-btn ${golden.mine ? 'ghost' : 'gold'} small`} onClick={() => pledge(!golden.mine)} data-testid="oap-pledge">{golden.mine ? (ar ? 'ألغِ تعهّدي' : 'Withdraw pledge') : (ar ? 'أتعهّد بالحضور' : 'I pledge to be there')}</button></p>}
+          {!d?.signed_in && <p className="pt-muted"><Link href="/login?next=/on-air">{ar ? 'سجّل الدخول' : 'Sign in'}</Link> {ar ? 'لتتعهّد (لأعضاء الهيئة والطاقم)' : 'to pledge'}</p>}
+          {pnote && <p className="pt-muted" role="status" data-testid="oap-pledge-note">{pnote}</p>}
+        </div>}
+        {!!d?.bottles && <p className="oap-bottles" data-testid="oap-bottles">🍾 <b>{d.bottles}</b> {ar ? `«${P34_NAMES_AR.bottle}» تنتظر أول من يصعد` : 'messages in a bottle waiting'}</p>}
+      </div>
+    </section>
+
     <section className="pt-box"><h2>{ar ? 'من على الهواء الآن' : 'On air now'}</h2>
       {!present.length && <p className="pt-muted" data-testid="oap-nobody">{ar ? 'لا أحد الآن. الاستشارة تصل الطاقم في أي وقت، والنوافذ القادمة أدناه.' : 'Nobody right now.'}</p>}
       <ul className="oap-people" data-testid="oap-people">{present.map((p: any, i: number) => <li key={p.user_id || i}>
         <span className="oap-ava" aria-hidden="true">{p.photo_url ? <img src={p.photo_url} alt="" /> : <Icon name="users" size={18} />}</span>
-        <span><b>{p.name_ar || (ar ? 'عضو هيئة أَثَر' : 'Athar Faculty member')}</b><small>{p.face_ar}{p.title_ar ? ` · ${p.title_ar}` : ''}</small><small>{(p.receives || []).map((g: Grade) => GRADE_LABEL[g].ar).join(' · ')}{p.domains?.length ? ` · ${p.domains.slice(0, 4).join(' · ')}` : ''} · {ar ? `${p.minutes_left} د متبقية` : `${p.minutes_left} min`}</small></span>
+        <span><b>{p.name_ar || (ar ? 'عضو هيئة أَثَر' : 'Athar Faculty member')}</b><small>{p.face_ar}{p.title_ar ? ` · ${p.title_ar}` : ''}{p.text_only ? (ar ? ' · نصّ فقط (الهواء الصامت)' : ' · text only') : ''}</small><small>{(p.receives || []).map((g: Grade) => GRADE_LABEL[g].ar).join(' · ')}{p.domains?.length ? ` · ${p.domains.slice(0, 4).join(' · ')}` : ''} · {ar ? `${p.minutes_left} د متبقية` : `${p.minutes_left} min`}</small></span>
         {p.slug && <Link href={`/experts/${p.slug}`} className="pt-btn ghost small">{ar ? 'سيرته' : 'Profile'}</Link>}
       </li>)}</ul>
       {d && !d.signed_in && present.length > 0 && <p className="pt-muted">{ar ? 'الأسماء والصور بعد تسجيل الدخول — ' : 'Names after sign-in — '}<Link href="/login?next=/on-air">{ar ? 'سجّل الدخول' : 'Sign in'}</Link></p>}
@@ -71,6 +89,9 @@ function Inner() {
         <li>{ar ? 'طلبك يصل كل الحاضرين المناسبين؛ أول من يضغط «أستقبل» يكون معك، والبقية يرون أنه أُخذ.' : 'Your request reaches all suitable receivers; the first to accept is with you.'}</li>
         <li>{ar ? 'الذكاء الاصطناعي يرتّب الصفّ ويلخّص الخيط للمُستقبِل بإذنك — ولا يردّ عليك قط باسم إنسان.' : 'AI ranks the queue and summarises with your consent — it never replies in a human’s name.'}</li>
         <li>{ar ? `ساعات الحضور تُحسب من اللقاءات الفعلية: ${CERT_HOURS} ساعات و${CERT_MEETINGS} لقاءات = «شهادة حضور على الهواء» موقَّعة (ATH-OA) تظهر في «ما شهده أَثَر».` : `${CERT_HOURS} hours and ${CERT_MEETINGS} meetings earn a signed On-Air certificate (ATH-OA).`}</li>
+        <li>{ar ? `«${P34_NAMES_AR.bottle}»: إن كان الهواء صفرًا، يُحفظ سؤالك ${BOTTLE_HOURS} ساعة ويجده أول من يصعد — ولا يضيع.` : 'Message in a bottle: when nobody is on air, your question waits 72 h for the first to go on air.'}</li>
+        <li>{ar ? `«${P34_NAMES_AR.quiet}»: من يستقبل بالنص فقط يُعلن ذلك، ومن يفضّل النص يُقدَّم له المتوافقون أولًا. «${P34_NAMES_AR.signed}»: حين يحضر مترجم تظهر يدٌ على زر الرأس.` : 'Quiet Air and Signed Air: text-only receivers and interpreter presence are visible.'}</li>
+        <li>{ar ? `«${P34_NAMES_AR.echo}»: سؤال حُلّ — بإذن صاحبه ومجهّلًا — قد يصبح «مهارة اليوم» بعد اعتماد الطاقم. «${P34_NAMES_AR.legacy}»: حامل ATH-OA يرافق مُستقبِلًا جديدًا في أول ${SHADOW_REQUESTS} طلبات، يقرأ ولا يتدخّل.` : 'Echo and Legacy: consented questions become daily skills; certified members shadow newcomers.'}</li>
         <li>{ar ? 'احتياجاتك (أَثَر يلبّي احتياجاتي) لا تدخل في اختيار من يردّ — إلا إن طلبت مترجم إشارة بنفسك.' : 'Your access needs never enter matching — unless you ask for an interpreter yourself.'}</li>
       </ol>
       <p className="pt-muted">{d?.privacy_ar}</p>
@@ -94,5 +115,8 @@ const CSS = `
 .oap-wins li{color:#334155}.oap-wins small{color:#475569}
 .oap-faq details{border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px}.oap-faq summary{cursor:pointer;font-weight:800;color:#0f2a4e;min-height:24px}.oap-faq summary small{color:#64748b;font-weight:400}.oap-faq p{margin:8px 0 0;color:#334155;line-height:1.8;white-space:pre-wrap}
 .oap-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 10px}.oap-kpis span{background:#f8fafc;border-radius:12px;padding:10px 12px;color:#334155;display:flex;flex-direction:column;gap:2px;font-size:13px}.oap-kpis b{font-size:22px;color:#0f2a4e}
+.oap-two{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}@media(max-width:760px){.oap-two{grid-template-columns:1fr}}
+.oap-golden{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-radius:16px;padding:14px 16px;color:#78350f}.oap-golden p{margin:0 0 6px;color:#78350f;font-size:15px}.oap-gold-big{font-size:26px;font-weight:900;color:#92400e}.oap-gold-n b{font-size:20px}
+.oap-bottles{margin:12px 0 0;background:#f0f9ff;border:1px solid #bae6fd;color:#0c4a6e;border-radius:12px;padding:8px 12px;font-weight:700}
 .oap-how{margin:0 0 10px;padding-inline-start:20px;color:#334155;line-height:1.9}
 `;

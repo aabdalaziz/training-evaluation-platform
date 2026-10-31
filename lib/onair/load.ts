@@ -7,21 +7,26 @@ import { VC_CONTEXTS, issuerBlock, statusEntry, documentDigest } from '../portal
 import { signDocument, sha256 } from '../portal/vc-server';
 import type { Signer } from '../portal/vc-server';
 import { notify } from '../portal/notify';
-import { FACE_AR, CERT_HOURS, CERT_MEETINGS, GRADE_LABEL, certCode, hoursFrom, isOnAir, publicPresence, publicStats, avgResponseMin, matchReceivers, quickExpired, quickClosed, QUICK_CLOSE_MIN } from './registry';
-import type { Presence, Request, Win, Grade, Face, Hours } from './registry';
+import { FACE_AR, CERT_HOURS, CERT_MEETINGS, GRADE_LABEL, certCode, hoursFrom, isOnAir, publicPresence, publicStats, avgResponseMin, matchReceivers, quickExpired, quickClosed, QUICK_CLOSE_MIN, goldenState, liveMap, isBottle, BOTTLE_AR, STATS_K } from './registry';
+import type { Presence, Request, Win, Grade, Face, Hours, Golden, EchoDraft } from './registry';
 
 const lower = (s: unknown) => String(s || '').trim().toLowerCase();
 async function safe<T>(q: PromiseLike<{ data: any; error: any }>, fb: T): Promise<T> { try { const { data, error } = await q; if (error) return fb; return (data ?? fb) as T; } catch { return fb; } }
-const PRESENCE_COLS = 'user_id,email,face,receives,domains,alt_link,on_air_until,grounded_at,grounded_note,meta,updated_at';
-const REQ_COLS = 'id,kind,status,asker_user_id,asker_email,asker_alias,domain,text_ar,receiver_user_id,room_code,taken_at,done_at,outcome,what_changed_ar,duration_min,meta,created_at';
+const PRESENCE_COLS = 'user_id,email,face,receives,domains,alt_link,on_air_until,grounded_at,grounded_note,meta,updated_at,text_only,mentor_user_id,mentor_status,shadow_left';
+const REQ_COLS = 'id,kind,status,asker_user_id,asker_email,asker_alias,domain,text_ar,receiver_user_id,room_code,taken_at,done_at,outcome,what_changed_ar,duration_min,meta,created_at,org_id';
 
 export type Person = { user_id: string; name_ar: string; slug: string | null; photo_url: string | null; title_ar: string | null; faces: string[]; email: string; status: string; listed: boolean };
 /** أعضاء الهيئة المعتمَدون لمجموعة معرّفات (الاسم والصورة العامة والوجوه) */
-export async function loadPeople(db: any, userIds: string[], publicUrl: (p: string) => string): Promise<Record<string, Person>> {
+export async function loadPeople(db: any, userIds: string[], publicUrl: (p: string) => string, withProfiles = false): Promise<Record<string, Person>> {
   const ids = Array.from(new Set(userIds.filter(Boolean))); if (!ids.length) return {};
   const rows = await safe<any[]>(db.from('portal_directory_profiles').select('user_id,email,name_ar,slug,photo_public_path,title_ar,faces,status,listed').in('user_id', ids).limit(500), []);
   const out: Record<string, Person> = {};
   for (const r of rows) out[String(r.user_id)] = { user_id: String(r.user_id), name_ar: String(r.name_ar || ''), slug: r.slug || null, photo_url: r.photo_public_path && r.status === 'approved' ? publicUrl(r.photo_public_path) : null, title_ar: r.title_ar || null, faces: Array.isArray(r.faces) ? r.faces : [], email: lower(r.email), status: String(r.status || ''), listed: r.listed !== false };
+  // P34 «ميراث الهواء» فقط (withProfiles): المرافِق/المرافَق بلا ملف في «هيئة أَثَر» يظهر باسمه من الملف الشخصي — بلا صورة ولا رابط؛ على الهواء العام يبقى «طاقم أَثَر»
+  const missing = withProfiles ? ids.filter(id => !out[id]) : []; if (missing.length) {
+    const prof = await safe<any[]>(db.from('profiles').select('id,full_name').in('id', missing).limit(500), []);
+    for (const p of prof) out[String(p.id)] = { user_id: String(p.id), name_ar: String(p.full_name || ''), slug: null, photo_url: null, title_ar: null, faces: [], email: '', status: 'none', listed: false };
+  }
   return out;
 }
 export async function directoryFacesOf(db: any, userId: string): Promise<string[]> {
@@ -120,12 +125,89 @@ export function presentView(present: Presence[], people: Record<string, Person>,
 
 /** النداء: إشعار داخل التطبيق/دفع لأقرب 5 حاضرين (بريد/واتساب مؤجَّلان بقرار المالك) */
 export async function callReceivers(db: any, r: Request, present: Presence[], site: string): Promise<number> {
-  const targets = matchReceivers(present, r).slice(0, 5); let n = 0;
+  const orgSet = r.org_id ? await orgMemberIds(db, r.org_id) : undefined;
+  const targets = matchReceivers(present, r, Date.now(), orgSet).slice(0, 5); let n = 0;
   for (const p of targets) {
-    try { await notify(db, { kind: 'onair_ask', to: { email: p.email, name: null }, ref: `onair:ask:${r.id}:${p.user_id}`, subject: `على الهواء: ${GRADE_LABEL[r.kind].ar} في الصفّ`, text: `${r.asker_alias} يطلب ${GRADE_LABEL[r.kind].ar}${r.domain ? ` في «${r.domain}»` : ''}:\n«${r.text_ar.slice(0, 160)}»\nافتح: ${site}/me/onair`, url: `${site}/me/onair` }); n++; } catch { /* يتابع */ }
+    try { await notify(db, { kind: 'onair_ask', to: { email: p.email, name: null }, ref: `onair:ask:${r.id}:${p.user_id}`, subject: `على الهواء: ${GRADE_LABEL[r.kind].ar} في الصفّ`, text: `${r.asker_alias} يطلب ${GRADE_LABEL[r.kind].ar}${r.domain ? ` في «${r.domain}»` : ''}${isBottle(r) ? ` (${BOTTLE_AR})` : ''}${r.org_id ? ' — داخل جهتك' : ''}:\n«${r.text_ar.slice(0, 160)}»\nافتح: ${site}/me/onair`, url: `${site}/me/onair` }); n++; } catch { /* يتابع */ }
   }
   return n;
 }
 /** سطر «ما شهده أَثَر» للعضو */
 export async function onAirFacts(db: any, uid: string | null | undefined) { if (!uid) return { meetings: 0, hours: 0 }; const h = await hoursFor(db, uid); return { meetings: h.meetings, hours: h.hours }; }
 export type { Grade };
+
+// ───────────────────────────── P34 «الهواء يتّسع» ─────────────────────────────
+/** 5) هواء الجهة: جهات العضو المؤكَّدة · منسوبو جهة */
+export async function orgsOf(db: any, me: { id: string; email: string }): Promise<{ id: string; name_ar: string; role: string }[]> {
+  const mem = await safe<any[]>(db.from('portal_org_members').select('organization_id,role').or(`user_id.eq.${me.id},email.eq.${lower(me.email)}`).eq('status', 'confirmed').limit(5), []);
+  const ids = Array.from(new Set(mem.map(m => String(m.organization_id)))); if (!ids.length) return [];
+  const orgs = await safe<any[]>(db.from('portal_organizations').select('id,name_ar').in('id', ids).limit(5), []);
+  return orgs.map(o => ({ id: String(o.id), name_ar: String(o.name_ar || 'جهتي'), role: String(mem.find(m => String(m.organization_id) === String(o.id))?.role || 'member') }));
+}
+export async function orgMemberIds(db: any, orgId: string): Promise<Set<string>> {
+  const rows = await safe<any[]>(db.from('portal_org_members').select('user_id').eq('organization_id', orgId).eq('status', 'confirmed').limit(5000), []);
+  return new Set(rows.map(r => String(r.user_id || '')).filter(Boolean));
+}
+/** ساعات الهواء للجهة: ما قدّمه منسوبوها (كمُستقبِلين) وما طلبوه (k≥5) */
+export async function orgAirStats(db: any, orgId: string) {
+  const ids = Array.from(await orgMemberIds(db, orgId)); if (!ids.length) return { hours_given: 0, meetings_given: 0, hours_received: 0, askers: 0, internal: 0, k: STATS_K };
+  const given = await safe<any[]>(db.from('portal_onair_requests').select('kind,status,duration_min,receiver_user_id,asker_user_id,org_id').in('receiver_user_id', ids.slice(0, 1000)).eq('status', 'done').limit(5000), []);
+  const asked = await safe<any[]>(db.from('portal_onair_requests').select('asker_user_id,status,duration_min,org_id,kind').in('asker_user_id', ids.slice(0, 1000)).limit(5000), []);
+  const g = hoursFrom(given); const askers = new Set(asked.map(r => r.asker_user_id)).size; const internal = asked.filter(r => String(r.org_id || '') === String(orgId)).length;
+  const recv = hoursFrom(asked.filter(r => r.status === 'done'));
+  return { hours_given: g.hours, meetings_given: g.meetings, hours_received: recv.hours, askers: askers >= STATS_K ? askers : 0, internal: internal >= STATS_K ? internal : 0, k: STATS_K };
+}
+
+/** 1) ساعة الهواء الذهبية */
+export const goldenList = (db: any) => safe<Golden[]>(db.from('portal_onair_golden').select('id,title_ar,weekday,from_min,duration_min,active').eq('active', true).order('id').limit(5), []);
+export async function goldenNow(db: any, me: { id: string } | null, now = new Date()) {
+  const list = await goldenList(db); if (!list.length) return null;
+  const g = list[0]; const st = goldenState(g, now);
+  const pledges = await safe<any[]>(db.from('portal_onair_golden_pledges').select('user_id').eq('golden_id', g.id).eq('week_key', st.week_key).limit(500), []);
+  return { ...g, ...st, pledged: pledges.length, pledged_ids: pledges.map(p => String(p.user_id)), mine: !!me && pledges.some(p => String(p.user_id) === me.id) };
+}
+export async function pledgeGolden(db: any, goldenId: string | number, me: { id: string; email: string }, weekKey: string, on: boolean) {
+  if (!on) { await db.from('portal_onair_golden_pledges').delete().eq('golden_id', goldenId).eq('user_id', me.id).eq('week_key', weekKey); return; }
+  const { error } = await db.from('portal_onair_golden_pledges').upsert({ golden_id: goldenId, user_id: me.id, email: lower(me.email), week_key: weekKey }, { onConflict: 'golden_id,user_id,week_key' }); if (error && !/duplicate|unique/i.test(String(error.message))) throw new Error(error.message);
+}
+/** تذكير المتعهّدين قبل الساعة بـ60 دقيقة — يُستدعى من كرون الهيئة القائم (لا كرون جديد) */
+export async function remindGolden(db: any, site: string, now = new Date(), dry = false): Promise<number> {
+  const list = await goldenList(db); let n = 0;
+  for (const g of list) {
+    const st = goldenState(g, now); if (st.live || st.minutes_to > 60) continue;
+    const ps = await safe<any[]>(db.from('portal_onair_golden_pledges').select('id,user_id,email').eq('golden_id', g.id).eq('week_key', st.week_key).is('reminded_at', null).limit(500), []);
+    for (const p of ps) {
+      if (dry) { n++; continue; }
+      try { await notify(db, { kind: 'onair_golden', to: { email: p.email, name: null }, ref: `onair:golden:${g.id}:${st.week_key}:${p.user_id}`, subject: `${g.title_ar} بعد ${st.minutes_to} دقيقة`, text: `تعهّدت بالحضور. اصعد على الهواء من: ${site}/me/onair`, url: `${site}/me/onair` }); await db.from('portal_onair_golden_pledges').update({ reminded_at: now.toISOString() }).eq('id', p.id); n++; } catch { /* يتابع */ }
+    }
+  }
+  return n;
+}
+
+/** 6) خريطة الحضور الحيّة — المدينة من الملف العام المعتمَد في الهيئة (أعداد بلا أسماء) */
+export async function liveMapOf(db: any, present: Presence[]) {
+  const ids = present.map(p => p.user_id); if (!ids.length) return liveMap([], {});
+  const rows = await safe<any[]>(db.from('portal_directory_profiles').select('user_id,city,status').in('user_id', ids).limit(500), []);
+  const cityOf: Record<string, string | null> = {}; for (const r of rows) if (r.status === 'approved') cityOf[String(r.user_id)] = r.city || null;
+  return liveMap(present, cityOf);
+}
+
+/** 8) رسالة في زجاجة: الزجاجات المفتوحة — أول من يصعد يجدها */
+export const bottlesOpen = async (db: any): Promise<Request[]> => (await openRequests(db)).filter(isBottle);
+
+/** 4) ميراث الهواء */
+export const menteesOf = (db: any, mentorId: string) => safe<Presence[]>(db.from('portal_onair_presence').select(PRESENCE_COLS).eq('mentor_user_id', mentorId).limit(20), []);
+export const shadowedFor = (db: any, mentorId: string) => safe<Request[]>(db.from('portal_onair_requests').select(REQ_COLS).contains('meta', { shadow_user_id: mentorId }).order('created_at', { ascending: false }).limit(20), []);
+
+/** 3) صدى السؤال */
+export const echoOf = (db: any, requestId: string | number) => safe<any>(db.from('portal_onair_echoes').select('id,request_id,status,day,draft,model,created_at').eq('request_id', requestId).maybeSingle(), null);
+export const echoCandidates = (db: any) => safe<Request[]>(db.from('portal_onair_requests').select(REQ_COLS).eq('status', 'done').contains('meta', { echo_ok: true }).order('done_at', { ascending: false }).limit(50), []);
+export const echoList = (db: any) => safe<any[]>(db.from('portal_onair_echoes').select('id,request_id,status,day,draft,model,created_at').order('id', { ascending: false }).limit(100), []);
+export async function saveEcho(db: any, requestId: string | number, draft: EchoDraft, model: string | null, by: string) {
+  const { data, error } = await db.from('portal_onair_echoes').upsert({ request_id: requestId, status: 'draft', draft, model, created_by: by }, { onConflict: 'request_id' }).select('id,request_id,status,day,draft').single(); if (error) throw new Error(error.message); return data;
+}
+export async function setEcho(db: any, id: string | number, patch: { status?: string; day?: string | null; draft?: EchoDraft }) {
+  const { data, error } = await db.from('portal_onair_echoes').update(patch).eq('id', id).select('id,request_id,status,day,draft').maybeSingle(); if (error) throw new Error(error.message); return data;
+}
+/** الصدى المعتمد ليومٍ ما — يفضّله /api/daily على التوليد */
+export const echoForDay = (db: any, day: string) => safe<any>(db.from('portal_onair_echoes').select('id,draft,request_id').eq('day', day).in('status', ['approved', 'published']).limit(1).maybeSingle(), null);
