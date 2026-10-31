@@ -11,18 +11,18 @@ import Link from 'next/link';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
-import { GRADE_LABEL, WEEKDAY_AR, P34_NAMES_AR, P35_NAMES_AR } from '../../../lib/onair/registry';
+import { GRADE_LABEL, WEEKDAY_AR, P34_NAMES_AR, P35_NAMES_AR, P36_NAMES_AR } from '../../../lib/onair/registry';
 import type { Grade } from '../../../lib/onair/registry';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
-type Tab = 'now' | 'escalations' | 'faq' | 'people' | 'golden' | 'echo' | 'season';
+type Tab = 'now' | 'escalations' | 'faq' | 'people' | 'golden' | 'echo' | 'season' | 'week';   /* P36: week */
 
 export default function AdminOnAirPage() {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
   const [ready, setReady] = useState(false); const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [tab, setTab] = useState<Tab>('now'); const [gold, setGold] = useState({ title_ar: 'ساعة الهواء الذهبية', weekday: 2, from: '20:00', duration_min: 60 });
-  const [sea, setSea] = useState({ title_ar: 'موسم الهواء', invite_ar: '', from_day: '', to_day: '' });   /* P35 */ const [echoDay, setEchoDay] = useState<Record<string, string>>({}); const [echoEdit, setEchoEdit] = useState<Record<string, any>>({}); const [note, setNote] = useState<Record<string, string>>({}); const [faq, setFaq] = useState<Record<string, { q: string; a: string }>>({}); const [thread, setThread] = useState<Record<string, any[]>>({}); const [interpEmail, setInterpEmail] = useState('');
+  const [sea, setSea] = useState({ title_ar: 'موسم الهواء', invite_ar: '', from_day: '', to_day: '' });   /* P35 */ const [wq, setWq] = useState<Record<string, string>>({});   /* P36 */ const [echoDay, setEchoDay] = useState<Record<string, string>>({}); const [echoEdit, setEchoEdit] = useState<Record<string, any>>({}); const [note, setNote] = useState<Record<string, string>>({}); const [faq, setFaq] = useState<Record<string, { q: string; a: string }>>({}); const [thread, setThread] = useState<Record<string, any[]>>({}); const [interpEmail, setInterpEmail] = useState('');
   const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
   const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
   async function load(tk?: string) { const j = await fetch('/api/admin/onair', { headers: await H(tk), cache: 'no-store' }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
@@ -46,7 +46,7 @@ export default function AdminOnAirPage() {
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         {data?.pending_sql && <div className="am-err" role="alert">لم يُنفَّذ ملف SQL الخاص بـ P33 بعد (<code>20261210_portal_p33_onair.sql</code>) — نفّذه أولًا ثم أعد التحميل.</div>}
         {st && <div className="am-kpis" data-testid="ao-kpis"><span className="g"><b>{st.present}</b> على الهواء الآن</span><span><b>{st.month.asked}</b> طلبًا هذا الشهر</span><span><b>{st.month.done}</b> اكتمل</span><span><b>{st.month.expired}</b> بلا ردّ</span><span><b>{st.month.escalated}</b> صُعّد</span><span><b>{st.month.avg_response_min ?? '—'}</b> د متوسط أول ردّ</span><span><b>{st.interpreters}</b> مترجمًا معتمَدًا</span><span className="am-cycle"><Link href="/on-air" className="am-btn ghost small">الصفحة العامة</Link></span></div>}
-        <div className="am-tabs" role="tablist">{([['now', `الآن (${present.length} · صفّ ${queue.length})`], ['escalations', `التصعيدات والاستشارات (${esc.length})`], ['faq', 'أسئلة أجاب عنها الهواء'], ['people', 'المترجمون والإنزال'], ['golden', `✦ ${P34_NAMES_AR.golden}`], ['echo', `${P34_NAMES_AR.echo} (${(data?.echo_candidates || []).length})`], ['season', `❂ ${P35_NAMES_AR.season}`]] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} data-testid={`ao-tab-${k}`}>{l}</button>)}</div>
+        <div className="am-tabs" role="tablist">{([['now', `الآن (${present.length} · صفّ ${queue.length})`], ['escalations', `التصعيدات والاستشارات (${esc.length})`], ['faq', 'أسئلة أجاب عنها الهواء'], ['people', 'المترجمون والإنزال'], ['golden', `✦ ${P34_NAMES_AR.golden}`], ['echo', `${P34_NAMES_AR.echo} (${(data?.echo_candidates || []).length})`], ['season', `❂ ${P35_NAMES_AR.season}`], ['week', `🔗 ${P36_NAMES_AR.week_question} (${(data?.week?.candidates || []).length})`]] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} data-testid={`ao-tab-${k}`}>{l}</button>)}</div>
 
         {tab === 'now' && <div className="am-grid2">
           <div className="am-card" data-testid="ao-present"><h3>من على الهواء الآن <small>— بالأسماء؛ لا أحد يُجبر على الصعود ولا يُسأل عن النزول</small></h3>
@@ -120,6 +120,23 @@ export default function AdminOnAirPage() {
             <label>دعوة قصيرة (اختياري)<input value={sea.invite_ar} onChange={e => setSea(g => ({ ...g, invite_ar: e.target.value.slice(0, 200) }))} placeholder="مثال: أسبوعٌ نرفع فيه أيدينا معًا" data-testid="ao-season-invite" /></label>
             <button type="submit" className="am-btn" disabled={!!busy} data-testid="ao-season-set">{data?.season ? 'استبدله بموسم جديد' : 'أعلن الموسم'}</button>
           </form>
+          <h4 className="ao-h4">📖 {P36_NAMES_AR.record} — المواسم المنتهية ({(data?.seasons_ended || []).length})</h4>
+          {!(data?.seasons_ended || []).length && <div className="am-empty">لم ينتهِ موسم بعد. السجلّ العامّ المجهَّل يُجمَّد وحده بعد نهاية كل موسم (<Link href="/on-air/seasons">/on-air/seasons</Link>).</div>}
+          {(data?.seasons_ended || []).map((r: any) => <div key={r.id} className="ao-req" data-testid="ao-season-record"><b>{r.title_ar}</b> · {r.from_day} → {r.to_day} · <small>{r.line_ar}</small> · <Link href={r.url}>السجلّ العامّ</Link></div>)}
+        </div>}
+
+        {tab === 'week' && <div className="am-card" data-testid="ao-week"><h3>🔗 {P36_NAMES_AR.chain} → {P36_NAMES_AR.week_question} <small>— أمانة مضت عليها 72 ساعة بلا مستلم، وأذن كاتبها عند كتابتها بنشرها مجهولةً. أنت تراجع الصياغة (بلا أسماء ولا تفاصيل) وتعتمد؛ سؤال واحد في الأسبوع، يجيب عنه من على الهواء بدوره لا باسمه، ويُبلَّغ كاتبها. لا يكتب الذكاء الاصطناعي هنا شيئًا</small></h3>
+          {data?.week?.published && <div className="ao-req ao-week-pub" data-testid="ao-week-published"><span className="am-st" style={{ background: '#6d28d9' }}>منشور هذا الأسبوع</span> <b>«{data.week.published.text_ar}»</b> · <small>منذ {data.week.published.week_start} · {data.week.published.line_ar}</small>
+            {(data.week.published.answers || []).length > 0 && <ul className="ao-slots">{data.week.published.answers.map((a: any) => <li key={a.id}><b>{a.role_label_ar}</b>: {a.text_ar}</li>)}</ul>}
+            <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_retire', id: data.week.published.id })} data-testid="ao-week-retire">اطوِه الآن</button></div>}
+          {!data?.week?.published && <div className="am-empty" data-testid="ao-week-none">لا سؤال منشورًا هذا الأسبوع.</div>}
+          <h4 className="ao-h4">أمانات انقضت وأذن أصحابها ({(data?.week?.candidates || []).length})</h4>
+          {!(data?.week?.candidates || []).length && <div className="am-empty">لا مرشَّحات — الأمانات كلها وجدت من يحملها، أو لم يأذن أصحابها.</div>}
+          {(data?.week?.candidates || []).map((r: any) => <div key={r.id} className="ao-req" data-testid="ao-week-cand"><b>{r.kind_ar}</b>{r.domain ? ` · ${r.domain}` : ''}{r.org_scoped ? ' · كانت داخل جهة' : ''} · <small>{fmt(r.created_at)}</small>
+            <label className="ao-wide">الصياغة العامة (حرّرها إن لزم — بلا أسماء)<textarea rows={2} value={wq[r.id] ?? r.text_ar} onChange={e => setWq(x => ({ ...x, [r.id]: e.target.value.slice(0, 300) }))} data-testid="ao-week-text" /></label>
+            <div className="ao-actions"><button type="button" className="am-btn" disabled={!!busy} onClick={() => post({ action: 'week_approve', id: r.id, text_ar: wq[r.id] ?? r.text_ar })} data-testid="ao-week-approve">اعتمد سؤالًا للأسبوع</button><button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_reject', id: r.id })} data-testid="ao-week-reject">لا تُعرض</button></div></div>)}
+          {(data?.week?.queued || []).length > 0 && <><h4 className="ao-h4">في الطابور ({data.week.queued.length})</h4>{data.week.queued.map((q: any) => <div key={q.id} className="ao-req" data-testid="ao-week-queued">«{q.text_ar}» <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_retire', id: q.id })}>احذفه من الطابور</button></div>)}</>}
+          {(data?.week?.retired || []).length > 0 && <><h4 className="ao-h4">أسابيع مضت</h4>{data.week.retired.map((q: any) => <div key={q.id} className="ao-req"><small>{q.week_start}</small> «{q.text_ar}»</div>)}</>}
         </div>}
 
         {tab === 'echo' && <div className="am-card" data-testid="ao-echo"><h3>{P34_NAMES_AR.echo} <small>— سؤال حُلّ على الهواء وأذن صاحبه: يصوغ الذكاء الاصطناعي منه مسودّة «مهارة اليوم» (بعد تجهيل البريد والأرقام والروابط)، وأنت تراجع وتختار اليوم وتعتمد؛ في يومه يسبق التوليد الآلي</small></h3>
@@ -151,6 +168,7 @@ export default function AdminOnAirPage() {
 }
 
 const CSS = `
+.ao-wide{display:grid;gap:4px;margin:8px 0;font-size:13px;font-weight:800;color:#0f2a4e}.ao-wide textarea{border:1px solid #cbd5e1;border-radius:8px;padding:6px 8px;font:inherit;width:100%}.ao-week-pub{background:#f5f3ff;border-color:#c4b5fd}
 .ao-slots{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:13px}
 .ao-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;margin-top:10px}.ao-form label{font-weight:800;color:#0f2a4e;font-size:13px}.ao-form label.wide{grid-column:1/-1}.ao-form input,.ao-form select,.ao-form textarea{display:block;width:100%;margin-top:4px;border:1.5px solid #cbd5e1;border-radius:10px;padding:9px;font:inherit;font-weight:400;min-height:44px;background:#fff}
 .ao-h4{margin:14px 0 6px;font-size:14px;color:#0f2a4e}.ao-text{margin:6px 0;color:#334155;line-height:1.7}.ao-actions{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1}.ao-echo{display:block}

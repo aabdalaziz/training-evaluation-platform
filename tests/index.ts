@@ -63,3 +63,4 @@ import './p32.test';
 import './p33.test';
 import './p34.test';
 import './p35.test';
+import './p36.test';

@@ -42,7 +42,7 @@ export const ON_AIR_K = 1;                   // الحضور معلَن بإرا
 export const STATS_K = 5;                    // أي رقم عن الطالبين (لا عن الحاضرين) يبقى k≥5
 
 export const cleanGrades = (xs: unknown): Grade[] => Array.from(new Set((Array.isArray(xs) ? xs : []).map(String).filter((x): x is Grade => (GRADES as string[]).includes(x))));
-export const cleanDomains = (xs: unknown): string[] => Array.from(new Set((Array.isArray(xs) ? xs : []).map(x => String(x).trim().toLowerCase().replace(/[^a-z0-9_\-\u0600-\u06FF]/g, '')).filter(x => x.length >= 2 && x.length <= 40))).slice(0, 12);
+export const cleanDomains = (xs: unknown): string[] => Array.from(new Set((Array.isArray(xs) ? xs : []).filter(x => x !== null && x !== undefined && x !== '' && x !== 'undefined' && x !== 'null').map(x => String(x).trim().toLowerCase().replace(/[^a-z0-9_\-\u0600-\u06FF]/g, '')).filter(x => x.length >= 2 && x.length <= 40))).slice(0, 12);
 export const cleanLink = (s: unknown): string | null => { const v = String(s || '').trim(); if (!v) return null; if (!/^https:\/\/[^\s]{6,300}$/i.test(v)) return null; return v; };
 export const cleanText = (s: unknown, max = TEXT_MAX) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
 
@@ -396,3 +396,105 @@ export function canWhisper(p: Pick<Presence, 'face' | 'on_air_until' | 'grounded
 }
 export const whisperEndsAt = (startedIso: string) => new Date(Date.parse(startedIso) + WHISPER_MINUTES * 60000).toISOString();
 export const whisperOver = (r: Pick<Request, 'status' | 'taken_at' | 'meta'>, now = Date.now()) => isWhisper(r) && r.status === 'taken' && !!r.taken_at && now >= Date.parse(whisperEndsAt(r.taken_at));
+
+// ───────────────────────────── P36 «ذاكرة الهواء» ─────────────────────────────
+/** (1) سجلّ الموسم  (2) موسم بالإشارة  (3) أمانة متسلسلة → سؤال الأسبوع  (4) خريطة الزمن للجهة — دوال نقية بلا شبكة */
+export const P36_NAMES_AR = { memory: 'ذاكرة الهواء', record: 'سجلّ الموسم', signed_season: 'موسم بالإشارة', chain: 'أمانة متسلسلة', week_question: 'سؤال الأسبوع', org_time: 'خريطة الزمن للجهة' } as const;
+export const RECORD_K = 5;                     // أي عدد في السجلّ العامّ يُذكر من 5 (وإلا «أقل من خمسة»)
+export const ORG_TIME_K = 5;                   // خلية الجهة تُعرض بمستواها إن حضر فيها 5 أشخاص مختلفين؛ وإلا ضبابية بلا رقم
+export const ORG_TIME_MIN_USERS = 5;           // لا شبكة للجهة أصلًا إن حضر من منسوبيها أقل من 5 أشخاص خلال المدة
+export const WEEK_QUESTION_DAYS = 7;           // سؤال واحد في الأسبوع
+export const WEEK_ANSWER_MIN = 10; export const WEEK_ANSWER_MAX = 600; export const WEEK_QUESTION_MAX = 300;
+export const MEETINGS_BANDS_AR = ['لا لقاءات مسجّلة', 'أقل من 10', '10–25', 'أكثر من 25'] as const;
+
+/** (1) سجلّ الموسم: المواسم المنتهية (بتوقيت الرياض) */
+export const seasonEnded = (s: Pick<Season, 'to_day'>, now = new Date()) => riyadhDay(now) > s.to_day;
+export const seasonDays = (s: Pick<Season, 'from_day' | 'to_day'>) => Math.round((Date.parse(s.to_day) - Date.parse(s.from_day)) / 86400000) + 1;
+/** عدد اللقاءات في السجلّ العامّ: شرائح لا أرقامًا (k≥5 مضمون بشريحة «أقل من 10») */
+export function meetingsBand(n: number): string { return n <= 0 ? MEETINGS_BANDS_AR[0] : n < 10 ? MEETINGS_BANDS_AR[1] : n <= 25 ? MEETINGS_BANDS_AR[2] : MEETINGS_BANDS_AR[3]; }
+/** العدد العامّ: الرقم إن بلغ k وإلا «أقل من خمسة» */
+export const publicCount = (n: number, k = RECORD_K): { n: number | null; ar: string } => (n >= k ? { n, ar: String(n) } : n <= 0 ? { n: 0, ar: 'لا شيء' } : { n: null, ar: 'أقل من خمسة' });
+export type SeasonRecord = {
+  season_id: string; title_ar: string; invite_ar: string | null; from_day: string; to_day: string; days: number;
+  orgs: number; cities: { key: string; ar: string; n: number }[]; slots: { weekday: number; from_min: number; duration_min: number; org_name_ar: string | null; sign_language: boolean; sign_verified: boolean }[];
+  sign_slots: number; sign_verified: number; meetings_band: string; peak: { weekday: number; hour: number }[]; present_people: { n: number | null; ar: string };
+  docs: { code: string; org_name_ar: string }[]; recorded_at: string; line_ar: string;
+};
+/** الساعات الأكثف داخل أيام الموسم: من سجلّ الحضور (أشخاص مختلفون في الخلية ≥ k) — أعلى 3 خلايا بلا أعداد */
+export function peakHours(logs: { user_id: string; started_at: string; ended_at: string | null }[], season: Pick<Season, 'from_day' | 'to_day'>, k = RECORD_K, top = 3): { peak: { weekday: number; hour: number }[]; people: number } {
+  const from = Date.parse(season.from_day) - 3 * 3600000, to = Date.parse(season.to_day) + 86400000 - 3 * 3600000;
+  const cells: Record<string, Set<string>> = {}; const people = new Set<string>();
+  for (const l of logs) {
+    const s = Date.parse(l.started_at); const e = Math.min(Date.parse(l.ended_at || '') || s + 3600000, s + 4 * 3600000, to); if (!(s >= from && s < to && e > s)) continue; people.add(l.user_id);
+    for (let t = s; t < e; t += 3600000) { const r = new Date(t + 3 * 3600000); const key = `${r.getUTCDay()}:${r.getUTCHours()}`; (cells[key] || (cells[key] = new Set())).add(l.user_id); }
+  }
+  const peak = Object.entries(cells).filter(([, u]) => u.size >= k).sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0])).slice(0, top).map(([key]) => { const [d, h] = key.split(':').map(Number); return { weekday: d, hour: h }; });
+  return { peak, people: people.size };
+}
+/** هل حضر المترجم فعلًا ساعة الجهة؟ (تقاطع سجلّ حضوره مع وقت الساعة) */
+export function interpreterShowedUp(logs: { user_id: string; started_at: string; ended_at: string | null }[], interpreterId: string | null | undefined, slotAtIso: string | null, durationMin: number): boolean {
+  if (!interpreterId || !slotAtIso) return false; const a = Date.parse(slotAtIso), b = a + durationMin * 60000;
+  return logs.some(l => l.user_id === interpreterId && Date.parse(l.started_at) < b && (Date.parse(l.ended_at || '') || Date.parse(l.started_at) + 3600000) > a);
+}
+export function recordLine(r: Pick<SeasonRecord, 'orgs' | 'cities' | 'meetings_band' | 'sign_verified' | 'days'>): string {
+  const o = r.orgs === 0 ? 'بلا ساعات معلنة' : r.orgs === 1 ? 'جهة واحدة' : r.orgs === 2 ? 'جهتان' : `${r.orgs} جهات`;
+  const c = r.cities.length === 0 ? '' : r.cities.length === 1 ? ` في مدينة واحدة` : ` في ${r.cities.length} مدن`;
+  return `${r.days} ${r.days === 1 ? 'يوم' : r.days === 2 ? 'يومان' : r.days <= 10 ? 'أيام' : 'يومًا'} · ${o}${c} · لقاءات: ${r.meetings_band}${r.sign_verified ? ` · ${r.sign_verified === 1 ? 'ساعة واحدة' : `${r.sign_verified} ساعات`} بالإشارة` : ''}`;
+}
+/** ملف تقويم .ics للموسم (بلا مكتبات): حدث لكل ساعة جهة داخل أيامه، وإلا حدث يوم كامل للمدة */
+const icsDate = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+const icsText = (s: string) => String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/[,;]/g, m => `\\${m}`);
+export function seasonIcs(season: Pick<Season, 'id' | 'title_ar' | 'invite_ar' | 'from_day' | 'to_day'>, slots: { id: number | string; weekday: number; from_min: number; duration_min: number; org_name_ar?: string | null; sign_language?: boolean }[], site: string, now = new Date()): string {
+  const L: string[] = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Athar//On-Air Season//AR', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', `X-WR-CALNAME:${icsText(season.title_ar)}`];
+  const stamp = icsDate(now.toISOString()); const url = `${site}/on-air/seasons/${season.id}`;
+  const ev: string[] = [];
+  for (const s of slots) { const at = slotOccursAt(s, season); if (!at) continue; const end = new Date(Date.parse(at) + s.duration_min * 60000).toISOString();
+    ev.push('BEGIN:VEVENT', `UID:athar-season-${season.id}-slot-${s.id}@athar`, `DTSTAMP:${stamp}`, `DTSTART:${icsDate(at)}`, `DTEND:${icsDate(end)}`, `SUMMARY:${icsText(`${season.title_ar} — ساعة ${s.org_name_ar || 'جهة'}${s.sign_language ? ' (بالإشارة)' : ''}`)}`, `DESCRIPTION:${icsText(`${season.invite_ar || 'موسم الهواء في أَثَر'} · الصعود قرار شخصي من ${site}/me/onair`)}`, `URL:${url}`, 'END:VEVENT'); }
+  if (!ev.length) { const d2 = new Date(Date.parse(season.to_day) + 86400000).toISOString().slice(0, 10).replace(/-/g, ''); ev.push('BEGIN:VEVENT', `UID:athar-season-${season.id}@athar`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${season.from_day.replace(/-/g, '')}`, `DTEND;VALUE=DATE:${d2}`, `SUMMARY:${icsText(season.title_ar)}`, `DESCRIPTION:${icsText(season.invite_ar || 'موسم الهواء في أَثَر')}`, `URL:${url}`, 'END:VEVENT'); }
+  return [...L, ...ev, 'END:VCALENDAR'].map(l => l.length <= 73 ? l : l.match(/[\s\S]{1,73}/g)!.join('\r\n ')).join('\r\n') + '\r\n';
+}
+
+/** (2) موسم بالإشارة: ساعة الجهة قد تُوسم «بالإشارة» ومعها مترجم معتمَد */
+export function cleanSlot36(b: any): { ok: true; s: Pick<SeasonSlot, 'weekday' | 'from_min' | 'duration_min' | 'public_name'> & { sign_language: boolean; interpreter_user_id: string | null } } | { ok: false; error: string } {
+  const c = cleanSlot(b); if (!c.ok) return c; const sign = b?.sign_language === true; const interp = String(b?.interpreter_user_id || '').trim() || null;
+  if (sign && !interp) return { ok: false, error: 'اختر المترجم المعتمَد لساعة الإشارة' };
+  return { ok: true, s: { ...c.s, sign_language: sign, interpreter_user_id: sign ? interp : null } };
+}
+
+/** (3) أمانة متسلسلة → سؤال الأسبوع */
+export type WeekQuestion = { id: number | string; source_request_id: number | string | null; text_ar: string; domain: string | null; status: 'queued' | 'published' | 'retired' | 'rejected'; week_start: string | null; approved_by: string | null; approved_at: string | null; created_at: string };
+/** الأمانة المرشَّحة: انقضت (72 ساعة بلا مستلم) وأذن كاتبها عند كتابتها */
+export const isChainCandidate = (r: Pick<Request, 'status' | 'meta'>) => r.status === 'expired' && isBottle(r) && r.meta?.may_publish === true;
+/** هل انقضى أسبوع السؤال المنشور؟ */
+export const weekOver = (q: Pick<WeekQuestion, 'status' | 'week_start'>, now = new Date()) => q.status === 'published' && !!q.week_start && riyadhDay(now) >= new Date(Date.parse(q.week_start) + WEEK_QUESTION_DAYS * 86400000).toISOString().slice(0, 10);
+export function canAnswerWeek(p: Pick<Presence, 'on_air_until' | 'grounded_at'> | null, already: boolean, now = Date.now()): { ok: true } | { ok: false; error: string } {
+  if (!p || !isOnAir(p, now)) return { ok: false, error: 'الإجابة لمن هو على الهواء الآن — اصعد أولًا' };
+  if (already) return { ok: false, error: 'أجبت عن سؤال هذا الأسبوع' };
+  return { ok: true };
+}
+export function cleanWeekAnswer(s: unknown): { ok: true; text: string } | { ok: false; error: string } { const t = cleanText(s, WEEK_ANSWER_MAX); if (t.length < WEEK_ANSWER_MIN) return { ok: false, error: `اكتب إجابة من ${WEEK_ANSWER_MIN} أحرف على الأقل` }; return { ok: true, text: scrubPii(t) }; }
+export function cleanWeekQuestion(s: unknown): { ok: true; text: string } | { ok: false; error: string } { const t = scrubPii(cleanText(s, WEEK_QUESTION_MAX)); if (t.length < 8) return { ok: false, error: 'صياغة السؤال قصيرة' }; return { ok: true, text: t }; }
+export const weekQuestionLine = (n: number) => (n === 0 ? 'لم يجب أحد بعد — من على الهواء يجيب' : n === 1 ? 'إجابة واحدة من الهواء' : n === 2 ? 'إجابتان من الهواء' : `${n} إجابات من الهواء`);
+
+/** (4) خريطة الزمن للجهة: شبكة 7×24 واحدة — المستوى 1..3 إن حضر في الخلية k أشخاص مختلفين، −1 ضبابية (أقل من k)، 0 لا شيء */
+export type TimeGrid = { weeks: number; users: number; shown: boolean; cells: number[][] };
+export function timeGrid(logs: { user_id: string; started_at: string; ended_at: string | null }[], now = new Date(), weeks = WHEN_WEEKS, k = ORG_TIME_K, minUsers = ORG_TIME_MIN_USERS): TimeGrid {
+  const since = now.getTime() - weeks * 7 * 86400000; const users = new Set<string>(); const cellUsers: Record<string, Set<string>> = {}; const cellWeeks: Record<string, Set<string>> = {};
+  for (const l of logs) {
+    const s = Date.parse(l.started_at); if (!(s >= since)) continue; const e = Math.min(Date.parse(l.ended_at || '') || s + 3600000, s + 4 * 3600000, now.getTime()); if (!(e > s)) continue; users.add(l.user_id);
+    for (let t = s; t < e; t += 3600000) { const r = new Date(t + 3 * 3600000); const key = `${r.getUTCDay()}:${r.getUTCHours()}`; (cellUsers[key] || (cellUsers[key] = new Set())).add(l.user_id); (cellWeeks[key] || (cellWeeks[key] = new Set())).add(weekKey(new Date(t))); }
+  }
+  const cells = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0)); const shown = users.size >= minUsers;
+  if (shown) for (const [key, u] of Object.entries(cellUsers)) { const [d, h] = key.split(':').map(Number); if (u.size < k) { cells[d][h] = -1; continue; } const ratio = cellWeeks[key].size / weeks; cells[d][h] = ratio >= 0.5 ? 3 : ratio >= 0.2 ? 2 : 1; }
+  return { weeks, users: users.size, shown, cells };
+}
+/** «أنسب ثلاث ساعات لموسمكم»: حساب خالص من كثافة الجهة (×2) والمنصّة (×1) — الساعات 8–22 بتوقيت الرياض؛ القرار لمدير الجهة */
+export function bestHours(org: number[][] | null, platform: number[][] | null, top = 3): { weekday: number; hour: number; score: number; why_ar: string }[] {
+  const out: { weekday: number; hour: number; score: number; why_ar: string }[] = [];
+  for (let d = 0; d < 7; d++) for (let h = 8; h <= 22; h++) {
+    const o = Math.max(0, org?.[d]?.[h] || 0), p = Math.max(0, platform?.[d]?.[h] || 0); const score = o * 2 + p; if (!score) continue;
+    out.push({ weekday: d, hour: h, score, why_ar: o && p ? 'منسوبوكم والمنصّة معًا يُضيئون هذه الساعة' : o ? 'منسوبوكم يُضيئون هذه الساعة' : 'المنصّة مضاءة هنا — ومنسوبوكم بعدُ لا' });
+  }
+  return out.sort((a, b) => b.score - a.score || a.weekday - b.weekday || a.hour - b.hour).slice(0, top);
+}
+export const ORG_TIME_LEVEL_AR: Record<string, string> = { '-1': 'أقل من خمسة', '0': '—', '1': 'نادرًا', '2': 'أحيانًا', '3': 'غالبًا' };

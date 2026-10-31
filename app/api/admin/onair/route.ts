@@ -6,6 +6,8 @@
  *  الطاقم يرى التصعيدات لا الخيوط؛ خيط «عون سريع» لا يُفتح إلا إن صُعّد إليه.
  *  P34: golden_set {title_ar, weekday, from_min, duration_min} · golden_off {id} · echo_make {id} (الذكاء الاصطناعي يصوغ مسودّة «مهارة اليوم» من سؤال أذن صاحبه) · echo_set {id, status, day?, draft?}
  *       GET يضيف golden · echoes · echo_candidates · bottles
+ *  P36 «ذاكرة الهواء»: GET يضيف week (المنشور · الطابور · المرشَّحون من أمانات انقضت وأذن أصحابها) · seasons_ended (روابط السجلّات)
+ *       POST week_approve {id (طلب), text_ar} · week_retire {id} · week_reject {id (طلب)} · week_set {id, text_ar} — إنسان يعتمد، لا ذكاء اصطناعي يكتب
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -16,6 +18,8 @@ import type { Presence, Request as OnAirRequest } from '../../../../lib/onair/re
 import { loadPeople, messagesOf, patchRequest, postMessage, upsertPresence, goldenList, echoList, echoCandidates, saveEcho, setEcho, getRequest } from '../../../../lib/onair/load';
 import { seasonView, setSeason, offSeason, echoReturns, whisperNow } from '../../../../lib/onair/load';   // P35
 import { cleanSeason, seasonPhraseAr, seasonState, P35_NAMES_AR } from '../../../../lib/onair/registry';   // P35
+import { P36_NAMES_AR, cleanWeekQuestion, isChainCandidate, weekOver, weekQuestionLine } from '../../../../lib/onair/registry';   // P36
+import { settleStale, chainCandidates, weekQuestions, weekAnswers, approveWeekQuestion, setWeekQuestion, rotateWeekQuestion, seasonsAll, seasonRecordOf } from '../../../../lib/onair/load';   // P36
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -66,7 +70,15 @@ export async function GET(req: Request) {
     season = { ...season0, slots: slotsRaw.map((x: any) => ({ ...x, org_name_ar: String(orgRows.find((o: any) => String(o.id) === String(x.org_id))?.name_ar || 'جهة'), weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min) })) }; }
   const echo_back = await Promise.all(echoes.filter((e: any) => e.status === 'published').slice(0, 30).map(async (e: any) => ({ id: e.id, request_id: e.request_id, day: e.day, returns: await echoReturns(db, e) })));
   const whisper = await whisperNow(db, now.getTime());
-  return NextResponse.json({ success: true, pending_sql: false, present, queue, escalations, recent, grounded, interpreters, stats, golden: goldenView, echoes, echo_candidates, bottles, season, echo_back, whisper, names35_ar: P35_NAMES_AR });
+  // P36: سؤال الأسبوع (مرشَّحون · منشور بإجاباته · طابور) · سجلّات المواسم المنتهية
+  await rotateWeekQuestion(db, now).catch(() => 0);
+  const [wcands, qs] = await Promise.all([chainCandidates(db).catch(() => [] as OnAirRequest[]), weekQuestions(db)]);
+  const published = qs.find(q => q.status === 'published' && !weekOver(q, now)) || null; const pubAnswers = published ? await weekAnswers(db, published.id) : [];
+  const week = { candidates: wcands.filter(isChainCandidate).map(r => ({ id: r.id, kind_ar: GRADE_LABEL[r.kind].ar, domain: r.domain, text_ar: r.text_ar, created_at: r.created_at, org_scoped: !!r.org_id })),
+    published: published ? { ...published, n: pubAnswers.length, line_ar: weekQuestionLine(pubAnswers.length), answers: pubAnswers.map(a => ({ id: a.id, role_label_ar: a.role_label_ar, text_ar: a.text_ar, created_at: a.created_at })) } : null,
+    queued: qs.filter(q => q.status === 'queued').sort((a, b) => Number(a.id) - Number(b.id)), retired: qs.filter(q => q.status === 'retired').slice(0, 10) };
+  const seasons_ended = (await seasonsAll(db)).filter(s => seasonState(s, now).phase === 'after').slice(0, 20); const records = await Promise.all(seasons_ended.map(async s => { const r = await seasonRecordOf(db, s, now); return { id: String(s.id), title_ar: s.title_ar, from_day: s.from_day, to_day: s.to_day, line_ar: r.line_ar, recorded_at: r.recorded_at, url: `/on-air/seasons/${s.id}` }; }));
+  return NextResponse.json({ success: true, pending_sql: false, present, queue, escalations, recent, grounded, interpreters, stats, golden: goldenView, echoes, echo_candidates, bottles, season, echo_back, whisper, names35_ar: P35_NAMES_AR, week, seasons_ended: records, names36_ar: P36_NAMES_AR });
 }
 
 export async function POST(req: Request) {
@@ -137,5 +149,15 @@ export async function POST(req: Request) {
     const e = await setEcho(db, b.id, { ...(status ? { status } : {}), ...(day !== undefined ? { day } : {}), ...(draft ? { draft: { ...draft, domain_code: b.draft?.domain_code || null } } : {}) });
     return NextResponse.json({ success: true, echo: e, note_ar: status === 'approved' ? 'اعتُمد — سيظهر «مهارة اليوم» في يومه.' : 'حُفظ.' });
   }
+  // ── P36 أمانة متسلسلة → سؤال الأسبوع (اعتماد بشري) ──
+  if (action === 'week_approve') {
+    const r0 = await getRequest(db, b.id); if (!r0) return bad('لا طلب', 404); const [r] = await settleStale(db, [r0]); if (!isChainCandidate(r)) return bad('ليست أمانة منقضية أذن كاتبها بنشرها', 403);
+    if ((await weekQuestions(db)).some(q => String(q.source_request_id) === String(r.id))) return bad('اعتُمدت من قبل');
+    const t = cleanWeekQuestion(b.text_ar || r.text_ar); if (!t.ok) return bad(t.error);
+    try { const q = await approveWeekQuestion(db, r, t.text, user.id, new Date()); return NextResponse.json({ success: true, question: q, note_ar: q.status === 'published' ? 'نُشر «سؤال الأسبوع» الآن على /on-air — يجيب عنه من على الهواء.' : 'اعتُمد — ينتظر دوره بعد سؤال هذا الأسبوع.' }); } catch (e: any) { return bad(e?.message || 'تعذّر', 500); }
+  }
+  if (action === 'week_reject') { const r = await getRequest(db, b.id); if (!r) return bad('لا طلب', 404); await patchRequest(db, r.id, { meta: { ...(r.meta || {}), may_publish: false, week_rejected_by: user.id } }); return NextResponse.json({ success: true, note_ar: 'لن تُعرض — بقيت الأمانة خاصة.' }); }
+  if (action === 'week_retire') { await setWeekQuestion(db, b.id, { status: 'retired' }); await rotateWeekQuestion(db, new Date()); return NextResponse.json({ success: true, note_ar: 'طُوي السؤال — إن كان في الطابور سؤال نُشر مكانه.' }); }
+  if (action === 'week_set') { const t = cleanWeekQuestion(b.text_ar); if (!t.ok) return bad(t.error); await setWeekQuestion(db, b.id, { text_ar: t.text }); return NextResponse.json({ success: true, note_ar: 'حُفظت الصياغة.' }); }
   return bad('إجراء غير معروف');
 }

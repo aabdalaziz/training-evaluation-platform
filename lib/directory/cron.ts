@@ -11,7 +11,7 @@ import { UPDATE_REMINDER_DAYS, TAGLINE_AR, lower } from './registry';
 import type { Profile } from './registry';
 
 const INVITE_BATCH = 25;
-export type DirectoryCronResult = { ok: true; dry: boolean; invited: number; reminded: number; skipped_invites: number; windows_reminded?: number; golden_reminded?: number; season_reminded?: number; echo_back_notified?: number; presence_log_cleaned?: number } | { ok: false; error: string };
+export type DirectoryCronResult = { ok: true; dry: boolean; invited: number; reminded: number; skipped_invites: number; windows_reminded?: number; golden_reminded?: number; season_reminded?: number; echo_back_notified?: number; presence_log_cleaned?: number; season_recorded?: number; week_question_rotated?: number } | { ok: false; error: string };
 
 export async function runDirectory(db: any, opts: { dry?: boolean; site: string; now?: Date } = { site: '' }): Promise<DirectoryCronResult> {
   const dry = !!opts.dry; const now = opts.now || new Date(); const site = opts.site.replace(/\/+$/, '');
@@ -63,6 +63,8 @@ export async function runDirectory(db: any, opts: { dry?: boolean; site: string;
     let golden = 0; try { const { remindGolden } = await import('../onair/load'); golden = await remindGolden(db, site, now, dry); } catch { /* قبل SQL P34 */ }
     // P35: تذكير ساعة الجهة في الموسم · «صدى يعود» 5/25/100 · تنظيف سجل الحضور بعد 90 يومًا — من الكرون القائم نفسه
     let season = 0, echoBack = 0, logClean = 0; try { const { remindSeason, notifyEchoBack, cleanPresenceLog } = await import('../onair/load'); season = await remindSeason(db, site, now, dry); echoBack = await notifyEchoBack(db, site, dry); logClean = await cleanPresenceLog(db, now, dry); } catch { /* قبل SQL P35 */ }
-    return { ok: true, dry, invited, reminded, skipped_invites: skipped, windows_reminded: windows, golden_reminded: golden, season_reminded: season, echo_back_notified: echoBack, presence_log_cleaned: logClean };
+    // P36: تجميد سجلّ الموسم المنتهي (قبل حذف سجلّ الحضور) · تدوير «سؤال الأسبوع» — من الكرون القائم نفسه
+    let recorded = 0, rotated = 0; try { const { freezeSeasonRecords, rotateWeekQuestion } = await import('../onair/load'); recorded = await freezeSeasonRecords(db, now, dry); rotated = await rotateWeekQuestion(db, now, dry); } catch { /* قبل SQL P36 */ }
+    return { ok: true, dry, invited, reminded, skipped_invites: skipped, windows_reminded: windows, golden_reminded: golden, season_reminded: season, echo_back_notified: echoBack, presence_log_cleaned: logClean, season_recorded: recorded, week_question_rotated: rotated };
   } catch (e: any) { return { ok: false, error: e?.message || String(e) }; }
 }

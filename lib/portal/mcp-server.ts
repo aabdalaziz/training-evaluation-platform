@@ -33,6 +33,7 @@ import { GET as horizonGET } from '../../app/api/horizon/route';
 import { GET as pairGET } from '../../app/api/pair/route';
 import { GET as orgPairGET } from '../../app/api/org/pair/route';
 import { GET as didGET } from '../../app/.well-known/did.json/route';
+import { GET as onairGET } from '../../app/api/onair/route';   // P36 season_record
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Agent-Key, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id', 'Access-Control-Expose-Headers': 'MCP-Protocol-Version, WWW-Authenticate', 'Cache-Control': 'no-store' };
 const site = () => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.vercel.app');
@@ -168,6 +169,12 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
     const result = args.code ? { code: j.code, org_name: j.org_name, year_label: j.year_label, intro_ar: j.intro_ar, chapters: (j.chapters || []).map(ch), k: j.k, expires_at: j.expires_at, verify_url: j.verify_url, page: `${c.site}/org-journey/${encodeURIComponent(String(j.code))}`, note_ar: j.note_ar }
       : { yearbooks: (j.items || []).map((y: any) => ({ code: y.code, org_name: y.org_name, year_label: y.year_label, chapters: (y.chapters || []).length, intro_ar: y.intro_ar, url: y.url, verify_url: y.verify_url })), note_ar: j.note_ar, page: `${c.site}/councils#yearbooks` };
     await log(c, name, true, { code: String(args.code || 'shelf').slice(0, 40) }); return toolContent(summarize(result), result);
+  }
+  if (name === 'season_record') {   // P36 ذاكرة الهواء — سجلّ عامّ مجهَّل
+    const id = String(args.season_id || '').trim(); const j = await asJson(await onairGET(internal(c, id ? `/api/onair?season=${encodeURIComponent(id)}` : '/api/onair?seasons=1')));
+    if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر القراءة | Unavailable', { error: j?.error ? 'not_found' : 'unavailable' }, true); }
+    const result = id ? { season: j.season, record: j.record, note_ar: j.record ? 'سجلّ مجمَّد بعد انتهاء الموسم — لا أسماء أفراد، الأعداد من خمسة' : 'الموسم لم ينتهِ بعد — السجلّ يُكتب بعد نهايته', page: `${c.site}/on-air/seasons/${encodeURIComponent(id)}` } : { seasons: j.seasons, note_ar: j.note_ar, page: `${c.site}/on-air/seasons` };
+    await log(c, name, true, { season: id || 'shelf' }); return toolContent(summarize(result), result);
   }
   if (c.actor.tier !== 'personal') return toolContent('تحتاج تفويضًا شخصيًا', { error: 'not_authorized' }, true);
   if (name === 'my_wallet') {

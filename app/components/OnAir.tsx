@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '../../lib/supabase/client';
 import { fastToken } from './Pocket';
 import { Icon } from '../../lib/ui/icons';
-import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, TEXT_MAX, CHANGED_MAX, dialogDefaults, BOTTLE_AR, BOTTLE_HOURS, CITY_POINTS, ORG_HOLD_HOURS, WHEN_LEVEL_AR, WEEKDAY_AR, P35_NAMES_AR } from '../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, TEXT_MAX, CHANGED_MAX, dialogDefaults, BOTTLE_AR, BOTTLE_HOURS, CITY_POINTS, ORG_HOLD_HOURS, WHEN_LEVEL_AR, WEEKDAY_AR, P35_NAMES_AR, P36_NAMES_AR, ORG_TIME_LEVEL_AR } from '../../lib/onair/registry';
 import type { Grade } from '../../lib/onair/registry';
 
 type Lang = 'ar' | 'en';
@@ -60,6 +60,27 @@ export function WhenStrip({ lang }: { lang: Lang }) {
 }
 
 /** 6) خريطة الحضور الحيّة — أعداد بالمدن، بلا أسماء (SVG مضمّن، بلا خرائط خارجية) */
+/** P36 «خريطة الزمن للجهة»: شبكة 7×24 لمنسوبي الجهة (ضبابية تحت 5) بجوار المنصّة + أنسب ثلاث ساعات (حساب خالص، القرار للمدير) */
+export function OrgTimeGrid({ orgId, lang, token, onPick }: { orgId: string; lang: Lang; token: () => Promise<string>; onPick?: (b: { weekday: number; hour: number }) => void }) {
+  const ar = lang === 'ar'; const [d, setD] = useState<any>(null); const [view, setView] = useState<'org' | 'platform'>('org');
+  useEffect(() => { let alive = true; (async () => { const tk = await token().catch(() => ''); const j = await fetch(`/api/onair?org_time=${encodeURIComponent(orgId)}`, { cache: 'no-store', headers: tk ? { Authorization: `Bearer ${tk}` } : {} }).then(r => r.json()).catch(() => null); if (alive) setD(j?.success ? j : { error: j?.error || '—' }); })(); return () => { alive = false; }; }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hours = [8, 10, 12, 14, 16, 18, 20, 22]; const cells: number[][] | null = d?.success ? (view === 'org' && d.org?.shown ? d.org.cells : d.platform?.cells) : null;
+  return <div className="oa-when oa-orgtime" data-testid="org-time" data-shown={d?.org?.shown ? '1' : d?.success ? '0' : '-'}>
+    {!d && <p className="pt-muted">…</p>}{d?.error && <p className="pt-muted">{d.error}</p>}
+    {d?.success && <>
+      <p className="pt-muted" data-testid="org-time-note">{d.note_ar}</p>
+      <div className="oa-when-cities" role="tablist" aria-label={ar ? 'الشبكة' : 'Grid'}>{d.org?.shown && <button type="button" role="tab" aria-selected={view === 'org'} className={`oa-when-city ${view === 'org' ? 'on' : ''}`} onClick={() => setView('org')} data-testid="org-time-tab-org">{ar ? 'منسوبونا' : 'Our members'}</button>}<button type="button" role="tab" aria-selected={view === 'platform' || !d.org?.shown} className={`oa-when-city ${view === 'platform' || !d.org?.shown ? 'on' : ''}`} onClick={() => setView('platform')} data-testid="org-time-tab-platform">{ar ? 'المنصّة كلها' : 'Whole platform'}</button></div>
+      {cells && <table className="oa-when-grid" data-testid="org-time-grid"><caption className="oa-sr">{ar ? `كثافة الحضور آخر ${d.org.weeks} أسابيع` : 'Presence density'}</caption>
+        <thead><tr><th scope="col"><span className="oa-sr">{ar ? 'اليوم' : 'Day'}</span></th>{hours.map(h => <th key={h} scope="col">{String(h).padStart(2, '0')}</th>)}</tr></thead>
+        <tbody>{cells.map((row, dIdx) => <tr key={dIdx}><th scope="row">{WEEKDAY_AR[dIdx]}</th>{hours.map(h => { const a = row[h] || 0, b = row[h + 1] || 0; const lv = a === -1 || b === -1 ? (Math.max(a, b) > 0 ? Math.max(a, b) : -1) : Math.max(a, b); return <td key={h} data-level={lv} title={`${WEEKDAY_AR[dIdx]} ${String(h).padStart(2, '0')}:00 — ${ORG_TIME_LEVEL_AR[String(lv)]}`}><span className="oa-sr">{ORG_TIME_LEVEL_AR[String(lv)]}</span></td>; })}</tr>)}</tbody></table>}
+      <p className="oa-when-legend" aria-hidden="true"><i data-level="-1" /> {ORG_TIME_LEVEL_AR['-1']} <i data-level="1" /> {ORG_TIME_LEVEL_AR['1']} <i data-level="2" /> {ORG_TIME_LEVEL_AR['2']} <i data-level="3" /> {ORG_TIME_LEVEL_AR['3']}</p>
+      {!!d.best?.length && <div className="oa-best" data-testid="org-time-best"><b>{ar ? 'أنسب ثلاث ساعات لموسمكم القادم' : 'Best three hours for your next season'}</b>
+        <ul>{d.best.map((b: any, i: number) => <li key={i}><span>{b.weekday_ar} {b.hour_ar}</span> <small>{b.why_ar}</small> {onPick && <button type="button" className="pt-btn ghost small" onClick={() => onPick(b)} data-testid={`org-time-pick-${i}`}>{ar ? 'استخدمها في الموسم' : 'Use it'}</button>}</li>)}</ul>
+        <small className="pt-muted">{ar ? 'اقتراح حسابي من الكثافة — ليس ذكاءً اصطناعيًا، والقرار لمدير الجهة.' : 'Computed from density — not AI; the decision is the org admin’s.'}</small></div>}
+      {!d.best?.length && <p className="pt-muted" data-testid="org-time-nobest">{ar ? 'لا اقتراح بعد — لم يُضَأ الهواء بما يكفي.' : 'No suggestion yet.'}</p>}
+    </>}
+  </div>;
+}
 export function OnAirMap({ map, lang, compact = false }: { map: NowPayload['map'] | null | undefined; lang: Lang; compact?: boolean }) {
   const ar = lang === 'ar'; const pts = map?.points || []; const total = map?.total || 0;
   return <figure className={`oa-map ${compact ? 'compact' : ''}`} data-testid="oa-map" data-points={pts.length}>
@@ -77,7 +98,7 @@ export function OnAirMap({ map, lang, compact = false }: { map: NowPayload['map'
 export function OnAirPanel({ lang }: { lang: Lang }) {
   const ar = lang === 'ar'; const [open, setOpen] = useState(false); const [grade, setGrade] = useState<Grade | null>(null); const [now, setNow] = useState<NowPayload | null>(null);
   const [text, setText] = useState(''); const [domain, setDomain] = useState(''); const [alias, setAlias] = useState(''); const [interp, setInterp] = useState(false); const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [alts, setAlts] = useState<string[] | null>(null);
-  const [preferText, setPreferText] = useState(false); const [canBottle, setCanBottle] = useState<string | null>(null); const [orgId, setOrgId] = useState(''); const [defNote, setDefNote] = useState<string | null>(null); const applied = useRef(false);
+  const [preferText, setPreferText] = useState(false); const [canBottle, setCanBottle] = useState<string | null>(null); const [mayPublish, setMayPublish] = useState(false);   /* P36 أمانة متسلسلة */ const [orgId, setOrgId] = useState(''); const [defNote, setDefNote] = useState<string | null>(null); const applied = useRef(false);
   const [thread, setThread] = useState<{ id: string | number; t: string } | null>(null);
   const ref = useRef<HTMLDivElement>(null); const last = useRef<HTMLElement | null>(null);
   const load = useCallback(() => api('/api/onair?now=1').then(r => { if (r.j?.success) setNow(r.j); }), []);
@@ -98,7 +119,7 @@ export function OnAirPanel({ lang }: { lang: Lang }) {
   const domains = Array.from(new Set(present.flatMap(p => p.domains))).slice(0, 20);
   async function ask(bottle = false) {
     if (!grade) return; setBusy(true); setErr(''); setAlts(null); setCanBottle(null);
-    const r = await api('/api/onair', { action: 'ask', kind: grade, text, domain: domain || undefined, alias: alias || undefined, interpreter_wanted: interp, prefer_text: preferText, org_id: orgId || undefined, bottle });
+    const r = await api('/api/onair', { action: 'ask', kind: grade, text, domain: domain || undefined, alias: alias || undefined, interpreter_wanted: interp, prefer_text: preferText, org_id: orgId || undefined, bottle, may_publish: bottle && mayPublish });
     setBusy(false);
     if (r.status === 409 && r.j?.nobody) { setAlts(r.j.alternatives_ar || []); setErr(r.j.error || ''); if (r.j.can_bottle) setCanBottle(r.j.bottle_ar || BOTTLE_AR); return; }
     if (!r.ok) { setErr(r.j?.error || (ar ? 'تعذّر الإرسال' : 'Failed')); return; }
@@ -138,7 +159,8 @@ export function OnAirPanel({ lang }: { lang: Lang }) {
             {!now?.signed_in && grade !== 'quick' && <p className="oa-warn" role="status">{ar ? 'جلسة الدعم والاستشارة تحتاجان تسجيل الدخول؛ «عونٌ سريع» متاح للجميع.' : 'Sessions and consultations require sign-in.'} <Link href="/login">{ar ? 'سجّل الدخول' : 'Sign in'}</Link></p>}
             <div className="ax-actions"><button type="submit" className="pt-btn gold" disabled={busy || text.trim().length < 5} data-testid="oa-send">{busy ? '…' : ar ? 'أرسل إلى الهواء' : 'Send on air'}</button></div>
             {err && <p className="oa-err" role="alert" data-testid="oa-err">{err}</p>}
-            {canBottle && <p className="oa-bottle" data-testid="oa-bottle"><button type="button" className="pt-btn navy small" disabled={busy} onClick={() => ask(true)} data-testid="oa-bottle-send">🤲 {ar ? (orgId ? 'أودِعها أمانةً إلى جهتي' : 'أودِعه أمانة') : 'Leave it in trust'}</button> <small>{orgId ? (ar ? `${P35_NAMES_AR.org_hold}: تبقى في عهدة منسوبي جهتك ${ORG_HOLD_HOURS} ساعة، فإن لم يصعد أحد منهم انتقلت إلى الهواء العام` : `Held by your organization ${ORG_HOLD_HOURS} h, then public`) : canBottle}</small></p>}
+            {canBottle && <div className="oa-bottle" data-testid="oa-bottle"><p><button type="button" className="pt-btn navy small" disabled={busy} onClick={() => ask(true)} data-testid="oa-bottle-send">🤲 {ar ? (orgId ? 'أودِعها أمانةً إلى جهتي' : 'أودِعه أمانة') : 'Leave it in trust'}</button> <small>{orgId ? (ar ? `${P35_NAMES_AR.org_hold}: تبقى في عهدة منسوبي جهتك ${ORG_HOLD_HOURS} ساعة، فإن لم يصعد أحد منهم انتقلت إلى الهواء العام` : `Held by your organization ${ORG_HOLD_HOURS} h, then public`) : canBottle}</small></p>
+              <label className="oa-check"><input type="checkbox" checked={mayPublish} onChange={e => setMayPublish(e.target.checked)} data-testid="oa-may-publish" /> {ar ? `${P36_NAMES_AR.chain}: إن لم يجدها أحد خلال ${BOTTLE_HOURS} ساعة، يجوز نشرها مجهولةً «${P36_NAMES_AR.week_question}» بعد اعتماد الطاقم — ويجيب عنها من على الهواء` : 'If nobody finds it in 72 h, it may be published anonymously as the Question of the Week after staff approval'}</label></div>}
             {alts && <ul className="oa-alts" data-testid="oa-alts">{alts.map((a, i) => <li key={i}>{a}</li>)}<li><Link href="/contact">{ar ? 'تواصل مع الطاقم' : 'Contact staff'}</Link></li></ul>}
             <p className="ax-foot">{now?.privacy_ar}</p>
           </form>}
@@ -205,7 +227,7 @@ export const ONAIR_CSS = `
 .oa-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0 0;color:#334155;font-size:14px}
 .oa-season,.oa-whisper{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 0;font-size:14px;border-radius:12px;padding:8px 12px}.oa-season{background:#ecfeff;border:1px solid #a5f3fc;color:#164e63}.oa-whisper{background:#fdf4ff;border:1px solid #f0abfc;color:#701a75}.oa-season a,.oa-whisper a{font-weight:800}
 .oa-when{display:grid;gap:10px}.oa-when-cities{display:flex;flex-wrap:wrap;gap:6px}.oa-when-city{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:4px 12px;font:inherit;font-size:13px;cursor:pointer;min-height:28px;color:#0f2a4e}.oa-when-city.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.oa-when-city:focus-visible{outline:3px solid #c9a24b;outline-offset:2px}
-.oa-when-grid{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed}.oa-when-grid th{font-size:11px;color:#64748b;font-weight:600;text-align:center}.oa-when-grid th[scope=row]{text-align:start;width:52px;white-space:nowrap}.oa-when-grid td{height:18px;border-radius:4px;background:#f1f5f9}.oa-when-grid td[data-level="1"],.oa-when-legend i[data-level="1"]{background:#99f6e4}.oa-when-grid td[data-level="2"],.oa-when-legend i[data-level="2"]{background:#2dd4bf}.oa-when-grid td[data-level="3"],.oa-when-legend i[data-level="3"]{background:#0b8a83}.oa-when-legend{display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;margin:0}.oa-when-legend i{display:inline-block;width:14px;height:14px;border-radius:3px}.oa-line b{color:#0f2a4e;font-size:16px}.oa-line .oa-dot.on{background:#dc2626;animation:oaPulse 1.6s infinite}
+.oa-when-grid{border-collapse:separate;border-spacing:3px;width:100%;table-layout:fixed}.oa-when-grid th{font-size:11px;color:#64748b;font-weight:600;text-align:center}.oa-when-grid th[scope=row]{text-align:start;width:52px;white-space:nowrap}.oa-when-grid td{height:18px;border-radius:4px;background:#f1f5f9}.oa-when-grid td[data-level="1"],.oa-when-legend i[data-level="1"]{background:#99f6e4}.oa-when-grid td[data-level="2"],.oa-when-legend i[data-level="2"]{background:#2dd4bf}.oa-when-grid td[data-level="3"],.oa-when-legend i[data-level="3"]{background:#0b8a83}.oa-when-grid td[data-level="-1"],.oa-when-legend i[data-level="-1"]{background:repeating-linear-gradient(45deg,#e2e8f0 0 3px,#f8fafc 3px 6px)}.oa-best{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 12px;color:#78350f}.oa-best ul{list-style:none;margin:6px 0;padding:0;display:grid;gap:6px}.oa-best li{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.oa-best li span{font-weight:800;color:#0f2a4e}.oa-best li small{color:#92400e}.oa-when-legend{display:flex;align-items:center;gap:6px;font-size:12px;color:#64748b;margin:0}.oa-when-legend i{display:inline-block;width:14px;height:14px;border-radius:3px}.oa-line b{color:#0f2a4e;font-size:16px}.oa-line .oa-dot.on{background:#dc2626;animation:oaPulse 1.6s infinite}
 .oa-linebtn{border:0;background:#0f2a4e;color:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-weight:800;cursor:pointer;min-height:40px}
 .oa-hand{margin-inline-start:2px;font-size:14px}.oa-golden{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 0;color:#92400e;background:#fffbeb;border-radius:10px;padding:6px 10px;font-size:13.5px}.oa-golden b{color:#78350f}.oa-golden a{color:#0b6f69;font-weight:800}
 .oa-tag{display:inline-block;background:#f1f5f9;color:#0f2a4e;border-radius:999px;padding:1px 8px;font-size:12px;font-weight:800;margin-inline-start:6px}.oa-tag.shadow{background:#ede9fe;color:#5b21b6}.oa-bottle{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 0}.oa-bottle small{color:#475569}

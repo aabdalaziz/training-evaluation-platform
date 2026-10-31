@@ -64,8 +64,9 @@ function Inner() {
         <ul className="oam-echo-list">{d.echo_back.map((e: any) => <li key={`${e.request_id}:${e.role}`} data-testid="oam-echo-back-line"><b>{e.line}</b> <small>· {ar ? `يوم ${e.day}` : e.day}</small></li>)}</ul>
         <p className="pt-muted">{ar ? 'الصدى يعود إليك بعددٍ لا بأسماء — ولا يُحسب لك ساعات؛ هو أثرك وحده.' : 'The echo returns as a number, never names.'}</p>
       </section>}
-      {d.season && d.season.phase !== 'after' && (d.season.slots || []).length > 0 && d.can_receive && <section className="pt-box oam-season" data-testid="oam-season"><h2>❂ {d.season.title_ar}</h2>
+      {d.season && d.season.phase !== 'after' && ((d.season.slots || []).length > 0 || (d.season.sign_slots || []).length > 0) && d.can_receive && <section className="pt-box oam-season" data-testid="oam-season"><h2>❂ {d.season.title_ar}</h2>
         {d.season.slots.map((x: any, i: number) => <p key={i}>{ar ? <>ساعة <b>{x.org_name_ar}</b>: {x.weekday_ar} {x.from} · {x.duration_min} دقيقة — نذكّرك قبلها بساعة؛ الصعود قرارك.</> : <>{x.org_name_ar}: {x.weekday_ar} {x.from}</>}</p>)}
+        {(d.season.sign_slots || []).map((x: any, i: number) => <p key={`s${i}`} data-testid="oam-sign-slot">🤟 {ar ? <>أُسندت إليك ساعةٌ <b>بالإشارة</b>: {x.weekday_ar} {x.from} · {x.duration_min} دقيقة — لا تُحتسب «بالإشارة» في سجلّ الموسم إلا بصعودك فعلًا.</> : <>Signed hour assigned to you: {x.weekday_ar} {x.from}</>}</p>)}
       </section>}
       {d.whisper && d.can_receive && <section className="pt-box oam-whisper" data-testid="oam-whisper"><h2>🤟 {ar ? P35_NAMES_AR.whisper : 'Interpreter’s whisper'}</h2>
         <p>{ar ? `${WHISPER_MINUTES} دقائق على الهواء العام: تقدّم «مهارة اليوم» بلغة الإشارة في غرفة مفتوحة للجميع — مرة في اليوم، وتُحسب لقاءً.` : `${WHISPER_MINUTES} minutes: today’s skill in sign language, open to all.`}</p>
