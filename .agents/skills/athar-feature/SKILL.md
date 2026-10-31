@@ -3,7 +3,7 @@ name: athar-feature
 description: Build a complete feature phase for the Athar portal (Next.js 14 + Supabase) end-to-end — SQL, pure lib, API route, learner/public/admin pages, MCP tool, vault registry, cron hook, tests, mock fixtures, Playwright E2E, one-zip GitHub delivery. Use when asked to add a new module/phase (P30+) to github.com/aabdalaziz/training-evaluation-platform. Updated after P29 (mutual pledge — the first two-party feature) and P29-أ (actionable gate screens).
 ---
 
-# Athar — build a feature phase (post-P31 pattern)
+# Athar — build a feature phase (post-P32 pattern)
 
 ## Order of work (never reorder)
 1. **Proposal first** (`P<N>-PROPOSAL-AR.txt`, Arabic, 1–2 pages): the idea in one sentence, the five "movements" of the experience, what stays private, what gets signed, what the agent may read, what the cron does, the DB tables, the constants. Wait for approval. Read `athar-product` before writing it.
@@ -55,6 +55,16 @@ description: Build a complete feature phase for the Athar portal (Next.js 14 + S
 - Anything copied to a public bucket on approval must be removed on suspension/withdrawal/erasure and re-published on reinstatement; assert `photo_public_path` null/non-null on both transitions.
 - Camera/file inputs (P31-ب): hidden `<input type=file>` keeps its `data-testid` (Playwright `set_input_files` works on hidden inputs); «التقط» uses `getUserMedia` on fine pointers and `capture="user"` on coarse ones; E2E launches Chromium with `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream` and a context `permissions=['camera']`, waits for `video.videoWidth > 0`, then snaps to a JPEG `File`.
 - AI that fills a form (P31-ب `parse_cv`): the API returns `fields` + `filled_keys` + `notes_ar` + `source`; the page merges (empty-only by default, `overwrite` opt-in), keeps a `prevForm` ref for «تراجع», and never saves. Add the purpose to `AiPurpose`, `AI_LIMITS`, `AI_PURPOSE_LABEL` and the `/ai` services table; log counts only. Attachments go through `runAi({ attachments })`; Word is unpacked by `docxText` (no npm). Vercel body limit 4.5 MB → cap files at 3 MB before base64.
+- Cross-cutting phases (P32 `lib/inclusion`): keep ONE pure registry of codes + Arabic labels + hints (`NEEDS`, `FEATURES`, `NEED_FEATURES`) and reach every surface from it; the UI state lives in a context (`AccessProvider`) that mirrors to `localStorage` **and** `<html data-access="…">` so CSS does the adaptation (`html[data-access~="low_vision"] .pt{zoom:1.25}`), with account sync only after login (account wins over device).
+- Sensitive-by-law data (needs, health-adjacent): never put it in an AI prompt, never in an org view, never in a VC; staff see k≥5 aggregates or explicit opt-in (`share_staff`) scoped to a program; the public stats endpoint returns `null` below quorum; write a unit test that asserts the AI prompt builder receives only public text.
+- Anything AI writes for the public is `pending` until staff approve/edit (`portal_access_texts`); the public GET returns `{text:null,pending:true}` — test that state explicitly.
+- A skip link must be the first focusable element on **every** page: put `SkipLink` in both shells (`PortalShell` and `GlobalNavigation`), self-styled (`<style>` inside the component) because `ACCESS_CSS` is only injected by the portal shell; E2E: `pg.keyboard.press('Tab')` then read `document.activeElement.textContent`, press Enter and assert `activeElement.tagName === 'MAIN'`.
+- Dialogs: `role=dialog` + `aria-modal` + focus trap (Tab/Shift+Tab wrap) + Esc + return focus to the opener; E2E presses Tab 40× and asserts `activeElement.closest('[data-testid="ax-panel"]')`.
+- Browser-only capabilities (speech recognition, speechSynthesis) are feature-detected and explain by text when absent; broadcast results on the existing room channel (`caption` event) — no server, no audio leaves the device.
+- Controlled checkboxes bound to the URL (`?fit=1` via `router.replace`) fail Playwright `check/uncheck` («did not change its state») — use `click` + `wait_for_function` on the resulting DOM.
+- Admin lists sorted by name: never rely on `.first` in E2E — add `data-pid={id}` and target `[data-pid="p1"]`.
+- Mock ids are string UUIDs: never `Number(body.id)` in admin routes (prod bigint ids still parse); and every new table must be added to the mock's generic-insert list or inserts vanish silently.
+- Renames are text-only deliverables: change labels, titles, comments and test names; never rename `data-testid`s, tables, API actions or codes (P32-ب: «على مقاسي» → «احتياجاتي» touched 9 files, zero logic).
 
 ## Delivery message (Arabic)
 Table (number · path · role), QA line (tsc · tests N/N · build · E2E N/N), "ideas that emerged" (the owner welcomes them), then the 3 steps (SQL with expected counts → upload zip → verify URLs). After «تم»: verify every file with `cmp` against `raw.githubusercontent.com/<sha>/<path>` (URL-encode `[`), check the Vercel status API, smoke-test live routes, and close the phase explicitly with the next file number.
