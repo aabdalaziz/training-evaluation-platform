@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // اختبارات P34 — «أَثَر معك — الهواء يتّسع»: الساعة الذهبية (الحالة والعدّاد ومفتاح الأسبوع) · الهواء الصامت (المطابقة) · صدى السؤال (التجهيل والمطالبة والتحليل)
 //                 ميراث الهواء (من يرافق · الظلّ عند «أستقبل») · هواء الجهة (نطاق النداء · سطر الجهة k≥5) · الخريطة (المدن بلا أسماء) · الهواء بالإشارة (افتراضيات الحوار محليًا)
-//                 رسالة في زجاجة (لا تنتهي بعد 3 دقائق · أولًا في الصفّ) · خزنة أَثَر · الكرون بلا كرون جديد
+//                 أمانة الهواء (لا تنتهي بعد 3 دقائق · أولًا في الصفّ) · خزنة أَثَر · الكرون بلا كرون جديد
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -17,18 +17,18 @@ const R = (o: Partial<Request> & { id: number }): Request => ({ kind: 'quick', s
 
 test('P34 — الأسماء الثمانية ثابتة والثوابت', () => {
   assert.deepEqual(Object.keys(P34_NAMES_AR), ['golden', 'quiet', 'echo', 'legacy', 'org', 'map', 'signed', 'bottle']);
-  assert.equal(P34_NAMES_AR.bottle, 'رسالة في زجاجة'); assert.equal(P34_NAMES_AR.golden, 'ساعة الهواء الذهبية');
+  assert.equal(P34_NAMES_AR.bottle, 'أمانة الهواء'); assert.equal(P34_NAMES_AR.golden, 'ساعة الهواء الذهبية');
   assert.equal(BOTTLE_HOURS, 72); assert.equal(SHADOW_REQUESTS, 5); assert.equal(GOLDEN_REMIND_MIN, 60);
 });
 
-test('P34 — 8) رسالة في زجاجة: لا تنتهي بعد 3 دقائق، وتبقى 72 ساعة، وتأتي أولًا في الصفّ', () => {
+test('P34 — 8) أمانة الهواء: لا تنتهي بعد 3 دقائق، وتبقى 72 ساعة، وتأتي أولًا في الصفّ', () => {
   const old = new Date(Date.now() - (QUICK_TIMEOUT_MIN + 1) * 60000).toISOString();
   assert.equal(quickExpired(R({ id: 1, created_at: old })), true, 'عادي ينتهي');
-  assert.equal(quickExpired(R({ id: 2, created_at: old, meta: { bottle: true } })), false, 'الزجاجة لا تنتهي بعد 3 دقائق');
+  assert.equal(quickExpired(R({ id: 2, created_at: old, meta: { bottle: true } })), false, 'الأمانة لا تنتهي بعد 3 دقائق');
   assert.equal(quickExpired(R({ id: 3, created_at: new Date(Date.now() - (BOTTLE_HOURS + 1) * 3600000).toISOString(), meta: { bottle: true } })), true, 'تنتهي بعد 72 ساعة');
   assert.ok(isBottle({ meta: { bottle: true } }) && !isBottle({ meta: {} }) && !isBottle({ meta: null }), 'isBottle');
   const q = rankQueue([R({ id: 1, created_at: new Date(Date.now() - 60000).toISOString(), domain: 'تقويم' }), R({ id: 2, created_at: new Date(Date.now() - 30000).toISOString(), meta: { bottle: true } })], { receives: ['quick'], domains: ['تقويم'] });
-  assert.equal(q[0].id, 2, 'الزجاجة أولًا ولو كان الآخر في مجالي وأقدم');
+  assert.equal(q[0].id, 2, 'الأمانة أولًا ولو كان الآخر في مجالي وأقدم');
 });
 
 test('P34 — 2) الهواء الصامت: من يفضّل النص يُقدَّم له المُستقبِل النصّي؛ والنصّي لا يرى جلسة صوتية صريحة', () => {

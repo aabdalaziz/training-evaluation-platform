@@ -192,7 +192,7 @@ export async function liveMapOf(db: any, present: Presence[]) {
   return liveMap(present, cityOf);
 }
 
-/** 8) رسالة في زجاجة: الزجاجات المفتوحة — أول من يصعد يجدها */
+/** 8) أمانة الهواء: الأمانات المفتوحة — أول من يصعد يجدها */
 export const bottlesOpen = async (db: any): Promise<Request[]> => (await openRequests(db)).filter(isBottle);
 
 /** 4) ميراث الهواء */

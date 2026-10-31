@@ -139,17 +139,17 @@ export async function POST(req: Request) {
     let org_id: string | null = null; if (me && body.org_id) { const mine = await orgsOf(db, me); if (!mine.some(o => o.id === String(body.org_id))) return bad('لست عضوًا مؤكَّدًا في هذه الجهة'); org_id = String(body.org_id); }
     const orgSet = org_id ? await orgMemberIds(db, org_id) : null;
     const anyone = present.some(p => p.receives.includes(kind) && (!orgSet || orgSet.has(p.user_id)));
-    // 8) رسالة في زجاجة: لا أحد الآن → نحفظ السؤال 72 ساعة بدل رفضه (إن اختار السائل)
+    // 8) أمانة الهواء: لا أحد الآن → نودِع السؤال أمانةً 72 ساعة بدل رفضه (إن اختار السائل)
     const bottle = kind !== 'consult' && !anyone && body.bottle === true;
-    if (kind !== 'consult' && !anyone && !bottle) return NextResponse.json({ success: false, nobody: true, error: org_id ? 'لا أحد من جهتك على الهواء الآن' : 'لا أحد على الهواء لهذه الدرجة الآن', can_bottle: true, bottle_ar: `اترك «${BOTTLE_AR}» — يبقى سؤالك ${BOTTLE_HOURS} ساعة ويجده أول من يصعد`, alternatives_ar: ['احجز نافذة قادمة من /on-air', 'اترك رسالة للطاقم من «تواصل»', 'اسأل أثير الآن (ذكاء اصطناعي — ليس إنسانًا)'] }, { status: 409 });
+    if (kind !== 'consult' && !anyone && !bottle) return NextResponse.json({ success: false, nobody: true, error: org_id ? 'لا أحد من جهتك على الهواء الآن' : 'لا أحد على الهواء لهذه الدرجة الآن', can_bottle: true, bottle_ar: `أودِعه أمانة — يبقى سؤالك ${BOTTLE_HOURS} ساعة ويجده أول من يصعد`, alternatives_ar: ['احجز نافذة قادمة من /on-air', 'اترك رسالة للطاقم من «تواصل»', 'اسأل أثير الآن (ذكاء اصطناعي — ليس إنسانًا)'] }, { status: 409 });
     const token = me ? null : anonToken();
     const r = await insertRequest(db, { kind, status: kind === 'consult' ? 'escalated' : 'open', asker_user_id: me?.id || null, asker_email: me?.email || null, asker_alias: cleanText(body.alias, 40) || (me?.name ? me.name.split(' ')[0] : mkAlias()), domain, text_ar: text, ip_hash: ipH, org_id, meta: { ...(token ? { anon_token: token } : {}), ...(body.interpreter_wanted === true ? { interpreter_wanted: true } : {}), ...(body.prefer_text === true ? { prefer_text: true } : {}), ...(bottle ? { bottle: true } : {}), site_lang: 'ar' } });
-    if (bottle) await postMessage(db, r.id, 'system', `${BOTTLE_AR}: لا أحد على الهواء الآن — سيجدها أول من يصعد خلال ${BOTTLE_HOURS} ساعة`).catch(() => null);
+    if (bottle) await postMessage(db, r.id, 'system', `${BOTTLE_AR}: لا أحد على الهواء الآن — سيجدها أول من يصعد خلال ${BOTTLE_HOURS} ساعة وهي في عهدته`).catch(() => null);
     await postMessage(db, r.id, 'asker', text).catch(() => null);
     let called = 0;
     if (kind === 'consult') { try { await notify(db, { kind: 'onair_consult', to: { email: process.env.ADMIN_EMAILS?.split(',')[0]?.trim() || null, name: 'طاقم أَثَر' }, ref: `onair:consult:${r.id}`, subject: `طلب استشارة من «على الهواء» — ${r.asker_alias}`, text: `${text}\n\nافتح: ${site}/admin/onair`, url: `${site}/admin/onair` }); } catch { /* يتابع */ } }
     else called = await callReceivers(db, r, present, site);
-    return NextResponse.json({ success: true, request: viewOf(r, me, token || ''), t: token, called, note_ar: kind === 'consult' ? 'وصلت الطاقم؛ سيفتح عقد التعاون مع العضو ويعود إليك.' : bottle ? `حُفظت رسالتك في زجاجة — أول من يصعد على الهواء يجدها أولًا، وسنخبرك${me ? ' في إشعاراتك' : ' هنا عند عودتك'}.` : `نادينا ${called} من الحاضرين — إن لم يردّ أحد خلال ${QUICK_TIMEOUT_MIN} دقائق نعرض البدائل.` });
+    return NextResponse.json({ success: true, request: viewOf(r, me, token || ''), t: token, called, note_ar: kind === 'consult' ? 'وصلت الطاقم؛ سيفتح عقد التعاون مع العضو ويعود إليك.' : bottle ? `أودعنا سؤالك أمانةً — أول من يصعد على الهواء يجدها أولًا، وسنخبرك${me ? ' في إشعاراتك' : ' هنا عند عودتك'}.` : `نادينا ${called} من الحاضرين — إن لم يردّ أحد خلال ${QUICK_TIMEOUT_MIN} دقائق نعرض البدائل.` });
   }
   if (['message', 'close', 'changed', 'cancel', 'extend', 'echo_ok'].includes(action)) {
     const r0 = await getRequest(db, body.id); if (!r0) return bad('لا طلب بهذا الرقم', 404); const [r] = await settleStale(db, [r0], now.getTime());
@@ -197,8 +197,8 @@ export async function POST(req: Request) {
     const on = body.on !== false; const until = on ? goOnAir(Number(body.minutes) || ON_AIR_MINUTES, now.getTime()) : null;
     const text_only = body.text_only === undefined ? !!presence?.text_only : body.text_only === true;   // 2) الهواء الصامت
     const row = await upsertPresence(db, { user_id: me.id, email: me.email, face, receives, domains, alt_link, text_only, on_air_until: until, meta: { ...(presence?.meta || {}), ...(on ? { last_on_at: iso } : {}) } });
-    const bottles = on ? (await bottlesOpen(db)).filter(b => receives.includes(b.kind)).length : 0;   // 8) أول من يصعد يجد الزجاجات
-    return NextResponse.json({ success: true, presence: { ...row, on_air: isOnAir(row!, now.getTime()), minutes_left: minutesLeft(row!, now.getTime()) }, bottles, note_ar: on ? `أنت على الهواء ${minutesLeft(row!, now.getTime())} دقيقة — ينطفئ وحده؛ جدّد متى شئت.${bottles ? ` في الصفّ ${bottles} ${BOTTLE_AR} تنتظرك.` : ''}` : 'نزلت من الهواء.' });
+    const bottles = on ? (await bottlesOpen(db)).filter(b => receives.includes(b.kind)).length : 0;   // 8) أول من يصعد يجد الأمانات
+    return NextResponse.json({ success: true, presence: { ...row, on_air: isOnAir(row!, now.getTime()), minutes_left: minutesLeft(row!, now.getTime()) }, bottles, note_ar: on ? `أنت على الهواء ${minutesLeft(row!, now.getTime())} دقيقة — ينطفئ وحده؛ جدّد متى شئت.${bottles ? ` في الصفّ ${bottles} ${BOTTLE_AR} في عهدتك.` : ''}` : 'نزلت من الهواء.' });
   }
   if (action === 'off') { if (!presence) return bad('لست على الهواء'); const row = await upsertPresence(db, { user_id: me.id, email: me.email, on_air_until: null }); return NextResponse.json({ success: true, presence: { ...row, on_air: false, minutes_left: 0 } }); }
   if (action === 'window_add') {

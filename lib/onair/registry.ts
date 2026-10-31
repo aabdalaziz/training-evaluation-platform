@@ -98,7 +98,7 @@ export const quickClosed = (r: Pick<Request, 'kind' | 'status' | 'taken_at'>, no
 export function rankQueue<T extends Pick<Request, 'domain' | 'created_at' | 'kind' | 'meta'>>(open: T[], mine: { receives: Grade[]; domains: string[]; text_only?: boolean }): T[] {
   const dom = new Set(mine.domains);
   return open.filter(r => mine.receives.includes(r.kind) && !(mine.text_only && r.kind === 'session' && r.meta?.prefer_text === false)).sort((a, b) => {
-    const ab = isBottle(a) ? 0 : 1, bb = isBottle(b) ? 0 : 1;                      // الزجاجات أولًا — انتظرت أكثر
+    const ab = isBottle(a) ? 0 : 1, bb = isBottle(b) ? 0 : 1;                      // الأمانات أولًا — انتظرت أكثر
     const am = a.domain && dom.has(a.domain) ? 0 : 1, bm = b.domain && dom.has(b.domain) ? 0 : 1;
     return ab - bb || am - bm || Date.parse(a.created_at) - Date.parse(b.created_at);
   });
@@ -172,13 +172,14 @@ export function nextWindowAt(w: Pick<Win, 'weekday' | 'from_min'>, now = new Dat
 export const TAGLINE_AR = 'اسأل الآن… فثمّة إنسان يسمعك';
 
 // ───────────────────────────── P34 «الهواء يتّسع» ─────────────────────────────
-export const BOTTLE_HOURS = 72;                 // «رسالة في زجاجة» تبقى 72 ساعة
+export const BOTTLE_HOURS = 72;                 // «أمانة الهواء» تبقى 72 ساعة
 export const SHADOW_REQUESTS = 5;               // «ميراث الهواء»: أول 5 طلبات
 export const GOLDEN_REMIND_MIN = 60;            // تذكير قبل الساعة الذهبية
 export const GOLDEN_DEFAULT_MIN = 60;
 export const isBottle = (r: { meta?: Record<string, any> | null }) => !!r?.meta?.bottle;
-export const BOTTLE_AR = 'رسالة في زجاجة';
-export const P34_NAMES_AR = { golden: 'ساعة الهواء الذهبية', quiet: 'الهواء الصامت', echo: 'صدى السؤال', legacy: 'ميراث الهواء', org: 'هواء الجهة', map: 'خريطة الحضور الحيّة', signed: 'الهواء بالإشارة', bottle: BOTTLE_AR } as const;
+export const BOTTLE_AR = 'أمانة';                 // الاسم القصير في الوسوم والعدّادات (قرار المالك 2026-10-31: «أمانة» بدل «رسالة في زجاجة»؛ الرموز التقنية bottle لم تتغيّر)
+export const BOTTLE_NAME_AR = 'أمانة الهواء';     // اسم الفكرة
+export const P34_NAMES_AR = { golden: 'ساعة الهواء الذهبية', quiet: 'الهواء الصامت', echo: 'صدى السؤال', legacy: 'ميراث الهواء', org: 'هواء الجهة', map: 'خريطة الحضور الحيّة', signed: 'الهواء بالإشارة', bottle: BOTTLE_NAME_AR } as const;
 
 /** 7) الهواء بالإشارة + 2) الهواء الصامت: إعدادات افتراضية للحوار من «احتياجاتي» — تُحسب على المتصفح فقط ولا تُرسل */
 export function dialogDefaults(needs: readonly string[] | null | undefined): { grade: Grade | null; interpreter: boolean; prefer_text: boolean; note_ar: string | null } {

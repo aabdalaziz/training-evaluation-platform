@@ -120,7 +120,7 @@ export function OnAirPanel({ lang }: { lang: Lang }) {
             {!now?.signed_in && grade !== 'quick' && <p className="oa-warn" role="status">{ar ? 'جلسة الدعم والاستشارة تحتاجان تسجيل الدخول؛ «عونٌ سريع» متاح للجميع.' : 'Sessions and consultations require sign-in.'} <Link href="/login">{ar ? 'سجّل الدخول' : 'Sign in'}</Link></p>}
             <div className="ax-actions"><button type="submit" className="pt-btn gold" disabled={busy || text.trim().length < 5} data-testid="oa-send">{busy ? '…' : ar ? 'أرسل إلى الهواء' : 'Send on air'}</button></div>
             {err && <p className="oa-err" role="alert" data-testid="oa-err">{err}</p>}
-            {canBottle && <p className="oa-bottle" data-testid="oa-bottle"><button type="button" className="pt-btn navy small" disabled={busy} onClick={() => ask(true)} data-testid="oa-bottle-send">🍾 {ar ? `اترك «${BOTTLE_AR}»` : 'Leave a message in a bottle'}</button> <small>{canBottle}</small></p>}
+            {canBottle && <p className="oa-bottle" data-testid="oa-bottle"><button type="button" className="pt-btn navy small" disabled={busy} onClick={() => ask(true)} data-testid="oa-bottle-send">🤲 {ar ? 'أودِعه أمانة' : 'Leave it in trust'}</button> <small>{canBottle}</small></p>}
             {alts && <ul className="oa-alts" data-testid="oa-alts">{alts.map((a, i) => <li key={i}>{a}</li>)}<li><Link href="/contact">{ar ? 'تواصل مع الطاقم' : 'Contact staff'}</Link></li></ul>}
             <p className="ax-foot">{now?.privacy_ar}</p>
           </form>}
@@ -147,9 +147,9 @@ export function Thread({ id, t, lang, onBack, receiver = false }: { id: string |
     {onBack && <button type="button" className="ax-btn" onClick={onBack}>← {ar ? 'رجوع' : 'Back'}</button>}
     {!r && <p className="ax-muted">…</p>}
     {r && <>
-      <p className="oa-status" role="status" data-testid="oa-status"><b>{r.kind_ar}</b> · <span className={`oa-st ${r.status}`}>{r.status_ar}</span>{r.bottle && <span className="oa-tag" data-testid="oa-bottle-tag">🍾 {BOTTLE_AR}</span>}{r.prefer_text && <span className="oa-tag">{ar ? 'نصّ' : 'text'}</span>}{r.org_scoped && <span className="oa-tag">{ar ? 'هواء الجهة' : 'org air'}</span>}{r.i_shadow && <span className="oa-tag shadow" data-testid="oa-shadow-tag">{ar ? 'ظلّ — تقرأ ولا تكتب' : 'shadow — read only'}</span>}
+      <p className="oa-status" role="status" data-testid="oa-status"><b>{r.kind_ar}</b> · <span className={`oa-st ${r.status}`}>{r.status_ar}</span>{r.bottle && <span className="oa-tag" data-testid="oa-bottle-tag">🤲 {BOTTLE_AR}</span>}{r.prefer_text && <span className="oa-tag">{ar ? 'نصّ' : 'text'}</span>}{r.org_scoped && <span className="oa-tag">{ar ? 'هواء الجهة' : 'org air'}</span>}{r.i_shadow && <span className="oa-tag shadow" data-testid="oa-shadow-tag">{ar ? 'ظلّ — تقرأ ولا تكتب' : 'shadow — read only'}</span>}
         {r.status === 'open' && r.kind !== 'consult' && !r.bottle && <small> · {ar ? `ننادي الحاضرين — ${Math.max(0, QUICK_TIMEOUT_MIN * 60 - waitedSec)} ث حتى نعرض البدائل` : `calling — ${Math.max(0, QUICK_TIMEOUT_MIN * 60 - waitedSec)} s`}</small>}
-        {r.status === 'open' && r.bottle && <small> · {ar ? `تبقى ${BOTTLE_HOURS} ساعة — أول من يصعد يجدها` : `kept ${BOTTLE_HOURS} h`}</small>}
+        {r.status === 'open' && r.bottle && <small> · {ar ? `في عهدة الهواء ${BOTTLE_HOURS} ساعة — أول من يصعد يجدها` : `held in trust ${BOTTLE_HOURS} h`}</small>}
         {r.status === 'taken' && data.receiver && <small> · {ar ? 'معك:' : 'with you:'} <b>{data.receiver.name_ar}</b> ({data.receiver.face_ar})</small>}
         {endsIn !== null && r.status === 'taken' && <small> · {ar ? `تنتهي الجلسة بعد ${endsIn} د` : `session ends in ${endsIn} min`}</small>}
       </p>

@@ -12,7 +12,7 @@ import { PortalShell, useLang } from '../components/PortalShell';
 import { openOnAir, OnAirMap } from '../components/OnAir';
 import { fastToken } from '../components/Pocket';
 import { supabase } from '../../lib/supabase/client';
-import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES, P34_NAMES_AR, BOTTLE_HOURS, SHADOW_REQUESTS } from '../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES, P34_NAMES_AR, BOTTLE_AR, BOTTLE_HOURS, SHADOW_REQUESTS } from '../../lib/onair/registry';
 import type { Grade } from '../../lib/onair/registry';
 
 export default function OnAirPage() { return <PortalShell><Inner /></PortalShell>; }
@@ -53,7 +53,7 @@ function Inner() {
           {!d?.signed_in && <p className="pt-muted"><Link href="/login?next=/on-air">{ar ? 'سجّل الدخول' : 'Sign in'}</Link> {ar ? 'لتتعهّد (لأعضاء الهيئة والطاقم)' : 'to pledge'}</p>}
           {pnote && <p className="pt-muted" role="status" data-testid="oap-pledge-note">{pnote}</p>}
         </div>}
-        {!!d?.bottles && <p className="oap-bottles" data-testid="oap-bottles">🍾 <b>{d.bottles}</b> {ar ? `«${P34_NAMES_AR.bottle}» تنتظر أول من يصعد` : 'messages in a bottle waiting'}</p>}
+        {!!d?.bottles && <p className="oap-bottles" data-testid="oap-bottles">🤲 <b>{d.bottles}</b> {ar ? `${BOTTLE_AR} في عهدة الهواء — تنتظر أول من يصعد` : 'entrusted questions waiting'}</p>}
       </div>
     </section>
 
@@ -89,7 +89,7 @@ function Inner() {
         <li>{ar ? 'طلبك يصل كل الحاضرين المناسبين؛ أول من يضغط «أستقبل» يكون معك، والبقية يرون أنه أُخذ.' : 'Your request reaches all suitable receivers; the first to accept is with you.'}</li>
         <li>{ar ? 'الذكاء الاصطناعي يرتّب الصفّ ويلخّص الخيط للمُستقبِل بإذنك — ولا يردّ عليك قط باسم إنسان.' : 'AI ranks the queue and summarises with your consent — it never replies in a human’s name.'}</li>
         <li>{ar ? `ساعات الحضور تُحسب من اللقاءات الفعلية: ${CERT_HOURS} ساعات و${CERT_MEETINGS} لقاءات = «شهادة حضور على الهواء» موقَّعة (ATH-OA) تظهر في «ما شهده أَثَر».` : `${CERT_HOURS} hours and ${CERT_MEETINGS} meetings earn a signed On-Air certificate (ATH-OA).`}</li>
-        <li>{ar ? `«${P34_NAMES_AR.bottle}»: إن كان الهواء صفرًا، يُحفظ سؤالك ${BOTTLE_HOURS} ساعة ويجده أول من يصعد — ولا يضيع.` : 'Message in a bottle: when nobody is on air, your question waits 72 h for the first to go on air.'}</li>
+        <li>{ar ? `«${P34_NAMES_AR.bottle}»: إن كان الهواء صفرًا، يُودَع سؤالك أمانةً ${BOTTLE_HOURS} ساعة ويجده أول من يصعد — ولا يضيع.` : 'Entrusted question: when nobody is on air, your question is held in trust 72 h for the first to go on air.'}</li>
         <li>{ar ? `«${P34_NAMES_AR.quiet}»: من يستقبل بالنص فقط يُعلن ذلك، ومن يفضّل النص يُقدَّم له المتوافقون أولًا. «${P34_NAMES_AR.signed}»: حين يحضر مترجم تظهر يدٌ على زر الرأس.` : 'Quiet Air and Signed Air: text-only receivers and interpreter presence are visible.'}</li>
         <li>{ar ? `«${P34_NAMES_AR.echo}»: سؤال حُلّ — بإذن صاحبه ومجهّلًا — قد يصبح «مهارة اليوم» بعد اعتماد الطاقم. «${P34_NAMES_AR.legacy}»: حامل ATH-OA يرافق مُستقبِلًا جديدًا في أول ${SHADOW_REQUESTS} طلبات، يقرأ ولا يتدخّل.` : 'Echo and Legacy: consented questions become daily skills; certified members shadow newcomers.'}</li>
         <li>{ar ? 'احتياجاتك (أَثَر يلبّي احتياجاتي) لا تدخل في اختيار من يردّ — إلا إن طلبت مترجم إشارة بنفسك.' : 'Your access needs never enter matching — unless you ask for an interpreter yourself.'}</li>
