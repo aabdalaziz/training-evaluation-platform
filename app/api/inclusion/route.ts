@@ -1,9 +1,9 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/inclusion — «أَثَر للجميع» (P32 · «أَثَر على مقاسي»)
+ * /api/inclusion — «أَثَر للجميع» (P32 · «أَثَر يلبّي احتياجاتي»)
  *  GET  ?meta=1                       (عام)   → الاحتياجات بكلماتها وأثر كلٍّ منها · سمات البرامج · بيان الوصول · الخصوصية
  *  GET  ?stats=1                      (عام)   → إحصاءات مجمَّعة k≥5 (لا رقم عن احتياج أقل من 5 أشخاص)
- *  GET  ?mine=1                       (مسجّل) → ملفي «أَثَر على مقاسي» (RLS: صاحبه فقط)
+ *  GET  ?mine=1                       (مسجّل) → ملفي «أَثَر يلبّي احتياجاتي» (RLS: صاحبه فقط)
  *  GET  ?simple=<source>&id=<id>      (عام)   → «نسخة أبسط» المعتمَدة لهذا المصدر إن وُجدت (لا تُعرض pending)
  *  GET  ?programs=1                   (عام)   → سمات الوصول لكل برنامج عام {id: features[]} — متسامح إن لم يُنفَّذ SQL بعد
  *  POST (مسجّل) { action:'save', needs[], helps_ar?, share_staff? } · { action:'delete' } · { action:'simplify', source, id } (يولّد نسخة pending أو يعيد المعتمَدة/الموجودة)

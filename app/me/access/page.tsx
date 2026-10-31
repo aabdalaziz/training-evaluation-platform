@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /me/access — «أَثَر على مقاسي» (P32 أَثَر للجميع): ملفي الكامل — الاحتياجات بكلماتي · «ما يساعدني» · هل يراه الطاقم عند تنسيق برنامج ·
+ * /me/access — «أَثَر يلبّي احتياجاتي» (P32 أَثَر للجميع): ملفي الكامل — الاحتياجات بكلماتي · «ما يساعدني» · هل يراه الطاقم عند تنسيق برنامج ·
  *  ماذا يتغيّر فعلًا لكل احتياج · حذف فوري. خاص بصاحبه (RLS)، لا يُرسل إلى أي نموذج ذكاء اصطناعي.
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -32,7 +32,7 @@ function Inner() {
   async function save() {
     setBusy(true); setErr(''); setMsg('');
     if (!tok) { a.setNeeds(draft); setMsg(ar ? 'طُبِّق على هذا الجهاز. سجّل الدخول ليتبعك على كل جهاز.' : 'Applied on this device.'); setBusy(false); return; }
-    const e = await a.saveToAccount(draft, { helps_ar: helps.trim(), share_staff: share }); if (e) setErr(e); else { setMsg(ar ? 'حُفظ. البوابة على مقاسك الآن على كل جهاز تدخل منه.' : 'Saved.'); setP(x => ({ needs: draft, helps_ar: helps.trim() || null, share_staff: share, updated_at: new Date().toISOString(), ...(x || {}) })); }
+    const e = await a.saveToAccount(draft, { helps_ar: helps.trim(), share_staff: share }); if (e) setErr(e); else { setMsg(ar ? 'حُفظ. البوابة تلبّي احتياجاتك الآن على كل جهاز تدخل منه.' : 'Saved.'); setP(x => ({ needs: draft, helps_ar: helps.trim() || null, share_staff: share, updated_at: new Date().toISOString(), ...(x || {}) })); }
     setBusy(false);
   }
   async function remove() {
@@ -43,7 +43,7 @@ function Inner() {
   }
   return (
     <main className="pt-main ax-page" dir={ar ? 'rtl' : 'ltr'}><style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <header className="ax-ph"><span className="pt-kicker"><Icon name="users" size={14} /> {ar ? 'أَثَر للجميع' : 'Athar for all'}</span><h1>{ar ? 'أَثَر على مقاسي' : 'Athar, my way'}</h1>
+      <header className="ax-ph"><span className="pt-kicker"><Icon name="users" size={14} /> {ar ? 'أَثَر للجميع' : 'Athar for all'}</span><h1>{ar ? 'أَثَر يلبّي احتياجاتي' : 'Athar meets my needs'}</h1>
         <p>{ar ? 'لا بوابة منفصلة لأحد. تقول ما يساعدك بكلماتك، وتتكيّف البوابة نفسها: الحجم، التباين، الوقت، الترجمة الحيّة، اللغة الأبسط. لا نسأل عن سبب، ولا نطلب وثيقة، ولا نرسل هذا إلى أي ذكاء اصطناعي.' : 'No separate portal for anyone. Say what helps you, in your words, and the same portal adapts.'}</p></header>
       {!loaded && <section className="pt-box"><p className="pt-muted">{ar ? 'نقرأ ملفك…' : 'Loading…'}</p></section>}
       {loaded && (<>

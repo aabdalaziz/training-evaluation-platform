@@ -1,6 +1,6 @@
 'use client';
 
-// P32 «أَثَر للجميع» — «أَثَر على مقاسي»: مزوّد الاحتياجات + لوحة التكييف + «اقرأ لي الصفحة» + «نسخة أبسط» + الترجمة الحيّة
+// P32 «أَثَر للجميع» — «أَثَر يلبّي احتياجاتي»: مزوّد الاحتياجات + لوحة التكييف + «اقرأ لي الصفحة» + «نسخة أبسط» + الترجمة الحيّة
 // الاحتياجات تُطبَّق سمةً على <html data-access="…"> فيقرؤها CSS الغلاف؛ لا تُرسل إلى أي نموذج ذكاء اصطناعي.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -53,15 +53,15 @@ export function SkipLink({ lang }: { lang: Lang }) {
   return <><style dangerouslySetInnerHTML={{ __html: SKIP_CSS }} /><a href="#main" className="ax-skip" onClick={e => { e.preventDefault(); const m = document.querySelector('main') as HTMLElement | null; if (m) { m.setAttribute('tabindex', '-1'); m.focus(); m.scrollIntoView(); } }}>{lang === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content'}</a></>;
 }
 
-/** زر الرأس «على مقاسي» */
+/** زر الرأس «احتياجاتي» */
 export function AccessButton({ lang }: { lang: Lang }) {
   const a = useAccess(); const n = a.needs.length;
-  return <button type="button" className={`ax-btn ${n ? 'on' : ''}`} onClick={() => a.setOpen(true, 'needs')} aria-haspopup="dialog" aria-expanded={a.open} data-testid="ax-open" title={lang === 'ar' ? 'أَثَر على مقاسي — كيّف البوابة لاحتياجك' : 'Athar, my way — adapt the portal to you'}>
-    <Icon name="users" size={15} /> {lang === 'ar' ? 'على مقاسي' : 'My way'}{n ? <b aria-hidden="true">{n}</b> : null}
+  return <button type="button" className={`ax-btn ${n ? 'on' : ''}`} onClick={() => a.setOpen(true, 'needs')} aria-haspopup="dialog" aria-expanded={a.open} data-testid="ax-open" title={lang === 'ar' ? 'أَثَر يلبّي احتياجاتي — كيّف البوابة لاحتياجك' : 'Athar meets my needs — adapt the portal to you'}>
+    <Icon name="users" size={15} /> {lang === 'ar' ? 'احتياجاتي' : 'My needs'}{n ? <b aria-hidden="true">{n}</b> : null}
   </button>;
 }
 
-/** لوحة «أَثَر على مقاسي» — حوار بتركيز محصور وإغلاق بـ Esc؛ تبويبان: احتياجاتي · أخبرنا بعائق */
+/** لوحة «أَثَر يلبّي احتياجاتي» — حوار بتركيز محصور وإغلاق بـ Esc؛ تبويبان: احتياجاتي · أخبرنا بعائق */
 export function AccessPanel({ lang }: { lang: Lang }) {
   const a = useAccess(); const ar = lang === 'ar'; const ref = useRef<HTMLDivElement>(null); const last = useRef<HTMLElement | null>(null);
   const [draft, setDraft] = useState<Need[]>(a.needs); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false);
@@ -85,7 +85,7 @@ export function AccessPanel({ lang }: { lang: Lang }) {
   return (
     <div className="ax-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) a.setOpen(false); }}>
       <div className="ax-panel" role="dialog" aria-modal="true" aria-labelledby="ax-title" ref={ref} dir={ar ? 'rtl' : 'ltr'} data-testid="ax-panel">
-        <header className="ax-head"><h2 id="ax-title"><Icon name="users" size={18} /> {ar ? 'أَثَر على مقاسي' : 'Athar, my way'}</h2><button type="button" className="ax-x" onClick={() => a.setOpen(false)} aria-label={ar ? 'إغلاق' : 'Close'}>✕</button></header>
+        <header className="ax-head"><h2 id="ax-title"><Icon name="users" size={18} /> {ar ? 'أَثَر يلبّي احتياجاتي' : 'Athar meets my needs'}</h2><button type="button" className="ax-x" onClick={() => a.setOpen(false)} aria-label={ar ? 'إغلاق' : 'Close'}>✕</button></header>
         <div className="ax-tabs" role="tablist"><button type="button" role="tab" aria-selected={a.tab === 'needs'} className={a.tab === 'needs' ? 'on' : ''} onClick={() => a.setOpen(true, 'needs')}>{ar ? 'ما يساعدني' : 'What helps me'}</button><button type="button" role="tab" aria-selected={a.tab === 'report'} className={a.tab === 'report' ? 'on' : ''} onClick={() => a.setOpen(true, 'report')}>{ar ? 'أخبرنا بعائق' : 'Report a barrier'}</button></div>
         {a.tab === 'needs' ? <div className="ax-body">
           <p className="ax-lead">{ar ? 'اختر ما ينطبق عليك بكلماتك — لا نسأل عن سبب ولا نطلب وثيقة. البوابة تتكيّف فورًا، وأنت وحدك ترى هذه القائمة.' : 'Pick what applies, in your words — no reasons, no documents. The portal adapts at once; only you see this list.'}</p>

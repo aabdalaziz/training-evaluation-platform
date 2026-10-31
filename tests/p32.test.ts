@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// اختبارات P32 — «أَثَر للجميع» / «أَثَر على مقاسي»: الاحتياجات بكلمات الحاجة · «يناسبني» · k≥5 · مُضاعِف الوقت 1.5 في العهود
+// اختبارات P32 — «أَثَر للجميع» / «أَثَر يلبّي احتياجاتي»: الاحتياجات بكلمات الحاجة · «يناسبني» · k≥5 · مُضاعِف الوقت 1.5 في العهود
 //                 · «نسخة أبسط» (محلي + بصمة الأصل + لا عرض قبل الاعتماد) · الترجمة الحيّة (دمج السطور · مقعد المترجم أولًا)
 //                 · بلاغات الوصول · تعهّد الشمول في أفق الجهة · سياق شامل في «موقف اليوم» · خزنة أَثَر · بيان الوصول صادق
 import test from 'node:test';
@@ -180,7 +180,7 @@ test('P32: «موقف اليوم» — كل أربعاء سياق شامل: ال
   assert.ok(buildCasePrompt(f).user.startsWith(INCLUSIVE_HINT_AR.slice(0, 10)), 'الأربعاء: التلميح في أول الموجّه');
   assert.ok(!buildCasePrompt({ ...f, day: '2026-11-05', weekday_ar: 'الخميس' }).user.includes('كامل الأهلية'), 'الخميس: بلا تلميح');
 });
-test('P32: خزنة أَثَر تعرف ملف «أَثَر على مقاسي»: حذف فوري · self فقط · لا وكلاء', () => {
+test('P32: خزنة أَثَر تعرف ملف «أَثَر يلبّي احتياجاتي»: حذف فوري · self فقط · لا وكلاء', () => {
   const e = REGISTRY.find(r => r.table === 'portal_access_profiles'); assert.ok(e, 'مسجّل'); assert.equal(e!.policy, 'delete'); assert.deepEqual(e!.access, ['self']); assert.equal(e!.basis, 'consent');
   const plan = erasurePlan(); assert.ok(JSON.stringify(plan).includes('portal_access_profiles'));
   for (const x of PRIVACY_ACCESS_AR) assert.ok(x.length > 10, 'سطر خصوصية');

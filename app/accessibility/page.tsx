@@ -24,7 +24,7 @@ function Inner() {
     <main className="pt-main as" dir={ar ? 'rtl' : 'ltr'}><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <header className="as-head"><span className="pt-kicker"><Icon name="users" size={14} /> {ar ? 'أَثَر للجميع' : 'Athar for all'}</span><h1>{ar ? 'بيان الوصول' : 'Accessibility statement'}</h1>
         <p>{ar ? 'أَثَر بوابة واحدة لكل من يتعلّم ويدرّب ويقيّم. لا نبني بوابة منفصلة لأحد؛ نجعل البوابة نفسها تتكيّف، ونقول بصدق ما يعمل اليوم وما لم يكتمل بعد.' : 'One portal for everyone who learns, trains and evaluates. We do not build a separate portal; we make this one adapt — and say honestly what works and what does not yet.'}</p>
-        <div className="as-cta"><button type="button" className="pt-btn gold" onClick={() => a.setOpen(true, 'needs')} data-testid="as-open">{ar ? 'كيّف البوابة على مقاسي' : 'Adapt the portal to me'}</button><button type="button" className="pt-btn ghost" onClick={() => a.setOpen(true, 'report')} data-testid="as-report">{ar ? 'أخبرنا بعائق' : 'Report a barrier'}</button></div></header>
+        <div className="as-cta"><button type="button" className="pt-btn gold" onClick={() => a.setOpen(true, 'needs')} data-testid="as-open">{ar ? 'كيّف البوابة لاحتياجاتي' : 'Adapt the portal to me'}</button><button type="button" className="pt-btn ghost" onClick={() => a.setOpen(true, 'report')} data-testid="as-report">{ar ? 'أخبرنا بعائق' : 'Report a barrier'}</button></div></header>
 
       <section className="pt-box" aria-labelledby="as-h1"><h2 id="as-h1"><Icon name="shield" size={18} /> {ar ? 'ما نلتزم به' : 'Our commitment'}</h2>
         <p><b>{ar ? 'المقياس: ' : 'Standard: '}</b>{S.standard}</p><p><b>{ar ? 'النطاق: ' : 'Scope: '}</b>{S.scope_ar}</p>
@@ -35,7 +35,7 @@ function Inner() {
         <p className="pt-muted">{ar ? `نراجع هذا البيان كل ${S.review_months} أشهر ومع كل إصدار.` : `Reviewed every ${S.review_months} months and with each release.`}</p></section>
 
       <section className="pt-box" aria-labelledby="as-h3"><h2 id="as-h3"><Icon name="users" size={18} /> {ar ? 'كيف تتكيّف البوابة' : 'How the portal adapts'}</h2>
-        <p className="pt-muted">{ar ? 'تختار بكلماتك ما يساعدك — من زر «على مقاسي» في أعلى كل صفحة — فيتغيّر هذا:' : 'Choose, in your words, what helps you — via "My way" at the top of every page:'}</p>
+        <p className="pt-muted">{ar ? 'تختار بكلماتك ما يساعدك — من زر «احتياجاتي» في أعلى كل صفحة — فيتغيّر هذا:' : 'Choose, in your words, what helps you — via "My way" at the top of every page:'}</p>
         <dl className="as-dl">{NEEDS.map(n => <div key={n}><dt>{NEED_LABEL[n][lang]}</dt><dd>{NEED_EFFECT_AR[n]}</dd></div>)}</dl></section>
 
       <section className="pt-box" aria-labelledby="as-h4"><h2 id="as-h4"><Icon name="target" size={18} /> {ar ? 'ما توفّره البرامج' : 'What programs provide'}</h2>
@@ -57,7 +57,7 @@ function Inner() {
       <section className="pt-box" aria-labelledby="as-h6"><h2 id="as-h6"><Icon name="shield" size={18} /> {ar ? 'خصوصية ملف الاحتياج' : 'Privacy of the needs profile'}</h2>
         <ul className="as-list">{PRIVACY_ACCESS_AR.map((x, i) => <li key={i}>{x}</li>)}</ul>
         <p>{S.contact_ar}</p>
-        <p className="pt-muted"><Link href="/me/access">{ar ? 'ملفي «أَثَر على مقاسي»' : 'My profile'}</Link> · <Link href="/security">{ar ? 'درع أَثَر' : 'Athar Shield'}</Link> · <Link href="/me/data">{ar ? 'خزنة أَثَر' : 'Athar Vault'}</Link></p></section>
+        <p className="pt-muted"><Link href="/me/access">{ar ? 'ملفي «أَثَر يلبّي احتياجاتي»' : 'My profile'}</Link> · <Link href="/security">{ar ? 'درع أَثَر' : 'Athar Shield'}</Link> · <Link href="/me/data">{ar ? 'خزنة أَثَر' : 'Athar Vault'}</Link></p></section>
     </main>
   );
 }
