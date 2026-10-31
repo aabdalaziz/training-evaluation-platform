@@ -29,9 +29,9 @@ export const TAGLINE_AR = 'سيرتك توثّقها بنفسك، وشهادة �
 export type ProfileStatus = 'draft' | 'submitted' | 'approved' | 'changes_requested' | 'suspended';
 export const STATUS_AR: Record<ProfileStatus, string> = { draft: 'مسودة', submitted: 'بانتظار الاعتماد', approved: 'معتمد — عضو هيئة أَثَر', changes_requested: 'طُلب تعديل', suspended: 'موقوف' };
 
-export const SERVICES = ['consulting', 'training', 'assessment', 'program_design', 'judging', 'research_supervision', 'keynote', 'council_facilitation'] as const;
+export const SERVICES = ['consulting', 'training', 'assessment', 'program_design', 'judging', 'research_supervision', 'keynote', 'council_facilitation', 'inclusive_training'] as const;
 export type Service = typeof SERVICES[number];
-export const SERVICE_AR: Record<Service, string> = { consulting: 'استشارة', training: 'تدريب', assessment: 'تقييم', program_design: 'تصميم برامج', judging: 'تحكيم', research_supervision: 'إشراف بحثي', keynote: 'حديث رئيسي', council_facilitation: 'تيسير مجالس' };
+export const SERVICE_AR: Record<Service, string> = { consulting: 'استشارة', training: 'تدريب', assessment: 'تقييم', program_design: 'تصميم برامج', judging: 'تحكيم', research_supervision: 'إشراف بحثي', keynote: 'حديث رئيسي', council_facilitation: 'تيسير مجالس', inclusive_training: 'تدريب مهيَّأ للجميع' };
 export const MODES = ['onsite', 'remote', 'hybrid'] as const; export type Mode = typeof MODES[number];
 export const MODE_AR: Record<Mode, string> = { onsite: 'حضوري', remote: 'عن بُعد', hybrid: 'هجين' };
 export const LANG_AR: Record<string, string> = { ar: 'العربية', en: 'الإنجليزية', fr: 'الفرنسية', ur: 'الأردية', tr: 'التركية', other: 'أخرى' };

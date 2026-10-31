@@ -10,6 +10,8 @@ import { PortalShell, useLang } from '../components/PortalShell';
 import { UI, t, programName, fmtDate, deliveryLabel } from '../../lib/portal/content';
 import { TYPES, typeLabel, feeLabel, regState, REG_LABEL, seatsLeft, catalogPrograms, filterPrograms, durationLabel, pick } from '../../lib/portal/catalog';
 import type { CatalogProgram, Counts } from '../../lib/portal/catalog';
+import { useAccess } from '../components/Inclusion';
+import { FEATURE_LABEL, fitsNeeds, isFeature } from '../../lib/inclusion/registry';
 
 export default function ProgramsPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -19,7 +21,10 @@ function Inner() {
   const { lang } = useLang(); const sp = useSearchParams(); const router = useRouter();
   const [rows, setRows] = useState<CatalogProgram[]>([]); const [counts, setCounts] = useState<Counts[]>([]); const [loaded, setLoaded] = useState(false);
   const [q, setQ] = useState(sp.get('q') || '');
-  const type = sp.get('type') || '', mode = sp.get('mode') || '', state = sp.get('state') || '', ended = sp.get('ended') === '1';
+  const type = sp.get('type') || '', mode = sp.get('mode') || '', state = sp.get('state') || '', ended = sp.get('ended') === '1', fit = sp.get('fit') === '1';
+  // P32 أَثَر للجميع: سمات الوصول لكل برنامج (متسامح إن لم يُنفَّذ SQL) + مرشّح «يناسبني» من احتياجاتي
+  const access = useAccess(); const [feats, setFeats] = useState<Record<string, string[]>>({});
+  useEffect(() => { fetch('/api/inclusion?programs=1', { cache: 'no-store' }).then(r => r.json()).then(j => { if (j?.success) setFeats(j.features || {}); }).catch(() => null); }, []);
   const today = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
@@ -34,7 +39,7 @@ function Inner() {
   }, []);
 
   const setParam = (k: string, v: string) => { const n = new URLSearchParams(sp.toString()); if (v) n.set(k, v); else n.delete(k); router.replace(`/programs${n.toString() ? `?${n}` : ''}`); };
-  const list = useMemo(() => filterPrograms(catalogPrograms(rows, today, ended), { q, type, mode, state }, today, counts), [rows, counts, q, type, mode, state, ended, today]);
+  const list = useMemo(() => filterPrograms(catalogPrograms(rows, today, ended), { q, type, mode, state }, today, counts).filter(p => !fit || (access.needs.length ? fitsNeeds(feats[p.id], access.needs) && (feats[p.id] || []).length > 0 : (feats[p.id] || []).length > 0)), [rows, counts, q, type, mode, state, ended, today, fit, feats, access.needs]);
 
   return (
     <main className="pt-main">
@@ -51,6 +56,7 @@ function Inner() {
           <select value={mode} onChange={e => setParam('mode', e.target.value)}><option value="">{lang === 'ar' ? 'حضوري وعن بُعد' : 'On-site & online'}</option><option value="onsite">{t(UI.onsite, lang)}</option><option value="remote">{t(UI.remote, lang)}</option></select>
           <select value={state} onChange={e => setParam('state', e.target.value)}><option value="">{lang === 'ar' ? 'كل الحالات' : 'All states'}</option><option value="open">{lang === 'ar' ? 'التسجيل متاح' : 'Open for registration'}</option><option value="full">{t(REG_LABEL.full, lang)}</option><option value="closed">{t(REG_LABEL.closed, lang)}</option></select>
           <label className="pt-check"><input type="checkbox" checked={ended} onChange={e => setParam('ended', e.target.checked ? '1' : '')} /> {lang === 'ar' ? 'إظهار المنتهية' : 'Show ended'}</label>
+          <label className="pt-check" title={lang === 'ar' ? 'برامج تعلن ما توفّره للجميع — وإن اخترت احتياجاتك في «على مقاسي» تُرشَّح بها' : 'Programs that declare access features — filtered by your needs if set'}><input type="checkbox" checked={fit} onChange={e => setParam('fit', e.target.checked ? '1' : '')} data-testid="cat-fit" /> {lang === 'ar' ? (access.needs.length ? 'يناسبني' : 'مهيَّأ للجميع') : (access.needs.length ? 'Fits me' : 'Accessible')}</label>
         </div>
 
         <div className="pt-programs">
@@ -62,6 +68,7 @@ function Inner() {
                 <div className="pt-meta"><span className="pt-tag navy">{typeLabel(p.program_type, lang)}</span>{p.delivery_mode && <span className="pt-chip">{deliveryLabel(p.delivery_mode, lang)}</span>}<span className={`pt-tag ${s === 'open' ? '' : s === 'waitlist' ? 'soon' : 'off'}`}>{t(REG_LABEL[s], lang)}</span></div>
                 <h3><Link href={`/programs/${p.id}`} style={{ textDecoration: 'none' }}>{programName(p, lang)}</Link></h3>
                 <p>{intro}</p>
+                {(feats[p.id] || []).length > 0 && <div className="pt-chips" data-testid="cat-feats">{(feats[p.id] || []).filter(isFeature).map(f => <span key={f} className="pt-chip" style={{ background: '#f0fbfa', color: '#0b6f69' }}>{FEATURE_LABEL[f][lang]}</span>)}</div>}
                 <div className="pt-dates">
                   <span><Icon name="calendar" size={13} /> <bdi>{fmtDate(p.start_date, lang)}</bdi>{p.end_date && <> → <bdi>{fmtDate(p.end_date, lang)}</bdi></>}</span>
                   {durationLabel(p, lang) && <span><Icon name="clock" size={13} /> {durationLabel(p, lang)}</span>}

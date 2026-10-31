@@ -12,6 +12,7 @@
  *  الكتابة لمديري الجهة المؤكَّدين فقط (الطاقم يقرأ ولا يكتب ولا يرى نص الأفق).
  */
 import { NextResponse } from 'next/server';
+import { readyProgramsCount } from '../../../../lib/inclusion/load';
 import { orgCtx, isOrgAdmin, svc, who, bad, siteOf } from '../../../../lib/org-impact/auth';
 import { randomCode } from '../../../../lib/portal/profile';
 import { signerFromEnv } from '../../../../lib/portal/vc-server';
@@ -69,7 +70,7 @@ export async function POST(req: Request) {
   }
   if (action === 'options') {
     if (!h) return bad('اكتبوا أفق الجهة أولًا — لا خطوة بلا أفق', 409); if (h.status !== 'draft') return bad('للجهة عهد نشط — الخطوات تُقترح بعد المراجعة', 409);
-    const options = proposeOrgPledges(st.chapters, st.members); const { data, error } = await db.from('portal_org_horizons').update({ options, updated_at: now.toISOString() }).eq('id', h.id).select(ORG_HORIZON_COLS).single(); if (error) return bad(error.message, 500);
+    const options = proposeOrgPledges(st.chapters, st.members, undefined, { inclusive_programs: await readyProgramsCount(db) }); const { data, error } = await db.from('portal_org_horizons').update({ options, updated_at: now.toISOString() }).eq('id', h.id).select(ORG_HORIZON_COLS).single(); if (error) return bad(error.message, 500);
     return NextResponse.json({ success: true, horizon: data, options, note_ar: 'ثلاث خطوات يستطيع أَثَر أن يشهدها من أفعال منسوبيكم — اختاروا واحدة فقط، وعدّلوا صياغتها إن شئتم.' });
   }
   if (action === 'pledge') {

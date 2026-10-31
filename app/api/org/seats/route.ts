@@ -5,6 +5,7 @@
  *  POST { action:'request', org, topic, people:[{email,full_name?}], note? } → طلب جماعي: كل منسوب يصبح «متقدمًا» لدى المُوفِّق (لا مجلس من جهة واحدة أبدًا)
  *  POST { action:'decide', org, id, approve:boolean, note? }               → اعتماد/رفض شهادة أقران لمنسوب (نفس قاعدة P23: مدير الجهة أولًا) → وزن 0.4 → 0.75
  *  POST { action:'close', org, id }                                        → إغلاق طلب مقاعد
+ *  P32: priority_seats? (رقم فقط — مقاعد موجَّهة للفئات الأولى بالرعاية؛ لا أسماء) يُحفظ في meta.priority_seats
  */
 import { NextResponse } from 'next/server';
 import { orgCtx } from '../../../../lib/org-impact/auth';
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
     const err = validateSeatRequest({ topic: body.topic, people: uniq, note: body.note }); if (err) return bad(err);
     const outsiders = uniq.filter(p => !emails.has(p.email)); if (outsiders.length) return bad(`${outsiders.length} ${outsiders.length === 1 ? 'بريد ليس' : 'بُرُد ليست'} من منسوبيكم المؤكَّدين (أكّدوا العضوية أولًا من تبويب المنسوبين): ${outsiders.slice(0, 3).map(o => o.email).join('، ')}`);
     const topic = String(body.topic).trim(); const theme = THEMES_AR.find(t => t.code === topic || t.label === topic); const domain = theme ? theme.code : null;
-    const { data: row, error } = await db.from('portal_org_seat_requests').insert({ organization_id: org.id, requested_by: me.id, requested_email: me.email, topic: theme ? theme.label : topic.slice(0, 80), domain, seats: uniq.length, people: uniq, note: body.note ? String(body.note).slice(0, 600) : null, status: 'pending', meta: {} }).select(SEAT_COLS).single();
+    const { data: row, error } = await db.from('portal_org_seat_requests').insert({ organization_id: org.id, requested_by: me.id, requested_email: me.email, topic: theme ? theme.label : topic.slice(0, 80), domain, seats: uniq.length, people: uniq, note: body.note ? String(body.note).slice(0, 600) : null, status: 'pending', meta: { ...(Number(body.priority_seats) > 0 ? { priority_seats: Math.min(Math.floor(Number(body.priority_seats)), uniq.length) } : {}) } }).select(SEAT_COLS).single();
     if (error || !row) return bad(error?.message || 'تعذّر الحفظ', 500);
     // كل منسوب يصبح متقدمًا لدى المُوفِّق (ما لم يكن متقدمًا أو عضوًا نشطًا الآن)
     const { data: existing } = await db.from('portal_council_members').select('email,status,council_id').in('email', uniq.map(p => p.email)).in('status', ['applied', 'active', 'invited']).limit(500);

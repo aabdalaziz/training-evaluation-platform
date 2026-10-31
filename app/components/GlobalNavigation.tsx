@@ -6,10 +6,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase/client';
 import { Icon, type IconName } from '../../lib/ui/icons';
 import NotificationBell from './NotificationBell';
+import { SkipLink } from './Inclusion';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 // صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
-const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay'];
+const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility'];
 const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
   { href: '/dashboard', label: 'لوحة القيادة', icon: 'dashboard', match: p => p.startsWith('/dashboard') },
   { href: '/command-center', label: 'غرفة القيادة', icon: 'play', match: p => p.startsWith('/command-center') },
@@ -48,7 +49,7 @@ export default function GlobalNavigation() {
   /* ===== شريط إداري موحّد ===== */
   if (adminArea) {
     return (
-      <nav className="global-nav admin" aria-label="التنقل الإداري">
+      <nav className="global-nav admin" aria-label="التنقل الإداري"><SkipLink lang="ar" />
         <Link href="/dashboard" className="global-brand"><Icon name="shield" size={18} /> <span>منصة التقويم</span></Link>
         <button type="button" className="global-burger" aria-label="القائمة" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
         <div className={`global-links ${open ? 'open' : ''}`}>
@@ -66,7 +67,7 @@ export default function GlobalNavigation() {
 
   /* ===== شريط عام (الصفحات العامة) ===== */
   return (
-    <nav className="global-nav" aria-label="التنقل العام">
+    <nav className="global-nav" aria-label="التنقل العام"><SkipLink lang="ar" />
       <Link href="/" className="global-brand"><Icon name="shield" size={18} /> <span>منصة التقويم</span></Link>
       <div className="global-actions">
         {pathname !== '/' && <Link href="/" className="global-btn"><Icon name="home" size={16} /> الرئيسية</Link>}

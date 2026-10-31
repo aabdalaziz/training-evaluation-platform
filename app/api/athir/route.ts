@@ -75,6 +75,8 @@ export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   let body: any = {}; try { body = await req.json(); } catch { /* فارغ */ }
   const action = String(body.action || 'hello'); const lang = langOf(body.lang); const page = S(body.page, 120) || '/';
+  // P32 أَثَر للجميع: «لغة أبسط» — علم بلا هوية (لا يُرسل أي احتياج آخر)؛ يُضاف سطر أسلوب فقط
+  const SIMPLE_HINT = body.simple === true ? '\nأسلوب إلزامي: جمل قصيرة جدًا (≤ 10 كلمات)، فكرة واحدة في كل جملة، كلمات شائعة، لا مصطلحات، وأقصى ثلاث جمل.' : '';
 
   // ---------- زائر: تحية عامة وحوار المستشار ----------
   if (!user) {
@@ -82,7 +84,7 @@ export async function POST(req: Request) {
     if (action === 'chat') {
       const text = S(body.text, 600); if (text.length < 2) return bad('اكتب رسالتك');
       const facts = await liveFacts(db, lang); const p = buildAdvisorPrompt(text, facts, lang, 'companion');
-      const res = await runAi<AdvisorAnswer>({ system: p.system, user: p.user, parse: raw => parseAdvisor(parseJsonLoose(raw), facts), local: () => localAdvisor(text, facts), budgetMs: 18000 });
+      const res = await runAi<AdvisorAnswer>({ system: p.system + SIMPLE_HINT, user: p.user, parse: raw => parseAdvisor(parseJsonLoose(raw), facts), local: () => localAdvisor(text, facts), budgetMs: 18000 });
       return NextResponse.json({ success: true, guest: true, answer: res.data.answer_ar, links: res.data.links, handoff: res.data.handoff, source: res.source });
     }
     return bad('يرجى تسجيل الدخول أولاً', 401);
@@ -100,7 +102,7 @@ export async function POST(req: Request) {
     let hello: CompanionHello; let source = 'local';
     if (lf.c.visits >= 1 && (lf.c.weakest || lf.c.goals.length)) {
       const q = await aiUsage(db, user.id, 'companion');
-      if (q.allowed) { const p = buildHelloPrompt(lf.c); const res = await runAi<CompanionHello>({ system: p.system, user: p.user, parse: raw => parseHello(parseJsonLoose(raw)), local: () => localHello(lf.c), budgetMs: 12000 }); hello = res.data; source = res.source; await logAi(db, { user_id: user.id, email: user.email, role: 'USER', purpose: 'companion', result: res, context: { action: 'hello' } }); }
+      if (q.allowed) { const p = buildHelloPrompt(lf.c); const res = await runAi<CompanionHello>({ system: p.system + SIMPLE_HINT, user: p.user, parse: raw => parseHello(parseJsonLoose(raw)), local: () => localHello(lf.c), budgetMs: 12000 }); hello = res.data; source = res.source; await logAi(db, { user_id: user.id, email: user.email, role: 'USER', purpose: 'companion', result: res, context: { action: 'hello' } }); }
       else hello = localHello(lf.c);
     } else hello = localHello(lf.c);
     return NextResponse.json({ success: true, hello, source, memory: { summary: mem.summary, goals: mem.goals, prefs: mem.prefs, visits: mem.visits }, facts: { weakest: lf.c.weakest, strongest: lf.c.strongest, daily_done: lf.c.daily_done, next_session: lf.c.next_session, skills: lf.skills.length } });
@@ -114,7 +116,7 @@ export async function POST(req: Request) {
     facts.profile = { name: lf.c.name, skills: lf.skills.slice(0, 12), enrollments: lf.enrollments };
     const convo = `${mem.summary ? `ذاكرتي عن المتعلم: ${mem.summary}\n` : ''}${mem.goals.length ? `أهدافه: ${mem.goals.join(' | ')}\n` : ''}${history.length ? `آخر الحوار:\n${history.map((h: any) => `${h.role}: ${h.text}`).join('\n')}\n` : ''}رسالته الآن: ${text}`;
     const p = buildAdvisorPrompt(convo, facts, lang, 'companion');
-    const res = await runAi<AdvisorAnswer>({ system: p.system, user: p.user, parse: raw => parseAdvisor(parseJsonLoose(raw), facts), local: () => localAdvisor(text, facts), budgetMs: 18000 });
+    const res = await runAi<AdvisorAnswer>({ system: p.system + SIMPLE_HINT, user: p.user, parse: raw => parseAdvisor(parseJsonLoose(raw), facts), local: () => localAdvisor(text, facts), budgetMs: 18000 });
     await logAi(db, { user_id: user.id, email: user.email, role: 'USER', purpose: 'companion', result: res, context: { action: 'chat' } });
     // تحديث الذاكرة كل 4 رسائل (أو عند ذكر هدف صريح)
     const wantsGoal = /هدفي|أريد أن|أبغى|أطمح|خطتي/.test(text);

@@ -3,6 +3,8 @@
 import { notify } from '../portal/notify';
 import { PAIR_COLS, PAIR_INVITE_DAYS, PAIR_PROPOSE_DAYS, PAIR_MIDYEAR_DAY, PAIR_REVIEW_WINDOW_DAYS, addDays, nameFor, stepFor, jointDecision } from './registry';
 import { partnerState } from './load';
+import { moreTimeEmails, rowFactor } from '../inclusion/load';
+import { inviteExpired } from './registry';
 import type { Pair, Side } from './registry';
 
 export type PairCronResult = { ok: boolean; expired: number; step_notices: number; nudged: number; opened: number; closed: number; renewed: number; errors: string[] };
@@ -17,7 +19,9 @@ export async function runPair(db: any, opts: { dry?: boolean; site: string; now?
       db.from('portal_pair_pledges').select(PAIR_COLS).eq('status', 'invited').lte('invited_at', addDays(now, -PAIR_INVITE_DAYS)).limit(200),
       db.from('portal_pair_pledges').select(PAIR_COLS).eq('status', 'proposing').lte('accepted_at', addDays(now, -PAIR_PROPOSE_DAYS)).limit(200),
     ]);
-    for (const p of ([...(inv || []), ...(prop || [])] as Pair[])) {
+    const cands = [...(inv || []), ...(prop || [])] as Pair[]; const moreTime = await moreTimeEmails(db, cands.flatMap(p => [p.a_email, p.b_email]));
+    for (const p of cands) {
+      if (!inviteExpired(p, now.getTime(), rowFactor(moreTime, [p.a_email, p.b_email]))) continue; // P32: «وقتًا أطول» → المهلة × 1.5
       if (dry) { expired++; continue; }
       await db.from('portal_pair_pledges').update({ status: 'expired', updated_at: now.toISOString(), meta: { ...(p.meta || {}), expired_at: now.toISOString() } }).eq('id', p.id);
       if (p.status === 'proposing') for (const s of ['a', 'b'] as Side[]) { const w = who(p, s); await notify(db, { kind: 'pair_expired', to: w, subject: 'انقضت مهلة العهد المتقابل', text: `انقضت أربعة عشر يومًا دون أن يكتمل التوقيعان — طُوي بصمت، ويمكنكما البدء من جديد متى شئتما.\n\n${url}`, url, ref: `pair:${p.id}:expired:${s}` }, { now }).then(() => null, () => null); }

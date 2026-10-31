@@ -173,7 +173,8 @@ export function orgPairReviewText(side: OrgSide, p: OrgPair, member: StepState, 
   return [`قبل سنة — في ${fmtD(p.signed_at!)} — طلبتم من ${mName}: «${ms.title_ar}»، وطلب منكم: «${os.title_ar}».`, `خطوة ${mName}: ${member.read_ar}. خطوتكم: ${org.read_ar}.`, `اكتبوا باسم الجهة ما تغيّر فيكم بسبب ${mName} — ولن يقرأه حتى يكتب ما تغيّر فيه بسببكم. ثم تقرّران: تجدّدان أم تطويان.`].join(' ');
 }
 /** المهل */
-export const orgInviteExpired = (p: Pick<OrgPair, 'status' | 'invited_at' | 'accepted_at'>, now = Date.now()) => (p.status === 'invited' && new Date(p.invited_at).getTime() + ORG_PAIR_INVITE_DAYS * 864e5 <= now) || (p.status === 'proposing' && !!p.accepted_at && new Date(p.accepted_at).getTime() + ORG_PAIR_PROPOSE_DAYS * 864e5 <= now);
+/** P32: factor = 1.5 حين يكون المنسوب قد أعلن «وقتًا أطول» */
+export const orgInviteExpired = (p: Pick<OrgPair, 'status' | 'invited_at' | 'accepted_at'>, now = Date.now(), factor = 1) => (p.status === 'invited' && new Date(p.invited_at).getTime() + ORG_PAIR_INVITE_DAYS * factor * 864e5 <= now) || (p.status === 'proposing' && !!p.accepted_at && new Date(p.accepted_at).getTime() + ORG_PAIR_PROPOSE_DAYS * factor * 864e5 <= now);
 export const orgReviewOpen = (p: Pick<OrgPair, 'status' | 'review_at'>, now = Date.now()) => p.status === 'review' || (p.status === 'active' && !!p.review_at && new Date(p.review_at).getTime() <= now);
 
 /** ما يُعاد لكل طرف — كلمات الآخر تُفتح بعد كلماتك؛ موقّع الجهة لا يظهر للمنسوب ببريده */

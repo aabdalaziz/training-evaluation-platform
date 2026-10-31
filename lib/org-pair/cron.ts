@@ -3,6 +3,8 @@
 import { notify } from '../portal/notify';
 import { ORG_PAIR_COLS, ORG_PAIR_INVITE_DAYS, ORG_PAIR_PROPOSE_DAYS, ORG_PAIR_MIDYEAR_DAY, ORG_PAIR_REVIEW_WINDOW_DAYS, addDays, memberName, orgName, jointDecision } from './registry';
 import { orgPairPaths, orgAdmins } from './load';
+import { moreTimeEmails, rowFactor } from '../inclusion/load';
+import { orgInviteExpired } from './registry';
 import type { OrgPair } from './registry';
 
 export type OrgPairCronResult = { ok: boolean; expired: number; step_notices: number; nudged: number; opened: number; closed: number; renewed: number; errors: string[] };
@@ -19,7 +21,9 @@ export async function runOrgPair(db: any, opts: { dry?: boolean; site: string; n
       db.from('portal_org_pair_pledges').select(ORG_PAIR_COLS).eq('status', 'invited').lte('invited_at', addDays(now, -ORG_PAIR_INVITE_DAYS)).limit(200),
       db.from('portal_org_pair_pledges').select(ORG_PAIR_COLS).eq('status', 'proposing').lte('accepted_at', addDays(now, -ORG_PAIR_PROPOSE_DAYS)).limit(200),
     ]);
-    for (const p of ([...(inv || []), ...(prop || [])] as OrgPair[])) {
+    const cands = [...(inv || []), ...(prop || [])] as OrgPair[]; const moreTime = await moreTimeEmails(db, cands.map(p => p.member_email));
+    for (const p of cands) {
+      if (!orgInviteExpired(p, now.getTime(), rowFactor(moreTime, [p.member_email]))) continue; // P32: «وقتًا أطول» → المهلة × 1.5
       if (dry) { expired++; continue; }
       await db.from('portal_org_pair_pledges').update({ status: 'expired', updated_at: now.toISOString(), meta: { ...(p.meta || {}), expired_at: now.toISOString() } }).eq('id', p.id);
       if (p.status === 'proposing') { await tellMember(p, 'org_pair_expired', 'انقضت مهلة العهد مع جهتك', 'انقضت أربعة عشر يومًا دون أن يكتمل التوقيعان — طُوي بصمت، ويمكن البدء من جديد متى شئتما.', `org_pair:${p.id}:expired:m`); await tellOrg(p, 'org_pair_expired', `انقضت مهلة العهد مع ${memberName(p)}`, 'انقضت أربعة عشر يومًا دون أن يكتمل التوقيعان — طُوي بصمت.', `org_pair:${p.id}:expired:o`); }

@@ -1,6 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /** أفق الجهة — قراءة الحالة (أفق · عهد · درب) من قاعدة البيانات + مسودة «نحن في 2036» بالذكاء الاصطناعي من فصول الجهة وكلماتها فقط */
 import { runAi, logAi } from '../ai/athar';
+import { inclusionEvents } from '../inclusion/load';
 import { loadOrgJourneyInput } from '../org-journey/load';
 import { buildOrgChapters } from '../org-journey/registry';
 import type { OrgChapter, OrgJourneyInput } from '../org-journey/registry';
@@ -15,7 +16,8 @@ export async function orgPathInput(db: any, orgId: string, input: OrgJourneyInpu
   let yearbooks: { at: string; chapters: number }[] = [];
   if (since) { const { data } = await db.from('portal_org_journey_shares').select('created_at,chapter_keys,status').eq('organization_id', orgId).gte('created_at', since).limit(50).then((r: any) => r, () => ({ data: [] })); yearbooks = ((data || []) as any[]).filter(s => s.status !== 'revoked').map(s => ({ at: s.created_at, chapters: Array.isArray(s.chapter_keys) ? s.chapter_keys.length : 0 })); }
   const pe = input.path_events || { daily: [], joins: [], returns: [] };
-  return { members: input.members, missions: input.missions, daily: pe.daily, joins: pe.joins, returns: pe.returns, levels: input.levels, attestations: input.attestations, yearbooks };
+  const inclusion = await inclusionEvents(db, input.members).catch(() => []);
+  return { members: input.members, missions: input.missions, daily: pe.daily, joins: pe.joins, returns: pe.returns, levels: input.levels, attestations: input.attestations, yearbooks, inclusion };
 }
 
 /** الأفق الجاري = آخر أفق ليس archived/renewed؛ العهد الجاري = عهد هذا الأفق غير المسحوب */

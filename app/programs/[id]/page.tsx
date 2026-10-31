@@ -16,6 +16,9 @@ import UpcomingSessions from '../../components/UpcomingSessions';
 import PlacementCard from '../../components/PlacementCard';
 import { courseJsonLd, jsonLdScript, normalizeSite } from '../../../lib/portal/open';
 import type { SkillLite } from '../../../lib/portal/open';
+import { SimplerText } from '../../components/Inclusion';
+import { FEATURE_LABEL, cleanFeatures } from '../../../lib/inclusion/registry';
+import type { Feature } from '../../../lib/inclusion/registry';
 
 export default function ProgramPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -25,7 +28,7 @@ const RESUME_KEY = 'athar_resume';
 function Inner() {
   const { lang } = useLang(); const params = useParams<{ id: string }>(); const sp = useSearchParams(); const id = String(params?.id || '');
   const db = useMemo(() => supabase(), []);
-  const [p, setP] = useState<CatalogProgram | null>(null); const [counts, setCounts] = useState<Counts | null>(null); const [loaded, setLoaded] = useState(false);
+  const [p, setP] = useState<CatalogProgram | null>(null); const [feats, setFeats] = useState<Feature[]>([]); const [counts, setCounts] = useState<Counts | null>(null); const [loaded, setLoaded] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [mine, setMine] = useState<Enrollment | null>(null); const [inv, setInv] = useState<{ id: string; invoice_no: string; status: string; total: number; currency: string } | null>(null);
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false);
   const [f, setF] = useState<EnrollForm>({ full_name: '', email: '', phone: '', organization: '', city: '', notes: '' });
@@ -36,7 +39,8 @@ function Inner() {
     (async () => {
       try {
         const [{ data }, { data: c }, { data: { user: u } }] = await Promise.all([db.from('programs').select(SELECT).eq('id', id).maybeSingle(), db.rpc('portal_enrollment_counts'), db.auth.getUser()]);
-        setP((data as CatalogProgram) || null); setCounts(((c || []) as Counts[]).find(x => x.program_id === id) || null);
+        setP((data as CatalogProgram) || null);
+        try { const { data: af } = await db.from('programs').select('access_features').eq('id', id).maybeSingle(); setFeats(cleanFeatures((af as any)?.access_features)); } catch { /* عمود P32 غير موجود بعد */ } setCounts(((c || []) as Counts[]).find(x => x.program_id === id) || null);
         if (data) { try { const { data: ps } = await db.from('portal_program_skills').select('skill_id').eq('program_id', id); const ids = ((ps || []) as { skill_id: string }[]).map(x => x.skill_id); if (ids.length) { const { data: sk } = await db.from('portal_skills').select('id,code,name_ar,name_en,domain,saqf_level,cefr_level,sdaia_code').in('id', ids); setLdSkills((sk || []) as SkillLite[]); } } catch { /* اختياري */ } }
         if (u) {
           setUser({ id: u.id, email: u.email || '' }); setF(x => ({ ...x, email: u.email || '', full_name: String(u.user_metadata?.full_name || '') }));
@@ -92,6 +96,8 @@ function Inner() {
         <div className="pt-chips" style={{ marginTop: 8 }}><span className="pt-tag navy">{typeLabel(p.program_type, lang)}</span>{p.delivery_mode && <span className="pt-chip">{deliveryLabel(p.delivery_mode, lang)}</span>}<span className={`pt-tag ${s === 'open' ? '' : s === 'waitlist' ? 'soon' : 'off'}`}>{t(REG_LABEL[s], lang)}</span></div>
         <h1>{programName(p, lang)}</h1>
         {intro && <p>{intro}</p>}
+        {intro && p && <SimplerText source="program_intro" id={p.id} lang={lang} />}
+        {feats.length > 0 && <div className="pt-chips" data-testid="prog-feats" aria-label={lang === 'ar' ? 'ما يوفّره البرنامج للجميع' : 'Access features'}>{feats.map(f => <span key={f} className="pt-chip" style={{ background: '#f0fbfa', color: '#0b6f69' }}>✓ {FEATURE_LABEL[f][lang]}</span>)}</div>}
       </div></section>
 
       <section className="pt-sec"><div className="pt-wrap pt-two">

@@ -16,6 +16,7 @@ import { BAND_LABEL, RUBRIC_LABEL } from '../lib/portal/daily-case';
 import { PushOptIn } from './components/Pwa';
 import { useOutbox, valueMoment } from './components/Pocket';
 import { Channel, ReadAloud, VoiceButton } from './components/Channel';
+import { SimplerText } from './components/Inclusion';
 
 export default function HomePage() { return <PortalShell><Home /></PortalShell>; }
 
@@ -149,6 +150,7 @@ function DailyCase({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
               <p className="hm-situation">{c.situation_ar}</p>
               {!!c.parties_ar?.length && <div className="hm-parties"><small>{ar ? 'الأطراف' : 'Parties'}</small>{c.parties_ar.map((x, k) => <span key={k}>{x}</span>)}</div>}
               <div className="hm-ask"><b>{ar ? 'المطلوب منك' : 'Your task'}</b><p>{c.ask_ar}</p></div>
+              {d.day && <SimplerText source="daily_case" id={d.day} lang={lang} />}
               {revealed?.twist_ar && <div className="hm-twist"><b>{ar ? 'التعقيد الخفي الذي كان في الموقف' : 'The hidden complication'}</b><p>{revealed.twist_ar}</p></div>}
             </article>
             <aside className="hm-respond">

@@ -25,7 +25,7 @@ export const ORG_YEARBOOK_CHAPTERS = 3;
 export const ORG_PLEDGE_CODE_PREFIX = 'ATH-OH';
 export const ORG_NOTIFY_MEMBERS_MAX = 300;
 
-export type OrgPledgeKind = 'council' | 'missions' | 'daily' | 'levels' | 'attestations' | 'yearbook';
+export type OrgPledgeKind = 'council' | 'missions' | 'daily' | 'levels' | 'attestations' | 'yearbook' | 'inclusion';
 export type OrgPledgeTarget = { people?: number; members?: number; returns?: number; per_person?: number; chapters?: number };
 export type OrgPledgeOption = { kind: OrgPledgeKind; title_ar: string; why_ar: string; target: OrgPledgeTarget };
 export type OrgHorizonStatus = 'draft' | 'active' | 'review' | 'renewed' | 'archived';
@@ -43,11 +43,12 @@ export type OrgPathInput = {
   levels: { person: string; at: string }[];
   attestations: { person: string; at: string }[];
   yearbooks: { at: string; chapters: number }[];                    // كتب سنة أصدرتها الجهة
+  inclusion?: { person: string; at: string }[];                     // P32: منسوب قُبل في برنامج مهيَّأ للجميع (له access_features)
 };
 
 export const ORG_HORIZON_COLS = 'id,created_at,updated_at,organization_id,org_name,written_by,written_email,year_target,scenario_ar,scenario_source,status,activated_at,review_at,reviewed_at,review_note_ar,decision,options,meta';
 export const ORG_PLEDGE_COLS = 'id,created_at,horizon_id,organization_id,org_name,kind,title_ar,target,code,signed_by,signed_email,signed_at,expires_at,revoked_at,status,vc_issuance_id,meta';
-export const ORG_PLEDGE_KIND_AR: Record<OrgPledgeKind, string> = { council: 'مجلس يكتمل ويعود', missions: 'خمس مهمات من قلب العمل', daily: 'خمسة يواجهون المواقف', levels: 'خمسة مستويات يعتمدها بشر', attestations: 'خمس شهادات أقران', yearbook: 'كتاب السنة' };
+export const ORG_PLEDGE_KIND_AR: Record<OrgPledgeKind, string> = { council: 'مجلس يكتمل ويعود', missions: 'خمس مهمات من قلب العمل', daily: 'خمسة يواجهون المواقف', levels: 'خمسة مستويات يعتمدها بشر', attestations: 'خمس شهادات أقران', yearbook: 'كتاب السنة', inclusion: 'تعهّد الشمول — خمسة في برامج مهيَّأة للجميع' };
 export const PRIVACY_ORG_HORIZON_AR = ['أفق الجهة («نحن في 2036») يراه مديرو الجهة وحدهم — لا الطاقم ولا المنسوبون ولا الوثيقة', 'العهد وثيقة باسم الجهة تعرض عنوانه وتاريخه ومن وقّعه بصفته فقط', 'الدرب يُشتق من أحداث المنسوبين بعد التوقيع — أعداد أشخاص متمايزين، لا أسماء ولا نسبة', 'المنسوب يرى عنوان عهد جهته فقط — ولا شيء عن منسوب آخر', 'الذكاء الاصطناعي يقترح مسودة واحدة من فصول الجهة وكلماتها ولا يحكم عليها'];
 
 const fmtD = (iso: string) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'long' });
@@ -93,7 +94,7 @@ export function validateOrgScenario(b: { scenario_ar?: unknown; source?: unknown
 }
 
 /** الخطوات الثلاث: ما تستطيع المنصة أن تشهده عن جهة — ما لم تعشه الجهة أولًا، ثم ما يمكنها تعميقه؛ أنواع متمايزة؛ ثلاث بالضبط */
-export function proposeOrgPledges(chapters: OrgChapter[], members: number, n = ORG_PLEDGE_OPTIONS): OrgPledgeOption[] {
+export function proposeOrgPledges(chapters: OrgChapter[], members: number, n = ORG_PLEDGE_OPTIONS, ctx: { inclusive_programs?: number } = {}): OrgPledgeOption[] {
   const has = (kind: OrgChapterKind) => chapters.some(c => c.kind === kind); const P = ORG_PLEDGE_PEOPLE;
   const out: OrgPledgeOption[] = [];
   if (!has('council') && !has('twinning')) out.push({ kind: 'council', title_ar: 'يجلس اثنان من منسوبينا إلى مجلس أقران واحد ويعود أحدهما بما حدث', why_ar: 'لم يجلس منسوبوكم بعد إلى طاولة لا تضم جهتكم وحدها.', target: { members: 2, returns: 1 } });
@@ -108,6 +109,7 @@ export function proposeOrgPledges(chapters: OrgChapter[], members: number, n = O
   if (has('council') && has('return')) out.push({ kind: 'council', title_ar: 'دورة مجلس كاملة أخرى يعود منها منسوبونا بما حدث', why_ar: 'قضية → التزام → عودة، مرة أخرى.', target: { members: 2, returns: 1 } });
   if (has('level')) out.push({ kind: 'levels', title_ar: `خمسة مستويات جديدة يعتمدها بشر لمنسوبينا`, why_ar: 'مستوى اعتمده إنسان يمكن أن يرتفع بأدلة جديدة.', target: { people: P } });
   if (has('attestation')) out.push({ kind: 'attestations', title_ar: `خمس شهادات أقران جديدة لمنسوبينا`, why_ar: 'شهادة ثانية من مجلس.', target: { people: P } });
+  if ((ctx.inclusive_programs || 0) > 0) out.splice(Math.min(2, out.length), 0, { kind: 'inclusion', title_ar: `يلتحق ${P} من منسوبينا ببرامج مهيَّأة للجميع — ومنهم من كان يُترك خارج القاعة`, why_ar: 'تعهّد الشمول: الأثر الذي يصل إلى من لم تُبنَ له القاعات. يُعدّ المنسوب حين يُقبل في برنامج يعلن ما يوفّره فعلًا (ترجمة حيّة، لغة إشارة، مواد مقروءة…).', target: { people: P } });
   const seen = new Set<OrgPledgeKind>(); const distinct = out.filter(o => (seen.has(o.kind) ? false : (seen.add(o.kind), true)));
   if (members < ORG_PLEDGE_PEOPLE) return distinct.filter(o => o.kind === 'council' || o.kind === 'yearbook').slice(0, n);
   return distinct.slice(0, n);
@@ -137,6 +139,7 @@ export function buildOrgPath(p: Pick<OrgPledge, 'kind' | 'target' | 'signed_at'>
   if (p.kind === 'missions') complete = countStep('مهام أكّدها المشرفون لمنسوبين متمايزين', inp.missions, P, ' — بشهادة مشرفيهم');
   else if (p.kind === 'levels') complete = countStep('مستويات اعتمدها بشر لمنسوبين متمايزين', inp.levels, P, '');
   else if (p.kind === 'attestations') complete = countStep('شهادات أقران معتمدة لمنسوبين متمايزين', inp.attestations, P, '');
+  else if (p.kind === 'inclusion') complete = countStep('منسوبون قُبلوا في برامج مهيَّأة للجميع', inp.inclusion || [], P, ' — برامج تعلن ما توفّره فعلًا');
   else if (p.kind === 'daily') {
     const per = p.target.per_person || ORG_DAILY_PER_PERSON; const byP = new Map<string, string[]>(); for (const e of ours(inp.daily)) { const k = String(e.person).toLowerCase(); byP.set(k, [...(byP.get(k) || []), e.at]); }
     const reached = Array.from(byP.values()).filter(l => l.length >= per).map(l => l[per - 1]).sort(); const started = byP.size;

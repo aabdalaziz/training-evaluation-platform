@@ -136,7 +136,8 @@ export const meetsHorizon = (step: PairStep | null, horizonKind: PledgeKind | nu
 /** قرار المراجعة المشتركة: renew فقط إن قرّر الطرفان renew؛ وإلا close */
 export function jointDecision(a: 'renew' | 'close' | null, b: 'renew' | 'close' | null): 'renew' | 'close' | null { if (!a || !b) return null; return a === 'renew' && b === 'renew' ? 'renew' : 'close'; }
 /** مهلة الدعوة/الاقتراح */
-export const inviteExpired = (p: Pick<Pair, 'status' | 'invited_at' | 'accepted_at'>, now = Date.now()) => (p.status === 'invited' && new Date(p.invited_at).getTime() + PAIR_INVITE_DAYS * 864e5 <= now) || (p.status === 'proposing' && !!p.accepted_at && new Date(p.accepted_at).getTime() + PAIR_PROPOSE_DAYS * 864e5 <= now);
+/** P32: factor = 1.5 حين يكون أحد الطرفين قد أعلن «وقتًا أطول» (يُحسب في load/cron؛ النص الافتراضي 1) */
+export const inviteExpired = (p: Pick<Pair, 'status' | 'invited_at' | 'accepted_at'>, now = Date.now(), factor = 1) => (p.status === 'invited' && new Date(p.invited_at).getTime() + PAIR_INVITE_DAYS * factor * 864e5 <= now) || (p.status === 'proposing' && !!p.accepted_at && new Date(p.accepted_at).getTime() + PAIR_PROPOSE_DAYS * factor * 864e5 <= now);
 export const reviewOpen = (p: Pick<Pair, 'status' | 'review_at'>, now = Date.now()) => p.status === 'review' || (p.status === 'active' && !!p.review_at && new Date(p.review_at).getTime() <= now);
 
 /** ما يُعاد لكل طرف — صاحبه لا يرى كلمات مراجعته قبل أن يكتب كلماته */

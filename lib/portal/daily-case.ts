@@ -101,11 +101,16 @@ export function eventLine(ev: ActiveEvent | null, lang: 'ar' | 'en'): string | n
 }
 
 // ====================================================================== توليد موقف بالذكاء الاصطناعي (اختياري)
+/** P32 أَثَر للجميع: مرة كل أسبوع يُكتب الموقف من سياق شامل — متدرّب كفيف، زميلة صمّاء، مرافق، مقرّ غير ميسَّر — بلا شفقة ولا بطولة؛ الشخص طرف كامل الأهلية */
+export const INCLUSIVE_HINT_AR = 'سياق اليوم: اجعل أحد أطراف الموقف شخصًا من الفئات الأولى بالرعاية (إعاقة بصرية أو سمعية أو حركية أو صعوبة تعلّم أو كبير سن) بوصفه طرفًا كامل الأهلية يتخذ قرارًا، لا موضوعًا للشفقة ولا بطلًا خارقًا. اجعل العائق في البيئة والإجراء لا في الشخص.';
+export const INCLUSIVE_WEEKDAY = 3; // الأربعاء (0 = الأحد بتقويم JS: 3 = الأربعاء)
+export const inclusiveContextDay = (day: string) => { const d = new Date(`${day}T00:00:00Z`); return !Number.isNaN(d.getTime()) && d.getUTCDay() === INCLUSIVE_WEEKDAY; };
 export function buildCasePrompt(f: { day: string; weekday_ar: string; event: ActiveEvent | null; domain: DomainCode; family: FamilyCode; skills: { code: string; name_ar: string }[]; avoid_slugs: string[] }): { system: string; user: string } {
   const d = domainByCode(f.domain)!; const fam = FAMILIES.find(x => x.code === f.family)!;
   const system = `أنت كاتب «موقف اليوم» في بوابة أَثَر (التدريب ما بعد الذكاء الاصطناعي). تكتب موقفًا مهنيًا/إنسانيًا واقعيًا من بيئة عربية (تعليم، تدريب، جهات حكومية، صحة، أسر، قطاع غير ربحي) فيه توتر حقيقي لا إجابة نموذجية له، ويحتاج حكمًا بشريًا؛ هدفه بناء جدارة (قدرة تُمارَس وتُشهَد) لا اختبار معلومة. ممنوع: الوعظ، الأسئلة ذات الإجابة الواحدة، الاختيار من متعدد، الأسماء الحقيقية. أعد JSON فقط.`;
   const schema = `{"title_ar": string (≤ 50), "scene_ar": string (زمان ومكان وتفصيل حسي، جملتان), "role_ar": string ("أنت …"), "situation_ar": string (ما حدث، 3–4 جمل، بأرقام وتفاصيل ملموسة), "twist_ar": string (تعقيد خفي أو معلومة متأخرة تقلب الحكم), "ask_ar": string (المطلوب: ماذا تفعل ومتى وكيف تتحقق لاحقًا — بصيغة طلب كتابة حرّة), "parties_ar": string[3-4] (الأطراف المتأثرة), "rubric": [{"code": "frame|parties|options|action|ethics|human_loop|presence|follow_up", "weight": 0-3}]}`;
-  const user = `اليوم: ${f.weekday_ar} ${f.day}.${f.event ? ` المناسبة: ${f.event.event.name.ar} — محورها: ${f.event.event.theme.ar}. اربط الموقف بها ربطًا طبيعيًا.` : ''}\nالمجال: ${d.h} ${d.name.ar} (السؤال الكبير: ${d.question.ar}). العائلة: ${fam.f} ${fam.name.ar}.\nالمهارات المرتبطة: ${f.skills.map(s => `${s.code} ${s.name_ar}`).join('، ') || 'عامة'}.\nتجنّب تكرار هذه المواقف: ${f.avoid_slugs.join(', ') || '—'}.\nالمخطط:\n${schema}`;
+  const inclusiveDay = inclusiveContextDay(f.day);
+  const user = `${inclusiveDay ? INCLUSIVE_HINT_AR + '\n' : ''}اليوم: ${f.weekday_ar} ${f.day}.${f.event ? ` المناسبة: ${f.event.event.name.ar} — محورها: ${f.event.event.theme.ar}. اربط الموقف بها ربطًا طبيعيًا.` : ''}\nالمجال: ${d.h} ${d.name.ar} (السؤال الكبير: ${d.question.ar}). العائلة: ${fam.f} ${fam.name.ar}.\nالمهارات المرتبطة: ${f.skills.map(s => `${s.code} ${s.name_ar}`).join('، ') || 'عامة'}.\nتجنّب تكرار هذه المواقف: ${f.avoid_slugs.join(', ') || '—'}.\nالمخطط:\n${schema}`;
   return { system, user };
 }
 const S = (v: unknown, max = 300): string => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);

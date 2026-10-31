@@ -22,7 +22,7 @@ type Pledge = { id: string; kind: string; title_ar: string; code: string | null;
 type Path = { kind: string; steps: { label_ar: string; done: boolean; at: string | null; detail_ar: string | null; have: number; want: number }[]; read_ar: string; quarters: { label: string; text_ar: string }[]; complete: boolean };
 type Data = { me: { can_write: boolean; staff: boolean }; eligible: { ok: boolean; chapters: number; min: number; members: number; min_members: number; read_ar: string }; year_target: number; horizon: Horizon | null; pledge: Pledge | null; path: Path | null; review_open: boolean; review_text: string | null; past: { horizon: Horizon; pledge: Pledge | null }[]; chapters: number; members: number; rules: { min_chapters: number; min_members: number; years: number; pledge_days: number; review_window_days: number; scenario_min: number; scenario_max: number; review_max: number; pledge_title_max: number; people: number; kinds_ar: Record<string, string>; privacy_ar: string[]; signing_ready: boolean } };
 const fmt = (iso: string | null | undefined, style: 'medium' | 'long' = 'medium') => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: style }) : '—');
-const KIND_ICON: Record<string, IconName> = { council: 'users', missions: 'flag', daily: 'calendar', levels: 'trend', attestations: 'star', yearbook: 'book' };
+const KIND_ICON: Record<string, IconName> = { council: 'users', missions: 'flag', daily: 'calendar', levels: 'trend', attestations: 'star', yearbook: 'book', inclusion: 'users' };
 const daysUntil = (iso: string) => Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 864e5));
 
 export function OrgHorizon({ orgId, orgName, lang, token }: Props) {

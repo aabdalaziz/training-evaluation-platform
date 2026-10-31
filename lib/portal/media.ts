@@ -74,7 +74,8 @@ export function roomCountFor(joined: number, perRoom = 3): number { return Math.
 export const ROOM_KIND_LABEL: Record<RoomKind, { ar: string; en: string }> = { breakout: { ar: 'غرفة صغيرة من جلسة حية', en: 'Live-session breakout' }, dialogue: { ar: 'غرفة حوار', en: 'Dialogue room' }, consult: { ar: 'غرفة استشارة', en: 'Consultation room' } };
 export const ROOM_DEFAULT_PROMPT: Record<RoomKind, string> = { breakout: 'ما أصعب جزء في هذا؟ — اتفقوا على سطر واحد تعودون به إلى الجلسة.', dialogue: 'كل واحد يروي موقفًا حقيقيًا من عمله هذا الأسبوع، والآخرون يسألون: «ماذا لو…؟»', consult: 'اعرض الحالة في دقيقتين، ثم اسمع قبل أن تردّ.' };
 /** إشارات WebRTC عبر قناة البث الفورية: أنواع الرسائل */
-export type SignalMsg = { type: 'hello' | 'offer' | 'answer' | 'ice' | 'bye'; from: string; to?: string; name?: string; sdp?: any; candidate?: any };
+/** P32: 'caption' = سطر ترجمة حيّة من متصفح المتكلّم (نص فقط · لا صوت) · 'need_captions' = طلب مجهول بتشغيل الترجمة (from = 'anon') · role مع hello/presence لمقعد مترجم الإشارة */
+export type SignalMsg = { type: 'hello' | 'offer' | 'answer' | 'ice' | 'bye' | 'caption' | 'need_captions'; from: string; to?: string; name?: string; sdp?: any; candidate?: any; text?: string; final?: boolean; at?: number; role?: 'member' | 'interpreter' };
 /** من يبدأ العرض؟ الطرف ذو المعرّف الأصغر يرسل offer (قاعدة حتمية تمنع التصادم) */
 export function shouldOffer(me: string, other: string): boolean { return String(me) < String(other); }
 export const ICE_SERVERS = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];

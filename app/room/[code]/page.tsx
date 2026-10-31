@@ -12,6 +12,9 @@ import { PortalShell, useLang } from '../../components/PortalShell';
 import { VoiceButton } from '../../components/Channel';
 import { ICE_SERVERS, shouldOffer, roomTimeLeft, fmtDuration, ROOM_KIND_LABEL } from '../../../lib/portal/media';
 import type { Room, SignalMsg } from '../../../lib/portal/media';
+import { useAccess, useCaptionSpeaker, useCaptionBoard, CaptionBoard } from '../../components/Inclusion';
+import { orderTiles, INTERPRETER_LABEL_AR } from '../../../lib/inclusion/registry';
+import type { CaptionMsg, RoomRole } from '../../../lib/inclusion/registry';
 
 export default function RoomPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -20,7 +23,11 @@ type Peer = { id: string; name: string; pc: RTCPeerConnection; stream: MediaStre
 function Inner() {
   const { lang } = useLang(); const ar = lang === 'ar'; const params = useParams<{ code: string }>(); const code = String(params?.code || '').toUpperCase();
   const db = useMemo(() => supabase(), []); const [tok, setTok] = useState(''); const [room, setRoom] = useState<Room | null>(null); const [me, setMe] = useState<{ id: string; name: string } | null>(null); const [err, setErr] = useState('');
-  const [joined, setJoined] = useState(false); const [peers, setPeers] = useState<Record<string, { id: string; name: string; stream: MediaStream | null }>>({}); const [present, setPresent] = useState<{ id: string; name: string }[]>([]);
+  const [joined, setJoined] = useState(false); const [peers, setPeers] = useState<Record<string, { id: string; name: string; stream: MediaStream | null }>>({}); const [present, setPresent] = useState<{ id: string; name: string; role?: RoomRole }[]>([]);
+  // P32 أَثَر للجميع: ترجمة حيّة (نص من متصفح المتكلّم) · مقعد مترجم الإشارة · طلب مجهول بتشغيل الترجمة · إنترنت ضعيف = صوت أولًا
+  const access = useAccess(); const needsCaptions = access.has('hard_hearing') || access.has('sign_language'); const lowBw = access.has('low_bandwidth');
+  const [showCaps, setShowCaps] = useState(false); const [interp, setInterp] = useState(false); const [capAsk, setCapAsk] = useState(false); const board = useCaptionBoard(); const interpRef = useRef(false);
+  useEffect(() => { if (needsCaptions) setShowCaps(true); }, [needsCaptions]);
   const [mic, setMic] = useState(true); const [cam, setCam] = useState(true); const [now, setNow] = useState(Date.now()); const [note, setNote] = useState(''); const [noteBusy, setNoteBusy] = useState(false); const [notes, setNotes] = useState<Room['notes']>([]); const [copied, setCopied] = useState(false);
   const localRef = useRef<HTMLVideoElement | null>(null); const localStream = useRef<MediaStream | null>(null); const peersRef = useRef<Map<string, Peer>>(new Map()); const chRef = useRef<any>(null); const meRef = useRef<{ id: string; name: string } | null>(null);
 
@@ -33,6 +40,8 @@ function Inner() {
 
   // ---------- WebRTC mesh
   function send(msg: SignalMsg) { try { chRef.current?.send({ type: 'broadcast', event: 'signal', payload: msg }); } catch { /* ignore */ } }
+  const speaker = useCaptionSpeaker({ lang, me: me?.id || '', name: me?.name || '', send: (m: CaptionMsg) => send(m as SignalMsg) });
+  async function toggleInterp() { const on = !interp; setInterp(on); interpRef.current = on; try { await chRef.current?.track({ name: meRef.current?.name || '', at: Date.now(), role: on ? 'interpreter' : 'member' }); } catch { /* ignore */ } }
   function makePeer(id: string, name: string): Peer {
     const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
     localStream.current?.getTracks().forEach(t => pc.addTrack(t, localStream.current!));
@@ -45,6 +54,8 @@ function Inner() {
   async function offerTo(id: string, name: string) { const peer = peersRef.current.get(id) || makePeer(id, name); const offer = await peer.pc.createOffer(); await peer.pc.setLocalDescription(offer); if (meRef.current) send({ type: 'offer', from: meRef.current.id, to: id, name: meRef.current.name, sdp: offer }); }
   async function onSignal(msg: SignalMsg) {
     const my = meRef.current; if (!my || msg.from === my.id) return; if (msg.to && msg.to !== my.id) return;
+    if (msg.type === 'caption') { board.push({ type: 'caption', from: msg.from, name: msg.name, text: String(msg.text || ''), final: !!msg.final, at: Number(msg.at) || Date.now() }); return; }
+    if (msg.type === 'need_captions') { setCapAsk(true); return; }
     if (msg.type === 'hello') { if (shouldOffer(my.id, msg.from)) await offerTo(msg.from, msg.name || ''); return; }
     if (msg.type === 'offer') { const peer = peersRef.current.get(msg.from) || makePeer(msg.from, msg.name || ''); await peer.pc.setRemoteDescription(new RTCSessionDescription(msg.sdp)); const ans = await peer.pc.createAnswer(); await peer.pc.setLocalDescription(ans); send({ type: 'answer', from: my.id, to: msg.from, name: my.name, sdp: ans }); return; }
     if (msg.type === 'answer') { const peer = peersRef.current.get(msg.from); if (peer && peer.pc.signalingState !== 'stable') await peer.pc.setRemoteDescription(new RTCSessionDescription(msg.sdp)); return; }
@@ -54,13 +65,13 @@ function Inner() {
   function drop(id: string) { const p = peersRef.current.get(id); if (p) { try { p.pc.close(); } catch { /* ignore */ } peersRef.current.delete(id); } setPeers(x => { const y = { ...x }; delete y[id]; return y; }); }
   async function join() {
     if (!room || !me) return; setErr('');
-    try { localStream.current = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }, audio: { echoCancellation: true, noiseSuppression: true } }); if (localRef.current) { localRef.current.srcObject = localStream.current; localRef.current.muted = true; localRef.current.play().catch(() => { /* ignore */ }); } }
+    try { localStream.current = await navigator.mediaDevices.getUserMedia({ video: lowBw ? false : { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }, audio: { echoCancellation: true, noiseSuppression: true } }); if (lowBw) setCam(false); if (localRef.current) { localRef.current.srcObject = localStream.current; localRef.current.muted = true; localRef.current.play().catch(() => { /* ignore */ }); } }
     catch { setErr(ar ? 'لم نتمكن من فتح الكاميرا/الميكروفون — اسمح بهما ثم أعد المحاولة.' : 'Could not open camera/microphone — allow them and retry.'); return; }
     const ch = db.channel(`room:${code}`, { config: { presence: { key: me.id }, broadcast: { self: false, ack: false } } });
     ch.on('broadcast', { event: 'signal' }, ({ payload }: any) => { onSignal(payload as SignalMsg).catch(() => { /* ignore */ }); });
-    ch.on('presence', { event: 'sync' }, () => { const st = ch.presenceState() as Record<string, any[]>; const list = Object.keys(st).map(k => ({ id: k, name: String(st[k]?.[0]?.name || '') })); setPresent(list); for (const id of Array.from(peersRef.current.keys())) if (!st[id]) drop(id); });
+    ch.on('presence', { event: 'sync' }, () => { const st = ch.presenceState() as Record<string, any[]>; const list = Object.keys(st).map(k => ({ id: k, name: String(st[k]?.[0]?.name || ''), role: (st[k]?.[0]?.role === 'interpreter' ? 'interpreter' : 'member') as RoomRole })); setPresent(list); for (const id of Array.from(peersRef.current.keys())) if (!st[id]) drop(id); });
     ch.on('presence', { event: 'leave' }, ({ key }: any) => drop(String(key)));
-    ch.subscribe(async (status: string) => { if (status === 'SUBSCRIBED') { await ch.track({ name: me.name, at: Date.now() }); send({ type: 'hello', from: me.id, name: me.name }); } });
+    ch.subscribe(async (status: string) => { if (status === 'SUBSCRIBED') { await ch.track({ name: me.name, at: Date.now(), role: interpRef.current ? 'interpreter' : 'member' }); send({ type: 'hello', from: me.id, name: me.name }); if (needsCaptions) send({ type: 'need_captions', from: 'anon' }); } });
     chRef.current = ch; setJoined(true);
   }
   function leave() { if (meRef.current) send({ type: 'bye', from: meRef.current.id }); for (const id of Array.from(peersRef.current.keys())) drop(id); try { chRef.current?.untrack?.(); chRef.current?.unsubscribe?.(); } catch { /* ignore */ } chRef.current = null; localStream.current?.getTracks().forEach(t => t.stop()); localStream.current = null; setJoined(false); }
@@ -70,7 +81,7 @@ function Inner() {
   async function closeRoom() { if (!confirm(ar ? 'إغلاق الغرفة للجميع؟' : 'Close the room for everyone?')) return; await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'close', code }) }); leave(); await load(tok); }
   function copyLink() { try { navigator.clipboard.writeText(`${window.location.origin}/room/${code}`); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* ignore */ } }
 
-  const left = room ? roomTimeLeft(room, now) : 0; const others = Object.values(peers); const count = present.length || (joined ? 1 : 0); const full = !!room && !joined && present.length >= room.max_peers;
+  const left = room ? roomTimeLeft(room, now) : 0; const roleOf = (id: string): RoomRole => (present.find(p => p.id === id)?.role || 'member'); const others = orderTiles(Object.values(peers).map(p => ({ ...p, role: roleOf(p.id) }))); const count = present.length || (joined ? 1 : 0); const full = !!room && !joined && present.length >= room.max_peers;
   return (
     <main className="pt-main rm">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -97,15 +108,20 @@ function Inner() {
             <section className={`rm-grid n${Math.min(6, others.length + 1 + (joined && others.length === 0 ? 1 : 0))}`} data-testid="room-grid">
               <div className={`rm-tile me ${!cam ? 'nocam' : ''}`}><video ref={localRef} playsInline autoPlay muted /><span className="rm-name">{me?.name || (ar ? 'أنا' : 'Me')} · {ar ? 'أنا' : 'me'}</span>{!joined && <div className="rm-join">
                 {room.status === 'closed' ? <p>{ar ? 'أُغلقت هذه الغرفة.' : 'This room is closed.'}</p> : full ? <p>{ar ? 'الغرفة ممتلئة (6).' : 'Room is full (6).'}</p> : <>
-                  <p>{ar ? 'كاميرا وميكروفون من متصفحك مباشرة — لا يُسجَّل شيء.' : 'Camera and mic straight from your browser — nothing is recorded.'}</p>
+                  <p>{lowBw ? (ar ? 'إنترنتك ضعيف: ندخل بالصوت وحده، وتشغّل الكاميرا متى شئت.' : 'Weak internet: audio only first; turn the camera on when you wish.') : (ar ? 'كاميرا وميكروفون من متصفحك مباشرة — لا يُسجَّل شيء.' : 'Camera and mic straight from your browser — nothing is recorded.')}</p>
                   <button type="button" className="pt-btn gold" onClick={join} data-testid="room-join"><Icon name="play" size={15} /> {ar ? 'ادخل الغرفة' : 'Join the room'}</button></>}
               </div>}</div>
-              {others.map(p => <PeerTile key={p.id} id={p.id} name={p.name} stream={p.stream} ar={ar} />)}
+              {others.map(p => <PeerTile key={p.id} id={p.id} name={p.name} stream={p.stream} ar={ar} interpreter={p.role === 'interpreter'} />)}
+              {joined && showCaps && <CaptionBoard lines={board.lines} lang={lang} />}
               {joined && others.length === 0 && <div className="rm-tile wait"><p>{ar ? 'بانتظار الآخرين… شارك الرمز' : 'Waiting for others… share the code'} <b dir="ltr">{room.code}</b></p></div>}
             </section>
+            {joined && capAsk && !speaker.on && <div className="rm-capask" role="status" data-testid="room-capask">{ar ? 'أحد الحاضرين يحتاج الترجمة الحيّة — شغّل «ترجم كلامي نصًا» حين تتكلّم.' : 'Someone here needs live captions — turn on “caption my speech” when you talk.'}{speaker.supported && <button type="button" className="pt-btn gold small" onClick={() => { speaker.toggle(); setCapAsk(false); }}>{ar ? 'شغّلها الآن' : 'Turn on'}</button>}</div>}
             {joined && <div className="rm-bar">
               <button type="button" className={`rm-ctl ${mic ? '' : 'off'}`} onClick={toggleMic}>{mic ? (ar ? 'كتم' : 'Mute') : (ar ? 'إلغاء الكتم' : 'Unmute')}</button>
               <button type="button" className={`rm-ctl ${cam ? '' : 'off'}`} onClick={toggleCam}>{cam ? (ar ? 'أطفئ الكاميرا' : 'Camera off') : (ar ? 'شغّل الكاميرا' : 'Camera on')}</button>
+              {speaker.supported && <button type="button" className={`rm-ctl ${speaker.on ? 'live' : ''}`} onClick={speaker.toggle} aria-pressed={speaker.on} data-testid="room-cap-speak" title={ar ? 'تعرّف الكلام يعمل في متصفحك؛ يُبثّ النص فقط' : 'Speech recognition runs in your browser; only text is sent'}>{speaker.on ? (ar ? '● يُترجم كلامي نصًا' : '● Captioning me') : (ar ? 'ترجم كلامي نصًا' : 'Caption my speech')}</button>}
+              <button type="button" className={`rm-ctl ${showCaps ? '' : 'off'}`} onClick={() => setShowCaps(s => !s)} aria-pressed={showCaps} data-testid="room-cap-show">{showCaps ? (ar ? 'أخفِ الترجمة الحيّة' : 'Hide captions') : (ar ? 'اعرض الترجمة الحيّة' : 'Show captions')}</button>
+              <button type="button" className={`rm-ctl ${interp ? 'live' : ''}`} onClick={toggleInterp} aria-pressed={interp} data-testid="room-interp">{interp ? (ar ? '● أنا مترجم الإشارة' : '● I am the interpreter') : (ar ? 'أنا مترجم لغة إشارة' : 'I am a sign-language interpreter')}</button>
               <button type="button" className="rm-ctl leave" onClick={leave}>{ar ? 'غادر' : 'Leave'}</button>
               {me && room.created_by === me.id && room.status === 'open' && <button type="button" className="rm-ctl ghost" onClick={closeRoom}>{ar ? 'أغلق الغرفة للجميع' : 'Close for all'}</button>}
             </div>}
@@ -123,10 +139,10 @@ function Inner() {
   );
 }
 
-function PeerTile({ id, name, stream, ar }: { id: string; name: string; stream: MediaStream | null; ar: boolean }) {
+function PeerTile({ id, name, stream, ar, interpreter }: { id: string; name: string; stream: MediaStream | null; ar: boolean; interpreter?: boolean }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   useEffect(() => { if (ref.current && stream) { ref.current.srcObject = stream; ref.current.play().catch(() => { /* ignore */ }); } }, [stream]);
-  return <div className="rm-tile" data-peer={id}><video ref={ref} playsInline autoPlay /><span className="rm-name">{name || (ar ? 'مشارك' : 'Participant')}</span></div>;
+  return <div className={`rm-tile ${interpreter ? 'interp' : ''}`} data-peer={id} data-role={interpreter ? 'interpreter' : 'member'}><video ref={ref} playsInline autoPlay /><span className="rm-name">{name || (ar ? 'مشارك' : 'Participant')}{interpreter ? ` · ${INTERPRETER_LABEL_AR}` : ''}</span></div>;
 }
 
 const CSS = `
@@ -136,7 +152,8 @@ const CSS = `
 .rm-prompt{margin:0;display:flex;gap:8px;align-items:flex-start;background:#f0fdfa;border:1px solid #99f6e4;border-radius:12px;padding:10px 12px;color:#134e4a;font-size:.92rem;line-height:1.7;max-width:60ch}
 .rm-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.86rem;color:#334155}.rm-meta span{display:inline-flex;gap:6px;align-items:center}
 .rm-timer{font-weight:800;color:#0f2a4e;direction:ltr}.rm-timer.warn{color:#b45309}.rm-timer.over{color:#b91c1c}.rm-closed{background:#fee2e2;color:#991b1b;border-radius:999px;padding:2px 10px;font-weight:700}
-.rm-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.rm-grid.n1{grid-template-columns:minmax(260px,560px)}.rm-grid.n2{grid-template-columns:repeat(2,1fr)}
+.rm-grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));position:relative}.rm-tile.interp{grid-column:1/-1;aspect-ratio:16/9;outline:3px solid #c9a24b;outline-offset:-3px}.rm-tile.interp video{object-fit:contain}
+.rm-ctl.live{background:#0b6f69;color:#fff;border-color:#0b6f69}.rm-capask{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:8px 12px;margin:10px 0;color:#78350f;font-size:.9rem}.rm-grid.n1{grid-template-columns:minmax(260px,560px)}.rm-grid.n2{grid-template-columns:repeat(2,1fr)}
 .rm-tile{position:relative;background:#0b1526;border-radius:16px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center}.rm-tile video{width:100%;height:100%;object-fit:cover;background:#000}
 .rm-tile.me video{transform:scaleX(-1)}.rm-tile.nocam video{opacity:.15}.rm-tile.wait{border:2px dashed rgba(15,42,78,.25);background:#f8fafc;color:#475569;text-align:center;padding:16px}.rm-tile.wait b{font-family:ui-monospace,monospace;letter-spacing:.15em}
 .rm-name{position:absolute;bottom:8px;inset-inline-start:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:700}

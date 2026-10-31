@@ -6,6 +6,7 @@ import { buildChapters } from '../journey/registry';
 import type { Me } from '../journey/load';
 import type { JourneyInput, Chapter } from '../journey/registry';
 import type { PledgeKind } from '../horizon/registry';
+import { moreTimeEmails, rowFactor } from '../inclusion/load';
 import { PAIR_COLS, sideOf, other, stepFor, pairPath, stepState, pairEligibility, isLive, inviteExpired } from './registry';
 import type { Pair, Side, Circle, StepState } from './registry';
 
@@ -50,10 +51,11 @@ export async function loadMyPairs(db: any, me: Me): Promise<Pair[]> {
   return arr<Pair>(r).filter(p => !(p.meta && p.meta.blind && sideOf(p, me) === 'b'));
 }
 /** عهدي الحيّ (proposing|active|review) + الدعوات */
-export function splitPairs(pairs: Pair[], me: Me, now = Date.now()) {
-  const live = pairs.find(p => isLive(p.status) && !inviteExpired(p, now)) || null;
-  const invitesIn = pairs.filter(p => p.status === 'invited' && sideOf(p, me) === 'b' && !inviteExpired(p, now));
-  const inviteOut = pairs.find(p => p.status === 'invited' && sideOf(p, me) === 'a' && !inviteExpired(p, now)) || null;
+export function splitPairs(pairs: Pair[], me: Me, now = Date.now(), moreTime: Set<string> = new Set()) {
+  const f = (p: Pair) => rowFactor(moreTime, [p.a_email, p.b_email]);
+  const live = pairs.find(p => isLive(p.status) && !inviteExpired(p, now, f(p))) || null;
+  const invitesIn = pairs.filter(p => p.status === 'invited' && sideOf(p, me) === 'b' && !inviteExpired(p, now, f(p)));
+  const inviteOut = pairs.find(p => p.status === 'invited' && sideOf(p, me) === 'a' && !inviteExpired(p, now, f(p))) || null;
   const past = pairs.filter(p => ['renewed', 'closed', 'revoked', 'expired'].includes(p.status) && !!p.accepted_at && !(p.meta && p.meta.blind)).slice(0, 12);
   return { live, invitesIn, inviteOut, past };
 }
@@ -66,7 +68,8 @@ export type PairState = {
 /** الحالة الكاملة لطرف واحد — درب صاحبي يُحسب ويُختزل إلى حالة فقط */
 export async function loadPairState(db: any, me: Me, now = Date.now()): Promise<PairState> {
   const [mineJ, pairs, hz] = await Promise.all([personChapters(db, me), loadMyPairs(db, me), safe(db.from('portal_horizon_pledges').select('kind,status').or(orMe(me, 'user_id', 'email')).eq('status', 'active').limit(1))]);
-  const { live, invitesIn, inviteOut, past } = splitPairs(pairs, me, now);
+  const moreTime = await moreTimeEmails(db, pairs.flatMap(p => [p.a_email, p.b_email]));
+  const { live, invitesIn, inviteOut, past } = splitPairs(pairs, me, now, moreTime);
   const side = live ? sideOf(live, me) : null;
   let my_path = null as PairState['my_path'], my_state: StepState | null = null, partner_state: StepState | null = null;
   if (live && side && live.signed_at && (live.status === 'active' || live.status === 'review')) {

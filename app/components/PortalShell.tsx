@@ -9,6 +9,7 @@ import { Icon } from '../../lib/ui/icons';
 import { ACRONYM, BRAND, CONTACT, NAV, PARTNERS, SERVICES, UI, t } from '../../lib/portal/content';
 import type { Lang } from '../../lib/portal/content';
 import Athir from './Athir';
+import { AccessProvider, AccessButton, AccessPanel, ReadPage, SkipLink, ACCESS_CSS, useAccess } from './Inclusion';
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
 export const useLang = () => useContext(LangCtx);
@@ -24,6 +25,11 @@ export function AtharMark({ size = 36, light = false }: { size?: number; light?:
       <circle cx="24" cy="24" r="2.5" fill={light ? c1 : '#fff'} />
     </svg>
   );
+}
+
+function ReportBarrierLink({ lang }: { lang: Lang }) {
+  const a = useAccess();
+  return <button type="button" className="pt-footlink" onClick={() => a.setOpen(true, 'report')} data-testid="ax-report-open">{lang === 'ar' ? 'أخبرنا بعائق وصول' : 'Report an accessibility barrier'}</button>;
 }
 
 export function PortalShell({ children }: { children: React.ReactNode }) {
@@ -46,8 +52,10 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
 
   return (
     <LangCtx.Provider value={{ lang, setLang }}>
+      <AccessProvider>
       <div className={`pt ${lang}`} dir={dir} lang={lang}>
-        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        <style dangerouslySetInnerHTML={{ __html: CSS + ACCESS_CSS }} />
+        <SkipLink lang={lang} />
         <header className="pt-header">
           <Link href="/" className="pt-brand" aria-label={t(BRAND.full, lang)}>
             <AtharMark size={38} />
@@ -61,6 +69,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             </div>
           </nav>
           <div className="pt-headright">
+            <AccessButton lang={lang} />
             <button type="button" className="pt-lang" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} aria-label="language">{lang === 'ar' ? 'English' : 'عربي'}</button>
             <button type="button" className="pt-burger" aria-label="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
           </div>
@@ -68,6 +77,8 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
 
         {children}
         <Athir />
+        <AccessPanel lang={lang} />
+        <ReadPage lang={lang} />
 
         <footer className="pt-footer">
           <div className="pt-footgrid">
@@ -94,6 +105,8 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
                 <li><Link href="/ai">{lang === 'ar' ? 'الذكاء الاصطناعي المسؤول' : 'Responsible AI'}</Link></li>
                 <li><Link href="/agents">{lang === 'ar' ? 'أَثَر للوكلاء · المكتب الزجاجي' : 'Athar for agents · the glass office'}</Link></li>
                 <li><Link href="/security">{lang === 'ar' ? 'درع أَثَر · الأمن والإفصاح المسؤول' : 'Athar Shield · security & responsible disclosure'}</Link></li>
+                <li><Link href="/accessibility">{lang === 'ar' ? 'أَثَر للجميع · بيان الوصول' : 'Athar for all · accessibility statement'}</Link></li>
+                <li><ReportBarrierLink lang={lang} /></li>
                 <li><Link href={BRAND.evaluationUrl}>{t(UI.admin, lang)}</Link></li>
               </ul>
             </div>
@@ -113,6 +126,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
           <div className="pt-copy">© {BRAND.copyrightYear} {t(BRAND.owner, lang)} · {t(BRAND.name, lang)} — {t(UI.rights, lang)}<br /><small>{t(BRAND.operatedBy, lang)} {t(BRAND.legal, lang)}</small></div>
         </footer>
       </div>
+      </AccessProvider>
     </LangCtx.Provider>
   );
 }
@@ -171,6 +185,7 @@ const CSS = `
 .pt-form{display:grid;gap:14px}.pt-form label{display:grid;gap:6px;font-size:13.5px;font-weight:800;color:#334155}.pt-form input,.pt-form select,.pt-form textarea{font:inherit;font-size:14px;padding:11px 13px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#0f172a;width:100%}.pt-form textarea{min-height:140px;resize:vertical}.pt-form .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .pt-alert{border-radius:12px;padding:12px 14px;font-weight:800;font-size:14px}.pt-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.pt-alert.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
 .pt-footer{background:${NAVY};color:#fff;padding:48px 0 22px;margin-top:auto}
+.pt-footlink{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px;min-height:24px}
 .pt-footgrid{max-width:1200px;margin:0 auto;padding:0 18px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:28px}.pt-footer h4{margin:0 0 12px;font-size:14px;color:${GOLD}}.pt-footer ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}.pt-footer li,.pt-footer li a{font-size:13.5px;color:rgba(255,255,255,.85);text-decoration:none}.pt-footer li a:hover{color:#fff;text-decoration:underline}
 .pt-footp{font-size:13px;line-height:1.8;color:rgba(255,255,255,.75);margin:12px 0}
 .pt-trace{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.pt-trace a{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:4px;padding-inline-end:8px;text-decoration:none;font-size:11.5px;color:rgba(255,255,255,.85)}.pt-trace b{width:22px;height:22px;border-radius:7px;background:${GOLD};color:#1f2937;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900}

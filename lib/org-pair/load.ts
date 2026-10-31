@@ -9,6 +9,7 @@ import { ORG_PAIR_COLS, memberEligibility, orgEligibility, isLive, orgInviteExpi
 import type { OrgPair, OrgWitness } from './registry';
 import type { StepState } from '../pair/registry';
 import type { Path } from '../horizon/registry';
+import { moreTimeEmails, rowFactor } from '../inclusion/load';
 
 const arr = <T>(r: any): T[] => ((r && r.data) || []) as T[];
 const safe = (p: Promise<any>) => p.then((r: any) => r, () => ({ data: [] }));
@@ -50,9 +51,10 @@ export async function loadMemberOrgPairs(db: any, me: Me): Promise<OrgPair[]> {
 export async function loadOrgPairs(db: any, orgId: string): Promise<OrgPair[]> {
   return arr<OrgPair>(await safe(db.from('portal_org_pair_pledges').select(ORG_PAIR_COLS).eq('organization_id', orgId).order('created_at', { ascending: false }).limit(300)));
 }
-export function splitOrgPairs(rows: OrgPair[], now = Date.now()) {
-  const live = rows.find(p => isLive(p.status) && !orgInviteExpired(p, now)) || null;
-  const invites = rows.filter(p => p.status === 'invited' && !orgInviteExpired(p, now));
+export function splitOrgPairs(rows: OrgPair[], now = Date.now(), moreTime: Set<string> = new Set()) {
+  const f = (p: OrgPair) => rowFactor(moreTime, [p.member_email]);
+  const live = rows.find(p => isLive(p.status) && !orgInviteExpired(p, now, f(p))) || null;
+  const invites = rows.filter(p => p.status === 'invited' && !orgInviteExpired(p, now, f(p)));
   const past = rows.filter(p => ['renewed', 'closed', 'revoked', 'expired'].includes(p.status) && !!p.accepted_at).slice(0, 12);
   return { live, invites, past };
 }
@@ -75,7 +77,7 @@ export type MemberOrgPairState = {
 export async function loadMemberOrgPairState(db: any, me: Me, now = Date.now()): Promise<MemberOrgPairState> {
   const [org, mineJ, rows] = await Promise.all([myOrg(db, me), memberChapters(db, me), loadMemberOrgPairs(db, me)]);
   const adm = org ? arr<any>(await safe(db.from('portal_org_members').select('id').eq('organization_id', org.id).eq('role', 'org_admin').eq('status', 'confirmed').or(orMe(me, 'user_id', 'email')).limit(1))).length > 0 : false;
-  const { live, invites, past } = splitOrgPairs(rows, now);
+  const { live, invites, past } = splitOrgPairs(rows, now, await moreTimeEmails(db, rows.map(p => p.member_email)));
   const paths = live ? await orgPairPaths(db, live, now, mineJ.input) : { member_path: null, member_state: null, org_path: null, org_state: null };
   return { me, org, is_org_admin: adm, eligible: memberEligibility(mineJ.chapters), org_eligible: orgEligibility(org?.charter || null, now), chapters: mineJ.chapters.length, chapter_kinds: Array.from(new Set(mineJ.chapters.map(c => c.kind))), input: mineJ.input, live, invites_in: invites.filter(p => p.invited_by === 'org' && !(p.meta || {}).blind), invite_out: invites.find(p => p.invited_by === 'member') || null, past, paths };
 }
