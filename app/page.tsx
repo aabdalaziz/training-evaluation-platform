@@ -17,6 +17,7 @@ import { PushOptIn } from './components/Pwa';
 import { useOutbox, valueMoment } from './components/Pocket';
 import { Channel, ReadAloud, VoiceButton } from './components/Channel';
 import { SimplerText } from './components/Inclusion';
+import { OnAirLine } from './components/OnAir';
 
 export default function HomePage() { return <PortalShell><Home /></PortalShell>; }
 
@@ -230,6 +231,7 @@ function Advisor({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
             <h2>{ar ? 'اسأل… وأنا أجيب' : 'Ask — and I answer'}</h2>
             <p>{ar ? 'إجابات فورية من معلومات أَثَر الحيّة: البرامج المفتوحة، الجلسات القادمة، الرسوم، الشهادات، وخدمات الجهات. وحين يحتاج سؤالك إلى إنسان، أحوّله فورًا إلى مستشار بشري.' : 'Instant answers from Athar’s live data: open programs, upcoming sessions, fees, credentials and services for organizations. When your question needs a human, I hand it over immediately.'}</p>
             <ul className="hm-advrules"><li><Icon name="check" size={14} /> {ar ? 'لا أعد بما ليس موجودًا' : 'No promises beyond the facts'}</li><li><Icon name="check" size={14} /> {ar ? 'أذكر مصدر الإجابة' : 'Every answer shows its source'}</li><li><Icon name="check" size={14} /> {ar ? 'إنسان حقيقي بضغطة زر' : 'A real human one click away'}</li></ul>
+            <OnAirLine lang={lang} />
           </div>
           <div className="hm-advbox">
             <form className="hm-ask" onSubmit={e => { e.preventDefault(); ask(); }}>

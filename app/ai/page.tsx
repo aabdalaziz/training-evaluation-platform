@@ -43,6 +43,7 @@ function Inner() {
     { p: 'activity_draft', who: ar ? 'المدرب والإدارة' : 'Trainer & staff', where: ar ? 'إدارة البث المباشر' : 'Live sessions admin', href: '/admin/live' },
     { p: 'cv_extract', who: ar ? 'عضو هيئة أَثَر' : 'Athar Faculty member', where: ar ? 'سيرتي في هيئة أَثَر — «ابدأ من سيرتك الذاتية»' : 'My Athar Faculty profile — start from your CV', href: '/me/directory' },
     { p: 'access_simplify', who: ar ? 'أي مسجَّل' : 'Any signed-in user', where: ar ? 'زر «نسخة أبسط» على نبذة البرنامج وموقف اليوم — لا يُعرض قبل اعتماد الطاقم' : 'The "simpler version" button on program and daily-case texts — shown only after staff approval', href: '/accessibility' },
+    { p: 'onair_summary', who: ar ? 'المُستقبِل على الهواء' : 'The on-air receiver', where: ar ? 'عند إغلاق «عونٍ سريع»: تلخيص الخيط في ثلاث جمل للمُستقبِل — الإنسان يردّ باسمه، والآلة لا تتكلم باسم أحد' : 'When a quick-help thread closes: a three-sentence summary for the receiver — humans answer in their own name', href: '/on-air' },
   ];
 
   return (

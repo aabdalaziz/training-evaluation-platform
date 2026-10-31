@@ -56,6 +56,7 @@ export async function witnessFacts(db: any, me: { id?: string | null; email: str
   const orgId = rows(memberships)[0]?.organization_id;
   if (orgId) { const ch = rows<any>(await safe(db.from('portal_org_charters').select('status,organization_id').eq('organization_id', orgId).eq('status', 'active').limit(1), []))[0]; if (ch) { const org = await safe<any>(db.from('portal_organizations').select('name_ar').eq('id', orgId).maybeSingle(), null); f.org_charter = String(org?.name_ar || 'جهته'); } }
   Object.assign(f, engagementFacts(engagements || []));
+  try { const { onAirFacts } = await import('../onair/load'); const oa = await onAirFacts(db, me.id); f.on_air_hours = oa.hours; f.on_air_meetings = oa.meetings; } catch { /* قبل تنفيذ SQL */ }
   return f;
 }
 

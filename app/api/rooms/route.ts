@@ -4,7 +4,7 @@
  *  التنسيق (signaling) يجري في المتصفح عبر قناة Supabase الفورية `room:<code>`؛ هذا المسار يدير دورة حياة الغرفة فقط.
  *  GET  ?code=<ABC234>                                      → بيانات الغرفة (مسجّل دخول)
  *  GET  ?session=<id>                                       → غرف جلسة حية (مسجّل دخول)
- *  POST { action:'create', kind:'dialogue'|'consult', title?, prompt?, minutes? }            → غرفة واحدة (أي مستخدم مسجّل · 3 غرف مفتوحة كحد أقصى)
+ *  POST { action:'create', kind:'dialogue'|'consult'|'support', title?, prompt?, minutes? }            → غرفة واحدة (أي مستخدم مسجّل · 3 غرف مفتوحة كحد أقصى)
  *  POST { action:'breakouts', session_id, count?, prompt?, minutes? }                        → غرف صغيرة لجلسة (موظف/مدرب الجلسة/منشئها)
  *  POST { action:'note', code, text }                                                        → سطر الغرفة الذي تعود به إلى الجلسة (يظهر في الميسِّر والمحضر)
  *  POST { action:'close', code }                                                             → إغلاق (المنشئ/موظف)
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   let body: any; try { body = await req.json(); } catch { return bad('JSON غير صالح'); }
   const action = String(body.action || '');
   if (action === 'create') {
-    const kind = (['dialogue', 'consult'].includes(String(body.kind)) ? String(body.kind) : 'dialogue') as RoomKind;
+    const kind = (['dialogue', 'consult', 'support'].includes(String(body.kind)) ? String(body.kind) : 'dialogue') as RoomKind;
     const { count } = await db.from('portal_rooms').select('id', { count: 'exact', head: true }).eq('created_by', user.id).eq('status', 'open').gte('created_at', new Date(Date.now() - 6 * 3600000).toISOString());
     if ((count || 0) >= 3 && !user.staff) return bad('لديك 3 غرف مفتوحة بالفعل — أغلق واحدة أولًا.', 429);
     const code = await uniqueCode(db); const minutes = Math.max(5, Math.min(60, Number(body.minutes) || 15));

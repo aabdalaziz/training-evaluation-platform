@@ -3,17 +3,18 @@
  * هيئة أَثَر (P31) — ما يجري في الكرون اليومي القائم (followups) بلا كرون جديد:
  *  1) دعوة مدربي منصة التقييم القائمة الذين لا سيرة لهم بعد (مرة واحدة لكل بريد — ref `directory:invite:<email>`؛ حدّ 25 يوميًّا).
  *  2) تذكير سنوي لأعضاء الهيئة المعتمدين الذين لم يحدّثوا سيرتهم منذ 365 يومًا (مرة في السنة — meta.reminded_at).
+ *  3) P33 «أَثَر معك»: تذكير صاحب النافذة المعلنة إن كانت تبدأ خلال 24 ساعة (مرة لكل نافذة ويوم — ref `onair:window:<id>:<date>`).
  */
 import { notify } from '../portal/notify';
 import { UPDATE_REMINDER_DAYS, TAGLINE_AR, lower } from './registry';
 import type { Profile } from './registry';
 
 const INVITE_BATCH = 25;
-export type DirectoryCronResult = { ok: true; dry: boolean; invited: number; reminded: number; skipped_invites: number } | { ok: false; error: string };
+export type DirectoryCronResult = { ok: true; dry: boolean; invited: number; reminded: number; skipped_invites: number; windows_reminded?: number } | { ok: false; error: string };
 
 export async function runDirectory(db: any, opts: { dry?: boolean; site: string; now?: Date } = { site: '' }): Promise<DirectoryCronResult> {
   const dry = !!opts.dry; const now = opts.now || new Date(); const site = opts.site.replace(/\/+$/, '');
-  let invited = 0, reminded = 0, skipped = 0;
+  let invited = 0, reminded = 0, skipped = 0, windows = 0;
   try {
     // (1) دعوات المدربين القائمين
     const { data: trainers } = await db.from('trainers').select('id,name,email').not('email', 'is', null).limit(2000);
@@ -40,6 +41,24 @@ export async function runDirectory(db: any, opts: { dry?: boolean; site: string;
         text: `${p.name_ar}،\nمضت سنة منذ آخر تحديث لسيرتك في هيئة أَثَر. ما شهدته المنصة لك يتحدّث تلقائيًّا، أمّا كلماتك وإنجازاتك فأنت وحدك من يكتبها.\nراجع سيرتك وحدّث ما تشاء — ولو سطرًا: ${site}/me/directory\n— أَثَر`, url: `${site}/me/directory` }, { now });
       await db.from('portal_directory_profiles').update({ meta: { ...(p.meta || {}), reminded_at: now.toISOString() } }).eq('id', p.id);
     }
-    return { ok: true, dry, invited, reminded, skipped_invites: skipped };
+    // (3) P33 نوافذ «أَثَر معك» التي تبدأ خلال 24 ساعة
+    try {
+      const { nextWindowAt, hhmm, WEEKDAY_AR } = await import('../onair/registry');
+      const { data: wins } = await db.from('portal_onair_windows').select('id,user_id,weekday,from_min,to_min,note_ar').limit(2000);
+      const uids = Array.from(new Set(((wins || []) as any[]).map(w => String(w.user_id))));
+      const { data: pres } = uids.length ? await db.from('portal_onair_presence').select('user_id,email').in('user_id', uids).limit(2000) : { data: [] };
+      const emailOf = new Map(((pres || []) as any[]).map(p => [String(p.user_id), String(p.email || '')]));
+      const { data: wlogs } = await db.from('portal_message_log').select('ref_id').eq('kind', 'onair_window').limit(5000);
+      const wsent = new Set(((wlogs || []) as any[]).map(l => String(l.ref_id || '')));
+      for (const w of (wins || []) as any[]) {
+        const at = nextWindowAt(w, now); const diff = at.getTime() - now.getTime(); if (diff < 0 || diff > 24 * 36e5) continue;
+        const email = emailOf.get(String(w.user_id)) || ''; if (!email.includes('@')) continue;
+        const ref = `onair:window:${w.id}:${at.toISOString().slice(0, 10)}`; if (wsent.has(ref)) continue;
+        windows++; if (dry) continue;
+        await notify(db, { kind: 'onair_window', to: { email, name: null }, ref, subject: `نافذتك على الهواء ${WEEKDAY_AR[w.weekday]} ${hhmm(w.from_min)}`,
+          text: `أعلنتَ نافذة «أَثَر معك» ${WEEKDAY_AR[w.weekday]} من ${hhmm(w.from_min)} إلى ${hhmm(w.to_min)}${w.note_ar ? ` (${w.note_ar})` : ''}. حين يحين الوقت اضغط «أستقبل» من ${site}/me/onair — الصعود بيدك، ولا يصعد أحد عنك.`, url: `${site}/me/onair` });
+      }
+    } catch { /* قبل تنفيذ SQL الخاص بـ P33 */ }
+    return { ok: true, dry, invited, reminded, skipped_invites: skipped, windows_reminded: windows };
   } catch (e: any) { return { ok: false, error: e?.message || String(e) }; }
 }

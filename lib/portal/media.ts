@@ -59,7 +59,7 @@ export const MEDIA_STATUS_LABEL: Record<MediaRow['status'], { ar: string; en: st
 export function fmtDuration(sec: number): string { const s = Math.max(0, Math.round(sec || 0)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
 
 // ====================================================================== غرف أَثَر الصغيرة
-export type RoomKind = 'breakout' | 'dialogue' | 'consult';
+export type RoomKind = 'breakout' | 'dialogue' | 'consult' | 'support';
 export type Room = { id: string; code: string; title: string; kind: RoomKind; session_id?: string | null; created_by?: string | null; prompt?: string | null; max_peers: number; minutes: number; status: 'open' | 'closed'; notes: { by: string; name?: string; text: string; at: string }[]; created_at: string; closed_at?: string | null };
 const ROOM_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 /** رمز غرفة من 6 حروف بلا التباس (O/0 · I/1 مستبعدة) */
@@ -71,8 +71,8 @@ export function hashStr(s: string): number { let h = 2166136261; for (let i = 0;
 export function assignRoom<T extends { code: string }>(userId: string, rooms: T[]): T | null { if (!rooms.length) return null; const open = rooms; return open[hashStr(String(userId || 'guest')) % open.length]; }
 /** عدد الغرف المناسب لعدد المشاركين (3 لكل غرفة، بين 1 و12) */
 export function roomCountFor(joined: number, perRoom = 3): number { return Math.max(1, Math.min(12, Math.ceil(Math.max(1, joined) / Math.max(2, perRoom)))); }
-export const ROOM_KIND_LABEL: Record<RoomKind, { ar: string; en: string }> = { breakout: { ar: 'غرفة صغيرة من جلسة حية', en: 'Live-session breakout' }, dialogue: { ar: 'غرفة حوار', en: 'Dialogue room' }, consult: { ar: 'غرفة استشارة', en: 'Consultation room' } };
-export const ROOM_DEFAULT_PROMPT: Record<RoomKind, string> = { breakout: 'ما أصعب جزء في هذا؟ — اتفقوا على سطر واحد تعودون به إلى الجلسة.', dialogue: 'كل واحد يروي موقفًا حقيقيًا من عمله هذا الأسبوع، والآخرون يسألون: «ماذا لو…؟»', consult: 'اعرض الحالة في دقيقتين، ثم اسمع قبل أن تردّ.' };
+export const ROOM_KIND_LABEL: Record<RoomKind, { ar: string; en: string }> = { breakout: { ar: 'غرفة صغيرة من جلسة حية', en: 'Live-session breakout' }, dialogue: { ar: 'غرفة حوار', en: 'Dialogue room' }, consult: { ar: 'غرفة استشارة', en: 'Consultation room' }, support: { ar: 'جلسة دعم — أَثَر معك', en: 'Support session — Athar with you' } };
+export const ROOM_DEFAULT_PROMPT: Record<RoomKind, string> = { breakout: 'ما أصعب جزء في هذا؟ — اتفقوا على سطر واحد تعودون به إلى الجلسة.', dialogue: 'كل واحد يروي موقفًا حقيقيًا من عمله هذا الأسبوع، والآخرون يسألون: «ماذا لو…؟»', consult: 'اعرض الحالة في دقيقتين، ثم اسمع قبل أن تردّ.', support: 'عشرون دقيقة: ما الذي تريد أن تخرج به من هذه الجلسة؟ ابدأ به.' };
 /** إشارات WebRTC عبر قناة البث الفورية: أنواع الرسائل */
 /** P32: 'caption' = سطر ترجمة حيّة من متصفح المتكلّم (نص فقط · لا صوت) · 'need_captions' = طلب مجهول بتشغيل الترجمة (from = 'anon') · role مع hello/presence لمقعد مترجم الإشارة */
 export type SignalMsg = { type: 'hello' | 'offer' | 'answer' | 'ice' | 'bye' | 'caption' | 'need_captions'; from: string; to?: string; name?: string; sdp?: any; candidate?: any; text?: string; final?: boolean; at?: number; role?: 'member' | 'interpreter' };

@@ -36,6 +36,7 @@ function Inner() {
   }, [code]);
   useEffect(() => { (async () => { const { data: s } = await db.auth.getSession(); const t = s.session?.access_token || ''; setTok(t); if (!t) { setErr('login'); return; } await load(t); })(); }, [db, load]);
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
+  useEffect(() => { if (!tok) return; const id = setInterval(() => load(tok), 30000); return () => clearInterval(id); }, [tok, load]); // P33: تمديد جلسة الدعم يظهر دون إعادة تحميل
   useEffect(() => () => { leave(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------- WebRTC mesh

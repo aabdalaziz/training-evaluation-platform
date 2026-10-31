@@ -23,6 +23,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/missions', label: 'مهمات العمل', icon: 'flag' },
   { href: '/admin/directory', label: 'هيئة أَثَر', icon: 'certificate' },
   { href: '/admin/inclusion', label: 'أَثَر للجميع', icon: 'users' },
+  { href: '/admin/onair', label: 'أَثَر معك', icon: 'chat' },
   { href: '/admin/contracts', label: 'عقود الأثر', icon: 'scale' },
   { href: '/admin/program-engineering', label: 'هندسة البرامج التدريبية', icon: 'compass' },
   { href: '/admin/media', label: 'الأداء المُشاهَد', icon: 'play' },

@@ -10,6 +10,7 @@ import { ACRONYM, BRAND, CONTACT, NAV, PARTNERS, SERVICES, UI, t } from '../../l
 import type { Lang } from '../../lib/portal/content';
 import Athir from './Athir';
 import { AccessProvider, AccessButton, AccessPanel, ReadPage, SkipLink, ACCESS_CSS, useAccess } from './Inclusion';
+import { OnAirButton, OnAirPanel, ONAIR_CSS } from './OnAir';
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
 export const useLang = () => useContext(LangCtx);
@@ -54,7 +55,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     <LangCtx.Provider value={{ lang, setLang }}>
       <AccessProvider>
       <div className={`pt ${lang}`} dir={dir} lang={lang}>
-        <style dangerouslySetInnerHTML={{ __html: CSS + ACCESS_CSS }} />
+        <style dangerouslySetInnerHTML={{ __html: CSS + ACCESS_CSS + ONAIR_CSS }} />
         <SkipLink lang={lang} />
         <header className="pt-header">
           <Link href="/" className="pt-brand" aria-label={t(BRAND.full, lang)}>
@@ -69,6 +70,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             </div>
           </nav>
           <div className="pt-headright">
+            <OnAirButton lang={lang} />
             <AccessButton lang={lang} />
             <button type="button" className="pt-lang" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} aria-label="language">{lang === 'ar' ? 'English' : 'عربي'}</button>
             <button type="button" className="pt-burger" aria-label="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
@@ -78,6 +80,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
         {children}
         <Athir />
         <AccessPanel lang={lang} />
+        <OnAirPanel lang={lang} />
         <ReadPage lang={lang} />
 
         <footer className="pt-footer">
