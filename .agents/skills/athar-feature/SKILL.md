@@ -3,7 +3,7 @@ name: athar-feature
 description: Build a complete feature phase for the Athar portal (Next.js 14 + Supabase) end-to-end — SQL, pure lib, API route, learner/public/admin pages, MCP tool, vault registry, cron hook, tests, mock fixtures, Playwright E2E, one-zip GitHub delivery. Use when asked to add a new module/phase (P30+) to github.com/aabdalaziz/training-evaluation-platform. Updated after P29 (mutual pledge — the first two-party feature) and P29-أ (actionable gate screens).
 ---
 
-# Athar — build a feature phase (post-P32 pattern)
+# Athar — build a feature phase (post-P34 pattern)
 
 ## Order of work (never reorder)
 1. **Proposal first** (`P<N>-PROPOSAL-AR.txt`, Arabic, 1–2 pages): the idea in one sentence, the five "movements" of the experience, what stays private, what gets signed, what the agent may read, what the cron does, the DB tables, the constants. Wait for approval. Read `athar-product` before writing it.
@@ -65,6 +65,16 @@ description: Build a complete feature phase for the Athar portal (Next.js 14 + S
 - Admin lists sorted by name: never rely on `.first` in E2E — add `data-pid={id}` and target `[data-pid="p1"]`.
 - Mock ids are string UUIDs: never `Number(body.id)` in admin routes (prod bigint ids still parse); and every new table must be added to the mock's generic-insert list or inserts vanish silently.
 - Renames are text-only deliverables: change labels, titles, comments and test names; never rename `data-testid`s, tables, API actions or codes (P32-ب: «على مقاسي» → «احتياجاتي» touched 9 files, zero logic).
+- Presence features (P33 `lib/onair`): presence is one row per person toggled by the person (`until` timestamp, auto-off by reading, never by cron); time-outs are settled on read (`settleStale`) so no cron is needed; anonymous askers hold a per-request token in `localStorage` (`athar_onair_t:<id>`) and are rate-limited by `ip_hash` — E2E reruns need a unique `X-Forwarded-For`.
+- Hours and certificates come from real meetings (`taken_at → done_at`, `duration_min`), never from how long a toggle was on; seconds-long E2E meetings round to 0 h — assert meeting counts, not hours.
+- Extending a live feature (P34 — eight ideas in one phase): keep ONE registry of Arabic names (`P34_NAMES_AR`) exposed in `?meta=1`, one migration with `add column if not exists` + new tables, and extend the existing route actions instead of new routes; reuse the existing cron entry (`runDirectory` → `remindGolden`) rather than adding a Vercel cron.
+- Matching may use a *preference* the asker states in the request (`prefer_text`) but never a stored need-word; dialog defaults derived from needs (`dialogDefaults`) are computed in the browser from `GET /api/inclusion?mine=1` and the need is never posted.
+- AI drafts that become public content (P34 «صدى السؤال»): asker consent (`echo_ok`) → staff `echo_make` (PII-scrubbed prompt, local fallback) → staff edits + picks a day → `approved` → the public consumer (`/api/daily`) prefers it and marks it `published`. Approving without a day must be a 400.
+- Read-only observers (shadow mentor): expose `i_shadow` in the request view, return 403 on write, show a tag and hide the composer; decrement a per-mentee counter on `take`, not on close.
+- Scoped calls (org air): the scope is validated against confirmed membership on `ask` (400 otherwise); the read endpoint lets staff read any scope and members only their own (403) — test the 403 with a non-staff user (staff users pass).
+- Name fallbacks are contextual: `loadPeople(…, withProfiles=true)` only where a non-directory person must be named (mentor/mentee); public surfaces keep «طاقم أَثَر».
+- Maps: an inline SVG with a short list of city points keyed from the public directory city (`cityKey`), counts only, «مدن أخرى» for the rest, `aria-label` with the total; never coordinates of a person.
+- A 409 that offers an alternative (`{nobody:true, can_bottle:true, bottle_ar, alternatives_ar}`) is a product state, not an error: the dialog renders the offer and the retry posts the same payload with `bottle:true`.
 
 ## Delivery message (Arabic)
 Table (number · path · role), QA line (tsc · tests N/N · build · E2E N/N), "ideas that emerged" (the owner welcomes them), then the 3 steps (SQL with expected counts → upload zip → verify URLs). After «تم»: verify every file with `cmp` against `raw.githubusercontent.com/<sha>/<path>` (URL-encode `[`), check the Vercel status API, smoke-test live routes, and close the phase explicitly with the next file number.
