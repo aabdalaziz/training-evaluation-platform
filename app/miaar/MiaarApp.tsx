@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * «مِعيار — من أَثَر» — تجربة المتقدّم كاملة في مكوّن واحد (م1):
- *  المقدّمة (30 لغة — قاموس مِعيار حرفيًا من /miaar/copy.json) → التسجيل (+«احتياجاتي») → «مِسبار» (5 بنود تحدّد نقطة البداية)
+ *  المقدّمة (30 لغة — قاموس مِعيار حرفيًا من /miaar/copy/<lang>.json — مقسَّم منذ P40) → التسجيل (+«احتياجاتي») → «مِسبار» (5 بنود تحدّد نقطة البداية)
  *  → الاختبار (قراءة · استماع · قواعد؛ بنود mcq/مصوّرة/صواب-خطأ؛ مؤقّت؛ تأجيل؛ اختصارات) → المراجعة → «بطاقة المستوى» (أستطيع أن… · ميزان الثقة · رمز نتيجة · باركود · طباعة).
  *  التصحيح كله على الخادم (/api/miaar). هوية مِعيار/أَثَر البصرية كما في شاشات مِعيار الأصلية: كحلي #0f2a4e · تركوازي #0b8a83 · ذهبي #c9a24b؛ خطّا Tajawal وAref Ruqaa (next/font — مستضافان ذاتيًا).
  */
@@ -556,7 +556,7 @@ const CSS = `
 .mi-door:hover,.mi-door[aria-pressed="true"]{background:rgba(255,255,255,.12);border-color:var(--gold)}
 .mi-arab{background:#fff;color:var(--navy);border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-top:10px}
 .mi-arab.stage{width:100%;background:transparent;color:#fff;border:0;padding:0;box-shadow:none}.mi-arab.stage .mi-q,.mi-arab.stage .mi-q span{color:#fff}
-.mi-q{white-space:pre-line;font-family:var(--mi-ruqaa,"Aref Ruqaa"),"Noto Naskh Arabic",serif;font-size:clamp(24px,3vw,34px);line-height:1.7;margin:0 0 14px;color:var(--navy)}
+.mi-hero .mi-arab .mi-q,.mi-q{white-space:pre-line;font-family:var(--mi-ruqaa,"Aref Ruqaa"),"Noto Naskh Arabic",serif;font-size:clamp(24px,3vw,34px);line-height:1.7;margin:0 0 14px;color:var(--navy)}
 .mi-lv{font-family:var(--font-ar,Tajawal),sans-serif;font-size:13px;font-weight:900;color:var(--gold);margin-inline-end:8px}
 .mi-opts-arab{display:grid;gap:8px}.mi-opts-arab button{border:1px solid #e2e8f0;background:#fff;color:var(--navy);border-radius:12px;padding:12px 14px;font-weight:900;font-size:15px;cursor:pointer;text-align:right}
 .mi-opts-arab button:hover,.mi-opts-arab button.on{background:var(--gold);border-color:var(--gold);color:#1f2937}

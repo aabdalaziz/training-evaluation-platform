@@ -5,6 +5,7 @@
  *  POST {action}
  *   item_update   {id, question_text, options[{id,text,image?,alt?}], correct, descriptor_code?, domain?, difficulty_est?, passage_id?, media_path?, media_alt?, note?}
  *   item_status   {id | ids[], status: approved|in_review|archived|draft, note?}   (حدث مراجعة لكل بند)
+ *   item_delete   {id}  حذف نهائي — فقط لبند غير معتمد لم يُجب عنه أحد قط (وإلا: أرشفة). المفاتيح والأحداث تُحذف بالتتابع.
  *   batch_status  {batch: athar-m2a|miaar-legacy|<content_version>, status, level?}  → «مراجعة الدفعة» (in_review → approved) أو «أرشفة القديم»
  *   item_create   {level, skill, item_type, question_text, options, correct, passage_id?, descriptor_code?, domain?, difficulty_est?, media_path?, media_alt?}
  *   passage_update {id, title?, body?, status?, meta?, audio_public_path?}
@@ -123,6 +124,17 @@ export async function POST(req: Request) {
     if (!ids.length) return NextResponse.json({ success: true, count: 0, note_ar: 'لا بنود مطابقة.' });
     for (let i = 0; i < ids.length; i += 200) { const part = ids.slice(i, i + 200); const up = await db.from('question_bank_items').update({ status, latest_review_note: note || `دفعة ${batch}`, reviewed_by: user.id, reviewed_at: now, updated_at: now }).in('id', part); if (up.error) return bad(up.error.message, 500); await reviewEvent(db, part, `batch:${status}`, note || `دفعة ${batch}`, user.id); }
     return NextResponse.json({ success: true, count: ids.length, note_ar: `${status === 'approved' ? 'اعتُمد' : status === 'archived' ? 'أُرشف' : 'أُعيد للمراجعة'} ${ids.length} بندًا من دفعة ${batch}${level ? ` (${level})` : ''}.` });
+  }
+  if (action === 'item_delete') {
+    const id = str(b.id, 60); if (!id) return bad('معرّف مفقود');
+    const { data: it } = await db.from('question_bank_items').select('id, item_code, status').eq('id', id).maybeSingle(); if (!it) return bad('البند غير موجود', 404);
+    if (it.status === 'approved') return bad('بند معتمد لا يُحذف — أرشِفه بدل الحذف');
+    const { count } = await db.from('placement_secure_answers').select('session_id', { count: 'exact', head: true }).eq('question_id', id);
+    if ((count || 0) > 0) return bad(`أُجيب عن هذا البند في ${count} جلسة — لا يُحذف حفاظًا على التقارير؛ أرشِفه`);
+    /* التوابع صراحةً (FK on delete cascade موجود في الإنتاج؛ الحذف الصريح يجعل السلوك واحدًا في كل بيئة) */
+    for (const t of ['question_bank_answer_keys', 'question_bank_review_events', 'question_bank_form_items']) await db.from(t).delete().eq('item_id', id);
+    const del = await db.from('question_bank_items').delete().eq('id', id); if (del.error) return bad(del.error.message, 500);
+    return NextResponse.json({ success: true, note_ar: `حُذف البند ${it.item_code} نهائيًا.` });
   }
   if (action === 'item_create') {
     const level = isBankLevel(b.level) ? String(b.level) : null; const skill = isSkill(b.skill) ? String(b.skill) : null; if (!level || !skill) return bad('المستوى أو المهارة غير صالح');
