@@ -4,7 +4,7 @@
  * /admin/miaar[/invites|/bank] — «مِعيار — من أَثَر» للطاقم (م1)
  *  نظرة: آخر النتائج (بطاقة المستوى برمزها) · موافقات الإعادة · «نقل البيت» (استيراد بيانات مِعيار القديم جدولًا جدولًا مع العدّادات)
  *  دعوات: جماعية (رمز قصير + QR + ملصق «امسح وحدّد مستواك») وشخصية (رابط برمز خاص لكل بريد) · تتبّع فُتح/بدأ/أنهى · توزيع المستويات
- *  البنك: تغطية مستوى×مهارة×نوع مقابل الخطة (م1 قراءة فقط؛ محرّر البنك في م2)
+ *  البنك: تغطية مستوى×مهارة×نوع مقابل الخطة + محرّر البنك (م2-أ: البنود والمقاطع والصوت ومراجعة الدفعة)
  *  الذكاء الاصطناعي لا يقرّر هنا شيئًا.
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -13,7 +13,8 @@ import Link from 'next/link';
 import { supabase } from '../../../lib/supabase/client';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { qrSvg } from '../../../lib/certificates/qr';
-import { LEVELS, SKILLS, skillLabel, MIAAR_NAMES_AR } from '../../../lib/miaar/registry';
+import { LEVELS, SKILLS, skillLabel, MIAAR_NAMES_AR, FLOOR_LEVEL, BANK_LEVEL_AR } from '../../../lib/miaar/registry';
+import BankEditor from './BankEditor';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const LANG_OPTS = [['ar', 'العربية'], ['en', 'English'], ['fr', 'Français'], ['tr', 'Türkçe'], ['ur', 'اردو'], ['id', 'Indonesia'], ['ms', 'Melayu'], ['fa', 'فارسی'], ['ru', 'Русский'], ['zh', '中文'], ['es', 'Español'], ['de', 'Deutsch'], ['hi', 'हिन्दी'], ['bn', 'বাংলা'], ['sw', 'Kiswahili'], ['fil', 'Filipino']];
@@ -66,7 +67,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
           <div>
             <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <Link href="/miaar">صفحة الأداة</Link></p>
             <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : MIAAR_NAMES_AR.invites}</h1>
-            <p className="mm-lead">{tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج. التحرير والاستيراد والمراجعة في م2.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
+            <p className="mm-lead">{tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
           </div>
           <div className="mm-heroacts">
             <Link href="/admin/placements" className="mm-hbtn gold">تصدير النتائج CSV</Link>
@@ -143,12 +144,13 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         {tab === 'bank' && <section className="am-card"><h3>تغطية البنك مقابل الخطة <small>معتمد / مطلوب لكل خلية — الخلية الحمراء لا تكفي لتوليد نموذج</small></h3>
           {!cov ? <div className="am-empty">تعذّر قراءة البنك — نفّذ ملف SQL أولًا.</div> : <>
             <table className="mm-t mm-cov"><thead><tr><th>المستوى</th>{SKILLS.map((s) => <th key={s}>{skillLabel(s)}</th>)}</tr></thead><tbody>
-              {LEVELS.map((lv) => <tr key={lv}><td><b>{lv}</b></td>{SKILLS.map((s) => { const c = cov.cells.find((x: any) => x.level === lv && x.skill === s); const okc = c && c.approved >= c.needed; return <td key={s} className={okc ? 'ok' : 'low'}><b>{c?.approved ?? 0}</b> / {c?.needed ?? 0}<br /><small>{Object.entries(c?.by_type || {}).map(([k, v]) => `${k}:${v}`).join(' ') || '—'}</small></td>; })}</tr>)}
+              {[FLOOR_LEVEL, ...LEVELS].map((lv) => <tr key={lv}><td><b>{BANK_LEVEL_AR[lv as keyof typeof BANK_LEVEL_AR] || lv}</b></td>{SKILLS.map((s) => { const c = cov.cells.find((x: any) => x.level === lv && x.skill === s); const okc = c && c.approved >= c.needed; return <td key={s} className={okc ? 'ok' : 'low'}><b>{c?.approved ?? 0}</b> / {c?.needed ?? 0}{c?.in_review ? <small> · {c.in_review} للمراجعة</small> : null}<br /><small>{Object.entries(c?.by_type || {}).map(([k, v]) => `${k}:${v}`).join(' ') || '—'}</small></td>; })}</tr>)}
             </tbody></table>
             <div className="am-kpis"><span><b>{cov.total_approved}</b> معتمد من {cov.total_all}</span>{Object.entries(cov.by_status || {}).map(([k, v]) => <span key={k}><b>{v as number}</b> {k}</span>)}<span><b>{cov.descriptors_used}</b> واصفًا مستخدمًا</span></div>
-            <p className="mm-note">م1: البنك يُقرأ هنا ويُحرَّر بالـ SQL. م2 يجلب محرّر البنود المصوّرة والسحابية ومراجعة الزملاء وتحليل البنود (الصعوبة والتمييز) وامتحانات المستوى A1…C2.</p>
+            <p className="mm-note">«ما قبل A1» أرضية مصوّرة تُقدَّم في التكيفي لمن لم يجتز A1. الاختبار يسحب من «معتمد» فقط؛ البنود «للمراجعة» تنتظر قرارك في المحرّر أدناه.</p>
           </>}
         </section>}
+        {tab === 'bank' && <BankEditor auth={() => H()} byBatch={cov?.by_batch || {}} onChanged={() => { void load(); }} />}
         <p className="mm-foot">© 2026 {MIAAR_NAMES_AR.product} — {MIAAR_NAMES_AR.nature}، والقرار الأكاديمي بيد إنسان.</p>
       </div>
     </div>

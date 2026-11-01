@@ -121,3 +121,59 @@ test('نقل البيت: ترتيب الجداول يحترم المفاتيح �
   assert.equal(optionList([{ id: 'a', text: 'صواب' }, { id: 'b', text: 'خطأ' }, { id: 'c', text: 'غير مذكور' }], 'true_false_notgiven')!.length, 3); assert.equal(optionList([{ id: 'a', text: 'صواب' }, { id: 'b', text: 'خطأ' }], 'true_false_notgiven'), null, 'صواب/خطأ يحتاج ثلاثة');
   assert.equal(optionList([{ text: 'x' }, { image: 'p.png' }], 'picture_choice'), null, 'المصوّر يحتاج صورة لكل خيار'); assert.equal(optionList([{ image: 'a.png', alt: 'قطة' }, { image: 'b.png' }], 'picture_choice')!.length, 2);
 });
+
+// ---------- م2-أ: أرضية ما قبل A1 · سياسة المشغّل · التقرير ----------
+import { FLOOR_LEVEL, FLOOR_INDEX, FLOOR_PLAN, BANK_LEVELS, isBankLevel, bankLevelIndex, levelAtIndex, hasFloor, floorStat, playerPolicy, PLAYER_POLICY, BANK_LEVEL_AR } from '../lib/miaar/registry';
+import { itemBatch } from '../lib/miaar/bank';
+
+const floorPool = (): PoolItem[] => { const out: PoolItem[] = []; let n = 0; for (const skill of SKILLS) for (let i = 0; i < 5; i += 1) { n += 1; out.push({ id: `f${n}`, code: `PRE-${skill}-${i}`, level: FLOOR_LEVEL, skill, type: 'picture_choice', passageId: null, questionText: `ف${n}`, options: [{ id: 'a', text: '', image: '/miaar/img/apple.svg' }, { id: 'b', text: '', image: '/miaar/img/book.svg' }], correctOptionId: 'a', stimulus: null, descriptor: null }); } return out; };
+
+test('م2-أ: الأرضية مستوى في البنك لا في السلّم · الفهرس -1 · السحب يضيف 12 بندًا إن وُجدت ولا يعدّ غيابها نقصًا', () => {
+  assert.equal(BANK_LEVELS.length, 7); assert.equal(BANK_LEVELS[0], 'PRE_A1'); assert.equal(LEVELS.length, 6, 'سلّم التسكين لم يتغيّر');
+  assert.ok(isBankLevel('PRE_A1') && isBankLevel('B1') && !isBankLevel('PRE')); assert.equal(bankLevelIndex('PRE_A1'), FLOOR_INDEX); assert.equal(bankLevelIndex('A2'), 1);
+  assert.equal(levelAtIndex(-1), 'PRE_A1'); assert.equal(levelAtIndex(0), 'A1'); assert.equal(levelAtIndex(99), 'A1'); assert.equal(BANK_LEVEL_AR.PRE_A1, 'ما قبل A1');
+  assert.equal(FLOOR_PLAN.grammar_vocab + FLOOR_PLAN.reading + FLOOR_PLAN.listening, 12);
+  const noFloor = drawCodes(pool(), 's'); assert.equal(noFloor!.codes.length, 50); assert.deepEqual(noFloor!.short, []);
+  const withFloor = drawCodes([...pool(), ...floorPool()], 's'); assert.equal(withFloor!.codes.length, 62); assert.deepEqual(withFloor!.short, []);
+  assert.equal(withFloor!.codes.filter((c) => c.startsWith('PRE-')).length, 12);
+  for (const skill of SKILLS) assert.equal(withFloor!.codes.filter((c) => c.startsWith(`PRE-${skill}-`)).length, 4, `${skill}: 4 بنود أرضية`);
+  assert.ok(hasFloor(floorPool()) && !hasFloor(pool()));
+});
+
+test('م2-أ: قرار التقدّم — الإخفاق في A1 مع أرضية → floor؛ بعد الأرضية → fail؛ بلا أرضية → fail كما كان؛ الشامل لا يُخفق', () => {
+  assert.deepEqual(nextStep({ currentIndex: 0, startIndex: 0, direction: 'up', mode: 'adaptive', floor: true }, 40), { decision: 'floor', nextIndex: FLOOR_INDEX, direction: 'up' });
+  assert.deepEqual(nextStep({ currentIndex: 0, startIndex: 0, direction: 'up', mode: 'adaptive', floor: false }, 40), { decision: 'fail', nextIndex: null, direction: 'up' });
+  assert.deepEqual(nextStep({ currentIndex: 0, startIndex: 0, direction: 'up', mode: 'adaptive' }, 40), { decision: 'fail', nextIndex: null, direction: 'up' }, 'التوافق الخلفي');
+  assert.deepEqual(nextStep({ currentIndex: 0, startIndex: 1, direction: 'down', mode: 'adaptive', floor: true }, 20), { decision: 'floor', nextIndex: FLOOR_INDEX, direction: 'down' }, 'النزول إلى A1 ثم الإخفاق → الأرضية');
+  assert.deepEqual(nextStep({ currentIndex: FLOOR_INDEX, startIndex: 0, direction: 'up', mode: 'adaptive', floor: true }, 100), { decision: 'fail', nextIndex: null, direction: 'up' }, 'بعد الأرضية ينتهي');
+  assert.equal(nextStep({ currentIndex: 0, startIndex: 0, direction: 'up', mode: 'adaptive', floor: true }, 60).decision, 'advance');
+  assert.equal(nextStep({ currentIndex: 0, startIndex: 0, direction: 'up', mode: 'comprehensive', floor: true }, 0).decision, 'advance', 'الشامل لا يُخفق فلا أرضية');
+});
+
+test('م2-أ: التقرير — الأرضية خارج إحصاء المهارات والمستويات · «ما_قبل_A1» و«نقطة_البداية_داخل_A1»', () => {
+  const main = secure(); const floor: SecureItem[] = floorPool().map((i) => ({ id: i.code, level: i.level, skill: i.skill, correctOptionId: i.correctOptionId })).slice(0, 12);
+  const base = { candidate: { name: 'نور', email: 'n@x.io' }, examMode: 'adaptive' as const, startIndex: 0, durationSeconds: 3000, remainingSeconds: 1000, source: 't', title: 't', access: null, inviteLabel: null, short: [] };
+  const a1 = main.filter((i) => i.level === 'A1');
+  // أخفق في A1 (0/8) ثم أجاب الأرضية 10/12
+  const answers = [...a1.map((i) => ({ question_id: i.id, selected_option_id: 'b' })), ...floor.map((i, k) => ({ question_id: i.id, selected_option_id: k < 10 ? 'a' : 'b' }))];
+  const sel = new Map(answers.map((a) => [a.question_id, a.selected_option_id]));
+  const fs = floorStat([...main, ...floor], sel); assert.equal(fs.offered, true); assert.equal(fs.correct, 10); assert.equal(fs.answered, 12); assert.equal(fs.verdict, 'knows_basics');
+  const r = calculateReport(base, answers, 'failed', [...main, ...floor]) as any;
+  assert.equal(r.ملخص_التسكين.دون_A1, true); assert.equal(r.ملخص_التسكين.مستوى_الالتحاق_المقترح, 'A1'); assert.match(r.ملخص_التسكين.نقطة_البداية_داخل_A1, /يعرف الحروف/);
+  assert.equal(r.ما_قبل_A1.قُدِّمت, true); assert.equal(r.ما_قبل_A1.النسبة, 83); assert.equal(r.الدرجة_الموضوعية, `0/${a1.length}`, 'الأرضية لا تدخل في الدرجة');
+  assert.equal(r.احصائيات.grammar_vocab.answered, a1.filter((i) => i.skill === 'grammar_vocab').length, 'المهارات من المستويات فقط');
+  assert.equal(r.بنود_الجلسة.length, main.length + floor.length, 'بنود الجلسة تشمل الأرضية للطاقم');
+  // أرضية ضعيفة → من الصفر
+  const weak = [...a1.map((i) => ({ question_id: i.id, selected_option_id: 'b' })), ...floor.map((i, k) => ({ question_id: i.id, selected_option_id: k < 3 ? 'a' : 'b' }))];
+  assert.match((calculateReport(base, weak, 'failed', [...main, ...floor]) as any).ملخص_التسكين.نقطة_البداية_داخل_A1, /من الصفر/);
+  // بلا أرضية → كما كان
+  const r0 = calculateReport(base, a1.map((i) => ({ question_id: i.id, selected_option_id: 'b' })), 'failed', main) as any;
+  assert.equal(r0.ما_قبل_A1.قُدِّمت, false); assert.equal(r0.ملخص_التسكين.نقطة_البداية_داخل_A1, null);
+});
+
+test('م2-أ: سياسة المشغّل — سرعات حتى B1 وإعادات بحسب المستوى · meta المقطع تغلب · دفعة البند', () => {
+  assert.deepEqual(playerPolicy('A1'), { speeds: [0.75, 1, 1.25], replays: 2 }); assert.deepEqual(playerPolicy('B2'), { speeds: [1], replays: 1 }); assert.deepEqual(playerPolicy('PRE_A1'), { speeds: [0.75, 1], replays: 3 });
+  assert.deepEqual(playerPolicy('غير معروف'), PLAYER_POLICY.B2, 'مستوى مجهول → الأصعب');
+  assert.deepEqual(playerPolicy('C1', { replays: 2, speeds: [1, 1.25] }), { speeds: [1, 1.25], replays: 2 }); assert.deepEqual(playerPolicy('C1', { replays: 99, speeds: [3] }), { speeds: [1], replays: 1 }, 'قيم شاذّة تُهمل');
+  assert.equal(itemBatch({ content_version: 'athar-m2a' }), 'athar-m2a'); assert.equal(itemBatch({ content_version: '1.4.0', legacy_extra: { batch: 'miaar-legacy' } }), 'miaar-legacy'); assert.equal(itemBatch({}), '—');
+});

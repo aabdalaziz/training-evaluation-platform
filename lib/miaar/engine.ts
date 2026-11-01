@@ -3,11 +3,12 @@
  * محرّك مِعيار (خادم فقط) — الجلسة الآمنة كما في مِعيار: رمز في كوكي (hash في الجدول) · التصحيح على الخادم · المستويات الماضية لا تُعدَّل
  *  + م1: مِسبار يحدّد نقطة البداية · نزول عند الإخفاق في نقطة بداية أعلى من A1 · وقت «احتياجاتي» · ربط الدعوة والحساب
  *  · عند الإنهاء: placement_reports (برمز نتيجة ML-…) + portal_placements + حدث assessed + مستوى التسجيلات — بلا مزامنة خارجية.
+ *  + م2-أ: «أرضية ما قبل A1» — في التكيفي، من لم يجتز A1 يُقدَّم له 12 بندًا مصوّرًا (current_level_index = -1) ثم ينتهي الاختبار؛ النتيجة في التقرير «ما_قبل_A1».
  */
 import { createHash, randomBytes } from 'node:crypto';
 import {
-  LEVELS, PASS_PERCENT, DURATION_SECONDS, CONTENT_VERSION, MIAAR_NAMES_AR, levelIndex, isExamMode, isOptionId, cleanText, normalizeCandidate, normalizeAccess,
-  accessDuration, drawCodes, probeScore, probeStartIndex, nextStep, calculateReport, resultCode,
+  PASS_PERCENT, DURATION_SECONDS, CONTENT_VERSION, MIAAR_NAMES_AR, isExamMode, isOptionId, cleanText, normalizeCandidate, normalizeAccess,
+  accessDuration, drawCodes, probeScore, probeStartIndex, nextStep, calculateReport, resultCode, bankLevelIndex, levelAtIndex, hasFloor, FLOOR_INDEX,
 } from './registry';
 import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report } from './registry';
 import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './bank';
@@ -34,7 +35,7 @@ function plan(s: SessionRow) {
 }
 export function publicSession(s: SessionRow, answers: Answer[] = [], form: PublicForm | null = null) {
   return {
-    examMode: s.exam_mode, currentLevel: LEVELS[s.current_level_index] ?? LEVELS[0], currentLevelIndex: s.current_level_index, startLevelIndex: s.start_level_index, direction: s.direction,
+    examMode: s.exam_mode, currentLevel: levelAtIndex(s.current_level_index), currentLevelIndex: s.current_level_index, startLevelIndex: s.start_level_index, direction: s.direction,
     status: s.status, finishReason: s.finish_reason, expiresAt: s.expires_at, remainingSeconds: remainingSeconds(s.expires_at), durationSeconds: plan(s).durationSeconds,
     access: s.access, answers: Object.fromEntries(answers.map((a) => [a.question_id, a.selected_option_id])), form,
   };
@@ -109,22 +110,22 @@ export async function answerSession(db: any, s: SessionRow, body: Record<string,
   if (!questionId || !isOptionId(selected)) return fail('invalid_answer', 400);
   const scored = await scoredItems(db, s); if (!scored) return fail('form_unavailable', 409);
   const item = scored.items.find((i) => i.id === questionId); if (!item) return fail('invalid_question', 404);
-  const itemIndex = levelIndex(item.level); if (itemIndex < 0 || itemIndex !== s.current_level_index) return fail('question_not_current', 403);
+  const itemIndex = bankLevelIndex(item.level); if (itemIndex < FLOOR_INDEX || itemIndex !== s.current_level_index) return fail('question_not_current', 403);
   const saved = await db.from('placement_secure_answers').upsert({ session_id: s.id, question_id: questionId, selected_option_id: selected, submitted_at: nowIso() }, { onConflict: 'session_id,question_id' });
   if (saved.error) return fail('answer_save_failed', 500);
   let decision = 'continue'; let nextLevel: string | null = null; let direction = s.direction;
   if (body.finalize === true) {
-    const level = LEVELS[s.current_level_index]; const levelItems = scored.items.filter((i) => i.level === level);
+    const level = levelAtIndex(s.current_level_index); const levelItems = scored.items.filter((i) => i.level === level);
     const fresh = await db.from('placement_secure_answers').select('question_id, selected_option_id').eq('session_id', s.id); if (fresh.error) return fail('answers_load_failed', 500);
     const map = new Map(((fresh.data || []) as Answer[]).map((a) => [a.question_id, a.selected_option_id]));
     if (levelItems.length > 0 && levelItems.every((i) => map.has(i.id))) {
       const correct = levelItems.filter((i) => map.get(i.id) === i.correctOptionId).length; const percent = (correct / levelItems.length) * 100;
-      const step = nextStep({ currentIndex: s.current_level_index, startIndex: s.start_level_index, direction: s.direction, mode: s.exam_mode }, percent);
+      const step = nextStep({ currentIndex: s.current_level_index, startIndex: s.start_level_index, direction: s.direction, mode: s.exam_mode, floor: hasFloor(scored.items) }, percent);
       decision = step.decision; direction = step.direction;
       const patch: Record<string, unknown> = { updated_at: nowIso(), direction: step.direction };
       if (step.decision === 'complete') patch.finish_reason = 'completed';
       else if (step.decision === 'fail') patch.finish_reason = 'failed';
-      else { patch.current_level_index = step.nextIndex; patch.finish_reason = null; nextLevel = LEVELS[step.nextIndex as number]; }
+      else { patch.current_level_index = step.nextIndex; patch.finish_reason = null; nextLevel = levelAtIndex(step.nextIndex as number); }
       await db.from('placement_secure_sessions').update(patch).eq('id', s.id);
     }
   }

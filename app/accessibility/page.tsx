@@ -56,6 +56,7 @@ function Inner() {
 
       <section className="pt-box" aria-labelledby="as-h6"><h2 id="as-h6"><Icon name="shield" size={18} /> {ar ? 'خصوصية ملف الاحتياج' : 'Privacy of the needs profile'}</h2>
         <ul className="as-list">{PRIVACY_ACCESS_AR.map((x, i) => <li key={i}>{x}</li>)}</ul>
+        <p className="as-credit" data-testid="as-credit">{ar ? 'صور بنود «مِعيار» المصوّرة من مشروع ' : 'Picture items in “Miaar” use '}<a href="https://github.com/twitter/twemoji" target="_blank" rel="noopener noreferrer">Twemoji</a>{ar ? ' — © Twitter, Inc. وآخرون، برخصة ' : ' — © Twitter, Inc. and other contributors, licensed '}<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC-BY 4.0</a>{ar ? '. أصوات الاستماع اصطناعية (Microsoft Neural) ويُذكر ذلك في التقرير.' : '. Listening audio is synthetic (Microsoft Neural) and is declared in the report.'}</p>
         <p>{S.contact_ar}</p>
         <p className="pt-muted"><Link href="/me/access">{ar ? 'ملفي «أَثَر يلبّي احتياجاتي»' : 'My profile'}</Link> · <Link href="/security">{ar ? 'درع أَثَر' : 'Athar Shield'}</Link> · <Link href="/me/data">{ar ? 'خزنة أَثَر' : 'Athar Vault'}</Link></p></section>
     </main>
@@ -63,6 +64,7 @@ function Inner() {
 }
 
 const CSS = `
+.as-credit{font-size:13px;color:#475569;margin-top:10px}.as-credit a{color:#0f5c57;font-weight:800}
 .as{max-width:960px;margin:0 auto;padding:28px 18px 60px}.as-head h1{margin:6px 0 8px;font-size:32px;color:#0f2a4e}.as-head p{color:#334155;line-height:1.9;font-size:16px;margin:0 0 14px}.as-cta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .as .pt-box{margin-bottom:16px}.as h2{font-size:19px;color:#0f2a4e;margin:0 0 10px;display:flex;align-items:center;gap:8px}.as p{line-height:1.9;color:#1e293b}
 .as-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}.as-list li{display:flex;gap:8px;align-items:flex-start;line-height:1.8;color:#1e293b}.as-list li svg{flex:0 0 auto;margin-top:7px;color:#0b6f69}

@@ -3,8 +3,8 @@
  * بنك مِعيار (خادم فقط): البنود المعتمدة بمفاتيحها · المقاطع من الجدول · روابط الوسائط الموقَّعة (دلو miaar-media)
  *  · بناء النموذج العام للمتقدّم (بلا مفاتيح) · تغطية البنك (مستوى×مهارة×نوع) للوحة.
  */
-import { LEVELS, SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, isLevel, isSkill, isOptionId, FORM_PLAN } from './registry';
-import type { PoolItem, PublicForm, PublicQuestion, PublicPassage, SecureItem, Option, ItemType, Level, Skill } from './registry';
+import { LEVELS, SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, isBankLevel, isSkill, isOptionId, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
+import type { PoolItem, PublicForm, PublicQuestion, PublicPassage, SecureItem, Option, ItemType, BankLevel, Skill } from './registry';
 
 export const MEDIA_BUCKET = 'miaar-media';
 const SIGN_SECONDS = 3 * 60 * 60;
@@ -24,9 +24,9 @@ export function optionList(value: unknown, type: ItemType): Option[] | null {
   return new Set(out.map((o) => o.id)).size === out.length ? out : null;
 }
 
-export type PassageRow = { id: string; level: string; skill: 'reading' | 'listening'; title: string; body: string; audio_public_path: string | null; audio_storage_path: string | null; status: string };
+export type PassageRow = { id: string; level: string; skill: 'reading' | 'listening'; title: string; body: string; audio_public_path: string | null; audio_storage_path: string | null; status: string; meta?: Record<string, unknown> | null };
 export async function loadPassages(db: any): Promise<Map<string, PassageRow>> {
-  const { data, error } = await db.from('miaar_passages').select('id, level, skill, title, body, audio_public_path, audio_storage_path, status').eq('status', 'approved').limit(1000);
+  const { data, error } = await db.from('miaar_passages').select('id, level, skill, title, body, audio_public_path, audio_storage_path, status, meta').eq('status', 'approved').limit(1000);
   if (error) throw new Error('passages_unavailable');
   return new Map(((data || []) as PassageRow[]).map((p) => [p.id, p]));
 }
@@ -47,7 +47,7 @@ export async function loadApprovedPool(db: any, passages?: Map<string, PassageRo
     const code = typeof row.item_code === 'string' ? row.item_code.trim() : ''; if (!code || seen.has(code) || WITHDRAWN_CODES.has(code)) continue;
     const type = (M1_ITEM_TYPES as readonly string[]).includes(row.item_type) ? (row.item_type as ItemType) : null; if (!type) continue;
     const options = optionList(row.options, type); const correct = keyOf.get(row.id);
-    if (!options || !isOptionId(correct) || !options.some((o) => o.id === correct) || !isLevel(row.level) || !isSkill(row.skill)) continue;
+    if (!options || !isOptionId(correct) || !options.some((o) => o.id === correct) || !isBankLevel(row.level) || !isSkill(row.skill)) continue;
     const passageId = typeof row.passage_id === 'string' && row.passage_id.trim() ? row.passage_id.trim() : null;
     if (row.skill === 'listening' && !listeningReady(P.get(passageId || ''))) continue;
     if (row.skill === 'reading' && passageId && !readingReady(P.get(passageId))) continue;
@@ -72,7 +72,7 @@ export async function formFromPool(db: any, pool: readonly PoolItem[], codes: re
   const selected = codes.map((c) => byCode.get(c)).filter((i): i is PoolItem => !!i); if (selected.length !== codes.length) return null;
   const passageIds = [...new Set(selected.map((i) => i.passageId).filter((x): x is string => !!x))];
   const out: PublicPassage[] = [];
-  for (const id of passageIds) { const p = P.get(id); if (!p) return null; out.push({ id: p.id, level: p.level, skill: p.skill, title: p.title, text: p.body, audioUrl: p.skill === 'listening' ? await mediaUrl(db, p.audio_public_path || p.audio_storage_path) : null }); }
+  for (const id of passageIds) { const p = P.get(id); if (!p) return null; const pol = playerPolicy(p.level, (p.meta || null) as any); out.push({ id: p.id, level: p.level, skill: p.skill, title: p.title, text: p.body, audioUrl: p.skill === 'listening' ? await mediaUrl(db, p.audio_public_path || p.audio_storage_path) : null, player: p.skill === 'listening' ? { ...pol, twice: (p.meta as any)?.twice === true } : undefined }); }
   const questions: PublicQuestion[] = [];
   for (const i of selected) {
     const options: Option[] = []; for (const o of i.options) options.push({ id: o.id, text: o.text, image: o.image ? await mediaUrl(db, o.image) : null, alt: o.alt || null });
@@ -86,19 +86,21 @@ export const secureItems = (pool: readonly PoolItem[], codes: readonly string[])
 };
 
 /** تغطية البنك للوحة: لكل مستوى×مهارة عدد المعتمد مقابل الخطة، وبالنوع */
-export type Coverage = { cells: Array<{ level: Level; skill: Skill; approved: number; needed: number; by_type: Record<string, number> }>; total_approved: number; total_all: number; by_status: Record<string, number>; passages: number; descriptors_used: number };
+export type Coverage = { cells: Array<{ level: BankLevel; skill: Skill; approved: number; in_review: number; needed: number; by_type: Record<string, number> }>; total_approved: number; total_all: number; by_status: Record<string, number>; by_batch: Record<string, Record<string, number>>; passages: number; descriptors_used: number };
+/** دفعة البند: athar-m2a (الجديد) · miaar-legacy (القديم الموسوم) · غير ذلك إصدار المحتوى */
+export const itemBatch = (r: { content_version?: string | null; legacy_extra?: any }): string => (r.legacy_extra && typeof r.legacy_extra === 'object' && typeof r.legacy_extra.batch === 'string') ? r.legacy_extra.batch : (r.content_version || '—');
 export async function bankCoverage(db: any): Promise<Coverage> {
   const [{ data: items }, { data: passages }] = await Promise.all([
-    db.from('question_bank_items').select('level, skill, status, item_type, descriptor_code').limit(5000),
+    db.from('question_bank_items').select('level, skill, status, item_type, descriptor_code, content_version, legacy_extra').limit(5000),
     db.from('miaar_passages').select('id').eq('status', 'approved').limit(2000),
   ]);
-  const rows = (items || []) as any[]; const by_status: Record<string, number> = {}; const used = new Set<string>();
-  for (const r of rows) { by_status[r.status] = (by_status[r.status] || 0) + 1; if (r.descriptor_code) used.add(r.descriptor_code); }
+  const rows = (items || []) as any[]; const by_status: Record<string, number> = {}; const used = new Set<string>(); const by_batch: Coverage['by_batch'] = {};
+  for (const r of rows) { by_status[r.status] = (by_status[r.status] || 0) + 1; if (r.descriptor_code) used.add(r.descriptor_code); const b = itemBatch(r); by_batch[b] = by_batch[b] || {}; by_batch[b][r.status] = (by_batch[b][r.status] || 0) + 1; }
   const cells: Coverage['cells'] = [];
-  for (const level of LEVELS) for (const skill of SKILLS) {
-    const here = rows.filter((r) => r.level === level && r.skill === skill && r.status === 'approved'); const by_type: Record<string, number> = {};
-    for (const r of here) by_type[r.item_type || 'mcq'] = (by_type[r.item_type || 'mcq'] || 0) + 1;
-    cells.push({ level, skill, approved: here.length, needed: FORM_PLAN[level][skill], by_type });
+  for (const level of [FLOOR_LEVEL, ...LEVELS] as BankLevel[]) for (const skill of SKILLS) {
+    const here = rows.filter((r) => r.level === level && r.skill === skill); const approved = here.filter((r) => r.status === 'approved'); const by_type: Record<string, number> = {};
+    for (const r of approved) by_type[r.item_type || 'mcq'] = (by_type[r.item_type || 'mcq'] || 0) + 1;
+    cells.push({ level, skill, approved: approved.length, in_review: here.filter((r) => r.status === 'in_review').length, needed: level === FLOOR_LEVEL ? FLOOR_PLAN[skill] : FORM_PLAN[level][skill], by_type });
   }
-  return { cells, total_approved: by_status.approved || 0, total_all: rows.length, by_status, passages: (passages || []).length, descriptors_used: used.size };
+  return { cells, total_approved: by_status.approved || 0, total_all: rows.length, by_status, by_batch, passages: (passages || []).length, descriptors_used: used.size };
 }

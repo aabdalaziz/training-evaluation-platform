@@ -5,6 +5,8 @@
  *  · «مِسبار» (خمسة بنود تحدّد نقطة البداية) · «ميزان الثقة» · حساب التقرير بمفاتيحه العربية نفسها (يقرؤه portal_placements وكل ما بُني على P7)
  *  · «احتياجاتي»: مضاعف الوقت والتعليمات الأبسط · رموز الدعوات ورموز الوصول للنتيجة.
  * المصطلح الرسمي في التقرير: «تقرير تحديد المستوى في اللغة العربية — مِعيار من أَثَر» و«توصية تسكين مبدئية».
+ * م2-أ «بنك مِعيار الجديد»: «أرضية ما قبل A1» (اثنا عشر بندًا مصوّرًا تُقدَّم في التكيفي لمن لم يجتز A1) · سياسة المشغّل (سرعات حتى B1 · إعادات بحسب المستوى)
+ *  · التقرير يضيف «ما_قبل_A1» و«نقطة_البداية_داخل_A1».
  */
 export const MIAAR_NAMES_AR = {
   product: 'مِعيار — من أَثَر',
@@ -22,6 +24,24 @@ export const MIAAR_NAMES_AR = {
 
 export const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 export type Level = (typeof LEVELS)[number];
+/** «أرضية ما قبل A1»: مستوى في البنك لا في سلّم التسكين — يُقدَّم بعد الإخفاق في A1 (التكيفي) ليميّز «من الصفر» عن «يعرف الحروف والكلمات» */
+export const FLOOR_LEVEL = 'PRE_A1' as const;
+export type BankLevel = Level | typeof FLOOR_LEVEL;
+export const BANK_LEVELS: readonly BankLevel[] = [FLOOR_LEVEL, ...LEVELS];
+export const FLOOR_INDEX = -1;
+export const FLOOR_PLAN = { grammar_vocab: 4, reading: 4, listening: 4 } as const;
+export const BANK_LEVEL_AR: Record<BankLevel, string> = { PRE_A1: 'ما قبل A1', A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
+/** سياسة المشغّل بحسب المستوى: السرعات المتاحة (حتى B1) وعدد الإعادات؛ يمكن للمقطع أن يضبطها في meta */
+export const PLAYER_POLICY: Record<BankLevel, { speeds: number[]; replays: number }> = {
+  PRE_A1: { speeds: [0.75, 1], replays: 3 }, A1: { speeds: [0.75, 1, 1.25], replays: 2 }, A2: { speeds: [0.75, 1, 1.25], replays: 2 }, B1: { speeds: [0.75, 1, 1.25], replays: 2 },
+  B2: { speeds: [1], replays: 1 }, C1: { speeds: [1], replays: 1 }, C2: { speeds: [1], replays: 1 },
+};
+export function playerPolicy(level: string, meta?: { speeds?: unknown; replays?: unknown } | null): { speeds: number[]; replays: number } {
+  const base = PLAYER_POLICY[(isBankLevel(level) ? level : 'B2') as BankLevel];
+  const speeds = Array.isArray(meta?.speeds) ? meta!.speeds.filter((x): x is number => typeof x === 'number' && x >= 0.5 && x <= 1.5) : [];
+  const replays = typeof meta?.replays === 'number' && meta.replays >= 1 && meta.replays <= 5 ? Math.floor(meta.replays) : base.replays;
+  return { speeds: speeds.length ? speeds : base.speeds, replays };
+}
 export const SKILLS = ['grammar_vocab', 'reading', 'listening'] as const;
 export type Skill = (typeof SKILLS)[number];
 export type ExamMode = 'comprehensive' | 'adaptive';
@@ -48,12 +68,12 @@ export const FORM_PLAN: Record<Level, Record<Skill, number>> = {
 
 export type Option = { id: string; text: string; image?: string | null; alt?: string | null };
 export type PoolItem = {
-  id: string; code: string; level: Level; skill: Skill; type: ItemType; passageId: string | null; questionText: string;
+  id: string; code: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string;
   options: Option[]; correctOptionId: string; stimulus: { image?: string | null; alt?: string | null } | null; descriptor: string | null;
 };
-export type SecureItem = { id: string; level: Level; skill: Skill; correctOptionId: string };
-export type PublicQuestion = { id: string; level: Level; skill: Skill; type: ItemType; passageId: string | null; questionText: string; options: Option[]; stimulus: { image: string | null; alt: string | null } | null };
-export type PublicPassage = { id: string; level: string; skill: 'reading' | 'listening'; title: string; text: string; audioUrl: string | null };
+export type SecureItem = { id: string; level: BankLevel; skill: Skill; correctOptionId: string };
+export type PublicQuestion = { id: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string; options: Option[]; stimulus: { image: string | null; alt: string | null } | null };
+export type PublicPassage = { id: string; level: string; skill: 'reading' | 'listening'; title: string; text: string; audioUrl: string | null; player?: { speeds: number[]; replays: number; twice?: boolean } };
 export type PublicForm = { questions: PublicQuestion[]; passages: PublicPassage[] };
 export type Candidate = { name: string; email: string; phone?: string; nativeLanguage?: string; studiedBefore?: boolean | null; purpose?: string };
 export type Answer = { question_id: string; selected_option_id: string };
@@ -62,6 +82,10 @@ export type Confidence = { grade: 'high' | 'medium' | 'border'; label_ar: string
 
 export const levelIndex = (level: string): number => LEVELS.indexOf(level as Level);
 export const isLevel = (v: unknown): v is Level => typeof v === 'string' && (LEVELS as readonly string[]).includes(v);
+export const isBankLevel = (v: unknown): v is BankLevel => v === FLOOR_LEVEL || isLevel(v);
+/** فهرس المستوى في الجلسة: الأرضية = -1 */
+export const bankLevelIndex = (level: string): number => level === FLOOR_LEVEL ? FLOOR_INDEX : levelIndex(level);
+export const levelAtIndex = (index: number): BankLevel => index === FLOOR_INDEX ? FLOOR_LEVEL : (LEVELS[index] ?? LEVELS[0]);
 export const isSkill = (v: unknown): v is Skill => typeof v === 'string' && (SKILLS as readonly string[]).includes(v);
 export const isExamMode = (v: unknown): v is ExamMode => v === 'comprehensive' || v === 'adaptive';
 export const isOptionId = (v: unknown): v is string => typeof v === 'string' && /^[a-f]$/.test(v);
@@ -120,8 +144,14 @@ export function drawCodes(pool: readonly PoolItem[], seed: string): { codes: str
     }
     if (levelCount === 0) return null;
   }
+  // أرضية ما قبل A1: تُسحب إن وُجدت (لا تُعدّ نقصًا إن غابت) وتُقدَّم فقط عند الإخفاق في A1
+  for (const skill of SKILLS) {
+    const available = shufflePool(pool.filter((item) => item.level === FLOOR_LEVEL && item.skill === skill), `${seed}:${FLOOR_LEVEL}:${skill}`);
+    codes.push(...available.slice(0, FLOOR_PLAN[skill]).map((item) => item.code));
+  }
   return { codes, short };
 }
+export const hasFloor = (items: readonly { level: string }[]): boolean => items.some((i) => i.level === FLOOR_LEVEL);
 
 // ---------- مِسبار (خمسة بنود؛ المفاتيح على الخادم فقط) ----------
 export type ProbeItem = { id: string; level: Level; skill: string; prompt: string; options: Option[]; correct: string };
@@ -147,21 +177,32 @@ export function probeBand(score: number): Level { return score <= 1 ? 'A1' : sco
 export function probeStartIndex(score: number, mode: ExamMode): number { return mode === 'comprehensive' ? 0 : Math.min(levelIndex(probeBand(score)), 2); }
 
 // ---------- قرار التقدّم (صعود/نزول) ----------
-export type Progress = { currentIndex: number; startIndex: number; direction: 'up' | 'down'; mode: ExamMode };
-export type Decision = { decision: 'advance' | 'descend' | 'fail' | 'complete'; nextIndex: number | null; direction: 'up' | 'down' };
+export type Progress = { currentIndex: number; startIndex: number; direction: 'up' | 'down'; mode: ExamMode; floor?: boolean };
+export type Decision = { decision: 'advance' | 'descend' | 'fail' | 'complete' | 'floor'; nextIndex: number | null; direction: 'up' | 'down' };
 /** بعد اكتمال بنود المستوى الحالي: صعود عند الاجتياز؛ عند الإخفاق في نقطة بداية أعلى من A1 ننزل مستوى (لا نحكم بالفشل من مستوى لم يُقَس ما تحته) */
 export function nextStep(p: Progress, percent: number): Decision {
   const passed = p.mode === 'comprehensive' || percent >= PASS_PERCENT; const last = p.currentIndex === LEVELS.length - 1;
+  if (p.currentIndex === FLOOR_INDEX) return { decision: 'fail', nextIndex: null, direction: p.direction };  /* بعد الأرضية ينتهي الاختبار */
+  const failA1 = (): Decision => p.floor ? { decision: 'floor', nextIndex: FLOOR_INDEX, direction: p.direction } : { decision: 'fail', nextIndex: null, direction: p.direction };
   if (p.direction === 'down') {
     if (passed) return { decision: 'complete', nextIndex: null, direction: 'down' };
-    if (p.currentIndex === 0) return { decision: 'fail', nextIndex: null, direction: 'down' };
+    if (p.currentIndex === 0) return failA1();
     return { decision: 'descend', nextIndex: p.currentIndex - 1, direction: 'down' };
   }
   if (last) return { decision: 'complete', nextIndex: null, direction: 'up' };
   if (passed) return { decision: 'advance', nextIndex: p.currentIndex + 1, direction: 'up' };
   if (p.currentIndex === p.startIndex && p.startIndex > 0) return { decision: 'descend', nextIndex: p.currentIndex - 1, direction: 'down' };
-  return { decision: 'fail', nextIndex: null, direction: 'up' };
+  return failA1();
 }
+/** حكم الأرضية: ≥ 60% → يعرف الحروف والكلمات الأساسية (يبدأ A1 مباشرة)؛ وإلا يبدأ من الصفر */
+export type FloorStat = { offered: boolean; correct: number; answered: number; total: number; percent: number; verdict: 'knows_basics' | 'from_zero' | null };
+export function floorStat(scored: readonly SecureItem[], selected: ReadonlyMap<string, string>): FloorStat {
+  const items = scored.filter((i) => i.level === FLOOR_LEVEL); const answered = items.filter((i) => selected.has(i.id));
+  const correct = answered.filter((i) => selected.get(i.id) === i.correctOptionId).length; const percent = answered.length ? Math.round((correct / answered.length) * 100) : 0;
+  const offered = answered.length > 0;
+  return { offered, correct, answered: answered.length, total: items.length, percent, verdict: !offered ? null : percent >= PASS_PERCENT ? 'knows_basics' : 'from_zero' };
+}
+export const FLOOR_VERDICT_AR: Record<'knows_basics' | 'from_zero', string> = { knows_basics: 'يعرف الحروف والكلمات الأساسية — يبدأ A1 مباشرة', from_zero: 'يبدأ من الصفر — الحروف والأصوات أولًا' };
 
 // ---------- التقرير (المفاتيح العربية نفسها + إضافات م1) ----------
 export function reasonLabel(reason: FinishReason): string {
@@ -212,8 +253,11 @@ export type ReportInput = {
   candidate: Candidate; examMode: ExamMode; startIndex: number; durationSeconds: number; remainingSeconds: number; source: string; title: string;
   access: Access | null; inviteLabel: string | null; short: string[];
 };
-export function calculateReport(input: ReportInput, answers: Answer[], reason: FinishReason, scored: readonly SecureItem[], stems: ReadonlyMap<string, string> = new Map()) {
+export function calculateReport(input: ReportInput, answers: Answer[], reason: FinishReason, scoredAll: readonly SecureItem[], stems: ReadonlyMap<string, string> = new Map()) {
   const selected = new Map(answers.map((a) => [a.question_id, a.selected_option_id]));
+  const floor = floorStat(scoredAll, selected);
+  const scored = scoredAll.filter((item) => item.level !== FLOOR_LEVEL);  /* الأرضية لا تدخل في إحصاء المهارات والمستويات */
+  const mainAnswers = answers.filter((a) => scored.some((i) => i.id === a.question_id));
   const totalCorrect = scored.filter((item) => selected.get(item.id) === item.correctOptionId).length;
   const skillStats: Record<string, { correct: number; answered: number; total: number; percent: number; level: string }> = {};
   for (const skill of SKILLS) {
@@ -241,8 +285,8 @@ export function calculateReport(input: ReportInput, answers: Answer[], reason: F
       دراسة_سابقة_للعربية: c.studiedBefore === null || c.studiedBefore === undefined ? 'غير محدد' : c.studiedBefore ? 'نعم' : 'لا', الغرض_من_الاختبار: c.purpose || '—',
     },
     المستوى_العام: demonstrated,
-    الدرجة_الموضوعية: `${totalCorrect}/${Math.max(1, answers.length)}`,
-    النسبة_العامة: Math.round((totalCorrect / Math.max(1, answers.length)) * 100),
+    الدرجة_الموضوعية: `${totalCorrect}/${Math.max(1, mainAnswers.length)}`,
+    النسبة_العامة: Math.round((totalCorrect / Math.max(1, mainAnswers.length)) * 100),
     تفصيل_المهارات: { القواعد_والمفردات: skillStats.grammar_vocab.level, القراءة: skillStats.reading.level, الاستماع: skillStats.listening.level },
     احصائيات: skillStats,
     مستويات_تفصيلية: stats,
@@ -250,11 +294,11 @@ export function calculateReport(input: ReportInput, answers: Answer[], reason: F
     الوقت_المستغرق: `${mm}:${ss}`,
     التوصية: `${placementText}${weakestText}${conf.grade === 'border' ? ' النتيجة على الحدّ — يُستحسن قرار بشري.' : ''}`,
     تاريخ: new Date().toISOString(),
-    ملخص_التسكين: { المستوى_المثبت: demonstrated, مستوى_الالتحاق_المقترح: entry, طبيعة_النتيجة: MIAAR_NAMES_AR.nature, دون_A1: !completedAll && entry === demonstrated },
+    ملخص_التسكين: { المستوى_المثبت: demonstrated, مستوى_الالتحاق_المقترح: entry, طبيعة_النتيجة: MIAAR_NAMES_AR.nature, دون_A1: !completedAll && entry === demonstrated, نقطة_البداية_داخل_A1: floor.verdict ? FLOOR_VERDICT_AR[floor.verdict] : null },
     إصدار_البنك: input.source,
     طريقة_اختيار_الأسئلة: input.title,
     عدد_البنود_المقدمة: answers.length,
-    بنود_الجلسة: scored.map((item) => { const chosen = selected.get(item.id); return { الرمز: item.id, المستوى: item.level, المهارة: item.skill, النص: (stems.get(item.id) || '').replace(/\s+/g, ' ').trim().slice(0, 180), النتيجة: chosen == null ? 'لم يُجب' : chosen === item.correctOptionId ? 'صحيح' : 'غير صحيح' }; }),
+    بنود_الجلسة: scoredAll.map((item) => { const chosen = selected.get(item.id); return { الرمز: item.id, المستوى: item.level, المهارة: item.skill, النص: (stems.get(item.id) || '').replace(/\s+/g, ' ').trim().slice(0, 180), النتيجة: chosen == null ? 'لم يُجب' : chosen === item.correctOptionId ? 'صحيح' : 'غير صحيح' }; }),
     // م1
     الجهة_المصدرة: MIAAR_NAMES_AR.product,
     نمط_الاختبار: input.examMode === 'adaptive' ? 'تكيفي' : 'شامل',
@@ -264,6 +308,8 @@ export function calculateReport(input: ReportInput, answers: Answer[], reason: F
     تيسيرات: accessText,
     الدعوة: input.inviteLabel,
     نقص_البنك: input.short.length ? input.short : null,
+    // م2-أ
+    ما_قبل_A1: floor.offered ? { قُدِّمت: true, صحيح: floor.correct, من: floor.answered, النسبة: floor.percent, الحكم: FLOOR_VERDICT_AR[floor.verdict!] } : { قُدِّمت: false },
   };
 }
 export type Report = ReturnType<typeof calculateReport>;

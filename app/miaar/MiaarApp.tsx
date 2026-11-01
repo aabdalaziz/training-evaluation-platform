@@ -8,13 +8,14 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { qrSvg } from '../../lib/certificates/qr';
-import { CAN_DO, LEVELS, SKILLS } from '../../lib/miaar/registry';
+import { CAN_DO, LEVELS, SKILLS, FLOOR_LEVEL, FLOOR_INDEX } from '../../lib/miaar/registry';
 import type { Level } from '../../lib/miaar/registry';
 
 type Copy = Record<string, Record<string, Record<string, string>>> & { langs?: { id: string; name: string; find: string }[]; native?: { value: string; labels: Record<string, string> }[] };
-type Q = { id: string; level: Level; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
-type P = { id: string; level: string; skill: string; title: string; text: string; audioUrl: string | null };
-type Session = { examMode: 'comprehensive' | 'adaptive'; currentLevel: Level; currentLevelIndex: number; startLevelIndex: number; direction: 'up' | 'down'; status: string; finishReason: string | null; expiresAt: string; remainingSeconds: number; durationSeconds: number; access: any; answers: Record<string, string>; form: { questions: Q[]; passages: P[] } | null };
+type Q = { id: string; level: string; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
+type Player = { speeds: number[]; replays: number; twice?: boolean };
+type P = { id: string; level: string; skill: string; title: string; text: string; audioUrl: string | null; player?: Player };
+type Session = { examMode: 'comprehensive' | 'adaptive'; currentLevel: string; currentLevelIndex: number; startLevelIndex: number; direction: 'up' | 'down'; status: string; finishReason: string | null; expiresAt: string; remainingSeconds: number; durationSeconds: number; access: any; answers: Record<string, string>; form: { questions: Q[]; passages: P[] } | null };
 type Invite = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: 'adaptive' | 'comprehensive'; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null };
 type Step = 'loading' | 'intro' | 'register' | 'probe' | 'test' | 'review' | 'result' | 'blocked';
 type Props = { inviteCode?: string | null; inviteToken?: string | null; resultCode?: string | null; fontClass?: string };
@@ -42,6 +43,8 @@ const X: Record<string, { ar: string; en: string }> = {
   result_code: { ar: 'رمز النتيجة', en: 'Result code' }, copy_link: { ar: 'نسخ الرابط', en: 'Copy link' }, copied: { ar: 'نُسخ', en: 'Copied' }, nature: { ar: 'توصية تسكين مبدئية — لا شهادة إتقان', en: 'Preliminary placement recommendation — not a proficiency certificate' },
   not_found: { ar: 'لا نتيجة بهذا الرمز.', en: 'No result with this code.' }, loading: { ar: 'جارٍ التحميل…', en: 'Loading…' }, replays_left: { ar: 'إعادات متبقية: {n}', en: 'Replays left: {n}' },
   pre_a1: { ar: 'بداية الطريق — يبدأ من أول A1', en: 'Starting out — begins at the very start of A1' },
+  floor_level: { ar: 'ما قبل A1', en: 'Pre-A1' }, level_floor: { ar: 'لم تكتمل A1 — بضعة أسئلة أبسط بالصور لنعرف نقطة بدايتك', en: 'A1 not yet complete — a few simpler picture questions to find your starting point' },
+  speed: { ar: 'السرعة', en: 'Speed' }, twice: { ar: 'يُقرأ المقطع مرتين', en: 'The clip is read twice' }, floor_verdict: { ar: 'نقطة البداية داخل A1', en: 'Starting point within A1' },
   tfng_a: { ar: 'صواب', en: 'True' }, tfng_b: { ar: 'خطأ', en: 'False' }, tfng_c: { ar: 'غير مذكور', en: 'Not given' }, pick_picture: { ar: 'اختر الصورة', en: 'Choose the picture' },
   simple_test: { ar: 'اقرأ أو استمع، ثم اختر إجابة واحدة. الزرّ الكبير ينقلك إلى السؤال التالي.', en: 'Read or listen, then choose one answer. The big button moves to the next question.' },
 };
@@ -146,6 +149,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     if (r.decision === 'advance' || r.decision === 'descend') {
       setToast(x(r.decision === 'advance' ? 'level_passed' : 'level_down', { level: session!.currentLevel, next: r.nextLevel })); setTimeout(() => setToast(''), 5000);
       setSession((s) => s ? { ...s, currentLevel: r.nextLevel, currentLevelIndex: LEVELS.indexOf(r.nextLevel), direction: r.direction } : s); setQIdx(0);
+    } else if (r.decision === 'floor') {
+      setToast(x('level_floor')); setTimeout(() => setToast(''), 7000);
+      setSession((s) => s ? { ...s, currentLevel: FLOOR_LEVEL, currentLevelIndex: FLOOR_INDEX, direction: r.direction } : s); setQIdx(0);
     } else if (r.decision === 'complete' || r.decision === 'fail') { setSession((s) => s ? { ...s, finishReason: r.decision === 'complete' ? 'completed' : 'failed' } : s); setToast(x('level_finished')); setTimeout(() => setToast(''), 5000); setStep('review'); }
   }
   async function doFinish(reason: 'quit' | 'time') {
@@ -333,9 +339,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
 
     {step === 'test' && session && current && <section className="mi-test" data-testid="mi-test">
       <div className="mi-tbar">
-        <div className="mi-levels-strip" aria-hidden="true">{LEVELS.map((lv, i) => <span key={lv} className={`${i === session.currentLevelIndex ? 'now' : i < session.currentLevelIndex ? 'done' : ''}${i < session.startLevelIndex ? ' skip' : ''}`}>{lv}</span>)}</div>
+        <div className="mi-levels-strip" aria-hidden="true">{session.currentLevelIndex === FLOOR_INDEX && <span className="now floor">{x('floor_level')}</span>}{LEVELS.map((lv, i) => <span key={lv} className={`${i === session.currentLevelIndex ? 'now' : i < session.currentLevelIndex ? 'done' : ''}${i < session.startLevelIndex ? ' skip' : ''}`}>{lv}</span>)}</div>
         <div className="mi-tools-row">
-          <span className="mi-tpill" data-testid="mi-level">{t('test', 'levelNow', { level: session.currentLevel })}</span>
+          <span className="mi-tpill" data-testid="mi-level">{t('test', 'levelNow', { level: session.currentLevel === FLOOR_LEVEL ? x('floor_level') : session.currentLevel })}</span>
           <span className="mi-tpill">{t('test', 'qOf', { a: qIdx + 1, b: levelQs.length })} · <b>{t('test', 'answered', { n: answeredInLevel })}</b></span>
           <span className={`mi-tpill${remaining < 300 ? ' low' : ''}`} aria-live="polite" data-testid="mi-clock">{t('test', 'time', { clock: clock(remaining) })}</span>
           <button type="button" className="mi-link" onClick={() => setShowEnd(true)}>{t('test', 'end')}</button>
@@ -346,10 +352,10 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       <div className={`mi-main${passage ? ' pass' : ''}`}>
         {passage && <aside className="mi-read" data-testid="mi-passage">
           <div className="mi-read-h"><p><strong>{passage.skill === 'listening' ? t('test', 'listening') : t('test', 'reading')}</strong><small>{passage.title} · {passage.level}</small></p></div>
-          <div className="mi-read-b">{passage.skill === 'listening' ? <Player key={passage.id} url={passage.audioUrl} title={passage.title} t={(k, v) => t('player', k, v)} left={(n) => x('replays_left', { n })} /> : <p className="mi-text" dir="rtl" lang="ar">{passage.text}</p>}</div>
+          <div className="mi-read-b">{passage.skill === 'listening' ? <Player key={passage.id} url={passage.audioUrl} title={passage.title} policy={passage.player || { speeds: [1], replays: 1 }} t={(k, v) => t('player', k, v)} x={x} /> : <p className="mi-text" dir="rtl" lang="ar">{passage.text}</p>}</div>
         </aside>}
         <article className={`mi-qcard${deferred.has(current.id) ? ' mark' : ''}`}>
-          <div className="mi-tags"><span className={`mi-skilltag ${current.skill === 'reading' ? 'read' : current.skill === 'listening' ? 'listen' : ''}`}>{skillName(current.skill)}</span><span className="mi-leveltag">{current.level}</span>{deferred.has(current.id) && <span className="mi-flag">{t('test', 'deferred')}</span>}<span className="mi-count">{t('test', 'qOf', { a: qIdx + 1, b: levelQs.length })}</span></div>
+          <div className="mi-tags"><span className={`mi-skilltag ${current.skill === 'reading' ? 'read' : current.skill === 'listening' ? 'listen' : ''}`}>{skillName(current.skill)}</span><span className="mi-leveltag">{current.level === FLOOR_LEVEL ? x('floor_level') : current.level}</span>{deferred.has(current.id) && <span className="mi-flag">{t('test', 'deferred')}</span>}<span className="mi-count">{t('test', 'qOf', { a: qIdx + 1, b: levelQs.length })}</span></div>
           {current.stimulus?.image && <img className="mi-stim" src={current.stimulus.image} alt={current.stimulus.alt || ''} />}
           <h2 className="mi-qtext" dir="rtl" lang="ar">{current.questionText}</h2>
           {current.type === 'picture_choice' && <p className="mi-muted">{x('pick_picture')}</p>}
@@ -377,7 +383,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     {step === 'review' && session && <>
       <Hero kicker={t('review', 'kicker')} title={t('review', 'title')} lead={t('review', 'lead')} />
       <div className="mi-wrap"><section className="mi-card" data-testid="mi-review">
-        {(() => { const shown = session.form?.questions.filter((q) => LEVELS.indexOf(q.level) <= Math.max(session.currentLevelIndex, session.startLevelIndex) && (LEVELS.indexOf(q.level) >= Math.min(session.currentLevelIndex, session.startLevelIndex))) || []; const done = shown.filter((q) => answers[q.id]).length; const pend = shown.length - done;
+        {(() => { const shown = session.form?.questions.filter((q) => { const li = q.level === FLOOR_LEVEL ? FLOOR_INDEX : (LEVELS as readonly string[]).indexOf(q.level); return li <= Math.max(session.currentLevelIndex, session.startLevelIndex) && li >= Math.min(session.currentLevelIndex, session.startLevelIndex); }) || []; const done = shown.filter((q) => answers[q.id]).length; const pend = shown.length - done;
           return <>
             <div className="mi-stats"><div className="mi-stat"><span>{t('review', 'shown')}</span><b>{shown.length}</b></div><div className="mi-stat"><span>{t('review', 'answered')}</span><b>{done}</b></div><div className="mi-stat"><span>{t('review', 'deferred')}</span><b>{deferred.size}</b></div><div className="mi-stat"><span>{t('review', 'timeLeft')}</span><b>{clock(remaining)}</b></div></div>
             {pend > 0 && <p className="mi-alert soft">{t('review', 'pending', { n: pend })}</p>}
@@ -432,14 +438,17 @@ function LangPicker({ copy, lang, onPick, label, search, none }: { copy: Copy | 
   </div>;
 }
 
-function Player({ url, title, t, left }: { url: string | null; title: string; t: (k: string, v?: any) => string; left: (n: number) => string }) {
-  const ref = useRef<HTMLAudioElement | null>(null); const [plays, setPlays] = useState(0); const [playing, setPlaying] = useState(false); const [failed, setFailed] = useState(!url);
-  const MAX = 2;
-  const play = () => { if (plays >= MAX) return; if (!url || failed) { try { const u = new SpeechSynthesisUtterance(title); u.lang = 'ar-SA'; speechSynthesis.speak(u); setPlays(plays + 1); } catch { /* */ } return; } const a = ref.current; if (!a) return; a.currentTime = 0; a.play().then(() => { setPlaying(true); setPlays(plays + 1); }).catch(() => setFailed(true)); };
+/** مشغّل الاستماع (م2-أ): تشغيل + إعادات بحسب سياسة المستوى · سرعات 0.75/1/1.25 حتى B1 · «يُقرأ مرتين» لما قبل A1 */
+function Player({ url, title, policy, t, x }: { url: string | null; title: string; policy: Player; t: (k: string, v?: any) => string; x: (k: string, v?: any) => string }) {
+  const ref = useRef<HTMLAudioElement | null>(null); const [plays, setPlays] = useState(0); const [playing, setPlaying] = useState(false); const [failed, setFailed] = useState(!url); const [speed, setSpeed] = useState(1);
+  const MAX = 1 + Math.max(0, policy.replays);
+  const play = () => { if (plays >= MAX) return; if (!url || failed) { try { const u = new SpeechSynthesisUtterance(title); u.lang = 'ar-SA'; u.rate = speed; speechSynthesis.speak(u); setPlays(plays + 1); } catch { /* */ } return; } const a = ref.current; if (!a) return; a.currentTime = 0; a.playbackRate = speed; a.play().then(() => { setPlaying(true); setPlays(plays + 1); }).catch(() => setFailed(true)); };
   return <div className="mi-player" role="group" aria-label={t('aria', { title })}>
     {url && <audio ref={ref} src={url} preload="auto" onEnded={() => setPlaying(false)} onError={() => setFailed(true)} />}
     <div className="mi-eq" aria-hidden="true">{[18, 34, 26, 44, 30, 22, 38, 28, 16, 36, 24, 40].map((h, i) => <span key={i} style={{ height: h, opacity: playing ? 1 : 0.45 }} />)}</div>
-    <div className="mi-pctl"><button type="button" className="mi-play" onClick={play} disabled={plays >= MAX || playing} data-testid="mi-play">{playing ? '…' : plays === 0 ? `▶ ${t('play')}` : `↻ ${t('replay', { n: MAX - plays })}`}</button><span className="mi-psoft">{left(Math.max(0, MAX - plays))}</span></div>
+    <div className="mi-pctl"><button type="button" className="mi-play" onClick={play} disabled={plays >= MAX || playing} data-testid="mi-play">{playing ? '…' : plays === 0 ? `▶ ${t('play')}` : `↻ ${t('replay', { n: MAX - plays })}`}</button><span className="mi-psoft">{x('replays_left', { n: Math.max(0, MAX - Math.max(1, plays)) })}</span></div>
+    {policy.speeds.length > 1 && <div className="mi-speed" role="group" aria-label={x('speed')} data-testid="mi-speed"><span>{x('speed')}</span>{policy.speeds.map((v) => <button key={v} type="button" className={v === speed ? 'on' : ''} aria-pressed={v === speed} disabled={playing} onClick={() => { setSpeed(v); if (ref.current) ref.current.playbackRate = v; }}>×{v}</button>)}</div>}
+    {policy.twice && <p className="mi-pnote">{x('twice')}</p>}
     {failed && !url && <p className="mi-pnote">{t('tts')}</p>}{failed && url && <p className="mi-pnote">{t('failed')}</p>}
   </div>;
 }
@@ -457,7 +466,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
     <div className="mi-wrap"><div className="mi-card">
       <div className="mi-rsplit">
         <div>
-          <div className={`mi-rlevel lv-${demo}`} data-testid="mi-demo"><small>{x('card_demo')}</small><b style={sum.دون_A1 ? { fontSize: 26 } : undefined}>{sum.دون_A1 ? (ar ? 'ما قبل A1' : 'Pre-A1') : demo}</b><span>{sum.دون_A1 ? x('pre_a1') : t('result', demo.toLowerCase())}</span></div>
+          <div className={`mi-rlevel lv-${demo}`} data-testid="mi-demo"><small>{x('card_demo')}</small><b style={sum.دون_A1 ? { fontSize: 26 } : undefined}>{sum.دون_A1 ? (ar ? 'ما قبل A1' : 'Pre-A1') : demo}</b><span>{sum.دون_A1 ? (sum.نقطة_البداية_داخل_A1 || x('pre_a1')) : t('result', demo.toLowerCase())}</span></div>
           <div className="mi-rgrid">
             <div className="mi-rstat"><span>{x('card_entry')}</span><b data-testid="mi-entry">{entry}</b></div>
             <div className="mi-rstat"><span>{x('conf')}</span><b className={`mi-conf ${conf}`} data-testid="mi-conf">{x(`conf_${conf}`)}</b></div>
@@ -631,6 +640,8 @@ const CSS = `
 .mi-pctl{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
 .mi-play{border:1px solid var(--gold);background:var(--gold);color:#1f2937;border-radius:999px;padding:12px 20px;font-weight:900;cursor:pointer}.mi-play:disabled{opacity:.4;cursor:not-allowed}
 .mi-psoft{color:rgba(255,255,255,.8);font-size:12px;font-weight:800}
+.mi-speed{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;font-size:12px;color:rgba(255,255,255,.85)}.mi-speed button{border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:999px;padding:4px 10px;font-weight:800;cursor:pointer;min-width:44px;min-height:28px}.mi-speed button.on{background:#fff;color:var(--navy)}.mi-speed button:disabled{opacity:.5;cursor:not-allowed}
+.mi-levels-strip .floor{min-width:auto;padding:0 8px;background:var(--gold);color:#1f2937;border-color:var(--gold)}
 .mi-pnote{margin:12px 0 0;border:1px solid rgba(201,162,75,.55);background:rgba(201,162,75,.16);border-radius:12px;padding:8px 12px;text-align:center;font-size:12px;font-weight:800}
 /* review */
 .mi-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
