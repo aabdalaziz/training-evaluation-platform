@@ -15,6 +15,8 @@
  *   GET ?now=1 يضيف golden · map · bottles(عدد) ؛ GET ?mine=1 يضيف orgs · golden · mentor · mentees · shadowed · bottles
  *  لا يصل أي احتياج (P32) إلى هنا إلا عَلَم «مترجم إشارة مطلوب» الذي يختاره الطالب بنفسه في الطلب.
  *  P36 «ذاكرة الهواء»: GET ?seasons=1 · ?season=<id> · ?season_ics=<id> (تقويم .ics) · ?week_question=1 (عام) · ?org_time=<orgId> (منسوب/طاقم)
+ *  P37 «عُمر الهواء»: GET ?week_wall=1 (جدار الأسبوع، عام) · ?year=<سنة> (سجلّ السنة، عام) · ?season= (+ shared, sign_hours) · ?org= (+ share) · ?mine=1 (+ sign_hour, my_week_questions)
+ *   POST week_helped {id} · season_share_invite {org_id, to_org_id} · season_share_answer {org_id, accept} · season_sign_hour {weekday, from_min, duration_min} · season_sign_hour_remove
  *   POST season_slot{sign_language, interpreter_user_id} · week_answer {id, text} (لمن هو على الهواء الآن) · ask{may_publish}
  */
 import { NextResponse } from 'next/server';
@@ -30,6 +32,8 @@ import { runAi, aiUsage, logAi } from '../../../lib/ai/athar';
 import { GRADES, GRADE_LABEL, GRADE_HINT, FACES, FACE_AR, FACE_EN, STATUS_AR, OUTCOME_AR, ON_AIR_MINUTES, ON_AIR_MAX_MINUTES, QUICK_TIMEOUT_MIN, QUICK_CLOSE_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, MAX_OPEN_PER_ASKER, MAX_OPEN_ANON, MAX_WINDOWS, TEXT_MIN, TEXT_MAX, MSG_MAX, CHANGED_MAX, CERT_HOURS, CERT_MEETINGS, WEEKDAY_AR, TAGLINE_AR, cleanGrades, cleanDomains, cleanLink, cleanText, cleanWindow, allowedFaces, goOnAir, isOnAir, minutesLeft, alias as mkAlias, canTake, canClose, nextStatus, rankQueue, nextWindowAt, hhmm, summaryPrompt, localSummary, sessionEndsAt, isBottle, BOTTLE_AR, BOTTLE_HOURS, SHADOW_REQUESTS, P34_NAMES_AR, canAdopt, shadowOnTake, countdownAr, orgAirLine } from '../../../lib/onair/registry';
 import { P35_NAMES_AR, ORG_HOLD_HOURS, WHISPER_MINUTES, orgHoldUntil, effectiveOrg, holdReleased, canReverse, reverseOnTake, canWhisper, cleanSlot, isWhisper, whisperEndsAt, seasonState } from '../../../lib/onair/registry';   // P35
 import { P36_NAMES_AR, RECORD_K, WEEK_QUESTION_DAYS, WEEK_ANSWER_MAX, ORG_TIME_K, cleanSlot36, canAnswerWeek, cleanWeekAnswer, seasonIcs, seasonEnded, weekQuestionLine, seasonPhraseAr, slotOccursAt } from '../../../lib/onair/registry';   // P36
+import { P37_NAMES_AR, SIGN_HOUR_MIN, SIGN_HOUR_MAX, wallLine, canMarkHelped, sharedLabel, cleanSignHour, signHourLiveNow } from '../../../lib/onair/registry';   // P37
+import { weekAnswers, weekWall, myWeekQuestions, weekQuestion37, setWeekWall, shareCandidates, shareInvite, shareAnswer, shareStateOf, orgAdminsOf, signHoursOf, mySignHour, upsertSignHour, removeSignHour, yearRecordOf, yearsWithRecords } from '../../../lib/onair/load';   // P37
 import { seasonById, seasonsAll, seasonSlots36, seasonRecordOf, approvedInterpreters, upsertSeasonSlot36, mySeasonSlot36, interpreterSlots, weekQuestionNow, insertWeekAnswer, orgTimeGridOf } from '../../../lib/onair/load';   // P36
 import type { Face, Grade, Outcome, Presence, Request as OnAirRequest } from '../../../lib/onair/registry';
 import { loadPeople, directoryFacesOf, presentNow, myPresence, upsertPresence, windowsOf, getRequest, openRequests, activeFor, askedBy, countOpenBy, insertRequest, patchRequest, settleStale, messagesOf, postMessage, hoursFor, existingCert, issueOnAirCert, loadPublicStats, presentView, callReceivers, orgsOf, orgMemberIds, orgAirStats, goldenNow, pledgeGolden, liveMapOf, bottlesOpen, menteesOf, shadowedFor, echoOf } from '../../../lib/onair/load';
@@ -57,6 +61,7 @@ const META = { tagline_ar: TAGLINE_AR, grades: GRADES.map(g => ({ key: g, label:
   limits: { on_air_minutes: ON_AIR_MINUTES, on_air_max_minutes: ON_AIR_MAX_MINUTES, quick_timeout_min: QUICK_TIMEOUT_MIN, quick_close_min: QUICK_CLOSE_MIN, session_minutes: SESSION_MINUTES, session_extend_minutes: SESSION_EXTEND_MINUTES, max_open: MAX_OPEN_PER_ASKER, max_open_anon: MAX_OPEN_ANON, max_windows: MAX_WINDOWS, text_min: TEXT_MIN, text_max: TEXT_MAX, cert_hours: CERT_HOURS, cert_meetings: CERT_MEETINGS } };
 const P34_META = { names_ar: P34_NAMES_AR, bottle_hours: BOTTLE_HOURS, shadow_requests: SHADOW_REQUESTS };
 const P35_META = { names_ar: P35_NAMES_AR, org_hold_hours: ORG_HOLD_HOURS, whisper_minutes: WHISPER_MINUTES, echo_back_steps: [5, 25, 100], when_weeks: 8, presence_log_days: 90 };
+const P37_META = { names_ar: P37_NAMES_AR, sign_hour_min: SIGN_HOUR_MIN, sign_hour_max: SIGN_HOUR_MAX };
 const P36_META = { names_ar: P36_NAMES_AR, record_k: RECORD_K, week_question_days: WEEK_QUESTION_DAYS, week_answer_max: WEEK_ANSWER_MAX, org_time_k: ORG_TIME_K };
 const PRIVACY_AR = 'الحضور معلَن بإرادة أصحابه؛ الأسماء خلف تسجيل الدخول. لا يصل احتياجك (إن كتبته في «احتياجاتي») إلى أحد هنا — إلا إن طلبت بنفسك مترجم إشارة. لا نجوم ولا تقييم: «ما الذي تغيّر؟» يقرؤه من ساعدك وحده.';
 
@@ -74,27 +79,42 @@ function viewOf(r: OnAirRequest, me: Who | null, t: string, presence?: Presence 
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500);
   const u = new URL(req.url); const now = new Date(); const pub = publicUrlOf(db);
-  if (u.searchParams.get('meta') === '1') return NextResponse.json({ success: true, meta: { ...META, p34: P34_META, p35: P35_META, p36: P36_META }, privacy_ar: PRIVACY_AR });
+  if (u.searchParams.get('meta') === '1') return NextResponse.json({ success: true, meta: { ...META, p34: P34_META, p35: P35_META, p36: P36_META, p37: P37_META }, privacy_ar: PRIVACY_AR });
   if (u.searchParams.get('when') === '1') return NextResponse.json({ success: true, when: await whenGridOf(db, now), names_ar: P35_NAMES_AR, note_ar: 'كثافة حضور آخر 8 أسابيع بتوقيت الرياض — مدن حضر منها 5 أشخاص مختلفين فأكثر، بلا أسماء ولا أعداد.' });
+  // ── P37 (عام) ──
+  if (u.searchParams.get('week_wall') === '1') {   // 1) جدار الأسبوع: أسئلة الأسابيع الماضية بإجاباتها بالدور
+    const wall = await weekWall(db);
+    return NextResponse.json({ success: true, wall, n: wall.length, line_ar: wallLine(wall.length), names_ar: P37_NAMES_AR, note_ar: 'أسئلة أسابيع مضت أجاب عنها من كان على الهواء — بالدور لا بالاسم؛ «أفادت صاحبها ✓» يضعها كاتب الأمانة وحده.' });
+  }
+  if (u.searchParams.get('year')) {   // 3) سجلّ السنة: من السجلّات المجمَّدة فقط
+    const y = Number(u.searchParams.get('year')); if (!Number.isInteger(y) || y < 2025 || y > 2100) return bad('سنة غير صالحة');
+    const rec = await yearRecordOf(db, y); const years = await yearsWithRecords(db);
+    return NextResponse.json({ success: true, year: { ...rec, peak: rec.peak ? { ...rec.peak, weekday_ar: WEEKDAY_AR[rec.peak.weekday], hour_ar: `${String(rec.peak.hour).padStart(2, '0')}:00` } : null, seasons_urls: rec.season_ids.map(id => `${siteOf(req)}/on-air/seasons/${id}`) }, years, names_ar: P37_NAMES_AR, note_ar: 'فصل سنوي يُخاط من سجلّات المواسم المجمَّدة — لا أسماء أفراد، الجهات المختلفة من خمسة، والسنة ميلادية.' });
+  }
   // ── P36 (عام) ──
   if (u.searchParams.get('seasons') === '1') {   // 1) سجلّ الموسم: الرفّ — النشط أولًا ثم المنتهية بسجلّاتها المجمَّدة
     const all = await seasonsAll(db); const out: any[] = [];
     for (const s of all) { const st = seasonState(s, now); if (st.phase === 'after') { const rec = await seasonRecordOf(db, s, now); out.push({ id: String(s.id), phase: 'after', title_ar: s.title_ar, from_day: s.from_day, to_day: s.to_day, line_ar: rec.line_ar, orgs: rec.orgs, cities: rec.cities.length, sign_verified: rec.sign_verified, url: `${siteOf(req)}/on-air/seasons/${s.id}` }); }
       else if (s.active) out.push({ id: String(s.id), phase: st.phase, phrase: seasonPhraseAr(st), title_ar: s.title_ar, invite_ar: s.invite_ar, from_day: s.from_day, to_day: s.to_day, slots: (await seasonSlots36(db, s.id)).length, ics_url: `${siteOf(req)}/api/onair?season_ics=${s.id}`, url: `${siteOf(req)}/on-air/seasons/${s.id}` }); }
-    return NextResponse.json({ success: true, seasons: out, names_ar: P36_NAMES_AR, k: RECORD_K, note_ar: 'سجلّ عامّ مجهَّل: لا أسماء أفراد، الأعداد من خمسة، واسم الجهة بإذن مديرها.' });
+    return NextResponse.json({ success: true, seasons: out, years: await yearsWithRecords(db), names37_ar: P37_NAMES_AR, names_ar: P36_NAMES_AR, k: RECORD_K, note_ar: 'سجلّ عامّ مجهَّل: لا أسماء أفراد، الأعداد من خمسة، واسم الجهة بإذن مديرها.' });
   }
   if (u.searchParams.get('season')) {
     const s = await seasonById(db, u.searchParams.get('season')!); if (!s) return bad('لا موسم بهذا الرقم', 404); const st = seasonState(s, now);
     const slots = await seasonSlots36(db, s.id); const orgIds = Array.from(new Set(slots.map(x => String(x.org_id)))); const orgs = orgIds.length ? await db.from('portal_organizations').select('id,name_ar').in('id', orgIds).limit(500).then((x: any) => (x.data || []) as any[], () => [] as any[]) : [];
-    const pubSlots = slots.map(x => ({ id: x.id, weekday: x.weekday, weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min), duration_min: x.duration_min, org_name_ar: x.public_name ? String(orgs.find((o: any) => String(o.id) === String(x.org_id))?.name_ar || 'جهة') : null, sign_language: !!x.sign_language, at: slotOccursAt(x, s) }));
-    const record = st.phase === 'after' ? await seasonRecordOf(db, s, now) : null;
+    const nameOfOrg = (id: any) => String(orgs.find((o: any) => String(o.id) === String(id))?.name_ar || 'جهة');
+    const pubSlots = slots.map(x => { const partner = (x as any).shared_status === 'accepted' ? slots.find(y => String(y.org_id) === String((x as any).shared_with_org_id)) : null; return { id: x.id, weekday: x.weekday, weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min), duration_min: x.duration_min, org_name_ar: x.public_name ? nameOfOrg(x.org_id) : null, sign_language: !!x.sign_language, at: slotOccursAt(x, s), shared: !!partner, shared_label_ar: partner ? sharedLabel(x.public_name ? nameOfOrg(x.org_id) : null, partner.public_name ? nameOfOrg(partner.org_id) : null) : null }; });
+    const meS = await who(req, db); const sh = await signHoursOf(db, s.id); const shPeople = meS && sh.length ? await loadPeople(db, sh.map(h => h.user_id), pub) : {};   // P37 4) ساعات الإشارة المفتوحة — الاسم بعد تسجيل الدخول
+    const signHours = sh.map(h => ({ id: h.id, weekday: h.weekday, weekday_ar: WEEKDAY_AR[h.weekday], from: hhmm(h.from_min), duration_min: h.duration_min, interpreter_name_ar: meS ? ((shPeople as any)[h.user_id]?.name_ar || 'مترجم أَثَر') : null, live: signHourLiveNow(h, s, now) }));
+    const record0 = st.phase === 'after' ? await seasonRecordOf(db, s, now) : null; const record = record0 ? (({ org_ids: _o, ...rest }) => rest)(record0 as any) as typeof record0 : null;
     return NextResponse.json({ success: true, season: { id: String(s.id), title_ar: s.title_ar, invite_ar: s.invite_ar, from_day: s.from_day, to_day: s.to_day, phase: st.phase, phrase: seasonPhraseAr(st), active: !!s.active, slots: pubSlots, ics_url: st.phase === 'after' ? null : `${siteOf(req)}/api/onair?season_ics=${s.id}` },
+      sign_hours: signHours, names37_ar: P37_NAMES_AR,
       record: record ? { ...record, peak: record.peak.map(p => ({ ...p, weekday_ar: WEEKDAY_AR[p.weekday], hour_ar: `${String(p.hour).padStart(2, '0')}:00` })), slots: record.slots.map(x => ({ ...x, weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min) })), docs: record.docs.map(d => ({ ...d, verify_url: `${siteOf(req)}/verify/vc?code=${encodeURIComponent(d.code)}` })) } : null, names_ar: P36_NAMES_AR, k: RECORD_K });
   }
   if (u.searchParams.get('season_ics')) {   // «أضِف الموسم إلى تقويمك» — نصّ .ics بلا مكتبات
     const s = await seasonById(db, u.searchParams.get('season_ics')!); if (!s) return bad('لا موسم بهذا الرقم', 404); if (seasonEnded(s, now)) return bad('انتهى الموسم — انظر سجلّه', 410);
     const slots = await seasonSlots36(db, s.id); const orgIds = Array.from(new Set(slots.map(x => String(x.org_id)))); const orgs = orgIds.length ? await db.from('portal_organizations').select('id,name_ar').in('id', orgIds).limit(500).then((x: any) => (x.data || []) as any[], () => [] as any[]) : [];
-    const body = seasonIcs(s, slots.map(x => ({ id: x.id, weekday: x.weekday, from_min: x.from_min, duration_min: x.duration_min, org_name_ar: x.public_name ? String(orgs.find((o: any) => String(o.id) === String(x.org_id))?.name_ar || 'جهة') : null, sign_language: !!x.sign_language })), siteOf(req), now);
+    const shIcs = (await signHoursOf(db, s.id)).map(h => ({ id: `sign-${h.id}`, weekday: h.weekday, from_min: h.from_min, duration_min: h.duration_min, org_name_ar: 'ساعة إشارة مفتوحة', sign_language: true }));   // P37
+    const body = seasonIcs(s, [...slots.map(x => ({ id: x.id, weekday: x.weekday, from_min: x.from_min, duration_min: x.duration_min, org_name_ar: x.public_name ? String(orgs.find((o: any) => String(o.id) === String(x.org_id))?.name_ar || 'جهة') : null, sign_language: !!x.sign_language })), ...shIcs], siteOf(req), now);
     return new Response(body, { status: 200, headers: { 'Content-Type': 'text/calendar; charset=utf-8', 'Content-Disposition': `attachment; filename="athar-season-${s.id}.ics"`, 'Cache-Control': 'no-store' } });
   }
   if (u.searchParams.get('week_question') === '1') { const q = await weekQuestionNow(db, now); return NextResponse.json({ success: true, question: q ? { id: q.id, text_ar: q.text_ar, domain: q.domain, week_start: q.week_start, ends_day: q.ends_day, answers: q.answers, n: q.n, line_ar: weekQuestionLine(q.n) } : null, names_ar: P36_NAMES_AR, note_ar: 'أمانة لم يجدها أحد 72 ساعة، أذن كاتبها بنشرها مجهولةً، واعتمدها إنسان من الطاقم؛ يجيب عنها من هو على الهواء بدوره لا باسمه.' }); }
@@ -108,12 +128,16 @@ export async function GET(req: Request) {
     const faq = ((fq || []) as any[]).filter(r => r.meta?.faq?.question_ar).slice(0, 30).map(r => ({ id: r.id, domain: r.domain, question_ar: r.meta.faq.question_ar, answer_ar: r.meta.faq.answer_ar, at: r.meta.faq.approved_at }));
     const [golden, map, bottles, season, whisper, weekq] = await Promise.all([goldenNow(db, me, now), liveMapOf(db, present), bottlesOpen(db), seasonView(db, now), whisperNow(db, now.getTime()), weekQuestionNow(db, now)]);   // P36: سؤال الأسبوع
     const wpers = whisper?.interpreter_user_id ? await loadPeople(db, [whisper.interpreter_user_id], pub) : {};
+    // P37 4) ساعة إشارة مفتوحة جارية الآن ومترجمها على الهواء فعلًا
+    const sNow = season ? (await signHoursOf(db, season.id)).find(h => signHourLiveNow(h, season, now) && present.some(p => p.user_id === h.user_id)) : null;
+    const sNowP = sNow && me ? await loadPeople(db, [sNow.user_id], pub) : {};
     return NextResponse.json({ success: true, present: view, count: present.length, stats, upcoming, faq, signed_in: !!me, privacy_ar: PRIVACY_AR, tagline_ar: TAGLINE_AR,
-      season: season ? { ...season, slots: season.slots.map(x => ({ ...x, weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min) })) } : null, names35_ar: P35_NAMES_AR,
+      season: season ? { ...season, slots: season.slots.map(x => ({ ...x, weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min) })), sign_hours: (season.sign_hours || []).map(h => ({ ...h, weekday_ar: WEEKDAY_AR[h.weekday], from: hhmm(h.from_min) })) } : null, names35_ar: P35_NAMES_AR,
       whisper: whisper ? { room_code: whisper.room_code, title_ar: whisper.title_ar, ends_at: whisper.ends_at, interpreter_name_ar: me ? (wpers as any)[String(whisper.interpreter_user_id)]?.name_ar || 'مترجم أَثَر' : null } : null,
       golden: golden ? { id: golden.id, title_ar: golden.title_ar, weekday_ar: WEEKDAY_AR[golden.weekday], from: hhmm(golden.from_min), duration_min: golden.duration_min, live: golden.live, starts_at: golden.starts_at, ends_at: golden.ends_at, minutes_to: golden.minutes_to, countdown_ar: countdownAr(golden.minutes_to), pledged: golden.pledged, mine: golden.mine } : null,
       map, bottles: bottles.length, names_ar: P34_NAMES_AR, orgs: me ? await orgsOf(db, me) : [],
-      week_question: weekq ? { id: weekq.id, text_ar: weekq.text_ar, domain: weekq.domain, week_start: weekq.week_start, ends_day: weekq.ends_day, answers: weekq.answers, n: weekq.n, line_ar: weekQuestionLine(weekq.n), mine: !!me && weekq.answerer_ids.includes(me.id), can_answer: !!me && present.some(p => p.user_id === me.id) && !weekq.answerer_ids.includes(me.id) } : null, names36_ar: P36_NAMES_AR });
+      week_question: weekq ? { id: weekq.id, text_ar: weekq.text_ar, domain: weekq.domain, week_start: weekq.week_start, ends_day: weekq.ends_day, answers: weekq.answers, n: weekq.n, line_ar: weekQuestionLine(weekq.n), mine: !!me && weekq.answerer_ids.includes(me.id), can_answer: !!me && present.some(p => p.user_id === me.id) && !weekq.answerer_ids.includes(me.id) } : null, names36_ar: P36_NAMES_AR,
+      sign_now: sNow ? { ends_in_min: Math.max(0, Math.ceil(sNow.from_min + sNow.duration_min - ((now.getTime() + 3 * 3600000) % 86400000) / 60000)), interpreter_name_ar: me ? ((sNowP as any)[sNow.user_id]?.name_ar || 'مترجم أَثَر') : null } : null, names37_ar: P37_NAMES_AR });
   }
   const me = await who(req, db);
   if (u.searchParams.get('request')) {
@@ -139,7 +163,8 @@ export async function GET(req: Request) {
     const doc = season && slot && sst?.phase === 'after' ? await existingSeasonDoc(db, season.id, orgId) : null; const smeet = season && slot ? await seasonMeetings(db, season, orgId) : 0;
     const held = await heldBottlesOf(db, orgId, now.getTime()); const isAdmin = me.staff || mine.some(o => o.id === orgId && o.role === 'org_admin');
     const interpreters = isAdmin && season ? await approvedInterpreters(db, pub) : [];   // P36: لوسم ساعة «بالإشارة»
-    return NextResponse.json({ success: true, stats: { ...st, present_now }, line_ar: orgAirLine(st), is_admin: isAdmin, names35_ar: P35_NAMES_AR, names36_ar: P36_NAMES_AR, interpreters,
+    const share = season && slot ? { state: await shareStateOf(db, slot as any), candidates: isAdmin && !(slot as any).shared_status && sst?.phase !== 'after' ? (await shareCandidates(db, season.id, orgId)).map(c => ({ ...c, weekday_ar: WEEKDAY_AR[c.weekday], from: hhmm(c.from_min) })) : [] } : null;   // P37: موسم مشترك
+    return NextResponse.json({ success: true, stats: { ...st, present_now }, line_ar: orgAirLine(st), is_admin: isAdmin, names35_ar: P35_NAMES_AR, names36_ar: P36_NAMES_AR, names37_ar: P37_NAMES_AR, interpreters, share,
       season: season ? { id: season.id, title_ar: season.title_ar, invite_ar: season.invite_ar, from_day: season.from_day, to_day: season.to_day, phase: sst!.phase, slot: slot ? { ...slot, weekday_ar: WEEKDAY_AR[slot.weekday], from: hhmm(slot.from_min), interpreter_name_ar: slot.interpreter_user_id ? (interpreters.find(i => i.user_id === slot.interpreter_user_id)?.name_ar || 'مترجم أَثَر') : null } : null, meetings: smeet >= 5 ? smeet : 0, record_url: sst!.phase === 'after' ? `${siteOf(req)}/on-air/seasons/${season.id}` : null, can_issue: sst!.phase === 'after' && !!slot && !doc, doc: doc ? { code: doc.code, issued_at: doc.issued_at, verify_url: `${siteOf(req)}/verify/vc?code=${encodeURIComponent(String(doc.code))}` } : null } : null,
       held: { n: held.length, hours: ORG_HOLD_HOURS, items: isAdmin ? held.map(r => ({ id: r.id, kind_ar: GRADE_LABEL[r.kind].ar, domain: r.domain, created_at: r.created_at, org_hold_until: r.org_hold_until })) : [] } });
   }
@@ -160,11 +185,15 @@ export async function GET(req: Request) {
     const mySlots = season ? (await Promise.all(myOrgs.map(async o => ({ org: o, slot: await mySeasonSlot(db, season.id, o.id) })))).filter(x => x.slot) : [];
     // P36: ساعات الإشارة المسنَدة إليّ (مترجم) · سؤال الأسبوع (أجيب إن كنت على الهواء)
     const signSlots = season && presence?.face === 'interpreter' ? await interpreterSlots(db, season.id, me.id) : []; const weekq = await weekQuestionNow(db, now);
+    // P37: تعهّد المترجم بساعة إشارة أسبوعية · أسئلة الأسبوع المولودة من أماناتي («أفادتني»)
+    const canPledge = !!presence?.meta?.interpreter_ok && !!season && seasonState(season, now).phase !== 'after'; const myHour = season && presence?.meta?.interpreter_ok ? await mySignHour(db, season.id, me.id) : null;
+    const myWq = (await myWeekQuestions(db, me.id)).map(q => ({ id: q.id, text_ar: q.text_ar, status: q.status, n: q.n, helped: !!q.helped_at, can_help: canMarkHelped(q, me.id, me.id, q.n).ok }));
     return NextResponse.json({ success: true, me: { id: me.id, name: me.name, staff: me.staff },
       echo_back, reverse: { pending_from: revPending.map(p => ({ user_id: p.user_id, name_ar: revPeople[p.user_id]?.name_ar || 'عضو هيئة أَثَر' })), given_to: presence?.reverse_user_id ? { user_id: presence.reverse_user_id, name_ar: revPeople[presence.reverse_user_id]?.name_ar || 'عضو هيئة أَثَر' } : null, complete: ((Array.isArray(presence?.meta?.legacy_complete) ? presence!.meta.legacy_complete : []) as string[]).map(id => ({ user_id: id, name_ar: revPeople[id]?.name_ar || 'عضو هيئة أَثَر' })) },
       whisper: presence?.face === 'interpreter' ? { can: whisperOk.ok, why: whisperOk.ok ? null : whisperOk.error, minutes: WHISPER_MINUTES } : null,
       season: season ? { id: season.id, title_ar: season.title_ar, phase: seasonState(season, now).phase, slots: mySlots.map(x => ({ org_name_ar: x.org.name_ar, weekday_ar: WEEKDAY_AR[x.slot!.weekday], from: hhmm(x.slot!.from_min), duration_min: x.slot!.duration_min })), sign_slots: signSlots.map(x => ({ weekday_ar: WEEKDAY_AR[x.weekday], from: hhmm(x.from_min), duration_min: x.duration_min })) } : null,
-      week_question: weekq ? { id: weekq.id, text_ar: weekq.text_ar, n: weekq.n, mine: weekq.answerer_ids.includes(me.id), can_answer: !!presence && isOnAir(presence, now.getTime()) && !weekq.answerer_ids.includes(me.id) } : null, presence: presence ? { ...presence, on_air: isOnAir(presence, now.getTime()), minutes_left: minutesLeft(presence, now.getTime()), alt_link: presence.alt_link, meta: { interpreter_ok: !!presence.meta?.interpreter_ok, blocked_n: blocked.length } } : null,
+      week_question: weekq ? { id: weekq.id, text_ar: weekq.text_ar, n: weekq.n, mine: weekq.answerer_ids.includes(me.id), can_answer: !!presence && isOnAir(presence, now.getTime()) && !weekq.answerer_ids.includes(me.id) } : null,
+      sign_hour: { can: canPledge, mine: myHour ? { ...myHour, weekday_ar: WEEKDAY_AR[myHour.weekday], from: hhmm(myHour.from_min) } : null, min: SIGN_HOUR_MIN, max: SIGN_HOUR_MAX }, my_week_questions: myWq, names37_ar: P37_NAMES_AR, presence: presence ? { ...presence, on_air: isOnAir(presence, now.getTime()), minutes_left: minutesLeft(presence, now.getTime()), alt_link: presence.alt_link, meta: { interpreter_ok: !!presence.meta?.interpreter_ok, blocked_n: blocked.length } } : null,
       faces: faces.map(f => ({ key: f, ar: FACE_AR[f] })), can_receive: faces.length > 0, windows: wins.map(w => ({ ...w, weekday_ar: WEEKDAY_AR[w.weekday], from: hhmm(w.from_min), to: hhmm(w.to_min) })),
       hours, cert: cert ? { code: cert.code, issued_at: cert.issued_at, verify_url: `${siteOf(req)}/verify/vc?code=${encodeURIComponent(cert.code)}` } : null,
       active: active.filter(r => r.status === 'taken').map(r => viewOf(r, me, '', presence)), queue: queue.map(r => viewOf(r, me, '', presence)), asks: asks.map(r => viewOf(r, me, '')), meta: { ...META, p34: P34_META }, privacy_ar: PRIVACY_AR,
@@ -348,6 +377,33 @@ export async function POST(req: Request) {
     const name = org?.name_ar || String((await db.from('portal_organizations').select('name_ar').eq('id', orgId).maybeSingle()).data?.name_ar || 'الجهة');
     const r = await issueSeasonDoc(db, { id: orgId, name_ar: name }, season, me, signerFromEnv(process.env, site), site, didWeb(site), () => randomCode(4), now); if (!r.ok) return bad(r.error);
     return NextResponse.json({ success: true, code: r.code, verify_url: r.verify_url });
+  }
+  // ── P37 «عُمر الهواء» ──
+  if (action === 'week_helped') {   // 1) جدار الأسبوع: كاتب الأمانة يقول «أفادتني» مرة واحدة
+    const q = await weekQuestion37(db, body.id); if (!q) return bad('لا سؤال بهذا الرقم', 404);
+    const src = q.source_request_id ? await getRequest(db, q.source_request_id) : null; const n = (await weekAnswers(db, q.id)).length;
+    const c = canMarkHelped(q, src?.asker_user_id || null, me.id, n); if (!c.ok) return bad(c.error, 403);
+    await setWeekWall(db, q.id, { helped_at: iso }); return NextResponse.json({ success: true, note_ar: 'شكرًا — سيظهر على الجدار «أفادت صاحبها ✓» بلا اسمك.' });
+  }
+  if (action === 'season_share_invite' || action === 'season_share_answer') {   // 2) موسم مشترك (مدير الجهة)
+    const orgId = String(body.org_id || ''); const mine = await orgsOf(db, me); if (!me.staff && !mine.some(o => o.id === orgId && o.role === 'org_admin')) return bad('الساعة المشتركة لمدير الجهة', 403);
+    const season = await seasonActive(db); if (!season || seasonState(season, now).phase === 'after') return bad('لا موسم جارٍ أو قادمًا الآن');
+    if (action === 'season_share_invite') {
+      const toOrg = String(body.to_org_id || ''); const r = await shareInvite(db, season.id, orgId, toOrg); if (!r.ok) return bad(r.error);
+      const { data: names } = await db.from('portal_organizations').select('id,name_ar').in('id', [orgId, toOrg]); const nm = (id: string) => String((names || []).find((o: any) => String(o.id) === id)?.name_ar || 'جهة');
+      for (const a of await orgAdminsOf(db, toOrg)) { try { await notify(db, { kind: 'onair_share', to: { email: a.email, name: a.name }, ref: `onair:share:${season.id}:${orgId}:${toOrg}`, subject: `دعوة إلى ساعة مشتركة في «${season.title_ar}» من ${nm(orgId)}`, text: `تدعوكم ${nm(orgId)} إلى توحيد ساعتكم في الموسم مع ساعتها. القبول أو الاعتذار من: ${site}/org?tab=onair&org=${toOrg}`, url: `${site}/org?tab=onair&org=${toOrg}` }); } catch { /* يتابع */ } }
+      return NextResponse.json({ success: true, note_ar: `أرسلنا الدعوة إلى مديري ${nm(toOrg)} — إن قبلوا توحّدت الساعتان على ساعتكم، وظهرت على الخريطة «ساعة مشتركة».` });
+    }
+    const r = await shareAnswer(db, season.id, orgId, body.accept === true); if (!r.ok) return bad(r.error);
+    return NextResponse.json({ success: true, status: r.status, note_ar: r.status === 'accepted' ? 'توحّدت الساعتان — منسوبو الجهتين يُذكَّرون معًا، والسجلّ يذكرها «ساعة مشتركة».' : 'أُلغي الربط عند الطرفين.' });
+  }
+  if (action === 'season_sign_hour' || action === 'season_sign_hour_remove') {   // 4) مترجم الموسم (مترجم معتمَد)
+    if (!presence?.meta?.interpreter_ok) return bad('التعهّد بساعة إشارة للمترجمين المعتمَدين', 403);
+    const season = await seasonActive(db); if (!season || seasonState(season, now).phase === 'after') return bad('لا موسم جارٍ أو قادمًا الآن');
+    if (action === 'season_sign_hour_remove') { await removeSignHour(db, season.id, me.id); return NextResponse.json({ success: true, note_ar: 'سُحب التعهّد.' }); }
+    const c = cleanSignHour(body); if (!c.ok) return bad(c.error);
+    const h = await upsertSignHour(db, season.id, me.id, c.s);
+    return NextResponse.json({ success: true, sign_hour: { ...h, weekday_ar: WEEKDAY_AR[h.weekday], from: hhmm(h.from_min) }, note_ar: `تعهّدت بساعة إشارة ${WEEKDAY_AR[h.weekday]} ${hhmm(h.from_min)} طوال «${season.title_ar}» — نذكّرك قبلها بساعة، ولا تُحتسب في السجلّ إلا بصعودك.` });
   }
   if (action === 'week_answer') {   // P36 3) أمانة متسلسلة: من على الهواء يجيب عن «سؤال الأسبوع» بدوره لا باسمه
     const q = await weekQuestionNow(db, now); if (!q || String(q.id) !== String(body.id)) return bad('لا سؤال أسبوع منشورًا بهذا الرقم', 404);

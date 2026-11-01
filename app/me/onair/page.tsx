@@ -13,7 +13,7 @@ import { PortalShell, useLang } from '../../components/PortalShell';
 import { Thread, openOnAir } from '../../components/OnAir';
 import { fastToken } from '../../components/Pocket';
 import { supabase } from '../../../lib/supabase/client';
-import { GRADES, GRADE_LABEL, WEEKDAY_AR, ON_AIR_MINUTES, ON_AIR_MAX_MINUTES, MAX_WINDOWS, CERT_HOURS, CERT_MEETINGS, P34_NAMES_AR, SHADOW_REQUESTS, BOTTLE_AR, P35_NAMES_AR, WHISPER_MINUTES } from '../../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, WEEKDAY_AR, ON_AIR_MINUTES, ON_AIR_MAX_MINUTES, MAX_WINDOWS, CERT_HOURS, CERT_MEETINGS, P34_NAMES_AR, SHADOW_REQUESTS, BOTTLE_AR, P35_NAMES_AR, WHISPER_MINUTES, P37_NAMES_AR } from '../../../lib/onair/registry';
 import type { Grade } from '../../../lib/onair/registry';
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
@@ -44,6 +44,7 @@ function Inner() {
   }
   const goOn = () => post({ action: 'presence', on: true, face, receives, domains: domains.split(/[،,]/).map(s => s.trim()).filter(Boolean), alt_link: alt, minutes, text_only: textOnly });
   const toMin = (s: string) => { const [h, m] = s.split(':').map(Number); return (h || 0) * 60 + (m || 0); };
+  const [sh, setSh] = useState({ weekday: 2, from: '18:00', duration_min: 60 });   // P37 «مترجم الموسم»: تعهّد بساعة إشارة أسبوعية
   if (tok === '') return <main className="pt-main oam"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box"><p>{ar ? 'سجّل الدخول لتستقبل أو لترى طلباتك. ' : 'Sign in. '}<Link href="/login?next=/me/onair" className="pt-btn navy small">{ar ? 'تسجيل الدخول' : 'Sign in'}</Link></p></section></main>;
   if (!d) return <main className="pt-main oam"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box"><p className="pt-muted">{err || '…'}</p></section></main>;
   const p = d.presence; const hours = d.hours; const queue: any[] = d.queue || []; const active: any[] = d.active || []; const asks: any[] = d.asks || []; const wins: any[] = d.windows || [];
@@ -67,6 +68,16 @@ function Inner() {
       {d.season && d.season.phase !== 'after' && ((d.season.slots || []).length > 0 || (d.season.sign_slots || []).length > 0) && d.can_receive && <section className="pt-box oam-season" data-testid="oam-season"><h2>❂ {d.season.title_ar}</h2>
         {d.season.slots.map((x: any, i: number) => <p key={i}>{ar ? <>ساعة <b>{x.org_name_ar}</b>: {x.weekday_ar} {x.from} · {x.duration_min} دقيقة — نذكّرك قبلها بساعة؛ الصعود قرارك.</> : <>{x.org_name_ar}: {x.weekday_ar} {x.from}</>}</p>)}
         {(d.season.sign_slots || []).map((x: any, i: number) => <p key={`s${i}`} data-testid="oam-sign-slot">🤟 {ar ? <>أُسندت إليك ساعةٌ <b>بالإشارة</b>: {x.weekday_ar} {x.from} · {x.duration_min} دقيقة — لا تُحتسب «بالإشارة» في سجلّ الموسم إلا بصعودك فعلًا.</> : <>Signed hour assigned to you: {x.weekday_ar} {x.from}</>}</p>)}
+      </section>}
+      {d.sign_hour?.can && d.can_receive && <section className="pt-box oam-whisper oam-signhour" data-testid="oam-sign-hour" data-has={d.sign_hour.mine ? '1' : '0'}><h2>🤟 {ar ? P37_NAMES_AR.season_sign : 'Season interpreter'}</h2>
+        <p>{ar ? `تعهّد بساعة إشارة أسبوعية ثابتة طوال «${d.season?.title_ar || 'الموسم'}»: تظهر على الخريطة باسمك لمن سجّل الدخول، ونذكّرك قبلها بساعة، ولا تُحتسب في السجلّ إلا بصعودك فعلًا.` : 'Pledge a weekly open sign-language hour for the season.'}</p>
+        {d.sign_hour.mine && <p className="oam-signhour-mine" data-testid="oam-sign-hour-mine">{ar ? <>تعهّدك: <b>{d.sign_hour.mine.weekday_ar} {d.sign_hour.mine.from}</b> · {d.sign_hour.mine.duration_min} دقيقة</> : <>Pledged: {d.sign_hour.mine.weekday_ar} {d.sign_hour.mine.from}</>} <button type="button" className="pt-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'season_sign_hour_remove' })} data-testid="oam-sign-hour-remove">{ar ? 'اسحب التعهّد' : 'Withdraw'}</button></p>}
+        <form className="oam-win" onSubmit={e => { e.preventDefault(); post({ action: 'season_sign_hour', weekday: sh.weekday, from_min: toMin(sh.from), duration_min: sh.duration_min }); }} data-testid="oam-sign-hour-form">
+          <label>{ar ? 'اليوم' : 'Day'}<select value={sh.weekday} onChange={e => setSh(x => ({ ...x, weekday: Number(e.target.value) }))} data-testid="oam-sign-hour-day">{WEEKDAY_AR.map((n, i) => <option key={i} value={i}>{n}</option>)}</select></label>
+          <label>{ar ? 'الوقت (الرياض)' : 'Time'}<input type="time" value={sh.from} onChange={e => setSh(x => ({ ...x, from: e.target.value }))} data-testid="oam-sign-hour-from" /></label>
+          <label>{ar ? 'المدة' : 'Duration'}<select value={sh.duration_min} onChange={e => setSh(x => ({ ...x, duration_min: Number(e.target.value) }))}>{[30, 45, 60, 90].map(m => <option key={m} value={m}>{m} {ar ? 'دقيقة' : 'min'}</option>)}</select></label>
+          <button type="submit" className="pt-btn gold small" disabled={!!busy} data-testid="oam-sign-hour-save">{d.sign_hour.mine ? (ar ? 'عدّل التعهّد' : 'Update') : (ar ? 'أتعهّد بساعة إشارة' : 'Pledge')}</button>
+        </form>
       </section>}
       {d.whisper && d.can_receive && <section className="pt-box oam-whisper" data-testid="oam-whisper"><h2>🤟 {ar ? P35_NAMES_AR.whisper : 'Interpreter’s whisper'}</h2>
         <p>{ar ? `${WHISPER_MINUTES} دقائق على الهواء العام: تقدّم «مهارة اليوم» بلغة الإشارة في غرفة مفتوحة للجميع — مرة في اليوم، وتُحسب لقاءً.` : `${WHISPER_MINUTES} minutes: today’s skill in sign language, open to all.`}</p>
@@ -143,6 +154,10 @@ function Inner() {
 
     {tab === 'asks' && !thread && <section className="pt-box" data-testid="oam-asks"><h2>{ar ? 'طلباتي' : 'My requests'}</h2>
       {!asks.length && <p className="pt-muted">{ar ? 'لم تسأل بعد. ' : 'Nothing yet. '}<button type="button" className="pt-btn gold small" onClick={() => openOnAir()} data-testid="oam-ask-now">{ar ? 'اسأل الآن' : 'Ask now'}</button></p>}
+      {!!(d.my_week_questions || []).length && <div className="oam-mywq" data-testid="oam-mywq"><h3>🔗 {ar ? `أماناتك التي صارت «سؤال الأسبوع»` : 'Your entrusted questions that became the Question of the Week'}</h3>
+        <ul className="oam-list">{d.my_week_questions.map((q: any) => <li key={q.id} data-testid="oam-mywq-item" data-helped={q.helped ? '1' : '0'}><div><b>«{q.text_ar}»</b> · <small>{q.n} {ar ? 'إجابة من الهواء' : 'answers'} · {q.status === 'retired' ? (ar ? `على ${P37_NAMES_AR.wall}` : 'on the wall') : (ar ? 'منشور هذا الأسبوع' : 'published')}</small>{q.helped && <p className="oam-helped">{ar ? 'قلت: أفادتني ✓' : 'Marked: helped ✓'}</p>}</div>
+          <div className="oam-actions">{q.can_help && <button type="button" className="pt-btn gold small" disabled={!!busy} onClick={() => post({ action: 'week_helped', id: q.id })} data-testid="oam-helped-btn">{ar ? 'أفادتني' : 'It helped me'}</button>}<Link href={q.status === 'retired' ? '/on-air/week' : '/on-air#week'} className="pt-btn ghost small">{ar ? 'اقرأ الإجابات' : 'Read answers'}</Link></div></li>)}</ul>
+        <p className="pt-muted">{ar ? 'العلامة تظهر على الجدار «أفادت صاحبها ✓» بلا اسمك — مرة واحدة ولا تُسحب.' : 'Shown on the wall without your name.'}</p></div>}
       <ul className="oam-list">{asks.map(r => <li key={r.id} data-testid="oam-ask"><div><b>{r.kind_ar}</b> · <span className={`oam-st ${r.status}`}>{r.status_ar}</span> · <small>{fmt(r.created_at)}{r.receiver ? ` · مع ${r.receiver.name_ar}` : ''}</small><p>{r.text_ar}</p></div><div className="oam-actions"><button type="button" className="pt-btn navy small" onClick={() => setThread({ id: r.id, receiver: false })} data-testid="oam-ask-open">{ar ? 'افتح' : 'Open'}</button></div></li>)}</ul>
     </section>}
 
@@ -165,6 +180,7 @@ const CSS = `
 .oam-wins{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:6px}.oam-wins li{display:flex;gap:8px;align-items:center;color:#334155}.oam-wins small{color:#475569}
 .oam-win{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:end}.oam-win label{font-weight:800;color:#0f2a4e;font-size:13px}.oam-win input,.oam-win select{display:block;width:100%;margin-top:4px;border:1.5px solid #cbd5e1;border-radius:10px;padding:9px;font:inherit;font-weight:400;min-height:44px;background:#fff}
 .oam-chk{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.oam-chk input{width:20px;height:20px;accent-color:#0b6f69;margin:0}.oam-chk small{font-weight:400;flex-basis:100%}
+.oam-signhour{background:#fdf4ff}.oam-signhour-mine{font-weight:700}.oam-mywq{margin:0 0 14px;padding:10px 12px;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:12px}.oam-mywq h3{margin:0 0 8px;font-size:15px;color:#4c1d95}.oam-helped{color:#166534;font-weight:800;margin:4px 0 0}
 .oam-echoback{background:#f0fdfa;border-color:#99f6e4}.oam-echo-list{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:6px}.oam-season{background:#ecfeff;border-color:#a5f3fc}.oam-season p{color:#164e63;margin:0 0 6px}.oam-whisper{background:#fdf4ff;border-color:#f0abfc}.oam-whisper p{color:#701a75}.oam-reverse{background:#ede9fe;color:#4c1d95;border-radius:10px;padding:8px 12px;margin:6px 0}
 .oam-invite{border:2px solid #7c3aed;background:#faf5ff}.oam-invite p{color:#4c1d95;line-height:1.8;margin:0 0 6px}.oam-golden{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a}.oam-golden p{color:#78350f;margin:0 0 8px}
 .oam-bottles{background:#f0f9ff;border:1px solid #bae6fd;color:#0c4a6e;border-radius:12px;padding:8px 12px;margin:0 0 8px;font-weight:700}.oam-h3{font-size:15px;color:#0f2a4e;margin:12px 0 6px}

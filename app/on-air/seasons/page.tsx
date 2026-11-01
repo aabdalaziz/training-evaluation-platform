@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../../lib/ui/icons';
 import { PortalShell, useLang } from '../../components/PortalShell';
-import { P36_NAMES_AR, P35_NAMES_AR } from '../../../lib/onair/registry';
+import { P36_NAMES_AR, P35_NAMES_AR, P37_NAMES_AR } from '../../../lib/onair/registry';
 
 export default function SeasonsPage() { return <PortalShell><Inner /></PortalShell>; }
 function Inner() {
@@ -31,6 +31,7 @@ function Inner() {
       {d && !ended.length && <p className="pt-muted" data-testid="osr-ended-none">{ar ? 'لم ينتهِ موسم بعد — أول موسم يُكتب سجلّه هنا.' : 'No finished season yet.'}</p>}
       <ul className="osr-list" data-testid="osr-list">{ended.map(s => <li key={s.id} data-testid="osr-item"><Link href={`/on-air/seasons/${s.id}`}><b>{s.title_ar}</b><span>{s.from_day} → {s.to_day}</span><small>{s.line_ar}</small></Link></li>)}</ul>
       <p className="pt-muted">{ar ? `السجلّ يُجمَّد مرة واحدة بعد نهاية الموسم، قبل أن يُحذف سجلّ الحضور بعد 90 يومًا — فلا يتغيّر بعدها.` : 'Records are frozen once after the season ends.'}</p>
+      {!!(d?.years || []).length && <p className="osr-years" data-testid="osr-years"><b>{ar ? `${P37_NAMES_AR.year}: ` : 'Year records: '}</b>{(d.years as number[]).map(y => <Link key={y} href={`/on-air/seasons/year/${y}`} className="pt-btn ghost small" data-testid="osr-year">{y}</Link>)}<small> — {ar ? 'فصل سنوي يُخاط من سجلّات المواسم' : 'an annual chapter stitched from season records'}</small></p>}
       <p><Link href="/on-air" className="pt-btn ghost small">{ar ? 'صفحة الهواء' : 'On-air page'}</Link> <Link href="/2062" className="pt-btn ghost small">{ar ? 'يوم في 2062' : 'A day in 2062'}</Link> <Link href="/accessibility" className="pt-btn ghost small">{ar ? 'بيان الوصول' : 'Accessibility'}</Link></p>
     </section>
   </main>;
@@ -39,5 +40,6 @@ const CSS = `
 .osr{max-width:900px;margin:0 auto;padding:28px 18px 60px}.osr-h h1{margin:6px 0 8px;font-size:28px;color:#0f2a4e}.osr-h p{color:#334155;line-height:1.9;margin:0 0 12px;font-size:16px}.osr-err{color:#b91c1c;font-weight:800}
 .osr .pt-box{margin-bottom:16px}.osr h2{font-size:19px;color:#0f2a4e;margin:0 0 10px}
 .osr-live{background:linear-gradient(135deg,#ecfeff,#cffafe);border:1px solid #a5f3fc;border-radius:16px;padding:14px 16px;color:#164e63}.osr-live p{margin:0 0 6px;color:#164e63}.osr-big{font-size:24px;font-weight:900;color:#0e7490}.osr-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px!important}
+.osr-years{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:#0f2a4e}.osr-years small{color:#64748b}
 .osr-list{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}.osr-list a{display:grid;gap:2px;border:1px solid #e2e8f0;border-radius:14px;padding:12px 14px;text-decoration:none;color:#0f2a4e;min-height:44px}.osr-list a:hover{border-color:#0b6f69;background:#f0fbfa}.osr-list b{font-size:16px}.osr-list span{color:#475569;font-size:13px}.osr-list small{color:#334155;line-height:1.7}
 `;

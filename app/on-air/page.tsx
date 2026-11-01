@@ -13,7 +13,7 @@ import { PortalShell, useLang } from '../components/PortalShell';
 import { openOnAir, OnAirMap, WhenStrip } from '../components/OnAir';
 import { fastToken } from '../components/Pocket';
 import { supabase } from '../../lib/supabase/client';
-import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES, P34_NAMES_AR, BOTTLE_AR, BOTTLE_HOURS, SHADOW_REQUESTS, P35_NAMES_AR, WHISPER_MINUTES, P36_NAMES_AR, WEEK_ANSWER_MAX } from '../../lib/onair/registry';
+import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, SESSION_MINUTES, SESSION_EXTEND_MINUTES, CERT_HOURS, CERT_MEETINGS, ON_AIR_MINUTES, P34_NAMES_AR, BOTTLE_AR, BOTTLE_HOURS, SHADOW_REQUESTS, P35_NAMES_AR, WHISPER_MINUTES, P37_NAMES_AR, P36_NAMES_AR, WEEK_ANSWER_MAX } from '../../lib/onair/registry';
 import type { Grade } from '../../lib/onair/registry';
 
 export default function OnAirPage() { return <PortalShell><Inner /></PortalShell>; }
@@ -64,6 +64,10 @@ function Inner() {
       </div>
     </section>
 
+    {d?.sign_now && <section className="pt-box oap-whisper oap-signnow" data-testid="oap-sign-now" aria-live="polite"><span className="oap-whisper-ic" aria-hidden="true">🤟</span>
+      <div><h2>{ar ? `${P37_NAMES_AR.season_sign} — على الهواء الآن` : 'Season interpreter — on air now'}</h2><p>{d.sign_now.interpreter_name_ar ? <b>{d.sign_now.interpreter_name_ar} · </b> : null}{ar ? `ساعة إشارة مفتوحة جارية — تبقّى نحو ${d.sign_now.ends_in_min} دقيقة. اطلب عونًا بالإشارة من الزرّ أدناه.` : `An open sign-language hour is live — about ${d.sign_now.ends_in_min} min left.`}</p></div>
+      <a href="#ask" className="pt-btn gold" data-testid="oap-sign-now-ask">{ar ? 'اطلب بالإشارة' : 'Ask in sign'}</a>
+    </section>}
     {whisper && <section className="pt-box oap-whisper" data-testid="oap-whisper" aria-live="polite"><span className="oap-whisper-ic" aria-hidden="true">🤟</span>
       <div><h2>{ar ? `${P35_NAMES_AR.whisper} — الآن` : 'Interpreter’s whisper — now'}</h2><p><b>{whisper.title_ar}</b>{whisper.interpreter_name_ar ? ` · ${whisper.interpreter_name_ar}` : ''} · {ar ? `غرفة مفتوحة للجميع ${WHISPER_MINUTES} دقائق — تنتهي ${new Date(whisper.ends_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}` : `open room ${WHISPER_MINUTES} min`}</p></div>
       <Link href={`/room/${whisper.room_code}`} className="pt-btn gold" data-testid="oap-whisper-join">{ar ? 'ادخل الغرفة' : 'Join'}</Link>
@@ -78,7 +82,8 @@ function Inner() {
           {season.invite_ar && <p className="oap-season-inv">«{season.invite_ar}»</p>}
           <p className="oap-gold-n" data-testid="oap-season-line">{season.line}</p>
           {signFirst && !!season.sign_slots && <p className="oap-signfirst" data-testid="oap-sign-first">🤟 {ar ? `${season.sign_slots === 1 ? 'ساعة واحدة' : `${season.sign_slots} ساعات`} بالإشارة في هذا الموسم — قدّمناها لك أولًا` : 'Signed hours shown first for you'}</p>}
-          <ul className="oap-slots" data-testid="oap-season-slots">{seasonSlots.map((x: any) => <li key={x.id} data-sign={x.sign_language ? '1' : '0'}><b>{x.weekday_ar} {x.from}</b> · {x.duration_min} {ar ? 'دقيقة' : 'min'}{x.org_name_ar ? <span> · {x.org_name_ar}</span> : <span className="pt-muted"> · {ar ? 'جهة (بلا اسم)' : 'an organization'}</span>}{x.sign_language ? <span className="oap-sign" data-testid="oap-slot-sign"> · 🤟 {ar ? 'بالإشارة' : 'signed'}</span> : null}</li>)}</ul>
+          <ul className="oap-slots" data-testid="oap-season-slots">{seasonSlots.map((x: any) => <li key={x.id} data-sign={x.sign_language ? '1' : '0'}><b>{x.weekday_ar} {x.from}</b> · {x.duration_min} {ar ? 'دقيقة' : 'min'}{x.org_name_ar ? <span> · {x.org_name_ar}</span> : <span className="pt-muted"> · {ar ? 'جهة (بلا اسم)' : 'an organization'}</span>}{x.sign_language ? <span className="oap-sign" data-testid="oap-slot-sign"> · 🤟 {ar ? 'بالإشارة' : 'signed'}</span> : null}{x.shared ? <span className="oap-shared" data-testid="oap-slot-shared"> · 🤝 {x.shared_label_ar}</span> : null}</li>)}</ul>
+          {!!(season.sign_hours || []).length && <p className="oap-signhours" data-testid="oap-sign-hours">🤟 {ar ? `${P37_NAMES_AR.season_sign}: ` : 'Season interpreters: '}{(season.sign_hours as any[]).map((h: any, i: number) => <span key={h.id}>{i ? ' · ' : ''}{h.weekday_ar} {h.from} ({h.duration_min} {ar ? 'د' : 'min'}){h.live ? (ar ? ' — الآن' : ' — now') : ''}</span>)}<small> — {ar ? 'ساعات إشارة مفتوحة تعهّد بها مترجمون طوال الموسم' : 'open sign-language hours pledged for the season'}</small></p>}
           <p className="oap-season-links">{season.phase !== 'after' && <a href={`/api/onair?season_ics=${season.id}`} className="pt-btn ghost small" data-testid="oap-season-ics">📅 {ar ? 'أضِف الموسم إلى تقويمك' : 'Add to calendar'}</a>} <Link href="/on-air/seasons" className="pt-btn ghost small" data-testid="oap-seasons-link">📖 {ar ? `${P36_NAMES_AR.record} — كل المواسم` : 'Season records'}</Link></p>
           {season.phase !== 'after' && <p className="pt-muted">{ar ? 'مدير الجهة يعلن ساعتها من «جهتي ← أَثَر معك». منسوبوها يُذكَّرون قبلها بساعة، والصعود يبقى قرارًا شخصيًا.' : 'Org admins announce their hour from the organization page.'}</p>}
         </div>}
@@ -125,6 +130,7 @@ function Inner() {
     <section className="pt-box"><h2>{ar ? 'أسئلة أجاب عنها الهواء' : 'Questions the air answered'}</h2>
       <p className="pt-muted">{ar ? 'أجوبة حقيقية أعاد الطاقم صياغتها بلا أسماء ولا تفاصيل، بموافقة من سأل — لتنفع من يأتي بعده.' : 'Real answers, rewritten by staff without names, with the asker’s consent.'}</p>
       {!faq.length && <p className="pt-muted" data-testid="oap-faq-empty">{ar ? 'لا شيء بعد — أول سؤال يُجاب على الهواء يبدأ هذا الجدار.' : 'Nothing yet.'}</p>}
+      <p className="oap-wall-link"><Link href="/on-air/week" className="pt-btn ghost small" data-testid="oap-wall-link">🧱 {ar ? `${P37_NAMES_AR.wall} — أسئلة الأسابيع الماضية بإجاباتها` : 'Week Wall — past questions answered'}</Link></p>
       <ul className="oap-faq" data-testid="oap-faq">{faq.map((f: any) => <li key={f.id}><details><summary>{f.question_ar}{f.domain ? <small> · {f.domain}</small> : null}</summary><p>{f.answer_ar}</p></details></li>)}</ul>
     </section>
 
@@ -159,6 +165,7 @@ const CSS = `
 .oap-grades{list-style:none;margin:0 0 10px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
 .oap-grade{width:100%;text-align:start;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;background:#fff;font:inherit;cursor:pointer;min-height:44px;display:flex;flex-direction:column;gap:4px;color:#0f2a4e}.oap-grade:hover{border-color:#0b6f69;background:#f0fbfa}
 .oap-grade b{font-size:17px}.oap-grade small{color:#475569;line-height:1.6}.oap-grade span{align-self:flex-start;background:#f1f5f9;border-radius:999px;padding:1px 10px;font-size:12.5px;font-weight:800;color:#0b6f69;margin-top:4px}
+.oap-shared{color:#9a3412;font-weight:800}.oap-signhours{margin:8px 0 0;color:#701a75;font-size:14px;line-height:1.8}.oap-signhours small{color:#64748b;font-weight:400}.oap-wall-link{margin:0 0 10px}.oap-signnow{background:linear-gradient(135deg,#fdf4ff,#fae8ff)}
 .oap-people,.oap-wins,.oap-faq{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .oap-people li{display:flex;gap:12px;align-items:center;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px}.oap-people li>span:nth-child(2){flex:1}.oap-people b{display:block;color:#0f2a4e}.oap-people small{display:block;color:#475569;line-height:1.6}
 .oap-ava{width:48px;height:48px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto;color:#0b6f69}.oap-ava img{width:100%;height:100%;object-fit:cover}

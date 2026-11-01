@@ -176,6 +176,17 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
     const result = id ? { season: j.season, record: j.record, note_ar: j.record ? 'سجلّ مجمَّد بعد انتهاء الموسم — لا أسماء أفراد، الأعداد من خمسة' : 'الموسم لم ينتهِ بعد — السجلّ يُكتب بعد نهايته', page: `${c.site}/on-air/seasons/${encodeURIComponent(id)}` } : { seasons: j.seasons, note_ar: j.note_ar, page: `${c.site}/on-air/seasons` };
     await log(c, name, true, { season: id || 'shelf' }); return toolContent(summarize(result), result);
   }
+  if (name === 'week_wall') {   // P37 جدار الأسبوع — عامّ بالدور لا بالاسم
+    const j = await asJson(await onairGET(internal(c, '/api/onair?week_wall=1')));
+    if (!j?.success) { await log(c, name, false); return toolContent('تعذّر القراءة | Unavailable', { error: 'unavailable' }, true); }
+    const result = { wall: j.wall, n: j.n, line_ar: j.line_ar, note_ar: j.note_ar, page: `${c.site}/on-air/week` }; await log(c, name, true, { n: j.n }); return toolContent(summarize(result), result);
+  }
+  if (name === 'year_record') {   // P37 سجلّ السنة — فصل سنوي من سجلّات مجمَّدة
+    const y = String(args.year || '').trim(); const j = await asJson(await onairGET(internal(c, y ? `/api/onair?year=${encodeURIComponent(y)}` : '/api/onair?seasons=1')));
+    if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر القراءة | Unavailable', { error: j?.error ? 'not_found' : 'unavailable' }, true); }
+    const result = y ? { year: j.year, note_ar: j.note_ar, page: `${c.site}/on-air/seasons/year/${encodeURIComponent(y)}` } : { years: j.years, note_ar: 'سنوات لها سجلّات مجمَّدة — اطلب year لقراءة فصلها', page: `${c.site}/on-air/seasons` };
+    await log(c, name, true, { year: y || 'list' }); return toolContent(summarize(result), result);
+  }
   if (c.actor.tier !== 'personal') return toolContent('تحتاج تفويضًا شخصيًا', { error: 'not_authorized' }, true);
   if (name === 'my_wallet') {
     const j = await asJson(await pocketGET(internal(c, '/api/pocket?view=bundle'))); if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر قراءة المحفظة', { error: 'failed' }, true); }

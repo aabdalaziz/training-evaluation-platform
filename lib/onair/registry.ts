@@ -419,6 +419,7 @@ export type SeasonRecord = {
   orgs: number; cities: { key: string; ar: string; n: number }[]; slots: { weekday: number; from_min: number; duration_min: number; org_name_ar: string | null; sign_language: boolean; sign_verified: boolean }[];
   sign_slots: number; sign_verified: number; meetings_band: string; peak: { weekday: number; hour: number }[]; present_people: { n: number | null; ar: string };
   docs: { code: string; org_name_ar: string }[]; recorded_at: string; line_ar: string;
+  /* P37 */ org_ids?: string[]; shared?: number; sign_hours?: number; sign_hours_verified?: number; meetings_n?: never;
 };
 /** الساعات الأكثف داخل أيام الموسم: من سجلّ الحضور (أشخاص مختلفون في الخلية ≥ k) — أعلى 3 خلايا بلا أعداد */
 export function peakHours(logs: { user_id: string; started_at: string; ended_at: string | null }[], season: Pick<Season, 'from_day' | 'to_day'>, k = RECORD_K, top = 3): { peak: { weekday: number; hour: number }[]; people: number } {
@@ -436,10 +437,10 @@ export function interpreterShowedUp(logs: { user_id: string; started_at: string;
   if (!interpreterId || !slotAtIso) return false; const a = Date.parse(slotAtIso), b = a + durationMin * 60000;
   return logs.some(l => l.user_id === interpreterId && Date.parse(l.started_at) < b && (Date.parse(l.ended_at || '') || Date.parse(l.started_at) + 3600000) > a);
 }
-export function recordLine(r: Pick<SeasonRecord, 'orgs' | 'cities' | 'meetings_band' | 'sign_verified' | 'days'>): string {
+export function recordLine(r: Pick<SeasonRecord, 'orgs' | 'cities' | 'meetings_band' | 'sign_verified' | 'days'> & { shared?: number; sign_hours_verified?: number }): string {
   const o = r.orgs === 0 ? 'بلا ساعات معلنة' : r.orgs === 1 ? 'جهة واحدة' : r.orgs === 2 ? 'جهتان' : `${r.orgs} جهات`;
   const c = r.cities.length === 0 ? '' : r.cities.length === 1 ? ` في مدينة واحدة` : ` في ${r.cities.length} مدن`;
-  return `${r.days} ${r.days === 1 ? 'يوم' : r.days === 2 ? 'يومان' : r.days <= 10 ? 'أيام' : 'يومًا'} · ${o}${c} · لقاءات: ${r.meetings_band}${r.sign_verified ? ` · ${r.sign_verified === 1 ? 'ساعة واحدة' : `${r.sign_verified} ساعات`} بالإشارة` : ''}`;
+  return `${r.days} ${r.days === 1 ? 'يوم' : r.days === 2 ? 'يومان' : r.days <= 10 ? 'أيام' : 'يومًا'} · ${o}${c} · لقاءات: ${r.meetings_band}${r.sign_verified ? ` · ${r.sign_verified === 1 ? 'ساعة واحدة' : `${r.sign_verified} ساعات`} بالإشارة` : ''}${r.sign_hours_verified ? ` · ${r.sign_hours_verified === 1 ? 'ساعة إشارة مفتوحة' : `${r.sign_hours_verified} ساعات إشارة مفتوحة`} حضرها مترجمها` : ''}${r.shared ? ` · ${r.shared === 1 ? 'ساعة مشتركة' : `${r.shared} ساعات مشتركة`}` : ''}`;
 }
 /** ملف تقويم .ics للموسم (بلا مكتبات): حدث لكل ساعة جهة داخل أيامه، وإلا حدث يوم كامل للمدة */
 const icsDate = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
@@ -498,3 +499,88 @@ export function bestHours(org: number[][] | null, platform: number[][] | null, t
   return out.sort((a, b) => b.score - a.score || a.weekday - b.weekday || a.hour - b.hour).slice(0, top);
 }
 export const ORG_TIME_LEVEL_AR: Record<string, string> = { '-1': 'أقل من خمسة', '0': '—', '1': 'نادرًا', '2': 'أحيانًا', '3': 'غالبًا' };
+
+// ───────────────────────────── P37 «عُمر الهواء» (Athar on Air · Continuity) ─────────────────────────────
+// 1) جدار الأسبوع · 2) موسم مشترك · 3) سجلّ السنة · 4) مترجم الموسم — دوال نقية (بلا قاعدة بيانات)
+export const P37_NAMES_AR = { continuity: 'عُمر الهواء', wall: 'جدار الأسبوع', shared: 'موسم مشترك', year: 'سجلّ السنة', season_sign: 'مترجم الموسم' } as const;
+export const SIGN_HOUR_MIN = 30;               // تعهّد المترجم: 30–90 دقيقة
+export const SIGN_HOUR_MAX = 90;
+export const YEAR_K = 5;                       // الجهات المختلفة في الفصل السنوي تُذكر من 5
+export type WeekQuestion37 = WeekQuestion & { wall_hidden?: boolean; helped_at?: string | null };
+export type SeasonSlot37 = SeasonSlot & { sign_language?: boolean; interpreter_user_id?: string | null; shared_with_org_id?: string | null; shared_status?: 'invited' | 'pending' | 'accepted' | null; shared_group?: string | null };
+export type SignHour = { id: number | string; season_id: number | string; user_id: string; weekday: number; from_min: number; duration_min: number; created_at?: string };
+
+/** (1) جدار الأسبوع: يُعرض السؤال المطويّ غير المخفيّ الذي له إجابة واحدة على الأقل */
+export const wallVisible = (q: Pick<WeekQuestion37, 'status' | 'wall_hidden'>, answers: number) => q.status === 'retired' && !q.wall_hidden && answers > 0;
+/** «أفادتني»: كاتب الأمانة المعروف وحده، مرة واحدة، بعد أن تصل إجابة */
+export function canMarkHelped(q: Pick<WeekQuestion37, 'helped_at' | 'status'>, askerUserId: string | null | undefined, me: string | null | undefined, answers: number): { ok: true } | { ok: false; error: string } {
+  if (!me || !askerUserId || askerUserId !== me) return { ok: false, error: 'هذا لكاتب الأمانة وحده' };
+  if (q.helped_at) return { ok: false, error: 'سبق أن قلت «أفادتني» — شكرًا' };
+  if (answers < 1) return { ok: false, error: 'لم تصل إجابة بعد' };
+  if (q.status === 'queued' || q.status === 'rejected') return { ok: false, error: 'السؤال لم يُنشر بعد' };
+  return { ok: true };
+}
+export const wallLine = (n: number) => n === 0 ? 'لا أسئلة على الجدار بعد — أول سؤال أسبوع يُجاب عنه يُعلَّق هنا' : n === 1 ? 'سؤال واحد أجاب عنه الهواء' : n === 2 ? 'سؤالان أجاب عنهما الهواء' : n <= 10 ? `${n} أسئلة أجاب عنها الهواء` : `${n} سؤالًا أجاب عنها الهواء`;
+
+/** (2) موسم مشترك: جهتان فقط · مشاركة واحدة لكل جهة في الموسم */
+export function canShareInvite(mine: Pick<SeasonSlot37, 'org_id' | 'shared_status'> | null, target: Pick<SeasonSlot37, 'org_id' | 'shared_status'> | null): { ok: true } | { ok: false; error: string } {
+  if (!mine) return { ok: false, error: 'أعلن ساعة جهتك أولًا' };
+  if (!target) return { ok: false, error: 'الجهة الأخرى لم تعلن ساعتها في هذا الموسم' };
+  if (String(mine.org_id) === String(target.org_id)) return { ok: false, error: 'لا تُدعى الجهة نفسها' };
+  if (mine.shared_status) return { ok: false, error: mine.shared_status === 'accepted' ? 'جهتك في ساعة مشتركة بالفعل — مشاركة واحدة في الموسم' : 'لديكم دعوة قائمة — انتظروا الردّ أو اسحبوها' };
+  if (target.shared_status) return { ok: false, error: 'الجهة الأخرى مرتبطة بدعوة أو مشاركة قائمة' };
+  return { ok: true };
+}
+/** تسمية الساعة المشتركة على الخريطة: بالاسمين إن أذن الطرفان، وإلا «بين جهتين» */
+export const sharedLabel = (a: string | null | undefined, b: string | null | undefined) => a && b ? `ساعة مشتركة: ${a} + ${b}` : 'ساعة مشتركة بين جهتين';
+/** عدد المجموعات المشتركة المقبولة بين الساعات (كل مجموعة = جهتان) */
+export const sharedGroups = (slots: Pick<SeasonSlot37, 'shared_status' | 'shared_group'>[]) => new Set(slots.filter(s => s.shared_status === 'accepted' && s.shared_group).map(s => String(s.shared_group))).size;
+
+/** (4) مترجم الموسم: التحقق من التعهّد */
+export function cleanSignHour(b: any): { ok: true; s: { weekday: number; from_min: number; duration_min: number } } | { ok: false; error: string } {
+  const weekday = Number(b?.weekday), from_min = Number(b?.from_min), duration_min = Number(b?.duration_min || 60);
+  if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) return { ok: false, error: 'اليوم غير صالح' };
+  if (!Number.isInteger(from_min) || from_min < 0 || from_min > 1439) return { ok: false, error: 'الوقت غير صالح' };
+  if (!Number.isInteger(duration_min) || duration_min < SIGN_HOUR_MIN || duration_min > SIGN_HOUR_MAX) return { ok: false, error: `المدة بين ${SIGN_HOUR_MIN} و${SIGN_HOUR_MAX} دقيقة` };
+  return { ok: true, s: { weekday, from_min, duration_min } };
+}
+/** هل ساعة الإشارة المفتوحة جارية الآن؟ (أسبوعية داخل أيام الموسم) */
+export function signHourLiveNow(h: Pick<SignHour, 'weekday' | 'from_min' | 'duration_min'>, season: Pick<Season, 'from_day' | 'to_day'>, now = new Date()): boolean {
+  const day = riyadhDay(now); if (day < season.from_day || day > season.to_day) return false;
+  const ry = new Date(now.getTime() + 3 * 3600000); if (ry.getUTCDay() !== h.weekday) return false;
+  const m = ry.getUTCHours() * 60 + ry.getUTCMinutes(); return m >= h.from_min && m < h.from_min + h.duration_min;
+}
+/** كم مرة تقع ساعة أسبوعية داخل الموسم؟ (لسطر «حضرها N من M») */
+export function weeklyOccurrences(weekday: number, season: Pick<Season, 'from_day' | 'to_day'>): string[] {
+  const out: string[] = []; for (let i = 0; i <= SEASON_MAX_DAYS; i++) { const d = new Date(Date.parse(season.from_day) + i * 86400000); const key = d.toISOString().slice(0, 10); if (key > season.to_day) break; if (d.getUTCDay() === weekday) out.push(key); } return out;
+}
+/** سطر «ما شهده أَثَر» للمترجم */
+export const signPledgeLine = (seasonTitle: string, attended: number, total: number) => `تعهّد بساعة إشارة أسبوعية في «${seasonTitle}» وحضرها ${attended} من ${total}`;
+
+/** (3) سجلّ السنة: خياطة سجلّات المواسم المجمَّدة — من السجلّات فقط */
+export type YearRecord = { year: number; hijri_ar: string; seasons: number; org_participations: number; orgs_distinct: { n: number | null; ar: string }; cities: { key: string; ar: string; n: number }[]; sign_verified: number; sign_hours_verified: number; shared: number; meetings_band: string; peak: { weekday: number; hour: number } | null; season_ids: string[]; line_ar: string };
+export function hijriSpanAr(year: number): string {
+  try {
+    const f = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura-nu-latn', { year: 'numeric' });
+    const a = f.format(new Date(Date.UTC(year, 0, 1))).replace(/\D/g, ''), b = f.format(new Date(Date.UTC(year, 11, 31))).replace(/\D/g, '');
+    if (!a) return ''; return a === b ? `${a}هـ` : `${a}–${b}هـ`;
+  } catch { return ''; }
+}
+export function yearRecord(year: number, recs: (SeasonRecord & { org_ids?: string[]; shared?: number; sign_hours_verified?: number })[], meetingsTotal: number | null, k = YEAR_K): YearRecord {
+  const cities: Record<string, { key: string; ar: string; n: number }> = {}; const orgSet = new Set<string>(); let participations = 0, signV = 0, signH = 0, shared = 0; const peakCount: Record<string, number> = {};
+  for (const r of recs) {
+    participations += r.orgs || 0; for (const id of r.org_ids || []) orgSet.add(String(id));
+    for (const c of r.cities || []) { cities[c.key] = cities[c.key] || { key: c.key, ar: c.ar, n: 0 }; cities[c.key].n += c.n; }
+    signV += r.sign_verified || 0; signH += r.sign_hours_verified || 0; shared += r.shared || 0;
+    for (const p of r.peak || []) { const key = `${p.weekday}:${p.hour}`; peakCount[key] = (peakCount[key] || 0) + 1; }
+  }
+  const top = Object.entries(peakCount).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+  const peak = top ? { weekday: Number(top[0].split(':')[0]), hour: Number(top[0].split(':')[1]) } : null;
+  const orgs_distinct = recs.some(r => r.org_ids) ? publicCount(orgSet.size, k) : { n: null, ar: 'غير محسوبة' };
+  const base = { year, hijri_ar: hijriSpanAr(year), seasons: recs.length, org_participations: participations, orgs_distinct, cities: Object.values(cities).sort((a, b) => b.n - a.n), sign_verified: signV, sign_hours_verified: signH, shared, meetings_band: meetingsTotal === null ? 'غير محسوبة' : meetingsBand(meetingsTotal), peak, season_ids: recs.map(r => r.season_id) };
+  const s = base.seasons; const seasonsAr = s === 0 ? 'لا مواسم' : s === 1 ? 'موسم واحد' : s === 2 ? 'موسمان' : s <= 10 ? `${s} مواسم` : `${s} موسمًا`;
+  const citiesAr = base.cities.length === 0 ? 'بلا مدن' : base.cities.length === 1 ? 'مدينة واحدة' : base.cities.length === 2 ? 'مدينتان' : `${base.cities.length} مدن`;
+  const signAr = signV + signH === 0 ? '' : ` · ${signV + signH === 1 ? 'ساعة واحدة بالإشارة' : signV + signH === 2 ? 'ساعتان بالإشارة' : `${signV + signH} ساعات بالإشارة`} حضرها مترجم`;
+  const sharedAr = shared === 0 ? '' : ` · ${shared === 1 ? 'ساعة مشتركة واحدة' : shared === 2 ? 'ساعتان مشتركتان' : `${shared} ساعات مشتركة`}`;
+  return { ...base, line_ar: s === 0 ? `${year}: لم ينتهِ موسم بعد` : `${year}: ${seasonsAr} · ${participations} مشاركة جهة في ${citiesAr}${signAr}${sharedAr} · لقاءات: ${base.meetings_band}` };
+}

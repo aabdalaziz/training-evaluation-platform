@@ -10,6 +10,8 @@ import { notify } from '../portal/notify';
 import { FACE_AR, CERT_HOURS, CERT_MEETINGS, GRADE_LABEL, certCode, hoursFrom, isOnAir, publicPresence, publicStats, avgResponseMin, matchReceivers, quickExpired, quickClosed, QUICK_CLOSE_MIN, goldenState, liveMap, isBottle, BOTTLE_AR, STATS_K, holdReleased, whisperOver, WHISPER_MINUTES, seasonState, seasonPhraseAr, slotOccursAt, seasonLine, seasonCode, seasonDocTitle, seasonDocNarrative, SEASON_K, echoBackStep, echoBackLine, ECHO_BACK_STEPS, whenGrid, PRESENCE_LOG_DAYS, WHEN_WEEKS, cityKey, isWhisper, whisperEndsAt, CITY_POINTS } from './registry';
 import type { Presence, Request, Win, Grade, Face, Hours, Golden, EchoDraft, Season, SeasonSlot } from './registry';
 import { RECORD_K, WEEK_QUESTION_DAYS, riyadhDay, seasonEnded, seasonDays, meetingsBand, publicCount, peakHours, interpreterShowedUp, recordLine, isChainCandidate, weekOver, timeGrid, bestHours } from './registry';   // P36
+import { wallVisible, canShareInvite, sharedGroups, weeklyOccurrences, yearRecord, signPledgeLine, sharedLabel, signHourLiveNow } from './registry';   // P37
+import type { SignHour, SeasonSlot37, WeekQuestion37, YearRecord } from './registry';   // P37
 import type { SeasonRecord, WeekQuestion } from './registry';   // P36
 
 const lower = (s: unknown) => String(s || '').trim().toLowerCase();
@@ -145,7 +147,7 @@ export async function callReceivers(db: any, r: Request, present: Presence[], si
   return n;
 }
 /** سطر «ما شهده أَثَر» للعضو */
-export async function onAirFacts(db: any, uid: string | null | undefined) { if (!uid) return { meetings: 0, hours: 0, legacy: 0 }; const h = await hoursFor(db, uid); const legacy = await legacyCompleteCount(db, uid); return { meetings: h.meetings, hours: h.hours, legacy }; }
+export async function onAirFacts(db: any, uid: string | null | undefined) { if (!uid) return { meetings: 0, hours: 0, legacy: 0, sign_pledge: null as string | null }; const h = await hoursFor(db, uid); const legacy = await legacyCompleteCount(db, uid); const sign_pledge = await signPledgeFact(db, uid).catch(() => null); return { meetings: h.meetings, hours: h.hours, legacy, sign_pledge }; }
 export type { Grade };
 
 // ───────────────────────────── P34 «الهواء يتّسع» ─────────────────────────────
@@ -238,17 +240,19 @@ export async function seasonMeetings(db: any, season: Pick<Season, 'from_day' | 
 /** العرض العام للموسم: الحالة · عدد الجهات · ساعات الجهات (الاسم بإذن) · نقاط الخريطة من مدن الجهات (أعداد فقط) */
 export async function seasonView(db: any, now = new Date()) {
   const s = await seasonActive(db); if (!s) return null;
-  const st = seasonState(s, now); const slots = await seasonSlots(db, s.id);
+  const st = seasonState(s, now); const slots = await seasonSlots36(db, s.id);   // P37: + أعمدة الساعة المشتركة
   const orgIds = Array.from(new Set(slots.map(x => String(x.org_id))));
   const orgs = orgIds.length ? await safe<any[]>(db.from('portal_organizations').select('id,name_ar,city').in('id', orgIds).limit(500), []) : [];
+  const signHours = await signHoursOf(db, s.id).catch(() => [] as SignHour[]);   // P37 «مترجم الموسم»: ساعات إشارة مفتوحة (بلا أسماء هنا)
   const orgOf: Record<string, any> = {}; for (const o of orgs) orgOf[String(o.id)] = o;
   const map: Record<string, { key: string; ar: string; x: number; y: number; n: number }> = {};
   for (const o of orgs) { const k = cityKey(o.city); if (!k || !CITY_POINTS[k]) continue; map[k] = map[k] || { key: k, ar: CITY_POINTS[k].ar, x: CITY_POINTS[k].x, y: CITY_POINTS[k].y, n: 0 }; map[k].n++; }
   let meetings = 0; if (st.phase === 'after') for (const id of orgIds.slice(0, 50)) meetings += await seasonMeetings(db, s, id);
   return {
     ...s, ...st, phrase: seasonPhraseAr(st), orgs: orgIds.length, meetings_public: meetings >= SEASON_K ? meetings : 0, line: seasonLine({ orgs: orgIds.length, meetings, phase: st.phase }),
-    slots: slots.map(x => ({ id: x.id, org_id: x.public_name ? String(x.org_id) : null, org_name_ar: x.public_name ? String(orgOf[String(x.org_id)]?.name_ar || 'جهة') : null, weekday: x.weekday, from_min: x.from_min, duration_min: x.duration_min, at: slotOccursAt(x, s), sign_language: !!x.sign_language })),   // P36: علم الإشارة عامّ، المترجم لا
+    slots: slots.map(x => { const partner = x.shared_status === 'accepted' ? slots.find(y => String(y.org_id) === String(x.shared_with_org_id)) : null; const nm = (z: any) => z.public_name ? String(orgOf[String(z.org_id)]?.name_ar || 'جهة') : null; return { id: x.id, org_id: x.public_name ? String(x.org_id) : null, org_name_ar: nm(x), weekday: x.weekday, from_min: x.from_min, duration_min: x.duration_min, at: slotOccursAt(x, s), sign_language: !!x.sign_language, shared: !!partner, shared_label_ar: partner ? sharedLabel(nm(x), nm(partner)) : null }; }),   // P36: علم الإشارة عامّ، المترجم لا · P37: الساعة المشتركة
     sign_slots: slots.filter(x => x.sign_language).length,
+    sign_hours: signHours.map(h => ({ id: h.id, weekday: h.weekday, from_min: h.from_min, duration_min: h.duration_min, live: signHourLiveNow(h, s, now) })),   // P37
     map: Object.values(map),
   };
 }
@@ -385,8 +389,8 @@ export { ECHO_BACK_STEPS };
 
 // ───────────────────────────── P36 «ذاكرة الهواء» ─────────────────────────────
 const SEASON_COLS = 'id,title_ar,invite_ar,from_day,to_day,active,record_json,recorded_at';
-const SLOT_COLS = 'id,season_id,org_id,weekday,from_min,duration_min,public_name,sign_language,interpreter_user_id';
-export type SeasonSlot36 = SeasonSlot & { sign_language?: boolean; interpreter_user_id?: string | null };
+const SLOT_COLS = 'id,season_id,org_id,weekday,from_min,duration_min,public_name,sign_language,interpreter_user_id,shared_with_org_id,shared_status,shared_group';   // P37: + المشاركة
+export type SeasonSlot36 = SeasonSlot & { sign_language?: boolean; interpreter_user_id?: string | null; shared_with_org_id?: string | null; shared_status?: 'invited' | 'pending' | 'accepted' | null; shared_group?: string | null };
 
 /** (1) سجلّ الموسم */
 export const seasonById = (db: any, id: string | number) => safe<(Season & { record_json?: SeasonRecord | null; recorded_at?: string | null }) | null>(db.from('portal_onair_seasons').select(SEASON_COLS).eq('id', id).maybeSingle(), null);
@@ -409,17 +413,23 @@ export async function computeSeasonRecord(db: any, season: Season, now = new Dat
   let meetings = 0; for (const id of orgIds.slice(0, 50)) meetings += await seasonMeetings(db, season, id);
   const docs = await safe<any[]>(db.from('portal_vc_issuances').select('code,full_name,vc').eq('kind', 'on_air_season').is('revoked_at', null).contains('vc', { _athar: { season_id: String(season.id) } }).limit(200), []);
   const publicOrg = new Set(slots.filter(x => x.public_name).map(x => String(x.org_id)));
-  const slotsOut = slots.map(x => { const at = slotOccursAt(x, season); const verified = !!x.sign_language && interpreterShowedUp(logs, x.interpreter_user_id, at, x.duration_min); return { weekday: x.weekday, from_min: x.from_min, duration_min: x.duration_min, org_name_ar: x.public_name ? String(orgOf[String(x.org_id)]?.name_ar || 'جهة') : null, sign_language: !!x.sign_language, sign_verified: verified }; });
+  const slotsOut = slots.map(x => { const at = slotOccursAt(x, season); const verified = !!x.sign_language && interpreterShowedUp(logs, x.interpreter_user_id, at, x.duration_min); return { weekday: x.weekday, from_min: x.from_min, duration_min: x.duration_min, org_name_ar: x.public_name ? String(orgOf[String(x.org_id)]?.name_ar || 'جهة') : null, sign_language: !!x.sign_language, sign_verified: verified, shared: (x as SeasonSlot37).shared_status === 'accepted' }; });
+  // P37: ساعات الإشارة المفتوحة (تعهّد المترجمين) — تُحتسب بالحضور في كل أسبوع من الموسم؛ والساعات المشتركة المقبولة
+  const signHours = await signHoursOf(db, season.id); let signHoursVerified = 0;
+  for (const h of signHours) { const days = weeklyOccurrences(h.weekday, season); const attended = days.filter(d => interpreterShowedUp(logs, h.user_id, new Date(Date.parse(d) + h.from_min * 60000 - 3 * 3600000).toISOString(), h.duration_min)).length; signHoursVerified += attended; }
+  const shared = sharedGroups(slots as SeasonSlot37[]);
   const base = { season_id: String(season.id), title_ar: season.title_ar, invite_ar: season.invite_ar, from_day: season.from_day, to_day: season.to_day, days: seasonDays(season), orgs: orgIds.length, cities: Object.values(cities).sort((a, b) => b.n - a.n), slots: slotsOut,
     sign_slots: slotsOut.filter(s => s.sign_language).length, sign_verified: slotsOut.filter(s => s.sign_verified).length, meetings_band: meetingsBand(meetings), peak, present_people: publicCount(people, RECORD_K),
-    docs: docs.filter(d => publicOrg.has(String(d.vc?._athar?.org_id || ''))).map(d => ({ code: String(d.code), org_name_ar: String(d.full_name || 'جهة') })), recorded_at: now.toISOString() };
+    docs: docs.filter(d => publicOrg.has(String(d.vc?._athar?.org_id || ''))).map(d => ({ code: String(d.code), org_name_ar: String(d.full_name || 'جهة') })), recorded_at: now.toISOString(),
+    org_ids: orgIds, shared, sign_hours: signHours.length, sign_hours_verified: signHoursVerified };
+  (base as any).__meetings_n = meetings;   // خدميّ: يُحفظ في عمود seasons.meetings_n عند التجميد ويُحذف من السجلّ العامّ
   return { ...base, line_ar: recordLine(base) };
 }
 /** السجلّ: من record_json إن جُمِّد، وإلا يُحسب (ويُجمَّد إن انتهى الموسم) */
 export async function seasonRecordOf(db: any, season: Season & { record_json?: SeasonRecord | null }, now = new Date()): Promise<SeasonRecord> {
   if (season.record_json && season.record_json.season_id) return season.record_json;
-  const rec = await computeSeasonRecord(db, season, now);
-  if (seasonEnded(season, now)) await db.from('portal_onair_seasons').update({ record_json: rec, recorded_at: rec.recorded_at }).eq('id', season.id).then(() => null, () => null);
+  const rec0 = await computeSeasonRecord(db, season, now); const meetings_n = Number((rec0 as any).__meetings_n || 0); delete (rec0 as any).__meetings_n; const rec = rec0;
+  if (seasonEnded(season, now)) await db.from('portal_onair_seasons').update({ record_json: rec, recorded_at: rec.recorded_at, meetings_n }).eq('id', season.id).then(() => null, () => null);
   return rec;
 }
 /** كرون: تجميد سجلّات المواسم المنتهية التي لم تُجمَّد (قبل حذف سجلّ الحضور) */
@@ -438,7 +448,7 @@ export const mySeasonSlot36 = (db: any, seasonId: string | number, orgId: string
 export const interpreterSlots = (db: any, seasonId: string | number, uid: string) => safe<SeasonSlot36[]>(db.from('portal_onair_season_slots').select(SLOT_COLS).eq('season_id', seasonId).eq('interpreter_user_id', uid).limit(20), []);
 
 /** (3) أمانة متسلسلة → سؤال الأسبوع */
-const WQ_COLS = 'id,source_request_id,text_ar,domain,status,week_start,approved_by,approved_at,created_at';
+const WQ_COLS = 'id,source_request_id,text_ar,domain,status,week_start,approved_by,approved_at,created_at,wall_hidden,helped_at';   // P37: + wall_hidden, helped_at
 export const weekQuestions = (db: any) => safe<WeekQuestion[]>(db.from('portal_onair_week_questions').select(WQ_COLS).order('id', { ascending: false }).limit(100), []);
 export const weekAnswers = (db: any, qid: string | number) => safe<{ id: number | string; user_id: string; role_label_ar: string; text_ar: string; created_at: string }[]>(db.from('portal_onair_week_answers').select('id,user_id,role_label_ar,text_ar,created_at').eq('question_id', qid).order('id', { ascending: true }).limit(200), []);
 /** الأمانات المرشَّحة: انقضت وأذن أصحابها ولم تُعرض بعد */
@@ -480,4 +490,119 @@ export async function orgTimeGridOf(db: any, orgId: string, now = new Date()) {
   const rows = await safe<any[]>(db.from('portal_onair_presence_log').select('user_id,started_at,ended_at').gte('started_at', since).limit(20000), []);
   const org = timeGrid(rows.filter(r => ids.has(String(r.user_id))), now); const platform = timeGrid(rows, now, WHEN_WEEKS, 1, 1);   // شبكة المنصّة كلها بلا أسماء (مستويات فقط)
   return { org, platform: { weeks: platform.weeks, cells: platform.cells }, best: bestHours(org.shown ? org.cells : null, platform.cells) };
+}
+
+// ───────────────────────────── P37 «عُمر الهواء» ─────────────────────────────
+const SIGN_COLS = 'id,season_id,user_id,weekday,from_min,duration_min,created_at';
+const WQ37_COLS = 'id,source_request_id,text_ar,domain,status,week_start,approved_by,approved_at,created_at,wall_hidden,helped_at';
+
+/** (1) جدار الأسبوع: الأسئلة المطويّة غير المخفيّة التي لها إجابات — بالدور لا بالاسم */
+export async function weekWall(db: any): Promise<{ id: number | string; text_ar: string; domain: string | null; week_start: string | null; helped: boolean; n: number; answers: { id: number | string; role_label_ar: string; text_ar: string }[] }[]> {
+  const qs = await safe<WeekQuestion37[]>(db.from('portal_onair_week_questions').select(WQ37_COLS).eq('status', 'retired').eq('wall_hidden', false).order('id', { ascending: false }).limit(200), []);
+  if (!qs.length) return [];
+  const ans = await safe<any[]>(db.from('portal_onair_week_answers').select('id,question_id,role_label_ar,text_ar').in('question_id', qs.map(q => q.id)).order('id', { ascending: true }).limit(5000), []);
+  const by: Record<string, any[]> = {}; for (const a of ans) (by[String(a.question_id)] = by[String(a.question_id)] || []).push(a);
+  return qs.filter(q => wallVisible(q, (by[String(q.id)] || []).length)).map(q => ({ id: q.id, text_ar: q.text_ar, domain: q.domain, week_start: q.week_start, helped: !!q.helped_at, n: (by[String(q.id)] || []).length, answers: (by[String(q.id)] || []).map(a => ({ id: a.id, role_label_ar: a.role_label_ar, text_ar: a.text_ar })) }));
+}
+/** أسئلة الأسبوع التي وُلدت من أمانات هذا العضو (لزرّ «أفادتني» في /me/onair) */
+export async function myWeekQuestions(db: any, uid: string): Promise<(WeekQuestion37 & { n: number })[]> {
+  const mine = (await safe<any[]>(db.from('portal_onair_requests').select('id,meta').eq('asker_user_id', uid).order('created_at', { ascending: false }).limit(300), [])).filter(r => r.meta?.bottle && r.meta?.may_publish);
+  if (!mine.length) return [];
+  const qs = await safe<WeekQuestion37[]>(db.from('portal_onair_week_questions').select(WQ37_COLS).in('source_request_id', mine.map(r => r.id)).in('status', ['published', 'retired']).order('id', { ascending: false }).limit(50), []);
+  const out: (WeekQuestion37 & { n: number })[] = [];
+  for (const q of qs) { const a = await weekAnswers(db, q.id); out.push({ ...q, n: a.length }); }
+  return out;
+}
+export const weekQuestion37 = (db: any, id: string | number) => safe<WeekQuestion37 | null>(db.from('portal_onair_week_questions').select(WQ37_COLS).eq('id', id).maybeSingle(), null);
+export const setWeekWall = (db: any, id: string | number, patch: { wall_hidden?: boolean; helped_at?: string }) => db.from('portal_onair_week_questions').update(patch).eq('id', id).then(() => null, () => null);
+
+/** (2) موسم مشترك */
+const slotOfOrg = async (db: any, seasonId: string | number, orgId: string) => safe<SeasonSlot37 | null>(db.from('portal_onair_season_slots').select(SLOT_COLS).eq('season_id', seasonId).eq('org_id', orgId).maybeSingle(), null);
+/** جهات الموسم القابلة للدعوة (أعلنت ساعتها باسمها، وليست جهتي، وغير مرتبطة) */
+export async function shareCandidates(db: any, seasonId: string | number, myOrgId: string): Promise<{ org_id: string; name_ar: string; weekday: number; from_min: number }[]> {
+  const slots = await seasonSlots36(db, seasonId) as SeasonSlot37[]; const cands = slots.filter(x => String(x.org_id) !== String(myOrgId) && x.public_name && !x.shared_status);
+  if (!cands.length) return [];
+  const orgs = await safe<any[]>(db.from('portal_organizations').select('id,name_ar').in('id', cands.map(c => String(c.org_id))).limit(200), []);
+  return cands.map(c => ({ org_id: String(c.org_id), name_ar: String(orgs.find(o => String(o.id) === String(c.org_id))?.name_ar || 'جهة'), weekday: c.weekday, from_min: c.from_min }));
+}
+export async function shareInvite(db: any, seasonId: string | number, fromOrg: string, toOrg: string): Promise<{ ok: true; group: string } | { ok: false; error: string }> {
+  const mine = await slotOfOrg(db, seasonId, fromOrg), target = await slotOfOrg(db, seasonId, toOrg); const c = canShareInvite(mine, target); if (!c.ok) return c;
+  if (!target!.public_name) return { ok: false, error: 'تُدعى الجهات التي أعلنت ساعتها باسمها' };
+  const group = `${seasonId}:${fromOrg}`;
+  await db.from('portal_onair_season_slots').update({ shared_with_org_id: toOrg, shared_status: 'invited', shared_group: group }).eq('id', mine!.id).then(() => null, () => null);
+  await db.from('portal_onair_season_slots').update({ shared_with_org_id: fromOrg, shared_status: 'pending', shared_group: group }).eq('id', target!.id).then(() => null, () => null);
+  return { ok: true, group };
+}
+/** ردّ الجهة المدعوّة: القبول يوحّد الساعتين على ساعة الداعي (واليوم/الوقت/المدة/الإشارة)؛ الاعتذار أو السحب يمسح الربط عند الطرفين */
+export async function shareAnswer(db: any, seasonId: string | number, orgId: string, accept: boolean): Promise<{ ok: true; status: 'accepted' | 'cleared' } | { ok: false; error: string }> {
+  const mine = await slotOfOrg(db, seasonId, orgId); if (!mine || !mine.shared_status || !mine.shared_with_org_id) return { ok: false, error: 'لا دعوة قائمة' };
+  const other = await slotOfOrg(db, seasonId, String(mine.shared_with_org_id)); if (!other) return { ok: false, error: 'الجهة الأخرى لم تعد في الموسم' };
+  if (!accept) {
+    for (const id of [mine.id, other.id]) await db.from('portal_onair_season_slots').update({ shared_with_org_id: null, shared_status: null, shared_group: null }).eq('id', id).then(() => null, () => null);
+    return { ok: true, status: 'cleared' };
+  }
+  if (mine.shared_status !== 'pending') return { ok: false, error: 'القبول للجهة المدعوّة' };
+  const sign = !!(mine.sign_language || other.sign_language); const interp = mine.sign_language ? mine.interpreter_user_id : other.interpreter_user_id;
+  await db.from('portal_onair_season_slots').update({ weekday: other.weekday, from_min: other.from_min, duration_min: other.duration_min, sign_language: sign, interpreter_user_id: sign ? interp : null, shared_status: 'accepted' }).eq('id', mine.id).then(() => null, () => null);
+  await db.from('portal_onair_season_slots').update({ sign_language: sign, interpreter_user_id: sign ? interp : null, shared_status: 'accepted' }).eq('id', other.id).then(() => null, () => null);
+  return { ok: true, status: 'accepted' };
+}
+/** حالة المشاركة لجهة (لـ ?org=) مع اسم الجهة الأخرى */
+export async function shareStateOf(db: any, slot: SeasonSlot37 | null): Promise<{ status: 'invited' | 'pending' | 'accepted'; other_org_id: string; other_name_ar: string } | null> {
+  if (!slot?.shared_status || !slot.shared_with_org_id) return null;
+  const o = await safe<any>(db.from('portal_organizations').select('name_ar').eq('id', slot.shared_with_org_id).maybeSingle(), null);
+  return { status: slot.shared_status, other_org_id: String(slot.shared_with_org_id), other_name_ar: String(o?.name_ar || 'جهة') };
+}
+/** مديرو الجهة (للإشعار الداخلي بالدعوة) */
+export async function orgAdminsOf(db: any, orgId: string): Promise<{ email: string; name: string | null }[]> {
+  const rows = await safe<any[]>(db.from('portal_org_members').select('email,full_name').eq('organization_id', orgId).eq('status', 'confirmed').eq('role', 'org_admin').limit(20), []);
+  return rows.filter(r => r.email).map(r => ({ email: String(r.email), name: r.full_name ? String(r.full_name) : null }));
+}
+
+/** (4) مترجم الموسم */
+export const signHoursOf = (db: any, seasonId: string | number) => safe<SignHour[]>(db.from('portal_onair_season_sign_hours').select(SIGN_COLS).eq('season_id', seasonId).order('weekday').limit(100), []);
+export const mySignHour = (db: any, seasonId: string | number, uid: string) => safe<SignHour | null>(db.from('portal_onair_season_sign_hours').select(SIGN_COLS).eq('season_id', seasonId).eq('user_id', uid).maybeSingle(), null);
+export async function upsertSignHour(db: any, seasonId: string | number, uid: string, h: { weekday: number; from_min: number; duration_min: number }): Promise<SignHour> {
+  const { data, error } = await db.from('portal_onair_season_sign_hours').upsert({ season_id: seasonId, user_id: uid, ...h }, { onConflict: 'season_id,user_id' }).select(SIGN_COLS).single(); if (error) throw new Error(error.message); return data as SignHour;
+}
+export const removeSignHour = (db: any, seasonId: string | number, uid: string) => db.from('portal_onair_season_sign_hours').delete().eq('season_id', seasonId).eq('user_id', uid).then(() => null, () => null);
+/** تذكير المترجمين المتعهّدين قبل ساعتهم بساعة (ضمن season_reminded القائم — لا مفتاح جديد) */
+export async function remindSignHours(db: any, site: string, now = new Date(), dry = false): Promise<number> {
+  const s = await seasonActive(db); if (!s || seasonState(s, now).phase === 'after') return 0;
+  const hours = await signHoursOf(db, s.id); let n = 0; const day = riyadhDay(now);
+  for (const h of hours) {
+    const at = new Date(Date.parse(day) + h.from_min * 60000 - 3 * 3600000); const ry = new Date(now.getTime() + 3 * 3600000); if (ry.getUTCDay() !== h.weekday) continue;
+    const mins = (at.getTime() - now.getTime()) / 60000; if (mins <= 0 || mins > 60) continue;
+    const p = await safe<any>(db.from('portal_onair_presence').select('user_id,email,meta').eq('user_id', h.user_id).maybeSingle(), null); if (!p?.email) continue;
+    if (p.meta?.sign_hour_reminded === `${s.id}:${day}`) continue; if (dry) { n++; continue; }
+    try { await notify(db, { kind: 'onair_season', to: { email: p.email, name: null }, ref: `onair:signhour:${s.id}:${h.id}:${day}`, subject: `ساعتك بالإشارة في ${s.title_ar} بعد ${Math.ceil(mins)} دقيقة`, text: `تعهّدت بساعة إشارة أسبوعية في الموسم. اصعد على الهواء من: ${site}/me/onair`, url: `${site}/me/onair` }); await db.from('portal_onair_presence').update({ meta: { ...(p.meta || {}), sign_hour_reminded: `${s.id}:${day}` } }).eq('user_id', h.user_id).then(() => null, () => null); n++; } catch { /* يتابع */ }
+  }
+  return n;
+}
+/** سطر «ما شهده أَثَر» للمترجم: من السجلّات المجمَّدة (آخر موسم تعهّد فيه) */
+export async function signPledgeFact(db: any, uid: string): Promise<string | null> {
+  const mine = await safe<SignHour[]>(db.from('portal_onair_season_sign_hours').select(SIGN_COLS).eq('user_id', uid).order('id', { ascending: false }).limit(5), []); if (!mine.length) return null;
+  for (const h of mine) {
+    const s = await seasonById(db, h.season_id); if (!s || !s.record_json?.season_id) continue;
+    const total = weeklyOccurrences(h.weekday, s).length; if (!total) continue;
+    // الحضور يُعاد حسابه من سجلّ الحضور إن بقي؛ وإلا من المجموع المجمَّد (لا نعرف نصيب كل مترجم) → نكتفي بالتعهّد
+    const from = new Date(Date.parse(s.from_day) - 7 * 3600000).toISOString(), to = new Date(Date.parse(s.to_day) + 86400000 - 3 * 3600000).toISOString();
+    const logs = await safe<any[]>(db.from('portal_onair_presence_log').select('user_id,started_at,ended_at').eq('user_id', uid).gte('started_at', from).lt('started_at', to).limit(500), []);
+    const attended = weeklyOccurrences(h.weekday, s).filter(d => interpreterShowedUp(logs, uid, new Date(Date.parse(d) + h.from_min * 60000 - 3 * 3600000).toISOString(), h.duration_min)).length;
+    if (attended < 1) continue;
+    return signPledgeLine(s.title_ar, attended, total);
+  }
+  return null;
+}
+
+/** (3) سجلّ السنة: من السجلّات المجمَّدة فقط (+ meetings_n الخدميّ للشريحة السنوية) */
+export async function yearRecordOf(db: any, year: number): Promise<YearRecord> {
+  const rows = await safe<any[]>(db.from('portal_onair_seasons').select('id,to_day,record_json,meetings_n').gte('to_day', `${year}-01-01`).lte('to_day', `${year}-12-31`).order('to_day', { ascending: true }).limit(100), []);
+  const recs = rows.filter(r => r.record_json?.season_id).map(r => r.record_json as SeasonRecord);
+  const known = rows.filter(r => r.record_json?.season_id && typeof r.meetings_n === 'number'); const meetingsTotal = known.length === recs.length && recs.length > 0 ? known.reduce((a, r) => a + Number(r.meetings_n || 0), 0) : recs.length === 0 ? 0 : null;
+  return yearRecord(year, recs, meetingsTotal);
+}
+export async function yearsWithRecords(db: any): Promise<number[]> {
+  const rows = await safe<any[]>(db.from('portal_onair_seasons').select('to_day,record_json').not('record_json', 'is', null).limit(500), []);
+  return Array.from(new Set(rows.filter(r => r.record_json?.season_id).map(r => Number(String(r.to_day).slice(0, 4))))).sort((a, b) => b - a);
 }

@@ -6,10 +6,11 @@
  *      بعد الموسم يصدر «وثيقة موسم» موقَّعة ATH-OS باسم الجهة (عدد اللقاءات يُذكر من 5).
  *  (3) «أمانة إلى جهة»: عدد الأمانات في عهدة الجهة الآن (24 ساعة ثم الهواء العام) — التفاصيل لمدير الجهة بلا أسماء.
  *  الصعود يبقى قرار كل منسوب؛ لا تعهّد جماعيًا ولا ترتيب بين الجهات.
+ *  P37 «عُمر الهواء»: (2) موسم مشترك — جهتان توحّدان ساعتيهما: دعوة من مدير إلى مدير، قبول أو اعتذار، سحب؛ على الخريطة «ساعة مشتركة»؛ جهتان فقط.
  *  P36 «ذاكرة الهواء»: (2) موسم بالإشارة — وسم الساعة «بالإشارة» مع مترجم معتمَد · (4) خريطة الزمن للجهة — شبكة 7×24 واقتراح أنسب ثلاث ساعات يملأ النموذج بضغطة · رابط «سجلّ الموسم» بعد الانتهاء.
  */
 import { useState } from 'react';
-import { WEEKDAY_AR, P35_NAMES_AR, ORG_HOLD_HOURS, P36_NAMES_AR } from '../../lib/onair/registry';
+import { WEEKDAY_AR, P35_NAMES_AR, ORG_HOLD_HOURS, P36_NAMES_AR, P37_NAMES_AR } from '../../lib/onair/registry';
 import { OrgTimeGrid } from './OnAir';   // P36
 
 type Lang = 'ar' | 'en';
@@ -18,6 +19,7 @@ export function OrgSeason({ orgId, air, lang, token, onChange }: { orgId: string
   const [f, setF] = useState({ weekday: s?.slot?.weekday ?? 2, from: s?.slot ? s.slot.from : '20:00', duration_min: s?.slot?.duration_min ?? 60, public_name: !!s?.slot?.public_name, sign_language: !!s?.slot?.sign_language, interpreter_user_id: String(s?.slot?.interpreter_user_id || '') });
   const interpreters: { user_id: string; name_ar: string }[] = air?.interpreters || []; const [picked, setPicked] = useState('');
   const [busy, setBusy] = useState(false); const [note, setNote] = useState(''); const [err, setErr] = useState('');
+  const share = air?.share || null; const [toOrg, setToOrg] = useState('');   // P37 موسم مشترك
   async function post(body: any) {
     setBusy(true); setErr(''); setNote('');
     try { const tk = await token(); const j = await fetch('/api/onair', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ ...body, org_id: orgId }) }).then(r => r.json()); if (!j.success) throw new Error(j.error || 'فشل'); setNote(j.note_ar || (j.verify_url ? `${ar ? 'صدرت الوثيقة' : 'Issued'}: ${j.code}` : '')); onChange(); return j; }
@@ -41,6 +43,20 @@ export function OrgSeason({ orgId, air, lang, token, onChange }: { orgId: string
         {picked && <small className="ogs-picked" data-testid="org-season-picked">{picked}</small>}
         <span className="ogs-btns"><button type="submit" className="pt-btn navy small" disabled={busy} data-testid="org-season-save">{s.slot ? (ar ? 'عدّل الساعة' : 'Update') : (ar ? 'أعلن ساعة جهتنا' : 'Announce our hour')}</button>{s.slot && <button type="button" className="pt-btn ghost small" disabled={busy} onClick={() => post({ action: 'season_slot_remove' })} data-testid="org-season-remove">{ar ? 'ألغِها' : 'Remove'}</button>}</span>
       </form>}
+      {s.slot && share && <div className="ogs-share" data-testid="org-share" data-state={share.state?.status || 'none'}>
+        <h5>🤝 {ar ? P37_NAMES_AR.shared : 'Shared season'}</h5>
+        {!share.state && s.phase !== 'after' && <>
+          <p className="pt-muted">{ar ? 'جهتان توحّدان ساعتيهما في الموسم: تدعون جهة أعلنت ساعتها، فإن قبل مديرها انتقلت ساعتها إلى ساعتكم، وذُكّر منسوبو الجهتين معًا، وظهرت على الخريطة «ساعة مشتركة». جهتان فقط، والطرفان يملكان السحب.' : 'Two organizations unite their hours.'}</p>
+          {isAdmin && <form className="ogs-share-form" onSubmit={e => { e.preventDefault(); if (toOrg) post({ action: 'season_share_invite', to_org_id: toOrg }); }} data-testid="org-share-form">
+            <label>{ar ? 'ادعُ جهة' : 'Invite'}<select value={toOrg} onChange={e => setToOrg(e.target.value)} data-testid="org-share-to" required><option value="">{ar ? 'اختر جهة أعلنت ساعتها' : 'Choose'}</option>{(share.candidates || []).map((c: any) => <option key={c.org_id} value={c.org_id}>{c.name_ar} — {c.weekday_ar} {c.from}</option>)}</select></label>
+            <button type="submit" className="pt-btn ghost small" disabled={busy || !toOrg} data-testid="org-share-invite">{ar ? 'أرسل الدعوة' : 'Send invite'}</button>
+            {!(share.candidates || []).length && <small className="pt-muted">{ar ? 'لا جهة أخرى أعلنت ساعتها بعد (أو كلها مرتبطة).' : 'No other organization has announced yet.'}</small>}
+          </form>}
+        </>}
+        {share.state?.status === 'invited' && <p className="ogs-share-st" data-testid="org-share-invited">{ar ? <>دعوتم <b>{share.state.other_name_ar}</b> إلى ساعة مشتركة — بانتظار ردّ مديرها.</> : <>Invited {share.state.other_name_ar}.</>} {isAdmin && s.phase !== 'after' && <button type="button" className="pt-btn ghost small" disabled={busy} onClick={() => post({ action: 'season_share_answer', accept: false })} data-testid="org-share-withdraw">{ar ? 'اسحب الدعوة' : 'Withdraw'}</button>}</p>}
+        {share.state?.status === 'pending' && <p className="ogs-share-st" data-testid="org-share-pending">{ar ? <><b>{share.state.other_name_ar}</b> تدعوكم إلى توحيد ساعتكم مع ساعتها — إن قبلتم انتقلت ساعتكم إلى ساعتها.</> : <>{share.state.other_name_ar} invites you.</>} {isAdmin && s.phase !== 'after' && <span className="ogs-btns"><button type="button" className="pt-btn navy small" disabled={busy} onClick={() => post({ action: 'season_share_answer', accept: true })} data-testid="org-share-accept">{ar ? 'نقبل' : 'Accept'}</button><button type="button" className="pt-btn ghost small" disabled={busy} onClick={() => post({ action: 'season_share_answer', accept: false })} data-testid="org-share-decline">{ar ? 'نعتذر' : 'Decline'}</button></span>}</p>}
+        {share.state?.status === 'accepted' && <p className="ogs-share-st ok" data-testid="org-share-accepted">{ar ? <>ساعتكم مشتركة مع <b>{share.state.other_name_ar}</b> — منسوبو الجهتين يُذكَّرون معًا.</> : <>Shared with {share.state.other_name_ar}.</>} {isAdmin && s.phase !== 'after' && <button type="button" className="pt-btn ghost small" disabled={busy} onClick={() => post({ action: 'season_share_answer', accept: false })} data-testid="org-share-unlink">{ar ? 'فكّ الارتباط' : 'Unlink'}</button>}</p>}
+      </div>}
       {s.phase === 'after' && s.record_url && <p className="ogs-doc" data-testid="org-season-record"><a href={s.record_url}>📖 {ar ? `${P36_NAMES_AR.record} — الصفحة العامة المجهَّلة لهذا الموسم` : 'Season record (public, anonymized)'}</a></p>}
       {s.phase === 'after' && s.doc && <p className="ogs-doc" data-testid="org-season-doc">{ar ? 'وثيقة الموسم:' : 'Season document:'} <code>{s.doc.code}</code> · <a href={s.doc.verify_url}>{ar ? 'تحقّق' : 'Verify'}</a></p>}
       {s.phase === 'after' && isAdmin && s.can_issue && <p><button type="button" className="pt-btn gold small" disabled={busy} onClick={() => post({ action: 'season_doc' })} data-testid="org-season-issue">{ar ? 'أصدر وثيقة الموسم (ATH-OS)' : 'Issue season document'}</button> <small className="pt-muted">{ar ? 'وثيقة موقَّعة باسم الجهة؛ عدد اللقاءات يُذكر إن بلغ خمسة.' : 'Signed in the organization’s name.'}</small></p>}
@@ -61,5 +77,6 @@ const CSS = `
 .ogs-slot{margin:0;background:#ecfeff;border:1px solid #a5f3fc;border-radius:12px;padding:8px 12px;color:#164e63}
 .ogs-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:end;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px}.ogs-form label{font-weight:800;color:#0f2a4e;font-size:13px;display:grid;gap:4px}.ogs-form input,.ogs-form select{border:1px solid #cbd5e1;border-radius:8px;padding:6px 8px;font:inherit;min-height:36px}.ogs-chk{grid-column:1/-1;display:flex!important;align-items:center;gap:8px;font-weight:600!important}.ogs-btns{display:flex;gap:8px;grid-column:1/-1}
 .ogs-sign{color:#701a75;font-weight:800}.ogs-interp{grid-column:1/-1}.ogs-picked{grid-column:1/-1;color:#92400e;font-weight:700}
+.ogs-share{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:8px 12px;display:grid;gap:6px}.ogs-share h5{margin:0;font-size:14px;color:#9a3412}.ogs-share p{margin:0;color:#7c2d12;line-height:1.7}.ogs-share-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.ogs-share-form label{font-weight:800;color:#0f2a4e;font-size:13px;display:grid;gap:4px}.ogs-share-form select{border:1px solid #cbd5e1;border-radius:8px;padding:6px 8px;font:inherit;min-height:36px}.ogs-share-st.ok{color:#065f46}
 .ogs-doc,.ogs-ok{margin:0;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:6px 10px}.ogs-err{margin:0;color:#b91c1c}.ogs-held{margin:0}.ogs-held-list{margin:0;padding:0 18px;font-size:13px;color:#334155}
 `;
