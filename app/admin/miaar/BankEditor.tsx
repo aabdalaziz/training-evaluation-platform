@@ -42,6 +42,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
   }, [f.level, f.skill, f.status, f.batch, f.type, f.dupes]);
   useEffect(() => { if (view === 'passages' && !passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
+  useEffect(() => { if (!edit && !pEdit) return; const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setEdit(null); setPEdit(null); } }; window.addEventListener('keydown', onKey); const prev = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; }; }, [edit, pEdit]);
   useEffect(() => { if (!edit) { setDraft(null); return; } setDraft({ question_text: edit.question_text, options: edit.options.map((o) => ({ ...o })), correct: edit.correct || 'a', descriptor_code: edit.descriptor_code || '', domain: edit.domain || '', difficulty_est: edit.difficulty_est || 3, passage_id: edit.passage_id || '', media_path: edit.media_path || '', media_alt: edit.media_alt || '', item_type: edit.item_type }); if (!passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edit]);
 
@@ -86,7 +87,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
         <input value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') void load(0); }} placeholder="بحث بالرمز أو النص" aria-label="بحث" />
         <label className="bk-chk"><input type="checkbox" checked={f.dupes} onChange={(e) => setF({ ...f, dupes: e.target.checked })} /> المكرّرات فقط</label>
         <button type="button" className="bk-soft" onClick={() => void load(0)}>بحث</button>
-        <button type="button" className="mm-hbtn" onClick={startNew} data-testid="bank-new">+ بند جديد</button>
+        <button type="button" className="bk-primary" onClick={startNew} data-testid="bank-new"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none"/></svg>إضافة بند جديد</button>
       </div>
       <div className="bk-bulk"><span><b>{total}</b> بندًا · المعروض {items.length ? offset + 1 : 0}–{offset + items.length}</span>
         {sel.size > 0 && <><span>محدّد: <b>{sel.size}</b></span><button type="button" className="bk-soft" onClick={() => void setStatus([...sel], 'approved')}>اعتماد</button><button type="button" className="bk-soft" onClick={() => void setStatus([...sel], 'in_review')}>للمراجعة</button><button type="button" className="bk-soft" onClick={() => void setStatus([...sel], 'archived')}>أرشفة</button></>}
@@ -100,7 +101,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
         {!items.length && <tr><td colSpan={9} className="am-empty">لا بنود مطابقة.</td></tr>}
       </tbody></table></div>
 
-      {edit && draft && <div className="bk-edit" role="dialog" aria-label={`تحرير ${edit.item_code}`} data-testid="bank-edit-form">
+      {edit && draft && <div className="bk-backdrop" onClick={() => setEdit(null)}><div className="bk-edit" role="dialog" aria-modal="true" aria-label={edit.id === 'new' ? 'بند جديد' : `تحرير ${edit.item_code}`} data-testid="bank-edit-form" onClick={(e) => e.stopPropagation()}>
         <div className="bk-eh"><h4>{edit.id === 'new' ? 'بند جديد' : `تحرير ${edit.item_code}`} <small>{BANK_LEVEL_AR[edit.level as keyof typeof BANK_LEVEL_AR]} · {skillLabel(edit.skill)} · {BATCH_AR[edit.batch] || edit.batch}</small></h4><button type="button" className="bk-soft" onClick={() => setEdit(null)}>إغلاق</button></div>
         <div className="bk-grid">
           <label>النوع<select value={draft.item_type} onChange={(e) => setDraft({ ...draft, item_type: e.target.value })}>{Object.entries(TYPE_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
@@ -125,36 +126,36 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
         {edit.latest_review_note && <p className="mm-note">آخر ملاحظة: {edit.latest_review_note}</p>}
         <div className="bk-row">
           <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة المراجعة" aria-label="ملاحظة" />
-          <button type="button" className="mm-hbtn" disabled={!!busy} onClick={() => void save()} data-testid="bank-save">حفظ</button>
+          <button type="button" className="bk-primary" disabled={!!busy} onClick={() => void save()} data-testid="bank-save">حفظ البند</button>
           {edit.id !== 'new' && <>{edit.status !== 'approved' && <button type="button" className="bk-soft" disabled={!!busy} onClick={() => void setStatus([edit.id], 'approved').then(() => setEdit(null))} data-testid="bank-approve">اعتماد</button>}
             {edit.status === 'approved' && <button type="button" className="bk-soft" disabled={!!busy} onClick={() => void setStatus([edit.id], 'in_review').then(() => setEdit(null))}>إعادة للمراجعة</button>}
             <button type="button" className="bk-soft" disabled={!!busy} onClick={() => void setStatus([edit.id], 'archived').then(() => setEdit(null))}>أرشفة</button></>}
         </div>
-      </div>}
+      </div></div>}
     </>}
 
     {view === 'passages' && <>
       <div className="bk-studio"><b>استوديو مِعيار</b><p>صوت الاستماع يُنتَج خارج الخادم بطاقم مِعيار الصوتي (حامد الراوي · زارية وتيم للحوار · شاكر وجمال وأمل للتنويع) ثم يُرفع هنا بصيغة MP3 — أو يوضع في <code>public/miaar/audio/&lt;المعرّف&gt;.mp3</code> في المستودع. الملف المرفوع يُقدَّم برابط موقَّع من الدلو الخاص.</p>
-        <button type="button" className="mm-hbtn" onClick={() => setCreating(!creating)}>+ مقطع جديد</button></div>
-      {creating && <div className="bk-edit"><div className="bk-grid">
+        <button type="button" className="bk-primary" onClick={() => setCreating(!creating)} aria-expanded={creating}><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none"/></svg>إضافة مقطع جديد</button></div>
+      {creating && <div className="bk-edit bk-inline"><div className="bk-grid">
         <label>المعرّف<input value={newP.id} onChange={(e) => setNewP({ ...newP, id: e.target.value })} placeholder="R-B1-10 أو L-A2-05" dir="ltr" /></label>
         <label>المستوى<select value={newP.level} onChange={(e) => setNewP({ ...newP, level: e.target.value })}>{LEVELS_ALL.map((l) => <option key={l} value={l}>{BANK_LEVEL_AR[l as keyof typeof BANK_LEVEL_AR]}</option>)}</select></label>
         <label>المهارة<select value={newP.skill} onChange={(e) => setNewP({ ...newP, skill: e.target.value })}><option value="reading">قراءة</option><option value="listening">استماع</option></select></label>
         <label>العنوان<input value={newP.title} onChange={(e) => setNewP({ ...newP, title: e.target.value })} /></label></div>
         <label className="bk-full">النص<textarea rows={6} value={newP.body} onChange={(e) => setNewP({ ...newP, body: e.target.value })} dir="rtl" lang="ar" /></label>
-        <div className="bk-row"><button type="button" className="mm-hbtn" disabled={!!busy} onClick={() => void createPassage()}>إنشاء</button><button type="button" className="bk-soft" onClick={() => setCreating(false)}>إلغاء</button></div></div>}
+        <div className="bk-row"><button type="button" className="bk-primary" disabled={!!busy} onClick={() => void createPassage()}>إنشاء المقطع</button><button type="button" className="bk-soft" onClick={() => setCreating(false)}>إلغاء</button></div></div>}
       <div className="bk-tablewrap"><table className="mm-t bk-t"><thead><tr><th>المعرّف</th><th>المستوى</th><th>المهارة</th><th>العنوان</th><th>الصوت</th><th>الحالة</th><th></th></tr></thead><tbody>
         {passages.map((p) => <tr key={p.id}><td><code>{p.id}</code><br /><small>{p.version || p.source}</small></td><td>{BANK_LEVEL_AR[p.level as keyof typeof BANK_LEVEL_AR] || p.level}</td><td>{p.skill === 'listening' ? 'استماع' : 'قراءة'}</td><td>{p.title}<br /><small>{p.body.split(/\s+/).length} كلمة{p.meta?.voices ? ` · ${(p.meta.voices as string[]).join(' + ')}` : ''}{p.meta?.twice ? ' · مرتين' : ''}</small></td>
           <td>{p.skill === 'listening' ? <>{p.audio_public_path ? <audio controls preload="none" src={p.audio_public_path} /> : <small>{audioOf(p) || 'لا صوت'}</small>}<label className="bk-up">رفع MP3<input type="file" accept="audio/mpeg,.mp3" onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadAudio(p, file); e.currentTarget.value = ''; }} /></label></> : '—'}</td>
           <td><span className={`bk-st ${p.status}`}>{STATUS_AR[p.status] || p.status}</span></td><td><button type="button" className="bk-soft" onClick={() => setPEdit({ ...p })}>تحرير</button></td></tr>)}
         {!passages.length && <tr><td colSpan={7} className="am-empty">لا مقاطع.</td></tr>}
       </tbody></table></div>
-      {pEdit && <div className="bk-edit" role="dialog" aria-label={`تحرير ${pEdit.id}`}><div className="bk-eh"><h4>تحرير المقطع {pEdit.id}</h4><button type="button" className="bk-soft" onClick={() => setPEdit(null)}>إغلاق</button></div>
+      {pEdit && <div className="bk-backdrop" onClick={() => setPEdit(null)}><div className="bk-edit" role="dialog" aria-modal="true" aria-label={`تحرير ${pEdit.id}`} onClick={(e) => e.stopPropagation()}><div className="bk-eh"><h4>تحرير المقطع {pEdit.id}</h4><button type="button" className="bk-soft" onClick={() => setPEdit(null)}>إغلاق</button></div>
         <div className="bk-grid"><label>العنوان<input value={pEdit.title} onChange={(e) => setPEdit({ ...pEdit, title: e.target.value })} /></label>
           <label>الحالة<select value={pEdit.status} onChange={(e) => setPEdit({ ...pEdit, status: e.target.value })}>{Object.entries(STATUS_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
           {pEdit.skill === 'listening' && <label>مسار الصوت العام<input value={pEdit.audio_public_path || ''} onChange={(e) => setPEdit({ ...pEdit, audio_public_path: e.target.value })} dir="ltr" placeholder="/miaar/audio/L-A1-01.mp3" /></label>}</div>
         <label className="bk-full">النص{pEdit.skill === 'listening' && ' (النصّ المقروء — يُعرض للطاقم فقط)'}<textarea rows={8} value={pEdit.body} onChange={(e) => setPEdit({ ...pEdit, body: e.target.value })} dir="rtl" lang="ar" /></label>
-        <div className="bk-row"><button type="button" className="mm-hbtn" disabled={!!busy} onClick={() => void savePassage()}>حفظ</button></div></div>}
+        <div className="bk-row"><button type="button" className="bk-primary" disabled={!!busy} onClick={() => void savePassage()}>حفظ المقطع</button></div></div></div>}
     </>}
   </section>;
 }
@@ -166,7 +167,10 @@ const CSS = `
 .bk-bulk{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13px;margin:4px 0 8px}.bk-pager{margin-inline-start:auto;display:flex;gap:6px}.bk-pager button{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:4px 10px;cursor:pointer}.bk-pager button:disabled{opacity:.4}
 .bk-tablewrap{overflow:auto}.bk-t td{vertical-align:top;font-size:13px}.bk-t code{font-size:12px}.bk-stem{max-width:360px}.bk-stem img{width:34px;height:34px;vertical-align:middle;margin-inline-start:6px}.bk-stem small{display:block;color:#64748b}.bk-dup{color:#b45309!important}.bk-t tr.dup{background:#fff7ed}
 .bk-st{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;background:#e2e8f0}.bk-st.approved{background:#d1fae5;color:#065f46}.bk-st.in_review{background:#fef3c7;color:#92400e}.bk-st.archived{background:#f1f5f9;color:#64748b}.bk-st.draft{background:#e0e7ff;color:#3730a3}
-.bk-edit{border:1px solid #e2e8f0;border-radius:14px;padding:14px;margin-top:12px;background:#f8fafc;display:grid;gap:10px}.bk-eh{display:flex;justify-content:space-between;align-items:center}.bk-eh h4{margin:0}.bk-eh small{color:#64748b;font-weight:600;margin-inline-start:8px}
+.bk-primary{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:0;border-radius:12px;padding:8px 18px;background:var(--gold,#c9a24b);color:var(--navy,#0b2a4a);font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 6px 16px rgba(201,162,75,.35)}.bk-primary:hover{filter:brightness(1.05)}.bk-primary:disabled{opacity:.55;cursor:not-allowed}.bk-primary svg{background:var(--navy,#0b2a4a);color:#fff;border-radius:50%;padding:2px}
+.bk-backdrop{position:fixed;inset:0;z-index:1200;background:rgba(11,42,74,.55);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto}
+.bk-edit{width:min(980px,100%);max-height:calc(100vh - 48px);overflow:auto;border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#fff;display:grid;gap:10px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.bk-edit.bk-inline{width:auto;max-height:none;box-shadow:none;background:#f8fafc;margin-top:12px}.bk-eh{display:flex;justify-content:space-between;align-items:center}.bk-eh h4{margin:0}.bk-eh small{color:#64748b;font-weight:600;margin-inline-start:8px}
 .bk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.bk-grid label,.bk-full{display:grid;gap:4px;font-size:13px;font-weight:800}.bk-full textarea{font-weight:500}
 .bk-opts{display:grid;gap:6px}.bk-opt{display:grid;grid-template-columns:auto 1fr 180px auto auto;gap:8px;align-items:center;border:1px solid #e2e8f0;border-radius:10px;padding:6px 8px;background:#fff}.bk-opt.key{border-color:#0b8a83;background:#ecfdf5}.bk-opt img{width:40px;height:40px}.bk-radio{font-weight:800}.bk-rat{grid-column:2/-1;color:#64748b}.bk-x{border:none;background:transparent;font-size:18px;cursor:pointer;color:#94a3b8}
 .bk-studio{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px dashed #0b8a83;border-radius:14px;padding:12px;margin:10px 0}.bk-studio p{margin:0;flex:1;font-size:13px}.bk-up{display:inline-block;border:1px solid #cbd5e1;border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer;margin-top:4px}.bk-up input{display:none}
