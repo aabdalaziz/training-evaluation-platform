@@ -93,7 +93,7 @@ async function ask(question: string, sources: Entry[], lang: 'ar' | 'en'): Promi
   const r = await runAi<string>({
     system: lang === 'ar' ? 'أنت «أثير»، مرشد بوابة أَثَر. أجب عن سؤال الزائر في جملتين أو ثلاث بالعربية الفصحى الواضحة، اعتمادًا على قائمة المصادر فقط. إن لم تكفِ المصادر فقل ذلك صراحة ووجّهه إلى «تواصل معنا». لا تختلق أرقامًا أو روابط. أشر إلى المصدر برقمه بين قوسين مربعين.' : 'You are Athir, the Athar portal guide. Answer in two or three clear sentences using ONLY the listed sources; if they are insufficient say so and point to Contact us. Never invent numbers or links. Cite sources as [n].',
     user: `${lang === 'ar' ? 'السؤال' : 'Question'}: ${question}\n\n${lang === 'ar' ? 'المصادر' : 'Sources'}:\n${list || '(none)'}`,
-    parse: raw => { const t = String(raw || '').trim(); return t.length > 4 ? t.slice(0, 700) : null; }, local, budgetMs: 9000, fast: true,
+    parse: raw => { const t = String(raw || '').trim(); return t.length > 4 ? t.slice(0, 700) : null; }, local, budgetMs: 16000, fast: true,   // P42: كانت 9 ث فسقطت إلى المحلي على Vercel البارد
   });
   return { text: r.data, source: r.source };
 }

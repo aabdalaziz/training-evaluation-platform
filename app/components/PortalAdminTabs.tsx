@@ -35,6 +35,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/outreach', label: 'الإبلاغ متعدد القنوات', icon: 'send' },
   { href: '/admin/observatory', label: 'مرصد القدرة البشرية', icon: 'globe' },
   { href: '/admin/shield', label: 'درع أَثَر', icon: 'shield' },
+  { href: '/admin/roles', label: 'الأدوار والدعوات', icon: 'users' },
   { href: '/admin/vault', label: 'خزنة أَثَر', icon: 'folder' },
   { href: '/admin/councils', label: 'مجالس أَثَر', icon: 'users' },
 ];
