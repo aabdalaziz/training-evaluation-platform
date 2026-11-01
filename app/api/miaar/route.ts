@@ -3,6 +3,8 @@
  * /api/miaar — «مِعيار — من أَثَر» للمتقدّم (بلا حساب؛ وإن كان داخلًا رُبط التقرير بحسابه)
  *  GET ?probe=1[&seen=رموز]     → بنود «مِسبار» الخمسة — متجدّدة من البنك في كل زيارة (م2-ب)، خيارات مخلوطة، بلا مفاتيح
  *  GET ?doors=1                 → أبواب الاختبار العامة (المخطّطات النشطة المعلنة) — م2-ب
+ *  GET ?pulse=1                 → «نبض مِعيار»: أعداد مجهّلة (الآن/اليوم/الأسبوع) وآخر المستويات المُثبتة بلا أسماء — لا يُعرض شيء دون 5 تقارير في الأسبوع — م2-ب
+ *  POST probe_band {probeAnswers} → {score, band} مؤشر أولي بعد الحلقات (بلا جلسة) — م2-ب
  *  GET ?invite=<code>&t=<token> → ما تعنيه الدعوة (الاسم · اللغة · النمط · المستلم إن كانت شخصية)
  *  GET ?result=<ML-code>        → النتيجة برمزها (بلا بريد/هاتف)
  *  POST {action}
@@ -18,7 +20,8 @@ import { COOKIE_NAME, probePublic, isResultCode, MIAAR_NAMES_AR } from '../../..
 import { startSession, loadSession, resumeSession, answerSession, finishSession, resultByCode } from '../../../lib/miaar/engine';
 import { openInvite } from '../../../lib/miaar/invites';
 import { loadApprovedPool } from '../../../lib/miaar/bank';
-import { probeFromPool, publicDoors } from '../../../lib/miaar/blueprint';
+import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
+import { probeBand } from '../../../lib/miaar/registry';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const NO = { 'Cache-Control': 'no-store' };
@@ -38,9 +41,29 @@ const withCookie = (res: NextResponse, token: string | null, expiresAt?: string)
   return res;
 };
 
+/* نبض مِعيار — ذاكرة دقيقة واحدة حتى لا تُثقل الصفحة الأولى قاعدة البيانات */
+let PULSE_CACHE: { at: number; body: unknown } | null = null;
+const PULSE_MIN = 5;  /* قاعدة «أَثَر للجميع»/الخصوصية: لا أرقام ولا آثار دون خمسة تقارير في الأسبوع */
+async function pulse(db: any) {  /* eslint-disable-line @typescript-eslint/no-explicit-any */
+  if (PULSE_CACHE && Date.now() - PULSE_CACHE.at < 60_000) return PULSE_CACHE.body;
+  const now = Date.now(); const iso = (ms: number) => new Date(now - ms).toISOString();
+  const [live, today, week, recent] = await Promise.all([
+    db.from('placement_secure_sessions').select('id', { count: 'exact', head: true }).eq('status', 'active').gte('started_at', iso(20 * 60_000)),
+    db.from('placement_reports').select('id', { count: 'exact', head: true }).gte('created_at', iso(24 * 3600_000)),
+    db.from('placement_reports').select('id', { count: 'exact', head: true }).gte('created_at', iso(7 * 24 * 3600_000)),
+    db.from('placement_reports').select('report, created_at').order('created_at', { ascending: false }).limit(8),
+  ]);
+  const weekN = week.count || 0;
+  const ok = weekN >= PULSE_MIN;
+  const items = ok ? (recent.data || []).map((r: any) => { const rep = r.report || {}; const level = String(rep['المستوى_العام'] || ''); const lang = String(rep?.['بيانات_المتقدم']?.['اللغة_الأم'] || ''); return /^(A1|A2|B1|B2|C1|C2)$/.test(level) ? { level, lang: lang && lang !== '—' ? lang : null, minutes: Math.max(1, Math.round((now - new Date(r.created_at).getTime()) / 60_000)) } : null; }).filter(Boolean) : [];
+  const body = { ok: true, now: ok ? live.count || 0 : null, today: ok ? today.count || 0 : null, week: ok ? weekN : null, recent: items };
+  PULSE_CACHE = { at: Date.now(), body }; return body;
+}
+
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('server_not_configured', 500);
   const u = new URL(req.url);
+  if (u.searchParams.get('pulse')) return NextResponse.json(await pulse(db).catch(() => ({ ok: true, now: null, today: null, week: null, recent: [] })), { headers: { 'Cache-Control': 'public, max-age=60' } });
   if (u.searchParams.get('probe')) {
     /* م2-ب: بنود متجدّدة من البنك المعتمد في كل زيارة (بذرة عشوائية) مع استبعاد ما رآه الزائر مؤخرًا (?seen=رمز,رمز) — والبنود الثابتة احتياط */
     const seen = String(u.searchParams.get('seen') || '').split(',').map((c) => c.trim()).filter(Boolean).slice(0, 30);
@@ -62,6 +85,12 @@ export async function POST(req: Request) {
   if (crossSiteBrowserWrite(req)) return bad('origin_not_allowed', 403);
   const j = await readJson(req); if (!j.ok) return bad('invalid_json', 400); const body = j.body as Record<string, unknown>;
   const action = String(body.action || '');
+  if (action === 'probe_band') {
+    /* م2-ب: مؤشر أولي بعد الحلقات (بلا جلسة ولا اسم) — التصحيح على الخادم، والنتيجة فرقة تقديرية فقط */
+    const rl = await rateLimit(db, `miaar_probe:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
+    const pool = await loadApprovedPool(db).catch(() => [] as Awaited<ReturnType<typeof loadApprovedPool>>);
+    const score = probeScoreFrom(pool, body.probeAnswers); return NextResponse.json({ ok: true, score, band: probeBand(score) }, { headers: NO });
+  }
   if (action === 'start') {
     const rl = await rateLimit(db, `miaar_start:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات بدء كثيرة');
     let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null } | null = null;

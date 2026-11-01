@@ -204,8 +204,24 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const cls = `mi ${fontClass}${access.contrast ? ' mi-contrast' : ''}${access.large ? ' mi-large' : ''}`;
 
   // ---- حلقات الختم (مِسبار على الصفحة الأولى — كما في مِعيار الأصلي)
-  const [ringsOn, setRingsOn] = useState(false); const [asked, setAsked] = useState(false); const [door, setDoor] = useState<Door | null>(null);
+  const [ringsOn, setRingsOn] = useState(false); const [asked, setAsked] = useState(false); const [door, setDoor] = useState<Door | null>(null); const [band, setBand] = useState<{ score: number; band: string } | null>(null); const [sampleAns, setSampleAns] = useState<number | null>(null);
   const ringItem = ringsOn && !probeDone ? probe[probeIdx] || null : null;
+  /* «العنوان النابض» · «شريط الأثر» · «الختم الناطق» — حياة الصفحة الأولى (تحترم prefers-reduced-motion؛ الشريط يُوقف بزر) */
+  const FLASH_N = 5; const [flashI, setFlashI] = useState(0); const [flashHold, setFlashHold] = useState(false); const [reduced, setReduced] = useState(false);
+  const [pulse, setPulse] = useState<{ now: number | null; today: number | null; week: number | null; recent: { level: string; lang: string | null; minutes: number }[] } | null>(null); const [tickerPaused, setTickerPaused] = useState(false);
+  const [sealVoice, setSealVoice] = useState(false); const sealAudio = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => { if (typeof window === 'undefined') return; const mq = window.matchMedia('(prefers-reduced-motion: reduce)'); setReduced(mq.matches); const on = () => setReduced(mq.matches); mq.addEventListener?.('change', on); setSealVoice(localStorage.getItem('miaar-seal-voice') === '1'); return () => mq.removeEventListener?.('change', on); }, []);
+  useEffect(() => { if (step !== 'intro' || ringsOn || flashHold || reduced) return; const id = setInterval(() => setFlashI((i) => (i + 1) % FLASH_N), 4600); return () => clearInterval(id); }, [step, ringsOn, flashHold, reduced]);
+  useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?pulse=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok) setPulse(j); }).catch(() => { /* الشريط يكتفي بعباراته */ }); }, [step]);
+  const flashText = t('intro', `flash${flashI + 1}`) !== `flash${flashI + 1}` ? t('intro', `flash${flashI + 1}`) : t('intro', 'h1');
+  const splitHead = (h: string) => { const bar = h.indexOf('|'); if (bar > 0) return [h.slice(0, bar), h.slice(bar + 1)]; const i = h.indexOf('؟') >= 0 ? h.indexOf('؟') + 1 : h.indexOf('?') >= 0 ? h.indexOf('?') + 1 : -1; return i > 0 ? [h.slice(0, i), h.slice(i).trim()] : [h, '']; };
+  const ago = (m: number) => m < 60 ? t('intro', 'agoMin', { n: m }) : m < 1440 ? t('intro', 'agoHour', { n: Math.round(m / 60) }) : t('intro', 'agoDay', { n: Math.round(m / 1440) });
+  const nativeLabel = (v: string | null) => { if (!v) return null; const n = (copy?.native || []).find((x) => x.value === v); return n ? n.labels[lang] || n.labels.en || v : null; };
+  const tickerItems = (() => { const out: string[] = []; if (pulse) { if (pulse.now) out.push(t('intro', 'tickerNow', { n: pulse.now })); if (pulse.today) out.push(t('intro', 'tickerToday', { n: pulse.today })); pulse.recent.slice(0, 5).forEach((r) => { const l = nativeLabel(r.lang); out.push(l ? t('intro', 'tickerProved', { when: ago(r.minutes), lang: l, level: r.level }) : t('intro', 'tickerProvedNoLang', { when: ago(r.minutes), level: r.level })); }); if (pulse.week) out.push(t('intro', 'tickerWeek', { n: pulse.week })); } for (let i = 1; i <= 5; i++) { const k = `ticker${i}`; const v = t('intro', k); if (v !== k) out.splice(Math.min(out.length, i * 2 - 1), 0, v); } return out; })();
+  const sealLine = !ringsOn ? t('intro', 'seal0') : ringItem ? t('intro', `sealR${probeIdx + 1}`, { level: ringItem.level }) : band ? t('intro', 'sealDone', { band: band.band }) : t('intro', 'sealWait');
+  const sealClip = !ringsOn ? 'seal-0' : ringItem ? `seal-r${probeIdx + 1}` : band ? `seal-done-${band.band}` : '';
+  useEffect(() => { if (!sealVoice || lang !== 'ar' || !sealClip || !ringsOn) return; try { sealAudio.current?.pause(); const a = new Audio(`/miaar/audio/${sealClip}.mp3`); sealAudio.current = a; void a.play().catch(() => { /* المتصفح منع التشغيل */ }); } catch { /* لا صوت */ } }, [sealClip, sealVoice, lang, ringsOn]);
+  const toggleSealVoice = () => { const v = !sealVoice; setSealVoice(v); try { localStorage.setItem('miaar-seal-voice', v ? '1' : '0'); } catch { /* خاص */ } if (!v) sealAudio.current?.pause(); };
   const ringsDone = probe.length > 0 && Object.keys(probeAns).length >= probe.length;
   async function beginRings() {
     if (ringsOn) return;
@@ -215,10 +231,10 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   }
   function answerRing(optionId: string) {
     if (!ringItem) return; const nextAns = { ...probeAns, [ringItem.id]: optionId }; setProbeAns(nextAns);
-    if (probeIdx < probe.length - 1) setProbeIdx(probeIdx + 1); else setProbeDone(true);
+    if (probeIdx < probe.length - 1) setProbeIdx(probeIdx + 1); else { setProbeDone(true); void post({ action: 'probe_band', probeAnswers: nextAns }).then((r) => { if (r?.ok) setBand({ score: r.score, band: r.band }); }); }
   }
   function askEnter() { if (invite) { setStep('register'); return; } setAsked(true); void fetch('/api/miaar?doors=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && Array.isArray(j.doors) && j.doors.length) setDoors(j.doors); }).catch(() => { /* الأبواب الافتراضية */ }); setTimeout(() => document.getElementById('mi-doors')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); }
-  function chooseDoor(d: Door) { setDoor(d); setExamMode(d.door === 'adaptive' ? 'adaptive' : 'comprehensive'); setBlueprint(d.code); setTimeout(() => document.getElementById('mi-go')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); }
+  function chooseDoor(d: Door) { setDoor(d); setSampleAns(null); setExamMode(d.door === 'adaptive' ? 'adaptive' : 'comprehensive'); setBlueprint(d.code); setTimeout(() => document.getElementById('mi-go')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); }
   const ringSkill = (k: string) => t('intro', ({ vocab: 'skVocab', structures: 'skStruct', linking: 'skRead', meaning: 'skUnderstand', argument: 'skInfer' } as any)[k] || 'skVocab');
   const ringSizes = ['88%', '62%', '36%', '76%', '50%'];
   const cefr = (lv: Level) => (lang === 'ar' ? CEFR_AR : CEFR_EN)[lv];
@@ -248,48 +264,64 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
 
   const sampleQ = EXAMS[(door ? door.door : examMode) === 'adaptive' ? 'adaptive' : 'comprehensive'];
   const doorName = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adap') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'comp') : lang === 'ar' ? d.name_ar : d.name_en || d.name_ar;
-  const doorSub = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adapS') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'compS') : `${d.description_ar ? d.description_ar + ' · ' : ''}${d.items} ${lang === 'ar' ? 'بندًا' : 'items'} · ${d.minutes} ${lang === 'ar' ? 'د' : 'min'}`;
+  const doorSub = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adapS') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'compS') : (d.description_ar || d.name_en);
   return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} />
     {step !== 'result' && <Header admin={step === 'intro'} />}
     {toast && <div className="mi-toast" role="status" data-testid="mi-toast">{toast}</div>}
 
     {step === 'intro' && <>
+      <section className={`mi-ticker${tickerPaused || reduced ? ' paused' : ''}`} aria-label={t('intro', 'tickerK')} data-testid="mi-ticker">
+        <span className="mi-ticker-k"><i aria-hidden="true" />{t('intro', 'tickerK')}</span>
+        <div className="mi-ticker-view"><div className="mi-ticker-track" style={{ animationDuration: `${Math.max(24, tickerItems.length * 7)}s` }}>{[0, 1].map((rp) => <span key={rp} className="mi-ticker-row" aria-hidden={rp === 1}>{tickerItems.map((it, i) => <span key={i} className="mi-ticker-item">{it}</span>)}</span>)}</div></div>
+        <button type="button" className="mi-ticker-btn" aria-pressed={tickerPaused} onClick={() => setTickerPaused((v) => !v)} data-testid="mi-ticker-toggle">{tickerPaused ? '▶' : '❚❚'}<span className="mi-sr">{tickerPaused ? t('intro', 'tickerPlay') : t('intro', 'tickerPause')}</span></button>
+      </section>
       <section className={`mi-hero${ringsOn ? ' open' : ''}`} data-testid="mi-intro">
         <div>
           {invite && <div className="mi-invite" data-testid="mi-invite"><b>{x('invite_for')}:</b> {invite.label_ar} · {t('intro', invite.exam_mode === 'adaptive' ? 'adap' : 'comp')}</div>}
           <p className="mi-pill">{t('intro', 'kicker')}</p>
-          <h1>{(() => { const h = t('intro', 'h1'); const i = h.indexOf('؟') >= 0 ? h.indexOf('؟') + 1 : h.indexOf('?') >= 0 ? h.indexOf('?') + 1 : -1; return i > 0 ? <>{h.slice(0, i)} <em>{h.slice(i).trim()}</em></> : h; })()}</h1>
+          <div className="mi-flash" onMouseEnter={() => setFlashHold(true)} onMouseLeave={() => setFlashHold(false)} onFocus={() => setFlashHold(true)} onBlur={() => setFlashHold(false)} data-testid="mi-flash">
+            <h1 key={ringsOn ? 'fixed' : flashI} className={ringsOn || reduced ? '' : 'live'} data-flash={flashI}>{(() => { const [a, b] = splitHead(ringsOn ? t('intro', 'h1') : flashText); return <>{a} {b && <em>{b}</em>}</>; })()}</h1>
+            {!ringsOn && <div className="mi-flash-dots" role="tablist" aria-label={t('intro', 'flashDot', { n: '' }).trim()}>{Array.from({ length: FLASH_N }, (_, i) => <button key={i} type="button" role="tab" aria-selected={i === flashI} aria-label={t('intro', 'flashDot', { n: i + 1 })} className={i === flashI ? 'on' : ''} onClick={() => { setFlashI(i); setFlashHold(true); }} />)}</div>}
+          </div>
           {!ringsOn && <p className="mi-lead">{t('intro', 'lead')}</p>}
           {!ringsOn && <p className="mi-rule">{t('intro', 'rule')}</p>}
+          <div className="mi-scale" role="list" aria-label={t('intro', 'scaleK')} data-testid="mi-scale">{(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const).map((l) => { const on = ringItem ? ringItem.level === l : band ? band.band === l : false; const done = ringsOn && !ringItem && !band ? false : ringItem ? LEVELS.indexOf(l) < LEVELS.indexOf(ringItem.level as Level) : false; return <span key={l} role="listitem" className={`mi-sc${on ? ' on' : ''}${done ? ' done' : ''}`}>{l}</span>; })}</div>
           {!ringsOn && <div className="mi-promises">{[1, 2, 3].map((i) => <article key={i}><strong>{t('intro', `p${i}t`)}</strong><span>{t('intro', `p${i}`)}</span></article>)}</div>}
-          {ringsOn && <p className="mi-voice">{ringItem ? t('intro', 'voiceN', { n: probeIdx + 1, skill: ringSkill(ringItem.skill) }) : t('intro', 'after')}</p>}
+          {ringsOn && <p className="mi-voice">{ringItem ? t('intro', 'voiceN', { n: probeIdx + 1, skill: ringSkill(ringItem.skill), level: ringItem.level }) : t('intro', 'after')}</p>}
           {!asked && <button type="button" className="mi-go" onClick={askEnter} data-testid="mi-start"><Icon name="play" />{t('intro', 'askEnter')}</button>}
           {asked && <section className="mi-inplace" id="mi-doors">
             <p className="mi-kicker gold">{t('intro', 'entryK')}</p><h2>{t('intro', 'entryH')}</h2>
-            <div className="mi-doors">{doors.map((d, i) => <button key={d.code} type="button" className="mi-door" aria-pressed={door?.code === d.code} onClick={() => chooseDoor(d)} data-testid={doors.findIndex((x) => x.door === d.door) === i ? `mi-door-${d.door}` : `mi-door-${d.door}-${d.code}`} data-code={d.code}><strong>{doorName(d)}</strong><span>{doorSub(d)}</span></button>)}</div>
+            <div className="mi-doors">{doors.map((d, i) => <button key={d.code} type="button" className="mi-door" aria-pressed={door?.code === d.code} onClick={() => chooseDoor(d)} data-testid={doors.findIndex((x) => x.door === d.door) === i ? `mi-door-${d.door}` : `mi-door-${d.door}-${d.code}`} data-code={d.code}><strong>{doorName(d)}</strong><span>{doorSub(d)}</span><small>{d.levels.length === 1 ? d.levels[0] : `${d.levels[0]}→${d.levels[d.levels.length - 1]}`} · {d.items} {lang === 'ar' ? 'بندًا' : 'items'} · ≈{d.minutes} {lang === 'ar' ? 'د' : 'min'}{d.probe ? ` · ${lang === 'ar' ? 'بمِسبار' : 'with probe'}` : ''}</small></button>)}</div>
           </section>}
           {door && <section className="mi-inplace" id="mi-go">
             <p className="mi-kicker gold">{t('intro', 'examK')}</p><h2>{t('intro', 'examH')}</h2>
             <p className="mi-voice">{t('intro', 'examNote', { door: door.type === 'placement' ? t('intro', 'doorAdap') : door.code === 'SYS-COMPREHENSIVE' ? t('intro', 'doorComp') : doorName(door) })}</p>
             <p className="mi-kicker gold">{t('intro', sampleQ.skill)}</p>
-            <div className="mi-arab" dir="rtl" lang="ar"><p className="mi-q">{sampleQ.prompt}</p><div className="mi-opts-arab">{sampleQ.options.map((o) => <button key={o} type="button" lang="ar" dir="rtl">{o}</button>)}</div></div>
+            <div className="mi-arab" dir="rtl" lang="ar"><p className="mi-q">{sampleQ.prompt}</p><div className="mi-opts-arab two">{sampleQ.options.map((o, i) => <button key={o} type="button" lang="ar" dir="rtl" className={sampleAns === null ? '' : i === sampleQ.answer ? 'right' : i === sampleAns ? 'wrong' : 'dim'} aria-pressed={sampleAns === i} onClick={() => setSampleAns(i)} data-testid="mi-sample-opt">{o}</button>)}</div>
+              {sampleAns !== null && <p className={`mi-samplefb${sampleAns === sampleQ.answer ? ' ok' : ''}`} role="status" data-testid="mi-sample-fb">{sampleAns === sampleQ.answer ? t('intro', 'sampleRight') : t('intro', 'sampleWrong', { answer: sampleQ.options[sampleQ.answer] })}</p>}</div>
             <button type="button" className="mi-go" onClick={() => setStep('register')} data-testid="mi-go-register"><Icon name="next" />{t('intro', 'goRegister')}</button>
           </section>}
         </div>
         <div className="mi-sealbox">
-          <div className="mi-stagehead"><span className="mi-dots" aria-hidden="true"><i /><i /><i className="on" /></span><span className="mi-now">الآن في أَثَر <i /></span></div>
+          <div className="mi-stagehead"><span className="mi-dots" aria-hidden="true"><i /><i /><i className="on" /></span><span className="mi-now">الآن في أَثَر <i /></span>{lang === 'ar' && <button type="button" className={`mi-sealvoice${sealVoice ? ' on' : ''}`} aria-pressed={sealVoice} onClick={toggleSealVoice} title={sealVoice ? t('intro', 'sealVoiceOn') : t('intro', 'sealVoiceOff')} data-testid="mi-seal-voice"><Icon name="play" /><span className="mi-sr">{sealVoice ? t('intro', 'sealVoiceOn') : t('intro', 'sealVoiceOff')}</span></button>}</div>
           <div className="mi-stagecard">
             <div className="mi-seal">
               <i className="mi-ring" style={{ width: '100%', height: '100%', borderColor: '#0b8a83' }} /><i className="mi-ring" style={{ width: '74%', height: '74%', borderColor: '#14b8a6' }} /><i className="mi-ring" style={{ width: '48%', height: '48%', borderColor: '#0b8a83' }} />
               {Object.keys(probeAns).map((_, i) => <i key={i} className="mi-ring gold" style={{ width: ringSizes[i % ringSizes.length], height: ringSizes[i % ringSizes.length] }} />)}
               <button type="button" className="mi-core" onClick={() => void beginRings()} style={{ fontSize: t('intro', 'start').length > 5 ? 14 : 20 }} data-testid="mi-core">{ringsDone ? '✓' : t('intro', 'start')}</button>
             </div>
+            <p key={sealClip || 'wait'} className={`mi-bubble${reduced ? '' : ' pop'}`} role="status" aria-live="polite" data-testid="mi-bubble">{sealLine}</p>
             {ringItem && <div style={{ width: '100%' }}>
               <span className="mi-skill">{ringSkill(ringItem.skill)}</span>
               <div className="mi-arab stage" dir="rtl" lang="ar"><p className="mi-q"><span className="mi-lv">{ringItem.level}</span>{ringItem.prompt}</p>
                 <div className="mi-opts-arab">{ringItem.options.map((o) => <button key={o.id} type="button" lang="ar" dir="rtl" onClick={() => answerRing(o.id)} data-testid="mi-ring-opt">{o.text}</button>)}</div></div>
             </div>}
-            {ringsOn && probeDone && <p className="mi-after">✓ · {t('gate', 'indicator')}</p>}
+            {ringsOn && probeDone && <div className="mi-teaser" data-testid="mi-teaser">
+              <span>{t('intro', 'teaserK')}</span>
+              <b>{band ? band.band : '…'}</b>
+              <p>{band ? `${t('gate', 'score', { n: band.score })} · ${t('gate', `note${band.band}`)}` : t('gate', 'indicator')}</p>
+              {!asked && <button type="button" className="mi-go small" onClick={askEnter} data-testid="mi-teaser-cta"><Icon name="next" />{t('intro', 'teaserCta')}</button>}
+            </div>}
           </div>
           <p className="mi-cap">{t('intro', 'sealCap')}</p>
           {err && <p className="mi-err" role="alert">{err}</p>}
@@ -457,9 +489,9 @@ const CEFR_EN: Record<Level, { title: string; en: string; desc: string; can: str
 const BANDS_AR: Record<string, string> = { basic: 'مستخدم أساسي', independent: 'مستخدم مستقل', proficient: 'مستخدم متمكن' };
 const BANDS_EN: Record<string, string> = { basic: 'Basic user', independent: 'Independent user', proficient: 'Proficient user' };
 /** عيّنة «من هذا الباب» — كما في مِعيار الأصلي (عرض فقط، لا تُحتسب) */
-const EXAMS: Record<'comprehensive' | 'adaptive', { skill: string; prompt: string; options: string[] }> = {
-  comprehensive: { skill: 'skRead', prompt: 'قرأتُ الرسالة مرتين، ثم رددتُ عليها.\nماذا فعلتُ قبل الرد؟', options: ['قرأتُ الرسالة', 'نمتُ', 'سافرتُ', 'أغلقتُ الباب'] },
-  adaptive: { skill: 'skVocab', prompt: 'الجو حار. تطلب:', options: ['ماء بارد', 'معطف', 'كتاب', 'قلم'] },
+const EXAMS: Record<'comprehensive' | 'adaptive', { skill: string; prompt: string; options: string[]; answer: number }> = {
+  comprehensive: { skill: 'skRead', prompt: 'قرأتُ الرسالة مرتين، ثم رددتُ عليها.\nماذا فعلتُ قبل الرد؟', options: ['قرأتُ الرسالة', 'نمتُ', 'سافرتُ', 'أغلقتُ الباب'], answer: 0 },
+  adaptive: { skill: 'skVocab', prompt: 'الجو حار. تطلب:', options: ['ماء بارد', 'معطف', 'كتاب', 'قلم'], answer: 0 },
 };
 
 function LangPicker({ copy, lang, onPick, label, search, none }: { copy: Copy | null; lang: string; onPick: (v: string) => void; label: string; search: string; none: string }) {
@@ -590,7 +622,33 @@ const CSS = `
 .mi-cap{margin:12px 0 2px;text-align:center;color:rgba(255,255,255,.78);font-size:13px;line-height:1.7}
 .mi-skill{display:block;margin:0 0 8px;color:var(--gold);font-size:12px;font-weight:900}
 .mi-after{margin:0;color:#fff;font-weight:800;text-align:center;line-height:1.7}
+.mi-scale{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px}.mi-sc{min-width:44px;text-align:center;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:4px 10px;font-weight:900;font-size:12.5px;color:rgba(255,255,255,.75);letter-spacing:.02em;transition:background-color .25s,color .25s,transform .25s}.mi-sc.done{border-color:var(--gold);color:var(--gold)}.mi-sc.on{background:var(--gold);border-color:var(--gold);color:#1f2937;transform:scale(1.08)}
+.mi-door small{display:block;margin-top:8px;color:var(--gold);font-weight:800;font-size:12px;letter-spacing:.02em}
+.mi-opts-arab.two{grid-template-columns:1fr 1fr}.mi-opts-arab button.right{background:#d1fae5;border-color:#0b8a83;color:#065f46}.mi-opts-arab button.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}.mi-opts-arab button.dim{opacity:.55}
+.mi-samplefb{margin:10px 0 0;font-size:13.5px;font-weight:800;color:#991b1b}.mi-samplefb.ok{color:#065f46}
+.mi-teaser{width:100%;display:grid;justify-items:center;gap:6px;text-align:center;padding:14px 12px;border:1px solid rgba(201,162,75,.6);border-radius:16px;background:rgba(201,162,75,.08)}.mi-teaser span{color:var(--gold);font-weight:800;font-size:12.5px;letter-spacing:.04em}.mi-teaser b{font-size:40px;line-height:1;color:#fff;font-weight:900}.mi-teaser p{margin:0;color:rgba(255,255,255,.85);font-size:13px;line-height:1.7;max-width:46ch}.mi-go.small{min-height:40px;padding:6px 14px;font-size:14px;margin-top:6px}
 .mi-sealbox .mi-err{color:#fecaca;margin:8px 0 0;font-weight:800;font-size:13px}
+/* العنوان النابض */
+.mi-flash{position:relative}.mi-flash h1.live{animation:miFlash .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes miFlash{from{opacity:0;transform:translateY(10px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.mi-flash-dots{display:flex;gap:8px;margin:2px 0 10px}.mi-flash-dots button{width:22px;height:6px;border:0;border-radius:3px;background:rgba(255,255,255,.28);cursor:pointer;padding:0;transition:background .3s,width .3s}.mi-flash-dots button.on{background:var(--gold);width:34px}.mi-flash-dots button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* شريط الأثر */
+.mi-ticker{display:flex;align-items:center;gap:0;background:var(--navy);color:#e2e8f0;border-bottom:1px solid rgba(201,162,75,.35);font-size:13.5px;font-weight:700;min-height:38px}
+.mi-ticker-k{flex:none;display:flex;align-items:center;gap:8px;padding:0 16px 0 7vw;color:var(--gold);font-weight:900;letter-spacing:.02em;white-space:nowrap}[dir=rtl] .mi-ticker-k{padding:0 7vw 0 16px}.mi-ticker-k i{width:8px;height:8px;border-radius:50%;background:#2dd4bf;box-shadow:0 0 0 0 rgba(45,212,191,.7);animation:miPing 1.8s infinite}
+@keyframes miPing{70%{box-shadow:0 0 0 7px rgba(45,212,191,0)}100%{box-shadow:0 0 0 0 rgba(45,212,191,0)}}
+.mi-ticker-view{flex:1;overflow:hidden;min-width:0;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.mi-ticker-track{display:flex;width:max-content;animation:miTickRtl linear infinite}[dir=ltr] .mi-ticker-track{animation-name:miTickLtr}
+.mi-ticker-row{display:flex;flex:none}.mi-ticker-item{white-space:nowrap;padding:0 26px;border-inline-end:1px solid rgba(201,162,75,.45)}
+@keyframes miTickRtl{from{transform:translateX(0)}to{transform:translateX(50%)}}@keyframes miTickLtr{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.mi-ticker:hover .mi-ticker-track,.mi-ticker:focus-within .mi-ticker-track,.mi-ticker.paused .mi-ticker-track{animation-play-state:paused}
+.mi-ticker-btn{flex:none;margin:0 10px 0 7vw;width:30px;height:26px;border:1px solid rgba(255,255,255,.3);border-radius:8px;background:transparent;color:#fff;font-size:10px;cursor:pointer}[dir=rtl] .mi-ticker-btn{margin:0 10px 0 7vw}[dir=ltr] .mi-ticker-btn{margin:0 7vw 0 10px}.mi-ticker-btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.mi-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* الختم الناطق */
+.mi-hero .mi-stagecard p.mi-bubble{position:relative;width:100%;box-sizing:border-box;margin:10px 0 0;padding:10px 16px;border-radius:16px;background:#fff;color:var(--navy);font-weight:900;font-size:15px;line-height:1.6;text-align:center;box-shadow:0 10px 26px rgba(2,6,23,.3)}
+.mi-bubble::before{content:"";position:absolute;top:-8px;left:50%;width:16px;height:16px;transform:translateX(-50%) rotate(45deg);background:#fff;border-radius:3px}
+.mi-bubble.pop{animation:miPop .5s cubic-bezier(.2,.9,.3,1.3) both}@keyframes miPop{from{opacity:0;transform:scale(.86) translateY(6px)}to{opacity:1;transform:none}}
+.mi-sealvoice{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:1px solid rgba(201,162,75,.5);background:transparent;color:#cbd5e1;cursor:pointer}.mi-sealvoice.on{background:var(--gold);color:var(--navy)}.mi-sealvoice:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.mi-flash h1.live,.mi-bubble.pop,.mi-ticker-k i{animation:none}.mi-ticker-track{animation:none;flex-wrap:wrap;width:auto}.mi-ticker-row[aria-hidden=true]{display:none}.mi-ticker-view{mask-image:none;-webkit-mask-image:none}}
 /* bands below hero */
 .mi-inner{padding:48px 7vw 8px}.mi-inner h2{font-size:clamp(26px,3.4vw,38px);color:var(--navy);margin:6px 0 10px;line-height:1.35}
 .mi-split{display:grid;gap:28px;align-items:center}
