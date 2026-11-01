@@ -1,17 +1,20 @@
 'use client';
 
 import LoginHero from './LoginHero';
+import { PortalShell } from '../PortalShell';
 
-/** الإطار الموحّد لصفحات المصادقة (تسجيل الدخول / استرجاع كلمة المرور / إعادة التعيين) */
+/** الإطار الموحّد لصفحات المصادقة (تسجيل الدخول / استرجاع كلمة المرور / إعادة التعيين) — داخل قشرة أَثَر (P42-ب-0 «هوية الدخول») */
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="au" dir="rtl">
-      <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
-      <div className="au-grid">
-        <LoginHero />
-        {children}
-      </div>
-    </main>
+    <PortalShell>
+      <main className="au" dir="rtl" id="main">
+        <style dangerouslySetInnerHTML={{ __html: SHELL_CSS }} />
+        <div className="au-grid">
+          <LoginHero />
+          {children}
+        </div>
+      </main>
+    </PortalShell>
   );
 }
 
@@ -48,7 +51,7 @@ export function AuthMessage({ kind, children }: { kind: 'ok' | 'err' | 'info'; c
 }
 
 const SHELL_CSS = `
-.au{min-height:100vh;background:#f3f6fa;display:flex;align-items:center;justify-content:center;padding:28px 20px;color:#0f172a;font-family:inherit;}
+.au{min-height:calc(100vh - 240px);background:#f3f6fa;display:flex;align-items:center;justify-content:center;padding:28px 20px;color:#0f172a;font-family:inherit;}
 .au *{box-sizing:border-box;}
 .au-grid{max-width:1240px;width:100%;display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:stretch;}
 .au-card{background:#fff;border:1px solid #e4eaf2;border-top:4px solid #c9a24b;border-radius:18px;padding:34px 32px;box-shadow:0 1px 2px rgba(15,42,78,.05),0 12px 32px rgba(15,42,78,.08);align-self:center;}

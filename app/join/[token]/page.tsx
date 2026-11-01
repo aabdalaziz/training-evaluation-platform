@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
+import { PortalShell } from '../../components/PortalShell';
 
 type Inv = { email_masked: string; full_name: string | null; roles: { code: string; name_ar: string; name_en: string }[]; org: string | null; message: string | null; expires_at: string; state: 'pending' | 'accepted' | 'expired' | 'revoked' };
 const STATE_AR: Record<string, string> = { accepted: 'هذه الدعوة قُبلت من قبل — ادخل من /login وسيفتح بابك.', expired: 'انتهت صلاحية هذه الدعوة (14 يومًا). اطلب من مدير النظام دعوة جديدة.', revoked: 'أُلغيت هذه الدعوة.' };
@@ -48,7 +49,7 @@ export default function JoinPage({ params }: { params: { token: string } }) {
   async function signOut() { await supabase().auth.signOut(); setMe(null); setTok(''); }
 
   return (
-    <main className="jn" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <PortalShell><main className="jn" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <section className="jn-card" data-testid="join-card">
         <div className="jn-kicker"><Icon name="mail" size={14} /> دعوة إلى بوابة أَثَر</div>
         {err && !inv && <p className="jn-err" data-testid="join-error">{err}</p>}
@@ -86,12 +87,12 @@ export default function JoinPage({ params }: { params: { token: string } }) {
         </>)}
         <p className="jn-foot"><Link href="/">بوابة أَثَر</Link> · <Link href="/help">مساعدة</Link></p>
       </section>
-    </main>
+    </main></PortalShell>
   );
 }
 
 const CSS = `
-.jn{min-height:100vh;display:grid;place-items:center;padding:28px 14px;background:radial-gradient(1000px 500px at 50% -10%,#e9f4f3,transparent 60%),#f6f8fb;font-family:inherit}
+.jn{min-height:70vh;display:grid;place-items:center;padding:28px 14px;background:radial-gradient(1000px 500px at 50% -10%,#e9f4f3,transparent 60%),#f6f8fb;font-family:inherit}
 .jn-card{width:100%;max-width:560px;background:#fff;border:1px solid #e5e9f0;border-radius:22px;padding:26px 24px;box-shadow:0 20px 50px -30px rgba(15,42,78,.35)}
 .jn-kicker{display:inline-flex;gap:6px;align-items:center;color:#0b8a83;font-weight:800;font-size:13px;background:#e6f4f3;padding:5px 10px;border-radius:999px}
 .jn h1{margin:14px 0 4px;color:#0f2a4e;font-size:26px}.jn-lead{margin:0 0 10px;color:#334155}

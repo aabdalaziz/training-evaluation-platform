@@ -13,7 +13,7 @@ import { GuideButton } from './Guide';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 // صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
-const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility', '/miaar'];
+const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility', '/miaar', '/login', '/join', '/hub', '/forgot-password', '/reset-password'];
 const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
   { href: '/dashboard', label: 'لوحة القيادة', icon: 'dashboard', match: p => p.startsWith('/dashboard') },
   { href: '/command-center', label: 'غرفة القيادة', icon: 'play', match: p => p.startsWith('/command-center') },

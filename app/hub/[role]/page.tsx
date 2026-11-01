@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
+import { PortalShell } from '../../components/PortalShell';
 
 type Door = { title_ar: string; title_en: string; roles: string[]; lead: string; links: { href: string; label: string; hint: string }[] };
 const DOORS: Record<string, Door> = {
@@ -40,9 +41,9 @@ export default function HubDoorPage({ params }: { params: { role: string } }) {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.role]);
-  if (!door) return <main className="hd" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="hd-wrap"><p className="hd-err">لا يوجد باب بهذا الاسم. <Link href="/hub">أبوابي</Link></p></div></main>;
+  if (!door) return <PortalShell><main className="hd" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="hd-wrap"><p className="hd-err">لا يوجد باب بهذا الاسم. <Link href="/hub">أبوابي</Link></p></div></main></PortalShell>;
   return (
-    <main className="hd" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <PortalShell><main className="hd" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hd-wrap">
         <header className="hd-head"><Link href="/hub" className="hd-back"><Icon name="arrow" size={14} /> أبوابي</Link><h1>{door.title_ar} <small>{door.title_en}</small></h1><p>{door.lead}</p></header>
         {allowed === null && <p className="hd-muted">جارٍ التحقق من صفتك…</p>}
@@ -54,7 +55,7 @@ export default function HubDoorPage({ params }: { params: { role: string } }) {
         )}
         <p className="hd-note">في P42-ب يصبح كل باب حيًّا: أرقام اليوم، وما ينتظر قرارك، و«أول ثلاث خطوات» لمن دخل أول مرة.</p>
       </div>
-    </main>
+    </main></PortalShell>
   );
 }
 const CSS = `

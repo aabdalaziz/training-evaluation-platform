@@ -31,10 +31,10 @@ export default function LoginCard({ onSubmit, onMagic, loading = false, error = 
     if (mode === 'magic' && onMagic) { const m = await onMagic(email); if (m) setSent(m); return; }
     await onSubmit(email, password);
   }
-  const tabBtn = (on: boolean): React.CSSProperties => ({ flex: 1, padding: '9px 10px', borderRadius: 10, border: on ? '1.5px solid #0f2a4e' : '1px solid #e2e8f0', background: on ? '#0f2a4e' : '#fff', color: on ? '#fff' : '#334155', fontWeight: 800, cursor: 'pointer', fontSize: 14 });
+  const tabBtn = (on: boolean): React.CSSProperties => ({ flex: 1, minHeight: 44, padding: '9px 10px', borderRadius: 10, border: on ? '1.5px solid #0f2a4e' : '1px solid #e2e8f0', background: on ? '#0f2a4e' : '#fff', color: on ? '#fff' : '#334155', fontWeight: 800, cursor: 'pointer', fontSize: 14 });
 
   return (
-    <AuthCard standalone={false} icon={<Icon name="login" size={30} />} title="تسجيل الدخول" subtitle="بابٌ واحد لكل صفة: متدرّب أو مدرّب أو طاقم — ادخل ببريدك ويفتح لك بابك">
+    <AuthCard standalone={false} icon={<Icon name="login" size={30} />} title="ادخل إلى أَثَر" subtitle="بابٌ واحد لكل صفة: متدرّب أو مدرّب أو طاقم — اكتب بريدك ويفتح لك بابك">
       {onMagic && (
         <div role="tablist" aria-label="طريقة الدخول" style={{ display: 'flex', gap: 8, marginBottom: 16 }} data-testid="login-modes">
           <button type="button" role="tab" aria-selected={mode === 'magic'} style={tabBtn(mode === 'magic')} onClick={() => setMode('magic')} data-testid="login-mode-magic">رابط الدخول (بلا كلمة مرور)</button>

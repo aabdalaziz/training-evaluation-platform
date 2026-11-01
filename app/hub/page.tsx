@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
+import { PortalShell } from '../components/PortalShell';
 
 type R = { code: string; name_ar: string; name_en: string; landing: string; scope: string };
 export default function HubPage() {
@@ -25,7 +26,7 @@ export default function HubPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <main className="hb" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <PortalShell><main className="hb" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hb-wrap">
         <header className="hb-head"><span className="hb-kicker"><Icon name="compass" size={14} /> بوابة أَثَر</span><h1>أبوابك</h1><p>{email ? <>داخل باسم <code dir="ltr">{email}</code> — </> : null}لك أكثر من صفة؛ اختر الباب الذي تريد الدخول منه الآن.</p></header>
         {err && <p className="hb-err">{err}</p>}
@@ -43,7 +44,7 @@ export default function HubPage() {
           </div>
         )}
       </div>
-    </main>
+    </main></PortalShell>
   );
 }
 const CSS = `
