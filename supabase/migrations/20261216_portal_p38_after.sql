@@ -6,7 +6,7 @@
 --    · إذن النشر (may_publish) · إظهار الفصل في الشهادة الحيّة (shown_on_credential) · اعتماد الطاقم للاقتباس العام (published_at)
 --  الصفّ يُنشأ عند فتح المحطة (notified_at) أو عند الكتابة (written_at)؛ المحطة الفائتة تبقى فارغة — لا استكمال بأثر رجعي.
 --  وثيقة ATH-AF تُصدر في portal_vc_issuances (kind = 'after') — لا جدول لها.
---  تشخيص متوقَّع في النهاية: tables_1 = 1 · policies_1 = 1 · idx_2 = 2
+--  تشخيص متوقَّع في النهاية: vc_kind_1 = 1 · tables_1 = 1 · policies_1 = 1 · idx_2 = 2
 -- =====================================================================================
 
 create table if not exists public.portal_after_stations (
@@ -39,8 +39,14 @@ drop policy if exists after_stations_self on public.portal_after_stations;
 create policy after_stations_self on public.portal_after_stations for select
   using (user_id = auth.uid() or lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')));   -- القراءة العامة المجهَّلة (k≥5) والكتابة عبر الخدمة فقط
 
+-- وثيقة «أثر بعد» ATH-AF: portal_vc_issuances.kind يقبل 'after'
+alter table public.portal_vc_issuances drop constraint if exists portal_vc_issuances_kind_check;
+alter table public.portal_vc_issuances add constraint portal_vc_issuances_kind_check
+  check (kind in ('credential','snapshot','dataset','council_badge','org_charter','journey','org_journey','horizon','org_horizon','pair_pledge','org_pair_pledge','directory_card','collaboration','on_air','on_air_season','after'));
+
 -- تشخيص
 select
+  (select count(*) from pg_constraint where conname = 'portal_vc_issuances_kind_check' and pg_get_constraintdef(oid) like '%''after''%') as vc_kind_1,
   (select count(*) from information_schema.tables where table_schema = 'public' and table_name = 'portal_after_stations') as tables_1,
   (select count(*) from pg_policies where schemaname = 'public' and tablename = 'portal_after_stations' and policyname = 'after_stations_self') as policies_1,
   (select count(*) from pg_indexes where schemaname = 'public' and tablename = 'portal_after_stations' and indexname in ('portal_after_stations_program_idx','portal_after_stations_email_idx')) as idx_2;
