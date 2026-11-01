@@ -24,6 +24,8 @@ type Props = { inviteCode?: string | null; inviteToken?: string | null; resultCo
 const RTL = new Set(['ar', 'ur', 'fa', 'ps', 'ku']);
 const AR_LETTERS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و']; const EN_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 const PURPOSE = [['دراسة', 'study'], ['عمل', 'work'], ['سفر', 'travel'], ['شخصي', 'personal'], ['أخرى', 'other']] as const;
+/* نقش QR توضيحي ثابت للشهادة في الطيّة (ليس رمزًا حقيقيًا) */
+const QR_DEMO = ['111111101011001111111','100000100110101000001','101110101101101011101','101110100010101011101','101110101111001011101','100000101001001000001','111111101010101111111','000000000111000000000','110101111001011011010','010010001110100101001','101101110011011010110','011000011100100100011','110111101011011011101','000000001100100100001','111111100111011010110','100000101001100101001','101110101111011011111','101110100100100100010','101110101011011110101','100000100110100001100','111111101001011011010'];
 const SAMPLES: Record<Level, string> = { A1: 'أنا من الولايات المتحدة الأمريكية.', A2: 'أريد تذكرة إلى جدة يوم الخميس، من فضلك.', B1: 'سافرت إلى القاهرة في الصيف الماضي، وكانت الرحلة مفيدة.', B2: 'قد يكون التأخير بسبب الزحام، وقد يكون بسبب عطل في القطار.', C1: 'لم يكن الإشكال في قلة الوقت، بل في أن الخطة لم تُراجَع قبل الاجتماع.', C2: 'قال إن الأمر بخير، غير أن طريقة كلامه أوحت بغير ذلك.' };
 /** نصوص م1 الجديدة (عربية/إنجليزية؛ بقية اللغات تأخذ الإنجليزية) */
 const X: Record<string, { ar: string; en: string }> = {
@@ -68,9 +70,10 @@ function readLang(fallback: string) { try { const v = localStorage.getItem('atha
 type CopyIndex = { codes: string[]; langs: Copy['langs']; native: Copy['native'] };
 const copyFiles: Record<string, Promise<Record<string, Record<string, string>> | null>> = {};
 let copyIndex: Promise<CopyIndex | null> | null = null;
-function fetchCopyLang(code: string) { if (!copyFiles[code]) copyFiles[code] = fetch(`/miaar/copy/${encodeURIComponent(code)}.json`, { cache: 'force-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null); return copyFiles[code]; }
+/* hotfix3: 'no-cache' لا 'force-cache' — المتصفح كان يحتفظ بقاموس قديم بعد كل تحديث فتظهر مفاتيح خام (tickerK…)؛ no-cache يعيد التحقق بـ ETag (رخيص) ويضمن أحدث نص */
+function fetchCopyLang(code: string) { if (!copyFiles[code]) copyFiles[code] = fetch(`/miaar/copy/${encodeURIComponent(code)}.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null); return copyFiles[code]; }
 async function loadCopy(base: Copy | null, codes: string[]): Promise<Copy | null> {
-  if (!copyIndex) copyIndex = fetch('/miaar/copy/index.json', { cache: 'force-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (!copyIndex) copyIndex = fetch('/miaar/copy/index.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
   const idx = await copyIndex; if (!idx) return null;
   const out: Copy = base ? { ...base } : ({ langs: idx.langs, native: idx.native } as Copy);
   for (const code of Array.from(new Set(codes))) {
@@ -206,14 +209,20 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   // ---- حلقات الختم (مِسبار على الصفحة الأولى — كما في مِعيار الأصلي)
   const [ringsOn, setRingsOn] = useState(false); const [asked, setAsked] = useState(false); const [door, setDoor] = useState<Door | null>(null); const [band, setBand] = useState<{ score: number; band: string } | null>(null); const [sampleAns, setSampleAns] = useState<number | null>(null);
   const ringItem = ringsOn && !probeDone ? probe[probeIdx] || null : null;
-  /* «العنوان النابض» · «شريط الأثر» · «الختم الناطق» — حياة الصفحة الأولى (تحترم prefers-reduced-motion؛ الشريط يُوقف بزر) */
-  const FLASH_N = 5; const [flashI, setFlashI] = useState(0); const [flashHold, setFlashHold] = useState(false); const [reduced, setReduced] = useState(false);
-  const [pulse, setPulse] = useState<{ now: number | null; today: number | null; week: number | null; recent: { level: string; lang: string | null; minutes: number }[] } | null>(null); const [tickerPaused, setTickerPaused] = useState(false);
+  /* V3 «واجهة الوعد الواحد»: شريط الأثر · الختم الناطق · مشهد ثلاثي الأبعاد (ميل مع المؤشر + قلب الشهادة إلى منصة الحلقات) · «دلّني» · بطاقات CEFR المنقلبة — كلها تحترم prefers-reduced-motion */
+  const [reduced, setReduced] = useState(false);
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0 }); const [marker, setMarker] = useState(0); const [flipLv, setFlipLv] = useState<Level | null>(null);
+  const [guideGoal, setGuideGoal] = useState<'know' | 'org' | 'level' | 'quick' | null>(null); const [guideTime, setGuideTime] = useState<'25' | '50' | '10' | null>(null); const [inviteIn, setInviteIn] = useState('');
+  const onSceneMove = (e: React.MouseEvent<HTMLDivElement>) => { if (reduced) return; const r = e.currentTarget.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; setTilt({ rx: Math.round(-py * 10 * 10) / 10, ry: Math.round(px * 12 * 10) / 10 }); };
+  useEffect(() => { if (step !== 'intro' || reduced || band || ringsOn) return; const id = setInterval(() => setMarker((m) => (m + 1) % 6), 1400); return () => clearInterval(id); }, [step, reduced, band, ringsOn]);
+  useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?doors=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && Array.isArray(j.doors) && j.doors.length) setDoors(j.doors); }).catch(() => { /* الأبواب الافتراضية */ }); }, [step]);
+  const recDoor: Door | null = (() => { if (!doors.length) return null; const by = (f: (d: Door) => boolean) => doors.find(f) || null; const adaptive = by((d) => d.type === 'placement' || d.door === 'adaptive'); const comp = by((d) => d.code === 'SYS-COMPREHENSIVE' || d.type === 'comprehensive'); const short = by((d) => d.type === 'short'); const level = by((d) => d.type === 'level');
+    if (guideGoal === 'level' && level) return level; if (guideGoal === 'quick' || guideTime === '10') return short || adaptive || doors[0]; if (guideGoal === 'org' || guideTime === '50') return comp || adaptive || doors[0]; return adaptive || doors[0]; })();
+  function startNow() { if (invite) { setStep('register'); return; } const d = door || recDoor; if (d) { setDoor(d); setExamMode(d.door === 'adaptive' ? 'adaptive' : 'comprehensive'); setBlueprint(d.code); } setStep('register'); }
+  const [pulse, setPulse] = useState<{ now: number | null; today: number | null; week: number | null; month: number | null; recent: { level: string; lang: string | null; minutes: number }[] } | null>(null); const [tickerPaused, setTickerPaused] = useState(false);
   const [sealVoice, setSealVoice] = useState(false); const sealAudio = useRef<HTMLAudioElement | null>(null);
   useEffect(() => { if (typeof window === 'undefined') return; const mq = window.matchMedia('(prefers-reduced-motion: reduce)'); setReduced(mq.matches); const on = () => setReduced(mq.matches); mq.addEventListener?.('change', on); setSealVoice(localStorage.getItem('miaar-seal-voice') === '1'); return () => mq.removeEventListener?.('change', on); }, []);
-  useEffect(() => { if (step !== 'intro' || ringsOn || flashHold || reduced) return; const id = setInterval(() => setFlashI((i) => (i + 1) % FLASH_N), 4600); return () => clearInterval(id); }, [step, ringsOn, flashHold, reduced]);
   useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?pulse=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok) setPulse(j); }).catch(() => { /* الشريط يكتفي بعباراته */ }); }, [step]);
-  const flashText = t('intro', `flash${flashI + 1}`) !== `flash${flashI + 1}` ? t('intro', `flash${flashI + 1}`) : t('intro', 'h1');
   const splitHead = (h: string) => { const bar = h.indexOf('|'); if (bar > 0) return [h.slice(0, bar), h.slice(bar + 1)]; const i = h.indexOf('؟') >= 0 ? h.indexOf('؟') + 1 : h.indexOf('?') >= 0 ? h.indexOf('?') + 1 : -1; return i > 0 ? [h.slice(0, i), h.slice(i).trim()] : [h, '']; };
   const ago = (m: number) => m < 60 ? t('intro', 'agoMin', { n: m }) : m < 1440 ? t('intro', 'agoHour', { n: Math.round(m / 60) }) : t('intro', 'agoDay', { n: Math.round(m / 1440) });
   const nativeLabel = (v: string | null) => { if (!v) return null; const n = (copy?.native || []).find((x) => x.value === v); return n ? n.labels[lang] || n.labels.en || v : null; };
@@ -275,86 +284,122 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
         <div className="mi-ticker-view"><div className="mi-ticker-track" style={{ animationDuration: `${Math.max(24, tickerItems.length * 7)}s` }}>{[0, 1].map((rp) => <span key={rp} className="mi-ticker-row" aria-hidden={rp === 1}>{tickerItems.map((it, i) => <span key={i} className="mi-ticker-item">{it}</span>)}</span>)}</div></div>
         <button type="button" className="mi-ticker-btn" aria-pressed={tickerPaused} onClick={() => setTickerPaused((v) => !v)} data-testid="mi-ticker-toggle">{tickerPaused ? '▶' : '❚❚'}<span className="mi-sr">{tickerPaused ? t('intro', 'tickerPlay') : t('intro', 'tickerPause')}</span></button>
       </section>
-      <section className={`mi-hero${ringsOn ? ' open' : ''}`} data-testid="mi-intro">
-        <div>
+
+      {/* ===== V3 «واجهة الوعد الواحد» — الطيّة ===== */}
+      <section className="mi-v3hero" data-testid="mi-intro">
+        <div className="mi-v3copy">
           {invite && <div className="mi-invite" data-testid="mi-invite"><b>{x('invite_for')}:</b> {invite.label_ar} · {t('intro', invite.exam_mode === 'adaptive' ? 'adap' : 'comp')}</div>}
-          <p className="mi-pill">{t('intro', 'kicker')}</p>
-          <div className="mi-flash" onMouseEnter={() => setFlashHold(true)} onMouseLeave={() => setFlashHold(false)} onFocus={() => setFlashHold(true)} onBlur={() => setFlashHold(false)} data-testid="mi-flash">
-            <h1 key={ringsOn ? 'fixed' : flashI} className={ringsOn || reduced ? '' : 'live'} data-flash={flashI}>{(() => { const [a, b] = splitHead(ringsOn ? t('intro', 'h1') : flashText); return <>{a} {b && <em>{b}</em>}</>; })()}</h1>
-            {!ringsOn && <div className="mi-flash-dots" role="tablist" aria-label={t('intro', 'flashDot', { n: '' }).trim()}>{Array.from({ length: FLASH_N }, (_, i) => <button key={i} type="button" role="tab" aria-selected={i === flashI} aria-label={t('intro', 'flashDot', { n: i + 1 })} className={i === flashI ? 'on' : ''} onClick={() => { setFlashI(i); setFlashHold(true); }} />)}</div>}
+          <p className="mi-v3pill"><i aria-hidden="true" />{t('intro', 'v3pill')}</p>
+          <h1 data-testid="mi-flash">{(() => { const [a, b] = splitHead(t('intro', 'v3h1')); return <>{a}<br />{b && <em>{b}</em>}</>; })()}</h1>
+          <p className="mi-v3lead">{t('intro', 'v3lead')}</p>
+          <ul className="mi-v3bul">{[1, 2, 3].map((i) => <li key={i}><i aria-hidden="true">✓</i>{t('intro', `v3b${i}`)}</li>)}</ul>
+          <div className="mi-v3cta">
+            <button type="button" className="mi-go" onClick={startNow} data-testid="mi-start"><Icon name="play" />{recDoor && recDoor.code !== 'SYS-PLACEMENT' ? t('intro', 'v3ctaDoor', { door: doorName(recDoor) }) : t('intro', 'v3cta')}</button>
+            <button type="button" className="mi-v3link" onClick={() => { void beginRings(); document.getElementById('mi-scene')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' }); }} data-testid="mi-rings-link">{t('intro', 'v3rings')}</button>
           </div>
-          {!ringsOn && <p className="mi-lead">{t('intro', 'lead')}</p>}
-          {!ringsOn && <p className="mi-rule">{t('intro', 'rule')}</p>}
-          <div className="mi-scale" role="list" aria-label={t('intro', 'scaleK')} data-testid="mi-scale">{(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const).map((l) => { const on = ringItem ? ringItem.level === l : band ? band.band === l : false; const done = ringsOn && !ringItem && !band ? false : ringItem ? LEVELS.indexOf(l) < LEVELS.indexOf(ringItem.level as Level) : false; return <span key={l} role="listitem" className={`mi-sc${on ? ' on' : ''}${done ? ' done' : ''}`}>{l}</span>; })}</div>
-          {!ringsOn && <div className="mi-promises">{[1, 2, 3].map((i) => <article key={i}><strong>{t('intro', `p${i}t`)}</strong><span>{t('intro', `p${i}`)}</span></article>)}</div>}
-          {ringsOn && <p className="mi-voice">{ringItem ? t('intro', 'voiceN', { n: probeIdx + 1, skill: ringSkill(ringItem.skill), level: ringItem.level }) : t('intro', 'after')}</p>}
-          {!asked && <button type="button" className="mi-go" onClick={askEnter} data-testid="mi-start"><Icon name="play" />{t('intro', 'askEnter')}</button>}
-          {asked && <section className="mi-inplace" id="mi-doors">
-            <p className="mi-kicker gold">{t('intro', 'entryK')}</p><h2>{t('intro', 'entryH')}</h2>
-            <div className="mi-doors">{doors.map((d, i) => <button key={d.code} type="button" className="mi-door" aria-pressed={door?.code === d.code} onClick={() => chooseDoor(d)} data-testid={doors.findIndex((x) => x.door === d.door) === i ? `mi-door-${d.door}` : `mi-door-${d.door}-${d.code}`} data-code={d.code}><strong>{doorName(d)}</strong><span>{doorSub(d)}</span><small>{d.levels.length === 1 ? d.levels[0] : `${d.levels[0]}→${d.levels[d.levels.length - 1]}`} · {d.items} {lang === 'ar' ? 'بندًا' : 'items'} · ≈{d.minutes} {lang === 'ar' ? 'د' : 'min'}{d.probe ? ` · ${lang === 'ar' ? 'بمِسبار' : 'with probe'}` : ''}</small></button>)}</div>
-          </section>}
-          {door && <section className="mi-inplace" id="mi-go">
-            <p className="mi-kicker gold">{t('intro', 'examK')}</p><h2>{t('intro', 'examH')}</h2>
-            <p className="mi-voice">{t('intro', 'examNote', { door: door.type === 'placement' ? t('intro', 'doorAdap') : door.code === 'SYS-COMPREHENSIVE' ? t('intro', 'doorComp') : doorName(door) })}</p>
-            <p className="mi-kicker gold">{t('intro', sampleQ.skill)}</p>
-            <div className="mi-arab" dir="rtl" lang="ar"><p className="mi-q">{sampleQ.prompt}</p><div className="mi-opts-arab two">{sampleQ.options.map((o, i) => <button key={o} type="button" lang="ar" dir="rtl" className={sampleAns === null ? '' : i === sampleQ.answer ? 'right' : i === sampleAns ? 'wrong' : 'dim'} aria-pressed={sampleAns === i} onClick={() => setSampleAns(i)} data-testid="mi-sample-opt">{o}</button>)}</div>
-              {sampleAns !== null && <p className={`mi-samplefb${sampleAns === sampleQ.answer ? ' ok' : ''}`} role="status" data-testid="mi-sample-fb">{sampleAns === sampleQ.answer ? t('intro', 'sampleRight') : t('intro', 'sampleWrong', { answer: sampleQ.options[sampleQ.answer] })}</p>}</div>
-            <button type="button" className="mi-go" onClick={() => setStep('register')} data-testid="mi-go-register"><Icon name="next" />{t('intro', 'goRegister')}</button>
-          </section>}
+          {pulse && pulse.month ? <p className="mi-v3proof" data-testid="mi-proof"><span className="mi-v3av" aria-hidden="true"><i /><i /><i /><i /></span>{t('intro', 'v3proof', { n: pulse.month.toLocaleString('en-US') })}{pulse.recent[0] ? ` · ${t('intro', 'v3last', { when: ago(pulse.recent[0].minutes), level: pulse.recent[0].level })}` : ''}</p> : null}
+          <div className="mi-v3stats" data-testid="mi-stats">
+            {(() => { const d = door || recDoor; const adaptive = !d || d.type === 'placement' || d.door === 'adaptive'; const mins = d ? d.minutes : 50; const items = d ? d.items : 50; return <>
+              <div><b>{adaptive ? `≤${mins}` : `≈${mins}`}</b><span>{t('intro', adaptive ? 'v3stMin' : 'v3stMinX')}</span></div>
+              <div><b>{adaptive ? `≤${items}` : items}</b><span>{t('intro', adaptive ? 'v3stItems' : 'v3stItemsX')}</span></div>
+              <div><b>{d && d.levels.length < 6 ? d.levels.length : 6}</b><span>{t('intro', 'v3stLevels')}</span></div>
+              <div><b>3</b><span>{t('intro', 'v3stSkills')}</span></div></>; })()}
+          </div>
         </div>
-        <div className="mi-sealbox">
-          <div className="mi-stagehead"><span className="mi-dots" aria-hidden="true"><i /><i /><i className="on" /></span><span className="mi-now">الآن في أَثَر <i /></span>{lang === 'ar' && <button type="button" className={`mi-sealvoice${sealVoice ? ' on' : ''}`} aria-pressed={sealVoice} onClick={toggleSealVoice} title={sealVoice ? t('intro', 'sealVoiceOn') : t('intro', 'sealVoiceOff')} data-testid="mi-seal-voice"><Icon name="play" /><span className="mi-sr">{sealVoice ? t('intro', 'sealVoiceOn') : t('intro', 'sealVoiceOff')}</span></button>}</div>
-          <div className="mi-stagecard">
-            <div className="mi-seal">
-              <i className="mi-ring" style={{ width: '100%', height: '100%', borderColor: '#0b8a83' }} /><i className="mi-ring" style={{ width: '74%', height: '74%', borderColor: '#14b8a6' }} /><i className="mi-ring" style={{ width: '48%', height: '48%', borderColor: '#0b8a83' }} />
-              {Object.keys(probeAns).map((_, i) => <i key={i} className="mi-ring gold" style={{ width: ringSizes[i % ringSizes.length], height: ringSizes[i % ringSizes.length] }} />)}
-              <button type="button" className="mi-core" onClick={() => void beginRings()} style={{ fontSize: t('intro', 'start').length > 5 ? 14 : 20 }} data-testid="mi-core">{ringsDone ? '✓' : t('intro', 'start')}</button>
+
+        {/* المشهد ثلاثي الأبعاد: شهادة تميل مع المؤشر، وختم «تحدّي الدقيقتين»، وشريط A1→C2 بمؤشر «أنت هنا» */}
+        <div className="mi-v3vis" id="mi-scene">
+          <div className={`mi-scene${reduced ? ' flat' : ''}${ringsOn ? ' live' : ''}`} onMouseMove={onSceneMove} onMouseLeave={() => setTilt({ rx: 0, ry: 0 })} style={{ ['--rx' as any]: `${tilt.rx}deg`, ['--ry' as any]: `${tilt.ry}deg` }}>
+            <div className={`mi-flip${ringsOn ? ' on' : ''}`}>
+              <div className="mi-face mi-cert" aria-hidden={ringsOn}>
+                <span className="mi-certk">{t('intro', 'v3certK')}<em>{t('intro', 'v3certDemo')}</em></span>
+                <h3>{t('intro', 'v3certT')}</h3>
+                <p className="mi-certwho">{t('intro', 'v3certName')} · 2026-11-01 · ML-7K2Q-9MX4</p>
+                <div className="mi-certlvl"><div className="mi-certbig"><b>B2</b></div>
+                  <div className="mi-certsk">{([['grammar', 78], ['read', 70], ['listen', 64]] as const).map(([k, v]) => <div key={k}><span>{t('test', k)}</span><span className="mi-certbar"><i style={{ width: `${v}%` }} /></span></div>)}</div></div>
+                <div className="mi-certfoot"><span>{t('intro', 'v3certFoot')}</span><svg className="mi-qr" viewBox="0 0 21 21" aria-hidden="true">{QR_DEMO.map((row, y) => row.split('').map((c, x) => c === '1' ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" /> : null))}</svg></div>
+              </div>
+              <div className="mi-face mi-stage mi-stagecard" aria-hidden={!ringsOn}>
+                <div className="mi-stagehead"><span className="mi-dots" aria-hidden="true"><i /><i /><i className="on" /></span><span className="mi-now">الآن في أَثَر <i /></span>{lang === 'ar' && <button type="button" className={`mi-sealvoice${sealVoice ? ' on' : ''}`} aria-pressed={sealVoice} onClick={toggleSealVoice} title={sealVoice ? t('intro', 'sealVoiceOn') : t('intro', 'sealVoiceOff')} data-testid="mi-seal-voice"><Icon name="play" /><span className="mi-sr">{sealVoice ? t('intro', 'sealVoiceOn') : t('intro', 'sealVoiceOff')}</span></button>}</div>
+                <p key={sealClip || 'wait'} className={`mi-bubble${reduced ? '' : ' pop'}`} role="status" aria-live="polite" data-testid="mi-bubble">{sealLine}</p>
+                {ringItem && <div style={{ width: '100%' }}>
+                  <span className="mi-skill">{ringSkill(ringItem.skill)} · {t('intro', 'voiceN', { n: probeIdx + 1, skill: ringSkill(ringItem.skill), level: ringItem.level })}</span>
+                  <div className="mi-arab stage" dir="rtl" lang="ar"><p className="mi-q"><span className="mi-lv">{ringItem.level}</span>{ringItem.prompt}</p>
+                    <div className="mi-opts-arab">{ringItem.options.map((o) => <button key={o.id} type="button" lang="ar" dir="rtl" onClick={() => answerRing(o.id)} data-testid="mi-ring-opt">{o.text}</button>)}</div></div>
+                </div>}
+                {ringsOn && probeDone && <div className="mi-teaser" data-testid="mi-teaser">
+                  <span>{t('intro', 'teaserK')}</span>
+                  <b>{band ? band.band : '…'}</b>
+                  <p>{band ? `${t('gate', 'score', { n: band.score })} · ${t('gate', `note${band.band}`)}` : t('gate', 'indicator')}</p>
+                  <button type="button" className="mi-go small" onClick={startNow} data-testid="mi-teaser-cta"><Icon name="next" />{t('intro', 'teaserCta')}</button>
+                </div>}
+                {err && <p className="mi-err" role="alert">{err}</p>}
+              </div>
             </div>
-            <p key={sealClip || 'wait'} className={`mi-bubble${reduced ? '' : ' pop'}`} role="status" aria-live="polite" data-testid="mi-bubble">{sealLine}</p>
-            {ringItem && <div style={{ width: '100%' }}>
-              <span className="mi-skill">{ringSkill(ringItem.skill)}</span>
-              <div className="mi-arab stage" dir="rtl" lang="ar"><p className="mi-q"><span className="mi-lv">{ringItem.level}</span>{ringItem.prompt}</p>
-                <div className="mi-opts-arab">{ringItem.options.map((o) => <button key={o.id} type="button" lang="ar" dir="rtl" onClick={() => answerRing(o.id)} data-testid="mi-ring-opt">{o.text}</button>)}</div></div>
-            </div>}
-            {ringsOn && probeDone && <div className="mi-teaser" data-testid="mi-teaser">
-              <span>{t('intro', 'teaserK')}</span>
-              <b>{band ? band.band : '…'}</b>
-              <p>{band ? `${t('gate', 'score', { n: band.score })} · ${t('gate', `note${band.band}`)}` : t('gate', 'indicator')}</p>
-              {!asked && <button type="button" className="mi-go small" onClick={askEnter} data-testid="mi-teaser-cta"><Icon name="next" />{t('intro', 'teaserCta')}</button>}
-            </div>}
+            <div className="mi-sealwrap">
+              <div className="mi-seal">
+                <i className="mi-ring" style={{ width: '100%', height: '100%', borderColor: '#0b8a83' }} /><i className="mi-ring" style={{ width: '74%', height: '74%', borderColor: '#14b8a6' }} /><i className="mi-ring" style={{ width: '48%', height: '48%', borderColor: '#0b8a83' }} />
+                {Object.keys(probeAns).map((_, i) => <i key={i} className="mi-ring gold" style={{ width: ringSizes[i % ringSizes.length], height: ringSizes[i % ringSizes.length] }} />)}
+                <button type="button" className="mi-core" onClick={() => void beginRings()} style={{ fontSize: 13 }} data-testid="mi-core">{ringsDone ? '✓' : <>{t('intro', 'v3sealT')}</>}</button>
+              </div>
+              <small>{ringsOn && !ringsDone ? t('intro', 'sealCap') : t('intro', 'v3sealS')}</small>
+            </div>
           </div>
-          <p className="mi-cap">{t('intro', 'sealCap')}</p>
-          {err && <p className="mi-err" role="alert">{err}</p>}
+          <div className="mi-scale v3" role="list" aria-label={t('intro', 'scaleK')} data-testid="mi-scale">{LEVELS.map((l, i) => { const on = band ? band.band === l : ringItem ? ringItem.level === l : marker === i; const done = ringItem ? i < LEVELS.indexOf(ringItem.level as Level) : false; return <span key={l} role="listitem" className={`mi-sc${on ? ' on' : ''}${done ? ' done' : ''}`}>{l}{band && band.band === l && <em>▲ {t('intro', 'v3here')}</em>}</span>; })}</div>
         </div>
       </section>
 
-      <section className="mi-inner"><div className="mi-split">
-        <div><p className="mi-kicker">{t('intro', 'sideK')}</p><h2>{t('intro', 'sideH')}</h2></div>
-        <div className="mi-panel"><p>{t('intro', 'side')}</p></div>
-      </div></section>
-
-      <section className="mi-inner mi-lvhead">
-        <p className="mi-kicker">{t('intro', 'lvK')}</p><h2>{t('intro', 'lvH')}</h2>
-        <p className="mi-note">{lang === 'ar' ? 'الإطار الأوروبي المرجعي المشترك للغات (CEFR): ثلاث فئات للمستخدم وستة مستويات. كل صفّ يقول ما يفعله المتعلم بالعربية عند هذا المستوى، ومعه سطر عربي نموذجي.' : 'The Common European Framework of Reference (CEFR): three user bands and six levels. Each row says what the learner can do in Arabic at that level, with a sample Arabic line.'}</p>
+      {/* ===== كيف يعمل ===== */}
+      <section className="mi-v3sec" id="mi-how"><p className="mi-kicker gold">{t('intro', 'v3howK')}</p><h2>{t('intro', 'v3howH')}</h2>
+        <div className="mi-v3steps">{[1, 2, 3].map((i) => <article key={i} className="mi-v3step"><b>{i}</b><h3>{t('intro', `v3s${i}`)}</h3><p>{t('intro', `v3s${i}p`)}</p></article>)}</div>
       </section>
-      <div className="mi-levels">
-        {(['basic', 'independent', 'proficient'] as const).map((band) => <div key={band} className={`mi-bandrow ${band}`}>
-          <div className="mi-bandhead"><b>{bandName(band)}</b><span>{band === 'basic' ? 'A1 · A2' : band === 'independent' ? 'B1 · B2' : 'C1 · C2'}</span></div>
-          {LEVELS.filter((lv) => bandOf(lv) === band).map((lv) => { const c = cefr(lv); return <article key={lv} className="mi-level" data-testid={`mi-level-${lv}`}>
-            <div className="mi-lvcode"><b>{lv}</b><small>{c.en}</small></div>
-            <div className="mi-lvbody">
-              <h3>{c.title}</h3>
-              <p className="mi-lvdesc">{c.desc}</p>
-              <p className="mi-lvcan"><span>{lang === 'ar' ? 'الكفاءة التواصلية المستهدفة' : 'Target communicative competence'}</span>{c.can}</p>
-              <p className="mi-lvline">{t('intro', lv.toLowerCase())}</p>
-            </div>
-            <p className="mi-specimen" dir="rtl" lang="ar"><small>عربي · {lv}</small>{SAMPLES[lv]}</p>
-          </article>; })}
-        </div>)}
-      </div>
 
-      <section className="mi-band mi-finale"><div className="mi-split">
-        <div><p className="mi-kicker gold">{t('intro', 'learnK')}</p><h2>{t('intro', 'learnH')}</h2><p>{t('intro', 'learn')}</p></div>
+      {/* ===== الأبواب + «دلّني» ===== */}
+      {!invite && <section className="mi-v3sec" id="mi-doors"><p className="mi-kicker gold">{t('intro', 'v3doorsK')}</p><h2>{t('intro', 'v3doorsH')}</h2>
+        <div className="mi-guide" data-testid="mi-guide">
+          <span className="mi-gq">{t('intro', 'v3gGoal')}</span>
+          {(['know', 'org', 'level', 'quick'] as const).map((g) => <button key={g} type="button" className={`mi-gopt${guideGoal === g ? ' on' : ''}`} aria-pressed={guideGoal === g} onClick={() => setGuideGoal(guideGoal === g ? null : g)} data-testid={`mi-guide-${g}`}>{t('intro', `v3g${g[0].toUpperCase()}${g.slice(1)}`)}</button>)}
+          <span className="mi-gq">{t('intro', 'v3gTime')}</span>
+          {(['25', '50', '10'] as const).map((g) => <button key={g} type="button" className={`mi-gopt${guideTime === g ? ' on' : ''}`} aria-pressed={guideTime === g} onClick={() => setGuideTime(guideTime === g ? null : g)}>{t('intro', `v3gT${g}`)}</button>)}
+          {recDoor && <span className="mi-gres" data-testid="mi-guide-res">→ {t('intro', 'v3gRes', { door: doorName(recDoor) })}</span>}
+        </div>
+        <div className="mi-doors v3">
+          {doors.map((d, i) => <button key={d.code} type="button" className={`mi-door${recDoor?.code === d.code ? ' rec' : ''}`} aria-pressed={door?.code === d.code} onClick={() => chooseDoor(d)} data-testid={doors.findIndex((x) => x.door === d.door) === i ? `mi-door-${d.door}` : `mi-door-${d.door}-${d.code}`} data-code={d.code}>
+            <i className="mi-dic" aria-hidden="true">{d.type === 'placement' || d.door === 'adaptive' ? '◎' : d.type === 'short' ? '⚡' : d.type === 'level' ? '✓' : d.type === 'custom' ? '✉' : '▦'}</i>
+            <strong>{doorName(d)}{recDoor?.code === d.code && <em className="mi-tag">{t('intro', 'v3rec')}</em>}</strong>
+            <small>{d.levels.length === 1 ? d.levels[0] : `${d.levels[0]}→${d.levels[d.levels.length - 1]}`} · {d.items} {t('intro', 'v3unit')} · ≈{d.minutes} {t('intro', 'v3min')}{d.probe ? ` · ${t('intro', 'v3probe')}` : ''}</small>
+            <span>{doorSub(d)}</span>
+            <span className="mi-dbtn">{door?.code === d.code ? '✓ ' + t('intro', 'v3chosen') : t('intro', 'v3doorGo')}</span>
+          </button>)}
+          {!doors.some((d) => d.type === 'level') && <div className="mi-door-x"><i className="mi-dic" aria-hidden="true">✓</i><strong>{t('intro', 'v3lvT')}</strong><div className="mi-chips" aria-hidden="true">{LEVELS.map((l) => <span key={l}>{l}</span>)}</div><span>{t('intro', 'v3lvP')}</span></div>}
+          <form className="mi-door-x org" onSubmit={(e) => { e.preventDefault(); const c = inviteIn.trim().toUpperCase().replace(/[^A-Z0-9-]/g, ''); if (c) window.location.href = `/miaar/d/${encodeURIComponent(c)}`; }} data-testid="mi-door-org">
+            <i className="mi-dic" aria-hidden="true">✉</i><strong>{t('intro', 'v3orgT')}</strong><small>{t('intro', 'v3orgM')}</small><span>{t('intro', 'v3orgP')}</span>
+            <div className="mi-code"><input value={inviteIn} onChange={(e) => setInviteIn(e.target.value)} placeholder={t("intro", "v3codePh")} aria-label={t("intro", "v3codePh")} dir="auto" /><button type="submit" className="mi-dbtn">{t('intro', 'v3codeGo')}</button></div>
+          </form>
+        </div>
+        {door && <div className="mi-v3sample" id="mi-go">
+          <p className="mi-kicker gold">{t('intro', 'examK')}</p><h2>{t('intro', 'examH')}</h2>
+          <p className="mi-voice">{t('intro', 'examNote', { door: door.type === 'placement' ? t('intro', 'doorAdap') : door.code === 'SYS-COMPREHENSIVE' ? t('intro', 'doorComp') : doorName(door) })}</p>
+          <p className="mi-kicker gold">{t('intro', sampleQ.skill)}</p>
+          <div className="mi-arab" dir="rtl" lang="ar"><p className="mi-q">{sampleQ.prompt}</p><div className="mi-opts-arab two">{sampleQ.options.map((o, i) => <button key={o} type="button" lang="ar" dir="rtl" className={sampleAns === null ? '' : i === sampleQ.answer ? 'right' : i === sampleAns ? 'wrong' : 'dim'} aria-pressed={sampleAns === i} onClick={() => setSampleAns(i)} data-testid="mi-sample-opt">{o}</button>)}</div>
+            {sampleAns !== null && <p className={`mi-samplefb${sampleAns === sampleQ.answer ? ' ok' : ''}`} role="status" data-testid="mi-sample-fb">{sampleAns === sampleQ.answer ? t('intro', 'sampleRight') : t('intro', 'sampleWrong', { answer: sampleQ.options[sampleQ.answer] })}</p>}</div>
+          <button type="button" className="mi-go" onClick={() => setStep('register')} data-testid="mi-go-register"><Icon name="next" />{t('intro', 'goRegister')}</button>
+        </div>}
+      </section>}
+
+      {/* ===== CEFR — ست بطاقات تنقلب (ثلاثي الأبعاد) ===== */}
+      <section className="mi-v3sec" id="mi-cefr"><p className="mi-kicker gold">{t('intro', 'v3cefrK')}</p><h2>{t('intro', 'v3cefrH')}</h2><p className="mi-note">{t('intro', 'v3flip')}</p>
+        <div className="mi-v3bands">{(['basic', 'independent', 'proficient'] as const).map((b) => <span key={b} className={b}>{bandName(b)} · {BANDS_EN[b]} ({b === 'basic' ? 'A1–A2' : b === 'independent' ? 'B1–B2' : 'C1–C2'})</span>)}</div>
+        <div className="mi-levels v3">{LEVELS.map((lv) => { const c = cefr(lv); const b = bandOf(lv); const open = flipLv === lv; return <article key={lv} className={`mi-level ${b}${open ? ' open' : ''}`} data-testid={`mi-level-${lv}`} onMouseEnter={() => !reduced && setFlipLv(lv)} onMouseLeave={() => !reduced && setFlipLv(null)}>
+          <button type="button" className="mi-lvflip" aria-expanded={open} onClick={() => setFlipLv(open ? null : lv)}>
+            <div className="mi-lvface front"><div className="mi-lvcode"><b>{lv}</b><small>{c.en}</small></div><h3>{c.title}<small>{c.desc}</small></h3><p className="mi-lvcan">{c.can}</p></div>
+            <div className="mi-lvface back"><div className="mi-lvcode"><b>{lv}</b><small>{bandName(b)}</small></div><p className="mi-lvline">{t('intro', lv.toLowerCase())}</p><p className="mi-specimen" dir="rtl" lang="ar"><small>عربي · {lv}</small>{SAMPLES[lv]}</p></div>
+          </button></article>; })}</div>
+      </section>
+
+      {/* ===== الختام ===== */}
+      <section className="mi-band mi-finale v3"><div className="mi-split">
+        <div><p className="mi-kicker gold">{t('intro', 'learnK')}</p><h2>{t('intro', 'v3finalH')}</h2><p>{t('intro', 'learn')}</p><button type="button" className="mi-go" onClick={startNow} data-testid="mi-start-bottom"><Icon name="play" />{t('intro', 'v3cta')}</button></div>
         <div className="mi-tools">{([['prog', 'progS', '/programs'], ['sim', 'simS', '/sim'], ['kit', 'kitS', '/resources'], ['live', 'liveS', '/on-air']] as const).map(([a, b, href]) => <a key={href} className="mi-tool" href={href}><strong>{t('intro', a)}</strong><span>{t('intro', b)}</span></a>)}</div>
       </div></section>
     </>}
@@ -637,7 +682,7 @@ const CSS = `
 .mi-ticker-k{flex:none;display:flex;align-items:center;gap:8px;padding:0 16px 0 7vw;color:var(--gold);font-weight:900;letter-spacing:.02em;white-space:nowrap}[dir=rtl] .mi-ticker-k{padding:0 7vw 0 16px}.mi-ticker-k i{width:8px;height:8px;border-radius:50%;background:#2dd4bf;box-shadow:0 0 0 0 rgba(45,212,191,.7);animation:miPing 1.8s infinite}
 @keyframes miPing{70%{box-shadow:0 0 0 7px rgba(45,212,191,0)}100%{box-shadow:0 0 0 0 rgba(45,212,191,0)}}
 .mi-ticker-view{flex:1;overflow:hidden;min-width:0;mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
-.mi-ticker-track{display:flex;width:max-content;animation:miTickRtl linear infinite}[dir=ltr] .mi-ticker-track{animation-name:miTickLtr}
+.mi-ticker-track{display:flex;width:max-content;padding-inline-start:40px;animation:miTickRtl linear infinite}[dir=ltr] .mi-ticker-track{animation-name:miTickLtr}
 .mi-ticker-row{display:flex;flex:none}.mi-ticker-item{white-space:nowrap;padding:0 26px;border-inline-end:1px solid rgba(201,162,75,.45)}
 @keyframes miTickRtl{from{transform:translateX(0)}to{transform:translateX(50%)}}@keyframes miTickLtr{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .mi-ticker:hover .mi-ticker-track,.mi-ticker:focus-within .mi-ticker-track,.mi-ticker.paused .mi-ticker-track{animation-play-state:paused}
@@ -649,6 +694,66 @@ const CSS = `
 .mi-bubble.pop{animation:miPop .5s cubic-bezier(.2,.9,.3,1.3) both}@keyframes miPop{from{opacity:0;transform:scale(.86) translateY(6px)}to{opacity:1;transform:none}}
 .mi-sealvoice{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:1px solid rgba(201,162,75,.5);background:transparent;color:#cbd5e1;cursor:pointer}.mi-sealvoice.on{background:var(--gold);color:var(--navy)}.mi-sealvoice:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.mi-flash h1.live,.mi-bubble.pop,.mi-ticker-k i{animation:none}.mi-ticker-track{animation:none;flex-wrap:wrap;width:auto}.mi-ticker-row[aria-hidden=true]{display:none}.mi-ticker-view{mask-image:none;-webkit-mask-image:none}}
+/* ===== V3 «واجهة الوعد الواحد» — فاتح يتنفّس + كحلي أَثَر + ذهب الوعد ===== */
+.mi-v3hero{display:grid;grid-template-columns:1.08fr .92fr;gap:40px;align-items:start;padding:44px 7vw 36px;background:radial-gradient(900px 500px at 85% -10%,rgba(11,138,131,.10),transparent 60%),radial-gradient(700px 400px at 0% 100%,rgba(201,162,75,.12),transparent 60%),#fff;color:var(--ink,#0f172a)}
+.mi-v3pill{display:inline-flex;gap:10px;align-items:center;border:1px solid rgba(11,138,131,.35);background:rgba(11,138,131,.07);color:var(--teal);border-radius:999px;padding:6px 14px;font-weight:800;font-size:13px;margin:0 0 14px}.mi-v3pill i{width:8px;height:8px;border-radius:50%;background:#22c55e}
+.mi-v3hero h1{font-size:clamp(28px,3.4vw,44px);line-height:1.3;margin:0 0 10px;color:var(--navy);font-weight:900}.mi-v3hero h1 em{font-style:normal;color:var(--gold)}
+.mi-v3lead{font-size:17px;color:#334155;margin:0 0 16px;max-width:560px;line-height:1.8}
+.mi-v3bul{list-style:none;padding:0;margin:0 0 20px;display:grid;gap:9px}.mi-v3bul li{display:flex;gap:12px;align-items:center;font-weight:800;font-size:15.5px;color:#1e293b}.mi-v3bul i{flex:none;width:30px;height:30px;border-radius:9px;background:rgba(201,162,75,.18);color:var(--navy);display:grid;place-items:center;font-style:normal;font-size:14px;font-weight:900}
+.mi-v3cta{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.mi-v3cta .mi-go{margin-top:0;font-size:17px;padding:13px 26px;box-shadow:0 10px 24px rgba(201,162,75,.35)}
+.mi-v3link{border:0;background:transparent;color:var(--navy);font:inherit;font-weight:900;cursor:pointer;text-decoration:underline;text-underline-offset:5px;text-decoration-color:var(--gold);padding:6px 2px}.mi-v3link:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:6px}
+.mi-v3proof{margin:14px 0 0;display:flex;align-items:center;gap:10px;color:#475569;font-size:13px;font-weight:700}.mi-v3av{display:flex}.mi-v3av i{width:26px;height:26px;border-radius:50%;border:2px solid #fff;background:linear-gradient(135deg,#0b8a83,#0f2a4e);margin-inline-end:-8px;display:inline-block}
+.mi-v3stats{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}.mi-v3stats div{min-width:112px;border:1px solid #e2e8f0;border-radius:14px;padding:10px 14px;background:#fff;text-align:center;box-shadow:0 8px 20px rgba(15,42,78,.05)}.mi-v3stats b{display:block;font-size:24px;color:var(--teal);line-height:1.15}.mi-v3stats span{font-size:12px;color:#64748b;font-weight:800}
+/* المشهد ثلاثي الأبعاد */
+.mi-v3vis{position:relative}
+.mi-scene{position:relative;perspective:1200px;min-height:470px}
+.mi-flip{position:relative;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.2,.8,.2,1);display:grid;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}
+.mi-flip.on{transform:rotateY(180deg)}.mi-scene.flat .mi-flip{transition:none;transform:none}.mi-scene.flat .mi-flip.on{transform:none}
+.mi-face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mi-face.mi-stage{transform:rotateY(180deg)}.mi-scene.flat .mi-face.mi-stage{transform:none;display:none}.mi-scene.flat .mi-flip.on .mi-face.mi-stage{display:grid}.mi-scene.flat .mi-flip.on .mi-face.mi-cert{display:none}
+.mi-cert{width:min(100%,400px);margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 30px 60px rgba(15,42,78,.18);padding:22px 24px;color:var(--navy);transform:rotateZ(-3deg) translateZ(30px);animation:miFloat 6s ease-in-out infinite}
+@keyframes miFloat{0%,100%{transform:rotateZ(-3deg) translateZ(30px) translateY(0)}50%{transform:rotateZ(-3deg) translateZ(30px) translateY(-8px)}}
+.mi-certk{display:flex;justify-content:space-between;font-size:11px;color:var(--gold);font-weight:900;letter-spacing:.04em}.mi-certk em{font-style:normal;color:#94a3b8}
+.mi-cert h3{margin:4px 0 2px;font-size:20px}.mi-certwho{color:#64748b;font-size:13px;margin:0 0 12px}
+.mi-certlvl{display:flex;align-items:center;gap:16px}.mi-certbig{width:84px;height:84px;border-radius:50%;background:conic-gradient(var(--gold) 0 72%,#e2e8f0 72% 100%);display:grid;place-items:center;flex:none}.mi-certbig b{width:66px;height:66px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:26px}
+.mi-certsk{flex:1;display:grid;gap:6px;font-size:12px;font-weight:800;color:#334155}.mi-certsk div{display:flex;justify-content:space-between;align-items:center;gap:8px}.mi-certbar{width:110px;height:6px;border-radius:3px;background:#e2e8f0;position:relative;overflow:hidden}.mi-certbar i{position:absolute;inset:0 0 0 auto;border-radius:3px;background:var(--teal)}[dir=ltr] .mi-certbar i{inset:0 auto 0 0}
+.mi-certfoot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;border-top:1px dashed #e2e8f0;padding-top:10px;font-size:11px;color:#64748b;font-weight:800;gap:10px}
+.mi-qr{flex:none;width:46px;height:46px;fill:var(--navy);background:#fff;padding:2px;border:1px solid #e2e8f0;border-radius:4px}
+.mi-face.mi-stage{border-radius:18px;padding:18px;background:linear-gradient(160deg,#0f2a4e,#1b4a80);display:grid;gap:12px;color:#fff;min-height:320px;align-content:start}
+.mi-face.mi-stage .mi-stagehead{margin:0}.mi-face.mi-stage .mi-bubble{margin:0}
+.mi-sealwrap{position:absolute;inset-inline-start:-6px;bottom:-26px;width:210px;text-align:center;transform:translateZ(60px)}
+.mi-sealwrap .mi-seal{width:190px;height:190px;margin:0 auto;border-radius:50%;background:linear-gradient(160deg,#0f2a4e,#1b4a80);box-shadow:0 24px 50px rgba(15,42,78,.32)}
+.mi-sealwrap .mi-ring{border-width:2px}.mi-sealwrap .mi-core{width:84px;height:84px;padding:6px;font-size:13px;line-height:1.2}
+.mi-sealwrap small{display:block;margin-top:8px;font-size:12.5px;font-weight:900;color:var(--navy)}
+.mi-scene.live .mi-sealwrap{position:static;transform:none;margin:14px auto 0;width:150px}.mi-scene.live .mi-sealwrap .mi-seal{width:140px;height:140px}.mi-scene.live .mi-sealwrap .mi-core{width:64px;height:64px;font-size:11px}.mi-scene.live .mi-face.mi-stage{min-height:380px}
+.mi-scale.v3{margin:46px 0 0;gap:6px}.mi-scale.v3 .mi-sc{flex:1;min-width:0;position:relative;padding:8px 0;border-radius:10px;background:#f6f8fb;border:1px solid #e2e8f0;color:var(--navy);font-weight:900;font-size:14px;transition:background .4s,color .4s}
+.mi-scale.v3 .mi-sc.on{background:var(--navy);color:#fff;border-color:var(--navy)}.mi-scale.v3 .mi-sc.done{border-color:var(--gold)}.mi-scale.v3 .mi-sc em{position:absolute;top:100%;left:50%;transform:translateX(-50%);font-style:normal;font-size:10px;color:var(--gold);white-space:nowrap;font-weight:900}
+/* الأقسام */
+.mi-v3sec{padding:44px 7vw 8px;background:#fff;color:var(--ink,#0f172a)}.mi-v3sec h2{font-size:clamp(24px,2.8vw,32px);color:var(--navy);margin:2px 0 6px}.mi-v3sec .mi-note{color:#64748b;margin:0}
+.mi-v3steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px}.mi-v3step{border:1px solid #e2e8f0;border-radius:18px;padding:22px;background:#fff;box-shadow:0 10px 28px rgba(15,42,78,.05);transition:transform .3s}.mi-v3step:hover{transform:translateY(-4px)}.mi-v3step b{width:44px;height:44px;border-radius:12px;background:var(--navy);color:var(--gold);display:grid;place-items:center;font-size:20px;font-weight:900;margin-bottom:10px}.mi-v3step h3{margin:0 0 6px;font-size:19px;color:var(--navy)}.mi-v3step p{margin:0;color:#475569;font-size:14.5px}
+.mi-guide{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:20px;padding:12px 16px;border:1px dashed rgba(201,162,75,.7);border-radius:14px;background:rgba(201,162,75,.06);font-size:13.5px;font-weight:800;color:var(--navy)}.mi-gq{color:#64748b}.mi-gopt{padding:5px 12px;border-radius:999px;border:1px solid #e2e8f0;background:#fff;color:var(--navy);font:inherit;font-weight:800;cursor:pointer}.mi-gopt.on{background:var(--navy);color:#fff;border-color:var(--navy)}.mi-gopt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}.mi-gres{margin-inline-start:auto;color:var(--teal)}
+.mi-doors.v3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+.mi-doors.v3 .mi-door,.mi-door-x{position:relative;display:grid;align-content:start;gap:6px;text-align:start;border:2px solid #e2e8f0;border-radius:20px;padding:20px;background:#fff;color:var(--navy);cursor:pointer;font:inherit;transition:transform .3s,box-shadow .3s,border-color .3s;min-height:200px}
+.mi-doors.v3 .mi-door:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(15,42,78,.10)}.mi-doors.v3 .mi-door.rec{border-color:var(--gold);background:linear-gradient(180deg,#fff,rgba(201,162,75,.08))}.mi-doors.v3 .mi-door[aria-pressed=true]{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,42,78,.12)}
+.mi-doors.v3 .mi-door strong{font-size:19px;line-height:1.3}.mi-doors.v3 .mi-door small{color:var(--teal);font-weight:900;font-size:12.5px}.mi-doors.v3 .mi-door span{color:#475569;font-size:14px;font-weight:600}.mi-doors.v3 .mi-door .mi-dbtn,.mi-door-x .mi-dbtn{display:inline-block;justify-self:start;margin-top:auto;border:1.5px solid var(--navy);color:var(--navy);border-radius:10px;padding:7px 16px;font-weight:900;font-size:14px;background:#fff}.mi-doors.v3 .mi-door.rec .mi-dbtn{background:var(--navy);color:#fff}
+.mi-dic{width:40px;height:40px;border-radius:12px;background:rgba(15,42,78,.08);color:var(--navy);display:grid;place-items:center;font-size:20px;font-style:normal;margin-bottom:4px}.mi-door.rec .mi-dic{background:var(--gold)}
+.mi-tag{display:inline-block;background:var(--gold);color:var(--navy);font-size:11px;font-weight:900;border-radius:6px;padding:1px 8px;margin-inline-start:8px;vertical-align:middle;font-style:normal}
+.mi-door-x{cursor:default;color:var(--navy)}.mi-door-x strong{font-size:19px}.mi-door-x small{color:var(--teal);font-weight:900;font-size:12.5px}.mi-door-x span{color:#475569;font-size:14px}.mi-door-x.org{background:#f6f8fb}
+.mi-chips{display:flex;gap:6px}.mi-chips span{flex:1;text-align:center;padding:6px 0;border-radius:8px;border:1px solid #e2e8f0;font-weight:900;font-size:13px;color:#94a3b8;background:#fff}
+.mi-code{display:flex;gap:8px;margin-top:auto}.mi-code input{flex:1;min-width:0;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px}.mi-code input:focus-visible{outline:2px solid var(--gold)}.mi-code .mi-dbtn{cursor:pointer;font:inherit}
+.mi-v3sample{margin-top:28px;padding:22px;border:1px solid #e2e8f0;border-radius:20px;background:#f6f8fb}.mi-v3sample .mi-voice{color:#475569;margin:0 0 8px}.mi-v3sample .mi-go{margin-top:14px}
+.mi-v3bands{display:flex;gap:10px;margin-top:20px;font-size:13px;font-weight:900;flex-wrap:wrap}.mi-v3bands span{flex:1;text-align:center;padding:7px 10px;border-radius:10px;white-space:nowrap}.mi-v3bands .basic{background:rgba(11,138,131,.1);color:var(--teal)}.mi-v3bands .independent{background:rgba(201,162,75,.16);color:#8a6a1f}.mi-v3bands .proficient{background:rgba(15,42,78,.1);color:var(--navy)}
+.mi-levels.v3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;padding:0;perspective:1200px}
+.mi-levels.v3 .mi-level{display:block;background:transparent;border:0;padding:0;min-height:230px}
+.mi-lvflip{position:relative;display:grid;width:100%;height:100%;min-height:230px;border:0;background:transparent;padding:0;font:inherit;text-align:start;cursor:pointer;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.8,.2,1)}.mi-level.open .mi-lvflip{transform:rotateY(180deg)}.mi-lvflip:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:16px}
+.mi-lvface{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid #e2e8f0;border-radius:16px;padding:18px;background:#fff;color:var(--navy);box-shadow:0 10px 28px rgba(15,42,78,.05)}.mi-lvface.back{transform:rotateY(180deg);background:linear-gradient(160deg,#0f2a4e,#1b4a80);color:#fff;border-color:transparent}
+.mi-lvface .mi-lvcode{display:flex;align-items:center;gap:8px}.mi-lvface .mi-lvcode b{display:inline-block;font-weight:900;font-size:14px;padding:3px 10px;border-radius:8px;background:rgba(11,138,131,.1);color:var(--teal)}.mi-level.independent .mi-lvcode b{background:rgba(201,162,75,.16);color:#8a6a1f}.mi-level.proficient .mi-lvcode b{background:rgba(15,42,78,.1);color:var(--navy)}.mi-lvface.back .mi-lvcode b{background:var(--gold);color:var(--navy)}.mi-lvface .mi-lvcode small{color:#64748b;font-weight:700;font-size:12px}.mi-lvface.back .mi-lvcode small{color:#cbd5e1}
+.mi-lvface h3{margin:10px 0 4px;font-size:17px}.mi-lvface h3 small{color:#64748b;font-weight:700;font-size:12px;margin-inline-start:6px}.mi-lvface .mi-lvcan{margin:0;font-size:13.5px;color:#475569;line-height:1.7}
+.mi-lvface .mi-lvline{margin:12px 0 8px;font-weight:800;color:#e2e8f0;font-size:14px}.mi-levels.v3 .mi-lvface.back .mi-specimen{margin:0;padding:10px 12px;border:1px solid rgba(201,162,75,.45);border-radius:12px;background:rgba(255,255,255,.08);font-family:'Aref Ruqaa',serif;font-size:21px;color:#fff;line-height:1.9;box-shadow:none}.mi-lvface .mi-specimen small{display:block;font-family:inherit;font-size:10px;color:var(--gold);letter-spacing:.06em}
+.mi-finale.v3{margin:36px 7vw 56px;border-radius:28px;padding:44px}.mi-finale.v3 .mi-go{margin-top:16px}
+@media (max-width:980px){.mi-v3hero{grid-template-columns:1fr}.mi-v3steps,.mi-doors.v3,.mi-levels.v3{grid-template-columns:1fr}.mi-scene{min-height:0}.mi-sealwrap{position:static;transform:none;margin:14px auto 0}.mi-scale.v3{margin-top:16px}.mi-v3bands span{white-space:normal}}
+@media (prefers-reduced-motion:reduce){.mi-cert{animation:none}.mi-flip,.mi-lvflip,.mi-v3step,.mi-doors.v3 .mi-door{transition:none}}
+
 /* bands below hero */
 .mi-inner{padding:48px 7vw 8px}.mi-inner h2{font-size:clamp(26px,3.4vw,38px);color:var(--navy);margin:6px 0 10px;line-height:1.35}
 .mi-split{display:grid;gap:28px;align-items:center}
