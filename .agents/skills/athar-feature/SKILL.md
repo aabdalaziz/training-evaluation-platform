@@ -28,7 +28,7 @@ description: Build a complete feature phase for the Athar portal (Next.js 14 + S
 - Arabic in HTTP headers → `encodeURIComponent`.
 - Browser caches `s-maxage` responses → client fetches needing fresh state use `cache: 'no-store'`.
 - Cron runs other syncs first (e.g. مِعيار placement) — E2E expectations must be computed after the cron, not hard-coded.
-- Mock `/auth/v1/user` returns the admin for ANY token → test 401 without a token, not 403 for other users.
+- Authorization (since P42-a): staff gate = `isStaffRoles((await myRoles(db, user)).roles, catalog)` from `lib/portal/roles.ts` (reads grants + legacy ENUM + org_admin); fine-grained = `hasPermission(codes, 'ns.action')`; in SQL `portal_has_role('CODE')`. Do not add new `profiles.role` string checks. Mock tokens: `tok` admin u1 · `tok-u2` noura (legacy PROGRAM_MANAGER) · `tok-u3` khalid · `tok-u5` reem (participant until granted). Mock `/auth/v1/user` returns the admin for ANY unknown token → test 401 without a token, not 403 for other users.
 - Event-derived progress compares ISO strings against `signed_at` **and** `now` — E2E fixtures dated in the future are invisible; seed events between the signed date and now.
 - Buttons inside dark cards need their own `light` variant in the page CSS (`pt-btn ghost` is navy-on-white).
 - Link only to routes that exist in `app/` (`/#daily`, `/sim`, `/me/data`, `/councils`, `/me/missions`, `/me/pair`) — `/me/daily`, `/me/vault` and `/simulations` never existed (898–899, P29-أ). This applies to **step guides sent to the owner** too: `grep` `app/**/page.tsx` before writing a URL.
