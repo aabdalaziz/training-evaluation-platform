@@ -17,7 +17,7 @@ export default function PlacementCard({ lang = 'ar', compact = false, programLev
     setConfigured(j.configured !== false); setP(((j.placements || [])[0] as Placement) || null);
   } catch { setP(null); } })(); }, [db]);
   if (p === undefined) return null;
-  const lvl = effectiveLevel(p); const fit = programFit(programLevel, lvl); const url = (BRAND as any).placementUrl || 'https://miaar-placement-test.vercel.app';
+  const lvl = effectiveLevel(p); const fit = programFit(programLevel, lvl); const url = (BRAND as any).placementUrl || '/miaar';
   const dateStr = p ? new Date(p.taken_at).toLocaleDateString(lang === 'ar' ? 'ar-SA-u-nu-latn-ca-gregory' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   return (
     <div className={`plc ${compact ? 'compact' : ''} ${p ? '' : 'empty'}`}>

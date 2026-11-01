@@ -10,7 +10,7 @@ import { SkipLink } from './Inclusion';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 // صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
-const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility'];
+const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility', '/miaar'];
 const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
   { href: '/dashboard', label: 'لوحة القيادة', icon: 'dashboard', match: p => p.startsWith('/dashboard') },
   { href: '/command-center', label: 'غرفة القيادة', icon: 'play', match: p => p.startsWith('/command-center') },

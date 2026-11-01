@@ -27,7 +27,7 @@ export const BRAND = {
   acronym: 'TRACE',
   acronymLine: { ar: 'أَثَر = TRACE: حروفه أوائل خدماتنا', en: 'Athar means “trace” — and TRACE spells our services' } as T,
   evaluationUrl: '/login',
-  placementUrl: 'https://miaar-placement-test.vercel.app',
+  placementUrl: '/miaar', // مِعيار — من أَثَر: يعيش داخل البوابة منذ م1 (العنوان القديم يُحوَّل في م3)
 };
 
 export const CONTACT = {
@@ -94,7 +94,7 @@ export const SERVICES: Service[] = [
     ],
     features: [{ ar: 'مستويات A1 → C1', en: 'Levels A1 → C1' }, { ar: 'معلمون متخصصون', en: 'Specialist teachers' }, { ar: 'شهادة موثّقة برمز تحقق', en: 'Verified certificate' }, { ar: 'بوابة المتدرب لمتابعة الرحلة', en: 'Student portal' }],
     modes: [{ ar: 'حضوري', en: 'On-site' }, { ar: 'عن بُعد', en: 'Online' }],
-    cta: { label: { ar: 'اختبر مستواك أولًا', en: 'Take the placement test' }, href: BRAND.placementUrl, external: true },
+    cta: { label: { ar: 'حدّد مستواك أولًا', en: 'Find your level first' }, href: BRAND.placementUrl, external: false },
   },
   {
     slug: 'training', icon: 'trend', tone: 'teal', status: 'live',
@@ -166,7 +166,7 @@ export const SERVICES: Service[] = [
       { ar: 'يتكيّف الاختبار مع إجاباتك ليحدد مستواك بدقة في وقت أقصر، ويقترح لك البرنامج والمستوى المناسبين داخل أَثَر.', en: 'The test adapts to your answers to pinpoint your level faster, then suggests the right Athar program and level.' },
     ],
     features: [{ ar: 'تكيفي', en: 'Adaptive' }, { ar: 'مواءمة CEFR', en: 'CEFR-aligned' }, { ar: 'نتيجة فورية', en: 'Instant result' }, { ar: 'توصية بالبرنامج', en: 'Program recommendation' }],
-    cta: { label: { ar: 'ابدأ الاختبار', en: 'Start the test' }, href: BRAND.placementUrl, external: true },
+    cta: { label: { ar: 'حدّد مستواك', en: 'Find your level' }, href: BRAND.placementUrl, external: false },
   },
 ];
 

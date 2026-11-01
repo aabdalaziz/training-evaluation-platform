@@ -119,7 +119,7 @@ export function catalogEnvelope(site: string, data: { programs: unknown[]; sessi
   return {
     name: 'Athar · TRACE — Open Catalog', version: CATALOG_VERSION, generated_at: generatedAt, site, license: `© ${BRAND.copyrightYear} ${BRAND.owner.en} — catalog data may be indexed and displayed with attribution and a link back.`,
     issuer: `${site}/.well-known/athar.json`, organization: organizationJsonLd(site),
-    links: { programs: `${site}/programs`, live: `${site}/live`, resources: `${site}/resources`, verify: `${site}/credential/{code}`, placement: BRAND.placementUrl, jsonld: `${site}/api/catalog?format=jsonld` },
+    links: { programs: `${site}/programs`, live: `${site}/live`, resources: `${site}/resources`, verify: `${site}/credential/{code}`, placement: `${site}${BRAND.placementUrl}`, jsonld: `${site}/api/catalog?format=jsonld` },
     counts: { programs: data.programs.length, sessions: data.sessions.length, resources: data.resources.length, sectors: data.sectors.length, skills: data.skills.length },
     sectors: data.sectors.map(s => ({ code: s.code, name: { ar: s.name_ar, en: s.name_en } })),
     skills: data.skills.map(s => stripNil({ code: s.code, name: { ar: s.name_ar, en: s.name_en }, domain: s.domain, saqf_level: s.saqf_level || undefined, cefr_level: s.cefr_level || undefined, sdaia_code: s.sdaia_code || undefined })),

@@ -66,3 +66,4 @@ import './p35.test';
 import './p36.test';
 import './p37.test';
 import './p38.test';
+import './miaar.test';

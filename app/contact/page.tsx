@@ -67,7 +67,7 @@ function Inner() {
           </div>
           <div className="pt-box"><h3><Icon name="compass" size={18} /> {lang === 'ar' ? 'روابط مباشرة' : 'Direct links'}</h3>
             <ul>
-              <li><Icon name="target" size={15} /> <a href="https://miaar-placement-test.vercel.app" target="_blank" rel="noreferrer">{lang === 'ar' ? 'اختبار تحديد المستوى (مِعيار)' : 'Placement test (Miaar)'}</a></li>
+              <li><Icon name="target" size={15} /> <a href="/miaar">{lang === 'ar' ? 'حدّد مستواك — مِعيار' : 'Find your level — Mi’yar'}</a></li>
               <li><Icon name="users" size={15} /> <Link href="/me">{t(UI.student, lang)}</Link></li>
               <li><Icon name="certificate" size={15} /> <Link href="/verify">{t(UI.verify, lang)}</Link></li>
             </ul>

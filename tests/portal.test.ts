@@ -14,7 +14,8 @@ test('portal: brand + 8 services with unique slugs and both languages', () => {
     assert.ok(s.cta.href.startsWith('/') || s.cta.href.startsWith('https://'), s.slug);
     assert.ok(['live', 'soon'].includes(s.status));
   }
-  assert.equal(serviceBySlug('placement')?.cta.href, 'https://miaar-placement-test.vercel.app');
+  assert.equal(serviceBySlug('placement')?.cta.href, '/miaar'); // مِعيار — من أَثَر يعيش داخل البوابة (م1)
+  assert.equal(serviceBySlug('placement')?.cta.external, false); assert.equal(serviceBySlug('placement')?.cta.label.ar, 'حدّد مستواك');
   assert.equal(serviceBySlug('evaluation')?.cta.href, '/login');
   assert.equal(serviceBySlug('nope'), undefined);
   assert.equal(SERVICES.filter(s => s.status === 'soon').length, 0);

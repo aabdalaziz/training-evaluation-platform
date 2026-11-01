@@ -162,7 +162,7 @@ function Inner() {
               <button type="button" className="pt-btn ghost small" onClick={async () => { await db.auth.signOut(); setUser(null); }}>{lang === 'ar' ? 'ليس بريدي — تبديل الحساب' : 'Not my email — switch account'}</button>
             </form>
           )}
-          <div className="pt-aside-foot"><Icon name="target" size={14} /> {lang === 'ar' ? 'جديد في العربية؟' : 'New to Arabic?'} <a href={BRAND.placementUrl} target="_blank" rel="noreferrer">{lang === 'ar' ? 'حدّد مستواك مع مِعيار' : 'Take the Miaar test'}</a></div>
+          <div className="pt-aside-foot"><Icon name="target" size={14} /> {lang === 'ar' ? 'جديد في العربية؟' : 'New to Arabic?'} <a href={BRAND.placementUrl}>{lang === 'ar' ? 'حدّد مستواك مع مِعيار' : 'Find your level with Mi’yar'}</a></div>
         </aside>
       </div></section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(courseJsonLd(p, normalizeSite(typeof window !== 'undefined' ? window.location.origin : ''), today, ldSkills, counts)) }} />
