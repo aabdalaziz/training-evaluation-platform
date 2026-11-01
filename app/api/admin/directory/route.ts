@@ -19,6 +19,7 @@ import { randomCode } from '../../../../lib/portal/profile';
 import { signerFromEnv } from '../../../../lib/portal/vc-server';
 import { didWeb } from '../../../../lib/portal/vc';
 import { notify } from '../../../../lib/portal/notify';
+import { grantRoles, rolesForFaces } from '../../../../lib/portal/roles';
 import { FACES, FACE_AR, SERVICE_AR, MODE_AR, STATUS_AR, ENGAGEMENT_STATUS_AR, ENGAGEMENT_KIND_AR, PROFILE_COLS, PRIVATE_BUCKET, PUBLIC_BUCKET, lower, profileIssues, publicPhotoPath, mimeOfPath, sanitizeEngagementInput, engagementIssues, staffTransition } from '../../../../lib/directory/registry';
 import type { Profile, Engagement, Face } from '../../../../lib/directory/registry';
 import { loadAllProfiles, loadProfileById, loadMeta, legacyTrainer, witnessFacts, loadEngagements, loadAllEngagements, loadEngagement } from '../../../../lib/directory/load';
@@ -101,8 +102,10 @@ export async function POST(req: Request) {
         const cards = await issueAll({ ...p, status: 'approved' }, false);
         const saved = await save({ status: 'approved', approved_at: iso, approved_by: user.id, listed: true, suspended_at: null, staff_note_ar: null, photo_public_path: ph.path, ...cards, meta: { ...(p.meta || {}), review_pending: false, photo_published_path: p.photo_path } });
         const url = `${site}/${(saved.faces[0] || 'expert') === 'trainer' ? 'trainers' : 'experts'}/${saved.slug}`;
-        await tell(db, saved, 'اعتُمدت سيرتك — أهلًا بك في هيئة أَثَر', `${saved.name_ar}،\nاعتمد طاقم أَثَر سيرتك، وصدرت شهادة توثيقك${saved.faces.map(f => ` (${FACE_AR[f]})`).join('')} موقَّعة إلكترونيًّا.\nصفحتك العامة: ${url}\nسيرتك وشهادتك من حسابك: ${site}/me/directory\n— أَثَر`, url, now, 'directory_approved');
-        return NextResponse.json({ success: true, profile: saved, public_url: url });
+        /* P42-ب: الاعتماد يفتح الباب — صفة المدرّب/الخبير تُمنح تلقائيًا بالبريد نفسه (بلا دعوة)، ولا تُكرَّر */
+        let opened: string[] = []; try { opened = await grantRoles(db, { email: saved.email, user_id: saved.user_id || null, full_name: saved.name_ar, roles: rolesForFaces(saved.faces), source: 'directory', granted_by: user.id, note: `اعتماد هيئة أَثَر ${iso.slice(0, 10)}` }); } catch { opened = []; }
+        await tell(db, saved, 'اعتُمدت سيرتك — أهلًا بك في هيئة أَثَر', `${saved.name_ar}،\nاعتمد طاقم أَثَر سيرتك، وصدرت شهادة توثيقك${saved.faces.map(f => ` (${FACE_AR[f]})`).join('')} موقَّعة إلكترونيًّا.\nصفحتك العامة: ${url}\nسيرتك وشهادتك من حسابك: ${site}/me/directory${opened.length ? `\nوفُتح لك بابك في أَثَر: ${site}/hub — ادخل بالبريد نفسه` : ''}\n— أَثَر`, url, now, 'directory_approved');
+        return NextResponse.json({ success: true, profile: saved, public_url: url, roles_opened: opened });
       }
       case 'changes': { const note = String(body.note_ar || '').trim().slice(0, 1000); if (note.length < 10) return bad('اكتب للعضو ما يلزم تعديله (10 أحرف فأكثر)'); if (p.status === 'approved') { const saved = await save({ staff_note_ar: note, meta: { ...(p.meta || {}), review_pending: true } }); await tell(db, saved, 'ملاحظة من أَثَر على سيرتك', `${saved.name_ar}،\n${note}\nحدّث سيرتك من: ${site}/me/directory\n— أَثَر`, `${site}/me/directory`, now, 'directory_changes'); return NextResponse.json({ success: true, profile: saved }); }
         const saved = await save({ status: 'changes_requested', staff_note_ar: note }); await tell(db, saved, 'سيرتك تحتاج لمسة قبل الاعتماد', `${saved.name_ar}،\nراجع طاقم أَثَر سيرتك ويطلب:\n${note}\nعدّل وأعد الإرسال من: ${site}/me/directory\n— أَثَر`, `${site}/me/directory`, now, 'directory_changes'); return NextResponse.json({ success: true, profile: saved }); }

@@ -29,6 +29,28 @@ export function AtharMark({ size = 36, light = false }: { size?: number; light?:
   );
 }
 
+/** شارة الباب (P42-ب): للداخلين أصحاب صفة فقط — «بابي · مدير الجودة» → وجهتهم. لا تكلّف الزائر شيئًا (لا Supabase بلا جلسة مخزَّنة). */
+function DoorBadge({ lang }: { lang: Lang }) {
+  const [b, setB] = useState<{ landing: string; name_ar: string; name_en: string } | null>(null);
+  useEffect(() => {
+    try {
+      if (!hasStoredSession()) return;
+      const c = sessionStorage.getItem('athar_door_badge'); if (c) { const j = JSON.parse(c); if (j && j.ts && Date.now() - j.ts < 600000) { if (j.badge) setB(j.badge); return; } }
+      void sbLazy().then(sb => sb.auth.getSession()).then(async ({ data }) => {
+        const tk = data.session?.access_token; if (!tk) return;
+        const j = await fetch('/api/roles', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null);
+        const roles: string[] = j?.roles || []; const cat: any[] = j?.catalog || [];
+        const main = cat.find(c => c.landing === j?.landing) || cat[0];
+        const badge = roles.length && main && !['PARTICIPANT', 'TRAINEE', 'STUDENT'].includes(main.code) ? { landing: j.landing || '/hub', name_ar: cat.length > 1 ? `${main.name_ar} +${cat.length - 1}` : main.name_ar, name_en: cat.length > 1 ? `${main.name_en} +${cat.length - 1}` : main.name_en } : null;
+        try { sessionStorage.setItem('athar_door_badge', JSON.stringify({ ts: Date.now(), badge })); } catch { /* ignore */ }
+        if (badge) setB(badge);
+      });
+    } catch { /* ignore */ }
+  }, []);
+  if (!b) return null;
+  return <Link href={b.landing} className="pt-doorbadge" data-testid="shell-door-badge" title={lang === 'ar' ? 'بابي' : 'My door'}><span className="pt-doordot" aria-hidden="true" /><b>{lang === 'ar' ? 'بابي' : 'My door'}</b><small>{lang === 'ar' ? b.name_ar : b.name_en}</small></Link>;
+}
+
 function ReportBarrierLink({ lang }: { lang: Lang }) {
   const a = useAccess();
   return <button type="button" className="pt-footlink" onClick={() => a.setOpen(true, 'report')} data-testid="ax-report-open">{lang === 'ar' ? 'أخبرنا بعائق وصول' : 'Report an accessibility barrier'}</button>;
@@ -71,6 +93,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             </div>
           </nav>
           <div className="pt-headright">
+            <DoorBadge lang={lang} />
             <GuideButton lang={lang} compact />
             <OnAirButton lang={lang} />
             <AccessButton lang={lang} />
@@ -148,6 +171,8 @@ const CSS = `
 .pt-navlink{text-decoration:none;font-weight:800;font-size:14px;color:#334155;padding:8px 12px;border-radius:10px}.pt-navlink:hover{background:#f1f5f9}.pt-navlink.on{color:${TEAL};background:#f0fdfa}
 .pt-navactions{display:none;gap:8px;margin-top:8px}
 .pt-headright{display:flex;align-items:center;gap:8px}
+.pt-doorbadge{display:inline-flex;align-items:center;gap:7px;text-decoration:none;border:1px solid #c9a24b;background:#fffaf0;border-radius:999px;padding:5px 12px 5px 10px;min-height:38px;color:${NAVY}}.pt-doorbadge b{font-size:12.5px;font-weight:900}.pt-doorbadge small{font-size:11.5px;color:#64748b;font-weight:700;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pt-doordot{width:8px;height:8px;border-radius:50%;background:#c9a24b;box-shadow:0 0 0 3px rgba(201,162,75,.25)}.pt-doorbadge:hover{background:#fff4d6}.pt-doorbadge:focus-visible{outline:3px solid ${TEAL};outline-offset:2px}
+@media(max-width:760px){.pt-doorbadge small{display:none}.pt-doorbadge{padding:5px 10px}}
 .pt-lang{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:900;color:${NAVY};cursor:pointer}
 .pt-burger{display:none;border:1px solid #cbd5e1;background:#fff;border-radius:10px;width:40px;height:38px;font-size:18px;cursor:pointer}
 /* .pt-btn — يُعرَّف الآن مركزيًا في app/style.css («مفاتيح أَثَر» P40): ذهبي أساسي بأيقونة في قرص كحلي · navy · teal · ghost · light · outline · small */

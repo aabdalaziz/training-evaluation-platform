@@ -87,7 +87,7 @@ async function search(c: Ctx, raw: string, lang: 'ar' | 'en'): Promise<Entry[]> 
 const STOP = new Set(['كيف', 'ما', 'ماذا', 'هل', 'اين', 'أين', 'متى', 'لماذا', 'من', 'في', 'على', 'الى', 'إلى', 'عن', 'مع', 'او', 'أو', 'ان', 'أن', 'هو', 'هي', 'هذا', 'هذه', 'يمكن', 'يمكنني', 'اريد', 'أريد', 'احصل', 'أحصل', 'how', 'what', 'where', 'when', 'why', 'can', 'the', 'for', 'and', 'with', 'get', 'do', 'is', 'are', 'my', 'me']);
 function keywords(s: string): string[] { const out: string[] = []; for (const w0 of s.split(/\s+/)) { const w = w0.replace(/[؟?،,.!]/g, '').replace(/^[وفبك]?ال(?=.{3})/, ''); if (w.length >= 3 && !STOP.has(w) && !STOP.has(w0)) out.push(w); if (out.length >= 3) break; } return out.length ? out : [s.slice(0, 40)]; }
 
-async function ask(question: string, sources: Entry[], lang: 'ar' | 'en'): Promise<{ text: string; source: 'ai' | 'local' }> {
+async function ask(question: string, sources: Entry[], lang: 'ar' | 'en'): Promise<{ text: string; source: 'ai' | 'local'; error: string | null; model: string | null; ms: number; provider: string | null }> {
   const list = sources.slice(0, 12).map((s, i) => `[${i + 1}] ${lang === 'ar' ? s.ar : s.en} — ${s.href}${s.hint ? ' — ' + (lang === 'ar' ? s.hint.ar : s.hint.en) : ''}`).join('\n');
   const local = () => (lang === 'ar' ? (sources.length ? `أقرب ما وجدته لسؤالك: ${sources.slice(0, 3).map(s => s.ar).join(' · ')}. افتح أيًّا منها من القائمة أدناه.` : 'لم أجد ما يطابق سؤالك داخل البوابة. جرّب كلمات أقل، أو اسأل فريق أَثَر من صفحة «تواصل معنا».') : (sources.length ? `Closest matches: ${sources.slice(0, 3).map(s => s.en).join(' · ')}.` : 'Nothing in the portal matches that. Try fewer words or contact the Athar team.'));
   const r = await runAi<string>({
@@ -95,7 +95,8 @@ async function ask(question: string, sources: Entry[], lang: 'ar' | 'en'): Promi
     user: `${lang === 'ar' ? 'السؤال' : 'Question'}: ${question}\n\n${lang === 'ar' ? 'المصادر' : 'Sources'}:\n${list || '(none)'}`,
     parse: raw => { const t = String(raw || '').trim(); return t.length > 4 ? t.slice(0, 700) : null; }, local, budgetMs: 16000, fast: true,   // P42: كانت 9 ث فسقطت إلى المحلي على Vercel البارد
   });
-  return { text: r.data, source: r.source };
+  /* P42-ب: سبب السقوط إلى المحلي يُعاد (مقتطعًا) للتشخيص على Vercel — لا مفاتيح ولا نصوص المزوّد الكاملة */
+  return { text: r.data, source: r.source, error: r.error ? String(r.error).replace(/key=[^&\s]+/gi, 'key=…').slice(0, 160) : null, model: r.model, ms: r.ms, provider: r.provider };
 }
 
 export async function GET(req: Request) {
@@ -108,6 +109,6 @@ export async function GET(req: Request) {
   const lists = await Promise.all(terms.map(t => search(c, t, lang)));
   const seenIds = new Set<string>(); const results = lists.flat().filter(e => !seenIds.has(e.id) && seenIds.add(e.id)).slice(0, 40);
   const body: Record<string, unknown> = { ok: true, q, intent: intent.kind, results, staff: c.staff, user: !!c.user };
-  if (wantAsk && intent.kind === 'ask') { const a = await ask(intent.value, results, lang); body.answer = a.text; body.answer_source = a.source; }
+  if (wantAsk && intent.kind === 'ask') { const a = await ask(intent.value, results, lang); body.answer = a.text; body.answer_source = a.source; body.answer_ms = a.ms; body.answer_provider = a.provider || 'none'; if (a.model) body.answer_model = a.model; if (a.error) body.answer_error = a.error; }
   return NextResponse.json(body, { headers: { 'Cache-Control': 'private, no-store' } });
 }

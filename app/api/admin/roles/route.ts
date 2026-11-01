@@ -4,6 +4,7 @@
  *  GET  → { roles, grants, invites, orgs, me }      (الطاقم يقرأ؛ مدير النظام وحده يكتب)
  *  POST actions:
  *   invite        {email, full_name?, roles[], org_id?, message?}  → دعوة برمز لمرة واحدة (14 يومًا) + رابط /join/<token> يُعرض مرة واحدة
+ *                 {kind:'group', label, max_uses, roles[], message?} → دعوة جماعية بـQR (P42-ب): رمز واحد بعدد مقاعد، كل داخل يأخذ مقعدًا ببريده
  *   grant         {email, roles[], org_id?, note?}                 → منحة مباشرة بلا دعوة (لمن هو داخل أصلًا)
  *   revoke        {grant_id, reason?}                              → سحب فوري
  *   revoke_invite {invite_id}
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, catalog, mine, admin } = c; const now = new Date().toISOString();
   const [grants, invites, orgs] = await Promise.all([
     db.from('portal_role_grants').select('*').is('revoked_at', null).order('created_at', { ascending: false }).limit(500).then((r: any) => (r.data || []) as Grant[]),
-    db.from('portal_role_invites').select('id,email,full_name,role_codes,org_id,message,expires_at,accepted_at,revoked_at,created_at').order('created_at', { ascending: false }).limit(200).then((r: any) => (r.data || []) as Invite[]),
+    db.from('portal_role_invites').select('id,email,full_name,role_codes,org_id,message,expires_at,accepted_at,revoked_at,created_at,kind,max_uses,uses,label').order('created_at', { ascending: false }).limit(200).then((r: any) => (r.data || []) as Invite[]),
     db.from('portal_organizations').select('id,name_ar,name_en').eq('active', true).order('name_ar').limit(300).then((r: any) => r.data || []),
   ]);
   return NextResponse.json({ success: true, roles: catalog, grants, invites: invites.map(i => ({ ...i, state: inviteState(i, now) })), orgs, me: { roles: mine.roles, admin }, invite_days: INVITE_DAYS });
@@ -72,13 +73,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, granted: made, already: v.roles.filter(r => !made.includes(r)) });
     }
     const { token, hash } = newInviteToken();
-    const { data, error } = await db.from('portal_role_invites').insert({ token_hash: hash, email: v.email, full_name: v.full_name, role_codes: v.roles, org_id: v.org_id, message: v.message, created_by: user.id, expires_at: new Date(Date.now() + INVITE_DAYS * 86400000).toISOString() }).select('id,expires_at').single();
+    const { data, error } = await db.from('portal_role_invites').insert({ token_hash: hash, email: v.kind === 'group' ? null : v.email, full_name: v.full_name, role_codes: v.roles, org_id: v.org_id, message: v.message, created_by: user.id, expires_at: new Date(Date.now() + INVITE_DAYS * 86400000).toISOString(), kind: v.kind, max_uses: v.max_uses, uses: 0, label: v.label }).select('id,expires_at').single();
     if (error || !data) return bad(error?.message || 'تعذّر إنشاء الدعوة');
-    await audit(db, user, 'invite', { email: v.email, roles: v.roles, org_id: v.org_id, invite_id: data.id });
+    await audit(db, user, v.kind === 'group' ? 'invite_group' : 'invite', { email: v.email || null, roles: v.roles, org_id: v.org_id, invite_id: data.id, max_uses: v.max_uses, label: v.label });
     const names = v.roles.map(r => catalog.find(x => x.code === r)?.name_ar || r);
     const url = inviteUrl(siteOf(req), token);
-    const text = `السلام عليكم${v.full_name ? ' ' + v.full_name : ''}،\nدعوة للانضمام إلى بوابة أَثَر بصفة: ${names.join(' · ')}.\n${v.message ? v.message + '\n' : ''}افتح الرابط وادخل بالبريد ${v.email}:\n${url}\n(صالح ${INVITE_DAYS} يومًا)`;
-    return NextResponse.json({ success: true, invite_id: data.id, url, text, expires_at: data.expires_at });
+    const text = v.kind === 'group'
+      ? `السلام عليكم،\nدعوة «${v.label}» للانضمام إلى بوابة أَثَر بصفة: ${names.join(' · ')}.\n${v.message ? v.message + '\n' : ''}امسح رمز QR أو افتح الرابط وادخل ببريدك:\n${url}\n(${v.max_uses} مقعدًا · صالحة ${INVITE_DAYS} يومًا)`
+      : `السلام عليكم${v.full_name ? ' ' + v.full_name : ''}،\nدعوة للانضمام إلى بوابة أَثَر بصفة: ${names.join(' · ')}.\n${v.message ? v.message + '\n' : ''}افتح الرابط وادخل بالبريد ${v.email}:\n${url}\n(صالح ${INVITE_DAYS} يومًا)`;
+    return NextResponse.json({ success: true, invite_id: data.id, url, text, expires_at: data.expires_at, kind: v.kind, max_uses: v.max_uses, label: v.label });
   }
   if (action === 'revoke') {
     const id = String(body.grant_id || ''); if (!id) return bad('معرّف المنحة مطلوب');

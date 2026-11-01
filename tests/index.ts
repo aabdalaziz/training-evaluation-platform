@@ -71,3 +71,4 @@ import './miaar-m2b.test';
 import './ui-keys.test';
 import './search.test';
 import './roles.test';
+import './hub.test';

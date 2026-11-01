@@ -9,7 +9,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
-import { loadCatalog, myRoles, acceptInvite, hashToken, inviteState, normEmail } from '../../../lib/portal/roles';
+import { loadCatalog, myRoles, acceptInvite, hashToken, inviteState, normEmail, seatsLeft } from '../../../lib/portal/roles';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -28,11 +28,11 @@ export async function GET(req: Request) {
   const u = new URL(req.url); const token = u.searchParams.get('token');
   if (token) {
     const rl = await rateLimit(db, `roles_preview:ip:${ipOf(req)}`, 60, 30); if (!rl.allowed) return tooMany(rl);
-    const { data: inv } = await db.from('portal_role_invites').select('email,full_name,role_codes,org_id,message,expires_at,accepted_at,revoked_at').eq('token_hash', hashToken(token)).maybeSingle();
+    const { data: inv } = await db.from('portal_role_invites').select('email,full_name,role_codes,org_id,message,expires_at,accepted_at,revoked_at,kind,max_uses,uses,label').eq('token_hash', hashToken(token)).maybeSingle();
     if (!inv) return bad('الدعوة غير موجودة', 404, 'not_found');
     const catalog = await loadCatalog(db); const org = inv.org_id ? await db.from('portal_organizations').select('name_ar').eq('id', inv.org_id).maybeSingle().then((r: any) => r.data?.name_ar || null) : null;
     const me = await userOf(req);
-    return NextResponse.json({ success: true, invite: { email_masked: mask(inv.email), full_name: inv.full_name, roles: (inv.role_codes || []).map((c: string) => ({ code: c, name_ar: catalog.find(r => r.code === c)?.name_ar || c, name_en: catalog.find(r => r.code === c)?.name_en || c })), org, message: inv.message, expires_at: inv.expires_at, state: inviteState(inv, new Date().toISOString()) }, me: me ? { email: me.email, matches: normEmail(me.email) === normEmail(inv.email) } : null });
+    return NextResponse.json({ success: true, invite: { kind: inv.kind || 'personal', label: inv.label || null, seats_left: inv.kind === 'group' ? seatsLeft(inv) : null, max_uses: inv.max_uses || 1, email_masked: inv.email ? mask(inv.email) : null, full_name: inv.full_name, roles: (inv.role_codes || []).map((c: string) => ({ code: c, name_ar: catalog.find(r => r.code === c)?.name_ar || c, name_en: catalog.find(r => r.code === c)?.name_en || c })), org, message: inv.message, expires_at: inv.expires_at, state: inviteState(inv, new Date().toISOString()) }, me: me ? { email: me.email, matches: inv.kind === 'group' || normEmail(me.email) === normEmail(inv.email || '') } : null });
   }
   const me = await userOf(req); if (!me) return bad('يلزم تسجيل الدخول', 401);
   const catalog = await loadCatalog(db); const r = await myRoles(db, me, catalog);

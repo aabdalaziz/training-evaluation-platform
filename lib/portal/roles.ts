@@ -12,7 +12,8 @@ import { createHash, randomBytes } from 'crypto';
 export type Scope = 'platform' | 'org' | 'personal';
 export type Role = { code: string; name_ar: string; name_en: string; scope: Scope; landing: string; permissions: string[]; is_staff: boolean; legacy_role: string | null; is_system: boolean; active: boolean; sort: number };
 export type Grant = { id: string; user_id: string | null; email: string; role_code: string; org_id: string | null; source: string; expires_at: string | null; revoked_at: string | null; created_at: string; note?: string | null };
-export type Invite = { id: string; email: string; full_name: string | null; role_codes: string[]; org_id: string | null; message: string | null; expires_at: string; accepted_at: string | null; revoked_at: string | null; created_at: string };
+export type Invite = { id: string; email: string | null; full_name: string | null; role_codes: string[]; org_id: string | null; message: string | null; expires_at: string; accepted_at: string | null; revoked_at: string | null; created_at: string; kind?: 'personal' | 'group'; max_uses?: number; uses?: number; label?: string | null };
+export const GROUP_MAX_SEATS = 500;
 
 /** الأدوار النظامية — نسخة الكود من سجلّ SQL (للعرض قبل تحميل القاعدة ولمنطق الاختبارات) */
 export const SYSTEM_ROLES: Role[] = [
@@ -51,10 +52,15 @@ export const inviteUrl = (site: string, token: string) => `${site.replace(/\/+$/
 
 /** حالة الدعوة للعرض */
 export type InviteState = 'pending' | 'accepted' | 'expired' | 'revoked';
-export function inviteState(i: Pick<Invite, 'accepted_at' | 'revoked_at' | 'expires_at'>, nowIso: string): InviteState {
-  if (i.revoked_at) return 'revoked'; if (i.accepted_at) return 'accepted'; if (i.expires_at <= nowIso) return 'expired'; return 'pending';
+export function inviteState(i: Pick<Invite, 'accepted_at' | 'revoked_at' | 'expires_at'> & { kind?: string; max_uses?: number; uses?: number }, nowIso: string): InviteState {
+  if (i.revoked_at) return 'revoked';
+  if (i.kind === 'group') { if (i.expires_at <= nowIso) return 'expired'; return (i.uses || 0) >= (i.max_uses || 1) ? 'accepted' : 'pending'; }
+  if (i.accepted_at) return 'accepted'; if (i.expires_at <= nowIso) return 'expired'; return 'pending';
 }
+/** المقاعد المتبقية في دعوة جماعية */
+export const seatsLeft = (i: { max_uses?: number; uses?: number }) => Math.max(0, (i.max_uses || 1) - (i.uses || 0));
 export const INVITE_STATE_AR: Record<InviteState, string> = { pending: 'بانتظار القبول', accepted: 'مقبولة', expired: 'منتهية', revoked: 'ملغاة' };
+export const GROUP_STATE_AR: Record<InviteState, string> = { pending: 'مفتوحة', accepted: 'اكتملت المقاعد', expired: 'منتهية', revoked: 'ملغاة' };
 
 /** المنح النشطة فقط */
 export const activeGrants = (grants: Grant[], nowIso: string) => grants.filter(g => !g.revoked_at && (!g.expires_at || g.expires_at > nowIso));
@@ -64,8 +70,10 @@ export function rolesOf(p: { grants: Grant[]; legacyRole?: string | null; orgAdm
   const cat = new Map((p.catalog || SYSTEM_ROLES).filter(r => r.active).map(r => [r.code, r] as const));
   const set = new Set<string>();
   for (const g of activeGrants(p.grants, p.nowIso)) if (cat.has(g.role_code)) set.add(g.role_code);
-  /* الجسر القديم: مستوى المدير يُحتسب دائمًا؛ وغيره فقط لمن لا منح له بعد (المنح هي المرجع متى وُجدت — حتى لا ينعكس جسر ENUM صفةً وهمية) */
-  const L = LEGACY_TO_ROLE[String(p.legacyRole || '').toUpperCase()]; if (L && (L === 'ADMIN' || set.size === 0)) set.add(L);
+  /* الجسر القديم: مستوى المدير يُحتسب دائمًا؛ وغيره فقط لمن لا منحة طاقم له (المنح هي المرجع متى وُجدت — حتى لا ينعكس جسر ENUM صفةً وهمية) */
+  /* P42-ب: منحة شخصية (مدرّب/خبير من هيئة أَثَر، مشارك من دعوة جماعية) لا تُنزِل موظفًا قائمًا — الجسر يسقط فقط أمام منحة طاقم */
+  const staffGrant = [...set].some(c => cat.get(c)?.is_staff && c !== 'TRAINER');
+  const L = LEGACY_TO_ROLE[String(p.legacyRole || '').toUpperCase()]; if (L && (L === 'ADMIN' || !staffGrant)) set.add(L);
   if (p.orgAdmin) set.add('ORG_ADMIN');
   if (!set.size) set.add('PARTICIPANT');   // كل داخل مشارك على الأقل
   return [...set].sort((a, b) => (cat.get(a)?.sort ?? 999) - (cat.get(b)?.sort ?? 999));
@@ -93,14 +101,18 @@ export function legacyNeededFor(codes: string[], catalog: Role[] = SYSTEM_ROLES)
 export const shouldUpgradeLegacy = (current: string | null | undefined, needed: string | null) => !!needed && (LEGACY_RANK[needed] ?? 0) > (LEGACY_RANK[String(current || '').toUpperCase()] ?? 0);
 
 /** تحقق مدخلات الدعوة */
-export function validateInvite(body: any, catalog: Role[]): { ok: true; email: string; roles: string[]; full_name: string | null; message: string | null; org_id: string | null } | { ok: false; error: string } {
-  const email = normEmail(body?.email); if (!emailOk(email)) return { ok: false, error: 'بريد غير صالح' };
+export function validateInvite(body: any, catalog: Role[]): { ok: true; email: string; roles: string[]; full_name: string | null; message: string | null; org_id: string | null; kind: 'personal' | 'group'; max_uses: number; label: string | null } | { ok: false; error: string } {
+  const kind: 'personal' | 'group' = body?.kind === 'group' ? 'group' : 'personal';
+  const email = kind === 'group' ? '' : normEmail(body?.email); if (kind === 'personal' && !emailOk(email)) return { ok: false, error: 'بريد غير صالح' };
+  const max_uses = kind === 'group' ? Math.floor(Number(body?.max_uses)) : 1; if (kind === 'group' && !(max_uses >= 2 && max_uses <= GROUP_MAX_SEATS)) return { ok: false, error: `عدد المقاعد بين 2 و${GROUP_MAX_SEATS}` };
+  const label = kind === 'group' ? String(body?.label || '').trim().slice(0, 80) : null; if (kind === 'group' && (label || '').length < 2) return { ok: false, error: 'اكتب اسم المجموعة (مثل: ورشة مدرّبي الرياض — نوفمبر)' };
   const roles = [...new Set((Array.isArray(body?.roles) ? body.roles : [body?.role]).map((x: any) => String(x || '').toUpperCase()).filter(Boolean))] as string[];
   if (!roles.length) return { ok: false, error: 'اختر صفة واحدة على الأقل' }; if (roles.length > MAX_ROLES_PER_INVITE) return { ok: false, error: `حتى ${MAX_ROLES_PER_INVITE} صفات في الدعوة الواحدة` };
   const bad = roles.filter(r => !catalog.some(c => c.code === r && c.active)); if (bad.length) return { ok: false, error: `صفة غير معروفة: ${bad.join(', ')}` };
   const org_id = body?.org_id ? String(body.org_id) : null; if (org_id && !/^[0-9a-f-]{36}$/i.test(org_id)) return { ok: false, error: 'معرّف جهة غير صالح' };
   if (roles.includes('ORG_ADMIN') && !org_id) return { ok: false, error: 'صفة «مسؤول المؤسسة» تحتاج اختيار الجهة' };
-  return { ok: true, email, roles, full_name: body?.full_name ? String(body.full_name).trim().slice(0, 120) : null, message: body?.message ? String(body.message).trim().slice(0, 600) : null, org_id };
+  if (kind === 'group' && roles.includes('ADMIN')) return { ok: false, error: 'صفة مدير النظام لا تُمنح بدعوة جماعية' };
+  return { ok: true, email, roles, full_name: body?.full_name ? String(body.full_name).trim().slice(0, 120) : null, message: body?.message ? String(body.message).trim().slice(0, 600) : null, org_id, kind, max_uses, label };
 }
 /** تحقق دور مخصّص جديد */
 export function validateRole(body: any): { ok: true; role: Omit<Role, 'is_system' | 'active' | 'sort'> } | { ok: false; error: string } {
@@ -137,11 +149,22 @@ export async function acceptInvite(db: any, token: string, user: { id: string; e
   const inv = await safe<any>(db.from('portal_role_invites').select('*').eq('token_hash', hashToken(token)).maybeSingle(), null);
   if (!inv) return { ok: false, error: 'الدعوة غير موجودة', code: 'not_found' };
   const st = inviteState(inv, now); if (st !== 'pending') return { ok: false, error: st === 'accepted' ? 'هذه الدعوة قُبلت من قبل' : st === 'expired' ? 'انتهت صلاحية الدعوة — اطلب دعوة جديدة' : 'أُلغيت هذه الدعوة', code: st };
-  if (normEmail(inv.email) !== normEmail(user.email)) return { ok: false, error: `هذه الدعوة موجَّهة إلى ${inv.email} — ادخل بالبريد نفسه`, code: 'email_mismatch' };
   const roles: string[] = (inv.role_codes || []).filter((c: string) => cat.some(r => r.code === c && r.active));
+  if (inv.kind === 'group') {
+    /* دعوة جماعية: أي داخل يأخذ مقعدًا مرة واحدة؛ المنحة ببريده هو؛ تُختم عند اكتمال المقاعد */
+    const mineAlready = await safe<any[]>(db.from('portal_role_grants').select('id').eq('invite_id', inv.id).ilike('email', normEmail(user.email)).limit(1), []);
+    if (!mineAlready.length) {
+      const granted = await grantRoles(db, { email: user.email, user_id: user.id, full_name: user.full_name || null, roles, source: 'group', granted_by: inv.created_by || null, org_id: inv.org_id || null, invite_id: inv.id, note: inv.label ? `دعوة جماعية: ${inv.label}` : null }, cat);
+      const uses = (inv.uses || 0) + 1; await db.from('portal_role_invites').update({ uses, accepted_at: uses >= (inv.max_uses || 1) ? now : null }).eq('id', inv.id);
+      if (!granted.length) await bridgeLegacy(db, user, roles, cat);
+    }
+    const all = await myRoles(db, user, cat);
+    return { ok: true, roles: all.roles, landing: landingFor(all.roles, cat) };
+  }
+  if (normEmail(inv.email || '') !== normEmail(user.email)) return { ok: false, error: `هذه الدعوة موجَّهة إلى ${inv.email} — ادخل بالبريد نفسه`, code: 'email_mismatch' };
   for (const role_code of roles) {
-    const exists = await safe<any[]>(db.from('portal_role_grants').select('id').ilike('email', normEmail(inv.email)).eq('role_code', role_code).is('revoked_at', null).limit(1), []);
-    if (!exists.length) await db.from('portal_role_grants').insert({ user_id: user.id, email: normEmail(inv.email), role_code, org_id: inv.org_id || null, granted_by: inv.created_by || null, source: 'invite', invite_id: inv.id });
+    const exists = await safe<any[]>(db.from('portal_role_grants').select('id').ilike('email', normEmail(inv.email || '')).eq('role_code', role_code).is('revoked_at', null).limit(1), []);
+    if (!exists.length) await db.from('portal_role_grants').insert({ user_id: user.id, email: normEmail(inv.email || ''), role_code, org_id: inv.org_id || null, granted_by: inv.created_by || null, source: 'invite', invite_id: inv.id });
   }
   await db.from('portal_role_invites').update({ accepted_at: now, accepted_by: user.id }).eq('id', inv.id);
   await bridgeLegacy(db, user, roles, cat);
@@ -149,6 +172,23 @@ export async function acceptInvite(db: any, token: string, user: { id: string; e
   const all = await myRoles(db, user, cat);
   return { ok: true, roles: all.roles, landing: landingFor(all.roles, cat) };
 }
+
+/** منح صفات مباشرة (بلا دعوة): من مدير النظام («منح مباشر») أو من النظام (اعتماد هيئة أَثَر → المدرّب/الخبير، دعوة جماعية).
+ *  لا يكرّر منحة فعّالة؛ يجسر ENUM القديم إن كان الحساب معروفًا؛ يعيد ما مُنح فعلًا. */
+export async function grantRoles(db: any, p: { email: string; user_id?: string | null; full_name?: string | null; roles: string[]; source: 'manual' | 'system' | 'directory' | 'group'; granted_by?: string | null; org_id?: string | null; note?: string | null; invite_id?: string | null }, catalog?: Role[]): Promise<string[]> {
+  const cat = catalog || await loadCatalog(db); const email = normEmail(p.email); if (!email) return [];
+  const roles = [...new Set(p.roles)].filter(c => cat.some(r => r.code === c && r.active)); const granted: string[] = [];
+  for (const role_code of roles) {
+    const exists = await safe<any[]>(db.from('portal_role_grants').select('id,revoked_at,expires_at').ilike('email', email).eq('role_code', role_code).is('revoked_at', null).limit(1), []);
+    if (exists.length) continue;
+    const { error } = await db.from('portal_role_grants').insert({ user_id: p.user_id || null, email, role_code, org_id: p.org_id || null, granted_by: p.granted_by || null, source: p.source, note: p.note || null, invite_id: p.invite_id || null });
+    if (!error) granted.push(role_code);
+  }
+  if (granted.length && p.user_id) await bridgeLegacy(db, { id: p.user_id, email, full_name: p.full_name || null }, granted, cat);
+  return granted;
+}
+/** صفات هيئة أَثَر بحسب الوجوه: expert → EXPERT · trainer → TRAINER */
+export const rolesForFaces = (faces: string[] | null | undefined): string[] => (faces || []).map(f => f === 'trainer' ? 'TRAINER' : f === 'expert' ? 'EXPERT' : '').filter(Boolean);
 
 /** الجسر إلى ENUM القديم: ترقية فقط (ولا تمسّ من هو ADMIN أصلًا) + ضمان صف profiles */
 export async function bridgeLegacy(db: any, user: { id: string; email: string; full_name?: string | null }, roles: string[], catalog: Role[]): Promise<string | null> {

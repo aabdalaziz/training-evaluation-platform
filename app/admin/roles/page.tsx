@@ -11,13 +11,15 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
+import { qrSvg } from '../../../lib/certificates/qr';
 
 type InviteState = 'pending' | 'accepted' | 'expired' | 'revoked';
 const INVITE_STATE_AR: Record<InviteState, string> = { pending: 'بانتظار القبول', accepted: 'مقبولة', expired: 'منتهية', revoked: 'ملغاة' }; // نسخة عميل (lib/portal/roles يستورد crypto)
 
 type Role = { code: string; name_ar: string; name_en: string; scope: string; landing: string; permissions: string[]; is_staff: boolean; legacy_role: string | null; is_system: boolean; active: boolean; sort: number };
 type Grant = { id: string; user_id: string | null; email: string; role_code: string; org_id: string | null; source: string; created_at: string; note: string | null };
-type Inv = { id: string; email: string; full_name: string | null; role_codes: string[]; org_id: string | null; message: string | null; expires_at: string; created_at: string; state: InviteState };
+type Inv = { id: string; email: string | null; full_name: string | null; role_codes: string[]; org_id: string | null; message: string | null; expires_at: string; created_at: string; state: InviteState; kind?: 'personal' | 'group'; max_uses?: number; uses?: number; label?: string | null };
+const GROUP_STATE_AR: Record<InviteState, string> = { pending: 'مفتوحة', accepted: 'اكتملت المقاعد', expired: 'منتهية', revoked: 'ملغاة' };
 type Org = { id: string; name_ar: string; name_en: string | null };
 type Data = { roles: Role[]; grants: Grant[]; invites: Inv[]; orgs: Org[]; me: { roles: string[]; admin: boolean }; invite_days: number };
 const fmt = (iso?: string | null) => iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { dateStyle: 'medium' }) : '—';
@@ -28,7 +30,8 @@ export default function AdminRolesPage() {
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [tok, setTok] = useState(''); const [data, setData] = useState<Data | null>(null);
   const [tab, setTab] = useState<'invite' | 'grants' | 'invites' | 'catalog'>('invite'); const [busy, setBusy] = useState('');
   const [email, setEmail] = useState(''); const [fullName, setFullName] = useState(''); const [picked, setPicked] = useState<string[]>([]); const [orgId, setOrgId] = useState(''); const [message, setMessage] = useState(''); const [direct, setDirect] = useState(false);
-  const [made, setMade] = useState<{ url: string; text: string; expires_at: string } | null>(null); const [q, setQ] = useState('');
+  const [group, setGroup] = useState(false); const [seats, setSeats] = useState(20); const [label, setLabel] = useState('');
+  const [made, setMade] = useState<{ url: string; text: string; expires_at: string; kind?: string; max_uses?: number; label?: string | null } | null>(null); const [q, setQ] = useState('');
   const [nr, setNr] = useState({ code: '', name_ar: '', name_en: '', scope: 'platform', landing: '/hub', is_staff: true, legacy_role: 'QUALITY_ANALYST', permissions: '' });
   const fresh = useCallback(async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk !== tok) setTok(tk); return tk; }, [db, tok]);
   async function load(tk: string) { const j = await fetch('/api/admin/roles', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return false; } setData(j); return true; }
@@ -48,15 +51,21 @@ export default function AdminRolesPage() {
 
   async function submitInvite(e: React.FormEvent) {
     e.preventDefault(); setError(''); setOk(''); setMade(null); setBusy('invite');
-    const j = await post({ action: direct ? 'grant' : 'invite', email, full_name: fullName, roles: picked, org_id: orgId || null, message });
+    const j = await post(group && !direct ? { action: 'invite', kind: 'group', label, max_uses: seats, roles: picked, org_id: orgId || null, message } : { action: direct ? 'grant' : 'invite', email, full_name: fullName, roles: picked, org_id: orgId || null, message });
     setBusy(''); if (!j?.success) { setError(j?.error || 'تعذّر'); return; }
     if (direct) { setOk(`مُنحت مباشرة: ${(j.granted || []).map(roleName).join(' · ') || 'لا جديد'}${j.already?.length ? ` (كانت لديه: ${j.already.map(roleName).join(' · ')})` : ''}`); }
-    else setMade({ url: j.url, text: j.text, expires_at: j.expires_at });
-    setEmail(''); setFullName(''); setPicked([]); setMessage(''); await load(await fresh());
+    else setMade({ url: j.url, text: j.text, expires_at: j.expires_at, kind: j.kind, max_uses: j.max_uses, label: j.label });
+    setEmail(''); setFullName(''); setPicked([]); setMessage(''); setLabel(''); await load(await fresh());
+  }
+  /** ملصق QR للطباعة (P42-ب): نافذة طباعة بسيطة بهوية أَثَر — بلا تخزين للرابط */
+  function printPoster() {
+    if (!made) return; const names = picked.length ? picked.map(roleName).join(' · ') : '';
+    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>دعوة أَثَر — ${made.label || ''}</title><style>body{font-family:Tajawal,system-ui,sans-serif;margin:0;padding:40px;color:#0f2a4e;text-align:center}h1{font-size:34px;margin:0 0 6px}h2{font-size:22px;color:#0b8a83;margin:0 0 18px;font-weight:700}.qr{display:inline-block;padding:18px;border:6px solid #c9a24b;border-radius:24px;background:#fff}.qr svg{width:360px;height:360px}p{font-size:16px;line-height:1.9;color:#334155}code{direction:ltr;display:block;font-size:13px;color:#64748b;word-break:break-all;margin-top:10px}.foot{margin-top:28px;font-size:13px;color:#64748b}@media print{body{padding:20px}}</style></head><body><h1>أَثَر — ${made.label || 'دعوة جماعية'}</h1><h2>${names}</h2><div class="qr">${qrSvg(made.url, 360)}</div><p>امسح الرمز بكاميرا جوالك، ثم ادخل ببريدك — يُفتح بابك فورًا.<br>${made.max_uses || ''} مقعدًا · صالحة حتى ${fmt(made.expires_at)}</p><code>${made.url}</code><div class="foot">بوابة أَثَر — التدريب ما بعد الذكاء الاصطناعي · نبني القدرة ونُثبت الأثر</div><script>window.onload=function(){window.print()}</script></body></html>`;
+    const w = window.open('', '_blank', 'noopener,width=720,height=900'); if (!w) { setError('السماح بالنوافذ المنبثقة مطلوب للطباعة'); return; } w.document.write(html); w.document.close();
   }
   async function copy(t: string) { try { await navigator.clipboard.writeText(t); setOk('نُسخ'); setTimeout(() => setOk(''), 1500); } catch { setError('تعذّر النسخ — حدّد النص وانسخه يدويًا'); } }
   async function revoke(g: Grant) { if (!confirm(`سحب «${roleName(g.role_code)}» من ${g.email}؟ يسري فورًا.`)) return; setBusy(g.id); const j = await post({ action: 'revoke', grant_id: g.id }); if (!j?.success) setError(j?.error || 'تعذّر السحب'); await load(await fresh()); setBusy(''); }
-  async function revokeInvite(i: Inv) { if (!confirm(`إلغاء دعوة ${i.email}؟`)) return; setBusy(i.id); const j = await post({ action: 'revoke_invite', invite_id: i.id }); if (!j?.success) setError(j?.error || 'تعذّر'); await load(await fresh()); setBusy(''); }
+  async function revokeInvite(i: Inv) { if (!confirm(`إلغاء دعوة ${i.kind === 'group' ? `«${i.label}»` : i.email}؟`)) return; setBusy(i.id); const j = await post({ action: 'revoke_invite', invite_id: i.id }); if (!j?.success) setError(j?.error || 'تعذّر'); await load(await fresh()); setBusy(''); }
   async function createRole(e: React.FormEvent) { e.preventDefault(); setError(''); setBusy('role'); const j = await post({ action: 'role_create', ...nr, code: nr.code.toUpperCase(), permissions: nr.permissions.split(/[,\s،]+/).filter(Boolean), legacy_role: nr.is_staff ? nr.legacy_role : null }); setBusy(''); if (!j?.success) { setError(j?.error || 'تعذّر'); return; } setOk(`أُنشئت الصفة ${j.code}`); setNr({ code: '', name_ar: '', name_en: '', scope: 'platform', landing: '/hub', is_staff: true, legacy_role: 'QUALITY_ANALYST', permissions: '' }); await load(await fresh()); }
   async function toggleRole(r: Role) { setBusy(r.code); const j = await post({ action: 'role_toggle', code: r.code, active: !r.active }); if (!j?.success) setError(j?.error || 'تعذّر'); await load(await fresh()); setBusy(''); }
 
@@ -82,17 +91,25 @@ export default function AdminRolesPage() {
           <section className="rl-card">
             {made && (
               <div className="rl-made" data-testid="invite-made">
-                <h3><Icon name="check" size={16} /> الدعوة جاهزة — انسخ الرابط وأرسله بالقناة التي تناسبك</h3>
+                <h3><Icon name="check" size={16} /> {made.kind === 'group' ? `الدعوة الجماعية «${made.label}» جاهزة — اعرض الرمز أو اطبع الملصق` : 'الدعوة جاهزة — انسخ الرابط وأرسله بالقناة التي تناسبك'}</h3>
+                {made.kind === 'group' && <div className="rl-qrwrap"><div className="rl-qr" data-testid="invite-qr" dangerouslySetInnerHTML={{ __html: qrSvg(made.url, 200) }} /><div className="rl-qrside"><b>{made.max_uses} مقعدًا</b><span>كل من يمسح الرمز ويدخل ببريده يأخذ مقعدًا واحدًا ويُفتح بابه فورًا.</span><button type="button" onClick={printPoster} data-testid="invite-print"><Icon name="print" size={14} /> اطبع الملصق</button></div></div>}
                 <code dir="ltr" data-testid="invite-url">{made.url}</code>
                 <div className="rl-row"><button type="button" onClick={() => copy(made.url)} data-testid="invite-copy"><Icon name="copy" size={14} /> نسخ الرابط</button><button type="button" onClick={() => copy(made.text)}><Icon name="copy" size={14} /> نسخ رسالة كاملة</button><a className="rl-btn" href={`https://wa.me/?text=${encodeURIComponent(made.text)}`} target="_blank" rel="noopener noreferrer"><Icon name="send" size={14} /> عبر واتساب</a><a className="rl-btn" href={`mailto:?subject=${encodeURIComponent('دعوة إلى بوابة أَثَر')}&body=${encodeURIComponent(made.text)}`}><Icon name="mail" size={14} /> عبر البريد</a></div>
                 <p className="rl-muted">الرابط يُعرض مرة واحدة ولا يُخزَّن — إن ضاع أنشئ دعوة جديدة. صالح حتى {fmt(made.expires_at)}.</p>
               </div>
             )}
             <form onSubmit={submitInvite} className="rl-form" data-testid="invite-form">
-              <div className="rl-two">
+              <div className="rl-modes" role="tablist" aria-label="نوع الدعوة">
+                <button type="button" role="tab" aria-selected={!group} className={!group ? 'on' : ''} onClick={() => setGroup(false)} data-testid="inv-kind-personal" disabled={!admin}><Icon name="mail" size={14} /> دعوة شخصية (بريد واحد)</button>
+                <button type="button" role="tab" aria-selected={group} className={group ? 'on' : ''} onClick={() => { setGroup(true); setDirect(false); }} data-testid="inv-kind-group" disabled={!admin}><Icon name="qr" size={14} /> دعوة جماعية بـ QR (ورشة · دفعة)</button>
+              </div>
+              {!group ? <div className="rl-two">
                 <label>البريد الإلكتروني<input type="email" required dir="ltr" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" data-testid="inv-email" disabled={!admin} /></label>
                 <label>الاسم (اختياري)<input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="د. …" disabled={!admin} /></label>
-              </div>
+              </div> : <div className="rl-two">
+                <label>اسم المجموعة<input required value={label} onChange={e => setLabel(e.target.value)} maxLength={80} placeholder="ورشة مدرّبي الرياض — نوفمبر" data-testid="inv-label" disabled={!admin} /></label>
+                <label>عدد المقاعد (2–500)<input type="number" min={2} max={500} required value={seats} onChange={e => setSeats(Number(e.target.value))} data-testid="inv-seats" disabled={!admin} /></label>
+              </div>}
               <fieldset><legend>الصفات (حتى 5) — اختر ما يخصّه فقط</legend>
                 <div className="rl-roles" data-testid="inv-roles">
                   {active.map(r => <label key={r.code} className={picked.includes(r.code) ? 'on' : ''}><input type="checkbox" checked={picked.includes(r.code)} onChange={() => toggle(r.code)} disabled={!admin} data-testid={`inv-role-${r.code}`} /><b>{r.name_ar}</b><span>{r.name_en} · {SCOPE_AR[r.scope]}{r.is_staff ? ' · طاقم' : ''}</span></label>)}
@@ -102,8 +119,8 @@ export default function AdminRolesPage() {
                 <label>الجهة {needOrg ? <em>(مطلوبة لصفة الجهة)</em> : '(اختياري)'}<select value={orgId} onChange={e => setOrgId(e.target.value)} disabled={!admin} data-testid="inv-org"><option value="">— بلا جهة —</option>{data?.orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>
                 <label>رسالة قصيرة تظهر في الدعوة (اختياري)<input value={message} onChange={e => setMessage(e.target.value)} maxLength={600} placeholder="مثال: نرحّب بك مديرًا لبرامج العربية ابتداءً من يناير" disabled={!admin} /></label>
               </div>
-              <label className="rl-check"><input type="checkbox" checked={direct} onChange={e => setDirect(e.target.checked)} disabled={!admin} data-testid="inv-direct" /> منح مباشر بلا دعوة (لمن هو داخل أصلًا ويحتاج صفة إضافية الآن)</label>
-              <div className="rl-row"><button type="submit" disabled={!admin || busy === 'invite' || !picked.length} data-testid="inv-submit"><Icon name={direct ? 'check' : 'link'} size={16} /> {busy === 'invite' ? 'لحظة…' : direct ? 'امنح الآن' : 'أنشئ رابط الدعوة'}</button><span className="rl-muted">{picked.length ? picked.map(roleName).join(' + ') : 'لم تختر صفة بعد'}</span></div>
+              {!group && <label className="rl-check"><input type="checkbox" checked={direct} onChange={e => setDirect(e.target.checked)} disabled={!admin} data-testid="inv-direct" /> منح مباشر بلا دعوة (لمن هو داخل أصلًا ويحتاج صفة إضافية الآن)</label>}
+              <div className="rl-row"><button type="submit" disabled={!admin || busy === 'invite' || !picked.length} data-testid="inv-submit"><Icon name={direct ? 'check' : 'link'} size={16} /> {busy === 'invite' ? 'لحظة…' : direct ? 'امنح الآن' : group ? 'أنشئ الدعوة الجماعية والرمز' : 'أنشئ رابط الدعوة'}</button><span className="rl-muted">{picked.length ? picked.map(roleName).join(' + ') : 'لم تختر صفة بعد'}</span></div>
             </form>
           </section>
         )}
@@ -121,7 +138,7 @@ export default function AdminRolesPage() {
         {tab === 'invites' && (
           <section className="rl-card">
             <div className="rl-tablewrap"><table className="rl-table" data-testid="invites-table"><thead><tr><th>البريد</th><th>الاسم</th><th>الصفات</th><th>الجهة</th><th>الحالة</th><th>تنتهي</th><th></th></tr></thead><tbody>
-              {(data?.invites || []).map(i => <tr key={i.id} data-testid="invite-row" data-state={i.state}><td dir="ltr">{i.email}</td><td>{i.full_name || '—'}</td><td>{i.role_codes.map(roleName).join(' · ')}</td><td>{orgName(i.org_id)}</td><td><span className={`rl-tag ${i.state === 'accepted' ? 'ok' : i.state === 'pending' ? 'warn' : ''}`}>{INVITE_STATE_AR[i.state]}</span></td><td>{fmt(i.expires_at)}</td><td>{admin && i.state === 'pending' && <button type="button" className="rl-x" onClick={() => revokeInvite(i)} disabled={busy === i.id} data-testid="invite-revoke">إلغاء</button>}</td></tr>)}
+              {(data?.invites || []).map(i => <tr key={i.id} data-testid="invite-row" data-state={i.state} data-kind={i.kind || 'personal'}><td dir={i.kind === 'group' ? 'rtl' : 'ltr'}>{i.kind === 'group' ? <><Icon name="qr" size={13} /> {i.label} <small className="rl-muted">({i.uses || 0}/{i.max_uses})</small></> : i.email}</td><td>{i.full_name || '—'}</td><td>{i.role_codes.map(roleName).join(' · ')}</td><td>{orgName(i.org_id)}</td><td><span className={`rl-tag ${i.state === 'accepted' ? 'ok' : i.state === 'pending' ? 'warn' : ''}`}>{i.kind === 'group' ? GROUP_STATE_AR[i.state] : INVITE_STATE_AR[i.state]}</span></td><td>{fmt(i.expires_at)}</td><td>{admin && i.state === 'pending' && <button type="button" className="rl-x" onClick={() => revokeInvite(i)} disabled={busy === i.id} data-testid="invite-revoke">إلغاء</button>}</td></tr>)}
               {!data?.invites.length && <tr><td colSpan={7} className="rl-muted">لا دعوات بعد.</td></tr>}
             </tbody></table></div>
             <p className="rl-muted">الرابط نفسه لا يُعرض هنا (لا نخزّنه) — إن احتاج الشخص رابطًا جديدًا ألغِ الدعوة وأنشئ أخرى.</p>
@@ -162,6 +179,8 @@ const CSS = `
 .rl-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:720px){.rl-two{grid-template-columns:1fr}}
 .rl-form fieldset{border:1px dashed #cbd5e1;border-radius:14px;padding:12px}.rl-form legend{font-weight:800;color:#0f2a4e;padding:0 6px}
 .rl-roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}.rl-roles label{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;border:1px solid #e5e9f0;border-radius:12px;padding:8px 10px;cursor:pointer;font-weight:600}.rl-roles label.on{border-color:#0b8a83;background:#e6f4f3}.rl-roles input{grid-row:1/3;width:18px;height:18px;min-height:0}.rl-roles b{color:#0f2a4e}.rl-roles span{color:#64748b;font-size:11px;grid-column:2}
+.rl-modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.rl-modes button{display:inline-flex;gap:6px;align-items:center;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;color:#334155;font:inherit;font-weight:800;cursor:pointer}.rl-modes button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.rl-modes button:focus-visible{outline:3px solid #0b8a83;outline-offset:2px}
+.rl-qrwrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:10px 0}.rl-qr{background:#fff;border:4px solid #c9a24b;border-radius:16px;padding:10px;line-height:0}.rl-qr svg{width:200px;height:200px}.rl-qrside{display:grid;gap:6px;max-width:320px}.rl-qrside b{font-size:18px;color:#0f2a4e}.rl-qrside span{color:#475569;font-size:13px;line-height:1.7}.rl-qrside button{justify-self:start}
 .rl-check{display:flex!important;gap:8px;align-items:center;font-weight:600!important}.rl-check input{width:18px;height:18px;min-height:0!important}
 .rl-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .rl-form button,.rl-made button,.rl-btn{display:inline-flex;gap:6px;align-items:center;border:0;border-radius:12px;padding:10px 16px;background:#0f2a4e;color:#fff;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px;min-height:44px;text-decoration:none}.rl-form button:disabled{opacity:.5;cursor:not-allowed}.rl-made button,.rl-btn{background:#0b8a83}

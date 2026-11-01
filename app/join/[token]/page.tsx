@@ -14,7 +14,7 @@ import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { PortalShell } from '../../components/PortalShell';
 
-type Inv = { email_masked: string; full_name: string | null; roles: { code: string; name_ar: string; name_en: string }[]; org: string | null; message: string | null; expires_at: string; state: 'pending' | 'accepted' | 'expired' | 'revoked' };
+type Inv = { kind?: 'personal' | 'group'; label?: string | null; seats_left?: number | null; max_uses?: number; email_masked: string | null; full_name: string | null; roles: { code: string; name_ar: string; name_en: string }[]; org: string | null; message: string | null; expires_at: string; state: 'pending' | 'accepted' | 'expired' | 'revoked' };
 const STATE_AR: Record<string, string> = { accepted: 'هذه الدعوة قُبلت من قبل — ادخل من /login وسيفتح بابك.', expired: 'انتهت صلاحية هذه الدعوة (14 يومًا). اطلب من مدير النظام دعوة جديدة.', revoked: 'أُلغيت هذه الدعوة.' };
 const fmt = (iso: string) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { dateStyle: 'long' });
 
@@ -55,18 +55,18 @@ export default function JoinPage({ params }: { params: { token: string } }) {
         {err && !inv && <p className="jn-err" data-testid="join-error">{err}</p>}
         {!inv && !err && <p className="jn-muted">جارٍ فتح الدعوة…</p>}
         {inv && (<>
-          <h1>{inv.full_name ? `أهلًا ${inv.full_name}` : 'أهلًا بك'}</h1>
-          <p className="jn-lead">دعاك مدير النظام للانضمام بصفة:</p>
+          <h1>{inv.kind === 'group' ? `أهلًا بك في «${inv.label || 'دعوة جماعية'}»` : inv.full_name ? `أهلًا ${inv.full_name}` : 'أهلًا بك'}</h1>
+          <p className="jn-lead">{inv.kind === 'group' ? 'دعوة جماعية من إدارة أَثَر للانضمام بصفة:' : 'دعاك مدير النظام للانضمام بصفة:'}</p>
           <ul className="jn-roles" data-testid="join-roles">{inv.roles.map(r => <li key={r.code}><b>{r.name_ar}</b><span>{r.name_en}</span></li>)}</ul>
           {inv.org && <p className="jn-org"><Icon name="users" size={14} /> الجهة: <b>{inv.org}</b></p>}
           {inv.message && <blockquote className="jn-msg">{inv.message}</blockquote>}
-          <p className="jn-muted">الدعوة باسم البريد <code dir="ltr">{inv.email_masked}</code> · صالحة حتى {fmt(inv.expires_at)}</p>
+          {inv.kind === 'group' ? <p className="jn-muted" data-testid="join-seats">دعوة جماعية · المقاعد المتبقية <b>{inv.seats_left ?? '—'}</b> من {inv.max_uses} · صالحة حتى {fmt(inv.expires_at)} · تدخل ببريدك أنت</p> : <p className="jn-muted">الدعوة باسم البريد <code dir="ltr">{inv.email_masked}</code> · صالحة حتى {fmt(inv.expires_at)}</p>}
 
-          {inv.state !== 'pending' && <p className="jn-err" data-testid="join-state">{STATE_AR[inv.state]}</p>}
-          {inv.state === 'pending' && done && <p className="jn-ok" data-testid="join-done"><Icon name="check" size={16} /> تمّ — صرت الآن: {done.roles.join(' · ')}. نفتح بابك…</p>}
+          {inv.state !== 'pending' && !done && <p className="jn-err" data-testid="join-state">{inv.kind === 'group' && inv.state === 'accepted' ? 'اكتملت مقاعد هذه الدعوة — اطلب من إدارة أَثَر دعوة جديدة' : STATE_AR[inv.state]}</p>}
+          {done && <p className="jn-ok" data-testid="join-done"><Icon name="check" size={16} /> تمّ — صرت الآن: {done.roles.join(' · ')}. نفتح بابك…</p>}
           {inv.state === 'pending' && !done && !me && (
             <form onSubmit={magic} className="jn-form" data-testid="join-login">
-              <label htmlFor="jn-email">ادخل ببريد الدعوة نفسه</label>
+              <label htmlFor="jn-email">{inv.kind === 'group' ? 'ادخل ببريدك' : 'ادخل ببريد الدعوة نفسه'}</label>
               <input id="jn-email" type="email" dir="ltr" required value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" />
               {sent ? <p className="jn-ok">{sent}</p> : <button type="submit" disabled={busy}><Icon name="send" size={16} /> أرسل لي رابط الدخول</button>}
               {err && <p className="jn-err">{err}</p>}
@@ -74,7 +74,7 @@ export default function JoinPage({ params }: { params: { token: string } }) {
             </form>
           )}
           {inv.state === 'pending' && !done && me && me.matches && (
-            <div className="jn-form"><p>أنت داخل باسم <code dir="ltr">{me.email}</code> — وهو بريد الدعوة.</p>
+            <div className="jn-form"><p>أنت داخل باسم <code dir="ltr">{me.email}</code>{inv.kind === 'group' ? ' — سيُفتح بابك بهذا البريد.' : ' — وهو بريد الدعوة.'}</p>
               <button type="button" onClick={accept} disabled={busy} data-testid="join-accept"><Icon name="check" size={16} /> {busy ? 'لحظة…' : 'أقبل الدعوة وافتح بابي'}</button>
               {err && <p className="jn-err">{err}</p>}
             </div>
