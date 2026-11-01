@@ -9,6 +9,7 @@ import { Icon } from '../../lib/ui/icons';
 import { ACRONYM, BRAND, CONTACT, NAV, PARTNERS, SERVICES, UI, t } from '../../lib/portal/content';
 import type { Lang } from '../../lib/portal/content';
 import Athir from './Athir';
+import { GuideButton } from './Guide';
 import { AccessProvider, AccessButton, AccessPanel, ReadPage, SkipLink, ACCESS_CSS, useAccess } from './Inclusion';
 import { OnAirButton, OnAirPanel, ONAIR_CSS } from './OnAir';
 
@@ -70,6 +71,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             </div>
           </nav>
           <div className="pt-headright">
+            <GuideButton lang={lang} compact />
             <OnAirButton lang={lang} />
             <AccessButton lang={lang} />
             <button type="button" className="pt-lang" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} aria-label="language">{lang === 'ar' ? 'English' : 'عربي'}</button>

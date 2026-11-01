@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 /* خِفّة أَثَر (P40): جرس الإشعارات يستورد مكتبة Supabase ثابتًا — يُحمَّل فقط حين يُعرض (شريط الإدارة) لا في كل صفحة عامة */
 const NotificationBell = dynamic(() => import('./NotificationBell'), { ssr: false });
 import { SkipLink } from './Inclusion';
+import { GuideButton } from './Guide';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 // صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
@@ -61,6 +62,7 @@ export default function GlobalNavigation() {
               <Icon name={n.icon} size={16} /> {n.label}
             </Link>
           ))}
+          <GuideButton compact />
           <NotificationBell />
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
         </div>
@@ -73,6 +75,7 @@ export default function GlobalNavigation() {
     <nav className="global-nav" aria-label="التنقل العام"><SkipLink lang="ar" />
       <Link href="/" className="global-brand"><Icon name="shield" size={18} /> <span>منصة التقويم</span></Link>
       <div className="global-actions">
+        <GuideButton />
         {pathname !== '/' && <Link href="/" className="global-btn"><Icon name="home" size={16} /> الرئيسية</Link>}
         {loggedIn ? <>
           <Link href="/dashboard" className="global-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>

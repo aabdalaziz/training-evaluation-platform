@@ -11,6 +11,7 @@ import { qrSvg } from '../../lib/certificates/qr';
 import { CAN_DO, LEVELS, SKILLS, FLOOR_LEVEL, FLOOR_INDEX } from '../../lib/miaar/registry';
 import type { Level } from '../../lib/miaar/registry';
 import { Icon } from '../../lib/ui/icons';
+import { GuideButton } from '../components/Guide'; /* «دليل أَثَر» (P41) */
 
 type Copy = Record<string, Record<string, Record<string, string>>> & { langs?: { id: string; name: string; find: string }[]; native?: { value: string; labels: Record<string, string> }[] };
 type Q = { id: string; level: string; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
@@ -258,6 +259,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
         <a className="mi-mark" href="/miaar">مِعيار{lang !== 'ar' && <small>{t('intro', 'mark')}</small>}</a>
       </div>
       <div className="mi-left">
+        <GuideButton lang={lang === 'ar' ? 'ar' : 'en'} compact />
         {admin && <a className="mi-admin" href="/admin/miaar">دخول الإدارة</a>}
         <LangPicker copy={copy} lang={lang} onPick={setLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} />
       </div>
@@ -866,7 +868,7 @@ const CSS = `
 @media(min-width:720px){.mi-two{grid-template-columns:1fr 1fr}.mi-stats{grid-template-columns:repeat(4,1fr)}.mi-rgrid{grid-template-columns:repeat(4,1fr)}}
 @media(min-width:980px){.mi-hero{grid-template-columns:1.1fr .9fr}.mi-split{grid-template-columns:1fr 1fr}.mi-doors{grid-template-columns:1fr 1fr}.mi-rsplit{grid-template-columns:2fr 3fr}}
 @media(max-width:860px){.mi-level{grid-template-columns:84px 1fr}.mi-specimen{grid-column:1 / -1}}
-@media(max-width:720px){.mi-head{min-height:72px;padding:10px 16px;gap:10px}.mi-brand{font-size:30px}.mi-brand small{display:none}.mi-mark{font-size:22px}.mi-hero{padding:36px 16px 48px;min-height:0}.mi-inner,.mi-levels,.mi-band,.mi-finale{padding-left:16px;padding-right:16px}.mi-tbar{top:72px;padding:8px 16px}.mi-langbtn{min-width:0}.mi-level{grid-template-columns:1fr}.mi-lvcode{justify-items:start;grid-auto-flow:column;align-items:center;gap:10px}}
+@media(max-width:720px){.mi-left .gd-trigger{display:none}.mi-langbtn{min-width:0}.mi-head{min-height:72px;padding:10px 16px;gap:10px}.mi-brand{font-size:30px}.mi-brand small{display:none}.mi-mark{font-size:22px}.mi-hero{padding:36px 16px 48px;min-height:0}.mi-inner,.mi-levels,.mi-band,.mi-finale{padding-left:16px;padding-right:16px}.mi-tbar{top:72px;padding:8px 16px}.mi-langbtn{min-width:0}.mi-level{grid-template-columns:1fr}.mi-lvcode{justify-items:start;grid-auto-flow:column;align-items:center;gap:10px}}
 @media(prefers-reduced-motion:reduce){.mi-ring.gold{animation:none;opacity:1;transform:translate(-50%,-50%)}}
 @media print{.mi-top,.mi-actions,.mi-nolink,.mi-foot{display:none !important}.mi,.mi-band{background:#fff !important;color:#0f172a !important}.mi-band h1,.mi-band p,.mi-kicker{color:#0f172a !important}.mi-wrap{margin-top:0}.mi-card{box-shadow:none;border:0}}
 `;

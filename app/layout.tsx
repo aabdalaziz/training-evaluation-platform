@@ -3,6 +3,7 @@ import { Tajawal } from 'next/font/google';
 import './style.css';
 import GlobalNavigation from './components/GlobalNavigation';
 import { PocketProvider } from './components/Pocket';
+import Guide from './components/Guide'; /* «دليل أَثَر» (P41): البحث والأوامر في كل صفحة — Ctrl+K */
 
 // خط عربي موحّد يُحمَّل مع البناء (بدون طلبات خارجية وقت التشغيل ولا وميض عند التحميل)
 const tajawal = Tajawal({ subsets: ['arabic', 'latin'], weight: ['400', '700', '900'] /* خِفّة أَثَر (P40): 3 أوزان بدل 5 — الوزنان 500/800 يُقرّبهما المتصفح من 400/700 */, display: 'swap', variable: '--font-ar' });
@@ -29,6 +30,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <PocketProvider>
           <GlobalNavigation />
           {children}
+          <Guide />
         </PocketProvider>
       </body>
     </html>

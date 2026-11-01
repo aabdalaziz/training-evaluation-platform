@@ -69,3 +69,4 @@ import './p38.test';
 import './miaar.test';
 import './miaar-m2b.test';
 import './ui-keys.test';
+import './search.test';
