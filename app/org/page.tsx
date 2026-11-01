@@ -27,6 +27,7 @@ import { OrgImpact } from '../components/OrgImpact';
 import { OrgJourney } from '../components/OrgJourney';
 import { OrgHorizon } from '../components/OrgHorizon';
 import { OrgSeason } from '../components/OrgSeason';   // P35 «موسم الهواء» + «أمانة إلى جهة»
+import { OrgAfterLine } from '../components/ProgramAfter';   // P38 «الشهادة التي تكبر» — سطر الجهة
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
@@ -114,6 +115,7 @@ function Inner() {
               {wx.steps.length > 0 && <div className="og-wxsteps"><h4>{lang === 'ar' ? (wx.steps.length >= 3 ? 'ثلاث خطوات تغيّر التوقّع' : wx.steps.length === 2 ? 'خطوتان تغيّران التوقّع' : 'خطوة تغيّر التوقّع') : 'Steps that change the forecast'}</h4><ol>{wx.steps.slice(0, 3).map((s, i) => <li key={i}><b>{s.title_ar}</b> — {s.why_ar}</li>)}</ol></div>}
               {!wx.steps.length && <p className="pt-muted">{lang === 'ar' ? 'لا خطوات مقترحة الآن — حافظوا على الإيقاع.' : 'No suggested steps right now — keep the rhythm.'}</p>}
             </>}
+            <OrgAfterLine orgId={orgId} token={token} lang={lang} />
           </div>}
           {d && k && tab === 'impact' && <div className="og-grid">
             <div className="og-ai"><div><b><Icon name="star" size={16} /> {lang === 'ar' ? 'توصيات ذكية للجهة' : 'Smart recommendations'}</b><small>{lang === 'ar' ? 'يلخّص المساعد فجوات المنسوبين ويقترح برامج — دون تسمية أفراد، والقرار لكم.' : 'Summarises gaps and suggests programs — no individuals named; you decide.'}</small></div><button type="button" className="pt-btn" disabled={busy === 'ai'} onClick={aiBrief}>{busy === 'ai' ? (lang === 'ar' ? 'جارٍ التحليل…' : 'Analysing…') : brief ? (lang === 'ar' ? 'تحديث' : 'Refresh') : (lang === 'ar' ? 'اقترح' : 'Suggest')}</button>

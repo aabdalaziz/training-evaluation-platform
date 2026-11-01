@@ -19,6 +19,7 @@ import type { SkillLite } from '../../../lib/portal/open';
 import { SimplerText } from '../../components/Inclusion';
 import { FEATURE_LABEL, cleanFeatures } from '../../../lib/inclusion/registry';
 import type { Feature } from '../../../lib/inclusion/registry';
+import { ProgramAfter } from '../../components/ProgramAfter';   // P38 «الشهادة التي تكبر»
 
 export default function ProgramPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -116,6 +117,7 @@ function Inner() {
           {(p.program_type === 'arabic' || p.cefr_level) && <PlacementCard lang={lang} compact programLevel={p.cefr_level || null} />}
           <UpcomingSessions programId={p.id} lang={lang} />
           <ProgramResources programId={p.id} lang={lang} />
+          <ProgramAfter programId={p.id} lang={lang} />
           <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر منصة التقويم، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>
         </div>
 

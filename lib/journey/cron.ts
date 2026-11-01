@@ -3,7 +3,9 @@
  * رحلة الممارس — الحارس الزمني (ضمن الكرون اليومي الحالي، لا كرون جديد):
  *  1) تسليم «رسالة إلى نفسي بعد سنة» حين يحين موعدها: لقطة «أين صرت» + نص التسليم + إشعار بقنواته (بريد/واتساب/يدوي)
  *  2) انتهاء صلاحية النسخ المشتركة (12 شهرًا) → expired وإلغاء وثيقتها
+ *  3) P38 «الشهادة التي تكبر»: فتح محطات ما بعد البرنامج (30 · 90 · 365) حين تدخل نافذتها — صفّ + إشعار داخلي مرة واحدة (لا كرون جديد)
  */
+import { openStations } from '../after/load';   // P38
 import { notify } from '../portal/notify';
 import { loadJourney } from './load';
 import { capsuleSnapshot, capsuleDeliveryText } from './registry';
@@ -13,8 +15,8 @@ import { SHARE_COLS } from './share';
 export const CAPSULE_COLS = 'id,created_at,user_id,email,full_name,body_ar,media_id,kind,deliver_at,delivered_at,status,snapshot_then,snapshot_now,message_log_id,meta';
 export type Capsule = { id: number; created_at: string; user_id: string; email: string; full_name: string | null; body_ar: string; media_id: string | null; kind: 'text' | 'audio' | 'video'; deliver_at: string; delivered_at: string | null; status: 'sealed' | 'delivered' | 'cancelled'; snapshot_then: CapsuleSnapshot; snapshot_now: CapsuleSnapshot | null; message_log_id: number | null; meta: any };
 
-export async function runJourney(db: any, opts: { dry?: boolean; site: string; now?: Date }): Promise<{ ok: boolean; delivered: number; expired: number; errors: string[] }> {
-  const now = opts.now || new Date(); const dry = !!opts.dry; const site = opts.site.replace(/\/+$/, ''); const errors: string[] = []; let delivered = 0, expired = 0;
+export async function runJourney(db: any, opts: { dry?: boolean; site: string; now?: Date }): Promise<{ ok: boolean; delivered: number; expired: number; stations_opened: number; errors: string[] }> {
+  const now = opts.now || new Date(); const dry = !!opts.dry; const site = opts.site.replace(/\/+$/, ''); const errors: string[] = []; let delivered = 0, expired = 0, stations_opened = 0;
   try {
     const { data } = await db.from('portal_time_capsules').select(CAPSULE_COLS).eq('status', 'sealed').lte('deliver_at', now.toISOString()).order('deliver_at', { ascending: true }).limit(50);
     for (const c of ((data || []) as Capsule[])) {
@@ -38,5 +40,6 @@ export async function runJourney(db: any, opts: { dry?: boolean; site: string; n
       expired++;
     }
   } catch (e: any) { errors.push(`shares: ${e?.message || e}`); }
-  return { ok: errors.length === 0, delivered, expired, errors };
+  try { const a = await openStations(db, { site, now, dry }); stations_opened = a.opened; errors.push(...a.errors); } catch (e: any) { errors.push(`after: ${e?.message || e}`); }   // P38
+  return { ok: errors.length === 0, delivered, expired, stations_opened, errors };
 }

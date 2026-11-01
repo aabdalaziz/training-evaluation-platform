@@ -26,6 +26,7 @@ import { GET as dailyGET, POST as dailyPOST } from '../../app/api/daily/route';
 import { GET as missionsGET } from '../../app/api/missions/route';
 import { POST as vcPOST } from '../../app/api/vc/route';
 import { GET as obsGET } from '../../app/api/observatory/route';
+import { GET as afterGET } from '../../app/api/after/route';   // P38
 import { GET as charterGET } from '../../app/api/org/charter/route';
 import { GET as journeyGET } from '../../app/api/journey/route';
 import { GET as orgJourneyGET } from '../../app/api/org/journey/route';
@@ -186,6 +187,12 @@ async function callTool(m: Rpc, c: Ctx, tier: Tier, scopes: string[]) {
     if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر القراءة | Unavailable', { error: j?.error ? 'not_found' : 'unavailable' }, true); }
     const result = y ? { year: j.year, note_ar: j.note_ar, page: `${c.site}/on-air/seasons/year/${encodeURIComponent(y)}` } : { years: j.years, note_ar: 'سنوات لها سجلّات مجمَّدة — اطلب year لقراءة فصلها', page: `${c.site}/on-air/seasons` };
     await log(c, name, true, { year: y || 'list' }); return toolContent(summarize(result), result);
+  }
+  if (name === 'program_after') {   // P38 الشهادة التي تكبر — عامّ، k≥5، بالكلمات
+    const pid = String(args.program_id || '').trim(); if (!/^[0-9a-z-]{1,40}$/i.test(pid)) return toolContent('program_id مطلوب | program_id required', { error: 'invalid_params' }, true);
+    const j = await asJson(await afterGET(internal(c, `/api/after?program=${encodeURIComponent(pid)}`)));
+    if (!j?.success) { await log(c, name, false); return toolContent(j?.error || 'تعذّر القراءة | Unavailable', { error: j?.error ? 'not_found' : 'unavailable' }, true); }
+    const result = { program_id: pid, shown: j.shown, n: j.n, k: j.k, line_ar: j.line_ar, states: j.states, excerpts: j.excerpts, note_ar: j.note_ar, page: `${c.site}/programs/${encodeURIComponent(pid)}` }; await log(c, name, true, { program: pid, shown: !!j.shown }); return toolContent(summarize(result), result);
   }
   if (c.actor.tier !== 'personal') return toolContent('تحتاج تفويضًا شخصيًا', { error: 'not_authorized' }, true);
   if (name === 'my_wallet') {
