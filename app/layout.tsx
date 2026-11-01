@@ -5,7 +5,7 @@ import GlobalNavigation from './components/GlobalNavigation';
 import { PocketProvider } from './components/Pocket';
 
 // خط عربي موحّد يُحمَّل مع البناء (بدون طلبات خارجية وقت التشغيل ولا وميض عند التحميل)
-const tajawal = Tajawal({ subsets: ['arabic', 'latin'], weight: ['400', '500', '700', '800', '900'], display: 'swap', variable: '--font-ar' });
+const tajawal = Tajawal({ subsets: ['arabic', 'latin'], weight: ['400', '700', '900'] /* خِفّة أَثَر (P40): 3 أوزان بدل 5 — الوزنان 500/800 يُقرّبهما المتصفح من 400/700 */, display: 'swap', variable: '--font-ar' });
 
 export const metadata: Metadata = {
   title: { default: 'أَثَر — بوابة التعليم والتدريب والتطوير', template: '%s | أَثَر' },

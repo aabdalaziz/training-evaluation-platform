@@ -3,7 +3,7 @@
 // أَثَر — الصفحة الرئيسية الحيّة (P10): مسرح «الآن في أَثَر» · كل يوم بناء: موقف اليوم (P13-أ) · مستشارك: اسأل وأنا أجيب · جلسة حوار (محاكاة فورية + الجلسة القادمة) · شريط TRACE
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../lib/supabase/client';
+import { sbLazy, hasStoredSession } from '../lib/supabase/lazy';
 import { Icon } from '../lib/ui/icons';
 import { PortalShell, useLang } from './components/PortalShell';
 import { ACRONYM, BRAND, SERVICES, UI, t } from '../lib/portal/content';
@@ -33,8 +33,9 @@ function Home() {
   const [programs, setPrograms] = useState<FeedProgram[]>([]); const [sessions, setSessions] = useState<FeedSession[]>([]); const [counters, setCounters] = useState({ resources: 0, credentials: 0, sims: 0 });
   const [now, setNow] = useState(() => Date.now()); const [tok, setTok] = useState('');
   useEffect(() => {
-    fetch('/api/advisor').then(r => r.json()).then(j => { if (j?.success) { setPrograms(j.programs || []); setSessions(j.sessions || []); setCounters(j.counters || counters); } }).catch(() => {});
-    supabase().auth.getSession().then(({ data }) => setTok(data.session?.access_token || '')).catch(() => {});
+    /* خِفّة أَثَر: نداء واحد مخزَّن على الحافة بدل advisor + evidence؛ ويُبثّ إلى «الذاكرة» أدناه */
+    fetch('/api/home').then(r => r.json()).then(j => { if (j?.success) { setPrograms(j.programs || []); setSessions(j.sessions || []); setCounters(j.counters || counters); window.dispatchEvent(new CustomEvent('athar:home', { detail: j })); (window as unknown as { __atharHome?: unknown }).__atharHome = j; } }).catch(() => {});
+    if (hasStoredSession()) sbLazy().then((sb) => sb.auth.getSession()).then(({ data }) => setTok(data.session?.access_token || '')).catch(() => {});
     const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -55,7 +56,7 @@ function Home() {
           <div className="hm-tracehead"><span className="pt-kicker"><Icon name="compass" size={14} /> {ar ? 'منهجية TRACE · ثماني خدمات' : 'TRACE method · eight services'}</span><h2>{ar ? 'كل ما سبق يقف على بنية واحدة' : 'Everything above stands on one architecture'}</h2></div>
           <div className="hm-tracerow">{ACRONYM.map(a => <Link key={a.letter} href={`/services/${a.slug}`} className="hm-tracecell"><b>{a.letter}</b><span>{ar ? a.ar : a.word}</span></Link>)}</div>
           <div className="hm-services">{SERVICES.map(s => <Link key={s.slug} href={`/services/${s.slug}`} className="hm-svc"><Icon name={s.icon as any} size={16} /> {t(s.title, lang)}</Link>)}</div>
-          <div className="hm-final"><div><b>{t(BRAND.tagline, lang)}</b><small>{t(BRAND.promise, lang)}</small></div><div className="pt-heroacts"><Link href="/programs" className="pt-btn gold">{t(UI.programs, lang)}</Link><Link href="/consulting" className="pt-btn outline dark">{ar ? 'للجهات: اطلب استشارة' : 'Organizations: request a consultation'}</Link></div></div>
+          <div className="hm-final"><div><b>{t(BRAND.tagline, lang)}</b><small>{t(BRAND.promise, lang)}</small></div><div className="pt-heroacts"><Link href="/programs" className="pt-btn gold"><Icon name="star" />{t(UI.programs, lang)}</Link><Link href="/consulting" className="pt-btn outline dark"><Icon name="users" />{ar ? 'للجهات: اطلب استشارة' : 'Organizations: request a consultation'}</Link></div></div>
         </div>
       </section>
     </main>
@@ -78,7 +79,7 @@ function Hero({ feed, now, lang, counters }: { feed: FeedItem[]; now: number; la
           <h1>{ar ? <>التدريب ما بعد الذكاء الاصطناعي:<br /><em key={w} className="hm-word">{words[w]}</em></> : <>Post‑AI training:<br /><em key={w} className="hm-word">{words[w]}</em></>}</h1>
           <p>{ar ? 'هنا لا تقرأ عن التدريب — تعيشه: محاكيات تضعك في الموقف، موقف واحد كل يوم يكشف كيف تفكّر، مستشار يجيبك الآن، وملف مهاري يتشكّل من أدلة حقيقية يعتمدها خبراء.' : 'You do not read about training here — you live it: simulators that put you in the situation, one real situation a day that shows how you think, an advisor who answers now, and a skills profile built from real evidence approved by experts.'}</p>
           <div className="pt-heroacts">
-            <Link href="/sim" className="pt-btn gold"><Icon name="play" size={16} /> {ar ? 'جرّب محاكاة — 3 دقائق' : 'Try a simulation — 3 min'}</Link>
+            <Link href="/sim" className="pt-btn gold"><Icon name="play" /><Icon name="play" size={16} /> {ar ? 'جرّب محاكاة — 3 دقائق' : 'Try a simulation — 3 min'}</Link>
             <a href="#daily" className="pt-btn light"><Icon name="target" size={16} /> {ar ? 'موقف اليوم' : "Today's case"}</a>
             <Link href="/2062" className="pt-btn outline"><Icon name="star" size={16} /> {ar ? 'عِش يومك في 2062' : 'Live your day in 2062'}</Link>
             <a href="#advisor" className="pt-btn outline"><Icon name="chat" size={16} /> {ar ? 'اسأل مستشارك' : 'Ask your advisor'}</a>
@@ -160,7 +161,7 @@ function DailyCase({ lang, tok }: { lang: 'ar' | 'en'; tok: string }) {
                   <div className="hm-chhead"><b>{ar ? 'كيف تتصرّف؟' : 'How would you act?'}</b></div>
                   <Channel lang={lang} value={text} onChange={setText} maxLength={d.limits?.max || 2500} rows={9} tok={tok} context={{ type: 'daily_case', id: c.day || null, skills: c.skill_ids || [], title: c.title_ar, parties: c.parties_ar || [] }} placeholder={ar ? 'اكتب هنا بكلماتك: ماذا تفعل أولًا، مع من تتحدث، ما البدائل، ما الذي لن تفعله، وكيف ستتأكد لاحقًا…' : 'Write in your own words: what you do first, whom you talk to, the alternatives, what you will not do, and how you will verify later…'} disabled={busy} testId="daily-channel" />
                   <ul className="hm-hints">{(ar ? HINTS_AR : HINTS_EN).map(h => <li key={h}><Icon name="check" size={12} /> {h}</li>)}</ul>
-                  <div className="hm-respacts"><button type="button" className="pt-btn gold" onClick={submit} disabled={busy || left > 0}>{busy ? (ar ? 'أقرأ ردّك بعناية…' : 'Reading carefully…') : (ar ? 'أرني مرآة أدائي' : 'Show me my mirror')} <Icon name="arrow" size={14} /></button>{left > 0 && <small>{ar ? `${left} حرفًا على الأقل بعد` : `${left} more characters`}</small>}</div>
+                  <div className="hm-respacts"><button type="button" className="pt-btn gold" onClick={submit} disabled={busy || left > 0} aria-busy={busy || undefined}><Icon name="send" />{busy ? (ar ? 'أقرأ ردّك بعناية…' : 'Reading carefully…') : (ar ? 'أرني مرآة أدائي' : 'Show me my mirror')} <Icon name="arrow" size={14} /></button>{left > 0 && <small>{ar ? `${left} حرفًا على الأقل بعد` : `${left} more characters`}</small>}</div>
                   {busy && <div className="hm-think light"><i /><i /><i /> {ar ? 'أقارن ردّك بمعايير الموقف وأطرافه وتعقيده الخفي…' : 'Comparing your answer with the case criteria, parties and hidden twist…'}</div>}
                   {err && err !== 'x' && <div className="hm-err">{err}</div>}
                   {queued && <div className="hm-ok" data-testid="daily-queued"><Icon name="inbox" size={15} /> {ar ? 'لا اتصال الآن — حُفظ ردّك في صندوق الأدلة الميداني وسيُقوَّم تلقائيًا حين يعود الاتصال، بتاريخ كتابته.' : 'Offline — your answer is saved in the field outbox and will be evaluated automatically when you reconnect, stamped with the time you wrote it.'} <Link href="/offline#outbox">{ar ? 'الصندوق' : 'Outbox'}</Link></div>}
@@ -273,7 +274,7 @@ function Embassy({ lang }: { lang: 'ar' | 'en' }) {
 
 function Memory({ lang }: { lang: 'ar' | 'en' }) {
   const ar = lang === 'ar'; const [d, setD] = useState<null | { threads: MemThread[]; lesson: { week: string; title_ar: string; body_ar: string } | null; nodes: number }>(null); const [shown, setShown] = useState(0);
-  useEffect(() => { fetch('/api/evidence?threads=1', { cache: 'no-store' }).then(r => r.json()).then(j => { if (j?.success && Array.isArray(j.threads) && j.threads.length) setD({ threads: j.threads.slice(0, 3), lesson: j.lesson || null, nodes: j.nodes || 0 }); }).catch(() => {}); }, []);
+  useEffect(() => { const take = (j: any) => { if (j?.success && Array.isArray(j.threads) && j.threads.length) setD({ threads: j.threads.slice(0, 3), lesson: j.lesson || null, nodes: j.nodes || 0 }); }; const pre = (window as unknown as { __atharHome?: unknown }).__atharHome; if (pre) { take(pre); return; } const on = (e: Event) => take((e as CustomEvent).detail); window.addEventListener('athar:home', on); return () => window.removeEventListener('athar:home', on); }, []);
   useEffect(() => { if (!d) return; setShown(0); const id = setInterval(() => setShown(s => { if (s >= d.threads.length) { clearInterval(id); return s; } return s + 1; }), 650); return () => clearInterval(id); }, [d]);
   if (!d) return null;
   const ICON: Record<MemThread['icon'], 'star' | 'compass' | 'target'> = { spark: 'star', compass: 'compass', target: 'target' };
@@ -312,7 +313,7 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
           <div className="hm-simbox">
             <div className="hm-simhead"><div><small>{ar ? 'حوار تدريبي فوري · بلا تسجيل' : 'Instant practice dialogue · no sign‑up'}</small><b>{s.title_ar}</b></div><span className="hm-chip gold">{s.minutes} {ar ? 'دقائق' : 'min'} · {s.max_turns} {ar ? 'أدوار' : 'turns'}</span></div>
             {!started ? (
-              <div className="hm-simintro"><p><b>{ar ? 'الموقف:' : 'Situation:'}</b> {s.situation_ar}</p><p><b>{ar ? 'هدفك:' : 'Your goal:'}</b> {s.goal_ar}</p><div className="hm-rubric">{s.rubric.map(r => <span key={r.key}>{r.title_ar} <b>{r.weight}%</b></span>)}</div><button type="button" className="pt-btn gold" onClick={start}><Icon name="play" size={15} /> {ar ? 'ادخل الصف الآن' : 'Enter the classroom'}</button></div>
+              <div className="hm-simintro"><p><b>{ar ? 'الموقف:' : 'Situation:'}</b> {s.situation_ar}</p><p><b>{ar ? 'هدفك:' : 'Your goal:'}</b> {s.goal_ar}</p><div className="hm-rubric">{s.rubric.map(r => <span key={r.key}>{r.title_ar} <b>{r.weight}%</b></span>)}</div><button type="button" className="pt-btn gold" onClick={start}><Icon name="play" /><Icon name="play" size={15} /> {ar ? 'ادخل الصف الآن' : 'Enter the classroom'}</button></div>
             ) : (
               <>
                 <div className="hm-simlist" ref={listRef}>

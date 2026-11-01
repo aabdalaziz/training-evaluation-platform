@@ -4,8 +4,7 @@
 // الاحتياجات تُطبَّق سمةً على <html data-access="…"> فيقرؤها CSS الغلاف؛ لا تُرسل إلى أي نموذج ذكاء اصطناعي.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabase/client';
-import { fastToken } from './Pocket';
+import { lazyToken } from './Pocket';
 import { Icon } from '../../lib/ui/icons';
 import { ACCESS_STORAGE_KEY, NEEDS, NEED_LABEL, NEED_EFFECT_AR, cleanNeeds, accessAttr, CAPTION_LANG, CAPTION_TTL_MS, mergeCaption } from '../../lib/inclusion/registry';
 import type { Need, SimpleSource, SimpleText, CaptionMsg } from '../../lib/inclusion/registry';
@@ -26,7 +25,7 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
     const local = readLocal(); setNeedsState(local); applyAttr(local);
     (async () => {
       try {
-        const tk = await fastToken(supabase()); if (!tk) { setSynced(true); return; } setSignedIn(true);
+        const tk = await lazyToken(); if (!tk) { setSynced(true); return; } setSignedIn(true);
         const r = await fetch('/api/inclusion?mine=1', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(x => x.json()).catch(() => null);
         if (r?.success && r.profile) { const n = cleanNeeds(r.profile.needs); setNeedsState(n); writeLocal(n); applyAttr(n); }
       } catch { /* يبقى المحلي */ }
@@ -36,7 +35,7 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
   const setNeeds = useCallback((n: Need[]) => { const c = cleanNeeds(n); setNeedsState(c); writeLocal(c); applyAttr(c); }, []);
   const saveToAccount = useCallback(async (n: Need[], extra?: { helps_ar?: string; share_staff?: boolean }) => {
     try {
-      const tk = await fastToken(supabase()); if (!tk) return 'سجّل الدخول لحفظ ملفك في حسابك';
+      const tk = await lazyToken(); if (!tk) return 'سجّل الدخول لحفظ ملفك في حسابك';
       const r = await fetch('/api/inclusion', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ action: 'save', needs: n, ...(extra || {}) }) }).then(x => x.json());
       if (!r?.success) return r?.error || 'تعذّر الحفظ'; setNeeds(cleanNeeds(r.profile?.needs)); return null;
     } catch { return 'تعذّر الاتصال'; }
@@ -79,7 +78,7 @@ export function AccessPanel({ lang }: { lang: Lang }) {
   const save = async () => { setBusy(true); a.setNeeds(draft); const err = await a.saveToAccount(draft); setBusy(false); setMsg(err || (ar ? 'حُفظ في حسابك — يتبعك على كل جهاز.' : 'Saved to your account.')); };
   const sendReport = async () => {
     setBusy(true); setRepMsg('');
-    try { const tk = await fastToken(supabase()).catch(() => ''); const r = await fetch('/api/inclusion', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tk ? { Authorization: `Bearer ${tk}` } : {}) }, body: JSON.stringify({ action: 'report', page: location.pathname, text: rep.text, contact: rep.contact || undefined }) }).then(x => x.json()); setRepMsg(r?.success ? r.message_ar : (r?.error || 'تعذّر الإرسال')); if (r?.success) setRep({ text: '', contact: '' }); } catch { setRepMsg('تعذّر الاتصال'); }
+    try { const tk = await lazyToken().catch(() => ''); const r = await fetch('/api/inclusion', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tk ? { Authorization: `Bearer ${tk}` } : {}) }, body: JSON.stringify({ action: 'report', page: location.pathname, text: rep.text, contact: rep.contact || undefined }) }).then(x => x.json()); setRepMsg(r?.success ? r.message_ar : (r?.error || 'تعذّر الإرسال')); if (r?.success) setRep({ text: '', contact: '' }); } catch { setRepMsg('تعذّر الاتصال'); }
     setBusy(false);
   };
   return (
@@ -137,7 +136,7 @@ export function SimplerText({ source, id, lang, children }: { source: SimpleSour
     if (r?.text) { setShow(true); setBusy(false); return; }
     if (r?.pending) { setBusy(false); return; }
     try {
-      const tk = await fastToken(supabase()).catch(() => ''); if (!tk) { setNote(ar ? 'سجّل الدخول لطلب نسخة أبسط — تُكتب مرة واحدة ويقرؤها الجميع بعد اعتمادها.' : 'Sign in to request a simpler version.'); setBusy(false); return; }
+      const tk = await lazyToken().catch(() => ''); if (!tk) { setNote(ar ? 'سجّل الدخول لطلب نسخة أبسط — تُكتب مرة واحدة ويقرؤها الجميع بعد اعتمادها.' : 'Sign in to request a simpler version.'); setBusy(false); return; }
       const x = await fetch('/api/inclusion', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ action: 'simplify', source, id }) }).then(y => y.json());
       setNote(x?.success ? (x.note_ar || '') : (x?.error || 'تعذّر الطلب')); if (x?.success && x.text) { setT(x.text); setShow(true); }
     } catch { setNote('تعذّر الاتصال'); }

@@ -15,7 +15,7 @@ function Inner() {
   if (!s) return (
     <main className="pt-main"><section className="pt-sec"><div className="pt-wrap" style={{ textAlign: 'center' }}>
       <h2>{lang === 'ar' ? 'الخدمة غير موجودة' : 'Service not found'}</h2>
-      <Link href="/services" className="pt-btn">{t(UI.allServices, lang)}</Link>
+      <Link href="/services" className="pt-btn"><Icon name="arrow" />{t(UI.allServices, lang)}</Link>
     </div></section></main>
   );
   const others = SERVICES.filter(x => x.slug !== s.slug).slice(0, 4);
@@ -30,7 +30,7 @@ function Inner() {
         <div>
           <div className="pt-prose">{s.long.map((p, i) => <p key={i}>{t(p, lang)}</p>)}</div>
           <div className="pt-heroacts" style={{ marginTop: 18 }}>
-            {s.cta.external ? <a href={s.cta.href} target="_blank" rel="noreferrer" className="pt-btn"><Icon name="arrow" size={16} /> {t(s.cta.label, lang)}</a> : <Link href={s.cta.href} className="pt-btn"><Icon name="arrow" size={16} /> {t(s.cta.label, lang)}</Link>}
+            {s.cta.external ? <a href={s.cta.href} target="_blank" rel="noreferrer" className="pt-btn"><Icon name="arrow" size={16} /> {t(s.cta.label, lang)}</a> : <Link href={s.cta.href} className="pt-btn"><Icon name="play" /><Icon name="arrow" size={16} /> {t(s.cta.label, lang)}</Link>}
             <Link href={`/contact?service=${s.slug === 'placement' || s.slug === 'evaluation' ? 'other' : s.slug}`} className="pt-btn ghost"><Icon name="chat" size={16} /> {t(UI.contactUs, lang)}</Link>
           </div>
         </div>

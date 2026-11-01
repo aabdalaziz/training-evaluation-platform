@@ -8,8 +8,9 @@
  *  • شريط تحديث «نسخة جديدة» · تدفئة الكاش بحزمة الجيب بعد تسجيل الدخول · مسح الجيب عند الخروج
  *  • شريط الجيب العائم: بلا اتصال / عناصر بانتظار الإرسال / أُرسلت
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { supabase } from '../../lib/supabase/client';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import type { supabase } from '../../lib/supabase/client';
+import { sbLazy, hasStoredSession } from '../../lib/supabase/lazy';
 import { POCKET_VERSION, applySync, canQueue, installDecision, newItem, syncPlan, type OutboxItem, type OutboxKind, type SyncResult } from '../../lib/portal/pocket';
 import { clearPocket, countItems, fileToBase64, getFile, hasPocket, kvGet, kvSet, listItems, patchItem, persistStorage, putItem, removeItem } from '../../lib/portal/pocket-db';
 import { isIosNotStandalone } from './Pwa';
@@ -22,7 +23,7 @@ export const VALUE_EVENT = 'athar:value';
 /** تُستدعى من الصفحات بعد لحظة قيمة (إصدار شهادة، ردّ موقف، تسليم دليل) */
 export function valueMoment(kind: string) { if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(VALUE_EVENT, { detail: kind })); }
 /** جلسة سريعة: getSession قد تعلّق بلا اتصال (محاولات تجديد الرمز) — نسابقها بمهلة ثم نقرأ الرمز المخزَّن محليًا (يكفي لقراءة الكاش) */
-export async function fastToken(db: ReturnType<typeof supabase>, ms = 3500): Promise<string> {
+export async function fastToken(db: ReturnType<typeof supabase> | null, ms = 3500): Promise<string> {
   // الجلسة لدى @supabase/ssr في كعكات sb-<ref>-auth-token(.0,.1…) بقيمة JSON أو base64-JSON؛ وبعض العملاء في localStorage
   const parse = (raw: string) => { try { let r = raw; if (r.startsWith('base64-')) { const b = r.slice(7).replace(/-/g, '+').replace(/_/g, '/'); r = new TextDecoder().decode(Uint8Array.from(atob(b.padEnd(b.length + ((4 - (b.length % 4)) % 4), '=')), c => c.charCodeAt(0))); } const v = JSON.parse(r); return String(v?.access_token || v?.currentSession?.access_token || ''); } catch { return ''; } };
   const stored = () => {
@@ -31,16 +32,22 @@ export async function fastToken(db: ReturnType<typeof supabase>, ms = 3500): Pro
     try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i) || ''; if (k.startsWith('sb-') && k.endsWith('-auth-token')) { const t = parse(localStorage.getItem(k) || ''); if (t) return t; } } } catch { /* ignore */ }
     return '';
   };
+  if (!db) return stored();
   try { const r = await Promise.race([db.auth.getSession().then(x => x.data.session?.access_token || ''), new Promise<null>(res => setTimeout(() => res(null), ms))]); return r === null ? stored() : (r || stored()); } catch { return stored(); }
+}
+/** P40: رمز الجلسة بلا تحميل مكتبة Supabase ما لم توجد جلسة مخزَّنة */
+export async function lazyToken(ms = 3500): Promise<string> {
+  if (!hasStoredSession()) return '';
+  try { return await fastToken(await sbLazy(), ms); } catch { return fastToken(null); }
 }
 export const isStandalone = () => typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true);
 
 export function PocketProvider({ children }: { children: React.ReactNode }) {
-  const db = useMemo(() => supabase(), []);
   const [online, setOnline] = useState(true); const [items, setItems] = useState<OutboxItem[]>([]); const [syncing, setSyncing] = useState(false); const [lastSync, setLastSync] = useState<string | null>(null); const [lastReport, setLastReport] = useState('');
   const [swVersion, setSwVersion] = useState<string | null>(null); const [waiting, setWaiting] = useState<ServiceWorker | null>(null); const [install, setInstall] = useState<'none' | 'prompt' | 'ios_hint'>('none'); const [toast, setToast] = useState('');
   const promptRef = useRef<any>(null); const wantReload = useRef(false); const supported = typeof window !== 'undefined' && hasPocket(); const busy = useRef(false);
-  const token = useCallback(() => fastToken(db), [db]);
+  /* خِفّة أَثَر: لا عميل Supabase للزائر؛ يُحمَّل كسولًا عند وجود جلسة مخزَّنة */
+  const token = useCallback(async () => { if (!hasStoredSession()) return ''; const sb = await sbLazy().catch(() => null); return fastToken(sb as ReturnType<typeof supabase> | null); }, []);
 
   const refresh = useCallback(async () => { if (!supported) return; try { setItems(await listItems()); } catch { /* ignore */ } }, [supported]);
   const sync = useCallback(async () => {
@@ -82,7 +89,7 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
         const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
         if (reg.waiting && navigator.serviceWorker.controller) setWaiting(reg.waiting);
         reg.addEventListener('updatefound', () => { const nw = reg.installing; nw?.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller && reg.waiting === nw) setWaiting(nw); if (nw.state === 'activated' || nw.state === 'redundant') setWaiting(w => (w === nw ? null : w)); }); });
-        const done = await kvGet<string>('activated').catch(() => undefined); if (done !== POCKET_VERSION) { await kvSet('activated', POCKET_VERSION).catch(() => undefined); const tok = await token(); fetch('/api/pocket', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }, body: JSON.stringify({ action: 'activated', version: POCKET_VERSION, standalone: isStandalone(), platform: /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop' }) }).catch(() => null); }
+        const done = await kvGet<string>('activated').catch(() => undefined); if (done !== POCKET_VERSION) { await kvSet('activated', POCKET_VERSION).catch(() => undefined); const tok = await token(); if (tok) fetch('/api/pocket', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'activated', version: POCKET_VERSION, standalone: isStandalone(), platform: /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop' }) }).catch(() => null); }
       } catch { /* بلا PWA */ }
     }, 1200);
     // إعادة التحميل فقط حين يطلب المستخدم التحديث (لا عند أول تثبيت لعامل الخدمة — claim لا يجب أن يقطع الصفحة)
@@ -97,9 +104,10 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('online', up); window.addEventListener('offline', down); document.addEventListener('visibilitychange', vis);
     refresh(); kvGet<string>('last_sync').then(v => v && setLastSync(v)).catch(() => undefined);
     (async () => { const tok = await token(); if (tok && navigator.onLine) { try { if ('serviceWorker' in navigator) await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(r, 6000))]); } catch { /* بلا SW */ } const warmAt = await kvGet<string>('warm_at').catch(() => undefined); if (!warmAt || Date.now() - new Date(warmAt).getTime() > 20 * 60000) { const h = { Authorization: `Bearer ${tok}` }; await Promise.all(['/api/pocket?view=bundle', '/api/vc?view=mine', '/api/daily', '/api/missions'].map(u => fetch(u, { headers: h }).catch(() => null))); fetch('/.well-known/did.json').catch(() => null); await kvSet('warm_at', new Date().toISOString()).catch(() => undefined); } setTimeout(() => sync(), 800); } })();
-    const { data: sub } = db.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { clearPocket().catch(() => undefined); setItems([]); navigator.serviceWorker?.controller?.postMessage({ type: 'logout' }); } });
-    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down); document.removeEventListener('visibilitychange', vis); sub?.subscription?.unsubscribe(); };
-  }, [db, refresh, sync, token]);
+    let unsubAuth: (() => void) | null = null; let alive = true;
+    if (hasStoredSession()) void sbLazy().then((sb) => { if (!alive) return; const { data: sub } = sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { clearPocket().catch(() => undefined); setItems([]); navigator.serviceWorker?.controller?.postMessage({ type: 'logout' }); } }); unsubAuth = () => sub?.subscription?.unsubscribe(); }).catch(() => undefined);
+    return () => { window.removeEventListener('online', up); window.removeEventListener('offline', down); document.removeEventListener('visibilitychange', vis); alive = false; unsubAuth?.(); };
+  }, [refresh, sync, token]);
 
   // التثبيت الذكي
   useEffect(() => {
@@ -107,7 +115,7 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
     const onBip = (e: any) => { e.preventDefault(); promptRef.current = e; };
     const decide = async () => { const moments = Number((await kvGet<number>('value_moments').catch(() => 0)) || 0); const dismissed = (await kvGet<string>('install_dismissed').catch(() => undefined)) || null; setInstall(installDecision({ standalone: isStandalone(), ios: isIosNotStandalone(), canPrompt: !!promptRef.current, dismissedAt: dismissed, valueMoments: moments })); };
     const onValue = async () => { const n = Number((await kvGet<number>('value_moments').catch(() => 0)) || 0) + 1; await kvSet('value_moments', n).catch(() => undefined); decide(); };
-    const onInstalled = async () => { setInstall('none'); const tok = await token(); fetch('/api/pocket', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }, body: JSON.stringify({ action: 'installed', version: POCKET_VERSION, platform: /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop' }) }).catch(() => null); };
+    const onInstalled = async () => { setInstall('none'); const tok = await token(); if (tok) fetch('/api/pocket', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'installed', version: POCKET_VERSION, platform: /iphone|ipad/i.test(navigator.userAgent) ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop' }) }).catch(() => null); };
     window.addEventListener('beforeinstallprompt', onBip); window.addEventListener(VALUE_EVENT, onValue); window.addEventListener('appinstalled', onInstalled);
     return () => { window.removeEventListener('beforeinstallprompt', onBip); window.removeEventListener(VALUE_EVENT, onValue); window.removeEventListener('appinstalled', onInstalled); };
   }, [token]);

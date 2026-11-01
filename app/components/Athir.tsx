@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { supabase } from '../../lib/supabase/client';
+import { lazyToken } from './Pocket';
 import { Icon } from '../../lib/ui/icons';
 import { useLang } from './PortalShell';
 
@@ -23,7 +23,7 @@ export default function Athir() {
   const listRef = useRef<HTMLDivElement>(null); const recRef = useRef<any>(null); const helloDone = useRef(false);
   const hidden = pathname.startsWith('/admin') || pathname.startsWith('/verify');
 
-  const token = useCallback(async () => { try { const { data } = await supabase().auth.getSession(); return data.session?.access_token || ''; } catch { return ''; } }, []);
+  const token = useCallback(async () => lazyToken(), []);
   const call = useCallback(async (body: any) => { const tk = await token(); const r = await fetch('/api/athir', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tk ? { Authorization: `Bearer ${tk}` } : {}) }, body: JSON.stringify({ ...body, page: pathname, lang, simple: /\bsimple\b|\bread_hard\b/.test(document.documentElement.getAttribute('data-access') || '') }) }); return r.json(); }, [token, pathname, lang]);
 
   // تحية مبادِرة مرة واحدة في الجلسة

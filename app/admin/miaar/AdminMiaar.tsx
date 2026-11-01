@@ -15,6 +15,7 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { qrSvg } from '../../../lib/certificates/qr';
 import { LEVELS, SKILLS, skillLabel, MIAAR_NAMES_AR, FLOOR_LEVEL, BANK_LEVEL_AR } from '../../../lib/miaar/registry';
 import BankEditor from './BankEditor';
+import { Icon } from '../../../lib/ui/icons';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const LANG_OPTS = [['ar', 'العربية'], ['en', 'English'], ['fr', 'Français'], ['tr', 'Türkçe'], ['ur', 'اردو'], ['id', 'Indonesia'], ['ms', 'Melayu'], ['fa', 'فارسی'], ['ru', 'Русский'], ['zh', '中文'], ['es', 'Español'], ['de', 'Deutsch'], ['hi', 'हिन्दी'], ['bn', 'বাংলা'], ['sw', 'Kiswahili'], ['fil', 'Filipino']];
@@ -70,10 +71,10 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
             <p className="mm-lead">{tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
           </div>
           <div className="mm-heroacts">
-            <Link href="/admin/placements" className="mm-hbtn gold">تصدير النتائج CSV</Link>
-            <Link href="/admin/miaar/bank" className="mm-hbtn">تقرير البنك</Link>
-            <Link href="/admin/miaar/invites" className="mm-hbtn">{MIAAR_NAMES_AR.invites}</Link>
-            <Link href="/miaar" className="mm-hbtn">صفحة الاختبار</Link>
+            <Link href="/admin/placements" className="mm-hbtn gold"><Icon name="download" />تصدير النتائج CSV</Link>
+            <Link href="/admin/miaar/bank" className="mm-hbtn"><Icon name="search" />تقرير البنك</Link>
+            <Link href="/admin/miaar/invites" className="mm-hbtn"><Icon name="qr" />{MIAAR_NAMES_AR.invites}</Link>
+            <Link href="/miaar" className="mm-hbtn"><Icon name="play" />صفحة الاختبار</Link>
           </div>
         </header>
         <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['invites', '03', MIAAR_NAMES_AR.invites, '/admin/miaar/invites']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
@@ -164,7 +165,7 @@ const CSS = `
 .mm-crumb{margin:0;font-size:12px;font-weight:900;letter-spacing:.14em;color:#d7e2ee}.mm-crumb a{color:#fff;text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:4px}.mm-crumb span{color:var(--gold)}
 .mm-hero h1{margin:8px 0 0;font-size:34px;font-weight:900;color:#fff}.mm-lead{margin:10px 0 0;max-width:640px;line-height:1.8;color:#d5e0ea;font-size:15px}
 .mm-heroacts{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;justify-content:flex-end}
-.mm-hbtn{display:inline-flex;align-items:center;min-height:44px;border:1px solid rgba(255,255,255,.25);background:#fff;color:var(--navy);border-radius:12px;padding:8px 16px;font-size:13.5px;font-weight:800;text-decoration:none}.mm-hbtn:hover{background:#f8fafc}.mm-hbtn.gold{background:var(--gold);border-color:var(--gold);color:#1f2937}.mm-hbtn.gold:hover{background:#b8923f}
+.mm-hbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:1px solid rgba(255,255,255,.25);background:#fff;color:var(--navy);border-radius:12px;padding:8px 16px;font-size:13.5px;font-weight:800;text-decoration:none;cursor:pointer}.mm-hbtn:hover{background:#f1f5f9;filter:none}.mm-hbtn:active{background:#e2e8f0}.mm-hbtn>svg:first-child{width:20px;height:20px;flex:none;border-radius:50%;padding:3px;background:var(--navy);color:#fff;box-sizing:border-box}.mm-hbtn.gold:hover{background:var(--gold-600,#bb9340)}.mm-hbtn.gold:active{background:var(--gold-700,#b58c33)}.mm-hbtn.gold{background:var(--gold);border-color:var(--gold);color:#1f2937}.mm-hbtn.gold:hover{background:#b8923f}
 .mm-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mm-tabs a{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 22px;font-size:15px;font-weight:900;color:var(--navy);text-decoration:none;box-shadow:0 4px 14px rgba(15,42,78,.04)}
 .mm-tabs a i{font-style:normal;font-size:11px;font-weight:900;color:var(--teal);letter-spacing:.14em}.mm-tabs a.on{background:var(--navy);border-color:var(--navy);color:#fff}.mm-tabs a.on i{color:#d7e2ee}
 .mm-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}

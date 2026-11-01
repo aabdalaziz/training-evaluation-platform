@@ -3,8 +3,7 @@
 // P33 «أَثَر معك — على الهواء»: زر الرأس (العدد الحي) + حوار «أَثَر معك» (من على الهواء · ثلاث درجات · الطلب) + الخيط (Thread) المشترك مع /me/onair.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabase/client';
-import { fastToken } from './Pocket';
+import { lazyToken } from './Pocket';
 import { Icon } from '../../lib/ui/icons';
 import { GRADES, GRADE_LABEL, GRADE_HINT, QUICK_TIMEOUT_MIN, TEXT_MAX, CHANGED_MAX, dialogDefaults, BOTTLE_AR, BOTTLE_HOURS, CITY_POINTS, ORG_HOLD_HOURS, WHEN_LEVEL_AR, WEEKDAY_AR, P35_NAMES_AR, P36_NAMES_AR, ORG_TIME_LEVEL_AR } from '../../lib/onair/registry';
 import type { Grade } from '../../lib/onair/registry';
@@ -16,15 +15,22 @@ const tokKey = (id: string | number) => `athar_onair_t:${id}`;
 export const rememberAnon = (id: string | number, t: string | null) => { try { if (t) localStorage.setItem(tokKey(id), t); } catch { /* صامت */ } };
 export const anonTokenFor = (id: string | number) => { try { return localStorage.getItem(tokKey(id)) || ''; } catch { return ''; } };
 async function api(path: string, body?: any) {
-  const tk = await fastToken(supabase()).catch(() => '');
+  const tk = await lazyToken().catch(() => '');
   const r = await fetch(path, { method: body ? 'POST' : 'GET', cache: 'no-store', headers: { 'Content-Type': 'application/json', ...(tk ? { Authorization: `Bearer ${tk}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({})); return { ok: r.ok, status: r.status, j };
 }
 
 /** زر الرأس: «أَثَر معك · N على الهواء» — يُحدَّث كل 45 ثانية */
+/* خِفّة أَثَر (P40): نداء «الآن على الهواء» مشترك بين الزر والسطر الحيّ (كان يُطلب مرتين في كل صفحة) — ذاكرة 20 ثانية */
+let onAirNow: { t: number; p: Promise<any> } | null = null;
+function fetchOnAirNow(): Promise<any> {
+  const now = Date.now();
+  if (!onAirNow || now - onAirNow.t > 20000) onAirNow = { t: now, p: fetch('/api/onair?now=1', { cache: 'no-store' }).then(r => r.json()).catch(() => null) };
+  return onAirNow.p;
+}
 export function OnAirButton({ lang }: { lang: Lang }) {
   const ar = lang === 'ar'; const [n, setN] = useState<number | null>(null); const [signed, setSigned] = useState(false);
-  useEffect(() => { let alive = true; const load = () => fetch('/api/onair?now=1', { cache: 'no-store' }).then(r => r.json()).then(j => { if (alive && j?.success) { setN(Number(j.count) || 0); setSigned(Number(j.stats?.faces?.interpreter || 0) > 0); } }).catch(() => null); load(); const id = setInterval(load, 45000); return () => { alive = false; clearInterval(id); }; }, []);
+  useEffect(() => { let alive = true; const load = () => fetchOnAirNow().then(j => { if (alive && j?.success) { setN(Number(j.count) || 0); setSigned(Number(j.stats?.faces?.interpreter || 0) > 0); } }).catch(() => null); load(); const id = setInterval(load, 45000); return () => { alive = false; clearInterval(id); }; }, []);
   return <button type="button" className={`oa-btn ${n ? 'live' : ''}`} onClick={() => openOnAir()} aria-haspopup="dialog" data-testid="oa-open" title={ar ? 'أَثَر معك — اسأل الآن، فثمّة إنسان يسمعك' : 'Athar with you — ask now, a human is listening'}>
     <span className="oa-dot" aria-hidden="true" /> {ar ? 'أَثَر معك' : 'Athar with you'}{n !== null && <b data-testid="oa-count">{n}</b>}{signed && <span className="oa-hand" data-testid="oa-hand" title={ar ? 'مترجم لغة إشارة على الهواء الآن' : 'Sign-language interpreter on air now'}>🤟<span className="oa-sr">{ar ? ' · مترجم إشارة على الهواء' : ' · interpreter on air'}</span></span>}<span className="oa-sr">{n ? (ar ? ` · ${n} على الهواء` : ` · ${n} on air`) : (ar ? ' · لا أحد على الهواء الآن' : ' · nobody on air now')}</span>
   </button>;
@@ -33,7 +39,7 @@ export function OnAirButton({ lang }: { lang: Lang }) {
 /** سطر حيّ للصفحة الرئيسية: «الآن N إنسان على الهواء» */
 export function OnAirLine({ lang }: { lang: Lang }) {
   const ar = lang === 'ar'; const [d, setD] = useState<{ count: number; faces: string[]; golden: any | null; map: any; season: any | null; whisper: any | null } | null>(null);
-  useEffect(() => { let alive = true; const load = () => fetch('/api/onair?now=1', { cache: 'no-store' }).then(r => r.json()).then(j => { if (alive && j?.success) setD({ count: Number(j.count) || 0, faces: Array.from(new Set((j.present || []).map((p: any) => String(p.face_ar)))) as string[], golden: j.golden || null, map: j.map || null, season: j.season || null, whisper: j.whisper || null }); }).catch(() => null); load(); const id = setInterval(load, 60000); return () => { alive = false; clearInterval(id); }; }, []);
+  useEffect(() => { let alive = true; const load = () => fetchOnAirNow().then(j => { if (alive && j?.success) setD({ count: Number(j.count) || 0, faces: Array.from(new Set((j.present || []).map((p: any) => String(p.face_ar)))) as string[], golden: j.golden || null, map: j.map || null, season: j.season || null, whisper: j.whisper || null }); }).catch(() => null); load(); const id = setInterval(load, 60000); return () => { alive = false; clearInterval(id); }; }, []);
   if (!d) return null;
   return <><p className="oa-line" data-testid="oa-line"><span className={`oa-dot ${d.count ? 'on' : ''}`} aria-hidden="true" /> {d.count ? (ar ? <>الآن <b>{d.count}</b> {d.count === 1 ? 'إنسان' : d.count === 2 ? 'إنسانان' : 'أناس'} على الهواء في «أَثَر معك»{d.faces.length ? ` (${d.faces.join('، ')})` : ''} — </> : <>Right now <b>{d.count}</b> on air in “Athar with you” — </>) : (ar ? 'لا أحد على الهواء هذه اللحظة — اترك طلبك يصل أول من يصعد — ' : 'Nobody on air this minute — leave a request — ')}<button type="button" className="oa-linebtn" onClick={() => openOnAir()} data-testid="oa-line-btn">{ar ? 'اسأل إنسانًا الآن' : 'Ask a human now'}</button></p>{d.golden && <p className="oa-golden" data-testid="oa-golden-line"><span aria-hidden="true">✦</span> {ar ? <>{d.golden.title_ar}: {d.golden.live ? <b>جارية الآن</b> : <b>{d.golden.countdown_ar}</b>} · {d.golden.weekday_ar} {d.golden.from} · <b>{d.golden.pledged}</b> تعهّدوا بالحضور</> : <>{d.golden.title_ar}: {d.golden.live ? <b>live now</b> : <b>in {d.golden.minutes_to} min</b>} · {d.golden.pledged} pledged</>} <Link href="/on-air">{ar ? 'التفاصيل' : 'Details'}</Link></p>}{d.whisper && <p className="oa-whisper" data-testid="oa-whisper-line"><span aria-hidden="true">🤟</span> {ar ? <>{P35_NAMES_AR.whisper} الآن: <b>{d.whisper.title_ar}</b> — غرفة مفتوحة للجميع حتى {new Date(d.whisper.ends_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</> : <>Interpreter’s whisper now: <b>{d.whisper.title_ar}</b></>} <Link href={`/room/${d.whisper.room_code}`} className="oa-linebtn">{ar ? 'ادخل' : 'Join'}</Link></p>}{d.season && d.season.phase !== 'after' && <p className="oa-season" data-testid="oa-season-line"><span aria-hidden="true">❂</span> {ar ? <>{d.season.title_ar}: <b>{d.season.phrase}</b> · {d.season.line}</> : <>{d.season.title_ar}: <b>{d.season.phase === 'live' ? 'live' : 'soon'}</b> · {d.season.orgs} organizations</>} <Link href="/on-air#season">{ar ? 'الموسم' : 'Season'}</Link></p>}{d.count > 0 && d.map?.points?.length > 0 && <OnAirMap map={d.map} lang={lang} compact />}</>;
 }
@@ -105,7 +111,7 @@ export function OnAirPanel({ lang }: { lang: Lang }) {
   useEffect(() => { const on = (e: Event) => { const d = (e as CustomEvent).detail || {}; setOpen(true); setGrade(d.grade || null); setThread(null); setErr(''); setAlts(null); }; window.addEventListener(EVT, on); if (typeof window !== 'undefined' && (window.location.hash === '#onair' || new URLSearchParams(window.location.search).get('onair') === '1')) setOpen(true); return () => window.removeEventListener(EVT, on); }, []);
   useEffect(() => {   // 7) الهواء بالإشارة · 2) الهواء الصامت — من «احتياجاتي» على المتصفح فقط؛ لا يُرسل شيء
     if (!open || applied.current) return; applied.current = true;
-    (async () => { const tk = await fastToken(supabase()).catch(() => ''); if (!tk) return; const r = await api('/api/inclusion?mine=1'); const needs: string[] = r.j?.profile?.needs || []; const d = dialogDefaults(needs); if (d.grade) setGrade(g => g || d.grade); if (d.interpreter) setInterp(true); if (d.prefer_text) setPreferText(true); setDefNote(d.note_ar); })().catch(() => null);
+    (async () => { const tk = await lazyToken().catch(() => ''); if (!tk) return; const r = await api('/api/inclusion?mine=1'); const needs: string[] = r.j?.profile?.needs || []; const d = dialogDefaults(needs); if (d.grade) setGrade(g => g || d.grade); if (d.interpreter) setInterp(true); if (d.prefer_text) setPreferText(true); setDefNote(d.note_ar); })().catch(() => null);
   }, [open]);
   useEffect(() => { if (open) { load(); last.current = document.activeElement as HTMLElement; setTimeout(() => ref.current?.querySelector<HTMLElement>('button,input,[tabindex]')?.focus(), 30); } else last.current?.focus?.(); }, [open, load]);
   useEffect(() => {

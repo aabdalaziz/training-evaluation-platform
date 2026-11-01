@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { qrSvg } from '../../lib/certificates/qr';
 import { CAN_DO, LEVELS, SKILLS, FLOOR_LEVEL, FLOOR_INDEX } from '../../lib/miaar/registry';
 import type { Level } from '../../lib/miaar/registry';
+import { Icon } from '../../lib/ui/icons';
 
 type Copy = Record<string, Record<string, Record<string, string>>> & { langs?: { id: string; name: string; find: string }[]; native?: { value: string; labels: Record<string, string> }[] };
 type Q = { id: string; level: string; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
@@ -51,6 +52,23 @@ const X: Record<string, { ar: string; en: string }> = {
 
 const fill = (s: string, vars: Record<string, string | number> = {}) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
 function readLang(fallback: string) { try { const v = localStorage.getItem('athar-page-lang'); if (v) return v; } catch { /* */ } return fallback; }
+/* خِفّة مِعيار (P40): القاموس مقسَّم — فهرس صغير /miaar/copy/index.json + ملف لكل لغة /miaar/copy/<code>.json؛ لا يُحمَّل إلا en (الاحتياطي) ولغة الزائر، وتُجلب أي لغة أخرى عند اختيارها فقط (كان الملف الموحّد 139 KB مضغوطة لكل زيارة). */
+type CopyIndex = { codes: string[]; langs: Copy['langs']; native: Copy['native'] };
+const copyFiles: Record<string, Promise<Record<string, Record<string, string>> | null>> = {};
+let copyIndex: Promise<CopyIndex | null> | null = null;
+function fetchCopyLang(code: string) { if (!copyFiles[code]) copyFiles[code] = fetch(`/miaar/copy/${encodeURIComponent(code)}.json`, { cache: 'force-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null); return copyFiles[code]; }
+async function loadCopy(base: Copy | null, codes: string[]): Promise<Copy | null> {
+  if (!copyIndex) copyIndex = fetch('/miaar/copy/index.json', { cache: 'force-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const idx = await copyIndex; if (!idx) return null;
+  const out: Copy = base ? { ...base } : ({ langs: idx.langs, native: idx.native } as Copy);
+  for (const code of Array.from(new Set(codes))) {
+    if (!idx.codes.includes(code) || out.intro?.[code]) continue;
+    const f = await fetchCopyLang(code); if (!f) continue;
+    for (const sec of Object.keys(f)) out[sec] = { ...(out[sec] || {}), [code]: f[sec] };
+  }
+  return out;
+}
+async function copyHas(code: string) { const idx = await copyIndex; return !!idx?.codes.includes(code); }
 
 export default function MiaarApp({ inviteCode = null, inviteToken = null, resultCode = null, fontClass = '' }: Props) {
   const [copy, setCopy] = useState<Copy | null>(null);
@@ -70,13 +88,15 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const dir = RTL.has(lang) ? 'rtl' : 'ltr';
   const t = useCallback((sec: string, key: string, vars?: Record<string, string | number>) => { const s = copy?.[sec]; const v = s?.[lang]?.[key] ?? s?.en?.[key] ?? key; return vars ? fill(v, vars) : v; }, [copy, lang]);
   const x = useCallback((key: string, vars?: Record<string, string | number>) => { const v = (lang === 'ar' ? X[key]?.ar : X[key]?.en) || key; return vars ? fill(v, vars) : v; }, [lang]);
-  const setLang = (v: string) => { langPicked.current = true; setLangState(v); try { localStorage.setItem('athar-page-lang', v); } catch { /* */ } };
+  const setLang = (v: string) => { langPicked.current = true; setLangState(v); try { localStorage.setItem('athar-page-lang', v); } catch { /* */ } void loadCopy(copy, [v]).then((c) => { if (c) setCopy(c); }); };
   const letters = lang === 'ar' ? AR_LETTERS : EN_LETTERS;
 
   // ---- تحميل القاموس · الدعوة · النتيجة برمزها · استئناف جلسة
   useEffect(() => { (async () => {
-    const c = await fetch('/miaar/copy.json', { cache: 'force-cache' }).then((r) => r.json()).catch(() => null); if (!c) { setErr('copy'); return; } setCopy(c);
-    let initialLang = readLang(typeof navigator !== 'undefined' && c.intro?.[navigator.language.slice(0, 2)] ? navigator.language.slice(0, 2) : 'en');
+    const navLang = typeof navigator !== 'undefined' ? navigator.language.slice(0, 2) : 'en';
+    await loadCopy(null, []); /* الفهرس أولًا */
+    let initialLang = readLang((await copyHas(navLang)) ? navLang : 'en');
+    let c = await loadCopy(null, ['en', initialLang]); if (!c) { setErr('copy'); return; } setCopy(c);
     if (resultCode) {
       const r = await fetch(`/api/miaar?result=${encodeURIComponent(resultCode)}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
       if (r?.ok) { setReport(r.report); setCode(r.code); setResultName(r.name); setStep('result'); } else { setStep('blocked'); setErr('not_found'); }
@@ -84,7 +104,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     }
     if (inviteCode) {
       const r = await fetch(`/api/miaar?invite=${encodeURIComponent(inviteCode)}${inviteToken ? `&t=${encodeURIComponent(inviteToken)}` : ''}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
-      if (r?.ok) { setInvite(r.invite); setExamMode(r.invite.exam_mode); if (!langPicked.current && c.intro?.[r.invite.lang]) initialLang = r.invite.lang; if (r.invite.recipient) setCand((v) => ({ ...v, email: r.invite.recipient.email, name: r.invite.recipient.name || v.name })); }
+      if (r?.ok) { setInvite(r.invite); setExamMode(r.invite.exam_mode); if (!langPicked.current && (await copyHas(r.invite.lang))) { initialLang = r.invite.lang; c = (await loadCopy(c, [initialLang])) || c; setCopy(c); } if (r.invite.recipient) setCand((v) => ({ ...v, email: r.invite.recipient.email, name: r.invite.recipient.name || v.name })); }
       else { setInviteErr(true); setLangState(initialLang); setStep('blocked'); return; }
     }
     setLangState(initialLang);
@@ -228,7 +248,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
           {!ringsOn && <p className="mi-rule">{t('intro', 'rule')}</p>}
           {!ringsOn && <div className="mi-promises">{[1, 2, 3].map((i) => <article key={i}><strong>{t('intro', `p${i}t`)}</strong><span>{t('intro', `p${i}`)}</span></article>)}</div>}
           {ringsOn && <p className="mi-voice">{ringItem ? t('intro', 'voiceN', { n: probeIdx + 1, skill: ringSkill(ringItem.skill) }) : t('intro', 'after')}</p>}
-          {!asked && <button type="button" className="mi-go" onClick={askEnter} data-testid="mi-start">{t('intro', 'askEnter')}</button>}
+          {!asked && <button type="button" className="mi-go" onClick={askEnter} data-testid="mi-start"><Icon name="play" />{t('intro', 'askEnter')}</button>}
           {asked && <section className="mi-inplace" id="mi-doors">
             <p className="mi-kicker gold">{t('intro', 'entryK')}</p><h2>{t('intro', 'entryH')}</h2>
             <div className="mi-doors">{(['comprehensive', 'adaptive'] as const).map((m) => <button key={m} type="button" className="mi-door" aria-pressed={door === m} onClick={() => chooseDoor(m)} data-testid={`mi-door-${m}`}><strong>{t('intro', m === 'adaptive' ? 'adap' : 'comp')}</strong><span>{t('intro', m === 'adaptive' ? 'adapS' : 'compS')}</span></button>)}</div>
@@ -238,7 +258,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
             <p className="mi-voice">{t('intro', 'examNote', { door: t('intro', door === 'comprehensive' ? 'doorComp' : 'doorAdap') })}</p>
             <p className="mi-kicker gold">{t('intro', sampleQ.skill)}</p>
             <div className="mi-arab" dir="rtl" lang="ar"><p className="mi-q">{sampleQ.prompt}</p><div className="mi-opts-arab">{sampleQ.options.map((o) => <button key={o} type="button" lang="ar" dir="rtl">{o}</button>)}</div></div>
-            <button type="button" className="mi-go" onClick={() => setStep('register')} data-testid="mi-go-register">{t('intro', 'goRegister')}</button>
+            <button type="button" className="mi-go" onClick={() => setStep('register')} data-testid="mi-go-register"><Icon name="next" />{t('intro', 'goRegister')}</button>
           </section>}
         </div>
         <div className="mi-sealbox">
@@ -313,7 +333,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
             </fieldset>
           </div>
           {err && <p className="mi-alert" role="alert" data-testid="mi-err">{err}</p>}
-          <button type="submit" className="mi-go wide" disabled={busy} data-testid="mi-register-submit">{busy ? t('register', 'saving') : t('register', 'submit')}</button>
+          <button type="submit" className="mi-go wide" disabled={busy} aria-busy={busy || undefined} data-testid="mi-register-submit"><Icon name={busy ? 'spinner' : 'check'} />{busy ? t('register', 'saving') : t('register', 'submit')}</button>
           <p className="mi-note center">{t('register', 'privacy')}</p>
         </form>
       </div>
@@ -368,7 +388,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
             <p className="mi-hint">{!access.simple && t('test', 'shortcuts')}</p>
             <div className="mi-actions">
               <button type="button" className={`mi-defer${deferred.has(current.id) ? ' on' : ''}`} onClick={() => setDeferred((d) => { const c = new Set(d); c.has(current.id) ? c.delete(current.id) : c.add(current.id); return c; })} aria-pressed={deferred.has(current.id)}>{deferred.has(current.id) ? t('test', 'clear') : t('test', 'defer')}</button>
-              <button type="button" className="mi-next" onClick={() => void next()} disabled={busy} data-testid="mi-next">{t('test', 'next')} →</button>
+              <button type="button" className="mi-next" onClick={() => void next()} disabled={busy} data-testid="mi-next"><Icon name="next" />{t('test', 'next')}</button>
             </div>
           </div>
         </article>
@@ -492,7 +512,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
 }
 
 const CSS = `
-.mi{--navy:#0f2a4e;--ink:#0f172a;--teal:#0b8a83;--teal-deep:#0f5c57;--teal-soft:#e6f4f3;--teal-line:#cfe9e6;--gold:#c9a24b;--gold-line:#ead9a6;--gold-soft:#fbf5e4;--page:#f3f6fa;--line:#e4eaf2;--muted:#64748b;--grad:linear-gradient(135deg,#0f2a4e 0%,#143a66 55%,#0b6b66 100%);min-height:100vh;color:var(--ink);background:linear-gradient(180deg,#f6f8fb,#eef5f4);font-family:var(--mi-font,Tajawal),"Noto Naskh Arabic",system-ui,sans-serif;font-size:17px;line-height:1.6}
+.mi{--navy:#0f2a4e;--ink:#0f172a;--teal:#0b8a83;--teal-deep:#0f5c57;--teal-soft:#e6f4f3;--teal-line:#cfe9e6;--gold:#c9a24b;--gold-line:#ead9a6;--gold-soft:#fbf5e4;--page:#f3f6fa;--line:#e4eaf2;--muted:#64748b;--grad:linear-gradient(135deg,#0f2a4e 0%,#143a66 55%,#0b6b66 100%);min-height:100vh;color:var(--ink);background:linear-gradient(180deg,#f6f8fb,#eef5f4);font-family:var(--font-ar,Tajawal),"Noto Naskh Arabic",system-ui,sans-serif;font-size:17px;line-height:1.6}
 .mi *{box-sizing:border-box}.mi a{color:inherit;text-decoration:none}.mi button,.mi input,.mi select{font-family:inherit}
 .mi h1,.mi h2,.mi h3{font-weight:900;letter-spacing:0;margin:0}
 .mi-large{font-size:20px}.mi-contrast{--navy:#000;--ink:#000;--teal:#004d49;--muted:#222;--grad:linear-gradient(135deg,#000,#0a2a2a)}
@@ -527,8 +547,8 @@ const CSS = `
 .mi-voice{font-size:17px;line-height:1.9;max-width:60ch;margin:0 0 12px}
 .mi-invite{display:inline-block;margin:0 0 14px;background:rgba(201,162,75,.16);border:1px solid rgba(201,162,75,.55);border-radius:12px;padding:8px 12px;font-size:13px;font-weight:800;color:#fff}
 .mi-invite.light{display:block;background:var(--gold-soft);border-color:var(--gold-line);color:var(--navy);margin:0 0 12px}
-.mi-go{display:inline-flex;align-items:center;justify-content:center;margin-top:18px;background:var(--gold);color:#1f2937;border:1px solid var(--gold);border-radius:12px;padding:12px 20px;font-weight:900;font-size:15px;cursor:pointer}
-.mi-go:hover{background:#b8923f}.mi-go:disabled{opacity:.7;cursor:wait}.mi-go.wide{width:100%;padding:14px 18px;font-size:16px}
+.mi-go{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;min-height:44px;background:var(--gold-500,#c9a24b);color:var(--navy);border:1px solid var(--gold-500,#c9a24b);border-radius:12px;padding:11px 20px;font-weight:900;font-size:15px;cursor:pointer;transition:background-color .15s,transform .12s,box-shadow .15s}.mi-go:hover{background:var(--gold-600,#bb9340);border-color:var(--gold-600,#bb9340);transform:translateY(-1px)}.mi-go:active{background:var(--gold-700,#b58c33);transform:translateY(1px);box-shadow:inset 0 2px 6px rgba(8,26,51,.22)}.mi-go:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px var(--teal)}.mi-go:disabled{opacity:.45;cursor:not-allowed}.mi-go>svg:first-child,.mi-next>svg:first-child{width:20px;height:20px;flex:none;border-radius:50%;padding:3px;background:var(--navy);color:#fff;box-sizing:border-box}.mi-go[aria-busy="true"]>svg:first-child{animation:key-spin .9s linear infinite}
+.mi-go[aria-busy="true"]{cursor:wait}.mi-go.wide{width:100%;padding:14px 18px;font-size:16px}
 .mi-inplace{margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.18)}.mi-inplace h2{font-size:clamp(22px,2.6vw,30px);color:#fff;margin:4px 0 10px}
 .mi-doors{display:grid;gap:12px;margin-top:8px}
 .mi-door{border:1px solid rgba(255,255,255,.45);border-radius:18px;padding:16px 18px;background:transparent;color:#fff;text-align:start;cursor:pointer}
@@ -537,7 +557,7 @@ const CSS = `
 .mi-arab{background:#fff;color:var(--navy);border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-top:10px}
 .mi-arab.stage{width:100%;background:transparent;color:#fff;border:0;padding:0;box-shadow:none}.mi-arab.stage .mi-q,.mi-arab.stage .mi-q span{color:#fff}
 .mi-q{white-space:pre-line;font-family:var(--mi-ruqaa,"Aref Ruqaa"),"Noto Naskh Arabic",serif;font-size:clamp(24px,3vw,34px);line-height:1.7;margin:0 0 14px;color:var(--navy)}
-.mi-lv{font-family:var(--mi-font,Tajawal),sans-serif;font-size:13px;font-weight:900;color:var(--gold);margin-inline-end:8px}
+.mi-lv{font-family:var(--font-ar,Tajawal),sans-serif;font-size:13px;font-weight:900;color:var(--gold);margin-inline-end:8px}
 .mi-opts-arab{display:grid;gap:8px}.mi-opts-arab button{border:1px solid #e2e8f0;background:#fff;color:var(--navy);border-radius:12px;padding:12px 14px;font-weight:900;font-size:15px;cursor:pointer;text-align:right}
 .mi-opts-arab button:hover,.mi-opts-arab button.on{background:var(--gold);border-color:var(--gold);color:#1f2937}
 .mi-sealbox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:16px;backdrop-filter:blur(6px)}
@@ -550,7 +570,7 @@ const CSS = `
 .mi-ring.gold{border-color:var(--gold);transform:translate(-50%,-50%) scale(.2);opacity:0;animation:miMint .7s ease forwards}
 @keyframes miMint{to{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .mi-core{position:absolute;left:50%;top:50%;width:140px;height:140px;transform:translate(-50%,-50%);border:1px solid var(--gold);border-radius:50%;background:var(--gold);color:var(--navy);font-weight:900;line-height:1.15;cursor:pointer;padding:8px;box-shadow:0 8px 18px rgba(15,42,78,.25)}
-.mi-core:focus-visible,.mi-go:focus-visible,.mi-door:focus-visible,.mi-opts-arab button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.mi-core:focus-visible,.mi-door:focus-visible,.mi-opts-arab button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .mi-cap{margin:12px 0 2px;text-align:center;color:rgba(255,255,255,.78);font-size:13px;line-height:1.7}
 .mi-skill{display:block;margin:0 0 8px;color:var(--gold);font-size:12px;font-weight:900}
 .mi-after{margin:0;color:#fff;font-weight:800;text-align:center;line-height:1.7}
@@ -570,7 +590,7 @@ const CSS = `
 .mi-lvcan{margin:0;color:#334155;font-size:15px;line-height:1.7}.mi-lvcan span{display:block;color:var(--teal);font-size:11.5px;font-weight:900}
 .mi-lvline{margin:6px 0 0;color:var(--muted);font-size:13.5px;line-height:1.6}
 .mi-specimen{margin:0;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:16px;padding:12px 14px;font-family:var(--mi-ruqaa,"Aref Ruqaa"),"Noto Naskh Arabic",serif;font-size:clamp(20px,1.8vw,26px);line-height:1.6;color:var(--navy)}
-.mi-specimen small{display:block;font-family:var(--mi-font,Tajawal),sans-serif;font-size:11px;font-weight:900;color:#8a6a14;margin-bottom:2px}
+.mi-specimen small{display:block;font-family:var(--font-ar,Tajawal),sans-serif;font-size:11px;font-weight:900;color:#8a6a14;margin-bottom:2px}
 .mi-band{background:var(--grad);color:#fff;padding:34px 7vw 48px}.mi-band h1{font-size:clamp(28px,4vw,44px);line-height:1.3;margin:8px 0;color:#fff}.mi-band h2{font-size:clamp(24px,3vw,34px);color:#fff;margin:6px 0 10px}.mi-band p{color:rgba(255,255,255,.85)}
 .mi-band .mi-lead{margin:0}
 .mi-finale{padding:56px 7vw 64px}.mi-tools{display:grid;gap:10px}
@@ -628,7 +648,7 @@ const CSS = `
 .mi-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.mi-tfoot .mi-actions{margin:0}
 .mi-defer,.mi-next{border-radius:12px;padding:13px 18px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-size:15px}
 .mi-defer{border:1px solid #dbe3ea;background:#fff;color:var(--navy)}.mi-defer.on{border-color:var(--gold);background:var(--gold-soft)}
-.mi-next{border:1px solid var(--gold);background:var(--gold);color:#1f2937}.mi-next:hover{background:#b8923f}.mi-next:disabled{border-color:#e2e8f0;background:#e2e8f0;color:#94a3b8;cursor:not-allowed}
+.mi-next{border:1px solid var(--gold-500,#c9a24b);background:var(--gold-500,#c9a24b);color:var(--navy);transition:background-color .15s,transform .12s,box-shadow .15s}.mi-next:hover{background:var(--gold-600,#bb9340);border-color:var(--gold-600,#bb9340)}.mi-next:active{background:var(--gold-700,#b58c33);transform:translateY(1px);box-shadow:inset 0 2px 6px rgba(8,26,51,.22)}.mi-next:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px var(--teal)}.mi-next:disabled{border-color:#e2e8f0;background:#e2e8f0;color:#94a3b8;cursor:not-allowed}
 .mi-nav{display:flex;flex-wrap:wrap;gap:6px;max-width:1100px;margin:6px auto 0;padding:0 18px}
 .mi-num{min-width:40px;height:40px;border-radius:12px;border:1px solid #dbe3ea;background:#fff;color:var(--navy);font-weight:900;cursor:pointer;padding:0 10px;font-size:13px}
 .mi-num.ok{background:var(--teal-soft);border-color:var(--teal-line);color:var(--teal-deep)}.mi-num.def{border-color:var(--gold);background:var(--gold-soft)}.mi-num.now{outline:2px solid var(--navy);outline-offset:1px}

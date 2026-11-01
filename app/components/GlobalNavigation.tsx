@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase/client';
+import { sbLazy, hasStoredSession } from '../../lib/supabase/lazy';
 import { Icon, type IconName } from '../../lib/ui/icons';
-import NotificationBell from './NotificationBell';
+import dynamic from 'next/dynamic';
+/* خِفّة أَثَر (P40): جرس الإشعارات يستورد مكتبة Supabase ثابتًا — يُحمَّل فقط حين يُعرض (شريط الإدارة) لا في كل صفحة عامة */
+const NotificationBell = dynamic(() => import('./NotificationBell'), { ssr: false });
 import { SkipLink } from './Inclusion';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
@@ -24,16 +26,17 @@ const ADMIN_NAV: { href: string; label: string; icon: IconName; match: (p: strin
 ];
 
 export default function GlobalNavigation() {
-  const db = supabase();
   const router = useRouter();
   const pathname = usePathname() || '/';
   const [loggedIn, setLoggedIn] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    db.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
-    const { data: listener } = db.auth.onAuthStateChange((_event, session) => setLoggedIn(!!session));
-    return () => listener.subscription.unsubscribe();
+    /* خِفّة أَثَر: لا تحميل لمكتبة Supabase للزائر بلا جلسة مخزَّنة */
+    if (!hasStoredSession()) { setLoggedIn(false); return; }
+    let unsub: (() => void) | null = null; let alive = true;
+    void sbLazy().then((db) => { if (!alive) return; db.auth.getSession().then(({ data }) => setLoggedIn(!!data.session)); const { data: listener } = db.auth.onAuthStateChange((_event, session) => setLoggedIn(!!session)); unsub = () => listener.subscription.unsubscribe(); });
+    return () => { alive = false; unsub?.(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -42,7 +45,7 @@ export default function GlobalNavigation() {
   if (pathname.startsWith('/dashboard')) return null;
   if (pathname === '/' || PORTAL_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))) return null;
 
-  async function logout() { await db.auth.signOut(); router.push('/'); router.refresh(); }
+  async function logout() { const db = await sbLazy(); await db.auth.signOut(); router.push('/'); router.refresh(); }
 
   const adminArea = loggedIn && (pathname.startsWith('/admin') || pathname.startsWith('/reports') || pathname.startsWith('/command-center') || pathname.startsWith('/final-analysis'));
 

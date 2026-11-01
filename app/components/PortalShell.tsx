@@ -4,7 +4,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase/client';
+import { sbLazy, hasStoredSession } from '../../lib/supabase/lazy';
 import { Icon } from '../../lib/ui/icons';
 import { ACRONYM, BRAND, CONTACT, NAV, PARTNERS, SERVICES, UI, t } from '../../lib/portal/content';
 import type { Lang } from '../../lib/portal/content';
@@ -45,7 +45,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     try {
       const resume = localStorage.getItem('athar_resume');
       if (!resume || pathname.startsWith('/programs/')) return;
-      supabase().auth.getSession().then(({ data }) => { if (data.session) { localStorage.removeItem('athar_resume'); router.replace(resume); } });
+      if (!hasStoredSession()) return; void sbLazy().then((sb) => sb.auth.getSession()).then(({ data }) => { if (data.session) { localStorage.removeItem('athar_resume'); router.replace(resume); } });
     } catch { /* ignore */ }
   }, [pathname, router]);
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem('athar_lang', l); } catch { /* ignore */ } };
@@ -148,8 +148,7 @@ const CSS = `
 .pt-headright{display:flex;align-items:center;gap:8px}
 .pt-lang{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:900;color:${NAVY};cursor:pointer}
 .pt-burger{display:none;border:1px solid #cbd5e1;background:#fff;border-radius:10px;width:40px;height:38px;font-size:18px;cursor:pointer}
-.pt-btn{display:inline-flex;align-items:center;gap:8px;background:${TEAL};color:#fff;border:1px solid ${TEAL};border-radius:12px;padding:12px 20px;font:inherit;font-size:14px;font-weight:900;text-decoration:none;cursor:pointer;white-space:nowrap;transition:transform .15s}.pt-btn:hover{transform:translateY(-1px)}
-.pt-btn.navy{background:${NAVY};border-color:${NAVY}}.pt-btn.gold{background:${GOLD};border-color:${GOLD};color:#1f2937}.pt-btn.ghost{background:#fff;color:${NAVY};border-color:#cbd5e1}.pt-btn.light{background:#fff;color:${NAVY};border-color:#fff}.pt-btn.outline{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}.pt-btn.small{padding:8px 14px;font-size:13px}.pt-btn:disabled{opacity:.6;cursor:not-allowed}
+/* .pt-btn — يُعرَّف الآن مركزيًا في app/style.css («مفاتيح أَثَر» P40): ذهبي أساسي بأيقونة في قرص كحلي · navy · teal · ghost · light · outline · small */
 .pt-main{flex:1}
 .pt-wrap{max-width:1200px;margin:0 auto;padding:0 18px}
 .pt-sec{padding:64px 0}.pt-sec.alt{background:#fff}.pt-sec.navy{background:${NAVY};color:#fff}
