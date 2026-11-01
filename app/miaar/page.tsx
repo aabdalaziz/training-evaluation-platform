@@ -2,6 +2,7 @@
 /** /miaar — «مِعيار — من أَثَر»: اختبار تحديد المستوى في العربية (CEFR A1–C2) · 30 لغة واجهة · مِسبار البداية · بطاقة المستوى */
 import type { Metadata } from 'next';
 import MiaarApp from './MiaarApp';
+import { miaarFontClass } from './fonts';
 
 export const metadata: Metadata = {
   title: 'مِعيار — حدّد مستواك في العربية',
@@ -11,4 +12,4 @@ export const metadata: Metadata = {
 };
 export const dynamic = 'force-dynamic';
 
-export default function Page() { return <MiaarApp />; }
+export default function Page() { return <MiaarApp fontClass={miaarFontClass} />; }
