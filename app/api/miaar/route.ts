@@ -1,7 +1,8 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /api/miaar — «مِعيار — من أَثَر» للمتقدّم (بلا حساب؛ وإن كان داخلًا رُبط التقرير بحسابه)
- *  GET ?probe=1                 → بنود «مِسبار» الخمسة (خيارات مخلوطة، بلا مفاتيح)
+ *  GET ?probe=1[&seen=رموز]     → بنود «مِسبار» الخمسة — متجدّدة من البنك في كل زيارة (م2-ب)، خيارات مخلوطة، بلا مفاتيح
+ *  GET ?doors=1                 → أبواب الاختبار العامة (المخطّطات النشطة المعلنة) — م2-ب
  *  GET ?invite=<code>&t=<token> → ما تعنيه الدعوة (الاسم · اللغة · النمط · المستلم إن كانت شخصية)
  *  GET ?result=<ML-code>        → النتيجة برمزها (بلا بريد/هاتف)
  *  POST {action}
@@ -16,6 +17,8 @@ import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { COOKIE_NAME, probePublic, isResultCode, MIAAR_NAMES_AR } from '../../../lib/miaar/registry';
 import { startSession, loadSession, resumeSession, answerSession, finishSession, resultByCode } from '../../../lib/miaar/engine';
 import { openInvite } from '../../../lib/miaar/invites';
+import { loadApprovedPool } from '../../../lib/miaar/bank';
+import { probeFromPool, publicDoors } from '../../../lib/miaar/blueprint';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const NO = { 'Cache-Control': 'no-store' };
@@ -38,7 +41,15 @@ const withCookie = (res: NextResponse, token: string | null, expiresAt?: string)
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('server_not_configured', 500);
   const u = new URL(req.url);
-  if (u.searchParams.get('probe')) return NextResponse.json({ ok: true, name_ar: MIAAR_NAMES_AR.probe, official_ar: MIAAR_NAMES_AR.probe_official, items: probePublic(`${ipOf(req)}:${Date.now()}`) }, { headers: NO });
+  if (u.searchParams.get('probe')) {
+    /* م2-ب: بنود متجدّدة من البنك المعتمد في كل زيارة (بذرة عشوائية) مع استبعاد ما رآه الزائر مؤخرًا (?seen=رمز,رمز) — والبنود الثابتة احتياط */
+    const seen = String(u.searchParams.get('seen') || '').split(',').map((c) => c.trim()).filter(Boolean).slice(0, 30);
+    const seed = `${ipOf(req)}:${Date.now()}:${Math.random()}`;
+    const pool = await loadApprovedPool(db).catch(() => null);
+    const items = pool && pool.length ? probeFromPool(pool, seed, seen) : probePublic(seed);
+    return NextResponse.json({ ok: true, name_ar: MIAAR_NAMES_AR.probe, official_ar: MIAAR_NAMES_AR.probe_official, items }, { headers: NO });
+  }
+  if (u.searchParams.get('doors')) return NextResponse.json({ ok: true, doors: await publicDoors(db) }, { headers: NO });
   if (u.searchParams.get('invite')) { const r = await openInvite(db, u.searchParams.get('invite'), u.searchParams.get('t') || null); return r.ok ? NextResponse.json({ ok: true, invite: r.invite }, { headers: NO }) : bad(`invite_${r.error}`, r.error === 'not_found' ? 404 : 410); }
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */
@@ -53,15 +64,15 @@ export async function POST(req: Request) {
   const action = String(body.action || '');
   if (action === 'start') {
     const rl = await rateLimit(db, `miaar_start:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات بدء كثيرة');
-    let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null } | null = null;
+    let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null } | null = null;
     const inv = body.invite as Record<string, unknown> | undefined;
     if (inv && typeof inv === 'object' && inv.code) {
       const r = await openInvite(db, inv.code, inv.t || null); if (!r.ok) return bad(`invite_${r.error}`, 410);
-      invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null };
+      invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null };
       if (r.recipient && body.candidate && typeof body.candidate === 'object') (body.candidate as Record<string, unknown>).email = r.recipient.email;  /* الدعوة الشخصية تثبّت البريد */
     }
     const userId = await userOf(req);
-    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId });
+    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint });
     if (!r.ok) return bad(r.code, r.status);
     return withCookie(NextResponse.json({ ok: true, session: r.value.session, invite: invite ? { label_ar: invite.label_ar } : null }, { headers: NO }), r.value.token, r.value.session.expiresAt);
   }

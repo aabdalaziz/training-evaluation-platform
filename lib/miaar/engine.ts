@@ -8,10 +8,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 import {
   PASS_PERCENT, DURATION_SECONDS, CONTENT_VERSION, MIAAR_NAMES_AR, isExamMode, isOptionId, cleanText, normalizeCandidate, normalizeAccess,
-  accessDuration, drawCodes, probeScore, probeStartIndex, nextStep, calculateReport, resultCode, bankLevelIndex, levelAtIndex, hasFloor, FLOOR_INDEX,
+  accessDuration, nextStep, calculateReport, resultCode, bankLevelIndex, levelAtIndex, hasFloor, FLOOR_INDEX,
 } from './registry';
 import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report } from './registry';
 import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './bank';
+import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
+import type { Plan } from './blueprint';
 import { parseMiaarReport, placementValid, evidenceSkills, effectiveLevel } from '../portal/placement';
 
 export type SessionRow = {
@@ -19,8 +21,9 @@ export type SessionRow = {
   content_version: string; exam_mode: ExamMode; status: 'active' | 'completed' | 'expired' | 'abandoned'; current_level_index: number;
   started_at: string; expires_at: string; finished_at: string | null; finish_reason: FinishReason | null; report: Report | null;
   invite_id: string | null; recipient_id: string | null; user_id: string | null; start_level_index: number; direction: 'up' | 'down'; probe: { score: number; band_index: number } | null; access: Access | null;
+  blueprint_id?: string | null; plan?: unknown;  /* م2-ب: الخطة المثبّتة لحظة البدء */
 };
-export type StartInput = { candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null } | null; userId?: string | null };
+export type StartInput = { candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null } | null; userId?: string | null; blueprint?: unknown };
 export type Result<T> = { ok: true; value: T } | { ok: false; code: string; status: number };
 const fail = (code: string, status: number): Result<never> => ({ ok: false, code, status });
 
@@ -37,8 +40,30 @@ export function publicSession(s: SessionRow, answers: Answer[] = [], form: Publi
   return {
     examMode: s.exam_mode, currentLevel: levelAtIndex(s.current_level_index), currentLevelIndex: s.current_level_index, startLevelIndex: s.start_level_index, direction: s.direction,
     status: s.status, finishReason: s.finish_reason, expiresAt: s.expires_at, remainingSeconds: remainingSeconds(s.expires_at), durationSeconds: plan(s).durationSeconds,
-    access: s.access, answers: Object.fromEntries(answers.map((a) => [a.question_id, a.selected_option_id])), form,
+    access: s.access, answers: Object.fromEntries(answers.map((a) => [a.question_id, a.selected_option_id])), form, plan: publicPlan(s),
   };
+}
+/** الخطة كما يراها المتصفح (بلا سلال الخبير) */
+export function publicPlan(s: SessionRow) {
+  const p = planFromSession(s.plan);
+  if (!p) return { code: s.exam_mode === 'adaptive' ? 'SYS-PLACEMENT' : 'SYS-COMPREHENSIVE', name_ar: s.exam_mode === 'adaptive' ? TEST_TYPE_INFO.placement.name_ar : TEST_TYPE_INFO.comprehensive.name_ar, name_en: s.exam_mode === 'adaptive' ? TEST_TYPE_INFO.placement.name_en : TEST_TYPE_INFO.comprehensive.name_en, type: s.exam_mode === 'adaptive' ? 'placement' : 'comprehensive', ladder: s.exam_mode === 'adaptive' ? 'adaptive' : 'linear', levels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], cut: PASS_PERCENT, floor: s.exam_mode === 'adaptive' };
+  return { code: p.code, name_ar: p.name_ar, name_en: p.name_en, type: p.type, ladder: p.ladder, levels: p.levels, cut: p.cut, floor: p.floor };
+}
+/** اختيار الخطة: مخطّط الدعوة → رمز مخطّط عام نشط → المخطّط النظامي للنمط (من الجدول إن وُجد، وإلا الافتراضي المضمّن) */
+async function resolvePlan(db: any, input: StartInput): Promise<Result<{ plan: Plan; blueprintId: string | null }>> {
+  let row: any = null;
+  const code = cleanText(input.blueprint, 40);
+  if (input.invite?.blueprint_id) { const r = await db.from('question_bank_blueprints').select('*').eq('id', input.invite.blueprint_id).maybeSingle(); row = r?.data || null; }  /* مخطّط الدعوة (إن حُذف: الافتراضي) */
+  else if (code) {
+    const r = await db.from('question_bank_blueprints').select('*').eq('code', code).eq('status', 'active').eq('is_public', true).maybeSingle();
+    row = r?.data || null; if (!row) return fail('blueprint_unavailable', 404);
+  }
+  if (row) { const { plan, errors } = planFromBlueprint(row); if (errors.length) return fail('blueprint_invalid', 409); return { ok: true, value: { plan, blueprintId: row.id } }; }
+  const mode: ExamMode = input.invite ? input.invite.exam_mode : isExamMode(input.examMode) ? input.examMode : 'adaptive';
+  const sysCode = mode === 'comprehensive' ? 'SYS-COMPREHENSIVE' : 'SYS-PLACEMENT';
+  const sys = await db.from('question_bank_blueprints').select('*').eq('code', sysCode).eq('status', 'active').maybeSingle();
+  if (sys?.data) { const { plan, errors } = planFromBlueprint(sys.data); if (!errors.length) return { ok: true, value: { plan, blueprintId: sys.data.id as string } }; }
+  return { ok: true, value: { plan: systemPlan(mode === 'comprehensive' ? 'comprehensive' : 'placement'), blueprintId: null } };
 }
 
 /** هل يحق لهذا البريد البدء؟ محاولة واحدة لكل بريد إلا بموافقة إعادة غير مستهلكة (كما في مِعيار) */
@@ -53,8 +78,9 @@ export async function canStart(db: any, email: string): Promise<Result<{ retake:
 
 export async function startSession(db: any, input: StartInput): Promise<Result<{ token: string; session: ReturnType<typeof publicSession> }>> {
   const candidate = normalizeCandidate(input.candidate); if (!candidate) return fail('invalid_start_request', 400);
-  const examMode: ExamMode = input.invite ? input.invite.exam_mode : isExamMode(input.examMode) ? input.examMode : 'adaptive';
-  if (!isExamMode(input.examMode) && !input.invite) return fail('invalid_start_request', 400);
+  if (!isExamMode(input.examMode) && !input.invite && !cleanText(input.blueprint, 40)) return fail('invalid_start_request', 400);
+  const resolved = await resolvePlan(db, input); if (!resolved.ok) return resolved;
+  const { plan: activePlan, blueprintId } = resolved.value; const examMode: ExamMode = examModeOf(activePlan);
   const allowed = await canStart(db, candidate.email); if (!allowed.ok) return allowed;
   // الجلسات النشطة المنتهية زمنًا لهذا البريد تُغلق
   await db.from('placement_secure_sessions').update({ status: 'expired', finish_reason: 'time', updated_at: nowIso() }).eq('status', 'active').lt('expires_at', nowIso()).eq('candidate_email', candidate.email);
@@ -64,15 +90,16 @@ export async function startSession(db: any, input: StartInput): Promise<Result<{
   const token = createToken();
   const passages = await loadPassages(db).catch(() => null); if (!passages) return fail('form_unavailable', 503);
   const pool = await loadApprovedPool(db, passages).catch(() => null); if (!pool) return fail('form_unavailable', 503);
-  const drawn = drawCodes(pool, token); if (!drawn) return fail('form_unavailable', 503);
+  const drawn = drawPlan(pool, token, activePlan); if (!drawn) return fail('form_unavailable', 503);
   const form = await formFromPool(db, pool, drawn.codes, passages); if (!form) return fail('form_unavailable', 503);
-  const access = normalizeAccess(input.access); const durationSeconds = accessDuration(DURATION_SECONDS, access);
-  const score = probeScore(input.probeAnswers); const startIndex = probeStartIndex(score, examMode);
+  const access = normalizeAccess(input.access); const durationSeconds = accessDuration(activePlan.durationSeconds, access);
+  const score = activePlan.probe ? probeScoreFrom(pool, input.probeAnswers) : 0; const startIndex = planStartIndex(activePlan, probeBandIndexOf(score));
   const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
-  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: 'approved-random', publishedFormTitle: 'سحب متوازن من البنك المعتمد', shortCells: drawn.short };
+  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: `approved-${activePlan.draw}`, publishedFormTitle: `${activePlan.name_ar} (${activePlan.code})`, shortCells: drawn.short };
   const { data, error } = await db.from('placement_secure_sessions').insert({
     token_hash: tokenHash(token), candidate: stored, content_version: CONTENT_VERSION, exam_mode: examMode, status: 'active', expires_at: expiresAt, current_level_index: startIndex, start_level_index: startIndex, direction: 'up',
-    probe: input.probeAnswers ? { score, band_index: startIndex } : null, access, invite_id: input.invite?.id || null, recipient_id: input.invite?.recipient_id || null, user_id: input.userId || null,
+    probe: input.probeAnswers && activePlan.probe ? { score, band_index: startIndex } : null, access, invite_id: input.invite?.id || null, recipient_id: input.invite?.recipient_id || null, user_id: input.userId || null,
+    blueprint_id: blueprintId, plan: activePlan,
   }).select('*').single();
   if (error || !data) return fail('session_start_failed', 409);
   if (input.invite?.recipient_id) await db.from('placement_invite_recipients').update({ started_at: nowIso() }).eq('id', input.invite.recipient_id).is('started_at', null);
@@ -120,7 +147,9 @@ export async function answerSession(db: any, s: SessionRow, body: Record<string,
     const map = new Map(((fresh.data || []) as Answer[]).map((a) => [a.question_id, a.selected_option_id]));
     if (levelItems.length > 0 && levelItems.every((i) => map.has(i.id))) {
       const correct = levelItems.filter((i) => map.get(i.id) === i.correctOptionId).length; const percent = (correct / levelItems.length) * 100;
-      const step = nextStep({ currentIndex: s.current_level_index, startIndex: s.start_level_index, direction: s.direction, mode: s.exam_mode, floor: hasFloor(scored.items) }, percent);
+      const sp = planFromSession(s.plan);
+      const step = sp ? nextStepPlan(sp, { currentIndex: s.current_level_index, startIndex: s.start_level_index, direction: s.direction, hasFloor: hasFloor(scored.items) }, percent)
+        : nextStep({ currentIndex: s.current_level_index, startIndex: s.start_level_index, direction: s.direction, mode: s.exam_mode, floor: hasFloor(scored.items) }, percent);
       decision = step.decision; direction = step.direction;
       const patch: Record<string, unknown> = { updated_at: nowIso(), direction: step.direction };
       if (step.decision === 'complete') patch.finish_reason = 'completed';
@@ -156,6 +185,8 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   void requested;
   const p = plan(s);
   const report = calculateReport({ candidate: s.candidate, examMode: s.exam_mode, startIndex: s.start_level_index, durationSeconds: p.durationSeconds, remainingSeconds: remainingSeconds(s.expires_at), source: `${CONTENT_VERSION}/${p.source}`, title: p.title, access: s.access, inviteLabel, short: p.short }, answers, reason, scored.items, scored.stems);
+  const sp = planFromSession(s.plan);
+  if (sp) { (report as any).النموذج = { الرمز: sp.code, الاسم: sp.name_ar, النوع: TEST_TYPE_INFO[sp.type].name_ar, السلّم: sp.ladder, طريقة_السحب: sp.draw, المستويات: sp.levels, حد_الاجتياز: sp.cut }; (report as any).نمط_الاختبار = TEST_TYPE_INFO[sp.type].name_ar; const v = levelVerdict(sp, report.مستويات_تفصيلية); if (v) (report as any).اجتياز_المستوى = v; }
   let access_code = resultCode(); let inserted: any = null;
   for (let attempt = 0; attempt < 3 && !inserted; attempt += 1) {
     const r = await db.from('placement_reports').insert({ submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, report, access_code, invite_id: s.invite_id, user_id: s.user_id }).select('id, created_at').single();

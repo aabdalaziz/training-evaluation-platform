@@ -15,17 +15,19 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { qrSvg } from '../../../lib/certificates/qr';
 import { LEVELS, SKILLS, skillLabel, MIAAR_NAMES_AR, FLOOR_LEVEL, BANK_LEVEL_AR } from '../../../lib/miaar/registry';
 import BankEditor from './BankEditor';
+import FormBuilder from './FormBuilder';
 import { Icon } from '../../../lib/ui/icons';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const LANG_OPTS = [['ar', 'العربية'], ['en', 'English'], ['fr', 'Français'], ['tr', 'Türkçe'], ['ur', 'اردو'], ['id', 'Indonesia'], ['ms', 'Melayu'], ['fa', 'فارسی'], ['ru', 'Русский'], ['zh', '中文'], ['es', 'Español'], ['de', 'Deutsch'], ['hi', 'हिन्दी'], ['bn', 'বাংলা'], ['sw', 'Kiswahili'], ['fil', 'Filipino']];
 const CONF_AR: Record<string, string> = { high: 'مؤكَّد', medium: 'محتمل', border: 'على الحدّ' };
-type Tab = 'overview' | 'invites' | 'bank';
+type Tab = 'overview' | 'invites' | 'bank' | 'forms';
 
 export default function AdminMiaar({ tab }: { tab: Tab }) {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
   const [ready, setReady] = useState(false); const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
-  const [form, setForm] = useState({ kind: 'group', label_ar: '', lang: 'en', exam_mode: 'adaptive', purpose: '', expires_at: '', max_seats: '', note: '', recipients: '' });
+  const [form, setForm] = useState({ kind: 'group', label_ar: '', lang: 'en', exam_mode: 'adaptive', blueprint_id: '', purpose: '', expires_at: '', max_seats: '', note: '', recipients: '' });
+  const [bps, setBps] = useState<any[]>([]);  /* م2-ب: المخطّطات النشطة للدعوات */
   const [created, setCreated] = useState<any>(null); const [qrFor, setQrFor] = useState<any>(null); const [retake, setRetake] = useState({ email: '', note: '' }); const [log, setLog] = useState<string[]>([]);
   const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
   const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
@@ -35,10 +37,11 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/miaar'); return; }
     const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
     const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || ''; setTok(tk); await load(tk); setReady(true);
+    if (tab === 'invites') { const j = await fetch('/api/admin/miaar/forms?list=1', { headers: await H(tk), cache: 'no-store' }).then((r) => r.json()).catch(() => null); setBps(((j?.blueprints || []) as any[]).filter((b) => b.status === 'active')); }
   })(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function createInvite(e: React.FormEvent) { e.preventDefault(); const j = await post({ action: 'invite_create', ...form, max_seats: form.max_seats ? Number(form.max_seats) : undefined, expires_at: form.expires_at || undefined }); if (j) { setCreated(j); setForm({ ...form, label_ar: '', recipients: '' }); await load(); } }
+  async function createInvite(e: React.FormEvent) { e.preventDefault(); const j = await post({ action: 'invite_create', ...form, blueprint_id: form.blueprint_id || undefined, max_seats: form.max_seats ? Number(form.max_seats) : undefined, expires_at: form.expires_at || undefined }); if (j) { setCreated(j); setForm({ ...form, label_ar: '', recipients: '' }); await load(); } }
   async function importAll() {
     const order: string[] = data?.legacy?.order || []; setLog([]); let total = 0;
     for (const table of order) {
@@ -67,17 +70,18 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         <header className="mm-hero">
           <div>
             <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <Link href="/miaar">صفحة الأداة</Link></p>
-            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : MIAAR_NAMES_AR.invites}</h1>
-            <p className="mm-lead">{tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
+            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : MIAAR_NAMES_AR.invites}</h1>
+            <p className="mm-lead">{tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
           </div>
           <div className="mm-heroacts">
             <Link href="/admin/placements" className="mm-hbtn gold"><Icon name="download" />تصدير النتائج CSV</Link>
             <Link href="/admin/miaar/bank" className="mm-hbtn"><Icon name="search" />تقرير البنك</Link>
+            <Link href="/admin/miaar/forms" className="mm-hbtn"><Icon name="table" />منشئ النماذج</Link>
             <Link href="/admin/miaar/invites" className="mm-hbtn"><Icon name="qr" />{MIAAR_NAMES_AR.invites}</Link>
             <Link href="/miaar" className="mm-hbtn"><Icon name="play" />صفحة الاختبار</Link>
           </div>
         </header>
-        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['invites', '03', MIAAR_NAMES_AR.invites, '/admin/miaar/invites']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
+        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         <div className="mm-cards">
           <div className="mm-card navy"><span>نتائج الاختبارات</span><b>{latest.length}</b><small>آخر التقارير في السجل</small></div>
@@ -118,6 +122,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
               <label>اسم الدعوة<input required minLength={3} maxLength={120} placeholder="جامعة أَثَر — دفعة يناير 2027" value={form.label_ar} onChange={(e) => setForm({ ...form, label_ar: e.target.value })} data-testid="mm-label" /></label>
               <label>لغة الواجهة الافتراضية<select value={form.lang} onChange={(e) => setForm({ ...form, lang: e.target.value })}>{LANG_OPTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
               <label>نمط الاختبار<select value={form.exam_mode} onChange={(e) => setForm({ ...form, exam_mode: e.target.value })}><option value="adaptive">تكيّفي (يبدأ من مِسبار ويتوقّف حين يتّضح المستوى)</option><option value="comprehensive">شامل (كل المستويات من A1)</option></select></label>
+              <label>نموذج الاختبار (م2-ب)<select value={form.blueprint_id} onChange={(e) => setForm({ ...form, blueprint_id: e.target.value })} data-testid="mm-blueprint"><option value="">الافتراضي حسب النمط أعلاه</option>{bps.map((b) => <option key={b.id} value={b.id}>{b.name_ar} — {b.plan_total} بندًا · {b.duration_minutes} د ({b.code})</option>)}</select></label>
               <label>الغرض<input maxLength={60} placeholder="تسكين · قبول · تشخيص" value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} /></label>
               <label>ينتهي في<input type="date" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} /></label>
               <label>حدّ المقاعد<input type="number" min={1} max={5000} placeholder="بلا حدّ" value={form.max_seats} onChange={(e) => setForm({ ...form, max_seats: e.target.value })} /></label>
@@ -152,6 +157,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
           </>}
         </section>}
         {tab === 'bank' && <BankEditor auth={() => H()} byBatch={cov?.by_batch || {}} onChanged={() => { void load(); }} />}
+        {tab === 'forms' && <FormBuilder auth={() => H()} />}
         <p className="mm-foot">© 2026 {MIAAR_NAMES_AR.product} — {MIAAR_NAMES_AR.nature}، والقرار الأكاديمي بيد إنسان.</p>
       </div>
     </div>

@@ -16,7 +16,7 @@ type Copy = Record<string, Record<string, Record<string, string>>> & { langs?: {
 type Q = { id: string; level: string; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
 type Player = { speeds: number[]; replays: number; twice?: boolean };
 type P = { id: string; level: string; skill: string; title: string; text: string; audioUrl: string | null; player?: Player };
-type Session = { examMode: 'comprehensive' | 'adaptive'; currentLevel: string; currentLevelIndex: number; startLevelIndex: number; direction: 'up' | 'down'; status: string; finishReason: string | null; expiresAt: string; remainingSeconds: number; durationSeconds: number; access: any; answers: Record<string, string>; form: { questions: Q[]; passages: P[] } | null };
+type Session = { plan?: { code: string; name_ar: string; name_en: string; type: string; ladder: string; levels: string[]; cut: number; floor: boolean } | null; examMode: 'comprehensive' | 'adaptive'; currentLevel: string; currentLevelIndex: number; startLevelIndex: number; direction: 'up' | 'down'; status: string; finishReason: string | null; expiresAt: string; remainingSeconds: number; durationSeconds: number; access: any; answers: Record<string, string>; form: { questions: Q[]; passages: P[] } | null };
 type Invite = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: 'adaptive' | 'comprehensive'; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null };
 type Step = 'loading' | 'intro' | 'register' | 'probe' | 'test' | 'review' | 'result' | 'blocked';
 type Props = { inviteCode?: string | null; inviteToken?: string | null; resultCode?: string | null; fontClass?: string };
@@ -51,6 +51,18 @@ const X: Record<string, { ar: string; en: string }> = {
 };
 
 const fill = (s: string, vars: Record<string, string | number> = {}) => s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+/** م2-ب: المِسبار متجدّد — نرسل ما رآه هذا المتصفح مؤخرًا ليستبعده الخادم، ونحفظ ما وصل */
+async function fetchProbe(): Promise<any | null> {
+  let seen: string[] = []; try { seen = JSON.parse(localStorage.getItem('miaar-probe-seen') || '[]'); } catch { /* */ }
+  const r = await fetch(`/api/miaar?probe=1${seen.length ? `&seen=${encodeURIComponent(seen.slice(-25).join(','))}` : ''}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
+  if (r?.ok && Array.isArray(r.items)) { try { localStorage.setItem('miaar-probe-seen', JSON.stringify([...seen, ...r.items.map((i: any) => i.id)].slice(-25))); } catch { /* */ } }
+  return r;
+}
+type Door = { code: string; name_ar: string; name_en: string; description_ar: string; type: string; door: string; minutes: number; items: number; levels: string[]; probe: boolean; cut: number };
+const DEFAULT_DOORS: Door[] = [
+  { code: 'SYS-PLACEMENT', name_ar: 'تحديد المستوى (تكيفي)', name_en: 'Placement — adaptive', description_ar: '', type: 'placement', door: 'adaptive', minutes: 50, items: 50, levels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], probe: true, cut: 60 },
+  { code: 'SYS-COMPREHENSIVE', name_ar: 'الاختبار الشامل', name_en: 'Comprehensive', description_ar: '', type: 'comprehensive', door: 'comprehensive', minutes: 50, items: 50, levels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'], probe: false, cut: 60 },
+];
 function readLang(fallback: string) { try { const v = localStorage.getItem('athar-page-lang'); if (v) return v; } catch { /* */ } return fallback; }
 /* خِفّة مِعيار (P40): القاموس مقسَّم — فهرس صغير /miaar/copy/index.json + ملف لكل لغة /miaar/copy/<code>.json؛ لا يُحمَّل إلا en (الاحتياطي) ولغة الزائر، وتُجلب أي لغة أخرى عند اختيارها فقط (كان الملف الموحّد 139 KB مضغوطة لكل زيارة). */
 type CopyIndex = { codes: string[]; langs: Copy['langs']; native: Copy['native'] };
@@ -75,7 +87,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [lang, setLangState] = useState('en');
   const [step, setStep] = useState<Step>('loading');
   const [invite, setInvite] = useState<Invite | null>(null); const [inviteErr, setInviteErr] = useState(false);
-  const [examMode, setExamMode] = useState<'comprehensive' | 'adaptive'>('adaptive');
+  const [examMode, setExamMode] = useState<'comprehensive' | 'adaptive'>('adaptive'); const [blueprint, setBlueprint] = useState<string | null>(null); const [doors, setDoors] = useState<Door[]>(DEFAULT_DOORS);
   const [cand, setCand] = useState({ name: '', email: '', phone: '', nativeLanguage: '', studiedBefore: null as boolean | null, purpose: '' });
   const [access, setAccess] = useState({ time: 1 as 1 | 1.25 | 1.5, simple: false, contrast: false, large: false });
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
@@ -137,12 +149,13 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     e.preventDefault(); setErr('');
     if (cand.name.trim().length < 2) { setErr(t('register', 'nameErr')); return; } if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cand.email)) { setErr(t('register', 'emailErr')); return; }
     if (probe.length > 0 && Object.keys(probeAns).length >= probe.length) { await startTest(true); return; }  /* حلقات الختم أُكملت على الصفحة الأولى */
-    setBusy(true); const r = await fetch('/api/miaar?probe=1', { cache: 'no-store' }).then((r) => r.json()).catch(() => null); setBusy(false);
+    if (door && !door.probe) { await startTest(false); return; }  /* م2-ب: باب بلا مِسبار (شامل · قصير · اجتياز مستوى) → البدء مباشرة */
+    setBusy(true); const r = await fetchProbe(); setBusy(false);
     if (!r?.ok) { setErr(t('register', 'errNet')); return; } setProbe(r.items); setProbeAns({}); setProbeIdx(0); setProbeDone(false); setStep('probe');
   }
   async function startTest(withProbe: boolean) {
     setBusy(true); setErr('');
-    const r = await post({ action: 'start', candidate: cand, examMode, probeAnswers: withProbe ? probeAns : null, access: access.time !== 1 || access.simple || access.contrast || access.large ? access : null, invite: invite ? { code: invite.code, t: inviteToken || undefined } : undefined });
+    const r = await post({ action: 'start', candidate: cand, examMode, blueprint: invite ? undefined : blueprint || undefined, probeAnswers: withProbe ? probeAns : null, access: access.time !== 1 || access.simple || access.contrast || access.large ? access : null, invite: invite ? { code: invite.code, t: inviteToken || undefined } : undefined });
     setBusy(false);
     if (!r?.ok) { const k = r?.error === 'retake_not_allowed' ? 'errRetake' : r?.error === 'retake_check_failed' ? 'errCheck' : r?.error === 'session_start_failed' || r?.error === 'session_exists' ? 'errSession' : r?.error?.startsWith?.('invite_') ? 'invite' : 'errGeneric'; setErr(k === 'invite' ? x('invite_bad') : t('register', k)); if (k === 'errRetake' || k === 'invite') setStep('register'); return; }
     alerted.current = new Set(); setSession(r.session); setAnswers({}); setDeferred(new Set()); setQIdx(0); setStep('test');
@@ -191,21 +204,21 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const cls = `mi ${fontClass}${access.contrast ? ' mi-contrast' : ''}${access.large ? ' mi-large' : ''}`;
 
   // ---- حلقات الختم (مِسبار على الصفحة الأولى — كما في مِعيار الأصلي)
-  const [ringsOn, setRingsOn] = useState(false); const [asked, setAsked] = useState(false); const [door, setDoor] = useState<'comprehensive' | 'adaptive' | null>(null);
+  const [ringsOn, setRingsOn] = useState(false); const [asked, setAsked] = useState(false); const [door, setDoor] = useState<Door | null>(null);
   const ringItem = ringsOn && !probeDone ? probe[probeIdx] || null : null;
   const ringsDone = probe.length > 0 && Object.keys(probeAns).length >= probe.length;
   async function beginRings() {
     if (ringsOn) return;
     let items = probe;
-    if (!items.length) { const r = await fetch('/api/miaar?probe=1', { cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (!r?.ok) { setErr(t('register', 'errNet')); return; } items = r.items; setProbe(items); }
+    if (!items.length) { const r = await fetchProbe(); if (!r?.ok) { setErr(t('register', 'errNet')); return; } items = r.items; setProbe(items); }
     setProbeAns({}); setProbeIdx(0); setProbeDone(false); setRingsOn(true);
   }
   function answerRing(optionId: string) {
     if (!ringItem) return; const nextAns = { ...probeAns, [ringItem.id]: optionId }; setProbeAns(nextAns);
     if (probeIdx < probe.length - 1) setProbeIdx(probeIdx + 1); else setProbeDone(true);
   }
-  function askEnter() { if (invite) { setStep('register'); return; } setAsked(true); setTimeout(() => document.getElementById('mi-doors')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); }
-  function chooseDoor(m: 'comprehensive' | 'adaptive') { setDoor(m); setExamMode(m); setTimeout(() => document.getElementById('mi-go')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); }
+  function askEnter() { if (invite) { setStep('register'); return; } setAsked(true); void fetch('/api/miaar?doors=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && Array.isArray(j.doors) && j.doors.length) setDoors(j.doors); }).catch(() => { /* الأبواب الافتراضية */ }); setTimeout(() => document.getElementById('mi-doors')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); }
+  function chooseDoor(d: Door) { setDoor(d); setExamMode(d.door === 'adaptive' ? 'adaptive' : 'comprehensive'); setBlueprint(d.code); setTimeout(() => document.getElementById('mi-go')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); }
   const ringSkill = (k: string) => t('intro', ({ vocab: 'skVocab', structures: 'skStruct', linking: 'skRead', meaning: 'skUnderstand', argument: 'skInfer' } as any)[k] || 'skVocab');
   const ringSizes = ['88%', '62%', '36%', '76%', '50%'];
   const cefr = (lv: Level) => (lang === 'ar' ? CEFR_AR : CEFR_EN)[lv];
@@ -233,7 +246,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   if (step === 'loading' || !copy) return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="mi-wrap"><p className="mi-muted" role="status">{err === 'copy' ? 'تعذّر تحميل مِعيار — أعد تحميل الصفحة.' : x('loading')}</p></div></main>;
   if (step === 'blocked') return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><Header /><Hero kicker={x('product')} title={x('invite_for')} /><div className="mi-wrap"><section className="mi-card"><p className="mi-err" role="alert">{inviteErr ? x('invite_bad') : x('not_found')}</p><a className="mi-btn ghost" href="/miaar">{x('product')}</a></section></div><Foot /></main>;
 
-  const sampleQ = EXAMS[door || examMode];
+  const sampleQ = EXAMS[(door ? door.door : examMode) === 'adaptive' ? 'adaptive' : 'comprehensive'];
+  const doorName = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adap') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'comp') : lang === 'ar' ? d.name_ar : d.name_en || d.name_ar;
+  const doorSub = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adapS') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'compS') : `${d.description_ar ? d.description_ar + ' · ' : ''}${d.items} ${lang === 'ar' ? 'بندًا' : 'items'} · ${d.minutes} ${lang === 'ar' ? 'د' : 'min'}`;
   return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} />
     {step !== 'result' && <Header admin={step === 'intro'} />}
     {toast && <div className="mi-toast" role="status" data-testid="mi-toast">{toast}</div>}
@@ -251,11 +266,11 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
           {!asked && <button type="button" className="mi-go" onClick={askEnter} data-testid="mi-start"><Icon name="play" />{t('intro', 'askEnter')}</button>}
           {asked && <section className="mi-inplace" id="mi-doors">
             <p className="mi-kicker gold">{t('intro', 'entryK')}</p><h2>{t('intro', 'entryH')}</h2>
-            <div className="mi-doors">{(['comprehensive', 'adaptive'] as const).map((m) => <button key={m} type="button" className="mi-door" aria-pressed={door === m} onClick={() => chooseDoor(m)} data-testid={`mi-door-${m}`}><strong>{t('intro', m === 'adaptive' ? 'adap' : 'comp')}</strong><span>{t('intro', m === 'adaptive' ? 'adapS' : 'compS')}</span></button>)}</div>
+            <div className="mi-doors">{doors.map((d, i) => <button key={d.code} type="button" className="mi-door" aria-pressed={door?.code === d.code} onClick={() => chooseDoor(d)} data-testid={doors.findIndex((x) => x.door === d.door) === i ? `mi-door-${d.door}` : `mi-door-${d.door}-${d.code}`} data-code={d.code}><strong>{doorName(d)}</strong><span>{doorSub(d)}</span></button>)}</div>
           </section>}
           {door && <section className="mi-inplace" id="mi-go">
             <p className="mi-kicker gold">{t('intro', 'examK')}</p><h2>{t('intro', 'examH')}</h2>
-            <p className="mi-voice">{t('intro', 'examNote', { door: t('intro', door === 'comprehensive' ? 'doorComp' : 'doorAdap') })}</p>
+            <p className="mi-voice">{t('intro', 'examNote', { door: door.type === 'placement' ? t('intro', 'doorAdap') : door.code === 'SYS-COMPREHENSIVE' ? t('intro', 'doorComp') : doorName(door) })}</p>
             <p className="mi-kicker gold">{t('intro', sampleQ.skill)}</p>
             <div className="mi-arab" dir="rtl" lang="ar"><p className="mi-q">{sampleQ.prompt}</p><div className="mi-opts-arab">{sampleQ.options.map((o) => <button key={o} type="button" lang="ar" dir="rtl">{o}</button>)}</div></div>
             <button type="button" className="mi-go" onClick={() => setStep('register')} data-testid="mi-go-register"><Icon name="next" />{t('intro', 'goRegister')}</button>
@@ -361,7 +376,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       <div className="mi-tbar">
         <div className="mi-levels-strip" aria-hidden="true">{session.currentLevelIndex === FLOOR_INDEX && <span className="now floor">{x('floor_level')}</span>}{LEVELS.map((lv, i) => <span key={lv} className={`${i === session.currentLevelIndex ? 'now' : i < session.currentLevelIndex ? 'done' : ''}${i < session.startLevelIndex ? ' skip' : ''}`}>{lv}</span>)}</div>
         <div className="mi-tools-row">
-          <span className="mi-tpill" data-testid="mi-level">{t('test', 'levelNow', { level: session.currentLevel === FLOOR_LEVEL ? x('floor_level') : session.currentLevel })}</span>
+          <span className="mi-tpill" data-testid="mi-level">{t('test', 'levelNow', { level: session.currentLevel === FLOOR_LEVEL ? x('floor_level') : session.currentLevel })}</span>{session.plan && session.plan.type !== 'placement' && session.plan.code !== 'SYS-COMPREHENSIVE' && <span className="mi-tpill" data-testid="mi-plan">{lang === 'ar' ? session.plan.name_ar : session.plan.name_en || session.plan.name_ar}</span>}
           <span className="mi-tpill">{t('test', 'qOf', { a: qIdx + 1, b: levelQs.length })} · <b>{t('test', 'answered', { n: answeredInLevel })}</b></span>
           <span className={`mi-tpill${remaining < 300 ? ' low' : ''}`} aria-live="polite" data-testid="mi-clock">{t('test', 'time', { clock: clock(remaining) })}</span>
           <button type="button" className="mi-link" onClick={() => setShowEnd(true)}>{t('test', 'end')}</button>
@@ -493,6 +508,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
             <div className="mi-rstat"><span>{t('result', 'percent')}</span><b>{report.النسبة_العامة}% <small>({report.الدرجة_الموضوعية})</small></b></div>
             <div className="mi-rstat"><span>{t('result', 'spent')}</span><b>{report.الوقت_المستغرق}</b></div>
           </div>
+          {report.اجتياز_المستوى && <div className={`mi-rec ${report.اجتياز_المستوى.اجتاز ? 'teal' : ''}`} data-testid="mi-level-verdict"><span>{ar ? 'اجتياز المستوى' : 'Level exam'} {report.اجتياز_المستوى.المستوى}</span><p><b>{report.اجتياز_المستوى.اجتاز ? (ar ? 'اجتاز ✓' : 'Passed ✓') : (ar ? 'لم يجتز' : 'Not passed')}</b> — {report.اجتياز_المستوى.النسبة}% {ar ? 'من حدّ' : 'vs cut'} {report.اجتياز_المستوى.حد_الاجتياز}%</p></div>}
           <div className="mi-rec"><span>{x('can_do')}</span><ul>{canDo.map((s, i) => <li key={i}>{s}</li>)}</ul></div>
         </div>
         <div>

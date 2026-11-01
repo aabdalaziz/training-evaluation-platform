@@ -67,4 +67,5 @@ import './p36.test';
 import './p37.test';
 import './p38.test';
 import './miaar.test';
+import './miaar-m2b.test';
 import './ui-keys.test';
