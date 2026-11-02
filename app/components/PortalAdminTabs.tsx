@@ -1,10 +1,13 @@
 'use client';
 
 // شريط تنقّل موحّد لصفحات إدارة بوابة أَثَر
+// P43-ب: الشريط يعرض غُرَف مركز القيادة المفتوحة لصاحب الجلسة فقط (الغرف من lib/portal/rooms.ts؛ الصلاحيات من useMyRoles)
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon } from '../../lib/ui/icons';
 import type { IconName } from '../../lib/ui/icons';
+import { useMyRoles } from './Brand';
+import { canOpen, roomFor } from '../../lib/portal/rooms';
 
 const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/enrollments', label: 'طلبات التسجيل', icon: 'users' },
@@ -42,12 +45,16 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
 
 export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<string, number>> }) {
   const pathname = usePathname() || '';
+  const my = useMyRoles();
+  /* قبل قراءة الصلاحيات (أو لمدير النظام) تُعرض كل الألسنة كما كانت؛ وبعدها يبقى ما تفتحه صلاحياته فقط — لسان بلا غرفة معرَّفة يُعامل كغرفة طاقم */
+  const tabs = !my ? TABS : TABS.filter(x => canOpen(roomFor(x.href) || { perms: ['staff'] }, my.permissions, my.staff));
+  const dash = !my || my.staff || my.permissions.includes('*');
   return (
-    <nav className="pat" aria-label="portal admin">
+    <nav className="pat" aria-label="portal admin" data-testid="portal-admin-tabs">
       <style>{`.pat{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-family:var(--font-ar),Tajawal,Arial,sans-serif}.pat a{display:inline-flex;align-items:center;gap:6px;border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:900;color:#334155;text-decoration:none}.pat a.on{background:#0f2a4e;border-color:#0f2a4e;color:#fff}.pat a i{font-style:normal;background:#0b8a83;color:#fff;border-radius:999px;font-size:11px;padding:1px 7px}.pat a.on i{background:#c9a24b;color:#1f2937}.pat .pat-site{margin-inline-start:auto}`}</style>
-      {TABS.map(x => <Link key={x.href} href={x.href} className={pathname.startsWith(x.href) ? 'on' : ''}><Icon name={x.icon} size={14} /> {x.label}{counts?.[x.href] ? <i>{counts[x.href]}</i> : null}</Link>)}
+      {tabs.map(x => <Link key={x.href} href={x.href} className={pathname.startsWith(x.href) ? 'on' : ''}><Icon name={x.icon} size={14} /> {x.label}{counts?.[x.href] ? <i>{counts[x.href]}</i> : null}</Link>)}
       <Link href="/" target="_blank" className="pat-site"><Icon name="link" size={14} /> فتح البوابة</Link>
-      <Link href="/dashboard"><Icon name="dashboard" size={14} /> لوحة القيادة</Link>
+      {dash ? <Link href="/dashboard"><Icon name="dashboard" size={14} /> لوحة القيادة</Link> : null}
     </nav>
   );
 }

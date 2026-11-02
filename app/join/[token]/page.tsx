@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { PortalShell } from '../../components/PortalShell';
+import { invalidateMyRoles } from '../../components/Brand';
 
 type Inv = { kind?: 'personal' | 'group'; label?: string | null; seats_left?: number | null; max_uses?: number; email_masked: string | null; full_name: string | null; roles: { code: string; name_ar: string; name_en: string }[]; org: string | null; message: string | null; expires_at: string; state: 'pending' | 'accepted' | 'expired' | 'revoked' };
 const STATE_AR: Record<string, string> = { accepted: 'هذه الدعوة قُبلت من قبل — ادخل من /login وسيفتح بابك.', expired: 'انتهت صلاحية هذه الدعوة (14 يومًا). اطلب من مدير النظام دعوة جديدة.', revoked: 'أُلغيت هذه الدعوة.' };
@@ -43,6 +44,7 @@ export default function JoinPage({ params }: { params: { token: string } }) {
   async function accept() {
     setBusy(true); setErr('');
     const j = await fetch('/api/roles', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'accept', token }) }).then(r => r.json()).catch(() => null);
+    invalidateMyRoles();   /* P43-ب: صفاتي تغيّرت → الشارة والشريط يُعاد بناؤهما */
     setBusy(false); if (!j?.success) { setErr(j?.error || 'تعذّر القبول'); return; }
     setDone({ roles: j.roles, landing: j.landing }); setTimeout(() => router.replace(j.landing), 1400);
   }

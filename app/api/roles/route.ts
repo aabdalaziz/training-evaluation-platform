@@ -2,14 +2,14 @@
 /**
  * P42-أ — أدواري وقبول الدعوة: /api/roles
  *  GET  ?token=…     (بلا دخول)  → معاينة الدعوة: الصفات والجهة والرسالة وحالتها — بلا بريد كامل (يُقنَّع)
- *  GET               (Bearer)    → { roles, landing, catalog(المختصر), grants }
+ *  GET               (Bearer)    → { roles, landing, catalog(المختصر), grants, permissions, staff } (P43-ب: الصلاحيات المجمّعة للمتصفح)
  *  POST {action:'accept', token} (Bearer) → قبول الدعوة بالبريد نفسه → منح + جسر + وجهة
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
-import { loadCatalog, myRoles, acceptInvite, hashToken, inviteState, normEmail, seatsLeft } from '../../../lib/portal/roles';
+import { loadCatalog, myRoles, acceptInvite, hashToken, inviteState, normEmail, seatsLeft, isStaffRoles } from '../../../lib/portal/roles';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -36,7 +36,10 @@ export async function GET(req: Request) {
   }
   const me = await userOf(req); if (!me) return bad('يلزم تسجيل الدخول', 401);
   const catalog = await loadCatalog(db); const r = await myRoles(db, me, catalog);
-  return NextResponse.json({ success: true, roles: r.roles, landing: r.landing, grants: r.grants, catalog: catalog.filter(c => r.roles.includes(c.code)).map(c => ({ code: c.code, name_ar: c.name_ar, name_en: c.name_en, landing: c.landing, scope: c.scope })), email: me.email });
+  /* P43-ب: الصلاحيات المجمّعة + هل أنا طاقم — يقرأها المتصفح ليبني غُرَف مركز القيادة (lib/portal/rooms.ts) بلا منطق خادمي */
+  const permissions = Array.from(new Set(catalog.filter(c => r.roles.includes(c.code)).flatMap(c => c.permissions || []))).sort();
+  const staff = isStaffRoles(r.roles, catalog);
+  return NextResponse.json({ success: true, roles: r.roles, landing: r.landing, grants: r.grants, permissions, staff, catalog: catalog.filter(c => r.roles.includes(c.code)).map(c => ({ code: c.code, name_ar: c.name_ar, name_en: c.name_en, landing: c.landing, scope: c.scope })), email: me.email });
 }
 
 export async function POST(req: Request) {

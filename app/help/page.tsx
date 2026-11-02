@@ -92,9 +92,9 @@ export default function HelpPage() {
       <style>{CSS}</style>
       <header className="hp-head">
         <div>
-          <div className="hp-kicker"><Icon name="question" size={14} /> دليل الاستخدام</div>
+          <div className="hp-kicker"><Icon name="question" size={14} /> دليل مركز قيادة أَثَر</div>
           <h1>كيف تدير برنامجًا من الفكرة إلى الأثر</h1>
-          <p>دليل عملي مختصر لكل شاشة في المنصة، مرتّب حسب رحلة البرنامج. ابحث عن أي كلمة أو اضغط على خطوة في الرحلة.</p>
+          <p>دليل عملي مختصر لكل غرفة في مركز القيادة، مرتّب حسب رحلة البرنامج. ابحث عن أي كلمة أو اضغط على خطوة في الرحلة.</p>
         </div>
         <nav className="hp-nav">
           <Link href="/dashboard" className="hp-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
@@ -140,7 +140,7 @@ export default function HelpPage() {
 }
 
 const CSS = `
-.hp{font-family:var(--font-ar),Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
+.hp{font-family:var(--font-ar),Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:70vh;padding:22px;color:#0f172a}
 .hp *{box-sizing:border-box}
 .hp-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
 .hp-head h1{margin:2px 0 4px;font-size:22px;color:${NAVY}}.hp-head p{margin:0;color:#64748b;font-size:13px;max-width:760px;line-height:1.7}

@@ -12,7 +12,8 @@ import { supabase } from '../../lib/supabase/client';
 import { REPORTS, REPORT_GROUPS } from '../../lib/reports/catalog';
 import { Icon, type IconName } from '../../lib/ui/icons';
 import NotificationBell from '../components/NotificationBell';
-import { AtharMark } from '../components/Brand';
+import { AtharMark, useMyRoles, invalidateMyRoles } from '../components/Brand';
+import { sideRooms } from '../../lib/portal/rooms';
 import { BRAND } from '../../lib/portal/content';
 /* P43-أ «أَثَر الواحد»: هذه اللوحة هي «مركز قيادة أَثَر» — غرفة داخل البيت الواحد؛ الهوية والاسم من lib/portal/content، والردهة على بعد نقرة */
 import {
@@ -55,6 +56,12 @@ const APPROVAL_STYLE: Record<ApprovalStatus, { bg: string; color: string; label:
 };
 const APPROVER_ROLES = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'QUALITY_ANALYST'];
 const SUBMITTER_ROLES = [...APPROVER_ROLES, 'PROGRAM_MANAGER'];
+/* P43-ب: الصفة تُعرض من أدوار أَثَر (P42) إن قُرئت — «المدير المالي» لا «مدير برامج» الذي يرفعه جسر ENUM القديم */
+const myRoleLabel = (my: { roles: string[]; catalog: { code: string; name_ar: string }[] } | null): string => {
+  if (!my) return '';
+  const names = my.roles.filter(c => c !== 'PARTICIPANT').map(c => my.catalog.find(x => x.code === c)?.name_ar || '').filter(Boolean);
+  return names.slice(0, 2).join(' · ');
+};
 const ROLE_LABEL: Record<string, string> = { PLATFORM_ADMIN: 'مدير المنصة', SUPER_ADMIN: 'مدير عام', ADMIN: 'مدير', PROGRAM_MANAGER: 'مدير برامج', QUALITY_ANALYST: 'محلل جودة', MANAGER: 'مدير برامج', TRAINER: 'مدرب', USER: 'مستخدم' };
 
 /* الأيقونات: من المكتبة الموحّدة lib/ui/icons */
@@ -62,6 +69,7 @@ const REPORT_ICON: Record<string, IconName> = { trainer_card: 'star', executive:
 
 /* ============================================================ page */
 export default function Dashboard() {
+  const my = useMyRoles();
   const db = useMemo(() => supabase(), []);
   const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -110,7 +118,7 @@ export default function Dashboard() {
   }
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
-  async function logout() { await db.auth.signOut(); router.replace('/'); }
+  async function logout() { invalidateMyRoles(); await db.auth.signOut(); router.replace('/'); }
 
   /* ---------- programs CRUD (unchanged behaviour) ---------- */
   function openAdd() { setEditing(null); setForm(emptyForm); setShowForm(true); }
@@ -305,7 +313,7 @@ export default function Dashboard() {
         </div>
         <div className="db-user">
           <div className="db-avatar">{(profile.full_name || 'م').trim().charAt(0)}</div>
-          <div><b>{profile.full_name || 'مدير المنصة'}</b><small>{ROLE_LABEL[profile.role] || profile.role}</small></div>
+          <div><b>{profile.full_name || 'مدير المنصة'}</b><small>{myRoleLabel(my) || ROLE_LABEL[profile.role] || profile.role}</small></div>
         </div>
         <nav className="db-nav">
           {NAV.map(n => (
@@ -314,29 +322,10 @@ export default function Dashboard() {
             </button>
           ))}
           <div className="db-nav-sep">الإدارة</div>
-          <Link href="/command-center" className="db-navlink"><Icon name="play" size={20} /><span><b>غرفة القيادة</b><small>شاشة عرض حية · تحديث تلقائي</small></span></Link>
-          <Link href="/admin/management" className="db-navlink"><Icon name="admin" size={20} /><span><b>لوحة الإدارة</b><small>المدربون · القاعات · المستويات</small></span></Link>
-          <Link href="/reports/center" className="db-navlink"><Icon name="chart" size={20} /><span><b>مركز التقارير</b><small>تنفيذية · تشغيلية · تحليلية</small></span></Link>
-          <Link href="/reports/remote-survey" className="db-navlink"><Icon name="laptop" size={20} /><span><b>استطلاع التعلم عن بُعد</b><small>{raw?.remoteResponses || 0} استجابة</small></span></Link>
-          <Link href="/admin/attendance" className="db-navlink"><Icon name="check" size={20} /><span><b>الحضور الرقمي</b><small>جلسات QR · نسب الحضور</small></span></Link>
-          <Link href="/admin/followup" className="db-navlink"><Icon name="trend" size={20} /><span><b>نقل أثر التدريب</b><small>متابعة المشرف والمتدرب بعد 60–90 يومًا</small></span></Link>
-          <Link href="/admin/notifications" className="db-navlink"><Icon name="bell" size={20} /><span><b>مركز الإشعارات</b><small>تنبيهات الجودة التلقائية</small></span></Link>
-          <Link href="/admin/certificates" className="db-navlink"><Icon name="certificate" size={20} /><span><b>الشهادات الإلكترونية</b><small>إصدار · تحقق QR · إرسال</small></span></Link>
-          <Link href="/admin/awards" className="db-navlink"><Icon name="award" size={20} /><span><b>تكريم المدربين</b><small>لوحة الشرف الشهرية</small></span></Link>
-          <Link href="/admin/impact" className="db-navlink"><Icon name="target" size={20} /><span><b>قياس أثر التدريب</b><small>قبلي / بعدي · الكسب المعياري</small></span></Link>
-          <Link href="/admin/outcomes" className="db-navlink"><Icon name="flag" size={20} /><span><b>مؤشرات النتائج</b><small>المستوى 4 · خط أساس ومستهدف</small></span></Link>
-          <Link href="/reports/chain" className="db-navlink"><Icon name="trend" size={20} /><span><b>سلسلة الأثر 1→4</b><small>كيركباتريك في صفحة واحدة</small></span></Link>
-          <Link href="/reports/program" className="db-navlink"><Icon name="doc" size={20} /><span><b>بطاقة البرنامج الشاملة</b><small>صفحة واحدة لصانع القرار · PDF · Excel</small></span></Link>
-          <Link href="/reports/cohorts" className="db-navlink"><Icon name="scale" size={20} /><span><b>الذكاء التحليلي</b><small>الدفعات · عدالة المدربين · ملخص ذكي</small></span></Link>
-          <Link href="/admin/audit" className="db-navlink"><Icon name="shield" size={20} /><span><b>سجلّ التدقيق</b><small>من فعل ماذا ومتى · تتبّع تلقائي</small></span></Link>
-          <Link href="/admin/health" className="db-navlink"><Icon name="check" size={20} /><span><b>صحة المنصة</b><small>الإعدادات · الكرون · البريد · سلامة البيانات</small></span></Link>
-          <Link href="/admin/access" className="db-navlink"><Icon name="users" size={20} /><span><b>نطاق الوصول</b><small>ربط مديري البرامج ببرامجهم</small></span></Link>
-          <Link href="/admin/templates" className="db-navlink"><Icon name="doc" size={20} /><span><b>قوالب التقييم</b><small>الأسئلة · الربط بالبرامج · معاينة</small></span></Link>
-          <Link href="/admin/readiness" className="db-navlink"><Icon name="compass" size={20} /><span><b>جاهزية البرنامج</b><small>قائمة تحقق من الإعداد حتى الإغلاق</small></span></Link>
-          <Link href="/help" className="db-navlink"><Icon name="question" size={20} /><span><b>دليل الاستخدام</b><small>رحلة البرنامج · أسئلة شائعة</small></span></Link>
-          <Link href="/admin/enrollments" className="db-navlink"><Icon name="globe" size={20} /><span><b>طلبات التسجيل والمدفوعات</b><small>طلبات التسجيل · المدفوعات · نشر البرامج · رسائل التواصل</small></span></Link>
-          <Link href="/admin/backup" className="db-navlink"><Icon name="save" size={20} /><span><b>النسخ الاحتياطي والأرشفة</b><small>تصدير شامل Excel/JSON وأرشفة البرامج</small></span></Link>
-          <Link href="/admin/data-lifecycle" className="db-navlink"><Icon name="trash" size={20} /><span><b>دورة حياة البيانات</b><small>معاينة وتفريغ منضبط</small></span></Link>
+          {/* P43-ب: غُرَف مركز القيادة من خريطة واحدة (lib/portal/rooms.ts) بحسب صلاحياتي */}
+          {sideRooms(my ? my.permissions : null, !!my?.staff).map(r => (
+            <Link key={r.href} href={r.href} className="db-navlink" data-testid={`side-room-${r.href.replace(/\//g, '-').slice(1)}`}><Icon name={r.icon} size={20} /><span><b>{r.label}</b><small>{r.href === '/reports/remote-survey' ? `${raw?.remoteResponses || 0} استجابة` : r.hint}</small></span></Link>
+          ))}
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
         <small className="db-owner">{BRAND.operatedBy.ar} {BRAND.legal.ar} · © {BRAND.copyrightYear}</small>

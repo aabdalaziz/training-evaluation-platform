@@ -34,7 +34,7 @@ test('kind labels/icons have fallbacks', () => {
 
 test('scanEmailHtml escapes and links', () => {
   const { subject, html } = scanEmailHtml('https://x.sa', [{ id: '1', kind: 'low_transfer', severity: 'critical', title: 'نقل <ضعيف>', href: '/reports/transfer?followup=1' }, { id: '2', kind: 'session_unclosed', severity: 'info', title: 'جلسة', href: null }], '2026-10-23T03:00:00Z');
-  assert.equal(subject, 'منصة التقويم: 2 إشعار جديد (1 حرج)');
+  assert.equal(subject, 'أَثَر: 2 إشعار جديد (1 حرج)');
   assert.ok(html.includes('نقل &lt;ضعيف&gt;'));
   assert.ok(html.includes('https://x.sa/reports/transfer?followup=1'));
   assert.ok(html.includes('https://x.sa/admin/notifications'));

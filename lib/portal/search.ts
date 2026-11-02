@@ -46,7 +46,7 @@ export const ROUTES: Entry[] = [
   P('agents', '/agents', 'أَثَر للوكلاء — المكتب الزجاجي', 'Athar for agents', ['وكيل', 'agent', 'mcp', 'api']),
   P('security', '/security', 'درع أَثَر — الأمن والإفصاح المسؤول', 'Athar Shield — security', ['امن', 'security', 'درع', 'ثغرة', 'خصوصية']),
   P('accessibility', '/accessibility', 'أَثَر للجميع — بيان الوصول', 'Athar for all — accessibility', ['وصول', 'accessibility', 'wcag', 'تباين', 'قارئ الشاشة', 'ذوي الاعاقة']),
-  P('help', '/help', 'المساعدة والأسئلة الشائعة', 'Help & FAQ', ['مساعدة', 'help', 'faq', 'كيف', 'سؤال']),
+  P('help', '/help', 'دليل مركز القيادة والأسئلة الشائعة', 'Command center guide & FAQ', ['مساعدة', 'help', 'faq', 'كيف', 'سؤال']),
   P('contact', '/contact', 'تواصل معنا', 'Contact us', ['تواصل', 'اتصال', 'contact', 'بريد', 'واتساب', 'هاتف']),
   P('about', '/about', 'عن أَثَر', 'About Athar', ['عن', 'about', 'من نحن', 'رؤية']),
   P('2062', '/2062', 'أَثَر 2062 — الأفق', 'Athar 2062 — the horizon', ['2062', 'مستقبل', 'رؤية', 'horizon']),

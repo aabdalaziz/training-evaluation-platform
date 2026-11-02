@@ -72,3 +72,4 @@ import './ui-keys.test';
 import './search.test';
 import './roles.test';
 import './hub.test';
+import './rooms.test';
