@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — نتائج مِعيار: مزامنة من مشروع مِعيار، توزيع المستويات، المهارات الثلاث، الربط بالتسجيلات والبرامج الموصى بها، Excel
+// بوابة أَثَر — نتائج مِعيار (من أَثَر، مستقلّ): تُكتب مباشرة من المحرّك لحظة اكتمال الاختبار، توزيع المستويات، المهارات الثلاث، الربط بالتسجيلات والبرامج الموصى بها، Excel
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -23,18 +23,17 @@ export default function Page() { return <Suspense fallback={null}><PlacementsAdm
 function PlacementsAdmin() {
   const db = useMemo(() => supabase(), []); const router = useRouter();
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [busy, setBusy] = useState('');
-  const [rows, setRows] = useState<Placement[]>([]); const [progs, setProgs] = useState<Prog[]>([]); const [enrs, setEnrs] = useState<Enr[]>([]); const [configured, setConfigured] = useState<boolean | null>(null); const [cfgError, setCfgError] = useState('');
+  const [rows, setRows] = useState<Placement[]>([]); const [progs, setProgs] = useState<Prog[]>([]); const [enrs, setEnrs] = useState<Enr[]>([]);
   const [level, setLevel] = useState<'all' | Cefr>('all'); const [q, setQ] = useState(''); const [open, setOpen] = useState<string | null>(null); const [latestOnly, setLatestOnly] = useState(true);
 
   async function load() {
-    const [{ data: p, error: e1 }, { data: pg }, { data: en }, cfg] = await Promise.all([
+    const [{ data: p, error: e1 }, { data: pg }, { data: en }] = await Promise.all([
       db.from('portal_placements').select('*').order('taken_at', { ascending: false }).limit(2000),
       db.from('programs').select('id,name_ar,cefr_level,program_type,status').is('archived_at', null).order('start_date', { ascending: false }).limit(300),
       db.from('portal_enrollments').select('id,email,program_id,status,placement_level,classroom_id').in('status', ['pending', 'approved', 'waitlisted']).limit(3000),
-      fetch('/api/placements').then(x => x.json()).catch(() => null),
     ]);
     if (e1) { setError(e1.message); return; }
-    setRows((p || []) as Placement[]); setProgs((pg || []) as Prog[]); setEnrs((en || []) as Enr[]); setConfigured(cfg ? !!cfg.configured : null); setCfgError(cfg?.error || '');
+    setRows((p || []) as Placement[]); setProgs((pg || []) as Prog[]); setEnrs((en || []) as Enr[]);
   }
   useEffect(() => { (async () => {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/placements'); return; }
@@ -55,10 +54,9 @@ function PlacementsAdmin() {
   return (
     <div className="en"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="en-wrap">
-        <header className="en-head"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>نتائج مِعيار — اختبار تحديد المستوى</h1><p>كل نتيجة تُستورد من مِعيار وتُسجَّل كدليل مهارة (استماع · قراءة · قواعد ومفردات) في ملف المتعلم، وتوجّه الإسكان في الشعب والتوصية بالبرامج.</p></div>
-          <div className="en-acts"><button type="button" className="en-btn" onClick={sync} disabled={busy === 'sync' || configured === false}><Icon name="refresh" size={14} /> {busy === 'sync' ? 'جارٍ التحديث…' : 'تحديث القائمة'}</button><a className="en-btn ghost" href="https://miaar-placement-test.vercel.app" target="_blank" rel="noreferrer"><Icon name="arrow" size={14} /> فتح مِعيار</a></div></header>
+        <header className="en-head"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>نتائج مِعيار — اختبار تحديد المستوى</h1><p>كل نتيجة يكتبها مِعيار — من أَثَر لحظة اكتمال الاختبار وتُسجَّل كدليل مهارة (استماع · قراءة · قواعد ومفردات) في ملف المتعلم، وتوجّه الإسكان في الشعب والتوصية بالبرامج.</p></div>
+          <div className="en-acts"><button type="button" className="en-btn" onClick={sync} disabled={busy === 'sync'}><Icon name="refresh" size={14} /> {busy === 'sync' ? 'جارٍ التحديث…' : 'تحديث القائمة'}</button><a className="en-btn ghost" href="/admin/miaar"><Icon name="arrow" size={14} /> فتح مِعيار</a></div></header>
         <PortalAdminTabs />
-        {configured === false && <div className="en-err">{cfgError ? `إعداد مِعيار: ${cfgError}. ` : ''}الربط مع مِعيار غير مفعّل: أضف في Vercel المتغيّرين <code>MIAAR_SUPABASE_URL</code> و<code>MIAAR_SERVICE_ROLE_KEY</code> (من مشروع مِعيار في Supabase) ثم Redeploy. تُزامَن النتائج تلقائيًا كل صباح، ويمكنك المزامنة يدويًا من الزر أعلاه.</div>}
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok">{notice}</div>}
 
         <div className="en-card pl-dist">
@@ -73,7 +71,7 @@ function PlacementsAdmin() {
           <button type="button" className="en-btn ghost" onClick={() => downloadXlsx(safeFilename('athar_miaar_results', 'xlsx'), [placementsSheet(shown)])} disabled={!shown.length}><Icon name="download" size={14} /> Excel ({shown.length})</button>
         </div>
 
-        {shown.length === 0 && <div className="en-card en-muted">{rows.length === 0 ? 'لا نتائج مستوردة بعد — اضغط «مزامنة من مِعيار».' : 'لا نتائج ضمن هذه التصفية.'}</div>}
+        {shown.length === 0 && <div className="en-card en-muted">{rows.length === 0 ? 'لا نتائج بعد — تظهر هنا لحظة اكتمال أول اختبار في /miaar.' : 'لا نتائج ضمن هذه التصفية.'}</div>}
         {shown.map(p => { const lvl = effectiveLevel(p); const isOpen = open === p.id; const myEnr = enrByEmail.get(p.email) || []; const rec = recommendPrograms(progs.filter(x => x.cefr_level), lvl).slice(0, 3); return (
           <div key={p.id} className="en-card en-row">
             <div className="en-top" onClick={() => setOpen(isOpen ? null : p.id)}>

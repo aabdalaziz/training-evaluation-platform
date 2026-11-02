@@ -6,7 +6,7 @@
  *  POST { action: 'mine' }  → مستخدم: أحدث نتائجه ببريده (بلا مزامنة)
  *  POST { action: 'sync' }  → موظف: يرجع { success:true, retired:true, imported:0 } — لا عمل
  *  GET                      → { success:true, configured:true, retired:true }
- *  متغيّرا البيئة MIAAR_SUPABASE_URL / MIAAR_SERVICE_ROLE_KEY لم يعودا مطلوبَين ويمكن حذفهما من Vercel.
+ *  «الفصل» (2026-11-02): لا اتصال بأي مشروع خارجي؛ ملف lib/portal/placement-sync.ts حُذف.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';

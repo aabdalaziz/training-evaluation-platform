@@ -87,7 +87,7 @@ export const secureItems = (pool: readonly PoolItem[], codes: readonly string[])
 
 /** تغطية البنك للوحة: لكل مستوى×مهارة عدد المعتمد مقابل الخطة، وبالنوع */
 export type Coverage = { cells: Array<{ level: BankLevel; skill: Skill; approved: number; in_review: number; needed: number; by_type: Record<string, number> }>; total_approved: number; total_all: number; by_status: Record<string, number>; by_batch: Record<string, Record<string, number>>; passages: number; descriptors_used: number };
-/** دفعة البند: athar-m2a (الجديد) · miaar-legacy (القديم الموسوم) · غير ذلك إصدار المحتوى */
+/** دفعة البند: athar-m2a (الجديد) · miaar-legacy (الدفعة التأسيسية — وسم تاريخي، ملك أَثَر) · غير ذلك إصدار المحتوى */
 export const itemBatch = (r: { content_version?: string | null; legacy_extra?: any }): string => (r.legacy_extra && typeof r.legacy_extra === 'object' && typeof r.legacy_extra.batch === 'string') ? r.legacy_extra.batch : (r.content_version || '—');
 export async function bankCoverage(db: any): Promise<Coverage> {
   const [{ data: items }, { data: passages }] = await Promise.all([

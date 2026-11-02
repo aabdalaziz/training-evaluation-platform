@@ -9,7 +9,6 @@ import {
 } from '../lib/miaar/registry';
 import type { PoolItem, SecureItem, Level } from '../lib/miaar/registry';
 import { validateCreate, shareText, inviteUrl } from '../lib/miaar/invites';
-import { shapeRow, LEGACY_ORDER, isLegacyTable } from '../lib/miaar/legacy';
 import { optionList } from '../lib/miaar/bank';
 
 const pool = (): PoolItem[] => { const out: PoolItem[] = []; let n = 0; for (const level of LEVELS) for (const skill of SKILLS) for (let i = 0; i < 6; i += 1) { n += 1; out.push({ id: `i${n}`, code: `${level}-${skill}-${i}`, level, skill, type: 'mcq', passageId: null, questionText: `س${n}`, options: [{ id: 'a', text: '1' }, { id: 'b', text: '2' }, { id: 'c', text: '3' }], correctOptionId: 'a', stimulus: null, descriptor: null }); } return out; };
@@ -106,21 +105,6 @@ test('الدعوات: تحقق الإنشاء (جماعية/شخصية) · قا�
   assert.ok(shareText({ label_ar: 'Batch', lang: 'fr', expires_at: null }, 'https://x/miaar/d/Q').startsWith('Hello!'));
 });
 
-test('نقل البيت: ترتيب الجداول يحترم المفاتيح · تشكيل الصفوف القديمة (أعمدة معروفة + legacy_extra) · تطبيع الحالات · خيارات البنود', () => {
-  assert.equal(LEGACY_ORDER[0], 'question_bank_import_batches'); assert.ok(LEGACY_ORDER.indexOf('question_bank_items') < LEGACY_ORDER.indexOf('question_bank_answer_keys')); assert.ok(LEGACY_ORDER.indexOf('placement_reports') < LEGACY_ORDER.indexOf('placement_decisions')); assert.equal(LEGACY_ORDER[LEGACY_ORDER.length - 1], 'audio');
-  assert.ok(isLegacyTable('placement_reports')); assert.ok(!isLegacyTable('profiles'));
-  const id = '11111111-1111-4111-8111-111111111111';
-  const s = shapeRow('placement_secure_sessions', { id, token_hash: 'h', candidate: { email: 'a@b.co' }, status: 'active', weird_col: 1, content_version: 'v' })!;
-  assert.equal(s.status, 'expired', 'الجلسات القديمة لا تُستأنف'); assert.deepEqual(s.legacy_extra, { weird_col: 1 }); assert.ok(!('weird_col' in s));
-  const d = shapeRow('placement_decisions', { id, report_id: id, assigned_level: 'B1', decision_status: 'something' })!; assert.equal(d.decision_status, 'review');
-  const it = shapeRow('question_bank_items', { id, item_code: 'A1-GV-1', level: 'A1', skill: 'grammar_vocab', question_text: 'س', options: [] })!; assert.equal(it.item_type, 'mcq'); assert.equal(it.source_kind, 'imported');
-  assert.equal(shapeRow('question_bank_items', { id: 'not-a-uuid', item_code: 'x' }), null, 'معرّف غير صالح يُستبعد');
-  const r = shapeRow('placement_reports', { id, report: { بيانات_المتقدم: { البريد_الإلكتروني: 'X@Y.co' } } })!; assert.equal(r.candidate_email, 'x@y.co');
-  assert.deepEqual(optionList([{ id: 'a', text: '1' }, { id: 'b', text: '2' }, { text: '3' }, { text: '4' }], 'mcq')!.map((o) => o.id), ['a', 'b', 'c', 'd'], 'المعرّفات الناقصة تُكمَّل');
-  assert.equal(optionList([{ id: 'a', text: '1' }, { id: 'b', text: '2' }], 'mcq'), null, 'الاختيار من متعدد = أربعة خيارات');
-  assert.equal(optionList([{ id: 'a', text: 'صواب' }, { id: 'b', text: 'خطأ' }, { id: 'c', text: 'غير مذكور' }], 'true_false_notgiven')!.length, 3); assert.equal(optionList([{ id: 'a', text: 'صواب' }, { id: 'b', text: 'خطأ' }], 'true_false_notgiven'), null, 'صواب/خطأ يحتاج ثلاثة');
-  assert.equal(optionList([{ text: 'x' }, { image: 'p.png' }], 'picture_choice'), null, 'المصوّر يحتاج صورة لكل خيار'); assert.equal(optionList([{ image: 'a.png', alt: 'قطة' }, { image: 'b.png' }], 'picture_choice')!.length, 2);
-});
 
 // ---------- م2-أ: أرضية ما قبل A1 · سياسة المشغّل · التقرير ----------
 import { FLOOR_LEVEL, FLOOR_INDEX, FLOOR_PLAN, BANK_LEVELS, isBankLevel, bankLevelIndex, levelAtIndex, hasFloor, floorStat, playerPolicy, PLAYER_POLICY, BANK_LEVEL_AR } from '../lib/miaar/registry';

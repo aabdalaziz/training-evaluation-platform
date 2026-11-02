@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /admin/miaar[/invites|/bank] — «مِعيار — من أَثَر» للطاقم (م1)
- *  نظرة: آخر النتائج (بطاقة المستوى برمزها) · موافقات الإعادة · «نقل البيت» (استيراد بيانات مِعيار القديم جدولًا جدولًا مع العدّادات)
+ *  نظرة: آخر النتائج (بطاقة المستوى برمزها) · موافقات الإعادة. (مِعيار — من أَثَر مستقلّ تمامًا: لا استيراد ولا مزامنة مع أي مشروع خارجي — «الفصل» 2026-11-02)
  *  دعوات: جماعية (رمز قصير + QR + ملصق «امسح وحدّد مستواك») وشخصية (رابط برمز خاص لكل بريد) · تتبّع فُتح/بدأ/أنهى · توزيع المستويات
  *  البنك: تغطية مستوى×مهارة×نوع مقابل الخطة + محرّر البنك (م2-أ: البنود والمقاطع والصوت ومراجعة الدفعة)
  *  الذكاء الاصطناعي لا يقرّر هنا شيئًا.
@@ -29,10 +29,10 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   const [ready, setReady] = useState(false); const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [form, setForm] = useState({ kind: 'group', label_ar: '', lang: 'en', exam_mode: 'adaptive', blueprint_id: '', purpose: '', expires_at: '', max_seats: '', note: '', recipients: '' });
   const [bps, setBps] = useState<any[]>([]);  /* م2-ب: المخطّطات النشطة للدعوات */
-  const [created, setCreated] = useState<any>(null); const [qrFor, setQrFor] = useState<any>(null); const [balFor, setBalFor] = useState<{ invite: any; data: any } | null>(null); const [retake, setRetake] = useState({ email: '', note: '' }); const [log, setLog] = useState<string[]>([]);
+  const [created, setCreated] = useState<any>(null); const [qrFor, setQrFor] = useState<any>(null); const [balFor, setBalFor] = useState<{ invite: any; data: any } | null>(null); const [retake, setRetake] = useState({ email: '', note: '' });
   const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
   const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
-  async function load(tk?: string, legacy = false) { const j = await fetch(`/api/admin/miaar${legacy ? '?legacy=1' : ''}`, { headers: await H(tk), cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return null; } setData(j); return j; }
+  async function load(tk?: string) { const j = await fetch('/api/admin/miaar', { headers: await H(tk), cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return null; } setData(j); return j; }
   async function post(body: any) { setBusy(body.action + (body.id || body.table || '')); setError(''); setOk(''); try { const j = await fetch('/api/admin/miaar', { method: 'POST', headers: await H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التنفيذ'); return null; } if (j.note_ar) setOk(j.note_ar); return j; } finally { setBusy(''); } }
   useEffect(() => { (async () => {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/miaar'); return; }
@@ -43,17 +43,6 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   }, []);
 
   async function createInvite(e: React.FormEvent) { e.preventDefault(); const j = await post({ action: 'invite_create', ...form, blueprint_id: form.blueprint_id || undefined, max_seats: form.max_seats ? Number(form.max_seats) : undefined, expires_at: form.expires_at || undefined }); if (j) { setCreated(j); setForm({ ...form, label_ar: '', recipients: '' }); await load(); } }
-  async function importAll() {
-    const order: string[] = data?.legacy?.order || []; setLog([]); let total = 0;
-    for (const table of order) {
-      let offset = 0; for (let guard = 0; guard < 200; guard += 1) {
-        const j = await post({ action: 'import', table, offset }); if (!j) { setLog((l) => [...l, `✗ ${table}: توقّف`]); return; }
-        total += j.imported; setLog((l) => [...l, `${j.label_ar}: جُلب ${j.fetched} · أُدرج ${j.imported} · تُخطّي ${j.skipped}${j.errors?.length ? ` · أخطاء ${j.errors.length}: ${j.errors[0]}` : ''}`]);
-        if (j.done) break; offset = j.next_offset;
-      }
-    }
-    setOk(`اكتمل النقل — ${total} صفًّا جديدًا.`); await load(undefined, true);
-  }
   const copy = (t: string) => { navigator.clipboard?.writeText(t).then(() => setOk('نُسخ')).catch(() => setError('تعذّر النسخ')); };
   const poster = (inv: any) => {
     const url = inv.url || created?.url; const w = window.open('', '_blank', 'width=720,height=960'); if (!w) return;
@@ -62,7 +51,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   };
 
   if (!ready) return <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="am-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
-  const invites: any[] = data?.invites || []; const latest: any[] = data?.latest || []; const cov = data?.coverage; const legacy = data?.legacy; const local = data?.local || {};
+  const invites: any[] = data?.invites || []; const latest: any[] = data?.latest || []; const cov = data?.coverage;
   const openInv = invites.filter((i) => i.status === 'open').length;
   return (
     <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -104,15 +93,6 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
               <input placeholder="سبب الموافقة (اختياري)" value={retake.note} onChange={(e) => setRetake({ ...retake, note: e.target.value })} aria-label="السبب" />
               <button className="am-btn" disabled={!!busy}>أذِن بالإعادة</button>
             </form>
-          </section>
-          <section className="am-card"><h3>نقل البيت — بيانات مِعيار القديم <small>استيراد آمن قابل للتكرار (ما نُقل لا يُكرَّر) · ترتيب الجداول يحترم المفاتيح</small></h3>
-            {!legacy?.configured ? <p className="mm-note">متغيّرا <code>MIAAR_SUPABASE_URL</code> و<code>MIAAR_SERVICE_ROLE_KEY</code> غير مضبوطين على هذا الخادم — النقل يعمل فقط على الإنتاج حيث هما موجودان منذ P7.</p> : <>
-              <div className="mm-row"><button className="am-btn ghost" type="button" disabled={!!busy} onClick={() => load(undefined, true)}>اجلب أعداد القديم</button><button className="am-btn" type="button" disabled={!!busy} onClick={importAll} data-testid="mm-import-all">{busy.startsWith('import') ? 'جارٍ النقل…' : 'انقل الكل الآن'}</button></div>
-              <table className="mm-t"><thead><tr><th>الجدول</th><th>في القديم</th><th>في أَثَر</th></tr></thead><tbody>
-                {(legacy.order as string[]).map((t) => <tr key={t}><td>{legacy.labels?.[t] || t}<br /><small dir="ltr">{t}</small></td><td>{legacy.counts ? (legacy.counts[t] ?? '—') : '…'}</td><td>{t === 'audio' ? '—' : local[t] ?? 0}</td></tr>)}
-              </tbody></table>
-              {!!log.length && <pre className="mm-log">{log.join('\n')}</pre>}
-            </>}
           </section>
         </>}
 

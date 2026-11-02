@@ -6,7 +6,7 @@
  *   item_update   {id, question_text, options[{id,text,image?,alt?}], correct, descriptor_code?, domain?, difficulty_est?, passage_id?, media_path?, media_alt?, note?}
  *   item_status   {id | ids[], status: approved|in_review|archived|draft, note?}   (حدث مراجعة لكل بند)
  *   item_delete   {id}  حذف نهائي — فقط لبند غير معتمد لم يُجب عنه أحد قط (وإلا: أرشفة). المفاتيح والأحداث تُحذف بالتتابع.
- *   batch_status  {batch: athar-m2a|miaar-legacy|<content_version>, status, level?}  → «مراجعة الدفعة» (in_review → approved) أو «أرشفة القديم»
+ *   batch_status  {batch: athar-m2a|miaar-legacy|<content_version>, status, level?}  → «مراجعة الدفعة» (in_review → approved) أو «أرشفة التأسيسية»
  *   item_create   {level, skill, item_type, question_text, options, correct, passage_id?, descriptor_code?, domain?, difficulty_est?, media_path?, media_alt?}
  *   passage_update {id, title?, body?, status?, meta?, audio_public_path?}
  *   passage_create {id, level, skill, title, body, meta?}

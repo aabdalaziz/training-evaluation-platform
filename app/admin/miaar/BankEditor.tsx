@@ -3,7 +3,7 @@
 /**
  * محرّر بنك مِعيار (م2-أ) — داخل /admin/miaar/bank
  *  بنود: تصفية (مستوى · مهارة · حالة · دفعة · نوع · بحث · مكرّرات) · تحرير بند (النص · الخيارات · المفتاح · الواصف · المجال · الصعوبة · المقطع · الصورة)
- *  · حالة بند/بنود · «مراجعة الدفعة» (اعتماد athar-m2a كلّها أو مستوىً واحدًا) · «أرشفة القديم» · إنشاء بند
+ *  · حالة بند/بنود · «مراجعة الدفعة» (اعتماد athar-m2a كلّها أو مستوىً واحدًا) · «أرشفة التأسيسية» · إنشاء بند
  *  مقاطع: تحرير العنوان/النص/الحالة · رفع MP3 إلى الدلو · إنشاء مقطع · «استوديو مِعيار» (الصوت يُنتَج خارج الخادم ويُرفع هنا)
  *  القرار الأكاديمي بيد الطاقم.
  */
@@ -19,7 +19,7 @@ const SKILLS_ALL = ['grammar_vocab', 'reading', 'listening'];
 const STATUS_AR: Record<string, string> = { draft: 'مسودّة', in_review: 'قيد المراجعة', approved: 'معتمد', archived: 'مؤرشف' };
 const TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور' };
 const DOMAIN_AR: Record<string, string> = { personal: 'شخصي', public: 'عام', educational: 'تعليمي', professional: 'مهني' };
-const BATCH_AR: Record<string, string> = { 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'البنك القديم (مِعيار)', 'athar-staff': 'بنود الطاقم' };
+const BATCH_AR: Record<string, string> = { 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم' };
 const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f'];
 
 export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => Promise<Record<string, string>>; byBatch: Record<string, Record<string, number>>; onChanged: () => void }) {
@@ -65,16 +65,16 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
     {err && <p className="am-err" role="alert">{err}</p>}{msg && <p className="bk-ok" role="status">{msg}</p>}
 
     <div className="bk-batch" data-testid="bank-batch">
-      <div><b>مراجعة الدفعة</b><span>بنك مِعيار الجديد: <b>{m2a.in_review || 0}</b> قيد المراجعة · <b>{m2a.approved || 0}</b> معتمد · <b>{m2a.archived || 0}</b> مؤرشف</span><span>البنك القديم: <b>{legacy.approved || 0}</b> معتمد · <b>{legacy.in_review || 0}</b> قيد المراجعة · <b>{legacy.archived || 0}</b> مؤرشف</span></div>
+      <div><b>مراجعة الدفعة</b><span>بنك مِعيار الجديد: <b>{m2a.in_review || 0}</b> قيد المراجعة · <b>{m2a.approved || 0}</b> معتمد · <b>{m2a.archived || 0}</b> مؤرشف</span><span>الدفعة التأسيسية: <b>{legacy.approved || 0}</b> معتمد · <b>{legacy.in_review || 0}</b> قيد المراجعة · <b>{legacy.archived || 0}</b> مؤرشف</span></div>
       <div className="bk-row">
         <select value={batchLevel} onChange={(e) => setBatchLevel(e.target.value)} aria-label="مستوى الدفعة"><option value="">كل المستويات</option>{LEVELS_ALL.map((l) => <option key={l} value={l}>{BANK_LEVEL_AR[l as keyof typeof BANK_LEVEL_AR]}</option>)}</select>
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة المراجعة (اختياري)" aria-label="ملاحظة المراجعة" />
         <button type="button" className="mm-hbtn" disabled={!!busy} onClick={() => batchAct('athar-m2a', 'approved')} data-testid="bank-approve-batch">اعتماد الجديد</button>
         <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('athar-m2a', 'in_review')}>إعادة الجديد للمراجعة</button>
-        <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'archived')}>أرشفة القديم</button>
-        <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'approved')}>إعادة اعتماد القديم</button>
+        <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'archived')}>أرشفة التأسيسية</button>
+        <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'approved')}>إعادة اعتماد التأسيسية</button>
       </div>
-      <p className="mm-note">الترتيب المقترح: راجع الجديد مستوىً مستوى ← «اعتماد الجديد» ← حين تكتفي بالجديد «أرشفة القديم». الاختبار الحيّ يسحب من المعتمد فقط، فلا يتوقّف في أي لحظة.</p>
+      <p className="mm-note">الترتيب المقترح: راجع الجديد مستوىً مستوى ← «اعتماد الجديد» ← حين تكتفي بالجديد «أرشفة التأسيسية» (الدفعة التأسيسية ملك أَثَر الكامل ولا صلة لها بأي مشروع خارجي). الاختبار الحيّ يسحب من المعتمد فقط، فلا يتوقّف في أي لحظة.</p>
     </div>
 
     {view === 'items' && <>

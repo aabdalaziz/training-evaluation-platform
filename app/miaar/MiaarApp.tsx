@@ -95,9 +95,6 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [cand, setCand] = useState({ name: '', email: '', phone: '', nativeLanguage: '', studiedBefore: null as boolean | null, purpose: '' });
   const [access, setAccess] = useState({ time: 1 as 1 | 1.25 | 1.5, simple: false, contrast: false, large: false });
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
-  /* م3-د: القادمون من العنوان القديم miaar-placement-test.vercel.app (?from=legacy) يرون شريط ترحيب واحدًا يشرح البيت الجديد */
-  const [fromLegacy, setFromLegacy] = useState(false);
-  useEffect(() => { try { const q = new URLSearchParams(window.location.search); if (q.get('from') === 'legacy' && sessionStorage.getItem('miaar-legacy-seen') !== '1') setFromLegacy(true); } catch { /* */ } }, []);
   const [probe, setProbe] = useState<{ id: string; level: Level; skill: string; prompt: string; options: { id: string; text: string }[] }[]>([]); const [probeAns, setProbeAns] = useState<Record<string, string>>({}); const [probeIdx, setProbeIdx] = useState(0); const [probeDone, setProbeDone] = useState(false);
   const [session, setSession] = useState<Session | null>(null); const [answers, setAnswers] = useState<Record<string, string>>({}); const [deferred, setDeferred] = useState<Set<string>>(new Set());
   const [qIdx, setQIdx] = useState(0); const [remaining, setRemaining] = useState(0); const [toast, setToast] = useState(''); const [showEnd, setShowEnd] = useState(false);
@@ -285,7 +282,6 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     {toast && <div className="mi-toast" role="status" data-testid="mi-toast">{toast}</div>}
 
     {step === 'intro' && <>
-      {fromLegacy && <div className="mi-legacy" role="status" data-testid="mi-legacy"><span>{lang === 'ar' ? 'انتقل مِعيار إلى بيته الجديد داخل أَثَر — الاختبار نفسه، والبنك أوسع، والنتائج محفوظة. هذا هو العنوان الذي تحفظه من اليوم.' : 'Miaar has moved into its new home at Athar — same test, a wider bank, your results preserved. This is the address to keep from today.'}</span><button type="button" onClick={() => { setFromLegacy(false); try { sessionStorage.setItem('miaar-legacy-seen', '1'); } catch { /* */ } }} aria-label={lang === 'ar' ? 'إغلاق' : 'Close'}>×</button></div>}
       <section className={`mi-ticker${tickerPaused || reduced ? ' paused' : ''}`} aria-label={t('intro', 'tickerK')} data-testid="mi-ticker">
         <span className="mi-ticker-k"><i aria-hidden="true" />{t('intro', 'tickerK')}</span>
         <div className="mi-ticker-view"><div className="mi-ticker-track" style={{ animationDuration: `${Math.max(24, tickerItems.length * 7)}s` }}>{[0, 1].map((rp) => <span key={rp} className="mi-ticker-row" aria-hidden={rp === 1}>{tickerItems.map((it, i) => <span key={i} className="mi-ticker-item">{it}</span>)}</span>)}</div></div>
@@ -634,7 +630,6 @@ const CSS = `
 .mi-kicker{margin:0;color:var(--teal);font-size:12.5px;font-weight:900;letter-spacing:.02em}.mi-kicker.gold{color:var(--gold)}
 .mi-note{color:var(--muted);font-size:14px;line-height:1.7;margin:8px 0 0}
 .mi-trust{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:13px;color:var(--muted);flex-wrap:wrap}.mi-trust i{width:10px;height:10px;border-radius:50%;background:#94a3b8;flex:none}.mi-trust[data-light=green] i{background:#0b8a83}.mi-trust[data-light=yellow] i{background:#c9a24b}.mi-trust[data-light=red] i{background:#b42318}.mi-trust a{color:var(--teal,#0b8a83);text-decoration:underline}
-.mi-legacy{display:flex;align-items:center;gap:12px;margin:0 7vw 12px;padding:10px 14px;border-radius:12px;background:#fff8e6;border:1px solid #f1d58a;color:#5b4300;font-size:14px;line-height:1.7}.mi-legacy span{flex:1}.mi-legacy button{border:0;background:transparent;font-size:20px;line-height:1;color:inherit;cursor:pointer;min-width:44px;min-height:44px}.mi-note.center{text-align:center}.mi-muted{color:var(--muted);font-size:14px}
 .mi-meta{margin:0 0 10px;color:var(--teal);font-size:13px;font-weight:900}
 /* hero */
 .mi-hero{position:relative;overflow:hidden;display:grid;gap:42px;align-items:center;padding:64px 7vw 72px;background:var(--grad);color:#fff;min-height:calc(100vh - 84px)}
@@ -841,6 +836,7 @@ const CSS = `
 .mi-nav{display:flex;flex-wrap:wrap;gap:6px;max-width:1100px;margin:6px auto 0;padding:0 18px}
 .mi-num{min-width:40px;height:40px;border-radius:12px;border:1px solid #dbe3ea;background:#fff;color:var(--navy);font-weight:900;cursor:pointer;padding:0 10px;font-size:13px}
 .mi-num.ok{background:var(--teal-soft);border-color:var(--teal-line);color:var(--teal-deep)}.mi-num.def{border-color:var(--gold);background:var(--gold-soft)}.mi-num.now{outline:2px solid var(--navy);outline-offset:1px}
+.mi-note.center{text-align:center}.mi-muted{color:var(--muted);font-size:14px}
 .mi-toast{position:fixed;top:96px;left:50%;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:8px;border-radius:16px;padding:12px 16px;font-weight:900;box-shadow:0 14px 30px rgba(15,42,78,.16);background:var(--navy);color:#fff;max-width:min(92vw,560px);text-align:center}
 .mi-modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(15,42,78,.6);padding:16px}.mi-modal .mi-card{width:min(520px,100%)}.mi-modal h3{margin:0 0 6px}
 /* player */
