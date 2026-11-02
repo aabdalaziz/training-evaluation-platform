@@ -75,3 +75,4 @@ import './hub.test';
 import './rooms.test';
 import './miaar-m3.test';
 import './miaar-m4.test';
+import './miaar-speed.test';

@@ -77,9 +77,11 @@ export async function GET(req: Request) {
     const items = pool && pool.length ? probeFromPool(pool, seed, seen) : probePublic(seed);
     return NextResponse.json({ ok: true, name_ar: MIAAR_NAMES_AR.probe, official_ar: MIAAR_NAMES_AR.probe_official, items }, { headers: NO });
   }
-  if (u.searchParams.get('doors')) return NextResponse.json({ ok: true, doors: await publicDoors(db) }, { headers: NO });
+  /* «سرعة مِعيار»: الأبواب والنبض بيانات عامة بلا جلسة — تُخدَم من حافة Vercel دقيقة كاملة (stale-while-revalidate) فتصل الصفحة الأولى في أجزاء الثانية */
+  const EDGE = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
+  if (u.searchParams.get('doors')) return NextResponse.json({ ok: true, doors: await publicDoors(db) }, { headers: EDGE });
   /* م3-د (خِفّة): المقدّمة تطلب الأبواب والنبض معًا في طلب واحد */
-  if (u.searchParams.get('intro')) { const [doors, p] = await Promise.all([publicDoors(db).catch(() => []), pulse(db).catch(() => null)]); return NextResponse.json({ ok: true, doors, pulse: p }, { headers: NO }); }
+  if (u.searchParams.get('intro')) { const [doors, p] = await Promise.all([publicDoors(db).catch(() => []), pulse(db).catch(() => null)]); return NextResponse.json({ ok: true, doors, pulse: p }, { headers: EDGE }); }
   if (u.searchParams.get('invite')) { const r = await openInvite(db, u.searchParams.get('invite'), u.searchParams.get('t') || null); return r.ok ? NextResponse.json({ ok: true, invite: r.invite }, { headers: NO }) : bad(`invite_${r.error}`, r.error === 'not_found' ? 404 : 410); }
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */

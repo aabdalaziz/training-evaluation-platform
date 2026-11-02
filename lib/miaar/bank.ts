@@ -25,16 +25,25 @@ export function optionList(value: unknown, type: ItemType): Option[] | null {
 }
 
 export type PassageRow = { id: string; level: string; skill: 'reading' | 'listening'; title: string; body: string; audio_public_path: string | null; audio_storage_path: string | null; status: string; meta?: Record<string, unknown> | null };
+/* «سرعة مِعيار» (2026-11-02): البنك المعتمد لا يتغيّر إلا باعتماد بشري — فيُقرأ مرة ويُعاد استعماله 90 ثانية داخل الخادم نفسه
+   (كان يُحمَّل كاملًا ≈700 بند مع كل إجابة وكل بدء). الاعتماد/السحب من لوحة البنك يُفرغ الذاكرة فورًا (invalidatePoolCache). */
+const POOL_TTL_MS = 90_000;
+let PASSAGES_CACHE: { at: number; value: Map<string, PassageRow> } | null = null;
+let POOL_CACHE: { at: number; value: PoolItem[] } | null = null;
+export function invalidatePoolCache(): void { PASSAGES_CACHE = null; POOL_CACHE = null; }
+const fresh = (at: number) => Date.now() - at < POOL_TTL_MS;
 export async function loadPassages(db: any): Promise<Map<string, PassageRow>> {
+  if (PASSAGES_CACHE && fresh(PASSAGES_CACHE.at)) return PASSAGES_CACHE.value;
   const { data, error } = await db.from('miaar_passages').select('id, level, skill, title, body, audio_public_path, audio_storage_path, status, meta').eq('status', 'approved').limit(1000);
   if (error) throw new Error('passages_unavailable');
-  return new Map(((data || []) as PassageRow[]).map((p) => [p.id, p]));
+  const value = new Map(((data || []) as PassageRow[]).map((p) => [p.id, p])); PASSAGES_CACHE = { at: Date.now(), value }; return value;
 }
 const listeningReady = (p: PassageRow | undefined) => !!p && p.skill === 'listening' && !!p.body && (!!p.audio_public_path || !!p.audio_storage_path);
 const readingReady = (p: PassageRow | undefined) => !!p && p.skill === 'reading' && !!p.body;
 
 /** البنود المعتمدة الصالحة للتقديم في م1 (الأنواع الأربعة · مقاطع جاهزة · مفتاح صالح · ليست مسحوبة) */
 export async function loadApprovedPool(db: any, passages?: Map<string, PassageRow>): Promise<PoolItem[]> {
+  if (POOL_CACHE && fresh(POOL_CACHE.at)) return POOL_CACHE.value;
   const P = passages || await loadPassages(db);
   const [items, keys] = await Promise.all([
     db.from('question_bank_items').select('id, item_code, level, skill, passage_id, question_text, options, item_type, stimulus, media_path, media_alt, descriptor_code, cefr_descriptor').eq('status', 'approved').limit(2000),
@@ -57,6 +66,7 @@ export async function loadApprovedPool(db: any, passages?: Map<string, PassageRo
     seen.add(code);
     pool.push({ id: row.id, code, level: row.level, skill: row.skill, type, passageId, questionText: row.question_text.trim(), options, correctOptionId: correct, stimulus: image ? { image, alt: (stim?.alt as string) || row.media_alt || null } : null, descriptor: row.descriptor_code || row.cefr_descriptor || null });
   }
+  POOL_CACHE = { at: Date.now(), value: pool };
   return pool;
 }
 
@@ -65,19 +75,34 @@ export async function mediaUrl(db: any, path: string | null | undefined): Promis
   if (!path) return null; if (path.startsWith('/') || path.startsWith('http')) return path;
   try { const r = await db.storage.from(MEDIA_BUCKET).createSignedUrl(path, SIGN_SECONDS); return r.error ? null : (r.data?.signedUrl ?? null); } catch { return null; }
 }
+/** «سرعة مِعيار»: كل روابط المخزن في النموذج تُوقَّع بطلب واحد بدل طلب لكل صورة/مقطع (كان النموذج الكامل يحتاج عشرات الرحلات المتتابعة) */
+export async function mediaUrls(db: any, paths: readonly (string | null | undefined)[]): Promise<Map<string, string | null>> {
+  const out = new Map<string, string | null>(); const toSign: string[] = [];
+  for (const p of paths) { if (!p || out.has(p)) continue; if (p.startsWith('/') || p.startsWith('http')) out.set(p, p); else { out.set(p, null); toSign.push(p); } }
+  if (!toSign.length) return out;
+  try {
+    const r = await db.storage.from(MEDIA_BUCKET).createSignedUrls(toSign, SIGN_SECONDS);
+    if (!r.error && Array.isArray(r.data)) for (const row of r.data as { path?: string | null; signedUrl?: string | null; error?: string | null }[]) if (row?.path && row.signedUrl && !row.error) out.set(row.path, row.signedUrl);
+    else for (const p of toSign) out.set(p, await mediaUrl(db, p));  /* احتياط: مخزن لا يدعم التوقيع الجماعي */
+  } catch { for (const p of toSign) out.set(p, await mediaUrl(db, p)); }
+  return out;
+}
 
 /** النموذج العام من رموز مسندة: الأسئلة بلا مفاتيح + المقاطع بروابط الصوت */
 export async function formFromPool(db: any, pool: readonly PoolItem[], codes: readonly string[], passages?: Map<string, PassageRow>): Promise<PublicForm | null> {
   const P = passages || await loadPassages(db); const byCode = new Map(pool.map((i) => [i.code, i]));
   const selected = codes.map((c) => byCode.get(c)).filter((i): i is PoolItem => !!i); if (selected.length !== codes.length) return null;
   const passageIds = [...new Set(selected.map((i) => i.passageId).filter((x): x is string => !!x))];
-  const out: PublicPassage[] = [];
-  for (const id of passageIds) { const p = P.get(id); if (!p) return null; const pol = playerPolicy(p.level, (p.meta || null) as any); out.push({ id: p.id, level: p.level, skill: p.skill, title: p.title, text: p.body, audioUrl: p.skill === 'listening' ? await mediaUrl(db, p.audio_public_path || p.audio_storage_path) : null, player: p.skill === 'listening' ? { ...pol, twice: (p.meta as any)?.twice === true } : undefined }); }
-  const questions: PublicQuestion[] = [];
-  for (const i of selected) {
-    const options: Option[] = []; for (const o of i.options) options.push({ id: o.id, text: o.text, image: o.image ? await mediaUrl(db, o.image) : null, alt: o.alt || null });
-    questions.push({ id: i.code, level: i.level, skill: i.skill, type: i.type, passageId: i.passageId, questionText: i.questionText, options, stimulus: i.stimulus ? { image: await mediaUrl(db, i.stimulus.image), alt: i.stimulus.alt || null } : null });
-  }
+  const passRows = passageIds.map((id) => P.get(id)); if (passRows.some((p) => !p)) return null;
+  /* طلب توقيع واحد لكل الوسائط (مقاطع الاستماع · صور الخيارات · صور المنبّه) */
+  const paths: (string | null | undefined)[] = [];
+  for (const p of passRows as PassageRow[]) if (p.skill === 'listening') paths.push(p.audio_public_path || p.audio_storage_path);
+  for (const i of selected) { for (const o of i.options) paths.push(o.image); if (i.stimulus) paths.push(i.stimulus.image); }
+  const urls = await mediaUrls(db, paths); const urlOf = (p: string | null | undefined) => (p ? urls.get(p) ?? null : null);
+  const out: PublicPassage[] = (passRows as PassageRow[]).map((p) => { const pol = playerPolicy(p.level, (p.meta || null) as any); return { id: p.id, level: p.level, skill: p.skill, title: p.title, text: p.body, audioUrl: p.skill === 'listening' ? urlOf(p.audio_public_path || p.audio_storage_path) : null, player: p.skill === 'listening' ? { ...pol, twice: (p.meta as any)?.twice === true } : undefined }; });
+  const questions: PublicQuestion[] = selected.map((i) => ({ id: i.code, level: i.level, skill: i.skill, type: i.type, passageId: i.passageId, questionText: i.questionText,
+    options: i.options.map((o) => ({ id: o.id, text: o.text, image: o.image ? urlOf(o.image) : null, alt: o.alt || null })) as Option[],
+    stimulus: i.stimulus ? { image: urlOf(i.stimulus.image), alt: i.stimulus.alt || null } : null }));
   return { questions, passages: out };
 }
 export const secureItems = (pool: readonly PoolItem[], codes: readonly string[]): SecureItem[] | null => {

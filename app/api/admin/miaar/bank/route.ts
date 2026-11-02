@@ -23,7 +23,7 @@ import { readJson } from '../../../../../lib/shield/body';
 import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLevel, isSkill, isProductiveSkill, isOptionId, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
 import { validateTask } from '../../../../../lib/miaar/rubric';
 import type { ItemType } from '../../../../../lib/miaar/registry';
-import { optionList, MEDIA_BUCKET, itemBatch } from '../../../../../lib/miaar/bank';
+import { optionList, MEDIA_BUCKET, itemBatch, invalidatePoolCache } from '../../../../../lib/miaar/bank';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -98,6 +98,7 @@ export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const j = await readJson(req, { maxBytes: 6 * 1024 * 1024 }); if (!j.ok) return bad(j.error, j.status); const b = j.body as Record<string, unknown>;
   const action = String(b.action || ''); const note = str(b.note, 600); const now = new Date().toISOString();
+  invalidatePoolCache();  /* «سرعة مِعيار»: أي تعديل في البنك يُفرغ ذاكرة البنك المعتمد فورًا على هذا الخادم (والباقي خلال 90 ث) */
 
   if (action === 'item_update') {
     const id = str(b.id, 60); if (!id) return bad('معرّف مفقود');
