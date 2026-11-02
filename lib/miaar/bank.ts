@@ -75,7 +75,30 @@ export async function mediaUrl(db: any, path: string | null | undefined): Promis
   if (!path) return null; if (path.startsWith('/') || path.startsWith('http')) return path;
   try { const r = await db.storage.from(MEDIA_BUCKET).createSignedUrl(path, SIGN_SECONDS); return r.error ? null : (r.data?.signedUrl ?? null); } catch { return null; }
 }
-/** «سرعة مِعيار»: كل روابط المخزن في النموذج تُوقَّع بطلب واحد بدل طلب لكل صورة/مقطع (كان النموذج الكامل يحتاج عشرات الرحلات المتتابعة) */
+/* «سرعة مِعيار» (الدفعة 3): التوقيع لا يحدث عند البدء إطلاقًا — القياس الحيّ أظهر أن توقيع 7 مقاطع استغرق 2.7–11 ث داخل بدء الجلسة.
+   النموذج يحمل رابطًا كسولًا /api/miaar?media=<المسار> يُحوَّل (302) إلى رابط موقَّع لحظة تشغيل المقطع فقط، مع ذاكرة توقيع داخل الخادم
+   (صلاحية التوقيع 3 ساعات → نحتفظ به 2.5 ساعة) فلا يدفع ثمن التوقيع إلا أول مستمع على كل خادم. المسارات المسموح توقيعها هي فقط
+   ما يشير إليه مقطع أو بند معتمد (لا توقيع لمسار عشوائي). */
+export const lazyMediaUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null; if (path.startsWith('/') || path.startsWith('http')) return path;
+  return `/api/miaar?media=${encodeURIComponent(path)}`;
+};
+const SIGNED_CACHE = new Map<string, { url: string; exp: number }>();
+const SIGNED_KEEP_MS = (SIGN_SECONDS - 30 * 60) * 1000;
+/** رابط موقَّع من الذاكرة أو بتوقيع واحد — null إن تعذّر */
+export async function signedMediaUrl(db: any, path: string): Promise<string | null> {
+  const hit = SIGNED_CACHE.get(path); if (hit && hit.exp > Date.now()) return hit.url;
+  const url = await mediaUrl(db, path); if (url) SIGNED_CACHE.set(path, { url, exp: Date.now() + SIGNED_KEEP_MS });
+  return url;
+}
+/** هل هذا المسار مسموح؟ يجب أن يشير إليه مقطع معتمد أو بند معتمد (صورة خيار/منبّه) */
+export function isReferencedMediaPath(path: string, passages: Map<string, PassageRow>, pool: readonly PoolItem[]): boolean {
+  if (!path || path.startsWith('/') || path.startsWith('http') || path.includes('..')) return false;
+  for (const p of passages.values()) if (p.audio_storage_path === path || p.audio_public_path === path) return true;
+  for (const i of pool) { if (i.stimulus?.image === path) return true; for (const o of i.options) if (o.image === path) return true; }
+  return false;
+}
+/** توقيع جماعي بطلب واحد (يبقى للاستعمالات الإدارية) */
 export async function mediaUrls(db: any, paths: readonly (string | null | undefined)[]): Promise<Map<string, string | null>> {
   const out = new Map<string, string | null>(); const toSign: string[] = [];
   for (const p of paths) { if (!p || out.has(p)) continue; if (p.startsWith('/') || p.startsWith('http')) out.set(p, p); else { out.set(p, null); toSign.push(p); } }
@@ -98,7 +121,7 @@ export async function formFromPool(db: any, pool: readonly PoolItem[], codes: re
   const paths: (string | null | undefined)[] = [];
   for (const p of passRows as PassageRow[]) if (p.skill === 'listening') paths.push(p.audio_public_path || p.audio_storage_path);
   for (const i of selected) { for (const o of i.options) paths.push(o.image); if (i.stimulus) paths.push(i.stimulus.image); }
-  const urls = await mediaUrls(db, paths); const urlOf = (p: string | null | undefined) => (p ? urls.get(p) ?? null : null);
+  void paths; const urlOf = lazyMediaUrl;  /* بلا أي رحلة توقيع عند البدء */
   const out: PublicPassage[] = (passRows as PassageRow[]).map((p) => { const pol = playerPolicy(p.level, (p.meta || null) as any); return { id: p.id, level: p.level, skill: p.skill, title: p.title, text: p.body, audioUrl: p.skill === 'listening' ? urlOf(p.audio_public_path || p.audio_storage_path) : null, player: p.skill === 'listening' ? { ...pol, twice: (p.meta as any)?.twice === true } : undefined }; });
   const questions: PublicQuestion[] = selected.map((i) => ({ id: i.code, level: i.level, skill: i.skill, type: i.type, passageId: i.passageId, questionText: i.questionText,
     options: i.options.map((o) => ({ id: o.id, text: o.text, image: o.image ? urlOf(o.image) : null, alt: o.alt || null })) as Option[],

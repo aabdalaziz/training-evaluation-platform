@@ -23,7 +23,7 @@ import { startSession, loadSession, resumeSession, answerSession, finishSession,
 import { trustSummary } from '../../../lib/miaar/balance';
 import { stopwatch, slowLine } from '../../../lib/miaar/timing';
 import { openInvite } from '../../../lib/miaar/invites';
-import { loadApprovedPool } from '../../../lib/miaar/bank';
+import { loadApprovedPool, loadPassages, signedMediaUrl, isReferencedMediaPath } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
 import { probeBand } from '../../../lib/miaar/registry';
 
@@ -80,6 +80,14 @@ export async function GET(req: Request) {
   }
   /* «سرعة مِعيار»: الأبواب والنبض بيانات عامة بلا جلسة — تُخدَم من حافة Vercel دقيقة كاملة (stale-while-revalidate) فتصل الصفحة الأولى في أجزاء الثانية */
   const EDGE = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
+  if (u.searchParams.get('media')) {
+    /* «سرعة مِعيار»: مقطع/صورة من المخزن الخاص — يُوقَّع لحظة التشغيل فقط (302) ومن الذاكرة بعد أول مرة؛ ولا يُوقَّع إلا ما يشير إليه محتوى معتمد */
+    const path = String(u.searchParams.get('media') || '').trim().slice(0, 300);
+    const [passages, pool] = await Promise.all([loadPassages(db).catch(() => new Map()), loadApprovedPool(db).catch(() => [])]);
+    if (!isReferencedMediaPath(path, passages as any, pool)) return bad('not_found', 404);
+    const url = await signedMediaUrl(db, path); if (!url) return bad('media_unavailable', 503);
+    return NextResponse.redirect(url, { status: 302, headers: { 'Cache-Control': 'private, max-age=1800' } });
+  }
   if (u.searchParams.get('doors')) return NextResponse.json({ ok: true, doors: await publicDoors(db) }, { headers: EDGE });
   /* م3-د (خِفّة): المقدّمة تطلب الأبواب والنبض معًا في طلب واحد */
   if (u.searchParams.get('intro')) { const [doors, p] = await Promise.all([publicDoors(db).catch(() => []), pulse(db).catch(() => null)]); return NextResponse.json({ ok: true, doors, pulse: p }, { headers: EDGE }); }

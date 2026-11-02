@@ -84,15 +84,12 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
   if (!isExamMode(input.examMode) && !input.invite && !cleanText(input.blueprint, 40)) return fail('invalid_start_request', 400);
   /* «سرعة مِعيار»: أربع رحلات مستقلة إلى القاعدة تجري معًا بدل التتابع (الخطّة · الأهلية · الجلسات المفتوحة · البنك) —
      كل رحلة تدفع ثمن المسافة بين Vercel وSupabase، فالتوازي يختصر الانتظار إلى أطولها لا مجموعها */
-  const openCheck = async () => {
-    // الجلسات النشطة المنتهية زمنًا لهذا البريد تُغلق
-    await db.from('placement_secure_sessions').update({ status: 'expired', finish_reason: 'time', updated_at: nowIso() }).eq('status', 'active').lt('expires_at', nowIso()).eq('candidate_email', candidate.email);
-    // جلسة نشطة واحدة لكل بريد (لا «إعادة سحب» للبنود بإعادة البدء) — الاستئناف بالكعكة، أو الانتظار حتى انتهاء مدّتها
-    const { data: open } = await db.from('placement_secure_sessions').select('id').eq('status', 'active').eq('candidate_email', candidate.email).limit(1);
-    return Array.isArray(open) && open.length > 0;
-  };
+  // الجلسات النشطة المنتهية زمنًا لهذا البريد تُغلق (تجري بالتوازي؛ فحص الجلسة المفتوحة يعتمد على expires_at لا على نتيجة هذا التحديث)
+  const expireOld = () => db.from('placement_secure_sessions').update({ status: 'expired', finish_reason: 'time', updated_at: nowIso() }).eq('status', 'active').lt('expires_at', nowIso()).eq('candidate_email', candidate.email);
+  // جلسة نشطة واحدة لكل بريد (لا «إعادة سحب» للبنود بإعادة البدء) — الاستئناف بالكعكة، أو الانتظار حتى انتهاء مدّتها
+  const openCheck = async () => { const { data: open } = await db.from('placement_secure_sessions').select('id').eq('status', 'active').gt('expires_at', nowIso()).eq('candidate_email', candidate.email).limit(1); return Array.isArray(open) && open.length > 0; };
   const bank = async () => { const passages = await loadPassages(db); const pool = await loadApprovedPool(db, passages); return { passages, pool }; };
-  const [resolved, allowed, hasOpen, loaded] = await Promise.all([resolvePlan(db, input), canStart(db, candidate.email), openCheck().catch(() => false), bank().catch(() => null)]);
+  const [resolved, allowed, hasOpen, loaded] = await Promise.all([resolvePlan(db, input), canStart(db, candidate.email), openCheck().catch(() => false), bank().catch(() => null), expireOld().then(() => null, () => null)]);
   mark('plan+eligibility+open+pool');
   if (!resolved.ok) return resolved; if (!allowed.ok) return allowed; if (hasOpen) return fail('session_exists', 409); if (!loaded) return fail('form_unavailable', 503);
   const { plan: activePlan, blueprintId } = resolved.value; const examMode: ExamMode = examModeOf(activePlan); const { passages, pool } = loaded;
