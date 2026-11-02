@@ -21,6 +21,7 @@ import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { COOKIE_NAME, probePublic, isResultCode, MIAAR_NAMES_AR } from '../../../lib/miaar/registry';
 import { startSession, loadSession, resumeSession, answerSession, finishSession, resultByCode } from '../../../lib/miaar/engine';
 import { trustSummary } from '../../../lib/miaar/balance';
+import { stopwatch, slowLine } from '../../../lib/miaar/timing';
 import { openInvite } from '../../../lib/miaar/invites';
 import { loadApprovedPool } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
@@ -101,7 +102,8 @@ export async function POST(req: Request) {
     const score = probeScoreFrom(pool, body.probeAnswers); return NextResponse.json({ ok: true, score, band: probeBand(score) }, { headers: NO });
   }
   if (action === 'start') {
-    const rl = await rateLimit(db, `miaar_start:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات بدء كثيرة');
+    const sw = stopwatch();  /* «سرعة مِعيار»: مراحل البدء في Server-Timing + سطر سجلّ إن تجاوز 2.5 ث */
+    const rl = await rateLimit(db, `miaar_start:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات بدء كثيرة'); sw.mark('ratelimit');
     let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null } | null = null;
     const inv = body.invite as Record<string, unknown> | undefined;
     if (inv && typeof inv === 'object' && inv.code) {
@@ -109,16 +111,18 @@ export async function POST(req: Request) {
       invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null };
       if (r.recipient && body.candidate && typeof body.candidate === 'object') (body.candidate as Record<string, unknown>).email = r.recipient.email;  /* الدعوة الشخصية تثبّت البريد */
     }
-    const userId = await userOf(req);
-    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint });
+    const userId = await userOf(req); sw.mark('auth');
+    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint }, sw);
+    const slow = slowLine('start', sw); if (slow) console.warn(slow);
     if (!r.ok) return bad(r.code, r.status);
-    return withCookie(NextResponse.json({ ok: true, session: r.value.session, invite: invite ? { label_ar: invite.label_ar } : null }, { headers: NO }), r.value.token, r.value.session.expiresAt);
+    return withCookie(NextResponse.json({ ok: true, session: r.value.session, invite: invite ? { label_ar: invite.label_ar } : null }, { headers: { ...NO, 'Server-Timing': sw.header() } }), r.value.token, r.value.session.expiresAt);
   }
+  const sw = stopwatch();
   const token = cookieOf(req); if (!token) return bad('missing_session', 401);
-  const loaded = await loadSession(db, token); if (!loaded) return withCookie(bad('invalid_session', 401), null);
+  const loaded = await loadSession(db, token, action !== 'answer'); if (!loaded) return withCookie(bad('invalid_session', 401), null); sw.mark('session');
   const { session, answers } = loaded;
   if (action === 'resume') { const r = await resumeSession(db, session, answers); return r.ok ? NextResponse.json({ ok: true, session: r.value }, { headers: NO }) : bad(r.code, r.status); }
-  if (action === 'answer') { const r = await answerSession(db, session, body); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: NO }) : bad(r.code, r.status); }
+  if (action === 'answer') { const r = await answerSession(db, session, body, sw); sw.mark('decide'); const slow = slowLine('answer', sw, 1500); if (slow) console.warn(slow); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: { ...NO, 'Server-Timing': sw.header() } }) : bad(r.code, r.status); }
   if (action === 'finish') {
     let label: string | null = null; if (session.invite_id) { const { data } = await db.from('placement_invites').select('label_ar').eq('id', session.invite_id).maybeSingle(); label = data?.label_ar || null; }
     const r = await finishSession(db, session, answers, body.reason, label); if (!r.ok) return bad(r.code, r.status);

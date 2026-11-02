@@ -13,6 +13,7 @@ import {
 import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report } from './registry';
 import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './bank';
 import { reweighIfDue, trustLine } from './balance';
+import type { Stopwatch } from './timing';
 import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
 import type { Plan } from './blueprint';
 import { parseMiaarReport, placementValid, evidenceSkills, effectiveLevel } from '../portal/placement';
@@ -77,22 +78,27 @@ export async function canStart(db: any, email: string): Promise<Result<{ retake:
   return (approvals.data || []).length ? { ok: true, value: { retake: true } } : fail('retake_not_allowed', 403);
 }
 
-export async function startSession(db: any, input: StartInput): Promise<Result<{ token: string; session: ReturnType<typeof publicSession> }>> {
+export async function startSession(db: any, input: StartInput, sw?: Stopwatch): Promise<Result<{ token: string; session: ReturnType<typeof publicSession> }>> {
+  const mark = (n: string) => sw?.mark(n);
   const candidate = normalizeCandidate(input.candidate); if (!candidate) return fail('invalid_start_request', 400);
   if (!isExamMode(input.examMode) && !input.invite && !cleanText(input.blueprint, 40)) return fail('invalid_start_request', 400);
-  const resolved = await resolvePlan(db, input); if (!resolved.ok) return resolved;
-  const { plan: activePlan, blueprintId } = resolved.value; const examMode: ExamMode = examModeOf(activePlan);
-  const allowed = await canStart(db, candidate.email); if (!allowed.ok) return allowed;
-  // الجلسات النشطة المنتهية زمنًا لهذا البريد تُغلق
-  await db.from('placement_secure_sessions').update({ status: 'expired', finish_reason: 'time', updated_at: nowIso() }).eq('status', 'active').lt('expires_at', nowIso()).eq('candidate_email', candidate.email);
-  // جلسة نشطة واحدة لكل بريد (لا «إعادة سحب» للبنود بإعادة البدء) — الاستئناف بالكعكة، أو الانتظار حتى انتهاء مدّتها
-  const { data: open } = await db.from('placement_secure_sessions').select('id').eq('status', 'active').eq('candidate_email', candidate.email).limit(1);
-  if (Array.isArray(open) && open.length) return fail('session_exists', 409);
+  /* «سرعة مِعيار»: أربع رحلات مستقلة إلى القاعدة تجري معًا بدل التتابع (الخطّة · الأهلية · الجلسات المفتوحة · البنك) —
+     كل رحلة تدفع ثمن المسافة بين Vercel وSupabase، فالتوازي يختصر الانتظار إلى أطولها لا مجموعها */
+  const openCheck = async () => {
+    // الجلسات النشطة المنتهية زمنًا لهذا البريد تُغلق
+    await db.from('placement_secure_sessions').update({ status: 'expired', finish_reason: 'time', updated_at: nowIso() }).eq('status', 'active').lt('expires_at', nowIso()).eq('candidate_email', candidate.email);
+    // جلسة نشطة واحدة لكل بريد (لا «إعادة سحب» للبنود بإعادة البدء) — الاستئناف بالكعكة، أو الانتظار حتى انتهاء مدّتها
+    const { data: open } = await db.from('placement_secure_sessions').select('id').eq('status', 'active').eq('candidate_email', candidate.email).limit(1);
+    return Array.isArray(open) && open.length > 0;
+  };
+  const bank = async () => { const passages = await loadPassages(db); const pool = await loadApprovedPool(db, passages); return { passages, pool }; };
+  const [resolved, allowed, hasOpen, loaded] = await Promise.all([resolvePlan(db, input), canStart(db, candidate.email), openCheck().catch(() => false), bank().catch(() => null)]);
+  mark('plan+eligibility+open+pool');
+  if (!resolved.ok) return resolved; if (!allowed.ok) return allowed; if (hasOpen) return fail('session_exists', 409); if (!loaded) return fail('form_unavailable', 503);
+  const { plan: activePlan, blueprintId } = resolved.value; const examMode: ExamMode = examModeOf(activePlan); const { passages, pool } = loaded;
   const token = createToken();
-  const passages = await loadPassages(db).catch(() => null); if (!passages) return fail('form_unavailable', 503);
-  const pool = await loadApprovedPool(db, passages).catch(() => null); if (!pool) return fail('form_unavailable', 503);
-  const drawn = drawPlan(pool, token, activePlan); if (!drawn) return fail('form_unavailable', 503);
-  const form = await formFromPool(db, pool, drawn.codes, passages); if (!form) return fail('form_unavailable', 503);
+  const drawn = drawPlan(pool, token, activePlan); if (!drawn) return fail('form_unavailable', 503); mark('draw');
+  const form = await formFromPool(db, pool, drawn.codes, passages); if (!form) return fail('form_unavailable', 503); mark('form');
   const access = normalizeAccess(input.access); const durationSeconds = accessDuration(activePlan.durationSeconds, access);
   const score = activePlan.probe ? probeScoreFrom(pool, input.probeAnswers) : 0; const startIndex = planStartIndex(activePlan, probeBandIndexOf(score));
   const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
@@ -103,13 +109,15 @@ export async function startSession(db: any, input: StartInput): Promise<Result<{
     blueprint_id: blueprintId, plan: activePlan,
   }).select('*').single();
   if (error || !data) { console.error('[miaar] session_start_failed', error?.code || '-', error?.message || 'no row');  /* سجلّ Vercel يحمل السبب (بلا بيانات شخصية) — درس حادثة م2-ب */ return fail('session_start_failed', 409); }
+  mark('insert');
   if (input.invite?.recipient_id) await db.from('placement_invite_recipients').update({ started_at: nowIso() }).eq('id', input.invite.recipient_id).is('started_at', null);
   return { ok: true, value: { token, session: publicSession(data as SessionRow, [], form) } };
 }
 
-export async function loadSession(db: any, token: string): Promise<{ session: SessionRow; answers: Answer[] } | null> {
+export async function loadSession(db: any, token: string, withAnswers = true): Promise<{ session: SessionRow; answers: Answer[] } | null> {
   const { data, error } = await db.from('placement_secure_sessions').select('*').eq('token_hash', tokenHash(token)).maybeSingle();
   if (error || !data) return null;
+  if (!withAnswers) return { session: data as SessionRow, answers: [] };  /* «سرعة مِعيار»: تسجيل إجابة لا يحتاج قائمة الإجابات (تُقرأ طازجة عند إغلاق المستوى) */
   const a = await db.from('placement_secure_answers').select('question_id, selected_option_id').eq('session_id', data.id);
   return { session: data as SessionRow, answers: (a.data || []) as Answer[] };
 }
@@ -130,13 +138,13 @@ export async function resumeSession(db: any, s: SessionRow, answers: Answer[]): 
   return { ok: true, value: publicSession(s, answers, form) };
 }
 
-export async function answerSession(db: any, s: SessionRow, body: Record<string, unknown>): Promise<Result<{ decision: string; nextLevel: string | null; direction: 'up' | 'down'; expiresAt: string; remainingSeconds: number }>> {
+export async function answerSession(db: any, s: SessionRow, body: Record<string, unknown>, sw?: Stopwatch): Promise<Result<{ decision: string; nextLevel: string | null; direction: 'up' | 'down'; expiresAt: string; remainingSeconds: number }>> {
   if (s.status !== 'active') return fail('session_not_active', 409);
   if (s.finish_reason === 'completed' || s.finish_reason === 'failed') return fail('session_finalized', 409);
   if (remainingSeconds(s.expires_at) === 0) return fail('session_expired', 409);
   const questionId = cleanText(body.questionId, 80); const selected = body.selectedOptionId;
   if (!questionId || !isOptionId(selected)) return fail('invalid_answer', 400);
-  const scored = await scoredItems(db, s); if (!scored) return fail('form_unavailable', 409);
+  const scored = await scoredItems(db, s); if (!scored) return fail('form_unavailable', 409); sw?.mark('pool');
   const item = scored.items.find((i) => i.id === questionId); if (!item) return fail('invalid_question', 404);
   const itemIndex = bankLevelIndex(item.level); if (itemIndex < FLOOR_INDEX || itemIndex !== s.current_level_index) return fail('question_not_current', 403);
   const saved = await db.from('placement_secure_answers').upsert({ session_id: s.id, question_id: questionId, selected_option_id: selected, submitted_at: nowIso() }, { onConflict: 'session_id,question_id' });
