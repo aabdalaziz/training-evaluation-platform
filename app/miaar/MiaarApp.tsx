@@ -95,6 +95,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [cand, setCand] = useState({ name: '', email: '', phone: '', nativeLanguage: '', studiedBefore: null as boolean | null, purpose: '' });
   const [access, setAccess] = useState({ time: 1 as 1 | 1.25 | 1.5, simple: false, contrast: false, large: false });
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  /* م3-د: القادمون من العنوان القديم miaar-placement-test.vercel.app (?from=legacy) يرون شريط ترحيب واحدًا يشرح البيت الجديد */
+  const [fromLegacy, setFromLegacy] = useState(false);
+  useEffect(() => { try { const q = new URLSearchParams(window.location.search); if (q.get('from') === 'legacy' && sessionStorage.getItem('miaar-legacy-seen') !== '1') setFromLegacy(true); } catch { /* */ } }, []);
   const [probe, setProbe] = useState<{ id: string; level: Level; skill: string; prompt: string; options: { id: string; text: string }[] }[]>([]); const [probeAns, setProbeAns] = useState<Record<string, string>>({}); const [probeIdx, setProbeIdx] = useState(0); const [probeDone, setProbeDone] = useState(false);
   const [session, setSession] = useState<Session | null>(null); const [answers, setAnswers] = useState<Record<string, string>>({}); const [deferred, setDeferred] = useState<Set<string>>(new Set());
   const [qIdx, setQIdx] = useState(0); const [remaining, setRemaining] = useState(0); const [toast, setToast] = useState(''); const [showEnd, setShowEnd] = useState(false);
@@ -112,7 +115,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     const navLang = typeof navigator !== 'undefined' ? navigator.language.slice(0, 2) : 'en';
     await loadCopy(null, []); /* الفهرس أولًا */
     let initialLang = readLang((await copyHas(navLang)) ? navLang : 'en');
-    let c = await loadCopy(null, ['en', initialLang]); if (!c) { setErr('copy'); return; } setCopy(c);
+    /* م3-د (خِفّة): العربية مكتملة المفاتيح (361/361) فلا يُحمَّل الاحتياطي en إلا لغير العربية — طلب أقل وبايتات أقل على /miaar */
+    let c = await loadCopy(null, initialLang === 'ar' ? ['ar'] : ['en', initialLang]); if (!c) { setErr('copy'); return; } setCopy(c);
     if (resultCode) {
       const r = await fetch(`/api/miaar?result=${encodeURIComponent(resultCode)}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
       if (r?.ok) { setReport(r.report); setCode(r.code); setResultName(r.name); setStep('result'); } else { setStep('blocked'); setErr('not_found'); }
@@ -216,14 +220,14 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [guideGoal, setGuideGoal] = useState<'know' | 'org' | 'level' | 'quick' | null>(null); const [guideTime, setGuideTime] = useState<'25' | '50' | '10' | null>(null); const [inviteIn, setInviteIn] = useState('');
   const onSceneMove = (e: React.MouseEvent<HTMLDivElement>) => { if (reduced) return; const r = e.currentTarget.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; setTilt({ rx: Math.round(-py * 10 * 10) / 10, ry: Math.round(px * 12 * 10) / 10 }); };
   useEffect(() => { if (step !== 'intro' || reduced || band || ringsOn) return; const id = setInterval(() => setMarker((m) => (m + 1) % 6), 1400); return () => clearInterval(id); }, [step, reduced, band, ringsOn]);
-  useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?doors=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && Array.isArray(j.doors) && j.doors.length) setDoors(j.doors); }).catch(() => { /* الأبواب الافتراضية */ }); }, [step]);
+  /* م3-د (خِفّة): الأبواب والنبض في طلب واحد ?intro=1 بدل طلبين */
+  useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?intro=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && Array.isArray(j.doors) && j.doors.length) setDoors(j.doors); if (j?.ok && j.pulse) setPulse(j.pulse); }).catch(() => { /* الأبواب الافتراضية والشريط يكتفي بعباراته */ }); }, [step]);
   const recDoor: Door | null = (() => { if (!doors.length) return null; const by = (f: (d: Door) => boolean) => doors.find(f) || null; const adaptive = by((d) => d.type === 'placement' || d.door === 'adaptive'); const comp = by((d) => d.code === 'SYS-COMPREHENSIVE' || d.type === 'comprehensive'); const short = by((d) => d.type === 'short'); const level = by((d) => d.type === 'level');
     if (guideGoal === 'level' && level) return level; if (guideGoal === 'quick' || guideTime === '10') return short || adaptive || doors[0]; if (guideGoal === 'org' || guideTime === '50') return comp || adaptive || doors[0]; return adaptive || doors[0]; })();
   function startNow() { if (invite) { setStep('register'); return; } const d = door || recDoor; if (d) { setDoor(d); setExamMode(d.door === 'adaptive' ? 'adaptive' : 'comprehensive'); setBlueprint(d.code); } setStep('register'); }
   const [pulse, setPulse] = useState<{ now: number | null; today: number | null; week: number | null; month: number | null; recent: { level: string; lang: string | null; minutes: number }[] } | null>(null); const [tickerPaused, setTickerPaused] = useState(false);
   const [sealVoice, setSealVoice] = useState(false); const sealAudio = useRef<HTMLAudioElement | null>(null);
   useEffect(() => { if (typeof window === 'undefined') return; const mq = window.matchMedia('(prefers-reduced-motion: reduce)'); setReduced(mq.matches); const on = () => setReduced(mq.matches); mq.addEventListener?.('change', on); setSealVoice(localStorage.getItem('miaar-seal-voice') === '1'); return () => mq.removeEventListener?.('change', on); }, []);
-  useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?pulse=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok) setPulse(j); }).catch(() => { /* الشريط يكتفي بعباراته */ }); }, [step]);
   const splitHead = (h: string) => { const bar = h.indexOf('|'); if (bar > 0) return [h.slice(0, bar), h.slice(bar + 1)]; const i = h.indexOf('؟') >= 0 ? h.indexOf('؟') + 1 : h.indexOf('?') >= 0 ? h.indexOf('?') + 1 : -1; return i > 0 ? [h.slice(0, i), h.slice(i).trim()] : [h, '']; };
   const ago = (m: number) => m < 60 ? t('intro', 'agoMin', { n: m }) : m < 1440 ? t('intro', 'agoHour', { n: Math.round(m / 60) }) : t('intro', 'agoDay', { n: Math.round(m / 1440) });
   const nativeLabel = (v: string | null) => { if (!v) return null; const n = (copy?.native || []).find((x) => x.value === v); return n ? n.labels[lang] || n.labels.en || v : null; };
@@ -281,6 +285,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     {toast && <div className="mi-toast" role="status" data-testid="mi-toast">{toast}</div>}
 
     {step === 'intro' && <>
+      {fromLegacy && <div className="mi-legacy" role="status" data-testid="mi-legacy"><span>{lang === 'ar' ? 'انتقل مِعيار إلى بيته الجديد داخل أَثَر — الاختبار نفسه، والبنك أوسع، والنتائج محفوظة. هذا هو العنوان الذي تحفظه من اليوم.' : 'Miaar has moved into its new home at Athar — same test, a wider bank, your results preserved. This is the address to keep from today.'}</span><button type="button" onClick={() => { setFromLegacy(false); try { sessionStorage.setItem('miaar-legacy-seen', '1'); } catch { /* */ } }} aria-label={lang === 'ar' ? 'إغلاق' : 'Close'}>×</button></div>}
       <section className={`mi-ticker${tickerPaused || reduced ? ' paused' : ''}`} aria-label={t('intro', 'tickerK')} data-testid="mi-ticker">
         <span className="mi-ticker-k"><i aria-hidden="true" />{t('intro', 'tickerK')}</span>
         <div className="mi-ticker-view"><div className="mi-ticker-track" style={{ animationDuration: `${Math.max(24, tickerItems.length * 7)}s` }}>{[0, 1].map((rp) => <span key={rp} className="mi-ticker-row" aria-hidden={rp === 1}>{tickerItems.map((it, i) => <span key={i} className="mi-ticker-item">{it}</span>)}</span>)}</div></div>
@@ -589,6 +594,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
           </div>
           {report.اجتياز_المستوى && <div className={`mi-rec ${report.اجتياز_المستوى.اجتاز ? 'teal' : ''}`} data-testid="mi-level-verdict"><span>{ar ? 'اجتياز المستوى' : 'Level exam'} {report.اجتياز_المستوى.المستوى}</span><p><b>{report.اجتياز_المستوى.اجتاز ? (ar ? 'اجتاز ✓' : 'Passed ✓') : (ar ? 'لم يجتز' : 'Not passed')}</b> — {report.اجتياز_المستوى.النسبة}% {ar ? 'من حدّ' : 'vs cut'} {report.اجتياز_المستوى.حد_الاجتياز}%</p></div>}
           <div className="mi-rec"><span>{x('can_do')}</span><ul>{canDo.map((s, i) => <li key={i}>{s}</li>)}</ul></div>
+          {report.الموثوقية?.الضوء && <p className="mi-trust" data-testid="mi-trust" data-light={report.الموثوقية.الضوء}><i aria-hidden="true" /><span>{ar ? report.الموثوقية.النص : report.الموثوقية.الضوء === 'green' ? 'This result comes from a form with certified reliability' : report.الموثوقية.الضوء === 'yellow' ? 'This result comes from a form with acceptable reliability' : report.الموثوقية.الضوء === 'red' ? 'This form is under review — the result is indicative' : 'This form is still being calibrated — the result is indicative'}</span> <a href="/miaar/trust" target="_blank" rel="noopener">{ar ? 'سجلّ الصدق' : 'trust ledger'}</a></p>}
         </div>
         <div>
           <h3>{t('result', 'skills')}</h3>
@@ -626,7 +632,9 @@ const CSS = `
 .mi-menu button{display:block;width:100%;text-align:start;border:0;background:transparent;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700;font-size:16px;color:var(--navy)}
 .mi-menu button[aria-selected="true"],.mi-menu button:hover{background:#f0fdfa;color:var(--teal)}
 .mi-kicker{margin:0;color:var(--teal);font-size:12.5px;font-weight:900;letter-spacing:.02em}.mi-kicker.gold{color:var(--gold)}
-.mi-note{color:var(--muted);font-size:14px;line-height:1.7;margin:8px 0 0}.mi-note.center{text-align:center}.mi-muted{color:var(--muted);font-size:14px}
+.mi-note{color:var(--muted);font-size:14px;line-height:1.7;margin:8px 0 0}
+.mi-trust{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:13px;color:var(--muted);flex-wrap:wrap}.mi-trust i{width:10px;height:10px;border-radius:50%;background:#94a3b8;flex:none}.mi-trust[data-light=green] i{background:#0b8a83}.mi-trust[data-light=yellow] i{background:#c9a24b}.mi-trust[data-light=red] i{background:#b42318}.mi-trust a{color:var(--teal,#0b8a83);text-decoration:underline}
+.mi-legacy{display:flex;align-items:center;gap:12px;margin:0 7vw 12px;padding:10px 14px;border-radius:12px;background:#fff8e6;border:1px solid #f1d58a;color:#5b4300;font-size:14px;line-height:1.7}.mi-legacy span{flex:1}.mi-legacy button{border:0;background:transparent;font-size:20px;line-height:1;color:inherit;cursor:pointer;min-width:44px;min-height:44px}.mi-note.center{text-align:center}.mi-muted{color:var(--muted);font-size:14px}
 .mi-meta{margin:0 0 10px;color:var(--teal);font-size:13px;font-weight:900}
 /* hero */
 .mi-hero{position:relative;overflow:hidden;display:grid;gap:42px;align-items:center;padding:64px 7vw 72px;background:var(--grad);color:#fff;min-height:calc(100vh - 84px)}

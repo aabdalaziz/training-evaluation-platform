@@ -1,13 +1,15 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/placements — تكامل مِعيار (بوابة أَثَر · P7)
- *  POST { action: 'mine' }            → مستخدم: مزامنة نتائجه ببريده من مِعيار ثم إرجاع أحدث نتيجة
- *  POST { action: 'sync', since? }    → موظف: استيراد التقارير الجديدة كلها
- *  GET  ?health=1                     → موظف/زائر: هل إعدادات مِعيار مضبوطة؟ (بلا أسرار)
+ * /api/placements — نتائج مِعيار في أَثَر (P7 → م3)
+ *  منذ «مِعيار — من أَثَر» (م1) تُكتب كل نتيجة في portal_placements مباشرةً لحظة اكتمال الاختبار (lib/miaar/engine.ts → recordPlacement)،
+ *  فلم تعد هناك قاعدة خارجية تُزامَن منها. المسارات باقية لتوافق الواجهات القديمة:
+ *  POST { action: 'mine' }  → مستخدم: أحدث نتائجه ببريده (بلا مزامنة)
+ *  POST { action: 'sync' }  → موظف: يرجع { success:true, retired:true, imported:0 } — لا عمل
+ *  GET                      → { success:true, configured:true, retired:true }
+ *  متغيّرا البيئة MIAAR_SUPABASE_URL / MIAAR_SERVICE_ROLE_KEY لم يعودا مطلوبَين ويمكن حذفهما من Vercel.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { syncPlacements, miaarClient, miaarConfigError } from '../../../lib/portal/placement-sync';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,18 +28,17 @@ async function ctx(req: Request) {
   return { user: { id: data.user.id, email: String(data.user.email || '').toLowerCase() }, staff: WRITERS.includes(String((prof as any)?.role || '').toUpperCase()), db: createClient(URL_, SERVICE) };
 }
 
-export async function GET() { const err = miaarConfigError(); return NextResponse.json({ success: true, configured: !err && !!miaarClient(), error: err || undefined }); }
+export async function GET() { return NextResponse.json({ success: true, configured: true, retired: true, note: 'النتائج تُكتب مباشرة من مِعيار داخل أَثَر — لا مزامنة' }); }
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error;
   let body: any = {}; try { body = await req.json(); } catch { /* فارغ */ }
   const action = String(body.action || '');
   if (action === 'mine') {
-    const sync = await syncPlacements(c.db, { email: c.user.email, limit: 20 });
     const { data } = await c.db.from('portal_placements').select('*').ilike('email', c.user.email).order('taken_at', { ascending: false }).limit(5);
-    return NextResponse.json({ success: true, configured: !miaarConfigError(), synced: sync, placements: data || [] });
+    return NextResponse.json({ success: true, configured: true, retired: true, placements: data || [] });
   }
   if (!c.staff) return bad('غير مصرّح', 403);
-  if (action === 'sync') { try { const r = await syncPlacements(c.db, { since: body.since || null, limit: Math.min(Number(body.limit) || 200, 500) }); return NextResponse.json({ success: r.ok, ...r }); } catch (e: any) { return bad(String(e?.message || e), 500); } }
+  if (action === 'sync') return NextResponse.json({ success: true, retired: true, fetched: 0, imported: 0, skipped: 0, note: 'المزامنة متقاعدة: مِعيار داخل أَثَر يكتب النتائج مباشرة' });
   return bad('إجراء غير معروف');
 }

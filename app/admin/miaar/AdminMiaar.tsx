@@ -16,19 +16,20 @@ import { qrSvg } from '../../../lib/certificates/qr';
 import { LEVELS, SKILLS, skillLabel, MIAAR_NAMES_AR, FLOOR_LEVEL, BANK_LEVEL_AR } from '../../../lib/miaar/registry';
 import BankEditor from './BankEditor';
 import FormBuilder from './FormBuilder';
+import Balance from './Balance';
 import { Icon } from '../../../lib/ui/icons';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const LANG_OPTS = [['ar', 'العربية'], ['en', 'English'], ['fr', 'Français'], ['tr', 'Türkçe'], ['ur', 'اردو'], ['id', 'Indonesia'], ['ms', 'Melayu'], ['fa', 'فارسی'], ['ru', 'Русский'], ['zh', '中文'], ['es', 'Español'], ['de', 'Deutsch'], ['hi', 'हिन्दी'], ['bn', 'বাংলা'], ['sw', 'Kiswahili'], ['fil', 'Filipino']];
 const CONF_AR: Record<string, string> = { high: 'مؤكَّد', medium: 'محتمل', border: 'على الحدّ' };
-type Tab = 'overview' | 'invites' | 'bank' | 'forms';
+type Tab = 'overview' | 'invites' | 'bank' | 'forms' | 'balance';
 
 export default function AdminMiaar({ tab }: { tab: Tab }) {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
   const [ready, setReady] = useState(false); const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [form, setForm] = useState({ kind: 'group', label_ar: '', lang: 'en', exam_mode: 'adaptive', blueprint_id: '', purpose: '', expires_at: '', max_seats: '', note: '', recipients: '' });
   const [bps, setBps] = useState<any[]>([]);  /* م2-ب: المخطّطات النشطة للدعوات */
-  const [created, setCreated] = useState<any>(null); const [qrFor, setQrFor] = useState<any>(null); const [retake, setRetake] = useState({ email: '', note: '' }); const [log, setLog] = useState<string[]>([]);
+  const [created, setCreated] = useState<any>(null); const [qrFor, setQrFor] = useState<any>(null); const [balFor, setBalFor] = useState<{ invite: any; data: any } | null>(null); const [retake, setRetake] = useState({ email: '', note: '' }); const [log, setLog] = useState<string[]>([]);
   const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
   const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
   async function load(tk?: string, legacy = false) { const j = await fetch(`/api/admin/miaar${legacy ? '?legacy=1' : ''}`, { headers: await H(tk), cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return null; } setData(j); return j; }
@@ -70,8 +71,8 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         <header className="mm-hero">
           <div>
             <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <Link href="/miaar">صفحة الأداة</Link></p>
-            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : MIAAR_NAMES_AR.invites}</h1>
-            <p className="mm-lead">{tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
+            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : tab === 'balance' ? 'ميزان مِعيار' : MIAAR_NAMES_AR.invites}</h1>
+            <p className="mm-lead">{tab === 'balance' ? 'المقياس الذي يزن نفسه: تحليل البنود من إجابات حقيقية، شهادة موثوقية لكل مستوى، ومعايرة راش تقترح — وأنت تعتمد. لا اسم ولا بريد في أي رقم.' : tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
           </div>
           <div className="mm-heroacts">
             <Link href="/admin/placements" className="mm-hbtn gold"><Icon name="download" />تصدير النتائج CSV</Link>
@@ -81,7 +82,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
             <Link href="/miaar" className="mm-hbtn"><Icon name="play" />صفحة الاختبار</Link>
           </div>
         </header>
-        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
+        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites'], ['balance', '05', 'الميزان', '/admin/miaar/balance']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         <div className="mm-cards">
           <div className="mm-card navy"><span>نتائج الاختبارات</span><b>{latest.length}</b><small>آخر التقارير في السجل</small></div>
@@ -140,9 +141,16 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
           <section className="am-card"><h3>الدعوات <small>فُتح / بدأ / أنهى — وتوزيع مستويات الالتحاق</small></h3>
             {!invites.length ? <div className="am-empty">لا دعوات بعد.</div> : <table className="mm-t"><thead><tr><th>الدعوة</th><th>الرمز</th><th>النمط</th><th>بدأ</th><th>أنهى</th><th>المستويات</th><th>الحالة</th><th></th></tr></thead><tbody>
               {invites.map((i) => <tr key={i.id} data-testid="mm-invite-row"><td><b>{i.label_ar}</b><br /><small>{i.kind === 'personal' ? `شخصية · ${i.recipients?.length || 0} مستلمًا · فتح ${i.opened || 0}` : 'جماعية'}{i.expires_at ? ` · حتى ${new Date(i.expires_at).toLocaleDateString('ar-SA')}` : ''}{i.max_seats ? ` · ${i.max_seats} مقعدًا` : ''}</small></td><td><code dir="ltr">{i.code}</code></td><td>{i.exam_mode === 'adaptive' ? 'تكيّفي' : 'شامل'}</td><td>{i.started}</td><td>{i.finished}</td><td>{Object.entries(i.levels || {}).map(([k, v]) => `${k}:${v}`).join(' · ') || '—'}</td><td>{i.status === 'open' ? <span className="mm-open">مفتوحة</span> : <span className="mm-closed">مغلقة</span>}</td>
-                <td className="mm-acts"><button type="button" className="am-btn ghost" onClick={() => setQrFor(qrFor?.id === i.id ? null : i)}>QR</button><button type="button" className="am-btn ghost" onClick={() => copy(i.url)}>نسخ</button><button type="button" className="am-btn ghost" onClick={() => poster(i)}>ملصق</button><button type="button" className="am-btn ghost" disabled={!!busy} onClick={async () => { await post({ action: 'invite_status', id: i.id, status: i.status === 'open' ? 'closed' : 'open' }); await load(); }}>{i.status === 'open' ? 'أغلق' : 'افتح'}</button></td></tr>)}
+                <td className="mm-acts"><button type="button" className="am-btn ghost" onClick={() => setQrFor(qrFor?.id === i.id ? null : i)}>QR</button><button type="button" className="am-btn ghost" onClick={() => copy(i.url)}>نسخ</button><button type="button" className="am-btn ghost" onClick={() => poster(i)}>ملصق</button><button type="button" className="am-btn ghost" data-testid={`mm-bal-${i.code}`} onClick={async () => { if (balFor?.invite?.id === i.id) { setBalFor(null); return; } const r = await fetch(`/api/admin/miaar/balance?invite=${encodeURIComponent(i.id)}`, { headers: await H(), cache: 'no-store' }).then((x) => x.json()).catch(() => null); setBalFor({ invite: i, data: r }); }}>الميزان</button><button type="button" className="am-btn ghost" disabled={!!busy} onClick={async () => { await post({ action: 'invite_status', id: i.id, status: i.status === 'open' ? 'closed' : 'open' }); await load(); }}>{i.status === 'open' ? 'أغلق' : 'افتح'}</button></td></tr>)}
             </tbody></table>}
             {qrFor && <div className="mm-created"><div className="mm-qr" dangerouslySetInnerHTML={{ __html: qrSvg(qrFor.url, 160, 'M', '#0f2a4e') }} /><div><b>{qrFor.label_ar}</b><br /><a href={qrFor.url} dir="ltr" target="_blank" rel="noreferrer">{qrFor.url}</a>{qrFor.recipients?.length ? <ul className="mm-links">{qrFor.recipients.map((r: any) => <li key={r.email}><span>{r.name || '—'} <small dir="ltr">{r.email}</small></span><small>{r.finished ? 'أنهى' : r.started ? 'بدأ' : r.opened ? 'فتح' : 'لم يفتح'}</small></li>)}</ul> : null}</div></div>}
+            {balFor && <div className="mm-created" data-testid="mm-invite-balance"><div style={{ flex: 1 }}><b>الميزان في الدعوة — {balFor.invite.label_ar}</b>
+              {!balFor.data?.report?.ok ? <p className="mm-note">{balFor.data?.report?.reason || balFor.data?.error || 'تعذّر الحساب'}{typeof balFor.data?.report?.sessions === 'number' ? ` (${balFor.data.report.sessions} حتى الآن)` : ''}</p> : (() => { const d = balFor.data.report; return <>
+                <p className="mm-note">{d.sessions} جلسة منتهية · {d.responses} إجابة · متوسط الصواب {d.overall_p ?? '—'}% · الزمن الوسيط {d.median_minutes ?? '—'} دقيقة</p>
+                <p className="mm-note">توزيع المستويات المثبتة: {Object.entries(d.distribution || {}).map(([k, v]) => `${k}: ${v}`).join(' · ') || '—'}</p>
+                {!!d.confusing?.length && <><small>أكثر البنود إرباكًا لهذه المجموعة (قد يكشف ثغرة تدريس لا ثغرة بند):</small><ul className="mm-links">{d.confusing.map((c: any) => <li key={c.item}><span><code dir="ltr">{c.item}</code> {c.level} · صواب {Math.round(c.p * 100)}% من {c.n}</span><small>{c.text}</small></li>)}</ul></>}
+              </>; })()}
+            </div><button type="button" className="am-btn ghost" onClick={() => setBalFor(null)}>إغلاق</button></div>}
             <p className="mm-note">البريد وواتساب مؤجَّلان بقرار المالك (ج) — انسخ الرابط أو نص الرسالة أو اطبع الملصق وأرسلها بقناتك.</p>
           </section>
         </>}
@@ -158,6 +166,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         </section>}
         {tab === 'bank' && <BankEditor auth={() => H()} byBatch={cov?.by_batch || {}} onChanged={() => { void load(); }} />}
         {tab === 'forms' && <FormBuilder auth={() => H()} />}
+        {tab === 'balance' && <Balance auth={() => H()} />}
         <p className="mm-foot">© 2026 {MIAAR_NAMES_AR.product} — {MIAAR_NAMES_AR.nature}، والقرار الأكاديمي بيد إنسان.</p>
       </div>
     </div>

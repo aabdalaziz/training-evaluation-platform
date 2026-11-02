@@ -12,6 +12,7 @@ import {
 } from './registry';
 import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report } from './registry';
 import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './bank';
+import { reweighIfDue, trustLine } from './balance';
 import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
 import type { Plan } from './blueprint';
 import { parseMiaarReport, placementValid, evidenceSkills, effectiveLevel } from '../portal/placement';
@@ -187,6 +188,8 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   const report = calculateReport({ candidate: s.candidate, examMode: s.exam_mode, startIndex: s.start_level_index, durationSeconds: p.durationSeconds, remainingSeconds: remainingSeconds(s.expires_at), source: `${CONTENT_VERSION}/${p.source}`, title: p.title, access: s.access, inviteLabel, short: p.short }, answers, reason, scored.items, scored.stems);
   const sp = planFromSession(s.plan);
   if (sp) { (report as any).النموذج = { الرمز: sp.code, الاسم: sp.name_ar, النوع: TEST_TYPE_INFO[sp.type].name_ar, السلّم: sp.ladder, طريقة_السحب: sp.draw, المستويات: sp.levels, حد_الاجتياز: sp.cut }; (report as any).نمط_الاختبار = TEST_TYPE_INFO[sp.type].name_ar; const v = levelVerdict(sp, report.مستويات_تفصيلية); if (v) (report as any).اجتياز_المستوى = v; }
+  /* م3: سطر الموثوقية — ضوء النموذج الذي خاضه المتقدّم كاملًا (صدقٌ مع المتعلّم؛ لا أرقام) */
+  try { const tl = await trustLine(db, [...new Set(scored.items.map((i) => i.level))], sp?.code || null); if (tl) (report as any).الموثوقية = { الضوء: tl.light, النص: tl.text }; } catch { /* لا يوقف النتيجة */ }
   let access_code = resultCode(); let inserted: any = null;
   for (let attempt = 0; attempt < 3 && !inserted; attempt += 1) {
     const r = await db.from('placement_reports').insert({ submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, report, access_code, invite_id: s.invite_id, user_id: s.user_id }).select('id, created_at').single();
@@ -200,6 +203,7 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   // موافقة إعادة الاختبار تُستهلك
   await db.from('test_retake_approvals').update({ used_at: nowIso() }).ilike('email', s.candidate.email).is('used_at', null);
   await recordPlacement(db, { id: inserted.id, submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, created_at: inserted.created_at || nowIso(), report }, s.user_id);
+  await reweighIfDue(db);   /* م3: الميزان يزن نفسه كل 25 جلسة منتهية — لا يرمي ولا يؤخّر النتيجة إلا ثوانيَ عند الاستحقاق */
   return { ok: true, value: { report, access_code } };
 }
 

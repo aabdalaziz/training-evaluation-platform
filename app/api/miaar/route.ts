@@ -3,6 +3,8 @@
  * /api/miaar — «مِعيار — من أَثَر» للمتقدّم (بلا حساب؛ وإن كان داخلًا رُبط التقرير بحسابه)
  *  GET ?probe=1[&seen=رموز]     → بنود «مِسبار» الخمسة — متجدّدة من البنك في كل زيارة (م2-ب)، خيارات مخلوطة، بلا مفاتيح
  *  GET ?doors=1                 → أبواب الاختبار العامة (المخطّطات النشطة المعلنة) — م2-ب
+ *  GET ?intro=1                 → الأبواب + النبض في ردّ واحد (خِفّة م3-د)
+ *  GET ?trust=1                 → «سجلّ الصدق»: موثوقية كل مستوى (ضوء · n · k · SEM · ثبات القرار) بلا بنود ولا أشخاص — م3
  *  GET ?pulse=1                 → «نبض مِعيار»: أعداد مجهّلة (الآن/اليوم/الأسبوع) وآخر المستويات المُثبتة بلا أسماء — لا يُعرض شيء دون 5 تقارير في الأسبوع — م2-ب
  *  POST probe_band {probeAnswers} → {score, band} مؤشر أولي بعد الحلقات (بلا جلسة) — م2-ب
  *  GET ?invite=<code>&t=<token> → ما تعنيه الدعوة (الاسم · اللغة · النمط · المستلم إن كانت شخصية)
@@ -18,6 +20,7 @@ import { readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { COOKIE_NAME, probePublic, isResultCode, MIAAR_NAMES_AR } from '../../../lib/miaar/registry';
 import { startSession, loadSession, resumeSession, answerSession, finishSession, resultByCode } from '../../../lib/miaar/engine';
+import { trustSummary } from '../../../lib/miaar/balance';
 import { openInvite } from '../../../lib/miaar/invites';
 import { loadApprovedPool } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
@@ -64,6 +67,7 @@ async function pulse(db: any) {  /* eslint-disable-line @typescript-eslint/no-ex
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('server_not_configured', 500);
   const u = new URL(req.url);
+  if (u.searchParams.get('trust')) return NextResponse.json(await trustSummary(db).catch(() => ({ levels: [], sessions: 0, computed_at: null })), { headers: { 'Cache-Control': 'public, max-age=300' } });   /* م3: «سجلّ الصدق» — أضواء المستويات فقط */
   if (u.searchParams.get('pulse')) return NextResponse.json(await pulse(db).catch(() => ({ ok: true, now: null, today: null, week: null, month: null, recent: [] })), { headers: { 'Cache-Control': 'public, max-age=60' } });
   if (u.searchParams.get('probe')) {
     /* م2-ب: بنود متجدّدة من البنك المعتمد في كل زيارة (بذرة عشوائية) مع استبعاد ما رآه الزائر مؤخرًا (?seen=رمز,رمز) — والبنود الثابتة احتياط */
@@ -74,6 +78,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: true, name_ar: MIAAR_NAMES_AR.probe, official_ar: MIAAR_NAMES_AR.probe_official, items }, { headers: NO });
   }
   if (u.searchParams.get('doors')) return NextResponse.json({ ok: true, doors: await publicDoors(db) }, { headers: NO });
+  /* م3-د (خِفّة): المقدّمة تطلب الأبواب والنبض معًا في طلب واحد */
+  if (u.searchParams.get('intro')) { const [doors, p] = await Promise.all([publicDoors(db).catch(() => []), pulse(db).catch(() => null)]); return NextResponse.json({ ok: true, doors, pulse: p }, { headers: NO }); }
   if (u.searchParams.get('invite')) { const r = await openInvite(db, u.searchParams.get('invite'), u.searchParams.get('t') || null); return r.ok ? NextResponse.json({ ok: true, invite: r.invite }, { headers: NO }) : bad(`invite_${r.error}`, r.error === 'not_found' ? 404 : 410); }
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */

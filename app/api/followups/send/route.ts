@@ -35,7 +35,6 @@ import { runOrgHorizon } from '../../../../lib/org-horizon/cron';
 import { runPair } from '../../../../lib/pair/cron';
 import { runOrgPair } from '../../../../lib/org-pair/cron';
 import { runDirectory } from '../../../../lib/directory/cron';
-import { syncPlacements, miaarClient } from '../../../../lib/portal/placement-sync';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -117,9 +116,8 @@ export async function GET(req: Request) {
   // نبض عقود الأثر: إشعار عند استحقاق دفعة أو اقتراب إغلاق نافذة الأثر — بلا إفراج آلي (أَثَر · P12-ب)
   let contracts: any = null;
   try { contracts = await runContractPulse(db, site, { dry }); } catch (e: any) { contracts = { ok: false, error: e?.message || String(e) }; }
-  // مزامنة نتائج مِعيار اليومية (أَثَر · P7) — تعمل فقط إن كانت MIAAR_* مضبوطة
-  let placements: any = null;
-  try { if (!dry && miaarClient()) placements = await syncPlacements(db, { limit: 300 }); } catch (e: any) { placements = { ok: false, error: e?.message || String(e) }; }
+  // مزامنة مِعيار (P7) متقاعدة منذ م3: مِعيار يعيش داخل أَثَر ويكتب نتائجه في «التسكين» مباشرة (recordPlacement)
+  const placements: any = { retired: true };
   // إشعار «موقف اليوم» (أَثَر · P13-ب): يضمن وجود موقف اليوم ثم يرسل لكل اشتراك نشط لم يُرسَل له اليوم
   let daily_push: any = null;
   try {
