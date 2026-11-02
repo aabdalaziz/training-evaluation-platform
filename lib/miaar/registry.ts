@@ -46,7 +46,13 @@ export const SKILLS = ['grammar_vocab', 'reading', 'listening'] as const;
 export type Skill = (typeof SKILLS)[number];
 export type ExamMode = 'comprehensive' | 'adaptive';
 export type FinishReason = 'completed' | 'failed' | 'time' | 'quit';
-export const ITEM_TYPES = ['mcq', 'picture_choice', 'picture_label', 'picture_sequence', 'true_false_notgiven', 'cloze_bank', 'matching', 'ordering', 'word_tap', 'short_dictation'] as const;
+export const ITEM_TYPES = ['mcq', 'picture_choice', 'picture_label', 'picture_sequence', 'true_false_notgiven', 'cloze_bank', 'matching', 'ordering', 'word_tap', 'short_dictation', 'writing_task', 'speaking_task'] as const;
+/** م4-أ «صوتك وقلمك»: المهارتان الإنتاجيتان — بنود من نوع مهمة لا خيارات لها، تُقدَّر بسُلّم (lib/miaar/rubric.ts) */
+export const PRODUCTIVE_SKILLS = ['writing', 'speaking'] as const;
+export type ProductiveSkill = (typeof PRODUCTIVE_SKILLS)[number];
+export const isProductiveSkill = (v: unknown): v is ProductiveSkill => typeof v === 'string' && (PRODUCTIVE_SKILLS as readonly string[]).includes(v);
+export const PRODUCTIVE_ITEM_TYPES: Record<ProductiveSkill, ItemType> = { writing: 'writing_task', speaking: 'speaking_task' };
+export const MIAAR_PRODUCTIVE_NAMES_AR = { narrative: 'صوتك وقلمك', official: 'المهارات الإنتاجية — الكتابة والتحدّث', writing_task: 'مهمة كتابة', speaking_task: 'مهمة تحدّث', rubric: 'سُلّم التقدير', room: 'غرفة الأداء', rater: 'مصحّح مِعيار' } as const;
 export type ItemType = (typeof ITEM_TYPES)[number];
 /** الأنواع التي يقدّمها م1 للمتقدّم (الباقي يُبنى في م4) */
 export const M1_ITEM_TYPES: readonly ItemType[] = ['mcq', 'picture_choice', 'picture_label', 'true_false_notgiven'];
@@ -208,7 +214,7 @@ export const FLOOR_VERDICT_AR: Record<'knows_basics' | 'from_zero', string> = { 
 export function reasonLabel(reason: FinishReason): string {
   return { completed: 'أكملت جميع المستويات حتى النهاية', failed: 'إيقاف تدرّجي — لم تُستوفَ نسبة الانتقال', time: 'انتهى وقت الاختبار', quit: 'إنهاء مبكر بقرارك' }[reason];
 }
-export const skillLabel = (skill: string): string => (({ grammar_vocab: 'القواعد والمفردات', reading: 'القراءة', listening: 'الاستماع' }) as Record<string, string>)[skill] ?? skill;
+export const skillLabel = (skill: string): string => (({ grammar_vocab: 'القواعد والمفردات', reading: 'القراءة', listening: 'الاستماع', writing: 'الكتابة', speaking: 'التحدّث' }) as Record<string, string>)[skill] ?? skill;
 export function skillLevel(percent: number, answered: number): string {
   if (!answered) return '—'; if (percent >= 85) return 'C1'; if (percent >= 65) return 'B2'; if (percent >= 45) return 'B1'; if (percent >= 25) return 'A2'; return 'A1';
 }

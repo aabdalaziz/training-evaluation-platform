@@ -3,7 +3,7 @@
  * بنك مِعيار (خادم فقط): البنود المعتمدة بمفاتيحها · المقاطع من الجدول · روابط الوسائط الموقَّعة (دلو miaar-media)
  *  · بناء النموذج العام للمتقدّم (بلا مفاتيح) · تغطية البنك (مستوى×مهارة×نوع) للوحة.
  */
-import { LEVELS, SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, isBankLevel, isSkill, isOptionId, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
+import { LEVELS, SKILLS, PRODUCTIVE_SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, isBankLevel, isSkill, isOptionId, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
 import type { PoolItem, PublicForm, PublicQuestion, PublicPassage, SecureItem, Option, ItemType, BankLevel, Skill } from './registry';
 
 export const MEDIA_BUCKET = 'miaar-media';
@@ -86,7 +86,7 @@ export const secureItems = (pool: readonly PoolItem[], codes: readonly string[])
 };
 
 /** تغطية البنك للوحة: لكل مستوى×مهارة عدد المعتمد مقابل الخطة، وبالنوع */
-export type Coverage = { cells: Array<{ level: BankLevel; skill: Skill; approved: number; in_review: number; needed: number; by_type: Record<string, number> }>; total_approved: number; total_all: number; by_status: Record<string, number>; by_batch: Record<string, Record<string, number>>; passages: number; descriptors_used: number };
+export type Coverage = { cells: Array<{ level: BankLevel; skill: Skill; approved: number; in_review: number; needed: number; by_type: Record<string, number> }>; productive: Array<{ level: BankLevel; skill: 'writing' | 'speaking'; approved: number; in_review: number; needed: number }>; total_approved: number; total_all: number; by_status: Record<string, number>; by_batch: Record<string, Record<string, number>>; passages: number; descriptors_used: number };
 /** دفعة البند: athar-m2a (الجديد) · miaar-legacy (الدفعة التأسيسية — وسم تاريخي، ملك أَثَر) · غير ذلك إصدار المحتوى */
 export const itemBatch = (r: { content_version?: string | null; legacy_extra?: any }): string => (r.legacy_extra && typeof r.legacy_extra === 'object' && typeof r.legacy_extra.batch === 'string') ? r.legacy_extra.batch : (r.content_version || '—');
 export async function bankCoverage(db: any): Promise<Coverage> {
@@ -102,5 +102,11 @@ export async function bankCoverage(db: any): Promise<Coverage> {
     for (const r of approved) by_type[r.item_type || 'mcq'] = (by_type[r.item_type || 'mcq'] || 0) + 1;
     cells.push({ level, skill, approved: approved.length, in_review: here.filter((r) => r.status === 'in_review').length, needed: level === FLOOR_LEVEL ? FLOOR_PLAN[skill] : FORM_PLAN[level][skill], by_type });
   }
-  return { cells, total_approved: by_status.approved || 0, total_all: rows.length, by_status, by_batch, passages: (passages || []).length, descriptors_used: used.size };
+  /* م4-أ: خلايا المهام الإنتاجية — المطلوب 3 معتمدة لكل خلية (مهمة واحدة تُسحب عشوائيًا من ثلاث على الأقل) */
+  const productive: Coverage['productive'] = [];
+  for (const level of [FLOOR_LEVEL, ...LEVELS] as BankLevel[]) for (const skill of PRODUCTIVE_SKILLS) {
+    const here = rows.filter((r) => r.level === level && r.skill === skill);
+    productive.push({ level, skill, approved: here.filter((r) => r.status === 'approved').length, in_review: here.filter((r) => r.status === 'in_review').length, needed: 3 });
+  }
+  return { cells, productive, total_approved: by_status.approved || 0, total_all: rows.length, by_status, by_batch, passages: (passages || []).length, descriptors_used: used.size };
 }

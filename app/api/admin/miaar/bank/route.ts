@@ -11,12 +11,17 @@
  *   passage_update {id, title?, body?, status?, meta?, audio_public_path?}
  *   passage_create {id, level, skill, title, body, meta?}
  *   audio_upload  {passage_id, base64 (mp3 ≤ 4MB)} → الدلو miaar-media/audio/<id>.mp3 (رابط موقَّع عند التقديم)
+ *  م4-أ «صوتك وقلمك»: GET ?skill=writing|speaking (المهام) · ?rubric=1 → سُلّم التقدير (48 درجة)
+ *   task_update   {id, question_text, task{genre,prompt_en?,tips_ar[],sample_ar?,min_words|min_seconds…}, descriptor_code?, domain?, media_path?, media_alt?, note?}
+ *   task_create   {level, skill: writing|speaking, question_text, task, descriptor_code?, domain?, media_path?, media_alt?}
+ *   اعتماد المهمة لا يحتاج مفتاحًا (تُقدَّر بالسُلّم لا بمفتاح) — item_status/batch_status يميّزان ذلك.
  *  القرار الأكاديمي بيد الطاقم؛ لا يقرّر الذكاء الاصطناعي هنا شيئًا.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson } from '../../../../../lib/shield/body';
-import { ITEM_TYPES, SKILLS, isBankLevel, isSkill, isOptionId, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
+import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLevel, isSkill, isProductiveSkill, isOptionId, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
+import { validateTask } from '../../../../../lib/miaar/rubric';
 import type { ItemType } from '../../../../../lib/miaar/registry';
 import { optionList, MEDIA_BUCKET, itemBatch } from '../../../../../lib/miaar/bank';
 
@@ -45,6 +50,10 @@ export async function GET(req: Request) {
     const { data } = await db.from('miaar_descriptors').select('code, level, mode, text_ar, text_en, sort').order('sort').limit(500);
     return NextResponse.json({ success: true, descriptors: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
   }
+  if (p.get('rubric') === '1') {
+    const { data } = await db.from('miaar_rubric_bands').select('skill, dimension, dimension_ar, dimension_en, score, text_ar, text_en, sort').order('sort').limit(200);
+    return NextResponse.json({ success: true, bands: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
+  }
   if (p.get('passages') === '1') {
     let q = db.from('miaar_passages').select('id, level, skill, title, body, status, source, version, audio_public_path, audio_storage_path, meta, updated_at').order('level').order('id').limit(500);
     if (isBankLevel(p.get('level'))) q = q.eq('level', p.get('level')); if (p.get('skill') === 'reading' || p.get('skill') === 'listening') q = q.eq('skill', p.get('skill'));
@@ -52,8 +61,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ success: true, passages: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
   }
   const limit = Math.min(100, Math.max(5, Number(p.get('limit')) || 40)); const offset = Math.max(0, Number(p.get('offset')) || 0);
-  let q = db.from('question_bank_items').select('id, item_code, content_version, level, skill, passage_id, question_text, options, item_type, status, descriptor_code, cefr_descriptor, domain, difficulty_est, stimulus, media_path, media_alt, author_notes, legacy_extra, latest_review_note, reviewed_at, exposure_count, updated_at', { count: 'exact' });
-  if (isBankLevel(p.get('level'))) q = q.eq('level', p.get('level')); if (isSkill(p.get('skill'))) q = q.eq('skill', p.get('skill'));
+  let q = db.from('question_bank_items').select('id, item_code, content_version, level, skill, passage_id, question_text, options, item_type, status, descriptor_code, cefr_descriptor, domain, difficulty_est, stimulus, media_path, media_alt, author_notes, task, legacy_extra, latest_review_note, reviewed_at, exposure_count, updated_at', { count: 'exact' });
+  if (isBankLevel(p.get('level'))) q = q.eq('level', p.get('level')); if (isSkill(p.get('skill')) || isProductiveSkill(p.get('skill'))) q = q.eq('skill', p.get('skill')); else if (p.get('productive') === '1') q = q.in('skill', [...PRODUCTIVE_SKILLS]);
   if (STATUSES.includes(p.get('status') || '')) q = q.eq('status', p.get('status')); if ((ITEM_TYPES as readonly string[]).includes(p.get('type') || '')) q = q.eq('item_type', p.get('type'));
   const batch = str(p.get('batch'), 40); if (batch) q = batchFilter(q, batch);
   const text = str(p.get('q'), 80); if (text) q = q.or(`item_code.ilike.%${text.replace(/[%,()]/g, '')}%,question_text.ilike.%${text.replace(/[%,()]/g, '')}%`);
@@ -107,6 +116,7 @@ export async function POST(req: Request) {
     const ids = (Array.isArray(b.ids) ? b.ids : [b.id]).map((x) => str(x, 60)).filter(Boolean).slice(0, 200); if (!ids.length) return bad('لا بنود');
     if (status === 'approved') {
       const { data: keys } = await db.from('question_bank_answer_keys').select('item_id').in('item_id', ids); const have = new Set(((keys || []) as any[]).map((k) => k.item_id));
+      const { data: prod } = await db.from('question_bank_items').select('id').in('id', ids).in('skill', [...PRODUCTIVE_SKILLS]); for (const r of (prod || []) as any[]) have.add(r.id); /* المهام تُقدَّر بالسُلّم لا بمفتاح */
       const missing = ids.filter((x) => !have.has(x)); if (missing.length) return bad(`لا يمكن اعتماد بند بلا مفتاح (${missing.length})`);
     }
     const up = await db.from('question_bank_items').update({ status, latest_review_note: note || null, reviewed_by: user.id, reviewed_at: now, updated_at: now }).in('id', ids); if (up.error) return bad(up.error.message, 500);
@@ -120,10 +130,37 @@ export async function POST(req: Request) {
     let sel = batchFilter(db.from('question_bank_items').select('id'), batch).in('status', from); if (level) sel = sel.eq('level', level);
     const { data: rows, error } = await sel.limit(2000); if (error) return bad(error.message, 500);
     let ids = ((rows || []) as any[]).map((r) => r.id);
-    if (status === 'approved' && ids.length) { const { data: keys } = await db.from('question_bank_answer_keys').select('item_id').in('item_id', ids); const have = new Set(((keys || []) as any[]).map((k) => k.item_id)); ids = ids.filter((x) => have.has(x)); }
+    if (status === 'approved' && ids.length) { const { data: keys } = await db.from('question_bank_answer_keys').select('item_id').in('item_id', ids); const have = new Set(((keys || []) as any[]).map((k) => k.item_id)); const { data: prod } = await db.from('question_bank_items').select('id').in('id', ids).in('skill', [...PRODUCTIVE_SKILLS]); for (const r of (prod || []) as any[]) have.add(r.id); ids = ids.filter((x) => have.has(x)); }
     if (!ids.length) return NextResponse.json({ success: true, count: 0, note_ar: 'لا بنود مطابقة.' });
     for (let i = 0; i < ids.length; i += 200) { const part = ids.slice(i, i + 200); const up = await db.from('question_bank_items').update({ status, latest_review_note: note || `دفعة ${batch}`, reviewed_by: user.id, reviewed_at: now, updated_at: now }).in('id', part); if (up.error) return bad(up.error.message, 500); await reviewEvent(db, part, `batch:${status}`, note || `دفعة ${batch}`, user.id); }
     return NextResponse.json({ success: true, count: ids.length, note_ar: `${status === 'approved' ? 'اعتُمد' : status === 'archived' ? 'أُرشف' : 'أُعيد للمراجعة'} ${ids.length} بندًا من دفعة ${batch}${level ? ` (${level})` : ''}.` });
+  }
+  if (action === 'task_update' || action === 'task_create') {
+    const create = action === 'task_create';
+    let id = str(b.id, 60); let level = isBankLevel(b.level) ? String(b.level) : null; let skill = isProductiveSkill(b.skill) ? String(b.skill) : null; let curStatus = 'draft';
+    if (!create) {
+      if (!id) return bad('معرّف مفقود');
+      const { data: cur } = await db.from('question_bank_items').select('id, level, skill, status').eq('id', id).maybeSingle(); if (!cur) return bad('المهمة غير موجودة', 404);
+      if (!isProductiveSkill(cur.skill)) return bad('هذا بند لا مهمة'); level = cur.level; skill = cur.skill; curStatus = cur.status;
+    }
+    if (!level || !skill || !isProductiveSkill(skill)) return bad('المستوى أو المهارة غير صالح');
+    const question_text = str(b.question_text, 1500); if (question_text.length < 8) return bad('نص المهمة قصير');
+    const vt = validateTask(skill, level, b.task); if (!vt.task) return bad(vt.errors.join(' · ') || 'بيانات المهمة ناقصة');
+    const descriptor_code = str(b.descriptor_code, 40) || null; const domain = DOMAINS.includes(String(b.domain)) ? String(b.domain) : null;
+    const media_path = str(b.media_path, 300) || null; const media_alt = str(b.media_alt, 200) || null; const stimulus = media_path ? { image: media_path, alt: media_alt } : null;
+    if (create) {
+      const pre = `AR-${skill === 'writing' ? 'WR' : 'SP'}-${level === FLOOR_LEVEL ? 'PRE' : level}-S`;
+      const { count } = await db.from('question_bank_items').select('id', { count: 'exact', head: true }).eq('content_version', NEW_VERSION).like('item_code', `${pre}%`);
+      const item_code = `${pre}${String((count || 0) + 1).padStart(3, '0')}`;
+      const ins = await db.from('question_bank_items').insert({ item_code, content_version: NEW_VERSION, level, skill, question_text, options: [], item_type: PRODUCTIVE_ITEM_TYPES[skill], status: 'draft', source_kind: 'manual', descriptor_code, cefr_descriptor: descriptor_code, domain, task: vt.task, media_path, media_alt, stimulus, created_by: user.id }).select('id, item_code').single();
+      if (ins.error || !ins.data) return bad(ins.error?.message || 'تعذّر الإنشاء', 500);
+      await reviewEvent(db, [ins.data.id], 'draft', note, user.id);
+      return NextResponse.json({ success: true, id: ins.data.id, item_code: ins.data.item_code, note_ar: `أُنشئت المهمة ${ins.data.item_code} (مسودّة).` });
+    }
+    const up = await db.from('question_bank_items').update({ question_text, task: vt.task, descriptor_code, cefr_descriptor: descriptor_code, domain, media_path, media_alt, stimulus, latest_review_note: note || null, reviewed_by: user.id, reviewed_at: now, updated_at: now }).eq('id', id);
+    if (up.error) return bad(up.error.message, 500);
+    await reviewEvent(db, [id], `edited:${curStatus}`, note, user.id);
+    return NextResponse.json({ success: true, note_ar: 'حُفظت المهمة.' });
   }
   if (action === 'item_delete') {
     const id = str(b.id, 60); if (!id) return bad('معرّف مفقود');

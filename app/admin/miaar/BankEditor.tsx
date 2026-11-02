@@ -5,13 +5,15 @@
  *  بنود: تصفية (مستوى · مهارة · حالة · دفعة · نوع · بحث · مكرّرات) · تحرير بند (النص · الخيارات · المفتاح · الواصف · المجال · الصعوبة · المقطع · الصورة)
  *  · حالة بند/بنود · «مراجعة الدفعة» (اعتماد athar-m2a كلّها أو مستوىً واحدًا) · «أرشفة التأسيسية» · إنشاء بند
  *  مقاطع: تحرير العنوان/النص/الحالة · رفع MP3 إلى الدلو · إنشاء مقطع · «استوديو مِعيار» (الصوت يُنتَج خارج الخادم ويُرفع هنا)
+ *  م4-أ «صوتك وقلمك»: تبويب «المهام الإنتاجية» — مهام الكتابة والتحدّث (تصفية · تحرير النصّ والحدود والإرشادات والإجابة النموذجية · معاينة كما يراها المتقدّم · سُلّم التقدير بجوار المحرّر · اعتماد الدفعة athar-m4a)
  *  القرار الأكاديمي بيد الطاقم.
  */
 import { useEffect, useState } from 'react';
 import { BANK_LEVEL_AR, skillLabel } from '../../../lib/miaar/registry';
+import { RUBRIC_DIMENSIONS, DIMENSION_AR, WRITING_LIMITS, SPEAKING_LIMITS, validateTask, countWords } from '../../../lib/miaar/rubric';
 
 type Opt = { id: string; text: string; image?: string | null; alt?: string | null };
-type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
+type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; task?: any; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
 type Passage = { id: string; level: string; skill: string; title: string; body: string; status: string; source: string; version: string | null; audio_public_path: string | null; audio_storage_path: string | null; meta: any };
 type Desc = { code: string; level: string; mode: string; text_ar: string };
 const LEVELS_ALL = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -19,11 +21,16 @@ const SKILLS_ALL = ['grammar_vocab', 'reading', 'listening'];
 const STATUS_AR: Record<string, string> = { draft: 'مسودّة', in_review: 'قيد المراجعة', approved: 'معتمد', archived: 'مؤرشف' };
 const TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور' };
 const DOMAIN_AR: Record<string, string> = { personal: 'شخصي', public: 'عام', educational: 'تعليمي', professional: 'مهني' };
-const BATCH_AR: Record<string, string> = { 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم' };
+const BATCH_AR: Record<string, string> = { 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم', 'athar-m4a': 'صوتك وقلمك (م4-أ)' };
+type Band = { skill: string; dimension: string; dimension_ar: string; score: number; text_ar: string };
+const GENRE_AR: Record<string, string> = { copy: 'نسخ', form: 'نموذج', self_intro: 'تعريف بالنفس', card: 'بطاقة', message: 'رسالة', diary: 'مذكّرات', description: 'وصف', note: 'ملاحظة', request: 'طلب', article: 'مقال قصير', blog: 'تدوينة', narrative: 'سرد', opinion: 'رأي', formal_email: 'بريد رسمي', essay: 'مقال', report: 'تقرير', summary: 'تلخيص', formal_letter: 'خطاب رسمي', proposal: 'مقترح', review: 'مراجعة', adapt: 'تكييف السجلّ', position_paper: 'ورقة موقف', critique: 'نقد', style: 'أسلوب', greet: 'تحيّة', numbers: 'أعداد', name_picture: 'تسمية صورة', questions: 'أسئلة', answer: 'إجابة', routine: 'روتين', family: 'عائلة', service: 'موقف خدمة', plans: 'خطط', situation: 'موقف', spontaneous: 'ارتجال', interaction: 'تفاعل', presentation: 'عرض', debate: 'نقاش', fluent_talk: 'حديث متدفّق', professional_setting: 'سياق مهني', complex_presentation: 'عرض معقّد', effortless: 'حديث حرّ', nuance: 'فروق دقيقة', repair: 'تدارك' };
 const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f'];
 
 export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => Promise<Record<string, string>>; byBatch: Record<string, Record<string, number>>; onChanged: () => void }) {
-  const [view, setView] = useState<'items' | 'passages'>('items');
+  const [view, setView] = useState<'items' | 'passages' | 'tasks'>('items');
+  /* م4-أ: المهام الإنتاجية */
+  const [tf, setTf] = useState({ level: '', skill: '', status: '', q: '' }); const [tasks, setTasks] = useState<Item[]>([]); const [tTotal, setTTotal] = useState(0);
+  const [tEdit, setTEdit] = useState<Item | null>(null); const [tDraft, setTDraft] = useState<any>(null); const [bands, setBands] = useState<Band[]>([]); const [preview, setPreview] = useState(false);
   const [f, setF] = useState({ level: '', skill: '', status: '', batch: 'athar-m2a', type: '', q: '', dupes: false });
   const [items, setItems] = useState<Item[]>([]); const [total, setTotal] = useState(0); const [offset, setOffset] = useState(0); const LIMIT = 40;
   const [sel, setSel] = useState<Set<string>>(new Set()); const [edit, setEdit] = useState<Item | null>(null); const [draft, setDraft] = useState<any>(null);
@@ -38,11 +45,22 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
     const j = await api(`?${qs.toString()}`); if (j) { setItems(j.items); setTotal(j.total); setOffset(off); setSel(new Set()); }
   }
   async function loadPassages() { const j = await api('?passages=1'); if (j) setPassages(j.passages); }
+  async function loadTasks() { const qs = new URLSearchParams({ productive: '1', limit: '100' }); if (tf.level) qs.set('level', tf.level); if (tf.skill) qs.set('skill', tf.skill); if (tf.status) qs.set('status', tf.status); if (tf.q) qs.set('q', tf.q); const j = await api(`?${qs.toString()}`); if (j) { setTasks(j.items); setTTotal(j.total); } }
+  useEffect(() => { if (view !== 'tasks') return; void loadTasks(); if (!bands.length) void api('?rubric=1').then((j) => j && setBands(j.bands)); if (!descs.length) void api('?descriptors=1').then((j) => j && setDescs(j.descriptors)); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, tf.level, tf.skill, tf.status]);
+  useEffect(() => { if (!tEdit) { setTDraft(null); setPreview(false); return; } const t = tEdit.task || {}; const d = tEdit.skill === 'writing' ? WRITING_LIMITS[tEdit.level as keyof typeof WRITING_LIMITS] : SPEAKING_LIMITS[tEdit.level as keyof typeof SPEAKING_LIMITS];
+    setTDraft({ question_text: tEdit.question_text, descriptor_code: tEdit.descriptor_code || '', domain: tEdit.domain || '', media_path: tEdit.media_path || '', media_alt: tEdit.media_alt || '', task: { genre: t.genre || 'message', prompt_en: t.prompt_en || '', tips_ar: [...(t.tips_ar || []), '', '', ''].slice(0, 3), sample_ar: t.sample_ar || '', ...d, ...Object.fromEntries(Object.entries(t).filter(([k]) => /^(min_|max_|time_|prep_|retakes)/.test(k))) } });
+  }, [tEdit]);
+  const saveTask = async () => { if (!tEdit || !tDraft) return; const task = { ...tDraft.task, tips_ar: (tDraft.task.tips_ar as string[]).filter((x) => x && x.trim()) }; const v = validateTask(tEdit.skill as 'writing' | 'speaking', tEdit.level, task); if (!v.task) { setErr(v.errors.join(' · ')); return; }
+    const j = await post({ action: tEdit.id === 'new' ? 'task_create' : 'task_update', id: tEdit.id, level: tEdit.level, skill: tEdit.skill, question_text: tDraft.question_text, descriptor_code: tDraft.descriptor_code, domain: tDraft.domain, media_path: tDraft.media_path, media_alt: tDraft.media_alt, task: v.task, note }); if (j) { setTEdit(null); await loadTasks(); onChanged(); } };
+  const startNewTask = () => { const level = tf.level || 'A1'; const skill = (tf.skill || 'writing') as string; setTEdit({ id: 'new', item_code: 'جديدة', content_version: 'athar-staff', level, skill, passage_id: null, question_text: '', options: [], item_type: `${skill}_task`, status: 'draft', descriptor_code: null, domain: null, difficulty_est: null, media_path: null, media_alt: null, task: {} } as any); };
+  const taskStatus = (ids: string[], status: string) => post({ action: 'item_status', ids, status, note }).then(async (j) => { if (j) { await loadTasks(); onChanged(); } });
+  const bandsFor = (skill: string) => RUBRIC_DIMENSIONS[(skill === 'speaking' ? 'speaking' : 'writing') as 'writing' | 'speaking'].map((dim) => ({ dim, rows: bands.filter((b) => b.skill === skill && b.dimension === dim).sort((a, b) => b.score - a.score) }));
   useEffect(() => { void load(0); if (!descs.length) void api('?descriptors=1').then((j) => j && setDescs(j.descriptors)); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.level, f.skill, f.status, f.batch, f.type, f.dupes]);
   useEffect(() => { if (view === 'passages' && !passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
-  useEffect(() => { if (!edit && !pEdit) return; const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setEdit(null); setPEdit(null); } }; window.addEventListener('keydown', onKey); const prev = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; }; }, [edit, pEdit]);
+  useEffect(() => { if (!edit && !pEdit && !tEdit) return; const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setEdit(null); setPEdit(null); setTEdit(null); } }; window.addEventListener('keydown', onKey); const prev = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; }; }, [edit, pEdit, tEdit]);
   useEffect(() => { if (!edit) { setDraft(null); return; } setDraft({ question_text: edit.question_text, options: edit.options.map((o) => ({ ...o })), correct: edit.correct || 'a', descriptor_code: edit.descriptor_code || '', domain: edit.domain || '', difficulty_est: edit.difficulty_est || 3, passage_id: edit.passage_id || '', media_path: edit.media_path || '', media_alt: edit.media_alt || '', item_type: edit.item_type }); if (!passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edit]);
 
@@ -56,21 +74,22 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
   const uploadAudio = async (p: Passage, file: File) => { if (file.size > 4 * 1024 * 1024) { setErr('الحدّ 4MB'); return; } const b64 = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsDataURL(file); }); const j = await post({ action: 'audio_upload', passage_id: p.id, base64: b64 }); if (j) await loadPassages(); };
   const savePassage = async () => { if (!pEdit) return; const j = await post({ action: 'passage_update', id: pEdit.id, title: pEdit.title, body: pEdit.body, status: pEdit.status, audio_public_path: pEdit.audio_public_path || '' }); if (j) { setPEdit(null); await loadPassages(); onChanged(); } };
   const createPassage = async () => { const j = await post({ action: 'passage_create', ...newP }); if (j) { setCreating(false); setNewP({ id: '', level: 'A1', skill: 'reading', title: '', body: '' }); await loadPassages(); } };
-  const m2a = byBatch['athar-m2a'] || {}; const legacy = byBatch['miaar-legacy'] || {};
+  const m2a = byBatch['athar-m2a'] || {}; const legacy = byBatch['miaar-legacy'] || {}; const m4a = byBatch['athar-m4a'] || {};
 
   return <section className="am-card bk" data-testid="bank-editor">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <div className="bk-head"><h3>محرّر البنك <small>البنود والمقاطع · المراجعة بيد الطاقم</small></h3>
-      <div className="bk-tabs" role="tablist"><button type="button" role="tab" aria-selected={view === 'items'} className={view === 'items' ? 'on' : ''} onClick={() => setView('items')}>البنود</button><button type="button" role="tab" aria-selected={view === 'passages'} className={view === 'passages' ? 'on' : ''} onClick={() => setView('passages')}>المقاطع والصوت</button></div></div>
+      <div className="bk-tabs" role="tablist"><button type="button" role="tab" aria-selected={view === 'items'} className={view === 'items' ? 'on' : ''} onClick={() => setView('items')}>البنود</button><button type="button" role="tab" aria-selected={view === 'tasks'} className={view === 'tasks' ? 'on' : ''} onClick={() => setView('tasks')} data-testid="bank-tab-tasks">المهام الإنتاجية <small>صوتك وقلمك</small></button><button type="button" role="tab" aria-selected={view === 'passages'} className={view === 'passages' ? 'on' : ''} onClick={() => setView('passages')}>المقاطع والصوت</button></div></div>
     {err && <p className="am-err" role="alert">{err}</p>}{msg && <p className="bk-ok" role="status">{msg}</p>}
 
     <div className="bk-batch" data-testid="bank-batch">
-      <div><b>مراجعة الدفعة</b><span>بنك مِعيار الجديد: <b>{m2a.in_review || 0}</b> قيد المراجعة · <b>{m2a.approved || 0}</b> معتمد · <b>{m2a.archived || 0}</b> مؤرشف</span><span>الدفعة التأسيسية: <b>{legacy.approved || 0}</b> معتمد · <b>{legacy.in_review || 0}</b> قيد المراجعة · <b>{legacy.archived || 0}</b> مؤرشف</span></div>
+      <div><b>مراجعة الدفعة</b><span>بنك مِعيار الجديد: <b>{m2a.in_review || 0}</b> قيد المراجعة · <b>{m2a.approved || 0}</b> معتمد · <b>{m2a.archived || 0}</b> مؤرشف</span><span>صوتك وقلمك (م4-أ): <b>{m4a.in_review || 0}</b> قيد المراجعة · <b>{m4a.approved || 0}</b> معتمد</span><span>الدفعة التأسيسية: <b>{legacy.approved || 0}</b> معتمد · <b>{legacy.in_review || 0}</b> قيد المراجعة · <b>{legacy.archived || 0}</b> مؤرشف</span></div>
       <div className="bk-row">
         <select value={batchLevel} onChange={(e) => setBatchLevel(e.target.value)} aria-label="مستوى الدفعة"><option value="">كل المستويات</option>{LEVELS_ALL.map((l) => <option key={l} value={l}>{BANK_LEVEL_AR[l as keyof typeof BANK_LEVEL_AR]}</option>)}</select>
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة المراجعة (اختياري)" aria-label="ملاحظة المراجعة" />
         <button type="button" className="mm-hbtn" disabled={!!busy} onClick={() => batchAct('athar-m2a', 'approved')} data-testid="bank-approve-batch">اعتماد الجديد</button>
         <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('athar-m2a', 'in_review')}>إعادة الجديد للمراجعة</button>
+        <button type="button" className="mm-hbtn" disabled={!!busy} onClick={() => batchAct('athar-m4a', 'approved')} data-testid="bank-approve-m4a">اعتماد مهام صوتك وقلمك</button>
         <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'archived')}>أرشفة التأسيسية</button>
         <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'approved')}>إعادة اعتماد التأسيسية</button>
       </div>
@@ -140,6 +159,76 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
       </div></div>}
     </>}
 
+    {view === 'tasks' && <>
+      <div className="bk-studio bk-prodintro"><b>صوتك وقلمك</b><p>مهام الكتابة والتحدّث تُقدَّر بـ«سُلّم التقدير» (أربعة أبعاد × 0–5) لا بمفتاح. كل مهمة تحمل حدودها وإرشاداتها وإجابة نموذجية لا تغادر الخادم. القاعدة: الآلة تقترح درجة، والإنسان يعتمدها (م4-ج). لا مهمة تصل إلى متقدّم قبل اعتمادك.</p>
+        <button type="button" className="bk-primary" onClick={startNewTask} data-testid="task-new"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none"/></svg>مهمة جديدة</button></div>
+      <div className="bk-filters">
+        <select value={tf.level} onChange={(e) => setTf({ ...tf, level: e.target.value })} aria-label="المستوى"><option value="">كل المستويات</option>{LEVELS_ALL.map((l) => <option key={l} value={l}>{BANK_LEVEL_AR[l as keyof typeof BANK_LEVEL_AR]}</option>)}</select>
+        <select value={tf.skill} onChange={(e) => setTf({ ...tf, skill: e.target.value })} aria-label="المهارة" data-testid="task-skill"><option value="">كتابة وتحدّث</option><option value="writing">الكتابة</option><option value="speaking">التحدّث</option></select>
+        <select value={tf.status} onChange={(e) => setTf({ ...tf, status: e.target.value })} aria-label="الحالة"><option value="">كل الحالات</option>{Object.entries(STATUS_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        <input value={tf.q} onChange={(e) => setTf({ ...tf, q: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') void loadTasks(); }} placeholder="بحث بالرمز أو النصّ" aria-label="بحث" />
+        <button type="button" className="bk-soft" onClick={() => void loadTasks()}>بحث</button>
+        <span className="bk-count" data-testid="task-total"><b>{tTotal}</b> مهمة</span>
+      </div>
+      <div className="bk-tablewrap"><table className="mm-t bk-t" data-testid="task-table"><thead><tr><th>الرمز</th><th>المستوى</th><th>المهارة</th><th>النوع</th><th>المهمة</th><th>الحدود</th><th>الواصف</th><th>الحالة</th><th></th></tr></thead><tbody>
+        {tasks.map((it) => <tr key={it.id}><td><code>{it.item_code}</code><br /><small>{BATCH_AR[(it as any).batch] || (it as any).batch}</small></td><td>{BANK_LEVEL_AR[it.level as keyof typeof BANK_LEVEL_AR] || it.level}</td><td>{skillLabel(it.skill)}</td><td>{GENRE_AR[it.task?.genre] || it.task?.genre || '—'}</td>
+          <td className="bk-stem">{it.media_path && <img src={it.media_path} alt={it.media_alt || ''} />}{it.question_text.slice(0, 110)}{it.question_text.length > 110 ? '…' : ''}</td>
+          <td><small dir="ltr">{it.skill === 'writing' ? `${it.task?.min_words ?? '—'}–${it.task?.max_words ?? '—'} كلمة · ${Math.round((it.task?.time_seconds || 0) / 60)} د` : `${it.task?.min_seconds ?? '—'}–${it.task?.max_seconds ?? '—'} ث · تحضير ${it.task?.prep_seconds ?? '—'} ث`}</small></td>
+          <td><small>{it.descriptor_code || '—'}</small></td><td><span className={`bk-st ${it.status}`}>{STATUS_AR[it.status] || it.status}</span></td>
+          <td className="bk-acts"><button type="button" className="bk-act" onClick={() => setTEdit(it)} data-testid="task-edit">تعديل</button>
+            {it.status !== 'approved' ? <button type="button" className="bk-act ok" disabled={!!busy} onClick={() => void taskStatus([it.id], 'approved')} data-testid="task-row-approve">اعتماد</button> : <button type="button" className="bk-act" disabled={!!busy} onClick={() => void taskStatus([it.id], 'in_review')} data-testid="task-row-review">إعادة للمراجعة</button>}
+            {it.status !== 'archived' && <button type="button" className="bk-act warn" disabled={!!busy} onClick={() => void taskStatus([it.id], 'archived')}>أرشفة</button>}</td></tr>)}
+        {!tasks.length && <tr><td colSpan={9} className="am-empty">لا مهام مطابقة.</td></tr>}
+      </tbody></table></div>
+
+      {tEdit && tDraft && <div className="bk-backdrop" onClick={() => setTEdit(null)}><div className="bk-edit bk-task" role="dialog" aria-modal="true" aria-label={tEdit.id === 'new' ? 'مهمة جديدة' : `تحرير ${tEdit.item_code}`} data-testid="task-edit-form" onClick={(e) => e.stopPropagation()}>
+        <div className="bk-eh"><h4>{tEdit.id === 'new' ? 'مهمة جديدة' : `تحرير ${tEdit.item_code}`} <small>{BANK_LEVEL_AR[tEdit.level as keyof typeof BANK_LEVEL_AR]} · {skillLabel(tEdit.skill)}</small></h4>
+          <div className="bk-row"><button type="button" className={`bk-soft${preview ? ' on' : ''}`} onClick={() => setPreview(!preview)} aria-pressed={preview} data-testid="task-preview">معاينة كما يراها المتقدّم</button><button type="button" className="bk-soft" onClick={() => setTEdit(null)}>إغلاق</button></div></div>
+        {preview ? <div className="tk-preview" data-testid="task-preview-card">
+            <span className="tk-chip">{tEdit.skill === 'writing' ? 'مهمة كتابة' : 'مهمة تحدّث'} · {BANK_LEVEL_AR[tEdit.level as keyof typeof BANK_LEVEL_AR]}</span>
+            {tDraft.media_path && <img src={tDraft.media_path} alt={tDraft.media_alt || ''} className="tk-img" />}
+            <p className="tk-prompt">{tDraft.question_text || '…'}</p>
+            {tDraft.task.prompt_en && <p className="tk-en" dir="ltr">{tDraft.task.prompt_en}</p>}
+            <ul className="tk-tips">{(tDraft.task.tips_ar as string[]).filter(Boolean).map((t, i) => <li key={i}>{t}</li>)}</ul>
+            <div className="tk-limits">{tEdit.skill === 'writing' ? <><span>{tDraft.task.min_words}–{tDraft.task.max_words} كلمة</span><span>{Math.round(tDraft.task.time_seconds / 60)} دقيقة</span><span>عدّاد الكلمات يظهر أثناء الكتابة</span></> : <><span>تحضير {tDraft.task.prep_seconds} ث</span><span>تسجيل {tDraft.task.min_seconds}–{tDraft.task.max_seconds} ث</span><span>إعادة {tDraft.task.retakes} مرّة</span></>}</div>
+            <p className="mm-note">هكذا تظهر في «غرفة الأداء» (م4-ب) — بلا الإجابة النموذجية ولا السُلّم.</p>
+          </div>
+        : <div className="tk-grid">
+          <div className="tk-form">
+            <label className="bk-full">نصّ المهمة (كما يقرؤه المتقدّم)<textarea rows={4} value={tDraft.question_text} onChange={(e) => setTDraft({ ...tDraft, question_text: e.target.value })} dir="rtl" lang="ar" data-testid="task-text" /></label>
+            <div className="bk-grid">
+              <label>النوع (genre)<input value={tDraft.task.genre} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, genre: e.target.value.toLowerCase().replace(/[^a-z_]/g, '') } })} dir="ltr" list="tk-genres" /><datalist id="tk-genres">{Object.keys(GENRE_AR).map((g) => <option key={g} value={g}>{GENRE_AR[g]}</option>)}</datalist></label>
+              <label>الواصف<select value={tDraft.descriptor_code} onChange={(e) => setTDraft({ ...tDraft, descriptor_code: e.target.value })}><option value="">—</option>{descs.filter((d) => d.level === tEdit.level && d.mode === tEdit.skill).map((d) => <option key={d.code} value={d.code}>{d.code} — {d.text_ar}</option>)}</select></label>
+              <label>المجال<select value={tDraft.domain} onChange={(e) => setTDraft({ ...tDraft, domain: e.target.value })}><option value="">—</option>{Object.entries(DOMAIN_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+              {tEdit.skill === 'writing' ? <>
+                <label>أقلّ كلمات<input type="number" min={1} max={600} value={tDraft.task.min_words} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, min_words: Number(e.target.value) } })} /></label>
+                <label>أكثر كلمات<input type="number" min={1} max={800} value={tDraft.task.max_words} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, max_words: Number(e.target.value) } })} /></label>
+                <label>الزمن (ثانية)<input type="number" min={60} max={3600} step={60} value={tDraft.task.time_seconds} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, time_seconds: Number(e.target.value) } })} /></label>
+              </> : <>
+                <label>أقلّ ثوانٍ<input type="number" min={3} max={90} value={tDraft.task.min_seconds} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, min_seconds: Number(e.target.value) } })} /></label>
+                <label>أكثر ثوانٍ (≤90)<input type="number" min={5} max={90} value={tDraft.task.max_seconds} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, max_seconds: Number(e.target.value) } })} /></label>
+                <label>تحضير (ثانية)<input type="number" min={0} max={120} value={tDraft.task.prep_seconds} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, prep_seconds: Number(e.target.value) } })} /></label>
+                <label>إعادات مسموحة<input type="number" min={0} max={2} value={tDraft.task.retakes} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, retakes: Number(e.target.value) } })} /></label>
+              </>}
+              <label>صورة تحفيز (مسار)<input value={tDraft.media_path} onChange={(e) => setTDraft({ ...tDraft, media_path: e.target.value })} placeholder="/miaar/img/book.svg" dir="ltr" /></label>
+              <label>وصف الصورة<input value={tDraft.media_alt} onChange={(e) => setTDraft({ ...tDraft, media_alt: e.target.value })} /></label>
+            </div>
+            <label className="bk-full">ترجمة التعليمات (تظهر بلغة واجهة المتقدّم إن لم تكن العربية)<input value={tDraft.task.prompt_en} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, prompt_en: e.target.value } })} dir="ltr" /></label>
+            <div className="bk-grid">{[0, 1, 2].map((i) => <label key={i}>إرشاد {i + 1}<input value={tDraft.task.tips_ar[i] || ''} onChange={(e) => { const tips_ar = [...tDraft.task.tips_ar]; tips_ar[i] = e.target.value; setTDraft({ ...tDraft, task: { ...tDraft.task, tips_ar } }); }} dir="rtl" /></label>)}</div>
+            <label className="bk-full">الإجابة النموذجية / المخطّط (للطاقم والمصحّح فقط — لا تغادر الخادم)<textarea rows={4} value={tDraft.task.sample_ar} onChange={(e) => setTDraft({ ...tDraft, task: { ...tDraft.task, sample_ar: e.target.value } })} dir="rtl" lang="ar" />{tEdit.skill === 'writing' && !!tDraft.task.sample_ar && <small className="tk-wc">{countWords(tDraft.task.sample_ar)} كلمة في النموذج</small>}</label>
+            {tEdit.latest_review_note && <p className="mm-note">آخر ملاحظة: {tEdit.latest_review_note}</p>}
+            <div className="bk-row"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة المراجعة" aria-label="ملاحظة" />
+              <button type="button" className="bk-primary" disabled={!!busy} onClick={() => void saveTask()} data-testid="task-save">حفظ المهمة</button>
+              {tEdit.id !== 'new' && tEdit.status !== 'approved' && <button type="button" className="bk-soft" disabled={!!busy} onClick={() => void taskStatus([tEdit.id], 'approved').then(() => setTEdit(null))} data-testid="task-approve">اعتماد</button>}</div>
+          </div>
+          <aside className="tk-rubric" aria-label="سُلّم التقدير" data-testid="task-rubric"><h5>سُلّم التقدير — {skillLabel(tEdit.skill)} <small>نسبةً إلى مستوى المهمة</small></h5>
+            {bandsFor(tEdit.skill).map(({ dim, rows }) => <details key={dim} open={dim === 'task'}><summary>{DIMENSION_AR[dim] || dim}</summary><ol reversed>{rows.map((b) => <li key={b.score} value={b.score}><b>{b.score}</b> {b.text_ar}</li>)}</ol></details>)}
+            {!bands.length && <p className="mm-note">السُلّم غير محمّل — نفّذ SQL م4-أ.</p>}
+          </aside>
+        </div>}
+      </div></div>}
+    </>}
+
     {view === 'passages' && <>
       <div className="bk-studio"><b>استوديو مِعيار</b><p>صوت الاستماع يُنتَج خارج الخادم بطاقم مِعيار الصوتي (حامد الراوي · زارية وتيم للحوار · شاكر وجمال وأمل للتنويع) ثم يُرفع هنا بصيغة MP3 — أو يوضع في <code>public/miaar/audio/&lt;المعرّف&gt;.mp3</code> في المستودع. الملف المرفوع يُقدَّم برابط موقَّع من الدلو الخاص.</p>
         <button type="button" className="bk-primary" onClick={() => setCreating(!creating)} aria-expanded={creating}><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none"/></svg>إضافة مقطع جديد</button></div>
@@ -181,5 +270,10 @@ const CSS = `
 .bk-opts{display:grid;gap:6px}.bk-opt{display:grid;grid-template-columns:auto 1fr 180px auto auto;gap:8px;align-items:center;border:1px solid #e2e8f0;border-radius:10px;padding:6px 8px;background:#fff}.bk-opt.key{border-color:#0b8a83;background:#ecfdf5}.bk-opt img{width:40px;height:40px}.bk-radio{font-weight:800}.bk-rat{grid-column:2/-1;color:#64748b}.bk-x{border:none;background:transparent;font-size:18px;cursor:pointer;color:#94a3b8}
 .bk-studio{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px dashed #0b8a83;border-radius:14px;padding:12px;margin:10px 0}.bk-studio p{margin:0;flex:1;font-size:13px}.bk-up{display:inline-block;border:1px solid #cbd5e1;border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer;margin-top:4px}.bk-up input{display:none}
 audio{height:30px;max-width:200px;vertical-align:middle}
+.bk-tabs button small{display:block;font-size:10px;font-weight:600;color:#8a6d1f;line-height:1}.bk-count{align-self:center;font-size:13px}.bk-prodintro{border-color:#c9a24b;background:#fffbea}.bk-soft.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}
+.bk-task{width:min(1180px,100%)}.tk-grid{display:grid;grid-template-columns:1fr 320px;gap:14px}.tk-form{display:grid;gap:10px}.tk-wc{font-weight:600;color:#0b8a83}
+.tk-rubric{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;background:#f8fafc;font-size:12.5px;max-height:70vh;overflow:auto}.tk-rubric h5{margin:0 0 6px;font-size:13px}.tk-rubric h5 small{display:block;color:#64748b;font-weight:600}.tk-rubric details{border-top:1px solid #e2e8f0;padding:6px 0}.tk-rubric summary{font-weight:800;cursor:pointer}.tk-rubric ol{margin:6px 0 0;padding-inline-start:0;list-style:none;display:grid;gap:4px}.tk-rubric li b{display:inline-block;min-width:22px;height:22px;border-radius:6px;background:#0f2a4e;color:#fff;text-align:center;line-height:22px;margin-inline-end:6px;font-size:12px}
+.tk-preview{border:1px solid #e6d9b3;border-radius:16px;padding:18px 20px;background:linear-gradient(180deg,#fffdf7,#fff);display:grid;gap:10px;max-width:720px;margin:0 auto}.tk-chip{justify-self:start;border-radius:999px;background:#0f2a4e;color:#fff;padding:3px 12px;font-size:12px;font-weight:800}.tk-img{width:120px;height:120px;object-fit:contain;justify-self:center}.tk-prompt{font-size:18px;line-height:1.9;margin:0;color:#0f2a4e;font-weight:700}.tk-en{color:#64748b;font-size:13px;margin:0}.tk-tips{margin:0;padding-inline-start:18px;color:#334155;font-size:14px;line-height:1.8}.tk-limits{display:flex;gap:8px;flex-wrap:wrap}.tk-limits span{border:1px solid #cbd5e1;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;background:#fff}
+@media (max-width:860px){.tk-grid{grid-template-columns:1fr}}
 @media (max-width:720px){.bk-opt{grid-template-columns:auto 1fr auto}.bk-img{display:none}}
 `;

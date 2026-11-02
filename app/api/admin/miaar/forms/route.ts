@@ -64,6 +64,8 @@ function rowFromBody(b: Record<string, unknown>, existing: Partial<BlueprintRow>
   const counts: Record<string, Record<string, number>> = {};
   const rawCounts = req.counts && typeof req.counts === 'object' ? (req.counts as Record<string, Record<string, unknown>>) : {};
   for (const l of LEVELS) { counts[l] = {}; for (const s of SKILLS) counts[l][s] = num(rawCounts[l]?.[s], 0, 40, 0); }
+  const productive: Record<string, { writing: number; speaking: number }> = {}; const rawProd = req.productive && typeof req.productive === 'object' ? (req.productive as Record<string, Record<string, unknown>>) : {};
+  for (const l of LEVELS) productive[l] = { writing: num(rawProd[l]?.writing, 0, 3, 0), speaking: num(rawProd[l]?.speaking, 0, 3, 0) };
   const pool: Record<string, string[]> = {}; const rawPool = req.pool && typeof req.pool === 'object' ? (req.pool as Record<string, unknown>) : {};
   for (const [k, v] of Object.entries(rawPool)) if (Array.isArray(v)) pool[k] = [...new Set(v.map((c) => str(c, 60)).filter(Boolean))].slice(0, 400);
   const level = test_type === 'level' ? (isLevel(b.level) ? b.level : levels[0] || null) : null;
@@ -71,6 +73,7 @@ function rowFromBody(b: Record<string, unknown>, existing: Partial<BlueprintRow>
     levels: test_type === 'level' && level ? [level] : levels, counts, draw: req.draw === 'expert_pool' || req.draw === 'fixed' ? req.draw : 'random', pool,
     floor: req.floor === true || req.floor === 'true', probe: req.probe === true || req.probe === 'true', shuffle_options: !(req.shuffle_options === false || req.shuffle_options === 'false'),
     start_level: isLevel(req.start_level) ? req.start_level : null, ladder: req.ladder === 'adaptive' || req.ladder === 'linear' || req.ladder === 'single' ? req.ladder : null,
+    productive, productive_mode: req.productive_mode === 'declared' ? 'declared' : 'demonstrated', /* م4-أ */
   };
   const purpose = test_type === 'level' ? 'level' : test_type === 'short' ? 'diagnostic' : 'placement';
   return {

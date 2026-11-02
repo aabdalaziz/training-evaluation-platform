@@ -19,22 +19,24 @@ const STATUS_AR: Record<string, string> = { draft: 'مسودّة', active: 'نش
 const LADDER_AR: Record<string, string> = { adaptive: 'تكيفي (صعود/نزول)', linear: 'تتابعي (كل المستويات)', single: 'مستوى واحد' };
 
 type Draft = { id?: string; code?: string; name_ar: string; name_en: string; description_ar: string; test_type: string; level: string; duration_minutes: number; cut_percent: number; sort_order: number;
-  levels: string[]; counts: Record<string, Record<string, number>>; draw: string; pool: Record<string, string[]>; floor: boolean; probe: boolean; shuffle_options: boolean; start_level: string; ladder: string };
+  levels: string[]; counts: Record<string, Record<string, number>>; draw: string; pool: Record<string, string[]>; floor: boolean; probe: boolean; shuffle_options: boolean; start_level: string; ladder: string; productive: Record<string, { writing: number; speaking: number }>; productive_mode: 'demonstrated' | 'declared'; };
 function draftFor(type: string, types: Row[]): Draft {
   const t = types.find((x) => x.id === type) || { name_ar: '', name_en: '', hint_ar: '', ladder: 'linear' };
   const counts = type === 'short' ? Object.fromEntries(LEVELS.map((l) => [l, Object.fromEntries(SKILLS.map((s) => [s, 1]))])) : type === 'level' ? { ...emptyCounts(), B1: { grammar_vocab: 8, reading: 6, listening: 6 } } : JSON.parse(JSON.stringify(ORIGINAL));
   return { name_ar: t.name_ar, name_en: t.name_en, description_ar: t.hint_ar, test_type: type, level: 'B1', duration_minutes: type === 'short' ? 15 : type === 'level' ? 30 : 50, cut_percent: type === 'level' ? 70 : 60, sort_order: 100,
-    levels: type === 'level' ? ['B1'] : [...LEVELS], counts, draw: 'random', pool: {}, floor: type === 'placement', probe: type === 'placement', shuffle_options: true, start_level: 'A1', ladder: t.ladder };
+    levels: type === 'level' ? ['B1'] : [...LEVELS], counts, draw: 'random', pool: {}, floor: type === 'placement', probe: type === 'placement', shuffle_options: true, start_level: 'A1', ladder: t.ladder, productive: emptyProd(), productive_mode: 'demonstrated' };
 }
+const emptyProd = (): Draft['productive'] => Object.fromEntries(LEVELS.map((l) => [l, { writing: 0, speaking: 0 }]));
 function draftFromRow(r: Row): Draft {
-  const req = r.requirements || {}; const counts = emptyCounts();
+  const req = r.requirements || {}; const counts = emptyCounts(); const productive = emptyProd();
+  for (const l of LEVELS) for (const ps of ['writing', 'speaking'] as const) productive[l][ps] = Math.max(0, Math.min(3, Number(req.productive?.[l]?.[ps] || 0)));
   const src = req.counts || (r.test_type === 'short' ? null : ORIGINAL);
   for (const l of LEVELS) for (const s of SKILLS) counts[l][s] = src ? Number(src[l]?.[s] || 0) : 1;
   return { id: r.id, code: r.code, name_ar: r.name_ar || '', name_en: r.name_en || '', description_ar: r.description_ar || '', test_type: r.test_type, level: r.level || (req.levels?.[0]) || 'B1', duration_minutes: r.duration_minutes || 50, cut_percent: r.cut_percent || 60, sort_order: r.sort_order || 100,
-    levels: Array.isArray(req.levels) && req.levels.length ? req.levels : [...LEVELS], counts, draw: req.draw || 'random', pool: req.pool || {}, floor: req.floor === true || (req.floor !== false && r.test_type === 'placement'), probe: req.probe === true || (req.probe !== false && r.test_type === 'placement'), shuffle_options: req.shuffle_options !== false, start_level: req.start_level || 'A1', ladder: req.ladder || r.ladder || 'linear' };
+    levels: Array.isArray(req.levels) && req.levels.length ? req.levels : [...LEVELS], counts, draw: req.draw || 'random', pool: req.pool || {}, floor: req.floor === true || (req.floor !== false && r.test_type === 'placement'), probe: req.probe === true || (req.probe !== false && r.test_type === 'placement'), shuffle_options: req.shuffle_options !== false, start_level: req.start_level || 'A1', ladder: req.ladder || r.ladder || 'linear', productive, productive_mode: req.productive_mode === 'declared' ? 'declared' : 'demonstrated' };
 }
 const payload = (d: Draft) => ({ id: d.id, name_ar: d.name_ar, name_en: d.name_en, description_ar: d.description_ar, test_type: d.test_type, level: d.level, duration_minutes: d.duration_minutes, cut_percent: d.cut_percent, sort_order: d.sort_order,
-  requirements: { levels: d.test_type === 'level' ? [d.level] : d.levels, counts: d.counts, draw: d.draw, pool: d.pool, floor: d.floor, probe: d.probe, shuffle_options: d.shuffle_options, start_level: d.start_level, ladder: d.test_type === 'custom' ? d.ladder : undefined } });
+  requirements: { levels: d.test_type === 'level' ? [d.level] : d.levels, counts: d.counts, draw: d.draw, pool: d.pool, floor: d.floor, probe: d.probe, shuffle_options: d.shuffle_options, start_level: d.start_level, ladder: d.test_type === 'custom' ? d.ladder : undefined, productive: d.productive, productive_mode: d.productive_mode } });
 
 export default function FormBuilder({ auth }: Props) {
   const [data, setData] = useState<Row | null>(null); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
@@ -52,6 +54,7 @@ export default function FormBuilder({ auth }: Props) {
   const activeLevels = draft ? (draft.test_type === 'level' ? [draft.level] : draft.levels) : [];
   const total = useMemo(() => draft ? activeLevels.reduce((a, l) => a + SKILLS.reduce((b, s) => b + (draft.counts[l]?.[s] || 0), 0), 0) : 0, [draft, activeLevels]);
   const need = (l: string, s: string) => draft?.counts[l]?.[s] || 0;
+  const prodTotal = useMemo(() => draft ? activeLevels.reduce((a, l) => a + (draft.productive?.[l]?.writing || 0) + (draft.productive?.[l]?.speaking || 0), 0) : 0, [draft, activeLevels]);
   const basket = (l: string, s: string) => (draft?.pool[key(l, s)] || []).length;
   const cellBad = (l: string, s: string) => { const n = need(l, s); if (!n) return false; if (draft?.draw === 'random') return (avail[key(l, s)] || 0) < n; return basket(l, s) < n || (draft?.draw === 'fixed' && basket(l, s) !== n); };
   const problems = draft ? activeLevels.flatMap((l) => SKILLS.filter((s) => cellBad(l, s)).map((s) => `${l}/${skillLabel(s)}`)) : [];
@@ -104,13 +107,17 @@ export default function FormBuilder({ auth }: Props) {
           </div>
 
           <div className="fb-matrixhead"><b>مصفوفة البنود</b><div className="fb-quick"><button type="button" className="bk-soft" onClick={() => fill('original')}>خطة مِعيار (50)</button><button type="button" className="bk-soft" onClick={() => fill('one')}>بند لكل خلية (18)</button><button type="button" className="bk-soft" onClick={() => fill('zero')}>تصفير</button></div></div>
-          <div className="bk-tablewrap"><table className="fb-m"><thead><tr><th>المستوى</th>{SKILLS.map((s) => <th key={s}>{skillLabel(s)}</th>)}<th>المجموع</th></tr></thead><tbody>
+          <div className="bk-tablewrap"><table className="fb-m"><thead><tr><th>المستوى</th>{SKILLS.map((s) => <th key={s}>{skillLabel(s)}</th>)}<th>المجموع</th><th className="fb-prod">كتابة <small>غرفة الأداء</small></th><th className="fb-prod">تحدّث <small>غرفة الأداء</small></th></tr></thead><tbody>
             {activeLevels.map((l) => <tr key={l}><th>{l}</th>{SKILLS.map((s) => <td key={s} className={cellBad(l, s) ? 'bad' : need(l, s) ? 'okc' : ''}>
               <input type="number" min={0} max={40} value={need(l, s)} data-testid={`fb-cell-${l}-${s}`} onChange={(e) => setCount(l, s, Number(e.target.value))} aria-label={`${l} ${skillLabel(s)}`} />
               <small>متاح {avail[key(l, s)] || 0}</small>
               {draft.draw !== 'random' && need(l, s) > 0 && <button type="button" className="fb-pick" data-testid={`fb-pick-${l}-${s}`} onClick={() => setPicking({ level: l, skill: s })}>السلّة {basket(l, s)}/{need(l, s)}</button>}
-            </td>)}<td className="fb-sum">{SKILLS.reduce((a, s) => a + need(l, s), 0)}</td></tr>)}
+            </td>)}<td className="fb-sum">{SKILLS.reduce((a, s) => a + need(l, s), 0)}</td>{(['writing', 'speaking'] as const).map((ps) => <td key={ps} className={`fb-prod${draft.productive[l]?.[ps] ? ' okc' : ''}`}><input type="number" min={0} max={3} value={draft.productive[l]?.[ps] || 0} data-testid={`fb-prod-${l}-${ps}`} onChange={(e) => setDraft((d) => d ? { ...d, productive: { ...d.productive, [l]: { ...d.productive[l], [ps]: Math.max(0, Math.min(3, Number(e.target.value) || 0)) } } } : d)} aria-label={`${l} ${ps === 'writing' ? 'كتابة' : 'تحدّث'}`} /></td>)}</tr>)}
           </tbody></table></div>
+          {prodTotal > 0 && <div className="fb-prodnote" data-testid="fb-prodnote"><b>صوتك وقلمك:</b> {prodTotal} مهمة إنتاجية في «غرفة الأداء» — تُقدَّم بعد البنود الاستقبالية
+            <label><input type="radio" name="fb-pmode" checked={draft.productive_mode === 'demonstrated'} onChange={() => set({ productive_mode: 'demonstrated' })} /> بمستوى المتقدّم المثبت ±1</label>
+            <label><input type="radio" name="fb-pmode" checked={draft.productive_mode === 'declared'} onChange={() => set({ productive_mode: 'declared' })} /> بالمستوى المعلن في الدعوة</label>
+            <small>تصحيح مزدوج (آلة تقترح · إنسان يعتمد) خلال 48 ساعة — يفعّله المحرّك في م4-ب؛ حتى ذلك الحين تُحفظ الأعداد في المخطّط فقط.</small></div>}
           <div className="fb-draw">{modes.map((m) => <label key={m.id} className={draft.draw === m.id ? 'on' : ''}><input type="radio" name="fb-draw" value={m.id} checked={draft.draw === m.id} onChange={() => set({ draw: m.id })} data-testid={`fb-draw-${m.id}`} /><b>{m.name_ar}</b><small>{m.hint_ar}</small></label>)}</div>
           <div className="fb-now"><span>المطلوب الآن: <b data-testid="fb-total">{total}</b> بندًا · {draft.duration_minutes} دقيقة · حدّ {draft.cut_percent}%</span>{problems.length > 0 && <span className="fb-warn">خلايا لا يكفيها البنك: {problems.join(' · ')}</span>}</div>
           <div className="fb-acts">
@@ -173,6 +180,7 @@ const CSS = `
 .fb-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.fb-head h3 small{display:block;color:#64748b;font-weight:600;font-size:13px;margin-top:4px}.fb-sub{margin:6px 0 0;color:#334155;font-size:13px}
 .fb-newbar{display:flex;gap:6px;flex-wrap:wrap;max-width:560px;justify-content:flex-end}.fb-newbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid #0f2a4e;background:#0f2a4e;color:#fff;border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;cursor:pointer;min-height:38px}.fb-newbtn:hover{background:#163a6b}.fb-newbtn svg{width:14px;height:14px}
 .fb-editor{border:1px solid #e2e8f0;border-radius:16px;padding:16px;background:#f8fafc;margin:12px 0;display:grid;gap:10px}.fb-eh{display:flex;justify-content:space-between;align-items:center}.fb-eh h4{margin:0}.fb-eh code{margin-inline-start:8px;font-size:12px;color:#64748b}.fb-hint{margin:0;color:#475569;font-size:13px}
+.fb-prod{background:#f5f0e3}.fb-prod small{display:block;font-weight:600;color:#8a6d1f;font-size:10.5px}.fb-prodnote{display:flex;gap:14px;flex-wrap:wrap;align-items:center;border:1px dashed #c9a24b;border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13px;background:#fffbea}.fb-prodnote label{display:inline-flex;gap:6px;align-items:center;font-weight:700}.fb-prodnote small{flex-basis:100%;color:#64748b}
 .fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.fb-grid label,.fb-full{display:grid;gap:4px;font-size:13px;font-weight:800}.fb-grid input,.fb-grid select,.fb-full textarea{border:1px solid #cbd5e1;border-radius:10px;padding:8px 10px;font:inherit;min-height:36px;background:#fff}.fb-full textarea{font-weight:500}
 .fb-levels{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px;font-weight:800}.fb-levels button{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:5px 12px;font-weight:800;cursor:pointer;min-height:32px}.fb-levels button.on{background:#0b8a83;border-color:#0b8a83;color:#fff}
 .fb-toggles{display:flex;gap:16px;flex-wrap:wrap;font-size:13px}.fb-toggles label{display:flex;gap:6px;align-items:center}

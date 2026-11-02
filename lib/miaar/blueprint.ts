@@ -27,6 +27,8 @@ export type Plan = {
   code: string; name_ar: string; name_en: string; description_ar: string; type: TestType; ladder: Ladder; levels: Level[]; counts: Counts;
   floor: boolean; probe: boolean; cut: number; durationSeconds: number; draw: DrawMode; shuffleOptions: boolean;
   startLevel: Level | null;              /* التكيفي بنقطة بداية يحدّدها المسؤول (بلا مِسبار) */
+  productive: Record<Level, { writing: number; speaking: number }>; /* م4-أ: مهام «غرفة الأداء» لكل مستوى (0–3) — يقدّمها المحرّك في م4-ب */
+  productiveMode: 'demonstrated' | 'declared'; /* demonstrated: بمستوى المتقدّم المثبت ±1 بعد الاستقبالي · declared: بالمستوى المعلن في الدعوة/الاختيار */
   pool: Record<string, string[]>;        /* "A1:reading" → رموز البنود (سلّة الخبير أو الثابت) */
 };
 export type BlueprintRow = {
@@ -52,6 +54,8 @@ export const DRAW_MODE_INFO: Record<DrawMode, { name_ar: string; hint_ar: string
 export const isTestType = (v: unknown): v is TestType => typeof v === 'string' && (TEST_TYPES as readonly string[]).includes(v);
 export const isDrawMode = (v: unknown): v is DrawMode => typeof v === 'string' && (DRAW_MODES as readonly string[]).includes(v);
 export const cellKey = (level: string, skill: string) => `${level}:${skill}`;
+export const emptyProductive = (): Plan['productive'] => Object.fromEntries(LEVELS.map((l) => [l, { writing: 0, speaking: 0 }])) as Plan['productive'];
+export const productiveTotal = (plan: Pick<Plan, 'levels' | 'productive'>): number => plan.levels.reduce((sum, l) => sum + (plan.productive?.[l]?.writing || 0) + (plan.productive?.[l]?.speaking || 0), 0);
 export const emptyCounts = (): Counts => Object.fromEntries(LEVELS.map((l) => [l, Object.fromEntries(SKILLS.map((s) => [s, 0]))])) as Counts;
 export const planTotal = (plan: Pick<Plan, 'levels' | 'counts'>): number => plan.levels.reduce((sum, l) => sum + SKILLS.reduce((a, s) => a + (plan.counts[l]?.[s] || 0), 0), 0);
 export const planIndices = (plan: Pick<Plan, 'levels'>): number[] => plan.levels.map(levelIndex).filter((i) => i >= 0).sort((a, b) => a - b);
@@ -60,7 +64,7 @@ export const examModeOf = (plan: Pick<Plan, 'ladder'>): ExamMode => plan.ladder 
 /** الخطط النظامية (تُزرع في SQL أيضًا؛ هنا احتياط إن غاب الجدول) */
 export function systemPlan(type: TestType, level: Level = 'B1'): Plan {
   const info = TEST_TYPE_INFO[type];
-  const base: Plan = { code: `SYS-${type.toUpperCase()}`, name_ar: info.name_ar, name_en: info.name_en, description_ar: info.hint_ar, type, ladder: info.ladder, levels: [...LEVELS], counts: JSON.parse(JSON.stringify(FORM_PLAN)), floor: false, probe: false, cut: PASS_PERCENT, durationSeconds: DURATION_SECONDS, draw: 'random', shuffleOptions: true, startLevel: null, pool: {} };
+  const base: Plan = { code: `SYS-${type.toUpperCase()}`, name_ar: info.name_ar, name_en: info.name_en, description_ar: info.hint_ar, type, ladder: info.ladder, levels: [...LEVELS], counts: JSON.parse(JSON.stringify(FORM_PLAN)), floor: false, probe: false, cut: PASS_PERCENT, durationSeconds: DURATION_SECONDS, draw: 'random', shuffleOptions: true, startLevel: null, pool: {}, productive: emptyProductive(), productiveMode: 'demonstrated' };
   if (type === 'placement') return { ...base, floor: true, probe: true };
   if (type === 'adaptive') return { ...base, startLevel: 'A1' };
   if (type === 'short') { const c = emptyCounts(); for (const l of LEVELS) for (const s of SKILLS) c[l][s] = 1; return { ...base, counts: c, durationSeconds: 15 * 60 }; }
@@ -85,8 +89,11 @@ export function planFromBlueprint(row: Partial<BlueprintRow> & { requirements?: 
     const v = rawCounts ? Number(rawCounts[l]?.[s]) : type === 'short' ? 1 : FORM_PLAN[l][s];
     counts[l][s] = Number.isFinite(v) ? Math.max(0, Math.min(40, Math.floor(v))) : 0;
   }
-  const total = planTotal({ levels, counts }); if (total === 0) errors.push('لا بنود في الخطة');
-  for (const l of levels) if (SKILLS.every((s) => counts[l][s] === 0)) errors.push(`المستوى ${l} بلا بنود`);
+  const productive = emptyProductive(); const rawProd = req.productive && typeof req.productive === 'object' ? (req.productive as Record<string, Record<string, unknown>>) : null;
+  for (const l of levels) for (const ps of ['writing', 'speaking'] as const) { const v = rawProd ? Number(rawProd[l]?.[ps]) : 0; productive[l][ps] = Number.isFinite(v) ? Math.max(0, Math.min(3, Math.floor(v))) : 0; }
+  const productiveMode: Plan['productiveMode'] = req.productive_mode === 'declared' ? 'declared' : 'demonstrated';
+  const total = planTotal({ levels, counts }); const pTotal = productiveTotal({ levels, productive }); if (total === 0 && pTotal === 0) errors.push('لا بنود في الخطة');
+  for (const l of levels) if (SKILLS.every((s) => counts[l][s] === 0) && productive[l].writing === 0 && productive[l].speaking === 0) errors.push(`المستوى ${l} بلا بنود`);
   const draw: DrawMode = isDrawMode(req.draw) ? req.draw : 'random';
   const pool: Record<string, string[]> = {};
   if (draw !== 'random') {
@@ -106,7 +113,7 @@ export function planFromBlueprint(row: Partial<BlueprintRow> & { requirements?: 
   const floor = ladder === 'adaptive' ? req.floor !== false : req.floor === true;
   const plan: Plan = {
     code: cleanText(row.code, 40) || 'SYS-CUSTOM', name_ar: cleanText(row.name_ar, 120) || info.name_ar, name_en: cleanText(row.name_en, 120) || info.name_en, description_ar: cleanText(row.description_ar, 400) || info.hint_ar,
-    type, ladder, levels, counts, floor, probe, cut, durationSeconds, draw, shuffleOptions: req.shuffle_options !== false, startLevel, pool,
+    type, ladder, levels, counts, floor, probe, cut, durationSeconds, draw, shuffleOptions: req.shuffle_options !== false, startLevel, pool, productive, productiveMode,
   };
   return { plan, errors };
 }
