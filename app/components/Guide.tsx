@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
+import Nadi from './Nadi'; /* «نادِ»: تحدّث أو اطلب — الأوامر الصوتية للتنقّل في كل صفحة */
 const GuidePanel = dynamic(() => import('./GuidePanel'), { ssr: false });
 
 type Lang = 'ar' | 'en';
@@ -25,12 +26,12 @@ export function GuideButton({ lang = 'ar', className = '', compact = false }: { 
 
 export default function Guide() {
   const pathname = usePathname() || '/';
-  const [open, setOpen] = useState(false); const lastFocus = useRef<HTMLElement | null>(null); const openRef = useRef(false); openRef.current = open;
+  const [open, setOpen] = useState(false); const lastFocus = useRef<HTMLElement | null>(null); const openRef = useRef(false); openRef.current = open; const initialQ = useRef('');
   const openGuide = useCallback(() => { lastFocus.current = document.activeElement as HTMLElement; setOpen(true); }, []);
   const close = useCallback(() => { setOpen(false); setTimeout(() => lastFocus.current?.focus?.(), 0); }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K' || e.code === 'KeyK')) { e.preventDefault(); setOpen(o => { if (!o) lastFocus.current = document.activeElement as HTMLElement; return !o; }); } else if (e.key === 'Escape' && openRef.current) { e.preventDefault(); close(); } };
-    const onEvt = () => openGuide();
+    const onEvt = (e: Event) => { const q = (e as CustomEvent).detail?.query; initialQ.current = typeof q === 'string' ? q : ''; openGuide(); };
     window.addEventListener('keydown', onKey); window.addEventListener('athar:guide', onEvt);
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('athar:guide', onEvt); };
   }, [openGuide, close]);
@@ -43,7 +44,8 @@ export default function Guide() {
       <button type="button" className="gd-fab" onClick={openGuide} aria-label={LABEL[lang]} title={`${LABEL[lang]} — Ctrl K`} data-testid="guide-fab">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2.4" /><path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
       </button>
-      {open && <GuidePanel onClose={close} />}
+      {open && <GuidePanel onClose={close} initialQuery={initialQ.current} />}
+      <Nadi />
     </>
   );
 }

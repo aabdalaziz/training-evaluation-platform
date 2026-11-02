@@ -17,12 +17,13 @@ import { LEVELS, SKILLS, skillLabel, MIAAR_NAMES_AR, FLOOR_LEVEL, BANK_LEVEL_AR 
 import BankEditor from './BankEditor';
 import FormBuilder from './FormBuilder';
 import Balance from './Balance';
+import Rating from './Rating'; /* م4-ب: غرفة التصحيح */
 import { Icon } from '../../../lib/ui/icons';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const LANG_OPTS = [['ar', 'العربية'], ['en', 'English'], ['fr', 'Français'], ['tr', 'Türkçe'], ['ur', 'اردو'], ['id', 'Indonesia'], ['ms', 'Melayu'], ['fa', 'فارسی'], ['ru', 'Русский'], ['zh', '中文'], ['es', 'Español'], ['de', 'Deutsch'], ['hi', 'हिन्दी'], ['bn', 'বাংলা'], ['sw', 'Kiswahili'], ['fil', 'Filipino']];
 const CONF_AR: Record<string, string> = { high: 'مؤكَّد', medium: 'محتمل', border: 'على الحدّ' };
-type Tab = 'overview' | 'invites' | 'bank' | 'forms' | 'balance';
+type Tab = 'overview' | 'invites' | 'bank' | 'forms' | 'balance' | 'rating';
 
 export default function AdminMiaar({ tab }: { tab: Tab }) {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
@@ -60,8 +61,8 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         <header className="mm-hero">
           <div>
             <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <Link href="/miaar">صفحة الأداة</Link></p>
-            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : tab === 'balance' ? 'ميزان مِعيار' : MIAAR_NAMES_AR.invites}</h1>
-            <p className="mm-lead">{tab === 'balance' ? 'المقياس الذي يزن نفسه: تحليل البنود من إجابات حقيقية، شهادة موثوقية لكل مستوى، ومعايرة راش تقترح — وأنت تعتمد. لا اسم ولا بريد في أي رقم.' : tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
+            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : tab === 'balance' ? 'ميزان مِعيار' : tab === 'rating' ? 'غرفة التصحيح' : MIAAR_NAMES_AR.invites}</h1>
+            <p className="mm-lead">{tab === 'rating' ? 'أداءات الكتابة والتحدّث من «غرفة الأداء»: يقرؤها ويسمعها إنسان على سُلّم تقدير معلن، ويُصدرها إلى بطاقة المتقدّم على الرمز نفسه. الذكاء الاصطناعي يقترح للنصوص بموافقة المتقدّم فقط — ولا يُنشر شيء قبل إنسان.' : tab === 'balance' ? 'المقياس الذي يزن نفسه: تحليل البنود من إجابات حقيقية، شهادة موثوقية لكل مستوى، ومعايرة راش تقترح — وأنت تعتمد. لا اسم ولا بريد في أي رقم.' : tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
           </div>
           <div className="mm-heroacts">
             <Link href="/admin/placements" className="mm-hbtn gold"><Icon name="download" />تصدير النتائج CSV</Link>
@@ -71,7 +72,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
             <Link href="/miaar" className="mm-hbtn"><Icon name="play" />صفحة الاختبار</Link>
           </div>
         </header>
-        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites'], ['balance', '05', 'الميزان', '/admin/miaar/balance']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
+        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites'], ['balance', '05', 'الميزان', '/admin/miaar/balance'], ['rating', '06', 'التصحيح', '/admin/miaar/rating']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         <div className="mm-cards">
           <div className="mm-card navy"><span>نتائج الاختبارات</span><b>{latest.length}</b><small>آخر التقارير في السجل</small></div>
@@ -147,6 +148,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         {tab === 'bank' && <BankEditor auth={() => H()} byBatch={cov?.by_batch || {}} onChanged={() => { void load(); }} />}
         {tab === 'forms' && <FormBuilder auth={() => H()} />}
         {tab === 'balance' && <Balance auth={() => H()} />}
+        {tab === 'rating' && <Rating auth={() => H()} />}
         <p className="mm-foot">© 2026 {MIAAR_NAMES_AR.product} — {MIAAR_NAMES_AR.nature}، والقرار الأكاديمي بيد إنسان.</p>
       </div>
     </div>

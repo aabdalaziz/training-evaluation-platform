@@ -11,7 +11,12 @@ import { qrSvg } from '../../lib/certificates/qr';
 import { CAN_DO, LEVELS, SKILLS, FLOOR_LEVEL, FLOOR_INDEX } from '../../lib/miaar/registry';
 import type { Level } from '../../lib/miaar/registry';
 import { Icon } from '../../lib/ui/icons';
-import { GuideButton } from '../components/Guide'; /* «دليل أَثَر» (P41) */
+import { GuideButton } from '../components/Guide';
+import WayBar from '../components/WayBar'; /* «الطريق» */
+import dynamic from 'next/dynamic';
+import type { RoomData } from './PerformanceRoom';
+const PerformanceRoom = dynamic(() => import('./PerformanceRoom'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* م4-ب: غرفة الأداء تُحمَّل عند الحاجة */
+const ProductiveBlock = dynamic(() => import('./ProductiveBlock'), { ssr: false }); /* كتلة «المهارات الإنتاجية» — فقط حين تحملها البطاقة (ميزانية P40) */
 
 type Copy = Record<string, Record<string, Record<string, string>>> & { langs?: { id: string; name: string; find: string }[]; native?: { value: string; labels: Record<string, string> }[] };
 type Q = { id: string; level: string; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
@@ -192,6 +197,15 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       setSession((s) => s ? { ...s, currentLevel: FLOOR_LEVEL, currentLevelIndex: FLOOR_INDEX, direction: r.direction } : s); setQIdx(0);
     } else if (r.decision === 'complete' || r.decision === 'fail') { setSession((s) => s ? { ...s, finishReason: r.decision === 'complete' ? 'completed' : 'failed' } : s); setToast(x('level_finished')); setTimeout(() => setToast(''), 5000); setStep('review'); }
   }
+  /* م4-ب «غرفة الأداء»: بعد البطاقة — ندخل الغرفة (idempotent) فإن وُجدت مهام معتمدة بمستوى المتقدّم عُرضت الدعوة */
+  const [room, setRoom] = useState<RoomData | null>(null); const [roomOpen, setRoomOpen] = useState(false); const roomAsked = useRef(false);
+  useEffect(() => {
+    if (step !== 'result' || !report || roomAsked.current) return; roomAsked.current = true;
+    (async () => { const r = await post({ action: 'room_enter' }); if (r?.ok && r.room?.tasks?.length) { setRoom(r.room); if (r.room.productive) setReport((p: any) => ({ ...p, المهارات_الإنتاجية: r.room.productive })); } })();
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [step, report]);
+  const roomPending = !!room && room.tasks.some((t) => !room.done.includes(t.skill) && !room.skipped.includes(t.skill));
+  const onRoomUpdate = (productive: any, r: RoomData) => { setRoom(r); if (productive) setReport((p: any) => ({ ...p, المهارات_الإنتاجية: productive })); };
   async function doFinish(reason: 'quit' | 'time') {
     if (busy && reason === 'quit') return; setBusy(true); const r = await post({ action: 'finish', reason }); setBusy(false);
     if (r?.ok) { setReport(r.report); setCode(r.access_code); setStep('result'); } else setErr(t('register', 'errNet'));
@@ -253,6 +267,10 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const bandName = (b: string) => (lang === 'ar' ? BANDS_AR : BANDS_EN)[b];
 
   // ================= العرض =================
+  /* «الطريق» داخل مِعيار: رجوع بين الخطوات (التسجيل → المقدّمة · المِسبار → التسجيل)، ويُخفى أثناء الاختبار نفسه حتى لا يغادر المتقدّم بسهو */
+  const wayLang: 'ar' | 'en' = lang === 'ar' ? 'ar' : 'en';
+  const stepLabel: Record<string, { ar: string; en: string }> = { register: { ar: 'التسجيل', en: 'Registration' }, probe: { ar: 'المِسبار', en: 'Probe' }, review: { ar: 'المراجعة', en: 'Review' }, result: { ar: 'النتيجة', en: 'Result' }, room: { ar: 'غرفة الأداء', en: 'Performance room' } };
+  const stepBack = step === 'register' ? () => { setErr(''); setStep('intro'); } : step === 'probe' ? () => { setErr(''); setStep('register'); } : step === 'result' ? () => { window.location.href = '/miaar'; } : null;
   const Header = ({ admin = false }: { admin?: boolean }) => (
     <div className="mi-top"><header className="mi-head">
       <div className="mi-brandside">
@@ -264,7 +282,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
         {admin && <a className="mi-admin" href="/admin/miaar">إدارة مِعيار</a>}
         <LangPicker copy={copy} lang={lang} onPick={setLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} />
       </div>
-    </header></div>
+    </header>
+      <WayBar lang={wayLang} onBack={stepBack} extra={stepLabel[step] ? [stepLabel[step][wayLang]] : undefined} lock={step === 'test' || step === 'review'} />
+    </div>
   );
   const Hero = ({ kicker, title, lead, children }: { kicker: string; title: string; lead?: string; children?: React.ReactNode }) => (
     <section className="mi-band"><p className="mi-kicker gold">{kicker}</p><h1>{title}</h1>{lead && <p className="mi-lead">{lead}</p>}{children}</section>
@@ -452,13 +472,13 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       </section></div>
     </>}
 
-    {step === 'test' && session && current && <section className="mi-test" data-testid="mi-test">
+    {step === 'test' && session && current && <section className="mi-test" data-testid="mi-test" data-voice-exam="1">
       <div className="mi-tbar">
         <div className="mi-levels-strip" aria-hidden="true">{session.currentLevelIndex === FLOOR_INDEX && <span className="now floor">{x('floor_level')}</span>}{LEVELS.map((lv, i) => <span key={lv} className={`${i === session.currentLevelIndex ? 'now' : i < session.currentLevelIndex ? 'done' : ''}${i < session.startLevelIndex ? ' skip' : ''}`}>{lv}</span>)}</div>
         <div className="mi-tools-row">
           <span className="mi-tpill" data-testid="mi-level">{t('test', 'levelNow', { level: session.currentLevel === FLOOR_LEVEL ? x('floor_level') : session.currentLevel })}</span>{session.plan && session.plan.type !== 'placement' && session.plan.code !== 'SYS-COMPREHENSIVE' && <span className="mi-tpill" data-testid="mi-plan">{lang === 'ar' ? session.plan.name_ar : session.plan.name_en || session.plan.name_ar}</span>}
           <span className="mi-tpill">{t('test', 'qOf', { a: qIdx + 1, b: levelQs.length })} · <b>{t('test', 'answered', { n: answeredInLevel })}</b></span>
-          <span className={`mi-tpill${remaining < 300 ? ' low' : ''}`} aria-live="polite" data-testid="mi-clock">{t('test', 'time', { clock: clock(remaining) })}</span>
+          <span className={`mi-tpill${remaining < 300 ? ' low' : ''}`} aria-live="polite" data-testid="mi-clock" data-voice-time="1">{t('test', 'time', { clock: clock(remaining) })}</span>
           <button type="button" className="mi-link" onClick={() => setShowEnd(true)}>{t('test', 'end')}</button>
         </div>
       </div>
@@ -472,9 +492,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
         <article className={`mi-qcard${deferred.has(current.id) ? ' mark' : ''}`}>
           <div className="mi-tags"><span className={`mi-skilltag ${current.skill === 'reading' ? 'read' : current.skill === 'listening' ? 'listen' : ''}`}>{skillName(current.skill)}</span><span className="mi-leveltag">{current.level === FLOOR_LEVEL ? x('floor_level') : current.level}</span>{deferred.has(current.id) && <span className="mi-flag">{t('test', 'deferred')}</span>}<span className="mi-count">{t('test', 'qOf', { a: qIdx + 1, b: levelQs.length })}</span></div>
           {current.stimulus?.image && <img className="mi-stim" src={current.stimulus.image} alt={current.stimulus.alt || ''} />}
-          <h2 className="mi-qtext" dir="rtl" lang="ar">{current.questionText}</h2>
+          <h2 className="mi-qtext" dir="rtl" lang="ar" data-voice-read="1">{current.questionText}</h2>
           {current.type === 'picture_choice' && <p className="mi-muted">{x('pick_picture')}</p>}
-          <div className={`mi-opts${current.type === 'picture_choice' ? ' pics' : ''}`} role="radiogroup" aria-label={t('test', 'choices')}>
+          <div className={`mi-opts${current.type === 'picture_choice' ? ' pics' : ''}`} role="radiogroup" aria-label={t('test', 'choices')} data-voice-read="2">
             {current.options.map((o, i) => <button key={o.id} type="button" role="radio" aria-checked={answers[current.id] === o.id} className={`mi-opt${answers[current.id] === o.id ? ' on' : ''}`} onClick={() => void choose(o.id)} data-testid="mi-opt">
               <span className="mi-letter">{letters[i]}</span>{o.image ? <img src={o.image} alt={o.alt || o.text || ''} /> : <span dir="rtl" lang="ar">{optionText(current, o)}</span>}<span className="mi-check" aria-hidden="true">{answers[current.id] === o.id ? '✓' : ''}</span>
             </button>)}
@@ -483,7 +503,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
             <p className="mi-hint">{!access.simple && t('test', 'shortcuts')}</p>
             <div className="mi-actions">
               <button type="button" className={`mi-defer${deferred.has(current.id) ? ' on' : ''}`} onClick={() => setDeferred((d) => { const c = new Set(d); c.has(current.id) ? c.delete(current.id) : c.add(current.id); return c; })} aria-pressed={deferred.has(current.id)}>{deferred.has(current.id) ? t('test', 'clear') : t('test', 'defer')}</button>
-              <button type="button" className="mi-next" onClick={() => void next()} disabled={busy} data-testid="mi-next"><Icon name="next" />{t('test', 'next')}</button>
+              <button type="button" className="mi-next" onClick={() => void next()} disabled={busy} data-testid="mi-next" data-voice-next="1"><Icon name="next" />{t('test', 'next')}</button>
             </div>
           </div>
         </article>
@@ -512,7 +532,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       </section></div>
     </>}
 
-    {step === 'result' && report && <ResultCard report={report} code={code} name={resultName} lang={lang} t={t} x={x} site={site} copied={copied} onCopy={async () => { try { await navigator.clipboard.writeText(`${site}/miaar/result/${code}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* */ } }} onLang={setLang} copy={copy} />}
+    {step === 'result' && report && roomOpen && room && <section className="mi-result" data-testid="mi-result-room"><PerformanceRoom room={room} lang={lang} post={post} onUpdate={onRoomUpdate} onExit={() => setRoomOpen(false)} /></section>}
+    {step === 'result' && report && !roomOpen && <ResultCard report={report} code={code} name={resultName} lang={lang} t={t} x={x} site={site} copied={copied} roomInvite={room ? { pending: roomPending, tasks: room.tasks.map((t) => t.skill), onEnter: () => setRoomOpen(true) } : null} onCopy={async () => { try { await navigator.clipboard.writeText(`${site}/miaar/result/${code}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* */ } }} onLang={setLang} copy={copy} />}
     <Foot />
   </main>;
 }
@@ -568,7 +589,7 @@ function Player({ url, title, policy, t, x }: { url: string | null; title: strin
   </div>;
 }
 
-function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLang, copy }: { report: any; code: string | null; name: string; lang: string; t: (s: string, k: string, v?: any) => string; x: (k: string, v?: any) => string; site: string; copied: boolean; onCopy: () => void; onLang: (v: string) => void; copy: Copy | null }) {
+function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLang, copy, roomInvite = null }: { roomInvite?: { pending: boolean; tasks: string[]; onEnter: () => void } | null; report: any; code: string | null; name: string; lang: string; t: (s: string, k: string, v?: any) => string; x: (k: string, v?: any) => string; site: string; copied: boolean; onCopy: () => void; onLang: (v: string) => void; copy: Copy | null }) {
   const sum = report?.ملخص_التسكين || {}; const demo: Level = sum.المستوى_المثبت || report.المستوى_العام || 'A1'; const entry: Level = sum.مستوى_الالتحاق_المقترح || demo;
   const conf = report?.ميزان_الثقة?.الرمز || 'medium'; const stats = report?.احصائيات || {}; const levels: any[] = report?.مستويات_تفصيلية || [];
   const ar = lang === 'ar'; const canDo = (CAN_DO[demo] || CAN_DO.A1)[ar ? 'ar' : 'en'];
@@ -576,7 +597,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
   const weakest = SKILLS.filter((k) => stats[k]?.answered > 0).sort((a, b) => stats[a].percent - stats[b].percent)[0];
   const sk = (k: string) => t('result', ({ grammar_vocab: 'gShort', reading: 'rShort', listening: 'lShort' } as any)[k]);
   return <section className="mi-result" data-testid="mi-result">
-    <div className="mi-top mi-nolink"><header className="mi-head"><div className="mi-brandside"><a className="mi-brand" href="/">أَثَر<small>{t('intro', 'brandSub')}</small></a><a className="mi-mark" href="/miaar">مِعيار</a></div><div className="mi-left"><LangPicker copy={copy} lang={lang} onPick={onLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} /></div></header></div>
+    <div className="mi-top mi-nolink"><header className="mi-head"><div className="mi-brandside"><a className="mi-brand" href="/">أَثَر<small>{t('intro', 'brandSub')}</small></a><a className="mi-mark" href="/miaar">مِعيار</a></div><div className="mi-left"><LangPicker copy={copy} lang={lang} onPick={onLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} /></div></header><WayBar lang={lang === 'ar' ? 'ar' : 'en'} /></div>
     <section className="mi-band"><p className="mi-kicker gold">{x('card_k')} · {t('result', 'org')}</p><h1>{who}</h1><p className="mi-lead">{t('result', 'date')}: {new Date(report.تاريخ || Date.now()).toLocaleDateString(ar ? 'ar-SA' : lang)} · {x('nature')}</p></section>
     <div className="mi-wrap"><div className="mi-card">
       <div className="mi-rsplit">
@@ -601,6 +622,8 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
           <ol className="mi-steps"><li><a href={`/programs?level=${entry}`}>{x('step_programs')}</a></li><li>{x('step_keep')}</li>{weakest && <li>{x('step_weak')} — {sk(weakest)} {stats[weakest].percent}%</li>}</ol>
         </div>
       </div>
+      {roomInvite && roomInvite.pending && <div className="mi-rec gold mi-room-invite" data-testid="room-invite"><span>{ar ? 'أكمل بطاقتك — غرفة الأداء' : 'Complete your card — performance room'}</span><p>{ar ? `${roomInvite.tasks.length === 2 ? 'مهمّتان قصيرتان' : 'مهمة قصيرة'} بمستواك (${roomInvite.tasks.map((k) => (k === 'writing' ? 'كتابة' : 'تحدّث')).join(' · ')}) يقرؤها ويسمعها إنسان، وتكتمل بطاقتك على الرمز نفسه خلال 48 ساعة. يمكنك تخطّيها.` : `${roomInvite.tasks.length} short task(s) at your level (${roomInvite.tasks.join(' · ')}) read and heard by a human; your card completes on the same code within 48 hours. You may skip.`}</p><button type="button" className="mi-next" onClick={roomInvite.onEnter} data-testid="room-enter">{ar ? 'ادخل غرفة الأداء' : 'Enter the room'}</button></div>}
+      {report.المهارات_الإنتاجية && <ProductiveBlock block={report.المهارات_الإنتاجية} ar={ar} onOpen={roomInvite && roomInvite.pending ? roomInvite.onEnter : null} />}
       <div className="mi-rec teal"><span>{t('result', 'recommendation')}</span><p>{report.التوصية}</p>{report.تيسيرات && <p className="mi-note">{report.تيسيرات}</p>}<p className="mi-note">{report.ميزان_الثقة?.الشرح || ''} · {report.سبب_الانتهاء} · {report.نمط_الاختبار || ''}{report.نقطة_البداية ? ` · ${x('probe_k')}: ${report.نقطة_البداية}` : ''}</p></div>
       {code && <div className="mi-code"><div><small>{x('result_code')}</small><b dir="ltr" data-testid="mi-code">{code}</b><a href={url} dir="ltr">{url}</a></div><div className="mi-qr" dangerouslySetInnerHTML={{ __html: qrSvg(url, 96, 'M', '#0f2a4e') }} /></div>}
       <div className="mi-actions mi-nolink"><button type="button" className="mi-defer" onClick={() => window.print()}>{t('result', 'print')}</button>{code && <button type="button" className="mi-defer" onClick={onCopy}>{copied ? x('copied') : x('copy_link')}</button>}<a className="mi-next" href={`/programs?level=${entry}`}>{t('result', 'programs')} →</a></div>
@@ -609,6 +632,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
 }
 
 const CSS = `
+.mi-rec.gold{background:var(--gold-soft);border-color:var(--gold-line)}.mi-room-invite .mi-next{margin-top:8px}
 .mi{--navy:#0f2a4e;--ink:#0f172a;--teal:#0b8a83;--teal-deep:#0f5c57;--teal-soft:#e6f4f3;--teal-line:#cfe9e6;--gold:#c9a24b;--gold-line:#ead9a6;--gold-soft:#fbf5e4;--page:#f3f6fa;--line:#e4eaf2;--muted:#64748b;--grad:linear-gradient(135deg,#0f2a4e 0%,#143a66 55%,#0b6b66 100%);min-height:100vh;color:var(--ink);background:linear-gradient(180deg,#f6f8fb,#eef5f4);font-family:var(--font-ar,Tajawal),"Noto Naskh Arabic",system-ui,sans-serif;font-size:17px;line-height:1.6}
 .mi *{box-sizing:border-box}.mi a{color:inherit;text-decoration:none}.mi button,.mi input,.mi select{font-family:inherit}
 .mi h1,.mi h2,.mi h3{font-weight:900;letter-spacing:0;margin:0}

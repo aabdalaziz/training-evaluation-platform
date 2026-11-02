@@ -14,6 +14,7 @@ import { AtharMark, DoorBadge, invalidateMyRoles } from './Brand';
 /* P43-ب: غُرَف الشريط الإداري في حزمة مستقلة — لا تُحمَّل إلا داخل مركز القيادة */
 const CommandRooms = dynamic(() => import('./CommandRooms'));
 import { BRAND } from '../../lib/portal/content';
+import WayBar from './WayBar';
 /* P43-أ «أَثَر الواحد»: هذا الشريط هو «مركز قيادة أَثَر» — غرفة إدارية داخل البيت الواحد، لا منتجًا منفصلًا اسمه «منصة التقويم».
    الردهة (/hub?stay=1) ⇄ مركز القيادة بزرّ واحد، وشارة «بابي» نفسها التي في غلاف البوابة. */
 const HALL = '/hub?stay=1';
@@ -49,7 +50,7 @@ export default function GlobalNavigation() {
 
   /* ===== شريط إداري موحّد ===== */
   if (adminArea) {
-    return (
+    return (<>
       <nav className="global-nav admin" aria-label="التنقل الإداري" data-testid="command-bar"><SkipLink lang="ar" />
         <Link href="/dashboard" className="global-brand athar" data-testid="command-brand"><AtharMark size={26} /> <span>{BRAND.command.ar}</span></Link>
         <button type="button" className="global-burger" aria-label="القائمة" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
@@ -62,11 +63,12 @@ export default function GlobalNavigation() {
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
         </div>
       </nav>
-    );
+      <WayBar lang="ar" />
+    </>);
   }
 
   /* ===== شريط عام (الصفحات العامة) ===== */
-  return (
+  return (<>
     <nav className="global-nav" aria-label="التنقل العام"><SkipLink lang="ar" />
       <Link href="/" className="global-brand athar" data-testid="public-brand"><AtharMark size={26} /> <span>{BRAND.name.ar}</span></Link>
       <div className="global-actions">
@@ -78,5 +80,6 @@ export default function GlobalNavigation() {
         </> : pathname !== '/login' ? <Link href="/login" className="global-btn" data-testid="public-login"><Icon name="login" size={16} /> دخول</Link> : null}
       </div>
     </nav>
-  );
+    <WayBar lang="ar" />
+  </>);
 }

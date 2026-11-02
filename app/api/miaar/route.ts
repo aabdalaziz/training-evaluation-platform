@@ -16,6 +16,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { enterRoom, saveDraft, submitPerformance, skipPerformance } from '../../../lib/miaar/room';
 import { readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { COOKIE_NAME, probePublic, isResultCode, MIAAR_NAMES_AR } from '../../../lib/miaar/registry';
@@ -26,6 +27,7 @@ import { openInvite } from '../../../lib/miaar/invites';
 import { loadApprovedPool, loadPassages, signedMediaUrl, isReferencedMediaPath } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
 import { probeBand } from '../../../lib/miaar/registry';
+const ROOM_MAX_BYTES = 4 * 1024 * 1024; /* تسجيل التحدّث base64 (≤ 90 ث) — تحت سقف Vercel 4.5 م.ب */
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const NO = { 'Cache-Control': 'no-store' };
@@ -101,7 +103,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const db = svc(); if (!db) return bad('server_not_configured', 500);
   if (crossSiteBrowserWrite(req)) return bad('origin_not_allowed', 403);
-  const j = await readJson(req); if (!j.ok) return bad('invalid_json', 400); const body = j.body as Record<string, unknown>;
+  const j = await readJson(req, { maxBytes: ROOM_MAX_BYTES }); if (!j.ok) return bad(j.status === 413 ? 'payload_too_large' : 'invalid_json', j.status === 413 ? 413 : 400); const body = j.body as Record<string, unknown>;
   const action = String(body.action || '');
   if (action === 'probe_band') {
     /* م2-ب: مؤشر أولي بعد الحلقات (بلا جلسة ولا اسم) — التصحيح على الخادم، والنتيجة فرقة تقديرية فقط */
@@ -137,5 +139,13 @@ export async function POST(req: Request) {
     /* الكعكة تبقى حتى انتهاء مدّتها: إعادة تحميل الصفحة تعيد البطاقة نفسها (finish idempotent) */
     return NextResponse.json({ ok: true, report: r.value.report, access_code: r.value.access_code, result_url: r.value.access_code ? `/miaar/result/${r.value.access_code}` : null }, { headers: NO });
   }
+  /* م4-ب «غرفة الأداء»: بعد اكتمال الاستقبالي — مهمّتان بمستوى المتقدّم؛ النص في الجدول والصوت في الدلو الخاص؛ لا درجة قبل اعتماد إنسان */
+  if (action === 'room_enter') { const r = await enterRoom(db, session); return r.ok ? NextResponse.json({ ok: true, room: r.value }, { headers: NO }) : bad(r.code, r.status); }
+  if (action === 'room_draft') { const r = await saveDraft(db, session, body.skill, body.text); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: NO }) : bad(r.code, r.status); }
+  if (action === 'room_submit') {
+    const rl = await rateLimit(db, `miaar_room:${ipOf(req)}`, 3600, 12); if (!rl.allowed) return tooMany(rl, 'محاولات تسليم كثيرة');
+    const r = await submitPerformance(db, session, body as any); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: NO }) : bad(r.code, r.status);
+  }
+  if (action === 'room_skip') { const r = await skipPerformance(db, session, body.skill); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: NO }) : bad(r.code, r.status); }
   return bad('unknown_action', 400);
 }

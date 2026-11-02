@@ -14,6 +14,7 @@ import Athir from './Athir';
 import { GuideButton } from './Guide';
 import { AccessProvider, AccessButton, AccessPanel, ReadPage, SkipLink, ACCESS_CSS, useAccess } from './Inclusion';
 import { OnAirButton, OnAirPanel, ONAIR_CSS } from './OnAir';
+import WayBar from './WayBar';  /* «الطريق»: رجوع · الرئيسية · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسية */
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
 export const useLang = () => useContext(LangCtx);
@@ -68,6 +69,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             <button type="button" className="pt-burger" aria-label="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
           </div>
         </header>
+        <WayBar lang={lang} />
 
         {children}
         <Athir />

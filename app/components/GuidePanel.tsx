@@ -25,9 +25,9 @@ const T = {
   staffOnly: { ar: 'نتائج الإدارة تظهر للطاقم بعد الدخول', en: 'Admin results appear for staff after sign-in' },
 };
 
-export default function GuidePanel({ onClose }: { onClose: () => void }) {
+export default function GuidePanel({ onClose, initialQuery = '' }: { onClose: () => void; initialQuery?: string }) {
   const pathname = usePathname() || '/'; const router = useRouter();
-  const [q, setQ] = useState(''); const [lang, setLang] = useState<Lang>('ar');
+  const [q, setQ] = useState(initialQuery); const [lang, setLang] = useState<Lang>('ar');
   const [user, setUser] = useState(false); const [staff, setStaff] = useState(false);
   const [remote, setRemote] = useState<Entry[]>([]); const [busy, setBusy] = useState(false); const [answer, setAnswer] = useState<{ text: string; src: Entry[] } | null>(null); const [asking, setAsking] = useState(false);
   const [active, setActive] = useState(0); const [toast, setToast] = useState(''); const [recent, setRecent] = useState<string[]>([]);

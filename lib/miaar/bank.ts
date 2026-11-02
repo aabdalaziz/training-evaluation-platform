@@ -3,6 +3,8 @@
  * بنك مِعيار (خادم فقط): البنود المعتمدة بمفاتيحها · المقاطع من الجدول · روابط الوسائط الموقَّعة (دلو miaar-media)
  *  · بناء النموذج العام للمتقدّم (بلا مفاتيح) · تغطية البنك (مستوى×مهارة×نوع) للوحة.
  */
+import { taskItemFrom } from './performance';
+import type { TaskItem } from './performance';
 import { LEVELS, SKILLS, PRODUCTIVE_SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, isBankLevel, isSkill, isOptionId, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
 import type { PoolItem, PublicForm, PublicQuestion, PublicPassage, SecureItem, Option, ItemType, BankLevel, Skill } from './registry';
 
@@ -30,7 +32,17 @@ export type PassageRow = { id: string; level: string; skill: 'reading' | 'listen
 const POOL_TTL_MS = 90_000;
 let PASSAGES_CACHE: { at: number; value: Map<string, PassageRow> } | null = null;
 let POOL_CACHE: { at: number; value: PoolItem[] } | null = null;
-export function invalidatePoolCache(): void { PASSAGES_CACHE = null; POOL_CACHE = null; }
+let TASKS_CACHE: { at: number; value: TaskItem[] } | null = null;
+export function invalidatePoolCache(): void { PASSAGES_CACHE = null; POOL_CACHE = null; TASKS_CACHE = null; }
+/** م4-ب: مهام الكتابة/التحدّث المعتمدة (لا مهمة تُعرض قبل اعتماد إنسان) — ذاكرة 90 ثانية كالبنك */
+export async function loadApprovedTasks(db: any): Promise<TaskItem[]> {
+  if (TASKS_CACHE && fresh(TASKS_CACHE.at)) return TASKS_CACHE.value;
+  const { data, error } = await db.from('question_bank_items').select('id, item_code, level, skill, question_text, item_type, task, media_path, media_alt, descriptor_code').eq('status', 'approved').in('item_type', ['writing_task', 'speaking_task']).limit(1000);
+  if (error) throw new Error('tasks_unavailable');
+  const seen = new Set<string>(); const value: TaskItem[] = [];
+  for (const row of (data || []) as Record<string, unknown>[]) { const t = taskItemFrom(row); if (!t || seen.has(t.code)) continue; seen.add(t.code); value.push(t); }
+  TASKS_CACHE = { at: Date.now(), value }; return value;
+}
 const fresh = (at: number) => Date.now() - at < POOL_TTL_MS;
 export async function loadPassages(db: any): Promise<Map<string, PassageRow>> {
   if (PASSAGES_CACHE && fresh(PASSAGES_CACHE.at)) return PASSAGES_CACHE.value;
