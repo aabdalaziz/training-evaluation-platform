@@ -26,7 +26,7 @@ export function buildEmail(f: BehaviorFollowup, programName: string, r: Recipien
   const html = `
   <div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f3f6fa;padding:24px">
     <div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-top:4px solid #c9a24b;border-radius:14px;padding:24px">
-      <div style="color:#0b8a83;font-weight:bold;font-size:12px">منصة التقويم والجودة — متابعة أثر التدريب في بيئة العمل</div>
+      <div style="color:#0b8a83;font-weight:bold;font-size:12px">أَثَر — متابعة أثر التدريب في بيئة العمل</div>
       <h2 style="color:#0f2a4e;margin:8px 0 4px">${esc(f.title_ar)}</h2>
       <div style="color:#475569;font-size:13px;margin-bottom:14px">البرنامج: <b>${esc(programName)}</b></div>
       <p style="color:#0f172a;font-size:14px;line-height:1.9">مرحبًا ${esc(r.name)}،<br>${who}، نرجو تخصيص <b>3 دقائق</b> لتقييم ما تم تطبيقه فعليًا في العمل من محتوى البرنامج. إجاباتك تساعدنا على قياس الأثر الحقيقي وتحسين البرامج القادمة.</p>

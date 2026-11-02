@@ -27,6 +27,10 @@ export const BRAND = {
   acronym: 'TRACE',
   acronymLine: { ar: 'أَثَر = TRACE: حروفه أوائل خدماتنا', en: 'Athar means “trace” — and TRACE spells our services' } as T,
   evaluationUrl: '/login',
+  /** P43-أ «أَثَر الواحد»: الاسم المهني الرسمي للواجهة الإدارية (كانت «منصة التقويم · مركز القيادة التنفيذي») — باب واحد /login وغُرَف بالصلاحيات */
+  command: { ar: 'مركز قيادة أَثَر', en: 'Athar Command Center' } as T,
+  /** المؤسسة المستضيفة الظاهرة في ترويسة مركز القيادة — قيمة إعداد واحدة هنا إلى أن تُنقل إلى شاشة الإعدادات */
+  institution: { ar: 'جامعة الأمير مقرن بن عبدالعزيز', en: 'Prince Mugrin University' } as T,
   placementUrl: '/miaar', // مِعيار — من أَثَر: يعيش داخل البوابة منذ م1 (العنوان القديم يُحوَّل في م3)
 };
 
@@ -45,7 +49,7 @@ export const CONTACT = {
 export const ABOUT = {
   /** بيان الملكية — يُعرض في «من نحن» */
   ownership: { ar: 'أَثَر مشروع فكري ومهني للدكتور أحمد محمد عبدالعزيز بدوي: فكرته ومنهجيته (TRACE) وتصميمه ومحتواه ملك حصري له. الجهات الأكاديمية والمؤسسات المذكورة في البوابة هي جهات عمل وتعاون، ويُدار النشاط التجاري حاليًا عبر شركة بوابة التميز للاستشارات والتدريب.', en: 'Athar is the intellectual and professional project of Dr. Ahmed Mohamed Abdelaziz Badawi; its concept, TRACE methodology, design and content are his exclusive property. The institutions named on this portal are employers and collaborators; commercial operations currently run through CenterGate for Excellence.' } as T,
-  intro: { ar: 'أَثَر بوابة متكاملة تجمع تحت سقف واحد ثلاث رحلات: التعليم، والتدريب، والتطوير المؤسسي — وتربطها بمنظومة قياس تبدأ قبل الرحلة باختبار «مِعيار»، وتستمر أثناءها بمنصة التقويم، وتُثبت نتائجها بعدها بقياس الأثر وفق مستويات كيركباتريك الأربعة.', en: 'Athar is an integrated portal bringing together three journeys — education, training and institutional development — bound by a measurement system that starts before the journey (Miaar placement test), continues during it (the Evaluation Platform) and proves results after it through Kirkpatrick levels 1–4.' } as T,
+  intro: { ar: 'أَثَر بوابة متكاملة تجمع تحت سقف واحد ثلاث رحلات: التعليم، والتدريب، والتطوير المؤسسي — وتربطها بمنظومة قياس تبدأ قبل الرحلة باختبار «مِعيار»، وتستمر أثناءها بتقويم البرامج وقياس الأثر، وتُثبت نتائجها بعدها بقياس الأثر وفق مستويات كيركباتريك الأربعة.', en: 'Athar is an integrated portal bringing together three journeys — education, training and institutional development — bound by a measurement system that starts before the journey (Miaar placement test), continues during it (the Evaluation Platform) and proves results after it through Kirkpatrick levels 1–4.' } as T,
   vision: { ar: 'أن نكون المرجع الأول في المنطقة لحلول التعليم والتدريب التي تُثبت أثرها بالأرقام.', en: 'To be the region’s first reference for education and training solutions that prove their impact with numbers.' } as T,
   mission: { ar: 'تقديم برامج وخدمات تعليمية وتدريبية واستشارية عالية الجودة، تُصمَّم على احتياج حقيقي، وتُنفَّذ بخبرات متخصصة، وتُقاس نتائجها بشفافية.', en: 'To deliver high-quality education, training and consulting services designed on real needs, delivered by specialists, and measured transparently.' } as T,
   values: [
@@ -150,13 +154,13 @@ export const SERVICES: Service[] = [
   },
   {
     slug: 'evaluation', icon: 'scale', tone: 'navy', status: 'live',
-    title: { ar: 'تقويم الخدمات — منصة التقويم', en: 'Service Evaluation — The Evaluation Platform' },
+    title: { ar: 'تقويم البرامج وقياس الأثر', en: 'Program Evaluation & Impact Measurement' },
     short: { ar: 'منصة متكاملة لإدارة البرامج وتقييمها وقياس أثرها وفق كيركباتريك 1→4.', en: 'An integrated platform to manage, evaluate and measure programs across Kirkpatrick 1→4.' },
     long: [
       { ar: 'المحرّك الذي يشغّل كل خدمات أَثَر: تقييمات ثنائية اللغة، حضور رقمي، قياس قبلي/بعدي، متابعة نقل الأثر، مؤشرات مؤسسية، شهادات موثّقة، وتقارير تنفيذية — بجاهزية وصحة وتدقيق ونسخ احتياطي.', en: 'The engine behind every Athar service: bilingual evaluations, digital attendance, pre/post measurement, transfer follow-up, institutional KPIs, verified certificates and executive reports — with readiness, health, audit and backup built in.' },
     ],
     features: [{ ar: 'كيركباتريك 1→4', en: 'Kirkpatrick 1→4' }, { ar: 'تقارير تنفيذية', en: 'Executive reports' }, { ar: 'شهادات برمز تحقق', en: 'Verifiable certificates' }, { ar: 'حوكمة وتدقيق', en: 'Governance & audit' }],
-    cta: { label: { ar: 'دخول المنصة', en: 'Open the platform' }, href: BRAND.evaluationUrl },
+    cta: { label: { ar: 'ادخل إلى مركز القيادة', en: 'Open the command center' }, href: BRAND.evaluationUrl },
   },
   {
     slug: 'placement', icon: 'target', tone: 'teal', status: 'live',
@@ -191,12 +195,12 @@ export const NAV: { href: string; label: T }[] = [
 
 export const UI = {
   student: { ar: 'بوابة المتدرب', en: 'Student portal' } as T,
-  admin: { ar: 'دخول الإدارة', en: 'Staff login' } as T,
+  admin: { ar: 'دخول', en: 'Sign in' } as T,   /* P43-أ: باب واحد للجميع — لا «دخول الإدارة» */
   verify: { ar: 'التحقق من الشهادات', en: 'Verify certificate' } as T,
   services: { ar: 'خدماتنا', en: 'Our services' } as T,
   servicesSub: { ar: 'ثماني خدمات متكاملة، تجمعها منهجية قياس واحدة', en: 'Eight integrated services under one measurement method' } as T,
   programs: { ar: 'البرامج الجارية والقادمة', en: 'Current & upcoming programs' } as T,
-  programsSub: { ar: 'من منصة التقويم مباشرة — ما يُعلن هنا يُقاس هناك', en: 'Straight from the Evaluation Platform — what is announced here is measured there' } as T,
+  programsSub: { ar: 'من مركز قيادة أَثَر مباشرة — ما يُعلن هنا يُقاس هناك', en: 'Straight from the Athar command center — what is announced here is measured there' } as T,
   noPrograms: { ar: 'لا توجد برامج معلنة حاليًا — تواصل معنا لمعرفة المواعيد القادمة.', en: 'No programs announced at the moment — contact us for upcoming dates.' } as T,
   method: { ar: 'منهجية أَثَر', en: 'The Athar method' } as T,
   methodSub: { ar: 'قبل · أثناء · بعد', en: 'Before · During · After' } as T,
@@ -265,7 +269,7 @@ export const CONTACT_SUBJECTS: { value: string; label: T }[] = [
   { value: 'consulting', label: { ar: 'استشارة', en: 'Consulting' } },
   { value: 'resources', label: { ar: 'الحقائب التدريبية', en: 'Training resources' } },
   { value: 'live', label: { ar: 'البث المتزامن', en: 'Live channels' } },
-  { value: 'evaluation', label: { ar: 'منصة التقويم', en: 'Evaluation platform' } },
+  { value: 'evaluation', label: { ar: 'تقويم البرامج وقياس الأثر', en: 'Program evaluation & impact' } },
   { value: 'advisor', label: { ar: 'سؤال عبر «مستشارك»', en: 'Question via Your Advisor' } },
   { value: 'other', label: { ar: 'أخرى', en: 'Other' } },
 ];

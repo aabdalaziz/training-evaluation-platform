@@ -118,7 +118,7 @@ function Inner() {
           <UpcomingSessions programId={p.id} lang={lang} />
           <ProgramResources programId={p.id} lang={lang} />
           <ProgramAfter programId={p.id} lang={lang} />
-          <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر منصة التقويم، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>
+          <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر أَثَر، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>
         </div>
 
         <aside id="register" className="pt-box pt-sticky">

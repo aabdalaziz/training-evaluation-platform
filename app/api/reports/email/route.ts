@@ -9,7 +9,7 @@
  *   'list'        → {}
  *
  * الحماية: Bearer <access_token> لمستخدم مسجّل دوره إداري (PLATFORM_ADMIN / PROGRAM_MANAGER / QUALITY_ANALYST).
- * المتغيرات: RESEND_API_KEY (مطلوب للإرسال)، REPORTS_FROM_EMAIL (اختياري، مثل "منصة التقويم <reports@domain.edu.sa>").
+ * المتغيرات: RESEND_API_KEY (مطلوب للإرسال)، REPORTS_FROM_EMAIL (اختياري، مثل "أَثَر <reports@domain.edu.sa>").
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';

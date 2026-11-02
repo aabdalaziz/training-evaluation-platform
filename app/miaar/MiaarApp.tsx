@@ -260,7 +260,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       </div>
       <div className="mi-left">
         <GuideButton lang={lang === 'ar' ? 'ar' : 'en'} compact />
-        {admin && <a className="mi-admin" href="/admin/miaar">دخول الإدارة</a>}
+        {admin && <a className="mi-admin" href="/admin/miaar">إدارة مِعيار</a>}
         <LangPicker copy={copy} lang={lang} onPick={setLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} />
       </div>
     </header></div>

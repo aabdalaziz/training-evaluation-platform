@@ -12,6 +12,9 @@ import { supabase } from '../../lib/supabase/client';
 import { REPORTS, REPORT_GROUPS } from '../../lib/reports/catalog';
 import { Icon, type IconName } from '../../lib/ui/icons';
 import NotificationBell from '../components/NotificationBell';
+import { AtharMark } from '../components/Brand';
+import { BRAND } from '../../lib/portal/content';
+/* P43-أ «أَثَر الواحد»: هذه اللوحة هي «مركز قيادة أَثَر» — غرفة داخل البيت الواحد؛ الهوية والاسم من lib/portal/content، والردهة على بعد نقرة */
 import {
   TARGET, THRESHOLDS, PERF_LABEL, RISK_LABEL, addDays, applyFilters, buildEvaluations, buildFacts, groupBy, kpis as computeKpis,
   labelFor, periodComparison, riskRegister, riyadhDate, timeSeries,
@@ -292,12 +295,13 @@ export default function Dashboard() {
 
       {/* ===== sidebar ===== */}
       <aside className={`db-side ${menuOpen ? 'open' : ''}`}>
-        <div className="db-brand">
+        <div className="db-brand" data-testid="command-side-brand">
           <div className="db-logos">
-            <img src="/logos/upm.png" alt="جامعة الأمير مقرن" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            <img src="/logos/gate.png" alt="بوابة التميز" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <AtharMark size={44} />
+            <img src="/logos/upm.png" alt={BRAND.institution.ar} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           </div>
-          <div className="db-brand-text"><b>منصة التقويم</b><small>مركز القيادة التنفيذي · جامعة الأمير مقرن</small></div>
+          <div className="db-brand-text"><b>{BRAND.name.ar} · مركز القيادة</b><small>{BRAND.institution.ar}</small></div>
+          <Link href="/hub?stay=1" className="db-hall" data-testid="command-side-hall"><Icon name="compass" size={16} /> الردهة — كل أبوابك</Link>
         </div>
         <div className="db-user">
           <div className="db-avatar">{(profile.full_name || 'م').trim().charAt(0)}</div>
@@ -330,11 +334,12 @@ export default function Dashboard() {
           <Link href="/admin/templates" className="db-navlink"><Icon name="doc" size={20} /><span><b>قوالب التقييم</b><small>الأسئلة · الربط بالبرامج · معاينة</small></span></Link>
           <Link href="/admin/readiness" className="db-navlink"><Icon name="compass" size={20} /><span><b>جاهزية البرنامج</b><small>قائمة تحقق من الإعداد حتى الإغلاق</small></span></Link>
           <Link href="/help" className="db-navlink"><Icon name="question" size={20} /><span><b>دليل الاستخدام</b><small>رحلة البرنامج · أسئلة شائعة</small></span></Link>
-          <Link href="/admin/enrollments" className="db-navlink"><Icon name="globe" size={20} /><span><b>بوابة أَثَر</b><small>طلبات التسجيل · المدفوعات · نشر البرامج · رسائل التواصل</small></span></Link>
+          <Link href="/admin/enrollments" className="db-navlink"><Icon name="globe" size={20} /><span><b>طلبات التسجيل والمدفوعات</b><small>طلبات التسجيل · المدفوعات · نشر البرامج · رسائل التواصل</small></span></Link>
           <Link href="/admin/backup" className="db-navlink"><Icon name="save" size={20} /><span><b>النسخ الاحتياطي والأرشفة</b><small>تصدير شامل Excel/JSON وأرشفة البرامج</small></span></Link>
           <Link href="/admin/data-lifecycle" className="db-navlink"><Icon name="trash" size={20} /><span><b>دورة حياة البيانات</b><small>معاينة وتفريغ منضبط</small></span></Link>
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
+        <small className="db-owner">{BRAND.operatedBy.ar} {BRAND.legal.ar} · © {BRAND.copyrightYear}</small>
       </aside>
 
       {/* ===== main ===== */}
@@ -349,6 +354,7 @@ export default function Dashboard() {
             {view === 'overview' && (
               <div className="db-seg">{(['7d', '14d', '30d', 'all'] as Range[]).map(r => <button key={r} className={range === r ? 'on' : ''} onClick={() => setRange(r)}>{{ '7d': '7 أيام', '14d': '14 يومًا', '30d': '30 يومًا', all: 'الكل' }[r]}</button>)}</div>
             )}
+            <Link href="/hub?stay=1" className="db-btn" data-testid="command-top-hall" title="الردهة — كل أبوابك في أَثَر"><Icon name="compass" size={16} /> الردهة</Link>
             <NotificationBell />
             <button className="db-btn" onClick={load}><Icon name="refresh" size={16} /> تحديث</button>
           </div>
@@ -702,6 +708,7 @@ const CSS = `
 /* ---------- sidebar ---------- */
 .db-side{background:linear-gradient(180deg,var(--navy) 0%,#0b2240 100%);color:#fff;padding:16px 14px;display:flex;flex-direction:column;gap:14px;position:sticky;top:0;height:100vh;overflow:auto;align-self:start;border-inline-start:1px solid rgba(255,255,255,.06)}
 .db-brand{display:flex;flex-direction:column;gap:10px}.db-brand-text{text-align:center}
+.db-logos svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}.db-hall{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(201,162,75,.6);background:rgba(201,162,75,.12);color:#fde68a;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:800;text-decoration:none}.db-hall:hover{background:rgba(201,162,75,.22)}.db-owner{display:block;text-align:center;color:#8fb0c9;font-size:10.5px;font-weight:700;line-height:1.6;padding:0 6px}
 .db-logos{background:#fff;border-radius:var(--r);padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 0 2px var(--gold-soft)}
 .db-logos img{height:46px;width:auto;max-width:128px;object-fit:contain;display:block}
 .db-brand b{display:block;font-size:16px;letter-spacing:.2px}.db-brand small,.db-user small{display:block;color:#a9c4d8;font-size:11px;font-weight:700}

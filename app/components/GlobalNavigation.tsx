@@ -10,6 +10,11 @@ import dynamic from 'next/dynamic';
 const NotificationBell = dynamic(() => import('./NotificationBell'), { ssr: false });
 import { SkipLink } from './Inclusion';
 import { GuideButton } from './Guide';
+import { AtharMark, DoorBadge } from './Brand';
+import { BRAND } from '../../lib/portal/content';
+/* P43-أ «أَثَر الواحد»: هذا الشريط هو «مركز قيادة أَثَر» — غرفة إدارية داخل البيت الواحد، لا منتجًا منفصلًا اسمه «منصة التقويم».
+   الردهة (/hub?stay=1) ⇄ مركز القيادة بزرّ واحد، وشارة «بابي» نفسها التي في غلاف البوابة. */
+const HALL = '/hub?stay=1';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 // صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
@@ -53,8 +58,8 @@ export default function GlobalNavigation() {
   /* ===== شريط إداري موحّد ===== */
   if (adminArea) {
     return (
-      <nav className="global-nav admin" aria-label="التنقل الإداري"><SkipLink lang="ar" />
-        <Link href="/dashboard" className="global-brand"><Icon name="shield" size={18} /> <span>منصة التقويم</span></Link>
+      <nav className="global-nav admin" aria-label="التنقل الإداري" data-testid="command-bar"><SkipLink lang="ar" />
+        <Link href="/dashboard" className="global-brand athar" data-testid="command-brand"><AtharMark size={26} /> <span>{BRAND.command.ar}</span></Link>
         <button type="button" className="global-burger" aria-label="القائمة" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
         <div className={`global-links ${open ? 'open' : ''}`}>
           {ADMIN_NAV.map(n => (
@@ -62,6 +67,8 @@ export default function GlobalNavigation() {
               <Icon name={n.icon} size={16} /> {n.label}
             </Link>
           ))}
+          <Link href={HALL} className="global-btn hall" data-testid="command-hall" title="الردهة — كل أبوابك في أَثَر"><Icon name="compass" size={16} /> الردهة</Link>
+          <DoorBadge lang="ar" />
           <GuideButton compact />
           <NotificationBell />
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
@@ -73,14 +80,14 @@ export default function GlobalNavigation() {
   /* ===== شريط عام (الصفحات العامة) ===== */
   return (
     <nav className="global-nav" aria-label="التنقل العام"><SkipLink lang="ar" />
-      <Link href="/" className="global-brand"><Icon name="shield" size={18} /> <span>منصة التقويم</span></Link>
+      <Link href="/" className="global-brand athar" data-testid="public-brand"><AtharMark size={26} /> <span>{BRAND.name.ar}</span></Link>
       <div className="global-actions">
         <GuideButton />
         {pathname !== '/' && <Link href="/" className="global-btn"><Icon name="home" size={16} /> الرئيسية</Link>}
         {loggedIn ? <>
-          <Link href="/dashboard" className="global-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
+          <Link href={HALL} className="global-btn"><Icon name="compass" size={16} /> أبوابي</Link>
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
-        </> : pathname !== '/login' ? <Link href="/login" className="global-btn"><Icon name="login" size={16} /> دخول الإدارة</Link> : null}
+        </> : pathname !== '/login' ? <Link href="/login" className="global-btn" data-testid="public-login"><Icon name="login" size={16} /> دخول</Link> : null}
       </div>
     </nav>
   );

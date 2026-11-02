@@ -185,7 +185,7 @@ function Inner() {
               <div className="tr-comments">{s.comments.slice(0, 30).map((c, i) => <blockquote key={i}><span className={`tr-role ${c.role}`}>{c.role === 'supervisor' ? 'مشرف' : c.role === 'trainee' ? 'متدرب' : 'زميل'}</span>{c.text}{c.who ? <small> — {c.who}</small> : null}</blockquote>)}</div>
             </section>
           )}
-          <p className="tr-foot">أُعدّ هذا التقرير آليًا من منصة التقويم والجودة · {new Date().toLocaleDateString('ar-SA')} · تُقرأ النتائج مع تقرير القياس القبلي/البعدي (المستوى 2) وتقييم رد الفعل (المستوى 1) لتكوين صورة الأثر الكاملة.</p>
+          <p className="tr-foot">أُعدّ هذا التقرير آليًا من أَثَر — مركز القيادة · {new Date().toLocaleDateString('ar-SA')} · تُقرأ النتائج مع تقرير القياس القبلي/البعدي (المستوى 2) وتقييم رد الفعل (المستوى 1) لتكوين صورة الأثر الكاملة.</p>
         </>
       )}
     </div>
