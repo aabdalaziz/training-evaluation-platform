@@ -11,6 +11,7 @@ const NAMES: Record<string, L> = {
   about: { ar: 'عن أَثَر', en: 'About' }, contact: { ar: 'تواصل', en: 'Contact' }, ai: { ar: 'الذكاء الاصطناعي المسؤول', en: 'Responsible AI' },
   needs: { ar: 'ما يحتاجه الممارسون', en: 'What practitioners need' }, 'admin/needs': { ar: 'الاحتياج المعلَن', en: 'Declared needs' },
   rehearsal: { ar: 'بروفاتي', en: 'My rehearsals' }, 'me/rehearsal': { ar: 'بروفاتي', en: 'My rehearsals' }, 'admin/rehearsals': { ar: 'البروفات', en: 'Rehearsals' },
+  'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' },
   me: { ar: 'مساحتي', en: 'My space' }, org: { ar: 'بوابة الجهات', en: 'Organizations' }, hub: { ar: 'الردهة', en: 'Hall' }, login: { ar: 'الدخول', en: 'Sign in' }, join: { ar: 'الانضمام', en: 'Join' },
   help: { ar: 'المساعدة', en: 'Help' }, verify: { ar: 'التحقق من شهادة', en: 'Verify' }, credential: { ar: 'الشهادة', en: 'Credential' }, pay: { ar: 'الدفع', en: 'Payment' }, p: { ar: 'صفحة عامة', en: 'Public page' },
   accessibility: { ar: 'الوصولية', en: 'Accessibility' }, miaar: { ar: 'مِعيار', en: 'Mi‘yar' }, 'miaar/result': { ar: 'النتيجة', en: 'Result' }, 'miaar/trust': { ar: 'سجلّ الصدق', en: 'Trust record' }, 'miaar/d': { ar: 'دعوة', en: 'Invitation' },

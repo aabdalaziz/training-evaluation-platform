@@ -12,6 +12,7 @@ import UpcomingSessions from '../components/UpcomingSessions';
 import PlacementCard from '../components/PlacementCard';
 import ContactPrefs from '../components/ContactPrefs';
 import OrgPledgeBanner from '../components/OrgPledgeBanner';
+import ReportLinesCard from '../components/ReportLinesCard';
 import { AtharMark } from '../components/PortalShell';
 import type { IconName } from '../../lib/ui/icons';
 import { CERT_KIND_AR, STATUS_AR, attendancePct, attendanceTone, buildTasks, isRunning, type MePortal, type Task } from '../../lib/me/model';
@@ -99,6 +100,7 @@ export default function MePage() {
     {me && <PlacementCard />}
     {me && <ContactPrefs />}
     {me && <OrgPledgeBanner />}
+    {me && <ReportLinesCard />}
     {me && <>
       <nav className="me-tabs">
         <button className={tab === 'tasks' ? 'on' : ''} onClick={() => setTab('tasks')}><Icon name="evaluations" size={16} /> المطلوب مني {tasks.length ? <i>{tasks.length}</i> : null}</button>
@@ -112,6 +114,7 @@ export default function MePage() {
         <a className="me-tablink" href="/me/after"><Icon name="certificate" size={16} /> محطاتي</a>
         <a className="me-tablink" href="/needs"><Icon name="spark" size={16} /> حاجاتي</a>
         <a className="me-tablink" href="/me/rehearsal"><Icon name="users" size={16} /> بروفاتي</a>
+        <a className="me-tablink" href="/me/reports"><Icon name="doc" size={16} /> تقاريري</a>
         <a className="me-tablink" href="/me/council"><Icon name="users" size={16} /> مجلسي</a>
         <a className="me-tablink" href="/me/journey"><Icon name="compass" size={16} /> رحلتي</a>
         <a className="me-tablink" href="/me/horizon"><Icon name="flag" size={16} /> أفقي</a>

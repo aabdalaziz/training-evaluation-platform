@@ -100,6 +100,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
                 <li><Link href="/me/missions">{lang === 'ar' ? 'مهماتي من قلب العمل' : 'My workflow missions'}</Link></li>
                 <li><Link href="/needs">{lang === 'ar' ? 'ما يحتاجه الممارسون · البرنامج الذي لم يُكتب بعد' : 'What practitioners need'}</Link></li>
                 <li><Link href="/me/rehearsal">{lang === 'ar' ? 'بروفة · جرّب الموقف قبل أن يقع' : 'Rehearsal · practise before it happens'}</Link></li>
+                <li><Link href="/me/reports">{lang === 'ar' ? 'محور التقارير · تقرير يُعبَّأ من أَثَر ويُحكم بالمعلّم' : 'Reports · filled by Athar, judged by the teacher'}</Link></li>
                 <li><Link href="/verify">{t(UI.verify, lang)}</Link></li>
                 <li><Link href="/ai">{lang === 'ar' ? 'الذكاء الاصطناعي المسؤول' : 'Responsible AI'}</Link></li>
                 <li><Link href="/agents">{lang === 'ar' ? 'أَثَر للوكلاء · المكتب الزجاجي' : 'Athar for agents · the glass office'}</Link></li>
