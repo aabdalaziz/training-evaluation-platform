@@ -17,6 +17,7 @@ import { P38_NAMES_AR, STATES, STATE_AR, STATE_EN, TEXT_MIN, TEXT_MAX, QUESTION_
 import type { AfterState } from '../../../lib/after/registry';
 import { LetterBox, OfferBox, MeasureBox } from './Voices';
 import { NeedFromStation } from '../../components/Needs';   // P44: من محطة «لم تسنح الفرصة/لم ينفعني» إلى حاجة معلَنة
+import { RehearsalBeforeStation } from '../../components/Rehearsal';   // P45: «موقفك قادم — بروفة قبله؟» تحت محطة مفتوحة لم تُكتب
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium' }) : '—');
 
@@ -69,6 +70,7 @@ function Inner() {
               </div>
             </div>}
             {s.phase === 'open' && !isOpen && <button type="button" className="pt-btn" onClick={() => { setOpen(key); setF({ state: '', text: '', may_publish: false }); }} data-testid="oaf-write">{ar ? 'اكتب هذه المحطة' : 'Write this station'}</button>}
+            {s.phase === 'open' && !isOpen && s.station !== 365 && <RehearsalBeforeStation programId={String(it.program_id || '')} programAr={String(it.program_ar || '')} lang={lang} />}
             {s.phase === 'open' && isOpen && <form className="oaf-form" onSubmit={e => { e.preventDefault(); post({ action: 'write', enrollment_id: it.id, station: s.station, state: f.state, text_ar: f.text, may_publish: f.may_publish }).then(j => { if (j) setOpen(''); }); }} data-testid="oaf-form">
               <fieldset><legend>{ar ? 'بعد هذه المدة، أين صار ما تعلّمته؟' : 'Where is what you learned now?'}</legend>
                 <div className="oaf-states" role="radiogroup">{STATES.map(st => <label key={st} className={f.state === st ? 'on' : ''}><input type="radio" name={`st-${key}`} value={st} checked={f.state === st} onChange={() => setF(x => ({ ...x, state: st }))} data-testid={`oaf-state-${st}`} /> {ar ? STATE_AR[st] : STATE_EN[st]}</label>)}</div>

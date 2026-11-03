@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../lib/ui/icons';
 import { P44_NAMES_AR, NEED_MIN, NEED_MAX, PITCH_MAX, NEED_K, needFromStationText } from '../../lib/needs/registry';
+import { RehearsalFromNeed } from './Rehearsal';   // P45: «أطلب بروفة لهذا الموقف» على الحاجة المعلَنة
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium' }) : '');
 const fmtT = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '');
@@ -84,6 +85,7 @@ function NeedCard({ n, mine, busy, post, share, shareOk, canAdopt, pitch, setPit
       {n.can_withdraw && <button type="button" className="pt-btn ghost" onClick={() => { if (window.confirm('تسحب حاجتك؟')) post({ action: 'withdraw', id: n.id }); }} data-testid="need-withdraw">اسحب</button>}
       {n.can_revive && <button type="button" className="pt-btn ghost" onClick={() => post({ action: 'revive', id: n.id })} data-testid="need-revive">أحيِها</button>}
       {canAdopt && n.can_adopt && !isAdopting && <button type="button" className="pt-btn gold" onClick={() => setAdopting(n.id)} data-testid="need-adopt">{P44_NAMES_AR.adopt}</button>}
+      {['open', 'adopted', 'born'].includes(n.status) && <RehearsalFromNeed needId={n.id} />}
     </div>
     {isAdopting && <form className="nd-pitch" data-testid="need-pitch-form" onSubmit={e => { e.preventDefault(); post({ action: 'adopt', id: n.id, pitch_ar: pitch[n.id] || '' }, () => setAdopting('')); }}>
       <label>كيف ستلبّيها؟ (≤ {PITCH_MAX} حرفًا — يُعرض للمؤيّدين)<textarea rows={3} maxLength={PITCH_MAX} value={pitch[n.id] || ''} onChange={e => setPitch((x: any) => ({ ...x, [n.id]: e.target.value }))} data-testid="need-pitch" /></label>

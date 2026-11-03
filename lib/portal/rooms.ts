@@ -73,6 +73,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/onair', label: 'أَثَر معك', hint: 'الخبراء على الهواء', icon: 'chat', perms: ['onair.answer', 'programs.write', 'invites.write'] },
   { href: '/admin/after', label: 'أثر بعد البرنامج', hint: 'ما بعد التدريب', icon: 'certificate', perms: ['programs.write', 'impact.read'] },
   { href: '/admin/needs', label: 'الاحتياج المعلَن', hint: 'البرنامج الذي لم يُكتب بعد', icon: 'spark', perms: ['programs.write'] },
+  { href: '/admin/rehearsals', label: 'البروفات', hint: 'التمرين التبادلي بين الممارسين', icon: 'users', perms: ['programs.write'] },
   { href: '/admin/program-engineering', label: 'هندسة البرامج التدريبية', hint: 'تصميم البرامج', icon: 'compass', perms: ['programs.write'], match: p => p.startsWith('/admin/program-engineering') || p.startsWith('/admin/factory') },
   { href: '/admin/media', label: 'الأداء المُشاهَد', hint: 'الوسائط والمشاهدات', icon: 'play', perms: ['programs.write', 'sessions.write', 'evidence.write'] },
   { href: '/admin/councils', label: 'مجالس أَثَر', hint: 'المجالس ودوراتها', icon: 'users', perms: ['councils.chair', 'programs.write'] },

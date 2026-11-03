@@ -15,6 +15,7 @@ import type { Room, SignalMsg } from '../../../lib/portal/media';
 import { useAccess, useCaptionSpeaker, useCaptionBoard, CaptionBoard } from '../../components/Inclusion';
 import { orderTiles, INTERPRETER_LABEL_AR } from '../../../lib/inclusion/registry';
 import type { CaptionMsg, RoomRole } from '../../../lib/inclusion/registry';
+import { RehearsalRoomPanel } from '../../components/Rehearsal';   // P45: لوحة البروفة داخل غرفة rehearsal
 
 export default function RoomPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -87,7 +88,7 @@ function Inner() {
     <main className="pt-main rm">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="pt-wrap">
-        <nav className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> › <Link href="/#dialogue">{ar ? 'جلسة حوار' : 'Dialogue'}</Link> › <span>{ar ? 'غرفة أَثَر' : 'Athar room'}</span></nav>
+        <nav className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> › {room?.kind === 'rehearsal' ? <Link href="/me/rehearsal">{ar ? 'بروفاتي' : 'My rehearsals'}</Link> : <Link href="/#dialogue">{ar ? 'جلسة حوار' : 'Dialogue'}</Link>} › <span>{ar ? 'غرفة أَثَر' : 'Athar room'}</span></nav>
         {err === 'login' && <div className="pt-box pt-empty"><h3>{ar ? 'سجّل الدخول للانضمام إلى الغرفة' : 'Sign in to join the room'}</h3><Link href={`/me?next=/room/${code}`} className="pt-btn gold">{ar ? 'دخول' : 'Sign in'}</Link></div>}
         {err && err !== 'login' && err !== 'x' && <div className="pt-alert err">{err}</div>}
         {err === 'x' && !room && <div className="pt-box pt-empty">{ar ? 'الغرفة غير موجودة أو انتهت.' : 'Room not found or expired.'}</div>}
@@ -126,12 +127,13 @@ function Inner() {
               <button type="button" className="rm-ctl leave" onClick={leave}>{ar ? 'غادر' : 'Leave'}</button>
               {me && room.created_by === me.id && room.status === 'open' && <button type="button" className="rm-ctl ghost" onClick={closeRoom}>{ar ? 'أغلق الغرفة للجميع' : 'Close for all'}</button>}
             </div>}
-            <section className="rm-notes">
+            {room.kind === 'rehearsal' && tok && <RehearsalRoomPanel code={code} token={async () => tok} lang={lang} onClosed={() => { leave(); load(tok); }} />}
+            {room.kind !== 'rehearsal' && <section className="rm-notes">
               <b><Icon name="flag" size={15} /> {ar ? 'السطر الذي نعود به' : 'The line we bring back'}</b>
               <p className="rm-noteshint">{ar ? 'بعد الحوار: جملة واحدة تلخّص ما اتفقتم عليه. تظهر للمدرب في الميسِّر وتدخل محضر الأثر.' : 'After the talk: one line summarising what you agreed. It reaches the trainer’s facilitator and the impact memo.'}</p>
               <div className="rm-noterow"><input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder={ar ? 'اتفقنا على…' : 'We agreed that…'} /><VoiceButton lang={lang} onText={t => setNote(x => (x ? x + ' ' : '') + t)} /><button type="button" className="pt-btn gold small" onClick={saveNote} disabled={noteBusy || note.trim().length < 3}>{ar ? 'أرسل' : 'Send'}</button></div>
               {!!notes.length && <ul className="rm-notelist">{notes.slice().reverse().map((n, k) => <li key={k}><b>{n.name || ''}</b> {n.text}</li>)}</ul>}
-            </section>
+            </section>}
             <p className="rm-foot">{ar ? 'الاتصال مباشر بين المتصفحات (WebRTC) ولا يمر عبر خوادم أَثَر؛ في بعض الشبكات المؤسسية الصارمة قد لا يكتمل الاتصال — استخدم شبكة أخرى أو رابط Teams/Zoom للجلسة الكبيرة.' : 'Connection is browser-to-browser (WebRTC) and never passes through Athar servers; strict corporate networks may block it — use another network or the session’s Teams/Zoom link.'}</p>
           </>
         )}

@@ -82,3 +82,4 @@ import './voice.test';
 import './miaar-m4b.test';
 import './miaar-m5a.test';
 import './p44.test';
+import './p45.test';

@@ -111,6 +111,7 @@ export default function MePage() {
         <a className="me-tablink" href="/me/onair"><Icon name="chat" size={16} /> أَثَر معك</a>
         <a className="me-tablink" href="/me/after"><Icon name="certificate" size={16} /> محطاتي</a>
         <a className="me-tablink" href="/needs"><Icon name="spark" size={16} /> حاجاتي</a>
+        <a className="me-tablink" href="/me/rehearsal"><Icon name="users" size={16} /> بروفاتي</a>
         <a className="me-tablink" href="/me/council"><Icon name="users" size={16} /> مجلسي</a>
         <a className="me-tablink" href="/me/journey"><Icon name="compass" size={16} /> رحلتي</a>
         <a className="me-tablink" href="/me/horizon"><Icon name="flag" size={16} /> أفقي</a>
