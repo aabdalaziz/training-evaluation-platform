@@ -36,6 +36,7 @@ export default function ProgramEngineeringPage() {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/program-engineering'); return; }
     const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
     const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || ''; setTok(tk); await load(tk); setReady(true);
+    const want = new URLSearchParams(window.location.search).get('draft'); if (want) setSelId(want);   /* P44: فتح مسودّة وُلدت من حاجة معلَنة */
   })(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const sel = useMemo(() => data?.drafts.find(d => d.id === selId) || null, [data, selId]);
@@ -103,7 +104,7 @@ export default function ProgramEngineeringPage() {
                 <button className="fc-btn ghost small danger" disabled={!!busy} onClick={del}>حذف</button>
               </div></div>
               {busy && <div className="fc-think"><i /><i /><i /> {busy === 'approve' || busy === 'design' ? 'المصمم التعليمي يبني المخطط…' : busy === 'review' ? 'مراجع الجودة يفحص…' : busy === 'foresight' ? 'محلل الاحتياج يستشرف…' : 'جارٍ…'}</div>}
-              <div className="fc-need"><b>الاحتياج:</b> {domainByCode(sel.need.domain_code)?.h} {domainByCode(sel.need.domain_code)?.name.ar} · {familyName(sel.need.family, 'ar')} · {SECTORS_2062.find(x => x.code === sel.need.sector)?.name.ar} · {LIFE_STAGES.find(x => x.code === sel.need.stage)?.label_ar} · {INSTITUTIONS.find(x => x.code === sel.need.institution)?.label_ar} · {HORIZON_LABEL[sel.need.horizon].ar}<br /><b>الفئة:</b> {sel.need.audience_ar}{sel.need.org_name ? ` · ${sel.need.org_name}` : ''}<br /><b>الفجوة:</b> {sel.need.gap_ar}</div>
+              <div className="fc-need"><b>الاحتياج:</b> {domainByCode(sel.need.domain_code)?.h} {domainByCode(sel.need.domain_code)?.name.ar} · {familyName(sel.need.family, 'ar')} · {SECTORS_2062.find(x => x.code === sel.need.sector)?.name.ar} · {LIFE_STAGES.find(x => x.code === sel.need.stage)?.label_ar} · {INSTITUTIONS.find(x => x.code === sel.need.institution)?.label_ar} · {HORIZON_LABEL[sel.need.horizon].ar}<br /><b>الفئة:</b> {sel.need.audience_ar}{sel.need.org_name ? ` · ${sel.need.org_name}` : ''}<br /><b>الفجوة:</b> {sel.need.gap_ar}{(sel.need as any).need_id ? <><br /><b style={{ color: '#9a7524' }}>وُلدت من حاجة معلَنة</b> — <a href={`/needs?n=${(sel.need as any).need_id}`} target="_blank" rel="noreferrer">الحاجة على اللوحة ↗</a> · عند النشر يُكتب على البرنامج «وُلد من حاجة» ويُبلَّغ المؤيّدون.</> : null}</div>
 
               {sel.foresight && <section className="fc-sec"><h4><Icon name="compass" size={14} /> محلل الاحتياج — الاستشراف</h4>
                 <p className="fc-lead">{sel.foresight.headline_ar}</p><p>{sel.foresight.why_now_ar}</p>

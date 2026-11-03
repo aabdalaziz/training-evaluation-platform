@@ -11,6 +11,7 @@ import type { StationRow } from './registry';
 import { letterWindow, canWriteLetter, shouldUnseal, offerTrigger, noChancePeople, canWriteOrgStation, orgStationPhase, measureOf, programMeasureLine, ORG_STATE_AR, OFFER_LINE_AR, P39_NAMES_AR } from './voices';
 import type { LetterRow, LetterPhase, OfferRow, OfferReply, OrgStationRow, OrgState, OrgSaid, Measure } from './voices';
 import { letterPhase } from './voices';
+import { needFromOffer } from '../needs/load';   // P44: خمسة «أرغب» في ورشة تطبيق → حاجة معلَنة
 
 const LCOLS = 'id,enrollment_id,program_id,user_id,email,text_ar,sealed_at,opened_at,in_doc';
 const OCOLS = 'id,program_id,title_ar,text_ar,link,created_by,created_at,closed_at';
@@ -68,6 +69,8 @@ export async function replyOffer(db: any, me: { id: string; email: string }, ens
   const prev = (await repliesOf(db, [o.id])).find(r => String(r.enrollment_id) === e.id);
   if (prev) await db.from('portal_after_offer_replies').update({ reply, at: now.toISOString() }).eq('offer_id', o.id).eq('enrollment_id', e.id);
   else { const { error } = await db.from('portal_after_offer_replies').insert({ offer_id: o.id, enrollment_id: e.id, user_id: e.user_id || me.id, email: e.email, reply, at: now.toISOString() }); if (error) return { ok: false, error: error.message }; }
+  /* P44: حين يرغب خمسة في الورشة تصير «حاجة معلَنة» باسم البرنامج — بلا أسماء، مرة واحدة */
+  if (reply === 'want') { try { const wants = (await repliesOf(db, [o.id])).filter(r => r.reply === 'want').map(r => String((r as any).email || '')).filter(Boolean); const sec = await safe<any>(db.from('programs').select('sector').eq('id', o.program_id).maybeSingle(), null); await needFromOffer(db, { id: o.id, program_id: String(o.program_id), title_ar: o.title_ar, created_by: o.created_by }, e.program_ar, Array.from(new Set(wants.map(x => x.toLowerCase()))), sec?.sector || null); } catch { /* داخلي */ } }
   return { ok: true };
 }
 export async function createOffer(db: any, programId: string, o: { title_ar: string; text_ar: string; link: string | null }, by: string, stations: StationRow[], now = new Date()): Promise<{ ok: true; id: number | string } | { ok: false; error: string }> {

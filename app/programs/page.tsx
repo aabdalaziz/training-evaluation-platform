@@ -60,7 +60,7 @@ function Inner() {
         </div>
 
         <div className="pt-programs">
-          {loaded && list.length === 0 && <div className="pt-empty">{t(UI.noPrograms, lang)}</div>}
+          {loaded && list.length === 0 && <div className="pt-empty">{t(UI.noPrograms, lang)}<br /><Link href="/needs" className="pt-btn" style={{ marginTop: '.6rem', display: 'inline-block' }} data-testid="cat-need-cta">{lang === 'ar' ? 'لم تجد ما تحتاج؟ أعلن حاجتك — البرنامج الذي لم يُكتب بعد' : 'Didn’t find it? Declare your need'}</Link></div>}
           {list.map(p => {
             const c = counts.find(x => x.program_id === p.id); const s = regState(p, today, c); const left = seatsLeft(p, c); const intro = pick(p, 'intro', lang) || pick(p, 'audience', lang);
             return (
@@ -79,6 +79,7 @@ function Inner() {
             );
           })}
         </div>
+        {loaded && list.length > 0 && <p className="pt-muted" style={{ textAlign: 'center', margin: '1.2rem 0 0' }}><Link href="/needs" data-testid="cat-need-cta">{lang === 'ar' ? 'لم تجد ما تحتاج؟ أعلن حاجتك — وحين يقول خمسة «وأنا أيضًا» يُكتب البرنامج الذي لم يُكتب بعد ←' : 'Didn’t find what you need? Declare it →'}</Link></p>}
       </div></section>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
     </main>

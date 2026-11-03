@@ -15,6 +15,7 @@ import { createClient } from '@supabase/supabase-js';
 import { runAi, logAi } from '../../../lib/ai/athar';
 import { DRAFT_COLS, validateNeed, needPayload, draftTitle, localForesight, buildForesightPrompt, parseForesight, localDesign, buildDesignPrompt, parseDesign, localReview, buildReviewPrompt, parseReview, programPayload, factoryStats } from '../../../lib/portal/factory';
 import type { Draft, Design, Foresight, Review } from '../../../lib/portal/factory';
+import { bornFromDraft } from '../../../lib/needs/load';   // P44: برنامج وُلد من حاجة معلَنة
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -105,7 +106,8 @@ export async function POST(req: Request) {
       const skillIds: string[] = Array.isArray(body.skill_ids) ? body.skill_ids.map(String).slice(0, 12) : [];
       if (skillIds.length) await db.from('portal_program_skills').upsert(skillIds.map(sid => ({ program_id: pid, skill_id: sid, weight: 1 })), { onConflict: 'program_id,skill_id' });
       const saved = await save(db, id, { stage: 'published', program_id: pid, log: [...(d.log || []), { at: now(), by: user.name || user.email, action: 'publish' }] });
-      return NextResponse.json({ success: true, draft: saved, program_id: pid });
+      let born = false; try { born = await bornFromDraft(db, d.need, pid, String(payload.name_ar || ''), (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, '')); } catch { /* P44: لا يُفشل النشر */ }
+      return NextResponse.json({ success: true, draft: saved, program_id: pid, born_from_need: born });
     }
     if (action === 'update') {
       if (!writer) return bad('غير مصرّح', 403);

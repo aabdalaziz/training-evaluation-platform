@@ -16,6 +16,7 @@ import { supabase } from '../../../lib/supabase/client';
 import { P38_NAMES_AR, STATES, STATE_AR, STATE_EN, TEXT_MIN, TEXT_MAX, QUESTION_AR, HONESTY_AR, TAGLINE_AR, PHASE_AR } from '../../../lib/after/registry';
 import type { AfterState } from '../../../lib/after/registry';
 import { LetterBox, OfferBox, MeasureBox } from './Voices';
+import { NeedFromStation } from '../../components/Needs';   // P44: من محطة «لم تسنح الفرصة/لم ينفعني» إلى حاجة معلَنة
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium' }) : '—');
 
@@ -57,6 +58,7 @@ function Inner() {
             <div className="oaf-shead"><b>{s.label_ar}</b><span className={`oaf-ph ${s.phase}`}>{PHASE_AR[s.phase as keyof typeof PHASE_AR]}</span><small className="pt-muted">{s.phase === 'future' ? `${ar ? 'تُفتح' : 'opens'} ${s.opens}` : s.phase === 'open' ? `${ar ? 'حتى' : 'until'} ${s.closes}` : s.phase === 'missed' ? `${s.opens} → ${s.closes}` : fmt(r?.written_at)}</small></div>
             {s.phase === 'written' && r && <div className="oaf-w">
               <p className="oaf-state" data-testid="oaf-state">{STATE_AR[r.state as AfterState]}</p><blockquote>{r.text_ar}</blockquote>
+              {(r.state === 'no_chance' || r.state === 'not_useful') && <NeedFromStation stationId={r.id} text={r.text_ar} lang={lang} />}
               {r.witness_status === 'signed' && <p className="oaf-wit" data-testid="oaf-witnessed"><Icon name="check" size={13} /> {ar ? 'شهد' : 'Witnessed'}: «{r.witness_text}»</p>}
               {r.witness_status === 'invited' && <p className="pt-muted" data-testid="oaf-wit-invited">{ar ? `دُعي ${r.witness_email} شاهدًا — ينتظر` : `Witness invited: ${r.witness_email}`}</p>}
               {r.witness_status === 'declined' && <p className="pt-muted">{ar ? 'اعتذر الشاهد — يمكنك دعوة غيره' : 'Witness declined — invite someone else'}</p>}

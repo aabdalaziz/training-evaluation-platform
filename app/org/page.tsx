@@ -28,6 +28,7 @@ import { OrgJourney } from '../components/OrgJourney';
 import { OrgHorizon } from '../components/OrgHorizon';
 import { OrgSeason } from '../components/OrgSeason';   // P35 «موسم الهواء» + «أمانة إلى جهة»
 import { OrgAfterLine, OrgStations } from '../components/ProgramAfter';   // P38 «الشهادة التي تكبر» — سطر الجهة · P39 «محطة الجهة»
+import { OrgNeeds } from '../components/Needs';   // P44 «جهة تحتاج»
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
@@ -117,6 +118,7 @@ function Inner() {
             </>}
             <OrgAfterLine orgId={orgId} token={token} lang={lang} />
             <OrgStations orgId={orgId} token={token} lang={lang} />
+            <OrgNeeds orgId={orgId} token={token} lang={lang} />
           </div>}
           {d && k && tab === 'impact' && <div className="og-grid">
             <div className="og-ai"><div><b><Icon name="star" size={16} /> {lang === 'ar' ? 'توصيات ذكية للجهة' : 'Smart recommendations'}</b><small>{lang === 'ar' ? 'يلخّص المساعد فجوات المنسوبين ويقترح برامج — دون تسمية أفراد، والقرار لكم.' : 'Summarises gaps and suggests programs — no individuals named; you decide.'}</small></div><button type="button" className="pt-btn" disabled={busy === 'ai'} onClick={aiBrief}>{busy === 'ai' ? (lang === 'ar' ? 'جارٍ التحليل…' : 'Analysing…') : brief ? (lang === 'ar' ? 'تحديث' : 'Refresh') : (lang === 'ar' ? 'اقترح' : 'Suggest')}</button>

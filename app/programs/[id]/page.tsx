@@ -20,6 +20,7 @@ import { SimplerText } from '../../components/Inclusion';
 import { FEATURE_LABEL, cleanFeatures } from '../../../lib/inclusion/registry';
 import type { Feature } from '../../../lib/inclusion/registry';
 import { ProgramAfter } from '../../components/ProgramAfter';   // P38 «الشهادة التي تكبر»
+import { ProgramBorn } from '../../components/Needs';   // P44 «وُلد من حاجة» + المقاعد الأولى
 
 export default function ProgramPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -32,6 +33,8 @@ function Inner() {
   const [p, setP] = useState<CatalogProgram | null>(null); const [feats, setFeats] = useState<Feature[]>([]); const [counts, setCounts] = useState<Counts | null>(null); const [loaded, setLoaded] = useState(false);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [mine, setMine] = useState<Enrollment | null>(null); const [inv, setInv] = useState<{ id: string; invoice_no: string; status: string; total: number; currency: string } | null>(null);
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false);
+  const [prio, setPrio] = useState<{ active: boolean; am: boolean }>({ active: false, am: false });   // P44: نافذة المقاعد الأولى (72 ساعة) لمن أعلنوا الحاجة
+  const bornToken = useMemo(() => (user ? async () => { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; } : null), [user, db]);
   const [f, setF] = useState<EnrollForm>({ full_name: '', email: '', phone: '', organization: '', city: '', notes: '' });
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [ldSkills, setLdSkills] = useState<SkillLite[]>([]);
   const today = new Date().toISOString().slice(0, 10);
@@ -118,6 +121,7 @@ function Inner() {
           <UpcomingSessions programId={p.id} lang={lang} />
           <ProgramResources programId={p.id} lang={lang} />
           <ProgramAfter programId={p.id} lang={lang} />
+          {loaded && <ProgramBorn programId={p.id} token={bornToken} onState={setPrio} lang={lang} />}
           <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر أَثَر، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>
         </div>
 
@@ -136,6 +140,8 @@ function Inner() {
               {['pending', 'waitlisted'].includes(mine.status) && <button type="button" className="pt-btn ghost small" disabled={busy} onClick={cancel}><Icon name="x" size={14} /> {lang === 'ar' ? 'إلغاء الطلب' : 'Cancel application'}</button>}
               <div style={{ marginTop: 12 }}><Link href="/me" className="pt-more">{t(UI.student, lang)} <Icon name="arrow" size={13} /></Link></div>
             </div>
+          ) : prio.active && !prio.am ? (
+            <div className="pt-alert" data-testid="prio-hold"><p className="pt-muted" style={{ margin: 0 }}>{lang === 'ar' ? 'هذا البرنامج وُلد من حاجة أعلنها ممارسون — المقاعد الأولى لهم 72 ساعة من فتح التسجيل، ثم يُفتح للجميع. عُد قريبًا.' : 'Born from a declared need — first seats are reserved for its declarers for 72 hours.'}</p>{!user && <p style={{ margin: '.5rem 0 0' }}><Link href={`/login?next=/programs/${p.id}`}>{lang === 'ar' ? 'إن كنت ممن أعلنوا الحاجة فسجّل الدخول ←' : 'Declared it? Sign in →'}</Link></p>}</div>
           ) : !canApply(s) ? (
             <div><p className="pt-muted">{s === 'full' ? (lang === 'ar' ? 'اكتملت مقاعد هذه الدورة. تواصل معنا لإبلاغك بالدورة القادمة.' : 'This cohort is full. Contact us to be notified about the next one.') : s === 'ended' ? (lang === 'ar' ? 'انتهى هذا البرنامج.' : 'This program has ended.') : (lang === 'ar' ? 'التسجيل غير متاح حاليًا.' : 'Registration is currently unavailable.')}</p><Link href={`/contact?service=training&program=${encodeURIComponent(p.name_ar)}`} className="pt-btn ghost"><Icon name="chat" size={15} /> {t(UI.contactUs, lang)}</Link></div>
           ) : !user ? (
