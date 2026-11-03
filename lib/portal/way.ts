@@ -2,7 +2,7 @@
 /** «الطريق» — خريطة أسماء المسارات لشريط التنقّل الموحّد (رجوع · الرئيسية · مسار الصفحة). منطق خالص قابل للاختبار. */
 export type Crumb = { href: string; label: string; current: boolean; /** مقطع بلا صفحة خاصة (مجلّد مسارات فقط) → يُعرض نصًّا لا رابطًا */ dead?: boolean };
 /** مقاطع لا صفحة لها (تحتها صفحات ديناميكية فقط) — لا تُربَط في الفتات ولا يُرجَع إليها (كانت تعطي 404) */
-export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/evaluate', '/followup', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey']);
+export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/evaluate', '/followup', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey']);
 type L = { ar: string; en: string };
 /** أسماء المقاطع المعروفة (المقطع الأول أو المركّب) — الأسماء الرسمية كما في القوائم */
 const NAMES: Record<string, L> = {
@@ -13,7 +13,7 @@ const NAMES: Record<string, L> = {
   help: { ar: 'المساعدة', en: 'Help' }, verify: { ar: 'التحقق من شهادة', en: 'Verify' }, credential: { ar: 'الشهادة', en: 'Credential' }, pay: { ar: 'الدفع', en: 'Payment' }, p: { ar: 'صفحة عامة', en: 'Public page' },
   accessibility: { ar: 'الوصولية', en: 'Accessibility' }, miaar: { ar: 'مِعيار', en: 'Mi‘yar' }, 'miaar/result': { ar: 'النتيجة', en: 'Result' }, 'miaar/trust': { ar: 'سجلّ الصدق', en: 'Trust record' }, 'miaar/d': { ar: 'دعوة', en: 'Invitation' },
   admin: { ar: 'الإدارة', en: 'Admin' }, 'admin/miaar': { ar: 'مِعيار', en: 'Mi‘yar' }, 'admin/miaar/bank': { ar: 'بنك البنود', en: 'Item bank' }, 'admin/miaar/forms': { ar: 'منشئ النماذج', en: 'Form builder' },
-  'admin/miaar/invites': { ar: 'الدعوات', en: 'Invitations' }, 'admin/miaar/balance': { ar: 'الميزان', en: 'Balance' }, 'admin/miaar/rating': { ar: 'التصحيح', en: 'Rating' }, 'admin/miaar/ledger': { ar: 'السجلّ', en: 'Ledger' },
+  'admin/miaar/invites': { ar: 'الدعوات', en: 'Invitations' }, 'admin/miaar/balance': { ar: 'الميزان', en: 'Balance' }, 'admin/miaar/rating': { ar: 'التصحيح', en: 'Rating' }, 'admin/miaar/ledger': { ar: 'السجلّ', en: 'Ledger' }, 'admin/miaar/growth': { ar: 'النموّ', en: 'Growth' }, 'miaar/growth': { ar: 'رحلة المتقدّم', en: 'Journey' },
   dashboard: { ar: 'لوحة التحكم', en: 'Dashboard' }, reports: { ar: 'التقارير', en: 'Reports' }, 'command-center': { ar: 'مركز القيادة', en: 'Command center' },
   skills: { ar: 'ملفي المهاري', en: 'My skills' }, twin: { ar: 'توأمي المهاري', en: 'My twin' }, missions: { ar: 'مهماتي', en: 'My missions' }, after: { ar: 'ما بعد البرنامج', en: 'After the program' }, pair: { ar: 'رفيقي', en: 'My pair' },
   trust: { ar: 'سجلّ الصدق', en: 'Trust' }, result: { ar: 'النتيجة', en: 'Result' }, bank: { ar: 'بنك البنود', en: 'Item bank' }, forms: { ar: 'النماذج', en: 'Forms' }, invites: { ar: 'الدعوات', en: 'Invitations' }, balance: { ar: 'الميزان', en: 'Balance' }, rating: { ar: 'التصحيح', en: 'Rating' },

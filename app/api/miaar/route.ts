@@ -9,6 +9,7 @@
  *  POST probe_band {probeAnswers} → {score, band} مؤشر أولي بعد الحلقات (بلا جلسة) — م2-ب
  *  GET ?invite=<code>&t=<token> → ما تعنيه الدعوة (الاسم · اللغة · النمط · المستلم إن كانت شخصية)
  *  GET ?result=<ML-code>        → النتيجة برمزها (بلا بريد/هاتف)
+ *  GET ?journey=<ML-code>       → م5-ب: رحلة المتقدّم (المحاولات والمقارنة) برمز النتيجة
  *  POST {action}
  *   start  {candidate, examMode, probeAnswers?, access?, invite?: {code, t?}}  → جلسة آمنة (كوكي miaar_placement_session) + النموذج
  *   resume · answer {questionId, selectedOptionId, finalize?} · finish {reason}
@@ -21,6 +22,9 @@ import { readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { COOKIE_NAME, probePublic, isResultCode, MIAAR_NAMES_AR } from '../../../lib/miaar/registry';
 import { startSession, loadSession, resumeSession, answerSession, finishSession, resultByCode } from '../../../lib/miaar/engine';
+import { journeyByCode, setGrowthPublic } from '../../../lib/miaar/growth'; /* م5-ب */
+import { normalizeSite } from '../../../lib/portal/open';
+const siteUrl = (req: Request) => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin);
 import { trustSummary } from '../../../lib/miaar/balance';
 import { stopwatch, slowLine } from '../../../lib/miaar/timing';
 import { openInvite } from '../../../lib/miaar/invites';
@@ -53,17 +57,18 @@ const PULSE_MIN = 5;  /* قاعدة «أَثَر للجميع»/الخصوصية
 async function pulse(db: any) {  /* eslint-disable-line @typescript-eslint/no-explicit-any */
   if (PULSE_CACHE && Date.now() - PULSE_CACHE.at < 60_000) return PULSE_CACHE.body;
   const now = Date.now(); const iso = (ms: number) => new Date(now - ms).toISOString();
-  const [live, today, week, month, recent] = await Promise.all([
+  const [live, today, week, month, recent, growth] = await Promise.all([
     db.from('placement_secure_sessions').select('id', { count: 'exact', head: true }).eq('status', 'active').gte('started_at', iso(20 * 60_000)),
     db.from('placement_reports').select('id', { count: 'exact', head: true }).gte('created_at', iso(24 * 3600_000)),
     db.from('placement_reports').select('id', { count: 'exact', head: true }).gte('created_at', iso(7 * 24 * 3600_000)),
     db.from('placement_reports').select('id', { count: 'exact', head: true }).gte('created_at', iso(30 * 24 * 3600_000)),
     db.from('placement_reports').select('report, created_at').order('created_at', { ascending: false }).limit(8),
+    db.from('placement_reports').select('id', { count: 'exact', head: true }).eq('growth_public', true),  /* م5-ب: «ختم النموّ» باختيار أصحابه */
   ]);
   const weekN = week.count || 0;
   const ok = weekN >= PULSE_MIN;
   const items = ok ? (recent.data || []).map((r: any) => { const rep = r.report || {}; const level = String(rep['المستوى_العام'] || ''); const lang = String(rep?.['بيانات_المتقدم']?.['اللغة_الأم'] || ''); return /^(A1|A2|B1|B2|C1|C2)$/.test(level) ? { level, lang: lang && lang !== '—' ? lang : null, minutes: Math.max(1, Math.round((now - new Date(r.created_at).getTime()) / 60_000)) } : null; }).filter(Boolean) : [];
-  const body = { ok: true, now: ok ? live.count || 0 : null, today: ok ? today.count || 0 : null, week: ok ? weekN : null, month: ok ? month.count || 0 : null, recent: items };
+  const body = { ok: true, now: ok ? live.count || 0 : null, today: ok ? today.count || 0 : null, week: ok ? weekN : null, month: ok ? month.count || 0 : null, recent: items, growth: ok && (growth.count || 0) >= 3 ? growth.count || 0 : null };
   PULSE_CACHE = { at: Date.now(), body }; return body;
 }
 
@@ -97,6 +102,10 @@ export async function GET(req: Request) {
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */
     const r = await resultByCode(db, code); return r ? NextResponse.json({ ok: true, ...r }, { headers: NO }) : bad('not_found', 404); }
+  /* م5-ب: «رحلة المتقدّم» برمز النتيجة — الاسم الأول فقط، بلا بريد ولا بنود */
+  if (u.searchParams.get('journey')) { const code = String(u.searchParams.get('journey') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
+    const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
+    const j = await journeyByCode(db, code, siteUrl(req)); return j ? NextResponse.json({ ok: true, journey: j }, { headers: NO }) : bad('not_found', 404); }
   return bad('unknown_query', 400);
 }
 
@@ -105,6 +114,10 @@ export async function POST(req: Request) {
   if (crossSiteBrowserWrite(req)) return bad('origin_not_allowed', 403);
   const j = await readJson(req, { maxBytes: ROOM_MAX_BYTES }); if (!j.ok) return bad(j.status === 413 ? 'payload_too_large' : 'invalid_json', j.status === 413 ? 413 : 400); const body = j.body as Record<string, unknown>;
   const action = String(body.action || '');
+  /* م5-ب: «ختم النموّ» — المتقدّم (حامل الرمز) يختار إظهار نموّه في «نبض مِعيار» العلني بلا اسم */
+  if (action === 'growth_public') { const code = String(body.code || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
+    const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
+    const ok = await setGrowthPublic(db, code, !!body.on); return ok ? NextResponse.json({ ok: true, public: !!body.on }, { headers: NO }) : bad('not_found', 404); }
   if (action === 'probe_band') {
     /* م2-ب: مؤشر أولي بعد الحلقات (بلا جلسة ولا اسم) — التصحيح على الخادم، والنتيجة فرقة تقديرية فقط */
     const rl = await rateLimit(db, `miaar_probe:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');

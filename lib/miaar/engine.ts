@@ -14,6 +14,7 @@ import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem,
 import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './bank';
 import { reweighIfDue, trustLine } from './balance';
 import { openGrant, publicLedgerBadge } from './ledger';
+import { hasJourney } from './growth'; /* م5-ب */
 import type { Stopwatch } from './timing';
 import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
 import type { Plan } from './blueprint';
@@ -222,6 +223,8 @@ export async function resultByCode(db: any, code: string): Promise<{ code: strin
   const safe = { ...rest, بيانات_المتقدم: { ...(r as any).بيانات_المتقدم, الاسم: name, البريد_الإلكتروني: '—', الهاتف: '—' } } as Report;
   /* م5-أ: شارة الأرشفة وقرار التسكين على البطاقة نفسها (بلا بيانات شخصية) — والتسكين التلقائي الكسول إن حلّت المهلة */
   try { (safe as any).السجلّ = await publicLedgerBadge(db, String(data.id)); } catch { /* البطاقة لا تنتظر السجلّ */ }
+  /* م5-ب: إن كانت للمتقدّم محاولة أخرى → زرّ «رحلتك» على البطاقة */
+  try { if (await hasJourney(db, data.candidate_email)) (safe as any).السجلّ = { ...((safe as any).السجلّ || {}), رحلة: true }; } catch { /* اختياري */ }
   return { code: data.access_code, name, taken_at: data.created_at, report: safe };
 }
 export { PASS_PERCENT };
