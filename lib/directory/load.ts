@@ -58,6 +58,7 @@ export async function witnessFacts(db: any, me: { id?: string | null; email: str
   Object.assign(f, engagementFacts(engagements || []));
   try { const { onAirFacts } = await import('../onair/load'); const oa = await onAirFacts(db, me.id); f.on_air_hours = oa.hours; f.on_air_meetings = oa.meetings; f.on_air_legacy = oa.legacy || 0; f.on_air_sign_pledge = oa.sign_pledge || null; } catch { /* قبل تنفيذ SQL */ }
   try { const { afterFacts } = await import('../after/load'); const al = await afterFacts(db, me); if (al) f.after_line = al; } catch { /* قبل تنفيذ SQL */ }   // P38
+  try { const { missionReportedCount } = await import('../reports/load'); f.missions_reported = await missionReportedCount(db, email); } catch { /* قبل تنفيذ SQL */ }   // P46 ر3
   return f;
 }
 

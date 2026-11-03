@@ -19,6 +19,10 @@ import { P46_NAMES_AR, GRADE_KEY_AR, WEEK_DAYS_AR, FIT_AR, ACHIEVED_AR, APPLIED_
 type Tok = () => Promise<string>;
 const FinalCards = dynamic(() => import('./FinalReport').then(m => m.FinalCards), { ssr: false });
 const FinalEditor = dynamic(() => import('./FinalReport').then(m => m.FinalEditor), { ssr: false, loading: () => <main className="pt-main"><section className="pt-box"><p className="pt-muted">…</p></section></main> });
+/* ر3 — تقرير إنجاز المهمة («أثرُ المهمة») */
+const MissionCards = dynamic(() => import('./MissionReport').then(m => m.MissionCards), { ssr: false });
+const MissionEditor = dynamic(() => import('./MissionReport').then(m => m.MissionEditor), { ssr: false, loading: () => <main className="pt-main"><section className="pt-box"><p className="pt-muted">…</p></section></main> });
+const MissionClient = dynamic(() => import('./MissionReport').then(m => m.MissionClient), { ssr: false, loading: () => <main className="pt-main"><section className="pt-box"><p className="pt-muted">…</p></section></main> });
 async function api(tok: Tok | null, path: string, body?: any) { const tk = tok ? await tok() : ''; const h: any = { 'Content-Type': 'application/json' }; if (tk) h.Authorization = `Bearer ${tk}`; const r = await fetch(path, body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h, cache: 'no-store' }); return r.json().catch(() => ({ success: false, error: 'استجابة غير صالحة' })); }
 const fmtT = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '');
 const STATUS_TONE: Record<string, string> = { draft: 'g', submitted: 'b', approved: 't', returned: 'o' };
@@ -38,7 +42,8 @@ export function ReportsHome({ token }: { token: Tok }) {
       <span className="pt-kicker"><Icon name="doc" size={14} /> {P46_NAMES_AR.axis} · {P46_NAMES_AR.official}</span>
       <h1>{P46_NAMES_AR.page}</h1>
       <p className="rp-lead">التقرير هنا لا يُكتب من فراغ: أرقامه (المسجَّلون · المنتظمون · الجلسات والساعات · حضور كل متدرّب) تُلتقط من أَثَر، وتكتب أنت ما لا يعرفه إلا المعلّم: الأهداف، وما جرى في الصف، والحكم، والتوصية. ثم يعتمده مدير البرنامج ويُطبع بنموذج «{P46_NAMES_AR.weekly_full}».</p>
-      {!isTrainer && <p className="rp-note" data-testid="rp-not-trainer">حسابك ليس مسجَّلًا مدرّبًا على شعبة بعد. حين يربطك الطاقم بشعبة (بريدك في سجلّ المدرّبين) تظهر هنا برامجك.</p>}
+      {!isTrainer && !(d.missions?.length > 0) && <p className="rp-note" data-testid="rp-not-trainer">حسابك ليس مسجَّلًا مدرّبًا على شعبة بعد. حين يربطك الطاقم بشعبة (بريدك في سجلّ المدرّبين) تظهر هنا برامجك.</p>}
+      {!isTrainer && d.missions?.length > 0 && <p className="rp-note" data-testid="rp-expert-note">أنت هنا بصفتك خبيرًا متعاقدًا مع أَثَر: تقاريرك تقارير إنجاز مهمة — واحد لكل عقد تعاون موقَّع.</p>}
       {isTrainer && <form className="rp-new" data-testid="rp-new" onSubmit={create}>
         <b>{P46_NAMES_AR.start}</b>
         <div className="rp-grid">
@@ -51,6 +56,7 @@ export function ReportsHome({ token }: { token: Tok }) {
       </form>}
     </section>
     {isTrainer && d.finals?.length > 0 && <FinalCards finals={d.finals} token={token} />}
+    {d.missions?.length > 0 && <MissionCards missions={d.missions} token={token} />}
     <section className="pt-box" aria-labelledby="rp-mine-h">
       <h2 id="rp-mine-h"><Icon name="folder" size={18} /> تقاريري</h2>
       {mine.length === 0 && <p className="pt-muted" data-testid="rp-empty">لا تقارير بعد.</p>}
@@ -80,6 +86,7 @@ export function ReportEditor({ id, token, mode = 'author', onBack }: { id: strin
   function adopt(p: Phrase) { if (!body) return; const add = (cur: string) => (cur ? cur + ' ' + p.text : p.text); if (p.section === 'strengths') setB(['strengths', 'strengths'], [...body.strengths.strengths, { point: p.text, evidence: 'من أرقام التقرير' }]); else if (p.section === 'challenges') setB(['strengths', 'challenges'], [...body.strengths.challenges, { point: p.text, action: '' }]); else if (p.section === 'admin_attendance') setB(['admin', 'attendance'], add(body.admin.attendance)); else if (p.section === 'common_errors') setB(['assessment', 'formative', 'common_errors'], add(body.assessment.formative.common_errors)); else setB(['general', 'notes'], add(body.general.notes)); setPhr(x => (x ? { ...x, phrases: x.phrases.filter(q => q !== p) } : x)); }
   if (!d || !body || !c) return <main className="pt-main rp"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box"><p className="pt-muted">{err || '…'}</p></section></main>;
   if (r.kind === 'final') return <FinalEditor id={id} token={token} mode={mode} onBack={onBack} />;
+  if (r.kind === 'mission') return <MissionEditor id={id} token={token} mode={mode} onBack={onBack} />;
   const S = d.status_ar; const SECS = ['البيانات العامة', 'الأهداف التعليمية', 'الأنشطة والاستراتيجيات', 'أساليب التقييم', 'كشف الطلاب', 'التوصيات والقرارات', 'القوة والتحدّيات', 'الملاحظات الإدارية', 'سطر لكل متدرّب'];
   const ro = !editable;
   const inp = (path: (string | number)[], v: string, ph = '', max = 600, rows = 0) => rows ? <textarea value={v} onChange={e => setB(path, e.target.value.slice(0, max))} placeholder={ph} rows={rows} maxLength={max} readOnly={ro} /> : <input value={v} onChange={e => setB(path, e.target.value.slice(0, max))} placeholder={ph} maxLength={max} readOnly={ro} />;
@@ -302,11 +309,11 @@ export function AdminReports({ token }: { token: Tok }) {
   useEffect(() => { load(); const r = new URLSearchParams(window.location.search).get('r'); if (r) setOpen(r); }, [load]);
   if (open) return <ReportEditor id={open} token={token} mode="admin" onBack={() => { setOpen(''); load(); }} />;
   if (!d) return <main className="pt-main rp"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box"><p className="pt-muted">{err || '…'}</p></section></main>;
-  const items: any[] = d.items || []; const counts = items.reduce((m: Record<string, number>, r) => { m[r.status] = (m[r.status] || 0) + 1; return m; }, {}); const list = items.filter(r => filter === 'all' || (filter === 'final' ? r.kind === 'final' : r.status === filter));
+  const items: any[] = d.items || []; const counts = items.reduce((m: Record<string, number>, r) => { m[r.status] = (m[r.status] || 0) + 1; return m; }, {}); const list = items.filter(r => filter === 'all' || (filter === 'final' ? r.kind === 'final' : filter === 'mission' ? r.kind === 'mission' : r.status === filter));
   return <main className="pt-main rp" data-testid="ar-reports"><style dangerouslySetInnerHTML={{ __html: CSS }} />
     <section className="pt-box rp-hero"><span className="pt-kicker"><Icon name="doc" size={14} /> {P46_NAMES_AR.axis} · {P46_NAMES_AR.official}</span><h2 className="rp-h">{P46_NAMES_AR.admin}</h2>
       <div className="rp-kpis" data-testid="ar-kpis"><span className="b"><b>{counts.submitted || 0}</b> بانتظار الاعتماد</span><span><b>{counts.approved || 0}</b> معتمَد</span><span><b>{counts.returned || 0}</b> مُعاد</span><span><b>{counts.draft || 0}</b> مسودّات</span></div>
-      <div className="rp-filters">{['submitted', 'approved', 'returned', 'draft', 'final', 'all'].map(f => <button key={f} type="button" className={filter === f ? 'on' : ''} onClick={() => setFilter(f)} data-testid={`ar-f-${f}`}>{f === 'all' ? 'الكل' : f === 'final' ? `الختامية (${items.filter(r => r.kind === 'final').length})` : d.status_ar[f]}</button>)}</div>
+      <div className="rp-filters">{['submitted', 'approved', 'returned', 'draft', 'final', 'mission', 'all'].map(f => <button key={f} type="button" className={filter === f ? 'on' : ''} onClick={() => setFilter(f)} data-testid={`ar-f-${f}`}>{f === 'all' ? 'الكل' : f === 'final' ? `الختامية (${items.filter(r => r.kind === 'final').length})` : f === 'mission' ? `إنجاز المهمات (${items.filter(r => r.kind === 'mission').length})` : d.status_ar[f]}</button>)}</div>
     </section>
     <section className="pt-box"><ul className="rp-list" data-testid="ar-list">{list.length === 0 && <li className="pt-muted">لا تقارير في هذه الحالة.</li>}{list.map(r => <li key={r.id} data-status={r.status} data-kind={r.kind}><button type="button" className="rp-linkbtn" onClick={() => setOpen(r.id)} data-testid="ar-item"><span className={`rp-chip ${STATUS_TONE[r.status]}`}>{d.status_ar[r.status]}</span> {listLineAr(r)} · <small>{r.author_name || r.author_email}</small></button></li>)}</ul></section>
   </main>;
@@ -322,12 +329,15 @@ export function MyReportLines({ token }: { token: Tok }) {
 
 /* ───────── 6) التحقّق العام ───────── */
 export function ReportVerify({ code }: { code: string }) {
-  const [d, setD] = useState<any>(undefined);
-  useEffect(() => { fetch(`/api/reports?verify=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setD(j?.report || null)).catch(() => setD(null)); }, [code]);
+  const [d, setD] = useState<any>(undefined); const [k, setK] = useState<string | null>(null);
+  useEffect(() => { const kk = new URLSearchParams(window.location.search).get('k') || ''; setK(kk); if (kk) return; fetch(`/api/reports?verify=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setD(j?.report || null)).catch(() => setD(null)); }, [code]);
+  if (k === null) return <main className="pt-main rp"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box"><p className="pt-muted">…</p></section></main>;
+  if (k) return <MissionClient code={code} k={k} />;   // ر3: نسخة الجهة بلا دخول
   return <main className="pt-main rp" data-testid="rp-verify"><style dangerouslySetInnerHTML={{ __html: CSS }} /><section className="pt-box rp-hero"><span className="pt-kicker"><Icon name="shield" size={14} /> التحقّق من تقرير</span>
     {d === undefined && <p className="pt-muted">…</p>}
     {d === null && <><h1>لا يوجد تقرير معتمَد بهذا الرمز</h1><p className="pt-muted" dir="ltr">{code}</p><p><Link href="/verify">التحقّق من الشهادات</Link></p></>}
-    {d && <><h1>{d.kind === 'final' ? d.kind_ar : `${d.kind_ar} — الأسبوع ${d.week_no}`}</h1><table className="rp-t"><tbody><tr><th>البرنامج</th><td>{d.program_ar}{d.classroom_ar ? ` — ${d.classroom_ar}` : ''}</td></tr><tr><th>الجهة</th><td>{d.org_ar || '—'}</td></tr><tr><th>الفترة</th><td>{fmtDayAr(d.period_from)} → {fmtDayAr(d.period_to)}</td></tr><tr><th>عضو هيئة التدريس</th><td>{d.author_name}</td></tr>{d.kind === 'final' && d.signoff ? <tr><th>التوقيعان</th><td data-testid="rp-verify-signs">{d.signoff.quality ? `${d.signoff.quality.name} (الجودة)` : '—'} · {d.signoff.manager ? `${d.signoff.manager.name} (مدير البرنامج)` : '—'} · {fmtT(d.approved_at)}</td></tr> : <tr><th>اعتمده</th><td>{d.approved_name} · {fmtT(d.approved_at)}</td></tr>}{d.kind === 'final' && <tr><th>{P46_NAMES_AR.chain}</th><td data-testid="rp-verify-chain">{d.weeks} تقارير أسبوعية معتمدة{d.chain?.length ? <> — {d.chain.map((c: string) => <Link key={c} href={`/verify/report/${c}`} dir="ltr" style={{ marginInlineEnd: '.5rem' }}>{c}</Link>)}</> : ''}</td></tr>}<tr><th>التنفيذ</th><td>{d.sessions} جلسات · {d.hours} ساعة · {d.enrolled} مسجَّلًا</td></tr><tr><th>الرمز</th><td dir="ltr">{d.code}</td></tr></tbody></table><p className="pt-muted">صفحة التحقّق لا تعرض أسماء الطلاب ولا درجاتهم.</p></>}
+    {d && d.kind === 'mission' && <><h1>{d.kind_ar}</h1><table className="rp-t" data-testid="rp-verify-mission"><tbody><tr><th>المهمة</th><td>{d.title_ar}</td></tr><tr><th>الجهة</th><td>{d.org_ar || '—'}</td></tr><tr><th>النوع</th><td>{d.engagement_kind_ar}{d.engagement_code ? <> · <span dir="ltr">{d.engagement_code}</span></> : ''}</td></tr><tr><th>المدة</th><td>{fmtDayAr(d.period_from)} → {fmtDayAr(d.period_to)}</td></tr><tr><th>الخبير</th><td>{d.author_name}</td></tr><tr><th>المخرجات</th><td>سُلِّم {d.delivered} من {d.total} متّفقًا عليها{d.milestones ? ` · ${d.milestones_done}/${d.milestones} مراحل` : ''}</td></tr><tr><th>اعتماد أَثَر</th><td>{d.approved_name} · {fmtT(d.approved_at)}</td></tr><tr><th>إقرار الجهة</th><td data-testid="rp-verify-ack">{d.ack ? `${d.ack.name} · ${fmtT(d.ack.at)}` : 'لم يُسجَّل بعد'}</td></tr><tr><th>الرمز</th><td dir="ltr">{d.code}</td></tr></tbody></table><p className="pt-muted">صفحة التحقّق لا تعرض الأجر ولا تفاصيل التقرير؛ نصّه الكامل لدى الجهة والخبير وأَثَر.</p></>}
+    {d && d.kind !== 'mission' && <><h1>{d.kind === 'final' ? d.kind_ar : `${d.kind_ar} — الأسبوع ${d.week_no}`}</h1><table className="rp-t"><tbody><tr><th>البرنامج</th><td>{d.program_ar}{d.classroom_ar ? ` — ${d.classroom_ar}` : ''}</td></tr><tr><th>الجهة</th><td>{d.org_ar || '—'}</td></tr><tr><th>الفترة</th><td>{fmtDayAr(d.period_from)} → {fmtDayAr(d.period_to)}</td></tr><tr><th>عضو هيئة التدريس</th><td>{d.author_name}</td></tr>{d.kind === 'final' && d.signoff ? <tr><th>التوقيعان</th><td data-testid="rp-verify-signs">{d.signoff.quality ? `${d.signoff.quality.name} (الجودة)` : '—'} · {d.signoff.manager ? `${d.signoff.manager.name} (مدير البرنامج)` : '—'} · {fmtT(d.approved_at)}</td></tr> : <tr><th>اعتمده</th><td>{d.approved_name} · {fmtT(d.approved_at)}</td></tr>}{d.kind === 'final' && <tr><th>{P46_NAMES_AR.chain}</th><td data-testid="rp-verify-chain">{d.weeks} تقارير أسبوعية معتمدة{d.chain?.length ? <> — {d.chain.map((c: string) => <Link key={c} href={`/verify/report/${c}`} dir="ltr" style={{ marginInlineEnd: '.5rem' }}>{c}</Link>)}</> : ''}</td></tr>}<tr><th>التنفيذ</th><td>{d.sessions} جلسات · {d.hours} ساعة · {d.enrolled} مسجَّلًا</td></tr><tr><th>الرمز</th><td dir="ltr">{d.code}</td></tr></tbody></table><p className="pt-muted">صفحة التحقّق لا تعرض أسماء الطلاب ولا درجاتهم.</p></>}
   </section></main>;
 }
 

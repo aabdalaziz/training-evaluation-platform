@@ -173,8 +173,9 @@ export type WitnessFacts = {
   on_air_legacy?: number; // P35 «ميراث متبادل»: ميراث مكتمل (رافق ثم رُوفق)
   on_air_sign_pledge?: string | null; // P37 «مترجم الموسم»: سطر جاهز «تعهّد بساعة إشارة أسبوعية في «…» وحضرها N من M»
   after_line?: string | null; // P38 «الشهادة التي تكبر»: «كتب N محطات بعد برامجه وشهد على M منها مشرف»
+  missions_reported?: number; // P46 ر3 «أثرُ المهمة»: تقارير إنجاز مهمة معتمَدة
 };
-export const EMPTY_WITNESS: WitnessFacts = { programs: 0, classrooms: 0, program_years: null, councils_chaired: 0, attestations_approved: 0, levels_approved: 0, missions_confirmed: 0, engagements_consult: 0, engagements_train: 0, engagement_years: null, org_charter: null, on_air_hours: 0, on_air_meetings: 0, on_air_legacy: 0, on_air_sign_pledge: null };
+export const EMPTY_WITNESS: WitnessFacts = { programs: 0, classrooms: 0, program_years: null, councils_chaired: 0, attestations_approved: 0, levels_approved: 0, missions_confirmed: 0, engagements_consult: 0, engagements_train: 0, engagement_years: null, org_charter: null, on_air_hours: 0, on_air_meetings: 0, on_air_legacy: 0, on_air_sign_pledge: null, missions_reported: 0 };
 const n2 = (n: number, one: string, two: string, many: string, acc: string) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${many}` : `${n} ${acc}`;
 const span = (y: [string, string] | null) => y ? (y[0] === y[1] ? `في ${y[0]}` : `بين ${y[0]} و${y[1]}`) : '';
 export function witnessLines(f: WitnessFacts): { key: string; text: string }[] {
@@ -186,6 +187,7 @@ export function witnessLines(f: WitnessFacts): { key: string; text: string }[] {
   if (f.missions_confirmed > 0) out.push({ key: 'missions', text: `أكّد بصفته مشرفًا ${n2(f.missions_confirmed, 'مهمة واحدة من قلب العمل', 'مهمتين من قلب العمل', 'مهام من قلب العمل', 'مهمة من قلب العمل')}` });
   const eng = f.engagements_consult + f.engagements_train;
   if (eng > 0) { const parts = [f.engagements_consult ? n2(f.engagements_consult, 'استشارة واحدة', 'استشارتان', 'استشارات', 'استشارة') : '', f.engagements_train ? n2(f.engagements_train, 'تدريب واحد', 'تدريبان', 'تدريبات', 'تدريبًا') : ''].filter(Boolean).join(' و'); out.push({ key: 'engagements', text: `نفّذ ${n2(eng, 'مهمة واحدة', 'مهمتين', 'مهام', 'مهمة')} بعقود تعاون مع أَثَر (${parts}) ${span(f.engagement_years)}`.trim() }); }
+  if ((f.missions_reported || 0) > 0) { const n = f.missions_reported || 0; out.push({ key: 'missions_reported', text: `أنجز ${n === 1 ? 'مهمة واحدة موثَّقة بتقرير إنجاز معتمَد' : n === 2 ? 'مهمتين موثَّقتين بتقريرَي إنجاز معتمدَين' : `${n} ${n <= 10 ? 'مهمات موثَّقة' : 'مهمة موثَّقة'} بتقارير إنجاز معتمَدة`}` }); }   // P46 ر3
   if ((f.on_air_legacy || 0) > 0) { const n = f.on_air_legacy || 0; out.push({ key: 'on_air_legacy', text: `أتمّ ميراث هواء متبادلًا ${n === 1 ? 'مع زميل' : n === 2 ? 'مع زميلين' : `مع ${n} زملاء`} — رافق ورُوفق` }); }
   if (f.on_air_sign_pledge) out.push({ key: 'on_air_sign_pledge', text: f.on_air_sign_pledge });
   if (f.after_line) out.push({ key: 'after', text: f.after_line });   // P38

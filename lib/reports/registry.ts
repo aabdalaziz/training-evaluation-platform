@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P46 «محور التقارير» — توثيق الجودة والأداء (دوال صافية، بلا اعتماديات) — ر1: تقرير التعلّم الأسبوعي
+ * P46 «محور التقارير» — توثيق الجودة والأداء (دوال صافية، بلا اعتماديات) — ر1: تقرير التعلّم الأسبوعي · ر2: الختامي · ر3: تقرير إنجاز المهمة (آخر الملف)
  *  التقرير يملأ أرقامه من قاعدة أَثَر (computed) ويكتب الإنسان الحكم والتوصية (body · students).
  *  القالب: الأقسام الثمانية لنموذج «تقرير التعلّم الشامل» (برنامج العربية للناطقين بغيرها) — مهاراته الخمس للعربية،
  *  ومهارات البرنامج (إطار P8) أو أربع عامة لغيره. مفتاح التقدير ثابت: ممتاز 90–100 · جيد جدًا 80–89 · جيد 70–79 · مقبول 60–69 · ضعيف < 60.
@@ -216,6 +216,7 @@ export function publicVerifyView(r: { verify_code: string | null; status: string
 }
 /** سطر القائمة */
 export function listLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind?: string }): string {
+  if (r.kind === 'mission') return missionListLineAr(r);
   if (r.kind === 'final') return `${P46_NAMES_AR.final} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0} أسابيع معتمدة · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
   return `الأسبوع ${r.week_no} · ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
 }
@@ -337,3 +338,129 @@ export function paragraphPrompt(t: Trajectory, skills: Skill[], s: { avg: number
 export function parseParagraph(raw: string): string | null { try { const m = raw.match(/\{[\s\S]*\}/); const j = JSON.parse(m ? m[0] : raw); const t = T(j?.text, PARA_MAX); return t.length >= 20 && !FORBID.test(t) ? t : null; } catch { const t = T(raw, PARA_MAX); return t.length >= 20 && t.length <= PARA_MAX && !FORBID.test(t) && !/[{}\[\]]/.test(t) ? t : null; } }
 /** ما يراه المتدرّب في صفحته (ولا شيء عن غيره) */
 export function studentPageData(t: Trajectory, skills: Skill[], s: FinalStudent): any { return { weeks: t.weeks, skills: skills.map(k => ({ code: k.code, name_ar: k.name_ar, by_week: t.skills[k.code], final: s.scores?.[k.code] ?? null })), avgs: t.avgs, first: t.first, last: t.last, delta: t.delta, trend: t.trend, attendance_pct: s.attendance_pct, final_avg: s.avg, grade_ar: s.grade_ar, rec: s.rec || null, rec_ar: s.rec ? REC_AR[s.rec] : null, paragraph: s.paragraph || '' }; }
+
+/* ═════════════════════════════ ر3 — تقرير إنجاز المهمة («أثرُ المهمة») ═════════════════════════════
+ *  الخبير/المستشار/المدرّب المتعاقد. المرجع: عقد التعاون (هيئة أَثَر) + طلب الاستشارة المرتبط (المراحل · التحديثات).
+ *  «الوعد مقابل الواقع»: كل مخرج من العقد كما وُقِّع ← ما سُلِّم. «خطّ المهمة»: المراحل المخطَّطة مقابل الفعلية (الانحراف يُحسب والسبب يُكتب).
+ *  الاعتماد بمرحلة واحدة (الطاقم)، ثم «إقرار الجهة» برابط بلا دخول (استلام لا تقييم). الأجر لا يدخل التقرير أبدًا.
+ */
+export const MISSION_NAMES_AR = { story: 'أثرُ المهمة', start: 'ابدأ تقرير إنجاز المهمة', matrix: 'الوعد مقابل الواقع', timeline: 'خطّ المهمة', ack: 'إقرار الجهة', ack_btn: 'أقرّ بالاستلام', send_client: 'أرسل للجهة', phrase: 'صِغ لي من المخرجات', updates: 'لخّص التحديثات', reported: 'موثَّقة بتقرير', addendum: 'إلحاق تصويب' } as const;
+export const DELIV = ['delivered', 'partial', 'changed', 'not'] as const; export type Deliv = (typeof DELIV)[number];
+export const DELIV_AR: Record<Deliv, string> = { delivered: 'سُلِّم', partial: 'جزئي', changed: 'تغيّر بالاتفاق', not: 'لم يُسلَّم' };
+export const HORIZON = ['near', 'mid', 'far'] as const; export type Horizon = (typeof HORIZON)[number]; export const HORIZON_AR: Record<Horizon, string> = { near: 'قريب (≤ 3 أشهر)', mid: 'متوسط (3–12 شهرًا)', far: 'بعيد (> سنة)' };
+export const PRIORITY = ['high', 'mid', 'low'] as const; export type Priority = (typeof PRIORITY)[number]; export const PRIORITY_AR: Record<Priority, string> = { high: 'عالية', mid: 'متوسطة', low: 'منخفضة' };
+export const MISSION_SUMMARY_MAX = 900; export const MAX_DELIV = 20; export const MAX_EXTRA = 3; export const MAX_FINDINGS = 5; export const MAX_KPIS = 4; export const MAX_RECS = 8; export const MAX_LESSONS = 6; export const MAX_HANDOVER = 10; export const MAX_OPEN = 8;
+export const DEVIATION_DAYS = 3; export const ACK_NOTE_MAX = 300; export const ADDENDUM_MAX = 600; export const MAX_ADDENDA = 5;
+export type MissionMilestone = { id: string; position: number; title: string; due_date: string | null; status: string; done_at: string | null; deviation_days: number | null };
+export type MissionComputed = {
+  engagement_id: string; kind: 'consult' | 'train'; kind_ar: string; title_ar: string; scope_ar: string; deliverables: string[]; start_at: string | null; end_at: string | null; mode: string | null; member_signed_at: string | null; athar_signed_at: string | null; engagement_code: string | null; engagement_status: string;
+  expert_name: string; expert_title: string; org_ar: string; sector: string; area: string; request_id: string | null; request_title: string; request_goals: string; request_timeline: string; client_name: string; client_email: string;
+  quote_scope: string; quote_deliverables: string[]; quote_duration: string;
+  milestones: MissionMilestone[]; milestones_done: number; milestones_on_time: number; milestones_late: number; updates: number; updates_from: string | null; updates_to: string | null; my_updates: string[];
+  duration_days: number | null; sessions: number; hours: number; attendance_pct: number | null; at: string;
+  client_sent_at?: string | null; client_sent_to?: string | null;   // بعد الاعتماد: متى وإلى من أُرسل رابط الإقرار
+};
+export type MissionDeliverable = { title: string; source: 'contract' | 'quote' | 'extra'; status: Deliv | ''; evidence: string; date: string; note: string };
+export type MissionBody = {
+  general: { context: string };
+  summary: { executive: string };
+  deliverables: MissionDeliverable[];
+  timeline: { reasons: Record<string, string>; note: string };
+  results: { findings: { text: string; evidence: string }[]; kpis: { name: string; before: number | null; after: number | null; unit: string }[] };
+  recommendations: { items: { text: string; horizon: Horizon | ''; priority: Priority | ''; owner: string; impact: string }[] };
+  lessons: { challenges: { point: string; handled: string }[]; lessons: string[] };
+  handover: { items: string[]; open: string[]; followup: 'yes' | 'no' | ''; followup_note: string; admin_note: string };
+  ack: { at: string; name: string; note: string; email: string } | null;
+  addenda: { at: string; by: string; text: string }[];
+};
+const dayDiff = (a: string | null, b: string | null): number | null => { if (!a || !b) return null; const x = Date.parse(String(a).slice(0, 10) + 'T00:00:00Z'); const y = Date.parse(String(b).slice(0, 10) + 'T00:00:00Z'); return Number.isFinite(x) && Number.isFinite(y) ? Math.round((y - x) / 86400000) : null; };
+/** انحراف كل مرحلة بالأيام (+ تأخّر · − تبكير) — المنجَزة مقابل done_at، وغير المنجَزة مقابل اليوم إن تجاوز موعدها */
+export function milestoneDeviations(ms: { id: string; position: number; title: string; due_date?: string | null; status: string; done_at?: string | null }[], today: string): MissionMilestone[] {
+  return [...ms].sort((a, b) => a.position - b.position).map(m => { const due = m.due_date || null; const done = m.status === 'done' ? (m.done_at ? String(m.done_at).slice(0, 10) : null) : null; let dev: number | null = null; if (due && done) dev = dayDiff(due, done); else if (due && m.status !== 'done' && due < today) dev = dayDiff(due, today); return { id: String(m.id), position: Number(m.position || 0), title: T(m.title, SHORT_MAX), due_date: due, status: String(m.status || 'planned'), done_at: m.done_at ? String(m.done_at) : null, deviation_days: dev }; });
+}
+export const lateMilestones = (ms: MissionMilestone[]) => ms.filter(m => (m.deviation_days ?? 0) > DEVIATION_DAYS);
+/** جسم فارغ معبّأ من العقد: مخرجات العقد ثم مخرجات عرض السعر غير المكرّرة */
+export function emptyMissionBody(c: Pick<MissionComputed, 'deliverables' | 'quote_deliverables'>): MissionBody {
+  const seen = new Set<string>(); const dl: MissionDeliverable[] = [];
+  for (const [src, list] of [['contract', c.deliverables], ['quote', c.quote_deliverables]] as const) for (const t of list || []) { const k = T(t, SHORT_MAX); const nk = k.replace(/\s+/g, ' ').toLowerCase(); if (!k || seen.has(nk) || dl.length >= MAX_DELIV) continue; seen.add(nk); dl.push({ title: k, source: src, status: '', evidence: '', date: '', note: '' }); }
+  return { general: { context: '' }, summary: { executive: '' }, deliverables: dl, timeline: { reasons: {}, note: '' }, results: { findings: [], kpis: [] }, recommendations: { items: [] }, lessons: { challenges: [], lessons: [] }, handover: { items: [], open: [], followup: '', followup_note: '', admin_note: '' }, ack: null, addenda: [] };
+}
+const numAny = (v: unknown): number | null => { if (v === '' || v === null || v === undefined) return null; const n = Number(v); return Number.isFinite(n) ? Math.round(n * 100) / 100 : null; };
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+/** تنظيف ما كتبه الخبير — الإقرار والإلحاقات لا تأتي من المتصفح؛ مخرجات العقد لا تُحذف (تُشرح) */
+export function cleanMissionBody(b: any, prev: MissionBody): MissionBody {
+  const x = b && typeof b === 'object' ? b : {}; const e = emptyMissionBody({ deliverables: [], quote_deliverables: [] });
+  const given: any[] = Array.isArray(x.deliverables) ? x.deliverables : []; const fixed = prev.deliverables.filter(d => d.source !== 'extra');
+  const dl: MissionDeliverable[] = fixed.map((d, i) => { const g = given.find((y: any) => y && y.source !== 'extra' && T(y.title, SHORT_MAX) === d.title) || given.filter((y: any) => y && y.source !== 'extra')[i] || {}; return { ...d, status: (DELIV as readonly string[]).includes(String(g.status)) ? (g.status as Deliv) : '', evidence: T(g.evidence, LINE_MAX), date: DATE_RE.test(String(g.date || '')) ? String(g.date) : '', note: T(g.note, LINE_MAX) }; });
+  for (const g of given.filter((y: any) => y && y.source === 'extra').slice(0, MAX_EXTRA)) { const t = T(g.title, SHORT_MAX); if (t) dl.push({ title: t, source: 'extra', status: (DELIV as readonly string[]).includes(String(g.status)) ? (g.status as Deliv) : 'delivered', evidence: T(g.evidence, LINE_MAX), date: DATE_RE.test(String(g.date || '')) ? String(g.date) : '', note: T(g.note, LINE_MAX) }); }
+  const reasons: Record<string, string> = {}; if (x.timeline?.reasons && typeof x.timeline.reasons === 'object') for (const [k, v] of Object.entries(x.timeline.reasons).slice(0, 40)) { const t = T(v, LINE_MAX); if (t) reasons[String(k).slice(0, 40)] = t; }
+  const list = (v: any, n: number) => (Array.isArray(v) ? v : []).slice(0, n);
+  return {
+    general: { context: T(x.general?.context, TEXT_MAX) },
+    summary: { executive: T(x.summary?.executive, MISSION_SUMMARY_MAX) },
+    deliverables: dl,
+    timeline: { reasons, note: T(x.timeline?.note, TEXT_MAX) },
+    results: { findings: list(x.results?.findings, MAX_FINDINGS).map((f: any) => ({ text: T(f?.text, LINE_MAX), evidence: T(f?.evidence, LINE_MAX) })).filter((f: any) => f.text), kpis: list(x.results?.kpis, MAX_KPIS).map((k: any) => ({ name: T(k?.name, SHORT_MAX), before: numAny(k?.before), after: numAny(k?.after), unit: T(k?.unit, 20) })).filter((k: any) => k.name) },
+    recommendations: { items: list(x.recommendations?.items, MAX_RECS).map((r: any) => ({ text: T(r?.text, LINE_MAX), horizon: (HORIZON as readonly string[]).includes(String(r?.horizon)) ? r.horizon : '', priority: (PRIORITY as readonly string[]).includes(String(r?.priority)) ? r.priority : '', owner: T(r?.owner, SHORT_MAX), impact: T(r?.impact, LINE_MAX) })).filter((r: any) => r.text) },
+    lessons: { challenges: list(x.lessons?.challenges, MAX_LESSONS).map((c: any) => ({ point: T(c?.point, LINE_MAX), handled: T(c?.handled, LINE_MAX) })).filter((c: any) => c.point), lessons: list(x.lessons?.lessons, MAX_LESSONS).map((l: any) => T(l, LINE_MAX)).filter(Boolean) },
+    handover: { items: list(x.handover?.items, MAX_HANDOVER).map((l: any) => T(l, LINE_MAX)).filter(Boolean), open: list(x.handover?.open, MAX_OPEN).map((l: any) => T(l, LINE_MAX)).filter(Boolean), followup: x.handover?.followup === 'yes' ? 'yes' : x.handover?.followup === 'no' ? 'no' : '', followup_note: T(x.handover?.followup_note, LINE_MAX), admin_note: T(x.handover?.admin_note, TEXT_MAX) },
+    ack: prev.ack || null, addenda: Array.isArray(prev.addenda) ? prev.addenda : [],
+  } as MissionBody & typeof e;
+}
+/** إحصاء المصفوفة: سُلِّم x من y (بلا «زيادة») · الالتزام بالمواعيد */
+export function missionStats(body: Pick<MissionBody, 'deliverables' | 'results'>, c: Pick<MissionComputed, 'milestones'>): { total: number; delivered: number; partial: number; changed: number; not: number; extra: number; pct: number | null; on_time: number; late: number; kpi_deltas: { name: string; delta: number | null; pct: number | null }[] } {
+  const base = body.deliverables.filter(d => d.source !== 'extra'); const cnt = (s: Deliv) => base.filter(d => d.status === s).length;
+  const done = (c.milestones || []).filter(m => m.status === 'done'); const late = done.filter(m => (m.deviation_days ?? 0) > DEVIATION_DAYS).length;
+  const kd = body.results.kpis.map(k => { const d = k.before !== null && k.after !== null ? Math.round((k.after - k.before) * 100) / 100 : null; const p = d !== null && k.before ? Math.round((d / Math.abs(k.before)) * 1000) / 10 : null; return { name: k.name, delta: d, pct: p }; });
+  return { total: base.length, delivered: cnt('delivered'), partial: cnt('partial'), changed: cnt('changed'), not: cnt('not'), extra: body.deliverables.length - base.length, pct: base.length ? Math.round((cnt('delivered') / base.length) * 100) : null, on_time: done.length - late, late, kpi_deltas: kd };
+}
+/** الاكتمال قبل الإرسال */
+export function missingBeforeMissionSubmit(body: MissionBody, c: Pick<MissionComputed, 'milestones'>): string[] {
+  const out: string[] = [];
+  if (T(body.summary.executive).length < 40) out.push('ملخّص تنفيذي (40 حرفًا على الأقل)');
+  const base = body.deliverables.filter(d => d.source !== 'extra'); if (base.length && base.some(d => !d.status)) out.push('حالة لكل مخرج في «الوعد مقابل الواقع»');
+  if (base.some(d => d.status === 'delivered' && !d.evidence)) out.push('شاهد لكل مخرج «سُلِّم»');
+  if (base.some(d => (d.status === 'changed' || d.status === 'not') && !d.note)) out.push('ملاحظة لكل مخرج «تغيّر» أو «لم يُسلَّم»');
+  if (!body.results.findings.length) out.push('نتيجة واحدة على الأقل');
+  if (!body.recommendations.items.length) out.push('توصية واحدة للجهة على الأقل');
+  for (const m of lateMilestones(c.milestones || [])) if (!body.timeline.reasons[m.id]) { out.push(`سبب الانحراف في «${m.title}»`); break; }
+  return out;
+}
+export function canAck(r: { status: string; body: any }): boolean { return r.status === 'approved' && !r.body?.ack; }
+/** صياغة محلية من الأرقام والحالات — وصف لا حكم */
+export type MissionPhrase = { section: 'summary' | 'timeline' | 'handover'; text: string };
+export function localMissionPhrases(c: MissionComputed, body: MissionBody): MissionPhrase[] {
+  const s = missionStats(body, c); const out: MissionPhrase[] = [];
+  const dur = c.duration_days !== null ? `على مدى ${c.duration_days} يومًا` : ''; const per = c.start_at ? ` من ${fmtDayAr(c.start_at)}${c.end_at ? ` إلى ${fmtDayAr(c.end_at)}` : ''}` : '';
+  out.push({ section: 'summary', text: `نُفِّذت مهمة «${c.title_ar}» لصالح ${c.org_ar || 'الجهة'}${per}${dur ? ` ${dur}` : ''}، وشملت ${s.total} ${s.total === 1 ? 'مخرجًا متّفقًا عليه' : s.total === 2 ? 'مخرجين متّفقًا عليهما' : 'مخرجات متّفقًا عليها'}.` });
+  if (s.total) out.push({ section: 'summary', text: `سُلِّم ${s.delivered} من ${s.total} ${s.total <= 10 ? 'مخرجات' : 'مخرجًا'} كما وُقِّع${s.partial ? `، و${s.partial} جزئيًّا` : ''}${s.changed ? `، وتغيّر ${s.changed} بالاتفاق` : ''}${s.not ? `، ولم يُسلَّم ${s.not}` : ''}${s.extra ? `، وأُضيف ${s.extra} خارج الاتفاق` : ''}.` });
+  if (c.milestones.length) out.push({ section: 'timeline', text: `من ${c.milestones.length} مراحل، أُنجزت ${c.milestones_done}${c.milestones_done ? ` (${s.on_time} في موعدها${s.late ? ` و${s.late} بتأخّر يتجاوز ${DEVIATION_DAYS} أيام` : ''})` : ''}، وسُجِّل ${c.updates} ${c.updates === 1 ? 'تحديثًا' : c.updates === 2 ? 'تحديثان' : 'تحديثات'} للجهة${c.updates_from ? ` بين ${fmtDayAr(c.updates_from)} و${fmtDayAr(c.updates_to)}` : ''}.` });
+  if (c.sessions) out.push({ section: 'summary', text: `تضمّنت المهمة ${c.sessions} جلسة تدريبية بواقع ${c.hours} ساعة${c.attendance_pct !== null ? ` ومتوسط حضور ${c.attendance_pct}%` : ''}.` });
+  out.push({ section: 'handover', text: `${body.handover.items.length ? `سُلِّمت ${body.handover.items.length} عناصر` : 'تُسلَّم المخرجات'} إلى ${c.org_ar || 'الجهة'}${body.handover.open.length ? ` مع ${body.handover.open.length} نقاط مفتوحة` : ''}${body.recommendations.items.length ? `، ويرافقها ${body.recommendations.items.length} توصيات` : ''}.` });
+  return out.slice(0, 5);
+}
+const MISSION_FORBID = /ممتاز|متميّز|متميز|ناجح|نجاح باهر|فشل|ضعيف|رائع|مبهر|أفضل|أسوأ/;
+export function parseMissionPhrases(raw: string): MissionPhrase[] | null {
+  try { const m = raw.match(/\[[\s\S]*\]/); const j = JSON.parse(m ? m[0] : raw); if (!Array.isArray(j)) return null; const ok = ['summary', 'timeline', 'handover']; const out = j.map((x: any) => ({ section: ok.includes(String(x?.section)) ? String(x.section) : 'summary', text: T(x?.text, 260) })).filter((x: any) => x.text.length >= 10 && !MISSION_FORBID.test(x.text)); return out.length ? (out.slice(0, 5) as MissionPhrase[]) : null; } catch { return null; }
+}
+export function missionPhrasePrompt(c: MissionComputed, body: MissionBody): { system: string; user: string } {
+  const s = missionStats(body, c);
+  return {
+    system: 'أنت كاتب تقارير مهنية بالعربية الفصحى. تصوغ جُملًا وصفية قصيرة من معطيات رقمية وحالات مخرجات فقط. ممنوع: تقييم جودة العمل أو الخبير أو الجهة، أو كلمات الحكم (ممتاز، ناجح، ضعيف…)، أو ذكر أسماء أشخاص، أو أي مبلغ مالي، أو أي رقم غير معطى. أعد JSON فقط: مصفوفة من {"section": summary|timeline|handover, "text": "…"} بحدّ أقصى 5 عناصر، كل جملة ≤ 240 حرفًا.',
+    user: JSON.stringify({ title: c.title_ar, org: c.org_ar, kind: c.kind_ar, start: c.start_at, end: c.end_at, duration_days: c.duration_days, deliverables: { total: s.total, delivered: s.delivered, partial: s.partial, changed: s.changed, not: s.not, extra: s.extra }, milestones: { total: c.milestones.length, done: c.milestones_done, on_time: s.on_time, late: s.late }, updates: c.updates, sessions: c.sessions, hours: c.hours, attendance_pct: c.attendance_pct, handover_items: body.handover.items.length, open_points: body.handover.open.length, recommendations: body.recommendations.items.length, my_updates: c.my_updates.slice(0, 8) }),
+  };
+}
+/** ما تراه الجهة برابط الإقرار: التقرير كاملًا عدا الملاحظة الإدارية والبريد؛ ولا أجر في أي مكان */
+export function missionClientView(r: { id: string; verify_code: string | null; status: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; body: MissionBody; period_from: string; period_to: string }): any {
+  const c = r.computed as MissionComputed; const { admin_note: _a, ...handover } = r.body.handover; const { my_updates: _u, client_email: _e, client_sent_to: _s, ...cc } = c;   // بلا بريد ولا تحديثات داخلية
+  const ack = r.body.ack ? { at: r.body.ack.at, name: r.body.ack.name, note: r.body.ack.note || '' } : null;
+  return { id: r.id, code: r.verify_code, status: r.status, author_name: r.author_name, approved_name: r.approved_name, approved_at: r.approved_at, period_from: r.period_from, period_to: r.period_to, computed: cc, body: { ...r.body, handover, ack }, stats: missionStats(r.body, c), can_ack: canAck(r) };
+}
+/** التحقّق العام من تقرير مهمة: بلا نتائج ولا توصيات ولا أجر */
+export function missionPublicView(r: { verify_code: string | null; status: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; body: any; period_from: string; period_to: string; kind: string }): any {
+  const c = r.computed as MissionComputed; const s = missionStats(r.body as MissionBody, c);
+  return { code: r.verify_code, kind: 'mission', kind_ar: P46_NAMES_AR.mission, title_ar: c.title_ar, org_ar: c.org_ar, engagement_kind_ar: c.kind_ar, engagement_code: c.engagement_code, period_from: c.start_at || r.period_from, period_to: c.end_at || r.period_to, author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at, delivered: s.delivered, total: s.total, milestones: c.milestones.length, milestones_done: c.milestones_done, ack: r.body?.ack ? { at: r.body.ack.at, name: r.body.ack.name } : null };
+}
+/** رمز إقرار الجهة (24 رمزًا من أبجدية مِعيار) */
+export function ackToken(): string { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 24; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
+export function missionListLineAr(r: { computed: any; status: string }): string { const c = r.computed || {}; const n = Array.isArray(c.milestones) ? c.milestones.length : 0; return `${P46_NAMES_AR.mission} · ${String(c.title_ar || '')}${c.org_ar ? ` · ${c.org_ar}` : ''}${n ? ` · ${c.milestones_done ?? 0}/${n} مراحل` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }

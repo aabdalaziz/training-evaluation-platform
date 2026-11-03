@@ -222,6 +222,7 @@ function Inner() {
           {e.terms_ar && <p className="dr-muted"><b>شروط:</b> {e.terms_ar}</p>}
           {e.change_note_ar && <p className="dr-muted"><b>طلب التعديل:</b> {e.change_note_ar}</p>}
           {e.verify_url && <p className="dr-cert"><Icon name="certificate" size={14} /> وثيقة العقد <b dir="ltr">{e.code}</b> · <a href={e.verify_url}>تحقّق</a></p>}
+          {(e.status === 'active' || e.status === 'completed') && <p className="dr-cert" data-testid="me-eng-report"><Icon name="doc" size={14} /> تقرير إنجاز المهمة: <a href="/me/reports">{e.status === 'completed' ? 'افتحه من تقاريري' : 'ابدأه من تقاريري'}</a> <small className="dr-muted">— الأجر لا يدخل التقرير</small></p>}   {/* P46 ر3 */}
           {e.status === 'proposed' && (<div className="me-engact">
             <button className="pt-btn small" disabled={!!busy} onClick={() => { if (confirm('توقّع باسمك على عقد التعاون هذا، ويوقّع أَثَر بصفته فورًا. متابعة؟')) act({ action: 'engagement', id: e.id, op: 'sign', confirm: true }); }} data-testid="eng-sign"><Icon name="check" size={14} /> أوقّع</button>
             <label className="dr-lbl grow">ملاحظة (للتعديل أو الاعتذار)<input className="dr-in" value={note[e.id] || ''} onChange={ev => setNote({ ...note, [e.id]: ev.target.value })} maxLength={600} data-testid="eng-note" /></label>

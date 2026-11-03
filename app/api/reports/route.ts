@@ -11,7 +11,9 @@
  *       submit {id} · approve {id, as?: quality|manager} · return {id, note} · delete {id} · template {program_id, skills, strategies} · phrase {id}
  *  ر2 (التقرير الختامي «خاتمة الرحلة»): GET ?line=<id> (صفحة المتدرّب) · ?credential=<code> (ما يظهر في الشهادة بإذنه — عام)
  *       POST create_final {program_id, classroom_id?} · paragraph {id, key} (AI يصوغ فقرة مسار متدرّب من أرقامه فقط) · promote {id, program_id} (الطاقم: المرشَّحون للرفع → تسجيل معلَّق في برنامج الهدف) · line_show {line_id, on}
- *  الذكاء الاصطناعي يصوغ جملًا من الأرقام فقط (phrase · paragraph) ولا يُحفظ منها شيء حتى يعتمدها المعلّم؛ لا تقديرات ولا توصيات.
+ *  ر3 (تقرير إنجاز المهمة «أثرُ المهمة»): GET ?verify=<code>&k=<رمز الإقرار> (الجهة ترى التقرير كاملًا بلا دخول) · GET يعيد missions[] (عقودي الموقَّعة)
+ *       POST create_mission {engagement_id} · mission_phrase {id} (AI يصوغ من المخرجات والمراحل فقط) · send_client {id, email?} (الطاقم) · addendum {id, text} (الطاقم) · ack {code, k, name, note} (عام — بلا دخول)
+ *  الذكاء الاصطناعي يصوغ جملًا من الأرقام فقط (phrase · paragraph · mission_phrase) ولا يُحفظ منها شيء حتى يعتمدها الإنسان؛ لا تقديرات ولا توصيات ولا حكم.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -19,6 +21,8 @@ import { normalizeSite } from '../../../lib/portal/open';
 import { runAi, aiUsage, logAi, aiStatus } from '../../../lib/ai/athar';
 import { P46_NAMES_AR, STATUS_AR, GRADES, GRADE_KEY_AR, FIT_AR, ACHIEVED_AR, APPLIED_AR, RESPONSE_AR, SUMMATIVE_TOOLS_AR, WEEK_DAYS_AR, PASS_MARK, REGULAR_PCT, TEXT_MAX, SHORT_MAX, LINE_MAX, MAX_ACTIVITIES, MAX_TOOLS, publicVerifyView, localPhrases, parsePhrases, phrasePrompt, canView, weekBounds, type Computed, type StudentRow, REC_AR, SIGN_AR, TREND_AR, PARA_MAX, PROMOTE_MIN, PROMOTE_ATT, SUPPORT_MAX, localParagraph, paragraphPrompt, parseParagraph, type FinalComputed, type FinalStudent } from '../../../lib/reports/registry';
 import { myScope, myReports, adminReports, myLines, reportById, verifyReport, view, createReport, saveReport, recomputeReport, submitReport, decideReport, deleteReport, saveTemplate, mayReportOn, finalCards, createFinal, promoteFromFinal, lineById, setLineShow, credentialLine } from '../../../lib/reports/load';
+import { missionCards, createMission, sendMissionToClient, missionByToken, ackMission, addMissionAddendum } from '../../../lib/reports/load';
+import { missionPublicView, localMissionPhrases, missionPhrasePrompt, parseMissionPhrases, MISSION_NAMES_AR, DELIV_AR, HORIZON_AR, PRIORITY_AR, type MissionComputed, type MissionBody } from '../../../lib/reports/registry';
 import type { Me } from '../../../lib/reports/load';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 30;
@@ -29,7 +33,7 @@ const siteOf = (req: Request) => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL 
 const lower = (s: unknown) => String(s || '').trim().toLowerCase();
 const ID = /^[0-9a-z-]{1,40}$/i;
 const staffEmails = () => String(process.env.NOTIFY_EMAILS || process.env.ADMIN_EMAILS || '').split(/[,;\s]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
-const META = { names_ar: P46_NAMES_AR, status_ar: STATUS_AR, grades: GRADES, grade_key_ar: GRADE_KEY_AR, fit_ar: FIT_AR, achieved_ar: ACHIEVED_AR, applied_ar: APPLIED_AR, response_ar: RESPONSE_AR, summative_tools_ar: SUMMATIVE_TOOLS_AR, week_days_ar: WEEK_DAYS_AR, pass_mark: PASS_MARK, regular_pct: REGULAR_PCT, text_max: TEXT_MAX, short_max: SHORT_MAX, line_max: LINE_MAX, max_activities: MAX_ACTIVITIES, max_tools: MAX_TOOLS, ai: aiStatus().enabled, rec_ar: REC_AR, sign_ar: SIGN_AR, trend_ar: TREND_AR, para_max: PARA_MAX, rule: { promote_min: PROMOTE_MIN, promote_att: PROMOTE_ATT, support_max: SUPPORT_MAX } };
+const META = { names_ar: { ...P46_NAMES_AR, ...MISSION_NAMES_AR }, deliv_ar: DELIV_AR, horizon_ar: HORIZON_AR, priority_ar: PRIORITY_AR, status_ar: STATUS_AR, grades: GRADES, grade_key_ar: GRADE_KEY_AR, fit_ar: FIT_AR, achieved_ar: ACHIEVED_AR, applied_ar: APPLIED_AR, response_ar: RESPONSE_AR, summative_tools_ar: SUMMATIVE_TOOLS_AR, week_days_ar: WEEK_DAYS_AR, pass_mark: PASS_MARK, regular_pct: REGULAR_PCT, text_max: TEXT_MAX, short_max: SHORT_MAX, line_max: LINE_MAX, max_activities: MAX_ACTIVITIES, max_tools: MAX_TOOLS, ai: aiStatus().enabled, rec_ar: REC_AR, sign_ar: SIGN_AR, trend_ar: TREND_AR, para_max: PARA_MAX, rule: { promote_min: PROMOTE_MIN, promote_att: PROMOTE_ATT, support_max: SUPPORT_MAX } };
 
 async function who(req: Request, db: any): Promise<Me | null> {
   const U = process.env.NEXT_PUBLIC_SUPABASE_URL; const A = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
@@ -41,7 +45,9 @@ async function who(req: Request, db: any): Promise<Me | null> {
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500); const sp = new URL(req.url).searchParams;
   if (sp.get('meta')) return NextResponse.json({ success: true, ...META });
-  if (sp.get('verify')) { const code = String(sp.get('verify') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); const r = code ? await verifyReport(db, code) : null; return NextResponse.json({ success: true, report: r ? publicVerifyView(r) : null }); }
+  if (sp.get('verify')) { const code = String(sp.get('verify') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); const k = String(sp.get('k') || '').replace(/[^A-Z0-9]/g, '').slice(0, 32);
+    if (k) { const cv = await missionByToken(db, code, k); return NextResponse.json({ success: true, report: cv, client: !!cv, names_ar: { ...P46_NAMES_AR, ...MISSION_NAMES_AR }, deliv_ar: DELIV_AR, horizon_ar: HORIZON_AR, priority_ar: PRIORITY_AR }, { headers: { 'Cache-Control': 'no-store' } }); }
+    const r = code ? await verifyReport(db, code) : null; return NextResponse.json({ success: true, report: r ? (r.kind === 'mission' ? missionPublicView(r) : publicVerifyView(r)) : null }); }
   if (sp.get('credential')) { const code = String(sp.get('credential') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 40); return NextResponse.json({ success: true, line: code ? await credentialLine(db, code) : null }, { headers: { 'Cache-Control': 'no-store' } }); }
   const me = await who(req, db); if (!me) return bad('سجّل الدخول', 401);
   if (sp.get('line')) { const lid = String(sp.get('line') || ''); if (!ID.test(lid)) return bad('معرّف غير صالح'); const l = await lineById(db, me, lid); if (!l) return bad('السطر غير موجود', 404); return NextResponse.json({ success: true, line: l, ...META }); }
@@ -49,16 +55,22 @@ export async function GET(req: Request) {
   if (sp.get('id')) { const id = String(sp.get('id') || ''); if (!ID.test(id)) return bad('معرّف غير صالح'); const r = await reportById(db, id); if (!r) return bad('التقرير غير موجود', 404); if (!canView(r, me)) return bad('غير مصرّح', 403); return NextResponse.json({ success: true, report: view(r, me), me: { staff: me.staff, email: me.email }, ...META }); }
   if (sp.get('admin')) { if (!me.staff) return bad('غير مصرّح', 403); const rows = await adminReports(db); return NextResponse.json({ success: true, items: rows.map(r => view(r, me)), ...META }); }
   const scope = await myScope(db, me); const mine = await myReports(db, me); const wb = weekBounds(new Date().toISOString().slice(0, 10));
-  const finals = await finalCards(db, me, scope, mine);
-  return NextResponse.json({ success: true, scope, mine: mine.map(r => view(r, me)), finals, week: wb, me: { staff: me.staff, email: me.email, name: me.name }, ...META });
+  const finals = await finalCards(db, me, scope, mine); const missions = await missionCards(db, me, mine);
+  return NextResponse.json({ success: true, scope, mine: mine.map(r => view(r, me)), finals, missions, week: wb, me: { staff: me.staff, email: me.email, name: me.name }, ...META });
 }
 
 export async function POST(req: Request) {
-  const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500); const me = await who(req, db); if (!me) return bad('سجّل الدخول', 401); const site = siteOf(req);
+  const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500); const site = siteOf(req);
   let body: any = {}; try { body = await req.json(); } catch { return bad('طلب غير صالح'); } const action = String(body.action || ''); const id = String(body.id || '');
+  if (action === 'ack') {   // ر3: إقرار الجهة — عام بلا دخول، بالرمز + رمز الرابط
+    const code = String(body.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12); const k = String(body.k || '').replace(/[^A-Z0-9]/g, '').slice(0, 32); if (!code || !k) return bad('الرابط غير صالح');
+    const r = await ackMission(db, code, k, String(body.name || ''), String(body.note || ''), site, staffEmails()); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true });
+  }
+  const me = await who(req, db); if (!me) return bad('سجّل الدخول', 401);
   if (action === 'create') { const pid = String(body.program_id || ''); if (!ID.test(pid)) return bad('اختر البرنامج'); const cid = body.classroom_id ? String(body.classroom_id) : null; if (cid && !ID.test(cid)) return bad('معرّف الشعبة غير صالح'); const r = await createReport(db, me, { program_id: pid, classroom_id: cid, period_from: body.period_from, period_to: body.period_to }); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, report: view(r.report, me) }); }
   if (action === 'template') { const pid = String(body.program_id || ''); if (!ID.test(pid)) return bad('اختر البرنامج'); const scope = await myScope(db, me); if (!mayReportOn(scope, me, pid, null)) return bad('غير مصرّح', 403); const r = await saveTemplate(db, me, pid, body.skills, body.strategies); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, skills: r.skills, strategies: r.strategies }); }
   if (action === 'create_final') { const pid = String(body.program_id || ''); if (!ID.test(pid)) return bad('اختر البرنامج'); const cid = body.classroom_id ? String(body.classroom_id) : null; if (cid && !ID.test(cid)) return bad('معرّف الشعبة غير صالح'); const r = await createFinal(db, me, { program_id: pid, classroom_id: cid }); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, report: view(r.report, me) }); }
+  if (action === 'create_mission') { const eid = String(body.engagement_id || ''); if (!ID.test(eid)) return bad('اختر عقد التعاون'); const r = await createMission(db, me, eid); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, report: view(r.report, me) }); }
   if (action === 'line_show') { const lid = String(body.line_id || ''); if (!ID.test(lid)) return bad('معرّف غير صالح'); const r = await setLineShow(db, me, lid, !!body.on); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true }); }
   if (!ID.test(id)) return bad('معرّف غير صالح');
   if (action === 'save') { const r = await saveReport(db, me, id, { body: body.body, students: body.students, lines: body.lines, lines_ok: body.lines_ok }); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, report: view(r.report, me) }); }
@@ -75,6 +87,17 @@ export async function POST(req: Request) {
     const p = paragraphPrompt(t, c.skills || [], live); const res = await runAi({ system: p.system, user: p.user, parse: parseParagraph, local, budgetMs: 20000, json: true });
     await logAi(db, { user_id: me.id, email: me.email, role: me.staff ? 'staff' : 'trainer', purpose: 'report_phrase', result: res, context: { report: id, final: true } });
     return NextResponse.json({ success: true, text: res.data, source: res.source, note_ar: res.source === 'ai' ? 'صاغها الذكاء الاصطناعي من مسار المتدرّب — لا تُحفظ حتى تعتمدها' : 'صياغة محلية من الأرقام' });
+  }
+  if (action === 'send_client') { const r = await sendMissionToClient(db, me, id, site, body.email ? String(body.email) : undefined); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, to: r.to, url: r.url }); }
+  if (action === 'addendum') { const r = await addMissionAddendum(db, me, id, String(body.text || '')); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true }); }
+  if (action === 'mission_phrase') {
+    const r = await reportById(db, id); if (!r) return bad('التقرير غير موجود', 404); if (!canView(r, me)) return bad('غير مصرّح', 403); if (r.kind !== 'mission') return bad('الصياغة هنا لتقرير إنجاز المهمة');
+    const c: MissionComputed = r.computed; const b: MissionBody = body.body && typeof body.body === 'object' ? body.body : r.body;
+    const usage = await aiUsage(db, me.id, 'report_mission'); const local = () => localMissionPhrases(c, b);
+    if (!usage.allowed) return NextResponse.json({ success: true, phrases: local(), source: 'local', note_ar: 'بلغت حدّ الاستخدام اليومي — هذه صياغة محلية من المخرجات والمراحل' });
+    const p = missionPhrasePrompt(c, b); const res = await runAi({ system: p.system, user: p.user, parse: parseMissionPhrases, local, budgetMs: 20000, json: true });
+    await logAi(db, { user_id: me.id, email: me.email, role: me.staff ? 'staff' : 'expert', purpose: 'report_mission', result: res, context: { report: id } });
+    return NextResponse.json({ success: true, phrases: res.data, source: res.source, note_ar: res.source === 'ai' ? 'صاغها الذكاء الاصطناعي من مخرجاتك ومراحلك — لا تُحفظ حتى تعتمدها' : 'صياغة محلية من المخرجات والمراحل — لا تُحفظ حتى تعتمدها' });
   }
   if (action === 'delete') { const r = await deleteReport(db, me, id); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true }); }
   if (action === 'phrase') {
