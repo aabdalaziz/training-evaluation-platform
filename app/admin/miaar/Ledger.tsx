@@ -120,33 +120,41 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
       </section>}
       <section className="am-card">
         <h3>السجلّ <small>{rows.length} نتيجة بحسب المرشّحات — أمام كل متقدّم قرارُه وإجراءاتُه</small></h3>
-        {!rows.length ? <div className="am-empty" data-testid="lg-empty">لا نتائج تطابق المرشّحات.</div> : <div className="lg-tw"><table className="mm-t lg-t"><thead><tr>
-          <th><input type="checkbox" aria-label="تحديد الكل" checked={all} onChange={() => setSel(all ? new Set() : new Set(rows.map((r) => r.id)))} data-testid="lg-check-all" /></th>
-          <th>المتقدّم</th><th>النتيجة</th><th>الحالة</th><th>قرار التسكين</th><th>إجراءات</th></tr></thead><tbody>
-          {rows.map((r) => { const p = pk(r); const d = r.decision; const left = hoursLeft(r.deadline_at); return <tr key={r.id} className={`${r.archived_at ? 'arch' : ''}${d?.status === 'review' || (!d && r.gray) ? ' gray' : ''}`} data-testid="lg-row">
-            <td><input type="checkbox" aria-label={`تحديد ${r.name}`} checked={sel.has(r.id)} onChange={() => toggle(r.id)} data-testid="lg-check" /></td>
-            <td><button type="button" className="lg-name" onClick={() => void openHistory(r.email)} data-testid="lg-history-open">{r.name}</button><br /><small dir="ltr">{r.email}</small>
-              <div className="lg-chips">{r.attempt > 1 && <span className="lg-chip teal" title="محاولة لاحقة — تقرير المقارنة في م5-ب">المحاولة {r.attempt}</span>}{r.invite_label && <span className="lg-chip">{r.invite_label}</span>}{r.group_tag && <span className="lg-chip">#{r.group_tag}</span>}{r.retake_open && <span className="lg-chip gold">إذن إعادة مفتوح</span>}</div></td>
-            <td><b className="lg-lv">{LV[r.demonstrated]}</b><small> مثبت · التحاق {LV[r.entry]}</small><br /><small>{r.percent !== null ? `${r.percent}%` : '—'} · ثقة {CONF[r.confidence] || r.confidence}{r.form_code ? ` · ${r.form_code}` : ''}</small><br /><small>{fmt(r.taken_at)}</small>{r.code && <><br /><a href={`/miaar/result/${r.code}`} target="_blank" rel="noreferrer" dir="ltr">{r.code}</a></>}</td>
-            <td>{r.archived_at ? <span className="lg-st arch">مؤرشفة</span> : d ? <span className={`lg-st ${d.status}`}>{d.status === 'review' ? 'يحتاج إنسانًا' : d.source === 'auto' ? 'سُكِّن تلقائيًّا' : 'معتمد'}</span> : <span className="lg-st none">بلا قرار{left !== null ? <small> · {left === 0 ? 'حلّت المهلة' : `${left} س متبقية`}</small> : <small> · بلا تسكين تلقائي</small>}</span>}
-              {(d?.gray_reason || (!d && r.gray)) && <small className="lg-grayr" data-testid="lg-gray">{d?.gray_reason || r.gray}</small>}</td>
-            <td className="lg-dec">
-              {d && d.status === 'approved' ? <div className="lg-decided" data-testid="lg-decided"><b>{LV[d.level || ''] || '—'}</b>{d.level && d.level !== r.entry && <small className="lg-ovr">تسكين يدوي بدل {LV[r.entry]}</small>}<small>{d.program_name ? `برنامج: ${d.program_name}` : 'بلا تسجيل'}{d.classroom ? ` · شعبة ${d.classroom}` : ''}</small><small>{d.source === 'auto' ? 'تلقائي' : 'إنسان'} · {fmt(d.decided_at)}</small><button type="button" className="lg-link" onClick={() => void post({ action: 'decision_clear', report_id: r.id }, `clear-${r.id}`)}>تغيير</button></div>
-                : <div className="lg-pick">
-                  <select aria-label="مستوى التسكين" value={p.level} onChange={(e) => setPick({ ...pick, [r.id]: { ...p, level: e.target.value } })} data-testid="lg-level">{LEVELS.map((l) => <option key={l} value={l}>{LV[l]}{l === r.entry ? ' (توصية مِعيار)' : ''}</option>)}</select>
-                  {p.level !== r.entry && <small className="lg-ovr">تسكين يدوي: {LV[p.level]} بدل {LV[r.entry]}</small>}
+        {!rows.length ? <div className="am-empty" data-testid="lg-empty">لا نتائج تطابق المرشّحات.</div> : <div className="lg-list">
+          <div className="lg-lhead"><label><input type="checkbox" aria-label="تحديد الكل" checked={all} onChange={() => setSel(all ? new Set() : new Set(rows.map((r) => r.id)))} data-testid="lg-check-all" /> تحديد الكل</label><span>{sel.size ? `${sel.size} محدَّد` : 'المستوى الكبير على اليمين = المستوى المثبت؛ السطر السفلي = القرار والإجراءات'}</span></div>
+          {rows.map((r) => { const p = pk(r); const d = r.decision; const left = hoursLeft(r.deadline_at); const gray = d?.gray_reason || (!d && r.gray); return <article key={r.id} className={`lg-row${r.archived_at ? ' arch' : ''}${d?.status === 'review' || (!d && r.gray) ? ' gray' : ''}${sel.has(r.id) ? ' sel' : ''}`} data-testid="lg-row">
+            <div className="lg-top">
+              <input type="checkbox" className="lg-cb" aria-label={`تحديد ${r.name}`} checked={sel.has(r.id)} onChange={() => toggle(r.id)} data-testid="lg-check" />
+              <div className={`lg-coin lv-${r.demonstrated}`} title={`المستوى المثبت ${LV[r.demonstrated]}`}><b>{LV[r.demonstrated]}</b><small>مثبت</small></div>
+              <div className="lg-who">
+                <div className="lg-who1"><button type="button" className="lg-name" onClick={() => void openHistory(r.email)} data-testid="lg-history-open">{r.name}</button><small dir="ltr">{r.email}</small></div>
+                <div className="lg-meta"><span>التحاق {LV[r.entry]}</span><span>{r.percent !== null ? `${r.percent}%` : '—'}</span><span>ثقة {CONF[r.confidence] || r.confidence}</span>{r.form_code && <span dir="ltr">{r.form_code}</span>}<span>{fmt(r.taken_at)}</span>{r.code && <span><a href={`/miaar/result/${r.code}`} target="_blank" rel="noreferrer" dir="ltr">{r.code}</a></span>}</div>
+                <div className="lg-chips">{r.attempt > 1 && <span className="lg-chip teal" title="محاولة لاحقة — تقرير المقارنة في م5-ب">المحاولة {r.attempt}</span>}{r.invite_label && <span className="lg-chip">{r.invite_label}</span>}{r.group_tag && <span className="lg-chip">#{r.group_tag}</span>}{r.retake_open && <span className="lg-chip gold">إذن إعادة مفتوح</span>}</div>
+              </div>
+              <div className="lg-state">
+                {r.archived_at ? <span className="lg-st arch">مؤرشفة</span> : d ? <span className={`lg-st ${d.status}`}>{d.status === 'review' ? 'يحتاج إنسانًا' : d.source === 'auto' ? 'سُكِّن تلقائيًّا' : 'معتمد'}</span> : <span className="lg-st none">بلا قرار<small> · {left === null ? 'بلا تسكين تلقائي' : left === 0 ? 'حلّت المهلة' : `${left} س متبقية`}</small></span>}
+                {gray && <small className="lg-grayr" data-testid="lg-gray">{gray}</small>}
+              </div>
+            </div>
+            <div className="lg-bot">
+              {d && d.status === 'approved' ? <div className="lg-decided" data-testid="lg-decided"><Icon name="check" /><b>{LV[d.level || ''] || '—'}</b>{d.level && d.level !== r.entry && <small className="lg-ovr">يدوي بدل {LV[r.entry]}</small>}<span className="lg-arrow">←</span><span>{d.program_name ? d.program_name : 'بلا تسجيل'}{d.classroom ? ` · شعبة ${d.classroom}` : ''}</span><small className="lg-dim">{d.source === 'auto' ? 'تلقائي' : 'إنسان'} · {fmt(d.decided_at)}</small><button type="button" className="lg-link" onClick={() => void post({ action: 'decision_clear', report_id: r.id }, `clear-${r.id}`)}>تغيير</button></div>
+                : <div className="lg-pick" role="group" aria-label="قرار التسكين">
+                  <span className="lg-plbl">التسكين</span>
+                  <select aria-label="مستوى التسكين" className={p.level !== r.entry ? 'ovr' : ''} value={p.level} onChange={(e) => setPick({ ...pick, [r.id]: { ...p, level: e.target.value } })} data-testid="lg-level">{LEVELS.map((l) => <option key={l} value={l}>{LV[l]}{l === r.entry ? ' · توصية مِعيار' : ''}</option>)}</select>
+                  <span className="lg-arrow" aria-hidden="true">←</span>
                   <select aria-label="البرنامج" value={p.program} onChange={(e) => setPick({ ...pick, [r.id]: { ...p, program: e.target.value } })} data-testid="lg-program"><option value="">بلا تسجيل في برنامج</option>{programs.map((pr) => <option key={pr.id} value={pr.id} disabled={pr.remaining === 0}>{progLabel(pr)}</option>)}</select>
-                  <button type="button" className="am-btn small" disabled={!!busy || !!r.archived_at} onClick={() => void decideOne(r)} data-testid="lg-decide">اعتمد</button>
+                  <button type="button" className="am-btn lg-go" disabled={!!busy || !!r.archived_at} onClick={() => void decideOne(r)} data-testid="lg-decide"><Icon name="check" />اعتمد</button>
+                  {p.level !== r.entry && <small className="lg-ovr">تسكين يدوي: {LV[p.level]} بدل {LV[r.entry]}</small>}
                 </div>}
-            </td>
-            <td className="lg-acts">
-              {r.code && <a className="am-btn small ghost" href={`/miaar/result/${r.code}`} target="_blank" rel="noreferrer">البطاقة</a>}
-              <button type="button" className="am-btn small ghost" disabled={!!busy} onClick={() => void post({ action: r.archived_at ? 'unarchive' : 'archive', ids: [r.id] }, `arch-${r.id}`)} data-testid="lg-archive">{r.archived_at ? 'إلغاء الأرشفة' : 'أرشفة'}</button>
-              <button type="button" className="am-btn small ghost" disabled={!!busy || r.retake_open} onClick={() => void post({ action: 'retake', report_ids: [r.id], reason: 'إذن فردي من السجلّ', days: 30 }, `retake-${r.id}`)} data-testid="lg-retake">{r.retake_open ? 'الإعادة مأذونة' : 'السماح بالإعادة'}</button>
-              {canDelete && <button type="button" className="am-btn small danger" disabled={!!busy} onClick={() => void delOne(r)} data-testid="lg-delete">حذف</button>}
-            </td>
-          </tr>; })}
-        </tbody></table></div>}
+              <div className="lg-acts" role="group" aria-label="إجراءات">
+                {r.code && <a className="lg-act" href={`/miaar/result/${r.code}`} target="_blank" rel="noreferrer" title="فتح البطاقة العلنية"><Icon name="link" />البطاقة</a>}
+                <button type="button" className="lg-act" disabled={!!busy} onClick={() => void post({ action: r.archived_at ? 'unarchive' : 'archive', ids: [r.id] }, `arch-${r.id}`)} data-testid="lg-archive" title={r.archived_at ? 'إعادة النتيجة إلى السجلّ النشط' : 'إخفاء من السجلّ النشط — البطاقة تبقى تعمل'}><Icon name="folder" />{r.archived_at ? 'إلغاء الأرشفة' : 'أرشفة'}</button>
+                <button type="button" className="lg-act" disabled={!!busy || r.retake_open} onClick={() => void post({ action: 'retake', report_ids: [r.id], reason: 'إذن فردي من السجلّ', days: 30 }, `retake-${r.id}`)} data-testid="lg-retake" title="إذن إعادة صالح 30 يومًا، يُربط بهذه المحاولة"><Icon name="refresh" />{r.retake_open ? 'الإعادة مأذونة' : 'إعادة'}</button>
+                {canDelete && <button type="button" className="lg-act danger" disabled={!!busy} onClick={() => void delOne(r)} data-testid="lg-delete" title="حذف نهائي بلا سلّة"><Icon name="trash" />حذف</button>}
+              </div>
+            </div>
+          </article>; })}
+        </div>}
         <p className="mm-note">الأرشفة تخفي النتيجة من السجلّ النشط وتبقي بطاقتها العلنية تعمل بشارة «نتيجة مؤرشفة». الحذف فوري بلا سلّة محذوفات ويُقيَّد في «درع أَثَر»؛ لذلك «صدّر CSV أولًا». التسكين التلقائي يعمل بعد مهلة الدعوة (48 ساعة افتراضًا، تُضبط من الدعوات) ولا يمسّ المنطقة الرمادية.</p>
       </section>
       {history && <div className="lg-modal" role="dialog" aria-modal="true" aria-label="سجلّ المتقدّم" data-testid="lg-history" onClick={() => setHistory(null)}><div className="lg-mcard" onClick={(e) => e.stopPropagation()}>
@@ -169,14 +177,27 @@ const CSS = `
 .lg-frow input,.lg-frow select,.lg-bulk input,.lg-bulk select,.lg-pick select{border:1px solid var(--line,#e2e8f0);border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;background:#fff;min-height:38px}
 .lg-fact{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.lg-dl{border-inline-start:4px solid var(--gold,#c9a24b)}.lg-dl-off{align-items:flex-start}.lg-dl-off input{width:22px;height:22px;min-height:0}.lg-dl-note{align-self:center;font-size:12px;color:#64748b}
 .lg-bulk{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;background:#f8fafc;border-color:#cbd5e1}.lg-bulk>b{align-self:center;color:#0f2a4e}.lg-sep{width:1px;height:28px;background:#cbd5e1;align-self:center}.lg-num{width:80px}
-.lg-tw{overflow:auto;max-width:100%}.am-wrap>*{min-width:0}.lg{min-width:0}.lg-t td{vertical-align:top}.lg-t tr.arch td{opacity:.72}.lg-t tr.gray td{background:#fffbeb}
-.lg-name{background:none;border:0;padding:0;font:inherit;font-weight:900;color:#0f2a4e;cursor:pointer;text-decoration:underline dotted}
-.lg-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.lg-chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;background:#f1f5f9;color:#334155}.lg-chip.teal{background:#e6f4f3;color:#0f5c57}.lg-chip.gold{background:#fbf5e4;color:#8a6a1f}
-.lg-lv{font-size:17px;color:#0f2a4e}.lg-st{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:800;background:#f1f5f9;color:#334155}.lg-st.approved{background:#e6f4f3;color:#0f5c57}.lg-st.review{background:#fbf5e4;color:#8a6a1f}.lg-st.arch{background:#e2e8f0;color:#475569}.lg-grayr{display:block;margin-top:4px;color:#8a6a1f;font-weight:800;max-width:220px}
-.lg-pick{display:flex;flex-direction:column;gap:6px;min-width:200px}.lg-ovr{color:#8a6a1f;font-weight:800}.lg-decided{display:flex;flex-direction:column;gap:2px}.lg-decided b{font-size:17px;color:#0f5c57}
-.lg-link{background:none;border:0;padding:0;font:inherit;font-size:12px;font-weight:800;color:#0b8a83;cursor:pointer;text-decoration:underline;align-self:flex-start}
-.lg-acts{display:flex;flex-direction:column;gap:6px;min-width:130px}.am-btn.danger{background:#fff;border-color:#fecaca;color:#b91c1c}.am-btn.danger:hover{background:#fef2f2}
+.am-wrap>*{min-width:0}.lg{min-width:0}
+.lg-lhead{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;color:#64748b;padding:2px 6px 8px}.lg-lhead label{display:flex;align-items:center;gap:6px;font-weight:800;color:#334155;cursor:pointer}
+.lg-list{display:flex;flex-direction:column;gap:10px}
+.lg-row{border:1px solid var(--line,#e2e8f0);border-radius:16px;background:#fff;overflow:hidden;transition:box-shadow .15s,border-color .15s}.lg-row:hover{box-shadow:0 6px 18px rgba(15,42,78,.08)}.lg-row.sel{border-color:#0b8a83;box-shadow:0 0 0 2px #e6f4f3}.lg-row.gray{background:#fffdf5;border-color:#efe2b8}.lg-row.arch{opacity:.72;background:#f8fafc}
+.lg-top{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px}
+.lg-cb{width:18px;height:18px;margin:0;accent-color:#0b8a83}
+.lg-coin{width:60px;height:60px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;background:#0f2a4e;color:#fff;box-shadow:inset 0 0 0 3px #fff,0 0 0 2px #0f2a4e}.lg-coin b{font-size:17px}.lg-coin small{font-size:9px;opacity:.85;margin-top:3px}
+.lg-coin.lv-PRE_A1{background:#64748b;box-shadow:inset 0 0 0 3px #fff,0 0 0 2px #64748b}.lg-coin.lv-PRE_A1 b{font-size:11px;white-space:nowrap}.lg-coin.lv-A1,.lg-coin.lv-A2{background:#0b8a83;box-shadow:inset 0 0 0 3px #fff,0 0 0 2px #0b8a83}.lg-coin.lv-C1,.lg-coin.lv-C2{background:#c9a24b;color:#1f2937;box-shadow:inset 0 0 0 3px #fff,0 0 0 2px #c9a24b}
+.lg-who{min-width:0;display:flex;flex-direction:column;gap:3px}.lg-who1{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.lg-who1 small{color:#64748b;font-size:12px}
+.lg-name{background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:900;color:#0f2a4e;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.lg-meta{display:flex;flex-wrap:wrap;gap:0 6px;font-size:12px;color:#475569}.lg-meta>*+*::before{content:"·";margin-inline-end:6px;color:#cbd5e1}.lg-meta a{color:#0b8a83;font-weight:800}
+.lg-chips{display:flex;gap:4px;flex-wrap:wrap}.lg-chip{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;background:#f1f5f9;color:#334155}.lg-chip.teal{background:#e6f4f3;color:#0f5c57}.lg-chip.gold{background:#fbf5e4;color:#8a6a1f}
+.lg-state{display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:240px;text-align:end}.lg-st{display:inline-block;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800;background:#f1f5f9;color:#334155;white-space:nowrap}.lg-st small{font-weight:700;color:#64748b}.lg-st.approved{background:#e6f4f3;color:#0f5c57}.lg-st.review{background:#fbf5e4;color:#8a6a1f}.lg-st.arch{background:#e2e8f0;color:#475569}.lg-grayr{color:#8a6a1f;font-weight:800;font-size:11px;line-height:1.4}
+.lg-bot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px 10px;border-top:1px dashed var(--line,#e2e8f0);background:#fbfcfd}.lg-row.gray .lg-bot{background:#fff9e8}
+.lg-pick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.lg-plbl{font-size:12px;font-weight:900;color:#0f2a4e}.lg-pick select{border:1px solid #cbd5e1;border-radius:10px;padding:5px 8px;font:inherit;font-size:13px;font-weight:800;background:#fff;min-height:34px;max-width:min(100%,260px)}.lg-pick select.ovr{border-color:#c9a24b;background:#fffbea}.lg-arrow{color:#94a3b8;font-weight:900}
+.am-btn.lg-go{min-height:34px;padding:5px 14px;border-radius:10px;font-size:13px;background:#0b8a83;border-color:#0b8a83}.am-btn.lg-go:disabled{opacity:.5;cursor:not-allowed}.lg-ovr{color:#8a6a1f;font-weight:800;font-size:12px;flex-basis:100%}
+.lg-decided{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#0f5c57;font-weight:800;min-width:0}.lg-decided .lg-ovr{flex-basis:auto;background:#fbf5e4;border-radius:999px;padding:1px 8px;font-size:11px}.lg-decided b{font-size:16px}.lg-decided .lg-dim{color:#64748b;font-weight:700;font-size:12px}
+.lg-link{background:none;border:0;padding:0;font:inherit;font-size:12px;font-weight:800;color:#0b8a83;cursor:pointer;text-decoration:underline}
+.lg-acts{display:inline-flex;gap:0;border:1px solid var(--line,#e2e8f0);border-radius:10px;overflow:hidden;background:#fff;margin-inline-start:auto}.lg-act{display:inline-flex;align-items:center;gap:5px;border:0;border-inline-start:1px solid var(--line,#e2e8f0);background:#fff;padding:0 10px;min-height:32px;font:inherit;font-size:12px;font-weight:800;color:#334155;cursor:pointer;text-decoration:none;white-space:nowrap}.lg-act:first-child{border-inline-start:0}.lg-act:hover{background:#f1f5f9;color:#0f2a4e}.lg-act:disabled{opacity:.5;cursor:not-allowed}.lg-act.danger{color:#b91c1c}.lg-act.danger:hover{background:#fef2f2}.lg-act svg{width:13px;height:13px}
+.am-btn.danger{background:#fff;border-color:#fecaca;color:#b91c1c}.am-btn.danger:hover{background:#fef2f2}
 .lg-secs{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.lg-sec{border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px}.lg-sec.full{border-color:#fecaca}.lg-sec small{color:#64748b}.lg-bar{height:8px;border-radius:999px;background:#f1f5f9;overflow:hidden}.lg-bar i{display:block;height:100%;background:#0b8a83}.lg-sec.full .lg-bar i{background:#b91c1c}
 .lg-modal{position:fixed;inset:0;background:rgba(15,42,78,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60}.lg-mcard{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:90vh;overflow:auto;padding:18px 20px}.lg-mhead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.lg-mhead h3{margin:0}.lg-mhead p{margin:4px 0 0;color:#475569}.lg-mcard h4{margin:14px 0 6px;color:#0f2a4e}.lg-tl{margin:0;padding-inline-start:18px;display:flex;flex-direction:column;gap:6px;color:#334155}
-@media(max-width:760px){.lg-acts{min-width:0}.lg-pick{min-width:160px}}
+@media(max-width:760px){.lg-top{grid-template-columns:auto auto minmax(0,1fr);gap:10px;padding:10px}.lg-state{grid-column:1/-1;flex-direction:row;align-items:center;max-width:none;text-align:start;flex-wrap:wrap}.lg-coin{width:48px;height:48px}.lg-coin b{font-size:14px}.lg-bot{padding:8px 10px}.lg-acts{margin-inline-start:0;width:100%}.lg-act{flex:1;justify-content:center;padding:0 6px}.lg-pick select{max-width:100%}}
 `;
