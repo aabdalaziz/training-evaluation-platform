@@ -10,6 +10,8 @@ import { PortalShell, useLang } from '../../components/PortalShell';
 import { BRAND, CONTACT, UI, t } from '../../../lib/portal/content';
 import { reqStatusLabel, areaLabel, sectorLabel, budgetLabel, TIMELINE, timelineIndex, isQuoteExpired, lines, cleanItems, renderQuote, QW, QH } from '../../../lib/portal/consulting';
 import type { ConsultingRequest, Quote, Milestone, Update } from '../../../lib/portal/consulting';
+import dynamic from 'next/dynamic';
+const ClientDocsBox = dynamic(() => import('../../components/AdvisoryReport').then(m => m.ClientDocsBox), { ssr: false });   // ر3-ب: «وثائق أَثَر المعتمَدة»
 import { money, invStatusLabel, jpegToPortraitPdf } from '../../../lib/portal/payments';
 import type { Invoice, PaymentSettings } from '../../../lib/portal/payments';
 import { canvasToJpeg, downloadBytes } from '../../../lib/certificates/render';
@@ -109,6 +111,7 @@ function Inner() {
             </div>
           ))}
 
+          {['accepted', 'in_progress', 'completed', 'closed'].includes(r.status) && <ClientDocsBox requestId={String(r.id)} token={async () => { const { data: s } = await db.auth.getSession(); return s.session?.access_token || ''; }} />}
           {ms.length > 0 && <div className="pt-box"><h3><Icon name="target" size={18} /> {lang === 'ar' ? 'مراحل التنفيذ' : 'Milestones'} <small className="pt-muted">{done}/{ms.length}</small></h3><ol className="cs-ms">{ms.map(m => <li key={m.id} className={m.status}><i>{m.status === 'done' ? <Icon name="check" size={12} /> : m.status === 'in_progress' ? <Icon name="play" size={12} /> : ''}</i><div><b>{m.title}</b>{m.note && <p>{m.note}</p>}<small>{m.due_date && <>{lang === 'ar' ? 'الموعد' : 'Due'}: <bdi>{m.due_date}</bdi></>}{m.done_at && <> · {lang === 'ar' ? 'أُنجز' : 'Done'}: <bdi>{m.done_at.slice(0, 10)}</bdi></>}</small></div></li>)}</ol></div>}
 
           <div className="pt-box"><h3><Icon name="chat" size={18} /> {lang === 'ar' ? 'التحديثات والمراسلات' : 'Updates & messages'}</h3>

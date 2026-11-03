@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P46 «محور التقارير» — توثيق الجودة والأداء (دوال صافية، بلا اعتماديات) — ر1: تقرير التعلّم الأسبوعي · ر2: الختامي · ر3: تقرير إنجاز المهمة (آخر الملف)
+ * P46 «محور التقارير» — توثيق الجودة والأداء (دوال صافية، بلا اعتماديات) — ر1: تقرير التعلّم الأسبوعي · ر2: الختامي · ر3: تقرير إنجاز المهمة (آخر الملف) · ر3-ب: التقرير الاستشاري (رأي استشاري · دراسة) — آخر الملف
  *  التقرير يملأ أرقامه من قاعدة أَثَر (computed) ويكتب الإنسان الحكم والتوصية (body · students).
  *  القالب: الأقسام الثمانية لنموذج «تقرير التعلّم الشامل» (برنامج العربية للناطقين بغيرها) — مهاراته الخمس للعربية،
  *  ومهارات البرنامج (إطار P8) أو أربع عامة لغيره. مفتاح التقدير ثابت: ممتاز 90–100 · جيد جدًا 80–89 · جيد 70–79 · مقبول 60–69 · ضعيف < 60.
@@ -217,6 +217,7 @@ export function publicVerifyView(r: { verify_code: string | null; status: string
 /** سطر القائمة */
 export function listLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind?: string }): string {
   if (r.kind === 'mission') return missionListLineAr(r);
+  if (r.kind === 'advisory' || r.kind === 'study') return docListLineAr(r as any);   // ر3-ب
   if (r.kind === 'final') return `${P46_NAMES_AR.final} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0} أسابيع معتمدة · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
   return `الأسبوع ${r.week_no} · ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
 }
@@ -360,7 +361,7 @@ export type MissionComputed = {
   duration_days: number | null; sessions: number; hours: number; attendance_pct: number | null; at: string;
   client_sent_at?: string | null; client_sent_to?: string | null;   // بعد الاعتماد: متى وإلى من أُرسل رابط الإقرار
 };
-export type MissionDeliverable = { title: string; source: 'contract' | 'quote' | 'extra'; status: Deliv | ''; evidence: string; date: string; note: string };
+export type MissionDeliverable = { title: string; source: 'contract' | 'quote' | 'extra'; status: Deliv | ''; evidence: string; date: string; note: string; doc_code?: string };
 export type MissionBody = {
   general: { context: string };
   summary: { executive: string };
@@ -391,8 +392,8 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 export function cleanMissionBody(b: any, prev: MissionBody): MissionBody {
   const x = b && typeof b === 'object' ? b : {}; const e = emptyMissionBody({ deliverables: [], quote_deliverables: [] });
   const given: any[] = Array.isArray(x.deliverables) ? x.deliverables : []; const fixed = prev.deliverables.filter(d => d.source !== 'extra');
-  const dl: MissionDeliverable[] = fixed.map((d, i) => { const g = given.find((y: any) => y && y.source !== 'extra' && T(y.title, SHORT_MAX) === d.title) || given.filter((y: any) => y && y.source !== 'extra')[i] || {}; return { ...d, status: (DELIV as readonly string[]).includes(String(g.status)) ? (g.status as Deliv) : '', evidence: T(g.evidence, LINE_MAX), date: DATE_RE.test(String(g.date || '')) ? String(g.date) : '', note: T(g.note, LINE_MAX) }; });
-  for (const g of given.filter((y: any) => y && y.source === 'extra').slice(0, MAX_EXTRA)) { const t = T(g.title, SHORT_MAX); if (t) dl.push({ title: t, source: 'extra', status: (DELIV as readonly string[]).includes(String(g.status)) ? (g.status as Deliv) : 'delivered', evidence: T(g.evidence, LINE_MAX), date: DATE_RE.test(String(g.date || '')) ? String(g.date) : '', note: T(g.note, LINE_MAX) }); }
+  const dl: MissionDeliverable[] = fixed.map((d, i) => { const g = given.find((y: any) => y && y.source !== 'extra' && T(y.title, SHORT_MAX) === d.title) || given.filter((y: any) => y && y.source !== 'extra')[i] || {}; return { ...d, status: (DELIV as readonly string[]).includes(String(g.status)) ? (g.status as Deliv) : '', evidence: T(g.evidence, LINE_MAX), date: DATE_RE.test(String(g.date || '')) ? String(g.date) : '', note: T(g.note, LINE_MAX), doc_code: /^[A-Z0-9]{4,12}$/.test(String(g.doc_code || '')) ? String(g.doc_code) : '' }; });
+  for (const g of given.filter((y: any) => y && y.source === 'extra').slice(0, MAX_EXTRA)) { const t = T(g.title, SHORT_MAX); if (t) dl.push({ title: t, source: 'extra', status: (DELIV as readonly string[]).includes(String(g.status)) ? (g.status as Deliv) : 'delivered', evidence: T(g.evidence, LINE_MAX), date: DATE_RE.test(String(g.date || '')) ? String(g.date) : '', note: T(g.note, LINE_MAX), doc_code: /^[A-Z0-9]{4,12}$/.test(String(g.doc_code || '')) ? String(g.doc_code) : '' }); }
   const reasons: Record<string, string> = {}; if (x.timeline?.reasons && typeof x.timeline.reasons === 'object') for (const [k, v] of Object.entries(x.timeline.reasons).slice(0, 40)) { const t = T(v, LINE_MAX); if (t) reasons[String(k).slice(0, 40)] = t; }
   const list = (v: any, n: number) => (Array.isArray(v) ? v : []).slice(0, n);
   return {
@@ -464,3 +465,128 @@ export function missionPublicView(r: { verify_code: string | null; status: strin
 /** رمز إقرار الجهة (24 رمزًا من أبجدية مِعيار) */
 export function ackToken(): string { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 24; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
 export function missionListLineAr(r: { computed: any; status: string }): string { const c = r.computed || {}; const n = Array.isArray(c.milestones) ? c.milestones.length : 0; return `${P46_NAMES_AR.mission} · ${String(c.title_ar || '')}${c.org_ar ? ` · ${c.org_ar}` : ''}${n ? ` · ${c.milestones_done ?? 0}/${n} مراحل` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
+
+/* ═══════════════════════════ ر3-ب: التقرير الاستشاري — رأي استشاري · دراسة («أثرُ الرأي») ═══════════════════════════ */
+export const DOC_KINDS = ['advisory', 'study'] as const; export type DocKind = (typeof DOC_KINDS)[number];
+export const DOC_NAMES_AR = {
+  umbrella: 'التقرير الاستشاري', story: 'أثرُ الرأي', advisory: 'رأي استشاري', study: 'دراسة', new_advisory: 'رأي استشاري جديد', new_study: 'دراسة جديدة', new_version: 'نسخة جديدة', supersedes: 'يحلّ محلّ', superseded: 'نُسخت',
+  bullets: 'من نقاطي إلى فقرة', consistency: 'فحص الاتساق', client_docs: 'وثائق أَثَر المعتمَدة', pick_doc: 'اختر وثيقة معتمَدة من أَثَر', chain: 'سلسلة الوثائق', rec_to_request: 'اطلب تنفيذها من أَثَر', work: 'مهماتي وطلباتي', docs_written: 'وثائق استشارية معتمَدة',
+} as const;
+export const METHOD_TOOLS = ['interviews', 'survey', 'documents', 'observation', 'athar_data', 'focus_group', 'benchmark'] as const; export type MethodTool = (typeof METHOD_TOOLS)[number];
+export const METHOD_TOOL_AR: Record<MethodTool, string> = { interviews: 'مقابلات', survey: 'استبانة', documents: 'تحليل وثائق', observation: 'ملاحظة ميدانية', athar_data: 'بيانات أَثَر', focus_group: 'مجموعة تركيز', benchmark: 'مقارنة مرجعية' };
+export const COST_AR: Record<string, string> = { low: 'منخفضة', mid: 'متوسطة', high: 'مرتفعة' };
+export const ADV_MAX_ASSUMPTIONS = 5; export const ADV_MAX_INPUTS = 8; export const ADV_MAX_OPTIONS = 4; export const ADV_MIN_OPTIONS = 2; export const ADV_MAX_STEPS = 5; export const ADV_MAX_RISKS = 3; export const ADV_RATIONALE_MAX = 600; export const ADV_QUESTION_MAX = 300;
+export const STU_MAX_OBJ = 6; export const STU_MAX_Q = 6; export const STU_MAX_FINDINGS = 12; export const STU_MAX_KPIS = 6; export const STU_MAX_GAPS = 10; export const STU_MAX_RECS = 10; export const STU_MAX_PHASES = 8; export const STU_MAX_RISKS = 5; export const STU_MAX_ANNEX = 10; export const STU_READING_MAX = 900; export const STU_SUMMARY_MAX = 900;
+export const BULLETS_MAX_IN = 1200; export const BULLETS_RATIO = 1.6;
+
+/** لقطة الطلب — مشتركة بين الرأي والدراسة وتقرير الإنجاز بلا عقد */
+export type RequestComputed = {
+  request_id: string | null; engagement_id: string | null; engagement_code: string | null; title: string; details: string; goals: string; timeline: string; org_ar: string; sector: string; area: string; client_name: string; client_email: string; requested_at: string | null; request_status: string;
+  consultant_name: string; consultant_title: string; assigned_name: string; quote_scope: string; quote_deliverables: string[]; quote_duration: string; milestones: MissionMilestone[]; at: string; client_sent_at?: string | null; client_sent_to?: string | null;
+};
+export type AdvisoryBody = {
+  question: { text: string; assumptions: string[]; limits: string };
+  inputs: { items: { text: string; source: string }[] };
+  options: { items: { title: string; desc: string; pros: string; cons: string; conditions: string }[] };
+  opinion: { chosen: number | null; rationale: string; first_steps: { text: string; horizon: Horizon | ''; owner: string }[]; risks: string[] };
+  ack: { at: string; name: string; note: string; email: string } | null; addenda: { at: string; by: string; text: string }[]; superseded_by?: { code: string; at: string } | null;
+};
+export type StudyBody = {
+  summary: { executive: string };
+  problem: { statement: string; objectives: string[]; questions: string[] };
+  method: { tools: MethodTool[]; sample: string; period: string; limits: string };
+  findings: { items: { text: string; evidence: string; source: string }[]; kpis: { name: string; value: number | null; unit: string; source: string }[] };
+  analysis: { gaps: { target: string; current: string; gap: string; priority: Priority | '' }[]; reading: string };
+  recommendations: { items: { text: string; ref: string; horizon: Horizon | ''; priority: Priority | ''; owner: string; cost: string; indicator: string }[] };
+  plan: { phases: { title: string; duration: string; owner: string; output: string }[]; risks: string[]; followup: string };
+  annexes: string[];
+  ack: { at: string; name: string; note: string; email: string } | null; addenda: { at: string; by: string; text: string }[]; superseded_by?: { code: string; at: string } | null;
+};
+export function emptyAdvisoryBody(): AdvisoryBody { return { question: { text: '', assumptions: [], limits: '' }, inputs: { items: [] }, options: { items: [] }, opinion: { chosen: null, rationale: '', first_steps: [], risks: [] }, ack: null, addenda: [] }; }
+export function emptyStudyBody(): StudyBody { return { summary: { executive: '' }, problem: { statement: '', objectives: [], questions: [] }, method: { tools: [], sample: '', period: '', limits: '' }, findings: { items: [], kpis: [] }, analysis: { gaps: [], reading: '' }, recommendations: { items: [] }, plan: { phases: [], risks: [], followup: '' }, annexes: [], ack: null, addenda: [] }; }
+const L = (v: any, n: number) => (Array.isArray(v) ? v : []).slice(0, n);
+const strs = (v: any, n: number, max = LINE_MAX) => L(v, n).map((x: any) => T(x, max)).filter(Boolean);
+const inH = (v: any): Horizon | '' => ((HORIZON as readonly string[]).includes(String(v)) ? (v as Horizon) : '');
+const inP = (v: any): Priority | '' => ((PRIORITY as readonly string[]).includes(String(v)) ? (v as Priority) : '');
+const keep = (prev: { ack?: any; addenda?: any; superseded_by?: any }) => ({ ack: prev?.ack || null, addenda: Array.isArray(prev?.addenda) ? prev.addenda : [], ...(prev?.superseded_by ? { superseded_by: prev.superseded_by } : {}) });
+export function cleanAdvisoryBody(b: any, prev: AdvisoryBody): AdvisoryBody {
+  const x = b && typeof b === 'object' ? b : {}; const opts = L(x.options?.items, ADV_MAX_OPTIONS).map((o: any) => ({ title: T(o?.title, SHORT_MAX), desc: T(o?.desc, TEXT_MAX), pros: T(o?.pros, LINE_MAX), cons: T(o?.cons, LINE_MAX), conditions: T(o?.conditions, LINE_MAX) })).filter((o: any) => o.title);
+  const ch = Number.isInteger(Number(x.opinion?.chosen)) && x.opinion?.chosen !== null && x.opinion?.chosen !== '' ? Number(x.opinion.chosen) : null;
+  return {
+    question: { text: T(x.question?.text, ADV_QUESTION_MAX), assumptions: strs(x.question?.assumptions, ADV_MAX_ASSUMPTIONS), limits: T(x.question?.limits, LINE_MAX) },
+    inputs: { items: L(x.inputs?.items, ADV_MAX_INPUTS).map((i: any) => ({ text: T(i?.text, LINE_MAX), source: T(i?.source, SHORT_MAX) })).filter((i: any) => i.text) },
+    options: { items: opts },
+    opinion: { chosen: ch !== null && ch >= 0 && ch < opts.length ? ch : null, rationale: T(x.opinion?.rationale, ADV_RATIONALE_MAX), first_steps: L(x.opinion?.first_steps, ADV_MAX_STEPS).map((s: any) => ({ text: T(s?.text, LINE_MAX), horizon: inH(s?.horizon), owner: T(s?.owner, SHORT_MAX) })).filter((s: any) => s.text), risks: strs(x.opinion?.risks, ADV_MAX_RISKS) },
+    ...keep(prev),
+  };
+}
+export function cleanStudyBody(b: any, prev: StudyBody): StudyBody {
+  const x = b && typeof b === 'object' ? b : {}; const nums = (v: unknown) => { if (v === '' || v === null || v === undefined) return null; const n = Number(v); return Number.isFinite(n) ? Math.round(n * 100) / 100 : null; };
+  const findings = L(x.findings?.items, STU_MAX_FINDINGS).map((f: any) => ({ text: T(f?.text, LINE_MAX), evidence: T(f?.evidence, LINE_MAX), source: T(f?.source, SHORT_MAX) })).filter((f: any) => f.text);
+  const gaps = L(x.analysis?.gaps, STU_MAX_GAPS).map((g: any) => ({ target: T(g?.target, LINE_MAX), current: T(g?.current, LINE_MAX), gap: T(g?.gap, LINE_MAX), priority: inP(g?.priority) })).filter((g: any) => g.target || g.gap);
+  const refOk = (ref: string) => /^f:\d+$/.test(ref) ? Number(ref.slice(2)) < findings.length : /^g:\d+$/.test(ref) ? Number(ref.slice(2)) < gaps.length : false;
+  return {
+    summary: { executive: T(x.summary?.executive, STU_SUMMARY_MAX) },
+    problem: { statement: T(x.problem?.statement, TEXT_MAX), objectives: strs(x.problem?.objectives, STU_MAX_OBJ), questions: strs(x.problem?.questions, STU_MAX_Q) },
+    method: { tools: L(x.method?.tools, METHOD_TOOLS.length).filter((t: any) => (METHOD_TOOLS as readonly string[]).includes(String(t))), sample: T(x.method?.sample, LINE_MAX), period: T(x.method?.period, SHORT_MAX), limits: T(x.method?.limits, LINE_MAX) },
+    findings: { items: findings, kpis: L(x.findings?.kpis, STU_MAX_KPIS).map((k: any) => ({ name: T(k?.name, SHORT_MAX), value: nums(k?.value), unit: T(k?.unit, 20), source: T(k?.source, SHORT_MAX) })).filter((k: any) => k.name) },
+    analysis: { gaps, reading: T(x.analysis?.reading, STU_READING_MAX) },
+    recommendations: { items: L(x.recommendations?.items, STU_MAX_RECS).map((r: any) => { const ref = T(r?.ref, 10); return { text: T(r?.text, LINE_MAX), ref: refOk(ref) ? ref : '', horizon: inH(r?.horizon), priority: inP(r?.priority), owner: T(r?.owner, SHORT_MAX), cost: ['low', 'mid', 'high'].includes(String(r?.cost)) ? String(r.cost) : '', indicator: T(r?.indicator, LINE_MAX) }; }).filter((r: any) => r.text) },
+    plan: { phases: L(x.plan?.phases, STU_MAX_PHASES).map((p: any) => ({ title: T(p?.title, SHORT_MAX), duration: T(p?.duration, SHORT_MAX), owner: T(p?.owner, SHORT_MAX), output: T(p?.output, LINE_MAX) })).filter((p: any) => p.title), risks: strs(x.plan?.risks, STU_MAX_RISKS), followup: T(x.plan?.followup, LINE_MAX) },
+    annexes: strs(x.annexes, STU_MAX_ANNEX),
+    ...keep(prev),
+  };
+}
+export function missingBeforeAdvisorySubmit(b: AdvisoryBody): string[] {
+  const out: string[] = []; if (T(b.question.text).length < 40) out.push('السؤال الاستشاري (40 حرفًا على الأقل)'); if (!b.inputs.items.length) out.push('معطى واحد على الأقل');
+  if (b.options.items.length < ADV_MIN_OPTIONS) out.push('خياران على الأقل'); if (b.options.items.some(o => !o.pros || !o.cons)) out.push('مزايا ومخاطر لكل خيار');
+  if (b.opinion.chosen === null) out.push('اختيار الخيار الموصى به'); if (T(b.opinion.rationale).length < 80) out.push('الرأي والتسويغ (80 حرفًا على الأقل)'); if (!b.opinion.first_steps.length) out.push('خطوة أولى واحدة على الأقل');
+  return out;
+}
+/** «فحص الاتساق» — محلي بلا ذكاء اصطناعي: كل توصية تشير إلى نتيجة/فجوة موجودة · كل نتيجة لها شاهد · كل فجوة لها أولوية */
+export function studyConsistency(b: StudyBody): string[] {
+  const out: string[] = [];
+  b.findings.items.forEach((f, i) => { if (!f.evidence) out.push(`النتيجة ن${i + 1} بلا شاهد`); });
+  b.analysis.gaps.forEach((g, i) => { if (!g.priority) out.push(`الفجوة ف${i + 1} بلا أولوية`); });
+  b.recommendations.items.forEach((r, i) => { if (!r.ref) out.push(`التوصية ت${i + 1} غير مربوطة بنتيجة أو فجوة`); if (!r.indicator) out.push(`التوصية ت${i + 1} بلا مؤشّر نجاح`); });
+  const used = new Set(b.recommendations.items.map(r => r.ref)); b.analysis.gaps.forEach((g, i) => { if (g.priority === 'high' && !used.has(`g:${i}`)) out.push(`الفجوة ف${i + 1} عالية الأولوية بلا توصية تعالجها`); });
+  return out;
+}
+export function missingBeforeStudySubmit(b: StudyBody): string[] {
+  const out: string[] = []; if (T(b.summary.executive).length < 80) out.push('ملخّص تنفيذي (80 حرفًا على الأقل)'); if (!b.problem.objectives.length) out.push('هدف واحد على الأقل'); if (!b.method.tools.length) out.push('أداة منهجية واحدة على الأقل');
+  if (b.findings.items.length < 3) out.push('ثلاث نتائج على الأقل'); if (b.findings.items.some(f => !f.evidence)) out.push('شاهد لكل نتيجة');
+  const linked = b.recommendations.items.filter(r => r.ref).length; if (linked < 2) out.push('توصيتان على الأقل مربوطتان بنتيجة أو فجوة'); if (!b.plan.phases.length) out.push('مرحلة تنفيذ واحدة على الأقل');
+  return out;
+}
+/** صلاحية الاعتماد للوثائق: الطاقم، غير الكاتب — إلا مدير المنصة */
+export function canDecideDoc(r: { status: string; author_id?: string | null; author_email: string }, me: WhoSign): boolean { return canDecide(r, me) && (!isAuthor(r, me) || !!me.admin); }
+export const isDocKind = (k: unknown): k is DocKind => (DOC_KINDS as readonly string[]).includes(String(k));
+export const isClientKind = (k: unknown) => k === 'mission' || isDocKind(k);
+export const docTitle = (r: { kind: string; computed: any }) => `${r.kind === 'advisory' ? DOC_NAMES_AR.advisory : DOC_NAMES_AR.study} — ${String(r.computed?.title || '')}`;
+/** «من نقاطي إلى فقرة»: الناتج لا يضيف رقمًا ولا يتجاوز 1.6× المدخل ولا يحمل حكمًا مطلقًا */
+const ABSOLUTE = /الأفضل|الأسوأ|مضمون|مستحيل|بلا شكّ|قطعًا|حتمًا/;
+export const bulletLines = (text: string) => String(text || '').split(/\r?\n/).map(x => x.replace(/^\s*(?:[-•*–]|\d{1,2}[.)])\s*/, '').trim()).filter(Boolean).slice(0, 20);   // لا نقصّ رقمًا يبدأ به المحتوى («12 مقابلة»)
+export function localBulletsParagraph(text: string): string { const ls = bulletLines(text); if (!ls.length) return ''; return ls.map(l => l.replace(/[.؛;]+$/, '')).join('؛ ') + '.'; }
+export function bulletsPrompt(text: string, context: { kind: string; section: string; title: string; org: string }): { system: string; user: string } {
+  return {
+    system: 'أنت محرّر تقارير مهنية بالعربية الفصحى. تحوّل نقاطًا كتبها خبير إلى فقرة واحدة متماسكة. ممنوع: إضافة أي حقيقة أو رقم أو اسم أو تاريخ غير موجود في النقاط · إضافة توصية أو خيار جديد · كلمات الحكم المطلق (الأفضل، الأسوأ، مضمون…) · أي مبلغ مالي. حافظ على ترتيب الأفكار. أعد JSON فقط: {"text": "…"} بطول لا يتجاوز مرّة ونصف طول النقاط.',
+    user: JSON.stringify({ document: context.kind === 'advisory' ? 'رأي استشاري' : 'دراسة', section: context.section, title: context.title, org: context.org, bullets: bulletLines(text) }),
+  };
+}
+export function parseBulletsParagraph(raw: string, input: string): string | null {
+  try { const m = raw.match(/\{[\s\S]*\}/); const j = JSON.parse(m ? m[0] : raw); const t = T(j?.text, 2400); if (t.length < 20) return null;
+    const inNums = new Set((input.match(/\d+(?:[.,]\d+)?/g) || []).map(n => n.replace(',', '.'))); for (const n of t.match(/\d+(?:[.,]\d+)?/g) || []) if (!inNums.has(n.replace(',', '.'))) return null;
+    if (t.length > Math.max(120, bulletLines(input).join(' ').length * BULLETS_RATIO)) return null; if (ABSOLUTE.test(t)) return null; return t; } catch { return null; }
+}
+/** ما تراه الجهة من الوثيقة: كاملة بلا بريد؛ التحقّق العام: ملخّص بلا محتوى */
+export function docClientView(r: { id: string; kind: string; verify_code: string | null; status: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; body: any; period_from: string; period_to: string; supersedes_id?: string | null }): any {
+  const { client_email: _e, client_sent_to: _s, ...cc } = (r.computed || {}) as RequestComputed; const ack = r.body?.ack ? { at: r.body.ack.at, name: r.body.ack.name, note: r.body.ack.note || '' } : null;
+  return { id: r.id, kind: r.kind, code: r.verify_code, status: r.status, author_name: r.author_name, approved_name: r.approved_name, approved_at: r.approved_at, period_from: r.period_from, period_to: r.period_to, computed: cc, body: { ...(r.body || {}), ack }, can_ack: canAck(r), supersedes_id: r.supersedes_id || null };
+}
+export function docPublicView(r: { kind: string; verify_code: string | null; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; body: any; period_from: string; period_to: string }): any {
+  const c = (r.computed || {}) as RequestComputed; const b = r.body || {};
+  return { code: r.verify_code, kind: r.kind, kind_ar: r.kind === 'advisory' ? DOC_NAMES_AR.advisory : DOC_NAMES_AR.study, title_ar: c.title, org_ar: c.org_ar, area: c.area, engagement_code: c.engagement_code, period_from: r.period_from, period_to: r.period_to, author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at,
+    counts: r.kind === 'advisory' ? { options: (b.options?.items || []).length, steps: (b.opinion?.first_steps || []).length } : { findings: (b.findings?.items || []).length, recommendations: (b.recommendations?.items || []).length, phases: (b.plan?.phases || []).length },
+    ack: b.ack ? { at: b.ack.at, name: b.ack.name } : null, superseded_by: b.superseded_by || null };
+}
+export function docListLineAr(r: { kind: string; computed: any; status: string }): string { const c = r.computed || {}; return `${r.kind === 'advisory' ? DOC_NAMES_AR.advisory : DOC_NAMES_AR.study} · ${String(c.title || '')}${c.org_ar ? ` · ${c.org_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }

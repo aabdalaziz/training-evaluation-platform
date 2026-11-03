@@ -20,7 +20,7 @@ function Inner() {
   const { lang } = useLang(); const router = useRouter(); const sp = useSearchParams(); const db = useMemo(() => supabase(), []);
   const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [loaded, setLoaded] = useState(false);
   const [mine, setMine] = useState<ConsultingRequest[]>([]);
-  const [f, setF] = useState<ReqForm>({ ...EMPTY_FORM, area: sp.get('area') || '' });
+  const [f, setF] = useState<ReqForm>({ ...EMPTY_FORM, area: sp.get('area') || '', title: (sp.get('title') || '').slice(0, 160), details: (sp.get('details') || '').slice(0, 1500) });   // ر3-ب: «من التوصية إلى الطلب» (?title&details&from=<رمز الوثيقة>)
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false); const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
 
   useEffect(() => {

@@ -147,6 +147,7 @@ function ConsultingAdmin() {
                   </div>
                 )}
 
+                {['accepted', 'in_progress', 'completed'].includes(r.status) && <section className="cs-sec" data-testid="ac-docs"><h3><Icon name="shield" size={16} /> وثائق أَثَر على هذا الطلب</h3><span className="en-muted">تقرير إنجاز المهمة · رأي استشاري · دراسة — تُكتب وتُعتمد في محور التقارير، وتظهر للعميل في صفحة طلبه بعد الاعتماد.</span><div className="en-acts"><Link className="en-btn ghost" href={`/admin/reports?request=${r.id}`} data-testid="ac-docs-link"><Icon name="doc" size={12} /> افتح وثائق الطلب في محور التقارير</Link></div></section>}
                 <section className="cs-sec"><h3><Icon name="doc" size={16} /> عروض السعر</h3>
                   {quotes.length === 0 && <span className="en-muted">لا عروض بعد.</span>}
                   {quotes.map(x => <div key={x.id} className={`cs-q ${x.status}`}><div className="cs-qh"><b>الإصدار {x.version}</b><span className={`en-tag q-${x.status}`}>{x.status === 'draft' ? 'مسودة' : x.status === 'sent' ? (isQuoteExpired(x, today) ? 'منتهي الصلاحية' : 'مُرسل — بانتظار الرد') : x.status === 'accepted' ? 'مقبول' : x.status === 'declined' ? 'معتذر عنه' : 'مستبدل'}</span><span className="en-muted"><bdi>{money(x.total, x.currency, 'ar')}</bdi> شامل الضريبة · صالح حتى <bdi>{x.valid_until || '—'}</bdi>{x.sent_at && <> · أُرسل {fmt(x.sent_at)}</>}{x.responded_at && <> · الرد {fmt(x.responded_at)}</>}</span>

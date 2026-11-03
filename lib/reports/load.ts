@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P46 «محور التقارير» — القراءة والكتابة بمفتاح الخدمة (ر1: تقرير التعلّم الأسبوعي · ر2: الختامي · ر3: تقرير إنجاز المهمة — آخر الملف)
+ * P46 «محور التقارير» — القراءة والكتابة بمفتاح الخدمة (ر1: تقرير التعلّم الأسبوعي · ر2: الختامي · ر3: تقرير إنجاز المهمة · ر3-ب: التقرير الاستشاري — آخر الملف)
  *  من أنا: مدرّب (trainers.email) له شُعب (classrooms.trainer_id) · أو طاقم (كل البرامج النشطة).
  *  اللقطة (computed): البرنامج · الجهة · الشعبة · المسجَّلون المقبولون · جلسات الحضور في الفترة وساعاتها وعناوينها · الحضور لكل متدرّب · المنتظمون.
  *  الدورة: مسودّة → مُرسَل → معتمَد (رمز تحقّق + إرسال «سطر لك» بإذن المعلّم) أو مُعاد بملاحظة.
@@ -8,11 +8,12 @@
 import { notify } from '../portal/notify';
 import { effectiveTemplate, emptyBody, cleanBody, cleanStudents, cleanLines, buildRoster, hoursOf, weekBounds, weekNo, validPeriod, canEdit, canDecide, canView, missingBeforeSubmit, verifyCode, summativeStats, P46_NAMES_AR, fmtDayAr, type Computed, type StudentRow, type Skill, type Body,
   buildTrajectories, maturityOf, progressPct, finalSuggested, cleanFinalBody, cleanFinalStudents, missingBeforeFinalSubmit, distribution, canSign, signoffComplete, signoffView, studentPageData, suggestRec, REC_AR, SIGN_AR, type FinalComputed, type FinalBody, type FinalStudent, type WeekSrc, type SignAs,
-  emptyMissionBody, cleanMissionBody, missionStats, missingBeforeMissionSubmit, milestoneDeviations, missionClientView, canAck, ackToken, MISSION_NAMES_AR, ACK_NOTE_MAX, ADDENDUM_MAX, MAX_ADDENDA, type MissionComputed, type MissionBody } from './registry';
+  emptyMissionBody, cleanMissionBody, missionStats, missingBeforeMissionSubmit, milestoneDeviations, missionClientView, canAck, ackToken, MISSION_NAMES_AR, ACK_NOTE_MAX, ADDENDUM_MAX, MAX_ADDENDA, type MissionComputed, type MissionBody,
+  DOC_NAMES_AR, emptyAdvisoryBody, emptyStudyBody, cleanAdvisoryBody, cleanStudyBody, missingBeforeAdvisorySubmit, missingBeforeStudySubmit, studyConsistency, canDecideDoc, isDocKind, isClientKind, docClientView, type DocKind, type RequestComputed, type AdvisoryBody, type StudyBody } from './registry';
 
 export type Me = { id: string; email: string; name: string; staff: boolean; admin?: boolean };
 export type Classroom = { id: string; code: string; section_name: string | null; level: string | null; program_id: string; program_ar: string; program_type: string };
-export const REPORT_COLS = 'id,created_at,updated_at,kind,program_id,classroom_id,author_id,author_email,author_name,week_no,period_from,period_to,status,computed,body,students,lines,lines_ok,submitted_at,approved_by,approved_name,approved_at,return_note,verify_code,lines_sent_at,engagement_id';   // ack_token لا يُقرأ هنا (ر3)
+export const REPORT_COLS = 'id,created_at,updated_at,kind,program_id,classroom_id,author_id,author_email,author_name,week_no,period_from,period_to,status,computed,body,students,lines,lines_ok,submitted_at,approved_by,approved_name,approved_at,return_note,verify_code,lines_sent_at,engagement_id,consulting_request_id,supersedes_id';   // ack_token لا يُقرأ هنا (ر3)
 const lower = (s: unknown) => String(s || '').trim().toLowerCase(); const nowIso = () => new Date().toISOString();
 async function safe<X>(q: PromiseLike<{ data: any; error: any }>, fb: X): Promise<X> { try { const { data, error } = await q; return error || data === null || data === undefined ? fb : (data as X); } catch { return fb; } }
 
@@ -94,7 +95,8 @@ export async function myLines(db: any, me: Me): Promise<any[]> {
 export async function verifyReport(db: any, code: string): Promise<any | null> { return safe<any>(db.from('portal_reports').select(REPORT_COLS).eq('verify_code', code.toUpperCase()).eq('status', 'approved').maybeSingle(), null); }
 export function view(r: any, me: Me) {
   const roster: StudentRow[] = Array.isArray(r.students) ? r.students : [];
-  if (r.kind === 'mission') { const mb = r.body as MissionBody; const mc = r.computed as MissionComputed; const { ack_token: _t, ...r0 } = r; return { ...r0, stats: missionStats(mb, mc), can_edit: canEdit(r, me), can_decide: canDecide(r, me), missing: missingBeforeMissionSubmit(mb, mc), can_send_client: r.status === 'approved' && !!me.staff, can_addendum: r.status === 'approved' && !!me.staff && (mb.addenda || []).length < MAX_ADDENDA, can_ack: canAck(r), client_sent_at: mc.client_sent_at || null, late: milestoneDeviations(mc.milestones || [], today()).filter(m => (m.deviation_days ?? 0) > 3).map(m => m.id) }; }
+  if (isDocKind(r.kind)) { const { ack_token: _t, ...r0 } = r; const b = r.body || {}; return { ...r0, can_edit: canEdit(r, me), can_decide: canDecideDoc(r, me), missing: r.kind === 'advisory' ? missingBeforeAdvisorySubmit(b as AdvisoryBody) : missingBeforeStudySubmit(b as StudyBody), consistency: r.kind === 'study' ? studyConsistency(b as StudyBody) : [], can_send_client: r.status === 'approved' && !!me.staff, can_addendum: r.status === 'approved' && !!me.staff && (b.addenda || []).length < MAX_ADDENDA, can_ack: canAck(r), client_sent_at: r.computed?.client_sent_at || null }; }   // ر3-ب
+  if (r.kind === 'mission') { const mb = r.body as MissionBody; const mc = r.computed as MissionComputed; const { ack_token: _t, ...r0 } = r; return { ...r0, stats: missionStats(mb, mc), can_edit: canEdit(r, me), can_decide: canDecideDoc(r, me), missing: missingBeforeMissionSubmit(mb, mc), can_send_client: r.status === 'approved' && !!me.staff, can_addendum: r.status === 'approved' && !!me.staff && (mb.addenda || []).length < MAX_ADDENDA, can_ack: canAck(r), client_sent_at: mc.client_sent_at || null, late: milestoneDeviations(mc.milestones || [], today()).filter(m => (m.deviation_days ?? 0) > 3).map(m => m.id) }; }
   if (r.kind === 'final') return { ...r, stats: summativeStats(roster), distribution: distribution(roster), can_edit: canEdit(r, me), can_decide: false, can_return: canDecide(r, me), can_sign_quality: canSign(r, me, 'quality'), can_sign_manager: canSign(r, me, 'manager'), signoff: signoffView(r.body), missing: missingBeforeFinalSubmit(r.body as FinalBody, roster as FinalStudent[]), can_promote: r.status === 'approved' && !!me.staff && !r.body?.promotion };
   return { ...r, stats: summativeStats(roster), can_edit: canEdit(r, me), can_decide: canDecide(r, me), missing: missingBeforeSubmit(r.body as Body, roster) };
 }
@@ -116,6 +118,7 @@ export async function createReport(db: any, me: Me, b: { program_id: string; cla
 export async function saveReport(db: any, me: Me, id: string, b: { body?: any; students?: any; lines?: any; lines_ok?: any }): Promise<{ ok: true; report: any } | { ok: false; error: string }> {
   const r = await reportById(db, id); if (!r) return { ok: false, error: 'التقرير غير موجود' }; if (!canEdit(r, me)) return { ok: false, error: 'لا يمكن تعديل هذا التقرير الآن' };
   const c: Computed = r.computed; const roster: StudentRow[] = Array.isArray(r.students) ? r.students : []; const fin = r.kind === 'final';
+  if (isDocKind(r.kind)) { const body = r.kind === 'advisory' ? cleanAdvisoryBody(b.body ?? r.body, r.body as AdvisoryBody) : cleanStudyBody(b.body ?? r.body, r.body as StudyBody); const patch = { body, updated_at: nowIso() }; const { data, error } = await db.from('portal_reports').update(patch).eq('id', id).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message }; return { ok: true, report: data || { ...r, ...patch } }; }   // ر3-ب
   if (r.kind === 'mission') { const body = cleanMissionBody(b.body ?? r.body, r.body as MissionBody); const patch = { body, updated_at: nowIso() }; const { data, error } = await db.from('portal_reports').update(patch).eq('id', id).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message }; return { ok: true, report: data || { ...r, ...patch } }; }
   const body = fin ? cleanFinalBody(b.body ?? r.body, { signoff: r.body?.signoff, promotion: r.body?.promotion }) : cleanBody(b.body ?? r.body, c.strategies); const students = fin ? cleanFinalStudents(b.students ?? r.students, roster, c.skills) : cleanStudents(b.students ?? r.students, roster, c.skills); const lines = cleanLines(b.lines ?? r.lines, roster);
   const patch = { body, students, lines, lines_ok: b.lines_ok === undefined ? !!r.lines_ok : !!b.lines_ok, updated_at: nowIso() };
@@ -124,7 +127,8 @@ export async function saveReport(db: any, me: Me, id: string, b: { body?: any; s
 }
 export async function recomputeReport(db: any, me: Me, id: string): Promise<{ ok: true; report: any } | { ok: false; error: string }> {
   const r = await reportById(db, id); if (!r) return { ok: false, error: 'التقرير غير موجود' }; if (!canEdit(r, me)) return { ok: false, error: 'لا يمكن تحديث هذا التقرير الآن' };
-  if (r.kind === 'mission') { const eng = await engagementById(db, String(r.engagement_id || '')); if (!eng) return { ok: false, error: 'عقد التعاون غير موجود' }; const mc = await computeMissionSnapshot(db, me, eng); const body = mergeMissionDeliverables(r.body as MissionBody, mc); const patch = { computed: mc, body, period_from: mc.start_at || r.period_from, period_to: mc.end_at || today(), updated_at: nowIso() }; const { data, error } = await db.from('portal_reports').update(patch).eq('id', id).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message }; return { ok: true, report: data || { ...r, ...patch } }; }
+  if (isDocKind(r.kind)) { const eng = r.engagement_id ? await engagementById(db, String(r.engagement_id)) : null; const rc = await computeRequestSnapshot(db, me, r.consulting_request_id ? String(r.consulting_request_id) : null, eng, r.computed as RequestComputed); const patch = { computed: rc, period_to: today(), updated_at: nowIso() }; const { data, error } = await db.from('portal_reports').update(patch).eq('id', id).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message }; return { ok: true, report: data || { ...r, ...patch } }; }   // ر3-ب
+  if (r.kind === 'mission') { const eng = r.engagement_id ? await engagementById(db, String(r.engagement_id)) : null; if (!eng && !r.consulting_request_id) return { ok: false, error: 'عقد التعاون غير موجود' }; const mc = await computeMissionSnapshot(db, me, eng, r.consulting_request_id ? String(r.consulting_request_id) : null); const body = mergeMissionDeliverables(r.body as MissionBody, mc); const patch = { computed: mc, body, period_from: mc.start_at || r.period_from, period_to: mc.end_at || today(), updated_at: nowIso() }; const { data, error } = await db.from('portal_reports').update(patch).eq('id', id).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message }; return { ok: true, report: data || { ...r, ...patch } }; }
   if (r.kind === 'final') { const fs = await computeFinalSnapshot(db, me, String(r.program_id), r.classroom_id ? String(r.classroom_id) : null); if ('error' in fs) return { ok: false, error: fs.error }; const students = cleanFinalStudents(r.students, fs.roster, fs.computed.skills); const body = cleanFinalBody(r.body, { signoff: r.body?.signoff, promotion: r.body?.promotion }); const patch = { computed: fs.computed, students, body, week_no: fs.computed.weeks.length, period_from: fs.computed.period_from, period_to: fs.computed.period_to, updated_at: nowIso() }; const { data, error } = await db.from('portal_reports').update(patch).eq('id', id).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message }; return { ok: true, report: data || { ...r, ...patch } }; }
   const snap = await computeSnapshot(db, me, String(r.program_id), r.classroom_id ? String(r.classroom_id) : null, r.period_from, r.period_to); if ('error' in snap) return { ok: false, error: snap.error };
   const students = cleanStudents(r.students, snap.roster, snap.computed.skills); const body = cleanBody(r.body, snap.computed.strategies);
@@ -134,19 +138,19 @@ export async function recomputeReport(db: any, me: Me, id: string): Promise<{ ok
 }
 export async function submitReport(db: any, me: Me, id: string, site: string, staffEmails: string[]): Promise<{ ok: true } | { ok: false; error: string; missing?: string[] }> {
   const r = await reportById(db, id); if (!r) return { ok: false, error: 'التقرير غير موجود' }; if (!canEdit(r, me)) return { ok: false, error: 'لا يمكن إرسال هذا التقرير الآن' };
-  const fin = r.kind === 'final'; const mis = r.kind === 'mission'; const missing = mis ? missingBeforeMissionSubmit(r.body as MissionBody, r.computed as MissionComputed) : fin ? missingBeforeFinalSubmit(r.body as FinalBody, Array.isArray(r.students) ? r.students : []) : missingBeforeSubmit(r.body as Body, Array.isArray(r.students) ? r.students : []); if (missing.length) return { ok: false, error: 'أكمل قبل الإرسال: ' + missing.join(' · '), missing };
+  const fin = r.kind === 'final'; const mis = r.kind === 'mission'; const doc = isDocKind(r.kind); const missing = doc ? (r.kind === 'advisory' ? missingBeforeAdvisorySubmit(r.body as AdvisoryBody) : missingBeforeStudySubmit(r.body as StudyBody)) : mis ? missingBeforeMissionSubmit(r.body as MissionBody, r.computed as MissionComputed) : fin ? missingBeforeFinalSubmit(r.body as FinalBody, Array.isArray(r.students) ? r.students : []) : missingBeforeSubmit(r.body as Body, Array.isArray(r.students) ? r.students : []); if (missing.length) return { ok: false, error: 'أكمل قبل الإرسال: ' + missing.join(' · '), missing };
   const { error } = await db.from('portal_reports').update({ status: 'submitted', submitted_at: nowIso(), return_note: null, updated_at: nowIso() }).eq('id', id); if (error) return { ok: false, error: error.message };
-  for (const email of staffEmails.slice(0, 5)) { try { await notify(db, { kind: 'report_submitted', to: { email }, ref: `rep:submitted:${id}:${email}:${Date.now()}`, subject: mis ? `${P46_NAMES_AR.mission} — ${r.computed?.title_ar || ''} بانتظار الاعتماد` : fin ? `${P46_NAMES_AR.final} — ${r.computed?.classroom_ar || r.computed?.program_ar || ''} بانتظار توقيعين` : `${P46_NAMES_AR.weekly} — الأسبوع ${r.week_no} بانتظار الاعتماد`, text: mis ? `${r.author_name || r.author_email} أرسل ${P46_NAMES_AR.mission} («${r.computed?.title_ar || ''}» — ${r.computed?.org_ar || ''}).` : `${r.author_name || r.author_email} أرسل ${fin ? P46_NAMES_AR.final : P46_NAMES_AR.weekly} (${r.computed?.program_ar || ''}${r.computed?.classroom_ar ? ' · ' + r.computed.classroom_ar : ''}) للفترة ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)}.`, url: `${site}/admin/reports?r=${id}` }); } catch { /* داخلي */ } }
+  for (const email of staffEmails.slice(0, 5)) { try { await notify(db, { kind: 'report_submitted', to: { email }, ref: `rep:submitted:${id}:${email}:${Date.now()}`, subject: doc ? `${docKindAr(r.kind)} — ${r.computed?.title || ''} بانتظار الاعتماد` : mis ? `${P46_NAMES_AR.mission} — ${r.computed?.title_ar || ''} بانتظار الاعتماد` : fin ? `${P46_NAMES_AR.final} — ${r.computed?.classroom_ar || r.computed?.program_ar || ''} بانتظار توقيعين` : `${P46_NAMES_AR.weekly} — الأسبوع ${r.week_no} بانتظار الاعتماد`, text: doc ? `${r.author_name || r.author_email} أرسل ${docKindAr(r.kind)} («${r.computed?.title || ''}» — ${r.computed?.org_ar || ''}).` : mis ? `${r.author_name || r.author_email} أرسل ${P46_NAMES_AR.mission} («${r.computed?.title_ar || ''}» — ${r.computed?.org_ar || ''}).` : `${r.author_name || r.author_email} أرسل ${fin ? P46_NAMES_AR.final : P46_NAMES_AR.weekly} (${r.computed?.program_ar || ''}${r.computed?.classroom_ar ? ' · ' + r.computed.classroom_ar : ''}) للفترة ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)}.`, url: `${site}/admin/reports?r=${id}` }); } catch { /* داخلي */ } }
   return { ok: true };
 }
 export async function decideReport(db: any, me: Me, id: string, decision: 'approve' | 'return', note: string, site: string, signAs?: SignAs | null): Promise<{ ok: true; verify_code?: string | null; lines_sent?: number; signed?: SignAs; pending?: SignAs } | { ok: false; error: string }> {
-  const r = await reportById(db, id); if (!r) return { ok: false, error: 'التقرير غير موجود' }; if (!canDecide(r, me)) return { ok: false, error: 'التقرير ليس بانتظار الاعتماد أو لست من الطاقم' };
+  const r = await reportById(db, id); if (!r) return { ok: false, error: 'التقرير غير موجود' }; if (!(isClientKind(r.kind) ? canDecideDoc(r, me) : canDecide(r, me))) return { ok: false, error: isClientKind(r.kind) && isAuthorOf(r, me) ? 'كاتب الوثيقة لا يعتمدها بنفسه — يعتمدها زميل من الطاقم أو مدير المنصة' : 'التقرير ليس بانتظار الاعتماد أو لست من الطاقم' };
   const fin = r.kind === 'final';
   if (decision === 'return') {
     const n = String(note || '').replace(/\s+/g, ' ').trim().slice(0, 400); if (n.length < 3) return { ok: false, error: 'اكتب ملاحظة الإعادة' };
     const patch: any = { status: 'returned', return_note: n, updated_at: nowIso() }; if (fin) patch.body = { ...(r.body || {}), signoff: { quality: null, manager: null } };   // الإعادة تمسح التوقيعين
     const { error } = await db.from('portal_reports').update(patch).eq('id', id); if (error) return { ok: false, error: error.message };
-    try { await notify(db, { kind: 'report_returned', to: { email: r.author_email }, ref: `rep:returned:${id}:${Date.now()}`, subject: r.kind === 'mission' ? `أُعيد ${P46_NAMES_AR.mission} بملاحظة` : r.kind === 'final' ? `أُعيد ${P46_NAMES_AR.final} بملاحظة` : `أُعيد تقرير الأسبوع ${r.week_no} بملاحظة`, text: `${me.name || 'مدير البرنامج'}: ${n}`, url: `${site}/me/reports/${id}` }); } catch { /* داخلي */ }
+    try { await notify(db, { kind: 'report_returned', to: { email: r.author_email }, ref: `rep:returned:${id}:${Date.now()}`, subject: isDocKind(r.kind) ? `أُعيد ${docKindAr(r.kind)} بملاحظة` : r.kind === 'mission' ? `أُعيد ${P46_NAMES_AR.mission} بملاحظة` : r.kind === 'final' ? `أُعيد ${P46_NAMES_AR.final} بملاحظة` : `أُعيد تقرير الأسبوع ${r.week_no} بملاحظة`, text: `${me.name || 'مدير البرنامج'}: ${n}`, url: `${site}/me/reports/${id}` }); } catch { /* داخلي */ }
     return { ok: true };
   }
   if (fin) {   // ر2: توقيعان — الجودة ثم مدير البرنامج (أيّهما أولًا) — والاعتماد يكتمل بالثاني
@@ -168,8 +172,9 @@ export async function decideReport(db: any, me: Me, id: string, decision: 'appro
     }
     await db.from('portal_reports').update({ lines_sent_at: nowIso() }).eq('id', id);
   }
-  if (r.kind === 'mission') { try { await completeEngagementFromReport(db, r, code); } catch { /* داخلي */ } }
-  try { await notify(db, { kind: 'report_approved', to: { email: r.author_email }, ref: `rep:approved:${id}`, subject: r.kind === 'mission' ? `اعتُمد ${P46_NAMES_AR.mission}` : fin ? `اعتُمد ${P46_NAMES_AR.final}` : `اعتُمد تقرير الأسبوع ${r.week_no}`, text: r.kind === 'mission' ? `اعتمد ${me.name || 'الطاقم'} ${P46_NAMES_AR.mission} («${r.computed?.title_ar || ''}»). رمز التحقّق: ${code}. ${MISSION_NAMES_AR.ack} يصل بعد إرسال الطاقم للجهة.` : fin ? `اكتمل توقيعا ${P46_NAMES_AR.final} (${r.computed?.program_ar || ''}). رمز التحقّق: ${code}.` : `اعتمد ${me.name || 'مدير البرنامج'} ${P46_NAMES_AR.weekly} (${r.computed?.program_ar || ''}). رمز التحقّق: ${code}.`, url: `${site}/me/reports/${id}` }); } catch { /* داخلي */ }
+  if (r.kind === 'mission') { try { await completeEngagementFromReport(db, r, code); await completeRequestFromReport(db, r, code); } catch { /* داخلي */ } }
+  if (isDocKind(r.kind)) { try { await markSuperseded(db, r, code); } catch { /* داخلي */ } }   // ر3-ب: النسخة الجديدة تَنسخ السابقة ولا تغيّر حالة الطلب
+  try { await notify(db, { kind: 'report_approved', to: { email: r.author_email }, ref: `rep:approved:${id}`, subject: isDocKind(r.kind) ? `اعتُمد ${docKindAr(r.kind)}` : r.kind === 'mission' ? `اعتُمد ${P46_NAMES_AR.mission}` : fin ? `اعتُمد ${P46_NAMES_AR.final}` : `اعتُمد تقرير الأسبوع ${r.week_no}`, text: isDocKind(r.kind) ? `اعتمد ${me.name || 'الطاقم'} ${docKindAr(r.kind)} («${r.computed?.title || ''}»). رمز التحقّق: ${code}. تصل للجهة بعد إرسال الطاقم.` : r.kind === 'mission' ? `اعتمد ${me.name || 'الطاقم'} ${P46_NAMES_AR.mission} («${r.computed?.title_ar || ''}»). رمز التحقّق: ${code}. ${MISSION_NAMES_AR.ack} يصل بعد إرسال الطاقم للجهة.` : fin ? `اكتمل توقيعا ${P46_NAMES_AR.final} (${r.computed?.program_ar || ''}). رمز التحقّق: ${code}.` : `اعتمد ${me.name || 'مدير البرنامج'} ${P46_NAMES_AR.weekly} (${r.computed?.program_ar || ''}). رمز التحقّق: ${code}.`, url: `${site}/me/reports/${id}` }); } catch { /* داخلي */ }
   if (!fin) { try { await maybeNotifyFinalReady(db, r, site); } catch { /* داخلي */ } }
   return { ok: true, verify_code: code, lines_sent };
 }
@@ -268,18 +273,12 @@ const ENG_COLS = 'id,created_at,profile_id,user_id,email,kind,consulting_request
 const ENG_OK = ['active', 'completed', 'settled'];
 export async function engagementById(db: any, id: string): Promise<any | null> { return id ? safe<any>(db.from('portal_directory_engagements').select(ENG_COLS).eq('id', id).maybeSingle(), null) : null; }
 export async function myEngagements(db: any, me: Me): Promise<any[]> { const rows = await safe<any[]>(db.from('portal_directory_engagements').select(ENG_COLS).ilike('email', me.email).order('created_at', { ascending: false }).limit(50), []); return rows.filter(e => ENG_OK.includes(String(e.status))); }
-/** بطاقات «مهماتك الموقَّعة» في تقاريري */
-export async function missionCards(db: any, me: Me, mine: any[]): Promise<any[]> {
-  const engs = await myEngagements(db, me); if (!engs.length) return [];
-  const rids = Array.from(new Set(engs.map(e => e.consulting_request_id).filter(Boolean))); const reqs = rids.length ? await safe<any[]>(db.from('portal_consulting_requests').select('id,organization,title').in('id', rids).limit(50), []) : []; const org = new Map(reqs.map(r => [String(r.id), r]));
-  return engs.map(e => { const rep = mine.find(r => r.kind === 'mission' && String(r.engagement_id || '') === String(e.id)); const rq = org.get(String(e.consulting_request_id || '')); return { engagement_id: String(e.id), title_ar: String(e.title_ar || ''), kind: String(e.kind || 'consult'), kind_ar: e.kind === 'train' ? 'تدريب' : 'استشارة', status: String(e.status), org_ar: String(rq?.organization || ''), start_at: e.start_at || null, end_at: e.end_at || null, deliverables: Array.isArray(e.deliverables) ? e.deliverables.length : 0, code: e.code || null, report_id: rep ? String(rep.id) : null, report_status: rep ? String(rep.status) : null }; });
-}
 /** لقطة المهمة من العقد + الطلب + المراحل + التحديثات (+ جلسات التدريب إن وُجدت) */
-export async function computeMissionSnapshot(db: any, me: Me, eng: any): Promise<MissionComputed> {
-  const td = today(); const rid = eng.consulting_request_id ? String(eng.consulting_request_id) : null;
+export async function computeMissionSnapshot(db: any, me: Me, eng0: any | null, requestId?: string | null): Promise<MissionComputed> {
+  const eng = eng0 || {}; const td = today(); const rid = eng.consulting_request_id ? String(eng.consulting_request_id) : requestId ? String(requestId) : null;   // ر3-ب: بلا عقد → من الطلب
   const [prof, req, quotes, ms, ups] = await Promise.all([
-    safe<any>(db.from('portal_directory_profiles').select('name_ar,title_ar').eq('id', eng.profile_id).maybeSingle(), null),
-    rid ? safe<any>(db.from('portal_consulting_requests').select('id,full_name,email,organization,sector,area,title,goals,timeline,status').eq('id', rid).maybeSingle(), null) : Promise.resolve(null),
+    eng.profile_id ? safe<any>(db.from('portal_directory_profiles').select('name_ar,title_ar').eq('id', eng.profile_id).maybeSingle(), null) : myProfile(db, me),
+    rid ? safe<any>(db.from('portal_consulting_requests').select('id,created_at,full_name,email,organization,sector,area,title,details,goals,timeline,status,assigned_to,decided_at,completed_at').eq('id', rid).maybeSingle(), null) : Promise.resolve(null),
     rid ? safe<any[]>(db.from('portal_consulting_quotes').select('version,status,scope,deliverables,duration').eq('request_id', rid).order('version', { ascending: false }).limit(10), []) : Promise.resolve([] as any[]),
     rid ? safe<any[]>(db.from('portal_consulting_milestones').select('id,position,title,due_date,status,done_at').eq('request_id', rid).order('position', { ascending: true }).limit(40), []) : Promise.resolve([] as any[]),
     rid ? safe<any[]>(db.from('portal_consulting_updates').select('created_at,author_id,author_name,by_staff,body,visible_to_client').eq('request_id', rid).order('created_at', { ascending: true }).limit(200), []) : Promise.resolve([] as any[]),
@@ -293,10 +292,10 @@ export async function computeMissionSnapshot(db: any, me: Me, eng: any): Promise
     if (tid) { let qq = db.from('attendance_sessions').select('id,start_time,end_time,session_date').eq('trainer_id', tid); if (eng.start_at) qq = qq.gte('session_date', eng.start_at); qq = qq.lte('session_date', eng.end_at || td); const ss = await safe<any[]>(qq.limit(500), []); sessions = ss.length; hours = Math.round(ss.reduce((a, x) => a + hoursOf(x), 0) * 10) / 10;
       if (ss.length) { const recs = await safe<any[]>(db.from('attendance_records').select('session_id,status').in('session_id', ss.map(x => x.id)).limit(5000), []); const present = recs.filter(x => ['present', 'late'].includes(String(x.status))).length; attendance_pct = recs.length ? Math.round((present / recs.length) * 100) : null; } }
   }
-  const start = eng.start_at ? String(eng.start_at).slice(0, 10) : null; const end = eng.end_at ? String(eng.end_at).slice(0, 10) : null; const endEff = end && end < td ? end : td;
+  const start = eng.start_at ? String(eng.start_at).slice(0, 10) : req?.decided_at ? String(req.decided_at).slice(0, 10) : req?.created_at ? String(req.created_at).slice(0, 10) : null; const end = eng.end_at ? String(eng.end_at).slice(0, 10) : req?.completed_at ? String(req.completed_at).slice(0, 10) : null; const endEff = end && end < td ? end : td;
   const dd = start ? Math.round((Date.parse(endEff + 'T00:00:00Z') - Date.parse(start + 'T00:00:00Z')) / 86400000) : null;
   return {
-    engagement_id: String(eng.id), kind: eng.kind === 'train' ? 'train' : 'consult', kind_ar: eng.kind === 'train' ? 'تدريب' : 'استشارة', title_ar: String(eng.title_ar || ''), scope_ar: String(eng.scope_ar || ''), deliverables: (Array.isArray(eng.deliverables) ? eng.deliverables : []).map((d: any) => String(d || '').trim()).filter(Boolean).slice(0, 20), start_at: start, end_at: end, mode: eng.mode || null, member_signed_at: eng.member_signed_at || null, athar_signed_at: eng.athar_signed_at || null, engagement_code: eng.code || null, engagement_status: String(eng.status || ''),
+    engagement_id: eng.id ? String(eng.id) : null, kind: eng.kind === 'train' ? 'train' : 'consult', kind_ar: eng.kind === 'train' ? 'تدريب' : 'استشارة', title_ar: String(eng.title_ar || req?.title || ''), scope_ar: String(eng.scope_ar || q?.scope || ''), deliverables: (Array.isArray(eng.deliverables) ? eng.deliverables : []).map((d: any) => String(d || '').trim()).filter(Boolean).slice(0, 20), /* بلا عقد: المخرجات تأتي من quote_deliverables بمصدر «العرض» */ start_at: start, end_at: end, mode: eng.mode || null, member_signed_at: eng.member_signed_at || null, athar_signed_at: eng.athar_signed_at || null, engagement_code: eng.code || null, engagement_status: String(eng.status || (req ? 'request' : '')),
     expert_name: String(prof?.name_ar || me.name || ''), expert_title: String(prof?.title_ar || ''), org_ar: String(req?.organization || ''), sector: String(req?.sector || ''), area: String(req?.area || ''), request_id: rid, request_title: String(req?.title || ''), request_goals: String(req?.goals || ''), request_timeline: String(req?.timeline || ''), client_name: String(req?.full_name || ''), client_email: lower(req?.email || ''),
     quote_scope: String(q?.scope || ''), quote_deliverables: q ? lines(q.deliverables) : [], quote_duration: String(q?.duration || ''),
     milestones, milestones_done: done.length, milestones_on_time: done.length - late, milestones_late: late, updates: vis.length, updates_from: vis.length ? String(vis[0].created_at).slice(0, 10) : null, updates_to: vis.length ? String(vis[vis.length - 1].created_at).slice(0, 10) : null, my_updates: myUps,
@@ -308,12 +307,11 @@ function mergeMissionDeliverables(body: MissionBody, c: MissionComputed): Missio
   const fresh = emptyMissionBody(c).deliverables; const cur = body.deliverables || []; const have = new Set(cur.map(d => d.title.toLowerCase()));
   const add = fresh.filter(d => !have.has(d.title.toLowerCase())); return { ...body, deliverables: [...cur.filter(d => d.source !== 'extra'), ...add, ...cur.filter(d => d.source === 'extra')] };
 }
-export async function createMission(db: any, me: Me, engagementId: string): Promise<{ ok: true; report: any } | { ok: false; error: string }> {
-  const eng = await engagementById(db, engagementId); if (!eng) return { ok: false, error: 'عقد التعاون غير موجود' };
-  if (lower(eng.email) !== me.email && !me.staff) return { ok: false, error: 'هذا العقد ليس لك' }; if (!ENG_OK.includes(String(eng.status))) return { ok: false, error: 'التقرير يُكتب لعقد موقَّع (جارٍ أو مُنجَز)' };
-  const dup = await safe<any[]>(db.from('portal_reports').select('id').eq('kind', 'mission').eq('engagement_id', eng.id).limit(1), []); if (dup.length) return { ok: false, error: 'يوجد تقرير إنجاز لهذا العقد من قبل' };
-  const c = await computeMissionSnapshot(db, me, eng); const body = emptyMissionBody(c);
-  const row = { kind: 'mission', program_id: null, classroom_id: null, engagement_id: String(eng.id), author_id: me.id, author_email: me.email, author_name: c.expert_name || me.name || me.email, week_no: 0, period_from: c.start_at || today(), period_to: c.end_at || today(), status: 'draft', computed: c, body, students: [], lines: [], lines_ok: false };
+export async function createMission(db: any, me: Me, src: string | { engagement_id?: string | null; consulting_request_id?: string | null }): Promise<{ ok: true; report: any } | { ok: false; error: string }> {
+  const s = typeof src === 'string' ? { engagement_id: src } : src || {}; const srcOk = await resolveSource(db, me, s); if ('error' in srcOk) return { ok: false, error: srcOk.error }; const { eng, rid } = srcOk;
+  const dup = eng ? await safe<any[]>(db.from('portal_reports').select('id').eq('kind', 'mission').eq('engagement_id', eng.id).limit(1), []) : await safe<any[]>(db.from('portal_reports').select('id').eq('kind', 'mission').eq('consulting_request_id', rid).is('engagement_id', null).limit(1), []); if (dup.length) return { ok: false, error: eng ? 'يوجد تقرير إنجاز لهذا العقد من قبل' : 'يوجد تقرير إنجاز لهذا الطلب من قبل' };
+  const c = await computeMissionSnapshot(db, me, eng, rid); const body = emptyMissionBody(c);
+  const row = { kind: 'mission', program_id: null, classroom_id: null, engagement_id: eng ? String(eng.id) : null, consulting_request_id: rid || null, author_id: me.id, author_email: me.email, author_name: c.expert_name || me.name || me.email, week_no: 0, period_from: c.start_at || today(), period_to: c.end_at || today(), status: 'draft', computed: c, body, students: [], lines: [], lines_ok: false };
   const { data, error } = await db.from('portal_reports').insert(row).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message };
   return { ok: true, report: data };
 }
@@ -324,34 +322,132 @@ async function completeEngagementFromReport(db: any, r: any, code: string | null
 }
 /** الطاقم يرسل التقرير المعتمَد للجهة برابط إقرار بلا دخول */
 export async function sendMissionToClient(db: any, me: Me, id: string, site: string, emailOverride?: string): Promise<{ ok: true; to: string; url: string } | { ok: false; error: string }> {
-  if (!me.staff) return { ok: false, error: 'غير مصرّح' }; const r = await reportById(db, id); if (!r || r.kind !== 'mission') return { ok: false, error: 'التقرير غير موجود' }; if (r.status !== 'approved' || !r.verify_code) return { ok: false, error: 'يُرسل للجهة بعد الاعتماد' };
-  const c = r.computed as MissionComputed; const to = lower(emailOverride || c.client_email); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { ok: false, error: 'اكتب بريد الجهة' };
+  if (!me.staff) return { ok: false, error: 'غير مصرّح' }; const r = await reportById(db, id); if (!r || !isClientKind(r.kind)) return { ok: false, error: 'التقرير غير موجود' }; if (r.status !== 'approved' || !r.verify_code) return { ok: false, error: 'يُرسل للجهة بعد الاعتماد' };
+  const c = r.computed as MissionComputed; const to = lower(emailOverride || c.client_email); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { ok: false, error: 'اكتب بريد الجهة' }; const docAr = isDocKind(r.kind) ? docKindAr(r.kind) : P46_NAMES_AR.mission; const ttl = String(isDocKind(r.kind) ? (c as any).title : c.title_ar || '');
   const cur = await safe<any>(db.from('portal_reports').select('ack_token').eq('id', id).maybeSingle(), null); const token = cur?.ack_token || ackToken();
   const url = `${site}/verify/report/${r.verify_code}?k=${token}`; const computed = { ...c, client_sent_at: nowIso(), client_sent_to: to };
   const { error } = await db.from('portal_reports').update({ ack_token: token, computed, updated_at: nowIso() }).eq('id', id); if (error) return { ok: false, error: error.message };
-  try { await notify(db, { kind: 'report_client', to: { email: to, name: c.client_name || c.org_ar }, ref: `rep:client:${id}:${to}:${Date.now()}`, subject: `${P46_NAMES_AR.mission} — «${c.title_ar}»`, text: `أنجز ${r.author_name} مهمة «${c.title_ar}» واعتمد أَثَر تقرير إنجازها. يمكنكم قراءته وإقرار استلامه من الرابط (لا يحتاج دخولًا).`, url }); } catch { /* داخلي */ }
+  try { await notify(db, { kind: 'report_client', to: { email: to, name: c.client_name || c.org_ar }, ref: `rep:client:${id}:${to}:${Date.now()}`, subject: `${docAr} — «${ttl}»`, text: isDocKind(r.kind) ? `كتب ${r.author_name} ${docAr} «${ttl}» واعتمده أَثَر. يمكنكم قراءته وإقرار استلامه من الرابط (لا يحتاج دخولًا).` : `أنجز ${r.author_name} مهمة «${ttl}» واعتمد أَثَر تقرير إنجازها. يمكنكم قراءته وإقرار استلامه من الرابط (لا يحتاج دخولًا).`, url }); } catch { /* داخلي */ }
   return { ok: true, to, url };
 }
 /** ما تراه الجهة برابطها */
 export async function missionByToken(db: any, code: string, k: string): Promise<any | null> {
-  if (!code || !k) return null; const r = await safe<any>(db.from('portal_reports').select(REPORT_COLS + ',ack_token').eq('verify_code', code.toUpperCase()).eq('kind', 'mission').eq('status', 'approved').maybeSingle(), null);
-  if (!r || !r.ack_token || r.ack_token !== k) return null; const { ack_token: _t, ...rest } = r; return missionClientView(rest);
+  if (!code || !k) return null; const r = await safe<any>(db.from('portal_reports').select(REPORT_COLS + ',ack_token').eq('verify_code', code.toUpperCase()).in('kind', ['mission', 'advisory', 'study']).eq('status', 'approved').maybeSingle(), null);
+  if (!r || !r.ack_token || r.ack_token !== k) return null; const { ack_token: _t, ...rest } = r; return isDocKind(r.kind) ? docClientView(rest) : missionClientView(rest);
 }
 export async function ackMission(db: any, code: string, k: string, name: string, note: string, site: string, staffEmails: string[]): Promise<{ ok: true } | { ok: false; error: string }> {
-  const r = await safe<any>(db.from('portal_reports').select(REPORT_COLS + ',ack_token').eq('verify_code', code.toUpperCase()).eq('kind', 'mission').eq('status', 'approved').maybeSingle(), null);
+  const r = await safe<any>(db.from('portal_reports').select(REPORT_COLS + ',ack_token').eq('verify_code', code.toUpperCase()).in('kind', ['mission', 'advisory', 'study']).eq('status', 'approved').maybeSingle(), null);
   if (!r || !r.ack_token || r.ack_token !== k) return { ok: false, error: 'الرابط غير صالح' }; if (!canAck(r)) return { ok: false, error: 'سبق الإقرار بالاستلام' };
   const nm = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 120); if (nm.length < 2) return { ok: false, error: 'اكتب اسم المُقِرّ' }; const c = r.computed as MissionComputed;
-  const ack = { at: nowIso(), name: nm, note: String(note || '').replace(/\s+/g, ' ').trim().slice(0, ACK_NOTE_MAX), email: String(c.client_sent_to || c.client_email || '') };
+  const ack = { at: nowIso(), name: nm, note: String(note || '').replace(/\s+/g, ' ').trim().slice(0, ACK_NOTE_MAX), email: String(c.client_sent_to || c.client_email || '') }; const kindAr = isDocKind(r.kind) ? docKindAr(r.kind) : P46_NAMES_AR.mission; const ttl = String(isDocKind(r.kind) ? (c as any).title : c.title_ar || '');
   const { error } = await db.from('portal_reports').update({ body: { ...(r.body || {}), ack }, updated_at: nowIso() }).eq('id', r.id); if (error) return { ok: false, error: error.message };
-  try { await notify(db, { kind: 'report_ack', to: { email: r.author_email }, ref: `rep:ack:${r.id}`, subject: `${MISSION_NAMES_AR.ack} — «${c.title_ar}»`, text: `${nm} (${c.org_ar || 'الجهة'}) أقرّ باستلام ${P46_NAMES_AR.mission}${ack.note ? `: «${ack.note}»` : '.'}`, url: `${site}/me/reports/${r.id}` }); } catch { /* داخلي */ }
-  for (const email of staffEmails.slice(0, 3)) { try { await notify(db, { kind: 'report_ack', to: { email }, ref: `rep:ack:${r.id}:${email}`, subject: `${MISSION_NAMES_AR.ack} — «${c.title_ar}»`, text: `${nm} (${c.org_ar || 'الجهة'}) أقرّ باستلام تقرير إنجاز مهمة ${r.author_name}.`, url: `${site}/admin/reports?r=${r.id}` }); } catch { /* داخلي */ } }
+  try { await notify(db, { kind: 'report_ack', to: { email: r.author_email }, ref: `rep:ack:${r.id}`, subject: `${MISSION_NAMES_AR.ack} — «${ttl}»`, text: `${nm} (${c.org_ar || 'الجهة'}) أقرّ باستلام ${kindAr}${ack.note ? `: «${ack.note}»` : '.'}`, url: `${site}/me/reports/${r.id}` }); } catch { /* داخلي */ }
+  for (const email of staffEmails.slice(0, 3)) { try { await notify(db, { kind: 'report_ack', to: { email }, ref: `rep:ack:${r.id}:${email}`, subject: `${MISSION_NAMES_AR.ack} — «${ttl}»`, text: `${nm} (${c.org_ar || 'الجهة'}) أقرّ باستلام ${kindAr} من ${r.author_name}.`, url: `${site}/admin/reports?r=${r.id}` }); } catch { /* داخلي */ } }
   return { ok: true };
 }
 /** إلحاق تصويب مؤرَّخ من الطاقم دون مسّ الأصل */
 export async function addMissionAddendum(db: any, me: Me, id: string, text: string): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!me.staff) return { ok: false, error: 'غير مصرّح' }; const r = await reportById(db, id); if (!r || r.kind !== 'mission') return { ok: false, error: 'التقرير غير موجود' }; if (r.status !== 'approved') return { ok: false, error: 'الإلحاق بعد الاعتماد فقط' };
+  if (!me.staff) return { ok: false, error: 'غير مصرّح' }; const r = await reportById(db, id); if (!r || !isClientKind(r.kind)) return { ok: false, error: 'التقرير غير موجود' }; if (r.status !== 'approved') return { ok: false, error: 'الإلحاق بعد الاعتماد فقط' };
   const t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, ADDENDUM_MAX); if (t.length < 10) return { ok: false, error: 'اكتب نصّ التصويب (10 أحرف على الأقل)' }; const list = Array.isArray(r.body?.addenda) ? r.body.addenda : []; if (list.length >= MAX_ADDENDA) return { ok: false, error: 'بلغت حدّ الإلحاقات' };
   const { error } = await db.from('portal_reports').update({ body: { ...(r.body || {}), addenda: [...list, { at: nowIso(), by: me.name || me.email, text: t }] }, updated_at: nowIso() }).eq('id', id); return error ? { ok: false, error: error.message } : { ok: true };
 }
 /** عدد تقارير الإنجاز المعتمَدة لعضو — لـ«ما شهده أَثَر» */
 export async function missionReportedCount(db: any, email: string): Promise<number> { const rows = await safe<any[]>(db.from('portal_reports').select('id').eq('kind', 'mission').eq('status', 'approved').ilike('author_email', lower(email)).limit(500), []); return rows.length; }
+
+/* ═══════════════════════════ ر3-ب — التقرير الاستشاري («أثرُ الرأي»): رأي استشاري · دراسة ═══════════════════════════ */
+const REQ_COLS = 'id,created_at,user_id,full_name,email,organization,sector,area,title,details,goals,timeline,status,assigned_to,expert_profile_id,decided_at,completed_at';
+const REQ_OK = ['accepted', 'in_progress', 'completed'];   // الوثيقة تُكتب لطلب مقبول (أو جارٍ أو مُنجَز) — لا لطلب قيد الدراسة
+export const docKindAr = (k: string) => (k === 'advisory' ? DOC_NAMES_AR.advisory : k === 'study' ? DOC_NAMES_AR.study : P46_NAMES_AR.mission);
+const isAuthorOf = (r: any, me: Me) => (!!r.author_id && r.author_id === me.id) || lower(r.author_email) === me.email;
+async function myProfile(db: any, me: Me): Promise<any | null> { return safe<any>(db.from('portal_directory_profiles').select('id,name_ar,title_ar,user_id').ilike('email', me.email).limit(1).maybeSingle(), null); }
+export async function requestById(db: any, id: string): Promise<any | null> { return id ? safe<any>(db.from('portal_consulting_requests').select(REQ_COLS).eq('id', id).maybeSingle(), null) : null; }
+/** من يكتب على طلب بلا عقد: الطاقم · المكلَّف به (assigned_to) · الخبير المرتبط بملفه أو بعقدٍ على الطلب */
+export async function canAuthorRequest(db: any, me: Me, req: any): Promise<boolean> {
+  if (!req) return false; if (me.staff || (req.assigned_to && req.assigned_to === me.id)) return true;
+  const [prof, engs] = await Promise.all([myProfile(db, me), safe<any[]>(db.from('portal_directory_engagements').select('id,email,status').eq('consulting_request_id', req.id).ilike('email', me.email).limit(5), [])]);
+  return (!!prof && !!req.expert_profile_id && String(prof.id) === String(req.expert_profile_id)) || engs.some(e => ENG_OK.includes(String(e.status)));
+}
+async function resolveSource(db: any, me: Me, s: { engagement_id?: string | null; consulting_request_id?: string | null }): Promise<{ eng: any | null; rid: string | null } | { error: string }> {
+  if (s.engagement_id) { const eng = await engagementById(db, String(s.engagement_id)); if (!eng) return { error: 'عقد التعاون غير موجود' }; if (lower(eng.email) !== me.email && !me.staff) return { error: 'هذا العقد ليس لك' }; if (!ENG_OK.includes(String(eng.status))) return { error: 'يُكتب لعقد موقَّع (جارٍ أو مُنجَز)' }; return { eng, rid: eng.consulting_request_id ? String(eng.consulting_request_id) : null }; }
+  const req = await requestById(db, String(s.consulting_request_id || '')); if (!req) return { error: 'الطلب غير موجود' }; if (!REQ_OK.includes(String(req.status))) return { error: 'يُكتب لطلب مقبول أو جارٍ أو مُنجَز' }; if (!(await canAuthorRequest(db, me, req))) return { error: 'هذا الطلب ليس من تكليفك' };
+  return { eng: null, rid: String(req.id) };
+}
+/** لقطة الطلب — من الطلب والعقد (إن وُجد) وعرض السعر المقبول والمراحل؛ تحفظ بيانات الإرسال للجهة */
+export async function computeRequestSnapshot(db: any, me: Me, rid: string | null, eng: any | null, prev?: Partial<RequestComputed> | null): Promise<RequestComputed> {
+  const td = today();
+  const [prof, req, quotes, ms, assigned] = await Promise.all([
+    eng?.profile_id ? safe<any>(db.from('portal_directory_profiles').select('name_ar,title_ar').eq('id', eng.profile_id).maybeSingle(), null) : myProfile(db, me),
+    rid ? requestById(db, rid) : Promise.resolve(null),
+    rid ? safe<any[]>(db.from('portal_consulting_quotes').select('version,status,scope,deliverables,duration').eq('request_id', rid).order('version', { ascending: false }).limit(10), []) : Promise.resolve([] as any[]),
+    rid ? safe<any[]>(db.from('portal_consulting_milestones').select('id,position,title,due_date,status,done_at').eq('request_id', rid).order('position', { ascending: true }).limit(40), []) : Promise.resolve([] as any[]),
+    Promise.resolve(null),
+  ]);
+  void assigned; const q = (quotes || []).find(x => x.status === 'accepted') || null; const lines = (t: unknown) => String(t || '').split(/\r?\n/).map(x => x.replace(/^[-•*\d.)\s]+/, '').trim()).filter(Boolean).slice(0, 20);
+  return {
+    request_id: rid, engagement_id: eng ? String(eng.id) : null, engagement_code: eng?.code || null, title: String(req?.title || eng?.title_ar || ''), details: String(req?.details || ''), goals: String(req?.goals || ''), timeline: String(req?.timeline || ''), org_ar: String(req?.organization || ''), sector: String(req?.sector || ''), area: String(req?.area || ''), client_name: String(req?.full_name || ''), client_email: lower(req?.email || ''), requested_at: req?.created_at ? String(req.created_at).slice(0, 10) : null, request_status: String(req?.status || ''),
+    consultant_name: String(prof?.name_ar || me.name || ''), consultant_title: String(prof?.title_ar || ''), assigned_name: '', quote_scope: String(q?.scope || eng?.scope_ar || ''), quote_deliverables: q ? lines(q.deliverables) : Array.isArray(eng?.deliverables) ? eng.deliverables.map((d: any) => String(d || '')).filter(Boolean) : [], quote_duration: String(q?.duration || ''), milestones: milestoneDeviations(ms || [], td), at: nowIso(),
+    client_sent_at: prev?.client_sent_at || null, client_sent_to: prev?.client_sent_to || null,
+  };
+}
+/** إنشاء رأي/دراسة: مسودّة واحدة غير معتمَدة لكل (مصدر، نوع)؛ النسخة الجديدة بعد الاعتماد تحمل supersedes_id */
+export async function createDoc(db: any, me: Me, kind: DocKind, src: { engagement_id?: string | null; consulting_request_id?: string | null }): Promise<{ ok: true; report: any; resumed?: boolean } | { ok: false; error: string }> {
+  if (!isDocKind(kind)) return { ok: false, error: 'نوع الوثيقة غير معروف' }; const srcOk = await resolveSource(db, me, src); if ('error' in srcOk) return { ok: false, error: srcOk.error }; const { eng, rid } = srcOk;
+  let qq = db.from('portal_reports').select(REPORT_COLS).eq('kind', kind); qq = eng ? qq.eq('engagement_id', eng.id) : qq.eq('consulting_request_id', rid).is('engagement_id', null);
+  const ex = await safe<any[]>(qq.order('created_at', { ascending: false }).limit(20), []); const open = ex.find(r => r.status !== 'approved'); if (open) return { ok: true, report: open, resumed: true };
+  const last = ex.find(r => r.status === 'approved') || null; const c = await computeRequestSnapshot(db, me, rid, eng);
+  const row = { kind, program_id: null, classroom_id: null, engagement_id: eng ? String(eng.id) : null, consulting_request_id: rid || null, supersedes_id: last ? String(last.id) : null, author_id: me.id, author_email: me.email, author_name: c.consultant_name || me.name || me.email, week_no: 0, period_from: c.requested_at || today(), period_to: today(), status: 'draft', computed: c, body: kind === 'advisory' ? emptyAdvisoryBody() : emptyStudyBody(), students: [], lines: [], lines_ok: false };
+  const { data, error } = await db.from('portal_reports').insert(row).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message };
+  return { ok: true, report: data };
+}
+async function markSuperseded(db: any, r: any, code: string | null): Promise<void> {
+  if (!r.supersedes_id) return; const old = await reportById(db, String(r.supersedes_id)); if (!old || old.status !== 'approved') return;
+  await db.from('portal_reports').update({ body: { ...(old.body || {}), superseded_by: { code, at: nowIso() } }, updated_at: nowIso() }).eq('id', old.id);
+}
+/** اعتماد تقرير الإنجاز على طلب بلا عقد يُنهي الطلب (in_progress/accepted → completed) */
+async function completeRequestFromReport(db: any, r: any, code: string | null): Promise<void> {
+  const rid = r.consulting_request_id ? String(r.consulting_request_id) : null; if (!rid || r.engagement_id) return; const req = await requestById(db, rid); if (!req || !['accepted', 'in_progress'].includes(String(req.status))) return;
+  await db.from('portal_consulting_requests').update({ status: 'completed', completed_at: nowIso(), updated_at: nowIso() }).eq('id', rid); void code;
+}
+/** الوثائق المعتمَدة للطلب/العقد — لربط مخرجات تقرير الإنجاز بها («سلسلة الوثائق») */
+export async function docsForRequest(db: any, rid: string | null, engId: string | null): Promise<{ id: string; kind: string; code: string; title: string; approved_at: string | null; superseded: boolean }[]> {
+  if (!rid && !engId) return []; let qq = db.from('portal_reports').select('id,kind,verify_code,computed,approved_at,body,consulting_request_id,engagement_id').in('kind', ['advisory', 'study']).eq('status', 'approved');
+  qq = rid ? qq.eq('consulting_request_id', rid) : qq.eq('engagement_id', engId); const rows = await safe<any[]>(qq.order('approved_at', { ascending: false }).limit(20), []);
+  return rows.filter(r => r.verify_code).map(r => ({ id: String(r.id), kind: String(r.kind), code: String(r.verify_code), title: String(r.computed?.title || ''), approved_at: r.approved_at || null, superseded: !!r.body?.superseded_by }));
+}
+/** ما تراه الجهة في صفحة طلبها: وثائقها المعتمَدة بروابط إقرار جاهزة (صاحب الطلب أو الطاقم) */
+export async function clientDocs(db: any, me: Me, rid: string, site: string): Promise<{ ok: true; docs: any[] } | { ok: false; error: string }> {
+  const req = await requestById(db, rid); if (!req) return { ok: false, error: 'الطلب غير موجود' }; if (!me.staff && req.user_id !== me.id && lower(req.email) !== me.email) return { ok: false, error: 'غير مصرّح' };
+  const rows = await safe<any[]>(db.from('portal_reports').select(REPORT_COLS + ',ack_token').in('kind', ['mission', 'advisory', 'study']).eq('status', 'approved').eq('consulting_request_id', rid).order('approved_at', { ascending: false }).limit(30), []);
+  const out: any[] = [];
+  for (const r of rows) { if (!r.verify_code) continue; let token = r.ack_token; if (!token) { token = ackToken(); const { error } = await db.from('portal_reports').update({ ack_token: token, updated_at: nowIso() }).eq('id', r.id); if (error) continue; }
+    out.push({ id: String(r.id), kind: String(r.kind), kind_ar: docKindAr(r.kind), code: String(r.verify_code), title: String(r.kind === 'mission' ? r.computed?.title_ar : r.computed?.title || ''), author_name: String(r.author_name || ''), approved_at: r.approved_at || null, acked_at: r.body?.ack?.at || null, superseded: !!r.body?.superseded_by, url: `${site}/verify/report/${r.verify_code}?k=${token}` }); }
+  return { ok: true, docs: out };
+}
+function pickDocs(all: any[], pred: (r: any) => boolean) {
+  const rs = all.filter(pred); const pick = (k: string) => { const list = rs.filter(r => r.kind === k); const open = list.find(r => r.status !== 'approved'); const appr = list.filter(r => r.status === 'approved'); return { open: open ? { id: String(open.id), status: String(open.status) } : null, approved: appr.length, last: appr[0] ? { id: String(appr[0].id), code: appr[0].verify_code || null } : null }; };
+  return { mission: pick('mission'), advisory: pick('advisory'), study: pick('study') };
+}
+/** بطاقات «مهماتي وطلباتي»: عقد (وطلبه إن وُجد) أو طلب مكلَّف به بلا عقد — بأزرار تقرير الإنجاز والرأي والدراسة */
+export async function workCards(db: any, me: Me, mine: any[], onlyRequest?: string | null): Promise<any[]> {
+  if (onlyRequest) {
+    const req = await requestById(db, onlyRequest); if (!req) return []; const reps = await safe<any[]>(db.from('portal_reports').select(REPORT_COLS).eq('consulting_request_id', req.id).order('created_at', { ascending: false }).limit(50), []);
+    return [{ src: 'req', engagement_id: null, request_id: String(req.id), title_ar: String(req.title || ''), kind: 'consult', kind_ar: 'طلب استشارة', status: String(req.status), org_ar: String(req.organization || ''), code: null, start_at: req.decided_at || req.created_at || null, end_at: req.completed_at || null, deliverables: 0, can_write: REQ_OK.includes(String(req.status)), ...pickDocs(reps, () => true) }];
+  }
+  const engs = await myEngagements(db, me); const prof = await myProfile(db, me);
+  const rids = Array.from(new Set(engs.map(e => e.consulting_request_id).filter(Boolean))); const reqsOfEngs = rids.length ? await safe<any[]>(db.from('portal_consulting_requests').select(REQ_COLS).in('id', rids).limit(50), []) : []; const byId = new Map(reqsOfEngs.map(r => [String(r.id), r]));
+  const mineReqs = await safe<any[]>(db.from('portal_consulting_requests').select(REQ_COLS).eq('assigned_to', me.id).in('status', REQ_OK).order('created_at', { ascending: false }).limit(30), []);
+  const profReqs = prof ? await safe<any[]>(db.from('portal_consulting_requests').select(REQ_COLS).eq('expert_profile_id', prof.id).in('status', REQ_OK).limit(30), []) : [];
+  // الوثائق على المصدر من أي كاتب (الطاقم قد يكتب على طلبي) — لا تقاريري فقط
+  const engIds = engs.map(e => String(e.id)); const reqIds = Array.from(new Set([...mineReqs, ...profReqs].map(r => String(r.id))));
+  const [byEng, byReq] = await Promise.all([engIds.length ? safe<any[]>(db.from('portal_reports').select(REPORT_COLS).in('engagement_id', engIds).order('created_at', { ascending: false }).limit(200), []) : Promise.resolve([] as any[]), reqIds.length ? safe<any[]>(db.from('portal_reports').select(REPORT_COLS).in('consulting_request_id', reqIds).is('engagement_id', null).order('created_at', { ascending: false }).limit(200), []) : Promise.resolve([] as any[])]);
+  const seenIds = new Set<string>(); const all = [...mine, ...byEng, ...byReq].filter(r => { const id = String(r.id); if (seenIds.has(id)) return false; seenIds.add(id); return true; }).sort((x, y) => String(y.created_at).localeCompare(String(x.created_at)));
+  const docOf2 = (pred: (r: any) => boolean) => pickDocs(all, pred);
+  const cards: any[] = engs.map(e => { const rq = byId.get(String(e.consulting_request_id || '')); return { src: 'eng', engagement_id: String(e.id), request_id: e.consulting_request_id ? String(e.consulting_request_id) : null, title_ar: String(e.title_ar || ''), kind: String(e.kind || 'consult'), kind_ar: e.kind === 'train' ? 'تدريب' : 'استشارة', status: String(e.status), org_ar: String(rq?.organization || ''), start_at: e.start_at || null, end_at: e.end_at || null, deliverables: Array.isArray(e.deliverables) ? e.deliverables.length : 0, code: e.code || null, can_write: true, ...docOf2(r => String(r.engagement_id || '') === String(e.id)) }; });
+  const covered = new Set(engs.map(e => String(e.consulting_request_id || ''))); const seen = new Set<string>();
+  for (const rq of [...mineReqs, ...profReqs]) { const id = String(rq.id); if (covered.has(id) || seen.has(id)) continue; seen.add(id); cards.push({ src: 'req', engagement_id: null, request_id: id, title_ar: String(rq.title || ''), kind: 'consult', kind_ar: 'طلب استشارة', status: String(rq.status), org_ar: String(rq.organization || ''), start_at: rq.decided_at || rq.created_at || null, end_at: rq.completed_at || null, deliverables: 0, code: null, can_write: true, ...docOf2(r => !r.engagement_id && String(r.consulting_request_id || '') === id) }); }
+  return cards;
+}
+/** ما يُستأنف منه بطاقة ر3 القديمة */
+export async function missionCards(db: any, me: Me, mine: any[]): Promise<any[]> { return (await workCards(db, me, mine)).filter(c => c.src === 'eng').map(c => ({ ...c, report_id: c.mission.open?.id || c.mission.last?.id || null, report_status: c.mission.open?.status || (c.mission.last ? 'approved' : null) })); }
+/** عدد الوثائق الاستشارية المعتمَدة لعضو — لـ«ما شهده أَثَر» */
+export async function docsWrittenCount(db: any, email: string): Promise<number> { const rows = await safe<any[]>(db.from('portal_reports').select('id').in('kind', ['advisory', 'study']).eq('status', 'approved').ilike('author_email', lower(email)).limit(500), []); return rows.length; }
