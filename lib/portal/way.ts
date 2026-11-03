@@ -1,6 +1,8 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /** «الطريق» — خريطة أسماء المسارات لشريط التنقّل الموحّد (رجوع · الرئيسية · مسار الصفحة). منطق خالص قابل للاختبار. */
-export type Crumb = { href: string; label: string; current: boolean };
+export type Crumb = { href: string; label: string; current: boolean; /** مقطع بلا صفحة خاصة (مجلّد مسارات فقط) → يُعرض نصًّا لا رابطًا */ dead?: boolean };
+/** مقاطع لا صفحة لها (تحتها صفحات ديناميكية فقط) — لا تُربَط في الفتات ولا يُرجَع إليها (كانت تعطي 404) */
+export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/evaluate', '/followup', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey']);
 type L = { ar: string; en: string };
 /** أسماء المقاطع المعروفة (المقطع الأول أو المركّب) — الأسماء الرسمية كما في القوائم */
 const NAMES: Record<string, L> = {
@@ -30,14 +32,15 @@ export function crumbsFor(pathname: string, lang: 'ar' | 'en' = 'ar'): Crumb[] {
     href += `/${seg}`; const key2 = segs.slice(Math.max(0, i - 2), i + 1).join('/'); const key1 = segs.slice(Math.max(0, i - 1), i + 1).join('/');
     const named = NAMES[key2] || NAMES[key1] || NAMES[seg];
     const label = named ? pick(named, lang) : looksLikeId(seg) ? pick(DETAIL, lang) : decodeURIComponent(seg).replace(/[-_]+/g, ' ');
-    out.push({ href, label, current: i === segs.length - 1 });
+    out.push({ href, label, current: i === segs.length - 1, ...(NO_PAGE.has(href) && i < segs.length - 1 ? { dead: true } : {}) });
   });
   return out;
 }
 /** المسار الأب للرجوع حين لا يوجد تاريخ متصفح صالح (أو جاء الزائر من رابط خارجي) */
 export function parentOf(pathname: string): string {
-  const segs = (pathname || '/').split('?')[0].split('/').filter(Boolean); if (segs.length <= 1) return '/';
-  return '/' + segs.slice(0, -1).join('/');
+  const segs = (pathname || '/').split('?')[0].split('/').filter(Boolean);
+  for (let n = segs.length - 1; n >= 1; n--) { const p = '/' + segs.slice(0, n).join('/'); if (!NO_PAGE.has(p)) return p; }
+  return '/';
 }
 /** هل يُظهَر الشريط في هذا المسار؟ الرئيسية لها بطلها، ولوحة التحكم لها قائمتها الجانبية */
 export const showWay = (pathname: string): boolean => !!pathname && pathname !== '/' && !pathname.startsWith('/dashboard');

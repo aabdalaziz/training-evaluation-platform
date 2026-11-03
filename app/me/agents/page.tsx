@@ -20,8 +20,8 @@ export default function MyAgentsPage() { return <PortalShell><Inner /></PortalSh
 function Inner() {
   const { lang } = useLang(); const ar = lang === 'ar'; const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [data, setData] = useState<Data | null>(null); const [busy, setBusy] = useState(''); const [copied, setCopied] = useState(''); const [err, setErr] = useState('');
-  const site = typeof location !== 'undefined' ? location.origin : 'https://athar-portal.vercel.app';
-  useEffect(() => { fastToken(db).then(t => setTok(t || '')); }, [db]);
+  const [site, setSite] = useState('https://athar-portal.vercel.app'); /* يُقرأ بعد التركيب حتى لا يختلف نصّ الخادم عن المتصفح */
+  useEffect(() => { setSite(location.origin); fastToken(db).then(t => setTok(t || '')); }, [db]);
   const load = useCallback(async (t: string) => { const j = await fetch('/api/oauth', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (j?.success) setData(j); else setErr(j?.error || (ar ? 'تعذّر التحميل' : 'Failed')); }, [ar]);
   useEffect(() => { if (tok) load(tok); }, [tok, load]);
   async function revoke(id: string) { if (!confirm(ar ? 'إبطال تفويض هذا المساعد الآن؟ سيُرفض عند أول نداء.' : 'Revoke this assistant now?')) return; setBusy(id); await fetch('/api/oauth', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'revoke', id }) }); await load(tok || ''); setBusy(''); }

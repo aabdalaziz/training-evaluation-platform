@@ -128,7 +128,7 @@ export async function POST(req: Request) {
     return withCookie(NextResponse.json({ ok: true, session: r.value.session, invite: invite ? { label_ar: invite.label_ar } : null }, { headers: { ...NO, 'Server-Timing': sw.header() } }), r.value.token, r.value.session.expiresAt);
   }
   const sw = stopwatch();
-  const token = cookieOf(req); if (!token) return bad('missing_session', 401);
+  const token = cookieOf(req); if (!token) return action === 'resume' ? NextResponse.json({ ok: false, error: 'missing_session' }, { headers: NO }) : bad('missing_session', 401); /* الاستئناف بلا جلسة حالة عادية (أول زيارة) لا خطأ */
   const loaded = await loadSession(db, token, action !== 'answer'); if (!loaded) return withCookie(bad('invalid_session', 401), null); sw.mark('session');
   const { session, answers } = loaded;
   if (action === 'resume') { const r = await resumeSession(db, session, answers); return r.ok ? NextResponse.json({ ok: true, session: r.value }, { headers: NO }) : bad(r.code, r.status); }

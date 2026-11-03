@@ -17,6 +17,11 @@ test('الطريق: الأب والإظهار والمعرّفات', () => {
   assert.ok(looksLikeId('ML-AB12-CD34') && looksLikeId('3f2a9c10-1b2c-4d5e-8f90-aabbccddeeff') && looksLikeId('12345') && looksLikeId('abcdefghijklmnopqrstuvwxyz012345'));
   assert.equal(looksLikeId('bank'), false); assert.equal(looksLikeId('miaar'), false);
 });
+test('الطريق: المقاطع بلا صفحة لا تُربَط ولا يُرجَع إليها (كانت 404)', () => {
+  const c = crumbsFor('/miaar/result/ML-AB12-CD34'); assert.equal(c[2].dead, true, '/miaar/result مجلّد فقط'); assert.equal(c[1].dead, undefined, '/miaar صفحة');
+  assert.equal(parentOf('/miaar/result/ML-AB12-CD34'), '/miaar'); assert.equal(parentOf('/credential/ABC'), '/'); assert.equal(parentOf('/live/copilot/7'), '/live'); assert.equal(parentOf('/m/confirm/tok'), '/');
+  assert.equal(parentOf('/admin/miaar'), '/admin', '/admin صار صفحة (تحويل إلى الردهة)');
+});
 test('الطريق: سجلّ التبويب يميّز الرجوع عن التقدّم', () => {
   let st = updateStack([], '/'); st = updateStack(st, '/services'); st = updateStack(st, '/programs'); assert.deepEqual(st, ['/', '/services', '/programs']);
   st = updateStack(st, '/services'); assert.deepEqual(st, ['/', '/services'], 'العودة لما قبلها = رجوع (pop)');

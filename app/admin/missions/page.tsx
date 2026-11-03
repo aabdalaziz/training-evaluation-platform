@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
-import { MODE_LABEL, STATUS_LABEL, EMPTY_TEMPLATE, templateToForm, daysLeft } from '../../../lib/portal/missions';
+import { MODE_LABEL, STATUS_LABEL, modeLabel, statusLabel, EMPTY_TEMPLATE, templateToForm, daysLeft } from '../../../lib/portal/missions';
 import type { Mission, MissionTemplate, TemplateForm, TransferStats, EvidenceMode } from '../../../lib/portal/missions';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -48,7 +48,7 @@ export default function AdminMissionsPage() {
   async function decide(m: Mission, decision: 'confirmed' | 'returned') { const j = await post({ action: 'decide', id: m.id, decision, note }); if (j) { setOk(decision === 'confirmed' ? 'تم التأكيد' : 'أُعيدت للمتدرب'); setSel(null); setNote(''); await load(); } }
   async function remind(m: Mission) { const j = await post({ action: 'remind', id: m.id }); if (j) setOk(j.mailed ? 'أُرسل التذكير' : `لم يُرسل البريد (تحقق من RESEND) — الرابط: ${j.url}`); await load(); }
   async function cycle(dry: boolean) { const j = await post({ action: 'cycle', dry }); if (j) { setOk(`${dry ? 'معاينة' : 'تنفيذ'}: إسناد ${j.assigned} · تذكير ${j.reminded} · انتهاء ${j.expired}${j.previews?.length ? ` — ${j.previews.slice(0, 3).map((p: any) => p.email).join('، ')}` : ''}`); if (!dry) await load(); } }
-  const St = ({ s }: { s: Mission['status'] }) => <span className="am-st" style={{ background: STATUS_LABEL[s].color }}>{STATUS_LABEL[s].ar}</span>;
+  const St = ({ s }: { s: Mission['status'] }) => <span className="am-st" style={{ background: STATUS_LABEL[s]?.color || '#64748b' }}>{statusLabel(s, 'ar')}</span>;
 
   if (!ready) return <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="am-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   const st = data?.stats;
@@ -68,7 +68,7 @@ export default function AdminMissionsPage() {
             {missions.map(m => { const dl = daysLeft(m.due_at); return <tr key={m.id} className={sel?.id === m.id ? 'sel' : ''}>
               <td><b>{m.full_name || '—'}</b><br /><small dir="ltr">{m.email}</small></td>
               <td>{m.title_ar}<br /><small>{programs.get(m.program_id || '') || '—'}</small></td>
-              <td><small>{MODE_LABEL[m.evidence_mode].ar}</small></td>
+              <td><small>{modeLabel(m.evidence_mode, 'ar')}</small></td>
               <td><St s={m.status} /></td>
               <td><small className={dl < 0 && m.status === 'assigned' ? 'am-late' : ''}>{fmt(m.due_at)}{m.status === 'assigned' ? ` (${dl >= 0 ? `بقي ${dl}` : `تأخر ${-dl}`} يوم)` : ''}</small></td>
               <td>{m.ai ? <b className={m.ai.score >= 70 ? 'am-good' : m.ai.score >= 45 ? 'am-mid' : 'am-low'}>{m.ai.score}%</b> : <small>—</small>}</td>
@@ -80,7 +80,7 @@ export default function AdminMissionsPage() {
             <h3>مراجعة: {sel.title_ar} — {sel.full_name || sel.email}</h3>
             <div className="am-two">
               <div><h4>المعيار والفحص الأولي ({sel.ai?.score ?? '—'}% · {sel.ai?.source === 'ai' ? 'ذكاء اصطناعي' : 'محلي'})</h4><ol>{sel.rubric.map((c, i) => <li key={i}>{c.c} <small className={sel.ai?.criteria?.[i]?.met}>{sel.ai?.criteria?.[i]?.met === 'yes' ? 'ورد' : sel.ai?.criteria?.[i]?.met === 'partly' ? 'جزئيًا' : 'لم يرد'}</small></li>)}</ol><p>{sel.ai?.feedback_ar}</p></div>
-              <div><h4>الدليل ({MODE_LABEL[sel.evidence_mode].ar})</h4>{sel.evidence?.file_path && <p><a href={`/m/confirm-preview`} onClick={e => { e.preventDefault(); window.open(`/m/${sel.token}`, '_blank'); }}>الملف يُعرض في صفحة المهمة ↗</a></p>}{sel.evidence?.link && <p><a href={sel.evidence.link} target="_blank" rel="noopener noreferrer" dir="ltr">{sel.evidence.link}</a></p>}<blockquote>{sel.evidence?.text || sel.evidence?.caption || sel.evidence?.transcript || '—'}</blockquote></div>
+              <div><h4>الدليل ({modeLabel(sel.evidence_mode, 'ar')})</h4>{sel.evidence?.file_path && <p><a href={`/m/confirm-preview`} onClick={e => { e.preventDefault(); window.open(`/m/${sel.token}`, '_blank'); }}>الملف يُعرض في صفحة المهمة ↗</a></p>}{sel.evidence?.link && <p><a href={sel.evidence.link} target="_blank" rel="noopener noreferrer" dir="ltr">{sel.evidence.link}</a></p>}<blockquote>{sel.evidence?.text || sel.evidence?.caption || sel.evidence?.transcript || '—'}</blockquote></div>
             </div>
             <div className="am-decide"><input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتدرب (مطلوبة عند الإعادة)" /><button className="am-btn" disabled={!!busy} onClick={() => decide(sel, 'confirmed')}>أؤكد كطاقم</button><button className="am-btn ghost" disabled={!!busy || note.trim().length < 5} onClick={() => decide(sel, 'returned')}>أعِد للمتدرب</button><button className="am-btn ghost" onClick={() => setSel(null)}>إغلاق</button></div>
             <small className="am-note">الأفضل أن يؤكد المشرف المباشر (وزن 0.85). تأكيد الطاقم مقبول حين لا مشرف — ويُسجَّل باسمك.</small>
@@ -107,7 +107,7 @@ export default function AdminMissionsPage() {
           <div className="am-card">
             <h3>القوالب</h3>
             {!data?.templates.length && <div className="am-empty">لا قوالب بعد — ابدأ بـ«اقترح مهمات».</div>}
-            {data?.templates.map(tpl => <article key={tpl.id} className={`am-tpl ${tpl.active ? '' : 'off'}`}><div><b>{tpl.title_ar}</b><small>{programs.get(tpl.program_id || '') || 'بلا برنامج'} · {MODE_LABEL[tpl.evidence_mode].ar} · بعد {tpl.days_after} يوم · {(tpl.skills || []).map(id => skillsById.get(id)?.name_ar).filter(Boolean).join('، ')}</small></div><div className="am-acts"><button className="am-btn ghost small" onClick={() => { setEditId(tpl.id); setForm(templateToForm(tpl)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>تعديل</button><button className="am-btn ghost small" onClick={() => { setTab('assign'); loadPeople(tpl.id); }}>إسناد</button><button className="am-btn ghost small danger" onClick={() => delTemplate(tpl.id)}>حذف</button></div></article>)}
+            {data?.templates.map(tpl => <article key={tpl.id} className={`am-tpl ${tpl.active ? '' : 'off'}`}><div><b>{tpl.title_ar}</b><small>{programs.get(tpl.program_id || '') || 'بلا برنامج'} · {modeLabel(tpl.evidence_mode, 'ar')} · بعد {tpl.days_after} يوم · {(tpl.skills || []).map(id => skillsById.get(id)?.name_ar).filter(Boolean).join('، ')}</small></div><div className="am-acts"><button className="am-btn ghost small" onClick={() => { setEditId(tpl.id); setForm(templateToForm(tpl)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>تعديل</button><button className="am-btn ghost small" onClick={() => { setTab('assign'); loadPeople(tpl.id); }}>إسناد</button><button className="am-btn ghost small danger" onClick={() => delTemplate(tpl.id)}>حذف</button></div></article>)}
           </div>
         </div>}
 

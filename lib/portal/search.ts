@@ -52,7 +52,6 @@ export const ROUTES: Entry[] = [
   P('about', '/about', 'عن أَثَر', 'About Athar', ['عن', 'about', 'من نحن', 'رؤية']),
   P('2062', '/2062', 'أَثَر 2062 — الأفق', 'Athar 2062 — the horizon', ['2062', 'مستقبل', 'رؤية', 'horizon']),
   P('observatory', '/observatory', 'مرصد القدرة البشرية', 'Human capability observatory', ['مرصد', 'observatory', 'مؤشر', 'قطاع']),
-  P('impact', '/impact', 'الأثر', 'Impact', ['اثر', 'impact', 'قياس']),
   P('privacy', '/privacy', 'الخصوصية', 'Privacy', ['خصوصية', 'privacy', 'pdpl', 'بيانات']),
   P('login', '/login', 'تسجيل الدخول', 'Sign in', ['دخول', 'login', 'sign in', 'حساب']),
   P('student', '/student', 'بوابة المتدرّب', 'Trainee portal', ['متدرب', 'طالب', 'student', 'trainee']),

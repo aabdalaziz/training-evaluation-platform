@@ -151,13 +151,15 @@ export function formatTime(time: string | null | undefined): string {
   return m ? `${m[1].padStart(2, '0')}:${m[2]}` : String(time);
 }
 
-export function dayLabel(day: number, lang: Lang): string {
+export function dayLabel(day: number | null | undefined, lang: Lang): string {
+  if (day === null || day === undefined) return '';
   const d = DAYS.find(x => x.v === day);
   return d ? (lang === 'ar' ? d.ar : d.en) : String(day);
 }
 
 /** Today's date (YYYY-MM-DD) in the Asia/Riyadh time zone. */
 export function todayRiyadh(now: Date = new Date()): string {
+  if (isNaN(now.getTime())) now = new Date(); /* صفّ بلا تاريخ إرسال صالح لا يُسقط التقرير */
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: RIYADH_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
   }).formatToParts(now);
