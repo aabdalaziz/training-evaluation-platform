@@ -13,6 +13,7 @@ import {
 import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report } from './registry';
 import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './bank';
 import { reweighIfDue, trustLine } from './balance';
+import { openGrant, publicLedgerBadge } from './ledger';
 import type { Stopwatch } from './timing';
 import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
 import type { Plan } from './blueprint';
@@ -73,9 +74,8 @@ export async function canStart(db: any, email: string): Promise<Result<{ retake:
   const prior = await db.from('placement_reports').select('id').ilike('candidate_email', email).limit(1);
   if (prior.error) return fail('retake_check_failed', 503);
   if (!(prior.data || []).length) return { ok: true, value: { retake: false } };
-  const approvals = await db.from('test_retake_approvals').select('id').ilike('email', email).is('used_at', null).limit(1);
-  if (approvals.error) return fail('retake_check_failed', 503);
-  return (approvals.data || []).length ? { ok: true, value: { retake: true } } : fail('retake_not_allowed', 403);
+  /* م5-أ: الإذن المفتوح يراعي الصلاحية والسحب (lib/miaar/ledger.ts) */
+  try { const g = await openGrant(db, email); return g ? { ok: true, value: { retake: true } } : fail('retake_not_allowed', 403); } catch { return fail('retake_check_failed', 503); }
 }
 
 export async function startSession(db: any, input: StartInput, sw?: Stopwatch): Promise<Result<{ token: string; session: ReturnType<typeof publicSession> }>> {
@@ -205,8 +205,9 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   const status = reason === 'time' ? 'expired' : 'completed';
   const closed = await db.from('placement_secure_sessions').update({ status, finish_reason: reason, finished_at: nowIso(), report, updated_at: nowIso() }).eq('id', s.id); if (closed.error) return fail('session_close_failed', 500);
   if (s.recipient_id) await db.from('placement_invite_recipients').update({ report_id: inserted.id }).eq('id', s.recipient_id);
-  // موافقة إعادة الاختبار تُستهلك
+  // موافقة إعادة الاختبار تُستهلك — وتُربط المحاولة بسابقتها (م5-أ: previous_report_id يولّد «تقرير المقارنة» في م5-ب)
   await db.from('test_retake_approvals').update({ used_at: nowIso() }).ilike('email', s.candidate.email).is('used_at', null);
+  try { const { data: prev } = await db.from('placement_reports').select('id').ilike('candidate_email', s.candidate.email).neq('id', inserted.id).order('created_at', { ascending: false }).limit(1); if (prev?.[0]?.id) await db.from('placement_reports').update({ previous_report_id: prev[0].id }).eq('id', inserted.id); } catch { /* الربط تحسيني */ }
   await recordPlacement(db, { id: inserted.id, submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, created_at: inserted.created_at || nowIso(), report }, s.user_id);
   await reweighIfDue(db);   /* م3: الميزان يزن نفسه كل 25 جلسة منتهية — لا يرمي ولا يؤخّر النتيجة إلا ثوانيَ عند الاستحقاق */
   return { ok: true, value: { report, access_code } };
@@ -219,6 +220,8 @@ export async function resultByCode(db: any, code: string): Promise<{ code: strin
   const name = String((r as any)?.بيانات_المتقدم?.الاسم || '').split(/\s+/)[0] || '—';
   const { بنود_الجلسة: _items, ...rest } = r as any; void _items;  /* بنود الجلسة (الرموز والنصوص) لا تُعرض للعلن */
   const safe = { ...rest, بيانات_المتقدم: { ...(r as any).بيانات_المتقدم, الاسم: name, البريد_الإلكتروني: '—', الهاتف: '—' } } as Report;
+  /* م5-أ: شارة الأرشفة وقرار التسكين على البطاقة نفسها (بلا بيانات شخصية) — والتسكين التلقائي الكسول إن حلّت المهلة */
+  try { (safe as any).السجلّ = await publicLedgerBadge(db, String(data.id)); } catch { /* البطاقة لا تنتظر السجلّ */ }
   return { code: data.access_code, name, taken_at: data.created_at, report: safe };
 }
 export { PASS_PERCENT };

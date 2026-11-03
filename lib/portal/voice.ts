@@ -57,6 +57,7 @@ export const DESTINATIONS: Destination[] = [
   { href: '/admin/miaar/invites', label: 'الدعوات', aliases: ['الدعوات', 'دعوات معيار', 'الدعوه'], admin: true },
   { href: '/admin/miaar/balance', label: 'الميزان', aliases: ['الميزان', 'ميزان معيار', 'الموثوقية'], admin: true },
   { href: '/admin/miaar/rating', label: 'التصحيح', aliases: ['التصحيح', 'قائمة التصحيح', 'المصحح', 'غرفة التصحيح'], admin: true },
+  { href: '/admin/miaar/ledger', label: 'سجلّ مِعيار', aliases: ['السجل', 'سجل معيار', 'سجل النتائج', 'ادارة النتائج', 'الارشيف', 'قرار التسكين'], admin: true },
   { href: '/admin/roles', label: 'الأدوار', aliases: ['الادوار', 'الصلاحيات'], admin: true },
   { href: '/admin/vault', label: 'خزنة أَثَر', aliases: ['خزنة اثر', 'الخزنه', 'خزنة'], admin: true },
   { href: '/admin/shield', label: 'درع أَثَر', aliases: ['درع اثر', 'الدرع', 'الامان'], admin: true },

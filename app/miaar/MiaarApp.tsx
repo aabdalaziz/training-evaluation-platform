@@ -600,6 +600,10 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
     <div className="mi-top mi-nolink"><header className="mi-head"><div className="mi-brandside"><a className="mi-brand" href="/">أَثَر<small>{t('intro', 'brandSub')}</small></a><a className="mi-mark" href="/miaar">مِعيار</a></div><div className="mi-left"><LangPicker copy={copy} lang={lang} onPick={onLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} /></div></header><WayBar lang={lang === 'ar' ? 'ar' : 'en'} /></div>
     <section className="mi-band"><p className="mi-kicker gold">{x('card_k')} · {t('result', 'org')}</p><h1>{who}</h1><p className="mi-lead">{t('result', 'date')}: {new Date(report.تاريخ || Date.now()).toLocaleDateString(ar ? 'ar-SA' : lang)} · {x('nature')}</p></section>
     <div className="mi-wrap"><div className="mi-card">
+      {/* م5-أ «سجلّ مِعيار»: شارة الأرشفة وقرار التسكين على البطاقة نفسها — البطاقة المؤرشفة تبقى تعمل */}
+      {report?.السجلّ?.مؤرشفة && <p className="mi-ledger arch" data-testid="mi-archived">{ar ? 'نتيجة مؤرشفة — ما زالت صحيحة وقابلة للتحقّق، لكنها خرجت من السجلّ النشط.' : 'Archived result — still valid and verifiable, but no longer in the active ledger.'}</p>}
+      {report?.السجلّ?.قرار && <p className="mi-ledger dec" data-testid="mi-decision">{ar ? `قرار التسكين: ${report.السجلّ.قرار.المستوى}` : `Placement decision: ${report.السجلّ.قرار.المستوى}`}{report.السجلّ.قرار.البرنامج ? (ar ? ` · البرنامج: ${report.السجلّ.قرار.البرنامج}` : ` · Program: ${report.السجلّ.قرار.البرنامج}`) : ''}{report.السجلّ.قرار.الشعبة ? (ar ? ` · الشعبة: ${report.السجلّ.قرار.الشعبة}` : ` · Section: ${report.السجلّ.قرار.الشعبة}`) : ''}</p>}
+      {report?.السجلّ?.يحتاج_إنسانًا && <p className="mi-ledger wait" data-testid="mi-decision-wait">{ar ? 'قرار التسكين بانتظار مراجعة إنسان — ستصلك النتيجة قريبًا.' : 'Your placement decision awaits human review — you will hear from us soon.'}</p>}
       <div className="mi-rsplit">
         <div>
           <div className={`mi-rlevel lv-${demo}`} data-testid="mi-demo"><small>{x('card_demo')}</small><b style={sum.دون_A1 ? { fontSize: 26 } : undefined}>{sum.دون_A1 ? (ar ? 'ما قبل A1' : 'Pre-A1') : demo}</b><span>{sum.دون_A1 ? (sum.نقطة_البداية_داخل_A1 || x('pre_a1')) : t('result', demo.toLowerCase())}</span></div>
@@ -876,6 +880,7 @@ const CSS = `
 .mi-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 .mi-stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;text-align:center;box-shadow:0 8px 22px rgba(15,42,78,.05)}.mi-stat span{display:block;color:var(--muted);font-size:12px;font-weight:800}.mi-stat b{display:block;margin-top:4px;color:var(--navy);font-size:26px}
 /* result */
+.mi-ledger{margin:0 0 12px;padding:10px 14px;border-radius:12px;font-weight:800;font-size:14px;line-height:1.7}.mi-ledger.arch{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}.mi-ledger.dec{background:#e6f4f3;color:#0f5c57;border:1px solid #cfe9e6}.mi-ledger.wait{background:#fbf5e4;color:#8a6a1f;border:1px solid #efe1b8}
 .mi-rsplit{display:grid;gap:22px}
 .mi-rlevel{display:grid;gap:4px;justify-items:start;border-radius:18px;background:var(--navy);color:#fff;padding:16px 18px}.mi-rlevel small{color:rgba(255,255,255,.75);font-size:12px;font-weight:800}.mi-rlevel b{font-size:46px;line-height:1.05}.mi-rlevel span{color:#d5e0ea;font-size:14px;line-height:1.6}
 .mi-rgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}

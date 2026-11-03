@@ -18,12 +18,13 @@ import BankEditor from './BankEditor';
 import FormBuilder from './FormBuilder';
 import Balance from './Balance';
 import Rating from './Rating'; /* م4-ب: غرفة التصحيح */
+import Ledger from './Ledger'; /* م5-أ: سجلّ مِعيار */
 import { Icon } from '../../../lib/ui/icons';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const LANG_OPTS = [['ar', 'العربية'], ['en', 'English'], ['fr', 'Français'], ['tr', 'Türkçe'], ['ur', 'اردو'], ['id', 'Indonesia'], ['ms', 'Melayu'], ['fa', 'فارسی'], ['ru', 'Русский'], ['zh', '中文'], ['es', 'Español'], ['de', 'Deutsch'], ['hi', 'हिन्दी'], ['bn', 'বাংলা'], ['sw', 'Kiswahili'], ['fil', 'Filipino']];
 const CONF_AR: Record<string, string> = { high: 'مؤكَّد', medium: 'محتمل', border: 'على الحدّ' };
-type Tab = 'overview' | 'invites' | 'bank' | 'forms' | 'balance' | 'rating';
+type Tab = 'overview' | 'invites' | 'bank' | 'forms' | 'balance' | 'rating' | 'ledger';
 
 export default function AdminMiaar({ tab }: { tab: Tab }) {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
@@ -61,8 +62,8 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         <header className="mm-hero">
           <div>
             <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <Link href="/miaar">صفحة الأداة</Link></p>
-            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : tab === 'balance' ? 'ميزان مِعيار' : tab === 'rating' ? 'غرفة التصحيح' : MIAAR_NAMES_AR.invites}</h1>
-            <p className="mm-lead">{tab === 'rating' ? 'أداءات الكتابة والتحدّث من «غرفة الأداء»: يقرؤها ويسمعها إنسان على سُلّم تقدير معلن، ويُصدرها إلى بطاقة المتقدّم على الرمز نفسه. الذكاء الاصطناعي يقترح للنصوص بموافقة المتقدّم فقط — ولا يُنشر شيء قبل إنسان.' : tab === 'balance' ? 'المقياس الذي يزن نفسه: تحليل البنود من إجابات حقيقية، شهادة موثوقية لكل مستوى، ومعايرة راش تقترح — وأنت تعتمد. لا اسم ولا بريد في أي رقم.' : tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
+            <h1>{tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : tab === 'balance' ? 'ميزان مِعيار' : tab === 'rating' ? 'غرفة التصحيح' : tab === 'ledger' ? 'سجلّ مِعيار' : MIAAR_NAMES_AR.invites}</h1>
+            <p className="mm-lead">{tab === 'ledger' ? 'دفتر النتائج: أمام كل متقدّم قرارُ تسكينه (المستوى والبرنامج والشعبة) وإجراءاتُه — أرشفة، إعادة، حذف. ما لا يحسمه إنسان في مهلته يُسكَّن على توصية مِعيار، إلا «المنطقة الرمادية» فتبقى لإنسان.' : tab === 'rating' ? 'أداءات الكتابة والتحدّث من «غرفة الأداء»: يقرؤها ويسمعها إنسان على سُلّم تقدير معلن، ويُصدرها إلى بطاقة المتقدّم على الرمز نفسه. الذكاء الاصطناعي يقترح للنصوص بموافقة المتقدّم فقط — ولا يُنشر شيء قبل إنسان.' : tab === 'balance' ? 'المقياس الذي يزن نفسه: تحليل البنود من إجابات حقيقية، شهادة موثوقية لكل مستوى، ومعايرة راش تقترح — وأنت تعتمد. لا اسم ولا بريد في أي رقم.' : tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
           </div>
           <div className="mm-heroacts">
             <Link href="/admin/placements" className="mm-hbtn gold"><Icon name="download" />تصدير النتائج CSV</Link>
@@ -72,7 +73,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
             <Link href="/miaar" className="mm-hbtn"><Icon name="play" />صفحة الاختبار</Link>
           </div>
         </header>
-        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites'], ['balance', '05', 'الميزان', '/admin/miaar/balance'], ['rating', '06', 'التصحيح', '/admin/miaar/rating']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
+        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites'], ['balance', '05', 'الميزان', '/admin/miaar/balance'], ['rating', '06', 'التصحيح', '/admin/miaar/rating'], ['ledger', '07', 'السجلّ', '/admin/miaar/ledger']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         <div className="mm-cards">
           <div className="mm-card navy"><span>نتائج الاختبارات</span><b>{latest.length}</b><small>آخر التقارير في السجل</small></div>
@@ -83,10 +84,10 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
 
         {tab === 'overview' && <>
           <section className="am-card"><h3>آخر النتائج <small>بطاقة المستوى لكل متقدّم — الرمز يفتحها ويتحقّق منها</small></h3>
-            {!latest.length ? <div className="am-empty">لا نتائج بعد. أول متقدّم يفتح <Link href="/miaar">/miaar</Link> ويظهر هنا.</div> : <table className="mm-t"><thead><tr><th>المتقدّم</th><th>المستوى</th><th>الالتحاق</th><th>الثقة</th><th>الرمز</th><th>التاريخ</th></tr></thead><tbody>
-              {latest.map((r) => <tr key={r.id}><td>{r.name}<br /><small dir="ltr">{r.email}</small></td><td><b>{r.demonstrated || '—'}</b></td><td>{r.entry || '—'}</td><td className={`mm-c ${r.confidence || ''}`}>{CONF_AR[r.confidence] || '—'}</td><td>{r.code ? <a href={`/miaar/result/${r.code}`} target="_blank" rel="noreferrer" dir="ltr">{r.code}</a> : <small>قديم</small>}</td><td><small>{new Date(r.taken_at).toLocaleString('ar-SA')}</small></td></tr>)}
+            {!latest.length ? <div className="am-empty">لا نتائج بعد. أول متقدّم يفتح <Link href="/miaar">/miaar</Link> ويظهر هنا.</div> : <table className="mm-t"><thead><tr><th>المتقدّم</th><th>المستوى</th><th>الالتحاق</th><th>الثقة</th><th>الرمز</th><th>التاريخ</th><th>السجلّ</th></tr></thead><tbody>
+              {latest.map((r) => <tr key={r.id}><td>{r.name}<br /><small dir="ltr">{r.email}</small></td><td><b>{r.demonstrated || '—'}</b></td><td>{r.entry || '—'}</td><td className={`mm-c ${r.confidence || ''}`}>{CONF_AR[r.confidence] || '—'}</td><td>{r.code ? <a href={`/miaar/result/${r.code}`} target="_blank" rel="noreferrer" dir="ltr">{r.code}</a> : <small>قديم</small>}</td><td><small>{new Date(r.taken_at).toLocaleString('ar-SA')}</small></td><td><Link className="am-btn small ghost" href={`/admin/miaar/ledger?q=${encodeURIComponent(r.email)}`} data-testid="ov-ledger">القرار والإجراءات</Link></td></tr>)}
             </tbody></table>}
-            <p className="mm-note">النتائج كلها تُسجَّل أيضًا في «التسكين» (<Link href="/admin/placements">/admin/placements</Link>) وفي سجل التعلّم لصاحب الحساب إن وُجد.</p>
+            <p className="mm-note">الأرشفة والحذف وإذن الإعادة وقرار التسكين لكل متقدّم في <Link href="/admin/miaar/ledger">السجلّ (07)</Link>. النتائج كلها تُسجَّل أيضًا في «التسكين» (<Link href="/admin/placements">/admin/placements</Link>) وفي سجل التعلّم لصاحب الحساب إن وُجد.</p>
           </section>
           <section className="am-card"><h3>موافقة إعادة الاختبار <small>مرة واحدة لكل موافقة — تُستهلك مع بداية المحاولة</small></h3>
             <form className="mm-row" onSubmit={async (e) => { e.preventDefault(); const j = await post({ action: 'retake_approve', ...retake }); if (j) setRetake({ email: '', note: '' }); }}>
@@ -149,6 +150,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         {tab === 'forms' && <FormBuilder auth={() => H()} />}
         {tab === 'balance' && <Balance auth={() => H()} />}
         {tab === 'rating' && <Rating auth={() => H()} />}
+        {tab === 'ledger' && <Ledger auth={() => H()} />}
         <p className="mm-foot">© 2026 {MIAAR_NAMES_AR.product} — {MIAAR_NAMES_AR.nature}، والقرار الأكاديمي بيد إنسان.</p>
       </div>
     </div>
@@ -163,7 +165,7 @@ const CSS = `
 .mm-hero h1{margin:8px 0 0;font-size:34px;font-weight:900;color:#fff}.mm-lead{margin:10px 0 0;max-width:640px;line-height:1.8;color:#d5e0ea;font-size:15px}
 .mm-heroacts{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;justify-content:flex-end}
 .mm-hbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:1px solid rgba(255,255,255,.25);background:#fff;color:var(--navy);border-radius:12px;padding:8px 16px;font-size:13.5px;font-weight:800;text-decoration:none;cursor:pointer}.mm-hbtn:hover{background:#f1f5f9;filter:none}.mm-hbtn:active{background:#e2e8f0}.mm-hbtn>svg:first-child{width:20px;height:20px;flex:none;border-radius:50%;padding:3px;background:var(--navy);color:#fff;box-sizing:border-box}.mm-hbtn.gold:hover{background:var(--gold-600,#bb9340)}.mm-hbtn.gold:active{background:var(--gold-700,#b58c33)}.mm-hbtn.gold{background:var(--gold);border-color:var(--gold);color:#1f2937}.mm-hbtn.gold:hover{background:#b8923f}
-.mm-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mm-tabs a{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 22px;font-size:15px;font-weight:900;color:var(--navy);text-decoration:none;box-shadow:0 4px 14px rgba(15,42,78,.04)}
+.mm-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.mm-tabs a{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 22px;font-size:15px;font-weight:900;color:var(--navy);text-decoration:none;box-shadow:0 4px 14px rgba(15,42,78,.04)}
 .mm-tabs a i{font-style:normal;font-size:11px;font-weight:900;color:var(--teal);letter-spacing:.14em}.mm-tabs a.on{background:var(--navy);border-color:var(--navy);color:#fff}.mm-tabs a.on i{color:#d7e2ee}
 .mm-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .mm-card{background:#fff;border:1px solid var(--line);border-top:3px solid var(--navy);border-radius:18px;padding:16px 18px;box-shadow:0 6px 18px rgba(15,42,78,.05)}.mm-card span{display:block;font-size:12.5px;font-weight:800;color:#475569}.mm-card b{display:block;margin-top:6px;font-size:34px;line-height:1.1;color:var(--navy)}.mm-card small{display:block;margin-top:6px;font-size:11.5px;color:#64748b}

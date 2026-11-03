@@ -79,3 +79,4 @@ import './miaar-speed.test';
 import './way.test';
 import './voice.test';
 import './miaar-m4b.test';
+import './miaar-m5a.test';
