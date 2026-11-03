@@ -34,13 +34,14 @@ export function ProgramAfter({ programId, lang = 'ar' }: { programId: string; la
 }
 
 export function CredentialChapters({ code, lang = 'ar' }: { code: string; lang?: string }) {
-  const ar = lang === 'ar'; const [ch, setCh] = useState<any[] | null>(null);
-  useEffect(() => { if (!code) return; fetch(`/api/after?credential=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setCh(j?.success ? (j.chapters || []) : [])).catch(() => setCh([])); }, [code]);
-  if (!ch || ch.length === 0) return null;
+  const ar = lang === 'ar'; const [ch, setCh] = useState<any[] | null>(null); const [fl, setFl] = useState<any | null>(null);
+  useEffect(() => { if (!code) return; fetch(`/api/after?credential=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setCh(j?.success ? (j.chapters || []) : [])).catch(() => setCh([])); fetch(`/api/reports?credential=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setFl(j?.success ? (j.line || null) : null)).catch(() => setFl(null)); }, [code]);   // P46 ر2: «خاتمة الرحلة» — فقرة المسار من التقرير الختامي المعتمَد (بإذن صاحبها)
+  if ((!ch || ch.length === 0) && !fl) return null;
   return <section className="pa-ch" data-testid="pa-chapters" aria-labelledby="pa-ch-h"><style dangerouslySetInnerHTML={{ __html: CSS }} />
     <h3 id="pa-ch-h"><Icon name="certificate" size={16} /> {ar ? P38_NAMES_AR.chapters : 'Chapters after the program'}</h3>
     <p className="pa-note">{ar ? 'كتبها صاحب الشهادة بنفسه بعد البرنامج، واختار إظهارها هنا. الشهادة التي تكبر.' : 'Written by the holder after the program and shown here by their choice.'}</p>
-    <ol className="pa-chl">{ch.map((c: any) => <li key={c.station} data-testid="pa-chapter"><b>{c.station_ar}</b> · <span className="pa-st">{c.state_ar}</span><p>{c.text_ar}</p>{c.witness_text && <em>— {ar ? 'شهد' : 'witness'}: «{c.witness_text}»</em>}</li>)}</ol>
+    {fl && <div className="pa-final" data-testid="pa-final-line"><b>{ar ? 'خاتمة الرحلة' : 'End of the journey'}</b> · <span className="pa-st">{ar ? `من التقرير الختامي المعتمَد (${fl.weeks} أسابيع موثَّقة${fl.delta !== null && fl.delta !== undefined ? ` · الفرق ${fl.delta > 0 ? '+' : ''}${fl.delta}` : ''})` : `from the approved final report (${fl.weeks} weeks)`}</span><p>{fl.paragraph || fl.text_ar}</p><em dir="ltr">/verify/report/{fl.verify_code}</em></div>}
+    {ch && ch.length > 0 && <ol className="pa-chl">{ch.map((c: any) => <li key={c.station} data-testid="pa-chapter"><b>{c.station_ar}</b> · <span className="pa-st">{c.state_ar}</span><p>{c.text_ar}</p>{c.witness_text && <em>— {ar ? 'شهد' : 'witness'}: «{c.witness_text}»</em>}</li>)}</ol>}
   </section>;
 }
 
@@ -86,7 +87,7 @@ const CSS = `
 .pa-acts{display:flex;gap:10px;flex-wrap:wrap}.pa-btn{border:1px solid #0f2a4e;background:#0f2a4e;color:#fff;border-radius:10px;padding:9px 14px;font:inherit;font-weight:800;cursor:pointer;min-height:44px}.pa-btn.light{background:#fff;color:#0f2a4e}.pa-btn:disabled{opacity:.5;cursor:not-allowed}
 .pa-box{border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 16px;background:#fff;margin-top:14px}.pa-box h3,.pa-ch h3{margin:0 0 6px;font-size:17px;color:#0f2a4e;display:flex;gap:8px;align-items:center}
 .pa-line{margin:0 0 8px;color:#1f2937;line-height:1.9;font-weight:700}.pa-states{list-style:none;margin:0 0 8px;padding:0;display:flex;gap:8px;flex-wrap:wrap}.pa-states li{border:1px solid #e2e8f0;border-radius:12px;padding:6px 10px;background:#f8fafc;display:grid}.pa-states b{color:#0f2a4e;font-size:13px}.pa-states span{color:#475569;font-size:12px}
-.pa-ex{display:grid;gap:8px}.pa-ex blockquote{margin:0;padding:8px 12px;border-inline-start:3px solid #c9a24b;background:#fffbeb;border-radius:8px;line-height:1.9;color:#1f2937}.pa-ex small,.pa-ch small{display:block;color:#64748b;font-size:11.5px;margin-bottom:2px}.pa-ex em,.pa-chl em{display:block;color:#065f46;font-style:normal;font-size:13px;margin-top:4px}
+.pa-ex{display:grid;gap:8px}.pa-ex blockquote{margin:0;padding:8px 12px;border-inline-start:3px solid #c9a24b;background:#fffbeb;border-radius:8px;line-height:1.9;color:#1f2937}.pa-ex small,.pa-ch small{display:block;color:#64748b;font-size:11.5px;margin-bottom:2px}.pa-ex em,.pa-final{background:#fffaf0;border-inline-start:4px solid #c9a24b;border-radius:8px;padding:.6rem .9rem;margin:.4rem 0 .6rem;line-height:1.8}.pa-final p{margin:.3rem 0}.pa-final em{font-size:.8rem;color:#64748b}.pa-chl em{display:block;color:#065f46;font-style:normal;font-size:13px;margin-top:4px}
 .pa-note{display:block;color:#64748b;font-size:12.5px;line-height:1.7;margin-top:6px}
 .pa-ch{border:1.5px solid #c9a24b;border-radius:16px;padding:14px 16px;background:#fffdf5;margin-top:14px}.pa-chl{margin:8px 0 0;padding-inline-start:18px;display:grid;gap:8px}.pa-chl b{color:#0f2a4e}.pa-st{background:#fef3c7;border-radius:6px;padding:1px 8px;font-weight:800;font-size:12.5px}.pa-chl p{margin:4px 0 0;line-height:1.9;color:#1f2937}
 .pa-org{margin:10px 0 0;color:#0f2a4e;line-height:1.8;display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap}

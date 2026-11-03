@@ -11,6 +11,8 @@ export const P46_NAMES_AR = {
   axis: 'محور التقارير', official: 'توثيق الجودة والأداء', weekly: 'تقرير التعلّم الأسبوعي', weekly_full: 'تقرير التعلّم الشامل', final: 'التقرير الختامي لأداء المتدربين',
   mission: 'تقرير إنجاز المهمة', diploma: 'ملف الدبلوم', page: 'تقاريري', admin: 'التقارير', start: 'ابدأ تقرير هذا الأسبوع', line: 'سطر لك من تقرير الأسبوع',
   submit: 'أرسل للاعتماد', approve: 'اعتمد', return: 'أعد بملاحظة', recompute: 'حدّث الأرقام', print: 'اطبع', phrase: 'صِغ لي من الأرقام',
+  /* ر2 */ final_story: 'خاتمة الرحلة', final_start: 'ابدأ التقرير الختامي', maturity: 'نضج التقرير', final_line: 'سطر لك من التقرير الختامي', my_page: 'صفحتي في التقرير الختامي',
+  promote_btn: 'حوّل التوصيات إلى قرارات تنسيب', sign_quality: 'توقيع الجودة', sign_manager: 'توقيع مدير البرنامج', chain: 'سلسلة الثقة', show_cred: 'أظهِر في شهادتي',
 } as const;
 
 export const KINDS = ['weekly', 'final', 'mission', 'diploma_pulse', 'diploma_unit', 'diploma_profile'] as const; export type ReportKind = (typeof KINDS)[number];
@@ -210,9 +212,128 @@ export function verifyCode(rnd: () => number = Math.random): string { let s = 'R
 /** ما يُعرض للعامة عند التحقّق: لا أسماء طلاب ولا درجات */
 export function publicVerifyView(r: { verify_code: string | null; status: string; week_no: number; period_from: string; period_to: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; kind: string }): any {
   if (r.status !== 'approved' || !r.verify_code) return null;
-  return { code: r.verify_code, kind_ar: r.kind === 'weekly' ? P46_NAMES_AR.weekly : r.kind, week_no: r.week_no, period_from: r.period_from, period_to: r.period_to, program_ar: String(r.computed?.program_ar || ''), org_ar: String(r.computed?.org_ar || ''), classroom_ar: String(r.computed?.classroom_ar || ''), author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at, sessions: Number(r.computed?.sessions || 0), hours: Number(r.computed?.hours || 0), enrolled: Number(r.computed?.enrolled || 0) };
+  return { code: r.verify_code, kind: r.kind, kind_ar: r.kind === 'weekly' ? P46_NAMES_AR.weekly : r.kind === 'final' ? P46_NAMES_AR.final : r.kind, week_no: r.week_no, weeks: Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0, chain: Array.isArray(r.computed?.weeks) ? (r.computed.weeks as any[]).map(w => String(w.verify_code || '')).filter(Boolean) : [], signoff: r.kind === 'final' ? signoffView((r as any).body) : null, period_from: r.period_from, period_to: r.period_to, program_ar: String(r.computed?.program_ar || ''), org_ar: String(r.computed?.org_ar || ''), classroom_ar: String(r.computed?.classroom_ar || ''), author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at, sessions: Number(r.computed?.sessions || 0), hours: Number(r.computed?.hours || 0), enrolled: Number(r.computed?.enrolled || 0) };
 }
 /** سطر القائمة */
-export function listLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string }): string {
+export function listLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind?: string }): string {
+  if (r.kind === 'final') return `${P46_NAMES_AR.final} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0} أسابيع معتمدة · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
   return `الأسبوع ${r.week_no} · ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
 }
+
+/* ═════════════════════════════ ر2 — التقرير الختامي لأداء المتدرّبين («خاتمة الرحلة») ═════════════════════════════
+ *  لا يُكتب في الأسبوع الأخير؛ ينمو من الأسبوعيات المعتمدة للشعبة نفسها: مسار كل متدرّب في كل مهارة أسبوعًا بأسبوع،
+ *  وعنوانه «الفرق لا الدرجة». المعلّم يُدخل التقييم الختامي ويكتب التوصية، والذكاء الاصطناعي يصوغ فقرة المسار من الأرقام فقط،
+ *  ويعتمده توقيعان (الجودة ثم مدير البرنامج). لماذا «خاتمة الرحلة»: الاسم السردي للصفحة الرئيسية وأثير؛ الرسمي في العقود «التقرير الختامي لأداء المتدرّبين».
+ */
+export const RECS = ['promote', 'continue', 'support', 'repeat'] as const; export type Rec = (typeof RECS)[number];
+export const REC_AR: Record<Rec, string> = { promote: 'رفع للمستوى الأعلى', continue: 'استمرار في المستوى', support: 'خطة دعم', repeat: 'إعادة المستوى' };
+export const PROMOTE_MIN = 80; export const PROMOTE_ATT = 75; export const SUPPORT_MAX = 60;   // قاعدة الاقتراح الآلي — المعلّم يبدّلها بحرّية
+export const FINAL_READY_PCT = 75; export const FINAL_READY_DAYS = 14;                          // متى يُقترح البدء: 75% من مدّة البرنامج أو أسبوعان قبل نهايته
+export const SIGNS = ['quality', 'manager'] as const; export type SignAs = (typeof SIGNS)[number];
+export const SIGN_AR: Record<SignAs, string> = { quality: 'الجودة', manager: 'مدير البرنامج' };
+export const PARA_MAX = 420;
+export type Trend = 'up' | 'flat' | 'down';
+export type WeekSrc = { id: string; week_no: number; period_from: string; period_to: string; verify_code: string | null; students: StudentRow[]; strengths: { point: string; evidence: string }[]; challenges: { point: string; action: string }[]; lines: { email?: string | null; key?: string; text: string }[]; promote: { key: string }[]; support: { key: string }[] };
+export type Trajectory = { key: string; name: string; email: string | null; weeks: number[]; skills: Record<string, (number | null)[]>; avgs: (number | null)[]; first: number | null; last: number | null; delta: number | null; trend: Trend | null; best_skill: string | null; weakest_skill: string | null; lines: string[]; mentioned: { promote: number; support: number } };
+export type FinalComputed = Computed & { kind: 'final'; program_from: string | null; program_to: string | null; progress_pct: number | null; weeks: { id: string; week_no: number; period_from: string; period_to: string; verify_code: string | null; n: number; avg: number | null }[]; trajectory: Trajectory[]; maturity: { approved: number; expected: number; pct: number }; strengths_pool: { point: string; evidence: string }[]; challenges_pool: { point: string; action: string }[] };
+export type FinalStudent = StudentRow & { rec: Rec | ''; reason: string; paragraph: string };
+export type Signoff = { name: string; email: string; id: string | null; at: string } | null;
+export type FinalBody = {
+  general: { institution: string; level: string; group: string; duration: string; notes: string };
+  summary: { overview: string; attendance_note: string; trajectory_note: string };
+  results: { tools: string; note: string };
+  recommendations: { next_level: string; group_note: string; admin_note: string };
+  strengths: { strengths: { point: string; evidence: string }[]; challenges: { point: string; action: string }[] };
+  admin: { attendance: string; discipline: string; environment: string; other: string };
+  signoff: { quality: Signoff; manager: Signoff };
+  promotion: { at: string; by: string; program_id: string; program_ar: string; created: number; skipped: number } | null;
+};
+const daysBetween = (a: string, b: string) => Math.round((toDate(b).getTime() - toDate(a).getTime()) / 86400000);
+/** تقدّم البرنامج في الزمن (٪) */
+export function progressPct(start: string | null, end: string | null, today: string): number | null { if (!start || !end) return null; const tot = daysBetween(start, end); if (tot <= 0) return 100; return Math.max(0, Math.min(100, Math.round((daysBetween(start, today) / tot) * 100))); }
+/** «نضج التقرير»: الأسبوعيات المعتمدة ÷ الأسابيع المتوقَّعة حتى اليوم (أو حتى نهاية البرنامج) */
+export function maturityOf(approved: number, start: string | null, end: string | null, today: string): { approved: number; expected: number; pct: number } {
+  let expected = 1; if (start) { const until = end && end < today ? end : today; expected = Math.max(1, Math.ceil(Math.max(0, daysBetween(start, until) + 1) / 7)); }
+  expected = Math.max(expected, approved); return { approved, expected, pct: Math.round((approved / expected) * 100) };
+}
+/** هل يُقترح بدء الختامي؟ 75% من المدّة، أو أسبوعان قبل النهاية، أو أسبوعيتان معتمدتان على الأقل */
+export function finalSuggested(progress: number | null, end: string | null, today: string, approvedWeeks: number): boolean { if (approvedWeeks >= 2) return true; if (progress !== null && progress >= FINAL_READY_PCT) return true; if (end && daysBetween(today, end) <= FINAL_READY_DAYS) return true; return false; }
+export function trendOf(first: number | null, last: number | null): Trend | null { if (first === null || last === null) return null; const d = last - first; return d >= 3 ? 'up' : d <= -3 ? 'down' : 'flat'; }
+export const TREND_AR: Record<Trend, string> = { up: 'صاعد', flat: 'ثابت', down: 'هابط' }; export const TREND_SIGN: Record<Trend, string> = { up: '↑', flat: '→', down: '↓' };
+/** مسار كل متدرّب من الأسبوعيات المعتمدة (مرتّبة زمنيًا) */
+export function buildTrajectories(roster: StudentRow[], weeks: WeekSrc[], skills: Skill[]): Trajectory[] {
+  const ws = [...weeks].sort((a, b) => a.week_no - b.week_no || a.period_from.localeCompare(b.period_from));
+  return roster.map(r => {
+    const sk: Record<string, (number | null)[]> = {}; for (const k of skills) sk[k.code] = []; const avgs: (number | null)[] = []; const lines: string[] = []; let promote = 0, support = 0;
+    for (const w of ws) { const s = w.students.find(x => x.key === r.key || (r.email && x.email && x.email === r.email)); for (const k of skills) sk[k.code].push(s ? (s.scores?.[k.code] ?? null) : null); avgs.push(s ? (s.avg ?? null) : null); const l = w.lines.find(x => (x.key && x.key === r.key) || (r.email && x.email && String(x.email).toLowerCase() === r.email)); if (l?.text) lines.push(l.text); if (w.promote.some(x => x.key === r.key)) promote++; if (w.support.some(x => x.key === r.key)) support++; }
+    const known = avgs.filter((v): v is number => v !== null); const first = known.length ? known[0] : null; const last = known.length ? known[known.length - 1] : null; const delta = first !== null && last !== null ? Math.round((last - first) * 10) / 10 : null;
+    const lastOf = (code: string) => { const a = sk[code].filter((v): v is number => v !== null); return a.length ? a[a.length - 1] : null; };
+    let best: string | null = null, weak: string | null = null, bv = -1, wv = 101; for (const k of skills) { const v = lastOf(k.code); if (v === null) continue; if (v > bv) { bv = v; best = k.code; } if (v < wv) { wv = v; weak = k.code; } }
+    return { key: r.key, name: r.name, email: r.email, weeks: ws.map(w => w.week_no), skills: sk, avgs, first, last, delta, trend: trendOf(first, last), best_skill: best, weakest_skill: best === weak ? null : weak, lines: lines.slice(-6), mentioned: { promote, support } };
+  });
+}
+/** الاقتراح الآلي للتوصية — من التقييم الختامي إن وُجد وإلا آخر أسبوع؛ «إعادة» لا تُقترح آليًا أبدًا (قرار إنسان) */
+export function suggestRec(finalAvg: number | null, lastAvg: number | null, attendancePct: number | null): Rec | null {
+  const avg = finalAvg ?? lastAvg; if (avg === null) return null;
+  if (avg >= PROMOTE_MIN && (attendancePct === null || attendancePct >= PROMOTE_ATT)) return 'promote'; if (avg < SUPPORT_MAX) return 'support'; return 'continue';
+}
+export function distribution(students: { avg: number | null }[]): { code: string; ar: string; n: number }[] { return GRADES.map(g => ({ code: g.code, ar: g.ar, n: students.filter(s => s.avg !== null && gradeOf(s.avg)?.code === g.code).length })); }
+export const emptyFinalBody = (): FinalBody => ({ general: { institution: '', level: '', group: '', duration: '', notes: '' }, summary: { overview: '', attendance_note: '', trajectory_note: '' }, results: { tools: '', note: '' }, recommendations: { next_level: '', group_note: '', admin_note: '' }, strengths: { strengths: [], challenges: [] }, admin: { attendance: '', discipline: '', environment: '', other: '' }, signoff: { quality: null, manager: null }, promotion: null });
+const signOf = (v: any): Signoff => (v && typeof v === 'object' && v.at ? { name: T(v.name, SHORT_MAX), email: T(v.email, SHORT_MAX).toLowerCase(), id: v.id ? String(v.id) : null, at: String(v.at) } : null);
+/** تنظيف ما كتبه الإنسان — التواقيع والتنسيب لا تأتي من المتصفح؛ تُحفظ كما في الصفّ */
+export function cleanFinalBody(b: any, keep?: { signoff?: FinalBody['signoff']; promotion?: FinalBody['promotion'] }): FinalBody {
+  const x = b && typeof b === 'object' ? b : {}; const e = emptyFinalBody();
+  return {
+    general: { institution: T(x.general?.institution, SHORT_MAX), level: T(x.general?.level, SHORT_MAX), group: T(x.general?.group, SHORT_MAX), duration: T(x.general?.duration, SHORT_MAX), notes: T(x.general?.notes, TEXT_MAX) },
+    summary: { overview: T(x.summary?.overview, TEXT_MAX * 2), attendance_note: T(x.summary?.attendance_note, TEXT_MAX), trajectory_note: T(x.summary?.trajectory_note, TEXT_MAX) },
+    results: { tools: T(x.results?.tools, TEXT_MAX), note: T(x.results?.note, TEXT_MAX) },
+    recommendations: { next_level: T(x.recommendations?.next_level, SHORT_MAX), group_note: T(x.recommendations?.group_note, TEXT_MAX), admin_note: T(x.recommendations?.admin_note, TEXT_MAX) },
+    strengths: { strengths: arr(x.strengths?.strengths, 8, s => ({ point: T(s?.point, TEXT_MAX), evidence: T(s?.evidence, TEXT_MAX) })).filter(s => s.point), challenges: arr(x.strengths?.challenges, 8, s => ({ point: T(s?.point, TEXT_MAX), action: T(s?.action, TEXT_MAX) })).filter(s => s.point) },
+    admin: { attendance: T(x.admin?.attendance, TEXT_MAX), discipline: T(x.admin?.discipline, TEXT_MAX), environment: T(x.admin?.environment, TEXT_MAX), other: T(x.admin?.other, TEXT_MAX) },
+    signoff: keep?.signoff ? { quality: signOf(keep.signoff.quality), manager: signOf(keep.signoff.manager) } : e.signoff,
+    promotion: keep?.promotion && keep.promotion.at ? { at: String(keep.promotion.at), by: T(keep.promotion.by, SHORT_MAX), program_id: String(keep.promotion.program_id || ''), program_ar: T(keep.promotion.program_ar, SHORT_MAX), created: Number(keep.promotion.created || 0), skipped: Number(keep.promotion.skipped || 0) } : null,
+  };
+}
+/** كشف الختامي: درجات التقييم الختامي لكل مهارة + التوصية وسببها + فقرة المسار (يكتبها/يعتمدها المعلّم) */
+export function cleanFinalStudents(given: any, roster: StudentRow[], skills: Skill[]): FinalStudent[] {
+  const byKey = new Map<string, any>((Array.isArray(given) ? given : []).map((s: any) => [String(s?.key || ''), s]));
+  return cleanStudents(given, roster, skills).map(s => { const g = byKey.get(s.key) || {}; return { ...s, rec: (RECS as readonly string[]).includes(String(g?.rec)) ? (String(g.rec) as Rec) : '', reason: T(g?.reason, TEXT_MAX), paragraph: T(g?.paragraph, PARA_MAX) }; });
+}
+export function missingBeforeFinalSubmit(body: FinalBody, students: FinalStudent[]): string[] {
+  const m: string[] = [];
+  if (!body.summary.overview) m.push('ملخّص البرنامج (القسم الثاني)');
+  if (!students.some(s => s.avg !== null)) m.push('درجة ختامية واحدة على الأقل (القسم الرابع)');
+  const graded = students.filter(s => s.avg !== null); if (graded.length && graded.some(s => !s.rec)) m.push(`توصية لكل متدرّب له درجة (${graded.filter(s => !s.rec).length} بلا توصية — القسم الخامس)`);
+  if (!body.strengths.strengths.length) m.push('نقطة قوة واحدة على الأقل (القسم السادس)');
+  return m;
+}
+/* ───────── التوقيعان ───────── */
+export type WhoSign = Who & { admin?: boolean };
+export function canSign(r: { kind: string; status: string; body: any }, me: WhoSign, as: SignAs): boolean {
+  if (r.kind !== 'final' || r.status !== 'submitted' || !me.staff) return false; const so = r.body?.signoff || {}; if (so[as]?.at) return false;
+  const other = so[as === 'quality' ? 'manager' : 'quality']; if (other?.at && !me.admin && ((me.id && other.id === me.id) || (me.email && other.email === me.email))) return false;   // التوقيع الثاني من شخص آخر — إلا مدير المنصة
+  return true;
+}
+export function signoffComplete(body: any): boolean { return !!(body?.signoff?.quality?.at && body?.signoff?.manager?.at); }
+export function signoffView(body: any): { quality: { name: string; at: string } | null; manager: { name: string; at: string } | null } { const so = body?.signoff || {}; return { quality: so.quality?.at ? { name: String(so.quality.name || ''), at: String(so.quality.at) } : null, manager: so.manager?.at ? { name: String(so.manager.name || ''), at: String(so.manager.at) } : null }; }
+/* ───────── «صِغ لي من الأرقام» للمتدرّب — فقرة وصفية من مساره (لا تقدير ولا توصية) ───────── */
+const FORBID = /توصي|أوصي|ينقل|يُنقل|يُرفع|يرسب|راسب|تقدير|ممتاز|ضعيف|مقبول|جيد جدًا/;
+export function localParagraph(t: Trajectory, skills: Skill[], s: { avg: number | null; attendance_pct: number | null }): string {
+  const nm = (c: string | null) => skills.find(k => k.code === c)?.name_ar || ''; const parts: string[] = [];
+  if (t.first !== null && t.last !== null && t.weeks.length >= 2) parts.push(`انتقل متوسط ${t.name} من ${t.first}% في الأسبوع ${t.weeks[0]} إلى ${t.last}% في الأسبوع ${t.weeks[t.weeks.length - 1]} (${t.delta! >= 0 ? '+' : ''}${t.delta} نقطة).`);
+  else if (t.last !== null) parts.push(`آخر متوسط مرصود لـ${t.name} ${t.last}% في الأسبوع ${t.weeks[t.weeks.length - 1] || 1}.`);
+  if (t.best_skill) parts.push(`أعلى مهاراته ${nm(t.best_skill)}${t.weakest_skill ? `، وأكثرها حاجةً إلى وقت ${nm(t.weakest_skill)}` : ''}.`);
+  if (s.attendance_pct !== null) parts.push(`حضر ${s.attendance_pct}% من الجلسات.`);
+  if (s.avg !== null) parts.push(`متوسط التقييم الختامي ${s.avg}%.`);
+  if (t.lines.length) parts.push(`آخر ما كُتب له: «${t.lines[t.lines.length - 1].slice(0, 120)}».`);
+  return parts.join(' ').slice(0, PARA_MAX);
+}
+export function paragraphPrompt(t: Trajectory, skills: Skill[], s: { avg: number | null; attendance_pct: number | null; scores: Record<string, number | null> }): { system: string; user: string } {
+  return {
+    system: `أنت كاتب تقارير تعليمية بالعربية الفصحى. اكتب فقرة واحدة (≤ ${PARA_MAX} حرفًا) تصف مسار متدرّب خلال برنامج من أرقام معطاة فقط: من أين بدأ وإلى أين وصل في كل مهارة، وحضوره، وما كُتب له سابقًا. ممنوع: اقتراح تقدير أو توصية (نقل/رسوب/رفع)، أو أي رقم غير معطى، أو مجاملات عامة. أعد JSON فقط: {"text": "…"}.`,
+    user: JSON.stringify({ name: t.name, weeks: t.weeks, skills: skills.map(k => ({ skill: k.name_ar, by_week: t.skills[k.code] })), avg_by_week: t.avgs, first: t.first, last: t.last, delta: t.delta, attendance_pct: s.attendance_pct, final_scores: Object.fromEntries(skills.map(k => [k.name_ar, s.scores?.[k.code] ?? null])), final_avg: s.avg, previous_lines: t.lines }),
+  };
+}
+export function parseParagraph(raw: string): string | null { try { const m = raw.match(/\{[\s\S]*\}/); const j = JSON.parse(m ? m[0] : raw); const t = T(j?.text, PARA_MAX); return t.length >= 20 && !FORBID.test(t) ? t : null; } catch { const t = T(raw, PARA_MAX); return t.length >= 20 && t.length <= PARA_MAX && !FORBID.test(t) && !/[{}\[\]]/.test(t) ? t : null; } }
+/** ما يراه المتدرّب في صفحته (ولا شيء عن غيره) */
+export function studentPageData(t: Trajectory, skills: Skill[], s: FinalStudent): any { return { weeks: t.weeks, skills: skills.map(k => ({ code: k.code, name_ar: k.name_ar, by_week: t.skills[k.code], final: s.scores?.[k.code] ?? null })), avgs: t.avgs, first: t.first, last: t.last, delta: t.delta, trend: t.trend, attendance_pct: s.attendance_pct, final_avg: s.avg, grade_ar: s.grade_ar, rec: s.rec || null, rec_ar: s.rec ? REC_AR[s.rec] : null, paragraph: s.paragraph || '' }; }

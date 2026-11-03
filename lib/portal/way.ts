@@ -2,7 +2,7 @@
 /** «الطريق» — خريطة أسماء المسارات لشريط التنقّل الموحّد (رجوع · الرئيسية · مسار الصفحة). منطق خالص قابل للاختبار. */
 export type Crumb = { href: string; label: string; current: boolean; /** مقطع بلا صفحة خاصة (مجلّد مسارات فقط) → يُعرض نصًّا لا رابطًا */ dead?: boolean };
 /** مقاطع لا صفحة لها (تحتها صفحات ديناميكية فقط) — لا تُربَط في الفتات ولا يُرجَع إليها (كانت تعطي 404) */
-export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/evaluate', '/followup', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey']);
+export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/evaluate', '/followup', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/me/reports/line', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey', '/verify/report']);
 type L = { ar: string; en: string };
 /** أسماء المقاطع المعروفة (المقطع الأول أو المركّب) — الأسماء الرسمية كما في القوائم */
 const NAMES: Record<string, L> = {
@@ -11,7 +11,7 @@ const NAMES: Record<string, L> = {
   about: { ar: 'عن أَثَر', en: 'About' }, contact: { ar: 'تواصل', en: 'Contact' }, ai: { ar: 'الذكاء الاصطناعي المسؤول', en: 'Responsible AI' },
   needs: { ar: 'ما يحتاجه الممارسون', en: 'What practitioners need' }, 'admin/needs': { ar: 'الاحتياج المعلَن', en: 'Declared needs' },
   rehearsal: { ar: 'بروفاتي', en: 'My rehearsals' }, 'me/rehearsal': { ar: 'بروفاتي', en: 'My rehearsals' }, 'admin/rehearsals': { ar: 'البروفات', en: 'Rehearsals' },
-  'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' },
+  'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'me/reports/line': { ar: 'صفحتي في التقرير الختامي', en: 'My page in the final report' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' },
   me: { ar: 'مساحتي', en: 'My space' }, org: { ar: 'بوابة الجهات', en: 'Organizations' }, hub: { ar: 'الردهة', en: 'Hall' }, login: { ar: 'الدخول', en: 'Sign in' }, join: { ar: 'الانضمام', en: 'Join' },
   help: { ar: 'المساعدة', en: 'Help' }, verify: { ar: 'التحقق من شهادة', en: 'Verify' }, credential: { ar: 'الشهادة', en: 'Credential' }, pay: { ar: 'الدفع', en: 'Payment' }, p: { ar: 'صفحة عامة', en: 'Public page' },
   accessibility: { ar: 'الوصولية', en: 'Accessibility' }, miaar: { ar: 'مِعيار', en: 'Mi‘yar' }, 'miaar/result': { ar: 'النتيجة', en: 'Result' }, 'miaar/trust': { ar: 'سجلّ الصدق', en: 'Trust record' }, 'miaar/d': { ar: 'دعوة', en: 'Invitation' },

@@ -84,3 +84,4 @@ import './miaar-m5a.test';
 import './p44.test';
 import './p45.test';
 import './p46.test';
+import './p46r2.test';
