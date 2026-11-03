@@ -29,6 +29,7 @@ export const ROOMS: Room[] = [
   { href: '/reports', label: 'اللوحة التحليلية', hint: 'المؤشرات التحليلية', icon: 'chart', perms: ['reports.read'], nav: true, match: p => p === '/reports' || p.startsWith('/reports/executive') },
   { href: '/reports/remote-survey', label: 'استطلاع التعلم عن بُعد', hint: 'استجابات المتعلّمين عن بُعد', icon: 'laptop', perms: ['evidence.write', 'programs.write'], nav: true, side: true },
   { href: '/admin/payments', label: 'المالية', hint: 'الفواتير · المدفوعات · المتأخرات', icon: 'scale', perms: ['payments.write', 'invoices.write'] },
+  { href: '/admin/miaar/rating', label: 'غرفة التصحيح', hint: 'أداءات الكتابة والتحدّث — يقرؤها إنسان', icon: 'edit', perms: ['miaar.rate', 'miaar.write'] }, /* م4-ج: باب المصحّح وحده — قبل /admin/miaar لأن roomFor يأخذ أوّل مطابقة */
   { href: '/admin/miaar', label: 'إدارة مِعيار', hint: 'البنك · النماذج · الدعوات', icon: 'target', perms: ['miaar.write', 'miaar.bank.write', 'miaar.forms.write'] },
   { href: '/admin/roles', label: 'الأدوار والدعوات', hint: 'باب واحد لكل صفة · للطاقم قراءة وللمدير كتابة', icon: 'users', perms: ['staff'] },
   { href: '/admin/directory', label: 'هيئة أَثَر', hint: 'اعتماد السير · المدرّبون والخبراء', icon: 'users', perms: ['invites.write'] },

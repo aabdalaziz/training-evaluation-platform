@@ -29,7 +29,7 @@ type Tab = 'overview' | 'invites' | 'bank' | 'forms' | 'balance' | 'rating' | 'l
 
 export default function AdminMiaar({ tab }: { tab: Tab }) {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
-  const [ready, setReady] = useState(false); const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
+  const [ready, setReady] = useState(false); const [rater, setRater] = useState(false); /* م4-ج: دور «المصحّح» — غرفة التصحيح فقط */ const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [form, setForm] = useState({ kind: 'group', label_ar: '', lang: 'en', exam_mode: 'adaptive', blueprint_id: '', purpose: '', expires_at: '', max_seats: '', note: '', recipients: '' });
   const [bps, setBps] = useState<any[]>([]);  /* م2-ب: المخطّطات النشطة للدعوات */
   const [created, setCreated] = useState<any>(null); const [qrFor, setQrFor] = useState<any>(null); const [balFor, setBalFor] = useState<{ invite: any; data: any } | null>(null); const [retake, setRetake] = useState({ email: '', note: '' });
@@ -39,7 +39,16 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   async function post(body: any) { setBusy(body.action + (body.id || body.table || '')); setError(''); setOk(''); try { const j = await fetch('/api/admin/miaar', { method: 'POST', headers: await H(), body: JSON.stringify(body) }).then(r => r.json()); if (!j?.success) { setError(j?.error || 'تعذّر التنفيذ'); return null; } if (j.note_ar) setOk(j.note_ar); return j; } finally { setBusy(''); } }
   useEffect(() => { (async () => {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/miaar'); return; }
-    const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
+    const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).maybeSingle();
+    if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) {
+      /* م4-ج: من يحمل صلاحية miaar.rate عبر طبقة الأدوار (دور «المصحّح») يدخل غرفة التصحيح وحدها */
+      const { data: s0 } = await db.auth.getSession(); const tk0 = s0.session?.access_token || '';
+      const j = tk0 ? await fetch('/api/roles', { headers: { Authorization: `Bearer ${tk0}` }, cache: 'no-store' }).then((r) => r.json()).catch(() => null) : null;
+      const canRate = Array.isArray(j?.permissions) && (j.permissions.includes('miaar.rate') || j.permissions.includes('*'));
+      if (!canRate) { router.replace('/dashboard'); return; }
+      if (tab !== 'rating') { router.replace('/admin/miaar/rating'); return; }
+      setTok(tk0); setRater(true); setReady(true); return;
+    }
     const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || ''; setTok(tk); await load(tk); setReady(true);
     if (tab === 'invites') { const j = await fetch('/api/admin/miaar/forms?list=1', { headers: await H(tk), cache: 'no-store' }).then((r) => r.json()).catch(() => null); setBps(((j?.blueprints || []) as any[]).filter((b) => b.status === 'active')); }
   })(); // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,6 +62,21 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
     w.document.close();
   };
 
+  if (ready && rater) return (
+    <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="am-wrap" data-testid="mi-rater-mode">
+        <header className="mm-hero">
+          <div>
+            <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <span>غرفة التصحيح</span></p>
+            <h1>غرفة التصحيح</h1>
+            <p className="mm-lead">أنت هنا بصفة «المصحّح»: ترى الأداءات بلا أسماء، وتقرأ قراءتك وحدك، وما تعتمده يظهر في بطاقة المتقدّم على الرمز نفسه. لا بنك ولا سجلّ هنا — عمدًا.</p>
+          </div>
+          <div className="mm-heroacts"><Link href="/hub" className="mm-hbtn"><Icon name="home" />مركز القيادة</Link><Link href="/me" className="mm-hbtn"><Icon name="users" />صفحتي</Link></div>
+        </header>
+        <Rating auth={() => H()} />
+      </div>
+    </div>
+  );
   if (!ready) return <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="am-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   const invites: any[] = data?.invites || []; const latest: any[] = data?.latest || []; const cov = data?.coverage;
   const openInv = invites.filter((i) => i.status === 'open').length;

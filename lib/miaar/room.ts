@@ -22,12 +22,12 @@ export function levelFromReport(report: Record<string, any> | null | undefined, 
   }
   return 'A1';
 }
-type PerfRow = { id: string; skill: ProductiveSkill; status: PerformanceStatus; item_code: string; level_target: BankLevel; word_count: number | null; duration_sec: number | null; accommodation: string | null; human_rating: any; released_at: string | null; created_at: string };
+type PerfRow = { id: string; skill: ProductiveSkill; status: PerformanceStatus; item_code: string; level_target: BankLevel; word_count: number | null; duration_sec: number | null; accommodation: string | null; human_rating: any; transcript?: string | null; released_at: string | null; created_at: string };
 async function perfsOf(db: any, sessionId: string): Promise<PerfRow[]> {
-  const { data } = await db.from('miaar_performances').select('id, skill, status, item_code, level_target, word_count, duration_sec, accommodation, human_rating, released_at, created_at').eq('session_id', sessionId).limit(4);
+  const { data } = await db.from('miaar_performances').select('id, skill, status, item_code, level_target, word_count, duration_sec, accommodation, human_rating, released_at, created_at, transcript').eq('session_id', sessionId).limit(4);
   return (data || []) as PerfRow[];
 }
-const lite = (p: PerfRow): PerfLite => ({ skill: p.skill, status: p.status, item_code: p.item_code, level_target: p.level_target, word_count: p.word_count, duration_sec: p.duration_sec, accommodation: p.accommodation, human_rating: p.human_rating || null, released_at: p.released_at });
+const lite = (p: PerfRow): PerfLite => ({ skill: p.skill, status: p.status, item_code: p.item_code, level_target: p.level_target, word_count: p.word_count, duration_sec: p.duration_sec, accommodation: p.accommodation, human_rating: p.human_rating || null, released_at: p.released_at, transcript: (p as any).transcript || null });
 const roomView = (state: RoomState, perfs: PerfRow[]) => ({ ...state, done: perfs.filter((p) => p.status !== 'skipped').map((p) => p.skill), skipped: perfs.filter((p) => p.status === 'skipped').map((p) => p.skill) });
 
 /** دخول الغرفة (idempotent): يثبّت المهمّتين في الجلسة أول مرة ويعيدهما بعدها كما هي */

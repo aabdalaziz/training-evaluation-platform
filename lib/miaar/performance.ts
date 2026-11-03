@@ -75,7 +75,7 @@ export const mediaPathFor = (sessionId: string, skill: ProductiveSkill, ext: str
 
 /** ما يُلحَق بالتقرير لحظة الإنهاء: حالة «قيد التصحيح» لكل مهارة — بلا درجات (تأتي مع الإصدار) */
 export type PerfLite = { skill: ProductiveSkill; status: PerformanceStatus; item_code: string; level_target: BankLevel; word_count?: number | null; duration_sec?: number | null; accommodation?: string | null;
-  human_rating?: { scores: RubricScores; estimated: BankLevel; verdict_ar: string; note_ar?: string | null } | null; released_at?: string | null };
+  human_rating?: { scores: RubricScores; estimated: BankLevel; verdict_ar: string; note_ar?: string | null } | null; released_at?: string | null; transcript?: string | null /* م4-ج */ };
 const SKILL_AR: Record<ProductiveSkill, string> = { writing: 'الكتابة', speaking: 'التحدّث' };
 export function productiveBlock(perfs: readonly PerfLite[]): Record<string, unknown> | null {
   if (!perfs.length) return null;
@@ -87,12 +87,13 @@ export function productiveBlock(perfs: readonly PerfLite[]): Record<string, unkn
     if (p.status === 'skipped') { base.الحالة = 'لم تُقدَّم'; }
     else if (p.status === 'released' && p.human_rating) {
       released += 1; base.الحالة = 'معتمد'; base.المستوى_المقدر = p.human_rating.estimated; base.الحكم = p.human_rating.verdict_ar;
-      base.الأبعاد = Object.fromEntries(Object.entries(p.human_rating.scores).map(([d, v]) => [DIMENSION_AR[d] || d, v])); if (p.human_rating.note_ar) base.ما_قاله_المصحح = p.human_rating.note_ar; if (p.released_at) base.تاريخ_الاعتماد = p.released_at;
+      base.الأبعاد = Object.fromEntries(Object.entries(p.human_rating.scores).map(([d, v]) => [DIMENSION_AR[d] || d, v])); if (p.human_rating.note_ar) base.ما_قاله_المصحح = p.human_rating.note_ar; if (p.transcript && (p.skill === 'speaking' || p.accommodation === 'spoken_instead_of_writing')) base.ما_قلتَه = p.transcript; /* م4-ج: النسخ يبقى بعد حذف الصوت */ if (p.released_at) base.تاريخ_الاعتماد = p.released_at;
     } else { pending += 1; base.الحالة = 'قيد التصحيح'; }
     skills[key] = base;
   }
   const status = pending > 0 ? 'قيد التصحيح' : released > 0 ? 'مكتمل' : 'لم تُقدَّم';
-  return { الحالة: status, الوعد: pending > 0 ? 'يسمعها ويقرؤها إنسان — تكتمل بطاقتك على الرمز نفسه خلال 48 ساعة' : null, ...skills };
+  const hasAudio = perfs.some((p) => p.status !== 'skipped' && p.duration_sec != null);
+  return { الحالة: status, الوعد: pending > 0 ? 'يسمعها ويقرؤها إنسان — تكتمل بطاقتك على الرمز نفسه خلال 48 ساعة' : null, ...skills, ...(hasAudio ? { سياسة_الصوت: 'تسجيلك الصوتي يُحذف تلقائيًّا بعد 180 يومًا من تقديمه؛ يبقى النصّ المنسوخ والتقدير' } : {}) };
 }
 /** إصدار تقدير بشري: يحوّل درجات السُّلّم إلى حكم ومستوى مقدَّر (judge) */
 export function humanRatingFrom(skill: ProductiveSkill, taskLevel: BankLevel, rawScores: unknown, note: unknown): { scores: RubricScores; estimated: BankLevel; verdict_ar: string; mean: number; note_ar: string | null } | null {

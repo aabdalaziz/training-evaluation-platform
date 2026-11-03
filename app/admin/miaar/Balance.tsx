@@ -14,17 +14,20 @@ type Scope = { scope: string; n: number; k: number; method: string; rel: number;
 type Row = { item: string; level: string; skill: string | null; n: number; p: number; rpb: number; distractors: Record<string, number>; median_ms: number | null; exposure: number; flags: string[]; flags_ar: string[]; severity: number; b: number | null; se: number | null; infit: number | null; outfit: number | null; calib_n: number; suggest_level: string | null; is_anchor: boolean; status: string; question_text: string };
 type Summary = { computed_at: string | null; sessions: number; items: number; scopes: Scope[]; rows: Row[]; attention: Row[]; overexposed: Row[]; rasch: { persons: number; iterations: number; converged: boolean; calibrated: number } | null; bands: { medians: Record<string, number> } | null; thresholds: { min_n_item: number; min_n_calib: number; reweigh_every: number } };
 
-const LIGHT_COLOR: Record<string, string> = { green: '#0b8a83', yellow: '#b7791f', red: '#b91c1c', gray: '#64748b' };
+type PairStat = { a: string; b: string; n: number; kappa: number | null; exact: number; light: string; light_ar: string };
+type Agree = { skills: { skill: 'writing' | 'speaking'; pairs_n: number; kappa: number | null; exact: number; adjudications: number; light: string; light_ar: string; by_pair: PairStat[] }[]; raters: { rater: string; n: number; n_pairs: number; severity: number | null; severity_ar: string; kappa: number | null; kappa_ar: string; avg_seconds: number | null; adjudication_rate: number | null; calibrated: boolean }[]; policy: { second_rate: number; full_first: number; adjudicate_gap: number; anchors_min: number; kappa_pass: number; pair_min: number }; readings: number };
+const LIGHT_COLOR: Record<string, string> = { green: '#0b8a83', yellow: '#b7791f', red: '#b91c1c', gray: '#64748b', gold: '#8a6a1f' };
 const LEVEL_AR: Record<string, string> = { PRE_A1: 'ما قبل A1', A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
 const SKILL_AR: Record<string, string> = { grammar_vocab: 'قواعد ومفردات', reading: 'قراءة', listening: 'استماع' };
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 const secs = (ms: number | null) => (ms == null ? '—' : `${Math.round(ms / 1000)} ث`);
 
 export default function Balance({ auth }: { auth: () => Promise<Record<string, string>> }) {
-  const [d, setD] = useState<Summary | null>(null); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState(''); const [showAll, setShowAll] = useState(false); const [level, setLevel] = useState('all');
+  const [d, setD] = useState<Summary | null>(null); const [agree, setAgree] = useState<Agree | null>(null); /* م4-ج: اتفاق المصحّحين */ const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState(''); const [showAll, setShowAll] = useState(false); const [level, setLevel] = useState('all');
   async function load() { const j = await fetch('/api/admin/miaar/balance', { headers: await auth(), cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (!j?.success) { setErr(j?.error || 'تعذّر تحميل الميزان'); return; } setD(j); }
+  async function loadAgree() { const j = await fetch('/api/admin/miaar/rating?agreement=1', { headers: await auth(), cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success) setAgree(j); }
   async function post(body: Record<string, unknown>) { setBusy(String(body.action) + String(body.item_code || '')); setErr(''); setOk(''); try { const j = await fetch('/api/admin/miaar/balance', { method: 'POST', headers: await auth(), body: JSON.stringify(body) }).then((r) => r.json()); if (!j?.success) setErr(j?.error || 'تعذّر'); else setOk(j.note_ar || 'تم'); await load(); } finally { setBusy(''); } }
-  useEffect(() => { void load(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { void load(); void loadAgree(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const levels = (d?.scopes || []).filter((s) => s.scope.startsWith('level:')); const forms = (d?.scopes || []).filter((s) => s.scope.startsWith('form:'));
   const rows = (d?.rows || []).filter((r) => level === 'all' || r.level === level);
@@ -63,6 +66,19 @@ export default function Balance({ auth }: { auth: () => Promise<Record<string, s
         </div>}
       </section>
 
+      <section className="am-card" data-testid="bal-agreement"><h3>اتفاق المصحّحين <small>م4-ج: كابا مرجّح (تربيعي) بين القراءة الأولى والثانية على الأداء نفسه — لكل مهارة ولكل زوج مصحّحَين · بلا أسماء ولا ترتيب</small></h3>
+        {!agree ? <div className="am-empty">جارٍ القراءة… (أو لم تُشغَّل هجرة م4-ج بعد)</div> : <>
+          <div className="bal-agr">{agree.skills.map((sk) => <div key={sk.skill} className="bal-agr-card" data-testid={`bal-agr-${sk.skill}`} style={{ borderColor: LIGHT_COLOR[sk.light] }}>
+            <b>{sk.skill === 'writing' ? 'الكتابة' : 'التحدّث'}</b><strong style={{ color: LIGHT_COLOR[sk.light] }}>{sk.kappa ?? '—'}</strong><span>{sk.light_ar}</span>
+            <small>{sk.pairs_n} زوجًا · تطابق تامّ {pct(sk.exact)} · تحكيمات {sk.adjudications}</small>
+            {sk.by_pair.length > 0 && <ul>{sk.by_pair.slice(0, 6).map((p, i) => <li key={i}><span>{p.a} × {p.b}</span><i>{p.kappa ?? '—'} · {p.n}</i></li>)}</ul>}
+          </div>)}</div>
+          <p className="mm-note">السياسة: قراءة ثانية لـ{Math.round(agree.policy.second_rate * 100)}% من الأداءات ولأوّل {agree.policy.full_first} أداءً لكل مهارة · التحكيم عند فرق {agree.policy.adjudicate_gap} درجتين · الاعتماد {agree.policy.anchors_min} مراسٍ وكابا ≥ {agree.policy.kappa_pass} · الرقم يُعرض بعد {agree.policy.pair_min} أزواج. {agree.readings} قراءة مسجَّلة.</p>
+          {agree.raters.length > 0 && <table className="mm-t bal-raters" data-testid="bal-raters"><thead><tr><th>مصحّح</th><th>قراءات</th><th>مشتركة</th><th>الميل</th><th>كابا مع الزملاء</th><th>زمن القراءة</th><th>اعتماد</th></tr></thead><tbody>
+            {agree.raters.map((r) => <tr key={r.rater}><td>{r.rater}</td><td>{r.n}</td><td>{r.n_pairs}</td><td>{r.severity_ar}</td><td>{r.kappa ?? '—'} <small>{r.kappa_ar}</small></td><td>{r.avg_seconds != null ? `${r.avg_seconds} ث` : '—'}</td><td>{r.calibrated ? 'معتمد' : 'الطاقم/قيد التأهيل'}</td></tr>)}
+          </tbody></table>}
+        </>}
+      </section>
       <section className="am-card"><h3>بنود تحتاج نظرة <small>أعلام التحليل الكلاسيكي واقتراحات المعايرة — القرار لك، ويُسجَّل باسمك</small></h3>
         {!d?.attention.length ? <div className="am-empty" data-testid="bal-attention-empty">لا شيء يستدعي النظر الآن.</div> : <table className="mm-t" data-testid="bal-attention"><thead><tr><th>البند</th><th>المستوى</th><th>n</th><th>p</th><th>r-pb</th><th>الأعلام</th><th>المعايرة</th><th></th></tr></thead><tbody>
           {d.attention.map((r) => <tr key={r.item} data-testid="bal-attn-row" data-item={r.item} data-severity={r.severity}>
@@ -108,6 +124,7 @@ export default function Balance({ auth }: { auth: () => Promise<Record<string, s
 }
 
 const CSS = `
+.bal-agr{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:8px 0}.bal-agr-card{border:2px solid #e2e8f0;border-radius:14px;padding:12px 14px;background:#fff}.bal-agr-card b{display:block;color:#0f2a4e}.bal-agr-card strong{display:block;font-size:34px;line-height:1.2}.bal-agr-card span{display:block;font-weight:800;font-size:13px;color:#334155}.bal-agr-card small{display:block;color:#64748b;font-size:12px;margin-top:4px}.bal-agr-card ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:3px}.bal-agr-card li{display:flex;justify-content:space-between;font-size:12px;color:#334155}.bal-agr-card li i{font-style:normal;font-weight:900}.bal-raters small{display:block;color:#64748b;font-size:11px}
 .bal-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
 .bal-lights{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
 .bal-light{border:2px solid #cbd5e1;border-radius:16px;padding:12px 14px;background:#fff;display:grid;gap:8px}.bal-light header{display:flex;align-items:center;gap:8px}.bal-light header b{font-size:20px;color:#0f2a4e}.bal-light header small{color:#475569;font-weight:800}

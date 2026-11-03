@@ -7,12 +7,13 @@ import { SYSTEM_ROLES, LEGACY_TO_ROLE, newInviteToken, hashToken, inviteUrl, inv
 const NOW = '2026-11-01T12:00:00Z';
 const g = (role_code: string, extra: Partial<any> = {}) => ({ id: 'g', user_id: 'u', email: 'a@b.sa', role_code, org_id: null, source: 'invite', expires_at: null, revoked_at: null, created_at: NOW, ...extra });
 
-test('P42 catalog: 16 صفة نظامية، رموز فريدة صالحة، وجهة لكل صفة، ADMIN وحده بـ *', () => {
-  assert.equal(SYSTEM_ROLES.length, 16, '16 roles');
-  assert.equal(new Set(SYSTEM_ROLES.map(r => r.code)).size, 16, 'unique codes');
+test('P42 catalog: 17 صفة نظامية (م4-ج: المصحّح)، رموز فريدة صالحة، وجهة لكل صفة، ADMIN وحده بـ *', () => {
+  assert.equal(SYSTEM_ROLES.length, 17, '17 roles');
+  assert.equal(new Set(SYSTEM_ROLES.map(r => r.code)).size, 17, 'unique codes');
   assert.ok(SYSTEM_ROLES.every(r => roleCodeOk(r.code) && r.landing.startsWith('/') && r.name_ar && r.name_en), 'shape');
   assert.deepEqual(SYSTEM_ROLES.filter(r => r.permissions.includes('*')).map(r => r.code), ['ADMIN'], 'only ADMIN wildcard');
-  assert.ok(SYSTEM_ROLES.filter(r => r.is_staff).every(r => r.legacy_role), 'staff roles bridge to legacy ENUM');
+  assert.ok(SYSTEM_ROLES.filter(r => r.is_staff && r.code !== 'RATER').every(r => r.legacy_role), 'staff roles bridge to legacy ENUM');
+  assert.ok(SYSTEM_ROLES.find(r => r.code === 'RATER')?.legacy_role == null, 'م4-ج: المصحّح لا يجسر إلى ENUM القديم — غرفة التصحيح فقط');
   assert.ok(SYSTEM_ROLES.filter(r => !r.is_staff).every(r => !r.legacy_role || r.code === 'TRAINER'), 'non-staff have no legacy bridge');
   for (const v of Object.values(LEGACY_TO_ROLE)) assert.ok(SYSTEM_ROLES.some(r => r.code === v), `legacy maps to known role ${v}`);
 });
