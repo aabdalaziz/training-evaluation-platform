@@ -4,6 +4,7 @@
  * /admin/after — «الشهادة التي تكبر» للطاقم (P38 · متابعة أثر التدريب)
  *  لكل برنامج: المحطات المفتوحة والمكتوبة (بالمحطة والحالة) · المشهودة · هل تتكلم صفحته العامة (من خمسة)
  *  · اعتماد اقتباسات مجهولة لصفحة البرنامج من بين ما أذن أصحابه فقط (إنسان يختار) · مسودّة الميسِّر لهندسة البرامج (الذكاء يلخّص والمهندس يقرّر)
+ *  P39 «البرنامج يردّ»: حين يكتب خمسة «لم تسنح الفرصة» تظهر بطاقة «هل يردّ البرنامج؟» → مسودّة → الطاقم يحرّر ويعرض ورشة تطبيق → أعداد «أرغب» · عمود «الجهة كتبت»
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,6 +14,7 @@ import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { P38_NAMES_AR, STATE_AR, STATION_AR, AFTER_K } from '../../../lib/after/registry';
 import type { AfterState, Station } from '../../../lib/after/registry';
+import { P39_NAMES_AR, OFFER_TEXT_MAX, OFFER_TITLE_MAX } from '../../../lib/after/voices';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 
@@ -20,6 +22,7 @@ export default function AdminAfterPage() {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
   const [ready, setReady] = useState(false); const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [openP, setOpenP] = useState(''); const [sum, setSum] = useState<Record<string, any>>({});
+  const [offerP, setOfferP] = useState(''); const [of, setOf] = useState<{ title_ar: string; text_ar: string; link: string; source?: string }>({ title_ar: '', text_ar: '', link: '' });   // P39
   const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
   const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
   async function load(tk?: string) { const j = await fetch('/api/admin/after', { headers: await H(tk), cache: 'no-store' }).then(r => r.json()).catch(() => null); if (!j?.success) { setError(j?.error || 'تعذّر التحميل'); return; } setData(j); }
@@ -38,7 +41,7 @@ export default function AdminAfterPage() {
         <header className="am-head"><div><span className="am-kicker"><Icon name="certificate" size={14} /> بوابة أَثَر · P38</span><h1>{P38_NAMES_AR.phase} — {P38_NAMES_AR.official}</h1><p>الشهادة لا تُختم يوم انتهاء البرنامج؛ تُفتح. المتدرّب يكتب بكلماته بعد شهر وثلاثة أشهر وسنة. الطاقم هنا لا يقيّم أحدًا: يرى الأعداد، ويختار من بين ما أذن أصحابه اقتباسات تظهر مجهولةً على صفحة البرنامج حين تتكلم (من {AFTER_K})، ويطلب من الميسِّر خلاصة لمهندس البرنامج — مسودّةً لا قرارًا.</p></div></header>
         <PortalAdminTabs counts={{ '/admin/after': programs.reduce((n, p) => n + (p.candidates || []).length, 0) }} />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
-        <div className="am-kpis" data-testid="aa-kpis"><span className="g"><b>{data?.total_written ?? 0}</b> محطة مكتوبة</span><span><b>{programs.length}</b> برنامجًا له محطات</span><span><b>{programs.filter(p => p.public).length}</b> صفحة برنامج تتكلم</span><span><b>{programs.reduce((n, p) => n + (p.candidates || []).length, 0)}</b> اقتباسًا ينتظر اختيارًا</span></div>
+        <div className="am-kpis" data-testid="aa-kpis"><span className="g"><b>{data?.total_written ?? 0}</b> محطة مكتوبة</span><span><b>{programs.length}</b> برنامجًا له محطات</span><span><b>{programs.filter(p => p.public).length}</b> صفحة برنامج تتكلم</span><span><b>{data?.offers_open ?? 0}</b> ورشة تطبيق معروضة</span><span className={data?.triggers_ready ? 'g' : ''}><b>{data?.triggers_ready ?? 0}</b> برنامج ينتظر ردًّا</span><span><b>{programs.reduce((n, p) => n + (p.candidates || []).length, 0)}</b> اقتباسًا ينتظر اختيارًا</span></div>
         {programs.length === 0 && <div className="am-card am-empty" data-testid="aa-empty">لا محطات بعد. تُفتح المحطات وحدها بعد 16 يومًا من نهاية أي برنامج له تسجيلات معتمَدة (داخل كرون المتابعة اليومي)، ويكتبها المتدرّبون من «محطاتي».</div>}
         {programs.map(p => <section key={p.program_id} className="am-card" data-testid="aa-prog">
           <h3>{p.program_ar} <small>انتهى {p.end_day || '—'} · {p.opened} محطة مفتوحة · {p.written} مكتوبة · {p.witnessed} مشهودة · {p.public ? <span className="aa-pub">صفحته تتكلم</span> : <span className="aa-quiet">صفحته صامتة حتى {AFTER_K}</span>}</small></h3>
@@ -47,6 +50,20 @@ export default function AdminAfterPage() {
             <div><h4>بالحالة (كلمات، لا نسب)</h4><ul>{Object.entries(p.states || {}).map(([k, v]) => <li key={k}>{STATE_AR[k as AfterState]}: <b>{String(v)}</b></li>)}{!Object.keys(p.states || {}).length && <li>—</li>}</ul></div>
             <div><h4>الصفحة العامة</h4><p className="aa-note"><Link href={`/programs/${encodeURIComponent(p.program_id)}`} target="_blank" rel="noreferrer">صفحة البرنامج ↗</Link> · المنشور: <b>{(p.published || []).length}</b> من 3 على الأكثر</p><button type="button" className="am-btn ghost small" disabled={busy === `summary${p.program_id}` || p.written < 3} onClick={async () => { const j = await post({ action: 'summary', program_id: p.program_id }); if (j) setSum(x => ({ ...x, [p.program_id]: j })); }} data-testid="aa-summary">{busy === `summary${p.program_id}` ? '…' : 'خلاصة الميسِّر لهندسة البرامج'}</button></div>
           </div>
+          {p.voices && <div className={`aa-voices ${p.voices.trigger?.ready ? 'ready' : ''}`} data-testid="aa-voices" data-ready={p.voices.trigger?.ready ? '1' : '0'}>
+            <b><Icon name="users" size={14} /> {P39_NAMES_AR.offer} <small>· الجهة كتبت: {p.org_written || 0}</small></b>
+            <p className="aa-note" data-testid="aa-trigger">{p.voices.trigger?.line_ar}</p>
+            {(p.voices.offers || []).map((o: any) => <div key={o.id} className={`aa-offer ${o.closed_at ? 'closed' : ''}`} data-testid="aa-offer"><small>{o.closed_at ? 'أُغلق' : 'قائم'} · {String(o.created_at).slice(0, 10)}</small><b>{o.title_ar}</b><p>{o.text_ar}</p>{o.link && <a href={o.link} target="_blank" rel="noreferrer">الرابط ↗</a>}<span className="aa-counts" data-testid="aa-offer-counts">أرغب: <b>{o.want}</b> · لا، شكرًا: <b>{o.no}</b></span>{!o.closed_at && <button type="button" className="am-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'offer_close', id: o.id })} data-testid="aa-offer-close">أغلق العرض</button>}</div>)}
+            {p.voices.trigger?.ready && !(p.voices.offers || []).some((o: any) => !o.closed_at) && offerP !== p.program_id && <button type="button" className="am-btn small" disabled={!!busy} onClick={async () => { setOfferP(p.program_id); setOf({ title_ar: '', text_ar: '', link: '' }); const j = await post({ action: 'offer_draft', program_id: p.program_id }); if (j?.draft) setOf({ title_ar: j.draft.title_ar, text_ar: j.draft.text_ar, link: '', source: j.source }); }} data-testid="aa-offer-draft">هل يردّ البرنامج؟ — مسودّة دعوة</button>}
+            {offerP === p.program_id && <form className="aa-offerf" onSubmit={e => { e.preventDefault(); post({ action: 'offer', program_id: p.program_id, title_ar: of.title_ar, text_ar: of.text_ar, link: of.link }).then((j: any) => { if (j) setOfferP(''); }); }} data-testid="aa-offer-form">
+              <small>{of.source ? `مسودّة الميسِّر (${of.source === 'ai' ? 'ذكاء اصطناعي' : 'محلي'}) من نصوص «لم تسنح» مجهَّلةً — حرّرها بكلماتك` : 'جارٍ إعداد المسودّة…'}</small>
+              <label>عنوان العرض<input value={of.title_ar} onChange={e => setOf(x => ({ ...x, title_ar: e.target.value }))} maxLength={OFFER_TITLE_MAX} data-testid="aa-offer-title" required /></label>
+              <label>نصّ الدعوة <small>({of.text_ar.length}/{OFFER_TEXT_MAX})</small><textarea rows={4} value={of.text_ar} onChange={e => setOf(x => ({ ...x, text_ar: e.target.value }))} maxLength={OFFER_TEXT_MAX} data-testid="aa-offer-text" required /></label>
+              <label>رابط قاعة أو موعد (اختياري — https:// أو مسار داخل أَثَر مثل /live)<input value={of.link} onChange={e => setOf(x => ({ ...x, link: e.target.value }))} data-testid="aa-offer-link" placeholder="/live" /></label>
+              <div className="aa-acts"><button type="submit" className="am-btn small" disabled={!!busy || of.title_ar.trim().length < 3 || of.text_ar.trim().length < 20} data-testid="aa-offer-send">اعرض ورشة تطبيق</button><button type="button" className="am-btn ghost small" onClick={() => setOfferP('')}>إلغاء</button></div>
+              <small>لا يُرسَل شيء تلقائيًا غير إشعار داخلي لأصحاب «لم تسنح»؛ الإنسان يقرّر ويكتب.</small>
+            </form>}
+          </div>}
           {sum[p.program_id] && <div className="aa-sum" data-testid="aa-sum"><b>مسودّة الميسِّر <small>({sum[p.program_id].source === 'ai' ? 'ذكاء اصطناعي' : 'محلي'} · من {sum[p.program_id].n} محطة)</small></b>
             <div className="aa-sumg"><div><h4>ما نفع فعلًا</h4><ul>{sum[p.program_id].summary.kept_ar.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div><div><h4>ما لم ينتقل إلى العمل</h4><ul>{sum[p.program_id].summary.gaps_ar.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div><div><h4>للنسخة التالية</h4><ul>{sum[p.program_id].summary.next_ar.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul></div></div>
             <p className="aa-note">{sum[p.program_id].note_ar} <Link href="/admin/factory">هندسة البرامج التدريبية ↗</Link></p></div>}
@@ -76,4 +93,7 @@ const CSS = `
 .aa-sum{margin-top:12px;border:1.5px solid #c9a24b;border-radius:12px;padding:12px;background:#fffdf5}.aa-sumg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .aa-cands{margin-top:10px;border-top:1px dashed #e2e8f0;padding-top:10px;display:grid;gap:8px}.aa-c{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;display:grid;gap:4px;background:#f8fafc}.aa-c.on{border-color:#c9a24b;background:#fffbeb}.aa-c small{color:#64748b;font-size:11.5px}.aa-c p{margin:0;line-height:1.8;color:#1f2937}.aa-c em{color:#065f46;font-style:normal;font-size:12.5px}.aa-c .am-btn{justify-self:start}
 .aa-foot{color:#475569;font-size:12.5px;line-height:1.7;margin:4px 0 0}
+.aa-voices{margin-top:12px;border:1.5px dashed #cbd5e1;border-radius:12px;padding:10px 12px;display:grid;gap:8px}.aa-voices.ready{border-style:solid;border-color:#0b8a83;background:#f0fdfa}.aa-voices>b{display:flex;gap:6px;align-items:center;color:#0f2a4e}.aa-voices>b small{color:#64748b;font-weight:600}
+.aa-offer{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;display:grid;gap:4px;background:#fff}.aa-offer.closed{opacity:.7}.aa-offer small{color:#64748b;font-size:11.5px}.aa-offer p{margin:0;line-height:1.8;font-size:13.5px}.aa-counts{font-size:13px;color:#0f2a4e}.aa-counts b{color:#0b6f69}
+.aa-offerf{display:grid;gap:8px}.aa-offerf label{display:grid;gap:4px;font-size:13px;font-weight:800;color:#0f2a4e}.aa-offerf input,.aa-offerf textarea{border:1.5px solid #cbd5e1;border-radius:10px;padding:8px 12px;font:inherit;min-height:44px;width:100%;box-sizing:border-box}.aa-offerf small{color:#64748b;font-size:12px;font-weight:600}.aa-acts{display:flex;gap:8px;flex-wrap:wrap}
 `;

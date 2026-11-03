@@ -5,6 +5,7 @@
  *  لكل برنامج أتممته: ثلاث محطات (بعد شهر · بعد ثلاثة أشهر · بعد سنة). في نافذة المحطة أكتب بكلماتي «ما الذي فعلته بما تعلّمت؟»
  *  وأختار حالة واحدة بالكلمات — و«لم ينفعني» مرحَّب بها. ثم: شاهد يوقّع بجملة · إظهار الفصل في شهادتي الحيّة · وثيقة «أثر بعد» عند محطة السنة.
  *  #witness: دعوات الشهادة التي وصلتني من متدرّبين.
+ *  P39 «أصوات حول الشهادة»: رسالة إلى نفسي بعد سنة (تُفتح فوق محطة السنة) · البرنامج يردّ (ورشة تطبيق) · قياسك في مِعيار — في Voices.tsx
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -14,6 +15,7 @@ import { fastToken } from '../../components/Pocket';
 import { supabase } from '../../../lib/supabase/client';
 import { P38_NAMES_AR, STATES, STATE_AR, STATE_EN, TEXT_MIN, TEXT_MAX, QUESTION_AR, HONESTY_AR, TAGLINE_AR, PHASE_AR } from '../../../lib/after/registry';
 import type { AfterState } from '../../../lib/after/registry';
+import { LetterBox, OfferBox, MeasureBox } from './Voices';
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium' }) : '—');
 
@@ -48,6 +50,7 @@ function Inner() {
 
     {items.map(it => <section key={it.id} className="pt-box oaf-prog" data-testid="oaf-prog">
       <h2>{it.program_ar} <small className="pt-muted">{ar ? 'انتهى' : 'ended'} <bdi>{it.end_day}</bdi></small></h2>
+      <LetterBox item={it} post={post} busy={busy} ar={ar} />
       <ol className="oaf-st" aria-label={ar ? 'المحطات' : 'Stations'}>
         {it.stations.map((s: any) => { const key = `${it.id}:${s.station}`; const r = s.row; const isOpen = open === key;
           return <li key={s.station} className={`oaf-s ${s.phase}`} data-testid={`oaf-st-${s.station}`} data-phase={s.phase}>
@@ -76,6 +79,8 @@ function Inner() {
             {s.phase === 'missed' && <p className="pt-muted oaf-missed">{ar ? 'فاتت نافذتها — تبقى فارغة؛ هذا جزء من صدق الدفتر.' : 'Its window passed — it stays empty; that is part of the honesty.'}</p>}
           </li>; })}
       </ol>
+      <OfferBox item={it} post={post} busy={busy} ar={ar} />
+      <MeasureBox item={it} post={post} busy={busy} ar={ar} />
       <div className="oaf-doc" data-testid="oaf-doc">
         {it.doc ? <p><Icon name="shield" size={14} /> {ar ? 'وثيقة «أثر بعد»' : 'After document'}: <bdi>{it.doc.code}</bdi> · <a href={`/verify/vc?code=${encodeURIComponent(it.doc.code)}`} target="_blank" rel="noreferrer">{ar ? 'تحقّق' : 'Verify'}</a></p>
           : it.doc_eligible ? <button type="button" className="pt-btn light" onClick={() => post({ action: 'doc', enrollment_id: it.id })} disabled={busy === 'doc'} data-testid="oaf-doc-btn">{ar ? `أصدر وثيقة «${P38_NAMES_AR.doc}» (ATH-AF)` : 'Issue the ATH-AF document'}</button>

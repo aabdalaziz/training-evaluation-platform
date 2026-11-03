@@ -139,7 +139,9 @@ const CSS = `
 .pt-nav{display:flex;align-items:center;gap:4px;flex:1;justify-content:center}
 .pt-navlink{text-decoration:none;font-weight:800;font-size:14px;color:#334155;padding:8px 12px;border-radius:10px}.pt-navlink:hover{background:#f1f5f9}.pt-navlink.on{color:${TEAL};background:#f0fdfa}
 .pt-navactions{display:none;gap:8px;margin-top:8px}
-.pt-headright{display:flex;align-items:center;gap:8px}
+.pt-headright{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+/* P39: على شاشات الحاسوب المحمول (≤1400px) يتزاحم الشريط عند تسجيل الدخول (بابي · أَثَر معك · احتياجاتي · اللغة) فيُحدث تمريرًا أفقيًا — نضغط الروابط ونسمح بالالتفاف بدل القصّ */
+@media(min-width:761px) and (max-width:1400px){.pt-navlink{padding:8px 8px;font-size:13px}.pt-nav{flex-wrap:wrap;min-width:0;row-gap:0}.pt-header{gap:10px}}
 /* .pt-doorbadge — يُعرَّف مركزيًا في app/style.css (P43-أ) لأن شارة الباب تظهر أيضًا في شريط «مركز قيادة أَثَر» */
 @media(max-width:760px){.pt-doorbadge small{display:none}.pt-doorbadge{padding:5px 10px}}
 .pt-lang{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:900;color:${NAVY};cursor:pointer}

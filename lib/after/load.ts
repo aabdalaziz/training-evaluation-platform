@@ -10,23 +10,27 @@ import type { Signer } from '../portal/vc-server';
 import { notify } from '../portal/notify';
 import { STATIONS, STATE_AR, STATION_AR, stationPhase, stationWindow, canWrite, canInviteWitness, canAnswerWitness, cleanWitnessText, docEligible, afterCode, programAfter, orgAfterLine, afterFactLine, addDays, AFTER_K } from './registry';
 import type { Station, StationRow, AfterState, StationPhase } from './registry';
+/* P39 «أصوات حول الشهادة» — الرسالة · البرنامج يردّ · محطة الجهة · القياس */
+import { lettersOf, letterView, unsealLetters, openOffersFor, repliesOf, offerViewFor, adminOffers, orgWrittenCount, orgSaidFor, programOfferLine, programMeasure, measureFor } from './voices-load';
+import { LETTER_DOC_LINE_AR, MEASURE_LEVEL_AR } from './voices';
+import type { Measure } from './voices';
 
-const COLS = 'id,enrollment_id,program_id,user_id,email,station,state,text_ar,may_publish,shown_on_credential,witness_email,witness_user_id,witness_status,witness_text,witness_at,notified_at,written_at,published_at,published_by';
+const COLS = 'id,enrollment_id,program_id,user_id,email,station,state,text_ar,may_publish,shown_on_credential,witness_email,witness_user_id,witness_status,witness_text,witness_at,notified_at,written_at,published_at,published_by,in_doc_measure';
 const lower = (s: unknown) => String(s || '').trim().toLowerCase();
 async function safe<T>(q: PromiseLike<{ data: any; error: any }>, fb: T): Promise<T> { try { const { data, error } = await q; if (error) return fb; return (data ?? fb) as T; } catch { return fb; } }
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 
-export type DoneEnrollment = { id: string; program_id: string; program_ar: string; end_day: string; user_id: string | null; email: string; full_name: string | null; organization_id: string | null };
+export type DoneEnrollment = { id: string; program_id: string; program_ar: string; end_day: string; user_id: string | null; email: string; full_name: string | null; organization_id: string | null; placement_level?: string | null };
 export type StationView = { station: Station; label_ar: string; phase: StationPhase; opens: string; closes: string; due: string; row: StationRow | null };
 
 /** تسجيلاتي المعتمَدة التي انتهى برنامجها (end_date ≤ اليوم) */
 export async function doneEnrollments(db: any, me: { id: string; email: string }, now = new Date()): Promise<DoneEnrollment[]> {
-  const ens = await safe<any[]>(db.from('portal_enrollments').select('id,program_id,user_id,email,full_name,status,organization_id').or(`user_id.eq.${me.id},email.eq.${lower(me.email)}`).eq('status', 'approved').limit(100), []);
+  const ens = await safe<any[]>(db.from('portal_enrollments').select('id,program_id,user_id,email,full_name,status,organization_id,placement_level').or(`user_id.eq.${me.id},email.eq.${lower(me.email)}`).eq('status', 'approved').limit(100), []);
   if (!ens.length) return [];
   const pids = Array.from(new Set(ens.map(e => String(e.program_id))));
   const progs = await safe<any[]>(db.from('programs').select('id,name_ar,end_date').in('id', pids).limit(100), []);
   const today = ymd(now); const out: DoneEnrollment[] = [];
-  for (const e of ens) { const p = progs.find(x => String(x.id) === String(e.program_id)); if (!p?.end_date || String(p.end_date).slice(0, 10) > today) continue; out.push({ id: String(e.id), program_id: String(e.program_id), program_ar: String(p.name_ar || 'برنامج'), end_day: String(p.end_date).slice(0, 10), user_id: e.user_id || null, email: lower(e.email), full_name: e.full_name || null, organization_id: e.organization_id || null }); }
+  for (const e of ens) { const p = progs.find(x => String(x.id) === String(e.program_id)); if (!p?.end_date || String(p.end_date).slice(0, 10) > today) continue; out.push({ id: String(e.id), program_id: String(e.program_id), program_ar: String(p.name_ar || 'برنامج'), end_day: String(p.end_date).slice(0, 10), user_id: e.user_id || null, email: lower(e.email), full_name: e.full_name || null, organization_id: e.organization_id || null, placement_level: e.placement_level || null }); }
   return out.sort((a, b) => b.end_day.localeCompare(a.end_day));
 }
 export async function stationsOf(db: any, enrollmentIds: string[]): Promise<StationRow[]> {
@@ -38,7 +42,11 @@ export function stationViews(e: DoneEnrollment, rows: StationRow[], now = new Da
 export async function myAfter(db: any, me: { id: string; email: string }, now = new Date()) {
   const ens = await doneEnrollments(db, me, now); const rows = await stationsOf(db, ens.map(e => e.id));
   const docs = await safe<any[]>(db.from('portal_vc_issuances').select('id,code,issued_at,vc').eq('kind', 'after').or(`user_id.eq.${me.id},email.eq.${lower(me.email)}`).is('revoked_at', null).limit(50), []);
-  const items = ens.map(e => { const mine = rows.filter(r => String(r.enrollment_id) === e.id); const el = docEligible(e.end_day, mine, now); const doc = docs.find(d => String(d.vc?._athar?.enrollment_id || '') === e.id) || null; return { ...e, stations: stationViews(e, mine, now), doc_eligible: el.ok, doc_note_ar: el.ok ? null : el.error, written: el.written, doc: doc ? { code: doc.code, issued_at: doc.issued_at } : null }; });
+  /* P39: الرسالة تُفتح مع محطة السنة (كسولًا هنا أيضًا) · عرض البرنامج · القياس */
+  const letters0 = await lettersOf(db, ens.map(e => e.id)); const unsealed = await unsealLetters(db, ens.map(e => ({ e, row: letters0.find(l => String(l.enrollment_id) === e.id) || null })), String(process.env.NEXT_PUBLIC_SITE_URL || ''), now);
+  const letters = unsealed ? await lettersOf(db, ens.map(e => e.id)) : letters0; const offers = await openOffersFor(db, Array.from(new Set(ens.map(e => e.program_id)))); const replies = await repliesOf(db, offers.map(o => o.id));
+  const measures = new Map<string, Measure>(); for (const e of ens) if (stationPhase(e.end_day, 365, null, now) !== 'future') measures.set(e.id, await measureFor(db, e));
+  const items = ens.map(e => { const mine = rows.filter(r => String(r.enrollment_id) === e.id); const el = docEligible(e.end_day, mine, now); const doc = docs.find(d => String(d.vc?._athar?.enrollment_id || '') === e.id) || null; const l365 = mine.find(r => Number(r.station) === 365) || null; return { ...e, stations: stationViews(e, mine, now), letter: letterView(e, letters.find(l => String(l.enrollment_id) === e.id) || null, now), offer: offerViewFor(e, mine, offers, replies), measure: measures.get(e.id) || null, measure_in_doc: !!(l365 as any)?.in_doc_measure, doc_eligible: el.ok, doc_note_ar: el.ok ? null : el.error, written: el.written, doc: doc ? { code: doc.code, issued_at: doc.issued_at } : null }; });
   const invites = await safe<StationRow[]>(db.from('portal_after_stations').select(COLS).eq('witness_email', lower(me.email)).eq('witness_status', 'invited').limit(50), []);
   const invitePrograms = invites.length ? await safe<any[]>(db.from('programs').select('id,name_ar').in('id', Array.from(new Set(invites.map(i => String(i.program_id))))).limit(50), []) : [];
   const inviteEnroll = invites.length ? await safe<any[]>(db.from('portal_enrollments').select('id,full_name').in('id', Array.from(new Set(invites.map(i => String(i.enrollment_id))))).limit(50), []) : [];
@@ -86,7 +94,11 @@ export async function chaptersForCredential(db: any, code: string): Promise<{ pr
 /** «ما قاله من تدرّب هنا» — عام */
 export async function programAfterOf(db: any, programId: string, now = new Date()) {
   const rows = await safe<StationRow[]>(db.from('portal_after_stations').select(COLS).eq('program_id', programId).limit(2000), []);
-  return programAfter(rows, AFTER_K, now);
+  const base = programAfter(rows, AFTER_K, now);
+  /* P39: أصوات حول الشهادة — سطر البرنامج (ردّ بورشة) · ما قالته الجهة (بإذنها) · سطر القياس (من خمسة) */
+  const p = await safe<any>(db.from('programs').select('id,end_date').eq('id', programId).maybeSingle(), null);
+  const [offer_line_ar, org_said, measure] = await Promise.all([programOfferLine(db, programId), orgSaidFor(db, programId), programMeasure(db, programId, p?.end_date ? String(p.end_date).slice(0, 10) : null)]);
+  return { ...base, offer_line_ar, org_said, measure_line_ar: measure.shown ? measure.line_ar : null, measured_n: measure.n };
 }
 /** سطر الجهة — منسوبوها المؤكَّدون */
 export async function orgAfterOf(db: any, orgId: string) {
@@ -98,7 +110,7 @@ export async function orgAfterOf(db: any, orgId: string) {
   return orgAfterLine(rows);
 }
 /** وثيقة «أثر بعد» ATH-AF */
-export function buildAfterDoc(inp: { code: string; name: string; program_ar: string; enrollment_id: string; end_day: string; stations: { station: Station; state: AfterState; text_ar: string; witness: boolean }[]; site: string; did: string; now?: Date; statusIndex: number | null }) {
+export function buildAfterDoc(inp: { code: string; name: string; program_ar: string; enrollment_id: string; end_day: string; stations: { station: Station; state: AfterState; text_ar: string; witness: boolean }[]; site: string; did: string; now?: Date; statusIndex: number | null; letter?: boolean; measure?: Measure | null }) {
   const now = inp.now || new Date(); const url = `${inp.site}/verify/vc?code=${encodeURIComponent(inp.code)}`;
   return {
     '@context': VC_CONTEXTS, id: url, type: ['VerifiableCredential', 'OpenBadgeCredential'], name: 'Athar — Training Impact Follow-up · أثر بعد البرنامج',
@@ -107,9 +119,9 @@ export function buildAfterDoc(inp: { code: string; name: string; program_ar: str
       achievement: { id: `${inp.site}/me/after`, type: ['Achievement'], name: `What I did with what I learned — ${inp.program_ar}`, achievementType: 'Badge',
         description: 'After the program ended, this learner returned at 30, 90 and 365 days and wrote, in their own words, what they did with what they learned — including when it did not help. Stations missed stay empty; nothing is back-filled. Witness lines were signed by people the learner invited. No ratings exist in Athar.',
         criteria: { narrative: 'At least two of the three stations written inside their ±14-day windows after the program end date recorded by the platform' } },
-      result: inp.stations.map(s => ({ type: ['Result'], resultDescription: `station_${s.station}`, value: `${s.state}${s.witness ? ' · witnessed' : ''}` })) },
+      result: [...inp.stations.map(s => ({ type: ['Result'], resultDescription: `station_${s.station}`, value: `${s.state}${s.witness ? ' · witnessed' : ''}` })), ...(inp.letter ? [{ type: ['Result'], resultDescription: 'letter_to_self', value: 'sealed at program end · opened after one year' }] : []), ...(inp.measure?.has_after ? [{ type: ['Result'], resultDescription: 'miaar_measure', value: `${inp.measure.entry_level || '?'} → ${inp.measure.after_level} (${String(inp.measure.after_at).slice(0, 10)})` }] : [])] },
     ...(inp.statusIndex !== null ? { credentialStatus: statusEntry(inp.site, inp.statusIndex) } : {}),
-    _athar: { kind: 'after', code: inp.code, holder: inp.name, program_ar: inp.program_ar, enrollment_id: inp.enrollment_id, end_day: inp.end_day, stations: inp.stations.map(s => ({ station: s.station, station_ar: STATION_AR[s.station], state: s.state, state_ar: STATE_AR[s.state], text_ar: s.text_ar, witnessed: s.witness })), title_ar: `أثر بعد — ${inp.program_ar} — ${inp.name}`, verify_url: url },
+    _athar: { kind: 'after', code: inp.code, holder: inp.name, program_ar: inp.program_ar, enrollment_id: inp.enrollment_id, end_day: inp.end_day, stations: inp.stations.map(s => ({ station: s.station, station_ar: STATION_AR[s.station], state: s.state, state_ar: STATE_AR[s.state], text_ar: s.text_ar, witnessed: s.witness })), title_ar: `أثر بعد — ${inp.program_ar} — ${inp.name}`, verify_url: url, ...(inp.letter ? { letter_ar: LETTER_DOC_LINE_AR } : {}), ...(inp.measure?.has_after ? { measure: { entry_level: inp.measure.entry_level, entry_ar: inp.measure.entry_level ? MEASURE_LEVEL_AR[inp.measure.entry_level] : null, after_level: inp.measure.after_level, after_ar: inp.measure.after_ar, after_at: inp.measure.after_at, steps: inp.measure.steps, line_ar: inp.measure.line_ar } } : {}) },
   };
 }
 export async function issueAfterDoc(db: any, me: { id: string; email: string; name: string }, enrollmentId: string, signer: Signer | null, site: string, did: string, rnd: () => string, now = new Date()): Promise<{ ok: true; code: string; verify_url: string } | { ok: false; error: string }> {
@@ -120,7 +132,8 @@ export async function issueAfterDoc(db: any, me: { id: string; email: string; na
   const code = afterCode(rnd); const url = `${site}/verify/vc?code=${encodeURIComponent(code)}`; if (!signer) return { ok: true, code, verify_url: url };
   const { data: ins, error } = await db.from('portal_vc_issuances').insert({ code, kind: 'after', credential_id: null, user_id: me.id, email: lower(me.email), full_name: me.name, title_ar: `أثر بعد — ${e.program_ar} — ${me.name}`, kid: signer.kid, vc: {}, digest: '', issued_at: now.toISOString(), expires_at: null, issued_by: me.id }).select('id,status_index').single();
   if (error || !ins) return { ok: false, error: error?.message || 'تعذّر إصدار الوثيقة' };
-  const vc = await signDocument(buildAfterDoc({ code, name: me.name, program_ar: e.program_ar, enrollment_id: e.id, end_day: e.end_day, stations: rows.sort((a, b) => Number(a.station) - Number(b.station)).map(r => ({ station: r.station, state: r.state as AfterState, text_ar: String(r.text_ar), witness: r.witness_status === 'signed' })), site, did, now, statusIndex: Number((ins as any).status_index) }), signer, now);
+  const letter = (await lettersOf(db, [e.id]))[0] || null; const l365 = (await stationsOf(db, [e.id])).find(r => Number(r.station) === 365) as any; const measure = l365?.in_doc_measure ? await measureFor(db, e) : null;   /* P39: بخيار المتدرّب */
+  const vc = await signDocument(buildAfterDoc({ code, name: me.name, program_ar: e.program_ar, enrollment_id: e.id, end_day: e.end_day, stations: rows.sort((a, b) => Number(a.station) - Number(b.station)).map(r => ({ station: r.station, state: r.state as AfterState, text_ar: String(r.text_ar), witness: r.witness_status === 'signed' })), site, did, now, statusIndex: Number((ins as any).status_index), letter: !!(letter && letter.opened_at && letter.in_doc), measure }), signer, now);
   await db.from('portal_vc_issuances').update({ vc, digest: await documentDigest(vc, sha256) }).eq('id', (ins as any).id);
   return { ok: true, code, verify_url: url };
 }
@@ -132,8 +145,11 @@ export async function openStations(db: any, opts: { site: string; now?: Date; dr
     if (!progs.length) return { opened, errors };
     const ens = await safe<any[]>(db.from('portal_enrollments').select('id,program_id,user_id,email,full_name').in('program_id', progs.map(p => String(p.id))).eq('status', 'approved').limit(5000), []);
     const rows = ens.length ? await safe<StationRow[]>(db.from('portal_after_stations').select('id,enrollment_id,station,notified_at,written_at').in('enrollment_id', ens.map(e => String(e.id))).limit(20000), []) : [];
+    const letters = ens.length ? await lettersOf(db, ens.map(e => String(e.id))) : [];   /* P39: الرسائل تُفتح مع محطة السنة */
     for (const e of ens) {
       const p = progs.find(x => String(x.id) === String(e.program_id)); if (!p?.end_date) continue; const endDay = String(p.end_date).slice(0, 10);
+      const letter = letters.find(l => String(l.enrollment_id) === String(e.id)) || null;
+      if (letter) opened += await unsealLetters(db, [{ e: { id: String(e.id), program_id: String(e.program_id), program_ar: String(p.name_ar || 'برنامج'), end_day: endDay, user_id: e.user_id || null, email: lower(e.email), full_name: e.full_name || null }, row: letter }], opts.site, now, !!opts.dry);
       for (const st of STATIONS) {
         const row = rows.find(r => String(r.enrollment_id) === String(e.id) && Number(r.station) === st); if (row) continue;
         if (stationPhase(endDay, st, null, now) !== 'open') continue;
@@ -154,7 +170,11 @@ export async function adminAfter(db: any) {
   const pids = Array.from(new Set(rows.map(r => String(r.program_id)))); const progs = pids.length ? await safe<any[]>(db.from('programs').select('id,name_ar,end_date').in('id', pids).limit(500), []) : [];
   const programs = pids.map(pid => { const mine = rows.filter(r => String(r.program_id) === pid); const w = mine.filter(r => r.written_at); const p = progs.find(x => String(x.id) === pid);
     return { program_id: pid, program_ar: String(p?.name_ar || 'برنامج'), end_day: p?.end_date ? String(p.end_date).slice(0, 10) : null, opened: mine.length, written: w.length, by_station: STATIONS.map(st => ({ station: st, written: w.filter(r => Number(r.station) === st).length })), states: w.reduce((acc, r) => { if (r.state) acc[r.state] = (acc[r.state] || 0) + 1; return acc; }, {} as Record<string, number>), witnessed: w.filter(r => r.witness_status === 'signed').length, public: programAfter(mine).shown, candidates: w.filter(r => r.may_publish && !r.published_at).map(r => ({ id: r.id, station: r.station, station_ar: STATION_AR[r.station], state_ar: STATE_AR[r.state as AfterState], text_ar: r.text_ar, witness_text: r.witness_status === 'signed' ? r.witness_text : null })), published: w.filter(r => r.published_at).map(r => ({ id: r.id, station: r.station, station_ar: STATION_AR[r.station], state_ar: STATE_AR[r.state as AfterState], text_ar: r.text_ar })) }; });
-  return { programs: programs.sort((a, b) => b.written - a.written), total_written: rows.filter(r => r.written_at).length };
+  /* P39: البرنامج يردّ (المُطلِق · العروض · الأعداد) · الجهة كتبت */
+  const byProg = new Map<string, StationRow[]>(); for (const pid of pids) byProg.set(pid, rows.filter(r => String(r.program_id) === pid));
+  const offers = await adminOffers(db, pids, byProg); const orgWritten = await orgWrittenCount(db, pids);
+  const withVoices = programs.map(p => ({ ...p, voices: offers[p.program_id] || null, org_written: orgWritten[p.program_id] || 0 }));
+  return { programs: withVoices.sort((a, b) => b.written - a.written), total_written: rows.filter(r => r.written_at).length, offers_open: Object.values(offers).reduce((n: number, v: any) => n + (v.offers || []).filter((o: any) => !o.closed_at).length, 0), triggers_ready: Object.values(offers).filter((v: any) => v.trigger?.ready && !(v.offers || []).length).length };
 }
 export async function setPublished(db: any, id: string | number, published: boolean, by: string, now = new Date()): Promise<{ ok: true } | { ok: false; error: string }> {
   const row = await safe<StationRow | null>(db.from('portal_after_stations').select(COLS).eq('id', id).maybeSingle(), null); if (!row?.written_at) return { ok: false, error: 'لا محطة مكتوبة' };

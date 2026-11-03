@@ -207,7 +207,7 @@ const CSS = `
 .me-btn:hover{border-color:#0b8a83;color:#0b8a83}
 .me-btn.primary{background:#0f2a4e;color:#fff;border-color:#0f2a4e;padding:13px 22px;font-size:15px}.me-btn.primary:hover{background:#163b6e;color:#fff}.me-btn:disabled{opacity:.5;cursor:not-allowed}
 .me-btn.gold{background:#fbf5e4;border-color:#ead9a6;color:#8a6a14}.me-btn.gold:hover{border-color:#c9a24b;color:#6b5210}
-.me-tabs{display:flex;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:6px}
+.me-tabs{display:flex;flex-wrap:wrap;gap:6px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:6px}
 .me-tabs .me-tablink{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:10px 8px;font-size:13.5px;font-weight:800;color:#0b8a83;text-decoration:none;background:#f0fdfa}
 .me-tabs button{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:transparent;border-radius:10px;padding:10px 8px;font:inherit;font-size:13.5px;font-weight:900;color:#475569;cursor:pointer;min-width:0}
 .me-tabs button.on{background:#0f2a4e;color:#fff}.me-tabs i{font-style:normal;background:rgba(15,42,78,.08);border-radius:999px;padding:0 7px;font-size:11px}.me-tabs button.on i{background:rgba(255,255,255,.2)}

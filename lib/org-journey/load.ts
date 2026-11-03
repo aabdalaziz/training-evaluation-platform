@@ -1,5 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /** رحلة الجهة — قراءة أحداث المنسوبين المؤكَّدين من الجداول القائمة (لا جدول للفصول) + مقدمة كتاب السنة من كلمات الجهة وحدها */
+import { orgAfterChapters } from '../after/voices';   // P39 «قالت بعد سنة»
+import { orgAfterChapterRows } from '../after/voices-load';
 import { lower } from '../councils/registry';
 import { runAi, logAi } from '../ai/athar';
 import { buildOrgJourney, ORG_INTRO_MAX_CHARS, quarterLabel } from './registry';
@@ -62,7 +64,7 @@ export async function loadOrgJourneyInput(db: any, orgId: string): Promise<OrgJo
     org_pairs: orgPairRows.filter((p: any) => p.status !== 'revoked').map((p: any) => ev(p.member_email, p.signed_at)),
     charters: charters.map((c: any, i: number) => ({ signed_at: c.signed_at, renewed: i > 0 })),
     twinnings, contracts: contracts.map((c: any) => ({ delivered_at: c.delivered_at, returned: returned.has(c.id) })),
-    org_pledge_chapters: orgPledgeChapters(orgPledges.map((p: any) => ({ signed_at: p.signed_at, title_ar: p.title_ar, kind: p.kind, status: p.status, reviewed_at: p.meta?.reviewed_at || null, decision: p.meta?.decision || null, complete: p.meta?.complete ?? null, note_ar: null })), quarterOf),
+    org_pledge_chapters: [...orgAfterChapters(await orgAfterChapterRows(db, orgId), quarterOf), ...orgPledgeChapters(orgPledges.map((p: any) => ({ signed_at: p.signed_at, title_ar: p.title_ar, kind: p.kind, status: p.status, reviewed_at: p.meta?.reviewed_at || null, decision: p.meta?.decision || null, complete: p.meta?.complete ?? null, note_ar: null })), quarterOf)],
     // P28 — أحداث خام لدرب عهد الجهة (كل الإجابات · الانضمام بمعرّف المجلس · العودات بمعرّف المجلس)
     path_events: { daily: daily.map(r => ev(r.email, r.created_at)), joins: joins.filter(j => j.status !== 'applied' && j.status !== 'invited').map(j => ({ person: lower(j.email), at: j.joined_at, council: String(j.council_id || '') })), returns: cases.map(c => ({ person: lower(c.author_email), at: c.returned_at, council: c.council_id ? String(c.council_id) : null })) },
   };

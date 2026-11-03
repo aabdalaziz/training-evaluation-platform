@@ -18,7 +18,7 @@ export const ORG_SHARE_CODE_PREFIX = 'ATH-OY';
 export const MAX_ORG_SHARE_CHAPTERS = 40;
 export { K_ORG };
 
-export type OrgChapterKind = 'daily' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'pledge' | 'charter' | 'twinning' | 'contract' | 'org_pledge' | 'pair' | 'org_pair';
+export type OrgChapterKind = 'daily' | 'mission' | 'council' | 'return' | 'attestation' | 'level' | 'credential' | 'pledge' | 'charter' | 'twinning' | 'contract' | 'org_pledge' | 'pair' | 'org_pair' | 'org_after';   // org_after: P39 «قالت بعد سنة»
 export type OrgEvent = { person: string; at: string; theme?: string | null };     // person = بريد أو معرّف (لا يُنشر أبدًا)
 export type OrgJourneyInput = {
   members: string[];                                        // بُرُد المنسوبين المؤكَّدين (صغيرة الحروف)
@@ -48,7 +48,7 @@ export type OrgBelow = { quarter: string; kind: OrgChapterKind; label_ar: string
 export type OrgMirrorRow = { kind: OrgChapterKind; label_ar: string; now: number | null; prev: number | null; read_ar: string };
 export type OrgJourney = { version: string; k: number; members: number; chapters: OrgChapter[]; eras: { label: string; keys: string[] }[]; below: OrgBelow[]; mirror: OrgMirrorRow[]; arc_ar: string; year_label: string; first_at: string | null; privacy_ar: string[] };
 
-export const ORG_KIND_AR: Record<OrgChapterKind, string> = { daily: 'أول موقف', mission: 'مهام أكّدها المشرفون', council: 'انضمام إلى المجالس', return: 'عودات بما حدث', attestation: 'شهادات أقران معتمدة', level: 'مستويات اعتمدها بشر', credential: 'اعتمادات', pledge: 'عهود مع النفس', charter: 'ميثاق الجهة', twinning: 'توأمة', contract: 'عقد أثر' , org_pledge: 'عهد الجهة', pair: 'عهود متقابلة', org_pair: 'عهود مع منسوبين' };
+export const ORG_KIND_AR: Record<OrgChapterKind, string> = { daily: 'أول موقف', mission: 'مهام أكّدها المشرفون', council: 'انضمام إلى المجالس', return: 'عودات بما حدث', attestation: 'شهادات أقران معتمدة', level: 'مستويات اعتمدها بشر', credential: 'اعتمادات', pledge: 'عهود مع النفس', charter: 'ميثاق الجهة', twinning: 'توأمة', contract: 'عقد أثر' , org_pledge: 'عهد الجهة', pair: 'عهود متقابلة', org_pair: 'عهود مع منسوبين', org_after: 'قالت بعد سنة' };
 export const PRIVACY_ORG_JOURNEY_AR = ['لا فصل من أقل من 5 أشخاص — دائمًا', 'أعداد وحقب فقط؛ لا أسماء ولا نصوص أفراد', 'الجهة تُقارَن بسنتها السابقة لا بجهة أخرى', 'ما يُنشر موقَّع وقابل للإلغاء بنقرة', 'الذكاء الاصطناعي يقترح المقدمة من كلمات الجهة وحدها ولا يحفظها'];
 
 export const quarterOf = (iso: string) => { const d = new Date(iso); return `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}`; };
@@ -57,7 +57,7 @@ const fmtD = (iso: string) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-
 const nPeople = (n: number) => n === 1 ? 'شخص واحد' : n === 2 ? 'شخصان' : n <= 10 ? `${n} أشخاص` : `${n} شخصًا`;
 const topTheme = (evs: OrgEvent[]) => { const m = new Map<string, number>(); for (const e of evs) if (e.theme) m.set(e.theme, (m.get(e.theme) || 0) + 1); let best: string | null = null, bn = 0; m.forEach((n, t) => { if (n > bn) { bn = n; best = t; } }); return best ? themeLabel(best) : null; };
 
-const WHAT: Record<Exclude<OrgChapterKind, 'charter' | 'twinning' | 'contract' | 'org_pledge'>, (n: number, theme: string | null) => [string, string]> = {
+const WHAT: Record<Exclude<OrgChapterKind, 'charter' | 'twinning' | 'contract' | 'org_pledge' | 'org_after'>, (n: number, theme: string | null) => [string, string]> = {
   daily: n => [`${nPeople(n)} واجهوا أول موقف لهم`, `في «كل يوم مهارة» كتب ${nPeople(n)} من منسوبيكم — لأول مرة — كيف يتصرّفون في موقف حقيقي، بكلماتهم لا بخيارات جاهزة.`],
   mission: n => [`${nPeople(n)} نقلوا التعلّم إلى قلب العمل`, `مهام أكّد المشرفون أنها حدثت فعلًا لـ${nPeople(n)} — الأثر هنا شهادة مشرف لا تقرير متدرب.`],
   council: n => [`${nPeople(n)} جلسوا مع أقران من جهات أخرى`, `وقّع ${nPeople(n)} ميثاق مجلس أقران وجلسوا إلى طاولة لا تضم جهتهم وحدها.`],
