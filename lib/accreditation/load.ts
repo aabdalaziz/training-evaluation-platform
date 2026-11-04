@@ -5,8 +5,10 @@
  *  - المعايير من `portal_accred_standards` (قابلة للتعديل من الإدارة) وإلا من السجلّ المدمج.
  *  - الفقرات في `portal_accred_narratives`: لا تُحفظ إلا موقَّعة. خريطة الكفايات في `portal_accred_skill_maps`.
  */
-import { DEFAULT_STANDARDS, EVIDENCE_RULES, K_MIN, coverageOf, localNarrative, narrativePrompt, parseNarrative, cleanNarrativeText, narrativeMissing, cleanSkillMap, skillMapCoverage, tpsGeneral, subsOf, topsOf, eligibilityOf, fileScore, type StandardRow, type Evidence, type Narrative, type Framework, type SkillMap } from './registry';
+import { DEFAULT_STANDARDS, EVIDENCE_RULES, K_MIN, coverageOf, localNarrative, narrativePrompt, parseNarrative, cleanNarrativeText, narrativeMissing, cleanSkillMap, skillMapCoverage, tpsGeneral, subsOf, topsOf, eligibilityOf, fileScore, evidenceTimeline, ageingEvidence, snapshotBody, snapshotCode, canonicalJson, standardsCanonical, freezeMissing, coverageDiff, cleanNote, snapshotPublicView, type StandardRow, type Evidence, type Narrative, type Framework, type SkillMap } from './registry';
+import { createHash } from 'crypto';
 import { myScope, templateFor, unitsOf, type Me } from '../reports/load';
+import { filePublicView } from './registry';
 import { runAi, aiUsage, logAi } from '../ai/athar';
 
 async function safe<X>(q: PromiseLike<{ data: any; error: any }>, fb: X): Promise<X> { try { const { data, error } = await q; return error || data === null || data === undefined ? fb : (data as X); } catch { return fb; } }
@@ -81,11 +83,13 @@ export async function skillMapOf(db: any, programId: string): Promise<SkillMap> 
 export async function fileFor(db: any, me: Me, programId: string) {
   if (!(await canSeeProgram(db, me, programId))) return { ok: false as const, error: 'غير مصرّح' };
   const program = await safe<any>(db.from('programs').select('id,name_ar,program_type,start_date,end_date,organization_id').eq('id', programId).maybeSingle(), null); if (!program) return { ok: false as const, error: 'البرنامج غير موجود' };
-  const [rows, nars, map, tpl] = await Promise.all([standardsRows(db), narrativesOf(db, programId), skillMapOf(db, programId), templateFor(db, program)]);
+  const [rows, nars, map, tpl, snaps, org] = await Promise.all([standardsRows(db), narrativesOf(db, programId), skillMapOf(db, programId), templateFor(db, program), snapshotsOf(db, programId), program.organization_id ? safe<any>(db.from('organizations').select('id,name_ar,name').eq('id', String(program.organization_id)).maybeSingle(), null) : Promise.resolve(null)]);
   const { evidence, facts } = await collectEvidence(db, program); const tps = tpsGeneral(rows); const smc = skillMapCoverage(map, tps.map(t => t.code));
   if (smc.n > 0) evidence.push({ id: 'skill_map:1', kind: 'skill_map', codes: ['1.1'], label_ar: `كفايات البرنامج تغطّي ${smc.n} من ${smc.total} معايير المعلّم العامة`, at: null, href: '#tps', n: smc.n });
-  const signed = new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code)); const cov = coverageOf(rows, evidence, signed);
-  return { ok: true as const, program: { id: String(program.id), name_ar: String(program.name_ar || ''), program_type: program.program_type || null }, standards: rows.filter(r => r.framework === 'pas'), tps, coverage: cov, score: fileScore(cov), eligibility: eligibilityOf({ program_type: program.program_type || null, ...facts }), narratives: nars, skill_map: map, skills: tpl.skills, skill_map_coverage: smc, evidence_n: evidence.length, can_edit: true, updated_at: nowIso() };
+  const signed = new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code)); const cov = coverageOf(rows, evidence, signed); const timeline = evidenceTimeline(evidence); const ageing = ageingEvidence(evidence);
+  const cur = filePublicView({ program_ar: String(program.name_ar || ''), cov, narratives: nars, updated_at: null }); const last = snaps[0] || null;
+  return { ok: true as const, program: { id: String(program.id), name_ar: String(program.name_ar || ''), program_type: program.program_type || null, org_ar: org ? String(org.name_ar || org.name || '') : null, organization_id: program.organization_id ? String(program.organization_id) : null }, standards: rows.filter(r => r.framework === 'pas'), tps, coverage: cov, score: fileScore(cov), eligibility: eligibilityOf({ program_type: program.program_type || null, ...facts }), narratives: nars, skill_map: map, skills: tpl.skills, skill_map_coverage: smc, evidence_n: evidence.length, can_edit: true, updated_at: nowIso(),
+    timeline, ageing: ageing.map(e => ({ id: e.id, kind: e.kind, label_ar: e.label_ar, at: e.at, codes: e.codes, href: e.href })), snapshots: snaps.map(x => ({ code: x.code, frozen_at: x.frozen_at, frozen_name: x.frozen_name, score_met: x.score_met, score_total: x.score_total, eligible: x.eligible, note_ar: x.note_ar || '' })), freeze_missing: freezeMissing(cov, nars), diff: last ? coverageDiff(last.body, cur) : null, _cov: cov, _facts: facts };
 }
 export async function draftNarrative(db: any, me: Me, b: { program_id: string; code: unknown; local?: boolean }): Promise<{ ok: true; text_ar: string; source: 'local' | 'ai' } | { ok: false; error: string }> {
   const f = await fileFor(db, me, b.program_id); if (!f.ok) return f; const code = String(b.code || ''); const std = f.standards.find(s => s.code === code); if (!std) return { ok: false, error: 'معيار غير معروف' };
@@ -113,7 +117,54 @@ export async function adminFiles(db: any, me: Me) {
   if (!me.staff) return { ok: false as const, error: 'غير مصرّح' };
   const progs = await safe<any[]>(db.from('programs').select('id,name_ar,program_type,start_date,end_date,organization_id').eq('program_type', 'diploma').order('start_date', { ascending: false }).limit(40), []);
   const rows = await standardsRows(db); const out: any[] = [];
-  for (const p of progs.slice(0, 12)) { const [{ evidence, facts }, nars] = await Promise.all([collectEvidence(db, p), narrativesOf(db, String(p.id))]); const cov = coverageOf(rows, evidence, new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code))); out.push({ id: String(p.id), name_ar: String(p.name_ar || ''), score: fileScore(cov), standards: cov.map(c => ({ code: c.code, pct: c.pct, met: c.met, total: c.subs.length })), eligible: eligibilityOf({ program_type: p.program_type, ...facts }).every(x => x.ok), signed: nars.filter(n => n.signed_at).length }); }
+  const orgIds = Array.from(new Set(progs.map(p => String(p.organization_id || '')).filter(Boolean))); const orgs = orgIds.length ? await safe<any[]>(db.from('organizations').select('id,name_ar,name').in('id', orgIds).limit(50), []) : []; const orgName = (id: string) => { const o = orgs.find(x => String(x.id) === id); return o ? String(o.name_ar || o.name || '') : ''; };
+  for (const p of progs.slice(0, 12)) { const [{ evidence, facts }, nars, snaps] = await Promise.all([collectEvidence(db, p), narrativesOf(db, String(p.id)), snapshotsOf(db, String(p.id))]); const cov = coverageOf(rows, evidence, new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code))); out.push({ id: String(p.id), name_ar: String(p.name_ar || ''), organization_id: p.organization_id ? String(p.organization_id) : null, org_ar: p.organization_id ? orgName(String(p.organization_id)) : '', score: fileScore(cov), standards: cov.map(c => ({ code: c.code, pct: c.pct, met: c.met, total: c.subs.length })), eligible: eligibilityOf({ program_type: p.program_type, ...facts }).every(x => x.ok), signed: nars.filter(n => n.signed_at).length, snapshots: snaps.length, last_code: snaps[0]?.code || null, last_at: snaps[0]?.frozen_at || null, ageing: ageingEvidence(evidence).length }); }
+  const byOrg = new Map<string, any>(); for (const f of out) { const k = f.organization_id || '-'; const g = byOrg.get(k) || { organization_id: f.organization_id, org_ar: f.org_ar || 'بلا جهة', programs: 0, pct_sum: 0, frozen: 0, ageing: 0, per: {} as Record<string, number[]> }; g.programs++; g.pct_sum += f.score.pct; g.frozen += f.snapshots; g.ageing += f.ageing; for (const s of f.standards) (g.per[s.code] ||= []).push(s.pct); byOrg.set(k, g); }
+  const orgs_rollup = Array.from(byOrg.values()).map(g => { const per = Object.entries(g.per).map(([code, arr]) => ({ code, avg: Math.round((arr as number[]).reduce((a, b) => a + b, 0) / (arr as number[]).length) })); return { organization_id: g.organization_id, org_ar: g.org_ar, programs: g.programs, avg_pct: Math.round(g.pct_sum / g.programs), frozen: g.frozen, ageing: g.ageing, weakest: per.length ? [...per].sort((a, b) => a.avg - b.avg)[0] : null }; }).sort((a, b) => b.programs - a.programs);
   const weakest = topsOf(rows, 'pas').map(t => ({ code: t.code, title_ar: t.title_ar, avg: out.length ? Math.round(out.reduce((a, f) => a + (f.standards.find((s: any) => s.code === t.code)?.pct || 0), 0) / out.length) : 0 })).sort((a, b) => a.avg - b.avg);
-  return { ok: true as const, files: out, weakest, standards: rows };
+  return { ok: true as const, files: out, weakest, standards: rows, orgs: orgs_rollup };
+}
+
+/* ───────── P48-ب: النسخ المختومة ───────── */
+const SNAP_COLS = 'id,program_id,organization_id,code,sha256,standards_sha,body,score_met,score_total,eligible,frozen_by,frozen_name,frozen_at,note_ar';
+const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+export async function snapshotsOf(db: any, programId: string): Promise<any[]> { return safe<any[]>(db.from('portal_accred_snapshots').select(SNAP_COLS).eq('program_id', programId).order('frozen_at', { ascending: false }).limit(20), []); }
+export async function freezeFile(db: any, me: Me, b: { program_id: string; note_ar?: unknown }): Promise<{ ok: true; snapshot: any; diff: any } | { ok: false; error: string; missing?: string[] }> {
+  const f = await fileFor(db, me, b.program_id); if (!f.ok) return f;
+  if (f.freeze_missing.length) return { ok: false, error: 'لا يُجمَّد ملف بلا صوت إنسان في معاييره الأربعة', missing: f.freeze_missing };
+  const frozen_at = nowIso(); const note_ar = cleanNote(b.note_ar); const rows = await standardsRows(db);
+  const body = snapshotBody({ program_ar: f.program.name_ar, org_ar: f.program.org_ar, program_type: f.program.program_type, cov: f._cov, narratives: f.narratives, eligibility: f.eligibility, timeline: f.timeline, standards: rows, skill_map_coverage: f.skill_map_coverage, frozen_at, note_ar });
+  const standards_sha = sha256(standardsCanonical(rows)); const digest = sha256(canonicalJson({ body, standards_sha }));
+  let code = ''; for (let i = 0; i < 6; i++) { const c = snapshotCode(); const ex = await safe<any[]>(db.from('portal_accred_snapshots').select('id').eq('code', c).limit(1), []); if (!ex.length) { code = c; break; } } if (!code) return { ok: false, error: 'تعذّر توليد رمز' };
+  const row = { program_id: b.program_id, organization_id: f.program.organization_id, code, sha256: digest, standards_sha, body, score_met: f.score.met, score_total: f.score.total, eligible: f.eligibility.every(e => e.ok), frozen_by: me.id, frozen_name: me.name || me.email, frozen_at, note_ar };
+  const { data, error } = await db.from('portal_accred_snapshots').insert(row).select(SNAP_COLS).maybeSingle(); if (error) return { ok: false, error: error.message };
+  const prev = f.snapshots[0] ? (await snapshotsOf(db, b.program_id)).find(x => x.code === f.snapshots[0].code) : null;
+  return { ok: true, snapshot: { code, frozen_at, frozen_name: row.frozen_name, score_met: row.score_met, score_total: row.score_total, eligible: row.eligible, note_ar, sha256: digest, id: data?.id || null }, diff: prev ? coverageDiff(prev.body, body) : null };
+}
+/** صفحة التحقّق العامة: الصفّ + إعادة حساب البصمة لحظيًّا من الجسم المحفوظ */
+export async function verifySnapshot(db: any, code: string) {
+  const r = await safe<any>(db.from('portal_accred_snapshots').select(SNAP_COLS).eq('code', code.toUpperCase()).maybeSingle(), null); if (!r) return null;
+  const intact = sha256(canonicalJson({ body: r.body, standards_sha: r.standards_sha })) === r.sha256; const all = await snapshotsOf(db, String(r.program_id)); const i = all.findIndex(x => x.code === r.code); const prev = i >= 0 ? all[i + 1] : null;
+  return { ...snapshotPublicView(r, intact), diff: prev ? coverageDiff(prev.body, r.body) : null, superseded: i > 0 ? { code: all[0].code, frozen_at: all[0].frozen_at } : null };
+}
+/** الشريط العام على صفحة البرنامج — فقط إذا وُجدت نسخة مختومة (قرار التسليم = قرار الإعلان) */
+export async function publicStrip(db: any, programId: string) {
+  const s = (await snapshotsOf(db, programId))[0]; if (!s) return null;
+  return { code: s.code, frozen_at: s.frozen_at, met: s.score_met, total: s.score_total, pct: s.score_total ? Math.round((s.score_met / s.score_total) * 100) : 0, eligible: s.eligible, standards: ((s.body?.standards || []) as any[]).map(x => ({ code: x.code, title_ar: x.title_ar, pct: x.pct, met: x.met })), n: 1 + Math.max(0, (await snapshotsOf(db, programId)).length - 1) };
+}
+/** تجميع الجهة: برامجها المنتهية بمؤهل (بالملكية أو بالتسجيل) — أرقام فقط */
+export async function orgRollup(db: any, orgId: string) {
+  const own = await safe<any[]>(db.from('programs').select('id,name_ar,program_type,start_date,organization_id').eq('organization_id', orgId).limit(60), []);
+  const ens = await safe<any[]>(db.from('portal_enrollments').select('program_id').eq('organization_id', orgId).eq('status', 'approved').limit(2000), []); const extra = Array.from(new Set(ens.map(e => String(e.program_id)))).filter(id => !own.some(p => String(p.id) === id)).slice(0, 20);
+  const more = extra.length ? await safe<any[]>(db.from('programs').select('id,name_ar,program_type,start_date,organization_id').in('id', extra).limit(20), []) : [];
+  const progs = [...own, ...more].filter(p => p.program_type === 'diploma').slice(0, 12); const rows = await standardsRows(db); const files: any[] = [];
+  for (const p of progs) { const [{ evidence }, nars, snaps] = await Promise.all([collectEvidence(db, p), narrativesOf(db, String(p.id)), snapshotsOf(db, String(p.id))]); const cov = coverageOf(rows, evidence, new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code))); const sc = fileScore(cov); files.push({ id: String(p.id), name_ar: String(p.name_ar || ''), met: sc.met, total: sc.total, pct: sc.pct, standards: cov.map(c => ({ code: c.code, pct: c.pct })), snapshots: snaps.length, last_code: snaps[0]?.code || null, last_at: snaps[0]?.frozen_at || null, ageing: ageingEvidence(evidence).length }); }
+  const tops = topsOf(rows, 'pas'); const per = tops.map(t => ({ code: t.code, title_ar: t.title_ar, avg: files.length ? Math.round(files.reduce((a, f) => a + (f.standards.find((s: any) => s.code === t.code)?.pct || 0), 0) / files.length) : 0 }));
+  return { programs: files.length, avg_pct: files.length ? Math.round(files.reduce((a, f) => a + f.pct, 0) / files.length) : 0, frozen: files.reduce((a, f) => a + f.snapshots, 0), ageing: files.reduce((a, f) => a + f.ageing, 0), weakest: per.length ? [...per].sort((a, b) => a.avg - b.avg)[0] : null, per_standard: per, files };
+}
+/** «جيب ر2»: سطر الملف لكل برنامج في نطاق المستخدم — للعمل بلا اتصال */
+export async function pocketAccred(db: any, me: Me) {
+  const sc = await myScope(db, me); const out: any[] = [];
+  for (const p of sc.programs.filter(p => p.program_type === 'diploma').slice(0, 6)) { const snaps = await snapshotsOf(db, String(p.id)); const s = snaps[0]; out.push({ program_id: String(p.id), name_ar: p.name_ar, met: s?.score_met ?? null, total: s?.score_total ?? null, code: s?.code || null, frozen_at: s?.frozen_at || null, snapshots: snaps.length }); }
+  return out;
 }

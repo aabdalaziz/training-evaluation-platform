@@ -9,6 +9,7 @@
  *  POST {action:'installed'|'activated'|'push_action'} → أحداث نبض (بلا هوية عند عدم وجود جلسة؛ push_action يُعرَّف بعنوان الاشتراك)
  */
 import { NextResponse } from 'next/server';
+import { pocketAccred } from '../../../lib/accreditation/load';
 import { createClient } from '@supabase/supabase-js';
 import { runAi, logAi } from '../../../lib/ai/athar';
 import { normalizeSite } from '../../../lib/portal/open';
@@ -71,7 +72,7 @@ export async function GET(req: Request) {
     .sort((a: any, b: any) => Number(b.approved) - Number(a.approved) || b.level - a.level);
   const issuances = (iss || []) as any[]; const snapshot = issuances.find(r => r.kind === 'snapshot' && !r.revoked_at && (!r.expires_at || new Date(r.expires_at) > new Date())) || null;
   return NextResponse.json({ success: true, generated_at: new Date().toISOString(), site, did, did_url: `${site}/.well-known/did.json`, configured: !!signer, fingerprint: signer ? keyFingerprint(signer.multibase) : null,
-    profile: { name: user.name, email: user.email, staff: user.staff }, levels, credentials: creds || [], issuances, snapshot: snapshot ? { code: snapshot.code, issued_at: snapshot.issued_at, expires_at: snapshot.expires_at } : null, version: LIMITS });
+    profile: { name: user.name, email: user.email, staff: user.staff }, levels, credentials: creds || [], issuances, snapshot: snapshot ? { code: snapshot.code, issued_at: snapshot.issued_at, expires_at: snapshot.expires_at } : null, version: LIMITS, accreditation: await pocketAccred(db, { id: user.id, email: user.email, name: user.name, staff: user.staff, admin: false }).catch(() => []) });   // P48-ب «جيب ر2»
 }
 
 /* ---------- مزامنة الصندوق ---------- */

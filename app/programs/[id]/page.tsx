@@ -24,7 +24,8 @@ import { ProgramBorn } from '../../components/Needs';   // P44 «وُلد من �
 import { ProgramRehearsals } from '../../components/Rehearsal';   // P45 «بروفات مفتوحة» لزملاء البرنامج
 import dynamic from 'next/dynamic';
 const ProgramUnitsStrip = dynamic(() => import('../../components/DiplomaReport').then(m => m.ProgramUnitsStrip), { ssr: false });
-const ProgramReviewStrip = dynamic(() => import('../../components/ProgramReview').then(m => m.ProgramReviewStrip), { ssr: false });   // P47: «هذا البرنامج تغيّر N مرة بسبب دفعاته»   // P46 ر4 «خريطة الوحدات» للدبلوم
+const ProgramReviewStrip = dynamic(() => import('../../components/ProgramReview').then(m => m.ProgramReviewStrip), { ssr: false });
+const AccredStrip = dynamic(() => import('../../components/Accreditation').then(m => m.AccredStrip), { ssr: false });   // P48-ب: شريط ملف الاعتماد — بعد التجميد فقط   // P47: «هذا البرنامج تغيّر N مرة بسبب دفعاته»   // P46 ر4 «خريطة الوحدات» للدبلوم
 
 export default function ProgramPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -126,6 +127,7 @@ function Inner() {
           <ProgramResources programId={p.id} lang={lang} />
           {p.program_type === 'diploma' && <ProgramUnitsStrip programId={p.id} />}
           <ProgramReviewStrip programId={p.id} />
+          <AccredStrip programId={p.id} />
           <ProgramAfter programId={p.id} lang={lang} />
           {loaded && <ProgramBorn programId={p.id} token={bornToken} onState={setPrio} lang={lang} />}
           {loaded && <ProgramRehearsals programId={p.id} lang={lang} />}

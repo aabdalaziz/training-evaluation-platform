@@ -157,3 +157,56 @@ export function skillMapCoverage(map: SkillMap, tpsCodes: string[]) { const cove
 export function filePublicView(v: { program_ar: string; cov: StandardCoverage[]; narratives: Narrative[]; updated_at: string | null }) {
   const sc = fileScore(v.cov); return { program_ar: v.program_ar, met: sc.met, total: sc.total, pct: sc.pct, standards: v.cov.map(s => ({ code: s.code, title_ar: s.title_ar, met: s.met, partial: s.partial, missing: s.missing, manual: s.manual, pct: s.pct, subs: s.subs.map(x => ({ code: x.code, state: x.state, state_ar: COVERAGE_AR[x.state], n: x.n })) })), narratives: v.narratives.filter(n => n.signed_at).map(n => ({ framework: n.framework, code: n.code, text_ar: n.text_ar, signed_at: String(n.signed_at || '').slice(0, 10) })), updated_at: v.updated_at };
 }
+
+/* ═════════ P48-ب — التجميد والتحقّق والتجميع ═════════ */
+export const P48B_NAMES_AR = {
+  freeze: 'جمِّد نسخة للمراجِع', snapshot: 'نسخة مختومة', snapshots: 'النسخ المختومة', official: 'نسخة معتمَدة من ملف الدراسة الذاتية (قابلة للتحقّق)', verify: 'التحقّق من ملف اعتماد',
+  clock: 'ساعة المراجِع', ageing: 'دليل سيشيخ', ageing_card: 'أدلة تحتاج تجديدًا', note: 'كلمة إلى المراجِع', diff: 'ما تغيّر منذ آخر تجميد', rollup: 'جامعة أَثَر في صورة واحدة', strip: 'ملف الاعتماد',
+  intact: 'مطابق للأصل', tampered: 'غير مطابق — راجع الطاقم', delivery: 'شهادة تسليم',
+} as const;
+export const NOTE_MAX = 300; export const AGE_MONTHS = 12; export const SNAPSHOT_PREFIX = 'A';
+const SNAP_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export function snapshotCode(rnd: () => number = Math.random): string { let s = SNAPSHOT_PREFIX; for (let i = 0; i < 9; i++) s += SNAP_ALPHABET[Math.floor(rnd() * SNAP_ALPHABET.length)]; return s; }
+export const cleanNote = (v: unknown) => S(v, NOTE_MAX);
+/** JSON قانوني: مفاتيح مرتّبة في كل مستوى — البصمة تُحسب عليه لا على HTML */
+export function canonicalJson(v: unknown): string {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v === undefined ? null : v);
+  if (Array.isArray(v)) return `[${v.map(canonicalJson).join(',')}]`;
+  const o = v as Record<string, unknown>; return `{${Object.keys(o).filter(k => o[k] !== undefined).sort().map(k => `${JSON.stringify(k)}:${canonicalJson(o[k])}`).join(',')}}`;
+}
+/** شروط التجميد: فقرة موقَّعة لكل معيار رئيس */
+export function freezeMissing(cov: StandardCoverage[], narratives: Narrative[]): string[] {
+  const signed = new Set(narratives.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code));
+  return cov.filter(s => !signed.has(s.code)).map(s => `المعيار ${s.code} «${s.title_ar}» بلا فقرة موقَّعة`);
+}
+export type TimelineItem = { at: string | null; kind: EvidenceKind; kind_ar: string; label_ar: string; codes: string[]; top: string; ageing: boolean };
+const monthsBetween = (a: Date, b: Date) => (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+export const isAgeing = (at: string | null, now = new Date()) => !!at && monthsBetween(new Date(String(at).slice(0, 10) + 'T00:00:00Z'), now) >= AGE_MONTHS;
+/** «ساعة المراجِع»: الأدلة مرتّبة زمنيًّا (المؤرَّخة أولًا تصاعديًّا ثم غير المؤرَّخة) مع علامة الشيخوخة */
+export function evidenceTimeline(evidence: Evidence[], now = new Date()): TimelineItem[] {
+  const seen = new Set<string>(); const out: TimelineItem[] = [];
+  for (const e of evidence) { if (seen.has(e.id)) continue; seen.add(e.id); out.push({ at: e.at, kind: e.kind, kind_ar: EVIDENCE_KIND_AR[e.kind], label_ar: e.label_ar, codes: e.codes, top: (e.codes[0] || '').split('.')[0], ageing: isAgeing(e.at, now) }); }
+  return out.sort((a, b) => (a.at && b.at ? a.at.localeCompare(b.at) : a.at ? -1 : b.at ? 1 : 0));
+}
+export const ageingEvidence = (evidence: Evidence[], now = new Date()) => evidence.filter(e => isAgeing(e.at, now));
+/** جسم النسخة المختومة — كل ما يراه المراجِع، بلا أسماء متدرّبين ولا روابط داخلية */
+export function snapshotBody(v: { program_ar: string; org_ar: string | null; program_type: string | null; cov: StandardCoverage[]; narratives: Narrative[]; eligibility: { key: string; ok: boolean; text_ar: string }[]; timeline: TimelineItem[]; standards: StandardRow[]; skill_map_coverage: { n: number; total: number }; frozen_at: string; note_ar: string }) {
+  const pub = filePublicView({ program_ar: v.program_ar, cov: v.cov, narratives: v.narratives, updated_at: v.frozen_at });
+  return { ...pub, org_ar: v.org_ar, program_type: v.program_type, eligibility: v.eligibility, timeline: v.timeline.map(t => ({ at: t.at, kind: t.kind, kind_ar: t.kind_ar, label_ar: t.label_ar, codes: t.codes, ageing: t.ageing })), ageing_n: v.timeline.filter(t => t.ageing).length,
+    standards: pub.standards.map(s => ({ ...s, text_ar: v.standards.find(r => r.framework === 'pas' && r.code === s.code)?.text_ar || '', subs: s.subs.map(x => ({ ...x, title_ar: v.standards.find(r => r.framework === 'pas' && r.code === x.code)?.title_ar || '' })) })),
+    skill_map_coverage: v.skill_map_coverage, frozen_at: v.frozen_at, note_ar: v.note_ar };
+}
+/** بصمة نصوص المعايير (إطار pas) — تُختم مع النسخة */
+export const standardsCanonical = (rows: StandardRow[]) => canonicalJson(rows.filter(r => r.framework === 'pas').map(r => ({ code: r.code, title_ar: r.title_ar, text_ar: r.text_ar })).sort((a, b) => a.code.localeCompare(b.code)));
+export type CoverageDiff = { improved: { code: string; from: Coverage; to: Coverage }[]; regressed: { code: string; from: Coverage; to: Coverage }[]; met_from: number; met_to: number };
+const RANK: Record<Coverage, number> = { missing: 0, manual: 0, partial: 1, met: 2 };
+/** «ما تغيّر منذ آخر تجميد»: مقارنة حالات المعايير الفرعية بين جسمين */
+export function coverageDiff(prev: { standards: { subs: { code: string; state: Coverage }[] }[]; met: number } | null, cur: { standards: { subs: { code: string; state: Coverage }[] }[]; met: number }): CoverageDiff | null {
+  if (!prev) return null; const p = new Map(prev.standards.flatMap(s => s.subs).map(x => [x.code, x.state])); const d: CoverageDiff = { improved: [], regressed: [], met_from: prev.met, met_to: cur.met };
+  for (const x of cur.standards.flatMap(s => s.subs)) { const from = p.get(x.code); if (!from || from === x.state) continue; (RANK[x.state] > RANK[from] ? d.improved : d.regressed).push({ code: x.code, from, to: x.state }); }
+  return d;
+}
+/** عرض النسخة للعامة: الجسم + البيانات الوصفية (الموقِّع بصفته المهنية فقط) */
+export function snapshotPublicView(r: { code: string; sha256: string; standards_sha: string; body: any; frozen_name: string | null; frozen_at: string; score_met: number; score_total: number; eligible: boolean; note_ar: string | null }, intact: boolean) {
+  return { code: r.code, sha256: r.sha256, standards_sha: r.standards_sha, standards_sha_short: String(r.standards_sha || '').slice(0, 8), intact, frozen_name: r.frozen_name, frozen_at: r.frozen_at, score_met: r.score_met, score_total: r.score_total, eligible: r.eligible, note_ar: r.note_ar || '', ...(r.body || {}) };
+}

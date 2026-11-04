@@ -92,3 +92,4 @@ import './p46r4b.test';
 import './p47.test';
 import './p47b.test';
 import './p48.test';
+import './p48b.test';

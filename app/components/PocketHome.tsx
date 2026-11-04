@@ -53,6 +53,7 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
           <p className="muted" data-testid="wallet-line">{offlineLine(bundle?.stale ? bundle.cachedAt : null, ob.online)}</p>
           <div className="lv">{b.levels.slice(0, 8).map(l => <span key={l.code}>{l.name_ar} <b>{LEVEL_NAME_AR[Math.round(l.level)] || l.level}</b>{l.approved ? ' ✓' : ''}</span>)}{!b.levels.length && <span>لا مستويات بعد</span>}</div>
           {b.issuances.filter(i => !i.revoked_at).slice(0, 6).map(i => <div className="row" key={i.id}><span>{i.kind === 'snapshot' ? 'لقطة قدرة' : (i.title_ar || 'شهادة')}</span><span style={{ fontFamily: 'monospace', fontSize: 12, color: '#475569' }}>{i.code}</span></div>)}
+          {(b as any).accreditation?.length > 0 && <div className="row" data-testid="wallet-accred" style={{ display: 'grid', gap: 4 }}>{(b as any).accreditation.map((a: any) => <span key={a.program_id} style={{ fontSize: 13 }}>ملف الاعتماد — {a.name_ar}: {a.code ? <><b>{a.met}/{a.total}</b> مستوفى · نسخة مختومة <span dir="ltr" style={{ fontFamily: 'monospace' }}>{a.code}</span></> : 'لم تُختم نسخة بعد'}</span>)}</div>}
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><Link href="/me/card" className="b g" style={{ textDecoration: 'none' }}>بطاقة قدرتي</Link><Link href="/me/twin" className="b x" style={{ textDecoration: 'none' }}>المحفظة الكاملة</Link></div>
         </>}
       </div>
