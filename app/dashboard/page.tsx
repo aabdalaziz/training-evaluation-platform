@@ -12,6 +12,8 @@ import { supabase } from '../../lib/supabase/client';
 import { REPORTS, REPORT_GROUPS } from '../../lib/reports/catalog';
 import { Icon, type IconName } from '../../lib/ui/icons';
 import NotificationBell from '../components/NotificationBell';
+import dynamic from 'next/dynamic';
+const EvalLinks = dynamic(() => import('../components/EvalLinks'), { ssr: false, loading: () => <div className="db-muted">تحميل مولّد الروابط…</div> });   /* P49 */
 import { AtharMark, useMyRoles, invalidateMyRoles } from '../components/Brand';
 import { sideRooms } from '../../lib/portal/rooms';
 import { BRAND } from '../../lib/portal/content';
@@ -540,15 +542,17 @@ export default function Dashboard() {
           <div className="db-content">
             <section className="db-kpis four">
               <Kpi icon="evaluations" label="تقييمات يومية" value={kAll.daily} sub="إجمالي" />
-              <Kpi icon="flag" label="تقييمات ختامية" value={kAll.final} sub="إجمالي" />
+              <Kpi icon="flag" label="ختامية + نهاية البرنامج" value={kAll.final + kAll.end} sub={`ختامي ${kAll.final} · نهاية برنامج ${kAll.end}`} />
               <Kpi icon="laptop" label="استطلاع التعلم عن بُعد" value={raw?.remoteResponses || 0} sub="استجابة" />
               <Kpi icon="star" label="المتوسط العام" value={kAll.responses ? kAll.mean.toFixed(2) : '—'} sub={`الهدف ${TARGET}`} />
             </section>
-            <div className="db-g3">
+            <div className="db-g3 db-g4">
               <FormCard icon="evaluations" title="الاستبيان اليومي" desc="يُعبأ بعد كل حصة تدريبية — يرتبط بالقاعة والمدرب تلقائيًا." href="/evaluate/daily" />
               <FormCard icon="flag" title="الاستبيان الختامي" desc="يُعبأ مرة واحدة في نهاية البرنامج ويشمل الخدمات والإقامة." href="/evaluate/final" />
+              <FormCard icon="check" title="استبيان نهاية البرنامج" desc="عام لأيّ برنامج: الدورة والمدرّب (ليكرت) + ثلاثة آراء + تقدير عام + ترشيح 0–10. بلا خدمات ولا إقامة." href="/evaluate/end" admin="/admin/templates" />
               <FormCard icon="laptop" title="استطلاع التعلم عن بُعد" desc="للطلاب عبر Teams — مجهول الهوية، ثنائي اللغة، بروابط لكل مجموعة/موعد." href="/survey/remote-learning" admin="/admin/management?tab=rooms" />
             </div>
+            <EvalLinks programs={programs as any} classrooms={(raw?.classrooms || []) as any} />
           </div>
         )}
 
@@ -757,7 +761,7 @@ const CSS = `
 .db-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .db-empty{color:var(--muted);font-weight:800;padding:26px 14px;text-align:center;background:var(--surface-2);border:1px dashed var(--line-2);border-radius:var(--r);font-size:13px}
 .db-g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.db-g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.db-g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.db-g4{grid-template-columns:repeat(4,1fr)}@media(max-width:1100px){.db-g4{grid-template-columns:1fr 1fr}}@media(max-width:640px){.db-g4{grid-template-columns:1fr}}
 /* status summary chips (programs view) */
 .db-pills{display:flex;gap:8px;flex-wrap:wrap}
 .db-pills .db-badge{background:var(--surface)!important;border:1px solid var(--line);color:var(--ink-2)!important;padding:5px 12px;font-size:12px;box-shadow:var(--shadow-sm)}

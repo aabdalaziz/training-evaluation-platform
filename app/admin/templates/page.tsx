@@ -33,7 +33,7 @@ export default function TemplatesPage() {
 
   async function load(keep?: string) {
     const [t, q, l, p] = await Promise.all([
-      db.from('evaluation_templates').select('id,kind,name_ar,name_en').limit(500),
+      db.from('evaluation_templates').select('id,kind,name_ar,name_en,is_default').limit(500),
       db.from('questions').select('id,template_id,kind,text_ar,text_en,section_ar,section_en,is_required,options,max_value,order_index,question_key').limit(5000),
       db.from('program_evaluation_templates').select('program_id,template_id,is_active'),
       db.from('programs').select('id,name_ar,status').order('name_ar'),
@@ -202,20 +202,20 @@ export default function TemplatesPage() {
         <div className="tp-card-head"><h2><Icon name="link" size={16} /> تغطية البرامج</h2><span>قالب واحد مفعّل لكل نوع — اختر من القائمة ليُحفظ فورًا</span></div>
         <div className="tp-scroll">
           <table className="tp-table">
-            <thead><tr><th>البرنامج</th><th>القالب اليومي</th><th>القالب الختامي</th><th>الحالة</th></tr></thead>
+            <thead><tr><th>البرنامج</th><th>القالب اليومي</th><th>القالب الختامي</th><th>نهاية البرنامج (عام)</th><th>الحالة</th></tr></thead>
             <tbody>
               {cov.map(c => (
                 <tr key={c.program.id} className={c.ok ? '' : 'gap'}>
                   <td><b>{c.program.name_ar}</b><small>{c.program.status || ''}</small></td>
-                  {(['DAILY', 'FINAL'] as TemplateKind[]).map(k => {
-                    const cur = k === 'DAILY' ? c.daily : c.final; const n = k === 'DAILY' ? c.dailyQuestions : c.finalQuestions;
+                  {(['DAILY', 'FINAL', 'END'] as TemplateKind[]).map(k => {
+                    const cur = k === 'DAILY' ? c.daily : k === 'FINAL' ? c.final : c.end; const n = k === 'DAILY' ? c.dailyQuestions : k === 'FINAL' ? c.finalQuestions : c.endQuestions;
                     return (
                       <td key={k}>
                         <select disabled={!canEdit || busy} value={cur?.id || ''} onChange={e => setProgramTemplate(c.program.id, k, e.target.value)}>
                           <option value="">— بلا قالب —</option>
                           {templates.filter(t => t.kind === k).map(t => <option key={t.id} value={t.id}>{templateName(t)}</option>)}
                         </select>
-                        <small className={cur && !n ? 'bad' : ''}>{cur ? `${n} سؤال` : 'غير مرتبط'}</small>
+                        <small className={cur && !n ? 'bad' : ''}>{cur ? `${n} سؤال${k === 'END' && (cur as any).is_default && !links.some(l => l.program_id === c.program.id && l.template_id === cur.id && l.is_active) ? ' · الافتراضي العام' : ''}` : 'غير مرتبط'}</small>
                       </td>
                     );
                   })}

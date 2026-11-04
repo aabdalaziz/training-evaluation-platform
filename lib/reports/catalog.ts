@@ -21,7 +21,7 @@ export type ReportDef = {
   audienceKey: 'leadership' | 'supervisor' | 'trainer';
   sections: SectionId[];
   /** default filter overrides when opening this report */
-  defaults?: { kind?: 'ALL' | 'DAILY' | 'FINAL'; compare?: boolean; preset?: string };
+  defaults?: { kind?: 'ALL' | 'DAILY' | 'FINAL' | 'END'; compare?: boolean; preset?: string };
 };
 
 export const AUDIENCES: { id: 'all' | ReportDef['audienceKey']; ar: string; en: string }[] = [

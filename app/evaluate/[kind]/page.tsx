@@ -4,11 +4,14 @@
  * الهوية البصرية الموحّدة (نفس أسلوب نموذج قياس الأثر): شعارات، ترويسة، أقسام مرقّمة، مقياس 1–5 بتسميات، عربي/إنجليزي.
  * منطق الحفظ كما هو: منع التكرار (اليومي: نفس البريد + القاعة + اليوم / النهائي: نفس البريد + البرنامج)، ثم evaluations + evaluation_answers.
  * يدعم ?program=<id>&classroom=<id> لاختيار البرنامج/القاعة مسبقًا (روابط بوابة المتدرب وQR).
+ * P49: /evaluate/end «استبيان نهاية البرنامج» (بلا خدمات/إقامة) · ?link=<رمز> «الرابط الذي لا يُخطئ»: بطاقة مقفلة بالبرنامج/الشعبة بلا قوائم، نافذة زمنية، link_id يُحفظ مع الاستجابة.
+ *      ليكرت END: «موافق بقوة»=5 … «غير موافق بقوة»=1 · NPS_10: 0–10 يُحفظ نصًّا حتى لا يُفسد متوسّطات 1–5.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
+import { kindFromPath, KIND_AR, KIND_EN, linkStateText, linkTitle, scopeText, pickTemplate, answerRow, LIKERT_AR, LIKERT_EN, NPS_MIN, NPS_MAX, type EvalLink, type LinkState } from '../../../lib/evaluation/links';
 
 const COUNTRIES = [
   ['+966', 'السعودية', 'Saudi Arabia'], ['+971', 'الإمارات', 'UAE'], ['+965', 'الكويت', 'Kuwait'], ['+974', 'قطر', 'Qatar'], ['+973', 'البحرين', 'Bahrain'], ['+968', 'عُمان', 'Oman'],
@@ -39,6 +42,8 @@ const STR = {
   privacy: ['تُستخدم بياناتك لأغراض الجودة فقط وتُعرض النتائج بشكل مجمّع.', 'Your data is used for quality purposes only; results are reported in aggregate.'],
   missingFields: ['يرجى استكمال الحقول التالية:', 'Please complete the following fields:'], missingQs: ['يرجى الإجابة عن الأسئلة الإلزامية التالية:', 'Please answer the following required questions:'],
   dupDaily: ['سجلاتنا توضح أنك قيّمت هذه الجلسة اليوم مسبقًا — شكرًا لك.', 'Our records show you already evaluated this session today — thank you.'],
+  endTitle: ['استبيان نهاية البرنامج', 'End-of-Program Survey'], dupEnd: ['لقد قدّمت استبيان نهاية هذا البرنامج مسبقًا — شكرًا لك.', 'You have already submitted the end-of-program survey — thank you.'],
+  locked: ['أنت تقيّم', 'You are evaluating'], lockedHint: ['فُتح هذا الاستبيان برابط مخصّص — لا حاجة لاختيار البرنامج.', 'Opened via a dedicated link — no need to choose the program.'], section: ['الشعبة', 'Section'], npsLow: ['0 = لن أرشّح أبدًا', '0 = not at all likely'], npsHigh: ['10 = أرشّح بقوة', '10 = extremely likely'],
   dupFinal: ['لقد قدّمت التقييم النهائي لهذا البرنامج مسبقًا — شكرًا لك.', 'You have already submitted the final evaluation for this program — thank you.'],
   thanks: ['شكرًا لك! تم استلام تقييمك', 'Thank you! Your evaluation was received'],
   thanksBody: ['ملاحظاتك تساعدنا في تطوير جودة البرامج التدريبية.', 'Your feedback helps us improve the quality of our training programs.'],
@@ -48,7 +53,8 @@ const STR = {
 
 export default function GuestEvaluationPage() {
   const params = useParams();
-  const kind = params.kind === 'final' ? 'final' : 'daily';
+  const kind = params.kind === 'final' ? 'final' : params.kind === 'end' ? 'end' : 'daily';   // P49: end
+  const kindLabel = kind === 'daily' ? 'DAILY' : kind === 'final' ? 'FINAL' : 'END';
   const db = supabase();
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
   const t = (k: keyof typeof STR) => STR[k][lang === 'en' ? 1 : 0];
@@ -67,13 +73,25 @@ export default function GuestEvaluationPage() {
   const [message, setMessage] = useState(''); const [missIds, setMissIds] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
   const [preClassroom, setPreClassroom] = useState('');
+  /* P49: وضع الرابط المقفل */
+  const [link, setLink] = useState<EvalLink | null>(null); const [linkStatus, setLinkStatus] = useState<LinkState | 'none' | 'invalid'>('none'); const [linkRooms, setLinkRooms] = useState<any[]>([]); const [linkProgram, setLinkProgram] = useState<any>(null);
 
   useEffect(() => {
     let on = true;
     (async () => {
       const sp = new URLSearchParams(window.location.search);
-      const preP = sp.get('program') || ''; setPreClassroom(sp.get('classroom') || '');
+      let preP = sp.get('program') || ''; setPreClassroom(sp.get('classroom') || '');
       if (sp.get('lang') === 'en') setLang('en');
+      const code = (sp.get('link') || '').trim();
+      if (code) {   // P49: حلّ الرمز أوّلًا — البرنامج والشعبة يأتيان من الرابط لا من المتدرّب
+        try {
+          const r = await fetch(`/api/evaluation-links?code=${encodeURIComponent(code)}`, { cache: 'no-store' }); const j = await r.json();
+          if (!on) return;
+          if (!j?.link) { setLinkStatus('invalid'); setLoading(false); return; }
+          setLink(j.link); setLinkStatus(j.state); setLinkRooms(j.classrooms || []); setLinkProgram(j.program || null); preP = j.link.program_id; if (j.classroom?.id) setPreClassroom(j.classroom.id); else if ((j.classrooms || []).length === 1) setPreClassroom(j.classrooms[0].id);
+          if (j.state !== 'open') { setLoading(false); return; }
+        } catch { if (on) { setLinkStatus('invalid'); setLoading(false); } return; }
+      }
       try {
         const { data: progs } = await db.from('programs').select('id,name_ar,name_en').order('name_ar');
         if (!on) return;
@@ -94,19 +112,23 @@ export default function GuestEvaluationPage() {
       const tIds = ((linkData || []) as any[]).map(l => l.template_id);
       let activeTemplateId: string | null = null;
       if (tIds.length) {
-        const { data: templates } = await db.from('evaluation_templates').select('id, kind').in('id', tIds).eq('kind', kind === 'daily' ? 'DAILY' : 'FINAL');
+        const { data: templates } = await db.from('evaluation_templates').select('id, kind').in('id', tIds).eq('kind', kindLabel);
         activeTemplateId = (templates as any[])?.[0]?.id || null;
+      }
+      if (!activeTemplateId && kind === 'end') {   // P49: الاستبيان العام — القالب الافتراضي لأيّ برنامج بلا قالب خاص
+        const { data: all } = await db.from('evaluation_templates').select('id,kind,is_default').eq('kind', 'END');
+        activeTemplateId = pickTemplate('END', programId, [], (all || []) as any[])?.id || null;
       }
       if (!on) return;
       if (!activeTemplateId) { setQLoading(false); return; }
       setTemplateId(activeTemplateId);
       const [qRes, cRes] = await Promise.all([
         db.from('questions').select('*').eq('template_id', activeTemplateId).order('order_index'),
-        db.from('classrooms').select('id,code,level').eq('program_id', programId).order('code'),
+        db.from('classrooms').select('id,code,level,section_name').eq('program_id', programId).order('code'),
       ]);
       if (!on) return;
       setQuestions(((qRes.data || []) as any[]).map(item => ({ ...item, options: Array.isArray(item.options) ? item.options : [] })));
-      const rooms = (cRes.data || []) as any[]; setClassrooms(rooms);
+      const rooms = link ? ((cRes.data || []) as any[]).filter(r => linkRooms.some(x => x.id === r.id)) : (cRes.data || []) as any[]; setClassrooms(rooms);   // P49: الشعب المسموحة تحت الرابط فقط
       setClassroomId(preClassroom && rooms.some(r => r.id === preClassroom) ? preClassroom : (rooms[0]?.id || ''));
       setAnswers({}); setMissIds([]); setQLoading(false);
     })();
@@ -133,13 +155,16 @@ export default function GuestEvaluationPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const missing: string[] = [];
-    if (!info.full_name.trim()) missing.push(t('name'));
+    const isEnd = kind === 'end';   // P49: نهاية البرنامج — البريد وحده إلزامي (منع التكرار)؛ الاسم والجوال والجنس اختيارية
+    if (!isEnd && !info.full_name.trim()) missing.push(t('name'));
     if (!info.email.trim()) missing.push(t('email'));
     const digits = (info.phone || '').replace(/\D/g, '');
-    if (!info.phone.trim() || digits.length < 7) missing.push(t('phone'));
-    if (!info.gender) missing.push(t('gender'));
+    if (!isEnd && (!info.phone.trim() || digits.length < 7)) missing.push(t('phone'));
+    if (isEnd && info.phone.trim() && digits.length < 7) missing.push(t('phone'));
+    if (!isEnd && !info.gender) missing.push(t('gender'));
     if (kind === 'final' && !info.accommodation_type) missing.push(t('accommodation'));
     if (kind === 'daily' && !classroomId) missing.push(t('classroom'));
+    if (link && kind !== 'daily' && classrooms.length > 1 && !classroomId) missing.push(t('section'));   // P49: رابط «كل الشعب» يطلب الشعبة
     if (missing.length) { setMessage(`${t('missingFields')}\n• ${missing.join('\n• ')}`); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     const requiredMissing = questions.filter(q => q.is_required && !hasAnswer(answers[q.id]));
     if (requiredMissing.length) {
@@ -153,25 +178,19 @@ export default function GuestEvaluationPage() {
       const fullPhone = `${info.country_dial}${digits}`;
       const ratings = ratingQuestions.map(q => Number(answers[q.id])).filter(x => !isNaN(x) && x > 0);
       const today = new Date().toISOString().slice(0, 10);
-      let dup = db.from('evaluations').select('id').eq('program_id', programId).eq('guest_email', guestEmail).eq('kind', kind === 'daily' ? 'DAILY' : 'FINAL');
+      let dup = db.from('evaluations').select('id').eq('program_id', programId).eq('guest_email', guestEmail).eq('kind', kindLabel);
       if (kind === 'daily') dup = dup.eq('classroom_id', classroomId).eq('evaluation_date', today);
       const { data: existing } = await dup.maybeSingle();
-      if (existing) { setSaving(false); setMessage(`⚠️ ${kind === 'daily' ? t('dupDaily') : t('dupFinal')}`); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+      if (existing) { setSaving(false); setMessage(`⚠️ ${kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}`); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
       const { data: ev, error } = await db.from('evaluations').insert({
-        program_id: programId, template_id: templateId, trainee_id: null, guest_email: guestEmail, guest_name: info.full_name.trim(), guest_phone: fullPhone, guest_gender: info.gender,
-        accommodation_type: kind === 'final' ? info.accommodation_type : null, classroom_id: kind === 'daily' ? classroomId : null, kind: kind === 'daily' ? 'DAILY' : 'FINAL', evaluation_date: today,
+        program_id: programId, template_id: templateId, trainee_id: null, guest_email: guestEmail, guest_name: info.full_name.trim() || null, guest_phone: info.phone.trim() ? fullPhone : null, guest_gender: info.gender || null,
+        accommodation_type: kind === 'final' ? info.accommodation_type : null, classroom_id: kind === 'daily' ? classroomId : (classroomId || null), kind: kindLabel, evaluation_date: today, link_id: link?.id || null,
         overall_rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null,
       } as any).select('id').single();
       if (error || !ev) throw error || new Error('تعذر حفظ التقييم');
       const rows = questions.map(q => {
         const value = answers[q.id] || '';
-        return {
-          evaluation_id: (ev as any).id, question_id: q.id,
-          rating_value: RATING_KINDS.includes(q.kind) ? Number(value) || null : null,
-          selected_option: ['SINGLE_CHOICE', 'YES_NO'].includes(q.kind) ? value || null : null,
-          selected_options: q.kind === 'MULTI_CHOICE' ? (Array.isArray(value) ? value : []) : [],
-          text_value: ['SHORT_TEXT', 'LONG_TEXT'].includes(q.kind) ? value || null : null,
-        };
+        return { evaluation_id: (ev as any).id, question_id: q.id, ...answerRow(q.kind, value) };   // P49: NPS_10 نصًّا
       });
       const { error: answerError } = await db.from('evaluation_answers').insert(rows as any);
       if (answerError) throw answerError;
@@ -186,7 +205,7 @@ export default function GuestEvaluationPage() {
     <header className="ev-card ev-head">
       <div className="ev-logos"><img src="/logos/upm.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /><img src="/logos/gate.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
       <div className="ev-kicker"><Icon name={kind === 'daily' ? 'calendar' : 'flag'} size={14} /> {t('kicker')}</div>
-      <h1>{kind === 'daily' ? t('dailyTitle') : t('finalTitle')}</h1>
+      <h1>{kind === 'daily' ? t('dailyTitle') : kind === 'end' ? t('endTitle') : t('finalTitle')}</h1>
       {program && <div className="ev-prog"><Icon name="book" size={14} /> {L(program.name_ar, program.name_en)}</div>}
       <p className="ev-intro">{t('intro')}</p>
       <div className="ev-langs"><button type="button" className={lang === 'ar' ? 'on' : ''} onClick={() => setLang('ar')}>العربية</button><button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button></div>
@@ -194,6 +213,23 @@ export default function GuestEvaluationPage() {
   );
 
   if (loading) return shell(<div className="ev-card ev-center ev-muted">{t('loading')}</div>);
+  if (linkStatus === 'invalid' || (link && linkStatus !== 'open')) return shell(<>
+    {header}
+    <section className="ev-card ev-center" data-testid="ev-link-closed" data-state={linkStatus}>
+      <div className="ev-ok off"><Icon name="clock" size={30} /></div>
+      <h2>{linkStatus === 'before' ? (lang === 'ar' ? 'لم يُفتح بعد' : 'Not open yet') : linkStatus === 'after' ? (lang === 'ar' ? 'أُغلق الرابط' : 'Link closed') : (lang === 'ar' ? 'انتهى هذا الرابط' : 'This link has expired')}</h2>
+      <p className="ev-muted" style={{ fontSize: 14 }}>{linkStateText(linkStatus === 'invalid' ? 'off' : linkStatus as LinkState, link, lang)}</p>
+      {linkProgram && <div className="ev-prog"><Icon name="book" size={14} /> {L(linkProgram.name_ar, linkProgram.name_en)}</div>}
+    </section>
+  </>);
+  const lockedRoom = link?.classroom_id ? (linkRooms.find(x => x.id === link.classroom_id) || classrooms.find(c => c.id === link.classroom_id) || null) : null;
+  const lockCard = link && linkProgram ? (
+    <section className="ev-card ev-lock" data-testid="ev-locked">
+      <div className="ev-lock-k"><Icon name="shield" size={14} /> {t('locked')}</div>
+      <div className="ev-lock-t">{linkTitle(link, L(linkProgram.name_ar, linkProgram.name_en), lockedRoom)}</div>
+      <div className="ev-lock-m">{L(linkProgram.name_ar, linkProgram.name_en)} · {lang === 'ar' ? KIND_AR[kindFromPath(kind)] : KIND_EN[kindFromPath(kind)]} · {scopeText(link, lockedRoom, lang)}{link.slot_ar ? ` · ${link.slot_ar}` : ''}</div>
+      <small className="ev-muted">{t('lockedHint')}</small>
+    </section>) : null;
   if (isSuccess) return shell(<>
     {header}
     <section className="ev-card ev-center">
@@ -209,24 +245,29 @@ export default function GuestEvaluationPage() {
   return shell(<>
     {header}
     <form onSubmit={submit} className="ev-form" noValidate>
+      {lockCard}
       {message && <div className={`ev-msg${message.startsWith('⚠️') ? ' warn' : ' bad'}`}><Icon name="alert" size={16} /><span>{message.replace(/^⚠️\s*/, '')}</span></div>}
 
       <section className="ev-card">
         <h2><span className="ev-n">1</span>{t('participant')}</h2>
         <div className="ev-grid">
-          {field(t('name'), true, <input value={info.full_name} onChange={e => setInfo({ ...info, full_name: e.target.value })} autoComplete="name" />)}
+          {field(t('name'), kind !== 'end', <input value={info.full_name} onChange={e => setInfo({ ...info, full_name: e.target.value })} autoComplete="name" />)}
           {field(t('email'), true, <input type="email" dir="ltr" placeholder="name@example.com" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })} autoComplete="email" />)}
-          {field(t('phone'), true, <div className="ev-phone" dir="ltr">
+          {field(t('phone'), kind !== 'end', <div className="ev-phone" dir="ltr">
             <select value={info.country_dial} onChange={e => setInfo({ ...info, country_dial: e.target.value })} aria-label="Country code">{COUNTRIES.map(c => <option key={c[0] + c[1]} value={c[0]}>{c[0]} · {lang === 'en' ? c[2] : c[1]}</option>)}</select>
             <input inputMode="numeric" placeholder="5xxxxxxxx" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value.replace(/[^\d]/g, '') })} autoComplete="tel-national" />
           </div>)}
           {field(t('nationality'), false, <input value={info.nationality} onChange={e => setInfo({ ...info, nationality: e.target.value })} />)}
-          {field(t('gender'), true, <div className="ev-seg">{[['ذكر', t('male')], ['أنثى', t('female')]].map(([v, l]) => <button type="button" key={v} className={info.gender === v ? 'on' : ''} onClick={() => setInfo({ ...info, gender: v })}>{l}</button>)}</div>)}
-          {kind === 'final' && field(t('accommodation'), true, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
+          {field(t('gender'), kind !== 'end', <div className="ev-seg">{[['ذكر', t('male')], ['أنثى', t('female')]].map(([v, l]) => <button type="button" key={v} className={info.gender === v ? 'on' : ''} onClick={() => setInfo({ ...info, gender: v })}>{l}</button>)}</div>)}
+          {kind === 'final' && !link && field(t('accommodation'), true, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
             <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'en' ? 'Al-Manar Hotel' : 'فندق المنار'}</option><option value="شقق الإسكان العزيزية">{lang === 'en' ? 'Al-Aziziyah Apartments' : 'شقق الإسكان العزيزية'}</option><option value="إقامة أخرى">{lang === 'en' ? 'Other accommodation' : 'إقامة أخرى'}</option>
           </select>)}
-          {field(t('program'), true, <select value={programId} onChange={e => setProgramId(e.target.value)}><option value="">{t('choose')}</option>{programs.map(p => <option key={p.id} value={p.id}>{L(p.name_ar, p.name_en)}</option>)}</select>, kind === 'final')}
-          {kind === 'daily' && field(t('classroom'), true, <select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{t('room')} {c.code}{c.level ? ` (${c.level})` : ''}</option>)}</select>)}
+          {kind === 'final' && link && field(t('accommodation'), false, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
+            <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'en' ? 'Al-Manar Hotel' : 'فندق المنار'}</option><option value="شقق الإسكان العزيزية">{lang === 'en' ? 'Al-Aziziyah Apartments' : 'شقق الإسكان العزيزية'}</option><option value="إقامة أخرى">{lang === 'en' ? 'Other accommodation' : 'إقامة أخرى'}</option>
+          </select>)}
+          {!link && field(t('program'), true, <select value={programId} onChange={e => setProgramId(e.target.value)}><option value="">{t('choose')}</option>{programs.map(p => <option key={p.id} value={p.id}>{L(p.name_ar, p.name_en)}</option>)}</select>, kind !== 'daily')}
+          {!link && kind === 'daily' && field(t('classroom'), true, <select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{t('room')} {c.code}{c.level ? ` (${c.level})` : ''}</option>)}</select>)}
+          {link && classrooms.length > 1 && field(t('section'), kind === 'daily', <select data-testid="ev-link-rooms" value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{c.section_name || `${t('room')} ${c.code}`}{c.level ? ` (${c.level})` : ''}</option>)}</select>, true)}
         </div>
       </section>
 
@@ -244,11 +285,17 @@ export default function GuestEvaluationPage() {
                 {lang === 'ar' && q.text_en && <div className="ev-qen">{q.text_en}</div>}
                 {RATING_KINDS.includes(q.kind) && (
                   <div className="ev-scale" style={{ gridTemplateColumns: `repeat(${q.max_value || 5}, minmax(0,1fr))` }}>
-                    {Array.from({ length: q.max_value || 5 }, (_, i) => i + 1).map(v => (
+                    {(q.kind === 'LIKERT_5' && kind === 'end' ? [5, 4, 3, 2, 1] : Array.from({ length: q.max_value || 5 }, (_, i) => i + 1)).map(v => (
                       <button key={v} type="button" className={val === String(v) ? 'on' : ''} onClick={() => set(q.id, String(v))} aria-pressed={val === String(v)}>
-                        {q.kind === 'STARS' ? <Icon name="star" size={14} /> : null}<b>{v}</b>{(q.max_value || 5) === 5 && <small>{SCALE_LABELS[v][lang === 'en' ? 1 : 0]}</small>}
+                        {q.kind === 'STARS' ? <Icon name="star" size={14} /> : null}<b>{v}</b>{(q.max_value || 5) === 5 && <small>{q.kind === 'LIKERT_5' && kind === 'end' ? (lang === 'en' ? LIKERT_EN : LIKERT_AR)[5 - v] : SCALE_LABELS[v][lang === 'en' ? 1 : 0]}</small>}
                       </button>
                     ))}
+                  </div>
+                )}
+                {q.kind === 'NPS_10' && (
+                  <div className="ev-nps" data-testid="ev-nps">
+                    <div className="ev-nps-row">{Array.from({ length: NPS_MAX - NPS_MIN + 1 }, (_, i) => NPS_MIN + i).map(v => <button key={v} type="button" className={val === String(v) ? 'on' : ''} onClick={() => set(q.id, String(v))} aria-pressed={val === String(v)} aria-label={String(v)}>{v}</button>)}</div>
+                    <div className="ev-nps-l"><small>{t('npsLow')}</small><small>{t('npsHigh')}</small></div>
                   </div>
                 )}
                 {['SINGLE_CHOICE', 'YES_NO'].includes(q.kind) && (
@@ -272,7 +319,7 @@ export default function GuestEvaluationPage() {
       {questions.length > 0 && (
         <section className="ev-card ev-submit">
           <div className="ev-progress"><div className="ev-bar"><i style={{ width: `${Math.round(100 * answered / Math.max(1, questions.length))}%` }} /></div><small className="ev-muted">{t('progress')} {answered} {t('of')} {questions.length} {t('questions')}</small></div>
-          <button className="ev-btn" disabled={saving}><Icon name="send" size={16} /> {saving ? t('sending') : t('submit')}</button>
+          <button type="submit" className="ev-btn" disabled={saving}><Icon name="send" size={16} /> {saving ? t('sending') : t('submit')}</button>
           <small className="ev-muted"><Icon name="shield" size={12} /> {t('privacy')}</small>
         </section>
       )}
@@ -281,6 +328,9 @@ export default function GuestEvaluationPage() {
 }
 
 const CSS = `
+.ev-lock{border:1.5px solid #c9a24b;background:linear-gradient(180deg,#fffbeb,#fff);display:grid;gap:4px}.ev-lock-k{font-size:12px;font-weight:900;color:#8a6a1f;display:inline-flex;gap:6px;align-items:center}.ev-lock-t{font-size:18px;font-weight:900;color:#0f2a4e}.ev-lock-m{font-size:13px;font-weight:700;color:#334155}
+.ev-nps-row{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}.ev-nps-row button{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:9px 0;font:inherit;font-weight:900;font-size:13px;color:#0f2a4e;cursor:pointer;min-width:0}.ev-nps-row button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.ev-nps-l{display:flex;justify-content:space-between;margin-top:4px;color:#64748b}@media(max-width:480px){.ev-nps-row{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.ev-ok.off{background:#e2e8f0;color:#475569}
 .ev{font-family:Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:18px 12px 60px;color:#0f172a}
 .ev-wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .ev-form{display:flex;flex-direction:column;gap:12px}

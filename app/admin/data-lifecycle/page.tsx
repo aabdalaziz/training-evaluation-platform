@@ -10,7 +10,8 @@ type Program = { id: string; name_ar: string | null; name_en: string | null; sta
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id: string | null };
 type Trainer = { id: string; name: string };
 type AuditRow = { id: string; created_at: string; actor_id: string | null; action: string; metadata: any };
-type Kind = 'BOTH' | 'DAILY' | 'FINAL';
+type Kind = 'BOTH' | 'DAILY' | 'FINAL' | 'END' | 'ALL' | 'REMOTE' | 'LINKS' | 'EMPTY_ROOMS';   /* P49 */
+const KIND_TXT: Record<Kind, string> = { BOTH: 'اليومي والختامي', DAILY: 'اليومي فقط', FINAL: 'الختامي فقط', END: 'استبيان نهاية البرنامج فقط', ALL: 'كل الاستبيانات (يومي + ختامي + نهاية البرنامج)', REMOTE: 'استطلاع التعلّم عن بُعد', LINKS: 'روابط التقويم (/e/…) — الاستجابات تبقى', EMPTY_ROOMS: 'الشعب الفارغة (بلا أيّ استجابة أو رابط) — داخل برنامج محدّد' };
 
 const NAVY = '#0f2a4e';
 
@@ -29,6 +30,7 @@ export default function DataLifecyclePage() {
   const [classroomId, setClassroomId] = useState('ALL');
   const [trainerId, setTrainerId] = useState('ALL');
   const [kind, setKind] = useState<Kind>('BOTH');
+  const [olderThan, setOlderThan] = useState<string>('');   /* P49: أقدم من N شهرًا */
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
 
@@ -65,16 +67,17 @@ export default function DataLifecyclePage() {
   }
 
   const visibleRooms = useMemo(() => classrooms.filter(c => (programId === 'ALL' || c.program_id === programId) && (trainerId === 'ALL' || c.trainer_id === trainerId)), [classrooms, programId, trainerId]);
-  const filters = { programId, classroomId, trainerId, from: from || null, to: to || null };
+  const filters = { programId, classroomId, trainerId, from: from || null, to: to || null, olderThanMonths: olderThan ? Number(olderThan) : 0, onlyInactive: kind === 'LINKS' };
   const scope = useMemo(() => {
     const parts: string[] = [];
-    parts.push(kind === 'BOTH' ? 'اليومي والختامي' : kind === 'DAILY' ? 'اليومي فقط' : 'الختامي فقط');
+    parts.push(KIND_TXT[kind]);
+    if (olderThan) parts.push(`أقدم من ${olderThan} شهرًا`);
     if (programId !== 'ALL') parts.push('البرنامج: ' + (programs.find(p => p.id === programId)?.name_ar || programId));
     if (trainerId !== 'ALL') parts.push('المدرب: ' + (trainers.find(t => t.id === trainerId)?.name || trainerId));
     if (classroomId !== 'ALL') parts.push('القاعة: ' + (classrooms.find(c => c.id === classroomId)?.code || classroomId));
     if (from || to) parts.push(`الفترة: ${from || '…'} → ${to || '…'}`);
     return parts.join(' · ');
-  }, [kind, programId, trainerId, classroomId, from, to, programs, trainers, classrooms]);
+  }, [kind, programId, trainerId, classroomId, from, to, olderThan, programs, trainers, classrooms]);
 
   async function call(body: any) {
     const { data: { session } } = await db.auth.getSession();
@@ -135,7 +138,8 @@ export default function DataLifecyclePage() {
           <label>البرنامج<select value={programId} onChange={e => { setProgramId(e.target.value); setClassroomId('ALL'); setPreview(null); }}><option value="ALL">كل البرامج</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar || p.name_en}{p.status ? ` (${p.status})` : ''}</option>)}</select></label>
           <label>المدرب<select value={trainerId} onChange={e => { setTrainerId(e.target.value); setClassroomId('ALL'); setPreview(null); }}><option value="ALL">كل المدربين</option>{trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
           <label>القاعة<select value={classroomId} onChange={e => { setClassroomId(e.target.value); setPreview(null); }}><option value="ALL">كل القاعات ضمن النطاق</option>{visibleRooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
-          <label>نوع التقييم<select value={kind} onChange={e => { setKind(e.target.value as Kind); setPreview(null); }}><option value="BOTH">اليومي والختامي</option><option value="DAILY">اليومي فقط</option><option value="FINAL">الختامي فقط</option></select></label>
+          <label>نوع التقييم<select value={kind} onChange={e => { setKind(e.target.value as Kind); setPreview(null); }}>{(Object.keys(KIND_TXT) as Kind[]).map(k => <option key={k} value={k}>{KIND_TXT[k]}</option>)}</select></label>
+          <label>أقدم من (شهرًا)<select value={olderThan} onChange={e => { setOlderThan(e.target.value); setPreview(null); }} data-testid="dl-older"><option value="">— بلا —</option>{[3, 6, 12, 18, 24, 36].map(n => <option key={n} value={String(n)}>{n} شهرًا</option>)}</select></label>
           <label>من تاريخ<input type="date" value={from} onChange={e => { setFrom(e.target.value); setPreview(null); }} /></label>
           <label>إلى تاريخ<input type="date" value={to} onChange={e => { setTo(e.target.value); setPreview(null); }} /></label>
         </div>
@@ -149,8 +153,8 @@ export default function DataLifecyclePage() {
 
         {preview && (
           <div className={`dl-preview ${preview.evaluations ? '' : 'empty'}`}>
-            <div className="dl-num"><b>{preview.evaluations.toLocaleString('en')}</b><span>استجابة تقييم</span></div>
-            <div className="dl-num"><b>{preview.answers.toLocaleString('en')}</b><span>إجابة سؤال</span></div>
+            <div className="dl-num"><b>{preview.evaluations.toLocaleString('en')}</b><span>{kind === 'LINKS' ? 'رابط' : kind === 'EMPTY_ROOMS' ? 'شعبة فارغة' : kind === 'REMOTE' ? 'استجابة استطلاع' : 'استجابة تقييم'}</span></div>
+            {!['LINKS', 'EMPTY_ROOMS', 'REMOTE'].includes(kind) && <div className="dl-num"><b>{preview.answers.toLocaleString('en')}</b><span>إجابة سؤال</span></div>}
             <div className="dl-note">{preview.evaluations ? 'هذه الأعداد هي ما سيُحذف نهائيًا عند التأكيد. لم يُحذف شيء بعد.' : 'لا توجد استجابات ضمن هذا النطاق — لا شيء لحذفه.'}</div>
           </div>
         )}
@@ -172,7 +176,7 @@ export default function DataLifecyclePage() {
                 return (
                   <tr key={r.id}>
                     <td dir="ltr">{new Date(r.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Riyadh' })}</td>
-                    <td>{m.kind === 'DAILY' ? 'يومي' : m.kind === 'FINAL' ? 'ختامي' : 'الكل'}</td>
+                    <td>{m.kind === 'DAILY' ? 'يومي' : m.kind === 'FINAL' ? 'ختامي' : m.kind === 'END' ? 'نهاية البرنامج' : m.kind === 'REMOTE' ? 'عن بُعد' : m.kind === 'LINKS' ? 'روابط' : m.kind === 'EMPTY_ROOMS' ? 'شعب فارغة' : 'الكل'}</td>
                     <td>{scopeTxt}</td>
                     <td>{m.deleted_evaluations ?? '—'}</td>
                     <td>{m.deleted_answers ?? '—'}</td>

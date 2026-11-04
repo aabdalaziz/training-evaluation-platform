@@ -6,7 +6,7 @@
 
 /* ============================================================ types */
 export type Lang = 'ar' | 'en';
-export type Kind = 'DAILY' | 'FINAL';
+export type Kind = 'DAILY' | 'FINAL' | 'END';   /* P49: END = استبيان نهاية البرنامج (عام) */
 
 export type RawEvaluation = {
   id: string; program_id: string | null; classroom_id: string | null; kind: Kind | string;
@@ -65,7 +65,7 @@ export type GroupRow = Stats & {
   meta?: Record<string, unknown>;
 };
 export type Kpis = {
-  responses: number; participants: number; daily: number; final: number; measurements: number;
+  responses: number; participants: number; daily: number; final: number; end: number; measurements: number;   /* P49: end = استبيانات نهاية البرنامج */
   mean: number; median: number; sd: number; highPct: number; lowPct: number; gap: number;
   perf: PerfKey; risk: RiskKey; rooms: number; trainers: number; programs: number;
   firstDate: string; lastDate: string; days: number; perDay: number;
@@ -87,7 +87,7 @@ export const TARGET = 4.2;
 export const THRESHOLDS = { excellent: 4.2, good: 3.7, watch: 3.0, minSample: 5 };
 
 export const KIND_LABEL: Record<string, { ar: string; en: string }> = {
-  DAILY: { ar: 'يومي', en: 'Daily' }, FINAL: { ar: 'ختامي', en: 'Final' }, ALL: { ar: 'الكل', en: 'All' },
+  DAILY: { ar: 'يومي', en: 'Daily' }, FINAL: { ar: 'ختامي', en: 'Final' }, END: { ar: 'نهاية البرنامج', en: 'End-of-program' }, ALL: { ar: 'الكل', en: 'All' },
 };
 export const PERF_LABEL: Record<PerfKey, { ar: string; en: string; color: string; bg: string }> = {
   EXCELLENT: { ar: 'ممتاز', en: 'Excellent', color: '#047857', bg: '#d1fae5' },
@@ -302,7 +302,7 @@ export function kpis(evals: Evaluation[], facts: Fact[]): Kpis {
   const days = first && last ? daysBetween(first, last) + 1 : 0;
   return {
     responses: evals.length, participants: participantsOf(evals),
-    daily: evals.filter(e => e.kind === 'DAILY').length, final: evals.filter(e => e.kind === 'FINAL').length,
+    daily: evals.filter(e => e.kind === 'DAILY').length, final: evals.filter(e => e.kind === 'FINAL').length, end: evals.filter(e => e.kind === 'END').length,
     measurements: s.n, mean: s.mean, median: s.median, sd: s.sd, highPct: s.highPct, lowPct: s.lowPct,
     gap: round(TARGET - s.mean), perf: perfKey(s.mean, s.n), risk: riskKey(s, evals.length),
     rooms: new Set(evals.map(e => e.classroom_id).filter(Boolean)).size,

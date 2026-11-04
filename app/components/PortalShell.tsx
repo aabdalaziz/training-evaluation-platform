@@ -8,7 +8,7 @@ import { sbLazy, hasStoredSession } from '../../lib/supabase/lazy';
 import { Icon } from '../../lib/ui/icons';
 import { ACRONYM, BRAND, CONTACT, NAV, PARTNERS, SERVICES, UI, t } from '../../lib/portal/content';
 import type { Lang } from '../../lib/portal/content';
-import { AtharMark, DoorBadge } from './Brand';
+import { AtharMark, DoorBadge, invalidateMyRoles } from './Brand';
 export { AtharMark } from './Brand';   /* يبقى الاستيراد القديم من PortalShell صالحًا */
 import Athir from './Athir';
 import { GuideButton } from './Guide';
@@ -32,6 +32,15 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   useEffect(() => { setOpen(false); }, [pathname]);
   // استئناف التسجيل بعد العودة من رابط الدخول بالبريد (إن أعادنا Supabase إلى الصفحة الرئيسية)
   const router = useRouter();
+  /* P49-ج: رأس واعٍ بالجلسة — «خروج» في كل صفحة من صفحات البوابة (حاسوب + جوال)، «دخول» للزائر */
+  const [loggedIn, setLoggedIn] = useState(false);
+  useEffect(() => {
+    if (!hasStoredSession()) { setLoggedIn(false); return; }
+    let unsub: (() => void) | null = null; let alive = true;
+    void sbLazy().then((sb) => { if (!alive) return; sb.auth.getSession().then(({ data }) => { if (alive) setLoggedIn(!!data.session); }); const { data: l } = sb.auth.onAuthStateChange((_e, session) => setLoggedIn(!!session)); unsub = () => l.subscription.unsubscribe(); });
+    return () => { alive = false; unsub?.(); };
+  }, []);
+  async function logout() { try { invalidateMyRoles(); const sb = await sbLazy(); await sb.auth.signOut(); } catch { /* ignore */ } try { localStorage.removeItem('athar_resume'); } catch { /* ignore */ } setLoggedIn(false); router.push('/'); router.refresh(); }
   useEffect(() => {
     try {
       const resume = localStorage.getItem('athar_resume');
@@ -57,7 +66,8 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             {NAV.map(n => <Link key={n.href} href={n.href} className={`pt-navlink ${pathname === n.href || (n.href !== '/' && !n.href.includes('#') && pathname.startsWith(n.href)) ? 'on' : ''}`}>{t(n.label, lang)}</Link>)}
             <div className="pt-navactions">
               <Link href="/me" className="pt-btn ghost small"><Icon name="users" size={15} /> {t(UI.student, lang)}</Link>
-              <Link href={BRAND.evaluationUrl} className="pt-btn small"><Icon name="login" size={15} /> {t(UI.admin, lang)}</Link>
+              {loggedIn ? <button type="button" className="pt-btn small danger" onClick={logout} data-testid="shell-logout"><Icon name="logout" size={15} /> {lang === 'ar' ? 'خروج' : 'Sign out'}</button>
+                : <Link href={BRAND.evaluationUrl} className="pt-btn small" data-testid="shell-login"><Icon name="login" size={15} /> {t(UI.admin, lang)}</Link>}
             </div>
           </nav>
           <div className="pt-headright">
@@ -66,6 +76,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             <OnAirButton lang={lang} />
             <AccessButton lang={lang} />
             <button type="button" className="pt-lang" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} aria-label="language">{lang === 'ar' ? 'English' : 'عربي'}</button>
+            {loggedIn && <button type="button" className="pt-exit" onClick={logout} aria-label={lang === 'ar' ? 'خروج' : 'Sign out'} title={lang === 'ar' ? 'خروج' : 'Sign out'} data-testid="shell-exit"><Icon name="logout" size={16} /><span>{lang === 'ar' ? 'خروج' : 'Sign out'}</span></button>}
             <button type="button" className="pt-burger" aria-label="menu" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
           </div>
         </header>
@@ -107,7 +118,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
                 <li><Link href="/security">{lang === 'ar' ? 'درع أَثَر · الأمن والإفصاح المسؤول' : 'Athar Shield · security & responsible disclosure'}</Link></li>
                 <li><Link href="/accessibility">{lang === 'ar' ? 'أَثَر للجميع · بيان الوصول' : 'Athar for all · accessibility statement'}</Link></li>
                 <li><ReportBarrierLink lang={lang} /></li>
-                <li><Link href={BRAND.evaluationUrl}>{t(UI.admin, lang)}</Link></li>
+                <li>{loggedIn ? <button type="button" className="pt-menu-exit" onClick={logout} data-testid="shell-logout-m"><Icon name="logout" size={14} /> {lang === 'ar' ? 'خروج' : 'Sign out'}</button> : <Link href={BRAND.evaluationUrl}>{t(UI.admin, lang)}</Link>}</li>
               </ul>
             </div>
             <div>
@@ -142,6 +153,8 @@ const CSS = `
 .pt-nav{display:flex;align-items:center;gap:4px;flex:1;justify-content:center}
 .pt-navlink{text-decoration:none;font-weight:800;font-size:14px;color:#334155;padding:8px 12px;border-radius:10px}.pt-navlink:hover{background:#f1f5f9}.pt-navlink.on{color:${TEAL};background:#f0fdfa}
 .pt-navactions{display:none;gap:8px;margin-top:8px}
+.pt-exit{display:inline-flex;align-items:center;gap:5px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:900;cursor:pointer}.pt-exit:hover{background:#fee2e2}@media(max-width:560px){.pt-exit span{display:none}.pt-exit{padding:6px 8px}}
+.pt-btn.danger{border-color:#fecaca;background:#fff5f5;color:#b91c1c}.pt-menu-exit{border:0;background:none;font:inherit;font-weight:800;color:#b91c1c;cursor:pointer;display:inline-flex;gap:6px;align-items:center;padding:0}
 .pt-headright{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
 /* P39: على شاشات الحاسوب المحمول (≤1400px) يتزاحم الشريط عند تسجيل الدخول (بابي · أَثَر معك · احتياجاتي · اللغة) فيُحدث تمريرًا أفقيًا — نضغط الروابط ونسمح بالالتفاف بدل القصّ */
 @media(min-width:761px) and (max-width:1400px){.pt-navlink{padding:8px 8px;font-size:13px}.pt-nav{flex-wrap:wrap;min-width:0;row-gap:0}.pt-header{gap:10px}}

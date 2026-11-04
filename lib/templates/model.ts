@@ -1,6 +1,6 @@
 // نموذج إدارة قوالب التقييم والأسئلة — دوال نقية قابلة للاختبار (بلا React / بلا Supabase)
 
-export type TemplateKind = 'DAILY' | 'FINAL';
+export type TemplateKind = 'DAILY' | 'FINAL' | 'END';   // P49: END = استبيان نهاية البرنامج (عام)
 
 export type Template = {
   id: string;
@@ -41,7 +41,8 @@ export type QuestionDraft = {
 
 export const TEMPLATE_KINDS: { id: TemplateKind; label: string; short: string }[] = [
   { id: 'DAILY', label: 'تقييم يومي (لكل جلسة)', short: 'يومي' },
-  { id: 'FINAL', label: 'تقييم ختامي (نهاية البرنامج)', short: 'ختامي' },
+  { id: 'FINAL', label: 'تقييم ختامي (نهاية البرنامج — مع الخدمات والإقامة)', short: 'ختامي' },
+  { id: 'END', label: 'استبيان نهاية البرنامج (عام — بلا خدمات)', short: 'نهاية برنامج' },
 ];
 
 export const QUESTION_KINDS: { id: string; label: string; hasOptions: boolean; isScale: boolean; hint: string }[] = [
@@ -53,6 +54,7 @@ export const QUESTION_KINDS: { id: string; label: string; hasOptions: boolean; i
   { id: 'YES_NO', label: 'نعم / لا', hasOptions: false, isScale: false, hint: 'سؤال ثنائي' },
   { id: 'SHORT_TEXT', label: 'نص قصير', hasOptions: false, isScale: false, hint: 'سطر واحد' },
   { id: 'LONG_TEXT', label: 'نص طويل', hasOptions: false, isScale: false, hint: 'فقرة حرة' },
+  { id: 'NPS_10', label: 'ترشيح 0–10 (NPS)', hasOptions: false, isScale: false, hint: 'أحد عشر زرًّا من 0 إلى 10 — يُحفظ نصًّا ولا يدخل في متوسّط 1–5' },
 ];
 
 export const RATING_KINDS = ['RATING_5', 'STARS', 'LIKERT_5'];
@@ -65,6 +67,9 @@ export function templateKindLabel(kind: string): string {
   const k = String(kind || '').toUpperCase();
   return TEMPLATE_KINDS.find(t => t.id === k)?.short || k || '—';
 }
+
+/** P49: القالب الافتراضي من نوع (is_default) — يُستخدم لأيّ برنامج بلا قالب خاص من هذا النوع */
+export function defaultTemplateOf(kind: TemplateKind, templates: Array<Template & { is_default?: boolean | null }>): Template | null { return templates.find(t => String(t.kind || '').toUpperCase() === kind && (t as any).is_default) || null; }
 
 export function templateName(t: Template | null | undefined): string {
   if (!t) return '—';
@@ -167,7 +172,7 @@ export function activeTemplateFor(programId: string, kind: TemplateKind, templat
   return found[0] || null;
 }
 
-export type CoverageRow = { program: ProgramLite; daily: Template | null; final: Template | null; dailyQuestions: number; finalQuestions: number; ok: boolean };
+export type CoverageRow = { program: ProgramLite; daily: Template | null; final: Template | null; end: Template | null; dailyQuestions: number; finalQuestions: number; endQuestions: number; ok: boolean };
 
 /** جدول التغطية: لكل برنامج قالبه اليومي والختامي وعدد الأسئلة — ok عندما يملك كليهما بأسئلة */
 export function coverage(programs: ProgramLite[], templates: Template[], questions: Question[], links: TemplateLink[]): CoverageRow[] {
@@ -176,7 +181,8 @@ export function coverage(programs: ProgramLite[], templates: Template[], questio
     const final = activeTemplateFor(p.id, 'FINAL', templates, links);
     const dq = daily ? questions.filter(q => q.template_id === daily.id).length : 0;
     const fq = final ? questions.filter(q => q.template_id === final.id).length : 0;
-    return { program: p, daily, final, dailyQuestions: dq, finalQuestions: fq, ok: !!daily && !!final && dq > 0 && fq > 0 };
+    const end = activeTemplateFor(p.id, 'END', templates, links) || defaultTemplateOf('END', templates); const eq = end ? questions.filter(q => q.template_id === end.id).length : 0;   // P49: الافتراضي العام يغطّي من لا قالب له
+    return { program: p, daily, final, end, dailyQuestions: dq, finalQuestions: fq, endQuestions: eq, ok: !!daily && !!final && dq > 0 && fq > 0 };
   });
 }
 

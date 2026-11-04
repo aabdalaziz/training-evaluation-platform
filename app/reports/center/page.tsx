@@ -394,7 +394,7 @@ function ReportsCenter() {
                 </select></label>
               <label><span>{ar ? 'نوع التقييم' : 'Evaluation kind'}</span>
                 <select value={filters.kind} onChange={e => upd({ kind: e.target.value as Filters['kind'] })}>
-                  {(['ALL', 'DAILY', 'FINAL'] as const).map(x => <option key={x} value={x}>{KIND_LABEL[x][lang]}</option>)}
+                  {(['ALL', 'DAILY', 'FINAL', 'END'] as const).map(x => <option key={x} value={x}>{KIND_LABEL[x][lang]}</option>)}
                 </select></label>
               <label><span>{ar ? 'طريقة التنفيذ' : 'Delivery'}</span>
                 <select value={filters.deliveryMode} onChange={e => upd({ deliveryMode: e.target.value as Filters['deliveryMode'] })}>
