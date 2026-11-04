@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
+import { resolveOpenLang } from '../../../lib/evaluation/links';
 import {
   ATTENDANCE, DIFFICULTIES, SCALE, STATEMENTS, SURVEY_INTRO, SURVEY_TITLE, UI,
   buildPayload, classroomLabel, classroomsFor, emptyDraft, levelLabel, levelsForProgram,
@@ -40,7 +41,9 @@ function SurveyForm() {
   const db = supabase();
   const params = useSearchParams();
 
+  /* P49-ب «بلغة المتدرّب»: بلا ?lang يُفتح بلغة المتصفّح (غير العربي → الإنجليزية) */
   const [lang, setLang] = useState<Lang>(() => (params.get('lang') === 'en' ? 'en' : 'ar'));
+  useEffect(() => { if (!params.get('lang')) setLang(resolveOpenLang('auto', navigator.language)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   const [programs, setPrograms] = useState<Program[]>([]);
