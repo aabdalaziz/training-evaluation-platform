@@ -144,6 +144,7 @@ export const NON_PERSONAL_TABLES = [
   'portal_roles',   // P42: كتالوج الأدوار (أسماء وصلاحيات — لا أشخاص)
   'portal_report_templates',   // P46: قالب مهارات/استراتيجيات التقرير لكل برنامج — لا أشخاص
   'portal_program_versions',   // P47-ب: نسخ الدفعات (قبل/بعد · التعديلات · رسالة الدفعة القادمة) — created_by/created_name للمصمّم بصفته المهنية لا بيانات متدرّبين
+  'portal_accred_standards', 'portal_accred_narratives', 'portal_accred_skill_maps',   // P48: نصوص معايير الاعتماد · فقرات الدراسة الذاتية (signed_by/signed_name للمصمّم بصفته المهنية) · خريطة كفايات البرنامج — لا متدرّبين
   'portal_program_units',   // P46 ر4: وحدات الدبلوم (عنوان · ناتج · ساعات · مهارات · مدّة · إغلاق) — لا أشخاص (created_by معرّف داخلي بلا عرض)
   'portal_onair_golden', 'portal_onair_echoes',   // P34: موعد عام · مسودّات مجهّلة (تُحذف تبعًا للطلب cascade)
   'portal_onair_seasons', 'portal_onair_season_slots',   // P35: موسم عام · ساعة الجهة (معرّف جهة لا شخص)
