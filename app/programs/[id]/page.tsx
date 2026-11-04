@@ -22,6 +22,8 @@ import type { Feature } from '../../../lib/inclusion/registry';
 import { ProgramAfter } from '../../components/ProgramAfter';   // P38 «الشهادة التي تكبر»
 import { ProgramBorn } from '../../components/Needs';   // P44 «وُلد من حاجة» + المقاعد الأولى
 import { ProgramRehearsals } from '../../components/Rehearsal';   // P45 «بروفات مفتوحة» لزملاء البرنامج
+import dynamic from 'next/dynamic';
+const ProgramUnitsStrip = dynamic(() => import('../../components/DiplomaReport').then(m => m.ProgramUnitsStrip), { ssr: false });   // P46 ر4 «خريطة الوحدات» للدبلوم
 
 export default function ProgramPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -121,6 +123,7 @@ function Inner() {
           {(p.program_type === 'arabic' || p.cefr_level) && <PlacementCard lang={lang} compact programLevel={p.cefr_level || null} />}
           <UpcomingSessions programId={p.id} lang={lang} />
           <ProgramResources programId={p.id} lang={lang} />
+          {p.program_type === 'diploma' && <ProgramUnitsStrip programId={p.id} />}
           <ProgramAfter programId={p.id} lang={lang} />
           {loaded && <ProgramBorn programId={p.id} token={bornToken} onState={setPrio} lang={lang} />}
           {loaded && <ProgramRehearsals programId={p.id} lang={lang} />}

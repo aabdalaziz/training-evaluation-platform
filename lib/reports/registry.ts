@@ -212,12 +212,14 @@ export function verifyCode(rnd: () => number = Math.random): string { let s = 'R
 /** ما يُعرض للعامة عند التحقّق: لا أسماء طلاب ولا درجات */
 export function publicVerifyView(r: { verify_code: string | null; status: string; week_no: number; period_from: string; period_to: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; kind: string }): any {
   if (r.status !== 'approved' || !r.verify_code) return null;
+  if (r.kind === 'diploma_unit') return unitPublicView(r as any);   // ر4
   return { code: r.verify_code, kind: r.kind, kind_ar: r.kind === 'weekly' ? P46_NAMES_AR.weekly : r.kind === 'final' ? P46_NAMES_AR.final : r.kind, week_no: r.week_no, weeks: Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0, chain: Array.isArray(r.computed?.weeks) ? (r.computed.weeks as any[]).map(w => String(w.verify_code || '')).filter(Boolean) : [], signoff: r.kind === 'final' ? signoffView((r as any).body) : null, period_from: r.period_from, period_to: r.period_to, program_ar: String(r.computed?.program_ar || ''), org_ar: String(r.computed?.org_ar || ''), classroom_ar: String(r.computed?.classroom_ar || ''), author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at, sessions: Number(r.computed?.sessions || 0), hours: Number(r.computed?.hours || 0), enrolled: Number(r.computed?.enrolled || 0) };
 }
 /** سطر القائمة */
 export function listLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind?: string }): string {
   if (r.kind === 'mission') return missionListLineAr(r);
   if (r.kind === 'advisory' || r.kind === 'study') return docListLineAr(r as any);   // ر3-ب
+  if (r.kind === 'diploma_pulse' || r.kind === 'diploma_unit' || r.kind === 'diploma_profile') return diplomaListLineAr(r as any);   // ر4
   if (r.kind === 'final') return `${P46_NAMES_AR.final} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0} أسابيع معتمدة · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
   return `الأسبوع ${r.week_no} · ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
 }
@@ -590,3 +592,137 @@ export function docPublicView(r: { kind: string; verify_code: string | null; aut
     ack: b.ack ? { at: b.ack.at, name: b.ack.name } : null, superseded_by: b.superseded_by || null };
 }
 export function docListLineAr(r: { kind: string; computed: any; status: string }): string { const c = r.computed || {}; return `${r.kind === 'advisory' ? DOC_NAMES_AR.advisory : DOC_NAMES_AR.study} · ${String(c.title || '')}${c.org_ar ? ` · ${c.org_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
+
+/* ═════════════════════════════ ر4-أ — «ملف الدبلوم» (وحدات الدبلوم · نبض الأسبوع · تقرير الوحدة) — «أثرُ الدبلوم» ═════════════════════════════
+ *  الدبلوم طويل فلا يُختصر في تقرير؛ هو ملف يتراكم: نبض نصف صفحة كل أسبوع، وتقرير عند إغلاق كل وحدة، وكشف كفايات لكل متدرّب (ر4-ب).
+ *  لماذا «نبض» لا «تقرير»: الأسبوع في دبلوم من 12–40 أسبوعًا يحتاج متابعة لا توثيقًا رسميًا (التقرير الأسبوعي الكامل ر1 يبقى بزرّ).
+ *  لماذا الوحدة: هي وحدة الحكم التعليمي الحقيقية — لها ناتج ومهارات ومدّة — وتُغلق باعتماد تقريرها لا بزرّ منفصل: الإغلاق هو التوثيق.
+ *  «سلسلة الانتباه»: من ذُكر في «من يحتاج انتباهًا» يظهر في نبض الأسبوع التالي بخانة «ما الذي تغيّر؟» حتى يُغلق — لا أحد يسقط بين الأسابيع.
+ */
+export const R4_NAMES_AR = {
+  file: 'ملف الدبلوم', official: 'ملف توثيق الدبلوم', story: 'أثرُ الدبلوم', pulse: 'نبض الأسبوع', unit: 'تقرير الوحدة', profile: 'كشف الكفايات', units: 'وحدات الدبلوم',
+  attention: 'سلسلة الانتباه', map: 'خريطة الوحدات', full_week: 'أريد التقرير الكامل هذا الأسبوع', pulse_start: 'نبض هذا الأسبوع', close_unit: 'أغلق الوحدة بتقريرها', unit_line: 'سطر لك من تقرير الوحدة',
+  motto: 'كفاية بشاهد، لا درجة بلا أثر', import_design: 'استورد الوحدات من التصميم',
+} as const;
+export const UNIT_MAX = 24; export const UNIT_TITLE_MAX = 120; export const UNIT_OUTCOME_MAX = 300; export const PULSE_MAX_ATTENTION = 8; export const PULSE_TEXT_MAX = 400;
+export const UNIT_TOOLS_AR = [...SUMMATIVE_TOOLS_AR, 'مهمة مصدَّقة', 'بروفة', 'محاكاة', 'مشروع الوحدة', 'ملف أعمال'];
+export const ATTENTION_CHANGE = ['improved', 'plan', 'referred', 'same'] as const; export type AttentionChange = (typeof ATTENTION_CHANGE)[number];
+export const ATTENTION_CHANGE_AR: Record<AttentionChange, string> = { improved: 'تحسّن — تُغلق', plan: 'خطة دعم', referred: 'إحالة للإدارة', same: 'كما هو — تستمرّ' };
+export const UNIT_DECISION = ['completed', 'support', 'repeat', 'pending'] as const; export type UnitDecision = (typeof UNIT_DECISION)[number];
+export const UNIT_DECISION_AR: Record<UnitDecision, string> = { completed: 'بلغ ناتج الوحدة', support: 'بلغه مع خطة دعم', repeat: 'يعيد الوحدة', pending: 'لم يُحسم بعد' };
+export const EVIDENCE_MARKS_AR: Record<string, string> = { missions: 'م = مهمة مصدَّقة', rehearsals: 'ب = بروفة', cases: 'ي = كل يوم مهارة', stations: 'ح = محطة' };
+export const DIPLOMA_KINDS = ['diploma_pulse', 'diploma_unit', 'diploma_profile'] as const; export type DiplomaKind = (typeof DIPLOMA_KINDS)[number];
+export const isDiplomaKind = (k: string): k is DiplomaKind => (DIPLOMA_KINDS as readonly string[]).includes(k);
+export const diplomaKindAr = (k: string) => (k === 'diploma_pulse' ? R4_NAMES_AR.pulse : k === 'diploma_unit' ? R4_NAMES_AR.unit : R4_NAMES_AR.profile);
+
+export type Unit = { id: string | null; idx: number; title_ar: string; outcome_ar: string; hours: number; skill_codes: string[]; starts_on: string | null; ends_on: string | null; closed_at: string | null; closed_report_id?: string | null; source: 'manual' | 'design' };
+export type UnitState = 'closed' | 'current' | 'upcoming';
+const S = (v: unknown, n: number) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
+const D = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+/** تنظيف قائمة الوحدات كما يرسلها المحرّر — الترتيب يُعاد ترقيمه 1..n، والرموز تُحصر في مهارات القالب */
+export function cleanUnits(given: unknown, skills: Skill[]): Unit[] {
+  const codes = new Set(skills.map(s => s.code)); const arr = Array.isArray(given) ? given : [];
+  const out: Unit[] = arr.slice(0, UNIT_MAX).map((u: any, i: number): Unit => ({
+    id: typeof u?.id === 'string' && u.id ? u.id : null, idx: i + 1, title_ar: S(u?.title_ar, UNIT_TITLE_MAX), outcome_ar: S(u?.outcome_ar, UNIT_OUTCOME_MAX),
+    hours: Math.max(0, Math.min(999, Number(u?.hours) || 0)), skill_codes: Array.isArray(u?.skill_codes) ? Array.from(new Set((u.skill_codes as unknown[]).map(String).filter(c => codes.has(c)))).slice(0, 12) : [],
+    starts_on: D(u?.starts_on), ends_on: D(u?.ends_on), closed_at: typeof u?.closed_at === 'string' ? u.closed_at : null, closed_report_id: typeof u?.closed_report_id === 'string' ? u.closed_report_id : null, source: (u?.source === 'design' ? 'design' : 'manual') as 'manual' | 'design',
+  })).filter(u => u.title_ar.length >= 2);
+  return out.map((u, i) => ({ ...u, idx: i + 1 }));
+}
+/** وحدات من تصميم P11 (design.modules) — العناوين والنواتج جاهزة؛ الساعات تُقسَّم بالتساوي */
+export function unitsFromDesign(design: any, skills: Skill[]): Unit[] {
+  const mods: any[] = Array.isArray(design?.modules) ? design.modules : []; if (!mods.length) return [];
+  const hours = Number(design?.hours) || 0; const per = mods.length ? Math.round((hours / mods.length) * 10) / 10 : 0;
+  return cleanUnits(mods.map((m: any, i: number) => ({ idx: i + 1, title_ar: m?.title_ar || `الوحدة ${i + 1}`, outcome_ar: m?.outcome_ar || '', hours: per, skill_codes: [], source: 'design' })), skills);
+}
+/** حالة الوحدة: مغلقة ✓ · جارية ● · قادمة ○ — الجارية بالتواريخ، وإلا أول وحدة غير مغلقة */
+export function unitStates(units: Unit[], today: string): { unit: Unit; state: UnitState }[] {
+  const sorted = [...units].sort((a, b) => a.idx - b.idx); let currentPicked = false;
+  const byDate = sorted.find(u => !u.closed_at && u.starts_on && u.ends_on && u.starts_on <= today && today <= u.ends_on);
+  return sorted.map(u => { if (u.closed_at) return { unit: u, state: 'closed' as UnitState }; if (byDate ? u === byDate : !currentPicked) { currentPicked = true; return { unit: u, state: 'current' as UnitState }; } return { unit: u, state: 'upcoming' as UnitState }; });
+}
+export const currentUnit = (units: Unit[], today: string): Unit | null => unitStates(units, today).find(x => x.state === 'current')?.unit || null;
+export const UNIT_STATE_AR: Record<UnitState, string> = { closed: 'مغلقة', current: 'جارية', upcoming: 'قادمة' };
+
+/* ───────── نبض الأسبوع ───────── */
+export type Around = { missions: number; rehearsals: number; cases: number; stations: number };
+export type AttentionItem = { key: string; name: string; reason: string };
+export type FollowItem = { key: string; name: string; prev_reason: string; since_week: number; change: AttentionChange | ''; note: string };
+export type PulseComputed = {
+  kind: 'diploma_pulse'; program_ar: string; org_ar: string; trainer_ar: string; classroom_ar: string; week_no: number; period_from: string; period_to: string;
+  unit: { id: string | null; idx: number; title_ar: string } | null; units_total: number; units_closed: number;
+  enrolled: number; regular: number; absent: number; sessions: number; hours: number; around: Around; prev_attention: { key: string; name: string; reason: string; since_week: number }[];
+  roster: { key: string; name: string; email: string | null }[]; computed_at: string; full_weekly_id: string | null;
+};
+export type PulseBody = { done: string; attention: AttentionItem[]; follow: FollowItem[]; need: string };
+export const emptyPulseBody = (c: PulseComputed): PulseBody => ({ done: '', attention: [], follow: (c.prev_attention || []).map(p => ({ key: p.key, name: p.name, prev_reason: p.reason, since_week: p.since_week, change: '', note: '' })), need: '' });
+export function cleanPulseBody(b: any, c: PulseComputed): PulseBody {
+  const keys = new Map((c.roster || []).map(r => [r.key, r.name])); const prev = new Map((c.prev_attention || []).map(p => [p.key, p]));
+  const attention: AttentionItem[] = (Array.isArray(b?.attention) ? b.attention : []).filter((a: any) => keys.has(String(a?.key))).slice(0, PULSE_MAX_ATTENTION).map((a: any) => ({ key: String(a.key), name: keys.get(String(a.key)) || S(a.name, 80), reason: S(a.reason, SHORT_MAX) }));
+  const seen = new Set<string>(); const follow: FollowItem[] = (Array.isArray(b?.follow) ? b.follow : []).filter((f: any) => prev.has(String(f?.key)) && !seen.has(String(f.key)) && seen.add(String(f.key))).map((f: any) => { const p = prev.get(String(f.key))!; return { key: p.key, name: p.name, prev_reason: p.reason, since_week: p.since_week, change: (ATTENTION_CHANGE as readonly string[]).includes(String(f.change)) ? (String(f.change) as AttentionChange) : '', note: S(f.note, SHORT_MAX) }; });
+  for (const p of c.prev_attention || []) if (!seen.has(p.key)) follow.push({ key: p.key, name: p.name, prev_reason: p.reason, since_week: p.since_week, change: '', note: '' });
+  return { done: S(b?.done, PULSE_TEXT_MAX), attention, follow, need: S(b?.need, PULSE_TEXT_MAX) };
+}
+export function missingBeforePulseSubmit(b: PulseBody): string[] {
+  const m: string[] = []; if (b.done.length < 10) m.push('«ما تمّ» (سطر على الأقل)');
+  if (b.attention.some(a => a.reason.length < 3)) m.push('سبب لكل اسم في «من يحتاج انتباهًا»');
+  if (b.follow.some(f => !f.change)) m.push('«ما الذي تغيّر؟» لكل اسم من الأسبوع السابق');
+  return m;
+}
+/** سلسلة الانتباه: ما يُحمل إلى الأسبوع التالي = الأسماء الجديدة + المستمرّة (plan/referred/same) — المغلقة (improved) تسقط */
+export function carryAttention(b: PulseBody, week_no: number): { key: string; name: string; reason: string; since_week: number }[] {
+  const out: { key: string; name: string; reason: string; since_week: number }[] = [];
+  for (const f of b.follow) if (f.change && f.change !== 'improved') out.push({ key: f.key, name: f.name, reason: f.note || f.prev_reason, since_week: f.since_week });
+  for (const a of b.attention) if (!out.some(o => o.key === a.key)) out.push({ key: a.key, name: a.name, reason: a.reason, since_week: week_no });
+  return out.slice(0, PULSE_MAX_ATTENTION * 2);
+}
+export function pulseLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string }): string { const c = r.computed || {}; return `${R4_NAMES_AR.pulse} ${r.week_no} · ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)} · ${String(c.program_ar || '')}${c.classroom_ar ? ` · ${c.classroom_ar}` : ''}${c.unit ? ` · الوحدة ${c.unit.idx}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
+
+/* ───────── تقرير الوحدة ───────── */
+export type UnitWeek = { id: string; kind: 'weekly' | 'diploma_pulse'; week_no: number; period_from: string; period_to: string; verify_code: string | null; status: string };
+export type UnitStudent = StudentRow & { marks: Around; decision: UnitDecision | '' };
+export type UnitComputed = Omit<Computed, 'units'> & {
+  kind: 'diploma_unit'; unit: Unit; unit_skills: Skill[]; planned_hours: number; planned_from: string | null; planned_to: string | null; weeks: UnitWeek[]; weekly_approved: number; pulses_approved: number;
+  attention: { key: string; name: string; reason: string; since_week: number; last_change: AttentionChange | '' }[]; around: Around; units_total: number; units_closed: number; grid_source: 'weeks' | 'empty';
+};
+export type UnitBody = {
+  execution: { deviation: string; notes: string };
+  assessment: { tools: { tool: string; skill: string; desc: string }[]; notes: string };
+  outcome: { judgment: string; pct: number | null; evidence: string };
+  attention: { key: string; name: string; decision: string }[];
+  next: { support: { key: string; name: string; what: string; owner: string }[]; adjust: string; admin: string };
+};
+export const emptyUnitBody = (c: UnitComputed): UnitBody => ({ execution: { deviation: '', notes: '' }, assessment: { tools: [], notes: '' }, outcome: { judgment: '', pct: null, evidence: '' }, attention: (c.attention || []).map(a => ({ key: a.key, name: a.name, decision: '' })), next: { support: [], adjust: '', admin: '' } });
+export function cleanUnitBody(b: any, c: UnitComputed, roster: { key: string; name: string }[]): UnitBody {
+  const names = new Map(roster.map(r => [r.key, r.name])); const att = new Map((c.attention || []).map(a => [a.key, a]));
+  const tools = (Array.isArray(b?.assessment?.tools) ? b.assessment.tools : []).slice(0, 8).map((t: any) => ({ tool: S(t?.tool, SHORT_MAX), skill: S(t?.skill, 40), desc: S(t?.desc, TEXT_MAX) })).filter((t: any) => t.tool);
+  const pctN = b?.outcome?.pct === null || b?.outcome?.pct === undefined || b?.outcome?.pct === '' ? null : Math.max(0, Math.min(100, Math.round(Number(b.outcome.pct)))); const pct = pctN !== null && Number.isFinite(pctN) ? pctN : null;
+  const attention = (Array.isArray(b?.attention) ? b.attention : []).filter((a: any) => att.has(String(a?.key))).map((a: any) => ({ key: String(a.key), name: att.get(String(a.key))!.name, decision: S(a.decision, SHORT_MAX) }));
+  for (const a of c.attention || []) if (!attention.some((x: any) => x.key === a.key)) attention.push({ key: a.key, name: a.name, decision: '' });
+  const support = (Array.isArray(b?.next?.support) ? b.next.support : []).filter((s: any) => names.has(String(s?.key))).slice(0, MAX_LIST).map((s: any) => ({ key: String(s.key), name: names.get(String(s.key)) || '', what: S(s.what, TEXT_MAX), owner: S(s.owner, 80) }));
+  return { execution: { deviation: S(b?.execution?.deviation, TEXT_MAX), notes: S(b?.execution?.notes, TEXT_MAX) }, assessment: { tools, notes: S(b?.assessment?.notes, TEXT_MAX) }, outcome: { judgment: S(b?.outcome?.judgment, TEXT_MAX), pct, evidence: S(b?.outcome?.evidence, TEXT_MAX) }, attention, next: { support, adjust: S(b?.next?.adjust, TEXT_MAX), admin: S(b?.next?.admin, TEXT_MAX) } };
+}
+export function cleanUnitStudents(given: unknown, roster: StudentRow[], skills: Skill[], marks: Map<string, Around>): UnitStudent[] {
+  const base = cleanStudents(given, roster, skills); const g = new Map((Array.isArray(given) ? given : []).map((s: any) => [String(s?.key), s]));
+  return base.map(s => { const x = g.get(s.key); const d = String(x?.decision || ''); return { ...s, marks: marks.get(s.key) || { missions: 0, rehearsals: 0, cases: 0, stations: 0 }, decision: (UNIT_DECISION as readonly string[]).includes(d) ? (d as UnitDecision) : '' }; });
+}
+export function missingBeforeUnitSubmit(b: UnitBody, students: UnitStudent[]): string[] {
+  const m: string[] = []; if (!b.assessment.tools.length) m.push('أداة تقييم واحدة على الأقل'); if (b.outcome.judgment.length < 20) m.push('حكم «ما تحقّق من ناتج الوحدة»');
+  if (b.outcome.pct === null) m.push('نسبة من بلغوا الناتج'); if (b.attention.some(a => a.decision.length < 3)) m.push('قرار لكل اسم في سلسلة الانتباه');
+  const graded = students.filter(s => s.avg !== null).length; if (students.length && graded === 0) m.push('درجات كشف الطلاب (طالب واحد على الأقل)');
+  if (students.length && students.some(s => s.avg !== null && !s.decision)) m.push('قرار الوحدة لكل طالب له درجة');
+  return m;
+}
+/** النسبة المقترحة من الكشف: من بلغ 60% فأكثر — المعلّم يملك الحكم */
+export function outcomePctSuggested(students: { avg: number | null }[]): number | null { const g = students.filter(s => s.avg !== null); if (!g.length) return null; return Math.round((g.filter(s => (s.avg as number) >= PASS_MARK).length / g.length) * 100); }
+export function unitLineAr(r: { computed: any; status: string }): string { const c = r.computed || {}; return `${R4_NAMES_AR.unit} ${c.unit?.idx || ''} «${String(c.unit?.title_ar || '')}» · ${String(c.program_ar || '')}${c.classroom_ar ? ` · ${c.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
+export function diplomaListLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind: string }): string { return r.kind === 'diploma_pulse' ? pulseLineAr(r) : r.kind === 'diploma_unit' ? unitLineAr(r) : `${R4_NAMES_AR.profile} · ${String(r.computed?.program_ar || '')} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
+/** التحقّق العام لتقرير الوحدة: أعداد فقط — بلا أسماء */
+export function unitPublicView(r: { verify_code: string | null; status: string; period_from: string; period_to: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; students: any; body: any }): any {
+  if (r.status !== 'approved' || !r.verify_code) return null; const c: UnitComputed = r.computed; const st: UnitStudent[] = Array.isArray(r.students) ? r.students : [];
+  return { code: r.verify_code, kind: 'diploma_unit', kind_ar: R4_NAMES_AR.unit, program_ar: c.program_ar, org_ar: c.org_ar, classroom_ar: c.classroom_ar, unit: { idx: c.unit.idx, title_ar: c.unit.title_ar, outcome_ar: c.unit.outcome_ar }, units_total: c.units_total, units_closed: c.units_closed,
+    period_from: r.period_from, period_to: r.period_to, sessions: c.sessions, hours: c.hours, planned_hours: c.planned_hours, enrolled: c.enrolled, weeks: c.weeks.length, chain: c.weeks.map(w => w.verify_code || '').filter(Boolean), outcome_pct: r.body?.outcome?.pct ?? null,
+    decisions: UNIT_DECISION.map(d => ({ code: d, ar: UNIT_DECISION_AR[d], n: st.filter(s => s.decision === d).length })), author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at };
+}
+/** بطاقة الدبلوم في تقاريري */
+export type DiplomaCard = { program_id: string; classroom_id: string | null; program_ar: string; classroom_ar: string; level: string | null; units: { unit: Unit; state: UnitState; report_id: string | null; report_status: string | null }[]; current: Unit | null; pulse: { id: string; status: string } | null; weekly: { id: string; status: string } | null; week: { from: string; to: string; week_no: number }; attention_open: number; can_edit_units: boolean };
