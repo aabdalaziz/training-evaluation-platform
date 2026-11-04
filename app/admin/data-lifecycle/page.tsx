@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
@@ -61,7 +61,7 @@ export default function DataLifecyclePage() {
   }, []);
 
   async function loadAudit() {
-    const { data, error } = await db.from('audit_logs').select('id,created_at,actor_id,action,metadata').eq('action', 'PURGE_EVALUATIONS').order('created_at', { ascending: false }).limit(20);
+    const { data, error } = await db.from('audit_logs').select('id,created_at,actor_id,action,metadata').ilike('action', 'PURGE_%').order('created_at', { ascending: false }).limit(20);
     if (error) { setAuditErr(error.message); return; }
     setAudit(data || []);
   }
@@ -106,6 +106,13 @@ export default function DataLifecyclePage() {
 
   const isAdmin = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'].includes(String(role).toUpperCase());
   const canConfirm = confirmText.trim() === 'حذف' && confirmCode.trim().length >= 4 && !busy;
+  const confirmHint = busy === 'purge' ? 'جارٍ الحذف…'
+    : confirmText.trim() && confirmText.trim() !== 'حذف' ? `المكتوب «${confirmText.trim().slice(0, 24)}» — المطلوب كلمة «حذف» بالضبط.`
+    : !confirmText.trim() && confirmCode.trim().length < 4 ? 'اكتب كلمة «حذف» ثم رمز التأكيد الإداري (4 أرقام فأكثر) ليُفعَّل الزرّ.'
+    : !confirmText.trim() ? 'اكتب كلمة «حذف» في الحقل الأول.'
+    : confirmCode.trim().length < 4 ? 'أدخل رمز التأكيد الإداري (4 أرقام فأكثر).' : 'جاهز — اضغط «احذف نهائيًا» أو Enter.';
+  function closeConfirm() { setConfirmOpen(false); setConfirmCode(''); setConfirmText(''); }
+  function onConfirmKey(e: KeyboardEvent) { if (e.key === 'Escape') closeConfirm(); else if (e.key === 'Enter' && canConfirm) { e.preventDefault(); void doPurge(); } }
 
   if (!ready) return <div className="dl" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
 
@@ -195,10 +202,12 @@ export default function DataLifecyclePage() {
             <h3 id="dl-confirm-title"><Icon name="trash" size={20} color="#b91c1c" /> تأكيد الحذف النهائي</h3>
             <p>سيتم حذف <b>{preview.evaluations.toLocaleString('en')}</b> استجابة و<b>{preview.answers.toLocaleString('en')}</b> إجابة نهائيًا من النطاق:</p>
             <div className="dl-scope">{scope}</div>
-            <label>اكتب كلمة <b>حذف</b> للتأكيد<input value={confirmText} onChange={e => setConfirmText(e.target.value)} autoComplete="off" /></label>
-            <label>رمز التأكيد الإداري<input type="password" value={confirmCode} onChange={e => setConfirmCode(e.target.value)} autoComplete="off" inputMode="numeric" /></label>
+            {/* P49-ب.3: حقل «كلمة» + حقل password كانا يُقرآن كنموذج دخول فيملؤهما المتصفّح تلقائيًّا بالبريد وكلمة المرور ويبقى الزرّ معطّلًا بلا تفسير — الآن: حقول نصّية بلا تعبئة تلقائية، الرمز مُقنَّع بـ CSS، وتلميح حيّ يشرح ما ينقص، وEnter/Esc يعملان */}
+            <label><span>اكتب كلمة <b>حذف</b> للتأكيد</span><input name="dl-confirm-word" value={confirmText} onChange={e => setConfirmText(e.target.value)} onKeyDown={onConfirmKey} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false} data-lpignore="true" data-form-type="other" data-1p-ignore placeholder="حذف" aria-describedby="dl-confirm-hint" data-testid="dl-word" /></label>
+            <label><span>رمز التأكيد الإداري</span><input name="dl-confirm-code" className="dl-mask" type="text" value={confirmCode} onChange={e => setConfirmCode(e.target.value)} onKeyDown={onConfirmKey} autoComplete="one-time-code" inputMode="numeric" data-lpignore="true" data-form-type="other" data-1p-ignore aria-describedby="dl-confirm-hint" data-testid="dl-code" /></label>
+            <small id="dl-confirm-hint" className={`dl-hint${canConfirm ? ' ok' : ''}`} aria-live="polite" data-testid="dl-hint">{confirmHint}</small>
             <div className="dl-actions">
-              <button className="dl-btn" onClick={() => { setConfirmOpen(false); setConfirmCode(''); setConfirmText(''); }} disabled={busy !== null}>إلغاء</button>
+              <button className="dl-btn" onClick={closeConfirm} disabled={busy !== null}>إلغاء</button>
               <button className="dl-btn danger" onClick={doPurge} disabled={!canConfirm}>{busy === 'purge' ? 'جارٍ الحذف…' : 'احذف نهائيًا'}</button>
             </div>
           </div>
@@ -243,5 +252,6 @@ const CSS = `
 .dl-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
 .dl-modal-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px}
 .dl-modal-box h3{margin:0;color:#b91c1c;display:flex;align-items:center;gap:8px}.dl-modal-box p{margin:0;line-height:1.7}
+.dl-modal-box label>span{display:block;font-weight:800;font-size:13px;margin-bottom:4px}.dl-mask{-webkit-text-security:disc}.dl-hint{display:block;font-size:12.5px;color:#92400e;font-weight:700;line-height:1.6}.dl-hint.ok{color:#047857}
 @media(max-width:800px){.dl-grid{grid-template-columns:1fr}.dl{padding:12px}}
 `;
