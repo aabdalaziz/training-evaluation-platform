@@ -34,13 +34,14 @@ export function ProgramAfter({ programId, lang = 'ar' }: { programId: string; la
 }
 
 export function CredentialChapters({ code, lang = 'ar' }: { code: string; lang?: string }) {
-  const ar = lang === 'ar'; const [ch, setCh] = useState<any[] | null>(null); const [fl, setFl] = useState<any | null>(null);
-  useEffect(() => { if (!code) return; fetch(`/api/after?credential=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setCh(j?.success ? (j.chapters || []) : [])).catch(() => setCh([])); fetch(`/api/reports?credential=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setFl(j?.success ? (j.line || null) : null)).catch(() => setFl(null)); }, [code]);   // P46 ر2: «خاتمة الرحلة» — فقرة المسار من التقرير الختامي المعتمَد (بإذن صاحبها)
-  if ((!ch || ch.length === 0) && !fl) return null;
+  const ar = lang === 'ar'; const [ch, setCh] = useState<any[] | null>(null); const [fl, setFl] = useState<any | null>(null); const [pf, setPf] = useState<any | null>(null);   // ر4-ب: كشف الكفايات
+  useEffect(() => { if (!code) return; fetch(`/api/after?credential=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setCh(j?.success ? (j.chapters || []) : [])).catch(() => setCh([])); fetch(`/api/reports?credential=${encodeURIComponent(code)}`, { cache: 'no-store' }).then(r => r.json()).then(j => { setFl(j?.success ? (j.line || null) : null); setPf(j?.success ? (j.profile || null) : null); }).catch(() => { setFl(null); setPf(null); }); }, [code]);   // P46 ر2: «خاتمة الرحلة» — فقرة المسار من التقرير الختامي المعتمَد (بإذن صاحبها)
+  if ((!ch || ch.length === 0) && !fl && !pf) return null;
   return <section className="pa-ch" data-testid="pa-chapters" aria-labelledby="pa-ch-h"><style dangerouslySetInnerHTML={{ __html: CSS }} />
     <h3 id="pa-ch-h"><Icon name="certificate" size={16} /> {ar ? P38_NAMES_AR.chapters : 'Chapters after the program'}</h3>
     <p className="pa-note">{ar ? 'كتبها صاحب الشهادة بنفسه بعد البرنامج، واختار إظهارها هنا. الشهادة التي تكبر.' : 'Written by the holder after the program and shown here by their choice.'}</p>
     {fl && <div className="pa-final" data-testid="pa-final-line"><b>{ar ? 'خاتمة الرحلة' : 'End of the journey'}</b> · <span className="pa-st">{ar ? `من التقرير الختامي المعتمَد (${fl.weeks} أسابيع موثَّقة${fl.delta !== null && fl.delta !== undefined ? ` · الفرق ${fl.delta > 0 ? '+' : ''}${fl.delta}` : ''})` : `from the approved final report (${fl.weeks} weeks)`}</span><p>{fl.paragraph || fl.text_ar}</p><em dir="ltr">/verify/report/{fl.verify_code}</em></div>}
+    {pf && <div className="pa-final pa-prof" data-testid="pa-profile"><b>{ar ? 'كشف الكفايات' : 'Competency profile'}</b> · <span className="pa-st">{ar ? `معتمَد${pf.units_reached !== null && pf.units_total ? ` · بلغ ناتج ${pf.units_reached} من ${pf.units_total} وحدات` : ''}${pf.hours ? ` · ${pf.hours} ساعة` : ''}` : 'approved'}</span><ul className="pa-lv">{(pf.levels || []).map((l: any, i: number) => <li key={i} data-level={l.level}><span>{l.name_ar}</span><b>{l.level_ar}</b></li>)}</ul>{pf.strengths && <p>{pf.strengths}</p>}<em dir="ltr">/verify/report/{pf.verify_code}</em></div>}
     {ch && ch.length > 0 && <ol className="pa-chl">{ch.map((c: any) => <li key={c.station} data-testid="pa-chapter"><b>{c.station_ar}</b> · <span className="pa-st">{c.state_ar}</span><p>{c.text_ar}</p>{c.witness_text && <em>— {ar ? 'شهد' : 'witness'}: «{c.witness_text}»</em>}</li>)}</ol>}
   </section>;
 }
@@ -79,6 +80,7 @@ export function OrgStations({ orgId, token, lang = 'ar' }: { orgId: string; toke
 }
 
 const CSS = `
+.pa-lv{list-style:none;margin:.4rem 0;padding:0;display:grid;gap:.3rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.pa-lv li{display:flex;justify-content:space-between;gap:.5rem;border:1px solid #e5e8ef;border-radius:8px;padding:.3rem .55rem;background:#fff;font-size:.9rem}.pa-lv li b{color:#0b8a83}.pa-lv li[data-level="0"] b{color:#94a3b8}.pa-lv li[data-level="5"] b,.pa-lv li[data-level="4"] b{color:#9a6b00}
 .pa-voices{display:grid;gap:8px;margin:8px 0}.pa-voice{margin:0;color:#0f2a4e;font-weight:700;line-height:1.9;display:flex;gap:6px;align-items:flex-start}.pa-orgsaid{margin:0;padding:8px 12px;border-inline-start:3px solid #0f2a4e;background:#f8fafc;border-radius:8px;line-height:1.9;color:#1f2937}.pa-orgsaid small{display:block;color:#0b6f69;font-weight:800;font-size:12px;margin-bottom:2px}
 .pa-orgst{border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 16px;background:#fff;margin-top:14px}.pa-orgst h3{margin:0 0 6px;font-size:17px;color:#0f2a4e;display:flex;gap:8px;align-items:center}.pa-orgl{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:10px}.pa-orgi{border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;display:grid;gap:8px}.pa-orgi.open{border-color:#0b8a83;background:#f0fdfa}.pa-orgi.written{border-color:#c9a24b}
 .pa-orgh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.pa-orgh b{color:#0f2a4e}.pa-orgh small{color:#64748b;font-size:12px}.pa-msg{margin:4px 0;color:#0b6f69;font-weight:800}

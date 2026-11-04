@@ -213,6 +213,7 @@ export function verifyCode(rnd: () => number = Math.random): string { let s = 'R
 export function publicVerifyView(r: { verify_code: string | null; status: string; week_no: number; period_from: string; period_to: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; kind: string }): any {
   if (r.status !== 'approved' || !r.verify_code) return null;
   if (r.kind === 'diploma_unit') return unitPublicView(r as any);   // ر4
+  if (r.kind === 'diploma_profile') return profilePublicView(r as any);   // ر4-ب
   return { code: r.verify_code, kind: r.kind, kind_ar: r.kind === 'weekly' ? P46_NAMES_AR.weekly : r.kind === 'final' ? P46_NAMES_AR.final : r.kind, week_no: r.week_no, weeks: Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0, chain: Array.isArray(r.computed?.weeks) ? (r.computed.weeks as any[]).map(w => String(w.verify_code || '')).filter(Boolean) : [], signoff: r.kind === 'final' ? signoffView((r as any).body) : null, period_from: r.period_from, period_to: r.period_to, program_ar: String(r.computed?.program_ar || ''), org_ar: String(r.computed?.org_ar || ''), classroom_ar: String(r.computed?.classroom_ar || ''), author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at, sessions: Number(r.computed?.sessions || 0), hours: Number(r.computed?.hours || 0), enrolled: Number(r.computed?.enrolled || 0) };
 }
 /** سطر القائمة */
@@ -716,13 +717,117 @@ export function missingBeforeUnitSubmit(b: UnitBody, students: UnitStudent[]): s
 /** النسبة المقترحة من الكشف: من بلغ 60% فأكثر — المعلّم يملك الحكم */
 export function outcomePctSuggested(students: { avg: number | null }[]): number | null { const g = students.filter(s => s.avg !== null); if (!g.length) return null; return Math.round((g.filter(s => (s.avg as number) >= PASS_MARK).length / g.length) * 100); }
 export function unitLineAr(r: { computed: any; status: string }): string { const c = r.computed || {}; return `${R4_NAMES_AR.unit} ${c.unit?.idx || ''} «${String(c.unit?.title_ar || '')}» · ${String(c.program_ar || '')}${c.classroom_ar ? ` · ${c.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
-export function diplomaListLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind: string }): string { return r.kind === 'diploma_pulse' ? pulseLineAr(r) : r.kind === 'diploma_unit' ? unitLineAr(r) : `${R4_NAMES_AR.profile} · ${String(r.computed?.program_ar || '')} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
+export function diplomaListLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind: string }): string { return r.kind === 'diploma_pulse' ? pulseLineAr(r) : r.kind === 'diploma_unit' ? unitLineAr(r) : profileLineAr(r); }
 /** التحقّق العام لتقرير الوحدة: أعداد فقط — بلا أسماء */
 export function unitPublicView(r: { verify_code: string | null; status: string; period_from: string; period_to: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; students: any; body: any }): any {
   if (r.status !== 'approved' || !r.verify_code) return null; const c: UnitComputed = r.computed; const st: UnitStudent[] = Array.isArray(r.students) ? r.students : [];
-  return { code: r.verify_code, kind: 'diploma_unit', kind_ar: R4_NAMES_AR.unit, program_ar: c.program_ar, org_ar: c.org_ar, classroom_ar: c.classroom_ar, unit: { idx: c.unit.idx, title_ar: c.unit.title_ar, outcome_ar: c.unit.outcome_ar }, units_total: c.units_total, units_closed: c.units_closed,
+  return { code: r.verify_code, kind: 'diploma_unit', kind_ar: R4_NAMES_AR.unit, program_id: (r as any).program_id ? String((r as any).program_id) : null, program_ar: c.program_ar, org_ar: c.org_ar, classroom_ar: c.classroom_ar, unit: { idx: c.unit.idx, title_ar: c.unit.title_ar, outcome_ar: c.unit.outcome_ar }, units_total: c.units_total, units_closed: c.units_closed,
     period_from: r.period_from, period_to: r.period_to, sessions: c.sessions, hours: c.hours, planned_hours: c.planned_hours, enrolled: c.enrolled, weeks: c.weeks.length, chain: c.weeks.map(w => w.verify_code || '').filter(Boolean), outcome_pct: r.body?.outcome?.pct ?? null,
     decisions: UNIT_DECISION.map(d => ({ code: d, ar: UNIT_DECISION_AR[d], n: st.filter(s => s.decision === d).length })), author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at };
 }
 /** بطاقة الدبلوم في تقاريري */
 export type DiplomaCard = { program_id: string; classroom_id: string | null; program_ar: string; classroom_ar: string; level: string | null; units: { unit: Unit; state: UnitState; report_id: string | null; report_status: string | null }[]; current: Unit | null; pulse: { id: string; status: string } | null; weekly: { id: string; status: string } | null; week: { from: string; to: string; week_no: number }; attention_open: number; can_edit_units: boolean };
+
+/* ═════════════════════════════ ر4-ب — «كشف الكفايات» («العودة إلى الجواز») ═════════════════════════════
+ *  لكل متدرّب مقبول كشفٌ واحد حيّ: يُنشأ مسودّةً عند اعتماد أول تقرير وحدة، ويُعاد حسابه بعد كل وحدة، ويُعتمد مرّة واحدة في آخر الدبلوم (ونسخة جديدة تَنسخه عند الحاجة).
+ *  لماذا «كشف» لا «شهادة»: الشهادة تقول «أتمّ»، والكشف يقول «ماذا يستطيع الآن وبأيّ شاهد» — وهو ما يُعاد إلى جواز المهارات (P8) مستوىً معتمَدًا بملاحظة تحمل رمزه.
+ *  القاعدة: الأدلّة تُجمع آليًا (كشوف الوحدات · المهمات المصدَّقة · «كل يوم مهارة» · البروفات · المحطات · الجواز المحسوب)، والاقتراح يُحسب محليًا بقاعدة مُعلنة،
+ *  والمستوى النهائي يكتبه المعلّم على سُلّم الجواز نفسه (أساسي · مبتدئ متقدم · متوسط · متقدم · خبير) أو «لم يُثبت بعد»، ومن «متوسط» فأعلى تلزم جملةُ شاهد.
+ */
+export const R4B_NAMES_AR = {
+  profile: 'كشف الكفايات', official: 'كشف الكفايات المعتمَد', story: 'العودة إلى الجواز', suggest: 'اقتراح من الأدلّة', not_proven: 'لم يُثبت بعد', arrange: 'رتّب الأدلّة',
+  distinguish: 'ما يميّزه', keep: 'ما يحتاج أن يواصله', recommendation: 'التوصية', cohort: 'قراءة الدفعة', open: 'كشوف الكفايات', passport: 'جواز المهارات', complete_cert: 'أصدر شهادة الإتمام',
+  motto: 'ما يستطيعه الآن، وبأيّ شاهد', my_profile: 'كشف كفاياتي', show_cred: 'أظهِر كفاياتي في شهادتي',
+} as const;
+/** سُلّم المستوى في الكشف = سُلّم الجواز P8 (1..5) + صفر «لم يُثبت بعد» */
+export const PROFILE_LEVEL_AR = ['لم يُثبت بعد', 'أساسي', 'مبتدئ متقدم', 'متوسط', 'متقدم', 'خبير'] as const;
+export const PROFILE_EVIDENCE_MIN_LEVEL = 3;            // من «متوسط» فأعلى تلزم جملة شاهد
+export const PROFILE_MAX_QUOTES = 3; export const QUOTE_MAX = 300; export const COHORT_MIN = 5;
+export const PROFILE_REC = ['complete', 'complete_plan', 'finish_units', 'repeat'] as const; export type ProfileRec = (typeof PROFILE_REC)[number];
+export const PROFILE_REC_AR: Record<ProfileRec, string> = { complete: 'إتمام الدبلوم', complete_plan: 'إتمام مع خطة متابعة', finish_units: 'استكمال وحدات', repeat: 'إعادة الدبلوم' };
+/** كلمات الحكم التي لا تدخل «رتّب الأدلّة» — الحكم للمعلّم وحده */
+export const JUDGMENT_WORDS_AR = ['ممتاز', 'ضعيف', 'يستحق', 'لا يستحق', 'فاشل', 'رائع', 'متفوق', 'سيئ', 'مخفق', 'الأفضل', 'الأسوأ'];
+export type CompetencyUnit = { idx: number; title_ar: string; score: number | null; decision: string; verify_code: string | null };
+export type Competency = { code: string; name_ar: string; skill_id: string | null; units: CompetencyUnit[]; avg: number | null; missions: number; cases: number; passport_computed: number | null; passport_approved: number | null; suggested: number | null; why: string };
+export type ProfileComputed = {
+  kind: 'diploma_profile'; program_ar: string; org_ar: string; classroom_ar: string; trainer_ar: string; subject: { key: string; name: string; email: string; user_id: string | null };
+  units: { idx: number; title_ar: string; state: UnitState; score: number | null; decision: string; verify_code: string | null }[]; units_total: number; units_closed: number; units_reached: number;
+  attendance_pct: number | null; sessions: number; hours: number; attention: { reason: string; since_week: number; last_change: string }[]; around: Around; competencies: Competency[]; computed_at: string; supersedes_code: string | null;
+};
+export type ProfileLevel = { code: string; level: number | null; evidence: string };
+export type ProfileQuote = { code: string; text: string; source: string };
+export type ProfileBody = { levels: ProfileLevel[]; strengths: string; keep: string; recommendation: ProfileRec | ''; plan: string; quotes: ProfileQuote[]; admin: string; show_suggest?: boolean };
+/** الاقتراح من الأدلّة — قاعدة مُعلنة: متوسط كشوف الوحدات (90/80/70/60) ← +1 إن صُدِّقت مهمّتان ← وإلا الجواز المحسوب ← وإلا لا اقتراح */
+export function suggestLevel(c: { avg: number | null; missions: number; cases: number; passport_computed: number | null }): { level: number | null; why: string } {
+  if (c.avg !== null && Number.isFinite(c.avg)) {
+    let lv = c.avg >= 90 ? 5 : c.avg >= 80 ? 4 : c.avg >= 70 ? 3 : c.avg >= PASS_MARK ? 2 : 1; const why = [`متوسط كشوف الوحدات ${Math.round(c.avg)}%`];
+    if (c.missions >= 2 && lv < 5 && c.avg >= PASS_MARK) { lv++; why.push(`+1 لتصديق ${c.missions === 2 ? 'مهمّتين' : c.missions + ' مهمات'}`); } else if (c.missions === 1) why.push('مهمة مصدَّقة واحدة (لا ترفع المستوى وحدها)');
+    if (c.cases) why.push(`${c.cases} ${c.cases === 1 ? 'إجابة' : 'إجابات'} في «كل يوم مهارة»`); return { level: lv, why: why.join(' · ') };
+  }
+  if (c.passport_computed !== null && c.passport_computed > 0) return { level: Math.max(1, Math.min(5, Math.round(c.passport_computed))), why: `من الجواز المحسوب (${c.passport_computed}) — لا كشف وحدة لهذه الكفاية بعد` };
+  return { level: null, why: 'لا أدلّة بعد' };
+}
+export const emptyProfileBody = (c: ProfileComputed): ProfileBody => ({ levels: (c.competencies || []).map(k => ({ code: k.code, level: null, evidence: '' })), strengths: '', keep: '', recommendation: '', plan: '', quotes: [], admin: '', show_suggest: true });
+export function cleanProfileBody(b: any, c: ProfileComputed): ProfileBody {
+  const comps = c.competencies || []; const codes = new Set(comps.map(k => k.code)); const given = new Map<string, any>((Array.isArray(b?.levels) ? b.levels : []).map((l: any) => [String(l?.code), l]));
+  const levels: ProfileLevel[] = comps.map(k => { const l = given.get(k.code); const n = l?.level === null || l?.level === undefined || l?.level === '' ? null : Math.round(Number(l.level)); return { code: k.code, level: n !== null && Number.isFinite(n) && n >= 0 && n <= 5 ? n : null, evidence: S(l?.evidence, TEXT_MAX) }; });
+  const perCode = new Map<string, number>(); const quotes: ProfileQuote[] = (Array.isArray(b?.quotes) ? b.quotes : []).map((q: any) => ({ code: String(q?.code || ''), text: S(q?.text, QUOTE_MAX), source: S(q?.source, 80) })).filter((q: ProfileQuote) => codes.has(q.code) && q.text.length >= 3 && (perCode.set(q.code, (perCode.get(q.code) || 0) + 1), (perCode.get(q.code) || 0) <= PROFILE_MAX_QUOTES));
+  const rec = String(b?.recommendation || ''); return { levels, strengths: S(b?.strengths, TEXT_MAX), keep: S(b?.keep, TEXT_MAX), recommendation: (PROFILE_REC as readonly string[]).includes(rec) ? (rec as ProfileRec) : '', plan: S(b?.plan, TEXT_MAX), quotes, admin: S(b?.admin, TEXT_MAX), show_suggest: b?.show_suggest !== false };
+}
+export function missingBeforeProfileSubmit(b: ProfileBody, c: ProfileComputed): string[] {
+  const m: string[] = []; const names = new Map((c.competencies || []).map(k => [k.code, k.name_ar]));
+  const noLevel = b.levels.filter(l => l.level === null); if (noLevel.length) m.push(`مستوى لكل كفاية أو «${R4B_NAMES_AR.not_proven}» (${noLevel.map(l => names.get(l.code) || l.code).slice(0, 3).join('، ')}${noLevel.length > 3 ? '…' : ''})`);
+  const noEv = b.levels.filter(l => (l.level || 0) >= PROFILE_EVIDENCE_MIN_LEVEL && l.evidence.length < 10); if (noEv.length) m.push(`جملة شاهد لكل كفاية بمستوى «${PROFILE_LEVEL_AR[PROFILE_EVIDENCE_MIN_LEVEL]}» فأعلى (${noEv.map(l => names.get(l.code) || l.code).slice(0, 3).join('، ')})`);
+  if (b.strengths.length < 10) m.push(`«${R4B_NAMES_AR.distinguish}»`); if (b.keep.length < 10) m.push(`«${R4B_NAMES_AR.keep}»`);
+  if (!b.recommendation) m.push(`${R4B_NAMES_AR.recommendation} بالكلمات`); else if (b.recommendation !== 'complete' && b.plan.length < 10) m.push(b.recommendation === 'finish_units' ? 'ما الوحدات التي تُستكمل؟' : 'خطة المتابعة/الإعادة');
+  return m;
+}
+/** سطر القائمة */
+export function profileLineAr(r: { computed: any; status: string }): string { const c = r.computed || {}; return `${R4B_NAMES_AR.profile} · ${String(c.subject?.name || '')} · ${String(c.program_ar || '')}${c.classroom_ar ? ` · ${c.classroom_ar}` : ''} · ${r.status === 'approved' ? 'معتمَد' : r.status === 'submitted' ? 'بانتظار الاعتماد' : r.status === 'returned' ? 'أُعيد' : 'مسودّة'}`; }
+export const levelAr = (n: number | null | undefined) => (n === null || n === undefined ? '—' : PROFILE_LEVEL_AR[Math.max(0, Math.min(5, n))]);
+/** ما يُكتب في الجواز عند الاعتماد: المستويات 1..5 فقط لكفايات لها مهارة في P8 */
+export function passportWrites(b: ProfileBody, c: ProfileComputed): { skill_id: string; level: number; code: string }[] {
+  const byCode = new Map((c.competencies || []).map(k => [k.code, k])); const out: { skill_id: string; level: number; code: string }[] = [];
+  for (const l of b.levels) { const k = byCode.get(l.code); if (k?.skill_id && l.level && l.level >= 1 && l.level <= 5) out.push({ skill_id: k.skill_id, level: l.level, code: l.code }); } return out;
+}
+/** ما يصل المتدرّب (سطر + صفحة كاملة) — بلا ملاحظات الإدارة */
+export function profileLineData(b: ProfileBody, c: ProfileComputed): any {
+  const names = new Map((c.competencies || []).map(k => [k.code, k.name_ar]));
+  return { levels: b.levels.map(l => ({ code: l.code, name_ar: names.get(l.code) || l.code, level: l.level ?? 0, level_ar: levelAr(l.level ?? 0), evidence: l.evidence })), quotes: b.quotes, strengths: b.strengths, keep: b.keep, recommendation: b.recommendation, recommendation_ar: b.recommendation ? PROFILE_REC_AR[b.recommendation] : '', plan: b.plan,
+    units_total: c.units_total, units_closed: c.units_closed, units_reached: c.units_reached, hours: c.hours, attendance_pct: c.attendance_pct, program_ar: c.program_ar, org_ar: c.org_ar };
+}
+export function profileLineText(b: ProfileBody, c: ProfileComputed): string {
+  const proven = b.levels.filter(l => (l.level || 0) >= 1).length; const top = b.levels.filter(l => (l.level || 0) >= 4).length; const names = new Map((c.competencies || []).map(k => [k.code, k.name_ar]));
+  const best = [...b.levels].sort((a, z) => (z.level || 0) - (a.level || 0))[0]; const t = `اعتُمد ${R4B_NAMES_AR.profile}: أثبتَ ${proven} من ${b.levels.length} كفايات${top ? ` (${top} منها «${PROFILE_LEVEL_AR[4]}» فأعلى)` : ''}${best && (best.level || 0) >= 3 ? ` — أبرزها «${names.get(best.code) || best.code}»` : ''}. ${R4B_NAMES_AR.recommendation}: ${b.recommendation ? PROFILE_REC_AR[b.recommendation] : '—'}.`;
+  return t.slice(0, LINE_MAX);
+}
+/** التحقّق العام: أعداد ومستويات بلا اسم */
+export function profilePublicView(r: { verify_code: string | null; status: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; body: any; period_to?: string }): any {
+  if (r.status !== 'approved' || !r.verify_code) return null; const c: ProfileComputed = r.computed; const b: ProfileBody = r.body || { levels: [] }; const dist = [0, 0, 0, 0, 0, 0]; for (const l of b.levels || []) dist[Math.max(0, Math.min(5, l.level || 0))]++;
+  return { code: r.verify_code, kind: 'diploma_profile', kind_ar: R4B_NAMES_AR.profile, program_ar: c.program_ar, org_ar: c.org_ar, units_total: c.units_total, units_closed: c.units_closed, units_reached: c.units_reached, hours: c.hours, competencies: (b.levels || []).length, proven: (b.levels || []).filter(l => (l.level || 0) >= 1).length,
+    distribution: dist.map((n, i) => ({ level: i, ar: PROFILE_LEVEL_AR[i], n })), recommendation_ar: b.recommendation ? PROFILE_REC_AR[b.recommendation] : '', author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at, superseded: !!r.body?.superseded_by };
+}
+/** قراءة الدفعة (k ≥ 5 · بلا أسماء): توزيع المستويات لكل كفاية · نسبة الإتمام · متوسط الساعات */
+export function cohortReading(rows: { body: any; computed: any }[]): { n: number; shown: boolean; competencies: { code: string; name_ar: string; dist: number[]; avg_level: number | null }[]; completion_pct: number | null; avg_hours: number | null } {
+  const n = rows.length; if (n < COHORT_MIN) return { n, shown: false, competencies: [], completion_pct: null, avg_hours: null };
+  const acc = new Map<string, { name_ar: string; dist: number[]; sum: number; k: number }>();
+  for (const r of rows) { const names = new Map(((r.computed?.competencies || []) as Competency[]).map(k => [k.code, k.name_ar])); for (const l of (r.body?.levels || []) as ProfileLevel[]) { const a = acc.get(l.code) || { name_ar: names.get(l.code) || l.code, dist: [0, 0, 0, 0, 0, 0], sum: 0, k: 0 }; const lv = Math.max(0, Math.min(5, l.level || 0)); a.dist[lv]++; if (lv) { a.sum += lv; a.k++; } acc.set(l.code, a); } }
+  const done = rows.filter(r => r.body?.recommendation === 'complete' || r.body?.recommendation === 'complete_plan').length; const hrs = rows.map(r => Number(r.computed?.hours) || 0);
+  return { n, shown: true, competencies: Array.from(acc.entries()).map(([code, a]) => ({ code, name_ar: a.name_ar, dist: a.dist, avg_level: a.k ? Math.round((a.sum / a.k) * 10) / 10 : null })), completion_pct: Math.round((done / n) * 100), avg_hours: hrs.length ? Math.round(hrs.reduce((x, y) => x + y, 0) / hrs.length) : null };
+}
+/* ───────── «رتّب الأدلّة» — اقتباسات بمصدر، بلا رقم غريب ولا حكم ───────── */
+export type EvidenceItem = { source: string; text: string };
+const digitsOf = (s: string) => (s.match(/[0-9٠-٩]+(?:[.,][0-9٠-٩]+)?/g) || []).map(x => x.replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(',', '.'));
+const firstSentence = (t: string, n = 160) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); const m = s.match(/^.{10,}?[.!؟?؛]/); return (m ? m[0] : s).slice(0, n).trim(); };
+/** الترتيب المحلي: أول جملة من كل دليل بمصدره — حتى ثلاثة */
+export function localEvidenceQuotes(code: string, items: EvidenceItem[]): ProfileQuote[] { const out: ProfileQuote[] = []; for (const it of items) { const t = firstSentence(it.text); if (t.length >= 10 && !out.some(o => o.text === t)) out.push({ code, text: t, source: it.source }); if (out.length >= PROFILE_MAX_QUOTES) break; } return out; }
+/** تنقية ما يقترحه الذكاء: المصدر من القائمة · لا كلمة حكم · كل رقم فيه موجود في الأدلّة · 10..300 حرفًا · ≤ 3 */
+export function cleanEvidenceQuotes(code: string, raw: any, items: EvidenceItem[]): { quotes: ProfileQuote[]; rejected: number } {
+  const srcs = new Set(items.map(i => i.source)); const pool = new Set(items.flatMap(i => digitsOf(i.text + ' ' + i.source))); const arr: any[] = Array.isArray(raw?.quotes) ? raw.quotes : Array.isArray(raw) ? raw : []; const out: ProfileQuote[] = []; let rejected = 0;
+  for (const q of arr) { const text = S(q?.text, QUOTE_MAX); const source = S(q?.source, 80); const bad = text.length < 10 || !srcs.has(source) || JUDGMENT_WORDS_AR.some(w => text.includes(w)) || digitsOf(text).some(d => !pool.has(d)); if (bad) { rejected++; continue; } if (!out.some(o => o.text === text)) out.push({ code, text, source }); if (out.length >= PROFILE_MAX_QUOTES) break; }
+  return { quotes: out, rejected };
+}
+export function evidencePrompt(name_ar: string, items: EvidenceItem[]): { system: string; user: string } {
+  return { system: 'أنت تساعد معلّم دبلوم على ترتيب أدلّة كفاية واحدة لمتدرّب. أعد JSON فقط بالشكل {"quotes":[{"text":"...","source":"..."}]} بثلاث جمل على الأكثر، كل جملة إمّا اقتباس حرفي قصير من دليل أو تلخيص أمين له، و"source" يُنسخ حرفيًا من مصدر الدليل. ممنوع: أي رقم غير موجود في الأدلّة، وأي حكم أو تقدير (ممتاز/ضعيف/يستحق)، وأي معلومة من خارج الأدلّة. العربية الفصحى، بلا مقدّمات.',
+    user: JSON.stringify({ competency: name_ar, evidence: items.slice(0, 12).map(i => ({ source: i.source, text: i.text.slice(0, 500) })) }) };
+}

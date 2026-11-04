@@ -27,7 +27,9 @@ import { OrgImpact } from '../components/OrgImpact';
 import { OrgJourney } from '../components/OrgJourney';
 import { OrgHorizon } from '../components/OrgHorizon';
 import { OrgSeason } from '../components/OrgSeason';   // P35 «موسم الهواء» + «أمانة إلى جهة»
-import { OrgAfterLine, OrgStations } from '../components/ProgramAfter';   // P38 «الشهادة التي تكبر» — سطر الجهة · P39 «محطة الجهة»
+import { OrgAfterLine, OrgStations } from '../components/ProgramAfter';
+import dynamic from 'next/dynamic';
+const OrgCohorts = dynamic(() => import('../components/DiplomaProfile').then(m => m.OrgCohorts), { ssr: false });   // P46 ر4-ب «قراءة الدفعة»   // P38 «الشهادة التي تكبر» — سطر الجهة · P39 «محطة الجهة»
 import { OrgNeeds } from '../components/Needs';   // P44 «جهة تحتاج»
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
@@ -117,6 +119,7 @@ function Inner() {
               {!wx.steps.length && <p className="pt-muted">{lang === 'ar' ? 'لا خطوات مقترحة الآن — حافظوا على الإيقاع.' : 'No suggested steps right now — keep the rhythm.'}</p>}
             </>}
             <OrgAfterLine orgId={orgId} token={token} lang={lang} />
+            <OrgCohorts orgId={orgId} token={token} />
             <OrgStations orgId={orgId} token={token} lang={lang} />
             <OrgNeeds orgId={orgId} token={token} lang={lang} />
           </div>}

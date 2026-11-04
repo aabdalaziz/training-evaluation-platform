@@ -15,6 +15,8 @@ import Link from 'next/link';
 import { Icon } from '../../lib/ui/icons';
 import { P46_NAMES_AR, R4_NAMES_AR, UNIT_STATE_AR, UNIT_TOOLS_AR, ATTENTION_CHANGE, ATTENTION_CHANGE_AR, UNIT_DECISION, UNIT_DECISION_AR, EVIDENCE_MARKS_AR, UNIT_MAX, UNIT_TITLE_MAX, UNIT_OUTCOME_MAX, PULSE_MAX_ATTENTION, PULSE_TEXT_MAX, TEXT_MAX, SHORT_MAX, LINE_MAX, MAX_LIST, GRADE_KEY_AR, PASS_MARK, fmtDayAr, summativeStats, outcomePctSuggested, type Unit, type PulseBody, type PulseComputed, type UnitBody, type UnitComputed, type UnitStudent, type DiplomaCard, type Phrase } from '../../lib/reports/registry';
 import { MR_CSS, MR_PRINT_CSS } from './MissionReport';
+import dynamic from 'next/dynamic';
+const ProfilesPanel = dynamic(() => import('./DiplomaProfile').then(m => m.ProfilesPanel), { ssr: false });   // ر4-ب «كشف الكفايات»
 
 type Tok = () => Promise<string>;
 async function api(tok: Tok | null, path: string, body?: any) { const tk = tok ? await tok() : ''; const h: any = { 'Content-Type': 'application/json' }; if (tk) h.Authorization = `Bearer ${tk}`; const r = await fetch(path, body ? { method: 'POST', headers: h, body: JSON.stringify(body) } : { headers: h, cache: 'no-store' }); return r.json().catch(() => ({ success: false, error: 'استجابة غير صالحة' })); }
@@ -32,9 +34,13 @@ const CSS = `
 @media (max-width:720px){.dr-follow{grid-template-columns:1fr}.dr-unit .g{grid-template-columns:1fr}}
 `;
 
+/** ر4-ب: تُعيد «كشف الكفايات» استعمال الرأس والقرار والملاحظات والأنماط نفسها */
+export { api as drApi, CSS as DR_CSS, statusAr as drStatusAr };
+export const DrHead = (p: any) => <Head {...p} />; export const DrReturn = (p: any) => <Return {...p} />; export const DrNotes = (p: any) => <Notes {...p} />;
+
 /* ───────── 1) بطاقات ملف الدبلوم ───────── */
 export function DiplomaCards({ diploma, token }: { diploma: DiplomaCard[]; token: Tok }) {
-  const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [open, setOpen] = useState<string>(''); const [cards, setCards] = useState<DiplomaCard[]>(diploma);
+  const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [open, setOpen] = useState<string>(''); const [openP, setOpenP] = useState<string>(''); const [cards, setCards] = useState<DiplomaCard[]>(diploma);
   useEffect(() => setCards(diploma), [diploma]);
   if (!cards || !cards.length) return null;
   async function go(action: string, c: DiplomaCard, extra: any = {}, tid = '') { setBusy(tid || action + c.program_id + (c.classroom_id || '')); setErr(''); const j = await api(token, '/api/reports', { action, program_id: c.program_id, classroom_id: c.classroom_id, ...extra }); setBusy(''); if (!j.success) { setErr(j.error || 'فشل'); return; } window.location.href = `/me/reports/${j.report.id}`; }
@@ -51,7 +57,9 @@ export function DiplomaCards({ diploma, token }: { diploma: DiplomaCard[]; token
         {c.weekly?.id ? <Link className="pt-btn ghost small" href={`/me/reports/${c.weekly.id}`} data-testid="dr-open-weekly">{P46_NAMES_AR.weekly} · {statusAr(c.weekly.status)}</Link> : !c.weekly && <button type="button" className="pt-btn ghost small" onClick={() => go('create', c, { period_from: c.week.from, period_to: c.week.to }, 'full' + k)} disabled={!!busy} data-testid="dr-full">{R4_NAMES_AR.full_week}</button>}
         {cur && (cur.report_id ? <Link className="pt-btn ghost small" href={`/me/reports/${cur.report_id}`} data-testid="dr-open-unit">{R4_NAMES_AR.unit} {cur.unit.idx} · {statusAr(cur.report_status || 'draft')}</Link> : <button type="button" className="pt-btn ghost small" onClick={() => go('create_unit', c, { unit_id: cur.unit.id }, 'unit' + k)} disabled={!!busy} data-testid="dr-close-unit">{busy === 'unit' + k ? '…' : `${R4_NAMES_AR.close_unit} (${cur.unit.idx})`}</button>)}
         {c.can_edit_units && <button type="button" className="mr-linkbtn" onClick={() => setOpen(o => (o === k ? '' : k))} data-testid="dr-units-toggle">{open === k ? 'أخفِ الوحدات' : R4_NAMES_AR.units}</button>}
+        <button type="button" className="mr-linkbtn" onClick={() => setOpenP(o => (o === k ? '' : k))} data-testid="dp-toggle">{openP === k ? 'أخفِ الكشوف' : R4_NAMES_AR.profile}</button>
       </div>
+      {openP === k && <ProfilesPanel programId={c.program_id} classroomId={c.classroom_id} token={token} />}
       {open === k && <UnitsPanel programId={c.program_id} token={token} onSaved={us => setCards(cs => cs.map(x => (x.program_id === c.program_id ? { ...x, units: us.map((u, i) => ({ unit: u, state: u.closed_at ? 'closed' : (x.units.find(y => y.unit.id === u.id)?.state || (i === us.findIndex(z => !z.closed_at) ? 'current' : 'upcoming')), report_id: x.units.find(y => y.unit.id === u.id)?.report_id || null, report_status: x.units.find(y => y.unit.id === u.id)?.report_status || null })) } : x)))} />}
     </li>; })}</ul>
   </section>;

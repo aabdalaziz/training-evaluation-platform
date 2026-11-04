@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
 
-type Line = { id: string; program_ar: string; week_no: number; text_ar: string; period_to: string; kind?: string };   /* P46 ر2: kind = weekly | final */
+type Line = { id: string; program_ar: string; week_no: number; text_ar: string; period_to: string; kind?: string };   /* P46 ر2/ر4: kind = weekly | final | diploma_unit | diploma_profile */
 const fmt = (d: string) => (d ? new Date(d + 'T00:00:00').toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { day: 'numeric', month: 'long' }) : '');
 export default function ReportLinesCard() {
   const db = useMemo(() => supabase(), []); const [items, setItems] = useState<Line[]>([]);
@@ -17,9 +17,9 @@ export default function ReportLinesCard() {
   if (!items.length) return null;
   return (
     <section className="rlc" id="report-lines" data-testid="report-lines-card"><style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <h3><Icon name="mail" size={16} /> {items.some(l => l.kind === 'final') ? 'سطر لك من معلّمك' : 'سطر لك من تقرير الأسبوع'}</h3>
+      <h3><Icon name="mail" size={16} /> {items.some(l => l.kind === 'final' || l.kind === 'diploma_profile' || l.kind === 'diploma_unit') ? 'سطر لك من معلّمك' : 'سطر لك من تقرير الأسبوع'}</h3>
       <ul>{items.slice(0, 3).map(l => <li key={l.id} data-kind={l.kind || 'weekly'}><p>«{l.text_ar}»</p>
-        {l.kind === 'final' ? <small><b className="rlc-final">خاتمة الرحلة</b> · {l.program_ar} · التقرير الختامي · <a href={`/me/reports/line/${l.id}`} data-testid="rp-myline-open">صفحتي من التقرير ←</a></small> : <small>{l.program_ar} · الأسبوع {l.week_no} · {fmt(l.period_to)} · من معلّمك بعد اعتماد التقرير</small>}
+        {l.kind === 'diploma_profile' ? <small><b className="rlc-final">كشف الكفايات</b> · {l.program_ar} · <a href={`/me/reports/line/${l.id}`} data-testid="rp-myprofile-open">كشفي كاملًا ←</a></small> : l.kind === 'diploma_unit' ? <small><b className="rlc-final">أثرُ الدبلوم</b> · {l.program_ar} · الوحدة {l.week_no} · {fmt(l.period_to)}</small> : l.kind === 'final' ? <small><b className="rlc-final">خاتمة الرحلة</b> · {l.program_ar} · التقرير الختامي · <a href={`/me/reports/line/${l.id}`} data-testid="rp-myline-open">صفحتي من التقرير ←</a></small> : <small>{l.program_ar} · الأسبوع {l.week_no} · {fmt(l.period_to)} · من معلّمك بعد اعتماد التقرير</small>}
       </li>)}</ul>
     </section>
   );

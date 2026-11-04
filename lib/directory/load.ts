@@ -60,6 +60,7 @@ export async function witnessFacts(db: any, me: { id?: string | null; email: str
   try { const { afterFacts } = await import('../after/load'); const al = await afterFacts(db, me); if (al) f.after_line = al; } catch { /* قبل تنفيذ SQL */ }   // P38
   try { const { missionReportedCount } = await import('../reports/load'); f.missions_reported = await missionReportedCount(db, email); } catch { /* قبل تنفيذ SQL */ }   // P46 ر3
   try { const { docsWrittenCount } = await import('../reports/load'); f.docs_written = await docsWrittenCount(db, email); } catch { /* قبل تنفيذ SQL */ }   // P46 ر3-ب
+  try { const { profilesLedCount } = await import('../reports/load'); const pl = await profilesLedCount(db, email); f.profiles_led = pl.profiles; f.diplomas_led = pl.diplomas; } catch { /* قبل تنفيذ SQL */ }   // P46 ر4-ب
   return f;
 }
 
