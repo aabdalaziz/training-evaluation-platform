@@ -12,8 +12,8 @@ import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
 import { qrSvg } from '../../lib/certificates/qr';
 import {
-  KIND_AR, KIND_PATH, LINK_KINDS, TITLE_PRESETS, TITLE_PRESET_AR, classroomLabel, fmtWhen, linkStateText, linkTitle, scopeText, shortUrl, titlePreset,
-  type EvalLink, type LinkKind, type LinkState, type TitlePreset,
+  KIND_AR, KIND_EN, KIND_PATH, LINK_KINDS, LINK_LANGS, LINK_LANG_AR, TITLE_PRESETS, TITLE_PRESET_AR, classroomLabel, fmtWhen, linkStateText, linkTitle, scopeText, shortUrl, titlePreset,
+  type EvalLink, type LinkKind, type LinkLang, type LinkState, type TitlePreset,
 } from '../../lib/evaluation/links';
 
 type ProgramLite = { id: string; name_ar: string; name_en?: string | null; status?: string | null };
@@ -37,6 +37,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
   const [classroomId, setClassroomId] = useState(''); const [level, setLevel] = useState('');
   const [preset, setPreset] = useState<TitlePreset>('group'); const [label, setLabel] = useState(''); const [labelTouched, setLabelTouched] = useState(false);
   const [slot, setSlot] = useState(''); const [opensAt, setOpensAt] = useState(''); const [closesAt, setClosesAt] = useState('');
+  const [linkLang, setLinkLang] = useState<LinkLang>('auto');   /* P49-ب «بلغة المتدرّب» */
   const [created, setCreated] = useState<LinkRow[]>([]);
 
   useEffect(() => { try { setOrigin(window.location.origin); } catch { /* ignore */ } void supabase().auth.getSession().then(({ data }) => setToken(data.session?.access_token || '')); }, []);
@@ -70,7 +71,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
     if (!programId) { setMsg({ ok: false, t: 'اختر البرنامج أولًا' }); return; }
     setBusy(true); setMsg(null);
     try {
-      const base = { kind, program_id: programId, label_ar: scope === 'bulk' ? '' : label, slot_ar: slot, opens_at: opensAt || null, closes_at: closesAt || null };
+      const base = { kind, program_id: programId, label_ar: scope === 'bulk' ? '' : label, slot_ar: slot, opens_at: opensAt || null, closes_at: closesAt || null, lang: linkLang };
       const j = scope === 'bulk' ? await post({ action: 'bulk', ...base, level: level || null }) : await post({ action: 'create', ...base, classroom_id: scope === 'room' ? classroomId || null : null, level: scope === 'level' ? level || null : null });
       const made: LinkRow[] = j.links || (j.link ? [j.link] : []);
       await load(); setCreated(made); setSel(new Set(made.map(l => l.id)));
@@ -91,12 +92,12 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
     if (!rows.length) { setMsg({ ok: false, t: 'حدّد رابطًا واحدًا على الأقل' }); return; }
     const cards = rows.map(l => {
       const u = shortUrl(origin, l.code); const p = programOf(l.program_id);
-      return `<article class="c"><div class="k">${esc(KIND_AR[l.kind])}</div><h2>${esc(title(l))}</h2><div class="p">${esc(p?.name_ar || '')}${l.classroom_id || l.level ? ' · ' + esc(scopeText(l, roomOf(l.classroom_id))) : ''}${l.slot_ar ? ' · ' + esc(l.slot_ar) : ''}</div>${qrSvg(u, 190)}<div class="u">${esc(u)}</div><div class="w">${esc(linkStateText(l.state, l))}</div><div class="h">امسح الرمز بكاميرا الجوال — البرنامج والشعبة محدّدان مسبقًا، لا تختر شيئًا.</div></article>`;
+      return `<article class="c"><div class="k">${esc(KIND_AR[l.kind])}</div><h2>${esc(title(l))}</h2><div class="p">${esc(p?.name_ar || '')}${l.classroom_id || l.level ? ' · ' + esc(scopeText(l, roomOf(l.classroom_id))) : ''}${l.slot_ar ? ' · ' + esc(l.slot_ar) : ''}</div>${qrSvg(u, 190)}<div class="u">${esc(u)}</div><div class="w">${esc(linkStateText(l.state, l))}</div><div class="h">امسح الرمز بكاميرا الجوال — البرنامج والشعبة محدّدان مسبقًا، لا تختر شيئًا.</div><div class="h en">${esc(KIND_EN[l.kind])} · Scan with your phone camera — program and group are preset; nothing to choose.</div></article>`;
     }).join('');
     const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ورقة الطباعة — روابط التقويم</title><style>
       @page{size:A4;margin:12mm}body{font-family:Tahoma,Arial,sans-serif;color:#0f2a4e;margin:0}.g{display:grid;grid-template-columns:repeat(2,1fr);gap:10mm}
       .c{border:1.5px solid #c9a24b;border-radius:14px;padding:8mm 6mm;text-align:center;break-inside:avoid;display:grid;gap:4px;justify-items:center}.k{font-size:11px;font-weight:900;color:#8a6a1f;letter-spacing:.3px}
-      h2{font-size:17px;margin:0;font-weight:900}.p{font-size:12px;color:#334155;font-weight:700}.u{font-family:monospace;font-size:13px;font-weight:900;direction:ltr}.w{font-size:11px;color:#0b8a83;font-weight:800}.h{font-size:10.5px;color:#64748b;max-width:62mm}
+      h2{font-size:17px;margin:0;font-weight:900}.p{font-size:12px;color:#334155;font-weight:700}.u{font-family:monospace;font-size:13px;font-weight:900;direction:ltr}.w{font-size:11px;color:#0b8a83;font-weight:800}.h{font-size:10.5px;color:#64748b;max-width:62mm}.h.en{direction:ltr;color:#0b8a83;font-weight:700}
       .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6mm;font-size:12px;color:#64748b}@media print{.np{display:none}}
     </style></head><body><div class="top"><b>أَثَر · روابط التقويم</b><span>${rows.length} بطاقة · ${esc(new Date().toLocaleDateString('ar-SA'))}</span><button class="np" onclick="print()">طباعة</button></div><div class="g">${cards}</div></body></html>`;
     const w = window.open('', '_blank'); if (!w) { setMsg({ ok: false, t: 'المتصفح منع النافذة — اسمح بالنوافذ المنبثقة' }); return; }
@@ -105,7 +106,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
 
   const selected = list.filter(l => sel.has(l.id));
   return (
-    <section className="el" data-testid="eval-links">
+    <section className="el" id="eval-links" data-testid="eval-links">
       <style>{CSS}</style>
       <header className="el-h">
         <div><div className="el-k"><Icon name="link" size={14} /> مولّد الروابط</div><h2>الرابط الذي لا يُخطئ</h2><p>رابط قصير + QR لكل برنامج أو شعبة أو فترة — يفتح الاستبيان الصحيح والبرنامج محدّد مسبقًا، فلا يختار المتدرّب شيئًا ولا يُخطئ.</p></div>
@@ -134,6 +135,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
             <label>الفترة/الموعد (اختياري)<input value={slot} onChange={e => setSlot(e.target.value)} placeholder="مثال: الأسبوع الثالث · مساءً" maxLength={80} data-testid="el-slot" /></label>
           </div>
           {scope !== 'bulk' && <div className="el-row"><label>العنوان الظاهر للمتدرّب<input value={label} onChange={e => { setLabel(e.target.value); setLabelTouched(true); }} maxLength={120} data-testid="el-label" /><small>يتولّد من القالب تلقائيًّا، ويمكنك تعديله — {labelTouched && <button type="button" className="el-lnk" onClick={() => setLabelTouched(false)}>أعد الاقتراح</button>}</small></label></div>}
+          <div className="el-row"><label>لغة الفتح<div className="el-seg">{LINK_LANGS.map(l => <button key={l} type="button" className={linkLang === l ? 'on' : ''} onClick={() => setLinkLang(l)} data-testid={`el-lang-${l}`}>{LINK_LANG_AR[l]}</button>)}</div><small>«تلقائي»: الناطق بالعربية يرى العربية، وغيره يرى الإنجليزية — من الرمز نفسه.</small></label></div>
           <div className="el-row two">
             <label>يُفتح من (اختياري)<input type="datetime-local" value={opensAt} onChange={e => setOpensAt(e.target.value)} data-testid="el-opens" /></label>
             <label>يُغلق في (اختياري)<input type="datetime-local" value={closesAt} onChange={e => setClosesAt(e.target.value)} data-testid="el-closes" /></label>
@@ -172,7 +174,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
             {list.map(l => { const u = shortUrl(origin, l.code); const st = STATE_AR[l.state]; return (
               <div key={l.id} className={`el-r ${l.active ? '' : 'dim'}`} role="row" data-testid="el-row" data-code={l.code}>
                 <label className="el-chk"><input type="checkbox" checked={sel.has(l.id)} onChange={e => setSel(s => { const n = new Set(s); if (e.target.checked) n.add(l.id); else n.delete(l.id); return n; })} aria-label={`تحديد ${l.code}`} /></label>
-                <div className="el-rt"><b>{title(l)}</b><small>{programOf(l.program_id)?.name_ar || '—'} · {KIND_AR[l.kind]} · {scopeText(l, roomOf(l.classroom_id))}{l.slot_ar ? ` · ${l.slot_ar}` : ''}</small><small className="el-when">{l.opens_at || l.closes_at ? `${l.opens_at ? `من ${fmtWhen(l.opens_at)}` : ''} ${l.closes_at ? `إلى ${fmtWhen(l.closes_at)}` : ''}` : 'بلا نافذة زمنية'} · فُتح {l.hits || 0} مرّة</small></div>
+                <div className="el-rt"><b>{title(l)}</b><small>{programOf(l.program_id)?.name_ar || '—'} · {KIND_AR[l.kind]} · {scopeText(l, roomOf(l.classroom_id))}{l.slot_ar ? ` · ${l.slot_ar}` : ''}{l.lang && l.lang !== 'auto' ? ` · ${l.lang === 'en' ? 'English' : 'عربي'}` : ''}</small><small className="el-when">{l.opens_at || l.closes_at ? `${l.opens_at ? `من ${fmtWhen(l.opens_at)}` : ''} ${l.closes_at ? `إلى ${fmtWhen(l.closes_at)}` : ''}` : 'بلا نافذة زمنية'} · فُتح {l.hits || 0} مرّة</small></div>
                 <code dir="ltr" className="el-code">/e/{l.code}</code>
                 <span className={`el-st ${st.c}`}>{st.t}</span>
                 <div className="el-ra">

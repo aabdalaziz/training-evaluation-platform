@@ -547,9 +547,9 @@ export default function Dashboard() {
               <Kpi icon="star" label="المتوسط العام" value={kAll.responses ? kAll.mean.toFixed(2) : '—'} sub={`الهدف ${TARGET}`} />
             </section>
             <div className="db-g3 db-g4">
-              <FormCard icon="evaluations" title="الاستبيان اليومي" desc="يُعبأ بعد كل حصة تدريبية — يرتبط بالقاعة والمدرب تلقائيًا." href="/evaluate/daily" />
-              <FormCard icon="flag" title="الاستبيان الختامي" desc="يُعبأ مرة واحدة في نهاية البرنامج ويشمل الخدمات والإقامة." href="/evaluate/final" />
-              <FormCard icon="check" title="استبيان نهاية البرنامج" desc="عام لأيّ برنامج: الدورة والمدرّب (ليكرت) + ثلاثة آراء + تقدير عام + ترشيح 0–10. بلا خدمات ولا إقامة." href="/evaluate/end" admin="/admin/templates" />
+              <FormCard icon="evaluations" title="الاستبيان اليومي" desc="يُعبأ بعد كل حصة تدريبية — يرتبط بالقاعة والمدرب تلقائيًا." href="/evaluate/daily" admin="#eval-links" />
+              <FormCard icon="flag" title="الاستبيان الختامي" desc="يُعبأ مرة واحدة في نهاية البرنامج ويشمل الخدمات والإقامة." href="/evaluate/final" admin="#eval-links" />
+              <FormCard icon="check" title="استبيان نهاية البرنامج" desc="عام لأيّ برنامج: الدورة والمدرّب (ليكرت) + ثلاثة آراء + تقدير عام + ترشيح 0–10. بلا خدمات ولا إقامة." href="/evaluate/end" admin="#eval-links" />
               <FormCard icon="laptop" title="استطلاع التعلم عن بُعد" desc="للطلاب عبر Teams — مجهول الهوية، ثنائي اللغة، بروابط لكل مجموعة/موعد." href="/survey/remote-learning" admin="/admin/management?tab=rooms" />
             </div>
             <EvalLinks programs={programs as any} classrooms={(raw?.classrooms || []) as any} />
@@ -684,7 +684,7 @@ function FormCard({ icon, title, desc, href, admin }: { icon: IconName; title: s
         <a className="db-btn primary" href={href} target="_blank" rel="noreferrer">فتح النموذج</a>
         <button className="db-btn" onClick={copy}><Icon name="link" size={14} /> {copied ? 'تم النسخ' : 'نسخ الرابط'}</button>
         <a className="db-btn" href={`https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=10&data=${encodeURIComponent(full)}`} target="_blank" rel="noreferrer">QR</a>
-        {admin && <Link className="db-link" href={admin}>روابط المجموعات</Link>}
+        {admin && (admin.startsWith('#') ? <a className="db-link" href={admin}><Icon name="qr" size={13} /> QR لكل مجموعة</a> : <Link className="db-link" href={admin}>روابط المجموعات</Link>)}
       </div>
     </section>
   );

@@ -6,6 +6,7 @@ import {
   P49_NAMES_AR, LINK_KINDS, KIND_AR, KIND_PATH, kindFromPath, isLinkKind, LINK_ALPHABET, linkCode, normalizeCode, shortUrl,
   linkState, linkStateText, TITLE_PRESETS, titlePreset, linkTitle, classroomLabel, scopeText, allowedClassrooms, cleanLabel, validateLinkInput,
   pickTemplate, normalizeNps, npsSummary, NPS_BAND_AR, END_SURVEY_SEED, endSurveyStats, LIKERT_AR, LIKERT_EN, OVERALL_OPTIONS, answerRow, likertValue, likertLabel,
+  LINK_LANGS, normalizeLinkLang, resolveOpenLang, LINK_LANG_AR,
   type EvalLink,
 } from '../lib/evaluation/links';
 
@@ -92,4 +93,10 @@ test('P49 · صفّ الإجابة: NPS نصًّا (لا يُفسد متوسّط
   assert.equal(answerRow('LIKERT_5', '5').rating_value, 5); assert.equal(answerRow('STARS', '').rating_value, null);
   assert.equal(answerRow('SINGLE_CHOICE', 'ممتاز').selected_option, 'ممتاز'); assert.deepEqual(answerRow('MULTI_CHOICE', ['a', 'b']).selected_options, ['a', 'b']); assert.equal(answerRow('LONG_TEXT', ' رأي ').text_value, ' رأي ');
   assert.equal(likertValue(0), 5); assert.equal(likertValue(4), 1); assert.equal(likertLabel(5), 'موافق بقوة'); assert.equal(likertLabel(1, 'en'), 'Strongly disagree'); assert.equal(likertLabel(9), '9');
+});
+test('P49-ب · بلغة المتدرّب: auto/ar/en · لغة المتصفّح تُحسم فقط عند auto · التحقّق يحمل lang', () => {
+  assert.deepEqual([...LINK_LANGS], ['auto', 'ar', 'en']); assert.equal(normalizeLinkLang('EN'), 'en'); assert.equal(normalizeLinkLang('fr'), 'auto'); assert.equal(normalizeLinkLang(null), 'auto'); assert.equal(LINK_LANG_AR.en, 'English');
+  assert.equal(resolveOpenLang('auto', 'en-US'), 'en'); assert.equal(resolveOpenLang('auto', 'ur-PK'), 'en'); assert.equal(resolveOpenLang('auto', 'ar-SA'), 'ar'); assert.equal(resolveOpenLang('auto', ''), 'ar'); assert.equal(resolveOpenLang('auto', null, 'en'), 'en');
+  assert.equal(resolveOpenLang('ar', 'en-US'), 'ar'); assert.equal(resolveOpenLang('en', 'ar-SA'), 'en');
+  const v = validateLinkInput({ kind: 'end', program_id: 'p1', lang: 'en' }); assert.ok(v.ok && v.value.lang === 'en'); const v2 = validateLinkInput({ kind: 'end', program_id: 'p1' }); assert.ok(v2.ok && v2.value.lang === 'auto');
 });

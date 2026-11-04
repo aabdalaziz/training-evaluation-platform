@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase/client";
+import GroupQr from "../../components/GroupQr";   /* P49-ب: QR الاستبيان لكل مجموعة */
 
 const EMERALD = "#00897B", TEAL = "#1FA39A", NAVY = "#0f2a4e", RED = "#dc2626";
 
@@ -413,6 +414,7 @@ export default function ManagementPage() {
                         <tr key={c.id}>
                           <td className="td nm">
                             <span className={remote ? "pill remote" : "pill onsite"}>{remote ? "💻" : "🏫"}</span> {c.code}{c.section_name ? ` (${c.section_name})` : ""}
+                            <div style={{ marginTop: 6 }}><GroupQr programId={c.program_id} programName={programs.find(p => p.id === c.program_id)?.name_ar || ""} classroomId={c.id} classroomLabel={`${c.section_name || c.code}${lv?.code ? ` — ${lv.code}` : ""}`} lang={ar ? "ar" : "en"} compact /></div>
                           </td>
                           <td className="td lt">{programs.find(p => p.id === c.program_id)?.name_ar || "—"}</td>
                           <td className="td">

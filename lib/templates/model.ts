@@ -123,7 +123,7 @@ export function questionPayload(d: QuestionDraft): Omit<Question, 'id' | 'templa
     section_en: d.section_en.trim() || null,
     is_required: !!d.is_required,
     options: meta?.hasOptions ? parseOptions(d.optionsText) : [],
-    max_value: meta?.isScale ? Number(d.max_value) || 5 : null,
+    max_value: meta?.isScale ? Number(d.max_value) || 5 : 5,   /* P49: العمود not null في الإنتاج — 5 افتراضيًّا لغير المقاييس */
   };
 }
 

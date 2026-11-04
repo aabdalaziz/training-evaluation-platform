@@ -36,9 +36,9 @@ test('validateQuestion: النص مطلوب، الخيارات ≥2، حدود �
 
 test('questionPayload: يصفّر الخيارات لغير الاختيار والحد الأعلى لغير المقياس', () => {
   const p = questionPayload({ ...emptyDraft('YES_NO'), text_ar: ' س ', text_en: '', optionsText: 'a\nb', max_value: 7 });
-  assert.equal(p.text_ar, 'س'); assert.equal(p.text_en, null); assert.deepEqual(p.options, []); assert.equal(p.max_value, null);
+  assert.equal(p.text_ar, 'س'); assert.equal(p.text_en, null); assert.deepEqual(p.options, []); assert.equal(p.max_value, 5);   // P49-ب: questions.max_value NOT NULL في الإنتاج
   const m = questionPayload({ ...emptyDraft('MULTI_CHOICE'), text_ar: 'س', optionsText: 'a\nb' });
-  assert.deepEqual(m.options, ['a', 'b']); assert.equal(m.max_value, null);
+  assert.deepEqual(m.options, ['a', 'b']); assert.equal(m.max_value, 5);
 });
 
 test('move/renumber/nextOrder: ترتيب متسلسل وتغييرات دنيا', () => {

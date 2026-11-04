@@ -8,7 +8,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { validateLinkInput, linkCode, normalizeCode, linkState, allowedClassrooms, type EvalLink } from '../../../lib/evaluation/links';
+import { validateLinkInput, linkCode, normalizeCode, normalizeLinkLang, linkState, allowedClassrooms, type EvalLink } from '../../../lib/evaluation/links';
 
 export const dynamic = 'force-dynamic';
 const STAFF_ROLES = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -81,6 +81,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, links: links.map(l => ({ ...l, state: linkState(l) })), ...nm });
   }
   if (v.value.classroom_id) { const { data: room } = await s.admin.from('classrooms').select('id,program_id').eq('id', v.value.classroom_id).maybeSingle(); if (!room || String((room as any).program_id) !== v.value.program_id) return bad('الشعبة لا تتبع هذا البرنامج'); }
+  if (b.reuse) {   // P49-ب «QR المجموعة»: أعد الرابط المفتوح نفسه لهذه المجموعة/النوع بدل توليد رمز جديد كل مرّة
+    let q = admin.from('evaluation_links').select(LINK_COLS).eq('program_id', v.value.program_id).eq('kind', v.value.kind).eq('active', true).is('opens_at', null).is('closes_at', null).order('created_at', { ascending: false }).limit(20);
+    q = v.value.classroom_id ? q.eq('classroom_id', v.value.classroom_id) : q.is('classroom_id', null);
+    const { data: ex } = await q; const hit = ((ex || []) as EvalLink[]).find(l => String(l.level || '') === String(v.value.level || '') && normalizeLinkLang(l.lang) === v.value.lang);
+    if (hit) { const nm = await names(admin, [hit]); return NextResponse.json({ success: true, link: { ...hit, state: linkState(hit) }, reused: true, ...nm }); }
+  }
   const code = await freshCode(); if (!code) return bad('تعذّر توليد رمز', 500);
   const { data, error } = await s.admin.from('evaluation_links').insert({ ...v.value, code, created_by: s.uid }).select(LINK_COLS).maybeSingle(); if (error) return bad(error.message, 500);
   const L = data as EvalLink; const nm = await names(s.admin, [L]);

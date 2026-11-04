@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
-import { kindFromPath, KIND_AR, KIND_EN, linkStateText, linkTitle, scopeText, pickTemplate, answerRow, LIKERT_AR, LIKERT_EN, NPS_MIN, NPS_MAX, type EvalLink, type LinkState } from '../../../lib/evaluation/links';
+import { kindFromPath, KIND_AR, KIND_EN, resolveOpenLang, linkStateText, linkTitle, scopeText, pickTemplate, answerRow, LIKERT_AR, LIKERT_EN, NPS_MIN, NPS_MAX, type EvalLink, type LinkState } from '../../../lib/evaluation/links';
 
 const COUNTRIES = [
   ['+966', 'السعودية', 'Saudi Arabia'], ['+971', 'الإمارات', 'UAE'], ['+965', 'الكويت', 'Kuwait'], ['+974', 'قطر', 'Qatar'], ['+973', 'البحرين', 'Bahrain'], ['+968', 'عُمان', 'Oman'],
@@ -88,7 +88,10 @@ export default function GuestEvaluationPage() {
           const r = await fetch(`/api/evaluation-links?code=${encodeURIComponent(code)}`, { cache: 'no-store' }); const j = await r.json();
           if (!on) return;
           if (!j?.link) { setLinkStatus('invalid'); setLoading(false); return; }
-          setLink(j.link); setLinkStatus(j.state); setLinkRooms(j.classrooms || []); setLinkProgram(j.program || null); preP = j.link.program_id; if (j.classroom?.id) setPreClassroom(j.classroom.id); else if ((j.classrooms || []).length === 1) setPreClassroom(j.classrooms[0].id);
+          setLink(j.link); setLinkStatus(j.state); setLinkRooms(j.classrooms || []); setLinkProgram(j.program || null);
+          /* P49-ب «بلغة المتدرّب»: غير الناطق بالعربية يفتح الإنجليزية مباشرة */
+          if (!sp.get('lang')) setLang(resolveOpenLang(j.link.lang, typeof navigator !== 'undefined' ? navigator.language : ''));
+          preP = j.link.program_id; if (j.classroom?.id) setPreClassroom(j.classroom.id); else if ((j.classrooms || []).length === 1) setPreClassroom(j.classrooms[0].id);
           if (j.state !== 'open') { setLoading(false); return; }
         } catch { if (on) { setLinkStatus('invalid'); setLoading(false); } return; }
       }

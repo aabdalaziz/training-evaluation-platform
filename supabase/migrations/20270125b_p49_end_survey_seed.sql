@@ -22,7 +22,7 @@ begin
     elsif v_opts_type in ('jsonb', 'json') then v_opts := format('%L::jsonb', (q->'options')::text);
     else v_opts := format('%L', (q->'options')::text); end if;
     execute format('insert into public.questions (template_id, kind, text_ar, text_en, section_ar, section_en, is_required, options, max_value, order_index, question_key) values (%L, %L, %L, %L, %L, %L, %L, %s, %L, %L, %L)',
-      v_tpl, q->>'kind', q->>'ar', q->>'en', q->>'section_ar', q->>'section_en', (q->>'required')::boolean, v_opts, nullif(q->>'max', '')::int, (q->>'order')::int, q->>'key');
+      v_tpl, q->>'kind', q->>'ar', q->>'en', q->>'section_ar', q->>'section_en', (q->>'required')::boolean, v_opts, coalesce(nullif(q->>'max', '')::int, 5), (q->>'order')::int, q->>'key');
     n := n + 1;
   end loop;
   raise notice 'قالب END: % — أسئلة أُضيفت الآن: %', v_tpl, n;

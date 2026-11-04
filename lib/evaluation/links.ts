@@ -8,7 +8,7 @@
 export const P49_NAMES_AR = {
   links: 'الرابط الذي لا يُخطئ', generator: 'مولّد الروابط', sheet: 'ورقة الطباعة', sheetAll: 'ورقة لكل شعبة', locked: 'أنت تقيّم',
   end: 'استبيان نهاية البرنامج', endOfficial: 'استبيان نهاية البرنامج (عام — لكل البرامج القصيرة)', purge: 'حذف البيانات القديمة', logout: 'خروج',
-  motto: 'المتدرب لا يختار شيئًا؛ الرابط يعرف من هو',
+  motto: 'المتدرب لا يختار شيئًا؛ الرابط يعرف من هو', groupQr: 'QR المجموعة', inLearnerLang: 'بلغة المتدرّب',
 } as const;
 
 export const LINK_KINDS = ['DAILY', 'FINAL', 'END'] as const;
@@ -29,7 +29,18 @@ export function shortUrl(origin: string, code: string): string { return `${Strin
 export type EvalLink = {
   id: string; code: string; kind: LinkKind; program_id: string; classroom_id: string | null; level: string | null;
   label_ar: string | null; slot_ar: string | null; opens_at: string | null; closes_at: string | null; active: boolean; hits: number; created_at?: string | null; last_hit_at?: string | null;
+  lang?: LinkLang | null;   /* P49-ب: لغة الفتح — auto = لغة متصفّح المتدرّب */
 };
+/* ───────── P49-ب «بلغة المتدرّب» ───────── */
+export const LINK_LANGS = ['auto', 'ar', 'en'] as const;
+export type LinkLang = typeof LINK_LANGS[number];
+export const LINK_LANG_AR: Record<LinkLang, string> = { auto: 'بلغة متصفّح المتدرّب (تلقائي)', ar: 'العربية', en: 'English' };
+export function normalizeLinkLang(v: unknown): LinkLang { const x = String(v || '').toLowerCase(); return x === 'ar' || x === 'en' ? x : 'auto'; }
+/** اللغة التي يُفتح بها الاستبيان: ar/en صريحة من الرابط، وإلا لغة المتصفّح (كل ما ليس عربيًّا → الإنجليزية) */
+export function resolveOpenLang(linkLang: unknown, browserLang: string | null | undefined, fallback: 'ar' | 'en' = 'ar'): 'ar' | 'en' {
+  const l = normalizeLinkLang(linkLang); if (l !== 'auto') return l;
+  const b = String(browserLang || '').toLowerCase(); if (!b) return fallback; return b.startsWith('ar') ? 'ar' : 'en';
+}
 export type LinkState = 'open' | 'before' | 'after' | 'off';
 export function linkState(link: Pick<EvalLink, 'active' | 'opens_at' | 'closes_at'> | null | undefined, now: Date = new Date()): LinkState {
   if (!link || link.active === false) return 'off';
@@ -80,7 +91,7 @@ export function allowedClassrooms(link: Pick<EvalLink, 'classroom_id' | 'level'>
   return classrooms;
 }
 /** التحقّق من طلب إنشاء رابط */
-export function validateLinkInput(b: any): { ok: true; value: { kind: LinkKind; program_id: string; classroom_id: string | null; level: string | null; label_ar: string | null; slot_ar: string | null; opens_at: string | null; closes_at: string | null } } | { ok: false; error: string } {
+export function validateLinkInput(b: any): { ok: true; value: { kind: LinkKind; program_id: string; classroom_id: string | null; level: string | null; label_ar: string | null; slot_ar: string | null; opens_at: string | null; closes_at: string | null; lang: LinkLang } } | { ok: false; error: string } {
   const kind = String(b?.kind || '').toUpperCase(); if (!isLinkKind(kind)) return { ok: false, error: 'نوع الاستبيان غير معروف' };
   const program_id = String(b?.program_id || '').trim(); if (!program_id) return { ok: false, error: 'اختر البرنامج' };
   const classroom_id = b?.classroom_id ? String(b.classroom_id) : null; const level = !classroom_id && b?.level ? cleanLabel(b.level, 60) : null;
@@ -88,7 +99,7 @@ export function validateLinkInput(b: any): { ok: true; value: { kind: LinkKind; 
   if (opens_at && Number.isNaN(opens_at.getTime())) return { ok: false, error: 'تاريخ الفتح غير صالح' };
   if (closes_at && Number.isNaN(closes_at.getTime())) return { ok: false, error: 'تاريخ الإغلاق غير صالح' };
   if (opens_at && closes_at && closes_at.getTime() <= opens_at.getTime()) return { ok: false, error: 'الإغلاق يجب أن يكون بعد الفتح' };
-  return { ok: true, value: { kind: kind as LinkKind, program_id, classroom_id, level, label_ar: cleanLabel(b?.label_ar) || null, slot_ar: cleanLabel(b?.slot_ar, 80) || null, opens_at: opens_at ? opens_at.toISOString() : null, closes_at: closes_at ? closes_at.toISOString() : null } };
+  return { ok: true, value: { kind: kind as LinkKind, program_id, classroom_id, level, label_ar: cleanLabel(b?.label_ar) || null, slot_ar: cleanLabel(b?.slot_ar, 80) || null, opens_at: opens_at ? opens_at.toISOString() : null, closes_at: closes_at ? closes_at.toISOString() : null, lang: normalizeLinkLang(b?.lang) } };
 }
 
 /* ───────── (د) القالب الافتراضي و NPS ───────── */
