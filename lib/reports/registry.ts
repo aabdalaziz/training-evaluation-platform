@@ -214,12 +214,14 @@ export function publicVerifyView(r: { verify_code: string | null; status: string
   if (r.status !== 'approved' || !r.verify_code) return null;
   if (r.kind === 'diploma_unit') return unitPublicView(r as any);   // ر4
   if (r.kind === 'diploma_profile') return profilePublicView(r as any);   // ر4-ب
+  if (r.kind === 'program_review') return reviewPublicView(r as any);   // P47
   return { code: r.verify_code, kind: r.kind, kind_ar: r.kind === 'weekly' ? P46_NAMES_AR.weekly : r.kind === 'final' ? P46_NAMES_AR.final : r.kind, week_no: r.week_no, weeks: Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0, chain: Array.isArray(r.computed?.weeks) ? (r.computed.weeks as any[]).map(w => String(w.verify_code || '')).filter(Boolean) : [], signoff: r.kind === 'final' ? signoffView((r as any).body) : null, period_from: r.period_from, period_to: r.period_to, program_ar: String(r.computed?.program_ar || ''), org_ar: String(r.computed?.org_ar || ''), classroom_ar: String(r.computed?.classroom_ar || ''), author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at, sessions: Number(r.computed?.sessions || 0), hours: Number(r.computed?.hours || 0), enrolled: Number(r.computed?.enrolled || 0) };
 }
 /** سطر القائمة */
 export function listLineAr(r: { week_no: number; period_from: string; period_to: string; computed: any; status: string; kind?: string }): string {
   if (r.kind === 'mission') return missionListLineAr(r);
   if (r.kind === 'advisory' || r.kind === 'study') return docListLineAr(r as any);   // ر3-ب
+  if (r.kind === 'program_review') return reviewListLineAr(r as any);   // P47
   if (r.kind === 'diploma_pulse' || r.kind === 'diploma_unit' || r.kind === 'diploma_profile') return diplomaListLineAr(r as any);   // ر4
   if (r.kind === 'final') return `${P46_NAMES_AR.final} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${Array.isArray(r.computed?.weeks) ? r.computed.weeks.length : 0} أسابيع معتمدة · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
   return `الأسبوع ${r.week_no} · ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
@@ -830,4 +832,116 @@ export function cleanEvidenceQuotes(code: string, raw: any, items: EvidenceItem[
 export function evidencePrompt(name_ar: string, items: EvidenceItem[]): { system: string; user: string } {
   return { system: 'أنت تساعد معلّم دبلوم على ترتيب أدلّة كفاية واحدة لمتدرّب. أعد JSON فقط بالشكل {"quotes":[{"text":"...","source":"..."}]} بثلاث جمل على الأكثر، كل جملة إمّا اقتباس حرفي قصير من دليل أو تلخيص أمين له، و"source" يُنسخ حرفيًا من مصدر الدليل. ممنوع: أي رقم غير موجود في الأدلّة، وأي حكم أو تقدير (ممتاز/ضعيف/يستحق)، وأي معلومة من خارج الأدلّة. العربية الفصحى، بلا مقدّمات.',
     user: JSON.stringify({ competency: name_ar, evidence: items.slice(0, 12).map(i => ({ source: i.source, text: i.text.slice(0, 500) })) }) };
+}
+
+/* ═════════════════════════════ P47 — «البرنامج الذي يراجع نفسه» (الرسمي: مراجعة البرنامج بعد الدفعة) ═════════════════════════════
+ *  حين تنتهي الدفعة يضع أَثَر «وعد التصميم» (ما وعد به البرنامج في هندسته/وحداته: ناتج · ساعات · كفايات) بجوار «ما ثبت» (ما وثّقته تقارير P46 المعتمَدة فقط)،
+ *  ويقيس «الفجوة» لكل وحدة/كفاية/للبرنامج بثلاث درجات (وفى · قارب · أخلف)، ويقترح تعديلات محدّدة من قائمة أفعال مغلقة — والمصمّم يقرّر على كلٍّ: أقبل · أعدّل · أرفض.
+ *  لماذا «مراجعة» لا «تقرير»: الناتج ليس وثيقة تُقرأ بل تعديلٌ يدخل نسخة الدفعة القادمة (P47-ب) بسبب ورقم. والذكاء الاصطناعي يصوغ الاقتراح من الأرقام فقط ولا يحكم ولا يُحفظ منه شيء حتى يقرّر الإنسان.
+ */
+export const P47_NAMES_AR = {
+  review: 'مراجعة البرنامج بعد الدفعة', official: 'مراجعة البرنامج المعتمَدة', story: 'البرنامج الذي يراجع نفسه', promise: 'وعد التصميم', proven: 'ما ثبت', gap: 'الفجوة', proposals: 'اقتراحات التعديل', propose: 'اقترح التعديلات',
+  context: 'ما لا تراه الأرقام', version: 'نسخة الدفعة', open: 'راجع الدفعة', changed: 'هذا البرنامج تغيّر', decisions: 'القرارات', cohort: 'الدفعة', motto: 'البرنامج لا يُراجَع في اجتماع؛ يراجع نفسه من متدرّبيه، والإنسان يوقّع',
+} as const;
+export const GAP_GRADES = ['kept', 'near', 'missed'] as const; export type GapGrade = (typeof GAP_GRADES)[number];
+export const GAP_GRADE_AR: Record<GapGrade, string> = { kept: 'وفى', near: 'قارب', missed: 'أخلف' };
+export const GAP_KEPT = 70; export const GAP_NEAR = 50; export const ATTEND_KEPT = 75; export const ATTEND_NEAR = 60; export const HOURS_TOL = 0.2;
+export const REVIEW_ACTIONS = ['add_hours', 'split_unit', 'add_evidence', 'move_skill', 'drop_skill', 'reorder', 'add_support', 'keep'] as const; export type ReviewAction = (typeof REVIEW_ACTIONS)[number];
+export const REVIEW_ACTION_AR: Record<ReviewAction, string> = { add_hours: 'زِد ساعات الوحدة', split_unit: 'قسّم الوحدة إلى وحدتين', add_evidence: 'أضف نشاط دليل للكفاية', move_skill: 'انقل الكفاية إلى وحدة أخرى', drop_skill: 'أزل كفاية لم تُثبَت في دفعتين', reorder: 'قدّم الوحدة في الترتيب', add_support: 'أضف محطة دعم/متابعة', keep: 'أبقِ كما هو — وفى' };
+export const REVIEW_DECISIONS = ['accept', 'edit', 'reject'] as const; export type ReviewDecision = (typeof REVIEW_DECISIONS)[number];
+export const REVIEW_DECISION_AR: Record<ReviewDecision, string> = { accept: 'أقبل', edit: 'أعدّل', reject: 'أرفض' };
+export const REVIEW_MAX_PROPOSALS = 8; export const REVIEW_CONTEXT_MIN = 20; export const WHY_MAX = 160;
+export type PromiseUnit = { idx: number; title_ar: string; outcome_ar: string; hours: number; skill_codes: string[] };
+export type ReviewUnit = { idx: number; title_ar: string; hours_planned: number; hours_actual: number | null; closed: boolean; report_code: string | null; outcome_pct: number | null; avg: number | null; decisions: { completed: number; support: number; repeat: number; pending: number }; attention: number };
+export type ReviewSkill = { code: string; name_ar: string; avg: number | null; dist: number[]; profiles: number; proven_pct: number | null; missions: number; cases: number; in_units: number[] };
+export type Gap = { target: string; label_ar: string; promised_ar: string; proven_ar: string; grade: GapGrade; why_ar: string };
+export type ReviewComputed = {
+  kind: 'program_review'; program_ar: string; program_type: string; org_ar: string; classroom_ar: string; trainer_ar: string; cohort_no: number; period_from: string; period_to: string; source: 'units' | 'design' | 'template';
+  promise: { hours: number; units: PromiseUnit[]; skills: { code: string; name_ar: string }[] };
+  proven: { enrolled: number; regular: number; attendance_pct: number | null; sessions: number; hours: number; weeks_approved: number; final_code: string | null; profiles: number; completion_pct: number | null; units: ReviewUnit[]; skills: ReviewSkill[]; after: { stations: number; applied: number; letters: number } };
+  gaps: Gap[]; previous: { code: string; period_to: string; kept: number; near: number; missed: number; accepted: number }[]; computed_at: string;
+};
+export type ReviewProposal = { id: string; target: string; action: ReviewAction; value: string; why_ar: string; source: 'local' | 'ai' };
+export type ReviewChoice = { proposal_id: string; decision: ReviewDecision | ''; text_ar: string; reason_ar: string };
+export type ReviewBody = { proposals: ReviewProposal[]; decisions: ReviewChoice[]; context_ar: string; admin: string; proposals_source: '' | 'local' | 'ai' };
+export const gapGrade = (pct: number | null, kept = GAP_KEPT, near = GAP_NEAR): GapGrade | null => (pct === null || !Number.isFinite(pct) ? null : pct >= kept ? 'kept' : pct >= near ? 'near' : 'missed');
+export function targetLabelAr(target: string, c: { promise: { units: PromiseUnit[]; skills: { code: string; name_ar: string }[] } }): string {
+  const [k, v] = target.split(':'); if (k === 'unit') { const u = c.promise.units.find(x => String(x.idx) === v); return `الوحدة ${v}${u ? ` — ${u.title_ar}` : ''}`; }
+  if (k === 'skill') { const s = c.promise.skills.find(x => x.code === v); return `الكفاية «${s ? s.name_ar : v}»`; }
+  return v === 'attendance' ? 'البرنامج — الحضور' : v === 'hours' ? 'البرنامج — الساعات' : v === 'completion' ? 'البرنامج — الإتمام' : 'البرنامج';
+}
+/** الفجوات: لكل وعدٍ ما ثبت أمامه بدرجة — لا تُحسب فجوة لوحدة لم تُغلق ولا لكفاية بلا أثر */
+export function buildGaps(p: ReviewComputed['promise'], v: ReviewComputed['proven']): Gap[] {
+  const g: Gap[] = []; const push = (target: string, label_ar: string, promised_ar: string, proven_ar: string, grade: GapGrade | null, why_ar: string) => { if (grade) g.push({ target, label_ar, promised_ar, proven_ar, grade, why_ar }); };
+  if (v.attendance_pct !== null && v.sessions > 0) push('program:attendance', 'الحضور', `انتظام ≥ ${ATTEND_KEPT}%`, `${v.attendance_pct}%`, gapGrade(v.attendance_pct, ATTEND_KEPT, ATTEND_NEAR), `متوسط حضور الدفعة ${v.attendance_pct}% في ${v.sessions} جلسة`);
+  if (p.hours > 0 && v.hours > 0) { const ratio = v.hours / p.hours; const diff = Math.abs(1 - ratio); push('program:hours', 'الساعات', `${p.hours} ساعة`, `${v.hours} ساعة`, diff <= HOURS_TOL ? 'kept' : diff <= HOURS_TOL * 2 ? 'near' : 'missed', `نُفِّذ ${Math.round(ratio * 100)}% من الساعات المخطَّطة`); }
+  if (v.completion_pct !== null) push('program:completion', 'الإتمام', `إتمام ≥ ${GAP_KEPT}%`, `${v.completion_pct}%`, gapGrade(v.completion_pct), v.profiles ? `${v.completion_pct}% من كشوف الكفايات المعتمَدة (${v.profiles}) توصي بالإتمام` : `${v.completion_pct}% من التقرير الختامي بتوصية استمرار أو رفع`);
+  for (const u of v.units) if (u.closed) push(`unit:${u.idx}`, `الوحدة ${u.idx} — ${u.title_ar}`, p.units.find(x => x.idx === u.idx)?.outcome_ar || 'ناتج الوحدة', u.outcome_pct === null ? 'لا تقرير وحدة' : `بلغه ${u.outcome_pct}%`, u.outcome_pct === null ? 'near' : gapGrade(u.outcome_pct), u.outcome_pct === null ? 'أُغلقت بلا تقرير وحدة معتمَد' : `${u.outcome_pct}% بلغوا الناتج · ${u.decisions.repeat} يعيد · ${u.decisions.support} بخطة دعم${u.attention ? ` · ${u.attention} في سلسلة الانتباه` : ''}`);
+  for (const s of v.skills) { const pct = s.avg !== null ? s.avg : s.proven_pct; if (pct === null) continue; push(`skill:${s.code}`, `الكفاية «${s.name_ar}»`, s.in_units.length ? `تُثبَت في ${s.in_units.length === 1 ? 'وحدة' : 'وحدات'} ${s.in_units.join('، ')}` : 'كفاية البرنامج', s.avg !== null ? `متوسط ${s.avg}%` : `أثبتها ${s.proven_pct}%`, gapGrade(pct), [s.avg !== null ? `متوسط كشوف الوحدات ${s.avg}%` : '', s.profiles ? `${s.proven_pct}% من ${s.profiles} كشفًا أثبتوها` : '', s.missions ? `${s.missions} مهمة مصدَّقة` : 'لا مهمة مصدَّقة', s.cases ? `${s.cases} «يوم مهارة»` : ''].filter(Boolean).join(' · ')); }
+  return g;
+}
+/** الاقتراح المحلي (بقاعدة مُعلنة): أخلفت وحدة ← ساعات أو تقسيم · قاربت ← نشاط دليل · أخلفت كفاية ← دليل، وفي الدفعة الثانية نقل/إزالة · حضور ← محطة دعم · لا فجوة ← أبقِ */
+export function localProposals(c: ReviewComputed): ReviewProposal[] {
+  const out: ReviewProposal[] = []; let n = 0; const add = (target: string, action: ReviewAction, value: string, why_ar: string) => { if (out.length < REVIEW_MAX_PROPOSALS && !out.some(o => o.target === target && o.action === action)) out.push({ id: `p${++n}`, target, action, value: S(value, 120), why_ar: S(why_ar, WHY_MAX), source: 'local' }); };
+  const prevMissed = (target: string) => c.previous.length > 0 && c.cohort_no >= 2 && c.gaps.some(g => g.target === target && g.grade === 'missed');
+  for (const g of c.gaps) {
+    const [k, v] = g.target.split(':');
+    if (k === 'unit') { const u = c.promise.units.find(x => String(x.idx) === v); const ru = c.proven.units.find(x => String(x.idx) === v); if (g.grade === 'missed') { if ((u?.hours || 0) >= 20) add(g.target, 'split_unit', `وحدتان من «${u?.title_ar || ''}»`, `${g.why_ar} — ناتج واحد كبير لم يُبلَغ`); else add(g.target, 'add_hours', `+${Math.max(2, Math.round((u?.hours || 8) * 0.25))} ساعات`, g.why_ar); } else if (g.grade === 'near') { const weak = (ru && u ? u.skill_codes.map(code => c.proven.skills.find(s => s.code === code)).filter(Boolean).sort((a, b) => (a!.avg ?? 100) - (b!.avg ?? 100))[0] : null) || null; add(g.target, 'add_evidence', weak ? `نشاط دليل لـ«${weak.name_ar}» داخل الوحدة` : 'نشاط دليل داخل الوحدة', g.why_ar); } }
+    if (k === 'skill' && g.grade === 'missed') { const s = c.proven.skills.find(x => x.code === v); if (prevMissed(g.target)) add(g.target, s && s.in_units.length > 1 ? 'move_skill' : 'drop_skill', s?.name_ar || v, `${g.why_ar} — للمرة الثانية`); else add(g.target, 'add_evidence', s && !s.missions ? 'مهمة مصدَّقة واحدة على الأقل' : 'موقف تطبيقي يُسجَّل دليلًا', g.why_ar); }
+    if (k === 'program' && v === 'attendance' && g.grade !== 'kept') add(g.target, 'add_support', 'محطة متابعة منتصف البرنامج', g.why_ar);
+    if (k === 'program' && v === 'hours' && g.grade === 'missed') add(g.target, 'add_hours', `تعويض ${Math.max(1, Math.round(c.promise.hours - c.proven.hours))} ساعة`, g.why_ar);
+  }
+  if (!out.length) add('program:all', 'keep', '', c.gaps.length ? `كل الوعود وفت أو قاربت (${c.gaps.filter(g => g.grade === 'kept').length} وفى · ${c.gaps.filter(g => g.grade === 'near').length} قارب)` : 'لا فجوات محسوبة بعد — الدفعة لم تُوثَّق بما يكفي');
+  return out;
+}
+/** تنقية ما يقترحه الذكاء: الفعل من القائمة · الهدف من الفجوات · «لماذا» ≤ 160 بلا كلمة حكم ولا رقم غريب · ≤ 8 */
+export function cleanProposals(raw: any, c: ReviewComputed, source: 'local' | 'ai'): { proposals: ReviewProposal[]; rejected: number } {
+  const targets = new Set(c.gaps.map(g => g.target).concat(['program:all'])); const pool = new Set(c.gaps.flatMap(g => digitsOf(`${g.promised_ar} ${g.proven_ar} ${g.why_ar}`)).concat(c.promise.units.flatMap(u => digitsOf(`${u.idx} ${u.hours}`))));
+  const arr: any[] = Array.isArray(raw?.proposals) ? raw.proposals : Array.isArray(raw) ? raw : []; const out: ReviewProposal[] = []; let rejected = 0;
+  for (const p of arr) { const action = String(p?.action || ''); const target = String(p?.target || ''); const why = S(p?.why_ar ?? p?.why, WHY_MAX); const value = S(p?.value, 120);
+    const bad = !(REVIEW_ACTIONS as readonly string[]).includes(action) || !targets.has(target) || why.length < 8 || JUDGMENT_WORDS_AR.some(w => why.includes(w) || value.includes(w)) || digitsOf(why + ' ' + value).some(d => !pool.has(d)) || out.some(o => o.target === target && o.action === action);
+    if (bad) { rejected++; continue; } out.push({ id: `p${out.length + 1}`, target, action: action as ReviewAction, value, why_ar: why, source }); if (out.length >= REVIEW_MAX_PROPOSALS) break; }
+  return { proposals: out, rejected };
+}
+export const emptyReviewBody = (): ReviewBody => ({ proposals: [], decisions: [], context_ar: '', admin: '', proposals_source: '' });
+export function cleanReviewBody(b: any, prev?: Partial<ReviewBody> | null): ReviewBody {
+  const props: ReviewProposal[] = (Array.isArray(b?.proposals) ? b.proposals : prev?.proposals || []).map((p: any) => ({ id: S(p?.id, 12), target: S(p?.target, 60), action: (REVIEW_ACTIONS as readonly string[]).includes(String(p?.action)) ? (p.action as ReviewAction) : 'keep', value: S(p?.value, 120), why_ar: S(p?.why_ar, WHY_MAX), source: p?.source === 'ai' ? 'ai' : 'local' })).filter((p: ReviewProposal) => p.id && p.target).slice(0, REVIEW_MAX_PROPOSALS);
+  const given = new Map<string, any>((Array.isArray(b?.decisions) ? b.decisions : []).map((d: any) => [String(d?.proposal_id), d]));
+  const decisions: ReviewChoice[] = props.map(p => { const d = given.get(p.id); const dec = String(d?.decision || ''); return { proposal_id: p.id, decision: (REVIEW_DECISIONS as readonly string[]).includes(dec) ? (dec as ReviewDecision) : '', text_ar: S(d?.text_ar, TEXT_MAX), reason_ar: S(d?.reason_ar, SHORT_MAX) }; });
+  const src = String(b?.proposals_source ?? prev?.proposals_source ?? ''); return { proposals: props, decisions, context_ar: S(b?.context_ar, TEXT_MAX), admin: S(b?.admin, TEXT_MAX), proposals_source: src === 'ai' ? 'ai' : src === 'local' ? 'local' : props.length ? 'local' : '' };
+}
+/** عند تجديد الاقتراحات: نُبقي قرار كل اقتراح له الهدف والفعل نفسهما */
+export function mergeProposals(prevBody: ReviewBody, next: ReviewProposal[], source: 'local' | 'ai'): ReviewBody {
+  const key = (p: ReviewProposal) => `${p.target}|${p.action}`; const old = new Map(prevBody.proposals.map(p => [key(p), prevBody.decisions.find(d => d.proposal_id === p.id)]));
+  const decisions: ReviewChoice[] = next.map(p => { const d = old.get(key(p)); return { proposal_id: p.id, decision: d?.decision || '', text_ar: d?.text_ar || '', reason_ar: d?.reason_ar || '' }; });
+  return { ...prevBody, proposals: next, decisions, proposals_source: source };
+}
+export function missingBeforeReviewSubmit(b: ReviewBody): string[] {
+  const m: string[] = []; if (!b.proposals.length) m.push(`${P47_NAMES_AR.proposals} (اضغط «${P47_NAMES_AR.propose}»)`);
+  const und = b.decisions.filter(d => !d.decision).length; if (b.proposals.length && und) m.push(`قرار على كل اقتراح (بقي ${und})`);
+  const noText = b.decisions.filter(d => d.decision === 'edit' && d.text_ar.length < 5).length; if (noText) m.push(`صيغتك للاقتراحات التي تعدّلها (${noText})`);
+  const noWhy = b.decisions.filter(d => d.decision === 'reject' && d.reason_ar.length < 3).length; if (noWhy) m.push(`سبب الرفض (${noWhy})`);
+  if (b.context_ar.length < REVIEW_CONTEXT_MIN) m.push(`«${P47_NAMES_AR.context}» — فقرة من المصمّم`); return m;
+}
+export type ReviewChange = { target: string; target_ar: string; action: ReviewAction; action_ar: string; text_ar: string; decision: 'accept' | 'edit' };
+/** ما يدخل نسخة الدفعة: المقبول بصيغته والمعدَّل بصيغة الإنسان */
+export function reviewChanges(b: ReviewBody, c: ReviewComputed): ReviewChange[] {
+  const out: ReviewChange[] = []; for (const p of b.proposals) { const d = b.decisions.find(x => x.proposal_id === p.id); if (!d || !d.decision || d.decision === 'reject') continue; out.push({ target: p.target, target_ar: targetLabelAr(p.target, c), action: p.action, action_ar: REVIEW_ACTION_AR[p.action], text_ar: d.decision === 'edit' ? d.text_ar : [REVIEW_ACTION_AR[p.action], p.value].filter(Boolean).join(': '), decision: d.decision }); } return out;
+}
+export const gapCounts = (gaps: Gap[]) => ({ kept: gaps.filter(g => g.grade === 'kept').length, near: gaps.filter(g => g.grade === 'near').length, missed: gaps.filter(g => g.grade === 'missed').length });
+export function reviewListLineAr(r: { computed: any; status: string }): string { const c = r.computed || {}; return `${P47_NAMES_AR.review} · ${String(c.program_ar || '')}${c.classroom_ar ? ` · ${c.classroom_ar}` : ''} · الدفعة ${c.cohort_no || 1} · ${r.status === 'approved' ? 'معتمَدة' : r.status === 'submitted' ? 'بانتظار الاعتماد' : r.status === 'returned' ? 'أُعيدت' : 'مسودّة'}`; }
+/** التحقّق العام: درجات الفجوات والتعديلات المقبولة — بلا أسماء ولا أرقام أفراد */
+export function reviewPublicView(r: { verify_code: string | null; status: string; author_name: string; approved_name: string | null; approved_at: string | null; computed: any; body: any }): any {
+  if (r.status !== 'approved' || !r.verify_code) return null; const c: ReviewComputed = r.computed; const b: ReviewBody = r.body || emptyReviewBody(); const ch = reviewChanges(b, c);
+  return { code: r.verify_code, kind: 'program_review', kind_ar: P47_NAMES_AR.review, program_ar: c.program_ar, org_ar: c.org_ar, cohort_no: c.cohort_no, period_from: c.period_from, period_to: c.period_to, units_total: c.promise.units.length, skills_total: c.promise.skills.length, ...gapCounts(c.gaps),
+    gaps: c.gaps.map(g => ({ label_ar: g.label_ar, grade: g.grade, grade_ar: GAP_GRADE_AR[g.grade] })), changes: ch.map(x => ({ target_ar: x.target_ar, action_ar: x.action_ar, text_ar: x.text_ar })), rejected: b.decisions.filter(d => d.decision === 'reject').length, author_name: r.author_name, approved_name: r.approved_name || '', approved_at: r.approved_at };
+}
+/** الشريط العام على صفحة البرنامج: «هذا البرنامج تغيّر N مرة بسبب دفعاته» */
+export function programChangeLog(rows: { verify_code: string | null; approved_at: string | null; computed: any; body: any }[]): { n: number; changes_total: number; last: { code: string; cohort_no: number; period_to: string; kept: number; near: number; missed: number; changes: { target_ar: string; action_ar: string; text_ar: string }[] } | null } {
+  const ok = rows.filter(r => r.verify_code).sort((a, b) => String(b.approved_at || '').localeCompare(String(a.approved_at || ''))); const total = ok.reduce((a, r) => a + reviewChanges(r.body || emptyReviewBody(), r.computed).length, 0); const l = ok[0];
+  return { n: ok.length, changes_total: total, last: l ? { code: String(l.verify_code), cohort_no: Number(l.computed?.cohort_no || 1), period_to: String(l.computed?.period_to || ''), ...gapCounts(l.computed?.gaps || []), changes: reviewChanges(l.body || emptyReviewBody(), l.computed).map(x => ({ target_ar: x.target_ar, action_ar: x.action_ar, text_ar: x.text_ar })) } : null };
+}
+export function reviewPrompt(c: ReviewComputed): { system: string; user: string } {
+  return { system: `أنت تساعد مصمّم برنامج تدريبي على مراجعة برنامجه بعد انتهاء دفعة. أمامك «وعد التصميم» و«ما ثبت» والفجوات بدرجاتها. أعد JSON فقط بالشكل {"proposals":[{"target":"...","action":"...","value":"...","why_ar":"..."}]} بثمانية اقتراحات على الأكثر. "target" يُنسخ حرفيًا من قائمة الفجوات، و"action" واحد فقط من: ${REVIEW_ACTIONS.join(' | ')} (${Object.entries(REVIEW_ACTION_AR).map(([k, v]) => `${k}=${v}`).join('، ')}). "why_ar" ≤ 160 حرفًا من الأرقام المذكورة فقط. ممنوع: أي رقم غير موجود في الفجوات، وأي اسم شخص، وأي حكم أو تقدير (${JUDGMENT_WORDS_AR.slice(0, 6).join('، ')}…)، واقتراح حذف البرنامج. إن وفت كل الوعود أعد اقتراحًا واحدًا action=keep target=program:all.`,
+    user: JSON.stringify({ program: c.program_ar, cohort_no: c.cohort_no, promise: { hours: c.promise.hours, units: c.promise.units.map(u => ({ idx: u.idx, title: u.title_ar, hours: u.hours, skills: u.skill_codes })) }, gaps: c.gaps.map(g => ({ target: g.target, label: g.label_ar, promised: g.promised_ar, proven: g.proven_ar, grade: g.grade, why: g.why_ar })), previous_reviews: c.previous.map(p => ({ kept: p.kept, near: p.near, missed: p.missed, accepted: p.accepted })) }) };
 }
