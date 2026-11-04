@@ -176,8 +176,9 @@ export type WitnessFacts = {
   missions_reported?: number; // P46 ر3 «أثرُ المهمة»: تقارير إنجاز مهمة معتمَدة
   docs_written?: number; // P46 ر3-ب «أثرُ الرأي»: آراء استشارية ودراسات معتمَدة
   profiles_led?: number; diplomas_led?: number; // P46 ر4-ب «كشف الكفايات»: كشوف اعتُمدت لمتدرّبين قادهم في دبلوم
+  reviews_led?: number; versions_applied?: number; // P47-ب «البرنامج الذي يراجع نفسه»: مراجعات برنامج معتمَدة كتبها + نسخ دفعات طُبِّقت منها
 };
-export const EMPTY_WITNESS: WitnessFacts = { programs: 0, classrooms: 0, program_years: null, councils_chaired: 0, attestations_approved: 0, levels_approved: 0, missions_confirmed: 0, engagements_consult: 0, engagements_train: 0, engagement_years: null, org_charter: null, on_air_hours: 0, on_air_meetings: 0, on_air_legacy: 0, on_air_sign_pledge: null, missions_reported: 0, docs_written: 0, profiles_led: 0, diplomas_led: 0 };
+export const EMPTY_WITNESS: WitnessFacts = { programs: 0, classrooms: 0, program_years: null, councils_chaired: 0, attestations_approved: 0, levels_approved: 0, missions_confirmed: 0, engagements_consult: 0, engagements_train: 0, engagement_years: null, org_charter: null, on_air_hours: 0, on_air_meetings: 0, on_air_legacy: 0, on_air_sign_pledge: null, missions_reported: 0, docs_written: 0, profiles_led: 0, diplomas_led: 0, reviews_led: 0, versions_applied: 0 };
 const n2 = (n: number, one: string, two: string, many: string, acc: string) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${many}` : `${n} ${acc}`;
 const span = (y: [string, string] | null) => y ? (y[0] === y[1] ? `في ${y[0]}` : `بين ${y[0]} و${y[1]}`) : '';
 export function witnessLines(f: WitnessFacts): { key: string; text: string }[] {
@@ -192,6 +193,7 @@ export function witnessLines(f: WitnessFacts): { key: string; text: string }[] {
   if ((f.missions_reported || 0) > 0) { const n = f.missions_reported || 0; out.push({ key: 'missions_reported', text: `أنجز ${n === 1 ? 'مهمة واحدة موثَّقة بتقرير إنجاز معتمَد' : n === 2 ? 'مهمتين موثَّقتين بتقريرَي إنجاز معتمدَين' : `${n} ${n <= 10 ? 'مهمات موثَّقة' : 'مهمة موثَّقة'} بتقارير إنجاز معتمَدة`}` }); }   // P46 ر3
   if ((f.docs_written || 0) > 0) { const n = f.docs_written || 0; out.push({ key: 'docs_written', text: `كتب ${n === 1 ? 'وثيقة استشارية واحدة معتمَدة (رأيًا أو دراسة)' : n === 2 ? 'وثيقتين استشاريتين معتمَدتين' : `${n} ${n <= 10 ? 'وثائق استشارية' : 'وثيقة استشارية'} معتمَدة (آراء ودراسات)`}` }); }   // P46 ر3-ب
   if ((f.profiles_led || 0) > 0) { const n = f.profiles_led || 0; const d = f.diplomas_led || 1; out.push({ key: 'profiles_led', text: `قاد ${d === 1 ? 'دبلومًا موثَّقًا' : d === 2 ? 'دبلومين موثَّقين' : `${d} دبلومات موثَّقة`} بـ${n === 1 ? 'كشف كفايات معتمَد واحد' : n === 2 ? 'كشفَي كفايات معتمَدين' : n <= 10 ? `${n} كشوف كفايات معتمَدة` : `${n} كشف كفايات معتمَدًا`}` }); }   // P46 ر4-ب
+  if ((f.reviews_led || 0) > 0) { const n = f.reviews_led || 0; const v = f.versions_applied || 0; out.push({ key: 'reviews_led', text: `راجع برنامجه بعد ${n === 1 ? 'دفعة واحدة' : n === 2 ? 'دفعتين' : n <= 10 ? `${n} دفعات` : `${n} دفعة`} بمراجعة معتمَدة${v > 0 ? ` وطبّق ${v === 1 ? 'نسخة واحدة' : v === 2 ? 'نسختين' : `${v} نسخ`} منها على الدفعة التالية` : ''}` }); }   // P47-ب
   if ((f.on_air_legacy || 0) > 0) { const n = f.on_air_legacy || 0; out.push({ key: 'on_air_legacy', text: `أتمّ ميراث هواء متبادلًا ${n === 1 ? 'مع زميل' : n === 2 ? 'مع زميلين' : `مع ${n} زملاء`} — رافق ورُوفق` }); }
   if (f.on_air_sign_pledge) out.push({ key: 'on_air_sign_pledge', text: f.on_air_sign_pledge });
   if (f.after_line) out.push({ key: 'after', text: f.after_line });   // P38

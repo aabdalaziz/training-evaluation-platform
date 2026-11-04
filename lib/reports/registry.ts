@@ -863,7 +863,7 @@ export type ReviewComputed = {
 };
 export type ReviewProposal = { id: string; target: string; action: ReviewAction; value: string; why_ar: string; source: 'local' | 'ai' };
 export type ReviewChoice = { proposal_id: string; decision: ReviewDecision | ''; text_ar: string; reason_ar: string };
-export type ReviewBody = { proposals: ReviewProposal[]; decisions: ReviewChoice[]; context_ar: string; admin: string; proposals_source: '' | 'local' | 'ai' };
+export type ReviewBody = { proposals: ReviewProposal[]; decisions: ReviewChoice[]; context_ar: string; admin: string; proposals_source: '' | 'local' | 'ai'; version?: { id: string; version: number; at: string } | null };   /* version: P47-ب — يُكتب من الخادم فقط عند التطبيق */
 export const gapGrade = (pct: number | null, kept = GAP_KEPT, near = GAP_NEAR): GapGrade | null => (pct === null || !Number.isFinite(pct) ? null : pct >= kept ? 'kept' : pct >= near ? 'near' : 'missed');
 export function targetLabelAr(target: string, c: { promise: { units: PromiseUnit[]; skills: { code: string; name_ar: string }[] } }): string {
   const [k, v] = target.split(':'); if (k === 'unit') { const u = c.promise.units.find(x => String(x.idx) === v); return `الوحدة ${v}${u ? ` — ${u.title_ar}` : ''}`; }
@@ -908,7 +908,7 @@ export function cleanReviewBody(b: any, prev?: Partial<ReviewBody> | null): Revi
   const props: ReviewProposal[] = (Array.isArray(b?.proposals) ? b.proposals : prev?.proposals || []).map((p: any) => ({ id: S(p?.id, 12), target: S(p?.target, 60), action: (REVIEW_ACTIONS as readonly string[]).includes(String(p?.action)) ? (p.action as ReviewAction) : 'keep', value: S(p?.value, 120), why_ar: S(p?.why_ar, WHY_MAX), source: p?.source === 'ai' ? 'ai' : 'local' })).filter((p: ReviewProposal) => p.id && p.target).slice(0, REVIEW_MAX_PROPOSALS);
   const given = new Map<string, any>((Array.isArray(b?.decisions) ? b.decisions : []).map((d: any) => [String(d?.proposal_id), d]));
   const decisions: ReviewChoice[] = props.map(p => { const d = given.get(p.id); const dec = String(d?.decision || ''); return { proposal_id: p.id, decision: (REVIEW_DECISIONS as readonly string[]).includes(dec) ? (dec as ReviewDecision) : '', text_ar: S(d?.text_ar, TEXT_MAX), reason_ar: S(d?.reason_ar, SHORT_MAX) }; });
-  const src = String(b?.proposals_source ?? prev?.proposals_source ?? ''); return { proposals: props, decisions, context_ar: S(b?.context_ar, TEXT_MAX), admin: S(b?.admin, TEXT_MAX), proposals_source: src === 'ai' ? 'ai' : src === 'local' ? 'local' : props.length ? 'local' : '' };
+  const src = String(b?.proposals_source ?? prev?.proposals_source ?? ''); return { proposals: props, decisions, context_ar: S(b?.context_ar, TEXT_MAX), admin: S(b?.admin, TEXT_MAX), proposals_source: src === 'ai' ? 'ai' : src === 'local' ? 'local' : props.length ? 'local' : '', ...(prev?.version?.id ? { version: prev.version } : {}) };
 }
 /** عند تجديد الاقتراحات: نُبقي قرار كل اقتراح له الهدف والفعل نفسهما */
 export function mergeProposals(prevBody: ReviewBody, next: ReviewProposal[], source: 'local' | 'ai'): ReviewBody {
@@ -944,4 +944,52 @@ export function programChangeLog(rows: { verify_code: string | null; approved_at
 export function reviewPrompt(c: ReviewComputed): { system: string; user: string } {
   return { system: `أنت تساعد مصمّم برنامج تدريبي على مراجعة برنامجه بعد انتهاء دفعة. أمامك «وعد التصميم» و«ما ثبت» والفجوات بدرجاتها. أعد JSON فقط بالشكل {"proposals":[{"target":"...","action":"...","value":"...","why_ar":"..."}]} بثمانية اقتراحات على الأكثر. "target" يُنسخ حرفيًا من قائمة الفجوات، و"action" واحد فقط من: ${REVIEW_ACTIONS.join(' | ')} (${Object.entries(REVIEW_ACTION_AR).map(([k, v]) => `${k}=${v}`).join('، ')}). "why_ar" ≤ 160 حرفًا من الأرقام المذكورة فقط. ممنوع: أي رقم غير موجود في الفجوات، وأي اسم شخص، وأي حكم أو تقدير (${JUDGMENT_WORDS_AR.slice(0, 6).join('، ')}…)، واقتراح حذف البرنامج. إن وفت كل الوعود أعد اقتراحًا واحدًا action=keep target=program:all.`,
     user: JSON.stringify({ program: c.program_ar, cohort_no: c.cohort_no, promise: { hours: c.promise.hours, units: c.promise.units.map(u => ({ idx: u.idx, title: u.title_ar, hours: u.hours, skills: u.skill_codes })) }, gaps: c.gaps.map(g => ({ target: g.target, label: g.label_ar, promised: g.promised_ar, proven: g.proven_ar, grade: g.grade, why: g.why_ar })), previous_reviews: c.previous.map(p => ({ kept: p.kept, near: p.near, missed: p.missed, accepted: p.accepted })) }) };
+}
+
+/* ===================================================================================================
+ * P47-ب «نسخة الدفعة» — تطبيق ما قبله الإنسان في المراجعة المعتمَدة على تصميم البرنامج كنسخة جديدة
+ *  - النسخة = الوحدات بعد التعديلات (مفتوحة من جديد للدفعة القادمة) + كفايات القالب بعد الحذف؛ القديمة تُؤرشَف لا تُحذف (تقاريرها تبقى تشير إليها).
+ *  - ما يُطبَّق آليًا: زِد ساعات (وحدة) · قسّم الوحدة · أضف نشاط دليل (يُلحق بناتج الوحدة) · احذف الكفاية · أبقِ.
+ *    ما يحتاج يدًا (يُسجَّل في النسخة ويُعرض للمصمّم): انقل الكفاية · أعد الترتيب · أضف محطة دعم · ساعات على مستوى البرنامج بلا رقم.
+ *  - «رسالة إلى الدفعة القادمة»: سطر يكتبه المصمّم (≤ 300) يراه متدرّبو الدفعة التالية — لا أسماء ولا أرقام أفراد.
+ * =================================================================================================== */
+export const P47B_NAMES_AR = { version: 'نسخة الدفعة', apply: 'طبّق على النسخة القادمة', applied: 'طُبِّقت', message: 'رسالة إلى الدفعة القادمة', manual: 'يحتاج يدك في لوحة الوحدات', history: 'سجلّ النسخ', because: 'بسبب من سبقوكم تغيّر في هذا البرنامج' } as const;
+export const VERSION_MESSAGE_MAX = 300; export const VERSION_MESSAGE_MIN = 10;
+export type VersionStep = { target: string; target_ar: string; action: ReviewAction; action_ar: string; text_ar: string; note_ar: string };
+export type VersionPlan = { units: Unit[]; skills: Skill[]; hours: number; applied: VersionStep[]; manual: VersionStep[] };
+const firstNumber = (s: string): number | null => { const d = digitsOf(s)[0]; const n = d ? Number(d) : NaN; return Number.isFinite(n) && n > 0 ? n : null; };
+const half = (h: number): [number, number] => { const a = Math.round(h / 2); return [a, Math.max(0, h - a)]; };
+/** يبني الوحدات والكفايات الجديدة من التعديلات المقبولة/المعدَّلة — نقي؛ لا يمسّ القاعدة */
+export function applyChanges(units: Unit[], skills: Skill[], changes: ReviewChange[]): VersionPlan {
+  let us: Unit[] = units.slice().sort((a, b) => a.idx - b.idx).map(u => ({ ...u, id: null, closed_at: null, closed_report_id: null, starts_on: null, ends_on: null, skill_codes: [...u.skill_codes] }));
+  let sk: Skill[] = skills.map(s => ({ ...s })); const applied: VersionStep[] = []; const manual: VersionStep[] = [];
+  const step = (c: ReviewChange, note_ar: string): VersionStep => ({ target: c.target, target_ar: c.target_ar, action: c.action, action_ar: c.action_ar, text_ar: c.text_ar, note_ar });
+  const unitOf = (target: string) => { const [k, v] = target.split(':'); return k === 'unit' ? us.find(u => String(u.idx) === v) || null : null; };
+  for (const c of changes) {
+    const [k, v] = c.target.split(':'); const u = unitOf(c.target);
+    if (c.action === 'keep') { applied.push(step(c, 'أُبقي كما هو')); continue; }
+    if (c.action === 'add_hours') { const n = firstNumber(c.text_ar); if (u && n) { u.hours = Math.min(400, u.hours + n); applied.push(step(c, `ساعات الوحدة ${u.idx}: ${u.hours - n} → ${u.hours}`)); } else if (k === 'program' && n && us.length) { const last = us[us.length - 1]; last.hours += n; applied.push(step(c, `أُضيفت ${n} ساعة إلى الوحدة الأخيرة (${last.idx}) — وزّعها إن شئت`)); } else manual.push(step(c, 'لم يُفهم عدد الساعات — زِدها يدويًا')); continue; }
+    if (c.action === 'split_unit') { if (!u) { manual.push(step(c, 'الوحدة غير موجودة في النسخة')); continue; } const [h1, h2] = half(u.hours); const codes = u.skill_codes; const c1 = codes.length > 1 ? codes.slice(0, Math.ceil(codes.length / 2)) : codes; const c2 = codes.length > 1 ? codes.slice(Math.ceil(codes.length / 2)) : codes;
+      const a: Unit = { ...u, title_ar: S(`${u.title_ar} (١)`, UNIT_TITLE_MAX), hours: h1, skill_codes: c1 }; const b: Unit = { ...u, title_ar: S(`${u.title_ar} (٢)`, UNIT_TITLE_MAX), hours: h2, skill_codes: c2, outcome_ar: S(`${u.outcome_ar} — الجزء الثاني`, UNIT_OUTCOME_MAX) };
+      us = us.flatMap(x => x === u ? [a, b] : [x]); applied.push(step(c, `قُسّمت إلى وحدتين (${h1} + ${h2} ساعة) — عدّل العنوانين والناتجين في لوحة الوحدات`)); continue; }
+    if (c.action === 'add_evidence') { const t = u || (k === 'skill' ? us.find(x => x.skill_codes.includes(v)) || null : null); if (!t) { manual.push(step(c, 'لا وحدة تحمل هذه الكفاية — أضف الدليل يدويًا')); continue; } const ev = c.decision === 'edit' ? c.text_ar : c.text_ar.replace(/^[^:]*:\s*/, ''); t.outcome_ar = S(`${t.outcome_ar} — دليله: ${ev}`, UNIT_OUTCOME_MAX); applied.push(step(c, `أُلحق الدليل بناتج الوحدة ${t.idx}`)); continue; }
+    if (c.action === 'drop_skill') { if (k !== 'skill' || !sk.some(s => s.code === v)) { manual.push(step(c, 'الكفاية غير موجودة في القالب')); continue; } if (sk.length <= 2) { manual.push(step(c, 'القالب يحتاج كفايتين على الأقل — استبدلها بدل حذفها')); continue; } sk = sk.filter(s => s.code !== v); for (const x of us) x.skill_codes = x.skill_codes.filter(code => code !== v); applied.push(step(c, 'حُذفت من قالب الكفايات ومن كل الوحدات')); continue; }
+    if (c.action === 'move_skill') { manual.push(step(c, 'اختر الوحدة التي تنتقل إليها الكفاية')); continue; }
+    if (c.action === 'reorder') { manual.push(step(c, 'أعد ترتيب الوحدات بالسحب في لوحة الوحدات')); continue; }
+    if (c.action === 'add_support') { manual.push(step(c, 'أضف محطة متابعة في خطة الدفعة القادمة (الجلسات/المحطات)')); continue; }
+    manual.push(step(c, 'يُنفَّذ يدويًا'));
+  }
+  us = us.map((x, i) => ({ ...x, idx: i + 1, skill_codes: x.skill_codes.filter(code => sk.some(s => s.code === code)) })).slice(0, UNIT_MAX);
+  return { units: us, skills: sk, hours: us.reduce((a, x) => a + (Number(x.hours) || 0), 0), applied, manual };
+}
+export const cleanVersionMessage = (s: unknown) => S(s, VERSION_MESSAGE_MAX);
+/** مسودّة محلية لرسالة الدفعة القادمة من الخطوات المطبَّقة — المصمّم يعدّلها أو يستبدلها */
+export function localCohortMessage(plan: VersionPlan, cohort_no: number): string {
+  const bits = plan.applied.filter(s => s.action !== 'keep').slice(0, 3).map(s => s.action === 'split_unit' ? `قُسّمت «${s.target_ar.replace(/^الوحدة \d+ — /, '')}» إلى وحدتين` : s.action === 'add_hours' ? `زادت ساعات ${s.target_ar}` : s.action === 'add_evidence' ? `أُضيف نشاط دليل في ${s.target_ar}` : s.action === 'drop_skill' ? `أُزيلت ${s.target_ar}` : s.action_ar);
+  return S(bits.length ? `${P47B_NAMES_AR.because} بعد الدفعة ${cohort_no}: ${bits.join('، ')}.` : `${P47B_NAMES_AR.because} بعد الدفعة ${cohort_no}.`, VERSION_MESSAGE_MAX);
+}
+/** ما يُعرض للعموم عن النسخة: لا أسماء ولا معرّفات أشخاص */
+export function versionPublicView(v: { version: number; created_at: string; cohort_no: number; review_code: string | null; applied: any; manual: any; message_ar: string | null; after: any; before: any }) {
+  const ap: any[] = Array.isArray(v.applied) ? v.applied : []; const mn: any[] = Array.isArray(v.manual) ? v.manual : [];
+  return { version: Number(v.version), at: String(v.created_at || '').slice(0, 10), cohort_no: Number(v.cohort_no || 0), code: v.review_code || null, applied: ap.filter(s => s.action !== 'keep').map(s => ({ target_ar: s.target_ar, action_ar: s.action_ar, note_ar: s.note_ar })), manual_n: mn.length, message_ar: v.message_ar || '', units_before: Array.isArray(v.before?.units) ? v.before.units.length : null, units_after: Array.isArray(v.after?.units) ? v.after.units.length : null, hours_before: v.before?.hours ?? null, hours_after: v.after?.hours ?? null };
 }

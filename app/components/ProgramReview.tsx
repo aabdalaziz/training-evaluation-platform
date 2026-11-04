@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../lib/ui/icons';
+import { P47B_NAMES_AR, VERSION_MESSAGE_MAX, VERSION_MESSAGE_MIN } from '../../lib/reports/registry';   // P47-ب
 import { P46_NAMES_AR, P47_NAMES_AR, GAP_GRADE_AR, REVIEW_ACTION_AR, REVIEW_DECISIONS, REVIEW_DECISION_AR, TEXT_MAX, SHORT_MAX, REVIEW_CONTEXT_MIN, targetLabelAr, reviewChanges, gapCounts, fmtDayAr, type ReviewBody, type ReviewComputed, type ReviewProposal, type GapGrade } from '../../lib/reports/registry';
 import { MR_CSS, MR_PRINT_CSS } from './MissionReport';
 import { drApi as api, DR_CSS, DrReturn, DrNotes, drStatusAr as statusAr } from './DiplomaReport';
@@ -26,6 +27,8 @@ const CSS = `
 .pv-prop h4{margin:0;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;color:#0f2a4e}.pv-prop h4 small{color:#64748b;font-weight:600}.pv-prop .why{margin:0;color:#334155;font-size:.9rem}.pv-prop .why b{color:#0b8a83}
 .pv-dec{display:flex;gap:.4rem;flex-wrap:wrap}.pv-dec label{display:inline-flex;gap:.3rem;align-items:center;border:1px solid #e5e8ef;border-radius:999px;padding:.2rem .6rem;cursor:pointer;font-weight:700;font-size:.86rem}.pv-dec label[data-on="1"]{border-color:#0f2a4e;background:#0f2a4e;color:#fff}
 .pv-prop textarea{min-height:52px}.pv-src{font-size:.8rem;color:#64748b}
+.pv-ver{margin:.6rem 0 0;border:1px solid #f1dfae;border-radius:14px;padding:.7rem .9rem;background:#fffaf0;display:grid;gap:.5rem}.pv-ver h4{margin:0;font-size:.98rem;color:#7a5c12;display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}.pv-ver ul{margin:0;padding:0 1.1rem 0 0;font-size:.88rem;line-height:1.7}.pv-ver ul.m li{color:#7a5c12}.pv-ver textarea{width:100%;box-sizing:border-box;min-height:64px;border:1px solid #e5d9b8;border-radius:10px;padding:.5rem .7rem;font:inherit;line-height:1.7;background:#fff}.pv-ver .warn{background:#fff3f3;border:1px solid #f3c5c5;color:#8a1f1f;border-radius:10px;padding:.4rem .7rem;font-size:.85rem;margin:0}.pv-ver .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}.pv-ver .ba{display:flex;gap:.6rem;flex-wrap:wrap;font-size:.85rem}.pv-ver .ba b{color:#0f2a4e}.pv-ver .ok{background:#eefaf5;border:1px solid #bfe9d6;color:#0b6b4a;border-radius:10px;padding:.4rem .7rem;margin:0;font-size:.9rem}
+.pv-vers{margin:.5rem 0 0;padding:0;list-style:none;display:grid;gap:.3rem;font-size:.85rem}.pv-vers li{display:flex;gap:.5rem;flex-wrap:wrap;align-items:baseline}.pv-vers .v{font-weight:900;color:#7a5c12;background:#fff7e6;border:1px solid #f1dfae;border-radius:999px;padding:.05rem .55rem;font-size:.78rem}.pv-msg{margin:.5rem 0 0;border-right:3px solid #c9a24b;padding:.3rem .7rem;background:#fffaf0;border-radius:8px;font-size:.92rem;line-height:1.75}
 .pv-strip{margin:1rem 0;border:1px solid #d9efe9;border-radius:16px;padding:.8rem 1rem;background:#f3fbfa}.pv-strip h2{font-size:1.05rem;color:#0b6f69;margin:0 0 .4rem;display:flex;gap:.4rem;align-items:center}.pv-strip ul{margin:.3rem 0 0;padding-inline-start:1.1rem;font-size:.9rem;color:#0f172a}.pv-strip small{color:#64748b}
 .pv-sum{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
 @media (max-width:720px){.pv-two{grid-template-columns:1fr}}
@@ -85,6 +88,7 @@ export function ReviewEditor({ id, token, mode = 'author', onBack }: { id: strin
     <Head r={r} c={c} mode={mode} onBack={onBack} busy={busy} dirty={dirty} editable={editable} act={act} save={save} print={() => setPrint(true)}
       extra={<><DrReturn r={r} busy={busy} act={act} /><DrNotes r={r} err={err} ok={ok} />
         {r.status === 'approved' && <p className="mr-okbox" data-testid="pv-after">{changes.length ? `قُبل ${changes.length} من ${body.proposals.length} ${body.proposals.length === 1 ? 'اقتراح' : 'اقتراحات'} — تدخل «${P47_NAMES_AR.version}» القادمة من هذا البرنامج، وتظهر على صفحته العامّة بلا أسماء.` : `اعتُمدت المراجعة بلا تعديلات — البرنامج وفى بوعده في هذه الدفعة.`}</p>}
+        {r.status === 'approved' && (r.can_apply || body.version?.id) && <VersionPanel id={id} token={token} body={body} cohort={c.cohort_no} onApplied={load} />}
         <div className="mr-kpis" data-testid="pv-kpis"><span className="b"><b>{gc.kept}</b> <small>{GAP_GRADE_AR.kept}</small></span><span className="o"><b>{gc.near}</b> <small>{GAP_GRADE_AR.near}</small></span><span><b>{gc.missed}</b> <small>{GAP_GRADE_AR.missed}</small></span><span><b>{c.proven.enrolled}</b> <small>مسجَّل · <b>{c.proven.attendance_pct ?? '—'}{c.proven.attendance_pct !== null ? '%' : ''}</b> حضور</small></span><span><b>{c.proven.hours}</b>/{c.promise.hours} <small>ساعة</small></span>{c.proven.completion_pct !== null && <span className="b"><b>{c.proven.completion_pct}%</b> <small>إتمام</small></span>}{c.previous.length > 0 && <span><b>{c.previous.length}</b> <small>{c.previous.length === 1 ? 'مراجعة سابقة' : 'مراجعات سابقة'}</small></span>}</div>
         <div className="mr-secs" role="tablist" aria-label="أقسام المراجعة">{secs.map((s, i) => <button key={s} type="button" className={sec === i + 1 ? 'on' : ''} onClick={() => setSec(i + 1)} role="tab" aria-selected={sec === i + 1} data-testid={`pv-sec-${i + 1}`}>{i + 1} · {s}</button>)}</div></>} />
     {sec === 1 && <section className="pt-box mr-sec" data-testid="pv-s1"><h3>١ · {P47_NAMES_AR.promise} مقابل {P47_NAMES_AR.proven} <small className="pt-muted">— جاهز من أَثَر · الوعد من {c.source === 'units' ? 'وحدات الدبلوم' : c.source === 'design' ? 'هندسة البرنامج' : 'قالب البرنامج'} · ما ثبت من التقارير المعتمَدة فقط</small></h3>
@@ -118,6 +122,28 @@ export function ReviewEditor({ id, token, mode = 'author', onBack }: { id: strin
 }
 
 /* ───────── 3) المطبوع A4 ───────── */
+/* ───────── 3-ب) P47-ب «نسخة الدفعة»: تطبيق ما قُبل على الوحدات كنسخة جديدة + «رسالة إلى الدفعة القادمة» ───────── */
+function VersionPanel({ id, token, body, cohort, onApplied }: { id: string; token: Tok; body: ReviewBody; cohort: number; onApplied: () => Promise<void> }) {
+  const [pv, setPv] = useState<any>(null); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(''); const [err, setErr] = useState(''); const [open, setOpen] = useState(false);
+  const v = body.version;
+  async function preview() { setBusy('preview'); setErr(''); const j = await api(token, '/api/reports', { action: 'version_preview', id }); setBusy(''); if (!j.success) { setErr(j.error || 'تعذّرت المعاينة'); return; } setPv(j); setMsg(j.message_ar || ''); setOpen(true); }
+  async function apply() { if (!pv) return; const warn = pv.open_rooms > 0 ? `تنبيه: ${pv.open_rooms} ${pv.open_rooms === 1 ? 'شعبة لم تُراجَع بعد' : 'شعب لم تُراجَع بعد'} في هذه الدفعة — لا تطبّق إلا بعد انتهاء كل شعب الدفعة.\n\n` : ''; if (!window.confirm(`${warn}ستصبح وحدات البرنامج الحالية (${pv.plan.units.length - pv.plan.applied.filter((x: any) => x.action === 'split_unit').length}) نسخة مؤرشَفة، وتُنشأ النسخة ${pv.next_version} مفتوحة للدفعة القادمة. لا يُحذف شيء، وتقارير الوحدات المعتمَدة تبقى. أتطبّق؟`)) return; setBusy('apply'); setErr(''); const j = await api(token, '/api/reports', { action: 'apply_version', id, message_ar: msg }); if (!j.success) { setBusy(''); setErr(j.error || 'فشل التطبيق'); return; } await onApplied(); setBusy(''); setOpen(false); }
+  if (v?.id) return <div className="pv-ver" data-testid="pv-version-done"><p className="ok"><Icon name="check" size={14} /> {P47B_NAMES_AR.applied} — النسخة {v.version} من هذا البرنامج مفتوحة للدفعة القادمة ({fmtDayAr(String(v.at || '').slice(0, 10))}). عدّل عناوين الوحدات أو رتّبها من <Link href="/me/reports">لوحة الوحدات</Link> إن احتجت.</p></div>;
+  return <div className="pv-ver" data-testid="pv-version">
+    <h4><Icon name="copy" size={15} /> {P47B_NAMES_AR.version} {!open && <button className="pt-btn gold small" type="button" onClick={preview} disabled={!!busy} data-testid="pv-apply-open">{busy === 'preview' ? '…' : P47B_NAMES_AR.apply}</button>}</h4>
+    {!open && <small className="pt-muted">ما قبلتَه أعلاه يُطبَّق على وحدات البرنامج كنسخة جديدة مفتوحة للدفعة القادمة — بزرّ منك لا تلقائيًّا؛ الوحدات الحالية تُؤرشَف ولا تُحذف.</small>}
+    {err && <p className="warn" data-testid="pv-version-err">{err}</p>}
+    {open && pv && <>
+      {pv.open_rooms > 0 && <p className="warn" data-testid="pv-version-warn">تنبيه: {pv.open_rooms} {pv.open_rooms === 1 ? 'شعبة لم تُراجَع بعد' : 'شعب لم تُراجَع بعد'} — لا تطبّق إلا بعد انتهاء كل شعب الدفعة.</p>}
+      <div className="ba" data-testid="pv-version-ba"><span>النسخة <b>{pv.next_version}</b></span><span>الوحدات <b>{pv.plan.units.length}</b></span><span>الساعات <b>{pv.plan.hours}</b></span><span>الكفايات <b>{pv.plan.skills.length}</b></span></div>
+      <div><b style={{ fontSize: '.88rem' }}>يُطبَّق آليًا ({pv.plan.applied.length})</b>{pv.plan.applied.length ? <ul data-testid="pv-version-applied">{pv.plan.applied.map((x: any, i: number) => <li key={i}><b>{x.target_ar}</b> · {x.action_ar} — <span className="pt-muted">{x.note_ar}</span></li>)}</ul> : <p className="pt-muted" style={{ margin: 0 }}>لا شيء آلي — النسخة تحفظ القرار وتفتح الوحدات من جديد.</p>}</div>
+      {pv.plan.manual.length > 0 && <div><b style={{ fontSize: '.88rem' }}>{P47B_NAMES_AR.manual} ({pv.plan.manual.length})</b><ul className="m" data-testid="pv-version-manual">{pv.plan.manual.map((x: any, i: number) => <li key={i}><b>{x.target_ar}</b> · {x.action_ar} — {x.note_ar}</li>)}</ul></div>}
+      <label style={{ fontSize: '.88rem', fontWeight: 800 }}>{P47B_NAMES_AR.message} <small className="pt-muted">— يراها متدرّبو الدفعة {cohort + 1} في صفحتهم وعلى صفحة البرنامج · بلا أسماء ({msg.length}/{VERSION_MESSAGE_MAX})</small>
+        <textarea value={msg} onChange={e => setMsg(e.target.value.slice(0, VERSION_MESSAGE_MAX))} maxLength={VERSION_MESSAGE_MAX} rows={2} data-testid="pv-message" /></label>
+      <div className="row"><button className="pt-btn gold small" type="button" onClick={apply} disabled={!!busy || msg.trim().length < VERSION_MESSAGE_MIN} data-testid="pv-apply"><Icon name="check" size={14} /> {busy === 'apply' ? '…' : `أصدر النسخة ${pv.next_version}`}</button><button className="pt-btn ghost small" type="button" onClick={() => setOpen(false)} disabled={!!busy}>ليس الآن</button></div>
+    </>}
+  </div>;
+}
 export function ReviewDoc({ r, onClose }: { r: any; onClose?: () => void }) {
   const c: ReviewComputed = r.computed; const b: ReviewBody = r.body; const gc = gapCounts(c.gaps); const ch = reviewChanges(b, c);
   return <main className="pt-main pr" data-testid="pv-doc"><style dangerouslySetInnerHTML={{ __html: MR_CSS + MR_PRINT_CSS }} />
@@ -138,13 +164,15 @@ export function ReviewDoc({ r, onClose }: { r: any; onClose?: () => void }) {
 
 /* ───────── 4) الشريط العام على صفحة البرنامج ───────── */
 export function ProgramReviewStrip({ programId }: { programId: string }) {
-  const [d, setD] = useState<any>(null);
-  useEffect(() => { fetch(`/api/reports?reviews=${encodeURIComponent(programId)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setD(j?.success ? j : { n: 0 })).catch(() => setD({ n: 0 })); }, [programId]);
-  if (!d || !d.n) return null;
+  const [d, setD] = useState<any>(null); const [vs, setVs] = useState<any>(null);
+  useEffect(() => { fetch(`/api/reports?reviews=${encodeURIComponent(programId)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setD(j?.success ? j : { n: 0 })).catch(() => setD({ n: 0 })); fetch(`/api/reports?versions=${encodeURIComponent(programId)}`, { cache: 'no-store' }).then(r => r.json()).then(j => setVs(j?.success ? j : { n: 0 })).catch(() => setVs({ n: 0 })); }, [programId]);   /* P47-ب: + سجلّ النسخ */
+  if (!d || !d.n) return null; const last = vs?.n ? vs.versions[0] : null;
   return <section className="pv-strip" data-testid="pv-strip" aria-labelledby="pv-strip-h"><style dangerouslySetInnerHTML={{ __html: CSS }} />
     <h2 id="pv-strip-h"><Icon name="refresh" size={16} /> {P47_NAMES_AR.changed} {d.n === 1 ? 'مرة' : d.n === 2 ? 'مرتين' : `${d.n} مرات`} بسبب دفعاته</h2>
     <small>«{P47_NAMES_AR.story}» — بعد كل دفعة يُقارَن وعد التصميم بما ثبت، ويعدَّل البرنامج بقرار إنسان. آخر مراجعة: {P47_NAMES_AR.cohort} {d.last.cohort_no} · {fmtDayAr(d.last.period_to)} · {d.last.kept} {GAP_GRADE_AR.kept} · {d.last.near} {GAP_GRADE_AR.near} · {d.last.missed} {GAP_GRADE_AR.missed} · <Link href={`/verify/report/${d.last.code}`}>تحقّق</Link></small>
     {d.last.changes?.length > 0 && <ul data-testid="pv-strip-changes">{d.last.changes.slice(0, 5).map((x: any, i: number) => <li key={i}><b>{x.target_ar}</b>: {x.text_ar}</li>)}</ul>}
+    {last && <ul className="pv-vers" data-testid="pv-strip-versions">{vs.versions.slice(0, 4).map((v: any) => <li key={v.version}><span className="v">النسخة {v.version}</span><span>بعد {P47_NAMES_AR.cohort} {v.cohort_no} · {fmtDayAr(v.at)}</span>{v.units_before !== null && <span className="pt-muted">{v.units_before} → {v.units_after} وحدة · {v.hours_before} → {v.hours_after} ساعة</span>}{v.code && <Link href={`/verify/report/${v.code}`}>تحقّق</Link>}</li>)}</ul>}
+    {last?.message_ar && <p className="pv-msg" data-testid="pv-strip-message"><b>{P47B_NAMES_AR.message}:</b> «{last.message_ar}»</p>}
   </section>;
 }
 

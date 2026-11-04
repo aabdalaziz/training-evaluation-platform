@@ -61,6 +61,7 @@ export async function witnessFacts(db: any, me: { id?: string | null; email: str
   try { const { missionReportedCount } = await import('../reports/load'); f.missions_reported = await missionReportedCount(db, email); } catch { /* قبل تنفيذ SQL */ }   // P46 ر3
   try { const { docsWrittenCount } = await import('../reports/load'); f.docs_written = await docsWrittenCount(db, email); } catch { /* قبل تنفيذ SQL */ }   // P46 ر3-ب
   try { const { profilesLedCount } = await import('../reports/load'); const pl = await profilesLedCount(db, email); f.profiles_led = pl.profiles; f.diplomas_led = pl.diplomas; } catch { /* قبل تنفيذ SQL */ }   // P46 ر4-ب
+  try { const { reviewsLedCount } = await import('../reports/load'); const rl = await reviewsLedCount(db, email); f.reviews_led = rl.reviews; f.versions_applied = rl.versions; } catch { /* قبل تنفيذ SQL */ }   // P47-ب
   return f;
 }
 
