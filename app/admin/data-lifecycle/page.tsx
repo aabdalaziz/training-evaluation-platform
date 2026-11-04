@@ -252,6 +252,6 @@ const CSS = `
 .dl-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
 .dl-modal-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px}
 .dl-modal-box h3{margin:0;color:#b91c1c;display:flex;align-items:center;gap:8px}.dl-modal-box p{margin:0;line-height:1.7}
-.dl-modal-box label>span{display:block;font-weight:800;font-size:13px;margin-bottom:4px}.dl-mask{-webkit-text-security:disc}.dl-hint{display:block;font-size:12.5px;color:#92400e;font-weight:700;line-height:1.6}.dl-hint.ok{color:#047857}
+.dl-modal-box label span{display:block;font-weight:800;font-size:13px;margin-bottom:4px}.dl-mask{-webkit-text-security:disc}.dl-hint{display:block;font-size:12.5px;color:#92400e;font-weight:700;line-height:1.6}.dl-hint.ok{color:#047857}
 @media(max-width:800px){.dl-grid{grid-template-columns:1fr}.dl{padding:12px}}
 `;

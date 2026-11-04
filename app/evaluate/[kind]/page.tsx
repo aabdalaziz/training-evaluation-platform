@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
+import { isUniqueViolation, markDone, onceMessage, ONCE_SHARED, ONCE_TITLE, riyadhToday, wasDone, type OnceKind } from '../../../lib/evaluation/once';
 import { kindFromPath, KIND_AR, KIND_EN, resolveOpenLang, linkStateText, linkTitle, scopeText, pickTemplate, answerRow, LIKERT_AR, LIKERT_EN, NPS_MIN, NPS_MAX, type EvalLink, type LinkState } from '../../../lib/evaluation/links';
 
 const COUNTRIES = [
@@ -72,6 +73,19 @@ export default function GuestEvaluationPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(''); const [missIds, setMissIds] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
+  /* P49-ج «مرّة واحدة»: ذاكرة الجهاز + فحص البريد المبكّر */
+  const [onceAt, setOnceAt] = useState<string | null>(null); const [onceOverride, setOnceOverride] = useState(false);
+  const [dupEmail, setDupEmail] = useState<string | null>(null);
+  const onceScope = { kind: kindLabel as OnceKind, programId, classroomId: kind === 'daily' ? classroomId : null };   /* الختامي/النهاية: للبرنامج كلّه */
+  useEffect(() => { if (programId) setOnceAt(wasDone(onceScope)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [programId, classroomId]);
+  async function checkEmailEarly(raw: string) {
+    const em = raw.trim().toLowerCase(); setDupEmail(null); if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) || !programId) return;
+    try {
+      let q = db.from('evaluations').select('id').eq('program_id', programId).eq('guest_email', em).eq('kind', kindLabel);
+      if (kind === 'daily') q = q.eq('classroom_id', classroomId).eq('evaluation_date', riyadhToday());
+      const { data } = await q.limit(1); if (data && data.length) setDupEmail(em);
+    } catch { /* الفحص المبكّر اختياري — الحسم عند الإرسال وفي قاعدة البيانات */ }
+  }
   const [preClassroom, setPreClassroom] = useState('');
   /* P49: وضع الرابط المقفل */
   const [link, setLink] = useState<EvalLink | null>(null); const [linkStatus, setLinkStatus] = useState<LinkState | 'none' | 'invalid'>('none'); const [linkRooms, setLinkRooms] = useState<any[]>([]); const [linkProgram, setLinkProgram] = useState<any>(null);
@@ -180,10 +194,10 @@ export default function GuestEvaluationPage() {
       const guestEmail = info.email.trim().toLowerCase();
       const fullPhone = `${info.country_dial}${digits}`;
       const ratings = ratingQuestions.map(q => Number(answers[q.id])).filter(x => !isNaN(x) && x > 0);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = riyadhToday();   /* P49-ج: تاريخ الرياض لا UTC */
       let dup = db.from('evaluations').select('id').eq('program_id', programId).eq('guest_email', guestEmail).eq('kind', kindLabel);
       if (kind === 'daily') dup = dup.eq('classroom_id', classroomId).eq('evaluation_date', today);
-      const { data: existing } = await dup.maybeSingle();
+      const { data: existingRows } = await dup.limit(1); const existing = existingRows && existingRows.length ? existingRows[0] : null;
       if (existing) { setSaving(false); setMessage(`⚠️ ${kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}`); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
       const { data: ev, error } = await db.from('evaluations').insert({
         program_id: programId, template_id: templateId, trainee_id: null, guest_email: guestEmail, guest_name: info.full_name.trim() || null, guest_phone: info.phone.trim() ? fullPhone : null, guest_gender: info.gender || null,
@@ -197,8 +211,9 @@ export default function GuestEvaluationPage() {
       });
       const { error: answerError } = await db.from('evaluation_answers').insert(rows as any);
       if (answerError) throw answerError;
+      markDone(onceScope); setOnceAt(new Date().toISOString()); setOnceOverride(false); setDupEmail(null);   /* P49-ج: علامة الجهاز */
       setIsSuccess(true); window.scrollTo({ top: 0 });
-    } catch (err: any) { setMessage(err?.message || 'حدث خطأ غير متوقع'); }
+    } catch (err: any) { setMessage(isUniqueViolation(err) ? `⚠️ ${kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}` : (err?.message || 'حدث خطأ غير متوقع')); if (isUniqueViolation(err)) window.scrollTo({ top: 0, behavior: 'smooth' }); }
     finally { setSaving(false); }
   }
 
@@ -243,6 +258,17 @@ export default function GuestEvaluationPage() {
     </section>
   </>);
 
+  if (onceAt && !onceOverride) return shell(<>
+    {header}
+    {lockCard}
+    <section className="ev-card ev-center" data-testid="ev-once" data-at={onceAt}>
+      <div className="ev-ok"><Icon name="check" size={34} /></div>
+      <h2>{ONCE_TITLE[lang === 'en' ? 1 : 0]}</h2>
+      <p className="ev-muted" style={{ fontSize: 14 }}>{onceMessage(kindLabel as OnceKind, lang)}</p>
+      <button type="button" className="ev-btn ghost" onClick={() => setOnceOverride(true)} data-testid="ev-once-override"><Icon name="users" size={14} /> {ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
+    </section>
+  </>);
+
   const field = (label: string, required: boolean, control: React.ReactNode, span?: boolean) => <label className={`ev-field${span ? ' span' : ''}`}><span>{label}{required && <span className="ev-req"> *</span>}</span>{control}</label>;
 
   return shell(<>
@@ -255,7 +281,7 @@ export default function GuestEvaluationPage() {
         <h2><span className="ev-n">1</span>{t('participant')}</h2>
         <div className="ev-grid">
           {field(t('name'), kind !== 'end', <input value={info.full_name} onChange={e => setInfo({ ...info, full_name: e.target.value })} autoComplete="name" />)}
-          {field(t('email'), true, <input type="email" dir="ltr" placeholder="name@example.com" value={info.email} onChange={e => setInfo({ ...info, email: e.target.value })} autoComplete="email" />)}
+          {field(t('email'), true, <><input type="email" dir="ltr" placeholder="name@example.com" value={info.email} onChange={e => { setInfo({ ...info, email: e.target.value }); if (dupEmail) setDupEmail(null); }} onBlur={e => void checkEmailEarly(e.target.value)} autoComplete="email" aria-invalid={!!dupEmail} data-testid="ev-email" />{dupEmail && <small className="ev-dup" role="alert" data-testid="ev-dup">⚠️ {kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}</small>}</>)}
           {field(t('phone'), kind !== 'end', <div className="ev-phone" dir="ltr">
             <select value={info.country_dial} onChange={e => setInfo({ ...info, country_dial: e.target.value })} aria-label="Country code">{COUNTRIES.map(c => <option key={c[0] + c[1]} value={c[0]}>{c[0]} · {lang === 'en' ? c[2] : c[1]}</option>)}</select>
             <input inputMode="numeric" placeholder="5xxxxxxxx" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value.replace(/[^\d]/g, '') })} autoComplete="tel-national" />
@@ -322,7 +348,7 @@ export default function GuestEvaluationPage() {
       {questions.length > 0 && (
         <section className="ev-card ev-submit">
           <div className="ev-progress"><div className="ev-bar"><i style={{ width: `${Math.round(100 * answered / Math.max(1, questions.length))}%` }} /></div><small className="ev-muted">{t('progress')} {answered} {t('of')} {questions.length} {t('questions')}</small></div>
-          <button type="submit" className="ev-btn" disabled={saving}><Icon name="send" size={16} /> {saving ? t('sending') : t('submit')}</button>
+          <button type="submit" className="ev-btn" disabled={saving || !!dupEmail}><Icon name="send" size={16} /> {saving ? t('sending') : t('submit')}</button>
           <small className="ev-muted"><Icon name="shield" size={12} /> {t('privacy')}</small>
         </section>
       )}
@@ -331,6 +357,8 @@ export default function GuestEvaluationPage() {
 }
 
 const CSS = `
+.ev-center p.ev-muted{display:block;font-size:14px;line-height:1.8;max-width:560px;margin:0 auto}.ev-center .ev-btn.ghost{display:inline-flex;margin-top:16px}
+.ev-dup{display:block;color:#b91c1c;font-weight:800;font-size:12.5px;margin-top:4px;line-height:1.6}.ev-field input[aria-invalid=true]{border-color:#dc2626;background:#fef2f2}
 .ev-lock{border:1.5px solid #c9a24b;background:linear-gradient(180deg,#fffbeb,#fff);display:grid;gap:4px}.ev-lock-k{font-size:12px;font-weight:900;color:#8a6a1f;display:inline-flex;gap:6px;align-items:center}.ev-lock-t{font-size:18px;font-weight:900;color:#0f2a4e}.ev-lock-m{font-size:13px;font-weight:700;color:#334155}
 .ev-nps-row{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}.ev-nps-row button{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:9px 0;font:inherit;font-weight:900;font-size:13px;color:#0f2a4e;cursor:pointer;min-width:0}.ev-nps-row button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.ev-nps-l{display:flex;justify-content:space-between;margin-top:4px;color:#64748b}@media(max-width:480px){.ev-nps-row{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .ev-ok.off{background:#e2e8f0;color:#475569}

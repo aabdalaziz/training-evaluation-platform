@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { resolveOpenLang } from '../../../lib/evaluation/links';
+import { markDone, onceMessage, ONCE_SHARED, ONCE_TITLE, wasDone } from '../../../lib/evaluation/once';
 import {
   ATTENDANCE, DIFFICULTIES, SCALE, STATEMENTS, SURVEY_INTRO, SURVEY_TITLE, UI,
   buildPayload, classroomLabel, classroomsFor, emptyDraft, levelLabel, levelsForProgram,
@@ -59,6 +60,9 @@ function SurveyForm() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [done, setDone] = useState(false);
+  /* P49-ج «مرّة واحدة في اليوم»: الاستطلاع مجهول الهوية، فالطبقة الوحيدة هنا ذاكرة الجهاز (لكل مجموعة/يوم) */
+  const [onceAt, setOnceAt] = useState<string | null>(null); const [onceOverride, setOnceOverride] = useState(false);
+  useEffect(() => { if (!loading && draft.classroomId) setOnceAt(wasDone({ kind: 'REMOTE', programId: draft.programId, classroomId: draft.classroomId })); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [loading, draft.classroomId]);
 
   /* ---------------- load lookups ---------------- */
   useEffect(() => {
@@ -152,6 +156,7 @@ function SurveyForm() {
       const payload = buildPayload(draft, { programs, levels, trainers, classrooms, schedules, lang });
       const { error } = await db.from('remote_learning_survey_responses').insert(payload);
       if (error) throw error;
+      markDone({ kind: 'REMOTE', programId: draft.programId, classroomId: draft.classroomId }); setOnceOverride(false);
       setDone(true);
       window.scrollTo({ top: 0 });
     } catch (err: any) {
@@ -163,6 +168,18 @@ function SurveyForm() {
 
   /* ---------------- render ---------------- */
   if (loading) return (<main className="rs-center" dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} />{t(UI.loading, lang)}</main>);
+
+  if (onceAt && !onceOverride && !done) return (
+    <main className="rs-wrap" dir={dir}>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <section className="rs-card rs-thanks" data-testid="rs-once" data-at={onceAt}>
+        <div className="rs-thanks-icon">✅</div>
+        <h1>{ONCE_TITLE[lang === 'en' ? 1 : 0]}</h1>
+        <p>{onceMessage('REMOTE', lang)}</p>
+        <button type="button" className="rs-once-btn" onClick={() => setOnceOverride(true)} data-testid="rs-once-override">{ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
+      </section>
+    </main>
+  );
 
   if (done) return (
     <main className="rs-wrap" dir={dir}>
@@ -433,6 +450,7 @@ const CSS = `
 .rs-submit{width:100%;border:0;border-radius:14px;padding:16px;background:linear-gradient(135deg,#00897B,#1FA39A);color:#fff;font:inherit;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 10px 24px rgba(0,137,123,.25);}
 .rs-submit .rs-primary,.rs-submit .rs-secondary{color:#fff;}
 .rs-submit:disabled{opacity:.7;cursor:wait;}
+.rs-once-btn{margin-top:14px;font:inherit;font-weight:800;font-size:13px;color:#0f2a4e;background:#fff;border:1.5px solid #cbd5e1;border-radius:999px;padding:9px 16px;cursor:pointer}.rs-once-btn:hover{border-color:#0f2a4e}
 .rs-thanks{text-align:center;padding:40px 24px;border-top:8px solid #10b981;}
 .rs-thanks-icon{font-size:64px;margin-bottom:10px;}
 .rs-thanks h1{margin:0 0 10px;color:#047857;} .rs-thanks h1 .rs-primary{font-size:26px;}
