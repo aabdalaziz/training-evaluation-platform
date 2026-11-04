@@ -5,7 +5,7 @@
  *  - المعايير من `portal_accred_standards` (قابلة للتعديل من الإدارة) وإلا من السجلّ المدمج.
  *  - الفقرات في `portal_accred_narratives`: لا تُحفظ إلا موقَّعة. خريطة الكفايات في `portal_accred_skill_maps`.
  */
-import { DEFAULT_STANDARDS, EVIDENCE_RULES, K_MIN, coverageOf, localNarrative, narrativePrompt, parseNarrative, cleanNarrativeText, narrativeMissing, cleanSkillMap, skillMapCoverage, tpsGeneral, subsOf, topsOf, eligibilityOf, fileScore, evidenceTimeline, ageingEvidence, snapshotBody, snapshotCode, canonicalJson, standardsCanonical, freezeMissing, coverageDiff, cleanNote, snapshotPublicView, type StandardRow, type Evidence, type Narrative, type Framework, type SkillMap } from './registry';
+import { DEFAULT_STANDARDS, EVIDENCE_RULES, K_MIN, coverageOf, localNarrative, narrativePrompt, parseNarrative, cleanNarrativeText, narrativeMissing, cleanSkillMap, skillMapCoverage, tpsGeneral, subsOf, topsOf, eligibilityOf, fileScore, evidenceTimeline, ageingEvidence, snapshotBody, snapshotCode, canonicalJson, standardsCanonical, freezeMissing, coverageDiff, cleanNote, snapshotPublicView, type StandardRow, type Evidence, type Narrative, type Framework, type SkillMap, dominantId } from './registry';
 import { createHash } from 'crypto';
 import { myScope, templateFor, unitsOf, type Me } from '../reports/load';
 import { filePublicView } from './registry';
@@ -83,12 +83,12 @@ export async function skillMapOf(db: any, programId: string): Promise<SkillMap> 
 export async function fileFor(db: any, me: Me, programId: string) {
   if (!(await canSeeProgram(db, me, programId))) return { ok: false as const, error: 'غير مصرّح' };
   const program = await safe<any>(db.from('programs').select('id,name_ar,program_type,start_date,end_date,organization_id').eq('id', programId).maybeSingle(), null); if (!program) return { ok: false as const, error: 'البرنامج غير موجود' };
-  const [rows, nars, map, tpl, snaps, org] = await Promise.all([standardsRows(db), narrativesOf(db, programId), skillMapOf(db, programId), templateFor(db, program), snapshotsOf(db, programId), program.organization_id ? safe<any>(db.from('organizations').select('id,name_ar,name').eq('id', String(program.organization_id)).maybeSingle(), null) : Promise.resolve(null)]);
+  const [rows, nars, map, tpl, snaps, org] = await Promise.all([standardsRows(db), narrativesOf(db, programId), skillMapOf(db, programId), templateFor(db, program), snapshotsOf(db, programId), orgOfProgram(db, program)]);
   const { evidence, facts } = await collectEvidence(db, program); const tps = tpsGeneral(rows); const smc = skillMapCoverage(map, tps.map(t => t.code));
   if (smc.n > 0) evidence.push({ id: 'skill_map:1', kind: 'skill_map', codes: ['1.1'], label_ar: `كفايات البرنامج تغطّي ${smc.n} من ${smc.total} معايير المعلّم العامة`, at: null, href: '#tps', n: smc.n });
   const signed = new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code)); const cov = coverageOf(rows, evidence, signed); const timeline = evidenceTimeline(evidence); const ageing = ageingEvidence(evidence);
   const cur = filePublicView({ program_ar: String(program.name_ar || ''), cov, narratives: nars, updated_at: null }); const last = snaps[0] || null;
-  return { ok: true as const, program: { id: String(program.id), name_ar: String(program.name_ar || ''), program_type: program.program_type || null, org_ar: org ? String(org.name_ar || org.name || '') : null, organization_id: program.organization_id ? String(program.organization_id) : null }, standards: rows.filter(r => r.framework === 'pas'), tps, coverage: cov, score: fileScore(cov), eligibility: eligibilityOf({ program_type: program.program_type || null, ...facts }), narratives: nars, skill_map: map, skills: tpl.skills, skill_map_coverage: smc, evidence_n: evidence.length, can_edit: true, updated_at: nowIso(),
+  return { ok: true as const, program: { id: String(program.id), name_ar: String(program.name_ar || ''), program_type: program.program_type || null, org_ar: org.name_ar, organization_id: org.id, org_inferred: org.inferred }, standards: rows.filter(r => r.framework === 'pas'), tps, coverage: cov, score: fileScore(cov), eligibility: eligibilityOf({ program_type: program.program_type || null, ...facts }), narratives: nars, skill_map: map, skills: tpl.skills, skill_map_coverage: smc, evidence_n: evidence.length, can_edit: true, updated_at: nowIso(),
     timeline, ageing: ageing.map(e => ({ id: e.id, kind: e.kind, label_ar: e.label_ar, at: e.at, codes: e.codes, href: e.href })), snapshots: snaps.map(x => ({ code: x.code, frozen_at: x.frozen_at, frozen_name: x.frozen_name, score_met: x.score_met, score_total: x.score_total, eligible: x.eligible, note_ar: x.note_ar || '' })), freeze_missing: freezeMissing(cov, nars), diff: last ? coverageDiff(last.body, cur) : null, _cov: cov, _facts: facts };
 }
 export async function draftNarrative(db: any, me: Me, b: { program_id: string; code: unknown; local?: boolean }): Promise<{ ok: true; text_ar: string; source: 'local' | 'ai' } | { ok: false; error: string }> {
@@ -117,12 +117,34 @@ export async function adminFiles(db: any, me: Me) {
   if (!me.staff) return { ok: false as const, error: 'غير مصرّح' };
   const progs = await safe<any[]>(db.from('programs').select('id,name_ar,program_type,start_date,end_date,organization_id').eq('program_type', 'diploma').order('start_date', { ascending: false }).limit(40), []);
   const rows = await standardsRows(db); const out: any[] = [];
-  const orgIds = Array.from(new Set(progs.map(p => String(p.organization_id || '')).filter(Boolean))); const orgs = orgIds.length ? await safe<any[]>(db.from('organizations').select('id,name_ar,name').in('id', orgIds).limit(50), []) : []; const orgName = (id: string) => { const o = orgs.find(x => String(x.id) === id); return o ? String(o.name_ar || o.name || '') : ''; };
-  for (const p of progs.slice(0, 12)) { const [{ evidence, facts }, nars, snaps] = await Promise.all([collectEvidence(db, p), narrativesOf(db, String(p.id)), snapshotsOf(db, String(p.id))]); const cov = coverageOf(rows, evidence, new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code))); out.push({ id: String(p.id), name_ar: String(p.name_ar || ''), organization_id: p.organization_id ? String(p.organization_id) : null, org_ar: p.organization_id ? orgName(String(p.organization_id)) : '', score: fileScore(cov), standards: cov.map(c => ({ code: c.code, pct: c.pct, met: c.met, total: c.subs.length })), eligible: eligibilityOf({ program_type: p.program_type, ...facts }).every(x => x.ok), signed: nars.filter(n => n.signed_at).length, snapshots: snaps.length, last_code: snaps[0]?.code || null, last_at: snaps[0]?.frozen_at || null, ageing: ageingEvidence(evidence).length }); }
+  const inferred = await inferredOrgIds(db, progs.filter(p => !p.organization_id).map(p => String(p.id))); const orgIdOf = (p: any) => p.organization_id ? String(p.organization_id) : (inferred.get(String(p.id)) || null); const names = await orgNames(db, progs.map(orgIdOf).filter(Boolean) as string[]); const orgName = (id: string) => names.get(id) || '';
+  for (const p of progs.slice(0, 12)) { const [{ evidence, facts }, nars, snaps] = await Promise.all([collectEvidence(db, p), narrativesOf(db, String(p.id)), snapshotsOf(db, String(p.id))]); const cov = coverageOf(rows, evidence, new Set(nars.filter(n => n.framework === 'pas' && n.signed_at).map(n => n.code))); out.push({ id: String(p.id), name_ar: String(p.name_ar || ''), organization_id: orgIdOf(p), org_ar: orgIdOf(p) ? orgName(orgIdOf(p)!) : '', org_inferred: !p.organization_id && !!orgIdOf(p), score: fileScore(cov), standards: cov.map(c => ({ code: c.code, pct: c.pct, met: c.met, total: c.subs.length })), eligible: eligibilityOf({ program_type: p.program_type, ...facts }).every(x => x.ok), signed: nars.filter(n => n.signed_at).length, snapshots: snaps.length, last_code: snaps[0]?.code || null, last_at: snaps[0]?.frozen_at || null, ageing: ageingEvidence(evidence).length }); }
   const byOrg = new Map<string, any>(); for (const f of out) { const k = f.organization_id || '-'; const g = byOrg.get(k) || { organization_id: f.organization_id, org_ar: f.org_ar || 'بلا جهة', programs: 0, pct_sum: 0, frozen: 0, ageing: 0, per: {} as Record<string, number[]> }; g.programs++; g.pct_sum += f.score.pct; g.frozen += f.snapshots; g.ageing += f.ageing; for (const s of f.standards) (g.per[s.code] ||= []).push(s.pct); byOrg.set(k, g); }
   const orgs_rollup = Array.from(byOrg.values()).map(g => { const per = Object.entries(g.per).map(([code, arr]) => ({ code, avg: Math.round((arr as number[]).reduce((a, b) => a + b, 0) / (arr as number[]).length) })); return { organization_id: g.organization_id, org_ar: g.org_ar, programs: g.programs, avg_pct: Math.round(g.pct_sum / g.programs), frozen: g.frozen, ageing: g.ageing, weakest: per.length ? [...per].sort((a, b) => a.avg - b.avg)[0] : null }; }).sort((a, b) => b.programs - a.programs);
   const weakest = topsOf(rows, 'pas').map(t => ({ code: t.code, title_ar: t.title_ar, avg: out.length ? Math.round(out.reduce((a, f) => a + (f.standards.find((s: any) => s.code === t.code)?.pct || 0), 0) / out.length) : 0 })).sort((a, b) => a.avg - b.avg);
   return { ok: true as const, files: out, weakest, standards: rows, orgs: orgs_rollup };
+}
+
+
+/* ───────── P48-ب.1: جهة البرنامج — بالملكية (programs.organization_id) أو بالاستدلال (الجهة الغالبة في التسجيلات المعتمَدة)؛ الاسم من portal_organizations ثم الجدول القديم organizations ───────── */
+async function orgNames(db: any, ids: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>(); const want = Array.from(new Set(ids.filter(Boolean))); if (!want.length) return out;
+  const a = await safe<any[]>(db.from('portal_organizations').select('id,name_ar').in('id', want).limit(60), []); for (const o of a) if (o?.id && o.name_ar) out.set(String(o.id), String(o.name_ar));
+  const rest = want.filter(id => !out.has(id)); if (rest.length) { const b = await safe<any[]>(db.from('organizations').select('*').in('id', rest).limit(60), []); for (const o of b) { const nm = o?.name_ar || o?.name || o?.title || ''; if (o?.id && nm) out.set(String(o.id), String(nm)); } }
+  return out;
+}
+async function inferredOrgIds(db: any, programIds: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>(); if (!programIds.length) return out;
+  const ens = await safe<any[]>(db.from('portal_enrollments').select('program_id,organization_id').in('program_id', programIds).eq('status', 'approved').limit(3000), []);
+  const by = new Map<string, string[]>(); for (const e of ens) if (e?.organization_id) (by.get(String(e.program_id)) || by.set(String(e.program_id), []).get(String(e.program_id))!).push(String(e.organization_id));
+  for (const [pid, ids] of by) { const d = dominantId(ids); if (d) out.set(pid, d); }
+  return out;
+}
+/** جهة برنامج واحد: {id, name_ar, inferred} */
+export async function orgOfProgram(db: any, program: any): Promise<{ id: string | null; name_ar: string | null; inferred: boolean }> {
+  let id = program?.organization_id ? String(program.organization_id) : null; let inferred = false;
+  if (!id) { const inf = await inferredOrgIds(db, [String(program.id)]); id = inf.get(String(program.id)) || null; inferred = !!id; }
+  if (!id) return { id: null, name_ar: null, inferred: false }; const names = await orgNames(db, [id]); return { id, name_ar: names.get(id) || null, inferred };
 }
 
 /* ───────── P48-ب: النسخ المختومة ───────── */

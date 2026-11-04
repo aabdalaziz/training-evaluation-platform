@@ -210,3 +210,10 @@ export function coverageDiff(prev: { standards: { subs: { code: string; state: C
 export function snapshotPublicView(r: { code: string; sha256: string; standards_sha: string; body: any; frozen_name: string | null; frozen_at: string; score_met: number; score_total: number; eligible: boolean; note_ar: string | null }, intact: boolean) {
   return { code: r.code, sha256: r.sha256, standards_sha: r.standards_sha, standards_sha_short: String(r.standards_sha || '').slice(0, 8), intact, frozen_name: r.frozen_name, frozen_at: r.frozen_at, score_met: r.score_met, score_total: r.score_total, eligible: r.eligible, note_ar: r.note_ar || '', ...(r.body || {}) };
 }
+
+/** P48-ب.1 — الجهة الغالبة: أكثر معرّف تكرارًا في قائمة (تسجيلات معتمَدة) — null إن خلت القائمة؛ عند التعادل يُؤخذ الأقدم ظهورًا */
+export function dominantId(ids: Array<string | null | undefined>): string | null {
+  const n = new Map<string, number>(); const order: string[] = [];
+  for (const raw of ids) { const id = String(raw || '').trim(); if (!id) continue; if (!n.has(id)) order.push(id); n.set(id, (n.get(id) || 0) + 1); }
+  let best: string | null = null; for (const id of order) if (best === null || (n.get(id) || 0) > (n.get(best) || 0)) best = id; return best;
+}

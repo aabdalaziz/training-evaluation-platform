@@ -2,7 +2,7 @@
 // اختبارات P48-ب — «التجميد والتحقّق والتجميع»: JSON قانوني · رمز النسخة · شروط التجميد · ساعة المراجِع وشيخوخة الدليل · جسم النسخة · فرق التغطية · العرض العام
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { P48B_NAMES_AR, NOTE_MAX, AGE_MONTHS, snapshotCode, cleanNote, canonicalJson, freezeMissing, isAgeing, evidenceTimeline, ageingEvidence, snapshotBody, standardsCanonical, coverageDiff, snapshotPublicView, coverageOf, PAS_STANDARDS, filePublicView, type Evidence, type Narrative } from '../lib/accreditation/registry';
+import { dominantId, P48B_NAMES_AR, NOTE_MAX, AGE_MONTHS, snapshotCode, cleanNote, canonicalJson, freezeMissing, isAgeing, evidenceTimeline, ageingEvidence, snapshotBody, standardsCanonical, coverageDiff, snapshotPublicView, coverageOf, PAS_STANDARDS, filePublicView, type Evidence, type Narrative } from '../lib/accreditation/registry';
 
 const EV = (kind: Evidence['kind'], codes: string[], at: string | null, n?: number): Evidence => ({ id: `${kind}:${codes.join('/')}:${at}`, kind, codes, label_ar: `دليل ${kind}`, at, href: '/me/reports', n });
 const NAR = (code: string, signed = true): Narrative => ({ framework: 'pas', code, text_ar: 'ف'.repeat(60), evidence_ids: [], signed_by: signed ? 'u' : null, signed_name: signed ? 'د. فلان' : null, signed_at: signed ? '2026-10-01T00:00:00Z' : null, source: 'human' });
@@ -45,4 +45,7 @@ test('P48-ب · فرق التغطية: صعود/نزول بين نسختين، �
 test('P48-ب · العرض العام للنسخة: يحمل الرمز والبصمتين وحالة المطابقة ولا يحمل معرّف الموقِّع', () => {
   const v = snapshotPublicView({ code: 'AABCDEFGH2', sha256: 'ab'.repeat(32), standards_sha: 'cd'.repeat(32), body: { met: 3, total: 21, standards: [] }, frozen_name: 'د. نورة', frozen_at: '2026-11-04T00:00:00Z', score_met: 3, score_total: 21, eligible: false, note_ar: null }, true);
   assert.equal(v.code, 'AABCDEFGH2'); assert.equal(v.intact, true); assert.equal(v.standards_sha_short, 'cdcdcdcd'); assert.equal(v.note_ar, ''); assert.equal((v as any).frozen_by, undefined); assert.equal(v.met, 3);
+});
+test('P48-ب.1 · الجهة الغالبة: الأكثر تكرارًا · التعادل للأقدم · الفراغ null', () => {
+  assert.equal(dominantId(['a', 'b', 'b', null, '', 'a', 'b']), 'b'); assert.equal(dominantId(['x', 'y']), 'x'); assert.equal(dominantId([]), null); assert.equal(dominantId([null, undefined, ' ']), null);
 });
