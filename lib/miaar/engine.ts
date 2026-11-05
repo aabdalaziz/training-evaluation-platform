@@ -30,7 +30,7 @@ export type SessionRow = {
   blueprint_id?: string | null; plan?: unknown;  /* م2-ب: الخطة المثبّتة لحظة البدء */
   proctor_mode?: 'room' | 'camera' | 'remote' | null;  /* م8-ب: وضع المراقبة المثبَّت لحظة البدء */
 };
-export type StartInput = { candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; proctorMode?: 'room' | 'camera' | 'remote' | null; userId?: string | null; blueprint?: unknown };
+export type StartInput = { /* م8-ج */ instructionsAck?: { version: number; lang: 'ar' | 'en'; at: string } | null; candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; proctorMode?: 'room' | 'camera' | 'remote' | null; userId?: string | null; blueprint?: unknown };
 export type Result<T> = { ok: true; value: T } | { ok: false; code: string; status: number };
 const fail = (code: string, status: number): Result<never> => ({ ok: false, code, status });
 
@@ -114,7 +114,7 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
   const { data, error } = await db.from('placement_secure_sessions').insert({
     token_hash: tokenHash(token), candidate: stored, content_version: CONTENT_VERSION, exam_mode: examMode, status: 'active', expires_at: expiresAt, current_level_index: startIndex, start_level_index: startIndex, direction: 'up',
     probe: input.probeAnswers && activePlan.probe ? { score, band_index: startIndex } : null, access, invite_id: input.invite?.id || null, recipient_id: input.invite?.recipient_id || null, user_id: input.userId || null,
-    blueprint_id: blueprintId, plan: activePlan, proctor_mode: input.proctorMode || null, /* م8-ب: وضع المراقبة يُثبَّت على الجلسة */
+    blueprint_id: blueprintId, plan: activePlan, proctor_mode: input.proctorMode || null, /* م8-ب: وضع المراقبة يُثبَّت على الجلسة */ instructions_ack: input.instructionsAck || null, /* م8-ج: إقرار التعليمات */
   }).select('*').single();
   if (error || !data) { console.error('[miaar] session_start_failed', error?.code || '-', error?.message || 'no row');  /* سجلّ Vercel يحمل السبب (بلا بيانات شخصية) — درس حادثة م2-ب */ return fail('session_start_failed', 409); }
   mark('insert');

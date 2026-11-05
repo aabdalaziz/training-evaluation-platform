@@ -50,7 +50,9 @@ export default function WitnessRoom({ auth }: { auth: () => Promise<Record<strin
         <h2>{d.session.name || '—'} <small dir="ltr">{d.session.email}</small></h2>
         <p className="wr-meta">{d.invite ? <>{d.invite.label_ar} · المستوى <b>{d.invite.level}</b> · <span className="wr-pill">{d.invite.mode_ar}</span>{d.invite.client_name && <> · الجهة: <b>{d.invite.client_name}</b></>} · </> : <>اختبار فردي (بلا دعوة) · <span className="wr-pill">{(d as any).mode_ar || 'قاعة + شاهِد'}</span> · </>}
           {d.session.status === 'active' ? <span className="wr-pill warn">يختبر الآن</span> : <>أنهى {fmt(d.session.finished_at)}</>} · بدأ {fmt(d.session.started_at)}{d.session.id_number && <> · رقم الهوية المُدخَل: <code dir="ltr">{d.session.id_number}</code></>}
-          {d.exit && <> · الحكم: <b>{d.exit.النتيجة === 'passed' ? 'اجتاز' : d.exit.النتيجة === 'conditional' ? 'مشروط' : d.exit.النتيجة === 'failed' ? 'لم يجتز' : 'قيد التصحيح'}</b>{typeof d.exit.الكلي === 'number' ? ` (${d.exit.الكلي}%)` : ''}</>}</p>
+          {d.exit && <> · الحكم: <b>{d.exit.النتيجة === 'passed' ? 'اجتاز' : d.exit.النتيجة === 'conditional' ? 'مشروط' : d.exit.النتيجة === 'failed' ? 'لم يجتز' : 'قيد التصحيح'}</b>{typeof d.exit.الكلي === 'number' ? ` (${d.exit.الكلي}%)` : ''}</>}
+          {/* م8-ج: إقرار الممتحن بالتعليمات */}
+          {(d as any).instructions_ack?.version ? <> · <span className="wr-pill ok" data-testid="wr-ack">أقرّ بالتعليمات (إصدار {(d as any).instructions_ack.version}) {fmt((d as any).instructions_ack.at)}</span></> : <> · <span className="wr-pill warn" data-testid="wr-ack">بلا إقرار مسجَّل (جلسة سابقة لـ م8-ج)</span></>}</p>
       </div>
       <div className="wr-acts">{d.invite?.id && <a className="wr-btn" href={`/admin/miaar/exit?invite=${encodeURIComponent(d.invite.id)}`}>← لوحة المجموعة</a>}{d.report?.access_code && <a className="wr-btn" href={`/miaar/result/${d.report.access_code}`} target="_blank" rel="noreferrer">بطاقة النتيجة</a>}</div>
     </section>

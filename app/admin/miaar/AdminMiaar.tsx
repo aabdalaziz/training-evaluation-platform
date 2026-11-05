@@ -22,7 +22,8 @@ import Ledger from './Ledger'; /* م5-أ: سجلّ مِعيار */
 import Growth from './Growth'; /* م5-ب: النموّ والمقارنة */
 import ExitBoard from './ExitBoard'; /* م6 «عُبور»: لوحة نهاية المستوى */
 import WitnessRoom from './WitnessRoom';
-import Hall, { LiveBadge } from './Hall'; /* م8-ب */ /* م8 «شاهِد»: غرفة الشاهد */
+import Hall, { LiveBadge } from './Hall'; /* م8-ب */
+import RulesEditor from './RulesEditor'; /* م8-ج: تعليمات الاختبار وإقرار الممتحن */ /* م8 «شاهِد»: غرفة الشاهد */
 import ServiceInviteModal from '../../components/ServiceInviteModal'; /* م7 «عُبور للجهات»: خدمة الاختبار المعياري */
 import { Icon } from '../../../lib/ui/icons';
 
@@ -132,6 +133,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
 
         {tab === 'invites' && <>
           {svcOpen && <ServiceInviteModal onClose={() => setSvcOpen(false)} onCreated={() => void load()} />}
+          <RulesEditor auth={() => H()} />
           <section className="am-card mm-svc" data-testid="mm-service">
             <div className="mm-svchead"><h3>خدمة الاختبار المعياري للجهات <small>اختبار نهاية المستوى (CEFR) لمجموعة من خارج البرامج — معهد آخر أو أفراد طلبوا الاختبار فقط</small></h3><button type="button" className="am-btn" onClick={() => setSvcOpen(true)} data-testid="mm-svc-new">طلب خدمة جديد + QR</button></div>
             {!orders.length ? <p className="mm-note">لا طلبات خدمة بعد. يمكن أيضًا إنشاؤها من «منشئ النماذج» على بطاقة SYS-EXIT بزرّ «دعوة خارجية + QR».</p> : <table className="mm-t" data-testid="mm-orders"><thead><tr><th>الجهة الطالبة</th><th>المستوى</th><th>المقاعد</th><th>بدأ</th><th>أنهى</th><th>اجتاز</th><th>الحالة</th><th>المراقب</th><th>اللوحة</th></tr></thead><tbody>

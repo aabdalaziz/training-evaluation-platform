@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { qrSvg } from '../../lib/certificates/qr';
 import { CAN_DO, LEVELS, SKILLS, FLOOR_LEVEL, FLOOR_INDEX } from '../../lib/miaar/registry';
+import { parseRules, countPoints } from '../../lib/miaar/rules'; /* م8-ج */
 import type { Level } from '../../lib/miaar/registry';
 import { Icon } from '../../lib/ui/icons';
 import { GuideButton } from '../components/Guide';
@@ -28,7 +29,7 @@ type Session = { plan?: { code: string; name_ar: string; name_en: string; type: 
 type Invite = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: 'adaptive' | 'comprehensive'; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
   witness?: WitnessCfg | null; /* م8-ب: المراقبة صفة لكل دعوة */
   exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null; witness?: WitnessCfg | null; client_name?: string | null; needs_pin?: boolean; identity_mode?: 'email' | 'email_id' } | null /* م6 · م7 */ };
-type Step = 'loading' | 'intro' | 'register' | 'probe' | 'test' | 'review' | 'result' | 'blocked';
+type Step = 'loading' | 'intro' | 'register' | 'rules' | 'probe' | 'test' | 'review' | 'result' | 'blocked'; /* م8-ج: rules = تعليمات الاختبار والإقرار */
 type Props = { inviteCode?: string | null; inviteToken?: string | null; resultCode?: string | null; fontClass?: string };
 
 const RTL = new Set(['ar', 'ur', 'fa', 'ps', 'ku']);
@@ -68,6 +69,20 @@ const X: Record<string, { ar: string; en: string }> = {
   wit_strip: { ar: 'سجلّ النزاهة', en: 'Integrity record' }, wit_pending: { ar: 'يُراجَع بشريًّا أثناء التصحيح — لا حكم آلي', en: 'Reviewed by a human during rating — no automated verdict' }, wit_clear: { ar: 'سليم — أُدّي تحت مراقبة مصوَّرة', en: 'Clear — taken under photo proctoring' }, wit_note: { ar: 'ملاحظة مُسجَّلة', en: 'A note was recorded' }, wit_invalid: { ar: 'لاغٍ — أُبطلت هذه المحاولة بقرار بشري؛ الشهادة محجوبة. يمكن طلب إعادة من الجهة/المعهد.', en: 'Annulled by human decision; the certificate is withheld. A retake may be requested.' },
   svc_continue: { ar: 'أكمل في أَثَر — برامج المستوى التالي', en: 'Continue at Athar — next-level programmes' }, svc_next: { ar: 'توصية المستوى التالي', en: 'Next level recommendation' },
   exit_title: { ar: 'اختبار نهاية المستوى — معياري (CEFR)', en: 'Level Exit Examination (CEFR-aligned)' },
+  /* م8-ج: تعليمات الاختبار والإقرار */
+  rules_k: { ar: 'الخطوة الأخيرة قبل البدء', en: 'Last step before you start' }, rules_h: { ar: 'تعليمات الاختبار وإقرار الممتحن', en: 'Exam instructions & candidate declaration' },
+  rules_lead: { ar: 'اقرأ التعليمات حتى نهايتها، ثم أكّد إقرارك. لن تُفتح الجلسة قبل ذلك.', en: 'Read the instructions to the end, then confirm your declaration. The session will not open before that.' },
+  rules_card: { ar: 'بطاقة اختبارك', en: 'Your exam card' }, rules_exam: { ar: 'الاختبار', en: 'Exam' }, rules_time: { ar: 'الوقت', en: 'Time' }, rules_min: { ar: '{n} دقيقة', en: '{n} minutes' }, rules_time_adaptive: { ar: 'حسب تقدّمك (≈ 25–40 دقيقة)', en: 'Depends on your progress (≈ 25–40 min)' },
+  rules_sections: { ar: 'الأقسام', en: 'Sections' }, rules_mode: { ar: 'المراقبة', en: 'Proctoring' }, rules_mode_room: { ar: 'قاعة بمراقب — بلا كاميرا؛ تُسجَّل مغادرة الشاشة فقط', en: 'Proctored room — no camera; only leaving the screen is recorded' },
+  rules_mode_camera: { ar: 'قاعة + شاهِد — لقطات صغيرة من الكاميرا كل نحو {n} ثانية، لا فيديو ولا صوت', en: 'Room + witness — small camera snapshots about every {n} s; no video, no audio' },
+  rules_mode_remote: { ar: 'عن بُعد — لقطات + لقطة هوية + ملء الشاشة إلزامي', en: 'Remote — snapshots + identity snapshot + mandatory full screen' },
+  rules_meta: { ar: 'الإصدار {v} · {n} نقطة · قراءة ≈ دقيقتين', en: 'Version {v} · {n} points · ≈ 2 min read' },
+  rules_progress: { ar: 'قرأت {p}%', en: 'Read {p}%' }, rules_read_hint: { ar: 'مرّر حتى نهاية التعليمات لتفعيل الإقرار.', en: 'Scroll to the end of the instructions to enable the declaration.' },
+  rules_agree: { ar: 'قرأتُ التعليمات وفهمتها، وأتعهّد بأداء الاختبار بنفسي وبأمانة.', en: 'I have read and understood the instructions, and I undertake to take the exam by myself and honestly.' },
+  rules_go: { ar: 'أقرّ وأبدأ الاختبار', en: 'I agree — start the exam' }, rules_listen: { ar: 'اقرأها لي', en: 'Read it to me' }, rules_stop: { ar: 'إيقاف القراءة', en: 'Stop reading' },
+  rules_changed: { ar: 'حُدّثت التعليمات للتوّ — اقرأ النسخة الجديدة وأكّد إقرارك.', en: 'The instructions were just updated — read the new version and confirm again.' },
+  rules_required: { ar: 'يلزم الإقرار بالتعليمات قبل البدء.', en: 'You must accept the instructions before starting.' }, rules_loading: { ar: 'تُحمَّل التعليمات…', en: 'Loading instructions…' },
+  rules_signed: { ar: 'سيُثبَّت إقرارك (الإصدار {v}) على جلستك بالوقت.', en: 'Your declaration (version {v}) will be recorded on your session with a timestamp.' },
   exit_level: { ar: 'المستوى', en: 'Level' }, exit_min: { ar: 'دقيقة', en: 'min' }, exit_items: { ar: 'بندًا', en: 'items' }, exit_tasks: { ar: 'مهمة', en: 'tasks' },
   exit_spec: { ar: 'جدول المواصفات', en: 'Specification' }, exit_rule: { ar: 'الاجتياز: الكلّي 60% فأكثر ولا مهارة دون 50% · استقبالي 60% · كتابة 20% · تحدّث 20%', en: 'Pass: overall 60%+ and no skill below 50% · receptive 60% · writing 20% · speaking 20%' },
   exit_retake_of: { ar: 'إعادة مهارة واحدة', en: 'Single-skill retake' },
@@ -127,7 +142,15 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   /* م8 «شاهِد»: جاهزية الكاميرا والموافقة قبل البدء · واجهة الشاهد (ملء الشاشة · علامات الأقسام) */
   const [wit, setWit] = useState<{ ready: boolean; consent: boolean; identity: boolean; error: string | null }>({ ready: true, consent: true, identity: false, error: null }); const witApi = useRef<WitnessApi | null>(null);
   /* م8-ب: المراقبة صفة لكل اختبار — الدعوة إن حدّدت، وإلا الافتراضي العام الذي يعلنه الخادم */
-  const [defaultWit, setDefaultWit] = useState<WitnessCfg | null>(null); const witCfg: WitnessCfg | null = invite?.witness ?? invite?.exit?.witness ?? defaultWit;
+  const [defaultWit, setDefaultWit] = useState<WitnessCfg | null>(null);
+  /* م8-ج: تعليمات الاختبار — تُجلب عند التسجيل، تُقرأ حتى النهاية، ثم إقرار يُرسل مع البدء */
+  const [rules, setRules] = useState<{ version: number; ar: string; en: string } | null>(null); const [rulesRead, setRulesRead] = useState(false); const [rulesAgree, setRulesAgree] = useState(false); const [reading, setReading] = useState(false); const [previewRules, setPreviewRules] = useState(false); const [readPct, setReadPct] = useState(0); const rulesBox = useRef<HTMLDivElement | null>(null);
+  const loadRules = useCallback(() => fetch('/api/miaar?rules=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && j.rules) setRules(j.rules); }).catch(() => null), []);
+  useEffect(() => { if ((step === 'register' || step === 'rules') && !rules) void loadRules(); }, [step, rules, loadRules]);
+  const ackRef = useRef<{ version: number; lang: 'ar' | 'en'; accepted: true } | null>(null); /* يُثبَّت عند نقرة «أقرّ وأبدأ» ويُرسل مع start (من المسبار أو مباشرة) */
+  useEffect(() => { if (step === 'register' || step === 'intro') { setRulesRead(false); setRulesAgree(false); setReadPct(0); ackRef.current = null; } if (step !== 'rules' && reading) { try { window.speechSynthesis?.cancel(); } catch { /* */ } setReading(false); } }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (step !== 'rules' || !rules) return; const el = rulesBox.current; if (!el) return; const check = () => { const max = el.scrollHeight - el.clientHeight; const p = max <= 8 ? 100 : Math.min(100, Math.round((el.scrollTop / max) * 100)); setReadPct(p); if (p >= 97) setRulesRead(true); }; check(); el.addEventListener('scroll', check, { passive: true }); const id = window.setTimeout(check, 400); return () => { el.removeEventListener('scroll', check); window.clearTimeout(id); }; }, [step, rules, lang]);
+  function toggleRead() { try { const ss = window.speechSynthesis; if (!ss) return; if (reading) { ss.cancel(); setReading(false); return; } const text = (lang === 'ar' ? rules?.ar : rules?.en) || ''; const u = new SpeechSynthesisUtterance(text.replace(/^## /gm, '').replace(/^- /gm, '')); u.lang = lang === 'ar' ? 'ar-SA' : 'en-GB'; u.rate = 0.95; u.onend = () => setReading(false); u.onerror = () => setReading(false); ss.cancel(); ss.speak(u); setReading(true); } catch { setReading(false); } } const witCfg: WitnessCfg | null = invite?.witness ?? invite?.exit?.witness ?? defaultWit;
   const onWitSetup = useCallback((s: { ready: boolean; consent: boolean; identity: boolean; error: string | null }) => setWit(s), []); const regWit = useCallback((api: WitnessApi) => { witApi.current = api; }, []);
   const [access, setAccess] = useState({ time: 1 as 1 | 1.25 | 1.5, simple: false, contrast: false, large: false });
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
@@ -161,6 +184,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       else { setInviteErr(r?.error === 'invite_not_open' ? 'not_open' : 'bad'); setLangState(initialLang); setStep('blocked'); return; }
     }
     setLangState(initialLang);
+    /* م8-ج: ?preview=rules → معاينة صفحة التعليمات كما يراها الممتحن (من محرِّر الطاقم) بلا جلسة — قبل الاستئناف */
+    if (typeof window !== 'undefined' && /(?:\?|&)preview=rules(?:&|$)/.test(window.location.search)) { setPreviewRules(true); setStep('rules'); return; }
     const s = await fetch('/api/miaar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'resume' }), cache: 'no-store' }).then((r) => r.json()).catch(() => null);
     if (s?.ok && s.session) {
       if (s.session.status === 'active' && s.session.form) { if (s.witness) setDefaultWit(s.witness); setSession(s.session); setAnswers(s.session.answers || {}); setStep('test'); return; }
@@ -189,8 +214,13 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   async function submitRegister(e: React.FormEvent) {
     e.preventDefault(); setErr('');
     if (witCfg?.camera && (!wit.ready || !wit.consent)) { setErr(x(wit.ready ? 'wit_wait' : witCfg?.identity && !wit.identity ? 'wit_id_wait' : 'wit_wait')); return; }
-    if (witCfg?.fullscreen) witApi.current?.enterFullscreen();  /* يجب أن يسبق أي await (إيماءة المستخدم) */
     if (cand.name.trim().length < 2) { setErr(t('register', 'nameErr')); return; } if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cand.email)) { setErr(t('register', 'emailErr')); return; }
+    setStep('rules'); window.scrollTo({ top: 0 }); /* م8-ج: التعليمات والإقرار قبل أي جلسة */
+  }
+  /* بعد الإقرار: ملء الشاشة (إيماءة المستخدم) ثم المسبار أو البدء المباشر كما كان */
+  async function afterRules() {
+    if (!rules || !rulesRead || !rulesAgree) { setErr(x('rules_required')); return; } setErr(''); ackRef.current = { version: rules.version, lang, accepted: true };
+    if (witCfg?.fullscreen) witApi.current?.enterFullscreen();  /* يجب أن يسبق أي await (إيماءة المستخدم) */
     if (probe.length > 0 && Object.keys(probeAns).length >= probe.length) { await startTest(true); return; }  /* حلقات الختم أُكملت على الصفحة الأولى */
     if (door && !door.probe) { await startTest(false); return; }  /* م2-ب: باب بلا مِسبار (شامل · قصير · اجتياز مستوى) → البدء مباشرة */
     setBusy(true); const r = await fetchProbe(); setBusy(false);
@@ -198,8 +228,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   }
   async function startTest(withProbe: boolean) {
     setBusy(true); setErr('');
-    const r = await post({ action: 'start', candidate: cand, examMode, blueprint: invite ? undefined : blueprint || undefined, probeAnswers: withProbe ? probeAns : null, access: access.time !== 1 || access.simple || access.contrast || access.large ? access : null, invite: invite ? { code: invite.code, t: inviteToken || undefined, pin: pin || undefined } : undefined });
+    const r = await post({ action: 'start', instructions_ack: ackRef.current, candidate: cand, examMode, blueprint: invite ? undefined : blueprint || undefined, probeAnswers: withProbe ? probeAns : null, access: access.time !== 1 || access.simple || access.contrast || access.large ? access : null, invite: invite ? { code: invite.code, t: inviteToken || undefined, pin: pin || undefined } : undefined });
     setBusy(false);
+    if (!r?.ok && (r?.error === 'instructions_required' || r?.error === 'instructions_changed')) { setRules(null); setRulesAgree(false); setRulesRead(false); ackRef.current = null; await loadRules(); setStep('rules'); setErr(x(r.error === 'instructions_changed' ? 'rules_changed' : 'rules_required')); return; }
     if (!r?.ok && (r?.error === 'invite_pin_required' || r?.error === 'invite_pin_wrong' || r?.error === 'invite_id_required')) { setErr(x(r.error === 'invite_pin_required' ? 'svc_pin_required' : r.error === 'invite_pin_wrong' ? 'svc_pin_wrong' : 'svc_id_required')); return; }
     if (!r?.ok) { const k = r?.error === 'retake_not_allowed' ? 'errRetake' : r?.error === 'exit_already_taken' ? 'exit_taken' : r?.error === 'retake_check_failed' ? 'errCheck' : r?.error === 'session_start_failed' || r?.error === 'session_exists' ? 'errSession' : r?.error === 'invite_not_open' ? 'not_open' : r?.error?.startsWith?.('invite_') ? 'invite' : 'errGeneric'; setErr(k === 'invite' ? x('invite_bad') : k === 'not_open' ? x('invite_not_open') : k === 'exit_taken' ? x('exit_taken') : t('register', k)); if (k === 'errRetake' || k === 'invite' || k === 'exit_taken' || k === 'not_open') setStep('register'); return; }
     alerted.current = new Set(); setSession(r.session); setAnswers({}); setDeferred(new Set()); setQIdx(0); setStep('test');
@@ -306,7 +337,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   /* «الطريق» داخل مِعيار: رجوع بين الخطوات (التسجيل → المقدّمة · المِسبار → التسجيل)، ويُخفى أثناء الاختبار نفسه حتى لا يغادر المتقدّم بسهو */
   const wayLang: 'ar' | 'en' = lang === 'ar' ? 'ar' : 'en';
   const stepLabel: Record<string, { ar: string; en: string }> = { register: { ar: 'التسجيل', en: 'Registration' }, probe: { ar: 'المِسبار', en: 'Probe' }, review: { ar: 'المراجعة', en: 'Review' }, result: { ar: 'النتيجة', en: 'Result' }, room: { ar: 'غرفة الأداء', en: 'Performance room' } };
-  const stepBack = step === 'register' ? () => { setErr(''); setStep('intro'); } : step === 'probe' ? () => { setErr(''); setStep('register'); } : step === 'result' ? () => { window.location.href = '/miaar'; } : null;
+  const stepBack = step === 'register' ? () => { setErr(''); setStep('intro'); } : step === 'rules' ? () => { setErr(''); setStep('register'); } : step === 'probe' ? () => { setErr(''); setStep('rules'); } : step === 'result' ? () => { window.location.href = '/miaar'; } : null;
   const Header = ({ admin = false }: { admin?: boolean }) => (
     <div className="mi-top"><header className="mi-head">
       <div className="mi-brandside">
@@ -496,6 +527,41 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
           <button type="submit" className="mi-go wide" disabled={busy || (!!witCfg?.camera && (!wit.ready || !wit.consent))} aria-busy={busy || undefined} data-testid="mi-register-submit"><Icon name={busy ? 'spinner' : 'check'} />{busy ? t('register', 'saving') : t('register', 'submit')}</button>
           <p className="mi-note center">{t('register', 'privacy')}</p>
         </form>
+      </div>
+    </>}
+
+    {step === 'rules' && <>
+      <Hero kicker={x('rules_k')} title={x('rules_h')} lead={x('rules_lead')} />
+      <div className="mi-wrap narrow">
+        <button type="button" className="mi-back" onClick={() => { setErr(''); if (previewRules) window.location.href = '/miaar'; else setStep('register'); }}>{t('register', 'back')}</button>
+        <section className="mi-card mi-rules" data-testid="mi-rules" data-version={rules?.version || 0}>
+          {/* بطاقة الاختبار الحيّة: تُبنى من معطيات الاختبار الفعلية لا من نصّ يدوي */}
+          <div className="mi-rules-card" data-testid="mi-rules-card">
+            <p className="mi-kicker gold">{x('rules_card')}</p>
+            <dl>
+              <div><dt>{x('rules_exam')}</dt><dd>{invite?.exit ? `${x('exit_title')} · ${invite.exit.level}` : invite ? invite.label_ar : door ? (lang === 'ar' ? door.name_ar : door.name_en) : t('intro', examMode === 'adaptive' ? 'adap' : 'comp')}</dd></div>
+              <div><dt>{x('rules_time')}</dt><dd>{invite?.exit?.minutes ? x('rules_min', { n: invite.exit.minutes }) : door?.minutes ? x('rules_min', { n: door.minutes }) : examMode === 'adaptive' ? x('rules_time_adaptive') : x('rules_min', { n: 50 })}</dd></div>
+              {invite?.exit?.counts && <div><dt>{x('rules_sections')}</dt><dd>{Object.entries(invite.exit.counts).filter(([, n]) => n > 0).map(([k, n]) => `${ringSkill(k)} ${n}`).join(' · ')}</dd></div>}
+              <div><dt>{x('rules_mode')}</dt><dd data-testid="mi-rules-mode">{!witCfg || witCfg.mode === 'room' ? x('rules_mode_room') : witCfg.mode === 'remote' ? x('rules_mode_remote') : x('rules_mode_camera', { n: witCfg.interval || 45 })}</dd></div>
+            </dl>
+          </div>
+          {!rules && <p className="mi-note" data-testid="mi-rules-loading">{x('rules_loading')}</p>}
+          {rules && <>
+            <div className="mi-rules-meta"><span data-testid="mi-rules-meta">{x('rules_meta', { v: rules.version, n: countPoints(lang === 'ar' ? rules.ar : rules.en) })}</span>
+              <button type="button" className="mi-link" onClick={toggleRead} aria-pressed={reading} data-testid="mi-rules-listen"><Icon name={reading ? 'pause' : 'play'} />{reading ? x('rules_stop') : x('rules_listen')}</button>
+              <span className="mi-rules-pct" aria-live="polite" data-testid="mi-rules-progress">{x('rules_progress', { p: readPct })}</span></div>
+            <div className="mi-rules-box" ref={rulesBox} tabIndex={0} lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} data-testid="mi-rules-box" aria-label={x('rules_h')}>
+              {parseRules(lang === 'ar' ? rules.ar : rules.en).map((b, i) => b.kind === 'h' ? <h3 key={i}>{b.text}</h3> : b.kind === 'ul' ? <ul key={i}>{(b.items || []).map((it, j) => <li key={j}>{it}</li>)}</ul> : <p key={i}>{b.text}</p>)}
+              <p className="mi-rules-end" data-testid="mi-rules-end">— {lang === 'ar' ? 'نهاية التعليمات' : 'End of instructions'} —</p>
+            </div>
+            {!rulesRead && <p className="mi-note" data-testid="mi-rules-read-hint">{x('rules_read_hint')}</p>}
+            <label className={`mi-rules-agree${rulesRead ? '' : ' off'}`}><input type="checkbox" checked={rulesAgree} disabled={!rulesRead} onChange={(e) => setRulesAgree(e.target.checked)} data-testid="mi-rules-agree" /><span>{x('rules_agree')}</span></label>
+            {err && <p className="mi-alert" role="alert" data-testid="mi-err">{err}</p>}
+            {previewRules ? <a className="mi-go wide" href="/miaar" data-testid="mi-rules-preview"><Icon name="home" />{lang === 'ar' ? 'هذه معاينة — إلى صفحة مِعيار' : 'Preview only — go to Miaar'}</a>
+              : <button type="button" className="mi-go wide" disabled={busy || !rulesRead || !rulesAgree} onClick={() => void afterRules()} aria-busy={busy || undefined} data-testid="mi-rules-go"><Icon name={busy ? 'spinner' : 'check'} />{busy ? t('register', 'saving') : x('rules_go')}</button>}
+            <p className="mi-note center">{x('rules_signed', { v: rules.version })}</p>
+          </>}
+        </section>
       </div>
     </>}
 
@@ -738,6 +804,10 @@ const CSS = `
 .mi-menu button{display:block;width:100%;text-align:start;border:0;background:transparent;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:700;font-size:16px;color:var(--navy)}
 .mi-menu button[aria-selected="true"],.mi-menu button:hover{background:#f0fdfa;color:var(--teal)}
 .mi-kicker{margin:0;color:var(--teal);font-size:12.5px;font-weight:900;letter-spacing:.02em}.mi-kicker.gold{color:var(--gold)}
+.mi-rules .mi-rules-card{background:var(--navy);color:#fff;border-radius:16px;padding:16px 18px;margin-bottom:16px}.mi-rules-card dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin:8px 0 0}.mi-rules-card dt{font-size:11px;letter-spacing:.08em;opacity:.75;font-weight:900}.mi-rules-card dd{margin:2px 0 0;font-weight:800;font-size:14px;line-height:1.6}
+.mi-rules-meta{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:13px;color:var(--muted);font-weight:800;margin-bottom:8px}.mi-rules-pct{margin-inline-start:auto;font-variant-numeric:tabular-nums;color:var(--teal)}
+.mi-rules-box{max-height:46vh;min-height:220px;overflow:auto;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fbfcfe;line-height:1.9;font-size:15px;scroll-behavior:smooth}.mi-rules-box h3{margin:14px 0 6px;font-size:16px;color:var(--navy)}.mi-rules-box h3:first-child{margin-top:0}.mi-rules-box ul{margin:0;padding-inline-start:22px}.mi-rules-box li{margin:4px 0}.mi-rules-box p{margin:6px 0}.mi-rules-end{text-align:center;color:var(--muted);font-size:12px;font-weight:800;margin-top:14px}
+.mi-rules-agree{display:flex;gap:10px;align-items:flex-start;margin:14px 0 10px;padding:12px 14px;border:1px solid var(--teal);border-radius:14px;background:#eefaf8;font-weight:800;line-height:1.6;cursor:pointer}.mi-rules-agree.off{border-color:var(--line);background:#f5f7fa;color:var(--muted);cursor:default}.mi-rules-agree input{width:20px;height:20px;margin-top:3px;flex:0 0 auto}
 .mi-note{color:var(--muted);font-size:14px;line-height:1.7;margin:8px 0 0}
 .mi-trust{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:13px;color:var(--muted);flex-wrap:wrap}.mi-trust i{width:10px;height:10px;border-radius:50%;background:#94a3b8;flex:none}.mi-trust[data-light=green] i{background:#0b8a83}.mi-trust[data-light=yellow] i{background:#c9a24b}.mi-trust[data-light=red] i{background:#b42318}.mi-trust a{color:var(--teal,#0b8a83);text-decoration:underline}
 .mi-meta{margin:0 0 10px;color:var(--teal);font-size:13px;font-weight:900}

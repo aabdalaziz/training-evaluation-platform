@@ -30,6 +30,7 @@ import { stopwatch, slowLine } from '../../../lib/miaar/timing';
 import { openInvite } from '../../../lib/miaar/invites';
 import { verifyPin } from '../../../lib/miaar/service';
 import { recordEvent, whispersSince, witnessPublic, defaultWitnessMode, resolveMode } from '../../../lib/miaar/witness'; /* م8 «شاهِد» · م8-ب */
+import { getRules, validateAck, RULES_TITLE } from '../../../lib/miaar/rules'; /* م8-ج */
 import { publicWitness } from '../../../lib/miaar/invites';
 import { loadApprovedPool, loadPassages, signedMediaUrl, isReferencedMediaPath } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
@@ -103,6 +104,8 @@ export async function GET(req: Request) {
   if (u.searchParams.get('intro')) { const [doors, p, dm] = await Promise.all([publicDoors(db).catch(() => []), pulse(db).catch(() => null), defaultWitnessMode(db)]); return NextResponse.json({ ok: true, doors, pulse: p, witness: publicWitness(witnessPublic({ proctor_mode: dm })) }, { headers: EDGE }); }
   /* م8-ب: المراقبة صفة لكل اختبار — ما يُعلَن للمتقدّم الفردي قبل التسجيل */
   if (u.searchParams.get('witness')) return NextResponse.json({ ok: true, witness: publicWitness(witnessPublic({ proctor_mode: await defaultWitnessMode(db) })) }, { headers: NO });
+  /* م8-ج: تعليمات الاختبار — يقرؤها الممتحن ويقرّ بها قبل البدء (النصّ + الإصدار الحالي) */
+  if (u.searchParams.get('rules')) { const rules = await getRules(db); return NextResponse.json({ ok: true, rules: { version: rules.version, ar: rules.ar, en: rules.en, updated_at: rules.updated_at }, title: RULES_TITLE }, { headers: NO }); }
   if (u.searchParams.get('invite')) { const r = await openInvite(db, u.searchParams.get('invite'), u.searchParams.get('t') || null); return r.ok ? NextResponse.json({ ok: true, invite: r.invite }, { headers: NO }) : bad(`invite_${r.error}`, r.error === 'not_found' ? 404 : 410); }
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */
@@ -143,9 +146,11 @@ export async function POST(req: Request) {
       if (r.recipient && body.candidate && typeof body.candidate === 'object') (body.candidate as Record<string, unknown>).email = r.recipient.email;  /* الدعوة الشخصية تثبّت البريد */
     }
     const userId = await userOf(req); sw.mark('auth');
+    /* م8-ج: لا جلسة بلا إقرار بالتعليمات بإصدارها الحالي */
+    const rules = await getRules(db); const ackCheck = validateAck(body.instructions_ack, rules.version); if (!ackCheck.ok) return bad(ackCheck.error, 428);
     const proctorMode = resolveMode(null, inviteRow, await defaultWitnessMode(db));  /* م8-ب: الوضع الفعلي يُثبَّت على الجلسة */
     const witness = publicWitness(witnessPublic({ proctor_mode: proctorMode, witness_interval: inviteRow?.witness_interval || null }));
-    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint, proctorMode }, sw);
+    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint, proctorMode, instructionsAck: ackCheck.ack }, sw);
     const slow = slowLine('start', sw); if (slow) console.warn(slow);
     if (!r.ok) return bad(r.code, r.status);
     return withCookie(NextResponse.json({ ok: true, session: r.value.session, witness, invite: invite ? { label_ar: invite.label_ar, witness } : null }, { headers: { ...NO, 'Server-Timing': sw.header() } }), r.value.token, r.value.session.expiresAt);

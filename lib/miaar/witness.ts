@@ -176,7 +176,7 @@ export async function eventsFor(db: Db, sessionId: string): Promise<WitnessEvent
 }
 /** «غرفة الشاهد»: الخطّ الزمني الكامل لجلسة — لقطات موقَّعة 10 دقائق + أحداث + ملخّص + الحكم */
 export async function timelineFor(db: Db, sessionId: string) {
-  const { data: s } = await db.from('placement_secure_sessions').select('id, candidate, status, created_at, finished_at, invite_id, report, proctor_mode').eq('id', sessionId).maybeSingle(); if (!s) return null;
+  const { data: s } = await db.from('placement_secure_sessions').select('id, candidate, status, created_at, finished_at, invite_id, report, proctor_mode, instructions_ack').eq('id', sessionId).maybeSingle(); if (!s) return null;
   const [events, { data: rep }, { data: inv }] = await Promise.all([
     eventsFor(db, sessionId),
     db.from('placement_reports').select('id, access_code, integrity_status, integrity_note, integrity_by, integrity_at, source').eq('submission_id', sessionId).maybeSingle(),
@@ -193,6 +193,8 @@ export async function timelineFor(db: Db, sessionId: string) {
     session: { id: s.id, status: s.status, started_at: s.created_at, finished_at: s.finished_at, name: String(s.candidate?.name || ''), email: String(s.candidate?.email || ''), id_number: s.candidate?.idNumber ? String(s.candidate.idNumber) : null },
     /* م8-ب: الوضع الفعلي = المثبَّت على الجلسة ← الدعوة ← الافتراضي العام؛ والاختبار الفردي بلا دعوة له «غرفة» أيضًا */
     mode, mode_ar: WITNESS_MODE_AR[mode],
+    /* م8-ج: إقرار الممتحن بالتعليمات (الإصدار · اللغة · الوقت) */
+    instructions_ack: s.instructions_ack && typeof s.instructions_ack === 'object' ? { version: Number((s.instructions_ack as any).version || 0), lang: String((s.instructions_ack as any).lang || 'ar'), at: (s.instructions_ack as any).at || null } : null,
     invite: inv ? { id: inv.id, code: inv.code, label_ar: inv.label_ar, level: inv.level_target, mode, mode_ar: WITNESS_MODE_AR[mode], client_name: inv.service_mode === 'external' ? inv.client_name : null } : null,
     report: rep ? { id: rep.id, access_code: rep.access_code, integrity_status: rep.integrity_status, integrity_note: rep.integrity_note, integrity_by: rep.integrity_by, integrity_at: rep.integrity_at, source: rep.source } : null,
     exit: exit ? { الحالة: exit.الحالة, النتيجة: exit.النتيجة, الكلي: exit.الكلي, تقدير_ar: exit.تقدير_ar } : null,
