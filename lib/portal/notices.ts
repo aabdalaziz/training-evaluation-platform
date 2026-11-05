@@ -8,7 +8,7 @@
 import { sendPush, vapidFromEnv } from './push';
 import { inQuietHours, pushSubsFor } from './notify';
 
-export type NoticeKind = 'exit_final' | 'retake_open' | 'retake_rem3' | 'retake_rem1' | 'remedial_new' | 'remedial_tmrw' | 'promoted' | 'placed' | 'exit_summary' | 'custom';
+export type NoticeKind = 'exit_final' | 'retake_open' | 'retake_rem3' | 'retake_rem1' | 'remedial_new' | 'remedial_tmrw' | 'promoted' | 'placed' | 'exit_summary' | 'practice_plan' | 'practice_day' | 'practice_nudge' | 'practice_idle' /* م10 مِران */ | 'custom';
 
 export type NoticeInput = {
   email: string; user_id?: string | null; report_id?: string | null;
@@ -25,9 +25,9 @@ export type NoticeOpts = { site?: string; env?: NodeJS.ProcessEnv; fetchImpl?: t
 
 export const KIND_AR: Record<NoticeKind, string> = {
   exit_final: 'حكم العبور', retake_open: 'إعادة مهارة', retake_rem3: 'تذكير بالإعادة', retake_rem1: 'تذكير أخير', remedial_new: 'جلسة تعويض', remedial_tmrw: 'جلسة غدًا',
-  promoted: 'ترقية', placed: 'تسكين', exit_summary: 'ملخّص الشُّعبة', custom: 'تنبيه',
+  promoted: 'ترقية', placed: 'تسكين', exit_summary: 'ملخّص الشُّعبة', practice_plan: 'خطّة مِران', practice_day: 'مِران اليوم', practice_nudge: 'تذكير من مدرّبك', practice_idle: 'متعلّم متوقّف', custom: 'تنبيه',
 };
-export const KIND_ICON: Record<NoticeKind, string> = { exit_final: '⚖️', retake_open: '🔁', retake_rem3: '⏳', retake_rem1: '⏰', remedial_new: '🧭', remedial_tmrw: '📅', promoted: '🎓', placed: '🏫', exit_summary: '📋', custom: '🔔' };
+export const KIND_ICON: Record<NoticeKind, string> = { exit_final: '⚖️', retake_open: '🔁', retake_rem3: '⏳', retake_rem1: '⏰', remedial_new: '🧭', remedial_tmrw: '📅', promoted: '🎓', placed: '🏫', exit_summary: '📋', practice_plan: '🗓️', practice_day: '💪', practice_nudge: '🤝', practice_idle: '💤', custom: '🔔' };
 
 export const SKILL_AR: Record<string, string> = { listening: 'الاستماع', reading: 'القراءة', grammar_vocab: 'القواعد والمفردات', writing: 'الكتابة', speaking: 'المحادثة' };
 
@@ -45,7 +45,12 @@ export type NoticeTextInput =
   | { kind: 'remedial_tmrw'; title: string; starts_at: string; joinUrl?: string | null }
   | { kind: 'promoted'; from: string; to: string; code: string }
   | { kind: 'placed'; classroom: string; program?: string | null }
-  | { kind: 'exit_summary'; invite: string; final: number; total: number; passed: number; conditional: number; failed: number; inviteId: string };
+  | { kind: 'exit_summary'; invite: string; final: number; total: number; passed: number; conditional: number; failed: number; inviteId: string }
+  /* م10 «مِران» */
+  | { kind: 'practice_plan'; level: string; code: string; days: number }
+  | { kind: 'practice_day'; day: number; unit_title: string; code: string }
+  | { kind: 'practice_nudge'; trainer: string; code: string }
+  | { kind: 'practice_idle'; name: string; days: number; inviteId: string };
 
 export function noticeText(t: NoticeTextInput): { title_ar: string; body_ar: string; url: string } {
   switch (t.kind) {
@@ -60,6 +65,10 @@ export function noticeText(t: NoticeTextInput): { title_ar: string; body_ar: str
     case 'promoted': return { title_ar: `رُقّيت من ${t.from} إلى ${t.to}`, body_ar: 'وقّع المشرف قرار عبورك. شهادتك جاهزة — وتنمو كلما تقدّمت.', url: `/miaar/certificate/${t.code}` };
     case 'placed': return { title_ar: `سُكِّنت في ${t.classroom}`, body_ar: `${t.program ? `برنامج ${t.program}. ` : ''}ستجد جلساتك وموادك في صفحتك «أنا».`, url: '/me' };
     case 'exit_summary': return { title_ar: `${t.invite}: صدرت ${t.final} من ${t.total} نتيجة`, body_ar: `اجتاز ${t.passed} · مشروط ${t.conditional} · لم يجتز ${t.failed}. اللوحة بانتظار قرارك.`, url: `/admin/miaar/exit?invite=${encodeURIComponent(t.inviteId)}` };
+    case 'practice_plan': return { title_ar: `خطّة مِران جاهزة لك — ${t.days} يومًا`, body_ar: `اعتمد مدرّبك خطّة تمرين قصيرة من وحدات مستوى ${t.level} التي تحتاج مراجعة: بطاقة واحدة كل صباح (7–10 دقائق) ومرآة تُريك تحسّنك. مِران تدريب لا اختبار.`, url: `/miaar/practice/${t.code}` };
+    case 'practice_day': return { title_ar: `مِران اليوم ${t.day}: ${t.unit_title} — 7 دقائق`, body_ar: t.day === 7 || t.day === 14 ? 'يوم المرآة: أضعف خمسة بنود من أيامك السابقة — لترى الفرق بعينك.' : 'خمسة بنود وتغذية راجعة فورية. اليوم الفائت لا يضيع — يعود إليك غدًا.', url: `/miaar/practice/${t.code}` };
+    case 'practice_nudge': return { title_ar: `تذكير من مدرّبك ${t.trainer}: مِران اليوم بانتظارك`, body_ar: 'خمس دقائق الآن خير من ساعة ليلة الإعادة. افتح بطاقتك.', url: `/miaar/practice/${t.code}` };
+    case 'practice_idle': return { title_ar: `${t.name} لم يتدرّب منذ ${t.days} أيام — ذكّره؟`, body_ar: 'من لوحة العبور: «ذكّر» يرسل تذكيرًا إنسانيًا بتوقيعك.', url: `/admin/miaar/exit?invite=${encodeURIComponent(t.inviteId)}#xb-practice` };
   }
 }
 

@@ -81,6 +81,7 @@ ${unitsHtml}<h2>التوصية</h2><div class="rec">${rp.recommendations_ar.map(
           {d.units.sessions.length > 0 && <div className="cb-sess" data-testid="cb-sessions"><h3>جلسات التعويض وأثرها</h3>
             <ul>{d.units.sessions.map((x: any) => <li key={x.id}><b>{x.title_ar}</b> · {dt(x.starts_at)} · {x.duration_min} د · {x.units.join(' · ')} · انضمّ <b>{x.joined}</b>{x.effect.length > 0 && <ul className="cb-eff">{x.effect.map((e: any) => <li key={e.code} data-testid="cb-effect">{e.text}</li>)}</ul>}</li>)}</ul>
             {typeof d.units.effect_avg === 'number' && <p className="cb-ok">متوسط أثر التعويض للحاضرين: <b>{d.units.effect_avg >= 0 ? '+' : ''}{d.units.effect_avg}</b> نقطة</p>}</div>}
+          {d.practice && <p className="cb-ok" data-testid="cb-practice">💪 {d.practice.text_ar} <small>— مِران تدريب لا اختبار؛ لا يغيّر النتائج الرسمية.</small></p>}
           <p className="cb-note">{d.units.note_ar}</p>
         </section>}
         <section className="cb-panel" data-testid="cb-report-panel">

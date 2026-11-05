@@ -72,10 +72,10 @@ export const tpsGeneral = (rows: StandardRow[]) => rows.filter(r => r.framework 
 
 /* ───────── 3) الأدلة: الأنواع والقواعد ───────── */
 export type EvidenceKind = 'program' | 'design' | 'units' | 'template' | 'need' | 'charter' | 'weekly' | 'final' | 'diploma_unit' | 'pulse' | 'profile' | 'review' | 'version' | 'attendance' | 'enrollment' | 'support' | 'after' | 'trainer' | 'trainer_pd' | 'skill_map'
-  | 'miaar_exit' | 'miaar_units' | 'miaar_remedial' | 'miaar_effect' | 'miaar_retake' /* م9 أدلة مِعيار */;
+  | 'miaar_exit' | 'miaar_units' | 'miaar_remedial' | 'miaar_effect' | 'miaar_retake' /* م9 أدلة مِعيار */ | 'miaar_practice' /* م10 مِران */;
 export type Evidence = { id: string; kind: EvidenceKind; codes: string[]; label_ar: string; at: string | null; href: string | null; n?: number };
 export const EVIDENCE_KIND_AR: Record<EvidenceKind, string> = { program: 'بيانات البرنامج', design: 'هندسة البرنامج', units: 'وحدات البرنامج', template: 'قالب الكفايات والاستراتيجيات', need: 'احتياج معلَن تبنّاه البرنامج', charter: 'ميثاق الجهة', weekly: 'تقرير تعلّم أسبوعي معتمَد', final: 'تقرير ختامي معتمَد', diploma_unit: 'تقرير وحدة معتمَد', pulse: 'نبض الأسبوع', profile: 'كشف كفايات معتمَد', review: 'مراجعة البرنامج بعد الدفعة (معتمَدة)', version: 'نسخة الدفعة المطبَّقة', attendance: 'سجلّ الحضور', enrollment: 'التسجيل والقبول والتنسيب', support: 'قرارات الدعم والإعادة', after: 'محطات الأثر بعد البرنامج', trainer: 'سيرة مدرّب موثَّقة في هيئة أَثَر', trainer_pd: 'تطوير مهني للمدرّب (بروفة · أَثَر معك · شهادة قرين)', skill_map: 'ربط الكفايات بمعايير المعلّم',
-  miaar_exit: 'نهاية المستوى (مِعيار)', miaar_units: 'خريطة المنهج (مِعيار)', miaar_remedial: 'جلسة تعويض (مِعيار)', miaar_effect: 'أثر التعويض (مِعيار)', miaar_retake: 'إعادة مهارة (مِعيار)',
+  miaar_exit: 'نهاية المستوى (مِعيار)', miaar_units: 'خريطة المنهج (مِعيار)', miaar_remedial: 'جلسة تعويض (مِعيار)', miaar_effect: 'أثر التعويض (مِعيار)', miaar_retake: 'إعادة مهارة (مِعيار)', miaar_practice: 'مِران — تدريب بين الحكم والإعادة (مِعيار)',
 };
 /** لكل معيار فرعي: الحدّ الأدنى من الأدلة ليُعدّ مستوفى، وهل له مصدر آلي، والمهمة التي تُنتج دليله ورابطها */
 export type EvidenceRule = { min: number; auto: boolean; task_ar: string; href: string };

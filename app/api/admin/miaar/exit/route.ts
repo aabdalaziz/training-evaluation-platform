@@ -86,7 +86,9 @@ export async function GET(req: Request) {
     const inv = { ...b.invite, proctor_pin_hash: undefined, client_token_hash: undefined, has_pin: !!(b.invite as any).proctor_pin_hash, has_client_link: !!(b.invite as any).client_token_hash };
     /* P39: «أُبلغ؟» — لكل متعلّم: عدد إشعاراته · هل دُفع له · هل له اشتراك «نبّهني» */
     const reach = await noticeReach(db, b.rows.map((r: any) => String(r.email || ''))).catch(() => ({}));
-    return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, witness, reach, witness_mode: witnessMode, witness_mode_ar: WITNESS_MODE_AR[(isWitnessMode(witnessMode) ? witnessMode : 'room') as keyof typeof WITNESS_MODE_AR], spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
+    /* م10 «مِران»: ملخّص خطّة التمرين لكل تقرير (عمود «مِران») */
+    let practice: Record<string, any> = {}; try { const { summariesForReports } = await import('../../../../../lib/miaar/practice'); practice = await summariesForReports(db, b.rows.filter((r: any) => r.report_id).map((r: any) => ({ id: String(r.report_id) }))); } catch { practice = {}; }
+    return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, witness, reach, practice, witness_mode: witnessMode, witness_mode_ar: WITNESS_MODE_AR[(isWitnessMode(witnessMode) ? witnessMode : 'room') as keyof typeof WITNESS_MODE_AR], spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
   }
   if (pool) { if (!isExitLevel(pool)) return bad('مستوى غير صالح'); const avail = await availability(db); let unit_coverage: any = null; try { unit_coverage = coverage(await listUnits(db), pool, await loadApprovedPool(db)); } catch { unit_coverage = null; } return NextResponse.json({ success: true, pool: poolCheck(pool, avail), spec: specTable(pool), unit_coverage }, { headers: NO }); }
   return bad('استعلام غير معروف');

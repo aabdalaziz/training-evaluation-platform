@@ -104,3 +104,4 @@ import './miaar-m6b.test';
 import './miaar-m6c.test';
 import './miaar-m9.test';
 import './p39-notices.test';
+import './miaar-m10.test';

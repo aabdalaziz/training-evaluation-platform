@@ -136,6 +136,7 @@ export function planFromSession(value: unknown): Plan | null {
 export type DrawOpts = {
   units?: readonly string[];   /* م6-ب: وحدات معتمدة يُستحسن أن تظهر كلٌّ منها ببند واحد على الأقل عبر المستوى (التوازن لا يغيّر العدد) */
   only?: readonly string[];    /* م6-ب: «ما دُرّس فقط» — حصر الخلية في بنود هذه الوحدات؛ إن قلّت عن المطلوب عادت الخلية كاملة وسُجِّل ذلك */
+  exclude?: ReadonlySet<string>; /* م10 «مِران»: بنود تدرّب عليها المتقدّم (مكشوفة له) تُستثنى من نموذجه الرسمي؛ إن ضاق المخزون بقيت وسُجِّل ذلك */
 };
 export function drawPlan(pool: readonly PoolItem[], seed: string, plan: Plan, opts?: DrawOpts): { codes: string[]; short: string[]; units?: { covered: string[]; missing: string[]; scoped: boolean; fallback: string[] } } | null {
   const codes: string[] = []; const short: string[] = [];
@@ -147,6 +148,7 @@ export function drawPlan(pool: readonly PoolItem[], seed: string, plan: Plan, op
       let cell = pool.filter((item) => item.level === level && item.skill === skill);
       if (plan.draw !== 'random') { const basket = new Set(plan.pool[cellKey(level, skill)] || []); const chosen = cell.filter((i) => basket.has(i.code)); if (chosen.length) cell = chosen; else short.push(`${level}/${skill}:basket-empty`); }
       if (opts?.only?.length) { const sc = scopeCell(cell, opts.only, needed); cell = sc.cell; if (sc.narrowed) scoped = true; if (sc.fallback) fallback.push(`${level}/${skill}`); }
+      if (opts?.exclude?.size) { const kept = cell.filter((i) => !opts.exclude!.has(i.code)); if (kept.length >= needed) cell = kept; else if (kept.length < cell.length) short.push(`${level}/${skill}:exposure-kept`); }
       const available = balancedOrder(shufflePool(cell, `${seed}:${level}:${skill}`), uncovered);
       if (available.length < needed) short.push(`${level}/${skill}:${available.length}/${needed}`);
       const take = available.slice(0, needed); levelCount += take.length; codes.push(...take.map((item) => item.code));

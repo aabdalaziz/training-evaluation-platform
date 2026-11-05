@@ -60,8 +60,8 @@ test('م9: التغطية — أدلة مِعيار تُحتسب في 2.5 و3.3 
   const cov = coverageOf(DEFAULT_STANDARDS as any, ev, new Set());
   const sub = (c: string) => cov.flatMap((s) => s.subs).find((x) => x.code === c)!;
   assert.ok(sub('2.5').n >= 2, '2.5: نهاية المستوى + الأثر'); assert.ok(sub('3.3').n >= 2, '3.3: ترقية + إعادة'); assert.ok(sub('1.4').n >= 1); assert.ok(sub('2.2').n >= 1); assert.equal(sub('4.1').n, 0);
-  assert.deepEqual(miaarSummary(facts()), { exits: 1, finals: 12, promoted: 7, sessions: 1, retakes: 6, avg_effect: 18 });
-  assert.deepEqual(miaarSummary(EMPTY_FACTS), { exits: 0, finals: 0, promoted: 0, sessions: 0, retakes: 0, avg_effect: null });
+  assert.deepEqual(miaarSummary(facts()), { exits: 1, finals: 12, promoted: 7, sessions: 1, retakes: 6, avg_effect: 18, practice_plans: 0, practice_delta: null } /* م10 أضاف حقلَي مِران */);
+  assert.deepEqual(miaarSummary(EMPTY_FACTS), { exits: 0, finals: 0, promoted: 0, sessions: 0, retakes: 0, avg_effect: null, practice_plans: 0, practice_delta: null });
   assert.deepEqual(miaarSummary(facts({ invites: [{ id: 'q', label: 'D', level: 'A1', finals: 4, passed: 4, promoted: 4, avg: 90, last_at: null, weak_units: 0 }] })).exits, 0, 'الملخّص يتبع قاعدة k ≥ 5 أيضًا');
 });
 

@@ -10,6 +10,7 @@ import { noticeText, pushNotice, SKILL_AR } from '../portal/notices';
 import { randomBytes, createHash } from 'node:crypto';
 import { validateScope, listUnits, unitReport, boardHeat, reviewUnits, fairness } from './syllabus'; /* م6-ب «خريطة المنهج» */
 import { planFromSession } from './blueprint';
+import { mergeRetakeUnits } from './practice'; /* م10 «مِران» */
 import type { Plan } from './blueprint';
 import { createInvite, inviteUrl } from './invites';
 void inviteUrl;
@@ -104,6 +105,9 @@ export async function mergeSkillRetake(db: Db, retakeSessionId: string, retakeRe
   const old = (orig.report as any).exit;
   const block = exitBlock({ level, report: patched, perfs: ps, wantWriting: want.writing, wantSpeaking: want.speaking, cut: plan.cut, growth: old?.خط_العبور || null, retake: { المهارة: skill, النسبة: typeof pct === 'number' ? pct : null, الحالة: pct === 'pending' ? 'pending' : 'merged', في: nowIso(), جلسة: retakeSessionId } });
   if (block.النتيجة === 'conditional' && block.مهارة_الإعادة === skill) { /* أعاد ولم يبلغ الحد بعد: لا إعادة ثانية تلقائيًا */ (block as any).الإعادة = { ...(block as any).الإعادة, استُنفدت: true }; }
+  /* م10: نتيجة الإعادة تُدمج في خريطة الوحدات الأصلية («قبل ← بعد») دون مسّ النسبة الأصلية */
+  if (old?.الوحدات) { (block as any).الوحدات = old.الوحدات; (block as any).وحدات_للمراجعة = old.وحدات_للمراجعة || []; } /* كانت تسقط عند الدمج — تبقى الآن */
+  if (old?.الوحدات && retakeReport.الوحدات) { try { (block as any).الوحدات = mergeRetakeUnits(old.الوحدات, retakeReport.الوحدات as any); (block as any).وحدات_بعد_الإعادة = true; } catch { /* اختياري */ } }
   const report = { ...(orig.report as Record<string, any>), exit: block };
   await db.from('placement_reports').update({ report }).eq('id', orig.id);
   await db.from('placement_secure_sessions').update({ report, updated_at: nowIso() }).eq('id', orig.submission_id);

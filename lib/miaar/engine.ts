@@ -15,7 +15,8 @@ import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './ban
 import { reweighIfDue, trustLine } from './balance';
 import { openGrant, publicLedgerBadge } from './ledger';
 import { hasJourney } from './growth'; /* م5-ب */
-import { attachExit, mergeSkillRetake, exitLevelOf } from './exitflow'; /* م6 «عُبور» */
+import { attachExit, mergeSkillRetake, exitLevelOf, isRetakePlan } from './exitflow'; /* م6 «عُبور» */
+import { exposedCodes } from './practice'; /* م10 «مِران» */
 import { listUnits, approvedFor, validateScope, tallyUnits } from './syllabus'; /* م6-ب «خريطة المنهج» */
 import type { DrawOpts } from './blueprint';
 import type { Stopwatch } from './timing';
@@ -111,6 +112,8 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
      و«ما دُرّس فقط» (unit_scope على الدعوة) يحصر البنود في وحدات دُرّست — وإن ضاق السحب عاد إلى المستوى كاملًا وسُجِّل ذلك على الجلسة */
   const exitLvl = exitLevelOf(activePlan); let drawOpts: DrawOpts | undefined;
   if (exitLvl) { try { const units = approvedFor(await listUnits(db), exitLvl).map((u) => u.code); const only = validateScope(input.invite?.unit_scope, exitLvl); if (units.length || only) drawOpts = { units, only: only || undefined }; } catch { drawOpts = undefined; } }
+  /* م10 «مِران»: بنود تدرّب عليها هذا البريد لا تدخل نموذج عبوره ولا إعادته (نزاهة القياس) — إن ضاق المخزون بقيت وسُجِّل في shortCells */
+  if (exitLvl || isRetakePlan(activePlan)) { try { const ex = await exposedCodes(db, candidate.email); if (ex.size) drawOpts = { ...(drawOpts || {}), exclude: ex }; } catch { /* اختياري */ } }
   const drawn = drawPlan(pool, token, activePlan, drawOpts); if (!drawn) return fail('form_unavailable', 503); mark('draw');
   const form = await formFromPool(db, pool, drawn.codes, passages); if (!form) return fail('form_unavailable', 503); mark('form');
   const access = normalizeAccess(input.access); const durationSeconds = accessDuration(activePlan.durationSeconds, access);
@@ -276,6 +279,9 @@ export async function resultByCode(db: any, code: string): Promise<{ code: strin
   try { const { listNotices, publicNotice } = await import('../portal/notices'); const ns = await listNotices(db, data.candidate_email, { limit: 5, report_id: String(data.id) });
     let sub = false; try { const { data: ps } = await db.from('portal_push_subscriptions').select('id').eq('email', String(data.candidate_email || '').toLowerCase()).eq('active', true).limit(1); sub = Array.isArray(ps) && ps.length > 0; } catch { sub = false; }
     (safe as any).تنبيهات = { القائمة: ns.map(publicNotice), مشترك: sub }; } catch { /* اختياري */ }
+  /* م10 «مِران»: إن كانت له خطّة معتمدة → زرّ «ابدأ مِران» على البطاقة (اليوم · ما أُنجز) — بلا بنود هنا */
+  try { const { planByReport, currentDay, PLAN_DAYS } = await import('./practice'); const p = await planByReport(db, String(data.id));
+    if (p && (p.status === 'approved' || p.status === 'done')) { const cd = currentDay(p.start_date, new Date()); (safe as any).مِران = { الحالة: p.status, اليوم: cd.d, انتهت: cd.ended || p.status === 'done', أُنجز: p.days.filter((d) => d.done_at).length, الأيام: PLAN_DAYS, الرابط: `/miaar/practice/${data.access_code}` }; } } catch { /* اختياري */ }
   return { code: data.access_code, name, taken_at: data.created_at, report: safe };
 }
 export { PASS_PERCENT };

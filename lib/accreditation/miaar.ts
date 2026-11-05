@@ -13,7 +13,7 @@ import type { Effect } from '../miaar/remedial';
 export const MIAAR_EVIDENCE_TITLE = { ar: 'أدلة مِعيار', en: 'Miaar Evidence' } as const;
 /** خرائط المعايير الفرعية (PAS) التي تخدمها أدلة مِعيار — معلَنة لتُقرأ في الوثائق والاختبارات */
 export const MIAAR_CODES = {
-  exit: ['2.5'], exit_promoted: ['3.3'], units: ['1.4', '1.6'], remedial: ['2.2', '2.1'], effect: ['2.5', '2.6'], retake: ['3.3', '3.1'],
+  exit: ['2.5'], exit_promoted: ['3.3'], units: ['1.4', '1.6'], remedial: ['2.2', '2.1'], effect: ['2.5', '2.6'], retake: ['3.3', '3.1'], practice: ['2.2', '2.5', '3.3'] /* م10 */,
 } as const;
 
 export type ExitInviteFacts = { id: string; label: string; level: string; finals: number; passed: number; promoted: number; avg: number | null; last_at: string | null; weak_units: number };
@@ -24,8 +24,10 @@ export type MiaarFacts = {
   sessions: RemedialFacts[];
   effects: Array<{ session_id: string; title_ar: string; effect: Effect }>;
   linked_units: { program_units: number; level_units: number };
+  practice?: PracticeFacts | null; /* م10 مِران */
 };
-export const EMPTY_FACTS: MiaarFacts = { invites: [], retakes: { n: 0, passed_after: 0, last_at: null }, sessions: [], effects: [], linked_units: { program_units: 0, level_units: 0 } };
+export type PracticeFacts = { plans: number; approved: number; active: number; days_done: number; avg_delta: number | null; with_delta: number; retook: number; passed_after: number };
+export const EMPTY_FACTS: MiaarFacts = { invites: [], retakes: { n: 0, passed_after: 0, last_at: null }, sessions: [], effects: [], linked_units: { program_units: 0, level_units: 0 }, practice: null };
 
 const day = (iso: string | null | undefined) => (iso ? String(iso).slice(0, 10) : null);
 const fmtDay = (iso: string) => { try { return new Date(iso).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', timeZone: 'Asia/Riyadh' }); } catch { return String(iso).slice(0, 10); } };
@@ -53,9 +55,15 @@ export function miaarEvidence(f: MiaarFacts, kMin = K_MIN): Evidence[] {
   }
   if (f.retakes.n >= kMin) out.push({ id: 'miaar_retake:1', kind: 'miaar_retake', codes: [...MIAAR_CODES.retake], n: f.retakes.n, at: day(f.retakes.last_at), href: '/admin/miaar/exit',
     label_ar: `إعادة مهارة واحدة خلال 14 يومًا: ${f.retakes.n} إعادة · ${f.retakes.passed_after} أفضت إلى اجتياز` });
+  /* م10 «مِران»: تدريب موجَّه بين الحكم والإعادة — k ≥ 5 خطّة معتمدة */
+  const pr = f.practice; if (pr && pr.approved >= kMin) out.push({ id: 'miaar_practice:1', kind: 'miaar_practice', codes: [...MIAAR_CODES.practice], n: pr.approved, at: null, href: '/admin/miaar/exit#xb-practice',
+    label_ar: practiceText(pr) });
   return out;
 }
 
+export function practiceText(pr: PracticeFacts): string {
+  return `مِران — تدريب موجَّه بين الحكم والإعادة: ${pr.approved} خطّة اعتمدها مدرّب · ${pr.days_done} يوم تمرين مُنجَز${pr.with_delta >= 1 && pr.avg_delta !== null ? ` · متوسط تحسّن الوحدات ${pr.avg_delta > 0 ? '+' : ''}${pr.avg_delta} نقطة` : ''}${pr.retook ? ` · ${pr.retook} أعادوا بعد مِران و${pr.passed_after} اجتازوا` : ''}`;
+}
 /** ملخّص رقمي للتجميع المؤسسي (P48-ب) ولسطر البوابة */
 export function miaarSummary(f: MiaarFacts, kMin = K_MIN) {
   const inv = f.invites.filter((i) => i.finals >= kMin); /* القاعدة نفسها: لا دعوة دون 5 أحكام */
@@ -63,7 +71,7 @@ export function miaarSummary(f: MiaarFacts, kMin = K_MIN) {
   const sessions = f.sessions.filter((s) => s.status !== 'cancelled').length;
   const deltas = f.effects.map((e) => e.effect.attended.delta).filter((d): d is number => typeof d === 'number');
   const avg_effect = deltas.length ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length) : null;
-  return { exits, finals, promoted, sessions, retakes: f.retakes.n, avg_effect };
+  return { exits, finals, promoted, sessions, retakes: f.retakes.n, avg_effect, practice_plans: f.practice?.approved || 0, practice_delta: f.practice?.avg_delta ?? null };
 }
 
 /* ───────── الغراء ───────── */
@@ -120,5 +128,7 @@ async function collectInner(db: Db, programId: string, classroomIds: readonly st
       for (const e of effectFor(rows, codes)) facts.effects.push({ session_id: String(s.id), title_ar: e.code, effect: e });
     }
   }
+  /* م10: مجاميع مِران لتقارير هذه الدعوات (بلا أسماء) */
+  try { const { practiceFactsForReports } = await import('../miaar/practice'); facts.practice = await practiceFactsForReports(db, reports.map((r) => ({ id: String(r.id), report: r.report }))); } catch { facts.practice = null; }
   return { evidence: miaarEvidence(facts), facts };
 }
