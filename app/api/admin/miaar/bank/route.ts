@@ -61,7 +61,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ success: true, passages: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
   }
   const limit = Math.min(100, Math.max(5, Number(p.get('limit')) || 40)); const offset = Math.max(0, Number(p.get('offset')) || 0);
-  let q = db.from('question_bank_items').select('id, item_code, content_version, level, skill, passage_id, question_text, options, item_type, status, descriptor_code, cefr_descriptor, domain, difficulty_est, stimulus, media_path, media_alt, author_notes, task, legacy_extra, latest_review_note, reviewed_at, exposure_count, updated_at', { count: 'exact' });
+  let q = db.from('question_bank_items').select('id, item_code, content_version, level, skill, passage_id, question_text, options, item_type, status, descriptor_code, unit_codes, cefr_descriptor, domain, difficulty_est, stimulus, media_path, media_alt, author_notes, task, legacy_extra, latest_review_note, reviewed_at, exposure_count, updated_at', { count: 'exact' });
   if (isBankLevel(p.get('level'))) q = q.eq('level', p.get('level')); if (isSkill(p.get('skill')) || isProductiveSkill(p.get('skill'))) q = q.eq('skill', p.get('skill')); else if (p.get('productive') === '1') q = q.in('skill', [...PRODUCTIVE_SKILLS]);
   if (STATUSES.includes(p.get('status') || '')) q = q.eq('status', p.get('status')); if ((ITEM_TYPES as readonly string[]).includes(p.get('type') || '')) q = q.eq('item_type', p.get('type'));
   const batch = str(p.get('batch'), 40); if (batch) q = batchFilter(q, batch);

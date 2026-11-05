@@ -153,6 +153,14 @@ export const SESSION_COLS = 'id, created_at, program_id, classroom_id, trainer_i
 export async function listRemedials(db: Db, inviteId: string): Promise<any[]> {
   try { const { data, error } = await db.from('portal_sessions').select(SESSION_COLS).eq('source_invite_id', inviteId).neq('status', 'cancelled').order('starts_at', { ascending: true }).limit(20); return error ? [] : (data || []); } catch { return []; }
 }
+/** م9: جلسات التعويض لدعوة مع عدد المنضمّين وأثر كل وحدة (مشترك بين لوحة المدرّب وبوابة الجهة وملف الاعتماد) */
+export async function sessionsWithEffect(db: Db, inviteId: string, titles: ReadonlyMap<string, string>): Promise<any[]> {
+  const sessions = await listRemedials(db, inviteId); if (!sessions.length) return [];
+  const joinedMap = await joinedEmails(db, sessions.map((s: any) => String(s.id))); const ba = await beforeAfterRows(db, inviteId);
+  return sessions.map((s: any) => { const codes: string[] = Array.isArray(s.miaar_unit_codes) ? s.miaar_unit_codes : [];
+    const eff = effectFor(ba.map((r) => ({ email: r.email, before: r.before, after: r.after, attended: joinedMap.get(String(s.id))?.has(r.email) || false })), codes);
+    return { ...s, joined: joinedMap.get(String(s.id))?.size || 0, effect: eff.map((e) => ({ ...e, title_ar: titles.get(e.code) || e.code, text: effectText(e, titles.get(e.code) || e.code) })) }; });
+}
 /** جلسات المراجعة التي تخصّ بطاقة متعلّم: دعوته + وحدة من وحداته — تُعرض بلا بيانات شخصية */
 export async function remedialsForLearner(db: Db, inviteId: string | null, codes: readonly string[]): Promise<Array<{ id: string; title_ar: string; starts_at: string; duration_min: number; provider: string; join_url: string | null; units: string[]; status: string }>> {
   if (!inviteId || !codes.length) return [];
@@ -165,6 +173,21 @@ export async function joinedEmails(db: Db, sessionIds: readonly string[]): Promi
   try { const { data } = await db.from('portal_learning_events').select('object_id, email').eq('verb', 'joined').eq('object_type', 'session').in('object_id', sessionIds).limit(5000);
     for (const r of (data || []) as any[]) { const e = String(r.email || '').toLowerCase(); if (!e) continue; const s = out.get(r.object_id) || new Set<string>(); s.add(e); out.set(r.object_id, s); } } catch { /* اختياري */ }
   return out;
+}
+/** «قبل/بعد» لكل متعلّم في دعوة عبور: حصيلة وحدات التقرير الأصلي ← حصيلة آخر إعادة مهارة (دعوة retake_of). بلا حضور — يضيفه المستدعي لكل جلسة */
+export async function beforeAfterRows(db: Db, inviteId: string): Promise<Array<{ email: string; before: UnitTally | null; after: UnitTally | null; report_id: string }>> {
+  try {
+    const { data: origs } = await db.from('placement_reports').select('id, candidate_email, report').eq('invite_id', inviteId).limit(500); const os: any[] = Array.isArray(origs) ? origs : [];
+    if (!os.length) return [];
+    const { data: rinv } = await db.from('placement_invites').select('id, retake_of').in('retake_of', os.map((o) => o.id)).limit(500); const ri: any[] = Array.isArray(rinv) ? rinv : [];
+    const afterOf = new Map<string, UnitTally | null>();
+    if (ri.length) {
+      const { data: rreps } = await db.from('placement_reports').select('invite_id, report, created_at').in('invite_id', ri.map((r) => r.id)).limit(500); const rr: any[] = Array.isArray(rreps) ? rreps : [];
+      const byInvite = new Map<string, any>(); for (const r of rr.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))) byInvite.set(r.invite_id, r); /* آخر إعادة */
+      for (const r of ri) { const rep = byInvite.get(r.id); if (rep) afterOf.set(r.retake_of, rep.report?.الوحدات || null); }
+    }
+    return os.map((o) => ({ email: String(o.candidate_email || '').toLowerCase(), before: o.report?.الوحدات || null, after: afterOf.get(o.id) || null, report_id: String(o.id) }));
+  } catch { return []; }
 }
 export const unitsOfItemMap = (pool: readonly { code: string; unitCodes?: string[] | null }[]): Map<string, string[]> => { const m = new Map<string, string[]>(); for (const i of pool) if (i.unitCodes?.length) m.set(i.code, i.unitCodes); return m; };
 export const titlesOf = (codes: readonly string[], units: readonly Unit[]): Unit[] => { const ix = unitIndex(units); return codes.map((c) => ix.get(c)).filter((u): u is Unit => !!u); };

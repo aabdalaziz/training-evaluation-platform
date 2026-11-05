@@ -18,8 +18,7 @@ import { isExitLevel } from '../../../../../lib/miaar/exit';
 import { listUnits, approvedFor } from '../../../../../lib/miaar/syllabus';
 import { conflicts, atharRoomUrl } from '../../../../../lib/portal/live';
 import type { LiveSession } from '../../../../../lib/portal/live';
-import { REMEDIAL_KIND, REMEDIAL_TITLE, REMEDIAL_DEFAULT_MIN, REMEDIAL_MAX_UNITS, nextWorkdayAt, remedialTitle, mistakesFor, draftPlan, validateCreate, effectFor, effectText, programUnitFor, listRemedials, joinedEmails, unitsOfItemMap, titlesOf, PLAN_SYSTEM, planPrompt, parsePlan } from '../../../../../lib/miaar/remedial';
-import type { EffectIn } from '../../../../../lib/miaar/remedial';
+import { REMEDIAL_KIND, REMEDIAL_TITLE, REMEDIAL_DEFAULT_MIN, REMEDIAL_MAX_UNITS, nextWorkdayAt, remedialTitle, mistakesFor, draftPlan, validateCreate, programUnitFor, unitsOfItemMap, titlesOf, sessionsWithEffect, PLAN_SYSTEM, planPrompt, parsePlan } from '../../../../../lib/miaar/remedial';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -57,17 +56,6 @@ async function inviteCtx(db: any, inviteId: string) {
 async function programUnits(db: any, programId: string | null): Promise<any[]> {
   if (!programId) return []; try { const { data, error } = await db.from('portal_program_units').select('idx, title_ar, starts_on, miaar_unit_codes').eq('program_id', programId).is('archived_at', null).order('idx', { ascending: true }).limit(60); return error ? [] : (data || []); } catch { return []; }
 }
-/** «قبل/بعد» لكل متعلّم: تقرير العبور الأصلي ← تقرير إعادة المهارة (دعوة retake_of) */
-async function effectRows(db: any, inviteId: string, joined: Set<string>): Promise<EffectIn[]> {
-  const { data: origs } = await db.from('placement_reports').select('id, candidate_email, report').eq('invite_id', inviteId).limit(500); const os: any[] = Array.isArray(origs) ? origs : [];
-  if (!os.length) return [];
-  const { data: rinv } = await db.from('placement_invites').select('id, retake_of').in('retake_of', os.map((o) => o.id)).limit(500); const ri: any[] = Array.isArray(rinv) ? rinv : [];
-  if (!ri.length) return os.map((o) => ({ email: String(o.candidate_email || '').toLowerCase(), before: o.report?.الوحدات, after: null, attended: joined.has(String(o.candidate_email || '').toLowerCase()) }));
-  const { data: rreps } = await db.from('placement_reports').select('invite_id, report, created_at').in('invite_id', ri.map((r) => r.id)).limit(500); const rr: any[] = Array.isArray(rreps) ? rreps : [];
-  const byInvite = new Map<string, any>(); for (const r of rr.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))) byInvite.set(r.invite_id, r); /* آخر إعادة */
-  const afterOf = new Map<string, any>(); for (const r of ri) { const rep = byInvite.get(r.id); if (rep) afterOf.set(r.retake_of, rep.report?.الوحدات || null); }
-  return os.map((o) => { const email = String(o.candidate_email || '').toLowerCase(); return { email, before: o.report?.الوحدات, after: afterOf.get(o.id) || null, attended: joined.has(email) }; });
-}
 
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db } = c;
@@ -79,12 +67,8 @@ export async function GET(req: Request) {
   const weak = heat.filter((h) => h.state === 'weak').slice(0, REMEDIAL_MAX_UNITS).map((h) => ({ code: h.code, title_ar: h.title_ar, percent: h.percent, n_students: h.n_students, program_unit: programUnitFor(h.code, pus) }));
   const heatBy = new Map(heat.map((h) => [h.code, h]));
   const unitsOut = units.map((x) => ({ code: x.code, title_ar: x.title_ar, title_en: x.title_en, percent: heatBy.get(x.code)?.percent ?? null, state: heatBy.get(x.code)?.state ?? null, program_unit: programUnitFor(x.code, pus) }));
-  const sessions = ok ? await listRemedials(db, inviteId) : []; const joinedMap = await joinedEmails(db, sessions.map((s: any) => s.id));
-  const allJoined = new Set<string>(); for (const s of joinedMap.values()) for (const e of s) allJoined.add(e);
-  const rows = sessions.length ? await effectRows(db, inviteId, allJoined) : [];
   const ix = new Map(units.map((x) => [x.code, x.title_ar]));
-  const out = sessions.map((s: any) => { const codes: string[] = s.miaar_unit_codes || []; const eff = effectFor(rows.map((r) => ({ ...r, attended: joinedMap.get(s.id)?.has(r.email) || false })), codes);
-    return { ...s, joined: joinedMap.get(s.id)?.size || 0, effect: eff.map((e) => ({ ...e, title_ar: ix.get(e.code) || e.code, text: effectText(e, ix.get(e.code) || e.code) })) }; });
+  const out = ok ? await sessionsWithEffect(db, inviteId, ix) : [];
   const defaults = { starts_at: nextWorkdayAt(new Date()), duration_min: REMEDIAL_DEFAULT_MIN, provider: classroom?.provider || 'teams', join_url: classroom?.join_url || '', trainer_id: trainer?.id || classroom?.trainer_id || null, title_ar: remedialTitle(titlesOf(weak.map((w) => w.code), units)) };
   return NextResponse.json({ success: true, ready: ok, title: REMEDIAL_TITLE, invite: { id: b.invite.id, code: b.invite.code, label_ar: b.invite.label_ar, level, classroom_id: classroom?.id || null, program_id: classroom?.program_id || b.invite.program_id || null }, classroom: classroom ? { id: classroom.id, code: classroom.code, name: classroom.name || classroom.section_name || null } : null, trainer, weak, units: unitsOut, defaults, sessions: out, max_units: REMEDIAL_MAX_UNITS }, { headers: NO });
 }

@@ -10,6 +10,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { createInvite, inviteUrl } from './invites';
 import { boardFor } from './exitflow';
+import { sessionsWithEffect } from './remedial'; /* م9: جلسات التعويض وأثرها للجهة */
 import { INTEGRITY_AR } from './witness'; /* م8: الجهة ترى الحكم لا الصور */
 import { EXIT_TITLE, EXIT_SKILLS, SKILL_NAMES, exitBlueprintCode, isExitLevel, nextLevel, specTable, boardSummary } from './exit';
 import type { ExitLevel, ExitSkill, BoardRow } from './exit';
@@ -148,6 +149,16 @@ export async function benchmarkFromDb(db: Db, level: ExitLevel) {
   return benchmarkOf(Array.isArray(data) ? data : [], level);
 }
 /** بوابة الجهة: برابط سرّي — قراءة فقط · نتائج طلابها فقط · لا بنود ولا مفاتيح */
+/** م9: ما تراه الجهة عن الوحدات — خريطة حرارة المجموعة (بلا أسماء) + جلسات التعويض وأثرها (مجاميع فقط) */
+export function clientUnitsView(heat: readonly any[], sessions: readonly any[], scope: readonly string[] | null | undefined) {
+  const units = heat.map((h) => ({ code: String(h.code), title_ar: String(h.title_ar || ''), percent: Number(h.percent) || 0, state: String(h.state || 'ok'), state_ar: String(h.state_ar || ''), n_students: Number(h.n_students) || 0 }));
+  const weak = units.filter((u) => u.state === 'weak').slice(0, 3);
+  const sess = sessions.filter((x) => x && x.status !== 'cancelled').map((x) => ({ id: String(x.id), title_ar: String(x.title_ar || ''), starts_at: String(x.starts_at || ''), duration_min: Number(x.duration_min) || 0, provider: String(x.provider || ''), status: String(x.status || ''), units: Array.isArray(x.miaar_unit_codes) ? x.miaar_unit_codes.map(String) : [], joined: Number(x.joined) || 0,
+    effect: (Array.isArray(x.effect) ? x.effect : []).map((e: any) => ({ code: String(e.code), title_ar: String(e.title_ar || e.code), n_retakes: Number(e.n_retakes) || 0, attended: e.attended, others: e.others, text: String(e.text || '') })) }));
+  const deltas = sess.flatMap((x) => x.effect.map((e: any) => e.attended?.delta)).filter((d: unknown): d is number => typeof d === 'number');
+  return { units, weak, scoped: Array.isArray(scope) && scope.length > 0, scope: Array.isArray(scope) ? scope.map(String) : [], sessions: sess, effect_avg: deltas.length ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length) : null,
+    note_ar: 'نسب الوحدات للمجموعة كلّها بلا أسماء · الوحدات لا تظهر على الشهادة الرسمية · أثر التعويض = فرق نسبة الوحدة بين الاختبار الأصلي وإعادة المهارة' };
+}
 export async function clientBoard(db: Db, token: unknown, site: string) {
   if (typeof token !== 'string' || token.length < 16 || token.length > 64) return null;
   const { data: inv } = await db.from('placement_invites').select('id, code, status, client_name, client_contact, level_target, opens_at, expires_at, max_seats, identity_mode, proctor_pin_hash').eq('client_token_hash', hashToken(token)).maybeSingle(); if (!inv) return null;
@@ -155,8 +166,12 @@ export async function clientBoard(db: Db, token: unknown, site: string) {
   const { data: order } = await db.from('miaar_service_orders').select('id, client_name, level, seats, status, proctor_name, proctor_signed_at, delivered_at, created_at').eq('invite_id', inv.id).maybeSingle();
   const level = isExitLevel(inv.level_target) ? inv.level_target : 'A1';
   const bench = await benchmarkFromDb(db, level).catch(() => null);
-  const rows = b.rows.map((r: any) => ({ name: r.name, email: r.email, status: r.status, started_at: r.started_at, finished_at: r.finished_at, answered: r.answered, total: r.total, report_code: r.report_code, integrity: (r as any).integrity || null, integrity_ar: (r as any).integrity ? (INTEGRITY_AR as any)[(r as any).integrity] || (r as any).integrity : null, exit: r.exit ? { الحالة: r.exit.الحالة, النتيجة: r.exit.النتيجة, الكلي: r.exit.الكلي, تقدير_ar: r.exit.تقدير_ar, grade_en: r.exit.grade_en, المهارات: r.exit.المهارات, مهارة_الإعادة: r.exit.مهارة_الإعادة } : null, certificate_url: r.exit?.الحالة === 'final' && r.exit?.النتيجة === 'passed' && (r as any).integrity !== 'invalid' && r.report_code ? `${site.replace(/\/$/, '')}/miaar/certificate/${encodeURIComponent(r.report_code)}` : null }));
-  return { invite: { code: inv.code, status: inv.status, client_name: inv.client_name, level, opens_at: inv.opens_at, expires_at: inv.expires_at, max_seats: inv.max_seats, has_pin: !!inv.proctor_pin_hash, url: inviteUrl(site, inv.code) }, order: order ? { ...order, status_ar: SERVICE_STATUS_AR[order.status as ServiceStatus] || order.status } : null, window: b.window, rows, summary: b.summary, report: clientReport(level, b.rows, bench), official: EXIT_TITLE, service: SERVICE_TITLE, at: nowIso() };
+  const rows = b.rows.map((r: any) => ({ name: r.name, email: r.email, status: r.status, started_at: r.started_at, finished_at: r.finished_at, answered: r.answered, total: r.total, report_code: r.report_code, integrity: (r as any).integrity || null, integrity_ar: (r as any).integrity ? (INTEGRITY_AR as any)[(r as any).integrity] || (r as any).integrity : null, exit: r.exit ? { الحالة: r.exit.الحالة, النتيجة: r.exit.النتيجة, الكلي: r.exit.الكلي, تقدير_ar: r.exit.تقدير_ar, grade_en: r.exit.grade_en, المهارات: r.exit.المهارات, مهارة_الإعادة: r.exit.مهارة_الإعادة, الوحدات: Array.isArray(r.exit.الوحدات) ? r.exit.الوحدات : [], وحدات_للمراجعة: Array.isArray(r.exit.وحدات_للمراجعة) ? r.exit.وحدات_للمراجعة : [] } : null, certificate_url: r.exit?.الحالة === 'final' && r.exit?.النتيجة === 'passed' && (r as any).integrity !== 'invalid' && r.report_code ? `${site.replace(/\/$/, '')}/miaar/certificate/${encodeURIComponent(r.report_code)}` : null }));
+  /* م9: الوحدات + جلسات التعويض للجهة (مجاميع · بلا أسماء) */
+  const heat: any[] = Array.isArray((b as any).units) ? (b as any).units : [];
+  const sessions = heat.length ? await sessionsWithEffect(db, String(inv.id), new Map(heat.map((h: any) => [String(h.code), String(h.title_ar || h.code)]))).catch(() => []) : [];
+  const units = clientUnitsView(heat, sessions, (b as any).unit_scope);
+  return { invite: { code: inv.code, status: inv.status, client_name: inv.client_name, level, opens_at: inv.opens_at, expires_at: inv.expires_at, max_seats: inv.max_seats, has_pin: !!inv.proctor_pin_hash, url: inviteUrl(site, inv.code) }, order: order ? { ...order, status_ar: SERVICE_STATUS_AR[order.status as ServiceStatus] || order.status } : null, window: b.window, rows, summary: b.summary, report: clientReport(level, b.rows, bench), units, official: EXIT_TITLE, service: SERVICE_TITLE, at: nowIso() };
 }
 /** ما تحتاجه الشهادة وبطاقة النتيجة عن الجهة (بلا رموز) */
 export async function serviceFactsForInvite(db: Db, inviteId: string | null): Promise<{ external: boolean; client_name: string | null; proctor_signed: boolean; proctor_name: string | null } | null> {

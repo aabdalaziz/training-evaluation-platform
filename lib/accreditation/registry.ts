@@ -71,9 +71,12 @@ export const topsOf = (rows: StandardRow[], fw: Framework) => rows.filter(r => r
 export const tpsGeneral = (rows: StandardRow[]) => rows.filter(r => r.framework === 'tps' && r.parent && ['A', 'B', 'C'].includes(r.parent)).sort((a, b) => a.sort - b.sort);
 
 /* ───────── 3) الأدلة: الأنواع والقواعد ───────── */
-export type EvidenceKind = 'program' | 'design' | 'units' | 'template' | 'need' | 'charter' | 'weekly' | 'final' | 'diploma_unit' | 'pulse' | 'profile' | 'review' | 'version' | 'attendance' | 'enrollment' | 'support' | 'after' | 'trainer' | 'trainer_pd' | 'skill_map';
+export type EvidenceKind = 'program' | 'design' | 'units' | 'template' | 'need' | 'charter' | 'weekly' | 'final' | 'diploma_unit' | 'pulse' | 'profile' | 'review' | 'version' | 'attendance' | 'enrollment' | 'support' | 'after' | 'trainer' | 'trainer_pd' | 'skill_map'
+  | 'miaar_exit' | 'miaar_units' | 'miaar_remedial' | 'miaar_effect' | 'miaar_retake' /* م9 أدلة مِعيار */;
 export type Evidence = { id: string; kind: EvidenceKind; codes: string[]; label_ar: string; at: string | null; href: string | null; n?: number };
-export const EVIDENCE_KIND_AR: Record<EvidenceKind, string> = { program: 'بيانات البرنامج', design: 'هندسة البرنامج', units: 'وحدات البرنامج', template: 'قالب الكفايات والاستراتيجيات', need: 'احتياج معلَن تبنّاه البرنامج', charter: 'ميثاق الجهة', weekly: 'تقرير تعلّم أسبوعي معتمَد', final: 'تقرير ختامي معتمَد', diploma_unit: 'تقرير وحدة معتمَد', pulse: 'نبض الأسبوع', profile: 'كشف كفايات معتمَد', review: 'مراجعة البرنامج بعد الدفعة (معتمَدة)', version: 'نسخة الدفعة المطبَّقة', attendance: 'سجلّ الحضور', enrollment: 'التسجيل والقبول والتنسيب', support: 'قرارات الدعم والإعادة', after: 'محطات الأثر بعد البرنامج', trainer: 'سيرة مدرّب موثَّقة في هيئة أَثَر', trainer_pd: 'تطوير مهني للمدرّب (بروفة · أَثَر معك · شهادة قرين)', skill_map: 'ربط الكفايات بمعايير المعلّم' };
+export const EVIDENCE_KIND_AR: Record<EvidenceKind, string> = { program: 'بيانات البرنامج', design: 'هندسة البرنامج', units: 'وحدات البرنامج', template: 'قالب الكفايات والاستراتيجيات', need: 'احتياج معلَن تبنّاه البرنامج', charter: 'ميثاق الجهة', weekly: 'تقرير تعلّم أسبوعي معتمَد', final: 'تقرير ختامي معتمَد', diploma_unit: 'تقرير وحدة معتمَد', pulse: 'نبض الأسبوع', profile: 'كشف كفايات معتمَد', review: 'مراجعة البرنامج بعد الدفعة (معتمَدة)', version: 'نسخة الدفعة المطبَّقة', attendance: 'سجلّ الحضور', enrollment: 'التسجيل والقبول والتنسيب', support: 'قرارات الدعم والإعادة', after: 'محطات الأثر بعد البرنامج', trainer: 'سيرة مدرّب موثَّقة في هيئة أَثَر', trainer_pd: 'تطوير مهني للمدرّب (بروفة · أَثَر معك · شهادة قرين)', skill_map: 'ربط الكفايات بمعايير المعلّم',
+  miaar_exit: 'نهاية المستوى (مِعيار)', miaar_units: 'خريطة المنهج (مِعيار)', miaar_remedial: 'جلسة تعويض (مِعيار)', miaar_effect: 'أثر التعويض (مِعيار)', miaar_retake: 'إعادة مهارة (مِعيار)',
+};
 /** لكل معيار فرعي: الحدّ الأدنى من الأدلة ليُعدّ مستوفى، وهل له مصدر آلي، والمهمة التي تُنتج دليله ورابطها */
 export type EvidenceRule = { min: number; auto: boolean; task_ar: string; href: string };
 export const EVIDENCE_RULES: Record<string, EvidenceRule> = {
@@ -84,14 +87,14 @@ export const EVIDENCE_RULES: Record<string, EvidenceRule> = {
   '1.5': { min: 1, auto: true, task_ar: 'حدّد استراتيجيات التدريب في قالب البرنامج', href: '/me/reports' },
   '1.6': { min: 1, auto: true, task_ar: 'حدّد كفايات القالب وأدوات قياسها أو نواتج الوحدات', href: '/me/reports' },
   '2.1': { min: 2, auto: true, task_ar: 'اعتمد تقارير التعلّم الدورية، وطبّق نسخة دفعة من مراجعة معتمَدة', href: '/me/reports' },
-  '2.2': { min: 2, auto: true, task_ar: 'اعتمد تقارير وحدات/أسابيع فيها قرارات دعم أو إعادة', href: '/me/reports' },
+  '2.2': { min: 2, auto: true, task_ar: 'اعتمد تقارير وحدات/أسابيع فيها قرارات دعم أو إعادة — أو أنشئ جلسة تعويض من خريطة المنهج', href: '/me/reports' },
   '2.3': { min: 1, auto: false, task_ar: 'اكتب فقرة الموارد والتجهيزات وتحديثها ووقّعها', href: '#narrative' },
   '2.4': { min: 1, auto: false, task_ar: 'اكتب فقرة التدريب التعاوني/على رأس العمل (أو «لا ينطبق» مع السبب) ووقّعها', href: '#narrative' },
-  '2.5': { min: 1, auto: true, task_ar: 'اعتمد تقريرًا ختاميًّا أو مراجعة بعد الدفعة (مؤشرات الأداء)', href: '/me/reports' },
+  '2.5': { min: 1, auto: true, task_ar: 'اعتمد تقريرًا ختاميًّا أو مراجعة بعد الدفعة (مؤشرات الأداء) — أو شغّل اختبار نهاية المستوى (مِعيار) لشعبة من البرنامج', href: '/me/reports' },
   '2.6': { min: 1, auto: true, task_ar: 'افتح «مراجعة البرنامج بعد الدفعة» واعتمدها', href: '/me/reports#reviews' },
   '3.1': { min: 1, auto: true, task_ar: 'اقبل المسجَّلين ونسّبهم إلى شعب، واكتب خطط الدعم في التقارير', href: '/admin' },
   '3.2': { min: 1, auto: true, task_ar: 'اعتمد كشوف الكفايات أو محطات الأثر (90 يومًا)', href: '/me/reports#diploma' },
-  '3.3': { min: 1, auto: true, task_ar: 'سجّل قرارات «يُرقَّى/يُدعَم/يُعيد» في تقارير الأسابيع والوحدات', href: '/me/reports' },
+  '3.3': { min: 1, auto: true, task_ar: 'سجّل قرارات «يُرقَّى/يُدعَم/يُعيد» في تقارير الأسابيع والوحدات — أو رقِّ المجتازين بتوقيعك من لوحة عُبور', href: '/me/reports' },
   '3.4': { min: 1, auto: true, task_ar: 'سجّل الحضور في الجلسات (خمسة متدرّبين فأكثر)', href: '/attend' },
   '3.5': { min: 1, auto: true, task_ar: 'فعّل محطات الأثر (90 يومًا · السنة) لخريجي البرنامج', href: '/me/after' },
   '4.1': { min: 1, auto: true, task_ar: 'ادعُ مدرّبي البرنامج إلى توثيق سيرهم في هيئة أَثَر', href: '/me/directory' },

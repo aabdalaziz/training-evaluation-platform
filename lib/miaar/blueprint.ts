@@ -55,6 +55,12 @@ export const DRAW_MODE_INFO: Record<DrawMode, { name_ar: string; hint_ar: string
 export const isTestType = (v: unknown): v is TestType => typeof v === 'string' && (TEST_TYPES as readonly string[]).includes(v);
 export const isDrawMode = (v: unknown): v is DrawMode => typeof v === 'string' && (DRAW_MODES as readonly string[]).includes(v);
 export const cellKey = (level: string, skill: string) => `${level}:${skill}`;
+/** م9: جاهزية التحويل إلى «سلّة الخبير» — كل خلية مطلوبة (عدد > 0) لها سلّة بحجم ≥ العدد المطلوب. المهارات الإنتاجية تُسحب من مهامها (SKILLS استقبالية فقط) */
+export function expertReadiness(plan: Pick<Plan, 'levels' | 'counts' | 'pool' | 'draw'>): { ready: boolean; cells_ok: number; cells_total: number; mode: Plan['draw'] } {
+  let ok = 0, total = 0;
+  for (const l of plan.levels) for (const s of SKILLS) { const need = plan.counts[l]?.[s] || 0; if (!need) continue; total += 1; if ((plan.pool[cellKey(l, s)] || []).length >= need) ok += 1; }
+  return { ready: total > 0 && ok === total, cells_ok: ok, cells_total: total, mode: plan.draw };
+}
 export const emptyProductive = (): Plan['productive'] => Object.fromEntries(LEVELS.map((l) => [l, { writing: 0, speaking: 0 }])) as Plan['productive'];
 export const productiveTotal = (plan: Pick<Plan, 'levels' | 'productive'>): number => plan.levels.reduce((sum, l) => sum + (plan.productive?.[l]?.writing || 0) + (plan.productive?.[l]?.speaking || 0), 0);
 export const emptyCounts = (): Counts => Object.fromEntries(LEVELS.map((l) => [l, Object.fromEntries(SKILLS.map((s) => [s, 0]))])) as Counts;

@@ -19,7 +19,7 @@ import { LEVELS, SKILLS, isLevel, isSkill } from '../../../../../lib/miaar/regis
 import type { PoolItem } from '../../../../../lib/miaar/registry';
 import { loadApprovedPool, loadPassages } from '../../../../../lib/miaar/bank';
 import { listUnits, coverage } from '../../../../../lib/miaar/syllabus'; /* م6-ب */
-import { TEST_TYPES, TEST_TYPE_INFO, DRAW_MODE_INFO, isTestType, planFromBlueprint, drawPlan, planTotal, cellKey } from '../../../../../lib/miaar/blueprint';
+import { TEST_TYPES, TEST_TYPE_INFO, DRAW_MODE_INFO, isTestType, planFromBlueprint, drawPlan, planTotal, cellKey, expertReadiness } from '../../../../../lib/miaar/blueprint';
 import type { BlueprintRow } from '../../../../../lib/miaar/blueprint';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
@@ -87,7 +87,7 @@ async function nextCode(db: any, type: string): Promise<string> {
   const prefix = `BP-${type.toUpperCase()}-`; const { data } = await db.from(TABLE).select('code').like('code', `${prefix}%`).limit(500);
   const used = new Set(((data || []) as { code: string }[]).map((r) => r.code)); for (let n = 1; n < 1000; n += 1) { const c = `${prefix}${String(n).padStart(3, '0')}`; if (!used.has(c)) return c; } return `${prefix}${Date.now()}`;
 }
-const publicRow = (r: BlueprintRow, pool: readonly PoolItem[]) => { const { plan, errors } = planFromBlueprint(r); return { ...r, plan_total: planTotal(plan), plan_errors: errors, shortages: shortages(plan, pool), type_name: TEST_TYPE_INFO[plan.type].name_ar, ladder: plan.ladder }; };
+const publicRow = (r: BlueprintRow, pool: readonly PoolItem[]) => { const { plan, errors } = planFromBlueprint(r); return { ...r, plan_total: planTotal(plan), plan_errors: errors, shortages: shortages(plan, pool), type_name: TEST_TYPE_INFO[plan.type].name_ar, ladder: plan.ladder, ...(/^SYS-EXIT-/.test(String(r.code || '')) ? { expert_ready: expertReadiness(plan) } : {}) }; };
 
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db } = c; const p = new URL(req.url).searchParams;
