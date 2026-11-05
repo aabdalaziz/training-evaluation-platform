@@ -23,7 +23,8 @@ type Q = { id: string; level: string; skill: string; type: string; passageId: st
 type Player = { speeds: number[]; replays: number; twice?: boolean };
 type P = { id: string; level: string; skill: string; title: string; text: string; audioUrl: string | null; player?: Player };
 type Session = { plan?: { code: string; name_ar: string; name_en: string; type: string; ladder: string; levels: string[]; cut: number; floor: boolean } | null; examMode: 'comprehensive' | 'adaptive'; currentLevel: string; currentLevelIndex: number; startLevelIndex: number; direction: 'up' | 'down'; status: string; finishReason: string | null; expiresAt: string; remainingSeconds: number; durationSeconds: number; access: any; answers: Record<string, string>; form: { questions: Q[]; passages: P[] } | null };
-type Invite = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: 'adaptive' | 'comprehensive'; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null };
+type Invite = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: 'adaptive' | 'comprehensive'; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
+  exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null } | null /* م6 */ };
 type Step = 'loading' | 'intro' | 'register' | 'probe' | 'test' | 'review' | 'result' | 'blocked';
 type Props = { inviteCode?: string | null; inviteToken?: string | null; resultCode?: string | null; fontClass?: string };
 
@@ -50,7 +51,19 @@ const X: Record<string, { ar: string; en: string }> = {
   step_programs: { ar: 'برامج العربية في أَثَر عند مستواك', en: 'Athar Arabic programmes at your level' }, step_keep: { ar: 'احتفظ برمز نتيجتك — به تعود إليها وتتحقّق منها الجهة', en: 'Keep your result code — it reopens and verifies your result' },
   step_weak: { ar: 'ركّز على أضعف مهارة أربعة أسابيع ثم أعد التقييم', en: 'Work on your weakest skill for four weeks, then reassess' },
   result_code: { ar: 'رمز النتيجة', en: 'Result code' }, copy_link: { ar: 'نسخ الرابط', en: 'Copy link' }, copied: { ar: 'نُسخ', en: 'Copied' }, nature: { ar: 'توصية تسكين مبدئية — لا شهادة إتقان', en: 'Preliminary placement recommendation — not a proficiency certificate' },
-  not_found: { ar: 'لا نتيجة بهذا الرمز.', en: 'No result with this code.' }, loading: { ar: 'جارٍ التحميل…', en: 'Loading…' }, replays_left: { ar: 'إعادات متبقية: {n}', en: 'Replays left: {n}' },
+  not_found: { ar: 'لا نتيجة بهذا الرمز.', en: 'No result with this code.' },
+  /* م6 «عُبور» */
+  invite_not_open: { ar: 'لم تُفتح نافذة هذا الاختبار بعد. عُد في الموعد المحدّد من جهتك.', en: 'This examination window has not opened yet. Come back at the time set by your institution.' },
+  exit_taken: { ar: 'سبق أن أدّيت اختبار نهاية المستوى بهذه الدعوة — النتيجة في بطاقتك.', en: 'You have already sat the level exit examination on this invitation — see your result card.' },
+  exit_title: { ar: 'اختبار نهاية المستوى — معياري (CEFR)', en: 'Level Exit Examination (CEFR-aligned)' },
+  exit_level: { ar: 'المستوى', en: 'Level' }, exit_min: { ar: 'دقيقة', en: 'min' }, exit_items: { ar: 'بندًا', en: 'items' }, exit_tasks: { ar: 'مهمة', en: 'tasks' },
+  exit_spec: { ar: 'جدول المواصفات', en: 'Specification' }, exit_rule: { ar: 'الاجتياز: الكلّي 60% فأكثر ولا مهارة دون 50% · استقبالي 60% · كتابة 20% · تحدّث 20%', en: 'Pass: overall 60%+ and no skill below 50% · receptive 60% · writing 20% · speaking 20%' },
+  exit_retake_of: { ar: 'إعادة مهارة واحدة', en: 'Single-skill retake' },
+  exit_total: { ar: 'النتيجة الكلّية', en: 'Overall' }, exit_grade: { ar: 'التقدير', en: 'Grade' }, exit_cert: { ar: 'شهادة اجتياز المستوى', en: 'Certificate of level completion' },
+  exit_pending: { ar: 'النتيجة الكلّية تُعلن بعد تصحيح الكتابة والتحدّث — ستجدها هنا بالرمز نفسه.', en: 'The overall result appears after writing and speaking are rated — same code, same page.' },
+  exit_cond: { ar: 'اجتياز مشروط: تُعاد مهارة واحدة فقط خلال 14 يومًا بدعوة شخصية من جهتك.', en: 'Conditional pass: one skill only is retaken within 14 days via a personal invitation from your institution.' },
+  exit_fail: { ar: 'لم يُجتز بعد — يمكن إعادة الاختبار كاملًا بعد 7 أيام بقرار من جهتك.', en: 'Not yet passed — the full examination may be retaken after 7 days by your institution’s decision.' },
+  exit_skills: { ar: { listening: 'الاستماع', reading: 'القراءة', grammar_vocab: 'المفردات والتراكيب', writing: 'الكتابة', speaking: 'التحدّث' } as any, en: { listening: 'Listening', reading: 'Reading', grammar_vocab: 'Use of language', writing: 'Writing', speaking: 'Speaking' } as any }, loading: { ar: 'جارٍ التحميل…', en: 'Loading…' }, replays_left: { ar: 'إعادات متبقية: {n}', en: 'Replays left: {n}' },
   pre_a1: { ar: 'بداية الطريق — يبدأ من أول A1', en: 'Starting out — begins at the very start of A1' },
   floor_level: { ar: 'ما قبل A1', en: 'Pre-A1' }, level_floor: { ar: 'لم تكتمل A1 — بضعة أسئلة أبسط بالصور لنعرف نقطة بدايتك', en: 'A1 not yet complete — a few simpler picture questions to find your starting point' },
   speed: { ar: 'السرعة', en: 'Speed' }, twice: { ar: 'يُقرأ المقطع مرتين', en: 'The clip is read twice' }, floor_verdict: { ar: 'نقطة البداية داخل A1', en: 'Starting point within A1' },
@@ -95,7 +108,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [copy, setCopy] = useState<Copy | null>(null);
   const [lang, setLangState] = useState('en');
   const [step, setStep] = useState<Step>('loading');
-  const [invite, setInvite] = useState<Invite | null>(null); const [inviteErr, setInviteErr] = useState(false);
+  const [invite, setInvite] = useState<Invite | null>(null); const [inviteErr, setInviteErr] = useState<false | string>(false);
   const [examMode, setExamMode] = useState<'comprehensive' | 'adaptive'>('adaptive'); const [blueprint, setBlueprint] = useState<string | null>(null); const [doors, setDoors] = useState<Door[]>(DEFAULT_DOORS);
   const [cand, setCand] = useState({ name: '', email: '', phone: '', nativeLanguage: '', studiedBefore: null as boolean | null, purpose: '' });
   const [access, setAccess] = useState({ time: 1 as 1 | 1.25 | 1.5, simple: false, contrast: false, large: false });
@@ -127,7 +140,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     if (inviteCode) {
       const r = await fetch(`/api/miaar?invite=${encodeURIComponent(inviteCode)}${inviteToken ? `&t=${encodeURIComponent(inviteToken)}` : ''}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
       if (r?.ok) { setInvite(r.invite); setExamMode(r.invite.exam_mode); if (!langPicked.current && (await copyHas(r.invite.lang))) { initialLang = r.invite.lang; c = (await loadCopy(c, [initialLang])) || c; setCopy(c); } if (r.invite.recipient) setCand((v) => ({ ...v, email: r.invite.recipient.email, name: r.invite.recipient.name || v.name })); }
-      else { setInviteErr(true); setLangState(initialLang); setStep('blocked'); return; }
+      else { setInviteErr(r?.error === 'invite_not_open' ? 'not_open' : 'bad'); setLangState(initialLang); setStep('blocked'); return; }
     }
     setLangState(initialLang);
     const s = await fetch('/api/miaar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'resume' }), cache: 'no-store' }).then((r) => r.json()).catch(() => null);
@@ -167,7 +180,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     setBusy(true); setErr('');
     const r = await post({ action: 'start', candidate: cand, examMode, blueprint: invite ? undefined : blueprint || undefined, probeAnswers: withProbe ? probeAns : null, access: access.time !== 1 || access.simple || access.contrast || access.large ? access : null, invite: invite ? { code: invite.code, t: inviteToken || undefined } : undefined });
     setBusy(false);
-    if (!r?.ok) { const k = r?.error === 'retake_not_allowed' ? 'errRetake' : r?.error === 'retake_check_failed' ? 'errCheck' : r?.error === 'session_start_failed' || r?.error === 'session_exists' ? 'errSession' : r?.error?.startsWith?.('invite_') ? 'invite' : 'errGeneric'; setErr(k === 'invite' ? x('invite_bad') : t('register', k)); if (k === 'errRetake' || k === 'invite') setStep('register'); return; }
+    if (!r?.ok) { const k = r?.error === 'retake_not_allowed' ? 'errRetake' : r?.error === 'exit_already_taken' ? 'exit_taken' : r?.error === 'retake_check_failed' ? 'errCheck' : r?.error === 'session_start_failed' || r?.error === 'session_exists' ? 'errSession' : r?.error === 'invite_not_open' ? 'not_open' : r?.error?.startsWith?.('invite_') ? 'invite' : 'errGeneric'; setErr(k === 'invite' ? x('invite_bad') : k === 'not_open' ? x('invite_not_open') : k === 'exit_taken' ? x('exit_taken') : t('register', k)); if (k === 'errRetake' || k === 'invite' || k === 'exit_taken' || k === 'not_open') setStep('register'); return; }
     alerted.current = new Set(); setSession(r.session); setAnswers({}); setDeferred(new Set()); setQIdx(0); setStep('test');
   }
 
@@ -292,7 +305,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const Foot = () => <footer className="mi-foot">© 2026 {x('product')} · {x('athar')} · <a href="/accessibility">{lang === 'ar' ? 'الوصولية' : 'Accessibility'}</a></footer>;
 
   if (step === 'loading' || !copy) return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="mi-wrap"><p className="mi-muted" role="status">{err === 'copy' ? 'تعذّر تحميل مِعيار — أعد تحميل الصفحة.' : x('loading')}</p></div></main>;
-  if (step === 'blocked') return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><Header /><Hero kicker={x('product')} title={x('invite_for')} /><div className="mi-wrap"><section className="mi-card"><p className="mi-err" role="alert">{inviteErr ? x('invite_bad') : x('not_found')}</p><a className="mi-btn ghost" href="/miaar">{x('product')}</a></section></div><Foot /></main>;
+  if (step === 'blocked') return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><Header /><Hero kicker={x('product')} title={x('invite_for')} /><div className="mi-wrap"><section className="mi-card"><p className="mi-err" role="alert">{inviteErr === 'not_open' ? x('invite_not_open') : inviteErr ? x('invite_bad') : x('not_found')}</p><a className="mi-btn ghost" href="/miaar">{x('product')}</a></section></div><Foot /></main>;
 
   const sampleQ = EXAMS[(door ? door.door : examMode) === 'adaptive' ? 'adaptive' : 'comprehensive'];
   const doorName = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adap') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'comp') : lang === 'ar' ? d.name_ar : d.name_en || d.name_ar;
@@ -311,7 +324,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       {/* ===== V3 «واجهة الوعد الواحد» — الطيّة ===== */}
       <section className="mi-v3hero" data-testid="mi-intro">
         <div className="mi-v3copy">
-          {invite && <div className="mi-invite" data-testid="mi-invite"><b>{x('invite_for')}:</b> {invite.label_ar} · {t('intro', invite.exam_mode === 'adaptive' ? 'adap' : 'comp')}</div>}
+          {invite && <div className="mi-invite" data-testid="mi-invite"><b>{x('invite_for')}:</b> {invite.label_ar} · {invite.exit ? x('exit_title') : t('intro', invite.exam_mode === 'adaptive' ? 'adap' : 'comp')}</div>}
+                          {invite?.exit && <ExitInviteCard ex={invite.exit} x={x} ar={lang === 'ar'} />}
           <p className="mi-v3pill"><i aria-hidden="true" />{t('intro', 'v3pill')}</p>
           <h1 data-testid="mi-flash">{(() => { const [a, b] = splitHead(t('intro', 'v3h1')); return <>{a}<br />{b && <em>{b}</em>}</>; })()}</h1>
           <p className="mi-v3lead">{t('intro', 'v3lead')}</p>
@@ -430,7 +444,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     {step === 'register' && <>
       <Hero kicker={t('register', 'kicker')} title={t('register', 'title')} lead={t('register', 'lead')} />
       <div className="mi-wrap narrow">
-        {invite && <div className="mi-invite light" data-testid="mi-invite"><b>{x('invite_for')}:</b> {invite.label_ar} · {t('intro', invite.exam_mode === 'adaptive' ? 'adap' : 'comp')}</div>}
+        {invite && <div className="mi-invite light" data-testid="mi-invite"><b>{x('invite_for')}:</b> {invite.label_ar} · {invite.exit ? x('exit_title') : t('intro', invite.exam_mode === 'adaptive' ? 'adap' : 'comp')}</div>}
+        {invite?.exit && <ExitInviteCard ex={invite.exit} x={x} ar={lang === 'ar'} />}
         <button type="button" className="mi-back" onClick={() => setStep('intro')}>{t('register', 'back')}</button>
         <form className="mi-card" onSubmit={submitRegister} data-testid="mi-register">
           <div className="mi-grid1">
@@ -604,6 +619,8 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
       {report?.السجلّ?.مؤرشفة && <p className="mi-ledger arch" data-testid="mi-archived">{ar ? 'نتيجة مؤرشفة — ما زالت صحيحة وقابلة للتحقّق، لكنها خرجت من السجلّ النشط.' : 'Archived result — still valid and verifiable, but no longer in the active ledger.'}</p>}
       {report?.السجلّ?.قرار && <p className="mi-ledger dec" data-testid="mi-decision">{ar ? `قرار التسكين: ${report.السجلّ.قرار.المستوى}` : `Placement decision: ${report.السجلّ.قرار.المستوى}`}{report.السجلّ.قرار.البرنامج ? (ar ? ` · البرنامج: ${report.السجلّ.قرار.البرنامج}` : ` · Program: ${report.السجلّ.قرار.البرنامج}`) : ''}{report.السجلّ.قرار.الشعبة ? (ar ? ` · الشعبة: ${report.السجلّ.قرار.الشعبة}` : ` · Section: ${report.السجلّ.قرار.الشعبة}`) : ''}</p>}
       {report?.السجلّ?.رحلة && <p className="mi-ledger journey" data-testid="mi-journey">{ar ? 'لك أكثر من محاولة في مِعيار — ' : 'You have more than one sitting in Miaar — '}<a href={`/miaar/growth/${code}`} data-testid="mi-journey-link">{ar ? 'شاهد رحلتك ونموّك على السُّلّم' : 'see your journey and growth on the scale'}</a></p>}
+      {/* م6 «عُبور»: شريط نهاية المستوى — الحكم المركّب · المهارات الخمس · خطّ العبور · الشهادة */}
+      {report?.exit && <ExitStrip ex={report.exit} code={code || ""} ar={ar} x={x} />}
       {report?.السجلّ?.يحتاج_إنسانًا && <p className="mi-ledger wait" data-testid="mi-decision-wait">{ar ? 'قرار التسكين بانتظار مراجعة إنسان — ستصلك النتيجة قريبًا.' : 'Your placement decision awaits human review — you will hear from us soon.'}</p>}
       <div className="mi-rsplit">
         <div>
@@ -633,6 +650,35 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
       {code && <div className="mi-code"><div><small>{x('result_code')}</small><b dir="ltr" data-testid="mi-code">{code}</b><a href={url} dir="ltr">{url}</a></div><div className="mi-qr" dangerouslySetInnerHTML={{ __html: qrSvg(url, 96, 'M', '#0f2a4e') }} /></div>}
       <div className="mi-actions mi-nolink"><button type="button" className="mi-defer" onClick={() => window.print()}>{t('result', 'print')}</button>{code && <button type="button" className="mi-defer" onClick={onCopy}>{copied ? x('copied') : x('copy_link')}</button>}<a className="mi-next" href={`/programs?level=${entry}`}>{t('result', 'programs')} →</a></div>
     </div></div>
+  </section>;
+}
+
+/* ===== م6 «عُبور» — بطاقة الدعوة قبل البدء (جدول المواصفات المختصر) ===== */
+function ExitInviteCard({ ex, x, ar }: { ex: NonNullable<Invite['exit']>; x: (k: string) => string; ar: boolean }) {
+  const names = (X.exit_skills as any)[ar ? 'ar' : 'en'] as Record<string, string>; const c = ex.counts || {};
+  const parts = ['listening', 'reading', 'grammar_vocab'].filter((k) => c[k]).map((k) => `${names[k]} ${c[k]}`);
+  const tasks = ['writing', 'speaking'].filter((k) => c[k]).map((k) => `${names[k]} ${c[k]}`);
+  return <div className="mi-exit-invite" data-testid="mi-exit-invite" dir={ar ? 'rtl' : 'ltr'}>
+    <p className="mi-exit-k">{ex.retake_skill ? `${x('exit_retake_of')} — ${names[ex.retake_skill] || ex.retake_skill}` : x('exit_spec')} · {x('exit_level')} <b>{ex.level}</b> · {ex.minutes} {x('exit_min')}</p>
+    <p className="mi-exit-cells">{parts.length ? `${parts.join(' · ')} (${x('exit_items')})` : ''}{parts.length && tasks.length ? ' · ' : ''}{tasks.length ? `${tasks.join(' · ')} (${x('exit_tasks')})` : ''}</p>
+    {!ex.retake_skill && <p className="mi-exit-rule">{x('exit_rule')}</p>}
+    {ex.opens_at && Date.parse(ex.opens_at) > Date.now() && <p className="mi-exit-rule">{x('invite_not_open')}</p>}
+  </div>;
+}
+/* ===== م6 «عُبور» — شريط النتيجة ===== */
+function ExitStrip({ ex, code, ar, x }: { ex: any; code: string; ar: boolean; x: (k: string) => string }) {
+  const names = (X.exit_skills as any)[ar ? 'ar' : 'en'] as Record<string, string>; const sk = ex.المهارات || {};
+  const outcome = String(ex.النتيجة || 'pending'); const final = ex.الحالة === 'final';
+  const text = ar ? ex.النص : ex.text_en; const grade = ar ? ex.تقدير_ar : ex.grade_en;
+  return <section className="mi-exit" data-testid="mi-exit" data-outcome={outcome}>
+    <p className="mi-exit-k">{ar ? ex.الاسم_الرسمي : ex.official_en} · {x('exit_level')} <b>{ex.المستوى}</b> · {ex.إصدار_المواصفات}</p>
+    <div className="mi-exit-head"><span className={`mi-exit-badge ${outcome}`} data-testid="mi-exit-outcome">{text}</span>{final && typeof ex.الكلي === 'number' && <span className="mi-exit-total" data-testid="mi-exit-total">{x('exit_total')}: <b>{ex.الكلي}%</b>{grade ? ` · ${x('exit_grade')}: ${grade}` : ''}</span>}</div>
+    <ul className="mi-exit-skills">{['listening', 'reading', 'grammar_vocab', 'writing', 'speaking'].map((k) => { const v = sk[k]; if (!v || v.الحالة === 'na') return null; const p = typeof v.النسبة === 'number' ? v.النسبة : null; return <li key={k} data-state={v.الحالة}><span className="mi-exit-sn">{names[k]}</span><span className="mi-exit-bar" aria-hidden="true"><i style={{ width: `${p ?? 0}%` }} /></span><span className="mi-exit-sp">{p === null ? (ar ? 'قيد التصحيح' : 'pending') : `${p}%`}</span></li>; })}</ul>
+    {ex.خط_العبور && <p className="mi-exit-growth" data-testid="mi-exit-growth">{ar ? ex.خط_العبور.text_ar : ex.خط_العبور.text_en}</p>}
+    {!final && <p className="mi-exit-note">{x('exit_pending')}</p>}
+    {final && outcome === 'conditional' && <p className="mi-exit-note">{x('exit_cond')}{ex.الإعادة?.حتى ? ` (${ar ? 'حتى' : 'until'} ${String(ex.الإعادة.حتى).slice(0, 10)})` : ''}</p>}
+    {final && outcome === 'failed' && <p className="mi-exit-note">{x('exit_fail')}</p>}
+    {final && outcome === 'passed' && <a className="mi-btn" href={`/miaar/certificate/${encodeURIComponent(code)}`} data-testid="mi-exit-cert">{x('exit_cert')}</a>}
   </section>;
 }
 
@@ -881,6 +927,10 @@ const CSS = `
 .mi-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 .mi-stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;text-align:center;box-shadow:0 8px 22px rgba(15,42,78,.05)}.mi-stat span{display:block;color:var(--muted);font-size:12px;font-weight:800}.mi-stat b{display:block;margin-top:4px;color:var(--navy);font-size:26px}
 /* result */
+.mi-exit-invite{margin:10px 0 14px;padding:12px 14px;border-radius:14px;background:#f0fdfa;border:1px solid #99f6e4;color:#134e4a;font-size:14px;line-height:1.8}.mi-exit-invite p{margin:0}.mi-exit-k{font-weight:800;color:#0b8a83;font-size:13px}.mi-exit-cells{font-weight:700}.mi-exit-rule{color:#475569;font-size:13px}
+.mi-exit{margin:0 0 16px;padding:14px 16px;border-radius:16px;background:linear-gradient(135deg,#fffdf5,#f0fdfa);border:1px solid #c9a24b}.mi-exit-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:6px 0 10px}.mi-exit-badge{display:inline-block;padding:6px 12px;border-radius:999px;font-weight:800;font-size:14px;background:#e2e8f0;color:#334155}.mi-exit-badge.passed{background:#dcfce7;color:#166534}.mi-exit-badge.conditional{background:#fef3c7;color:#92400e}.mi-exit-badge.failed{background:#fee2e2;color:#991b1b}.mi-exit-total{font-size:15px;color:#0f2a4e}
+.mi-exit-skills{list-style:none;margin:0;padding:0;display:grid;gap:6px}.mi-exit-skills li{display:grid;grid-template-columns:minmax(110px,160px) 1fr 70px;gap:10px;align-items:center;font-size:13px}.mi-exit-skills li[data-state=below] .mi-exit-sp{color:#991b1b;font-weight:800}.mi-exit-bar{display:block;height:8px;border-radius:6px;background:#e2e8f0;overflow:hidden;min-width:0}.mi-exit-bar i{display:block;height:100%;background:#0b8a83;border-radius:6px}.mi-exit-skills li[data-state=below] .mi-exit-bar i{background:#dc2626}.mi-exit-sp{text-align:end;font-weight:700}
+.mi-exit-growth{margin:10px 0 0;padding:8px 12px;border-radius:10px;background:#fff;border:1px dashed #c9a24b;color:#0f2a4e;font-weight:700;font-size:13px;line-height:1.7}.mi-exit-note{margin:8px 0 0;color:#475569;font-size:13px;line-height:1.7}.mi-exit .mi-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;border:1.5px solid #c9a24b;background:#c9a24b;color:#0f2a4e;border-radius:10px;padding:8px 16px;font-weight:900;font-size:14px;text-decoration:none}.mi-btn.ghost{background:#fff}
 .mi-ledger{margin:0 0 12px;padding:10px 14px;border-radius:12px;font-weight:800;font-size:14px;line-height:1.7}.mi-ledger.arch{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}.mi-ledger.journey{background:#fdf7e6;color:#0f2a4e;border:1px solid #f3d98b}.mi-ledger.journey a{color:#0b8a83;font-weight:900}.mi-ledger.dec{background:#e6f4f3;color:#0f5c57;border:1px solid #cfe9e6}.mi-ledger.wait{background:#fbf5e4;color:#8a6a1f;border:1px solid #efe1b8}
 .mi-rsplit{display:grid;gap:22px}
 .mi-rlevel{display:grid;gap:4px;justify-items:start;border-radius:18px;background:var(--navy);color:#fff;padding:16px 18px}.mi-rlevel small{color:rgba(255,255,255,.75);font-size:12px;font-weight:800}.mi-rlevel b{font-size:46px;line-height:1.05}.mi-rlevel span{color:#d5e0ea;font-size:14px;line-height:1.6}

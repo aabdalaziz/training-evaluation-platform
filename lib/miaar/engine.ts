@@ -15,6 +15,7 @@ import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './ban
 import { reweighIfDue, trustLine } from './balance';
 import { openGrant, publicLedgerBadge } from './ledger';
 import { hasJourney } from './growth'; /* م5-ب */
+import { attachExit, mergeSkillRetake } from './exitflow'; /* م6 «عُبور» */
 import type { Stopwatch } from './timing';
 import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
 import type { Plan } from './blueprint';
@@ -27,7 +28,7 @@ export type SessionRow = {
   invite_id: string | null; recipient_id: string | null; user_id: string | null; start_level_index: number; direction: 'up' | 'down'; probe: { score: number; band_index: number } | null; access: Access | null;
   blueprint_id?: string | null; plan?: unknown;  /* م2-ب: الخطة المثبّتة لحظة البدء */
 };
-export type StartInput = { candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null } | null; userId?: string | null; blueprint?: unknown };
+export type StartInput = { candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; userId?: string | null; blueprint?: unknown };
 export type Result<T> = { ok: true; value: T } | { ok: false; code: string; status: number };
 const fail = (code: string, status: number): Result<never> => ({ ok: false, code, status });
 
@@ -79,6 +80,13 @@ export async function canStart(db: any, email: string): Promise<Result<{ retake:
   try { const g = await openGrant(db, email); return g ? { ok: true, value: { retake: true } } : fail('retake_not_allowed', 403); } catch { return fail('retake_check_failed', 503); }
 }
 
+/** م6: دعوة نهاية المستوى لا تخضع لقاعدة «محاولة واحدة لكل بريد» (المتعلّم له تقرير تسكين سابق بطبيعته) — بل «محاولة واحدة لكل دعوة» */
+async function canStartExit(db: any, email: string, inviteId: string): Promise<Result<{ retake: boolean }>> {
+  const prior = await db.from('placement_reports').select('id').ilike('candidate_email', email).eq('invite_id', inviteId).limit(1);
+  if (prior.error) return fail('retake_check_failed', 503);
+  return (prior.data || []).length ? fail('exit_already_taken', 403) : { ok: true, value: { retake: false } };
+}
+
 export async function startSession(db: any, input: StartInput, sw?: Stopwatch): Promise<Result<{ token: string; session: ReturnType<typeof publicSession> }>> {
   const mark = (n: string) => sw?.mark(n);
   const candidate = normalizeCandidate(input.candidate); if (!candidate) return fail('invalid_start_request', 400);
@@ -90,7 +98,7 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
   // جلسة نشطة واحدة لكل بريد (لا «إعادة سحب» للبنود بإعادة البدء) — الاستئناف بالكعكة، أو الانتظار حتى انتهاء مدّتها
   const openCheck = async () => { const { data: open } = await db.from('placement_secure_sessions').select('id').eq('status', 'active').gt('expires_at', nowIso()).eq('candidate_email', candidate.email).limit(1); return Array.isArray(open) && open.length > 0; };
   const bank = async () => { const passages = await loadPassages(db); const pool = await loadApprovedPool(db, passages); return { passages, pool }; };
-  const [resolved, allowed, hasOpen, loaded] = await Promise.all([resolvePlan(db, input), canStart(db, candidate.email), openCheck().catch(() => false), bank().catch(() => null), expireOld().then(() => null, () => null)]);
+  const [resolved, allowed, hasOpen, loaded] = await Promise.all([resolvePlan(db, input), input.invite?.exit && input.invite.id ? canStartExit(db, candidate.email, input.invite.id) : canStart(db, candidate.email), openCheck().catch(() => false), bank().catch(() => null), expireOld().then(() => null, () => null)]);
   mark('plan+eligibility+open+pool');
   if (!resolved.ok) return resolved; if (!allowed.ok) return allowed; if (hasOpen) return fail('session_exists', 409); if (!loaded) return fail('form_unavailable', 503);
   const { plan: activePlan, blueprintId } = resolved.value; const examMode: ExamMode = examModeOf(activePlan); const { passages, pool } = loaded;
@@ -196,6 +204,9 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   if (sp) { (report as any).النموذج = { الرمز: sp.code, الاسم: sp.name_ar, النوع: TEST_TYPE_INFO[sp.type].name_ar, السلّم: sp.ladder, طريقة_السحب: sp.draw, المستويات: sp.levels, حد_الاجتياز: sp.cut }; (report as any).نمط_الاختبار = TEST_TYPE_INFO[sp.type].name_ar; const v = levelVerdict(sp, report.مستويات_تفصيلية); if (v) (report as any).اجتياز_المستوى = v; }
   /* م3: سطر الموثوقية — ضوء النموذج الذي خاضه المتقدّم كاملًا (صدقٌ مع المتعلّم؛ لا أرقام) */
   try { const tl = await trustLine(db, [...new Set(scored.items.map((i) => i.level))], sp?.code || null); if (tl) (report as any).الموثوقية = { الضوء: tl.light, النص: tl.text }; } catch { /* لا يوقف النتيجة */ }
+  /* م6 «عُبور»: الحكم المركّب لاختبار نهاية المستوى (جزئي حتى يُصدر تصحيح الغرفة) + خطّ العبور */
+  let isExit = false;
+  try { if (sp) { await attachExit(db, { plan: sp, report: report as any, email: s.candidate.email, inviteId: s.invite_id, sessionId: s.id }); isExit = !!(report as any).exit || !!(report as any).exit_retake; } } catch { /* لا يوقف النتيجة */ }
   let access_code = resultCode(); let inserted: any = null;
   for (let attempt = 0; attempt < 3 && !inserted; attempt += 1) {
     const r = await db.from('placement_reports').insert({ submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, report, access_code, invite_id: s.invite_id, user_id: s.user_id }).select('id, created_at').single();
@@ -206,8 +217,10 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   const status = reason === 'time' ? 'expired' : 'completed';
   const closed = await db.from('placement_secure_sessions').update({ status, finish_reason: reason, finished_at: nowIso(), report, updated_at: nowIso() }).eq('id', s.id); if (closed.error) return fail('session_close_failed', 500);
   if (s.recipient_id) await db.from('placement_invite_recipients').update({ report_id: inserted.id }).eq('id', s.recipient_id);
+  /* م6: إعادة مهارة استقبالية تُدمج في التقرير الأصلي فور الإنهاء (الإنتاجية تُدمج عند إصدار التصحيح) */
+  if ((report as any).exit_retake) { try { await mergeSkillRetake(db, s.id, report as any); } catch { /* تحسيني */ } }
   // موافقة إعادة الاختبار تُستهلك — وتُربط المحاولة بسابقتها (م5-أ: previous_report_id يولّد «تقرير المقارنة» في م5-ب)
-  await db.from('test_retake_approvals').update({ used_at: nowIso() }).ilike('email', s.candidate.email).is('used_at', null);
+  if (!isExit) await db.from('test_retake_approvals').update({ used_at: nowIso() }).ilike('email', s.candidate.email).is('used_at', null);   /* م6: نهاية المستوى لا تستهلك إذن إعادة التسكين */
   try { const { data: prev } = await db.from('placement_reports').select('id').ilike('candidate_email', s.candidate.email).neq('id', inserted.id).order('created_at', { ascending: false }).limit(1); if (prev?.[0]?.id) await db.from('placement_reports').update({ previous_report_id: prev[0].id }).eq('id', inserted.id); } catch { /* الربط تحسيني */ }
   await recordPlacement(db, { id: inserted.id, submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, created_at: inserted.created_at || nowIso(), report }, s.user_id);
   await reweighIfDue(db);   /* م3: الميزان يزن نفسه كل 25 جلسة منتهية — لا يرمي ولا يؤخّر النتيجة إلا ثوانيَ عند الاستحقاق */

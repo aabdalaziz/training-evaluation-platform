@@ -4,6 +4,7 @@
  *  حتى يعتمدها إنسان من «غرفة التصحيح». لا درجة تُنشر آليًا. */
 import { loadApprovedTasks, MEDIA_BUCKET } from './bank';
 import { planFromSession } from './blueprint';
+import { refreshExit } from './exitflow'; /* م6 */
 import { pickTasks, publicTask, validateWriting, validateSpeaking, isAccommodation, mediaPathFor, productiveBlock, AUDIO_MAX_BYTES } from './performance';
 import type { PublicTask, RoomState, PerfLite, PerformanceStatus } from './performance';
 import type { SessionRow, Result } from './engine';
@@ -64,6 +65,8 @@ export async function refreshProductive(db: any, sessionId: string): Promise<Rec
   const { data: rep } = await db.from('placement_reports').select('id, report').eq('submission_id', sessionId).maybeSingle();
   if (rep?.id) {
     const report = { ...(rep.report || {}) } as Record<string, unknown>; if (block) report[PRODUCTIVE_KEY] = block; else delete report[PRODUCTIVE_KEY];
+    /* م6 «عُبور»: إعادة بناء حكم نهاية المستوى بعد كل تحديث للغرفة/التصحيح (أو دمج إعادة المهارة في التقرير الأصلي) */
+    try { await refreshExit(db, sessionId, report as any, perfs.map((p) => ({ skill: p.skill, status: p.status, human_rating: p.human_rating as any }))); } catch { /* تحسيني */ }
     await db.from('placement_reports').update({ report }).eq('id', rep.id);
     await db.from('placement_secure_sessions').update({ report, updated_at: nowIso() }).eq('id', sessionId);
     if (perfs.length) await db.from('miaar_performances').update({ report_id: rep.id }).eq('session_id', sessionId).is('report_id', null);

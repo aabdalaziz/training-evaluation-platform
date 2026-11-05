@@ -127,11 +127,11 @@ export async function POST(req: Request) {
   if (action === 'start') {
     const sw = stopwatch();  /* «سرعة مِعيار»: مراحل البدء في Server-Timing + سطر سجلّ إن تجاوز 2.5 ث */
     const rl = await rateLimit(db, `miaar_start:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات بدء كثيرة'); sw.mark('ratelimit');
-    let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null } | null = null;
+    let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null = null;
     const inv = body.invite as Record<string, unknown> | undefined;
     if (inv && typeof inv === 'object' && inv.code) {
       const r = await openInvite(db, inv.code, inv.t || null); if (!r.ok) return bad(`invite_${r.error}`, 410);
-      invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null };
+      invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null, exit: r.row.purpose === 'level_exit' || r.row.purpose === 'skill_retake' };   /* م6 */
       if (r.recipient && body.candidate && typeof body.candidate === 'object') (body.candidate as Record<string, unknown>).email = r.recipient.email;  /* الدعوة الشخصية تثبّت البريد */
     }
     const userId = await userOf(req); sw.mark('auth');
