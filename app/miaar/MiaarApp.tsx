@@ -219,7 +219,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   }
   /* بعد الإقرار: ملء الشاشة (إيماءة المستخدم) ثم المسبار أو البدء المباشر كما كان */
   async function afterRules() {
-    if (!rules || !rulesRead || !rulesAgree) { setErr(x('rules_required')); return; } setErr(''); ackRef.current = { version: rules.version, lang, accepted: true };
+    if (!rules || !rulesRead || !rulesAgree) { setErr(x('rules_required')); return; } setErr(''); ackRef.current = { version: rules.version, lang: lang === 'ar' ? 'ar' : 'en', accepted: true }; /* النصّ يُعرض بالعربية أو الإنجليزية فقط */
     if (witCfg?.fullscreen) witApi.current?.enterFullscreen();  /* يجب أن يسبق أي await (إيماءة المستخدم) */
     if (probe.length > 0 && Object.keys(probeAns).length >= probe.length) { await startTest(true); return; }  /* حلقات الختم أُكملت على الصفحة الأولى */
     if (door && !door.probe) { await startTest(false); return; }  /* م2-ب: باب بلا مِسبار (شامل · قصير · اجتياز مستوى) → البدء مباشرة */
