@@ -16,6 +16,7 @@ import {
   LEVELS, SKILLS, FORM_PLAN, FLOOR_PLAN, FLOOR_LEVEL, FLOOR_INDEX, PASS_PERCENT, DURATION_SECONDS, shufflePool, levelIndex, isLevel, isSkill, cleanText, PROBE_ITEMS,
 } from './registry';
 import type { Level, Skill, PoolItem, Option, ExamMode, Decision } from './registry';
+import { balancedOrder, scopeCell } from './syllabus';
 
 export const TEST_TYPES = ['placement', 'comprehensive', 'adaptive', 'short', 'level', 'custom'] as const;
 export type TestType = (typeof TEST_TYPES)[number];
@@ -126,25 +127,32 @@ export function planFromSession(value: unknown): Plan | null {
 }
 
 /** السحب: عشوائي لكل جلسة (البذرة = رمز الجلسة) ضمن الخلية حسب طريقة السحب؛ النقص يُسجَّل ولا يغلق الباب */
-export function drawPlan(pool: readonly PoolItem[], seed: string, plan: Plan): { codes: string[]; short: string[] } | null {
+export type DrawOpts = {
+  units?: readonly string[];   /* م6-ب: وحدات معتمدة يُستحسن أن تظهر كلٌّ منها ببند واحد على الأقل عبر المستوى (التوازن لا يغيّر العدد) */
+  only?: readonly string[];    /* م6-ب: «ما دُرّس فقط» — حصر الخلية في بنود هذه الوحدات؛ إن قلّت عن المطلوب عادت الخلية كاملة وسُجِّل ذلك */
+};
+export function drawPlan(pool: readonly PoolItem[], seed: string, plan: Plan, opts?: DrawOpts): { codes: string[]; short: string[]; units?: { covered: string[]; missing: string[]; scoped: boolean; fallback: string[] } } | null {
   const codes: string[] = []; const short: string[] = [];
+  const uncovered = new Set(opts?.units || []); const wanted = [...uncovered]; const fallback: string[] = []; let scoped = false;
   for (const level of plan.levels) {
     let levelCount = 0;
     for (const skill of SKILLS) {
       const needed = plan.counts[level][skill]; if (!needed) continue;
       let cell = pool.filter((item) => item.level === level && item.skill === skill);
       if (plan.draw !== 'random') { const basket = new Set(plan.pool[cellKey(level, skill)] || []); const chosen = cell.filter((i) => basket.has(i.code)); if (chosen.length) cell = chosen; else short.push(`${level}/${skill}:basket-empty`); }
-      const available = shufflePool(cell, `${seed}:${level}:${skill}`);
+      if (opts?.only?.length) { const sc = scopeCell(cell, opts.only, needed); cell = sc.cell; if (sc.narrowed) scoped = true; if (sc.fallback) fallback.push(`${level}/${skill}`); }
+      const available = balancedOrder(shufflePool(cell, `${seed}:${level}:${skill}`), uncovered);
       if (available.length < needed) short.push(`${level}/${skill}:${available.length}/${needed}`);
       const take = available.slice(0, needed); levelCount += take.length; codes.push(...take.map((item) => item.code));
     }
     if (levelCount === 0) return null;
   }
+  const units = wanted.length || opts?.only?.length ? { covered: wanted.filter((u) => !uncovered.has(u)), missing: [...uncovered], scoped, fallback } : undefined;
   if (plan.floor) for (const skill of SKILLS) {
     const available = shufflePool(pool.filter((item) => item.level === FLOOR_LEVEL && item.skill === skill), `${seed}:${FLOOR_LEVEL}:${skill}`);
     codes.push(...available.slice(0, FLOOR_PLAN[skill]).map((item) => item.code));
   }
-  return { codes, short };
+  return units ? { codes, short, units } : { codes, short };
 }
 
 /** نقطة البداية حسب الخطة: تحديد المستوى من المِسبار (بحدّ B1 وضمن مستويات الخطة) · التكيفي الموجَّه من مستوى المسؤول · غير ذلك أول مستوى */

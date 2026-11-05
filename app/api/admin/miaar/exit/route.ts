@@ -20,6 +20,7 @@ import { loadApprovedTasks } from '../../../../../lib/miaar/bank';
 import { setInviteStatus, inviteUrl } from '../../../../../lib/miaar/invites';
 import { EXIT_SPEC, EXIT_TITLE, SPEC_VERSION, isExitLevel, levelFromRoom, poolCheck, specTable, exitInviteLabel } from '../../../../../lib/miaar/exit';
 import { findOrCreateExitInvite, boardFor, promoteReports, skillRetakeInvite } from '../../../../../lib/miaar/exitflow';
+import { listUnits, approvedFor, coverage } from '../../../../../lib/miaar/syllabus'; /* م6-ب */
 import { liveFor, WITNESS_MODE_AR, isWitnessMode, resolveMode, defaultWitnessMode } from '../../../../../lib/miaar/witness'; /* م8 · م8-ب */
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
@@ -65,7 +66,10 @@ export async function GET(req: Request) {
     const { data: invs } = await db.from('placement_invites').select('*').eq('classroom_id', classroom).eq('purpose', 'level_exit').order('created_at', { ascending: false }).limit(20);
     const rows = (Array.isArray(invs) ? invs : []).map((r: any) => ({ ...r, url: inviteUrl(site, r.code) }));
     const avail = await availability(db); const level = info.level && isExitLevel(info.level) ? info.level : null;
-    return NextResponse.json({ success: true, site, ...info, invites: rows, pool: level ? poolCheck(level, avail) : null, spec: level ? specTable(level) : null, official: EXIT_TITLE, version: SPEC_VERSION, levels: Object.keys(EXIT_SPEC) }, { headers: NO });
+    /* م6-ب: وحدات المستوى المعتمدة (لخيار «ما دُرّس فقط») وتغطيتها في البنك */
+    let units: any[] = []; let unit_coverage: any = null;
+    if (level) { try { const all = await listUnits(db); units = approvedFor(all, level).map((x) => ({ code: x.code, title_ar: x.title_ar, title_en: x.title_en })); unit_coverage = coverage(all, level, await loadApprovedPool(db)); } catch { units = []; } }
+    return NextResponse.json({ success: true, site, ...info, invites: rows, pool: level ? poolCheck(level, avail) : null, spec: level ? specTable(level) : null, official: EXIT_TITLE, version: SPEC_VERSION, levels: Object.keys(EXIT_SPEC), units, unit_coverage }, { headers: NO });
   }
   if (invite) {
     if (!isId(invite)) return bad('دعوة غير صالحة');
@@ -81,7 +85,7 @@ export async function GET(req: Request) {
     const inv = { ...b.invite, proctor_pin_hash: undefined, client_token_hash: undefined, has_pin: !!(b.invite as any).proctor_pin_hash, has_client_link: !!(b.invite as any).client_token_hash };
     return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, witness, witness_mode: witnessMode, witness_mode_ar: WITNESS_MODE_AR[(isWitnessMode(witnessMode) ? witnessMode : 'room') as keyof typeof WITNESS_MODE_AR], spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
   }
-  if (pool) { if (!isExitLevel(pool)) return bad('مستوى غير صالح'); const avail = await availability(db); return NextResponse.json({ success: true, pool: poolCheck(pool, avail), spec: specTable(pool) }, { headers: NO }); }
+  if (pool) { if (!isExitLevel(pool)) return bad('مستوى غير صالح'); const avail = await availability(db); let unit_coverage: any = null; try { unit_coverage = coverage(await listUnits(db), pool, await loadApprovedPool(db)); } catch { unit_coverage = null; } return NextResponse.json({ success: true, pool: poolCheck(pool, avail), spec: specTable(pool), unit_coverage }, { headers: NO }); }
   return bad('استعلام غير معروف');
 }
 
@@ -100,6 +104,7 @@ export async function POST(req: Request) {
       max_seats: Number.isInteger(seats) && seats > 0 ? seats : roster > 0 ? roster + Math.ceil(roster * 0.2) : null, program_id: info.classroom.program_id || null, lang: 'ar', force_new: b.force_new === true,
       location: typeof b.location === 'string' ? b.location.slice(0, 120) : null, /* م8-ب */
       proctor_mode: isWitnessMode(b.proctor_mode) ? b.proctor_mode : null, witness_interval: Number.isInteger(Number(b.witness_interval)) && Number(b.witness_interval) >= 20 ? Number(b.witness_interval) : null, /* م8 */
+      unit_scope: Array.isArray(b.unit_scope) ? (b.unit_scope as string[]) : null, /* م6-ب «ما دُرّس فقط» */
     }, user.id, site);
     if (!r.ok) return bad(r.error === 'blueprint_missing' ? 'مخطّط SYS-EXIT غير موجود — نفّذ ترحيل م6 أولًا' : r.error);
     const avail = await availability(db);

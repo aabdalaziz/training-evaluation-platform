@@ -15,7 +15,9 @@ import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './ban
 import { reweighIfDue, trustLine } from './balance';
 import { openGrant, publicLedgerBadge } from './ledger';
 import { hasJourney } from './growth'; /* م5-ب */
-import { attachExit, mergeSkillRetake } from './exitflow'; /* م6 «عُبور» */
+import { attachExit, mergeSkillRetake, exitLevelOf } from './exitflow'; /* م6 «عُبور» */
+import { listUnits, approvedFor, validateScope, tallyUnits } from './syllabus'; /* م6-ب «خريطة المنهج» */
+import type { DrawOpts } from './blueprint';
 import type { Stopwatch } from './timing';
 import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
 import type { Plan } from './blueprint';
@@ -30,7 +32,7 @@ export type SessionRow = {
   blueprint_id?: string | null; plan?: unknown;  /* م2-ب: الخطة المثبّتة لحظة البدء */
   proctor_mode?: 'room' | 'camera' | 'remote' | null;  /* م8-ب: وضع المراقبة المثبَّت لحظة البدء */
 };
-export type StartInput = { /* م8-ج */ instructionsAck?: { version: number; lang: 'ar' | 'en'; at: string } | null; candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; proctorMode?: 'room' | 'camera' | 'remote' | null; userId?: string | null; blueprint?: unknown };
+export type StartInput = { /* م8-ج */ instructionsAck?: { version: number; lang: 'ar' | 'en'; at: string } | null; candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { unit_scope?: unknown /* م6-ب */; id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; proctorMode?: 'room' | 'camera' | 'remote' | null; userId?: string | null; blueprint?: unknown };
 export type Result<T> = { ok: true; value: T } | { ok: false; code: string; status: number };
 const fail = (code: string, status: number): Result<never> => ({ ok: false, code, status });
 
@@ -105,12 +107,16 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
   if (!resolved.ok) return resolved; if (!allowed.ok) return allowed; if (hasOpen) return fail('session_exists', 409); if (!loaded) return fail('form_unavailable', 503);
   const { plan: activePlan, blueprintId } = resolved.value; const examMode: ExamMode = examModeOf(activePlan); const { passages, pool } = loaded;
   const token = createToken();
-  const drawn = drawPlan(pool, token, activePlan); if (!drawn) return fail('form_unavailable', 503); mark('draw');
+  /* م6-ب «خريطة المنهج»: في اختبار العبور يوازن السحب حتى تظهر كل وحدة معتمدة من وحدات المستوى ببند واحد على الأقل (العدد والأوزان كما هي)،
+     و«ما دُرّس فقط» (unit_scope على الدعوة) يحصر البنود في وحدات دُرّست — وإن ضاق السحب عاد إلى المستوى كاملًا وسُجِّل ذلك على الجلسة */
+  const exitLvl = exitLevelOf(activePlan); let drawOpts: DrawOpts | undefined;
+  if (exitLvl) { try { const units = approvedFor(await listUnits(db), exitLvl).map((u) => u.code); const only = validateScope(input.invite?.unit_scope, exitLvl); if (units.length || only) drawOpts = { units, only: only || undefined }; } catch { drawOpts = undefined; } }
+  const drawn = drawPlan(pool, token, activePlan, drawOpts); if (!drawn) return fail('form_unavailable', 503); mark('draw');
   const form = await formFromPool(db, pool, drawn.codes, passages); if (!form) return fail('form_unavailable', 503); mark('form');
   const access = normalizeAccess(input.access); const durationSeconds = accessDuration(activePlan.durationSeconds, access);
   const score = activePlan.probe ? probeScoreFrom(pool, input.probeAnswers) : 0; const startIndex = planStartIndex(activePlan, probeBandIndexOf(score));
   const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
-  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: `approved-${activePlan.draw}`, publishedFormTitle: `${activePlan.name_ar} (${activePlan.code})`, shortCells: drawn.short };
+  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: `approved-${activePlan.draw}`, publishedFormTitle: `${activePlan.name_ar} (${activePlan.code})`, shortCells: drawn.short, ...(drawn.units ? { unitDraw: drawn.units } : {}) };
   const { data, error } = await db.from('placement_secure_sessions').insert({
     token_hash: tokenHash(token), candidate: stored, content_version: CONTENT_VERSION, exam_mode: examMode, status: 'active', expires_at: expiresAt, current_level_index: startIndex, start_level_index: startIndex, direction: 'up',
     probe: input.probeAnswers && activePlan.probe ? { score, band_index: startIndex } : null, access, invite_id: input.invite?.id || null, recipient_id: input.invite?.recipient_id || null, user_id: input.userId || null,
@@ -133,9 +139,9 @@ async function rebuildForm(db: any, s: SessionRow): Promise<PublicForm | null> {
   const codes = assignedCodes(s); if (!codes.length) return null;
   try { const passages = await loadPassages(db); const pool = await loadApprovedPool(db, passages); return await formFromPool(db, pool, codes, passages); } catch { return null; }
 }
-async function scoredItems(db: any, s: SessionRow): Promise<{ items: SecureItem[]; stems: Map<string, string> } | null> {
+async function scoredItems(db: any, s: SessionRow): Promise<{ items: SecureItem[]; stems: Map<string, string>; units: Map<string, string[]> } | null> {
   const codes = assignedCodes(s); if (!codes.length) return null;
-  try { const pool = await loadApprovedPool(db); const items = secureItems(pool, codes); if (!items) return null; return { items, stems: new Map(pool.map((i) => [i.code, i.questionText])) }; } catch { return null; }
+  try { const pool = await loadApprovedPool(db); const items = secureItems(pool, codes); if (!items) return null; return { items, stems: new Map(pool.map((i) => [i.code, i.questionText])), units: new Map(pool.filter((i) => i.unitCodes?.length).map((i) => [i.code, i.unitCodes as string[]])) /* م6-ب: المفتاح رمز البند (SecureItem.id = code) */ }; } catch { return null; }
 }
 
 export async function resumeSession(db: any, s: SessionRow, answers: Answer[]): Promise<Result<ReturnType<typeof publicSession>>> {
@@ -206,6 +212,15 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   if (sp) { (report as any).النموذج = { الرمز: sp.code, الاسم: sp.name_ar, النوع: TEST_TYPE_INFO[sp.type].name_ar, السلّم: sp.ladder, طريقة_السحب: sp.draw, المستويات: sp.levels, حد_الاجتياز: sp.cut }; (report as any).نمط_الاختبار = TEST_TYPE_INFO[sp.type].name_ar; const v = levelVerdict(sp, report.مستويات_تفصيلية); if (v) (report as any).اجتياز_المستوى = v; }
   /* م3: سطر الموثوقية — ضوء النموذج الذي خاضه المتقدّم كاملًا (صدقٌ مع المتعلّم؛ لا أرقام) */
   try { const tl = await trustLine(db, [...new Set(scored.items.map((i) => i.level))], sp?.code || null); if (tl) (report as any).الموثوقية = { الضوء: tl.light, النص: tl.text }; } catch { /* لا يوقف النتيجة */ }
+  /* م6-ب «خريطة المنهج»: صواب/عدد لكل وحدة مستوى من بنود الجلسة الموسومة (يُقرأ منه «وحدات تحتاج مراجعة» وخريطة حرارة المجموعة) */
+  try {
+    if (scored.units.size) {
+      const sel = new Map(answers.map((a) => [a.question_id, a.selected_option_id]));
+      const tally = tallyUnits(scored.items.map((it) => { const picked = sel.get(it.id); return { unitCodes: scored.units.get(it.id) || null, answered: picked != null, correct: picked === it.correctOptionId }; }));
+      if (Object.keys(tally).length) (report as any).الوحدات = tally;
+      const ud = (s.candidate as any)?.unitDraw; if (ud && typeof ud === 'object') (report as any).نطاق_الوحدات = { محصور: !!ud.scoped, تراجع: Array.isArray(ud.fallback) ? ud.fallback : [], غير_مغطّى: Array.isArray(ud.missing) ? ud.missing : [] };
+    }
+  } catch { /* لا يوقف النتيجة */ }
   /* م6 «عُبور»: الحكم المركّب لاختبار نهاية المستوى (جزئي حتى يُصدر تصحيح الغرفة) + خطّ العبور */
   let isExit = false;
   try { if (sp) { await attachExit(db, { plan: sp, report: report as any, email: s.candidate.email, inviteId: s.invite_id, sessionId: s.id }); isExit = !!(report as any).exit || !!(report as any).exit_retake; } } catch { /* لا يوقف النتيجة */ }

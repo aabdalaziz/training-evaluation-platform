@@ -18,6 +18,7 @@ import { readJson } from '../../../../../lib/shield/body';
 import { LEVELS, SKILLS, isLevel, isSkill } from '../../../../../lib/miaar/registry';
 import type { PoolItem } from '../../../../../lib/miaar/registry';
 import { loadApprovedPool, loadPassages } from '../../../../../lib/miaar/bank';
+import { listUnits, coverage } from '../../../../../lib/miaar/syllabus'; /* م6-ب */
 import { TEST_TYPES, TEST_TYPE_INFO, DRAW_MODE_INFO, isTestType, planFromBlueprint, drawPlan, planTotal, cellKey } from '../../../../../lib/miaar/blueprint';
 import type { BlueprintRow } from '../../../../../lib/miaar/blueprint';
 
@@ -99,7 +100,9 @@ export async function GET(req: Request) {
     return ok({ items, total: pool.filter((i) => i.level === level && i.skill === skill).length });
   }
   const { data, error } = await db.from(TABLE).select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true }).limit(200); if (error) return bad(error.message, 500);
-  const rows = ((data || []) as BlueprintRow[]).map((r) => publicRow(r, pool));
+  const rows: any[] = ((data || []) as BlueprintRow[]).map((r) => publicRow(r, pool));
+  /* م6-ب: فحص تغطية وحدات المستوى على بطاقات SYS-EXIT (الوحدات المعتمدة بلا بنود موسومة) */
+  try { const units = await listUnits(db); if (units.length) for (const r of rows) { const m = String(r.code || '').match(/^SYS-EXIT-(A1|A2|B1|B2|C1)$/); if (!m) continue; const c = coverage(units, m[1] as any, pool); r.unit_coverage = { approved: c.rows.length, covered: c.rows.filter((x) => x.covered).length, uncovered: c.uncovered, tagged: c.tagged, total: c.total }; } } catch { /* بلا تغطية */ }
   const [sessions, invites] = await Promise.all([db.from('placement_secure_sessions').select('blueprint_id').not('blueprint_id', 'is', null).limit(5000), db.from('placement_invites').select('blueprint_id').not('blueprint_id', 'is', null).limit(2000)]);
   const usage: Record<string, { sessions: number; invites: number }> = {};
   for (const r of (sessions.data || []) as { blueprint_id: string }[]) { usage[r.blueprint_id] = usage[r.blueprint_id] || { sessions: 0, invites: 0 }; usage[r.blueprint_id].sessions += 1; }

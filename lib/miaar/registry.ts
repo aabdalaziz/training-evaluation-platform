@@ -76,6 +76,7 @@ export type Option = { id: string; text: string; image?: string | null; alt?: st
 export type PoolItem = {
   id: string; code: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string;
   options: Option[]; correctOptionId: string; stimulus: { image?: string | null; alt?: string | null } | null; descriptor: string | null;
+  unitCodes?: string[]; /* م6-ب: وحدات المستوى التي يخدمها البند */
 };
 export type SecureItem = { id: string; level: BankLevel; skill: Skill; correctOptionId: string };
 export type PublicQuestion = { id: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string; options: Option[]; stimulus: { image: string | null; alt: string | null } | null };

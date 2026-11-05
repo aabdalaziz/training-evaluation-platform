@@ -5,12 +5,13 @@
  *  ما يراه المتقدّم: اسم الدعوة ولغتها ونمطها؛ ما يراه الطاقم: فتح/بدء/إنهاء ومستوى كل مشارك.
  */
 import { createHash, randomBytes } from 'node:crypto';
+import { validateScope } from './syllabus'; /* م6-ب */
 import { witnessPublic, defaultWitnessMode, type WitnessMode } from './witness'; /* م8 · م8-ب */
 import { shortCode, isShortCode, cleanText, isExamMode } from './registry';
 import type { ExamMode } from './registry';
 
 export type InviteRow = { id: string; code: string; kind: 'group' | 'personal'; label_ar: string; org_id: string | null; program_id: string | null; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; max_seats: number | null; status: 'open' | 'closed'; note: string | null; created_by: string | null; created_at: string;
-  /* م6 «عُبور» */ classroom_id?: string | null; opens_at?: string | null; level_target?: string | null; reuse_key?: string | null; retake_of?: string | null;
+  /* م6 «عُبور» */ classroom_id?: string | null; opens_at?: string | null; level_target?: string | null; reuse_key?: string | null; retake_of?: string | null; /* م6-ب */ unit_scope?: string[] | null;
   /* م7 «عُبور للجهات» */ location?: string | null; /* م8-ب */ client_name?: string | null; client_contact?: string | null; service_mode?: 'internal' | 'external' | null; proctor_pin_hash?: string | null; client_token_hash?: string | null; identity_mode?: 'email' | 'email_id' | null; /* م8 «شاهِد» */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null };
 export type RecipientRow = { id: string; invite_id: string; email: string; name: string | null; opened_at: string | null; started_at: string | null; report_id: string | null; created_at: string };
 export type InvitePublic = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
@@ -56,6 +57,8 @@ export function validateCreate(b: CreateInput): { ok: true; row: Omit<InviteRow,
   /* م8 «شاهِد»: وضع المراقبة (room افتراضيًا) وفاصل اللقطات */
   /* م8-ب: room/camera/remote صراحةً، وإلا null = «الافتراضي العام» · المكان */
   if (b7.proctor_mode === 'room' || b7.proctor_mode === 'camera' || b7.proctor_mode === 'remote') extra.proctor_mode = b7.proctor_mode; const loc = cleanText(b7.location, 120); if (loc) extra.location = loc; const wi = Number(b7.witness_interval); if (Number.isInteger(wi) && wi >= 20 && wi <= 90) extra.witness_interval = wi;
+  /* م6-ب «ما دُرّس فقط»: نطاق وحدات من مستوى الدعوة (يُرسل فقط إن وُجد) */
+  const scope = validateScope(b7.unit_scope, level_target && /^(A1|A2|B1|B2|C1)$/.test(level_target) ? (level_target as 'A1' | 'A2' | 'B1' | 'B2' | 'C1') : null); if (scope) extra.unit_scope = scope;
   return { ok: true, row: { kind, label_ar, org_id: id(b.org_id), program_id: id(b.program_id), lang, exam_mode, blueprint_id: id(b.blueprint_id), purpose: cleanText(b.purpose, 60) || null, expires_at, max_seats, note: cleanText(b.note, 500) || null, ...extra }, recipients };
 }
 

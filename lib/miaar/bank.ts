@@ -57,10 +57,13 @@ const readingReady = (p: PassageRow | undefined) => !!p && p.skill === 'reading'
 export async function loadApprovedPool(db: any, passages?: Map<string, PassageRow>): Promise<PoolItem[]> {
   if (POOL_CACHE && fresh(POOL_CACHE.at)) return POOL_CACHE.value;
   const P = passages || await loadPassages(db);
-  const [items, keys] = await Promise.all([
-    db.from('question_bank_items').select('id, item_code, level, skill, passage_id, question_text, options, item_type, stimulus, media_path, media_alt, descriptor_code, cefr_descriptor').eq('status', 'approved').limit(2000),
+  const COLS = 'id, item_code, level, skill, passage_id, question_text, options, item_type, stimulus, media_path, media_alt, descriptor_code, cefr_descriptor';
+  let [items, keys] = await Promise.all([
+    db.from('question_bank_items').select(`${COLS}, unit_codes`).eq('status', 'approved').limit(2000),  /* م6-ب: وسوم الوحدات في الرحلة نفسها */
     db.from('question_bank_answer_keys').select('item_id, correct_option_id').limit(5000),
   ]);
+  /* قبل هجرة م6-ب (العمود غائب) تعاد القراءة بلا العمود — حتى لا يتوقّف البنك كلّه على عمود اختياري */
+  if (items.error) items = await db.from('question_bank_items').select(COLS).eq('status', 'approved').limit(2000);
   if (items.error || keys.error) throw new Error('approved_pool_unavailable');
   const keyOf = new Map<string, string>(((keys.data || []) as any[]).map((r) => [r.item_id, r.correct_option_id]));
   const seen = new Set<string>(); const pool: PoolItem[] = [];
@@ -76,7 +79,7 @@ export async function loadApprovedPool(db: any, passages?: Map<string, PassageRo
     const stim = row.stimulus && typeof row.stimulus === 'object' ? row.stimulus : null; const image = (stim?.image as string) || row.media_path || null;
     if ((type === 'picture_label') && !image) continue;
     seen.add(code);
-    pool.push({ id: row.id, code, level: row.level, skill: row.skill, type, passageId, questionText: row.question_text.trim(), options, correctOptionId: correct, stimulus: image ? { image, alt: (stim?.alt as string) || row.media_alt || null } : null, descriptor: row.descriptor_code || row.cefr_descriptor || null });
+    pool.push({ id: row.id, code, level: row.level, skill: row.skill, type, passageId, questionText: row.question_text.trim(), options, correctOptionId: correct, stimulus: image ? { image, alt: (stim?.alt as string) || row.media_alt || null } : null, descriptor: row.descriptor_code || row.cefr_descriptor || null , ...(Array.isArray(row.unit_codes) && row.unit_codes.length ? { unitCodes: row.unit_codes.filter((c: unknown) => typeof c === 'string') } : {}) });
   }
   POOL_CACHE = { at: Date.now(), value: pool };
   return pool;
