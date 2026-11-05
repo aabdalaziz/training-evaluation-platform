@@ -20,6 +20,7 @@ export default function Certificate({ code, fontClass = '' }: { code: string; fo
   }, [code]);
   useEffect(() => { void load(); setSite(window.location.origin); }, [load]);
   const ex = r?.report?.exit; const ok = !!ex && ex.الحالة === 'final' && ex.النتيجة === 'passed';
+  const svc = r?.report?.شهادة || null; const fullName = (svc?.الاسم_الكامل as string) || r?.name || ''; /* م7: الاسم الكامل على الوثيقة + الجهة الطالبة + ختم المراقب */
   const verifyUrl = `${site}/miaar/result/${encodeURIComponent(code)}`;
   return <main className={`cert-root ${fontClass}`} dir="rtl">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -33,7 +34,7 @@ export default function Certificate({ code, fontClass = '' }: { code: string; fo
         <div className="cert-brand en" dir="ltr"><b>Athar</b><small>Miaar by Athar</small></div>
       </header>
       <p className="cert-k">شهادة اجتياز المستوى · Certificate of Level Completion</p>
-      <h1>{r.name}</h1>
+      <h1>{fullName}</h1>
       <p className="cert-line">اجتاز(ت) <b>اختبار نهاية المستوى — معياري (CEFR)</b> للمستوى <b>{ex.المستوى} — {LV[ex.المستوى]?.[0] || ''}</b> بنتيجة كلّية <b>{ex.الكلي}%</b> وتقدير <b>{ex.تقدير_ar}</b> بتاريخ {day(r.taken_at, true)}.</p>
       <p className="cert-line en" dir="ltr">has passed the <b>Level Exit Examination (CEFR-aligned)</b> for level <b>{ex.المستوى} — {LV[ex.المستوى]?.[1] || ''}</b> with an overall score of <b>{ex.الكلي}%</b>, grade <b>{ex.grade_en}</b>, on {day(r.taken_at, false)}.</p>
       <table className="cert-table"><thead><tr><th>المحور · Domain</th><th>النسبة · Score</th></tr></thead><tbody>
@@ -41,6 +42,7 @@ export default function Certificate({ code, fontClass = '' }: { code: string; fo
         <tr className="tot"><td>النتيجة الكلّية · Overall (60 / 20 / 20)</td><td>{ex.الكلي}%</td></tr>
       </tbody></table>
       {ex.خط_العبور && <p className="cert-growth">{ex.خط_العبور.text_ar}</p>}
+      {svc?.خارجي && svc?.بطلب_من && <p className="cert-svc" data-testid="cert-svc"><span>بطلب من · Requested by: <b>{svc.بطلب_من}</b></span>{svc.بحضور_مراقب && <span className="cert-seal" data-testid="cert-seal">أُدّي بحضور مراقب · Taken under proctor supervision{svc.المراقب ? ` — ${svc.المراقب}` : ''}</span>}</p>}
       <footer className="cert-foot">
         <div><small>جدول المواصفات · Specification</small><b>{ex.إصدار_المواصفات}</b></div>
         <div><small>رمز التحقّق · Verification code</small><b dir="ltr">{code}</b></div>
@@ -62,6 +64,7 @@ const CSS = `
 .cert-line{margin:0 0 10px;font-size:17px;line-height:1.9;text-align:center}.cert-line.en{color:#334155;font-size:15px}
 .cert-table{width:100%;border-collapse:collapse;margin:18px 0 10px;font-size:14px}.cert-table th,.cert-table td{border:1px solid #e2e8f0;padding:7px 10px;text-align:start}.cert-table th{background:#f8fafc}.cert-table tr.tot td{font-weight:800;background:#fffdf5}
 .cert-growth{margin:10px 0 0;padding:10px 14px;border:1px dashed #c9a24b;border-radius:10px;font-weight:700;background:#fffdf5}
+.cert-svc{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:12px 0 0;font-size:13px;color:#334155}.cert-seal{display:inline-flex;align-items:center;padding:4px 10px;border:1.5px solid #0b8a83;border-radius:999px;color:#0b8a83;font-weight:800}
 .cert-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px;padding-top:14px;border-top:1px solid #e2e8f0}.cert-foot small{display:block;color:#64748b;font-size:12px}.cert-foot b{display:block;font-size:14px;word-break:break-all}.cert-url{font-size:12px}
 .cert-legal{margin:16px 0 0;font-size:11px;color:#64748b;line-height:1.7;text-align:center}
 @media print{.no-print{display:none !important}.cert-root{background:#fff;padding:0}.cert{box-shadow:none;margin:0;max-width:none;border-width:8px}@page{size:A4;margin:12mm}}

@@ -209,7 +209,9 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   try { if (sp) { await attachExit(db, { plan: sp, report: report as any, email: s.candidate.email, inviteId: s.invite_id, sessionId: s.id }); isExit = !!(report as any).exit || !!(report as any).exit_retake; } } catch { /* لا يوقف النتيجة */ }
   let access_code = resultCode(); let inserted: any = null;
   for (let attempt = 0; attempt < 3 && !inserted; attempt += 1) {
-    const r = await db.from('placement_reports').insert({ submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, report, access_code, invite_id: s.invite_id, user_id: s.user_id }).select('id, created_at').single();
+    /* م7: نتائج الخدمة للجهات تُوسم external — لا تدخل في مؤشرات البرامج، وتدخل في السيكومترية */
+    let source: 'internal' | 'external' = 'internal'; if (s.invite_id) { try { const { data: inv } = await db.from('placement_invites').select('service_mode').eq('id', s.invite_id).maybeSingle(); if (inv?.service_mode === 'external') source = 'external'; } catch { source = 'internal'; } }
+    const r = await db.from('placement_reports').insert({ submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, report, access_code, invite_id: s.invite_id, user_id: s.user_id, source }).select('id, created_at').single();
     if (r.error) { if (String(r.error.code) === '23505') { access_code = resultCode(); continue; } return fail('report_save_failed', 500); }
     inserted = r.data;
   }
@@ -229,7 +231,7 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
 
 /** النتيجة برمزها (صفحة /miaar/result/<code>) — بلا بريد ولا هاتف للعلن؛ الاسم الأول فقط */
 export async function resultByCode(db: any, code: string): Promise<{ code: string; name: string; taken_at: string; report: Report } | null> {
-  const { data } = await db.from('placement_reports').select('id, candidate_email, created_at, report, access_code').eq('access_code', code).maybeSingle();
+  const { data } = await db.from('placement_reports').select('id, candidate_email, created_at, report, access_code, invite_id').eq('access_code', code).maybeSingle();
   if (!data?.report) return null; const r = data.report as Report;
   const name = String((r as any)?.بيانات_المتقدم?.الاسم || '').split(/\s+/)[0] || '—';
   const { بنود_الجلسة: _items, ...rest } = r as any; void _items;  /* بنود الجلسة (الرموز والنصوص) لا تُعرض للعلن */
@@ -238,6 +240,13 @@ export async function resultByCode(db: any, code: string): Promise<{ code: strin
   try { (safe as any).السجلّ = await publicLedgerBadge(db, String(data.id)); } catch { /* البطاقة لا تنتظر السجلّ */ }
   /* م5-ب: إن كانت للمتقدّم محاولة أخرى → زرّ «رحلتك» على البطاقة */
   try { if (await hasJourney(db, data.candidate_email)) (safe as any).السجلّ = { ...((safe as any).السجلّ || {}), رحلة: true }; } catch { /* اختياري */ }
+  /* م7: الشهادة تحمل الاسم الكامل (وثيقة) + «بطلب من» الجهة + «بحضور مراقب» — فقط حين يكون الحكم نهائيًا وناجحًا */
+  try {
+    const ex = (r as any).exit; if (ex && ex.الحالة === 'final' && ex.النتيجة === 'passed') {
+      const { serviceFactsForInvite } = await import('./service'); const f = await serviceFactsForInvite(db, data.invite_id || null);
+      (safe as any).شهادة = { الاسم_الكامل: String((r as any)?.بيانات_المتقدم?.الاسم || name), خارجي: !!f?.external, بطلب_من: f?.client_name || null, بحضور_مراقب: !!f?.proctor_signed, المراقب: f?.proctor_name || null };
+    } else if (data.invite_id) { const { serviceFactsForInvite } = await import('./service'); const f = await serviceFactsForInvite(db, data.invite_id); if (f?.external) (safe as any).شهادة = { خارجي: true, بطلب_من: f.client_name }; }
+  } catch { /* اختياري */ }
   return { code: data.access_code, name, taken_at: data.created_at, report: safe };
 }
 export { PASS_PERCENT };

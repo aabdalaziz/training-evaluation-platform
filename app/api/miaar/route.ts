@@ -28,6 +28,7 @@ const siteUrl = (req: Request) => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL
 import { trustSummary } from '../../../lib/miaar/balance';
 import { stopwatch, slowLine } from '../../../lib/miaar/timing';
 import { openInvite } from '../../../lib/miaar/invites';
+import { verifyPin } from '../../../lib/miaar/service';
 import { loadApprovedPool, loadPassages, signedMediaUrl, isReferencedMediaPath } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
 import { probeBand } from '../../../lib/miaar/registry';
@@ -132,6 +133,9 @@ export async function POST(req: Request) {
     if (inv && typeof inv === 'object' && inv.code) {
       const r = await openInvite(db, inv.code, inv.t || null); if (!r.ok) return bad(`invite_${r.error}`, 410);
       invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null, exit: r.row.purpose === 'level_exit' || r.row.purpose === 'skill_retake' };   /* م6 */
+      /* م7: الدعوة الخارجية — رمز القاعة (يعلنه المراقب) ورقم الهوية إن طلبته الجهة */
+      const pinState = verifyPin(r.row, inv.pin); if (pinState !== 'ok') return bad(pinState === 'required' ? 'invite_pin_required' : 'invite_pin_wrong', 403);
+      if (r.row.identity_mode === 'email_id' && !String((body.candidate as any)?.idNumber || '').trim()) return bad('invite_id_required', 400);
       if (r.recipient && body.candidate && typeof body.candidate === 'object') (body.candidate as Record<string, unknown>).email = r.recipient.email;  /* الدعوة الشخصية تثبّت البريد */
     }
     const userId = await userOf(req); sw.mark('auth');

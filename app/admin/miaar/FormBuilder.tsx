@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { LEVELS, SKILLS, skillLabel } from '../../../lib/miaar/registry';
 import { Icon } from '../../../lib/ui/icons';
+import ServiceInviteModal from '../../components/ServiceInviteModal'; /* م7 «عُبور للجهات» */
 
 type Props = { auth: () => Promise<Record<string, string>> };
 type Row = Record<string, any>;
@@ -41,6 +42,7 @@ const payload = (d: Draft) => ({ id: d.id, name_ar: d.name_ar, name_en: d.name_e
 export default function FormBuilder({ auth }: Props) {
   const [data, setData] = useState<Row | null>(null); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [draft, setDraft] = useState<Draft | null>(null); const [picking, setPicking] = useState<{ level: string; skill: string } | null>(null); const [preview, setPreview] = useState<Row | null>(null);
+  const [svcLevel, setSvcLevel] = useState<string | null>(null); /* م7 */
   const [filter, setFilter] = useState('all');
   async function load() { try { const j = await fetch('/api/admin/miaar/forms?list=1', { headers: await auth(), cache: 'no-store' }).then((r) => r.json()); if (!j.success) setErr(j.error || 'تعذّر التحميل'); else setData(j); } catch { setErr('تعذّر الاتصال'); } }
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -76,6 +78,7 @@ export default function FormBuilder({ auth }: Props) {
 
   return (
     <div className="fb"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {svcLevel && <ServiceInviteModal level={svcLevel} onClose={() => setSvcLevel(null)} />}
       <section className="am-card">
         <div className="fb-head">
           <div><h3 style={{ margin: 0 }}>منشئ النماذج <small>المخطّط يضبط البنية، والبنود تُسحب عشوائيًا في كل جلسة من البنك المعتمد</small></h3>
@@ -137,6 +140,7 @@ export default function FormBuilder({ auth }: Props) {
             {(r.plan_errors?.length > 0 || r.shortages?.length > 0) && <p className="fb-warn">{[...(r.plan_errors || []), ...(r.shortages || [])].slice(0, 3).join(' · ')}</p>}
             {usage[r.id] && <p className="fb-use">{usage[r.id].sessions} جلسة · {usage[r.id].invites} دعوة</p>}
             <div className="fb-cacts">
+              {/^SYS-EXIT-(A1|A2|B1|B2|C1)$/.test(String(r.code)) && r.status === 'active' && <button type="button" className="bk-act fb-svc" data-testid="fb-service" onClick={() => setSvcLevel(String(r.code).replace('SYS-EXIT-', ''))} title="خدمة الاختبار المعياري لجهة من خارج البرامج"><Icon name="qr" size={13} /> دعوة خارجية + QR</button>}
               <button type="button" className="bk-act" onClick={() => { setDraft(draftFromRow(r)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>تعديل</button>
               <button type="button" className="bk-act" onClick={() => void doPreview(r)}>معاينة سحب</button>
               {r.status !== 'active' && <button type="button" className="bk-act" data-testid="fb-activate" onClick={() => void status(r, 'active')}>تفعيل</button>}
@@ -192,7 +196,7 @@ const CSS = `
 .fb-filters{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 8px}.fb-filters button{border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:5px 12px;font-weight:800;font-size:12.5px;cursor:pointer;min-height:32px}.fb-filters button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}
 .fb-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.fb-card{border:1px solid #e2e8f0;border-radius:16px;padding:14px;background:#fff;display:grid;gap:6px;align-content:start}.fb-card.active{border-color:#0b8a83}.fb-card.archived{opacity:.65}.fb-card header{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.fb-card header code{margin-inline-start:auto;font-size:11.5px;color:#64748b}.fb-card h4{margin:2px 0 0;font-size:16px}.fb-type{margin:0;color:#475569;font-size:12.5px}
 .fb-pub{background:#c9a24b;color:#0b2a4a;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:900}.fb-sys{background:#e2e8f0;color:#334155;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800}
-.fb-facts{list-style:none;margin:0;padding:0;display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#334155}.fb-use{margin:0;color:#64748b;font-size:12px}.fb-cacts{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.fb-del{color:#b91c1c!important}.fb-empty{color:#64748b;grid-column:1/-1}
+.fb-facts{list-style:none;margin:0;padding:0;display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#334155}.fb-use{margin:0;color:#64748b;font-size:12px}.fb-cacts{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.fb-del{color:#b91c1c!important}.fb-svc{background:#fffdf5!important;border-color:#c9a24b!important;color:#8a6a1f!important}.fb-empty{color:#64748b;grid-column:1/-1}
 .fb-prevlvl{border-top:1px solid #e2e8f0;padding-top:6px}.fb-prevlvl ol{margin:4px 0 0;padding-inline-start:20px;font-size:13px}.fb-prevlvl li span{color:#0b8a83;font-weight:800;margin:0 6px}
 .fb-pl{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-height:50vh;overflow:auto}.fb-pl li{border:1px solid #e2e8f0;border-radius:10px;padding:6px 8px;font-size:13px}.fb-pl li.on{border-color:#0b8a83;background:#ecfdf5}.fb-pl label{display:flex;gap:8px;align-items:center;cursor:pointer}.fb-pl code{font-size:11.5px}.fb-pl small{color:#64748b;margin-inline-start:auto}
 `;

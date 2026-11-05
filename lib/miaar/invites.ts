@@ -9,10 +9,12 @@ import { shortCode, isShortCode, cleanText, isExamMode } from './registry';
 import type { ExamMode } from './registry';
 
 export type InviteRow = { id: string; code: string; kind: 'group' | 'personal'; label_ar: string; org_id: string | null; program_id: string | null; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; max_seats: number | null; status: 'open' | 'closed'; note: string | null; created_by: string | null; created_at: string;
-  /* م6 «عُبور» */ classroom_id?: string | null; opens_at?: string | null; level_target?: string | null; reuse_key?: string | null; retake_of?: string | null };
+  /* م6 «عُبور» */ classroom_id?: string | null; opens_at?: string | null; level_target?: string | null; reuse_key?: string | null; retake_of?: string | null;
+  /* م7 «عُبور للجهات» */ client_name?: string | null; client_contact?: string | null; service_mode?: 'internal' | 'external' | null; proctor_pin_hash?: string | null; client_token_hash?: string | null; identity_mode?: 'email' | 'email_id' | null };
 export type RecipientRow = { id: string; invite_id: string; email: string; name: string | null; opened_at: string | null; started_at: string | null; report_id: string | null; created_at: string };
 export type InvitePublic = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
-  /* م6: معلومات اختبار نهاية المستوى (إن كانت الدعوة له) */ exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null } | null };
+  /* م6: معلومات اختبار نهاية المستوى (إن كانت الدعوة له) */ exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null;
+    /* م7: الجهة الطالبة (تُعلَن للمتقدّم) · رمز القاعة مطلوب؟ · وضع الهوية */ client_name?: string | null; needs_pin?: boolean; identity_mode?: 'email' | 'email_id' } | null };
 
 const hash = (t: string) => createHash('sha256').update(t).digest('hex');
 export const inviteUrl = (site: string, code: string, token?: string | null) => `${site.replace(/\/$/, '')}/miaar/d/${code}${token ? `?t=${encodeURIComponent(token)}` : ''}`;
@@ -44,6 +46,9 @@ export function validateCreate(b: CreateInput): { ok: true; row: Omit<InviteRow,
   const extra: Record<string, unknown> = {};
   if (typeof b.classroom_id === 'string' && /^[0-9a-z_-]{1,64}$/i.test(b.classroom_id)) extra.classroom_id = b.classroom_id; /* معرّف القاعة كما هو (uuid في الإنتاج) */ if (opens_at) extra.opens_at = opens_at; if (level_target) extra.level_target = level_target;
   if (typeof b.reuse_key === 'string' && b.reuse_key.length <= 120) extra.reuse_key = b.reuse_key; if (id(b.retake_of)) extra.retake_of = id(b.retake_of);
+  /* م7: أعمدة الخدمة للجهات — تُرسل فقط من createServiceInvite */
+  const b7 = b as Record<string, unknown>;
+  if (b7.service_mode === 'external') { extra.service_mode = 'external'; extra.client_name = cleanText(b7.client_name, 120) || null; extra.client_contact = cleanText(b7.client_contact, 160) || null; if (typeof b7.proctor_pin_hash === 'string') extra.proctor_pin_hash = b7.proctor_pin_hash; if (typeof b7.client_token_hash === 'string') extra.client_token_hash = b7.client_token_hash; extra.identity_mode = b7.identity_mode === 'email_id' ? 'email_id' : 'email'; }
   return { ok: true, row: { kind, label_ar, org_id: id(b.org_id), program_id: id(b.program_id), lang, exam_mode, blueprint_id: id(b.blueprint_id), purpose: cleanText(b.purpose, 60) || null, expires_at, max_seats, note: cleanText(b.note, 500) || null, ...extra }, recipients };
 }
 
@@ -71,7 +76,7 @@ async function exitInfo(db: any, row: InviteRow): Promise<InvitePublic['exit']> 
   const { EXIT_TITLE, isExitLevel } = await import('./exit');
   const level = isExitLevel(data.level) ? data.level : isExitLevel(row.level_target) ? row.level_target : null; if (!level) return null;
   const req = (data.requirements || {}) as Record<string, any>; const c = (req.counts?.[level] || {}) as Record<string, number>; const p = (req.productive?.[level] || {}) as Record<string, number>;
-  return { level, minutes: Number(data.duration_minutes) || 0, counts: { listening: Number(c.listening) || 0, reading: Number(c.reading) || 0, grammar_vocab: Number(c.grammar_vocab) || 0, writing: Number(p.writing) || 0, speaking: Number(p.speaking) || 0 }, opens_at: row.opens_at || null, official_ar: EXIT_TITLE.ar, official_en: EXIT_TITLE.en, retake_skill: typeof req.retake_skill === 'string' ? req.retake_skill : null };
+  return { level, minutes: Number(data.duration_minutes) || 0, counts: { listening: Number(c.listening) || 0, reading: Number(c.reading) || 0, grammar_vocab: Number(c.grammar_vocab) || 0, writing: Number(p.writing) || 0, speaking: Number(p.speaking) || 0 }, opens_at: row.opens_at || null, official_ar: EXIT_TITLE.ar, official_en: EXIT_TITLE.en, client_name: row.service_mode === 'external' ? row.client_name || null : null, needs_pin: !!row.proctor_pin_hash, identity_mode: row.identity_mode === 'email_id' ? 'email_id' : 'email', retake_skill: typeof req.retake_skill === 'string' ? req.retake_skill : null };
 }
 /** ما يراه المتقدّم عند فتح الرابط (ويُسجَّل الفتح للشخصية) */
 export async function openInvite(db: any, code: unknown, token: unknown): Promise<{ ok: true; invite: InvitePublic; row: InviteRow; recipient: RecipientRow | null } | { ok: false; error: 'not_found' | 'closed' | 'expired' | 'full' | 'used' | 'bad_token' | 'not_open' }> {

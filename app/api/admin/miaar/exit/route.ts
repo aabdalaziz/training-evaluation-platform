@@ -72,7 +72,10 @@ export async function GET(req: Request) {
     const level = isExitLevel(b.invite.level_target) ? b.invite.level_target : null;
     const url = inviteUrl(site, b.invite.code);
     if (u.searchParams.get('live')) return NextResponse.json({ success: true, rows: b.rows, summary: b.summary, window: b.window, at: new Date().toISOString() }, { headers: NO });
-    return NextResponse.json({ success: true, site, url, ...b, spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
+    /* م7: دعوة خدمة لجهة → سجلّ الخدمة معها (بلا رموز) */
+    let order: any = null; if ((b.invite as any).service_mode === 'external') { const { data: o } = await db.from('miaar_service_orders').select('id, client_name, client_contact, level, seats, seats_used, status, note, proctor_name, proctor_signed_at, delivered_at, invoiced_at, created_at').eq('invite_id', b.invite.id).maybeSingle(); order = o || null; }
+    const inv = { ...b.invite, proctor_pin_hash: undefined, client_token_hash: undefined, has_pin: !!(b.invite as any).proctor_pin_hash, has_client_link: !!(b.invite as any).client_token_hash };
+    return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
   }
   if (pool) { if (!isExitLevel(pool)) return bad('مستوى غير صالح'); const avail = await availability(db); return NextResponse.json({ success: true, pool: poolCheck(pool, avail), spec: specTable(pool) }, { headers: NO }); }
   return bad('استعلام غير معروف');

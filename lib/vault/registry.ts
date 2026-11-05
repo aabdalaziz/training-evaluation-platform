@@ -160,7 +160,7 @@ export const NON_PERSONAL_TABLES = [
   'portal_council_scribe',
   // مِعيار — من أَثَر (م1): بنك الأسئلة ونصوصه وواصفاته ومخططاته بلا بيانات شخصية؛ الإجابات والقرارات تتبع الجلسة/التقرير (cascade)؛ الدعوة الجماعية معرّف جهة لا شخص
   'question_bank_items', 'question_bank_answer_keys', 'question_bank_import_batches', 'question_bank_review_events', 'question_bank_import_errors', 'question_bank_blueprints', 'question_bank_forms', 'question_bank_form_items',
-  'miaar_passages', 'miaar_descriptors', 'miaar_rubric_bands', 'placement_secure_answers', 'placement_decisions', 'placement_decision_events', 'placement_invites',
+  'miaar_passages', 'miaar_descriptors', 'miaar_rubric_bands', 'placement_secure_answers', 'placement_decisions', 'placement_decision_events', 'placement_invites', 'miaar_service_orders' /* م7 */,
   // م3 «ميزان مِعيار»: إحصاءات بنود وموثوقية نماذج — أرقام مجمّعة بلا هوية
   'question_bank_item_stats', 'miaar_reliability',
   'miaar_performance_ratings', 'miaar_rater_calibration', /* م4-ج: قراءات المصحّحين واعتمادهم — معرّفات طاقم لا بيانات متقدّمين */

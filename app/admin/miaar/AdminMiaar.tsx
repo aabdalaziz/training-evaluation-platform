@@ -21,6 +21,7 @@ import Rating from './Rating'; /* م4-ب: غرفة التصحيح */
 import Ledger from './Ledger'; /* م5-أ: سجلّ مِعيار */
 import Growth from './Growth'; /* م5-ب: النموّ والمقارنة */
 import ExitBoard from './ExitBoard'; /* م6 «عُبور»: لوحة نهاية المستوى */
+import ServiceInviteModal from '../../components/ServiceInviteModal'; /* م7 «عُبور للجهات»: خدمة الاختبار المعياري */
 import { Icon } from '../../../lib/ui/icons';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -33,6 +34,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   const [ready, setReady] = useState(false); const [rater, setRater] = useState(false); /* م4-ج: دور «المصحّح» — غرفة التصحيح فقط */ const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [form, setForm] = useState({ kind: 'group', label_ar: '', lang: 'en', exam_mode: 'adaptive', blueprint_id: '', purpose: '', expires_at: '', max_seats: '', note: '', recipients: '' });
   const [bps, setBps] = useState<any[]>([]);  /* م2-ب: المخطّطات النشطة للدعوات */
+  const [svcOpen, setSvcOpen] = useState(false); const [orders, setOrders] = useState<any[]>([]); /* م7 */
   const [created, setCreated] = useState<any>(null); const [qrFor, setQrFor] = useState<any>(null); const [balFor, setBalFor] = useState<{ invite: any; data: any } | null>(null); const [retake, setRetake] = useState({ email: '', note: '' });
   const fresh = async () => { const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || tok; if (tk && tk !== tok) setTok(tk); return tk; };
   const H = async (tk?: string) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk || await fresh()}` });
@@ -51,7 +53,8 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
       setTok(tk0); setRater(true); setReady(true); return;
     }
     const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || ''; setTok(tk); await load(tk); setReady(true);
-    if (tab === 'invites') { const j = await fetch('/api/admin/miaar/forms?list=1', { headers: await H(tk), cache: 'no-store' }).then((r) => r.json()).catch(() => null); setBps(((j?.blueprints || []) as any[]).filter((b) => b.status === 'active')); }
+    if (tab === 'invites') { try { const o = await fetch('/api/admin/miaar/service', { headers: await H(tk), cache: 'no-store' }).then((r) => r.json()); setOrders(Array.isArray(o?.orders) ? o.orders : []); } catch { setOrders([]); } /* م7 */
+      const j = await fetch('/api/admin/miaar/forms?list=1', { headers: await H(tk), cache: 'no-store' }).then((r) => r.json()).catch(() => null); setBps(((j?.blueprints || []) as any[]).filter((b) => b.status === 'active')); }
   })(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -125,6 +128,13 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
         </>}
 
         {tab === 'invites' && <>
+          {svcOpen && <ServiceInviteModal onClose={() => setSvcOpen(false)} onCreated={() => void load()} />}
+          <section className="am-card mm-svc" data-testid="mm-service">
+            <div className="mm-svchead"><h3>خدمة الاختبار المعياري للجهات <small>اختبار نهاية المستوى (CEFR) لمجموعة من خارج البرامج — معهد آخر أو أفراد طلبوا الاختبار فقط</small></h3><button type="button" className="am-btn" onClick={() => setSvcOpen(true)} data-testid="mm-svc-new">طلب خدمة جديد + QR</button></div>
+            {!orders.length ? <p className="mm-note">لا طلبات خدمة بعد. يمكن أيضًا إنشاؤها من «منشئ النماذج» على بطاقة SYS-EXIT بزرّ «دعوة خارجية + QR».</p> : <table className="mm-t" data-testid="mm-orders"><thead><tr><th>الجهة الطالبة</th><th>المستوى</th><th>المقاعد</th><th>بدأ</th><th>أنهى</th><th>اجتاز</th><th>الحالة</th><th>المراقب</th><th>اللوحة</th></tr></thead><tbody>
+              {orders.map((o) => <tr key={o.id} data-testid="mm-order-row"><td><b>{o.client_name}</b>{o.client_contact ? <><br /><small dir="ltr">{o.client_contact}</small></> : null}</td><td>{o.level}</td><td>{o.seats ?? '—'} / <b>{o.seats_used}</b></td><td>{o.started}</td><td>{o.finished}</td><td>{o.passed}</td><td><span className="mm-pill">{o.status_ar}</span></td><td>{o.proctor_signed_at ? '✓ ' + (o.proctor_name || '') : '—'}</td><td className="mm-acts">{o.invite?.id && <Link className="am-btn ghost" href={`/admin/miaar/exit?invite=${o.invite.id}`}>اللوحة</Link>}</td></tr>)}
+            </tbody></table>}
+          </section>
           <section className="am-card"><h3>دعوة جديدة <small>جماعية: رمز واحد وQR وملصق · شخصية: رابط خاص لكل بريد (يُعرض مرة واحدة)</small></h3>
             <form className="mm-form" onSubmit={createInvite}>
               <label>النوع<select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}><option value="group">جماعية (رمز + QR)</option><option value="personal">شخصية (رابط لكل بريد)</option></select></label>
@@ -210,7 +220,7 @@ const CSS = `
 .mm-created{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:14px;padding:14px;margin-top:12px;font-size:13px;line-height:1.8}.mm-created a{color:var(--teal-deep);word-break:break-all}.mm-qr svg{display:block;background:#fff;border-radius:10px;padding:4px}
 .mm-links{list-style:none;padding:0;margin:6px 0;display:grid;gap:4px;font-size:12px}.mm-links li{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;border-bottom:1px dashed var(--line);padding:3px 0}.mm-links code{font-size:11px;word-break:break-all}
 .mm-open{color:var(--teal-deep);font-weight:800}.mm-closed{color:#64748b;font-weight:800}.mm-acts{display:flex;gap:4px;flex-wrap:wrap}.mm-acts .am-btn{padding:4px 10px;font-size:12px;min-height:36px}
-.mm-note{font-size:12.5px;color:#475569;line-height:1.7;margin:8px 0 0}.mm-note code{background:#f1f5f9;border-radius:6px;padding:1px 5px}.mm-log{background:var(--navy);color:#e2e8f0;border-radius:12px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;direction:rtl;text-align:right}
+.mm-note{font-size:12.5px;color:#475569;line-height:1.7;margin:8px 0 0}.mm-svc{border-color:#c9a24b}.mm-svchead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}.mm-svchead h3{margin:0}.mm-pill{display:inline-block;padding:2px 10px;border-radius:999px;background:#fffdf5;border:1px solid #c9a24b;font-size:12px;font-weight:800;color:#8a6a1f}.mm-note code{background:#f1f5f9;border-radius:6px;padding:1px 5px}.mm-log{background:var(--navy);color:#e2e8f0;border-radius:12px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;direction:rtl;text-align:right}
 .mm-foot{color:#475569;font-size:12.5px;line-height:1.7;margin:4px 0 0;text-align:center}
 @media(max-width:760px){.mm-tabs{grid-template-columns:1fr}.mm-hero{padding:22px}.mm-hero h1{font-size:26px}}
 `;
