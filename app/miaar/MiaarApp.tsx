@@ -26,6 +26,7 @@ type Player = { speeds: number[]; replays: number; twice?: boolean };
 type P = { id: string; level: string; skill: string; title: string; text: string; audioUrl: string | null; player?: Player };
 type Session = { plan?: { code: string; name_ar: string; name_en: string; type: string; ladder: string; levels: string[]; cut: number; floor: boolean } | null; examMode: 'comprehensive' | 'adaptive'; currentLevel: string; currentLevelIndex: number; startLevelIndex: number; direction: 'up' | 'down'; status: string; finishReason: string | null; expiresAt: string; remainingSeconds: number; durationSeconds: number; access: any; answers: Record<string, string>; form: { questions: Q[]; passages: P[] } | null };
 type Invite = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: 'adaptive' | 'comprehensive'; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
+  witness?: WitnessCfg | null; /* م8-ب: المراقبة صفة لكل دعوة */
   exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null; witness?: WitnessCfg | null; client_name?: string | null; needs_pin?: boolean; identity_mode?: 'email' | 'email_id' } | null /* م6 · م7 */ };
 type Step = 'loading' | 'intro' | 'register' | 'probe' | 'test' | 'review' | 'result' | 'blocked';
 type Props = { inviteCode?: string | null; inviteToken?: string | null; resultCode?: string | null; fontClass?: string };
@@ -61,8 +62,9 @@ const X: Record<string, { ar: string; en: string }> = {
   svc_client: { ar: 'بطلب من', en: 'Requested by' }, svc_consent: { ar: 'ستُشارك نتيجتك (الحكم والدرجات) مع الجهة الطالبة المذكورة؛ البنود والمفاتيح لا تُشارك مع أحد.', en: 'Your result (verdict and scores) will be shared with the requesting institution named above; items and keys are never shared.' },
   svc_pin: { ar: 'رمز القاعة', en: 'Room code' }, svc_pin_hint: { ar: 'يعلنه المراقب في القاعة — لا يبدأ الاختبار بدونه', en: 'Announced by the proctor in the room — the test will not start without it' },
   svc_pin_required: { ar: 'أدخل رمز القاعة الذي أعلنه المراقب.', en: 'Enter the room code announced by the proctor.' }, svc_pin_wrong: { ar: 'رمز القاعة غير صحيح.', en: 'Wrong room code.' },
+  wit_city: { ar: 'مدينتك (اختياري — تظهر للمراقب فقط)', en: 'Your city (optional — shown to the proctor only)' },
   svc_id: { ar: 'رقم الهوية / رقم الطالب', en: 'ID / student number' }, svc_id_required: { ar: 'الجهة الطالبة تشترط رقم الهوية أو رقم الطالب.', en: 'The requesting institution requires an ID or student number.' },
-  wit_wait: { ar: 'للبدء: شغّل الكاميرا ووافق على المراقبة المصوَّرة', en: 'To start: enable the camera and consent to photo proctoring' }, wit_id_wait: { ar: 'للبدء: التقط لقطة الهوية', en: 'To start: capture the identity snapshot' },
+  wit_wait: { ar: 'للبدء: شغّل الكاميرا ووافق على المراقبة المصوَّرة', en: 'To start: enable the camera and consent to photo proctoring' }, wit_consent_wait: { ar: 'للبدء: أكّد الموافقة على المراقبة المصوَّرة', en: 'To start: confirm your consent to photo proctoring' }, wit_id_wait: { ar: 'للبدء: التقط لقطة الهوية', en: 'To start: capture the identity snapshot' },
   wit_strip: { ar: 'سجلّ النزاهة', en: 'Integrity record' }, wit_pending: { ar: 'يُراجَع بشريًّا أثناء التصحيح — لا حكم آلي', en: 'Reviewed by a human during rating — no automated verdict' }, wit_clear: { ar: 'سليم — أُدّي تحت مراقبة مصوَّرة', en: 'Clear — taken under photo proctoring' }, wit_note: { ar: 'ملاحظة مُسجَّلة', en: 'A note was recorded' }, wit_invalid: { ar: 'لاغٍ — أُبطلت هذه المحاولة بقرار بشري؛ الشهادة محجوبة. يمكن طلب إعادة من الجهة/المعهد.', en: 'Annulled by human decision; the certificate is withheld. A retake may be requested.' },
   svc_continue: { ar: 'أكمل في أَثَر — برامج المستوى التالي', en: 'Continue at Athar — next-level programmes' }, svc_next: { ar: 'توصية المستوى التالي', en: 'Next level recommendation' },
   exit_title: { ar: 'اختبار نهاية المستوى — معياري (CEFR)', en: 'Level Exit Examination (CEFR-aligned)' },
@@ -120,10 +122,12 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [step, setStep] = useState<Step>('loading');
   const [invite, setInvite] = useState<Invite | null>(null); const [inviteErr, setInviteErr] = useState<false | string>(false);
   const [examMode, setExamMode] = useState<'comprehensive' | 'adaptive'>('adaptive'); const [blueprint, setBlueprint] = useState<string | null>(null); const [doors, setDoors] = useState<Door[]>(DEFAULT_DOORS);
-  const [cand, setCand] = useState({ name: '', email: '', phone: '', nativeLanguage: '', studiedBefore: null as boolean | null, purpose: '', idNumber: '' });
+  const [cand, setCand] = useState({ name: '', email: '', phone: '', nativeLanguage: '', studiedBefore: null as boolean | null, purpose: '', idNumber: '', city: '' });
   const [pin, setPin] = useState(''); /* م7: رمز القاعة */
   /* م8 «شاهِد»: جاهزية الكاميرا والموافقة قبل البدء · واجهة الشاهد (ملء الشاشة · علامات الأقسام) */
   const [wit, setWit] = useState<{ ready: boolean; consent: boolean; identity: boolean; error: string | null }>({ ready: true, consent: true, identity: false, error: null }); const witApi = useRef<WitnessApi | null>(null);
+  /* م8-ب: المراقبة صفة لكل اختبار — الدعوة إن حدّدت، وإلا الافتراضي العام الذي يعلنه الخادم */
+  const [defaultWit, setDefaultWit] = useState<WitnessCfg | null>(null); const witCfg: WitnessCfg | null = invite?.witness ?? invite?.exit?.witness ?? defaultWit;
   const onWitSetup = useCallback((s: { ready: boolean; consent: boolean; identity: boolean; error: string | null }) => setWit(s), []); const regWit = useCallback((api: WitnessApi) => { witApi.current = api; }, []);
   const [access, setAccess] = useState({ time: 1 as 1 | 1.25 | 1.5, simple: false, contrast: false, large: false });
   const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
@@ -159,7 +163,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     setLangState(initialLang);
     const s = await fetch('/api/miaar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'resume' }), cache: 'no-store' }).then((r) => r.json()).catch(() => null);
     if (s?.ok && s.session) {
-      if (s.session.status === 'active' && s.session.form) { setSession(s.session); setAnswers(s.session.answers || {}); setStep('test'); return; }
+      if (s.session.status === 'active' && s.session.form) { if (s.witness) setDefaultWit(s.witness); setSession(s.session); setAnswers(s.session.answers || {}); setStep('test'); return; }
       if (s.session.status !== 'active') { const f = await post({ action: 'finish', reason: 'quit' }); if (f?.ok) { setReport(f.report); setCode(f.access_code); setStep('result'); return; } }
     }
     setStep('intro');
@@ -184,8 +188,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   // ---- التسجيل → مِسبار
   async function submitRegister(e: React.FormEvent) {
     e.preventDefault(); setErr('');
-    if (invite?.exit?.witness?.camera && (!wit.ready || !wit.consent)) { setErr(x(wit.ready ? 'wit_wait' : invite.exit.witness.identity && !wit.identity ? 'wit_id_wait' : 'wit_wait')); return; }
-    if (invite?.exit?.witness?.fullscreen) witApi.current?.enterFullscreen();  /* يجب أن يسبق أي await (إيماءة المستخدم) */
+    if (witCfg?.camera && (!wit.ready || !wit.consent)) { setErr(x(wit.ready ? 'wit_wait' : witCfg?.identity && !wit.identity ? 'wit_id_wait' : 'wit_wait')); return; }
+    if (witCfg?.fullscreen) witApi.current?.enterFullscreen();  /* يجب أن يسبق أي await (إيماءة المستخدم) */
     if (cand.name.trim().length < 2) { setErr(t('register', 'nameErr')); return; } if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cand.email)) { setErr(t('register', 'emailErr')); return; }
     if (probe.length > 0 && Object.keys(probeAns).length >= probe.length) { await startTest(true); return; }  /* حلقات الختم أُكملت على الصفحة الأولى */
     if (door && !door.probe) { await startTest(false); return; }  /* م2-ب: باب بلا مِسبار (شامل · قصير · اجتياز مستوى) → البدء مباشرة */
@@ -261,8 +265,10 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [guideGoal, setGuideGoal] = useState<'know' | 'org' | 'level' | 'quick' | null>(null); const [guideTime, setGuideTime] = useState<'25' | '50' | '10' | null>(null); const [inviteIn, setInviteIn] = useState('');
   const onSceneMove = (e: React.MouseEvent<HTMLDivElement>) => { if (reduced) return; const r = e.currentTarget.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; setTilt({ rx: Math.round(-py * 10 * 10) / 10, ry: Math.round(px * 12 * 10) / 10 }); };
   useEffect(() => { if (step !== 'intro' || reduced || band || ringsOn) return; const id = setInterval(() => setMarker((m) => (m + 1) % 6), 1400); return () => clearInterval(id); }, [step, reduced, band, ringsOn]);
+  /* م8-ب: من وصل إلى التسجيل دون المرور بالمقدّمة (رابط باب مباشر) يعرف وضع المراقبة قبل أن يملأ بياناته */
+  useEffect(() => { if (step !== 'register' || witCfg || invite) return; fetch('/api/miaar?witness=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && j.witness) setDefaultWit(j.witness); }).catch(() => null); }, [step, witCfg, invite]);
   /* م3-د (خِفّة): الأبواب والنبض في طلب واحد ?intro=1 بدل طلبين */
-  useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?intro=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && Array.isArray(j.doors) && j.doors.length) setDoors(j.doors); if (j?.ok && j.pulse) setPulse(j.pulse); }).catch(() => { /* الأبواب الافتراضية والشريط يكتفي بعباراته */ }); }, [step]);
+  useEffect(() => { if (step !== 'intro') return; fetch('/api/miaar?intro=1', { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.ok && Array.isArray(j.doors) && j.doors.length) setDoors(j.doors); if (j?.ok && j.pulse) setPulse(j.pulse); if (j?.ok && j.witness) setDefaultWit(j.witness); }).catch(() => { /* الأبواب الافتراضية والشريط يكتفي بعباراته */ }); }, [step]);
   const recDoor: Door | null = (() => { if (!doors.length) return null; const by = (f: (d: Door) => boolean) => doors.find(f) || null; const adaptive = by((d) => d.type === 'placement' || d.door === 'adaptive'); const comp = by((d) => d.code === 'SYS-COMPREHENSIVE' || d.type === 'comprehensive'); const short = by((d) => d.type === 'short'); const level = by((d) => d.type === 'level');
     if (guideGoal === 'level' && level) return level; if (guideGoal === 'quick' || guideTime === '10') return short || adaptive || doors[0]; if (guideGoal === 'org' || guideTime === '50') return comp || adaptive || doors[0]; return adaptive || doors[0]; })();
   function startNow() { if (invite) { setStep('register'); return; } const d = door || recDoor; if (d) { setDoor(d); setExamMode(d.door === 'adaptive' ? 'adaptive' : 'comprehensive'); setBlueprint(d.code); } setStep('register'); }
@@ -328,8 +334,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const doorName = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adap') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'comp') : lang === 'ar' ? d.name_ar : d.name_en || d.name_ar;
   const doorSub = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adapS') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'compS') : (d.description_ar || d.name_en);
   return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} />
-    {invite?.exit?.witness && (step === 'probe' || step === 'test' || step === 'review' || (step === 'result' && roomOpen && room)) && <Witness cfg={invite.exit.witness} phase="active" ar={lang === 'ar'} post={post} register={regWit} section={step === 'result' ? 'room' : step} />}
-    {invite?.exit?.witness && step === 'result' && !(roomOpen && room) && <Witness cfg={invite.exit.witness} phase="done" ar={lang === 'ar'} post={post} />}
+    {witCfg && (step === 'probe' || step === 'test' || step === 'review' || (step === 'result' && roomOpen && room)) && <Witness cfg={witCfg} phase="active" ar={lang === 'ar'} post={post} register={regWit} section={step === 'result' ? 'room' : step} />}
+    {witCfg && step === 'result' && !(roomOpen && room) && <Witness cfg={witCfg} phase="done" ar={lang === 'ar'} post={post} />}
     {step !== 'result' && <Header admin={step === 'intro'} />}
     {toast && <div className="mi-toast" role="status" data-testid="mi-toast">{toast}</div>}
 
@@ -470,6 +476,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
           <div className="mi-grid1">
             <label>{t('register', 'name')}<input value={cand.name} onChange={(e) => setCand({ ...cand, name: e.target.value })} placeholder={t('register', 'namePh')} maxLength={120} required autoComplete="name" /></label>
             <label>{t('register', 'email')}<input type="email" value={cand.email} onChange={(e) => setCand({ ...cand, email: e.target.value })} readOnly={!!invite?.recipient} maxLength={160} required autoComplete="email" dir="ltr" placeholder="name@example.com" /></label>
+            {witCfg?.mode === 'remote' && <label>{x('wit_city')}<input value={cand.city} onChange={(e) => setCand({ ...cand, city: e.target.value })} maxLength={60} autoComplete="address-level2" data-testid="mi-city" /></label>}
             {invite?.exit?.identity_mode === 'email_id' && <label>{x('svc_id')}<input value={cand.idNumber} onChange={(e) => setCand({ ...cand, idNumber: e.target.value })} maxLength={40} required dir="ltr" inputMode="numeric" autoComplete="off" data-testid="mi-svc-id" /></label>}
             {invite?.exit?.needs_pin && <label>{x('svc_pin')} <small>— {x('svc_pin_hint')}</small><input value={pin} onChange={(e) => setPin(e.target.value.toUpperCase())} maxLength={8} required dir="ltr" autoComplete="off" data-lpignore="true" style={{ letterSpacing: 4, fontWeight: 900 }} data-testid="mi-svc-pin" /></label>}
             <div className="mi-two">
@@ -483,10 +490,10 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
               <div className="mi-row">{(['simple', 'contrast', 'large'] as const).map((k) => <label key={k} className="mi-radio"><input type="checkbox" checked={access[k]} onChange={(e) => setAccess({ ...access, [k]: e.target.checked })} />{x(`access_${k}`)}</label>)}</div>
             </fieldset>
           </div>
-          {invite?.exit?.witness && <Witness cfg={invite.exit.witness} phase="setup" ar={lang === 'ar'} post={post} onSetup={onWitSetup} register={regWit} />}
-          {invite?.exit?.witness?.camera && (!wit.ready || !wit.consent) && !err && <p className="mi-note" data-testid="mi-wit-hint">{wit.error || x(wit.ready ? 'wit_wait' : invite.exit.witness.identity && !wit.identity && !wit.error ? 'wit_id_wait' : 'wit_wait')}</p>}
+          {witCfg && <Witness cfg={witCfg} phase="setup" ar={lang === 'ar'} post={post} onSetup={onWitSetup} register={regWit} />}
+          {witCfg?.camera && (!wit.ready || !wit.consent) && !err && <p className="mi-note" data-testid="mi-wit-hint">{wit.error || x(wit.ready ? 'wit_consent_wait' : witCfg?.identity && !wit.identity && !wit.error ? 'wit_id_wait' : 'wit_wait')}</p>}
           {err && <p className="mi-alert" role="alert" data-testid="mi-err">{err}</p>}
-          <button type="submit" className="mi-go wide" disabled={busy || (!!invite?.exit?.witness?.camera && (!wit.ready || !wit.consent))} aria-busy={busy || undefined} data-testid="mi-register-submit"><Icon name={busy ? 'spinner' : 'check'} />{busy ? t('register', 'saving') : t('register', 'submit')}</button>
+          <button type="submit" className="mi-go wide" disabled={busy || (!!witCfg?.camera && (!wit.ready || !wit.consent))} aria-busy={busy || undefined} data-testid="mi-register-submit"><Icon name={busy ? 'spinner' : 'check'} />{busy ? t('register', 'saving') : t('register', 'submit')}</button>
           <p className="mi-note center">{t('register', 'privacy')}</p>
         </form>
       </div>

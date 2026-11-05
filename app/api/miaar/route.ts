@@ -29,7 +29,8 @@ import { trustSummary } from '../../../lib/miaar/balance';
 import { stopwatch, slowLine } from '../../../lib/miaar/timing';
 import { openInvite } from '../../../lib/miaar/invites';
 import { verifyPin } from '../../../lib/miaar/service';
-import { recordEvent, whispersSince, witnessPublic } from '../../../lib/miaar/witness'; /* م8 «شاهِد» */
+import { recordEvent, whispersSince, witnessPublic, defaultWitnessMode, resolveMode } from '../../../lib/miaar/witness'; /* م8 «شاهِد» · م8-ب */
+import { publicWitness } from '../../../lib/miaar/invites';
 import { loadApprovedPool, loadPassages, signedMediaUrl, isReferencedMediaPath } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
 import { probeBand } from '../../../lib/miaar/registry';
@@ -99,7 +100,9 @@ export async function GET(req: Request) {
   }
   if (u.searchParams.get('doors')) return NextResponse.json({ ok: true, doors: await publicDoors(db) }, { headers: EDGE });
   /* م3-د (خِفّة): المقدّمة تطلب الأبواب والنبض معًا في طلب واحد */
-  if (u.searchParams.get('intro')) { const [doors, p] = await Promise.all([publicDoors(db).catch(() => []), pulse(db).catch(() => null)]); return NextResponse.json({ ok: true, doors, pulse: p }, { headers: EDGE }); }
+  if (u.searchParams.get('intro')) { const [doors, p, dm] = await Promise.all([publicDoors(db).catch(() => []), pulse(db).catch(() => null), defaultWitnessMode(db)]); return NextResponse.json({ ok: true, doors, pulse: p, witness: publicWitness(witnessPublic({ proctor_mode: dm })) }, { headers: EDGE }); }
+  /* م8-ب: المراقبة صفة لكل اختبار — ما يُعلَن للمتقدّم الفردي قبل التسجيل */
+  if (u.searchParams.get('witness')) return NextResponse.json({ ok: true, witness: publicWitness(witnessPublic({ proctor_mode: await defaultWitnessMode(db) })) }, { headers: NO });
   if (u.searchParams.get('invite')) { const r = await openInvite(db, u.searchParams.get('invite'), u.searchParams.get('t') || null); return r.ok ? NextResponse.json({ ok: true, invite: r.invite }, { headers: NO }) : bad(`invite_${r.error}`, r.error === 'not_found' ? 404 : 410); }
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */
@@ -140,16 +143,24 @@ export async function POST(req: Request) {
       if (r.recipient && body.candidate && typeof body.candidate === 'object') (body.candidate as Record<string, unknown>).email = r.recipient.email;  /* الدعوة الشخصية تثبّت البريد */
     }
     const userId = await userOf(req); sw.mark('auth');
-    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint }, sw);
+    const proctorMode = resolveMode(null, inviteRow, await defaultWitnessMode(db));  /* م8-ب: الوضع الفعلي يُثبَّت على الجلسة */
+    const witness = publicWitness(witnessPublic({ proctor_mode: proctorMode, witness_interval: inviteRow?.witness_interval || null }));
+    const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint, proctorMode }, sw);
     const slow = slowLine('start', sw); if (slow) console.warn(slow);
     if (!r.ok) return bad(r.code, r.status);
-    return withCookie(NextResponse.json({ ok: true, session: r.value.session, invite: invite ? { label_ar: invite.label_ar, witness: inviteRow ? witnessPublic(inviteRow) : null } : null }, { headers: { ...NO, 'Server-Timing': sw.header() } }), r.value.token, r.value.session.expiresAt);
+    return withCookie(NextResponse.json({ ok: true, session: r.value.session, witness, invite: invite ? { label_ar: invite.label_ar, witness } : null }, { headers: { ...NO, 'Server-Timing': sw.header() } }), r.value.token, r.value.session.expiresAt);
   }
   const sw = stopwatch();
   const token = cookieOf(req); if (!token) return action === 'resume' ? NextResponse.json({ ok: false, error: 'missing_session' }, { headers: NO }) : bad('missing_session', 401); /* الاستئناف بلا جلسة حالة عادية (أول زيارة) لا خطأ */
   const loaded = await loadSession(db, token, action !== 'answer'); if (!loaded) return withCookie(bad('invalid_session', 401), null); sw.mark('session');
   const { session, answers } = loaded;
-  if (action === 'resume') { const r = await resumeSession(db, session, answers); return r.ok ? NextResponse.json({ ok: true, session: r.value }, { headers: NO }) : bad(r.code, r.status); }
+  if (action === 'resume') {
+    const r = await resumeSession(db, session, answers); if (!r.ok) return bad(r.code, r.status);
+    /* م8-ب: الشاهد يستأنف مع الجلسة (الوضع من الجلسة؛ الفاصل من الدعوة إن وُجدت) */
+    let wi: number | null = null; let invMode: string | null = null; if ((session as any).invite_id) { const { data } = await db.from('placement_invites').select('proctor_mode, witness_interval').eq('id', (session as any).invite_id).maybeSingle(); wi = data?.witness_interval || null; invMode = data?.proctor_mode || null; }
+    const witness = publicWitness(witnessPublic({ proctor_mode: resolveMode(session as any, { proctor_mode: invMode }, (session as any).proctor_mode ? 'room' : await defaultWitnessMode(db)), witness_interval: wi }));
+    return NextResponse.json({ ok: true, session: r.value, witness }, { headers: NO });
+  }
   if (action === 'answer') { const r = await answerSession(db, session, body, sw); sw.mark('decide'); const slow = slowLine('answer', sw, 1500); if (slow) console.warn(slow); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: { ...NO, 'Server-Timing': sw.header() } }) : bad(r.code, r.status); }
   if (action === 'finish') {
     let label: string | null = null; if (session.invite_id) { const { data } = await db.from('placement_invites').select('label_ar').eq('id', session.invite_id).maybeSingle(); label = data?.label_ar || null; }
@@ -167,7 +178,7 @@ export async function POST(req: Request) {
   /* م8 «شاهِد»: أحداث المتصفح ولقطاته (داخل الجلسة الحيّة فقط) + همسات المراقب */
   if (action === 'witness_event') {
     if (session.status !== 'active') return bad('session_finalized', 409);
-    let invRow: any = null; if (session.invite_id) { const { data } = await db.from('placement_invites').select('proctor_mode').eq('id', session.invite_id).maybeSingle(); invRow = data; }
+    let invRow: any = null; if (!(session as any).proctor_mode && session.invite_id) { const { data } = await db.from('placement_invites').select('proctor_mode').eq('id', session.invite_id).maybeSingle(); invRow = data; }  /* م8-ب: الجلسة تحمل وضعها؛ الدعوة للجلسات الأقدم */
     const r = await recordEvent(db, session, invRow, { kind: body.kind, meta: body.meta, frame: body.frame }); if (!r.ok) return bad(r.error, r.status);
     const whispers = await whispersSince(db, session.id, body.since).catch(() => []);
     return NextResponse.json({ ok: true, seq: r.seq, frames: r.frames, stored: r.stored, whispers, at: new Date().toISOString() }, { headers: NO });

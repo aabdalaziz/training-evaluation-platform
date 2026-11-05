@@ -98,3 +98,4 @@ import './p49c.test';
 import './miaar-m6.test';
 import './miaar-m7.test';
 import './miaar-m8.test';
+import './miaar-m8b.test';

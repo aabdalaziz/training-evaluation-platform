@@ -101,7 +101,7 @@ export async function mergeSkillRetake(db: Db, retakeSessionId: string, retakeRe
 }
 
 /* ---------- الدعوة المرتبطة بالقاعة ---------- */
-export type ExitInviteInput = { classroom_id: string; level: ExitLevel; label_ar: string; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; program_id?: string | null; lang?: string; note?: string | null; force_new?: boolean; /* م8 */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null };
+export type ExitInviteInput = { classroom_id: string; level: ExitLevel; label_ar: string; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; program_id?: string | null; lang?: string; note?: string | null; force_new?: boolean; /* م8 */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null; /* م8-ب */ location?: string | null };
 export async function findOrCreateExitInvite(db: Db, input: ExitInviteInput, actorId: string | null, site: string): Promise<{ ok: true; invite: any; reused: boolean; url: string } | { ok: false; error: string }> {
   const code = exitBlueprintCode(input.level);
   const { data: bp } = await db.from('question_bank_blueprints').select('id, code, status').eq('code', code).maybeSingle();
@@ -114,7 +114,7 @@ export async function findOrCreateExitInvite(db: Db, input: ExitInviteInput, act
   const r = await createInvite(db, {
     kind: 'group', label_ar: input.label_ar || exitInviteLabel('', input.level), lang: input.lang || 'ar', exam_mode: 'comprehensive', purpose: 'level_exit', blueprint_id: bp.id, expires_at: input.expires_at || null, max_seats: input.max_seats || null,
     program_id: input.program_id || null, note: input.note || null, classroom_id: input.classroom_id, opens_at: input.opens_at || null, level_target: input.level, reuse_key: key,
-    ...(input.proctor_mode ? { proctor_mode: input.proctor_mode } : {}), ...(input.witness_interval ? { witness_interval: input.witness_interval } : {}),
+    ...(input.proctor_mode ? { proctor_mode: input.proctor_mode } : {}), ...(input.witness_interval ? { witness_interval: input.witness_interval } : {}), ...(input.location ? { location: input.location } : {}),
   } as any, actorId || '', site);
   if (!r.ok) return { ok: false, error: r.error };
   return { ok: true, invite: r.invite, reused: false, url: r.url };

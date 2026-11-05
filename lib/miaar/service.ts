@@ -68,7 +68,7 @@ export function clientReport(level: ExitLevel, rows: readonly BoardRow[], bench:
 }
 
 /* ---------- الغراء ---------- */
-export type ServiceInput = { /* م8 */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null; client_name: string; client_contact?: string | null; level: ExitLevel; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; lang?: string; identity_mode?: 'email' | 'email_id'; pin?: string | null; note?: string | null };
+export type ServiceInput = { /* م8 */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null; /* م8-ب */ location?: string | null; client_name: string; client_contact?: string | null; level: ExitLevel; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; lang?: string; identity_mode?: 'email' | 'email_id'; pin?: string | null; note?: string | null };
 export async function createServiceInvite(db: Db, input: ServiceInput, actorId: string | null, site: string): Promise<{ ok: true; invite: any; order: any; url: string; client_url: string; client_token: string; pin: string | null } | { ok: false; error: string }> {
   const client_name = String(input.client_name || '').trim().replace(/\s+/g, ' ').slice(0, 120); if (client_name.length < 2) return { ok: false, error: 'اسم الجهة الطالبة من حرفين على الأقل (أو «أفراد»)' };
   if (!isExitLevel(input.level)) return { ok: false, error: 'حدّد المستوى (A1–C1)' };
@@ -79,7 +79,7 @@ export async function createServiceInvite(db: Db, input: ServiceInput, actorId: 
   const r = await createInvite(db, {
     kind: 'group', label_ar: serviceLabel(client_name, input.level), lang: input.lang || 'ar', exam_mode: 'comprehensive', purpose: 'level_exit', blueprint_id: bp.id,
     opens_at: input.opens_at || null, expires_at: input.expires_at || null, max_seats: input.max_seats || null, level_target: input.level, note: input.note || null,
-    /* م8 «شاهِد»: الافتراضي لخدمة الجهات «قاعة + شاهِد» (قرار المالك أ) */ proctor_mode: input.proctor_mode === 'room' || input.proctor_mode === 'remote' ? input.proctor_mode : 'camera', ...(input.witness_interval ? { witness_interval: input.witness_interval } : {}),
+    /* م8 «شاهِد»: الافتراضي لخدمة الجهات «قاعة + شاهِد» (قرار المالك أ) */ proctor_mode: input.proctor_mode === 'room' || input.proctor_mode === 'remote' || input.proctor_mode === 'camera' ? input.proctor_mode : null /* م8-ب: null = الافتراضي العام (قاعة + شاهِد) */, ...(input.witness_interval ? { witness_interval: input.witness_interval } : {}), ...(input.location ? { location: input.location } : {}),
     client_name, client_contact: input.client_contact ? String(input.client_contact).trim().slice(0, 160) : null, service_mode: 'external', proctor_pin_hash: pin ? hashToken(pin) : null, client_token_hash: hashToken(token), identity_mode: input.identity_mode === 'email_id' ? 'email_id' : 'email',
   } as any, actorId || '', site);
   if (!r.ok) return { ok: false, error: r.error };

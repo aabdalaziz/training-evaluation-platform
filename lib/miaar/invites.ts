@@ -5,18 +5,21 @@
  *  ما يراه المتقدّم: اسم الدعوة ولغتها ونمطها؛ ما يراه الطاقم: فتح/بدء/إنهاء ومستوى كل مشارك.
  */
 import { createHash, randomBytes } from 'node:crypto';
-import { witnessPublic } from './witness'; /* م8 */
+import { witnessPublic, defaultWitnessMode, type WitnessMode } from './witness'; /* م8 · م8-ب */
 import { shortCode, isShortCode, cleanText, isExamMode } from './registry';
 import type { ExamMode } from './registry';
 
 export type InviteRow = { id: string; code: string; kind: 'group' | 'personal'; label_ar: string; org_id: string | null; program_id: string | null; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; max_seats: number | null; status: 'open' | 'closed'; note: string | null; created_by: string | null; created_at: string;
   /* م6 «عُبور» */ classroom_id?: string | null; opens_at?: string | null; level_target?: string | null; reuse_key?: string | null; retake_of?: string | null;
-  /* م7 «عُبور للجهات» */ client_name?: string | null; client_contact?: string | null; service_mode?: 'internal' | 'external' | null; proctor_pin_hash?: string | null; client_token_hash?: string | null; identity_mode?: 'email' | 'email_id' | null; /* م8 «شاهِد» */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null };
+  /* م7 «عُبور للجهات» */ location?: string | null; /* م8-ب */ client_name?: string | null; client_contact?: string | null; service_mode?: 'internal' | 'external' | null; proctor_pin_hash?: string | null; client_token_hash?: string | null; identity_mode?: 'email' | 'email_id' | null; /* م8 «شاهِد» */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null };
 export type RecipientRow = { id: string; invite_id: string; email: string; name: string | null; opened_at: string | null; started_at: string | null; report_id: string | null; created_at: string };
 export type InvitePublic = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
+  /* م8-ب: المراقبة صفة لكل دعوة (الوضع الفعلي بعد الافتراضي العام) · المكان */ witness?: WitnessPublic | null; location?: string | null;
   /* م6: معلومات اختبار نهاية المستوى (إن كانت الدعوة له) */ exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null;
     /* م7: الجهة الطالبة (تُعلَن للمتقدّم) · رمز القاعة مطلوب؟ · وضع الهوية */ client_name?: string | null; needs_pin?: boolean; identity_mode?: 'email' | 'email_id'; /* م8: وضع المراقبة كما يُعلَن للمتقدّم */ witness?: { mode: 'room' | 'camera' | 'remote'; camera: boolean; interval: number; identity: boolean; fullscreen: boolean; retention_days: number; mode_ar: string; mode_en: string } } | null };
 
+export type WitnessPublic = { mode: 'room' | 'camera' | 'remote'; camera: boolean; interval: number; identity: boolean; fullscreen: boolean; retention_days: number; mode_ar: string; mode_en: string };
+export const publicWitness = (w: ReturnType<typeof witnessPublic>): WitnessPublic => ({ mode: w.mode, camera: w.camera, interval: w.interval, identity: w.identity, fullscreen: w.fullscreen, retention_days: w.retention_days, mode_ar: w.mode_ar, mode_en: w.mode_en });
 const hash = (t: string) => createHash('sha256').update(t).digest('hex');
 export const inviteUrl = (site: string, code: string, token?: string | null) => `${site.replace(/\/$/, '')}/miaar/d/${code}${token ? `?t=${encodeURIComponent(token)}` : ''}`;
 const LANGS = new Set(['ar', 'az', 'bn', 'bs', 'de', 'en', 'es', 'fa', 'fil', 'fr', 'ha', 'hi', 'id', 'it', 'ku', 'ms', 'nl', 'pl', 'ps', 'pt', 'ro', 'ru', 'so', 'sq', 'sw', 'tr', 'uk', 'ur', 'uz', 'zh']);
@@ -51,7 +54,8 @@ export function validateCreate(b: CreateInput): { ok: true; row: Omit<InviteRow,
   const b7 = b as Record<string, unknown>;
   if (b7.service_mode === 'external') { extra.service_mode = 'external'; extra.client_name = cleanText(b7.client_name, 120) || null; extra.client_contact = cleanText(b7.client_contact, 160) || null; if (typeof b7.proctor_pin_hash === 'string') extra.proctor_pin_hash = b7.proctor_pin_hash; if (typeof b7.client_token_hash === 'string') extra.client_token_hash = b7.client_token_hash; extra.identity_mode = b7.identity_mode === 'email_id' ? 'email_id' : 'email'; }
   /* م8 «شاهِد»: وضع المراقبة (room افتراضيًا) وفاصل اللقطات */
-  if (b7.proctor_mode === 'camera' || b7.proctor_mode === 'remote') extra.proctor_mode = b7.proctor_mode; const wi = Number(b7.witness_interval); if (Number.isInteger(wi) && wi >= 20 && wi <= 90) extra.witness_interval = wi;
+  /* م8-ب: room/camera/remote صراحةً، وإلا null = «الافتراضي العام» · المكان */
+  if (b7.proctor_mode === 'room' || b7.proctor_mode === 'camera' || b7.proctor_mode === 'remote') extra.proctor_mode = b7.proctor_mode; const loc = cleanText(b7.location, 120); if (loc) extra.location = loc; const wi = Number(b7.witness_interval); if (Number.isInteger(wi) && wi >= 20 && wi <= 90) extra.witness_interval = wi;
   return { ok: true, row: { kind, label_ar, org_id: id(b.org_id), program_id: id(b.program_id), lang, exam_mode, blueprint_id: id(b.blueprint_id), purpose: cleanText(b.purpose, 60) || null, expires_at, max_seats, note: cleanText(b.note, 500) || null, ...extra }, recipients };
 }
 
@@ -73,13 +77,13 @@ export async function createInvite(db: any, b: CreateInput, userId: string, site
 }
 
 /** م6: إن كانت الدعوة لاختبار نهاية المستوى (أو إعادة مهارة) نعيد ما يُعرض للمتقدّم قبل البدء */
-async function exitInfo(db: any, row: InviteRow): Promise<InvitePublic['exit']> {
+async function exitInfo(db: any, row: InviteRow, fallback: WitnessMode): Promise<InvitePublic['exit']> {
   if (!row.blueprint_id || (row.purpose !== 'level_exit' && row.purpose !== 'skill_retake')) return null;
   const { data } = await db.from('question_bank_blueprints').select('code, level, duration_minutes, requirements').eq('id', row.blueprint_id).maybeSingle(); if (!data) return null;
   const { EXIT_TITLE, isExitLevel } = await import('./exit');
   const level = isExitLevel(data.level) ? data.level : isExitLevel(row.level_target) ? row.level_target : null; if (!level) return null;
   const req = (data.requirements || {}) as Record<string, any>; const c = (req.counts?.[level] || {}) as Record<string, number>; const p = (req.productive?.[level] || {}) as Record<string, number>;
-  return { level, minutes: Number(data.duration_minutes) || 0, counts: { listening: Number(c.listening) || 0, reading: Number(c.reading) || 0, grammar_vocab: Number(c.grammar_vocab) || 0, writing: Number(p.writing) || 0, speaking: Number(p.speaking) || 0 }, opens_at: row.opens_at || null, official_ar: EXIT_TITLE.ar, official_en: EXIT_TITLE.en, client_name: row.service_mode === 'external' ? row.client_name || null : null, needs_pin: !!row.proctor_pin_hash, identity_mode: row.identity_mode === 'email_id' ? 'email_id' : 'email', retake_skill: typeof req.retake_skill === 'string' ? req.retake_skill : null, witness: (() => { const w = witnessPublic(row); return { mode: w.mode, camera: w.camera, interval: w.interval, identity: w.identity, fullscreen: w.fullscreen, retention_days: w.retention_days, mode_ar: w.mode_ar, mode_en: w.mode_en }; })() };
+  return { level, minutes: Number(data.duration_minutes) || 0, counts: { listening: Number(c.listening) || 0, reading: Number(c.reading) || 0, grammar_vocab: Number(c.grammar_vocab) || 0, writing: Number(p.writing) || 0, speaking: Number(p.speaking) || 0 }, opens_at: row.opens_at || null, official_ar: EXIT_TITLE.ar, official_en: EXIT_TITLE.en, client_name: row.service_mode === 'external' ? row.client_name || null : null, needs_pin: !!row.proctor_pin_hash, identity_mode: row.identity_mode === 'email_id' ? 'email_id' : 'email', retake_skill: typeof req.retake_skill === 'string' ? req.retake_skill : null, witness: (() => { const w = witnessPublic(row, fallback); return { mode: w.mode, camera: w.camera, interval: w.interval, identity: w.identity, fullscreen: w.fullscreen, retention_days: w.retention_days, mode_ar: w.mode_ar, mode_en: w.mode_en }; })() };
 }
 /** ما يراه المتقدّم عند فتح الرابط (ويُسجَّل الفتح للشخصية) */
 export async function openInvite(db: any, code: unknown, token: unknown): Promise<{ ok: true; invite: InvitePublic; row: InviteRow; recipient: RecipientRow | null } | { ok: false; error: 'not_found' | 'closed' | 'expired' | 'full' | 'used' | 'bad_token' | 'not_open' }> {
@@ -100,8 +104,8 @@ export async function openInvite(db: any, code: unknown, token: unknown): Promis
     const { count } = await db.from('placement_secure_sessions').select('id', { count: 'exact', head: true }).eq('invite_id', row.id);
     if ((count || 0) >= row.max_seats) return { ok: false, error: 'full' };
   }
-  const exit = await exitInfo(db, row).catch(() => null);
-  return { ok: true, row, recipient, invite: { code: row.code, kind: row.kind, label_ar: row.label_ar, lang: row.lang, exam_mode: row.exam_mode, blueprint_id: row.blueprint_id || null, purpose: row.purpose, expires_at: row.expires_at, recipient: recipient ? { id: recipient.id, email: recipient.email, name: recipient.name, used: !!recipient.report_id } : null, exit } };
+  const fallback = await defaultWitnessMode(db).catch(() => 'camera' as WitnessMode); const exit = await exitInfo(db, row, fallback).catch(() => null);
+  return { ok: true, row, recipient, invite: { code: row.code, kind: row.kind, label_ar: row.label_ar, lang: row.lang, exam_mode: row.exam_mode, blueprint_id: row.blueprint_id || null, purpose: row.purpose, expires_at: row.expires_at, recipient: recipient ? { id: recipient.id, email: recipient.email, name: recipient.name, used: !!recipient.report_id } : null, exit, witness: publicWitness(witnessPublic(row, fallback)), location: row.location || null } };
 }
 
 /** قائمة الطاقم: لكل دعوة عدّادات (فُتحت · بدأت · أُنهيت) وتوزيع المستويات */

@@ -22,6 +22,8 @@ const T = {
   enable: { ar: 'تشغيل الكاميرا', en: 'Enable camera' }, retry: { ar: 'حاول مجدّدًا', en: 'Try again' },
   denied: { ar: 'لم يُسمح بالكاميرا. هذا الاختبار يتطلّبها — اسمح بها من شريط العنوان ثم «حاول مجدّدًا».', en: 'Camera was not allowed. This exam requires it — allow it from the address bar, then “Try again”.' },
   nocam: { ar: 'لا توجد كاميرا متاحة على هذا الجهاز.', en: 'No camera is available on this device.' },
+  /* م8-ب: المراقبة صفة لكل اختبار — في وضع «قاعة + شاهِد» لا يوقفك غياب الكاميرا؛ يُسجَّل ذلك ويُبلَّغ المراقب */
+  nocamGo: { ar: 'لا كاميرا متاحة أو لم يُسمح بها. يمكنك المتابعة: سيُسجَّل في سجلّ النزاهة أن الكاميرا غير متاحة، ويرى المراقب ذلك في القاعة.', en: 'No camera available or not allowed. You may continue: the integrity log will record that the camera was unavailable and the proctor will see it in the hall.' },
   dark: { ar: 'الإضاءة ضعيفة — اجلس مواجهًا لمصدر الضوء.', en: 'Low light — face a light source.' }, good: { ar: 'الإضاءة جيدة · ضع وجهك داخل الإطار', en: 'Good light · keep your face in the frame' },
   idTitle: { ar: 'لقطة الهوية (عن بُعد)', en: 'Identity snapshot (remote)' }, idHint: { ar: 'ارفع بطاقتك بجانب وجهك ثم اضغط «التقاط». تُحفظ للطاقم فقط.', en: 'Hold your ID card beside your face and press “Capture”. Stored for staff only.' },
   capture: { ar: 'التقاط', en: 'Capture' }, recapture: { ar: 'إعادة الالتقاط', en: 'Retake' }, captured: { ar: 'التُقطت ✓', en: 'Captured ✓' },
@@ -104,9 +106,9 @@ export default function Witness({ cfg, phase, ar, post, onSetup, register, secti
     if (r?.ok) { identitySent.current = true; handoffIdentity = null; }
   }, [cfg.identity, post]);
   /* ---------- التهيئة ---------- */
-  useEffect(() => { if ((phase === 'setup' || phase === 'active') && cfg.camera && camState === 'idle') void enable(); }, [phase, cfg.camera, camState, enable]); /* مثيل «النشاط» يعيد فتح الكاميرا (الإذن مُنح في الإعداد) */
+  useEffect(() => { if ((phase === 'setup' || phase === 'active') && cfg.camera && camState === 'idle') void enable(); }, [phase, cfg.camera, camState, enable]);
   useEffect(() => { if (phase !== 'setup' || !cfg.camera) return; const id = setInterval(() => { const g = grab(); if (g.b64) setLum(Math.round(g.lum)); }, 1200); return () => clearInterval(id); }, [phase, cfg.camera, camState]);
-  useEffect(() => { onSetup?.({ ready: !cfg.camera || (camState === 'on' && (!cfg.identity || !!identityShot)), consent: !cfg.camera || consent, identity: !!identityShot, error: camState === 'denied' ? t('denied') : camState === 'none' ? t('nocam') : null }); }, [cfg.camera, cfg.identity, camState, consent, identityShot, onSetup, t]);
+  useEffect(() => { const noCam = camState === 'denied' || camState === 'none'; onSetup?.({ ready: !cfg.camera || (camState === 'on' && (!cfg.identity || !!identityShot)) || (noCam && !cfg.identity) /* م8-ب: «قاعة + شاهِد» لا يوقفه غياب الكاميرا؛ «عن بُعد» يتطلّبها */, consent: !cfg.camera || consent, identity: !!identityShot, error: noCam && !cfg.identity ? null : camState === 'denied' ? t('denied') : camState === 'none' ? t('nocam') : null }); }, [cfg.camera, cfg.identity, camState, consent, identityShot, onSetup, t]);
   useEffect(() => { register?.({ enterFullscreen: () => { if (!cfg.fullscreen) return; try { void document.documentElement.requestFullscreen?.(); } catch { /* غير مدعوم */ } }, mark: (s: string) => { if (sectionRef.current !== s) { sectionRef.current = s; void send('section_start', { section: s }, true); } } }); }, [register, cfg.fullscreen, send]);
 
   /* ---------- النشاط ---------- */
@@ -129,6 +131,9 @@ export default function Witness({ cfg, phase, ar, post, onSetup, register, secti
   useEffect(() => { if (phase === 'active' && section) { void flushIdentity(); if (sectionRef.current !== section) { sectionRef.current = section; void send('section_start', { section }, true); } } }, [section, phase, send, flushIdentity]);
   useEffect(() => { if (phase !== 'done') return; streamRef.current?.getTracks().forEach((tr) => tr.stop()); streamRef.current = null; if (document.fullscreenElement) void document.exitFullscreen?.().catch(() => null); }, [phase]);
   useEffect(() => () => { streamRef.current?.getTracks().forEach((tr) => tr.stop()); }, []);
+  /* م8-ب: كاميرا غير متاحة/مرفوضة في وضع «قاعة + شاهِد» → حدث واحد camera_lost بعد أن تصبح الجلسة نشطة (بعد مؤثّر النشاط أعلاه) */
+  const unavailSent = useRef(false); const sendRef = useRef(send); sendRef.current = send; /* مرجع ثابت: الأب يعيد الرسم كل ثانية (المؤقّت) فلا نعيد ضبط المهلة */
+  useEffect(() => { if (phase !== 'active' || !cfg.camera || unavailSent.current || !(camState === 'denied' || camState === 'none')) return; const id = setTimeout(() => { if (!activeRef.current || unavailSent.current) return; unavailSent.current = true; setCounters((c) => ({ ...c, cam: c.cam + 1 })); void sendRef.current('camera_lost', { reason: camState === 'none' ? 'unavailable' : 'denied' }, false); }, 1200); return () => clearTimeout(id); }, [phase, cfg.camera, camState]);
   useEffect(() => { if (phase !== 'active' || !cfg.camera || camState !== 'on') return; const id = setTimeout(() => { if (!activeRef.current) return; const g = grab(); if (g.b64 && g.lum >= DARK) void send('frame', { lum: g.lum, diff: g.diff, first: true }, true); }, 1200); return () => clearTimeout(id); }, [phase, cfg.camera, camState]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (phase !== 'active' || !cfg.camera || camState !== 'lost') return; const id = setInterval(() => { if (!streamRef.current || streamRef.current.getVideoTracks().every((tr) => tr.readyState === 'ended')) void enable(); }, 10000); return () => clearInterval(id); }, [phase, cfg.camera, camState, enable]);
 
@@ -142,8 +147,8 @@ export default function Witness({ cfg, phase, ar, post, onSetup, register, secti
         <div className="wit-cam">{videoEl}
           <div className="wit-st">
             {camState === 'on' && <span className={lum !== null && lum < DARK ? 'wit-bad' : 'wit-ok'} data-testid="wit-light">{lum !== null && lum < DARK ? t('dark') : t('good')}</span>}
-            {camState === 'denied' && <><span className="wit-err" data-testid="wit-denied">{t('denied')}</span><button type="button" className="wit-btn" onClick={() => void enable()}>{t('retry')}</button></>}
-            {camState === 'none' && <span className="wit-err" data-testid="wit-none">{t('nocam')}</span>}
+            {camState === 'denied' && <><span className="wit-err" data-testid="wit-denied">{cfg.identity ? t('denied') : t('nocamGo')}</span><button type="button" className="wit-btn" onClick={() => void enable()}>{t('retry')}</button></>}
+            {camState === 'none' && <span className="wit-err" data-testid="wit-none">{cfg.identity ? t('nocam') : t('nocamGo')}</span>}
             {camState === 'idle' && <button type="button" className="wit-btn solid" onClick={() => void enable()} data-testid="wit-enable">{t('enable')}</button>}
             {cfg.identity && camState === 'on' && <div data-testid="wit-identity"><b>{t('idTitle')}</b><p style={{ margin: '2px 0 6px' }}>{t('idHint')}</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

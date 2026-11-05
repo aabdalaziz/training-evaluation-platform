@@ -81,7 +81,7 @@ export type SecureItem = { id: string; level: BankLevel; skill: Skill; correctOp
 export type PublicQuestion = { id: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string; options: Option[]; stimulus: { image: string | null; alt: string | null } | null };
 export type PublicPassage = { id: string; level: string; skill: 'reading' | 'listening'; title: string; text: string; audioUrl: string | null; player?: { speeds: number[]; replays: number; twice?: boolean } };
 export type PublicForm = { questions: PublicQuestion[]; passages: PublicPassage[] };
-export type Candidate = { name: string; email: string; phone?: string; nativeLanguage?: string; studiedBefore?: boolean | null; purpose?: string; idNumber?: string /* م7: رقم هوية/طالب عند طلب الجهة */ };
+export type Candidate = { name: string; email: string; phone?: string; nativeLanguage?: string; studiedBefore?: boolean | null; purpose?: string; idNumber?: string /* م7: رقم هوية/طالب عند طلب الجهة */; city?: string /* م8-ب: مدينة يصرّح بها المتقدّم عن بُعد (اختياري · بلا تتبّع) */ };
 export type Answer = { question_id: string; selected_option_id: string };
 export type Access = { time: 1 | 1.25 | 1.5; simple: boolean; contrast: boolean; large: boolean };
 export type Confidence = { grade: 'high' | 'medium' | 'border'; label_ar: string; label_en: string; note_ar: string };
@@ -106,6 +106,7 @@ export function normalizeCandidate(value: unknown): Candidate | null {
     name, email, phone: cleanText(row.phone, 40) || undefined, nativeLanguage: cleanText(row.nativeLanguage, 60) || undefined,
     studiedBefore: typeof row.studiedBefore === 'boolean' ? row.studiedBefore : null, purpose: cleanText(row.purpose, 60) || undefined,
     idNumber: cleanText(row.idNumber, 40).replace(/[^0-9A-Za-z\u0660-\u0669-]/g, '') || undefined,
+    city: cleanText(row.city, 60) || undefined,
   };
 }
 /** «احتياجاتي» في مِعيار: تُطلب بلا إثبات؛ الوقت ×1.25/×1.5 · تعليمات أبسط · تباين · خطّ أكبر */

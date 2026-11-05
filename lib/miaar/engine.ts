@@ -20,6 +20,7 @@ import type { Stopwatch } from './timing';
 import { planFromBlueprint, planFromSession, systemPlan, drawPlan, planStartIndex, nextStepPlan, examModeOf, levelVerdict, probeScoreFrom, probeBandIndexOf, TEST_TYPE_INFO } from './blueprint';
 import type { Plan } from './blueprint';
 import { parseMiaarReport, placementValid, evidenceSkills, effectiveLevel } from '../portal/placement';
+import { usesCamera } from './witness'; /* م8-ب */
 
 export type SessionRow = {
   id: string; token_hash: string; candidate: Candidate & { assignedItemCodes?: string[]; assignedDurationSeconds?: number; questionSource?: string; publishedFormTitle?: string; shortCells?: string[] };
@@ -27,8 +28,9 @@ export type SessionRow = {
   started_at: string; expires_at: string; finished_at: string | null; finish_reason: FinishReason | null; report: Report | null;
   invite_id: string | null; recipient_id: string | null; user_id: string | null; start_level_index: number; direction: 'up' | 'down'; probe: { score: number; band_index: number } | null; access: Access | null;
   blueprint_id?: string | null; plan?: unknown;  /* م2-ب: الخطة المثبّتة لحظة البدء */
+  proctor_mode?: 'room' | 'camera' | 'remote' | null;  /* م8-ب: وضع المراقبة المثبَّت لحظة البدء */
 };
-export type StartInput = { candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; userId?: string | null; blueprint?: unknown };
+export type StartInput = { candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; proctorMode?: 'room' | 'camera' | 'remote' | null; userId?: string | null; blueprint?: unknown };
 export type Result<T> = { ok: true; value: T } | { ok: false; code: string; status: number };
 const fail = (code: string, status: number): Result<never> => ({ ok: false, code, status });
 
@@ -112,7 +114,7 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
   const { data, error } = await db.from('placement_secure_sessions').insert({
     token_hash: tokenHash(token), candidate: stored, content_version: CONTENT_VERSION, exam_mode: examMode, status: 'active', expires_at: expiresAt, current_level_index: startIndex, start_level_index: startIndex, direction: 'up',
     probe: input.probeAnswers && activePlan.probe ? { score, band_index: startIndex } : null, access, invite_id: input.invite?.id || null, recipient_id: input.invite?.recipient_id || null, user_id: input.userId || null,
-    blueprint_id: blueprintId, plan: activePlan,
+    blueprint_id: blueprintId, plan: activePlan, proctor_mode: input.proctorMode || null, /* م8-ب: وضع المراقبة يُثبَّت على الجلسة */
   }).select('*').single();
   if (error || !data) { console.error('[miaar] session_start_failed', error?.code || '-', error?.message || 'no row');  /* سجلّ Vercel يحمل السبب (بلا بيانات شخصية) — درس حادثة م2-ب */ return fail('session_start_failed', 409); }
   mark('insert');
@@ -211,7 +213,9 @@ export async function finishSession(db: any, s: SessionRow, answers: Answer[], r
   for (let attempt = 0; attempt < 3 && !inserted; attempt += 1) {
     /* م7: نتائج الخدمة للجهات تُوسم external — لا تدخل في مؤشرات البرامج، وتدخل في السيكومترية */
     let source: 'internal' | 'external' = 'internal'; let integrity_status: 'pending' | null = null;
-    if (s.invite_id) { try { const { data: inv } = await db.from('placement_invites').select('service_mode, proctor_mode').eq('id', s.invite_id).maybeSingle(); if (inv?.service_mode === 'external') source = 'external'; /* م8 «شاهِد»: مع الكاميرا يبقى الحكم معلّقًا حتى يوقّعه إنسان */ if (inv?.proctor_mode === 'camera' || inv?.proctor_mode === 'remote') integrity_status = 'pending'; } catch { source = 'internal'; } }
+    if (s.invite_id) { try { const { data: inv } = await db.from('placement_invites').select('service_mode, proctor_mode').eq('id', s.invite_id).maybeSingle(); if (inv?.service_mode === 'external') source = 'external'; } catch { source = 'internal'; } }
+    /* م8 «شاهِد»: مع الكاميرا يبقى الحكم معلّقًا حتى يوقّعه إنسان — م8-ب: الوضع من الجلسة نفسها (الاختبار الفردي مشمول) */
+    if (usesCamera((s as any).proctor_mode)) integrity_status = 'pending';
     const r = await db.from('placement_reports').insert({ submission_id: s.id, test_version: CONTENT_VERSION, candidate_email: s.candidate.email, report, access_code, invite_id: s.invite_id, user_id: s.user_id, source, ...(integrity_status ? { integrity_status } : {}) }).select('id, created_at').single();
     if (r.error) { if (String(r.error.code) === '23505') { access_code = resultCode(); continue; } return fail('report_save_failed', 500); }
     inserted = r.data;

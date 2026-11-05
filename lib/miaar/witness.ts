@@ -43,8 +43,8 @@ export function intervalFor(mode: unknown, custom?: unknown): number {
   const n = Number(custom); return Number.isInteger(n) && n >= 20 && n <= 90 ? n : DEFAULT_INTERVAL[m];
 }
 /** ما يُعلَن للمتقدّم قبل البدء */
-export function witnessPublic(row: { proctor_mode?: string | null; witness_interval?: number | null } | null | undefined) {
-  const mode = isWitnessMode(row?.proctor_mode) ? row!.proctor_mode as WitnessMode : 'room';
+export function witnessPublic(row: { proctor_mode?: string | null; witness_interval?: number | null } | null | undefined, fallback: WitnessMode = 'room') {
+  const mode = isWitnessMode(row?.proctor_mode) ? row!.proctor_mode as WitnessMode : fallback;
   return { mode, camera: usesCamera(mode), interval: intervalFor(mode, row?.witness_interval), identity: mode === 'remote', fullscreen: mode === 'remote', retention_days: RETENTION_DAYS, title_ar: WITNESS_TITLE.ar, title_en: WITNESS_TITLE.en, mode_ar: WITNESS_MODE_AR[mode], mode_en: WITNESS_MODE_EN[mode] };
 }
 
@@ -102,9 +102,9 @@ async function countsFor(db: Db, sessionId: string): Promise<{ events: number; f
 
 export type RecordInput = { kind: unknown; meta?: unknown; frame?: unknown };
 /** تسجيل حدث من متصفح المتقدّم (داخل جلسة حيّة) — يرفض ما لا يناسب الوضع ويحترم الحدود */
-export async function recordEvent(db: Db, session: { id: string; invite_id: string | null; status: string }, invite: { proctor_mode?: string | null } | null, input: RecordInput): Promise<{ ok: true; seq: number; frames: number; stored: boolean } | { ok: false; error: string; status: number }> {
+export async function recordEvent(db: Db, session: { id: string; invite_id: string | null; status: string; proctor_mode?: string | null }, invite: { proctor_mode?: string | null } | null, input: RecordInput): Promise<{ ok: true; seq: number; frames: number; stored: boolean } | { ok: false; error: string; status: number }> {
   if (!isEventKind(input.kind) || !CLIENT_KINDS.includes(input.kind)) return { ok: false, error: 'witness_bad_kind', status: 400 };
-  const mode = isWitnessMode(invite?.proctor_mode) ? invite!.proctor_mode as WitnessMode : 'room';
+  const mode = resolveMode(session as any, invite, 'room');  /* م8-ب: الجلسة تحمل وضعها؛ الدعوة احتياط للجلسات الأقدم */
   const wantsFrame = typeof input.frame === 'string' && input.frame.length > 0;
   if (wantsFrame && !usesCamera(mode)) return { ok: false, error: 'witness_no_camera_mode', status: 400 };
   if (input.kind === 'identity_frame' && mode !== 'remote') return { ok: false, error: 'witness_identity_not_required', status: 400 };
@@ -138,6 +138,13 @@ export async function sendWhisper(db: Db, sessionId: string, text: unknown, by: 
   return ins.error ? { ok: false, error: 'تعذّر الإرسال' } : { ok: true, text: t };
 }
 
+/** م8-ب: همسة جماعية لقاعة/مكان — ترسل لكل جلسة حيّة في القائمة (تتخطّى المنتهية بصمت) */
+export async function sendWhisperMany(db: Db, sessionIds: unknown, text: unknown, by: string): Promise<{ ok: true; sent: number; text: string } | { ok: false; error: string }> {
+  const ids = Array.isArray(sessionIds) ? sessionIds.filter((x) => typeof x === 'string' && /^[0-9a-f-]{8,64}$/i.test(x)).slice(0, 100) as string[] : [];
+  if (!ids.length) return { ok: false, error: 'لا جلسات' };
+  let sent = 0; let t = ''; for (const id of ids) { const r = await sendWhisper(db, id, text, by); if (r.ok) { sent += 1; t = r.text; } else if (/حرفين/.test(r.error)) return { ok: false, error: r.error }; }
+  return { ok: true, sent, text: t };
+}
 /** «حكم الشاهد» — يوقّعه إنسان: سليم / ملاحظة / لاغٍ (يحجب الشهادة) */
 export async function setVerdict(db: Db, reportId: string, status: unknown, note: unknown, by: { id: string; email: string }): Promise<{ ok: true; report: any } | { ok: false; error: string }> {
   if (!isIntegrity(status) || status === 'pending') return { ok: false, error: 'اختر الحكم: سليم أو ملاحظة أو لاغٍ' };
@@ -169,7 +176,7 @@ export async function eventsFor(db: Db, sessionId: string): Promise<WitnessEvent
 }
 /** «غرفة الشاهد»: الخطّ الزمني الكامل لجلسة — لقطات موقَّعة 10 دقائق + أحداث + ملخّص + الحكم */
 export async function timelineFor(db: Db, sessionId: string) {
-  const { data: s } = await db.from('placement_secure_sessions').select('id, candidate, status, created_at, finished_at, invite_id, report').eq('id', sessionId).maybeSingle(); if (!s) return null;
+  const { data: s } = await db.from('placement_secure_sessions').select('id, candidate, status, created_at, finished_at, invite_id, report, proctor_mode').eq('id', sessionId).maybeSingle(); if (!s) return null;
   const [events, { data: rep }, { data: inv }] = await Promise.all([
     eventsFor(db, sessionId),
     db.from('placement_reports').select('id, access_code, integrity_status, integrity_note, integrity_by, integrity_at, source').eq('submission_id', sessionId).maybeSingle(),
@@ -181,16 +188,44 @@ export async function timelineFor(db: Db, sessionId: string) {
   const identity = frames.find((f) => f.kind === 'identity_frame') || null;
   const summary = integritySummary(events);
   const exit = (s.report as any)?.exit || null;
+  const mode = resolveMode(s as any, inv as any, await defaultWitnessMode(db));
   return {
     session: { id: s.id, status: s.status, started_at: s.created_at, finished_at: s.finished_at, name: String(s.candidate?.name || ''), email: String(s.candidate?.email || ''), id_number: s.candidate?.idNumber ? String(s.candidate.idNumber) : null },
-    invite: inv ? { id: inv.id, code: inv.code, label_ar: inv.label_ar, level: inv.level_target, mode: isWitnessMode(inv.proctor_mode) ? inv.proctor_mode : 'room', mode_ar: WITNESS_MODE_AR[(isWitnessMode(inv.proctor_mode) ? inv.proctor_mode : 'room') as WitnessMode], client_name: inv.service_mode === 'external' ? inv.client_name : null } : null,
+    /* م8-ب: الوضع الفعلي = المثبَّت على الجلسة ← الدعوة ← الافتراضي العام؛ والاختبار الفردي بلا دعوة له «غرفة» أيضًا */
+    mode, mode_ar: WITNESS_MODE_AR[mode],
+    invite: inv ? { id: inv.id, code: inv.code, label_ar: inv.label_ar, level: inv.level_target, mode, mode_ar: WITNESS_MODE_AR[mode], client_name: inv.service_mode === 'external' ? inv.client_name : null } : null,
     report: rep ? { id: rep.id, access_code: rep.access_code, integrity_status: rep.integrity_status, integrity_note: rep.integrity_note, integrity_by: rep.integrity_by, integrity_at: rep.integrity_at, source: rep.source } : null,
     exit: exit ? { الحالة: exit.الحالة, النتيجة: exit.النتيجة, الكلي: exit.الكلي, تقدير_ar: exit.تقدير_ar } : null,
     frames, marks, identity, summary, retention_days: RETENTION_DAYS, integrity_ar: INTEGRITY_AR, title: WITNESS_TITLE, at: nowIso(),
   };
 }
 /** للوحة الحيّة: آخر لقطة ومستوى الإشارات لكل جلسة في الدعوة (استعلام واحد + توقيع جماعي) */
-export async function liveFor(db: Db, sessionIds: string[]): Promise<Record<string, { level: string; level_ar: string; signals: number; frames: number; last_frame_at: string | null; last_frame_url: string | null; camera: 'on' | 'off' | 'none'; counters: Record<string, number> }>> {
+/* ---------- م8-ب: المراقبة صفةً أساسية لكل اختبار ---------- */
+export const SETTINGS_KEY_DEFAULT_MODE = 'witness_default_mode';
+export const FACTORY_DEFAULT_MODE: WitnessMode = 'camera';
+let defaultCache: { mode: WitnessMode; at: number } | null = null;
+/** «وضع المراقبة الافتراضي» لكل الاختبارات (يُقرأ من miaar_settings؛ ذاكرة 30 ث؛ المصنع: قاعة + شاهِد) */
+export async function defaultWitnessMode(db: Db): Promise<WitnessMode> {
+  if (defaultCache && Date.now() - defaultCache.at < 30000) return defaultCache.mode;
+  let mode: WitnessMode = FACTORY_DEFAULT_MODE;
+  try { const { data } = await db.from('miaar_settings').select('value').eq('key', SETTINGS_KEY_DEFAULT_MODE).maybeSingle(); if (isWitnessMode(data?.value)) mode = data.value; } catch { /* الجدول غير موجود بعد → المصنع */ }
+  defaultCache = { mode, at: Date.now() }; return mode;
+}
+export async function setDefaultWitnessMode(db: Db, mode: unknown, by: string): Promise<{ ok: true; mode: WitnessMode } | { ok: false; error: string }> {
+  if (!isWitnessMode(mode)) return { ok: false, error: 'وضع غير معروف' };
+  const r = await db.from('miaar_settings').upsert({ key: SETTINGS_KEY_DEFAULT_MODE, value: mode, updated_at: nowIso(), updated_by: by }, { onConflict: 'key' }); if (r.error) return { ok: false, error: 'تعذّر الحفظ' };
+  defaultCache = { mode, at: Date.now() }; return { ok: true, mode };
+}
+/** الوضع الفعلي: الجلسة (ثُبّت عند البدء) ← الدعوة (إن اختير صراحةً) ← الافتراضي العام */
+export function resolveMode(session: { proctor_mode?: string | null } | null | undefined, invite: { proctor_mode?: string | null } | null | undefined, fallback: WitnessMode): WitnessMode {
+  if (isWitnessMode(session?.proctor_mode)) return session!.proctor_mode as WitnessMode;
+  if (isWitnessMode(invite?.proctor_mode)) return invite!.proctor_mode as WitnessMode;
+  return fallback;
+}
+
+const PULSE_KINDS = new Set(['tab_hidden', 'focus_lost', 'fullscreen_exit', 'camera_lost', 'camera_back', 'still_frame', 'paste', 'screen_extended', 'whisper', 'section_start']);
+/** الحالة الحيّة لمجموعة جلسات (لوحة المجموعة + قاعة الشاهد) */
+export async function liveFor(db: Db, sessionIds: string[]): Promise<Record<string, { section: string | null; level: string; level_ar: string; signals: number; frames: number; last_frame_at: string | null; last_frame_url: string | null; camera: 'on' | 'off' | 'none'; counters: Record<string, number>; pulse: Array<{ k: string; at: string }> }>> {
   const out: Record<string, any> = {}; const ids = sessionIds.filter(Boolean).slice(0, 200); if (!ids.length) return out;
   const { data } = await db.from('miaar_witness_events').select('session_id, seq, kind, at, media_path, meta').in('session_id', ids).order('at', { ascending: false }).limit(4000);
   const by = new Map<string, WitnessEvent[]>(); for (const e of (data || []) as WitnessEvent[]) { const a = by.get(e.session_id) || []; a.push(e); by.set(e.session_id, a); }
@@ -199,8 +234,11 @@ export async function liveFor(db: Db, sessionIds: string[]): Promise<Record<stri
   const urls = await signAll(db, lastPaths);
   for (const sid of ids) {
     const evs = by.get(sid) || []; const s = integritySummary(evs); const lastCam = evs.find((e) => e.kind === 'camera_lost' || e.kind === 'camera_back' || e.media_path);
-    const camera: 'on' | 'off' | 'none' = !evs.some((e) => e.media_path) ? 'none' : lastCam?.kind === 'camera_lost' ? 'off' : 'on';
-    out[sid] = { level: s.level, level_ar: s.level_ar, signals: s.signals, frames: s.frames, last_frame_at: s.last_frame_at, last_frame_url: lastOf.has(sid) ? urls.get(lastOf.get(sid) as string) || null : null, camera, counters: { tab_hidden: s.tab_hidden, focus_lost: s.focus_lost, fullscreen_exit: s.fullscreen_exit, camera_lost: s.camera_lost, still_frame: s.still_frame, paste: s.paste, hidden_seconds: s.hidden_seconds } };
+    const camera: 'on' | 'off' | 'none' = lastCam?.kind === 'camera_lost' ? 'off' : evs.some((e) => e.media_path) ? 'on' : 'none'; /* م8-ب: كاميرا غير متاحة منذ البداية = منقطعة (تُرى في القاعة) */
+    const lastSec = evs.find((e) => e.kind === 'section_start'); const section = lastSec ? String(lastSec.meta?.section || '') || null : null;  /* م8-ب: القسم الحالي للقاعة */
+    out[sid] = { section, level: s.level, level_ar: s.level_ar, signals: s.signals, frames: s.frames, last_frame_at: s.last_frame_at, last_frame_url: lastOf.has(sid) ? urls.get(lastOf.get(sid) as string) || null : null, camera, counters: { tab_hidden: s.tab_hidden, focus_lost: s.focus_lost, fullscreen_exit: s.fullscreen_exit, camera_lost: s.camera_lost, still_frame: s.still_frame, paste: s.paste, hidden_seconds: s.hidden_seconds },
+      /* م8-ب «النبض»: آخر 24 إشارة بزمنها لرسم الخطّ الزمني المصغّر على بلاطة القاعة */
+      pulse: evs.filter((e) => PULSE_KINDS.has(e.kind)).slice(0, 24).reverse().map((e) => ({ k: e.kind, at: e.at })) };
   }
   return out;
 }
