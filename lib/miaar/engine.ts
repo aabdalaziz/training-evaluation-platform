@@ -281,7 +281,7 @@ export async function resultByCode(db: any, code: string): Promise<{ code: strin
     (safe as any).تنبيهات = { القائمة: ns.map(publicNotice), مشترك: sub }; } catch { /* اختياري */ }
   /* م10 «مِران»: إن كانت له خطّة معتمدة → زرّ «ابدأ مِران» على البطاقة (اليوم · ما أُنجز) — بلا بنود هنا */
   try { const { planByReport, currentDay, PLAN_DAYS } = await import('./practice'); const p = await planByReport(db, String(data.id));
-    if (p && (p.status === 'approved' || p.status === 'done')) { const cd = currentDay(p.start_date, new Date()); (safe as any).مِران = { الحالة: p.status, اليوم: cd.d, انتهت: cd.ended || p.status === 'done', أُنجز: p.days.filter((d) => d.done_at).length, الأيام: PLAN_DAYS, الرابط: `/miaar/practice/${data.access_code}` }; } } catch { /* اختياري */ }
+    if (p && (p.status === 'approved' || p.status === 'done')) { const cd = currentDay(p.start_date, new Date()); (safe as any).مِران = { النوع: p.kind || 'exit', الحالة: p.status, اليوم: cd.d, انتهت: cd.ended || p.status === 'done', أُنجز: p.days.filter((d) => d.done_at).length, الأيام: PLAN_DAYS, الرابط: `/miaar/practice/${data.access_code}` }; } } catch { /* اختياري */ }
   return { code: data.access_code, name, taken_at: data.created_at, report: safe };
 }
 export { PASS_PERCENT };

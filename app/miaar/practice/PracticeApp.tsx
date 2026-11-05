@@ -13,7 +13,7 @@ type Q = { id: string; skill: string; passageId: string | null; questionText: st
 type P = { id: string; skill: 'reading' | 'listening'; title: string; text: string; audioUrl: string | null };
 type Fb = { correct: boolean; correct_option: string; why_ar: string };
 type Card = { d: number; kind: 'drill' | 'mirror'; unit: string | null; unit_title: string; focus_ar: string; form: { questions: Q[]; passages: P[] } | null; text: { prompt_ar: string; min_words: number; earlier: { d: number; text: string } | null } | null; answered: Record<string, Fb>; note_ar: string | null; note_audio: string | null; first_of_unit: boolean };
-type View = { ok: boolean; code: string; name: string; الحالة: string; اليوم: number; انتهت: boolean; المستوى: string; المهارة: string | null; الوحدات: { الرمز: string; الاسم: string }[]; الأيام: { d: number; kind: string; unit: string | null; unit_title: string; done: boolean; n: number; correct: number; text: boolean; has_note: boolean; today: boolean }[]; بطاقة_اليوم: Card | null; المرآة: { unit: string; title_ar: string; before: number | null; now: number | null; delta: number | null }[]; الجاهزية: { state: 'ready' | 'close' | 'early'; label_ar: string; sentence_ar: string }; نصوص: { d: number; text: string; mirror: any }[]; أُنجز: number; الشعار: string };
+type View = { ok: boolean; code: string; name: string; النوع?: 'exit' | 'placement'; الحالة: string; اليوم: number; انتهت: boolean; المستوى: string; المهارة: string | null; الوحدات: { الرمز: string; الاسم: string }[]; الأيام: { d: number; kind: string; unit: string | null; unit_title: string; done: boolean; n: number; correct: number; text: boolean; has_note: boolean; today: boolean }[]; بطاقة_اليوم: Card | null; المرآة: { unit: string; title_ar: string; before: number | null; now: number | null; delta: number | null }[]; الجاهزية: { state: 'ready' | 'close' | 'early'; label_ar: string; sentence_ar: string }; نصوص: { d: number; text: string; mirror: any }[]; أُنجز: number; الشعار: string };
 const SK: Record<string, string> = { listening: 'استماع', reading: 'قراءة', grammar_vocab: 'مفردات وتراكيب', writing: 'الكتابة', speaking: 'المحادثة' };
 
 export default function PracticeApp({ code, fontClass = '' }: { code: string; fontClass?: string }) {
@@ -43,13 +43,14 @@ export default function PracticeApp({ code, fontClass = '' }: { code: string; fo
     catch { setLive('تعذّر الاتصال'); } finally { setBusy(''); }
   }
   const r = v?.الجاهزية;
+  const DAY0 = v?.النوع === 'placement' ? 'يوم التشخيص' : 'يوم الحكم'; /* م11: نقطة «قبل» في المرآة */
   return <div className={`mp ${fontClass}`} dir="rtl" lang="ar" data-testid="mp-page">
     <div className="mp-top"><header className="mp-head"><div className="mp-brandside"><a className="mp-brand" href="/">أَثَر<small>بوابة التميّز للاستشارات والتدريب</small></a><a className="mp-mark" href="/miaar">مِعيار</a></div>
       <a className="mp-lnk" href={`/miaar/result/${encodeURIComponent(code)}`} data-testid="mp-back-result">← بطاقة نتيجتي</a></header><WayBar lang="ar" /></div>
     {!v && !err && <p className="mp-wait" role="status">جارٍ فتح مِران…</p>}
     {err && <section className="mp-wrap"><div className="mp-card"><p className="mp-err" role="alert" data-testid="mp-nf">{err === 'noplan' ? 'لا خطّة مِران معتمدة لهذا الرمز بعد — حين يعتمدها مدرّبك يصلك تنبيه.' : 'لم نجد هذا الرمز.'}</p><a className="mp-btn ghost" href={`/miaar/result/${encodeURIComponent(code)}`}>إلى بطاقة النتيجة</a></div></section>}
     {v && <>
-      <section className="mp-band"><p className="mp-kicker">مِران · تدريب ما بين الحكم والإعادة · مستوى {v.المستوى}{v.المهارة ? ` · ${SK[v.المهارة] || v.المهارة}` : ''}</p>
+      <section className="mp-band"><p className="mp-kicker" data-testid="mp-kicker" data-kind={v.النوع || 'exit'}>{v.النوع === 'placement' ? 'مِران البداية · أول أسبوعين قبل أول درس' : 'مِران · تدريب ما بين الحكم والإعادة'} · مستوى {v.المستوى}{v.المهارة ? ` · ${SK[v.المهارة] || v.المهارة}` : ''}</p>
         <h1 data-testid="mp-title">{v.انتهت ? 'انتهت أيامك الأربعة عشر' : v.اليوم > 0 ? `اليوم ${v.اليوم} من 14` : 'تبدأ قريبًا'} · {v.name}</h1>
         <p className="mp-lead"><span className={`mp-ready ${r?.state}`} data-testid="mp-ready" data-state={r?.state}>{r?.label_ar}</span> {r?.sentence_ar}</p></section>
       <div className="mp-wrap">
@@ -85,7 +86,7 @@ export default function PracticeApp({ code, fontClass = '' }: { code: string; fo
 
         <section className="mp-card" data-testid="mp-mirror"><h2>مرآة التحسّن</h2>
           <ul className="mp-mirror">{v.المرآة.map((m) => <li key={m.unit} data-testid="mp-mirror-row" data-delta={m.delta ?? ''}><div className="mp-mh"><b>{m.title_ar}</b><em className={m.delta === null ? '' : m.delta > 0 ? 'up' : m.delta < 0 ? 'down' : ''}>{m.delta === null ? (m.now === null ? 'لم تتمرّن بعد' : `${m.now}%`) : `${m.delta > 0 ? '+' : ''}${m.delta}`}</em></div>
-            <div className="mp-bars"><span className="mp-bar a" style={{ width: `${m.before ?? 0}%` }} title={`يوم الحكم: ${m.before ?? '—'}%`} /><span className="mp-bar b" style={{ width: `${m.now ?? 0}%` }} title={`في مِران: ${m.now ?? '—'}%`} /></div><small>يوم الحكم {m.before ?? '—'}% ← في مِران {m.now ?? '—'}%</small></li>)}</ul>
+            <div className="mp-bars"><span className="mp-bar a" style={{ width: `${m.before ?? 0}%` }} title={`${DAY0}: ${m.before ?? '—'}%`} /><span className="mp-bar b" style={{ width: `${m.now ?? 0}%` }} title={`في مِران: ${m.now ?? '—'}%`} /></div><small>{DAY0} {m.before ?? '—'}% ← في مِران {m.now ?? '—'}%</small></li>)}</ul>
           {v.نصوص.length > 1 && <div className="mp-twins" data-testid="mp-twins"><h3>تمرين مزدوج — نصّاك</h3>{v.نصوص.map((t) => <div key={t.d}><b>اليوم {t.d}</b> <small>({t.mirror?.words || 0} كلمة · {t.mirror?.connectors || 0} روابط)</small><p>{t.text}</p></div>)}</div>}
         </section>
         <p className="mp-foot">{v.الشعار} · <a href={`/miaar/result/${encodeURIComponent(code)}`}>بطاقة النتيجة</a> · <a href={`/miaar/growth/${encodeURIComponent(code)}`}>رحلتك</a></p>

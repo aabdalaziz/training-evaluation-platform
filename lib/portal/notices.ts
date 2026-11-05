@@ -8,7 +8,7 @@
 import { sendPush, vapidFromEnv } from './push';
 import { inQuietHours, pushSubsFor } from './notify';
 
-export type NoticeKind = 'exit_final' | 'retake_open' | 'retake_rem3' | 'retake_rem1' | 'remedial_new' | 'remedial_tmrw' | 'promoted' | 'placed' | 'exit_summary' | 'practice_plan' | 'practice_day' | 'practice_nudge' | 'practice_idle' /* م10 مِران */ | 'custom';
+export type NoticeKind = 'exit_final' | 'retake_open' | 'retake_rem3' | 'retake_rem1' | 'remedial_new' | 'remedial_tmrw' | 'promoted' | 'placed' | 'exit_summary' | 'practice_plan' | 'practice_day' | 'practice_nudge' | 'practice_idle' /* م10 مِران */ | 'practice_pending' /* م11 مِران البداية */ | 'custom';
 
 export type NoticeInput = {
   email: string; user_id?: string | null; report_id?: string | null;
@@ -25,9 +25,9 @@ export type NoticeOpts = { site?: string; env?: NodeJS.ProcessEnv; fetchImpl?: t
 
 export const KIND_AR: Record<NoticeKind, string> = {
   exit_final: 'حكم العبور', retake_open: 'إعادة مهارة', retake_rem3: 'تذكير بالإعادة', retake_rem1: 'تذكير أخير', remedial_new: 'جلسة تعويض', remedial_tmrw: 'جلسة غدًا',
-  promoted: 'ترقية', placed: 'تسكين', exit_summary: 'ملخّص الشُّعبة', practice_plan: 'خطّة مِران', practice_day: 'مِران اليوم', practice_nudge: 'تذكير من مدرّبك', practice_idle: 'متعلّم متوقّف', custom: 'تنبيه',
+  promoted: 'ترقية', placed: 'تسكين', exit_summary: 'ملخّص الشُّعبة', practice_plan: 'خطّة مِران', practice_day: 'مِران اليوم', practice_nudge: 'تذكير من مدرّبك', practice_idle: 'متعلّم متوقّف', practice_pending: 'خطط مِران بانتظارك', custom: 'تنبيه',
 };
-export const KIND_ICON: Record<NoticeKind, string> = { exit_final: '⚖️', retake_open: '🔁', retake_rem3: '⏳', retake_rem1: '⏰', remedial_new: '🧭', remedial_tmrw: '📅', promoted: '🎓', placed: '🏫', exit_summary: '📋', practice_plan: '🗓️', practice_day: '💪', practice_nudge: '🤝', practice_idle: '💤', custom: '🔔' };
+export const KIND_ICON: Record<NoticeKind, string> = { exit_final: '⚖️', retake_open: '🔁', retake_rem3: '⏳', retake_rem1: '⏰', remedial_new: '🧭', remedial_tmrw: '📅', promoted: '🎓', placed: '🏫', exit_summary: '📋', practice_plan: '🗓️', practice_day: '💪', practice_nudge: '🤝', practice_idle: '💤', custom: '🔔' , practice_pending: '✍️' };
 
 export const SKILL_AR: Record<string, string> = { listening: 'الاستماع', reading: 'القراءة', grammar_vocab: 'القواعد والمفردات', writing: 'الكتابة', speaking: 'المحادثة' };
 
@@ -50,7 +50,8 @@ export type NoticeTextInput =
   | { kind: 'practice_plan'; level: string; code: string; days: number }
   | { kind: 'practice_day'; day: number; unit_title: string; code: string }
   | { kind: 'practice_nudge'; trainer: string; code: string }
-  | { kind: 'practice_idle'; name: string; days: number; inviteId: string };
+  | { kind: 'practice_idle'; name: string; days: number; inviteId: string }
+  | { kind: 'practice_pending'; n: number; classroom: string; classroomId: string };
 
 export function noticeText(t: NoticeTextInput): { title_ar: string; body_ar: string; url: string } {
   switch (t.kind) {
@@ -68,6 +69,7 @@ export function noticeText(t: NoticeTextInput): { title_ar: string; body_ar: str
     case 'practice_plan': return { title_ar: `خطّة مِران جاهزة لك — ${t.days} يومًا`, body_ar: `اعتمد مدرّبك خطّة تمرين قصيرة من وحدات مستوى ${t.level} التي تحتاج مراجعة: بطاقة واحدة كل صباح (7–10 دقائق) ومرآة تُريك تحسّنك. مِران تدريب لا اختبار.`, url: `/miaar/practice/${t.code}` };
     case 'practice_day': return { title_ar: `مِران اليوم ${t.day}: ${t.unit_title} — 7 دقائق`, body_ar: t.day === 7 || t.day === 14 ? 'يوم المرآة: أضعف خمسة بنود من أيامك السابقة — لترى الفرق بعينك.' : 'خمسة بنود وتغذية راجعة فورية. اليوم الفائت لا يضيع — يعود إليك غدًا.', url: `/miaar/practice/${t.code}` };
     case 'practice_nudge': return { title_ar: `تذكير من مدرّبك ${t.trainer}: مِران اليوم بانتظارك`, body_ar: 'خمس دقائق الآن خير من ساعة ليلة الإعادة. افتح بطاقتك.', url: `/miaar/practice/${t.code}` };
+    case 'practice_pending': return { title_ar: `${t.n} خطّة مِران البداية بانتظار توقيعك — شعبة ${t.classroom}`, body_ar: 'اقترحها النظام من خريطة التشخيص لطلابك الجدد. راجع الوحدات وأضف ملاحظتك ثم اعتمد — لا تُفتح للمتعلّم قبل توقيعك.', url: `/admin/miaar/ledger?practice=${encodeURIComponent(t.classroomId)}` };
     case 'practice_idle': return { title_ar: `${t.name} لم يتدرّب منذ ${t.days} أيام — ذكّره؟`, body_ar: 'من لوحة العبور: «ذكّر» يرسل تذكيرًا إنسانيًا بتوقيعك.', url: `/admin/miaar/exit?invite=${encodeURIComponent(t.inviteId)}#xb-practice` };
   }
 }

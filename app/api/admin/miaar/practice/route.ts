@@ -18,7 +18,7 @@ import { readJson } from '../../../../../lib/shield/body';
 import { normalizeSite } from '../../../../../lib/portal/open';
 import { listUnits, unitIndex, approvedFor } from '../../../../../lib/miaar/syllabus';
 import type { ExitLevel } from '../../../../../lib/miaar/syllabus';
-import { PRACTICE_TITLE, PLAN_DAYS, eligibleExit, weakUnitsFrom, planDays, draftPlan, approvePlan, editDay, cancelPlan, nudge, planById, summariesForReports, validateDayEdit, currentDay, STATUS_AR } from '../../../../../lib/miaar/practice';
+import { PRACTICE_TITLE, PLAN_DAYS, eligibleReport, planDays, draftPlan, approvePlan, editDay, cancelPlan, nudge, planById, summariesForReports, validateDayEdit, currentDay, STATUS_AR } from '../../../../../lib/miaar/practice';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -39,20 +39,27 @@ async function ctx(req: Request) {
 const REP_COLS = 'id, invite_id, candidate_email, access_code, report, user_id, created_at';
 async function eligibleReports(db: any, inviteId: string) {
   const { data } = await db.from('placement_reports').select(REP_COLS).eq('invite_id', inviteId).limit(500);
-  return (Array.isArray(data) ? data : []).filter((r: any) => eligibleExit(r.report?.exit).ok);
+  return (Array.isArray(data) ? data : []).filter((r: any) => eligibleReport(r.report).ok);
 }
+/* م11: نطاقات السجلّ — تقارير محدّدة أو شعبة (عبر قرارات التسكين) */
+async function reportsByIds(db: any, ids: string[]) { if (!ids.length) return []; const { data } = await db.from('placement_reports').select(REP_COLS).in('id', ids.slice(0, 200)); return (Array.isArray(data) ? data : []).filter((r: any) => eligibleReport(r.report).ok); }
+async function reportsByClassroom(db: any, classroomId: string) { const { data: dec } = await db.from('placement_decisions').select('report_id').eq('classroom_id', classroomId).eq('decision_status', 'approved').limit(500); return reportsByIds(db, (Array.isArray(dec) ? dec : []).map((d: any) => String(d.report_id))); }
+const idsParam = (v: string | null) => (v || '').split(',').map((x) => x.trim()).filter(isId).slice(0, 200);
 const learnerName = (r: any) => String(r?.report?.بيانات_المتقدم?.الاسم || '').trim() || String(r?.candidate_email || '');
 
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db } = c; const u = new URL(req.url);
-  const invite = u.searchParams.get('invite'); const plan = u.searchParams.get('plan');
-  if (invite) {
-    if (!isId(invite)) return bad('دعوة غير صالحة');
-    const reps = await eligibleReports(db, invite); const sums = await summariesForReports(db, reps); const units = await listUnits(db).catch(() => []); const ix = unitIndex(units);
-    const rows = reps.map((r: any) => { const el = eligibleExit(r.report.exit); const s = sums[r.id] || null; const weak = weakUnitsFrom(r.report.exit); const level = String(r.report.exit.المستوى || '');
+  const invite = u.searchParams.get('invite'); const plan = u.searchParams.get('plan'); const reportIds = idsParam(u.searchParams.get('reports')); const classroom = u.searchParams.get('classroom');
+  if (invite || reportIds.length || classroom) {
+    if (invite && !isId(invite)) return bad('دعوة غير صالحة'); if (classroom && !isId(classroom)) return bad('شعبة غير صالحة');
+    const reps = invite ? await eligibleReports(db, invite) : classroom ? await reportsByClassroom(db, classroom) : await reportsByIds(db, reportIds);
+    const sums = await summariesForReports(db, reps); const units = await listUnits(db).catch(() => []); const ix = unitIndex(units);
+    const rows = reps.map((r: any) => { const el = eligibleReport(r.report); const s = sums[r.id] || null; const level = el.ok ? el.level : ''; const weak = el.ok ? el.units : [];
       const pu = weak.length ? weak : approvedFor(units as any, level as ExitLevel).slice(0, 3).map((x) => x.code);
-      const proposed = s ? null : { units: pu, days: planDays(pu, !!(el.ok && (el.skill === 'writing' || el.skill === 'speaking'))) };
-      return { report_id: r.id, code: r.access_code, name: learnerName(r), email: r.candidate_email, outcome: r.report.exit.النتيجة, level, skill: el.ok ? el.skill : null, retake: r.report.exit.الإعادة || null, plan: s, proposed, unit_titles: Object.fromEntries((s?.units || proposed?.units || []).map((code: string) => [code, ix.get(code)?.title_ar || code])) }; });
+      const productive = el.ok && (el.kind === 'exit' ? el.skill === 'writing' || el.skill === 'speaking' : level !== 'A1');
+      const proposed = s ? null : { units: pu, days: planDays(pu, productive) };
+      const ex = r.report?.exit || null;
+      return { kind: el.ok ? el.kind : 'exit', report_id: r.id, code: r.access_code, name: learnerName(r), email: r.candidate_email, outcome: ex ? ex.النتيجة : 'placement', level, skill: el.ok ? el.skill : null, retake: ex?.الإعادة || null, plan: s, proposed, unit_titles: Object.fromEntries((s?.units || proposed?.units || []).map((code: string) => [code, ix.get(code)?.title_ar || code])) }; });
     return NextResponse.json({ success: true, title: PRACTICE_TITLE, days: PLAN_DAYS, rows, status_ar: STATUS_AR }, { headers: NO });
   }
   if (plan) {
@@ -72,7 +79,7 @@ export async function POST(req: Request) {
   const j = await readJson(req, { maxBytes: 512 * 1024 }); if (!j.ok) return bad(j.error, j.status); const b = j.body as Record<string, unknown>; const action = String(b.action || '');
   const audit = async (a: string, entity: string, meta: Record<string, unknown>) => { try { await db.from('audit_logs').insert({ actor_id: user.id, actor_email: user.email, actor_role: user.role, action: a, entity_type: 'miaar_practice', entity_id: entity, entity_label: PRACTICE_TITLE.ar, source: 'admin', metadata: meta }); } catch { /* تحسيني */ } };
   const repOf = async (id: string) => { const { data } = await db.from('placement_reports').select(REP_COLS).eq('id', id).maybeSingle(); return data || null; };
-  const ERR: Record<string, string> = { not_final: 'الحكم ليس نهائيًا بعد', passed: 'المتعلّم اجتاز — لا حاجة لمِران', retake_merged: 'أُنجزت الإعادة بالفعل', no_units: 'لا وحدات معتمدة لهذا المستوى — اعتمد وحدات «خريطة المنهج» أولًا', not_found: 'الخطّة غير موجودة', status_approved: 'الخطّة معتمدة بالفعل', status_done: 'الخطّة انتهت', status_cancelled: 'الخطّة ملغاة' };
+  const ERR: Record<string, string> = { not_diagnostic: 'ليست نتيجة تشخيص ولا حكم عبور', retake_sitting: 'جلسة إعادة مهارة — لا مِران لها', level_unsupported: 'دون A1 — لا وحدات منهج لهذا المستوى بعد', not_final: 'الحكم ليس نهائيًا بعد', passed: 'المتعلّم اجتاز — لا حاجة لمِران', retake_merged: 'أُنجزت الإعادة بالفعل', no_units: 'لا وحدات معتمدة لهذا المستوى — اعتمد وحدات «خريطة المنهج» أولًا', not_found: 'الخطّة غير موجودة', status_approved: 'الخطّة معتمدة بالفعل', status_done: 'الخطّة انتهت', status_cancelled: 'الخطّة ملغاة' };
   if (action === 'draft') {
     if (!isId(b.report_id)) return bad('نتيجة غير صالحة'); const rep = await repOf(b.report_id); if (!rep) return bad('النتيجة غير موجودة', 404);
     const r = await draftPlan(db, rep, user.id); if (!r.ok) return bad(ERR[r.error] || r.error);
@@ -90,14 +97,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, plan: r.plan }, { headers: NO });
   }
   if (action === 'approve_all') {
-    if (!isId(b.invite_id)) return bad('دعوة غير صالحة'); const skip = new Set(Array.isArray(b.skip) ? (b.skip as unknown[]).filter(isId) : []);
-    const reps = await eligibleReports(db, b.invite_id); const sums = await summariesForReports(db, reps); let done = 0; let skipped = 0; const errors: string[] = [];
+    const skip = new Set(Array.isArray(b.skip) ? (b.skip as unknown[]).filter(isId) : []);
+    const rids = Array.isArray(b.report_ids) ? (b.report_ids as unknown[]).filter(isId) as string[] : [];
+    if (!isId(b.invite_id) && !isId(b.classroom_id) && !rids.length) return bad('حدّد دعوة أو شعبة أو نتائج');
+    const reps = isId(b.invite_id) ? await eligibleReports(db, b.invite_id) : isId(b.classroom_id) ? await reportsByClassroom(db, b.classroom_id) : await reportsByIds(db, rids); const sums = await summariesForReports(db, reps); let done = 0; let skipped = 0; const errors: string[] = [];
     for (const rep of reps) {
       if (skip.has(rep.id) || (sums[rep.id] && sums[rep.id].status !== 'draft')) { skipped += 1; continue; }
       const d = await draftPlan(db, rep, user.id); if (!d.ok) { errors.push(`${learnerName(rep)}: ${ERR[d.error] || d.error}`); continue; }
       const r = await approvePlan(db, d.plan.id, user.id, [], { site, code: rep.access_code || null }); if (r.ok) done += 1; else errors.push(`${learnerName(rep)}: ${ERR[r.error] || r.error}`);
     }
-    await audit('miaar_practice_approve_all', b.invite_id, { done, skipped, errors: errors.length });
+    await audit('miaar_practice_approve_all', String(isId(b.invite_id) ? b.invite_id : isId(b.classroom_id) ? b.classroom_id : (rids[0] || '')), { done, skipped, errors: errors.length, scope: isId(b.invite_id) ? 'invite' : isId(b.classroom_id) ? 'classroom' : 'reports' });
     return NextResponse.json({ success: true, done, skipped, errors }, { headers: NO });
   }
   if (action === 'edit_day') {

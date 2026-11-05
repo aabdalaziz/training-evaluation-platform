@@ -27,12 +27,14 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
   const [programs, setPrograms] = useState<Program[]>([]); const [sections, setSections] = useState<Section[]>([]); const [invites, setInvites] = useState<{ id: string; label_ar: string; hours: number | null; lp: Record<string, string> }[]>([]); const [dl, setDl] = useState<{ off: boolean; hours: string; lp: Record<string, string> } | null>(null);
   const [sel, setSel] = useState<Set<string>>(new Set()); const [pick, setPick] = useState<Record<string, { level: string; program: string }>>({}); const [view, setView] = useState<'list' | 'board'>('list'); const [laneProg, setLaneProg] = useState<Record<string, string>>({}); const [drag, setDrag] = useState<string | null>(null); const [over, setOver] = useState<string | null>(null);
   const [bulk, setBulk] = useState({ level: 'each', program: '', tag: '', reason: '', days: '30', note: '' });
+  const [practiceRoom, setPracticeRoom] = useState<string | null>(null); /* م11: الوصول من إشعار «خطط مِران بانتظارك» */
+  const [practice, setPractice] = useState<Record<string, { id: string; kind: string; status: string; status_ar: string; today: number; done: number; total: number; avg_delta: number | null; ready: string | null; units: string[] }>>({}); /* م11 مِران البداية */
   const [history, setHistory] = useState<any>(null); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState(''); const [showSections, setShowSections] = useState(false);
   const qs = useMemo(() => { const p = new URLSearchParams(); for (const [k, v] of Object.entries(f)) if (v) p.set(k, v); return p.toString(); }, [f]);
   async function load() {
     const j = await fetch(`/api/admin/miaar/ledger?${qs}`, { headers: await auth(), cache: 'no-store' }).then((r) => r.json()).catch(() => null);
     if (!j?.success) { setErr(j?.error || 'تعذّر تحميل السجلّ'); return; }
-    setErr(''); setRows(j.rows); setCounts(j.counts); setCanDelete(!!j.can_delete); setAuto(j.auto || null); setSel(new Set());
+    setErr(''); setRows(j.rows); setCounts(j.counts); setCanDelete(!!j.can_delete); setAuto(j.auto || null); setSel(new Set()); setPractice(j.practice || {});
   }
   async function loadAux() {
     const H = await auth();
@@ -45,7 +47,7 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
   }, [f.invite, invites]);
   async function saveDeadline() { if (!dl || !f.invite) return; const j = await post({ action: 'deadline', invite_id: f.invite, hours: dl.off ? null : Number(dl.hours), level_programs: dl.lp }); if (j) await loadAux(); }
   useEffect(() => { void loadAux(); /* الوصول من التقارير/الدعوات بمرشّح جاهز: ?q=بريد · ?invite=معرّف · ?status= */
-    try { const sp = new URLSearchParams(window.location.search); const next = { ...f }; let changed = false; for (const k of ['q', 'invite', 'status', 'tag', 'level', 'decision'] as const) { const v = sp.get(k); if (v) { (next as any)[k] = v; changed = true; } } if (changed) setF(next); } catch { /* لا شيء */ }
+    try { const sp = new URLSearchParams(window.location.search); const next = { ...f }; let changed = false; for (const k of ['q', 'invite', 'status', 'tag', 'level', 'decision'] as const) { const v = sp.get(k); if (v) { (next as any)[k] = v; changed = true; } } if (changed) setF(next); const pr = sp.get('practice'); if (pr && /^[0-9a-zA-Z-]{2,40}$/.test(pr)) { setPracticeRoom(pr); if (!sp.get('decision')) setF({ ...next, decision: 'approved' }); } } catch { /* لا شيء */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   async function post(body: Record<string, unknown>, label = '') {
@@ -53,6 +55,20 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
     try { const j = await fetch('/api/admin/miaar/ledger', { method: 'POST', headers: await auth(), body: JSON.stringify(body) }).then((r) => r.json()); if (!j?.success) { setErr(j?.error || 'تعذّر الإجراء'); return null; } await load(); setOk(j.note_ar || 'تم'); return j; }
     catch { setErr('تعذّر الاتصال'); return null; } finally { setBusy(''); }
   }
+  /* م11 «مِران البداية»: اعتماد خطّة تمرين (14 يومًا من أضعف وحدات مستوى الالتحاق) — بتوقيع إنسان؛ تُفتح للمتعلّم فورًا ويصله تنبيه */
+  async function practiceApprove(ids: string[], label: string) {
+    if (!ids.length) return; setBusy(label); setErr(''); setOk('');
+    try { const j = await fetch('/api/admin/miaar/practice', { method: 'POST', headers: { ...(await auth()), 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_all', report_ids: ids }) }).then((r) => r.json());
+      if (!j?.success) { setErr(j?.error || 'تعذّر اعتماد مِران'); return; } await load(); setOk(`مِران البداية: اعتُمدت ${j.done} خطّة${j.skipped ? ` · تُخطّي ${j.skipped} (لها خطّة أو غير مؤهّلة)` : ''}${j.errors?.length ? ` · ${j.errors.join(' · ')}` : ''}`); }
+    catch { setErr('تعذّر الاتصال'); } finally { setBusy(''); }
+  }
+  async function practiceApproveRoom() {
+    if (!practiceRoom || !window.confirm('اعتماد كل مسوَّدات مِران البداية لهذه الشعبة؟')) return; setBusy('practice-room'); setErr(''); setOk('');
+    try { const j = await fetch('/api/admin/miaar/practice', { method: 'POST', headers: { ...(await auth()), 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'approve_all', classroom_id: practiceRoom }) }).then((r) => r.json());
+      if (!j?.success) { setErr(j?.error || 'تعذّر'); return; } await load(); setOk(`مِران البداية للشعبة: اعتُمدت ${j.done} خطّة${j.skipped ? ` · تُخطّي ${j.skipped}` : ''}`); setPracticeRoom(null); }
+    catch { setErr('تعذّر الاتصال'); } finally { setBusy(''); }
+  }
+  const decidedSel = [...sel].filter((id) => { const r = rows.find((x) => x.id === id); const pr = practice[id]; return r?.decision?.status === 'approved' && (!pr || pr.status === 'draft' || pr.status === 'cancelled'); });
   const ids = [...sel]; const all = rows.length > 0 && rows.every((r) => sel.has(r.id));
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const pk = (r: Row) => pick[r.id] || { level: r.decision?.level || r.entry, program: r.decision?.program_id || '' };
@@ -78,6 +94,7 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
     <div className="lg" data-testid="mi-ledger">
       <style>{CSS}</style>
       {err && <div className="am-err" role="alert">{err}</div>}{ok && <div className="am-ok" role="status" data-testid="lg-ok">{ok}</div>}
+      {practiceRoom && <div className="lg-prbar" data-testid="lg-practice-room"><b>💪 خطط «مِران البداية» بانتظار توقيعك</b> — اقترحها النظام من خريطة التشخيص لطلاب الشعبة. راجع كل صفّ (زرّ «اعتمد مِران البداية») أو اعتمدها دفعة واحدة. <button type="button" className="am-btn lg-go" disabled={!!busy} onClick={() => void practiceApproveRoom()} data-testid="lg-practice-room-go">اعتمد مسوَّدات الشعبة</button></div>}
       <div className="mm-cards lg-cards">
         <div className="mm-card navy"><span>نتائج نشطة</span><b data-testid="lg-active">{counts.active ?? 0}</b><small>في السجلّ الآن</small></div>
         <div className="mm-card teal"><span>بلا قرار</span><b data-testid="lg-undecided">{counts.undecided ?? 0}</b><small>{counts.due ? `منها ${counts.due} حلّت مهلتها` : 'ضمن المهلة'}</small></div>
@@ -151,8 +168,8 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
             </section>; })}
           </div>}
         </div> : <div className="lg-list">
-          <div className="lg-lhead"><label><input type="checkbox" aria-label="تحديد الكل" checked={all} onChange={() => setSel(all ? new Set() : new Set(rows.map((r) => r.id)))} data-testid="lg-check-all" /> تحديد الكل</label><span>{sel.size ? `${sel.size} محدَّد` : 'سُلَّم المستوى: الحلقة الذهبية = توصية مِعيار، والممتلئ = قرارك'}</span></div>
-          {rows.map((r) => { const p = pk(r); const d = r.decision; const left = hoursLeft(r.deadline_at); const gray = d?.gray_reason || (!d && r.gray); const ovr = p.level !== r.entry; return <article key={r.id} className={`lg-row${r.archived_at ? ' arch' : ''}${d?.status === 'review' || (!d && r.gray) ? ' gray' : ''}${sel.has(r.id) ? ' sel' : ''}`} data-testid="lg-row">
+          <div className="lg-lhead"><label><input type="checkbox" aria-label="تحديد الكل" checked={all} onChange={() => setSel(all ? new Set() : new Set(rows.map((r) => r.id)))} data-testid="lg-check-all" /> تحديد الكل</label><span>{sel.size ? `${sel.size} محدَّد` : 'سُلَّم المستوى: الحلقة الذهبية = توصية مِعيار، والممتلئ = قرارك'}</span>{decidedSel.length > 0 && <button type="button" className="am-btn lg-go" disabled={!!busy} onClick={() => { if (window.confirm(`اعتماد مِران البداية لـ ${decidedSel.length} متعلّمًا مسكَّنًا؟ تُفتح لهم خطّة 14 يومًا اليوم.`)) void practiceApprove(decidedSel, 'practice-all'); }} data-testid="lg-practice-all">💪 اعتمد مِران البداية للمحدّدين ({decidedSel.length})</button>}</div>
+          {rows.map((r) => { const p = pk(r); const d = r.decision; const left = hoursLeft(r.deadline_at); const gray = d?.gray_reason || (!d && r.gray); const ovr = p.level !== r.entry; return <article key={r.id} className={`lg-row${r.archived_at ? ' arch' : ''}${d?.status === 'review' || (!d && r.gray) ? ' gray' : ''}${sel.has(r.id) ? ' sel' : ''}`} data-testid="lg-row" data-email={r.email}>
             <div className="lg-top">
               <input type="checkbox" className="lg-cb" aria-label={`تحديد ${r.name}`} checked={sel.has(r.id)} onChange={() => toggle(r.id)} data-testid="lg-check" />
               <div className={`lg-coin lv-${r.demonstrated}`} title={`المستوى المثبت ${LV[r.demonstrated]}`}><b>{LV[r.demonstrated]}</b><small>مثبت</small></div>
@@ -173,7 +190,9 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
               </div>
             </div>
             <div className="lg-bot">
-              {d && d.status === 'approved' ? <div className="lg-decided" data-testid="lg-decided"><Icon name="check" /><b>{LV[d.level || ''] || '—'}</b>{d.level && d.level !== r.entry && <small className="lg-ovr">يدوي بدل {LV[r.entry]}</small>}<span className="lg-arrow">←</span><span>{d.program_name ? d.program_name : 'بلا تسجيل'}{d.classroom ? ` · شعبة ${d.classroom}` : ''}</span><small className="lg-dim">{d.source === 'auto' ? 'تلقائي' : 'إنسان'} · {fmt(d.decided_at)}</small><button type="button" className="lg-link" onClick={() => void post({ action: 'decision_clear', report_id: r.id }, `clear-${r.id}`)}>تغيير</button></div>
+              {d && d.status === 'approved' ? <div className="lg-decided" data-testid="lg-decided"><Icon name="check" /><b>{LV[d.level || ''] || '—'}</b>{d.level && d.level !== r.entry && <small className="lg-ovr">يدوي بدل {LV[r.entry]}</small>}<span className="lg-arrow">←</span><span>{d.program_name ? d.program_name : 'بلا تسجيل'}{d.classroom ? ` · شعبة ${d.classroom}` : ''}</span><small className="lg-dim">{d.source === 'auto' ? 'تلقائي' : 'إنسان'} · {fmt(d.decided_at)}</small><button type="button" className="lg-link" onClick={() => void post({ action: 'decision_clear', report_id: r.id }, `clear-${r.id}`)}>تغيير</button>{(() => { const pr = practice[r.id]; if (pr && pr.status !== 'draft' && pr.status !== 'cancelled') return <span className={`lg-pr ${pr.status}`} data-testid="lg-practice" data-status={pr.status} title={pr.units.join(' · ')}>💪 مِران {pr.status === 'done' ? 'اكتمل' : `يوم ${pr.today}/${pr.total}`} · {pr.done}/{pr.total}{typeof pr.avg_delta === 'number' ? ` · ${pr.avg_delta > 0 ? '+' : ''}${pr.avg_delta}` : ''}{pr.ready === 'ready' ? ' · جاهز لأول درس' : ''}</span>;
+                  if (r.entry === 'PRE_A1' || (d?.level && d.level === 'PRE_A1')) return null; /* دون A1: لا وحدات منهج بعد */
+                  return <button type="button" className="lg-link lg-pr-go" disabled={!!busy || !!r.archived_at} onClick={() => void practiceApprove([r.id], `practice-${r.id}`)} data-testid="lg-practice-go" title={pr ? `مسوَّدة جاهزة: ${pr.units.join(' · ')}` : 'يقترح النظام الوحدات من خريطة التشخيص'}>💪 {pr ? 'اعتمد مِران البداية (مسوَّدة جاهزة)' : 'مِران البداية'}</button>; })()}</div>
                 : <div className="lg-pick" data-testid="lg-pick">
                   <div className="lg-ladder" role="radiogroup" aria-label="مستوى التسكين" data-testid="lg-level" data-value={p.level} data-rec={r.entry}>{LEVELS.map((l, i) => <button key={l} type="button" role="radio" aria-checked={p.level === l} className={`${p.level === l ? 'on' : ''}${l === r.entry ? ' rec' : ''}${(i < LEVELS.indexOf(p.level as any) && i >= LEVELS.indexOf(r.entry as any)) || (i > LEVELS.indexOf(p.level as any) && i <= LEVELS.indexOf(r.entry as any)) ? ' path' : ''}`} title={l === r.entry ? `${LV[l]} — توصية مِعيار` : LV[l]} onClick={() => setLevel(r, l)} data-testid={`lg-lv-${l}`}>{LV[l]}</button>)}</div>
                   <span className="lg-arrow" aria-hidden="true">←</span>
@@ -228,6 +247,8 @@ const CSS = `
 .lg-ladder button.path{background:#e6f4f3}.lg-ladder button.on{background:#0b8a83;border-color:#0b8a83;color:#fff;z-index:2}.lg-ladder button.on.rec{box-shadow:inset 0 0 0 2px #c9a24b}
 .lg-pick{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;padding-top:6px}.lg-pick select{border:1px solid #cbd5e1;border-radius:10px;padding:5px 8px;font:inherit;font-size:13px;font-weight:800;background:#fff;min-height:32px;max-width:min(100%,250px)}.lg-arrow{color:#94a3b8;font-weight:900}
 .am-btn.lg-go{min-height:32px;padding:4px 14px;border-radius:10px;font-size:13px;background:#0b8a83;border-color:#0b8a83}.am-btn.lg-go:disabled{opacity:.5;cursor:not-allowed}.lg-ovr{color:#8a6a1f;font-weight:800;font-size:12px}.lg-rec{color:#64748b;font-size:12px;font-weight:700}
+.lg-prbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#f0fdfa;border:1px solid #99f6e4;border-radius:12px;padding:10px 12px;margin:0 0 10px;font-size:13px}
+.lg-pr{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px;font-weight:800}.lg-pr.done{background:#f1f5f9;color:#475569}.lg-pr-go{color:#0b8a83}
 .lg-decided{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#0f5c57;font-weight:800;min-width:0}.lg-decided b{font-size:16px}.lg-decided .lg-dim{color:#64748b;font-weight:700;font-size:12px}.lg-decided .lg-ovr{background:#fbf5e4;border-radius:999px;padding:1px 8px;font-size:11px}
 .lg-link{background:none;border:0;padding:0;font:inherit;font-size:12px;font-weight:800;color:#0b8a83;cursor:pointer;text-decoration:underline}
 .lg-bot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px 10px;border-top:1px dashed var(--line,#e2e8f0);background:#fbfcfd}.lg-row.gray .lg-bot{background:#fff9e8}

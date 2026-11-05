@@ -26,7 +26,7 @@ export type MiaarFacts = {
   linked_units: { program_units: number; level_units: number };
   practice?: PracticeFacts | null; /* م10 مِران */
 };
-export type PracticeFacts = { plans: number; approved: number; active: number; days_done: number; avg_delta: number | null; with_delta: number; retook: number; passed_after: number };
+export type PracticeFacts = { plans: number; placement?: number /* م11 */; approved: number; active: number; days_done: number; avg_delta: number | null; with_delta: number; retook: number; passed_after: number };
 export const EMPTY_FACTS: MiaarFacts = { invites: [], retakes: { n: 0, passed_after: 0, last_at: null }, sessions: [], effects: [], linked_units: { program_units: 0, level_units: 0 }, practice: null };
 
 const day = (iso: string | null | undefined) => (iso ? String(iso).slice(0, 10) : null);
@@ -55,14 +55,14 @@ export function miaarEvidence(f: MiaarFacts, kMin = K_MIN): Evidence[] {
   }
   if (f.retakes.n >= kMin) out.push({ id: 'miaar_retake:1', kind: 'miaar_retake', codes: [...MIAAR_CODES.retake], n: f.retakes.n, at: day(f.retakes.last_at), href: '/admin/miaar/exit',
     label_ar: `إعادة مهارة واحدة خلال 14 يومًا: ${f.retakes.n} إعادة · ${f.retakes.passed_after} أفضت إلى اجتياز` });
-  /* م10 «مِران»: تدريب موجَّه بين الحكم والإعادة — k ≥ 5 خطّة معتمدة */
+  /* م10 «مِران» + م11 «مِران البداية»: تدريب موجَّه بعد الحكم أو بعد التشخيص — k ≥ 5 خطّة معتمدة */
   const pr = f.practice; if (pr && pr.approved >= kMin) out.push({ id: 'miaar_practice:1', kind: 'miaar_practice', codes: [...MIAAR_CODES.practice], n: pr.approved, at: null, href: '/admin/miaar/exit#xb-practice',
     label_ar: practiceText(pr) });
   return out;
 }
 
 export function practiceText(pr: PracticeFacts): string {
-  return `مِران — تدريب موجَّه بين الحكم والإعادة: ${pr.approved} خطّة اعتمدها مدرّب · ${pr.days_done} يوم تمرين مُنجَز${pr.with_delta >= 1 && pr.avg_delta !== null ? ` · متوسط تحسّن الوحدات ${pr.avg_delta > 0 ? '+' : ''}${pr.avg_delta} نقطة` : ''}${pr.retook ? ` · ${pr.retook} أعادوا بعد مِران و${pr.passed_after} اجتازوا` : ''}`;
+  return `مِران — تدريب موجَّه بين الحكم والإعادة: ${pr.approved} خطّة اعتمدها مدرّب · ${pr.days_done} يوم تمرين مُنجَز${pr.with_delta >= 1 && pr.avg_delta !== null ? ` · متوسط تحسّن الوحدات ${pr.avg_delta > 0 ? '+' : ''}${pr.avg_delta} نقطة` : ''}${pr.retook ? ` · ${pr.retook} أعادوا بعد مِران و${pr.passed_after} اجتازوا` : ''}${pr.placement ? ` · منها ${pr.placement} «مِران البداية» بعد التشخيص (م11)` : ''}`;
 }
 /** ملخّص رقمي للتجميع المؤسسي (P48-ب) ولسطر البوابة */
 export function miaarSummary(f: MiaarFacts, kMin = K_MIN) {

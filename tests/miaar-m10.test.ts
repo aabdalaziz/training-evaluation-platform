@@ -118,7 +118,7 @@ test('م10: التحقّق — اليوم 1..14 · الوحدة من مستوى 
 });
 
 test('م10: الملخّص للوحات — الحالة بالعربية · اليوم · المُنجَز · الخمول من آخر محاولة · متوسط فرق المرآة', () => {
-  const plan: PlanRow = { id: 'p1', report_id: 'r1', invite_id: 'i1', email: 'a@x', user_id: null, level: 'A1', skill: 'reading', units: ['A1-U01'], days: planDays(['A1-U01']).map((d) => (d.d <= 3 ? { ...d, done_at: 'x' } : d)), status: 'approved', created_by: null, approved_by: 'u1', approved_at: '2026-11-01T06:00:00Z', start_date: '2026-11-02', last_attempt_at: '2026-11-04T06:00:00Z', done_at: null, created_at: '2026-11-01' };
+  const plan: PlanRow = { kind: 'exit', id: 'p1', report_id: 'r1', invite_id: 'i1', email: 'a@x', user_id: null, level: 'A1', skill: 'reading', units: ['A1-U01'], days: planDays(['A1-U01']).map((d) => (d.d <= 3 ? { ...d, done_at: 'x' } : d)), status: 'approved', created_by: null, approved_by: 'u1', approved_at: '2026-11-01T06:00:00Z', start_date: '2026-11-02', last_attempt_at: '2026-11-04T06:00:00Z', done_at: null, created_at: '2026-11-01' };
   const s = summarize(plan, new Date('2026-11-08T09:00:00Z'), [{ unit: 'A1-U01', title_ar: 'x', before: 30, now: 60, delta: 30 }, { unit: 'A1-U02', title_ar: 'y', before: 40, now: 50, delta: 10 }], { state: 'close', label_ar: '', sentence_ar: '', per_unit: [] });
   assert.equal(s.status_ar, 'معتمدة'); assert.equal(s.today, 7); assert.equal(s.done, 3); assert.equal(s.total, 14); assert.equal(s.idle_days, 4); assert.equal(s.avg_delta, 20); assert.equal(s.ready, 'close');
   assert.equal(summarize({ ...plan, status: 'draft' }, new Date(), null, null).idle_days, null, 'المسوَّدة بلا خمول'); assert.equal(STATUS_AR.done, 'انتهت'); assert.equal(PRACTICE_TITLE.ar, 'مِران — تدريب ما بين الحكم والإعادة');
@@ -146,7 +146,7 @@ test('م10: أدلة الاعتماد — نوع miaar_practice (2.2 · 2.5 · 3
   assert.deepEqual([...MIAAR_CODES.practice], ['2.2', '2.5', '3.3']); assert.match(EVIDENCE_KIND_AR.miaar_practice, /مِران/);
   const few = miaarEvidence({ ...EMPTY_FACTS, practice: { plans: 4, approved: 4, active: 2, days_done: 20, avg_delta: 12, with_delta: 3, retook: 1, passed_after: 1 } }); assert.ok(!few.some((e) => e.kind === 'miaar_practice'), 'أقل من 5 → لا دليل');
   const ev = miaarEvidence({ ...EMPTY_FACTS, practice: { plans: 7, approved: 6, active: 2, days_done: 41, avg_delta: 18, with_delta: 4, retook: 3, passed_after: 2 } }).find((e) => e.kind === 'miaar_practice')!;
-  assert.ok(ev); assert.equal(ev.n, 6); assert.deepEqual(ev.codes, ['2.2', '2.5', '3.3']); assert.match(ev.label_ar, /6 خطّة/); assert.match(ev.label_ar, /\+18/); assert.match(ev.label_ar, /3 أعادوا/); assert.match(ev.href, /admin\/miaar\/exit/);
+  assert.ok(ev); assert.equal(ev.n, 6); assert.deepEqual(ev.codes, ['2.2', '2.5', '3.3']); assert.match(ev.label_ar, /6 خطّة/); assert.match(ev.label_ar, /\+18/); assert.match(ev.label_ar, /3 أعادوا/); assert.match(String(ev.href), /admin\/miaar\/exit/);
   assert.ok(!practiceText({ plans: 5, approved: 5, active: 0, days_done: 0, avg_delta: null, with_delta: 0, retook: 0, passed_after: 0 }).includes('متوسط'), 'بلا فرق → بلا متوسط');
 });
 

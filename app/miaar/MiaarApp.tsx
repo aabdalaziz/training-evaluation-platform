@@ -718,6 +718,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
       {report?.السجلّ?.رحلة && <p className="mi-ledger journey" data-testid="mi-journey">{ar ? 'لك أكثر من محاولة في مِعيار — ' : 'You have more than one sitting in Miaar — '}<a href={`/miaar/growth/${code}`} data-testid="mi-journey-link">{ar ? 'شاهد رحلتك ونموّك على السُّلّم' : 'see your journey and growth on the scale'}</a></p>}
       {/* م6 «عُبور»: شريط نهاية المستوى — الحكم المركّب · المهارات الخمس · خطّ العبور · الشهادة */}
       {report?.exit && <ExitStrip ex={report.exit} code={code || ""} ar={ar} x={x} svc={report.شهادة || null} practice={(report as any).مِران || null} />}
+      {!report?.exit && (report as any)?.مِران && <div className="mi-exit-strip mi-start-strip"><PracticeBox practice={(report as any).مِران} ar={ar} /></div>}
       {/* P39 «إشعارات المتعلّم»: «نبّهني» (اشتراك مجهول برمز النتيجة) + آخر المستجدّات الخاصة بهذه النتيجة */}
       <NoticesStrip n={(report as any)?.تنبيهات || null} code={code || ''} ar={ar} />
       {(report as any)?.نزاهة && <p className={`mi-exit-note mi-wit-${(report as any).نزاهة.الحالة}`} data-testid="mi-integrity" data-status={(report as any).نزاهة.الحالة}><b>{x('wit_strip')}:</b> {x(`wit_${(report as any).نزاهة.الحالة}`)}{(report as any).نزاهة.ملاحظة ? ` — ${(report as any).نزاهة.ملاحظة}` : ''}</p>}
@@ -804,11 +805,7 @@ function ExitStrip({ ex, code, ar, x, svc = null, practice = null }: { ex: any; 
         return <p key={s.id} className="mi-exit-sline" data-past={past ? '1' : '0'}><Icon name="calendar" size={14} /> <b>{ar ? 'جلسة مراجعة' : 'Review session'}:</b> {when} <span className="mi-exit-sdur">· {s.duration_min} {ar ? 'دقيقة' : 'min'}</span>{!past && s.join_url && <a className="mi-btn ghost small" href={s.join_url} target="_blank" rel="noopener noreferrer" data-testid="mi-exit-join">{ar ? 'انضمّ' : 'Join'}</a>}{!past && <a className="mi-btn ghost small" href={ics} download={`athar-review-${String(s.id).slice(0, 8)}.ics`}>{ar ? 'أضف إلى التقويم' : 'Add to calendar'}</a>}{past && <span className="mi-exit-sdur">· {ar ? 'انتهت' : 'ended'}</span>}</p>; })}
       <small className="mi-exit-snote">{ar ? 'الجلسة دعم لك قبل «إعادة المهارة» — لا تغيّر نتيجتك الرسمية.' : 'The session supports you before the skill retake — it does not change your official result.'}</small>
     </div>}
-    {practice && <div className="mi-exit-practice" data-testid="mi-practice">
-      <p><b>{ar ? 'مِران' : 'Miran'}</b> · {practice.انتهت ? (ar ? `انتهت أيام التمرين — أنجزت ${practice.أُنجز} من ${practice.الأيام}` : `Practice days ended — ${practice.أُنجز} of ${practice.الأيام} done`) : (ar ? `خطّة تمرين ${practice.الأيام} يومًا اعتمدها مدرّبك — اليوم ${practice.اليوم} · أنجزت ${practice.أُنجز}` : `A ${practice.الأيام}-day practice plan approved by your trainer — day ${practice.اليوم} · ${practice.أُنجز} done`)}</p>
-      <a className="mi-btn" href={practice.الرابط} data-testid="mi-practice-open">{practice.انتهت ? (ar ? 'افتح مرآتك' : 'Open your mirror') : (ar ? 'ابدأ مِران اليوم' : 'Start today’s practice')}</a>
-      <small>{ar ? 'مِران تدريب لا اختبار — لا يغيّر نتيجتك الرسمية.' : 'Practice, not a test — it does not change your official result.'}</small>
-    </div>}
+    {practice && <PracticeBox practice={practice} ar={ar} />}
     {!final && <p className="mi-exit-note">{x('exit_pending')}</p>}
     {final && outcome === 'conditional' && <p className="mi-exit-note">{x('exit_cond')}{ex.الإعادة?.حتى ? ` (${ar ? 'حتى' : 'until'} ${String(ex.الإعادة.حتى).slice(0, 10)})` : ''}</p>}
     {final && outcome === 'failed' && <p className="mi-exit-note">{x('exit_fail')}</p>}
@@ -817,8 +814,18 @@ function ExitStrip({ ex, code, ar, x, svc = null, practice = null }: { ex: any; 
     {svc?.خارجي && final && outcome === 'passed' && <a className="mi-btn ghost" href={`/programs?level=${NEXT_OF[String(ex.المستوى)] || ''}`} data-testid="mi-svc-continue">{x('svc_continue')} ({x('svc_next')}: {NEXT_OF[String(ex.المستوى)] || '—'})</a>}
   </section>;
 }
+/** م10/م11: صندوق «مِران» على بطاقة النتيجة — بعد حكم العبور أو بعد التشخيص («مِران البداية») */
+function PracticeBox({ practice, ar }: { practice: any; ar: boolean }) {
+  const start = practice.النوع === 'placement';
+  return <div className={`mi-exit-practice ${start ? 'start' : ''}`} data-testid="mi-practice" data-kind={practice.النوع || 'exit'}>
+      <p><b>{ar ? (start ? 'مِران البداية' : 'مِران') : (start ? 'Miran Start' : 'Miran')}</b> · {practice.انتهت ? (ar ? `انتهت أيام التمرين — أنجزت ${practice.أُنجز} من ${practice.الأيام}` : `Practice days ended — ${practice.أُنجز} of ${practice.الأيام} done`) : (ar ? `خطّة تمرين ${practice.الأيام} يومًا اعتمدها مدرّبك — اليوم ${practice.اليوم} · أنجزت ${practice.أُنجز}` : `A ${practice.الأيام}-day practice plan approved by your trainer — day ${practice.اليوم} · ${practice.أُنجز} done`)}</p>
+      <a className="mi-btn" href={practice.الرابط} data-testid="mi-practice-open">{practice.انتهت ? (ar ? 'افتح مرآتك' : 'Open your mirror') : (ar ? 'ابدأ مِران اليوم' : 'Start today’s practice')}</a>
+      <small>{ar ? (start ? 'تمرين أول أسبوعين على وحدات مستواك الضعيفة قبل أول درس — لا يغيّر نتيجتك الرسمية.' : 'مِران تدريب لا اختبار — لا يغيّر نتيجتك الرسمية.') : 'Practice, not a test — it does not change your official result.'}</small>
+    </div>;
+}
 
 const CSS = `
+.mi-start-strip{margin:12px 0 0}.mi-exit-practice.start{background:linear-gradient(135deg,#fff7ed,#f0fdfa);border-color:#fed7aa}
 .mi-exit-practice{margin:10px 0 0;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,#eef7ff,#f0fdfa);border:1px solid #bae6fd;display:grid;gap:8px}.mi-exit-practice p{margin:0;font-size:14px;line-height:1.7}.mi-exit-practice small{color:var(--muted);font-size:12px}.mi-u-after{display:block;font-style:normal;font-size:10px;color:#0f5c57;font-weight:900}
 .mi-exit-sess{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a}.mi-exit-sline{margin:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13.5px}.mi-exit-sline[data-past='1']{opacity:.7}.mi-exit-sdur{color:var(--muted);font-size:12.5px}.mi-exit-snote{display:block;margin-top:6px;color:var(--muted);font-size:12px}
 .mi-notices{margin:14px 0 6px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#f0fdfa,#f8fafc);border:1px solid #ccfbf1}.mi-notices-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.mi-notices-head .mi-exit-k{margin:0}.mi-notices-sub{color:#0f766e;font-weight:700}.mi-notices-empty{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.7}.mi-notices-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}.mi-notices-list li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid #e2e8f0}.mi-notices-list li>div{flex:1;min-width:0}.mi-notices-list li b{display:block;font-size:14px}.mi-notices-list li p{margin:2px 0 0;font-size:13px;color:#334155;line-height:1.6}.mi-notices-list li small{color:var(--muted);font-size:11px}.mi-notices-ic{font-size:20px;line-height:1}

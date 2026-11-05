@@ -222,20 +222,24 @@ async function upsertDecision(db: any, rep: RepLite, d: { level: LedgerLevel | n
   return { classroom_id: placed.classroom_id, program_id: d.program_id };
 }
 /** قرار الإنسان لفرد أو مجموعة: level = 'each' (كلٌّ بحسب نتيجته) أو مستوى موحّد؛ program_id اختياري (null = قرار مستوى بلا تسجيل) */
-export async function decidePlacement(db: any, input: DecideInput, actor: Actor): Promise<{ ok: true; n: number; placed: number; overrides: number } | { ok: false; error: string }> {
+export async function decidePlacement(db: any, input: DecideInput, actor: Actor): Promise<{ ok: true; n: number; placed: number; overrides: number; practice?: { drafted: number; existed: number; skipped: number; notified: number } | null } | { ok: false; error: string }> {
   const ids = idList(input.report_ids); if (!ids.length) return { ok: false, error: 'لا نتائج محدّدة' };
   const each = input.level === 'each' || input.level === undefined || input.level === null || input.level === ''; if (!each && !isLedgerLevel(input.level)) return { ok: false, error: 'مستوى غير صالح' };
   const programId = uuidish(input.program_id); const note = String(input.note || '').trim().slice(0, 300) || null;
   if (programId) { const { data: p } = await db.from('programs').select('id,archived_at').eq('id', programId).maybeSingle(); if (!p || p.archived_at) return { ok: false, error: 'البرنامج غير متاح' }; }
   const { data } = await db.from('placement_reports').select('id,candidate_email,created_at,report,invite_id,archived_at,user_id').in('id', ids); const reps = (data || []) as RepLite[];
-  let placed = 0, overrides = 0;
+  let placed = 0, overrides = 0; const drafts: Array<{ rep: any; classroom_id: string | null }> = [];
   for (const rep of reps) {
     const L = reportLevels(rep.report); const level = (each ? L.entry : input.level) as LedgerLevel; if (level !== L.entry) overrides += 1;
     const r = await upsertDecision(db, rep, { level, status: 'approved', program_id: programId, note: note || (level !== L.entry ? `تسكين يدوي: ${LEVEL_AR[level]} بدل ${LEVEL_AR[L.entry]}` : null), source: 'staff', gray_reason: null, deadline_at: null }, actor);
     if (r.classroom_id) placed += 1;
     void notifyDecision(db, rep, level, programId);
+    drafts.push({ rep: rep as any, classroom_id: r.classroom_id });
   }
-  return { ok: true, n: reps.length, placed, overrides };
+  /* م11 «مِران البداية»: مسوَّدة تمرين لكل قرار (لا تُفتح قبل توقيع مدرّب) + تنبيه مدرّب الشعبة — تحسيني لا يوقف القرار */
+  let practice: { drafted: number; existed: number; skipped: number; notified: number } | null = null;
+  try { const { draftForPlacements } = await import('./practice'); practice = await draftForPlacements(db, drafts, actor?.id || null); } catch { practice = null; }
+  return { ok: true, n: reps.length, placed, overrides, practice };
 }
 /** إعادة القرار إلى «بلا قرار» (مثلًا بعد خطأ) — لا يلغي التسجيل؛ ذلك من شاشة التسجيلات */
 export async function clearDecision(db: any, reportId: unknown, actor: Actor): Promise<boolean> { const id = uuidish(reportId); if (!id) return false; const r = await db.from('placement_decisions').delete().eq('report_id', id); if (r.error) return false; await audit(db, actor, 'miaar_decision_clear', id, 'إلغاء قرار تسكين'); return true; }
@@ -253,7 +257,7 @@ async function defaultProgramFor(db: any, level: LedgerLevel, invite: any | null
 }
 /** التسكين التلقائي الكسول — يُستدعى عند فتح السجلّ أو عرض بطاقة واحدة؛ بلا كرون */
 export async function autoPlaceDue(db: any, opts: { reportId?: string | null; limit?: number } = {}): Promise<{ placed: number; review: number }> {
-  const out = { placed: 0, review: 0 }; const now = nowIso(); const limit = Math.min(200, Math.max(1, opts.limit || 50));
+  const out = { placed: 0, review: 0 }; const now = nowIso(); const limit = Math.min(200, Math.max(1, opts.limit || 50)); const autoDrafts: Array<{ rep: RepLite; classroom_id: string | null }> = [];
   let q = db.from('placement_reports').select('id,candidate_email,created_at,report,invite_id,archived_at,user_id').is('archived_at', null).lte('created_at', new Date(Date.now() - 3600_000).toISOString()).order('created_at', { ascending: true }).limit(limit);
   if (opts.reportId) q = db.from('placement_reports').select('id,candidate_email,created_at,report,invite_id,archived_at,user_id').eq('id', opts.reportId).is('archived_at', null).limit(1);
   const { data } = await q; const reps = (data || []) as RepLite[]; if (!reps.length) return out;
@@ -269,10 +273,12 @@ export async function autoPlaceDue(db: any, opts: { reportId?: string | null; li
     try {
       if (gray) { await upsertDecision(db, rep, { level: null, status: 'review', program_id: null, note: null, source: 'auto', gray_reason: gray, deadline_at: deadline }, null); out.review += 1; continue; }
       const programId = await defaultProgramFor(db, L.entry, invite);
-      await upsertDecision(db, rep, { level: L.entry, status: 'approved', program_id: programId, note: 'تسكين تلقائي بعد انقضاء المهلة بلا تدخّل', source: 'auto', gray_reason: null, deadline_at: deadline }, null); out.placed += 1;
+      const pr = await upsertDecision(db, rep, { level: L.entry, status: 'approved', program_id: programId, note: 'تسكين تلقائي بعد انقضاء المهلة بلا تدخّل', source: 'auto', gray_reason: null, deadline_at: deadline }, null); out.placed += 1; autoDrafts.push({ rep, classroom_id: pr.classroom_id });
       void notifyDecision(db, rep, L.entry, programId);
     } catch { /* نتيجة واحدة لا توقف البقية */ }
   }
+  /* م11: مسوَّدات مِران البداية للمسكَّنين تلقائيًا + تنبيه مدرّب الشعبة */
+  if (autoDrafts.length) { try { const { draftForPlacements } = await import('./practice'); await draftForPlacements(db, autoDrafts as any, null); } catch { /* تحسيني */ } }
   return out;
 }
 

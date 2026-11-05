@@ -43,7 +43,9 @@ export async function GET(req: Request) {
   let auto = { placed: 0, review: 0 }; if (!sp.get('csv')) { try { auto = await autoPlaceDue(db, { limit: 50 }); } catch { /* كسول */ } }
   let list; try { list = await ledgerList(db, f); } catch (e) { return bad(`تعذّرت قراءة السجلّ — هل شُغّلت هجرة م5-أ؟ (${(e as Error).message})`, 500); }
   if (sp.get('csv')) return new NextResponse(ledgerCsv(list.rows), { headers: { ...NO, 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="miaar-ledger-${new Date().toISOString().slice(0, 10)}.csv"` } });
-  return NextResponse.json({ success: true, ...list, auto, can_delete: DELETE_ROLES.includes(user.role), filter: f }, { headers: NO });
+  /* م11 «مِران البداية»: ملخّص خطّة التمرين لكل صفّ (إن وُجدت) — بلا بنود */
+  let practice: Record<string, any> = {}; try { const { summariesForReports } = await import('../../../../../lib/miaar/practice'); practice = await summariesForReports(db, list.rows.map((r: any) => ({ id: String(r.id) }))); } catch { practice = {}; }
+  return NextResponse.json({ success: true, ...list, practice, auto, can_delete: DELETE_ROLES.includes(user.role), filter: f }, { headers: NO });
 }
 
 export async function POST(req: Request) {
