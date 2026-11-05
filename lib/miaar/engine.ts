@@ -267,6 +267,9 @@ export async function resultByCode(db: any, code: string): Promise<{ code: strin
       (safe as any).شهادة = { الاسم_الكامل: String((r as any)?.بيانات_المتقدم?.الاسم || name), خارجي: !!f?.external, بطلب_من: f?.client_name || null, بحضور_مراقب: !!f?.proctor_signed, المراقب: f?.proctor_name || null };
     } else if (data.invite_id) { const { serviceFactsForInvite } = await import('./service'); const f = await serviceFactsForInvite(db, data.invite_id); if (f?.external) (safe as any).شهادة = { خارجي: true, بطلب_من: f.client_name }; }
   } catch { /* اختياري */ }
+  /* م6-ج: «جلسة مراجعة» مجدولة لوحدات هذا المتعلّم (بلا بيانات شخصية؛ لا تمسّ الحكم) */
+  try { const ex = (safe as any).exit; const codes: string[] = Array.isArray(ex?.وحدات_للمراجعة) ? ex.وحدات_للمراجعة.map((u: any) => String(u.الرمز)) : [];
+    if (codes.length && data.invite_id) { const { remedialsForLearner } = await import('./remedial'); const ss = await remedialsForLearner(db, data.invite_id, codes); if (ss.length) (safe as any).exit = { ...ex, جلسة_مراجعة: ss }; } } catch { /* اختياري */ }
   /* م8 «شاهِد»: حكم النزاهة على البطاقة (بلا صور) — «لاغٍ» يحجب الشهادة بصدق */
   try { const { integrityBlock } = await import('./witness'); const nb = integrityBlock(data); if (nb) { (safe as any).نزاهة = nb; if (nb.الحالة === 'invalid' && (safe as any).شهادة) (safe as any).شهادة = { ...(safe as any).شهادة, محجوبة: true }; } } catch { /* اختياري */ }
   return { code: data.access_code, name, taken_at: data.created_at, report: safe };

@@ -11,7 +11,7 @@ const C = (o: Partial<Classroom>): Classroom => ({ id: 'c1', code: 'SEC-01', pro
 const at = (iso: string) => new Date(iso);
 
 test('live: catalogs + labels', () => {
-  assert.equal(PROVIDERS.length, 5); assert.equal(KINDS.length, 4); assert.equal(SESSION_ACCESS.length, 5); assert.equal(WEEKDAYS.length, 7); assert.equal(WEEKDAYS[0].value, 0);
+  assert.equal(PROVIDERS.length, 5); assert.equal(KINDS.length, 5); assert.equal(KINDS[4].value, "remedial"); assert.equal(SESSION_ACCESS.length, 5); assert.equal(WEEKDAYS.length, 7); assert.equal(WEEKDAYS[0].value, 0);
   assert.equal(providerLabel('athar', 'ar'), 'قاعة أَثَر (تجريبي)'); assert.equal(providerLabel('meet', 'en'), 'Google Meet'); assert.equal(kindLabel('webinar', 'ar'), 'ندوة عامة'); assert.equal(sessionAccessLabel('program', 'en'), 'Section / program trainees');
   assert.equal(sessionTitle(S({ title_en: 'X' }), 'en'), 'X'); assert.equal(sessionTitle(S({}), 'en'), 'جلسة');
   assert.equal(classroomLabel(C({ section_name: 'شعبة 1' }), 'ar'), 'شعبة 1 (SEC-01)'); assert.equal(classroomLabel(C({}), 'en'), 'Section SEC-01'); assert.equal(classroomLabel(null, 'ar'), '');

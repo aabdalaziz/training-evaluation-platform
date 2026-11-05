@@ -618,7 +618,7 @@ export const DIPLOMA_KINDS = ['diploma_pulse', 'diploma_unit', 'diploma_profile'
 export const isDiplomaKind = (k: string): k is DiplomaKind => (DIPLOMA_KINDS as readonly string[]).includes(k);
 export const diplomaKindAr = (k: string) => (k === 'diploma_pulse' ? R4_NAMES_AR.pulse : k === 'diploma_unit' ? R4_NAMES_AR.unit : R4_NAMES_AR.profile);
 
-export type Unit = { id: string | null; idx: number; title_ar: string; outcome_ar: string; hours: number; skill_codes: string[]; starts_on: string | null; ends_on: string | null; closed_at: string | null; closed_report_id?: string | null; source: 'manual' | 'design' };
+export type Unit = { id: string | null; idx: number; title_ar: string; outcome_ar: string; hours: number; skill_codes: string[]; starts_on: string | null; ends_on: string | null; closed_at: string | null; closed_report_id?: string | null; source: 'manual' | 'design'; miaar_unit_codes?: string[] /* م6-ج: وحدات المستوى (خريطة المنهج) */ };
 export type UnitState = 'closed' | 'current' | 'upcoming';
 const S = (v: unknown, n: number) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 const D = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
@@ -629,6 +629,7 @@ export function cleanUnits(given: unknown, skills: Skill[]): Unit[] {
     id: typeof u?.id === 'string' && u.id ? u.id : null, idx: i + 1, title_ar: S(u?.title_ar, UNIT_TITLE_MAX), outcome_ar: S(u?.outcome_ar, UNIT_OUTCOME_MAX),
     hours: Math.max(0, Math.min(999, Number(u?.hours) || 0)), skill_codes: Array.isArray(u?.skill_codes) ? Array.from(new Set((u.skill_codes as unknown[]).map(String).filter(c => codes.has(c)))).slice(0, 12) : [],
     starts_on: D(u?.starts_on), ends_on: D(u?.ends_on), closed_at: typeof u?.closed_at === 'string' ? u.closed_at : null, closed_report_id: typeof u?.closed_report_id === 'string' ? u.closed_report_id : null, source: (u?.source === 'design' ? 'design' : 'manual') as 'manual' | 'design',
+    miaar_unit_codes: Array.isArray(u?.miaar_unit_codes) ? Array.from(new Set((u.miaar_unit_codes as unknown[]).map(String).filter(c => /^(A1|A2|B1|B2|C1)-U\d{2}$/.test(c)))).slice(0, 8) : [],
   })).filter(u => u.title_ar.length >= 2);
   return out.map((u, i) => ({ ...u, idx: i + 1 }));
 }

@@ -4,7 +4,7 @@ import type { Lang, T } from './content';
 import { t } from './content';
 
 export type Provider = 'teams' | 'zoom' | 'meet' | 'athar' | 'other';
-export type SessionKind = 'class' | 'webinar' | 'workshop' | 'office_hours';
+export type SessionKind = 'class' | 'webinar' | 'workshop' | 'office_hours' | 'remedial'; /* م6-ج: جلسة تعويض من خريطة المنهج */
 export type SessionStatus = 'scheduled' | 'live' | 'ended' | 'cancelled';
 export type SessionAccess = 'public' | 'registered' | 'program' | 'org' | 'staff';
 export type TimeState = 'upcoming' | 'soon' | 'live' | 'ended' | 'cancelled';
@@ -33,6 +33,7 @@ export const KINDS: { value: SessionKind; label: T }[] = [
   { value: 'webinar', label: { ar: 'ندوة عامة', en: 'Webinar' } },
   { value: 'workshop', label: { ar: 'ورشة عمل', en: 'Workshop' } },
   { value: 'office_hours', label: { ar: 'ساعات مكتبية', en: 'Office hours' } },
+  { value: 'remedial', label: { ar: 'جلسة مراجعة (تعويض)', en: 'Review (remediation) session' } },
 ];
 export const SESSION_ACCESS: { value: SessionAccess; label: T }[] = [
   { value: 'program', label: { ar: 'متدربو الشعبة/البرنامج', en: 'Section / program trainees' } },

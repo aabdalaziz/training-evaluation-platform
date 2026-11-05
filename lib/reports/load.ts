@@ -473,8 +473,8 @@ export async function docsWrittenCount(db: any, email: string): Promise<number> 
 
 /* ═════════════════════════════ ر4-أ — «ملف الدبلوم» (وحدات الدبلوم · نبض الأسبوع · تقرير الوحدة) ═════════════════════════════ */
 const UNIT_COLS = 'id,created_at,updated_at,program_id,idx,title_ar,outcome_ar,hours,skill_codes,starts_on,ends_on,closed_at,closed_report_id,source,created_by';
-const rowUnit = (u: any): Unit => ({ id: String(u.id), idx: Number(u.idx || 0), title_ar: String(u.title_ar || ''), outcome_ar: String(u.outcome_ar || ''), hours: Number(u.hours || 0), skill_codes: Array.isArray(u.skill_codes) ? u.skill_codes.map(String) : [], starts_on: u.starts_on ? String(u.starts_on).slice(0, 10) : null, ends_on: u.ends_on ? String(u.ends_on).slice(0, 10) : null, closed_at: u.closed_at || null, closed_report_id: u.closed_report_id || null, source: u.source === 'design' ? 'design' : 'manual' });
-export async function unitsOf(db: any, programId: string): Promise<Unit[]> { const rows = await safe<any[]>(db.from('portal_program_units').select(UNIT_COLS).eq('program_id', programId).is('archived_at', null).order('idx', { ascending: true }).limit(60), []);   /* P47-ب: الوحدات المؤرشَفة (نسخ سابقة) لا تُعرض */ return rows.map(rowUnit).sort((a, b) => a.idx - b.idx); }
+const rowUnit = (u: any): Unit => ({ miaar_unit_codes: Array.isArray(u.miaar_unit_codes) ? u.miaar_unit_codes.map(String) : [], id: String(u.id), idx: Number(u.idx || 0), title_ar: String(u.title_ar || ''), outcome_ar: String(u.outcome_ar || ''), hours: Number(u.hours || 0), skill_codes: Array.isArray(u.skill_codes) ? u.skill_codes.map(String) : [], starts_on: u.starts_on ? String(u.starts_on).slice(0, 10) : null, ends_on: u.ends_on ? String(u.ends_on).slice(0, 10) : null, closed_at: u.closed_at || null, closed_report_id: u.closed_report_id || null, source: u.source === 'design' ? 'design' : 'manual' });
+export async function unitsOf(db: any, programId: string): Promise<Unit[]> { let rows = await safe<any[] | null>(db.from('portal_program_units').select(`${UNIT_COLS},miaar_unit_codes`).eq('program_id', programId).is('archived_at', null).order('idx', { ascending: true }).limit(60), null); /* م6-ج: قبل الهجرة يُقرأ بلا العمود */ if (rows === null) rows = await safe<any[]>(db.from('portal_program_units').select(UNIT_COLS).eq('program_id', programId).is('archived_at', null).order('idx', { ascending: true }).limit(60), []);   /* P47-ب: الوحدات المؤرشَفة (نسخ سابقة) لا تُعرض */ return rows.map(rowUnit).sort((a, b) => a.idx - b.idx); }
 /** الوحدات كما تظهر في صفحة البرنامج العامة: العناوين والنواتج والحالة فقط */
 export async function publicUnits(db: any, programId: string): Promise<{ idx: number; title_ar: string; outcome_ar: string; hours: number; state: string }[]> { const us = await unitsOf(db, programId); return unitStates(us, today()).map(x => ({ idx: x.unit.idx, title_ar: x.unit.title_ar, outcome_ar: x.unit.outcome_ar, hours: x.unit.hours, state: x.state })); }
 /** حفظ الوحدات (قائد الدبلوم أو الطاقم): المغلقة لا تُحذف ولا يتغيّر ترتيبها */
@@ -491,7 +491,10 @@ export async function saveUnits(db: any, me: Me, programId: string, given: unkno
   for (const u of next) {
     const ex = u.id ? existing.find(e => e.id === u.id) : null; const row: any = { program_id: programId, idx: u.idx, title_ar: u.title_ar, outcome_ar: u.outcome_ar, hours: u.hours, skill_codes: u.skill_codes, starts_on: u.starts_on, ends_on: u.ends_on, source: ex?.source || u.source, updated_at: nowIso() };
     if (ex?.closed_at) { row.title_ar = ex.title_ar; row.outcome_ar = ex.outcome_ar; }   // المغلقة: تواريخها وساعاتها قابلة للتصحيح، لا عنوانها وناتجها
-    const q = u.id ? db.from('portal_program_units').update(row).eq('id', u.id) : db.from('portal_program_units').insert({ ...row, created_by: me.id }); const { error } = await q; if (error) return { ok: false, error: error.message };
+    const withLink = { ...row, miaar_unit_codes: u.miaar_unit_codes || [] }; /* م6-ج */
+    let q = u.id ? db.from('portal_program_units').update(withLink).eq('id', u.id) : db.from('portal_program_units').insert({ ...withLink, created_by: me.id }); let { error } = await q;
+    if (error && /miaar_unit_codes/.test(String(error.message || ''))) { q = u.id ? db.from('portal_program_units').update(row).eq('id', u.id) : db.from('portal_program_units').insert({ ...row, created_by: me.id }); ({ error } = await q); } /* قبل الهجرة */
+    if (error) return { ok: false, error: error.message };
   }
   return { ok: true, units: await unitsOf(db, programId) };
 }

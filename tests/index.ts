@@ -101,3 +101,4 @@ import './miaar-m8.test';
 import './miaar-m8b.test';
 import './miaar-m8c.test';
 import './miaar-m6b.test';
+import './miaar-m6c.test';
