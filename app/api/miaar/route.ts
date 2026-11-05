@@ -29,6 +29,7 @@ import { trustSummary } from '../../../lib/miaar/balance';
 import { stopwatch, slowLine } from '../../../lib/miaar/timing';
 import { openInvite } from '../../../lib/miaar/invites';
 import { verifyPin } from '../../../lib/miaar/service';
+import { recordEvent, whispersSince, witnessPublic } from '../../../lib/miaar/witness'; /* م8 «شاهِد» */
 import { loadApprovedPool, loadPassages, signedMediaUrl, isReferencedMediaPath } from '../../../lib/miaar/bank';
 import { probeFromPool, publicDoors, probeScoreFrom } from '../../../lib/miaar/blueprint';
 import { probeBand } from '../../../lib/miaar/registry';
@@ -129,9 +130,9 @@ export async function POST(req: Request) {
     const sw = stopwatch();  /* «سرعة مِعيار»: مراحل البدء في Server-Timing + سطر سجلّ إن تجاوز 2.5 ث */
     const rl = await rateLimit(db, `miaar_start:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات بدء كثيرة'); sw.mark('ratelimit');
     let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null = null;
-    const inv = body.invite as Record<string, unknown> | undefined;
+    const inv = body.invite as Record<string, unknown> | undefined; let inviteRow: any = null;
     if (inv && typeof inv === 'object' && inv.code) {
-      const r = await openInvite(db, inv.code, inv.t || null); if (!r.ok) return bad(`invite_${r.error}`, 410);
+      const r = await openInvite(db, inv.code, inv.t || null); if (!r.ok) return bad(`invite_${r.error}`, 410); inviteRow = r.row;
       invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null, exit: r.row.purpose === 'level_exit' || r.row.purpose === 'skill_retake' };   /* م6 */
       /* م7: الدعوة الخارجية — رمز القاعة (يعلنه المراقب) ورقم الهوية إن طلبته الجهة */
       const pinState = verifyPin(r.row, inv.pin); if (pinState !== 'ok') return bad(pinState === 'required' ? 'invite_pin_required' : 'invite_pin_wrong', 403);
@@ -142,7 +143,7 @@ export async function POST(req: Request) {
     const r = await startSession(db, { candidate: body.candidate, examMode: body.examMode, probeAnswers: body.probeAnswers, access: body.access, invite, userId, blueprint: body.blueprint }, sw);
     const slow = slowLine('start', sw); if (slow) console.warn(slow);
     if (!r.ok) return bad(r.code, r.status);
-    return withCookie(NextResponse.json({ ok: true, session: r.value.session, invite: invite ? { label_ar: invite.label_ar } : null }, { headers: { ...NO, 'Server-Timing': sw.header() } }), r.value.token, r.value.session.expiresAt);
+    return withCookie(NextResponse.json({ ok: true, session: r.value.session, invite: invite ? { label_ar: invite.label_ar, witness: inviteRow ? witnessPublic(inviteRow) : null } : null }, { headers: { ...NO, 'Server-Timing': sw.header() } }), r.value.token, r.value.session.expiresAt);
   }
   const sw = stopwatch();
   const token = cookieOf(req); if (!token) return action === 'resume' ? NextResponse.json({ ok: false, error: 'missing_session' }, { headers: NO }) : bad('missing_session', 401); /* الاستئناف بلا جلسة حالة عادية (أول زيارة) لا خطأ */
@@ -163,6 +164,15 @@ export async function POST(req: Request) {
     const rl = await rateLimit(db, `miaar_room:${ipOf(req)}`, 3600, 12); if (!rl.allowed) return tooMany(rl, 'محاولات تسليم كثيرة');
     const r = await submitPerformance(db, session, body as any); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: NO }) : bad(r.code, r.status);
   }
+  /* م8 «شاهِد»: أحداث المتصفح ولقطاته (داخل الجلسة الحيّة فقط) + همسات المراقب */
+  if (action === 'witness_event') {
+    if (session.status !== 'active') return bad('session_finalized', 409);
+    let invRow: any = null; if (session.invite_id) { const { data } = await db.from('placement_invites').select('proctor_mode').eq('id', session.invite_id).maybeSingle(); invRow = data; }
+    const r = await recordEvent(db, session, invRow, { kind: body.kind, meta: body.meta, frame: body.frame }); if (!r.ok) return bad(r.error, r.status);
+    const whispers = await whispersSince(db, session.id, body.since).catch(() => []);
+    return NextResponse.json({ ok: true, seq: r.seq, frames: r.frames, stored: r.stored, whispers, at: new Date().toISOString() }, { headers: NO });
+  }
+  if (action === 'witness_ping') { const whispers = await whispersSince(db, session.id, body.since).catch(() => []); return NextResponse.json({ ok: true, whispers, at: new Date().toISOString() }, { headers: NO }); }
   if (action === 'room_skip') { const r = await skipPerformance(db, session, body.skill); return r.ok ? NextResponse.json({ ok: true, ...r.value }, { headers: NO }) : bad(r.code, r.status); }
   return bad('unknown_action', 400);
 }

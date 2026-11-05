@@ -19,7 +19,7 @@ export default function Certificate({ code, fontClass = '' }: { code: string; fo
     try { const res = await fetch(`/api/miaar?result=${encodeURIComponent(code)}`, { cache: 'no-store' }); const d = await res.json(); if (!res.ok || !d.ok) { setErr('nf'); return; } setR(d as Res); } catch { setErr('nf'); }
   }, [code]);
   useEffect(() => { void load(); setSite(window.location.origin); }, [load]);
-  const ex = r?.report?.exit; const ok = !!ex && ex.الحالة === 'final' && ex.النتيجة === 'passed';
+  const ex = r?.report?.exit; const integ = (r?.report as any)?.نزاهة || null; const annulled = integ?.الحالة === 'invalid'; /* م8: «لاغٍ» يحجب الشهادة */ const ok = !!ex && ex.الحالة === 'final' && ex.النتيجة === 'passed' && !annulled;
   const svc = r?.report?.شهادة || null; const fullName = (svc?.الاسم_الكامل as string) || r?.name || ''; /* م7: الاسم الكامل على الوثيقة + الجهة الطالبة + ختم المراقب */
   const verifyUrl = `${site}/miaar/result/${encodeURIComponent(code)}`;
   return <main className={`cert-root ${fontClass}`} dir="rtl">
@@ -27,7 +27,8 @@ export default function Certificate({ code, fontClass = '' }: { code: string; fo
     <div className="cert-tools no-print"><WayBar lang="ar" /><div className="cert-actions"><a className="cert-btn ghost" href={`/miaar/result/${encodeURIComponent(code)}`} data-testid="cert-back">← بطاقة النتيجة</a>{ok && <button type="button" className="cert-btn" onClick={() => window.print()} data-testid="cert-print">طباعة / حفظ PDF</button>}</div></div>
     {err && <section className="cert-msg" role="alert" data-testid="cert-nf">لا نتيجة بهذا الرمز.</section>}
     {r && !ex && <section className="cert-msg" data-testid="cert-not-exit">هذه النتيجة ليست لاختبار نهاية المستوى — الشهادة تُصدر لنتائج «اختبار نهاية المستوى — معياري (CEFR)» فقط.</section>}
-    {r && ex && !ok && <section className="cert-msg" data-testid="cert-not-passed">{ex.الحالة !== 'final' ? 'لم يكتمل التصحيح بعد — تُصدر الشهادة حين يصبح الحكم نهائيًا.' : 'لم يُجتز هذا المستوى بعد — لا تُصدر شهادة إلا عند الاجتياز.'}</section>}
+    {r && ex && annulled && <section className="cert-msg" role="alert" data-testid="cert-annulled">أُبطلت هذه المحاولة بقرار بشري بعد مراجعة سجلّ نزاهة الاختبار — لا تُصدر لها شهادة.{integ?.ملاحظة ? ` السبب: ${integ.ملاحظة}` : ''}</section>}
+    {r && ex && !ok && !annulled && <section className="cert-msg" data-testid="cert-not-passed">{ex.الحالة !== 'final' ? 'لم يكتمل التصحيح بعد — تُصدر الشهادة حين يصبح الحكم نهائيًا.' : 'لم يُجتز هذا المستوى بعد — لا تُصدر شهادة إلا عند الاجتياز.'}</section>}
     {r && ok && <article className="cert" data-testid="cert" aria-label="شهادة اجتياز المستوى">
       <header className="cert-head">
         <div className="cert-brand"><b>أَثَر</b><small>مِعيار — من أَثَر</small></div>
@@ -42,7 +43,8 @@ export default function Certificate({ code, fontClass = '' }: { code: string; fo
         <tr className="tot"><td>النتيجة الكلّية · Overall (60 / 20 / 20)</td><td>{ex.الكلي}%</td></tr>
       </tbody></table>
       {ex.خط_العبور && <p className="cert-growth">{ex.خط_العبور.text_ar}</p>}
-      {svc?.خارجي && svc?.بطلب_من && <p className="cert-svc" data-testid="cert-svc"><span>بطلب من · Requested by: <b>{svc.بطلب_من}</b></span>{svc.بحضور_مراقب && <span className="cert-seal" data-testid="cert-seal">أُدّي بحضور مراقب · Taken under proctor supervision{svc.المراقب ? ` — ${svc.المراقب}` : ''}</span>}</p>}
+      {!(svc?.خارجي && svc?.بطلب_من) && integ?.الحالة === 'clear' && <p className="cert-svc"><span className="cert-seal" data-testid="cert-integrity">◉ أُدّي تحت مراقبة مصوَّرة — سجلّ النزاهة: سليم · Integrity record: clear</span></p>}
+      {svc?.خارجي && svc?.بطلب_من && <p className="cert-svc" data-testid="cert-svc"><span>بطلب من · Requested by: <b>{svc.بطلب_من}</b></span>{integ?.الحالة === 'clear' && <span className="cert-seal" data-testid="cert-integrity">◉ أُدّي تحت مراقبة مصوَّرة — سجلّ النزاهة: سليم · Integrity record: clear</span>}{svc.بحضور_مراقب && <span className="cert-seal" data-testid="cert-seal">أُدّي بحضور مراقب · Taken under proctor supervision{svc.المراقب ? ` — ${svc.المراقب}` : ''}</span>}</p>}
       <footer className="cert-foot">
         <div><small>جدول المواصفات · Specification</small><b>{ex.إصدار_المواصفات}</b></div>
         <div><small>رمز التحقّق · Verification code</small><b dir="ltr">{code}</b></div>

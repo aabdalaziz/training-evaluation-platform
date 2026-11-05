@@ -10,6 +10,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { createInvite, inviteUrl } from './invites';
 import { boardFor } from './exitflow';
+import { INTEGRITY_AR } from './witness'; /* م8: الجهة ترى الحكم لا الصور */
 import { EXIT_TITLE, EXIT_SKILLS, SKILL_NAMES, exitBlueprintCode, isExitLevel, nextLevel, specTable, boardSummary } from './exit';
 import type { ExitLevel, ExitSkill, BoardRow } from './exit';
 
@@ -67,7 +68,7 @@ export function clientReport(level: ExitLevel, rows: readonly BoardRow[], bench:
 }
 
 /* ---------- الغراء ---------- */
-export type ServiceInput = { client_name: string; client_contact?: string | null; level: ExitLevel; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; lang?: string; identity_mode?: 'email' | 'email_id'; pin?: string | null; note?: string | null };
+export type ServiceInput = { /* م8 */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null; client_name: string; client_contact?: string | null; level: ExitLevel; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; lang?: string; identity_mode?: 'email' | 'email_id'; pin?: string | null; note?: string | null };
 export async function createServiceInvite(db: Db, input: ServiceInput, actorId: string | null, site: string): Promise<{ ok: true; invite: any; order: any; url: string; client_url: string; client_token: string; pin: string | null } | { ok: false; error: string }> {
   const client_name = String(input.client_name || '').trim().replace(/\s+/g, ' ').slice(0, 120); if (client_name.length < 2) return { ok: false, error: 'اسم الجهة الطالبة من حرفين على الأقل (أو «أفراد»)' };
   if (!isExitLevel(input.level)) return { ok: false, error: 'حدّد المستوى (A1–C1)' };
@@ -78,6 +79,7 @@ export async function createServiceInvite(db: Db, input: ServiceInput, actorId: 
   const r = await createInvite(db, {
     kind: 'group', label_ar: serviceLabel(client_name, input.level), lang: input.lang || 'ar', exam_mode: 'comprehensive', purpose: 'level_exit', blueprint_id: bp.id,
     opens_at: input.opens_at || null, expires_at: input.expires_at || null, max_seats: input.max_seats || null, level_target: input.level, note: input.note || null,
+    /* م8 «شاهِد»: الافتراضي لخدمة الجهات «قاعة + شاهِد» (قرار المالك أ) */ proctor_mode: input.proctor_mode === 'room' || input.proctor_mode === 'remote' ? input.proctor_mode : 'camera', ...(input.witness_interval ? { witness_interval: input.witness_interval } : {}),
     client_name, client_contact: input.client_contact ? String(input.client_contact).trim().slice(0, 160) : null, service_mode: 'external', proctor_pin_hash: pin ? hashToken(pin) : null, client_token_hash: hashToken(token), identity_mode: input.identity_mode === 'email_id' ? 'email_id' : 'email',
   } as any, actorId || '', site);
   if (!r.ok) return { ok: false, error: r.error };
@@ -153,7 +155,7 @@ export async function clientBoard(db: Db, token: unknown, site: string) {
   const { data: order } = await db.from('miaar_service_orders').select('id, client_name, level, seats, status, proctor_name, proctor_signed_at, delivered_at, created_at').eq('invite_id', inv.id).maybeSingle();
   const level = isExitLevel(inv.level_target) ? inv.level_target : 'A1';
   const bench = await benchmarkFromDb(db, level).catch(() => null);
-  const rows = b.rows.map((r: any) => ({ name: r.name, email: r.email, status: r.status, started_at: r.started_at, finished_at: r.finished_at, answered: r.answered, total: r.total, report_code: r.report_code, exit: r.exit ? { الحالة: r.exit.الحالة, النتيجة: r.exit.النتيجة, الكلي: r.exit.الكلي, تقدير_ar: r.exit.تقدير_ar, grade_en: r.exit.grade_en, المهارات: r.exit.المهارات, مهارة_الإعادة: r.exit.مهارة_الإعادة } : null, certificate_url: r.exit?.الحالة === 'final' && r.exit?.النتيجة === 'passed' && r.report_code ? `${site.replace(/\/$/, '')}/miaar/certificate/${encodeURIComponent(r.report_code)}` : null }));
+  const rows = b.rows.map((r: any) => ({ name: r.name, email: r.email, status: r.status, started_at: r.started_at, finished_at: r.finished_at, answered: r.answered, total: r.total, report_code: r.report_code, integrity: (r as any).integrity || null, integrity_ar: (r as any).integrity ? (INTEGRITY_AR as any)[(r as any).integrity] || (r as any).integrity : null, exit: r.exit ? { الحالة: r.exit.الحالة, النتيجة: r.exit.النتيجة, الكلي: r.exit.الكلي, تقدير_ar: r.exit.تقدير_ar, grade_en: r.exit.grade_en, المهارات: r.exit.المهارات, مهارة_الإعادة: r.exit.مهارة_الإعادة } : null, certificate_url: r.exit?.الحالة === 'final' && r.exit?.النتيجة === 'passed' && (r as any).integrity !== 'invalid' && r.report_code ? `${site.replace(/\/$/, '')}/miaar/certificate/${encodeURIComponent(r.report_code)}` : null }));
   return { invite: { code: inv.code, status: inv.status, client_name: inv.client_name, level, opens_at: inv.opens_at, expires_at: inv.expires_at, max_seats: inv.max_seats, has_pin: !!inv.proctor_pin_hash, url: inviteUrl(site, inv.code) }, order: order ? { ...order, status_ar: SERVICE_STATUS_AR[order.status as ServiceStatus] || order.status } : null, window: b.window, rows, summary: b.summary, report: clientReport(level, b.rows, bench), official: EXIT_TITLE, service: SERVICE_TITLE, at: nowIso() };
 }
 /** ما تحتاجه الشهادة وبطاقة النتيجة عن الجهة (بلا رموز) */

@@ -18,7 +18,7 @@ function esc(s: string) { return String(s || '').replace(/[&<>"]/g, (c) => ({ '&
 type Props = { level?: string | null; onClose: () => void; onCreated?: (res: any) => void };
 export default function ServiceInviteModal({ level: initial = null, onClose, onCreated }: Props) {
   const [level, setLevel] = useState<string>(initial && (LEVELS as readonly string[]).includes(initial) ? initial : 'A1');
-  const [client, setClient] = useState(''); const [contact, setContact] = useState(''); const [opens, setOpens] = useState(''); const [closes, setCloses] = useState(''); const [seats, setSeats] = useState('30');
+  const [client, setClient] = useState(''); const [contact, setContact] = useState(''); const [opens, setOpens] = useState(''); const [closes, setCloses] = useState(''); const [seats, setSeats] = useState('30'); const [mode, setMode] = useState<'room' | 'camera' | 'remote'>('camera'); /* م8: الافتراضي للجهات «قاعة + شاهِد» */
   const [identity, setIdentity] = useState<'email' | 'email_id'>('email'); const [pinMode, setPinMode] = useState<'none' | 'auto' | 'custom'>('auto'); const [pin, setPin] = useState(''); const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [res, setRes] = useState<any>(null); const [pool, setPool] = useState<any>(null); const [copied, setCopied] = useState('');
   useEffect(() => { const now = new Date(); setOpens(localIso(now)); setCloses(localIso(new Date(now.getTime() + 3 * 3600_000))); }, []);
@@ -27,7 +27,7 @@ export default function ServiceInviteModal({ level: initial = null, onClose, onC
   async function create() {
     setBusy(true); setErr('');
     try {
-      const body = { action: 'create', client_name: client, client_contact: contact, level, opens_at: opens ? new Date(opens).toISOString() : null, expires_at: closes ? new Date(closes).toISOString() : null, max_seats: Number(seats) || null, identity_mode: identity, auto_pin: pinMode === 'auto', pin: pinMode === 'custom' ? pin : null, note };
+      const body = { action: 'create', client_name: client, client_contact: contact, level, opens_at: opens ? new Date(opens).toISOString() : null, expires_at: closes ? new Date(closes).toISOString() : null, max_seats: Number(seats) || null, identity_mode: identity, auto_pin: pinMode === 'auto', pin: pinMode === 'custom' ? pin : null, note, proctor_mode: mode };
       const r = await fetch('/api/admin/miaar/service', { method: 'POST', headers: await H(), body: JSON.stringify(body) }); const j = await r.json().catch(() => ({}));
       if (!r.ok || !j?.success) throw new Error(j?.error || `HTTP ${r.status}`);
       setRes(j); onCreated?.(j);
@@ -62,6 +62,7 @@ ${res.pin ? `<div><small>رمز القاعة — يعلنه المراقب عن�
           <label><span>يُغلق</span><input type="datetime-local" value={closes} onChange={(e) => setCloses(e.target.value)} /></label>
           <label><span>المقاعد</span><input type="number" min={1} max={5000} value={seats} onChange={(e) => setSeats(e.target.value)} data-testid="sv-seats" /></label>
           <label><span>هوية الطالب</span><select value={identity} onChange={(e) => setIdentity(e.target.value as any)} data-testid="sv-identity"><option value="email">الاسم والبريد</option><option value="email_id">الاسم والبريد + رقم هوية/طالب</option></select></label>
+          <label><span>المراقبة («شاهِد»)</span><select value={mode} onChange={(e) => setMode(e.target.value as any)} data-testid="sv-mode"><option value="camera">قاعة + شاهِد (لقطات كاميرا)</option><option value="room">قاعة بمراقب (بلا كاميرا)</option><option value="remote">عن بُعد (شاهِد + هوية + ملء الشاشة)</option></select></label>
           <label><span>رمز القاعة (يعلنه المراقب)</span><select value={pinMode} onChange={(e) => setPinMode(e.target.value as any)} data-testid="sv-pinmode"><option value="auto">توليد تلقائي (مستحسن)</option><option value="custom">أحدّده بنفسي</option><option value="none">بلا رمز (عن بُعد)</option></select></label>
           {pinMode === 'custom' && <label><span>الرمز (4–8 بلا صفر/O)</span><input value={pin} onChange={(e) => setPin(e.target.value.toUpperCase())} maxLength={8} dir="ltr" data-testid="sv-pin" /></label>}
         </div>

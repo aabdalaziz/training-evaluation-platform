@@ -61,12 +61,13 @@ export default function ClientBoard({ token, fontClass = '' }: { token: string; 
         </section>
         <section className="cb-panel">
           <h2>الطلاب <small>({d.rows.length})</small></h2>
-          <div className="cb-tablewrap"><table className="cb-table" data-testid="cb-table"><thead><tr><th>الطالب</th><th>الحالة</th><th>الكلّي</th>{['listening', 'reading', 'grammar_vocab', 'writing', 'speaking'].map((k) => <th key={k}>{SK[k]}</th>)}<th>الحكم</th><th>الشهادة</th></tr></thead>
+          <div className="cb-tablewrap"><table className="cb-table" data-testid="cb-table"><thead><tr><th>الطالب</th><th>الحالة</th><th>الكلّي</th>{['listening', 'reading', 'grammar_vocab', 'writing', 'speaking'].map((k) => <th key={k}>{SK[k]}</th>)}<th>الحكم</th><th>النزاهة</th><th>الشهادة</th></tr></thead>
             <tbody>{d.rows.map((r: any) => <tr key={r.email} data-testid="cb-row"><td><b>{r.name || '—'}</b><br /><small dir="ltr">{r.email}</small></td><td>{ST[r.status] || r.status}<br /><small>{dt(r.finished_at || r.started_at)}</small></td><td>{r.exit?.الحالة === 'final' ? <b>{r.exit.الكلي}%</b> : r.exit ? 'قيد التصحيح' : '—'}</td>
               {['listening', 'reading', 'grammar_vocab', 'writing', 'speaking'].map((k) => { const v = r.exit?.المهارات?.[k]; return <td key={k} className={v?.الحالة === 'below' ? 'low' : ''}>{typeof v?.النسبة === 'number' ? `${v.النسبة}%` : v?.الحالة === 'pending' ? '…' : '—'}</td>; })}
               <td>{r.exit ? <span className={`cb-pill ${r.exit.النتيجة}`}>{OUT[r.exit.النتيجة] || r.exit.النتيجة}</span> : '—'}{r.exit?.تقدير_ar && r.exit.الحالة === 'final' ? <><br /><small>{r.exit.تقدير_ar}</small></> : null}</td>
+              <td data-testid="cb-integrity">{r.integrity ? <span className={`cb-pill ${r.integrity === 'clear' ? 'passed' : r.integrity === 'invalid' ? 'failed' : 'pending'}`} title="سجلّ نزاهة الاختبار — تراه الجهة حكمًا لا صورًا">{r.integrity_ar}</span> : <small>—</small>}</td>
               <td>{r.certificate_url ? <a href={r.certificate_url} target="_blank" rel="noreferrer">الشهادة</a> : '—'}</td></tr>)}
-              {!d.rows.length && <tr><td colSpan={10} className="cb-empty">لم يبدأ أحد بعد — شارك الباركود/الرابط مع طلابك.</td></tr>}</tbody></table></div>
+              {!d.rows.length && <tr><td colSpan={11} className="cb-empty">لم يبدأ أحد بعد — شارك الباركود/الرابط مع طلابك.</td></tr>}</tbody></table></div>
         </section>
         <section className="cb-panel" data-testid="cb-report-panel">
           <h2>تقرير الجهة — مختصر</h2>

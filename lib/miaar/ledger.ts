@@ -142,6 +142,7 @@ export async function deleteReports(db: any, ids: unknown, actor: Actor, confirm
         const { data: perf } = await db.from('miaar_performances').select('media_path').eq('session_id', sid); const paths = ((perf || []) as any[]).map((p) => p.media_path).filter(Boolean);
         if (paths.length) { try { await db.storage.from(MEDIA_BUCKET).remove(paths); } catch { /* المخزن قد يكون فارغًا */ } }
         await db.from('miaar_performances').delete().eq('session_id', sid);
+        try { const { deleteWitness } = await import('./witness'); await deleteWitness(db, sid); } catch { /* م8: لا صور متبقية */ }
         await db.from('placement_secure_answers').delete().eq('session_id', sid);
       }
       await db.from('placement_decisions').delete().eq('report_id', rep.id);

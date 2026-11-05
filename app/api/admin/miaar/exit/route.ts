@@ -20,6 +20,7 @@ import { loadApprovedTasks } from '../../../../../lib/miaar/bank';
 import { setInviteStatus, inviteUrl } from '../../../../../lib/miaar/invites';
 import { EXIT_SPEC, EXIT_TITLE, SPEC_VERSION, isExitLevel, levelFromRoom, poolCheck, specTable, exitInviteLabel } from '../../../../../lib/miaar/exit';
 import { findOrCreateExitInvite, boardFor, promoteReports, skillRetakeInvite } from '../../../../../lib/miaar/exitflow';
+import { liveFor, WITNESS_MODE_AR, isWitnessMode } from '../../../../../lib/miaar/witness'; /* م8 */
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -71,11 +72,14 @@ export async function GET(req: Request) {
     const b = await boardFor(db, invite); if (!b) return bad('الدعوة غير موجودة', 404);
     const level = isExitLevel(b.invite.level_target) ? b.invite.level_target : null;
     const url = inviteUrl(site, b.invite.code);
-    if (u.searchParams.get('live')) return NextResponse.json({ success: true, rows: b.rows, summary: b.summary, window: b.window, at: new Date().toISOString() }, { headers: NO });
+    /* م8 «شاهِد»: آخر لقطة ومستوى الإشارات لكل جلسة — فقط حين تستخدم الدعوة الكاميرا أو وُجدت أحداث */
+    const witnessMode = String((b.invite as any).proctor_mode || 'room');
+    const witness = await liveFor(db, b.rows.map((r: any) => r.session_id).filter(Boolean)).catch(() => ({}));
+    if (u.searchParams.get('live')) return NextResponse.json({ success: true, rows: b.rows, summary: b.summary, window: b.window, witness, at: new Date().toISOString() }, { headers: NO });
     /* م7: دعوة خدمة لجهة → سجلّ الخدمة معها (بلا رموز) */
     let order: any = null; if ((b.invite as any).service_mode === 'external') { const { data: o } = await db.from('miaar_service_orders').select('id, client_name, client_contact, level, seats, seats_used, status, note, proctor_name, proctor_signed_at, delivered_at, invoiced_at, created_at').eq('invite_id', b.invite.id).maybeSingle(); order = o || null; }
     const inv = { ...b.invite, proctor_pin_hash: undefined, client_token_hash: undefined, has_pin: !!(b.invite as any).proctor_pin_hash, has_client_link: !!(b.invite as any).client_token_hash };
-    return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
+    return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, witness, witness_mode: witnessMode, witness_mode_ar: WITNESS_MODE_AR[(isWitnessMode(witnessMode) ? witnessMode : 'room') as keyof typeof WITNESS_MODE_AR], spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
   }
   if (pool) { if (!isExitLevel(pool)) return bad('مستوى غير صالح'); const avail = await availability(db); return NextResponse.json({ success: true, pool: poolCheck(pool, avail), spec: specTable(pool) }, { headers: NO }); }
   return bad('استعلام غير معروف');
@@ -94,6 +98,7 @@ export async function POST(req: Request) {
       classroom_id: b.classroom_id, level, label_ar: typeof b.label_ar === 'string' && b.label_ar.trim().length >= 3 ? b.label_ar.trim() : exitInviteLabel(info.classroom.label, level),
       opens_at: typeof b.opens_at === 'string' ? b.opens_at : null, expires_at: typeof b.expires_at === 'string' ? b.expires_at : null,
       max_seats: Number.isInteger(seats) && seats > 0 ? seats : roster > 0 ? roster + Math.ceil(roster * 0.2) : null, program_id: info.classroom.program_id || null, lang: 'ar', force_new: b.force_new === true,
+      proctor_mode: isWitnessMode(b.proctor_mode) ? b.proctor_mode : null, witness_interval: Number.isInteger(Number(b.witness_interval)) && Number(b.witness_interval) >= 20 ? Number(b.witness_interval) : null, /* م8 */
     }, user.id, site);
     if (!r.ok) return bad(r.error === 'blueprint_missing' ? 'مخطّط SYS-EXIT غير موجود — نفّذ ترحيل م6 أولًا' : r.error);
     const avail = await availability(db);

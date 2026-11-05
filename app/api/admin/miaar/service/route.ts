@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     const r = await createServiceInvite(db, {
       client_name: String(b.client_name || ''), client_contact: typeof b.client_contact === 'string' ? b.client_contact : null, level: b.level,
       opens_at: typeof b.opens_at === 'string' ? b.opens_at : null, expires_at: typeof b.expires_at === 'string' ? b.expires_at : null,
-      max_seats: Number.isInteger(seats) && seats > 0 ? seats : null, lang: typeof b.lang === 'string' ? b.lang : 'ar', identity_mode: b.identity_mode === 'email_id' ? 'email_id' : 'email', pin, note: typeof b.note === 'string' ? b.note.slice(0, 500) : null,
+      max_seats: Number.isInteger(seats) && seats > 0 ? seats : null, lang: typeof b.lang === 'string' ? b.lang : 'ar', identity_mode: b.identity_mode === 'email_id' ? 'email_id' : 'email', pin, proctor_mode: b.proctor_mode === 'room' || b.proctor_mode === 'remote' || b.proctor_mode === 'camera' ? b.proctor_mode : null, note: typeof b.note === 'string' ? b.note.slice(0, 500) : null,
     }, user.id, site);
     if (!r.ok) return bad(r.error === 'blueprint_missing' ? 'مخطّط SYS-EXIT غير موجود — نفّذ ترحيل م6 أولًا' : r.error);
     await audit(db, user, 'miaar_service_create', r.order.id, `خدمة اختبار معياري — ${r.order.client_name} ${r.order.level}`, { invite_id: r.invite.id, level: r.order.level, seats: r.order.seats, pin: !!r.pin });

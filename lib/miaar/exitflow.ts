@@ -101,7 +101,7 @@ export async function mergeSkillRetake(db: Db, retakeSessionId: string, retakeRe
 }
 
 /* ---------- الدعوة المرتبطة بالقاعة ---------- */
-export type ExitInviteInput = { classroom_id: string; level: ExitLevel; label_ar: string; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; program_id?: string | null; lang?: string; note?: string | null; force_new?: boolean };
+export type ExitInviteInput = { classroom_id: string; level: ExitLevel; label_ar: string; opens_at?: string | null; expires_at?: string | null; max_seats?: number | null; program_id?: string | null; lang?: string; note?: string | null; force_new?: boolean; /* م8 */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null };
 export async function findOrCreateExitInvite(db: Db, input: ExitInviteInput, actorId: string | null, site: string): Promise<{ ok: true; invite: any; reused: boolean; url: string } | { ok: false; error: string }> {
   const code = exitBlueprintCode(input.level);
   const { data: bp } = await db.from('question_bank_blueprints').select('id, code, status').eq('code', code).maybeSingle();
@@ -114,7 +114,8 @@ export async function findOrCreateExitInvite(db: Db, input: ExitInviteInput, act
   const r = await createInvite(db, {
     kind: 'group', label_ar: input.label_ar || exitInviteLabel('', input.level), lang: input.lang || 'ar', exam_mode: 'comprehensive', purpose: 'level_exit', blueprint_id: bp.id, expires_at: input.expires_at || null, max_seats: input.max_seats || null,
     program_id: input.program_id || null, note: input.note || null, classroom_id: input.classroom_id, opens_at: input.opens_at || null, level_target: input.level, reuse_key: key,
-  }, actorId || '', site);
+    ...(input.proctor_mode ? { proctor_mode: input.proctor_mode } : {}), ...(input.witness_interval ? { witness_interval: input.witness_interval } : {}),
+  } as any, actorId || '', site);
   if (!r.ok) return { ok: false, error: r.error };
   return { ok: true, invite: r.invite, reused: false, url: r.url };
 }
@@ -150,7 +151,7 @@ export async function boardFor(db: Db, inviteId: string) {
   const { data: inv } = await db.from('placement_invites').select('*').eq('id', inviteId).maybeSingle(); if (!inv) return null;
   const [{ data: sessions }, { data: reports }, { data: recipients }] = await Promise.all([
     db.from('placement_secure_sessions').select('id, candidate, status, created_at, finished_at, updated_at, expires_at').eq('invite_id', inviteId).order('created_at', { ascending: true }),
-    db.from('placement_reports').select('id, submission_id, candidate_email, access_code, report, created_at').eq('invite_id', inviteId),
+    db.from('placement_reports').select('id, submission_id, candidate_email, access_code, report, created_at, integrity_status').eq('invite_id', inviteId),
     db.from('placement_invite_recipients').select('email, name, opened_at, started_at, report_id').eq('invite_id', inviteId),
   ]);
   const sess: any[] = Array.isArray(sessions) ? sessions : []; const reps: any[] = Array.isArray(reports) ? reports : [];
@@ -168,7 +169,7 @@ export async function boardFor(db: Db, inviteId: string) {
       started_at: s.created_at, finished_at: s.finished_at || rep?.created_at || null, answered: answered[s.id] || 0, total, idle_min: finished ? null : Math.max(0, Math.round((now - Date.parse(s.updated_at || s.created_at)) / 60000)),
       report_code: rep?.access_code || null, exit: (rep?.report?.exit as ExitBlockT) || null,
     };
-    (row as any).report_id = rep?.id || null; (row as any).session_id = s.id;
+    (row as any).report_id = rep?.id || null; (row as any).session_id = s.id; (row as any).integrity = rep?.integrity_status || null; /* م8 */
     const prev = byEmail.get(email); if (!prev || prev.status === 'invited' || (row.exit && !prev.exit)) byEmail.set(email, row);
   }
   const rows = [...byEmail.values()].sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, 'ar'));

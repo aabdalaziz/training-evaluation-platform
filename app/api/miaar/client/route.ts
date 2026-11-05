@@ -27,8 +27,8 @@ export async function GET(req: Request) {
   const u = new URL(req.url); const t = u.searchParams.get('t') || '';
   const b = await clientBoard(db, t, siteOf(req)); if (!b) return bad('not_found', 404);
   if (u.searchParams.get('csv')) {
-    const head = ['الاسم', 'البريد', 'الحالة', 'الكلّي', 'الحكم', 'التقدير', ...EXIT_SKILLS.map((s) => SKILL_NAMES[s].ar), 'رمز النتيجة', 'رابط الشهادة'];
-    const lines = b.rows.map((r: any) => [r.name, r.email, r.status, r.exit?.الكلي ?? '', r.exit?.النتيجة ?? '', r.exit?.تقدير_ar ?? '', ...EXIT_SKILLS.map((s) => r.exit?.المهارات?.[s]?.النسبة ?? ''), r.report_code ?? '', r.certificate_url ?? ''].map(csvCell).join(','));
+    const head = ['الاسم', 'البريد', 'الحالة', 'الكلّي', 'الحكم', 'التقدير', ...EXIT_SKILLS.map((s) => SKILL_NAMES[s].ar), 'سجلّ النزاهة', 'رمز النتيجة', 'رابط الشهادة'];
+    const lines = b.rows.map((r: any) => [r.name, r.email, r.status, r.exit?.الكلي ?? '', r.exit?.النتيجة ?? '', r.exit?.تقدير_ar ?? '', ...EXIT_SKILLS.map((s) => r.exit?.المهارات?.[s]?.النسبة ?? ''), r.integrity_ar ?? '', r.report_code ?? '', r.certificate_url ?? ''].map(csvCell).join(','));
     const csv = '\uFEFF' + [head.map(csvCell).join(','), ...lines].join('\r\n');
     return new NextResponse(csv, { headers: { ...NO, 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="miaar-exit-${b.invite.code}.csv"` } });
   }
