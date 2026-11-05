@@ -14,6 +14,7 @@ import Athir from './Athir';
 import { GuideButton } from './Guide';
 import { AccessProvider, AccessButton, AccessPanel, ReadPage, SkipLink, ACCESS_CSS, useAccess } from './Inclusion';
 import { OnAirButton, OnAirPanel, ONAIR_CSS } from './OnAir';
+import { NoticesBell, NOTICES_CSS } from './Notices'; /* P39 «تنبيهاتي» */
 import WayBar from './WayBar';  /* «الطريق»: رجوع · الرئيسية · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسية */
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
@@ -55,7 +56,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     <LangCtx.Provider value={{ lang, setLang }}>
       <AccessProvider>
       <div className={`pt ${lang}`} dir={dir} lang={lang}>
-        <style dangerouslySetInnerHTML={{ __html: CSS + ACCESS_CSS + ONAIR_CSS }} />
+        <style dangerouslySetInnerHTML={{ __html: CSS + ACCESS_CSS + ONAIR_CSS + NOTICES_CSS }} />
         <SkipLink lang={lang} />
         <header className="pt-header">
           <Link href="/" className="pt-brand" aria-label={t(BRAND.full, lang)}>
@@ -74,6 +75,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             <DoorBadge lang={lang} />
             <GuideButton lang={lang} compact />
             <OnAirButton lang={lang} />
+            {loggedIn && <NoticesBell lang={lang} />}
             <AccessButton lang={lang} />
             <button type="button" className="pt-lang" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} aria-label="language">{lang === 'ar' ? 'English' : 'عربي'}</button>
             {loggedIn && <button type="button" className="pt-exit" onClick={logout} aria-label={lang === 'ar' ? 'خروج' : 'Sign out'} title={lang === 'ar' ? 'خروج' : 'Sign out'} data-testid="shell-exit"><Icon name="logout" size={16} /><span>{lang === 'ar' ? 'خروج' : 'Sign out'}</span></button>}

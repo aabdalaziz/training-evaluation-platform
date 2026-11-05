@@ -196,3 +196,17 @@ export const titlesOf = (codes: readonly string[], units: readonly Unit[]): Unit
 export const PLAN_SYSTEM = 'أنت مصمّم تعليمي لتعليم العربية لغةً ثانية وفق الإطار الأوروبي المرجعي. تُعيد كتابة خطّة جلسة مراجعة قصيرة بالعربية الفصحى الواضحة، بسياق سعودي/عربي معاصر، للمدرّس لا للمتعلّم. حافظ على الصيغة: أسطر تبدأ بـ "## " للعناوين و"- " للنقاط فقط، وعلى المدّة والأقسام والأهداف نفسها، واجعل الأنشطة أدقّ وأكثر قابلية للتنفيذ، ولا تضف وحدات أو أهدافًا جديدة. لا تذكر الذكاء الاصطناعي.';
 export const planPrompt = (draft: string, level: string | null): string => `المستوى: ${level || '—'}\nالخطّة الحالية:\n${draft}\n\nأعد الخطّة محسَّنة بالصيغة نفسها (≤ 60 سطرًا).`;
 export function parsePlan(raw: string): string | null { const s = String(raw || '').replace(/```[a-z]*\n?/gi, '').trim(); if (s.length < 80) return null; const lines = s.split('\n').map((l) => l.trimEnd()).filter((l) => l.trim()); const ok = lines.filter((l) => /^(## |- )/.test(l.trim())).length / lines.length; return ok >= 0.7 ? lines.slice(0, 80).join('\n').slice(0, 6000) : null; }
+
+/* ───────── P39: جمهور إشعار جلسة التعويض ───────── */
+export type AudienceRow = { email: string; report_id?: string | null; user_id?: string | null; exit?: any };
+/** من يُبلَّغ بالجلسة؟ كل من تقاطعت وحداته الضعيفة/المراقبة مع وحدات الجلسة؛ وإن لم تتوفّر خريطة وحدات له: من لم يجتز أو اجتاز بشرط. صافية (قابلة للاختبار). */
+export function remedialAudience(rows: readonly AudienceRow[], unitCodes: readonly string[]): AudienceRow[] {
+  const want = new Set(unitCodes.map((c) => String(c).toUpperCase())); const seen = new Set<string>(); const out: AudienceRow[] = [];
+  for (const r of rows) {
+    const email = String(r.email || '').trim().toLowerCase(); if (!email || seen.has(email) || !r.report_id || !r.exit) continue;
+    const units = Array.isArray(r.exit?.الوحدات) ? r.exit.الوحدات : [];
+    const hit = units.length ? units.some((u: any) => want.has(String(u?.الرمز || '').toUpperCase()) && (u?.الحالة === 'weak' || u?.الحالة === 'watch')) : (r.exit?.النتيجة === 'failed' || r.exit?.النتيجة === 'conditional');
+    if (!hit) continue; seen.add(email); out.push({ ...r, email });
+  }
+  return out;
+}

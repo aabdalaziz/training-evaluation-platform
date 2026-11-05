@@ -19,8 +19,12 @@ export type PushState = 'loading' | 'unsupported' | 'server_off' | 'idle' | 'den
 export function isIosNotStandalone(): boolean { if (typeof navigator === 'undefined') return false; const ios = /iphone|ipad|ipod/i.test(navigator.userAgent); const standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator as any).standalone === true; return ios && !standalone; }
 
 /** زر «ذكّرني بموقف الغد» — يعمل للزائر والمستخدم؛ المستخدم يُربط اشتراكه بحسابه ويصله إشعار تجريبي فوري */
-export function PushOptIn({ lang, tok, compact }: { lang: 'ar' | 'en'; tok?: string; compact?: boolean }) {
+export type PushOptInProps = { lang: 'ar' | 'en'; tok?: string; compact?: boolean;
+  /** P39: مواضيع الاشتراك (الافتراضي «موقف اليوم») · حقول إضافية تُدمج في طلب الاشتراك (مثل رمز النتيجة result) · نصوص الزر · لا رسالة اختبار */
+  topics?: string[]; extra?: Record<string, unknown>; labels?: { idle?: string; on?: string; done?: string }; testid?: string; className?: string; onDone?: () => void };
+export function PushOptIn({ lang, tok, compact, topics, extra, labels, testid, className, onDone }: PushOptInProps) {
   const ar = lang === 'ar'; const [st, setSt] = useState<PushState>('loading'); const [key, setKey] = useState(''); const [msg, setMsg] = useState('');
+  const custom = !!(topics && topics.length) || !!extra;
   const hdr = useCallback(() => ({ 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }), [tok]);
   useEffect(() => {
     (async () => {
@@ -39,10 +43,11 @@ export function PushOptIn({ lang, tok, compact }: { lang: 'ar' | 'en'; tok?: str
       const perm = await Notification.requestPermission(); if (perm !== 'granted') { setSt('denied'); return; }
       const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' }); await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(key) as unknown as BufferSource });
-      const j = await fetch('/api/push', { method: 'POST', headers: hdr(), body: JSON.stringify({ action: 'subscribe', subscription: sub.toJSON(), lang, topics: ['daily'] }) }).then(r => r.json());
+      const j = await fetch('/api/push', { method: 'POST', headers: hdr(), body: JSON.stringify({ action: 'subscribe', subscription: sub.toJSON(), lang, topics: topics && topics.length ? topics : ['daily'], ...(extra || {}) }) }).then(r => r.json());
       if (!j?.success) { setMsg(j?.error || 'x'); setSt('idle'); return; }
-      setSt('on'); setMsg(ar ? 'تم — سيصلك موقف اليوم كل صباح (9 صباحًا بتوقيت الرياض).' : 'Done — you’ll get the daily case every morning (9:00 Riyadh).');
-      if (tok) fetch('/api/push', { method: 'POST', headers: hdr(), body: JSON.stringify({ action: 'test' }) }).catch(() => { /* تجاهل */ });
+      setSt('on'); setMsg(labels?.done || (ar ? 'تم — سيصلك موقف اليوم كل صباح (9 صباحًا بتوقيت الرياض).' : 'Done — you’ll get the daily case every morning (9:00 Riyadh).'));
+      if (tok && !custom) fetch('/api/push', { method: 'POST', headers: hdr(), body: JSON.stringify({ action: 'test' }) }).catch(() => { /* تجاهل */ });
+      onDone?.();
     } catch (e: any) { setMsg(String(e?.message || e)); setSt('idle'); }
   }
   async function disable() {
@@ -51,13 +56,13 @@ export function PushOptIn({ lang, tok, compact }: { lang: 'ar' | 'en'; tok?: str
     setSt('idle'); setMsg('');
   }
   if (st === 'loading' || st === 'unsupported' || st === 'server_off') return null;
-  const cls = compact ? 'pt-btn ghost small' : 'pt-btn light small';
+  const cls = className || (compact ? 'pt-btn ghost small' : 'pt-btn light small');
   return (
     <span className="pw-wrap" style={{ display: 'inline-flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
       {st === 'ios_install' && <small style={{ color: '#64748b', fontSize: 12 }}>{ar ? 'على iPhone: أضف أَثَر إلى الشاشة الرئيسية (مشاركة ← إضافة إلى الشاشة الرئيسية) ثم فعّل التذكير.' : 'On iPhone: add Athar to Home Screen first, then enable reminders.'}</small>}
       {st === 'denied' && <small style={{ color: '#64748b', fontSize: 12 }}>{ar ? 'الإشعارات محظورة في المتصفح — اسمح بها من إعدادات الموقع ثم أعد المحاولة.' : 'Notifications are blocked — allow them in site settings and retry.'}</small>}
-      {(st === 'idle' || st === 'busy') && <button type="button" className={cls} disabled={st === 'busy'} onClick={enable} data-testid="push-optin">🔔 {st === 'busy' ? (ar ? 'لحظة…' : 'One moment…') : (ar ? 'ذكّرني بموقف الغد' : 'Remind me of tomorrow’s case')}</button>}
-      {st === 'on' && <button type="button" className={cls} onClick={disable} title={ar ? 'إيقاف التذكير اليومي' : 'Turn off daily reminder'}>🔔 {ar ? 'التذكير اليومي مفعّل — إيقاف' : 'Daily reminder on — turn off'}</button>}
+      {(st === 'idle' || st === 'busy') && <button type="button" className={cls} disabled={st === 'busy'} onClick={enable} data-testid={testid || 'push-optin'}>🔔 {st === 'busy' ? (ar ? 'لحظة…' : 'One moment…') : (labels?.idle || (ar ? 'ذكّرني بموقف الغد' : 'Remind me of tomorrow’s case'))}</button>}
+      {st === 'on' && <button type="button" className={cls} onClick={disable} title={ar ? 'إيقاف الإشعارات على هذا الجهاز' : 'Turn off on this device'} data-testid={(testid || 'push-optin') + '-on'}>🔔 {labels?.on || (ar ? 'التذكير اليومي مفعّل — إيقاف' : 'Daily reminder on — turn off')}</button>}
       {msg && <small style={{ color: msg.length > 60 || /تم|Done/.test(msg) ? '#166534' : '#991b1b', fontSize: 12 }}>{msg}</small>}
     </span>
   );

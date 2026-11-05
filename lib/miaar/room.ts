@@ -5,6 +5,7 @@
 import { loadApprovedTasks, MEDIA_BUCKET } from './bank';
 import { planFromSession } from './blueprint';
 import { refreshExit } from './exitflow'; /* م6 */
+import { noticeText, pushNotice } from '../portal/notices'; /* P39 */
 import { pickTasks, publicTask, validateWriting, validateSpeaking, isAccommodation, mediaPathFor, productiveBlock, AUDIO_MAX_BYTES } from './performance';
 import type { PublicTask, RoomState, PerfLite, PerformanceStatus } from './performance';
 import type { SessionRow, Result } from './engine';
@@ -62,14 +63,17 @@ export async function saveDraft(db: any, s: SessionRow, skill: unknown, text: un
 /** إعادة بناء كتلة «المهارات الإنتاجية» في التقرير (على placement_reports والجلسة) من جدول الأداء — تُستدعى بعد كل تسليم/تخطٍّ/إصدار */
 export async function refreshProductive(db: any, sessionId: string): Promise<Record<string, unknown> | null> {
   const perfs = await perfsOf(db, sessionId); const block = productiveBlock(perfs.map(lite));
-  const { data: rep } = await db.from('placement_reports').select('id, report').eq('submission_id', sessionId).maybeSingle();
+  const { data: rep } = await db.from('placement_reports').select('id, report, candidate_email, access_code, user_id, invite_id').eq('submission_id', sessionId).maybeSingle();
   if (rep?.id) {
     const report = { ...(rep.report || {}) } as Record<string, unknown>; if (block) report[PRODUCTIVE_KEY] = block; else delete report[PRODUCTIVE_KEY];
+    const wasFinal = (rep.report as any)?.exit?.الحالة === 'final';
     /* م6 «عُبور»: إعادة بناء حكم نهاية المستوى بعد كل تحديث للغرفة/التصحيح (أو دمج إعادة المهارة في التقرير الأصلي) */
     try { await refreshExit(db, sessionId, report as any, perfs.map((p) => ({ skill: p.skill, status: p.status, human_rating: p.human_rating as any }))); } catch { /* تحسيني */ }
     await db.from('placement_reports').update({ report }).eq('id', rep.id);
     await db.from('placement_secure_sessions').update({ report, updated_at: nowIso() }).eq('id', sessionId);
     if (perfs.length) await db.from('miaar_performances').update({ report_id: rep.id }).eq('session_id', sessionId).is('report_id', null);
+    /* P39: لحظة صدور الحكم (pending → final) → إشعار المتعلّم (حكم بلا درجات) + ملخّص للمدرّب/منشئ الدعوة داخل أَثَر فقط */
+    try { const ex = (report as any).exit; if (ex?.الحالة === 'final' && !wasFinal && rep.access_code) await announceExitFinal(db, { reportId: rep.id, email: rep.candidate_email, userId: rep.user_id || null, code: rep.access_code, inviteId: rep.invite_id || null, exit: ex }); } catch { /* تحسيني */ }
   }
   return block;
 }
@@ -113,4 +117,23 @@ export async function skipPerformance(db: any, s: SessionRow, skill: unknown): P
   if (!prev) { const ins = await db.from('miaar_performances').upsert({ session_id: s.id, item_code: task.code, skill, level_target: task.level, candidate_email: s.candidate?.email || null, user_id: s.user_id || null, status: 'skipped', ai_consent: false, accommodation: null, text_answer: null, media_path: null, media_mime: null, duration_sec: null, word_count: null, transcript: null, human_rating: null, ai_rating: null, released_at: null, report_id: null, updated_at: nowIso() }, { onConflict: 'session_id,skill' }); if (ins.error) return fail('performance_save_failed', 500); }
   const productive = await refreshProductive(db, s.id);
   return { ok: true, value: { productive, room: roomView(state, await perfsOf(db, s.id)) } };
+}
+
+/* ====================================================================== P39 — إعلان صدور الحكم */
+/** إشعار المتعلّم بصدور حكمه (بلا درجات) + ملخّص متجدّد لمنشئ الدعوة/مدرّب القاعة (داخل أَثَر فقط، يُحدَّث كلما صدرت نتيجة) */
+export async function announceExitFinal(db: any, a: { reportId: string; email: string; userId: string | null; code: string; inviteId: string | null; exit: any }): Promise<void> {
+  const outcome = a.exit?.النتيجة === 'passed' ? 'passed' : a.exit?.النتيجة === 'failed' ? 'failed' : 'conditional';
+  const t = noticeText({ kind: 'exit_final', level: String(a.exit?.المستوى || ''), outcome, code: a.code });
+  await pushNotice(db, { email: a.email, user_id: a.userId, report_id: a.reportId, kind: 'exit_final', ...t, ref_id: a.reportId, dedupe_key: `exit_final:${a.reportId}` });
+  if (!a.inviteId) return;
+  const { data: inv } = await db.from('placement_invites').select('id, label_ar, code, created_by, classroom_id').eq('id', a.inviteId).maybeSingle(); if (!inv) return;
+  const { data: reps } = await db.from('placement_reports').select('report').eq('invite_id', a.inviteId).limit(500);
+  const ex = ((reps || []) as any[]).map((r) => r?.report?.exit).filter(Boolean); const fin = ex.filter((e) => e.الحالة === 'final');
+  const count = (k: string) => fin.filter((e) => e.النتيجة === k).length;
+  let total = ex.length; try { const { data: rc } = await db.from('placement_invite_recipients').select('id').eq('invite_id', a.inviteId).limit(1000); total = Math.max(total, (rc || []).length); } catch { /* تحسيني */ }
+  const who = new Set<string>();
+  try { if (inv.created_by) { const { data: p } = await db.from('profiles').select('email').eq('id', inv.created_by).maybeSingle(); if (p?.email) who.add(String(p.email)); } } catch { /* تحسيني */ }
+  try { if (inv.classroom_id) { const { data: c } = await db.from('classrooms').select('trainer_id').eq('id', inv.classroom_id).maybeSingle(); if (c?.trainer_id) { const { data: tr } = await db.from('trainers').select('email').eq('id', c.trainer_id).maybeSingle(); if (tr?.email) who.add(String(tr.email)); } } } catch { /* تحسيني */ }
+  const s = noticeText({ kind: 'exit_summary', invite: String(inv.label_ar || inv.code), final: fin.length, total, passed: count('passed'), conditional: count('conditional'), failed: count('failed'), inviteId: String(inv.id) });
+  for (const e of Array.from(who)) await pushNotice(db, { email: e, kind: 'exit_summary', ...s, ref_id: String(inv.id), dedupe_key: `exit_summary:${inv.id}:${e}`, push: false, merge: true });
 }

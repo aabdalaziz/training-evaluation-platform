@@ -17,8 +17,9 @@ import { boardFor } from '../../../../../lib/miaar/exitflow';
 import { isExitLevel } from '../../../../../lib/miaar/exit';
 import { listUnits, approvedFor } from '../../../../../lib/miaar/syllabus';
 import { conflicts, atharRoomUrl } from '../../../../../lib/portal/live';
+import { noticeText, pushNotice } from '../../../../../lib/portal/notices'; /* P39 */
 import type { LiveSession } from '../../../../../lib/portal/live';
-import { REMEDIAL_KIND, REMEDIAL_TITLE, REMEDIAL_DEFAULT_MIN, REMEDIAL_MAX_UNITS, nextWorkdayAt, remedialTitle, mistakesFor, draftPlan, validateCreate, programUnitFor, unitsOfItemMap, titlesOf, sessionsWithEffect, PLAN_SYSTEM, planPrompt, parsePlan } from '../../../../../lib/miaar/remedial';
+import { REMEDIAL_KIND, REMEDIAL_TITLE, REMEDIAL_DEFAULT_MIN, REMEDIAL_MAX_UNITS, nextWorkdayAt, remedialTitle, mistakesFor, draftPlan, validateCreate, programUnitFor, unitsOfItemMap, titlesOf, sessionsWithEffect, remedialAudience, PLAN_SYSTEM, planPrompt, parsePlan } from '../../../../../lib/miaar/remedial';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -57,6 +58,12 @@ async function programUnits(db: any, programId: string | null): Promise<any[]> {
   if (!programId) return []; try { const { data, error } = await db.from('portal_program_units').select('idx, title_ar, starts_on, miaar_unit_codes').eq('program_id', programId).is('archived_at', null).order('idx', { ascending: true }).limit(60); return error ? [] : (data || []); } catch { return []; }
 }
 
+/* P39: إشعار المتعلّمين المعنيّين بجلسة التعويض (داخل أَثَر + دفعة) — يعيد عددهم */
+async function notifyRemedial(db: any, board: any, s: { id: string; title_ar: string; starts_at: string; unit_codes: string[]; unit_titles: string[]; join_url: string | null }): Promise<number> {
+  const rows = Array.isArray(board?.rows) ? board.rows : []; const aud = remedialAudience(rows, s.unit_codes); let n = 0;
+  for (const a of aud) { const t = noticeText({ kind: 'remedial_new', title: s.title_ar, starts_at: s.starts_at, units: s.unit_titles, joinUrl: s.join_url || '/me' }); const r = await pushNotice(db, { email: a.email, user_id: a.user_id || null, report_id: a.report_id || null, kind: 'remedial_new', ...t, ref_id: s.id, dedupe_key: `remedial_new:${s.id}:${a.email}` }); if (r.inserted) n++; }
+  return n;
+}
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db } = c;
   const u = new URL(req.url); const inviteId = String(u.searchParams.get('invite') || ''); if (!isId(inviteId)) return bad('دعوة غير صالحة');
@@ -118,8 +125,10 @@ export async function POST(req: Request) {
       starts_at: inp.starts_at, duration_min: inp.duration_min, provider: inp.provider, join_url: inp.provider === 'athar' ? null : inp.join_url, access: 'program', skills: [], status: 'scheduled', created_by: user.id, miaar_unit_codes: inp.unit_codes, source_invite_id: inviteId };
     const { data: ins, error } = await db.from('portal_sessions').insert(row).select('id').single(); if (error || !ins) return bad(error?.message || 'تعذّر إنشاء الجلسة', 500);
     if (inp.provider === 'athar') { try { await db.from('portal_sessions').update({ join_url: atharRoomUrl(String(ins.id), inp.title_ar) }).eq('id', ins.id); } catch { /* اختياري */ } }
-    await audit(db, user, 'miaar_remedial_create', String(ins.id), inp.title_ar, { invite_id: inviteId, units: inp.unit_codes, starts_at: inp.starts_at, duration_min: inp.duration_min, provider: inp.provider, forced: !!b.force && clash.length > 0, plan_chars: inp.description_ar.length });
-    return NextResponse.json({ success: true, session_id: ins.id, conflicts: clash.length, live_url: '/admin/live' }, { headers: NO });
+    /* P39: إشعار كل متعلّم في الدعوة تتقاطع وحداته الضعيفة مع وحدات الجلسة (وإن لم تتوفّر خريطة الوحدات: كل من لم يجتز/مشروط) */
+    let notified = 0; try { notified = await notifyRemedial(db, board, { id: String(ins.id), title_ar: inp.title_ar, starts_at: inp.starts_at, unit_codes: inp.unit_codes, unit_titles: chosen.map((c) => c.title_ar), join_url: inp.provider === 'athar' ? atharRoomUrl(String(ins.id), inp.title_ar) : inp.join_url || null }); } catch { notified = 0; }
+    await audit(db, user, 'miaar_remedial_create', String(ins.id), inp.title_ar, { invite_id: inviteId, units: inp.unit_codes, starts_at: inp.starts_at, duration_min: inp.duration_min, provider: inp.provider, notified, forced: !!b.force && clash.length > 0, plan_chars: inp.description_ar.length });
+    return NextResponse.json({ success: true, session_id: ins.id, conflicts: clash.length, notified, live_url: '/admin/live' }, { headers: NO });
   }
   return bad('إجراء غير معروف');
 }

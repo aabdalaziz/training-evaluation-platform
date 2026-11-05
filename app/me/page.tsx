@@ -11,6 +11,7 @@ import ProgramResources from '../components/ProgramResources';
 import UpcomingSessions from '../components/UpcomingSessions';
 import PlacementCard from '../components/PlacementCard';
 import ContactPrefs from '../components/ContactPrefs';
+import NoticesCard from '../components/Notices'; /* P39 «تنبيهاتي» */
 import OrgPledgeBanner from '../components/OrgPledgeBanner';
 import ReportLinesCard from '../components/ReportLinesCard';
 import { AtharMark } from '../components/PortalShell';
@@ -98,6 +99,7 @@ export default function MePage() {
     {head}
     {error && <div className="me-msg bad"><Icon name="alert" size={16} /><span>{error}</span></div>}
     {me && <PlacementCard />}
+    {me && <NoticesCard />}
     {me && <ContactPrefs />}
     {me && <OrgPledgeBanner />}
     {me && <ReportLinesCard />}

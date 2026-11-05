@@ -272,6 +272,10 @@ export async function resultByCode(db: any, code: string): Promise<{ code: strin
     if (codes.length && data.invite_id) { const { remedialsForLearner } = await import('./remedial'); const ss = await remedialsForLearner(db, data.invite_id, codes); if (ss.length) (safe as any).exit = { ...ex, جلسة_مراجعة: ss }; } } catch { /* اختياري */ }
   /* م8 «شاهِد»: حكم النزاهة على البطاقة (بلا صور) — «لاغٍ» يحجب الشهادة بصدق */
   try { const { integrityBlock } = await import('./witness'); const nb = integrityBlock(data); if (nb) { (safe as any).نزاهة = nb; if (nb.الحالة === 'invalid' && (safe as any).شهادة) (safe as any).شهادة = { ...(safe as any).شهادة, محجوبة: true }; } } catch { /* اختياري */ }
+  /* P39 «إشعارات المتعلّم»: آخر المستجدّات الخاصة بهذه النتيجة (بلا بريد) + هل لهذا المتقدّم اشتراك «نبّهني» فعّال */
+  try { const { listNotices, publicNotice } = await import('../portal/notices'); const ns = await listNotices(db, data.candidate_email, { limit: 5, report_id: String(data.id) });
+    let sub = false; try { const { data: ps } = await db.from('portal_push_subscriptions').select('id').eq('email', String(data.candidate_email || '').toLowerCase()).eq('active', true).limit(1); sub = Array.isArray(ps) && ps.length > 0; } catch { sub = false; }
+    (safe as any).تنبيهات = { القائمة: ns.map(publicNotice), مشترك: sub }; } catch { /* اختياري */ }
   return { code: data.access_code, name, taken_at: data.created_at, report: safe };
 }
 export { PASS_PERCENT };

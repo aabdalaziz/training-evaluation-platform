@@ -14,6 +14,7 @@ import type { Level } from '../../lib/miaar/registry';
 import { Icon } from '../../lib/ui/icons';
 import { GuideButton } from '../components/Guide';
 import WayBar from '../components/WayBar'; /* «الطريق» */
+import { PushOptIn } from '../components/Pwa'; /* P39 «نبّهني» */
 import dynamic from 'next/dynamic';
 import type { RoomData } from './PerformanceRoom';
 import Witness from './Witness'; /* م8 «شاهِد» */
@@ -717,6 +718,8 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
       {report?.السجلّ?.رحلة && <p className="mi-ledger journey" data-testid="mi-journey">{ar ? 'لك أكثر من محاولة في مِعيار — ' : 'You have more than one sitting in Miaar — '}<a href={`/miaar/growth/${code}`} data-testid="mi-journey-link">{ar ? 'شاهد رحلتك ونموّك على السُّلّم' : 'see your journey and growth on the scale'}</a></p>}
       {/* م6 «عُبور»: شريط نهاية المستوى — الحكم المركّب · المهارات الخمس · خطّ العبور · الشهادة */}
       {report?.exit && <ExitStrip ex={report.exit} code={code || ""} ar={ar} x={x} svc={report.شهادة || null} />}
+      {/* P39 «إشعارات المتعلّم»: «نبّهني» (اشتراك مجهول برمز النتيجة) + آخر المستجدّات الخاصة بهذه النتيجة */}
+      <NoticesStrip n={(report as any)?.تنبيهات || null} code={code || ''} ar={ar} />
       {(report as any)?.نزاهة && <p className={`mi-exit-note mi-wit-${(report as any).نزاهة.الحالة}`} data-testid="mi-integrity" data-status={(report as any).نزاهة.الحالة}><b>{x('wit_strip')}:</b> {x(`wit_${(report as any).نزاهة.الحالة}`)}{(report as any).نزاهة.ملاحظة ? ` — ${(report as any).نزاهة.ملاحظة}` : ''}</p>}
       {report?.السجلّ?.يحتاج_إنسانًا && <p className="mi-ledger wait" data-testid="mi-decision-wait">{ar ? 'قرار التسكين بانتظار مراجعة إنسان — ستصلك النتيجة قريبًا.' : 'Your placement decision awaits human review — you will hear from us soon.'}</p>}
       <div className="mi-rsplit">
@@ -763,6 +766,21 @@ function ExitInviteCard({ ex, x, ar }: { ex: NonNullable<Invite['exit']>; x: (k:
     {ex.opens_at && Date.parse(ex.opens_at) > Date.now() && <p className="mi-exit-rule">{x('invite_not_open')}</p>}
   </div>;
 }
+/* ===== P39 «إشعارات المتعلّم» — «نبّهني» + آخر المستجدّات ===== */
+const NOTICE_ICON: Record<string, string> = { exit_final: '⚖️', retake_open: '🔁', retake_rem3: '⏳', retake_rem1: '⏰', remedial_new: '🧭', remedial_tmrw: '📅', promoted: '🎓', placed: '🏫' };
+function NoticesStrip({ n, code, ar }: { n: { القائمة: any[]; مشترك: boolean } | null; code: string; ar: boolean }) {
+  const list = Array.isArray(n?.القائمة) ? n!.القائمة : [];
+  if (!code) return null;
+  return <section className="mi-notices" data-testid="mi-notices" data-count={list.length}>
+    <div className="mi-notices-head">
+      <p className="mi-exit-k">{ar ? 'آخر المستجدّات' : 'Latest updates'}{n?.مشترك && <small className="mi-notices-sub" data-testid="mi-notify-sub"> · {ar ? 'لك اشتراك «نبّهني» فعّال' : 'push alerts active'}</small>}</p>
+      <PushOptIn lang={ar ? 'ar' : 'en'} topics={['miaar']} extra={{ result: code }} className="mi-btn ghost small" testid="mi-notify" labels={{ idle: ar ? 'نبّهني بأي جديد يخصّ نتيجتي' : 'Alert me about this result', on: ar ? 'التنبيهات مفعّلة على هذا الجهاز — إيقاف' : 'Alerts on for this device — turn off', done: ar ? 'تم — سيصلك إشعار حين يصدر حكمك أو تُفتح لك إعادة أو تُحجز لك جلسة.' : 'Done — you will be alerted when your verdict is issued, a retake opens, or a session is booked.' }} />
+    </div>
+    {list.length === 0 ? <p className="mi-notices-empty">{ar ? 'لا جديد بعد — كل ما يخصّ هذه النتيجة (الحكم · إعادة مهارة · جلسة تعويض · ترقية · تسكين) سيظهر هنا وعلى جهازك إن فعّلت «نبّهني».' : 'Nothing yet — everything about this result (verdict, retake, remedial session, promotion, placement) will appear here and on your device if you enable alerts.'}</p>
+      : <ul className="mi-notices-list">{list.map((m: any) => <li key={m.id} data-kind={m.النوع}><span className="mi-notices-ic" aria-hidden="true">{NOTICE_ICON[m.النوع] || '🔔'}</span><div><b>{m.العنوان}</b><p>{m.النصّ}</p><small>{new Date(m.في).toLocaleString(ar ? 'ar-SA' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Riyadh' })}{m.دُفع ? (ar ? ' · وصلك إشعارًا' : ' · pushed') : ''}</small></div>{m.الرابط && !String(m.الرابط).includes(`/miaar/result/${code}`) && <a className="mi-btn ghost small" href={m.الرابط}>{ar ? 'افتح' : 'Open'}</a>}</li>)}</ul>}
+  </section>;
+}
+
 /* ===== م6 «عُبور» — شريط النتيجة ===== */
 const NEXT_OF: Record<string, string> = { A1: 'A2', A2: 'B1', B1: 'B2', B2: 'C1', C1: 'C2' };
 function ExitStrip({ ex, code, ar, x, svc = null }: { ex: any; code: string; ar: boolean; x: (k: string) => string; svc?: any }) {
@@ -796,6 +814,7 @@ function ExitStrip({ ex, code, ar, x, svc = null }: { ex: any; code: string; ar:
 
 const CSS = `
 .mi-exit-sess{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a}.mi-exit-sline{margin:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13.5px}.mi-exit-sline[data-past='1']{opacity:.7}.mi-exit-sdur{color:var(--muted);font-size:12.5px}.mi-exit-snote{display:block;margin-top:6px;color:var(--muted);font-size:12px}
+.mi-notices{margin:14px 0 6px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#f0fdfa,#f8fafc);border:1px solid #ccfbf1}.mi-notices-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.mi-notices-head .mi-exit-k{margin:0}.mi-notices-sub{color:#0f766e;font-weight:700}.mi-notices-empty{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.7}.mi-notices-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}.mi-notices-list li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid #e2e8f0}.mi-notices-list li>div{flex:1;min-width:0}.mi-notices-list li b{display:block;font-size:14px}.mi-notices-list li p{margin:2px 0 0;font-size:13px;color:#334155;line-height:1.6}.mi-notices-list li small{color:var(--muted);font-size:11px}.mi-notices-ic{font-size:20px;line-height:1}
 .mi-exit-units{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)}.mi-exit-uk{margin:0 0 6px;font-size:12.5px;color:var(--muted);font-weight:800}.mi-ustrip{list-style:none;margin:0;padding:0;display:flex;gap:4px;flex-wrap:wrap}.mi-u{display:inline-grid;place-items:center;min-width:46px;padding:4px 6px;border-radius:8px;font-size:11px;font-weight:900;border:1px solid #e2e8f0;background:#f1f5f9;color:#334155}.mi-u b{font-size:12px}.mi-u.ok{background:#dcfce7;border-color:#86efac;color:#166534}.mi-u.watch{background:#fef3c7;border-color:#fcd34d;color:#92400e}.mi-u.weak{background:#fee2e2;border-color:#fca5a5;color:#991b1b}.mi-exit-review{margin:8px 0 0;font-size:13px;line-height:1.8}.mi-exit-review small{color:var(--muted)}
 .mi-rec.gold{background:var(--gold-soft);border-color:var(--gold-line)}.mi-room-invite .mi-next{margin-top:8px}
 .mi{--navy:#0f2a4e;--ink:#0f172a;--teal:#0b8a83;--teal-deep:#0f5c57;--teal-soft:#e6f4f3;--teal-line:#cfe9e6;--gold:#c9a24b;--gold-line:#ead9a6;--gold-soft:#fbf5e4;--page:#f3f6fa;--line:#e4eaf2;--muted:#64748b;--grad:linear-gradient(135deg,#0f2a4e 0%,#143a66 55%,#0b6b66 100%);min-height:100vh;color:var(--ink);background:linear-gradient(180deg,#f6f8fb,#eef5f4);font-family:var(--font-ar,Tajawal),"Noto Naskh Arabic",system-ui,sans-serif;font-size:17px;line-height:1.6}

@@ -10,6 +10,7 @@
  *  القاعدة: الذكاء الاصطناعي لا يقرّر هنا شيئًا؛ القرار الآلي قاعدةٌ معلنة لا نموذج.
  */
 import { MEDIA_BUCKET } from './bank';
+import { noticeText, pushNotice } from '../portal/notices'; /* P39 */
 import { reasonLabel } from './registry';
 
 export const LEDGER_LEVELS = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
@@ -216,6 +217,8 @@ async function upsertDecision(db: any, rep: RepLite, d: { level: LedgerLevel | n
   const row = { report_id: rep.id, recommended_level: L.entry, assigned_level: d.level || L.entry, decision_status: d.status, program_id: d.program_id, enrollment_id: placed.enrollment_id, classroom_id: placed.classroom_id, source: d.source, note: d.note, decided_by: actor?.id || null, decided_at: nowIso(), gray_reason: d.gray_reason, deadline_at: d.deadline_at, updated_at: nowIso() };
   const r = await db.from('placement_decisions').upsert(row, { onConflict: 'report_id' }); if (r.error) throw new Error(r.error.message);
   await audit(db, actor, d.status === 'review' ? 'miaar_decision_review' : 'miaar_decision', rep.id, 'قرار تسكين', { level: d.level, recommended: L.entry, program_id: d.program_id, classroom_id: placed.classroom_id, source: d.source, gray: d.gray_reason });
+  /* P39: «سُكِّنت في …» — مرّة لكل (تقرير، شعبة) */
+  try { if (d.status === 'approved' && placed.classroom_id) { const cm = await classroomsMap(db, [placed.classroom_id]); const pm = d.program_id ? await programsMap(db, [d.program_id]) : new Map<string, string>(); const t = noticeText({ kind: 'placed', classroom: cm.get(placed.classroom_id) || 'شعبتك', program: d.program_id ? pm.get(d.program_id) || null : null }); await pushNotice(db, { email: rep.candidate_email, user_id: rep.user_id || null, report_id: rep.id, kind: 'placed', ...t, ref_id: placed.classroom_id, dedupe_key: `placed:${rep.id}:${placed.classroom_id}` }); } } catch { /* تحسيني */ }
   return { classroom_id: placed.classroom_id, program_id: d.program_id };
 }
 /** قرار الإنسان لفرد أو مجموعة: level = 'each' (كلٌّ بحسب نتيجته) أو مستوى موحّد؛ program_id اختياري (null = قرار مستوى بلا تسجيل) */

@@ -112,13 +112,17 @@ export async function sendEmailRaw(payload: { to: string[]; subject: string; htm
   return json as { id?: string };
 }
 
-async function pushSubsFor(db: any, email: string, userId: string | null | undefined): Promise<any[]> {
+/** اشتراكات الدفعة لمتعلّم: بحسابه (user_id) أو ببريده (اشتراك «نبّهني» المجهول من بطاقة النتيجة — P39) · فريدة بالنقطة endpoint */
+export async function pushSubsFor(db: any, email: string, userId: string | null | undefined): Promise<any[]> {
   try {
     let uid = userId || null;
-    if (!uid) { const { data: p } = await db.from('profiles').select('id').eq('email', email).maybeSingle(); uid = (p as any)?.id || null; }
-    if (!uid) return [];
-    const { data } = await db.from('portal_push_subscriptions').select('id,endpoint,p256dh,auth,lang').eq('user_id', uid).eq('active', true).limit(5);
-    return (data || []) as any[];
+    const em = String(email || '').trim().toLowerCase();
+    if (!uid && em) { const { data: p } = await db.from('profiles').select('id').eq('email', em).maybeSingle(); uid = (p as any)?.id || null; }
+    const seen = new Set<string>(); const out: any[] = [];
+    const add = (rows: any[] | null | undefined) => { for (const r of rows || []) { const k = String(r?.endpoint || r?.id || ''); if (!k || seen.has(k)) continue; seen.add(k); out.push(r); } };
+    if (uid) { const { data } = await db.from('portal_push_subscriptions').select('id,endpoint,p256dh,auth,lang').eq('user_id', uid).eq('active', true).limit(5); add(data as any[]); }
+    if (em && out.length < 5) { const { data } = await db.from('portal_push_subscriptions').select('id,endpoint,p256dh,auth,lang').eq('email', em).eq('active', true).limit(5); add(data as any[]); }
+    return out.slice(0, 5);
   } catch { return []; }
 }
 

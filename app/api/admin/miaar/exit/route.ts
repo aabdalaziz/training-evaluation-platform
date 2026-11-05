@@ -22,6 +22,7 @@ import { EXIT_SPEC, EXIT_TITLE, SPEC_VERSION, isExitLevel, levelFromRoom, poolCh
 import { findOrCreateExitInvite, boardFor, promoteReports, skillRetakeInvite } from '../../../../../lib/miaar/exitflow';
 import { listUnits, approvedFor, coverage } from '../../../../../lib/miaar/syllabus'; /* م6-ب */
 import { liveFor, WITNESS_MODE_AR, isWitnessMode, resolveMode, defaultWitnessMode } from '../../../../../lib/miaar/witness'; /* م8 · م8-ب */
+import { noticeReach } from '../../../../../lib/portal/notices'; /* P39 */
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -83,7 +84,9 @@ export async function GET(req: Request) {
     /* م7: دعوة خدمة لجهة → سجلّ الخدمة معها (بلا رموز) */
     let order: any = null; if ((b.invite as any).service_mode === 'external') { const { data: o } = await db.from('miaar_service_orders').select('id, client_name, client_contact, level, seats, seats_used, status, note, proctor_name, proctor_signed_at, delivered_at, invoiced_at, created_at').eq('invite_id', b.invite.id).maybeSingle(); order = o || null; }
     const inv = { ...b.invite, proctor_pin_hash: undefined, client_token_hash: undefined, has_pin: !!(b.invite as any).proctor_pin_hash, has_client_link: !!(b.invite as any).client_token_hash };
-    return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, witness, witness_mode: witnessMode, witness_mode_ar: WITNESS_MODE_AR[(isWitnessMode(witnessMode) ? witnessMode : 'room') as keyof typeof WITNESS_MODE_AR], spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
+    /* P39: «أُبلغ؟» — لكل متعلّم: عدد إشعاراته · هل دُفع له · هل له اشتراك «نبّهني» */
+    const reach = await noticeReach(db, b.rows.map((r: any) => String(r.email || ''))).catch(() => ({}));
+    return NextResponse.json({ success: true, site, url, ...b, invite: inv, order, witness, reach, witness_mode: witnessMode, witness_mode_ar: WITNESS_MODE_AR[(isWitnessMode(witnessMode) ? witnessMode : 'room') as keyof typeof WITNESS_MODE_AR], spec: level ? specTable(level) : null, official: EXIT_TITLE }, { headers: NO });
   }
   if (pool) { if (!isExitLevel(pool)) return bad('مستوى غير صالح'); const avail = await availability(db); let unit_coverage: any = null; try { unit_coverage = coverage(await listUnits(db), pool, await loadApprovedPool(db)); } catch { unit_coverage = null; } return NextResponse.json({ success: true, pool: poolCheck(pool, avail), spec: specTable(pool), unit_coverage }, { headers: NO }); }
   return bad('استعلام غير معروف');

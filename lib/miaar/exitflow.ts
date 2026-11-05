@@ -6,6 +6,7 @@
  *  - mergeSkillRetake: تقرير إعادة المهارة يُدمج في التقرير الأصلي (النسبة الجديدة تحلّ محلّ القديمة لتلك المهارة فقط).
  *  - createExitInvite / boardFor / promote / skillRetakeInvite: مسار /api/admin/miaar/exit.
  */
+import { noticeText, pushNotice, SKILL_AR } from '../portal/notices';
 import { randomBytes, createHash } from 'node:crypto';
 import { validateScope, listUnits, unitReport, boardHeat, reviewUnits, fairness } from './syllabus'; /* م6-ب «خريطة المنهج» */
 import { planFromSession } from './blueprint';
@@ -84,7 +85,7 @@ export async function refreshExit(db: Db, sessionId: string, report: Record<stri
 /** دمج إعادة المهارة في التقرير الأصلي */
 export async function mergeSkillRetake(db: Db, retakeSessionId: string, retakeReport: Record<string, any>, perfs?: PerfLike[]): Promise<boolean> {
   const rt = retakeReport.exit_retake as { of: string | null; المهارة: ExitSkill } | undefined; if (!rt?.of) return false;
-  const { data: orig } = await db.from('placement_reports').select('id, submission_id, report').eq('id', rt.of).maybeSingle(); if (!orig?.report?.exit) return false;
+  const { data: orig } = await db.from('placement_reports').select('id, submission_id, report, candidate_email, access_code, user_id').eq('id', rt.of).maybeSingle(); if (!orig?.report?.exit) return false;
   const { data: os } = await db.from('placement_secure_sessions').select('plan').eq('id', orig.submission_id).maybeSingle();
   const plan = planFromSession(os?.plan); const level = exitLevelOf(plan); if (!plan || !level) return false;
   const skill = rt.المهارة; let pct: number | 'pending' | null = null;
@@ -106,6 +107,8 @@ export async function mergeSkillRetake(db: Db, retakeSessionId: string, retakeRe
   const report = { ...(orig.report as Record<string, any>), exit: block };
   await db.from('placement_reports').update({ report }).eq('id', orig.id);
   await db.from('placement_secure_sessions').update({ report, updated_at: nowIso() }).eq('id', orig.submission_id);
+  // P39: حكم بعد دمج الإعادة (نهائي) → إشعار واحد لكل دمج
+  try { if (block.الحالة === 'final' && pct !== 'pending' && orig.access_code) { const t = noticeText({ kind: 'exit_final', level: String(level), outcome: block.النتيجة as any, code: String(orig.access_code) }); await pushNotice(db, { email: orig.candidate_email, user_id: orig.user_id || null, report_id: orig.id, kind: 'exit_final', title_ar: `بعد إعادة ${SKILL_AR[skill] || skill}: ${t.title_ar}`, body_ar: t.body_ar, url: t.url, ref_id: retakeSessionId, dedupe_key: `exit_final:${orig.id}:merged:${retakeSessionId}` }); } } catch { /* تحسيني */ }
   return true;
 }
 
@@ -154,6 +157,8 @@ export async function skillRetakeInvite(db: Db, reportId: string, actorId: strin
   const url = r.links[0]?.url || r.url;
   const rep2 = { ...(rep.report as Record<string, any>) }; rep2.exit = { ...(rep2.exit as object), الإعادة: { المهارة: skill, الحالة: 'invited', حتى: expires_at, دعوة: r.invite.code } };
   await db.from('placement_reports').update({ report: rep2 }).eq('id', reportId);
+  // P39: إشعار المتعلّم «فُتحت لك إعادة مهارة…» (داخل أَثَر + دفعة إن وُجد اشتراك)
+  try { const t = noticeText({ kind: 'retake_open', skill, until: expires_at, inviteUrl: `/miaar/d/${r.invite.code}` }); await pushNotice(db, { email: rep.candidate_email, report_id: reportId, kind: 'retake_open', ...t, ref_id: String(r.invite.id || r.invite.code), dedupe_key: `retake_open:${reportId}:${r.invite.code}` }, { site }); } catch { /* لا يعطّل الدعوة */ }
   return { ok: true, url, invite: r.invite, skill, expires_at };
 }
 
@@ -217,7 +222,7 @@ export async function boardFor(db: Db, inviteId: string) {
 export async function promoteReports(db: Db, reportIds: string[], actorId: string | null, note: string | null, targetClassroomId: string | null = null): Promise<{ done: number; skipped: number }> {
   let done = 0; let skipped = 0;
   for (const id of reportIds.slice(0, 200)) {
-    const { data: rep } = await db.from('placement_reports').select('id, report').eq('id', id).maybeSingle();
+    const { data: rep } = await db.from('placement_reports').select('id, report, candidate_email, access_code, user_id').eq('id', id).maybeSingle();
     const ex = rep?.report?.exit as ExitBlockT | undefined; if (!ex || ex.الحالة !== 'final' || ex.النتيجة !== 'passed') { skipped += 1; continue; }
     const to = nextLevel(ex.المستوى as ExitLevel) || ex.المستوى;
     const row = { report_id: id, recommended_level: to, assigned_level: to, decision_status: 'approved', program_track: 'promote', source: 'staff', note: note || null, academic_note: `عبور نهاية المستوى ${ex.المستوى} → ${to} (${ex.الكلي}%)`, classroom_id: targetClassroomId, decided_by: actorId, decided_at: nowIso(), updated_at: nowIso() };
@@ -226,6 +231,8 @@ export async function promoteReports(db: Db, reportIds: string[], actorId: strin
     try { await db.from('placement_decision_events').insert({ report_id: id, event_type: 'promote', payload: { from: ex.المستوى, to, total: ex.الكلي, classroom_id: targetClassroomId }, actor: actorId }); } catch { /* سجلّ تحسيني */ }
     const rep2 = { ...(rep.report as Record<string, any>) }; rep2.exit = { ...(rep2.exit as object), قرار_العبور: { إلى: to, في: nowIso(), بواسطة: actorId } };
     await db.from('placement_reports').update({ report: rep2 }).eq('id', id);
+    // P39: «رُقّيت من … إلى …» مع رابط الشهادة
+    try { if (rep.access_code) { const t = noticeText({ kind: 'promoted', from: String(ex.المستوى), to: String(to), code: String(rep.access_code) }); await pushNotice(db, { email: rep.candidate_email, user_id: rep.user_id || null, report_id: id, kind: 'promoted', ...t, ref_id: id, dedupe_key: `promoted:${id}` }); } } catch { /* لا يعطّل القرار */ }
     done += 1;
   }
   return { done, skipped };

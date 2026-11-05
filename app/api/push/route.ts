@@ -11,6 +11,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { vapidFromEnv, generateVapidKeys, validateSubscription, sendPush } from '../../../lib/portal/push';
+import { isResultCode } from '../../../lib/miaar/registry'; /* P39 */
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,11 +53,18 @@ export async function POST(req: Request) {
   if (action === 'subscribe') {
     if (!keys) return bad('الإشعارات غير مفعّلة على الخادم بعد (VAPID)', 503);
     const sub = validateSubscription(body.subscription); if (!sub) return bad('اشتراك غير صالح');
-    const topics = Array.isArray(body.topics) && body.topics.length ? body.topics.map((t: unknown) => String(t).slice(0, 24)).slice(0, 6) : ['daily'];
-    const row = { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth, user_id: user?.id || null, email: user?.email || null, lang: body.lang === 'en' ? 'en' : 'ar', topics, ua: String(req.headers.get('user-agent') || '').slice(0, 200), active: true, failures: 0, last_error: null };
+    let topics: string[] = Array.isArray(body.topics) && body.topics.length ? body.topics.map((t: unknown) => String(t).slice(0, 24)).slice(0, 6) : ['daily'];
+    /* P39 «نبّهني»: اشتراك مجهول من بطاقة نتيجة مِعيار — رمز النتيجة (حامل سرّ) يربط الاشتراك ببريد المتقدّم دون تسجيل دخول؛ موضوعه «miaar» فقط (لا «موقف اليوم») */
+    let email: string | null = user?.email || null; let viaResult = false;
+    if (!user && body.result) {
+      const code = String(body.result || '').trim().toUpperCase(); if (!isResultCode(code)) return bad('رمز النتيجة غير صالح');
+      const { data: rep } = await db.from('placement_reports').select('id, candidate_email').eq('access_code', code).maybeSingle(); if (!rep?.candidate_email) return bad('لا نتيجة بهذا الرمز', 404);
+      email = String(rep.candidate_email).toLowerCase(); viaResult = true; topics = Array.from(new Set(['miaar', `miaar:${code}`, ...topics.filter((t) => t !== 'daily')])).slice(0, 6);
+    }
+    const row = { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth, user_id: user?.id || null, email, lang: body.lang === 'en' ? 'en' : 'ar', topics, ua: String(req.headers.get('user-agent') || '').slice(0, 200), active: true, failures: 0, last_error: null };
     const { error } = await db.from('portal_push_subscriptions').upsert(row, { onConflict: 'endpoint' });
     if (error) return bad('تعذّر حفظ الاشتراك: ' + error.message, 500);
-    return NextResponse.json({ success: true, subscribed: true });
+    return NextResponse.json({ success: true, subscribed: true, via: viaResult ? 'result' : user ? 'account' : 'anonymous', topics });
   }
   if (action === 'unsubscribe') {
     const endpoint = String(body.endpoint || ''); if (!endpoint) return bad('endpoint مطلوب');
