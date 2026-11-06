@@ -4,7 +4,7 @@
  *  الاسم الرسمي: «خدمة الاختبار المعياري للجهات» / Level Exit Examination — Institutional Service.
  *  الاختبار نفسه (SYS-EXIT-<L>) لا يتغيّر حرفًا — ما يتغيّر هو «الوعاء»: دعوة مرتبطة بـ«طلب خدمة» له جهة طالبة ومراقب وتقرير وسجلّ.
  *  - الجزء الصرف (بلا قاعدة بيانات): clientReport · benchmarkOf · maskEmail · SERVICE_STATUS · normalizePin
- *  - الغراء: createServiceInvite · listOrders · setOrderStatus · rotateClientToken · revokeClientToken · signProctor · clientBoard · verifyPin
+ *  - الغراء: createServiceInvite · listOrders · setOrderStatus · rotateClientToken · revokeClientToken · signProctor · clientBoard · verifyPin · requestPractice (م12 «مِران للجهات»)
  *  لا يقرّر الذكاء الاصطناعي هنا شيئًا؛ لا مدفوعات داخل المنصّة (قرار قائم) — العدّاد يكفي للفوترة اليدوية.
  */
 import { createHash, randomBytes } from 'node:crypto';
@@ -98,11 +98,15 @@ export async function listOrders(db: Db, site: string) {
     db.from('placement_reports').select('invite_id, report').in('invite_id', ids),
     db.from('placement_secure_sessions').select('invite_id').in('invite_id', ids),
   ]);
+  /* م12: خطط مِران المعتمدة لكل دعوة — لمعرفة هل أُجيب طلب الجهة */
+  let plans: any[] = []; try { const { data: pl } = await db.from('miaar_practice_plans').select('invite_id, status, approved_at').in('invite_id', ids).in('status', ['approved', 'done']).limit(2000); plans = Array.isArray(pl) ? pl : []; } catch { plans = []; }
+  const lastReq = (events: unknown) => { const l = Array.isArray(events) ? (events as any[]).filter((e) => e && e.type === 'practice_request') : []; return l.length ? l[l.length - 1] : null; };
   return orders.map((o) => {
+    const rq = lastReq(o.events); const answered = rq ? plans.filter((p) => p.invite_id === o.invite_id && p.approved_at && p.approved_at >= String(rq.at || '')).length : 0;
     const inv = (Array.isArray(invs) ? invs : []).find((i: any) => i.id === o.invite_id) || null;
     const rp = (Array.isArray(reps) ? reps : []).filter((r: any) => r.invite_id === o.invite_id); const st = (Array.isArray(sess) ? sess : []).filter((s: any) => s.invite_id === o.invite_id).length;
     const fin = rp.filter((r: any) => r.report?.exit?.الحالة === 'final').length; const passed = rp.filter((r: any) => r.report?.exit?.النتيجة === 'passed').length;
-    return { ...o, status_ar: SERVICE_STATUS_AR[o.status as ServiceStatus] || o.status, invite: inv ? { ...inv, url: inviteUrl(site, inv.code), has_client_link: !!inv.client_token_hash, has_pin: !!inv.proctor_pin_hash, client_token_hash: undefined, proctor_pin_hash: undefined } : null, started: st, finished: rp.length, final: fin, passed, seats_used: Math.max(Number(o.seats_used) || 0, st) };
+    return { ...o, status_ar: SERVICE_STATUS_AR[o.status as ServiceStatus] || o.status, invite: inv ? { ...inv, url: inviteUrl(site, inv.code), has_client_link: !!inv.client_token_hash, has_pin: !!inv.proctor_pin_hash, client_token_hash: undefined, proctor_pin_hash: undefined } : null, started: st, finished: rp.length, final: fin, passed, seats_used: Math.max(Number(o.seats_used) || 0, st), practice_request: rq ? { at: String(rq.at || ''), message: rq.message ? String(rq.message) : null, eligible: Number(rq.eligible) || 0, approved_after: answered, pending: answered === 0 && !['delivered', 'invoiced', 'cancelled'].includes(String(o.status)) } : null };
   });
 }
 
@@ -171,9 +175,18 @@ export async function clientBoard(db: Db, token: unknown, site: string) {
   const heat: any[] = Array.isArray((b as any).units) ? (b as any).units : [];
   const sessions = heat.length ? await sessionsWithEffect(db, String(inv.id), new Map(heat.map((h: any) => [String(h.code), String(h.title_ar || h.code)]))).catch(() => []) : [];
   const units = clientUnitsView(heat, sessions, (b as any).unit_scope);
-  /* م10 «مِران»: سطر واحد للجهة — كم طالبًا يتدرّب ومتوسط التحسّن (مجاميع بلا أسماء) */
-  let practice: any = null; try { const { practiceFactsForReports } = await import('./practice'); const ids = b.rows.map((r: any) => (r as any).report_id).filter(Boolean) as string[];
-    if (ids.length) { const { data: reps } = await db.from('placement_reports').select('id, report').in('id', ids.slice(0, 400)); const f = await practiceFactsForReports(db, (Array.isArray(reps) ? reps : []).map((r: any) => ({ id: String(r.id), report: r.report }))); if (f.plans) practice = { ...f, text_ar: `مِران: ${f.approved} من ${b.rows.length} طالبًا لهم خطّة تمرين معتمدة${f.active ? ` · ${f.active} يتدرّبون الآن` : ''}${f.with_delta && f.avg_delta !== null ? ` · متوسط التحسّن ${f.avg_delta > 0 ? '+' : ''}${f.avg_delta}` : ''}` }; } } catch { practice = null; }
+  /* م10 «مِران» + م12 «مِران للجهات»: مجاميع بلا أسماء · جاهزية الدفعة · خلية لكل طالب (أيام/جاهزية فقط) · آخر طلب من الجهة · كم مؤهّلًا بلا خطّة */
+  let practice: any = null; const cells: Record<string, any> = {};
+  try { const { practiceFactsForReports, summariesForReports, cohortReadiness, clientPracticeCell, lastClientRequest, eligibleReport } = await import('./practice'); const ids = b.rows.map((r: any) => (r as any).report_id).filter(Boolean) as string[];
+    const { data: reps } = ids.length ? await db.from('placement_reports').select('id, report').in('id', ids.slice(0, 400)) : { data: [] }; const list = (Array.isArray(reps) ? reps : []).map((r: any) => ({ id: String(r.id), report: r.report }));
+    const sums = list.length ? await summariesForReports(db, list) : {}; const f = list.length ? await practiceFactsForReports(db, list) : null; const cohort = cohortReadiness(sums);
+    for (const r of list) { const c = clientPracticeCell(sums[r.id]); if (c) cells[r.id] = c; }
+    const eligible = list.filter((r) => eligibleReport(r.report).ok && (!sums[r.id] || sums[r.id].status === 'draft' || sums[r.id].status === 'cancelled')).length;
+    const request = lastClientRequest(order?.events); const approvedAfter = request ? Object.values(sums).filter((v: any) => v.status !== 'draft' && v.status !== 'cancelled' && v.approved_at && v.approved_at >= request.at).length : 0;
+    const closedWindow = inv.status === 'closed' || !!(order && ['delivered', 'invoiced', 'cancelled'].includes(String(order.status)));
+    practice = { ...(f || {}), cohort, eligible, can_request: eligible > 0 && !closedWindow, request: request ? { ...request, approved_after: approvedAfter, pending: approvedAfter === 0 && eligible > 0 } : null,
+      text_ar: f && f.plans ? `مِران: ${f.approved} من ${b.rows.length} طالبًا لهم خطّة تمرين معتمدة${f.active ? ` · ${f.active} يتدرّبون الآن` : ''}${cohort.ready_pct !== null ? ` · جاهزية الدفعة ${cohort.ready_pct}%` : ''}${f.with_delta && f.avg_delta !== null ? ` · متوسط التحسّن ${f.avg_delta > 0 ? '+' : ''}${f.avg_delta}` : ''}` : null }; } catch { practice = null; }
+  for (const r of rows as any[]) r.practice = cells[String((b.rows.find((x: any) => x.report_code === r.report_code) as any)?.report_id || '')] || null;
   return { practice, invite: { code: inv.code, status: inv.status, client_name: inv.client_name, level, opens_at: inv.opens_at, expires_at: inv.expires_at, max_seats: inv.max_seats, has_pin: !!inv.proctor_pin_hash, url: inviteUrl(site, inv.code) }, order: order ? { ...order, status_ar: SERVICE_STATUS_AR[order.status as ServiceStatus] || order.status } : null, window: b.window, rows, summary: b.summary, report: clientReport(level, b.rows, bench), units, official: EXIT_TITLE, service: SERVICE_TITLE, at: nowIso() };
 }
 /** ما تحتاجه الشهادة وبطاقة النتيجة عن الجهة (بلا رموز) */
@@ -182,4 +195,23 @@ export async function serviceFactsForInvite(db: Db, inviteId: string | null): Pr
   const { data: inv } = await db.from('placement_invites').select('id, service_mode, client_name').eq('id', inviteId).maybeSingle(); if (!inv || inv.service_mode !== 'external') return null;
   const { data: o } = await db.from('miaar_service_orders').select('proctor_name, proctor_signed_at').eq('invite_id', inviteId).maybeSingle();
   return { external: true, client_name: inv.client_name || null, proctor_signed: !!o?.proctor_signed_at, proctor_name: o?.proctor_name || null };
+}
+
+/** م12: طلب الجهة «اطلب مِران لطلابي» — يُسجَّل في events (مرّة في اليوم، يُحدَّث) ويُشعر منشئ أمر الخدمة؛ لا يفتح خطّة بنفسه */
+export async function requestPractice(db: Db, token: unknown, message: unknown, by: string, site: string): Promise<{ ok: true; eligible: number; updated: boolean } | { ok: false; error: string }> {
+  const { normalizeClientMessage, lastClientRequest } = await import('./practice'); const { noticeText, pushNotice } = await import('../portal/notices');
+  const m = normalizeClientMessage(message); if (!m.ok) return m;
+  const b = await clientBoard(db, token, site); if (!b || !b.order) return { ok: false, error: 'not_found' };
+  if (!b.practice || !b.practice.can_request) return { ok: false, error: 'nothing_to_request' };
+  const o = await orderById(db, b.order.id); if (!o) return { ok: false, error: 'not_found' };
+  const day = new Date().toISOString().slice(0, 10); const last = lastClientRequest(o.events); const sameDay = !!(last && last.at.slice(0, 10) === day);
+  const events: any[] = Array.isArray(o.events) ? [...o.events] : []; const ev = { at: nowIso(), type: 'practice_request', message: m.text, eligible: b.practice.eligible, by };
+  if (sameDay) { for (let i = events.length - 1; i >= 0; i -= 1) if (events[i]?.type === 'practice_request') { events[i] = ev; break; } } else events.push(ev);
+  const r = await db.from('miaar_service_orders').update({ events, updated_at: nowIso() }).eq('id', o.id); if (r.error) return { ok: false, error: 'db' };
+  /* إشعار داخل أَثَر لمنشئ أمر الخدمة (إن عُرف بريده) — مرّة في اليوم لكل أمر، يُحدَّث */
+  try { if (o.created_by) { const { data: pr } = await db.from('profiles').select('email').eq('id', o.created_by).maybeSingle(); const email = String(pr?.email || '').trim().toLowerCase();
+    if (email) { const t = noticeText({ kind: 'practice_requested', client: String(o.client_name || ''), n: b.practice.eligible, inviteId: String(o.invite_id), message: m.text }); await pushNotice(db, { email, user_id: o.created_by, report_id: null, kind: 'practice_requested', ...t, ref_id: String(o.id), dedupe_key: `practice_requested:${o.id}:${day}`, push: false, merge: true }); } } } catch { /* تحسيني */ }
+  /* سجلّ تدقيق بلا فاعل داخلي: الجهة هي الفاعل (رمزها السرّي)، ولا بريد لها */
+  try { await db.from('audit_logs').insert({ actor_id: null, actor_email: `client:${String(o.client_name || '').slice(0, 80)}`, actor_role: 'client', action: 'miaar_practice_client_request', entity_type: 'miaar_service_order', entity_id: String(o.id), metadata: { invite_id: o.invite_id, eligible: b.practice.eligible, has_message: !!m.text, updated: sameDay } }); } catch { /* تحسيني */ }
+  return { ok: true, eligible: b.practice.eligible, updated: sameDay };
 }

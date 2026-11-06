@@ -4,6 +4,7 @@
  *  GET  ?t=<token>            → لوحة طلاب الجهة (العدّادات · الصفوف · تقرير الجهة · المعيار المرجعي) — لا بنود ولا مفاتيح
  *  GET  ?t=<token>&csv=1      → CSV
  *  POST {t, action:'sign', name} → «ختم المراقب» من منسّق الجهة (مرة واحدة)
+ *  POST {t, action:'practice_request', message?} → م12 «مِران للجهات»: طلب تمرين لطلاب الجهة (يُسجَّل ويُشعر الطاقم — لا يفتح خطّة بنفسه)
  *  الرابط يُبطل من لوحة الطاقم بضغطة. حدّ 120 طلبًا/ساعة لكل IP.
  */
 import { NextResponse } from 'next/server';
@@ -11,7 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readJson } from '../../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../../lib/shield/ratelimit';
 import { normalizeSite } from '../../../../lib/portal/open';
-import { clientBoard, signProctor } from '../../../../lib/miaar/service';
+import { clientBoard, signProctor, requestPractice } from '../../../../lib/miaar/service';
 import { SKILL_NAMES, EXIT_SKILLS } from '../../../../lib/miaar/exit';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 30;
@@ -29,8 +30,8 @@ export async function GET(req: Request) {
   if (u.searchParams.get('csv')) {
     const head = ['الاسم', 'البريد', 'الحالة', 'الكلّي', 'الحكم', 'التقدير', ...EXIT_SKILLS.map((s) => SKILL_NAMES[s].ar), 'سجلّ النزاهة', 'رمز النتيجة', 'رابط الشهادة'];
     /* م9: أعمدة الوحدات (نسبة كل وحدة لكل طالب) + «وحدات تحتاج مراجعة» */
-    const unitCodes: string[] = (b.units?.units || []).map((x: any) => String(x.code)); head.push(...unitCodes.map((c) => `وحدة ${c}`), 'وحدات تحتاج مراجعة');
-    const lines = b.rows.map((r: any) => [r.name, r.email, r.status, r.exit?.الكلي ?? '', r.exit?.النتيجة ?? '', r.exit?.تقدير_ar ?? '', ...EXIT_SKILLS.map((s) => r.exit?.المهارات?.[s]?.النسبة ?? ''), r.integrity_ar ?? '', r.report_code ?? '', r.certificate_url ?? '', ...unitCodes.map((c) => { const x = (Array.isArray(r.exit?.الوحدات) ? r.exit.الوحدات : []).find((v: any) => v.الرمز === c); return x ? x.النسبة : ''; }), (Array.isArray(r.exit?.وحدات_للمراجعة) ? r.exit.وحدات_للمراجعة : []).map((v: any) => v.الرمز).join(' ')].map(csvCell).join(','));
+    const unitCodes: string[] = (b.units?.units || []).map((x: any) => String(x.code)); head.push(...unitCodes.map((c) => `وحدة ${c}`), 'وحدات تحتاج مراجعة', 'مِران: الأيام المنجزة', 'مِران: الجاهزية');
+    const lines = b.rows.map((r: any) => [r.name, r.email, r.status, r.exit?.الكلي ?? '', r.exit?.النتيجة ?? '', r.exit?.تقدير_ar ?? '', ...EXIT_SKILLS.map((s) => r.exit?.المهارات?.[s]?.النسبة ?? ''), r.integrity_ar ?? '', r.report_code ?? '', r.certificate_url ?? '', ...unitCodes.map((c) => { const x = (Array.isArray(r.exit?.الوحدات) ? r.exit.الوحدات : []).find((v: any) => v.الرمز === c); return x ? x.النسبة : ''; }), (Array.isArray(r.exit?.وحدات_للمراجعة) ? r.exit.وحدات_للمراجعة : []).map((v: any) => v.الرمز).join(' '), r.practice ? `${r.practice.done}/${r.practice.total}` : '', r.practice?.ready_ar ?? ''].map(csvCell).join(','));
     const csv = '\uFEFF' + [head.map(csvCell).join(','), ...lines].join('\r\n');
     return new NextResponse(csv, { headers: { ...NO, 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="miaar-exit-${b.invite.code}.csv"` } });
   }
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
   const rl = await rateLimit(db, `miaar_client:${ipOf(req)}`, 3600, 120); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
   const j = await readJson(req, { maxBytes: 16 * 1024 }); if (!j.ok) return bad(j.error, j.status); const body = j.body as Record<string, unknown>;
   const b = await clientBoard(db, body.t, siteOf(req)); if (!b || !b.order) return bad('not_found', 404);
+  if (body.action === 'practice_request') { const r = await requestPractice(db, body.t, body.message, `client:${ipOf(req)}`, siteOf(req)); return r.ok ? NextResponse.json({ ok: true, eligible: r.eligible, updated: r.updated }, { headers: NO }) : bad(r.error, r.error === 'not_found' ? 404 : 400); }
   if (body.action === 'sign') { const r = await signProctor(db, b.order.id, body.name, `client:${ipOf(req)}`); return r.ok ? NextResponse.json({ ok: true, order: r.order }, { headers: NO }) : bad(r.error); }
   return bad('unknown_action');
 }

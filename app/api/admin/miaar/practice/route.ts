@@ -18,7 +18,7 @@ import { readJson } from '../../../../../lib/shield/body';
 import { normalizeSite } from '../../../../../lib/portal/open';
 import { listUnits, unitIndex, approvedFor } from '../../../../../lib/miaar/syllabus';
 import type { ExitLevel } from '../../../../../lib/miaar/syllabus';
-import { PRACTICE_TITLE, PLAN_DAYS, eligibleReport, planDays, draftPlan, approvePlan, editDay, cancelPlan, nudge, planById, summariesForReports, validateDayEdit, currentDay, STATUS_AR } from '../../../../../lib/miaar/practice';
+import { PRACTICE_TITLE, PLAN_DAYS, NOTE_MAX, lastClientRequest, eligibleReport, planDays, draftPlan, approvePlan, editDay, cancelPlan, nudge, planById, summariesForReports, validateDayEdit, currentDay, STATUS_AR } from '../../../../../lib/miaar/practice';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -60,7 +60,11 @@ export async function GET(req: Request) {
       const proposed = s ? null : { units: pu, days: planDays(pu, productive) };
       const ex = r.report?.exit || null;
       return { kind: el.ok ? el.kind : 'exit', report_id: r.id, code: r.access_code, name: learnerName(r), email: r.candidate_email, outcome: ex ? ex.النتيجة : 'placement', level, skill: el.ok ? el.skill : null, retake: ex?.الإعادة || null, plan: s, proposed, unit_titles: Object.fromEntries((s?.units || proposed?.units || []).map((code: string) => [code, ix.get(code)?.title_ar || code])) }; });
-    return NextResponse.json({ success: true, title: PRACTICE_TITLE, days: PLAN_DAYS, rows, status_ar: STATUS_AR }, { headers: NO });
+    /* م12 «مِران للجهات»: آخر طلب من الجهة الطالبة (إن كانت الدعوة أمر خدمة) — ليعرضه الطاقم ويقرّر */
+    let client_request: any = null;
+    if (invite) { try { const { data: o } = await db.from('miaar_service_orders').select('id, client_name, events').eq('invite_id', invite).maybeSingle(); const lr = o ? lastClientRequest(o.events) : null;
+      if (o && lr) { const after = rows.filter((r: any) => r.plan && r.plan.status !== 'draft' && r.plan.status !== 'cancelled' && r.plan.approved_at && r.plan.approved_at >= lr.at).length; client_request = { ...lr, client_name: o.client_name, order_id: o.id, approved_after: after, pending: rows.filter((r: any) => !r.plan || r.plan.status === 'draft').length }; } } catch { client_request = null; } }
+    return NextResponse.json({ success: true, title: PRACTICE_TITLE, days: PLAN_DAYS, rows, status_ar: STATUS_AR, client_request }, { headers: NO });
   }
   if (plan) {
     if (!isId(plan)) return bad('خطّة غير صالحة'); const p = await planById(db, plan); if (!p) return bad('الخطّة غير موجودة', 404);
@@ -100,13 +104,15 @@ export async function POST(req: Request) {
     const skip = new Set(Array.isArray(b.skip) ? (b.skip as unknown[]).filter(isId) : []);
     const rids = Array.isArray(b.report_ids) ? (b.report_ids as unknown[]).filter(isId) as string[] : [];
     if (!isId(b.invite_id) && !isId(b.classroom_id) && !rids.length) return bad('حدّد دعوة أو شعبة أو نتائج');
+    /* م12: ملاحظة اليوم 1 لكل خطّة تُعتمد (مثل رسالة الجهة) — يقرّرها الموقّع لا الجهة */
+    const d1 = typeof b.day1_note === 'string' ? b.day1_note.replace(/<[^>]*>/g, '').trim().slice(0, NOTE_MAX) : ''; const edits = d1 ? [{ day: 1, note_ar: d1 }] : [];
     const reps = isId(b.invite_id) ? await eligibleReports(db, b.invite_id) : isId(b.classroom_id) ? await reportsByClassroom(db, b.classroom_id) : await reportsByIds(db, rids); const sums = await summariesForReports(db, reps); let done = 0; let skipped = 0; const errors: string[] = [];
     for (const rep of reps) {
       if (skip.has(rep.id) || (sums[rep.id] && sums[rep.id].status !== 'draft')) { skipped += 1; continue; }
       const d = await draftPlan(db, rep, user.id); if (!d.ok) { errors.push(`${learnerName(rep)}: ${ERR[d.error] || d.error}`); continue; }
-      const r = await approvePlan(db, d.plan.id, user.id, [], { site, code: rep.access_code || null }); if (r.ok) done += 1; else errors.push(`${learnerName(rep)}: ${ERR[r.error] || r.error}`);
+      const r = await approvePlan(db, d.plan.id, user.id, edits.map((e) => { const v = validateDayEdit(e, d.plan.level); return v.ok ? { d: v.d, note_ar: v.note_ar ?? null } : { d: 1 }; }), { site, code: rep.access_code || null }); if (r.ok) done += 1; else errors.push(`${learnerName(rep)}: ${ERR[r.error] || r.error}`);
     }
-    await audit('miaar_practice_approve_all', String(isId(b.invite_id) ? b.invite_id : isId(b.classroom_id) ? b.classroom_id : (rids[0] || '')), { done, skipped, errors: errors.length, scope: isId(b.invite_id) ? 'invite' : isId(b.classroom_id) ? 'classroom' : 'reports' });
+    await audit('miaar_practice_approve_all', String(isId(b.invite_id) ? b.invite_id : isId(b.classroom_id) ? b.classroom_id : (rids[0] || '')), { done, skipped, errors: errors.length, scope: isId(b.invite_id) ? 'invite' : isId(b.classroom_id) ? 'classroom' : 'reports', day1_note: !!d1 });
     return NextResponse.json({ success: true, done, skipped, errors }, { headers: NO });
   }
   if (action === 'edit_day') {

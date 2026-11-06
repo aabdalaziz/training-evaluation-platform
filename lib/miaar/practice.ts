@@ -223,12 +223,12 @@ export function applyDayEdits(days: readonly PlanDay[], edits: ReadonlyArray<{ d
 }
 
 /* ───────── 10) الملخّص للوحات ───────── */
-export type PlanSummary = { id: string; kind: PlanKind; status: PlanStatus; status_ar: string; today: number; ended: boolean; done: number; total: number; last_attempt_at: string | null; idle_days: number | null; avg_delta: number | null; ready: Readiness['state'] | null; units: string[]; skill: string | null; start_date: string | null };
+export type PlanSummary = { id: string; kind: PlanKind; status: PlanStatus; status_ar: string; today: number; ended: boolean; done: number; total: number; last_attempt_at: string | null; idle_days: number | null; avg_delta: number | null; ready: Readiness['state'] | null; units: string[]; skill: string | null; start_date: string | null; approved_at: string | null /* م12 */; client_requested?: boolean /* م12: اعتُمدت بعد طلب من الجهة */ };
 export function summarize(plan: PlanRow, now: Date, mirror: readonly MirrorRow[] | null, ready: Readiness | null): PlanSummary {
   const cd = currentDay(plan.start_date, now); const done = plan.days.filter((d) => d.done_at).length;
   const lastAt = plan.last_attempt_at || plan.approved_at; const idle = plan.status === 'approved' && lastAt && !cd.ended ? Math.floor((now.getTime() - Date.parse(lastAt)) / 86400000) : null;
   const ds = (mirror || []).map((m) => m.delta).filter((x): x is number => typeof x === 'number');
-  return { id: plan.id, kind: plan.kind, status: plan.status, status_ar: STATUS_AR[plan.status] || plan.status, today: cd.d, ended: cd.ended, done, total: PLAN_DAYS, last_attempt_at: plan.last_attempt_at, idle_days: idle, avg_delta: ds.length ? Math.round(ds.reduce((a, b) => a + b, 0) / ds.length) : null, ready: ready?.state || null, units: plan.units, skill: plan.skill, start_date: plan.start_date };
+  return { approved_at: plan.approved_at || null, id: plan.id, kind: plan.kind, status: plan.status, status_ar: STATUS_AR[plan.status] || plan.status, today: cd.d, ended: cd.ended, done, total: PLAN_DAYS, last_attempt_at: plan.last_attempt_at, idle_days: idle, avg_delta: ds.length ? Math.round(ds.reduce((a, b) => a + b, 0) / ds.length) : null, ready: ready?.state || null, units: plan.units, skill: plan.skill, start_date: plan.start_date };
 }
 
 /* ====================================================================== قاعدة البيانات */
@@ -348,16 +348,20 @@ export async function summariesForReports(db: Db, reps: ReadonlyArray<{ id: stri
   const now = opts.now || new Date(); const plans = await plansForReports(db, reps.map((r) => r.id)).catch(() => [] as PlanRow[]); const out: Record<string, PlanSummary> = {}; if (!plans.length) return out;
   const units = await listUnits(db).catch(() => [] as Unit[]); const pool = await loadApprovedPool(db).catch(() => [] as PoolItem[]); const iu = itemUnitsOf(pool); const beforeOf = new Map(reps.map((r) => { const el = eligibleReport(r.report); return [r.id, el.ok ? el.before : new Map<string, number>()]; }));
   const ids = plans.map((p) => p.id); let all: AttemptRow[] = []; try { const { data } = await db.from('miaar_practice_attempts').select('plan_id, email, day, kind, item_code, option_id, correct, at').in('plan_id', ids).limit(5000); all = Array.isArray(data) ? data : []; } catch { all = []; }
-  for (const p of plans) { const att = all.filter((a) => a.plan_id === p.id); const prog = unitProgress(att, iu, p.units); out[p.report_id] = summarize(p, now, mirrorRowsFrom(beforeOf.get(p.report_id) || new Map(), prog, units), att.length ? readiness(prog, units, p.kind) : null); }
+  /* م12: أيّ خطّة اعتُمدت بعد «طلب مِران» من الجهة الطالبة تُعدّ «بطلب من جهة» (من events أمر الخدمة — بلا عمود جديد) */
+  const invIds = Array.from(new Set(plans.map((p) => p.invite_id).filter((x): x is string => !!x))); const reqAt = new Map<string, string>();
+  if (invIds.length) { try { const { data: ords } = await db.from('miaar_service_orders').select('invite_id, events').in('invite_id', invIds); for (const o of (Array.isArray(ords) ? ords : []) as any[]) { const ev = (Array.isArray(o.events) ? o.events : []).filter((e: any) => e && e.type === 'practice_request'); if (ev.length) reqAt.set(String(o.invite_id), String(ev[0].at || '')); } } catch { /* تحسيني */ } }
+  for (const p of plans) { const att = all.filter((a) => a.plan_id === p.id); const prog = unitProgress(att, iu, p.units); const sm = summarize(p, now, mirrorRowsFrom(beforeOf.get(p.report_id) || new Map(), prog, units), att.length ? readiness(prog, units, p.kind) : null);
+    const ra = p.invite_id ? reqAt.get(p.invite_id) : undefined; sm.client_requested = !!(ra && p.approved_at && ra <= p.approved_at); out[p.report_id] = sm; }
   return out;
 }
 /** مجاميع دعوة (للجهة م7 ولملف الاعتماد م9): بلا أسماء */
-export type PracticeFacts = { plans: number; placement: number /* م11 */; approved: number; active: number; days_done: number; avg_delta: number | null; with_delta: number; retook: number; passed_after: number };
+export type PracticeFacts = { plans: number; placement: number /* م11 */; client_requested: number /* م12 */; approved: number; active: number; days_done: number; avg_delta: number | null; with_delta: number; retook: number; passed_after: number };
 export async function practiceFactsForReports(db: Db, reps: ReadonlyArray<{ id: string; report?: any }>, opts: { now?: Date } = {}): Promise<PracticeFacts> {
   const s = await summariesForReports(db, reps, opts); const vals = Object.values(s); const ds = vals.map((v) => v.avg_delta).filter((x): x is number => typeof x === 'number');
   const planned = new Set(Object.keys(s)); let retook = 0; let passedAfter = 0;
   for (const r of reps) { if (!planned.has(r.id)) continue; const ex = r.report?.exit; if (ex?.الإعادة?.الحالة === 'merged') { retook += 1; if (ex.النتيجة === 'passed') passedAfter += 1; } }
-  return { plans: vals.length, placement: vals.filter((v) => v.kind === 'placement' && v.status !== 'draft' && v.status !== 'cancelled').length, approved: vals.filter((v) => v.status !== 'draft' && v.status !== 'cancelled').length, active: vals.filter((v) => v.status === 'approved' && !v.ended).length, days_done: vals.reduce((a, v) => a + v.done, 0), avg_delta: ds.length ? Math.round(ds.reduce((a, b) => a + b, 0) / ds.length) : null, with_delta: ds.length, retook, passed_after: passedAfter };
+  return { plans: vals.length, placement: vals.filter((v) => v.kind === 'placement' && v.status !== 'draft' && v.status !== 'cancelled').length, client_requested: vals.filter((v) => v.client_requested && v.status !== 'draft' && v.status !== 'cancelled').length, approved: vals.filter((v) => v.status !== 'draft' && v.status !== 'cancelled').length, active: vals.filter((v) => v.status === 'approved' && !v.ended).length, days_done: vals.reduce((a, v) => a + v.done, 0), avg_delta: ds.length ? Math.round(ds.reduce((a, b) => a + b, 0) / ds.length) : null, with_delta: ds.length, retook, passed_after: passedAfter };
 }
 
 /** تذكير إنساني من المدرّب (بتوقيعه) — مرّة في اليوم */
@@ -420,4 +424,32 @@ export async function draftForPlacements(db: Db, items: ReadonlyArray<{ rep: { i
     } catch { /* تحسيني */ }
   }
   return s;
+}
+
+/* ───────── م12 «مِران للجهات» ───────── */
+/** جاهزية الدفعة: رقم واحد للجهة — كم خطّة مفتوحة بلغت «جاهز» (بلا أسماء ولا نسب فردية) */
+export type CohortReadiness = { plans: number; active: number; ready: number; close: number; early: number; ready_pct: number | null; avg_delta: number | null; days_done: number };
+export function cohortReadiness(sums: Readonly<Record<string, PlanSummary>>): CohortReadiness {
+  const vals = Object.values(sums).filter((v) => v.status === 'approved' || v.status === 'done'); const open = vals.filter((v) => v.status === 'approved' && !v.ended);
+  const c = { ready: 0, close: 0, early: 0 }; for (const v of vals) { if (v.ready === 'ready') c.ready += 1; else if (v.ready === 'close') c.close += 1; else c.early += 1; }
+  const ds = vals.map((v) => v.avg_delta).filter((x): x is number => typeof x === 'number');
+  return { plans: vals.length, active: open.length, ...c, ready_pct: vals.length ? Math.round((c.ready / vals.length) * 100) : null, avg_delta: ds.length ? Math.round(ds.reduce((a, b) => a + b, 0) / ds.length) : null, days_done: vals.reduce((a, v) => a + v.done, 0) };
+}
+/** ما تراه الجهة عن طالب واحد: الأيام فقط والجاهزية — لا نسب مِران */
+export function clientPracticeCell(s: PlanSummary | null | undefined): { status: PlanStatus; status_ar: string; today: number; done: number; total: number; ready: Readiness['state'] | null; ready_ar: string | null } | null {
+  if (!s || s.status === 'draft' || s.status === 'cancelled') return null;
+  return { status: s.status, status_ar: s.status_ar, today: s.today, done: s.done, total: s.total, ready: s.ready, ready_ar: s.ready ? (s.kind === 'placement' ? READY_START_AR : READY_AR)[s.ready] : null };
+}
+export const CLIENT_MSG_MAX = 200;
+export type ClientPracticeRequest = { at: string; message: string | null; eligible: number; by: string | null };
+/** آخر طلب مِران من الجهة في سجلّ أحداث أمر الخدمة (events) — بلا جدول جديد */
+export function lastClientRequest(events: unknown): ClientPracticeRequest | null {
+  const list = Array.isArray(events) ? (events as any[]).filter((e) => e && e.type === 'practice_request') : []; if (!list.length) return null;
+  const e = list[list.length - 1]; return { at: String(e.at || ''), message: e.message ? String(e.message).slice(0, CLIENT_MSG_MAX) : null, eligible: Number(e.eligible) || 0, by: e.by ? String(e.by) : null };
+}
+/** رسالة الجهة إلى طلابها: نصّ قصير بلا روابط ولا وسوم — تُقترح كملاحظة اليوم 1 ويقرّر الموقّع إدراجها */
+export function normalizeClientMessage(v: unknown): { ok: true; text: string | null } | { ok: false; error: string } {
+  if (v === null || v === undefined || v === '') return { ok: true, text: null }; if (typeof v !== 'string') return { ok: false, error: 'bad_message' };
+  const t = v.replace(/<[^>]*>/g, '').replace(/https?:\/\/\S+/gi, '').replace(/\s+/g, ' ').trim(); if (!t) return { ok: true, text: null }; if (t.length > CLIENT_MSG_MAX) return { ok: false, error: 'message_too_long' };
+  return { ok: true, text: t };
 }

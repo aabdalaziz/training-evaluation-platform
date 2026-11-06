@@ -5,6 +5,7 @@
  *  العدّادات · جدول طلابه (الحكم · الكلّي · المهارات الخمس · الشهادة) · «تقرير الجهة» A4 (توزيع · أضعف محورين · المعيار المرجعي · توصية) · CSV · «ختم المراقب».
  *  لا يرى بنودًا ولا مفاتيح ولا طلاب جهة أخرى. الرابط يُبطل من لوحة الطاقم.
  *  م9: «خريطة المنهج» للجهة (حرارة الوحدات بلا أسماء · وحدات كل طالب · جلسات التعويض وأثرها) في اللوحة والتقرير A4 وCSV.
+ *  م12 «مِران للجهات»: بطاقة «مِران» (جاهزية الدفعة بلا أسماء) · عمود «مِران» لكل طالب (أيام/جاهزية — لا نسب) · زرّ «اطلب مِران لطلابي» برسالة اختيارية → يُشعر الطاقم ويوقّع هو.
  */
 import { useCallback, useEffect, useState } from 'react';
 import WayBar from '../../components/WayBar';
@@ -15,7 +16,7 @@ const ST: Record<string, string> = { invited: 'مدعو', started: 'بدأ', fin
 const dt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 
 export default function ClientBoard({ token, fontClass = '' }: { token: string; fontClass?: string }) {
-  const [d, setD] = useState<any>(null); const [err, setErr] = useState(''); const [name, setName] = useState(''); const [msg, setMsg] = useState('');
+  const [d, setD] = useState<any>(null); const [err, setErr] = useState(''); const [name, setName] = useState(''); const [msg, setMsg] = useState(''); const [pmsg, setPmsg] = useState(''); const [pbusy, setPbusy] = useState(false); const [pnote, setPnote] = useState(''); /* م12 */
   const load = useCallback(async () => {
     try { const r = await fetch(`/api/miaar/client?t=${encodeURIComponent(token)}`, { cache: 'no-store' }); const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) { setErr(j.error === 'not_found' ? 'nf' : 'err'); return; } setD(j); setErr(''); } catch { setErr('err'); }
   }, [token]);
@@ -23,6 +24,13 @@ export default function ClientBoard({ token, fontClass = '' }: { token: string; 
   async function sign() {
     setMsg(''); const r = await fetch('/api/miaar/client', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, action: 'sign', name }) }); const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) { setMsg(j.error || 'تعذّر التوقيع'); return; } await load(); setMsg('وُقّع كشف الحضور — ستحمل الشهادات عبارة «أُدّي بحضور مراقب».');
+  }
+  /* م12: طلب مِران — الجهة تطلب، وطاقم مِعيار يوقّع */
+  async function requestPractice() {
+    setPnote(''); setPbusy(true);
+    try { const r = await fetch('/api/miaar/client', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ t: token, action: 'practice_request', message: pmsg.trim() || null }) }); const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) { setPnote(j.error === 'message_too_long' ? 'الرسالة أطول من 200 حرف.' : j.error === 'nothing_to_request' ? 'لا أحد يحتاج مِران الآن.' : 'تعذّر إرسال الطلب — أعد المحاولة.'); return; }
+      setPnote(j.updated ? 'حُدّث طلب اليوم — سيصل الطاقم بصيغته الجديدة.' : `أُرسل طلبك عن ${j.eligible} طالبًا — يوقّع الطاقم الخطط ثم تظهر هنا.`); setPmsg(''); await load(); } finally { setPbusy(false); }
   }
   function printReport() {
     if (!d?.report) return; const rp = d.report; const w = window.open('', '_blank'); if (!w) return;
@@ -38,7 +46,7 @@ export default function ClientBoard({ token, fontClass = '' }: { token: string; 
 <div class="g"><div><small>مدعو/ظهر</small><b>${rp.summary.invited}</b></div><div><small>أنهى</small><b>${rp.summary.finished}</b></div><div><small>اجتاز</small><b>${rp.summary.passed}</b></div><div><small>مشروط</small><b>${rp.summary.conditional}</b></div><div><small>لم يجتز</small><b>${rp.summary.failed}</b></div><div><small>قيد التصحيح</small><b>${rp.summary.pending}</b></div><div><small>متوسط الكلّي</small><b>${rp.summary.avg ?? '—'}${rp.summary.avg !== null ? '%' : ''}</b></div><div><small>المعيار المرجعي (أَثَر)</small><b>${rp.benchmark.avg ?? '—'}${rp.benchmark.avg !== null ? '%' : ''}</b><small>${rp.benchmark.avg !== null ? `ن=${rp.benchmark.n}` : 'عيّنة < 30'}</small></div></div>
 <h2>المحاور</h2><table><thead><tr><th>المحور</th><th>متوسط المجموعة</th><th>دون 50%</th><th>المعيار المرجعي</th><th>الفارق</th></tr></thead><tbody>${skills}</tbody></table>
 <h2>التقديرات</h2><ul>${grades || '<li>لا أحكام نهائية بعد</li>'}</ul>
-${unitsHtml}<h2>التوصية</h2><div class="rec">${rp.recommendations_ar.map((r: string) => `<p>${esc(r)}</p>`).join('')}</div>
+${unitsHtml}${d.practice?.text_ar ? `<h2>مِران — تدريب ما بعد الحكم</h2><p>${esc(d.practice.text_ar)}${d.practice.request ? ` · طلبت الجهة مِران في ${esc(dt(d.practice.request.at))}${d.practice.request.approved_after ? ` واعتُمدت ${d.practice.request.approved_after} خطّة` : ''}` : ''} — مِران تدريب لا اختبار؛ لا يغيّر النتائج الرسمية.</p>` : ''}<h2>التوصية</h2><div class="rec">${rp.recommendations_ar.map((r: string) => `<p>${esc(r)}</p>`).join('')}</div>
 <p class="f">${d.order?.proctor_signed_at ? `أُدّي بحضور مراقب — ${esc(d.order.proctor_name)} · ` : ''}الحكم المركّب: 60% استقبالي · 20% كتابة · 20% تحدّث — اجتياز ≥ 60% ولا مهارة دون 50%. التصحيح البشري بمصحّحين معايَرين. البنود ومفاتيحها لا تُشارك. © 2026 مِعيار — من أَثَر · د. أحمد محمد عبدالعزيز بدوي.</p></body></html>`);
     w.document.close(); w.focus(); w.print();
   }
@@ -66,14 +74,35 @@ ${unitsHtml}<h2>التوصية</h2><div class="rec">${rp.recommendations_ar.map(
         </section>
         <section className="cb-panel">
           <h2>الطلاب <small>({d.rows.length})</small></h2>
-          <div className="cb-tablewrap"><table className="cb-table" data-testid="cb-table"><thead><tr><th>الطالب</th><th>الحالة</th><th>الكلّي</th>{['listening', 'reading', 'grammar_vocab', 'writing', 'speaking'].map((k) => <th key={k}>{SK[k]}</th>)}<th>الحكم</th><th>النزاهة</th><th>الشهادة</th></tr></thead>
+          <div className="cb-tablewrap"><table className="cb-table" data-testid="cb-table"><thead><tr><th>الطالب</th><th>الحالة</th><th>الكلّي</th>{['listening', 'reading', 'grammar_vocab', 'writing', 'speaking'].map((k) => <th key={k}>{SK[k]}</th>)}<th>الحكم</th><th>النزاهة</th><th title="تدريب ما بعد الحكم — أيام وجاهزية فقط، لا نسب">مِران</th><th>الشهادة</th></tr></thead>
             <tbody>{d.rows.map((r: any) => <tr key={r.email} data-testid="cb-row"><td><b>{r.name || '—'}</b><br /><small dir="ltr">{r.email}</small></td><td>{ST[r.status] || r.status}<br /><small>{dt(r.finished_at || r.started_at)}</small></td><td>{r.exit?.الحالة === 'final' ? <b>{r.exit.الكلي}%</b> : r.exit ? 'قيد التصحيح' : '—'}</td>
               {['listening', 'reading', 'grammar_vocab', 'writing', 'speaking'].map((k) => { const v = r.exit?.المهارات?.[k]; return <td key={k} className={v?.الحالة === 'below' ? 'low' : ''}>{typeof v?.النسبة === 'number' ? `${v.النسبة}%` : v?.الحالة === 'pending' ? '…' : '—'}</td>; })}
               <td>{r.exit ? <span className={`cb-pill ${r.exit.النتيجة}`}>{OUT[r.exit.النتيجة] || r.exit.النتيجة}</span> : '—'}{r.exit?.تقدير_ar && r.exit.الحالة === 'final' ? <><br /><small>{r.exit.تقدير_ar}</small></> : null}{r.exit?.وحدات_للمراجعة?.length > 0 && <div className="cb-rev" data-testid="cb-row-units">{r.exit.وحدات_للمراجعة.map((u: any) => <span key={u.الرمز} className={`cb-chip ${u.الحالة}`} title={`${u.الاسم} — ${u.النسبة}%`}>{u.الرمز}</span>)}</div>}</td>
               <td data-testid="cb-integrity">{r.integrity ? <span className={`cb-pill ${r.integrity === 'clear' ? 'passed' : r.integrity === 'invalid' ? 'failed' : 'pending'}`} title="سجلّ نزاهة الاختبار — تراه الجهة حكمًا لا صورًا">{r.integrity_ar}</span> : <small>—</small>}</td>
+              <td data-testid="cb-row-practice" data-ready={r.practice?.ready || ''}>{r.practice ? <><span className={`cb-pill ${r.practice.ready === 'ready' ? 'passed' : r.practice.ready === 'close' ? 'conditional' : 'pending'}`}>{r.practice.ready_ar || r.practice.status_ar}</span><br /><small>يوم {r.practice.today}/{r.practice.total} · أنجز {r.practice.done}</small></> : <small>—</small>}</td>
               <td>{r.certificate_url ? <a href={r.certificate_url} target="_blank" rel="noreferrer">الشهادة</a> : '—'}</td></tr>)}
-              {!d.rows.length && <tr><td colSpan={11} className="cb-empty">لم يبدأ أحد بعد — شارك الباركود/الرابط مع طلابك.</td></tr>}</tbody></table></div>
+              {!d.rows.length && <tr><td colSpan={12} className="cb-empty">لم يبدأ أحد بعد — شارك الباركود/الرابط مع طلابك.</td></tr>}</tbody></table></div>
         </section>
+        {d.practice && (d.practice.plans > 0 || d.practice.eligible > 0 || d.practice.request) && <section className="cb-panel" data-testid="cb-miran" data-can-request={d.practice.can_request ? '1' : '0'}>
+          <h2>💪 مِران — تدريب ما بعد الحكم <small>14 يومًا · 5 بنود يوميًا · يوقّعه طاقم مِعيار</small></h2>
+          <div className="cb-sum cb-miran-sum">
+            <div className="cb-card"><b data-testid="cb-miran-approved">{d.practice.approved || 0}</b><small>خطّة معتمدة</small></div>
+            <div className="cb-card"><b>{d.practice.active || 0}</b><small>يتدرّبون الآن</small></div>
+            <div className="cb-card passed"><b data-testid="cb-miran-ready">{d.practice.cohort?.ready || 0}</b><small>جاهز للإعادة</small></div>
+            <div className="cb-card conditional"><b>{d.practice.cohort?.close || 0}</b><small>اقترب</small></div>
+            <div className="cb-card"><b>{d.practice.cohort?.early || 0}</b><small>في البداية</small></div>
+            <div className="cb-card"><b>{d.practice.cohort?.ready_pct ?? '—'}{d.practice.cohort?.ready_pct !== null && d.practice.cohort?.ready_pct !== undefined ? '%' : ''}</b><small>جاهزية الدفعة</small></div>
+            <div className="cb-card"><b>{typeof d.practice.avg_delta === 'number' ? `${d.practice.avg_delta > 0 ? '+' : ''}${d.practice.avg_delta}` : '—'}</b><small>متوسط التحسّن</small></div>
+          </div>
+          {d.practice.request && <p className={`cb-status ${d.practice.request.pending ? 'wait' : 'done'}`} data-testid="cb-miran-status">{d.practice.request.approved_after > 0 ? <>✅ اعتُمدت <b>{d.practice.request.approved_after}</b> خطّة بعد طلبكم في {dt(d.practice.request.at)}.</> : d.practice.request.pending ? <>⏳ طلبكم في {dt(d.practice.request.at)} بانتظار توقيع الطاقم.</> : <>طلبكم في {dt(d.practice.request.at)} — لا أحد يحتاج مِران الآن.</>}{d.practice.request.message && <><br /><small>رسالتكم: «{d.practice.request.message}»</small></>}</p>}
+          {d.practice.can_request ? <div className="cb-req" data-testid="cb-miran-req">
+            <p><b>{d.practice.eligible}</b> من طلابكم يحتاجون مِران ولم تُفتح لهم خطّة بعد. يمكنكم طلبها — ويقرّر الطاقم ويوقّع.</p>
+            <label>كلمة لطلابكم تظهر في اليوم الأول (اختياري · ≤ 200 حرف)<textarea value={pmsg} onChange={(e) => setPmsg(e.target.value.slice(0, 200))} maxLength={200} rows={2} placeholder="مثال: نفخر بكم — ربع ساعة يوميًا تكفي." data-testid="cb-miran-msg" /><small dir="ltr">{pmsg.length}/200</small></label>
+            <button type="button" className="cb-btn" disabled={pbusy} onClick={() => void requestPractice()} data-testid="cb-miran-btn">{d.practice.request ? 'حدّث طلب مِران' : 'اطلب مِران لطلابي'}</button>
+          </div> : !d.practice.request && d.practice.plans === 0 ? <p className="cb-note">لا أحد يحتاج مِران الآن.</p> : null}
+          {pnote && <p className="cb-ok" role="status" data-testid="cb-miran-note">{pnote}</p>}
+          <p className="cb-note">مِران تدريب لا اختبار؛ لا يغيّر النتائج الرسمية. ترون الأيام والجاهزية فقط — لا درجات التمرين.</p>
+        </section>}
         {d.units?.units?.length > 0 && <section className="cb-panel" data-testid="cb-units">
           <h2>خريطة المنهج — أين ضعفت المجموعة؟ <small>({d.units.units.length} وحدة{d.units.scoped ? ' · ما دُرّس فقط' : ''})</small></h2>
           <div className="cb-heat">{d.units.units.map((u: any) => <div key={u.code} className={`cb-unit ${u.state}`} data-testid="cb-unit" data-state={u.state} title={`${u.title_ar} — ${u.n_students} طالبًا`}><b>{u.percent}%</b><span>{u.code}</span><small>{u.title_ar}</small></div>)}</div>
@@ -81,7 +110,7 @@ ${unitsHtml}<h2>التوصية</h2><div class="rec">${rp.recommendations_ar.map(
           {d.units.sessions.length > 0 && <div className="cb-sess" data-testid="cb-sessions"><h3>جلسات التعويض وأثرها</h3>
             <ul>{d.units.sessions.map((x: any) => <li key={x.id}><b>{x.title_ar}</b> · {dt(x.starts_at)} · {x.duration_min} د · {x.units.join(' · ')} · انضمّ <b>{x.joined}</b>{x.effect.length > 0 && <ul className="cb-eff">{x.effect.map((e: any) => <li key={e.code} data-testid="cb-effect">{e.text}</li>)}</ul>}</li>)}</ul>
             {typeof d.units.effect_avg === 'number' && <p className="cb-ok">متوسط أثر التعويض للحاضرين: <b>{d.units.effect_avg >= 0 ? '+' : ''}{d.units.effect_avg}</b> نقطة</p>}</div>}
-          {d.practice && <p className="cb-ok" data-testid="cb-practice">💪 {d.practice.text_ar} <small>— مِران تدريب لا اختبار؛ لا يغيّر النتائج الرسمية.</small></p>}
+          {d.practice?.text_ar && <p className="cb-ok" data-testid="cb-practice">💪 {d.practice.text_ar} <small>— مِران تدريب لا اختبار؛ لا يغيّر النتائج الرسمية.</small></p>}
           <p className="cb-note">{d.units.note_ar}</p>
         </section>}
         <section className="cb-panel" data-testid="cb-report-panel">
@@ -115,6 +144,7 @@ const CSS = `
 .cb-tablewrap{overflow:auto}.cb-table{width:100%;border-collapse:collapse;font-size:13px}.cb-table th,.cb-table td{border-bottom:1px solid #e2e8f0;padding:7px 8px;text-align:start;vertical-align:top;white-space:nowrap}.cb-table th{background:#f8fafc}.cb-table td.low{color:#991b1b;font-weight:800}.cb-empty{text-align:center;color:#64748b;padding:18px !important}
 .cb-rec{margin:0;padding-inline-start:18px;line-height:1.9}.cb-ok{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px;margin:8px 0 0}
 .cb-signrow{display:grid;gap:8px;max-width:520px}.cb-signrow label{display:grid;gap:4px;font-size:13px;font-weight:700}.cb-signrow input{min-height:40px;border:1px solid #cbd5e1;border-radius:10px;padding:0 10px;font:inherit}.cb-signrow small{color:#64748b;line-height:1.7}
+.cb-miran-sum{margin:6px 0}.cb-status{border-radius:10px;padding:8px 12px;margin:8px 0;font-size:14px}.cb-status.wait{background:#fffbeb;border:1px solid #fcd34d}.cb-status.done{background:#ecfdf5;border:1px solid #a7f3d0}.cb-req{display:grid;gap:8px;max-width:620px;padding:10px 12px;border:1px dashed #cbd5e1;border-radius:12px}.cb-req p{margin:0}.cb-req label{display:grid;gap:4px;font-size:13px;font-weight:700}.cb-req textarea{font:inherit;border:1px solid #cbd5e1;border-radius:10px;padding:8px 10px;resize:vertical}.cb-req small{color:#64748b;font-weight:400}
 .cb-foot{text-align:center;color:#64748b;font-size:12px;margin:16px 0 0}
 @media (max-width:640px){.cb-head h1{font-size:20px}}
 `;
