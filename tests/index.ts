@@ -108,3 +108,4 @@ import './miaar-m10.test';
 import './miaar-m11.test';
 import './miaar-m12.test';
 import './p50-sign.test'; /* P50 «توقيعي» */
+import './p51-day.test'; /* P51 «دفتر اليوم» */

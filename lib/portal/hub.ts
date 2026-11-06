@@ -29,7 +29,7 @@ export const DOORS: Record<DoorSlug, Door> = {
   expert: { title_ar: 'باب الخبراء', title_en: 'Experts & consultants', roles: ['CONSULTANT', 'EXPERT'], lead: 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر — ومهامك عقدٌ على كل مهمة.', links: [
     { href: '/experts', label: 'هيئة أَثَر — الخبراء', hint: 'ملفك العام' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك ومهامك' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'المهام المسندة' }] },
   trainer: { title_ar: 'باب المدرّبين', title_en: 'Trainers', roles: ['TRAINER'], lead: 'برامجك، جلساتك الحيّة، حضور متدرّبيك، وما قاله المتدرّبون عن الأثر.', links: [
-    { href: '/trainers', label: 'هيئة أَثَر — المدرّبون', hint: 'ملفك العام' }, { href: '/admin/live', label: 'جلساتي الحيّة', hint: 'الغرف والروابط' }, { href: '/admin/attendance', label: 'الحضور', hint: 'جلساتك' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك وشهاداتك' }] },
+    { href: '/me/day', label: 'دفتر اليوم', hint: 'صباحك في صفحة واحدة: جلساتك، من غاب، من توقّف، و«كلمة»' }, /* P51 */ { href: '/trainers', label: 'هيئة أَثَر — المدرّبون', hint: 'ملفك العام' }, { href: '/admin/live', label: 'جلساتي الحيّة', hint: 'الغرف والروابط' }, { href: '/admin/attendance', label: 'الحضور', hint: 'جلساتك' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك وشهاداتك' }] },
 };
 
 export const DOOR_STEPS: Record<DoorSlug, [string, string, string]> = {
@@ -247,7 +247,7 @@ async function personalDoor(db: any, me: Me, face: 'expert' | 'trainer'): Promis
         countRows(db, 'portal_sessions', q => q.in('trainer_id', tids).eq('status', 'live')),
         countRows(db, 'portal_sessions', q => q.in('trainer_id', tids).eq('status', 'ended').gte('starts_at', ago(30))),
       ]);
-      indicators.push({ key: 'sessions_today', label: 'جلساتي اليوم', value: today, href: '/admin/live', tone: today ? 'gold' : undefined }, { key: 'upcoming', label: 'جلساتي خلال 14 يومًا', value: upcoming, href: '/admin/live' }, { key: 'done_30', label: 'جلسات أنهيتها خلال 30 يومًا', value: done30, href: '/admin/attendance' });
+      indicators.push({ key: 'sessions_today', label: 'جلساتي اليوم', value: today, href: '/me/day', tone: today ? 'gold' : undefined }, { key: 'upcoming', label: 'جلساتي خلال 14 يومًا', value: upcoming, href: '/admin/live' }, { key: 'done_30', label: 'جلسات أنهيتها خلال 30 يومًا', value: done30, href: '/admin/attendance' });
       if (live) decisions.unshift({ key: 'live', label: 'جلسة لك على الهواء الآن', count: live, href: '/admin/live', urgent: true });
     } else indicators.push({ key: 'sessions_today', label: 'جلساتي اليوم', value: null, hint: 'لم يُربط بريدك ببطاقة مدرّب بعد — اطلب ذلك من إدارة البرامج', href: '/admin/live' });
   }
