@@ -3,6 +3,7 @@
  * P51 «دفتر اليوم» — سجلّ المدرّب اليومي
  *  GET  /api/me/day                → الدفتر (المدرّب: شُعبه وجلساته · الطاقم: دفتره أو ?trainer=<id> للاطّلاع فقط)
  *  POST /api/me/day {action:'word', classroom_id, mode:'one'|'absent'|'idle'|'all', email?, text?, template?} → «كلمة» داخل أَثَر
+ *  POST /api/me/day {action:'seen_replies', classroom_id?} → P53: تعليم ردود المتعلّمين على كلمتي مقروءة (شعبة أو الكلّ)
  *  المصادقة: Bearer · المدرّب = TRAINER أو بريده في trainers · الطاقم = STAFF_ROLES. غيرهم 403. لا «كلمة» بالنيابة.
  */
 import { NextResponse } from 'next/server';
@@ -14,6 +15,7 @@ import { normEmail } from '../../../../lib/portal/roles';
 import { STAFF_ROLES } from '../../../../lib/portal/sign';
 import { collectDayBook, resolveTrainer, sendWord, cleanWord, DAY_TITLE, WORD_MAX, WORDS_PER_HOUR } from '../../../../lib/portal/day';
 import type { WordMode } from '../../../../lib/portal/day';
+import { markRepliesSeen } from '../../../../lib/portal/word-reply'; /* P53 */
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -45,8 +47,12 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, me } = c;
-  const rl = await rateLimit(db, `day:word:${me.id}`, WORDS_PER_HOUR, 3600); if (!rl.allowed) return tooMany(rl);
+  const rl = await rateLimit(db, `day:word:${me.id}`, 3600, WORDS_PER_HOUR) /* P53: تصحيح ترتيب (نافذة، حدّ) */; if (!rl.allowed) return tooMany(rl);
   const jr = await readJson(req, { maxBytes: 16 * 1024 }); if (!jr.ok) return bad(jr.error, jr.status); const b = jr.body as Record<string, unknown>;
+  if (b.action === 'seen_replies') { /* P53 */
+    if (!me.trainerIds.length) return bad('لا ردود بلا بطاقة مدرّب', 403); if (me.viewing_other) return bad('الاطّلاع فقط — «قرأت» للمدرّب نفسه', 403);
+    const n = await markRepliesSeen(db, [...me.trainerIds, me.id], isId(b.classroom_id) ? b.classroom_id : null); return NextResponse.json({ success: true, seen: n }, { headers: NO });
+  }
   if (b.action !== 'word') return bad('إجراء غير معروف');
   if (!me.trainerIds.length) return bad('«كلمة» تُرسل من مدرّب الشعبة نفسه — بريدك غير مربوط ببطاقة مدرّب', 403);
   if (me.viewing_other) return bad('لا «كلمة» بالنيابة عن مدرّب آخر', 403);

@@ -8,7 +8,7 @@
 import { sendPush, vapidFromEnv } from './push';
 import { inQuietHours, pushSubsFor } from './notify';
 
-export type NoticeKind = 'exit_final' | 'retake_open' | 'retake_rem3' | 'retake_rem1' | 'remedial_new' | 'remedial_tmrw' | 'promoted' | 'placed' | 'exit_summary' | 'practice_plan' | 'practice_day' | 'practice_nudge' | 'practice_idle' /* م10 مِران */ | 'practice_pending' /* م11 مِران البداية */ | 'practice_requested' /* م12 مِران للجهات */ | 'sign_digest' /* P50 توقيعي */ | 'custom' | 'trainer_word' | 'day_digest' /* P51 دفتر اليوم */ | 'org_letter' | 'org_letter_reply' | 'org_letter_due' /* P52 رسالة الشهر */;
+export type NoticeKind = 'exit_final' | 'retake_open' | 'retake_rem3' | 'retake_rem1' | 'remedial_new' | 'remedial_tmrw' | 'promoted' | 'placed' | 'exit_summary' | 'practice_plan' | 'practice_day' | 'practice_nudge' | 'practice_idle' /* م10 مِران */ | 'practice_pending' /* م11 مِران البداية */ | 'practice_requested' /* م12 مِران للجهات */ | 'sign_digest' /* P50 توقيعي */ | 'custom' | 'trainer_word' | 'day_digest' /* P51 دفتر اليوم */ | 'org_letter' | 'org_letter_reply' | 'org_letter_due' /* P52 رسالة الشهر */ | 'word_reply' /* P53 ردّ على الكلمة */;
 
 export type NoticeInput = {
   email: string; user_id?: string | null; report_id?: string | null;
@@ -25,9 +25,9 @@ export type NoticeOpts = { site?: string; env?: NodeJS.ProcessEnv; fetchImpl?: t
 
 export const KIND_AR: Record<NoticeKind, string> = {
   exit_final: 'حكم العبور', retake_open: 'إعادة مهارة', retake_rem3: 'تذكير بالإعادة', retake_rem1: 'تذكير أخير', remedial_new: 'جلسة تعويض', remedial_tmrw: 'جلسة غدًا',
-  promoted: 'ترقية', placed: 'تسكين', exit_summary: 'ملخّص الشُّعبة', practice_plan: 'خطّة مِران', practice_day: 'مِران اليوم', practice_nudge: 'تذكير من مدرّبك', practice_idle: 'متعلّم متوقّف', practice_pending: 'خطط مِران بانتظارك', practice_requested: 'طلب مِران من جهة', sign_digest: 'نبض الصباح — توقيعي', trainer_word: 'كلمة من مدرّبك', day_digest: 'نبض الصباح — دفتر اليوم', org_letter: 'رسالة الشهر من أَثَر', org_letter_reply: 'ردّ الجهة على رسالة الشهر', org_letter_due: 'رسائل شهرية تنتظر توقيعك', custom: 'تنبيه',
+  promoted: 'ترقية', placed: 'تسكين', exit_summary: 'ملخّص الشُّعبة', practice_plan: 'خطّة مِران', practice_day: 'مِران اليوم', practice_nudge: 'تذكير من مدرّبك', practice_idle: 'متعلّم متوقّف', practice_pending: 'خطط مِران بانتظارك', practice_requested: 'طلب مِران من جهة', sign_digest: 'نبض الصباح — توقيعي', trainer_word: 'كلمة من مدرّبك', day_digest: 'نبض الصباح — دفتر اليوم', org_letter: 'رسالة الشهر من أَثَر', org_letter_reply: 'ردّ الجهة على رسالة الشهر', org_letter_due: 'رسائل شهرية تنتظر توقيعك', word_reply: 'ردّ على كلمتك', custom: 'تنبيه',
 };
-export const KIND_ICON: Record<NoticeKind, string> = { exit_final: '⚖️', retake_open: '🔁', retake_rem3: '⏳', retake_rem1: '⏰', remedial_new: '🧭', remedial_tmrw: '📅', promoted: '🎓', placed: '🏫', exit_summary: '📋', practice_plan: '🗓️', practice_day: '💪', practice_nudge: '🤝', practice_idle: '💤', custom: '🔔' , practice_pending: '✍️', practice_requested: '🏢', sign_digest: '✍️', trainer_word: '💬', day_digest: '📒', org_letter: '✉️', org_letter_reply: '💌', org_letter_due: '🖋️' };
+export const KIND_ICON: Record<NoticeKind, string> = { exit_final: '⚖️', retake_open: '🔁', retake_rem3: '⏳', retake_rem1: '⏰', remedial_new: '🧭', remedial_tmrw: '📅', promoted: '🎓', placed: '🏫', exit_summary: '📋', practice_plan: '🗓️', practice_day: '💪', practice_nudge: '🤝', practice_idle: '💤', custom: '🔔' , practice_pending: '✍️', practice_requested: '🏢', sign_digest: '✍️', trainer_word: '💬', day_digest: '📒', org_letter: '✉️', org_letter_reply: '💌', org_letter_due: '🖋️', word_reply: '🗨️' };
 
 export const SKILL_AR: Record<string, string> = { listening: 'الاستماع', reading: 'القراءة', grammar_vocab: 'القواعد والمفردات', writing: 'الكتابة', speaking: 'المحادثة' };
 
