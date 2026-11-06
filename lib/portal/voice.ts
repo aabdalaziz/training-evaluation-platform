@@ -53,6 +53,7 @@ export const DESTINATIONS: Destination[] = [
   { href: '/miaar/trust', label: 'سجلّ الصدق', aliases: ['سجل الصدق', 'الصدق', 'موثوقية معيار'] },
   { href: '/dashboard', label: 'لوحة التحكم', aliases: ['لوحة التحكم', 'اللوحة', 'الداشبورد'], admin: true },
   { href: '/admin/sign', label: 'توقيعي', aliases: ['توقيعي', 'ما ينتظر توقيعي', 'ينتظر توقيعي', 'التوقيعات', 'التوقيعات المعلقة'], admin: true }, /* P50 */
+  { href: '/admin/org/letters', label: 'رسالة الشهر', aliases: ['رسالة الشهر', 'رسائل الشهر', 'رسائل الجهات', 'الرسالة الشهرية', 'التقرير الشهري للجهة'], admin: true }, /* P52 */
   { href: '/admin/miaar', label: 'إدارة مِعيار', aliases: ['ادارة معيار', 'لوحة معيار', 'معيار الادارة'], admin: true },
   { href: '/admin/miaar/bank', label: 'بنك البنود', aliases: ['بنك البنود', 'البنك', 'بنك الاسئلة', 'البنود'], admin: true },
   { href: '/admin/miaar/forms', label: 'النماذج', aliases: ['النماذج', 'المخططات', 'نماذج الاختبار'], admin: true },

@@ -30,13 +30,14 @@ import { OrgSeason } from '../components/OrgSeason';   // P35 «موسم اله�
 import { OrgAfterLine, OrgStations } from '../components/ProgramAfter';
 import dynamic from 'next/dynamic';
 const OrgCohorts = dynamic(() => import('../components/DiplomaProfile').then(m => m.OrgCohorts), { ssr: false });
+const OrgLetters = dynamic(() => import('../components/OrgLetters').then(m => m.OrgLetters), { ssr: false });   // P52: «رسالة الشهر» — أرشيف الرسائل الموقَّعة + ردّ الجهة
 const AccredOrgCard = dynamic(() => import('../components/Accreditation').then(m => m.AccredOrgCard), { ssr: false });   // P48-ب: ملفات اعتماد برامج الجهة — أرقام فقط   // P46 ر4-ب «قراءة الدفعة»   // P38 «الشهادة التي تكبر» — سطر الجهة · P39 «محطة الجهة»
 import { OrgNeeds } from '../components/Needs';   // P44 «جهة تحتاج»
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
 type Org = { id: string; name_ar: string; name_en?: string | null; sector?: string | null; email_domain?: string | null; city?: string | null };
-type Tab = 'impact' | 'echo' | 'journey' | 'horizon' | 'members' | 'bulk' | 'resources' | 'contracts' | 'charter' | 'observatory' | 'report' | 'onair';
+type Tab = 'impact' | 'echo' | 'journey' | 'horizon' | 'members' | 'bulk' | 'resources' | 'contracts' | 'charter' | 'observatory' | 'report' | 'onair' | 'letters' /* P52 */;
 type ContractItem = { contract: { id: string; title_ar: string; total_amount: number; currency: string; status: ContractStatus; cohort_size: number; token: string; program_name?: string; delivered_at?: string | null }; state: ContractState };
 
 function Inner() {
@@ -47,7 +48,7 @@ function Inner() {
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false); const [inviteText, setInviteText] = useState(''); const [bulkText, setBulkText] = useState(''); const [bulkProg, setBulkProg] = useState(''); const [bulkNote, setBulkNote] = useState('');
 
   async function token() { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; }
-  useEffect(() => { if (typeof window === 'undefined') return; const t = new URLSearchParams(window.location.search).get('tab'); if (t && ['impact', 'echo', 'journey', 'horizon', 'members', 'bulk', 'resources', 'contracts', 'charter', 'observatory', 'report', 'onair'].includes(t)) setTab(t as Tab); }, []);
+  useEffect(() => { if (typeof window === 'undefined') return; const t = new URLSearchParams(window.location.search).get('tab'); if (t && ['impact', 'echo', 'journey', 'horizon', 'members', 'bulk', 'resources', 'contracts', 'charter', 'observatory', 'report', 'onair', 'letters'].includes(t)) setTab(t as Tab); }, []);
   // P15 — توقّع القدرة المؤسسية («مؤشر الأداء»): اتجاه مهارات الجهة خلال 90 يومًا من أدلة المنسوبين المؤكَّدين — بلا أسماء
   type Wx = { forecasts: { skill_id: string; name_ar: string; trend: 'rising' | 'steady' | 'fading' | 'unknown'; slope: number; people: number; evidence: number; steps: { title_ar: string; why_ar: string }[] }[]; line: string; members: number; events: number; steps: { title_ar: string; why_ar: string }[]; min_people: number };
   const [wx, setWx] = useState<Wx | null>(null); const [wxErr, setWxErr] = useState('');
@@ -105,7 +106,7 @@ function Inner() {
         {loaded && user && org && <>
           {err && <div className="pt-alert err">{err}</div>}{ok && <div className="pt-alert ok">{ok}</div>}
           {pendingMembers.length > 0 && tab !== 'members' && <div className="og-notice"><Icon name="bell" size={16} /> {lang === 'ar' ? `${pendingMembers.length} عضو جديد من نطاق بريد جهتكم بانتظار تأكيدك.` : `${pendingMembers.length} new member(s) from your email domain await your confirmation.`} <button type="button" className="pt-btn small" onClick={() => setTab('members')}>{lang === 'ar' ? 'مراجعة' : 'Review'}</button></div>}
-          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['echo', 'صدى الجهة', 'Echo'], ['journey', 'رحلة الجهة', 'Journey'], ['horizon', 'عشر سنوات وخطوة', 'Ten years & one step'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['charter', 'الميثاق والمقاعد', 'Charter & seats'], ['observatory', 'المرصد', 'Observatory'], ['report', 'التقرير', 'Report'], ['onair', 'هواء الجهة', 'Org Air']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
+          <div className="og-tabs">{([['impact', 'لوحة الأثر', 'Impact'], ['echo', 'صدى الجهة', 'Echo'], ['journey', 'رحلة الجهة', 'Journey'], ['horizon', 'عشر سنوات وخطوة', 'Ten years & one step'], ['members', 'المنسوبون', 'Members'], ['bulk', 'التسجيل الجماعي', 'Bulk enrolment'], ['resources', 'حقائب الجهة', 'Resources'], ['contracts', 'عقود الأثر', 'Impact contracts'], ['charter', 'الميثاق والمقاعد', 'Charter & seats'], ['observatory', 'المرصد', 'Observatory'], ['report', 'التقرير', 'Report'], ['onair', 'هواء الجهة', 'Org Air'], ['letters', 'رسالة الشهر', 'Monthly letter']] as [Tab, string, string][]).map(([v, a, e]) => <button type="button" key={v} className={tab === v ? 'on' : ''} onClick={() => setTab(v)}>{lang === 'ar' ? a : e}{v === 'members' && pendingMembers.length ? <i>{pendingMembers.length}</i> : null}{v === 'contracts' && (contracts || []).some(c => c.state.due > 0) ? <i>!</i> : null}</button>)}</div>
           {busy === 'dash' && !d && <div className="pt-empty">…</div>}
 
           {d && k && tab === 'impact' && <div className="og-wx" data-testid="org-weather">
@@ -156,6 +157,7 @@ function Inner() {
 
           {tab === 'echo' && <OrgImpact orgId={orgId} orgName={org.name_ar} lang={lang} token={token} view="echo" />}
           {tab === 'charter' && <OrgImpact orgId={orgId} orgName={org.name_ar} lang={lang} token={token} view="charter" />}
+          {tab === 'letters' && <OrgLetters orgId={orgId} lang={lang} token={token} />} {/* P52 «رسالة الشهر» */}
           {tab === 'journey' && <OrgJourney orgId={orgId} orgName={org.name_ar} lang={lang} token={token} />}
           {tab === 'horizon' && <OrgHorizon orgId={orgId} orgName={org.name_ar} lang={lang} token={token} />}
           {tab === 'contracts' && <div className="pt-box og-contracts">

@@ -55,6 +55,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/inbox', label: 'الوارد', hint: 'رسائل الزوّار والطلبات', icon: 'inbox', perms: ['inbox.write'] },
   { href: '/admin/placements', label: 'التسكين', hint: 'الشُّعب والقاعات', icon: 'school', perms: ['placements.write'] },
   { href: '/admin/contracts', label: 'عقود الأثر', hint: 'العقود والعهود', icon: 'doc', perms: ['contracts.read'] },
+  { href: '/admin/org/letters', label: 'رسالة الشهر', hint: 'التقرير الشهري لأثر الجهة — سطرك وتوقيعك قبل الإرسال', icon: 'mail', perms: ['staff', 'programs.write', 'reports.read', 'contracts.read'] }, /* P52 */
   { href: '/admin/consulting', label: 'الاستشارات', hint: 'الطلبات والعروض', icon: 'chat', perms: ['consulting.write'] },
   { href: '/admin/evidence', label: 'قاعدة الأدلة', hint: 'الاستعلامات والشواهد', icon: 'folder', perms: ['evidence.write'] },
   { href: '/admin/observatory', label: 'مرصد القدرة البشرية', hint: 'مؤشرات القطاعات', icon: 'globe', perms: ['observatory.read'] },

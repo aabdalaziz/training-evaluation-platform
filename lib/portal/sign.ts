@@ -145,6 +145,12 @@ async function doorGroups(db: Db, me: SignMe): Promise<SignGroup[]> {
   return [...seen.values()];
 }
 
+/** P52 «رسالة الشهر»: مسوَّدات شهرية تنتظر سطرًا بشريًّا وتوقيعًا — بلا لمسة (التوقيع يحتاج سطرًا) */
+async function letterGroup(db: Db): Promise<SignGroup[]> {
+  const { draftCount } = await import('../org-impact/letter'); const d = await draftCount(db); if (!d.count) return [];
+  return [{ key: 'org_letter', area: 'portal', title_ar: 'رسائل الشهر للجهات تنتظر سطرك وتوقيعك', hint_ar: 'ثلاثة أرقام صيغت آليًّا — السطر والوعد والتوقيع منك، وبلا توقيع لا تُرسل', count: d.count, oldest_at: d.oldest_at, href: '/admin/org/letters' }];
+}
+
 async function signedToday(db: Db, me: SignMe, now: Date): Promise<number | null> {
   try { const day0 = new Date(now); day0.setHours(0, 0, 0, 0); const { data } = await db.from('audit_logs').select('action').eq('actor_id', me.id).gte('created_at', day0.toISOString()).limit(500); return arr(data).filter((a) => SIGN_ACTION_RE.test(String(a.action || ''))).length; } catch { return null; }
 }
@@ -154,8 +160,8 @@ const CACHE = new Map<string, { at: number; v: SignRegister }>();
 export async function collectRegister(db: Db, me: SignMe, site: string, opts: { now?: Date; fresh?: boolean } = {}): Promise<SignRegister> {
   const now = opts.now || new Date(); const ck = `${me.id}:${me.staff ? 'S' : me.trainer ? 'T' : 'D'}:${me.doors.join(',')}`;
   const hit = CACHE.get(ck); if (!opts.fresh && hit && now.getTime() - hit.at < SIGN_CACHE_MS) return hit.v;
-  const [mi, doors, today] = await Promise.all([me.staff || me.trainer ? safe(miaarGroups(db, me, site, now), [] as SignGroup[]) : Promise.resolve([] as SignGroup[]), safe(doorGroups(db, me), [] as SignGroup[]), signedToday(db, me, now)]);
-  const groups = orderGroups([...mi, ...doors]); const s = summarize(groups, now);
+  const [mi, doors, today, letters] = await Promise.all([me.staff || me.trainer ? safe(miaarGroups(db, me, site, now), [] as SignGroup[]) : Promise.resolve([] as SignGroup[]), safe(doorGroups(db, me), [] as SignGroup[]), signedToday(db, me, now), me.staff ? safe(letterGroup(db), [] as SignGroup[]) : Promise.resolve([] as SignGroup[])]);
+  const groups = orderGroups([...mi, ...doors, ...letters]); const s = summarize(groups, now);
   const v: SignRegister = { total: s.total, today_signed: today, oldest_days: s.oldest_days, groups, scope: me.staff ? 'all' : me.trainer ? 'trainer' : 'doors', computed_at: now.toISOString() };
   CACHE.set(ck, { at: now.getTime(), v }); return v;
 }
