@@ -15,6 +15,7 @@ import { GuideButton } from './Guide';
 import { AccessProvider, AccessButton, AccessPanel, ReadPage, SkipLink, ACCESS_CSS, useAccess } from './Inclusion';
 import { OnAirButton, OnAirPanel, ONAIR_CSS } from './OnAir';
 import { NoticesBell, NOTICES_CSS } from './Notices'; /* P39 «تنبيهاتي» */
+import { SignCounter } from './SignCounter'; /* P50 «توقيعي» */
 import WayBar from './WayBar';  /* «الطريق»: رجوع · الرئيسية · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسية */
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
@@ -75,6 +76,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             <DoorBadge lang={lang} />
             <GuideButton lang={lang} compact />
             <OnAirButton lang={lang} />
+            {loggedIn && <SignCounter lang={lang} />}
             {loggedIn && <NoticesBell lang={lang} />}
             <AccessButton lang={lang} />
             <button type="button" className="pt-lang" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} aria-label="language">{lang === 'ar' ? 'English' : 'عربي'}</button>

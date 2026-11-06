@@ -51,6 +51,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/backup', label: 'النسخ الاحتياطي والأرشفة', hint: 'تصدير شامل Excel/JSON وأرشفة البرامج', icon: 'save', perms: ['admin'], side: true },
   { href: '/admin/data-lifecycle', label: 'دورة حياة البيانات', hint: 'معاينة وتفريغ منضبط', icon: 'trash', perms: ['admin'], nav: true, side: true },
   /* غُرَف تُفتح من أبوابها (hub) أو من روابطها — تُعرف هنا للعنوان والحارس فقط */
+  { href: '/admin/sign', label: 'توقيعي', hint: 'ما ينتظر توقيعي — سجلّ التوقيعات المعلّقة', icon: 'check', perms: ['staff', 'sessions.host', 'reports.read', 'programs.write', 'enrollments.write', 'payments.write', 'evidence.write', 'consulting.write'] }, /* P50 */
   { href: '/admin/inbox', label: 'الوارد', hint: 'رسائل الزوّار والطلبات', icon: 'inbox', perms: ['inbox.write'] },
   { href: '/admin/placements', label: 'التسكين', hint: 'الشُّعب والقاعات', icon: 'school', perms: ['placements.write'] },
   { href: '/admin/contracts', label: 'عقود الأثر', hint: 'العقود والعهود', icon: 'doc', perms: ['contracts.read'] },

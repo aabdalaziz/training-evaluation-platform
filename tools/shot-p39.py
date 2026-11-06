@@ -143,6 +143,7 @@ st, pr2 = staff.call(X, {'action': 'promote', 'report_ids': [rid], 'note': 'E2E 
 st, res = Client(f'10.{R}.93.31').call(f'/api/miaar?result={CODE}'); L = (res['report'].get('تنبيهات') or {}).get('القائمة') or []
 check('public result now lists ≤5 latest notices for this report (promoted first)', 1 <= len(L) <= 5 and L[0]['النوع'] == 'promoted' and all(x['النوع'] in ('promoted', 'retake_rem1', 'retake_rem3', 'retake_open', 'exit_final') for x in L))
 ALL = rest('portal_learner_notices'); check('all notices carry Arabic title · dedupe unique · kinds known', len({n['dedupe_key'] for n in ALL}) == len(ALL) and all(n['title_ar'] for n in ALL))
+urllib.request.urlopen(urllib.request.Request(M + '/rest/v1/portal_learner_notices?kind=eq.sign_digest', method='DELETE')).read()  # P50 «نبض الصباح» للطاقم خارج نطاق P39
 vault = rest('portal_learner_notices?email=eq.admin@upm.edu.sa'); check('summary updated in place (merge): still 1 row, now «صدرت 1 من 2» or more', len(vault) == 1 and 'صدرت' in vault[0]['title_ar'])
 
 # ---- 7) المتصفح

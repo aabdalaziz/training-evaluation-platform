@@ -11,6 +11,7 @@
  */
 import { runNoticeReminders } from '../../../../lib/portal/notices';
 import { runPracticeReminders } from '../../../../lib/miaar/practice'; /* م10 */
+import { runSignDigest } from '../../../../lib/portal/sign'; /* P50 «نبض الصباح» */
 import { NextResponse } from 'next/server';
 import { cronAuthorized } from '../../../../lib/shield/body';
 import { createClient } from '@supabase/supabase-js';
@@ -134,6 +135,9 @@ export async function GET(req: Request) {
   /* م10 «مِران»: «مِران اليوم» · إغلاق الخطط المنتهية · تنبيه المدرّب عند غياب 3 أيام */
   let practice: any = null;
   try { practice = await runPracticeReminders(db, { site, dry }); } catch (e: any) { practice = { ok: false, error: e?.message || String(e) }; }
+  /* P50 «توقيعي»: «نبض الصباح» — إشعار داخل أَثَر للطاقم بعدد ما ينتظر توقيعهم (مرّة في اليوم · بلا أسماء · بلا بريد) */
+  let sign_digest: any = null;
+  try { sign_digest = await runSignDigest(db, { site, dry }); } catch (e: any) { sign_digest = { ok: false, error: e?.message || String(e) }; }
   // تنظيف الوسائط والغرف (أَثَر · P13-ج): حذف التسجيلات غير المعتمدة بعد 180 يومًا من المخزن والسجل، وإغلاق الغرف المفتوحة منذ أكثر من 6 ساعات
   let media_cleanup: any = null;
   try {
@@ -193,5 +197,5 @@ export async function GET(req: Request) {
   try { directory = await runDirectory(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { directory = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, media_cleanup, evidence, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, media_cleanup, evidence, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory });
 }
