@@ -1,9 +1,9 @@
 ---
 name: athar-dialogue
-description: How to extend the Athar human dialogue loop (P51–P63 — «دفتر اليوم», «رسالة الشهر», «ردّ على الكلمة», «أمانة صوتية», «كلمة صوتية», «صدى الأسبوع», «نبض الجهة», «خريطة أثرك», «نسيج الشعبة», «لأن… بصوتك», «نسيج البرنامج», «رسالة إلى نفسي بعد سنة», «يوم تخرّجي — بكلماتي») without breaking its rules — nothing enters evaluation, k ≥ 5 for any aggregate, no names outside the owner's own screen, voice is private/temporary, no server AI, no new cron/env/deps.
+description: How to extend the Athar human dialogue loop (P51–P64 — «دفتر اليوم», «رسالة الشهر», «ردّ على الكلمة», «أمانة صوتية», «كلمة صوتية», «صدى الأسبوع», «نبض الجهة», «خريطة أثرك», «نسيج الشعبة», «لأن… بصوتك», «نسيج البرنامج», «رسالة إلى نفسي بعد سنة», «يوم تخرّجي — بكلماتي», «أول يوم — قال من سبقك») without breaking its rules — nothing enters evaluation, k ≥ 5 for any aggregate, no names outside the owner's own screen, voice is private/temporary, no server AI, no new cron/env/deps.
 ---
 
-# Athar — the dialogue loop (P51–P63)
+# Athar — the dialogue loop (P51–P64)
 
 Read `docs/ATHAR-DIALOGUE-LOOP-P51-P63-AR.txt` (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
 
@@ -65,6 +65,15 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - **Public face `/g/<code>`** is off by default (`live_public=false` → «خاصّة بصاحبها»); when on, `PUBLIC_DEFAULT = ['line','counts']` and everything else (`name`, each card, `since`) is an explicit opt-in (`public_keys`). `publicFace` never emits email, voice, or hidden cards.
 - «منذ ذلك اليوم» = counts only (`sinceThen`: threads after end, stations reached, letter/envelope opened, days since); cohort line «N من دفعتك ختموا» only at n ≥ 5 live seals (revoked excluded); the org pulse reads `portal_grad_pages` directly (a client-imported lib like `pulse.ts` must not import `lib/grad/store.ts` → `node:crypto` breaks the browser bundle); accreditation evidence `kind:'grad'` under ETEC 3.5 at n ≥ k through `collectEvidence`.
 - The older P39 after-letter is **not migrated**: `lib/letters/legacy.ts` reads `portal_after_letters` read-only, SelfLetter shows it under `sl-legacy`, and the P39 write form in `/me/after` became a door to `/me/letter?door=grad&program=<pid>` (legacy `letter_write` stays dormant, not removed).
+
+## Closing the circle — zero tables (P64 pattern — «أول يوم — قال من سبقك»)
+- **Grep the ancestors first**: «سنة أولى»/«أول يوم» already existed as a P62 door (`DOORS_AR.first_day`) and P38 program excerpts; P64 is a *composition* of P63 (public lines), P38 (`programAfterOf`), P51 (`sendWord` + `meta.welcome`) and P62 (`writeLetter` with `context_key='first_day'`). No migration, no env, no cron key beyond `first_days` (after `grad_days`).
+- **Open with the institution's own word** before any data: `atharWelcome(firstName, programAr)` is a static, human-authored block («شكر وتقدير وأمنيات», signed «— أَثَر»), personalised only by first name (session name → enrollment `full_name` fallback) and program name. Never generated.
+- «قال من سبقك» = `predecessorLines`: `portal_grad_pages` with `live_public=true`, sealed, not revoked, for the program **and every program with the same `name_ar`** (older cohorts under another id); the line comes from the sealed `body.line_ar`, one per `user_id`, shown only at ≥ 5 people, ≤ 7, shuffled by `fnv(program:day)` so order never leaks timing; the payload carries strings only (E2E greps the raw JSON for names/emails/codes). The same function feeds the public program page through `programAfterOf().said` (lazy `import('../first/store')` to avoid the import cycle).
+- «لماذا جئتُ» is a P62 letter, not a new row type: `writeWhy` → `writeLetter({horizon:'grad', program_id, prompt_key:'why_came', context_key:'first_day'})`; `writeLetter` validates it with `validateWhy` (10–160), excludes `first_day` rows from the ≤ 3 sealed limit (server **and** `SelfLetter` client count), one per program, window = start → start+7 days (`firstPhase`: `before|first|week|later`), never retroactive. On graduation day it surfaces as card `first_why` in P63 (`loadSources` splits `caps` by `context_key` so `grad_letter` never mixes with it).
+- Trainer «كلمة الاستقبال» is an ordinary `trainer_word` with `meta.welcome=1` (title «🌅 كلمة الاستقبال من مدرّبك…», url `/me/first?program=`, dedupe `welcome_word:<room>:<email>`), opened from `/me/day?welcome=<classroom_id>` (checkbox `dy-welcome`, exclusive with `dy-grad`); it shows in «أول يوم» and becomes P63 card `welcome`.
+- Cron `runFirstDays`: 🌅 `first_day:<enrollment_id>` (the only pushed one) on `start_date` = today Riyadh; `welcome_word:<classroom_id>` to the trainer one day before; `line_awaits:<grad_row_id>:<day>` to graduates whose line is public when a new cohort of ≥ 5 starts and lines are shown — counts only («سطرك ينتظر N متدرّبًا»), never who read.
+- Program lineage by `name_ar` is deliberate and visible in the code comment; if the institution renames a program the older cohorts simply stop feeding the strip — nothing breaks.
 
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
