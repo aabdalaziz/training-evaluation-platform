@@ -46,7 +46,7 @@ export type LetterState = 'sealed' | 'today' | 'ready' | 'opened';
 /** ما يصل إلى الواجهة — النصّ لا يُرسل قبل الفتح أبدًا */
 export type LetterPublic = {
   id: number; created_at: string; deliver_at: string; horizon: Horizon; state: LetterState; days_left: number; open_hour_ar: string; written_ar: string; opens_ar: string;
-  has_media: boolean; opened_at: string | null; opened_early: boolean; early_days: number | null; prompt_ar: string | null; door_ar: string | null; chain_of: number | null;
+  has_media: boolean; opened_at: string | null; opened_early: boolean; early_days: number | null; prompt_ar: string | null; door_ar: string | null; context_key: string | null /* P64 */; chain_of: number | null;
   body_ar: string | null; media_id: string | null; reply_ar: string | null; reply_media_id: string | null; replied_at: string | null; snapshot_then: unknown; snapshot_now: unknown;
 };
 
@@ -93,10 +93,10 @@ export const horizonAr = (h: Horizon | null | undefined) => HORIZONS.find((x) =>
 /** تحويل صفّ إلى شكل عام — النصّ والصوت يُحجبان ما لم تكن مفتوحة */
 export function toPublicLetter(l: LetterRow, now = new Date()): LetterPublic {
   const st = letterState(l, now); const opened = st.state === 'opened'; const earlyDays = opened && l.opened_early && l.opened_at ? Math.max(1, daysBetween(new Date(l.opened_at), new Date(l.deliver_at))) : null;
-  const prompt = PROMPTS.find((p) => p.key === l.prompt_key)?.ar || null;
+  const prompt = PROMPTS.find((p) => p.key === l.prompt_key)?.ar || (l.prompt_key === 'why_came' ? 'لماذا جئتُ إلى هذا البرنامج؟' /* P64 */ : null);
   return {
     id: Number(l.id), created_at: l.created_at, deliver_at: l.deliver_at, horizon: (l.horizon || '1y') as Horizon, state: st.state, days_left: st.days_left, open_hour_ar: openHourAr(l.deliver_at), written_ar: fmtDayAr(l.created_at), opens_ar: fmtDayAr(l.deliver_at),
-    has_media: !!l.media_id, opened_at: l.opened_at || null, opened_early: !!l.opened_early, early_days: earlyDays, prompt_ar: prompt, door_ar: l.context_key ? DOORS_AR[l.context_key] || null : null, chain_of: l.chain_of ? Number(l.chain_of) : null,
+    has_media: !!l.media_id, opened_at: l.opened_at || null, opened_early: !!l.opened_early, early_days: earlyDays, prompt_ar: prompt, door_ar: l.context_key ? DOORS_AR[l.context_key] || null : null, context_key: l.context_key || null, chain_of: l.chain_of ? Number(l.chain_of) : null,
     body_ar: opened ? l.body_ar : null, media_id: opened ? l.media_id : null, reply_ar: opened ? l.reply_ar || null : null, reply_media_id: opened ? l.reply_media_id || null : null, replied_at: l.replied_at || null, snapshot_then: opened ? l.snapshot_then ?? null : null, snapshot_now: opened ? l.snapshot_now ?? null : null,
   };
 }

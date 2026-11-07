@@ -10,6 +10,7 @@ import { loadJourney } from '../journey/load';
 import { capsuleSnapshot } from '../journey/registry';
 import { CAPSULE_COLS } from '../journey/cron';
 import { deliverAt, validateLetter, validateReply, validateCohortLine, toPublicLetter, mirrorOf, cohortEnvelope, cohortOpensAt, letterState, todayNoticeText, LETTER_LIMITS, LETTER_PATH, dayKeyRiyadh } from './self';
+import { validateWhy } from '../first/registry'; /* P64 */
 import type { LetterRow, LetterPublic, Horizon } from './self';
 
 type Db = any;
@@ -56,10 +57,12 @@ async function removeMedia(db: Db, me: Me, mediaId: string | null | undefined): 
 
 export type WriteBody = { body_ar?: string; media_id?: string | null; horizon?: Horizon; program_id?: string | null; prompt_key?: string | null; context_key?: string | null; chain_of?: number | null };
 export async function writeLetter(db: Db, me: Me, b: WriteBody, now = new Date()): Promise<{ ok: true; letter: LetterPublic; deliver_at: string } | Fail> {
-  const v = validateLetter(b); if (v) return fail(v);
+  /* P64: سطر «لماذا جئتُ» (context_key = first_day) — سطر قصير 10–160 بأفق التخرّج؛ لا يُحسب ضمن الرسائل الثلاث */
+  const firstDay = String(b.context_key || '') === 'first_day'; if (firstDay && (b.horizon || 'grad') !== 'grad') return fail('سطر أول يوم يُختم إلى يوم التخرّج فقط');
+  const v = firstDay ? validateWhy(b) : validateLetter(b); if (v) return fail(v);
   const horizon: Horizon = (b.horizon || '1y') as Horizon;
-  const rows = await rowsOf(db, me); const sealed = rows.filter((r) => (r.scope || 'self') === 'self' && !r.opened_at && r.status !== 'cancelled');
-  if (sealed.length >= LETTER_LIMITS.maxSealed) return fail(`لديك ${LETTER_LIMITS.maxSealed} رسائل مختومة — افتح إحداها في موعدها أو احذفها قبل أن تكتب رابعة`, 409);
+  const rows = await rowsOf(db, me); const sealed = rows.filter((r) => (r.scope || 'self') === 'self' && !r.opened_at && r.status !== 'cancelled' && String(r.context_key || '') !== 'first_day');
+  if (!firstDay && sealed.length >= LETTER_LIMITS.maxSealed) return fail(`لديك ${LETTER_LIMITS.maxSealed} رسائل مختومة — افتح إحداها في موعدها أو احذفها قبل أن تكتب رابعة`, 409);
   let programEnd: string | null = null; let programId: string | null = null;
   if (horizon === 'grad') { const ps = await myPrograms(db, me); const p = ps.find((x) => x.id === String(b.program_id || '')) || ps.filter((x) => x.end_date && String(x.end_date).slice(0, 10) > now.toISOString().slice(0, 10)).sort((a, c) => String(a.end_date).localeCompare(String(c.end_date)))[0]; if (!p) return fail('لست منسوبًا إلى برنامج له تاريخ نهاية — اختر أفقًا آخر'); programEnd = p.end_date; programId = p.id; }
   const d = deliverAt(now, horizon, programEnd); if (!d.ok) return fail(d.error);

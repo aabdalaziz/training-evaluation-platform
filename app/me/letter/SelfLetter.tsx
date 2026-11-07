@@ -56,8 +56,8 @@ export default function SelfLetter() {
   async function play(mediaId: string) { if (audio[mediaId]) return; const j = await fetch(`/api/media?id=${encodeURIComponent(mediaId)}`, { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success && j.url) setAudio((a) => ({ ...a, [mediaId]: j.url })); else setErr('تعذّر فتح التسجيل'); }
   const startNext = (from: LetterPublic) => { setChainOf(from.id); setWriting(true); setHorizon('1y'); setTimeout(() => document.getElementById('sl-write')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); };
 
-  const sealed = (d?.letters || []).filter((l) => l.state !== 'opened'); const past = (d?.letters || []).filter((l) => l.state === 'opened');
-  const canSeal = !!d && (body.trim().length >= d.limits.minChars || !!media) && !busy && sealed.length < d.limits.maxSealed;
+  const sealed = (d?.letters || []).filter((l) => l.state !== 'opened'); const sealedCount = sealed.filter((l) => l.context_key !== 'first_day').length; /* P64: سطر أول يوم يُعرض ولا يُحسب ضمن الثلاث */ const past = (d?.letters || []).filter((l) => l.state === 'opened');
+  const canSeal = !!d && (body.trim().length >= d.limits.minChars || !!media) && !busy && sealedCount < d.limits.maxSealed;
   const gradOk = !!d && d.programs.some((p) => p.end_date && p.end_date > (d.now || '').slice(0, 10));
   return <main className="sl" dir="rtl" data-testid="sl-root" data-sealed={sealed.length}>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />

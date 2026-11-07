@@ -3,7 +3,7 @@
 /**
  * P63 «يوم تخرّجي — بكلماتي» — مكتب الخرّيج (يُحمَّل ديناميكيًا بلا SSR)
  *  1) الرأس: البرنامج · التاريخ · «اليوم يومك» إن كان اليوم · اختيار برنامج آخر منتهٍ
- *  2) «بكلماتي»: بطاقات مما كتبه صاحبها بيده (كلمة الوداع من مدرّبه وحدها الاستثناء) — أُبقي/أُخفي لكل بطاقة
+ *  2) «بكلماتي»: بطاقات مما كتبه صاحبها بيده (كلمة الوداع وكلمة الاستقبال من مدرّبه هما الاستثناء) — أُبقي/أُخفي لكل بطاقة · P64: بطاقة «ما كتبتُه أول يوم»
  *  3) «سطر التخرّج» (≤ 160) + 🎙️ ≤ 15 ث يبقى معه → «اختم صفحتي» → رمز ATH-GD + وجه عام خاصّ افتراضيًا (السطر والأعداد فقط حين يُفتح)
  *  4) «منذ ذلك اليوم»: أعداد حيّة بعد الختم · «N من دفعتك ختموا» (k ≥ 5) · رسالة P39 القديمة إن وُجدت (قراءة فقط)
  *  testids: gd-root[data-phase][data-sealed] gd-err gd-ok gd-prog gd-today gd-cards gd-card[data-key][data-keep] gd-keep gd-line gd-line-save gd-voice-start gd-voice-hear gd-voice-del
@@ -135,7 +135,7 @@ const CSS = `
 .gd-today{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-radius:16px;padding:14px 18px;margin:0 0 12px;font-size:16px;line-height:1.9;color:#78350f}
 .gd-box{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px 18px;margin:0 0 12px}.gd-box h2{margin:0 0 8px;font-size:18px;color:#0f2a4e;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.gd-box h2 small{font-weight:600;font-size:12px}
 .gd-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.gd-card{border:1px solid #e2e8f0;border-radius:14px;padding:12px 14px;background:#f8fafc;min-width:0}.gd-card.off{opacity:.45;background:#fff;border-style:dashed}.gd-card header{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}.gd-card header b{color:#0f2a4e;font-size:14px}
-.gd-card.k-farewell{background:linear-gradient(160deg,#fffbeb,#fff);border-color:#fcd34d}.gd-card-text{margin:4px 0;font-size:16px;line-height:1.9;color:#3b1d0e;font-weight:600}.gd-items{list-style:none;padding:0;margin:0;display:grid;gap:6px}.gd-items li{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;font-size:14px;line-height:1.7}.gd-items li small{display:block;color:#94a3b8;font-size:11px}
+.gd-card.k-farewell,.gd-card.k-welcome{background:linear-gradient(160deg,#fffbeb,#fff);border-color:#fcd34d}.gd-card.k-first_why{background:linear-gradient(160deg,#eff6ff,#fff);border-color:#bfdbfe}.gd-card-text{margin:4px 0;font-size:16px;line-height:1.9;color:#3b1d0e;font-weight:600}.gd-items{list-style:none;padding:0;margin:0;display:grid;gap:6px}.gd-items li{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;font-size:14px;line-height:1.7}.gd-items li small{display:block;color:#94a3b8;font-size:11px}
 .gd-counts{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;color:#475569;font-size:13px;font-weight:700}
 .gd-linebox{border-color:#fde68a}.gd-prompt{margin:0 0 6px;color:#9a3412;font-weight:800;font-size:15px}.gd-ta{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font:inherit;font-size:17px;line-height:1.8;resize:vertical;min-height:64px}.gd-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}.gd-audio{width:100%;margin-top:8px}
 .gd-linkbtn{background:none;border:0;color:#0f2a4e;font:inherit;font-weight:800;cursor:pointer;text-decoration:underline;padding:0}.gd-linkbtn:disabled{opacity:.5;cursor:default}

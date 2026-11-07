@@ -5,6 +5,7 @@
  *  <ProgramAfter programId>     صفحة البرنامج العامة: «ما قاله من تدرّب هنا» — من خمسة متدرّبين كتبوا محطة الأشهر الثلاثة؛ كلمات لا نسب؛ اقتباسات اعتمدها إنسان
  *  <CredentialChapters code>    الشهادة الحيّة: «فصول بعد البرنامج» التي أظهرها صاحبها
  *  <OrgAfterLine orgId token>   /org (لوحة الأثر): سطر واحد عن المنسوبين (k≥5) — سطر لا رسم
+ *  P64 «قال من سبقك»: صفحة البرنامج تضيف سطور تخرّج الخرّيجين (الوجه العام من P63) — خمسة أشخاص على الأقل، سبعة سطور كحدّ، بلا أسماء
  *  P39 «أصوات حول الشهادة»: صفحة البرنامج تضيف «وردّ البرنامج بورشة تطبيق» · «وقالت الجهة» · سطر القياس من خمسة؛
  *  <OrgStations orgId token>    /org: «محطة الجهة» — بعد سنة تكتب الجهة سطرها هي (حالة بالكلمات + نصّ) لكل برنامج فيه خمسة من منسوبيها
  */
@@ -24,6 +25,8 @@ export function ProgramAfter({ programId, lang = 'ar' }: { programId: string; la
     <p className="pa-line" data-testid="pa-line">{d.line_ar}</p>
     {d.shown && <ul className="pa-states" data-testid="pa-states">{(d.states || []).filter((s: any) => s.n > 0).map((s: any) => <li key={s.key}><b>{s.ar}</b><span>{s.band_ar}</span></li>)}</ul>}
     {d.shown && (d.excerpts || []).length > 0 && <div className="pa-ex" data-testid="pa-excerpts">{d.excerpts.map((x: any, i: number) => <blockquote key={i}><small>{x.station === 30 ? 'بعد شهر' : x.station === 90 ? 'بعد ثلاثة أشهر' : 'بعد سنة'} · {x.state === 'applied' ? 'طبّقته' : x.state === 'partly' ? 'طبّقته جزئيًا' : x.state === 'no_chance' ? 'لم تسنح الفرصة' : 'لم ينفعني'}</small>{x.text_ar}{x.witness_text && <em>— {ar ? 'شهد مشرف' : 'witness'}: «{x.witness_text}»</em>}</blockquote>)}</div>}
+    {d.said?.shown && (d.said.lines || []).length > 0 && <div className="pa-said" data-testid="pa-said" data-n={d.said.n}><h4>{ar ? 'قال من سبقك' : 'Said by those before you'} <small>{ar ? `— سطور تخرّج من ${d.said.n} خرّيجًا، بلا أسماء` : `— graduation lines from ${d.said.n} graduates, no names`}</small></h4>
+      <ul>{d.said.lines.map((l: string, i: number) => <li key={i} data-testid="pa-said-line">«{l}»</li>)}</ul></div>}
     {(d.offer_line_ar || (d.org_said || []).length > 0 || d.measure_line_ar) && <div className="pa-voices" data-testid="pa-voices">
       {d.offer_line_ar && <p className="pa-voice" data-testid="pa-offer-line"><Icon name="users" size={14} /> {d.offer_line_ar}</p>}
       {(d.org_said || []).map((o: any, i: number) => <blockquote key={i} className="pa-orgsaid" data-testid="pa-org-said"><small>{P39_NAMES_AR.org_said} — {o.org_ar} · {o.state_ar}</small>{o.text_ar}</blockquote>)}
@@ -80,6 +83,7 @@ export function OrgStations({ orgId, token, lang = 'ar' }: { orgId: string; toke
 }
 
 const CSS = `
+.pa-said{margin:10px 0 4px;border-top:1px dashed #e2e8f0;padding-top:8px}.pa-said h4{margin:0 0 6px;font-size:14px;color:#9a3412}.pa-said h4 small{font-weight:600;color:#64748b;font-size:12px}.pa-said ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}.pa-said li{background:linear-gradient(160deg,#fffbeb,#fff);border:1px solid #fde68a;border-radius:12px;padding:8px 12px;font-size:15px;line-height:1.8;color:#3b1d0e;font-weight:600}
 .pa-lv{list-style:none;margin:.4rem 0;padding:0;display:grid;gap:.3rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.pa-lv li{display:flex;justify-content:space-between;gap:.5rem;border:1px solid #e5e8ef;border-radius:8px;padding:.3rem .55rem;background:#fff;font-size:.9rem}.pa-lv li b{color:#0b8a83}.pa-lv li[data-level="0"] b{color:#94a3b8}.pa-lv li[data-level="5"] b,.pa-lv li[data-level="4"] b{color:#9a6b00}
 .pa-voices{display:grid;gap:8px;margin:8px 0}.pa-voice{margin:0;color:#0f2a4e;font-weight:700;line-height:1.9;display:flex;gap:6px;align-items:flex-start}.pa-orgsaid{margin:0;padding:8px 12px;border-inline-start:3px solid #0f2a4e;background:#f8fafc;border-radius:8px;line-height:1.9;color:#1f2937}.pa-orgsaid small{display:block;color:#0b6f69;font-weight:800;font-size:12px;margin-bottom:2px}
 .pa-orgst{border:1.5px solid #e2e8f0;border-radius:16px;padding:14px 16px;background:#fff;margin-top:14px}.pa-orgst h3{margin:0 0 6px;font-size:17px;color:#0f2a4e;display:flex;gap:8px;align-items:center}.pa-orgl{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:10px}.pa-orgi{border:1.5px solid #e2e8f0;border-radius:12px;padding:10px 12px;display:grid;gap:8px}.pa-orgi.open{border-color:#0b8a83;background:#f0fdfa}.pa-orgi.written{border-color:#c9a24b}

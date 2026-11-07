@@ -58,16 +58,18 @@ export async function loadSources(db: Db, me: Me, p: Pick<GradProgram, 'id' | 'e
     safe<any[]>(db.from('portal_map_threads').select('from_key,to_key,rule,status,note_ar,decided_at').eq('email', email).limit(500), []),
     safe<any[]>(db.from('portal_word_replies').select('text,created_at,meta').eq('learner_email', email).limit(300), []),
     loadJourney(db, me, now.getTime(), false).catch(() => ({ chapters: [] as any[] })),
-    safe<any[]>(db.from('portal_time_capsules').select('id,scope,horizon,program_id,body_ar,created_at,deliver_at,opened_at,status').eq('user_id', me.id).eq('program_id', p.id).neq('status', 'cancelled').limit(20), []),
+    safe<any[]>(db.from('portal_time_capsules').select('id,scope,horizon,program_id,body_ar,created_at,deliver_at,opened_at,status,context_key').eq('user_id', me.id).eq('program_id', p.id).neq('status', 'cancelled').limit(20), []),
     safe<any[]>(db.from('portal_map_snapshots').select('code,created_at,is_public,revoked_at').eq('user_id', me.id).is('revoked_at', null).order('created_at', { ascending: false }).limit(1), []),
     safe<any[]>(db.from('classrooms').select('id').eq('program_id', p.id).limit(50), []),
     safe<any[]>(db.from('portal_after_stations').select('station,written_at').eq('enrollment_id', p.enrollment_id).limit(10), []),
   ]);
   const roomIds = new Set(rooms.map((r) => String(r.id)));
-  let farewell: Sources['farewell'] = null;
+  let farewell: Sources['farewell'] = null; let welcome: Sources['welcome'] = null; /* P64: كلمة الاستقبال (meta.welcome) تُقرأ من الإشعارات نفسها */
   try { const { data: n } = await db.from('portal_learner_notices').select('body_ar,title_ar,created_at,ref_id,meta').eq('email', email).eq('kind', 'trainer_word').order('created_at', { ascending: false }).limit(60);
-    const f = arr<any>(n).find((x) => x.meta && (x.meta as any).grad && (!x.ref_id || roomIds.has(String(x.ref_id)))); if (f) farewell = { text_ar: String(f.body_ar || ''), at: String(f.created_at), voice_sec: f.meta?.voice?.sec ? Number(f.meta.voice.sec) : null, trainer_ar: String(f.title_ar || '').replace(/^🎓\s*/, '').replace(/^كلمة الوداع من مدرّبك\s*/, '').trim() || null }; } catch { farewell = null; }
-  const cohort = caps.find((c) => c.scope === 'cohort') || null; const letter = caps.filter((c) => (c.scope || 'self') === 'self' && c.horizon === 'grad').sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0] || null;
+    const f = arr<any>(n).find((x) => x.meta && (x.meta as any).grad && (!x.ref_id || roomIds.has(String(x.ref_id))));
+    const w = arr<any>(n).find((x) => x.meta && (x.meta as any).welcome && (!x.ref_id || roomIds.has(String(x.ref_id)))); if (w) welcome = { text_ar: String(w.body_ar || ''), at: String(w.created_at), voice_sec: w.meta?.voice?.sec ? Number(w.meta.voice.sec) : null, trainer_ar: String(w.title_ar || '').replace(/^🌅\s*/, '').replace(/^كلمة الاستقبال من مدرّبك\s*/, '').trim() || null }; if (f) farewell = { text_ar: String(f.body_ar || ''), at: String(f.created_at), voice_sec: f.meta?.voice?.sec ? Number(f.meta.voice.sec) : null, trainer_ar: String(f.title_ar || '').replace(/^🎓\s*/, '').replace(/^كلمة الوداع من مدرّبك\s*/, '').trim() || null }; } catch { farewell = null; }
+  const cohort = caps.find((c) => c.scope === 'cohort') || null; const firstWhy = caps.find((c) => (c.scope || 'self') === 'self' && String(c.context_key || '') === 'first_day') || null; /* P64 */
+  const letter = caps.filter((c) => (c.scope || 'self') === 'self' && c.horizon === 'grad' && String(c.context_key || '') !== 'first_day').sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))[0] || null;
   const st = letter ? letterState({ deliver_at: letter.deliver_at, opened_at: letter.opened_at, created_at: letter.created_at }, now) : null;
   const end = `${p.end_date}T23:59:59Z`;
   let cohort_opened = false; try { const opens = cohortOpensAt(p.end_date); if (now.getTime() >= opens.getTime()) { const { count } = await db.from('portal_time_capsules').select('id', { count: 'exact', head: true }).eq('scope', 'cohort').eq('program_id', p.id).neq('status', 'cancelled'); cohort_opened = Number(count || 0) >= LETTER_LIMITS.kCohort; } } catch { cohort_opened = false; }
@@ -78,7 +80,7 @@ export async function loadSources(db: Db, me: Me, p: Pick<GradProgram, 'id' | 'e
     cohort_line: cohort ? { body_ar: String(cohort.body_ar || ''), created_at: String(cohort.created_at) } : null,
     grad_letter: letter && st ? { id: Number(letter.id), state: st.state, opens_ar: fmtIsoAr(letter.deliver_at), open_hour_ar: openHourAr(letter.deliver_at) } : null,
     map_code: snaps[0] ? { code: String(snaps[0].code), created_at: String(snaps[0].created_at), is_public: !!snaps[0].is_public } : null,
-    farewell, stations: stations.map((s) => ({ station: Number(s.station) as 30 | 90 | 365, written: !!s.written_at })), cohort_opened,
+    farewell, welcome, first_why: firstWhy ? { id: Number(firstWhy.id), body_ar: firstWhy.opened_at ? String(firstWhy.body_ar || '') : null, at: String(firstWhy.created_at), state: letterState(firstWhy, now).state, opens_ar: fmtIsoAr(firstWhy.deliver_at) } : null, stations: stations.map((s) => ({ station: Number(s.station) as 30 | 90 | 365, written: !!s.written_at })), cohort_opened,
     threads_after: threads.filter((t) => t.status === 'kept' && t.decided_at && String(t.decided_at) > end).length,
   };
 }

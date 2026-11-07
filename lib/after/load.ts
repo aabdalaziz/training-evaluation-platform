@@ -98,7 +98,10 @@ export async function programAfterOf(db: any, programId: string, now = new Date(
   /* P39: أصوات حول الشهادة — سطر البرنامج (ردّ بورشة) · ما قالته الجهة (بإذنها) · سطر القياس (من خمسة) */
   const p = await safe<any>(db.from('programs').select('id,end_date').eq('id', programId).maybeSingle(), null);
   const [offer_line_ar, org_said, measure] = await Promise.all([programOfferLine(db, programId), orgSaidFor(db, programId), programMeasure(db, programId, p?.end_date ? String(p.end_date).slice(0, 10) : null)]);
-  return { ...base, offer_line_ar, org_said, measure_line_ar: measure.shown ? measure.line_ar : null, measured_n: measure.n };
+  /* P64 «قال من سبقك»: سطور تخرّج P63 التي أظهر أصحابها وجهها العام — k ≥ 5 أشخاص · ≤ 7 · خلط يومي · بلا أسماء (استيراد كسول لتجنّب الدور) */
+  let said: { shown: boolean; n: number; lines: string[] } = { shown: false, n: 0, lines: [] };
+  try { const { predecessorLines } = await import('../first/store'); const pn = await safe<any>(db.from('programs').select('name_ar').eq('id', programId).maybeSingle(), null); said = await predecessorLines(db, programId, pn?.name_ar ? String(pn.name_ar) : null, now); } catch { /* الشريط اختياري */ }
+  return { ...base, offer_line_ar, org_said, measure_line_ar: measure.shown ? measure.line_ar : null, measured_n: measure.n, said };
 }
 /** سطر الجهة — منسوبوها المؤكَّدون */
 export async function orgAfterOf(db: any, orgId: string) {

@@ -122,3 +122,4 @@ import './p60-map-voice.test';
 import './p61-program-weave.test'; /* P61 «نسيج البرنامج» */
 import './p62-self-letter.test'; /* P62 «رسالة إلى نفسي بعد سنة» */
 import './p63-grad-day.test'; /* P63 «يوم تخرّجي — بكلماتي» */
+import './p64-first-day.test'; /* P64 «أول يوم — قال من سبقك» */

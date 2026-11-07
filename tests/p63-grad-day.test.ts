@@ -38,7 +38,7 @@ test('P63 · الأسماء والحدود والرمز والمفاتيح', () 
   assert.equal(P63_NAMES_AR.title, 'يوم تخرّجي'); assert.equal(P63_NAMES_AR.words, 'بكلماتي'); assert.equal(P63_NAMES_AR.official_ar, 'صفحة التخرّج الذاتية للمتدرّب'); assert.equal(P63_NAMES_AR.official_en, 'Learner-authored graduation page');
   assert.equal(GRAD_LIMITS.lineMax, 160, 'حدّ سطر الدفعة نفسه'); assert.equal(GRAD_LIMITS.voiceSec, 15); assert.equal(GRAD_LIMITS.k, 5); assert.equal(GRAD_LIMITS.farewellBeforeDays, 3);
   for (let i = 0; i < 20; i++) assert.match(gradCode(), CODE_RE); assert.ok(!CODE_RE.test('ATH-MP-AAAA-BBBB'), 'عائلة مستقلّة'); assert.ok(!CODE_RE.test('ATH-GD-0000-1111'), 'بلا 0 و1');
-  assert.deepEqual(CARD_KEYS, ['farewell', 'first_because', 'replies', 'chapters', 'cohort_line', 'grad_letter', 'map_code']); assert.deepEqual(PUBLIC_DEFAULT, ['line', 'counts']); assert.ok(PUBLIC_KEYS.includes('since') && !PUBLIC_KEYS.includes('voice' as any) && !PUBLIC_KEYS.includes('grad_letter' as any), 'لا مفتاح للصوت ولا لرسالة P62');
+  assert.deepEqual(CARD_KEYS, ['farewell', 'welcome', 'first_why', 'first_because', 'replies', 'chapters', 'cohort_line', 'grad_letter', 'map_code']); /* P64 أضاف welcome · first_why */ assert.deepEqual(PUBLIC_DEFAULT, ['line', 'counts']); assert.ok(PUBLIC_KEYS.includes('since') && !PUBLIC_KEYS.includes('voice' as any) && !PUBLIC_KEYS.includes('grad_letter' as any), 'لا مفتاح للصوت ولا لرسالة P62');
   assert.match(GRAD_COLS, /line_voice,keep,public_keys,live_public,body,code,digest,history,sealed_at,revoked_at/);
 });
 

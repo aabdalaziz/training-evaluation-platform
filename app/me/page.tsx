@@ -121,6 +121,7 @@ export default function MePage() {
         <a className="me-tablink" href="/me/journey"><Icon name="compass" size={16} /> رحلتي</a>
         <a className="me-tablink" href="/me/athar-map" data-testid="me-athar-map"><Icon name="spark" size={16} /> خريطة أثرك</a>
         <a className="me-tablink" href="/me/letter" data-testid="me-letter"><Icon name="mail" size={16} /> رسالة إلى نفسي</a>
+        <a className="me-tablink" href="/me/first" data-testid="me-first"><Icon name="spark" size={16} /> أول يوم</a>
         <a className="me-tablink" href="/me/grad" data-testid="me-grad"><Icon name="award" size={16} /> يوم تخرّجي</a>
         <a className="me-tablink" href="/me/horizon"><Icon name="flag" size={16} /> أفقي</a>
         <a className="me-tablink" href="/me/pair"><Icon name="users" size={16} /> عهدان متقابلان</a>
