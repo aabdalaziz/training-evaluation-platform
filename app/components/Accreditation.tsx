@@ -235,6 +235,7 @@ export function ProgramWeavePanel({ w, program_ar }: { w: any; program_ar: strin
     <h2>🧶 {P61_NAMES_AR.title} — {P61_NAMES_AR.sub} <small className="pt-muted">· {P61_NAMES_AR.official}</small></h2>
     <p className="ac-lead">{P61_NAMES_AR.motto}. كل خيط هنا كتبه متدرّب بيده في «خريطة أثره» («هذا قاد إلى ذاك — لأن…»)؛ الملف يَعُدّ ولا يَقتبس: لا أسماء، لا جُمل، لا عدد تحت {K_PROGRAM}. لا يدخل شيء من هذا في تقييم أحد.</p>
     <ul className="ac-weave-mirror" data-testid="ac-weave-mirror">{(w.mirror?.lines_ar || []).map((l: string, i: number) => <li key={i} data-testid="ac-weave-line">{l}</li>)}</ul>
+    <p className="ac-weave-line" data-testid="ac-letter-door">✉️ وأنت؟ ما الذي ترجو أن يكون خيطك بعد سنة؟ <Link href="/me/letter?door=weave">اكتب رسالة إلى نفسك</Link> — تعود إليك وحدك، في ساعة كتابتها.</p>
     {w.below_k && <p className="ac-task" data-testid="ac-weave-belowk"><Icon name="target" size={12} /> حين يبلغ الناسجون {K_PROGRAM} تظهر الخيوط والجديلة والدفعات — والدليل يعلّق نفسه تحت معياره تلقائيًا.</p>}
     {w.threads?.length > 0 && <>
       <h3>الخيوط ({w.threads.length}) — سماكة الخيط عدد ناسجيه</h3>

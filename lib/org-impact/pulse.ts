@@ -26,6 +26,7 @@ export type OrgPulse = {
   peak_week: string | null; peak_week_ar: string | null; k: boolean;
   line_ar: string | null; mirror_ar: string; ask_ar: string | null;
   thread_ar?: string | null; /* P59: «أقوى خيط نسجه منسوبوكم» من خريطة أثرك — k ≥ 5 ناسجين، وإلا لا يظهر */
+  letters_ar?: string | null; /* P62: «N من منسوبيكم كتبوا رسائل إلى أنفسهم» — عدد كُتّاب فقط (k ≥ 5)، لا محتوى ولا أفق */
 };
 
 const norm = (e: unknown) => String(e || '').trim().toLowerCase();
@@ -100,5 +101,11 @@ export async function orgPulse(db: Db, members: Set<string>, range: { from: stri
     for (const part of chunk(mem)) { const { data: t } = await db.from('portal_map_threads').select('email, rule').eq('status', 'kept').in('email', part).gte('decided_at', range.from).lt('decided_at', range.to).limit(5000); rows.push(...arr<{ email: string; rule: string }>(t).filter((x) => members.has(norm(x.email)))); }
     const top = orgStrongestThread(rows); pulse.thread_ar = top ? top.line_ar : null;
   } catch { pulse.thread_ar = null; }
+  /* P62: كم منسوبًا كتب «رسالة إلى نفسي» خلال الشهر — عدد الكُتّاب فقط (k ≥ 5)؛ الرسائل نفسها لا تسافر */
+  try {
+    const { pulseLetterLine } = await import('../letters/self'); const writers = new Set<string>();
+    for (const part of chunk(mem)) { const { data: l } = await db.from('portal_time_capsules').select('email').in('email', part).neq('status', 'cancelled').gte('created_at', range.from).lt('created_at', range.to).limit(5000); for (const x of arr<{ email: string }>(l)) if (members.has(norm(x.email))) writers.add(norm(x.email)); }
+    pulse.letters_ar = pulseLetterLine(writers.size);
+  } catch { pulse.letters_ar = null; }
   return pulse;
 }

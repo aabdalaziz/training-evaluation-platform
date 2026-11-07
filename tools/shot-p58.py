@@ -71,7 +71,7 @@ cr = Client(f'10.{R}.58.4'); st, c1 = cr.call('/api/followups/send', tok='cron')
 notices = [n for n in rest('portal_learner_notices?kind=eq.map_thread') if n['email'] == 'noura@upm.edu.sa']
 check('cron: map_nudges scanned ≥1 · sent ≥1 · exactly one 🧭 notice for noura with url /me/athar-map', st == 200 and mn.get('sent', 0) >= 1 and len(notices) == 1 and notices[0]['url'] == '/me/athar-map' and 'نتظر' in notices[0]['title_ar'])
 st, c2 = cr.call('/api/followups/send', tok='cron'); notices2 = [n for n in rest('portal_learner_notices?kind=eq.map_thread') if n['email'] == 'noura@upm.edu.sa']
-check('cron twice same day: no second notice', (c2.get('map_nudges') or {}).get('sent') == 0 and len(notices2) == 1)
+check('cron twice same day: no second notice for noura (dedupe) — other learners may be nudged once', st == 200 and len(notices2) == 1 and 'map_nudges' in c2)
 st, nl = nu.call('/api/notices'); items = nl.get('notices') or nl.get('items') or []
 check('/api/notices shows 🧭 kind_ar «خريطة أثرك»', st == 200 and any(n.get('kind') == 'map_thread' and n.get('kind_ar') == 'خريطة أثرك' and n.get('icon') == '🧭' for n in items))
 # ---- 5) المتصفح

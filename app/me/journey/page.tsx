@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { Icon, type IconName } from '../../../lib/ui/icons';
 import { PortalShell, useLang } from '../../components/PortalShell';
 import { fastToken } from '../../components/Pocket';
-import { Channel, ReadAloud } from '../../components/Channel';
+import { Channel } from '../../components/Channel';
 import { supabase } from '../../../lib/supabase/client';
 
 type Chapter = { key: string; kind: string; at: string; title_ar: string; what_ar: string; quote_ar: string | null; level: { skill_ar: string; to: number; from: number | null } | null; peers?: { people: number; org_name: string; quarter: string } | null };
@@ -21,7 +21,6 @@ type Data = { me: { name: string; email: string }; journey: { chapters: Chapter[
 const fmt = (iso: string | null | undefined, style: 'medium' | 'long' = 'medium') => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: style }) : '—');
 const KIND_ICON: Record<string, IconName> = { placement: 'compass', daily: 'calendar', simulation: 'play', mission: 'flag', council: 'users', return: 'refresh', attestation: 'star', level: 'trend', credential: 'certificate', badge: 'award', horizon: 'flag', pair: 'users' };
 const KIND_AR: Record<string, string> = { placement: 'تحديد المستوى', daily: 'كل يوم مهارة', simulation: 'محاكاة', mission: 'مهمة ميدانية', council: 'مجلس', return: 'عودة', attestation: 'شهادة قرين', level: 'مستوى معتمد', credential: 'اعتماد', badge: 'شارة', horizon: 'أفقي', pair: 'عهد متقابل', org_pair: 'عهد مع جهتي' };
-const daysUntil = (iso: string) => Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 864e5));
 
 export default function MyJourneyPage() { return <PortalShell><Inner /></PortalShell>; }
 function Inner() {
@@ -29,7 +28,6 @@ function Inner() {
   const [tok, setTok] = useState<string | null>(null); const [d, setD] = useState<Data | null>(null); const [err, setErr] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState('');
   const [tab, setTab] = useState<'river' | 'share' | 'capsule'>('river'); const [editing, setEditing] = useState<string>(''); const [note, setNote] = useState({ body: '', media_id: '' });
   const [sel, setSel] = useState<Record<string, boolean>>({}); const [shareOpt, setShareOpt] = useState({ name_mode: 'full' as 'full' | 'short', include_quotes: true, intro_ar: '' }); const [introSrc, setIntroSrc] = useState(''); const [lastShare, setLastShare] = useState<{ url: string; verify_url: string | null } | null>(null);
-  const [cap, setCap] = useState({ body: '', media_id: '' });
   useEffect(() => { fastToken(db).then(t => setTok(t || '')); }, [db]);
   useEffect(() => { if (typeof window !== 'undefined' && window.location.hash === '#capsules') setTab('capsule'); }, []);
   const load = useCallback(async (t: string) => { const j = await fetch('/api/journey', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null); if (j?.success) { setD(j); setErr(''); } else setErr(j?.error || 'تعذّر فتح الرحلة'); }, []);
@@ -117,25 +115,11 @@ function Inner() {
 
         {tab === 'capsule' && (
           <section className="jr-stack" id="capsules">
-            <div className="pt-box jr-cap">
-              <h2>رسالة إلى نفسي بعد سنة</h2>
-              <p className="jr-muted">تكتب أو تسجّل اليوم، وتُختم. بعد {d.rules.capsule_days} يومًا تصلك على قنواتك مع لقطتين: «أين كنت» يوم كتبتها و«أين صرت» يوم وصلت. لا يقرؤها أحد غيرك.</p>
-              {sealed ? (
-                <div className="jr-sealed" data-testid="sealed"><Icon name="clock" size={22} /><div><b>رسالتك مختومة</b><p>تصلك في {fmt(sealed.deliver_at, 'long')} — بعد {daysUntil(sealed.deliver_at)} يومًا. يومها كانت رحلتك {sealed.snapshot_then?.chapters ?? 0} فصلًا.</p><button className="pt-btn ghost small" disabled={!!busy} onClick={() => { if (confirm('فتح الختم وإلغاء الرسالة؟ لن تُسلَّم.')) act({ action: 'capsule_cancel', id: sealed.id }); }} data-testid="capsule-cancel">ألغِ الرسالة</button></div></div>
-              ) : (<>
-                <Channel lang={lang} value={cap.body} onChange={v => setCap({ ...cap, body: v })} tok={tok || undefined} context={{ type: 'free', id: 'time_capsule', title: 'رسالة إلى نفسي بعد سنة' }} rows={7} maxLength={d.rules.capsule_max} placeholder="إلى نفسي بعد سنة: ما الذي أرجو أن أكون قد تعلّمته؟ ما الذي أخشاه الآن؟ ما الذي أعدُ به؟ اكتب أو تكلّم…" onMedia={m => setCap(s => ({ ...s, media_id: m.id }))} testId="capsule-channel" />
-                <p className="jr-muted">{cap.body.trim().length}/{d.rules.capsule_max} · الحد الأدنى {d.rules.capsule_min} حرفًا (أو تسجيل)</p>
-                <button className="pt-btn gold" disabled={!!busy || (cap.body.trim().length < d.rules.capsule_min && !cap.media_id)} onClick={async () => { if (!confirm('تُختم الرسالة الآن ولا تُقرأ حتى موعدها. متابعة؟')) return; const j = await act({ action: 'capsule', body_ar: cap.body, media_id: cap.media_id || null, kind: cap.media_id ? 'audio' : 'text', confirm: true }); if (j.success) setCap({ body: '', media_id: '' }); }} data-testid="capsule-seal"><Icon name="mail" size={15} /> اختم الرسالة</button>
-              </>)}
+            <div className="pt-box jr-cap" data-testid="jr-capsule-link">
+              <h2>رسالة إلى نفسي بعد سنة <small style={{ color: '#b45309', fontSize: 13 }}>إلى مَن سأكون</small></h2>
+              <p className="jr-muted">صارت لها صفحتها: آفاق (3 أشهر · 6 أشهر · سنة · عند تخرّجي)، تُفتح في ساعة كتابتها نفسها مع «ما حدث فعلًا»، وردّ على نفسك القديمة، و«سلسلة سنواتي»، و«رسالة الدفعة». {sealed ? `لديك رسالة مختومة تُفتح ${fmt(sealed.deliver_at, 'long')}.` : ''}</p>
+              <Link href="/me/letter" className="pt-btn gold" data-testid="jr-capsule-go"><Icon name="mail" size={15} /> افتح «رسالة إلى نفسي»</Link>
             </div>
-            {d.capsules.filter(c => c.status === 'delivered').map(c => (
-              <article key={c.id} className="pt-box jr-delivered" data-testid="delivered">
-                <div className="jr-chhead"><span className="jr-kind">وصلت {fmt(c.delivered_at, 'long')}</span><time>كُتبت {fmt(c.created_at, 'long')}</time></div>
-                {c.meta?.delivery_text && <p className="jr-deltext">{c.meta.delivery_text}</p>}
-                <blockquote className="jr-quote big">{c.body_ar || '(تسجيل صوتي/مرئي)'}<small>من نفسك قبل سنة</small></blockquote>
-                <div className="jr-thennow"><div><b>أين كنت</b><p>{c.snapshot_then?.chapters ?? 0} فصلًا{c.snapshot_then?.last_chapter ? ` · «${c.snapshot_then.last_chapter}»` : ''}</p>{!!c.snapshot_then?.levels?.length && <small>{c.snapshot_then.levels.map((l: any) => `${l.skill} ${l.level}`).join(' · ')}</small>}</div><div><b>أين صرت</b><p>{c.snapshot_now?.chapters ?? 0} فصلًا{c.snapshot_now?.last_chapter ? ` · «${c.snapshot_now.last_chapter}»` : ''}</p>{!!c.snapshot_now?.levels?.length && <small>{c.snapshot_now.levels.map((l: any) => `${l.skill} ${l.level}`).join(' · ')}</small>}</div></div>
-                {c.body_ar && <ReadAloud text={c.body_ar} lang={lang} label="اسمعها" />}
-              </article>))}
           </section>)}
         <p className="jr-foot"><Icon name="shield" size={12} /> رحلتك ملكك: تُحفظ في <Link href="/me/data">خزنة أَثَر</Link>، وتُصدَّر وتُمحى بطلبك. الفصول مشتقة من أحداث مسجَّلة ولا يُضاف إليها شيء بغير فعلٍ منك أو اعتمادٍ من إنسان.</p>
       </>)}

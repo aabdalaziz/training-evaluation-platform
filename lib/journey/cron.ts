@@ -12,14 +12,16 @@ import { capsuleSnapshot, capsuleDeliveryText } from './registry';
 import type { CapsuleSnapshot } from './registry';
 import { SHARE_COLS } from './share';
 
-export const CAPSULE_COLS = 'id,created_at,user_id,email,full_name,body_ar,media_id,kind,deliver_at,delivered_at,status,snapshot_then,snapshot_now,message_log_id,meta';
-export type Capsule = { id: number; created_at: string; user_id: string; email: string; full_name: string | null; body_ar: string; media_id: string | null; kind: 'text' | 'audio' | 'video'; deliver_at: string; delivered_at: string | null; status: 'sealed' | 'delivered' | 'cancelled'; snapshot_then: CapsuleSnapshot; snapshot_now: CapsuleSnapshot | null; message_log_id: number | null; meta: any };
+export const CAPSULE_COLS = 'id,created_at,user_id,email,full_name,body_ar,media_id,kind,deliver_at,delivered_at,status,snapshot_then,snapshot_now,message_log_id,meta,context_key,scope';
+/* P62: البريد هنا للكبسولات القديمة فقط (context_key='journey' أو بلا قيمة). رسائل «رسالة إلى نفسي بعد سنة» الجديدة وأسطر الدفعة (scope='cohort') لا تُرسَل ولا تُفتح بالكرون — صاحبها يفتحها بيده في /me/letter، والكرون self_letters يُنبّه فقط. */
+export const isLegacyCapsule = (c: { context_key?: string | null; scope?: string | null }) => (!c.context_key || c.context_key === 'journey') && (!c.scope || c.scope === 'self');
+export type Capsule = { id: number; created_at: string; user_id: string; email: string; full_name: string | null; body_ar: string; media_id: string | null; kind: 'text' | 'audio' | 'video'; deliver_at: string; delivered_at: string | null; status: 'sealed' | 'delivered' | 'cancelled'; snapshot_then: CapsuleSnapshot; snapshot_now: CapsuleSnapshot | null; message_log_id: number | null; meta: any; context_key?: string | null; scope?: string | null };
 
 export async function runJourney(db: any, opts: { dry?: boolean; site: string; now?: Date }): Promise<{ ok: boolean; delivered: number; expired: number; stations_opened: number; errors: string[] }> {
   const now = opts.now || new Date(); const dry = !!opts.dry; const site = opts.site.replace(/\/+$/, ''); const errors: string[] = []; let delivered = 0, expired = 0, stations_opened = 0;
   try {
     const { data } = await db.from('portal_time_capsules').select(CAPSULE_COLS).eq('status', 'sealed').lte('deliver_at', now.toISOString()).order('deliver_at', { ascending: true }).limit(50);
-    for (const c of ((data || []) as Capsule[])) {
+    for (const c of ((data || []) as Capsule[]).filter(isLegacyCapsule)) {
       try {
         const j = await loadJourney(db, { id: c.user_id, email: c.email }, now.getTime()); const snapNow = capsuleSnapshot(j); const then = (c.snapshot_then || { chapters: 0, levels: [], last_chapter: null, days: 0 }) as CapsuleSnapshot;
         const text = capsuleDeliveryText(c.full_name || '', then, snapNow, c.created_at); const url = `${site}/me/journey#capsules`;

@@ -23,7 +23,7 @@ import { limitFor, tooMany, ipOf } from '../../../lib/shield/ratelimit';
 import { lower } from '../../../lib/councils/registry';
 import { loadJourney, journeyIntro } from '../../../lib/journey/load';
 import { createShare, revokeShare, myShares, publicShare } from '../../../lib/journey/share';
-import { CAPSULE_COLS } from '../../../lib/journey/cron';
+import { CAPSULE_COLS, isLegacyCapsule } from '../../../lib/journey/cron';
 import { validateNote, validateShare, validateCapsule, capsuleSnapshot, addDays, CAPSULE_DAYS, journeySummary, JOURNEY_VERSION, SHARE_MONTHS, NOTE_MAX_CHARS, CAPSULE_MIN_CHARS, CAPSULE_MAX_CHARS, INTRO_MAX_CHARS } from '../../../lib/journey/registry';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
@@ -45,7 +45,7 @@ async function bundle(db: any, me: Who, site: string) {
     loadJourney(db, me), db.from('portal_journey_notes').select(NOTE_COLS).eq('user_id', me.id).limit(200).then((r: any) => r.data || [], () => []), myShares(db, me),
     db.from('portal_time_capsules').select(CAPSULE_COLS).eq('user_id', me.id).order('created_at', { ascending: false }).limit(20).then((r: any) => r.data || [], () => []),
   ]);
-  return { journey: j, notes, shares: shares.map(s => ({ ...s, url: `${site}/journey/${encodeURIComponent(s.code)}`, verify_url: s.vc_issuance_id ? `${site}/verify/vc?code=${encodeURIComponent(s.code)}` : null })), capsules: caps };
+  return { journey: j, notes, shares: shares.map(s => ({ ...s, url: `${site}/journey/${encodeURIComponent(s.code)}`, verify_url: s.vc_issuance_id ? `${site}/verify/vc?code=${encodeURIComponent(s.code)}` : null })), capsules: (caps as any[]).filter(isLegacyCapsule) /* P62: رسائل «إلى مَن سأكون» وأسطر الدفعة لا تخرج من هنا — نصّها محجوب حتى يفتحها صاحبها في /me/letter */ };
 }
 
 export async function GET(req: Request) {
