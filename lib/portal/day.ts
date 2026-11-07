@@ -63,7 +63,7 @@ export function recipientsFor(mode: WordMode, room: ClassDay, one?: string | nul
 
 /* ---------- غراء ---------- */
 export type DayMe = { id: string; email: string; staff: boolean; trainerIds: string[]; name: string; viewing_other: boolean };
-export type DaySession = { id: string; title_ar: string; kind: string; starts_at: string; duration_min: number; provider: string; status: string; classroom: { id: string; code: string; section_name: string | null } | null; join_url: string | null; host_url: string | null; facilitator_href: string; state: 'soon' | 'live' | 'ended' | 'upcoming' };
+export type DaySession = { id: string; title_ar: string; kind: string; starts_at: string; duration_min: number; provider: string; status: string; unit_id: string | null; line_ar: string | null; classroom: { id: string; code: string; section_name: string | null } | null; join_url: string | null; host_url: string | null; facilitator_href: string; state: 'soon' | 'live' | 'ended' | 'upcoming' };
 export type DayBook = { date: string; date_ar: string; hello_ar: string; trainer_name: string; viewing_other: boolean; linked: boolean; counts: DayCounts; sessions: DaySession[]; classrooms: ClassDay[]; to_sign: { total: number; groups: SignGroup[] }; words_today: number; templates: readonly WordTemplate[]; replies: { total: number; need_help: number; unseen: number; voice: number; hands3: number; answered: number; rooms: RoomReplies[] }; echo?: TrainerEcho & { line: string; mirror: string } /* P56 */; computed_at: string };
 const arr = (d: unknown): any[] => (Array.isArray(d) ? d : []);
 const safe = async <T,>(p: Promise<T>, fb: T): Promise<T> => { try { return await p; } catch { return fb; } };
@@ -83,7 +83,7 @@ export async function collectDayBook(db: Db, me: DayMe, site: string, opts: { no
   /* الشُّعب والجلسات والتوقيعات والكلمات — معًا */
   const [{ data: cls }, { data: ses }, reg, { count: wc, data: wd }, replies, ry] = await Promise.all([
     db.from('classrooms').select('id, code, section_name, program_id, trainer_id').in('trainer_id', tids).limit(50),
-    db.from('portal_sessions').select('id, title_ar, kind, starts_at, duration_min, provider, status, classroom_id, trainer_id, join_url').in('trainer_id', tids).gte('starts_at', from).lt('starts_at', to).neq('status', 'cancelled').order('starts_at', { ascending: true }).limit(50),
+    db.from('portal_sessions').select('id, title_ar, kind, starts_at, duration_min, provider, status, classroom_id, trainer_id, join_url, unit_id, description_ar').in('trainer_id', tids).gte('starts_at', from).lt('starts_at', to).neq('status', 'cancelled').order('starts_at', { ascending: true }).limit(50),
     safe<{ total: number; groups: SignGroup[] }>(collectRegister(db, { id: me.id, email: me.email, role: 'TRAINER', staff: false, trainer: true, doors: [] }, site, { now }), { total: 0, groups: [] }),
     safe(Promise.resolve(db.from('audit_logs').select('id', { count: 'exact' }).eq('actor_id', me.id).eq('action', 'trainer_word').gte('created_at', from).limit(1)), { count: null, data: [] }),
     safe(collectReplies(db, [...tids, me.id], { now }), { total: 0, need_help: 0, unseen: 0, voice: 0, hands3: 0, answered: 0, rooms: [] as RoomReplies[] }), /* P53 · P54 · P55 */
@@ -93,12 +93,16 @@ export async function collectDayBook(db: Db, me: DayMe, site: string, opts: { no
   const echoStats = await safe(trainerEcho(db, [...tids, me.id], replies.rooms.flatMap((r) => r.items), now), null as TrainerEcho | null);
   const echo = echoStats ? { ...echoStats, line: trainerEchoLine(echoStats), mirror: trainerEchoMirror(echoStats) } : undefined;
   const withReplies = (c: DayCounts): DayCounts => ({ ...c, replies_unseen: replies.unseen, replies_yesterday: ry.replies, need_help_yesterday: ry.need_help, voice_yesterday: ry.voices, hands3_week: replies.hands3, answered_week: replies.answered, ...(echo && echo.line && isEchoDay(now) ? { echo_line: echo.line } : {}) });
-  const rooms = arr(cls); const cids = rooms.map((r) => String(r.id)); const roomOf = new Map(rooms.map((r) => [String(r.id), r]));
+  const rooms = arr(cls);
+  /* P66-ب: أستاذ المادة يرى اليوم شُعب محاضراته وإن لم يكن منسّقها */
+  const extraIds = [...new Set(arr(ses).filter((x) => x.unit_id && x.classroom_id).map((x) => String(x.classroom_id)))].filter((id) => !rooms.some((r) => String(r.id) === id));
+  if (extraIds.length) { const { data: ex } = await safe(Promise.resolve(db.from('classrooms').select('id, code, section_name, program_id, trainer_id').in('id', extraIds).limit(50)), { data: [] as any[] }); for (const r of arr(ex)) rooms.push(r); }
+  const cids = rooms.map((r) => String(r.id)); const roomOf = new Map(rooms.map((r) => [String(r.id), r]));
   /* الجلسات */
   const sessions: DaySession[] = []; const sids = arr(ses).map((s) => String(s.id));
   const { data: priv } = sids.length ? await db.from('portal_session_private').select('session_id, host_url').in('session_id', sids) : { data: [] }; const hostOf = new Map(arr(priv).map((p) => [String(p.session_id), p.host_url]));
   for (const s of arr(ses)) { const st = Date.parse(s.starts_at); const end = st + (Number(s.duration_min) || 60) * 60000; const state: DaySession['state'] = s.status === 'live' || (s.status !== 'ended' && st <= now.getTime() && end > now.getTime()) ? 'live' : s.status === 'ended' || end < now.getTime() ? 'ended' : st - now.getTime() < 30 * 60000 ? 'soon' : 'upcoming'; const r = s.classroom_id ? roomOf.get(String(s.classroom_id)) : null;
-    sessions.push({ id: String(s.id), title_ar: String(s.title_ar || ''), kind: String(s.kind || 'class'), starts_at: s.starts_at, duration_min: Number(s.duration_min) || 60, provider: String(s.provider || ''), status: String(s.status || ''), classroom: r ? { id: String(r.id), code: String(r.code || ''), section_name: r.section_name || null } : null, join_url: s.join_url || null, host_url: hostOf.get(String(s.id)) || null, facilitator_href: `/live/facilitator/${s.id}`, state }); }
+    sessions.push({ id: String(s.id), title_ar: String(s.title_ar || ''), kind: String(s.kind || 'class'), starts_at: s.starts_at, duration_min: Number(s.duration_min) || 60, provider: String(s.provider || ''), status: String(s.status || ''), unit_id: s.unit_id ? String(s.unit_id) : null, line_ar: s.unit_id && s.description_ar ? String(s.description_ar) : null, classroom: r ? { id: String(r.id), code: String(r.code || ''), section_name: r.section_name || null } : null, join_url: s.join_url || null, host_url: hostOf.get(String(s.id)) || null, facilitator_href: `/live/facilitator/${s.id}`, state }); }
   if (!cids.length) return { ...empty, sessions, counts: withReplies({ ...empty.counts, sessions_today: sessions.length, to_sign: reg.total }), to_sign: { total: reg.total, groups: reg.groups }, words_today: typeof wc === 'number' ? wc : arr(wd).length, replies, echo };
   /* الروستر · الحضور (أمس + 30 يومًا) · مِران · عُبور — معًا */
   const [{ data: enr }, { data: att }, { data: decs }, { data: invs }] = await Promise.all([

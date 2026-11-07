@@ -9,6 +9,7 @@
  */
 import { deriveCalendar, phaseOf, allowedKinds, validateDays, validateLine, cleanLine, isValidKind, isDone, fieldSummaryOf, atharLine, roadOf, weekStartIn, dayKey, addDays, applyStartNotice, applyWeekNotice, fieldSummaryNotice, commitOpenNotice, CAL_LIMITS, LINE_PATH, P66_NAMES_AR, PROMPTS_AR, DONE_AR, fmtDayAr } from './registry';
 import type { Calendar, DayPhase, LineKind, FieldSummary, RoadItem } from './registry';
+import type { LectureCard } from '../diploma/store';
 
 type Db = any;
 export type Me = { id: string; email: string; name?: string };
@@ -18,17 +19,27 @@ async function safe<X>(q: PromiseLike<{ data: any; error: any }>, fb: X): Promis
 type Fail = { ok: false; error: string; status: number };
 const fail = (error: string, status = 400): Fail => ({ ok: false, error, status });
 const ENROLLED = ['approved', 'placed', 'active', 'completed'];
-export const LINE_COLS = 'id,user_id,email,classroom_id,program_id,kind,day,body_ar,blocker_ar,block_no,apply_no,week_no,opens_on,done,done_at,created_at,updated_at';
+export const LINE_COLS = 'id,user_id,email,classroom_id,program_id,kind,day,body_ar,blocker_ar,block_no,apply_no,week_no,opens_on,done,done_at,created_at,updated_at,unit_id';
 
 /* ───────── التقويم ───────── */
 export async function getCalendar(db: Db, classroomId: string): Promise<(Calendar & { updated_at: string | null; program_id: string | null }) | null> {
-  const r = await safe<any>(db.from('portal_room_calendars').select('classroom_id,program_id,days,updated_at').eq('classroom_id', classroomId).maybeSingle(), null); if (!r) return null;
-  const cal = deriveCalendar(arr<string>(r.days)); if (!cal.days.length) return null; return { ...cal, updated_at: r.updated_at || null, program_id: r.program_id ? String(r.program_id) : null };
+  const r = await safe<any>(db.from('portal_room_calendars').select('classroom_id,program_id,days,updated_at').eq('classroom_id', classroomId).maybeSingle(), null);
+  const cal = r ? deriveCalendar(arr<string>(r.days)) : null;
+  if (cal && cal.days.length) return { ...cal, updated_at: r.updated_at || null, program_id: r.program_id ? String(r.program_id) : null };
+  /* P66-ب: بلا تقويم يدوي → أيام محاضرات المقرّرات (الجدول) هي التقويم المشتق */
+  const d = await derivedFromLectures(db, [classroomId]); const c = d.get(classroomId); return c ? { ...c, updated_at: null, program_id: null } : null;
+}
+async function derivedFromLectures(db: Db, ids: string[]): Promise<Map<string, Calendar>> {
+  const out = new Map<string, Calendar>(); if (!ids.length) return out;
+  try { const { lectureDaysOf } = await import('../diploma/store'); const m = await lectureDaysOf(db, ids); for (const [cid, days] of m) { const cal = deriveCalendar(days.slice(0, CAL_LIMITS.maxDays)); if (cal.days.length) out.set(cid, cal); } } catch { /* بلا جدول */ }
+  return out;
 }
 export async function calendarsFor(db: Db, classroomIds: string[]): Promise<Map<string, Calendar>> {
   const out = new Map<string, Calendar>(); const ids = [...new Set(classroomIds.filter(Boolean))]; if (!ids.length) return out;
   const rows = await safe<any[]>(db.from('portal_room_calendars').select('classroom_id,days').in('classroom_id', ids).limit(200), []);
-  for (const r of rows) { const cal = deriveCalendar(arr<string>(r.days)); if (cal.days.length) out.set(String(r.classroom_id), cal); } return out;
+  for (const r of rows) { const cal = deriveCalendar(arr<string>(r.days)); if (cal.days.length) out.set(String(r.classroom_id), cal); }
+  const rest = ids.filter((id) => !out.has(id)); if (rest.length) for (const [cid, cal] of await derivedFromLectures(db, rest)) out.set(cid, cal);
+  return out;
 }
 /** P64/P63/P62: استبدال اليوم الأول/الأخير حين يوجد تقويم للشعبة — لا يغيّر شيئًا بلا تقويم */
 export async function overlayCalendars<T extends { classroom_id?: string | null; start_date?: string | null; end_date?: string | null }>(db: Db, items: T[]): Promise<T[]> {
@@ -93,18 +104,19 @@ export async function roomsSummary(db: Db, classroomIds: string[], now = new Dat
 }
 
 /* ───────── صفحة المتدرّب «سطري» ───────── */
-export type MyLine = { id: number; kind: LineKind; day: string; day_ar: string; body_ar: string; blocker_ar: string | null; block_no: number | null; apply_no: number | null; week_no: number | null; opens_on: string | null; opens_ar: string | null; done: 'yes' | 'part' | 'no' | null; done_ar: string | null; open: boolean };
-export type MyRoom = { classroom_id: string; code: string; program_id: string | null; program_ar: string; enrollment_id: string; has_calendar: boolean; phase: DayPhase; allowed: LineKind[]; written_today: Partial<Record<LineKind, boolean>>; athar_ar: string; road: RoadItem[]; commit_open: MyLine | null; lines: MyLine[]; counts: { learn: number; apply: number; commit: number; days: number } };
-const toMy = (r: any, today: string): MyLine => ({ id: Number(r.id), kind: r.kind, day: String(r.day), day_ar: fmtDayAr(String(r.day)), body_ar: String(r.body_ar || ''), blocker_ar: r.blocker_ar || null, block_no: r.block_no ?? null, apply_no: r.apply_no ?? null, week_no: r.week_no ?? null, opens_on: r.opens_on || null, opens_ar: r.opens_on ? fmtDayAr(String(r.opens_on)) : null, done: isDone(r.done) ? r.done : null, done_ar: isDone(r.done) ? DONE_AR[r.done as 'yes' | 'part' | 'no'] : null, open: r.kind !== 'commit' || (!!r.opens_on && String(r.opens_on) <= today) });
+export type MyLine = { id: number; kind: LineKind; day: string; day_ar: string; unit_id: string | null; body_ar: string; blocker_ar: string | null; block_no: number | null; apply_no: number | null; week_no: number | null; opens_on: string | null; opens_ar: string | null; done: 'yes' | 'part' | 'no' | null; done_ar: string | null; open: boolean };
+export type MyRoom = { classroom_id: string; code: string; program_id: string | null; program_ar: string; enrollment_id: string; has_calendar: boolean; lectures: LectureCard[]; move_open: boolean; phase: DayPhase; allowed: LineKind[]; written_today: Partial<Record<LineKind, boolean>>; athar_ar: string; road: RoadItem[]; commit_open: MyLine | null; lines: MyLine[]; counts: { learn: number; apply: number; commit: number; days: number } };
+const toMy = (r: any, today: string): MyLine => ({ id: Number(r.id), kind: r.kind, day: String(r.day), day_ar: fmtDayAr(String(r.day)), unit_id: r.unit_id ? String(r.unit_id) : null, body_ar: String(r.body_ar || ''), blocker_ar: r.blocker_ar || null, block_no: r.block_no ?? null, apply_no: r.apply_no ?? null, week_no: r.week_no ?? null, opens_on: r.opens_on || null, opens_ar: r.opens_on ? fmtDayAr(String(r.opens_on)) : null, done: isDone(r.done) ? r.done : null, done_ar: isDone(r.done) ? DONE_AR[r.done as 'yes' | 'part' | 'no'] : null, open: r.kind !== 'commit' || (!!r.opens_on && String(r.opens_on) <= today) });
 async function myEnrollments(db: Db, me: Me) {
   const en = await safe<any[]>(db.from('portal_enrollments').select('id,program_id,classroom_id,status').eq('email', lower(me.email)).in('status', ENROLLED).not('classroom_id', 'is', null).limit(50), []);
   const seen = new Set<string>(); return en.filter((e) => { const k = String(e.classroom_id); if (seen.has(k)) return false; seen.add(k); return true; });
 }
-export async function myLinePage(db: Db, me: Me, now = new Date()): Promise<{ rooms: MyRoom[]; today: string; names: typeof P66_NAMES_AR; prompts: typeof PROMPTS_AR; limits: typeof CAL_LIMITS }> {
-  const today = dayKey(now); const en = await myEnrollments(db, me); const rooms: MyRoom[] = []; if (!en.length) return { rooms, today, names: P66_NAMES_AR, prompts: PROMPTS_AR, limits: CAL_LIMITS };
-  const cids = en.map((e) => String(e.classroom_id)); const [cals, crs, lines] = await Promise.all([
+export async function myLinePage(db: Db, me: Me, now = new Date()): Promise<{ rooms: MyRoom[]; today: string; names: typeof P66_NAMES_AR; prompts: typeof PROMPTS_AR; limits: typeof CAL_LIMITS; shift: { day: string; until: string } | null }> {
+  const today = dayKey(now); const en = await myEnrollments(db, me); const rooms: MyRoom[] = []; if (!en.length) return { rooms, today, names: P66_NAMES_AR, prompts: PROMPTS_AR, limits: CAL_LIMITS, shift: null };
+  const cids = en.map((e) => String(e.classroom_id)); const dip = await import('../diploma/store'); const [cals, crs, lines, cards, shift] = await Promise.all([
     calendarsFor(db, cids), safe<any[]>(db.from('classrooms').select('id,code,program_id').in('id', cids).limit(50), []),
     safe<any[]>(db.from('portal_learning_lines').select(LINE_COLS).eq('user_id', me.id).in('classroom_id', cids).order('day', { ascending: false }).limit(400), []),
+    dip.lectureCardsFor(db, me, cids, now).catch(() => new Map<string, { lectures: LectureCard[]; move_open: boolean }>()), dip.shiftDayFor(db, me, now).catch(() => null),
   ]);
   const pids = [...new Set(crs.map((c) => String(c.program_id || '')).concat(en.map((e) => String(e.program_id || ''))).filter(Boolean))];
   const ps = pids.length ? await safe<any[]>(db.from('programs').select('id,name_ar,start_date,end_date').in('id', pids).limit(50), []) : [];
@@ -115,22 +127,26 @@ export async function myLinePage(db: Db, me: Me, now = new Date()): Promise<{ ro
     const written: Partial<Record<LineKind, boolean>> = {}; for (const k of allowedKinds(ph)) { const key = k === 'apply' && ph.apply ? ph.apply.week_start : today; written[k] = mine.some((l) => l.kind === k && l.day === key); }
     const commit_open = mine.find((l) => l.kind === 'commit' && l.open && !l.done) || null;
     const program_ar = String(p?.name_ar || 'برنامجك');
-    rooms.push({ classroom_id: cid, code: String(cr?.code || ''), program_id: pid || null, program_ar, enrollment_id: String(e.id), has_calendar: has, phase: ph, allowed: has ? allowedKinds(ph) : (ph.phase === 'training' ? ['learn'] : []), written_today: written, athar_ar: atharLine(ph, program_ar), road: cal && has ? roadOf(cal, ph) : [], commit_open, lines: mine.slice(0, 60), counts: { learn: mine.filter((l) => l.kind === 'learn').length, apply: mine.filter((l) => l.kind === 'apply').length, commit: mine.filter((l) => l.kind === 'commit').length, days: cal ? cal.days.length : 0 } }); }
+    const card = cards.get(cid); rooms.push({ classroom_id: cid, code: String(cr?.code || ''), program_id: pid || null, program_ar, enrollment_id: String(e.id), has_calendar: has, lectures: card?.lectures || [], move_open: !!card?.move_open, phase: ph, allowed: has ? allowedKinds(ph) : (ph.phase === 'training' ? ['learn'] : []), written_today: written, athar_ar: atharLine(ph, program_ar), road: cal && has ? roadOf(cal, ph) : [], commit_open, lines: mine.slice(0, 60), counts: { learn: mine.filter((l) => l.kind === 'learn').length, apply: mine.filter((l) => l.kind === 'apply').length, commit: mine.filter((l) => l.kind === 'commit').length, days: cal ? cal.days.length : 0 } }); }
   rooms.sort((a, b) => (a.phase.phase === 'after' ? 1 : 0) - (b.phase.phase === 'after' ? 1 : 0));
   /* الترتيب: ما ينتظر فعلًا أولًا — التزام مفتوح، ثم شعبة لها تقويم، ثم ما يمكن الكتابة فيه اليوم، ثم الباقي */
   const rank = (r: MyRoom) => (r.commit_open ? 0 : r.has_calendar ? 1 : r.allowed.length ? 2 : 3); rooms.sort((x, y) => rank(x) - rank(y));
-  return { rooms, today, names: P66_NAMES_AR, prompts: PROMPTS_AR, limits: CAL_LIMITS };
+  return { rooms, today, names: P66_NAMES_AR, prompts: PROMPTS_AR, limits: CAL_LIMITS, shift };
 }
-export async function writeLine(db: Db, me: Me, b: { classroom_id?: unknown; kind?: unknown; body_ar?: unknown; blocker_ar?: unknown }, now = new Date()): Promise<{ ok: true; line: MyLine; updated: boolean } | Fail> {
+export async function writeLine(db: Db, me: Me, b: { classroom_id?: unknown; kind?: unknown; body_ar?: unknown; blocker_ar?: unknown; unit_id?: unknown; shift?: unknown }, now0 = new Date()): Promise<{ ok: true; line: MyLine; updated: boolean } | Fail> {
   const cid = String(b.classroom_id || ''); if (!cid) return fail('حدّد الشعبة'); if (!isValidKind(b.kind)) return fail('نوع السطر غير معروف');
+  const uid = b.unit_id ? String(b.unit_id) : null; if (uid && b.kind !== 'learn') return fail('سطر المقرّر هو «سطر اليوم» فقط');
+  /* ★ وضع الوردية: بعد منتصف الليل يبقى سطر الأمس مفتوحًا حتى نهاية الليل (06:00 أو quiet_to) */
+  let now = now0; if (b.shift === true && b.kind === 'learn') { const { shiftDayFor } = await import('../diploma/store'); const sh = await shiftDayFor(db, me, now0); if (!sh) return fail('انتهت مهلة الوردية — سطر الأمس أُغلق'); now = new Date(`${sh.day}T20:00:00+03:00`); }
   const v = validateLine(b.body_ar, b.blocker_ar); if (v) return fail(v);
   const en = (await myEnrollments(db, me)).find((e) => String(e.classroom_id) === cid); if (!en) return fail('هذه الشعبة ليست من شُعبك', 403);
   const today = dayKey(now); const cal = await getCalendar(db, cid); let ph = phaseOf(cal, today);
   if (!cal) { /* بلا تقويم: «سطر اليوم» فقط خلال مدة البرنامج */ const p = await safe<any>(db.from('programs').select('start_date,end_date').eq('id', String(en.program_id || '')).maybeSingle(), null); const s = String(p?.start_date || '').slice(0, 10); const e = String(p?.end_date || '').slice(0, 10); if (!s || today < s || (e && today > e)) return fail('البرنامج ليس في أيامه الآن', 409); ph = { phase: 'training', today, block: { no: 1, day_idx: 1, len: 1, is_first_day: false, is_last_day: false, is_program_first: false, is_program_last: false, next_block_start: null } }; }
   const allowed = cal ? allowedKinds(ph) : (['learn'] as LineKind[]); if (!allowed.includes(b.kind)) return fail(b.kind === 'apply' ? 'سطر التطبيق يُكتب في فترة التطبيق فقط' : b.kind === 'commit' ? '«التزامي حتى نلتقي» يُكتب في آخر يوم من الكتلة فقط' : '«سطر اليوم» يُكتب في يوم تدريب فقط', 409);
   const day = b.kind === 'apply' && ph.apply ? ph.apply.week_start : today;
-  const row: Record<string, unknown> = { user_id: me.id, email: lower(me.email), classroom_id: cid, program_id: en.program_id ? String(en.program_id) : null, kind: b.kind, day, body_ar: cleanLine(b.body_ar), blocker_ar: b.kind === 'apply' && cleanLine(b.blocker_ar) ? cleanLine(b.blocker_ar) : null, block_no: ph.block?.no ?? null, apply_no: ph.apply?.no ?? null, week_no: ph.apply?.week_no ?? null, opens_on: b.kind === 'commit' ? ph.block?.next_block_start || null : null, updated_at: now.toISOString() };
-  const prev = await safe<any>(db.from('portal_learning_lines').select('id,done').eq('user_id', me.id).eq('classroom_id', cid).eq('kind', b.kind).eq('day', day).maybeSingle(), null);
+  if (uid) { const { lectureExists } = await import('../diploma/store'); if (!(await lectureExists(db, cid, uid, day))) return fail('لا محاضرة لهذا المقرّر في شعبتك هذا اليوم'); }
+  const row: Record<string, unknown> = { user_id: me.id, email: lower(me.email), classroom_id: cid, program_id: en.program_id ? String(en.program_id) : null, kind: b.kind, day, unit_id: uid, body_ar: cleanLine(b.body_ar), blocker_ar: b.kind === 'apply' && cleanLine(b.blocker_ar) ? cleanLine(b.blocker_ar) : null, block_no: ph.block?.no ?? null, apply_no: ph.apply?.no ?? null, week_no: ph.apply?.week_no ?? null, opens_on: b.kind === 'commit' ? ph.block?.next_block_start || null : null, updated_at: now.toISOString() };
+  const pq = db.from('portal_learning_lines').select('id,done').eq('user_id', me.id).eq('classroom_id', cid).eq('kind', b.kind).eq('day', day); const prev = await safe<any>(uid ? pq.eq('unit_id', uid).maybeSingle() : pq.is('unit_id', null).maybeSingle(), null);
   if (prev && prev.done) return fail('هذا الالتزام أُجيب عنه — لا يُعدَّل', 409);
   let data: any = null; let error: any = null;
   if (prev) { const r = await db.from('portal_learning_lines').update({ body_ar: row.body_ar, blocker_ar: row.blocker_ar, updated_at: row.updated_at }).eq('id', prev.id).select(LINE_COLS).maybeSingle(); data = r.data; error = r.error; }

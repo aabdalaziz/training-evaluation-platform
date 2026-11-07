@@ -100,7 +100,7 @@ export default function MePage() {
     {error && <div className="me-msg bad"><Icon name="alert" size={16} /><span>{error}</span></div>}
     {me && <PlacementCard />}
     {me && <NoticesCard />}
-    {me && <ContactPrefs />}
+    {me && <div id="prefs"><ContactPrefs /></div>}
     {me && <OrgPledgeBanner />}
     {me && <ReportLinesCard />}
     {me && <>

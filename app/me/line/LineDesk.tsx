@@ -6,6 +6,7 @@
  *   يوم تدريب → «سطر اليوم» (واحد لليوم، يُعدَّل في يومه) · آخر يوم الكتلة → «التزامي حتى نلتقي» · فترة تطبيق → «سطر التطبيق» الأسبوعي (ماذا طبّقتُ / ما الذي منعني) + موقف ميداني
  *   «هذا ما وعدتَ به نفسك» حين يُفتح التزام (يوم العودة) → فعلت / جزئيًا / لم أفعل بعد · سطوري (آخر 60) · حذف فوري
  *  testids: ln-root ln-err ln-ok ln-empty ln-room[data-phase] ln-athar ln-road ln-write[data-kind] ln-ta ln-blocker ln-save ln-written ln-commit-open ln-commit-yes ln-commit-part ln-commit-no ln-lines ln-line ln-field-case ln-foot
+ *  P66-ب: ln-today ln-today-panel ln-today-answer ln-today-item ln-shift ln-lectures ln-lec[data-state,data-written] ln-thread ln-leave-ta ln-leave-save ln-leave-written ln-move ln-move-btn ln-move-reason ln-move-send ln-move-open
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -15,7 +16,9 @@ import { Icon } from '../../../lib/ui/icons';
 import type { MyRoom, MyLine } from '../../../lib/calendar/store';
 import type { LineKind } from '../../../lib/calendar/registry';
 
-type Data = { rooms: MyRoom[]; today: string; names: Record<string, string>; prompts: Record<LineKind, { title: string; hint: string; blocker?: string }>; limits: { lineMin: number; lineMax: number; k: number }; foot_ar: string; field_case_path: string };
+type Data = { rooms: MyRoom[]; today: string; names: Record<string, string>; prompts: Record<LineKind, { title: string; hint: string; blocker?: string }>; limits: { lineMin: number; lineMax: number; k: number }; foot_ar: string; field_case_path: string; shift?: { day: string; until: string } | null };
+type TodayData = { items: Array<{ session_id: string; course: string; section: string; starts: string; ends: string; instructor: string | null; line_ar: string; state: string }>; answer_ar: string; today: string };
+const STATE_AR: Record<string, string> = { upcoming: 'قادمة', live: 'الآن', ended: 'انتهت' };
 const PHASE_AR: Record<string, string> = { training: 'يوم تدريب', apply: 'البرنامج معك في موقعك', rest: 'استراحة قصيرة', before: 'قبل البداية', after: 'انتهى البرنامج', none: '' };
 const KIND_AR: Record<LineKind, string> = { learn: 'سطر اليوم', apply: 'سطر التطبيق', commit: 'التزامي حتى نلتقي' };
 
@@ -23,6 +26,7 @@ export default function LineDesk() {
   const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [d, setD] = useState<Data | null>(null); const [err, setErr] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false);
   const [text, setText] = useState<Record<string, string>>({}); const [blocker, setBlocker] = useState<Record<string, string>>({}); const [kindSel, setKindSel] = useState<Record<string, LineKind>>({});
+  const [leave, setLeave] = useState<Record<string, string>>({}); const [mv, setMv] = useState<Record<string, { open: boolean; reason: string }>>({}); const [todayD, setTodayD] = useState<TodayData | null>(null); const [todayOpen, setTodayOpen] = useState(false); const [shiftOn, setShiftOn] = useState(false);
   useEffect(() => { fastToken(db).then((t) => setTok(t || '')); }, [db]);
   const load = useCallback(async (t: string) => {
     const j = await fetch('/api/me/line', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then((r) => r.json()).catch(() => null);
@@ -37,15 +41,29 @@ export default function LineDesk() {
     if (j?.success) { setText((s) => ({ ...s, [`${r.classroom_id}:${kind}`]: '' })); setBlocker((s) => ({ ...s, [r.classroom_id]: '' })); flash(kind === 'commit' ? `خُتم التزامك — يُفتح لك ${j.line.opens_ar || 'أول يوم الكتلة القادمة'}.` : j.updated ? 'عُدّل سطرك.' : 'حُفظ سطرك.'); if (tok) load(tok); } else setErr(j?.error || 'تعذّر الحفظ');
   }
   async function answer(l: MyLine, done: 'yes' | 'part' | 'no') { const j = await post({ action: 'commit', id: l.id, done }); if (j?.success) { flash('سُجّلت إجابتك — لك وحدك.'); if (tok) load(tok); } else setErr(j?.error || 'تعذّر الحفظ'); }
+  const loadToday = useCallback(async (t: string) => { const j = await fetch('/api/diploma?today=1', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success) setTodayD(j); }, []);
+  useEffect(() => { if (tok && todayOpen && !todayD) loadToday(tok); }, [tok, todayOpen, todayD, loadToday]);
+  useEffect(() => { if (typeof window !== 'undefined' && window.location.hash === '#today') setTodayOpen(true); }, []);
+  async function saveLeave(r: MyRoom, unit_id: string) {
+    const body_ar = (leave[`${r.classroom_id}:${unit_id}`] || '').trim(); const j = await post({ action: 'line', classroom_id: r.classroom_id, kind: 'learn', unit_id, body_ar, shift: shiftOn || undefined });
+    if (j?.success) { setLeave((s) => ({ ...s, [`${r.classroom_id}:${unit_id}`]: '' })); flash('حُفظ سطرك — يراه زملاؤك مجمَّعًا بلا اسم في أول المحاضرة القادمة حين تبلغون خمسة.'); if (tok) load(tok); }
+  }
+  async function requestMove(r: MyRoom) {
+    const reason_ar = (mv[r.classroom_id]?.reason || '').trim(); if (reason_ar.length < 5) { setErr('اكتب سببًا من 5 أحرف على الأقل'); return; }
+    const j = await fetch('/api/diploma', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'move_request', program_id: r.program_id, reason_ar }) }).then((x) => x.json()).catch(() => null);
+    if (j?.success) { setMv((s) => ({ ...s, [r.classroom_id]: { open: false, reason: '' } })); flash('وصل طلبك إلى منسّق الشعبة — يصلك الرد في إشعاراتك.'); if (tok) load(tok); } else setErr(j?.error || 'تعذّر إرسال الطلب');
+  }
   async function del(l: MyLine) { if (!confirm('يُحذف السطر فورًا ولا يُسترجع. نتابع؟')) return; const j = await post({ action: 'delete', id: l.id }); if (j?.success) { flash('حُذف.'); if (tok) load(tok); } else setErr(j?.error || 'تعذّر الحذف'); }
   return <main className="ln" dir="rtl" data-testid="ln-root">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
-    <nav className="ln-nav" aria-label="تنقّل"><Link href="/me" className="ln-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/first" className="ln-link"><Icon name="spark" size={14} /> أول يوم</Link><Link href="/me/letter" className="ln-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="ln-link"><Icon name="award" size={14} /> يوم تخرّجي</Link></nav>
+    <nav className="ln-nav" aria-label="تنقّل"><Link href="/me" className="ln-link"><Icon name="arrow" size={14} /> ملفّي</Link><button type="button" className="ln-link ln-btnlink" data-testid="ln-today" aria-expanded={todayOpen} onClick={() => setTodayOpen((v) => !v)}><Icon name="clock" size={14} /> ماذا عندي اليوم؟</button><Link href="/me#prefs" className="ln-link"><Icon name="bell" size={14} /> تفضيلاتي</Link><Link href="/me/first" className="ln-link"><Icon name="spark" size={14} /> أول يوم</Link><Link href="/me/letter" className="ln-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="ln-link"><Icon name="award" size={14} /> يوم تخرّجي</Link></nav>
     <header className="ln-head"><span className="pt-kicker"><Icon name="edit" size={14} /> سجلّ التعلّم والتطبيق للمتدرّب</span><h1>✍️ {d?.names.page || 'سطري'} <small>سطر في يوم التدريب · سطر في الأسبوع من موقعك</small></h1>
       <p>في أيام التدريب تكتب سطرًا واحدًا: ماذا أخذتَ من اليوم. وحين تعود إلى موقعك بين الكتل يصبح البرنامج معك هناك: سطر في الأسبوع — ماذا طبّقتَ وما الذي منعك — وموقف ميداني تكتب كيف تصرّفت فيه فعلًا. مدرّبك يرى المجمَّع بلا أسماء، ويبدأ الكتلة القادمة بما جرى في مواقعكم.</p></header>
     {err && <p className="ln-err" role="alert" data-testid="ln-err">{err}</p>}
     {msg && <p className="ln-ok" role="status" data-testid="ln-ok">{msg}</p>}
     {!tok && tok !== null && <section className="pt-box"><p>سجّل الدخول لتكتب سطرك. <Link href="/me">مساحتي</Link></p></section>}
+    {todayOpen && <section className="pt-box ln-today" id="today" data-testid="ln-today-panel" aria-live="polite"><h2>🕒 ماذا عندي اليوم؟</h2>{!todayD && <p className="ln-muted">…</p>}{todayD && <><p className="ln-answer" data-testid="ln-today-answer">{todayD.answer_ar}</p>{todayD.items.length > 0 && <ul className="ln-todaylist">{todayD.items.map((i) => <li key={i.session_id} data-testid="ln-today-item" data-state={i.state}><span className="ln-tag">{i.starts}–{i.ends} · {STATE_AR[i.state] || ''}</span><b>{i.line_ar}</b></li>)}</ul>}</>}</section>}
+    {d?.shift && <label className="ln-shift" data-testid="ln-shift"><input type="checkbox" checked={shiftOn} onChange={(e) => setShiftOn(e.target.checked)} /> 🌙 وضع الوردية: سطر الأمس لا يزال مفتوحًا حتى {d.shift.until} — فعِّل هذا ليُحسب سطرك على يوم أمس.</label>}
     {d && !d.rooms.length && <section className="pt-box ln-empty" data-testid="ln-empty"><b>لستَ في شعبة بعد.</b><p className="ln-muted">حين تُوضع في شعبة برنامج يظهر هنا سطرك اليومي، وفترات التطبيق إن كان البرنامج موزّعًا على كتل.</p></section>}
     {d && d.rooms.map((r) => { const ph = r.phase; const kinds = r.allowed; const kind = kindSel[r.classroom_id] && kinds.includes(kindSel[r.classroom_id]) ? kindSel[r.classroom_id] : kinds[0]; const key = `${r.classroom_id}:${kind}`; const t = text[key] || ''; const ok = t.trim().length >= d.limits.lineMin && t.trim().length <= d.limits.lineMax;
       return <section key={r.classroom_id} className="ln-room" data-testid="ln-room" data-phase={ph.phase} data-room={r.classroom_id} aria-labelledby={`ln-h-${r.classroom_id}`}>
@@ -57,6 +75,24 @@ export default function LineDesk() {
           <blockquote>{r.commit_open.body_ar}</blockquote>
           <p className="ln-muted">هل فعلت؟ الإجابة لك وحدك — لا يراها مدرّبك ولا تدخل في أي تقييم.</p>
           <div className="ln-row"><button type="button" className="ln-btn ln-yes" data-testid="ln-commit-yes" disabled={busy} onClick={() => answer(r.commit_open!, 'yes')}>فعلت</button><button type="button" className="ln-btn" data-testid="ln-commit-part" disabled={busy} onClick={() => answer(r.commit_open!, 'part')}>جزئيًا</button><button type="button" className="ln-btn ln-ghost" data-testid="ln-commit-no" disabled={busy} onClick={() => answer(r.commit_open!, 'no')}>لم أفعل بعد</button></div>
+        </div>}
+        {r.lectures.length > 0 && <div className="ln-lectures" data-testid="ln-lectures" role="group" aria-label="محاضرات اليوم">
+          <h3>📚 محاضرات اليوم في شعبتك <small>{r.lectures.length}</small></h3>
+          {r.lectures.map((lc) => { const lk = `${r.classroom_id}:${lc.unit_id}`; const lt = leave[lk] || ''; const lok = lt.trim().length >= d.limits.lineMin && lt.trim().length <= d.limits.lineMax;
+            return <article key={lc.session_id} className={`ln-lec ${lc.state}`} data-testid="ln-lec" data-state={lc.state} data-written={lc.written ? '1' : '0'}>
+              <header><span className="ln-tag">{lc.starts}–{lc.ends} · {STATE_AR[lc.state]}</span><b>{lc.course}</b>{lc.instructor && <small>{lc.instructor}</small>}</header>
+              <p className="ln-structline">{lc.line_ar}</p>
+              {lc.thread.shown && <div className="ln-thread" data-testid="ln-thread"><b>{lc.thread.intro_ar}</b> <span className="ln-muted">{lc.thread.head_ar}</span><ul>{lc.thread.applied.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
+              {lc.state !== 'upcoming' && <div className="ln-leave"><p><b>{lc.question_ar}</b>{lc.written && <small data-testid="ln-leave-written"> — كتبتَه (يمكنك تعديله)</small>}</p>
+                <textarea data-testid="ln-leave-ta" value={lt} onChange={(e) => setLeave((s) => ({ ...s, [lk]: e.target.value }))} maxLength={d.limits.lineMax} rows={2} placeholder="سطر واحد…" aria-label={lc.question_ar} />
+                <div className="ln-row"><span className="ln-muted">{lt.trim().length}/{d.limits.lineMax}</span><button type="button" className="ln-btn ln-primary" data-testid="ln-leave-save" disabled={!lok || busy} onClick={() => saveLeave(r, lc.unit_id)}>{lc.written ? 'عدّل' : 'احفظ قبل أن أغادر'}</button></div></div>}
+              {lc.state === 'upcoming' && <p className="ln-muted">يُفتح سؤال «قبل أن تغادر» حين تبدأ المحاضرة.</p>}
+            </article>; })}
+        </div>}
+        {r.program_id && (r.lectures.length > 0 || r.move_open) && <div className="ln-move" data-testid="ln-move">
+          {r.move_open ? <p className="ln-muted" data-testid="ln-move-open">⏳ طلب نقلك إلى شعبة أخرى عند منسّق الشعبة — يصلك الردّ في إشعاراتك.</p>
+            : !mv[r.classroom_id]?.open ? <button type="button" className="ln-link ln-btnlink" data-testid="ln-move-btn" onClick={() => setMv((s) => ({ ...s, [r.classroom_id]: { open: true, reason: '' } }))}><Icon name="users" size={13} /> أطلب نقلي إلى شعبة أخرى</button>
+            : <div><p className="ln-muted">شعبتك ثابتة طوال المستوى؛ النقل بطلب يقرّره منسّق الشعبة. اكتب سببك (5–200 حرفًا):</p><input data-testid="ln-move-reason" className="ln-input" value={mv[r.classroom_id]?.reason || ''} maxLength={200} onChange={(e) => setMv((s) => ({ ...s, [r.classroom_id]: { open: true, reason: e.target.value } }))} placeholder="مثال: تعارض مع دوامي الصباحي" /><div className="ln-row"><button type="button" className="ln-btn ln-primary" data-testid="ln-move-send" disabled={busy} onClick={() => requestMove(r)}>أرسل الطلب</button><button type="button" className="ln-btn ln-ghost" onClick={() => setMv((s) => ({ ...s, [r.classroom_id]: { open: false, reason: '' } }))}>إلغاء</button></div></div>}
         </div>}
         {kinds.length > 0 && <div className="ln-write" data-testid="ln-write" data-kind={kind}>
           {kinds.length > 1 && <div className="ln-tabs" role="tablist">{kinds.map((k) => <button key={k} type="button" role="tab" aria-selected={k === kind} className={`ln-tab${k === kind ? ' on' : ''}`} onClick={() => setKindSel((s) => ({ ...s, [r.classroom_id]: k }))}>{KIND_AR[k]}</button>)}</div>}
@@ -70,13 +106,20 @@ export default function LineDesk() {
         {kinds.length === 0 && ph.phase !== 'after' && <p className="ln-muted ln-quiet">{ph.phase === 'before' ? 'يبدأ قريبًا — أول سطر لك يوم أول تدريب.' : ph.phase === 'rest' ? 'لا شيء يُطلب منك اليوم.' : ph.phase === 'none' ? 'لا تاريخ لهذا البرنامج بعد.' : ''}</p>}
         {r.road.length > 0 && <ol className="ln-road" data-testid="ln-road" aria-label="الطريق">{r.road.map((s, i) => <li key={i} className={`ln-step ${s.state}`}><b>{s.label}</b><span>{s.sub}</span></li>)}</ol>}
         {r.lines.length > 0 && <details className="ln-mine" open={r.lines.length <= 6}><summary>سطوري ({r.lines.length})</summary>
-          <ul className="ln-lines" data-testid="ln-lines">{r.lines.map((l) => <li key={l.id} data-testid="ln-line" data-kind={l.kind}><span className="ln-tag">{KIND_AR[l.kind]}{l.week_no ? ` · أسبوع ${l.week_no}` : ''}{l.block_no && l.kind !== 'apply' ? ` · كتلة ${l.block_no}` : ''}</span><b>{l.body_ar}</b>{l.blocker_ar && <i>ما منعني: {l.blocker_ar}</i>}{l.kind === 'commit' && (l.done ? <i>أجبت: {l.done_ar}</i> : <i>{l.open ? 'مفتوح — أجب أعلاه' : `يُفتح ${l.opens_ar}`}</i>)}<small>{l.day_ar}</small><button type="button" className="ln-x" aria-label="حذف" onClick={() => del(l)}>حذف</button></li>)}</ul></details>}
+          <ul className="ln-lines" data-testid="ln-lines">{r.lines.map((l) => <li key={l.id} data-testid="ln-line" data-kind={l.kind}><span className="ln-tag">{l.unit_id ? 'قبل أن أغادر' : KIND_AR[l.kind]}{l.week_no ? ` · أسبوع ${l.week_no}` : ''}{l.block_no && l.kind !== 'apply' ? ` · كتلة ${l.block_no}` : ''}</span><b>{l.body_ar}</b>{l.blocker_ar && <i>ما منعني: {l.blocker_ar}</i>}{l.kind === 'commit' && (l.done ? <i>أجبت: {l.done_ar}</i> : <i>{l.open ? 'مفتوح — أجب أعلاه' : `يُفتح ${l.opens_ar}`}</i>)}<small>{l.day_ar}</small><button type="button" className="ln-x" aria-label="حذف" onClick={() => del(l)}>حذف</button></li>)}</ul></details>}
       </section>; })}
     {d && <p className="ln-foot" data-testid="ln-foot"><Icon name="shield" size={13} /> {d.foot_ar}</p>}
   </main>;
 }
 
 const CSS = `
+.ln-btnlink{font:inherit;cursor:pointer}.ln-today h2{margin:0 0 6px;font-size:16px;color:#0f2a4e}.ln-answer{font-size:14px;font-weight:800;color:#0f2a4e;margin:0 0 6px;line-height:1.8}.ln-todaylist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.ln-todaylist li{display:flex;flex-direction:column;gap:2px;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;font-size:13px}
+.ln-shift{display:flex;gap:8px;align-items:center;background:#f5f3ff;border:1px solid #ddd6fe;color:#4c1d95;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:800}
+.ln-lectures{display:flex;flex-direction:column;gap:8px;margin:8px 0}.ln-lectures h3{margin:0;font-size:14px;color:#0f2a4e}.ln-lectures h3 small{color:#64748b}
+.ln-lec{border:1px solid #e2e8f0;border-radius:12px;padding:8px 12px;background:#fff;display:flex;flex-direction:column;gap:6px}.ln-lec.live{border-color:#0b8a83;box-shadow:0 0 0 2px #ccfbf1 inset}.ln-lec header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ln-lec header b{font-size:14px;color:#0f2a4e}.ln-lec header small{color:#64748b;font-weight:700}
+.ln-structline{margin:0;font-size:12px;color:#475569;font-weight:700}.ln-thread{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:6px 10px;font-size:13px}.ln-thread ul{margin:4px 0 0;padding-inline-start:18px}.ln-leave p{margin:0 0 4px;font-size:13.5px}
+.ln-move{margin:4px 0 8px;font-size:13px}
+
 .ln{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:920px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.ln *{box-sizing:border-box}
 .ln-nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}.ln-link{color:#0f2a4e;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:14px}.ln-link:hover{text-decoration:underline}
 .ln-head h1{margin:4px 0 6px;font-size:30px;color:#0f2a4e}.ln-head h1 small{display:block;font-size:14px;color:#b45309;font-weight:800;margin-top:2px}.ln-head p{margin:0 0 14px;color:#475569;line-height:1.9;max-width:760px}
