@@ -1,76 +1,38 @@
-# إصدار P58 — «خريطة أثرك — ما قاد إلى ماذا»
-
-**المنصّة:** أَثَر — بوابة التعليم والتدريب والتطوير · **المسار:** `/me/athar-map` · **التحقّق العام:** `/verify/map?code=ATH-MP-…` · **التاريخ:** 2026‑11‑07
-**الاسم الرسمي (عقود/شهادات/إدارة):** خريطة الأثر الذاتية للمتعلّم / Learner self‑authored impact map
-**المالك:** د. أحمد محمد عبدالعزيز بدوي © 2026 — تُسجَّل تجاريًّا عبر شركة بوابة التميز للاستشارات والتدريب.
-
+---
+name: athar-dialogue
+description: How to extend the Athar human dialogue loop (P51–P58 — «دفتر اليوم», «رسالة الشهر», «ردّ على الكلمة», «أمانة صوتية», «كلمة صوتية», «صدى الأسبوع», «نبض الجهة», «خريطة أثرك») without breaking its rules — nothing enters evaluation, k ≥ 5 for any aggregate, no names outside the owner's own screen, voice is private/temporary, no server AI, no new cron/env/deps.
 ---
 
-## 1) الفكرة في سطر
-كل لوحة مهارات في العالم تجيب عن «ماذا أتقنت؟». هذه الخريطة تجيب عن سؤال لا يجيب عنه أحد: **«ما الذي قاد إلى ماذا — في حياتي أنا؟»**
-نجوم = محطات وقعت فعلًا (برنامج، جلسة، مهارة اعتمدها إنسان، شهادة، حالة يوم، مهمة ميدانية، مجلس، عهد، ✋). والخيوط بينها **ليست من النظام ولا من ذكاء اصطناعي: كلمة المتعلّم**. يقترح النظام خيطًا حين يقع حدث بعد حدث بقاعدة معلنة، فيقول المتعلّم «نعم — لأن…» أو «ليس خيطًا». ما يُبقيه يُرسم متصلًا ويكبر مع التفرّع؛ وفي آخر السنة يوقّع «خريطة أثري 2026» بكلماته.
+# Athar — the dialogue loop (P51–P58)
 
-### لماذا «خريطة أثرك»؟ ولماذا «خيط»؟
-- **«خريطة أثرك»** تُكمل لغة المنصّة: الأثر لا المهارة، والأثر يُروى لا يُحسب. العنوان الفرعي **«ما قاد إلى ماذا»** هو الآلية في ثلاث كلمات (قاعدة P13: الاسم السردي في الواجهة، والرسمي في الوثائق).
-- **«خيط»** لأنها تُنسج باليد: نفس كلمة «خيوط الشهر» في رسالة الشهر و«خيوط الأثر» في الصفحة الرئيسية — المتعلّم هنا هو الناسج.
-- اللقطة بصيغة المتكلّم **«خريطة أثري 2026»** لأنها وثيقة يكتبها صاحبها لا تقريرًا يُكتب عنه.
-- بُعدٌ مقصود عن **`/me/map` (خريطة جداراتي H1–H12)** و**`/me/skills` (ملفي المهاري)**: تلك تجيب «أين أنا؟»، وهذه تجيب «كيف وصلت؟». لا تكرار.
+Read `docs/ATHAR-DIALOGUE-LOOP-P51-P57-AR.txt` first; this skill is the operational checklist.
 
----
+## The loop in one line
+Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/line/voice «أمانة» (P53/P54) → learner gets a weekly 🪞 «صدى» (P56) → the organization gets a monthly «رسالة الشهر» with an aggregated «نبض» (P52/P57) → the learner weaves their own «خيوط» into «خريطة أثرك» (P58).
 
-## 2) الحركات الخمس
-| # | الحركة | أين | كيف |
-|---|---|---|---|
-| 1 | **خيوط مقترَحة من الوقائع** | `lib/map/registry.ts` → `proposeThreads` | 11 قاعدة صريحة بنوافذ أيام (أدناه) — تُحسَب كل مرة من `lib/journey` (المصدر الوحيد لوقائع المتعلّم) + ✋ من `portal_word_replies` · لا تُخزَّن المقترَحات |
-| 2 | **كلمة المتعلّم** | `/me/athar-map` · `POST /api/me/map` | `keep` مع «لأن…» ≥ كلمتين ≤ 120 حرفًا (نصًّا أو **إملاءً صوتيًا في المتصفح** يتحوّل إلى نص) · `decline` يُخفي الخيط ولا يُقترح مجددًا · `keep` بين أي محطتين = خيط يدوي (`rule=manual`) · `remove` حذف فوري بلا سلّة |
-| 3 | **الكوكبة الحيّة** | `app/components/AtharMapSvg.tsx` | SVG مضمَّن بلا مكتبات · الزمن من اليمين إلى اليسار · مسارات بحسب النوع · المبقى متصل ذهبي يغلظ مع تفرّع محطته · المقترَح منقَّط · حجم النجمة = عدد الخيوط المبقاة الملامسة · بلا أسماء أشخاص |
-| 4 | **سطر المرآة** | `mirror()` | «أقوى خيط في أثرك: … — مرّتان» · «N خيوط تنتظر كلمتك» · «شهادتان بلا خيط — من أين جاءتا؟» · بلا نسب ولا أحكام |
-| 5 | **«خريطة أثري <سنة>»** | `signSnapshot` · `/verify/map` | رمز `ATH-MP-XXXX-XXXX` + بصمة SHA‑256 على الجسم المعياري (JCS) · **خاصّة افتراضيًا** · عامة برابط بقرار صاحبها · إعادة التوقيع تُبطل السابقة (فهرس جزئي: لقطة نافذة واحدة لكل سنة) · الإبطال فوري → صفحة التحقّق تقول **«أُبطلت»** |
+## Non‑negotiable rules (every new piece must honour all of them)
+1. **Nothing enters evaluation.** No column read by `lib/portal/skills.ts`, `lib/journey/registry.ts` scoring, مِعيار, or credentials may be written by the loop. Say so in the UI footer and in the release doc.
+2. **k ≥ 5** for anything shown to an organization or the public (`K_ORG = 5` in `lib/org-impact/registry.ts`). Below k: show the privacy mirror sentence, never a number.
+3. **No names** outside the author's own screen: «مدرّبك», «زميل», «جلسة». Public faces hide sensitive titles (daily cases → topic via `topicOf`).
+4. **Voice** = private bucket `athar-media`, path `word-voice/<trainer_id>/…`, signed temporary URLs, 180‑day purge in the existing media cleanup, limits `TRAINER_VOICE_LIMITS` (20 s) / `VOICE_LIMITS` (15 s · 10/h). Browser dictation (Web Speech) is allowed for text fields; never store new audio without a human listener on the other side.
+5. **No server AI** in the loop. Rules must be explicit and visible to the user («حدث ثم حدث خلال N يومًا»).
+6. **Dedupe + ≤ 1/day** for every notice kind (`dedupe_key` on `portal_learner_notices`); reuse the daily cron `/api/followups/send` — never add a Vercel cron.
+7. **Delete is immediate** (no recycle bin); «declined» choices are never re‑proposed.
+8. **Zero new env, zero deps, one SQL first** (with expected diagnostic counts), `.txt` twin for every `.md`.
 
-### القواعد (المفتاح · ما يقوله الخيط · النافذة)
-`placement_program` تحديد المستوى → برنامج (180 ي) · `program_skill` برنامج → مهارة معتمدة تشترك في الوسم (90 ي) · `program_credential` برنامج → شهادة إتمام (45 ي) · `skill_credential` مهارة → شهادة مهارة باسمها (180 ي) · `session_skill` جلسة → مهارة (60 ي) · `simulation_skill` محاكاة → مهارة (60 ي) · `daily_mission` حالة يوم → أول مهمة بعدها (60 ي) · `hand_session` ✋ → أول جلسة حضرها (14 ي) · `pledge_review` عهد الأفق → مراجعته (400 ي) · `council_badge` مجلس → شهادة عضو (400 ي) · `case_return` التزام القضية → العودة (120 ي) · `manual` خيط المتعلّم نفسه.
-كل زوج (من، إلى) يُقترح مرة واحدة؛ حدّ 40 مقترَحًا و160 محطة.
+## Where things live
+- Pure cores (unit‑testable, no DB): `lib/portal/day.ts`, `lib/portal/word-reply.ts`, `lib/portal/week-echo.ts`, `lib/org-impact/{letter,pulse}.ts`, `lib/map/registry.ts`.
+- Glue (DB, auth, storage): `lib/map/store.ts`, `lib/map/nudge.ts`, routes under `app/api/me/*`, `app/api/org/*`, `app/api/admin/org/*`, `app/api/verify/*`.
+- UI: `app/components/{VoiceRecorder,EchoSay,LetterSheet,AtharMapSvg}.tsx`; learner pages under `app/me/*` load heavy desks with `next/dynamic({ ssr:false })`.
+- Notice kinds: extend `NoticeKind`, `KIND_AR`, `KIND_ICON` in `lib/portal/notices.ts` together.
+- New routes → `lib/portal/way.ts`; new tables → `lib/vault/registry.ts`; voice aliases → `lib/portal/voice.ts`.
 
----
+## Signed documents pattern (P52 letter · P58 snapshot)
+Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
 
-## 3) الأسطح
-- **`/me`** بطاقة «خريطة أثرك» (بعد «رحلتي»).
-- **`/me/athar-map`** صفحة المتعلّم (تحميل ديناميكي بلا SSR): المرآة · الكوكبة (نقر على نجمة = لوحة جانبية بخيوطها · نقر على خيط = بطاقة الخيط) · «خيوط تنتظر كلمتك» · «خيوطك» · «انسج خيطًا بنفسك» · «خريطة أثري <سنة>» (توقيع/عام‑خاص/نسخ الرابط/إعادة توقيع/إبطال/لقطاتي السابقة) · أسهم العودة: ملفّي · رحلتي · الرئيسية.
-- **`/verify/map?code=`** عام: صحّة الرمز، السنة، تاريخ التوقيع، سلامة البصمة، الأعداد؛ **الكوكبة فقط إن كانت عامة** وبوجهها العام (حالات اليوم بالموضوع: «حالة يوم — إدارة الصفّ»).
-- **«نادِ»**: «خريطتي» · «خريطة أثري» · «ما قاد إلى ماذا» · «خيوطي» → `/me/athar-map`.
-- **🧭 إشعار «خيط جديد ينتظر كلمتك»** من الدورة اليومية الموجودة (`/api/followups/send` → `runMapNudges`): لمن تحرّكت رحلتهم خلال 48 ساعة فقط (≤ 80 متعلّمًا/يوم) · **الخيط الواحد مرة واحدة** (dedupe على مفتاحه) · **≤ إشعار واحد في اليوم** · لا بريد · نوع إشعار جديد `map_thread` بأيقونة 🧭.
-- **الخزنة**: جدولان مسجَّلان في `lib/vault/registry.ts` (حذف ذاتي · «لأن…» و`body` بيانات شخصية).
+## Service clients in GET routes
+Use a `noStore` fetch (`global: { fetch: (i, init) => fetch(i, { ...init, cache: 'no-store' }) }`) for any route that must read freshly updated rows (public/revoked flags); Next 14 may cache identical upstream GETs otherwise.
 
----
-
-## 4) الحدود (ما لا تفعله الخريطة)
-- لا تدخل في أي تقييم ولا في الملف المهاري المحسوب ولا في شهادة.
-- لا ذكاء اصطناعي على الخادم: القواعد صريحة ومعلنة في الواجهة («حدث ثم حدث خلال N يومًا»).
-- لا أسماء أقران ولا مدرّبين؛ الجلسة «جلسة»، والكلمة «كلمة مدرّبك».
-- الوجه العام يخفي عناوين الحالات والمهمات والقضايا والمجالس (يُظهر النوع/الموضوع فقط).
-- الحذف فوري؛ المستبعَد لا يعود (ويمكن نسجه يدويًا).
-- **قرار صريح:** اللقطة بنمط «رسالة الشهر» (رمز + بصمة + صفحة تحقّق) لا بإصدار VC/`did:web` — الغرض نفسه بلا تعديل قيود `portal_credentials`. و«بصوتك» في «لأن…» = إملاء في المتصفح لا تخزين صوتي جديد (عمود `note_voice` محجوز إن احتجناه).
-
----
-
-## 5) قاعدة البيانات (SQL واحد — طُبّق)
-`supabase/migrations/20270205_portal_p58_athar_map.sql`
-- `portal_map_threads` (13 عمودًا): `email,from_key,to_key` فريدة · `status in (kept, declined)` · قيد «المبقى له لأن… ≥ 2 حرفًا» · `note_ar ≤ 120`.
-- `portal_map_snapshots` (11 عمودًا): `code` فريد · فهرس جزئي `(email, year) where revoked_at is null` · `is_public=false` افتراضيًا.
-- RLS قراءة ذاتية؛ الكتابة عبر الخادم. تشخيص: 13 · 11 · سياستان · فهرس 1 ✓.
-
-## 6) الملفات
-جديد: `lib/map/{registry,store,nudge}.ts` · `app/api/me/map/route.ts` · `app/api/verify/map/route.ts` · `app/components/AtharMapSvg.tsx` · `app/me/athar-map/{page,AtharMapDesk}.tsx` · `app/verify/map/page.tsx` · `tests/p58-map.test.ts` · `tools/shot-p58.py` · هذا الملف (+ `.txt`) · `docs/ATHAR-DIALOGUE-LOOP-P51-P57-AR.txt` · `docs/TOOLS-REVIEW-2026-11-AR.txt` · `docs/diagrams/athar-system-map.svg` · `docs/diagrams/athar-voice-data-lineage.svg` · `.agents/skills/athar-dialogue/SKILL.md` · `.agents/skills/athar-release/SKILL.md`.
-معدَّل: `app/api/followups/send/route.ts` (🧭) · `app/me/page.tsx` (بطاقة) · `lib/portal/{way,voice,notices}.ts` · `lib/vault/registry.ts` · `lib/journey/{load,registry}.ts` (`case_id` في حالات اليوم) · `tests/index.ts`.
-صفر متغيّرات بيئة جديدة · صفر حزم · لا cron جديد.
-
-## 7) الجودة
-- النتائج (2026-11-07): وحدات **968/968** · E2E P58 **35/35** · رجوعيًا P57 23/23 · P56 22/22 · P39 44/44 · tsc نظيف · `next build` ناجح.
-- وحدات: `tests/p58-map.test.ts` 9/9 (المحطات · القواعد والنوافذ · القرارات · الإحداثيات · «لأن…» · اللقطة والبصمة · الغراء بقاعدة وهمية · 🧭 · «نادِ») ضمن المجموعة الكاملة.
-- E2E: `tools/shot-p58.py` — واجهة نورة (u2) كاملة + التحقّق العام + الكرون + جوّال + وصولية (نجوم `role=button` + `aria-label`، تباين AA، تقليل الحركة).
-- درس تقني موثَّق في `.agents/skills/athar-dialogue`: مسارات القراءة بعد الكتابة تستعمل `fetch` بـ `cache: 'no-store'` داخل عميل Supabase الخدمي، لأن Next 14 قد يُعيد صفًا قديمًا من ذاكرة البيانات.
-- أمان: Bearer للمتعلّم نفسه · 60 طلبًا/دقيقة · التحقّق العام 60/دقيقة لكل IP · لا كشف لأي محتوى خاص عبر الرمز.
-
-## 8) أفكار ظهرت أثناء البناء (مدمجة أو مؤجَّلة)
-- **مدمج:** خيط «التزام → عودة» داخل القضية نفسها · خيط يدوي بين أي محطتين · «لقطاتي السابقة» بتاريخ الإبطال · تذبذب خفيف في الإحداثيات لتفادي التراكب · تباعد أدنى داخل المسار.
-- **مؤجَّل (BACKLOG):** تضمين «أقوى خيط» في رسالة الشهر للجهة (مجمَّعًا، k ≥ 5) · PDF للقطة · «خريطة الشعبة» للمدرّب (مجمَّعة بلا أسماء).
+## Tests
+- Unit: one `tests/pNN-*.test.ts` with a fake db (`from(table)` builder supporting `select/eq/neq/is/in/gte/lt/or/not/order/limit/maybeSingle/single/insert/upsert/update/delete/then`) — upsert must return the stored row with `id`, else `pushNotice` reports `duplicate`.
+- E2E: `tools/shot-pNN.py` — API first, then browser (desktop + mobile ≤ 392 px scrollWidth + `pageerror` empty). Wait on DOM state, not fixed timeouts (API POSTs that rebuild a journey take ~2 s).
