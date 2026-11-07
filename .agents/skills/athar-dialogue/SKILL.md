@@ -5,7 +5,7 @@ description: How to extend the Athar human dialogue loop (P51–P62 — «دفت
 
 # Athar — the dialogue loop (P51–P62)
 
-Read `docs/ATHAR-DIALOGUE-LOOP-P51-P60-AR.txt` (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
+Read `docs/ATHAR-DIALOGUE-LOOP-P51-P62-AR.txt` (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
 
 ## The loop in one line
 Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/line/voice «أمانة» (P53/P54) → learner gets a weekly 🪞 «صدى» (P56) → the organization gets a monthly «رسالة الشهر» with an aggregated «نبض» (P52/P57) → the learner weaves their own «خيوط» into «خريطة أثرك» (P58) → the trainer reads what the section wove together in «نسيج الشعبة» and answers with a 🧶 word on it (P59) — which is again a «كلمة», so the loop closes on itself. The learner can also speak each «لأن…» (P60) — voice stays with its owner only. At program level the kept threads become **counted** evidence in the living accreditation file «نسيج البرنامج» (P61) — never quoted.
