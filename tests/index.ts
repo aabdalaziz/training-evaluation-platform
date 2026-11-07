@@ -116,3 +116,4 @@ import './p55-voice-word.test'; /* P55 «كلمة صوتية» */
 import './p56-week-echo.test';
 import './p57-pulse.test'; /* P56 «صدى الأسبوع» */
 import './p53b-mail-draft.test'; // P53-ب «أرسل من بريدك»
+import './p58-map.test'; /* P58 «خريطة أثرك» */

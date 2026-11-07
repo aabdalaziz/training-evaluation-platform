@@ -119,6 +119,7 @@ export default function MePage() {
         <a className="me-tablink" href="/me/reports"><Icon name="doc" size={16} /> تقاريري</a>
         <a className="me-tablink" href="/me/council"><Icon name="users" size={16} /> مجلسي</a>
         <a className="me-tablink" href="/me/journey"><Icon name="compass" size={16} /> رحلتي</a>
+        <a className="me-tablink" href="/me/athar-map" data-testid="me-athar-map"><Icon name="spark" size={16} /> خريطة أثرك</a>
         <a className="me-tablink" href="/me/horizon"><Icon name="flag" size={16} /> أفقي</a>
         <a className="me-tablink" href="/me/pair"><Icon name="users" size={16} /> عهدان متقابلان</a>
         <a className="me-tablink" href="/me/data"><Icon name="shield" size={16} /> ذاكرتي</a>

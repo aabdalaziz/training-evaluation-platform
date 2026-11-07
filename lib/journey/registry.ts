@@ -35,7 +35,7 @@ export function attachPeers<T extends { kind: string; at: string }>(chapters: T[
 export const peersText = (p: Peers) => `${p.people} من زملائك في «${p.org_name}» عاشوا فصلًا مثله في الربع نفسه — عدد لا أسماء.`;
 export type JourneyInput = {
   events: { at: string; verb: string; object_type: string; object_id: string; skills: string[]; context: any }[];
-  daily: { created_at: string; response: string; band: string | null; score: number | null; case_title: string | null }[];
+  daily: { created_at: string; response: string; band: string | null; score: number | null; case_title: string | null; case_id?: string | null /* P58 */ }[];
   sims: { id: string; created_at: string; ended_at: string | null; status: string; score: any }[];
   missions: { id: string; title_ar: string; confirmed_at: string | null; submitted_at: string | null; status: string; skills: string[] }[];
   memberships: { council_id: string; council_title: string | null; joined_at: string | null; status: string }[];

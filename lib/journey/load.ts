@@ -34,7 +34,7 @@ export async function loadJourneyInput(db: any, me: Me): Promise<JourneyInput> {
   const dTitle = new Map(arr<any>(dc).map(x => [x.id, x.title_ar])); const cTitle = new Map(arr<any>(cc).map(x => [x.id, x.title_ar])); const skills: Record<string, string> = {}; for (const s of arr<any>(sk)) skills[s.id] = s.name_ar;
   return {
     events: arr<any>(ev).map(e => ({ at: e.at, verb: e.verb, object_type: e.object_type, object_id: String(e.object_id), skills: e.skills || [], context: e.context || {} })),
-    daily: daily.map(d => ({ created_at: d.created_at, response: d.response || '', band: d.band || null, score: d.score ?? null, case_title: dTitle.get(d.case_id) || null })),
+    daily: daily.map(d => ({ created_at: d.created_at, response: d.response || '', band: d.band || null, score: d.score ?? null, case_title: dTitle.get(d.case_id) || null, case_id: d.case_id ? String(d.case_id) : null /* P58 */ })),
     sims: arr<any>(sm), missions: arr<any>(ms).map(m => ({ ...m, skills: m.skills || [] })),
     memberships: memberships.map(m => ({ council_id: m.council_id, council_title: cTitle.get(m.council_id) || null, joined_at: m.joined_at || null, status: m.status })),
     cases: arr<any>(cs), attestations: arr<any>(at), levels: arr<any>(lv), credentials: arr<any>(cr), skills,

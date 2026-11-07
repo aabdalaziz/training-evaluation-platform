@@ -48,6 +48,7 @@ export const DESTINATIONS: Destination[] = [
   { href: '/me/twin', label: 'توأمي المهاري', aliases: ['توامي المهاري', 'توامي', 'التوام'] },
   { href: '/me/missions', label: 'مهماتي', aliases: ['مهماتي', 'المهمات', 'مهامي'] },
   { href: '/me/journey', label: 'رحلتي', aliases: ['رحلتي', 'الرحلة'] },
+  { href: '/me/athar-map', label: 'خريطة أثرك', aliases: ['خريطتي', 'خريطة اثري', 'خريطة أثري', 'خريطة اثرك', 'ما قاد إلى ماذا', 'ما قاد الى ماذا', 'خيوطي'] }, /* P58 */
   { href: '/me/card', label: 'بطاقتي', aliases: ['بطاقتي', 'البطاقة'] },
   { href: '/me/data', label: 'بياناتي', aliases: ['بياناتي', 'خزنتي', 'الخزنة'] },
   { href: '/hub', label: 'الردهة', aliases: ['الردهة', 'الرَدهة', 'ردهة'] },
