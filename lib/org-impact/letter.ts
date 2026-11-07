@@ -1,6 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P52 «رسالة الشهر» — التقرير الشهري لأثر الجهة (Monthly Organization Impact Letter)
+ *  P57: قسم «نبض الشهر» (body.pulse — lib/org-impact/pulse.ts) يُحسب مع المسوَّدة ويتجمّد مع التوقيع.
  *  رسالة من صفحة واحدة تصل إلى مدير الجهة أول كل شهر: ثلاثة أرقام بكلمات (مع الفرق عن الشهر الماضي) · خيوط الشهر (k ≥ 5) ·
  *  «سطر الإنسان» يكتبه مدير البرامج ويوقّعه · «وعد الشهر القادم» · «ما نحتاجه منكم» · رمز وبصمة للتحقّق بلا محتوى.
  *  القاعدة: الأرقام تُصاغ آليًّا، والإنسان يكتب سطره ويوقّع — وبلا توقيع لا تُرسل. لا أسماء منسوبين أبدًا؛ ما دون خمسة يُكتب «أقلّ من خمسة».
@@ -9,6 +10,8 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { jcs } from '../portal/vc';
 import { K_ORG } from './registry';
+import { orgPulse } from './pulse';
+import type { OrgPulse } from './pulse';
 
 export const LETTER_TITLE = { ar: 'رسالة الشهر', en: 'Monthly letter' };
 export const LETTER_OFFICIAL = { ar: 'التقرير الشهري لأثر الجهة', en: 'Monthly Organization Impact Letter' };
@@ -37,6 +40,7 @@ export type LetterBody = {
   attendance: { pct: number | null; pct_prev: number | null; sessions: number; people: number };
   miaar: { exits_passed: number | null; placements: number | null; certificates: number | null };
   threads: LetterThread[];
+  pulse?: OrgPulse | null;            /* P57 «نبض الشهر» — اختياري حتى تبقى رسائل ما قبله كما هي */
   lines_ar: string[];                 /* «ثلاثة أرقام تكفي» — ثلاث جُمَل */
   ask_suggested_ar: string | null;    /* «ما نحتاجه منكم» المقترَح */
   generated_at: string;
@@ -85,9 +89,10 @@ export function composeLines(b: Omit<LetterBody, 'lines_ar' | 'ask_suggested_ar'
   return L;
 }
 /** «ما نحتاجه منكم» — طلب واحد مقترَح من الواقع */
-export function suggestAsk(b: { people: { members: number; pending: number; active_raw: number } }): string | null {
+export function suggestAsk(b: { people: { members: number; pending: number; active_raw: number }; pulse?: OrgPulse | null }): string | null {
   if (b.people.pending > 0) { const n = b.people.pending; const v = n === 1 ? 'ينتظر' : n === 2 ? 'ينتظران' : 'ينتظرون'; const h = n === 1 ? 'تأكيده يفتح له' : n === 2 ? 'تأكيدهما يفتح لهما' : 'تأكيدهم يفتح لهم'; return `${countAr(n, PERSON)} من نطاق بريدكم ${v} تأكيدكم في بوابة الجهات — ${h} التعلّم.`; }
   if (b.people.members >= MIN_MEMBERS && b.people.active_raw < b.people.members / 2) return 'كلمة من إدارتكم لمنسوبيكم عن أهمّية الحضور — نصف المقيَّدين لم يتعلّموا هذا الشهر.';
+  if (b.pulse?.ask_ar) return b.pulse.ask_ar; /* P57: ردّ دون 30٪ على كلمات المدرّبين */
   return null;
 }
 /** تنقية نصّ بشري قصير: لا وسوم ولا روابط ولا بريد — ولا أسماء نضمنها بالقاعدة لا بالآلة */
@@ -143,13 +148,13 @@ async function monthStats(db: Db, members: Set<string>, month: string) {
 export async function buildLetterBody(db: Db, org: { id: string; name_ar: string }, month: string): Promise<LetterBody> {
   const { data: mem } = await db.from('portal_org_members').select('email, status').eq('organization_id', org.id).in('status', ['confirmed', 'pending']).limit(5000);
   const members = new Set<string>(arr(mem).filter((m) => m.status === 'confirmed').map((m) => lower(m.email)).filter(Boolean)); const pending = arr(mem).filter((m) => m.status === 'pending').length;
-  const pm = prevMonth(month); const [cur, prev] = await Promise.all([monthStats(db, members, month), safe(monthStats(db, members, pm), null as any)]);
+  const pm = prevMonth(month); const [cur, prev, pulse] = await Promise.all([monthStats(db, members, month), safe(monthStats(db, members, pm), null as any), safe(orgPulse(db, members, monthRange(month)), null as OrgPulse | null)]);
   let threads: LetterThread[] = [];
   try { const { orgEcho } = await import('./echo'); const e = await orgEcho(db, org.id, new Date(monthRange(month).to).getTime() - 1); threads = (e.threads || []).slice(0, 3).map((t: any) => ({ label_ar: String(t.label_ar), people: Number(t.people) || 0 })); } catch { threads = []; }
   const base = { month, prev_month: pm, month_ar: monthLabelAr(month), prev_month_ar: monthLabelAr(pm), org: { id: org.id, name_ar: org.name_ar },
     people: { members: members.size, pending, active: kSafe(cur.active), active_prev: prev ? kSafe(prev.active) : null, active_raw: cur.active },
     attendance: { pct: cur.pct, pct_prev: prev?.pct ?? null, sessions: cur.sessions, people: cur.roster_people },
-    miaar: { exits_passed: kSafe(cur.exits_passed), placements: kSafe(cur.placements), certificates: kSafe(cur.certificates) }, threads };
+    miaar: { exits_passed: kSafe(cur.exits_passed), placements: kSafe(cur.placements), certificates: kSafe(cur.certificates) }, threads, pulse };
   return { v: 1, ...base, lines_ar: composeLines(base), ask_suggested_ar: suggestAsk(base), generated_at: new Date().toISOString() };
 }
 
