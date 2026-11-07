@@ -6,13 +6,15 @@
  *  - لا بيانات شخصية في النصوص (الإشعارات نفسها بلا درجات).
  *  P54 «أمانة صوتية»: تحت «كلمة» المدرّب زرّ 🎙️ «قُل لي» — تسجيل ≤ 15 ثانية على الجهاز، معاينة، ثم إرسال multipart إلى /api/me/voice-reply؛
  *    نصّ تقريبي اختياري من تعرّف المتصفّح (إن وُجد) يمكن حذفه قبل الإرسال · يُخفى الزرّ إن لم يدعم المتصفّح التسجيل · لا يدخل في أي تقييم.
+ *  P55 «كلمة صوتية»: إن حملت كلمة المدرّب صوتًا (voice.sec) يظهر «▶ استمع إلى مدرّبك (0:14)» — رابط موقَّع 5 دقائق عبر /api/notices?voice=<id> — ونصّه التقريبي رماديًّا.
+ *    المسجّل نفسه صار مكوّنًا مشتركًا VoiceRecorder (يستعمله المدرّب في دفتر اليوم أيضًا).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sbLazy } from '../../lib/supabase/lazy';
-import { AUDIO_MIME_CANDIDATES, pickMime } from '../../lib/portal/media';
+import VoiceRecorder, { canRecord, fmtSec, voiceFileName } from './VoiceRecorder';
 
 type MyReply = { chip: string | null; chip_ar: string; text: string | null; at: string; editable: boolean; voice_sec?: number | null; transcript?: string | null };
-type Notice = { id: string; kind: string; kind_ar: string; icon: string; title_ar: string; body_ar: string; url: string | null; pushed: boolean; read_at: string | null; created_at: string; can_reply?: boolean; my_reply?: MyReply | null };
+type Notice = { id: string; kind: string; kind_ar: string; icon: string; title_ar: string; body_ar: string; url: string | null; pushed: boolean; read_at: string | null; created_at: string; can_reply?: boolean; my_reply?: MyReply | null; voice?: { sec: number; transcript: string | null } | null };
 type Chip = { key: string; icon: string; label_ar: string; label_en: string };
 type Payload = { unread: number; notices: Notice[]; chips: Chip[]; reply_max: number; voice_max_sec: number; voice_max_bytes: number; transcript_max: number };
 const VOICE_SEC = 15; const VOICE_BYTES = 512 * 1024; const TRANSCRIPT_MAX = 300;
@@ -25,19 +27,18 @@ async function load(limit = 20): Promise<Payload | null> { try { const h = await
 async function sendReply(noticeId: string, chip: string | null, text: string): Promise<{ ok: boolean; reply?: MyReply; message?: string; error?: string }> { try { const h = await hdr(); const r = await fetch('/api/notices', { method: 'POST', headers: h, body: JSON.stringify({ action: 'word_reply', notice_id: noticeId, chip, text }) }); const j = await r.json().catch(() => ({})); return r.ok && j.success ? { ok: true, reply: j.reply, message: j.message } : { ok: false, error: j.error || 'تعذّر الإرسال' }; } catch { return { ok: false, error: 'تعذّر الاتصال' }; } }
 /** P54: إرسال الأمانة الصوتية — multipart بلا Content-Type يدوي (المتصفّح يضع الحدّ) */
 async function sendVoice(noticeId: string, blob: Blob, sec: number, transcript: string | null): Promise<{ ok: boolean; reply?: MyReply; message?: string; error?: string }> {
-  try { const h = await hdr(); delete h['Content-Type']; const fd = new FormData(); fd.append('file', blob, `voice.${blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm'}`); fd.append('notice_id', noticeId); fd.append('duration_sec', String(sec)); if (transcript !== null) fd.append('transcript', transcript);
+  try { const h = await hdr(); delete h['Content-Type']; const fd = new FormData(); fd.append('file', blob, voiceFileName(blob)); fd.append('notice_id', noticeId); fd.append('duration_sec', String(sec)); if (transcript !== null) fd.append('transcript', transcript);
     const r = await fetch('/api/me/voice-reply', { method: 'POST', headers: h, body: fd }); const j = await r.json().catch(() => ({})); return r.ok && j.success ? { ok: true, reply: j.reply, message: j.message } : { ok: false, error: j.error || 'تعذّر إرسال الأمانة' }; } catch { return { ok: false, error: 'تعذّر الاتصال' }; } }
 async function deleteVoice(noticeId: string): Promise<{ ok: boolean; row_deleted?: boolean; error?: string }> { try { const h = await hdr(); const r = await fetch(`/api/me/voice-reply?notice_id=${encodeURIComponent(noticeId)}`, { method: 'DELETE', headers: h }); const j = await r.json().catch(() => ({})); return r.ok && j.success ? { ok: true, row_deleted: !!j.row_deleted } : { ok: false, error: j.error || 'تعذّر الحذف' }; } catch { return { ok: false, error: 'تعذّر الاتصال' }; } }
-const canRecord = () => typeof window !== 'undefined' && typeof (window as any).MediaRecorder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
-const getSR = (): any => typeof window === 'undefined' ? null : ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition || null);
-const fmtSec = (s: number) => `${Math.floor(s / 60)}:${String(Math.round(s) % 60).padStart(2, '0')}`;
+/** P55: رابط موقَّع لصوت كلمة المدرّب (لصاحب الإشعار) */
+async function trainerVoiceUrl(noticeId: string): Promise<{ url?: string; error?: string }> { try { const h = await hdr(); const r = await fetch(`/api/notices?voice=${encodeURIComponent(noticeId)}`, { headers: h, cache: 'no-store' }); const j = await r.json().catch(() => ({})); return r.ok && j.success && j.url ? { url: j.url } : { error: j.error || 'تعذّر فتح الصوت' }; } catch { return { error: 'تعذّر الاتصال' }; } }
 async function markRead(ids: string[] | 'all'): Promise<void> { try { const h = await hdr(); await fetch('/api/notices', { method: 'POST', headers: h, body: JSON.stringify(ids === 'all' ? { action: 'read', all: true } : { action: 'read', ids }) }); } catch { /* تجاهل */ } }
 const when = (iso: string, ar: boolean) => { try { return new Intl.DateTimeFormat(ar ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return iso.slice(0, 16); } };
 
 export function NoticeItem({ n, ar, onOpen, chips, max, voiceSec }: { n: Notice; ar: boolean; onOpen?: () => void; chips?: Chip[]; max?: number; voiceSec?: number }) {
   return <li className={`nt-item ${n.read_at ? '' : 'unread'}`} data-testid="nt-item" data-kind={n.kind} data-read={n.read_at ? '1' : '0'}>
     <span className="nt-ic" aria-hidden="true">{n.icon}</span>
-    <div className="nt-body"><b>{n.title_ar}</b>{n.body_ar && <p>{n.body_ar}</p>}<small>{n.kind_ar} · {when(n.created_at, ar)}{n.pushed ? (ar ? ' · وصلك إشعارًا' : ' · pushed') : ''}</small>
+    <div className="nt-body"><b>{n.title_ar}</b>{n.body_ar && <p>{n.body_ar}</p>}{n.voice?.sec ? <TrainerVoice n={n} ar={ar} /> : null}<small>{n.kind_ar} · {when(n.created_at, ar)}{n.pushed ? (ar ? ' · وصلك إشعارًا' : ' · pushed') : ''}</small>
       {n.can_reply && <WordReply n={n} ar={ar} chips={chips || DEFAULT_CHIPS} max={max || 200} voiceSec={voiceSec || VOICE_SEC} />}</div>
     {n.url && !n.can_reply && <a className="nt-open" href={n.url} onClick={onOpen}>{ar ? 'افتح' : 'Open'}</a>}
   </li>;
@@ -50,7 +51,8 @@ function WordReply({ n, ar, chips, max, voiceSec }: { n: Notice; ar: boolean; ch
   async function go(chip: string | null) { if (busy) return; const t = text.trim(); if (!chip && !t) { setMsg({ ok: false, t: ar ? 'اختر لمسة أو اكتب سطرًا' : 'Pick a chip or write a line' }); return; } setBusy(true); const r = await sendReply(n.id, chip, t); setBusy(false);
     if (!r.ok) { setMsg({ ok: false, t: r.error || '' }); return; } setMine((m) => r.reply ? { ...r.reply, voice_sec: r.reply.voice_sec ?? m?.voice_sec ?? null, transcript: r.reply.transcript ?? m?.transcript ?? null } : null); setEdit(false); setText(''); setMsg({ ok: true, t: r.message || '' }); }
   async function dropVoice() { if (busy) return; setBusy(true); const r = await deleteVoice(n.id); setBusy(false); if (!r.ok) { setMsg({ ok: false, t: r.error || '' }); return; } setMine((m) => r.row_deleted || !m ? null : { ...m, voice_sec: null, transcript: null }); setMsg({ ok: true, t: ar ? 'حُذف الصوت.' : 'Voice removed.' }); }
-  if (voice) return <VoiceReply n={n} ar={ar} maxSec={voiceSec} onDone={(r) => { setMine(r); setVoice(false); setEdit(false); setMsg({ ok: true, t: ar ? 'وصلت أمانتك الصوتية إلى مدرّبك — له وحده.' : 'Your voice note reached your trainer — only them.' }); }} onCancel={() => setVoice(false)} />;
+  if (voice) return <VoiceRecorder ar={ar} maxSec={voiceSec} testid="nt-voice" sendLabel={ar ? 'أرسل الأمانة' : 'Send voice note'} hint={ar ? `أمانة صوتية ≤ ${voiceSec} ثانية · يسمعها مدرّبك وحده · لا تدخل في أي تقييم · تُحذف بعد 180 يومًا` : `Voice note ≤ ${voiceSec}s · heard by your trainer only · never part of any assessment · deleted after 180 days`} transcriptLabel={ar ? 'نصّ تقريبي (من جهازك — يراه مدرّبك مع الصوت):' : 'Rough transcript (on-device — shown to your trainer with the audio):'} onCancel={() => setVoice(false)}
+    onSend={async (t) => { const r = await sendVoice(n.id, t.blob, t.sec, t.transcript); if (!r.ok || !r.reply) return r.error || 'تعذّر الإرسال'; setMine(r.reply); setVoice(false); setEdit(false); setMsg({ ok: true, t: ar ? 'وصلت أمانتك الصوتية إلى مدرّبك — له وحده.' : 'Your voice note reached your trainer — only them.' }); return null; }} />;
   if (mine && !edit) return <div className="nt-reply done" data-testid="nt-reply-done" data-chip={mine.chip || ''} data-voice={mine.voice_sec ? '1' : '0'}>
     <span>{ar ? 'ردّك: ' : 'Your reply: '}<b>{mine.chip_ar}{mine.chip_ar && mine.text ? ' · ' : ''}{mine.text ? `«${mine.text}»` : ''}{(mine.chip_ar || mine.text) && mine.voice_sec ? ' · ' : ''}{mine.voice_sec ? <span data-testid="nt-voice-done">🎙️ {fmtSec(mine.voice_sec)}</span> : null}</b></span>
     {mine.editable && <button type="button" className="nt-link" onClick={() => { setEdit(true); setText(mine.text || ''); setMsg(null); }} data-testid="nt-reply-edit">{ar ? 'عدِّل' : 'Edit'}</button>}
@@ -68,34 +70,17 @@ function WordReply({ n, ar, chips, max, voiceSec }: { n: Notice; ar: boolean; ch
   </div>;
 }
 
-/** P54 «أمانة صوتية» — مسجّل ≤ 15 ثانية: تسجيل → معاينة (أعِد/أرسل) → إرسال · نصّ تقريبي اختياري من المتصفّح يُحذف بلمسة · يُخفى الميكروفون إن لم يُدعم */
-function VoiceReply({ n, ar, maxSec, onDone, onCancel }: { n: Notice; ar: boolean; maxSec: number; onDone: (r: MyReply) => void; onCancel: () => void }) {
-  const [state, setState] = useState<'idle' | 'rec' | 'ready' | 'sending'>('idle'); const [sec, setSec] = useState(0); const [blob, setBlob] = useState<Blob | null>(null); const [url, setUrl] = useState<string | null>(null); const [tr, setTr] = useState<string | null>(null); const [err, setErr] = useState('');
-  const rec = useRef<MediaRecorder | null>(null); const stream = useRef<MediaStream | null>(null); const chunks = useRef<Blob[]>([]); const tick = useRef<ReturnType<typeof setInterval> | null>(null); const sr = useRef<any>(null); const startedAt = useRef(0); const trRef = useRef('');
-  const cleanup = useCallback(() => { if (tick.current) clearInterval(tick.current); tick.current = null; try { sr.current?.stop(); } catch { /* ignore */ } sr.current = null; stream.current?.getTracks().forEach((t) => t.stop()); stream.current = null; }, []);
-  useEffect(() => () => { cleanup(); if (url) URL.revokeObjectURL(url); }, [cleanup, url]);
-  async function start() {
-    setErr(''); try { const s = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.current = s; const m = pickMime(AUDIO_MIME_CANDIDATES, (t) => (window as any).MediaRecorder.isTypeSupported(t)) || ''; const mr = m ? new MediaRecorder(s, { mimeType: m, audioBitsPerSecond: 32000 }) : new MediaRecorder(s); chunks.current = []; rec.current = mr;
-      mr.ondataavailable = (e) => { if (e.data?.size) chunks.current.push(e.data); };
-      mr.onstop = () => { const b = new Blob(chunks.current, { type: (mr.mimeType || m || 'audio/webm').split(';')[0] }); setBlob(b); setUrl((u) => { if (u) URL.revokeObjectURL(u); return URL.createObjectURL(b); }); setSec(Math.max(1, Math.min(maxSec, Math.round((Date.now() - startedAt.current) / 1000)))); setState('ready'); cleanup(); };
-      const SR = getSR(); if (SR) { try { const r = new SR(); r.lang = ar ? 'ar-SA' : 'en-US'; r.continuous = true; r.interimResults = false; trRef.current = ''; r.onresult = (ev: any) => { let t = ''; for (let i = 0; i < ev.results.length; i += 1) t += ev.results[i][0]?.transcript || ' '; trRef.current = t.replace(/\s+/g, ' ').trim().slice(0, TRANSCRIPT_MAX); setTr(trRef.current || null); }; r.onerror = () => { /* النصّ اختياري */ }; r.start(); sr.current = r; } catch { sr.current = null; } }
-      startedAt.current = Date.now(); mr.start(250); setState('rec'); setSec(0); tick.current = setInterval(() => { const el = (Date.now() - startedAt.current) / 1000; setSec(Math.min(maxSec, el)); if (el >= maxSec) stop(); }, 200);
-    } catch { setErr(ar ? 'لم نصل إلى الميكروفون — اسمح به من المتصفّح ثم أعِد المحاولة' : 'Microphone unavailable — allow it in the browser and retry'); cleanup(); }
-  }
-  function stop() { if (tick.current) clearInterval(tick.current); tick.current = null; try { if (rec.current && rec.current.state !== 'inactive') rec.current.stop(); } catch { /* ignore */ } }
-  function redo() { if (url) URL.revokeObjectURL(url); setUrl(null); setBlob(null); setTr(null); setSec(0); setState('idle'); }
-  async function send() { if (!blob || state === 'sending') return; setState('sending'); setErr(''); const r = await sendVoice(n.id, blob, sec, tr); if (!r.ok || !r.reply) { setErr(r.error || ''); setState('ready'); return; } onDone(r.reply); }
-  const left = Math.max(0, maxSec - sec);
-  return <div className="nt-reply nt-voice" data-testid="nt-voice-box" data-state={state}>
-    {state === 'idle' && <div className="nt-line"><button type="button" className="nt-send nt-rec" onClick={() => void start()} data-testid="nt-voice-start">🎙️ {ar ? 'ابدأ التسجيل' : 'Start recording'}</button><button type="button" className="nt-link" onClick={() => { cleanup(); onCancel(); }} data-testid="nt-voice-cancel">{ar ? 'إلغاء' : 'Cancel'}</button></div>}
-    {state === 'rec' && <div className="nt-line"><span className="nt-rec-dot" aria-hidden="true" /><b className="nt-rec-time" aria-live="polite" data-testid="nt-voice-timer">{fmtSec(sec)} · {ar ? `بقي ${Math.ceil(left)} ث` : `${Math.ceil(left)}s left`}</b><button type="button" className="nt-send" onClick={stop} data-testid="nt-voice-stop">■ {ar ? 'أوقف' : 'Stop'}</button></div>}
-    {(state === 'ready' || state === 'sending') && url && <div className="nt-voice-ready">
-      <div className="nt-line"><audio controls src={url} preload="metadata" aria-label={ar ? 'معاينة الأمانة الصوتية' : 'Voice preview'} data-testid="nt-voice-preview" /><span className="nt-rec-time">{fmtSec(sec)}</span></div>
-      {tr !== null && <div className="nt-voice-tr" data-testid="nt-voice-tr"><small>{ar ? 'نصّ تقريبي (من جهازك — يراه مدرّبك مع الصوت):' : 'Rough transcript (on-device — shown to your trainer with the audio):'}</small><p>{tr}</p><button type="button" className="nt-link" onClick={() => setTr(null)} data-testid="nt-voice-tr-del">{ar ? 'احذف النصّ' : 'Remove transcript'}</button></div>}
-      <div className="nt-line"><button type="button" className="nt-send" onClick={() => void send()} disabled={state === 'sending'} data-testid="nt-voice-send">{state === 'sending' ? (ar ? 'يُرسل…' : 'Sending…') : (ar ? 'أرسل الأمانة' : 'Send voice note')}</button><button type="button" className="nt-chip" onClick={redo} disabled={state === 'sending'} data-testid="nt-voice-redo">{ar ? 'أعِد' : 'Redo'}</button><button type="button" className="nt-link" onClick={() => { cleanup(); onCancel(); }}>{ar ? 'إلغاء' : 'Cancel'}</button></div>
-    </div>}
-    <small className="nt-reply-hint">{ar ? `أمانة صوتية ≤ ${maxSec} ثانية · يسمعها مدرّبك وحده · لا تدخل في أي تقييم · تُحذف بعد 180 يومًا` : `Voice note ≤ ${maxSec}s · heard by your trainer only · never part of any assessment · deleted after 180 days`}</small>
-    {err && <small className="nt-reply-err" role="alert" data-testid="nt-reply-err">{err}</small>}
+/** P55 «كلمة صوتية» — مشغّل صوت المدرّب داخل الكلمة: رابط موقَّع عند الضغط · نصّ تقريبي رمادي · يُعلَّم الإشعار مقروءًا بالاستماع */
+function TrainerVoice({ n, ar }: { n: Notice; ar: boolean }) {
+  const [url, setUrl] = useState<string | null>(null); const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [on, setOn] = useState(false); const ref = useRef<HTMLAudioElement | null>(null);
+  async function play() { setErr(''); if (url) { const a = ref.current; if (!a) return; if (on) { a.pause(); setOn(false); } else { try { await a.play(); setOn(true); } catch { setErr(ar ? 'اضغط مرّة أخرى للتشغيل' : 'Tap again to play'); } } return; }
+    setBusy(true); const r = await trainerVoiceUrl(n.id); setBusy(false); if (!r.url) { setErr(r.error || ''); return; } setUrl(r.url); setTimeout(async () => { try { await ref.current?.play(); setOn(true); void markRead([n.id]); } catch { /* يضغط ثانية */ } }, 50); }
+  return <div className="nt-tvoice" data-testid="nt-tvoice" data-sec={n.voice!.sec}>
+    <button type="button" className={`nt-tvoice-btn ${on ? 'on' : ''}`} onClick={() => void play()} disabled={busy} aria-pressed={on} data-testid="nt-tvoice-play">{on ? '❚❚' : '▶'} {ar ? `استمع إلى مدرّبك (${fmtSec(n.voice!.sec)})` : `Listen to your trainer (${fmtSec(n.voice!.sec)})`}</button>
+    <audio ref={ref} src={url || undefined} preload="none" onEnded={() => setOn(false)} onPause={() => setOn(false)} aria-hidden="true" />
+    {n.voice!.transcript && <em className="nt-tvoice-tr" data-testid="nt-tvoice-tr" title={ar ? 'نصّ تقريبي من جهاز المدرّب — الصوت هو الأصل' : 'Rough on-device transcript — audio is the original'}>≈ {n.voice!.transcript}</em>}
+    <small className="nt-reply-hint">{ar ? 'صوت مدرّبك لك وحدك · لا يدخل في أي تقييم · يُحذف بعد 180 يومًا' : 'Your trainer’s voice, for you only · never part of any assessment · deleted after 180 days'}</small>
+    {err && <small className="nt-reply-err" role="alert">{err}</small>}
   </div>;
 }
 
@@ -157,4 +142,5 @@ export const NOTICES_CSS = `
 .nt-line{display:flex;gap:6px}.nt-line input{flex:1;min-width:0;border:1.5px solid #cbd5e1;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px}.nt-send{border:1.5px solid #0f2a4e;background:#0f2a4e;color:#fff;border-radius:10px;padding:6px 12px;font:inherit;font-weight:800;cursor:pointer;min-height:34px}.nt-send:disabled{opacity:.5;cursor:not-allowed}
 .nt-reply-hint{color:#64748b;font-size:11.5px}.nt-reply-ok{color:#15803d;font-weight:800}.nt-reply-err{color:#b91c1c;font-weight:800}
 .nt-chip-voice{border-color:#0f766e;color:#0f766e}.nt-voice{background:#f8fafc;border:1px dashed #99f6e4;border-radius:10px;padding:8px 10px}.nt-rec{background:#b91c1c;border-color:#b91c1c}.nt-rec-dot{width:10px;height:10px;border-radius:50%;background:#dc2626;align-self:center;animation:nt-pulse 1s infinite}@keyframes nt-pulse{0%,100%{opacity:1}50%{opacity:.3}}.nt-rec-time{font-variant-numeric:tabular-nums;align-self:center;color:#0f2a4e;font-size:13px}.nt-voice-ready{display:grid;gap:6px}.nt-voice-ready audio{flex:1;min-width:0;height:34px}.nt-voice-tr{background:#fff;border-radius:8px;padding:6px 8px;border:1px solid #e2e8f0}.nt-voice-tr p{margin:4px 0;color:#475569;font-size:12.5px}@media (prefers-reduced-motion:reduce){.nt-rec-dot{animation:none}}
+.nt-tvoice{display:grid;gap:4px;margin:6px 0;justify-items:start}.nt-tvoice-btn{border:1.5px solid #0f766e;background:#fff;color:#0f766e;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;min-height:34px}.nt-tvoice-btn.on{background:#0f766e;color:#fff}.nt-tvoice-btn:disabled{opacity:.6;cursor:wait}.nt-tvoice-tr{color:#94a3b8;font-size:12px;font-style:normal}
 `;

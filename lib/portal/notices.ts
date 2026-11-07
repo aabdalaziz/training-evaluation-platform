@@ -18,8 +18,10 @@ export type NoticeInput = {
   push?: boolean;
   /** true = إن وُجد المفتاح يُحدَّث نصّه بدل التجاهل (ملخّصات تتراكم) */
   merge?: boolean;
+  /** P55: بيانات ملحقة (مثل voice لكلمة المدرّب الصوتية) — عمود meta jsonb */
+  meta?: Record<string, unknown> | null;
 };
-export type NoticeRow = { id: string; email: string; user_id: string | null; report_id: string | null; kind: NoticeKind; title_ar: string; body_ar: string; url: string | null; ref_id: string | null; dedupe_key: string; pushed: boolean; read_at: string | null; created_at: string };
+export type NoticeRow = { id: string; email: string; user_id: string | null; report_id: string | null; kind: NoticeKind; title_ar: string; body_ar: string; url: string | null; ref_id: string | null; dedupe_key: string; pushed: boolean; read_at: string | null; created_at: string; meta?: Record<string, unknown> | null };
 export type NoticeResult = { inserted: boolean; pushed: boolean; id: string | null; reason?: string };
 export type NoticeOpts = { site?: string; env?: NodeJS.ProcessEnv; fetchImpl?: typeof fetch; now?: Date; dry?: boolean };
 
@@ -82,16 +84,21 @@ const abs = (site: string, u: string | null | undefined) => !u ? undefined : /^h
 /** يحفظ الإشعار (مرّة واحدة لكل dedupe_key) ثم يدفعه إن أمكن. لا يرمي أخطاء أبدًا. */
 export async function pushNotice(db: any, n: NoticeInput, opts: NoticeOpts = {}): Promise<NoticeResult> {
   const email = norm(n.email); if (!isEmail(email)) return { inserted: false, pushed: false, id: null, reason: 'no_email' };
-  const row = { email, user_id: n.user_id || null, report_id: n.report_id || null, kind: n.kind, title_ar: String(n.title_ar || '').slice(0, 160), body_ar: String(n.body_ar || '').slice(0, 600), url: n.url || null, ref_id: n.ref_id || null, dedupe_key: String(n.dedupe_key).slice(0, 120) };
+  const row = { email, user_id: n.user_id || null, report_id: n.report_id || null, kind: n.kind, title_ar: String(n.title_ar || '').slice(0, 160), body_ar: String(n.body_ar || '').slice(0, 600), url: n.url || null, ref_id: n.ref_id || null, dedupe_key: String(n.dedupe_key).slice(0, 120), ...(n.meta !== undefined ? { meta: n.meta || {} } : {}) };
   if (opts.dry) return { inserted: true, pushed: false, id: null, reason: 'dry' };
   let id: string | null = null;
   try {
+    /* P55: لو لم يُطبَّق SQL عمود meta بعد، نعيد المحاولة بلا meta — لا تتوقّف الكلمات */
+    const noMeta = (r: Record<string, unknown>) => { const { meta: _m, ...rest } = r; return rest; }; const metaErr = (e: any) => !!e && 'meta' in row && /meta/i.test(String(e.message || ''));
     if (n.merge) {
-      const { data, error } = await db.from('portal_learner_notices').upsert({ ...row, read_at: null, created_at: new Date().toISOString() }, { onConflict: 'dedupe_key' }).select('id').single();
+      const full = { ...row, read_at: null, created_at: new Date().toISOString() };
+      let { data, error } = await db.from('portal_learner_notices').upsert(full, { onConflict: 'dedupe_key' }).select('id').single();
+      if (metaErr(error)) ({ data, error } = await db.from('portal_learner_notices').upsert(noMeta(full), { onConflict: 'dedupe_key' }).select('id').single());
       if (error) return { inserted: false, pushed: false, id: null, reason: String(error.message || 'db') };
       id = String((data as any)?.id || '') || null;
     } else {
-      const { data, error } = await db.from('portal_learner_notices').upsert(row, { onConflict: 'dedupe_key', ignoreDuplicates: true }).select('id');
+      let { data, error } = await db.from('portal_learner_notices').upsert(row, { onConflict: 'dedupe_key', ignoreDuplicates: true }).select('id');
+      if (metaErr(error)) ({ data, error } = await db.from('portal_learner_notices').upsert(noMeta(row), { onConflict: 'dedupe_key', ignoreDuplicates: true }).select('id'));
       if (error) return { inserted: false, pushed: false, id: null, reason: String(error.message || 'db') };
       const first = Array.isArray(data) ? data[0] : data; id = String((first as any)?.id || '') || null;
       if (!id) return { inserted: false, pushed: false, id: null, reason: 'duplicate' };
@@ -124,13 +131,14 @@ export async function pushOnly(db: any, m: { email: string; user_id?: string | n
 }
 
 /* ====================================================================== القراءة */
+const NOTICE_COLS = 'id,email,user_id,report_id,kind,title_ar,body_ar,url,ref_id,dedupe_key,pushed,read_at,created_at';
 export async function listNotices(db: any, email: string, opts: { limit?: number; report_id?: string | null; unreadOnly?: boolean } = {}): Promise<NoticeRow[]> {
   const em = norm(email); if (!isEmail(em)) return [];
   try {
-    let q = db.from('portal_learner_notices').select('id,email,user_id,report_id,kind,title_ar,body_ar,url,ref_id,dedupe_key,pushed,read_at,created_at').eq('email', em).order('created_at', { ascending: false }).limit(Math.min(50, Math.max(1, opts.limit || 20)));
-    if (opts.report_id) q = q.eq('report_id', opts.report_id);
-    if (opts.unreadOnly) q = q.is('read_at', null);
-    const { data } = await q; return ((data || []) as NoticeRow[]);
+    const build = (cols: string) => { let q = db.from('portal_learner_notices').select(cols).eq('email', em).order('created_at', { ascending: false }).limit(Math.min(50, Math.max(1, opts.limit || 20))); if (opts.report_id) q = q.eq('report_id', opts.report_id); if (opts.unreadOnly) q = q.is('read_at', null); return q; };
+    const { data, error } = await build(NOTICE_COLS + ',meta'); /* P55: meta (كلمة صوتية) */
+    if (error && /meta/i.test(String(error.message || ''))) { const r2 = await build(NOTICE_COLS); return ((r2.data || []) as NoticeRow[]); } /* قبل تطبيق SQL P55 يبقى كل شيء يعمل */
+    return ((data || []) as NoticeRow[]);
   } catch { return []; }
 }
 export async function unreadCount(db: any, email: string): Promise<number> { const rows = await listNotices(db, email, { limit: 50, unreadOnly: true }); return rows.length; }

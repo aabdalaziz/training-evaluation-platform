@@ -4,12 +4,13 @@
  *  POST /api/notices {action:'read', ids:[…] | all:true} → تعليم مقروء
  *  P53: GET يعيد لكل «كلمة» (trainer_word) can_reply + my_reply · POST {action:'word_reply', notice_id, chip?, text?} → ردّ المتعلّم (لمسة أو سطر ≤ 200)
  *  P54: GET يعيد حدود «الأمانة الصوتية» voice{max_sec,max_bytes,mimes} و my_reply.voice_sec/transcript — الرفع نفسه عبر POST /api/me/voice-reply
+ *  P55: كلمة المدرّب الصوتية — GET يعيد voice{sec,transcript} على الكلمة · GET ?voice=<notice_id> → رابط موقَّع 5 دقائق لصاحب الإشعار
  *  المتقدّم بلا حساب يرى إشعاراته على بطاقة نتيجته (/api/miaar?result=ML-…) — لا هنا.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { listNotices, markRead, KIND_AR, KIND_ICON } from '../../../lib/portal/notices';
-import { myReplies, submitReply, chipLabel, CHIPS, REPLY_MAX, REPLIES_PER_HOUR, VOICE_LIMITS, VOICE_MIMES } from '../../../lib/portal/word-reply'; /* P53 · P54 */
+import { myReplies, submitReply, chipLabel, CHIPS, REPLY_MAX, REPLIES_PER_HOUR, VOICE_LIMITS, VOICE_MIMES, voiceOf, transcriptOf, noticeVoiceUrl } from '../../../lib/portal/word-reply'; /* P53 · P54 · P55 */
 import { rateLimit, tooMany } from '../../../lib/shield/ratelimit';
 
 export const runtime = 'nodejs';
@@ -33,11 +34,12 @@ const shape = (n: any) => ({ id: n.id, kind: n.kind, kind_ar: KIND_AR[n.kind as 
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const u = new URL(req.url); const limit = Math.min(50, Math.max(1, Number(u.searchParams.get('limit') || 20) || 20)); const unreadOnly = u.searchParams.get('unread') === '1';
+  const vid = u.searchParams.get('voice'); if (vid) { /* P55 */ if (!/^[0-9a-zA-Z-]{1,40}$/.test(vid)) return bad('معرّف غير صالح'); const v = await noticeVoiceUrl(db, user.email, vid); if ('error' in v) return bad(v.error, v.status); return NextResponse.json({ success: true, ...v }, { headers: NO }); }
   const rows = await listNotices(db, user.email, { limit, unreadOnly });
   const unread = unreadOnly ? rows.length : (await listNotices(db, user.email, { limit: 50, unreadOnly: true })).length;
   /* P53: ردودي على «كلمات» مدرّبي */
   const wordIds = rows.filter((n: any) => n.kind === 'trainer_word').map((n: any) => String(n.id)); let mine = new Map<string, any>(); try { mine = await myReplies(db, user.email, wordIds); } catch { /* بلا ردود */ }
-  const notices = rows.map((n: any) => ({ ...shape(n), ...(n.kind === 'trainer_word' ? { can_reply: true, my_reply: mine.get(String(n.id)) || null } : {}) }));
+  const notices = rows.map((n: any) => { const tv = n.kind === 'trainer_word' ? voiceOf(n.meta) : null; return { ...shape(n), ...(n.kind === 'trainer_word' ? { can_reply: true, my_reply: mine.get(String(n.id)) || null, voice: tv ? { sec: tv.sec, transcript: transcriptOf(n.meta) } : null } : {}) }; });
   return NextResponse.json({ success: true, unread, notices, reply: { chips: CHIPS, max: REPLY_MAX }, voice: { max_sec: VOICE_LIMITS.maxSeconds, max_bytes: VOICE_LIMITS.maxBytes, transcript_max: VOICE_LIMITS.transcriptMax, mimes: VOICE_MIMES } }, { headers: NO });
 }
 

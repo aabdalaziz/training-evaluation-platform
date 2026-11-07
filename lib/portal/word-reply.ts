@@ -27,6 +27,18 @@ export const VOICE_LIMITS = { maxSeconds: 15, maxBytes: 512 * 1024, perHour: 10,
 export const VOICE_MIMES = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/mpeg', 'audio/wav'] as const;
 export const HANDS_WEEK_DAYS = 7; export const HANDS_WEEK_MIN = 3;
 export type VoiceMeta = { path: string; sec: number; bytes: number; mime: string; at: string };
+/** P55 «كلمة صوتية» — المدرّب يقول كلمته بصوته (≤ 20 ث) · نفس الدلو والبادئة (word-voice/<trainer>/w-…) فيشملها التنظيف نفسه */
+export const TRAINER_VOICE_TITLE = 'كلمة صوتية';
+export const TRAINER_VOICE_OFFICIAL = { ar: 'رسالة صوتية من المدرّب إلى المتعلّم', en: 'Trainer voice note to learner' } as const;
+export const TRAINER_VOICE_LIMITS = { maxSeconds: 20, maxBytes: 768 * 1024 } as const;
+export function validateTrainerVoice(input: { mime: string; bytes: number; sec: number }): { ok: true; mime: string; ext: string; sec: number } | { ok: false; error: string } {
+  const mime = voiceBase(input.mime); if (!(VOICE_MIMES as readonly string[]).includes(mime)) return { ok: false, error: 'صيغة الصوت غير مدعومة (webm · m4a · ogg · mp3 · wav)' };
+  const bytes = Number(input.bytes) || 0; if (bytes < 200) return { ok: false, error: 'التسجيل فارغ — أعِد المحاولة' }; if (bytes > TRAINER_VOICE_LIMITS.maxBytes) return { ok: false, error: `التسجيل أكبر من ${Math.round(TRAINER_VOICE_LIMITS.maxBytes / 1024)} ك.ب` };
+  const sec = Math.round(Number(input.sec) || 0); if (sec < 1) return { ok: false, error: 'التسجيل أقصر من ثانية' }; if (sec > TRAINER_VOICE_LIMITS.maxSeconds + 1) return { ok: false, error: `الكلمة الصوتية ${TRAINER_VOICE_LIMITS.maxSeconds} ثانية كحدّ أقصى` };
+  return { ok: true, mime, ext: voiceExt(mime), sec: Math.min(sec, TRAINER_VOICE_LIMITS.maxSeconds) };
+}
+/** مسار كلمة المدرّب الصوتية: w- يميّزها عن أمانات المتعلّمين داخل المجلد نفسه */
+export function trainerVoicePath(trainerId: string, id: string, ext: string): string { return voicePath(trainerId, `w-${id}`, ext); }
 
 export type ChipKey = 'got_it' | 'need_help' | 'will_attend';
 export type Chip = { key: ChipKey; icon: string; label_ar: string; label_en: string };
@@ -68,13 +80,13 @@ export function parseWordNotice(n: { kind?: string; dedupe_key?: string | null; 
   if (!n || n.kind !== 'trainer_word') return null; const parts = String(n.dedupe_key || '').split(':'); if (parts[0] !== 'trainer_word' || !parts[1]) return null;
   return { trainer_id: parts[1], classroom_id: n.ref_id ? String(n.ref_id) : null };
 }
-export type ReplyView = { id: string; email: string; name: string; chip: ChipKey | null; chip_ar: string; text: string | null; at: string; seen: boolean; notice_id: string; voice: { sec: number } | null; transcript: string | null; hands_week: number };
+export type ReplyView = { id: string; email: string; name: string; chip: ChipKey | null; chip_ar: string; text: string | null; at: string; seen: boolean; notice_id: string; voice: { sec: number } | null; transcript: string | null; hands_week: number; answered?: boolean /* P55 «أُجيب 🎙️» */ };
 export type ReplySummary = { total: number; need_help: number; unseen: number; voice: number; by_chip: Record<ChipKey, number>; items: ReplyView[] };
 /** تجميع ردود شعبة: ✋ أولًا ثم الأحدث · عدّادات */
-export function summarizeReplies(rows: ReplyRow[], names: Map<string, string> = new Map(), hands: Map<string, number> = new Map()): ReplySummary {
+export function summarizeReplies(rows: ReplyRow[], names: Map<string, string> = new Map(), hands: Map<string, number> = new Map(), answered: Set<string> = new Set()): ReplySummary {
   const by_chip: Record<ChipKey, number> = { got_it: 0, need_help: 0, will_attend: 0 }; let unseen = 0; let voice = 0;
   const items: ReplyView[] = rows.map((r) => { if (r.chip) by_chip[r.chip] += 1; if (!r.seen_at) unseen += 1; const e = norm(r.learner_email); const v = voiceOf(r.meta); if (v) voice += 1;
-    return { id: r.id, email: e, name: r.learner_name || names.get(e) || '', chip: r.chip, chip_ar: chipLabel(r.chip), text: r.text || null, at: r.updated_at || r.created_at, seen: !!r.seen_at, notice_id: r.notice_id, voice: v ? { sec: v.sec } : null, transcript: transcriptOf(r.meta), hands_week: hands.get(e) || 0 }; });
+    return { id: r.id, email: e, name: r.learner_name || names.get(e) || '', chip: r.chip, chip_ar: chipLabel(r.chip), text: r.text || null, at: r.updated_at || r.created_at, seen: !!r.seen_at, notice_id: r.notice_id, voice: v ? { sec: v.sec } : null, transcript: transcriptOf(r.meta), hands_week: hands.get(e) || 0, answered: (hands.get(e) || 0) >= HANDS_WEEK_MIN && answered.has(e) }; });
   /* ✋ أولًا · ثم الصوت قبل النصّ (P54) · ثم الأحدث */
   items.sort((a, b) => Number(b.chip === 'need_help') - Number(a.chip === 'need_help') || Number(!!b.voice) - Number(!!a.voice) || Date.parse(b.at) - Date.parse(a.at));
   return { total: rows.length, need_help: by_chip.need_help, unseen, voice, by_chip, items };
@@ -94,7 +106,7 @@ export function trainerNoticeText(count: number, needHelp: number, voices = 0): 
   return { title_ar: `${nAr(count, 'ردّ جديد', 'ردّان جديدان', 'ردود جديدة', 'ردًّا جديدًا')} على كلمتك`, body_ar: needHelp ? `${nAr(needHelp, 'متعلّم واحد يرفع يده', 'متعلّمان يرفعان أيديهما', 'متعلّمين يرفعون أيديهم', 'متعلّمًا يرفعون أيديهم')}${vo} — افتح دفتر اليوم لتراهم أولًا.` : `افتح «دفتر اليوم» لتقرأها${vo} — ردودهم لك وحدك.`, url: REPLIES_PATH };
 }
 /** سطر موجز الصباح 📒 */
-export function repliesLine(replies: number, needHelp: number, voices = 0): string { return replies ? `ردود أمس ${replies}${needHelp ? ` · ✋ ${needHelp}` : ''}${voices ? ` · 🎙️ ${voices}` : ''}` : ''; }
+export function repliesLine(replies: number, needHelp: number, voices = 0, answered = 0): string { return replies ? `ردود أمس ${replies}${needHelp ? ` · ✋ ${needHelp}` : ''}${voices ? ` · 🎙️ ${voices}` : ''}${answered ? ` · أُجيبوا 🎙️ ${answered}` : ''}` : ''; }
 export const hourBucket = (now: Date): string => new Date(Math.floor(now.getTime() / (TRAINER_NOTICE_BUCKET_MIN * 60000)) * TRAINER_NOTICE_BUCKET_MIN * 60000).toISOString().slice(0, 13);
 
 /* ---------- غراء ---------- */
@@ -146,14 +158,45 @@ export async function voiceUrlFor(db: Db, trainerIds: string[], replyId: string)
   if (!r || !v) return { error: 'لا أمانة صوتية بهذا المعرّف', status: 404 }; if (!trainerIds.includes(String(r.trainer_id))) return { error: 'هذه الأمانة ليست لكلمتك', status: 403 };
   try { const { data } = await db.storage.from(VOICE_LIMITS.bucket).createSignedUrl(v.path, VOICE_LIMITS.signedSeconds); if (!data?.signedUrl) return { error: 'تعذّر إنشاء الرابط', status: 500 }; return { url: data.signedUrl, sec: v.sec, transcript: transcriptOf(r.meta) }; } catch (e: any) { return { error: e?.message || 'تعذّر إنشاء الرابط', status: 500 }; }
 }
+/** P55: رابط موقَّع (5 دقائق) لصوت كلمة المدرّب — لصاحب الإشعار وحده (بريده = بريد الإشعار) */
+export async function noticeVoiceUrl(db: Db, email: string, noticeId: string): Promise<{ url: string; sec: number; transcript: string | null } | { error: string; status: number }> {
+  const { data: n } = await db.from('portal_learner_notices').select('id, email, kind, meta').eq('id', String(noticeId || '')).maybeSingle();
+  if (!n || norm(n.email) !== norm(email)) return { error: 'هذه الكلمة ليست لك', status: 404 }; const v = voiceOf(n.meta); if (!v) return { error: (n.meta as any)?.voice_expired ? 'انتهت مدّة الاحتفاظ بهذا الصوت (180 يومًا)' : 'لا صوت على هذه الكلمة', status: 404 };
+  try { const { data } = await db.storage.from(VOICE_LIMITS.bucket).createSignedUrl(v.path, VOICE_LIMITS.signedSeconds); if (!data?.signedUrl) return { error: 'تعذّر إنشاء الرابط', status: 500 }; return { url: data.signedUrl, sec: v.sec, transcript: transcriptOf(n.meta) }; } catch (e: any) { return { error: e?.message || 'تعذّر إنشاء الرابط', status: 500 }; }
+}
 /** P54: تنظيف ملفات الصوت لردود تجاوزت مدّة الاحتفاظ — يُستدعى من خطوة الاحتفاظ القائمة قبل حذف الصفوف (لا كرون جديد) */
-export async function purgeWordVoices(db: Db, days: number, opts: { now?: Date; dry?: boolean } = {}): Promise<{ scanned: number; removed: number }> {
-  const now = opts.now || new Date(); const cutoff = new Date(now.getTime() - days * 86400000).toISOString();
-  const { data } = await db.from('portal_word_replies').select('id, meta').lt('created_at', cutoff).limit(500); const rows = arr(data); const paths = rows.map((r) => voiceOf(r.meta)?.path).filter(Boolean) as string[];
+export async function purgeWordVoices(db: Db, days: number, opts: { now?: Date; dry?: boolean; table?: 'portal_word_replies' | 'portal_learner_notices' } = {}): Promise<{ scanned: number; removed: number }> {
+  const now = opts.now || new Date(); const cutoff = new Date(now.getTime() - days * 86400000).toISOString(); const table = opts.table || 'portal_word_replies';
+  /* P55: في الإشعارات (احتفاظها أطول من 180 يومًا) نلتقط ما يحمل صوتًا فقط ثم نُفرغ meta.voice ليتوقّف المشغّل */
+  const q = db.from(table).select('id, meta').lt('created_at', cutoff); const { data } = await (table === 'portal_learner_notices' ? q.eq('kind', 'trainer_word').not('meta->voice', 'is', null) : q).limit(500); const rows = arr(data);
+  const withVoice = rows.filter((r) => !!voiceOf(r.meta)); const paths = [...new Set(withVoice.map((r) => voiceOf(r.meta)!.path))];
   if (!paths.length || opts.dry) return { scanned: rows.length, removed: opts.dry ? paths.length : 0 };
   try { await db.storage.from(VOICE_LIMITS.bucket).remove(paths); } catch { /* يُعاد غدًا */ }
+  if (table === 'portal_learner_notices') for (const r of withVoice) { try { const meta = { ...(r.meta as Record<string, unknown>) }; delete meta.voice; delete meta.transcript; meta.voice_expired = true; await db.from(table).update({ meta }).eq('id', r.id); } catch { /* يُعاد غدًا */ } }
   return { scanned: rows.length, removed: paths.length };
 }
+/** P55: كنس المخزن — أي ملف صوت أقدم من المدّة تحت word-voice/ يُحذف ولو فقد مرجعه (كلمة نصّية حلّت محلّ صوتية في اليوم نفسه) · أفضل جهد */
+export async function sweepVoiceStorage(db: Db, days: number, opts: { now?: Date; dry?: boolean } = {}): Promise<{ removed: number }> {
+  const now = opts.now || new Date(); const cutoff = now.getTime() - days * 86400000; const st = db.storage.from(VOICE_LIMITS.bucket); const old: string[] = [];
+  try {
+    const { data: dirs } = await st.list(VOICE_LIMITS.prefix, { limit: 1000 });
+    for (const d of arr(dirs)) { if (!d?.name || d.id) continue; /* المجلدات بلا id */
+      const { data: files } = await st.list(`${VOICE_LIMITS.prefix}/${d.name}`, { limit: 1000, sortBy: { column: 'created_at', order: 'asc' } });
+      for (const f of arr(files)) { if (!f?.name || !f.created_at) continue; if (Date.parse(String(f.created_at)) < cutoff) old.push(`${VOICE_LIMITS.prefix}/${d.name}/${f.name}`); } }
+    if (old.length && !opts.dry) await st.remove(old);
+  } catch { /* يُعاد غدًا */ }
+  return { removed: old.length };
+}
+/** P55 «أُجيب 🎙️»: المتعلّم الذي رفع يده ✋ ثلاثًا وجاءته كلمة صوتية من مدرّبه بعد آخر ✋ — تهدأ شارته (بلا تخزين: من إشعارات الكلمة نفسها) */
+export async function answeredByVoice(db: Db, trainerIds: string[], hands: Map<string, number>, lastHandAt: Map<string, string>, now: Date): Promise<Set<string>> {
+  const out = new Set<string>(); const emails = [...hands].filter(([, n]) => n >= HANDS_WEEK_MIN).map(([e]) => e); if (!emails.length || !trainerIds.length) return out;
+  const since = new Date(now.getTime() - HANDS_WEEK_DAYS * 86400000).toISOString();
+  const { data } = await db.from('portal_learner_notices').select('email, created_at, dedupe_key, meta').eq('kind', 'trainer_word').in('email', emails).gte('created_at', since).limit(500);
+  for (const n of arr(data)) { const e = norm(n.email); const w = parseWordNotice(n); if (!w || !trainerIds.includes(String(w.trainer_id)) || !voiceOf(n.meta)) continue; const last = lastHandAt.get(e) || ''; if (String(n.created_at) >= last) out.add(e); }
+  return out;
+}
+/** آخر ✋ لكل متعلّم خلال الأسبوع (للمقارنة مع كلمة المدرّب الصوتية) */
+export function lastHandByLearner(rows: ReplyRow[], now: Date): Map<string, string> { const since = new Date(now.getTime() - HANDS_WEEK_DAYS * 86400000).toISOString(); const m = new Map<string, string>(); for (const r of rows) { if (r.chip !== 'need_help' || (r.updated_at || r.created_at) < since) continue; const e = norm(r.learner_email); const at = r.updated_at || r.created_at; if ((m.get(e) || '') < at) m.set(e, at); } return m; }
 /** بريد المدرّب: بطاقة trainers بالمعرّف — أو حساب profiles إن كان المعرّف حسابًا */
 async function trainerEmail(db: Db, trainerId: string): Promise<string | null> {
   const { data: t } = await db.from('trainers').select('id, email').eq('id', trainerId).maybeSingle(); if (t?.email) return norm(t.email);
@@ -171,15 +214,16 @@ async function notifyTrainer(db: Db, trainerId: string, now: Date): Promise<bool
 }
 export type RoomReplies = ReplySummary & { classroom_id: string | null };
 /** ردود شُعب المدرّب خلال 14 يومًا — مجمَّعة بالشعبة (null = كلمات بلا شعبة) */
-export async function collectReplies(db: Db, trainerIds: string[], opts: { now?: Date; names?: Map<string, string> } = {}): Promise<{ total: number; need_help: number; unseen: number; voice: number; hands3: number; rooms: RoomReplies[] }> {
-  const now = opts.now || new Date(); const ids = trainerIds.filter(Boolean); if (!ids.length) return { total: 0, need_help: 0, unseen: 0, voice: 0, hands3: 0, rooms: [] };
+export async function collectReplies(db: Db, trainerIds: string[], opts: { now?: Date; names?: Map<string, string> } = {}): Promise<{ total: number; need_help: number; unseen: number; voice: number; hands3: number; answered: number; rooms: RoomReplies[] }> {
+  const now = opts.now || new Date(); const ids = trainerIds.filter(Boolean); if (!ids.length) return { total: 0, need_help: 0, unseen: 0, voice: 0, hands3: 0, answered: 0, rooms: [] };
   const since = new Date(now.getTime() - REPLIES_WINDOW_DAYS * 86400000).toISOString();
   const { data } = await db.from('portal_word_replies').select('*').in('trainer_id', ids).gte('updated_at', since).order('updated_at', { ascending: false }).limit(1000); const rows = arr(data) as ReplyRow[];
   const hands = handsByLearner(rows, now); /* P54 «✋ ثلاث مرّات» — من النافذة نفسها (14 يومًا ⊇ 7 أيام) */
+  let answered = new Set<string>(); try { answered = await answeredByVoice(db, ids, hands, lastHandByLearner(rows, now), now); } catch { /* P55 اختياري */ }
   const groups = new Map<string, ReplyRow[]>(); for (const r of rows) { const k = r.classroom_id ? String(r.classroom_id) : ''; const g = groups.get(k) || []; g.push(r); groups.set(k, g); }
-  const rooms: RoomReplies[] = [...groups].map(([k, g]) => ({ classroom_id: k || null, ...summarizeReplies(g, opts.names, hands) }));
+  const rooms: RoomReplies[] = [...groups].map(([k, g]) => ({ classroom_id: k || null, ...summarizeReplies(g, opts.names, hands, answered) }));
   rooms.sort((a, b) => b.need_help - a.need_help || b.unseen - a.unseen || b.total - a.total);
-  return { total: rows.length, need_help: rooms.reduce((n, r) => n + r.need_help, 0), unseen: rooms.reduce((n, r) => n + r.unseen, 0), voice: rooms.reduce((n, r) => n + r.voice, 0), hands3: hands3Count(hands), rooms };
+  return { total: rows.length, need_help: rooms.reduce((n, r) => n + r.need_help, 0), unseen: rooms.reduce((n, r) => n + r.unseen, 0), voice: rooms.reduce((n, r) => n + r.voice, 0), hands3: hands3Count(hands) - answered.size, answered: answered.size, rooms };
 }
 /** «قرأت» — تعليم ردود شعبة (أو كلّها) مقروءة؛ تعود بعدد ما عُلِّم */
 export async function markRepliesSeen(db: Db, trainerIds: string[], classroomId: string | null, opts: { now?: Date } = {}): Promise<number> {
