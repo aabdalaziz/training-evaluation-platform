@@ -76,7 +76,7 @@ test('P51: collectDayBook — جلسات اليوم (بلا الملغاة وب�
   const ab = Object.fromEntries(r.absent_yesterday.map((l) => [l.email, l])); assert.ok(ab['a@x.sa'] && ab['c@x.sa'] && !ab['b@x.sa'], 'أمل وجود غابتا، بدر حضر'); assert.equal(ab['a@x.sa'].absences_30, 1, 'أمل حضرت جلسة 29 أكتوبر وغابت أمس'); assert.equal(ab['c@x.sa'].absences_30, 1); assert.equal(ab['a@x.sa'].name, 'أمل');
   assert.equal(r.practice.active, 2); assert.equal(r.practice.done_today, 1, 'أمل أنجزت اليوم'); assert.deepEqual(r.practice.idle.map((l) => [l.email, l.name, l.idle_days]), [['b@x.sa', 'بدر', 4]]);
   assert.deepEqual(r.exit_week, { passed: 1, conditional: 0, failed: 1, no_plan: 1 }, 'x3 أقدم من أسبوع فلا يُعدّ');
-  assert.deepEqual(b.counts, { sessions_today: 1, absent_yesterday: 2, idle: 1, to_sign: 0, replies_unseen: 0, replies_yesterday: 0, need_help_yesterday: 0 }); /* P53: عدّادات الردود */ assert.equal(b.words_today, 0); assert.equal(b.templates.length, 3);
+  assert.deepEqual(b.counts, { sessions_today: 1, absent_yesterday: 2, idle: 1, to_sign: 0, replies_unseen: 0, replies_yesterday: 0, need_help_yesterday: 0, voice_yesterday: 0, hands3_week: 0 }); /* P53: عدّادات الردود · P54: الصوت و✋×3 */ assert.equal(b.words_today, 0); assert.equal(b.templates.length, 3);
   assert.ok(!JSON.stringify(b).includes('زيد'), 'لا أسماء من شعبة غيري');
 });
 

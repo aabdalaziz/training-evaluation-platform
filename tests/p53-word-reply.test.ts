@@ -88,7 +88,7 @@ test('P53: collectReplies (14 يومًا · بالشعبة · ✋ أولًا) ·
   assert.equal(c.total, 3, 'بلا القديم وبلا مدرّب آخر'); assert.equal(c.need_help, 1); assert.equal(c.unseen, 2); assert.equal(c.rooms.length, 2); assert.equal(c.rooms[0].classroom_id, 'c1'); assert.deepEqual(c.rooms[0].items.map((i) => i.id), ['b', 'a']); assert.equal(c.rooms[1].classroom_id, null);
   assert.equal(await markRepliesSeen(db as any, ['t1'], 'c1', { now }), 3, 'شعبة c1 كاملة (حتى القديم)'); assert.equal((await collectReplies(db as any, ['t1'], { now })).unseen, 0); assert.equal(db.T.portal_word_replies.find((r: any) => r.id === 'other').seen_at, null, 'لا يمسّ مدرّبًا آخر');
   assert.equal(await markRepliesSeen(db as any, ['t1'], null, { now }), 0, 'لم يبقَ غير مقروء'); assert.equal(await markRepliesSeen(db as any, [], null), 0);
-  const y = await repliesYesterday(db as any, ['t1'], now); assert.deepEqual(y, { replies: 2, need_help: 1 });
+  const y = await repliesYesterday(db as any, ['t1'], now); assert.deepEqual(y, { replies: 2, need_help: 1, voices: 0 }); /* P54: voices */
   /* دفتر اليوم: مدرّب بلا شُعب → replies ضمن الدفتر والعدّادات */
   const db2 = fakeDb({ portal_word_replies: db.T.portal_word_replies, classrooms: [], portal_sessions: [], audit_logs: [] });
   const book = await collectDayBook(db2 as any, { id: 'u1', email: 'trainer@x.sa', staff: false, trainerIds: ['t1'], name: 'د. أحمد', viewing_other: false }, 'https://x', { now });

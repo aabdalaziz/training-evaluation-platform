@@ -4,6 +4,7 @@
  *  GET  /api/me/day                → الدفتر (المدرّب: شُعبه وجلساته · الطاقم: دفتره أو ?trainer=<id> للاطّلاع فقط)
  *  POST /api/me/day {action:'word', classroom_id, mode:'one'|'absent'|'idle'|'all', email?, text?, template?} → «كلمة» داخل أَثَر
  *  POST /api/me/day {action:'seen_replies', classroom_id?} → P53: تعليم ردود المتعلّمين على كلمتي مقروءة (شعبة أو الكلّ)
+ *  GET  /api/me/day?voice=<reply_id>   → P54: رابط موقَّع (5 دقائق) لأمانة صوتية على كلمتي — للمدرّب صاحب الكلمة أو الطاقم المطّلع (?trainer=)
  *  المصادقة: Bearer · المدرّب = TRAINER أو بريده في trainers · الطاقم = STAFF_ROLES. غيرهم 403. لا «كلمة» بالنيابة.
  */
 import { NextResponse } from 'next/server';
@@ -15,7 +16,7 @@ import { normEmail } from '../../../../lib/portal/roles';
 import { STAFF_ROLES } from '../../../../lib/portal/sign';
 import { collectDayBook, resolveTrainer, sendWord, cleanWord, DAY_TITLE, WORD_MAX, WORDS_PER_HOUR } from '../../../../lib/portal/day';
 import type { WordMode } from '../../../../lib/portal/day';
-import { markRepliesSeen } from '../../../../lib/portal/word-reply'; /* P53 */
+import { markRepliesSeen, voiceUrlFor } from '../../../../lib/portal/word-reply'; /* P53 · P54 */
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -41,6 +42,10 @@ async function ctx(req: Request, wantTrainer?: string | null) {
 export async function GET(req: Request) {
   const u = new URL(req.url); const c = await ctx(req, u.searchParams.get('trainer')); if ('error' in c) return c.error; const { db, me } = c;
   const rl = await rateLimit(db, `day:user:${me.id}`, 120, 60); if (!rl.allowed) return tooMany(rl);
+  const voice = u.searchParams.get('voice'); if (voice) { /* P54 */
+    if (!isId(voice)) return bad('معرّف غير صالح'); if (!me.trainerIds.length) return bad('لا أمانات بلا بطاقة مدرّب', 403);
+    const v = await voiceUrlFor(db, [...me.trainerIds, me.id], voice); if ('error' in v) return bad(v.error, v.status); return NextResponse.json({ success: true, ...v }, { headers: NO });
+  }
   const book = await collectDayBook(db, me, siteOf(req));
   return NextResponse.json({ success: true, title: DAY_TITLE, ...book }, { headers: NO });
 }

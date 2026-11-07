@@ -18,6 +18,9 @@ export async function runRetention(db: any, dry: boolean) {
   const out: { table: string; action: string; days: number; rows: number | null }[] = [];
   for (const r of retentionRules()) {
     try {
+      if (r.table === 'portal_word_replies' && r.retentionDays) { /* P54: ملفات الأمانات الصوتية تُحذف من المخزن قبل حذف صفوفها (لا كرون جديد) */
+        try { const { purgeWordVoices } = await import('../portal/word-reply'); const pv = await purgeWordVoices(db, r.retentionDays, { dry }); out.push({ table: 'storage:athar-media/word-voice', action: 'delete', days: r.retentionDays, rows: pv.removed }); } catch { out.push({ table: 'storage:athar-media/word-voice', action: 'delete', days: r.retentionDays, rows: null }); }
+      }
       const { data, error } = await db.rpc('vault_retention', { p_table: r.table, p_ts_col: r.tsCol, p_days: r.retentionDays, p_action: r.policy === 'delete' ? 'delete' : 'anonymize', p_user_col: r.userCol, p_email_col: r.emailCol, p_null_cols: r.piiCols, p_dry: dry });
       out.push({ table: r.table, action: r.policy, days: r.retentionDays || 0, rows: error ? null : Number(data ?? 0) });
     } catch { out.push({ table: r.table, action: r.policy, days: r.retentionDays || 0, rows: null }); }

@@ -10,7 +10,7 @@
 import { riyadhDate, IDLE_DAYS } from '../miaar/practice';
 import { collectRegister } from './sign';
 import type { SignGroup } from './sign';
-import { collectReplies, repliesYesterday, repliesLine } from './word-reply'; /* P53 «ردّ على الكلمة» */
+import { collectReplies, repliesYesterday, repliesLine, hands3Line } from './word-reply'; /* P53 «ردّ على الكلمة» · P54 «أمانة صوتية» */
 import type { RoomReplies } from './word-reply';
 
 type Db = any;
@@ -44,10 +44,11 @@ export function greeting(now: Date, name?: string | null): { hello_ar: string; d
 export const yesterdayOf = (now: Date): string => riyadhDate(new Date(now.getTime() - 86400000));
 /** حدود يوم الرياض بالتوقيت العالمي */
 export function riyadhDayBounds(now: Date): { from: string; to: string } { const d = riyadhDate(now); const from = new Date(Date.parse(`${d}T00:00:00Z`) - TZ_MS); return { from: from.toISOString(), to: new Date(from.getTime() + 86400000).toISOString() }; }
-export type DayCounts = { sessions_today: number; absent_yesterday: number; idle: number; to_sign: number; replies_unseen?: number; replies_yesterday?: number; need_help_yesterday?: number };
+export type DayCounts = { sessions_today: number; absent_yesterday: number; idle: number; to_sign: number; replies_unseen?: number; replies_yesterday?: number; need_help_yesterday?: number; voice_yesterday?: number; hands3_week?: number };
 export function digestText(c: DayCounts): { title_ar: string; body_ar: string; url: string } {
-  const parts: string[] = []; if (c.sessions_today) parts.push(c.sessions_today === 1 ? 'جلسة واحدة' : c.sessions_today === 2 ? 'جلستان' : `${c.sessions_today} جلسات`); if (c.absent_yesterday) parts.push(`غاب أمس ${c.absent_yesterday}`); if (c.idle) parts.push(`متوقّفون في مِران ${c.idle}`); if (c.to_sign) parts.push(`ينتظر توقيعك ${c.to_sign}`); const rl = repliesLine(c.replies_yesterday || 0, c.need_help_yesterday || 0); if (rl) parts.push(rl); /* P53 */
-  return { title_ar: `دفتر اليوم: ${parts.join(' · ') || 'لا شيء يستدعي انتباهك'}`, body_ar: 'افتح دفتر اليوم: جلساتك، من غاب، من توقّف، وما ينتظر توقيعك — و«كلمة» تصل إلى متعلّميك في لحظتها.', url: DAY_PATH };
+  const parts: string[] = []; if (c.sessions_today) parts.push(c.sessions_today === 1 ? 'جلسة واحدة' : c.sessions_today === 2 ? 'جلستان' : `${c.sessions_today} جلسات`); if (c.absent_yesterday) parts.push(`غاب أمس ${c.absent_yesterday}`); if (c.idle) parts.push(`متوقّفون في مِران ${c.idle}`); if (c.to_sign) parts.push(`ينتظر توقيعك ${c.to_sign}`); const rl = repliesLine(c.replies_yesterday || 0, c.need_help_yesterday || 0, c.voice_yesterday || 0); if (rl) parts.push(rl); /* P53 · P54 */
+  const pulse = hands3Line(c.hands3_week || 0); /* P54: سطر النبض — لا رقم بل نداء */
+  return { title_ar: `دفتر اليوم: ${parts.join(' · ') || 'لا شيء يستدعي انتباهك'}`, body_ar: (pulse ? `${pulse} — ` : '') + 'افتح دفتر اليوم: جلساتك، من غاب، من توقّف، وما ينتظر توقيعك — و«كلمة» تصل إلى متعلّميك في لحظتها.', url: DAY_PATH };
 }
 export type Learner = { email: string; name: string };
 export type ClassDay = { id: string; code: string; section_name: string | null; program_id: string | null; roster: number; roster_list: Learner[]; absent_yesterday: Array<Learner & { absences_30: number }>; sessions_yesterday: number; practice: { active: number; done_today: number; idle: Array<Learner & { idle_days: number }> }; drafts_pending: number; exit_week: { passed: number; conditional: number; failed: number; no_plan: number } };
@@ -60,7 +61,7 @@ export function recipientsFor(mode: WordMode, room: ClassDay, one?: string | nul
 /* ---------- غراء ---------- */
 export type DayMe = { id: string; email: string; staff: boolean; trainerIds: string[]; name: string; viewing_other: boolean };
 export type DaySession = { id: string; title_ar: string; kind: string; starts_at: string; duration_min: number; provider: string; status: string; classroom: { id: string; code: string; section_name: string | null } | null; join_url: string | null; host_url: string | null; facilitator_href: string; state: 'soon' | 'live' | 'ended' | 'upcoming' };
-export type DayBook = { date: string; date_ar: string; hello_ar: string; trainer_name: string; viewing_other: boolean; linked: boolean; counts: DayCounts; sessions: DaySession[]; classrooms: ClassDay[]; to_sign: { total: number; groups: SignGroup[] }; words_today: number; templates: readonly WordTemplate[]; replies: { total: number; need_help: number; unseen: number; rooms: RoomReplies[] }; computed_at: string };
+export type DayBook = { date: string; date_ar: string; hello_ar: string; trainer_name: string; viewing_other: boolean; linked: boolean; counts: DayCounts; sessions: DaySession[]; classrooms: ClassDay[]; to_sign: { total: number; groups: SignGroup[] }; words_today: number; templates: readonly WordTemplate[]; replies: { total: number; need_help: number; unseen: number; voice: number; hands3: number; rooms: RoomReplies[] }; computed_at: string };
 const arr = (d: unknown): any[] => (Array.isArray(d) ? d : []);
 const safe = async <T,>(p: Promise<T>, fb: T): Promise<T> => { try { return await p; } catch { return fb; } };
 
@@ -74,7 +75,7 @@ export async function resolveTrainer(db: Db, u: { id: string; email: string; sta
 export async function collectDayBook(db: Db, me: DayMe, site: string, opts: { now?: Date } = {}): Promise<DayBook> {
   const now = opts.now || new Date(); const today = riyadhDate(now); const yday = yesterdayOf(now); const g = greeting(now, me.name); const tids = me.trainerIds;
   const { from, to } = riyadhDayBounds(now); const ago30 = new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10); const ago7 = new Date(now.getTime() - 7 * 86400000).toISOString();
-  const empty: DayBook = { date: today, date_ar: g.date_ar, hello_ar: g.hello_ar, trainer_name: me.name, viewing_other: me.viewing_other, linked: tids.length > 0, counts: { sessions_today: 0, absent_yesterday: 0, idle: 0, to_sign: 0 }, sessions: [], classrooms: [], to_sign: { total: 0, groups: [] }, words_today: 0, templates: WORD_TEMPLATES, replies: { total: 0, need_help: 0, unseen: 0, rooms: [] }, computed_at: now.toISOString() };
+  const empty: DayBook = { date: today, date_ar: g.date_ar, hello_ar: g.hello_ar, trainer_name: me.name, viewing_other: me.viewing_other, linked: tids.length > 0, counts: { sessions_today: 0, absent_yesterday: 0, idle: 0, to_sign: 0 }, sessions: [], classrooms: [], to_sign: { total: 0, groups: [] }, words_today: 0, templates: WORD_TEMPLATES, replies: { total: 0, need_help: 0, unseen: 0, voice: 0, hands3: 0, rooms: [] }, computed_at: now.toISOString() };
   if (!tids.length) return empty;
   /* الشُّعب والجلسات والتوقيعات والكلمات — معًا */
   const [{ data: cls }, { data: ses }, reg, { count: wc, data: wd }, replies, ry] = await Promise.all([
@@ -82,10 +83,10 @@ export async function collectDayBook(db: Db, me: DayMe, site: string, opts: { no
     db.from('portal_sessions').select('id, title_ar, kind, starts_at, duration_min, provider, status, classroom_id, trainer_id, join_url').in('trainer_id', tids).gte('starts_at', from).lt('starts_at', to).neq('status', 'cancelled').order('starts_at', { ascending: true }).limit(50),
     safe<{ total: number; groups: SignGroup[] }>(collectRegister(db, { id: me.id, email: me.email, role: 'TRAINER', staff: false, trainer: true, doors: [] }, site, { now }), { total: 0, groups: [] }),
     safe(Promise.resolve(db.from('audit_logs').select('id', { count: 'exact' }).eq('actor_id', me.id).eq('action', 'trainer_word').gte('created_at', from).limit(1)), { count: null, data: [] }),
-    safe(collectReplies(db, [...tids, me.id], { now }), { total: 0, need_help: 0, unseen: 0, rooms: [] as RoomReplies[] }), /* P53 */
-    safe(repliesYesterday(db, [...tids, me.id], now), { replies: 0, need_help: 0 }),
+    safe(collectReplies(db, [...tids, me.id], { now }), { total: 0, need_help: 0, unseen: 0, voice: 0, hands3: 0, rooms: [] as RoomReplies[] }), /* P53 · P54 */
+    safe(repliesYesterday(db, [...tids, me.id], now), { replies: 0, need_help: 0, voices: 0 }),
   ]);
-  const withReplies = (c: DayCounts): DayCounts => ({ ...c, replies_unseen: replies.unseen, replies_yesterday: ry.replies, need_help_yesterday: ry.need_help });
+  const withReplies = (c: DayCounts): DayCounts => ({ ...c, replies_unseen: replies.unseen, replies_yesterday: ry.replies, need_help_yesterday: ry.need_help, voice_yesterday: ry.voices, hands3_week: replies.hands3 });
   const rooms = arr(cls); const cids = rooms.map((r) => String(r.id)); const roomOf = new Map(rooms.map((r) => [String(r.id), r]));
   /* الجلسات */
   const sessions: DaySession[] = []; const sids = arr(ses).map((s) => String(s.id));
@@ -156,7 +157,7 @@ export async function runDayDigest(db: Db, opts: { site?: string; dry?: boolean;
     const { pushNotice } = await import('./notices'); const day = riyadhDate(now); const seen = new Set<string>();
     for (const t of list) { const email = norm(t.email); if (seen.has(email)) continue; seen.add(email);
       try { const me: DayMe = { id: `digest:${t.id}`, email, staff: false, trainerIds: list.filter((x) => norm(x.email) === email).map((x) => String(x.id)), name: String(t.name || ''), viewing_other: false };
-        const book = await collectDayBook(db, me, opts.site || '', { now }); const c = book.counts; if (!c.sessions_today && !c.absent_yesterday && !c.idle && !c.to_sign && !c.replies_yesterday) continue;
+        const book = await collectDayBook(db, me, opts.site || '', { now }); const c = book.counts; if (!c.sessions_today && !c.absent_yesterday && !c.idle && !c.to_sign && !c.replies_yesterday && !c.hands3_week) continue;
         const txt = digestText(c); const r = await pushNotice(db, { email, user_id: null, report_id: null, kind: 'day_digest', ...txt, ref_id: null, dedupe_key: `day_digest:${email}:${day}`, push: false }, { dry: !!opts.dry }); if (r.inserted) s.sent += 1; } catch (e: any) { s.errors.push(`${t.id}: ${e?.message || e}`); } }
   } catch (e: any) { s.errors.push(e?.message || String(e)); }
   return s;
