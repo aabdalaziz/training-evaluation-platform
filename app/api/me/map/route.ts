@@ -11,6 +11,7 @@ import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { loadMap, keepThread, declineThread, removeThread, signSnapshot, setSnapshotPublic, revokeSnapshot, mySnapshots, shareThread } from '../../../../lib/map/store';
 import { peersForLearner } from '../../../../lib/map/weave-load'; /* P59 */
+import { programPeersForLearner } from '../../../../lib/map/program-weave-load'; /* P61 */
 import { MAP_TITLE, MAP_OFFICIAL, MAP_LIMITS, RULE_AR, KIND_AR } from '../../../../lib/map/registry';
 
 export const runtime = 'nodejs';
@@ -30,12 +31,14 @@ async function ctx(req: Request) {
 const audit = async (db: any, user: { id: string; email: string }, meta: Record<string, unknown>) => { try { await db.from('audit_logs').insert({ actor_id: user.id, actor_email: user.email, actor_role: 'LEARNER', action: 'athar_map', entity_type: 'portal_map_threads', entity_id: null, meta }); } catch { /* السجل اختياري */ } };
 
 const safePeers = async (db: any, email: string, map: { threads: { from: string; to: string; status: string }[] }) => { try { return await peersForLearner(db, email, map.threads.filter((t) => t.status === 'kept').map((t) => ({ from: t.from, to: t.to }))); } catch { return {}; } };
+/* P61 — الشفافية: «خيطك جزء من نسيج برنامج …» (عدد الناسجين غيرك على مفتاح البرنامج · k ≥ 5 · بلا أسماء) */
+const safeProgramPeers = async (db: any, email: string, map: { stations: { key: string; title_ar: string; kind: string }[]; threads: { from: string; to: string; status: string }[] }) => { try { const titles: Record<string, string> = {}; for (const s of map.stations) if (s.kind === 'program') titles[s.key] = s.title_ar; return await programPeersForLearner(db, email, map.threads.filter((t) => t.status === 'kept').map((t) => ({ from: t.from, to: t.to })), titles); } catch { return {}; } };
 
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const [map, snapshots] = await Promise.all([loadMap(db, user), mySnapshots(db, user)]);
-  const peers = await safePeers(db, user.email, map); /* P59 */
-  return NextResponse.json({ success: true, title: MAP_TITLE, official: MAP_OFFICIAL, limits: MAP_LIMITS, rules: RULE_AR, kinds: KIND_AR, map, snapshots, peers }, { headers: NO });
+  const [peers, program_peers] = await Promise.all([safePeers(db, user.email, map), safeProgramPeers(db, user.email, map)]); /* P59 · P61 */
+  return NextResponse.json({ success: true, title: MAP_TITLE, official: MAP_OFFICIAL, limits: MAP_LIMITS, rules: RULE_AR, kinds: KIND_AR, map, snapshots, peers, program_peers }, { headers: NO });
 }
 
 export async function POST(req: Request) {
@@ -52,6 +55,6 @@ export async function POST(req: Request) {
   else if (action === 'revoke') { if (!b.id) return bad('معرّف اللقطة مطلوب'); const r = await revokeSnapshot(db, user, String(b.id)); if (!r.ok) return bad('تعذّر الإبطال', 500); await audit(db, user, { action, id: b.id }); }
   else return bad('إجراء غير معروف');
   const [map, snapshots] = await Promise.all([loadMap(db, user), mySnapshots(db, user)]);
-  const peers = await safePeers(db, user.email, map);
-  return NextResponse.json({ success: true, map, snapshots, peers }, { headers: NO });
+  const [peers, program_peers] = await Promise.all([safePeers(db, user.email, map), safeProgramPeers(db, user.email, map)]);
+  return NextResponse.json({ success: true, map, snapshots, peers, program_peers }, { headers: NO });
 }

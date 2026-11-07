@@ -119,3 +119,4 @@ import './p53b-mail-draft.test'; // P53-ب «أرسل من بريدك»
 import './p58-map.test'; /* P58 «خريطة أثرك» */
 import './p59-weave.test';
 import './p60-map-voice.test';
+import './p61-program-weave.test'; /* P61 «نسيج البرنامج» */

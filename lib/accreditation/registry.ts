@@ -72,10 +72,11 @@ export const tpsGeneral = (rows: StandardRow[]) => rows.filter(r => r.framework 
 
 /* ───────── 3) الأدلة: الأنواع والقواعد ───────── */
 export type EvidenceKind = 'program' | 'design' | 'units' | 'template' | 'need' | 'charter' | 'weekly' | 'final' | 'diploma_unit' | 'pulse' | 'profile' | 'review' | 'version' | 'attendance' | 'enrollment' | 'support' | 'after' | 'trainer' | 'trainer_pd' | 'skill_map'
-  | 'miaar_exit' | 'miaar_units' | 'miaar_remedial' | 'miaar_effect' | 'miaar_retake' /* م9 أدلة مِعيار */ | 'miaar_practice' /* م10 مِران */;
+  | 'miaar_exit' | 'miaar_units' | 'miaar_remedial' | 'miaar_effect' | 'miaar_retake' /* م9 أدلة مِعيار */ | 'miaar_practice' /* م10 مِران */ | 'weave' /* P61 نسيج البرنامج */;
 export type Evidence = { id: string; kind: EvidenceKind; codes: string[]; label_ar: string; at: string | null; href: string | null; n?: number };
 export const EVIDENCE_KIND_AR: Record<EvidenceKind, string> = { program: 'بيانات البرنامج', design: 'هندسة البرنامج', units: 'وحدات البرنامج', template: 'قالب الكفايات والاستراتيجيات', need: 'احتياج معلَن تبنّاه البرنامج', charter: 'ميثاق الجهة', weekly: 'تقرير تعلّم أسبوعي معتمَد', final: 'تقرير ختامي معتمَد', diploma_unit: 'تقرير وحدة معتمَد', pulse: 'نبض الأسبوع', profile: 'كشف كفايات معتمَد', review: 'مراجعة البرنامج بعد الدفعة (معتمَدة)', version: 'نسخة الدفعة المطبَّقة', attendance: 'سجلّ الحضور', enrollment: 'التسجيل والقبول والتنسيب', support: 'قرارات الدعم والإعادة', after: 'محطات الأثر بعد البرنامج', trainer: 'سيرة مدرّب موثَّقة في هيئة أَثَر', trainer_pd: 'تطوير مهني للمدرّب (بروفة · أَثَر معك · شهادة قرين)', skill_map: 'ربط الكفايات بمعايير المعلّم',
   miaar_exit: 'نهاية المستوى (مِعيار)', miaar_units: 'خريطة المنهج (مِعيار)', miaar_remedial: 'جلسة تعويض (مِعيار)', miaar_effect: 'أثر التعويض (مِعيار)', miaar_retake: 'إعادة مهارة (مِعيار)', miaar_practice: 'مِران — تدريب بين الحكم والإعادة (مِعيار)',
+  weave: 'نسيج البرنامج — خيوط نسجها المتدرّبون بأيديهم (P61)',
 };
 /** لكل معيار فرعي: الحدّ الأدنى من الأدلة ليُعدّ مستوفى، وهل له مصدر آلي، والمهمة التي تُنتج دليله ورابطها */
 export type EvidenceRule = { min: number; auto: boolean; task_ar: string; href: string };
@@ -193,11 +194,11 @@ export function evidenceTimeline(evidence: Evidence[], now = new Date()): Timeli
 }
 export const ageingEvidence = (evidence: Evidence[], now = new Date()) => evidence.filter(e => isAgeing(e.at, now));
 /** جسم النسخة المختومة — كل ما يراه المراجِع، بلا أسماء متدرّبين ولا روابط داخلية */
-export function snapshotBody(v: { program_ar: string; org_ar: string | null; program_type: string | null; cov: StandardCoverage[]; narratives: Narrative[]; eligibility: { key: string; ok: boolean; text_ar: string }[]; timeline: TimelineItem[]; standards: StandardRow[]; skill_map_coverage: { n: number; total: number }; frozen_at: string; note_ar: string }) {
+export function snapshotBody(v: { program_ar: string; org_ar: string | null; program_type: string | null; cov: StandardCoverage[]; narratives: Narrative[]; eligibility: { key: string; ok: boolean; text_ar: string }[]; timeline: TimelineItem[]; standards: StandardRow[]; skill_map_coverage: { n: number; total: number }; frozen_at: string; note_ar: string; weave_ar?: string | null; weave_n?: number }) {
   const pub = filePublicView({ program_ar: v.program_ar, cov: v.cov, narratives: v.narratives, updated_at: v.frozen_at });
   return { ...pub, org_ar: v.org_ar, program_type: v.program_type, eligibility: v.eligibility, timeline: v.timeline.map(t => ({ at: t.at, kind: t.kind, kind_ar: t.kind_ar, label_ar: t.label_ar, codes: t.codes, ageing: t.ageing })), ageing_n: v.timeline.filter(t => t.ageing).length,
     standards: pub.standards.map(s => ({ ...s, text_ar: v.standards.find(r => r.framework === 'pas' && r.code === s.code)?.text_ar || '', subs: s.subs.map(x => ({ ...x, title_ar: v.standards.find(r => r.framework === 'pas' && r.code === x.code)?.title_ar || '' })) })),
-    skill_map_coverage: v.skill_map_coverage, frozen_at: v.frozen_at, note_ar: v.note_ar };
+    skill_map_coverage: v.skill_map_coverage, frozen_at: v.frozen_at, note_ar: v.note_ar, weave_ar: v.weave_ar || null, weave_n: v.weave_n || 0 /* P61: سطر النسيج يُختم مع النسخة (بلا شيء تحت خمسة) */ };
 }
 /** بصمة نصوص المعايير (إطار pas) — تُختم مع النسخة */
 export const standardsCanonical = (rows: StandardRow[]) => canonicalJson(rows.filter(r => r.framework === 'pas').map(r => ({ code: r.code, title_ar: r.title_ar, text_ar: r.text_ar })).sort((a, b) => a.code.localeCompare(b.code)));

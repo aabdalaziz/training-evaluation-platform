@@ -5,11 +5,13 @@
  *  <AccredFile>   /me/accreditation?program=<pid>  — المصمّم/قائد البرنامج: 4 معايير × (ما ثبت · ما ينقص · فقرة موقَّعة) + شروط التأهّل + خريطة الكفايات إلى معايير المعلّم
  *  <AccredAdmin>  /admin/accreditation             — الطاقم: كل الملفات موجزةً · أضعف معيار عبر البرامج · تحرير نصوص المعايير بلا نشر كود
  *  قواعد: التغطية بكلمات (مستوفى · جزئي · ناقص · يدوي) لا ألوان وحدها · الذكاء يسوّد والإنسان يوقّع · لا أسماء متدرّبين.
+ *  P61 <ProgramWeavePanel> «نسيج البرنامج» (#weave): ما نسجه المتدرّبون بأيديهم — أعداد فقط · k ≥ 5 · يَعُدّ ولا يَقتبس · «الجديلة» و«عبر الدفعات» · testids ac-weave-*
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../lib/ui/icons';
 import { P48_NAMES_AR, P48B_NAMES_AR, COVERAGE_AR, NARRATIVE_MIN, NARRATIVE_MAX, NOTE_MAX, type Coverage } from '../../lib/accreditation/registry';
+import { P61_NAMES_AR, K_PROGRAM } from '../../lib/map/program-weave'; /* P61 «نسيج البرنامج» */
 
 type Tok = () => Promise<string>;
 async function api(token: Tok, path: string, body?: any) { const t = await token(); const r = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' }); try { return await r.json(); } catch { return { success: false, error: 'استجابة غير صالحة' }; } }
@@ -45,6 +47,7 @@ export function AccredFile({ token, programId }: { token: Tok; programId: string
         {d.tasks.length > 0 && <div className="ac-tasks" data-testid="ac-tasks"><b><Icon name="target" size={14} /> {P48_NAMES_AR.missing} ({d.tasks.length}) — كل نقص يفتح الخدمة التي تُنتج دليله:</b><ul>{d.tasks.slice(0, 12).map((t: any) => <li key={t.code}><span className={`ac-st ${TONE[t.state as Coverage]}`}>{COVERAGE_AR[t.state as Coverage]}</span> <b>{t.code}</b> {t.task_ar} {t.href.startsWith('#') ? <button type="button" className="ac-link" onClick={() => { setOpen(t.code.split('.')[0]); setTimeout(() => document.getElementById(`ac-nar-${t.code}`)?.scrollIntoView({ behavior: 'smooth' }), 50); }}>{P48_NAMES_AR.produce} ←</button> : <Link href={t.href}>{P48_NAMES_AR.produce} ←</Link>}</li>)}</ul></div>}
       </section>
       <FreezePanel d={d} token={token} onChanged={load} />
+      <ProgramWeavePanel w={d.weave} program_ar={d.program.name_ar} />
       {d.ageing?.length > 0 && <section className="pt-box ac-age" data-testid="ac-ageing"><h2><Icon name="clock" size={16} /> {P48B_NAMES_AR.ageing_card} ({d.ageing.length}) <small className="pt-muted">— أدلة مضى عليها 12 شهرًا فأكثر؛ المراجِع يسأل: «هل ما زال هذا صحيحًا؟»</small></h2><ul>{d.ageing.slice(0, 10).map((e: any) => <li key={e.id}><span className="ac-st man">{P48B_NAMES_AR.ageing}</span> {e.label_ar} · {fmtDay(e.at)} · <b>{e.codes.join('، ')}</b>{e.href && !e.href.startsWith('#') && <> · <Link href={e.href}>{P48_NAMES_AR.produce} ←</Link></>}</li>)}</ul></section>}
       {d.coverage.map((s: any) => <StandardCard key={s.code} s={s} d={d} open={open === s.code} onToggle={() => setOpen(open === s.code ? '' : s.code)} token={token} onChanged={load} />)}
       <ReviewerClock timeline={d.timeline || []} />
@@ -116,9 +119,10 @@ function FreezePanel({ d, token, onChanged }: { d: any; token: Tok; onChanged: (
       <div className="ac-row">{!openForm && <button type="button" className="pt-btn gold small" onClick={() => setOpenForm(true)} data-testid="ac-freeze-open" disabled={busy}><Icon name="shield" size={14} /> {P48B_NAMES_AR.freeze}</button>}{last && <Link href={`/verify/accreditation/${last.code}`} className="pt-btn ghost small" data-testid="ac-freeze-last">آخر نسخة · <span dir="ltr">{last.code}</span></Link>}</div></div>
     {!can && <p className="ac-task" data-testid="ac-freeze-blocked"><Icon name="target" size={12} /> لا يُجمَّد الملف قبل فقرة موقَّعة لكل معيار رئيس: {(d.freeze_missing || []).map((m: string) => m.split(' ')[1]).join(' · ')}</p>}
     {openForm && <div className="ac-nar" data-testid="ac-freeze-form"><label><b>{P48B_NAMES_AR.note}</b> <small className="pt-muted">— اختيارية، ≤ {NOTE_MAX} حرفًا، تُختم مع النسخة ({note.length}/{NOTE_MAX})</small><textarea rows={2} value={note} onChange={e => setNote(e.target.value.slice(0, NOTE_MAX))} maxLength={NOTE_MAX} data-testid="ac-freeze-note" placeholder="مثال: هذه النسخة تُسلَّم مع طلب الاعتماد؛ النواقص في 3.5 و4.3 لها خطة حتى نهاية الفصل." /></label>
-      <p className="pt-muted" style={{ margin: 0, fontSize: '.85rem' }}>ما سيُختم: {d.score.met}/{d.score.total} مستوفى · {d.narratives.filter((n: any) => n.signed_at).length} فقرة موقَّعة · {d.evidence_n} دليلًا · شروط التأهّل {d.eligibility.every((e: any) => e.ok) ? 'متحقّقة' : 'غير مكتملة (تُعلَن كما هي)'}{d.ageing?.length ? ` · ${d.ageing.length} دليل سيشيخ` : ''}.</p>
+      <p className="pt-muted" style={{ margin: 0, fontSize: '.85rem' }}>ما سيُختم: {d.score.met}/{d.score.total} مستوفى · {d.narratives.filter((n: any) => n.signed_at).length} فقرة موقَّعة · {d.evidence_n} دليلًا · شروط التأهّل {d.eligibility.every((e: any) => e.ok) ? 'متحقّقة' : 'غير مكتملة (تُعلَن كما هي)'}{d.ageing?.length ? ` · ${d.ageing.length} دليل سيشيخ` : ''}{d.weave?.strongest ? ` · 🧶 ${d.weave.mirror.strongest_ar}` : ''}.</p>
       <div className="ac-row"><button type="button" className="pt-btn gold small" onClick={freeze} disabled={busy || !can} data-testid="ac-freeze-go"><Icon name="check" size={14} /> {busy ? '…' : 'اختم النسخة الآن'}</button><button type="button" className="pt-btn ghost small" onClick={() => setOpenForm(false)}>إلغاء</button>{err && <span className="ac-err" role="alert" data-testid="ac-freeze-err">{err}{missing.length ? ` — ${missing.join('؛ ')}` : ''}</span>}</div></div>}
     {done && <p className="ac-ok" data-testid="ac-freeze-ok">خُتمت النسخة <b dir="ltr">{done.snapshot.code}</b> · <Link href={`/verify/accreditation/${done.snapshot.code}`}>افتح صفحة التحقّق</Link>{done.diff && <> · {P48B_NAMES_AR.diff}: {done.diff.met_from} → {done.diff.met_to} مستوفى</>}</p>}
+    {last && typeof d.last_weave_n === 'number' && d.last_weave_n > 0 && (d.weave?.strongest?.n || 0) < d.last_weave_n && <p className="ac-task" data-testid="ac-weave-regress"><Icon name="alert" size={12} /> نسيج البرنامج تراجع منذ آخر ختم: أقوى خيط كان {d.last_weave_n} ناسجًا والآن {d.weave?.strongest?.n || 'تحت خمسة'} — مرآة لا حكم؛ قد يكون سببها خرّيجون حذفوا خيوطهم أو دفعة لم تبدأ خرائطها.</p>}
     {d.diff && last && <p className="ac-diff" data-testid="ac-diff"><b>{P48B_NAMES_AR.diff} ({fmtDay(last.frozen_at)}):</b> {d.diff.improved.length ? <>صعد {d.diff.improved.map((x: any) => <span key={x.code} className="ac-st ok">{x.code}: {COVERAGE_AR[x.from as Coverage]} → {COVERAGE_AR[x.to as Coverage]}</span>)}</> : 'لا صعود'}{d.diff.regressed.length ? <> · نزل {d.diff.regressed.map((x: any) => <span key={x.code} className="ac-st no">{x.code}: {COVERAGE_AR[x.from as Coverage]} → {COVERAGE_AR[x.to as Coverage]}</span>)}</> : null} · المستوفى {d.diff.met_from} → {d.diff.met_to}</p>}
     {snaps.length > 0 && <ul className="ac-snaps" data-testid="ac-snaps">{snaps.map((s: any) => <li key={s.code}><span dir="ltr" className="ac-code">{s.code}</span><span>{fmtT(s.frozen_at)} · {s.frozen_name}</span><span>{s.score_met}/{s.score_total} مستوفى · {s.eligible ? 'مؤهَّل' : 'التأهّل غير مكتمل'}</span>{s.note_ar && <small className="pt-muted">«{s.note_ar}»</small>}<Link href={`/verify/accreditation/${s.code}`}>تحقّق</Link></li>)}</ul>}
   </section>;
@@ -145,6 +149,7 @@ export function AccredVerify({ code }: { code: string }) {
         <p className={`ac-intact ${d.intact ? 'ok' : 'no'}`} data-testid="ac-verify-intact"><Icon name={d.intact ? 'check' : 'alert'} size={14} /> {d.intact ? P48B_NAMES_AR.intact : P48B_NAMES_AR.tampered} — SHA-256 <code dir="ltr">{d.sha256}</code> · إصدار نصوص المعايير <code dir="ltr">{d.standards_sha_short}</code></p>
         <div className="ac-kpis"><span className="b"><b>{d.met}</b>/{d.total} <small>معيارًا فرعيًّا مستوفى</small></span><span><b>{d.pct}%</b> <small>التغطية</small></span><span><b>{(d.narratives || []).length}</b> <small>فقرة موقَّعة</small></span><span><b>{(d.timeline || []).length}</b> <small>دليلًا</small></span>{d.ageing_n > 0 && <span><b>{d.ageing_n}</b> <small>{P48B_NAMES_AR.ageing}</small></span>}<span className={d.eligible ? 'b' : ''}><small>{d.eligible ? 'شروط التأهّل متحقّقة' : 'شروط التأهّل غير مكتملة (مُعلَنة)'}</small></span></div>
         {d.note_ar && <blockquote className="ac-note" data-testid="ac-verify-note"><b>{P48B_NAMES_AR.note}:</b> «{d.note_ar}»</blockquote>}
+        {d.weave_ar && <p className="ac-weave-line" data-testid="ac-verify-weave">🧶 <b>{P61_NAMES_AR.title}</b> (كما كان عند الختم): {d.weave_ar} — بأيدي المتدرّبين، بلا أسماء، خمسة فأكثر.</p>}
         <div className="ac-row no-print"><button type="button" className="pt-btn ghost small" onClick={() => window.print()} data-testid="ac-verify-print"><Icon name="print" size={14} /> طباعة / {P48B_NAMES_AR.delivery}</button><Link href="/" className="pt-btn ghost small"><Icon name="home" size={14} /> الرئيسية</Link></div>
       </>}
     </section>
@@ -171,6 +176,7 @@ export function AccredStrip({ programId }: { programId: string }) {
     <h2 id="ac-strip-h"><Icon name="award" size={16} /> {P48B_NAMES_AR.strip}: {s.met}/{s.total} معيارًا فرعيًّا مستوفى ({s.pct}%)</h2>
     <small>{P48_NAMES_AR.official} ({P48_NAMES_AR.body_ar}) — آخر {P48B_NAMES_AR.snapshot} {fmtDay(s.frozen_at)} · {s.eligible ? 'شروط التأهّل متحقّقة' : 'التأهّل غير مكتمل (مُعلَن)'} · <Link href={`/verify/accreditation/${s.code}`}>تحقّق</Link></small>
     <ul>{(s.standards || []).map((x: any) => <li key={x.code}><b>{x.code}</b> {x.title_ar} <span>{x.pct}%</span></li>)}</ul>
+    {s.weave_ar && <small className="ac-weave-line" data-testid="ac-strip-weave">🧶 {s.weave_ar} — نسجوه بأيديهم.</small>}
   </section>;
 }
 /** بطاقة الجهة في /org — أرقام فقط */
@@ -197,7 +203,7 @@ export function AccredAdmin({ token }: { token: Tok }) {
     <section className="pt-box">
       <h2><Icon name="award" size={16} /> ملفات الاعتماد الحيّة ({d.files.length})</h2>
       {!d.files.length && <p className="pt-muted" data-testid="ac-admin-empty">لا برامج منتهية بمؤهل (دبلوم) بعد.</p>}
-      <ul className="ac-files" data-testid="ac-admin-files">{d.files.map((f: any) => <li key={f.id} data-testid="ac-admin-file" data-pct={f.score.pct}><Link href={`/me/accreditation?program=${f.id}`}><b>{f.name_ar}</b></Link><span className="ac-kpis"><span className="b"><b>{f.score.met}</b>/{f.score.total}</span><span><b>{f.score.pct}%</b></span><span><b>{f.signed}</b> <small>فقرة موقَّعة</small></span><span className={f.eligible ? 'b' : ''}><small>{f.eligible ? 'مؤهَّل للتقدّم' : 'لم يستوفِ شروط التأهّل'}</small></span>{f.snapshots > 0 && <span><small>{f.snapshots} نسخة مختومة · <Link href={`/verify/accreditation/${f.last_code}`}>آخرها</Link></small></span>}{f.ageing > 0 && <span><small>{f.ageing} دليل سيشيخ</small></span>}</span><span className="ac-mini">{f.standards.map((s: any) => <i key={s.code} title={`المعيار ${s.code}: ${s.pct}%`}><b>{s.code}</b> {s.pct}%</i>)}</span></li>)}</ul>
+      <ul className="ac-files" data-testid="ac-admin-files">{d.files.map((f: any) => <li key={f.id} data-testid="ac-admin-file" data-pct={f.score.pct}><Link href={`/me/accreditation?program=${f.id}`}><b>{f.name_ar}</b></Link><span className="ac-kpis"><span className="b"><b>{f.score.met}</b>/{f.score.total}</span><span><b>{f.score.pct}%</b></span><span><b>{f.signed}</b> <small>فقرة موقَّعة</small></span><span className={f.eligible ? 'b' : ''}><small>{f.eligible ? 'مؤهَّل للتقدّم' : 'لم يستوفِ شروط التأهّل'}</small></span>{f.snapshots > 0 && <span><small>{f.snapshots} نسخة مختومة · <Link href={`/verify/accreditation/${f.last_code}`}>آخرها</Link></small></span>}{f.ageing > 0 && <span><small>{f.ageing} دليل سيشيخ</small></span>}<span data-testid="ac-admin-weave"><small>🧶 {f.weave_ar || 'النسيج تحت خمسة'}</small></span></span><span className="ac-mini">{f.standards.map((s: any) => <i key={s.code} title={`المعيار ${s.code}: ${s.pct}%`}><b>{s.code}</b> {s.pct}%</i>)}</span></li>)}</ul>
       {d.orgs?.length > 0 && <div className="ac-orgs" data-testid="ac-admin-orgs"><h3><Icon name="globe" size={14} /> {P48B_NAMES_AR.rollup} — لكل جهة</h3><ul>{d.orgs.map((o: any) => <li key={o.organization_id || '-'} data-testid="ac-admin-org"><b>{o.org_ar}</b><span className="ac-kpis"><span className="b"><b>{o.programs}</b> <small>برنامجًا</small></span><span><b>{o.avg_pct}%</b> <small>متوسط التغطية</small></span><span><b>{o.frozen}</b> <small>نسخة مختومة</small></span>{o.ageing > 0 && <span><b>{o.ageing}</b> <small>سيشيخ</small></span>}{o.weakest && <span><small>أضعف معيار <b>{o.weakest.code}</b> ({o.weakest.avg}%)</small></span>}{o.miaar?.exits > 0 && <span data-testid="ac-admin-org-miaar"><b>{o.miaar.exits}</b> <small>اختبار مِعيار · {o.miaar.finals} حكمًا · {o.miaar.promoted} ترقية · {o.miaar.sessions} تعويض</small></span>}</span></li>)}</ul></div>}
       {d.weakest?.length > 0 && d.files.length > 0 && <p className="ac-weak" data-testid="ac-weakest">أضعف معيار عبر البرامج: <b>{d.weakest[0].code} — {d.weakest[0].title_ar}</b> ({d.weakest[0].avg}%) · أقواها: <b>{d.weakest[d.weakest.length - 1].code}</b> ({d.weakest[d.weakest.length - 1].avg}%)</p>}
     </section>
@@ -209,7 +215,42 @@ export function AccredAdmin({ token }: { token: Tok }) {
     </section>
   </main>;
 }
+/* ───────── P61: نسيج البرنامج — ما نسجه متدرّبوه بأيديهم ───────── */
+function Braid({ sources }: { sources: { from: string; to: string; n: number }[] }) {
+  if (!sources.length) return null;
+  const L = Array.from(new Set(sources.map(s => s.from))); const R = Array.from(new Set(sources.map(s => s.to)));
+  const rows = Math.max(L.length, R.length); const H = rows * 54 + 30; const W = 640; const max = Math.max(...sources.map(s => s.n));
+  const y = (i: number, n: number) => n === 1 ? H / 2 : 30 + i * ((H - 60) / (n - 1));
+  /* المصادر على اليمين (من) والأهداف على اليسار (إلى) — اتجاه القراءة العربية */
+  return <svg viewBox={`0 0 ${W} ${H}`} className="ac-braid" role="img" aria-label="جديلة البرنامج: من أين جاءت الخيوط وإلى أين قادت" data-testid="ac-weave-braid">
+    {sources.map((s, i) => { const a = y(L.indexOf(s.from), L.length), b = y(R.indexOf(s.to), R.length); const w = 3 + 14 * (s.n / max); return <path key={i} d={`M ${W - 150} ${a} C ${W / 2} ${a}, ${W / 2} ${b}, 150 ${b}`} fill="none" stroke="#0e7490" strokeOpacity=".45" strokeWidth={w} strokeLinecap="round"><title>{`${s.from} ← ${s.to}: ${s.n}`}</title></path>; })}
+    {L.map((t, i) => <g key={`l${i}`}><circle cx={W - 150} cy={y(i, L.length)} r="7" fill="#0f2a4e" /><text x={W - 138} y={y(i, L.length) + 4} fontSize="13" fontWeight="800" fill="#0f2a4e" textAnchor="start">{t}</text></g>)}
+    {R.map((t, i) => <g key={`r${i}`}><circle cx={150} cy={y(i, R.length)} r="7" fill="#b45309" /><text x={138} y={y(i, R.length) + 4} fontSize="13" fontWeight="800" fill="#0f2a4e" textAnchor="end">{t}</text></g>)}
+    {sources.map((s, i) => { const a = y(L.indexOf(s.from), L.length), b = y(R.indexOf(s.to), R.length); return <text key={`n${i}`} x={W / 2} y={(a + b) / 2 - 4} fontSize="12" fontWeight="900" fill="#0e7490" textAnchor="middle">{s.n}</text>; })}
+  </svg>;
+}
+export function ProgramWeavePanel({ w, program_ar }: { w: any; program_ar: string }) {
+  if (!w) return null;
+  return <section className="pt-box ac-weave" id="weave" data-testid="ac-weave" data-belowk={w.below_k ? '1' : '0'} data-n={w.threads_n}>
+    <h2>🧶 {P61_NAMES_AR.title} — {P61_NAMES_AR.sub} <small className="pt-muted">· {P61_NAMES_AR.official}</small></h2>
+    <p className="ac-lead">{P61_NAMES_AR.motto}. كل خيط هنا كتبه متدرّب بيده في «خريطة أثره» («هذا قاد إلى ذاك — لأن…»)؛ الملف يَعُدّ ولا يَقتبس: لا أسماء، لا جُمل، لا عدد تحت {K_PROGRAM}. لا يدخل شيء من هذا في تقييم أحد.</p>
+    <ul className="ac-weave-mirror" data-testid="ac-weave-mirror">{(w.mirror?.lines_ar || []).map((l: string, i: number) => <li key={i} data-testid="ac-weave-line">{l}</li>)}</ul>
+    {w.below_k && <p className="ac-task" data-testid="ac-weave-belowk"><Icon name="target" size={12} /> حين يبلغ الناسجون {K_PROGRAM} تظهر الخيوط والجديلة والدفعات — والدليل يعلّق نفسه تحت معياره تلقائيًا.</p>}
+    {w.threads?.length > 0 && <>
+      <h3>الخيوط ({w.threads.length}) — سماكة الخيط عدد ناسجيه</h3>
+      <ul className="ac-weave-threads" data-testid="ac-weave-threads">{w.threads.map((t: any) => <li key={t.rule} data-testid="ac-weave-thread" data-rule={t.rule} data-n={t.n}><span className="ac-weave-bar" aria-hidden="true"><i style={{ width: `${Math.max(8, Math.round((t.n / (w.threads[0]?.n || 1)) * 100))}%` }} /></span><b>{t.title_ar}</b> <span>نسجه {t.n}</span> {t.codes?.length > 0 && <small className="pt-muted">· يشهد للمعايير {t.codes.join(' · ')}</small>}</li>)}</ul>
+      <Braid sources={w.sources || []} />
+    </>}
+    {w.cohorts?.length > 0 && <div className="ac-weave-cohorts" data-testid="ac-weave-cohorts"><h3>عبر الدفعات — هل غيّرت مراجعة الدفعة (المعيار 2.6) أثر الدفعة التالية؟</h3>
+      <table><thead><tr><th>الدفعة</th><th>منسوبوها</th><th>نسجوا خيطًا من البرنامج</th><th>النسبة</th></tr></thead>
+        <tbody>{w.cohorts.map((c: any) => <tr key={c.label_ar} data-testid="ac-weave-cohort"><td>{c.label_ar}</td><td>{c.roster}</td><td>{c.weavers || `تحت ${K_PROGRAM}`}</td><td>{c.weavers ? `${c.share}%` : '—'}</td></tr>)}</tbody></table>
+      <small className="pt-muted">كلمات وأعداد لا ألوان وحدها؛ دفعة تحت خمسة لا تظهر.</small></div>}
+    <p className="pt-muted ac-foot">من يرى ماذا: قائد البرنامج والطاقم يرون هذه الأعداد؛ المدرّب يرى نسيج شعبته (P59)؛ المتعلّم يرى على خيطه «جزء من نسيج برنامج …»؛ أما «لأن…» نصًّا وصوتًا فتبقى حيث أُذن بها فقط. {program_ar ? `— ${program_ar}` : ''}</p>
+  </section>;
+}
+
 const CSS = `
+.ac-weave h3{margin:14px 0 6px;font-size:15px;color:#0f2a4e}.ac-weave-mirror{margin:6px 0;padding:0 18px 0 0;line-height:1.9}.ac-weave-threads{list-style:none;padding:0;margin:0;display:grid;gap:6px}.ac-weave-threads li{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ac-weave-bar{flex:0 0 160px;height:10px;background:#e2e8f0;border-radius:6px;overflow:hidden}.ac-weave-bar i{display:block;height:100%;background:#0e7490;border-radius:6px}.ac-braid{width:100%;max-width:720px;height:auto;margin:10px auto;display:block;direction:ltr}.ac-weave-cohorts table{border-collapse:collapse;margin:6px 0}.ac-weave-cohorts th,.ac-weave-cohorts td{border:1px solid #e2e8f0;padding:4px 10px;font-size:13px;text-align:center}.ac-weave-line{display:block;margin:6px 0;color:#0f2a4e;font-weight:700}
 .ac .ac-hero h1{margin:.2rem 0 .4rem;font-size:1.5rem;color:#0f2a4e}.ac-lead{color:#475569;line-height:1.8;font-size:.95rem;margin:0 0 .6rem;max-width:900px}.ac-row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.4rem}.ac-pick select{margin-inline-start:.4rem;padding:.3rem .5rem;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
 .ac-kpis{display:flex;gap:.6rem;flex-wrap:wrap;margin:0 0 .6rem;padding:0}.ac-kpis span{display:inline-flex;align-items:baseline;gap:.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:.2rem .7rem;font-size:.85rem}.ac-kpis span b{font-size:1.05rem;color:#0f2a4e}.ac-kpis span.b{background:#eefaf5;border-color:#bfe9d6}
 .ac-st{display:inline-block;font-size:.75rem;font-weight:900;padding:.05rem .5rem;border-radius:999px;border:1px solid transparent;vertical-align:middle}.ac-st.ok{background:#eefaf5;color:#0b6b4a;border-color:#bfe9d6}.ac-st.mid{background:#fff7e6;color:#8a6a1a;border-color:#f1dfae}.ac-st.no{background:#fff1f1;color:#8a1f1f;border-color:#f3c5c5}.ac-st.man{background:#f1f5f9;color:#334155;border-color:#cbd5e1}

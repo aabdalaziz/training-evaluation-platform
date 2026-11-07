@@ -17,9 +17,10 @@ import { Icon } from '../../../lib/ui/icons';
 import { AtharMapSvg } from '../../components/AtharMapSvg';
 import type { AtharMap, Thread, Station, RuleKey, StationKind } from '../../../lib/map/registry';
 import { NOTE_MAX, fmtDays } from '../../../lib/map/registry';
+import { programPeersLine } from '../../../lib/map/program-weave'; /* P61 */
 
 type Snap = { id: string; created_at: string; year: number; code: string; digest: string; is_public: boolean; revoked_at: string | null; title_ar: string; verify_path: string; public_path: string | null };
-type Data = { map: AtharMap; snapshots: Snap[]; peers?: Record<string, number> /* P59 */; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; title: { ar: string; sub_ar: string }; official: { ar: string; en: string } };
+type Data = { map: AtharMap; snapshots: Snap[]; peers?: Record<string, number> /* P59 */; program_peers?: Record<string, { n: number; program_ar: string }> /* P61 */; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; title: { ar: string; sub_ar: string }; official: { ar: string; en: string } };
 const fmt = (iso?: string | null, m: 'short' | 'long' = 'short') => { if (!iso) return ''; try { return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: m, year: 'numeric', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return iso.slice(0, 10); } };
 const tk = (t: { from: string; to: string }) => `${t.from}>${t.to}`;
 
@@ -46,7 +47,7 @@ export default function AtharMapDesk() {
   const flash = (t: string) => { setMsg(t); setTimeout(() => setMsg(''), 5000); };
   async function act(body: Record<string, unknown>, label: string): Promise<any> {
     setBusy(label); const j = await fetch('/api/me/map', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null); setBusy('');
-    if (j?.success) { setD((p) => (p ? { ...p, map: j.map, snapshots: j.snapshots, peers: j.peers || {} } : p)); setErr(''); } else setErr(j?.error || 'تعذّر الحفظ'); return j;
+    if (j?.success) { setD((p) => (p ? { ...p, map: j.map, snapshots: j.snapshots, peers: j.peers || {}, program_peers: j.program_peers || {} } : p)); setErr(''); } else setErr(j?.error || 'تعذّر الحفظ'); return j;
   }
   /* P60: رفع/حذف الصوت — الخريطة تعود محدَّثة من الردّ */
   async function sendVoice(t: { from: string; to: string }, take: { blob: Blob; sec: number }): Promise<string | null> {
@@ -117,6 +118,7 @@ export default function AtharMapDesk() {
           <ul className="am-cards">{kept.map((t) => { const a = byKey.get(t.from)!; const b = byKey.get(t.to)!; return <li key={tk(t)} className="am-card kept" data-testid="am-kept-item">
             <span className="am-kind">{d.rules[t.rule].title}</span><b>{a.title_ar}</b><span className="am-arrow">⟵</span><b>{b.title_ar}</b><p className="am-note">«لأن {t.note_ar}»</p><p className="am-muted">{fmt(t.decided_at)}{t.shared ? <span className="am-shared" data-testid="am-shared-badge" title="كلمتك تصل مدرّبك بلا اسمك"> · 🧶 مع مدرّبك</span> : null}{t.voice ? <span className="am-voiced" data-testid="am-voice-badge" title="لك وحدك"> · 🎙️ بصوتك ({t.voice.sec} ث)</span> : null}</p>
             {d.peers?.[tk(t)] ? <p className="am-peers" data-testid="am-peers">🧶 خيطك هذا نسجه معك {d.peers[tk(t)]} من زملائك</p> : null}
+            {d.program_peers?.[tk(t)] ? <p className="am-peers am-ppeers" data-testid="am-program-peers">🧶 {programPeersLine(d.program_peers[tk(t)])} — عددُه (لا كلمتك) يدخل في ملف اعتماد البرنامج.</p> : null}
             <div className="am-row"><button type="button" className="am-linkbtn" onClick={() => setOpen(tk(t))}>عرض / حذف</button><button type="button" className="am-linkbtn" onClick={() => hearOne(t)} data-testid="am-hear">{t.voice ? '🔊 اسمع لماذا' : '🔊 اقرأه لي'}</button></div></li>; })}</ul></section>
 
         <section className="am-block" data-testid="am-manual"><h2><Icon name="edit" size={16} /> انسج خيطًا بنفسك</h2>
