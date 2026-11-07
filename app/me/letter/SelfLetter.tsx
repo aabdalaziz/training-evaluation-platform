@@ -20,7 +20,8 @@ import { countdownAr, earlyAr, horizonAr } from '../../../lib/letters/self';
 import type { LetterPublic, Horizon, MirrorLine, ChainItem } from '../../../lib/letters/self';
 
 type Cohort = { program_id: string; program_ar: string; end_date: string; opens_ar: string; days_left: number; n: number; ready: boolean; below_k: boolean; my_line: string | null; my_id: number | null; can_write: boolean; lines: string[] };
-type Data = { letters: LetterPublic[]; chain: ChainItem[]; cohort: Cohort[]; programs: { id: string; name_ar: string; end_date: string | null }[]; horizons: { key: Horizon; label_ar: string; hint_ar: string }[]; prompts: { key: string; ar: string }[]; prompt_today: { key: string; ar: string }; limits: { minChars: number; maxChars: number; replyMax: number; cohortMax: number; maxSealed: number; kCohort: number }; names: Record<string, string>; foot_ar: string; sealed: number; now: string };
+type Legacy = { id: number | string; program_ar: string; sealed_ar: string; opened_at: string | null; opened_ar: string; unseals_ar: string; text_ar: string | null };
+type Data = { legacy?: Legacy[]; letters: LetterPublic[]; chain: ChainItem[]; cohort: Cohort[]; programs: { id: string; name_ar: string; end_date: string | null }[]; horizons: { key: Horizon; label_ar: string; hint_ar: string }[]; prompts: { key: string; ar: string }[]; prompt_today: { key: string; ar: string }; limits: { minChars: number; maxChars: number; replyMax: number; cohortMax: number; maxSealed: number; kCohort: number }; names: Record<string, string>; foot_ar: string; sealed: number; now: string };
 type Mirror = { lines: MirrorLine[]; summary_ar: string; quiet: boolean; days: number };
 const qs = (k: string) => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get(k) : null);
 
@@ -34,6 +35,8 @@ export default function SelfLetter() {
   const load = useCallback(async (t: string) => { const j = await fetch('/api/me/letter', { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success) { setD(j); setErr(''); if (!prompt) setPrompt(j.prompt_today?.key || ''); } else setErr(j?.error || 'تعذّر تحميل رسائلك'); }, [prompt]);
   useEffect(() => { if (tok) load(tok); }, [tok, load]);
   useEffect(() => { const door = qs('door'); if (door) setWriting(true); }, []);
+  /* P63: باب «grad» من /me/after أو /me/grad — الأفق «عند تخرّجي» إن كان البرنامج لم ينتهِ، وإلا «بعد سنة» (معنى رسالة P39 القديمة نفسها) مع تثبيت البرنامج */
+  useEffect(() => { if (!d || qs('door') !== 'grad') return; const p = qs('program') || ''; const pr = d.programs.find((x) => x.id === p); const today = (d.now || '').slice(0, 10); setHorizon(pr?.end_date && pr.end_date > today ? 'grad' : '1y'); if (pr) setProg(pr.id); }, [d]); // eslint-disable-line react-hooks/exhaustive-deps
   const flash = (t: string) => { setMsg(t); setTimeout(() => setMsg(''), 6000); };
   async function act(payload: Record<string, unknown>, label: string): Promise<any> {
     setBusy(label); const j = await fetch('/api/me/letter', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify(payload) }).then((r) => r.json()).catch(() => null); setBusy('');
@@ -123,6 +126,13 @@ export default function SelfLetter() {
         <ol className="sl-timeline">{d.chain.filter((c) => c.opened).map((c) => { const l = past.find((p) => p.id === c.id); return <li key={c.id} data-testid="sl-chain-item" data-id={c.id} className={opened?.letter.id === c.id ? 'on' : ''}>
           <span className="sl-dot" aria-hidden="true" /><div><b>{c.written_ar}</b> <small>{c.horizon_ar}{c.early ? ' · فُتحت مبكّرًا' : ''}{c.replied ? ' · رُدّ عليها' : ''}</small>
             <div className="sl-acts">{l && <button type="button" className="pt-btn ghost small" onClick={() => open(l)} data-testid="sl-chain-open">اقرأها</button>}{l && <button type="button" className="pt-btn ghost small" onClick={() => startNext(l)}>الرسالة التالية</button>}{l && <button type="button" className="pt-btn ghost small" onClick={() => del(l)}>احذفها</button>}</div></div></li>; })}</ol>
+      </section>}
+
+      {/* P63: رسائل «أصوات حول الشهادة» القديمة (P39) — قراءة فقط؛ لا ترحيل ولا حذف */}
+      {d.legacy && d.legacy.length > 0 && <section className="pt-box sl-legacy" data-testid="sl-legacy">
+        <h2>📜 من «أصوات حول الشهادة» <small>{d.legacy.length}</small></h2>
+        <ol className="sl-timeline">{d.legacy.map((g) => <li key={g.id} data-testid="sl-legacy-item" data-opened={g.opened_at ? 1 : 0}><span className="sl-dot" aria-hidden="true" /><div><b>{g.program_ar}</b> <small>كُتبت {g.sealed_ar}{g.opened_at ? ` · فُتحت ${g.opened_ar}` : ` · مختومة — تُفتح ${g.unseals_ar}`}</small>{g.text_ar && <p className="sl-body" style={{ fontSize: 16 }}>{g.text_ar}</p>}</div></li>)}</ol>
+        <p className="sl-muted">كُتبت هذه الرسائل من صفحة «ما بعد البرنامج» قبل أن يتوحّد الباب هنا؛ تبقى كما هي وتُفتح في موعدها. الرسائل الجديدة تُكتب أعلاه.</p>
       </section>}
 
       {/* رسالة الدفعة */}

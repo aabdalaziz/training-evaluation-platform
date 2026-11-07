@@ -33,7 +33,7 @@ export const PROMPTS: { key: string; ar: string }[] = [
 /** بذرة اليوم تتناوب بيوم السنة — فتختلف من يوم لآخر وتثبت خلال اليوم */
 export function promptOfDay(now = new Date()): { key: string; ar: string } { const d = Math.floor((now.getTime() - Date.UTC(now.getUTCFullYear(), 0, 0)) / 86400000); return PROMPTS[d % PROMPTS.length]; }
 /** أبواب الكتابة الأربعة (context_key) */
-export const DOORS_AR: Record<string, string> = { first_day: 'أول يوم في البرنامج', map_sign: 'يوم توقيع خريطة أثرك', weave: 'أول زيارة لنسيج البرنامج', free: 'من مساحتك' , chain: 'سلسلة سنواتي' };
+export const DOORS_AR: Record<string, string> = { first_day: 'أول يوم في البرنامج', map_sign: 'يوم توقيع خريطة أثرك', weave: 'أول زيارة لنسيج البرنامج', free: 'من مساحتك' , chain: 'سلسلة سنواتي', grad: 'من «ما بعد البرنامج» / يوم تخرّجي' /* P63 */ };
 
 export type LetterRow = {
   id: number; created_at: string; user_id: string; email: string; body_ar: string; media_id: string | null; kind: string;

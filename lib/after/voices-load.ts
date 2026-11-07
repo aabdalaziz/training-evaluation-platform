@@ -22,10 +22,21 @@ type Enr = { id: string; program_id: string; program_ar: string; end_day: string
 
 /* ───────── 1) الرسالة ───────── */
 export async function lettersOf(db: any, enrollmentIds: string[]): Promise<LetterRow[]> { if (!enrollmentIds.length) return []; return safe<LetterRow[]>(db.from('portal_after_letters').select(LCOLS).in('enrollment_id', enrollmentIds).limit(200), []); }
-export type LetterView = { phase: LetterPhase; opens: string; closes: string; unseals: string; sealed_at: string | null; opened_at: string | null; text_ar: string | null; in_doc: boolean; id: number | string | null };
-export function letterView(e: Enr, row: LetterRow | null, now = new Date()): LetterView {
+/** P63: الرسالة الحديثة لهذا البرنامج من محرّك P62 (/me/letter) — حالة فقط، لا نصّ؛ door = باب الكتابة الموحَّد */
+export type GradLetterRef = { id: number; state: 'sealed' | 'today' | 'ready' | 'opened'; opens_ar: string; open_hour_ar: string; horizon: string };
+export type LetterView = { phase: LetterPhase; opens: string; closes: string; unseals: string; sealed_at: string | null; opened_at: string | null; text_ar: string | null; in_doc: boolean; id: number | string | null; grad: GradLetterRef | null; door: string; grad_path: string };
+export function letterView(e: Enr, row: LetterRow | null, now = new Date(), grad: GradLetterRef | null = null): LetterView {
   const w = letterWindow(e.end_day); const ph = letterPhase(e.end_day, row, now);
-  return { phase: ph, opens: w.opens, closes: w.closes, unseals: w.unseals, sealed_at: row?.sealed_at || null, opened_at: row?.opened_at || null, text_ar: ph === 'opened' ? String(row?.text_ar || '') : null, in_doc: !!row?.in_doc, id: row?.id ?? null };
+  return { phase: ph, opens: w.opens, closes: w.closes, unseals: w.unseals, sealed_at: row?.sealed_at || null, opened_at: row?.opened_at || null, text_ar: ph === 'opened' ? String(row?.text_ar || '') : null, in_doc: !!row?.in_doc, id: row?.id ?? null,
+    grad, door: `/me/letter?door=grad&program=${encodeURIComponent(e.program_id)}`, grad_path: `/me/grad?program=${encodeURIComponent(e.program_id)}` };
+}
+/** P63: رسائل P62 (portal_time_capsules · scope self) المرتبطة ببرامجي المنتهية — أحدث رسالة لكل برنامج، حالة بلا نصّ */
+export async function gradLettersOf(db: any, me: { id: string }, programIds: string[], now = new Date()): Promise<Map<string, GradLetterRef>> {
+  const out = new Map<string, GradLetterRef>(); if (!programIds.length) return out;
+  const rows = await safe<any[]>(db.from('portal_time_capsules').select('id,program_id,horizon,scope,status,created_at,deliver_at,opened_at').eq('user_id', me.id).in('program_id', programIds).neq('status', 'cancelled').order('created_at', { ascending: false }).limit(100), []);
+  const { letterState, fmtDayAr, openHourAr } = await import('../letters/self');
+  for (const r of rows) { const pid = String(r.program_id || ''); if (!pid || out.has(pid) || (r.scope || 'self') !== 'self') continue; const st = letterState({ deliver_at: String(r.deliver_at), opened_at: r.opened_at || null, created_at: String(r.created_at) }, now); out.set(pid, { id: Number(r.id), state: st.state, opens_ar: fmtDayAr(String(r.deliver_at)), open_hour_ar: openHourAr(String(r.deliver_at)), horizon: String(r.horizon || '1y') }); }
+  return out;
 }
 export async function writeLetter(db: any, me: { id: string; email: string }, e: Enr, text_ar: string, now = new Date()): Promise<{ ok: true } | { ok: false; error: string }> {
   const existing = (await lettersOf(db, [e.id]))[0] || null; const can = canWriteLetter(e.end_day, existing, now); if (!can.ok) return can;

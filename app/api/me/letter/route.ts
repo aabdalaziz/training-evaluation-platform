@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { myLetters, myPrograms, writeLetter, openLetter, replyLetter, deleteLetter, cohortFor, writeCohortLine, deleteCohortLine } from '../../../../lib/letters/store';
+import { legacyLetters } from '../../../../lib/letters/legacy'; /* P63: رسائل P39 القديمة — قراءة فقط */
 import { P62_NAMES_AR, HORIZONS, PROMPTS, promptOfDay, LETTER_LIMITS, LETTER_FOOT_AR, chainOf } from '../../../../lib/letters/self';
 
 export const runtime = 'nodejs';
@@ -35,8 +36,8 @@ async function ctx(req: Request) {
 const audit = async (db: any, user: { id: string; email: string }, meta: Record<string, unknown>) => { try { await db.from('audit_logs').insert({ actor_id: user.id, actor_email: user.email, actor_role: 'LEARNER', action: 'self_letter', entity_type: 'portal_time_capsules', entity_id: null, meta }); } catch { /* السجل اختياري */ } };
 
 async function payload(db: any, user: { id: string; email: string; name?: string }, now: Date) {
-  const [letters, cohort, programs] = await Promise.all([myLetters(db, user, now), cohortFor(db, user, now), myPrograms(db, user)]);
-  return { letters, chain: chainOf(letters), cohort, programs, horizons: HORIZONS, prompts: PROMPTS, prompt_today: promptOfDay(now), limits: LETTER_LIMITS, names: P62_NAMES_AR, foot_ar: LETTER_FOOT_AR, sealed: letters.filter((l) => l.state !== 'opened').length, now: now.toISOString() };
+  const [letters, cohort, programs, legacy] = await Promise.all([myLetters(db, user, now), cohortFor(db, user, now), myPrograms(db, user), legacyLetters(db, user)]);
+  return { legacy, letters, chain: chainOf(letters), cohort, programs, horizons: HORIZONS, prompts: PROMPTS, prompt_today: promptOfDay(now), limits: LETTER_LIMITS, names: P62_NAMES_AR, foot_ar: LETTER_FOOT_AR, sealed: letters.filter((l) => l.state !== 'opened').length, now: now.toISOString() };
 }
 
 export async function GET(req: Request) {

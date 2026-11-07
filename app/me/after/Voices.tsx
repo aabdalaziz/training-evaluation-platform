@@ -6,32 +6,29 @@
  *  <OfferBox>    «البرنامج يردّ»: عرض ورشة تطبيق لمن كتبوا «لم تسنح الفرصة» — «أرغب» / «لا، شكرًا» (إجابة واحدة تُبدَّل)
  *  <MeasureBox>  «قياسك في مِعيار»: مستوى الالتحاق ↔ أول قياس بعد البرنامج، وخيار إضافته إلى وثيقة «أثر بعد»
  */
-import { useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../../lib/ui/icons';
-import { P39_NAMES_AR, LETTER_QUESTION_AR, LETTER_PRIVACY_AR, LETTER_MIN, LETTER_MAX, LETTER_PHASE_AR, OFFER_REPLY_AR } from '../../../lib/after/voices';
+import { P39_NAMES_AR, LETTER_PHASE_AR, OFFER_REPLY_AR } from '../../../lib/after/voices';
 
 type Post = (body: any) => Promise<any>;
 
 export function LetterBox({ item, post, busy, ar }: { item: any; post: Post; busy: string; ar: boolean }) {
-  const l = item.letter; const [text, setText] = useState(''); const [open, setOpen] = useState(false);
+  const l = item.letter;
   if (!l) return null;
   if (l.phase === 'future') return null;   // لا نشوّش قبل أوانها
   return <div className={`vo-letter ${l.phase}`} data-testid="vo-letter" data-phase={l.phase}><style dangerouslySetInnerHTML={{ __html: CSS }} />
-    <div className="vo-head"><Icon name="mail" size={16} /> <b>{l.phase === 'opened' ? (ar ? P39_NAMES_AR.letter_opened : 'What you told yourself a year ago') : (ar ? P39_NAMES_AR.letter : 'A letter to myself in one year')}</b><span className="vo-ph">{LETTER_PHASE_AR[l.phase as keyof typeof LETTER_PHASE_AR]}</span></div>
+    <div className="vo-head"><Icon name="mail" size={16} /> <b>{l.phase === 'opened' ? (ar ? P39_NAMES_AR.letter_opened : 'What you told yourself a year ago') : (ar ? P39_NAMES_AR.letter : 'A letter to myself in one year')}</b><span className="vo-ph">{l.phase === 'open' || l.phase === 'missed' ? (ar ? 'في رسالة إلى نفسي' : 'in Letter to myself') : LETTER_PHASE_AR[l.phase as keyof typeof LETTER_PHASE_AR]}</span> <Link href={l.grad_path} className="vo-gradlink" data-testid="vo-grad-link">🎓 {ar ? 'يوم تخرّجي' : 'Graduation day'}</Link></div>
     {l.phase === 'opened' && <>
       <blockquote data-testid="vo-letter-text">{l.text_ar}</blockquote>
       <small className="pt-muted">{ar ? `ختمتها في ${String(l.sealed_at).slice(0, 10)} وفُتحت في ${String(l.opened_at).slice(0, 10)} — اقرأها ثم اكتب محطة السنة بما فعلته فعلًا.` : `Sealed ${String(l.sealed_at).slice(0, 10)} · opened ${String(l.opened_at).slice(0, 10)}.`}</small>
       <label className="vo-chk"><input type="checkbox" checked={!!l.in_doc} onChange={e => post({ action: 'letter_in_doc', id: l.id, on: e.target.checked })} data-testid="vo-letter-indoc" /> {ar ? 'أضف إلى وثيقة «أثر بعد» جملة أني كتبت لنفسي وفتحتها — بلا نصّها' : 'Add one line to my document — without the text'}</label>
     </>}
     {l.phase === 'sealed' && <p className="pt-muted" data-testid="vo-letter-sealed">{ar ? `مختومة منذ ${String(l.sealed_at).slice(0, 10)} — تُفتح لك في ${l.unseals} مع محطة السنة. لا يراها أحد قبلك.` : `Sealed — opens ${l.unseals}.`}</p>}
-    {l.phase === 'missed' && <p className="pt-muted">{ar ? 'فات وقت الرسالة — تبقى بلا رسالة؛ لا كتابة بأثر رجعي.' : 'Its window passed — no letter.'}</p>}
-    {l.phase === 'open' && !open && <><p className="pt-muted">{ar ? `قبل أن تُغلق صفحة البرنامج: اكتب لنفسك بعد سنة. تُختم فورًا وتُفتح في ${l.unseals}.` : `Write to yourself one year ahead. Sealed now, opened ${l.unseals}.`}</p><button type="button" className="pt-btn light" onClick={() => setOpen(true)} data-testid="vo-letter-write">{ar ? 'اكتب رسالتك' : 'Write the letter'}</button></>}
-    {l.phase === 'open' && open && <form className="vo-form" onSubmit={e => { e.preventDefault(); post({ action: 'letter_write', enrollment_id: item.id, text_ar: text }).then((j: any) => { if (j) { setOpen(false); setText(''); } }); }}>
-      <label>{LETTER_QUESTION_AR} <small className="pt-muted">({text.length}/{LETTER_MAX} · {ar ? `من ${LETTER_MIN} حرفًا` : `min ${LETTER_MIN}`})</small><textarea rows={4} maxLength={LETTER_MAX} value={text} onChange={e => setText(e.target.value)} data-testid="vo-letter-textarea" required /></label>
-      <p className="pt-muted">{LETTER_PRIVACY_AR}</p>
-      <div className="vo-acts"><button type="submit" className="pt-btn" disabled={busy === 'letter_write' || text.trim().length < LETTER_MIN} data-testid="vo-letter-send">{ar ? 'اختم الرسالة' : 'Seal the letter'}</button><button type="button" className="pt-btn light" onClick={() => setOpen(false)}>{ar ? 'ليس الآن' : 'Not now'}</button></div>
-    </form>}
+    {/* P63: باب واحد للكتابة — محرّك «رسالة إلى نفسي» (P62)؛ الكتابة القديمة هنا توقّفت (letter_write نائم)، والمختوم القديم يُقرأ كما هو */}
+    {(l.phase === 'open' || l.phase === 'missed') && <div className="vo-door" data-testid="vo-letter-door" data-grad={l.grad ? l.grad.state : 'none'}>
+      {l.grad ? <p className="pt-muted">{ar ? (l.grad.state === 'opened' ? `فتحتَ رسالتك إلى نفسك عن هذا البرنامج.` : `رسالتك إلى نفسك عن هذا البرنامج مختومة — تُفتح ${l.grad.opens_ar} الساعة ${l.grad.open_hour_ar}.`) : (l.grad.state === 'opened' ? 'You opened your letter about this program.' : `Your letter is sealed — opens ${l.grad.opens_ar}.`)} <Link href={`/me/letter#letter-${l.grad.id}`}>{ar ? 'مكتب رسائلي' : 'My letters'}</Link></p>
+        : <p className="pt-muted">{ar ? 'اكتب لنفسك بعد سنة من هذا البرنامج — نصًّا أو صوتًا — في «رسالة إلى نفسي»؛ تُختم فلا يقرؤها أحد حتى موعدها.' : 'Write to yourself one year after this program — in “Letter to myself”.'} <Link href={l.door} className="pt-btn light small" data-testid="vo-letter-door-link">{ar ? '✉️ اكتب في رسالة إلى نفسي' : '✉️ Write a letter'}</Link></p>}
+    </div>}
   </div>;
 }
 
@@ -62,6 +59,7 @@ export function MeasureBox({ item, post, busy, ar }: { item: any; post: Post; bu
 }
 
 const CSS = `
+.vo-door{margin-top:6px}.vo-gradlink{margin-inline-start:auto;font-size:12px;font-weight:800;color:#0f2a4e;text-decoration:none;border:1px solid #cbd5e1;border-radius:999px;padding:2px 10px}.vo-gradlink:hover{background:#f1f5f9}
 .vo-letter,.vo-offer,.vo-measure{border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;background:#fff;margin:10px 0;display:grid;gap:8px}
 .vo-letter.opened{border-color:#c9a24b;background:#fffdf5}.vo-letter.open{border-color:#0b8a83;background:#f0fdfa}.vo-offer{border-color:#0f2a4e;background:#f8fafc}.vo-measure{border-style:dashed}
 .vo-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#0f2a4e}.vo-head b{font-size:15px}.vo-ph{font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;background:#e2e8f0;color:#334155}

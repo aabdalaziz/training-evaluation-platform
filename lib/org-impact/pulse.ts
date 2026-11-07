@@ -26,6 +26,7 @@ export type OrgPulse = {
   peak_week: string | null; peak_week_ar: string | null; k: boolean;
   line_ar: string | null; mirror_ar: string; ask_ar: string | null;
   thread_ar?: string | null; /* P59: «أقوى خيط نسجه منسوبوكم» من خريطة أثرك — k ≥ 5 ناسجين، وإلا لا يظهر */
+  grad_ar?: string | null; /* P63: «N من منسوبيكم ختموا صفحة تخرّجهم هذا الشهر» — عدد فقط (k ≥ 5)، لا محتوى */
   letters_ar?: string | null; /* P62: «N من منسوبيكم كتبوا رسائل إلى أنفسهم» — عدد كُتّاب فقط (k ≥ 5)، لا محتوى ولا أفق */
 };
 
@@ -107,5 +108,11 @@ export async function orgPulse(db: Db, members: Set<string>, range: { from: stri
     for (const part of chunk(mem)) { const { data: l } = await db.from('portal_time_capsules').select('email').in('email', part).neq('status', 'cancelled').gte('created_at', range.from).lt('created_at', range.to).limit(5000); for (const x of arr<{ email: string }>(l)) if (members.has(norm(x.email))) writers.add(norm(x.email)); }
     pulse.letters_ar = pulseLetterLine(writers.size);
   } catch { pulse.letters_ar = null; }
+  /* P63: كم منسوبًا ختم «صفحة تخرّجه» خلال الشهر — عدد فقط (k ≥ 5)؛ الصفحات نفسها لا تسافر */
+  try {
+    const { pulseGradLineAr } = await import('../grad/registry'); const who = new Set<string>();
+    for (const part of chunk(mem)) { const { data: g } = await db.from('portal_grad_pages').select('email').in('email', part).not('sealed_at', 'is', null).is('revoked_at', null).gte('sealed_at', range.from).lt('sealed_at', range.to).limit(5000); for (const x of arr<{ email: string }>(g)) if (members.has(norm(x.email))) who.add(norm(x.email)); }
+    pulse.grad_ar = pulseGradLineAr(who.size);
+  } catch { pulse.grad_ar = null; }
   return pulse;
 }
