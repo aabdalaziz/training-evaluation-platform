@@ -1,9 +1,9 @@
 ---
 name: athar-dialogue
-description: How to extend the Athar human dialogue loop (P51–P61 — «دفتر اليوم», «رسالة الشهر», «ردّ على الكلمة», «أمانة صوتية», «كلمة صوتية», «صدى الأسبوع», «نبض الجهة», «خريطة أثرك», «نسيج الشعبة», «لأن… بصوتك», «نسيج البرنامج») without breaking its rules — nothing enters evaluation, k ≥ 5 for any aggregate, no names outside the owner's own screen, voice is private/temporary, no server AI, no new cron/env/deps.
+description: How to extend the Athar human dialogue loop (P51–P62 — «دفتر اليوم», «رسالة الشهر», «ردّ على الكلمة», «أمانة صوتية», «كلمة صوتية», «صدى الأسبوع», «نبض الجهة», «خريطة أثرك», «نسيج الشعبة», «لأن… بصوتك», «نسيج البرنامج», «رسالة إلى نفسي بعد سنة») without breaking its rules — nothing enters evaluation, k ≥ 5 for any aggregate, no names outside the owner's own screen, voice is private/temporary, no server AI, no new cron/env/deps.
 ---
 
-# Athar — the dialogue loop (P51–P61)
+# Athar — the dialogue loop (P51–P62)
 
 Read `docs/ATHAR-DIALOGUE-LOOP-P51-P60-AR.txt` (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
 
@@ -46,6 +46,16 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - Evidence attaches itself (`weaveEvidence` → `kind: 'weave'`, `href: '#weave'`) under ETEC sub-standards per rule (`WEAVE_EVIDENCE_CODES`) and only at n ≥ k; «graduates still weaving» = roster learners who decided any non-manual thread after `programs.end_date` → 3.5. It flows through `collectEvidence`, so coverage, freeze (`weave_ar`/`weave_n` in the snapshot body), `/verify`, the public strip and `/admin/accreditation` all see it without extra plumbing.
 - Transparency back to the learner: `/api/me/map` returns `program_peers` («خيطك جزء من نسيج برنامج … — نسجه معك N») computed from counts on the program key excluding the learner; a silent aggregate is not an honest one.
 - Cache only the heavy part (10 min per program, `fresh` bypass); never store the weave in the DB.
+
+## Second edition, not a second table (P62 pattern — «رسالة إلى نفسي بعد سنة»)
+- Before adding a feature, grep for its ancestor: the P25 time capsule (`portal_time_capsules`, `/api/journey`, `runJourney`) already held «رسالة إلى نفسي بعد سنة». P62 extends that table with `ALTER … ADD COLUMN IF NOT EXISTS` (horizon · opened_at · opened_early · reply_ar · chain_of · prompt_key · context_key · program_id · scope) and backfills `context_key='journey'`; old capsules appear in the new desk untouched.
+- The sealed body never leaves the server: `toPublicLetter` strips `body_ar`/`media_id` until `opened_at` is set; the E2E asserts the seeded sealed text is absent from the raw GET JSON. Early opening is allowed but honest — `opened_early=true` + `early_days`, shown as «فُتحت قبل أوانها».
+- Opening hour = writing hour (Riyadh): `deliverAt(written, horizon, programEnd)` adds days or takes `programs.end_date` at the same HH:MM:SS; `grad` falls back to the nearest **future** end_date only, and must be ≥ tomorrow.
+- Mirror «ما حدث فعلًا» = counts only from the learner's own rows (chapters · skill levels · credentials · councils · letters) — no percentages, no verdicts, no AI. `snapshot_now` is stored at opening so the mirror never drifts.
+- Voice capsules: `portal_media.expires_at` (+180 d) + `media_cleanup` would delete audio before a 1‑year letter opens → `keepMedia` pushes `expires_at = deliver_at + 400 d` and tags `context_type='self_letter'`. Any future deferred feature with media must do the same.
+- Cohort envelope «رسالة الدفعة»: one line per graduate per program (`scope='cohort'`, unique partial index), 10–160 chars, no email, opens 1 year after `end_date` at 09:00 Riyadh and only at n ≥ 5 (deterministic shuffle, no names). Writers can delete their own line until the envelope opens.
+- Cron key `self_letters` (after `org_letters`) only pushes the notice on the opening day (`todayNoticeText`, dedupe `self_letter:<id>`); it never opens the letter for the learner — the learner opens it.
+- Limits are part of the design: ≤ 3 sealed letters, delete is immediate (text + media), `rateLimit('letter:<uid>', 3600, 20)`, audit kind `self_letter`.
 
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
