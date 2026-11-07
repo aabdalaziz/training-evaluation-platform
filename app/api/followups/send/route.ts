@@ -40,6 +40,7 @@ import { runOrgJourney } from '../../../../lib/org-journey/cron';
 import { runSelfLetters } from '../../../../lib/letters/store'; /* P62 */
 import { runGradDays } from '../../../../lib/grad/store'; /* P63 */
 import { runFirstDays } from '../../../../lib/first/store'; /* P64 */
+import { runRoomCalendar } from '../../../../lib/calendar/store'; /* P66 */
 import { runHorizon } from '../../../../lib/horizon/cron';
 import { runOrgHorizon } from '../../../../lib/org-horizon/cron';
 import { runPair } from '../../../../lib/pair/cron';
@@ -164,6 +165,9 @@ export async function GET(req: Request) {
   /* P64 «أول يوم»: 🌅 «اليوم يومك الأول» للمتدرّب يوم start_date · «اكتب كلمة الاستقبال» للمدرّب قبلها بيوم · «سطرك ينتظر N» للخرّيج الذي أظهر سطره — داخل أَثَر؛ لا رجعية */
   let first_days: any = null;
   try { first_days = await runFirstDays(db, { site, dry }); } catch (e: any) { first_days = { ok: false, error: e?.message || String(e) }; }
+  /* P66 «أيام التدريب وفترات التطبيق»: بداية فترة التطبيق · التذكير الأسبوعي · «ما جرى في الميدان» للمدرّب · فتح الالتزام يوم العودة · أول/آخر يوم من التقويم */
+  let room_calendar: any = null;
+  try { room_calendar = await runRoomCalendar(db, { site, dry }); } catch (e: any) { room_calendar = { ok: false, error: e?.message || String(e) }; }
   let self_letters: any = null;
   try { self_letters = await runSelfLetters(db, { dry }); } catch (e: any) { self_letters = { ok: false, error: e?.message || String(e) }; }
   // تنظيف الوسائط والغرف (أَثَر · P13-ج): حذف التسجيلات غير المعتمدة بعد 180 يومًا من المخزن والسجل، وإغلاق الغرف المفتوحة منذ أكثر من 6 ساعات
@@ -225,5 +229,5 @@ export async function GET(req: Request) {
   try { directory = await runDirectory(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { directory = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة المنصة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, evidence, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory });
 }

@@ -12,6 +12,7 @@ import { CAPSULE_COLS } from '../journey/cron';
 import { deliverAt, validateLetter, validateReply, validateCohortLine, toPublicLetter, mirrorOf, cohortEnvelope, cohortOpensAt, letterState, todayNoticeText, LETTER_LIMITS, LETTER_PATH, dayKeyRiyadh } from './self';
 import { validateWhy } from '../first/registry'; /* P64 */
 import type { LetterRow, LetterPublic, Horizon } from './self';
+import { datesOverlay } from '../calendar/store'; /* P66 */
 
 type Db = any;
 export type Me = { id: string; email: string; name?: string };
@@ -27,10 +28,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type MyProgram = { id: string; name_ar: string; end_date: string | null };
 export async function myPrograms(db: Db, me: Me): Promise<MyProgram[]> {
-  const en = await safe<any[]>(db.from('portal_enrollments').select('program_id,status').eq('email', lower(me.email)).in('status', ENROLLED).limit(50), []);
+  const en = await safe<any[]>(db.from('portal_enrollments').select('program_id,status,classroom_id').eq('email', lower(me.email)).in('status', ENROLLED).limit(50), []);
   const ids = [...new Set(en.map((e) => String(e.program_id || '')).filter(Boolean))].slice(0, 20); if (!ids.length) return [];
   const ps = await safe<any[]>(db.from('programs').select('id,name_ar,end_date').in('id', ids).limit(20), []);
-  return ps.map((p) => ({ id: String(p.id), name_ar: String(p.name_ar || 'برنامج'), end_date: p.end_date ? String(p.end_date).slice(0, 10) : null }));
+  const ov = await datesOverlay(db, en.map((x) => ({ program_id: String(x.program_id || ''), classroom_id: x.classroom_id ? String(x.classroom_id) : null }))); /* P66: «عند تخرّجي» = آخر يوم في تقويم الشعبة إن وُجد */
+  return ps.map((p) => ({ id: String(p.id), name_ar: String(p.name_ar || 'برنامج'), end_date: ov.get(String(p.id))?.end || (p.end_date ? String(p.end_date).slice(0, 10) : null) }));
 }
 async function rowsOf(db: Db, me: Me): Promise<LetterRow[]> {
   return await safe<LetterRow[]>(db.from('portal_time_capsules').select(LETTER_COLS).eq('user_id', me.id).neq('status', 'cancelled').order('created_at', { ascending: false }).limit(60), []);

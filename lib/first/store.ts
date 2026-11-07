@@ -11,6 +11,7 @@
 import { writeLetter, LETTER_COLS } from '../letters/store';
 import { letterState, dayKeyRiyadh, fmtDayAr as fmtIsoAr, openHourAr } from '../letters/self';
 import { programAfterOf } from '../after/load';
+import { datesOverlay } from '../calendar/store'; /* P66 */
 import { atharWelcome, pickLines, firstPhase, firstOpen, canWriteWhy, windowUntil, validateWhy, matesLineAr, whyCountLineAr, firstDayNotice, welcomeAskNotice, lineAwaitsNotice, addDaysKey, FIRST_LIMITS, FIRST_PATH, WHY_CONTEXT, WHY_PROMPT_KEY, ROAD, P64_NAMES_AR } from './registry';
 import type { AtharWord, FirstPhase, GradLine, RoadStep } from './registry';
 
@@ -40,8 +41,9 @@ export async function firstPrograms(db: Db, me: Me, now = new Date()): Promise<F
   const en = await safe<any[]>(db.from('portal_enrollments').select('id,program_id,classroom_id,status,created_at,full_name').eq('email', lower(me.email)).in('status', ENROLLED).limit(50), []);
   const ids = [...new Set(en.map((e) => String(e.program_id || '')).filter(Boolean))].slice(0, 30); if (!ids.length) return [];
   const ps = await safe<any[]>(db.from('programs').select('id,name_ar,start_date,end_date').in('id', ids).limit(30), []);
+  const ov = await datesOverlay(db, en.map((x) => ({ program_id: String(x.program_id || ''), classroom_id: x.classroom_id ? String(x.classroom_id) : null }))); /* P66: أول/آخر يوم من تقويم الشعبة إن وُجد */
   const out: FirstProgram[] = [];
-  for (const p of ps) { const s = p.start_date ? String(p.start_date).slice(0, 10) : ''; const e = p.end_date ? String(p.end_date).slice(0, 10) : null; if (!firstOpen(s, e, today)) continue;
+  for (const p of ps) { const o = ov.get(String(p.id)); const s = o ? o.start : p.start_date ? String(p.start_date).slice(0, 10) : ''; const e = o ? o.end : p.end_date ? String(p.end_date).slice(0, 10) : null; if (!firstOpen(s, e, today)) continue;
     const my = en.filter((x) => String(x.program_id) === String(p.id)).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))[0];
     out.push({ id: String(p.id), name_ar: String(p.name_ar || 'برنامج'), start_date: s, end_date: e, enrollment_id: String(my?.id || ''), classroom_id: my?.classroom_id ? String(my.classroom_id) : null, phase: firstPhase(s, today), full_name: my?.full_name ? String(my.full_name) : null }); }
   const order: Record<FirstPhase, number> = { first: 0, week: 1, later: 2, before: 3 };

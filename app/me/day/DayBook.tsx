@@ -7,6 +7,7 @@
  *  P53 «ردّ على الكلمة»: dy-c-replies dy-replies[data-unseen] dy-replies-room[data-classroom] dy-reply[data-chip][data-seen] dy-replies-seen dy-replies-empty
  *  P55 «كلمة صوتية»: dy-word-voice (🎙️ قُلها بصوتك) · المسجّل المشترك VoiceRecorder بـ testid dy-rec (-start/-stop/-send/-redo) · dy-word-voice-take (التسجيل الجاهز) · dy-answered («أُجيب 🎙️») · dy-word-ok يذكر 🎙️
  *  P56 «صدى الأسبوع»: dy-echo (بطاقة آخر 7 أيام) · dy-echo-line · dy-echo-mirror · dy-echo-say (🔊 صوت الجهاز)
+ *  P66 «تقويم الشعبة»: بطاقة RoomCalendar داخل كل شعبة (rc-*) · ?room=<classroom_id>#calendar يفتحها
  *  P54 «أمانة صوتية»: dy-reply[data-voice] dy-voice (▶ استمع — رابط موقَّع 5 دقائق عبر /api/me/day?voice=) dy-voice-tr (نصّ تقريبي رمادي) dy-hands3 (✋ ×N هذا الأسبوع) dy-voice-playall (شغّل الجديدة تباعًا) dy-pulse
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -16,6 +17,8 @@ import { Icon } from '../../../lib/ui/icons';
 import VoiceRecorder, { canRecord, fmtSec as fmtVoice, voiceFileName, VOICE_RECORDER_CSS } from '../../components/VoiceRecorder';
 import type { VoiceTake } from '../../components/VoiceRecorder';
 import { EchoSay } from '../../components/Notices'; /* P56 */
+import dynamic from 'next/dynamic';
+const RoomCalendar = dynamic(() => import('./RoomCalendar'), { ssr: false, loading: () => null }); /* P66 «تقويم الشعبة» */
 const TRAINER_VOICE_SEC = 20;
 
 type Learner = { email: string; name: string };
@@ -42,6 +45,7 @@ export default function DayBook() {
   const [recOpen, setRecOpen] = useState(false); const [take, setTake] = useState<VoiceTake | null>(null); const [takeUrl, setTakeUrl] = useState<string | null>(null); const [canVoice, setCanVoice] = useState(false); useEffect(() => { setCanVoice(canRecord()); }, []);
   const setTakeSafe = useCallback((t: VoiceTake | null) => { setTakeUrl((u) => { if (u) URL.revokeObjectURL(u); return t ? URL.createObjectURL(t.blob) : null; }); setTake(t); }, []);
   const trainerParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('trainer') : null;
+  const roomParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('room') : null; /* P66: ?room=<classroom_id>#calendar من إشعار «ما جرى في الميدان» */
   /* P63 «كلمة الوداع»: ?grad=<classroom_id> من إشعار «دفعتك تتخرّج» يفتح صندوق الكلمة للشعبة كلّها موسومًا بالوداع؛ وتظهر كبطاقة اختيارية في أي كلمة «إلى الشعبة» */
   const [grad, setGrad] = useState(false); const [gradOpened, setGradOpened] = useState(false);
   /* P64 «كلمة الاستقبال»: ?welcome=<classroom_id> من إشعار «دفعة جديدة تبدأ» — تظهر في «أول يوم» وتبقى في صفحة التخرّج */
@@ -112,6 +116,8 @@ export default function DayBook() {
           <div className="dy-cell" data-testid="dy-sign"><h3>ينتظر توقيعي</h3>{r.drafts_pending > 0 ? <p>{r.drafts_pending} مسوَّدة «مِران البداية» — <Link href={`/admin/miaar/ledger?practice=${r.id}`}>وقّعها من دفتر التسكين</Link></p> : <p className="dy-good">لا شيء ✓</p>}</div>
           <div className="dy-cell" data-testid="dy-exit"><h3>عُبور هذا الأسبوع</h3>{(r.exit_week.passed + r.exit_week.conditional + r.exit_week.failed) === 0 ? <p className="pt-muted">لا أحكام جديدة.</p> : <p>اجتاز {r.exit_week.passed} · مشروط {r.exit_week.conditional} · لم يجتز {r.exit_week.failed}{r.exit_week.no_plan ? <> · <Link href="/admin/sign">{r.exit_week.no_plan} بلا خطّة مِران</Link></> : null}</p>}</div>
         </div>
+        {/* P66 «تقويم الشعبة»: أيام التدريب → كتل وفترات تطبيق · «ما جرى في الميدان» مجمَّعًا */}
+        <RoomCalendar roomId={r.id} code={r.code} hdr={hdr} readOnly={book.viewing_other} autoOpen={roomParam === r.id} />
       </article>)}</section>}
       {book.linked && book.classrooms.length === 0 && !quiet && <p className="pt-muted">لا شُعب مسندة إليك بعد — الجلسات أعلاه من جدولك.</p>}
       {/* P56: صدى الأسبوع — آخر 7 أيام · بلا تقييم */}

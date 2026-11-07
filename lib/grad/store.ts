@@ -15,6 +15,7 @@ import { letterState, openHourAr, fmtDayAr as fmtIsoAr, cohortOpensAt, dayKeyRiy
 import { buildCards, sinceThen, gradBody, publicFace, programWindow, gradPhase, validateLine, normalizeKeep, normalizePublic, cohortLineAr, gradEvidenceLineAr, gradDayNotice, farewellAskNotice, CODE_RE, GRAD_LIMITS, GRAD_PATH, PUBLIC_DEFAULT } from './registry';
 import type { Card, Counts, Since, Sources, CardKey, PublicKey, GradBody, GradPhase, PublicFace } from './registry';
 import type { Evidence } from '../accreditation/registry';
+import { datesOverlay } from '../calendar/store'; /* P66 */
 
 type Db = any;
 export type Me = { id: string; email: string; name?: string };
@@ -44,9 +45,10 @@ export async function gradPrograms(db: Db, me: Me, now = new Date()): Promise<Gr
   const ids = [...new Set(en.map((e) => String(e.program_id || '')).filter(Boolean))].slice(0, 20); if (!ids.length) return [];
   const [ps, mine] = await Promise.all([safe<any[]>(db.from('programs').select('id,name_ar,start_date,end_date').in('id', ids).limit(20), []), safe<any[]>(db.from('portal_grad_pages').select('program_id,sealed_at,revoked_at').eq('user_id', me.id).limit(50), [])]);
   const sealed = new Set(mine.filter((r) => r.sealed_at && !r.revoked_at).map((r) => String(r.program_id)));
+  const ov = await datesOverlay(db, en.map((x) => ({ program_id: String(x.program_id || ''), classroom_id: x.classroom_id ? String(x.classroom_id) : null }))); /* P66: يوم التخرّج = آخر يوم في تقويم الشعبة إن وُجد */
   const out: GradProgram[] = [];
-  for (const p of ps) { const end = p.end_date ? String(p.end_date).slice(0, 10) : null; if (!end || end > today) continue; const e = en.filter((x) => String(x.program_id) === String(p.id)).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))[0];
-    out.push({ id: String(p.id), name_ar: String(p.name_ar || 'برنامج'), start_date: p.start_date ? String(p.start_date).slice(0, 10) : null, end_date: end, enrollment_id: String(e.id), classroom_id: e.classroom_id ? String(e.classroom_id) : null, phase: gradPhase(end, today), sealed: sealed.has(String(p.id)) }); }
+  for (const p of ps) { const o = ov.get(String(p.id)); const end = o ? o.end : p.end_date ? String(p.end_date).slice(0, 10) : null; if (!end || end > today) continue; const e = en.filter((x) => String(x.program_id) === String(p.id)).sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))[0];
+    out.push({ id: String(p.id), name_ar: String(p.name_ar || 'برنامج'), start_date: o ? o.start : p.start_date ? String(p.start_date).slice(0, 10) : null, end_date: end, enrollment_id: String(e.id), classroom_id: e.classroom_id ? String(e.classroom_id) : null, phase: gradPhase(end, today), sealed: sealed.has(String(p.id)) }); }
   return out.sort((a, b) => b.end_date.localeCompare(a.end_date));
 }
 async function rowOf(db: Db, me: Me, programId: string): Promise<GradRow | null> { const { data } = await db.from('portal_grad_pages').select(GRAD_COLS).eq('user_id', me.id).eq('program_id', programId).maybeSingle(); return (data as GradRow) || null; }
