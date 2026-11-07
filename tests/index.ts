@@ -111,3 +111,4 @@ import './p50-sign.test'; /* P50 «توقيعي» */
 import './p51-day.test'; /* P51 «دفتر اليوم» */
 import './p52-letter.test'; /* P52 «رسالة الشهر» */
 import './p53-word-reply.test'; /* P53 «ردّ على الكلمة» */
+import './p53b-mail-draft.test'; // P53-ب «أرسل من بريدك»

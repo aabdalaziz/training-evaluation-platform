@@ -7,9 +7,12 @@
  *  (النسخة الأولى كانت: قائمة مستوى التسكين (Pre-A1…C2) مملوءة بتوصية مِعيار + برنامج (بمقاعده المتبقية) → [اعتمد] · [البطاقة] · [أرشفة] · [السماح بالإعادة] · [حذف]
  *  «المنطقة الرمادية» ذهبية: قرار يحتاج إنسانًا — لا يُسكَّن تلقائيًّا أبدًا. الحذف فوري بلا سلّة: «صدّر CSV أولًا» ظاهر دائمًا، والجماعي يحتاج كتابة العدد.
  *  «توزيع الشُّعب»: لوحة السعة الحيّة. «سجلّ المتقدّم»: كل محاولاته وأذونه وتسجيلاته في نافذة واحدة.
+ *  P53-ب «أرسل من بريدك»: لكل متقدّم زرّ يفتح رسالة جاهزة في بريد الموظّف (mailto: الموضوع + النصّ + رابط بطاقته) قبل تفعيل البريد الآلي؛
+ *    «نسخ الرسائل الجاهزة» للمحدّدين/المطابقين — رسالة لكل طالب وحده (لا BCC)؛ علامة «أُرسلت ✓» محلية في متصفّح الموظّف فقط (localStorage، لا خادم).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Icon } from '../../../lib/ui/icons';
+import { resultMailDraft, bulkMailText, readMailed, markMailed } from '../../../lib/miaar/mail-draft'; /* P53-ب */
 
 type Decision = { level: string | null; status: string; source: string; program_id: string | null; program_name: string | null; classroom: string | null; decided_at: string | null; gray_reason: string | null; note: string | null };
 type Row = { id: string; email: string; name: string; taken_at: string; code: string | null; demonstrated: string; entry: string; percent: number | null; confidence: string; form_code: string | null; invite_id: string | null; invite_label: string | null; group_tag: string | null; archived_at: string | null; previous_report_id: string | null; attempt: number; gray: string | null; decision: Decision | null; deadline_at: string | null; retake_open: boolean };
@@ -29,6 +32,7 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
   const [bulk, setBulk] = useState({ level: 'each', program: '', tag: '', reason: '', days: '30', note: '' });
   const [practiceRoom, setPracticeRoom] = useState<string | null>(null); /* م11: الوصول من إشعار «خطط مِران بانتظارك» */
   const [practice, setPractice] = useState<Record<string, { id: string; kind: string; status: string; status_ar: string; today: number; done: number; total: number; avg_delta: number | null; ready: string | null; units: string[] }>>({}); /* م11 مِران البداية */
+  const [mailed, setMailed] = useState<Record<string, string>>({}); const [site, setSite] = useState<string | undefined>(undefined); /* P53-ب: علامة «أُرسلت» المحلية + أصل الموقع (بعد التحميل لتجنّب اختلاف الترطيب) */
   const [history, setHistory] = useState<any>(null); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState(''); const [showSections, setShowSections] = useState(false);
   const qs = useMemo(() => { const p = new URLSearchParams(); for (const [k, v] of Object.entries(f)) if (v) p.set(k, v); return p.toString(); }, [f]);
   async function load() {
@@ -46,6 +50,7 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
   useEffect(() => { const inv = invites.find((x) => x.id === f.invite); setDl(inv ? { off: inv.hours === null, hours: String(inv.hours ?? 48), lp: { ...inv.lp } } : null); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [f.invite, invites]);
   async function saveDeadline() { if (!dl || !f.invite) return; const j = await post({ action: 'deadline', invite_id: f.invite, hours: dl.off ? null : Number(dl.hours), level_programs: dl.lp }); if (j) await loadAux(); }
+  useEffect(() => { try { setMailed(readMailed(window.localStorage)); setSite(window.location.origin); } catch { /* بلا تخزين */ } }, []); /* P53-ب */
   useEffect(() => { void loadAux(); /* الوصول من التقارير/الدعوات بمرشّح جاهز: ?q=بريد · ?invite=معرّف · ?status= */
     try { const sp = new URLSearchParams(window.location.search); const next = { ...f }; let changed = false; for (const k of ['q', 'invite', 'status', 'tag', 'level', 'decision'] as const) { const v = sp.get(k); if (v) { (next as any)[k] = v; changed = true; } } if (changed) setF(next); const pr = sp.get('practice'); if (pr && /^[0-9a-zA-Z-]{2,40}$/.test(pr)) { setPracticeRoom(pr); if (!sp.get('decision')) setF({ ...next, decision: 'approved' }); } } catch { /* لا شيء */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,6 +92,16 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
   async function delBulk() { if (!ids.length) return; const typed = window.prompt(`ستُحذف ${ids.length} نتيجة نهائيًّا بلا سلّة. صدّرت CSV أولًا؟\nللتأكيد اكتب العدد: ${ids.length}`); if (typed === null) return; await post({ action: 'delete', ids, confirm: typed }, 'delete-bulk'); }
   async function archiveFiltered() { if (!window.confirm(`أرشفة كل النتائج المطابقة للمرشّحات الحالية (${rows.length} ظاهرة)؟ البطاقات تبقى تعمل بشارة «نتيجة مؤرشفة».`)) return; await post({ action: 'archive', filter: Object.fromEntries(Object.entries(f).filter(([, v]) => v)) }, 'archive-filter'); }
   async function openHistory(email: string) { const j = await fetch(`/api/admin/miaar/ledger?email=${encodeURIComponent(email)}`, { headers: await auth(), cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success) setHistory(j.history); else setErr(j?.error || 'تعذّر فتح سجلّ المتقدّم'); }
+  /* P53-ب: مسوَّدات البريد اليدوي — رسالة لكل طالب وحده */
+  const mailRows = (sel.size ? rows.filter((r) => sel.has(r.id)) : rows).filter((r) => r.code);
+  function mailOne(r: Row) { if (!r.code) return; setMailed(markMailed(window.localStorage, r.code)); }
+  function unmail(r: Row) { if (!r.code) return; setMailed(markMailed(window.localStorage, r.code, new Date(), false)); }
+  async function copyMails() {
+    const { text, count, skipped } = bulkMailText(mailRows.map((r) => ({ name: r.name, email: r.email, code: r.code, demonstrated: r.demonstrated, program_name: r.decision?.program_name || null, classroom: r.decision?.classroom || null })), { site });
+    if (!count) { setErr('لا نتائج برمز لنسخ رسائلها'); return; }
+    try { await navigator.clipboard.writeText(text); setErr(''); setOk(`نُسخت ${count} رسالة جاهزة — الصقها في بريدك رسالةً لكل طالب على حدة (لا BCC)${skipped ? ` · تُخطّي ${skipped} بلا رمز` : ''}`); }
+    catch { setErr('تعذّر النسخ إلى الحافظة — افتح رسالة كل طالب من زرّ «أرسل من بريدك»'); }
+  }
   const csvHref = `/api/admin/miaar/ledger?csv=1&${qs}`;
   async function downloadCsv() { const r = await fetch(csvHref, { headers: await auth(), cache: 'no-store' }); if (!r.ok) { setErr('تعذّر التصدير'); return; } const b = await r.blob(); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `miaar-ledger-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
   const progLabel = (p: Program) => `${p.name_ar}${p.cefr_level ? ` · ${LV[p.cefr_level] || p.cefr_level}` : ''}${p.remaining !== null ? ` · متبقٍّ ${p.remaining}` : ''}`;
@@ -116,6 +131,7 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
         <div className="lg-fact">
           <button type="button" className="am-btn ghost" onClick={() => void downloadCsv()} data-testid="lg-csv"><Icon name="download" />صدّر CSV أولًا</button>
           <button type="button" className="am-btn ghost" onClick={() => setShowSections((v) => !v)} data-testid="lg-sections-toggle"><Icon name="table" />توزيع الشُّعب</button>
+          <button type="button" className="am-btn ghost" onClick={() => void copyMails()} disabled={!mailRows.length} data-testid="lg-mail-copy" data-n={mailRows.length} title="قبل تفعيل البريد الآلي: ينسخ رسالة جاهزة لكل طالب (إلى · الموضوع · النصّ · رابط بطاقته) لتلصقها في بريدك — رسالة لكل طالب وحده"><Icon name="mail" />نسخ الرسائل الجاهزة ({mailRows.length}{sel.size ? ' محدَّد' : ''})</button>
           <button type="button" className="am-btn ghost" onClick={() => void archiveFiltered()} disabled={!rows.length || !!busy} data-testid="lg-archive-filter">أرشفة كل المطابق للمرشّحات</button>
         </div>
       </section>
@@ -184,6 +200,7 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
               </div>
               <div className="lg-tools" role="group" aria-label={`إجراءات ${r.name}`}>
                 {r.code && <a className="lg-tool" href={`/miaar/result/${r.code}`} target="_blank" rel="noreferrer" title="فتح البطاقة العلنية للمتقدّم"><Icon name="link" /><span>البطاقة</span></a>}
+                {r.code && (() => { const dr = resultMailDraft({ name: r.name, email: r.email, code: r.code, demonstrated: r.demonstrated, program_name: d?.program_name || null, classroom: d?.classroom || null }, { site }); const m = mailed[r.code]; return dr ? <a className={`lg-tool${m ? ' done' : ''}`} href={dr.mailto} onClick={() => mailOne(r)} onContextMenu={m ? (e) => { e.preventDefault(); unmail(r); } : undefined} data-testid="lg-mail" data-mailed={m ? '1' : '0'} title={m ? `فُتحت رسالتها من بريدك ${fmt(m)} — انقر لإعادة الفتح، أو بالزرّ الأيمن لإزالة العلامة` : 'يفتح رسالة جاهزة في بريدك (الموضوع + النصّ + رابط بطاقته) — قبل تفعيل البريد الآلي'}><Icon name="mail" /><span>{m ? 'أُرسلت ✓' : 'من بريدك'}</span></a> : null; })()}
                 <button type="button" className="lg-tool" disabled={!!busy} onClick={() => void post({ action: r.archived_at ? 'unarchive' : 'archive', ids: [r.id] }, `arch-${r.id}`)} data-testid="lg-archive" title={r.archived_at ? 'إلغاء الأرشفة — تعود إلى السجلّ النشط' : 'أرشفة — تختفي من السجلّ النشط وتبقى بطاقتها تعمل'}><Icon name="folder" /><span>{r.archived_at ? 'استرجاع' : 'أرشفة'}</span></button>
                 <button type="button" className="lg-tool" disabled={!!busy || r.retake_open} onClick={() => void post({ action: 'retake', report_ids: [r.id], reason: 'إذن فردي من السجلّ', days: 30 }, `retake-${r.id}`)} data-testid="lg-retake" title={r.retake_open ? 'إذن الإعادة مفتوح بالفعل' : 'السماح بإعادة الاختبار (30 يومًا) — تُربط المحاولة الجديدة بهذه'}><Icon name="refresh" /><span>{r.retake_open ? 'مأذونة' : 'إعادة'}</span></button>
                 {canDelete && <button type="button" className="lg-tool danger" disabled={!!busy} onClick={() => void delOne(r)} data-testid="lg-delete" title="حذف نهائي — فوري بلا سلّة محذوفات"><Icon name="trash" /><span>حذف</span></button>}
@@ -241,7 +258,7 @@ const CSS = `
 .lg-h3{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.lg-h3 h3{margin:0}
 .lg-views{display:inline-flex;border:1px solid var(--line,#e2e8f0);border-radius:999px;padding:3px;background:#f8fafc;gap:2px}.lg-views button{display:inline-flex;align-items:center;gap:6px;border:0;background:none;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:800;color:#475569;cursor:pointer;min-height:34px}.lg-views button.on{background:#0f2a4e;color:#fff}.lg-views i{font-style:normal;background:#c9a24b;color:#1f2937;border-radius:999px;font-size:11px;padding:0 7px}
 .lg-cardlink{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#0b8a83;text-decoration:none}.lg-cardlink:hover{text-decoration:underline}.lg-cardlink svg{width:12px;height:12px}
-.lg-tools{display:inline-flex;gap:2px;background:#f8fafc;border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:3px;align-self:center}.lg-tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:48px;height:44px;border:0;background:none;border-radius:9px;font:inherit;font-size:10px;font-weight:800;color:#475569;cursor:pointer;text-decoration:none;line-height:1}.lg-tool svg{width:15px;height:15px}.lg-tool:hover{background:#fff;color:#0f2a4e;box-shadow:0 1px 3px rgba(15,42,78,.12)}.lg-tool:focus-visible{outline:2px solid #0b8a83;outline-offset:1px}.lg-tool:disabled{opacity:.45;cursor:not-allowed}.lg-tool.danger{color:#b91c1c}.lg-tool.danger:hover{background:#fef2f2}
+.lg-tools{display:inline-flex;gap:2px;background:#f8fafc;border:1px solid var(--line,#e2e8f0);border-radius:12px;padding:3px;align-self:center}.lg-tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:48px;height:44px;border:0;background:none;border-radius:9px;font:inherit;font-size:10px;font-weight:800;color:#475569;cursor:pointer;text-decoration:none;line-height:1}.lg-tool svg{width:15px;height:15px}.lg-tool:hover{background:#fff;color:#0f2a4e;box-shadow:0 1px 3px rgba(15,42,78,.12)}.lg-tool:focus-visible{outline:2px solid #0b8a83;outline-offset:1px}.lg-tool:disabled{opacity:.45;cursor:not-allowed}.lg-tool.danger{color:#b91c1c}.lg-tool.danger:hover{background:#fef2f2}.lg-tool.done{color:#0f5c57;background:#e6f4f3}
 .lg-ladder{display:inline-flex;align-items:center;gap:0;direction:rtl}.lg-ladder button{position:relative;min-width:40px;height:30px;border:1px solid #cbd5e1;background:#fff;color:#475569;font:inherit;font-size:12px;font-weight:800;cursor:pointer;padding:0 8px;margin-inline-start:-1px}.lg-ladder button:first-child{border-start-start-radius:999px;border-end-start-radius:999px;margin-inline-start:0}.lg-ladder button:last-child{border-start-end-radius:999px;border-end-end-radius:999px}.lg-ladder button:hover{background:#f1f5f9;z-index:1}
 .lg-ladder button.rec{box-shadow:inset 0 0 0 2px #c9a24b;color:#7a5b16;z-index:1}.lg-ladder button.rec::after{content:"توصية";position:absolute;top:-9px;inset-inline-start:50%;transform:translateX(50%);font-size:9px;background:#c9a24b;color:#1f2937;border-radius:999px;padding:0 5px;line-height:13px}
 .lg-ladder button.path{background:#e6f4f3}.lg-ladder button.on{background:#0b8a83;border-color:#0b8a83;color:#fff;z-index:2}.lg-ladder button.on.rec{box-shadow:inset 0 0 0 2px #c9a24b}
