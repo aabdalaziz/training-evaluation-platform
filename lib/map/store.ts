@@ -10,12 +10,14 @@ import { createHash, randomBytes } from 'node:crypto';
 import { loadJourneyInput } from '../journey/load';
 import { jcs } from '../portal/vc';
 import { buildMap, snapshotBody, validateNote, isStationKey, threadKey, RULE_AR, CODE_RE, snapshotTitle, MAP_OFFICIAL } from './registry';
+import { MAP_VOICE_LIMITS, mapVoicePath, voiceOfRow, toPublic, validateMapVoice } from './voice'; /* P60 */
+import type { MapVoiceStored, MapVoicePublic } from './voice';
 import type { AtharMap, Decision, MapInput, RuleKey, SnapshotBody } from './registry';
 
 type Db = any; type Me = { id: string; email: string };
 const arr = <T,>(x: unknown): T[] => (Array.isArray(x) ? (x as T[]) : []);
 const lower = (s: string) => String(s || '').trim().toLowerCase();
-export const DEC_COLS = 'from_key,to_key,rule,status,note_ar,decided_at,share_trainer'; /* P59: share_trainer */
+export const DEC_COLS = 'from_key,to_key,rule,status,note_ar,decided_at,share_trainer,note_voice'; /* P59: share_trainer · P60: note_voice */
 export const SNAP_COLS = 'id,created_at,year,code,digest,is_public,revoked_at';
 
 export async function loadHands(db: Db, me: Me): Promise<MapInput['hands']> {
@@ -24,7 +26,7 @@ export async function loadHands(db: Db, me: Me): Promise<MapInput['hands']> {
 }
 export async function loadDecisions(db: Db, me: Me): Promise<Decision[]> {
   const { data } = await db.from('portal_map_threads').select(DEC_COLS).eq('email', lower(me.email)).limit(500);
-  return arr<any>(data).map((r) => ({ from_key: String(r.from_key), to_key: String(r.to_key), rule: String(r.rule || 'manual'), status: r.status === 'declined' ? 'declined' : 'kept', note_ar: r.note_ar || null, decided_at: String(r.decided_at || ''), shared: r.share_trainer === true }));
+  return arr<any>(data).map((r) => ({ from_key: String(r.from_key), to_key: String(r.to_key), rule: String(r.rule || 'manual'), status: r.status === 'declined' ? 'declined' : 'kept', note_ar: r.note_ar || null, decided_at: String(r.decided_at || ''), shared: r.share_trainer === true, voice: toPublic(voiceOfRow(r.note_voice)) }));
 }
 export async function loadMap(db: Db, me: Me): Promise<AtharMap> {
   const [inp, hands, decisions] = await Promise.all([loadJourneyInput(db, me), loadHands(db, me), loadDecisions(db, me)]);
@@ -49,17 +51,64 @@ export async function declineThread(db: Db, me: Me, body: { from: string; to: st
   if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
   const map = await loadMap(db, me); const t = map.threads.find((x) => x.from === body.from && x.to === body.to);
   if (!t) return { ok: false, error: 'هذا الخيط ليس في خريطتك', status: 404 };
-  const row = { user_id: me.id, email: lower(me.email), from_key: body.from, to_key: body.to, rule: t.rule, status: 'declined', note_ar: null, decided_at: new Date().toISOString(), share_trainer: false, shared_at: null }; /* P59: الاستبعاد يسحب الإذن */
+  const old = await voiceRowOf(db, me, body); /* P60: الاستبعاد يحذف الصوت أيضًا */
+  const row = { user_id: me.id, email: lower(me.email), from_key: body.from, to_key: body.to, rule: t.rule, status: 'declined', note_ar: null, decided_at: new Date().toISOString(), share_trainer: false, shared_at: null, note_voice: {} }; /* P59: الاستبعاد يسحب الإذن */
   const { error } = await db.from('portal_map_threads').upsert(row, { onConflict: 'email,from_key,to_key' });
   if (error) return { ok: false, error: 'تعذّر الحفظ', status: 500 };
+  await removeVoiceFile(db, old?.voice?.path);
   return { ok: true };
 }
 /** حذف قرار (خيط مبقى أو مستبعَد) فورًا — يعود الخيط مقترَحًا إن كانت له قاعدة */
 export async function removeThread(db: Db, me: Me, body: { from: string; to: string }): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
   if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
+  const old = await voiceRowOf(db, me, body); /* P60: يُحذف الصوت مع الخيط */
   const { error } = await db.from('portal_map_threads').delete().eq('email', lower(me.email)).eq('from_key', body.from).eq('to_key', body.to);
   if (error) return { ok: false, error: 'تعذّر الحذف', status: 500 };
+  await removeVoiceFile(db, old?.voice?.path);
   return { ok: true };
+}
+
+// ——— P60 «لأن… بصوتك» ———
+async function voiceRowOf(db: Db, me: Me, body: { from: string; to: string }): Promise<{ id: string; status: string; voice: MapVoiceStored | null } | null> {
+  const { data } = await db.from('portal_map_threads').select('id,status,note_voice').eq('email', lower(me.email)).eq('from_key', body.from).eq('to_key', body.to).maybeSingle();
+  return data ? { id: String(data.id), status: String(data.status), voice: voiceOfRow(data.note_voice) } : null;
+}
+/** حذف ملف من المخزن بصمت (المخزن خاص؛ الفشل لا يُفشل القرار) */
+export async function removeVoiceFile(db: Db, path?: string | null): Promise<void> { if (!path) return; try { await db.storage.from(MAP_VOICE_LIMITS.bucket).remove([path]); } catch { /* يبقى ملفًا يتيمًا نادرًا — يُحذف مع الحساب */ } }
+/** رفع صوت «لأن…» على خيط مُبقى — ملف واحد لكل خيط (يستبدل القديم ويحذفه) */
+export async function setThreadVoice(db: Db, me: Me, body: { from: string; to: string }, file: { buf: Buffer; mime: string; bytes: number; sec: number }): Promise<{ ok: true; voice: MapVoicePublic; replaced: boolean } | { ok: false; error: string; status: number }> {
+  if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
+  const row = await voiceRowOf(db, me, body); if (!row) return { ok: false, error: 'هذا الخيط ليس في خريطتك — أبقِه بكلمة أولًا', status: 404 };
+  if (row.status !== 'kept') return { ok: false, error: 'الصوت لخيط أبقيتَه فقط', status: 400 };
+  const v = validateMapVoice({ mime: file.mime, bytes: file.bytes, sec: file.sec }); if (!v.ok) return { ok: false, error: v.error, status: 400 };
+  const path = mapVoicePath(me.id, row.id, v.ext); const at = new Date().toISOString();
+  const { error: upErr } = await db.storage.from(MAP_VOICE_LIMITS.bucket).upload(path, file.buf, { contentType: v.mime, upsert: true }); if (upErr) return { ok: false, error: `تعذّر رفع التسجيل: ${upErr.message}`, status: 500 };
+  const stored: MapVoiceStored = { path, sec: v.sec, bytes: file.bytes, mime: v.mime, at };
+  const { error } = await db.from('portal_map_threads').update({ note_voice: stored }).eq('id', row.id);
+  if (error) { await removeVoiceFile(db, path); return { ok: false, error: 'تعذّر حفظ الصوت', status: 500 }; }
+  if (row.voice?.path && row.voice.path !== path) await removeVoiceFile(db, row.voice.path);
+  return { ok: true, voice: { sec: v.sec, at }, replaced: !!row.voice };
+}
+/** حذف الصوت فورًا — يبقى الخيط وكلمته المكتوبة */
+export async function clearThreadVoice(db: Db, me: Me, body: { from: string; to: string }): Promise<{ ok: true; had: boolean } | { ok: false; error: string; status: number }> {
+  if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
+  const row = await voiceRowOf(db, me, body); if (!row) return { ok: false, error: 'هذا الخيط ليس في خريطتك', status: 404 };
+  if (row.voice) { const { error } = await db.from('portal_map_threads').update({ note_voice: {} }).eq('id', row.id); if (error) return { ok: false, error: 'تعذّر الحذف', status: 500 }; await removeVoiceFile(db, row.voice.path); }
+  return { ok: true, had: !!row.voice };
+}
+/** رابط موقَّع قصير العمر لصوت المتعلّم نفسه فقط */
+export async function voiceUrl(db: Db, me: Me, body: { from: string; to: string }): Promise<{ ok: true; url: string; sec: number } | { ok: false; error: string; status: number }> {
+  if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
+  const row = await voiceRowOf(db, me, body); if (!row || !row.voice) return { ok: false, error: 'لا صوت على هذا الخيط', status: 404 };
+  try { const { data } = await db.storage.from(MAP_VOICE_LIMITS.bucket).createSignedUrl(row.voice.path, MAP_VOICE_LIMITS.signedSeconds); if (!data?.signedUrl) return { ok: false, error: 'تعذّر إنشاء الرابط', status: 500 }; return { ok: true, url: data.signedUrl, sec: row.voice.sec }; }
+  catch { return { ok: false, error: 'تعذّر إنشاء الرابط', status: 500 }; }
+}
+/** كل أصوات خريطتي دفعة واحدة (لـ «اسمع خريطتك») — روابط موقَّعة لصاحبها فقط */
+export async function voiceUrls(db: Db, me: Me): Promise<Record<string, { url: string; sec: number }>> {
+  const { data } = await db.from('portal_map_threads').select('from_key,to_key,status,note_voice').eq('email', lower(me.email)).eq('status', 'kept').limit(500); /* التصفية في الكود — jsonb */
+  const out: Record<string, { url: string; sec: number }> = {};
+  for (const r of arr<any>(data)) { const v = voiceOfRow(r.note_voice); if (!v) continue; try { const { data: s } = await db.storage.from(MAP_VOICE_LIMITS.bucket).createSignedUrl(v.path, MAP_VOICE_LIMITS.signedSeconds); if (s?.signedUrl) out[`${r.from_key}>${r.to_key}`] = { url: s.signedUrl, sec: v.sec }; } catch { /* يُتخطّى */ } }
+  return out;
 }
 
 /** P59: إذن المتعلّم بعرض «لأن…» لمدرّب شعبته بلا اسم — على خيط مُبقى فقط · يُلغى فورًا */

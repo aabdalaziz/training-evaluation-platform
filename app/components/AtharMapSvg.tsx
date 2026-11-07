@@ -15,12 +15,15 @@ type Light = { key: string; kind: StationKind; at: string; title_ar: string };
 export type SvgThread = Pick<Thread, 'from' | 'to' | 'status' | 'rule'> & { note_ar?: string | null };
 type Props = { stations: (Station | Light)[]; threads: SvgThread[]; layout: MapLayout; selected?: string | null; focus?: string | null; onStation?: (key: string) => void; onThread?: (t: SvgThread) => void; title_ar?: string; rules?: Record<RuleKey, { title: string }>; style?: CSSProperties; testid?: string; compact?: boolean;
   /* P59 — الوضع المجمَّع (نسيج الشعبة): سماكة الخيط بعدد ناسجيه · حجم النجمة بعدد من بلغوها · نجمة الشعبة · عناوين دليل مختلفة */
-  weights?: Record<string, number>; counts?: Record<string, number>; star?: string | null; legend?: { kept: string; proposed: string } };
+  weights?: Record<string, number>; counts?: Record<string, number>; star?: string | null; legend?: { kept: string; proposed: string };
+  /* P60 — «اسمع خريطتك»: الخيط الجاري يُضاء ونجمتاه تنبضان */
+  active?: string | null };
 
 const fmt = (iso: string) => { try { return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return iso.slice(0, 10); } };
 const titleOf = (s: Station | Light) => ('public_ar' in s ? s.title_ar : s.title_ar);
 
-export function AtharMapSvg({ stations, threads, layout, selected, focus, onStation, onThread, title_ar, rules, style, testid = 'am-svg', compact, weights, counts, star, legend }: Props) {
+export function AtharMapSvg({ stations, threads, layout, selected, focus, onStation, onThread, title_ar, rules, style, testid = 'am-svg', compact, weights, counts, star, legend, active }: Props) {
+  const isActive = (t: SvgThread) => !!active && `${t.from}>${t.to}` === active; const activeEnds = active ? active.split('>') : [];
   const deg = degree({ threads: threads as Thread[] }); const pos = layout.pos; const byKey = new Map(stations.map((s) => [s.key, s])); const agg = !!(weights || counts);
   const r = (k: string) => (counts ? 5 + Math.min(11, 1.6 * Math.sqrt(counts[k] || 1)) : 5 + Math.min(9, 2.2 * (deg[k] || 0)));
   const wOf = (t: SvgThread) => (weights ? (t.status === 'kept' ? Math.min(8, 1.5 + 0.55 * (weights[`${t.from}>${t.to}`] || 1)) : 1.2) : strokeOf(t as Thread, deg));
@@ -40,12 +43,14 @@ export function AtharMapSvg({ stations, threads, layout, selected, focus, onStat
           return <g key={`${t.from}>${t.to}`} opacity={faded ? 0.18 : 1} style={{ cursor: onThread ? 'pointer' : 'default' }} onClick={() => onThread?.(t)} data-testid={kept ? 'am-thread-kept' : 'am-thread-proposed'}>
             <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
             {st && <path d={d} fill="none" stroke="#fde68a" strokeWidth={w + 8} strokeLinecap="round" opacity={0.28} filter="url(#am-glow)" data-testid="am-star" />}
+            {isActive(t) && <path d={d} fill="none" stroke="#fff7ed" strokeWidth={w + 6} strokeLinecap="round" opacity={0.55} filter="url(#am-glow)" data-testid="am-active"><animate attributeName="opacity" values="0.25;0.7;0.25" dur="1.6s" repeatCount="indefinite" /></path>}
             <path d={d} fill="none" stroke={kept ? (st ? '#fde68a' : '#fbbf24') : '#94a3b8'} strokeWidth={w} strokeDasharray={kept ? undefined : '3 5'} strokeLinecap="round" opacity={kept ? 0.95 : 0.7}>{label && <title>{label}</title>}</path>
           </g>; })}
         {/* المحطات */}
         {stations.map((s) => { const p = pos[s.key]; if (!p) return null; const sel = selected === s.key; const c = KIND_COLOR[s.kind]; const rr = r(s.key);
           return <g key={s.key} transform={`translate(${p.x},${p.y})`} opacity={dim(s.key) ? 0.25 : 1} style={{ cursor: onStation ? 'pointer' : 'default' }} onClick={() => onStation?.(s.key)} tabIndex={onStation ? 0 : -1} role={onStation ? 'button' : undefined} aria-label={`${KIND_AR[s.kind]}: ${titleOf(s)} — ${fmt(s.at)}`} onKeyDown={(e) => { if (onStation && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onStation(s.key); } }} data-testid="am-station" data-kind={s.kind}>
             <circle r={rr + 5} fill={c} opacity={sel ? 0.45 : 0.18} />
+            {activeEnds.includes(s.key) && <circle r={rr + 9} fill="none" stroke="#fff7ed" strokeWidth={2} opacity={0.8}><animate attributeName="r" values={`${rr + 6};${rr + 14};${rr + 6}`} dur="1.6s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.6s" repeatCount="indefinite" /></circle>}
             <circle r={rr} fill={sel ? '#fff7ed' : '#fff'} stroke={c} strokeWidth={sel ? 3 : 2} filter="url(#am-glow)" />
             <title>{`${KIND_AR[s.kind]}: ${titleOf(s)}${counts ? ` — بلغها ${counts[s.key] || 0}` : ` — ${fmt(s.at)}`}`}</title>
             {!compact && (agg || (deg[s.key] || 0) > 0) && <text y={-rr - 7} textAnchor="middle" fontSize={10} fill="#e2e8f0" fontFamily="Tajawal, Arial, sans-serif">{(titleOf(s).length > 22 ? titleOf(s).slice(0, 21) + '…' : titleOf(s)) + (counts ? ` ×${counts[s.key] || 0}` : '')}</text>}

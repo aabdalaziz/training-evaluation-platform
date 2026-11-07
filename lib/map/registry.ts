@@ -20,8 +20,8 @@ export type StationKind = 'placement' | 'program' | 'session' | 'skill' | 'crede
 export type Station = { key: string; kind: StationKind; at: string; title_ar: string; public_ar: string; skills: string[]; topic?: string | null };
 export type RuleKey = 'placement_program' | 'program_skill' | 'program_credential' | 'skill_credential' | 'session_skill' | 'daily_mission' | 'hand_session' | 'pledge_review' | 'council_badge' | 'case_return' | 'simulation_skill' | 'manual';
 export type Proposed = { from: string; to: string; rule: RuleKey; why_ar: string; days: number };
-export type Decision = { from_key: string; to_key: string; rule: string; status: 'kept' | 'declined'; note_ar: string | null; decided_at: string; shared?: boolean /* P59: إذن عرض «لأن…» للمدرّب بلا اسم */ };
-export type Thread = { from: string; to: string; rule: RuleKey; status: 'kept' | 'proposed'; note_ar: string | null; why_ar: string; decided_at: string | null; days: number; shared?: boolean /* P59 */ };
+export type Decision = { from_key: string; to_key: string; rule: string; status: 'kept' | 'declined'; note_ar: string | null; decided_at: string; shared?: boolean /* P59: إذن عرض «لأن…» للمدرّب بلا اسم */; voice?: { sec: number; at: string } | null /* P60: «لأن…» بصوت صاحبها — مدّة وتاريخ فقط، لا مسار */ };
+export type Thread = { from: string; to: string; rule: RuleKey; status: 'kept' | 'proposed'; note_ar: string | null; why_ar: string; decided_at: string | null; days: number; shared?: boolean /* P59 */; voice?: { sec: number; at: string } | null /* P60 */ };
 export type Pt = { x: number; y: number };
 export type MapLayout = { w: number; h: number; pos: Record<string, Pt> };
 export type Mirror = { strongest_ar: string | null; waiting_ar: string | null; lonely_ar: string | null; lines_ar: string[] };
@@ -117,7 +117,7 @@ export function withCaseReturns(stations: Station[]): Station[] {
 
 /** تحقّق «لأن…» */
 export function validateNote(s: unknown): { ok: true; note: string } | { ok: false; error: string } {
-  const t = String(s ?? '').replace(/\s+/g, ' ').trim();
+  const t = String(s ?? '').replace(/\s+/g, ' ').trim().replace(/^(?:لأن|لان|لأنّ)(?:\s+|\s*[:،,…]\s*)/u, ''); /* P60: من يبدأ بـ«لأن» (كتابةً أو إملاءً) لا تتكرّر له */
   if (t.length < 2) return { ok: false, error: 'اكتب «لأن…» بكلمتين على الأقل' };
   if (t.length > NOTE_MAX) return { ok: false, error: `«لأن…» حتى ${NOTE_MAX} حرفًا` };
   if (/https?:\/\/|<[a-z]/i.test(t)) return { ok: false, error: 'بلا روابط ولا وسوم' };
@@ -167,12 +167,12 @@ export function buildMap(inp: MapInput, decisions: Decision[], w?: number, h?: n
   for (const p of proposeThreads(stations)) {
     const d = dec.get(threadKey(p.from, p.to));
     if (d?.status === 'declined') { declined++; continue; }
-    threads.push({ from: p.from, to: p.to, rule: p.rule, status: d?.status === 'kept' ? 'kept' : 'proposed', note_ar: d?.note_ar || null, why_ar: p.why_ar, decided_at: d?.decided_at || null, days: p.days, shared: d?.status === 'kept' && !!d.shared });
+    threads.push({ from: p.from, to: p.to, rule: p.rule, status: d?.status === 'kept' ? 'kept' : 'proposed', note_ar: d?.note_ar || null, why_ar: p.why_ar, decided_at: d?.decided_at || null, days: p.days, shared: d?.status === 'kept' && !!d.shared, voice: d?.status === 'kept' ? d.voice || null : null });
   }
   const have = new Set(threads.map((t) => threadKey(t.from, t.to)));
   for (const d of decisions) if (d.status === 'kept' && !have.has(threadKey(d.from_key, d.to_key)) && keys.has(d.from_key) && keys.has(d.to_key)) {
     const a = stations.find((s) => s.key === d.from_key)!; const b = stations.find((s) => s.key === d.to_key)!; const rule = (d.rule in RULE_AR ? d.rule : 'manual') as RuleKey;
-    threads.push({ from: d.from_key, to: d.to_key, rule, status: 'kept', note_ar: d.note_ar, why_ar: rule === 'manual' ? RULE_AR.manual.why : why(rule, daysBetween(a.at, b.at)), decided_at: d.decided_at, days: daysBetween(a.at, b.at), shared: !!d.shared });
+    threads.push({ from: d.from_key, to: d.to_key, rule, status: 'kept', note_ar: d.note_ar, why_ar: rule === 'manual' ? RULE_AR.manual.why : why(rule, daysBetween(a.at, b.at)), decided_at: d.decided_at, days: daysBetween(a.at, b.at), shared: !!d.shared, voice: d.voice || null });
   }
   const by_kind: Record<string, number> = {}; for (const s of stations) by_kind[s.kind] = (by_kind[s.kind] || 0) + 1;
   return { stations, threads, declined, layout: layout(stations, w, h), mirror: mirror(stations, threads), counts: { stations: stations.length, kept: threads.filter((t) => t.status === 'kept').length, proposed: threads.filter((t) => t.status === 'proposed').length, manual: threads.filter((t) => t.rule === 'manual').length, by_kind } };
@@ -192,7 +192,9 @@ export function snapshotBody(map: AtharMap, year: number): SnapshotBody {
   const threads = map.threads.filter((t) => t.status === 'kept' && keys.has(t.from) && keys.has(t.to)).map((t) => ({ from: t.from, to: t.to, rule: t.rule, note_ar: t.note_ar || '', decided_at: t.decided_at ? t.decided_at.slice(0, 10) : null }));
   const by_kind: Record<string, number> = {}; for (const s of stations) by_kind[s.kind] = (by_kind[s.kind] || 0) + 1;
   const counts = { stations: stations.length, kept: threads.length, proposed: 0, manual: threads.filter((t) => t.rule === 'manual').length, by_kind };
-  return { v: 1, type: MAP_OFFICIAL.en, year, stations, threads, counts, mirror_ar: map.mirror.lines_ar.filter((l) => !/تنتظر كلمتك/.test(l)), first_at: stations[0]?.at || null, last_at: stations[stations.length - 1]?.at || null };
+  const voices = map.threads.filter((t) => t.status === 'kept' && keys.has(t.from) && keys.has(t.to) && !!t.voice).length; /* P60: عدد فقط — الصوت لا يدخل اللقطة */
+  const voice_line = voices === 1 ? 'خيط واحد من خيوطك بصوتك' : voices === 2 ? 'خيطان من خيوطك بصوتك' : voices > 2 ? `${voices} من خيوطك بصوتك` : null;
+  return { v: 1, type: MAP_OFFICIAL.en, year, stations, threads, counts, mirror_ar: [...map.mirror.lines_ar.filter((l) => !/تنتظر كلمتك/.test(l)), ...(voice_line ? [voice_line] : [])], first_at: stations[0]?.at || null, last_at: stations[stations.length - 1]?.at || null };
 }
 export const CODE_RE = /^ATH-MP-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
 export const snapshotTitle = (year: number) => `خريطة أثري ${year}`;
