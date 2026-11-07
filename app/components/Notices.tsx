@@ -8,6 +8,7 @@
  *    نصّ تقريبي اختياري من تعرّف المتصفّح (إن وُجد) يمكن حذفه قبل الإرسال · يُخفى الزرّ إن لم يدعم المتصفّح التسجيل · لا يدخل في أي تقييم.
  *  P55 «كلمة صوتية»: إن حملت كلمة المدرّب صوتًا (voice.sec) يظهر «▶ استمع إلى مدرّبك (0:14)» — رابط موقَّع 5 دقائق عبر /api/notices?voice=<id> — ونصّه التقريبي رماديًّا.
  *    المسجّل نفسه صار مكوّنًا مشتركًا VoiceRecorder (يستعمله المدرّب في دفتر اليوم أيضًا).
+ *  P56 «صدى الأسبوع»: إشعار 🪞 week_echo يحمل زرّ 🔊 «اسمعه» — يقرأ الصدى بصوت الجهاز (Web Speech · صفر خادم) · يُخفى إن لم يُدعم.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { sbLazy } from '../../lib/supabase/lazy';
@@ -38,10 +39,18 @@ const when = (iso: string, ar: boolean) => { try { return new Intl.DateTimeForma
 export function NoticeItem({ n, ar, onOpen, chips, max, voiceSec }: { n: Notice; ar: boolean; onOpen?: () => void; chips?: Chip[]; max?: number; voiceSec?: number }) {
   return <li className={`nt-item ${n.read_at ? '' : 'unread'}`} data-testid="nt-item" data-kind={n.kind} data-read={n.read_at ? '1' : '0'}>
     <span className="nt-ic" aria-hidden="true">{n.icon}</span>
-    <div className="nt-body"><b>{n.title_ar}</b>{n.body_ar && <p>{n.body_ar}</p>}{n.voice?.sec ? <TrainerVoice n={n} ar={ar} /> : null}<small>{n.kind_ar} · {when(n.created_at, ar)}{n.pushed ? (ar ? ' · وصلك إشعارًا' : ' · pushed') : ''}</small>
+    <div className="nt-body"><b>{n.title_ar}</b>{n.body_ar && <p>{n.body_ar}</p>}{n.voice?.sec ? <TrainerVoice n={n} ar={ar} /> : null}{n.kind === 'week_echo' && <EchoSay text={`${n.title_ar}. ${n.body_ar}`} ar={ar} />}<small>{n.kind_ar} · {when(n.created_at, ar)}{n.pushed ? (ar ? ' · وصلك إشعارًا' : ' · pushed') : ''}</small>
       {n.can_reply && <WordReply n={n} ar={ar} chips={chips || DEFAULT_CHIPS} max={max || 200} voiceSec={voiceSec || VOICE_SEC} />}</div>
     {n.url && !n.can_reply && <a className="nt-open" href={n.url} onClick={onOpen}>{ar ? 'افتح' : 'Open'}</a>}
   </li>;
+}
+
+/** P56 «صدى الأسبوع» — 🔊 يقرأ الصدى بصوت الجهاز (بلا رموز) · يُخفى إن لم يُدعم */
+export function EchoSay({ text, ar, testid = 'nt-echo-say' }: { text: string; ar: boolean; testid?: string }) {
+  const [can, setCan] = useState(false); const [on, setOn] = useState(false); useEffect(() => { setCan(typeof window !== 'undefined' && 'speechSynthesis' in window); }, []);
+  if (!can) return null;
+  const say = () => { try { const ss = window.speechSynthesis; if (on) { ss.cancel(); setOn(false); return; } ss.cancel(); const u = new SpeechSynthesisUtterance(text.replace(/[\u{1F399}\u{1F331}\u{270B}\u{1F550}\u{1FA9E}\u{2713}\u{FE0F}]/gu, '').replace(/ · /g, '، ').replace(/\s+/g, ' ')); u.lang = ar ? 'ar-SA' : 'en-GB'; u.rate = 0.95; u.onend = () => setOn(false); u.onerror = () => setOn(false); setOn(true); ss.speak(u); } catch { setOn(false); } };
+  return <button type="button" className={`nt-echo-say ${on ? 'on' : ''}`} onClick={say} aria-pressed={on} data-testid={testid}>{on ? '⏹' : '🔊'} {ar ? (on ? 'أوقف' : 'اسمعه') : (on ? 'Stop' : 'Listen')}</button>;
 }
 
 /** P53 «ردّ على الكلمة» — تحت كلمة المدرّب: ثلاث لمسات + سطر؛ ردّ واحد (يُعدَّل خلال ساعة) · يصل إلى المدرّب وحده · لا يُستعمل في أي تقييم */
@@ -143,4 +152,4 @@ export const NOTICES_CSS = `
 .nt-reply-hint{color:#64748b;font-size:11.5px}.nt-reply-ok{color:#15803d;font-weight:800}.nt-reply-err{color:#b91c1c;font-weight:800}
 .nt-chip-voice{border-color:#0f766e;color:#0f766e}.nt-voice{background:#f8fafc;border:1px dashed #99f6e4;border-radius:10px;padding:8px 10px}.nt-rec{background:#b91c1c;border-color:#b91c1c}.nt-rec-dot{width:10px;height:10px;border-radius:50%;background:#dc2626;align-self:center;animation:nt-pulse 1s infinite}@keyframes nt-pulse{0%,100%{opacity:1}50%{opacity:.3}}.nt-rec-time{font-variant-numeric:tabular-nums;align-self:center;color:#0f2a4e;font-size:13px}.nt-voice-ready{display:grid;gap:6px}.nt-voice-ready audio{flex:1;min-width:0;height:34px}.nt-voice-tr{background:#fff;border-radius:8px;padding:6px 8px;border:1px solid #e2e8f0}.nt-voice-tr p{margin:4px 0;color:#475569;font-size:12.5px}@media (prefers-reduced-motion:reduce){.nt-rec-dot{animation:none}}
 .nt-tvoice{display:grid;gap:4px;margin:6px 0;justify-items:start}.nt-tvoice-btn{border:1.5px solid #0f766e;background:#fff;color:#0f766e;border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;min-height:34px}.nt-tvoice-btn.on{background:#0f766e;color:#fff}.nt-tvoice-btn:disabled{opacity:.6;cursor:wait}.nt-tvoice-tr{color:#94a3b8;font-size:12px;font-style:normal}
-`;
+.nt-echo-say{border:1.5px solid #7c3aed;background:#fff;color:#6d28d9;border-radius:999px;padding:3px 10px;font-weight:800;cursor:pointer;font-size:.85rem;margin:4px 0;justify-self:start}.nt-echo-say.on{background:#6d28d9;color:#fff}.nt-item[data-kind=week_echo]{background:#faf5ff}`;

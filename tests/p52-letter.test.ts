@@ -115,7 +115,7 @@ test('P52: runOrgLetters — قبل اليوم الثالث لا مسوَّدا�
 test('P52: التكامل — «نادِ» · الغرفة · WayBar · الكرون · «توقيعي» · تبويب الجهة · التحقّق · عقود الواجهات', () => {
   const d = DESTINATIONS.find((x) => x.href === '/admin/org/letters'); assert.ok(d && d.admin); const i = parseCommand('افتح رسالة الشهر', { admin: true }) as any; assert.equal(i.kind, 'go'); assert.equal(i.href, '/admin/org/letters');
   assert.ok(ROOMS.some((r) => r.href === '/admin/org/letters' && r.perms.includes('staff'))); assert.match(read('lib/portal/way.ts'), /'admin\/org\/letters': \{ ar: 'رسالة الشهر'/); assert.match(read('lib/portal/way.ts'), /'verify\/letter'/);
-  const cron = read('app/api/followups/send/route.ts'); assert.match(cron, /runOrgLetters\(db, \{ site, dry \}\)/); assert.match(cron, /day_digest, org_letters/);
+  const cron = read('app/api/followups/send/route.ts'); assert.match(cron, /runOrgLetters\(db, \{ site, dry \}\)/); assert.match(cron, /day_digest, week_echo, org_letters/ /* P56 */);
   const sign = read('lib/portal/sign.ts'); assert.match(sign, /key: 'org_letter'/); assert.match(sign, /letterGroup\(db\)/); assert.match(sign, /me\.staff \? safe\(letterGroup/);
   const org = read('app/org/page.tsx'); assert.match(org, /\['letters', 'رسالة الشهر', 'Monthly letter'\]/); assert.match(org, /tab === 'letters' && <OrgLetters/);
   const adm = read('app/api/admin/org/letters/route.ts'); assert.match(adm, /if \(!me\.writer\) return bad/); assert.match(adm, /action === 'sign'/); assert.match(adm, /org_letter_sign/); assert.match(adm, /invalidateSignCache/);
