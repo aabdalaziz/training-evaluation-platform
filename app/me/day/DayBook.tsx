@@ -90,7 +90,7 @@ export default function DayBook() {
         </li>)}</ul></section>}
       {book.classrooms.length > 0 && <section id="dy-rooms">{book.classrooms.map((r) => <article key={r.id} className="dy-box dy-room" data-testid="dy-room" data-id={r.id}>
         <header className="dy-room-h"><h2><Icon name="users" size={16} /> شعبة {r.code}{r.section_name ? ` — ${r.section_name}` : ''} <small>{r.roster} متعلّمًا</small></h2>
-          {!book.viewing_other && r.roster > 0 && <button type="button" className="dy-btn sm ghost no-print" onClick={() => openWord(r, 'all')} data-testid="dy-word-open" data-mode="all"><Icon name="chat" size={14} /> كلمة للشعبة</button>}</header>
+          <span className="dy-acts no-print">{r.roster > 0 && <Link href={`/me/day/weave?classroom=${r.id}`} className="dy-btn sm ghost" data-testid="dy-weave-link">🧶 نسيج الشعبة</Link>}{!book.viewing_other && r.roster > 0 && <button type="button" className="dy-btn sm ghost" onClick={() => openWord(r, 'all')} data-testid="dy-word-open" data-mode="all"><Icon name="chat" size={14} /> كلمة للشعبة</button>}</span></header>
         <div className="dy-grid">
           <div className="dy-cell" data-testid="dy-absent"><h3>من غاب أمس {r.sessions_yesterday ? <small>{r.absent_yesterday.length} من {r.roster}</small> : <small>لا جلسة أمس</small>}</h3>
             {r.sessions_yesterday === 0 && <p className="pt-muted">لم تُعقد جلسة حضور لهذه الشعبة أمس.</p>}

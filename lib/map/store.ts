@@ -15,7 +15,7 @@ import type { AtharMap, Decision, MapInput, RuleKey, SnapshotBody } from './regi
 type Db = any; type Me = { id: string; email: string };
 const arr = <T,>(x: unknown): T[] => (Array.isArray(x) ? (x as T[]) : []);
 const lower = (s: string) => String(s || '').trim().toLowerCase();
-export const DEC_COLS = 'from_key,to_key,rule,status,note_ar,decided_at';
+export const DEC_COLS = 'from_key,to_key,rule,status,note_ar,decided_at,share_trainer'; /* P59: share_trainer */
 export const SNAP_COLS = 'id,created_at,year,code,digest,is_public,revoked_at';
 
 export async function loadHands(db: Db, me: Me): Promise<MapInput['hands']> {
@@ -24,7 +24,7 @@ export async function loadHands(db: Db, me: Me): Promise<MapInput['hands']> {
 }
 export async function loadDecisions(db: Db, me: Me): Promise<Decision[]> {
   const { data } = await db.from('portal_map_threads').select(DEC_COLS).eq('email', lower(me.email)).limit(500);
-  return arr<any>(data).map((r) => ({ from_key: String(r.from_key), to_key: String(r.to_key), rule: String(r.rule || 'manual'), status: r.status === 'declined' ? 'declined' : 'kept', note_ar: r.note_ar || null, decided_at: String(r.decided_at || '') }));
+  return arr<any>(data).map((r) => ({ from_key: String(r.from_key), to_key: String(r.to_key), rule: String(r.rule || 'manual'), status: r.status === 'declined' ? 'declined' : 'kept', note_ar: r.note_ar || null, decided_at: String(r.decided_at || ''), shared: r.share_trainer === true }));
 }
 export async function loadMap(db: Db, me: Me): Promise<AtharMap> {
   const [inp, hands, decisions] = await Promise.all([loadJourneyInput(db, me), loadHands(db, me), loadDecisions(db, me)]);
@@ -49,7 +49,7 @@ export async function declineThread(db: Db, me: Me, body: { from: string; to: st
   if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
   const map = await loadMap(db, me); const t = map.threads.find((x) => x.from === body.from && x.to === body.to);
   if (!t) return { ok: false, error: 'هذا الخيط ليس في خريطتك', status: 404 };
-  const row = { user_id: me.id, email: lower(me.email), from_key: body.from, to_key: body.to, rule: t.rule, status: 'declined', note_ar: null, decided_at: new Date().toISOString() };
+  const row = { user_id: me.id, email: lower(me.email), from_key: body.from, to_key: body.to, rule: t.rule, status: 'declined', note_ar: null, decided_at: new Date().toISOString(), share_trainer: false, shared_at: null }; /* P59: الاستبعاد يسحب الإذن */
   const { error } = await db.from('portal_map_threads').upsert(row, { onConflict: 'email,from_key,to_key' });
   if (error) return { ok: false, error: 'تعذّر الحفظ', status: 500 };
   return { ok: true };
@@ -60,6 +60,17 @@ export async function removeThread(db: Db, me: Me, body: { from: string; to: str
   const { error } = await db.from('portal_map_threads').delete().eq('email', lower(me.email)).eq('from_key', body.from).eq('to_key', body.to);
   if (error) return { ok: false, error: 'تعذّر الحذف', status: 500 };
   return { ok: true };
+}
+
+/** P59: إذن المتعلّم بعرض «لأن…» لمدرّب شعبته بلا اسم — على خيط مُبقى فقط · يُلغى فورًا */
+export async function shareThread(db: Db, me: Me, body: { from: string; to: string; share: boolean }): Promise<{ ok: true; shared: boolean } | { ok: false; error: string; status: number }> {
+  if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
+  const { data } = await db.from('portal_map_threads').select('id,status').eq('email', lower(me.email)).eq('from_key', body.from).eq('to_key', body.to).maybeSingle();
+  if (!data) return { ok: false, error: 'هذا الخيط ليس في خريطتك', status: 404 };
+  if (body.share && data.status !== 'kept') return { ok: false, error: 'الإذن لخيط أبقيتَه فقط', status: 400 };
+  const { error } = await db.from('portal_map_threads').update({ share_trainer: !!body.share, shared_at: body.share ? new Date().toISOString() : null }).eq('id', data.id);
+  if (error) return { ok: false, error: 'تعذّر الحفظ', status: 500 };
+  return { ok: true, shared: !!body.share };
 }
 
 // ——— اللقطة السنوية ———

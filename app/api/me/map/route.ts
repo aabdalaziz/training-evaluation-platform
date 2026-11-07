@@ -2,13 +2,15 @@
 /**
  * P58 «خريطة أثرك — ما قاد إلى ماذا» — واجهة المتعلّم
  *  GET  /api/me/map                      → المحطات · الخيوط (مبقاة/مقترَحة) · الإحداثيات · سطر المرآة · لقطاتي السنوية
- *  POST /api/me/map  { action }          keep {from,to,note} · decline {from,to} · remove {from,to} · sign {year?,is_public?} · public {id,is_public} · revoke {id}
+ *  POST /api/me/map  { action }          keep {from,to,note} · decline {from,to} · remove {from,to} · sign {year?,is_public?} · public {id,is_public} · revoke {id} · share {from,to,share} (P59: إذن عرض «لأن…» لمدرّبي بلا اسمي)
+ *  P59: الردّ يحمل peers {threadKey: N} — «خيطك نسجه معك N من زملائك» (N ≥ 5 فقط · بلا أسماء)
  *  المصادقة: Bearer (المتعلّم بنفسه) · لا ذكاء اصطناعي · لا يدخل في أي تقييم · الحدّ: 60 طلبًا/دقيقة
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
-import { loadMap, keepThread, declineThread, removeThread, signSnapshot, setSnapshotPublic, revokeSnapshot, mySnapshots } from '../../../../lib/map/store';
+import { loadMap, keepThread, declineThread, removeThread, signSnapshot, setSnapshotPublic, revokeSnapshot, mySnapshots, shareThread } from '../../../../lib/map/store';
+import { peersForLearner } from '../../../../lib/map/weave-load'; /* P59 */
 import { MAP_TITLE, MAP_OFFICIAL, MAP_LIMITS, RULE_AR, KIND_AR } from '../../../../lib/map/registry';
 
 export const runtime = 'nodejs';
@@ -27,10 +29,13 @@ async function ctx(req: Request) {
 }
 const audit = async (db: any, user: { id: string; email: string }, meta: Record<string, unknown>) => { try { await db.from('audit_logs').insert({ actor_id: user.id, actor_email: user.email, actor_role: 'LEARNER', action: 'athar_map', entity_type: 'portal_map_threads', entity_id: null, meta }); } catch { /* السجل اختياري */ } };
 
+const safePeers = async (db: any, email: string, map: { threads: { from: string; to: string; status: string }[] }) => { try { return await peersForLearner(db, email, map.threads.filter((t) => t.status === 'kept').map((t) => ({ from: t.from, to: t.to }))); } catch { return {}; } };
+
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const [map, snapshots] = await Promise.all([loadMap(db, user), mySnapshots(db, user)]);
-  return NextResponse.json({ success: true, title: MAP_TITLE, official: MAP_OFFICIAL, limits: MAP_LIMITS, rules: RULE_AR, kinds: KIND_AR, map, snapshots }, { headers: NO });
+  const peers = await safePeers(db, user.email, map); /* P59 */
+  return NextResponse.json({ success: true, title: MAP_TITLE, official: MAP_OFFICIAL, limits: MAP_LIMITS, rules: RULE_AR, kinds: KIND_AR, map, snapshots, peers }, { headers: NO });
 }
 
 export async function POST(req: Request) {
@@ -43,8 +48,10 @@ export async function POST(req: Request) {
   else if (action === 'remove') { const r = await removeThread(db, user, { from: String(b.from || ''), to: String(b.to || '') }); if (!r.ok) return bad(r.error, r.status); }
   else if (action === 'sign') { const r = await signSnapshot(db, user, { year: b.year ? Number(b.year) : undefined, is_public: !!b.is_public }); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action, year: r.snap.year, code: r.snap.code }); const [map, snapshots] = await Promise.all([loadMap(db, user), mySnapshots(db, user)]); return NextResponse.json({ success: true, snap: r.snap, map, snapshots }, { headers: NO }); }
   else if (action === 'public') { if (!b.id) return bad('معرّف اللقطة مطلوب'); const r = await setSnapshotPublic(db, user, String(b.id), !!b.is_public); if (!r.ok) return bad('تعذّر التحديث', 500); }
+  else if (action === 'share') { const r = await shareThread(db, user, { from: String(b.from || ''), to: String(b.to || ''), share: !!b.share }); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action, from: b.from, to: b.to, share: !!b.share }); } /* P59 */
   else if (action === 'revoke') { if (!b.id) return bad('معرّف اللقطة مطلوب'); const r = await revokeSnapshot(db, user, String(b.id)); if (!r.ok) return bad('تعذّر الإبطال', 500); await audit(db, user, { action, id: b.id }); }
   else return bad('إجراء غير معروف');
   const [map, snapshots] = await Promise.all([loadMap(db, user), mySnapshots(db, user)]);
-  return NextResponse.json({ success: true, map, snapshots }, { headers: NO });
+  const peers = await safePeers(db, user.email, map);
+  return NextResponse.json({ success: true, map, snapshots, peers }, { headers: NO });
 }

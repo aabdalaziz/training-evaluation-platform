@@ -243,5 +243,5 @@ const CSS = `
 .me-foot{display:flex;justify-content:center;gap:8px}
 .me-link{border:0;background:none;color:#64748b;font:inherit;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px}.me-link:hover{background:#fff;color:#0f2a4e}
 .me-help{background:#f8fafc}.me-help b{font-size:13.5px;color:#0f2a4e}.me-help a{color:#0b8a83;font-weight:800}
-@media(max-width:640px){.me-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.me-tabs button{font-size:12px;padding:9px 2px;white-space:nowrap;gap:4px}.me-tabs button svg{display:none}.me-task{flex-wrap:wrap}.me-task-go{width:100%;justify-content:flex-end}.me-cert{flex-wrap:wrap}.me-cert .me-btn{width:100%}}
+@media(max-width:640px){.me-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.me-tabs button,.me-tabs .me-tablink{flex:1 1 auto;font-size:12px;padding:9px 6px;white-space:nowrap;gap:4px}.me-tabs button svg{display:none}.me-task{flex-wrap:wrap}.me-task-go{width:100%;justify-content:flex-end}.me-cert{flex-wrap:wrap}.me-cert .me-btn{width:100%}}
 `;

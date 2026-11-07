@@ -20,8 +20,8 @@ export type StationKind = 'placement' | 'program' | 'session' | 'skill' | 'crede
 export type Station = { key: string; kind: StationKind; at: string; title_ar: string; public_ar: string; skills: string[]; topic?: string | null };
 export type RuleKey = 'placement_program' | 'program_skill' | 'program_credential' | 'skill_credential' | 'session_skill' | 'daily_mission' | 'hand_session' | 'pledge_review' | 'council_badge' | 'case_return' | 'simulation_skill' | 'manual';
 export type Proposed = { from: string; to: string; rule: RuleKey; why_ar: string; days: number };
-export type Decision = { from_key: string; to_key: string; rule: string; status: 'kept' | 'declined'; note_ar: string | null; decided_at: string };
-export type Thread = { from: string; to: string; rule: RuleKey; status: 'kept' | 'proposed'; note_ar: string | null; why_ar: string; decided_at: string | null; days: number };
+export type Decision = { from_key: string; to_key: string; rule: string; status: 'kept' | 'declined'; note_ar: string | null; decided_at: string; shared?: boolean /* P59: إذن عرض «لأن…» للمدرّب بلا اسم */ };
+export type Thread = { from: string; to: string; rule: RuleKey; status: 'kept' | 'proposed'; note_ar: string | null; why_ar: string; decided_at: string | null; days: number; shared?: boolean /* P59 */ };
 export type Pt = { x: number; y: number };
 export type MapLayout = { w: number; h: number; pos: Record<string, Pt> };
 export type Mirror = { strongest_ar: string | null; waiting_ar: string | null; lonely_ar: string | null; lines_ar: string[] };
@@ -167,12 +167,12 @@ export function buildMap(inp: MapInput, decisions: Decision[], w?: number, h?: n
   for (const p of proposeThreads(stations)) {
     const d = dec.get(threadKey(p.from, p.to));
     if (d?.status === 'declined') { declined++; continue; }
-    threads.push({ from: p.from, to: p.to, rule: p.rule, status: d?.status === 'kept' ? 'kept' : 'proposed', note_ar: d?.note_ar || null, why_ar: p.why_ar, decided_at: d?.decided_at || null, days: p.days });
+    threads.push({ from: p.from, to: p.to, rule: p.rule, status: d?.status === 'kept' ? 'kept' : 'proposed', note_ar: d?.note_ar || null, why_ar: p.why_ar, decided_at: d?.decided_at || null, days: p.days, shared: d?.status === 'kept' && !!d.shared });
   }
   const have = new Set(threads.map((t) => threadKey(t.from, t.to)));
   for (const d of decisions) if (d.status === 'kept' && !have.has(threadKey(d.from_key, d.to_key)) && keys.has(d.from_key) && keys.has(d.to_key)) {
     const a = stations.find((s) => s.key === d.from_key)!; const b = stations.find((s) => s.key === d.to_key)!; const rule = (d.rule in RULE_AR ? d.rule : 'manual') as RuleKey;
-    threads.push({ from: d.from_key, to: d.to_key, rule, status: 'kept', note_ar: d.note_ar, why_ar: rule === 'manual' ? RULE_AR.manual.why : why(rule, daysBetween(a.at, b.at)), decided_at: d.decided_at, days: daysBetween(a.at, b.at) });
+    threads.push({ from: d.from_key, to: d.to_key, rule, status: 'kept', note_ar: d.note_ar, why_ar: rule === 'manual' ? RULE_AR.manual.why : why(rule, daysBetween(a.at, b.at)), decided_at: d.decided_at, days: daysBetween(a.at, b.at), shared: !!d.shared });
   }
   const by_kind: Record<string, number> = {}; for (const s of stations) by_kind[s.kind] = (by_kind[s.kind] || 0) + 1;
   return { stations, threads, declined, layout: layout(stations, w, h), mirror: mirror(stations, threads), counts: { stations: stations.length, kept: threads.filter((t) => t.status === 'kept').length, proposed: threads.filter((t) => t.status === 'proposed').length, manual: threads.filter((t) => t.rule === 'manual').length, by_kind } };

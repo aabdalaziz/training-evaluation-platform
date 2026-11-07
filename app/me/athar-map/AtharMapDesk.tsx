@@ -15,7 +15,7 @@ import type { AtharMap, Thread, Station, RuleKey, StationKind } from '../../../l
 import { NOTE_MAX, fmtDays } from '../../../lib/map/registry';
 
 type Snap = { id: string; created_at: string; year: number; code: string; digest: string; is_public: boolean; revoked_at: string | null; title_ar: string; verify_path: string; public_path: string | null };
-type Data = { map: AtharMap; snapshots: Snap[]; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; title: { ar: string; sub_ar: string }; official: { ar: string; en: string } };
+type Data = { map: AtharMap; snapshots: Snap[]; peers?: Record<string, number> /* P59 */; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; title: { ar: string; sub_ar: string }; official: { ar: string; en: string } };
 const fmt = (iso?: string | null, m: 'short' | 'long' = 'short') => { if (!iso) return ''; try { return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: m, year: 'numeric', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return iso.slice(0, 10); } };
 const tk = (t: { from: string; to: string }) => `${t.from}>${t.to}`;
 
@@ -30,7 +30,7 @@ export default function AtharMapDesk() {
   const flash = (t: string) => { setMsg(t); setTimeout(() => setMsg(''), 5000); };
   async function act(body: Record<string, unknown>, label: string): Promise<any> {
     setBusy(label); const j = await fetch('/api/me/map', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null); setBusy('');
-    if (j?.success) { setD((p) => (p ? { ...p, map: j.map, snapshots: j.snapshots } : p)); setErr(''); } else setErr(j?.error || 'تعذّر الحفظ'); return j;
+    if (j?.success) { setD((p) => (p ? { ...p, map: j.map, snapshots: j.snapshots, peers: j.peers || {} } : p)); setErr(''); } else setErr(j?.error || 'تعذّر الحفظ'); return j;
   }
   const map = d?.map; const stations = map?.stations || []; const byKey = useMemo(() => new Map(stations.map((s) => [s.key, s])), [stations]);
   const proposed = (map?.threads || []).filter((t) => t.status === 'proposed'); const kept = (map?.threads || []).filter((t) => t.status === 'kept');
@@ -65,7 +65,8 @@ export default function AtharMapDesk() {
           <ThreadCard key={open} t={t} a={a} b={b} rules={d.rules} kinds={d.kinds} note={notes[open] || ''} setNote={(v) => setNotes((p) => ({ ...p, [open]: v }))} busy={busy} onClose={() => setOpen(null)}
             onKeep={async () => { const j = await act({ action: 'keep', from: t.from, to: t.to, note: notes[open] || '' }, 'keep'); if (j?.success) { flash('أُبقي الخيط بكلمتك'); setOpen(null); } }}
             onDecline={async () => { const j = await act({ action: 'decline', from: t.from, to: t.to }, 'decline'); if (j?.success) { flash('استُبعد الخيط ولن يُقترح مجددًا'); setOpen(null); } }}
-            onRemove={async () => { if (!confirm('يُحذف الخيط وكلمتك فورًا — ولا سلّة محذوفات. نتابع؟')) return; const j = await act({ action: 'remove', from: t.from, to: t.to }, 'remove'); if (j?.success) { flash('حُذف الخيط'); setOpen(null); } }} />); })()}
+            onRemove={async () => { if (!confirm('يُحذف الخيط وكلمتك فورًا — ولا سلّة محذوفات. نتابع؟')) return; const j = await act({ action: 'remove', from: t.from, to: t.to }, 'remove'); if (j?.success) { flash('حُذف الخيط'); setOpen(null); } }}
+            onShare={async (share) => { const j = await act({ action: 'share', from: t.from, to: t.to, share }, 'share'); if (j?.success) flash(share ? 'ستصل كلمتك مدرّبك بلا اسمك — ويمكنك سحبها متى شئت' : 'سُحب الإذن فورًا'); }} peers={d.peers?.[open] || 0} />); })()}
 
         <section className="am-block" data-testid="am-proposed"><h2><Icon name="bell" size={16} /> خيوط تنتظر كلمتك <i>{proposed.length}</i></h2>
           {!proposed.length && <p className="am-muted">لا خيوط مقترَحة الآن. كلّما وقع حدث بعد حدث في رحلتك — برنامج ثم مهارة، حالة ثم مهمة، ✋ ثم حضور — ظهر هنا خيطٌ ينتظر كلمتك.</p>}
@@ -76,7 +77,8 @@ export default function AtharMapDesk() {
         <section className="am-block" data-testid="am-kept"><h2><Icon name="star" size={16} /> خيوطك <i>{kept.length}</i></h2>
           {!kept.length && <p className="am-muted">حين تُبقي أول خيط بكلمة «لأن…» يُرسم هنا متصلًا، ويكبر مع كلّ تفرّع.</p>}
           <ul className="am-cards">{kept.map((t) => { const a = byKey.get(t.from)!; const b = byKey.get(t.to)!; return <li key={tk(t)} className="am-card kept" data-testid="am-kept-item">
-            <span className="am-kind">{d.rules[t.rule].title}</span><b>{a.title_ar}</b><span className="am-arrow">⟵</span><b>{b.title_ar}</b><p className="am-note">«لأن {t.note_ar}»</p><p className="am-muted">{fmt(t.decided_at)}</p>
+            <span className="am-kind">{d.rules[t.rule].title}</span><b>{a.title_ar}</b><span className="am-arrow">⟵</span><b>{b.title_ar}</b><p className="am-note">«لأن {t.note_ar}»</p><p className="am-muted">{fmt(t.decided_at)}{t.shared ? <span className="am-shared" data-testid="am-shared-badge" title="كلمتك تصل مدرّبك بلا اسمك"> · 🧶 مع مدرّبك</span> : null}</p>
+            {d.peers?.[tk(t)] ? <p className="am-peers" data-testid="am-peers">🧶 خيطك هذا نسجه معك {d.peers[tk(t)]} من زملائك</p> : null}
             <button type="button" className="am-linkbtn" onClick={() => setOpen(tk(t))}>عرض / حذف</button></li>; })}</ul></section>
 
         <section className="am-block" data-testid="am-manual"><h2><Icon name="edit" size={16} /> انسج خيطًا بنفسك</h2>
@@ -101,20 +103,23 @@ export default function AtharMapDesk() {
           {(d.snapshots || []).filter((s) => s.id !== liveSnap?.id).length > 0 && <details className="am-hist"><summary>لقطاتي السابقة ({(d.snapshots || []).filter((s) => s.id !== liveSnap?.id).length})</summary>
             <ul className="am-list">{(d.snapshots || []).filter((s) => s.id !== liveSnap?.id).map((s) => <li key={s.id}><code>{s.code}</code> {s.title_ar} · {fmt(s.created_at)} · {s.revoked_at ? <span className="am-rev">أُبطلت {fmt(s.revoked_at)}</span> : s.is_public ? 'عامة' : 'خاصّة'} · <a href={s.verify_path} target="_blank" rel="noreferrer">تحقّق</a></li>)}</ul></details>}
         </section>
-        <footer className="am-foot am-muted">المحطات تُقرأ من وقائع رحلتك كما هي؛ القواعد التي تقترح الخيوط صريحة ومعلنة (حدث ثم حدث خلال أيام معلومة) بلا ذكاء اصطناعي. ما تستبعده لا يعود، وما تحذفه يُحذف فورًا.</footer>
+        <footer className="am-foot am-muted">المحطات تُقرأ من وقائع رحلتك كما هي؛ القواعد التي تقترح الخيوط صريحة ومعلنة (حدث ثم حدث خلال أيام معلومة) بلا ذكاء اصطناعي. ما تستبعده لا يعود، وما تحذفه يُحذف فورًا. مدرّبك لا يرى خريطتك ولا خيوطك؛ يرى «نسيج الشعبة» مجمَّعًا بلا أسماء حين يبلغ خمسةٌ محطةً واحدة — وكلمتك «لأن…» لا تصله إلا بإذنك.</footer>
       </>)}
     </main>
   );
 }
 
-function ThreadCard({ t, a, b, rules, kinds, note, setNote, busy, onClose, onKeep, onDecline, onRemove }: { t: Thread; a: Station; b: Station; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; note: string; setNote: (v: string) => void; busy: string; onClose: () => void; onKeep: () => void; onDecline: () => void; onRemove: () => void }) {
+function ThreadCard({ t, a, b, rules, kinds, note, setNote, busy, onClose, onKeep, onDecline, onRemove, onShare, peers }: { t: Thread; a: Station; b: Station; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; note: string; setNote: (v: string) => void; busy: string; onClose: () => void; onKeep: () => void; onDecline: () => void; onRemove: () => void; onShare: (share: boolean) => void; peers: number }) {
   const kept = t.status === 'kept';
   return <section className={`am-thread ${kept ? 'kept' : ''}`} data-testid="am-thread-card" aria-live="polite">
     <button type="button" className="am-x" aria-label="إغلاق" onClick={onClose}>×</button>
     <span className="am-kind">{rules[t.rule].title}</span>
     <div className="am-pair"><div><small>{kinds[a.kind]} · {fmt(a.at)}</small><b>{a.title_ar}</b></div><span className="am-arrow">⟵ {t.rule === 'manual' ? 'خيطك' : `بعد ${fmtDays(t.days)}`} ⟵</span><div><small>{kinds[b.kind]} · {fmt(b.at)}</small><b>{b.title_ar}</b></div></div>
     <p className="am-muted">{t.why_ar}</p>
-    {kept ? <><p className="am-note">«لأن {t.note_ar}»</p><p className="am-muted">قلتَ كلمتك {fmt(t.decided_at, 'long')}</p><button type="button" className="pt-btn small danger" onClick={onRemove} disabled={busy === 'remove'} data-testid="am-remove">احذف الخيط وكلمتي</button></>
+    {kept ? <><p className="am-note">«لأن {t.note_ar}»</p><p className="am-muted">قلتَ كلمتك {fmt(t.decided_at, 'long')}</p>
+        {peers >= 5 && <p className="am-peers" data-testid="am-peers-card">🧶 خيطك هذا نسجه معك {peers} من زملائك</p>}
+        <label className="am-share" data-testid="am-share"><input type="checkbox" checked={!!t.shared} onChange={(e) => onShare(e.target.checked)} disabled={busy === 'share'} data-testid="am-share-toggle" /> <span><b>شارك كلمتي مع مدرّبي — بلا اسمي</b><small>تظهر «لأن…» هذه في «نسيج الشعبة» عند مدرّبك مع كلمات زملائك، بلا اسم ولا تاريخ، ولا تظهر أصلًا قبل أن يأذن خمسة. تسحبها متى شئت فتختفي فورًا.</small></span></label>
+        <button type="button" className="pt-btn small danger" onClick={onRemove} disabled={busy === 'remove'} data-testid="am-remove">احذف الخيط وكلمتي</button></>
       : <><p><b>هل هذا خيط؟</b> إن كان نعم، قل لماذا بكلماتك (أو أملِه بصوتك).</p>
         <NoteField value={note} onChange={setNote} testid="am-note" autoFocus />
         <div className="am-row"><button type="button" className="pt-btn" onClick={onKeep} disabled={busy === 'keep' || note.trim().length < 2} data-testid="am-keep">{busy === 'keep' ? '…' : 'نعم — أبقِ الخيط'}</button>
@@ -161,7 +166,7 @@ const CSS = `
 .am-mic{border:1.5px solid #cbd5e1;background:#fff;color:#0f2a4e;border-radius:999px;width:38px;height:38px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.am-mic.on{background:#fecaca;border-color:#ef4444;color:#7f1d1d;animation:am-p 1s infinite}@keyframes am-p{50%{box-shadow:0 0 0 6px rgba(239,68,68,.25)}}
 .am-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.am-chk{display:inline-flex;gap:6px;align-items:center;font-size:14px}
 .am-snap{background:linear-gradient(135deg,#fff,#f8fafc)}.am-snapcard{border:1.5px solid #fde68a;background:#fffbeb;border-radius:14px;padding:12px 14px}.am-snapcard code{background:#fff;border:1px solid #fde68a;border-radius:8px;padding:2px 8px;font-weight:800;letter-spacing:.5px}.am-rev{color:#b91c1c;font-weight:800}.am-hist{margin-top:10px}.am-hist summary{cursor:pointer;font-weight:800;color:#0f2a4e}
-.am-foot{margin-top:18px;border-top:1px dashed #e2e8f0;padding-top:10px}
+.am-foot{margin-top:18px;border-top:1px dashed #e2e8f0;padding-top:10px}.am-peers{margin:4px 0;color:#92400e;font-weight:700;font-size:13px}.am-shared{color:#92400e}.am-share{display:flex;gap:10px;align-items:flex-start;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 10px;margin:8px 0;cursor:pointer}.am-share input{margin-top:4px;width:18px;height:18px;flex:none}.am-share span{display:grid;gap:2px}.am-share small{color:#64748b;font-size:12px;line-height:1.5}
 @media (max-width:640px){.am-pair{grid-template-columns:1fr}.am-side{position:static;max-width:none;margin-top:8px}.am-head h1{font-size:26px}}
 @media (prefers-reduced-motion:reduce){.am-mic.on{animation:none}}
 `;

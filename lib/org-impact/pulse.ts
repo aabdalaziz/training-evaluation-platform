@@ -25,6 +25,7 @@ export type OrgPulse = {
   by_chip: Record<ChipKey, number>; voice_replies: number; hands: number; hands_open: number;
   peak_week: string | null; peak_week_ar: string | null; k: boolean;
   line_ar: string | null; mirror_ar: string; ask_ar: string | null;
+  thread_ar?: string | null; /* P59: «أقوى خيط نسجه منسوبوكم» من خريطة أثرك — k ≥ 5 ناسجين، وإلا لا يظهر */
 };
 
 const norm = (e: unknown) => String(e || '').trim().toLowerCase();
@@ -92,5 +93,12 @@ export async function orgPulse(db: Db, members: Set<string>, range: { from: stri
     ]);
     words.push(...arr<PulseWord>(w).filter((x) => members.has(norm(x.email)))); replies.push(...arr<PulseReply>(r).filter((x) => members.has(norm(x.learner_email))));
   }
-  return computePulse(words, replies, asOf);
+  const pulse = computePulse(words, replies, asOf);
+  /* P59: أقوى خيط نسجه المنسوبون خلال الشهر (خيوط P58 المبقاة · k ≥ 5 ناسجين · اليدوي لا يُحتسب) */
+  try {
+    const { orgStrongestThread } = await import('../map/weave'); const rows: Array<{ email: string; rule: string }> = [];
+    for (const part of chunk(mem)) { const { data: t } = await db.from('portal_map_threads').select('email, rule').eq('status', 'kept').in('email', part).gte('decided_at', range.from).lt('decided_at', range.to).limit(5000); rows.push(...arr<{ email: string; rule: string }>(t).filter((x) => members.has(norm(x.email)))); }
+    const top = orgStrongestThread(rows); pulse.thread_ar = top ? top.line_ar : null;
+  } catch { pulse.thread_ar = null; }
+  return pulse;
 }

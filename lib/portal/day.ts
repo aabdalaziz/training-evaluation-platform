@@ -143,16 +143,16 @@ export async function collectDayBook(db: Db, me: DayMe, site: string, opts: { no
 
 /** «كلمة» — إشعار داخل أَثَر للمستلمين (كلمة واحدة لكل متعلّم من كل مدرّب في اليوم؛ المتأخّرة تُحدِّث الأولى) */
 export type WordResult = { sent: number; recipients: number; text_ar: string; voice_sec?: number | null };
-export async function sendWord(db: Db, me: DayMe, room: ClassDay, input: { mode: WordMode; email?: string | null; text?: string; template?: string | null; voice?: VoiceMeta | null; transcript?: string | null }, opts: { now?: Date; dry?: boolean } = {}): Promise<WordResult | { error: string }> {
+export async function sendWord(db: Db, me: DayMe, room: ClassDay, input: { mode: WordMode; email?: string | null; text?: string; template?: string | null; voice?: VoiceMeta | null; transcript?: string | null; weave?: boolean /* P59: كلمة على النسيج */ }, opts: { now?: Date; dry?: boolean } = {}): Promise<WordResult | { error: string }> {
   const now = opts.now || new Date(); const tpl = WORD_TEMPLATES.find((t) => t.key === input.template);
   const recipients: Learner[] = recipientsFor(input.mode, room, input.email || null);
   if (!recipients.length) return { error: 'لا مستلم لهذه الكلمة' };
   const raw = cleanWord(input.text); const voice = input.voice || null; if (!raw && !tpl && !voice) return { error: 'اكتب كلمة أو اختر صيغة أو قُلها بصوتك' };
   /* P55: كلمة صوتية — ملف واحد يُشار إليه من إشعار كل مستلم (meta.voice) · بلا نصّ يصبح المتن «🎙️ كلمة صوتية من مدرّبك» */
-  const meta = voice ? { voice, transcript: input.transcript || null } : {}; /* كلمة نصّية لاحقة في اليوم نفسه تُزيل الصوت السابق (الأحدث تحلّ محلّ الأقدم) */
+  const meta = { ...(voice ? { voice, transcript: input.transcript || null } : {}), ...(input.weave ? { weave: 1 } : {}) }; /* كلمة نصّية لاحقة في اليوم نفسه تُزيل الصوت السابق (الأحدث تحلّ محلّ الأقدم) · P59: meta.weave */
   const { pushNotice } = await import('./notices'); const day = riyadhDate(now); const tid = me.trainerIds[0] || me.id; let sent = 0; let last = '';
   for (const l of recipients) { const text = raw || (tpl ? fillTemplate(tpl, l.name.split(' ')[0] || '') : `🎙️ كلمة صوتية من مدرّبك (${Math.round(voice!.sec)} ث)`); last = text;
-    const r = await pushNotice(db, { email: l.email, user_id: null, report_id: null, kind: 'trainer_word', title_ar: `كلمة من مدرّبك${me.name ? ` ${me.name}` : ''}`, body_ar: text, url: '/me', ref_id: room.id, dedupe_key: `trainer_word:${tid}:${l.email}:${day}`, push: false, merge: true, meta }, { dry: !!opts.dry });
+    const r = await pushNotice(db, { email: l.email, user_id: null, report_id: null, kind: 'trainer_word', title_ar: input.weave ? `🧶 كلمة من مدرّبك${me.name ? ` ${me.name}` : ''} على نسيجكم` : `كلمة من مدرّبك${me.name ? ` ${me.name}` : ''}`, body_ar: text, url: input.weave ? '/me/athar-map' : '/me', ref_id: room.id, dedupe_key: input.weave ? `weave_word:${tid}:${l.email}:${day}` : `trainer_word:${tid}:${l.email}:${day}`, push: false, merge: true, meta }, { dry: !!opts.dry });
     if (r.inserted) sent += 1; }
   return { sent, recipients: recipients.length, text_ar: raw || (tpl ? tpl.text_ar : last), voice_sec: voice ? voice.sec : null };
 }
