@@ -110,6 +110,10 @@ export async function GET(req: Request) {
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */
     const r = await resultByCode(db, code); return r ? NextResponse.json({ ok: true, ...r }, { headers: NO }) : bad('not_found', 404); }
+  /* P68-ب: «التقرير التفصيلي» برمز النتيجة — الواصفات والرموز والنتيجة والزمن لكل بند، بلا نصوص أسئلة */
+  if (u.searchParams.get('detail')) { const code = String(u.searchParams.get('detail') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
+    const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
+    const { detailByCode } = await import('../../../lib/miaar/detail'); const d = await detailByCode(db, code); return d ? NextResponse.json({ ok: true, detail: d }, { headers: NO }) : bad('not_found', 404); }
   /* م5-ب: «رحلة المتقدّم» برمز النتيجة — الاسم الأول فقط، بلا بريد ولا بنود */
   if (u.searchParams.get('journey')) { const code = String(u.searchParams.get('journey') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');

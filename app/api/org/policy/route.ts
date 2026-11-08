@@ -5,6 +5,7 @@
  *  GET  ?org=<id>            (مدير جهة/طاقم)     → السياسة · المُعرِّف · الأختام · ملخّص الأرقام · ★1 «كما يراني الزائر»
  *  POST { action:'save', org_id, policy }         → حفظ + ختم ATH-OP + حدث درع
  *  POST { action:'slug', org_id, slug }           → تعيين مُعرِّف الجهة (عنوان الباب /enter?o=)
+ *  POST { action:'logo', org_id, logo|null }      → P68-ج: شعار الجهة المضمَّن (بطاقة الدعوة · تقرير القيادة)
  *  POST { action:'roster', org_id, text }         → إنشاء حسابات الأرقام — الأرقام السرية تُعاد مرّة واحدة (★3 لا تُخزَّن)
  *  POST { action:'codes', org_id }                → قائمة الأرقام (بلا أرقام سرية): دخل؟ غيّر رقمه؟ مقفول؟ موقوف؟
  *  POST { action:'reset_pin'|'revoke'|'restore', org_id, training_no }
@@ -44,8 +45,8 @@ export async function GET(req: Request) {
   const orgId = String(u.searchParams.get('org') || ''); if (!orgId) return bad('حدّد الجهة');
   if (!(await canManage(c.db, orgId, c.user, c.staff))) return bad('هذه الصفحة لمدير الجهة', 403);
   const org = await orgById(c.db, orgId); if (!org) return bad('الجهة غير موجودة', 404);
-  const [seals, codes, visitor] = await Promise.all([listSeals(c.db, orgId), listCodes(c.db, orgId), visitorView(c.db, orgId)]);
-  return NextResponse.json({ success: true, org: { id: org.id, name_ar: org.name_ar, name_en: org.name_en, slug: org.slug, frozen: !!org.frozen }, policy: org.policy, keys: POLICY_KEYS, seals, codes: codesSummary(codes), visitor, staff: c.staff, enter_url: org.slug ? `${siteUrl(req)}/enter?o=${org.slug}` : null }, { headers: NO });
+  const [seals, codes, visitor, logoRow] = await Promise.all([listSeals(c.db, orgId), listCodes(c.db, orgId), visitorView(c.db, orgId), c.db.from('portal_organizations').select('logo').eq('id', orgId).maybeSingle().then((r: any) => r?.data || null, () => null)]);
+  return NextResponse.json({ success: true, org: { id: org.id, name_ar: org.name_ar, name_en: org.name_en, slug: org.slug, frozen: !!org.frozen, logo: (logoRow as any)?.logo || null }, policy: org.policy, keys: POLICY_KEYS, seals, codes: codesSummary(codes), visitor, staff: c.staff, enter_url: org.slug ? `${siteUrl(req)}/enter?o=${org.slug}` : null }, { headers: NO });
 }
 
 export async function POST(req: Request) {
@@ -59,6 +60,9 @@ export async function POST(req: Request) {
     const r = await savePolicy(c.db, { org_id: orgId, policy: normalizePolicy(body.policy), by: c.user, site: siteUrl(req) });
     return r.ok ? NextResponse.json({ success: true, policy: r.policy, changed: r.changed, seal: r.seal }, { headers: NO }) : bad(r.error || 'تعذّر الحفظ');
   }
+  /* P68-ج: شعار الجهة — صورة صغيرة مضمَّنة (≤ 96 KB، PNG/JPEG/WebP/SVG) تظهر على بطاقة دعوة مِعيار وتقرير القيادة · null = إزالة */
+  if (action === 'logo') { const logo = body.logo == null ? null : String(body.logo); if (logo !== null && !/^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(logo)) return bad('الشعار يجب أن يكون صورة PNG/JPEG/WebP/SVG'); if (logo && logo.length > 131072) return bad('الشعار أكبر من 96 KB — صغّره أوّلًا');
+    const { error } = await c.db.from('portal_organizations').update({ logo }).eq('id', orgId); return error ? bad(String(error.message || error).includes('logo') ? 'نفّذ p68-leadership-report.sql أوّلًا (عمود الشعار)' : String(error.message || error).slice(0, 160)) : NextResponse.json({ success: true, logo }, { headers: NO }); }
   if (action === 'slug') { const r = await setSlug(c.db, orgId, String(body.slug || '')); return r.ok ? NextResponse.json({ success: true, enter_url: `${siteUrl(req)}/enter?o=${String(body.slug).trim().toLowerCase()}` }, { headers: NO }) : bad(r.error || 'تعذّر'); }
   if (action === 'roster') {
     if (!org.policy.code_login) return bad('فعّل «الدخول بالرمز» واحفظ السياسة أولًا');

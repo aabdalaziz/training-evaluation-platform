@@ -34,6 +34,10 @@ async function ctx(req: Request) {
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db } = c; const site = siteOf(req);
   const u = new URL(req.url);
+  /* P68-ب: نسخة المصحّح من التقرير التفصيلي (بنصوص البنود) — للطاقم فقط */
+  if (u.searchParams.get('detail')) { const { detailByCode } = await import('../../../../lib/miaar/detail'); const d = await detailByCode(db, String(u.searchParams.get('detail') || '').toUpperCase(), { withText: true }); return d ? NextResponse.json({ success: true, detail: d }, { headers: { 'Cache-Control': 'no-store' } }) : NextResponse.json({ success: false, error: 'not_found' }, { status: 404 }); }
+  /* P68-ج: الجهات (الاسم + هل لها شعار) — لاختيار الجهة على بطاقة الدعوة */
+  if (u.searchParams.get('orgs')) { const { data } = await db.from('portal_organizations').select('id,name_ar,logo').eq('active', true).order('name_ar').limit(300); return NextResponse.json({ success: true, orgs: ((data || []) as any[]).map((o) => ({ id: o.id, name_ar: o.name_ar, logo: o.logo || null })) }, { headers: { 'Cache-Control': 'no-store' } }); }
   const [coverage, invites, reports, sessions] = await Promise.all([
     bankCoverage(db).catch(() => null), listInvites(db, site).catch(() => []),
     db.from('placement_reports').select('id, candidate_email, created_at, access_code, invite_id, report').order('created_at', { ascending: false }).limit(50),

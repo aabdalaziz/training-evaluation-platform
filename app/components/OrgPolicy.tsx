@@ -17,7 +17,7 @@ type KeyMeta = { key: Key; title_ar: string; title_en: string; desc_ar: string; 
 type Seal = { code: string; issued_at: string; changed: string[]; policy: Record<string, unknown>; signed: boolean };
 type Visitor = { id: string; title_ar: string; visible: boolean; count: number; controlled_by: Key | null; where_ar: string };
 type Summary = { total: number; active: number; entered: number; changed_pin: number; locked: number; revoked: number };
-type Data = { org: { id: string; name_ar: string; name_en: string | null; slug: string | null; frozen: boolean }; policy: Policy; keys: KeyMeta[]; seals: Seal[]; codes: Summary; visitor: Visitor[]; staff: boolean; enter_url: string | null };
+type Data = { org: { id: string; name_ar: string; name_en: string | null; slug: string | null; frozen: boolean; logo?: string | null }; policy: Policy; keys: KeyMeta[]; seals: Seal[]; codes: Summary; visitor: Visitor[]; staff: boolean; enter_url: string | null };
 type CodeRow = { training_no: string; created_at: string; first_login_at: string | null; last_login_at: string | null; pin_changed: boolean; locked: boolean; revoked: boolean };
 type Props = { orgId: string; lang: 'ar' | 'en'; token: () => Promise<string> };
 const KIOSK = [0, 5, 10, 20, 30];
@@ -45,6 +45,16 @@ export function OrgPolicy({ orgId, lang, token }: Props) {
     if (!o) { setErr(j.error || 'تعذّر الحفظ'); return; }
     setOk(j.seal ? (ar ? `حُفظت السياسة وخُتمت — ${j.seal.code}` : `Saved & sealed — ${j.seal.code}`) : (ar ? 'لا تغيير' : 'No change')); setLastSeal(j.seal ? { code: j.seal.code, changed: j.changed || [] } : null); await load();
   }
+  /* P68-ج: شعار الجهة — يُصغَّر في المتصفّح إلى ≤ 240px ويُضمَّن data:image (لا تخزين ملفات) */
+  async function pickLogo(file: File | null) {
+    if (!file) return; setErr(''); if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) { setErr(ar ? 'اختر صورة PNG/JPEG/WebP/SVG' : 'Pick a PNG/JPEG/WebP/SVG image'); return; }
+    const dataUrl: string = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result || '')); fr.onerror = () => rej(new Error('read')); fr.readAsDataURL(file); });
+    let out = dataUrl;
+    if (file.type !== 'image/svg+xml' || dataUrl.length > 131072) { out = await new Promise((res) => { const img = new Image(); img.onload = () => { const max = 240; const k = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k)); const g = c.getContext('2d'); if (!g) { res(dataUrl); return; } g.drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL('image/png')); }; img.onerror = () => res(dataUrl); img.src = dataUrl; }); }
+    if (out.length > 131072) { setErr(ar ? 'الشعار ما زال أكبر من 96 KB — استخدم صورة أبسط' : 'Still > 96 KB'); return; }
+    setBusy('logo'); const { ok: o, j } = await post({ action: 'logo', logo: out }); setBusy(''); if (!o) { setErr(j.error || 'تعذّر'); return; } setOk(ar ? 'حُفظ الشعار — سيظهر على بطاقة دعوة مِعيار وتقرير القيادة' : 'Logo saved'); await load();
+  }
+  async function clearLogo() { setBusy('logo'); const { ok: o, j } = await post({ action: 'logo', logo: null }); setBusy(''); if (!o) { setErr(j.error || 'تعذّر'); return; } setOk(ar ? 'أُزيل الشعار' : 'Logo removed'); await load(); }
   async function saveSlug() { setBusy('slug'); setErr(''); const { ok: o, j } = await post({ action: 'slug', slug: slug.trim().toLowerCase() }); setBusy(''); if (!o) { setErr(j.error || 'تعذّر'); return; } setOk(ar ? 'حُفظ المُعرِّف — هذا هو باب جهتكم' : 'Identifier saved'); await load(); }
   async function makeCodes() {
     setBusy('roster'); setErr(''); setRosterNote(''); const { ok: o, j } = await post({ action: 'roster', text: roster }); setBusy('');
@@ -98,6 +108,16 @@ export function OrgPolicy({ orgId, lang, token }: Props) {
       </div>
       {enterUrl && <p className="opl-url" data-testid="opl-enter-url"><Icon name="link" size={14} /> <a href={enterUrl} target="_blank" rel="noreferrer" dir="ltr">{enterUrl}</a> <button type="button" className="pt-btn ghost small" onClick={() => { try { void navigator.clipboard.writeText(enterUrl); setOk(ar ? 'نُسخ الرابط' : 'Copied'); } catch { /* لا */ } }}><Icon name="copy" size={13} /></button></p>}
       {!pol.code_login && <p className="pt-muted">{ar ? 'فعّل «الدخول بالرمز» أعلاه واحفظ حتى يعمل الباب.' : 'Enable “Code login” above and save to open the door.'}</p>}
+    </section>
+
+    <section className="opl-box no-print" aria-labelledby="opl-logo-h">
+      <h4 id="opl-logo-h">{ar ? 'شعار الجهة' : 'Organization logo'}</h4>
+      <p className="pt-muted">{ar ? 'يظهر بجوار شعار أَثَر على بطاقة دعوة «مِعيار» (الملصق وQR) وفي رأس «تقرير القيادة». صورة واحدة صغيرة تُضمَّن في سجلّ الجهة — لا ملفات ولا روابط خارجية.' : 'Shown next to the Athar logo on the Miaar invitation card and in the leadership report header. One small image embedded in the organization record.'}</p>
+      <div className="opl-row" style={{ alignItems: 'center' }}>
+        {d.org.logo ? <img src={d.org.logo} alt="" style={{ height: 56, maxWidth: 160, objectFit: 'contain', border: '1px solid #e2e8f0', borderRadius: 10, padding: 4, background: '#fff' }} data-testid="opl-logo-img" /> : <span className="pt-muted" data-testid="opl-logo-none">{ar ? 'لا شعار بعد' : 'No logo yet'}</span>}
+        <label className="pt-btn ghost small" style={{ cursor: 'pointer' }}>{busy === 'logo' ? '…' : (ar ? (d.org.logo ? 'استبدل الشعار' : 'ارفع الشعار') : 'Upload')}<input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style={{ display: 'none' }} onChange={(e) => void pickLogo(e.target.files?.[0] || null)} data-testid="opl-logo-file" disabled={d.org.frozen} /></label>
+        {d.org.logo ? <button type="button" className="pt-btn ghost small" onClick={() => void clearLogo()} disabled={busy === 'logo'} data-testid="opl-logo-clear">{ar ? 'إزالة' : 'Remove'}</button> : null}
+      </div>
     </section>
 
     {/* (3) الأرقام التدريبية */}

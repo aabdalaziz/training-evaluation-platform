@@ -115,8 +115,10 @@ const lower = (s: unknown) => String(s || '').trim().toLowerCase();
 const chunk = <T,>(a: T[], n = 200) => { const out: T[][] = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
 async function safe<T>(p: Promise<T>, fb: T): Promise<T> { try { return await p; } catch { return fb; } }
 
-async function monthStats(db: Db, members: Set<string>, month: string) {
-  const r = monthRange(month); const mem = [...members];
+async function monthStats(db: Db, members: Set<string>, month: string) { return rangeStats(db, members, monthRange(month)); }
+/** P68: الإحصاء نفسه لأي مدى (تقرير القيادة يقرأ ربعًا أو فصلًا) — r.from/to بتوقيت ISO وr.day_from/day_to أيام */
+export async function rangeStats(db: Db, members: Set<string>, r: { from: string; to: string; day_from: string; day_to: string }) {
+  const mem = [...members];
   /* جلسات الحضور في الشهر + سجلاتها لمنسوبينا */
   const { data: ses } = await db.from('attendance_sessions').select('id, classroom_id').gte('session_date', r.day_from).lt('session_date', r.day_to).limit(2000);
   const sessions = arr(ses); const sids = sessions.map((s) => String(s.id)); const recs: any[] = [];

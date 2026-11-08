@@ -127,3 +127,4 @@ import './p66-room-calendar.test'; /* P66 «أيام التدريب وفترات
 import './p66b-diploma.test'; /* P66-ب «هيكل الدبلوم» */
 import './p65-shield.test'; /* P65 «درع أَثَر — الطبقة الثانية» */
 import './p67-org-policy.test'; /* P67 «سياسة الجهة — الاسم يدخل من الباب» */
+import './p68-leadership-report.test'; /* P68 «تقرير القيادة» — صفحة واحدة موقَّعة ATH-LR تنتهي بقرار */
