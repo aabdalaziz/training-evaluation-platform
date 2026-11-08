@@ -96,6 +96,15 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - Voice: «ماذا عندي اليوم» stays `/me/day`; «محاضراتي اليوم / وش عندي اليوم / جدولي اليوم / قبل ان تغادر / شعبتي» → `/me/line#today` (aliases must not contain «من» — the parser strips it). API `/api/diploma` GET `?program=|?list=1|?today=1|?corridor=<session_id>`; rate key `diploma:<uid>` 60/h; cron key `level_close` right after `evidence`.
 - Lessons that cost a run: the mock compares timestamps as strings — keep one ISO format per table and pass `riyadhIso(now)` to `gte('starts_at')`; `sectionLabel` must take the **last** digits of the code; store tests need a fake-db chain with thenable `limit()`; P39/P63 E2E read admin's `/me/day` sessions list — any new seeded `portal_sessions` row shows up there.
 
+## The shield is a promise the learner can read (P65 pattern — «درع أَثَر — الطبقة الثانية»)
+- Every staff look at a PII path is **one row per user×path×subject×day** (`portal_admin_access`, beacon from `AdminShell`, allow-list `lib/shield/paths.ts` — client-safe, no server imports). The learner reads it back as «مَن نظر إلى بياناتي؟» (`/api/vault` → `who_looked`: count + roles, **never staff names**). GC 180 days inside `shield_gc`.
+- Security facts are **signed documents, not claims**: monthly «شهادة الدرع» `ATH-SH` = canonical digest of the 17-check drill + policy report (`portal_shield_seals`, `/verify/shield?seal=`); org exit = `ATH-EX` export + `ATH-ER` erasure receipt after a 7‑day grace (`/verify/erasure`). Same `signReceipt` as P22.
+- Org-wide operations walk the **FK catalog** (`vault_org_footprint/export/erase` over `pg_constraint`) — never a hand-written table list, so new tables are covered the day they get a FK.
+- «زرّ التجميد»: `freezeGate(db, userId)` → 423 `{frozen:true, org}` on learner **write** routes only (reads stay open; the learner is told, not punished). Membership = `portal_org_members(confirmed)` or `portal_enrollments.organization_id`.
+- CSP stays Report-Only until the verdict says «ready» (`lib/shield/csp.ts` summarises `portal_csp_reports` into directive×host rows); enforce is a one-line flip in `next.config.js`, never a code change.
+- RoPA is **generated** from the vault `REGISTRY` (`/privacy/processing`, `/admin/vault` «RoPA» button) — one source of truth for tables, purposes, retention, cross-border note.
+- Drill is the only test that may fail in prod: new checks `rls_all` (live `shield_policy_report()`), `anon_write`, `unauth_pii`. Legacy tables already carry RLS — verify live, do not add deny policies.
+
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
 
