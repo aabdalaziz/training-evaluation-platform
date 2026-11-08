@@ -10,7 +10,7 @@ import {
   PASS_PERCENT, DURATION_SECONDS, CONTENT_VERSION, MIAAR_NAMES_AR, isExamMode, isOptionId, cleanText, normalizeCandidate, normalizeAccess,
   accessDuration, nextStep, calculateReport, resultCode, bankLevelIndex, levelAtIndex, hasFloor, FLOOR_INDEX,
 } from './registry';
-import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report } from './registry';
+import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report, PoolItem } from './registry';
 import { loadApprovedPool, loadPassages, formFromPool, secureItems } from './bank';
 import { reweighIfDue, trustLine } from './balance';
 import { openGrant, publicLedgerBadge } from './ledger';
@@ -33,7 +33,7 @@ export type SessionRow = {
   blueprint_id?: string | null; plan?: unknown;  /* م2-ب: الخطة المثبّتة لحظة البدء */
   proctor_mode?: 'room' | 'camera' | 'remote' | null;  /* م8-ب: وضع المراقبة المثبَّت لحظة البدء */
 };
-export type StartInput = { /* م8-ج */ instructionsAck?: { version: number; lang: 'ar' | 'en'; at: string } | null; candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { unit_scope?: unknown /* م6-ب */; id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; proctorMode?: 'room' | 'camera' | 'remote' | null; userId?: string | null; blueprint?: unknown };
+export type StartInput = { /* م8-ج */ instructionsAck?: { version: number; lang: 'ar' | 'en'; at: string } | null; candidate: unknown; examMode: unknown; probeAnswers?: unknown; access?: unknown; invite?: { unit_scope?: unknown /* م6-ب */; form_id?: string | null /* P68-ب */; id: string; label_ar: string; exam_mode: ExamMode; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean } | null; proctorMode?: 'room' | 'camera' | 'remote' | null; userId?: string | null; blueprint?: unknown };
 export type Result<T> = { ok: true; value: T } | { ok: false; code: string; status: number };
 const fail = (code: string, status: number): Result<never> => ({ ok: false, code, status });
 
@@ -60,7 +60,7 @@ export function publicPlan(s: SessionRow) {
   return { code: p.code, name_ar: p.name_ar, name_en: p.name_en, type: p.type, ladder: p.ladder, levels: p.levels, cut: p.cut, floor: p.floor };
 }
 /** اختيار الخطة: مخطّط الدعوة → رمز مخطّط عام نشط → المخطّط النظامي للنمط (من الجدول إن وُجد، وإلا الافتراضي المضمّن) */
-async function resolvePlan(db: any, input: StartInput): Promise<Result<{ plan: Plan; blueprintId: string | null }>> {
+export async function resolvePlan(db: any, input: StartInput): Promise<Result<{ plan: Plan; blueprintId: string | null }>> {
   let row: any = null;
   const code = cleanText(input.blueprint, 40);
   if (input.invite?.blueprint_id) { const r = await db.from('question_bank_blueprints').select('*').eq('id', input.invite.blueprint_id).maybeSingle(); row = r?.data || null; }  /* مخطّط الدعوة (إن حُذف: الافتراضي) */
@@ -74,6 +74,30 @@ async function resolvePlan(db: any, input: StartInput): Promise<Result<{ plan: P
   const sys = await db.from('question_bank_blueprints').select('*').eq('code', sysCode).eq('status', 'active').maybeSingle();
   if (sys?.data) { const { plan, errors } = planFromBlueprint(sys.data); if (!errors.length) return { ok: true, value: { plan, blueprintId: sys.data.id as string } }; }
   return { ok: true, value: { plan: systemPlan(mode === 'comprehensive' ? 'comprehensive' : 'placement'), blueprintId: null } };
+}
+
+/** خيارات السحب للخطّة (م6-ب توازن الوحدات · «ما دُرّس فقط» · م10 استبعاد ما تدرّب عليه) — مشتركة بين بدء الجلسة وتثبيت النموذج (P68-ب) */
+export async function drawOptsFor(db: any, activePlan: Plan, invite: StartInput['invite'] | undefined, email: string | null): Promise<DrawOpts | undefined> {
+  const exitLvl = exitLevelOf(activePlan); let drawOpts: DrawOpts | undefined;
+  if (exitLvl) { try { const units = approvedFor(await listUnits(db), exitLvl).map((u) => u.code); const only = validateScope(invite?.unit_scope, exitLvl); if (units.length || only) drawOpts = { units, only: only || undefined }; } catch { drawOpts = undefined; } }
+  /* م10 «مِران»: بنود تدرّب عليها هذا البريد لا تدخل نموذج عبوره ولا إعادته (نزاهة القياس) — إن ضاق المخزون بقيت وسُجِّل في shortCells */
+  if (email && (exitLvl || isRetakePlan(activePlan))) { try { const ex = await exposedCodes(db, email); if (ex.size) drawOpts = { ...(drawOpts || {}), exclude: ex }; } catch { /* اختياري */ } }
+  return drawOpts;
+}
+/** P68-ب: بنود النموذج المثبَّت الحيّ — مع بديل فردي لبند مكشوف في «مِران» (من الخليّة نفسها، حتمي بالبذرة) */
+export async function frozenDraw(db: any, formId: string, pool: readonly PoolItem[], seed: string, exclude?: ReadonlySet<string>): Promise<{ code: string; version: number; codes: string[]; substituted: string[] } | null> {
+  const { data: f } = await db.from('question_bank_forms').select('id, code, version, status').eq('id', formId).maybeSingle(); if (!f || f.status !== 'frozen') return null;
+  const { data: items } = await db.from('question_bank_form_items').select('item_code, position').eq('form_id', formId).order('position', { ascending: true }).limit(500);
+  const codes = ((items || []) as any[]).map((x) => String(x.item_code || '')).filter(Boolean); if (!codes.length) return null;
+  const byCode = new Map(pool.map((i) => [i.code, i])); if (codes.some((c) => !byCode.has(c))) return null; /* بند لم يعد معتمدًا → سحب عشوائي (يُسجَّل في questionSource) */
+  const substituted: string[] = []; const used = new Set(codes);
+  const out = codes.map((c, idx) => {
+    if (!exclude?.has(c)) return c; const it = byCode.get(c)!;
+    const alts = pool.filter((p) => p.level === it.level && p.skill === it.skill && !used.has(p.code) && !exclude.has(p.code) && (it.descriptor ? p.descriptor === it.descriptor : true) && p.passageId === it.passageId);
+    const cands = alts.length ? alts : pool.filter((p) => p.level === it.level && p.skill === it.skill && !used.has(p.code) && !exclude.has(p.code) && p.passageId === it.passageId);
+    if (!cands.length) return c; const h = createHash('sha256').update(`${seed}:${c}:${idx}`).digest(); const pick = cands[h[0] % cands.length]; used.add(pick.code); substituted.push(c); return pick.code;
+  });
+  return { code: String(f.code), version: Number(f.version || 1), codes: out, substituted };
 }
 
 /** هل يحق لهذا البريد البدء؟ محاولة واحدة لكل بريد إلا بموافقة إعادة غير مستهلكة (كما في مِعيار) */
@@ -110,16 +134,17 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
   const token = createToken();
   /* م6-ب «خريطة المنهج»: في اختبار العبور يوازن السحب حتى تظهر كل وحدة معتمدة من وحدات المستوى ببند واحد على الأقل (العدد والأوزان كما هي)،
      و«ما دُرّس فقط» (unit_scope على الدعوة) يحصر البنود في وحدات دُرّست — وإن ضاق السحب عاد إلى المستوى كاملًا وسُجِّل ذلك على الجلسة */
-  const exitLvl = exitLevelOf(activePlan); let drawOpts: DrawOpts | undefined;
-  if (exitLvl) { try { const units = approvedFor(await listUnits(db), exitLvl).map((u) => u.code); const only = validateScope(input.invite?.unit_scope, exitLvl); if (units.length || only) drawOpts = { units, only: only || undefined }; } catch { drawOpts = undefined; } }
-  /* م10 «مِران»: بنود تدرّب عليها هذا البريد لا تدخل نموذج عبوره ولا إعادته (نزاهة القياس) — إن ضاق المخزون بقيت وسُجِّل في shortCells */
-  if (exitLvl || isRetakePlan(activePlan)) { try { const ex = await exposedCodes(db, candidate.email); if (ex.size) drawOpts = { ...(drawOpts || {}), exclude: ex }; } catch { /* اختياري */ } }
-  const drawn = drawPlan(pool, token, activePlan, drawOpts); if (!drawn) return fail('form_unavailable', 503); mark('draw');
+  const drawOpts = await drawOptsFor(db, activePlan, input.invite, candidate.email);
+  /* P68-ب «النموذج المثبَّت»: إن كان للدعوة نموذج حيّ تُؤخذ بنوده كما هي (الورقة نفسها للجميع) — إلا بندًا تدرّب عليه هذا البريد في «مِران»
+     فيُستبدل له وحده ببديل من الخليّة نفسها ويُسجَّل على جلسته (substituted) · إن تعذّر النموذج (حُذف/سُحب لتوّه) عاد السحب العشوائي */
+  let drawn: ReturnType<typeof drawPlan> = null; let frozenMeta: { code: string; version: number; substituted: string[] } | null = null;
+  if (input.invite?.form_id) { const fz = await frozenDraw(db, input.invite.form_id, pool, token, drawOpts?.exclude); if (fz) { drawn = { codes: fz.codes, short: [] }; frozenMeta = { code: fz.code, version: fz.version, substituted: fz.substituted }; } }
+  if (!drawn) drawn = drawPlan(pool, token, activePlan, drawOpts); if (!drawn) return fail('form_unavailable', 503); mark('draw');
   const form = await formFromPool(db, pool, drawn.codes, passages); if (!form) return fail('form_unavailable', 503); mark('form');
   const access = normalizeAccess(input.access); const durationSeconds = accessDuration(activePlan.durationSeconds, access);
   const score = activePlan.probe ? probeScoreFrom(pool, input.probeAnswers) : 0; const startIndex = planStartIndex(activePlan, probeBandIndexOf(score));
   const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
-  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: `approved-${activePlan.draw}`, publishedFormTitle: `${activePlan.name_ar} (${activePlan.code})`, shortCells: drawn.short, ...(drawn.units ? { unitDraw: drawn.units } : {}) };
+  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: frozenMeta ? `frozen-${frozenMeta.code}-v${frozenMeta.version}` : `approved-${activePlan.draw}`, publishedFormTitle: `${activePlan.name_ar} (${activePlan.code})`, shortCells: drawn.short, ...(drawn.units ? { unitDraw: drawn.units } : {}), ...(frozenMeta ? { frozenForm: frozenMeta } : {}) };
   const { data, error } = await db.from('placement_secure_sessions').insert({
     token_hash: tokenHash(token), candidate: stored, content_version: CONTENT_VERSION, exam_mode: examMode, status: 'active', expires_at: expiresAt, current_level_index: startIndex, start_level_index: startIndex, direction: 'up',
     probe: input.probeAnswers && activePlan.probe ? { score, band_index: startIndex } : null, access, invite_id: input.invite?.id || null, recipient_id: input.invite?.recipient_id || null, user_id: input.userId || null,

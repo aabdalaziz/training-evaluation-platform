@@ -11,7 +11,7 @@ test('P43-ب rooms: every room has a unique href, a label and at least one permi
   assert.equal(new Set(hrefs).size, hrefs.length, 'hrefs unique');
   for (const r of ROOMS) { assert.ok(r.label.length > 1, r.href + ' label'); assert.ok(r.perms.length >= 1, r.href + ' perms'); }
   assert.ok(ROOMS.filter(r => r.nav).length === 9, 'nine nav rooms as before');
-  assert.ok(ROOMS.filter(r => r.side).length === 23, '23 dashboard side rooms as before');
+  assert.ok(ROOMS.filter(r => r.side).length === 24, '24 dashboard side rooms (P49-هـ أضافت «نبض البيئة التدريبية»)');
 });
 
 test('P43-ب canOpen: * opens all · staff opens staff rooms · named permission or namespace wildcard', () => {
@@ -43,9 +43,9 @@ test('P43-ب navRooms: admin 9 · finance ≤ 6 with المالية and without 
   assert.equal(navRooms(PART, false).length, 0, 'participant has no command rooms');
 });
 
-test('P43-ب sideRooms: admin 23 · finance a short list without audit/backup', () => {
-  assert.equal(sideRooms(['*'], true).length, 23);
+test('P43-ب sideRooms: admin 24 · finance a short list without audit/backup', () => {
+  assert.equal(sideRooms(['*'], true).length, 24);
   const fin = sideRooms(FIN, true).map(r => r.href);
   assert.ok(fin.length > 0 && fin.length <= 8 && !fin.includes('/admin/audit') && !fin.includes('/admin/backup'), fin.join());
-  assert.equal(sideRooms(null, true).length, 23, 'before permissions load: all');
+  assert.equal(sideRooms(null, true).length, 24, 'before permissions load: all');
 });

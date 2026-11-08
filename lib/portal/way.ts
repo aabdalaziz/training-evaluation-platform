@@ -2,7 +2,7 @@
 /** «الطريق» — خريطة أسماء المسارات لشريط التنقّل الموحّد (رجوع · الرئيسية · مسار الصفحة). منطق خالص قابل للاختبار. */
 export type Crumb = { href: string; label: string; current: boolean; /** مقطع بلا صفحة خاصة (مجلّد مسارات فقط) → يُعرض نصًّا لا رابطًا */ dead?: boolean };
 /** مقاطع لا صفحة لها (تحتها صفحات ديناميكية فقط) — لا تُربَط في الفتات ولا يُرجَع إليها (كانت تعطي 404) */
-export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/e', '/evaluate', '/followup', '/g', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/miaar/certificate', '/miaar/client', '/miaar/practice', '/me/reports/line', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey', '/verify/report']);
+export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/e', '/evaluate', '/followup', '/g', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/miaar/certificate', '/miaar/client', '/miaar/practice', '/me/reports/line', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey', '/verify/report', '/verify/form']);
 type L = { ar: string; en: string };
 /** أسماء المقاطع المعروفة (المقطع الأول أو المركّب) — الأسماء الرسمية كما في القوائم */
 const NAMES: Record<string, L> = {
@@ -13,7 +13,7 @@ const NAMES: Record<string, L> = {
   'admin/pulse': { ar: 'نبض البيئة التدريبية', en: 'Training-environment pulse' },   // P49-هـ
   rehearsal: { ar: 'بروفاتي', en: 'My rehearsals' }, 'me/rehearsal': { ar: 'بروفاتي', en: 'My rehearsals' }, 'admin/rehearsals': { ar: 'البروفات', en: 'Rehearsals' },
   'e': { ar: 'رابط تقويم', en: 'Evaluation link' }, 'evaluate': { ar: 'التقويم', en: 'Evaluation' }, 'evaluate/end': { ar: 'استبيان نهاية البرنامج', en: 'End-of-program survey' }, 'evaluate/daily': { ar: 'التقييم اليومي', en: 'Daily evaluation' }, 'evaluate/final': { ar: 'التقييم الختامي', en: 'Final evaluation' },   // P49
-  'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'me/accreditation': { ar: 'ملف الاعتماد الحيّ', en: 'Live accreditation file' }, 'admin/accreditation': { ar: 'ملفات الاعتماد', en: 'Accreditation files' }, 'verify/accreditation': { ar: 'التحقّق من ملف اعتماد', en: 'Verify accreditation file' }, 'me/reports/line': { ar: 'صفحتي في التقرير الختامي', en: 'My page in the final report' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' },
+  'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'me/accreditation': { ar: 'ملف الاعتماد الحيّ', en: 'Live accreditation file' }, 'admin/accreditation': { ar: 'ملفات الاعتماد', en: 'Accreditation files' }, 'verify/accreditation': { ar: 'التحقّق من ملف اعتماد', en: 'Verify accreditation file' }, 'me/reports/line': { ar: 'صفحتي في التقرير الختامي', en: 'My page in the final report' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' }, 'verify/form': { ar: 'التحقّق من نموذج اختبار', en: 'Verify an exam form' },
   'me/first': { ar: 'أول يوم', en: 'First day' }, /* P64 */
   'me/line': { ar: 'سطري', en: 'My line' }, /* P66 */
   'me/diploma': { ar: 'هيكل الدبلوم', en: 'Diploma structure' }, /* P66-ب */

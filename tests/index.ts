@@ -129,3 +129,4 @@ import './p66b-diploma.test'; /* P66-ب «هيكل الدبلوم» */
 import './p65-shield.test'; /* P65 «درع أَثَر — الطبقة الثانية» */
 import './p67-org-policy.test'; /* P67 «سياسة الجهة — الاسم يدخل من الباب» */
 import './p68-leadership-report.test'; /* P68 «تقرير القيادة» — صفحة واحدة موقَّعة ATH-LR تنتهي بقرار */
+import './p68b-frozen-form.test'; /* P68-ب «النموذج المثبَّت» — ورقة واحدة موقَّعة ATH-FM لكل دعوة · القفل عند أول جلسة */

@@ -21,7 +21,7 @@ const HALL = '/hub?stay=1';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
 // صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
-const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility', '/miaar', '/login', '/join', '/hub', '/forgot-password', '/reset-password', '/verify/letter' /* P52: صفحة التحقّق من رسالة الشهر داخل PortalShell */, '/verify/shield', '/verify/erasure', '/verify/policy', '/verify/report' /* P68: تقرير القيادة + تقرير البرنامج (P46) — كلاهما داخل PortalShell */, '/enter' /* P67 */, '/privacy/processing' /* P65: داخل PortalShell */];
+const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility', '/miaar', '/login', '/join', '/hub', '/forgot-password', '/reset-password', '/verify/letter' /* P52: صفحة التحقّق من رسالة الشهر داخل PortalShell */, '/verify/shield', '/verify/erasure', '/verify/policy', '/verify/report', '/verify/form' /* P68: تقرير القيادة + تقرير البرنامج (P46) — كلاهما داخل PortalShell */, '/enter' /* P67 */, '/privacy/processing' /* P65: داخل PortalShell */];
 /* P43-ب: قائمة الشريط تُبنى من خريطة الغُرَف (lib/portal/rooms.ts) بحسب صلاحياتي — المالية لا ترى «نقل الأثر» */
 
 export default function GlobalNavigation() {

@@ -106,6 +106,8 @@ export async function GET(req: Request) {
   if (u.searchParams.get('witness')) return NextResponse.json({ ok: true, witness: publicWitness(witnessPublic({ proctor_mode: await defaultWitnessMode(db) })) }, { headers: NO });
   /* م8-ج: تعليمات الاختبار — يقرؤها الممتحن ويقرّ بها قبل البدء (النصّ + الإصدار الحالي) */
   if (u.searchParams.get('rules')) { const rules = await getRules(db); return NextResponse.json({ ok: true, rules: { version: rules.version, ar: rules.ar, en: rules.en, updated_at: rules.updated_at }, title: RULES_TITLE }, { headers: NO }); }
+  /* P68-ب ★2: تحقّق عام من نموذج مثبَّت ATH-FM — رموز وأعداد وبصمة فقط، لا نصوص */
+  if (u.searchParams.get('form')) { const { verifyForm, isFmCode } = await import('../../../lib/miaar/forms'); const code = String(u.searchParams.get('form') || '').toUpperCase(); if (!isFmCode(code)) return bad('invalid_code', 400); return NextResponse.json({ ok: true, ...(await verifyForm(db, code)) }, { headers: NO }); }
   if (u.searchParams.get('invite')) { const r = await openInvite(db, u.searchParams.get('invite'), u.searchParams.get('t') || null); return r.ok ? NextResponse.json({ ok: true, invite: r.invite }, { headers: NO }) : bad(`invite_${r.error}`, r.error === 'not_found' ? 404 : 410); }
   if (u.searchParams.get('result')) { const code = String(u.searchParams.get('result') || '').toUpperCase(); if (!isResultCode(code)) return bad('invalid_code', 400);
     const rl = await rateLimit(db, `miaar_result:${ipOf(req)}`, 3600, 60); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');  /* الرمز سرّ حامله — لا تخمين */
@@ -139,11 +141,11 @@ export async function POST(req: Request) {
   if (action === 'start') {
     const sw = stopwatch();  /* «سرعة مِعيار»: مراحل البدء في Server-Timing + سطر سجلّ إن تجاوز 2.5 ث */
     const rl = await rateLimit(db, `miaar_start:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات بدء كثيرة'); sw.mark('ratelimit');
-    let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean; unit_scope?: unknown } | null = null;
+    let invite: { id: string; label_ar: string; exam_mode: 'adaptive' | 'comprehensive'; recipient_id?: string | null; blueprint_id?: string | null; exit?: boolean; unit_scope?: unknown; form_id?: string | null } | null = null;
     const inv = body.invite as Record<string, unknown> | undefined; let inviteRow: any = null;
     if (inv && typeof inv === 'object' && inv.code) {
       const r = await openInvite(db, inv.code, inv.t || null); if (!r.ok) return bad(`invite_${r.error}`, 410); inviteRow = r.row;
-      invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null, exit: r.row.purpose === 'level_exit' || r.row.purpose === 'skill_retake', unit_scope: r.row.unit_scope ?? null /* م6-ب */ };   /* م6 */
+      invite = { id: r.row.id, label_ar: r.row.label_ar, exam_mode: r.row.exam_mode, recipient_id: r.recipient?.id || null, blueprint_id: r.row.blueprint_id || null, exit: r.row.purpose === 'level_exit' || r.row.purpose === 'skill_retake', unit_scope: r.row.unit_scope ?? null /* م6-ب */, form_id: (r.row as any).form_id || null /* P68-ب النموذج المثبَّت */ };   /* م6 */
       /* م7: الدعوة الخارجية — رمز القاعة (يعلنه المراقب) ورقم الهوية إن طلبته الجهة */
       const pinState = verifyPin(r.row, inv.pin); if (pinState !== 'ok') return bad(pinState === 'required' ? 'invite_pin_required' : 'invite_pin_wrong', 403);
       if (r.row.identity_mode === 'email_id' && !String((body.candidate as any)?.idNumber || '').trim()) return bad('invite_id_required', 400);
