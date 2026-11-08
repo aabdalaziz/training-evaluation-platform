@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { rateLimit, tooMany, ipOf } from '../../../../lib/shield/ratelimit';
 import { submitReply, resolveWordForLearner, removeVoice, validateVoice, voicePath, voiceExt, cleanTranscript, chipLabel, VOICE_LIMITS } from '../../../../lib/portal/word-reply';
 import type { VoiceMeta } from '../../../../lib/portal/word-reply';
+import { userFlag, POLICY_BLOCK_AR } from '../../../../lib/org/policy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,6 +33,8 @@ const audit = async (db: any, user: { id: string; email: string }, req: Request,
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
+  /* P67 سياسة الجهة: «لا صوت» — الأمانة تبقى كتابية */
+  if (await userFlag(db, user.id, 'voice_off', user.email)) return bad(POLICY_BLOCK_AR.voice_off, 403, { policy_blocked: 'voice_off' });
   const rl = await rateLimit(db, `wordvoice:${user.id}`, 3600, VOICE_LIMITS.perHour); if (!rl.allowed) return tooMany(rl);
   if (!(req.headers.get('content-type') || '').includes('multipart/form-data')) return bad('أرسل التسجيل كنموذج multipart');
   let fd: FormData; try { fd = await req.formData(); } catch { return bad('تعذّر قراءة التسجيل'); }

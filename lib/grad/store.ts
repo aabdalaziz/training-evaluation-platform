@@ -7,6 +7,7 @@
  *  runGradDays (ضمن الكرون اليومي القائم): إشعار «اليوم يومك» للخرّيج يوم end_date · «اكتب كلمة الوداع» للمدرّب قبلها بثلاثة أيام — بلا بريد، بلا إشعارات رجعية.
  */
 import { createHash, randomBytes } from 'crypto';
+import { userFlag, POLICY_BLOCK_AR } from '../org/policy';
 import { MAP_VOICE_LIMITS, validateMapVoice } from '../map/voice';
 import type { MapVoiceStored } from '../map/voice';
 import { jcs } from '../portal/vc';
@@ -121,6 +122,7 @@ export const gradVoicePath = (userId: string, rowId: number | string, ext: strin
 const removeVoiceFile = async (db: Db, path: string) => { try { await db.storage.from(MAP_VOICE_LIMITS.bucket).remove([path]); } catch { /* يتيم نادر */ } };
 /** 🎙️ سطر التخرّج بصوت صاحبه (≤ 15 ث · ملف واحد) — يبقى معه: لا وجه عام، لا تحقّق، لا دفعة */
 export async function setLineVoice(db: Db, me: Me, programId: string, file: { buf: Buffer; mime: string; bytes: number; sec: number }, now = new Date()): Promise<{ ok: true; voice: { sec: number; at: string }; replaced: boolean } | Fail> {
+  if (await userFlag(db, me.id, 'voice_off', me.email)) return fail(POLICY_BLOCK_AR.voice_off, 403); /* P67 */
   const p = await myProgram(db, me, programId, now); if ('ok' in p) return p; const row = await ensureRow(db, me, p, now); if ('ok' in row) return row;
   const v = validateMapVoice({ mime: file.mime, bytes: file.bytes, sec: file.sec }); if (!v.ok) return fail(v.error);
   const prev = voiceOfRow(row.line_voice); const path = gradVoicePath(me.id, row.id, v.ext); const at = now.toISOString();
@@ -175,15 +177,17 @@ export async function deleteGrad(db: Db, me: Me, programId: string): Promise<{ o
 }
 
 /* ───────── التحقّق والوجه العام ───────── */
-export type VerifyOut = { valid: boolean; revoked?: boolean; replaced?: boolean; intact?: boolean; sealed_at?: string; digest?: string; program_ar?: string; end?: string; face?: PublicFace | null; public?: boolean };
+export type VerifyOut = { valid: boolean; revoked?: boolean; replaced?: boolean; intact?: boolean; sealed_at?: string; digest?: string; program_ar?: string; end?: string; face?: PublicFace | null; public?: boolean; minimal?: boolean };
 export async function verifyGrad(db: Db, code: string, opts: { now?: Date; face?: boolean } = {}): Promise<VerifyOut> {
   const c = String(code || '').trim().toUpperCase(); if (!CODE_RE.test(c)) return { valid: false };
   let { data: r } = await db.from('portal_grad_pages').select(GRAD_COLS).eq('code', c).maybeSingle();
   if (!r) { /* رمز سابق استُبدل بختم أحدث */ const { data: hs } = await db.from('portal_grad_pages').select('id,code,history,sealed_at,program_id').contains('history', JSON.stringify([{ code: c }])).limit(1); const h = arr<any>(hs)[0]; if (!h) return { valid: false }; const old = arr<any>(h.history).find((x) => x.code === c); return { valid: false, revoked: true, replaced: true, sealed_at: old?.sealed_at, digest: old?.digest }; }
   const row = r as GradRow; if (!row.body || !row.sealed_at) return { valid: false };
   const intact = digestOf(row.body) === row.digest; const revoked = !!row.revoked_at;
-  const out: VerifyOut = { valid: !revoked && intact, revoked, intact, sealed_at: row.sealed_at, digest: String(row.digest || ''), program_ar: row.body.program.name_ar, end: row.body.program.end, public: !!row.live_public };
-  if (opts.face && row.live_public && !revoked) {
+  /* P67 «تحقّق أدنى»: جهة صاحب الصفحة قرّرت ألا وجه في صفحات التحقّق → صحّة الوثيقة فقط */
+  const minimal = row.live_public ? await userFlag(db, row.user_id, 'verify_minimal', row.email) : false;
+  const out: VerifyOut = { valid: !revoked && intact, revoked, intact, sealed_at: row.sealed_at, digest: String(row.digest || ''), program_ar: row.body.program.name_ar, end: row.body.program.end, public: !!row.live_public && !minimal, minimal };
+  if (opts.face && row.live_public && !revoked && !minimal) {
     const keys = normalizePublic(row.public_keys ?? PUBLIC_DEFAULT); let since: Since | null = null;
     if (keys.includes('since')) { try { const src = await loadSources(db, { id: row.user_id, email: row.email }, { id: row.program_id, end_date: row.body.program.end, enrollment_id: String(row.enrollment_id || '') }, opts.now || new Date()); since = sinceThen(src, row.body.program.end, opts.now || new Date()); } catch { since = null; } }
     out.face = publicFace(row.body, keys, { since, revoked, intact });

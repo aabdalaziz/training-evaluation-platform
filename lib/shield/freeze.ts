@@ -46,11 +46,11 @@ export async function setFreeze(db: any, a: { org_id: string; on: boolean; by: {
   return { ok: true as const, org: data };
 }
 
-export type OrgRow = { id: string; name_ar: string; city?: string | null; frozen_at: string | null; frozen_reason: string | null; erase_at: string | null; erase_reason: string | null; members: number };
+export type OrgRow = { id: string; name_ar: string; city?: string | null; frozen_at: string | null; frozen_reason: string | null; erase_at: string | null; erase_reason: string | null; members: number; policy?: Record<string, unknown>; slug?: string | null };
 export async function listOrgs(db: any): Promise<OrgRow[]> {
-  const { data } = await db.from('portal_organizations').select('id,name_ar,city,frozen_at,frozen_reason,erase_at,erase_reason').order('name_ar').limit(300);
+  const { data } = await db.from('portal_organizations').select('id,name_ar,city,frozen_at,frozen_reason,erase_at,erase_reason,policy,slug').order('name_ar').limit(300);
   const rows = (data || []) as any[]; if (!rows.length) return [];
   const { data: mem } = await db.from('portal_org_members').select('organization_id').in('organization_id', rows.map(r => r.id)).eq('status', 'confirmed').limit(5000);
   const cnt = new Map<string, number>(); for (const m of (mem || []) as any[]) cnt.set(m.organization_id, (cnt.get(m.organization_id) || 0) + 1);
-  return rows.map(r => ({ id: r.id, name_ar: r.name_ar, city: r.city, frozen_at: r.frozen_at || null, frozen_reason: r.frozen_reason || null, erase_at: r.erase_at || null, erase_reason: r.erase_reason || null, members: cnt.get(r.id) || 0 }));
+  return rows.map(r => ({ id: r.id, name_ar: r.name_ar, city: r.city, frozen_at: r.frozen_at || null, frozen_reason: r.frozen_reason || null, erase_at: r.erase_at || null, erase_reason: r.erase_reason || null, members: cnt.get(r.id) || 0, policy: r.policy || {}, slug: r.slug || null }));
 }

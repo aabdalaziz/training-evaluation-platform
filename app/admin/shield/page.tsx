@@ -14,7 +14,7 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'QUALITY_ANALYST'];
 /* P65 الطبقة الثانية: CSP (خلاصة + حكم الإلزام) · الوصول الإداري (مَن فتح ماذا) · الجهات (التجميد · التصدير ATH-EX · المحو ATH-ER) · شهادة الدرع ATH-SH */
 type CspRow = { directive: string; blocked: string; count: number; last_at: string; documents: string[] };
-type OrgRow = { id: string; name_ar: string; city?: string | null; frozen_at: string | null; frozen_reason: string | null; erase_at: string | null; erase_reason: string | null; members: number };
+type OrgRow = { id: string; name_ar: string; city?: string | null; frozen_at: string | null; frozen_reason: string | null; erase_at: string | null; erase_reason: string | null; members: number; policy?: Record<string, unknown>; slug?: string | null };
 type FootRow = { table: string; rows: number; label_ar: string; effect_ar: string };
 type Check = { id: string; title_ar: string; ok: boolean; detail: string };
 type Ev = { id: number; at: string; severity: 'info' | 'warn' | 'critical'; kind: string; actor: string | null; ip: string | null; meta: any; notified_at: string | null; handled_at: string | null };
@@ -124,7 +124,7 @@ export default function AdminShieldPage() {
             <div className="sh-row"><label className="sh-muted">السبب (يُسجَّل مع التجميد/المحو): <input value={reason} onChange={e => setReason(e.target.value)} placeholder="مثال: بلاغ تسريب رقم 12" style={{ border: '1px solid #e5e9f0', borderRadius: 8, padding: '5px 8px', font: 'inherit', fontSize: 13, minWidth: 260 }} data-testid="org-reason" /></label></div>
             <table className="sh-table small" data-testid="org-table"><thead><tr><th>الجهة</th><th>أعضاء</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody>
               {(data?.orgs || []).map(o => <tr key={o.id} className={o.frozen_at ? 'sev-critical' : o.erase_at ? 'sev-warn' : ''} data-testid={`org-${o.id}`}>
-                <td><b>{o.name_ar}</b>{o.city ? <small> · {o.city}</small> : null}</td><td>{o.members}</td>
+                <td><b>{o.name_ar}</b>{o.city ? <small> · {o.city}</small> : null}{o.policy?.pseudonymous ? <i className="sh-sev warn" title="P67: منسوبو هذه الجهة أرقام تدريبية — لا أسماء" data-testid={`pseudo-${o.id}`}>🔒 هوية مستعارة</i> : null}<small> · <a href={`/org?org=${o.id}&tab=policy`}>السياسة</a></small></td><td>{o.members}</td>
                 <td>{o.frozen_at ? <i className="sh-sev critical">❄ مجمَّدة منذ {fmt(o.frozen_at)}{o.frozen_reason ? ` — ${o.frozen_reason}` : ''}</i> : null}{o.erase_at ? <i className="sh-sev warn">⏳ تُمحى {fmt(o.erase_at)}{o.erase_reason ? ` — ${o.erase_reason}` : ''}</i> : null}{!o.frozen_at && !o.erase_at ? <span className="sh-muted">طبيعية</span> : null}</td>
                 <td className="sh-actions">
                   {o.frozen_at ? <button type="button" className="pt-btn light small" disabled={busy === 'unfreeze' + o.id} onClick={() => act({ action: 'unfreeze', org_id: o.id }, `رُفع التجميد عن ${o.name_ar}.`)} data-testid={`unfreeze-${o.id}`}>رفع التجميد</button>

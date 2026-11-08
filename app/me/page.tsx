@@ -68,7 +68,7 @@ export default function MePage() {
       <div className="me-kicker"><Icon name="school" size={14} /> بوابة المتدرب — حسابك الموحّد في أَثَر</div>
       {me ? <>
         <h1>مرحبًا، {me.name}</h1>
-        <p className="me-sub"><span dir="ltr">{me.email}</span> · {me.programs.length} برنامج · {allCerts.length} شهادة{running.length ? ` · ${running.length} برنامج جارٍ` : ''}</p>
+        <p className="me-sub">{/^\d+@[a-z0-9-]+\.id\.athar-portal\.sa$/i.test(me.email || '') ? <span data-testid="me-code-id">رقمك التدريبي <b dir="ltr">{String(me.email).split('@')[0]}</b> — لا بريد ولا اسم في حسابك (P67)</span> : <span dir="ltr">{me.email}</span>} · {me.programs.length} برنامج · {allCerts.length} شهادة{running.length ? ` · ${running.length} برنامج جارٍ` : ''}</p>
       </> : <>
         <h1>بوابة المتدرب</h1>
         <p className="me-sub">كل ما يخصك في مكان واحد: التقييمات المطلوبة، تسجيل الحضور، نسبة حضورك، قياس الأثر، وشهاداتك — بالدخول ببريدك فقط، بلا كلمة مرور.</p>

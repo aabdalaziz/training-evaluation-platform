@@ -7,13 +7,29 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { LAST_KEY, CUR_KEY, ZOOM_KEY } from '../../lib/portal/voice-keys';
 import { recordWay } from '../../lib/portal/way';
+import { fetchMyPolicy, kioskWatch, clearPolicyCache, KIOSK_KEY } from '../../lib/org/policy-client';
+import { supabase } from '../../lib/supabase/client';
 
 const NadiPanel = dynamic(() => import('./NadiPanel'), { ssr: false, loading: () => null });
 
 export default function Nadi() {
   const pathname = usePathname() || '/';
   const [open, setOpen] = useState(false);
+  const [voiceOff, setVoiceOff] = useState(false);
   const openIt = useCallback(() => setOpen(true), []);
+  /* P67 سياسة الجهة: «لا صوت» يُخفي الزرّ · «وضع الكشك» يُخرج بعد خمول ويعيد إلى باب الجهة (الخادم يحكم دائمًا؛ هذا للواجهة) */
+  useEffect(() => {
+    let stop = () => { /* لا كشك */ }; let alive = true;
+    (async () => {
+      try {
+        const { data } = await supabase().auth.getSession(); const tok = data.session?.access_token || null; if (!tok) { clearPolicyCache(); return; }
+        const p = await fetchMyPolicy(tok); if (!alive) return; setVoiceOff(!!p.voice_off);
+        const mins = p.kiosk_minutes || Number(localStorage.getItem(KIOSK_KEY) || 0) || 0;
+        if (mins) stop = kioskWatch(mins, () => { const slug = String(data.session?.user?.user_metadata?.org_slug || ''); clearPolicyCache(); void supabase().auth.signOut().finally(() => { window.location.href = slug ? `/enter?o=${slug}` : '/enter'; }); });
+      } catch { /* بلا سياسة */ }
+    })();
+    return () => { alive = false; stop(); };
+  }, [pathname]);
   useEffect(() => {
     /* «خذني حيث توقفت»: نحفظ الصفحة السابقة محليًا فقط (لا شيء يُرسل) */
     try { const cur = localStorage.getItem(CUR_KEY); if (cur && cur !== pathname) localStorage.setItem(LAST_KEY, cur); localStorage.setItem(CUR_KEY, pathname); } catch { /* خاص */ }
@@ -26,13 +42,14 @@ export default function Nadi() {
     window.addEventListener('keydown', onKey); window.addEventListener('athar:nadi', onEvt);
     return () => { window.removeEventListener('keydown', onKey); window.removeEventListener('athar:nadi', onEvt); };
   }, [openIt]);
+  if (pathname === '/enter' || pathname.startsWith('/enter/')) return null; /* P67: باب الدخول بالرمز صفحة كشك نظيفة — لا نادِ قبل معرفة سياسة الجهة */
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <button type="button" className={`nd-fab${open ? ' on' : ''}`} onClick={() => setOpen((o) => !o)} aria-label="نادِ أَثَر — تحدّث أو اطلب للتنقّل" title="نادِ — تحدّث أو اطلب (Alt M)" aria-expanded={open} aria-controls="nadi-panel" data-testid="nadi-fab">
+      {!voiceOff && <button type="button" className={`nd-fab${open ? ' on' : ''}`} onClick={() => setOpen((o) => !o)} aria-label="نادِ أَثَر — تحدّث أو اطلب للتنقّل" title="نادِ — تحدّث أو اطلب (Alt M)" aria-expanded={open} aria-controls="nadi-panel" data-testid="nadi-fab">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
-      </button>
-      {open && <NadiPanel onClose={() => setOpen(false)} />}
+      </button>}
+      {open && !voiceOff && <NadiPanel onClose={() => setOpen(false)} />}
     </>
   );
 }

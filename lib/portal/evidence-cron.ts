@@ -8,6 +8,7 @@
  */
 import { buildGraph, graphRows, lessonDraft, weekStart } from './evidence';
 import type { Graph, GraphSources, EntityIndex } from './evidence';
+import { membersWithFlag } from '../org/policy';
 
 const LIM = { events: 20000, rows: 3000 };
 const safe = async <T,>(p: PromiseLike<{ data: T | null; error?: any }>, fb: T): Promise<T> => { try { const r = await p; return (r && !r.error && r.data) ? (r.data as T) : fb; } catch { return fb; } };
@@ -27,7 +28,11 @@ export async function loadSources(db: any, today: string): Promise<GraphSources>
     safe<any[]>(db.from('portal_sectors').select('code,name_ar,name_en').eq('active', true).limit(200), []),
     safe<any[]>(db.from('portal_impact_contracts').select('id,title_ar,organization_id,program_id,status').limit(LIM.rows), []),
   ]);
-  return { events, skills, programs, sessions, trainers, scenarios, missions, registrations, enrollments, orgs, sectors, contracts, today } as GraphSources;
+  /* P67 سياسة الجهة — نقطة الاختناق الوحيدة للرسم العام: «لا خيوط في الرئيسية» يُسقط أحداث منسوبي الجهة قبل البناء، و«لا وجوه عامة» يُسقط عقدة الجهة */
+  const hidden = await membersWithFlag(db, 'home_threads_off'); const facesOff = await membersWithFlag(db, 'public_faces_off');
+  const ev = hidden.users.size || hidden.emails.size ? events.filter((e: any) => !(e.user_id && hidden.users.has(e.user_id)) && !(e.email && hidden.emails.has(String(e.email).toLowerCase()))) : events;
+  const og = facesOff.orgs.size ? orgs.filter((o: any) => !facesOff.orgs.has(o.id)) : orgs;
+  return { events: ev, skills, programs, sessions, trainers, scenarios, missions, registrations, enrollments, orgs: og, sectors, contracts, today } as GraphSources;
 }
 
 export async function refreshGraph(db: any, opts: { dry?: boolean; now?: Date } = {}): Promise<{ ok: boolean; nodes: number; edges: number; dry: boolean; error?: string }> {

@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validateMedia, mediaPath, mediaEvidenceEvent, transcriptScore, MEDIA_LIMITS } from '../../../lib/portal/media';
 import type { MediaRow, MediaContext } from '../../../lib/portal/media';
+import { userPolicy, POLICY_BLOCK_AR } from '../../../lib/org/policy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,6 +51,9 @@ export async function POST(req: Request) {
   const transcript = String(fd.get('transcript') || '').slice(0, 6000) || null; const title = String(fd.get('title') || '').slice(0, 200) || null;
   const skill_ids = String(fd.get('skill_ids') || '').split(',').map(s => s.trim()).filter(s => UUID.test(s)).slice(0, 12);
   const parties = String(fd.get('parties') || '').split('|').map(s => s.trim()).filter(Boolean).slice(0, 8);
+  /* P67 سياسة الجهة: «لا وسائط» يغلق كل رفع · «لا صوت» يغلق الصوت فقط (رسالة إنسانية — القرار لجهته لا له) */
+  const pol = await userPolicy(db, user); if (pol.policy.media_off) return NextResponse.json({ success: false, error: POLICY_BLOCK_AR.media_off, policy_blocked: 'media_off' }, { status: 403 });
+  if (pol.policy.voice_off && /^audio\//i.test(mime)) return NextResponse.json({ success: false, error: POLICY_BLOCK_AR.voice_off, policy_blocked: 'voice_off' }, { status: 403 });
   const buf = Buffer.from(await file.arrayBuffer());
   const v = validateMedia({ mime, bytes: buf.length, duration_sec: duration, context_type }); if (!v.ok) return bad(v.error_ar);
   // حد يومي لطيف: 12 تسجيلًا لكل مستخدم

@@ -7,6 +7,7 @@
  *  • لا ذكاء اصطناعي · لا بريد · لا تخزين وسائط · لا يدخل في أي تقييم
  */
 import { createHash, randomBytes } from 'node:crypto';
+import { userFlag, POLICY_BLOCK_AR } from '../org/policy';
 import { loadJourneyInput } from '../journey/load';
 import { jcs } from '../portal/vc';
 import { buildMap, snapshotBody, validateNote, isStationKey, threadKey, RULE_AR, CODE_RE, snapshotTitle, MAP_OFFICIAL } from './registry';
@@ -78,6 +79,7 @@ export async function removeVoiceFile(db: Db, path?: string | null): Promise<voi
 /** رفع صوت «لأن…» على خيط مُبقى — ملف واحد لكل خيط (يستبدل القديم ويحذفه) */
 export async function setThreadVoice(db: Db, me: Me, body: { from: string; to: string }, file: { buf: Buffer; mime: string; bytes: number; sec: number }): Promise<{ ok: true; voice: MapVoicePublic; replaced: boolean } | { ok: false; error: string; status: number }> {
   if (!isStationKey(body.from) || !isStationKey(body.to)) return { ok: false, error: 'محطتان غير صالحتين', status: 400 };
+  if (await userFlag(db, me.id, 'voice_off', me.email)) return { ok: false, error: POLICY_BLOCK_AR.voice_off, status: 403 }; /* P67 سياسة الجهة */
   const row = await voiceRowOf(db, me, body); if (!row) return { ok: false, error: 'هذا الخيط ليس في خريطتك — أبقِه بكلمة أولًا', status: 404 };
   if (row.status !== 'kept') return { ok: false, error: 'الصوت لخيط أبقيتَه فقط', status: 400 };
   const v = validateMapVoice({ mime: file.mime, bytes: file.bytes, sec: file.sec }); if (!v.ok) return { ok: false, error: v.error, status: 400 };
@@ -153,13 +155,15 @@ export async function revokeSnapshot(db: Db, me: Me, id: string): Promise<{ ok: 
   const { error } = await db.from('portal_map_snapshots').update({ revoked_at: new Date().toISOString(), is_public: false, meta: { reason: 'revoked_by_owner' } }).eq('email', lower(me.email)).eq('id', id).is('revoked_at', null); return { ok: !error };
 }
 /** التحقّق العام: صحّة الرمز + سلامة البصمة + حالة الإبطال — والجسم العام فقط إن كانت اللقطة عامة */
-export type VerifyOut = { valid: boolean; revoked?: boolean; intact?: boolean; year?: number; title_ar?: string; signed_at?: string; digest?: string; counts?: SnapshotBody['counts']; is_public?: boolean; body?: SnapshotBody; type_ar?: string };
+export type VerifyOut = { valid: boolean; revoked?: boolean; intact?: boolean; year?: number; title_ar?: string; signed_at?: string; digest?: string; counts?: SnapshotBody['counts']; is_public?: boolean; body?: SnapshotBody; type_ar?: string; minimal?: boolean };
 export async function verifyMap(db: Db, code: string): Promise<VerifyOut> {
   const c = String(code || '').trim().toUpperCase(); if (!CODE_RE.test(c)) return { valid: false };
-  const { data: r } = await db.from('portal_map_snapshots').select('id,created_at,year,code,digest,body,is_public,revoked_at').eq('code', c).maybeSingle(); if (!r) return { valid: false };
+  const { data: r } = await db.from('portal_map_snapshots').select('id,created_at,year,code,digest,body,is_public,revoked_at,email,user_id').eq('code', c).maybeSingle(); if (!r) return { valid: false };
   const intact = digestOf(r.body) === r.digest; const revoked = !!r.revoked_at;
-  const out: VerifyOut = { valid: true, revoked, intact, year: Number(r.year), title_ar: snapshotTitle(Number(r.year)), signed_at: String(r.created_at), digest: String(r.digest), type_ar: MAP_OFFICIAL.ar, is_public: !!r.is_public && !revoked };
-  if (!revoked) { out.counts = (r.body as SnapshotBody).counts; if (r.is_public) out.body = r.body as SnapshotBody; }
+  /* P67 «تحقّق أدنى»: جهة صاحب الخريطة قرّرت ألا وجه عامًا → صحّة الوثيقة والأعداد فقط */
+  const minimal = r.is_public && !revoked ? await userFlag(db, r.user_id || null, 'verify_minimal', r.email || null) : false;
+  const out: VerifyOut = { valid: true, revoked, intact, year: Number(r.year), title_ar: snapshotTitle(Number(r.year)), signed_at: String(r.created_at), digest: String(r.digest), type_ar: MAP_OFFICIAL.ar, is_public: !!r.is_public && !revoked && !minimal, minimal };
+  if (!revoked) { out.counts = (r.body as SnapshotBody).counts; if (r.is_public && !minimal) out.body = r.body as SnapshotBody; }
   return out;
 }
 export { RULE_AR, threadKey };

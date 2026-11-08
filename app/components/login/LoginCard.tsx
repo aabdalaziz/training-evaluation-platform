@@ -75,6 +75,7 @@ export default function LoginCard({ onSubmit, onMagic, loading = false, error = 
       <div style={{ textAlign: 'center', marginTop: 20, display: 'flex', justifyContent: 'center', gap: 18, flexWrap: 'wrap' }}>
         <Link href="/" className="au-link"><Icon name="home" size={15} />الصفحة الرئيسية</Link>
         <Link href="/help#invite" className="au-link" data-testid="login-invite-help"><Icon name="mail" size={15} />لديك دعوة؟ افتح رابطها مباشرة</Link>
+        <Link href="/enter" className="au-link" data-testid="login-enter-code"><Icon name="qr" size={15} />جهتك أعطتك رقمًا تدريبيًا؟ ادخل بالرمز</Link>
       </div>
     </AuthCard>
   );
