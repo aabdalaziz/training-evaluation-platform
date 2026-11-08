@@ -46,6 +46,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/health', label: 'صحة المنصة', hint: 'الإعدادات · الكرون · البريد · سلامة البيانات', icon: 'check', perms: ['admin'], side: true },
   { href: '/admin/access', label: 'نطاق الوصول', hint: 'ربط مديري البرامج ببرامجهم', icon: 'users', perms: ['admin'], side: true },
   { href: '/admin/templates', label: 'قوالب التقييم', hint: 'الأسئلة · الربط بالبرامج · معاينة', icon: 'doc', perms: ['programs.write', 'evidence.write'], side: true },
+  { href: '/admin/pulse', label: 'نبض البيئة التدريبية', hint: 'أقسام الاستبيان الختامي عبر الدفعات · بند الأسبوع', icon: 'trend', perms: ['programs.write', 'evidence.write'], side: true },   // P49-هـ
   { href: '/admin/readiness', label: 'جاهزية البرنامج', hint: 'قائمة تحقق من الإعداد حتى الإغلاق', icon: 'compass', perms: ['programs.write'], side: true },
   { href: '/help', label: 'دليل مركز القيادة', hint: 'رحلة البرنامج · أسئلة شائعة', icon: 'question', perms: ['staff'], side: true },
   { href: '/admin/backup', label: 'النسخ الاحتياطي والأرشفة', hint: 'تصدير شامل Excel/JSON وأرشفة البرامج', icon: 'save', perms: ['admin'], side: true },

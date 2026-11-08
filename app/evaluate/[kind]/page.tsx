@@ -40,6 +40,9 @@ const STR = {
   nationality: ['الجنسية', 'Nationality'], gender: ['النوع الاجتماعي', 'Gender'], male: ['ذكر', 'Male'], female: ['أنثى', 'Female'], choose: ['— اختر —', '— Select —'],
   accommodation: ['مكان الإقامة أثناء البرنامج', 'Accommodation during the program'], program: ['البرنامج التدريبي', 'Training program'], classroom: ['القاعة الدراسية', 'Classroom'], room: ['قاعة', 'Room'],
   noTemplate: ['لا يوجد قالب تقييم مفعّل لهذا البرنامج حاليًا — تواصل مع إدارة البرنامج.', 'No active evaluation template for this program yet — please contact the program office.'],
+  journey: ['رحلتك في الاستبيان', 'Your survey journey'],
+  journeyHint: ['اضغط قسمًا للانتقال إليه', 'Tap a section to jump to it'],
+  journeyMissing: ['ينقصه إلزامي', 'required missing'],
   linkErr: ['تعذّر حفظ الاستبيان: القالب غير مرتبط بهذا البرنامج بعد — أبلغ إدارة البرنامج (قوالب التقييم → تغطية البرامج) ثم أعد المحاولة؛ إجاباتك ما زالت في الصفحة.', 'Could not save: the template is not linked to this program yet — please tell the program office (Templates → program coverage) and try again; your answers are still on this page.'],
   loading: ['جارٍ تجهيز الاستبيان…', 'Preparing the form…'], submit: ['إرسال التقييم', 'Submit evaluation'], sending: ['جارٍ الإرسال…', 'Sending…'],
   privacy: ['تُستخدم بياناتك لأغراض الجودة فقط وتُعرض النتائج بشكل مجمّع.', 'Your data is used for quality purposes only; results are reported in aggregate.'],
@@ -188,7 +191,11 @@ export default function GuestEvaluationPage() {
     const requiredMissing = questions.filter(q => q.is_required && !hasAnswer(answers[q.id]));
     if (requiredMissing.length) {
       setMissIds(requiredMissing.map(q => q.id));
-      setMessage(`${t('missingQs')}\n${requiredMissing.map(q => `• ${L(q.text_ar, q.text_en)}`).join('\n')}`);
+      /* P49-هـ: مع شريط الرحلة تكفي خلاصة بالأقسام (لا قائمة طويلة) — والمحطّات الناقصة تتلوّن */
+      const missSecs = Array.from(new Set(requiredMissing.map(q => L(q.section_ar || STR.general[0], q.section_en))));
+      setMessage(requiredMissing.length > 6
+        ? `${t('missingQs')} (${requiredMissing.length})\n• ${missSecs.join(' · ')}`
+        : `${t('missingQs')}\n${requiredMissing.map(q => `• ${L(q.text_ar, q.text_en)}`).join('\n')}`);
       document.getElementById(`q-${requiredMissing[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
     }
     setSaving(true); setMessage('');
@@ -279,6 +286,28 @@ export default function GuestEvaluationPage() {
       {lockCard}
       {message && <div className={`ev-msg${message.startsWith('⚠️') ? ' warn' : ' bad'}`}><Icon name="alert" size={16} /><span>{message.replace(/^⚠️\s*/, '')}</span></div>}
 
+      {/* P49-هـ: «شريط الرحلة» — محطّة لكل قسم: مكتمل/جارٍ/لم يبدأ/ينقصه إلزامي؛ الضغط ينقل إلى القسم (WCAG 2.4 التنقّل · 3.3.1 تحديد الخطأ) */}
+      {!qLoading && grouped.length > 1 && (
+        <nav className="ev-journey" aria-label={t('journey')} data-testid="ev-journey">
+          <div className="ev-jhead"><strong>{t('journey')}</strong><small className="ev-muted">{t('journeyHint')} · {Math.round(100 * answered / Math.max(1, questions.length))}%</small></div>
+          <ol className="ev-jlist">
+            {grouped.map((g, gi) => {
+              const done = g.items.filter(q => hasAnswer(answers[q.id])).length; const req = g.items.filter(q => q.is_required).length;
+              const reqDone = g.items.filter(q => q.is_required && hasAnswer(answers[q.id])).length; const miss = g.items.some(q => missIds.includes(q.id));
+              const state = miss ? 'miss' : (req ? reqDone === req : done === g.items.length) ? 'done' : done > 0 ? 'part' : 'todo';
+              return (
+                <li key={g.key}>
+                  <button type="button" className={`ev-jchip ${state}`} data-testid={`ev-jchip-${gi}`} aria-current={state === 'part' ? 'step' : undefined}
+                    title={miss ? t('journeyMissing') : undefined}
+                    onClick={() => document.getElementById(`sec-${gi}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                    <i>{state === 'done' ? '✓' : gi + 1}</i><span>{L(g.key, g.en)}</span><b>{done}/{g.items.length}</b>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+      )}
       <section className="ev-card">
         <h2><span className="ev-n">1</span>{t('participant')}</h2>
         <div className="ev-grid">
@@ -296,7 +325,7 @@ export default function GuestEvaluationPage() {
           {kind === 'final' && link && field(t('accommodation'), false, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
             <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'en' ? 'Al-Manar Hotel' : 'فندق المنار'}</option><option value="شقق الإسكان العزيزية">{lang === 'en' ? 'Al-Aziziyah Apartments' : 'شقق الإسكان العزيزية'}</option><option value="إقامة أخرى">{lang === 'en' ? 'Other accommodation' : 'إقامة أخرى'}</option>
           </select>)}
-          {!link && field(t('program'), true, <select value={programId} onChange={e => setProgramId(e.target.value)}><option value="">{t('choose')}</option>{programs.map(p => <option key={p.id} value={p.id}>{L(p.name_ar, p.name_en)}</option>)}</select>, kind !== 'daily')}
+          {!link && field(t('program'), true, <select data-testid="ev-program" value={programId} onChange={e => setProgramId(e.target.value)}><option value="">{t('choose')}</option>{programs.map(p => <option key={p.id} value={p.id}>{L(p.name_ar, p.name_en)}</option>)}</select>, kind !== 'daily')}
           {!link && kind === 'daily' && field(t('classroom'), true, <select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{t('room')} {c.code}{c.level ? ` (${c.level})` : ''}</option>)}</select>)}
           {link && classrooms.length > 1 && field(t('section'), kind === 'daily', <select data-testid="ev-link-rooms" value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{c.section_name || `${t('room')} ${c.code}`}{c.level ? ` (${c.level})` : ''}</option>)}</select>, true)}
         </div>
@@ -306,7 +335,7 @@ export default function GuestEvaluationPage() {
       {!qLoading && programId && !templateId && <div className="ev-msg warn"><Icon name="alert" size={16} /><span>{t('noTemplate')}</span></div>}
 
       {grouped.map((g, gi) => (
-        <section key={g.key} className="ev-card">
+        <section key={g.key} id={`sec-${gi}`} className="ev-card ev-sec">
           <h2><span className="ev-n">{gi + 2}</span>{L(g.key, g.en)}<span className="ev-count">{g.items.length}</span></h2>
           {g.items.map(q => {
             const miss = missIds.includes(q.id); const val = answers[q.id];
@@ -359,6 +388,20 @@ export default function GuestEvaluationPage() {
 }
 
 const CSS = `
+.ev-journey{position:sticky;top:64px;z-index:5;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border:1px solid #e2e8f0;border-radius:16px;padding:10px 12px;margin:0 0 12px}
+.ev-jhead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
+.ev-jlist{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+.ev-jlist li{flex:0 0 auto}
+.ev-jchip{display:flex;align-items:center;gap:6px;border:1px solid #e2e8f0;background:#f8fafc;color:#0f2a4e;border-radius:999px;padding:5px 10px 5px 6px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ev-jchip i{width:20px;height:20px;border-radius:50%;background:#e2e8f0;display:grid;place-items:center;font-style:normal;font-size:11px}
+.ev-jchip b{font-weight:700;color:#64748b;font-size:11px}
+.ev-jchip.part{border-color:#0f2a4e;background:#fff}
+.ev-jchip.done{border-color:#bbf7d0;background:#f0fdf4;color:#166534}.ev-jchip.done i{background:#16a34a;color:#fff}
+.ev-jchip.miss{border-color:#fed7aa;background:#fff7ed;color:#9a3412}.ev-jchip.miss i{background:#ea580c;color:#fff}
+.ev-jchip:focus-visible{outline:2px solid #0f2a4e;outline-offset:2px}
+.ev-sec{scroll-margin-top:160px}
+@media print{.ev-journey{display:none}}
+
 .ev-center p.ev-muted{display:block;font-size:14px;line-height:1.8;max-width:560px;margin:0 auto}.ev-center .ev-btn.ghost{display:inline-flex;margin-top:16px}
 .ev-dup{display:block;color:#b91c1c;font-weight:800;font-size:12.5px;margin-top:4px;line-height:1.6}.ev-field input[aria-invalid=true]{border-color:#dc2626;background:#fef2f2}
 .ev-lock{border:1.5px solid #c9a24b;background:linear-gradient(180deg,#fffbeb,#fff);display:grid;gap:4px}.ev-lock-k{font-size:12px;font-weight:900;color:#8a6a1f;display:inline-flex;gap:6px;align-items:center}.ev-lock-t{font-size:18px;font-weight:900;color:#0f2a4e}.ev-lock-m{font-size:13px;font-weight:700;color:#334155}

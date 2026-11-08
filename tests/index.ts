@@ -95,6 +95,7 @@ import './p48.test';
 import './p48b.test';
 import './p49.test';
 import './p49c.test';
+import './p49e-pulse.test';
 import './miaar-m6.test';
 import './miaar-m7.test';
 import './miaar-m8.test';

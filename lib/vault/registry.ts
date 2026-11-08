@@ -156,6 +156,7 @@ export const REGISTRY: RegistryEntry[] = [
 export const NON_PERSONAL_TABLES = [
   'portal_shield_seals',   // P65: أختام «شهادة الدرع» الشهرية (نتائج تمرين — لا أشخاص)
   'portal_org_policy_seals',   // P67: أختام «سياسة الجهة» ATH-OP (اسم الجهة + مفاتيح — لا أشخاص)
+  'end_survey_actions',   // P49-هـ: مهامّ تحسين من الاستبيان الختامي (بند · متوسّط · عدد · ملاحظة) — لا أشخاص (created_by/closed_by معرّف داخلي بلا عرض)
   'portal_roles',   // P42: كتالوج الأدوار (أسماء وصلاحيات — لا أشخاص)
   'portal_report_templates',   // P46: قالب مهارات/استراتيجيات التقرير لكل برنامج — لا أشخاص
   'portal_program_versions',   // P47-ب: نسخ الدفعات (قبل/بعد · التعديلات · رسالة الدفعة القادمة) — created_by/created_name للمصمّم بصفته المهنية لا بيانات متدرّبين

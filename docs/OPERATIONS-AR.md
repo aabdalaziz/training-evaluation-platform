@@ -141,6 +141,9 @@
 | 13 | `phase5-j/222–229` | إصلاحات القوالب/التقييمات (ربط تلقائي، حارس النطاق، الأعمدة المطلوبة، respondent_hash) |
 | 14 | `…20261102_templates_admin.sql` | صلاحيات تحرير القوالب + حرّاس الحذف |
 | 15 | `…20261103_archive_backup.sql` | الأرشفة + `backup_log` + سياسة الزوار |
+| … | (مراحل البوابة P1–P68: `supabase/migrations/2026*–2027*` + `supabase/p6x-*.sql`) | انظر وثائق كل مرحلة |
+| 2026-11-08 | `supabase/p49d-end-survey-v2.sql` ثم `supabase/p49d2-link-guard.sql` | الاستبيان الختامي الشامل (53 بندًا) + حارس `evaluations_scope_guard` يقبل القالب الافتراضي ويربطه تلقائيًا + حارس جدول الربط v2 (القالب الافتراضي محايد المؤسسة). نُفِّذا في الإنتاج: `1·53·47·7·4·1·0·0·1` و`unlinked_programs = 0` |
+| 2026-11-08 | `supabase/p49e-pulse.sql` | P49-هـ: جدول `end_survey_actions` (مهامّ «بند الأسبوع» · k≥5 · إغلاق بملاحظة) + 3 سياسات + قيد مهمّة مفتوحة واحدة لكل (دفعة × بند) | `table=1 · policies=3 · open_uidx=1` |
 
 ### الجداول الرئيسية
 `programs` (مع `archived_at`) · `program_levels` · `program_approvals` · `program_managers` · `trainers` · `classrooms` · `class_schedules` · `evaluation_templates` · `questions` · `program_evaluation_templates` · `evaluations` · `evaluation_answers` · `attendance_sessions` · `attendance_records` · `certificates` · `certificate_settings` · `trainer_awards` · `impact_assessments` · `impact_questions` · `impact_responses` · `behavior_followups` · `behavior_questions` · `behavior_responses` · `outcome_kpis` · `outcome_measurements` · `remote_learning_survey_responses` · `report_subscriptions` · `notifications` · `notification_runs` · `trainee_mail_log` · `audit_logs` · `backup_log` · `profiles`
@@ -150,6 +153,7 @@
 - `create or replace function` لا يغيّر نوع الإرجاع → `drop function … cascade` أولًا.
 - الدوال الجديدة تُمنح تلقائيًا لـ anon/authenticated → `revoke` للدوال الخدمية.
 - محرّر SQL يعرض نتيجة **آخر** جملة فقط → اجمع التشخيص في استعلام `union all` واحد.
+- **حرّاس المنصّة الأصلية** (phase5-j وما قبلها) ما زالوا يعملون في قاعدة الإنتاج ولا يظهرون في المستودع: `evaluations_scope_guard` على `evaluations`، `program_templates_scope_guard` على `program_evaluation_templates`، `trg_audit_*`. قبل أيّ ميزة تُدرج في هذه الجداول: `select tgname from pg_trigger where tgrelid = 'public.<table>'::regclass and not tgisinternal;` — وعند تعديل حارس: دالة جديدة بالقاعدة نفسها + استثناء موثَّق، وإعادة توجيه التريغر دون حذف الدالة القديمة (P49-د).
 
 ---
 
