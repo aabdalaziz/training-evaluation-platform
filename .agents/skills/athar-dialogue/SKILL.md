@@ -129,6 +129,13 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - Honest numbers again: item performance (`computePerformance`) only at k ≥ 5 reports; flags easy ≥ 0.95 · hard ≤ 0.20 · weak discrimination < 0.10.
 - Test traps: `loadApprovedPool` drops mcq items without exactly 4 options; `drawPlan` with `exclude` keeps prior items when a cell runs short (no-overlap asserts need bank ≥ 2× cell); `invalidatePoolCache()` per test (90 s cache).
 
+## A demo tenant that is built and erased, never faked (P69 pattern — «غرفة العرض»)
+- Build through the REAL paths (`createCodes`, `savePolicy`, `freezeForm`, مِعيار engine `startSession/answerSession/finishSession`, `issueReport`) so a committee can press any button; only the inputs are synthetic (closed-list voices, training numbers, seeded `rng`).
+- Resumable steps: `buildStep` runs ONE step per call (`STEP_ORDER`, sessions in batches of 4) because a Vercel function has ~60 s; the page loops until `done`. The step returned is the NEXT one.
+- Erase from the manifest only: every id the build created is appended to `manifest`; `destroyManifest` deletes in dependency order (`DESTROY_ORDER`) and picks up what the committee created via demo invites/programs. Never delete by name or domain.
+- Guards: one live run (partial unique index), 409 while ready, failure → auto-destroy, `STALL_SECONDS` before a stuck build may be erased, `demo=true` org excluded from public threads/observatory and tagged on `/org`.
+- Relative dates («ساعة الصفر»): anchor = build day; all program/session dates are offsets so the scene is alive on any demo day.
+
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
 
