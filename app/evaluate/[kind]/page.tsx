@@ -35,10 +35,12 @@ const STR = {
   dailyTitle: ['التقييم اليومي لجلسات التدريب', 'Daily Session Evaluation'], finalTitle: ['التقييم الختامي للبرنامج التدريبي', 'Final Program Evaluation'],
   kicker: ['منصة تقويم البرامج التدريبية', 'Training Evaluation Platform'],
   intro: ['رأيك يساعدنا على تطوير جودة البرامج. الحقول المعلَّمة بـ * إلزامية، وتستغرق التعبئة نحو 3 دقائق.', 'Your feedback helps us improve program quality. Fields marked * are required; this takes about 3 minutes.'],
+  introEnd: ['رأيك يساعدنا على تطوير كل تفاصيل البيئة التدريبية — من الاستقبال إلى الشهادة. الحقول المعلَّمة بـ * إلزامية، والبنود الموسومة «إن انطبق» اتركها إن لم تنطبق عليك؛ تستغرق التعبئة نحو 6 دقائق.', 'Your feedback helps us improve every detail of the training environment — from reception to certificate. Fields marked * are required; leave items marked “if applicable” if they do not apply to you. It takes about 6 minutes.'],
   participant: ['بيانات المشارك', 'Participant information'], name: ['الاسم الكامل الثلاثي', 'Full name'], email: ['البريد الإلكتروني', 'Email address'], phone: ['رقم الجوال', 'Mobile number'],
   nationality: ['الجنسية', 'Nationality'], gender: ['النوع الاجتماعي', 'Gender'], male: ['ذكر', 'Male'], female: ['أنثى', 'Female'], choose: ['— اختر —', '— Select —'],
   accommodation: ['مكان الإقامة أثناء البرنامج', 'Accommodation during the program'], program: ['البرنامج التدريبي', 'Training program'], classroom: ['القاعة الدراسية', 'Classroom'], room: ['قاعة', 'Room'],
   noTemplate: ['لا يوجد قالب تقييم مفعّل لهذا البرنامج حاليًا — تواصل مع إدارة البرنامج.', 'No active evaluation template for this program yet — please contact the program office.'],
+  linkErr: ['تعذّر حفظ الاستبيان: القالب غير مرتبط بهذا البرنامج بعد — أبلغ إدارة البرنامج (قوالب التقييم → تغطية البرامج) ثم أعد المحاولة؛ إجاباتك ما زالت في الصفحة.', 'Could not save: the template is not linked to this program yet — please tell the program office (Templates → program coverage) and try again; your answers are still on this page.'],
   loading: ['جارٍ تجهيز الاستبيان…', 'Preparing the form…'], submit: ['إرسال التقييم', 'Submit evaluation'], sending: ['جارٍ الإرسال…', 'Sending…'],
   privacy: ['تُستخدم بياناتك لأغراض الجودة فقط وتُعرض النتائج بشكل مجمّع.', 'Your data is used for quality purposes only; results are reported in aggregate.'],
   missingFields: ['يرجى استكمال الحقول التالية:', 'Please complete the following fields:'], missingQs: ['يرجى الإجابة عن الأسئلة الإلزامية التالية:', 'Please answer the following required questions:'],
@@ -213,7 +215,7 @@ export default function GuestEvaluationPage() {
       if (answerError) throw answerError;
       markDone(onceScope); setOnceAt(new Date().toISOString()); setOnceOverride(false); setDupEmail(null);   /* P49-ج: علامة الجهاز */
       setIsSuccess(true); window.scrollTo({ top: 0 });
-    } catch (err: any) { setMessage(isUniqueViolation(err) ? `⚠️ ${kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}` : (err?.message || 'حدث خطأ غير متوقع')); if (isUniqueViolation(err)) window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    } catch (err: any) { setMessage(isUniqueViolation(err) ? `⚠️ ${kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}` : (/غير مرتبط|not linked/i.test(String(err?.message || '')) ? `⚠️ ${t('linkErr')}` : (err?.message || 'حدث خطأ غير متوقع'))); if (isUniqueViolation(err)) window.scrollTo({ top: 0, behavior: 'smooth' }); }
     finally { setSaving(false); }
   }
 
@@ -225,7 +227,7 @@ export default function GuestEvaluationPage() {
       <div className="ev-kicker"><Icon name={kind === 'daily' ? 'calendar' : 'flag'} size={14} /> {t('kicker')}</div>
       <h1>{kind === 'daily' ? t('dailyTitle') : kind === 'end' ? t('endTitle') : t('finalTitle')}</h1>
       {program && <div className="ev-prog"><Icon name="book" size={14} /> {L(program.name_ar, program.name_en)}</div>}
-      <p className="ev-intro">{t('intro')}</p>
+      <p className="ev-intro">{t(kind === 'end' ? 'introEnd' : 'intro')}</p>
       <div className="ev-langs"><button type="button" className={lang === 'ar' ? 'on' : ''} onClick={() => setLang('ar')}>العربية</button><button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button></div>
     </header>
   );

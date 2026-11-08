@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {
   P49_NAMES_AR, LINK_KINDS, KIND_AR, KIND_PATH, kindFromPath, isLinkKind, LINK_ALPHABET, linkCode, normalizeCode, shortUrl,
   linkState, linkStateText, TITLE_PRESETS, titlePreset, linkTitle, classroomLabel, scopeText, allowedClassrooms, cleanLabel, validateLinkInput,
-  pickTemplate, normalizeNps, npsSummary, NPS_BAND_AR, END_SURVEY_SEED, endSurveyStats, LIKERT_AR, LIKERT_EN, OVERALL_OPTIONS, answerRow, likertValue, likertLabel,
+  pickTemplate, normalizeNps, npsSummary, NPS_BAND_AR, END_SURVEY_SEED, END_SURVEY_SECTIONS_AR, endSurveyStats, LIKERT_AR, LIKERT_EN, OVERALL_OPTIONS, answerRow, likertValue, likertLabel,
   LINK_LANGS, normalizeLinkLang, resolveOpenLang, LINK_LANG_AR,
   type EvalLink,
 } from '../lib/evaluation/links';
@@ -76,14 +76,19 @@ test('P49 · NPS 0–10: المروّجون 9–10 · المحايدون 7–8 �
   assert.equal(npsSummary([10, 10, 9]).score, 100); assert.equal(npsSummary([0, 1]).score, -100); assert.equal(npsSummary([]).score, null);
   assert.equal(NPS_BAND_AR(50), 'ممتاز'); assert.equal(NPS_BAND_AR(0), 'جيد'); assert.equal(NPS_BAND_AR(-1), 'يحتاج انتباهًا'); assert.equal(NPS_BAND_AR(null), '—');
 });
-test('P49 · بذرة استبيان نهاية البرنامج: 17 سؤالًا = 12 ليكرت + 3 آراء + تقدير عام + ترشيح؛ مفاتيح فريدة؛ قسمان لليكرت', () => {
-  const st = endSurveyStats(); assert.equal(st.total, 17); assert.equal(st.likert, 12); assert.equal(st.text, 3);
-  assert.equal(END_SURVEY_SEED.filter(q => q.kind === 'SINGLE_CHOICE').length, 1); assert.equal(END_SURVEY_SEED.filter(q => q.kind === 'NPS_10').length, 1);
-  assert.equal(new Set(END_SURVEY_SEED.map(q => q.key)).size, 17);
-  const sections = Array.from(new Set(END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5').map(q => q.section_ar))); assert.deepEqual(sections, ['الدورة ومحتواها', 'المدرّب']);
-  assert.equal(END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5' && q.section_ar === 'الدورة ومحتواها').length, 6); assert.equal(END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5' && q.section_ar === 'المدرّب').length, 6);
+test('P49-د · بذرة الاستبيان الختامي الشامل: 53 بندًا = 47 ليكرت + 4 آراء + تقدير عام + ترشيح؛ مفاتيح فريدة؛ 8 أقسام بترتيب رحلة المتدرّب؛ المفاتيح القديمة باقية؛ لا «أكاديمية»', () => {
+  const st = endSurveyStats(); assert.equal(st.total, 53); assert.equal(st.likert, 47); assert.equal(st.text, 4); assert.equal(st.choice, 1); assert.equal(st.nps, 1);
+  assert.equal(new Set(END_SURVEY_SEED.map(q => q.key)).size, 53);
+  const sections = Array.from(new Set(END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5').map(q => q.section_ar))); assert.deepEqual(sections, END_SURVEY_SECTIONS_AR); assert.equal(sections.length, 8);
+  const per = (sec: string) => END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5' && q.section_ar === sec).length;
+  assert.deepEqual(END_SURVEY_SECTIONS_AR.map(per), [4, 5, 5, 3, 7, 10, 7, 6]);
+  for (let i = 1; i <= 17; i++) assert.ok(END_SURVEY_SEED.some(q => q.key.startsWith(`end_q${String(i).padStart(2, '0')}_`)), `المفتاح القديم ${i} باقٍ`);
   assert.deepEqual(END_SURVEY_SEED.find(q => q.kind === 'SINGLE_CHOICE')?.options, OVERALL_OPTIONS); assert.equal(OVERALL_OPTIONS.length, 5);
-  assert.ok(END_SURVEY_SEED.filter(q => q.kind === 'LONG_TEXT').every(q => !q.required), 'الآراء اختيارية'); assert.ok(END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5').every(q => q.required));
+  assert.ok(END_SURVEY_SEED.filter(q => q.kind === 'LONG_TEXT').every(q => !q.required), 'الآراء اختيارية');
+  const optional = END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5' && !q.required); assert.equal(optional.length, 7); assert.ok(optional.every(q => /\(إن /.test(q.ar)), 'كل ليكرت اختياري موسوم «إن انطبق/قُدّمت/وُجدت/استُخدمت»');
+  assert.ok(END_SURVEY_SEED.every(q => !q.ar.includes('أكاديمية') && !q.en.toLowerCase().includes('academy')), 'نصّ محايد يصلح لأيّ جهة');
+  assert.ok(END_SURVEY_SEED.every(q => q.ar.trim() && q.en.trim() && q.section_ar && q.section_en), 'كل بند ثنائي اللغة');
+  const nps = END_SURVEY_SEED.find(q => q.kind === 'NPS_10')!; assert.equal(nps.max, 10); assert.ok(nps.ar.includes('بالتدرّب معنا'));
   assert.equal(LIKERT_AR.length, 5); assert.equal(LIKERT_AR[0], 'موافق بقوة'); assert.equal(LIKERT_EN[4], 'Strongly disagree');
 });
 test('P49 · صفّ الإجابة: NPS نصًّا (لا يُفسد متوسّط 1–5) · ليكرت رقمًا · الاختيار · المتعدّد · النصّ', () => {

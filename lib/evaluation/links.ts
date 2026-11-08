@@ -2,7 +2,7 @@
 /**
  * P49 «تقويم البرامج — الرابط الذي لا يُخطئ» — دوال نقيّة بلا React / بلا Supabase
  *  (أ) روابط التقييم الذكية: رمز قصير · نطاق (برنامج/شعبة/مستوى) · نافذة زمنية · عنوان الورقة (مجموعة/برنامج/فترة)
- *  (د) «استبيان نهاية البرنامج» (END): بذرة الأسئلة الـ17 (المصدر الوحيد للترحيل والاختبارات) · اختيار القالب الافتراضي · مؤشّر الترشيح NPS (0–10)
+ *  (د) «استبيان نهاية البرنامج» (END): بذرة الأسئلة (v2: 53 بندًا — P49-د) (المصدر الوحيد للترحيل والاختبارات) · اختيار القالب الافتراضي · مؤشّر الترشيح NPS (0–10)
  */
 
 export const P49_NAMES_AR = {
@@ -130,25 +130,76 @@ export const OVERALL_OPTIONS = ['ممتاز', 'جيد جدا', 'جيد', 'مقب
 export const END_SURVEY_NAME_AR = 'استبيان نهاية البرنامج (عام)';
 export const END_SURVEY_NAME_EN = 'End-of-program survey (general)';
 const L = (key: string, ar: string, en: string, section_ar: string, section_en: string): SeedQ => ({ key, kind: 'LIKERT_5', ar, en, section_ar, section_en, required: true, options: [], max: 5 });
+const O = (key: string, ar: string, en: string, section_ar: string, section_en: string): SeedQ => ({ ...L(key, ar, en, section_ar, section_en), required: false }); /* بند اختياري «إن انطبق» */
+const T = (key: string, ar: string, en: string): SeedQ => ({ key, kind: 'LONG_TEXT', ar, en, section_ar: 'رأيك', section_en: 'Your opinion', required: false, options: [], max: null });
+/** P49-د (2026-11-08): الاستبيان الختامي الشامل — يغطّي رحلة المتدرّب كلّها من التسجيل إلى الوثائق، بلغة تصلح لأيّ جهة (لا «أكاديمية» ولا «دورة»)
+ *  المفاتيح القديمة end_q01…q17 باقية (الإجابات السابقة سليمة) ونصوصها حُدِّثت؛ الأقسام بترتيب ما يعيشه المتدرّب. البنود الموسومة «إن انطبق» اختيارية. */
 export const END_SURVEY_SEED: SeedQ[] = [
-  L('end_q01_objectives', 'كانت أهداف الدورة واضحة', 'The course objectives were clear', 'الدورة ومحتواها', 'The course and its content'),
-  L('end_q02_workload', 'كان مقدار الكتابة أو الأعمال الصفية الأخرى التي طُلب منك القيام بها كافياً', 'The amount of writing or other class work required was adequate', 'الدورة ومحتواها', 'The course and its content'),
-  L('end_q03_presentations', 'تشرح عروض الدورة التدريبية مفاهيم الدورة بشكل فعال', 'The course presentations explained the concepts effectively', 'الدورة ومحتواها', 'The course and its content'),
-  L('end_q04_materials', 'كانت الحقيبة التدريبية ومصادر التعلم مفيدة للدورة', 'The training kit and learning resources were useful', 'الدورة ومحتواها', 'The course and its content'),
-  L('end_q05_technology', 'عزز استخدام التكنولوجيا خلال الدورة من فهمي للموضوع', 'The use of technology during the course enhanced my understanding', 'الدورة ومحتواها', 'The course and its content'),
-  L('end_q06_quality', 'كانت مواد الدورة التدريبية عالية الجودة ومناسبة للتعلم', 'The course materials were high quality and suitable for learning', 'الدورة ومحتواها', 'The course and its content'),
-  L('end_q07_motivation', 'قام المدرب بزيادة الحافز عندي للدراسة', 'The trainer increased my motivation to study', 'المدرّب', 'The trainer'),
-  L('end_q08_depth', 'قام المدرب بشرح المعلومات بعمق وتفصيل مناسب', 'The trainer explained the information in appropriate depth and detail', 'المدرّب', 'The trainer'),
-  L('end_q09_enthusiasm', 'كان المدرب متحمس و مهتم بالتدريب', 'The trainer was enthusiastic and engaged in the training', 'المدرّب', 'The trainer'),
-  L('end_q10_answers', 'هل يمكنك الحصول على إجابات واضحة لأسئلتك من المدرب؟', 'Could you get clear answers to your questions from the trainer?', 'المدرّب', 'The trainer'),
-  L('end_q11_readiness', 'هل كان المدرب مستعدًا للإجابة على جميع الاستفسارات المتعلقة بالدورة؟', 'Was the trainer ready to answer all course-related enquiries?', 'المدرّب', 'The trainer'),
-  L('end_q12_pace', 'هل كانت السرعة التي قدم بها المدرب مادة الدورة التدريبية صحيحة؟', 'Was the pace at which the trainer delivered the course material right?', 'المدرّب', 'The trainer'),
-  { key: 'end_q13_improve_trainer', kind: 'LONG_TEXT', ar: 'ما الذي تنصح به لتحسين أداء المعلم؟', en: 'What would you recommend to improve the trainer\'s performance?', section_ar: 'رأيك', section_en: 'Your opinion', required: false, options: [], max: null },
-  { key: 'end_q14_strengths', kind: 'LONG_TEXT', ar: 'ما هي نقاط القوة الرئيسية لهذه الدورة؟', en: 'What are the main strengths of this course?', section_ar: 'رأيك', section_en: 'Your opinion', required: false, options: [], max: null },
-  { key: 'end_q15_improvements', kind: 'LONG_TEXT', ar: 'ما هي النقاط التي تحتاج الى تحسين في هذه الدورة؟', en: 'What needs improvement in this course?', section_ar: 'رأيك', section_en: 'Your opinion', required: false, options: [], max: null },
-  { key: 'end_q16_overall', kind: 'SINGLE_CHOICE', ar: 'ما هو التقييم العام الذي ستعطيه للدورة؟', en: 'What overall rating would you give the course?', section_ar: 'التقييم العام', section_en: 'Overall', required: true, options: OVERALL_OPTIONS, max: null },
-  { key: 'end_q17_nps', kind: 'NPS_10', ar: 'ما هو مدى ترشيحك لزملائك وعائلتك بالدراسة معنا في الأكاديمية؟ (10 أقصى قيمة و0 أقل قيمة)', en: 'How likely are you to recommend studying with us at the academy to your colleagues and family? (10 = highest, 0 = lowest)', section_ar: 'الترشيح', section_en: 'Recommendation', required: true, options: [], max: 10 },
+  /* 1) التسجيل والاستقبال */
+  L('end_r01_registration', 'خطوات التسجيل في البرنامج كانت واضحة وسهلة', 'The registration steps were clear and easy', 'التسجيل والاستقبال', 'Registration & reception'),
+  L('end_r02_enquiries', 'رُدّ على استفساراتي قبل البرنامج بسرعة ووضوح', 'My enquiries before the programme were answered quickly and clearly', 'التسجيل والاستقبال', 'Registration & reception'),
+  L('end_r03_prearrival', 'وصلتني معلومات كافية قبل البدء (المواعيد · المكان · المتطلبات)', 'I received sufficient information before starting (dates, venue, requirements)', 'التسجيل والاستقبال', 'Registration & reception'),
+  L('end_r04_reception', 'استقبلني فريق الاستقبال باحترام وساعدني في اليوم الأول', 'The reception team welcomed me respectfully and helped me on the first day', 'التسجيل والاستقبال', 'Registration & reception'),
+  /* 2) قاعة التدريب والمرافق */
+  L('end_f01_room', 'قاعة التدريب مناسبة من حيث المساحة والمقاعد وترتيب الجلوس', 'The training room was suitable in size, seating and layout', 'قاعة التدريب والمرافق', 'Training room & facilities'),
+  L('end_f02_climate', 'الإضاءة والتهوية ودرجة الحرارة في القاعة مريحة', 'Lighting, ventilation and temperature in the room were comfortable', 'قاعة التدريب والمرافق', 'Training room & facilities'),
+  L('end_f03_cleanliness', 'نظافة القاعة والمرافق (دورات المياه · الممرّات) جيدة', 'The room and facilities (restrooms, corridors) were clean', 'قاعة التدريب والمرافق', 'Training room & facilities'),
+  L('end_f04_access', 'الوصول إلى مقرّ التدريب سهل (الموقع · اللوحات الإرشادية · مواقف السيارات)', 'Reaching the venue was easy (location, signage, parking)', 'قاعة التدريب والمرافق', 'Training room & facilities'),
+  O('end_f05_accessibility', 'المقرّ مهيّأ لذوي الإعاقة واحتياجات الوصول (إن انطبق)', 'The venue is accessible for people with disabilities (if applicable)', 'قاعة التدريب والمرافق', 'Training room & facilities'),
+  /* 3) التجهيزات والتقنية */
+  L('end_t01_av', 'الشاشة أو جهاز العرض والصوت واضحان من كل مقاعد القاعة', 'The screen/projector and sound were clear from every seat', 'التجهيزات والتقنية', 'Equipment & technology'),
+  L('end_t02_internet', 'الإنترنت متاح ومستقر عند الحاجة إليه', 'Internet was available and stable when needed', 'التجهيزات والتقنية', 'Equipment & technology'),
+  O('end_t03_platform', 'المنصّة الرقمية أو الأدوات الإلكترونية المستخدمة سهلة ومفيدة (إن استُخدمت)', 'The digital platform or e-tools used were easy and useful (if used)', 'التجهيزات والتقنية', 'Equipment & technology'),
+  L('end_t04_supplies', 'الأدوات والمستلزمات التدريبية (سبورة · أقلام · أوراق · نسخ) متوفّرة', 'Training supplies (board, markers, paper, copies) were available', 'التجهيزات والتقنية', 'Equipment & technology'),
+  L('end_t05_support', 'الدعم التقني أو اللوجستي يصل بسرعة عند حدوث مشكلة', 'Technical or logistical support arrived quickly when a problem occurred', 'التجهيزات والتقنية', 'Equipment & technology'),
+  /* 4) الضيافة والخدمات */
+  O('end_h01_catering', 'جودة الضيافة (المشروبات · الوجبات) مناسبة (إن قُدّمت)', 'The quality of hospitality (drinks, meals) was appropriate (if provided)', 'الضيافة والخدمات', 'Hospitality & services'),
+  L('end_h02_breaks', 'مواعيد الاستراحات ومدّتها مناسبة', 'Break times and their length were appropriate', 'الضيافة والخدمات', 'Hospitality & services'),
+  O('end_h03_rest', 'أماكن الاستراحة والصلاة متوفّرة ومريحة (إن انطبق)', 'Rest and prayer areas were available and comfortable (if applicable)', 'الضيافة والخدمات', 'Hospitality & services'),
+  /* 5) المادة التدريبية وكتاب المستوى */
+  L('end_q01_objectives', 'كانت أهداف البرنامج واضحة منذ البداية', 'The programme objectives were clear from the start', 'المادة التدريبية وكتاب المستوى', 'Training material & level book'),
+  L('end_q04_materials', 'كانت الحقيبة التدريبية ومصادر التعلّم مفيدة', 'The training kit and learning resources were useful', 'المادة التدريبية وكتاب المستوى', 'Training material & level book'),
+  L('end_q06_quality', 'مواد البرنامج (أو كتاب المستوى) عالية الجودة ومناسبة للتعلّم', 'The programme materials (or level book) were high quality and suitable for learning', 'المادة التدريبية وكتاب المستوى', 'Training material & level book'),
+  L('end_m01_level_fit', 'محتوى المادة أو كتاب المستوى مناسب لمستواي الحالي', 'The material or level book matched my current level', 'المادة التدريبية وكتاب المستوى', 'Training material & level book'),
+  L('end_m02_sequence', 'تسلسل الموضوعات منطقي ومتدرّج', 'The topics were sequenced logically and progressively', 'المادة التدريبية وكتاب المستوى', 'Training material & level book'),
+  O('end_m03_skills', 'المادة توازن بين المهارات (استماع · تحدّث · قراءة · كتابة) بما يناسب البرنامج (إن انطبق)', 'The material balanced the skills (listening, speaking, reading, writing) as the programme requires (if applicable)', 'المادة التدريبية وكتاب المستوى', 'Training material & level book'),
+  L('end_m04_examples', 'الأمثلة والتمارين واقعية وقريبة من احتياجي', 'Examples and exercises were realistic and close to my needs', 'المادة التدريبية وكتاب المستوى', 'Training material & level book'),
+  /* 6) المدرّب */
+  L('end_q07_motivation', 'زاد المدرّب من حافزي للتعلّم', 'The trainer increased my motivation to learn', 'المدرّب', 'The trainer'),
+  L('end_q08_depth', 'شرح المدرّب المعلومات بعمق وتفصيل مناسبين', 'The trainer explained the information in appropriate depth and detail', 'المدرّب', 'The trainer'),
+  L('end_q09_enthusiasm', 'كان المدرّب متحمّسًا ومهتمًّا بالتدريب', 'The trainer was enthusiastic and engaged in the training', 'المدرّب', 'The trainer'),
+  L('end_q10_answers', 'حصلت على إجابات واضحة لأسئلتي من المدرّب', 'I got clear answers to my questions from the trainer', 'المدرّب', 'The trainer'),
+  L('end_q11_readiness', 'كان المدرّب مستعدًّا للإجابة عن كل الاستفسارات المتعلّقة بالبرنامج', 'The trainer was ready to answer all programme-related enquiries', 'المدرّب', 'The trainer'),
+  L('end_q12_pace', 'كانت سرعة تقديم المادة مناسبة', 'The pace of delivery was right', 'المدرّب', 'The trainer'),
+  L('end_tr01_time', 'يلتزم المدرّب بالمواعيد ويدير وقت الجلسة جيدًا', 'The trainer was punctual and managed session time well', 'المدرّب', 'The trainer'),
+  L('end_tr02_respect', 'يعامل المدرّب الجميع باحترام وعدل ويشجّع المشاركة', 'The trainer treated everyone with respect and fairness and encouraged participation', 'المدرّب', 'The trainer'),
+  L('end_tr03_methods', 'ينوّع المدرّب طرائق التدريب (شرح · حوار · تطبيق · مجموعات)', 'The trainer varied the methods (explanation, discussion, practice, group work)', 'المدرّب', 'The trainer'),
+  L('end_tr04_feedback', 'يقدّم لي المدرّب تغذية راجعة واضحة على أدائي', 'The trainer gave me clear feedback on my performance', 'المدرّب', 'The trainer'),
+  /* 7) الأنشطة التدريبية والتقييم */
+  L('end_q02_workload', 'كان مقدار الواجبات والأعمال الصفّية المطلوبة مناسبًا', 'The amount of assignments and class work required was appropriate', 'الأنشطة التدريبية والتقييم', 'Activities & assessment'),
+  L('end_q03_presentations', 'تشرح العروض والشروح التدريبية المفاهيم بفاعلية', 'The presentations explained the concepts effectively', 'الأنشطة التدريبية والتقييم', 'Activities & assessment'),
+  L('end_q05_technology', 'عزّز استخدام التقنية خلال البرنامج فهمي للموضوع', 'The use of technology during the programme enhanced my understanding', 'الأنشطة التدريبية والتقييم', 'Activities & assessment'),
+  L('end_a01_interactive', 'الأنشطة التفاعلية (مجموعات · أدوار · مشاريع) أفادتني في التعلّم', 'Interactive activities (groups, role-play, projects) helped my learning', 'الأنشطة التدريبية والتقييم', 'Activities & assessment'),
+  L('end_a02_assessment', 'الاختبارات والواجبات عكست ما تعلّمته فعلًا', 'Tests and assignments reflected what I actually learned', 'الأنشطة التدريبية والتقييم', 'Activities & assessment'),
+  L('end_a03_progress', 'عرفت نتائجي ومستوى تقدّمي أثناء البرنامج لا في نهايته فقط', 'I knew my results and progress during the programme, not only at the end', 'الأنشطة التدريبية والتقييم', 'Activities & assessment'),
+  O('end_a04_extra', 'الأنشطة المصاحبة (زيارات · فعاليات · أنشطة ثقافية) أضافت لي (إن وُجدت)', 'Accompanying activities (visits, events, cultural activities) added value (if any)', 'الأنشطة التدريبية والتقييم', 'Activities & assessment'),
+  /* 8) إدارة البرنامج */
+  L('end_p01_schedule', 'الجدول الزمني واضح والتزمت به إدارة البرنامج', 'The schedule was clear and the programme office kept to it', 'إدارة البرنامج', 'Programme management'),
+  L('end_p02_duration', 'مدّة البرنامج وعدد الساعات مناسبان للمحتوى', 'The programme length and hours suited the content', 'إدارة البرنامج', 'Programme management'),
+  L('end_p03_group', 'حجم المجموعة مناسب للتعلّم', 'The group size was suitable for learning', 'إدارة البرنامج', 'Programme management'),
+  L('end_p04_communication', 'التواصل مع إدارة البرنامج سهل والردّ سريع', 'Communicating with the programme office was easy and responses were quick', 'إدارة البرنامج', 'Programme management'),
+  L('end_p05_complaints', 'تُؤخذ الملاحظات والشكاوى بجدّية ويُتعامل معها', 'Feedback and complaints were taken seriously and acted upon', 'إدارة البرنامج', 'Programme management'),
+  O('end_p06_documents', 'الوثائق (الحضور · النتائج · الشهادات) تصدر بدقّة وفي وقتها (إن انطبق)', 'Documents (attendance, results, certificates) were issued accurately and on time (if applicable)', 'إدارة البرنامج', 'Programme management'),
+  /* 9) رأيك */
+  T('end_q13_improve_trainer', 'ما الذي تنصح به لتحسين أداء المدرّب؟', 'What would you recommend to improve the trainer\'s performance?'),
+  T('end_q14_strengths', 'ما نقاط القوة الرئيسية في هذا البرنامج؟', 'What are the main strengths of this programme?'),
+  T('end_q15_improvements', 'ما النقاط التي تحتاج إلى تحسين في هذا البرنامج؟', 'What needs improvement in this programme?'),
+  T('end_o01_environment', 'ما الذي تقترحه لتحسين البيئة التدريبية (القاعة · التجهيزات · الخدمات · الإدارة)؟', 'What would you suggest to improve the training environment (room, equipment, services, management)?'),
+  /* 10) التقييم العام */
+  { key: 'end_q16_overall', kind: 'SINGLE_CHOICE', ar: 'ما التقييم العام الذي تعطيه للبرنامج؟', en: 'What overall rating would you give the programme?', section_ar: 'التقييم العام', section_en: 'Overall', required: true, options: OVERALL_OPTIONS, max: null },
+  { key: 'end_q17_nps', kind: 'NPS_10', ar: 'ما مدى ترشيحك لزملائك وأصدقائك بالتدرّب معنا؟ (10 أعلى قيمة و0 أقل قيمة)', en: 'How likely are you to recommend training with us to your colleagues and friends? (10 = highest, 0 = lowest)', section_ar: 'الترشيح', section_en: 'Recommendation', required: true, options: [], max: 10 },
 ];
+export const END_SURVEY_SECTIONS_AR = ['التسجيل والاستقبال', 'قاعة التدريب والمرافق', 'التجهيزات والتقنية', 'الضيافة والخدمات', 'المادة التدريبية وكتاب المستوى', 'المدرّب', 'الأنشطة التدريبية والتقييم', 'إدارة البرنامج'];
 export function endSurveyStats() { return { total: END_SURVEY_SEED.length, likert: END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5').length, text: END_SURVEY_SEED.filter(q => q.kind === 'LONG_TEXT').length, choice: END_SURVEY_SEED.filter(q => q.kind === 'SINGLE_CHOICE').length, nps: END_SURVEY_SEED.filter(q => q.kind === 'NPS_10').length }; }
 /** كيف يُخزَّن جواب كل نوع في evaluation_answers (ليكرت → rating 1..5 حيث 5 = موافق بقوة · NPS → text_value "0".."10" حتى لا يُفسد متوسّطات 1–5) */
 export function answerRow(kind: string, value: any): { rating_value: number | null; selected_option: string | null; selected_options: string[]; text_value: string | null } {
