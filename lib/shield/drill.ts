@@ -9,6 +9,9 @@ import { keyInfo } from './keys';
 export type DrillCheck = { id: string; title_ar: string; ok: boolean; detail: string; manual?: boolean };
 export type DrillResult = { at: string; passed: number; total: number; checks: DrillCheck[]; ms: number };
 
+/** استمارات عامة بالتصميم (P65): الزائر يُدرج صفًّا واحدًا ولا يقرأ ولا يعدّل — تقييم البرنامج /e/<code>، استبيان التعلّم عن بُعد، نموذج «تواصل». أيّ جدول آخر يسمح للزائر بالكتابة = إخفاق. */
+export const PUBLIC_FORM_TABLES = ['evaluations', 'evaluation_answers', 'remote_learning_survey_responses', 'portal_contact_messages'];
+
 export const REQUIRED_HEADERS: { name: string; test: (v: string) => boolean; title_ar: string }[] = [
   { name: 'strict-transport-security', test: v => /max-age=\d{7,}/.test(v), title_ar: 'HSTS' },
   { name: 'x-content-type-options', test: v => /nosniff/i.test(v), title_ar: 'nosniff' },
@@ -104,8 +107,9 @@ export async function runDrill(site: string, env: Record<string, string | undefi
   if (!pol) { try { const { data, error } = await db.rpc('shield_rls_report'); if (!error && Array.isArray(data)) { pol = data; polSrc = 'rls'; } } catch { /* */ } }
   const noRls = (pol || []).filter((r: any) => !r.rls_enabled).map((r: any) => String(r.table_name));
   add('rls_all', 'RLS مفعَّل على كل جداول public (القديمة والجديدة)', !!pol && noRls.length === 0, pol ? (noRls.length ? `بلا RLS: ${noRls.slice(0, 8).join(', ')}${noRls.length > 8 ? ` +${noRls.length - 8}` : ''}` : `${pol.length} جدولًا كلّها مفعَّلة`) : 'RPC غير متاح — نفّذ supabase/p65-shield-layer2.sql');
-  const anonW = polSrc === 'policy' ? (pol || []).filter((r: any) => r.anon_write).map((r: any) => String(r.table_name)) : null; const openR = polSrc === 'policy' ? (pol || []).filter((r: any) => r.open_read).length : null;
-  add('anon_write', 'لا جدول يسمح للزائر المجهول بالكتابة', anonW !== null && anonW.length === 0, anonW === null ? 'يحتاج shield_policy_report — نفّذ SQL P65' : anonW.length ? `anon يكتب في: ${anonW.slice(0, 8).join(', ')}` : `لا كتابة مجهولة · قراءة مفتوحة في ${openR} جدولًا (كتالوجات — تُراجَع في اللوحة)`);
+  const anonAll = polSrc === 'policy' ? (pol || []).filter((r: any) => r.anon_write).map((r: any) => String(r.table_name)) : null;
+  const anonW = anonAll ? anonAll.filter(t => !PUBLIC_FORM_TABLES.includes(t)) : null; const forms = anonAll ? anonAll.filter(t => PUBLIC_FORM_TABLES.includes(t)).length : 0; const openR = polSrc === 'policy' ? (pol || []).filter((r: any) => r.open_read).length : null;
+  add('anon_write', 'لا جدول يسمح للزائر المجهول بالكتابة (عدا استمارات عامة معلنة: إدراج فقط)', anonW !== null && anonW.length === 0, anonW === null ? 'يحتاج shield_policy_report — نفّذ SQL P65' : anonW.length ? `anon يكتب في: ${anonW.slice(0, 8).join(', ')}${anonW.length > 8 ? ` +${anonW.length - 8}` : ''}` : `لا كتابة مجهولة خارج ${forms} استمارات عامة (إدراج فقط) · قراءة مفتوحة في ${openR} جدولًا (كتالوجات — تُراجَع في اللوحة)`);
   // 17 مسارات البيانات الشخصية ترفض بلا دخول (401/403) — IDOR الأساسي؛ التبادل بين مستخدمَين يُختبر في E2E بالرموز
   const PII_API = ['/api/vault', '/api/vault/admin?view=all', '/api/shield', '/api/diploma?list=1', '/api/me/line', '/api/me/day', '/api/admin/miaar/exit?classroom=drill'];
   const probes: string[] = []; let leaks = 0;

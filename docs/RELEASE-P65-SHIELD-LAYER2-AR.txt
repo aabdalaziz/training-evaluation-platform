@@ -41,3 +41,13 @@
 
 ## 6) ما بعدها
 الإلزام في CSP بعد أسبوع نظيف · Strix/ZAP قبل التشغيل الحكومي · 2FA/HIBP في Supabase · النشر داخل المملكة · `.sa`.
+
+## ملحق P65-ب — تصلّب السياسات بعد أول تقرير حيّ (2026‑11‑08)
+التقرير الأول على الإنتاج أظهر 23 جدولًا «كتابة مجهولة». التحليل (CSV السياسات والصلاحيات): 19 علمٌ كاذب — سياسات بدور `public` مشروطة بـ `auth.uid()`/`can_administer_organization()`؛ و4 مقصودة بالتصميم (إدراج فقط من المتصفّح): `evaluations` · `evaluation_answers` · `remote_learning_survey_responses` · `portal_contact_messages`.
+ما تغيّر (`supabase/p65-policy-hardening.sql` + `lib/shield/drill.ts`):
+- `shield_policy_report()` صار يقيس **صلاحية الجدول × السياسة** (`has_table_privilege` / `has_any_column_privilege`) — لا السياسة وحدها.
+- سحب `insert/update/delete/truncate/references/trigger` من `anon` على كل جداول `public` ثم إعادة `insert` للاستمارات الأربع فقط؛ `alter default privileges` تمنع المنح التلقائي للجداول القادمة.
+- قراءة على مستوى الأعمدة للزائر: `trainers` بلا `phone/email`، `classrooms` بلا `join_url/host_url` (الصفحات العامة تطلب أعمدة محدَّدة — مُراجَعة: الاستبيان، استمارة التقييم).
+- `auth_all_classrooms` / `auth_all_trainers` (أيّ مسجَّل يكتب) → `auth_read_*` للمسجَّلين و`staff_write_*` عبر `shield_legacy_staff()` (الطاقم + المدرّب).
+- التمرين: `PUBLIC_FORM_TABLES` معلنة بالاسم؛ `anon_write` يُخفق إن كتب الزائر في أيّ جدول خارجها. الاختبار الأول بعد النشر كان 16/17 بسبب هذا البند تحديدًا — وهذا هو عمل الدرع: أن يُخفق علنًا ثم يُصلَح.
+ملاحظة تصميم: أعمدة تُضاف مستقبلًا إلى `trainers`/`classrooms` لا تصل إلى الزائر تلقائيًا (إغلاق افتراضي) — إن احتاجتها صفحة عامة تُمنح صراحةً.

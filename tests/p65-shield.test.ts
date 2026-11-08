@@ -10,6 +10,7 @@ import { sealCode, isSealCode, sealStats, monthOf, prevMonth, monthAr, sealState
 import { frozenFor, freezeGate, setFreeze, FROZEN_STATUS, FROZEN_AR } from '../lib/shield/freeze';
 import { footprintRows, footprintSummaryAr, orgCode, isEraseCode, requestOrgErase, cancelOrgErase, dueOrgErasures, executeOrgErase, findEraseReceipt, ORG_ERASE_HOLD_DAYS } from '../lib/vault/org';
 import { KIND_AR, DEFAULT_SEVERITY } from '../lib/shield/guard';
+import { PUBLIC_FORM_TABLES } from '../lib/shield/drill';
 import { REGISTRY, NON_PERSONAL_TABLES } from '../lib/vault/registry';
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
@@ -170,4 +171,21 @@ test('P65 شكل المصدر: SQL (الجداول والدوال والأعمد
   const route = read('app/api/shield/route.ts'); for (const a of ["'freeze'", "'org_export'", "'org_erase_request'", "'seal_now'", "'csp_clear'", "searchParams.get('seal')", "searchParams.get('erasure')", "format') === 'csv'"]) assert.ok(route.includes(a), a);
   assert.ok(read('app/api/vault/route.ts').includes('who_looked') && read('app/me/data/page.tsx').includes('vault-who-looked'), '★1 في ذاكرتي');
   const nc = read('next.config.js'); assert.ok(nc.includes("'Content-Security-Policy-Report-Only', value: CSP_REPORT_ONLY"), 'الإلزام لا يُدفع تلقائيًا — السياسة الكاملة تبقى Report-Only حتى أسبوع نظيف');
+});
+
+/* ———— P65-ب تصلّب السياسات (نتيجة أول تقرير حيّ) ———— */
+test('P65-ب تصلّب السياسات: الاستمارات العامة الأربع معلنة في التمرين · SQL يسحب كتابة anon ويعيد الإدراج لها فقط · أعمدة trainers/classrooms الحسّاسة محجوبة · كتابة القاعات للطاقم', () => {
+  assert.deepStrictEqual([...PUBLIC_FORM_TABLES].sort(), ['evaluation_answers', 'evaluations', 'portal_contact_messages', 'remote_learning_survey_responses'], 'القائمة المعلنة = ما يكتبه الزائر فعلًا من المتصفّح');
+  const drill = read('lib/shield/drill.ts'); assert.ok(drill.includes('!PUBLIC_FORM_TABLES.includes(t)'), 'التمرين يستثني الاستمارات المعلنة فقط');
+  const sql = read('supabase/p65-policy-hardening.sql');
+  assert.ok(sql.includes('drop function if exists public.shield_policy_report()') && sql.includes("has_table_privilege('anon', c.oid, 'INSERT')") && sql.includes("has_any_column_privilege('anon', c.oid, 'SELECT')"), 'التقرير = صلاحية × سياسة');
+  assert.ok(sql.includes("revoke insert, update, delete, truncate, references, trigger on public.%I from anon"), 'سحب كتابة anon من كل الجداول');
+  for (const t of PUBLIC_FORM_TABLES) assert.ok(sql.includes(`public.${t}`), `إعادة الإدراج لـ ${t}`);
+  assert.ok(sql.includes('alter default privileges for role postgres in schema public revoke insert, update, delete, truncate, references, trigger on tables from anon'), 'الجداول القادمة لا تُمنح للزائر');
+  assert.ok(sql.includes("column_name not in ('phone', 'email')") && sql.includes("column_name not in ('join_url', 'host_url')"), 'الأعمدة الحسّاسة محجوبة عن الزائر');
+  for (const p of ['auth_read_classrooms', 'staff_write_classrooms', 'auth_read_trainers', 'staff_write_trainers']) assert.ok(sql.includes(`create policy ${p}`), p);
+  assert.ok(!/^\s*(delete from|drop table|truncate )/im.test(sql), 'لا حذف بيانات');
+  // الأعمدة التي تطلبها الصفحات العامة من المتصفّح تبقى مسموحة
+  const survey = read('app/survey/remote-learning/page.tsx'); assert.ok(survey.includes("from('trainers').select('id,name')") && !survey.includes("from('trainers').select('*')"), 'الاستبيان يطلب أعمدة محدَّدة من المدرّبين');
+  assert.ok(!/from\('classrooms'\)\.select\('\*'\)/.test(survey) && !/from\('classrooms'\)\.select\('\*'\)/.test(read('app/evaluate/[kind]/page.tsx')), 'الصفحات العامة لا تطلب كل أعمدة القاعات');
 });
