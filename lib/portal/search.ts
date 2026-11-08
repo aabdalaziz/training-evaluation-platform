@@ -128,6 +128,7 @@ export const ROUTES: Entry[] = [
   P('admin-outcomes', '/admin/outcomes', 'مؤشرات النتائج', 'Outcome KPIs', ['مؤشر', 'kpi', 'نتائج'], 'staff', 'admin'),
   P('admin-readiness', '/admin/readiness', 'الجاهزية', 'Readiness', ['جاهزية'], 'staff', 'admin'),
   P('admin-pulse', '/admin/pulse', 'نبض البيئة التدريبية', 'Training-environment pulse', ['نبض', 'استبيان', 'بند الأسبوع', 'pulse'], 'staff', 'admin'),
+  P('admin-demo', '/admin/demo', 'غرفة العرض — المنطقة س', 'Demo room — Region X', ['عرض', 'تجريبي', 'المنطقة س', 'demo'], 'staff', 'admin'),
   P('admin-awards', '/admin/awards', 'تكريم المدرّبين', 'Trainer awards', ['تكريم', 'جائزة'], 'staff', 'admin'),
   P('admin-factory', '/admin/factory', 'مسودّات البرامج', 'Program drafts', ['مسودة', 'هندسة'], 'staff', 'admin'),
   P('admin-access', '/admin/access', 'تفضيلات الوصول — الإدارة', 'Access admin', ['وصول'], 'staff', 'admin'),

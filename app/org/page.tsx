@@ -38,7 +38,7 @@ import { OrgNeeds } from '../components/Needs';   // P44 «جهة تحتاج»
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
-type Org = { id: string; name_ar: string; name_en?: string | null; sector?: string | null; email_domain?: string | null; city?: string | null };
+type Org = { id: string; name_ar: string; name_en?: string | null; sector?: string | null; email_domain?: string | null; city?: string | null; demo?: boolean | null };
 type Tab = 'impact' | 'echo' | 'journey' | 'horizon' | 'members' | 'bulk' | 'resources' | 'contracts' | 'charter' | 'observatory' | 'report' | 'onair' | 'letters' /* P52 */ | 'policy' /* P67 */ | 'leader' /* P68 */;
 type ContractItem = { contract: { id: string; title_ar: string; total_amount: number; currency: string; status: ContractStatus; cohort_size: number; token: string; program_name?: string; delivered_at?: string | null }; state: ContractState };
 
@@ -94,6 +94,7 @@ function Inner() {
       <section className="pt-pagehead"><div className="pt-wrap">
         <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <span>{lang === 'ar' ? 'بوابة الجهات' : 'Organizations portal'}</span></div>
         <h1>{lang === 'ar' ? 'بوابة الجهات' : 'Organizations Portal'}{org ? ` — ${lang === 'en' && org.name_en ? org.name_en : org.name_ar}` : ''}</h1>
+        {org?.demo ? <div data-testid="org-demo-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa', borderRadius: 999, padding: '4px 12px', fontSize: 12.5, fontWeight: 900, margin: '4px 0 8px' }}>{lang === 'ar' ? 'عرض — بيانات افتراضية · تُبنى وتُمحى من غرفة العرض' : 'Demo — synthetic data · built and erased from the Demo room'}</div> : null}
         <p>{lang === 'ar' ? 'لوحة واحدة ترى فيها الجهة أثر التدريب على منسوبيها: المهارات المكتسبة، الحضور، الشهادات، مستويات مِعيار — وتدير أعضاءها وتطلب التسجيل الجماعي.' : 'One dashboard where an organization sees the impact of training on its people — skills, attendance, credentials, Mi‘yar levels — and manages members and bulk enrolment.'}</p>
         {orgs.length > 1 && <select className="og-pick" value={orgId} onChange={e => { setOrgId(e.target.value); loadDash(e.target.value); }}>{orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select>}
       </div></section>

@@ -11,6 +11,7 @@ const NAMES: Record<string, L> = {
   about: { ar: 'عن أَثَر', en: 'About' }, contact: { ar: 'تواصل', en: 'Contact' }, ai: { ar: 'الذكاء الاصطناعي المسؤول', en: 'Responsible AI' },
   needs: { ar: 'ما يحتاجه الممارسون', en: 'What practitioners need' }, 'admin/needs': { ar: 'الاحتياج المعلَن', en: 'Declared needs' },
   'admin/pulse': { ar: 'نبض البيئة التدريبية', en: 'Training-environment pulse' },   // P49-هـ
+  'admin/demo': { ar: 'غرفة العرض', en: 'Demo room' },   // P69
   rehearsal: { ar: 'بروفاتي', en: 'My rehearsals' }, 'me/rehearsal': { ar: 'بروفاتي', en: 'My rehearsals' }, 'admin/rehearsals': { ar: 'البروفات', en: 'Rehearsals' },
   'e': { ar: 'رابط تقويم', en: 'Evaluation link' }, 'evaluate': { ar: 'التقويم', en: 'Evaluation' }, 'evaluate/end': { ar: 'استبيان نهاية البرنامج', en: 'End-of-program survey' }, 'evaluate/daily': { ar: 'التقييم اليومي', en: 'Daily evaluation' }, 'evaluate/final': { ar: 'التقييم الختامي', en: 'Final evaluation' },   // P49
   'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'me/accreditation': { ar: 'ملف الاعتماد الحيّ', en: 'Live accreditation file' }, 'admin/accreditation': { ar: 'ملفات الاعتماد', en: 'Accreditation files' }, 'verify/accreditation': { ar: 'التحقّق من ملف اعتماد', en: 'Verify accreditation file' }, 'me/reports/line': { ar: 'صفحتي في التقرير الختامي', en: 'My page in the final report' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' }, 'verify/form': { ar: 'التحقّق من نموذج اختبار', en: 'Verify an exam form' },

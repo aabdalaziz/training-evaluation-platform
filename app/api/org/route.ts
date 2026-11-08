@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     try { await db.rpc('portal_org_autojoin', { p_user: user.id, p_email: user.email }); } catch { /* تجاهل */ }
     const { data: ms } = await db.from('portal_org_members').select('id,organization_id,role,status,source,created_at').or(`user_id.eq.${user.id},email.ilike.${user.email}`);
     const ids = Array.from(new Set(((ms || []) as any[]).map(m => m.organization_id)));
-    const { data: orgs } = ids.length ? await db.from('portal_organizations').select('id,name_ar,name_en,sector,email_domain,city').in('id', ids) : { data: [] as any[] };
-    const { data: staffOrgs } = c.staff ? await db.from('portal_organizations').select('id,name_ar,name_en,sector,email_domain,city').eq('active', true).order('name_ar') : { data: [] as any[] };
+    const { data: orgs } = ids.length ? await db.from('portal_organizations').select('id,name_ar,name_en,sector,email_domain,city,demo').in('id', ids) : { data: [] as any[] };
+    const { data: staffOrgs } = c.staff ? await db.from('portal_organizations').select('id,name_ar,name_en,sector,email_domain,city,demo').eq('active', true).order('name_ar') : { data: [] as any[] };
     return NextResponse.json({ success: true, staff: c.staff, memberships: ms || [], orgs: orgs || [], all_orgs: staffOrgs || [] });
   }
 

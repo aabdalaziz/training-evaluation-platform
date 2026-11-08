@@ -22,6 +22,7 @@ export const KIND_AR: Record<string, string> = {
   /* P67 سياسة الجهة */ org_policy: 'تغيير سياسة جهة (ختم ATH-OP)', org_codes: 'إنشاء أرقام تدريبية (الأرقام السرية لم تُخزَّن)', org_pin_reset: 'إعادة تعيين رقم سري', org_code_revoked: 'إيقاف رمز دخول', org_code_restored: 'إعادة تشغيل رمز دخول', org_code_locked: 'قفل رمز بعد محاولات فاشلة',
   /* P68 تقرير القيادة */ org_report_issued: 'إصدار تقرير قيادة (ختم ATH-LR)', org_report_decided: 'ختم قرار القيادة داخل التقرير',
   /* P68-ب النموذج المثبَّت */ miaar_form_frozen: 'تثبيت نموذج اختبار (ختم ATH-FM)', miaar_form_changed: 'تعديل نموذج مثبَّت (إصدار جديد)', miaar_form_withdrawn: 'سحب نموذج مثبَّت',
+  /* P69 غرفة العرض */ demo_built: 'بناء مشهد العرض (المنطقة س)', demo_destroyed: 'محو مشهد العرض',
 };
 export const SEVERITY_AR: Record<Severity, string> = { info: 'معلومة', warn: 'تحذير', critical: 'حرج' };
 
