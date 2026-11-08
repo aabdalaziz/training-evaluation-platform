@@ -122,6 +122,13 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - `countAr(n, forms)` already appends «واحد» for n = 1 — pass `one: 'برنامج'`, not `'برنامج واحد'`; feminine nouns need an explicit `n === 1 ? 'جلسة واحدة' : countAr(...)`.
 - Org logo (P68-ج) is an inline `data:image/*` ≤ 96 KB on `portal_organizations.logo` (browser canvas-resizes to ≤ 240 px) — no storage bucket, printed on مِعيار invite posters next to the Athar icon.
 
+## The same paper for everyone, seen by the supervisor first (P68-ب pattern — «النموذج المثبَّت» ATH-FM)
+- Freezing is a staff act on an invite (`freezeForm` in `lib/miaar/forms.ts`): one draw from the approved pool by the invite's blueprint → rows in the revived M1 tables `question_bank_forms` / `question_bank_form_items` (+ `placement_invites.form_id`), signed Ed25519 over item codes only. Each change (`swap` with reason ≥ 3, `redraw`) is a NEW row with the same `code` and `version + 1` (`changes[]` carries what/why); never overwrite.
+- Lock at first session: any `placement_secure_sessions` row with this `invite_id` → swap/redraw answer 423; only `withdraw` (reason ≥ 5) stays possible and is a `warn` shield event. A second freeze on an invite with a live form → 409. A second invite on the same classroom excludes the previous form's items (`draw_meta.excluded_prior`).
+- Engine: `startSession` takes the `frozenDraw` branch when the invite has `form_id`; session `candidate.frozenForm{code,version}`, `questionSource='frozen-<code>-v<n>'`. The public `/verify/form` and `/api/miaar?form=` count sessions by **code + version** (`sessionsOnForm`), not by invite, and never return question text.
+- Honest numbers again: item performance (`computePerformance`) only at k ≥ 5 reports; flags easy ≥ 0.95 · hard ≤ 0.20 · weak discrimination < 0.10.
+- Test traps: `loadApprovedPool` drops mcq items without exactly 4 options; `drawPlan` with `exclude` keeps prior items when a cell runs short (no-overlap asserts need bank ≥ 2× cell); `invalidatePoolCache()` per test (90 s cache).
+
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
 
