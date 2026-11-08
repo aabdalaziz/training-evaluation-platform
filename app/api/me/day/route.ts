@@ -21,6 +21,7 @@ import type { WordMode } from '../../../../lib/portal/day';
 import { markRepliesSeen, voiceUrlFor, validateTrainerVoice, trainerVoicePath, cleanTranscript, VOICE_LIMITS } from '../../../../lib/portal/word-reply'; /* P53 · P54 · P55 */
 import type { VoiceMeta } from '../../../../lib/portal/word-reply';
 import { randomUUID } from 'node:crypto';
+import { freezeGate } from '../../../../lib/shield/freeze';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -56,6 +57,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, me } = c;
+  const fz = await freezeGate(db, me); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   const rl = await rateLimit(db, `day:word:${me.id}`, 3600, WORDS_PER_HOUR) /* P53: تصحيح ترتيب (نافذة، حدّ) */; if (!rl.allowed) return tooMany(rl);
   /* P55: كلمة صوتية تأتي multipart؛ الباقي JSON كما كان */
   let b: Record<string, unknown>; let voiceFile: File | null = null;

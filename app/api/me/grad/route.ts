@@ -15,6 +15,7 @@ import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { loadGradPage, saveLine, setKeep, setPublic, sealGrad, revokeGrad, deleteGrad } from '../../../../lib/grad/store';
 import { P63_NAMES_AR, GRAD_LIMITS, GRAD_FOOT_AR, LINE_PROMPT_AR, CARD_AR, PUBLIC_AR, PUBLIC_KEYS, sinceLinesAr } from '../../../../lib/grad/registry';
+import { freezeGate } from '../../../../lib/shield/freeze';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,6 +47,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
+  const fz = await freezeGate(db, user); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   let body: any; try { body = await req.json(); } catch { return bad('JSON غير صالح'); }
   const action = String(body.action || ''); const now = new Date(); const pid = String(body.program_id || ''); if (!pid) return bad('حدّد البرنامج');
   const rl = await rateLimit(db, `grad:${user.id}`, 3600, 30); if (!rl.allowed) return tooMany(rl);

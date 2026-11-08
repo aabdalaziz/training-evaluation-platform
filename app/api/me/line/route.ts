@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { myLinePage, writeLine, answerCommit, deleteLine } from '../../../../lib/calendar/store';
 import { LINE_FOOT_AR, FIELD_CASE_PATH } from '../../../../lib/calendar/registry';
+import { freezeGate } from '../../../../lib/shield/freeze';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -37,6 +38,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
+  const fz = await freezeGate(db, user); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   let body: any; try { body = await req.json(); } catch { return bad('JSON غير صالح'); }
   const action = String(body.action || ''); const now = new Date();
   const rl = await rateLimit(db, `line:${user.id}`, 3600, 40); if (!rl.allowed) return tooMany(rl);

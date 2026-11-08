@@ -23,6 +23,7 @@ import { STAFF_ROLES } from '../../../lib/portal/sign';
 import { resolveTrainer } from '../../../lib/portal/day';
 import { structureView, myPrograms, saveCourse, saveSlot, deleteSlot, regenerate, savePeriod, deletePeriod, suggest, adopt, substitutes, applySubstitute, corridor, myLecturesToday, requestMove, decideMove } from '../../../lib/diploma/store';
 import { D_NAMES_AR } from '../../../lib/diploma/registry';
+import { freezeGate } from '../../../lib/shield/freeze';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -54,6 +55,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, me } = c;
+  const fz = await freezeGate(db, me); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   let body: any; try { body = await req.json(); } catch { return bad('JSON غير صالح'); }
   const action = String(body.action || ''); if (!isId(String(body.program_id || ''))) return bad('حدّد البرنامج');
   const rl = await rateLimit(db, `diploma:${me.id}`, 3600, 60); if (!rl.allowed) return tooMany(rl); const now = new Date();

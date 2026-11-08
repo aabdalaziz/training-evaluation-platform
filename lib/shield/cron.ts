@@ -1,10 +1,12 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * درع أَثَر (P21) — المهمة اليومية (تُستدعى من كرون /api/followups/send الموجود — لا كرون جديد):
- *  1) تنظيف الدلاء والأحداث القديمة (shield_gc) · 2) التمرين الذاتي وحفظه حدثًا · 3) إن فشل اختبار أو بقي حدث حرج بلا معالجة > 24 ساعة → تنبيه الطاقم.
+ *  1) تنظيف الدلاء والأحداث القديمة والوصول الإداري > 180 يومًا (shield_gc) · 2) التمرين الذاتي وحفظه حدثًا · 3) إن فشل اختبار أو بقي حدث حرج بلا معالجة > 24 ساعة → تنبيه الطاقم
+ *  4) P65: «شهادة الدرع» — ختم الشهر الماضي عند أول تشغيل بعد انتهائه (ATH-SH).
  */
 import { runDrill } from './drill';
 import { securityEvent } from './guard';
+import { sealLastMonthIfDue } from './seal';
 
 export async function runShield(db: any, opts: { dry?: boolean; site: string; env?: Record<string, string | undefined> } = { site: '' }) {
   const env = opts.env || process.env; const out: any = { ok: true };
@@ -19,5 +21,6 @@ export async function runShield(db: any, opts: { dry?: boolean; site: string; en
     out.stale_critical = (stale || []).length;
     if (!opts.dry && (stale || []).length) await securityEvent(db, { severity: 'critical', kind: 'stale_critical', actor: 'cron', meta: { count: (stale || []).length, ids: (stale as any[]).slice(0, 10).map(x => x.id) } }, env);
   } catch { /* */ }
+  try { if (!opts.dry) { const seal = await sealLastMonthIfDue(db, new Date(), env, opts.site); out.seal = seal ? { month: seal.month, code: seal.code } : null; } } catch (e: any) { out.seal_error = e?.message || String(e); }
   return out;
 }

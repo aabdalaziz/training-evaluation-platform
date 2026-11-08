@@ -12,7 +12,7 @@ import { fastToken } from '../../components/Pocket';
 import { supabase } from '../../../lib/supabase/client';
 
 type MapRow = { table: string; label_ar: string; category: string; category_ar: string; purpose_ar: string; basis_ar: string; policy: string; policy_ar: string; retention_ar: string; access_ar: string[]; count: number | null };
-type Data = { me: { email: string; name: string }; map: MapRow[]; totals: { rows: number; tables: number }; consents: { items: { scope: string; label_ar: string; on: boolean; how_ar: string }[]; ledger: any[] }; touches: { at: string; who: string; what: string; kind: string }[]; requests: any[]; erasure: { id: number; execute_after: string } | null; plan: { delete: { label_ar: string }[]; anonymize: { label_ar: string }[]; retain: { label_ar: string; note_ar: string }[] }; notice: { version: string; draft: boolean; url: string }; timelines: { dsr_days: number; hold_days: number }; rights: { id: string; title: string; body: string }[] };
+type Data = { me: { email: string; name: string }; map: MapRow[]; totals: { rows: number; tables: number }; consents: { items: { scope: string; label_ar: string; on: boolean; how_ar: string }[]; ledger: any[] }; touches: { at: string; who: string; what: string; kind: string }[]; who_looked?: { days: number; count: number; staff: number; roles: string[]; last_at: string | null; line_ar: string } | null; requests: any[]; erasure: { id: number; execute_after: string } | null; plan: { delete: { label_ar: string }[]; anonymize: { label_ar: string }[]; retain: { label_ar: string; note_ar: string }[] }; notice: { version: string; draft: boolean; url: string }; timelines: { dsr_days: number; hold_days: number }; rights: { id: string; title: string; body: string }[] };
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 const KIND_AR: Record<string, string> = { access: 'اطّلاع/نسخة', correction: 'تصحيح', erasure: 'نسيان', objection: 'اعتراض', portability: 'نقل' };
 const STATUS_AR: Record<string, string> = { open: 'مفتوح', extended: 'مُمدَّد', done: 'نُفِّذ', rejected: 'مرفوض', cancelled: 'ملغى' };
@@ -106,7 +106,8 @@ function Inner() {
               {data.consents.ledger.length > 0 && <details className="md-ledger"><summary>سجل المنح والسحب ({data.consents.ledger.length})</summary>{data.consents.ledger.map((l: any, i: number) => <div key={i}><span>{l.scope}</span><span>{l.withdrawn_at ? `سُحبت ${fmt(l.withdrawn_at)}` : `مُنحت ${fmt(l.granted_at || l.created_at)}`}</span></div>)}</details>}
             </section>
             <section className="pt-box md-box" data-testid="vault-touches">
-              <h2><Icon name="search" size={18} /> من لمس بياناتي</h2><p className="md-muted">آخر 90 يومًا: وكلاؤك، الذكاء الاصطناعي (بلا هويتك)، الرسائل، طاقم أَثَر، الدرع.</p>
+              <h2><Icon name="search" size={18} /> من لمس بياناتي</h2>
+              {data.who_looked && <div className={`md-looked${data.who_looked.count ? ' on' : ''}`} data-testid="vault-who-looked"><b>مَن نظر إلى بياناتي؟</b><span>{data.who_looked.line_ar}</span><small>كل فتح لملفّك بعينه من الطاقم يُسجَّل بدوره ومكانه وزمانه (لا بالاسم) ويُكنس بعد 180 يومًا — هذا حقّك في المعرفة، لا منّة.</small></div>}<p className="md-muted">آخر 90 يومًا: وكلاؤك، الذكاء الاصطناعي (بلا هويتك)، الرسائل، طاقم أَثَر، الدرع.</p>
               {!data.touches.length && <p className="md-muted">لا لمسات مسجَّلة.</p>}
               <ol className="md-touches">{data.touches.slice(0, 30).map((t, i) => <li key={i} className={`k-${t.kind}`}><time>{fmt(t.at)}</time><b>{t.who}</b><span>{t.what}</span></li>)}</ol>
             </section>
@@ -126,6 +127,7 @@ function Inner() {
 }
 
 const CSS = `
+.md-looked{display:grid;gap:3px;border:1px solid #e5e9f0;border-radius:12px;padding:10px 12px;background:#fafbfd;margin:6px 0 10px;font-size:13px;color:#334155}.md-looked.on{border-color:#fcd34d;background:#fffbeb}.md-looked b{color:#0f2a4e}.md-looked small{color:#64748b}
 .md{max-width:1060px;margin:0 auto;padding:18px 16px 60px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f2a4e}
 .md-head h1{margin:6px 0 4px;font-size:30px}.md-head p{color:#475569;line-height:1.9;margin:0;max-width:760px}
 .md-box{margin-top:14px;padding:16px 18px}.md-box h2{display:flex;align-items:center;gap:8px;font-size:17px;margin:0 0 4px}.md-muted{color:#64748b;font-size:13px;line-height:1.8;margin:4px 0}

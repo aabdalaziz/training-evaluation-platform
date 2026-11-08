@@ -125,3 +125,4 @@ import './p63-grad-day.test'; /* P63 «يوم تخرّجي — بكلماتي» 
 import './p64-first-day.test'; /* P64 «أول يوم — قال من سبقك» */
 import './p66-room-calendar.test'; /* P66 «أيام التدريب وفترات التطبيق» */
 import './p66b-diploma.test'; /* P66-ب «هيكل الدبلوم» */
+import './p65-shield.test'; /* P65 «درع أَثَر — الطبقة الثانية» */

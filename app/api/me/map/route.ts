@@ -13,6 +13,7 @@ import { loadMap, keepThread, declineThread, removeThread, signSnapshot, setSnap
 import { peersForLearner } from '../../../../lib/map/weave-load'; /* P59 */
 import { programPeersForLearner } from '../../../../lib/map/program-weave-load'; /* P61 */
 import { MAP_TITLE, MAP_OFFICIAL, MAP_LIMITS, RULE_AR, KIND_AR } from '../../../../lib/map/registry';
+import { freezeGate } from '../../../../lib/shield/freeze';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
+  const fz = await freezeGate(db, user); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   const rl = await rateLimit(db, `atharmap:${user.id}`, 60, 60); if (!rl.allowed) return tooMany(rl);
   let b: any = {}; try { b = await req.json(); } catch { return bad('طلب غير صالح'); }
   const action = String(b.action || '');

@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { Icon } from '../../lib/ui/icons';
 import { PortalShell } from '../components/PortalShell';
 
-type Pub = { drill: { at: string; passed: number; total: number; ok: boolean } | null; checks: { id: string; title_ar: string; ok: boolean }[]; events_30d: { total: number; by_severity: Record<string, number> }; open_critical: boolean; generated_at: string };
+type Seal = { month: string; code: string; issued_at: string; passed_days: number; total_days: number; checks_total: number; statement_ar: string; partial: boolean; signed: boolean } | null;
+type Pub = { seal?: Seal; drill: { at: string; passed: number; total: number; ok: boolean } | null; checks: { id: string; title_ar: string; ok: boolean }[]; events_30d: { total: number; by_severity: Record<string, number> }; open_critical: boolean; generated_at: string };
 
 export default function SecurityPage() { return <PortalShell><Inner /></PortalShell>; }
 
@@ -19,7 +20,8 @@ const PILLARS = [
   { icon: 'alert', t: 'الحارس', d: 'كشف إعادة استخدام رموز التجديد والأكواد (أثر هجوم)، وإبطال التفويض فورًا، وتنبيه الطاقم وصاحب الحساب في اللحظة نفسها.' },
   { icon: 'settings', t: 'المفاتيح', d: 'مفاتيح التوقيع (شهادات Ed25519 ورموز OAuth) تُدوَّر بلا انقطاع: المفتاح القديم يبقى للتحقق من الشهادات السابقة، والجديد يوقّع من اليوم.' },
   { icon: 'globe', t: 'الباب المعلن', d: 'سياسة إفصاح مسؤول وفق RFC 9116 وملف security.txt قياسي — الباحثون يعرفون أين يطرقون.' },
-  { icon: 'check', t: 'التمرين', d: 'الدرع يختبر نفسه كل يوم بأربعة عشر اختبارًا حيًا على الموقع نفسه، والنتيجة تُعرض هنا علنًا.' },
+  { icon: 'check', t: 'التمرين', d: 'الدرع يختبر نفسه كل يوم بسبعة عشر اختبارًا حيًا على الموقع نفسه (الترويسات · الرموز · الحدود · RLS على كل الجداول · مسارات البيانات الشخصية)، والنتيجة تُعرض هنا علنًا.' },
+  { icon: 'users', t: 'الطبقة الثانية', d: 'سجلّ وصول إداري يخبر كل متدرّب مَن من الطاقم فتح ملفّه (أدوار لا أسماء) · خروج الجهة بأمر واحد: تصدير موقَّع ومحو بإيصال موقَّع · زرّ تجميد يجعل جهة واحدة «قراءة فقط» أثناء أي حادثة.' },
 ];
 
 function Inner() {
@@ -41,6 +43,15 @@ function Inner() {
         {p && <p className="sc-muted">خلال 30 يومًا: {p.events_30d.total} حدثًا أمنيًا مسجَّلًا (منها {p.events_30d.by_severity?.critical || 0} حرج · {p.events_30d.by_severity?.warn || 0} تحذير) — {p.open_critical ? 'يعمل الطاقم على حدث حرج الآن.' : 'لا حدث حرج معلّقًا.'} الأرقام مجهّلة ولا تكشف تفاصيل تفيد مهاجمًا.</p>}
       </section>
 
+      <section className="sc-card sc-seal" data-testid="shield-seal">
+        <h2><Icon name="award" size={16} /> شهادة الدرع الشهرية</h2>
+        {p?.seal ? <>
+          <p className="sc-sealline"><b dir="ltr">{p.seal.code}</b> · {p.seal.partial ? 'ختم جزئي (الشهر الجاري)' : 'شهر مكتمل'} · {p.seal.passed_days}/{p.seal.total_days} يومًا بنجاح كامل · {p.seal.checks_total} اختبارًا يوميًا{p.seal.signed ? ' · موقَّعة Ed25519' : ''}</p>
+          <p className="sc-muted">{p.seal.statement_ar}</p>
+          <div className="sc-actions"><Link className="pt-btn light" href={`/verify/shield?code=${p.seal.code}`}>تحقّق من هذا الختم</Link></div>
+        </> : <p className="sc-muted">كل شهر يُختم سجلّ التمرين اليومي وثيقةً موقَّعة برمز ATH-SH يمكن لأي جهة وضعها في ملفّها والتحقّق منها في <Link href="/verify/shield">/verify/shield</Link>. {p ? 'الختم الأول يصدر مع أول يوم بعد انتهاء الشهر الجاري.' : ''}</p>}
+      </section>
+
       <section className="sc-grid">{PILLARS.map(x => <article key={x.t} className="sc-card"><h3><Icon name={x.icon as any} size={16} /> {x.t}</h3><p>{x.d}</p></article>)}</section>
 
       <section className="sc-card" id="data">
@@ -49,6 +60,9 @@ function Inner() {
           <li><b>بياناتك في قاعدة بيانات بسياسات صفوف (RLS)</b> على كل جدول — لا يصل مستخدم إلى صف لا يخصّه حتى لو حاول مباشرة.</li>
           <li><b>الوكلاء والمساعدون</b> لا يدخلون إلا بتفويضك الصريح (OAuth 2.1 + PKCE) بنطاقات محدودة، وتراه وتُبطله في «وكلائي» بنقرة. أي محاولة إعادة استخدام رمز تُبطل التفويض كله وتُبلغك.</li>
           <li><b>الشهادات</b> موقَّعة Ed25519 ويمكن لأي جهة التحقق منها دون الاتصال بنا؛ المفاتيح المتقاعدة تبقى منشورة فلا تسقط شهادة قديمة.</li>
+          <li><b>مَن نظر إلى بياناتي؟</b> كل فتح لملفّك من الطاقم يُسجَّل (مَن بدوره · أين · متى) وتراه أنت في «ذاكرتي»؛ الطاقم يراه في سجلّ التدقيق، ويُكنس بعد 180 يومًا.</li>
+          <li><b>خروج الجهة بأمر واحد</b>: الجهة تستردّ كل بياناتها ملفًّا موقَّعًا (ATH-EX)، أو تطلب محوها بمهلة 7 أيام ثم إيصال موقَّع (ATH-ER) يُتحقّق منه في <Link href="/verify/erasure">/verify/erasure</Link> — وحسابات الأفراد وأثرهم يبقى لهم.</li>
+          <li><b>سجلّ أنشطة المعالجة (PDPL)</b> مولَّد من سجلّ الخزنة نفسه لا مكتوب يدويًا — ملخّصه العام في <Link href="/privacy/processing">/privacy/processing</Link>.</li>
           <li><b>لا نبيع البيانات ولا نشاركها</b> مع طرف ثالث إلا لتشغيل الخدمة (استضافة، بريد، دفع) وبالحد الأدنى. مبدأنا: «الإنسان يعتمد، الآلة تساعد».</li>
         </ul>
       </section>
@@ -78,5 +92,6 @@ const CSS = `
 .sc-list{margin:6px 0;padding-inline-start:20px;color:#334155;font-size:14px;line-height:1.9}.sc-list b{color:#0f2a4e}
 .sc-report{border-color:#f1e2b8;background:linear-gradient(180deg,#fffdf5,#fff)}.sc-actions{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
 .sc-muted{color:#64748b;font-size:13px;line-height:1.7}
+.sc-seal{border-color:#e9d9a8;background:linear-gradient(180deg,#fffdf5,#fff)}.sc-sealline{margin:4px 0;font-size:14px;color:#0f2a4e}.sc-sealline b{background:#fff;border:1px solid #e9d9a8;border-radius:8px;padding:2px 8px;font-size:13px}
 .pt-btn{display:inline-flex;align-items:center;justify-content:center;border:0;background:#0f2a4e;color:#fff;border-radius:12px;padding:10px 18px;font:inherit;font-size:14px;font-weight:800;text-decoration:none;cursor:pointer}.pt-btn.gold{background:#c9a24b;color:#0f2a4e}.pt-btn.light{background:#e6f4f3;color:#0b6f69}
 `;

@@ -147,10 +147,12 @@ export const REGISTRY: RegistryEntry[] = [
   { table: 'portal_dsr_requests', label_ar: 'طلباتي في الخزنة', label_en: 'Data subject requests', category: 'security', purpose_ar: 'إثبات تنفيذ حقوقك في المدة النظامية', basis: 'legal', data_ar: 'البريد · النوع · المواعيد', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'سجل الطلب يُحتفظ 3 سنوات كإثبات للامتثال (بلا تفاصيلك بعد التنفيذ).', access: ['self', 'staff'] },
   { table: 'portal_consents', label_ar: 'دفتر موافقاتي', label_en: 'Consent ledger', category: 'security', purpose_ar: 'إثبات ما وافقت عليه ومتى سحبته', basis: 'legal', data_ar: 'البريد · النطاق · التواريخ', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'إثبات الموافقة/السحب يُحتفظ 3 سنوات.', access: ['self', 'staff'] },
   { table: 'portal_erasure_queue', label_ar: 'طلب النسيان', label_en: 'Erasure queue', category: 'security', purpose_ar: 'تنفيذ النسيان بعد الحجر وإصدار إيصاله', basis: 'legal', data_ar: 'البريد (يُجزَّأ بعد التنفيذ) · الخطة · الإيصال', userCol: 'user_id', emailCol: 'email', piiCols: [], policy: 'retain_legal', retentionDays: null, tsCol: null, retainNote_ar: 'إيصال النسيان يبقى 3 سنوات ببصمة لا باسم.', access: ['self', 'staff'] },
+  { table: 'portal_admin_access', label_ar: 'سجلّ الوصول الإداري', label_en: 'Staff access log', category: 'security', purpose_ar: 'إخبارك مَن من الطاقم فتح ملفّك (أدوار لا أسماء) ومساءلة الطاقم', basis: 'legitimate', data_ar: 'معرّف عضو الطاقم · دوره · المسار · بصمة بريدك (لا بريدك) · اليوم', userCol: 'user_id', emailCol: null, piiCols: ['ip_masked'], policy: 'delete', retentionDays: 180, tsCol: 'last_at', access: ['self', 'staff'] },
 ];
 
 /** جداول يستعملها الكود ولا تحمل بيانات شخصية (أو تحمل بيانات طاقم إداري فقط ضمن عقد العمل) — مذكورة صراحة حتى يكتمل اختبار التغطية */
 export const NON_PERSONAL_TABLES = [
+  'portal_shield_seals',   // P65: أختام «شهادة الدرع» الشهرية (نتائج تمرين — لا أشخاص)
   'portal_roles',   // P42: كتالوج الأدوار (أسماء وصلاحيات — لا أشخاص)
   'portal_report_templates',   // P46: قالب مهارات/استراتيجيات التقرير لكل برنامج — لا أشخاص
   'portal_program_versions',   // P47-ب: نسخ الدفعات (قبل/بعد · التعديلات · رسالة الدفعة القادمة) — created_by/created_name للمصمّم بصفته المهنية لا بيانات متدرّبين

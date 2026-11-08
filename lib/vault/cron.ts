@@ -2,7 +2,7 @@
 /**
  * خزنة أَثَر — «الحارس الزمني» يعمل ضمن الكرون اليومي الحالي (لا كرون جديد):
  *  1) سياسات الاحتفاظ من السجل (حذف/تجهيل ما تجاوز مدته) عبر RPC vault_retention
- *  2) تنفيذ النسيان الذي انتهى حجره
+ *  2) تنفيذ النسيان الذي انتهى حجره (أفراد) + محو الجهات التي انتهت مهلتها (P65، إيصال ATH-ER)
  *  3) تذكير الطاقم بطلبات تستحق خلال ≤ 5 أيام أو تأخرت
  *  4) تذكير بحوادث مفتوحة مضى عليها > 48 ساعة بلا إبلاغ
  */
@@ -10,6 +10,7 @@ import { retentionRules } from './registry';
 import { dueErasures, executeErasure } from './erasure';
 import { dueSoon, daysLeft } from './dsr';
 import { openIncidents, hoursLeft } from './incidents';
+import { dueOrgErasures, executeOrgErase } from './org'; /* P65 خروج الجهة */
 import { notify } from '../portal/notify';
 
 const staffEmails = (env: Record<string, string | undefined>) => String(env.DATA_PROTECTION_CONTACT || env.NOTIFY_EMAILS || env.ADMIN_EMAILS || '').split(/[,;\s]+/).map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -38,6 +39,10 @@ export async function runVault(db: any, opts: { dry?: boolean; site: string; env
     const due = await dueErasures(db, now);
     for (const q of due) { if (dry) { result.erasures.push({ id: q.id, dry: true }); continue; } const r = await executeErasure(db, q, site, env); result.erasures.push({ id: q.id, ok: r.ok, auth: r.authDeleted }); }
   } catch (e: any) { result.errors.push('erasure: ' + (e?.message || e)); }
+  try { /* P65: محو الجهات التي انتهت مهلتها (7 أيام) */
+    const orgs = await dueOrgErasures(db, now); result.org_erasures = [];
+    for (const o of orgs) { if (dry) { result.org_erasures.push({ id: o.id, dry: true }); continue; } const r = await executeOrgErase(db, o, 'cron', env, site); result.org_erasures.push({ id: o.id, ok: r.ok, code: r.ok ? r.code : undefined }); }
+  } catch (e: any) { result.errors.push('org_erasure: ' + (e?.message || e)); }
   const staff = staffEmails(env);
   try {
     const soon = await dueSoon(db, 5, now.getTime());

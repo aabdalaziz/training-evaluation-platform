@@ -17,6 +17,8 @@ export const KIND_AR: Record<string, string> = {
   mcp_401_burst: 'محاولات متكررة بلا تفويض على /mcp', rate_limited: 'تجاوز حد المعدل', delegation_created: 'تفويض شخصي جديد', delegation_revoked: 'إبطال تفويض',
   key_created: 'مفتاح جهة جديد', key_rotated: 'تدوير مفتاح جهة', key_revoked: 'إبطال مفتاح جهة', client_registered: 'تسجيل عميل OAuth', csp_report: 'تقرير CSP',
   scope_escalation: 'محاولة استخدام نطاق غير ممنوح', vuln_report: 'بلاغ ثغرة من باحث', drill: 'تمرين الدرع', stale_critical: 'أحداث حرجة بلا معالجة منذ أكثر من يوم', body_rejected: 'جسم طلب مرفوض (حجم/عمق)', cron_bad_secret: 'سرّ كرون خاطئ',
+  /* P65 الطبقة الثانية */ shield_seal: 'ختم شهادة الدرع الشهرية', org_frozen: 'تجميد جهة (قراءة فقط)', org_unfrozen: 'رفع تجميد جهة', org_export: 'تصدير بيانات جهة',
+  org_erase_requested: 'طلب محو جهة (مهلة 7 أيام)', org_erase_cancelled: 'إلغاء محو جهة', org_erased: 'تنفيذ محو جهة (إيصال موقَّع)',
 };
 export const SEVERITY_AR: Record<Severity, string> = { info: 'معلومة', warn: 'تحذير', critical: 'حرج' };
 
@@ -25,6 +27,7 @@ export const DEFAULT_SEVERITY: Record<string, Severity> = {
   token_reuse: 'critical', code_reuse: 'critical', vuln_report: 'critical', cron_bad_secret: 'warn', pkce_fail: 'warn', bad_redirect: 'warn', mcp_401_burst: 'warn',
   scope_escalation: 'warn', rate_limited: 'info', delegation_created: 'info', delegation_revoked: 'info', key_created: 'info', key_rotated: 'info', key_revoked: 'info',
   client_registered: 'info', csp_report: 'info', drill: 'info', body_rejected: 'info', stale_critical: 'critical',
+  shield_seal: 'info', org_frozen: 'critical', org_unfrozen: 'info', org_export: 'warn', org_erase_requested: 'warn', org_erase_cancelled: 'info', org_erased: 'warn',
 };
 
 const staffEmails = (env: Record<string, string | undefined>) => String(env.NOTIFY_EMAILS || env.ADMIN_EMAILS || '').split(/[,;\s]+/).map(s => s.trim().toLowerCase()).filter(Boolean);

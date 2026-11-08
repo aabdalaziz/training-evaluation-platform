@@ -88,7 +88,7 @@ export async function runDrill(site: string, env: Record<string, string | undefi
   let got429 = false; let n = 0; for (; n < 8 && !got429; n++) { const r = await f('/oauth/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Athar-Drill': '1' }, body: 'grant_type=authorization_code&code=drill-' + n + '&code_verifier=drill-verifier-drill-verifier-drill-verifier-123&redirect_uri=https%3A%2F%2Fexample.org%2Fcb&client_id=drill' }); if (r && r.status === 429) got429 = true; } add('rate_limit', 'حد المعدل يوقف القصف على /oauth/token', got429, got429 ? `429 بعد ${n} طلبًا` : `لا 429 بعد ${n} طلبًا`);
   // 10 لا تسريب أسرار إلى NEXT_PUBLIC_*
   const leak = publicEnvLeak(env); add('env_leak', 'لا أسرار في متغيرات المتصفح (NEXT_PUBLIC_*)', leak.length === 0, leak.length ? `مشبوه: ${leak.join(', ')}` : 'نظيف');
-  // 11 RLS على كل جداول portal_*
+  // 11 RLS على كل جداول portal_* (P21 — يبقى كما هو؛ الفحص الشامل في 15)
   let rlsOk = false; let rlsDetail = 'RPC غير متاح — نفّذ SQL 725'; try { const { data, error } = await db.rpc('shield_rls_report'); if (!error && Array.isArray(data)) { const off = (data as any[]).filter(r => String(r.table_name).startsWith('portal_') && !r.rls_enabled).map(r => r.table_name); rlsOk = off.length === 0; rlsDetail = off.length ? `بلا RLS: ${off.join(', ')}` : `${(data as any[]).filter(r => String(r.table_name).startsWith('portal_')).length} جدول portal_* كلها بـ RLS`; } } catch { /* */ } add('rls', 'RLS مفعَّل على كل جداول البوابة', rlsOk, rlsDetail);
   // 12 security.txt صالح
   const st = await f('/.well-known/security.txt'); const stt = st ? await st.text().catch(() => '') : ''; const sc = securityTxtCheck(stt); add('security_txt', 'security.txt صالح (RFC 9116)', !!st && st.status === 200 && sc.ok, st ? (sc.ok ? 'صالح' : sc.problems.join(' · ')) : 'لا استجابة');
@@ -98,6 +98,19 @@ export async function runDrill(site: string, env: Record<string, string | undefi
   const pv = await f('/privacy'); const pj = await f('/.well-known/privacy.json'); let pjOk = false; try { const j = pj ? await pj.json() : null; pjOk = !!j && Array.isArray(j.processing) && j.processing.length > 10 && !!j.controller; } catch { /* */ }
   let late: number | null = null; try { const { data, error } = await db.from('portal_dsr_requests').select('id').in('status', ['open', 'extended']).lt('due_at', new Date().toISOString()).limit(50); late = error ? null : (data || []).length; } catch { /* */ }
   add('vault', 'خزنة أَثَر: إشعار الخصوصية حيّ ولا طلب بيانات متأخرًا', !!pv && pv.status === 200 && pjOk && late === 0, `${pv ? `/privacy ${pv.status}` : 'لا استجابة'} · privacy.json ${pjOk ? 'صالح' : 'ناقص'} · ${late === null ? 'جدول الطلبات غير متاح (SQL 761)' : late === 0 ? 'لا طلبات متأخرة' : `${late} طلب متأخر`}`);
+  // ——— P65 الطبقة الثانية ———
+  // 15 RLS على كل جداول public (لا portal_* فقط) + 16 لا جدول يكتب فيه anon — من تقرير السياسات (shield_policy_report؛ احتياط: shield_rls_report)
+  let pol: any[] | null = null; let polSrc = ''; try { const { data, error } = await db.rpc('shield_policy_report'); if (!error && Array.isArray(data)) { pol = data; polSrc = 'policy'; } } catch { /* */ }
+  if (!pol) { try { const { data, error } = await db.rpc('shield_rls_report'); if (!error && Array.isArray(data)) { pol = data; polSrc = 'rls'; } } catch { /* */ } }
+  const noRls = (pol || []).filter((r: any) => !r.rls_enabled).map((r: any) => String(r.table_name));
+  add('rls_all', 'RLS مفعَّل على كل جداول public (القديمة والجديدة)', !!pol && noRls.length === 0, pol ? (noRls.length ? `بلا RLS: ${noRls.slice(0, 8).join(', ')}${noRls.length > 8 ? ` +${noRls.length - 8}` : ''}` : `${pol.length} جدولًا كلّها مفعَّلة`) : 'RPC غير متاح — نفّذ supabase/p65-shield-layer2.sql');
+  const anonW = polSrc === 'policy' ? (pol || []).filter((r: any) => r.anon_write).map((r: any) => String(r.table_name)) : null; const openR = polSrc === 'policy' ? (pol || []).filter((r: any) => r.open_read).length : null;
+  add('anon_write', 'لا جدول يسمح للزائر المجهول بالكتابة', anonW !== null && anonW.length === 0, anonW === null ? 'يحتاج shield_policy_report — نفّذ SQL P65' : anonW.length ? `anon يكتب في: ${anonW.slice(0, 8).join(', ')}` : `لا كتابة مجهولة · قراءة مفتوحة في ${openR} جدولًا (كتالوجات — تُراجَع في اللوحة)`);
+  // 17 مسارات البيانات الشخصية ترفض بلا دخول (401/403) — IDOR الأساسي؛ التبادل بين مستخدمَين يُختبر في E2E بالرموز
+  const PII_API = ['/api/vault', '/api/vault/admin?view=all', '/api/shield', '/api/diploma?list=1', '/api/me/line', '/api/me/day', '/api/admin/miaar/exit?classroom=drill'];
+  const probes: string[] = []; let leaks = 0;
+  for (const path of PII_API) { const r = await f(path); const code = r ? r.status : 0; probes.push(`${path.split('?')[0]}:${code}`); if (!(code === 401 || code === 403 || code === 405)) leaks++; }
+  add('unauth_pii', 'مسارات البيانات الشخصية ترفض الطلب بلا دخول', leaks === 0, probes.join(' · '));
   const passed = checks.filter(c => c.ok).length;
   return { at: new Date().toISOString(), passed, total: checks.length, checks, ms: Date.now() - t0 };
 }

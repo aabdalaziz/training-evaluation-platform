@@ -17,6 +17,7 @@ import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { myLetters, myPrograms, writeLetter, openLetter, replyLetter, deleteLetter, cohortFor, writeCohortLine, deleteCohortLine } from '../../../../lib/letters/store';
 import { legacyLetters } from '../../../../lib/letters/legacy'; /* P63: رسائل P39 القديمة — قراءة فقط */
 import { P62_NAMES_AR, HORIZONS, PROMPTS, promptOfDay, LETTER_LIMITS, LETTER_FOOT_AR, chainOf } from '../../../../lib/letters/self';
+import { freezeGate } from '../../../../lib/shield/freeze';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,6 +48,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
+  const fz = await freezeGate(db, user); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   let body: any; try { body = await req.json(); } catch { return bad('JSON غير صالح'); }
   const action = String(body.action || ''); const now = new Date(); const id = Number(body.id || 0);
   if (['write', 'reply', 'cohort_write'].includes(action)) { const rl = await rateLimit(db, `letter:${user.id}`, 3600, 20); if (!rl.allowed) return tooMany(rl); }

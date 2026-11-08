@@ -9,12 +9,15 @@
  *  bare: للوحة القيادة (/dashboard) التي تملك قائمتها الجانبية بهوية أَثَر — الحارس فقط بلا شريط ولا تذييل.
  */
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Icon } from '../../lib/ui/icons';
 import { BRAND } from '../../lib/portal/content';
 import { ROOMS, canOpen, roomFor } from '../../lib/portal/rooms';
 import { useMyRoles } from './Brand';
 import { SignCounter } from './SignCounter'; /* P50 «توقيعي» */
+import { isPiiPath } from '../../lib/shield/paths'; /* P65 منارة الوصول الإداري */
+import { sbLazy } from '../../lib/supabase/lazy';
 
 const HALL = '/hub?stay=1';
 
@@ -25,6 +28,14 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
   /* الحارس: غرفة معروفة → صلاحيتها؛ غرفة غير معروفة تحت /admin → أي صفة طاقم */
   const denied = !!my && (room ? !canOpen(room, my.permissions, my.staff) : !(my.staff || my.permissions.includes('*')));
   const title = room?.label || 'غرفة إدارية';
+  /* P65: صفحة إدارية تحمل بيانات شخصية → منارة واحدة (الخادم يجمعها صفًّا لكل مستخدم × مسار × يوم) */
+  useEffect(() => {
+    if (denied || !my || !isPiiPath(pathname)) return;
+    let alive = true;
+    (async () => { try { const sb = await sbLazy(); const { data } = await sb.auth.getSession(); const tk = data.session?.access_token; if (!tk || !alive) return;
+      await fetch('/api/shield/access', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ path: pathname }) }); } catch { /* صامت */ } })();
+    return () => { alive = false; };
+  }, [pathname, denied, my]);
   if (denied) {
     const mine = ROOMS.filter(r => (r.nav || r.side) && canOpen(r, my!.permissions, my!.staff)).slice(0, 6);
     return (

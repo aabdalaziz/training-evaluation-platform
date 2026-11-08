@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import { delegateFromHeaders } from '../../../lib/portal/oauth';
 import { notify } from '../../../lib/portal/notify';
 import { subjectCounts, exportSubject, renderExportHtml, touches, signReceipt, liveConsents, sha256 } from '../../../lib/vault/subject';
+import { accessForSubject, subjectAccessLineAr } from '../../../lib/shield/access'; /* P65 ★1 «مَن نظر إلى بياناتي؟» */
 import { createDsr, openDsrs, cancelDsr, DSR_KIND_AR } from '../../../lib/vault/dsr';
 import { requestErasure, erasureStatus, cancelOwnErasure } from '../../../lib/vault/erasure';
 import { erasurePlan, NOTICE_DRAFT, NOTICE_VERSION, RIGHTS_AR, ERASURE_HOLD_DAYS, DSR_DAYS } from '../../../lib/vault/registry';
@@ -56,7 +57,8 @@ export async function GET(req: Request) {
     return NextResponse.json({ success: true, summary: { email: me.email, tables_with_data: nonEmpty.length, rows_total: total, categories: Array.from(new Set(nonEmpty.map(m => m.category_ar))), consents_on: consents.items.filter(c => c.on).map(c => c.label_ar), open_requests: reqs.map(r => ({ kind: DSR_KIND_AR[r.kind], due: String(r.due_at).slice(0, 10) })), erasure_pending: er ? String(er.execute_after).slice(0, 10) : null, rights_ar: RIGHTS_AR.map(r => r.title), self_service: `${S}/me/data`, notice: `${S}/privacy`, notice_version: NOTICE_VERSION, via: me.delegate ? `وكيل: ${me.client}` : 'صاحب الحساب' } });
   }
   const t = me.delegate ? [] : await touches(db, me);
-  return NextResponse.json({ success: true, me: { id: me.id, email: me.email, name: me.name, delegate: me.delegate }, map, totals: { rows: total, tables: nonEmpty.length }, consents, touches: t, requests: reqs, erasure: er ? { id: er.id, execute_after: er.execute_after, created_at: er.created_at } : null, plan: erasurePlan(), notice: { version: NOTICE_VERSION, draft: NOTICE_DRAFT, url: `${S}/privacy` }, timelines: { dsr_days: DSR_DAYS, hold_days: ERASURE_HOLD_DAYS }, rights: RIGHTS_AR });
+  const acc = me.delegate ? null : await accessForSubject(db, me.email, 30).catch(() => null); const who_looked = acc ? { ...acc, line_ar: subjectAccessLineAr(acc) } : null;
+  return NextResponse.json({ success: true, me: { id: me.id, email: me.email, name: me.name, delegate: me.delegate }, map, totals: { rows: total, tables: nonEmpty.length }, consents, touches: t, who_looked, requests: reqs, erasure: er ? { id: er.id, execute_after: er.execute_after, created_at: er.created_at } : null, plan: erasurePlan(), notice: { version: NOTICE_VERSION, draft: NOTICE_DRAFT, url: `${S}/privacy` }, timelines: { dsr_days: DSR_DAYS, hold_days: ERASURE_HOLD_DAYS }, rights: RIGHTS_AR });
 }
 
 export async function POST(req: Request) {

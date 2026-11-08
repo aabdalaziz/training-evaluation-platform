@@ -11,6 +11,7 @@ export type Subject = { id: string | null; email: string; name?: string | null }
 export type TableCount = { table: string; label_ar: string; category: string; category_ar: string; purpose_ar: string; basis_ar: string; policy: string; policy_ar: string; retention_ar: string; access_ar: string[]; count: number | null };
 
 export const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+const hashEmailP65 = (e: string) => 'sha256:' + sha256(String(e || '').trim().toLowerCase()).slice(0, 32); /* = hashEmail في erasure.ts (بلا استيراد دائري) */
 const esc = (s: any) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
 export const retentionText = (r: RegistryEntry) => r.policy === 'retain_legal' ? (r.retainNote_ar || 'مدة نظامية') : r.retentionDays ? (r.retentionDays >= 365 ? `${Math.round(r.retentionDays / 365)} سنوات ثم ${r.policy === 'delete' ? 'حذف' : 'تجهيل'} تلقائي` : `${r.retentionDays} يومًا ثم ${r.policy === 'delete' ? 'حذف' : 'تجهيل'} تلقائي`) : 'ما دام حسابك قائمًا (يُزال عند النسيان)';
 
@@ -86,6 +87,9 @@ export async function touches(db: any, s: Subject, days = 90): Promise<Touch[]> 
     for (const a of au) out.push({ at: a.created_at, who: `طاقم أَثَر (${a.actor_role || 'نظام'})`, what: `${a.action} على ${a.entity_type}`, kind: 'staff' });
     const se = await safe(db.from('portal_security_events').select('at,kind,severity').eq('user_id', s.id).gte('at', since).order('at', { ascending: false }).limit(10));
     for (const e of se) out.push({ at: e.at, who: 'درع أَثَر', what: `حدث ${e.kind} (${e.severity})`, kind: 'security' });
+    /* P65 «مَن نظر إلى بياناتي؟»: فتح الطاقم ملفّك بعينه (أدوار لا أسماء) */
+    const acc = await safe(db.from('portal_admin_access').select('last_at,role,path,hits').eq('subject_hash', hashEmailP65(s.email)).gte('day', since.slice(0, 10)).order('last_at', { ascending: false }).limit(20));
+    for (const a of acc) out.push({ at: a.last_at, who: `طاقم أَثَر (${a.role || 'طاقم'})`, what: `فتح ملفّك في ${a.path}${Number(a.hits) > 1 ? ` (${a.hits} مرّات)` : ''}`, kind: 'staff' });
   }
   return out.sort((a, b) => (a.at < b.at ? 1 : -1)).slice(0, 80);
 }

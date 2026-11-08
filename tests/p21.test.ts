@@ -22,6 +22,7 @@ function fakeDb(opts: { rpcFail?: boolean } = {}) {
       if (opts.rpcFail) return { data: null, error: { message: 'down' } };
       if (name === 'shield_hit') { const slot = Math.floor(Date.now() / 1000 / args.p_window_s); const k = `${args.p_key}:${slot}`; const c = (buckets.get(k) || 0) + 1; buckets.set(k, c); return { data: { allowed: c <= args.p_limit, count: c, limit: args.p_limit, retry_after: c <= args.p_limit ? 0 : 7 }, error: null }; }
       if (name === 'shield_rls_report') return { data: [{ table_name: 'portal_security_events', rls_enabled: true, policy_count: 0 }, { table_name: 'portal_delegations', rls_enabled: true, policy_count: 2 }], error: null };
+      if (name === 'shield_policy_report') return { data: [{ table_name: 'portal_security_events', rls_enabled: true, policy_count: 0, anon_read: false, anon_write: false, open_read: false }, { table_name: 'programs', rls_enabled: true, policy_count: 2, anon_read: true, anon_write: false, open_read: true }], error: null };
       if (name === 'shield_gc') return { data: { buckets: 0, events: 0 }, error: null };
       return { data: null, error: { message: 'unknown rpc' } };
     },
@@ -117,7 +118,7 @@ test('P21 الحارس: الأحداث تُحفظ، الحرج يُنبّه ال
   const s = await shieldSummary(db, 30); assert.equal(s.total, 3, 'ملخص 3 أحداث'); assert.equal(s.open_critical, 1, 'حرج واحد مفتوح'); assert.equal(s.by_kind.token_reuse, 1, 'حسب النوع');
 });
 
-test('P21 التمرين الذاتي: يشنّ 14 اختبارًا على خادم وهمي ويقرأ النتيجة بدقة (ناجح/فاشل)', async () => {
+test('P21+P65 التمرين الذاتي: يشنّ 17 اختبارًا على خادم وهمي ويقرأ النتيجة بدقة (ناجح/فاشل)', async () => {
   _resetMem(); const db = fakeDb(); const env = { VC_SIGNING_KEY: K1, NEXT_PUBLIC_SITE_URL: 'https://t.example' } as any;
   const H = { 'strict-transport-security': 'max-age=63072000', 'x-content-type-options': 'nosniff', 'referrer-policy': 'strict-origin-when-cross-origin', 'permissions-policy': 'camera=(self)', 'content-security-policy': "frame-ancestors 'none'" };
   let tokenHits = 0;
@@ -132,10 +133,11 @@ test('P21 التمرين الذاتي: يشنّ 14 اختبارًا على خا�
     if (p === '/.well-known/security.txt') return new Response(securityTxt(env, new Date()));
     if (p === '/privacy') return new Response('<html>privacy</html>', { headers: H });
     if (p === '/.well-known/privacy.json') return new Response(JSON.stringify({ controller: { name: 'x' }, processing: new Array(12).fill({ id: 't' }) }));
+    if (p.startsWith('/api/')) return new Response('{}', { status: 401 }); /* P65: مسارات البيانات الشخصية بلا دخول */
     return new Response('nf', { status: 404 });
   };
   const r = await runDrill('https://t.example', env, db, goodServer);
-  assert.equal(r.total, 14, '14 اختبارًا'); assert.equal(r.passed, 14, `كلها ناجحة: ${r.checks.filter(c => !c.ok).map(c => c.id + ':' + c.detail).join(' | ')}`);
+  assert.equal(r.total, 17, '17 اختبارًا'); assert.equal(r.passed, 17, `كلها ناجحة: ${r.checks.filter(c => !c.ok).map(c => c.id + ':' + c.detail).join(' | ')}`);
   assert.ok(r.checks.find(c => c.id === 'rate_limit')!.detail.includes('429'), 'يذكر 429');
   const weakServer: typeof fetch = async (input: any, init?: any) => { const p = new URL(String(input)).pathname; if (p === '/') return new Response('ok'); if (p === '/mcp') return new Response('{}', { status: 200 }); if (p === '/oauth/token') return new Response('{}', { status: 400 }); return goodServer(input, init); };
   const w = await runDrill('https://t.example', { ...env, NEXT_PUBLIC_LEAK: 'sk_live_1234567890' }, db, weakServer);
