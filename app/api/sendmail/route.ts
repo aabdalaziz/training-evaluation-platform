@@ -1,55 +1,15 @@
-// @ts-nocheck
+// © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
+/**
+ * /api/sendmail — مسار قديم (الإصدار الأول) أُوقف نهائيًا في الفحص الأمني 2026-11-15.
+ *  كان يرسل بريدًا إلى أي عنوان يُمرَّر في الجسم دون تحقّق من الهوية — أي «مُرحِّل بريد مفتوح» باسم النطاق الرسمي.
+ *  البديل المعتمد: lib/portal/notify.ts (هوية + سجلّ تسليم + قناة واحدة لكل مستلم) عبر /api/reports/email وبقية المسارات المحمية.
+ *  يعيد 410 Gone دون قراءة الجسم ودون أي اتصال خارجي، ويُسجَّل الاستدعاء في سجلّ الخادم فقط (بلا بيانات شخصية).
+ */
 import { NextResponse } from 'next/server';
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    const { trainer_email, trainer_name, room_code, avg_score, total_responses } = body;
+export const dynamic = 'force-dynamic';
 
-    console.log('Email request:', body);
+const gone = () => NextResponse.json({ success: false, error: 'gone', message: 'هذا المسار أُوقف. استخدم المسارات المحمية لإرسال البريد.' }, { status: 410, headers: { 'Cache-Control': 'no-store', Allow: '' } });
 
-    const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    
-    if (!RESEND_API_KEY) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'API Key missing',
-        env: Object.keys(process.env).filter(k => k.includes('RESEND'))
-      }, { status: 500 });
-    }
-
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: (process.env.REPORTS_FROM_EMAIL || '').trim() || 'أَثَر <reports@athar.university>',
-        to: trainer_email,
-        subject: `تقرير القاعة ${room_code}`,
-        html: `
-          <div dir="rtl" style="font-family: Tahoma; padding: 20px;">
-            <h1>مرحباً ${trainer_name}</h1>
-            <p>تقرير القاعة ${room_code}</p>
-            <p>متوسط الرضا: ${avg_score}/5</p>
-            <p>عدد التقييمات: ${total_responses}</p>
-          </div>
-        `
-      })
-    });
-
-    const result = await response.json();
-    console.log('Resend response:', result);
-
-    if (!response.ok) {
-      return NextResponse.json({ success: false, error: result.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, data: result });
-
-  } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
+export async function POST() { console.warn('[sendmail] legacy route called — 410'); return gone(); }
+export async function GET() { return gone(); }

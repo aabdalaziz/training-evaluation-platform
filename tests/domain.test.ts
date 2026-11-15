@@ -7,6 +7,7 @@ import { DEFAULT_SITE, normalizeSite } from '../lib/portal/open';
 import { DEFAULT_FROM, fromAddress, channelEnv } from '../lib/portal/notify';
 import robots from '../app/robots';
 import sitemap, { PUBLIC_PATHS } from '../app/sitemap';
+import { POST as sendmailPost, GET as sendmailGet } from '../app/api/sendmail/route';
 
 test('domain: الافتراضي في الكود هو النطاق الرسمي', () => {
   assert.equal(DEFAULT_SITE, 'https://athar.university');
@@ -35,4 +36,12 @@ test('domain: robots يسمح بالعامّ ويحجب الخاصّ، وsitemap
     for (const e of sm) { assert.ok(e.url.startsWith('https://athar.university/')); assert.ok(!dis.some(d => e.url.replace('https://athar.university', '').startsWith(d)), `صفحة عامّة ليست محجوبة: ${e.url}`); }
     process.env.NEXT_PUBLIC_SITE_URL = 'http://127.0.0.1:3100'; assert.equal(robots().host, 'http://127.0.0.1:3100', 'يتبع المتغير');
   } finally { if (prev === undefined) delete process.env.NEXT_PUBLIC_SITE_URL; else process.env.NEXT_PUBLIC_SITE_URL = prev; }
+});
+
+test('security 2026-11-15: مسار /api/sendmail القديم مُوقَف (410) ولا يقرأ الجسم ولا يتصل بالخارج', async () => {
+  const p = await sendmailPost(); assert.equal(p.status, 410); const j = await p.json(); assert.equal(j.success, false); assert.equal(j.error, 'gone');
+  assert.equal(p.headers.get('cache-control'), 'no-store'); const g = await sendmailGet(); assert.equal(g.status, 410);
+  const src = readFileSync('app/api/sendmail/route.ts', 'utf8'); assert.ok(!src.includes('api.resend.com') && !src.includes('RESEND_API_KEY') && !src.includes('request.json'), 'لا إرسال ولا قراءة جسم');
+  const sql = readFileSync('supabase/sec-2026-11-15-hardening.sql', 'utf8');
+  for (const k of ['drop policy if exists needs_public_read', 'create policy needs_own_read', 'revoke execute on function public.portal_oauth_gc()', 'revoke execute on function public.portal_latest_level(text)', 'union all']) assert.ok(sql.includes(k), `SQL: ${k}`);
 });
