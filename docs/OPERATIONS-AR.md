@@ -116,7 +116,7 @@
 | النطاق الرسمي | `https://athar-portal.com` (الجذر) · `www` يحوّل 308 إلى الجذر · `athar.university` و`www.athar.university` يحوّلان 308 إلى الجذر مع حفظ المسار · `athar-portal.vercel.app` يبقى اسمًا بديلًا يعمل (لا يُحذف) | Vercel → Settings → Domains |
 | لماذا `.com` لا `.university`/`.edu` | «جامعة» مسمّى محمي في المملكة (ترخيص وزارة التعليم)؛ `.edu` للجامعات الأمريكية فقط؛ `.com` محايد ويطابق اسم المشروع منذ البداية ويمهّد لـ `athar-portal.sa` بالاسم نفسه | قرار 2026-11-15 |
 | المسجِّل / DNS | Hostinger (hpanel.hostinger.com → Domains → athar-portal.com → DNS / Nameservers) · التجديد التلقائي مفعَّل · ينتهي 2027-11-15 | A `@` → `216.198.79.1` (Vercel) · CNAME `www` → `athar-portal.com` |
-| البريد الوارد | **Hostinger Business Email** (مجاني 12 شهرًا ضمن الاستضافة، ثم ≈ $1–2/صندوق شهريًا) · صندوق `info@athar-portal.com` · يُنشأ `security@athar-portal.com` (صندوق أو اسم مستعار) · Webmail: https://mail.hostinger.com · IMAP `imap.hostinger.com:993` / SMTP `smtp.hostinger.com:465` | MX `mx1/mx2.hostinger.com` · TXT `v=spf1 include:_spf.mail.hostinger.com ~all` · DKIM `hostingermail-a/b._domainkey` · `_dmarc` = `v=DMARC1; p=none` — كلها أُضيفت تلقائيًا؛ **لا تُحذف** |
+| البريد الوارد | **Hostinger Business Email** (مجاني 12 شهرًا ضمن الاستضافة، ثم ≈ $1–2/صندوق شهريًا) · ثلاثة صناديق فعّالة (2026-11-15): `info@` · `reports@` · `security@` (كلٌّ 1 GB) · تحويل Active من `reports@` و`security@` إلى `info@` مع حفظ نسخة (hPanel → Emails → athar-portal.com → Forwarders) فالمتابعة من صندوق واحد · Webmail: https://mail.hostinger.com · IMAP `imap.hostinger.com:993` / SMTP `smtp.hostinger.com:465` | MX `mx1/mx2.hostinger.com` · TXT `v=spf1 include:_spf.mail.hostinger.com ~all` · DKIM `hostingermail-a/b._domainkey` · `_dmarc` = `v=DMARC1; p=none` — كلها أُضيفت تلقائيًا؛ **لا تُحذف** |
 | البريد الصادر (المنصة) | Resend → Domains → athar-portal.com = **Verified** (Tokyo) · المُرسِل الافتراضي `أَثَر <reports@athar-portal.com>` في `lib/portal/notify.ts` | TXT `resend._domainkey` · CNAME `rsend` · CNAME `send` (الإرسال عبر النطاق الفرعي `send` فلا يتعارض مع SPF الجذر الخاص بـ Hostinger) |
 | عناوين الهوية | `info@` تواصل عام (`CONTACT.email` في `lib/portal/content.ts`) · `reports@` مُرسِل المنصة · `security@` الإفصاح المسؤول (`security.txt`، يغلبه المتغير `SECURITY_CONTACT`) | — |
 | ثبات النطاق في الكود | طبقتان: (1) `next.config.js` يثبّت `NEXT_PUBLIC_SITE_URL = https://athar-portal.com` داخل الحزم وقت البناء؛ (2) `instrumentation.ts` (خطّاف `register` على Vercel) يصحّح القيمة الحيّة في `process.env` عند إقلاع كل دالة — لأن دوالًا مثل `securityTxt` و`channelEnv` تستلم كائن البيئة كاملًا. محليًا يبقى المتغير لاختبارات E2E | `CANONICAL_SITE` · `resolveSiteEnv` |
@@ -223,5 +223,6 @@
 - [ ] نسخة JSON محفوظة خارج المنصة وتاريخها مسجّل في `/admin/backup`
 - [ ] البرامج المنتهية مؤرشفة
 - [ ] التجديد التلقائي للنطاقين `athar-portal.com` و`athar.university` مفعّل في Hostinger وبطاقة الدفع سارية
-- [ ] `athar-portal.com` بحالة Verified في Resend · صندوق `info@` يستقبل (اختبار من بريد خارجي)
+- [x] `athar-portal.com` بحالة Verified في Resend · صناديق `info@` · `reports@` · `security@` تستقبل، والتحويل إلى `info@` Active (2026-11-15)
+- [x] Google Search Console: خاصية Domain موثَّقة (TXT) · `sitemap.xml` = 12 صفحة · طُلبت فهرسة `/` `/programs` `/miaar` `/about` `/contact` (2026-11-15)
 - [ ] هذه الوثيقة محدّثة بتاريخ آخر مرحلة
