@@ -4,16 +4,16 @@
  *  GET ?invite=<id>                       → النموذج الحيّ للدعوة (نسخة المشرف بالنصوص) أو {form:null, lock}
  *  GET ?form=<id|ATH-FM-…>                → معاينة نسخة المشرف (بالنصوص · الميزان · الإصدارات · القفل)
  *  GET ?alternatives=<form_id>&item=<code> → بدائل البند من الخليّة نفسها (بالنصوص)
- *  GET ?performance=<form_id>             → ★3 أثر الورقة بعد الاختبار (k ≥ 5)
- *  GET ?sheet=<form_id>                   → ★4 بيانات «نسخة المراقب»
- *  POST {action: freeze {invite_id} | swap {form_id, from, to, reason} | redraw {form_id, reason?} | withdraw {form_id, reason}}
+ *  GET ?performance=<form_id>[&variant=b] → ★3 أثر الورقة بعد الاختبار (k ≥ 5) — ولورقتَي التوأم معًا «ميزان التكافؤ» (equivalence)
+ *  GET ?sheet=<form_id>                   → ★4 بيانات «نسخة المراقب» (+ رابط ختم المراقب الموقَّع · P68-ب-2)
+ *  POST {action: freeze {invite_id} | swap {form_id, from, to, reason} | redraw {form_id, reason?} | withdraw {form_id, reason} | twin {form_id}  (P68-ب-2 «ضُمّ توأمًا»)}
  *  نصوص البنود لا تخرج إلا من هنا (طاقم فقط) — التحقّق العام في /api/miaar?form= بلا نصوص. لا ذكاء اصطناعي يقرّر.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson } from '../../../../../lib/shield/body';
 import { normalizeSite } from '../../../../../lib/portal/open';
-import { previewForm, liveFormForInvite, lockState, alternativesFor, performanceOf, proctorSheet, freezeForm, swapItem, redrawForm, withdrawForm } from '../../../../../lib/miaar/forms';
+import { previewForm, liveFormForInvite, lockState, alternativesFor, performanceOf, equivalenceOf, proctorSheet, freezeForm, swapItem, redrawForm, withdrawForm, twinForm, twinItems } from '../../../../../lib/miaar/forms';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
   if (q('invite')) { const live = await liveFormForInvite(db, q('invite')); if (!live) return NextResponse.json({ success: true, form: null, lock: await lockState(db, q('invite')) }, { headers: NO }); const p = await previewForm(db, live.id, { withText: true, site }); return NextResponse.json({ success: true, form: p }, { headers: NO }); }
   if (q('form')) { const p = await previewForm(db, q('form'), { withText: true, site }); return p ? NextResponse.json({ success: true, form: p }, { headers: NO }) : bad('النموذج غير موجود', 404); }
   if (q('alternatives')) { const r = await alternativesFor(db, q('alternatives'), q('item')); return r.ok ? NextResponse.json({ success: true, ...r }, { headers: NO }) : bad(r.error, r.status || 400); }
-  if (q('performance')) { const r = await performanceOf(db, q('performance')); return r ? NextResponse.json({ success: true, performance: r }, { headers: NO }) : bad('النموذج غير موجود', 404); }
+  if (q('performance')) { const id = q('performance'); const tw = await twinItems(db, id).catch(() => ({ a: [], b: [] })); const a = await performanceOf(db, id, 'a'); if (!a) return bad('النموذج غير موجود', 404); const b = tw.b.length ? await performanceOf(db, id, 'b') : null; return NextResponse.json({ success: true, performance: q('variant') === 'b' && b ? b : a, performance_b: b, equivalence: b ? equivalenceOf(a, b) : null }, { headers: NO }); }
   if (q('sheet')) { const r = await proctorSheet(db, q('sheet'), site); return r ? NextResponse.json({ success: true, sheet: r }, { headers: NO }) : bad('النموذج غير موجود', 404); }
   return bad('معامل مفقود');
 }
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
   if (action === 'freeze') { const r = await freezeForm(db, { invite_id: b.invite_id, by, site }); if (!r.ok) return bad(r.error, r.status || 400); const p = await previewForm(db, r.form.id, { withText: true, site }); return NextResponse.json({ success: true, form: p, balance: r.balance, note_ar: `ثُبِّت النموذج ${r.form.code} (الإصدار 1) — ${r.items.length} بندًا. راجع نسخة المشرف قبل القاعة.` }); }
   if (action === 'swap') { const r = await swapItem(db, { form_id: b.form_id, from: b.from, to: b.to, reason: b.reason, by, site }); if (!r.ok) return bad(r.error, r.status || 400); const p = await previewForm(db, r.form.id, { withText: true, site }); return NextResponse.json({ success: true, form: p, note_ar: `بُدِّل البند — الإصدار ${r.form.version} من ${r.form.code}.` }); }
   if (action === 'redraw') { const r = await redrawForm(db, { form_id: b.form_id, reason: b.reason, by, site }); if (!r.ok) return bad(r.error, r.status || 400); const p = await previewForm(db, r.form.id, { withText: true, site }); return NextResponse.json({ success: true, form: p, note_ar: `سُحب نموذج جديد كاملًا — الإصدار ${r.form.version}${r.overlap ? ` (تكرّر ${r.overlap} بند لضيق البنك)` : ' (بلا أي بند مكرّر)'}.` }); }
+  if (action === 'twin') { const r = await twinForm(db, { form_id: b.form_id, by, site }); if (!r.ok) return bad(r.error, r.status || 400); const p = await previewForm(db, r.form.id, { withText: true, site }); return NextResponse.json({ success: true, form: p, note_ar: `ضُمّت الورقة «ب» — الإصدار ${r.form.version} من ${r.form.code}: ${r.itemsB.length} بندًا بالخلايا نفسها بلا بند مشترك (${r.same_descriptor} بندًا متقابلًا بالواصف نفسه). «أ» أخضر و«ب» ذهبي على شاشة المتقدّم.` }); }
   if (action === 'withdraw') { const r = await withdrawForm(db, { form_id: b.form_id, reason: b.reason, by, site }); if (!r.ok) return bad(r.error, r.status || 400); return NextResponse.json({ success: true, form: r.form, note_ar: `أُلغي التثبيت — الدعوة عادت إلى السحب العشوائي${r.locked_sessions ? ` (${r.locked_sessions} جلسة بدأت تُكمل ورقتها كما هي)` : ''}.` }); }
   return bad('إجراء غير معروف');
 }

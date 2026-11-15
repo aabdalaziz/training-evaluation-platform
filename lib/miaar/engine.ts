@@ -26,7 +26,7 @@ import { parseMiaarReport, placementValid, evidenceSkills, effectiveLevel } from
 import { usesCamera } from './witness'; /* م8-ب */
 
 export type SessionRow = {
-  id: string; token_hash: string; candidate: Candidate & { assignedItemCodes?: string[]; assignedDurationSeconds?: number; questionSource?: string; publishedFormTitle?: string; shortCells?: string[] };
+  id: string; token_hash: string; candidate: Candidate & { assignedItemCodes?: string[]; assignedDurationSeconds?: number; questionSource?: string; publishedFormTitle?: string; shortCells?: string[]; frozenForm?: { code: string; version: number; substituted?: string[]; variant?: 'a' | 'b'; twin?: boolean } };
   content_version: string; exam_mode: ExamMode; status: 'active' | 'completed' | 'expired' | 'abandoned'; current_level_index: number;
   started_at: string; expires_at: string; finished_at: string | null; finish_reason: FinishReason | null; report: Report | null;
   invite_id: string | null; recipient_id: string | null; user_id: string | null; start_level_index: number; direction: 'up' | 'down'; probe: { score: number; band_index: number } | null; access: Access | null;
@@ -51,6 +51,7 @@ export function publicSession(s: SessionRow, answers: Answer[] = [], form: Publi
     examMode: s.exam_mode, currentLevel: levelAtIndex(s.current_level_index), currentLevelIndex: s.current_level_index, startLevelIndex: s.start_level_index, direction: s.direction,
     status: s.status, finishReason: s.finish_reason, expiresAt: s.expires_at, remainingSeconds: remainingSeconds(s.expires_at), durationSeconds: plan(s).durationSeconds,
     access: s.access, answers: Object.fromEntries(answers.map((a) => [a.question_id, a.selected_option_id])), form, plan: publicPlan(s),
+    paper: s.candidate?.frozenForm?.twin ? (s.candidate.frozenForm.variant === 'b' ? 'b' : 'a') : null, /* P68-ب-2 «الجلوس بالألوان»: حرف الورقة للمراقب — لا شيء غيره */
   };
 }
 /** الخطة كما يراها المتصفح (بلا سلال الخبير) */
@@ -84,20 +85,22 @@ export async function drawOptsFor(db: any, activePlan: Plan, invite: StartInput[
   if (email && (exitLvl || isRetakePlan(activePlan))) { try { const ex = await exposedCodes(db, email); if (ex.size) drawOpts = { ...(drawOpts || {}), exclude: ex }; } catch { /* اختياري */ } }
   return drawOpts;
 }
-/** P68-ب: بنود النموذج المثبَّت الحيّ — مع بديل فردي لبند مكشوف في «مِران» (من الخليّة نفسها، حتمي بالبذرة) */
-export async function frozenDraw(db: any, formId: string, pool: readonly PoolItem[], seed: string, exclude?: ReadonlySet<string>): Promise<{ code: string; version: number; codes: string[]; substituted: string[] } | null> {
+/** P68-ب: بنود النموذج المثبَّت الحيّ — مع بديل فردي لبند مكشوف في «مِران» (من الخليّة نفسها، حتمي بالبذرة)
+ *  P68-ب-2 «توأم النموذج»: إن كان للنموذج ورقة ب، تُختار ورقة المتقدّم حتميًا بالبريد (sha256(الرمز:البريد) → أ/ب) — ثابتة عند إعادة الدخول */
+export async function frozenDraw(db: any, formId: string, pool: readonly PoolItem[], seed: string, exclude?: ReadonlySet<string>, email?: unknown): Promise<{ code: string; version: number; codes: string[]; substituted: string[]; variant: 'a' | 'b'; twin: boolean } | null> {
   const { data: f } = await db.from('question_bank_forms').select('id, code, version, status').eq('id', formId).maybeSingle(); if (!f || f.status !== 'frozen') return null;
-  const { data: items } = await db.from('question_bank_form_items').select('item_code, position').eq('form_id', formId).order('position', { ascending: true }).limit(500);
-  const codes = ((items || []) as any[]).map((x) => String(x.item_code || '')).filter(Boolean); if (!codes.length) return null;
+  const { data: items } = await db.from('question_bank_form_items').select('item_code, position, variant').eq('form_id', formId).order('position', { ascending: true }).limit(1000);
+  const rows = ((items || []) as any[]); const twin = rows.some((x) => x.variant === 'b'); const variant: 'a' | 'b' = twin ? (createHash('sha256').update(`${String(f.code)}:${String(email || seed || '').trim().toLowerCase()}`).digest()[0] & 1 ? 'b' : 'a') : 'a';
+  const codes = rows.filter((x) => (x.variant === 'b' ? 'b' : 'a') === variant).map((x) => String(x.item_code || '')).filter(Boolean); if (!codes.length) return null;
   const byCode = new Map(pool.map((i) => [i.code, i])); if (codes.some((c) => !byCode.has(c))) return null; /* بند لم يعد معتمدًا → سحب عشوائي (يُسجَّل في questionSource) */
-  const substituted: string[] = []; const used = new Set(codes);
+  const substituted: string[] = []; const used = new Set(rows.map((x) => String(x.item_code || ''))); /* البديل لا يأتي من الورقة الأخرى أيضًا (الجار يراها) */
   const out = codes.map((c, idx) => {
     if (!exclude?.has(c)) return c; const it = byCode.get(c)!;
     const alts = pool.filter((p) => p.level === it.level && p.skill === it.skill && !used.has(p.code) && !exclude.has(p.code) && (it.descriptor ? p.descriptor === it.descriptor : true) && p.passageId === it.passageId);
     const cands = alts.length ? alts : pool.filter((p) => p.level === it.level && p.skill === it.skill && !used.has(p.code) && !exclude.has(p.code) && p.passageId === it.passageId);
     if (!cands.length) return c; const h = createHash('sha256').update(`${seed}:${c}:${idx}`).digest(); const pick = cands[h[0] % cands.length]; used.add(pick.code); substituted.push(c); return pick.code;
   });
-  return { code: String(f.code), version: Number(f.version || 1), codes: out, substituted };
+  return { code: String(f.code), version: Number(f.version || 1), codes: out, substituted, variant, twin };
 }
 
 /** هل يحق لهذا البريد البدء؟ محاولة واحدة لكل بريد إلا بموافقة إعادة غير مستهلكة (كما في مِعيار) */
@@ -137,14 +140,14 @@ export async function startSession(db: any, input: StartInput, sw?: Stopwatch): 
   const drawOpts = await drawOptsFor(db, activePlan, input.invite, candidate.email);
   /* P68-ب «النموذج المثبَّت»: إن كان للدعوة نموذج حيّ تُؤخذ بنوده كما هي (الورقة نفسها للجميع) — إلا بندًا تدرّب عليه هذا البريد في «مِران»
      فيُستبدل له وحده ببديل من الخليّة نفسها ويُسجَّل على جلسته (substituted) · إن تعذّر النموذج (حُذف/سُحب لتوّه) عاد السحب العشوائي */
-  let drawn: ReturnType<typeof drawPlan> = null; let frozenMeta: { code: string; version: number; substituted: string[] } | null = null;
-  if (input.invite?.form_id) { const fz = await frozenDraw(db, input.invite.form_id, pool, token, drawOpts?.exclude); if (fz) { drawn = { codes: fz.codes, short: [] }; frozenMeta = { code: fz.code, version: fz.version, substituted: fz.substituted }; } }
+  let drawn: ReturnType<typeof drawPlan> = null; let frozenMeta: { code: string; version: number; substituted: string[]; variant?: 'a' | 'b'; twin?: boolean } | null = null;
+  if (input.invite?.form_id) { const fz = await frozenDraw(db, input.invite.form_id, pool, token, drawOpts?.exclude, candidate.email); if (fz) { drawn = { codes: fz.codes, short: [] }; frozenMeta = { code: fz.code, version: fz.version, substituted: fz.substituted, ...(fz.twin ? { variant: fz.variant, twin: true } : {}) }; } }
   if (!drawn) drawn = drawPlan(pool, token, activePlan, drawOpts); if (!drawn) return fail('form_unavailable', 503); mark('draw');
   const form = await formFromPool(db, pool, drawn.codes, passages); if (!form) return fail('form_unavailable', 503); mark('form');
   const access = normalizeAccess(input.access); const durationSeconds = accessDuration(activePlan.durationSeconds, access);
   const score = activePlan.probe ? probeScoreFrom(pool, input.probeAnswers) : 0; const startIndex = planStartIndex(activePlan, probeBandIndexOf(score));
   const expiresAt = new Date(Date.now() + durationSeconds * 1000).toISOString();
-  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: frozenMeta ? `frozen-${frozenMeta.code}-v${frozenMeta.version}` : `approved-${activePlan.draw}`, publishedFormTitle: `${activePlan.name_ar} (${activePlan.code})`, shortCells: drawn.short, ...(drawn.units ? { unitDraw: drawn.units } : {}), ...(frozenMeta ? { frozenForm: frozenMeta } : {}) };
+  const stored = { ...candidate, assignedItemCodes: drawn.codes, assignedDurationSeconds: durationSeconds, questionSource: frozenMeta ? `frozen-${frozenMeta.code}-v${frozenMeta.version}${frozenMeta.twin ? `-${frozenMeta.variant}` : ''}` : `approved-${activePlan.draw}`, publishedFormTitle: `${activePlan.name_ar} (${activePlan.code})`, shortCells: drawn.short, ...(drawn.units ? { unitDraw: drawn.units } : {}), ...(frozenMeta ? { frozenForm: frozenMeta } : {}) };
   const { data, error } = await db.from('placement_secure_sessions').insert({
     token_hash: tokenHash(token), candidate: stored, content_version: CONTENT_VERSION, exam_mode: examMode, status: 'active', expires_at: expiresAt, current_level_index: startIndex, start_level_index: startIndex, direction: 'up',
     probe: input.probeAnswers && activePlan.probe ? { score, band_index: startIndex } : null, access, invite_id: input.invite?.id || null, recipient_id: input.invite?.recipient_id || null, user_id: input.userId || null,

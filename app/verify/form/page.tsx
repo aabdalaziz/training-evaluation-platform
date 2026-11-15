@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { PortalShell } from '../../components/PortalShell';
 import { Icon } from '../../../lib/ui/icons';
 
-type R = { ok?: boolean; valid: boolean; intact?: boolean; status?: string; live?: boolean; form?: { code: string; version: number; n: number; cells: Record<string, number>; frozen_at: string | null; withdrawn_at: string | null; invite_label: string; blueprint: string; duration_minutes: number | null; sessions: number; versions: number; signed: boolean } };
+type R = { ok?: boolean; valid: boolean; intact?: boolean; status?: string; live?: boolean; form?: { code: string; version: number; n: number; cells: Record<string, number>; frozen_at: string | null; withdrawn_at: string | null; invite_label: string; blueprint: string; duration_minutes: number | null; sessions: number; versions: number; signed: boolean; twin?: { n: number; cells: Record<string, number>; sessions_a: number; sessions_b: number } | null; proctoring?: { open: number; close: number; halls: number; diff_total: number | null } | null } };
 const SK: Record<string, string> = { grammar_vocab: 'القواعد والمفردات', reading: 'القراءة', listening: 'الاستماع' };
 const fmt = (iso?: string | null) => { if (!iso) return '—'; try { return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); } catch { return iso; } };
 const STATUS_AR: Record<string, string> = { frozen: 'مثبَّت (حيّ)', superseded: 'إصدار قديم — حلّ محلّه إصدار أحدث', withdrawn: 'مسحوب' };
@@ -36,7 +36,9 @@ function Inner() {
           <dt>البنود</dt><dd style={{ margin: 0 }} data-testid="vf-n">{f.n} بندًا{f.duration_minutes ? ` · ${f.duration_minutes} دقيقة` : ''} — {Object.entries(f.cells).map(([k, n]) => { const [l, s] = k.split(':'); return `${l} ${SK[s] || s} ${n}`; }).join(' · ')}</dd>
           <dt>ثُبِّت في</dt><dd style={{ margin: 0 }}>{fmt(f.frozen_at)}</dd>
           {f.withdrawn_at ? <><dt>سُحب في</dt><dd style={{ margin: 0 }}>{fmt(f.withdrawn_at)}</dd></> : null}
+          {f.twin ? <><dt>التوأم</dt><dd style={{ margin: 0 }} data-testid="vf-twin">نموذج مزدوج — ورقتان «أ» و«ب» بالخلايا نفسها بلا بند مشترك ({f.twin.n} بندًا في ب) · أ: {f.twin.sessions_a} جلسة · ب: {f.twin.sessions_b} جلسة</dd></> : null}
           <dt>الجلسات</dt><dd style={{ margin: 0 }} data-testid="vf-sessions">{f.sessions} جلسة حُكمت بهذه الورقة</dd>
+          {f.proctoring ? <><dt>المراقبة</dt><dd style={{ margin: 0 }} data-testid="vf-proctoring">مراقبة حضورية موثَّقة بختم المراقب — {f.proctoring.halls} {f.proctoring.halls === 1 ? 'قاعة' : 'قاعات'} · {f.proctoring.open} ختم فتح · {f.proctoring.close} ختم إغلاق{f.proctoring.diff_total === null ? '' : f.proctoring.diff_total === 0 ? ' · عدّ القاعة يطابق الجلسات ✓' : ` · فرق في عدّ القاعة (${f.proctoring.diff_total > 0 ? '+' : ''}${f.proctoring.diff_total}) مسجَّل لدى الطاقم`}</dd></> : null}
           <dt>التوقيع</dt><dd style={{ margin: 0 }}>{f.signed ? 'موقَّع Ed25519 بمفتاح أَثَر' : 'بصمة بلا توقيع (المفتاح غير مضبوط)'}</dd>
         </dl>
         <p className="pt-muted" style={{ margin: '8px 0 0' }}>نصوص الأسئلة لا تظهر هنا ولا في أي صفحة عامة — تبقى في نسخة المشرف داخل الطاقم.</p>

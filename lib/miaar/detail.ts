@@ -16,7 +16,7 @@ export type Detail = {
   code: string; first_name: string; taken_at: string; level: string | null; exam_mode: string | null; is_exit: boolean; exit_level: string | null; exit_result: string | null;
   totals: { items: number; correct: number; blank: number; percent: number | null; minutes: number | null };
   skills: DetailSkill[]; descriptors: DetailDescriptor[]; items: DetailItem[]; with_text: boolean; note_ar: string;
-  form?: { code: string; version: number } | null; /* P68-ب: النموذج المثبَّت الذي حُكمت به الجلسة (إن وُجد) */
+  form?: { code: string; version: number; paper?: string | null } | null; /* P68-ب: النموذج المثبَّت الذي حُكمت به الجلسة (إن وُجد) */
 };
 const SK_AR: Record<string, string> = { grammar_vocab: 'القواعد والمفردات', reading: 'القراءة', listening: 'الاستماع', writing: 'الكتابة', speaking: 'التحدّث' };
 const skAr = (k: string) => SK_AR[k] || (SKILL_NAMES as any)[k]?.ar || k;
@@ -62,7 +62,7 @@ export async function detailByCode(db: Db, code: string, opts: { withText?: bool
     is_exit: !!ex, exit_level: ex?.المستوى || null, exit_result: ex?.النتيجة || null,
     totals: { items: out.length, correct, blank, percent: pct(correct, out.length - blank), minutes }, /* النسبة من البنود المُجابة — كما في التقرير الرسمي؛ غير المُجاب يُعرض عددًا */
     skills, descriptors, items: out, with_text: !!opts.withText,
-    form: sess?.candidate?.frozenForm?.code ? { code: String(sess.candidate.frozenForm.code), version: Number(sess.candidate.frozenForm.version || 1) } : null,
+    form: sess?.candidate?.frozenForm?.code ? { code: String(sess.candidate.frozenForm.code), version: Number(sess.candidate.frozenForm.version || 1), paper: sess.candidate.frozenForm.twin ? (sess.candidate.frozenForm.variant === 'b' ? 'ب' : 'أ') : null } : null, /* P68-ب-2: الورقة أ/ب إن كان النموذج توأمًا */
     note_ar: opts.withText ? 'نسخة المصحّح: تحوي نصوص البنود — لا تُسلَّم للمتقدّم ولا تُنشر.' : 'الواصفات من الإطار الأوروبي المرجعي (CEFR) «أستطيع أن…». رموز البنود للمراجعة مع المشرف — نصوص الأسئلة لا تظهر هنا حمايةً للبنك.',
   };
 }
