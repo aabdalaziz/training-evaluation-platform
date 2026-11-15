@@ -42,10 +42,10 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
       <main className="as as-deny" dir="rtl" id="main" data-testid="as-denied"><style dangerouslySetInnerHTML={{ __html: CSS }} />
         <div className="as-deny-card">
           <span className="as-kicker"><Icon name="shield" size={14} /> {BRAND.command.ar}</span>
-          <h1>هذه الغرفة ليست من أبوابك</h1>
-          <p>«{title}» تُفتح بصفة لا تحملها الآن. إن كنت ترى أنها تخصّ عملك فاطلبها من إدارة أَثَر — وإلى حينها هذه أبوابك المفتوحة:</p>
+          <h1>هذه الصفحة خارج صلاحياتك</h1>
+          <p>«{title}» تتطلّب دورًا غير مُسنَد إليك الآن. إن كنت ترى أنها تخصّ عملك فاطلبها من إدارة أَثَر — وإلى حينها هذه صفحاتك المتاحة:</p>
           <div className="as-deny-links">
-            <Link href={HALL} className="pt-btn small"><Icon name="compass" size={15} /> الردهة — كل أبوابك</Link>
+            <Link href={HALL} className="pt-btn small"><Icon name="compass" size={15} /> صفحاتي</Link>
             {mine.map(r => <Link key={r.href} href={r.href} className="pt-btn ghost small"><Icon name={r.icon} size={15} /> {r.label}</Link>)}
             {!mine.length && <Link href="/me" className="pt-btn ghost small"><Icon name="users" size={15} /> مساحتي</Link>}
           </div>
@@ -61,7 +61,7 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
           <Link href="/dashboard">{BRAND.command.ar}</Link><span aria-hidden="true">›</span><b data-testid="as-room">{title}</b>
           {room?.hint && <small>{room.hint}</small>}
         </nav>
-        <span className="as-right"><SignCounter lang="ar" tone="strip" /><Link href={HALL} className="as-hall" data-testid="as-hall"><Icon name="compass" size={14} /> الردهة</Link></span>
+        <span className="as-right"><SignCounter lang="ar" tone="strip" /><Link href={HALL} className="as-hall" data-testid="as-hall"><Icon name="compass" size={14} /> صفحاتي</Link></span>
       </div>
       <div className="as-body">{children}</div>
       <footer className="as-foot" data-testid="as-foot">

@@ -16,7 +16,7 @@ type Inc = { id: number; created_at: string; discovered_at: string; deadline_at:
 type Q = { id: number; created_at: string; email: string; execute_after: string; cancelled_at: string | null; executed_at: string | null; receipt: any };
 type Data = { requests: Dsr[]; summary: { open: number; due_soon: number; overdue: number; done_30d: number }; incidents: Inc[]; queue: Q[]; retention_preview: { table: string; action: string; days: number; rows: number | null }[]; retention_log: any[]; critical_events: { id: number; at: string; kind: string; severity: string; actor: string | null }[]; org: { contact: string }; notice: { version: string; draft: boolean }; registry: { tables: number; processors: number } };
 const fmt = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
-const KIND_AR: Record<string, string> = { access: 'اطّلاع/نسخة', correction: 'تصحيح', erasure: 'نسيان', objection: 'اعتراض', portability: 'نقل' };
+const KIND_AR: Record<string, string> = { access: 'اطّلاع/نسخة', correction: 'تصحيح', erasure: 'حذف الحساب', objection: 'اعتراض', portability: 'نقل' };
 const STATUS_AR: Record<string, string> = { open: 'مفتوح', extended: 'مُمدَّد', done: 'نُفِّذ', rejected: 'مرفوض', cancelled: 'ملغى', reported: 'أُبلغت الهيئة', closed: 'مغلقة', dismissed: 'ليست حادثة' };
 const daysLeft = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) / 864e5);
 
@@ -44,18 +44,18 @@ export default function AdminVaultPage() {
   return (
     <div className="vt"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="vt-wrap">
-        <header className="vt-head"><div><span className="vt-kicker"><Icon name="shield" size={14} /> بوابة أَثَر · P22</span><h1>خزنة أَثَر — غرفة الطلبات</h1><p>الامتثال لنظام حماية البيانات الشخصية كعملية حيّة لا كملف: طلبات الأشخاص بعدّادها النظامي (30 يومًا)، الحوادث بعدّاد 72 ساعة ومسودة بلاغ سدايا جاهزة، حجر النسيان، سياسات الاحتفاظ، وسجل أنشطة المعالجة المُولَّد من الكود. الصفحة العامة: <a href="/privacy" target="_blank" rel="noreferrer">/privacy</a></p></div></header>
+        <header className="vt-head"><div><span className="vt-kicker"><Icon name="shield" size={14} /> بوابة أَثَر · P22</span><h1>خزنة أَثَر — غرفة الطلبات</h1><p>الامتثال لنظام حماية البيانات الشخصية كعملية حيّة لا كملف: طلبات الأشخاص بعدّادها النظامي (30 يومًا)، الحوادث بعدّاد 72 ساعة ومسودة بلاغ سدايا جاهزة، حذف الحسابات بمهلة تراجع، سياسات الاحتفاظ، وسجل أنشطة المعالجة المُولَّد من الكود. الصفحة العامة: <a href="/privacy" target="_blank" rel="noreferrer">/privacy</a></p></div></header>
         <PortalAdminTabs counts={{ '/admin/vault': s.overdue + openInc.length }} />
         {error && <div className="vt-err">{error}</div>}{flash && <div className="vt-ok">{flash}</div>}
         <div className="vt-kpis" data-testid="vault-admin-kpis">
           <span className={s.overdue ? 'bad' : 'good'}><b>{s.overdue}</b> طلب متأخر</span><span className={s.due_soon ? 'warn' : ''}><b>{s.due_soon}</b> يستحق خلال 5 أيام</span><span><b>{s.open}</b> مفتوح · <b>{s.done_30d}</b> نُفِّذ (30 يومًا)</span>
-          <span className={openInc.length ? 'bad' : 'good'}><b>{openInc.length}</b> حادثة مفتوحة</span><span><b>{pendingQ.length}</b> في حجر النسيان</span><span><b>{data?.registry.tables}</b> نوع بيانات مسجَّل · إشعار v{data?.notice.version}{data?.notice.draft ? ' (مسودة)' : ''}</span>
+          <span className={openInc.length ? 'bad' : 'good'}><b>{openInc.length}</b> حادثة مفتوحة</span><span><b>{pendingQ.length}</b> حذف حساب قيد المهلة</span><span><b>{data?.registry.tables}</b> نوع بيانات مسجَّل · إشعار v{data?.notice.version}{data?.notice.draft ? ' (مسودة)' : ''}</span>
           {!data?.org.contact && <span className="warn">اضبط <code>DATA_PROTECTION_CONTACT</code> في Vercel ليظهر في الإشعار</span>}
         </div>
         <div className="vt-tabs">
           <button className={tab === 'requests' ? 'on' : ''} onClick={() => setTab('requests')}>الطلبات {openReqs.length ? <i>{openReqs.length}</i> : null}</button>
           <button className={tab === 'incidents' ? 'on' : ''} onClick={() => setTab('incidents')}>الحوادث (72 س) {openInc.length ? <i>{openInc.length}</i> : null}</button>
-          <button className={tab === 'queue' ? 'on' : ''} onClick={() => setTab('queue')}>حجر النسيان {pendingQ.length ? <i>{pendingQ.length}</i> : null}</button>
+          <button className={tab === 'queue' ? 'on' : ''} onClick={() => setTab('queue')}>حذف الحسابات {pendingQ.length ? <i>{pendingQ.length}</i> : null}</button>
           <button className={tab === 'retention' ? 'on' : ''} onClick={() => setTab('retention')}>الاحتفاظ</button>
           <button className={tab === 'ropa' ? 'on' : ''} onClick={() => setTab('ropa')}>سجل المعالجة RoPA</button>
         </div>
@@ -76,7 +76,7 @@ export default function AdminVaultPage() {
                   </td></tr>); })}
             </tbody></table>
             <details className="vt-old"><summary>المغلقة ({closedReqs.length})</summary><table className="vt-table small"><tbody>{closedReqs.slice(0, 100).map(r => <tr key={r.id}><td>{r.id}</td><td dir="ltr">{r.email}</td><td>{KIND_AR[r.kind] || r.kind}</td><td>{STATUS_AR[r.status]}</td><td>{fmt(r.created_at)}</td><td className="vt-details">{r.result ? JSON.stringify(r.result).slice(0, 120) : ''}</td></tr>)}</tbody></table></details>
-            <div className="vt-box"><b>نسيان لحساب بطلب وصل بقناة أخرى (أو حساب طاقم)</b><div className="vt-inline"><input value={eraseEmail} onChange={e => setEraseEmail(e.target.value)} placeholder="email@example.com" dir="ltr" /><button className="vt-btn ghost" disabled={!eraseEmail || !!busy} onClick={() => { if (confirm(`بدء حجر النسيان 7 أيام لـ ${eraseEmail}؟ سيصله رابط تراجع.`)) post({ action: 'erasure_for', email: eraseEmail }).then(j => j && setEraseEmail('')); }}>ابدأ الحجر</button></div></div>
+            <div className="vt-box"><b>حذف حساب (بطلب وصل بقناة أخرى، أو حساب موظف انتهى ارتباطه)</b><div className="vt-inline"><input value={eraseEmail} onChange={e => setEraseEmail(e.target.value)} placeholder="email@example.com" dir="ltr" /><button className="vt-btn ghost" disabled={!eraseEmail || !!busy} onClick={() => { if (confirm(`بدء حذف الحساب ${eraseEmail} مع مهلة تراجع 7 أيام؟ سيصله رابط تراجع.`)) post({ action: 'erasure_for', email: eraseEmail }).then(j => j && setEraseEmail('')); }}>بدء الحذف</button></div></div>
           </section>
         )}
 
@@ -105,10 +105,10 @@ export default function AdminVaultPage() {
 
         {tab === 'queue' && (
           <section className="vt-card" data-testid="vault-queue">
-            <h2>حجر النسيان <small>7 أيام برابط تراجع ثم تنفيذ آلي ضمن الكرون اليومي؛ التنفيذ المبكر بطلب صريح من الشخص فقط</small></h2>
-            {!(data?.queue || []).length && <p className="vt-muted">لا طلبات نسيان.</p>}
+            <h2>حذف الحسابات <small>مهلة تراجع 7 أيام برابط للشخص، ثم تنفيذ آلي ضمن المهمة اليومية؛ التنفيذ المبكر بطلب صريح من الشخص فقط</small></h2>
+            {!(data?.queue || []).length && <p className="vt-muted">لا طلبات حذف.</p>}
             <table className="vt-table"><thead><tr><th>#</th><th>البريد</th><th>طُلب</th><th>ينفَّذ بعد</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>
-              {(data?.queue || []).map(q => <tr key={q.id} data-testid="queue-row"><td>{q.id}</td><td dir="ltr">{q.email}</td><td>{fmt(q.created_at)}</td><td>{fmt(q.execute_after)}</td><td>{q.executed_at ? <>نُفِّذ {fmt(q.executed_at)}<br /><small dir="ltr">{q.receipt?.hash}</small></> : q.cancelled_at ? `تراجع ${fmt(q.cancelled_at)}` : <b>في الحجر</b>}</td><td>{!q.executed_at && !q.cancelled_at && <button className="vt-btn ghost" disabled={!!busy} onClick={() => { if (confirm('تنفيذ النسيان الآن قبل انتهاء الحجر؟ لا رجعة. يُسجَّل باسمك.')) post({ action: 'erasure_execute_now', id: q.id }); }} data-testid="queue-execute">نفِّذ الآن</button>}</td></tr>)}
+              {(data?.queue || []).map(q => <tr key={q.id} data-testid="queue-row"><td>{q.id}</td><td dir="ltr">{q.email}</td><td>{fmt(q.created_at)}</td><td>{fmt(q.execute_after)}</td><td>{q.executed_at ? <>نُفِّذ {fmt(q.executed_at)}<br /><small dir="ltr">{q.receipt?.hash}</small></> : q.cancelled_at ? `تراجع ${fmt(q.cancelled_at)}` : <b>قيد المهلة</b>}</td><td>{!q.executed_at && !q.cancelled_at && <button className="vt-btn ghost" disabled={!!busy} onClick={() => { if (confirm('تنفيذ حذف الحساب الآن قبل انتهاء المهلة؟ لا رجعة. يُسجَّل باسمك.')) post({ action: 'erasure_execute_now', id: q.id }); }} data-testid="queue-execute">نفِّذ الآن</button>}</td></tr>)}
             </tbody></table>
           </section>
         )}
@@ -141,7 +141,7 @@ function RopaTable({ tok }: { tok: string }) {
   const [rows, setRows] = useState<any[] | null>(null);
   useEffect(() => { fetch('/api/vault/admin?view=ropa', { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then(r => r.json()).then(j => setRows(j?.rows || [])).catch(() => setRows([])); }, [tok]);
   if (!rows) return <p className="vt-muted">…</p>;
-  return <div className="vt-scroll"><table className="vt-table small"><thead><tr><th>النشاط</th><th>الغرض</th><th>البيانات</th><th>الأساس</th><th>الاحتفاظ</th><th>عند النسيان</th><th>المتلقون</th><th>المعالجون</th></tr></thead><tbody>{rows.map(r => <tr key={r.table}><td><b>{r.activity}</b><br /><small dir="ltr">{r.table}</small></td><td>{r.purpose}</td><td>{r.data}</td><td>{r.basis}</td><td>{r.retention}</td><td>{r.on_erasure}</td><td>{r.recipients}</td><td>{r.processors}</td></tr>)}</tbody></table></div>;
+  return <div className="vt-scroll"><table className="vt-table small"><thead><tr><th>النشاط</th><th>الغرض</th><th>البيانات</th><th>الأساس</th><th>الاحتفاظ</th><th>عند حذف الحساب</th><th>المتلقون</th><th>المعالجون</th></tr></thead><tbody>{rows.map(r => <tr key={r.table}><td><b>{r.activity}</b><br /><small dir="ltr">{r.table}</small></td><td>{r.purpose}</td><td>{r.data}</td><td>{r.basis}</td><td>{r.retention}</td><td>{r.on_erasure}</td><td>{r.recipients}</td><td>{r.processors}</td></tr>)}</tbody></table></div>;
 }
 
 const CSS = `

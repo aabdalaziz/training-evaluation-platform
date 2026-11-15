@@ -56,7 +56,7 @@ export default function GlobalNavigation() {
         <button type="button" className="global-burger" aria-label="القائمة" aria-expanded={open} onClick={() => setOpen(o => !o)}>☰</button>
         <div className={`global-links ${open ? 'open' : ''}`}>
           <CommandRooms pathname={pathname} />
-          <Link href={HALL} className="global-btn hall" data-testid="command-hall" title="الردهة — كل أبوابك في أَثَر"><Icon name="compass" size={16} /> الردهة</Link>
+          <Link href={HALL} className="global-btn hall" data-testid="command-hall" title="صفحاتي — كل صفحات أدوارك في أَثَر"><Icon name="compass" size={16} /> صفحاتي</Link>
           <DoorBadge lang="ar" />
           <GuideButton compact />
           <NotificationBell />
@@ -75,7 +75,7 @@ export default function GlobalNavigation() {
         <GuideButton />
         {pathname !== '/' && <Link href="/" className="global-btn"><Icon name="home" size={16} /> الرئيسية</Link>}
         {loggedIn ? <>
-          <Link href={HALL} className="global-btn"><Icon name="compass" size={16} /> أبوابي</Link>
+          <Link href={HALL} className="global-btn"><Icon name="compass" size={16} /> صفحاتي</Link>
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
         </> : pathname !== '/login' ? <Link href="/login" className="global-btn" data-testid="public-login"><Icon name="login" size={16} /> دخول</Link> : null}
       </div>

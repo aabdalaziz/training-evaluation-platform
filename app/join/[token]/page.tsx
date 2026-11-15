@@ -1,10 +1,10 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /join/<token> — باب الدعوة (P42-أ)
- *  1) معاينة الدعوة بلا دخول: الصفات · الجهة · رسالة مدير النظام · الصلاحية
+ * /join/<token> — صفحة الدعوة (P42-أ) — مصطلحات معتمدة 2026-11-15
+ *  1) معاينة الدعوة بلا دخول: الأدوار · الجهة · رسالة مدير النظام · الصلاحية
  *  2) غير داخل؟ يكتب بريده (نفس بريد الدعوة) → رابط سحري يعود إلى هذه الصفحة
- *  3) داخل والبريد مطابق؟ زر «أقبل الدعوة» → منح الأدوار → يفتح بابه
+ *  3) داخل والبريد مطابق؟ زر «قبول الدعوة والدخول» → إسناد الأدوار → صفحته الرئيسية
  *  4) داخل ببريد آخر؟ نوضّح ونعرض «الخروج والدخول بالبريد الصحيح»
  */
 import { useEffect, useState } from 'react';
@@ -16,7 +16,7 @@ import { PortalShell } from '../../components/PortalShell';
 import { invalidateMyRoles } from '../../components/Brand';
 
 type Inv = { kind?: 'personal' | 'group'; label?: string | null; seats_left?: number | null; max_uses?: number; email_masked: string | null; full_name: string | null; roles: { code: string; name_ar: string; name_en: string }[]; org: string | null; message: string | null; expires_at: string; state: 'pending' | 'accepted' | 'expired' | 'revoked' };
-const STATE_AR: Record<string, string> = { accepted: 'هذه الدعوة قُبلت من قبل — ادخل من /login وسيفتح بابك.', expired: 'انتهت صلاحية هذه الدعوة (14 يومًا). اطلب من مدير النظام دعوة جديدة.', revoked: 'أُلغيت هذه الدعوة.' };
+const STATE_AR: Record<string, string> = { accepted: 'هذه الدعوة قُبلت من قبل — ادخل من /login إلى حسابك.', expired: 'انتهت صلاحية هذه الدعوة (14 يومًا). اطلب من مدير النظام دعوة جديدة.', revoked: 'أُلغيت هذه الدعوة.' };
 const fmt = (iso: string) => new Date(iso).toLocaleDateString('ar-SA-u-nu-latn', { dateStyle: 'long' });
 
 export default function JoinPage({ params }: { params: { token: string } }) {
@@ -44,7 +44,7 @@ export default function JoinPage({ params }: { params: { token: string } }) {
   async function accept() {
     setBusy(true); setErr('');
     const j = await fetch('/api/roles', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'accept', token }) }).then(r => r.json()).catch(() => null);
-    invalidateMyRoles();   /* P43-ب: صفاتي تغيّرت → الشارة والشريط يُعاد بناؤهما */
+    invalidateMyRoles();   /* P43-ب: أدواري تغيّرت → الشارة والشريط يُعاد بناؤهما */
     setBusy(false); if (!j?.success) { setErr(j?.error || 'تعذّر القبول'); return; }
     setDone({ roles: j.roles, landing: j.landing }); setTimeout(() => router.replace(j.landing), 1400);
   }
@@ -58,14 +58,14 @@ export default function JoinPage({ params }: { params: { token: string } }) {
         {!inv && !err && <p className="jn-muted">جارٍ فتح الدعوة…</p>}
         {inv && (<>
           <h1>{inv.kind === 'group' ? `أهلًا بك في «${inv.label || 'دعوة جماعية'}»` : inv.full_name ? `أهلًا ${inv.full_name}` : 'أهلًا بك'}</h1>
-          <p className="jn-lead">{inv.kind === 'group' ? 'دعوة جماعية من إدارة أَثَر للانضمام بصفة:' : 'دعاك مدير النظام للانضمام بصفة:'}</p>
+          <p className="jn-lead">{inv.kind === 'group' ? 'دعوة جماعية من إدارة أَثَر للانضمام بدور:' : 'دعاك مدير النظام للانضمام بدور:'}</p>
           <ul className="jn-roles" data-testid="join-roles">{inv.roles.map(r => <li key={r.code}><b>{r.name_ar}</b><span>{r.name_en}</span></li>)}</ul>
           {inv.org && <p className="jn-org"><Icon name="users" size={14} /> الجهة: <b>{inv.org}</b></p>}
           {inv.message && <blockquote className="jn-msg">{inv.message}</blockquote>}
           {inv.kind === 'group' ? <p className="jn-muted" data-testid="join-seats">دعوة جماعية · المقاعد المتبقية <b>{inv.seats_left ?? '—'}</b> من {inv.max_uses} · صالحة حتى {fmt(inv.expires_at)} · تدخل ببريدك أنت</p> : <p className="jn-muted">الدعوة باسم البريد <code dir="ltr">{inv.email_masked}</code> · صالحة حتى {fmt(inv.expires_at)}</p>}
 
           {inv.state !== 'pending' && !done && <p className="jn-err" data-testid="join-state">{inv.kind === 'group' && inv.state === 'accepted' ? 'اكتملت مقاعد هذه الدعوة — اطلب من إدارة أَثَر دعوة جديدة' : STATE_AR[inv.state]}</p>}
-          {done && <p className="jn-ok" data-testid="join-done"><Icon name="check" size={16} /> تمّ — صرت الآن: {done.roles.join(' · ')}. نفتح بابك…</p>}
+          {done && <p className="jn-ok" data-testid="join-done"><Icon name="check" size={16} /> تمّ — دورك الآن: {done.roles.join(' · ')}. ننتقل إلى صفحتك…</p>}
           {inv.state === 'pending' && !done && !me && (
             <form onSubmit={magic} className="jn-form" data-testid="join-login">
               <label htmlFor="jn-email">{inv.kind === 'group' ? 'ادخل ببريدك' : 'ادخل ببريد الدعوة نفسه'}</label>
@@ -76,8 +76,8 @@ export default function JoinPage({ params }: { params: { token: string } }) {
             </form>
           )}
           {inv.state === 'pending' && !done && me && me.matches && (
-            <div className="jn-form"><p>أنت داخل باسم <code dir="ltr">{me.email}</code>{inv.kind === 'group' ? ' — سيُفتح بابك بهذا البريد.' : ' — وهو بريد الدعوة.'}</p>
-              <button type="button" onClick={accept} disabled={busy} data-testid="join-accept"><Icon name="check" size={16} /> {busy ? 'لحظة…' : 'أقبل الدعوة وافتح بابي'}</button>
+            <div className="jn-form"><p>أنت داخل باسم <code dir="ltr">{me.email}</code>{inv.kind === 'group' ? ' — سيُفعَّل حسابك بهذا البريد.' : ' — وهو بريد الدعوة.'}</p>
+              <button type="button" onClick={accept} disabled={busy} data-testid="join-accept"><Icon name="check" size={16} /> {busy ? 'لحظة…' : 'قبول الدعوة والدخول'}</button>
               {err && <p className="jn-err">{err}</p>}
             </div>
           )}

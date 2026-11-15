@@ -33,7 +33,7 @@ export default function HubPage() {
       const sp = new URLSearchParams(window.location.search); const stay = sp.get('stay') === '1';
       let pref = false; try { pref = localStorage.getItem(START_KEY) === 'hub'; } catch { /* ignore */ } setStartHub(pref);
       const j = await fetch('/api/roles', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null);
-      if (!j?.success) { setErr(j?.error || 'تعذّر قراءة صفاتك'); return; }
+      if (!j?.success) { setErr(j?.error || 'تعذّر قراءة أدوارك'); return; }
       setEmail(j.email || ''); const cat: R[] = j.catalog || [];
       setRoles(cat);
       if (cat.some(r => COMMAND_CODES.includes(r.code))) {
@@ -54,8 +54,8 @@ export default function HubPage() {
       <main className="hw" dir="rtl" id="main" data-testid="door-welcome" aria-live="polite"><style dangerouslySetInnerHTML={{ __html: CSS }} />
         <div className="hw-card">
           <span className="hw-rings" aria-hidden="true"><i /><i /><i /></span>
-          <p className="hw-kicker">الباب يعرفك</p>
-          <h1>فُتحت لك: {welcome.names.join(' · ') || 'مساحتك'}</h1>
+          <p className="hw-kicker">مرحبًا بك في أَثَر</p>
+          <h1>صفحاتك: {welcome.names.join(' · ') || 'مساحتك'}</h1>
           <p className="hw-sub">ننتقل الآن إلى {welcome.toLabel}…</p>
           <Link href={welcome.to} className="hw-go" data-testid="door-welcome-go">ادخل الآن <Icon name="arrow" size={14} /></Link>
         </div>
@@ -65,9 +65,9 @@ export default function HubPage() {
   return (
     <PortalShell><main className="hb" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hb-wrap">
-        <header className="hb-head"><span className="hb-kicker"><Icon name="compass" size={14} /> الردهة · بوابة أَثَر</span><h1>أبوابك</h1><p>{email ? <>داخل باسم <code dir="ltr">{email}</code> — </> : null}لك أكثر من صفة؛ اختر الباب الذي تريد الدخول منه الآن.</p></header>
+        <header className="hb-head"><span className="hb-kicker"><Icon name="compass" size={14} /> صفحاتي · بوابة أَثَر</span><h1>صفحاتك</h1><p>{email ? <>داخل باسم <code dir="ltr">{email}</code> — </> : null}لك أكثر من دور؛ اختر الصفحة التي تريد الدخول إليها الآن.</p></header>
         {err && <p className="hb-err">{err}</p>}
-        {!roles && !err && <p className="hb-muted">جارٍ فتح أبوابك…</p>}
+        {!roles && !err && <p className="hb-muted">جارٍ تحميل صفحاتك…</p>}
         {roles && (
           <div className="hb-grid" data-testid="hub-grid">
             {roles.map(r => (
@@ -84,7 +84,7 @@ export default function HubPage() {
         {roles && (
           <label className="hb-pref" data-testid="hub-start-toggle">
             <input type="checkbox" checked={startHub} onChange={e => togglePref(e.target.checked)} />
-            <span>اجعل الردهة نقطة بدايتي بعد الدخول <small>(على هذا الجهاز — بدل التحويل المباشر إلى بابك)</small></span>
+            <span>اجعل «صفحاتي» نقطة بدايتي بعد الدخول <small>(على هذا الجهاز — بدل التحويل المباشر إلى صفحة دوري)</small></span>
           </label>
         )}
       </div>

@@ -1,8 +1,8 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /login — الباب الواحد (P42-أ)
- *  رابط سحري (افتراضي) أو كلمة مرور → بعد الدخول: ?next=… إن وُجد وإلا /hub (يفتح بابك حسب صفتك)
+ * /login — صفحة الدخول الموحّدة (P42-أ)
+ *  رابط سحري (افتراضي) أو كلمة مرور → بعد الدخول: ?next=… إن وُجد وإلا /hub (صفحتك الرئيسية حسب دورك)
  */
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -32,7 +32,7 @@ export default function LoginPage() {
   const [next, setNext] = useState('/hub');
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search); setNext(safeNext(sp.get('next')));
-    /* داخل بالفعل؟ إلى بابه مباشرة */
+    /* داخل بالفعل؟ إلى صفحته مباشرة */
     (async () => { try { const { data } = await supabase().auth.getSession(); if (data.session) router.replace(safeNext(sp.get('next'))); } catch { /* ignore */ } })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -56,7 +56,7 @@ export default function LoginPage() {
       const { error } = await supabase().auth.signInWithOtp({ email: em, options: { shouldCreateUser: true, emailRedirectTo: window.location.origin + next } });
       setLoading(false);
       if (error) { setError(explain(error.message)); return ''; }
-      return `أرسلنا رابط الدخول إلى ${em} — افتحه من هذا الجهاز وسيُفتح بابك مباشرة. (إن لم يصل خلال دقيقة راجع «غير المرغوب»)`;
+      return `أرسلنا رابط الدخول إلى ${em} — افتحه من هذا الجهاز وستدخل إلى حسابك مباشرة. (إن لم يصل خلال دقيقة راجع «غير المرغوب»)`;
     } catch (e: any) { setLoading(false); setError(explain(e?.message || String(e))); return ''; }
   }
 

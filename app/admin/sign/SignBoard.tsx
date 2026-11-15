@@ -20,7 +20,7 @@ type Reg = { total: number; today_signed: number | null; oldest_days: number | n
 
 const days = (iso: string | null) => { if (!iso) return null; const d = Math.max(0, Math.floor((Date.now() - Date.parse(iso)) / 86400000)); return d; };
 const since = (iso: string | null) => { const d = days(iso); if (d === null) return ''; return d === 0 ? 'اليوم' : d === 1 ? 'منذ يوم' : d === 2 ? 'منذ يومين' : d <= 10 ? `منذ ${d} أيام` : `منذ ${d} يومًا`; };
-const SCOPE_AR = { all: 'ترى كل ما ينتظر توقيعًا في أَثَر ومِعيار', trainer: 'ترى شُعبك فقط', doors: 'ترى قرارات أبوابك' } as const;
+const SCOPE_AR = { all: 'ترى كل ما ينتظر توقيعًا في أَثَر ومِعيار', trainer: 'ترى شُعبك فقط', doors: 'ترى قرارات صفحات أدوارك' } as const;
 
 export default function SignBoard() {
   const router = useRouter(); const [reg, setReg] = useState<Reg | null>(null); const [err, setErr] = useState<{ code: number; msg: string } | null>(null); const [busy, setBusy] = useState(''); const [ok, setOk] = useState(''); const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -43,9 +43,9 @@ export default function SignBoard() {
       <header className="sg-head">
         <div><span className="sg-kicker"><Icon name="check" size={14} /> بوابة أَثَر · P50 · سجلّ التوقيعات المعلّقة</span><h1>توقيعي <small>ما ينتظر توقيعي</small></h1>
           <p className="sg-lead">الذكاء يصوغ، والإنسان يوقّع. هذه الصفحة تجمع كل ما ينتظر إنسانًا في أَثَر ومِعيار — منذ متى، وأين يُوقَّع، وما يمكن توقيعه بلمسة.{reg ? ` ${SCOPE_AR[reg.scope]}.` : ''}</p></div>
-        <div className="sg-acts"><button type="button" className="sg-btn ghost" onClick={() => void load(true)} data-testid="sg-refresh"><Icon name="refresh" size={14} /> تحديث</button><Link href="/hub" className="sg-btn ghost">الردهة</Link></div>
+        <div className="sg-acts"><button type="button" className="sg-btn ghost" onClick={() => void load(true)} data-testid="sg-refresh"><Icon name="refresh" size={14} /> تحديث</button><Link href="/hub" className="sg-btn ghost">صفحاتي</Link></div>
       </header>
-      {err && <section className="sg-msg" role="alert" data-testid="sg-err">{err.code === 403 ? <>«توقيعي» للطاقم والمدرّبين وأصحاب الأبواب. <Link href="/me">مساحتي</Link></> : err.msg}</section>}
+      {err && <section className="sg-msg" role="alert" data-testid="sg-err">{err.code === 403 ? <>«توقيعي» للطاقم والمدرّبين وأصحاب الأدوار. <Link href="/me">مساحتي</Link></> : err.msg}</section>}
       {reg && <>
         <section className="sg-sum" data-testid="sg-summary">
           <div className={`sg-card ${reg.total ? 'hot' : 'calm'}`}><b data-testid="sg-total">{reg.total}</b><small>ينتظر توقيعك</small></div>

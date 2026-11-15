@@ -1,9 +1,9 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /admin/roles — الأدوار والدعوات (P42-أ «بابٌ واحد لكل دور»)
- *  دعوة: بريد + صفات (حتى 5) + جهة اختيارية + رسالة → رابط لمرة واحدة يُنسخ ويُرسل (واتساب/بريد) — لا إرسال آلي
- *  المنح: جدول حيّ مع سحب فوري · الدعوات: الحالة والنسخ والإلغاء · الكتالوج: 16 صفة نظامية + صفات مخصّصة «حسب الاحتياج»
+ * /admin/roles — الأدوار والدعوات (P42-أ) — مصطلحات معتمدة (2026-11-15): دور · صلاحية · إسناد · الصفحة الرئيسية للدور
+ *  دعوة: بريد + أدوار (حتى 5) + جهة اختيارية + رسالة → رابط لمرة واحدة يُنسخ ويُرسل (واتساب/بريد) — لا إرسال آلي
+ *  الصلاحيات: جدول حيّ مع إلغاء فوري · الدعوات: الحالة والنسخ والإلغاء · قائمة الأدوار: 16 دورًا نظاميًا + أدوار مخصّصة
  *  الطاقم يرى؛ مدير النظام وحده يكتب. كل كتابة تُسجَّل في درع أَثَر.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -60,13 +60,13 @@ export default function AdminRolesPage() {
   /** ملصق QR للطباعة (P42-ب): نافذة طباعة بسيطة بهوية أَثَر — بلا تخزين للرابط */
   function printPoster() {
     if (!made) return; const names = picked.length ? picked.map(roleName).join(' · ') : '';
-    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>دعوة أَثَر — ${made.label || ''}</title><style>body{font-family:Tajawal,system-ui,sans-serif;margin:0;padding:40px;color:#0f2a4e;text-align:center}h1{font-size:34px;margin:0 0 6px}h2{font-size:22px;color:#0b8a83;margin:0 0 18px;font-weight:700}.qr{display:inline-block;padding:18px;border:6px solid #c9a24b;border-radius:24px;background:#fff}.qr svg{width:360px;height:360px}p{font-size:16px;line-height:1.9;color:#334155}code{direction:ltr;display:block;font-size:13px;color:#64748b;word-break:break-all;margin-top:10px}.foot{margin-top:28px;font-size:13px;color:#64748b}@media print{body{padding:20px}}</style></head><body><h1>أَثَر — ${made.label || 'دعوة جماعية'}</h1><h2>${names}</h2><div class="qr">${qrSvg(made.url, 360)}</div><p>امسح الرمز بكاميرا جوالك، ثم ادخل ببريدك — يُفتح بابك فورًا.<br>${made.max_uses || ''} مقعدًا · صالحة حتى ${fmt(made.expires_at)}</p><code>${made.url}</code><div class="foot">بوابة أَثَر — التدريب ما بعد الذكاء الاصطناعي · نبني القدرة ونُثبت الأثر</div><script>window.onload=function(){window.print()}</script></body></html>`;
+    const html = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>دعوة أَثَر — ${made.label || ''}</title><style>body{font-family:Tajawal,system-ui,sans-serif;margin:0;padding:40px;color:#0f2a4e;text-align:center}h1{font-size:34px;margin:0 0 6px}h2{font-size:22px;color:#0b8a83;margin:0 0 18px;font-weight:700}.qr{display:inline-block;padding:18px;border:6px solid #c9a24b;border-radius:24px;background:#fff}.qr svg{width:360px;height:360px}p{font-size:16px;line-height:1.9;color:#334155}code{direction:ltr;display:block;font-size:13px;color:#64748b;word-break:break-all;margin-top:10px}.foot{margin-top:28px;font-size:13px;color:#64748b}@media print{body{padding:20px}}</style></head><body><h1>أَثَر — ${made.label || 'دعوة جماعية'}</h1><h2>${names}</h2><div class="qr">${qrSvg(made.url, 360)}</div><p>امسح الرمز بكاميرا جوالك، ثم ادخل ببريدك — يُفعَّل حسابك فورًا.<br>${made.max_uses || ''} مقعدًا · صالحة حتى ${fmt(made.expires_at)}</p><code>${made.url}</code><div class="foot">بوابة أَثَر — التدريب ما بعد الذكاء الاصطناعي · نبني القدرة ونُثبت الأثر</div><script>window.onload=function(){window.print()}</script></body></html>`;
     const w = window.open('', '_blank', 'noopener,width=720,height=900'); if (!w) { setError('السماح بالنوافذ المنبثقة مطلوب للطباعة'); return; } w.document.write(html); w.document.close();
   }
   async function copy(t: string) { try { await navigator.clipboard.writeText(t); setOk('نُسخ'); setTimeout(() => setOk(''), 1500); } catch { setError('تعذّر النسخ — حدّد النص وانسخه يدويًا'); } }
   async function revoke(g: Grant) { if (!confirm(`سحب «${roleName(g.role_code)}» من ${g.email}؟ يسري فورًا.`)) return; setBusy(g.id); const j = await post({ action: 'revoke', grant_id: g.id }); if (!j?.success) setError(j?.error || 'تعذّر السحب'); await load(await fresh()); setBusy(''); }
   async function revokeInvite(i: Inv) { if (!confirm(`إلغاء دعوة ${i.kind === 'group' ? `«${i.label}»` : i.email}؟`)) return; setBusy(i.id); const j = await post({ action: 'revoke_invite', invite_id: i.id }); if (!j?.success) setError(j?.error || 'تعذّر'); await load(await fresh()); setBusy(''); }
-  async function createRole(e: React.FormEvent) { e.preventDefault(); setError(''); setBusy('role'); const j = await post({ action: 'role_create', ...nr, code: nr.code.toUpperCase(), permissions: nr.permissions.split(/[,\s،]+/).filter(Boolean), legacy_role: nr.is_staff ? nr.legacy_role : null }); setBusy(''); if (!j?.success) { setError(j?.error || 'تعذّر'); return; } setOk(`أُنشئت الصفة ${j.code}`); setNr({ code: '', name_ar: '', name_en: '', scope: 'platform', landing: '/hub', is_staff: true, legacy_role: 'QUALITY_ANALYST', permissions: '' }); await load(await fresh()); }
+  async function createRole(e: React.FormEvent) { e.preventDefault(); setError(''); setBusy('role'); const j = await post({ action: 'role_create', ...nr, code: nr.code.toUpperCase(), permissions: nr.permissions.split(/[,\s،]+/).filter(Boolean), legacy_role: nr.is_staff ? nr.legacy_role : null }); setBusy(''); if (!j?.success) { setError(j?.error || 'تعذّر'); return; } setOk(`أُنشئ الدور ${j.code}`); setNr({ code: '', name_ar: '', name_en: '', scope: 'platform', landing: '/hub', is_staff: true, legacy_role: 'QUALITY_ANALYST', permissions: '' }); await load(await fresh()); }
   async function toggleRole(r: Role) { setBusy(r.code); const j = await post({ action: 'role_toggle', code: r.code, active: !r.active }); if (!j?.success) setError(j?.error || 'تعذّر'); await load(await fresh()); setBusy(''); }
 
   const grants = useMemo(() => (data?.grants || []).filter(g => !q || g.email.includes(q.toLowerCase()) || roleName(g.role_code).includes(q) || g.role_code.includes(q.toUpperCase())), [data, q, roles]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -77,14 +77,14 @@ export default function AdminRolesPage() {
   return (
     <div className="rl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="rl-wrap">
-        <header className="rl-head"><div><span className="rl-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P42</span><h1>الأدوار والدعوات</h1><p>بابٌ واحد لكل صفة: تدعو الشخص برابط واحد، يدخل ببريده، فيفتح بابه بما يخصّه فقط. {admin ? '' : '(أنت تقرأ فقط — الكتابة لمدير النظام)'}</p></div></header>
+        <header className="rl-head"><div><span className="rl-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P42</span><h1>الأدوار والدعوات</h1><p>دعوة واحدة لكل مستخدم: تدعو الشخص برابط واحد، يدخل ببريده، فتُفتح له صفحات دوره فقط. {admin ? '' : '(أنت تقرأ فقط — الكتابة لمدير النظام)'}</p></div></header>
         <PortalAdminTabs counts={{ '/admin/roles': pendingInv }} />
         {error && <div className="rl-err" role="alert">{error}</div>}{ok && <div className="rl-ok" role="status">{ok}</div>}
         <div className="rl-kpis" data-testid="roles-kpis">
-          <span><b>{byEmail.size}</b> شخصًا لهم صفات</span><span><b>{data?.grants.length || 0}</b> منحة فعّالة</span><span><b>{pendingInv}</b> دعوة بانتظار القبول</span><span><b>{active.length}</b> صفة متاحة ({roles.filter(r => !r.is_system).length} مخصّصة)</span>
+          <span><b>{byEmail.size}</b> مستخدمًا لهم أدوار</span><span><b>{data?.grants.length || 0}</b> صلاحية فعّالة</span><span><b>{pendingInv}</b> دعوة بانتظار القبول</span><span><b>{active.length}</b> دورًا متاحًا ({roles.filter(r => !r.is_system).length} مخصّصة)</span>
         </div>
         <div className="rl-tabs" role="tablist">
-          {(['invite', 'grants', 'invites', 'catalog'] as const).map(t => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)} data-testid={`roles-tab-${t}`}>{t === 'invite' ? 'دعوة جديدة' : t === 'grants' ? 'من لديه ماذا' : t === 'invites' ? 'الدعوات' : 'كتالوج الصفات'}</button>)}
+          {(['invite', 'grants', 'invites', 'catalog'] as const).map(t => <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)} data-testid={`roles-tab-${t}`}>{t === 'invite' ? 'دعوة جديدة' : t === 'grants' ? 'المستخدمون والأدوار' : t === 'invites' ? 'الدعوات' : 'قائمة الأدوار'}</button>)}
         </div>
 
         {tab === 'invite' && (
@@ -92,7 +92,7 @@ export default function AdminRolesPage() {
             {made && (
               <div className="rl-made" data-testid="invite-made">
                 <h3><Icon name="check" size={16} /> {made.kind === 'group' ? `الدعوة الجماعية «${made.label}» جاهزة — اعرض الرمز أو اطبع الملصق` : 'الدعوة جاهزة — انسخ الرابط وأرسله بالقناة التي تناسبك'}</h3>
-                {made.kind === 'group' && <div className="rl-qrwrap"><div className="rl-qr" data-testid="invite-qr" dangerouslySetInnerHTML={{ __html: qrSvg(made.url, 200) }} /><div className="rl-qrside"><b>{made.max_uses} مقعدًا</b><span>كل من يمسح الرمز ويدخل ببريده يأخذ مقعدًا واحدًا ويُفتح بابه فورًا.</span><button type="button" onClick={printPoster} data-testid="invite-print"><Icon name="print" size={14} /> اطبع الملصق</button></div></div>}
+                {made.kind === 'group' && <div className="rl-qrwrap"><div className="rl-qr" data-testid="invite-qr" dangerouslySetInnerHTML={{ __html: qrSvg(made.url, 200) }} /><div className="rl-qrside"><b>{made.max_uses} مقعدًا</b><span>كل من يمسح الرمز ويدخل ببريده يأخذ مقعدًا واحدًا ويُفعَّل حسابه فورًا.</span><button type="button" onClick={printPoster} data-testid="invite-print"><Icon name="print" size={14} /> اطبع الملصق</button></div></div>}
                 <code dir="ltr" data-testid="invite-url">{made.url}</code>
                 <div className="rl-row"><button type="button" onClick={() => copy(made.url)} data-testid="invite-copy"><Icon name="copy" size={14} /> نسخ الرابط</button><button type="button" onClick={() => copy(made.text)}><Icon name="copy" size={14} /> نسخ رسالة كاملة</button><a className="rl-btn" href={`https://wa.me/?text=${encodeURIComponent(made.text)}`} target="_blank" rel="noopener noreferrer"><Icon name="send" size={14} /> عبر واتساب</a><a className="rl-btn" href={`mailto:?subject=${encodeURIComponent('دعوة إلى بوابة أَثَر')}&body=${encodeURIComponent(made.text)}`}><Icon name="mail" size={14} /> عبر البريد</a></div>
                 <p className="rl-muted">الرابط يُعرض مرة واحدة ولا يُخزَّن — إن ضاع أنشئ دعوة جديدة. صالح حتى {fmt(made.expires_at)}.</p>
@@ -110,34 +110,34 @@ export default function AdminRolesPage() {
                 <label>اسم المجموعة<input required value={label} onChange={e => setLabel(e.target.value)} maxLength={80} placeholder="ورشة مدرّبي الرياض — نوفمبر" data-testid="inv-label" disabled={!admin} /></label>
                 <label>عدد المقاعد (2–500)<input type="number" min={2} max={500} required value={seats} onChange={e => setSeats(Number(e.target.value))} data-testid="inv-seats" disabled={!admin} /></label>
               </div>}
-              <fieldset><legend>الصفات (حتى 5) — اختر ما يخصّه فقط</legend>
+              <fieldset><legend>الأدوار (حتى 5) — اختر ما يخصّه فقط</legend>
                 <div className="rl-roles" data-testid="inv-roles">
                   {active.map(r => <label key={r.code} className={picked.includes(r.code) ? 'on' : ''}><input type="checkbox" checked={picked.includes(r.code)} onChange={() => toggle(r.code)} disabled={!admin} data-testid={`inv-role-${r.code}`} /><b>{r.name_ar}</b><span>{r.name_en} · {SCOPE_AR[r.scope]}{r.is_staff ? ' · طاقم' : ''}</span></label>)}
                 </div>
               </fieldset>
               <div className="rl-two">
-                <label>الجهة {needOrg ? <em>(مطلوبة لصفة الجهة)</em> : '(اختياري)'}<select value={orgId} onChange={e => setOrgId(e.target.value)} disabled={!admin} data-testid="inv-org"><option value="">— بلا جهة —</option>{data?.orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>
+                <label>الجهة {needOrg ? <em>(مطلوبة لدور «مسؤول المؤسسة»)</em> : '(اختياري)'}<select value={orgId} onChange={e => setOrgId(e.target.value)} disabled={!admin} data-testid="inv-org"><option value="">— بلا جهة —</option>{data?.orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>
                 <label>رسالة قصيرة تظهر في الدعوة (اختياري)<input value={message} onChange={e => setMessage(e.target.value)} maxLength={600} placeholder="مثال: نرحّب بك مديرًا لبرامج العربية ابتداءً من يناير" disabled={!admin} /></label>
               </div>
-              {!group && <label className="rl-check"><input type="checkbox" checked={direct} onChange={e => setDirect(e.target.checked)} disabled={!admin} data-testid="inv-direct" /> منح مباشر بلا دعوة (لمن هو داخل أصلًا ويحتاج صفة إضافية الآن)</label>}
-              <div className="rl-row"><button type="submit" disabled={!admin || busy === 'invite' || !picked.length} data-testid="inv-submit"><Icon name={direct ? 'check' : 'link'} size={16} /> {busy === 'invite' ? 'لحظة…' : direct ? 'امنح الآن' : group ? 'أنشئ الدعوة الجماعية والرمز' : 'أنشئ رابط الدعوة'}</button><span className="rl-muted">{picked.length ? picked.map(roleName).join(' + ') : 'لم تختر صفة بعد'}</span></div>
+              {!group && <label className="rl-check"><input type="checkbox" checked={direct} onChange={e => setDirect(e.target.checked)} disabled={!admin} data-testid="inv-direct" /> إسناد مباشر بلا دعوة (لمستخدم مسجَّل أصلًا يحتاج دورًا إضافيًا الآن)</label>}
+              <div className="rl-row"><button type="submit" disabled={!admin || busy === 'invite' || !picked.length} data-testid="inv-submit"><Icon name={direct ? 'check' : 'link'} size={16} /> {busy === 'invite' ? 'لحظة…' : direct ? 'أسنِد الدور الآن' : group ? 'أنشئ الدعوة الجماعية والرمز' : 'أنشئ رابط الدعوة'}</button><span className="rl-muted">{picked.length ? picked.map(roleName).join(' + ') : 'لم تختر دورًا بعد'}</span></div>
             </form>
           </section>
         )}
 
         {tab === 'grants' && (
           <section className="rl-card">
-            <div className="rl-row"><input className="rl-search" value={q} onChange={e => setQ(e.target.value)} placeholder="ابحث بالبريد أو الصفة…" aria-label="بحث" data-testid="grants-q" /><span className="rl-muted">{grants.length} منحة</span></div>
-            <div className="rl-tablewrap"><table className="rl-table" data-testid="grants-table"><thead><tr><th>البريد</th><th>الصفة</th><th>الجهة</th><th>المصدر</th><th>منذ</th><th>الحالة</th><th></th></tr></thead><tbody>
-              {grants.map(g => <tr key={g.id} data-testid="grant-row"><td dir="ltr">{g.email}</td><td><b>{roleName(g.role_code)}</b> <small>{g.role_code}</small></td><td>{orgName(g.org_id)}</td><td>{g.source === 'invite' ? 'دعوة' : g.source === 'manual' ? 'منح مباشر' : g.source}</td><td>{fmt(g.created_at)}</td><td>{g.user_id ? <span className="rl-tag ok">مرتبط بحساب</span> : <span className="rl-tag">بانتظار أول دخول</span>}</td><td>{admin && <button type="button" className="rl-x" onClick={() => revoke(g)} disabled={busy === g.id} data-testid="grant-revoke">سحب</button>}</td></tr>)}
-              {!grants.length && <tr><td colSpan={7} className="rl-muted">لا منح بعد — ابدأ بدعوة.</td></tr>}
+            <div className="rl-row"><input className="rl-search" value={q} onChange={e => setQ(e.target.value)} placeholder="ابحث بالبريد أو الدور…" aria-label="بحث" data-testid="grants-q" /><span className="rl-muted">{grants.length} منحة</span></div>
+            <div className="rl-tablewrap"><table className="rl-table" data-testid="grants-table"><thead><tr><th>البريد</th><th>الدور</th><th>الجهة</th><th>المصدر</th><th>منذ</th><th>الحالة</th><th></th></tr></thead><tbody>
+              {grants.map(g => <tr key={g.id} data-testid="grant-row"><td dir="ltr">{g.email}</td><td><b>{roleName(g.role_code)}</b> <small>{g.role_code}</small></td><td>{orgName(g.org_id)}</td><td>{g.source === 'invite' ? 'دعوة' : g.source === 'manual' ? 'إسناد مباشر' : g.source}</td><td>{fmt(g.created_at)}</td><td>{g.user_id ? <span className="rl-tag ok">مرتبط بحساب</span> : <span className="rl-tag">بانتظار أول دخول</span>}</td><td>{admin && <button type="button" className="rl-x" onClick={() => revoke(g)} disabled={busy === g.id} data-testid="grant-revoke">سحب</button>}</td></tr>)}
+              {!grants.length && <tr><td colSpan={7} className="rl-muted">لا صلاحيات بعد — ابدأ بدعوة.</td></tr>}
             </tbody></table></div>
           </section>
         )}
 
         {tab === 'invites' && (
           <section className="rl-card">
-            <div className="rl-tablewrap"><table className="rl-table" data-testid="invites-table"><thead><tr><th>البريد</th><th>الاسم</th><th>الصفات</th><th>الجهة</th><th>الحالة</th><th>تنتهي</th><th></th></tr></thead><tbody>
+            <div className="rl-tablewrap"><table className="rl-table" data-testid="invites-table"><thead><tr><th>البريد</th><th>الاسم</th><th>الأدوار</th><th>الجهة</th><th>الحالة</th><th>تنتهي</th><th></th></tr></thead><tbody>
               {(data?.invites || []).map(i => <tr key={i.id} data-testid="invite-row" data-state={i.state} data-kind={i.kind || 'personal'}><td dir={i.kind === 'group' ? 'rtl' : 'ltr'}>{i.kind === 'group' ? <><Icon name="qr" size={13} /> {i.label} <small className="rl-muted">({i.uses || 0}/{i.max_uses})</small></> : i.email}</td><td>{i.full_name || '—'}</td><td>{i.role_codes.map(roleName).join(' · ')}</td><td>{orgName(i.org_id)}</td><td><span className={`rl-tag ${i.state === 'accepted' ? 'ok' : i.state === 'pending' ? 'warn' : ''}`}>{i.kind === 'group' ? GROUP_STATE_AR[i.state] : INVITE_STATE_AR[i.state]}</span></td><td>{fmt(i.expires_at)}</td><td>{admin && i.state === 'pending' && <button type="button" className="rl-x" onClick={() => revokeInvite(i)} disabled={busy === i.id} data-testid="invite-revoke">إلغاء</button>}</td></tr>)}
               {!data?.invites.length && <tr><td colSpan={7} className="rl-muted">لا دعوات بعد.</td></tr>}
             </tbody></table></div>
@@ -147,23 +147,23 @@ export default function AdminRolesPage() {
 
         {tab === 'catalog' && (
           <section className="rl-card">
-            <div className="rl-tablewrap"><table className="rl-table" data-testid="catalog-table"><thead><tr><th>الصفة</th><th>الرمز</th><th>النطاق</th><th>الباب</th><th>طاقم؟</th><th>جسر قديم</th><th>الحالة</th><th></th></tr></thead><tbody>
+            <div className="rl-tablewrap"><table className="rl-table" data-testid="catalog-table"><thead><tr><th>الدور</th><th>الرمز</th><th>النطاق</th><th>الصفحة الرئيسية</th><th>إداري؟</th><th>جسر قديم</th><th>الحالة</th><th></th></tr></thead><tbody>
               {roles.map(r => <tr key={r.code} data-testid="catalog-row"><td><b>{r.name_ar}</b><br /><small dir="ltr">{r.name_en}</small></td><td dir="ltr"><code>{r.code}</code></td><td>{SCOPE_AR[r.scope]}</td><td dir="ltr">{r.landing}</td><td>{r.is_staff ? 'نعم' : '—'}</td><td dir="ltr">{r.legacy_role || '—'}</td><td>{r.active ? <span className="rl-tag ok">فعّالة</span> : <span className="rl-tag">معطَّلة</span>}{r.is_system ? '' : <span className="rl-tag">مخصّصة</span>}</td><td>{admin && !r.is_system && <button type="button" className="rl-x" onClick={() => toggleRole(r)} disabled={busy === r.code}>{r.active ? 'تعطيل' : 'تفعيل'}</button>}</td></tr>)}
             </tbody></table></div>
             {admin && (
               <form onSubmit={createRole} className="rl-form rl-newrole" data-testid="role-form">
-                <h3>صفة مخصّصة «حسب الاحتياج»</h3>
+                <h3>دور مخصّص «حسب الاحتياج»</h3>
                 <div className="rl-two"><label>الرمز (لاتيني كبير)<input dir="ltr" required value={nr.code} onChange={e => setNr({ ...nr, code: e.target.value.toUpperCase() })} placeholder="PARTNER_LIAISON" pattern="[A-Za-z][A-Za-z0-9_]{1,39}" data-testid="nr-code" /></label><label>الاسم العربي<input required value={nr.name_ar} onChange={e => setNr({ ...nr, name_ar: e.target.value })} placeholder="منسّق الشراكات" data-testid="nr-name" /></label></div>
-                <div className="rl-two"><label>الاسم الإنجليزي<input dir="ltr" required value={nr.name_en} onChange={e => setNr({ ...nr, name_en: e.target.value })} placeholder="Partnerships liaison" /></label><label>الباب (مسار داخلي)<input dir="ltr" value={nr.landing} onChange={e => setNr({ ...nr, landing: e.target.value })} /></label></div>
+                <div className="rl-two"><label>الاسم الإنجليزي<input dir="ltr" required value={nr.name_en} onChange={e => setNr({ ...nr, name_en: e.target.value })} placeholder="Partnerships liaison" /></label><label>الصفحة الرئيسية للدور (مسار داخلي)<input dir="ltr" value={nr.landing} onChange={e => setNr({ ...nr, landing: e.target.value })} /></label></div>
                 <div className="rl-two"><label>النطاق<select value={nr.scope} onChange={e => setNr({ ...nr, scope: e.target.value })}><option value="platform">المنصة</option><option value="org">الجهة</option><option value="personal">شخصي</option></select></label><label>الصلاحيات (مفصولة بفواصل)<input dir="ltr" value={nr.permissions} onChange={e => setNr({ ...nr, permissions: e.target.value })} placeholder="programs.read, contracts.read" /></label></div>
-                <label className="rl-check"><input type="checkbox" checked={nr.is_staff} onChange={e => setNr({ ...nr, is_staff: e.target.checked })} /> صفة طاقم (ترى صفحات الإدارة التي تخصّها)</label>
+                <label className="rl-check"><input type="checkbox" checked={nr.is_staff} onChange={e => setNr({ ...nr, is_staff: e.target.checked })} /> دور إداري (يرى صفحات الإدارة التي تخصّه)</label>
                 {nr.is_staff && <label>مستوى الجسر القديم (ما تراه الصفحات القديمة)<select value={nr.legacy_role} onChange={e => setNr({ ...nr, legacy_role: e.target.value })}><option value="QUALITY_ANALYST">QUALITY_ANALYST — قراءة ومتابعة</option><option value="PROGRAM_MANAGER">PROGRAM_MANAGER — تشغيل البرامج</option><option value="TRAINER">TRAINER — مدرّب</option></select></label>}
-                <div className="rl-row"><button type="submit" disabled={busy === 'role'} data-testid="nr-submit"><Icon name="star" size={16} /> أنشئ الصفة</button></div>
+                <div className="rl-row"><button type="submit" disabled={busy === 'role'} data-testid="nr-submit"><Icon name="star" size={16} /> إنشاء الدور</button></div>
               </form>
             )}
           </section>
         )}
-        <p className="rl-foot">لماذا «صفة» و«باب»؟ الدور كلمة إدارية؛ أمّا «الصفة» فهي ما يحمله الإنسان («بصفتي مدير جودة»)، و«الباب» هو ما يُفتح له. في العقود والشهادات نستخدم الاسم الرسمي للصفة.</p>
+        <p className="rl-foot">المصطلحات: «الدور» ما يُسنَد للمستخدم، و«الصلاحية» أثره الفعلي في النظام، ولكل دور صفحة رئيسية تُفتح بعد الدخول. في العقود والشهادات نستخدم الاسم الرسمي للدور.</p>
       </div>
     </div>
   );

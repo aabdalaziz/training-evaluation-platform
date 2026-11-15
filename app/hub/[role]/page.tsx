@@ -1,8 +1,8 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /hub/<باب> — باب الصفة (P42-أ: الهيكل · P42-ب: المحتوى الحيّ لكل باب)
- *  كل باب: اسم واضح + «أول ثلاث خطوات» + روابط الأدوات التي تخصّ هذه الصفة فقط — لا قائمة الإدارة الكاملة.
+ * /hub/<role> — الصفحة الرئيسية للدور (P42-أ: الهيكل · P42-ب: المحتوى الحيّ) — مصطلحات معتمدة 2026-11-15
+ *  كل صفحة: اسم واضح + «أول ثلاث خطوات» + روابط الأدوات التي تخصّ هذا الدور فقط — لا قائمة الإدارة الكاملة.
  */
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -22,20 +22,20 @@ export default function HubDoorPage({ params }: { params: { role: string } }) {
       const j = await fetch('/api/roles', { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null);
       const roles: string[] = j?.roles || []; setMine(roles); setAllowed(!!door && (roles.includes('ADMIN') || door.roles.some(r => roles.includes(r))));
       if (!door) return;
-      /* أول زيارة لهذا الباب على هذا الجهاز → «أول ثلاث خطوات» مفتوحة */
+      /* أول زيارة لهذه الصفحة على هذا الجهاز → «أول ثلاث خطوات» مفتوحة */
       try { const k = `athar_door_seen_${params.role}`; if (!localStorage.getItem(k)) { setFirst(true); localStorage.setItem(k, new Date().toISOString()); } } catch { /* ignore */ }
       const h = await fetch(`/api/hub?door=${encodeURIComponent(params.role)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }).then(r => r.json()).catch(() => null);
       if (h?.success) setLive(h); else setLiveErr(h?.error || 'تعذّر تحميل المؤشرات');
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.role, tick]);
-  if (!door) return <PortalShell><main className="hd" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="hd-wrap"><p className="hd-err">لا يوجد باب بهذا الاسم. <Link href="/hub">أبوابي</Link></p></div></main></PortalShell>;
+  if (!door) return <PortalShell><main className="hd" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="hd-wrap"><p className="hd-err">لا توجد صفحة دور بهذا الاسم. <Link href="/hub">صفحاتي</Link></p></div></main></PortalShell>;
   return (
     <PortalShell><main className="hd" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hd-wrap">
-        <header className="hd-head"><Link href="/hub" className="hd-back"><Icon name="arrow" size={14} /> أبوابي</Link><h1>{door.title_ar} <small>{door.title_en}</small></h1><p>{door.lead}</p></header>
+        <header className="hd-head"><Link href="/hub" className="hd-back"><Icon name="arrow" size={14} /> صفحاتي</Link><h1>{door.title_ar} <small>{door.title_en}</small></h1><p>{door.lead}</p></header>
         {allowed === null && <p className="hd-muted">جارٍ التحقق من صفتك…</p>}
-        {allowed === false && <p className="hd-err" data-testid="door-denied">هذا الباب لصفة أخرى ({door.roles.join(' · ')}). صفاتك الحالية: {mine.length ? mine.join(' · ') : 'مشارك'}. <Link href="/hub">عد إلى أبوابك</Link></p>}
+        {allowed === false && <p className="hd-err" data-testid="door-denied">هذه الصفحة لدور آخر ({door.roles.join(' · ')}). أدوارك الحالية: {mine.length ? mine.join(' · ') : 'مشارك'}. <Link href="/hub">العودة إلى صفحاتي</Link></p>}
         {allowed && (<>
           <section className="hd-sec" aria-labelledby="hd-ind" data-testid="door-indicators">
             <div className="hd-sechead"><h2 id="hd-ind"><Icon name="chart" size={16} /> مؤشرات أَثَر</h2>{live && <span className="hd-when">حُسبت الآن · <button type="button" className="hd-refresh" onClick={() => { setLive(null); setTick(t => t + 1); }} data-testid="door-refresh">تحديث</button></span>}</div>
@@ -51,13 +51,13 @@ export default function HubDoorPage({ params }: { params: { role: string } }) {
           )}
           {live && live.decisions.length === 0 && <p className="hd-clear" data-testid="door-clear"><Icon name="check" size={14} /> لا شيء ينتظر قرارك الآن.</p>}
           <section className="hd-sec" aria-labelledby="hd-links">
-            <div className="hd-sechead"><h2 id="hd-links"><Icon name="compass" size={16} /> أدوات الباب</h2></div>
+            <div className="hd-sechead"><h2 id="hd-links"><Icon name="compass" size={16} /> أدوات الدور</h2></div>
             <div className="hd-grid" data-testid="door-links">
               {door.links.map(l => <Link key={l.href} href={l.href} className="hd-card"><b>{l.label}</b><span>{l.hint}</span></Link>)}
             </div>
           </section>
           <details className="hd-steps" open={first} data-testid="door-steps">
-            <summary><Icon name="star" size={15} /> أول ثلاث خطوات {first ? '— مرحبًا بك في بابك' : ''}</summary>
+            <summary><Icon name="star" size={15} /> أول ثلاث خطوات {first ? '— مرحبًا بك في صفحتك' : ''}</summary>
             <ol>{(live?.steps || []).map((st, i) => <li key={i}>{st}</li>)}{!live && <li className="hd-muted">…</li>}</ol>
           </details>
         </>)}

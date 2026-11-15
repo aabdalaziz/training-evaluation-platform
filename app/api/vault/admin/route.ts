@@ -107,7 +107,8 @@ export async function POST(req: Request) {
     const email = String(b.email || '').toLowerCase().trim(); if (!/@/.test(email)) return bad('بريد غير صالح');
     const { data: u } = await c.db.from('portal_org_members').select('user_id,full_name').ilike('email', email).limit(1); let uid = u?.[0]?.user_id || null; let name = u?.[0]?.full_name || null;
     if (!uid) { const { data: p } = await c.db.from('portal_enrollments').select('user_id,full_name').ilike('email', email).not('user_id', 'is', null).limit(1); uid = p?.[0]?.user_id || null; name = name || p?.[0]?.full_name || null; }
-    if (!uid) return bad('لم نجد حساب دخول بهذا البريد — إن كان ضيفًا بلا حساب فاستعمل النسيان بالبريد من SQL أو أضف الحساب أولًا', 404);
+    if (!uid) { /* 2026-11-15: موظف/مدرّب أثر الذي له دور فقط (بلا عضوية جهة ولا تسجيل في برنامج) */ const { data: g } = await c.db.from('portal_role_grants').select('user_id').ilike('email', email).not('user_id', 'is', null).limit(1); uid = g?.[0]?.user_id || null; }
+    if (!uid) return bad('لم نجد حساب دخول بهذا البريد — إن كان ضيفًا بلا حساب فاستعمل الحذف بالبريد من SQL أو أضف الحساب أولًا', 404);
     const r = await requestErasure(c.db, { id: uid, email, name }, S, process.env); if (!r.ok) return bad(r.error || 'تعذّر', 500);
     return NextResponse.json({ success: true, duplicate: r.duplicate, queue: r.queue });
   }

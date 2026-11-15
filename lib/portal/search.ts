@@ -114,7 +114,7 @@ export const ROUTES: Entry[] = [
   P('admin-outreach', '/admin/outreach', 'الإبلاغ متعدد القنوات', 'Multi-channel outreach', ['واتساب', 'بريد', 'اشعار', 'whatsapp'], 'staff', 'admin'),
   P('admin-observatory', '/admin/observatory', 'مرصد القدرة البشرية — الإدارة', 'Observatory admin', ['مرصد', 'قطاع'], 'staff', 'admin'),
   P('admin-roles', '/admin/roles', 'الأدوار والدعوات', 'Roles & invitations', ['دور', 'ادوار', 'دعوة', 'صلاحيات', 'roles', 'invite'], 'staff', 'admin'),
-  P('hub', '/hub', 'أبوابي', 'My doors', ['باب', 'ابواب', 'hub', 'ادواري'], 'user'),
+  P('hub', '/hub', 'صفحاتي', 'My pages', ['صفحات', 'باب', 'ابواب', 'hub', 'ادواري', 'الردهة'], 'user'),
   P('admin-shield', '/admin/shield', 'درع أَثَر', 'Athar Shield', ['امن', 'حوادث', 'معدل', 'csp'], 'staff', 'admin'),
   P('admin-vault', '/admin/vault', 'خزنة أَثَر', 'Athar Vault', ['خزنة', 'بيانات شخصية', 'dsr', 'pdpl', 'حذف'], 'staff', 'admin'),
   P('admin-councils', '/admin/councils', 'مجالس أَثَر — الإدارة', 'Councils admin', ['مجلس'], 'staff', 'admin'),

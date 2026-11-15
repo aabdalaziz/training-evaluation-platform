@@ -311,7 +311,7 @@ export default function Dashboard() {
             <img src="/logos/upm.png" alt={BRAND.institution.ar} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           </div>
           <div className="db-brand-text"><b>{BRAND.name.ar} · مركز القيادة</b><small>{BRAND.institution.ar}</small></div>
-          <Link href="/hub?stay=1" className="db-hall" data-testid="command-side-hall"><Icon name="compass" size={16} /> الردهة — كل أبوابك</Link>
+          <Link href="/hub?stay=1" className="db-hall" data-testid="command-side-hall"><Icon name="compass" size={16} /> صفحاتي — كل صفحات أدوارك</Link>
         </div>
         <div className="db-user">
           <div className="db-avatar">{(profile.full_name || 'م').trim().charAt(0)}</div>
@@ -345,7 +345,7 @@ export default function Dashboard() {
             {view === 'overview' && (
               <div className="db-seg">{(['7d', '14d', '30d', 'all'] as Range[]).map(r => <button key={r} className={range === r ? 'on' : ''} onClick={() => setRange(r)}>{{ '7d': '7 أيام', '14d': '14 يومًا', '30d': '30 يومًا', all: 'الكل' }[r]}</button>)}</div>
             )}
-            <Link href="/hub?stay=1" className="db-btn" data-testid="command-top-hall" title="الردهة — كل أبوابك في أَثَر"><Icon name="compass" size={16} /> الردهة</Link>
+            <Link href="/hub?stay=1" className="db-btn" data-testid="command-top-hall" title="صفحاتي — كل صفحات أدوارك في أَثَر"><Icon name="compass" size={16} /> صفحاتي</Link>
             <NotificationBell />
             <button className="db-btn" onClick={load}><Icon name="refresh" size={16} /> تحديث</button>
           </div>

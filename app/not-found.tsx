@@ -9,10 +9,10 @@ export default function NotFound() {
       <section className="nf-card" aria-labelledby="nf-h">
         <span className="nf-kicker">أَثَر · الطريق</span>
         <h1 id="nf-h">لم نجد هذا الطريق</h1>
-        <p>الصفحة التي طلبتها غير موجودة أو انتقلت إلى مكان آخر. اختر أحد هذه الأبواب، أو زرّ «رجوع» في متصفحك:</p>
+        <p>الصفحة التي طلبتها غير موجودة أو انتقلت إلى مكان آخر. اختر أحد هذه الروابط، أو زرّ «رجوع» في متصفحك:</p>
         <div className="nf-actions">
           <a href="/" className="nf-btn gold" data-testid="nf-home">الرئيسية</a>
-          <a href="/hub" className="nf-btn" data-testid="nf-hub">الردهة — أبوابك</a>
+          <a href="/hub" className="nf-btn" data-testid="nf-hub">صفحاتي</a>
           <a href="/help" className="nf-btn">دليل أَثَر</a>
         </div>
         <p className="nf-hint">أو اضغط زرّ الميكروفون «نادِ» (Alt+M) وقل: <b>«خذني إلى مِعيار»</b> أو <b>«أين أنا؟»</b> — أو ابحث بـ Ctrl+K.</p>

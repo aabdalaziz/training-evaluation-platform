@@ -2,6 +2,7 @@
 /** «بابٌ واحد لكل دور» (P42-أ) — الكتالوج، الرموز، حالة الدعوة، جمع الأدوار، الوجهة، الجسر القديم، التحقق */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { SYSTEM_ROLES, LEGACY_TO_ROLE, newInviteToken, hashToken, inviteUrl, inviteState, rolesOf, isStaffRoles, isAdminRoles, hasPermission, landingFor, legacyNeededFor, shouldUpgradeLegacy, validateInvite, validateRole, roleCodeOk, MAX_ROLES_PER_INVITE } from '../lib/portal/roles';
 
 const NOW = '2026-11-01T12:00:00Z';
@@ -95,4 +96,15 @@ test('P42 validateRole: رمز لاتيني كبير، باب داخلي، جس�
   assert.equal((validateRole({ code: 'PARTNER', name_ar: 'x', name_en: 'y', is_staff: true, legacy_role: 'SUPER_ADMIN' }) as any).ok, false, 'custom role cannot bridge to admin');
   const ok = validateRole({ code: 'partner_liaison', name_ar: 'منسّق', name_en: 'Liaison', scope: 'platform', landing: '/hub', permissions: ['a.read', 'a.read', ''], is_staff: true, legacy_role: 'QUALITY_ANALYST' });
   assert.equal(ok.ok, true, 'valid'); if (ok.ok) { assert.equal(ok.role.code, 'PARTNER_LIAISON', 'upper'); assert.deepEqual(ok.role.permissions, ['a.read'], 'dedup'); }
+});
+
+test('المصطلحات المعتمدة (2026-11-15): دور · صلاحية · إسناد · صفحاتي — لا «صفة/باب/منحة/الردهة» في شاشات الإدارة والدخول', () => {
+  const files = ['app/admin/roles/page.tsx', 'app/join/[token]/page.tsx', 'app/hub/page.tsx', 'app/hub/[role]/page.tsx', 'app/login/page.tsx', 'app/components/GlobalNavigation.tsx', 'app/components/AdminShell.tsx'];
+  const banned = ['من لديه ماذا', 'كتالوج الصفات', 'امنح الآن', 'أقبل الدعوة وافتح بابي', 'الباب يعرفك', 'أبوابي', 'أبوابك', 'يُفتح بابك', 'منحة فعّالة'];
+  for (const f of files) { const src = readFileSync(f, 'utf8').split('\n').filter(l => !/^\s*(\*|\/\/|\/\*)/.test(l)).join('\n'); for (const b of banned) assert.ok(!src.includes(b), `${f} ما زال يحوي «${b}»`); }
+  const roles = readFileSync('app/admin/roles/page.tsx', 'utf8');
+  for (const w of ['المستخدمون والأدوار', 'قائمة الأدوار', 'أسنِد الدور الآن', 'إسناد مباشر']) assert.ok(roles.includes(w), `roles: «${w}»`);
+  assert.ok(readFileSync('app/join/[token]/page.tsx', 'utf8').includes('قبول الدعوة والدخول'), 'join: زر القبول');
+  const vault = readFileSync('app/admin/vault/page.tsx', 'utf8'); assert.ok(vault.includes('بدء الحذف') && !vault.includes('ابدأ الحجر'), 'vault: حذف الحساب بدل حجر النسيان');
+  assert.ok(readFileSync('app/api/vault/admin/route.ts', 'utf8').includes("from('portal_role_grants').select('user_id').ilike('email'"), 'erasure_for يجد أصحاب الأدوار');
 });
