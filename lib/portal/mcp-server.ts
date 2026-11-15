@@ -37,7 +37,7 @@ import { GET as didGET } from '../../app/.well-known/did.json/route';
 import { GET as onairGET } from '../../app/api/onair/route';   // P36 season_record
 
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, X-Agent-Key, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id', 'Access-Control-Expose-Headers': 'MCP-Protocol-Version, WWW-Authenticate', 'Cache-Control': 'no-store' };
-const site = () => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.vercel.app');
+const site = () => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar.university');
 const svc = () => { const U = process.env.NEXT_PUBLIC_SUPABASE_URL; const S = process.env.SUPABASE_SERVICE_ROLE_KEY; return U && S ? createClient(U, S, { auth: { persistSession: false } }) : null; };
 const todayStart = () => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return d.toISOString(); };
 const TREND_AR: Record<string, string> = { rising: 'صاعد', stable: 'مستقر', cooling: 'متراجع', unknown: 'لا دليل كافٍ' };

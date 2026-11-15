@@ -13,7 +13,7 @@ export const ENV_SPECS: EnvSpec[] = [
   { key: 'SUPABASE_SERVICE_ROLE_KEY', label: 'مفتاح الخدمة (Service Role)', required: true, breaks: 'الكرون، البريد، تفريغ البيانات، سجل التدقيق التطبيقي، OTP بوابة المتدرب' },
   { key: 'CRON_SECRET', label: 'سرّ الكرون', required: true, breaks: 'التقرير الأسبوعي، المتابعات اليومية، فحص الإشعارات، بريد المتدربين' },
   { key: 'RESEND_API_KEY', label: 'مفتاح Resend للبريد', required: true, breaks: 'كل الرسائل: التقارير، الشهادات، المتابعات، الإشعارات، OTP' },
-  { key: 'REPORTS_FROM_EMAIL', label: 'عنوان المُرسِل', required: true, breaks: 'إرسال البريد (يرفض Resend الرسائل بلا مُرسِل معتمد)' },
+  { key: 'REPORTS_FROM_EMAIL', label: 'عنوان المُرسِل', required: false, breaks: 'لا شيء — الافتراضي «أَثَر <reports@athar.university>» (نطاق متحقَّق في Resend)؛ اضبطه فقط لتغيير المُرسِل' },
   { key: 'NEXT_PUBLIC_SITE_URL', label: 'رابط الموقع العام', required: false, breaks: 'روابط البريد قد تشير إلى نطاق المعاينة بدل النطاق الرسمي', public: true },
   { key: 'AI_API_KEY', label: 'مفتاح الذكاء الاصطناعي', required: false, breaks: 'توليد الأدوات والملخص التنفيذي بالنموذج (يعمل البديل المحلي)' },
   { key: 'AI_PROVIDER', label: 'مزوّد الذكاء الاصطناعي', required: false, breaks: 'يُكتشف تلقائيًا من شكل المفتاح' },

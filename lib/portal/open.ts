@@ -6,7 +6,7 @@ import type { CatalogProgram } from './catalog';
 import { regState } from './catalog';
 
 export const CATALOG_VERSION = '1.0';
-export const DEFAULT_SITE = 'https://athar-portal.vercel.app';
+export const DEFAULT_SITE = 'https://athar.university';
 /** يوحّد عنوان الموقع (بلا شرطة أخيرة) ويقبل قيمة بيئة أو أصل طلب */
 export function normalizeSite(raw?: string | null): string { const s = String(raw || '').trim().replace(/\/+$/, ''); return /^https?:\/\/[^\s/]+$/i.test(s) ? s : DEFAULT_SITE; }
 export function iso(d?: string | null): string | undefined { if (!d) return undefined; const x = new Date(d); return Number.isNaN(x.getTime()) ? undefined : x.toISOString(); }

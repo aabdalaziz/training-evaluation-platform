@@ -1,7 +1,7 @@
 # دليل التشغيل والتسليم — منصة تقييم البرامج التدريبية
 
 > وثيقة مرجعية واحدة لمن يشغّل المنصة أو يتسلّمها: البنية، المسارات، الصلاحيات، المتغيرات، المهام المجدولة، قاعدة البيانات، النسخ والاستعادة، وإجراءات الطوارئ.
-> آخر تحديث: 2026-11-03 (بعد المرحلة L2). الدليل التفاعلي داخل المنصة: `/help`.
+> آخر تحديث: 2026-11-15 (النطاق الرسمي athar.university). الدليل التفاعلي داخل المنصة: `/help`.
 ---
 
 ## 1) نظرة عامة
@@ -98,15 +98,28 @@
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | الكرون، البريد، التفريغ، الاستعادة، OTP بوابة المتدرب |
 | `CRON_SECRET` | ✅ | التقرير الأسبوعي، المتابعات اليومية، فحص الإشعارات |
 | `RESEND_API_KEY` | ✅ | كل الرسائل |
-| `REPORTS_FROM_EMAIL` | ✅ | إرسال البريد (مُرسِل معتمد في Resend) |
-| `NEXT_PUBLIC_SITE_URL` | — | روابط البريد تشير للنطاق الرسمي |
+| `REPORTS_FROM_EMAIL` | — | الافتراضي في الكود `أَثَر <reports@athar.university>` (نطاق متحقَّق في Resend). اضبطه فقط لتغيير المُرسِل |
+| `NEXT_PUBLIC_SITE_URL` | — | `https://athar.university` (مضبوط). الافتراضي في الكود هو النطاق نفسه؛ بدونه تعمل الروابط وMCP وDID على النطاق الرسمي |
 | `AI_API_KEY` / `AI_PROVIDER` / `AI_MODEL` | — | توليد أدوات الأثر والملخص الذكي (البديل المحلي يعمل بدونها؛ المزوّد والنموذج يُكتشفان تلقائيًا) |
 | `NOTIFY_EMAILS` | — | بريد تنبيهات الإدارة (الافتراضي: مديرو المنصة من `profiles`) |
 | `TRAINEE_MAIL` | — | `0` لتعطيل بريد المتدربين التلقائي |
 | `AUDIT_RETENTION_DAYS` | — | الافتراضي 730 |
 | `PURGE_CONFIRM_CODE` | — | كلمة تأكيد التفريغ |
 
-تغيير أي متغير يتطلب **Redeploy**. صفحة `/admin/health` تعرض المضبوط/المفقود.
+تغيير أي متغير يتطلب **Redeploy** (إن طلب Vercel رمز تحقّق لإجراء حسّاس ولم يتوافر: أنشئ المتغير من نوع **Config** أو ادفع commit على `main` فيُنشر تلقائيًا). صفحة `/admin/health` تعرض المضبوط/المفقود.
+
+### 4-ب) النطاق الرسمي والبريد (منذ 2026-11-15)
+
+| البند | القيمة | أين |
+|---|---|---|
+| النطاق الرسمي | `https://athar.university` (الجذر) · `www` يحوّل 308 إلى الجذر · `athar-portal.vercel.app` يبقى اسمًا بديلًا يعمل | Vercel → Settings → Domains |
+| المسجِّل / DNS | Hostinger (hpanel.hostinger.com → Domains → athar.university → DNS / Nameservers) | A `@` → `216.198.79.1` · CNAME `www` → `athar.university` |
+| بريد الإرسال | Resend → Domains → athar.university = **Verified** (منطقة Tokyo) | TXT `resend._domainkey` (DKIM) · CNAME `rsend` · CNAME `send` · TXT `_dmarc` = `v=DMARC1; p=none;` |
+| المُرسِل | `أَثَر <reports@athar.university>` (افتراضي في `lib/portal/notify.ts`) | الاستقبال على هذا العنوان غير مفعّل (Enable receiving = OFF) — الردود تأتي إلى بريد المدير |
+| هويّة التوقيع | `did:web:athar.university` (تُشتقّ من `NEXT_PUBLIC_SITE_URL`) · الشهادات الصادرة قبل 2026-11-15 بهويّة `did:web:athar-portal.vercel.app` تبقى قابلة للتحقّق لأن الاسم البديل يخدم `/.well-known/did.json` نفسه | لا تحذف الاسم البديل من Vercel |
+| تجديد النطاق | **سنويًا** في شهر نوفمبر — فعّل التجديد التلقائي في Hostinger (Domains → athar.university → Auto-renewal) وثبّت بطاقة سارية؛ ضع تذكيرًا قبل 30 يومًا | انقطاع النطاق = توقّف الموقع والبريد والتحقّق معًا |
+| `robots.txt` / `sitemap.xml` | يُولَّدان من `app/robots.ts` و`app/sitemap.ts`؛ الصفحات العامّة فقط، وكل ما يُفتح برمز خارج الفهرسة | — |
+| Supabase Auth | Site URL = `https://athar.university` · Redirect URLs تشمل `https://athar.university/**` و`https://www.athar.university/**` | Authentication → URL Configuration |
 
 ---
 
@@ -181,7 +194,7 @@
 |---|---|---|
 | «لا يوجد قالب تقييم مفعّل لهذا البرنامج» | `/admin/readiness` → بند القوالب | `/admin/templates` → اربط قالبًا يوميًا/ختاميًا بالبرنامج |
 | المشارك لا يجد قاعته | القاعة على برنامج آخر أو غير موجودة | `/admin/management?tab=rooms` |
-| لا تصل رسائل | `/admin/health` → البريد | `RESEND_API_KEY` و`REPORTS_FROM_EMAIL` (نطاق معتمد في Resend) → Redeploy |
+| لا تصل رسائل | `/admin/health` → البريد | `RESEND_API_KEY` موجود؟ · نطاق `athar.university` ما زال Verified في Resend؟ (سجلّات DKIM/CNAME في Hostinger لم تُحذف) · إن ضُبط `REPORTS_FROM_EMAIL` يدويًا فليكن على النطاق نفسه |
 | الكرون متوقف | `/admin/health` → المهام المجدولة | Vercel → Cron Jobs → تأكد من التفعيل و`CRON_SECRET` |
 | فشل النشر خلال ~10 ثوانٍ | خطأ أنواع (ملف مستورد ناقص) | راجع آخر ملف مُلصَق؛ قارن بالمرجع |
 | «Deployment rate limited» | حد 100 نشر/يوم (Hobby) | انتظر 24 ساعة ثم Redeploy لآخر كومِت |
@@ -204,4 +217,6 @@
 - [ ] مهمتا الكرون مفعّلتان ونبضاتهما حديثة
 - [ ] نسخة JSON محفوظة خارج المنصة وتاريخها مسجّل في `/admin/backup`
 - [ ] البرامج المنتهية مؤرشفة
+- [ ] التجديد التلقائي للنطاق `athar.university` مفعّل في Hostinger وبطاقة الدفع سارية
+- [ ] نطاق البريد في Resend بحالة Verified
 - [ ] هذه الوثيقة محدّثة بتاريخ آخر مرحلة

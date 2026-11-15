@@ -211,12 +211,11 @@ test('م10: التذكير اليومي — «مِران اليوم» مرة ل�
   const db = fakeDb({ plans: [mk('p1', '2026-11-06', null, 'a@x.sa'), mk('p2', '2026-10-20', '2026-10-21T06:00:00Z', 'b@x.sa'), mk('p3', '2026-11-01', '2026-11-01T06:00:00Z', 'c@x.sa')], reports: [{ id: 'rp1', access_code: 'ML-0000-0001', candidate_email: 'a@x.sa' }, { id: 'rp3', access_code: 'ML-0000-0003', candidate_email: 'c@x.sa', report: { بيانات_المتقدم: { الاسم: 'سامي أحمد' } } }], profiles: [{ id: 'u1', email: 'trainer@x.sa' }] });
   const now = new Date('2026-11-06T06:00:00Z');
   const dry = await runPracticeReminders(db as any, { site: 'https://x', dry: true } as any); assert.equal(dry.checked, 3);
-  const r = await runPracticeReminders(db as any, { site: 'https://x' } as any); assert.equal(r.checked, 3); assert.ok(r.day_sent >= 1, 'تذكير اليوم'); assert.equal(r.closed, 1, 'p2 انتهت'); assert.ok(r.idle_sent >= 1, 'p3 خامل');
+  const r = await runPracticeReminders(db as any, { site: 'https://x', now } as any); /* تاريخ ثابت: بعد 2026-11-15 تنتهي p3 أيضًا ويفشل الاختبار بالتاريخ الحقيقي */ assert.equal(r.checked, 3); assert.ok(r.day_sent >= 1, 'تذكير اليوم'); assert.equal(r.closed, 1, 'p2 انتهت'); assert.ok(r.idle_sent >= 1, 'p3 خامل');
   assert.equal(db.T.miaar_practice_plans.find((p) => p.id === 'p2').status, 'done');
   const kinds = db.T.portal_learner_notices.map((n) => n.kind); assert.ok(kinds.includes('practice_day')); assert.ok(kinds.includes('practice_idle'));
   const idleN = db.T.portal_learner_notices.find((n) => n.kind === 'practice_idle'); assert.equal(idleN.email, 'trainer@x.sa', 'يصل المدرّب المعتمِد'); assert.match(idleN.title_ar, /سامي/); assert.ok(!/سامي أحمد/.test(idleN.title_ar), 'الاسم الأول فقط');
-  const n1 = db.T.portal_learner_notices.length; await runPracticeReminders(db as any, { site: 'https://x' } as any); assert.equal(db.T.portal_learner_notices.length, n1, 'التشغيل الثاني لا يكرّر');
-  void now;
+  const n1 = db.T.portal_learner_notices.length; await runPracticeReminders(db as any, { site: 'https://x', now } as any); assert.equal(db.T.portal_learner_notices.length, n1, 'التشغيل الثاني لا يكرّر');
 });
 
 test('م10: سلامة الملفات — الصفحة واللوحة والمسارات والهجرة والسجلّ والخريطة', () => {

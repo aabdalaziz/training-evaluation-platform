@@ -33,7 +33,7 @@ export const maxDuration = 60;
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'QUALITY_ANALYST'];
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status });
-const site = () => (process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.vercel.app').replace(/\/+$/, '');
+const site = () => (process.env.NEXT_PUBLIC_SITE_URL || 'https://athar.university').replace(/\/+$/, '');
 const svc = () => { const U = process.env.NEXT_PUBLIC_SUPABASE_URL; const K = process.env.SUPABASE_SERVICE_ROLE_KEY; return U && K ? createClient(U, K, { auth: { persistSession: false } }) : null; };
 
 async function staff(req: Request) {

@@ -267,7 +267,7 @@ function Embassy({ lang }: { lang: 'ar' | 'en' }) {
   const ar = lang === 'ar';
   return (
     <section className="pt-sec hm-embsec"><div className="pt-wrap">
-      <a className="hm-embassy" href="/agents#mcp" data-testid="home-embassy"><span className="hm-embk"><Icon name="link" size={14} /> {ar ? 'سفارة أَثَر · MCP' : 'Athar Embassy · MCP'}</span><b>{ar ? 'أَثَر داخل مساعدك الذكي' : 'Athar inside your AI assistant'}</b><p>{ar ? 'الصق رابطًا واحدًا في ChatGPT أو Claude أو وكيل جهتك: يتحقق من الشهادات، يقرأ مؤشر الأداء، يرشّح برنامجًا بدليل — ومحفظتك بإذنك أنت.' : 'Paste one link into ChatGPT, Claude or your organization’s agent: verify credentials, read the performance index, recommend by evidence — and your wallet, with your consent.'}</p><code dir="ltr">athar-portal.vercel.app/mcp</code></a>
+      <a className="hm-embassy" href="/agents#mcp" data-testid="home-embassy"><span className="hm-embk"><Icon name="link" size={14} /> {ar ? 'سفارة أَثَر · MCP' : 'Athar Embassy · MCP'}</span><b>{ar ? 'أَثَر داخل مساعدك الذكي' : 'Athar inside your AI assistant'}</b><p>{ar ? 'الصق رابطًا واحدًا في ChatGPT أو Claude أو وكيل جهتك: يتحقق من الشهادات، يقرأ مؤشر الأداء، يرشّح برنامجًا بدليل — ومحفظتك بإذنك أنت.' : 'Paste one link into ChatGPT, Claude or your organization’s agent: verify credentials, read the performance index, recommend by evidence — and your wallet, with your consent.'}</p><code dir="ltr">athar.university/mcp</code></a>
     </div></section>
   );
 }

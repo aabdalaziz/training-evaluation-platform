@@ -31,7 +31,7 @@ export type LogRow = {
 export type Delivery = { ok: boolean; channel: Channel; status: Status; id: number | null; provider_id?: string | null; error?: string | null; plan: Channel[]; duplicate?: boolean };
 
 // ====================================================================== البيئة
-export const DEFAULT_FROM = 'Training Evaluation Platform <onboarding@resend.dev>';
+export const DEFAULT_FROM = 'أَثَر <reports@athar.university>';
 export function fromAddress(env: NodeJS.ProcessEnv = process.env): string { return String(env.REPORTS_FROM_EMAIL || '').trim() || DEFAULT_FROM; }
 export function channelEnv(env: NodeJS.ProcessEnv = process.env): ChannelEnv {
   const from = fromAddress(env);

@@ -25,7 +25,7 @@ export async function POST(request) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Quality Platform <reports@yourdomain.com>',
+        from: (process.env.REPORTS_FROM_EMAIL || '').trim() || 'أَثَر <reports@athar.university>',
         to: trainer_email,
         subject: `تقرير القاعة ${room_code}`,
         html: `

@@ -71,7 +71,7 @@ function Inner() {
         <h2><Icon name="mail" size={16} /> وجدت ثغرة؟ هذا بابك</h2>
         <p>نرحّب بالإفصاح المسؤول. أبلغنا قبل أن تنشر، وأعطنا 90 يومًا للمعالجة، ولا تمسّ بيانات ليست لك ولا تُعطّل الخدمة — ونعدك بردّ خلال 5 أيام عمل وبذكر اسمك في لوحة الشكر إن رغبت.</p>
         <div className="sc-actions"><Link className="pt-btn gold" href="/security/report">أبلغ عن ثغرة</Link><a className="pt-btn light" href="/.well-known/security.txt" target="_blank" rel="noreferrer">security.txt</a></div>
-        <p className="sc-muted">نطاق البرنامج: athar-portal.vercel.app وواجهات /api و /mcp و /oauth. خارج النطاق: الهندسة الاجتماعية، حجب الخدمة، مزوّدو الاستضافة والدفع.</p>
+        <p className="sc-muted">نطاق البرنامج: athar.university وواجهات /api و /mcp و /oauth. خارج النطاق: الهندسة الاجتماعية، حجب الخدمة، مزوّدو الاستضافة والدفع.</p>
       </section>
 
       <section className="sc-card" id="thanks">
