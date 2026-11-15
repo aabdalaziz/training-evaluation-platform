@@ -34,7 +34,7 @@ curl -s https://api.github.com/repos/aabdalaziz/training-evaluation-platform/com
 ```
 - Vercel Hobby: 100 deployments/day; a rate-limited commit needs a NEW commit after reset. `NEXT_PUBLIC_*` changes require Redeploy.
 - A deploy failing in ~10 s = type error from a missing imported file → the owner skipped a file; re-send its link.
-- Production smoke: `curl -s -o /dev/null -w "%{http_code}" https://athar.university/<path>` for every new route.
+- Production smoke: `curl -s -o /dev/null -w "%{http_code}" https://athar-portal.com/<path>` for every new route.
 
 ## Known environment quirks
 - `pkill -f`/`pgrep -f` can kill the agent shell — use process tools. Server-side fetch to the public sandbox URL returns 403 — build against `127.0.0.1`. Playwright class-scoped `:has-text()`; `set_input_files` for uploads; real console messages only via `next dev`.
