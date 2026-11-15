@@ -61,5 +61,5 @@ export function DoorBadge({ lang }: { lang: Lang }) {
     return { landing: my.landing || '/hub', name_ar: cat.length > 1 ? `${main.name_ar} +${cat.length - 1}` : main.name_ar, name_en: cat.length > 1 ? `${main.name_en} +${cat.length - 1}` : main.name_en };
   })();
   if (!b) return null;
-  return <Link href={b.landing} className="pt-doorbadge" data-testid="shell-door-badge" title={lang === 'ar' ? 'بابي' : 'My door'}><span className="pt-doordot" aria-hidden="true" /><b>{lang === 'ar' ? 'بابي' : 'My door'}</b><small>{lang === 'ar' ? b.name_ar : b.name_en}</small></Link>;
+  return <Link href={b.landing} className="pt-doorbadge" data-testid="shell-door-badge" title={lang === 'ar' ? 'صفحتي' : 'My page'}><span className="pt-doordot" aria-hidden="true" /><b>{lang === 'ar' ? 'صفحتي' : 'My page'}</b><small>{lang === 'ar' ? b.name_ar : b.name_en}</small></Link>;
 }

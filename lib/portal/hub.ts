@@ -14,21 +14,21 @@ export type DoorLive = { slug: DoorSlug; indicators: Indicator[]; decisions: Dec
 
 export const DOOR_SLUGS: DoorSlug[] = ['leadership', 'programs', 'diplomas', 'quality', 'operations', 'finance', 'expert', 'trainer'];
 export const DOORS: Record<DoorSlug, Door> = {
-  leadership: { title_ar: 'باب القيادة', title_en: 'Leadership', roles: ['LEADERSHIP'], lead: 'نظرة الأثر لا التفاصيل: أين نقف اليوم؟ وما الذي يحتاج قرارًا بشريًا؟', links: [
+  leadership: { title_ar: 'القيادة', title_en: 'Leadership', roles: ['LEADERSHIP'], lead: 'نظرة الأثر لا التفاصيل: أين نقف اليوم؟ وما الذي يحتاج قرارًا بشريًا؟', links: [
     { href: '/admin/impact', label: 'أثر البرامج', hint: 'ما الذي تغيّر فعلًا' }, { href: '/admin/observatory', label: 'مرصد القدرة البشرية', hint: 'القطاعات والفجوات' }, { href: '/admin/sector-impact', label: 'الأثر القطاعي', hint: 'بالقطاع والجهة' }, { href: '/admin/health', label: 'صحة المنصة', hint: 'إشارات تحتاج قرارًا' }, { href: '/admin/councils', label: 'مجالس أَثَر', hint: 'الدورة الحالية' }] },
-  programs: { title_ar: 'باب البرامج', title_en: 'Programs', roles: ['EXEC_PROGRAMS', 'EXEC_ARABIC'], lead: 'من التصميم إلى الشهادة: هندسة البرنامج، التسجيل، الحضور، التقييم.', links: [
+  programs: { title_ar: 'البرامج', title_en: 'Programs', roles: ['EXEC_PROGRAMS', 'EXEC_ARABIC'], lead: 'من التصميم إلى الشهادة: هندسة البرنامج، التسجيل، الحضور، التقييم.', links: [
     { href: '/admin/program-engineering', label: 'هندسة البرامج التدريبية', hint: 'تصميم ومراجعة' }, { href: '/admin/enrollments', label: 'التسجيل والقبول', hint: 'الطلبات والشُّعب' }, { href: '/admin/attendance', label: 'الحضور', hint: 'بالجلسة' }, { href: '/admin/live', label: 'الجلسات الحيّة', hint: 'Teams · Zoom · Meet' }, { href: '/admin/certificates', label: 'الشهادات', hint: 'إصدار وتحقق' }, { href: '/admin/miaar', label: 'مِعيار', hint: 'تحديد المستوى' }] },
-  diplomas: { title_ar: 'باب الدبلومات', title_en: 'Diplomas', roles: ['EXEC_DIPLOMAS'], lead: 'المسارات الطويلة: الدفعات، التقدّم، الشهادة التي تكبر.', links: [
+  diplomas: { title_ar: 'الدبلومات', title_en: 'Diplomas', roles: ['EXEC_DIPLOMAS'], lead: 'المسارات الطويلة: الدفعات، التقدّم، الشهادة التي تكبر.', links: [
     { href: '/admin/program-engineering', label: 'هندسة البرامج', hint: 'مسارات الدبلوم' }, { href: '/admin/enrollments', label: 'الدفعات والقبول', hint: 'بالدبلوم' }, { href: '/admin/outcomes', label: 'المخرجات', hint: 'نواتج التعلّم' }, { href: '/admin/credentials', label: 'الاعتمادات', hint: 'الشهادة التي تكبر' }] },
-  quality: { title_ar: 'باب الجودة', title_en: 'Quality', roles: ['QUALITY_MANAGER'], lead: 'الأدلة قبل الانطباعات: التقييمات، حلقة التحسين، قاعدة الأدلة.', links: [
+  quality: { title_ar: 'الجودة', title_en: 'Quality', roles: ['QUALITY_MANAGER'], lead: 'الأدلة قبل الانطباعات: التقييمات، حلقة التحسين، قاعدة الأدلة.', links: [
     { href: '/admin/survey-settings', label: 'الاستبانات', hint: 'النماذج والمواعيد' }, { href: '/admin/evidence', label: 'قاعدة الأدلة', hint: 'ما يثبت الأثر' }, { href: '/admin/loop', label: 'التحسين المستمر', hint: 'اقتراحات بالأدلة' }, { href: '/admin/pulse', label: 'نبض البيئة', hint: 'أين تتسرّب الجودة؟' }, { href: '/admin/readiness', label: 'الجاهزية', hint: 'قبل الانطلاق' }, { href: '/admin/audit', label: 'سجل التدقيق', hint: 'من فعل ماذا' }] },
-  operations: { title_ar: 'باب العمليات', title_en: 'Operations', roles: ['ADMIN_SUPERVISOR'], lead: 'اليوم التشغيلي: الوارد، التنبيهات، المهام، الإبلاغ.', links: [
+  operations: { title_ar: 'العمليات', title_en: 'Operations', roles: ['ADMIN_SUPERVISOR'], lead: 'اليوم التشغيلي: الوارد، التنبيهات، المهام، الإبلاغ.', links: [
     { href: '/admin/inbox', label: 'الوارد', hint: 'ما وصل اليوم' }, { href: '/admin/missions', label: 'المهام', hint: 'مَن يتابع ماذا' }, { href: '/admin/notifications', label: 'التنبيهات', hint: 'الإرسال والقنوات' }, { href: '/admin/outreach', label: 'الإبلاغ متعدد القنوات', hint: 'بريد · واتساب' }, { href: '/admin/followup', label: 'المتابعة', hint: 'بعد البرنامج' }] },
-  finance: { title_ar: 'باب المالية', title_en: 'Finance', roles: ['FINANCE_MANAGER'], lead: 'المدفوعات والعقود والتحصيل — بلا الوصول إلى ما لا يخصّ المالية.', links: [
+  finance: { title_ar: 'المالية', title_en: 'Finance', roles: ['FINANCE_MANAGER'], lead: 'المدفوعات والعقود والتحصيل — بلا الوصول إلى ما لا يخصّ المالية.', links: [
     { href: '/admin/payments', label: 'المدفوعات', hint: 'الحالة والتحصيل' }, { href: '/admin/contracts', label: 'العقود', hint: 'عقود التعاون' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'الطلبات والعروض' }] },
-  expert: { title_ar: 'باب الخبراء', title_en: 'Experts & consultants', roles: ['CONSULTANT', 'EXPERT'], lead: 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر — ومهامك عقدٌ على كل مهمة.', links: [
+  expert: { title_ar: 'الخبراء والمستشارون', title_en: 'Experts & consultants', roles: ['CONSULTANT', 'EXPERT'], lead: 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر — ومهامك عقدٌ على كل مهمة.', links: [
     { href: '/experts', label: 'هيئة أَثَر — الخبراء', hint: 'ملفك العام' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك ومهامك' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'المهام المسندة' }] },
-  trainer: { title_ar: 'باب المدرّبين', title_en: 'Trainers', roles: ['TRAINER'], lead: 'برامجك، جلساتك الحيّة، حضور متدرّبيك، وما قاله المتدرّبون عن الأثر.', links: [
+  trainer: { title_ar: 'المدرّبون', title_en: 'Trainers', roles: ['TRAINER'], lead: 'برامجك، جلساتك الحيّة، حضور متدرّبيك، وما قاله المتدرّبون عن الأثر.', links: [
     { href: '/me/day', label: 'دفتر اليوم', hint: 'صباحك في صفحة واحدة: جلساتك، من غاب، من توقّف، و«كلمة»' }, /* P51 */ { href: '/trainers', label: 'هيئة أَثَر — المدرّبون', hint: 'ملفك العام' }, { href: '/admin/live', label: 'جلساتي الحيّة', hint: 'الغرف والروابط' }, { href: '/admin/attendance', label: 'الحضور', hint: 'جلساتك' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك وشهاداتك' }] },
 };
 
