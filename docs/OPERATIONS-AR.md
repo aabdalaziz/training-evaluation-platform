@@ -1,7 +1,7 @@
 # دليل التشغيل والتسليم — منصة تقييم البرامج التدريبية
 
 > وثيقة مرجعية واحدة لمن يشغّل المنصة أو يتسلّمها: البنية، المسارات، الصلاحيات، المتغيرات، المهام المجدولة، قاعدة البيانات، النسخ والاستعادة، وإجراءات الطوارئ.
-> آخر تحديث: 2026-11-15 (النطاق الرسمي athar.university). الدليل التفاعلي داخل المنصة: `/help`.
+> آخر تحديث: 2026-11-15 (النطاق الرسمي athar-portal.com + البريد الرسمي). الدليل التفاعلي داخل المنصة: `/help`.
 ---
 
 ## 1) نظرة عامة
@@ -98,8 +98,9 @@
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | الكرون، البريد، التفريغ، الاستعادة، OTP بوابة المتدرب |
 | `CRON_SECRET` | ✅ | التقرير الأسبوعي، المتابعات اليومية، فحص الإشعارات |
 | `RESEND_API_KEY` | ✅ | كل الرسائل |
-| `REPORTS_FROM_EMAIL` | — | الافتراضي في الكود `أَثَر <reports@athar.university>` (نطاق متحقَّق في Resend). اضبطه فقط لتغيير المُرسِل |
-| `NEXT_PUBLIC_SITE_URL` | — | `https://athar.university` (مضبوط). الافتراضي في الكود هو النطاق نفسه؛ بدونه تعمل الروابط وMCP وDID على النطاق الرسمي |
+| `REPORTS_FROM_EMAIL` | — | الافتراضي في الكود `أَثَر <reports@athar-portal.com>` (نطاق متحقَّق في Resend). اضبطه فقط لتغيير المُرسِل |
+| `NEXT_PUBLIC_SITE_URL` | — | على Vercel يُثبَّت من `next.config.js` (وقت البناء) ومن `instrumentation.ts` (وقت التشغيل) إلى `https://athar-portal.com` — قيمة اللوحة القديمة لا أثر لها. محليًا للـ E2E فقط |
+| `SECURITY_CONTACT` | — | بريد الإفصاح المسؤول في `security.txt`؛ الافتراضي `security@athar-portal.com` |
 | `AI_API_KEY` / `AI_PROVIDER` / `AI_MODEL` | — | توليد أدوات الأثر والملخص الذكي (البديل المحلي يعمل بدونها؛ المزوّد والنموذج يُكتشفان تلقائيًا) |
 | `NOTIFY_EMAILS` | — | بريد تنبيهات الإدارة (الافتراضي: مديرو المنصة من `profiles`) |
 | `TRAINEE_MAIL` | — | `0` لتعطيل بريد المتدربين التلقائي |
@@ -112,15 +113,18 @@
 
 | البند | القيمة | أين |
 |---|---|---|
-| النطاق الرسمي | `https://athar.university` (الجذر) · `www` يحوّل 308 إلى الجذر · `athar-portal.vercel.app` يبقى اسمًا بديلًا يعمل | Vercel → Settings → Domains |
-| المسجِّل / DNS | Hostinger (hpanel.hostinger.com → Domains → athar.university → DNS / Nameservers) | A `@` → `216.198.79.1` · CNAME `www` → `athar.university` |
-| بريد الإرسال | Resend → Domains → athar.university = **Verified** (منطقة Tokyo) | TXT `resend._domainkey` (DKIM) · CNAME `rsend` · CNAME `send` · TXT `_dmarc` = `v=DMARC1; p=none;` |
-| المُرسِل | `أَثَر <reports@athar.university>` (افتراضي في `lib/portal/notify.ts`) | الاستقبال على هذا العنوان غير مفعّل (Enable receiving = OFF) — الردود تأتي إلى بريد المدير |
-| هويّة التوقيع | `did:web:athar.university` (تُشتقّ من `NEXT_PUBLIC_SITE_URL`) · الشهادات الصادرة قبل 2026-11-15 بهويّة `did:web:athar-portal.vercel.app` تبقى قابلة للتحقّق لأن الاسم البديل يخدم `/.well-known/did.json` نفسه | لا تحذف الاسم البديل من Vercel |
-| تجديد النطاق | **سنويًا** في شهر نوفمبر — فعّل التجديد التلقائي في Hostinger (Domains → athar.university → Auto-renewal) وثبّت بطاقة سارية؛ ضع تذكيرًا قبل 30 يومًا | انقطاع النطاق = توقّف الموقع والبريد والتحقّق معًا |
+| النطاق الرسمي | `https://athar-portal.com` (الجذر) · `www` يحوّل 308 إلى الجذر · `athar.university` و`www.athar.university` يحوّلان 308 إلى الجذر مع حفظ المسار · `athar-portal.vercel.app` يبقى اسمًا بديلًا يعمل (لا يُحذف) | Vercel → Settings → Domains |
+| لماذا `.com` لا `.university`/`.edu` | «جامعة» مسمّى محمي في المملكة (ترخيص وزارة التعليم)؛ `.edu` للجامعات الأمريكية فقط؛ `.com` محايد ويطابق اسم المشروع منذ البداية ويمهّد لـ `athar-portal.sa` بالاسم نفسه | قرار 2026-11-15 |
+| المسجِّل / DNS | Hostinger (hpanel.hostinger.com → Domains → athar-portal.com → DNS / Nameservers) · التجديد التلقائي مفعَّل · ينتهي 2027-11-15 | A `@` → `216.198.79.1` (Vercel) · CNAME `www` → `athar-portal.com` |
+| البريد الوارد | **Hostinger Business Email** (مجاني 12 شهرًا ضمن الاستضافة، ثم ≈ $1–2/صندوق شهريًا) · صندوق `info@athar-portal.com` · يُنشأ `security@athar-portal.com` (صندوق أو اسم مستعار) · Webmail: https://mail.hostinger.com · IMAP `imap.hostinger.com:993` / SMTP `smtp.hostinger.com:465` | MX `mx1/mx2.hostinger.com` · TXT `v=spf1 include:_spf.mail.hostinger.com ~all` · DKIM `hostingermail-a/b._domainkey` · `_dmarc` = `v=DMARC1; p=none` — كلها أُضيفت تلقائيًا؛ **لا تُحذف** |
+| البريد الصادر (المنصة) | Resend → Domains → athar-portal.com = **Verified** (Tokyo) · المُرسِل الافتراضي `أَثَر <reports@athar-portal.com>` في `lib/portal/notify.ts` | TXT `resend._domainkey` · CNAME `rsend` · CNAME `send` (الإرسال عبر النطاق الفرعي `send` فلا يتعارض مع SPF الجذر الخاص بـ Hostinger) |
+| عناوين الهوية | `info@` تواصل عام (`CONTACT.email` في `lib/portal/content.ts`) · `reports@` مُرسِل المنصة · `security@` الإفصاح المسؤول (`security.txt`، يغلبه المتغير `SECURITY_CONTACT`) | — |
+| ثبات النطاق في الكود | طبقتان: (1) `next.config.js` يثبّت `NEXT_PUBLIC_SITE_URL = https://athar-portal.com` داخل الحزم وقت البناء؛ (2) `instrumentation.ts` (خطّاف `register` على Vercel) يصحّح القيمة الحيّة في `process.env` عند إقلاع كل دالة — لأن دوالًا مثل `securityTxt` و`channelEnv` تستلم كائن البيئة كاملًا. محليًا يبقى المتغير لاختبارات E2E | `CANONICAL_SITE` · `resolveSiteEnv` |
+| هويّة التوقيع | `did:web:athar-portal.com` (تُشتقّ من النطاق) · الشهادات الصادرة قبل 2026-11-15 بهويّة `did:web:athar-portal.vercel.app` أو `did:web:athar.university` تبقى قابلة للتحقّق لأن الاسمين البديلين يبقيان على Vercel | لا تحذف الأسماء البديلة |
+| تجديد | النطاقان (`athar-portal.com` · `athar.university`) كل **نوفمبر** — التجديد التلقائي مفعَّل، ثبّت بطاقة سارية · بريد Hostinger يتحوّل إلى مدفوع في **نوفمبر 2027** · ضع تذكيرًا قبل 30 يومًا | انقطاع النطاق = توقّف الموقع والبريد والتحقّق معًا |
 | `robots.txt` / `sitemap.xml` | يُولَّدان من `app/robots.ts` و`app/sitemap.ts`؛ الصفحات العامّة فقط، وكل ما يُفتح برمز خارج الفهرسة | — |
-| Supabase Auth | Site URL = `https://athar.university` · Redirect URLs تشمل `https://athar.university/**` و`https://www.athar.university/**` | Authentication → URL Configuration |
-
+| Supabase Auth | Site URL = `https://athar-portal.com` · Redirect URLs تشمل `https://athar-portal.com/**` و`https://www.athar-portal.com/**` (والقديمة باقية) | Authentication → URL Configuration |
+| لاحقًا | `athar-portal.sa` عبر مسجِّل سعودي (يحتاج السجل التجاري) → يحوّل 308 إلى `.com` بالاسم نفسه — لا ازدواجية | راجع BACKLOG |
 ---
 
 ## 5) المهام المجدولة (`vercel.json` — حد الخطة المجانية: مهمتان)
@@ -194,7 +198,7 @@
 |---|---|---|
 | «لا يوجد قالب تقييم مفعّل لهذا البرنامج» | `/admin/readiness` → بند القوالب | `/admin/templates` → اربط قالبًا يوميًا/ختاميًا بالبرنامج |
 | المشارك لا يجد قاعته | القاعة على برنامج آخر أو غير موجودة | `/admin/management?tab=rooms` |
-| لا تصل رسائل | `/admin/health` → البريد | `RESEND_API_KEY` موجود؟ · نطاق `athar.university` ما زال Verified في Resend؟ (سجلّات DKIM/CNAME في Hostinger لم تُحذف) · إن ضُبط `REPORTS_FROM_EMAIL` يدويًا فليكن على النطاق نفسه |
+| لا تصل رسائل | `/admin/health` → البريد | `RESEND_API_KEY` موجود؟ · نطاق `athar-portal.com` ما زال Verified في Resend؟ (سجلّات DKIM/CNAME في Hostinger لم تُحذف) · إن ضُبط `REPORTS_FROM_EMAIL` يدويًا فليكن على النطاق نفسه |
 | الكرون متوقف | `/admin/health` → المهام المجدولة | Vercel → Cron Jobs → تأكد من التفعيل و`CRON_SECRET` |
 | فشل النشر خلال ~10 ثوانٍ | خطأ أنواع (ملف مستورد ناقص) | راجع آخر ملف مُلصَق؛ قارن بالمرجع |
 | «Deployment rate limited» | حد 100 نشر/يوم (Hobby) | انتظر 24 ساعة ثم Redeploy لآخر كومِت |
@@ -217,6 +221,6 @@
 - [ ] مهمتا الكرون مفعّلتان ونبضاتهما حديثة
 - [ ] نسخة JSON محفوظة خارج المنصة وتاريخها مسجّل في `/admin/backup`
 - [ ] البرامج المنتهية مؤرشفة
-- [ ] التجديد التلقائي للنطاق `athar.university` مفعّل في Hostinger وبطاقة الدفع سارية
-- [ ] نطاق البريد في Resend بحالة Verified
+- [ ] التجديد التلقائي للنطاقين `athar-portal.com` و`athar.university` مفعّل في Hostinger وبطاقة الدفع سارية
+- [ ] `athar-portal.com` بحالة Verified في Resend · صندوق `info@` يستقبل (اختبار من بريد خارجي)
 - [ ] هذه الوثيقة محدّثة بتاريخ آخر مرحلة

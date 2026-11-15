@@ -44,7 +44,7 @@ export function buildPassport(inp: PassportInput): PassportData {
     kpis: { skills: levels.length, strong: levels.filter(l => l.confidence >= 70).length, approved: levels.filter(l => l.approved_level).length, credentials: credentials.length },
     domains, credentials,
     footer: ar ? `${BRAND.motto.ar} · صادر إلكترونيًا من بوابة أَثَر بتاريخ ${fmtDay(now, 'ar')} · © ${BRAND.copyrightYear} ${BRAND.owner.ar}` : `${BRAND.motto.en} · Issued electronically by Athar · TRACE on ${fmtDay(now, 'en')} · © ${BRAND.copyrightYear} ${BRAND.owner.en}`,
-    verifyHint: sharePublic ? (ar ? 'امسح الرمز لعرض الملف المهاري الحي والتحقق من الشهادات.' : 'Scan to open the live skills profile and verify credentials.') : (ar ? 'الملف خاص؛ تحقق من كل شهادة عبر رمزها في athar.university/credential' : 'Profile is private; verify each credential by its code at athar.university/credential'),
+    verifyHint: sharePublic ? (ar ? 'امسح الرمز لعرض الملف المهاري الحي والتحقق من الشهادات.' : 'Scan to open the live skills profile and verify credentials.') : (ar ? 'الملف خاص؛ تحقق من كل شهادة عبر رمزها في athar-portal.com/credential' : 'Profile is private; verify each credential by its code at athar-portal.com/credential'),
   };
 }
 /** تقسيم الصفحات: الغلاف يحمل حتى 14 مهارة، وكل صفحة تالية حتى 26 مهارة أو 18 شهادة */

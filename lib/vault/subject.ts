@@ -52,7 +52,7 @@ export async function exportSubject(db: any, s: Subject, opts: { perTable?: numb
     } catch { tables[r.table] = { label_ar: r.label_ar, label_en: r.label_en, purpose_ar: r.purpose_ar, rows: [], truncated: false, error: 'غير متاح' }; }
   }
   const generated_at = new Date().toISOString();
-  const doc = { '@context': 'https://athar.university/privacy#export', type: 'AtharPersonalDataExport', notice_version: NOTICE_VERSION, generated_at, subject: { id: s.id, email: s.email, name: s.name || null }, tables };
+  const doc = { '@context': 'https://athar-portal.com/privacy#export', type: 'AtharPersonalDataExport', notice_version: NOTICE_VERSION, generated_at, subject: { id: s.id, email: s.email, name: s.name || null }, tables };
   return { ...doc, hash: 'sha256:' + sha256(JSON.stringify(doc)) };
 }
 /** لا نصدّر أسرار الآخرين/النظام حتى في نسخة الشخص */

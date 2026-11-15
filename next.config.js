@@ -39,8 +39,13 @@ const BASE = [
   { key: 'X-Shield', value: 'athar-p21' },
 ];
 
+const CANONICAL_SITE = 'https://athar-portal.com';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /** النطاق الرسمي (2026-11-15): على Vercel يُثبَّت دائمًا athar-portal.com مهما كانت قيمة المتغير القديمة في لوحة Vercel؛ محليًا يبقى المتغير (E2E على 127.0.0.1) */
+  env: { NEXT_PUBLIC_SITE_URL: process.env.VERCEL ? CANONICAL_SITE : (process.env.NEXT_PUBLIC_SITE_URL || CANONICAL_SITE) },
+  experimental: { instrumentationHook: true }, /* instrumentation.ts: تصحيح القيمة الحيّة للمتغير على Vercel عند الإقلاع */
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

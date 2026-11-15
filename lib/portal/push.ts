@@ -23,7 +23,7 @@ export function generateVapidKeys(): VapidKeys {
 }
 export function vapidFromEnv(env: NodeJS.ProcessEnv = process.env): { publicKey: string; privateKey: string; subject: string } | null {
   const publicKey = String(env.VAPID_PUBLIC_KEY || '').trim(); const privateKey = String(env.VAPID_PRIVATE_KEY || '').trim();
-  const subject = String(env.VAPID_SUBJECT || '').trim() || 'mailto:aaabdalaziz@gmail.com';
+  const subject = String(env.VAPID_SUBJECT || '').trim() || 'mailto:info@athar-portal.com';
   if (!publicKey || !privateKey) return null;
   try { if (b64u.dec(publicKey).length !== 65 || b64u.dec(privateKey).length !== 32) return null; } catch { return null; }
   return { publicKey, privateKey, subject };

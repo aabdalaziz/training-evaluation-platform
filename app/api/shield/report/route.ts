@@ -26,5 +26,5 @@ export async function POST(req: Request) {
   if (title.length < 5 || detail.length < 20) return bad('اكتب عنوانًا ووصفًا كافيين (خطوات إعادة الإنتاج تساعدنا كثيرًا)');
   const { id } = await securityEvent(db, { severity: 'critical', kind: 'vuln_report', actor: contact || 'باحث مجهول', ip, meta: { title, detail, reporter_severity: severity, contact, ua: String(req.headers.get('user-agent') || '').slice(0, 160) } });
   const ref = `ATH-SEC-${String(id || Date.now() % 100000).padStart(4, '0')}`;
-  return NextResponse.json({ success: true, ref, message: 'شكرًا — وصل بلاغك إلى طاقم أَثَر. سنردّ خلال 5 أيام عمل على وسيلة التواصل التي ذكرتها.', policy: `${(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar.university').replace(/\/+$/, '')}/security` });
+  return NextResponse.json({ success: true, ref, message: 'شكرًا — وصل بلاغك إلى طاقم أَثَر. سنردّ خلال 5 أيام عمل على وسيلة التواصل التي ذكرتها.', policy: `${(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.com').replace(/\/+$/, '')}/security` });
 }

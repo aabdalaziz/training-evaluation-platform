@@ -49,7 +49,7 @@ export const isStale = (iso: string | null | undefined, now = new Date(), hours 
 // ---------- سياسات الكاش (جدول قرار يُطبّقه sw.js حرفيًا) ----------
 export type CachePolicy = 'static' | 'api_swr' | 'navigate' | 'bypass' | 'share';
 const API_CACHEABLE = ['/api/pocket?view=bundle', '/api/vc?view=mine', '/api/daily', '/api/observatory', '/.well-known/did.json', '/api/vc?status=1', '/api/missions', '/api/m?token='];
-export function cachePolicy(url: string, method = 'GET', mode: 'navigate' | 'same-origin' | 'cors' | 'no-cors' = 'same-origin', origin = 'https://athar.university'): CachePolicy {
+export function cachePolicy(url: string, method = 'GET', mode: 'navigate' | 'same-origin' | 'cors' | 'no-cors' = 'same-origin', origin = 'https://athar-portal.com'): CachePolicy {
   let u: URL; try { u = new URL(url, origin); } catch { return 'bypass'; }
   if (u.origin !== new URL(origin).origin) return 'bypass';
   if (method === 'POST' && u.pathname === '/share') return 'share';

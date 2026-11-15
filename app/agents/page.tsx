@@ -11,7 +11,7 @@ import { AGENT_TOOLS, AGENT_CAN_AR, AGENT_CANNOT_AR, SCOPE_LABEL, ANON_DAILY_LIM
 export default function AgentsPage() { return <PortalShell><Inner /></PortalShell>; }
 
 function Inner() {
-  const [log, setLog] = useState<{ lines: string[]; count_24h: number } | null>(null); const [site, setSite] = useState('https://athar.university'); const [copied, setCopied] = useState(false);
+  const [log, setLog] = useState<{ lines: string[]; count_24h: number } | null>(null); const [site, setSite] = useState('https://athar-portal.com'); const [copied, setCopied] = useState(false);
   useEffect(() => { if (typeof window !== 'undefined') setSite(window.location.origin); fetch('/api/agent?log=1', { cache: 'no-store' }).then(r => r.json()).then(j => setLog({ lines: j?.lines || [], count_24h: j?.count_24h || 0 })).catch(() => setLog({ lines: [], count_24h: 0 })); }, []);
   const curl = `curl -X POST ${site}/api/agent \\\n  -H "Content-Type: application/json" \\\n  -H "X-Agent-Key: atk_…" \\\n  -d '{"tool":"skill_fit","args":{"skill":"التقويم"}}'`;
   return (

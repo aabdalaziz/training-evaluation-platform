@@ -30,7 +30,7 @@ const H = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 
 const json = (body: any, status = 200) => NextResponse.json(body, { status, headers: H });
 const fail = (error_ar: string, error_en: string, status = 400) => json({ success: false, error: error_ar, error_en }, status);
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
-const site = () => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar.university');
+const site = () => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.com');
 const todayStart = () => { const d = new Date(); d.setUTCHours(0, 0, 0, 0); return d.toISOString(); };
 
 export async function OPTIONS() { return new NextResponse(null, { status: 204, headers: H }); }

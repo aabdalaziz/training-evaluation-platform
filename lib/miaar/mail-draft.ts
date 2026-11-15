@@ -8,7 +8,7 @@
 export type MailRow = { name: string | null; email: string; code: string | null; demonstrated?: string | null; entry?: string | null; program_name?: string | null; classroom?: string | null };
 export type MailDraft = { to: string; subject: string; body: string; mailto: string; url: string };
 export const LEVEL_AR: Record<string, string> = { PRE_A1: 'ما قبل A1', A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
-export const SITE_DEFAULT = 'https://athar.university';
+export const SITE_DEFAULT = 'https://athar-portal.com';
 /** الاسم الأول فقط (كما في البطاقة العلنية) — يتخطّى «د.» و«أ.» و«م.» */
 export function firstName(name: string | null | undefined): string { const parts = String(name || '').trim().split(/\s+/).filter((p) => p && !/^(د|أ|م|دكتور|الأستاذ|الأستاذة)\.?$/.test(p)); return parts[0] || ''; }
 export function resultUrl(code: string, site = SITE_DEFAULT): string { return `${site.replace(/\/$/, '')}/miaar/result/${encodeURIComponent(code)}`; }

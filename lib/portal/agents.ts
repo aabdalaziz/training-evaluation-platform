@@ -90,7 +90,7 @@ export function pluginManifest(site: string) {
     auth: { type: 'user_http', authorization_type: 'bearer', instructions: 'Send X-Agent-Key: atk_… (or Authorization: Bearer atk_…). Keys are issued per organization by Athar staff; request one at ' + site + '/agents' },
     api: { type: 'athar_tools', url: `${site}/api/agent`, method: 'POST', body: '{ "tool": "<name>", "args": { … } }', manifest: `${site}/api/agent` },
     mcp: { url: `${site}/mcp`, public_url: `${site}/mcp/public`, transport: 'streamable-http', protocol_versions: ['2026-07-28', '2025-11-25', '2025-06-18', '2025-03-26'], authorization: `${site}/.well-known/oauth-protected-resource/mcp` },
-    logo_url: `${site}/icons/icon-192.png`, contact_email: 'info@athar-portal.sa', legal_info_url: `${site}/agents`,
+    logo_url: `${site}/icons/icon-192.png`, contact_email: 'info@athar-portal.com', legal_info_url: `${site}/agents`,
     tools: AGENT_TOOLS.map(t => ({ name: t.name, scope: t.scope, writes: t.writes, description: t.desc_en, description_ar: t.desc_ar, parameters: { type: 'object', properties: Object.fromEntries(t.params.map(p => [p.name, { type: p.type, description: p.desc_en }])), required: t.params.filter(p => p.required).map(p => p.name) } })),
     governance: { human_in_the_loop: true, binding_commitments_by_agents: false, data_minimization: 'no individual names in reports', log_retention_days: 180 },
   };

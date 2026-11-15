@@ -29,8 +29,8 @@ export function headersCheck(h: Headers | Record<string, string>): { ok: boolean
 
 /** نصّ security.txt (RFC 9116) — Expires آلي */
 export function securityTxt(env: Record<string, string | undefined>, now = new Date()): string {
-  const S = (env.NEXT_PUBLIC_SITE_URL || 'https://athar.university').replace(/\/+$/, '');
-  const mail = String(env.SECURITY_CONTACT || (env.NOTIFY_EMAILS || env.ADMIN_EMAILS || '').split(/[,;\s]+/)[0] || '').trim();
+  const S = (env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.com').replace(/\/+$/, '');
+  const mail = String(env.SECURITY_CONTACT || '').trim() || 'security@athar-portal.com'; /* بريد الإفصاح المسؤول الرسمي (2026-11-15) — المتغير يغلبه فقط */
   const exp = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 12, 0, 23, 59, 59)); // آخر يوم من الشهر بعد 11 شهرًا
   return [
     '# أَثَر · TRACE — سياسة الإفصاح المسؤول (RFC 9116)',

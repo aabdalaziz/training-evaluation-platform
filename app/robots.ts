@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * robots.txt (النطاق الرسمي athar.university — 2026-11-15)
+ * robots.txt (النطاق الرسمي athar-portal.com — 2026-11-15)
  *  يُفهرَس العامّ فقط؛ ومساحات المتعلّم والإدارة والواجهات البرمجية والتحقّق خارج الفهرسة
  *  (روابط التحقّق تُفتح برمزها ولا تُكتشف من محرّك بحث — خصوصية حاملها).
  */

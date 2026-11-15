@@ -76,7 +76,7 @@ test('p16: planChannels — المفضّلة أولًا، فقط المضبوط�
   assert.deepEqual(planChannels(null, ENV_ALL, { phone: '0512345678' }), ['manual'], 'هاتف بلا موافقة ولا بريد = اليد');
 });
 test('p16: channelEnv يكشف وضع الاختبار resend.dev ويطبّع هاتف الإداري', () => {
-  const e = channelEnv({ RESEND_API_KEY: 'k', OUTREACH_ADMIN_PHONE: '0500000000', REPORTS_FROM_EMAIL: 'X <onboarding@resend.dev>' } as any); assert.equal(e.email, true); assert.equal(e.emailTest, true, 'resend.dev = اختبار'); assert.equal(channelEnv({ RESEND_API_KEY: 'k' } as any).from, 'أَثَر <reports@athar.university>', 'المُرسِل الافتراضي = النطاق الرسمي'); assert.equal(channelEnv({ RESEND_API_KEY: 'k' } as any).emailTest, false, 'الافتراضي ليس اختبارًا'); assert.equal(e.whatsapp, false); assert.equal(e.adminPhone, '966500000000');
+  const e = channelEnv({ RESEND_API_KEY: 'k', OUTREACH_ADMIN_PHONE: '0500000000', REPORTS_FROM_EMAIL: 'X <onboarding@resend.dev>' } as any); assert.equal(e.email, true); assert.equal(e.emailTest, true, 'resend.dev = اختبار'); assert.equal(channelEnv({ RESEND_API_KEY: 'k' } as any).from, 'أَثَر <reports@athar-portal.com>', 'المُرسِل الافتراضي = النطاق الرسمي'); assert.equal(channelEnv({ RESEND_API_KEY: 'k' } as any).emailTest, false, 'الافتراضي ليس اختبارًا'); assert.equal(e.whatsapp, false); assert.equal(e.adminPhone, '966500000000');
   assert.equal(channelEnv(RAW_ALL).emailTest, false, 'نطاق متحقَّق'); assert.equal(channelEnv(RAW_ALL).whatsapp, true);
 });
 

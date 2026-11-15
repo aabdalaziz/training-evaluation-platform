@@ -9,7 +9,7 @@ import Guide from './components/Guide'; /* «دليل أَثَر» (P41): الب
 const tajawal = Tajawal({ subsets: ['arabic', 'latin'], weight: ['400', '700', '900'] /* خِفّة أَثَر (P40): 3 أوزان بدل 5 — الوزنان 500/800 يُقرّبهما المتصفح من 400/700 */, display: 'swap', variable: '--font-ar' });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar.university'), /* النطاق الرسمي (2026-11-15): روابط OpenGraph مطلقة */
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.com'), /* النطاق الرسمي (2026-11-15): روابط OpenGraph مطلقة */
   title: { default: 'أَثَر — بوابة التعليم والتدريب والتطوير', template: '%s | أَثَر' },
   description: 'أَثَر: حلول متكاملة في التعليم والتدريب والتطوير — تعليم العربية للناطقين بغيرها، برامج ودبلومات، استشارات، حقائب تدريبية، بث متزامن، وقياس أثر حقيقي. Athar · TRACE (Training · Resources · Arabic · Consulting · Evaluation) — Education, Training & Development Portal.',
   keywords: ['أثر', 'Athar', 'TRACE', 'تعليم العربية للناطقين بغيرها', 'برامج تدريبية', 'دبلومات', 'استشارات', 'قياس الأثر', 'تقويم البرامج التدريبية', 'اختبار تحديد المستوى'],

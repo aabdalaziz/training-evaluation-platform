@@ -35,7 +35,7 @@ export const BRAND = {
 };
 
 export const CONTACT = {
-  email: 'info@athar-portal.sa',
+  email: 'info@athar-portal.com', /* البريد الرسمي (صندوق Hostinger) — 2026-11-15 */
   phone: '+966 56 444 0406',
   city: { ar: 'المدينة المنورة، المملكة العربية السعودية', en: 'Madinah, Saudi Arabia' } as T,
   hours: { ar: 'الأحد – الخميس · 8:00 ص – 4:00 م', en: 'Sun – Thu · 8:00 – 16:00' } as T,
