@@ -3,9 +3,9 @@ name: athar-dialogue
 description: How to extend the Athar human dialogue loop (P51–P66 — «دفتر اليوم», «رسالة الشهر», «ردّ على الكلمة», «أمانة صوتية», «كلمة صوتية», «صدى الأسبوع», «نبض الجهة», «خريطة أثرك», «نسيج الشعبة», «لأن… بصوتك», «نسيج البرنامج», «رسالة إلى نفسي بعد سنة», «يوم تخرّجي — بكلماتي», «أول يوم — قال من سبقك», «أيام التدريب وفترات التطبيق») without breaking its rules — nothing enters evaluation, k ≥ 5 for any aggregate, no names outside the owner's own screen, voice is private/temporary, no server AI, no new cron/env/deps.
 ---
 
-# Athar — the dialogue loop (P51–P71)
+# Athar — the dialogue loop (P51–P72)
 
-Read `docs/ATHAR-DIALOGUE-LOOP-P51-P66B-AR.txt` (v2.7) (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
+Read `docs/ATHAR-DIALOGUE-LOOP-P51-P66B-AR.txt` (v2.8) (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
 
 ## The loop in one line
 Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/line/voice «أمانة» (P53/P54) → learner gets a weekly 🪞 «صدى» (P56) → the organization gets a monthly «رسالة الشهر» with an aggregated «نبض» (P52/P57) → the learner weaves their own «خيوط» into «خريطة أثرك» (P58) → the trainer reads what the section wove together in «نسيج الشعبة» and answers with a 🧶 word on it (P59) — which is again a «كلمة», so the loop closes on itself. The learner can also speak each «لأن…» (P60) — voice stays with its owner only. At program level the kept threads become **counted** evidence in the living accreditation file «نسيج البرنامج» (P61) — never quoted. On the program's last day the learner's own words come back to them as a page they curate, seal and may open to the world: «يوم تخرّجي — بكلماتي» (P63).
@@ -159,6 +159,14 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - It comes back to its owner only: P64 first-day card «قلتَ يوم دخلتَ» (voice via signed URL · copy-to-«لماذا جئتُ» · immediate delete), P70 level-1 card `entry_line`, P63 first card `entry` — none of them enters a public face. Instructor sees `ClassDay.entry` «قالوا يوم دخلوا» only for sections whose program starts within ±7 days, k ≥ 5 on the section, 3 seeded-shuffled verbatim lines, no translation.
 - Split pure vs glue when a client component needs the copy: `lib/first/entry-pure.ts` (limits · prompts · validation · echo line) is imported by `app/miaar/EntryLine.tsx`; `lib/first/entry.ts` (crypto · storage · db) stays server-side.
 - Trap: `/miaar` test ids are crowded — `mi-entry` (entry level on the result card) and `mi-door` (test doors) are taken; P71 uses `mi-why*`. Grep the file before choosing an id.
+
+## Sound is checked on the device, never judged on the server (P72 pattern — «ضبط الصوت» · «فحص الميكروفون» · «أول محاضرة»)
+- One pure lib `lib/portal/audio-meter.ts` (frames → `levelHint` live, `takeQuality` after stop, `analyzePcm` for decoded buffers) and one client module `app/components/AudioMeter.tsx` (`useAudioMeter`, `<LevelBar>`, `<QualityNote>`, `<MicCheck>`). Every recorder (`VoiceRecorder.tsx`, `EntryLine.tsx`, `PerformanceRoom.tsx`) attaches the meter to the same `MediaStream` it records from; nothing is fetched or posted by the meter.
+- Verdicts are suggestions: `suggest_redo` shows a hint and (optionally) a redo button, but the send/save button is never disabled. In the exam room the redo honours the one-retake rule (`onRedo` undefined when exhausted).
+- Only `{voiced_sec, peak, level}` may travel, and only into an existing jsonb (`portal_entry_lines.voice.quality`) through `parseQualityMeta` — never into a score, a report, or the rater's rubric. The rater's «قراءة الصوت» decodes in *their* browser and is not stored.
+- Mic check once per device (`localStorage athar_mic_ok`), 3 seconds, always skippable.
+- **Data-URL rule**: strip with `stripDataUrl()` (`/^data:[^,]*,/`). Chrome's `audio/webm;codecs=opus` defeated the old `[^;]+;base64,` pattern and 15 corrupt bytes were uploaded while every API test returned 200 — E2E voice paths must use a fake microphone (`--use-fake-device-for-media-stream`) and assert the stored file's magic bytes (EBML `1A 45 DF A3`).
+- First lecture: `corridor()` adds `first` (reuses `sectionEntry` from P71, same k ≥ 5 / no-names / 7-day window) and the DayBook hides the empty thread line when `first` is present; the welcome button opens the P64 word with `welcome` pre-ticked — no new channel.
 
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
