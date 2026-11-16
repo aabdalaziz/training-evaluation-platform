@@ -45,7 +45,7 @@ export default function AdminTwinPage() {
   return (
     <div className="at"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="at-wrap">
-        <header className="at-head"><div><span className="at-kicker"><Icon name="star" size={14} /> بوابة أَثَر · P11</span><h1>توأم المؤسسة والشهادات الحية</h1><p>مجموع التوائم المهارية للأعضاء: أين ستكون القدرات بعد 180 يومًا إن لم يحدث شيء (السياسة أ) مقابل «محاكاة أداء واحدة شهريًا لكل عضو» (السياسة ب). المهارات الصدئة تُعرض لتتدخّل قبل أن تُفقد. أرقام إرشادية شفافة من أدلة P8 — بلا نموذج لغوي.</p></div></header>
+        <header className="at-head"><div><span className="at-kicker"><Icon name="star" size={14} /> بوابة أَثَر · P11</span><h1>خريطة قدرات المؤسسة والشهادات الحية</h1><p>مجموع التوائم المهارية للأعضاء: أين ستكون القدرات بعد 180 يومًا إن لم يحدث شيء (السياسة أ) مقابل «محاكاة أداء واحدة شهريًا لكل عضو» (السياسة ب). المهارات الصدئة تُعرض لتتدخّل قبل أن تُفقد. أرقام إرشادية شفافة من أدلة P8 — بلا نموذج لغوي.</p></div></header>
         <PortalAdminTabs />
         {error && <div className="at-err">{error}</div>}
         <div className="at-bar2">
@@ -68,7 +68,7 @@ export default function AdminTwinPage() {
           {rusty.length > 0 && <table className="at-table"><thead><tr><th>المهارة</th><th>العضو</th><th>المستوى</th><th>الطزاجة</th><th>الحالة</th><th>تصدأ خلال</th><th>آخر دليل</th></tr></thead><tbody>
             {rusty.map(({ l, t }, i) => <tr key={i}><td><b>{skills.get(l.skill_id)?.name_ar}</b><br /><small dir="ltr">{skills.get(l.skill_id)?.code}</small></td><td><small dir="ltr">{l.user_id.slice(0, 8)}…</small></td><td>{fmtLevel(t.level_now)}{t.approved ? ' ✓' : ''}</td><td>{t.freshness}%</td><td><span className="at-st" style={{ background: STATUS_LABEL[t.status].color }}>{STATUS_LABEL[t.status].ar}</span></td><td>{t.status === 'rusty' ? `صدئت منذ ${Math.abs(t.rust_in_days || 0)} يومًا` : `${t.rust_in_days} يومًا`}</td><td>{t.last_at ? fmt(t.last_at) : '—'}</td></tr>)}
           </tbody></table>}
-          <p className="at-note">الإجراء المقترح: أرسل للأعضاء المهددين رابط محاكاة مناسبة من <a href="/admin/sim">المحاكيات</a> أو أدرج المهارة في «كل يوم مهارة». يرى كل متعلم الإنذار نفسه في صفحة «توأمي».</p>
+          <p className="at-note">الإجراء المقترح: أرسل للأعضاء المهددين رابط محاكاة مناسبة من <a href="/admin/sim">التدريب بالمحاكاة</a> أو أدرج المهارة في «كل يوم مهارة». يرى كل متعلم الإنذار نفسه في صفحة «توأمي».</p>
         </div>}
 
         {tab === 'watchers' && <div className="at-card">

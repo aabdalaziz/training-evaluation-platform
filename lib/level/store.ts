@@ -67,7 +67,7 @@ const toLine = (r: any): LineSrc => ({ kind: r.kind, day: String(r.day), body_ar
 export async function loadSources(db: Db, me: Me, it: Pick<LevelItem, 'program_id' | 'enrollment_id' | 'classroom_id' | 'level_no' | 'window' | 'is_first'>, now = new Date()): Promise<Sources> {
   const email = lower(me.email); const w = it.window; const examTo = addDaysKey(w.to_day, LEVEL_LIMITS.openAfterDays);
   const [lines, prev, caps, cal, reports, entryRow] = await Promise.all([
-    safe<any[]>(db.from('portal_learning_lines').select('kind,day,body_ar,blocker_ar,done,meta,unit_id,week_no').eq('user_id', me.id).eq('classroom_id', it.classroom_id).gte('day', w.from_day).lte('day', w.to_day).order('day').limit(400), []),
+    safe<any[]>(db.from('portal_learning_lines').select('id,kind,day,body_ar,blocker_ar,done,meta,unit_id,week_no').eq('user_id', me.id).eq('classroom_id', it.classroom_id).gte('day', w.from_day).lte('day', w.to_day).order('day').limit(400), []),
     it.level_no > 1 ? safe<any>(db.from('portal_level_pages').select('line_ar,level_no,sealed_at,revoked_at').eq('user_id', me.id).eq('enrollment_id', it.enrollment_id).eq('level_no', it.level_no - 1).maybeSingle(), null) : Promise.resolve(null),
     it.is_first ? safe<any[]>(db.from('portal_time_capsules').select('id,body_ar,created_at,deliver_at,opened_at,status,context_key,scope').eq('user_id', me.id).eq('program_id', it.program_id).eq('context_key', 'first_day').neq('status', 'cancelled').limit(1), []) : Promise.resolve([] as any[]),
     safe<any>(db.from('portal_room_calendars').select('days').eq('classroom_id', it.classroom_id).maybeSingle(), null),
@@ -88,8 +88,11 @@ export async function loadSources(db: Db, me: Me, it: Pick<LevelItem, 'program_i
       speaking: sp ? { sec: sp.duration_sec ? Number(sp.duration_sec) : null, has_media: !!sp.media_path && !sp.media_purged_at, purged: !!sp.media_purged_at, transcript: sp.transcript && sp.transcript_source === 'human' ? String(sp.transcript) : null, at: String(sp.created_at) } : null,
     };
   }
+  /* P73: أيام ساعات الأثر التي خُتم فيها سطرٌ لي — ختم الشعبة (hour_seal) يحمل line_id المختار */
+  const myHourIds = new Set(lines.filter((r: any) => r.kind === 'hour_line').map((r: any) => Number(r.id))); const chosenHourDays = new Set<string>();
+  if (myHourIds.size) { const seals = await safe<any[]>(db.from('portal_learning_lines').select('day,meta').eq('classroom_id', it.classroom_id).eq('kind', 'hour_seal').gte('day', w.from_day).lte('day', w.to_day).limit(60), []); for (const s of seals) if (myHourIds.has(Number((s.meta as any)?.line_id))) chosenHourDays.add(String(s.day)); }
   return {
-    lines: lines.map(toLine).filter((l) => l.kind === 'learn' || l.kind === 'apply' || l.kind === 'commit'),
+    lines: lines.map(toLine).filter((l) => l.kind === 'learn' || l.kind === 'apply' || l.kind === 'commit' || l.kind === 'carry' || l.kind === 'hour_line' /* P73 */).map((l) => (l.kind === 'hour_line' ? { ...l, chosen: chosenHourDays.has(l.day) } : l)),
     prev_line: prev && prev.line_ar && prev.sealed_at && !prev.revoked_at ? { line_ar: String(prev.line_ar), level_no: Number(prev.level_no), sealed_at: String(prev.sealed_at) } : null,
     first_why: firstWhy ? { id: Number(firstWhy.id), body_ar: firstWhy.opened_at ? String(firstWhy.body_ar || '') : null, at: String(firstWhy.created_at), state: letterState(firstWhy, now).state, opens_ar: fmtIsoAr(firstWhy.deliver_at) } : null,
     entry_line: entryRow ? { text: entryRow.body_text || null, lang: String(entryRow.lang || 'ar'), voice_sec: (entryRow.voice as any)?.sec ? Number((entryRow.voice as any).sec) : null, at: String(entryRow.created_at) } : null,

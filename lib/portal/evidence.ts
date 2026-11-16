@@ -34,7 +34,7 @@ export type GraphSources = {
 
 export const CHANNEL_LABEL: Record<string, { ar: string; en: string }> = {
   program: { ar: 'إتمام البرامج', en: 'Program completion' }, credential: { ar: 'الشهادات', en: 'Credentials' }, session: { ar: 'الجلسات المباشرة', en: 'Live sessions' },
-  simulation: { ar: 'المحاكيات', en: 'Simulations' }, mission: { ar: 'مهمات في قلب العمل', en: 'Workplace missions' }, daily_case: { ar: 'موقف اليوم', en: 'Daily case' },
+  simulation: { ar: 'التدريب بالمحاكاة', en: 'Simulation training' }, mission: { ar: 'مهمات في قلب العمل', en: 'Workplace missions' }, daily_case: { ar: 'موقف اليوم', en: 'Daily case' },
   media: { ar: 'الأداء المُشاهَد', en: 'Observed performance' }, placement: { ar: 'اختبار مِعيار', en: 'Placement test' },
 };
 const TRANSFER_KINDS: EvidenceKind[] = ['mission', 'media', 'simulation'];

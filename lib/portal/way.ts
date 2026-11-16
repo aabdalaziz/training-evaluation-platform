@@ -7,16 +7,17 @@ type L = { ar: string; en: string };
 /** أسماء المقاطع المعروفة (المقطع الأول أو المركّب) — الأسماء الرسمية كما في القوائم */
 const NAMES: Record<string, L> = {
   services: { ar: 'الخدمات', en: 'Services' }, programs: { ar: 'البرامج', en: 'Programs' }, consulting: { ar: 'الاستشارات', en: 'Consulting' },
-  resources: { ar: 'الحقائب', en: 'Resources' }, live: { ar: 'البث المباشر', en: 'Live' }, sim: { ar: 'المحاكيات', en: 'Simulators' }, councils: { ar: 'المجالس', en: 'Councils' },
+  resources: { ar: 'الحقائب', en: 'Resources' }, live: { ar: 'البث المباشر', en: 'Live' }, sim: { ar: 'التدريب بالمحاكاة', en: 'Simulation training' }, councils: { ar: 'المجالس', en: 'Councils' },
   about: { ar: 'عن أَثَر', en: 'About' }, contact: { ar: 'تواصل', en: 'Contact' }, ai: { ar: 'الذكاء الاصطناعي المسؤول', en: 'Responsible AI' },
-  needs: { ar: 'ما يحتاجه الممارسون', en: 'What practitioners need' }, 'admin/needs': { ar: 'الاحتياج المعلَن', en: 'Declared needs' },
+  needs: { ar: 'ما يحتاجه الممارسون', en: 'What practitioners need' }, 'admin/needs': { ar: 'الاحتياجات التدريبية', en: 'Training needs' },
   'admin/pulse': { ar: 'نبض البيئة التدريبية', en: 'Training-environment pulse' },   // P49-هـ
   'admin/demo': { ar: 'غرفة العرض', en: 'Demo room' },   // P69
-  rehearsal: { ar: 'بروفاتي', en: 'My rehearsals' }, 'me/rehearsal': { ar: 'بروفاتي', en: 'My rehearsals' }, 'admin/rehearsals': { ar: 'البروفات', en: 'Rehearsals' },
+  rehearsal: { ar: 'تدريباتي التبادلية', en: 'My peer practice' }, 'me/rehearsal': { ar: 'تدريباتي التبادلية', en: 'My peer practice' }, 'admin/rehearsals': { ar: 'التدريب التبادلي', en: 'Peer practice' },
   'e': { ar: 'رابط تقويم', en: 'Evaluation link' }, 'evaluate': { ar: 'التقويم', en: 'Evaluation' }, 'evaluate/end': { ar: 'استبيان نهاية البرنامج', en: 'End-of-program survey' }, 'evaluate/daily': { ar: 'التقييم اليومي', en: 'Daily evaluation' }, 'evaluate/final': { ar: 'التقييم الختامي', en: 'Final evaluation' },   // P49
   'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'me/accreditation': { ar: 'ملف الاعتماد الحيّ', en: 'Live accreditation file' }, 'admin/accreditation': { ar: 'ملفات الاعتماد', en: 'Accreditation files' }, 'verify/accreditation': { ar: 'التحقّق من ملف اعتماد', en: 'Verify accreditation file' }, 'me/reports/line': { ar: 'صفحتي في التقرير الختامي', en: 'My page in the final report' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' }, 'verify/form': { ar: 'التحقّق من نموذج اختبار', en: 'Verify an exam form' },
   'me/first': { ar: 'أول يوم', en: 'First day' }, /* P64 */
   'me/line': { ar: 'سطري', en: 'My line' }, /* P66 */
+  'me/hour': { ar: 'ساعة الأثر', en: 'Athar hour' }, /* P73 */
   'me/diploma': { ar: 'هيكل الدبلوم', en: 'Diploma structure' }, /* P66-ب */
   'me/level': { ar: 'بكلماتي عبر المستوى', en: 'My level page' }, 'verify/level': { ar: 'تحقّق من صفحة مستوى', en: 'Verify level page' }, lv: { ar: 'صفحة مستوى', en: 'Level page' }, /* P70 */
   me: { ar: 'مساحتي', en: 'My space' }, org: { ar: 'بوابة الجهات', en: 'Organizations' }, hub: { ar: 'صفحاتي', en: 'My pages' }, login: { ar: 'الدخول', en: 'Sign in' }, join: { ar: 'الانضمام', en: 'Join' },

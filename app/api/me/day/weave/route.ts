@@ -16,6 +16,7 @@ import { normEmail } from '../../../../../lib/portal/roles';
 import { STAFF_ROLES } from '../../../../../lib/portal/sign';
 import { resolveTrainer, collectDayBook, sendWord, cleanWord, WORD_MAX, WORDS_PER_HOUR } from '../../../../../lib/portal/day';
 import { loadWeave } from '../../../../../lib/map/weave-load';
+import { hourSeals } from '../../../../../lib/hour/store'; /* P73 خيط «ساعاتنا» */
 import type { WeaveRoom } from '../../../../../lib/map/weave-load';
 import { WEAVE_TITLE, WEAVE_OFFICIAL, WEAVE_LIMITS, RULE_AR, KIND_AR } from '../../../../../lib/map/weave';
 
@@ -48,8 +49,8 @@ export async function GET(req: Request) {
   if (!cid) return NextResponse.json({ success: true, title: WEAVE_TITLE, official: WEAVE_OFFICIAL, limits: WEAVE_LIMITS, trainer_name: me.name, viewing_other: me.viewing_other, rooms }, { headers: NO });
   if (!isId(cid)) return bad('معرّف شعبة غير صالح');
   const room = rooms.find((r) => r.id === cid); const full = book.classrooms.find((r) => r.id === cid); if (!room || !full) return bad('هذه الشعبة ليست من شُعبك', 404, { code: 'not_my_classroom' });
-  const w = await loadWeave(db, room.id, full.roster_list.map((l) => l.email), { fresh: u.searchParams.get('fresh') === '1' });
-  return NextResponse.json({ success: true, title: WEAVE_TITLE, official: WEAVE_OFFICIAL, limits: WEAVE_LIMITS, rules: RULE_AR, kinds: KIND_AR, room, rooms, viewing_other: me.viewing_other, weave: w }, { headers: NO });
+  const [w, hours] = await Promise.all([loadWeave(db, room.id, full.roster_list.map((l) => l.email), { fresh: u.searchParams.get('fresh') === '1' }), hourSeals(db, room.id).catch(() => [])]);
+  return NextResponse.json({ success: true, title: WEAVE_TITLE, official: WEAVE_OFFICIAL, limits: WEAVE_LIMITS, rules: RULE_AR, kinds: KIND_AR, room, rooms, viewing_other: me.viewing_other, weave: w, hours /* P73 */ }, { headers: NO });
 }
 
 export async function POST(req: Request) {

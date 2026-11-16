@@ -89,6 +89,6 @@ test('المصادر: من حاجة · قبل المحطة · من «كل يوم
 test('الخزنة والطريق ونوع الغرفة', () => {
   assert.ok(REGISTRY.some(r => r.table === 'portal_rehearsals' && r.policy === 'anonymize' && r.piiCols.includes('name_ar'))); assert.ok(REGISTRY.some(r => r.table === 'portal_rehearsal_notes' && r.policy === 'delete'));
   assert.equal(new Set(REGISTRY.map(r => r.table)).size, REGISTRY.length, 'لا تكرار');
-  assert.equal(crumbsFor('/me/rehearsal').at(-1)?.label, 'بروفاتي'); assert.equal(crumbsFor('/admin/rehearsals').at(-1)?.label, 'البروفات');
+  assert.equal(crumbsFor('/me/rehearsal').at(-1)?.label, 'تدريباتي التبادلية'); assert.equal(crumbsFor('/admin/rehearsals').at(-1)?.label, 'التدريب التبادلي');
   assert.equal(ROOM_KIND_LABEL.rehearsal.ar, 'غرفة بروفة — التمرين التبادلي بين الممارسين'); assert.ok(ROOM_DEFAULT_PROMPT.rehearsal.includes('خمس عشرة دقيقة'));
 });

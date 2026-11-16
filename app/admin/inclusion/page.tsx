@@ -44,7 +44,7 @@ export default function AdminInclusionPage() {
   return (
     <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
-        <header className="am-head"><div><span className="am-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P32</span><h1>أَثَر للجميع — الشمول في البوابة نفسها</h1><p>هنا ثلاثة أشياء لا غير: نصوص «نسخة أبسط» يقترحها الذكاء الاصطناعي وتعتمدها أنت أو تحرّرها · بلاغات العوائق وحالتها · ما يوفّره كل برنامج فعلًا. لا ترى هنا ملف احتياج أي شخص؛ الأرقام مجمَّعة ولا رقم أقل من {data?.meta?.k || 5}.</p></div></header>
+        <header className="am-head"><div><span className="am-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P32</span><h1>إتاحة الوصول — الشمول في البوابة نفسها</h1><p>هنا ثلاثة أشياء لا غير: نصوص «نسخة أبسط» يقترحها الذكاء الاصطناعي وتعتمدها أنت أو تحرّرها · بلاغات العوائق وحالتها · ما يوفّره كل برنامج فعلًا. لا ترى هنا ملف احتياج أي شخص؛ الأرقام مجمَّعة ولا رقم أقل من {data?.meta?.k || 5}.</p></div></header>
         <PortalAdminTabs counts={{ '/admin/inclusion': pendingTexts + openReports }} />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         {data?.pending_sql && <div className="am-err" role="alert">لم يُنفَّذ ملف SQL الخاص بـ P32 بعد (عمود <code>programs.access_features</code>) — نفّذه أولًا ثم أعد التحميل.</div>}

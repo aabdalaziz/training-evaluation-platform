@@ -57,7 +57,7 @@ export default function AdminOutreachPage() {
   return (
     <div className="ou"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="ou-wrap">
-        <header className="ou-head"><div><span className="ou-kicker"><Icon name="send" size={14} /> بوابة أَثَر · P16</span><h1>الإبلاغ متعدد القنوات — نبض الوصول</h1><p>رسالة تُكتب مرة وتصل بأي قناة متاحة: واتساب ← بريد ← إشعار فوري ← قائمة اليد. لا رسالة تضيع بصمت، والحالة المعروضة هي حالة المزوّد الفعلية.</p></div></header>
+        <header className="ou-head"><div><span className="ou-kicker"><Icon name="send" size={14} /> بوابة أَثَر · P16</span><h1>الرسائل والتنبيهات — نبض الوصول</h1><p>رسالة تُكتب مرة وتصل بأي قناة متاحة: واتساب ← بريد ← إشعار فوري ← قائمة اليد. لا رسالة تضيع بصمت، والحالة المعروضة هي حالة المزوّد الفعلية.</p></div></header>
         <PortalAdminTabs counts={{ '/admin/outreach': health?.manual_count || 0 }} />
         {error && <div className="ou-err">{error}</div>}
         {msg && <div className="ou-msg" data-testid="out-msg">{msg}</div>}

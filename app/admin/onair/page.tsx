@@ -41,7 +41,7 @@ export default function AdminOnAirPage() {
   return (
     <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
-        <header className="am-head"><div><span className="am-kicker"><Icon name="chat" size={14} /> بوابة أَثَر · P33</span><h1>أَثَر معك — على الهواء</h1><p>الطاقم هنا حارسٌ لا مُشغِّل: يرى من على الهواء، ويتولّى ما صُعّد إليه والاستشارات، ويعتمد «أسئلة أجاب عنها الهواء» بصياغة عامة، ويعتمد مترجمي الإشارة. خيوط «عونٍ سريع» ملك لطرفيها.</p></div></header>
+        <header className="am-head"><div><span className="am-kicker"><Icon name="chat" size={14} /> بوابة أَثَر · P33</span><h1>اسأل خبيرًا — «أَثَر معك» على الهواء</h1><p>الطاقم هنا حارسٌ لا مُشغِّل: يرى من على الهواء، ويتولّى ما صُعّد إليه والاستشارات، ويعتمد «أسئلة أجاب عنها الهواء» بصياغة عامة، ويعتمد مترجمي الإشارة. خيوط «عونٍ سريع» ملك لطرفيها.</p></div></header>
         <PortalAdminTabs counts={{ '/admin/onair': esc.length }} />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         {data?.pending_sql && <div className="am-err" role="alert">لم يُنفَّذ ملف SQL الخاص بـ P33 بعد (<code>20261210_portal_p33_onair.sql</code>) — نفّذه أولًا ثم أعد التحميل.</div>}

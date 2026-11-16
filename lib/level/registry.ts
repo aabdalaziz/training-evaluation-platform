@@ -24,11 +24,11 @@ export const LINE_PROMPT_AR = 'لو لخّصتُ هذا المستوى في سط
 export const LEVEL_FOOT_AR = 'لا تدخل هذه الصفحة في أي تقييم أو درجة أو قرار عبور. لا يكتبها ذكاء اصطناعي. خاصّة حتى تختمها وتختار وجهها العام بنفسك — وتُبطلها متى شئت.';
 export const CODE_RE = /^ATH-LV-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
 
-export type CardKey = 'prev_line' | 'entry_line' /* P71 */ | 'first_why' | 'day_lines' | 'apply_lines' | 'commits' | 'exam_writing' | 'exam_speaking' | 'crossed';
-export const CARD_KEYS: CardKey[] = ['prev_line', 'entry_line', 'first_why', 'day_lines', 'apply_lines', 'commits', 'exam_writing', 'exam_speaking', 'crossed'];
+export type CardKey = 'prev_line' | 'entry_line' /* P71 */ | 'first_why' | 'day_lines' | 'apply_lines' | 'commits' | 'carried' | 'hour_line' /* P73 */ | 'exam_writing' | 'exam_speaking' | 'crossed';
+export const CARD_KEYS: CardKey[] = ['prev_line', 'entry_line', 'first_why', 'day_lines', 'apply_lines', 'commits', 'carried', 'hour_line', 'exam_writing', 'exam_speaking', 'crossed'];
 export const CARD_AR: Record<CardKey, string> = {
   prev_line: 'كلمتي من المستوى السابق', entry_line: 'قلتُه يوم دخلتُ — قبل أن أعرف نتيجتي' /* P71 */, first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»', day_lines: 'سطور أيامي', apply_lines: 'في موقعي — سطور التطبيق',
-  commits: 'التزمتُ… وأوفيتُ؟', exam_writing: 'ما كتبتُه في اختبار نهاية المستوى', exam_speaking: 'ما قلتُه في اختبار نهاية المستوى', crossed: 'عبرتُ',
+  commits: 'التزمتُ… وأوفيتُ؟', carried: 'ما حملتُه من غيري — في ساعة الأثر' /* P73 */, hour_line: 'سطر ساعتنا — ما اقترحتُه وما اختارته الشعبة' /* P73 */, exam_writing: 'ما كتبتُه في اختبار نهاية المستوى', exam_speaking: 'ما قلتُه في اختبار نهاية المستوى', crossed: 'عبرتُ',
 };
 /** ما يجوز أن يظهر على الوجه العام — الصوت لا يظهر أبدًا، ونصّ الاختبار لا يظهر (كلماته في موقف اختبار تبقى له) */
 export type PublicKey = 'line' | 'counts' | 'name' | 'crossed' | 'prev_line' | 'commits' | 'day_lines';
@@ -87,7 +87,7 @@ export function crossedText(x: Pick<ExamSource, 'level' | 'outcome' | 'retake_sk
 /* ───────── البطاقات من المصادر (كلماته هو فقط) ───────── */
 export type Done = 'yes' | 'part' | 'no';
 export const DONE_STATE_AR: Record<Done | 'none', string> = { yes: 'أوفيتُ ✓', part: 'أوفيتُ جزئيًا', no: 'لم أُوفِ بعدُ', none: 'لم أُجب بعدُ' };
-export type LineSrc = { kind: 'learn' | 'apply' | 'commit'; day: string; body_ar: string; blocker_ar: string | null; done: Done | null; done_note_ar: string | null; unit_id: string | null; week_no: number | null };
+export type LineSrc = { kind: 'learn' | 'apply' | 'commit' | 'carry' | 'hour_line'; day: string; body_ar: string; blocker_ar: string | null; done: Done | null; done_note_ar: string | null; unit_id: string | null; week_no: number | null; chosen?: boolean /* P73: اختارته الشعبة سطرَ ساعتها */ };
 export type Sources = {
   lines: LineSrc[];
   prev_line: { line_ar: string; level_no: number; sealed_at: string } | null;
@@ -105,6 +105,9 @@ export function buildCards(src: Sources, w: { from_day: string; to_day: string }
   if (src.first_why) cards.push({ key: 'first_why', title_ar: CARD_AR.first_why, text_ar: src.first_why.state === 'opened' ? src.first_why.body_ar : null, at: src.first_why.at, href: `/me/letter#letter-${src.first_why.id}`, state_ar: src.first_why.state === 'opened' ? null : `مختومة — تُفتح لك يوم تخرّجك (${src.first_why.opens_ar})` });
   if (learn.length) cards.push({ key: 'day_lines', title_ar: CARD_AR.day_lines, text_ar: null, at: learn[0].day, items: learn.slice(-LEVEL_LIMITS.dayLinesMax).map((l) => ({ text_ar: l.body_ar, at: l.day, state_ar: l.unit_id ? 'قبل أن أغادر' : null })) });
   if (apply.length) cards.push({ key: 'apply_lines', title_ar: CARD_AR.apply_lines, text_ar: null, at: apply[0].day, items: apply.slice(-LEVEL_LIMITS.applyMax).map((l) => ({ text_ar: l.blocker_ar ? `${l.body_ar} — وما عاقني: ${l.blocker_ar}` : l.body_ar, at: l.day, state_ar: l.week_no ? `الأسبوع ${l.week_no}` : null })) });
+  const carried = inW.filter((l) => l.kind === 'carry' && l.body_ar.trim()); const hourLines = inW.filter((l) => l.kind === 'hour_line' && l.body_ar.trim()); /* P73 */
+  if (carried.length) cards.push({ key: 'carried', title_ar: CARD_AR.carried, text_ar: null, at: carried[0].day, items: carried.slice(-LEVEL_LIMITS.commitsMax).map((l) => ({ text_ar: l.body_ar, at: l.day, state_ar: 'سطر زميل — بلا اسم' })) });
+  if (hourLines.length) cards.push({ key: 'hour_line', title_ar: CARD_AR.hour_line, text_ar: null, at: hourLines[0].day, items: hourLines.slice(-LEVEL_LIMITS.commitsMax).map((l) => ({ text_ar: l.body_ar, at: l.day, state_ar: l.chosen ? 'اختارته الشعبة سطرَ ساعتها' : null })) });
   if (commits.length) cards.push({ key: 'commits', title_ar: CARD_AR.commits, text_ar: null, at: commits[0].day, items: commits.slice(-LEVEL_LIMITS.commitsMax).map((l) => ({ text_ar: l.done && l.done_note_ar ? `${l.body_ar} — ${l.done_note_ar}` : l.body_ar, at: l.day, state_ar: DONE_STATE_AR[l.done || 'none'] })) });
   if (src.exam?.writing?.text) cards.push({ key: 'exam_writing', title_ar: CARD_AR.exam_writing, text_ar: src.exam.writing.text.slice(0, LEVEL_LIMITS.writingMax), at: src.exam.writing.at, state_ar: src.exam.writing.words ? `${src.exam.writing.words} كلمة — كما كتبتُها، بلا درجة` : 'كما كتبتُه، بلا درجة' });
   if (src.exam?.speaking) { const s = src.exam.speaking; cards.push({ key: 'exam_speaking', title_ar: CARD_AR.exam_speaking, text_ar: s.transcript ? s.transcript.slice(0, LEVEL_LIMITS.transcriptMax) : null, at: s.at, voice_sec: s.sec || null, state_ar: s.purged ? 'حُذف التسجيل وفق سياسة الصوت (180 يومًا)' : s.has_media ? `قلتُها في ${fmtSec(s.sec)} — لك وحدك، لا يدخل الختم إلا كمدّة` : 'لم يُسجَّل صوت' }); }

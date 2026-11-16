@@ -18,7 +18,7 @@ import type { WeaveRoom } from '../../../../lib/map/weave-load';
 import type { RuleKey, StationKind, Station } from '../../../../lib/map/registry';
 
 type Room = WeaveRoom;
-type Data = { title: { ar: string; sub_ar: string }; official: { ar: string; en: string }; limits: { k: number }; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; room?: Room; rooms: Room[]; viewing_other: boolean; weave?: Weave; trainer_name?: string };
+type Data = { title: { ar: string; sub_ar: string }; official: { ar: string; en: string }; limits: { k: number }; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; room?: Room; rooms: Room[]; viewing_other: boolean; weave?: Weave; trainer_name?: string; hours?: Array<{ day: string; day_ar: string; line: string | null; people: number; words: number; carries: number }> /* P73 */ };
 const qs = () => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams());
 
 export default function WeaveDesk() {
@@ -74,6 +74,10 @@ export default function WeaveDesk() {
                 : <ul className="wv-quotes">{w.quotes.map((q, i) => <li key={i} data-testid="wv-quote"><span className="wv-kind">{q.title_ar}</span><p>«لأن {q.note_ar}»</p></li>)}</ul>}
               <p className="wv-muted">كلمات أذِن أصحابها بمشاركتها معك — بلا اسم ولا تاريخ ولا ترتيب. ما يُسحب إذنه يختفي فورًا.</p></section>
           </>}
+        {/* P73 خيط «ساعاتنا»: السطور الجماعية المختومة في ساعة الأثر — ملك الشعبة، بلا أسماء */}
+        {!!d.hours?.length && <section className="wv-block" data-testid="wv-hours"><h2>🕰️ ساعاتنا <i>{d.hours.length}</i></h2>
+          <ul className="wv-quotes">{d.hours.map((h) => <li key={h.day} data-testid="wv-hour"><span className="wv-kind">{h.day_ar} · حضر {h.people}{h.carries ? ` · حُمل ${h.carries}` : ''}</span><p>{h.line ? `«${h.line}»` : 'خُتمت بلا سطر'}</p></li>)}</ul>
+          <p className="wv-muted">سطر كل ساعة اختارته الشعبة بالتصويت — وعند التعادل الأقصر. <Link href={`/me/hour?classroom=${room?.id || ''}`}>غرفة الساعة ←</Link></p></section>}
         {!d.viewing_other && <section className="wv-block wv-word">
           <h2><Icon name="chat" size={16} /> كلمة على النسيج</h2>
           {!wordOpen ? <div className="wv-row"><button type="button" className="pt-btn" onClick={() => { setWord(suggest); setWordOpen(true); }} data-testid="wv-word-open">اكتب كلمة لكل الشعبة</button><span className="wv-muted">تصلهم كإشعار 🧶 «كلمة من مدرّبك على نسيجكم» — ويردّون عليها كما يردّون على أيّ كلمة.</span></div>

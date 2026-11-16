@@ -52,7 +52,7 @@ export default function AdminEvidencePage() {
   return (
     <div className="ev"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="ev-wrap">
-        <header className="ev-head no-print"><div><span className="ev-kicker"><Icon name="compass" size={14} /> بوابة أَثَر · P14-أ</span><h1>قاعدة الأدلة المؤسسية — الذاكرة الحية</h1><p>كل برنامج ومهارة وجلسة ومحاكٍ ومهمة وجهة = عقدة؛ وكل دليل تعلّم = خيط موزون. اسأل بالعربية وسيُجاب من قوالب أسئلة معتمدة — الذكاء الاصطناعي يوجّه السؤال ولا يكتب استعلامات، والأرقام كلها من الأدلة.</p></div></header>
+        <header className="ev-head no-print"><div><span className="ev-kicker"><Icon name="compass" size={14} /> بوابة أَثَر · P14-أ</span><h1>شواهد الأثر — الذاكرة الحية للمؤسسة</h1><p>كل برنامج ومهارة وجلسة ومحاكٍ ومهمة وجهة = عقدة؛ وكل دليل تعلّم = خيط موزون. اسأل بالعربية وسيُجاب من قوالب أسئلة معتمدة — الذكاء الاصطناعي يوجّه السؤال ولا يكتب استعلامات، والأرقام كلها من الأدلة.</p></div></header>
         <div className="no-print"><PortalAdminTabs counts={{ '/admin/evidence': drafts.length }} /></div>
         {error && <div className="ev-err no-print">{error}</div>}
         <div className="ev-kpis no-print"><span><b>{st?.evidence ?? 0}</b> الأدلة</span><span><b>{st?.people ?? 0}</b> الأشخاص</span><span><b>{st?.skills ?? 0}</b> مهارات تحرّكت</span><span><b>{st?.edges ?? 0}</b> خيوط الشبكة</span><span className="ev-upd">آخر بناء: {fmt(st?.updated_at || null)} <button type="button" className="pt-btn ghost small" onClick={refresh} disabled={refreshing}><Icon name="refresh" size={13} /> {refreshing ? 'يُبنى…' : 'حدّث الذاكرة الآن'}</button></span></div>

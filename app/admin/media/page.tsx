@@ -39,7 +39,7 @@ export default function AdminMediaPage() {
   return (
     <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
-        <header className="am-head"><div><span className="am-kicker"><Icon name="play" size={14} /> بوابة أَثَر · P13-ج</span><h1>الأداء المُشاهَد</h1><p>تسجيلات الفيديو والصوت التي سجّلها المتعلمون من «القناة الواحدة» في موقف اليوم و«ماذا لو؟» وغيرها. النص المفرَّغ يُقدَّر آليًا بمعايير شفافة، لكن الدليل لا يرتفع من 0.6 إلى 0.85 في التوأم المهاري إلا بعد أن يشاهده إنسان ويعتمده. المرفوض يُستبعد من الحساب. تُحذف التسجيلات غير المعتمدة تلقائيًا بعد 180 يومًا.</p></div></header>
+        <header className="am-head"><div><span className="am-kicker"><Icon name="play" size={14} /> بوابة أَثَر · P13-ج</span><h1>مقاطع الأداء</h1><p>تسجيلات الفيديو والصوت التي سجّلها المتعلمون من «القناة الواحدة» في موقف اليوم و«ماذا لو؟» وغيرها. النص المفرَّغ يُقدَّر آليًا بمعايير شفافة، لكن الدليل لا يرتفع من 0.6 إلى 0.85 في التوأم المهاري إلا بعد أن يشاهده إنسان ويعتمده. المرفوض يُستبعد من الحساب. تُحذف التسجيلات غير المعتمدة تلقائيًا بعد 180 يومًا.</p></div></header>
         <PortalAdminTabs counts={{ '/admin/media': stats.pending }} />
         {error && <div className="am-err">{error}</div>}
         <div className="am-kpis"><span><b>{stats.pending}</b> بانتظار المراجعة</span><span><b>{stats.approved}</b> معتمد</span></div>

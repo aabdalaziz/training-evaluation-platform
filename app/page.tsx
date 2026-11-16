@@ -77,7 +77,7 @@ function Hero({ feed, now, lang, counters }: { feed: FeedItem[]; now: number; la
         <div>
           <span className="pt-heropill"><Icon name="star" size={14} /> {t(BRAND.tagline, lang)}</span>
           <h1>{ar ? <>التدريب ما بعد الذكاء الاصطناعي:<br /><em key={w} className="hm-word">{words[w]}</em></> : <>Post‑AI training:<br /><em key={w} className="hm-word">{words[w]}</em></>}</h1>
-          <p>{ar ? 'هنا لا تقرأ عن التدريب — تعيشه: محاكيات تضعك في الموقف، موقف واحد كل يوم يكشف كيف تفكّر، مستشار يجيبك الآن، وملف مهاري يتشكّل من أدلة حقيقية يعتمدها خبراء.' : 'You do not read about training here — you live it: simulators that put you in the situation, one real situation a day that shows how you think, an advisor who answers now, and a skills profile built from real evidence approved by experts.'}</p>
+          <p>{ar ? 'هنا لا تقرأ عن التدريب — تعيشه: مواقف محاكاة تضعك في الموقف، موقف واحد كل يوم يكشف كيف تفكّر، مستشار يجيبك الآن، وملف مهاري يتشكّل من أدلة حقيقية يعتمدها خبراء.' : 'You do not read about training here — you live it: simulators that put you in the situation, one real situation a day that shows how you think, an advisor who answers now, and a skills profile built from real evidence approved by experts.'}</p>
           <div className="pt-heroacts">
             <Link href="/sim" className="pt-btn gold"><Icon name="play" /><Icon name="play" size={16} /> {ar ? 'جرّب محاكاة — 3 دقائق' : 'Try a simulation — 3 min'}</Link>
             <a href="#daily" className="pt-btn light"><Icon name="target" size={16} /> {ar ? 'موقف اليوم' : "Today's case"}</a>
@@ -324,7 +324,7 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
                       <div className="hm-scorehead"><b>{score.total}<small>/100</small></b><div><span>{bandLabel(score.total, lang)}</span><small>{ar ? 'تقييم أولي بمعيار معلن — يعتمده مدرب بشري في النسخة الكاملة' : 'Preliminary rubric score — approved by a human trainer in the full version'}</small></div></div>
                       <div className="hm-crit">{score.criteria.map(c => { const r = s.rubric.find(x => x.key === c.key); return <div key={c.key}><span>{r?.title_ar || c.key}</span><i><b style={{ width: `${c.score}%` }} /></i><em>{c.score}</em></div>; })}</div>
                       {!!score.improve.length && <p><b>{ar ? 'لتتحسن:' : 'To improve:'}</b> {score.improve[0]}</p>}
-                      <div className="pt-chips"><Link href="/sim" className="pt-btn gold small">{ar ? 'كل المحاكيات' : 'All simulators'}</Link><Link href="/me" className="pt-btn light small">{ar ? 'سجّل الدخول ليُحفظ الدليل' : 'Sign in to keep the evidence'}</Link><button type="button" className="pt-btn outline small" onClick={start}>{ar ? 'أعد المحاولة' : 'Try again'}</button></div>
+                      <div className="pt-chips"><Link href="/sim" className="pt-btn gold small">{ar ? 'كل مواقف المحاكاة' : 'All simulation situations'}</Link><Link href="/me" className="pt-btn light small">{ar ? 'سجّل الدخول ليُحفظ الدليل' : 'Sign in to keep the evidence'}</Link><button type="button" className="pt-btn outline small" onClick={start}>{ar ? 'أعد المحاولة' : 'Try again'}</button></div>
                     </div>
                   )}
                 </div>

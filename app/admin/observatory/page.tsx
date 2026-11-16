@@ -40,7 +40,7 @@ export default function AdminObservatoryPage() {
   return (
     <div className="ob"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="ob-wrap">
-        <header className="ob-head"><div><span className="ob-kicker"><Icon name="globe" size={14} /> بوابة أَثَر · P18</span><h1>مرصد القدرة البشرية — غرفة التحرير</h1><p>اللقطة تُحسب يوميًا داخل السلسلة الحالية بلا أسماء. هنا تُراجع، تُكتم ما يلزم يدويًا، تكتب الافتتاحية، ثم «تعتمد وتنشر» عددًا ربعيًا مجمَّدًا وموقَّعًا. الذكاء يحسب — والإنسان يعتمد.</p></div>
+        <header className="ob-head"><div><span className="ob-kicker"><Icon name="globe" size={14} /> بوابة أَثَر · P18</span><h1>مؤشرات القطاعات — غرفة التحرير</h1><p>اللقطة تُحسب يوميًا داخل السلسلة الحالية بلا أسماء. هنا تُراجع، تُكتم ما يلزم يدويًا، تكتب الافتتاحية، ثم «تعتمد وتنشر» عددًا ربعيًا مجمَّدًا وموقَّعًا. الذكاء يحسب — والإنسان يعتمد.</p></div>
           <div className="ob-actions"><a className="ob-btn ghost" href="/observatory" target="_blank" rel="noreferrer">المرصد العام ↗</a><button className="ob-btn" onClick={refresh} disabled={!!busy} data-testid="obs-preview">{busy === 'refresh' ? '…' : 'حدّث اللقطة الآن'}</button></div></header>
         <PortalAdminTabs />
         {error && <div className="ob-err">{error}</div>}{msg && <div className="ob-msg" data-testid="obs-msg">{msg}</div>}

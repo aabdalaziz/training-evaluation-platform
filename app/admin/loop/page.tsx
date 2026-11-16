@@ -54,7 +54,7 @@ export default function AdminLoopPage() {
   return (
     <div className="lp"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="lp-wrap">
-        <header className="lp-head"><div><span className="lp-kicker"><Icon name="refresh" size={14} /> بوابة أَثَر · P15</span><h1>منظومة التحسين المستمر القائمة على الأدلة — الحلقة المغلقة</h1><p>الذاكرة الحية تقترح برامج ومهمات وتركيزات وخطوات مدعومة بسلسلة دليل كاملة؛ الإنسان يقبل أو يتجاهل؛ وكل قرار يغيّر ما تقترحه الحلقة في الشهر التالي. حيث لا يكفي الدليل، تقول الشاشة ذلك صراحة.</p></div>
+        <header className="lp-head"><div><span className="lp-kicker"><Icon name="refresh" size={14} /> بوابة أَثَر · P15</span><h1>التحسين المستمر — الحلقة المغلقة بالأدلة</h1><p>الذاكرة الحية تقترح برامج ومهمات وتركيزات وخطوات مدعومة بسلسلة دليل كاملة؛ الإنسان يقبل أو يتجاهل؛ وكل قرار يغيّر ما تقترحه الحلقة في الشهر التالي. حيث لا يكفي الدليل، تقول الشاشة ذلك صراحة.</p></div>
           <button className="lp-run" onClick={run} disabled={!!busy} data-testid="loop-run"><Icon name="play" size={14} /> {busy === 'run' ? 'جارٍ التشغيل…' : 'شغّل الحلقة الآن'}</button></header>
         <PortalAdminTabs counts={{ '/admin/loop': data?.stats.draft || 0 }} />
         {error && <div className="lp-err">{error}</div>}

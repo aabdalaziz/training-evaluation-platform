@@ -40,7 +40,7 @@ export default function AdminSimPage() {
   return (
     <div className="as"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="as-wrap">
-        <header className="as-head"><div><span className="as-kicker"><Icon name="play" size={14} /> بوابة أَثَر · P10</span><h1>المحاكيات وأثير</h1><p>الذكاء الاصطناعي يمثّل الشخصية ويقترح الدرجة — والاعتماد بشري. التشغيلة المعتمدة تصبح دليلًا كامل الوزن (0.7) في الملف المهاري؛ غير المعتمدة تبقى دليلًا أوليًا (0.45).</p></div></header>
+        <header className="as-head"><div><span className="as-kicker"><Icon name="play" size={14} /> بوابة أَثَر · P10</span><h1>التدريب بالمحاكاة</h1><p>الذكاء الاصطناعي يمثّل الشخصية ويقترح الدرجة — والاعتماد بشري. التشغيلة المعتمدة تصبح دليلًا كامل الوزن (0.7) في الملف المهاري؛ غير المعتمدة تبقى دليلًا أوليًا (0.45).</p></div></header>
         <PortalAdminTabs counts={{ '/admin/sim': status === 'scored' ? runs.length : 0 }} />
         {error && <div className="as-err">{error}</div>}
         <div className="as-tabs">{([['runs', 'تشغيلات بانتظار القرار'], ['scenarios', `السيناريوهات (${scen.length})`], ['questions', `أسئلة «مستشارك» (${qs.length})`]] as const).map(([k, l]) => <button key={k} type="button" className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>

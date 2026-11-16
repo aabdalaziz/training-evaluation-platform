@@ -77,5 +77,5 @@ test('من محطة ومن ورشة: نصّ ≤ 200 بلا بريد · صيغة 
 });
 test('الخزنة والطريق: الجدولان في سجلّ الخزنة · /needs و/admin/needs لهما اسم في الطريق', () => {
   const t = REGISTRY.find(r => r.table === 'portal_needs'); const s = REGISTRY.find(r => r.table === 'portal_need_supports'); assert.ok(t && s); assert.equal(t!.policy, 'anonymize'); assert.equal(s!.policy, 'delete'); assert.ok(t!.access.includes('public'));
-  const w = crumbsFor('/needs', 'ar'); assert.ok(JSON.stringify(w).includes('ما يحتاجه الممارسون')); const a = crumbsFor('/admin/needs', 'ar'); assert.ok(JSON.stringify(a).includes('الاحتياج المعلَن'));
+  const w = crumbsFor('/needs', 'ar'); assert.ok(JSON.stringify(w).includes('ما يحتاجه الممارسون')); const a = crumbsFor('/admin/needs', 'ar'); assert.ok(JSON.stringify(a).includes('الاحتياجات التدريبية'));
 });

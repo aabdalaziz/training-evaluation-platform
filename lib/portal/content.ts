@@ -187,7 +187,7 @@ export const NAV: { href: string; label: T }[] = [
   { href: '/consulting', label: { ar: 'الاستشارات', en: 'Consulting' } },
   { href: '/resources', label: { ar: 'الحقائب', en: 'Resources' } },
   { href: '/live', label: { ar: 'البث المباشر', en: 'Live' } },
-  { href: '/sim', label: { ar: 'المحاكيات', en: 'Simulators' } },
+  { href: '/sim', label: { ar: 'التدريب بالمحاكاة', en: 'Simulation training' } },
   { href: '/councils', label: { ar: 'المجالس', en: 'Councils' } },
   { href: '/about', label: { ar: 'من نحن', en: 'About' } },
   { href: '/contact', label: { ar: 'تواصل', en: 'Contact' } },

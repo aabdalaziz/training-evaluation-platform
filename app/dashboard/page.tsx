@@ -50,7 +50,7 @@ const STATUS_STYLE: Record<Program['status'], { bg: string; color: string; label
   COMPLETED: { bg: '#dbeafe', color: '#1d4ed8', label: 'مكتمل' }, CANCELLED: { bg: '#fee2e2', color: '#b91c1c', label: 'ملغى' },
 };
 const APPROVAL_STYLE: Record<ApprovalStatus, { bg: string; color: string; label: string; hint: string }> = {
-  DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'لم يُرسل', hint: 'البرنامج مسودة ولم يُرسل للمراجعة بعد' },
+  DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'بانتظار الإرسال', hint: 'البرنامج مسودة ولم يُرسل للمراجعة والاعتماد بعد' },
   PENDING_REVIEW: { bg: '#fff7e6', color: '#b45309', label: 'بانتظار المراجعة', hint: 'أُرسل من مدير البرامج وينتظر المراجعة' },
   REVIEWED: { bg: '#eef4ff', color: '#1d4ed8', label: 'تمت المراجعة', hint: 'روجع وينتظر اعتماد محلل الجودة / مدير المنصة' },
   APPROVED: { bg: '#eafaf0', color: '#15803d', label: 'معتمد', hint: 'معتمد — يمكن تفعيله' },
@@ -425,7 +425,7 @@ export default function Dashboard() {
             {/* traffic light board */}
             <div className="db-g2">
               <Board title="لوحة المدربين" icon="users" rows={trainers} href={`/reports/center?type=trainers&preset=${range === 'all' ? 'all' : range}`} />
-              <Board title="لوحة القاعات والمجموعات" icon="school" rows={rooms.map(r => ({ ...r, label: `${r.label}${r.meta?.trainer_id ? ' — ' + labelFor('trainer', String(r.meta.trainer_id), lk, 'ar') : ''}` }))} href={`/reports/center?type=classrooms&preset=${range === 'all' ? 'all' : range}`} />
+              <Board title="لوحة الشُّعب والمجموعات" icon="school" rows={rooms.map(r => ({ ...r, label: `${r.label}${r.meta?.trainer_id ? ' — ' + labelFor('trainer', String(r.meta.trainer_id), lk, 'ar') : ''}` }))} href={`/reports/center?type=classrooms&preset=${range === 'all' ? 'all' : range}`} />
             </div>
 
             {/* quick access */}
@@ -487,7 +487,7 @@ export default function Dashboard() {
             )}
             <section className="db-card">
               <div className="db-ct"><Icon name="programs" size={18} /> البرامج التدريبية ({programs.length})</div>
-              {programs.length ? <div className="db-tw"><table className="db-tbl"><thead><tr><th>البرنامج</th><th>التنفيذ</th><th>الفترة</th><th>القاعات</th><th>الاستجابات</th><th>المتوسط</th><th>الحالة</th><th>الاعتماد</th><th></th></tr></thead><tbody>
+              {programs.length ? <div className="db-tw"><table className="db-tbl"><thead><tr><th>البرنامج</th><th>التنفيذ</th><th>الفترة</th><th>الشُّعب</th><th>الاستجابات</th><th>متوسط التقييم</th><th>الحالة</th><th>الاعتماد</th><th></th></tr></thead><tbody>
                 {programs.map(p => {
                   const st = STATUS_STYLE[p.status];
                   const ap: ApprovalStatus = p.approval_status || 'DRAFT';
@@ -513,7 +513,7 @@ export default function Dashboard() {
                         {canApprove && ap === 'APPROVED' && p.status === 'DRAFT' && <button className="db-btn sm soft" title="إلغاء الاعتماد" onClick={() => openApproval(p, 'DRAFT')}><Icon name="refresh" size={12} /> إلغاء الاعتماد</button>}
                         {p.status === 'DRAFT' && ap === 'APPROVED' && <button className="db-btn sm soft ok" onClick={() => setStatus(p.id, 'ACTIVE')}><Icon name="play" size={12} /> تفعيل</button>}
                         {p.status === 'ACTIVE' && <button className="db-btn sm soft info" onClick={() => setStatus(p.id, 'COMPLETED')}><Icon name="check" size={12} /> إنهاء</button>}
-                        {p.status !== 'CANCELLED' && <button className="db-btn sm soft warn" onClick={() => setStatus(p.id, 'CANCELLED')}><Icon name="pause" size={12} /> تعطيل</button>}
+                        {p.status !== 'CANCELLED' && <button className="db-btn sm soft warn" onClick={() => setStatus(p.id, 'CANCELLED')}><Icon name="pause" size={12} /> إلغاء</button>}
                         <Link className="db-ic" title="تقرير البرنامج" href={`/reports/center?type=executive&program=${p.id}`}><Icon name="reports" size={15} /></Link>
                         <button className="db-ic danger" title="حذف" onClick={() => deleteProgram(p)}><Icon name="trash" size={15} /></button>
                       </div></td>

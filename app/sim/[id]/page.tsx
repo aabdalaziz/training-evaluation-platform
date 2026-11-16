@@ -58,7 +58,7 @@ function Inner() {
   }
   const toggleVoice = () => { const v = !voice; setVoice(v); try { localStorage.setItem('athir_voice', v ? '1' : '0'); } catch { /* ignore */ } };
 
-  if (missing) return <main className="pt-main"><section className="pt-sec"><div className="pt-wrap pt-empty"><p>{ar ? 'السيناريو غير موجود.' : 'Scenario not found.'}</p><Link href="/sim" className="pt-btn">{ar ? 'كل المحاكيات' : 'All simulators'}</Link></div></section></main>;
+  if (missing) return <main className="pt-main"><section className="pt-sec"><div className="pt-wrap pt-empty"><p>{ar ? 'السيناريو غير موجود.' : 'Scenario not found.'}</p><Link href="/sim" className="pt-btn">{ar ? 'كل مواقف المحاكاة' : 'All simulation situations'}</Link></div></section></main>;
   if (!s) return <main className="pt-main"><section className="pt-sec"><div className="pt-wrap pt-empty">…</div></section></main>;
   const n = learnerTurns(turns); const elapsed = startedAt ? Math.floor((now - startedAt) / 1000) : 0; const over = elapsed > s.minutes * 60; const reviewing = !!reviewId && !!run && run.status !== 'running';
   return (
@@ -67,7 +67,7 @@ function Inner() {
       <section className="pt-pagehead sp-head">
         <div className="pt-wrap sp-headgrid">
           <div>
-            <Link href="/sim" className="sp-back"><Icon name="arrow" size={14} /> {ar ? 'كل المحاكيات' : 'All simulators'}</Link>
+            <Link href="/sim" className="sp-back"><Icon name="arrow" size={14} /> {ar ? 'كل مواقف المحاكاة' : 'All simulation situations'}</Link>
             <span className="pt-kicker">{ar ? AUDIENCE_LABEL[s.audience].ar : AUDIENCE_LABEL[s.audience].en}{s.level ? ` · ${s.level}` : ''}</span>
             <h1>{(lang === 'en' && s.title_en) || s.title_ar}</h1>
             <p><b>{ar ? 'الموقف:' : 'Situation:'}</b> {s.situation_ar}</p>
@@ -77,7 +77,7 @@ function Inner() {
             <i className={s.persona.voice === 'child' ? 'child' : ''}>{s.persona.name.slice(0, 1)}</i>
             <b>{s.persona.name}</b><small>{s.persona.role}</small>
             <div className="sp-traits">{s.persona.traits.map(tr => <span key={tr}>{tr}</span>)}</div>
-            <div className="sp-rubric"><small>{ar ? 'معيار التقييم' : 'Rubric'}</small>{s.rubric.map(r => <div key={r.key} title={r.desc_ar}><span>{r.title_ar}</span><b>{r.weight}%</b></div>)}</div>
+            <div className="sp-rubric"><small>{ar ? 'معايير الأداء' : 'Performance criteria'}</small>{s.rubric.map(r => <div key={r.key} title={r.desc_ar}><span>{r.title_ar}</span><b>{r.weight}%</b></div>)}</div>
           </aside>
         </div>
       </section>
@@ -123,7 +123,7 @@ function Inner() {
                 {!!score.improve.length && <div className="sp-list2 imp"><b>{ar ? 'لتتحسن' : 'To improve'}</b><ul>{score.improve.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
                 {score.expert_path && <div className="sp-expert"><b>{ar ? 'كيف كان سيتصرف خبير' : 'How an expert would act'}</b><p>{score.expert_path}</p></div>}
                 {score.closing_ar && <p className="sp-closing">{score.closing_ar}</p>}
-                <small className="sp-src">{scoreSrc === 'ai' ? (ar ? 'تقييم أولي بالذكاء الاصطناعي وفق المعيار' : 'Preliminary AI score against the rubric') : (ar ? 'تقدير محلي أولي' : 'Preliminary local estimate')} · {ar ? 'يعتمده مدرب بشري قبل أن يصبح دليلًا كامل الوزن' : 'A human trainer approves it before it becomes full‑weight evidence'}</small>
+                <small className="sp-src">{scoreSrc === 'ai' ? (ar ? 'تقييم أولي بالذكاء الاصطناعي وفق معايير الأداء' : 'Preliminary AI score against the rubric') : (ar ? 'تقدير محلي أولي' : 'Preliminary local estimate')} · {ar ? 'يعتمده مدرب بشري قبل أن يصبح دليلًا كامل الوزن' : 'A human trainer approves it before it becomes full‑weight evidence'}</small>
                 <div className="pt-chips">{tok && !run?.stateless && <Link href="/me/skills" className="pt-btn small">{ar ? 'ملفي المهاري' : 'My skills'}</Link>}{!tok && <Link href="/me" className="pt-btn gold small">{ar ? 'سجّل الدخول لحفظ الدليل' : 'Sign in to save'}</Link>}<button type="button" className="pt-btn light small" onClick={() => { setRun(null); setTurns([]); setScore(null); setStartedAt(null); }}>{ar ? 'أعد المحاولة' : 'Try again'}</button><Link href="/sim" className="pt-btn outline small">{ar ? 'سيناريو آخر' : 'Another scenario'}</Link></div>
               </div>
             )}

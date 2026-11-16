@@ -49,7 +49,7 @@ export default function AdminAgentsPage() {
   return (
     <div className="ag"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="ag-wrap">
-        <header className="ag-head"><div><span className="ag-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P14-ب</span><h1>الوكلاء المفوَّضون</h1><p>وكيل الموارد البشرية في الجهة يكتشف، يسأل الذاكرة «أي برنامج أثبت رفع هذه المهارة؟»، يطلب عرضًا، يحجز، ويتحقق — وكل التزام يمرّ من هنا على إنسان. المفاتيح لكل جهة بصلاحيات وحدود، والسجل كامل. الصفحة العامة: <a href="/agents" target="_blank" rel="noreferrer">/agents</a> · بطاقة الاكتشاف: <a href="/.well-known/ai-plugin.json" target="_blank" rel="noreferrer">ai-plugin.json</a></p></div></header>
+        <header className="ag-head"><div><span className="ag-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P14-ب</span><h1>مساعدو الذكاء الاصطناعي — الوكلاء المفوَّضون</h1><p>وكيل الموارد البشرية في الجهة يكتشف، يسأل الذاكرة «أي برنامج أثبت رفع هذه المهارة؟»، يطلب عرضًا، يحجز، ويتحقق — وكل التزام يمرّ من هنا على إنسان. المفاتيح لكل جهة بصلاحيات وحدود، والسجل كامل. الصفحة العامة: <a href="/agents" target="_blank" rel="noreferrer">/agents</a> · بطاقة الاكتشاف: <a href="/.well-known/ai-plugin.json" target="_blank" rel="noreferrer">ai-plugin.json</a></p></div></header>
         <PortalAdminTabs counts={{ '/admin/agents': pending.length }} />
         {error && <div className="ag-err">{error}</div>}
         <div className="ag-kpis"><span><b>{pending.length}</b> طلبًا ينتظر قرارك</span><span><b>{(data?.keys || []).filter(k => !k.revoked_at).length}</b> مفتاحًا نشطًا</span><span><b>{data?.log?.length ?? 0}</b> نداءً أخيرًا</span></div>

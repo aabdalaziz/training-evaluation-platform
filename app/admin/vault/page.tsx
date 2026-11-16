@@ -44,7 +44,7 @@ export default function AdminVaultPage() {
   return (
     <div className="vt"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="vt-wrap">
-        <header className="vt-head"><div><span className="vt-kicker"><Icon name="shield" size={14} /> بوابة أَثَر · P22</span><h1>خزنة أَثَر — غرفة الطلبات</h1><p>الامتثال لنظام حماية البيانات الشخصية كعملية حيّة لا كملف: طلبات الأشخاص بعدّادها النظامي (30 يومًا)، الحوادث بعدّاد 72 ساعة ومسودة بلاغ سدايا جاهزة، حذف الحسابات بمهلة تراجع، سياسات الاحتفاظ، وسجل أنشطة المعالجة المُولَّد من الكود. الصفحة العامة: <a href="/privacy" target="_blank" rel="noreferrer">/privacy</a></p></div></header>
+        <header className="vt-head"><div><span className="vt-kicker"><Icon name="shield" size={14} /> بوابة أَثَر · P22</span><h1>البيانات الشخصية — طلبات أصحاب البيانات</h1><p>الامتثال لنظام حماية البيانات الشخصية كعملية حيّة لا كملف: طلبات الأشخاص بعدّادها النظامي (30 يومًا)، الحوادث بعدّاد 72 ساعة ومسودة بلاغ سدايا جاهزة، حذف الحسابات بمهلة تراجع، سياسات الاحتفاظ، وسجل أنشطة المعالجة المُولَّد من الكود. الصفحة العامة: <a href="/privacy" target="_blank" rel="noreferrer">/privacy</a></p></div></header>
         <PortalAdminTabs counts={{ '/admin/vault': s.overdue + openInc.length }} />
         {error && <div className="vt-err">{error}</div>}{flash && <div className="vt-ok">{flash}</div>}
         <div className="vt-kpis" data-testid="vault-admin-kpis">

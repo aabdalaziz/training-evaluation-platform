@@ -56,7 +56,7 @@ export default function AdminShieldPage() {
   return (
     <div className="sh"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="sh-wrap">
-        <header className="sh-head"><div><span className="sh-kicker"><Icon name="shield" size={14} /> بوابة أَثَر · P21</span><h1>درع أَثَر</h1><p>درع حيّ يختبر نفسه كل يوم: الجدار (ترويسات) · الصمّام (حدود المعدل) · الحارس (الأحداث والتنبيهات) · المفاتيح (تدوير بلا انقطاع) · الباب المعلن (security.txt) · التمرين الذاتي. الصفحة العامة: <a href="/security" target="_blank" rel="noreferrer">/security</a></p></div></header>
+        <header className="sh-head"><div><span className="sh-kicker"><Icon name="shield" size={14} /> بوابة أَثَر · P21</span><h1>الأمان والحماية — درع أَثَر</h1><p>درع حيّ يختبر نفسه كل يوم: الجدار (ترويسات) · الصمّام (حدود المعدل) · الحارس (الأحداث والتنبيهات) · المفاتيح (تدوير بلا انقطاع) · الباب المعلن (security.txt) · التمرين الذاتي. الصفحة العامة: <a href="/security" target="_blank" rel="noreferrer">/security</a></p></div></header>
         <PortalAdminTabs counts={{ '/admin/shield': openCrit }} />
         {error && <div className="sh-err">{error}</div>}
         <div className="sh-kpis" data-testid="shield-kpis">
