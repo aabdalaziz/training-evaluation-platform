@@ -138,6 +138,14 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - Guards: one live run (partial unique index), 409 while ready, failure → auto-destroy, `STALL_SECONDS` before a stuck build may be erased, `demo=true` org excluded from public threads/observatory and tagged on `/org`.
 - Relative dates («ساعة الصفر»): anchor = build day; all program/session dates are offsets so the scene is alive on any demo day.
 
+## The learner's own words cross the level (P70 pattern — «بكلماتي عبر المستوى» ATH-LV)
+- One row per (user, enrollment, level_no) in `portal_level_pages`; the window is derived on demand from `programLevelSpans` (last 7 days of the level → +7 days into the next). No new cron: the existing `level_close` notice now points to `/me/level`.
+- Cards are built only from what the learner produced: P66 lines (`learn|apply|commit` within the level span), the P64 «لماذا جئتُ» capsule (first level only), the previous level's sealed line, and مِعيار exit evidence read from `placement_reports.report.exit` + `miaar_performances` (**text_answer / duration / media only — never score, rating, rater, cut-score**). `crossedText()` turns the crossing into words («دخلتُ بـ A2 — وأعبره إلى B1»); the source-shape test rejects digits/% in it.
+- Exit speaking audio stays in `miaar-media` (signed 300 s URL for the owner only); the body stores only its duration. Line voice uses `level-voice/` in `athar-media` (30 s · 1 MiB).
+- Public keys never include `exam_writing`/`exam_speaking`; default `['line','counts']`. Re-sealing pushes the previous code into `history` whether it was revoked or not, so `/verify/level` can say «استُبدل بختم أحدث» instead of «لا توجد».
+- The echo: first week of the next level `levelEcho()` surfaces the sealed line in «سطري» (`ln-echo`); at graduation `sealedLevelLines()` becomes the P63 card `level_lines`.
+- «نادِ» trap: «صفحة» is a GO_WORD and is stripped before matching — aliases must stand without it («سطر المستوى», «عبرتُ»).
+
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
 
