@@ -17,6 +17,8 @@ import WayBar from '../components/WayBar'; /* «الطريق» */
 import { PushOptIn } from '../components/Pwa'; /* P39 «نبّهني» */
 import dynamic from 'next/dynamic';
 import type { RoomData } from './PerformanceRoom';
+const EntryLine = dynamic(() => import('./EntryLine'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* P71 «يوم دخلتُ»: تُحمَّل عند الحاجة فقط (MediaRecorder) */
+import { entryPromptFor } from '../../lib/first/entry-pure';
 import Witness from './Witness'; /* م8 «شاهِد» */
 import type { WitnessApi, WitnessCfg } from './Witness';
 const PerformanceRoom = dynamic(() => import('./PerformanceRoom'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* م4-ب: غرفة الأداء تُحمَّل عند الحاجة */
@@ -30,7 +32,7 @@ type Session = { plan?: { code: string; name_ar: string; name_en: string; type: 
 type Invite = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: 'adaptive' | 'comprehensive'; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
   witness?: WitnessCfg | null; /* م8-ب: المراقبة صفة لكل دعوة */
   exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null; witness?: WitnessCfg | null; client_name?: string | null; needs_pin?: boolean; identity_mode?: 'email' | 'email_id' } | null /* م6 · م7 */ };
-type Step = 'loading' | 'intro' | 'register' | 'rules' | 'probe' | 'test' | 'review' | 'result' | 'blocked'; /* م8-ج: rules = تعليمات الاختبار والإقرار */
+type Step = 'loading' | 'intro' | 'register' | 'rules' | 'probe' | 'test' | 'review' | 'entry' | 'result' | 'blocked'; /* P71: entry = «يوم دخلتُ» بين الإرسال والنتيجة */ /* م8-ج: rules = تعليمات الاختبار والإقرار */
 type Props = { inviteCode?: string | null; inviteToken?: string | null; resultCode?: string | null; fontClass?: string };
 
 const RTL = new Set(['ar', 'ur', 'fa', 'ps', 'ku']);
@@ -274,7 +276,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const onRoomUpdate = (productive: any, r: RoomData) => { setRoom(r); if (productive) setReport((p: any) => ({ ...p, المهارات_الإنتاجية: productive })); };
   async function doFinish(reason: 'quit' | 'time') {
     if (busy && reason === 'quit') return; setBusy(true); const r = await post({ action: 'finish', reason }); setBusy(false);
-    if (r?.ok) { setReport(r.report); setCode(r.access_code); setStep('result'); } else setErr(t('register', 'errNet'));
+    if (r?.ok) { setReport(r.report); setCode(r.access_code); setStep('entry'); /* P71: سطر الدخول أولًا — ثم النتيجة؛ التجاوز بزرّ واحد */ } else setErr(t('register', 'errNet'));
   }
   useEffect(() => {
     if (step !== 'test') return;
@@ -645,6 +647,10 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
       </section></div>
     </>}
 
+    {step === 'entry' && report && (() => { const E = entryPromptFor(lang === 'ar' ? 'ar' : 'en'); return <>
+      <Hero kicker={E.kicker} title={E.title} />
+      <div className="mi-wrap narrow"><EntryLine lang={lang} post={post} onDone={() => setStep('result')} /></div>
+    </>; })()}
     {step === 'result' && report && roomOpen && room && <section className="mi-result" data-testid="mi-result-room"><PerformanceRoom room={room} lang={lang} post={post} onUpdate={onRoomUpdate} onExit={() => setRoomOpen(false)} /></section>}
     {step === 'result' && report && !roomOpen && <ResultCard report={report} code={code} name={resultName} lang={lang} t={t} x={x} site={site} copied={copied} roomInvite={room ? { pending: roomPending, tasks: room.tasks.map((t) => t.skill), onEnter: () => setRoomOpen(true) } : null} onCopy={async () => { try { await navigator.clipboard.writeText(`${site}/miaar/result/${code}`); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* */ } }} onLang={setLang} copy={copy} />}
     <Foot />
@@ -1109,4 +1115,17 @@ const CSS = `
 @media(max-width:720px){.mi-left .gd-trigger{display:none}.mi-langbtn{min-width:0}.mi-head{min-height:72px;padding:10px 16px;gap:10px}.mi-brand{font-size:30px}.mi-brand small{display:none}.mi-mark{font-size:22px}.mi-hero{padding:36px 16px 48px;min-height:0}.mi-inner,.mi-levels,.mi-band,.mi-finale{padding-left:16px;padding-right:16px}.mi-tbar{top:72px;padding:8px 16px}.mi-langbtn{min-width:0}.mi-level{grid-template-columns:1fr}.mi-lvcode{justify-items:start;grid-auto-flow:column;align-items:center;gap:10px}}
 @media(prefers-reduced-motion:reduce){.mi-ring.gold{animation:none;opacity:1;transform:translate(-50%,-50%)}}
 @media print{.mi-top,.mi-actions,.mi-nolink,.mi-foot{display:none !important}.mi,.mi-band{background:#fff !important;color:#0f172a !important}.mi-band h1,.mi-band p,.mi-kicker{color:#0f172a !important}.mi-wrap{margin-top:0}.mi-card{box-shadow:none;border:0}}
+.mi-why{width:min(640px,100%);margin:0 auto}
+.mi-why-lead{margin:0 0 14px;font-size:16.5px;line-height:1.9;color:var(--navy);font-weight:600}
+.mi-why-field{position:relative;display:block}
+.mi-why-field textarea{width:100%;box-sizing:border-box;border:1px solid #dbe3ea;border-radius:14px;padding:14px 16px 28px;font:inherit;font-size:17px;line-height:1.7;resize:vertical;min-height:112px;background:#fff;color:var(--navy)}
+.mi-why-field textarea:focus{outline:2px solid var(--teal);outline-offset:1px}
+.mi-why-count{position:absolute;bottom:8px;inset-inline-end:14px;font-size:12px;color:#64748b;font-variant-numeric:tabular-nums}
+.mi-why-voice{margin-top:8px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mi-why-review{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mi-why-review audio{height:36px;max-width:260px}
+.mi-why-actions{margin-top:16px}
+.mi-why-foot{font-size:13px;margin-top:12px}
+.mi-why-saved{margin:12px 0 0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 `;

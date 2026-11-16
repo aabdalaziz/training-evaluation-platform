@@ -7,6 +7,7 @@
  *  GET ?trust=1                 → «سجلّ الصدق»: موثوقية كل مستوى (ضوء · n · k · SEM · ثبات القرار) بلا بنود ولا أشخاص — م3
  *  GET ?pulse=1                 → «نبض مِعيار»: أعداد مجهّلة (الآن/اليوم/الأسبوع) وآخر المستويات المُثبتة بلا أسماء — لا يُعرض شيء دون 5 تقارير في الأسبوع — م2-ب
  *  POST probe_band {probeAnswers} → {score, band} مؤشر أولي بعد الحلقات (بلا جلسة) — م2-ب
+ *  POST entry {text?, audio?, mime?, sec?, lang} → P71 «يوم دخلتُ»: سطر الدخول بعد الإرسال وقبل النتيجة — ليس من الاختبار، لا يراه المصحّح، لا يدخل التسكين (portal_entry_lines)
  *  GET ?invite=<code>&t=<token> → ما تعنيه الدعوة (الاسم · اللغة · النمط · المستلم إن كانت شخصية)
  *  GET ?result=<ML-code>        → النتيجة برمزها (بلا بريد/هاتف)
  *  GET ?journey=<ML-code>       → م5-ب: رحلة المتقدّم (المحاولات والمقارنة) برمز النتيجة
@@ -22,6 +23,7 @@ import { readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { COOKIE_NAME, probePublic, isResultCode, MIAAR_NAMES_AR } from '../../../lib/miaar/registry';
 import { startSession, loadSession, resumeSession, answerSession, finishSession, resultByCode } from '../../../lib/miaar/engine';
+import { saveEntry } from '../../../lib/first/entry';
 import { journeyByCode, setGrowthPublic } from '../../../lib/miaar/growth'; /* م5-ب */
 import { normalizeSite } from '../../../lib/portal/open';
 const siteUrl = (req: Request) => normalizeSite(process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin);
@@ -178,6 +180,12 @@ export async function POST(req: Request) {
     const r = await finishSession(db, session, answers, body.reason, label); if (!r.ok) return bad(r.code, r.status);
     /* الكعكة تبقى حتى انتهاء مدّتها: إعادة تحميل الصفحة تعيد البطاقة نفسها (finish idempotent) */
     return NextResponse.json({ ok: true, report: r.value.report, access_code: r.value.access_code, result_url: r.value.access_code ? `/miaar/result/${r.value.access_code}` : null }, { headers: NO });
+  }
+  /* P71 «يوم دخلتُ»: بعد الإرسال فقط (الجلسة مُنهاة) — سطر/صوت بأي لغة، صفّ واحد لكل جلسة، خارج التقرير تمامًا */
+  if (action === 'entry') {
+    if (session.status === 'active') return bad('session_not_finished', 409);
+    const rl = await rateLimit(db, `miaar_entry:${ipOf(req)}`, 3600, 10); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
+    const r = await saveEntry(db, session as any, body as any); return r.ok ? NextResponse.json({ ok: true, entry: r.entry }, { headers: NO }) : bad(r.error, r.status);
   }
   /* م4-ب «غرفة الأداء»: بعد اكتمال الاستقبالي — مهمّتان بمستوى المتقدّم؛ النص في الجدول والصوت في الدلو الخاص؛ لا درجة قبل اعتماد إنسان */
   if (action === 'room_enter') { const r = await enterRoom(db, session); return r.ok ? NextResponse.json({ ok: true, room: r.value }, { headers: NO }) : bad(r.code, r.status); }

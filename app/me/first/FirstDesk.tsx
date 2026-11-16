@@ -8,7 +8,7 @@
  *  3) «كلمة الاستقبال من مدرّبك» إن كتبها (P51 بعلامة welcome) · «شعبتك» أعداد فقط (k ≥ 5)
  *  4) «لماذا جئتُ»: سطر 10–160 يُختم إلى يوم التخرّج (محرّك P62) — في الأسبوع الأول فقط · مرة واحدة
  *  5) «ما ينتظرك في أَثَر»: خارطة طريق ثابتة بروابط
- *  testids: fd-root[data-phase] fd-err fd-ok fd-athar fd-prog fd-today fd-said fd-said-line fd-said-below fd-after fd-welcome fd-mates fd-why fd-why-ta fd-why-save fd-why-sealed fd-why-open fd-why-closed fd-road fd-foot fd-empty
+ *  testids: fd-root[data-phase] fd-err fd-ok fd-athar fd-prog fd-today fd-said fd-said-line fd-said-below fd-after fd-welcome fd-mates fd-why fd-why-ta fd-why-save fd-why-sealed fd-why-open fd-why-closed fd-road fd-foot fd-empty · P71: fd-entry[data-lang] fd-entry-text fd-entry-voice fd-entry-play fd-entry-del fd-entry-copy
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -37,6 +37,13 @@ export default function FirstDesk() {
     if (!confirm('يُختم سطرك الآن ولا يُقرأ — حتى يوم تخرّجك. سطر واحد لكل برنامج. نتابع؟')) return;
     setBusy(true); const j = await fetch('/api/me/first', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'why', program_id: pid, body_ar: why }) }).then((r) => r.json()).catch(() => null); setBusy(false);
     if (j?.success) { setD(j); setErr(''); setWhy(''); if (j.message) flash(j.message); } else setErr(j?.error || 'تعذّر الختم');
+  }
+  const [entryUrl, setEntryUrl] = useState('');
+  async function playEntry() { const j = await fetch('/api/me/first?entry_voice=1', { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success && j.url) setEntryUrl(j.url); else setErr(j?.error || 'تعذّر فتح التسجيل'); }
+  async function deleteEntry() {
+    if (!confirm('يُحذف سطر «يوم دخلتُ» نهائيًا (نصًّا وصوتًا) ولا يعود. نتابع؟')) return;
+    setBusy(true); const j = await fetch('/api/me/first', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'entry_delete' }) }).then((r) => r.json()).catch(() => null); setBusy(false);
+    if (j?.success) { setEntryUrl(''); if (j.message) flash(j.message); if (tok) load(tok, pid); } else setErr(j?.error || 'تعذّر الحذف');
   }
   const v = d?.view; const whyOk = !!d && why.trim().length >= d.limits.whyMin && why.trim().length <= d.limits.whyMax;
   return <main className="fd" dir="rtl" data-testid="fd-root" data-phase={v?.program.phase || ''}>
@@ -76,6 +83,12 @@ export default function FirstDesk() {
       {/* 3) كلمة الاستقبال · شعبتك */}
       {v.welcome && <section className="fd-box fd-welcome" data-testid="fd-welcome"><h2><Icon name="users" size={16} /> {d.names.welcome}{v.welcome.trainer_ar ? ` ${v.welcome.trainer_ar}` : ''}</h2>
         <p className="fd-welcome-text">{v.welcome.text_ar}</p>{v.welcome.voice_sec ? <p className="fd-muted">🎙️ ومعها كلمة صوتية ({v.welcome.voice_sec} ث) — تجدها في «دفتر اليوم» على ملفّك.</p> : null}<p className="fd-muted">تبقى هذه الكلمة في صفحة تخرّجك.</p></section>}
+      {/* P71 «يوم دخلتُ»: ما قاله يوم التسكين — بلغته كما كتبه؛ لا يراه أحد غيره */}
+      {v.entry && <section className="fd-box fd-entry" data-testid="fd-entry" data-lang={v.entry.lang}><h2><Icon name="star" size={16} /> {v.entry.title_ar}</h2>
+        {v.entry.text ? <p className="fd-entry-text" data-testid="fd-entry-text" dir="auto" lang="">{v.entry.text}</p> : null}
+        {v.entry.voice_sec ? <p className="fd-muted" data-testid="fd-entry-voice">🎙️ قلتَه بصوتك ({v.entry.voice_sec} ث){entryUrl ? <> — <audio controls src={entryUrl} data-testid="fd-entry-play" /></> : <> — <button type="button" className="fd-link" onClick={playEntry}>اسمع صوتك</button></>}</p> : null}
+        <p className="fd-muted">كتبتَه يوم اختبار التسكين — قبل أن تعرف نتيجتك. لم يره المصحّح، ولا يدخل أي تقييم. سيعود إليك عبر المستوى الأول ويوم تخرّجك. <button type="button" className="fd-link fd-entry-del" onClick={deleteEntry} disabled={busy} data-testid="fd-entry-del">احذفه نهائيًا</button>{v.can_write && v.entry.text ? <> · <button type="button" className="fd-link" onClick={() => { setWhy(String(v.entry?.text || '').slice(0, d.limits.whyMax)); document.getElementById('fd-why')?.scrollIntoView({ behavior: 'smooth' }); }} data-testid="fd-entry-copy">انسخه إلى «لماذا جئتُ» واكتبه اليوم بالعربية</button></> : null}</p>
+      </section>}
       {(v.mates_ar || v.why_count_ar) && <p className="fd-mates" data-testid="fd-mates">{v.mates_ar && <span>👥 {v.mates_ar}</span>}{v.why_count_ar && <span>✍️ {v.why_count_ar}</span>}</p>}
 
       {/* 4) لماذا جئتُ */}
@@ -110,6 +123,7 @@ const CSS = `
 .fd-box{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px 18px;margin:0 0 12px}.fd-box h2{margin:0 0 8px;font-size:18px;color:#0f2a4e;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.fd-box h2 small{font-weight:600;font-size:12px}.fd-box h3{margin:12px 0 4px;font-size:14px;color:#9a3412}
 .fd-lines{list-style:none;padding:0;margin:6px 0;display:grid;gap:8px}.fd-lines li{background:linear-gradient(160deg,#fffbeb,#fff);border:1px solid #fde68a;border-radius:14px;padding:10px 14px;font-size:17px;line-height:1.9;color:#3b1d0e;font-weight:600}.fd-below{font-size:15px;color:#475569}
 .fd-after blockquote{margin:6px 0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.8}.fd-after blockquote small{display:block;color:#94a3b8;font-size:11px}
+.fd-entry{background:linear-gradient(160deg,#eef7f6,#fff);border-color:#99d6cf}.fd-entry-text{margin:4px 0;font-size:18px;line-height:1.9;color:#0f2a4e;font-weight:700;white-space:pre-wrap;unicode-bidi:plaintext}.fd-entry audio{height:32px;vertical-align:middle;max-width:240px}.fd-link{border:0;background:transparent;color:#0f766e;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0;font:inherit}
 .fd-welcome{background:linear-gradient(160deg,#fffbeb,#fff);border-color:#fcd34d}.fd-welcome-text{margin:4px 0;font-size:17px;line-height:1.9;color:#3b1d0e;font-weight:600;white-space:pre-wrap}
 .fd-mates{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px;color:#475569;font-size:13px;font-weight:700}
 .fd-why{border-color:#fde68a}.fd-prompt{margin:0 0 6px;color:#9a3412;font-weight:800;font-size:15px}.fd-ta{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;font:inherit;font-size:17px;line-height:1.8;resize:vertical;min-height:64px}.fd-acts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}.fd-why-text{margin:4px 0;font-size:16px;line-height:1.9;color:#0f2a4e;font-weight:700}

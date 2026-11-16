@@ -22,13 +22,14 @@ export const LINE_PROMPT_AR = 'لو لخّصتُ هذا البرنامج في س
 export const GRAD_FOOT_AR = 'لا تدخل هذه الصفحة في أي تقييم أو شهادة. لا يكتبها ذكاء اصطناعي. خاصّة حتى تختمها وتختار وجهها العام بنفسك — وتُبطلها متى شئت.';
 export const CODE_RE = /^ATH-GD-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
 
-export type CardKey = 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'grad_letter' | 'map_code' | 'farewell' | 'welcome' | 'first_why' /* P64 */ | 'level_lines' /* P70 */;
-export const CARD_KEYS: CardKey[] = ['farewell', 'welcome', 'first_why', 'level_lines', 'first_because', 'replies', 'chapters', 'cohort_line', 'grad_letter', 'map_code'];
+export type CardKey = 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'grad_letter' | 'map_code' | 'farewell' | 'welcome' | 'first_why' /* P64 */ | 'level_lines' /* P70 */ | 'entry' /* P71 */;
+export const CARD_KEYS: CardKey[] = ['entry', 'farewell', 'welcome', 'first_why', 'level_lines', 'first_because', 'replies', 'chapters', 'cohort_line', 'grad_letter', 'map_code'];
 export const CARD_AR: Record<CardKey, string> = {
   farewell: 'قال مدرّبك يوم تخرّجك', first_because: 'أول «لأن…» على خيطي', replies: 'ردودي على كلمات مدرّبي', chapters: 'فصول رحلتي في هذا البرنامج',
   cohort_line: 'سطري في ظرف الدفعة', grad_letter: 'رسالتي إلى نفسي عند تخرّجي', map_code: 'لقطة خريطة أثري',
   welcome: 'قال مدرّبك في أول يوم', first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»' /* P64 */,
   level_lines: 'سطوري عبر المستويات' /* P70: سطر كل مستوى ختمتُه في «بكلماتي عبر المستوى» */,
+  entry: 'يوم دخلتُ — أول كلمة قلتُها، بجانب آخر كلمة' /* P71: ما قاله يوم التسكين قبل أن يعرف نتيجته — بلغته كما كتبه */,
 };
 /** ما يجوز أن يظهر على الوجه العام (الصوت لا يظهر أبدًا — لا مفتاح له) */
 export type PublicKey = 'line' | 'counts' | 'name' | 'farewell' | 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'map_code' | 'since' | 'welcome' | 'first_why' /* P64 */ | 'level_lines' /* P70 */;
@@ -81,6 +82,7 @@ export type Sources = {
   welcome?: { text_ar: string; at: string; voice_sec: number | null; trainer_ar: string | null } | null; /* P64 */
   first_why?: { id: number; body_ar: string | null; at: string; state: 'sealed' | 'today' | 'ready' | 'opened'; opens_ar: string } | null; /* P64 */
   level_lines?: { level_no: number; line_ar: string; sealed_at: string }[]; /* P70: سطور المستويات المختومة — بكلماته هو */
+  entry?: { text: string | null; lang: string; voice_sec: number | null; at: string } | null; /* P71: سطر الدخول — أول كلمة */
   stations: { station: 30 | 90 | 365; written: boolean }[];
   cohort_opened: boolean; threads_after: number;
 };
@@ -91,6 +93,7 @@ export function buildCards(src: Sources, program: { id: string }, w: { from: str
   const replies = src.replies.filter((r) => inWindow(r.at, w)); const textReplies = replies.filter((r) => r.text && r.text.trim()).slice(0, GRAD_LIMITS.repliesMax);
   const chapters = src.chapters.filter((c) => inWindow(c.at, w)).slice(0, GRAD_LIMITS.chaptersMax);
   const cards: Card[] = [];
+  if (src.entry && (src.entry.text || src.entry.voice_sec)) cards.push({ key: 'entry', title_ar: CARD_AR.entry, text_ar: src.entry.text, at: src.entry.at, voice_sec: src.entry.voice_sec, href: src.entry.voice_sec ? '/me/first#fd-entry' : null, state_ar: src.entry.voice_sec ? 'قلتَه بصوتك يوم دخلتَ — اسمعه في «أول يوم»' : null }); /* P71 */
   if (src.farewell) cards.push({ key: 'farewell', title_ar: CARD_AR.farewell, text_ar: src.farewell.text_ar, at: src.farewell.at, voice_sec: src.farewell.voice_sec || null, state_ar: src.farewell.trainer_ar || null });
   if (src.welcome) cards.push({ key: 'welcome', title_ar: CARD_AR.welcome, text_ar: src.welcome.text_ar, at: src.welcome.at, voice_sec: src.welcome.voice_sec || null, state_ar: src.welcome.trainer_ar || null }); /* P64 */
   if (src.first_why) cards.push({ key: 'first_why', title_ar: CARD_AR.first_why, text_ar: src.first_why.state === 'opened' ? src.first_why.body_ar : null, at: src.first_why.at, href: `/me/letter#letter-${src.first_why.id}`, state_ar: src.first_why.state === 'opened' ? null : `مختوم — يُفتح ${src.first_why.opens_ar} بيدك في «رسالة إلى نفسي»` }); /* P64 */

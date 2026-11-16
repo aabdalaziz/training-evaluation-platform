@@ -18,6 +18,7 @@ import type { Card, Counts, Since, Sources, CardKey, PublicKey, GradBody, GradPh
 import type { Evidence } from '../accreditation/registry';
 import { datesOverlay } from '../calendar/store'; /* P66 */
 import { sealedLevelLines } from '../level/store'; /* P70: سطور المستويات المختومة تعبر إلى صفحة التخرّج */
+import { entryOfEmail } from '../first/entry'; /* P71: سطر الدخول — أول كلمة بجانب آخر كلمة */
 
 type Db = any;
 export type Me = { id: string; email: string; name?: string };
@@ -58,7 +59,7 @@ async function rowOf(db: Db, me: Me, programId: string): Promise<GradRow | null>
 /** المصادر — كلمات صاحبها فقط (المدرّب يحضر بكلمة الوداع وحدها) */
 export async function loadSources(db: Db, me: Me, p: Pick<GradProgram, 'id' | 'end_date' | 'enrollment_id'>, now = new Date()): Promise<Sources> {
   const email = lower(me.email);
-  const [threads, replies, journey, caps, snaps, rooms, stations] = await Promise.all([
+  const [threads, replies, journey, caps, snaps, rooms, stations, entryRow] = await Promise.all([
     safe<any[]>(db.from('portal_map_threads').select('from_key,to_key,rule,status,note_ar,decided_at').eq('email', email).limit(500), []),
     safe<any[]>(db.from('portal_word_replies').select('text,created_at,meta').eq('learner_email', email).limit(300), []),
     loadJourney(db, me, now.getTime(), false).catch(() => ({ chapters: [] as any[] })),
@@ -66,6 +67,7 @@ export async function loadSources(db: Db, me: Me, p: Pick<GradProgram, 'id' | 'e
     safe<any[]>(db.from('portal_map_snapshots').select('code,created_at,is_public,revoked_at').eq('user_id', me.id).is('revoked_at', null).order('created_at', { ascending: false }).limit(1), []),
     safe<any[]>(db.from('classrooms').select('id').eq('program_id', p.id).limit(50), []),
     safe<any[]>(db.from('portal_after_stations').select('station,written_at').eq('enrollment_id', p.enrollment_id).limit(10), []),
+    entryOfEmail(db, email, me.id).catch(() => null), /* P71 */
   ]);
   const roomIds = new Set(rooms.map((r) => String(r.id)));
   let farewell: Sources['farewell'] = null; let welcome: Sources['welcome'] = null; /* P64: كلمة الاستقبال (meta.welcome) تُقرأ من الإشعارات نفسها */
@@ -84,6 +86,7 @@ export async function loadSources(db: Db, me: Me, p: Pick<GradProgram, 'id' | 'e
     cohort_line: cohort ? { body_ar: String(cohort.body_ar || ''), created_at: String(cohort.created_at) } : null,
     grad_letter: letter && st ? { id: Number(letter.id), state: st.state, opens_ar: fmtIsoAr(letter.deliver_at), open_hour_ar: openHourAr(letter.deliver_at) } : null,
     map_code: snaps[0] ? { code: String(snaps[0].code), created_at: String(snaps[0].created_at), is_public: !!snaps[0].is_public } : null,
+    entry: entryRow ? { text: entryRow.body_text || null, lang: String(entryRow.lang || 'ar'), voice_sec: (entryRow.voice as any)?.sec ? Number((entryRow.voice as any).sec) : null, at: String(entryRow.created_at) } : null, /* P71 */
     farewell, welcome, first_why: firstWhy ? { id: Number(firstWhy.id), body_ar: firstWhy.opened_at ? String(firstWhy.body_ar || '') : null, at: String(firstWhy.created_at), state: letterState(firstWhy, now).state, opens_ar: fmtIsoAr(firstWhy.deliver_at) } : null, stations: stations.map((s) => ({ station: Number(s.station) as 30 | 90 | 365, written: !!s.written_at })), cohort_opened,
     level_lines: await sealedLevelLines(db, me, p.id).catch(() => []), /* P70 */
     threads_after: threads.filter((t) => t.status === 'kept' && t.decided_at && String(t.decided_at) > end).length,

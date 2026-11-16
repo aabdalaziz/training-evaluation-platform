@@ -39,7 +39,7 @@ test('P70 · الأسماء والحدود والمسارات والرمز وا�
   assert.equal(LEVEL_PATH, '/me/level'); assert.equal(LEVEL_PUBLIC_PREFIX, '/lv');
   assert.equal(LEVEL_LIMITS.lineMax, 200); assert.equal(LEVEL_LIMITS.lineMin, 10); assert.equal(LEVEL_LIMITS.voiceSec, 30); assert.equal(LEVEL_LIMITS.k, 5); assert.equal(LEVEL_LIMITS.openBeforeDays, 7); assert.equal(LEVEL_LIMITS.openAfterDays, 7);
   for (let i = 0; i < 30; i++) assert.match(levelCode(), CODE_RE); assert.ok(!CODE_RE.test('ATH-GD-AAAA-BBBB'), 'عائلة مستقلّة عن P63'); assert.ok(!CODE_RE.test('ATH-LV-0000-1111'), 'بلا 0 و1');
-  assert.deepEqual(CARD_KEYS, ['prev_line', 'first_why', 'day_lines', 'apply_lines', 'commits', 'exam_writing', 'exam_speaking', 'crossed']); assert.equal(Object.keys(CARD_AR).length, CARD_KEYS.length);
+  assert.deepEqual(CARD_KEYS, ['prev_line', 'entry_line', 'first_why', 'day_lines', 'apply_lines', 'commits', 'exam_writing', 'exam_speaking', 'crossed']); /* P71 أضاف entry_line */ assert.equal(Object.keys(CARD_AR).length, CARD_KEYS.length);
   assert.deepEqual(PUBLIC_DEFAULT, ['line', 'counts']); assert.ok(!PUBLIC_KEYS.includes('exam_writing' as any) && !PUBLIC_KEYS.includes('exam_speaking' as any) && !PUBLIC_KEYS.includes('voice' as any), 'نصّ الاختبار وصوته لا مفتاح لهما على الوجه العام'); assert.equal(Object.keys(PUBLIC_AR).length, PUBLIC_KEYS.length);
   assert.match(LEVEL_COLS, /classroom_id,level_no,line_ar,line_voice,keep,public_keys,live_public,body,code,digest,history,sealed_at,revoked_at/);
   assert.match(LINE_PROMPT_AR, /سطر أحمله معي/); assert.match(LEVEL_FOOT_AR, /لا تدخل هذه الصفحة في أي تقييم أو درجة أو قرار عبور/); assert.match(LEVEL_FOOT_AR, /لا يكتبها ذكاء اصطناعي/);

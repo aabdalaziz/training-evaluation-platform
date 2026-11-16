@@ -24,10 +24,10 @@ export const LINE_PROMPT_AR = 'لو لخّصتُ هذا المستوى في سط
 export const LEVEL_FOOT_AR = 'لا تدخل هذه الصفحة في أي تقييم أو درجة أو قرار عبور. لا يكتبها ذكاء اصطناعي. خاصّة حتى تختمها وتختار وجهها العام بنفسك — وتُبطلها متى شئت.';
 export const CODE_RE = /^ATH-LV-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
 
-export type CardKey = 'prev_line' | 'first_why' | 'day_lines' | 'apply_lines' | 'commits' | 'exam_writing' | 'exam_speaking' | 'crossed';
-export const CARD_KEYS: CardKey[] = ['prev_line', 'first_why', 'day_lines', 'apply_lines', 'commits', 'exam_writing', 'exam_speaking', 'crossed'];
+export type CardKey = 'prev_line' | 'entry_line' /* P71 */ | 'first_why' | 'day_lines' | 'apply_lines' | 'commits' | 'exam_writing' | 'exam_speaking' | 'crossed';
+export const CARD_KEYS: CardKey[] = ['prev_line', 'entry_line', 'first_why', 'day_lines', 'apply_lines', 'commits', 'exam_writing', 'exam_speaking', 'crossed'];
 export const CARD_AR: Record<CardKey, string> = {
-  prev_line: 'كلمتي من المستوى السابق', first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»', day_lines: 'سطور أيامي', apply_lines: 'في موقعي — سطور التطبيق',
+  prev_line: 'كلمتي من المستوى السابق', entry_line: 'قلتُه يوم دخلتُ — قبل أن أعرف نتيجتي' /* P71 */, first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»', day_lines: 'سطور أيامي', apply_lines: 'في موقعي — سطور التطبيق',
   commits: 'التزمتُ… وأوفيتُ؟', exam_writing: 'ما كتبتُه في اختبار نهاية المستوى', exam_speaking: 'ما قلتُه في اختبار نهاية المستوى', crossed: 'عبرتُ',
 };
 /** ما يجوز أن يظهر على الوجه العام — الصوت لا يظهر أبدًا، ونصّ الاختبار لا يظهر (كلماته في موقف اختبار تبقى له) */
@@ -92,6 +92,7 @@ export type Sources = {
   lines: LineSrc[];
   prev_line: { line_ar: string; level_no: number; sealed_at: string } | null;
   first_why: { id: number; body_ar: string | null; at: string; state: 'sealed' | 'today' | 'ready' | 'opened'; opens_ar: string } | null;
+  entry_line?: { text: string | null; lang: string; voice_sec: number | null; at: string } | null; /* P71: المستوى الأول فقط — بلغته كما كتبه */
   exam: ExamSource | null;
   training_days: number;
 };
@@ -100,6 +101,7 @@ export function buildCards(src: Sources, w: { from_day: string; to_day: string }
   const learn = inW.filter((l) => l.kind === 'learn' && l.body_ar.trim()); const apply = inW.filter((l) => l.kind === 'apply' && l.body_ar.trim()); const commits = inW.filter((l) => l.kind === 'commit' && l.body_ar.trim());
   const cards: Card[] = [];
   if (src.prev_line) cards.push({ key: 'prev_line', title_ar: CARD_AR.prev_line, text_ar: src.prev_line.line_ar, at: src.prev_line.sealed_at, state_ar: `المستوى ${src.prev_line.level_no}` });
+  if (src.entry_line && (src.entry_line.text || src.entry_line.voice_sec)) cards.push({ key: 'entry_line', title_ar: CARD_AR.entry_line, text_ar: src.entry_line.text, at: src.entry_line.at, voice_sec: src.entry_line.voice_sec, state_ar: src.entry_line.text ? null : 'بصوتك — تسمعه في «أول يوم»' });
   if (src.first_why) cards.push({ key: 'first_why', title_ar: CARD_AR.first_why, text_ar: src.first_why.state === 'opened' ? src.first_why.body_ar : null, at: src.first_why.at, href: `/me/letter#letter-${src.first_why.id}`, state_ar: src.first_why.state === 'opened' ? null : `مختومة — تُفتح لك يوم تخرّجك (${src.first_why.opens_ar})` });
   if (learn.length) cards.push({ key: 'day_lines', title_ar: CARD_AR.day_lines, text_ar: null, at: learn[0].day, items: learn.slice(-LEVEL_LIMITS.dayLinesMax).map((l) => ({ text_ar: l.body_ar, at: l.day, state_ar: l.unit_id ? 'قبل أن أغادر' : null })) });
   if (apply.length) cards.push({ key: 'apply_lines', title_ar: CARD_AR.apply_lines, text_ar: null, at: apply[0].day, items: apply.slice(-LEVEL_LIMITS.applyMax).map((l) => ({ text_ar: l.blocker_ar ? `${l.body_ar} — وما عاقني: ${l.blocker_ar}` : l.body_ar, at: l.day, state_ar: l.week_no ? `الأسبوع ${l.week_no}` : null })) });

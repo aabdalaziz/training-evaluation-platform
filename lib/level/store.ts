@@ -10,6 +10,7 @@
 import { createHash, randomBytes } from 'crypto';
 import { userFlag, POLICY_BLOCK_AR } from '../org/policy';
 import { MAP_VOICE_LIMITS, validateMapVoice } from '../map/voice';
+import { entryOfEmail } from '../first/entry'; /* P71 */
 import type { MapVoiceStored } from '../map/voice';
 import { jcs } from '../portal/vc';
 import { letterState, fmtDayAr as fmtIsoAr, dayKeyRiyadh } from '../letters/self';
@@ -65,12 +66,13 @@ async function rowOf(db: Db, me: Me, it: Pick<LevelItem, 'enrollment_id' | 'leve
 const toLine = (r: any): LineSrc => ({ kind: r.kind, day: String(r.day), body_ar: String(r.body_ar || ''), blocker_ar: r.blocker_ar || null, done: (r.done === 'yes' || r.done === 'part' || r.done === 'no' ? r.done : null) as Done | null, done_note_ar: r.meta && (r.meta as any).note_ar ? String((r.meta as any).note_ar) : null, unit_id: r.unit_id ? String(r.unit_id) : null, week_no: r.week_no ? Number(r.week_no) : null });
 export async function loadSources(db: Db, me: Me, it: Pick<LevelItem, 'program_id' | 'enrollment_id' | 'classroom_id' | 'level_no' | 'window' | 'is_first'>, now = new Date()): Promise<Sources> {
   const email = lower(me.email); const w = it.window; const examTo = addDaysKey(w.to_day, LEVEL_LIMITS.openAfterDays);
-  const [lines, prev, caps, cal, reports] = await Promise.all([
+  const [lines, prev, caps, cal, reports, entryRow] = await Promise.all([
     safe<any[]>(db.from('portal_learning_lines').select('kind,day,body_ar,blocker_ar,done,meta,unit_id,week_no').eq('user_id', me.id).eq('classroom_id', it.classroom_id).gte('day', w.from_day).lte('day', w.to_day).order('day').limit(400), []),
     it.level_no > 1 ? safe<any>(db.from('portal_level_pages').select('line_ar,level_no,sealed_at,revoked_at').eq('user_id', me.id).eq('enrollment_id', it.enrollment_id).eq('level_no', it.level_no - 1).maybeSingle(), null) : Promise.resolve(null),
     it.is_first ? safe<any[]>(db.from('portal_time_capsules').select('id,body_ar,created_at,deliver_at,opened_at,status,context_key,scope').eq('user_id', me.id).eq('program_id', it.program_id).eq('context_key', 'first_day').neq('status', 'cancelled').limit(1), []) : Promise.resolve([] as any[]),
     safe<any>(db.from('portal_room_calendars').select('days').eq('classroom_id', it.classroom_id).maybeSingle(), null),
     safe<any[]>(db.from('placement_reports').select('id,submission_id,created_at,report').ilike('candidate_email', email).is('archived_at', null).gte('created_at', `${w.from_day}T00:00:00Z`).lte('created_at', `${examTo}T23:59:59Z`).order('created_at', { ascending: false }).limit(10), []),
+    it.is_first ? entryOfEmail(db, email, me.id).catch(() => null) : Promise.resolve(null), /* P71: سطر الدخول — المستوى الأول فقط */
   ]);
   const firstWhy = caps[0] || null;
   const days = arr<string>(cal?.days).filter((d) => d >= w.from_day && d <= w.to_day).length;
@@ -90,6 +92,7 @@ export async function loadSources(db: Db, me: Me, it: Pick<LevelItem, 'program_i
     lines: lines.map(toLine).filter((l) => l.kind === 'learn' || l.kind === 'apply' || l.kind === 'commit'),
     prev_line: prev && prev.line_ar && prev.sealed_at && !prev.revoked_at ? { line_ar: String(prev.line_ar), level_no: Number(prev.level_no), sealed_at: String(prev.sealed_at) } : null,
     first_why: firstWhy ? { id: Number(firstWhy.id), body_ar: firstWhy.opened_at ? String(firstWhy.body_ar || '') : null, at: String(firstWhy.created_at), state: letterState(firstWhy, now).state, opens_ar: fmtIsoAr(firstWhy.deliver_at) } : null,
+    entry_line: entryRow ? { text: entryRow.body_text || null, lang: String(entryRow.lang || 'ar'), voice_sec: (entryRow.voice as any)?.sec ? Number((entryRow.voice as any).sec) : null, at: String(entryRow.created_at) } : null,
     exam, training_days: days,
   };
 }

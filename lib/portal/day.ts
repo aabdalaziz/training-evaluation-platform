@@ -15,6 +15,8 @@ import type { RoomReplies, VoiceMeta } from './word-reply';
 import { trainerEcho, trainerEchoLine, trainerEchoMirror, isEchoDay } from './week-echo'; /* P56 «صدى الأسبوع» */
 import type { TrainerEcho } from './week-echo';
 import { echoWordTitleAr, echoDedupeKey } from '../level/echo'; /* P70-ب «كلمة العبور»: كلمة الأستاذ على صدى المستوى — تصل في «سطري» */
+import { sectionEntry, ENTRY_LIMITS } from '../first/entry'; /* P71 «قالوا يوم دخلوا»: سطور الدخول لشعبة تبدأ — k ≥ 5 · بلا أسماء · كما كُتبت */
+import { firstPhase, daysBetweenKeys } from '../first/registry';
 
 type Db = any;
 export const DAY_TITLE = { ar: 'دفتر اليوم', en: 'Day book' } as const;
@@ -55,7 +57,7 @@ export function digestText(c: DayCounts): { title_ar: string; body_ar: string; u
   return { title_ar: `دفتر اليوم: ${parts.join(' · ') || 'لا شيء يستدعي انتباهك'}`, body_ar: (pulse ? `${pulse} — ` : '') + echo + 'افتح دفتر اليوم: جلساتك، من غاب، من توقّف، وما ينتظر توقيعك — و«كلمة» تصل إلى متعلّميك في لحظتها.', url: DAY_PATH };
 }
 export type Learner = { email: string; name: string };
-export type ClassDay = { id: string; code: string; section_name: string | null; program_id: string | null; roster: number; roster_list: Learner[]; absent_yesterday: Array<Learner & { absences_30: number }>; sessions_yesterday: number; practice: { active: number; done_today: number; idle: Array<Learner & { idle_days: number }> }; drafts_pending: number; exit_week: { passed: number; conditional: number; failed: number; no_plan: number } };
+export type ClassDay = { id: string; code: string; section_name: string | null; program_id: string | null; roster: number; roster_list: Learner[]; absent_yesterday: Array<Learner & { absences_30: number }>; sessions_yesterday: number; practice: { active: number; done_today: number; idle: Array<Learner & { idle_days: number }> }; drafts_pending: number; exit_week: { passed: number; conditional: number; failed: number; no_plan: number }; entry?: { shown: boolean; n: number; head_ar: string | null; lines: string[]; silent_ar: string | null } | null /* P71 */ };
 /** مستلمو «كلمة» بحسب الوضع — بلا تكرار بالبريد */
 export function recipientsFor(mode: WordMode, room: ClassDay, one?: string | null): Learner[] {
   const src: Learner[] = mode === 'absent' ? room.absent_yesterday : mode === 'idle' ? room.practice.idle : mode === 'all' ? room.roster_list : mode === 'one' ? room.roster_list.filter((l) => l.email === norm(one)) : [];
@@ -139,6 +141,21 @@ export async function collectDayBook(db: Db, me: DayMe, site: string, opts: { no
     for (const rp of arr(reps)) { if (invRoom.get(String(rp.invite_id)) !== cid) continue; const x = rp.report?.exit; if (!x || x.الحالة !== 'final') continue; if (x.النتيجة === 'passed') ex.passed += 1; else if (x.النتيجة === 'conditional') ex.conditional += 1; else ex.failed += 1; if (x.النتيجة !== 'passed' && !approvedPlanReps.has(String(rp.id))) ex.no_plan += 1; }
     const drafts = reg.groups.find((gq) => gq.key === 'practice_start')?.items?.find((i) => i.id === cid)?.count || 0;
     classrooms.push({ id: cid, code: String(r.code || ''), section_name: r.section_name || null, program_id: r.program_id || null, roster: ros.size, roster_list: [...ros].map(([email, name]) => ({ email, name })).sort((a, b) => a.name.localeCompare(b.name, 'ar')), absent_yesterday: absent, sessions_yesterday: ySes.length, practice: { active, done_today: doneToday, idle }, drafts_pending: drafts, exit_week: ex }); }
+  /* P71 «قالوا يوم دخلوا»: لشُعب برنامج يبدأ (من أسبوع قبل البداية إلى أسبوع بعدها) — نصوص سطور الدخول بلا أسماء، k ≥ 5، كما كُتبت بلغاتها */
+  try {
+    const pids = [...new Set(classrooms.map((c) => c.program_id).filter(Boolean))] as string[];
+    if (pids.length) {
+      const progs = await safe(Promise.resolve(db.from('programs').select('id, start_date').in('id', pids).limit(50)), { data: [] as any[] });
+      const startOf = new Map(arr(progs.data).map((p: any) => [String(p.id), String(p.start_date || '').slice(0, 10)]));
+      for (const c of classrooms) {
+        const sd = c.program_id ? startOf.get(c.program_id) : null; if (!sd) continue;
+        const ph = firstPhase(sd, today); const near = ph === 'first' || ph === 'week' || (ph === 'before' && daysBetweenKeys(today, sd) <= ENTRY_LIMITS.windowBeforeDays);
+        if (!near) continue;
+        const e = await sectionEntry(db, c.roster_list.map((l) => l.email), c.roster, `${c.id}:${sd}`);
+        c.entry = { ...e, silent_ar: e.shown ? null : (e.n === 0 ? 'لم يكتب أحد سطر دخوله بعد — يُعرض حين يكتبه خمسة على الأقل' : `كتبه ${e.n} — يُعرض حين يبلغ ${ENTRY_LIMITS.k} (بلا أسماء)`) };
+      }
+    }
+  } catch { /* الصدى اختياري */ }
   classrooms.sort((a, b) => (b.absent_yesterday.length + b.practice.idle.length) - (a.absent_yesterday.length + a.practice.idle.length) || a.code.localeCompare(b.code));
   const counts: DayCounts = { sessions_today: sessions.length, absent_yesterday: classrooms.reduce((n, c) => n + c.absent_yesterday.length, 0), idle: classrooms.reduce((n, c) => n + c.practice.idle.length, 0), to_sign: reg.total };
   /* P53: أسماء الردود من روستر الشعبة حين لم يُسجَّل اسم */

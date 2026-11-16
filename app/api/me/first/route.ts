@@ -2,6 +2,8 @@
 /**
  * P64 «أول يوم — قال من سبقك» (الاسم الرسمي: صفحة اليوم الأول للمتدرّب)
  *  GET  /api/me/first?program=<id>   → برامجي التي بدأت · الصفحة (كلمة أَثَر · «قال من سبقك» k ≥ 5 بلا أسماء · ما قالوه بعد أشهر · كلمة الاستقبال · «لماذا جئتُ» · شعبتي · خارطة الطريق)
+ *  GET  /api/me/first?entry_voice=1  → P71: رابط موقَّع (300 ث) لصوت «يوم دخلتُ» — لصاحبه وحده
+ *  POST /api/me/first { action:'entry_delete' } → P71: حذف فوري لسطر الدخول (نصًّا وصوتًا)
  *  POST /api/me/first { action:'why', program_id, body_ar }  → سطر «لماذا جئتُ» (10–160) يُختم رسالةً إلى نفسي تُفتح يوم التخرّج (محرّك P62) — مرة واحدة لكل برنامج · في الأسبوع الأول فقط
  *  المبدأ: لا درجة ولا تقييم؛ لا أسماء؛ لا ذكاء اصطناعي؛ صفر SQL. المصادقة: Bearer (المتعلّم بنفسه) · الحدّ: 20 عملية كتابة/ساعة
  */
@@ -9,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { loadFirstPage, writeWhy } from '../../../../lib/first/store';
+import { entryVoiceUrl, deleteEntry } from '../../../../lib/first/entry'; /* P71 */
 import { P64_NAMES_AR, FIRST_LIMITS, FIRST_FOOT_AR, WHY_PROMPT_AR } from '../../../../lib/first/registry';
 import { freezeGate } from '../../../../lib/shield/freeze';
 
@@ -36,7 +39,8 @@ async function payload(db: any, user: { id: string; email: string; name?: string
 
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
-  const pid = new URL(req.url).searchParams.get('program');
+  const u = new URL(req.url); const pid = u.searchParams.get('program');
+  if (u.searchParams.get('entry_voice') === '1') { const r = await entryVoiceUrl(db, user.email); return r.ok ? NextResponse.json({ success: true, url: r.url, sec: r.sec }, { headers: NO }) : bad(r.error, r.status); }
   return NextResponse.json({ success: true, ...(await payload(db, user, pid, new Date())) }, { headers: NO });
 }
 
@@ -44,7 +48,9 @@ export async function POST(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const fz = await freezeGate(db, user); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   let body: any; try { body = await req.json(); } catch { return bad('JSON غير صالح'); }
-  const action = String(body.action || ''); const now = new Date(); const pid = String(body.program_id || ''); if (!pid) return bad('حدّد البرنامج');
+  const action = String(body.action || ''); const now = new Date();
+  if (action === 'entry_delete') { const r = await deleteEntry(db, user.email); await audit(db, user, { action: 'entry_delete', had: r.had }); return NextResponse.json({ success: true, had: r.had, message: 'حُذف سطر دخولك نهائيًا' }, { headers: NO }); }
+  const pid = String(body.program_id || ''); if (!pid) return bad('حدّد البرنامج');
   const rl = await rateLimit(db, `first:${user.id}`, 3600, 20); if (!rl.allowed) return tooMany(rl);
   if (action === 'why') { const r = await writeWhy(db, user, pid, { body_ar: body.body_ar }, now); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action: 'why', program_id: pid, letter_id: r.id }); return NextResponse.json({ success: true, id: r.id, deliver_at: r.deliver_at, message: 'خُتم سطرك — يُفتح لك يوم تخرّجك، ويظهر في صفحة تخرّجك بكلماتك.', ...(await payload(db, user, pid, now)) }, { headers: NO }); }
   return bad('إجراء غير معروف');

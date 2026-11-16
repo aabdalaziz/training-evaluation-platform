@@ -49,7 +49,7 @@ test('P64 · نصوص الإشعارات · الطريق والصوت · بطا�
   const la = lineAwaitsNotice('الدبلوم', 6); assert.match(la.title_ar, /سطرك ينتظر 6 متدرّبًا/); assert.ok(!/اسم/.test(la.title_ar)); assert.match(la.body_ar, /بلا اسمك/);
   assert.equal((parseCommand('افتح أول يوم') as any)?.href, '/me/first'); assert.equal((parseCommand('قال من سبقك') as any)?.href, '/me/first'); assert.equal((parseCommand('افتح يوم تخرجي') as any)?.href, '/me/grad', 'P63 كما هو');
   const c = crumbsFor('/me/first'); assert.equal(c[c.length - 1].label, 'أول يوم'); assert.equal(c[c.length - 1].current, true);
-  assert.deepEqual(CARD_KEYS.slice(0, 3), ['farewell', 'welcome', 'first_why']); assert.equal(CARD_AR.welcome, 'قال مدرّبك في أول يوم'); assert.match(CARD_AR.first_why, /ما كتبتُه أول يوم/); assert.ok(PUBLIC_KEYS.includes('welcome') && PUBLIC_KEYS.includes('first_why')); assert.ok(PUBLIC_AR.first_why);
+  assert.deepEqual(CARD_KEYS.slice(0, 4), ['entry', 'farewell', 'welcome', 'first_why']); /* P71: entry أولًا */ assert.equal(CARD_AR.welcome, 'قال مدرّبك في أول يوم'); assert.match(CARD_AR.first_why, /ما كتبتُه أول يوم/); assert.ok(PUBLIC_KEYS.includes('welcome') && PUBLIC_KEYS.includes('first_why')); assert.ok(PUBLIC_AR.first_why);
   const base: Sources = { threads: [], replies: [], chapters: [], cohort_line: null, grad_letter: null, map_code: null, farewell: null, stations: [], cohort_opened: false, threads_after: 0,
     welcome: { text_ar: 'أهلًا بكم — ابدؤوا بالسؤال', at: '2026-08-01T09:00:00Z', voice_sec: null, trainer_ar: 'أحمد' }, first_why: { id: 77, body_ar: 'جئتُ لأن أول طالب…', at: '2026-08-01T10:00:00Z', state: 'sealed', opens_ar: '7 نوفمبر 2026' } };
   const W = programWindow('2026-08-01', '2026-11-07'); const { cards } = buildCards(base, { id: 'p' }, W);

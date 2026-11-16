@@ -9,6 +9,8 @@
  *                  · «سطرك ينتظر N متدرّبًا» لخرّيجٍ أظهر سطره حين تبدأ دفعة جديدة من خمسة فأكثر (داخل أَثَر) — لا رجعية؛ dedupe لكل شيء
  */
 import { writeLetter, LETTER_COLS } from '../letters/store';
+import { entryOfEmail, entryView } from './entry'; /* P71 «يوم دخلتُ» */
+import type { EntryView } from './entry-pure';
 import { letterState, dayKeyRiyadh, fmtDayAr as fmtIsoAr, openHourAr } from '../letters/self';
 import { programAfterOf } from '../after/load';
 import { datesOverlay } from '../calendar/store'; /* P66 */
@@ -33,6 +35,7 @@ export type FirstView = {
   welcome: { text_ar: string; at: string; trainer_ar: string | null; voice_sec: number | null } | null;
   why: { id: number; state: 'sealed' | 'today' | 'ready' | 'opened'; opens_ar: string; open_hour_ar: string; body_ar: string | null; written_at: string } | null;
   mates_ar: string | null; why_count_ar: string | null; trainer_ar: string | null; road: RoadStep[];
+  entry: EntryView | null; /* P71: ما قاله يوم التسكين — يعود إليه أول يوم (نصّ بأي لغة + ثوانٍ الصوت إن سجّل) */
 };
 
 /* ───────── برامجي التي بدأت ───────── */
@@ -89,7 +92,7 @@ export async function loadFirstPage(db: Db, me: Me, programId: string | null, no
   const programs = await firstPrograms(db, me, now); const p = (programId ? programs.find((x) => x.id === programId) : programs[0]) || null;
   if (!p) return { programs, view: null };
   const today = dayKeyRiyadh(now); const rooms = await roomsOf(db, p.id); const myRoom = rooms.find((r) => r.id === p.classroom_id) || null; const roomIds = new Set(rooms.map((r) => r.id));
-  const [said, after, welcome, why, mates] = await Promise.all([predecessorLines(db, p.id, p.name_ar, now), safe<any>(programAfterOf(db, p.id, now).then((a) => ({ data: a, error: null })), null), welcomeOf(db, me, roomIds), whyOf(db, me, p.id, now), matesOf(db, p)]);
+  const [said, after, welcome, why, mates, entryRow] = await Promise.all([predecessorLines(db, p.id, p.name_ar, now), safe<any>(programAfterOf(db, p.id, now).then((a) => ({ data: a, error: null })), null), welcomeOf(db, me, roomIds), whyOf(db, me, p.id, now), matesOf(db, p), entryOfEmail(db, me.email, me.id).catch(() => null)]);
   let trainer_ar: string | null = null; if (myRoom?.trainer_id) { const t = await safe<any>(db.from('trainers').select('name').eq('id', myRoom.trainer_id).maybeSingle(), null); trainer_ar = t?.name ? String(t.name) : null; }
   const firstName = (me.name || p.full_name || '').trim().split(/\s+/)[0] || null; /* الاسم الأول: من الجلسة أو من طلب التسجيل */
   return { programs, view: {
@@ -98,6 +101,7 @@ export async function loadFirstPage(db: Db, me: Me, programId: string | null, no
     said: { ...said, head_ar: said.shown ? `من ${said.n} خرّيجًا كتبوا سطرهم يوم تخرّجهم — بلا أسماء` : null, below_ar: said.shown ? null : (said.n === 0 ? 'أنت من أوائل من يبدأ هنا — سطرك يوم تخرّجك سيكون أول ما يقرؤه من يأتي بعدك.' : `كتب ${said.n} من خرّيجي هذا البرنامج سطرهم؛ تظهر السطور حين يبلغون خمسة — بلا أسماء.`) },
     after: { line_ar: after?.shown ? String(after.line_ar || '') || null : null, excerpts: arr<any>(after?.excerpts).slice(0, FIRST_LIMITS.afterMax).map((x) => ({ text_ar: String(x.text_ar || x.excerpt_ar || ''), station: Number(x.station || 0) })).filter((x) => x.text_ar) },
     welcome, why, mates_ar: matesLineAr(mates.mates), why_count_ar: whyCountLineAr(mates.whys), trainer_ar, road: ROAD,
+    entry: entryRow ? entryView(entryRow) : null,
   } };
 }
 
