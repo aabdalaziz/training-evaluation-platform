@@ -9,6 +9,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '../../../lib/ui/icons';
+import { analyzePcm, qualityMeta, qualityLineAr } from '../../../lib/portal/audio-meter'; /* P72-أ: قراءة الصوت في جهاز المقيِّم — تميّز «لم يتكلّم» عن «لم يُسمع»، لا تدخل الدرجة */
 
 type Filter = 'pending' | 'second' | 'adjudicate' | 'released' | 'anchors' | 'all';
 type Row = { id: string; skill: 'writing' | 'speaking'; status: string; item_code: string; level_target: string; word_count: number | null; duration_sec: number | null; accommodation: string | null; ai_consent: boolean; has_ai: boolean; created_at: string; released_at: string | null; session_short: string; receptive_level: string | null;
@@ -26,6 +27,8 @@ const READING_AR: Record<number, string> = { 0: 'تأهيل', 1: 'الأولى',
 export default function Rating({ auth }: { auth: () => Promise<Record<string, string>> }) {
   const [filter, setFilter] = useState<Filter>('pending'); const [rows, setRows] = useState<Row[]>([]); const [counts, setCounts] = useState<Record<string, number>>({}); const [cal, setCal] = useState<Calibration | null>(null); const [mirror, setMirror] = useState<Mirror | null>(null); const [kind, setKind] = useState<'staff' | 'rater'>('staff');
   const [sel, setSel] = useState<Detail | null>(null); const [scores, setScores] = useState<Record<string, number>>({}); const [note, setNote] = useState(''); const [tr, setTr] = useState(''); const [trDraft, setTrDraft] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState(''); const [exempt, setExempt] = useState({ email: '', note: '' });
+  const [aq, setAq] = useState<{ id: string; line: string } | null>(null);
+  async function readAudio(id: string, url: string) { setAq({ id, line: '…يُقرأ الصوت في جهازك' }); try { const AC = (window as any).AudioContext || (window as any).webkitAudioContext; const buf = await fetch(url).then((r) => r.arrayBuffer()); const c: AudioContext = new AC(); const a = await c.decodeAudioData(buf); const q = analyzePcm(a.getChannelData(0), a.sampleRate); void c.close(); setAq({ id, line: qualityLineAr(qualityMeta(q), Math.round(a.duration)) || 'تعذّرت القراءة' }); } catch { setAq({ id, line: 'تعذّرت قراءة الصوت في هذا المتصفّح' }); } }
   const openedAt = useRef<number>(0);
   async function load(f = filter) { const j = await fetch(`/api/admin/miaar/rating?status=${f}`, { headers: await auth(), cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (!j?.success) { setErr(j?.error || 'تعذّر تحميل الطابور'); return; } setRows(j.rows || []); setCounts(j.counts || {}); setCal(j.calibration || null); setMirror(j.mirror || null); setKind(j.actor_kind === 'rater' ? 'rater' : 'staff'); }
   async function open(id: string) { setErr(''); const j = await fetch(`/api/admin/miaar/rating?id=${id}`, { headers: await auth(), cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (!j?.success) { setErr(j?.error || 'تعذّر فتح الأداء'); return; } const d = j.performance as Detail; setSel(d); setScores(d.my_reading?.scores || (d.blind ? {} : d.human_rating?.scores) || {}); setNote(d.my_reading?.note_ar || (d.blind ? '' : d.rater_note_ar) || ''); setTr(d.transcript || ''); setTrDraft(false); openedAt.current = Date.now(); }
@@ -82,7 +85,7 @@ export default function Rating({ auth }: { auth: () => Promise<Record<string, st
             {sel.blind && <p className="rt-blind" data-testid="rt-blind"><Icon name="shield" size={14} /> قراءة عمياء: لن ترى قراءة غيرك{isCalibRead ? ' ولا درجة المرساة' : ''} حتى ترسل قراءتك.</p>}
             {sel.task?.task?.sample_ar && <details className="rt-sample"><summary>إجابة نموذجية للمصحّح (لا يراها المتقدّم)</summary><p dir="rtl">{sel.task.task.sample_ar}</p></details>}
             {sel.text_answer && <blockquote className="rt-text" dir="rtl" lang="ar" data-testid="rt-text">{sel.text_answer}</blockquote>}
-            {sel.audio_url && <div className="rt-audio"><audio controls src={sel.audio_url} preload="metadata" data-testid="rt-audio" /><small>{sel.duration_sec} ث · الرابط صالح 5 دقائق · يُحذف الصوت بعد 180 يومًا</small></div>}
+            {sel.audio_url && <div className="rt-audio"><audio controls src={sel.audio_url} preload="metadata" data-testid="rt-audio" /><small>{sel.duration_sec} ث · الرابط صالح 5 دقائق · يُحذف الصوت بعد 180 يومًا</small><div className="rt-aq"><button type="button" className="rt-link" onClick={() => void readAudio(String(sel.id), sel.audio_url!)} data-testid="rt-quality">🔎 قراءة الصوت (مستوى ومدة مسموعة)</button>{aq?.id === String(sel.id) && <small data-testid="rt-quality-line">{aq.line}</small>}</div></div>}
             {sel.media_purged_at && <p className="mm-note" data-testid="rt-purged">حُذف التسجيل الصوتي بعد 180 يومًا ({new Date(sel.media_purged_at).toLocaleDateString('ar-SA')}) — بقي النسخ والتقدير.</p>}
             {!sel.text_answer && !sel.audio_url && !sel.media_purged_at && <div className="am-empty">لا محتوى (ربما انتهت صلاحية الملف).</div>}
             {(sel.skill === 'speaking' || sel.accommodation === 'spoken_instead_of_writing') && (sel.audio_url || sel.media_purged_at || sel.transcript) && <div className="rt-tr" data-testid="rt-transcript">
@@ -116,6 +119,7 @@ export default function Rating({ auth }: { auth: () => Promise<Record<string, st
 }
 
 const CSS = `
+.rt-aq{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px}.rt-aq small{color:#334155;font-weight:800}.rt-link{border:0;background:none;color:#0f766e;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;text-decoration:underline;padding:0}
 .rt-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.rt-filters{display:flex;gap:6px;flex-wrap:wrap}
 .rt-strip{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0}@media(max-width:980px){.rt-strip{grid-template-columns:1fr}}
 .rt-cal b,.rt-mirror b{display:block;color:#0f2a4e;font-size:15px}.rt-mirror b small{font-weight:700;color:#64748b;font-size:12px;margin-inline-start:6px}.rt-cal p{margin:6px 0 0;font-size:13px;color:#334155;line-height:1.8}.rt-cal.wait{border-color:#ead9a6;background:#fffdf7}.rt-cal.ok{border-color:#cfe9e6}

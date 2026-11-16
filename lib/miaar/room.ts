@@ -6,6 +6,7 @@ import { loadApprovedTasks, MEDIA_BUCKET } from './bank';
 import { planFromSession } from './blueprint';
 import { refreshExit } from './exitflow'; /* م6 */
 import { noticeText, pushNotice } from '../portal/notices'; /* P39 */
+import { stripDataUrl } from '../portal/media'; /* P72-أ */
 import { pickTasks, publicTask, validateWriting, validateSpeaking, isAccommodation, mediaPathFor, productiveBlock, AUDIO_MAX_BYTES } from './performance';
 import type { PublicTask, RoomState, PerfLite, PerformanceStatus } from './performance';
 import type { SessionRow, Result } from './engine';
@@ -93,7 +94,7 @@ export async function submitPerformance(db: any, s: SessionRow, body: SubmitBody
     const v = validateWriting(task, body.text); if (!v.ok) return fail(`writing_${v.error}`, 400);
     row.text_answer = v.text; row.word_count = v.words;
   } else {
-    const b64 = typeof body.audio === 'string' ? body.audio.replace(/^data:[^;]+;base64,/, '') : ''; if (!b64) return fail('speaking_empty', 400);
+    const b64 = stripDataUrl(body.audio); /* P72-أ: كان النمط القديم يُسقط `;codecs=opus` (Chrome) فيُخزَّن ملف تالف */ if (!b64) return fail('speaking_empty', 400);
     if (b64.length > AUDIO_MAX_BYTES * 1.4) return fail('speaking_too_big', 413);
     let buf: Buffer; try { buf = Buffer.from(b64, 'base64'); } catch { return fail('speaking_bad_audio', 400); }
     const v = validateSpeaking(task, { mime: body.mime, bytes: buf.length, duration_sec: body.duration_sec }); if (!v.ok) return fail(`speaking_${v.error}`, 400);

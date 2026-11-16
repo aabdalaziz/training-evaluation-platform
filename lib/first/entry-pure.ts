@@ -8,7 +8,7 @@ const voiceExt = (m: string) => m === 'audio/mp4' || m === 'audio/x-m4a' || m ==
 export const ENTRY_LIMITS = { textMin: 3, textMax: 200, voiceSec: 20, voiceBytes: 1024 * 1024, k: 5, show: 3, windowBeforeDays: 7, signedSeconds: 300, bucket: 'athar-media', prefix: 'entry-voice' } as const;
 export const ENTRY_NAMES = { ar: { narrative: 'يوم دخلتُ', line: 'سطر الدخول', official: 'سطر الدخول — بكلمات المتعلّم يوم التسكين', echo: 'قالوا يوم دخلوا' }, en: { narrative: 'The day I entered', line: 'Entry line', official: "Entry Line — In the Learner's Own Words on Placement Day" } } as const;
 export const ENTRY_COLS = 'id,email,session_id,report_id,user_id,invite_id,lang,body_text,voice,created_at,updated_at';
-export type EntryVoice = { path: string; sec: number; bytes: number; mime: string; at: string };
+export type EntryVoice = { path: string; sec: number; bytes: number; mime: string; at: string; quality?: { voiced_sec: number; peak: number; level: string } | null /* P72-أ: قراءة الجهاز — أرقام فقط، لا تدخل أي تقييم */ };
 export type EntryRow = { id: number; email: string; session_id: string; report_id: string | null; user_id: string | null; invite_id: string | null; lang: string; body_text: string | null; voice: EntryVoice | Record<string, never> | null; created_at: string; updated_at: string };
 export type EntryView = { id: number; text: string | null; lang: string; voice_sec: number | null; at: string; title_ar: string };
 

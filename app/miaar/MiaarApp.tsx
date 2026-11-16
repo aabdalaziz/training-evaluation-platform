@@ -19,6 +19,7 @@ import dynamic from 'next/dynamic';
 import type { RoomData } from './PerformanceRoom';
 const EntryLine = dynamic(() => import('./EntryLine'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* P71 «يوم دخلتُ»: تُحمَّل عند الحاجة فقط (MediaRecorder) */
 import { entryPromptFor } from '../../lib/first/entry-pure';
+import { AUDIO_METER_CSS } from '../components/AudioMeter'; /* P72-أ */
 import Witness from './Witness'; /* م8 «شاهِد» */
 import type { WitnessApi, WitnessCfg } from './Witness';
 const PerformanceRoom = dynamic(() => import('./PerformanceRoom'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* م4-ب: غرفة الأداء تُحمَّل عند الحاجة */
@@ -1123,6 +1124,7 @@ const CSS = `
 .mi-why-count{position:absolute;bottom:8px;inset-inline-end:14px;font-size:12px;color:#64748b;font-variant-numeric:tabular-nums}
 .mi-why-voice{margin-top:8px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .mi-why-review{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+${AUDIO_METER_CSS}
 .mi-why-review audio{height:36px;max-width:260px}
 .mi-why-actions{margin-top:16px}
 .mi-why-foot{font-size:13px;margin-top:12px}

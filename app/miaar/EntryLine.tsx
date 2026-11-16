@@ -8,6 +8,8 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { ENTRY_LIMITS, entryPromptFor } from '../../lib/first/entry-pure';
+import { useAudioMeter, LevelBar, QualityNote } from '../components/AudioMeter'; /* P72-أ «ضبط الصوت» */
+import { qualityMeta, type TakeQuality } from '../../lib/portal/audio-meter';
 
 type Post = (body: any) => Promise<any>;
 const ERR_AR: Record<string, string> = { empty: 'السطر فارغ', too_short: 'أقصر من أن يكون سطرًا', no_contact: 'بلا بريد أو هاتف — سطرك يعود إليك أنت، لا نحتاج وسيلة اتصال', too_big: 'التسجيل كبير — سجّل أقصر', too_long: `أكثر من ${ENTRY_LIMITS.voiceSec} ثانية — سجّل أقصر`, bad_voice: 'صيغة الصوت غير مدعومة', session_not_finished: 'أرسل اختبارك أولًا', rate_limited: 'محاولات كثيرة — انتظر قليلًا' };
@@ -19,7 +21,7 @@ export default function EntryLine({ lang, post, onDone }: { lang: string; post: 
   const [text, setText] = useState(''); const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [saved, setSaved] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'rec' | 'review'>('idle'); const [sec, setSec] = useState(0); const [blob, setBlob] = useState<Blob | null>(null); const [url, setUrl] = useState(''); const [noMic, setNoMic] = useState(false);
   const rec = useRef<MediaRecorder | null>(null); const chunks = useRef<Blob[]>([]); const stream = useRef<MediaStream | null>(null); const secRef = useRef(0); const tick = useRef<any>(null);
-  const [canRecord, setCanRecord] = useState(false);
+  const [canRecord, setCanRecord] = useState(false); const meter = useAudioMeter(); const [q, setQ] = useState<TakeQuality | null>(null);
   useEffect(() => { setCanRecord(!!(navigator.mediaDevices?.getUserMedia) && typeof MediaRecorder !== 'undefined'); }, []);
   useEffect(() => () => { stream.current?.getTracks().forEach((t) => t.stop()); if (url) URL.revokeObjectURL(url); clearInterval(tick.current); }, [url]);
   const n = [...text].length;
@@ -28,21 +30,21 @@ export default function EntryLine({ lang, post, onDone }: { lang: string; post: 
   async function startRec() {
     setErr('');
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.current = s;
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.current = s; meter.attach(s); setQ(null);
       const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].find((m) => MediaRecorder.isTypeSupported(m)) || '';
       const r = new MediaRecorder(s, mime ? { mimeType: mime, audioBitsPerSecond: 32000 } : undefined); chunks.current = []; secRef.current = 0; setSec(0);
       r.ondataavailable = (e) => { if (e.data.size) chunks.current.push(e.data); };
-      r.onstop = () => { const b = new Blob(chunks.current, { type: r.mimeType || mime || 'audio/webm' }); setBlob(b); setUrl(URL.createObjectURL(b)); s.getTracks().forEach((t) => t.stop()); setPhase('review'); };
+      r.onstop = () => { const b = new Blob(chunks.current, { type: r.mimeType || mime || 'audio/webm' }); setBlob(b); setUrl(URL.createObjectURL(b)); s.getTracks().forEach((t) => t.stop()); setQ(meter.finish(secRef.current || 1)); setPhase('review'); };
       r.start(1000); rec.current = r; setPhase('rec');
       tick.current = setInterval(() => { secRef.current += 1; setSec(secRef.current); if (secRef.current >= ENTRY_LIMITS.voiceSec) stopRec(); }, 1000);
     } catch { setNoMic(true); setPhase('idle'); }
   }
-  const redo = () => { setBlob(null); if (url) URL.revokeObjectURL(url); setUrl(''); setPhase('idle'); };
+  const redo = () => { setBlob(null); if (url) URL.revokeObjectURL(url); setUrl(''); setQ(null); setPhase('idle'); };
 
   async function save() {
     if (busy) return; const body: any = { action: 'entry', lang: ar ? 'ar' : 'en' };
     if (text.trim()) body.text = text.trim();
-    if (blob) { body.audio = await new Promise<string>((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result || '')); fr.readAsDataURL(blob); }); body.mime = blob.type; body.sec = secRef.current || sec; }
+    if (blob) { body.audio = await new Promise<string>((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result || '')); fr.readAsDataURL(blob); }); body.mime = blob.type; body.sec = secRef.current || sec; const qm = qualityMeta(q); if (qm) body.quality = qm; }
     if (!body.text && !body.audio) { setErr(E.empty); return; }
     setBusy(true); setErr(''); const r = await post(body); setBusy(false);
     if (r?.ok) { setSaved(true); setTimeout(onDone, 1400); } else setErr(E[String(r?.error || '')] || (ar ? 'تعذّر الحفظ — يمكنك التجاوز، النتيجة جاهزة' : 'Could not save — you can skip, your result is ready'));
@@ -58,8 +60,8 @@ export default function EntryLine({ lang, post, onDone }: { lang: string; post: 
       </label>
       {canRecord && !noMic && <div className="mi-why-voice">
         {phase === 'idle' && <button type="button" className="mi-link" onClick={startRec} disabled={busy} data-testid="mi-why-rec">🎙 {L.voice}</button>}
-        {phase === 'rec' && <div className="rm-rec mi-why-rec" aria-live="polite"><span className="rm-dot" aria-hidden="true" /><b>{clock(sec)} / {clock(ENTRY_LIMITS.voiceSec)}</b><button type="button" className="mi-next" onClick={stopRec} data-testid="mi-why-stop">{ar ? 'أوقف' : 'Stop'}</button></div>}
-        {phase === 'review' && url && <div className="mi-why-review"><audio controls src={url} data-testid="mi-why-play" /><span className="mi-note">{clock(sec)}</span><button type="button" className="mi-link" onClick={redo} data-testid="mi-why-redo">{ar ? 'أعد التسجيل' : 'Record again'}</button></div>}
+        {phase === 'rec' && <div className="rm-rec mi-why-rec" aria-live="polite"><span className="rm-dot" aria-hidden="true" /><b>{clock(sec)} / {clock(ENTRY_LIMITS.voiceSec)}</b><button type="button" className="mi-next" onClick={stopRec} data-testid="mi-why-stop">{ar ? 'أوقف' : 'Stop'}</button><LevelBar level={meter.level} lvl={meter.lvl} ar={ar} testid="mi-why" /></div>}
+        {phase === 'review' && url && <div className="mi-why-review"><audio controls src={url} data-testid="mi-why-play" /><span className="mi-note">{clock(sec)}</span><button type="button" className="mi-link" onClick={redo} data-testid="mi-why-redo">{ar ? 'أعد التسجيل' : 'Record again'}</button><QualityNote q={q} ar={ar} testid="mi-why" /></div>}
       </div>}
       {err && <p className="mi-alert" role="alert" data-testid="mi-why-err">{err}</p>}
       <div className="mi-actions mi-why-actions">

@@ -19,6 +19,8 @@ export const VIDEO_MIME_CANDIDATES = ['video/webm;codecs=vp8,opus', 'video/webm;
 export const AUDIO_MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'] as const;
 export function pickMime(candidates: readonly string[], isSupported: (m: string) => boolean): string | null { for (const c of candidates) { try { if (isSupported(c)) return c; } catch { /* ignore */ } } return null; }
 /** النوع الأساسي بلا codecs (للتخزين وقيود المخزن) */
+/** P72-أ: قشر data-URL أيًّا كانت معلماته — `data:audio/webm;codecs=opus;base64,…` (Chrome) كان يُفلت من النمط القديم `[^;]+;base64,` فيصل إلى الخادم بايتات تالفة (15 بايت) */
+export function stripDataUrl(v: unknown): string { return typeof v === 'string' ? v.replace(/^data:[^,]*,/, '').trim() : ''; }
 export function baseMime(mime: string): string { return String(mime || '').split(';')[0].trim().toLowerCase(); }
 export function extFor(mime: string): string { const b = baseMime(mime); if (b === 'video/mp4' || b === 'audio/mp4') return b.startsWith('video') ? 'mp4' : 'm4a'; if (b === 'video/quicktime') return 'mov'; if (b === 'audio/ogg') return 'ogg'; if (b === 'audio/mpeg') return 'mp3'; if (b === 'audio/wav') return 'wav'; return 'webm'; }
 export function kindFor(mime: string): MediaKind { return baseMime(mime).startsWith('video/') ? 'video' : 'audio'; }

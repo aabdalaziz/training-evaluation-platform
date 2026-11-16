@@ -6,6 +6,8 @@
    موافقة الذكاء الاصطناعي افتراضيًا مُطفأة — وحتى مع تفعيلها لا تُنشر درجة قبل اعتماد إنسان. أثناء المؤقّت يُقفل «الطريق» حتى لا يغادر المتقدّم سهوًا. */
 import { useEffect, useRef, useState } from 'react';
 import { setWayLock } from '../components/WayBar';
+import { useAudioMeter, LevelBar, QualityNote, MicCheck, micChecked, AUDIO_METER_CSS } from '../components/AudioMeter'; /* P72-أ «ضبط الصوت» */
+import type { TakeQuality } from '../../lib/portal/audio-meter';
 
 type Task = { code: string; level: string; skill: 'writing' | 'speaking'; prompt: string; prompt_en: string | null; tips_ar: string[]; genre: string; media: string | null; mediaAlt: string | null; min_words?: number; max_words?: number; time_seconds?: number; min_seconds?: number; max_seconds?: number; prep_seconds?: number; retakes?: number };
 export type RoomData = { tasks: Task[]; level: string; drafts: Record<string, string>; done: string[]; skipped: string[] };
@@ -105,16 +107,17 @@ function Recorder({ task, L, ar, skillToSend, accommodation, consent, setConsent
   const prepTotal = task.prep_seconds ?? 30; const maxS = task.max_seconds || 90; const minS = task.min_seconds || 10;
   const [phase, setPhase] = useState<'idle' | 'prep' | 'rec' | 'review'>('idle'); const [prep, setPrep] = useState(prepTotal); const [sec, setSec] = useState(0); const [blob, setBlob] = useState<Blob | null>(null); const [url, setUrl] = useState(''); const [takes, setTakes] = useState(0); const [noMic, setNoMic] = useState(false);
   const rec = useRef<MediaRecorder | null>(null); const chunks = useRef<Blob[]>([]); const stream = useRef<MediaStream | null>(null); const secRef = useRef(0);
+  const meter = useAudioMeter(); const [q, setQ] = useState<TakeQuality | null>(null); const [needCheck, setNeedCheck] = useState(false); useEffect(() => { setNeedCheck(!micChecked()); }, []); /* P72-أ */
   const canRecord = typeof window !== 'undefined' && !!(navigator.mediaDevices?.getUserMedia) && typeof MediaRecorder !== 'undefined';
   useEffect(() => () => { stream.current?.getTracks().forEach((t) => t.stop()); if (url) URL.revokeObjectURL(url); setWayLock(false); }, [url]);
   useEffect(() => { if (phase !== 'prep') return; setWayLock(true); if (prep <= 0) { void startRec(); return; } const id = setTimeout(() => setPrep((p) => p - 1), 1000); return () => clearTimeout(id); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [phase, prep]);
   async function startRec() {
     try {
-      const s = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.current = s;
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.current = s; meter.attach(s); setQ(null);
       const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].find((m) => MediaRecorder.isTypeSupported(m)) || '';
       const r = new MediaRecorder(s, mime ? { mimeType: mime, audioBitsPerSecond: 32000 } : undefined); chunks.current = []; secRef.current = 0; setSec(0);
       r.ondataavailable = (e) => { if (e.data.size) chunks.current.push(e.data); };
-      r.onstop = () => { const b = new Blob(chunks.current, { type: r.mimeType || mime || 'audio/webm' }); setBlob(b); setUrl(URL.createObjectURL(b)); s.getTracks().forEach((t) => t.stop()); setPhase('review'); setWayLock(false); };
+      r.onstop = () => { const b = new Blob(chunks.current, { type: r.mimeType || mime || 'audio/webm' }); setBlob(b); setUrl(URL.createObjectURL(b)); s.getTracks().forEach((t) => t.stop()); setQ(meter.finish(secRef.current || 1)); setPhase('review'); setWayLock(false); };
       r.start(1000); rec.current = r; setPhase('rec');
       const tick = setInterval(() => { secRef.current += 1; setSec(secRef.current); if (secRef.current >= maxS) { clearInterval(tick); setMsg(L.autoStop); stopRec(); } }, 1000); (r as any).__tick = tick;
     } catch { setNoMic(true); setPhase('idle'); setWayLock(false); }
@@ -129,12 +132,14 @@ function Recorder({ task, L, ar, skillToSend, accommodation, consent, setConsent
   };
   if (!canRecord || noMic) return <div className="rm-start"><p className="mi-simple">{L.noMic}</p><div className="mi-actions"><button type="button" className="mi-defer" onClick={skip} disabled={busy}>{L.skip}</button><button type="button" className="mi-next" onClick={onNoMic} data-testid="room-typed-instead">{L.typedInstead}</button></div></div>;
   return <>
-    {phase === 'idle' && <div className="rm-start"><p>{L.prep}: {prepTotal} {L.seconds} · {fmt(L.secRange, { a: minS, b: maxS })}</p><div className="mi-actions"><button type="button" className="mi-defer" onClick={skip} disabled={busy}>{L.skip}</button>{onTyped && <button type="button" className="mi-link" onClick={onTyped} data-testid="room-typed-link">{L.typedInstead}</button>}<button type="button" className="mi-next" onClick={() => { setPrep(prepTotal); setPhase('prep'); }} data-testid="room-start-speaking">{L.start}</button></div></div>}
+    {phase === 'idle' && needCheck && <MicCheck ar={ar} onDone={() => setNeedCheck(false)} testid="room" />}
+    {phase === 'idle' && !needCheck && <div className="rm-start"><p>{L.prep}: {prepTotal} {L.seconds} · {fmt(L.secRange, { a: minS, b: maxS })}</p><div className="mi-actions"><button type="button" className="mi-defer" onClick={skip} disabled={busy}>{L.skip}</button>{onTyped && <button type="button" className="mi-link" onClick={onTyped} data-testid="room-typed-link">{L.typedInstead}</button>}<button type="button" className="mi-next" onClick={() => { setPrep(prepTotal); setPhase('prep'); }} data-testid="room-start-speaking">{L.start}</button></div></div>}
     {phase === 'prep' && <div className="rm-prep" aria-live="polite" data-testid="room-prep"><b>{prep}</b><span>{L.prep}</span><button type="button" className="mi-link" onClick={() => setPrep(0)}>{L.record}</button></div>}
-    {phase === 'rec' && <div className="rm-rec" aria-live="polite"><span className="rm-dot" aria-hidden="true" /><b>{L.recording} {clock(sec)} / {clock(maxS)}</b><button type="button" className="mi-next" onClick={stopRec} data-testid="room-stop">{L.stop}</button></div>}
+    {phase === 'rec' && <div className="rm-rec" aria-live="polite"><span className="rm-dot" aria-hidden="true" /><b>{L.recording} {clock(sec)} / {clock(maxS)}</b><button type="button" className="mi-next" onClick={stopRec} data-testid="room-stop">{L.stop}</button><LevelBar level={meter.level} lvl={meter.lvl} ar={ar} testid="room" /></div>}
     {phase === 'review' && <div className="rm-review">
       <p>{L.listen} · {sec} {L.seconds} {sec < minS && <em className="rm-len short">({L.tooShort})</em>}</p>
       {url && <audio controls src={url} preload="metadata" />}
+      <QualityNote q={q} ar={ar} onRedo={takes < (task.retakes ?? 1) ? retake : undefined} testid="room" />
       <div className="rm-foot"><small /><Consent L={L} consent={consent} setConsent={setConsent} /></div>
       <div className="mi-actions"><button type="button" className="mi-defer" onClick={skip} disabled={busy}>{L.skip}</button>{takes < (task.retakes ?? 1) && <button type="button" className="mi-defer" onClick={retake} disabled={busy}>{L.retake}</button>}<button type="button" className="mi-next" onClick={submit} disabled={busy || !blob} data-testid="room-submit-speaking">{L.submit}</button></div>
     </div>}
@@ -166,4 +171,5 @@ const CSS = `
 .rm-priv{margin-top:14px}
 .mi-link{border:0;background:transparent;color:#0b8a83;font:inherit;font-weight:800;cursor:pointer;text-decoration:underline;padding:6px 8px}
 @media(max-width:640px){.rm-head{flex-direction:column}.rm-card{padding:16px}}
+${AUDIO_METER_CSS}
 `;

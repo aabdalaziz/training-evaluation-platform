@@ -18,6 +18,8 @@ import type { Course, Slot, Period, Section, Instructor, Conflict, Grid, LevelSp
 import { dayKey, addDays, fmtDayAr, isDayKey } from '../calendar/registry';
 import { instructorEcho } from '../level/echo'; /* P70-ب «رجع الصدى»: موجز الشعبة عبر المستوى الماضي لأستاذ المستوى الجديد */
 import type { InstructorEcho } from '../level/echo';
+import { sectionEntry, ENTRY_LIMITS } from '../first/entry'; /* P72-ب «أول محاضرة»: «قالوا يوم دخلوا» في الممرّ أول أسبوع من البرنامج — k ≥ 5 · بلا أسماء · لا يدخل أي تقييم */
+import { firstPhase, daysBetweenKeys } from '../first/registry';
 /** الآن بصيغة الرياض «YYYY-MM-DDTHH:MM:SS+03:00» — نفس صيغة تخزين المحاضرات، فتصحّ مقارنة النصوص كما يصحّ timestamptz */
 export function riyadhIso(now: Date): string { const r = new Date(now.getTime() + 3 * 3600 * 1000); return r.toISOString().slice(0, 19) + '+03:00'; }
 
@@ -186,7 +188,8 @@ export async function applySubstitute(db: Db, me: Me, b: { program_id?: unknown;
 }
 
 /* ───────── «الممرّ» ───────── */
-export async function corridor(db: Db, me: Me, sessionId: string, now = new Date()): Promise<{ ok: true; corridor: Corridor & { echo: InstructorEcho | null; classroom_id: string; program_id: string }; thread_shown: boolean } | Fail> {
+export type CorridorFirst = { shown: boolean; n: number; head_ar: string | null; lines: string[]; silent_ar: string | null; title_ar: string; welcome_href: string | null; start_day: string };
+export async function corridor(db: Db, me: Me, sessionId: string, now = new Date()): Promise<{ ok: true; corridor: Corridor & { echo: InstructorEcho | null; first: CorridorFirst | null; classroom_id: string; program_id: string }; thread_shown: boolean } | Fail> {
   const s = await safe<any>(db.from('portal_sessions').select('id,program_id,classroom_id,trainer_id,series_id,unit_id,starts_at,title_ar').eq('id', sessionId).maybeSingle(), null); if (!s || !s.unit_id) return fail('ليست محاضرة مقرّر', 404);
   const tids = me.trainerIds || []; if (!me.staff && !(s.trainer_id && tids.includes(String(s.trainer_id)))) return fail('«الممرّ» لأستاذ المحاضرة', 403);
   const L = await loadAll(db, String(s.program_id)); const slot = L.slots.find((x) => x.id === String(s.series_id)); const n = namesOf(L); const c = L.courses.find((x) => x.id === String(s.unit_id));
@@ -194,7 +197,7 @@ export async function corridor(db: Db, me: Me, sessionId: string, now = new Date
   const [lines, commits, roster] = await Promise.all([
     safe<any[]>(db.from('portal_learning_lines').select('user_id,body_ar,blocker_ar,day').eq('classroom_id', String(s.classroom_id)).eq('unit_id', String(s.unit_id)).eq('kind', 'learn').gte('day', since).limit(2000), []),
     safe<any[]>(db.from('portal_learning_lines').select('id').eq('classroom_id', String(s.classroom_id)).eq('kind', 'commit').is('done', null).limit(500), []),
-    safe<any[]>(db.from('portal_enrollments').select('id').eq('classroom_id', String(s.classroom_id)).in('status', ENROLLED).limit(500), []),
+    safe<any[]>(db.from('portal_enrollments').select('id,email').eq('classroom_id', String(s.classroom_id)).in('status', ENROLLED).limit(500), []),
   ]);
   const thread = courseThread(lines.map((l) => ({ user_id: String(l.user_id), body_ar: String(l.body_ar || ''), blocker_ar: l.blocker_ar || null, day: String(l.day) })), `${s.classroom_id}:${s.unit_id}`, roster.length);
   const starts = String(s.starts_at || '').includes('T') ? new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Riyadh', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(s.starts_at)) : (slot?.starts_at || '');
@@ -202,7 +205,15 @@ export async function corridor(db: Db, me: Me, sessionId: string, now = new Date
   /* P70-ب: في الأسبوع الأول من مستوى ≥ 2 يصعد صدى المستوى الماضي إلى الأستاذ — أعداد وعبارات بلا أسماء، يُحسب عند الفتح ولا يُخزَّن */
   const isOwn = !!(s.trainer_id && tids.includes(String(s.trainer_id)));
   const echo = c?.level_no ? await instructorEcho(db, { program_id: String(s.program_id), classroom_id: String(s.classroom_id), level_no: Number(c.level_no), trainer_name: me.name || null, can_write: isOwn }, L.courses.length ? levelSpans(L.courses, L.slots) : [], dayKey(now)).catch(() => null) : null;
-  return { ok: true, corridor: { ...card, echo, classroom_id: String(s.classroom_id), program_id: String(s.program_id) }, thread_shown: thread.shown };
+  /* P72-ب: أول أسبوع من البرنامج (ومن أسبوع قبله) — الممرّ خالٍ أصلًا، فيُفتح على «قالوا يوم دخلوا» + مدخل كلمة الاستقبال (P64) لأستاذ المحاضرة */
+  let first: CorridorFirst | null = null;
+  try {
+    const sd = String(L.program?.start_date || '').slice(0, 10); const today = dayKey(now);
+    if (sd) { const ph = firstPhase(sd, today); const near = ph === 'first' || ph === 'week' || (ph === 'before' && daysBetweenKeys(today, sd) <= ENTRY_LIMITS.windowBeforeDays);
+      if (near) { const e = await sectionEntry(db, roster.map((r) => String(r.email || '')), roster.length, `${s.classroom_id}:${sd}`);
+        first = { ...e, silent_ar: e.shown ? null : (e.n === 0 ? 'لم يكتب أحد سطر دخوله بعد — يُعرض حين يكتبه خمسة على الأقل' : `كتبه ${e.n} — يُعرض حين يبلغ ${ENTRY_LIMITS.k} (بلا أسماء)`), title_ar: 'أول محاضرة — قالوا يوم دخلوا', welcome_href: isOwn ? `/me/day?welcome=${encodeURIComponent(String(s.classroom_id))}` : null, start_day: sd }; } }
+  } catch { /* اختياري */ }
+  return { ok: true, corridor: { ...card, echo, first, classroom_id: String(s.classroom_id), program_id: String(s.program_id) }, thread_shown: thread.shown };
 }
 
 /* ───────── «ماذا عندي اليوم؟» ───────── */
