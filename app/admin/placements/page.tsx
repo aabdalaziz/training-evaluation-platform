@@ -54,7 +54,7 @@ function PlacementsAdmin() {
   return (
     <div className="en"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="en-wrap">
-        <header className="en-head"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>نتائج مِعيار — اختبار تحديد المستوى</h1><p>كل نتيجة يكتبها مِعيار — من أَثَر لحظة اكتمال الاختبار وتُسجَّل كدليل مهارة (استماع · قراءة · قواعد ومفردات) في ملف المتعلم، وتوجّه الإسكان في الشعب والتوصية بالبرامج.</p></div>
+        <header className="en-head"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>نتائج مِعيار — اختبار تحديد المستوى</h1><p>كل نتيجة يكتبها مِعيار — من أَثَر لحظة اكتمال الاختبار وتُسجَّل كدليل مهارة (استماع · قراءة · قواعد ومفردات) في ملف المتعلم، وتوجّه التسكين في الشعب والتوصية بالبرامج.</p></div>
           <div className="en-acts"><button type="button" className="en-btn" onClick={sync} disabled={busy === 'sync'}><Icon name="refresh" size={14} /> {busy === 'sync' ? 'جارٍ التحديث…' : 'تحديث القائمة'}</button><a className="en-btn ghost" href="/admin/miaar"><Icon name="arrow" size={14} /> فتح مِعيار</a></div></header>
         <PortalAdminTabs />
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok">{notice}</div>}
