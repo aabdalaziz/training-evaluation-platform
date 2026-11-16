@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { loadFirstPage, writeWhy } from '../../../../lib/first/store';
-import { entryVoiceUrl, deleteEntry } from '../../../../lib/first/entry'; /* P71 */
+import { entryVoiceUrl, deleteEntry, setEntryPublic } from '../../../../lib/first/entry'; /* P71 · P75 */
 import { P64_NAMES_AR, FIRST_LIMITS, FIRST_FOOT_AR, WHY_PROMPT_AR } from '../../../../lib/first/registry';
 import { freezeGate } from '../../../../lib/shield/freeze';
 
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
   const fz = await freezeGate(db, user); if (fz) return fz; /* P65 ★3 زرّ التجميد: جهة مجمَّدة = قراءة فقط */
   let body: any; try { body = await req.json(); } catch { return bad('JSON غير صالح'); }
   const action = String(body.action || ''); const now = new Date();
+  if (action === 'entry_public') { /* P75 «لماذا جاؤوا»: إذن صاحب السطر بظهوره على الرئيسة (نصّ فقط) */ const r = await setEntryPublic(db, user.email, body.public === true, user.id); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action: 'entry_public', public_ok: r.public_ok }); return NextResponse.json({ success: true, public_ok: r.public_ok, had: r.had, message: r.public_ok ? 'يجوز أن يظهر سطرك على الرئيسة — بلا اسمك ولا برنامجك.' : 'سُحب الإذن — سطرك لك وحدك.' }, { headers: NO }); }
   if (action === 'entry_delete') { const r = await deleteEntry(db, user.email); await audit(db, user, { action: 'entry_delete', had: r.had }); return NextResponse.json({ success: true, had: r.had, message: 'حُذف سطر دخولك نهائيًا' }, { headers: NO }); }
   const pid = String(body.program_id || ''); if (!pid) return bad('حدّد البرنامج');
   const rl = await rateLimit(db, `first:${user.id}`, 3600, 20); if (!rl.allowed) return tooMany(rl);

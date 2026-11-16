@@ -17,6 +17,7 @@ import { normalizeSite } from '../../../../lib/portal/open';
 import { normEmail } from '../../../../lib/portal/roles';
 import { STAFF_ROLES } from '../../../../lib/portal/sign';
 import { collectDayBook, resolveTrainer, sendWord, cleanWord, DAY_TITLE, WORD_MAX, WORDS_PER_HOUR } from '../../../../lib/portal/day';
+import { hideEntryPublic } from '../../../../lib/first/entry'; /* P75 */
 import type { WordMode } from '../../../../lib/portal/day';
 import { markRepliesSeen, voiceUrlFor, validateTrainerVoice, trainerVoicePath, cleanTranscript, VOICE_LIMITS } from '../../../../lib/portal/word-reply'; /* P53 · P54 · P55 */
 import type { VoiceMeta } from '../../../../lib/portal/word-reply';
@@ -68,6 +69,10 @@ export async function POST(req: Request) {
   if (b.action === 'seen_replies') { /* P53 */
     if (!me.trainerIds.length) return bad('لا ردود بلا بطاقة مدرّب', 403); if (me.viewing_other) return bad('الاطّلاع فقط — «قرأت» للمدرّب نفسه', 403);
     const n = await markRepliesSeen(db, [...me.trainerIds, me.id], isId(b.classroom_id) ? b.classroom_id : null); return NextResponse.json({ success: true, seen: n }, { headers: NO });
+  }
+  if (b.action === 'entry_hide') { /* P75: الأستاذ يخفي سطر دخول من شعبته عن الرئيسة — لا يحذفه ولا يرى صاحبه */
+    if (!isId(b.classroom_id)) return bad('حدّد الشعبة'); const book = await collectDayBook(db, me, siteOf(req)); const room = book.classrooms.find((r) => r.id === b.classroom_id); if (!room) return bad('هذه الشعبة ليست من شُعبك', 404);
+    const r = await hideEntryPublic(db, Number(b.entry_id || 0), room.roster_list.map((l) => l.email)); if (!r.ok) return bad(r.error, r.status); return NextResponse.json({ success: true, hidden: r.hidden, message: r.hidden ? 'أُخفي السطر عن الرئيسة — يبقى لصاحبه.' : 'لم يكن السطر معروضًا على الرئيسة.' }, { headers: NO });
   }
   if (b.action !== 'word') return bad('إجراء غير معروف');
   if (!me.trainerIds.length) return bad('«كلمة» تُرسل من مدرّب الشعبة نفسه — بريدك غير مربوط ببطاقة مدرّب', 403);

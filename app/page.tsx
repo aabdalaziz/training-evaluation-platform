@@ -49,6 +49,7 @@ function Home() {
       <DailyCase lang={lang} tok={tok} />
       <Advisor lang={lang} tok={tok} />
       <Memory lang={lang} />
+      <Why lang={lang} />
       <Heard lang={lang} />
       <Embassy lang={lang} />
       <Dialogue lang={lang} tok={tok} sessions={sessions} now={now} />
@@ -290,6 +291,27 @@ function Memory({ lang }: { lang: 'ar' | 'en' }) {
   );
 }
 
+/* P75 «لماذا جاؤوا» — سطور دخول (P71) أذِن أصحابها بظهورها: النصّ وشارة الخطّ فقط؛ لا اسم ولا برنامج ولا شعبة ولا تاريخ ولا صوت. لا يظهر القسم دون 20 شخصًا و5 شُعب. يتبدّل يوميًا. */
+type WhyItem = { text: string; script: string; script_ar: string; dir: 'rtl' | 'ltr' };
+type WhyData = { shown: boolean; items: WhyItem[]; head_ar: string; people: number; sections: number };
+function Why({ lang }: { lang: 'ar' | 'en' }) {
+  const ar = lang === 'ar'; const [d, setD] = useState<WhyData | null>(null); const [shown, setShown] = useState(0); const [copied, setCopied] = useState(-1); const pressRef = useRef<number | null>(null);
+  useEffect(() => { const take = (j: any) => { if (j?.success && j.why?.shown && Array.isArray(j.why.items) && j.why.items.length) setD(j.why); }; const pre = (window as unknown as { __atharHome?: unknown }).__atharHome; if (pre) { take(pre); return; } const on = (e: Event) => take((e as CustomEvent).detail); window.addEventListener('athar:home', on); return () => window.removeEventListener('athar:home', on); }, []);
+  useEffect(() => { if (!d) return; setShown(0); const id = setInterval(() => setShown(s => { if (s >= d.items.length) { clearInterval(id); return s; } return s + 1; }), 500); return () => clearInterval(id); }, [d]);
+  if (!d) return null;
+  const copy = async (it: WhyItem, i: number) => { try { await navigator.clipboard.writeText(`${it.text}\n— متعلّم في أَثَر`); setCopied(i); setTimeout(() => setCopied(-1), 1600); } catch { /* لا شيء */ } };
+  const down = (it: WhyItem, i: number) => { pressRef.current = window.setTimeout(() => copy(it, i), 600); }; const up = () => { if (pressRef.current) { clearTimeout(pressRef.current); pressRef.current = null; } };
+  return (
+    <section className="pt-sec hm-why" id="why" data-testid="wy-section" data-people={d.people} data-sections={d.sections}>
+      <div className="pt-wrap">
+        <div className="hm-sechead"><div><span className="pt-kicker"><Icon name="star" size={14} /> {ar ? 'لماذا جاؤوا · سطور الدخول' : 'Why they came · entry lines'}</span><h2>{ar ? 'لماذا جاؤوا' : 'Why they came'}</h2><p className="hm-dailysub" data-testid="wy-head">{ar ? d.head_ar : `${d.people} learners from ${d.sections} sections wrote why they came — in their own languages, no names.`}</p></div><a className="hm-memlink" href="/miaar">{ar ? 'اختبار التسكين «مِعيار» ←' : 'Placement test →'}</a></div>
+        <ol className="wy-list" data-testid="wy-list">{d.items.map((it, i) => <li key={i} className={`wy-item ${i < shown ? 'in' : ''}`} data-testid="wy-item" data-script={it.script} dir={it.dir} lang="" onPointerDown={() => down(it, i)} onPointerUp={up} onPointerLeave={up} onContextMenu={(e) => { e.preventDefault(); copy(it, i); }} title={ar ? 'اضغط مطوّلًا لنسخ السطر' : 'Long-press to copy'}><p>{it.text}</p><span className="wy-script" dir="rtl">{it.script_ar}</span>{copied === i && <small className="wy-copied" dir="rtl">{ar ? 'نُسخ — «متعلّم في أَثَر»' : 'Copied'}</small>}</li>)}</ol>
+        <small className="wy-foot">{ar ? 'سطور كتبها متعلّمون يوم دخلوا برامجنا — بلغاتهم كما كتبوها، بلا أسماء. كتبوها بعد اختبار التسكين وقبل أن يعرفوا نتيجتهم، وأذِنوا بظهورها هنا، ولصاحب السطر أن يسحبه متى شاء. لا تدخل أي تقييم.' : 'Lines learners wrote the day they entered our programs — in their own languages, as written, no names. Written after the placement test and before knowing the result; each owner consented and may withdraw at any time. Never part of any assessment.'}</small>
+      </div>
+    </section>
+  );
+}
+
 /* P74 «سمعناكم» — سطور «ساعة أَثَر» المختومة من كل الشُّعب: يوم الأسبوع والسطر فقط؛ لا يظهر القسم دون 20 مشاركًا و5 شُعب */
 type HeardItem = { weekday_ar: string; day: string; line: string };
 type HeardData = { shown: boolean; items: HeardItem[]; head_ar: string; sections: number; people: number };
@@ -389,6 +411,7 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
 const CSS = `
 .hm-memory{background:linear-gradient(180deg,#f6f8fb,#eef5f4);padding:56px 0}.hm-memlink{font-size:13px;font-weight:800;color:#0b8a83;white-space:nowrap}
 .hm-threads{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.hm-why{background:linear-gradient(180deg,#fbfaf6,#f3f7f6);padding:52px 0;border-top:1px solid #e7e5e4}.wy-list{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:12px;max-width:760px}.wy-item{position:relative;background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px 20px 12px;opacity:0;transform:translateY(8px);transition:opacity .5s,transform .5s;user-select:none;cursor:default;box-shadow:0 1px 0 rgba(15,42,78,.04)}.wy-item.in{opacity:1;transform:none}.wy-item p{margin:0;font-size:19px;line-height:1.9;color:#0f2a4e;font-weight:700;white-space:pre-wrap;unicode-bidi:plaintext}.wy-item[dir=ltr] p{font-family:ui-serif,Georgia,'Times New Roman',serif;font-size:18px;line-height:1.7}.wy-script{display:block;margin-top:6px;font-size:11.5px;font-weight:800;color:#0b8a83;letter-spacing:.02em}.wy-item[dir=ltr] .wy-script{text-align:right}.wy-copied{position:absolute;inset-inline-end:14px;top:10px;font-size:11px;color:#0b8a83}.wy-foot{display:block;margin-top:16px;color:#64748b;font-size:12.5px;line-height:1.8;max-width:760px}
 .hm-heard{background:#0f2a4e;color:#f1f5f9;padding:56px 0}.hm-heard .hm-sechead h2{color:#fff}.hm-heard .hm-dailysub{color:#cbd5e1}.hm-heard .hm-memlink{color:#7dd3c7}.hd-foot{display:block;margin-top:16px;color:#94a3b8;font-size:12px;line-height:1.8}
 .hd-list{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:10px}.hd-item{display:grid;grid-template-columns:84px 1fr;gap:14px;align-items:start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px;opacity:0;transform:translateX(12px);transition:opacity .55s,transform .55s;user-select:none;cursor:default;position:relative}.hd-item.in{opacity:1;transform:none}
 .hd-day{font-size:12px;font-weight:900;color:#c9a24b;letter-spacing:.2px;padding-top:4px}.hd-item p{margin:0;font-size:17px;line-height:1.9;font-weight:800;color:#fff}.hd-copied{position:absolute;inset-inline-end:14px;top:10px;font-size:11px;color:#7dd3c7}@media(max-width:640px){.hd-item{grid-template-columns:1fr;gap:4px}}@media(max-width:820px){.hm-threads{grid-template-columns:1fr}}

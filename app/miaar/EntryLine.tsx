@@ -8,6 +8,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { ENTRY_LIMITS, entryPromptFor } from '../../lib/first/entry-pure';
+import { P75_NAMES_AR } from '../../lib/first/why'; /* P75 «لماذا جاؤوا»: إذن الظهور على الرئيسة */
 import { useAudioMeter, LevelBar, QualityNote } from '../components/AudioMeter'; /* P72-أ «ضبط الصوت» */
 import { qualityMeta, type TakeQuality } from '../../lib/portal/audio-meter';
 
@@ -18,7 +19,7 @@ const clock = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${S
 
 export default function EntryLine({ lang, post, onDone }: { lang: string; post: Post; onDone: () => void }) {
   const ar = lang === 'ar'; const L = entryPromptFor(ar ? 'ar' : 'en'); const E = ar ? ERR_AR : ERR_EN;
-  const [text, setText] = useState(''); const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [saved, setSaved] = useState(false);
+  const [text, setText] = useState(''); const [pubOk, setPubOk] = useState(true); /* P75: مفعَّلة للنصّ؛ تُحفظ مع السطر */ const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [saved, setSaved] = useState(false);
   const [phase, setPhase] = useState<'idle' | 'rec' | 'review'>('idle'); const [sec, setSec] = useState(0); const [blob, setBlob] = useState<Blob | null>(null); const [url, setUrl] = useState(''); const [noMic, setNoMic] = useState(false);
   const rec = useRef<MediaRecorder | null>(null); const chunks = useRef<Blob[]>([]); const stream = useRef<MediaStream | null>(null); const secRef = useRef(0); const tick = useRef<any>(null);
   const [canRecord, setCanRecord] = useState(false); const meter = useAudioMeter(); const [q, setQ] = useState<TakeQuality | null>(null);
@@ -43,7 +44,7 @@ export default function EntryLine({ lang, post, onDone }: { lang: string; post: 
 
   async function save() {
     if (busy) return; const body: any = { action: 'entry', lang: ar ? 'ar' : 'en' };
-    if (text.trim()) body.text = text.trim();
+    if (text.trim()) { body.text = text.trim(); body.public_ok = pubOk; } else body.public_ok = false; /* P75: الصوت لا يسافر */
     if (blob) { body.audio = await new Promise<string>((res) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result || '')); fr.readAsDataURL(blob); }); body.mime = blob.type; body.sec = secRef.current || sec; const qm = qualityMeta(q); if (qm) body.quality = qm; }
     if (!body.text && !body.audio) { setErr(E.empty); return; }
     setBusy(true); setErr(''); const r = await post(body); setBusy(false);
@@ -63,6 +64,7 @@ export default function EntryLine({ lang, post, onDone }: { lang: string; post: 
         {phase === 'rec' && <div className="rm-rec mi-why-rec" aria-live="polite"><span className="rm-dot" aria-hidden="true" /><b>{clock(sec)} / {clock(ENTRY_LIMITS.voiceSec)}</b><button type="button" className="mi-next" onClick={stopRec} data-testid="mi-why-stop">{ar ? 'أوقف' : 'Stop'}</button><LevelBar level={meter.level} lvl={meter.lvl} ar={ar} testid="mi-why" /></div>}
         {phase === 'review' && url && <div className="mi-why-review"><audio controls src={url} data-testid="mi-why-play" /><span className="mi-note">{clock(sec)}</span><button type="button" className="mi-link" onClick={redo} data-testid="mi-why-redo">{ar ? 'أعد التسجيل' : 'Record again'}</button><QualityNote q={q} ar={ar} testid="mi-why" /></div>}
       </div>}
+      {text.trim() && <label className="mi-why-pub" data-testid="mi-why-pub"><input type="checkbox" checked={pubOk} onChange={(e) => setPubOk(e.target.checked)} disabled={busy} /> <span>{ar ? P75_NAMES_AR.consent : P75_NAMES_AR.consent_en}</span></label>}
       {err && <p className="mi-alert" role="alert" data-testid="mi-why-err">{err}</p>}
       <div className="mi-actions mi-why-actions">
         <button type="button" className="mi-next" onClick={save} disabled={busy || (!text.trim() && !blob)} data-testid="mi-why-save">{busy ? '…' : L.save}</button>

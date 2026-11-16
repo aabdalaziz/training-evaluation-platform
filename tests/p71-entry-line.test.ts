@@ -34,7 +34,7 @@ const sess = (over: any = {}) => ({ id: 'sess-1', candidate: { email: 'Lina@Exam
 test('P71 الحدود والأسماء والنصوص', () => {
   assert.equal(ENTRY_LIMITS.textMax, 200); assert.equal(ENTRY_LIMITS.textMin, 3); assert.equal(ENTRY_LIMITS.voiceSec, 20); assert.equal(ENTRY_LIMITS.k, 5); assert.equal(ENTRY_LIMITS.show, 3); assert.equal(ENTRY_LIMITS.bucket, 'athar-media'); assert.equal(ENTRY_LIMITS.prefix, 'entry-voice');
   assert.equal(ENTRY_NAMES.ar.narrative, 'يوم دخلتُ'); assert.match(ENTRY_NAMES.ar.official, /سطر الدخول — بكلمات المتعلّم يوم التسكين/); assert.match(ENTRY_NAMES.en.official, /Entry Line/); assert.equal(ENTRY_NAMES.ar.echo, 'قالوا يوم دخلوا');
-  assert.match(ENTRY_COLS, /^id,email,session_id,report_id,user_id,invite_id,lang,body_text,voice,created_at,updated_at$/);
+  assert.match(ENTRY_COLS, /^id,email,session_id,report_id,user_id,invite_id,lang,body_text,voice,created_at,updated_at,public_ok$/); /* P75 +public_ok */
   const ar = entryPromptFor('ar'); const en = entryPromptFor('en');
   assert.match(ar.lead, /لماذا تتعلّم العربية/); assert.match(ar.lead, /لا يراه المصحّح/); assert.match(ar.title, /قبل أن تعرف نتيجتك/); assert.equal(ar.skip, 'أتجاوز الآن');
   assert.match(en.lead, /Why are you learning Arabic/); assert.match(en.lead, /rater never sees it/); assert.equal(en.skip, 'Skip for now');
@@ -97,7 +97,7 @@ test('P71 صدى الشعبة: يقرأ بأبرِدة القيود فقط · k 
   const rows = ['a@x', 'b@x', 'c@x', 'd@x', 'e@x', 'f@x'].map((email, i) => ({ id: i, email, body_text: `reason number ${i}`, session_id: `s${i}` }));
   const db = fakeDb({ portal_entry_lines: rows.concat([{ id: 9, email: 'z@x', body_text: 'outsider', session_id: 's9' }]) });
   const e = await sectionEntry(db as any, ['A@x', 'b@x', 'c@x', 'd@x', 'e@x', 'f@x'], 10, 'seed'); assert.equal(e.shown, true); assert.equal(e.n, 6); assert.ok(!e.lines.includes('outsider')); assert.ok(!JSON.stringify(e).includes('@x'), 'لا بريد في الصدى');
-  const small = await sectionEntry(db as any, ['a@x', 'b@x'], 2, 'seed'); assert.deepEqual(small, { shown: false, n: 0, head_ar: null, lines: [] });
+  const small = await sectionEntry(db as any, ['a@x', 'b@x'], 2, 'seed'); assert.deepEqual(small, { shown: false, n: 0, head_ar: null, lines: [], items: [] }); /* P75 +items */
 });
 
 test('P71 البطاقات: P70 entry_line (المستوى الأول · خاصّة لا عامة) · P63 entry أولًا · لا تدخل الوجه العام', () => {

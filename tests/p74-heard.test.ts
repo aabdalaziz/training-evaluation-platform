@@ -76,7 +76,7 @@ test('P74 · شكل المصدر: صفر جداول · الرئيسة تحمل h
   assert.ok(store.includes("const meta = { ...(row.meta || {}), voice:") && store.includes('invalidateHeardCache'), 'الصوت في meta الختم');
   assert.ok(!store.includes("from('portal_hour_voices')") && !heard.includes("from('"), 'لا جدول جديد');
   assert.ok(route.includes("multipart/form-data") && route.includes("'voice_delete'") && route.includes("'seal_public'") && route.includes("userFlag(db, me.id, 'voice_off'"), 'المسارات الثلاثة وسياسة voice_off');
-  assert.ok(home.includes('heardThread') && home.includes('heard }'), 'الرئيسة تحمل heard');
+  assert.ok(home.includes('heardThread') && home.includes('heard, why }'), 'الرئيسة تحمل heard (وP75 why)');
   assert.ok(!heard.includes('voice_url') && !/HeardItem = \{[^}]*voice/.test(heard), 'الخيط العام بلا صوت');
   assert.ok(page.includes('data-testid="hd-section"') && page.includes('id="heard"') && page.includes('— شعبة في أَثَر') && !page.includes('hd-voice') && !page.includes('<audio') , 'القسم بلا صوت وبنسخ طويل');
   assert.ok(room.includes('hr-voice-consent') && room.includes('P74_NAMES_AR.consent') && room.includes('hr-seal-public') && room.includes("action: 'seal', public: pub"), 'الموافقة الصريحة وخانة الأستاذ');

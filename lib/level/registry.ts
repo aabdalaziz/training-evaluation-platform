@@ -38,7 +38,7 @@ export const PUBLIC_AR: Record<PublicKey, string> = {
   line: 'سطر المستوى', counts: 'الأعداد (بلا تفاصيل)', name: 'اسمي', crossed: '«عبرتُ» (بالمستويات لا الأرقام)', prev_line: 'كلمتي من المستوى السابق', commits: 'التزاماتي وما أوفيتُ به', day_lines: 'سطور أيامي',
 };
 
-export type Card = { key: CardKey; title_ar: string; text_ar: string | null; at: string | null; items?: { text_ar: string; at: string; state_ar?: string | null }[]; href?: string | null; voice_sec?: number | null; state_ar?: string | null };
+export type Card = { key: CardKey; title_ar: string; text_ar: string | null; at: string | null; items?: { text_ar: string; at: string; state_ar?: string | null }[]; href?: string | null; voice_sec?: number | null; state_ar?: string | null; public_ok?: boolean /* P75: entry_line فقط — إذن الظهور على الرئيسة */ };
 export type Counts = { day_lines: number; apply_lines: number; commits: number; commits_done: number; training_days: number; apply_weeks: number };
 
 /* ───────── النافذة والمرحلة ───────── */
@@ -92,7 +92,7 @@ export type Sources = {
   lines: LineSrc[];
   prev_line: { line_ar: string; level_no: number; sealed_at: string } | null;
   first_why: { id: number; body_ar: string | null; at: string; state: 'sealed' | 'today' | 'ready' | 'opened'; opens_ar: string } | null;
-  entry_line?: { text: string | null; lang: string; voice_sec: number | null; at: string } | null; /* P71: المستوى الأول فقط — بلغته كما كتبه */
+  entry_line?: { text: string | null; lang: string; voice_sec: number | null; at: string; public_ok?: boolean } | null; /* P71: المستوى الأول فقط — بلغته كما كتبه */
   exam: ExamSource | null;
   training_days: number;
 };
@@ -101,7 +101,7 @@ export function buildCards(src: Sources, w: { from_day: string; to_day: string }
   const learn = inW.filter((l) => l.kind === 'learn' && l.body_ar.trim()); const apply = inW.filter((l) => l.kind === 'apply' && l.body_ar.trim()); const commits = inW.filter((l) => l.kind === 'commit' && l.body_ar.trim());
   const cards: Card[] = [];
   if (src.prev_line) cards.push({ key: 'prev_line', title_ar: CARD_AR.prev_line, text_ar: src.prev_line.line_ar, at: src.prev_line.sealed_at, state_ar: `المستوى ${src.prev_line.level_no}` });
-  if (src.entry_line && (src.entry_line.text || src.entry_line.voice_sec)) cards.push({ key: 'entry_line', title_ar: CARD_AR.entry_line, text_ar: src.entry_line.text, at: src.entry_line.at, voice_sec: src.entry_line.voice_sec, state_ar: src.entry_line.text ? null : 'بصوتك — تسمعه في «أول يوم»' });
+  if (src.entry_line && (src.entry_line.text || src.entry_line.voice_sec)) cards.push({ key: 'entry_line', title_ar: CARD_AR.entry_line, text_ar: src.entry_line.text, at: src.entry_line.at, voice_sec: src.entry_line.voice_sec, public_ok: src.entry_line.public_ok === true, state_ar: src.entry_line.text ? null : 'بصوتك — تسمعه في «أول يوم»' });
   if (src.first_why) cards.push({ key: 'first_why', title_ar: CARD_AR.first_why, text_ar: src.first_why.state === 'opened' ? src.first_why.body_ar : null, at: src.first_why.at, href: `/me/letter#letter-${src.first_why.id}`, state_ar: src.first_why.state === 'opened' ? null : `مختومة — تُفتح لك يوم تخرّجك (${src.first_why.opens_ar})` });
   if (learn.length) cards.push({ key: 'day_lines', title_ar: CARD_AR.day_lines, text_ar: null, at: learn[0].day, items: learn.slice(-LEVEL_LIMITS.dayLinesMax).map((l) => ({ text_ar: l.body_ar, at: l.day, state_ar: l.unit_id ? 'قبل أن أغادر' : null })) });
   if (apply.length) cards.push({ key: 'apply_lines', title_ar: CARD_AR.apply_lines, text_ar: null, at: apply[0].day, items: apply.slice(-LEVEL_LIMITS.applyMax).map((l) => ({ text_ar: l.blocker_ar ? `${l.body_ar} — وما عاقني: ${l.blocker_ar}` : l.body_ar, at: l.day, state_ar: l.week_no ? `الأسبوع ${l.week_no}` : null })) });

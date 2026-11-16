@@ -95,7 +95,7 @@ export async function loadSources(db: Db, me: Me, it: Pick<LevelItem, 'program_i
     lines: lines.map(toLine).filter((l) => l.kind === 'learn' || l.kind === 'apply' || l.kind === 'commit' || l.kind === 'carry' || l.kind === 'hour_line' /* P73 */).map((l) => (l.kind === 'hour_line' ? { ...l, chosen: chosenHourDays.has(l.day) } : l)),
     prev_line: prev && prev.line_ar && prev.sealed_at && !prev.revoked_at ? { line_ar: String(prev.line_ar), level_no: Number(prev.level_no), sealed_at: String(prev.sealed_at) } : null,
     first_why: firstWhy ? { id: Number(firstWhy.id), body_ar: firstWhy.opened_at ? String(firstWhy.body_ar || '') : null, at: String(firstWhy.created_at), state: letterState(firstWhy, now).state, opens_ar: fmtIsoAr(firstWhy.deliver_at) } : null,
-    entry_line: entryRow ? { text: entryRow.body_text || null, lang: String(entryRow.lang || 'ar'), voice_sec: (entryRow.voice as any)?.sec ? Number((entryRow.voice as any).sec) : null, at: String(entryRow.created_at) } : null,
+    entry_line: entryRow ? { text: entryRow.body_text || null, lang: String(entryRow.lang || 'ar'), voice_sec: (entryRow.voice as any)?.sec ? Number((entryRow.voice as any).sec) : null, at: String(entryRow.created_at), public_ok: (entryRow as any).public_ok === true /* P75 */ } : null,
     exam, training_days: days,
   };
 }

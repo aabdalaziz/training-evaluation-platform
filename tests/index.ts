@@ -138,4 +138,5 @@ import './p71-entry-line.test'; /* P71 «يوم دخلتُ» — سطر الدخ
 import './p72-sound.test'; /* P72 «ضبط الصوت» في جهاز المتعلّم + «أول محاضرة» في الممرّ */
 import './p73-hour.test'; /* P73 «ساعة أَثَر» — لقاء التأمل الأسبوعي للشعبة */
 import './p74-heard.test'; /* P74 «سمعناكم» + «بصوتِ واحدٍ منّا» */
+import './p75-why.test'; /* P75 «لماذا جاؤوا» */
 import './domain.test'; /* النطاق الرسمي athar-portal.com (2026-11-15): الافتراضيات · المُرسِل · robots/sitemap */

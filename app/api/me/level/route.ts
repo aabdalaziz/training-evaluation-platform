@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
 import { loadLevelPage, learnerEchoView, saveLine, setKeep, setPublic, sealLevel, revokeLevel, deleteLevel } from '../../../../lib/level/store';
+import { setEntryPublic } from '../../../../lib/first/entry'; /* P75 */
 import { P70_NAMES_AR, LEVEL_LIMITS, LEVEL_FOOT_AR, LINE_PROMPT_AR, CARD_AR, PUBLIC_AR, PUBLIC_KEYS } from '../../../../lib/level/registry';
 import { freezeGate } from '../../../../lib/shield/freeze';
 
@@ -54,6 +55,7 @@ export async function POST(req: Request) {
   const action = String(body.action || ''); const now = new Date(); const key = String(body.level || ''); if (!key) return bad('حدّد المستوى');
   const rl = await rateLimit(db, `level:${user.id}`, 3600, 30); if (!rl.allowed) return tooMany(rl);
   if (action === 'line') { const r = await saveLine(db, user, key, { line_ar: body.line_ar }, now); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action: 'line', level: key }); return NextResponse.json({ success: true, message: 'حُفظ سطر مستواك — بكلماتك.', ...(await payload(db, user, key, now)) }, { headers: NO }); }
+  if (action === 'entry_public') { /* P75 «لماذا جاؤوا»: إذن صاحب سطر الدخول (نصّ فقط) من صفحة المستوى */ const r = await setEntryPublic(db, user.email, body.on === true, user.id); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action: 'entry_public', public_ok: r.public_ok }); return NextResponse.json({ success: true, public_ok: r.public_ok, message: r.public_ok ? 'يجوز أن يظهر سطرك على الرئيسة — بلا اسمك ولا برنامجك.' : 'سُحب الإذن — سطرك لك وحدك.', ...(await payload(db, user, key, now)) }, { headers: NO }); }
   if (action === 'keep') { const r = await setKeep(db, user, key, String(body.key || ''), body.on !== false, now); if (!r.ok) return bad(r.error, r.status); return NextResponse.json({ success: true, keep: r.keep, ...(await payload(db, user, key, now)) }, { headers: NO }); }
   if (action === 'public') { const r = await setPublic(db, user, key, { public_keys: body.public_keys, live_public: body.live_public }, now); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action: 'public', level: key, live: r.live_public, keys: r.public_keys }); return NextResponse.json({ success: true, message: r.live_public ? 'فُتح الوجه العام بما اخترتَه أنت.' : 'الوجه العام مغلق — صفحتك لك وحدك.', ...(await payload(db, user, key, now)) }, { headers: NO }); }
   if (action === 'seal') { const r = await sealLevel(db, user, key, now); if (!r.ok) return bad(r.error, r.status); await audit(db, user, { action: 'seal', level: key, code: r.code }); return NextResponse.json({ success: true, code: r.code, digest: r.digest, message: `خُتمت صفحة مستواك — رمزها ${r.code}. كلمتك تعبر معك.`, ...(await payload(db, user, key, now)) }, { headers: NO }); }
