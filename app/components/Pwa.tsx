@@ -59,7 +59,7 @@ export function PushOptIn({ lang, tok, compact, topics, extra, labels, testid, c
   const cls = className || (compact ? 'pt-btn ghost small' : 'pt-btn light small');
   return (
     <span className="pw-wrap" style={{ display: 'inline-flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-      {st === 'ios_install' && <small style={{ color: '#64748b', fontSize: 12 }}>{ar ? 'على iPhone: أضف أَثَر إلى الشاشة الرئيسية (مشاركة ← إضافة إلى الشاشة الرئيسية) ثم فعّل التذكير.' : 'On iPhone: add Athar to Home Screen first, then enable reminders.'}</small>}
+      {st === 'ios_install' && <small style={{ color: '#64748b', fontSize: 12 }}>{ar ? 'على iPhone: أضف أَثَر إلى الشاشة الرئيسة (مشاركة ← إضافة إلى الشاشة الرئيسة) ثم فعّل التذكير.' : 'On iPhone: add Athar to Home Screen first, then enable reminders.'}</small>}
       {st === 'denied' && <small style={{ color: '#64748b', fontSize: 12 }}>{ar ? 'الإشعارات محظورة في المتصفح — اسمح بها من إعدادات الموقع ثم أعد المحاولة.' : 'Notifications are blocked — allow them in site settings and retry.'}</small>}
       {(st === 'idle' || st === 'busy') && <button type="button" className={cls} disabled={st === 'busy'} onClick={enable} data-testid={testid || 'push-optin'}>🔔 {st === 'busy' ? (ar ? 'لحظة…' : 'One moment…') : (labels?.idle || (ar ? 'ذكّرني بموقف الغد' : 'Remind me of tomorrow’s case'))}</button>}
       {st === 'on' && <button type="button" className={cls} onClick={disable} title={ar ? 'إيقاف الإشعارات على هذا الجهاز' : 'Turn off on this device'} data-testid={(testid || 'push-optin') + '-on'}>🔔 {labels?.on || (ar ? 'التذكير اليومي مفعّل — إيقاف' : 'Daily reminder on — turn off')}</button>}

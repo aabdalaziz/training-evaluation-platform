@@ -48,7 +48,7 @@ function Inner() {
           <p className="pt-muted">الاطّلاع والنسخ والتصحيح والمحو من صفحة <Link href="/me/data">ذاكرتي</Link> بلا طلب ورقي؛ «مَن نظر إلى بياناتي؟» تُجيبك هناك عن كل فتح لملفّك من الطاقم. الإشعار الكامل في <Link href="/privacy">/privacy</Link>، والصيغة الآلية في <a href="/.well-known/privacy.json">privacy.json</a>، وحالة الدرع في <Link href="/security">/security</Link>.</p>
         </section>
       </>}
-      <p className="pt-muted no-print" style={{ marginTop: 14 }}><Link href="/privacy">← الخصوصية</Link> · <Link href="/security">درع أَثَر</Link> · <Link href="/">الرئيسية</Link></p>
+      <p className="pt-muted no-print" style={{ marginTop: 14 }}><Link href="/privacy">← الخصوصية</Link> · <Link href="/security">درع أَثَر</Link> · <Link href="/">الرئيسة</Link></p>
     </section>
   </main>;
 }

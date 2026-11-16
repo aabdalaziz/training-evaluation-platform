@@ -73,7 +73,7 @@ function Inner() {
   return (
     <main className="pt-main lv">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</span></div>
         <h1>{lang === 'ar' ? 'التعلّم المباشر والهجين' : 'Live & Hybrid Learning'}</h1>
         <p>{lang === 'ar' ? 'جلسات الشعب، الندوات العامة، وورش العمل — عبر Teams وZoom وMeet وقاعة أَثَر، مع حضور رقمي وتسجيلات لاحقة وكل جلسة موسومة بالمهارات التي تنمّيها.' : 'Class sessions, public webinars and workshops — on Teams, Zoom, Meet and Athar Room, with digital attendance, recordings and skill tagging.'}</p>
         {now && <div className="lv-kpis"><span><b>{rows.filter(r => timeState(r, n) === 'live').length}</b> {lang === 'ar' ? 'مباشر الآن' : 'live now'}</span><span><b>{rows.filter(r => timeState(r, n) === 'upcoming' || timeState(r, n) === 'soon').length}</b> {lang === 'ar' ? 'جلسة قادمة' : 'upcoming'}</span><span><b>{rows.filter(r => r.access === 'public').length}</b> {lang === 'ar' ? 'ندوة عامة' : 'public'}</span>{user && <span><b>{mine.size}</b> {lang === 'ar' ? 'جلساتي' : 'my sessions'}</span>}</div>}

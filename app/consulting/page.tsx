@@ -58,7 +58,7 @@ function Inner() {
   return (
     <main className="pt-main">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{lang === 'ar' ? 'الاستشارات' : 'Consulting'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{lang === 'ar' ? 'الاستشارات' : 'Consulting'}</span></div>
         <h1>{lang === 'ar' ? 'الاستشارات' : 'Consulting'}</h1>
         <p>{lang === 'ar' ? 'نرافق المؤسسات من التشخيص إلى التحسين — بعرض سعر واضح، وتنفيذ على مراحل، وقياس للأثر.' : 'We accompany institutions from diagnosis to improvement — with a clear proposal, staged delivery and impact measurement.'}</p>
         <div className="pt-heroacts" style={{ marginTop: 14 }}><a href="#request" className="pt-btn gold"><Icon name="send" size={16} /> {lang === 'ar' ? 'اطلب استشارة' : 'Request a consultation'}</a>{user && mine.length > 0 && <a href="#mine" className="pt-btn light">{lang === 'ar' ? `طلباتي (${mine.length})` : `My requests (${mine.length})`}</a>}</div>

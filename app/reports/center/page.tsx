@@ -196,7 +196,7 @@ function ReportsCenter() {
     const slides: PptSlide[] = [];
     slides.push({ title, subtitle: scopeText, bullets: [`${ar ? 'الجمهور' : 'Audience'}: ${report.audience[lang]}`, `${ar ? 'تاريخ الإعداد' : 'Generated'}: ${today} · Asia/Riyadh`, ar ? 'منصة تقويم البرامج التدريبية — النتائج مجمّعة ولا تعرض هوية المشاركين' : 'Training Evaluation Platform — aggregated, anonymous results'] });
     if (k.responses) {
-      slides.push({ title: ar ? 'المؤشرات الرئيسية' : 'Key indicators', bullets: [
+      slides.push({ title: ar ? 'المؤشرات الرئيسة' : 'Key indicators', bullets: [
         `${ar ? 'المتوسط العام' : 'Overall mean'}: ${k.mean.toFixed(2)}/5 — ${ar ? 'الهدف' : 'target'} ${TARGET} (${ar ? 'الفجوة' : 'gap'} ${(k.mean - TARGET).toFixed(2)})`,
         `${ar ? 'الاستجابات' : 'Responses'}: ${k.responses} — ${ar ? 'المشاركون' : 'participants'}: ${k.participants}`,
         `${ar ? 'رضا مرتفع (4–5)' : 'High (4–5)'}: ${k.highPct.toFixed(0)}% — ${ar ? 'منخفض (1–2)' : 'low (1–2)'}: ${k.lowPct.toFixed(0)}%`,

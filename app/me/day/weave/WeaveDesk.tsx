@@ -46,7 +46,7 @@ export default function WeaveDesk() {
 
   return (
     <main className="wv" dir="rtl" data-testid="wv-root"><style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <nav className="wv-nav" aria-label="تنقّل"><Link href="/me/day" className="wv-link"><Icon name="arrow" size={14} /> دفتر اليوم</Link><Link href="/me" className="wv-link">مساحتي</Link><Link href="/" className="wv-link"><Icon name="home" size={14} /> الرئيسية</Link></nav>
+      <nav className="wv-nav" aria-label="تنقّل"><Link href="/me/day" className="wv-link"><Icon name="arrow" size={14} /> دفتر اليوم</Link><Link href="/me" className="wv-link">مساحتي</Link><Link href="/" className="wv-link"><Icon name="home" size={14} /> الرئيسة</Link></nav>
       <header className="wv-head"><span className="pt-kicker"><Icon name="spark" size={14} /> {d?.official.ar || 'خريطة الأثر المجمَّعة للشعبة'}</span><h1>نسيج الشعبة <small>ما نسجه متعلّموك معًا</small></h1>
         <p>في «خريطة أثرك» يقول كلُّ متعلّم بنفسه ما قاد إلى ماذا. هنا ترى ما قالوه <b>معًا</b> — بلا أسماء: الخيوط التي نسجها خمسةٌ فأكثر تظهر سميكةً بعددهم، والخيوط التي اقترحناها لكثيرين ولم يأخذها أحد تظهر منقّطة. كلمة «لأن…» لا تصلك إلا بإذن صاحبها.</p></header>
       {tok === '' && <section className="pt-box"><p>سجّل الدخول. <Link href="/login?next=/me/day/weave">تسجيل الدخول</Link></p></section>}

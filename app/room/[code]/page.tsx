@@ -88,7 +88,7 @@ function Inner() {
     <main className="pt-main rm">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="pt-wrap">
-        <nav className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> › {room?.kind === 'rehearsal' ? <Link href="/me/rehearsal">{ar ? 'بروفاتي' : 'My rehearsals'}</Link> : <Link href="/#dialogue">{ar ? 'جلسة حوار' : 'Dialogue'}</Link>} › <span>{ar ? 'غرفة أَثَر' : 'Athar room'}</span></nav>
+        <nav className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> › {room?.kind === 'rehearsal' ? <Link href="/me/rehearsal">{ar ? 'بروفاتي' : 'My rehearsals'}</Link> : <Link href="/#dialogue">{ar ? 'جلسة حوار' : 'Dialogue'}</Link>} › <span>{ar ? 'غرفة أَثَر' : 'Athar room'}</span></nav>
         {err === 'login' && <div className="pt-box pt-empty"><h3>{ar ? 'سجّل الدخول للانضمام إلى الغرفة' : 'Sign in to join the room'}</h3><Link href={`/me?next=/room/${code}`} className="pt-btn gold">{ar ? 'دخول' : 'Sign in'}</Link></div>}
         {err && err !== 'login' && err !== 'x' && <div className="pt-alert err">{err}</div>}
         {err === 'x' && !room && <div className="pt-box pt-empty">{ar ? 'الغرفة غير موجودة أو انتهت.' : 'Room not found or expired.'}</div>}

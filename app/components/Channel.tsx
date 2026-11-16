@@ -98,7 +98,7 @@ export function Channel({ lang, value, onChange, placeholder, rows = 6, maxLengt
       )}
       {mode === 'video' && (
         <div className="ch-video">
-          {!canCam ? <small className="ch-note">{ar ? 'التسجيل بالكاميرا غير متاح هنا (iPhone: Safari 14.5+ أو أضف الموقع إلى الشاشة الرئيسية).' : 'Camera recording is not available here (iPhone: Safari 14.5+ or add to Home Screen).'}</small> : (
+          {!canCam ? <small className="ch-note">{ar ? 'التسجيل بالكاميرا غير متاح هنا (iPhone: Safari 14.5+ أو أضف الموقع إلى الشاشة الرئيسة).' : 'Camera recording is not available here (iPhone: Safari 14.5+ or add to Home Screen).'}</small> : (
             <>
               <div className={`ch-stage ${rec}`}>
                 <video ref={videoRef} playsInline autoPlay controls={rec === 'done'} />

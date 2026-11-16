@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /login — صفحة الدخول الموحّدة (P42-أ)
- *  رابط سحري (افتراضي) أو كلمة مرور → بعد الدخول: ?next=… إن وُجد وإلا /hub (صفحتك الرئيسية حسب دورك)
+ *  رابط سحري (افتراضي) أو كلمة مرور → بعد الدخول: ?next=… إن وُجد وإلا /hub (صفحتك الرئيسة حسب دورك)
  */
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';

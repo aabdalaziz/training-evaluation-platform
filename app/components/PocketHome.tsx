@@ -62,7 +62,7 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
       <div className="card" data-testid="local-daily">
         <h3><Icon name="compass" size={18} /> موقف اليوم — من جهازك</h3>
         {!daily && <p className="muted">…</p>}
-        {daily && !dc && <p className="muted">لا نسخة محلية من موقف اليوم. افتح الصفحة الرئيسية مرة مع اتصال.</p>}
+        {daily && !dc && <p className="muted">لا نسخة محلية من موقف اليوم. افتح الصفحة الرئيسة مرة مع اتصال.</p>}
         {dc && <>
           <p className="muted">{dc.day} · {daily?.stale ? `نسخة محلية (${offlineLine(daily.cachedAt, ob.online)})` : 'حيّ'}</p>
           <div style={{ fontWeight: 700, color: '#0f2a4e', marginBottom: 6 }}>{dc.case?.title_ar}</div>
@@ -84,7 +84,7 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
         <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>{ob.count > 0 && <button className="b g" onClick={() => ob.sync()} disabled={!ob.online || ob.syncing} data-testid="outbox-sync">{ob.syncing ? 'جارٍ الإرسال…' : ob.online ? 'أرسل الآن' : 'بانتظار الاتصال'}</button>}<Link href="/share" className="b x" style={{ textDecoration: 'none' }}>أضف صورة/تسجيلًا كدليل</Link></div>
         {ob.lastReport && <p className="muted" data-testid="outbox-report">{ob.lastReport}</p>}
       </div>
-      {!compact && <p className="muted" style={{ textAlign: 'center' }}>الأدلة تُشفَّر على جهازك بمفتاح لا يغادره، وتُمسح عند تسجيل الخروج. <Link href="/">الصفحة الرئيسية</Link></p>}
+      {!compact && <p className="muted" style={{ textAlign: 'center' }}>الأدلة تُشفَّر على جهازك بمفتاح لا يغادره، وتُمسح عند تسجيل الخروج. <Link href="/">الصفحة الرئيسة</Link></p>}
     </div>
   );
 }

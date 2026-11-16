@@ -73,7 +73,7 @@ export default function GlobalNavigation() {
       <Link href="/" className="global-brand athar" data-testid="public-brand"><AtharMark size={26} /> <span>{BRAND.name.ar}</span></Link>
       <div className="global-actions">
         <GuideButton />
-        {pathname !== '/' && <Link href="/" className="global-btn"><Icon name="home" size={16} /> الرئيسية</Link>}
+        {pathname !== '/' && <Link href="/" className="global-btn"><Icon name="home" size={16} /> الرئيسة</Link>}
         {loggedIn ? <>
           <Link href={HALL} className="global-btn"><Icon name="compass" size={16} /> صفحاتي</Link>
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>

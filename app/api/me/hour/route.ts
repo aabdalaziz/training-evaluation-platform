@@ -10,7 +10,7 @@
  *  POST { action:'line',  classroom_id, text }         (المتدرّب) سطر مقترَح ≤ 120
  *  POST { action:'vote',  classroom_id, line_id }      (المتدرّب) صوت واحد لسطر غيري (يُبدَّل)
  *  POST { action:'seal',  classroom_id }               (الأستاذ) ختم الساعة — الأعلى أصواتًا، والتعادل للأقصر
- *  POST { action:'seal',  classroom_id, public? }      (الأستاذ) public=false يُخرج سطر هذه الساعة من «سمعناكم» على الرئيسية (P74)
+ *  POST { action:'seal',  classroom_id, public? }      (الأستاذ) public=false يُخرج سطر هذه الساعة من «سمعناكم» على الرئيسة (P74)
  *  POST { action:'seal_public', classroom_id, seal_id, public } (الأستاذ) تبديل الظهور بعد الختم
  *  POST multipart { classroom_id, seal_id, duration_sec, file } (المتدرّب) «بصوتِ واحدٍ منّا» — قراءة ≤ 15 ث لسطر الشعبة المختوم (P74)
  *  POST { action:'voice_delete', classroom_id, seal_id } (صاحب الصوت أو الأستاذ) حذف فوري

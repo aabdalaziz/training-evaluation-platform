@@ -75,7 +75,7 @@ export default function AtharMapDesk() {
 
   return (
     <main className="am" dir="rtl" data-testid="am-root"><style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <nav className="am-nav" aria-label="تنقّل"><Link href="/me" className="am-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/journey" className="am-link"><Icon name="compass" size={14} /> رحلتي</Link><Link href="/" className="am-link"><Icon name="home" size={14} /> الرئيسية</Link></nav>
+      <nav className="am-nav" aria-label="تنقّل"><Link href="/me" className="am-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/journey" className="am-link"><Icon name="compass" size={14} /> رحلتي</Link><Link href="/" className="am-link"><Icon name="home" size={14} /> الرئيسة</Link></nav>
       <header className="am-head"><span className="pt-kicker"><Icon name="spark" size={14} /> {d?.official.ar || 'خريطة الأثر الذاتية للمتعلّم'}</span><h1>خريطة أثرك <small>ما قاد إلى ماذا</small></h1>
         <p>ليست خريطةَ مهارات ولا تقريرًا. كلُّ نجمة هنا محطةٌ وقعت فعلًا، وكلُّ خيطٍ بينها <b>كلمتُك أنت</b>: نقترح عليك خيطًا حين يقع حدث بعد حدث، فتقول «نعم — لأن…» أو «ليس خيطًا». لا أسماء أشخاص هنا، ولا يدخل شيء منها في أي تقييم.</p></header>
       {tok === '' && <section className="pt-box"><p>سجّل الدخول لفتح خريطتك. <Link href="/login?next=/me/athar-map">تسجيل الدخول</Link></p></section>}

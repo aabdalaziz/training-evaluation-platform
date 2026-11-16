@@ -12,7 +12,7 @@ function Inner() {
   return (
     <main className="pt-main">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <span>{t(UI.services, lang)}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <span>{t(UI.services, lang)}</span></div>
         <h1>{t(UI.services, lang)}</h1><p>{t(UI.servicesSub, lang)}</p>
       </div></section>
       <section className="pt-sec"><div className="pt-wrap">

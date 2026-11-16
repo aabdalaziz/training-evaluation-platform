@@ -32,7 +32,7 @@ function Inner() {
 
   return (
     <main className="pt-main cv">
-      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> / <span>{ar ? 'الشهادة الحية' : 'Living credential'}</span></div><h1>{ar ? 'الشهادة الحية' : 'Living Credential'}</h1><p>{ar ? 'ليست وثيقة جامدة: هذا عنوان دائم يعرض حالة الشهادة ومستوى صاحبها الآن وطزاجة مهاراته وسلسلة أدلته — ويمكن لجهة العمل الاشتراك فيه.' : 'Not a frozen document: a permanent address showing the credential status, the holder’s current level, skill freshness and evidence chain — employers can subscribe.'}</p></div></section>
+      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <span>{ar ? 'الشهادة الحية' : 'Living credential'}</span></div><h1>{ar ? 'الشهادة الحية' : 'Living Credential'}</h1><p>{ar ? 'ليست وثيقة جامدة: هذا عنوان دائم يعرض حالة الشهادة ومستوى صاحبها الآن وطزاجة مهاراته وسلسلة أدلته — ويمكن لجهة العمل الاشتراك فيه.' : 'Not a frozen document: a permanent address showing the credential status, the holder’s current level, skill freshness and evidence chain — employers can subscribe.'}</p></div></section>
       <section className="pt-sec"><div className="pt-wrap" style={{ maxWidth: 860 }}>
         {!v && <div className="pt-empty">…</div>}
         {msg && <div className="pt-alert ok" style={{ marginBottom: 12 }}>{msg}</div>}

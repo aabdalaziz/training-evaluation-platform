@@ -43,7 +43,7 @@ function Inner() {
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 6 }}>{r.body.threads.map((t: any) => { const a = r.body.stations.find((s: any) => s.key === t.from); const b = r.body.stations.find((s: any) => s.key === t.to); return <li key={`${t.from}>${t.to}`} style={{ border: '1px solid #fde68a', background: '#fffbeb', borderRadius: 12, padding: '8px 12px', fontSize: 14, lineHeight: 1.8 }}><span style={{ fontSize: 11, color: '#0e7490', fontWeight: 800 }}>{r.rules?.[t.rule]?.title}</span><br /><b>{a?.title_ar}</b> ⟵ <b>{b?.title_ar}</b><br /><span style={{ color: '#7c2d12', fontWeight: 800 }}>«لأن {t.note_ar}»</span></li>; })}</ul>
         </div>}
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}>اللقطة يكتبها المتعلّم بنفسه من محطات وقعت فعلًا؛ تُثبت البصمة أنها لم تتغيّر، ولا تُثبت تقييمًا ولا مستوى. <Link href="/">الرئيسية</Link> · <Link href="/verify/letter">تحقّق من رسالة الشهر</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}>اللقطة يكتبها المتعلّم بنفسه من محطات وقعت فعلًا؛ تُثبت البصمة أنها لم تتغيّر، ولا تُثبت تقييمًا ولا مستوى. <Link href="/">الرئيسة</Link> · <Link href="/verify/letter">تحقّق من رسالة الشهر</Link></p>
     </section>
   </main>;
 }

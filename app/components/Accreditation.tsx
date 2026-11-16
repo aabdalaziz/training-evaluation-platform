@@ -150,7 +150,7 @@ export function AccredVerify({ code }: { code: string }) {
         <div className="ac-kpis"><span className="b"><b>{d.met}</b>/{d.total} <small>معيارًا فرعيًّا مستوفى</small></span><span><b>{d.pct}%</b> <small>التغطية</small></span><span><b>{(d.narratives || []).length}</b> <small>فقرة موقَّعة</small></span><span><b>{(d.timeline || []).length}</b> <small>دليلًا</small></span>{d.ageing_n > 0 && <span><b>{d.ageing_n}</b> <small>{P48B_NAMES_AR.ageing}</small></span>}<span className={d.eligible ? 'b' : ''}><small>{d.eligible ? 'شروط التأهّل متحقّقة' : 'شروط التأهّل غير مكتملة (مُعلَنة)'}</small></span></div>
         {d.note_ar && <blockquote className="ac-note" data-testid="ac-verify-note"><b>{P48B_NAMES_AR.note}:</b> «{d.note_ar}»</blockquote>}
         {d.weave_ar && <p className="ac-weave-line" data-testid="ac-verify-weave">🧶 <b>{P61_NAMES_AR.title}</b> (كما كان عند الختم): {d.weave_ar} — بأيدي المتدرّبين، بلا أسماء، خمسة فأكثر.</p>}
-        <div className="ac-row no-print"><button type="button" className="pt-btn ghost small" onClick={() => window.print()} data-testid="ac-verify-print"><Icon name="print" size={14} /> طباعة / {P48B_NAMES_AR.delivery}</button><Link href="/" className="pt-btn ghost small"><Icon name="home" size={14} /> الرئيسية</Link></div>
+        <div className="ac-row no-print"><button type="button" className="pt-btn ghost small" onClick={() => window.print()} data-testid="ac-verify-print"><Icon name="print" size={14} /> طباعة / {P48B_NAMES_AR.delivery}</button><Link href="/" className="pt-btn ghost small"><Icon name="home" size={14} /> الرئيسة</Link></div>
       </>}
     </section>
     {d && <>

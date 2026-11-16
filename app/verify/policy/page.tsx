@@ -7,7 +7,7 @@ import { PortalShell } from '../../components/PortalShell';
 import { Icon } from '../../../lib/ui/icons';
 
 type R = { valid: boolean; intact?: boolean; seal?: { code: string; issued_at: string; organization: string; policy: Record<string, unknown>; changed: string[]; statement_ar: string; signed: boolean; latest: boolean } };
-const KEY_AR: Record<string, string> = { pseudonymous: 'هوية مستعارة', code_login: 'الدخول بالرمز', public_faces_off: 'لا وجوه عامة', home_threads_off: 'لا خيوط في الرئيسية', voice_off: 'لا صوت', media_off: 'لا وسائط', verify_minimal: 'تحقّق أدنى', kiosk_minutes: 'وضع الكشك' };
+const KEY_AR: Record<string, string> = { pseudonymous: 'هوية مستعارة', code_login: 'الدخول بالرمز', public_faces_off: 'لا وجوه عامة', home_threads_off: 'لا خيوط في الرئيسة', voice_off: 'لا صوت', media_off: 'لا وسائط', verify_minimal: 'تحقّق أدنى', kiosk_minutes: 'وضع الكشك' };
 const fmt = (iso?: string) => { if (!iso) return ''; try { return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return iso; } };
 
 export default function VerifyPolicyPage() { return <PortalShell><Inner /></PortalShell>; }
@@ -37,7 +37,7 @@ function Inner() {
         </dl>
         {s.statement_ar && <p className="pt-muted" style={{ margin: '8px 0 0' }}>{s.statement_ar}</p>}
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/verify">كل أنواع التحقّق</Link> · <Link href="/">الرئيسية</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/verify">كل أنواع التحقّق</Link> · <Link href="/">الرئيسة</Link></p>
     </section>
   </main>;
 }

@@ -51,7 +51,7 @@ export default function ProctorStamp({ code, token }: { code: string; token: str
           {st.hall.lines_ar.length > 0 && <p style={{ color: '#475569', fontSize: 14, margin: '6px 0 0' }}>{st.hall.lines_ar.join(' · ')}</p>}
         </div>}
       </>}
-      <p style={{ color: '#475569', fontSize: 13, marginTop: 14 }}>لا نسجّل اسمك — رقم القاعة ووقت الختم فقط. <Link href="/miaar">مِعيار</Link> · <Link href="/">الرئيسية</Link></p>
+      <p style={{ color: '#475569', fontSize: 13, marginTop: 14 }}>لا نسجّل اسمك — رقم القاعة ووقت الختم فقط. <Link href="/miaar">مِعيار</Link> · <Link href="/">الرئيسة</Link></p>
     </div>
   </main>;
 }

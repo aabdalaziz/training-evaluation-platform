@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/* «الطريق» — شريط تنقّل موحّد تحت الرأس في كل صفحة غير الرئيسية: سهم رجوع (تاريخ المتصفح وإلا المسار الأب) · الرئيسية · فتات الطريق.
+/* «الطريق» — شريط تنقّل موحّد تحت الرأس في كل صفحة غير الرئيسة: سهم رجوع (تاريخ المتصفح وإلا المسار الأب) · الرئيسة · فتات الطريق.
    WCAG: nav معنون، aria-current على الصفحة الحالية، أهداف لمس ≥ 36px، حلقة تركيز ظاهرة. يُخفى عند قفل المسار (أثناء اختبار مِعيار) عبر wayLock. */
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';

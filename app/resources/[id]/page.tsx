@@ -92,7 +92,7 @@ function Inner() {
   return (
     <main className="pt-main rd">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/resources">{lang === 'ar' ? 'مستودع الحقائب' : 'Resources'}</Link> / <span>{typeLabel(r.type, lang)}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/resources">{lang === 'ar' ? 'مستودع الحقائب' : 'Resources'}</Link> / <span>{typeLabel(r.type, lang)}</span></div>
         <div className="rd-head">
           <span className={`pt-ic ${r.type === 'package' ? 'gold' : 'teal'}`}><Icon name={typeIcon(r.type) as IconName} size={24} /></span>
           <div><h1>{resTitle(r, lang)}</h1>{resSummary(r, lang) && <p>{resSummary(r, lang)}</p>}

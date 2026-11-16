@@ -25,7 +25,7 @@ function Inner() {
   useEffect(() => { (async () => { try { const { data } = await db.rpc('portal_public_profile', { p_public_id: id }); setP((data as Pub) || { ok: false }); } catch { setP({ ok: false }); } setLoaded(true); })(); }, [db, id]);
   useEffect(() => { if (p?.ok && p.share_mode !== 'public') { const m = document.createElement('meta'); m.name = 'robots'; m.content = 'noindex,nofollow'; document.head.appendChild(m); return () => { m.remove(); }; } }, [p]);
   if (!loaded) return <main className="pt-main"><section className="pt-sec"><div className="pt-wrap pt-empty">…</div></section></main>;
-  if (!p?.ok) return <main className="pt-main"><section className="pt-sec"><div className="pt-wrap" style={{ textAlign: 'center' }}><h2>{lang === 'ar' ? 'هذا الملف خاص أو غير موجود' : 'This profile is private or does not exist'}</h2><p className="pt-muted">{lang === 'ar' ? 'صاحب الملف يتحكم في مشاركته من بوابته.' : 'The owner controls sharing from their portal.'}</p><Link href="/" className="pt-btn light">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link></div></section></main>;
+  if (!p?.ok) return <main className="pt-main"><section className="pt-sec"><div className="pt-wrap" style={{ textAlign: 'center' }}><h2>{lang === 'ar' ? 'هذا الملف خاص أو غير موجود' : 'This profile is private or does not exist'}</h2><p className="pt-muted">{lang === 'ar' ? 'صاحب الملف يتحكم في مشاركته من بوابته.' : 'The owner controls sharing from their portal.'}</p><Link href="/" className="pt-btn light">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link></div></section></main>;
   const skills = p.skills || []; const creds = p.credentials || []; const lv = (s: PubSkill) => s.approved_level ?? Math.round(s.computed_level);
   const byDomain = DOMAINS.map(d => ({ d, items: skills.filter(s => s.domain === d.value) })).filter(x => x.items.length);
   const site = normalizeSite(typeof window !== 'undefined' ? window.location.origin : '');
@@ -48,7 +48,7 @@ function Inner() {
   return (
     <main className="pt-main pp">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <span>{lang === 'ar' ? 'ملف مهاري' : 'Skills profile'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <span>{lang === 'ar' ? 'ملف مهاري' : 'Skills profile'}</span></div>
         <div className="pp-head"><span className="pp-av">{(p.display_name || '?').slice(0, 1)}</span><div><h1>{p.display_name || (lang === 'ar' ? 'متعلم في أَثَر' : 'Athar learner')}</h1><p>{[p.headline, p.organization, p.city].filter(Boolean).join(' · ')}</p><div className="pt-chips"><span className="pt-tag">{lang === 'ar' ? 'ملف مهاري موثّق من أَثَر' : 'Verified Athar skills profile'}</span><span className="pt-tag soon">{skills.length} {lang === 'ar' ? 'مهارة' : 'skills'} · {creds.length} {lang === 'ar' ? 'شهادة' : 'credentials'}</span><button type="button" className="pt-btn light small pp-pdf" disabled={pdfBusy} onClick={passport}><Icon name="download" size={13} /> {pdfBusy ? '…' : (lang === 'ar' ? 'جواز المهارات PDF' : 'Skills passport PDF')}</button></div>{pdfErr && <small className="pp-err">{pdfErr}</small>}</div></div>
       </div></section>
       <section className="pt-sec"><div className="pt-wrap pt-two">

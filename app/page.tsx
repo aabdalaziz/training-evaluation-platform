@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — الصفحة الرئيسية الحيّة (P10): مسرح «الآن في أَثَر» · كل يوم بناء: موقف اليوم (P13-أ) · مستشارك: اسأل وأنا أجيب · جلسة حوار (محاكاة فورية + الجلسة القادمة) · شريط TRACE
+// أَثَر — الصفحة الرئيسة الحيّة (P10): مسرح «الآن في أَثَر» · كل يوم بناء: موقف اليوم (P13-أ) · مستشارك: اسأل وأنا أجيب · جلسة حوار (محاكاة فورية + الجلسة القادمة) · شريط TRACE
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { sbLazy, hasStoredSession } from '../lib/supabase/lazy';

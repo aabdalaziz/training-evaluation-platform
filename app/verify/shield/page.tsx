@@ -38,7 +38,7 @@ function Inner() {
         {b.statement_ar && <p className="pt-muted" style={{ margin: '8px 0 0' }}>{b.statement_ar}</p>}
         {!!(b.failed || []).length && <p className="pt-muted" style={{ margin: '4px 0 0' }}>ما أخفق (بعدد الأيام): {(b.failed || []).map(f => `${f.title_ar} (${f.days})`).join('، ')}</p>}
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/verify">كل أنواع التحقّق</Link> · <Link href="/">الرئيسية</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/verify">كل أنواع التحقّق</Link> · <Link href="/">الرئيسة</Link></p>
     </section>
   </main>;
 }

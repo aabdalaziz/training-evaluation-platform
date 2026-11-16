@@ -50,7 +50,7 @@ export default function Athir() {
     const history = msgs.slice(-8).map(m => ({ role: m.role, text: m.text })); setMsgs(m => [...m, { role: 'me', text: q }]); setBusy(true);
     try {
       const j = await call({ action: 'chat', text: q, history });
-      const reply: Msg = j?.success ? { role: 'athir', text: j.answer + (j.handoff ? (ar ? '\n\nسأحوّل سؤالك إلى مستشار بشري — اترك بريدك في صفحة التواصل أو عبر «مستشارك» في الصفحة الرئيسية.' : '\n\nI will hand this to a human advisor — leave your email on the contact page.') : ''), links: j.links, source: j.source } : { role: 'athir', text: j?.error || (ar ? 'تعذّر الرد الآن.' : 'Could not answer now.') };
+      const reply: Msg = j?.success ? { role: 'athir', text: j.answer + (j.handoff ? (ar ? '\n\nسأحوّل سؤالك إلى مستشار بشري — اترك بريدك في صفحة التواصل أو عبر «مستشارك» في الصفحة الرئيسة.' : '\n\nI will hand this to a human advisor — leave your email on the contact page.') : ''), links: j.links, source: j.source } : { role: 'athir', text: j?.error || (ar ? 'تعذّر الرد الآن.' : 'Could not answer now.') };
       setMsgs(m => [...m, reply]); if (j?.goals) setMemory(mm => ({ summary: mm?.summary || '', goals: j.goals })); speak(reply.text);
     } catch { setMsgs(m => [...m, { role: 'athir', text: ar ? 'انقطع الاتصال لحظة — جرّب مرة أخرى.' : 'Connection hiccup — try again.' }]); }
     setBusy(false);

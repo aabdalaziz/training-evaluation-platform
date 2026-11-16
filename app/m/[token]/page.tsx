@@ -87,7 +87,7 @@ function Inner() {
 
   return (
     <main className="pt-main ms">
-      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> / <span>{ar ? 'مهمة من قلب العمل' : 'Workflow mission'}</span></div>
+      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <span>{ar ? 'مهمة من قلب العمل' : 'Workflow mission'}</span></div>
         <h1>{m ? m.title_ar : (ar ? 'مهمة من قلب العمل' : 'Workflow mission')}</h1>
         {m && <p className="pt-lead">{v?.program ? (ar ? `بعد برنامج «${v.program}» — ` : `After “${v.program}” — `) : ''}{ar ? 'لا نسألك «هل طبّقت؟»؛ نطلب دليلًا صغيرًا حقيقيًا من عملك، يُفحص مقابل معيار معلن ويؤكده مشرفك بضغطة.' : 'We don’t ask “did you apply it?” — we ask for a small real piece of evidence from your work, checked against a published standard and confirmed by your supervisor in one click.'}</p>}
         {m && <div className="ms-chips"><span className="ms-st" style={{ ['--c' as any]: STATUS_LABEL[m.status].color }}>{statusLabel(m.status, lang)}</span><span className={`ms-due ${urg}`}><Icon name="clock" size={14} /> {left >= 0 ? (ar ? `بقي ${left} يوم` : `${left} days left`) : (ar ? `تأخرت ${-left} يوم` : `${-left} days late`)} · {fmtDate(m.due_at, lang)}</span><span className="ms-mode"><Icon name={mode === 'audio' ? 'play' : mode === 'photo' ? 'doc' : mode === 'link' ? 'link' : 'edit'} size={14} /> {MODE_LABEL[mode][lang]}</span></div>}

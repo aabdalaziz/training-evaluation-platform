@@ -44,7 +44,7 @@ function Inner() {
   return (
     <main className="pt-main">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <span>{lang === 'ar' ? 'البرامج' : 'Programs'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <span>{lang === 'ar' ? 'البرامج' : 'Programs'}</span></div>
         <h1>{lang === 'ar' ? 'كتالوج البرامج' : 'Program catalogue'}</h1>
         <p>{lang === 'ar' ? 'برامج تدريبية ودبلومات وورش وبرامج تعليم العربية — حضوريًا وعن بُعد. سجّل مباشرة وستصلك نتيجة المراجعة بالبريد.' : 'Training programs, diplomas, workshops and Arabic courses — on-site and online. Apply directly and receive the review decision by email.'}</p>
       </div></section>

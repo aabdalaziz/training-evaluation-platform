@@ -28,7 +28,7 @@ function Inner() {
 
   return (
     <main className="pt-main mc">
-      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> / <span>{ar ? 'تأكيد دليل من قلب العمل' : 'Confirm workplace evidence'}</span></div>
+      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <span>{ar ? 'تأكيد دليل من قلب العمل' : 'Confirm workplace evidence'}</span></div>
         <h1>{ar ? 'دقيقة واحدة تُثبت الأثر' : 'One minute to confirm impact'}</h1>
         <p className="pt-lead">{ar ? 'أنجز متدربك مهمة صغيرة من عمله الحقيقي بعد برنامج تدريبي. اطّلع على الدليل مقابل المعيار، ثم أكّد أو أعِد. تأكيدك — لا الخوارزمية — هو ما يُعتمد.' : 'Your trainee completed a small real-work mission after a training program. Review the evidence against the standard, then confirm or return. Your confirmation — not the algorithm — is what counts.'}</p>
       </div></section>

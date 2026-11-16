@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** صفحة «لم نجد هذا الطريق» — بديل أَثَري لـ 404: الرئيسية · الردهة · الدليل · تلميح «نادِ».
+/** صفحة «لم نجد هذا الطريق» — بديل أَثَري لـ 404: الرئيسة · الردهة · الدليل · تلميح «نادِ».
  *  مكوّن خادم بلا أي JavaScript للعميل عمدًا: not-found الجذرية تدخل حزمة كل صفحة، وميزانية P40 (/miaar ≤ 340 ك.ب) لا تحتمل غرامًا زائدًا. زرّ الرجوع يوفّره شريط «الطريق» أعلاه. */
 
 export default function NotFound() {
@@ -11,7 +11,7 @@ export default function NotFound() {
         <h1 id="nf-h">لم نجد هذا الطريق</h1>
         <p>الصفحة التي طلبتها غير موجودة أو انتقلت إلى مكان آخر. اختر أحد هذه الروابط، أو زرّ «رجوع» في متصفحك:</p>
         <div className="nf-actions">
-          <a href="/" className="nf-btn gold" data-testid="nf-home">الرئيسية</a>
+          <a href="/" className="nf-btn gold" data-testid="nf-home">الرئيسة</a>
           <a href="/hub" className="nf-btn" data-testid="nf-hub">صفحاتي</a>
           <a href="/help" className="nf-btn">دليل أَثَر</a>
         </div>

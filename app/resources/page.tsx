@@ -48,7 +48,7 @@ function Inner() {
   return (
     <main className="pt-main rs">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{lang === 'ar' ? 'مستودع الحقائب' : 'Resources'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{lang === 'ar' ? 'مستودع الحقائب' : 'Resources'}</span></div>
         <h1>{lang === 'ar' ? 'مستودع الحقائب التدريبية' : 'Training Resources Repository'}</h1>
         <p>{lang === 'ar' ? 'حقائب وأدلة وأدوات تقويم ونماذج جاهزة — مصنّفة بالمهارة والقطاع والمستوى، بمستويات وصول واضحة وروابط تحميل آمنة.' : 'Kits, guides, assessment tools and templates — tagged by skill, sector and level, with clear access tiers and secure downloads.'}</p>
         <div className="rs-kpis">

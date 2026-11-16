@@ -97,7 +97,7 @@ function Inner() {
     const jpeg = canvasToJpeg(canvasRef.current, 0.92); downloadBytes(`${inv.invoice_no}.pdf`, jpegToPortraitPdf(jpeg, IW, IH, `Invoice ${inv.invoice_no}`)); setBusy(false);
   }
 
-  const head = (title: string, sub?: string) => <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/programs">{lang === 'ar' ? 'البرامج' : 'Programs'}</Link> / <span>{lang === 'ar' ? 'الفاتورة' : 'Invoice'}</span></div><h1>{title}</h1>{sub && <p>{sub}</p>}</div></section>;
+  const head = (title: string, sub?: string) => <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/programs">{lang === 'ar' ? 'البرامج' : 'Programs'}</Link> / <span>{lang === 'ar' ? 'الفاتورة' : 'Invoice'}</span></div><h1>{title}</h1>{sub && <p>{sub}</p>}</div></section>;
 
   if (!loaded) return <main className="pt-main"><section className="pt-sec"><div className="pt-wrap pt-empty">…</div></section></main>;
   if (!user) return (

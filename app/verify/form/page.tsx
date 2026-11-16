@@ -43,7 +43,7 @@ function Inner() {
         </dl>
         <p className="pt-muted" style={{ margin: '8px 0 0' }}>نصوص الأسئلة لا تظهر هنا ولا في أي صفحة عامة — تبقى في نسخة المشرف داخل الطاقم.</p>
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/verify">← كل أنواع التحقّق</Link> · <Link href="/miaar">مِعيار</Link> · <Link href="/">الرئيسية</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/verify">← كل أنواع التحقّق</Link> · <Link href="/miaar">مِعيار</Link> · <Link href="/">الرئيسة</Link></p>
     </section>
   </main>;
 }

@@ -36,7 +36,7 @@ export function OnAirButton({ lang }: { lang: Lang }) {
   </button>;
 }
 
-/** سطر حيّ للصفحة الرئيسية: «الآن N إنسان على الهواء» */
+/** سطر حيّ للصفحة الرئيسة: «الآن N إنسان على الهواء» */
 export function OnAirLine({ lang }: { lang: Lang }) {
   const ar = lang === 'ar'; const [d, setD] = useState<{ count: number; faces: string[]; golden: any | null; map: any; season: any | null; whisper: any | null } | null>(null);
   useEffect(() => { let alive = true; const load = () => fetchOnAirNow().then(j => { if (alive && j?.success) setD({ count: Number(j.count) || 0, faces: Array.from(new Set((j.present || []).map((p: any) => String(p.face_ar)))) as string[], golden: j.golden || null, map: j.map || null, season: j.season || null, whisper: j.whisper || null }); }).catch(() => null); load(); const id = setInterval(load, 60000); return () => { alive = false; clearInterval(id); }; }, []);

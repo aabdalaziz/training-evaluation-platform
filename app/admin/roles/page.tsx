@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /admin/roles — الأدوار والدعوات (P42-أ) — مصطلحات معتمدة (2026-11-15): دور · صلاحية · إسناد · الصفحة الرئيسية للدور
+ * /admin/roles — الأدوار والدعوات (P42-أ) — مصطلحات معتمدة (2026-11-15): دور · صلاحية · إسناد · الصفحة الرئيسة للدور
  *  دعوة: بريد + أدوار (حتى 5) + جهة اختيارية + رسالة → رابط لمرة واحدة يُنسخ ويُرسل (واتساب/بريد) — لا إرسال آلي
  *  الصلاحيات: جدول حيّ مع إلغاء فوري · الدعوات: الحالة والنسخ والإلغاء · قائمة الأدوار: 16 دورًا نظاميًا + أدوار مخصّصة
  *  الطاقم يرى؛ مدير النظام وحده يكتب. كل كتابة تُسجَّل في درع أَثَر.
@@ -147,14 +147,14 @@ export default function AdminRolesPage() {
 
         {tab === 'catalog' && (
           <section className="rl-card">
-            <div className="rl-tablewrap"><table className="rl-table" data-testid="catalog-table"><thead><tr><th>الدور</th><th>الرمز</th><th>النطاق</th><th>الصفحة الرئيسية</th><th>إداري؟</th><th>جسر قديم</th><th>الحالة</th><th></th></tr></thead><tbody>
+            <div className="rl-tablewrap"><table className="rl-table" data-testid="catalog-table"><thead><tr><th>الدور</th><th>الرمز</th><th>النطاق</th><th>الصفحة الرئيسة</th><th>إداري؟</th><th>جسر قديم</th><th>الحالة</th><th></th></tr></thead><tbody>
               {roles.map(r => <tr key={r.code} data-testid="catalog-row"><td><b>{r.name_ar}</b><br /><small dir="ltr">{r.name_en}</small></td><td dir="ltr"><code>{r.code}</code></td><td>{SCOPE_AR[r.scope]}</td><td dir="ltr">{r.landing}</td><td>{r.is_staff ? 'نعم' : '—'}</td><td dir="ltr">{r.legacy_role || '—'}</td><td>{r.active ? <span className="rl-tag ok">فعّالة</span> : <span className="rl-tag">معطَّلة</span>}{r.is_system ? '' : <span className="rl-tag">مخصّصة</span>}</td><td>{admin && !r.is_system && <button type="button" className="rl-x" onClick={() => toggleRole(r)} disabled={busy === r.code}>{r.active ? 'تعطيل' : 'تفعيل'}</button>}</td></tr>)}
             </tbody></table></div>
             {admin && (
               <form onSubmit={createRole} className="rl-form rl-newrole" data-testid="role-form">
                 <h3>دور مخصّص «حسب الاحتياج»</h3>
                 <div className="rl-two"><label>الرمز (لاتيني كبير)<input dir="ltr" required value={nr.code} onChange={e => setNr({ ...nr, code: e.target.value.toUpperCase() })} placeholder="PARTNER_LIAISON" pattern="[A-Za-z][A-Za-z0-9_]{1,39}" data-testid="nr-code" /></label><label>الاسم العربي<input required value={nr.name_ar} onChange={e => setNr({ ...nr, name_ar: e.target.value })} placeholder="منسّق الشراكات" data-testid="nr-name" /></label></div>
-                <div className="rl-two"><label>الاسم الإنجليزي<input dir="ltr" required value={nr.name_en} onChange={e => setNr({ ...nr, name_en: e.target.value })} placeholder="Partnerships liaison" /></label><label>الصفحة الرئيسية للدور (مسار داخلي)<input dir="ltr" value={nr.landing} onChange={e => setNr({ ...nr, landing: e.target.value })} /></label></div>
+                <div className="rl-two"><label>الاسم الإنجليزي<input dir="ltr" required value={nr.name_en} onChange={e => setNr({ ...nr, name_en: e.target.value })} placeholder="Partnerships liaison" /></label><label>الصفحة الرئيسة للدور (مسار داخلي)<input dir="ltr" value={nr.landing} onChange={e => setNr({ ...nr, landing: e.target.value })} /></label></div>
                 <div className="rl-two"><label>النطاق<select value={nr.scope} onChange={e => setNr({ ...nr, scope: e.target.value })}><option value="platform">المنصة</option><option value="org">الجهة</option><option value="personal">شخصي</option></select></label><label>الصلاحيات (مفصولة بفواصل)<input dir="ltr" value={nr.permissions} onChange={e => setNr({ ...nr, permissions: e.target.value })} placeholder="programs.read, contracts.read" /></label></div>
                 <label className="rl-check"><input type="checkbox" checked={nr.is_staff} onChange={e => setNr({ ...nr, is_staff: e.target.checked })} /> دور إداري (يرى صفحات الإدارة التي تخصّه)</label>
                 {nr.is_staff && <label>مستوى الجسر القديم (ما تراه الصفحات القديمة)<select value={nr.legacy_role} onChange={e => setNr({ ...nr, legacy_role: e.target.value })}><option value="QUALITY_ANALYST">QUALITY_ANALYST — قراءة ومتابعة</option><option value="PROGRAM_MANAGER">PROGRAM_MANAGER — تشغيل البرامج</option><option value="TRAINER">TRAINER — مدرّب</option></select></label>}
@@ -163,7 +163,7 @@ export default function AdminRolesPage() {
             )}
           </section>
         )}
-        <p className="rl-foot">المصطلحات: «الدور» ما يُسنَد للمستخدم، و«الصلاحية» أثره الفعلي في النظام، ولكل دور صفحة رئيسية تُفتح بعد الدخول. في العقود والشهادات نستخدم الاسم الرسمي للدور.</p>
+        <p className="rl-foot">المصطلحات: «الدور» ما يُسنَد للمستخدم، و«الصلاحية» أثره الفعلي في النظام، ولكل دور صفحة رئيسة تُفتح بعد الدخول. في العقود والشهادات نستخدم الاسم الرسمي للدور.</p>
       </div>
     </div>
   );

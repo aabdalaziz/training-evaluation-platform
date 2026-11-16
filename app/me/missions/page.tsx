@@ -39,7 +39,7 @@ function Inner() {
 
   return (
     <main className="pt-main mm">
-      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> / <Link href="/me">{ar ? 'بوابة المتدرب' : 'Trainee portal'}</Link> / <span>{ar ? 'مهماتي' : 'My missions'}</span></div>
+      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <Link href="/me">{ar ? 'بوابة المتدرب' : 'Trainee portal'}</Link> / <span>{ar ? 'مهماتي' : 'My missions'}</span></div>
         <h1>{ar ? 'مهماتي من قلب العمل' : 'My workflow missions'}</h1>
         <p className="pt-lead">{ar ? 'بعد كل برنامج تصلك مهمات صغيرة تُنجز في عملك الحقيقي: صورة، تسجيل 60 ثانية، أو سطور. يفحصها أَثَر مقابل معيار معلن، ويؤكدها مشرفك بضغطة، فتصبح أقوى دليل في توأمك المهاري وشهاداتك الحية.' : 'After each program you receive small missions done in your real work. Athar checks them against a published standard, your supervisor confirms in one click, and they become the strongest evidence in your twin and living credentials.'}</p>
         {stats && rows.length > 0 && <div className="mm-kpis"><span><b>{stats.confirmed}</b> {ar ? 'دليل مؤكَّد' : 'confirmed'}</span><span><b>{stats.submitted}</b> {ar ? 'بانتظار المشرف' : 'awaiting supervisor'}</span><span><b>{stats.assigned}</b> {ar ? 'بانتظارك' : 'waiting for you'}</span>{stats.avg_score !== null && <span><b>{stats.avg_score}%</b> {ar ? 'متوسط الفحص' : 'avg check'}</span>}</div>}

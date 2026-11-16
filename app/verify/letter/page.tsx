@@ -33,7 +33,7 @@ function Inner() {
           <dt>البصمة</dt><dd style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all' }}>{r.digest}</dd>
         </dl>
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/verify">صفحة التحقّق العامة</Link> · <Link href="/org">بوابة الجهات</Link> · <Link href="/">الرئيسية</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/verify">صفحة التحقّق العامة</Link> · <Link href="/org">بوابة الجهات</Link> · <Link href="/">الرئيسة</Link></p>
     </section>
   </main>;
 }

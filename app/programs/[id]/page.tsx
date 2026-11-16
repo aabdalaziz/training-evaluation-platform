@@ -101,7 +101,7 @@ function Inner() {
   return (
     <main className="pt-main">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/programs">{lang === 'ar' ? 'البرامج' : 'Programs'}</Link> / <span>{programName(p, lang)}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/programs">{lang === 'ar' ? 'البرامج' : 'Programs'}</Link> / <span>{programName(p, lang)}</span></div>
         <div className="pt-chips" style={{ marginTop: 8 }}><span className="pt-tag navy">{typeLabel(p.program_type, lang)}</span>{p.delivery_mode && <span className="pt-chip">{deliveryLabel(p.delivery_mode, lang)}</span>}<span className={`pt-tag ${s === 'open' ? '' : s === 'waitlist' ? 'soon' : 'off'}`}>{t(REG_LABEL[s], lang)}</span></div>
         <h1>{programName(p, lang)}</h1>
         {intro && <p>{intro}</p>}

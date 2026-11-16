@@ -1,6 +1,6 @@
 'use client';
 // حدود الخطأ العامة للبوابة — بدل شاشة Next.js الصامتة «Application error: a client-side exception has occurred»
-// تعرض سبب العطل بالعربية (رسالة الخطأ + المُعرِّف) مع أزرار: إعادة المحاولة · الرئيسية · نسخ التفاصيل.
+// تعرض سبب العطل بالعربية (رسالة الخطأ + المُعرِّف) مع أزرار: إعادة المحاولة · الرئيسة · نسخ التفاصيل.
 // لا تعتمد على أي سياق أو مكوّن آخر (قد يكون هو نفسه سبب العطل) — تنسيق مضمّن فقط.
 import { useEffect, useState } from 'react';
 
@@ -43,7 +43,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
           <button type="button" className="pe-btn" onClick={() => reset()}>إعادة المحاولة</button>
           <button type="button" className="pe-btn alt" onClick={hardReload}>تحديث كامل (مسح الكاش)</button>
           <button type="button" className="pe-btn ghost" onClick={copy}>نسخ التفاصيل</button>
-          <a className="pe-btn alt" href="/" style={{ textDecoration: 'none', display: 'inline-block' }}>الرئيسية</a>
+          <a className="pe-btn alt" href="/" style={{ textDecoration: 'none', display: 'inline-block' }}>الرئيسة</a>
         </div>
         {copied && <div className="pe-ok">نُسخت التفاصيل ✓</div>}
       </div>

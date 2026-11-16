@@ -61,7 +61,7 @@ function Inner() {
   return (
     <main className="pt-main tr">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/live">{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</Link> / <span>{lang === 'ar' ? 'جدول المدرب' : 'Trainer schedule'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/live">{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</Link> / <span>{lang === 'ar' ? 'جدول المدرب' : 'Trainer schedule'}</span></div>
         <h1>{lang === 'ar' ? 'جدول المدرب' : 'Trainer schedule'}</h1>
         <p>{user ? (lang === 'ar' ? `مرحبًا ${trainerName} — جلساتك اليوم وهذا الأسبوع عبر كل القاعات، برابط المضيف الخاص بك.` : `Welcome ${trainerName} — your sessions today and this week across all rooms, with your host link.`) : (lang === 'ar' ? 'سجّل الدخول ببريدك المسجّل كمدرب لعرض جدولك.' : 'Sign in with your trainer email to see your schedule.')}</p>
       </div></section>

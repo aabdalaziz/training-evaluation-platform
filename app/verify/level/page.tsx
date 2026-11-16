@@ -35,7 +35,7 @@ function Inner() {
           <dt className="pt-muted">الظهور</dt><dd style={{ margin: 0 }}>{r.public ? <>لها وجه عام: <Link href={`/lv/${r.code}`} data-testid="vl-public-link">/lv/{r.code}</Link></> : 'خاصّة — لا يُعرض المحتوى؛ البصمة والتاريخ فقط'}</dd>
         </dl>
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}>الصفحة لا تُثبت تقييمًا ولا مستوى لغويًّا ولا شهادة؛ تُثبت البصمة أن ما كتبه صاحبها لم يتغيّر منذ ختمه. <Link href="/">الرئيسية</Link> · <Link href="/verify/grad">تحقّق من صفحة تخرّج</Link> · <Link href="/verify">كل أنواع التحقّق</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}>الصفحة لا تُثبت تقييمًا ولا مستوى لغويًّا ولا شهادة؛ تُثبت البصمة أن ما كتبه صاحبها لم يتغيّر منذ ختمه. <Link href="/">الرئيسة</Link> · <Link href="/verify/grad">تحقّق من صفحة تخرّج</Link> · <Link href="/verify">كل أنواع التحقّق</Link></p>
     </section>
   </main>;
 }

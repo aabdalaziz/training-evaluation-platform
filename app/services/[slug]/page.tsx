@@ -22,7 +22,7 @@ function Inner() {
   return (
     <main className="pt-main">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{t(s.title, lang)}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{t(s.title, lang)}</span></div>
         <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}><span className={`pt-ic ${s.tone}`}><Icon name={s.icon} size={26} /></span><span className={`pt-tag ${s.status === 'soon' ? 'soon' : ''}`}>{s.status === 'soon' ? `${t(UI.soon, lang)}${s.phase ? ` · ${s.phase}` : ''}` : t(UI.live, lang)}</span></div>
         <h1>{t(s.title, lang)}</h1><p>{t(s.short, lang)}</p>
       </div></section>

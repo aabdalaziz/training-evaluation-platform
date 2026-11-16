@@ -94,7 +94,7 @@ export default function AdminOnAirPage() {
           </div>
         </div>}
 
-        {tab === 'golden' && <div className="am-card" data-testid="ao-golden"><h3>✦ {P34_NAMES_AR.golden} <small>— موعد أسبوعي ثابت يتواعد فيه أعضاء الهيئة على الصعود معًا؛ يظهر عدّادًا تنازليًا في الرئيسية و/on-air، ويذكّر المتعهّدين قبله بساعة (عبر كرون الهيئة القائم)</small></h3>
+        {tab === 'golden' && <div className="am-card" data-testid="ao-golden"><h3>✦ {P34_NAMES_AR.golden} <small>— موعد أسبوعي ثابت يتواعد فيه أعضاء الهيئة على الصعود معًا؛ يظهر عدّادًا تنازليًا في الرئيسة و/on-air، ويذكّر المتعهّدين قبله بساعة (عبر كرون الهيئة القائم)</small></h3>
           {(data?.golden || []).map((g: any) => <div key={g.id} className="ao-req" data-testid="ao-golden-row"><b>{g.title_ar}</b> · {g.weekday_ar} {g.from} · {g.duration_min} دقيقة · <span className="am-st" style={{ background: g.live ? '#b45309' : '#0f2a4e' }}>{g.live ? 'جارية الآن' : g.countdown_ar}</span> · <b>{g.pledged}</b> تعهّدوا هذا الأسبوع <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'golden_off', id: g.id })} data-testid="ao-golden-off">أوقفها</button></div>)}
           {!(data?.golden || []).length && <div className="am-empty">لا ساعة ذهبية معلَنة.</div>}
           <form className="ao-form" onSubmit={e => { e.preventDefault(); const [h, m] = gold.from.split(':').map(Number); post({ action: 'golden_set', title_ar: gold.title_ar, weekday: gold.weekday, from_min: (h || 0) * 60 + (m || 0), duration_min: gold.duration_min }); }}>

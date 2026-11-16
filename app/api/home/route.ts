@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * «خِفّة أَثَر» (P40) — واجهة الصفحة الرئيسية الواحدة.
- *  كانت الرئيسية تنادي /api/advisor و /api/evidence?threads=1 (دالتان باردتان) عند كل فتح.
+ * «خِفّة أَثَر» (P40) — واجهة الصفحة الرئيسة الواحدة.
+ *  كانت الرئيسة تنادي /api/advisor و /api/evidence?threads=1 (دالتان باردتان) عند كل فتح.
  *  هنا نداء واحد يجمع الاثنين على الخادم ويُخزَّن على حافة Vercel 60 ثانية (ويُقدَّم القديم 5 دقائق أثناء التجديد)،
  *  فلا يلمس الزائر إقلاعًا باردًا، ولا تُستدعى قاعدة البيانات أكثر من مرة في الدقيقة لكل منطقة.
  *  GET /api/home → { success, now, programs, sessions, counters, threads, lesson, nodes, heard }

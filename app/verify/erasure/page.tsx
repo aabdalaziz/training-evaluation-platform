@@ -39,7 +39,7 @@ function Inner() {
           {(rc.tables || []).map(t => <tr key={t.table}><td dir="ltr">{t.table}</td><td>{t.rows}</td><td>{EFFECT[t.effect] || t.effect}</td></tr>)}
         </tbody></table>
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/privacy">الخصوصية</Link> · <Link href="/">الرئيسية</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/privacy">الخصوصية</Link> · <Link href="/">الرئيسة</Link></p>
     </section>
   </main>;
 }

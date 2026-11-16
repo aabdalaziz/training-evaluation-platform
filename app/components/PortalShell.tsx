@@ -16,7 +16,7 @@ import { AccessProvider, AccessButton, AccessPanel, ReadPage, SkipLink, ACCESS_C
 import { OnAirButton, OnAirPanel, ONAIR_CSS } from './OnAir';
 import { NoticesBell, NOTICES_CSS } from './Notices'; /* P39 «تنبيهاتي» */
 import { SignCounter } from './SignCounter'; /* P50 «توقيعي» */
-import WayBar from './WayBar';  /* «الطريق»: رجوع · الرئيسية · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسية */
+import WayBar from './WayBar';  /* «الطريق»: رجوع · الرئيسة · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسة */
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
 export const useLang = () => useContext(LangCtx);
@@ -32,7 +32,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || '/';
   useEffect(() => { try { const s = localStorage.getItem('athar_lang'); if (s === 'en' || s === 'ar') setLangState(s); } catch { /* ignore */ } }, []);
   useEffect(() => { setOpen(false); }, [pathname]);
-  // استئناف التسجيل بعد العودة من رابط الدخول بالبريد (إن أعادنا Supabase إلى الصفحة الرئيسية)
+  // استئناف التسجيل بعد العودة من رابط الدخول بالبريد (إن أعادنا Supabase إلى الصفحة الرئيسة)
   const router = useRouter();
   /* P49-ج: رأس واعٍ بالجلسة — «خروج» في كل صفحة من صفحات البوابة (حاسوب + جوال)، «دخول» للزائر */
   const [loggedIn, setLoggedIn] = useState(false);

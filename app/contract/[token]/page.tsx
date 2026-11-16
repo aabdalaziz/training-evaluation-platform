@@ -34,7 +34,7 @@ function Inner() {
   return (
     <main className="pt-main ic">
       <section className="pt-pagehead ic-head"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> / <span>{ar ? 'عقد أثر حي' : 'Live impact contract'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <span>{ar ? 'عقد أثر حي' : 'Live impact contract'}</span></div>
         {c ? <>
           <div className="ic-org"><span className="ic-badge" style={{ '--c': STATUS_LABEL[c.status].color } as any}>{L(STATUS_LABEL[c.status])}</span>{c.org_name && <span className="ic-orgname"><Icon name="school" size={14} /> {c.org_name}</span>}{s && <span className="ic-health" data-h={s.health}><Icon name={s.health === 'due' ? 'bell' : s.health === 'attention' ? 'alert' : 'check'} size={13} /> {L(HEALTH_LABEL[s.health])}</span>}</div>
           <h1>{c.title_ar}</h1>

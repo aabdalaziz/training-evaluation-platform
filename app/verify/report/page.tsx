@@ -37,7 +37,7 @@ function Inner() {
         </dl>
         {r.minimal && <p className="pt-muted" style={{ margin: '8px 0 0' }} data-testid="vr-minimal">الجهة اختارت «الحدّ الأدنى في التحقّق»: نُظهر الصلاحية والجهة والفترة والتاريخ فقط.</p>}
       </div>}
-      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/verify">كل أنواع التحقّق</Link> · <Link href="/">الرئيسية</Link></p>
+      <p className="pt-muted" style={{ marginTop: 14 }}><Link href="/security">← درع أَثَر</Link> · <Link href="/verify">كل أنواع التحقّق</Link> · <Link href="/">الرئيسة</Link></p>
     </section>
   </main>;
 }

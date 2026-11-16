@@ -56,7 +56,7 @@ function Inner() {
 
   return (
     <main className="pt-main vv">
-      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسية' : 'Home'}</Link> / <Link href="/verify">{ar ? 'التحقق' : 'Verify'}</Link> / <span>{ar ? 'شهادة موقَّعة' : 'Signed credential'}</span></div>
+      <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <Link href="/verify">{ar ? 'التحقق' : 'Verify'}</Link> / <span>{ar ? 'شهادة موقَّعة' : 'Signed credential'}</span></div>
         <h1>{ar ? 'التحقق المستقل من شهادة أَثَر' : 'Independent verification of an Athar credential'}</h1>
         <p>{ar ? 'الصق ملف الشهادة (JSON) أو اسحبه هنا. يُفحص التوقيع داخل متصفحك بمفتاح أَثَر العام المنشور بمعيار did:web — فلا تحتاج أن تثق بخادمنا، ولا حتى بأن يكون متاحًا. الحالة (الإلغاء) تُفحص حيًّا إن توفر اتصال.' : 'Paste or drop the credential JSON. The signature is checked in your browser against Athar’s published did:web key — no trust in our server required. Revocation is checked live when online.'}</p></div></section>
       <section className="pt-sec"><div className="pt-wrap" style={{ maxWidth: 900 }}>

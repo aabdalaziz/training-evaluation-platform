@@ -48,7 +48,7 @@ export default function FirstDesk() {
   const v = d?.view; const whyOk = !!d && why.trim().length >= d.limits.whyMin && why.trim().length <= d.limits.whyMax;
   return <main className="fd" dir="rtl" data-testid="fd-root" data-phase={v?.program.phase || ''}>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
-    <nav className="fd-nav" aria-label="تنقّل"><Link href="/me" className="fd-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/letter" className="fd-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="fd-link"><Icon name="award" size={14} /> يوم تخرّجي</Link><Link href="/" className="fd-link"><Icon name="home" size={14} /> الرئيسية</Link></nav>
+    <nav className="fd-nav" aria-label="تنقّل"><Link href="/me" className="fd-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/letter" className="fd-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="fd-link"><Icon name="award" size={14} /> يوم تخرّجي</Link><Link href="/" className="fd-link"><Icon name="home" size={14} /> الرئيسة</Link></nav>
     <header className="fd-head"><span className="pt-kicker"><Icon name="spark" size={14} /> {d?.names.official_ar || 'صفحة اليوم الأول للمتدرّب'}</span><h1>🌅 {d?.names.title || 'أول يوم'} <small>{d?.names.sub || 'قال من سبقك'}</small></h1>
       <p>يوم يبدأ برنامجك يُفتح لك هذا الباب مرة واحدة: كلمة من أَثَر، وسطور تركها لك خرّيجو هذا البرنامج يوم تخرّجهم — بلا أسماء — ثم سطرٌ تكتبه أنت ويُفتح لك يوم تخرّجك. لا درجة، لا تقييم، لا ذكاء اصطناعي.</p></header>
     {err && <p className="fd-err" role="alert" data-testid="fd-err">{err}</p>}

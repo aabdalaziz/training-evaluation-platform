@@ -22,7 +22,7 @@ type CodeRow = { training_no: string; created_at: string; first_login_at: string
 type Props = { orgId: string; lang: 'ar' | 'en'; token: () => Promise<string> };
 const KIOSK = [0, 5, 10, 20, 30];
 const fmt = (iso?: string | null) => { if (!iso) return '—'; try { return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return iso.slice(0, 16); } };
-const KEY_AR: Record<string, string> = { pseudonymous: 'هوية مستعارة', code_login: 'الدخول بالرمز', public_faces_off: 'لا وجوه عامة', home_threads_off: 'لا خيوط في الرئيسية', voice_off: 'لا صوت', media_off: 'لا وسائط', verify_minimal: 'تحقّق أدنى', kiosk_minutes: 'وضع الكشك' };
+const KEY_AR: Record<string, string> = { pseudonymous: 'هوية مستعارة', code_login: 'الدخول بالرمز', public_faces_off: 'لا وجوه عامة', home_threads_off: 'لا خيوط في الرئيسة', voice_off: 'لا صوت', media_off: 'لا وسائط', verify_minimal: 'تحقّق أدنى', kiosk_minutes: 'وضع الكشك' };
 
 export function OrgPolicy({ orgId, lang, token }: Props) {
   const ar = lang === 'ar';

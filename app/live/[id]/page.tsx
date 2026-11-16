@@ -103,7 +103,7 @@ function Inner() {
   return (
     <main className="pt-main ls">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسية' : 'Home'}</Link> / <Link href="/live">{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</Link> / <span>{kindLabel(s.kind, lang)}</span></div>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/live">{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</Link> / <span>{kindLabel(s.kind, lang)}</span></div>
         <div className="ls-tags"><span className={`ls-state ${st}`}>{st === 'live' && <i />}{t(STATE_LABEL[st], lang)}</span><span>{kindLabel(s.kind, lang)}</span>{room && <span>{classroomLabel(room, lang)}</span>}<span><Icon name="laptop" size={12} /> {providerLabel(s.provider, lang)}</span><span><Icon name="shield" size={12} /> {sessionAccessLabel(s.access, lang)}</span></div>
         <h1>{sessionTitle(s, lang)}</h1>
         <p className="ls-when"><Icon name="calendar" size={16} /> <bdi>{fmtWhen(s.starts_at, lang, { date: true, weekday: true })}</bdi> · <bdi>{fmtRange(s, lang)}</bdi> ({lang === 'ar' ? 'توقيت الرياض' : 'Riyadh'}) · {s.duration_min} {lang === 'ar' ? 'دقيقة' : 'min'}{now && st === 'upcoming' && <> · <b>{countdown(s.starts_at, n, lang)}</b></>}</p>
