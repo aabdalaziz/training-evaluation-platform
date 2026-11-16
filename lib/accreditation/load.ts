@@ -14,6 +14,7 @@ import { loadProgramWeave } from '../map/program-weave-load'; /* P61 */
 import { weaveEvidence, weaveSnapshotLine } from '../map/program-weave';
 import type { ProgramWeave } from '../map/program-weave';
 import { gradEvidence } from '../grad/store'; /* P63: عدد صفحات التخرّج المختومة (k ≥ 5) تحت 3.5 — بلا محتوى */
+import { levelEvidence } from '../level/echo'; /* P70-ب «عبروا بكلماتهم»: عدد صفحات المستوى المختومة (k ≥ 5) تحت 3.5 — بلا محتوى */
 import { runAi, aiUsage, logAi } from '../ai/athar';
 
 async function safe<X>(q: PromiseLike<{ data: any; error: any }>, fb: X): Promise<X> { try { const { data, error } = await q; return error || data === null || data === undefined ? fb : (data as X); } catch { return fb; } }
@@ -86,6 +87,7 @@ export async function collectEvidence(db: any, program: any): Promise<{ evidence
   /* P61: نسيج البرنامج — ما نسجه المتدرّبون بأيديهم (kept · k ≥ 5 · بلا أسماء ولا اقتباس) */
   let weave: ProgramWeave | null = null; try { weave = await loadProgramWeave(db, { id: pid, name_ar: program.name_ar, end_date: program.end_date || null }); for (const e of weaveEvidence(weave)) push(e); } catch { weave = null; }
   try { for (const e of await gradEvidence(db, pid)) push(e); } catch { /* P63 اختياري */ }
+  try { for (const e of await levelEvidence(db, pid)) push(e); } catch { /* P70-ب اختياري */ }
   return { evidence: ev, facts: { cohorts_done: reviews.length || (finals.length ? 1 : 0) || (miaar.facts.invites.some(i => i.finals >= K_MIN) ? 1 : 0), graduates_feedback: afters.length >= K_MIN ? afters.length : 0, has_units: units.length > 0, trainers: trainersN, miaar: miaarSummary(miaar.facts), weave } };
 }
 /* ───────── الملف ───────── */

@@ -77,7 +77,9 @@ export function chipOf(v: unknown): ChipKey | null { const k = String(v || ''); 
 export const chipLabel = (k: ChipKey | null): string => { const c = CHIPS.find((x) => x.key === k); return c ? `${c.icon} ${c.label_ar}` : ''; };
 /** من إشعار «كلمة»: المدرّب من مفتاح التفرّد trainer_word:<tid>:<email>:<day> · الشعبة من ref_id */
 export function parseWordNotice(n: { kind?: string; dedupe_key?: string | null; ref_id?: string | null }): { trainer_id: string; classroom_id: string | null } | null {
-  if (!n || n.kind !== 'trainer_word') return null; const parts = String(n.dedupe_key || '').split(':'); if (parts[0] !== 'trainer_word' || !parts[1]) return null;
+  if (!n || n.kind !== 'trainer_word') return null; const parts = String(n.dedupe_key || '').split(':');
+  if (parts[0] === 'echo_word' && parts[1] && parts[3]) return { trainer_id: parts[3], classroom_id: parts[1] }; /* P70-ب «كلمة العبور»: echo_word:<classroom>:<level>:<trainer>:<email> — يُردّ عليها كأي كلمة */
+  if (parts[0] !== 'trainer_word' || !parts[1]) return null;
   return { trainer_id: parts[1], classroom_id: n.ref_id ? String(n.ref_id) : null };
 }
 export type ReplyView = { id: string; email: string; name: string; chip: ChipKey | null; chip_ar: string; text: string | null; at: string; seen: boolean; notice_id: string; voice: { sec: number } | null; transcript: string | null; hands_week: number; answered?: boolean /* P55 «أُجيب 🎙️» */ };

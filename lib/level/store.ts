@@ -15,6 +15,7 @@ import { jcs } from '../portal/vc';
 import { letterState, fmtDayAr as fmtIsoAr, dayKeyRiyadh } from '../letters/self';
 import { programLevelSpans } from '../diploma/store';
 import { MEDIA_BUCKET } from '../miaar/bank';
+import { learnerEchoWord } from './echo'; /* P70-ب: كلمة العبور من الأستاذ — تظهر في «سطري» تحت «الكلمة التي تعبر» */
 import { levelWindow, levelPhase, isEchoWeek, buildCards, levelBody, publicFace, validateLine, normalizeKeep, normalizePublic, sectionLineAr, echoIntroAr, CODE_RE, LEVEL_LIMITS, LEVEL_PATH, LEVEL_PUBLIC_PREFIX, PUBLIC_DEFAULT, addDaysKey } from './registry';
 import type { Card, Counts, Sources, CardKey, PublicKey, LevelBody, LevelPhase, LevelWindow, PublicFace, ExamSource, LineSrc, Done } from './registry';
 
@@ -222,6 +223,22 @@ export async function levelEcho(db: Db, me: Me, now = new Date()): Promise<{ int
   for (const it of levels) { if (!it.sealed || !it.next_from || !isEchoWeek(it.next_from, today)) continue; const row = await rowOf(db, me, it); if (!row?.line_ar || !row.sealed_at || row.revoked_at) continue;
     return { intro_ar: echoIntroAr(it.level_no), line_ar: String(row.line_ar), level_no: it.level_no, next_level_no: it.level_no + 1, href: `${LEVEL_PATH}?level=${encodeURIComponent(it.key)}` }; }
   return null;
+}
+/** P70-ب: ما يراه المتدرّب في «سطري» — كلمته التي تعبر (P70) + كلمة العبور من أستاذه + تذكير لطيف إن كانت صفحة مستواه ما زالت مفتوحة */
+export type LearnerEchoView = {
+  own: { intro_ar: string; line_ar: string; level_no: number; next_level_no: number; href: string } | null;
+  word: { notice_id: string; title_ar: string; text_ar: string; voice_sec: number | null; at: string; level_no: number } | null;
+  open: { href: string; level_no: number; until_ar: string } | null;
+};
+export async function learnerEchoView(db: Db, me: Me, now = new Date()): Promise<LearnerEchoView> {
+  const today = dayKeyRiyadh(now); const levels = await myLevels(db, me, now);
+  const own = await levelEcho(db, me, now);
+  /* المستوى الحالي: آخر مستوى بدأ ما بعده */
+  const cur = levels.filter((it) => it.next_from && today >= it.next_from).sort((a, b) => b.level_no - a.level_no)[0] || null;
+  const word = cur ? await learnerEchoWord(db, me.email, cur.classroom_id, cur.level_no + 1).catch(() => null) : null;
+  const pend = levels.find((it) => !it.sealed && it.phase === 'open' && today > it.window.to_day) || null;
+  const open = pend ? { href: `${LEVEL_PATH}?level=${encodeURIComponent(pend.key)}`, level_no: pend.level_no, until_ar: fmtIsoAr(`${pend.window.open_to}T00:00:00Z`) } : null;
+  return { own, word, open };
 }
 /** لصفحة التخرّج (P63): سطور المستويات المختومة بالترتيب — كلماته هو */
 export async function sealedLevelLines(db: Db, me: Me, programId: string): Promise<{ level_no: number; line_ar: string; sealed_at: string }[]> {

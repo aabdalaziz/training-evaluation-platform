@@ -2,7 +2,7 @@
 /**
  * P70 «بكلماتي عبر المستوى» (الاسم الرسمي: صفحة المستوى — بكلمات المتدرّب)
  *  GET  /api/me/level?level=<enrollment:level_no>  → مستوياتي المفتوحة · الصفحة (البطاقات من كلماتي · الأعداد · السطر · الختم · سطر الشعبة k ≥ 5)
- *  GET  /api/me/level?echo=1                        → «الكلمة التي تعبر» (أول أسبوع في المستوى التالي) — لصاحبها وحده
+ *  GET  /api/me/level?echo=1                        → «الكلمة التي تعبر» (أول أسبوع في المستوى التالي) + كلمة العبور من الأستاذ (P70-ب) + تذكير الصفحة المفتوحة — لصاحبها وحده
  *  POST /api/me/level { action, level }
  *       line   { line_ar }                  → «سطر المستوى» (≤ 200) · الصوت ≤ 30 ث عبر /api/me/level/voice (يبقى مع صاحبه)
  *       keep   { key, on }                   → أُبقي/أُخفي بطاقة
@@ -14,7 +14,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit, tooMany } from '../../../../lib/shield/ratelimit';
-import { loadLevelPage, levelEcho, saveLine, setKeep, setPublic, sealLevel, revokeLevel, deleteLevel } from '../../../../lib/level/store';
+import { loadLevelPage, learnerEchoView, saveLine, setKeep, setPublic, sealLevel, revokeLevel, deleteLevel } from '../../../../lib/level/store';
 import { P70_NAMES_AR, LEVEL_LIMITS, LEVEL_FOOT_AR, LINE_PROMPT_AR, CARD_AR, PUBLIC_AR, PUBLIC_KEYS } from '../../../../lib/level/registry';
 import { freezeGate } from '../../../../lib/shield/freeze';
 
@@ -43,7 +43,7 @@ async function payload(db: any, user: { id: string; email: string; name?: string
 export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error; const { db, user } = c;
   const u = new URL(req.url);
-  if (u.searchParams.get('echo') === '1') return NextResponse.json({ success: true, echo: await levelEcho(db, user, new Date()) }, { headers: NO });
+  if (u.searchParams.get('echo') === '1') { const v = await learnerEchoView(db, user, new Date()); return NextResponse.json({ success: true, echo: v.own, word: v.word, open: v.open }, { headers: NO }); } /* P70-ب: + كلمة العبور من الأستاذ + تذكير الصفحة المفتوحة */
   return NextResponse.json({ success: true, ...(await payload(db, user, u.searchParams.get('level'), new Date())) }, { headers: NO });
 }
 

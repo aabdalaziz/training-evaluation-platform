@@ -35,7 +35,12 @@ export default function LineDesk() {
   useEffect(() => { if (tok) load(tok); }, [tok, load]);
   /* P70: «الكلمة التي تعبر» — أول أسبوع في المستوى التالي يرى سطره من المستوى السابق كما ختمه */
   const [echo, setEcho] = useState<{ intro_ar: string; line_ar: string; level_no: number; next_level_no: number; href: string } | null>(null);
-  useEffect(() => { if (!tok) return; fetch('/api/me/level?echo=1', { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.success && j.echo) setEcho(j.echo); }).catch(() => undefined); }, [tok]);
+  /* P70-ب «رجع الصدى»: كلمة العبور من الأستاذ (تحت الكلمة التي تعبر) + تذكير لطيف إن كانت صفحة المستوى ما زالت مفتوحة */
+  const [eword, setEword] = useState<{ notice_id: string; title_ar: string; text_ar: string; voice_sec: number | null; level_no: number } | null>(null);
+  const [eopen, setEopen] = useState<{ href: string; level_no: number; until_ar: string } | null>(null);
+  const [echip, setEchip] = useState<string | null>(null); const [echipBusy, setEchipBusy] = useState(false);
+  useEffect(() => { if (!tok) return; fetch('/api/me/level?echo=1', { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then((r) => r.json()).then((j) => { if (!j?.success) return; if (j.echo) setEcho(j.echo); if (j.word) setEword(j.word); if (j.open) setEopen(j.open); }).catch(() => undefined); }, [tok]);
+  const replyChip = useCallback(async (chip: string) => { if (!tok || !eword || echipBusy) return; setEchipBusy(true); try { const r = await fetch('/api/notices', { method: 'POST', headers: { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'word_reply', notice_id: eword.notice_id, chip }) }); const j = await r.json().catch(() => ({})); if (r.ok && j?.success) setEchip(chip); } finally { setEchipBusy(false); } }, [tok, eword, echipBusy]);
   const flash = (t: string) => { setMsg(t); setTimeout(() => setMsg(''), 7000); };
   async function post(body: Record<string, unknown>): Promise<any> { setBusy(true); const j = await fetch('/api/me/line', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null); setBusy(false); return j; }
   async function save(r: MyRoom, kind: LineKind) {
@@ -63,6 +68,9 @@ export default function LineDesk() {
     <header className="ln-head"><span className="pt-kicker"><Icon name="edit" size={14} /> سجلّ التعلّم والتطبيق للمتدرّب</span><h1>✍️ {d?.names.page || 'سطري'} <small>سطر في يوم التدريب · سطر في الأسبوع من موقعك</small></h1>
       <p>في أيام التدريب تكتب سطرًا واحدًا: ماذا أخذتَ من اليوم. وحين تعود إلى موقعك بين الكتل يصبح البرنامج معك هناك: سطر في الأسبوع — ماذا طبّقتَ وما الذي منعك — وموقف ميداني تكتب كيف تصرّفت فيه فعلًا. مدرّبك يرى المجمَّع بلا أسماء، ويبدأ الكتلة القادمة بما جرى في مواقعكم.</p></header>
     {echo && <aside className="pt-box ln-echo" data-testid="ln-echo" data-level={echo.level_no}><small>{echo.intro_ar}</small><blockquote>«{echo.line_ar}»</blockquote><p>واليوم تبدأ المستوى {echo.next_level_no}. <Link href={echo.href}>صفحة المستوى {echo.level_no}</Link> · <Link href="/me/level">بكلماتي عبر المستوى</Link></p></aside>}
+    {eword && <aside className="pt-box ln-echo ln-echo-word" data-testid="ln-echo-word" data-level={eword.level_no} data-chip={echip || ''}><small>{eword.title_ar}</small>{eword.text_ar && <blockquote>«{eword.text_ar}»</blockquote>}{!eword.text_ar && eword.voice_sec ? <p>🎙️ كلمة صوتية ({Math.round(eword.voice_sec)} ث) — تسمعها من 🔔 تنبيهاتي.</p> : null}
+      <p className="ln-echo-chips">{echip ? <span data-testid="ln-echo-replied">وصل ردّك {echip === 'got_it' ? '🌱' : echip === 'need_help' ? '✋' : '🕐'} إلى أستاذك ✓</span> : <>ردّ بلمسة: {[['got_it', '🌱 وصلت'], ['need_help', '✋ أحتاج مساعدة'], ['will_attend', '🕐 سأحضر']].map(([k, l]) => <button key={k} type="button" className="ln-chip" data-testid={`ln-echo-chip-${k}`} disabled={echipBusy} onClick={() => void replyChip(k)}>{l}</button>)}</>}</p></aside>}
+    {eopen && !echo && <p className="ln-level-open" data-testid="ln-level-open" data-level={eopen.level_no}>🏁 صفحة مستواك {eopen.level_no} ما زالت مفتوحة حتى {eopen.until_ar} — <Link href={eopen.href}>اختمها بكلماتك</Link>؛ أستاذك الجديد يقرأ صدى الشعبة بلا أسماء.</p>}
     {err && <p className="ln-err" role="alert" data-testid="ln-err">{err}</p>}
     {msg && <p className="ln-ok" role="status" data-testid="ln-ok">{msg}</p>}
     {!tok && tok !== null && <section className="pt-box"><p>سجّل الدخول لتكتب سطرك. <Link href="/me">مساحتي</Link></p></section>}
@@ -117,6 +125,7 @@ export default function LineDesk() {
 }
 
 const CSS = `
+.ln-echo-word small{color:#0f766e}.ln-echo-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}.ln-chip{font:inherit;font-size:12.5px;font-weight:800;border:1px solid #99f6e4;background:#fff;color:#0f766e;border-radius:999px;padding:4px 10px;cursor:pointer}.ln-chip:disabled{opacity:.6}.ln-level-open{margin:0 0 12px;background:#fffbeb;border:1px solid #fde68a;color:#78350f;border-radius:12px;padding:8px 12px;font-size:13px;font-weight:700}
 .ln-echo{margin:10px 0 14px;background:linear-gradient(160deg,#ecfeff,#f0fdfa);border:1px solid #99f6e4;border-radius:16px;padding:12px 16px}.ln-echo small{color:#0b8a83;font-weight:800}.ln-echo blockquote{margin:6px 0;font-size:19px;line-height:1.8;color:#134e4a;font-weight:700}.ln-echo p{margin:0;color:#475569;font-size:13px}.ln-echo a{color:#0f2a4e;font-weight:800}
 .ln-btnlink{font:inherit;cursor:pointer}.ln-today h2{margin:0 0 6px;font-size:16px;color:#0f2a4e}.ln-answer{font-size:14px;font-weight:800;color:#0f2a4e;margin:0 0 6px;line-height:1.8}.ln-todaylist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.ln-todaylist li{display:flex;flex-direction:column;gap:2px;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;font-size:13px}
 .ln-shift{display:flex;gap:8px;align-items:center;background:#f5f3ff;border:1px solid #ddd6fe;color:#4c1d95;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:800}
