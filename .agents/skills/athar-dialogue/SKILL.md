@@ -146,6 +146,13 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - The echo: first week of the next level `levelEcho()` surfaces the sealed line in «سطري» (`ln-echo`); at graduation `sealedLevelLines()` becomes the P63 card `level_lines`.
 - «نادِ» trap: «صفحة» is a GO_WORD and is stripped before matching — aliases must stand without it («سطر المستوى», «عبرتُ»).
 
+## The echo climbs to the instructor as numbers, never names (P70-ب pattern — «رجع الصدى» · «كلمة العبور»)
+- Lives inside the existing «الممرّ» card (`corridor()` now returns `echo`), only in the first 7 days of a level ≥ 2 (`echoPhase` from `levelSpans`; no cron, nothing stored). `lib/level/echo.ts` is forbidden by a source-shape test from reading `miaar_*`/`placement_reports` and from any write.
+- Every component applies k ≥ 5 on its own (sealed · wrote · blocked · committed · crossed) and falls silent alone; «crossed» comes from the learners' sealed `body.cards[crossed]` text, guarded against % and two-digit numbers (CEFR codes pass).
+- The instructor's reply is an ordinary trainer word with a flag (`sendWord({ echo: level_no })`): title «كلمة العبور من أستاذك …», url `/me/line`, dedupe `echo_word:<classroom>:<level>:<trainer>:<email>` (merge → re-send replaces). `parseWordNotice` reads the trainer from that key so P53 chips and ✋ land in the day book as usual.
+- Learner side: `learnerEchoView()` = own line (P70) + instructor word + «page still open» nudge; the word never enters the sealed level page.
+- Trap: `dy-echo*` test ids already belong to P56 «صدى الأسبوع» — use `dy-lvecho*`.
+
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
 
