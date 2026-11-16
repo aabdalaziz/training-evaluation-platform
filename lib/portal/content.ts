@@ -71,7 +71,7 @@ export const PARTNERS = [
   { logo: '/logos/gate.png', name: { ar: 'شركة بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T, role: { ar: 'الكيان التجاري المشغِّل حاليًا', en: 'Current operating entity' } as T, wide: true },
 ];
 
-/** خريطة الاختصار TRACE → الخدمات (تُعرض في الرئيسية والتذييل) */
+/** خريطة الاختصار TRACE → الخدمات (تُعرض في الرئيسة والتذييل) */
 export const ACRONYM: { letter: string; word: string; ar: string; slug: string }[] = [
   { letter: 'T', word: 'Training', ar: 'البرامج التدريبية والدبلومات', slug: 'training' },
   { letter: 'R', word: 'Resources', ar: 'مستودع الحقائب التدريبية', slug: 'resources' },
@@ -181,7 +181,7 @@ export const CROSS = [
 ];
 
 export const NAV: { href: string; label: T }[] = [
-  { href: '/', label: { ar: 'الرئيسية', en: 'Home' } },
+  { href: '/', label: { ar: 'الرئيسة', en: 'Home' } },
   { href: '/services', label: { ar: 'الخدمات', en: 'Services' } },
   { href: '/programs', label: { ar: 'البرامج', en: 'Programs' } },
   { href: '/consulting', label: { ar: 'الاستشارات', en: 'Consulting' } },

@@ -18,7 +18,7 @@ export type Intent =
 export type Destination = { href: string; label: string; aliases: string[]; admin?: boolean };
 /** الوجهات العامة (مسارات موجودة فعلًا) — الاسم الرسمي أولًا ثم ما يقوله الناس */
 export const DESTINATIONS: Destination[] = [
-  { href: '/', label: 'الرئيسية', aliases: ['الرئيسية', 'الصفحة الرئيسية', 'البداية', 'البيت', 'الهوم'] },
+  { href: '/', label: 'الرئيسة', aliases: ['الرئيسة', 'الرئيسية', 'الصفحة الرئيسة', 'الصفحة الرئيسية', 'البداية', 'البيت', 'الهوم'] }, /* المصطلح «الرئيسة» — والنطق الشائع «الرئيسية» يبقى مفهومًا */
   { href: '/services', label: 'الخدمات', aliases: ['الخدمات', 'خدمات اثر', 'كل الخدمات'] },
   { href: '/programs', label: 'البرامج', aliases: ['البرامج', 'البرامج التدريبية', 'الدورات', 'التدريب', 'دورات'] },
   { href: '/consulting', label: 'الاستشارات', aliases: ['الاستشارات', 'استشارة', 'الاستشاره'] },
@@ -59,7 +59,7 @@ export const DESTINATIONS: Destination[] = [
   { href: '/me/diploma', label: 'هيكل الدبلوم', aliases: ['هيكل الدبلوم', 'هيكل', 'جدول الدبلوم', 'جدول المحاضرات', 'الشعب والمحاضرات', 'الشُّعب والمحاضرات', 'طلبات النقل', 'البديل بلمسة', 'الفترات الخاصة', 'الفترات الخاصّة'] }, /* P66-ب */
   { href: '/me/level', label: 'بكلماتي عبر المستوى', aliases: ['صفحة المستوى', 'صفحة مستواي', 'بكلماتي عبر المستوى', 'عبر المستوى', 'سطر المستوى', 'محطة المستوى', 'محطّة المستوى', 'عبرت', 'عبرتُ'] }, /* P70 */
   { href: '/me/hour', label: 'ساعة أَثَر', aliases: ['ساعه', 'ساعة', 'لساعه', 'ساعتنا', 'لساعتنا', 'سطر ساعتنا', 'لقاء التامل', 'لقاء التأمل', 'الساعه في البيت', 'الساعة في البيت'] }, /* P73 — «أثر» كلمة نداء تُحذف قبل المطابقة، فتبقى «ساعه» وحدها (بعد normalizeCmd) */
-  { href: '/#heard', label: 'سمعناكم', aliases: ['سمعناكم', 'سمعنا كم', 'خيط اللقاءات', 'سطور الشعب', 'سطور الشُّعب'] }, /* P74 — قسم «سمعناكم» في الرئيسية */
+  { href: '/#heard', label: 'سمعناكم', aliases: ['سمعناكم', 'سمعنا كم', 'خيط اللقاءات', 'سطور الشعب', 'سطور الشُّعب'] }, /* P74 — قسم «سمعناكم» في الرئيسة */
   { href: '/me/grad', label: 'يوم تخرّجي', aliases: ['يوم تخرجي', 'يوم تخرّجي', 'صفحة تخرجي', 'صفحة تخرّجي', 'تخرجي', 'تخرّجي', 'بكلماتي', 'سطر التخرج', 'سطر التخرّج'] }, /* P63 */
   { href: '/me/letter', label: 'رسالة إلى نفسي', aliases: ['رسالتي', 'رسالة الى نفسي', 'رسالة إلى نفسي', 'رسالتي إلى نفسي', 'رسالتي الى نفسي', 'إلى من سأكون', 'الى من ساكون', 'سلسلة سنواتي', 'رسالة الدفعة'] }, /* P62 */
   { href: '/me/card', label: 'بطاقتي', aliases: ['بطاقتي', 'البطاقة'] },
@@ -124,7 +124,7 @@ export function parseCommand(raw: string, ctx: { admin?: boolean; inExam?: boole
   if (sm && sm[1].trim().length >= 2) { const rawWords = raw.trim().split(/\s+/); const q = rawWords.slice(rawWords.length - sm[1].trim().split(' ').length).join(' ').replace(/[؟?!.،]+$/g, ''); return { kind: 'search', q: q || sm[1].trim() }; }
   /* الوجهات: نحذف أفعال الحركة ثم نطابق أطول اسم مستعار تُغطّى كل كلماته */
   const goSet = new Set(GO_WORDS.flatMap((g) => bare(g))); const words = bare(n).filter((w) => !goSet.has(w) && !['من', 'فضلك', 'سمحت', 'لو'].includes(w));
-  if (!words.length) return hasAny(n, ['الرئيسيه', 'الرئيسية', 'البيت', 'الهوم']) ? { kind: 'home' } : { kind: 'unknown', heard: raw };
+  if (!words.length) return hasAny(n, ['الرئيسيه', 'الرئيسه', 'الرئيسة', 'البيت', 'الهوم']) ? { kind: 'home' } : { kind: 'unknown', heard: raw };
   let best: { d: Destination; score: number } | null = null;
   for (const d of DESTINATIONS) {
     if (d.admin && !ctx.admin) continue;
@@ -145,7 +145,7 @@ export function describeIntent(i: Intent, lang: 'ar' | 'en' = 'ar'): string {
   const ar = lang === 'ar';
   switch (i.kind) {
     case 'go': return ar ? `أفتح ${i.label}` : `Opening ${i.label}`;
-    case 'home': return ar ? 'أعود إلى الرئيسية' : 'Going home';
+    case 'home': return ar ? 'أعود إلى الرئيسة' : 'Going home';
     case 'back': return ar ? 'أرجع خطوة' : 'Going back';
     case 'where': return ar ? 'أقرأ لك مكانك' : 'Reading your location';
     case 'resume_last': return ar ? 'أعيدك حيث توقفت' : 'Resuming where you left';

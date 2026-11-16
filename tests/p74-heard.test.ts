@@ -13,9 +13,9 @@ const seal = (day: string, cid: string, people = 6, line: string | null = `سط�
 const week = (n: number, cids: string[], people = 6) => cids.flatMap((c, j) => Array.from({ length: n }, (_, i) => seal(`2026-12-${String(30 - i - (j % 2)).padStart(2, '0')}`, c, people)));
 
 test('P74 · الأسماء والحدود', () => {
-  assert.equal(P74_NAMES_AR.heard, 'سمعناكم'); assert.equal(P74_NAMES_AR.heard_official, 'خيط لقاءات التأمل على الصفحة الرئيسية'); assert.equal(P74_NAMES_AR.voice, 'بصوتِ واحدٍ منّا'); assert.equal(P74_NAMES_AR.voice_official, 'القراءة الصوتية لسطر الشعبة');
+  assert.equal(P74_NAMES_AR.heard, 'سمعناكم'); assert.equal(P74_NAMES_AR.heard_official, 'خيط لقاءات التأمل على الصفحة الرئيسة'); assert.equal(P74_NAMES_AR.voice, 'بصوتِ واحدٍ منّا'); assert.equal(P74_NAMES_AR.voice_official, 'القراءة الصوتية لسطر الشعبة');
   assert.equal(HEARD_LIMITS.people, 20); assert.equal(HEARD_LIMITS.sections, 5); assert.equal(HEARD_LIMITS.items, 7); assert.equal(HEARD_LIMITS.voiceSec, 15); assert.equal(HEARD_LIMITS.voiceBytes, 1024 * 1024); assert.equal(HEARD_LIMITS.signedSeconds, 300); assert.equal(HEARD_LIMITS.bucket, 'athar-media'); assert.equal(HEARD_LIMITS.prefix, 'hour-voice');
-  assert.ok(P74_NAMES_AR.consent.includes('لا يصل الصفحة الرئيسية')); assert.ok(P74_NAMES_AR.consent.includes('حذفه'));
+  assert.ok(P74_NAMES_AR.consent.includes('لا يصل الصفحة الرئيسة')); assert.ok(P74_NAMES_AR.consent.includes('حذفه'));
 });
 
 test('P74 · العتبتان معًا: 5 شُعب و20 فردًا — وإلا لا قسم', () => {
@@ -71,12 +71,12 @@ test('P74 · «نادِ»: «سمعناكم» → /#heard', () => {
   const m = parseCommand('يا أثر سمعناكم') as any; assert.ok(m && JSON.stringify(m).includes('/#heard'), JSON.stringify(m));
 });
 
-test('P74 · شكل المصدر: صفر جداول · الرئيسية تحمل heard · الصوت لا يدخل الرئيسية · الغرفة تطلب الموافقة · الختم يحمل public', () => {
+test('P74 · شكل المصدر: صفر جداول · الرئيسة تحمل heard · الصوت لا يدخل الرئيسة · الغرفة تطلب الموافقة · الختم يحمل public', () => {
   const store = read('lib/hour/store.ts'); const route = read('app/api/me/hour/route.ts'); const home = read('app/api/home/route.ts'); const page = read('app/page.tsx'); const room = read('app/me/hour/HourRoom.tsx'); const heard = read('lib/hour/heard.ts');
   assert.ok(store.includes("const meta = { ...(row.meta || {}), voice:") && store.includes('invalidateHeardCache'), 'الصوت في meta الختم');
   assert.ok(!store.includes("from('portal_hour_voices')") && !heard.includes("from('"), 'لا جدول جديد');
   assert.ok(route.includes("multipart/form-data") && route.includes("'voice_delete'") && route.includes("'seal_public'") && route.includes("userFlag(db, me.id, 'voice_off'"), 'المسارات الثلاثة وسياسة voice_off');
-  assert.ok(home.includes('heardThread') && home.includes('heard }'), 'الرئيسية تحمل heard');
+  assert.ok(home.includes('heardThread') && home.includes('heard }'), 'الرئيسة تحمل heard');
   assert.ok(!heard.includes('voice_url') && !/HeardItem = \{[^}]*voice/.test(heard), 'الخيط العام بلا صوت');
   assert.ok(page.includes('data-testid="hd-section"') && page.includes('id="heard"') && page.includes('— شعبة في أَثَر') && !page.includes('hd-voice') && !page.includes('<audio') , 'القسم بلا صوت وبنسخ طويل');
   assert.ok(room.includes('hr-voice-consent') && room.includes('P74_NAMES_AR.consent') && room.includes('hr-seal-public') && room.includes("action: 'seal', public: pub"), 'الموافقة الصريحة وخانة الأستاذ');

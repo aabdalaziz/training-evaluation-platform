@@ -28,7 +28,7 @@ export async function loadSources(db: any, today: string): Promise<GraphSources>
     safe<any[]>(db.from('portal_sectors').select('code,name_ar,name_en').eq('active', true).limit(200), []),
     safe<any[]>(db.from('portal_impact_contracts').select('id,title_ar,organization_id,program_id,status').limit(LIM.rows), []),
   ]);
-  /* P67 سياسة الجهة — نقطة الاختناق الوحيدة للرسم العام: «لا خيوط في الرئيسية» يُسقط أحداث منسوبي الجهة قبل البناء، و«لا وجوه عامة» يُسقط عقدة الجهة */
+  /* P67 سياسة الجهة — نقطة الاختناق الوحيدة للرسم العام: «لا خيوط في الرئيسة» يُسقط أحداث منسوبي الجهة قبل البناء، و«لا وجوه عامة» يُسقط عقدة الجهة */
   const hidden = await membersWithFlag(db, 'home_threads_off'); const facesOff = await membersWithFlag(db, 'public_faces_off');
   const ev = hidden.users.size || hidden.emails.size ? events.filter((e: any) => !(e.user_id && hidden.users.has(e.user_id)) && !(e.email && hidden.emails.has(String(e.email).toLowerCase()))) : events;
   const og = facesOff.orgs.size ? orgs.filter((o: any) => !facesOff.orgs.has(o.id)) : orgs;

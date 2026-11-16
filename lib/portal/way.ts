@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** «الطريق» — خريطة أسماء المسارات لشريط التنقّل الموحّد (رجوع · الرئيسية · مسار الصفحة). منطق خالص قابل للاختبار. */
+/** «الطريق» — خريطة أسماء المسارات لشريط التنقّل الموحّد (رجوع · الرئيسة · مسار الصفحة). منطق خالص قابل للاختبار. */
 export type Crumb = { href: string; label: string; current: boolean; /** مقطع بلا صفحة خاصة (مجلّد مسارات فقط) → يُعرض نصًّا لا رابطًا */ dead?: boolean };
 /** مقاطع لا صفحة لها (تحتها صفحات ديناميكية فقط) — لا تُربَط في الفتات ولا يُرجَع إليها (كانت تعطي 404) */
 export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/e', '/evaluate', '/followup', '/g', '/lv' /* P70 */, '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/miaar/certificate', '/miaar/client', '/miaar/practice', '/me/reports/line', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey', '/verify/report', '/verify/form']);
@@ -29,12 +29,12 @@ const NAMES: Record<string, L> = {
   skills: { ar: 'ملفي المهاري', en: 'My skills' }, twin: { ar: 'توأمي المهاري', en: 'My twin' }, missions: { ar: 'مهماتي', en: 'My missions' }, after: { ar: 'ما بعد البرنامج', en: 'After the program' }, pair: { ar: 'رفيقي', en: 'My pair' },
   trust: { ar: 'سجلّ الصدق', en: 'Trust' }, result: { ar: 'النتيجة', en: 'Result' }, bank: { ar: 'بنك البنود', en: 'Item bank' }, forms: { ar: 'النماذج', en: 'Forms' }, invites: { ar: 'الدعوات', en: 'Invitations' }, balance: { ar: 'الميزان', en: 'Balance' }, rating: { ar: 'التصحيح', en: 'Rating' },
 };
-const HOME: L = { ar: 'الرئيسية', en: 'Home' };
+const HOME: L = { ar: 'الرئيسة', en: 'Home' };
 /** مقطع يبدو رمزًا/معرّفًا (uuid · ML-XXXX-XXXX · أرقام · رموز طويلة) → يُعرض باسم عام لا بقيمته */
 export const looksLikeId = (seg: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(seg) || /^ML-[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(seg) || /^\d+$/.test(seg) || (/^[A-Za-z0-9_]{16,}$/.test(seg) && !NAMES[seg]);
 const DETAIL: L = { ar: 'التفاصيل', en: 'Details' };
 const pick = (l: L, lang: 'ar' | 'en') => (lang === 'ar' ? l.ar : l.en);
-/** فتات الطريق من المسار: «الرئيسية › مِعيار › النتيجة» — المركّب يسبق المفرد (admin/miaar قبل miaar) */
+/** فتات الطريق من المسار: «الرئيسة › مِعيار › النتيجة» — المركّب يسبق المفرد (admin/miaar قبل miaar) */
 export function crumbsFor(pathname: string, lang: 'ar' | 'en' = 'ar'): Crumb[] {
   const clean = (pathname || '/').split('?')[0].split('#')[0]; const segs = clean.split('/').filter(Boolean);
   const out: Crumb[] = [{ href: '/', label: pick(HOME, lang), current: segs.length === 0 }];
@@ -53,7 +53,7 @@ export function parentOf(pathname: string): string {
   for (let n = segs.length - 1; n >= 1; n--) { const p = '/' + segs.slice(0, n).join('/'); if (!NO_PAGE.has(p)) return p; }
   return '/';
 }
-/** هل يُظهَر الشريط في هذا المسار؟ الرئيسية لها بطلها، ولوحة التحكم لها قائمتها الجانبية */
+/** هل يُظهَر الشريط في هذا المسار؟ الرئيسة لها بطلها، ولوحة التحكم لها قائمتها الجانبية */
 export const showWay = (pathname: string): boolean => !!pathname && pathname !== '/' && !pathname.startsWith('/dashboard');
 
 /** سجلّ الطريق داخل التبويب (sessionStorage): يميّز الرجوع الحقيقي عن القفز لصفحة أب — لأن document.referrer لا يتغيّر مع تنقّل SPA */

@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P67 «سياسة الجهة — الاسم يدخل من الباب»
- *  الجهة (قيادة/إدارة) تقرّر بنفسها ما الذي يصل إلى أَثَر: هوية مستعارة · دخول بالرمز · لا وجوه عامة · لا خيوط في الرئيسية ·
+ *  الجهة (قيادة/إدارة) تقرّر بنفسها ما الذي يصل إلى أَثَر: هوية مستعارة · دخول بالرمز · لا وجوه عامة · لا خيوط في الرئيسة ·
  *  لا صوت · لا وسائط · تحقّق أدنى · وضع الكشك. كل مفتاح له نقطة اختناق واحدة في الخادم (انظر POLICY_KEYS[].enforce_ar).
  *  المنطق النقي هنا (يُختبر وحده) + دوال القاعدة التي تأخذ db. الختم ATH-OP يوقَّع بمفتاح الموقع نفسه (signReceipt).
  */
@@ -21,7 +21,7 @@ export const POLICY_KEYS: { key: PolicyKey; title_ar: string; title_en: string; 
   { key: 'pseudonymous', title_ar: 'هوية مستعارة', title_en: 'Pseudonymous', desc_ar: 'منسوبو الجهة يُعرَفون في أَثَر برقمهم التدريبي فقط — لا اسم ولا بريد حقيقي. جدول «الرقم ↔ الشخص» يبقى عند الجهة.', enforce_ar: 'إنشاء الحسابات من قائمة الأرقام (بريد مصطنع) · شارة «هوية مستعارة» في قوائم الطاقم · التقارير بالأرقام', implies: ['code_login'] },
   { key: 'code_login', title_ar: 'الدخول بالرمز', title_en: 'Code login', desc_ar: 'الدخول من /enter بالرقم التدريبي ورقم سري من 6 أرقام (بلا بريد ولا رسائل). قفل مؤقت بعد 5 محاولات.', enforce_ar: '/api/enter (signInWithPassword على بريد مصطنع) · القفل في portal_org_codes + حدث درع' },
   { key: 'public_faces_off', title_ar: 'لا وجوه عامة', title_en: 'No public faces', desc_ar: 'لا يظهر أي منسوب للجهة في صفحة عامة (الملف العام/الدليل) ولا تظهر الجهة كعقدة في الرسم العام.', enforce_ar: 'portal_public_profile (SQL) · loadSources للرسم البياني' },
-  { key: 'home_threads_off', title_ar: 'لا خيوط في الرئيسية', title_en: 'No homepage threads', desc_ar: 'أحداث تعلّم منسوبي الجهة لا تدخل «خيوط الأثر» العامة ولا أي تجميع عام — حتى لو كانت مجهَّلة.', enforce_ar: 'loadSources في evidence-cron يستثني أحداث المنسوبين قبل بناء الرسم' },
+  { key: 'home_threads_off', title_ar: 'لا خيوط في الرئيسة', title_en: 'No homepage threads', desc_ar: 'أحداث تعلّم منسوبي الجهة لا تدخل «خيوط الأثر» العامة ولا أي تجميع عام — حتى لو كانت مجهَّلة.', enforce_ar: 'loadSources في evidence-cron يستثني أحداث المنسوبين قبل بناء الرسم' },
   { key: 'voice_off', title_ar: 'لا صوت', title_en: 'No voice', desc_ar: 'يختفي زرّ «نادِ» والأمانة الصوتية وأي رفع صوتي لمنسوبي الجهة — تبقى الكتابة.', enforce_ar: '/api/me/voice-reply · /api/media (kind=audio) · Nadi.tsx يخفي الزرّ' },
   { key: 'media_off', title_ar: 'لا وسائط', title_en: 'No media', desc_ar: 'لا تسجيلات أداء (فيديو/صوت/صورة) من منسوبي الجهة — الدليل كتابي ومن المشرف فقط.', enforce_ar: '/api/media POST → 403' },
   { key: 'verify_minimal', title_ar: 'تحقّق أدنى', title_en: 'Minimal verify', desc_ar: 'صفحات التحقّق العامة (شهادة التخرّج · خريطة الأثر) تُظهر صحّة الوثيقة فقط — بلا وجه ولا سطر شخصي.', enforce_ar: 'verifyGrad · verifyMap (store) تحجب face/live_public' },
@@ -186,7 +186,7 @@ export async function visitorView(db: Db, orgId: string): Promise<VisitorItem[]>
     { id: 'profiles', title_ar: 'ملفات عامة لمنسوبين (رابط/عام)', count: pubProfiles.length, visible: pubProfiles.length > 0 && !p.public_faces_off, controlled_by: 'public_faces_off', where_ar: '/p/<معرّف> — الملف المهاري العام' },
     { id: 'faces', title_ar: 'وجوه في صفحات التحقّق (شهادة التخرّج)', count: gradFaces.length, visible: gradFaces.length > 0 && !p.verify_minimal, controlled_by: 'verify_minimal', where_ar: '/verify/grad?code=…' },
     { id: 'graph', title_ar: 'الجهة كعقدة في رسم الأثر', count: node.length, visible: node.length > 0 && !p.public_faces_off, controlled_by: 'public_faces_off', where_ar: 'كوكبة الأثر (طاقم) + تجميعات' },
-    { id: 'threads', title_ar: 'أحداث منسوبين داخل خيوط الرئيسية (مجهَّلة، k≥5)', count: uids.length, visible: uids.length > 0 && !p.home_threads_off, controlled_by: 'home_threads_off', where_ar: 'الصفحة الرئيسية — «خيوط الأثر»' },
+    { id: 'threads', title_ar: 'أحداث منسوبين داخل خيوط الرئيسة (مجهَّلة، k≥5)', count: uids.length, visible: uids.length > 0 && !p.home_threads_off, controlled_by: 'home_threads_off', where_ar: 'الصفحة الرئيسة — «خيوط الأثر»' },
     { id: 'letters', title_ar: 'رسائل الشهر القابلة للتحقّق (بقرار الجهة ورمزها)', count: letters.length, visible: letters.length > 0, controlled_by: null, where_ar: '/verify/letter?code=… — لا تُنشر إلا بمشاركة الجهة للرمز' },
   ];
 }

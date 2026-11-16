@@ -95,12 +95,12 @@
 | **الدور** | ما يُسنَد للمستخدم (`portal_roles` — 17 دورًا نظاميًا + أدوار مخصّصة) | `/admin/roles` → «قائمة الأدوار» |
 | **الصلاحية** | أثر الدور الفعلي (`portal_role_grants`) — تُلغى بنقرة، يبقى الحساب | `/admin/roles` → «المستخدمون والأدوار» |
 | **الدعوة** | بريد + دور (حتى 5) + جهة اختيارية → رابط `/join/<token>` يُعرض مرة واحدة، صالح 14 يومًا | `/admin/roles` → «دعوة جديدة» (شخصية · جماعية بـ QR · إسناد مباشر) |
-| **الصفحة الرئيسية للدور** | وجهة المستخدم بعد الدخول (`landing`: `/hub/trainer` · `/hub/leadership` …) | `/hub` = «صفحاتي» عند تعدّد الأدوار |
+| **الصفحة الرئيسة للدور** | وجهة المستخدم بعد الدخول (`landing`: `/hub/trainer` · `/hub/leadership` …) | `/hub` = «صفحاتي» عند تعدّد الأدوار |
 | **حذف الحساب** | «أن تُنسى»: مهلة تراجع 7 أيام برابط للشخص ثم تنفيذ آلي (حذف/تجهيل/إبقاء نظامي + حذف حساب الدخول + إيصال موقَّع) | `/admin/vault` → «حذف الحسابات» → «بدء الحذف» |
 
 - دورة المدعو: يفتح الرابط → يكتب بريده نفسه → «أرسل لي رابط الدخول» (رابط لمرة واحدة من Supabase Auth؛ قد يقع في Spam أول مرة، وحدّ الإرسال نحو 2–4/ساعة للبريد الواحد) → يعود → «قبول الدعوة والدخول».
 - انتهاء الارتباط: ألغِ الدور من «المستخدمون والأدوار» (المعتاد). الحذف الكامل فقط بطلب الشخص أو انتهاء مدة الاحتفاظ. `erasure_for` يجد الحساب عبر عضوية جهة أو تسجيل برنامج **أو دور مُسنَد** (منذ 2026-11-15).
-- الأسماء السردية («باب»، «صفة»، «الردهة») انسحبت من شاشات الإدارة والدخول (قاعدة P13)؛ تبقى في الصفحة الرئيسية و2062 وأثير فقط.
+- الأسماء السردية («باب»، «صفة»، «الردهة») انسحبت من شاشات الإدارة والدخول (قاعدة P13)؛ تبقى في الصفحة الرئيسة و2062 وأثير فقط.
 
 ---
 
@@ -179,7 +179,7 @@
 | 2026-11-08 | `supabase/p49d-end-survey-v2.sql` ثم `supabase/p49d2-link-guard.sql` | الاستبيان الختامي الشامل (53 بندًا) + حارس `evaluations_scope_guard` يقبل القالب الافتراضي ويربطه تلقائيًا + حارس جدول الربط v2 (القالب الافتراضي محايد المؤسسة). نُفِّذا في الإنتاج: `1·53·47·7·4·1·0·0·1` و`unlinked_programs = 0` |
 | 2026-11-08 | `supabase/p49e-pulse.sql` | P49-هـ: جدول `end_survey_actions` (مهامّ «بند الأسبوع» · k≥5 · إغلاق بملاحظة) + 3 سياسات + قيد مهمّة مفتوحة واحدة لكل (دفعة × بند) | `table=1 · policies=3 · open_uidx=1` |
 
-### الجداول الرئيسية
+### الجداول الرئيسة
 `programs` (مع `archived_at`) · `program_levels` · `program_approvals` · `program_managers` · `trainers` · `classrooms` · `class_schedules` · `evaluation_templates` · `questions` · `program_evaluation_templates` · `evaluations` · `evaluation_answers` · `attendance_sessions` · `attendance_records` · `certificates` · `certificate_settings` · `trainer_awards` · `impact_assessments` · `impact_questions` · `impact_responses` · `behavior_followups` · `behavior_questions` · `behavior_responses` · `outcome_kpis` · `outcome_measurements` · `remote_learning_survey_responses` · `report_subscriptions` · `notifications` · `notification_runs` · `trainee_mail_log` · `audit_logs` · `backup_log` · `profiles`
 
 ### قواعد مهمة

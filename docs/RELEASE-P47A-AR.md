@@ -2,7 +2,7 @@
 
 © 2026 د. أحمد محمد عبدالعزيز بدوي — جميع الحقوق محفوظة · تُشغَّل تجاريًا عبر شركة بوابة التميز للاستشارات والتدريب.
 
-الاسم الرسمي (العقود · الشهادات · واجهة الإدارة): **مراجعة البرنامج بعد الدفعة** · الاسم السردي (الرئيسية · الصفحة العامة): **«البرنامج الذي يراجع نفسه»**.
+الاسم الرسمي (العقود · الشهادات · واجهة الإدارة): **مراجعة البرنامج بعد الدفعة** · الاسم السردي (الرئيسة · الصفحة العامة): **«البرنامج الذي يراجع نفسه»**.
 
 التاريخ: 2026-11-04 · الفرع: `p47a` فوق `03d4515` (ر4-ب) · ترحيل واحد صغير (يوسّع قيد النوع فقط) · لا جدول جديد · لا متغيّر بيئة جديد · لا حزمة npm جديدة · لا cron جديد.
 
@@ -65,10 +65,10 @@
 | `supabase/migrations/20270121_portal_p47_program_review.sql` | جديد: يعيد بناء `portal_reports_kind_check` مضيفًا `program_review` + فهرس جزئي للقراءة العامة. تشخيص: `kind_chk_ok = 1 · review_idx_1 = 1 · reviews_0 = 0`. |
 | `lib/reports/registry.ts` | كتلة P47 (أسماء · حدود · أفعال · أنواع · `buildGaps`/`localProposals`/`cleanProposals`/`cleanReviewBody`/`mergeProposals`/`missingBeforeReviewSubmit`/`reviewChanges`/`reviewPublicView`/`programChangeLog`/`reviewPrompt`) + فرعا `publicVerifyView`/`listLineAr`. |
 | `lib/reports/load.ts` | `programPromise` · `computeReviewSnapshot` · `reviewCards` · `createReview` (جاهزية مفروضة) · `proposeChanges` · `programReviews` + فروع `view`/`save`/`recompute`/`submit`/`decide` والإشعارات. |
-| `app/api/reports/route.ts` | GET `?reviews=` (عام) · `reviews[]` في الرئيسية · POST `create_review` · `propose {id, local?}` · مفاتيح META. |
+| `app/api/reports/route.ts` | GET `?reviews=` (عام) · `reviews[]` في الرئيسة · POST `create_review` · `propose {id, local?}` · مفاتيح META. |
 | `lib/ai/prompts.ts` | غرض `program_review` (حدّ 20) وتسميته. |
 | `app/components/ProgramReview.tsx` | جديد: `ReviewCards` · `ReviewEditor` · `ReviewDoc` · `ProgramReviewStrip` · `VerifyReview` (testids `pv-*`). |
-| `app/components/Reports.tsx` | ربط: بطاقات الرئيسية + قفزة سريعة · فرع المحرّر · فرع التحقّق · فلتر «المراجعات». |
+| `app/components/Reports.tsx` | ربط: بطاقات الرئيسة + قفزة سريعة · فرع المحرّر · فرع التحقّق · فلتر «المراجعات». |
 | `app/programs/[id]/page.tsx` | الشريط العام لكل البرامج. |
 | `tests/p47.test.ts` + `tests/index.ts` | 8 اختبارات وحدة جديدة (753 إجمالًا). |
 | `AGENTS.md` | التحديث المعتاد. |

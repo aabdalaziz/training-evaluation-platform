@@ -9,7 +9,7 @@ test('نادِ: الوجهات بالفصحى واللهجة وبأسماء ال
   assert.equal(go('افتح مِعيار'), '/miaar'); assert.equal(go('اختبار تحديد المستوى'), '/miaar'); assert.equal(go('حدّد مستواك'), '/miaar');
   assert.equal(go('خذني إلى البرامج'), '/programs'); assert.equal(go('روح للاستشارات'), '/consulting'); assert.equal(go('ودّيني لصفحة المساعدة'), '/help');
   assert.equal(go('يا أثر افتح الخدمات'), '/services'); assert.equal(go('تسجيل الدخول'), '/login'); assert.equal(go('مهاراتي'), '/me/skills'); assert.equal(go('أثر 2062'), '/2062');
-  assert.equal(go('الرئيسية'), 'home'); assert.equal(go('روح البيت'), 'home');
+  assert.equal(go('الرئيسة'), 'home'); assert.equal(go('الرئيسية'), 'home'); assert.equal(go('روح البيت'), 'home');
 });
 test('نادِ: نيّات ثابتة ولهجات', () => {
   assert.equal(parseCommand('أين أنا؟').kind, 'where'); assert.equal(parseCommand('وين أنا').kind, 'where');

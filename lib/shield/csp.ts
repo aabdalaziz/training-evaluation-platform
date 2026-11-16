@@ -47,7 +47,7 @@ export function cspVerdict(rows: CspRow[], now = Date.now(), days = CSP_READY_DA
 /** خطوات التحويل (تُعرض في اللوحة — لا تُنفَّذ آليًا) */
 export const ENFORCE_STEPS_AR = [
   'افتح next.config.js في GitHub واستبدل اسم الترويسة Content-Security-Policy-Report-Only بـ Content-Security-Policy (سطر واحد) مع إبقاء report-uri كما هو.',
-  'Commit → انتظر نشر Vercel (دقيقتان) → افتح الصفحة الرئيسية و/me و/admin/management وتأكّد أن كل شيء يعمل.',
+  'Commit → انتظر نشر Vercel (دقيقتان) → افتح الصفحة الرئيسة و/me و/admin/management وتأكّد أن كل شيء يعمل.',
   'عُد إلى هذه اللوحة بعد يوم: يجب أن يبقى العدّاد صفرًا. إن ظهر مصدر محظور فعلًا فالرجوع = إعادة الكلمة Report-Only (Commit واحد).',
   'بعد أسبوع نظيف في وضع الإلزام تُسجَّل الخطوة csp_enforce في «يحتاج يدًا بشرية» بأنها أُنجزت.',
 ];

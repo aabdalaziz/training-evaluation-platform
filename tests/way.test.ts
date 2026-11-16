@@ -5,15 +5,15 @@ import assert from 'node:assert/strict';
 import { crumbsFor, parentOf, showWay, looksLikeId, updateStack } from '../lib/portal/way';
 
 test('الطريق: فتات عربية بالأسماء الرسمية، والمركّب يسبق المفرد', () => {
-  assert.deepEqual(crumbsFor('/miaar/result/ML-AB12-CD34').map((c) => c.label), ['الرئيسية', 'مِعيار', 'النتيجة', 'التفاصيل'], 'رمز النتيجة لا يُعرض');
-  assert.deepEqual(crumbsFor('/admin/miaar/bank').map((c) => c.label), ['الرئيسية', 'الإدارة', 'مِعيار', 'بنك البنود']);
+  assert.deepEqual(crumbsFor('/miaar/result/ML-AB12-CD34').map((c) => c.label), ['الرئيسة', 'مِعيار', 'النتيجة', 'التفاصيل'], 'رمز النتيجة لا يُعرض');
+  assert.deepEqual(crumbsFor('/admin/miaar/bank').map((c) => c.label), ['الرئيسة', 'الإدارة', 'مِعيار', 'بنك البنود']);
   assert.deepEqual(crumbsFor('/admin/miaar/rating', 'en').map((c) => c.label), ['Home', 'Admin', 'Mi‘yar', 'Rating']);
   const c = crumbsFor('/me/skills'); assert.equal(c[c.length - 1].current, true); assert.equal(c[0].href, '/'); assert.equal(c[1].href, '/me');
-  assert.deepEqual(crumbsFor('/programs/some-program-slug').map((c) => c.label), ['الرئيسية', 'البرامج', 'some program slug'], 'المقطع المجهول يُقرأ');
+  assert.deepEqual(crumbsFor('/programs/some-program-slug').map((c) => c.label), ['الرئيسة', 'البرامج', 'some program slug'], 'المقطع المجهول يُقرأ');
 });
 test('الطريق: الأب والإظهار والمعرّفات', () => {
   assert.equal(parentOf('/admin/miaar/bank'), '/admin/miaar'); assert.equal(parentOf('/miaar'), '/'); assert.equal(parentOf('/'), '/');
-  assert.equal(showWay('/'), false, 'الرئيسية بلا شريط'); assert.equal(showWay('/dashboard/x'), false, 'لوحة التحكم لها قائمتها'); assert.equal(showWay('/miaar'), true);
+  assert.equal(showWay('/'), false, 'الرئيسة بلا شريط'); assert.equal(showWay('/dashboard/x'), false, 'لوحة التحكم لها قائمتها'); assert.equal(showWay('/miaar'), true);
   assert.ok(looksLikeId('ML-AB12-CD34') && looksLikeId('3f2a9c10-1b2c-4d5e-8f90-aabbccddeeff') && looksLikeId('12345') && looksLikeId('abcdefghijklmnopqrstuvwxyz012345'));
   assert.equal(looksLikeId('bank'), false); assert.equal(looksLikeId('miaar'), false);
 });

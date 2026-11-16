@@ -19,7 +19,7 @@ export const dict = {
     finalReport: "التقرير النهائي",
     teachers: "أداء المعلمين",
     management: "إدارة القاعات",
-    mainGate: "البوابة الرئيسية",
+    mainGate: "البوابة الرئيسة",
     
     // لوحة القيادة والمؤشرات
     totalResponses: "إجمالي الاستجابات الحية",

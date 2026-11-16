@@ -25,7 +25,7 @@ export function tokens(q: string): string[] { return normalizeAr(q).split(' ').m
 /* ---------- الفهرس الثابت: الصفحات (الأسماء الرسمية + المرادفات السردية/القديمة) ---------- */
 const P = (id: string, href: string, ar: string, en: string, syn: string[] = [], need?: Need, group: Group = 'page'): Entry => ({ id, href, ar, en, syn, group, need });
 export const ROUTES: Entry[] = [
-  P('home', '/', 'الصفحة الرئيسية', 'Home', ['الرئيسية', 'home', 'athar', 'اثر', 'بوابة']),
+  P('home', '/', 'الصفحة الرئيسة', 'Home', ['الرئيسة', 'home', 'athar', 'اثر', 'بوابة']),
   P('programs', '/programs', 'البرامج والدبلومات', 'Programs & diplomas', ['دورات', 'دبلوم', 'تسجيل', 'courses', 'catalog', 'برنامج']),
   P('services', '/services', 'الخدمات', 'Services', ['trace', 'خدماتنا', 'استشارات', 'حقائب']),
   P('arabic', '/services/arabic', 'تعليم العربية للناطقين بغيرها', 'Arabic for non-native speakers', ['عربية', 'arabic', 'ناطقين']),

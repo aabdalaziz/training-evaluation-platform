@@ -5,7 +5,7 @@
  *  ما يُكتب فيها = portal_learning_lines: hour_word · hour_line · hour_vote · carry · hour_seal (القيد الفريد = واحد لكل متدرّب في اليوم).
  *  الصلاحيات: الأستاذ = مدرّب الشعبة (classrooms.trainer_id ∈ بطاقاته) أو الطاقم · المتدرّب = مسجَّل في الشعبة (portal_enrollments).
  *  hourRole · myHourRooms · pinHour/unpinHour · hourView · act(carry|word|line|vote|seal) · hourSeals (النسيج) · hourEvidence (الاعتماد)
- *  P74: actSeal(public) · setHourVoice/clearHourVoice «بصوتِ واحدٍ منّا» (meta.voice) · heardThread «سمعناكم» (الرئيسية)
+ *  P74: actSeal(public) · setHourVoice/clearHourVoice «بصوتِ واحدٍ منّا» (meta.voice) · heardThread «سمعناكم» (الرئيسة)
  */
 import { P73_NAMES_AR, HOUR_LIMITS, SESSION_KIND, phaseOf, occurrences, riyadhStartIso, riyadhDay, addDaysKey, validatePin, validateWord, validateHourLine, weekViewOf, cloudOf, linesViewOf, pickLine, validVotes, carryNotice, pinNotice, sealNotice, sealHeadAr, cleanText, WEEKDAYS_AR, fmtTimeAr } from './registry';
 import type { HourSession, PhaseInfo, WeekView, CloudView, LinesView, SealMeta } from './registry';
@@ -209,7 +209,7 @@ export async function setSealPublic(db: Db, me: Me, classroomId: string, sealId:
   const { error } = await db.from('portal_learning_lines').update({ meta: { ...(row.meta || {}), public: !!pub } }).eq('id', row.id); if (error) return fail('تعذّر الحفظ', 500); invalidateHeardCache(); return { ok: true, public: !!pub };
 }
 
-/* ───────── P74 «سمعناكم» — خيط الرئيسية (ذاكرة 10 دقائق في العملية) ───────── */
+/* ───────── P74 «سمعناكم» — خيط الرئيسة (ذاكرة 10 دقائق في العملية) ───────── */
 let heardCache: { at: number; view: HeardView } | null = null;
 export const invalidateHeardCache = () => { heardCache = null; };
 export async function heardThread(db: Db, now = new Date()): Promise<HeardView> {

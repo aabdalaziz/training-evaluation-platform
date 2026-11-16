@@ -192,7 +192,7 @@ export const END_SURVEY_SEED: SeedQ[] = [
   O('end_p06_documents', 'الوثائق (الحضور · النتائج · الشهادات) تصدر بدقّة وفي وقتها (إن انطبق)', 'Documents (attendance, results, certificates) were issued accurately and on time (if applicable)', 'إدارة البرنامج', 'Programme management'),
   /* 9) رأيك */
   T('end_q13_improve_trainer', 'ما الذي تنصح به لتحسين أداء المدرّب؟', 'What would you recommend to improve the trainer\'s performance?'),
-  T('end_q14_strengths', 'ما نقاط القوة الرئيسية في هذا البرنامج؟', 'What are the main strengths of this programme?'),
+  T('end_q14_strengths', 'ما نقاط القوة الرئيسة في هذا البرنامج؟', 'What are the main strengths of this programme?'),
   T('end_q15_improvements', 'ما النقاط التي تحتاج إلى تحسين في هذا البرنامج؟', 'What needs improvement in this programme?'),
   T('end_o01_environment', 'ما الذي تقترحه لتحسين البيئة التدريبية (القاعة · التجهيزات · الخدمات · الإدارة)؟', 'What would you suggest to improve the training environment (room, equipment, services, management)?'),
   /* 10) التقييم العام */

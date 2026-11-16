@@ -18,7 +18,7 @@
 | `pseudonymous` هوية مستعارة | المنسوب رقم تدريبي؛ جدول «الرقم ↔ الشخص» عند الجهة | إنشاء الحسابات من القائمة ببريد مصطنع `<رقم>@<slug>.id.athar-portal.sa` + شارة في `/admin/shield` (يستلزم `code_login`) |
 | `code_login` الدخول بالرمز | `/enter`: رقم + 6 أرقام · قفل بعد 5 محاولات | `lib/org/roster.ts: enterWithCode` → `signInWithPassword` · القفل في `portal_org_codes` + حدث `org_code_locked` |
 | `public_faces_off` لا وجوه عامة | لا ملف عام لمنسوب · لا عقدة للجهة في الرسم | `portal_public_profile` (SQL: `portal_user_org_flag`) · `loadSources` يُسقط عقدة الجهة |
-| `home_threads_off` لا خيوط في الرئيسية | أحداث المنسوبين لا تدخل أي تجميع عام | `lib/portal/evidence-cron.ts: loadSources` (قبل `buildGraph`) |
+| `home_threads_off` لا خيوط في الرئيسة | أحداث المنسوبين لا تدخل أي تجميع عام | `lib/portal/evidence-cron.ts: loadSources` (قبل `buildGraph`) |
 | `voice_off` لا صوت | يختفي «نادِ» · الأمانة الصوتية · «بصوتي» · خيوط الخريطة الصوتية | `/api/me/voice-reply` · `/api/media (audio/*)` · `setLineVoice` · `setThreadVoice` · `Nadi.tsx` يخفي الزرّ |
 | `media_off` لا وسائط | لا تسجيلات أداء | `/api/media POST` → 403 |
 | `verify_minimal` تحقّق أدنى | صفحات التحقّق تُظهر صحّة الوثيقة فقط | `verifyGrad` · `verifyMap` (يحجبان face/body حتى لو `live_public`) |
