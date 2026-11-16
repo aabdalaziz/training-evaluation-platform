@@ -74,7 +74,7 @@ export function invoicesSheet(rows: (Invoice & { program_name?: string })[]) {
 const esc = (s: string) => String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
 function shell(lang: Lang, inner: string): string {
   return `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
-  <div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بوابة التعليم والتدريب والتطوير' : 'Education, Training & Development Portal'}</div></div>
+  <div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</div></div>
   <div style="padding:22px;color:#0f172a;line-height:1.9;font-size:15px">${inner}</div>
   <div style="background:#f8fafc;color:#64748b;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
 }
@@ -112,7 +112,7 @@ export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void
   ctx.beginPath(); ctx.arc(x0 + dir * 60, 115, 28, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.stroke();
   ctx.beginPath(); ctx.arc(x0 + dir * 60, 115, 12, 0, Math.PI * 2); ctx.fillStyle = GOLD; ctx.fill();
   text(rtl ? 'أَثَر' : 'Athar · TRACE', x0 + dir * 135, 105, 54, { color: '#fff', weight: '900' });
-  text(rtl ? 'بوابة التعليم والتدريب والتطوير' : 'Education, Training & Development Portal', x0 + dir * 135, 155, 26, { color: 'rgba(255,255,255,.8)', weight: '700' });
+  text(rtl ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality', x0 + dir * 135, 155, 26, { color: 'rgba(255,255,255,.8)', weight: '700' });
   text(rtl ? 'فاتورة ضريبية مبسطة' : 'Simplified Tax Invoice', IW - x0, 105, 40, { color: GOLD, weight: '900', align: rtl ? 'left' : 'right' });
   text(inv.invoice_no, IW - x0, 158, 34, { color: '#fff', weight: '700', align: rtl ? 'left' : 'right' });
   // parties

@@ -1,4 +1,4 @@
-# AGENTS.md — أَثَر (Athar · TRACE) · Education, Training & Development Portal
+# AGENTS.md — أَثَر (Athar · TRACE) · Portal for Education, Training, Development & Quality
 
 > دستور البناء لأي وكيل برمجي أو مطوّر يعمل على هذا المستودع. اقرأه كاملًا قبل أي تعديل.
 > Build constitution for any coding agent or developer. Read fully before changing anything.

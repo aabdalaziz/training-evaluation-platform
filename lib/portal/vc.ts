@@ -104,7 +104,7 @@ export function summarize(doc: any): VcSummary {
 type SkillMeta = Pick<Skill, 'id' | 'code' | 'name_ar' | 'name_en' | 'saqf_level' | 'cefr_level' | 'sdaia_code'>;
 export const frameworkOf = (s: Partial<SkillMeta>) => s.saqf_level ? `SAQF level ${s.saqf_level}` : s.cefr_level ? `CEFR ${s.cefr_level}` : s.sdaia_code ? `SDAIA ${s.sdaia_code}` : 'Athar skills taxonomy';
 const alignment = (skills: SkillMeta[], site: string) => skills.map(s => ({ type: ['Alignment'], targetName: s.name_en || s.name_ar, targetCode: s.code, targetDescription: s.name_ar, targetFramework: frameworkOf(s), targetUrl: `${site}/skills#${s.code}` }));
-export function issuerBlock(did: string, site: string) { return { id: did, type: ['Profile'], name: 'Athar · TRACE — Education, Training & Development Portal', url: site, otherIdentifier: [{ type: ['IdentifierEntry'], identifier: `${site}/.well-known/athar.json`, identifierType: 'url' }] }; }
+export function issuerBlock(did: string, site: string) { return { id: did, type: ['Profile'], name: 'Athar · TRACE — Portal for Education, Training, Development & Quality', url: site, otherIdentifier: [{ type: ['IdentifierEntry'], identifier: `${site}/.well-known/athar.json`, identifierType: 'url' }] }; }
 export function statusEntry(site: string, index: number) { return { id: `${site}/api/vc?status=1#${index}`, type: 'BitstringStatusListEntry', statusPurpose: 'revocation', statusListIndex: String(index), statusListCredential: `${site}/api/vc?status=1` }; }
 
 /** شهادة أَثَر → وثيقة OB 3.0 / VC 2.0 غير موقَّعة بعد (المُصدِر = did:web) */

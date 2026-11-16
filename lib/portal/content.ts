@@ -1,4 +1,4 @@
-// أَثَر — بوابة التعليم والتدريب والتطوير: المحتوى والهوية (ملف واحد قابل للتعديل)
+// أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ: المحتوى والهوية (ملف واحد قابل للتعديل)
 // كل النصوص ثنائية اللغة: { ar, en }. غيّر النصوص هنا فقط وتنعكس على كل صفحات البوابة.
 import type { IconName } from '../ui/icons';
 
@@ -8,7 +8,7 @@ export const t = (x: T, lang: Lang): string => x[lang] || x.ar;
 
 export const BRAND = {
   name: { ar: 'أَثَر', en: 'Athar' } as T,
-  full: { ar: 'أَثَر — بوابة التعليم والتدريب والتطوير', en: 'Athar · TRACE — Education, Training & Development Portal' } as T,
+  full: { ar: 'أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ', en: 'Athar · TRACE — Portal for Education, Training, Development & Quality' } as T,
   /** الشعار المعتمد (P9): التدريب ما بعد الذكاء الاصطناعي */
   tagline: { ar: 'التدريب ما بعد الذكاء الاصطناعي — نبني القدرة ونُثبت الأثر', en: 'Post-AI training — build capability, prove impact.' } as T,
   /** الصيغة القصيرة للشارات والرؤوس */

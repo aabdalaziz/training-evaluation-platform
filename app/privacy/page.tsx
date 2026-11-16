@@ -25,7 +25,7 @@ function Inner() {
       {err && <p className="pv-err">{err}</p>}
       {n && (
         <>
-          <section className="pv-box" id="controller"><h2><Icon name="home" size={18} /> من نحن</h2><p><b>{n.org.name}</b> — بوابة التعليم والتدريب والتطوير، تشغّلها <b>{n.org.legal}</b> (جهة التحكم) ويملك حقوقها {n.org.owner}. {n.org.contact ? <>جهة الاتصال لحماية البيانات: <a href={`mailto:${n.org.contact}`} dir="ltr">{n.org.contact}</a>.</> : 'جهة الاتصال لحماية البيانات تُعلن هنا فور ضبطها.'} ولك الحق في التظلّم لدى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p></section>
+          <section className="pv-box" id="controller"><h2><Icon name="home" size={18} /> من نحن</h2><p><b>{n.org.name}</b> — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ، تشغّلها <b>{n.org.legal}</b> (جهة التحكم) ويملك حقوقها {n.org.owner}. {n.org.contact ? <>جهة الاتصال لحماية البيانات: <a href={`mailto:${n.org.contact}`} dir="ltr">{n.org.contact}</a>.</> : 'جهة الاتصال لحماية البيانات تُعلن هنا فور ضبطها.'} ولك الحق في التظلّم لدى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p></section>
           <section className="pv-box" id="data"><h2><Icon name="compass" size={18} /> ما نجمع — ولماذا — وإلى متى</h2><p className="pv-muted">كل بند أدناه حقيقي ومُطابق لما في قاعدة البيانات. البنود الموسومة «منصة التقييم» تخصّ منصة تقييم التدريب الأصلية التي تشغّلها الجهات عبر أَثَر.</p>
             {n.categories.map(c => (
               <div key={c.id} className="pv-cat"><h3>{c.title_ar}</h3>

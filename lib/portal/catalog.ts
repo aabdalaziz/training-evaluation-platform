@@ -138,7 +138,7 @@ export function decisionEmail(e: Enrollment, programName: string, status: Enroll
   const esc = (s: string) => s.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
   const html = `<div dir="${dir}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
-  <div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بوابة التعليم والتدريب والتطوير' : 'Education, Training & Development Portal'}</div></div>
+  <div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</div></div>
   <div style="padding:22px;color:#0f172a;line-height:1.9;font-size:15px">
     <p style="margin:0 0 10px">${lang === 'ar' ? 'مرحبًا' : 'Dear'} ${esc(e.full_name)}،</p>
     <p style="margin:0 0 10px"><b>${esc(programName)}</b></p>

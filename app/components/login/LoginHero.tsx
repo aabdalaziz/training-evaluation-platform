@@ -21,7 +21,7 @@ export default function LoginHero() {
   return (
     <aside className="au-hero" aria-label="عن أَثَر" data-testid="login-hero">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="au-brand"><AtharMark size={56} light /><div><b>{BRAND.name.ar}</b><small>بوابة التعليم والتدريب والتطوير</small></div></div>
+      <div className="au-brand"><AtharMark size={56} light /><div><b>{BRAND.name.ar}</b><small>بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ</small></div></div>
       <h1>باب واحد — وبابك أنت</h1>
       <p className="au-lead">{BRAND.motto.ar}. تدخل ببريدك مرة واحدة، فيفتح أَثَر لك ما يخصّك وحدك: صفحتك إن كنت متدرّبًا، وبابك إن كنت من الطاقم.</p>
       <ul className="au-ways" aria-label="ثلاثة طرق إلى الباب الواحد">

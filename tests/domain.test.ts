@@ -73,7 +73,7 @@ test('identity: instrumentation يثبّت النطاق الرسمي على Verc
 
 test('SEO: «بوابة الأثر» في العنوان والكلمات والبيانات المنظّمة', () => {
   const lay = readFileSync('app/layout.tsx', 'utf8');
-  assert.ok(lay.includes("default: 'أَثَر — بوابة الأثر للتعليم والتدريب والتطوير'"), 'العنوان الرئيسي');
+  assert.ok(lay.includes("default: 'أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ'"), 'العنوان الرئيسي');
   assert.ok(lay.includes("'بوابة الأثر'") && lay.includes("'Athar Portal'"), 'الأسماء البديلة');
   assert.ok(lay.includes('application/ld+json') && lay.includes("'@type': 'Organization'") && lay.includes("'@type': 'WebSite'"), 'JSON-LD منظمة + موقع');
   assert.ok(lay.includes('siteJsonLd(normalizeSite(process.env.NEXT_PUBLIC_SITE_URL))'), 'النطاق من normalizeSite');

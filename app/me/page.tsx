@@ -64,7 +64,7 @@ export default function MePage() {
   const shell = (child: React.ReactNode) => <main className="me" dir="rtl"><style>{CSS}</style><div className="me-wrap">{child}</div></main>;
   const head = (
     <header className="me-card me-head">
-      <div className="me-brand"><a href="/" className="me-brandlink"><AtharMark size={36} /><span><b>أَثَر</b><small>بوابة التعليم والتدريب والتطوير</small></span></a><nav className="me-quick"><a href="/me/skills"><Icon name="target" size={14} /> ملفي المهاري</a><a href="/me/twin"><Icon name="star" size={14} /> توأمي</a><a href="/live"><Icon name="play" size={14} /> الجلسات</a><a href="/resources"><Icon name="folder" size={14} /> الحقائب</a><a href="/programs"><Icon name="programs" size={14} /> البرامج</a><a href="/org"><Icon name="users" size={14} /> بوابة الجهات</a></nav></div>
+      <div className="me-brand"><a href="/" className="me-brandlink"><AtharMark size={36} /><span><b>أَثَر</b><small>بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ</small></span></a><nav className="me-quick"><a href="/me/skills"><Icon name="target" size={14} /> ملفي المهاري</a><a href="/me/twin"><Icon name="star" size={14} /> توأمي</a><a href="/live"><Icon name="play" size={14} /> الجلسات</a><a href="/resources"><Icon name="folder" size={14} /> الحقائب</a><a href="/programs"><Icon name="programs" size={14} /> البرامج</a><a href="/org"><Icon name="users" size={14} /> بوابة الجهات</a></nav></div>
       <div className="me-kicker"><Icon name="school" size={14} /> بوابة المتدرب — حسابك الموحّد في أَثَر</div>
       {me ? <>
         <h1>مرحبًا، {me.name}</h1>

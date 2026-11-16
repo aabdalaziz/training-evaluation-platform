@@ -86,7 +86,7 @@ export async function renderPassportPage(canvas: HTMLCanvasElement, p: PassportP
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, PW, PH);
   // الرأس
   const headH = p.cover ? 420 : 170; ctx.fillStyle = NAVY; ctx.fillRect(0, 0, PW, headH); ctx.fillStyle = GOLD; ctx.fillRect(0, headH, PW, 8);
-  txt(ctx, ar ? 'بوابة أَثَر · Athar · TRACE' : 'Athar · TRACE — Education, Training & Development Portal', X, 70, { size: 26, weight: 800, color: GOLD, align, dir });
+  txt(ctx, ar ? 'بوابة أَثَر · Athar · TRACE' : 'Athar · TRACE — Portal for Education, Training, Development & Quality', X, 70, { size: 26, weight: 800, color: GOLD, align, dir });
   txt(ctx, ar ? 'جواز المهارات' : 'Skills Passport', X, p.cover ? 150 : 128, { size: p.cover ? 74 : 44, weight: 900, color: '#fff', align, dir });
   if (!p.cover) txt(ctx, d.name, X2, 128, { size: 30, weight: 700, color: 'rgba(255,255,255,.85)', align: align2, dir, maxW: 700 });
   if (p.cover) {

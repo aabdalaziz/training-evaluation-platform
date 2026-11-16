@@ -62,7 +62,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
         <header className="pt-header">
           <Link href="/" className="pt-brand" aria-label={t(BRAND.full, lang)}>
             <AtharMark size={38} />
-            <span><b>{t(BRAND.name, lang)}</b><small>{lang === 'ar' ? 'بوابة التعليم والتدريب والتطوير' : 'TRACE · Education · Training · Development'}</small></span>
+            <span><b>{t(BRAND.name, lang)}</b><small>{lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</small></span>
           </Link>
           <nav className={`pt-nav ${open ? 'open' : ''}`} aria-label="portal">
             {NAV.map(n => <Link key={n.href} href={n.href} className={`pt-navlink ${pathname === n.href || (n.href !== '/' && !n.href.includes('#') && pathname.startsWith(n.href)) ? 'on' : ''}`}>{t(n.label, lang)}</Link>)}

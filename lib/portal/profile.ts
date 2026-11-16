@@ -101,7 +101,7 @@ export function buildBadge(c: Omit<Credential, 'badge'>, skills: Pick<Skill, 'id
   return {
     '@context': ['https://www.w3.org/ns/credentials/v2', 'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'],
     id: url, type: ['VerifiableCredential', 'OpenBadgeCredential'], name: c.title_en || c.title_ar,
-    issuer: { id: `${site}/.well-known/athar.json`, type: ['Profile'], name: 'Athar · TRACE — Education, Training & Development Portal', url: site },
+    issuer: { id: `${site}/.well-known/athar.json`, type: ['Profile'], name: 'Athar · TRACE — Portal for Education, Training, Development & Quality', url: site },
     validFrom: c.issued_at, ...(c.valid_until ? { validUntil: c.valid_until } : {}),
     credentialSubject: { type: ['AchievementSubject'], identifier: [{ type: 'IdentityObject', identityType: 'emailAddress', hashed: false, identityHash: c.email }],
       achievement: { id: `${site}/credential/${c.verify_code}#achievement`, type: ['Achievement'], name: c.title_en || c.title_ar, description: c.description_ar || c.title_ar, achievementType: c.kind === 'program_completion' ? 'Certificate' : c.kind === 'skill' ? 'Competency' : c.kind === 'placement' ? 'Assessment' : 'Badge',

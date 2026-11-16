@@ -84,7 +84,7 @@ export function indicativeQuote(p: { fee?: number | string | null; currency?: st
 // ---------------------------------------------------------------- الاكتشاف الآلي
 export function pluginManifest(site: string) {
   return {
-    schema_version: 'v1', name_for_human: 'أَثَر — بوابة التعليم والتدريب والتطوير', name_for_model: 'athar_portal',
+    schema_version: 'v1', name_for_human: 'أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ', name_for_model: 'athar_portal',
     description_for_human: 'اكتشف برامج أَثَر، اسأل أي برنامج أثبت رفع مهارة، اطلب عرض سعر، احجز مقاعد، وتحقق من الشهادات — وكل التزام يعتمده إنسان.',
     description_for_model: 'Athar (TRACE) is an Arabic learning & development portal. Tools: discover_programs, skill_fit (evidence-based: which program proved to raise a skill), request_quote, reserve_seats, verify_credential, impact_report, open_dialogue_room, request_status. All write actions create human-approved requests; never promise a binding price or seat. Auth: header X-Agent-Key (atk_…) issued to organizations by Athar staff; discovery and verify work without a key at reduced limits.',
     auth: { type: 'user_http', authorization_type: 'bearer', instructions: 'Send X-Agent-Key: atk_… (or Authorization: Bearer atk_…). Keys are issued per organization by Athar staff; request one at ' + site + '/agents' },
@@ -96,7 +96,7 @@ export function pluginManifest(site: string) {
   };
 }
 export function agentsJsonLd(site: string) {
-  return { '@context': 'https://schema.org', '@type': 'WebAPI', name: 'Athar Agent API', description: 'Agent-native access to Athar programs, evidence-based skill fit, quotes, reservations and credential verification — with human approval on every commitment.', url: `${site}/agents`, documentation: `${site}/api/agent`, provider: { '@type': 'Organization', name: 'أَثَر — بوابة التعليم والتدريب والتطوير', url: site }, termsOfService: `${site}/agents`, potentialAction: AGENT_TOOLS.map(t => ({ '@type': 'Action', name: t.name, description: t.desc_en })) };
+  return { '@context': 'https://schema.org', '@type': 'WebAPI', name: 'Athar Agent API', description: 'Agent-native access to Athar programs, evidence-based skill fit, quotes, reservations and credential verification — with human approval on every commitment.', url: `${site}/agents`, documentation: `${site}/api/agent`, provider: { '@type': 'Organization', name: 'أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ', url: site }, termsOfService: `${site}/agents`, potentialAction: AGENT_TOOLS.map(t => ({ '@type': 'Action', name: t.name, description: t.desc_en })) };
 }
 
 // ---------------------------------------------------------------- المكتب الزجاجي: سطور عامة مجهّلة

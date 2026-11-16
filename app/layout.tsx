@@ -11,11 +11,11 @@ const tajawal = Tajawal({ subsets: ['arabic', 'latin'], weight: ['400', '700', '
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.com'), /* النطاق الرسمي (2026-11-15): روابط OpenGraph مطلقة */
-  title: { default: 'أَثَر — بوابة الأثر للتعليم والتدريب والتطوير', template: '%s | أَثَر' }, /* SEO (2026-11-15): الاسم المتداول «بوابة الأثر» يظهر حرفيًا في العنوان */
-  description: 'أَثَر: حلول متكاملة في التعليم والتدريب والتطوير — تعليم العربية للناطقين بغيرها، برامج ودبلومات، استشارات، حقائب تدريبية، بث متزامن، وقياس أثر حقيقي. Athar · TRACE (Training · Resources · Arabic · Consulting · Evaluation) — Education, Training & Development Portal.',
+  title: { default: 'أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ', template: '%s | أَثَر' }, /* SEO (2026-11-15): الاسم المتداول «بوابة الأثر» يظهر حرفيًا في العنوان */
+  description: 'أَثَر: حلول متكاملة في التعليم والتدريب والتطوير — تعليم العربية للناطقين بغيرها، برامج ودبلومات، استشارات، حقائب تدريبية، بث متزامن، وقياس أثر حقيقي. Athar · TRACE (Training · Resources · Arabic · Consulting · Evaluation) — Portal for Education, Training, Development & Quality.',
   keywords: ['أثر', 'بوابة الأثر', 'بوابة أثر', 'منصة أثر', 'Athar', 'Athar Portal', 'athar-portal', 'TRACE', 'تعليم العربية للناطقين بغيرها', 'برامج تدريبية', 'دبلومات', 'استشارات', 'قياس الأثر', 'تقويم البرامج التدريبية', 'اختبار تحديد المستوى'],
   applicationName: 'أَثَر',
-  openGraph: { title: 'أَثَر — بوابة الأثر للتعليم والتدريب والتطوير', description: 'نتعلّم، نتدرّب، نتطوّر… ونقيس الأثر', type: 'website', locale: 'ar_SA', siteName: 'أَثَر' },
+  openGraph: { title: 'أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ', description: 'نتعلّم، نتدرّب، نتطوّر… ونقيس الأثر', type: 'website', locale: 'ar_SA', siteName: 'أَثَر' },
   robots: { index: true, follow: true },
   // تطبيق ويب تقدّمي («أَثَر في الجيب» · P19): محفظة سيادية بلا اتصال، صندوق أدلة ميداني، share_target، إشعار «موقف اليوم»
   manifest: '/manifest.webmanifest',
@@ -25,11 +25,11 @@ export const metadata: Metadata = {
 
 /** بيانات منظّمة (schema.org) — تُعرّف محرّكات البحث بأن «بوابة الأثر» و«Athar Portal» أسماء بديلة للمنصّة نفسها (SEO 2026-11-15) */
 export const SITE_NAME = 'أَثَر';
-export const SITE_ALT_NAMES = ['بوابة الأثر', 'بوابة أثر', 'منصة أثر', 'أثر — بوابة التعليم والتدريب والتطوير', 'Athar Portal', 'Athar', 'athar-portal'];
+export const SITE_ALT_NAMES = ['بوابة الأثر', 'بوابة أثر', 'منصة أثر', 'أثر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ', 'Athar Portal', 'Athar', 'athar-portal'];
 export function siteJsonLd(site: string) {
   const org = {
     '@type': 'Organization', '@id': `${site}/#org`, name: SITE_NAME, alternateName: SITE_ALT_NAMES, url: site, logo: `${site}/icons/icon-512.png`,
-    email: 'info@athar-portal.com', description: 'بوابة التعليم والتدريب والتطوير — تعليم العربية للناطقين بغيرها، برامج ودبلومات، استشارات، وقياس أثر حقيقي',
+    email: 'info@athar-portal.com', description: 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ — تعليم العربية للناطقين بغيرها، برامج ودبلومات، استشارات، وقياس أثر حقيقي',
     areaServed: 'SA', knowsLanguage: ['ar', 'en'], foundingDate: '2026',
     contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer support', email: 'info@athar-portal.com', availableLanguage: ['ar', 'en'], url: `${site}/contact` }],
   };
