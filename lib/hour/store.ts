@@ -5,10 +5,13 @@
  *  ما يُكتب فيها = portal_learning_lines: hour_word · hour_line · hour_vote · carry · hour_seal (القيد الفريد = واحد لكل متدرّب في اليوم).
  *  الصلاحيات: الأستاذ = مدرّب الشعبة (classrooms.trainer_id ∈ بطاقاته) أو الطاقم · المتدرّب = مسجَّل في الشعبة (portal_enrollments).
  *  hourRole · myHourRooms · pinHour/unpinHour · hourView · act(carry|word|line|vote|seal) · hourSeals (النسيج) · hourEvidence (الاعتماد)
+ *  P74: actSeal(public) · setHourVoice/clearHourVoice «بصوتِ واحدٍ منّا» (meta.voice) · heardThread «سمعناكم» (الرئيسية)
  */
 import { P73_NAMES_AR, HOUR_LIMITS, SESSION_KIND, phaseOf, occurrences, riyadhStartIso, riyadhDay, addDaysKey, validatePin, validateWord, validateHourLine, weekViewOf, cloudOf, linesViewOf, pickLine, validVotes, carryNotice, pinNotice, sealNotice, sealHeadAr, cleanText, WEEKDAYS_AR, fmtTimeAr } from './registry';
 import type { HourSession, PhaseInfo, WeekView, CloudView, LinesView, SealMeta } from './registry';
 import { pushNotice } from '../portal/notices';
+import { HEARD_LIMITS, heardOf, sealLite, validateHourVoice, hourVoicePath, voiceOfMeta, voicePublic, canRemoveVoice, type HeardView, type HourVoicePublic } from './heard'; /* P74 */
+import { membersWithFlag } from '../org/policy';
 import { randomUUID } from 'node:crypto';
 
 type Db = any;
@@ -88,15 +91,15 @@ export async function unpinHour(db: Db, me: Me, classroomId: string, now = new D
 export type HourView = {
   role: Role; room: Room; program_ar: string; roster: number; pin: Pin; phase: PhaseInfo; day: string | null; home: boolean;
   week: WeekView; carried: { id: number; text: string } | null; cloud: CloudView; my_word: string | null; lines: LinesView; my_line: { id: number; text: string } | null;
-  seal: { line: string | null; head_ar: string; cloud: SealMeta['cloud']; at: string } | null; history: Array<{ day: string; line: string | null }>; counts: { words: number; lines: number; carries: number; votes: number };
-  names: typeof P73_NAMES_AR; limits: typeof HOUR_LIMITS; weekdays: typeof WEEKDAYS_AR; now: string;
+  seal: { id: number; line: string | null; head_ar: string; cloud: SealMeta['cloud']; at: string; public: boolean; voice: HourVoicePublic | null; voice_url: string | null } | null; history: Array<{ id: number; day: string; line: string | null; voice: HourVoicePublic | null }>; counts: { words: number; lines: number; carries: number; votes: number };
+  names: typeof P73_NAMES_AR; limits: typeof HOUR_LIMITS; weekdays: typeof WEEKDAYS_AR; now: string; voice_limits: { sec: number; bytes: number }; can_voice: boolean; last_voice_url: string | null;
 };
 async function hourRows(db: Db, classroomId: string, day: string) { return safe<any[]>(db.from('portal_learning_lines').select('id,user_id,kind,body_ar,meta,day,created_at').eq('classroom_id', classroomId).eq('day', day).in('kind', ['hour_word', 'hour_line', 'hour_vote', 'carry', 'hour_seal']).limit(600), []); }
 export async function hourView(db: Db, me: Me, classroomId: string, now = new Date()): Promise<HourView | Fail> {
   const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404);
   const { info, sessions, seals } = await phaseFor(db, classroomId, now); const day = info.session?.day || null;
   const [prog, roster] = await Promise.all([who.room.program_id ? safe<any>(db.from('programs').select('name_ar').eq('id', who.room.program_id).maybeSingle(), null) : Promise.resolve(null), rosterEmails(db, classroomId)]);
-  const base = { role: who.role, room: who.room, program_ar: String(prog?.name_ar || 'برنامجك'), roster: roster.length, pin: pinOf(sessions, now), phase: info, day, names: P73_NAMES_AR, limits: HOUR_LIMITS, weekdays: WEEKDAYS_AR, now: now.toISOString(), history: seals.filter((s) => s.body_ar && s.body_ar !== '—').slice(0, 12).map((s) => ({ day: String(s.day), line: String(s.body_ar) })) };
+  const base = { role: who.role, room: who.room, program_ar: String(prog?.name_ar || 'برنامجك'), roster: roster.length, pin: pinOf(sessions, now), phase: info, day, names: P73_NAMES_AR, limits: HOUR_LIMITS, weekdays: WEEKDAYS_AR, now: now.toISOString(), history: seals.filter((s) => s.body_ar && s.body_ar !== '—').slice(0, 12).map((s) => ({ id: Number(s.id), day: String(s.day), line: String(s.body_ar), voice: voicePublic(voiceOfMeta(s.meta), me.id) })), voice_limits: { sec: HEARD_LIMITS.voiceSec, bytes: HEARD_LIMITS.voiceBytes }, can_voice: who.role === 'learner', last_voice_url: await lastVoiceUrl(db, seals) };
   const empty = { week: weekViewOf([], me.id, 'x'), carried: null, cloud: cloudOf([]), my_word: null, lines: linesViewOf([], [], me.id, 'x'), my_line: null, seal: null, counts: { words: 0, lines: 0, carries: 0, votes: 0 }, home: false };
   if (!day || !info.session) return { ...base, ...empty };
   const seed = info.session.id; const from = addDaysKey(day, -6);
@@ -112,7 +115,7 @@ export async function hourView(db: Db, me: Me, classroomId: string, now = new Da
     carried: myCarry ? { id: Number(myCarry.meta?.from || 0), text: String(myCarry.body_ar) } : null,
     cloud: cloudOf(words.map((r) => ({ user_id: String(r.user_id), body_ar: String(r.body_ar || '') }))), my_word: myWord ? String(myWord.body_ar) : null,
     lines: linesViewOf(lines.map((r) => ({ id: Number(r.id), user_id: String(r.user_id), body_ar: String(r.body_ar || '') })), votes, me.id, seed), my_line: myLine ? { id: Number(myLine.id), text: String(myLine.body_ar) } : null,
-    seal: sealRow ? { line: sealRow.body_ar && sealRow.body_ar !== '—' ? String(sealRow.body_ar) : null, head_ar: sealHeadAr(sealRow.meta || { people: 0, words: 0, lines: 0, carries: 0 }), cloud: arr(sealRow.meta?.cloud), at: String(sealRow.created_at) } : null,
+    seal: sealRow ? { id: Number(sealRow.id), line: sealRow.body_ar && sealRow.body_ar !== '—' ? String(sealRow.body_ar) : null, head_ar: sealHeadAr(sealRow.meta || { people: 0, words: 0, lines: 0, carries: 0 }), cloud: arr(sealRow.meta?.cloud), at: String(sealRow.created_at), public: sealRow.meta?.public !== false, voice: voicePublic(voiceOfMeta(sealRow.meta), me.id), voice_url: await voiceUrl(db, voiceOfMeta(sealRow.meta)) } : null,
     counts: { words: words.length, lines: lines.length, carries: carries.length, votes: validVotes(lines.map((r) => ({ id: Number(r.id), user_id: String(r.user_id), body_ar: String(r.body_ar || '') })), votes).length },
   };
 }
@@ -156,26 +159,80 @@ export async function actVote(db: Db, me: Me, classroomId: string, b: { line_id?
   const r = await putRow(db, me, c, 'hour_vote', 'صوت', { for: lid }); if ('error' in r) return r; return { ok: true, for: lid };
 }
 /** الختم (الأستاذ): يختار النظام السطر بالأصوات (التعادل → الأقصر) · يحفظ الأعداد لا الأسماء · يُنهي الجلسة · يُخبر الشعبة */
-export async function actSeal(db: Db, me: Me, classroomId: string, now = new Date()): Promise<{ ok: true; line: string | null; meta: SealMeta; notified: number } | Fail> {
+export async function actSeal(db: Db, me: Me, classroomId: string, now = new Date(), opts: { public?: boolean } = {}): Promise<{ ok: true; line: string | null; meta: SealMeta; notified: number } | Fail> {
   const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404); if (who.role !== 'instructor') return fail('الختم لأستاذ الشعبة', 403);
   const { info, seals } = await phaseFor(db, classroomId, now); if (!info.session || (info.phase !== 'open' && info.phase !== 'home')) return fail('لا ساعة مفتوحة لتُختم', 409);
   if (seals.some((s) => String(s.meta?.session_id) === info.session!.id)) return fail('خُتمت هذه الساعة من قبل', 409);
   const day = info.session.day; const rows = await hourRows(db, classroomId, day);
   const words = rows.filter((r) => r.kind === 'hour_word'); const lines = rows.filter((r) => r.kind === 'hour_line').map((r) => ({ id: Number(r.id), user_id: String(r.user_id), body_ar: String(r.body_ar || '') })); const votes = rows.filter((r) => r.kind === 'hour_vote').map((r) => ({ user_id: String(r.user_id), for: Number(r.meta?.for || 0) })); const carries = rows.filter((r) => r.kind === 'carry');
   const people = new Set(rows.filter((r) => r.kind !== 'hour_seal').map((r) => String(r.user_id))).size; const pick = pickLine(lines, votes); const cloud = cloudOf(words.map((r) => ({ user_id: String(r.user_id), body_ar: String(r.body_ar || '') })));
-  const meta: SealMeta = { session_id: info.session.id, line_id: pick?.id || null, people, words: words.length, lines: lines.length, carries: carries.length, votes: validVotes(lines, votes).length, cloud: cloud.shown ? cloud.items.slice(0, 12) : [], sealed_at: now.toISOString(), home: rows.filter((r) => r.meta?.home).length };
+  const meta: SealMeta & { public: boolean } = { session_id: info.session.id, line_id: pick?.id || null, people, words: words.length, lines: lines.length, carries: carries.length, votes: validVotes(lines, votes).length, cloud: cloud.shown ? cloud.items.slice(0, 12) : [], sealed_at: now.toISOString(), home: rows.filter((r) => r.meta?.home).length, public: opts.public !== false /* P74: الأستاذ يطفئ «سمعناكم» لهذه الساعة */ };
   const { error } = await db.from('portal_learning_lines').insert({ user_id: me.id, email: lower(me.email), classroom_id: classroomId, program_id: who.room.program_id, kind: 'hour_seal', day, body_ar: pick ? pick.text : '—', meta }); if (error) return fail(error.message, 500);
   try { await db.from('portal_sessions').update({ status: 'ended', updated_at: now.toISOString() }).eq('id', info.session.id); } catch { /* لا شيء */ }
-  let notified = 0; const t = sealNotice(who.room.code, pick ? pick.text : null, day);
+  invalidateHeardCache(); let notified = 0; const t = sealNotice(who.room.code, pick ? pick.text : null, day);
   for (const e of await rosterEmails(db, classroomId)) { try { const r = await pushNotice(db, { email: e.email, user_id: e.user_id, report_id: null, kind: 'hour_sealed' as any, ...t, url: `${P73_NAMES_AR.path}?classroom=${classroomId}`, ref_id: info.session.id, dedupe_key: `hour_seal:${info.session.id}:${e.email}` }); if (r.inserted) notified += 1; } catch { /* لا شيء */ } }
   return { ok: true, line: pick ? pick.text : null, meta, notified };
 }
 
+/* ───────── P74 «بصوتِ واحدٍ منّا» — قراءة واحدة لسطر الشعبة المختوم ───────── */
+async function sealRowOf(db: Db, classroomId: string, sealId: number): Promise<any | null> { return safe<any>(db.from('portal_learning_lines').select('id,day,body_ar,meta,created_at,classroom_id').eq('classroom_id', classroomId).eq('kind', 'hour_seal').eq('id', sealId).maybeSingle(), null); }
+async function voiceUrl(db: Db, v: { path: string } | null): Promise<string | null> { if (!v?.path) return null; try { const { data, error } = await db.storage.from(HEARD_LIMITS.bucket).createSignedUrl(v.path, HEARD_LIMITS.signedSeconds); return error || !data?.signedUrl ? null : String(data.signedUrl); } catch { return null; } }
+async function lastVoiceUrl(db: Db, seals: any[]): Promise<string | null> { const s = seals.find((x) => voiceOfMeta(x.meta)); return s ? voiceUrl(db, voiceOfMeta(s.meta)) : null; }
+async function removeVoiceFile(db: Db, path: string) { try { await db.storage.from(HEARD_LIMITS.bucket).remove([path]); } catch { /* لا شيء */ } }
+/** متدرّبٌ واحد يقرأ السطر المختوم بصوته (≤ 15 ث) — ما دامت الساعة مفتوحة أو في البيت؛ ختم بلا سطر لا يُقرأ؛ من سبق فقراءته تبقى */
+export async function setHourVoice(db: Db, me: Me, classroomId: string, sealId: number, file: { buf: Buffer; mime: string; bytes: number; sec: number }, now = new Date()): Promise<{ ok: true; voice: HourVoicePublic; url: string | null } | Fail> {
+  const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404); if (who.role !== 'learner') return fail('القراءة بصوت واحدٍ من المتدرّبين — الأستاذ يسمع ويحذف', 403);
+  const row = await sealRowOf(db, classroomId, sealId); if (!row) return fail('لا ختم بهذا الرقم', 404); if (!row.body_ar || row.body_ar === '—') return fail('خُتمت الساعة بلا سطر — لا شيء يُقرأ', 409);
+  const { info } = await phaseFor(db, classroomId, now); const live = info.session && String(row.meta?.session_id) === info.session.id && (info.phase === 'open' || info.phase === 'home');
+  if (!live) return fail('انتهت «الساعة في البيت» — القراءة تكون في يوم الختم وما بعده بأربع وعشرين ساعة', 409);
+  const prev = voiceOfMeta(row.meta); if (prev && prev.by !== me.id) return fail('سبقك زميلٌ بقراءة هذا السطر — قراءة واحدة لكل سطر', 409);
+  const v = validateHourVoice({ mime: file.mime, bytes: file.bytes, sec: file.sec }); if (!v.ok) return fail(v.error);
+  const path = hourVoicePath(classroomId, Number(row.id), v.ext); const at = now.toISOString();
+  const { error: upErr } = await db.storage.from(HEARD_LIMITS.bucket).upload(path, file.buf, { contentType: v.mime, upsert: true }); if (upErr) return fail(`تعذّر رفع التسجيل: ${upErr.message}`, 500);
+  const meta = { ...(row.meta || {}), voice: { path, by: me.id, sec: v.sec, at, mime: v.mime } };
+  const { error } = await db.from('portal_learning_lines').update({ meta }).eq('id', row.id); if (error) { await removeVoiceFile(db, path); return fail('تعذّر حفظ القراءة', 500); }
+  if (prev?.path && prev.path !== path) await removeVoiceFile(db, prev.path);
+  return { ok: true, voice: { sec: v.sec, at, mine: true }, url: await voiceUrl(db, { path }) };
+}
+/** الحذف فوريّ: صاحب الصوت أو أستاذ الشعبة — الملف والخانة معًا */
+export async function clearHourVoice(db: Db, me: Me, classroomId: string, sealId: number): Promise<{ ok: true; had: boolean; by_instructor: boolean } | Fail> {
+  const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404);
+  const row = await sealRowOf(db, classroomId, sealId); const prev = voiceOfMeta(row?.meta); if (!row || !prev) return { ok: true, had: false, by_instructor: false };
+  if (!canRemoveVoice(prev, { id: me.id, role: who.role })) return fail('الحذف لصاحب الصوت أو أستاذ الشعبة', 403);
+  const meta = { ...(row.meta || {}) }; delete (meta as any).voice; const { error } = await db.from('portal_learning_lines').update({ meta }).eq('id', row.id); if (error) return fail('تعذّر الحذف', 500);
+  await removeVoiceFile(db, prev.path); return { ok: true, had: true, by_instructor: prev.by !== me.id };
+}
+/** الأستاذ يبدّل ظهور سطر ساعته في «سمعناكم» بعد الختم */
+export async function setSealPublic(db: Db, me: Me, classroomId: string, sealId: number, pub: boolean): Promise<{ ok: true; public: boolean } | Fail> {
+  const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404); if (who.role !== 'instructor') return fail('هذا لأستاذ الشعبة', 403);
+  const row = await sealRowOf(db, classroomId, sealId); if (!row) return fail('لا ختم بهذا الرقم', 404);
+  const { error } = await db.from('portal_learning_lines').update({ meta: { ...(row.meta || {}), public: !!pub } }).eq('id', row.id); if (error) return fail('تعذّر الحفظ', 500); invalidateHeardCache(); return { ok: true, public: !!pub };
+}
+
+/* ───────── P74 «سمعناكم» — خيط الرئيسية (ذاكرة 10 دقائق في العملية) ───────── */
+let heardCache: { at: number; view: HeardView } | null = null;
+export const invalidateHeardCache = () => { heardCache = null; };
+export async function heardThread(db: Db, now = new Date()): Promise<HeardView> {
+  if (heardCache && now.getTime() - heardCache.at < HEARD_LIMITS.cacheSec * 1000) return heardCache.view;
+  const from = new Date(now.getTime() - HEARD_LIMITS.days * 86400000).toISOString().slice(0, 10);
+  const rows = await safe<any[]>(db.from('portal_learning_lines').select('id,day,body_ar,meta,classroom_id').eq('kind', 'hour_seal').gte('day', from).order('day', { ascending: false }).limit(400), []);
+  const cids = [...new Set(rows.map((r) => String(r.classroom_id)))]; const orgOfRoom = new Map<string, string | null>();
+  if (cids.length) { const cls = await safe<any[]>(db.from('classrooms').select('id,organization_id').in('id', cids).limit(400), []); for (const c of cls) orgOfRoom.set(String(c.id), c.organization_id ? String(c.organization_id) : null); }
+  let excluded = new Set<string>(); try { excluded = (await membersWithFlag(db, 'home_threads_off')).orgs; } catch { /* لا شيء */ }
+  const view = heardOf(rows.map((r) => sealLite(r, (cid) => orgOfRoom.get(cid) ?? null)), excluded, now); heardCache = { at: now.getTime(), view }; return view;
+}
+
 /* ───────── النسيج والاعتماد ───────── */
 /** خيط «ساعاتنا» في نسيج الشعبة: السطور الجماعية المختومة (بلا أسماء — ملك الشعبة) */
-export async function hourSeals(db: Db, classroomId: string, limit = 20): Promise<Array<{ day: string; day_ar: string; line: string | null; people: number; words: number; carries: number }>> {
+export async function hourSeals(db: Db, classroomId: string, limit = 20): Promise<Array<{ id: number; day: string; day_ar: string; line: string | null; people: number; words: number; carries: number; voice_sec: number }>> {
   const seals = await sealsOf(db, classroomId, limit); const { fmtDayAr } = await import('./registry');
-  return seals.map((s) => ({ day: String(s.day), day_ar: fmtDayAr(String(s.day)), line: s.body_ar && s.body_ar !== '—' ? String(s.body_ar) : null, people: Number(s.meta?.people || 0), words: Number(s.meta?.words || 0), carries: Number(s.meta?.carries || 0) }));
+  return seals.map((s) => ({ id: Number(s.id), day: String(s.day), day_ar: fmtDayAr(String(s.day)), line: s.body_ar && s.body_ar !== '—' ? String(s.body_ar) : null, people: Number(s.meta?.people || 0), words: Number(s.meta?.words || 0), carries: Number(s.meta?.carries || 0), voice_sec: voiceOfMeta(s.meta)?.sec || 0 }));
+}
+/** رابط موقّع لقراءة ختمٍ بعينه (للنسيج وشاشة الساعة) — لعضو الشعبة فقط */
+export async function hourVoiceUrl(db: Db, me: Me, classroomId: string, sealId: number): Promise<{ ok: true; url: string; sec: number; expires_in: number } | Fail> {
+  const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404);
+  const row = await sealRowOf(db, classroomId, sealId); const v = voiceOfMeta(row?.meta); if (!row || !v) return fail('لا قراءة صوتية لهذا السطر', 404);
+  const url = await voiceUrl(db, v); if (!url) return fail('تعذّر إنشاء الرابط', 500); return { ok: true, url, sec: v.sec, expires_in: HEARD_LIMITS.signedSeconds };
 }
 /** «ساعة أَثَر» في ملف الاعتماد: أعداد فقط (ساعات مختومة · سطور محمولة) تحت 3.5 — لا محتوى ولا أسماء */
 export async function hourEvidence(db: Db, programId: string): Promise<Array<{ id: string; kind: 'hour'; codes: string[]; label_ar: string; at: null; href: null; n: number }>> {

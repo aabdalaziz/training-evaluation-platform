@@ -49,6 +49,7 @@ function Home() {
       <DailyCase lang={lang} tok={tok} />
       <Advisor lang={lang} tok={tok} />
       <Memory lang={lang} />
+      <Heard lang={lang} />
       <Embassy lang={lang} />
       <Dialogue lang={lang} tok={tok} sessions={sessions} now={now} />
       <section className="pt-sec hm-trace">
@@ -289,6 +290,27 @@ function Memory({ lang }: { lang: 'ar' | 'en' }) {
   );
 }
 
+/* P74 «سمعناكم» — سطور «ساعة أَثَر» المختومة من كل الشُّعب: يوم الأسبوع والسطر فقط؛ لا يظهر القسم دون 20 مشاركًا و5 شُعب */
+type HeardItem = { weekday_ar: string; day: string; line: string };
+type HeardData = { shown: boolean; items: HeardItem[]; head_ar: string; sections: number; people: number };
+function Heard({ lang }: { lang: 'ar' | 'en' }) {
+  const ar = lang === 'ar'; const [d, setD] = useState<HeardData | null>(null); const [shown, setShown] = useState(0); const [copied, setCopied] = useState(-1); const pressRef = useRef<number | null>(null);
+  useEffect(() => { const take = (j: any) => { if (j?.success && j.heard?.shown && Array.isArray(j.heard.items) && j.heard.items.length) setD(j.heard); }; const pre = (window as unknown as { __atharHome?: unknown }).__atharHome; if (pre) { take(pre); return; } const on = (e: Event) => take((e as CustomEvent).detail); window.addEventListener('athar:home', on); return () => window.removeEventListener('athar:home', on); }, []);
+  useEffect(() => { if (!d) return; setShown(0); const id = setInterval(() => setShown(s => { if (s >= d.items.length) { clearInterval(id); return s; } return s + 1; }), 550); return () => clearInterval(id); }, [d]);
+  if (!d) return null;
+  const copy = async (it: HeardItem, i: number) => { try { await navigator.clipboard.writeText(`${it.line}\n— شعبة في أَثَر`); setCopied(i); setTimeout(() => setCopied(-1), 1600); } catch { /* لا شيء */ } };
+  const down = (it: HeardItem, i: number) => { pressRef.current = window.setTimeout(() => copy(it, i), 600); }; const up = () => { if (pressRef.current) { clearTimeout(pressRef.current); pressRef.current = null; } };
+  return (
+    <section className="pt-sec hm-heard" id="heard" data-testid="hd-section">
+      <div className="pt-wrap">
+        <div className="hm-sechead light"><div><span className="pt-kicker"><Icon name="mic" size={14} /> {ar ? 'سمعناكم · لقاء التأمل الأسبوعي للشعبة' : 'We heard you · weekly reflection hour'}</span><h2>{ar ? 'سمعناكم — سطور كتبتها شُعبنا هذا الأسبوع' : 'We heard you — lines our sections wrote this week'}</h2><p className="hm-dailysub" data-testid="hd-head">{ar ? d.head_ar : `Sections sealed their lines in «Athar Hour» this week — ${d.sections} sections, ${d.people} trainees, no names.`}</p></div><a className="hm-memlink" href="/me/hour">{ar ? 'ساعة أَثَر لشعبتك ←' : 'Your section’s hour →'}</a></div>
+        <ol className="hd-list" data-testid="hd-list">{d.items.map((it, i) => <li key={it.day} className={`hd-item ${i < shown ? 'in' : ''}`} data-testid="hd-item" onPointerDown={() => down(it, i)} onPointerUp={up} onPointerLeave={up} onContextMenu={(e) => { e.preventDefault(); copy(it, i); }} title={ar ? 'اضغط مطوّلًا لنسخ السطر' : 'Long-press to copy'}><span className="hd-day">{it.weekday_ar}</span><p>{it.line}</p>{copied === i && <small className="hd-copied">{ar ? 'نُسخ — «شعبة في أَثَر»' : 'Copied'}</small>}</li>)}</ol>
+        <small className="hd-foot">{ar ? 'كل سطر كتبته شعبة كاملة واختارته بالتصويت وختمه أستاذها في «ساعة أَثَر» — بلا اسم شعبة ولا برنامج ولا متدرّب. لا يدخل أي تقييم.' : 'Each line was written by a whole section, chosen by vote and sealed by its instructor in «Athar Hour» — no section, program or trainee names. Never part of any assessment.'}</small>
+      </div>
+    </section>
+  );
+}
+
 function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string; sessions: FeedSession[]; now: number }) {
   const ar = lang === 'ar'; const s = DEMO_SCENARIO; const [turns, setTurns] = useState<Turn[]>([]); const [text, setText] = useState(''); const [busy, setBusy] = useState(false); const [score, setScore] = useState<SimScore | null>(null); const [started, setStarted] = useState(false); const listRef = useRef<HTMLDivElement>(null);
   const next = sessions.filter(x => Date.parse(x.starts_at) > now - 3600000).sort((a, b) => a.starts_at.localeCompare(b.starts_at))[0]; const cd = next ? countdown(next.starts_at, now, lang) : null;
@@ -366,7 +388,10 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
 
 const CSS = `
 .hm-memory{background:linear-gradient(180deg,#f6f8fb,#eef5f4);padding:56px 0}.hm-memlink{font-size:13px;font-weight:800;color:#0b8a83;white-space:nowrap}
-.hm-threads{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}@media(max-width:820px){.hm-threads{grid-template-columns:1fr}}
+.hm-threads{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.hm-heard{background:#0f2a4e;color:#f1f5f9;padding:56px 0}.hm-heard .hm-sechead h2{color:#fff}.hm-heard .hm-dailysub{color:#cbd5e1}.hm-heard .hm-memlink{color:#7dd3c7}.hd-foot{display:block;margin-top:16px;color:#94a3b8;font-size:12px;line-height:1.8}
+.hd-list{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:10px}.hd-item{display:grid;grid-template-columns:84px 1fr;gap:14px;align-items:start;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 16px;opacity:0;transform:translateX(12px);transition:opacity .55s,transform .55s;user-select:none;cursor:default;position:relative}.hd-item.in{opacity:1;transform:none}
+.hd-day{font-size:12px;font-weight:900;color:#c9a24b;letter-spacing:.2px;padding-top:4px}.hd-item p{margin:0;font-size:17px;line-height:1.9;font-weight:800;color:#fff}.hd-copied{position:absolute;inset-inline-end:14px;top:10px;font-size:11px;color:#7dd3c7}@media(max-width:640px){.hd-item{grid-template-columns:1fr;gap:4px}}@media(max-width:820px){.hm-threads{grid-template-columns:1fr}}
 .hm-thread{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:18px 18px 14px;display:grid;gap:8px;align-content:start;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}.hm-thread.in{opacity:1;transform:none}
 .hm-thread p{margin:0;font-size:15px;line-height:1.8;color:#0f2a4e;font-weight:700}.hm-thread small{color:#94a3b8;font-size:11.5px}
 .hm-thicon{width:38px;height:38px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#fff;background:#0b8a83}.hm-thicon.spark{background:#c9a24b;color:#0f2a4e}.hm-thicon.target{background:#0f2a4e}

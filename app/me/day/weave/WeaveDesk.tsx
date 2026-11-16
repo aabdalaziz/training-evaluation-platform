@@ -18,12 +18,14 @@ import type { WeaveRoom } from '../../../../lib/map/weave-load';
 import type { RuleKey, StationKind, Station } from '../../../../lib/map/registry';
 
 type Room = WeaveRoom;
-type Data = { title: { ar: string; sub_ar: string }; official: { ar: string; en: string }; limits: { k: number }; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; room?: Room; rooms: Room[]; viewing_other: boolean; weave?: Weave; trainer_name?: string; hours?: Array<{ day: string; day_ar: string; line: string | null; people: number; words: number; carries: number }> /* P73 */ };
+type Data = { title: { ar: string; sub_ar: string }; official: { ar: string; en: string }; limits: { k: number }; rules: Record<RuleKey, { title: string; why: string }>; kinds: Record<StationKind, string>; room?: Room; rooms: Room[]; viewing_other: boolean; weave?: Weave; trainer_name?: string; hours?: Array<{ id?: number; day: string; day_ar: string; line: string | null; people: number; words: number; carries: number; voice_sec?: number }> /* P73 */ };
 const qs = () => (typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams());
 
 export default function WeaveDesk() {
   const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [d, setD] = useState<Data | null>(null); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
+  const [hourUrl, setHourUrl] = useState<string | null>(null); /* P74 قراءة «بصوتِ واحدٍ منّا» من النسيج — رابط موقّع 300 ث */
+  async function playHour(sealId: number) { const c = d?.room?.id; if (!tok || !c) return; const j = await fetch(`/api/me/hour?classroom=${encodeURIComponent(c)}&voice=${sealId}`, { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success && j.url) setHourUrl(j.url); else setErr(j?.error || 'تعذّر جلب القراءة'); }
   const [cid, setCid] = useState<string>(''); const [wordOpen, setWordOpen] = useState(false); const [word, setWord] = useState(''); const [ok, setOk] = useState('');
   useEffect(() => { fastToken(db).then((t) => setTok(t || '')); setCid(qs().get('classroom') || ''); }, [db]);
   const load = useCallback(async (t: string, c: string, fresh = false) => {
@@ -76,7 +78,8 @@ export default function WeaveDesk() {
           </>}
         {/* P73 خيط «ساعاتنا»: السطور الجماعية المختومة في ساعة أَثَر — ملك الشعبة، بلا أسماء */}
         {!!d.hours?.length && <section className="wv-block" data-testid="wv-hours"><h2>🕰️ ساعاتنا <i>{d.hours.length}</i></h2>
-          <ul className="wv-quotes">{d.hours.map((h) => <li key={h.day} data-testid="wv-hour"><span className="wv-kind">{h.day_ar} · حضر {h.people}{h.carries ? ` · حُمل ${h.carries}` : ''}</span><p>{h.line ? `«${h.line}»` : 'خُتمت بلا سطر'}</p></li>)}</ul>
+          <ul className="wv-quotes">{d.hours.map((h) => <li key={h.day} data-testid="wv-hour" data-voice={h.voice_sec ? 1 : 0}><span className="wv-kind">{h.day_ar} · حضر {h.people}{h.carries ? ` · حُمل ${h.carries}` : ''}{h.voice_sec ? ' · 🎙️ بصوتِ واحدٍ منّا' : ''}</span><p>{h.line ? `«${h.line}»` : 'خُتمت بلا سطر'}</p>{!!h.voice_sec && !!h.id && <button type="button" className="wv-room" data-testid="wv-hour-play" data-id={h.id} onClick={() => void playHour(h.id!)}>▶️ {h.voice_sec} ث</button>}</li>)}</ul>
+          {hourUrl && <audio src={hourUrl} controls autoPlay data-testid="wv-hour-audio" style={{ width: '100%', marginTop: 8 }} />}
           <p className="wv-muted">سطر كل ساعة اختارته الشعبة بالتصويت — وعند التعادل الأقصر. <Link href={`/me/hour?classroom=${room?.id || ''}`}>غرفة الساعة ←</Link></p></section>}
         {!d.viewing_other && <section className="wv-block wv-word">
           <h2><Icon name="chat" size={16} /> كلمة على النسيج</h2>

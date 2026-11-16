@@ -169,6 +169,17 @@ export async function fieldVoices(db: Db, orgId: string, ids: string[], bounds: 
   const gradPeople = new Set(grads.map((g) => String(g.user_id))); if (gradPeople.size >= K) { const pick = grads.map((g) => String(g.line_ar || '').trim()).filter((s) => s.length >= 8); shuffle(pick, seed).slice(0, 2).forEach((s) => lines.push(s)); if (pick.length) sources.add('صفحات التخرّج العامة'); }
   const letters = await safe<any[]>(() => db.from('portal_org_letters').select('body,month').eq('organization_id', orgId).eq('status', 'signed').gte('month', bounds.day_from.slice(0, 7)).lte('month', bounds.day_to.slice(0, 7)).order('month', { ascending: false }).limit(3), []);
   const ll = letters.flatMap((l) => arr<string>(l.body?.lines_ar)).filter(Boolean); if (ll.length) { lines.push(ll[0]); sources.add('رسالة الشهر الموقَّعة'); }
+  /* P74: «ساعة أَثَر» في تقرير القيادة — أعداد فقط (ساعات مختومة · شُعب · قراءات «بصوتِ واحدٍ منّا») وسطر جماعي واحد؛ لا صوت ولا اسم */
+  const rooms = await safe<any[]>(() => db.from('classrooms').select('id').eq('organization_id', orgId).limit(500), []); const roomIds = rooms.map((r) => String(r.id));
+  if (roomIds.length) {
+    const seals: any[] = []; for (const part of chunk(roomIds)) seals.push(...await safe<any[]>(() => db.from('portal_learning_lines').select('classroom_id,body_ar,meta,day').in('classroom_id', part).eq('kind', 'hour_seal').gte('day', bounds.day_from).lt('day', bounds.day_to).limit(1000), []));
+    if (seals.length) {
+      const voices = seals.filter((x) => x.meta?.voice?.path).length; const secs = new Set(seals.map((x) => String(x.classroom_id))).size; const hp = seals.reduce((a, x) => a + Number(x.meta?.people || 0), 0);
+      lines.push(`ساعة أَثَر: ${seals.length} ${seals.length === 1 ? 'ساعة مختومة' : seals.length === 2 ? 'ساعتان مختومتان' : 'ساعات مختومة'} في ${secs} ${secs === 1 ? 'شعبة' : 'شُعب'}${voices ? ` — قرأ ${voices} ${voices === 1 ? 'متدرّبٌ سطرَ شعبته بصوته' : 'متدرّبين سطور شُعبهم بأصواتهم'}` : ''}`);
+      if (hp >= K) { const pick = seals.map((x) => String(x.body_ar || '').trim()).filter((t) => t.length >= 8 && t !== '—'); const one = shuffle(pick, seed)[0]; if (one) lines.push(one); }
+      sources.add('سطور «ساعة أَثَر» المختومة'); people = Math.max(people, hp);
+    }
+  }
   return { lines: lines.slice(0, 5), people: Math.max(people, gradPeople.size), sources_ar: [...sources], note_ar: lines.length ? null : `الميدان لم يبلغ نصاب الظهور بعد (k ≥ ${K} كاتبًا) — لا يُعرض سطر واحد قبل ذلك حمايةً لصاحبه` };
 }
 function shuffle<T>(xs: T[], seed: string): T[] { let h = 2166136261; for (const ch of seed) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } const out = [...xs]; for (let i = out.length - 1; i > 0; i--) { h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; const j = h % (i + 1); [out[i], out[j]] = [out[j], out[i]]; } return out; }
