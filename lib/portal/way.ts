@@ -17,7 +17,7 @@ const NAMES: Record<string, L> = {
   'me/reports': { ar: 'تقاريري', en: 'My reports' }, 'me/accreditation': { ar: 'ملف الاعتماد الحيّ', en: 'Live accreditation file' }, 'admin/accreditation': { ar: 'ملفات الاعتماد', en: 'Accreditation files' }, 'verify/accreditation': { ar: 'التحقّق من ملف اعتماد', en: 'Verify accreditation file' }, 'me/reports/line': { ar: 'صفحتي في التقرير الختامي', en: 'My page in the final report' }, 'admin/reports': { ar: 'التقارير', en: 'Reports' }, 'verify/report': { ar: 'التحقّق من تقرير', en: 'Verify a report' }, 'verify/form': { ar: 'التحقّق من نموذج اختبار', en: 'Verify an exam form' },
   'me/first': { ar: 'أول يوم', en: 'First day' }, /* P64 */
   'me/line': { ar: 'سطري', en: 'My line' }, /* P66 */
-  'me/hour': { ar: 'ساعة الأثر', en: 'Athar hour' }, /* P73 */
+  'me/hour': { ar: 'ساعة أَثَر', en: 'Athar hour' }, /* P73 */
   'me/diploma': { ar: 'هيكل الدبلوم', en: 'Diploma structure' }, /* P66-ب */
   'me/level': { ar: 'بكلماتي عبر المستوى', en: 'My level page' }, 'verify/level': { ar: 'تحقّق من صفحة مستوى', en: 'Verify level page' }, lv: { ar: 'صفحة مستوى', en: 'Level page' }, /* P70 */
   me: { ar: 'مساحتي', en: 'My space' }, org: { ar: 'بوابة الجهات', en: 'Organizations' }, hub: { ar: 'صفحاتي', en: 'My pages' }, login: { ar: 'الدخول', en: 'Sign in' }, join: { ar: 'الانضمام', en: 'Join' },

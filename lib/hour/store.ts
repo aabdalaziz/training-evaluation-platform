@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P73 «ساعة الأثر» — طبقة القاعدة (صفر جداول جديدة)
+ * P73 «ساعة أَثَر» — طبقة القاعدة (صفر جداول جديدة)
  *  الساعة = portal_sessions (kind = athar_hour · series_id واحد للشعبة) تُولَّد أسبوعيًّا من التثبيت حتى نهاية البرنامج.
  *  ما يُكتب فيها = portal_learning_lines: hour_word · hour_line · hour_vote · carry · hour_seal (القيد الفريد = واحد لكل متدرّب في اليوم).
  *  الصلاحيات: الأستاذ = مدرّب الشعبة (classrooms.trainer_id ∈ بطاقاته) أو الطاقم · المتدرّب = مسجَّل في الشعبة (portal_enrollments).
@@ -177,11 +177,11 @@ export async function hourSeals(db: Db, classroomId: string, limit = 20): Promis
   const seals = await sealsOf(db, classroomId, limit); const { fmtDayAr } = await import('./registry');
   return seals.map((s) => ({ day: String(s.day), day_ar: fmtDayAr(String(s.day)), line: s.body_ar && s.body_ar !== '—' ? String(s.body_ar) : null, people: Number(s.meta?.people || 0), words: Number(s.meta?.words || 0), carries: Number(s.meta?.carries || 0) }));
 }
-/** «ساعة الدفعة» في ملف الاعتماد: أعداد فقط (ساعات مختومة · سطور محمولة) تحت 3.5 — لا محتوى ولا أسماء */
+/** «ساعة أَثَر» في ملف الاعتماد: أعداد فقط (ساعات مختومة · سطور محمولة) تحت 3.5 — لا محتوى ولا أسماء */
 export async function hourEvidence(db: Db, programId: string): Promise<Array<{ id: string; kind: 'hour'; codes: string[]; label_ar: string; at: null; href: null; n: number }>> {
   const rows = await safe<any[]>(db.from('portal_learning_lines').select('kind,classroom_id,user_id').eq('program_id', programId).in('kind', ['hour_seal', 'carry']).limit(5000), []);
   const seals = rows.filter((r) => r.kind === 'hour_seal'); const carries = rows.filter((r) => r.kind === 'carry'); if (!seals.length) return [];
   const rooms = new Set(seals.map((r) => String(r.classroom_id))).size; const carriers = new Set(carries.map((r) => String(r.user_id))).size;
-  const label = `ساعة الدفعة: ${seals.length} ${seals.length === 1 ? 'ساعة أثر مختومة' : seals.length === 2 ? 'ساعتا أثر مختومتان' : 'ساعات أثر مختومة'} في ${rooms} ${rooms === 1 ? 'شعبة' : 'شُعب'}${carriers >= HOUR_LIMITS.k ? ` — حمل ${carriers} متدرّبًا سطورًا من زملائهم (${carries.length} سطرًا)` : ''} · لقاء تأمل أسبوعي بلا تقييم`;
+  const label = `ساعة أَثَر: ${seals.length} ${seals.length === 1 ? 'ساعة مختومة' : seals.length === 2 ? 'ساعتان مختومتان' : 'ساعات مختومة'} في ${rooms} ${rooms === 1 ? 'شعبة' : 'شُعب'}${carriers >= HOUR_LIMITS.k ? ` — حمل ${carriers} متدرّبًا سطورًا من زملائهم (${carries.length} سطرًا)` : ''} · لقاء تأمل أسبوعي بلا تقييم`;
   return [{ id: 'hour:seals', kind: 'hour', codes: ['3.5'], label_ar: label, at: null, href: null, n: seals.length }];
 }

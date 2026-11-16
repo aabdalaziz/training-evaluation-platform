@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P73 «ساعة الأثر» — بطاقة التثبيت داخل كل شعبة في «دفتر اليوم» (تُحمَّل ديناميكيًا)
+ * P73 «ساعة أَثَر» — بطاقة التثبيت داخل كل شعبة في «دفتر اليوم» (تُحمَّل ديناميكيًا)
  *  غير مثبَّتة: يختار الأستاذ يوم الأسبوع والوقت (لا افتراضي) → تُولَّد جلسات أسبوعية حتى نهاية البرنامج ويُخبَر المتدرّبون
  *  مثبَّتة: «كل الثلاثاء 10:30 · القادمة …» + الطور الآن + «افتح الغرفة» / «شاشة القاعة» + إلغاء المواعيد القادمة
  *  testids: hp-root[data-has][data-phase] hp-weekday hp-time hp-save hp-clear hp-next hp-open hp-screen hp-ok hp-err
@@ -24,15 +24,15 @@ export default function HourPin({ roomId, code, hdr, readOnly }: Props) {
   }
   const pin = v?.pin || null; const ph = v?.phase.phase || 'none';
   return <div className="hp" id={`hour-${roomId}`} data-testid="hp-root" data-has={pin ? 1 : 0} data-phase={ph}>
-    <div className="hp-row"><b>🕰️ ساعة الأثر</b>
+    <div className="hp-row"><b>🕰️ ساعة أَثَر</b>
       {pin ? <span className="hp-sum">كل {WEEKDAYS_AR[pin.weekday]} {pin.time} · <i data-testid="hp-next">{ph === 'open' ? 'مفتوحة الآن' : pin.next ? `القادمة ${fmtDayAr(pin.next.day)}` : PHASE_AR[ph]}</i></span> : <span className="hp-sum muted">لم تُثبَّت بعد — ساعة أسبوعية بلا تعليم ولا تصحيح</span>}
       <span className="hp-acts no-print">
         {pin && <Link href={`/me/hour?classroom=${roomId}`} className="dy-btn sm" data-testid="hp-open">افتح الغرفة</Link>}
         {pin && ph === 'open' && <a href={`/me/hour?classroom=${roomId}&screen=1`} target="_blank" rel="noreferrer" className="dy-btn sm ghost" data-testid="hp-screen">🖥️ شاشة القاعة</a>}
-        {!readOnly && !edit && <button type="button" className="dy-btn sm ghost" onClick={() => setEdit(true)} data-testid="hp-edit">{pin ? 'غيّر الموعد' : 'ثبّت ساعة الأثر'}</button>}
-        {!readOnly && pin && <button type="button" className="dy-btn sm ghost" disabled={busy} data-testid="hp-clear" onClick={() => { if (confirm(`إلغاء مواعيد ساعة الأثر القادمة لشعبة ${code}؟ ما خُتم يبقى.`)) void post({ action: 'unpin' }, 'أُلغيت المواعيد القادمة.'); }}>إلغاء</button>}
+        {!readOnly && !edit && <button type="button" className="dy-btn sm ghost" onClick={() => setEdit(true)} data-testid="hp-edit">{pin ? 'غيّر الموعد' : 'ثبّت ساعة أَثَر'}</button>}
+        {!readOnly && pin && <button type="button" className="dy-btn sm ghost" disabled={busy} data-testid="hp-clear" onClick={() => { if (confirm(`إلغاء مواعيد ساعة أَثَر القادمة لشعبة ${code}؟ ما خُتم يبقى.`)) void post({ action: 'unpin' }, 'أُلغيت المواعيد القادمة.'); }}>إلغاء</button>}
       </span></div>
-    {edit && !readOnly && <form className="hp-form no-print" onSubmit={(e) => { e.preventDefault(); if (weekday === '' || !time) { setErr('اختر اليوم والوقت'); return; } if (confirm(`تثبيت ساعة الأثر لشعبة ${code}: كل ${WEEKDAYS_AR[Number(weekday)]} الساعة ${time} حتى نهاية البرنامج — ويُخبَر المتدرّبون. نتابع؟`)) void post({ action: 'pin', weekday: Number(weekday), time }, 'ثُبّتت الساعة: {n} موعدًا، أولها {first}.'); }}>
+    {edit && !readOnly && <form className="hp-form no-print" onSubmit={(e) => { e.preventDefault(); if (weekday === '' || !time) { setErr('اختر اليوم والوقت'); return; } if (confirm(`تثبيت ساعة أَثَر لشعبة ${code}: كل ${WEEKDAYS_AR[Number(weekday)]} الساعة ${time} حتى نهاية البرنامج — ويُخبَر المتدرّبون. نتابع؟`)) void post({ action: 'pin', weekday: Number(weekday), time }, 'ثُبّتت الساعة: {n} موعدًا، أولها {first}.'); }}>
       <label>اليوم <select value={weekday} onChange={(e) => setWeekday(e.target.value)} data-testid="hp-weekday" required><option value="">— اختر —</option>{WEEKDAYS_AR.map((d, i) => <option key={d} value={i}>{d}</option>)}</select></label>
       <label>الوقت <input type="time" value={time} onChange={(e) => setTime(e.target.value)} data-testid="hp-time" required /></label>
       <button type="submit" className="dy-btn sm" disabled={busy} data-testid="hp-save">ثبّت</button><button type="button" className="dy-btn sm ghost" onClick={() => setEdit(false)}>إلغاء</button>

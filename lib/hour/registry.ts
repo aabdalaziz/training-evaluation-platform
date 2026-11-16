@@ -1,13 +1,13 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P73 «ساعة الأثر» (الرسمي: لقاء التأمل الأسبوعي للشعبة) — المنطق النقي (بلا قاعدة بيانات)
+ * P73 «ساعة أَثَر» (الرسمي: لقاء التأمل الأسبوعي للشعبة) — المنطق النقي (بلا قاعدة بيانات)
  *  ساعة أسبوعية ثابتة لكل شعبة لا تعليم فيها ولا تصحيح: يجتمع المتدرّبون على سطور أسبوعهم →
  *  «أحمله معي» (سطر لغيري) → «دقيقة الصمت ثم كلمة واحدة» (سحابة حيّة) → «سطر ساعتنا» (اقتراح + تصويت بلمسة · التعادل للأقصر)
  *  → الأستاذ يختم (أعداد لا أسماء) → «الساعة في البيت» 24 ساعة لمن غاب.
  *  المبادئ: لا تقييم · لا أسماء · k ≥ 5 لكل ما يُعرض جماعيًّا · لا ذكاء اصطناعي · الأستاذ يفتح ويختم ولا يختار السطر.
- *  الأسماء: «ساعة الأثر» اسم سردي؛ «لقاء التأمل الأسبوعي للشعبة» الاسم الرسمي في الجداول والتقارير (كما تعرفه أدبيات التدريب: Weekly reflection meeting).
+ *  الأسماء: «ساعة أَثَر» اسم سردي؛ «لقاء التأمل الأسبوعي للشعبة» الاسم الرسمي في الجداول والتقارير (كما تعرفه أدبيات التدريب: Weekly reflection meeting).
  */
-export const P73_NAMES_AR = { phase: 'ساعة الأثر', official: 'لقاء التأمل الأسبوعي للشعبة', path: '/me/hour', session_title: 'ساعة الأثر', pin: 'ثبّت ساعة الأثر', seal: 'اختم الساعة', home: 'الساعة في البيت' } as const;
+export const P73_NAMES_AR = { phase: 'ساعة أَثَر', official: 'لقاء التأمل الأسبوعي للشعبة', path: '/me/hour', session_title: 'ساعة أَثَر', pin: 'ثبّت ساعة أَثَر', seal: 'اختم الساعة', home: 'الساعة في البيت' } as const;
 export const HOUR_LIMITS = { minutes: 60, openBeforeMin: 10, graceMin: 30, homeHours: 24, k: 5, wordMax: 24, lineMin: 5, lineMax: 120, showLines: 12, cloudMax: 30, maxWeeks: 20, weekLinesMax: 400, silenceSec: 60 } as const;
 export const HOUR_KINDS = ['hour_word', 'hour_line', 'hour_vote', 'carry', 'hour_seal'] as const; export type HourKind = typeof HOUR_KINDS[number];
 export const SESSION_KIND = 'athar_hour';
@@ -125,7 +125,7 @@ export type SealMeta = { session_id: string; line_id: number | null; people: num
 export const sealHeadAr = (m: Pick<SealMeta, 'people' | 'words' | 'lines' | 'carries'>) => `حضر الساعة ${m.people} · كلمات ${m.words} · سطور مقترَحة ${m.lines} · سطور محمولة ${m.carries}`;
 
 /* ───────── الإشعارات (نصوص) ───────── */
-export const carryNotice = (code: string) => ({ title_ar: 'حَمَل أحدُهم سطرك معه 🕰️', body_ar: `في ساعة الأثر لشعبة ${code} اختار زميلٌ سطرَك ليحمله معه هذا الأسبوع — بلا اسم، كما تقضي قواعد الساعة. كلمتك سافرت.` });
-export const pinNotice = (code: string, weekday: number, time: string) => ({ title_ar: `ساعة الأثر لشعبة ${code} — كل ${WEEKDAYS_AR[weekday]} ${time}`, body_ar: 'ساعة أسبوعية بلا تعليم ولا تصحيح: نقرأ ما كتبناه، يحمل كلٌّ سطرًا لغيره، كلمة واحدة بعد دقيقة صمت، وسطر واحد نختمه معًا.' });
+export const carryNotice = (code: string) => ({ title_ar: 'حَمَل أحدُهم سطرك معه 🕰️', body_ar: `في ساعة أَثَر لشعبة ${code} اختار زميلٌ سطرَك ليحمله معه هذا الأسبوع — بلا اسم، كما تقضي قواعد الساعة. كلمتك سافرت.` });
+export const pinNotice = (code: string, weekday: number, time: string) => ({ title_ar: `ساعة أَثَر لشعبة ${code} — كل ${WEEKDAYS_AR[weekday]} ${time}`, body_ar: 'ساعة أسبوعية بلا تعليم ولا تصحيح: نقرأ ما كتبناه، يحمل كلٌّ سطرًا لغيره، كلمة واحدة بعد دقيقة صمت، وسطر واحد نختمه معًا.' });
 export const sealNotice = (code: string, line: string | null, day: string) => ({ title_ar: `سطر ساعتنا — شعبة ${code} · ${fmtDayAr(day)}`, body_ar: line ? `«${line}»` : 'خُتمت الساعة بلا سطر هذه المرّة — الأسبوع القادم سطرنا.' });
 export const NOTICE_KINDS_P73 = ['hour_pinned', 'hour_carry', 'hour_sealed'] as const;

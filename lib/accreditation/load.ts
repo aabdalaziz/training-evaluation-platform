@@ -15,7 +15,7 @@ import { weaveEvidence, weaveSnapshotLine } from '../map/program-weave';
 import type { ProgramWeave } from '../map/program-weave';
 import { gradEvidence } from '../grad/store'; /* P63: عدد صفحات التخرّج المختومة (k ≥ 5) تحت 3.5 — بلا محتوى */
 import { levelEvidence } from '../level/echo';
-import { hourEvidence } from '../hour/store'; /* P73 «ساعة الدفعة»: ساعات أثر مختومة وسطور محمولة — أعداد فقط تحت 3.5 */ /* P70-ب «عبروا بكلماتهم»: عدد صفحات المستوى المختومة (k ≥ 5) تحت 3.5 — بلا محتوى */
+import { hourEvidence } from '../hour/store'; /* P73 «ساعة أَثَر»: ساعات مختومة وسطور محمولة — أعداد فقط تحت 3.5 */ /* P70-ب «عبروا بكلماتهم»: عدد صفحات المستوى المختومة (k ≥ 5) تحت 3.5 — بلا محتوى */
 import { runAi, aiUsage, logAi } from '../ai/athar';
 
 async function safe<X>(q: PromiseLike<{ data: any; error: any }>, fb: X): Promise<X> { try { const { data, error } = await q; return error || data === null || data === undefined ? fb : (data as X); } catch { return fb; } }

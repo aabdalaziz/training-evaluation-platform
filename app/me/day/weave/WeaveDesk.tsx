@@ -74,7 +74,7 @@ export default function WeaveDesk() {
                 : <ul className="wv-quotes">{w.quotes.map((q, i) => <li key={i} data-testid="wv-quote"><span className="wv-kind">{q.title_ar}</span><p>«لأن {q.note_ar}»</p></li>)}</ul>}
               <p className="wv-muted">كلمات أذِن أصحابها بمشاركتها معك — بلا اسم ولا تاريخ ولا ترتيب. ما يُسحب إذنه يختفي فورًا.</p></section>
           </>}
-        {/* P73 خيط «ساعاتنا»: السطور الجماعية المختومة في ساعة الأثر — ملك الشعبة، بلا أسماء */}
+        {/* P73 خيط «ساعاتنا»: السطور الجماعية المختومة في ساعة أَثَر — ملك الشعبة، بلا أسماء */}
         {!!d.hours?.length && <section className="wv-block" data-testid="wv-hours"><h2>🕰️ ساعاتنا <i>{d.hours.length}</i></h2>
           <ul className="wv-quotes">{d.hours.map((h) => <li key={h.day} data-testid="wv-hour"><span className="wv-kind">{h.day_ar} · حضر {h.people}{h.carries ? ` · حُمل ${h.carries}` : ''}</span><p>{h.line ? `«${h.line}»` : 'خُتمت بلا سطر'}</p></li>)}</ul>
           <p className="wv-muted">سطر كل ساعة اختارته الشعبة بالتصويت — وعند التعادل الأقصر. <Link href={`/me/hour?classroom=${room?.id || ''}`}>غرفة الساعة ←</Link></p></section>}

@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** P73 «ساعة الأثر» — المنطق النقي: المواعيد الأسبوعية · الطور · الكلمة والسطر · k ≥ 5 · السحابة · الاختيار (التعادل للأقصر) · النصوص · شكل المصدر */
+/** P73 «ساعة أَثَر» — المنطق النقي: المواعيد الأسبوعية · الطور · الكلمة والسطر · k ≥ 5 · السحابة · الاختيار (التعادل للأقصر) · النصوص · شكل المصدر */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,7 +12,7 @@ const ses = (id: string, startsAt: string, status = 'scheduled') => ({ id, start
 const users = (n: number) => Array.from({ length: n }, (_, i) => `u${i + 1}`);
 
 test('P73 · الأسماء والحدود والأنواع', () => {
-  assert.equal(P73_NAMES_AR.phase, 'ساعة الأثر'); assert.equal(P73_NAMES_AR.official, 'لقاء التأمل الأسبوعي للشعبة'); assert.equal(P73_NAMES_AR.path, '/me/hour');
+  assert.equal(P73_NAMES_AR.phase, 'ساعة أَثَر'); assert.equal(P73_NAMES_AR.official, 'لقاء التأمل الأسبوعي للشعبة'); assert.equal(P73_NAMES_AR.path, '/me/hour');
   assert.equal(HOUR_LIMITS.minutes, 60); assert.equal(HOUR_LIMITS.k, 5); assert.equal(HOUR_LIMITS.wordMax, 24); assert.equal(HOUR_LIMITS.lineMax, 120); assert.equal(HOUR_LIMITS.homeHours, 24);
   assert.deepEqual([...HOUR_KINDS], ['hour_word', 'hour_line', 'hour_vote', 'carry', 'hour_seal']); assert.equal(WEEKDAYS_AR[0], 'الأحد'); assert.equal(WEEKDAYS_AR[6], 'السبت'); assert.equal(RULES_AR.length, 5);
 });
@@ -97,10 +97,10 @@ test('P73 · صفحة المستوى: بطاقتا «ما حملتُه من غي
 });
 
 test('P73 · المسار والمصدر: /me/hour في way · SQL يوسّع القيدين فقط · الواجهة والـ API بالترتيب المعلَن', () => {
-  assert.equal(crumbsFor('/me/hour', 'ar').at(-1)?.label, 'ساعة الأثر');
+  assert.equal(crumbsFor('/me/hour', 'ar').at(-1)?.label, 'ساعة أَثَر');
   const sql = read('supabase/p73-athar-hour.sql'); assert.ok(!/create table/i.test(sql), 'صفر جداول جديدة'); assert.match(sql, /'athar_hour'/); for (const k of HOUR_KINDS) assert.ok(sql.includes(`'${k}'`), k);
   const store = read('lib/hour/store.ts'); assert.ok(/needLearner && who\.role !== 'learner'/.test(store), 'الأستاذ لا يكتب'); assert.ok(store.includes("who.role !== 'instructor') return fail('الختم لأستاذ الشعبة'"), 'الختم للأستاذ'); assert.ok(store.includes('pickLine(lines, votes)'), 'النظام يختار لا الأستاذ');
   const room = read('app/me/hour/HourRoom.tsx'); const at = (id: string) => room.indexOf(`data-testid="${id}"`); assert.ok(at('hr-week') > 0 && at('hr-week') < at('hr-silence') && at('hr-silence') < at('hr-lines-box') && at('hr-lines-box') < at('hr-seal-btn'), 'ترتيب الأقسام: نقرأ → صمت وكلمة → سطر → ختم'); assert.ok(room.includes('data-screen'), 'وضع شاشة القاعة');
   const api = read('app/api/me/hour/route.ts'); for (const a of ['pin', 'unpin', 'carry', 'word', 'line', 'vote', 'seal']) assert.ok(api.includes(`action === '${a}'`), a);
-  assert.ok(read('app/me/day/DayBook.tsx').includes("import('./HourPin')"), 'بطاقة التثبيت في دفتر اليوم'); assert.ok(read('app/me/day/weave/WeaveDesk.tsx').includes('wv-hours'), 'خيط «ساعاتنا»'); assert.ok(read('lib/accreditation/load.ts').includes('hourEvidence'), 'شاهد «ساعة الدفعة»');
+  assert.ok(read('app/me/day/DayBook.tsx').includes("import('./HourPin')"), 'بطاقة التثبيت في دفتر اليوم'); assert.ok(read('app/me/day/weave/WeaveDesk.tsx').includes('wv-hours'), 'خيط «ساعاتنا»'); assert.ok(read('lib/accreditation/load.ts').includes('hourEvidence'), 'شاهد «ساعة أَثَر» في الاعتماد');
 });

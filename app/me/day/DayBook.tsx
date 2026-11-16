@@ -11,7 +11,7 @@
  *  P55 «كلمة صوتية»: dy-word-voice (🎙️ قُلها بصوتك) · المسجّل المشترك VoiceRecorder بـ testid dy-rec (-start/-stop/-send/-redo) · dy-word-voice-take (التسجيل الجاهز) · dy-answered («أُجيب 🎙️») · dy-word-ok يذكر 🎙️
  *  P56 «صدى الأسبوع»: dy-echo (بطاقة آخر 7 أيام) · dy-echo-line · dy-echo-mirror · dy-echo-say (🔊 صوت الجهاز)
  *  P66 «تقويم الشعبة»: بطاقة RoomCalendar داخل كل شعبة (rc-*) · ?room=<classroom_id>#calendar يفتحها
- *  P73 «ساعة الأثر»: بطاقة HourPin داخل كل شعبة (hp-*) — التثبيت الأسبوعي وفتح الغرفة /me/hour
+ *  P73 «ساعة أَثَر»: بطاقة HourPin داخل كل شعبة (hp-*) — التثبيت الأسبوعي وفتح الغرفة /me/hour
  *  P54 «أمانة صوتية»: dy-reply[data-voice] dy-voice (▶ استمع — رابط موقَّع 5 دقائق عبر /api/me/day?voice=) dy-voice-tr (نصّ تقريبي رمادي) dy-hands3 (✋ ×N هذا الأسبوع) dy-voice-playall (شغّل الجديدة تباعًا) dy-pulse
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -23,7 +23,7 @@ import type { VoiceTake } from '../../components/VoiceRecorder';
 import { EchoSay } from '../../components/Notices'; /* P56 */
 import dynamic from 'next/dynamic';
 const RoomCalendar = dynamic(() => import('./RoomCalendar'), { ssr: false, loading: () => null }); /* P66 «تقويم الشعبة» */
-const HourPin = dynamic(() => import('./HourPin'), { ssr: false, loading: () => null }); /* P73 «ساعة الأثر» */
+const HourPin = dynamic(() => import('./HourPin'), { ssr: false, loading: () => null }); /* P73 «ساعة أَثَر» */
 const TRAINER_VOICE_SEC = 20;
 
 type Learner = { email: string; name: string };
@@ -152,7 +152,7 @@ export default function DayBook() {
         </div>}
         {/* P66 «تقويم الشعبة»: أيام التدريب → كتل وفترات تطبيق · «ما جرى في الميدان» مجمَّعًا */}
         <RoomCalendar roomId={r.id} code={r.code} hdr={hdr} readOnly={book.viewing_other} autoOpen={roomParam === r.id} />
-        {/* P73 «ساعة الأثر»: تثبيت الساعة الأسبوعية (يوم + وقت يختارهما الأستاذ) · الطور الآن · فتح الغرفة/شاشة القاعة */}
+        {/* P73 «ساعة أَثَر»: تثبيت الساعة الأسبوعية (يوم + وقت يختارهما الأستاذ) · الطور الآن · فتح الغرفة/شاشة القاعة */}
         <HourPin roomId={r.id} code={r.code} hdr={hdr} readOnly={book.viewing_other} />
       </article>)}</section>}
       {book.linked && book.classrooms.length === 0 && !quiet && <p className="pt-muted">لا شُعب مسندة إليك بعد — الجلسات أعلاه من جدولك.</p>}

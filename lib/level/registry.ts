@@ -28,7 +28,7 @@ export type CardKey = 'prev_line' | 'entry_line' /* P71 */ | 'first_why' | 'day_
 export const CARD_KEYS: CardKey[] = ['prev_line', 'entry_line', 'first_why', 'day_lines', 'apply_lines', 'commits', 'carried', 'hour_line', 'exam_writing', 'exam_speaking', 'crossed'];
 export const CARD_AR: Record<CardKey, string> = {
   prev_line: 'كلمتي من المستوى السابق', entry_line: 'قلتُه يوم دخلتُ — قبل أن أعرف نتيجتي' /* P71 */, first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»', day_lines: 'سطور أيامي', apply_lines: 'في موقعي — سطور التطبيق',
-  commits: 'التزمتُ… وأوفيتُ؟', carried: 'ما حملتُه من غيري — في ساعة الأثر' /* P73 */, hour_line: 'سطر ساعتنا — ما اقترحتُه وما اختارته الشعبة' /* P73 */, exam_writing: 'ما كتبتُه في اختبار نهاية المستوى', exam_speaking: 'ما قلتُه في اختبار نهاية المستوى', crossed: 'عبرتُ',
+  commits: 'التزمتُ… وأوفيتُ؟', carried: 'ما حملتُه من غيري — في ساعة أَثَر' /* P73 */, hour_line: 'سطر ساعتنا — ما اقترحتُه وما اختارته الشعبة' /* P73 */, exam_writing: 'ما كتبتُه في اختبار نهاية المستوى', exam_speaking: 'ما قلتُه في اختبار نهاية المستوى', crossed: 'عبرتُ',
 };
 /** ما يجوز أن يظهر على الوجه العام — الصوت لا يظهر أبدًا، ونصّ الاختبار لا يظهر (كلماته في موقف اختبار تبقى له) */
 export type PublicKey = 'line' | 'counts' | 'name' | 'crossed' | 'prev_line' | 'commits' | 'day_lines';

@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /me/hour[?classroom=<id>][&screen=1] — «ساعة الأثر» (P73 · الاسم الرسمي: لقاء التأمل الأسبوعي للشعبة) — داخل صدفة البوابة؛ وضع الشاشة بلا صدفة */
+/** /me/hour[?classroom=<id>][&screen=1] — «ساعة أَثَر» (P73 · الاسم الرسمي: لقاء التأمل الأسبوعي للشعبة) — داخل صدفة البوابة؛ وضع الشاشة بلا صدفة */
 import dynamic from 'next/dynamic';
 import { Suspense, useEffect, useState } from 'react';
 import { PortalShell } from '../../components/PortalShell';

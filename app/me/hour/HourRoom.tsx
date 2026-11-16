@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P73 «ساعة الأثر» — غرفة الساعة (تُحمَّل ديناميكيًا بلا SSR) — صفحة واحدة للمتدرّب والأستاذ بصلاحيات مختلفة
+ * P73 «ساعة أَثَر» — غرفة الساعة (تُحمَّل ديناميكيًا بلا SSR) — صفحة واحدة للمتدرّب والأستاذ بصلاحيات مختلفة
  *  /me/hour                      → شُعبي: بطاقة لكل شعبة (الطور الآن · الموعد · سطر آخر ساعة)
  *  /me/hour?classroom=<id>       → الغرفة بالترتيب: 1 «ما كتبناه هذا الأسبوع» (k ≥ 5 · أحمله معي) → 2 «دقيقة الصمت ثم كلمة واحدة» (مؤقّت 60 ث · سحابة حيّة)
  *                                  → 3 «سطر ساعتنا» (اقتراح · تصويت بلمسة لغيري) → 4 الختم (الأستاذ) → «الساعة في البيت» لمن غاب (24 ساعة)
@@ -50,7 +50,7 @@ export default function HourRoom() {
 
   /* ───── الفهرس ───── */
   if (!cid) return <main className="hr" dir="rtl" data-testid="hr-root" data-phase="" data-role="" data-screen="0"><style dangerouslySetInnerHTML={{ __html: CSS }} />
-    <header className="hr-head"><span className="hr-kicker"><Icon name="users" size={14} /> {idx?.names.official || 'لقاء التأمل الأسبوعي للشعبة'}</span><h1>🕰️ ساعة الأثر</h1><p className="hr-sub">ساعة أسبوعية ثابتة لكل شعبة بلا تعليم ولا تصحيح: نقرأ ما كتبناه، يحمل كلٌّ سطرًا لغيره، كلمة واحدة بعد دقيقة صمت، وسطر واحد نختمه معًا.</p></header>
+    <header className="hr-head"><span className="hr-kicker"><Icon name="users" size={14} /> {idx?.names.official || 'لقاء التأمل الأسبوعي للشعبة'}</span><h1>🕰️ ساعة أَثَر</h1><p className="hr-sub">ساعة أسبوعية ثابتة لكل شعبة بلا تعليم ولا تصحيح: نقرأ ما كتبناه، يحمل كلٌّ سطرًا لغيره، كلمة واحدة بعد دقيقة صمت، وسطر واحد نختمه معًا.</p></header>
     {err && <p className="hr-err" data-testid="hr-err">{err}</p>}
     {idx && (idx.rooms.length ? <section className="hr-rooms" data-testid="hr-rooms">{idx.rooms.map((r) => <Link key={r.classroom_id} href={`/me/hour?classroom=${r.classroom_id}`} className="hr-room" data-testid="hr-room" data-id={r.classroom_id} data-phase={r.phase}>
       <b>شعبة {r.code}{r.section_name ? ` — ${r.section_name}` : ''}</b><small>{r.program_ar}{r.role === 'instructor' ? ' · أستاذ الشعبة' : ''}</small>
@@ -67,7 +67,7 @@ export default function HourRoom() {
   return <main className={`hr${screen ? ' screen' : ''}`} dir="rtl" data-testid="hr-root" data-phase={ph} data-role={v?.role || ''} data-screen={screen ? 1 : 0}><style dangerouslySetInnerHTML={{ __html: CSS }} />
     <header className="hr-head" data-testid="hr-head">
       {!screen && <Link href="/me/hour" className="hr-back"><Icon name="arrow" size={14} /> كل شُعبي</Link>}
-      <h1>🕰️ ساعة الأثر{v ? ` — شعبة ${v.room.code}` : ''}</h1>
+      <h1>🕰️ ساعة أَثَر{v ? ` — شعبة ${v.room.code}` : ''}</h1>
       {v && <p className="hr-sub">{v.program_ar} · <b data-testid="hr-count">{PHASE_AR[ph as keyof typeof PHASE_AR]}{ph === 'open' && v.phase.minutes_left !== null ? ` · بقي ${v.phase.minutes_left} دقيقة` : ''}{ph === 'before' && v.phase.session ? ` · ${fmtDayAr(v.phase.session.day)} ${fmtTimeAr(v.phase.session.starts_at)}` : ''}</b>{v.pin ? ` · كل ${WEEKDAYS_AR[v.pin.weekday]} ${v.pin.time}` : ''}</p>}
       {v && v.role === 'instructor' && !screen && ph === 'open' && <a className="hr-btn ghost" href={`/me/hour?classroom=${cid}&screen=1`} target="_blank" rel="noreferrer" data-testid="hr-screen-link">🖥️ اعرض على شاشة القاعة</a>}
     </header>
