@@ -17,6 +17,7 @@ import { buildCards, sinceThen, gradBody, publicFace, programWindow, gradPhase, 
 import type { Card, Counts, Since, Sources, CardKey, PublicKey, GradBody, GradPhase, PublicFace } from './registry';
 import type { Evidence } from '../accreditation/registry';
 import { datesOverlay } from '../calendar/store'; /* P66 */
+import { sealedLevelLines } from '../level/store'; /* P70: سطور المستويات المختومة تعبر إلى صفحة التخرّج */
 
 type Db = any;
 export type Me = { id: string; email: string; name?: string };
@@ -84,6 +85,7 @@ export async function loadSources(db: Db, me: Me, p: Pick<GradProgram, 'id' | 'e
     grad_letter: letter && st ? { id: Number(letter.id), state: st.state, opens_ar: fmtIsoAr(letter.deliver_at), open_hour_ar: openHourAr(letter.deliver_at) } : null,
     map_code: snaps[0] ? { code: String(snaps[0].code), created_at: String(snaps[0].created_at), is_public: !!snaps[0].is_public } : null,
     farewell, welcome, first_why: firstWhy ? { id: Number(firstWhy.id), body_ar: firstWhy.opened_at ? String(firstWhy.body_ar || '') : null, at: String(firstWhy.created_at), state: letterState(firstWhy, now).state, opens_ar: fmtIsoAr(firstWhy.deliver_at) } : null, stations: stations.map((s) => ({ station: Number(s.station) as 30 | 90 | 365, written: !!s.written_at })), cohort_opened,
+    level_lines: await sealedLevelLines(db, me, p.id).catch(() => []), /* P70 */
     threads_after: threads.filter((t) => t.status === 'kept' && t.decided_at && String(t.decided_at) > end).length,
   };
 }

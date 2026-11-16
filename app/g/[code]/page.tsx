@@ -10,7 +10,7 @@ import { useParams } from 'next/navigation';
 import { Icon } from '../../../lib/ui/icons';
 import { PortalShell } from '../../components/PortalShell';
 
-type Card = { key: string; title_ar: string; text_ar: string | null; at: string | null; items?: { text_ar: string; at: string }[]; href?: string | null; state_ar?: string | null };
+type Card = { key: string; title_ar: string; text_ar: string | null; at: string | null; items?: { text_ar: string; at: string; state_ar?: string | null }[]; href?: string | null; state_ar?: string | null };
 type Face = { code: string; program_ar: string; end: string; sealed_at: string; name: string | null; line_ar: string | null; counts: { threads: number; replies: number; amanat: number; chapters: number; days: number } | null; cards: Card[]; since_ar: string[] | null; revoked: boolean; intact: boolean };
 type R = { success: boolean; valid: boolean; revoked?: boolean; replaced?: boolean; public?: boolean; face?: Face | null; code?: string };
 const fmt = (iso: string | null | undefined, style: 'medium' | 'long' = 'long') => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: style }) : '—');
@@ -32,7 +32,7 @@ function Inner() {
         <p className="pg-muted">انتهى {fmt(`${f.end}T00:00:00Z`)} · خُتمت {fmt(f.sealed_at, 'medium')}{!f.intact ? ' · ⚠ البصمة لا تطابق' : ''}</p></header>
       {f.line_ar && <blockquote className="pg-line" data-testid="pg-line">«{f.line_ar}»</blockquote>}
       {f.counts && <p className="pg-counts" data-testid="pg-counts">{f.counts.days > 0 && <span>📅 {f.counts.days} يومًا</span>}{f.counts.threads > 0 && <span>🧵 {f.counts.threads} خيوط</span>}{f.counts.replies > 0 && <span>💬 {f.counts.replies} ردود</span>}{f.counts.chapters > 0 && <span>📖 {f.counts.chapters} فصول</span>}{!f.counts.days && !f.counts.threads && !f.counts.replies && !f.counts.chapters && <span>سطر واحد — يكفي</span>}</p>}
-      {f.cards.length > 0 && <section className="pg-cards" data-testid="pg-cards">{f.cards.map((c) => <article key={c.key} className={`pg-card k-${c.key}`} data-key={c.key}><b>{c.title_ar}</b>{c.text_ar && <p>{c.text_ar}</p>}{c.items && <ul>{c.items.map((it, i) => <li key={i}>{it.text_ar}</li>)}</ul>}{c.href && c.key === 'map_code' && <Link href={c.href}>تحقّق من اللقطة ←</Link>}</article>)}</section>}
+      {f.cards.length > 0 && <section className="pg-cards" data-testid="pg-cards">{f.cards.map((c) => <article key={c.key} className={`pg-card k-${c.key}`} data-key={c.key}><b>{c.title_ar}</b>{c.text_ar && <p>{c.text_ar}</p>}{c.items && <ul>{c.items.map((it, i) => <li key={i}>{it.state_ar ? <b>{it.state_ar} · </b> : null}{it.text_ar}</li>)}</ul>}{c.href && c.key === 'map_code' && <Link href={c.href}>تحقّق من اللقطة ←</Link>}</article>)}</section>}
       {f.since_ar && f.since_ar.length > 0 && <section className="pg-since" data-testid="pg-since"><b>منذ ذلك اليوم</b><ul>{f.since_ar.map((l, i) => <li key={i}>{l}</li>)}</ul></section>}
       <footer className="pg-foot"><p>ما كتبه المتدرّب بيده في برنامجه — لا درجة، لا مستوى، لا تقييم، لا ذكاء اصطناعي. يُثبت الختم أن النصّ لم يتغيّر منذ {fmt(f.sealed_at, 'medium')}؛ وما بعده يُعدّ حيًّا لا مختومًا.</p><p><Link href={`/verify/grad?code=${encodeURIComponent(f.code)}`}>تحقّق بالرمز {f.code}</Link> · <Link href="/">أَثَر</Link></p></footer>
     </>}

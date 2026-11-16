@@ -33,6 +33,9 @@ export default function LineDesk() {
     if (j?.success) { setD(j); setErr(''); } else setErr(j?.error || 'تعذّر فتح الصفحة');
   }, []);
   useEffect(() => { if (tok) load(tok); }, [tok, load]);
+  /* P70: «الكلمة التي تعبر» — أول أسبوع في المستوى التالي يرى سطره من المستوى السابق كما ختمه */
+  const [echo, setEcho] = useState<{ intro_ar: string; line_ar: string; level_no: number; next_level_no: number; href: string } | null>(null);
+  useEffect(() => { if (!tok) return; fetch('/api/me/level?echo=1', { headers: { Authorization: `Bearer ${tok}` }, cache: 'no-store' }).then((r) => r.json()).then((j) => { if (j?.success && j.echo) setEcho(j.echo); }).catch(() => undefined); }, [tok]);
   const flash = (t: string) => { setMsg(t); setTimeout(() => setMsg(''), 7000); };
   async function post(body: Record<string, unknown>): Promise<any> { setBusy(true); const j = await fetch('/api/me/line', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null); setBusy(false); return j; }
   async function save(r: MyRoom, kind: LineKind) {
@@ -56,9 +59,10 @@ export default function LineDesk() {
   async function del(l: MyLine) { if (!confirm('يُحذف السطر فورًا ولا يُسترجع. نتابع؟')) return; const j = await post({ action: 'delete', id: l.id }); if (j?.success) { flash('حُذف.'); if (tok) load(tok); } else setErr(j?.error || 'تعذّر الحذف'); }
   return <main className="ln" dir="rtl" data-testid="ln-root">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
-    <nav className="ln-nav" aria-label="تنقّل"><Link href="/me" className="ln-link"><Icon name="arrow" size={14} /> ملفّي</Link><button type="button" className="ln-link ln-btnlink" data-testid="ln-today" aria-expanded={todayOpen} onClick={() => setTodayOpen((v) => !v)}><Icon name="clock" size={14} /> ماذا عندي اليوم؟</button><Link href="/me#prefs" className="ln-link"><Icon name="bell" size={14} /> تفضيلاتي</Link><Link href="/me/first" className="ln-link"><Icon name="spark" size={14} /> أول يوم</Link><Link href="/me/letter" className="ln-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="ln-link"><Icon name="award" size={14} /> يوم تخرّجي</Link></nav>
+    <nav className="ln-nav" aria-label="تنقّل"><Link href="/me" className="ln-link"><Icon name="arrow" size={14} /> ملفّي</Link><button type="button" className="ln-link ln-btnlink" data-testid="ln-today" aria-expanded={todayOpen} onClick={() => setTodayOpen((v) => !v)}><Icon name="clock" size={14} /> ماذا عندي اليوم؟</button><Link href="/me#prefs" className="ln-link"><Icon name="bell" size={14} /> تفضيلاتي</Link><Link href="/me/level" className="ln-link" data-testid="ln-level"><Icon name="school" size={14} /> بكلماتي عبر المستوى</Link><Link href="/me/first" className="ln-link"><Icon name="spark" size={14} /> أول يوم</Link><Link href="/me/letter" className="ln-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="ln-link"><Icon name="award" size={14} /> يوم تخرّجي</Link></nav>
     <header className="ln-head"><span className="pt-kicker"><Icon name="edit" size={14} /> سجلّ التعلّم والتطبيق للمتدرّب</span><h1>✍️ {d?.names.page || 'سطري'} <small>سطر في يوم التدريب · سطر في الأسبوع من موقعك</small></h1>
       <p>في أيام التدريب تكتب سطرًا واحدًا: ماذا أخذتَ من اليوم. وحين تعود إلى موقعك بين الكتل يصبح البرنامج معك هناك: سطر في الأسبوع — ماذا طبّقتَ وما الذي منعك — وموقف ميداني تكتب كيف تصرّفت فيه فعلًا. مدرّبك يرى المجمَّع بلا أسماء، ويبدأ الكتلة القادمة بما جرى في مواقعكم.</p></header>
+    {echo && <aside className="pt-box ln-echo" data-testid="ln-echo" data-level={echo.level_no}><small>{echo.intro_ar}</small><blockquote>«{echo.line_ar}»</blockquote><p>واليوم تبدأ المستوى {echo.next_level_no}. <Link href={echo.href}>صفحة المستوى {echo.level_no}</Link> · <Link href="/me/level">بكلماتي عبر المستوى</Link></p></aside>}
     {err && <p className="ln-err" role="alert" data-testid="ln-err">{err}</p>}
     {msg && <p className="ln-ok" role="status" data-testid="ln-ok">{msg}</p>}
     {!tok && tok !== null && <section className="pt-box"><p>سجّل الدخول لتكتب سطرك. <Link href="/me">مساحتي</Link></p></section>}
@@ -113,6 +117,7 @@ export default function LineDesk() {
 }
 
 const CSS = `
+.ln-echo{margin:10px 0 14px;background:linear-gradient(160deg,#ecfeff,#f0fdfa);border:1px solid #99f6e4;border-radius:16px;padding:12px 16px}.ln-echo small{color:#0b8a83;font-weight:800}.ln-echo blockquote{margin:6px 0;font-size:19px;line-height:1.8;color:#134e4a;font-weight:700}.ln-echo p{margin:0;color:#475569;font-size:13px}.ln-echo a{color:#0f2a4e;font-weight:800}
 .ln-btnlink{font:inherit;cursor:pointer}.ln-today h2{margin:0 0 6px;font-size:16px;color:#0f2a4e}.ln-answer{font-size:14px;font-weight:800;color:#0f2a4e;margin:0 0 6px;line-height:1.8}.ln-todaylist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.ln-todaylist li{display:flex;flex-direction:column;gap:2px;border:1px solid #e2e8f0;border-radius:10px;padding:6px 10px;font-size:13px}
 .ln-shift{display:flex;gap:8px;align-items:center;background:#f5f3ff;border:1px solid #ddd6fe;color:#4c1d95;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:800}
 .ln-lectures{display:flex;flex-direction:column;gap:8px;margin:8px 0}.ln-lectures h3{margin:0;font-size:14px;color:#0f2a4e}.ln-lectures h3 small{color:#64748b}

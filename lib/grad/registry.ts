@@ -22,23 +22,24 @@ export const LINE_PROMPT_AR = 'لو لخّصتُ هذا البرنامج في س
 export const GRAD_FOOT_AR = 'لا تدخل هذه الصفحة في أي تقييم أو شهادة. لا يكتبها ذكاء اصطناعي. خاصّة حتى تختمها وتختار وجهها العام بنفسك — وتُبطلها متى شئت.';
 export const CODE_RE = /^ATH-GD-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
 
-export type CardKey = 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'grad_letter' | 'map_code' | 'farewell' | 'welcome' | 'first_why' /* P64 */;
-export const CARD_KEYS: CardKey[] = ['farewell', 'welcome', 'first_why', 'first_because', 'replies', 'chapters', 'cohort_line', 'grad_letter', 'map_code'];
+export type CardKey = 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'grad_letter' | 'map_code' | 'farewell' | 'welcome' | 'first_why' /* P64 */ | 'level_lines' /* P70 */;
+export const CARD_KEYS: CardKey[] = ['farewell', 'welcome', 'first_why', 'level_lines', 'first_because', 'replies', 'chapters', 'cohort_line', 'grad_letter', 'map_code'];
 export const CARD_AR: Record<CardKey, string> = {
   farewell: 'قال مدرّبك يوم تخرّجك', first_because: 'أول «لأن…» على خيطي', replies: 'ردودي على كلمات مدرّبي', chapters: 'فصول رحلتي في هذا البرنامج',
   cohort_line: 'سطري في ظرف الدفعة', grad_letter: 'رسالتي إلى نفسي عند تخرّجي', map_code: 'لقطة خريطة أثري',
   welcome: 'قال مدرّبك في أول يوم', first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»' /* P64 */,
+  level_lines: 'سطوري عبر المستويات' /* P70: سطر كل مستوى ختمتُه في «بكلماتي عبر المستوى» */,
 };
 /** ما يجوز أن يظهر على الوجه العام (الصوت لا يظهر أبدًا — لا مفتاح له) */
-export type PublicKey = 'line' | 'counts' | 'name' | 'farewell' | 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'map_code' | 'since' | 'welcome' | 'first_why' /* P64 */;
-export const PUBLIC_KEYS: PublicKey[] = ['line', 'counts', 'name', 'farewell', 'first_because', 'replies', 'chapters', 'cohort_line', 'map_code', 'since', 'welcome', 'first_why'];
+export type PublicKey = 'line' | 'counts' | 'name' | 'farewell' | 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'map_code' | 'since' | 'welcome' | 'first_why' /* P64 */ | 'level_lines' /* P70 */;
+export const PUBLIC_KEYS: PublicKey[] = ['line', 'counts', 'name', 'farewell', 'first_because', 'replies', 'chapters', 'cohort_line', 'map_code', 'since', 'welcome', 'first_why', 'level_lines'];
 export const PUBLIC_DEFAULT: PublicKey[] = ['line', 'counts'];
 export const PUBLIC_AR: Record<PublicKey, string> = {
   line: 'سطر التخرّج', counts: 'الأعداد (بلا تفاصيل)', name: 'اسمي', farewell: 'كلمة الوداع من مدرّبي', first_because: 'أول «لأن…»', replies: 'ردودي (كلماتي أنا)',
-  chapters: 'فصول رحلتي', cohort_line: 'سطري في ظرف الدفعة', map_code: 'رمز لقطة خريطتي', since: 'شريط «منذ ذلك اليوم» (أعداد حيّة)', welcome: 'كلمة الاستقبال من مدرّبي (أول يوم)', first_why: 'ما كتبتُه أول يوم',
+  chapters: 'فصول رحلتي', cohort_line: 'سطري في ظرف الدفعة', map_code: 'رمز لقطة خريطتي', since: 'شريط «منذ ذلك اليوم» (أعداد حيّة)', welcome: 'كلمة الاستقبال من مدرّبي (أول يوم)', first_why: 'ما كتبتُه أول يوم', level_lines: 'سطوري عبر المستويات (P70)',
 };
 
-export type Card = { key: CardKey; title_ar: string; text_ar: string | null; at: string | null; items?: { text_ar: string; at: string }[]; href?: string | null; voice_sec?: number | null; state_ar?: string | null };
+export type Card = { key: CardKey; title_ar: string; text_ar: string | null; at: string | null; items?: { text_ar: string; at: string; state_ar?: string | null }[]; href?: string | null; voice_sec?: number | null; state_ar?: string | null };
 export type Counts = { threads: number; replies: number; amanat: number; chapters: number; days: number };
 export type Since = { threads_after: number; stations: { 30: boolean; 90: boolean; 365: boolean }; letter_opened: boolean; cohort_opened: boolean; days_since: number };
 
@@ -79,6 +80,7 @@ export type Sources = {
   farewell: { text_ar: string; at: string; voice_sec: number | null; trainer_ar: string | null } | null;
   welcome?: { text_ar: string; at: string; voice_sec: number | null; trainer_ar: string | null } | null; /* P64 */
   first_why?: { id: number; body_ar: string | null; at: string; state: 'sealed' | 'today' | 'ready' | 'opened'; opens_ar: string } | null; /* P64 */
+  level_lines?: { level_no: number; line_ar: string; sealed_at: string }[]; /* P70: سطور المستويات المختومة — بكلماته هو */
   stations: { station: 30 | 90 | 365; written: boolean }[];
   cohort_opened: boolean; threads_after: number;
 };
@@ -92,6 +94,7 @@ export function buildCards(src: Sources, program: { id: string }, w: { from: str
   if (src.farewell) cards.push({ key: 'farewell', title_ar: CARD_AR.farewell, text_ar: src.farewell.text_ar, at: src.farewell.at, voice_sec: src.farewell.voice_sec || null, state_ar: src.farewell.trainer_ar || null });
   if (src.welcome) cards.push({ key: 'welcome', title_ar: CARD_AR.welcome, text_ar: src.welcome.text_ar, at: src.welcome.at, voice_sec: src.welcome.voice_sec || null, state_ar: src.welcome.trainer_ar || null }); /* P64 */
   if (src.first_why) cards.push({ key: 'first_why', title_ar: CARD_AR.first_why, text_ar: src.first_why.state === 'opened' ? src.first_why.body_ar : null, at: src.first_why.at, href: `/me/letter#letter-${src.first_why.id}`, state_ar: src.first_why.state === 'opened' ? null : `مختوم — يُفتح ${src.first_why.opens_ar} بيدك في «رسالة إلى نفسي»` }); /* P64 */
+  if (src.level_lines && src.level_lines.length) cards.push({ key: 'level_lines', title_ar: CARD_AR.level_lines, text_ar: null, at: src.level_lines[0].sealed_at, items: src.level_lines.map((l) => ({ text_ar: l.line_ar, at: l.sealed_at, state_ar: `المستوى ${l.level_no}` })) }); /* P70 */
   if (first) cards.push({ key: 'first_because', title_ar: CARD_AR.first_because, text_ar: `لأن ${String(first.note_ar).replace(/^لأن\s*/, '')}`, at: first.decided_at });
   if (textReplies.length) cards.push({ key: 'replies', title_ar: CARD_AR.replies, text_ar: null, at: textReplies[0].at, items: textReplies.map((r) => ({ text_ar: String(r.text), at: r.at })) });
   if (chapters.length) cards.push({ key: 'chapters', title_ar: CARD_AR.chapters, text_ar: null, at: chapters[0].at, items: chapters.map((c) => ({ text_ar: c.title_ar, at: c.at })) });
@@ -122,7 +125,7 @@ export function gradBody(v: { code: string; program: GradBody['program']; name: 
 }
 export type PublicFace = { code: string; program_ar: string; end: string; sealed_at: string; name: string | null; line_ar: string | null; counts: Counts | null; cards: Card[]; since_ar: string[] | null; revoked: boolean; intact: boolean };
 export function publicFace(body: GradBody, keys: PublicKey[], opts: { since?: Since | null; revoked?: boolean; intact?: boolean } = {}): PublicFace {
-  const on = new Set(keys); const allowed: Set<string> = new Set(['farewell', 'first_because', 'replies', 'chapters', 'cohort_line', 'map_code', 'welcome', 'first_why'].filter((k) => on.has(k as PublicKey)));
+  const on = new Set(keys); const allowed: Set<string> = new Set(['farewell', 'first_because', 'replies', 'chapters', 'cohort_line', 'map_code', 'welcome', 'first_why', 'level_lines'].filter((k) => on.has(k as PublicKey)));
   return {
     code: body.code, program_ar: body.program.name_ar, end: body.program.end, sealed_at: body.sealed_at, name: on.has('name') ? body.name : null, line_ar: on.has('line') ? body.line_ar : null,
     counts: on.has('counts') ? body.counts : null, cards: body.cards.filter((c) => allowed.has(c.key) && c.key !== 'grad_letter').map((c) => ({ ...c, href: c.key === 'map_code' ? c.href : null })),

@@ -119,7 +119,7 @@ function CardView({ c, keep, busy, onKeep }: { c: Card; keep: boolean; busy: boo
   return <article className={`gd-card ${keep ? '' : 'off'} k-${c.key}`} data-testid="gd-card" data-key={c.key} data-keep={keep ? 1 : 0}>
     <header><b>{c.title_ar}</b><button type="button" className="gd-linkbtn" disabled={busy} onClick={() => onKeep(!keep)} data-testid="gd-keep">{keep ? 'أخفِ' : 'أبقِ'}</button></header>
     {c.text_ar && <p className="gd-card-text">{c.text_ar}</p>}
-    {c.items && <ul className="gd-items">{c.items.map((it, i) => <li key={i}>{it.text_ar}<small>{fmt(it.at)}</small></li>)}</ul>}
+    {c.items && <ul className="gd-items">{c.items.map((it, i) => <li key={i}>{it.state_ar ? <b style={{ fontWeight: 800, color: '#0b8a83' }}>{it.state_ar} · </b> : null}{it.text_ar}<small>{fmt(it.at)}</small></li>)}</ul>}
     {c.state_ar && <p className="gd-muted">{c.state_ar}{c.voice_sec ? ` · 🎙️ ${c.voice_sec} ث` : ''}</p>}
     {c.href && <p><Link href={c.href} className="gd-link">افتح ←</Link></p>}
     {c.at && !c.items && <small className="gd-muted">{fmt(c.at)}</small>}

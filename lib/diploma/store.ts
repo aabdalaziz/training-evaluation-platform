@@ -52,6 +52,11 @@ async function loadAll(db: Db, programId: string) {
   return { program, courses, sections, slots, periods, instructors };
 }
 type Loaded = Awaited<ReturnType<typeof loadAll>>;
+/** P70: مدى كل مستوى في برنامج (من جدول الشُّعب) + تسمية الشعبة — لصفحة المستوى «بكلماتي عبر المستوى» */
+export async function programLevelSpans(db: Db, programId: string): Promise<{ name_ar: string; spans: LevelSpan[]; sectionLabel: (classroomId: string | null) => string | null } | null> {
+  const L = await loadAll(db, programId); if (!L.program) return null;
+  return { name_ar: String(L.program.name_ar || ''), spans: levelSpans(L.courses, L.slots), sectionLabel: (cid) => (cid ? sectionLabel(L.sections.find((s) => s.id === cid)) || null : null) };
+}
 const namesOf = (L: Loaded) => ({
   course: (id: string) => L.courses.find((c) => c.id === id)?.title_ar || 'مقرّر', section: (id: string) => sectionLabel(L.sections.find((s) => s.id === id)) || 'شعبة',
   instructor: (id: string | null) => (id ? L.instructors.find((t) => t.id === id)?.name || 'أستاذ المادة' : 'أستاذ المادة'),
@@ -286,7 +291,7 @@ export async function runLevelClose(db: Db, now = new Date(), opts: { dry?: bool
       const L = await loadAll(db, pid); if (!L.program) continue; out.programs += 1; const spans = levelSpans(L.courses, L.slots); const cur = currentLevel(spans, today); if (!cur || !isLevelLastWeek(cur, today)) continue;
       if (addDays(cur.to_day, -(D_LIMITS.levelLastWeekDays - 1)) !== today) continue; /* أول يوم من الأسبوع الأخير فقط */
       const en = await safe<any[]>(db.from('portal_enrollments').select('id,email,user_id').eq('program_id', pid).in('status', ENROLLED).not('classroom_id', 'is', null).limit(1000), []); const t = levelCloseNotice(String(L.program.name_ar || ''), cur.level_no);
-      for (const e of en) { const r = await pushNotice(db, { email: e.email, user_id: e.user_id || null, report_id: null, kind: 'level_close' as any, ...t, url: '/me/line', ref_id: pid, dedupe_key: `level_close:${e.id}:${cur.level_no}`, push: true } as any, { dry: !!opts.dry, site: opts.site, now }); if (r.inserted) out.level_close += 1; }
+      for (const e of en) { const r = await pushNotice(db, { email: e.email, user_id: e.user_id || null, report_id: null, kind: 'level_close' as any, ...t, url: '/me/level', ref_id: pid, dedupe_key: `level_close:${e.id}:${cur.level_no}`, push: true } as any, { dry: !!opts.dry, site: opts.site, now }); if (r.inserted) out.level_close += 1; }
     } catch (e) { out.errors.push(`${pid}: ${(e as Error).message}`); }
   }
   return out;

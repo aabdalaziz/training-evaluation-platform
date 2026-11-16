@@ -177,7 +177,7 @@ export const currentLevel = (spans: LevelSpan[], today: string): LevelSpan | nul
 export const isLevelLastWeek = (l: LevelSpan, today: string): boolean => !!l.to_day && today <= l.to_day && daysBetween(today, l.to_day) < D_LIMITS.levelLastWeekDays;
 
 /* ───────── نصوص ───────── */
-export const levelCloseNotice = (diploma: string, levelNo: number) => ({ title_ar: `${D_NAMES_AR.level_close} — ${D_NAMES_AR.level} ${levelNo} 🏁`, body_ar: `أسبوعك الأخير في ${D_NAMES_AR.level} ${levelNo} من «${diploma}». سطر واحد: ماذا تغيّر في عملك هذا المستوى؟ والتزاماتك المفتوحة تنتظر إجابتك.` });
+export const levelCloseNotice = (diploma: string, levelNo: number) => ({ title_ar: `${D_NAMES_AR.level_close} — ${D_NAMES_AR.level} ${levelNo} 🏁`, body_ar: `أسبوعك الأخير في ${D_NAMES_AR.level} ${levelNo} من «${diploma}». سطر واحد: ماذا تغيّر في عملك هذا المستوى؟ والتزاماتك المفتوحة تنتظر إجابتك. وصفحتك «بكلماتي عبر المستوى» فُتحت: كل ما كتبتَه وقلتَه في هذا المستوى — بيدك تختمه (P70).` });
 export const moveRequestNotice = (who: string, line: string, reason: string) => ({ title_ar: 'طلب نقل شعبة', body_ar: `${who} يطلب النقل — ${line}. السبب: ${reason}. التسكين من أداة التسكين.` });
 export const moveDecidedNotice = (ok: boolean, note: string | null) => ({ title_ar: ok ? 'تمّ النظر في طلب نقلك ✅' : 'طلب نقلك — تعذّر الآن', body_ar: ok ? `نُقلت إلى شعبتك الجديدة. ${note || ''}`.trim() : `${note || 'الشُّعب مكتملة حاليًا.'} يمكنك الطلب لاحقًا.` });
 export const arCount = (n: number, one: string, two: string, few: string, many: string) => (n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${few}` : `${n} ${many}`);

@@ -233,7 +233,7 @@ test('P66-ب · المخزن: طلب نقل الشعبة (سبب 5–200 · وا
   /* محطّة المستوى: to_day = 13/12 → أول يوم من الأسبوع الأخير = 7/12 */
   const r0 = await runLevelClose(db, new Date('2026-12-06T06:00:00Z'), { dry: false }); assert.equal(r0.level_close, 0); assert.equal(r0.programs, 1);
   const r1 = await runLevelClose(db, new Date('2026-12-07T06:00:00Z'), { dry: false }); assert.deepEqual(r1.errors, []); assert.equal(r1.level_close, 2, 'ريم وسارة (pending لا)');
-  const lc = notices.filter((n) => n.kind === 'level_close'); assert.equal(lc[0].dedupe_key, `level_close:${U(91)}:1`); assert.equal(lc[0].url, '/me/line'); assert.match(lc[0].title_ar, /محطّة المستوى — المستوى 1/);
+  const lc = notices.filter((n) => n.kind === 'level_close'); assert.equal(lc[0].dedupe_key, `level_close:${U(91)}:1`); assert.equal(lc[0].url, '/me/level', 'P70: الإشعار يفتح صفحة المستوى'); assert.match(lc[0].title_ar, /محطّة المستوى — المستوى 1/);
   const r2 = await runLevelClose(db, new Date('2026-12-07T06:00:00Z'), { dry: false }); assert.equal(r2.level_close, 0, 'مرّة واحدة'); assert.equal((await runLevelClose(db, new Date('2026-12-08T06:00:00Z'), { dry: false })).level_close, 0, 'ليس أول يوم الأسبوع الأخير');
 });
 

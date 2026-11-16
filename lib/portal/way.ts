@@ -2,7 +2,7 @@
 /** «الطريق» — خريطة أسماء المسارات لشريط التنقّل الموحّد (رجوع · الرئيسية · مسار الصفحة). منطق خالص قابل للاختبار. */
 export type Crumb = { href: string; label: string; current: boolean; /** مقطع بلا صفحة خاصة (مجلّد مسارات فقط) → يُعرض نصًّا لا رابطًا */ dead?: boolean };
 /** مقاطع لا صفحة لها (تحتها صفحات ديناميكية فقط) — لا تُربَط في الفتات ولا يُرجَع إليها (كانت تعطي 404) */
-export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/e', '/evaluate', '/followup', '/g', '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/miaar/certificate', '/miaar/client', '/miaar/practice', '/me/reports/line', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey', '/verify/report', '/verify/form']);
+export const NO_PAGE = new Set(['/attend', '/contract', '/credential', '/e', '/evaluate', '/followup', '/g', '/lv' /* P70 */, '/impact', '/join', '/journey', '/live/copilot', '/live/facilitator', '/m', '/m/confirm', '/miaar/d', '/miaar/result', '/miaar/growth', '/miaar/certificate', '/miaar/client', '/miaar/practice', '/me/reports/line', '/oauth', '/on-air/seasons/year', '/org-journey', '/p', '/pay', '/room', '/survey', '/verify/report', '/verify/form']);
 type L = { ar: string; en: string };
 /** أسماء المقاطع المعروفة (المقطع الأول أو المركّب) — الأسماء الرسمية كما في القوائم */
 const NAMES: Record<string, L> = {
@@ -18,6 +18,7 @@ const NAMES: Record<string, L> = {
   'me/first': { ar: 'أول يوم', en: 'First day' }, /* P64 */
   'me/line': { ar: 'سطري', en: 'My line' }, /* P66 */
   'me/diploma': { ar: 'هيكل الدبلوم', en: 'Diploma structure' }, /* P66-ب */
+  'me/level': { ar: 'بكلماتي عبر المستوى', en: 'My level page' }, 'verify/level': { ar: 'تحقّق من صفحة مستوى', en: 'Verify level page' }, lv: { ar: 'صفحة مستوى', en: 'Level page' }, /* P70 */
   me: { ar: 'مساحتي', en: 'My space' }, org: { ar: 'بوابة الجهات', en: 'Organizations' }, hub: { ar: 'صفحاتي', en: 'My pages' }, login: { ar: 'الدخول', en: 'Sign in' }, join: { ar: 'الانضمام', en: 'Join' },
   help: { ar: 'المساعدة', en: 'Help' }, verify: { ar: 'التحقق من شهادة', en: 'Verify' }, 'verify/policy': { ar: 'ختم سياسة الجهة', en: 'Policy seal' }, 'org/report': { ar: 'طباعة تقرير القيادة', en: 'Print leadership report' }, enter: { ar: 'الدخول بالرمز', en: 'Enter with code' }, credential: { ar: 'الشهادة', en: 'Credential' }, pay: { ar: 'الدفع', en: 'Payment' }, p: { ar: 'صفحة عامة', en: 'Public page' },
   accessibility: { ar: 'الوصولية', en: 'Accessibility' }, miaar: { ar: 'مِعيار', en: 'Mi‘yar' }, 'miaar/result': { ar: 'النتيجة', en: 'Result' }, 'miaar/practice': { ar: 'مِران', en: 'Practice' }, 'api/notices': { ar: 'التنبيهات', en: 'Notices' }, 'miaar/trust': { ar: 'سجلّ الصدق', en: 'Trust record' }, 'miaar/d': { ar: 'دعوة', en: 'Invitation' }, 'miaar/proctor': { ar: 'ختم المراقب', en: 'Proctor stamp' },
