@@ -3,9 +3,9 @@ name: athar-dialogue
 description: How to extend the Athar human dialogue loop (P51–P66 — «دفتر اليوم», «رسالة الشهر», «ردّ على الكلمة», «أمانة صوتية», «كلمة صوتية», «صدى الأسبوع», «نبض الجهة», «خريطة أثرك», «نسيج الشعبة», «لأن… بصوتك», «نسيج البرنامج», «رسالة إلى نفسي بعد سنة», «يوم تخرّجي — بكلماتي», «أول يوم — قال من سبقك», «أيام التدريب وفترات التطبيق») without breaking its rules — nothing enters evaluation, k ≥ 5 for any aggregate, no names outside the owner's own screen, voice is private/temporary, no server AI, no new cron/env/deps.
 ---
 
-# Athar — the dialogue loop (P51–P66)
+# Athar — the dialogue loop (P51–P71)
 
-Read `docs/ATHAR-DIALOGUE-LOOP-P51-P63-AR.txt` (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
+Read `docs/ATHAR-DIALOGUE-LOOP-P51-P66B-AR.txt` (v2.7) (and the data-travel matrix `docs/diagrams/athar-dialogue-travel-matrix.svg`) first; this skill is the operational checklist.
 
 ## The loop in one line
 Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/line/voice «أمانة» (P53/P54) → learner gets a weekly 🪞 «صدى» (P56) → the organization gets a monthly «رسالة الشهر» with an aggregated «نبض» (P52/P57) → the learner weaves their own «خيوط» into «خريطة أثرك» (P58) → the trainer reads what the section wove together in «نسيج الشعبة» and answers with a 🧶 word on it (P59) — which is again a «كلمة», so the loop closes on itself. The learner can also speak each «لأن…» (P60) — voice stays with its owner only. At program level the kept threads become **counted** evidence in the living accreditation file «نسيج البرنامج» (P61) — never quoted. On the program's last day the learner's own words come back to them as a page they curate, seal and may open to the world: «يوم تخرّجي — بكلماتي» (P63).
@@ -152,6 +152,13 @@ Trainer writes/speaks a «كلمة» (P51/P55) → learner answers with a touch/
 - The instructor's reply is an ordinary trainer word with a flag (`sendWord({ echo: level_no })`): title «كلمة العبور من أستاذك …», url `/me/line`, dedupe `echo_word:<classroom>:<level>:<trainer>:<email>` (merge → re-send replaces). `parseWordNotice` reads the trainer from that key so P53 chips and ✋ land in the day book as usual.
 - Learner side: `learnerEchoView()` = own line (P70) + instructor word + «page still open» nudge; the word never enters the sealed level page.
 - Trap: `dy-echo*` test ids already belong to P56 «صدى الأسبوع» — use `dy-lvecho*`.
+
+## The first word before the result (P71 pattern — «يوم دخلتُ» · «سطر الدخول» · «قالوا يوم دخلوا»)
+- One optional screen between مِعيار `finish` and the result card (`Step 'entry'` set only in `doFinish`, never on resume): text ≤ 200 in ANY language (`dir="auto"`) or voice ≤ 20 s, one-click skip. It is not part of the test: `POST /api/miaar {action:'entry'}` rejects active sessions (409), reads `placement_reports` only for the id link, and nothing is written into `report`; `/api/miaar?result=` never returns it; `lib/level/echo.ts` must not read `portal_entry_lines`.
+- The applicant has no account yet, so the row (`portal_entry_lines`, one per session) is keyed by email and claimed to `user_id` on first read (`entryOfEmail(db, email, me.id)`), exactly like enrollments. Text refuses emails/phones (`validateEntryText → no_contact`). Re-save replaces only what was sent (new text keeps old voice and vice versa).
+- It comes back to its owner only: P64 first-day card «قلتَ يوم دخلتَ» (voice via signed URL · copy-to-«لماذا جئتُ» · immediate delete), P70 level-1 card `entry_line`, P63 first card `entry` — none of them enters a public face. Instructor sees `ClassDay.entry` «قالوا يوم دخلوا» only for sections whose program starts within ±7 days, k ≥ 5 on the section, 3 seeded-shuffled verbatim lines, no translation.
+- Split pure vs glue when a client component needs the copy: `lib/first/entry-pure.ts` (limits · prompts · validation · echo line) is imported by `app/miaar/EntryLine.tsx`; `lib/first/entry.ts` (crypto · storage · db) stays server-side.
+- Trap: `/miaar` test ids are crowded — `mi-entry` (entry level on the result card) and `mi-door` (test doors) are taken; P71 uses `mi-why*`. Grep the file before choosing an id.
 
 ## Signed documents pattern (P52 letter · P58 snapshot)
 Code `ATH-XX-XXXX-XXXX` (alphabet without 0/1/I/O) + `sha256(jcs(body))` + `/verify/<kind>?code=` page that never shows private content unless the owner made it public. One live document per period (partial unique index `… where revoked_at is null`); re‑sign revokes the previous; revoked → the verify page says «أُبطلت». Do **not** reach for `lib/portal/vc.ts` unless a third party needs a W3C VC.
