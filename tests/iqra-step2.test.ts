@@ -193,7 +193,7 @@ test('مكتبة المستوى — المعتمد فقط · نصّ الاستم
   const r = await libraryAnswer(db, e, v.id, [0, 1, 0]); assert.ok(r.ok); assert.equal(r.score, 67); assert.equal(r.results.filter((x) => x.correct).length, 2); assert.equal(r.results[0].explanation_ar, 'قالت: أنا من جدّة.');
   const r2 = await libraryAnswer(db, e, v.id, [0, 1, 2]); assert.ok(r2.ok); assert.equal(r2.score, 100); assert.equal(db.T.iqra_progress.filter((x) => x.library_id === v.id).length, 1, 'صفّ واحد');
   assert.equal((await libraryList(db, e)).نصوص.find((x) => x.code === 'A1-U01-R01')!.درجة, 100); assert.equal((await learnerHome(db, e)).خطواتي!.done, 0, 'المكتبة لا تُعدّ حلقة');
-  assert.equal((await libraryAnswer(db, e, v.id, [0])).ok, false); assert.equal((await libraryView(db, enrolled('A2'), v.id)), null, 'نصّ من مستوى آخر لا يُفتح');
+  assert.equal((await libraryAnswer(db, e, v.id, [0])).ok, false); assert.equal((await libraryView(db, enrolled('PRE_A1'), v.id)), null, 'نصّ من مستوى أعلى لا يُفتح'); assert.ok(await libraryView(db, enrolled('A2'), v.id), 'ق٢: نصّ من مستوى أدنى يبقى مفتوحًا للعابر');
 });
 
 test('الخزانة — iqra_time_log بياناتٌ شخصية بسياسة حذف · iqra_library محتوى بلا بيانات شخصية · لا بيانات شخصية في الصور', () => {

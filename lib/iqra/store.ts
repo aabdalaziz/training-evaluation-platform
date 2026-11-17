@@ -3,8 +3,10 @@
  * «اقْرَأْ» ق1 — طبقة القاعدة: التسكين من قرار مِعيار · مستوى المتعلّم · الحلقة · التصحيح على الخادم · أراجع · دفتري · الطاقم (اعتماد/استيراد).
  *  مفتاح المتعلّم = البريد المطبَّع (كما مِعيار). لا أسماء في أي ردّ جماعي؛ أرقام الطاقم الجماعية تُحجب تحت k < 5.
  */
-import { IQRA_LIMITS, IQRA_NAMES_AR, LEVEL_META, HOURS_TARGET, THRESHOLD_RULE, SKILL_META, COUNTED_ACTIVITIES, levelFromDecision, levelLabel, isIqraLevel, isActivity, nextLevel, type IqraLevel, type IqraSkill, type Activity } from './registry';
+import { IQRA_LIMITS, IQRA_NAMES_AR, LEVEL_META, HOURS_TARGET, THRESHOLD_RULE, SKILL_META, COUNTED_ACTIVITIES, levelFromDecision, levelLabel, levelOrder, isIqraLevel, isActivity, nextLevel, type IqraLevel, type IqraSkill, type Activity } from './registry';
 import { exerciseToBank, grade, nextInterval, publicExercise, scorePct, streakDays, drawExercises, type Answer, type Pack, type PublicExercise, type ReviewResult } from './content';
+import { liveRequest, syncFromReport, examFacts, crossedCard } from './q2'; /* ق٢ (دورة استيراد متبادلة آمنة: دوالّ فقط) */
+import { THRESHOLD_STATUS_AR } from './registry';
 import { invalidatePoolCache } from '../miaar/bank';
 
 type Db = any;
@@ -83,23 +85,39 @@ export async function hoursSummary(db: Db, e: Enrolment, masteryPct: number, now
   return { hours, target, pct, external_hours: Math.round((external / 3600) * 10) / 10, by_activity: Object.fromEntries(COUNTED_ACTIVITIES.map((a) => [a, Math.round(((by[a] || 0) / 3600) * 10) / 10])), per_week: perWeek, weeks_left: weeks, today_min: Math.round((weekly[today] || 0) / 60), mastery_pct: masteryPct, threshold: { early_ready: early, full_ready: full, early_rule: `${THRESHOLD_RULE.early_hours_pct}% من الساعات مع إتقان ${THRESHOLD_RULE.early_mastery_pct}%`, state: full ? 'ready' : early ? 'early' : 'building' } };
 }
 
+/** ق٢: الإتقان = نسبة الحلقات المعتمدة التي «تمّت» (≥70%) — المُدخل الثاني لقاعدة العَتَبة */
+export async function masteryOf(db: Db, e: Enrolment): Promise<number> {
+  const [lessons, prog] = await Promise.all([approvedLessons(db, e.level), progressOf(db, e.learner_email)]);
+  const done = lessons.filter((l) => prog.get(l.id)?.status === 'done').length; return scorePct(done, lessons.length);
+}
+/** ق٢: بعد العبور يبقى ما دونه مفتوحًا — مستويات القراءة في «مكتبتي» = مستواه وما قبله */
+const levelsUpTo = (l: IqraLevel): IqraLevel[] => (Object.keys(LEVEL_META) as IqraLevel[]).filter((x) => levelOrder(x) <= levelOrder(l));
+
 /* ---------- مستوى المتعلّم ---------- */
 export async function learnerHome(db: Db, e: Enrolment, now = new Date()) {
+  /* ق٢: الالتقاط أوّلًا — إن اعتُمدت ترقية «عُبور» منذ آخر زيارة أُغلق النشط وفُتح التالي، فنقرأ القيد الجديد ونبني البيت عليه في النداء نفسه */
+  const req0 = await liveRequest(db, e.learner_email).catch(() => null);
+  const synced = req0 && req0.invite_id ? await syncFromReport(db, req0).catch(() => req0) : req0;
+  if (synced && synced.status === 'promoted' && synced.enrolment_id === e.id) { const fresh = await findEnrolment(db, e.learner_email).catch(() => null); if (fresh && fresh.id !== e.id) e = fresh; }
   const [units, lessons, prog] = await Promise.all([unitsOf(db, e.level), approvedLessons(db, e.level), progressOf(db, e.learner_email)]);
   const byUnit = new Map<string, LessonRow[]>(); for (const l of lessons) { const a = byUnit.get(l.unit_code) || []; a.push(l); byUnit.set(l.unit_code, a); }
   const منازل = units.filter((u) => byUnit.has(u.code)).map((u) => ({
     code: u.code, title_ar: u.title_ar, focus_ar: u.focus_ar,
     حلقات: (byUnit.get(u.code) || []).map((l) => { const p = prog.get(l.id); const n = (l.item_ids || []).length; const answered = countAnswered(l.item_ids || [], p?.answers || {}); return { id: l.id, code: l.code, title_ar: l.title_ar, goal_ar: l.goal_ar, minutes: l.minutes, minutes_total: l.minutes_total || 120, مهارة: skillOf(l), can_do_ar: l.can_do_ar || '', حالة: p?.status === 'done' ? 'done' : p ? 'started' : 'new', درجة: p?.score ?? null, مجاب: answered, الكلّ: n, مكتملة: n > 0 && answered >= n }; }),
   }));
-  const done = [...prog.values()].filter((p) => p.status === 'done').length;
-  const days = [...prog.values()].flatMap((p) => [p.last_seen_at, p.done_at].filter(Boolean).map((d: string) => riyadhDate(new Date(d))));
+  const mine = lessons.map((l) => prog.get(l.id)).filter(Boolean) as any[]; /* ق٢: تقدّم هذا المستوى فقط (بعد الانتقال تبقى صفوف المستوى السابق) */
+  const done = mine.filter((p) => p.status === 'done').length;
+  const days = mine.flatMap((p) => [p.last_seen_at, p.done_at].filter(Boolean).map((d: string) => riyadhDate(new Date(d))));
   const { count: due } = await db.from('iqra_reviews').select('id', { count: 'exact', head: true }).eq('learner_email', e.learner_email).lte('due_at', now.toISOString());
   const total = lessons.length; const nextOne = lessons.find((l) => prog.get(l.id)?.status !== 'done') || null;
   const daily = await dailyQuestion(db, e, now).catch(() => null);
   const ساعاتي = await hoursSummary(db, e, scorePct(done, total), now).catch(() => null);
-  const { count: libN } = await db.from('iqra_library').select('id', { count: 'exact', head: true }).eq('level', e.level).eq('status', 'approved');
+  const { count: libN } = await db.from('iqra_library').select('id', { count: 'exact', head: true }).in('level', levelsUpTo(e.level)).eq('status', 'approved');
+  /* ق٢: ملخّص العَتَبة في البيت (الطلب الحيّ إن وُجد) + بطاقة «عبرتُ» بعد الانتقال */
+  const العَتَبة = { state: ساعاتي?.threshold.state || 'building', eligible: !!ساعاتي && ساعاتي.threshold.state !== 'building' && !!nextLevel(e.level) && !!examFacts(e.level), request: synced ? { id: synced.id, status: synced.status, status_ar: THRESHOLD_STATUS_AR[synced.status], invite_url: synced.invite_url, defer_note: synced.defer_note, exit_total: synced.exit_total } : null };
+  const عبرتُ = await crossedCard(db, e).catch(() => null);
   return {
-    ساعاتي, مكتبة: Number(libN || 0),
+    ساعاتي, مكتبة: Number(libN || 0), العَتَبة, عبرتُ,
     المستوى: { level: e.level, label: levelLabel(e.level), name_ar: LEVEL_META[e.level].name_ar, code: LEVEL_META[e.level].code, line_ar: LEVEL_META[e.level].line_ar, can_ar: LEVEL_META[e.level].can_ar, next: nextLevel(e.level) ? levelLabel(nextLevel(e.level) as IqraLevel) : null, source: e.source },
     منازل, خطواتي: { done, total, pct: scorePct(done, total) }, أيامي: streakDays(days, riyadhDate(now)), أراجع_مستحقّ: Number(due || 0),
     التالية: nextOne ? { id: nextOne.id, title_ar: nextOne.title_ar, unit_code: nextOne.unit_code } : null,
@@ -188,18 +206,18 @@ export async function saveProduce(db: Db, e: Enrolment, input: { lesson_id: unkn
 /* ---------- مكتبة المستوى ---------- */
 const LIB_COLS = 'id, code, unit_code, level, kind, title_ar, body_ar, minutes, questions, descriptor_codes, status';
 export async function libraryList(db: Db, e: Enrolment) {
-  const [{ data }, { data: pr }] = await Promise.all([db.from('iqra_library').select('id, code, unit_code, kind, title_ar, minutes, status').eq('level', e.level).eq('status', 'approved').order('code').limit(200), db.from('iqra_progress').select('library_id, score, done_at').eq('learner_email', e.learner_email).not('library_id', 'is', null).limit(500)]);
+  const [{ data }, { data: pr }] = await Promise.all([db.from('iqra_library').select('id, code, unit_code, kind, title_ar, minutes, status, level').in('level', levelsUpTo(e.level)).eq('status', 'approved').order('code').limit(200), db.from('iqra_progress').select('library_id, score, done_at').eq('learner_email', e.learner_email).not('library_id', 'is', null).limit(500)]);
   const pm = new Map(((pr || []) as any[]).map((p) => [p.library_id, p]));
-  return { نصوص: ((data || []) as any[]).map((x) => ({ id: x.id, code: x.code, unit_code: x.unit_code, kind: x.kind, title_ar: x.title_ar, minutes: x.minutes, درجة: pm.get(x.id)?.score ?? null, تمّ: !!pm.get(x.id)?.done_at })) };
+  return { نصوص: ((data || []) as any[]).map((x) => ({ id: x.id, code: x.code, unit_code: x.unit_code, kind: x.kind, title_ar: x.title_ar, minutes: x.minutes, level: x.level, سابق: x.level !== e.level, درجة: pm.get(x.id)?.score ?? null, تمّ: !!pm.get(x.id)?.done_at })) };
 }
 export async function libraryView(db: Db, e: Enrolment, id: string) {
-  if (!isId(id)) return null; const { data: x } = await db.from('iqra_library').select(LIB_COLS).eq('id', id).eq('level', e.level).eq('status', 'approved').maybeSingle(); if (!x) return null;
+  if (!isId(id)) return null; const { data: x } = await db.from('iqra_library').select(LIB_COLS).eq('id', id).in('level', levelsUpTo(e.level)).eq('status', 'approved').maybeSingle(); if (!x) return null;
   const qs = (Array.isArray(x.questions) ? x.questions : []) as any[];
   return { id: x.id, code: x.code, kind: x.kind, title_ar: x.title_ar, body_ar: x.body_ar, minutes: x.minutes, أسئلة: qs.map((q, i) => ({ i, q: q.q, options: (q.options || []).map((t: string, k: number) => ({ id: String(k), text: t })) })) };
 }
 export async function libraryAnswer(db: Db, e: Enrolment, id: unknown, picks: unknown) {
   if (!isId(id) || !Array.isArray(picks)) return { ok: false as const, error: 'bad_input' };
-  const { data: x } = await db.from('iqra_library').select('id, level, status, questions').eq('id', id).maybeSingle(); if (!x || x.level !== e.level || x.status !== 'approved') return { ok: false as const, error: 'not_found' };
+  const { data: x } = await db.from('iqra_library').select('id, level, status, questions').eq('id', id).maybeSingle(); if (!x || !levelsUpTo(e.level).includes(x.level) || x.status !== 'approved') return { ok: false as const, error: 'not_found' };
   const qs = (Array.isArray(x.questions) ? x.questions : []) as any[]; const got = (picks as unknown[]).map((v) => Number(v)); if (got.length !== qs.length || got.some((n) => !Number.isInteger(n))) return { ok: false as const, error: 'answer_all' }; /* كلّ الأسئلة قبل التصحيح */
   const results = qs.map((q, i) => ({ i, correct: got[i] === Number(q.correct), correct_option: String(q.correct), explanation_ar: q.explanation_ar || null })); const score = scorePct(results.filter((r) => r.correct).length, qs.length || 1);
   await db.from('iqra_progress').upsert({ learner_email: e.learner_email, user_id: e.user_id, lesson_id: null, library_id: x.id, status: 'done', score, attempts: 1, answers: { picks: got }, last_seen_at: nowIso(), done_at: nowIso() }, { onConflict: 'learner_email,library_id' });
@@ -237,7 +255,7 @@ export async function notebook(db: Db, e: Enrolment) {
 }
 
 /* ---------- النسيان (خزنة أَثَر) ---------- */
-export async function forgetLearner(db: Db, email: string) { await Promise.all([db.from('iqra_progress').delete().eq('learner_email', email), db.from('iqra_reviews').delete().eq('learner_email', email), db.from('iqra_time_log').delete().eq('learner_email', email), db.from('iqra_enrolments').delete().eq('learner_email', email)]); }
+export async function forgetLearner(db: Db, email: string) { await Promise.all([db.from('iqra_progress').delete().eq('learner_email', email), db.from('iqra_reviews').delete().eq('learner_email', email), db.from('iqra_time_log').delete().eq('learner_email', email), db.from('iqra_threshold_requests').delete().eq('learner_email', email), db.from('iqra_produce_reviews').delete().eq('learner_email', email), db.from('iqra_enrolments').delete().eq('learner_email', email)]); }
 
 const LESSON_STATUSES = ['draft', 'in_review', 'approved', 'archived'] as const;
 /* ---------- الطاقم ---------- */

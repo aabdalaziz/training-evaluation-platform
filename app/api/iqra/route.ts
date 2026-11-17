@@ -17,6 +17,11 @@
  *  POST {action:'external', minutes, note}                                   → ساعات خارج أَثَر (تُعرض منفصلة ولا تُحتسب)
  *  POST {action:'produce', lesson_id, text, checked[]}                       → محطّة «أُنتج» (النصّ للمتعلّم وحده؛ الصوت لا يغادر الجهاز)
  *  POST {action:'library', id, picks[]}                                      → أسئلة نصّ المكتبة
+ *  ق٢ (2026-11-17) — «العَتَبة» عبر اختبار نهاية المستوى المعياري في مِعيار · طابور «أُنتج» بمراجعة بشرية:
+ *  GET  ?view=threshold                                                     → بطاقة العَتَبة: الأهلية · ما هو الاختبار · الطلب وحالته · رابط الدعوة
+ *  GET  ?view=produce[&id=<lesson uuid>]                                    → ردود المراجعة البشرية (+ ما بقي هذا الأسبوع)
+ *  POST {action:'threshold_request'} · {action:'threshold_cancel', id}      → طلب العَتَبة عند early/ready · سحبه قبل الاختبار
+ *  POST {action:'produce_send', lesson_id} · {action:'produce_withdraw', id} → إرسال النصّ المحفوظ للمراجعة (≥20 كلمة · نصّان/أسبوع) · سحبه قبل المراجعة
  *  لا درجة رسمية · لا أثر على التقييم أو الشهادة · لا أسماء · لا ذكاء اصطناعي في هذا المسار.
  */
 import { NextResponse } from 'next/server';
@@ -27,6 +32,7 @@ import { normEmail } from '../../../lib/portal/roles';
 import { isResultCode } from '../../../lib/miaar/registry';
 import { IQRA_NAMES_AR, IQRA_LIMITS, UI_AR } from '../../../lib/iqra/registry';
 import { gate, learnerHome, lessonView, answerItem, finishLesson, reviewsDue, reviewAnswer, notebook, logTime, saveProduce, libraryList, libraryView, libraryAnswer } from '../../../lib/iqra/store';
+import { thresholdView, requestThreshold, cancelThreshold, produceReviews, sendProduce, withdrawProduce } from '../../../lib/iqra/q2';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 30;
 const NO = { 'Cache-Control': 'private, no-store' };
@@ -62,6 +68,8 @@ export async function GET(req: Request) {
   if (view === 'reviews') return NextResponse.json({ ok: true, gate: 'enrolled', ...(await reviewsDue(c.db, g.enrolment)) }, { headers: NO });
   if (view === 'notebook') return NextResponse.json({ ok: true, gate: 'enrolled', ...(await notebook(c.db, g.enrolment)) }, { headers: NO });
   if (view === 'library') { const id = u.searchParams.get('id'); if (id) { const v = await libraryView(c.db, g.enrolment, id); return v ? NextResponse.json({ ok: true, gate: 'enrolled', نصّ: v }, { headers: NO }) : bad('not_found', 404); } return NextResponse.json({ ok: true, gate: 'enrolled', ...(await libraryList(c.db, g.enrolment)) }, { headers: NO }); }
+  if (view === 'threshold') return NextResponse.json({ ok: true, gate: 'enrolled', العَتَبة: await thresholdView(c.db, g.enrolment) }, { headers: NO });
+  if (view === 'produce') return NextResponse.json({ ok: true, gate: 'enrolled', ...(await produceReviews(c.db, g.enrolment, u.searchParams.get('id') || undefined)) }, { headers: NO });
   return bad('unknown_view');
 }
 
@@ -81,5 +89,10 @@ export async function POST(req: Request) {
   if (action === 'external') { const r = await logTime(c.db, g.enrolment, 'external', Math.round(Number(b.minutes) || 0) * 60, typeof b.note === 'string' ? b.note.slice(0, 120) : null); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error); }
   if (action === 'produce') { const r = await saveProduce(c.db, g.enrolment, { lesson_id: b.lesson_id, text: b.text, checked: b.checked }); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
   if (action === 'library') { const r = await libraryAnswer(c.db, g.enrolment, b.id, b.picks); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
+  /* ق٢ */
+  if (action === 'threshold_request') { const r = await requestThreshold(c.db, g.enrolment); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, r.error === 'already_requested' ? 409 : 400); }
+  if (action === 'threshold_cancel') { const r = await cancelThreshold(c.db, g.enrolment, b.id); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
+  if (action === 'produce_send') { const r = await sendProduce(c.db, g.enrolment, b.lesson_id); return r.ok ? NextResponse.json(r, { headers: NO }) : NextResponse.json({ ...r, ok: false }, { status: r.error === 'weekly_limit' || r.error === 'already_queued' ? 429 : 400, headers: NO }); }
+  if (action === 'produce_withdraw') { const r = await withdrawProduce(c.db, g.enrolment, b.id); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
   return bad('unknown_action');
 }

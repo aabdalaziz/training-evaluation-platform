@@ -65,7 +65,33 @@ export const IQRA_LIMITS = {
   fairness_min_refs: 6,
   writes_per_hour: 240,
   k_min: 5,                     /* أيّ رقم جماعي يُعرض للطاقم بأقلّ من 5 متعلّمين لا يُعرض */
+  /* ق٢ (2026-11-17) */
+  produce_min_words: 20,        /* طابور «أُنتج»: لا يُرسَل نصّ دون 20 كلمة */
+  produce_per_week: 2,          /* نصّان في الأسبوع لكلّ متعلّم (يرتفع مع الميسِّر لاحقًا) */
+  produce_slow_queue: 50,       /* فوق 50 نصًّا في الطابور يُقال للمتعلّم «خلال أسبوعين» بدل «خلال أسبوع» */
+  threshold_invite_days: 30,    /* صلاحية دعوة «العَتَبة» الشخصية */
+  offline_units_max: 2,         /* «المنزلة في جيبي»: منزلتان محمّلتان معًا على الجهاز */
 } as const;
+
+/* ---------- ق٢: «العَتَبة» (Level-exit gate) · طابور «أُنتج» (analytic rubric) ---------- */
+/** حالات طلب العَتَبة — المصدر الوحيد للحكم هو تقرير مِعيار (اختبار نهاية المستوى المعياري «عُبور») */
+export const THRESHOLD_STATUSES = ['requested', 'deferred', 'invited', 'sat', 'passed', 'failed', 'promoted', 'cancelled'] as const;
+export type ThresholdStatus = (typeof THRESHOLD_STATUSES)[number];
+export const THRESHOLD_LIVE: readonly ThresholdStatus[] = ['requested', 'deferred', 'invited', 'sat', 'passed']; /* passed: بانتظار اعتماد الترقية — ما زال حيًّا */
+export const THRESHOLD_STATUS_AR: Record<ThresholdStatus, string> = {
+  requested: 'طلبٌ بانتظار الطاقم', deferred: 'مؤجَّل', invited: 'دعوتك جاهزة', sat: 'النتيجة قيد التصحيح',
+  passed: 'اجتزتَ', failed: 'لم تجتز هذه المرّة', promoted: 'انتقلتَ إلى المستوى التالي', cancelled: 'أُلغي',
+};
+/** سلّم التقدير التحليلي للكتابة (CEFR analytic rubric): أربعة أبعاد × 4 درجات */
+export const PRODUCE_RUBRIC = ['content', 'organisation', 'vocabulary', 'accuracy'] as const;
+export type RubricDim = (typeof PRODUCE_RUBRIC)[number];
+export const RUBRIC_AR: Record<RubricDim, { name_ar: string; bands_ar: [string, string, string, string] }> = {
+  content: { name_ar: 'المضمون وإنجاز المهمّة', bands_ar: ['لم يُنجز المهمّة', 'أنجز جزءًا منها', 'أنجزها مع نقص يسير', 'أنجزها كاملة'] },
+  organisation: { name_ar: 'التنظيم والترابط', bands_ar: ['جمل مبعثرة', 'ترابط ضعيف', 'ترابط مقبول بأدوات بسيطة', 'نصّ متّصل واضح'] },
+  vocabulary: { name_ar: 'المفردات', bands_ar: ['دون مفردات المستوى', 'مفردات محدودة متكرّرة', 'مفردات المستوى بتنويع', 'مفردات دقيقة ومناسبة'] },
+  accuracy: { name_ar: 'الصحّة اللغوية', bands_ar: ['أخطاء تعيق الفهم', 'أخطاء كثيرة لا تعيق', 'أخطاء قليلة', 'صحيح في معظمه'] },
+};
+export const PRODUCE_STATUS_AR = { queued: 'في طابور المراجعة', reviewed: 'رُوجع', withdrawn: 'سُحب' } as const;
 
 /** الخطوة 2 (2026-11-17): قالب المَنزِلة — خمس حلقات، لكلّ حلقة مهارة من الإطار الأوروبي */
 export const IQRA_SKILLS = ['listen', 'read', 'grammar', 'speak', 'write'] as const;
@@ -109,4 +135,14 @@ export const UI_AR = {
   wrong: 'ليس بعد — انظر الشرح',
   review_again: 'ما زلت أتعلّمها', review_good: 'أعرفها', review_easy: 'سهلة',
   no_reviews: 'لا بطاقات مستحقّة اليوم — عد غدًا أو أكمل حلقة جديدة.',
+  /* ق٢ */
+  thr_title: 'العَتَبة',
+  thr_what: 'العَتَبة هي «اختبار نهاية المستوى — معياري (CEFR)» في مِعيار: استماع وقراءة واستعمال اللغة (60%) وكتابة (20%) وتحدّث (20%). الاجتياز من 60% ولا مهارة دون 50%. الإعادة بعد 7 أيام، وإعادة مهارة واحدة خلال 14 يومًا.',
+  thr_who: 'يقبل الطلب طاقم أَثَر، ويعتمد الانتقال إلى المستوى التالي بتوقيعه. نتيجتك لا تمسّ شهادة سابقة.',
+  thr_ask: 'أطلب العَتَبة',
+  thr_cancel: 'أسحب طلبي',
+  thr_pre_a1: 'في التمهيدي ينتقل المتعلّم إلى «مكتشف · A1» بقرار الطاقم بعد إتمام حلقاته — لا اختبار هنا.',
+  prod_send: 'أرسل لمراجعة بشرية',
+  prod_withdraw: 'أسحب النصّ',
+  prod_who: 'يقرؤه مصحّح من طاقم أَثَر ويردّ بدرجة من 4 على أربعة أبعاد وجملة واحدة يعيد كتابتها لك. نصّك ملكك ويُحذف مع تقدّمك.',
 } as const;

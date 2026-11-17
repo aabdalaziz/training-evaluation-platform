@@ -8,8 +8,10 @@
  *  مبدأ: لا يصل المتعلّم إلا ما اعتمده إنسان هنا.
  *  الخطوة 2 (2026-11-17): شارة المهارة و«أستطيع أن…» لكلّ حلقة · ساعات المستوى (متوسّط ونسبة من بلغ الأرضية؛ k ≥ 5) · مكتبة المستوى باعتمادها ·
  *   الحزمة iqra-pack-2 (9 أنواع مِران + مكتبة) مع تحذيرات القالب والإنصاف (60/40) غير المانعة.
+ *  ق٢ (2026-11-17): فوق المحتوى مكتبُ «العَتَبة» (طلبات اختبار نهاية المستوى) وطابور «أُنتج» (IqraQ2Desk).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import IqraQ2Desk from './IqraQ2Desk'; /* ق٢: مكتب العَتَبة وطابور «أُنتج» */
 
 type Lvl = Record<string, { name_ar: string; code: string; line_ar: string }>;
 type Hrs = Record<string, { learners: number; avg_hours: number; reached_pct: number; target: number } | null>;
@@ -44,6 +46,7 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
 
   return <div className="iqd" data-testid="iqd">
     {err && <p className="am-err" role="alert">{err}</p>}{ok && <p className="iqd-ok" role="status">{ok}</p>}
+    <IqraQ2Desk auth={auth} />
     <section className="am-card"><h3>المستويات السبعة <small>حلقات كلّ مستوى بحالاتها · المتعلّمون النشطون (يُعرض الرقم عند 5 فأكثر)</small></h3>
       <div className="iqd-levels" role="tablist" aria-label="المستوى">{ORDER.map((L) => { const o = d?.overview?.[L]; const m = d?.levels?.[L]; return <button key={L} role="tab" aria-selected={level === L} className={`iqd-lv${level === L ? ' on' : ''}`} onClick={() => setLevel(L)} data-testid={`iqd-lv-${L}`}><b>{m?.name_ar || L} · {m?.code || L}</b>{d?.hours_target && <small className="iqd-hrs" data-testid={`iqd-hrs-${L}`}>{d.hours_target[L]} س{d.hours?.[L] ? ` · متوسّط ${d.hours[L]!.avg_hours} س · بلغ الأرضية ${d.hours[L]!.reached_pct}٪` : ''}</small>}<span><i className="ap">{o?.approved || 0}</i> معتمدة · <i>{(o?.draft || 0) + (o?.in_review || 0)}</i> مسوَّدة</span><small>{o?.learners == null ? 'متعلّمون: —' : `متعلّمون: ${o.learners}`}</small></button>; })}</div></section>
 

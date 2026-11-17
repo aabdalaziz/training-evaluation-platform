@@ -25,6 +25,7 @@ import WitnessRoom from './WitnessRoom';
 import Hall, { LiveBadge } from './Hall'; /* م8-ب */
 import SyllabusMap from './SyllabusMap';
 import IqraDesk from './IqraDesk'; /* اقْرَأْ ق1 */
+import IqraQ2Desk from './IqraQ2Desk'; /* اقْرَأْ ق٢: طابور «أُنتج» للمصحّح */
 import FormDesk from './FormDesk'; /* P68-ب «النموذج المثبَّت» */
 import RulesEditor from './RulesEditor'; /* م8-ج: تعليمات الاختبار وإقرار الممتحن */ /* م8 «شاهِد»: غرفة الشاهد */
 import ServiceInviteModal from '../../components/ServiceInviteModal'; /* م7 «عُبور للجهات»: خدمة الاختبار المعياري */
@@ -88,6 +89,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
           <div className="mm-heroacts"><Link href="/hub" className="mm-hbtn"><Icon name="home" />مركز القيادة</Link><Link href="/me" className="mm-hbtn"><Icon name="users" />صفحتي</Link></div>
         </header>
         <Rating auth={() => H()} />
+        <section className="am-card" style={{ marginTop: 14 }}><h3>طابور «أُنتج» — اقْرَأْ <small>نصوص كتابة أرسلها متعلّمو اقْرَأْ لقراءة بشرية: سلّم تحليلي من 4 وتعليق وجملة واحدة تعيد كتابتها.</small></h3><IqraQ2Desk auth={() => H()} raterOnly /></section>
       </div>
     </div>
   );
