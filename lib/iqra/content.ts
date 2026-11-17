@@ -166,13 +166,14 @@ export function normArabic(s: string): string {
 }
 
 /* ---------- ميثاق الإنصاف: حضور متوازن للجنسين في نصوص الحلقة (تحذير 60/40، غير مانع) ---------- */
+// ملاحظة: حرف الجرّ «على» يُستبعد قبل التطبيع حتى لا يُحسب اسمًا (عليّ) — إصلاح الدفعة 4.
 const F_WORDS = ['هي', 'أم', 'أمي', 'أمك', 'أخت', 'أختي', 'بنت', 'ابنة', 'ابنتي', 'امرأة', 'سيدة', 'زوجة', 'زوجتي', 'جدة', 'جدتي', 'معلمة', 'طالبة', 'طبيبة', 'مهندسة', 'صديقة', 'صديقتي', 'موظفة', 'مديرة', 'ممرضة', 'بائعة', 'كاتبة', 'خالة', 'عمة', 'فاطمة', 'نورة', 'مريم', 'سارة', 'ليلى', 'هند', 'سلمى', 'ريم', 'عائشة', 'خديجة', 'زينب', 'أمل', 'منى', 'هدى', 'لمى', 'دانة', 'جود', 'رنا', 'آمنة', 'حنان', 'نادية', 'سعاد', 'لينا', 'شهد', 'غادة', 'أسماء', 'رقية', 'إيمان'];
 const M_WORDS = ['هو', 'أب', 'أبي', 'أبوك', 'والد', 'والدي', 'أخ', 'أخي', 'ولد', 'ابن', 'ابني', 'رجل', 'سيد', 'زوج', 'زوجي', 'جد', 'جدي', 'معلم', 'طالب', 'طبيب', 'مهندس', 'صديق', 'صديقي', 'موظف', 'مدير', 'ممرض', 'بائع', 'كاتب', 'خال', 'عم', 'أحمد', 'محمد', 'خالد', 'علي', 'عمر', 'سعيد', 'يوسف', 'سالم', 'فهد', 'عبدالله', 'حسن', 'كريم', 'ماجد', 'طارق', 'ناصر', 'بدر', 'إبراهيم', 'عثمان', 'حمد', 'راشد', 'سلطان', 'ياسر', 'زياد', 'آدم', 'عادل'];
 const fset = new Set(F_WORDS.map(normArabic)), mset = new Set(M_WORDS.map(normArabic));
 export type Fairness = { f: number; m: number; pct_f: number; warn: string | null };
 export function fairnessLint(texts: string[], exempt = false): Fairness {
   let f = 0, m = 0;
-  for (const t of texts) for (const w0 of normArabic(t).split(' ')) { const w = w0.replace(/^(و|ف|ب|ل|ك|ال|وال|بال|لل)/, ''); if (fset.has(w0) || fset.has(w)) f += 1; else if (mset.has(w0) || mset.has(w)) m += 1; }
+  for (const t of texts) for (const w0 of normArabic(String(t || '').replace(/(?<!\p{L})(?:و|ف)?على(?!\p{L})/gu, ' ')).split(' ')) { const w = w0.replace(/^(و|ف|ب|ل|ك|ال|وال|بال|لل)/, ''); if (fset.has(w0) || fset.has(w)) f += 1; else if (mset.has(w0) || mset.has(w)) m += 1; }
   const tot = f + m; const pct_f = tot ? Math.round((f / tot) * 100) : 50;
   const warn = exempt || tot < IQRA_LIMITS.fairness_min_refs ? null : pct_f < IQRA_LIMITS.fairness_min_pct ? `حضور الإناث ${pct_f}% فقط من الإشارات (${f} من ${tot}) — ميثاق الإنصاف يطلب ≥ ${IQRA_LIMITS.fairness_min_pct}%` : pct_f > 100 - IQRA_LIMITS.fairness_min_pct ? `حضور الذكور ${100 - pct_f}% فقط من الإشارات (${m} من ${tot}) — ميثاق الإنصاف يطلب ≥ ${IQRA_LIMITS.fairness_min_pct}%` : null;
   return { f, m, pct_f, warn };

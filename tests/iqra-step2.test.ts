@@ -99,6 +99,7 @@ test('السحب — 10 من 30: الجديد أوّلًا ثم الخطأ ثم 
 test('الإنصاف — 60/40 تحذير غير مانع · الإعفاء لحلقات قواعد الجنس · فاحص القالب يحذّر بلا منع', () => {
   const skew = fairnessLint(['أحمد ذهب. خالد جاء. محمد قال. هو طالب. أبي معلّم.']); assert.ok(skew.warn, 'نصّ ذكوري بالكامل يحذّر'); assert.ok(skew.pct_f < 40); assert.ok(skew.warn!.includes('الإنصاف') || skew.warn!.includes('حضور'));
   const fair = fairnessLint(['سارة ذهبت وأحمد جاء. هي معلّمة وهو طالب.']); assert.equal(fair.warn, null);
+  const prep = fairnessLint(['سارة على اليمين وعلى اليسار، وأحمد على الكرسيّ. هي معلّمة وهو طالب.']); assert.deepEqual([prep.f, prep.m], [3, 3], 'حرف الجرّ «على» لا يُحسب اسمًا (عليّ) — إصلاح الدفعة 4'); assert.equal(prep.warn, null);
   assert.equal(fairnessLint(['أحمد ذهب. خالد جاء. محمد قال. هو وهو وهو وأبي.'], true).warn, null, 'معفاة');
   const n = normalizePack(PACK2); assert.ok(n.ok); assert.ok(Array.isArray(n.warnings));
   const skewed = normalizePack({ ...PACK2, lessons: [{ ...PACK2.lessons[0], content: { ...PACK2.lessons[0].content, text: { kind: 'narrative', body: Array(6).fill('أحمد وخالد ومحمد وعليّ ذهبوا. هو قال وهو ردّ وهو ضحك. أبي وأخي وجدّي وعمّي والرجل والولد والمعلّم والطالب.').join('\n') } } }], library: [] });
