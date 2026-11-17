@@ -92,7 +92,7 @@ def who(speaker: str):
         a = V['role_avatars'].get(sp, c['a']); return c['voice'], c.get('pitch', '+0Hz'), c.get('rate'), c['g'], a, name
     g = 'f' if any(m in sp for m in V['female_markers']) or re.match(r'^(ال)?[' + AR + ']+ة$', sp.split()[0]) else 'm'
     fbs = V['fallback'][g]; fbs = fbs if isinstance(fbs, list) else [fbs]
-    key = (g, sp)
+    key = (g, re.sub(r'\s*[٠-٩0-9]+$', '', sp))  # «النداء ١» و«النداء ٢» دور واحد بصوت واحد
     if key not in _SCENE: _SCENE[key] = len([k for k in _SCENE if k[0] == g])
     fb = fbs[_SCENE[key] % len(fbs)]; a = V['role_avatars'].get(sp, fb['a'])
     return fb['voice'], '+0Hz', None, g, a, sp
