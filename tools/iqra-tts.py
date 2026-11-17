@@ -87,6 +87,15 @@ def who(speaker: str):
     fb = fbs[_SCENE[key] % len(fbs)]; a = V['role_avatars'].get(sp, fb['a'])
     return fb['voice'], '+0Hz', None, g, a, sp
 def narr(): n = V['narrator']; return n['voice'], n.get('pitch', '+0Hz'), None, n['g'], n['a'], ''
+HEADER_RE = re.compile(r'^[\(\[]?[٠-٩0-9]+[\)\]\-—.:]')
+def author_of(code: str, idx: int, line: str):
+    """صوت كاتب النصّ (رسالة/دفتر/بطاقة بضمير المتكلّم) من voices.json → authors؛ العناوين والسطر الأوّل الذي يسمّي الكاتب تبقى للراوي."""
+    name = (V.get('authors') or {}).get(code)
+    if not name or HEADER_RE.match(line) or (idx == 0 and name in line and len(line.split()) <= 8 and re.search(r'كتب|رسالة|دفتر|دليل|بطاقة', line)) or re.match(r'^(رسالة|بطاقة|دفتر|ملاحظة)\b.*:$', line): return narr()
+    return who(name)
+def mark(key: dict, w):
+    if w[5]: key.update({'r': w[5], 'g': w[3], 'a': w[4]})
+    return key
 def rate_of(level: str, adj):
     base = int(V['rate'].get(level, '+0%').rstrip('%')); r = base + (int(adj.rstrip('%')) if adj else 0); return f'{r:+d}%'
 FFMPEG = shutil.which('ffmpeg')
@@ -114,7 +123,7 @@ def segments_lesson(l):
             m = LINE_RE.match(ln)
             if m and c['text'].get('kind') == 'dialogue':
                 w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, m.group(2), w))
-            else: S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, ln, narr()))
+            else: w = author_of(l['code'], i, ln); S.append((mark({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, w), ln, w))
     for cd in l.get('cards', []):
         S.append(({'k': 'card', 't': cd['word_ar']}, cd['word_ar'], narr()))
         if cd.get('example_ar'):
@@ -126,6 +135,7 @@ def segments_lesson(l):
         for ln in c['text']['body'].split('\n'):
             m = LINE_RE.match(ln.strip())
             if m: said[re.sub(r'[^' + AR + ']', '', m.group(2))] = who(m.group(1))
+            elif ln.strip() and (V.get('authors') or {}).get(l['code']): said[re.sub(r'[^' + AR + ']', '', ln)] = author_of(l['code'], 1, ln.strip())
     for ex in l.get('exercises', []):
         if ex['kind'] == 'short_dictation':
             t = ex['text_ar']; w = said.get(re.sub(r'[^' + AR + ']', '', t)) or next((v for k, v in said.items() if re.sub(r'[^' + AR + ']', '', t) and re.sub(r'[^' + AR + ']', '', t) in k), None) or narr()
@@ -144,7 +154,7 @@ def segments_library(t):
         named = m and (norm_speaker(m.group(1)) in V['cast'] or norm_speaker(m.group(1)) in V.get('aliases', {}) or any(re.search('(?<![' + AR + '])' + re.escape(n) + '(?![' + AR + '])', m.group(1)) for n in V['cast']))
         if m and len(m.group(1).split()) <= 3 and (named or (listen and (any(x in m.group(1) for x in V['female_markers']) or norm_speaker(m.group(1)) in V['role_avatars'] or m.group(1).startswith('ال') or not re.search(r'[٠-٩0-9]', m.group(1))))):
             w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, m.group(2), w))
-        else: S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, ln, narr()))
+        else: w = author_of(t['code'], i, ln); S.append((mark({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, w), ln, w))
     return S
 def build(code, level, S, out_dir):
     tmp = tempfile.mkdtemp(); cues = []; pos = 0.0; parts = []

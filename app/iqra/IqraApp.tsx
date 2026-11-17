@@ -8,14 +8,14 @@
  *  المِران: اختيار · مطابقة باللمس (يسار ثم يمين) · ترتيب باللمس (انقر الكلمات بالترتيب) — كلّها بلوحة المفاتيح أيضًا. التصحيح على الخادم.
  *  WCAG: أهداف ≥ 44px · aria-live للتغذية الراجعة · تباين · بلا سحب إلزامي.
  *  الخطوة 2 (2026-11-17): الحلقة بستّ محطّات (أسمع وأقرأ · كلماتي · القاعدة · المِران 10 من 30 · أُنتج · أثر الحلقة) · تسعة أنواع مِران ·
- *   «اسمع» بصوت الجهاز (Web Speech — بلا خادم ولا كلفة ولا بيانات تخرج) · «ساعاتي» (نبضة كلّ 30 ث مع تفاعل خلال 90 ث وصفحة ظاهرة) ·
+ *   «اسمع» بشريط الحلقة المسجَّل (أصوات فرقة أَثَر؛ لا صوت جهاز) · «ساعاتي» (نبضة كلّ 30 ث مع تفاعل خلال 90 ث وصفحة ظاهرة) ·
  *   مكتبة المستوى · شارة المهارة و«أستطيع أن…» على كلّ حلقة · ساعات خارج أَثَر تُعرض منفصلة.
  *  «صوت أَثَر الواحد» (2026-11-17): شريط الحلقة (MP3 + cues) بأصوات «فرقة أَثَر» — الراوي نفسه في مِعيار — كلّ شخصية بصوتها الثابت؛
  *   «مسرح الحلقة» (فقاعات بأسماء الشخصيّات، السطر المنطوق يضيء، انقر سطرًا لتسمعه) · «العب الدور» (تُكتم شخصية ويتوقّف الشريط عند سطرها: دورك) ·
- *   «اسمع ثمّ أعد» في البطاقات · الإملاء و«اسمع:» بصوت صاحب الجملة · استماع المكتبة مرّتان كمِعيار · إن غاب الشريط: صوت الجهاز بشارة. lib/iqra/voice.ts
+ *   «اسمع ثمّ أعد» في البطاقات · الإملاء و«اسمع:» بصوت صاحب الجملة · استماع المكتبة مرّتان كمِعيار · إن غاب الشريط: شارة «التسجيل الرسمي قادم» بلا أزرار. lib/iqra/voice.ts
  */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { loadCues, findCue, lineCues, roles as rolesOf, Sprite, canSpeak, speakDevice, dabtOf, readDabtPref, writeDabtPref, type Cues, type Cue, type CueKind } from '../../lib/iqra/voice';
+import { loadCues, findCue, lineCues, roles as rolesOf, Sprite, dabtOf, readDabtPref, writeDabtPref, type Cues, type Cue, type CueKind } from '../../lib/iqra/voice';
 import WayBar from '../components/WayBar';
 import ReadSize from '../components/ReadSize'; /* «خطّ أَثَر»: حجم القراءة */
 import { supabase } from '../../lib/supabase/client';
@@ -32,7 +32,7 @@ type Review = { review_id: string; kind: 'card' | 'item'; interval_days: number;
 type Screen = { s: 'home' } | { s: 'lesson'; id: string } | { s: 'reviews' } | { s: 'notebook' } | { s: 'library'; id?: string };
 const STATIONS = ['أسمع وأقرأ', 'كلماتي', 'القاعدة', 'المِران', 'أُنتج', 'أثر الحلقة'] as const;
 
-/* ---------- «صوت أَثَر الواحد»: شريط الحلقة إن وُجد (أصوات فرقة أَثَر)، وإلّا صوت الجهاز بشارة — لا خادم، لا كلفة، لا بيانات تخرج ---------- */
+/* ---------- «صوت أَثَر الواحد»: شريط الحلقة المسجَّل بأصوات فرقة أَثَر فقط. لا صوت جهاز أبدًا (قرار المالك 2026-11-17: مخارج واحدة في كلّ التسجيلات) — إن غاب الشريط تظهر شارة «قادم» بلا أزرار ---------- */
 type VoiceCtxT = { cues: Cues | null; sprite: Sprite | null; ready: boolean; dabt: boolean; setDabt: (on: boolean) => void };
 const VoiceCtx = createContext<VoiceCtxT>({ cues: null, sprite: null, ready: false, dabt: false, setDabt: () => undefined });
 function useVoice(code: string | null | undefined): VoiceCtxT {
@@ -45,25 +45,22 @@ function useVoice(code: string | null | undefined): VoiceCtxT {
 }
 /** زرّ «اسمع»: k/ck يحدّدان المقطع في الشريط (card/ex/dict/pic/gex بنصّه، line برقمه، intro). echo: بعد السماع «قلها» ثلاث ثوانٍ. */
 function Say({ text, label = 'اسمع', slow, k, ck, echo }: { text: string; label?: string; slow?: boolean; k?: CueKind; ck?: string | number; echo?: boolean }) {
-  const { cues, sprite } = useContext(VoiceCtx); const [dev, setDev] = useState(false); const [on, setOn] = useState(false); const [say, setSay] = useState(false);
-  useEffect(() => { setDev(canSpeak()); }, []);
+  const { cues, sprite } = useContext(VoiceCtx); const [on, setOn] = useState(false); const [say, setSay] = useState(false);
   const cue = k ? findCue(cues, k, ck ?? text) : null;
-  if (!cue && !dev) return null;
-  const go = async () => { if (cue && sprite) { setOn(true); await sprite.play(cue, slow ? 0.75 : 1); setOn(false); if (echo) { setSay(true); window.setTimeout(() => setSay(false), 3000); } } else speakDevice(text, slow ? 0.6 : 0.8); };
-  return <span className="iq-sayw"><button type="button" className={`iq-say ${on ? 'on' : ''} ${cue ? '' : 'dev'}`} onClick={() => void go()} aria-label={`${label || 'اسمع'}: ${text}${cue ? '' : ' (صوت الجهاز)'}`} title={cue ? 'صوت أَثَر' : 'صوت الجهاز — الشريط الرسمي لم يُرفع بعد'} data-testid="iq-say" data-src={cue ? 'athar' : 'device'}>🔊 {label}{!cue && <small> جهاز</small>}</button>{say && <em className="iq-echo" role="status">🗣 قلها الآن</em>}</span>;
+  if (!cue || !sprite) return null;
+  const go = async () => { setOn(true); await sprite.play(cue, slow ? 0.75 : 1); setOn(false); if (echo) { setSay(true); window.setTimeout(() => setSay(false), 3000); } };
+  return <span className="iq-sayw"><button type="button" className={`iq-say ${on ? 'on' : ''}`} onClick={() => void go()} aria-label={`${label || 'اسمع'}: ${text}`} title="صوت أَثَر" data-testid="iq-say" data-src="athar">🔊 {label}</button>{say && <em className="iq-echo" role="status">🗣 قلها الآن</em>}</span>;
 }
 /** «مسرح الحلقة»: الحوار فقاعات بأسماء الشخصيّات، السطر المنطوق يضيء، انقر سطرًا لتسمعه وحده، «العب الدور» يكتم شخصية ويتوقّف عند دورها. */
 function Stage({ body, kind, hidden, maxPlays }: { body: string; kind: string; hidden?: boolean; maxPlays?: number }) {
   const { cues, sprite, ready, dabt, setDabt } = useContext(VoiceCtx); const [cur, setCur] = useState<number | null>(null); const [playing, setPlaying] = useState(false); const [slow, setSlow] = useState(false); const [role, setRole] = useState(''); const [turn, setTurn] = useState<{ c: Cue; resume: () => void } | null>(null); const [plays, setPlays] = useState(0); const [dev, setDev] = useState(false);
-  useEffect(() => { setDev(canSpeak()); }, []);
   const lines = body.split('\n'); const lcs = lineCues(cues); const cast = rolesOf(cues); const left = maxPlays ? Math.max(0, maxPlays - plays) : null;
   const parse = (ln: string) => { const m = ln.match(/^([^:：(]{1,24}(?:\s*\([^)]*\))?)[:：]\s*(.*)$/); const sc = ln.match(/^\((.+)\)$/); return { speaker: m && kind === 'dialogue' ? m[1] : null, text: m && kind === 'dialogue' ? m[2] : ln, scene: !!sc }; };
   const stop = () => { sprite?.stop(); setPlaying(false); setCur(null); setTurn(null); };
   const playAll = () => { if (!sprite || !lcs.length) return; if (left !== null && left <= 0) return; setPlays((n) => n + 1); setPlaying(true); setTurn(null);
     void sprite.playSeq(lcs, { rate: slow ? 0.75 : 1, skipRole: role || null, onCue: (c) => setCur(c.i ?? null), onTurn: (c, _i, resume) => setTurn({ c, resume }), onEnd: () => { setPlaying(false); setCur(null); setTurn(null); } }); };
   const playLine = (i: number) => { const c = findCue(cues, 'line', i); if (!c || !sprite) return; setCur(i); setPlaying(true); void sprite.play(c, slow ? 0.75 : 1).then(() => { setPlaying(false); setCur(null); }); };
-  const devText = lines.map((ln) => parse(ln).text).join('\n');
-  return <div className={`iq-stage ${kind}`} data-testid="iq-stage" data-voice={cues ? 'athar' : ready ? 'device' : 'loading'}>
+  return <div className={`iq-stage ${kind}`} data-testid="iq-stage" data-voice={cues ? 'athar' : ready ? 'pending' : 'loading'}>
     <div className="iq-sayrow iq-stagebar">
       {cues ? <span className="iq-stagein">
         <button type="button" className={`iq-say big ${playing ? 'on' : ''}`} onClick={playing ? stop : playAll} disabled={!playing && left !== null && left <= 0} data-testid="iq-stage-play">{playing ? '■ أوقف' : plays === 0 ? '▶ اسمع المشهد' : '↻ مرّة أخرى'}</button>
@@ -72,7 +69,7 @@ function Stage({ body, kind, hidden, maxPlays }: { body: string; kind: string; h
         {left !== null && <span className="iq-psoft" data-testid="iq-plays-left">{left === 0 ? 'انتهت مرّات الاستماع (مرّتان كمِعيار)' : `مرّات الاستماع المتبقّية: ${left}`}</span>}
         {lcs.some((c) => c.d) && <button type="button" className={`iq-say ${dabt ? 'on' : ''}`} aria-pressed={dabt} onClick={() => setDabt(!dabt)} title="اعرض النصّ بالضبط الكامل كما يُنطق" data-testid="iq-dabt">◌ّ أَظْهِرِ التَّشْكِيل</button>}
         <span className="iq-voicebadge" title="أصوات فرقة أَثَر — الراوي نفسه في مِعيار">🎙 صوت أَثَر</span>
-      </span> : ready && dev ? <span className="iq-stagein"><button type="button" className="iq-say dev" onClick={() => speakDevice(devText, 0.8)} data-testid="iq-say">🔊 اسمع النصّ <small>جهاز</small></button><button type="button" className="iq-say dev" onClick={() => speakDevice(devText, 0.6)} data-testid="iq-say">🐢 ببطء <small>جهاز</small></button><span className="iq-voicebadge dev">صوت الجهاز — الشريط الرسمي لم يُرفع بعد</span></span> : null}
+      </span> : ready ? <span className="iq-stagein"><span className="iq-voicebadge dev" title="لا نستخدم صوت الجهاز — كلّ التسجيلات بأصوات فرقة أَثَر ومخارجها الواحدة">🎙 التسجيل الرسمي لهذه الحلقة قادم</span></span> : null}
     </div>
     {role && !playing && <p className="iq-note">اخترتَ دور <b>{role}</b>: عند سطره يتوقّف المشهد وتقول أنت الجملة، ثمّ تضغط «قلتُها». لا تسجيل ولا تقييم — صوتك يبقى معك.</p>}
     {hidden ? <p className="iq-note">نصّ استماع: اسمع أوّلًا وأجب، ثم يظهر النصّ بعد الإجابة.</p> : <div className="iq-lines">{lines.map((ln, i) => { if (!ln.trim()) return null; const pz = parse(ln); const c = lcs.find((x) => x.i === i); const g = c?.g || 'n'; const av = c?.a || ''; const isTurn = turn && turn.c.i === i; const mine = role && c?.r === role;
