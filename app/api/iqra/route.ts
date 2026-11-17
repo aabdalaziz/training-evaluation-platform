@@ -11,6 +11,12 @@
  *  POST {action:'daily',  item_id, answer}                                   → تصحيح سؤال اليوم (بلا حفظ)
  *  POST {action:'finish', lesson_id}                                         → إغلاق الحلقة (≥70% = تمّت وتُفتح البطاقات في «أراجع»)
  *  POST {action:'review', review_id, result:'again'|'good'|'easy'}           → التكرار المتباعد 1·3·7·14·30
+ *  الخطوة 2 (2026-11-17):
+ *  GET  ?view=library | ?view=library&id=<uuid>                              → مكتبة الرِّواق (نصوص قراءة/استماع معتمدة) · نصّ بأسئلته
+ *  POST {action:'tick', activity, seconds}                                   → «ساعاتي»: نبضة زمن نشط (≤ 60 ث لكلّ نبضة؛ سقف يومي)
+ *  POST {action:'external', minutes, note}                                   → ساعات خارج أَثَر (تُعرض منفصلة ولا تُحتسب)
+ *  POST {action:'produce', lesson_id, text, checked[]}                       → محطّة «أُنتج» (النصّ للمتعلّم وحده؛ الصوت لا يغادر الجهاز)
+ *  POST {action:'library', id, picks[]}                                      → أسئلة نصّ المكتبة
  *  لا درجة رسمية · لا أثر على التقييم أو الشهادة · لا أسماء · لا ذكاء اصطناعي في هذا المسار.
  */
 import { NextResponse } from 'next/server';
@@ -20,7 +26,7 @@ import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
 import { normEmail } from '../../../lib/portal/roles';
 import { isResultCode } from '../../../lib/miaar/registry';
 import { IQRA_NAMES_AR, IQRA_LIMITS, UI_AR } from '../../../lib/iqra/registry';
-import { gate, learnerHome, lessonView, answerItem, finishLesson, reviewsDue, reviewAnswer, notebook } from '../../../lib/iqra/store';
+import { gate, learnerHome, lessonView, answerItem, finishLesson, reviewsDue, reviewAnswer, notebook, logTime, saveProduce, libraryList, libraryView, libraryAnswer } from '../../../lib/iqra/store';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 30;
 const NO = { 'Cache-Control': 'private, no-store' };
@@ -55,6 +61,7 @@ export async function GET(req: Request) {
   if (view === 'lesson') { const v = await lessonView(c.db, g.enrolment, String(u.searchParams.get('id') || '')); return v ? NextResponse.json({ ok: true, gate: 'enrolled', حلقة: v }, { headers: NO }) : bad('lesson_not_found', 404); }
   if (view === 'reviews') return NextResponse.json({ ok: true, gate: 'enrolled', ...(await reviewsDue(c.db, g.enrolment)) }, { headers: NO });
   if (view === 'notebook') return NextResponse.json({ ok: true, gate: 'enrolled', ...(await notebook(c.db, g.enrolment)) }, { headers: NO });
+  if (view === 'library') { const id = u.searchParams.get('id'); if (id) { const v = await libraryView(c.db, g.enrolment, id); return v ? NextResponse.json({ ok: true, gate: 'enrolled', نصّ: v }, { headers: NO }) : bad('not_found', 404); } return NextResponse.json({ ok: true, gate: 'enrolled', ...(await libraryList(c.db, g.enrolment)) }, { headers: NO }); }
   return bad('unknown_view');
 }
 
@@ -70,5 +77,9 @@ export async function POST(req: Request) {
   if (action === 'daily') { const r = await answerItem(c.db, g.enrolment, { item_id: b.item_id, answer: (b.answer || {}) as any, daily: true }); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
   if (action === 'finish') { const r = await finishLesson(c.db, g.enrolment, b.lesson_id); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
   if (action === 'review') { const r = await reviewAnswer(c.db, g.enrolment, b.review_id, b.result); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
+  if (action === 'tick') { if (b.activity === 'external') return bad('bad_activity'); const r = await logTime(c.db, g.enrolment, b.activity, b.seconds, null); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error); }
+  if (action === 'external') { const r = await logTime(c.db, g.enrolment, 'external', Math.round(Number(b.minutes) || 0) * 60, typeof b.note === 'string' ? b.note.slice(0, 120) : null); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error); }
+  if (action === 'produce') { const r = await saveProduce(c.db, g.enrolment, { lesson_id: b.lesson_id, text: b.text, checked: b.checked }); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
+  if (action === 'library') { const r = await libraryAnswer(c.db, g.enrolment, b.id, b.picks); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
   return bad('unknown_action');
 }

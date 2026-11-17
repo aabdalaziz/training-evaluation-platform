@@ -7,6 +7,8 @@
  *       {action:'import', pack}                 (الطاقم) حزمة iqra-pack-1 → مسوَّدات (الحلقة المعتمدة لا تُمَسّ)
  *       {action:'validate', pack}               (الطاقم) فحص الحزمة بلا كتابة
  *       {action:'enrol', email, level, note?}   (مديرون) تسكين يدوي — يُسجَّل في التدقيق
+ *  الخطوة 2: GET ?library=<uuid> نصّ مكتبة · GET يعيد hours (ساعات الرِّواقات k≥5) و library للمستوى · POST {action:'library_status', id, status} (مديرون)
+ *            validate/import تقبل iqra-pack-2 (حلقات بمهارة و«أستطيع أن…» و30 تمرينًا من 9 أنواع + مكتبة) وتعيد تحذيرات القالب والإنصاف.
  *  كل كتابة تُسجَّل في audit_logs. لا ذكاء اصطناعي هنا.
  */
 import { NextResponse } from 'next/server';
@@ -15,7 +17,8 @@ import { readJson } from '../../../../lib/shield/body';
 import { normEmail } from '../../../../lib/portal/roles';
 import { IQRA_NAMES_AR, LEVEL_META, isIqraLevel } from '../../../../lib/iqra/registry';
 import { normalizePack } from '../../../../lib/iqra/content';
-import { adminOverview, adminLessons, adminLesson, setLessonStatus, importPack, manualEnrol } from '../../../../lib/iqra/store';
+import { adminOverview, adminLessons, adminLesson, setLessonStatus, importPack, manualEnrol, adminLibrary, setLibraryStatus, adminHours } from '../../../../lib/iqra/store';
+import { HOURS_TARGET, SKILL_META } from '../../../../lib/iqra/registry';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -40,9 +43,10 @@ export async function GET(req: Request) {
   const c = await ctx(req); if ('error' in c) return c.error;
   const u = new URL(req.url); const lessonId = u.searchParams.get('lesson');
   if (lessonId) { const l = await adminLesson(c.db, lessonId); return l ? NextResponse.json({ success: true, lesson: l }, { headers: NO }) : bad('الحلقة غير موجودة', 404); }
+  const libId = u.searchParams.get('library'); if (libId) { const x = await adminLibrary(c.db, libId); return x ? NextResponse.json({ success: true, text: x }, { headers: NO }) : bad('النصّ غير موجود', 404); }
   const level = isIqraLevel(u.searchParams.get('level')) ? (u.searchParams.get('level') as any) : 'A1';
-  const [overview, lv] = await Promise.all([adminOverview(c.db), adminLessons(c.db, level)]);
-  return NextResponse.json({ success: true, title: IQRA_NAMES_AR, levels: LEVEL_META, overview, level, units: lv.units, lessons: lv.lessons }, { headers: NO });
+  const [overview, lv, hours] = await Promise.all([adminOverview(c.db), adminLessons(c.db, level), adminHours(c.db).catch(() => ({}))]);
+  return NextResponse.json({ success: true, title: IQRA_NAMES_AR, levels: LEVEL_META, skills: SKILL_META, hours_target: HOURS_TARGET, overview, hours, level, units: lv.units, lessons: lv.lessons, library: lv.library }, { headers: NO });
 }
 
 export async function POST(req: Request) {
@@ -57,12 +61,17 @@ export async function POST(req: Request) {
   }
   if (action === 'validate' || action === 'import') {
     const n = normalizePack(b.pack); if (!n.ok) return NextResponse.json({ success: false, error: 'الحزمة غير صالحة', problems: n.problems.slice(0, 60) }, { status: 400, headers: NO });
-    const summary = { source: n.pack.source, units: (n.pack.units || []).length, lessons: n.pack.lessons.length, cards: n.pack.lessons.reduce((s, l) => s + l.cards.length, 0), exercises: n.pack.lessons.reduce((s, l) => s + l.exercises.length, 0), warnings: n.warnings.slice(0, 60) };
+    const summary = { source: n.pack.source, version: n.pack.version, units: (n.pack.units || []).length, lessons: n.pack.lessons.length, cards: n.pack.lessons.reduce((s, l) => s + l.cards.length, 0), exercises: n.pack.lessons.reduce((s, l) => s + l.exercises.length, 0), library: (n.pack.library || []).length, kinds: [...new Set(n.pack.lessons.flatMap((l) => l.exercises.map((e) => e.kind)))], fairness_warnings: n.warnings.filter((w) => w.msg.startsWith('الإنصاف')).length, warnings: n.warnings.slice(0, 60) };
     if (action === 'validate') return NextResponse.json({ success: true, summary }, { headers: NO });
     const batchId = (globalThis.crypto?.randomUUID?.() || `${Date.now()}`) as string;
     const report = await importPack(c.db, n.pack, c.user, batchId);
     await audit(c.db, c.user, 'iqra.import', batchId, `استيراد حزمة اقْرَأْ (${n.pack.source})`, { ...report, lessons: n.pack.lessons.length });
     return NextResponse.json({ success: true, summary, report, batch_id: batchId }, { headers: NO });
+  }
+  if (action === 'library_status') {
+    if (!ADMINS.includes(c.user.role)) return bad('اعتماد نصوص المكتبة للمديرين', 403);
+    const r = await setLibraryStatus(c.db, b.id, b.status, c.user); if (!r.ok) return bad(r.error);
+    await audit(c.db, c.user, `iqra.library.${String(b.status)}`, String(b.id), 'نصّ مكتبة اقْرَأْ', {}); return NextResponse.json({ success: true }, { headers: NO });
   }
   if (action === 'enrol') {
     if (!ADMINS.includes(c.user.role)) return bad('التسكين اليدوي للمديرين', 403);

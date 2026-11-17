@@ -6,23 +6,30 @@
  *  وسط: حلقات المستوى المختار — عرض كامل (النصّ · البطاقات · المِران بمفاتيحه) · اعتماد/إرجاع/أرشفة (مديرون) — اعتماد الحلقة يعتمد مِرانها.
  *  أسفل: استيراد حزمة iqra-pack-1 (ملف أو لصق) → فحص → استيراد كمسوَّدات · تسكين يدوي (مديرون).
  *  مبدأ: لا يصل المتعلّم إلا ما اعتمده إنسان هنا.
+ *  الخطوة 2 (2026-11-17): شارة المهارة و«أستطيع أن…» لكلّ حلقة · ساعات الرِّواق (متوسّط ونسبة من بلغ الأرضية؛ k ≥ 5) · مكتبة الرِّواق باعتمادها ·
+ *   الحزمة iqra-pack-2 (9 أنواع مِران + مكتبة) مع تحذيرات القالب والإنصاف (60/40) غير المانعة.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Lvl = Record<string, { name_ar: string; code: string; line_ar: string }>;
+type Hrs = Record<string, { learners: number; avg_hours: number; reached_pct: number; target: number } | null>;
+type Lib = { id: string; code: string; unit_code: string; kind: string; title_ar: string; minutes: number; status: string; questions: number };
+type LibFull = { id: string; code: string; kind: string; title_ar: string; body_ar: string; minutes: number; status: string; questions: { q: string; options: string[]; correct: number; explanation_ar?: string }[]; descriptor_codes: string[] };
 type Ov = Record<string, { draft: number; in_review: number; approved: number; archived: number; learners: number | null }>;
-type L = { id: string; code: string; unit_code: string; idx: number; title_ar: string; goal_ar: string; minutes: number; status: string; items: number; cards: number; review_note?: string | null; reviewed_at?: string | null };
+type L = { id: string; code: string; unit_code: string; idx: number; title_ar: string; goal_ar: string; minutes: number; minutes_total?: number; skill?: string | null; مهارة?: { key: string; name_ar: string } | null; can_do_ar?: string | null; can_do_en?: string | null; descriptor_codes?: string[]; status: string; items: number; cards: number; review_note?: string | null; reviewed_at?: string | null };
 type Full = L & { content: any; cards: { id: string; idx: number; word_ar: string; pos: string | null; gloss_ar: string; example_ar: string }[]; items: { id: string; item_type: string; question_text: string; options: any; stimulus: any; status: string; key: any }[] };
-type Data = { levels: Lvl; overview: Ov; level: string; units: { code: string; title_ar: string; status: string }[]; lessons: L[] };
+type Data = { levels: Lvl; overview: Ov; hours?: Hrs; hours_target?: Record<string, number>; skills?: Record<string, { name_ar: string }>; level: string; units: { code: string; title_ar: string; status: string }[]; lessons: L[]; library?: Lib[] };
 const ORDER = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const ST: Record<string, string> = { draft: 'مسوَّدة', in_review: 'قيد المراجعة', approved: 'معتمدة', archived: 'مؤرشفة' };
-const KIND: Record<string, string> = { mcq: 'اختيار', matching: 'مطابقة', ordering: 'ترتيب' };
+const KIND: Record<string, string> = { mcq: 'اختيار', matching: 'مطابقة', ordering: 'ترتيب', picture_choice: 'صورة', cloze_bank: 'فراغات', true_false_notgiven: 'صواب/خطأ/غير مذكور', word_tap: 'انقر الكلمة', short_dictation: 'إملاء', picture_sequence: 'ترتيب صور' };
 
 export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, string>> }) {
   const [level, setLevel] = useState('A1'); const [d, setD] = useState<Data | null>(null); const [err, setErr] = useState<string | null>(null); const [ok, setOk] = useState<string | null>(null); const [busy, setBusy] = useState('');
   const [open, setOpen] = useState<Full | null>(null); const [note, setNote] = useState('');
   const [packText, setPackText] = useState(''); const [packRes, setPackRes] = useState<any>(null);
-  const [enrol, setEnrol] = useState({ email: '', level: 'A1', note: '' });
+  const [enrol, setEnrol] = useState({ email: '', level: 'A1', note: '' }); const [lib, setLib] = useState<LibFull | null>(null);
+  const viewLib = async (x: Lib) => { const H = await auth(); const j = await fetch(`/api/admin/iqra?library=${x.id}`, { headers: H, cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.success) setLib(j.text); else setErr(j?.error || 'تعذّر الفتح'); };
+  const setLibSt = async (x: { id: string; title_ar: string }, status: string) => { const j = await post({ action: 'library_status', id: x.id, status }, x.id); if (j?.success) { setOk(`${x.title_ar}: ${ST[status]}`); setLib(null); void load(level); } };
   const load = useCallback(async (L: string) => { setErr(null); const H = await auth(); const j = await fetch(`/api/admin/iqra?level=${L}`, { headers: H, cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (!j?.success) { setErr(j?.error || 'تعذّر التحميل'); return; } setD(j); }, [auth]);
   useEffect(() => { void load(level); }, [level, load]);
   const post = useCallback(async (body: Record<string, unknown>, label: string) => { setBusy(label); setErr(null); setOk(null); const H = await auth(); const j = await fetch('/api/admin/iqra', { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null); setBusy(''); if (!j?.success) { setErr(j?.error || 'تعذّر التنفيذ'); return j; } return j; }, [auth]);
@@ -38,14 +45,14 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
   return <div className="iqd" data-testid="iqd">
     {err && <p className="am-err" role="alert">{err}</p>}{ok && <p className="iqd-ok" role="status">{ok}</p>}
     <section className="am-card"><h3>الرِّواقات السبعة <small>حلقات كلّ مستوى بحالاتها · المتعلّمون النشطون (يُعرض الرقم عند 5 فأكثر)</small></h3>
-      <div className="iqd-levels" role="tablist" aria-label="المستوى">{ORDER.map((L) => { const o = d?.overview?.[L]; const m = d?.levels?.[L]; return <button key={L} role="tab" aria-selected={level === L} className={`iqd-lv${level === L ? ' on' : ''}`} onClick={() => setLevel(L)} data-testid={`iqd-lv-${L}`}><b>{m?.name_ar || L} · {m?.code || L}</b><span><i className="ap">{o?.approved || 0}</i> معتمدة · <i>{(o?.draft || 0) + (o?.in_review || 0)}</i> مسوَّدة</span><small>{o?.learners == null ? 'متعلّمون: —' : `متعلّمون: ${o.learners}`}</small></button>; })}</div></section>
+      <div className="iqd-levels" role="tablist" aria-label="المستوى">{ORDER.map((L) => { const o = d?.overview?.[L]; const m = d?.levels?.[L]; return <button key={L} role="tab" aria-selected={level === L} className={`iqd-lv${level === L ? ' on' : ''}`} onClick={() => setLevel(L)} data-testid={`iqd-lv-${L}`}><b>{m?.name_ar || L} · {m?.code || L}</b>{d?.hours_target && <small className="iqd-hrs" data-testid={`iqd-hrs-${L}`}>{d.hours_target[L]} س{d.hours?.[L] ? ` · متوسّط ${d.hours[L]!.avg_hours} س · بلغ الأرضية ${d.hours[L]!.reached_pct}٪` : ''}</small>}<span><i className="ap">{o?.approved || 0}</i> معتمدة · <i>{(o?.draft || 0) + (o?.in_review || 0)}</i> مسوَّدة</span><small>{o?.learners == null ? 'متعلّمون: —' : `متعلّمون: ${o.learners}`}</small></button>; })}</div></section>
 
     <section className="am-card"><h3>حلقات {d?.levels?.[level]?.name_ar} · {d?.levels?.[level]?.code} <small>{d?.lessons.length || 0} حلقة — لا يرى المتعلّم إلا المعتمدة</small></h3>
-      {!d ? <p className="am-empty">…</p> : d.lessons.length === 0 ? <p className="am-empty" data-testid="iqd-empty">لا حلقات لهذا المستوى بعد — استورد حزمة من الأسفل.</p> : <table className="mm-t" data-testid="iqd-table"><thead><tr><th>الرمز</th><th>الحلقة</th><th>المنزلة</th><th>بطاقات</th><th>مِران</th><th>الحالة</th><th></th></tr></thead><tbody>
-        {d.lessons.map((l) => <tr key={l.id} data-testid="iqd-row" data-status={l.status}><td dir="ltr">{l.code}</td><td><b>{l.title_ar}</b><br /><small>{l.goal_ar}</small></td><td>{unitTitle.get(l.unit_code) || l.unit_code}</td><td>{l.cards}</td><td>{l.items}</td><td><span className={`iqd-st ${l.status}`}>{ST[l.status] || l.status}</span></td><td className="mm-acts"><button className="am-btn" onClick={() => void view(l)} data-testid="iqd-view">عرض</button></td></tr>)}</tbody></table>}</section>
+      {!d ? <p className="am-empty">…</p> : d.lessons.length === 0 ? <p className="am-empty" data-testid="iqd-empty">لا حلقات لهذا المستوى بعد — استورد حزمة من الأسفل.</p> : <table className="mm-t" data-testid="iqd-table"><thead><tr><th>الرمز</th><th>الحلقة</th><th>المهارة</th><th>المنزلة</th><th>بطاقات</th><th>مِران</th><th>الحالة</th><th></th></tr></thead><tbody>
+        {d.lessons.map((l) => <tr key={l.id} data-testid="iqd-row" data-status={l.status}><td dir="ltr">{l.code}</td><td><b>{l.title_ar}</b><br /><small>{l.can_do_ar || l.goal_ar}</small></td><td>{l.مهارة ? <span className="iqd-kind" data-testid="iqd-skill">{l.مهارة.name_ar}</span> : '—'}</td><td>{unitTitle.get(l.unit_code) || l.unit_code}</td><td>{l.cards}</td><td>{l.items}</td><td><span className={`iqd-st ${l.status}`}>{ST[l.status] || l.status}</span></td><td className="mm-acts"><button className="am-btn" onClick={() => void view(l)} data-testid="iqd-view">عرض</button></td></tr>)}</tbody></table>}</section>
 
     {open && <section className="am-card iqd-open" data-testid="iqd-open"><div className="iqd-oh"><h3>{open.title_ar} <small dir="ltr">{open.code}</small></h3><button className="am-btn ghost" onClick={() => setOpen(null)}>إغلاق</button></div>
-      <p className="mm-note"><b>الهدف:</b> {open.goal_ar || '—'} · <b>المدّة:</b> {open.minutes} د · <b>الحالة:</b> {ST[open.status]}{open.review_note ? ` · ملاحظة: ${open.review_note}` : ''}</p>
+      <p className="mm-note">{open.مهارة && <><b>المهارة:</b> <span className="iqd-kind">{open.مهارة.name_ar}</span> · </>}<b>أستطيع أن…</b> {open.can_do_ar || open.goal_ar || '—'}{open.can_do_en && <span dir="ltr" lang="en"> · {open.can_do_en}</span>}{open.descriptor_codes?.length ? ` · ${open.descriptor_codes.join(' · ')}` : ''} · <b>المدّة:</b> {open.minutes_total || open.minutes} د على محطّات · <b>الحالة:</b> {ST[open.status]}{open.review_note ? ` · ملاحظة: ${open.review_note}` : ''}</p>
       <div className="iqd-grid">
         <div><h4>المدخل والنصّ</h4><p>{open.content?.intro_ar}</p>{open.content?.text && <pre className="iqd-text">{open.content.text.body}</pre>}{open.content?.grammar && <div className="iqd-rule"><b>{open.content.grammar.title_ar}</b><p>{open.content.grammar.explanation_ar}</p><ul>{(open.content.grammar.examples || []).map((e: string, i: number) => <li key={i}>{e}</li>)}</ul></div>}{open.content?.closing_ar && <p><b>أثر الحلقة:</b> {open.content.closing_ar}</p>}</div>
         <div><h4>البطاقات ({open.cards.length})</h4><ul className="iqd-cards">{open.cards.map((c) => <li key={c.id}><b>{c.word_ar}</b> <small>{c.pos || ''}</small><br />{c.gloss_ar}{c.example_ar && <em> — {c.example_ar}</em>}</li>)}</ul></div>
@@ -54,6 +61,12 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
         {it.item_type === 'mcq' && <ul>{(it.options || []).map((o: any) => <li key={o.id} className={it.key?.correct_option_id === o.id ? 'right' : ''}>{o.text}</li>)}</ul>}
         {it.item_type === 'matching' && <ul>{(it.stimulus?.pairs || []).map((p: any, i: number) => <li key={i}>{p.l} ← {p.r}</li>)}</ul>}
         {it.item_type === 'ordering' && <p className="iqd-ord">{(it.key?.accepted?.order || []).join(' ')}</p>}
+        {(it.item_type === 'picture_choice' || it.item_type === 'true_false_notgiven') && <ul>{(it.options || []).map((o: any) => <li key={o.id} className={it.key?.correct_option_id === o.id ? 'right' : ''}>{o.text}{o.image ? <small dir="ltr"> {o.image}</small> : ''}</li>)}</ul>}
+        {it.item_type === 'cloze_bank' && <p className="iqd-ord">{it.stimulus?.text} — <b>{(it.key?.accepted?.gaps || []).join(' · ')}</b></p>}
+        {it.item_type === 'word_tap' && <p className="iqd-ord">{(it.stimulus?.words || []).join(' ')} — <b>{it.key?.accepted?.word}</b></p>}
+        {it.item_type === 'short_dictation' && <p className="iqd-ord">يُسمَع (لا يُعرض للمتعلّم): <b>{it.key?.accepted?.text}</b></p>}
+        {it.item_type === 'picture_sequence' && <p className="iqd-ord">{(it.key?.accepted?.order || []).join(' ← ')}</p>}
+        {it.stimulus?.passage_ar && <small>النصّ: {it.stimulus.passage_ar}</small>}
         {it.stimulus?.explanation_ar && <small>الشرح: {it.stimulus.explanation_ar}</small>}</li>)}</ol>
       <div className="mm-row"><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة المراجعة (اختياري)" aria-label="ملاحظة" />
         {open.status !== 'approved' && <button className="am-btn" disabled={!!busy || !open.items.length} onClick={() => void setStatus(open, 'approved')} data-testid="iqd-approve">اعتماد الحلقة ومِرانها</button>}
@@ -62,10 +75,17 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
         {open.status !== 'archived' && <button className="am-btn ghost" disabled={!!busy} onClick={() => void setStatus(open, 'archived')}>أرشفة</button>}</div>
       {!open.items.length && <p className="mm-note">لا تُعتمد حلقة بلا مِران — أضف تمارين عبر حزمة محدَّثة.</p>}</section>}
 
-    <section className="am-card"><h3>استيراد حزمة محتوى <small>صيغة iqra-pack-1 — تُستورد مسوَّداتٍ، والحلقة المعتمدة لا تُمَسّ</small></h3>
+    <section className="am-card"><h3>مكتبة الرِّواق <small>نصوص قراءة/استماع موسَّعة (25–30 د) — لا يراها المتعلّم إلا معتمدة</small></h3>
+      {!d?.library?.length ? <p className="am-empty" data-testid="iqd-lib-empty">لا نصوص لهذا المستوى بعد — تأتي مع حزمة iqra-pack-2.</p> : <table className="mm-t" data-testid="iqd-lib-table"><thead><tr><th>الرمز</th><th>النصّ</th><th>النوع</th><th>أسئلة</th><th>الحالة</th><th></th></tr></thead><tbody>
+        {d.library.map((x) => <tr key={x.id} data-testid="iqd-lib-row" data-status={x.status}><td dir="ltr">{x.code}</td><td><b>{x.title_ar}</b> <small>≈{x.minutes} د</small></td><td>{x.kind === 'listen' ? 'استماع' : 'قراءة'}</td><td>{x.questions}</td><td><span className={`iqd-st ${x.status}`}>{ST[x.status] || x.status}</span></td><td className="mm-acts"><button className="am-btn" onClick={() => void viewLib(x)} data-testid="iqd-lib-view">عرض</button></td></tr>)}</tbody></table>}
+      {lib && <div className="iqd-open" data-testid="iqd-lib-open" style={{ marginTop: 12 }}><div className="iqd-oh"><h3>{lib.title_ar} <small dir="ltr">{lib.code}</small></h3><button className="am-btn ghost" onClick={() => setLib(null)}>إغلاق</button></div>
+        <pre className="iqd-text">{lib.body_ar}</pre><ol className="iqd-items">{lib.questions.map((qq, i) => <li key={i}><b>{qq.q}</b><ul>{qq.options.map((o, j) => <li key={j} className={j === qq.correct ? 'right' : ''}>{o}</li>)}</ul>{qq.explanation_ar && <small>الشرح: {qq.explanation_ar}</small>}</li>)}</ol>
+        <div className="mm-row">{lib.status !== 'approved' && <button className="am-btn" disabled={!!busy} onClick={() => void setLibSt(lib, 'approved')} data-testid="iqd-lib-approve">اعتماد النصّ</button>}{lib.status !== 'draft' && <button className="am-btn ghost" disabled={!!busy} onClick={() => void setLibSt(lib, 'draft')}>إرجاع إلى مسوَّدة</button>}{lib.status !== 'archived' && <button className="am-btn ghost" disabled={!!busy} onClick={() => void setLibSt(lib, 'archived')}>أرشفة</button>}</div></div>}</section>
+
+    <section className="am-card"><h3>استيراد حزمة محتوى <small>صيغة iqra-pack-1 أو iqra-pack-2 — تُستورد مسوَّداتٍ، والحلقة المعتمدة لا تُمَسّ</small></h3>
       <div className="mm-row"><input type="file" accept="application/json,.json" onChange={(e) => onFile(e.target.files?.[0] || null)} aria-label="ملف الحزمة" data-testid="iqd-file" /><button className="am-btn ghost" disabled={!packText || !!busy} onClick={() => void validate()} data-testid="iqd-validate">فحص</button><button className="am-btn" disabled={!packText || !!busy} onClick={() => void doImport()} data-testid="iqd-import">استيراد</button></div>
-      <textarea value={packText} onChange={(e) => setPackText(e.target.value)} placeholder='أو الصق JSON هنا: {"version":"iqra-pack-1","source":"…","lessons":[…]}' aria-label="محتوى الحزمة" className="iqd-ta" data-testid="iqd-pack" />
-      {packRes && <div className="iqd-res" data-testid="iqd-res">{packRes.success ? <><p><b>الحزمة:</b> {packRes.summary.lessons} حلقة · {packRes.summary.cards} بطاقة · {packRes.summary.exercises} مِران{packRes.summary.units ? ` · ${packRes.summary.units} منزلة` : ''}</p>
+      <textarea value={packText} onChange={(e) => setPackText(e.target.value)} placeholder='أو الصق JSON هنا: {"version":"iqra-pack-2","source":"…","units":[…],"lessons":[…],"library":[…]}' aria-label="محتوى الحزمة" className="iqd-ta" data-testid="iqd-pack" />
+      {packRes && <div className="iqd-res" data-testid="iqd-res">{packRes.success ? <><p><b>الحزمة:</b> {packRes.summary.lessons} حلقة · {packRes.summary.cards} بطاقة · {packRes.summary.exercises} مِران{packRes.summary.units ? ` · ${packRes.summary.units} منزلة` : ''}{packRes.summary.library ? ` · ${packRes.summary.library} نصّ مكتبة` : ''}{packRes.summary.kinds?.length ? ` · أنواع: ${packRes.summary.kinds.map((k: string) => KIND[k] || k).join('، ')}` : ''}{packRes.summary.fairness_warnings ? ` · تنبيهات إنصاف: ${packRes.summary.fairness_warnings} (غير مانعة)` : ''}</p>
         {packRes.summary.warnings?.length > 0 && <ul className="iqd-warn">{packRes.summary.warnings.map((w: any, i: number) => <li key={i}>{w.at}: {w.msg}</li>)}</ul>}
         {packRes.report && <p><b>النتيجة:</b> أُنشئت {packRes.report.lessons_created} · حُدّثت {packRes.report.lessons_updated} · تُركت معتمدة {packRes.report.lessons_skipped.length} · بطاقات {packRes.report.cards} · مِران {packRes.report.items}{packRes.report.errors.length ? ` · أخطاء ${packRes.report.errors.length}` : ''}</p>}
         {packRes.report?.errors?.length > 0 && <ul className="iqd-warn">{packRes.report.errors.map((w: string, i: number) => <li key={i}>{w}</li>)}</ul>}</>
@@ -84,6 +104,7 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
 .iqd-ta{width:100%;min-height:120px;font:inherit;font-size:12.5px;border:1px solid var(--line,#e8eef3);border-radius:12px;padding:10px;box-sizing:border-box;margin-top:8px;direction:ltr}
 .iqd-res{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:13px}.iqd-res p{margin:4px 0}.iqd-warn{margin:6px 0 0;padding-inline-start:18px;color:#854d0e;font-size:12.5px}
 .am-btn.ghost{background:#fff;color:#0f2a4e}
+.iqd-hrs{display:block;font-size:11.5px;color:#0b3d4a;font-weight:700}
 @media(max-width:760px){.iqd-grid{grid-template-columns:1fr}}
     `}</style>
   </div>;

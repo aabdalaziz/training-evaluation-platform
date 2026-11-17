@@ -1,0 +1,2690 @@
+{
+ "version": "iqra-pack-2",
+ "source": "athar-fixture",
+ "units": [
+  {
+   "code": "A1-U01",
+   "level": "A1",
+   "idx": 1,
+   "title_ar": "أنا وأنت",
+   "title_en": "Me and you",
+   "focus_ar": "التعارف",
+   "domains": [
+    "personal"
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "code": "A1-U01-L01",
+   "unit_code": "A1-U01",
+   "idx": 1,
+   "title_ar": "أسمع وأفهم: التعارف",
+   "goal_ar": "أستطيع أن أفهم تحيّة قصيرة",
+   "minutes": 20,
+   "minutes_total": 120,
+   "skill": "listen",
+   "can_do_ar": "أستطيع أن أفهم تحيّة قصيرة",
+   "can_do_en": "I can understand a short greeting",
+   "descriptor_codes": [
+    "A1-L01"
+   ],
+   "domain": "شخصي",
+   "content": {
+    "intro_ar": "في هذه الحلقة نسمع ونقرأ حوارًا قصيرًا بين سارة وأحمد.",
+    "text": {
+     "kind": "dialogue",
+     "body": "سارة: صباح الخير يا أحمد.\nأحمد: صباح النور يا سارة. كيف حالكِ؟\nسارة: بخير، الحمد لله. أنا معلّمة في المدينة.\nأحمد: وأنا طالب."
+    },
+    "grammar": {
+     "title_ar": "أنا + الاسم",
+     "explanation_ar": "نعرّف بأنفسنا بـ«أنا» ثم الاسم أو المهنة: أنا سارة، أنا معلّمة. وللمذكّر: أنا أحمد، أنا طالب.",
+     "examples": [
+      "أنا سارة.",
+      "أنا طالب.",
+      "أنا معلّمة."
+     ]
+    },
+    "produce": {
+     "kind": "write",
+     "prompt_ar": "عرّف بنفسك في ثلاث جمل: اسمك، مدينتك، عملك.",
+     "checklist": [
+      "ذكرتُ اسمي",
+      "ذكرتُ مدينتي",
+      "ذكرتُ عملي أو دراستي"
+     ],
+     "model_ar": "أنا نور. أنا من جدّة. أنا معلّمة.",
+     "min_words": 6
+    },
+    "closing_ar": "عرّف بنفسك لشخصٍ جديد اليوم."
+   },
+   "cards": [
+    {
+     "word_ar": "صباح",
+     "gloss_ar": "أوّل النهار",
+     "example_ar": "صباح الخير يا سارة."
+    },
+    {
+     "word_ar": "مساء",
+     "gloss_ar": "آخر النهار",
+     "example_ar": "مساء الخير يا أحمد."
+    },
+    {
+     "word_ar": "مدينة",
+     "gloss_ar": "مكان كبير يسكنه الناس",
+     "example_ar": "جدّة مدينة جميلة."
+    },
+    {
+     "word_ar": "معلّمة",
+     "gloss_ar": "امرأة تعلّم",
+     "example_ar": "فاطمة معلّمة."
+    },
+    {
+     "word_ar": "طالب",
+     "gloss_ar": "من يتعلّم",
+     "example_ar": "خالد طالب."
+    },
+    {
+     "word_ar": "بيت",
+     "gloss_ar": "مكان السكن",
+     "example_ar": "بيتي قريب."
+    },
+    {
+     "word_ar": "عمل",
+     "gloss_ar": "ما يفعله الإنسان ليكسب",
+     "example_ar": "أمّي تعمل طبيبة."
+    },
+    {
+     "word_ar": "كتاب",
+     "gloss_ar": "ما نقرأ فيه",
+     "example_ar": "هذا كتابي."
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (1)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (2)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (3)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (4)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (5)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (6)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (7)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (8)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (9)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (10)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (11)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (12)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (13)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (14)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (15)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (16)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (17)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (18)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (19)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (20)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (21)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (22)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (23)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (24)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (25)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (26)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (27)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (28)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (29)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (30)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    }
+   ]
+  },
+  {
+   "code": "A1-U01-L02",
+   "unit_code": "A1-U01",
+   "idx": 2,
+   "title_ar": "أقرأ وأفهم: التعارف",
+   "goal_ar": "أستطيع أن أقرأ تعريفًا قصيرًا بشخص",
+   "minutes": 20,
+   "minutes_total": 120,
+   "skill": "read",
+   "can_do_ar": "أستطيع أن أقرأ تعريفًا قصيرًا بشخص",
+   "can_do_en": "I can read a short personal introduction",
+   "descriptor_codes": [
+    "A1-R01"
+   ],
+   "domain": "شخصي",
+   "content": {
+    "intro_ar": "في هذه الحلقة نسمع ونقرأ حوارًا قصيرًا بين سارة وأحمد.",
+    "text": {
+     "kind": "dialogue",
+     "body": "سارة: صباح الخير يا أحمد.\nأحمد: صباح النور يا سارة. كيف حالكِ؟\nسارة: بخير، الحمد لله. أنا معلّمة في المدينة.\nأحمد: وأنا طالب."
+    },
+    "grammar": {
+     "title_ar": "أنا + الاسم",
+     "explanation_ar": "نعرّف بأنفسنا بـ«أنا» ثم الاسم أو المهنة: أنا سارة، أنا معلّمة. وللمذكّر: أنا أحمد، أنا طالب.",
+     "examples": [
+      "أنا سارة.",
+      "أنا طالب.",
+      "أنا معلّمة."
+     ]
+    },
+    "produce": {
+     "kind": "speak",
+     "prompt_ar": "عرّف بنفسك في ثلاث جمل: اسمك، مدينتك، عملك.",
+     "checklist": [
+      "ذكرتُ اسمي",
+      "ذكرتُ مدينتي",
+      "ذكرتُ عملي أو دراستي"
+     ],
+     "model_ar": "أنا نور. أنا من جدّة. أنا معلّمة.",
+     "min_words": 6
+    },
+    "closing_ar": "عرّف بنفسك لشخصٍ جديد اليوم."
+   },
+   "cards": [
+    {
+     "word_ar": "صباح",
+     "gloss_ar": "أوّل النهار",
+     "example_ar": "صباح الخير يا سارة."
+    },
+    {
+     "word_ar": "مساء",
+     "gloss_ar": "آخر النهار",
+     "example_ar": "مساء الخير يا أحمد."
+    },
+    {
+     "word_ar": "مدينة",
+     "gloss_ar": "مكان كبير يسكنه الناس",
+     "example_ar": "جدّة مدينة جميلة."
+    },
+    {
+     "word_ar": "معلّمة",
+     "gloss_ar": "امرأة تعلّم",
+     "example_ar": "فاطمة معلّمة."
+    },
+    {
+     "word_ar": "طالب",
+     "gloss_ar": "من يتعلّم",
+     "example_ar": "خالد طالب."
+    },
+    {
+     "word_ar": "بيت",
+     "gloss_ar": "مكان السكن",
+     "example_ar": "بيتي قريب."
+    },
+    {
+     "word_ar": "عمل",
+     "gloss_ar": "ما يفعله الإنسان ليكسب",
+     "example_ar": "أمّي تعمل طبيبة."
+    },
+    {
+     "word_ar": "كتاب",
+     "gloss_ar": "ما نقرأ فيه",
+     "example_ar": "هذا كتابي."
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (1)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (2)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (3)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (4)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (5)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (6)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (7)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (8)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (9)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (10)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (11)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (12)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (13)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (14)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (15)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (16)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (17)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (18)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (19)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (20)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (21)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (22)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (23)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (24)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (25)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (26)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (27)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (28)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (29)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (30)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    }
+   ]
+  },
+  {
+   "code": "A1-U01-L03",
+   "unit_code": "A1-U01",
+   "idx": 3,
+   "title_ar": "أبني الجملة: التعارف",
+   "goal_ar": "أستطيع أن أبني جملة «أنا + الاسم»",
+   "minutes": 20,
+   "minutes_total": 120,
+   "skill": "grammar",
+   "can_do_ar": "أستطيع أن أبني جملة «أنا + الاسم»",
+   "can_do_en": "I can build 'I am + name' sentences",
+   "descriptor_codes": [
+    "A1-G01"
+   ],
+   "domain": "شخصي",
+   "content": {
+    "intro_ar": "في هذه الحلقة نسمع ونقرأ حوارًا قصيرًا بين سارة وأحمد.",
+    "text": {
+     "kind": "dialogue",
+     "body": "سارة: صباح الخير يا أحمد.\nأحمد: صباح النور يا سارة. كيف حالكِ؟\nسارة: بخير، الحمد لله. أنا معلّمة في المدينة.\nأحمد: وأنا طالب."
+    },
+    "grammar": {
+     "title_ar": "أنا + الاسم",
+     "explanation_ar": "نعرّف بأنفسنا بـ«أنا» ثم الاسم أو المهنة: أنا سارة، أنا معلّمة. وللمذكّر: أنا أحمد، أنا طالب.",
+     "examples": [
+      "أنا سارة.",
+      "أنا طالب.",
+      "أنا معلّمة."
+     ]
+    },
+    "produce": {
+     "kind": "write",
+     "prompt_ar": "عرّف بنفسك في ثلاث جمل: اسمك، مدينتك، عملك.",
+     "checklist": [
+      "ذكرتُ اسمي",
+      "ذكرتُ مدينتي",
+      "ذكرتُ عملي أو دراستي"
+     ],
+     "model_ar": "أنا نور. أنا من جدّة. أنا معلّمة.",
+     "min_words": 6
+    },
+    "closing_ar": "عرّف بنفسك لشخصٍ جديد اليوم."
+   },
+   "cards": [
+    {
+     "word_ar": "صباح",
+     "gloss_ar": "أوّل النهار",
+     "example_ar": "صباح الخير يا سارة."
+    },
+    {
+     "word_ar": "مساء",
+     "gloss_ar": "آخر النهار",
+     "example_ar": "مساء الخير يا أحمد."
+    },
+    {
+     "word_ar": "مدينة",
+     "gloss_ar": "مكان كبير يسكنه الناس",
+     "example_ar": "جدّة مدينة جميلة."
+    },
+    {
+     "word_ar": "معلّمة",
+     "gloss_ar": "امرأة تعلّم",
+     "example_ar": "فاطمة معلّمة."
+    },
+    {
+     "word_ar": "طالب",
+     "gloss_ar": "من يتعلّم",
+     "example_ar": "خالد طالب."
+    },
+    {
+     "word_ar": "بيت",
+     "gloss_ar": "مكان السكن",
+     "example_ar": "بيتي قريب."
+    },
+    {
+     "word_ar": "عمل",
+     "gloss_ar": "ما يفعله الإنسان ليكسب",
+     "example_ar": "أمّي تعمل طبيبة."
+    },
+    {
+     "word_ar": "كتاب",
+     "gloss_ar": "ما نقرأ فيه",
+     "example_ar": "هذا كتابي."
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (1)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (2)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (3)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (4)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (5)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (6)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (7)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (8)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (9)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (10)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (11)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (12)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (13)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (14)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (15)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (16)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (17)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (18)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (19)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (20)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (21)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (22)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (23)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (24)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (25)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (26)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (27)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (28)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (29)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (30)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    }
+   ]
+  },
+  {
+   "code": "A1-U01-L04",
+   "unit_code": "A1-U01",
+   "idx": 4,
+   "title_ar": "أتحدّث: التعارف",
+   "goal_ar": "أستطيع أن أعرّف بنفسي",
+   "minutes": 20,
+   "minutes_total": 120,
+   "skill": "speak",
+   "can_do_ar": "أستطيع أن أعرّف بنفسي",
+   "can_do_en": "I can introduce myself",
+   "descriptor_codes": [
+    "A1-S01"
+   ],
+   "domain": "شخصي",
+   "content": {
+    "intro_ar": "في هذه الحلقة نسمع ونقرأ حوارًا قصيرًا بين سارة وأحمد.",
+    "text": {
+     "kind": "dialogue",
+     "body": "سارة: صباح الخير يا أحمد.\nأحمد: صباح النور يا سارة. كيف حالكِ؟\nسارة: بخير، الحمد لله. أنا معلّمة في المدينة.\nأحمد: وأنا طالب."
+    },
+    "grammar": {
+     "title_ar": "أنا + الاسم",
+     "explanation_ar": "نعرّف بأنفسنا بـ«أنا» ثم الاسم أو المهنة: أنا سارة، أنا معلّمة. وللمذكّر: أنا أحمد، أنا طالب.",
+     "examples": [
+      "أنا سارة.",
+      "أنا طالب.",
+      "أنا معلّمة."
+     ]
+    },
+    "produce": {
+     "kind": "speak",
+     "prompt_ar": "عرّف بنفسك في ثلاث جمل: اسمك، مدينتك، عملك.",
+     "checklist": [
+      "ذكرتُ اسمي",
+      "ذكرتُ مدينتي",
+      "ذكرتُ عملي أو دراستي"
+     ],
+     "model_ar": "أنا نور. أنا من جدّة. أنا معلّمة.",
+     "min_words": 6
+    },
+    "closing_ar": "عرّف بنفسك لشخصٍ جديد اليوم."
+   },
+   "cards": [
+    {
+     "word_ar": "صباح",
+     "gloss_ar": "أوّل النهار",
+     "example_ar": "صباح الخير يا سارة."
+    },
+    {
+     "word_ar": "مساء",
+     "gloss_ar": "آخر النهار",
+     "example_ar": "مساء الخير يا أحمد."
+    },
+    {
+     "word_ar": "مدينة",
+     "gloss_ar": "مكان كبير يسكنه الناس",
+     "example_ar": "جدّة مدينة جميلة."
+    },
+    {
+     "word_ar": "معلّمة",
+     "gloss_ar": "امرأة تعلّم",
+     "example_ar": "فاطمة معلّمة."
+    },
+    {
+     "word_ar": "طالب",
+     "gloss_ar": "من يتعلّم",
+     "example_ar": "خالد طالب."
+    },
+    {
+     "word_ar": "بيت",
+     "gloss_ar": "مكان السكن",
+     "example_ar": "بيتي قريب."
+    },
+    {
+     "word_ar": "عمل",
+     "gloss_ar": "ما يفعله الإنسان ليكسب",
+     "example_ar": "أمّي تعمل طبيبة."
+    },
+    {
+     "word_ar": "كتاب",
+     "gloss_ar": "ما نقرأ فيه",
+     "example_ar": "هذا كتابي."
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (1)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (2)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (3)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (4)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (5)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (6)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (7)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (8)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (9)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (10)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (11)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (12)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (13)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (14)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (15)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (16)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (17)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (18)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (19)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (20)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (21)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (22)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (23)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (24)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (25)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (26)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (27)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (28)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (29)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (30)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    }
+   ]
+  },
+  {
+   "code": "A1-U01-L05",
+   "unit_code": "A1-U01",
+   "idx": 5,
+   "title_ar": "أكتب وأُتقن: التعارف",
+   "goal_ar": "أستطيع أن أكتب ثلاث جمل عن نفسي",
+   "minutes": 20,
+   "minutes_total": 120,
+   "skill": "write",
+   "can_do_ar": "أستطيع أن أكتب ثلاث جمل عن نفسي",
+   "can_do_en": "I can write three sentences about myself",
+   "descriptor_codes": [
+    "A1-W01"
+   ],
+   "domain": "شخصي",
+   "content": {
+    "intro_ar": "في هذه الحلقة نسمع ونقرأ حوارًا قصيرًا بين سارة وأحمد.",
+    "text": {
+     "kind": "dialogue",
+     "body": "سارة: صباح الخير يا أحمد.\nأحمد: صباح النور يا سارة. كيف حالكِ؟\nسارة: بخير، الحمد لله. أنا معلّمة في المدينة.\nأحمد: وأنا طالب."
+    },
+    "grammar": {
+     "title_ar": "أنا + الاسم",
+     "explanation_ar": "نعرّف بأنفسنا بـ«أنا» ثم الاسم أو المهنة: أنا سارة، أنا معلّمة. وللمذكّر: أنا أحمد، أنا طالب.",
+     "examples": [
+      "أنا سارة.",
+      "أنا طالب.",
+      "أنا معلّمة."
+     ]
+    },
+    "produce": {
+     "kind": "write",
+     "prompt_ar": "عرّف بنفسك في ثلاث جمل: اسمك، مدينتك، عملك.",
+     "checklist": [
+      "ذكرتُ اسمي",
+      "ذكرتُ مدينتي",
+      "ذكرتُ عملي أو دراستي"
+     ],
+     "model_ar": "أنا نور. أنا من جدّة. أنا معلّمة.",
+     "min_words": 6
+    },
+    "closing_ar": "عرّف بنفسك لشخصٍ جديد اليوم."
+   },
+   "cards": [
+    {
+     "word_ar": "صباح",
+     "gloss_ar": "أوّل النهار",
+     "example_ar": "صباح الخير يا سارة."
+    },
+    {
+     "word_ar": "مساء",
+     "gloss_ar": "آخر النهار",
+     "example_ar": "مساء الخير يا أحمد."
+    },
+    {
+     "word_ar": "مدينة",
+     "gloss_ar": "مكان كبير يسكنه الناس",
+     "example_ar": "جدّة مدينة جميلة."
+    },
+    {
+     "word_ar": "معلّمة",
+     "gloss_ar": "امرأة تعلّم",
+     "example_ar": "فاطمة معلّمة."
+    },
+    {
+     "word_ar": "طالب",
+     "gloss_ar": "من يتعلّم",
+     "example_ar": "خالد طالب."
+    },
+    {
+     "word_ar": "بيت",
+     "gloss_ar": "مكان السكن",
+     "example_ar": "بيتي قريب."
+    },
+    {
+     "word_ar": "عمل",
+     "gloss_ar": "ما يفعله الإنسان ليكسب",
+     "example_ar": "أمّي تعمل طبيبة."
+    },
+    {
+     "word_ar": "كتاب",
+     "gloss_ar": "ما نقرأ فيه",
+     "example_ar": "هذا كتابي."
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (1)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (2)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (3)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (4)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (5)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (6)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (7)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (8)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (9)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (10)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (11)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (12)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (13)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (14)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (15)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (16)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (17)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (18)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (19)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (20)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (21)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "أين «الكتاب»؟ (22)",
+     "options": [
+      {
+       "text": "كتاب",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "قلم",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "باب",
+       "image": "/iqra/img/door.svg"
+      }
+     ],
+     "correct": 0
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "املأ الفراغ (23)",
+     "text": "أنا ___ من المدينة، و___ معلّمة.",
+     "bank": [
+      "طالب",
+      "هي",
+      "هو",
+      "كتاب"
+     ],
+     "gaps": [
+      "طالب",
+      "هي"
+     ]
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "سارة طبيبة. (24)",
+     "passage_ar": "سارة من جدّة. تعمل معلّمة في مدرسة.",
+     "correct": "false"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس اسم المدينة (25)",
+     "words": [
+      "أنا",
+      "من",
+      "الرياض",
+      "وأسكن",
+      "في",
+      "جدّة"
+     ],
+     "correct": "الرياض"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اكتب ما تسمع (26)",
+     "text_ar": "صباح الخير",
+     "alt": [
+      "صباح الخيرِ"
+     ]
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب يوم فاطمة (27)",
+     "frames": [
+      {
+       "image": "/iqra/img/sun.svg",
+       "text": "تستيقظ"
+      },
+      {
+       "image": "/iqra/img/cup.svg",
+       "text": "تفطر"
+      },
+      {
+       "image": "/iqra/img/bus.svg",
+       "text": "تذهب إلى العمل"
+      }
+     ],
+     "order": [
+      "تستيقظ",
+      "تفطر",
+      "تذهب إلى العمل"
+     ]
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما معنى «مرحبًا»؟ (28)",
+     "options": [
+      "تحية",
+      "وداع",
+      "سؤال",
+      "شكر"
+     ],
+     "correct": 0,
+     "skill": "read",
+     "explanation_ar": "راجع النصّ."
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "صِل الكلمة بمعناها (29)",
+     "pairs": [
+      {
+       "l": "صباح",
+       "r": "أوّل النهار"
+      },
+      {
+       "l": "مساء",
+       "r": "آخر النهار"
+      },
+      {
+       "l": "ليل",
+       "r": "وقت النوم"
+      }
+     ]
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات (30)",
+     "words": [
+      "أنا",
+      "من",
+      "مصر"
+     ],
+     "order": [
+      "أنا",
+      "من",
+      "مصر"
+     ]
+    }
+   ]
+  }
+ ],
+ "library": [
+  {
+   "code": "A1-U01-R01",
+   "unit_code": "A1-U01",
+   "kind": "read",
+   "title_ar": "رسالة من نور",
+   "body_ar": "مرحبًا، أنا نور. أنا من جدّة، وأسكن الآن في المدينة. أنا معلّمة في مدرسة صغيرة. أحبّ القراءة والشاي. وأنت؟ من أين أنت؟ وما عملك؟",
+   "minutes": 25,
+   "questions": [
+    {
+     "q": "من أين نور؟",
+     "options": [
+      "من جدّة",
+      "من الرياض",
+      "من مصر"
+     ],
+     "correct": 0,
+     "explanation_ar": "قالت: أنا من جدّة."
+    },
+    {
+     "q": "ما عمل نور؟",
+     "options": [
+      "طبيبة",
+      "معلّمة",
+      "طالبة"
+     ],
+     "correct": 1
+    },
+    {
+     "q": "ماذا تحبّ نور؟",
+     "options": [
+      "القهوة",
+      "الرياضة",
+      "القراءة والشاي"
+     ],
+     "correct": 2
+    }
+   ],
+   "descriptor_codes": [
+    "A1-R01"
+   ]
+  },
+  {
+   "code": "A1-U01-A01",
+   "unit_code": "A1-U01",
+   "kind": "listen",
+   "title_ar": "في المطار",
+   "body_ar": "موظّف: السلام عليكم. من أين أنتِ؟\nمسافرة: وعليكم السلام. أنا من تركيا.\nموظّف: أهلًا وسهلًا. ما اسمكِ؟\nمسافرة: اسمي ليلى.",
+   "minutes": 20,
+   "questions": [
+    {
+     "q": "من أين المسافرة؟",
+     "options": [
+      "من تركيا",
+      "من الهند",
+      "من مصر"
+     ],
+     "correct": 0
+    },
+    {
+     "q": "ما اسمها؟",
+     "options": [
+      "نور",
+      "ليلى",
+      "سارة"
+     ],
+     "correct": 1
+    }
+   ]
+  }
+ ]
+}

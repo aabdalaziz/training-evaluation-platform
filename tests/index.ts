@@ -107,6 +107,7 @@ import './miaar-m9.test';
 import './p39-notices.test';
 import './miaar-m10.test';
 import './iqra-q1.test'; /* اقْرَأْ ق1 */
+import './iqra-step2.test'; /* اقْرَأْ الخطوة 2: 100 ساعة + جولة الملاحظات */
 import './athar-font.test'; /* خطّ أَثَر */
 import './miaar-m11.test';
 import './miaar-m12.test';

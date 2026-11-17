@@ -52,12 +52,46 @@ export const IQRA_LIMITS = {
   review_batch: 12,             /* أقصى بطاقات في جلسة «أراجع» */
   daily_question_pool: 1,       /* سؤال اليوم: واحد من بنود الرِّواق المعتمدة (بذرة اليوم + البريد) */
   cards_per_lesson_max: 16,
-  items_per_lesson_max: 10,
-  content_max_bytes: 24_000,
+  items_per_lesson_max: 30,     /* الخطوة 2: 30 تمرينًا في الحلقة — 10 تُسحب في كلّ زيارة على ثلاثة أيام */
+  items_per_lesson_target: 30,
+  draw_per_visit: 10,
+  cards_per_lesson_min: 8,
+  kinds_per_lesson_min: 4,      /* تنوّع المِران: 4 أنواع على الأقل في الحلقة */
+  content_max_bytes: 40_000,
   import_max_lessons: 60,
+  tick_max_seconds: 60,         /* «ساعاتي»: أقصى ما تضيفه نبضة واحدة (كلّ 30 ث) */
+  tick_day_cap_seconds: 6 * 3600, /* سقف يوم واحد لنشاط واحد — ضدّ الصفحات المنسيّة */
+  fairness_min_pct: 40,         /* ميثاق الإنصاف: لا يقلّ حضور أيّ من الجنسين عن 40% في نصوص الحلقة */
+  fairness_min_refs: 6,
   writes_per_hour: 240,
   k_min: 5,                     /* أيّ رقم جماعي يُعرض للطاقم بأقلّ من 5 متعلّمين لا يُعرض */
 } as const;
+
+/** الخطوة 2 (2026-11-17): قالب المَنزِلة — خمس حلقات، لكلّ حلقة مهارة من الإطار الأوروبي */
+export const IQRA_SKILLS = ['listen', 'read', 'grammar', 'speak', 'write'] as const;
+export type IqraSkill = (typeof IQRA_SKILLS)[number];
+export const isIqraSkill = (v: unknown): v is IqraSkill => typeof v === 'string' && (IQRA_SKILLS as readonly string[]).includes(v);
+export const SKILL_META: Record<IqraSkill, { name_ar: string; name_en: string; cefr: string; icon: string }> = {
+  listen: { name_ar: 'أسمع وأفهم', name_en: 'Listening', cefr: 'Oral comprehension', icon: 'ear' },
+  read: { name_ar: 'أقرأ وأفهم', name_en: 'Reading', cefr: 'Reading comprehension', icon: 'book' },
+  grammar: { name_ar: 'أبني الجملة', name_en: 'Grammar & vocabulary', cefr: 'Linguistic competence', icon: 'blocks' },
+  speak: { name_ar: 'أتحدّث', name_en: 'Speaking', cefr: 'Oral production & interaction', icon: 'mic' },
+  write: { name_ar: 'أكتب وأُتقن', name_en: 'Writing', cefr: 'Written production', icon: 'pen' },
+};
+/** محطّات الحلقة الستّ (≈ ساعتان على أيام): أسمع وأقرأ 20 د · كلماتي 25 د · القاعدة 20 د · المِران 3×10 د · أُنتج 30 د · أثر الحلقة */
+export const STATIONS_AR = ['أسمع وأقرأ', 'كلماتي', 'القاعدة', 'المِران', 'أُنتج', 'أثر الحلقة'] as const;
+/** أنواع المِران التسعة (ثلاثة من ق1 + ستّة جديدة) */
+export const EXERCISE_KINDS = ['mcq', 'matching', 'ordering', 'picture_choice', 'cloze_bank', 'true_false_notgiven', 'word_tap', 'short_dictation', 'picture_sequence'] as const;
+export const KIND_AR: Record<(typeof EXERCISE_KINDS)[number], string> = { mcq: 'اختيار', matching: 'مطابقة', ordering: 'ترتيب الجملة', picture_choice: 'اختيار بالصورة', cloze_bank: 'ملء الفراغ', true_false_notgiven: 'صحيح · خطأ · غير مذكور', word_tap: 'المس الكلمة', short_dictation: 'إملاء قصير', picture_sequence: 'ترتيب الصور' };
+
+/** «مِئة ساعة» — عقد الزمن (قرار 2026-11-17، السلّم المتدرّج): ساعات تعلّم ذاتي مقيسة داخل البوابة لكلّ رِواق.
+ *  مرجعيًّا: Cambridge GLH التراكمي A1 90–100 · A2 180–200 · B1 350–400 · B2 500–600 · C1 700–800 · C2 1000–1200؛ والعربية فئة FSI الرابعة فالسلّم يصعد. */
+export const HOURS_TARGET: Record<IqraLevel, number> = { PRE_A1: 40, A1: 100, A2: 120, B1: 180, B2: 200, C1: 220, C2: 240 };
+/** العَتَبة المرنة: الاختبار المبكّر يُفتح عند ≥ 70% من الساعات مع إتقان ≥ 90% من الحلقات؛ وإلّا الأرضية كاملة + الإتقان */
+export const THRESHOLD_RULE = { early_hours_pct: 70, early_mastery_pct: 90, full_mastery_pct: 100, lesson_pass_pct: 70 } as const;
+export const COUNTED_ACTIVITIES = ['lesson', 'review', 'daily', 'library', 'free', 'produce'] as const;
+export type Activity = (typeof COUNTED_ACTIVITIES)[number] | 'external';
+export const isActivity = (v: unknown): v is Activity => typeof v === 'string' && ([...COUNTED_ACTIVITIES, 'external'] as string[]).includes(v);
 
 /** مفاتيح واجهة المتعلّم (عربية فقط) */
 export const UI_AR = {
