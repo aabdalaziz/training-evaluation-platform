@@ -258,7 +258,7 @@ function ReportsCenter() {
   const exportWord = () => {
     const doc = document.querySelector('.rc-doc');
     if (!doc) return;
-    const css = `body{font-family:Tajawal,Tahoma,Arial,sans-serif;direction:${ar ? 'rtl' : 'ltr'};color:#0f172a;font-size:12pt}
+    const css = `body{font-family:var(--font-ar),"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;direction:${ar ? 'rtl' : 'ltr'};color:#0f172a;font-size:12pt}
       h1{color:#0f2a4e;font-size:20pt;margin:0 0 6pt}h2,h3{color:#0f2a4e;margin:14pt 0 6pt}
       table{border-collapse:collapse;width:100%;margin:8pt 0}th,td{border:1px solid #cbd5e1;padding:4pt 6pt;font-size:10.5pt}th{background:#eef2f7}
       .noprint{display:none}.rc-muted{color:#64748b}p{line-height:1.7;margin:4pt 0}`;

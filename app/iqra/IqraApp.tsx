@@ -10,6 +10,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import WayBar from '../components/WayBar';
+import ReadSize from '../components/ReadSize'; /* «خطّ أَثَر»: حجم القراءة */
 import { supabase } from '../../lib/supabase/client';
 
 type Ex = { id: string; kind: 'mcq' | 'matching' | 'ordering'; prompt_ar: string; options?: { id: string; text: string }[]; left?: string[]; right?: string[]; words?: string[] };
@@ -37,7 +38,7 @@ export default function IqraApp({ fontClass = '' }: { fontClass?: string }) {
         <button type="button" className={screen.s === 'home' ? 'on' : ''} onClick={() => setScreen({ s: 'home' })} data-testid="iq-nav-home">رِواقي</button>
         <button type="button" className={screen.s === 'reviews' ? 'on' : ''} onClick={() => setScreen({ s: 'reviews' })} data-testid="iq-nav-reviews">أراجع{home.أراجع_مستحقّ ? <i>{home.أراجع_مستحقّ}</i> : null}</button>
         <button type="button" className={screen.s === 'notebook' ? 'on' : ''} onClick={() => setScreen({ s: 'notebook' })} data-testid="iq-nav-notebook">دفتري</button></>}
-        {code ? <a className="iq-lnk" href={`/miaar/result/${encodeURIComponent(code)}`}>بطاقة نتيجتي</a> : <a className="iq-lnk" href="/me">صفحتي</a>}</nav></div><WayBar /></header>
+        {code ? <a className="iq-lnk" href={`/miaar/result/${encodeURIComponent(code)}`}>بطاقة نتيجتي</a> : <a className="iq-lnk" href="/me">صفحتي</a>}<ReadSize /></nav></div><WayBar /></header>
     <p className="iq-live" aria-live="polite" role="status">{live}</p>
     {!ready || (!home && !err) ? <p className="iq-wait">نفتح رِواقك…</p> : null}
     {err && <section className="iq-wrap"><div className="iq-card"><p className="iq-err" role="alert">{err}</p></div></section>}
@@ -211,4 +212,9 @@ const CSS = `
 .iq-foot{max-width:980px;margin:0 auto;padding:0 18px 30px;color:#5b6b72;font-size:12.5px;font-weight:600;text-align:center}
 @media print{.iq-top,.iq-foot,.iq-live,.no-print{display:none!important}.iq{background:#fff}.iq-card{border:0;box-shadow:none}}
 @media (max-width:640px){.iq-band h1{font-size:24px}.iq-close h2{font-size:36px}.iq-stats div{min-width:90px}}
+
+/* «خطّ أَثَر» — طبقة القراءة: كلّ ما يقرؤه المتعلّم بنسخ واضح وحجمه من ReadSize */
+.iq-text,.iq-intro,.iq-q,.iq-opt,.iq-chip,.iq-flash,.iq-ex legend,.iq-fb,.iq-key,.iq-closing,.iq-rule p,.iq-rule li,.iq-rule h2,.iq-prod p,.iq-table td,.iq-rev-card .iq-flash,.iq-goal{font-family:var(--font-read),"Noto Naskh Arabic",serif;line-height:2;letter-spacing:0}
+.iq-text p{font-size:calc(19px * var(--read-size))}.iq-intro,.iq-q,.iq-ex legend,.iq-closing,.iq-rule p,.iq-rule li,.iq-prod p{font-size:calc(17.5px * var(--read-size))}.iq-opt,.iq-chip{font-size:calc(17px * var(--read-size));font-weight:400}.iq-flash .iq-w{font-size:calc(24px * var(--read-size))}.iq-flash .iq-g{font-size:calc(16px * var(--read-size))}.iq-table td{font-size:calc(16px * var(--read-size))}.iq-wd{font-size:calc(19px * var(--read-size))}.iq-fb,.iq-key{font-size:calc(15.5px * var(--read-size))}
+.iq-ex legend i,.iq-flash small,.iq-wd small,.iq-chip small{font-family:var(--font-ar)}
 `;

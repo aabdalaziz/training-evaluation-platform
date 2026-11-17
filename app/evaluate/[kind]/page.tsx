@@ -407,7 +407,7 @@ const CSS = `
 .ev-lock{border:1.5px solid #c9a24b;background:linear-gradient(180deg,#fffbeb,#fff);display:grid;gap:4px}.ev-lock-k{font-size:12px;font-weight:900;color:#8a6a1f;display:inline-flex;gap:6px;align-items:center}.ev-lock-t{font-size:18px;font-weight:900;color:#0f2a4e}.ev-lock-m{font-size:13px;font-weight:700;color:#334155}
 .ev-nps-row{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}.ev-nps-row button{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:9px 0;font:inherit;font-weight:900;font-size:13px;color:#0f2a4e;cursor:pointer;min-width:0}.ev-nps-row button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.ev-nps-l{display:flex;justify-content:space-between;margin-top:4px;color:#64748b}@media(max-width:480px){.ev-nps-row{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .ev-ok.off{background:#e2e8f0;color:#475569}
-.ev{font-family:Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:18px 12px 60px;color:#0f172a}
+.ev{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:18px 12px 60px;color:#0f172a}
 .ev-wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .ev-form{display:flex;flex-direction:column;gap:12px}
 .ev-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px}

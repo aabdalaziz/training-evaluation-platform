@@ -39,7 +39,7 @@ function Inner() {
   </main>;
 }
 const CSS = `
-.pg{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:820px;margin:0 auto;padding:26px 16px 60px;overflow-wrap:anywhere;min-width:0}.pg *{box-sizing:border-box}
+.pg{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:820px;margin:0 auto;padding:26px 16px 60px;overflow-wrap:anywhere;min-width:0}.pg *{box-sizing:border-box}
 .pg-muted{color:#64748b;font-size:13px;line-height:1.8;margin:4px 0}.pg-kicker{display:inline-flex;gap:6px;align-items:center;color:#b45309;font-weight:800;font-size:13px}
 .pg-head h1{margin:6px 0 4px;font-size:28px;color:#0f2a4e;line-height:1.5}
 .pg-line{margin:18px 0;padding:18px 22px;background:linear-gradient(160deg,#fffbeb,#fff7ed);border:1px solid #fed7aa;border-radius:18px;font-size:22px;line-height:1.9;color:#3b1d0e;font-weight:700}

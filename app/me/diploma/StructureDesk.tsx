@@ -139,7 +139,7 @@ export default function StructureDesk() {
 }
 
 const CSS = `
-.ds{font-family:var(--font-ar),Tajawal,Arial,sans-serif;max-width:1100px;margin:0 auto;padding:16px 12px 60px;color:#0f172a;display:flex;flex-direction:column;gap:12px}
+.ds{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;max-width:1100px;margin:0 auto;padding:16px 12px 60px;color:#0f172a;display:flex;flex-direction:column;gap:12px}
 .ds-nav{display:flex;gap:8px;flex-wrap:wrap}.ds-link{display:inline-flex;align-items:center;gap:5px;border:1px solid #e2e8f0;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:800;color:#0f2a4e;text-decoration:none;background:#f8fafc}.ds-btnlink{font:inherit;cursor:pointer}
 .ds-head h1{margin:4px 0;font-size:22px;color:#0f2a4e}.ds-head small{font-size:14px;color:#64748b;font-weight:700}.ds-head p{margin:4px 0 0;font-size:13.5px;line-height:1.8;color:#334155;background:#f8fafc;border-radius:10px;padding:10px 12px}
 .ds h2{margin:0 0 8px;font-size:16px;color:#0f2a4e;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ds h2 small{font-size:12px;color:#64748b;font-weight:700}.ds h3{margin:8px 0 4px;font-size:14px;color:#0f2a4e}.ds h3 em{font-style:normal;color:#0b8a83}

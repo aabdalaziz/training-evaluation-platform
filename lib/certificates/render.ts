@@ -42,9 +42,9 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
   return imgCache.get(src)!;
 }
 function fontFamily(): string {
-  if (typeof document === 'undefined') return 'Tajawal, Tahoma, Arial, sans-serif';
+  if (typeof document === 'undefined') return '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif';
   const f = getComputedStyle(document.body).fontFamily || '';
-  return f ? `${f}, Tajawal, Tahoma, Arial, sans-serif` : 'Tajawal, Tahoma, Arial, sans-serif';
+  return f ? `${f}, "IBM Plex Sans Arabic", Tahoma, Arial, sans-serif` : '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif';
 }
 export function fmtDate(ymd?: string | null): string {
   if (!ymd) return '';

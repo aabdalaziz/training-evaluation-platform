@@ -53,7 +53,7 @@ export default function DetailReport({ code, fontClass }: { code: string; fontCl
 }
 
 const CSS = `
-.dr{min-height:100vh;background:#eef2f7;padding:12px 8px;font-family:Tajawal,"Noto Naskh Arabic",Arial,sans-serif;color:#0f2a4e}
+.dr{min-height:100vh;background:#eef2f7;padding:12px 8px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e}
 .dr-bar{max-width:210mm;margin:0 auto 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}.dr-bar a{color:#0b8a83;font-weight:800;text-decoration:none}.dr-bar button{border:1px solid #0b8a83;background:#0b8a83;color:#fff;border-radius:10px;padding:8px 16px;font:inherit;font-weight:800;cursor:pointer}
 .dr-paper{max-width:210mm;margin:0 auto;background:#fff;border-radius:14px;padding:16mm 14mm;box-shadow:0 2px 12px rgba(15,42,78,.08)}
 .dr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:3px solid #0b8a83;padding-bottom:10px}.dr-head small{color:#0b8a83;font-weight:800;font-size:12px}.dr-head h1{margin:2px 0;font-size:22px}.dr-head p{margin:0;color:#475569;font-size:13px}

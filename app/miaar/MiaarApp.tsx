@@ -4,7 +4,7 @@
  * «مِعيار — من أَثَر» — تجربة المتقدّم كاملة في مكوّن واحد (م1):
  *  المقدّمة (30 لغة — قاموس مِعيار حرفيًا من /miaar/copy/<lang>.json — مقسَّم منذ P40) → التسجيل (+«احتياجاتي») → «مِسبار» (5 بنود تحدّد نقطة البداية)
  *  → الاختبار (قراءة · استماع · قواعد؛ بنود mcq/مصوّرة/صواب-خطأ؛ مؤقّت؛ تأجيل؛ اختصارات) → المراجعة → «بطاقة المستوى» (أستطيع أن… · ميزان الثقة · رمز نتيجة · باركود · طباعة).
- *  التصحيح كله على الخادم (/api/miaar). هوية مِعيار/أَثَر البصرية كما في شاشات مِعيار الأصلية: كحلي #0f2a4e · تركوازي #0b8a83 · ذهبي #c9a24b؛ خطّا Tajawal وAref Ruqaa (next/font — مستضافان ذاتيًا).
+ *  التصحيح كله على الخادم (/api/miaar). هوية مِعيار/أَثَر البصرية كما في شاشات مِعيار الأصلية: كحلي #0f2a4e · تركوازي #0b8a83 · ذهبي #c9a24b؛ خطّ الواجهة IBM Plex Sans Arabic وخطّ القراءة Noto Naskh Arabic (next/font في app/layout.tsx — مستضافان ذاتيًا؛ «خطّ أَثَر» 2026-11-17).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { qrSvg } from '../../lib/certificates/qr';
@@ -14,6 +14,7 @@ import type { Level } from '../../lib/miaar/registry';
 import { Icon } from '../../lib/ui/icons';
 import { GuideButton } from '../components/Guide';
 import WayBar from '../components/WayBar'; /* «الطريق» */
+import ReadSize from '../components/ReadSize'; /* «خطّ أَثَر»: حجم القراءة */
 import { PushOptIn } from '../components/Pwa'; /* P39 «نبّهني» */
 import dynamic from 'next/dynamic';
 import type { RoomData } from './PerformanceRoom';
@@ -352,6 +353,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
         <GuideButton lang={lang === 'ar' ? 'ar' : 'en'} compact />
         {admin && <a className="mi-admin" href="/admin/miaar">إدارة مِعيار</a>}
         <LangPicker copy={copy} lang={lang} onPick={setLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} />
+        <ReadSize label={lang === 'ar' ? 'حجم القراءة' : 'Text size'} />
       </div>
     </header>
       <WayBar lang={wayLang} onBack={stepBack} extra={stepLabel[step] ? [stepLabel[step][wayLang]] : undefined} lock={step === 'test' || step === 'review'} />
@@ -717,7 +719,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
   const weakest = SKILLS.filter((k) => stats[k]?.answered > 0).sort((a, b) => stats[a].percent - stats[b].percent)[0];
   const sk = (k: string) => t('result', ({ grammar_vocab: 'gShort', reading: 'rShort', listening: 'lShort' } as any)[k]);
   return <section className="mi-result" data-testid="mi-result">
-    <div className="mi-top mi-nolink"><header className="mi-head"><div className="mi-brandside"><a className="mi-brand" href="/">أَثَر<small>{t('intro', 'brandSub')}</small></a><a className="mi-mark" href="/miaar">مِعيار</a></div><div className="mi-left"><LangPicker copy={copy} lang={lang} onPick={onLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} /></div></header><WayBar lang={lang === 'ar' ? 'ar' : 'en'} /></div>
+    <div className="mi-top mi-nolink"><header className="mi-head"><div className="mi-brandside"><a className="mi-brand" href="/">أَثَر<small>{t('intro', 'brandSub')}</small></a><a className="mi-mark" href="/miaar">مِعيار</a></div><div className="mi-left"><LangPicker copy={copy} lang={lang} onPick={onLang} label={t('intro', 'pageLang')} search={t('intro', 'langSearch')} none={t('intro', 'langNone')} /><ReadSize label={lang === 'ar' ? 'حجم القراءة' : 'Text size'} /></div></header><WayBar lang={lang === 'ar' ? 'ar' : 'en'} /></div>
     <section className="mi-band"><p className="mi-kicker gold">{x('card_k')} · {t('result', 'org')}</p><h1>{who}</h1><p className="mi-lead">{t('result', 'date')}: {new Date(report.تاريخ || Date.now()).toLocaleDateString(ar ? 'ar-SA' : lang)} · {x('nature')}</p></section>
     <div className="mi-wrap"><div className="mi-card">
       {/* م5-أ «سجلّ مِعيار»: شارة الأرشفة وقرار التسكين على البطاقة نفسها — البطاقة المؤرشفة تبقى تعمل */}
@@ -841,7 +843,7 @@ const CSS = `
 .mi-notices{margin:14px 0 6px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#f0fdfa,#f8fafc);border:1px solid #ccfbf1}.mi-notices-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}.mi-notices-head .mi-exit-k{margin:0}.mi-notices-sub{color:#0f766e;font-weight:700}.mi-notices-empty{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.7}.mi-notices-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}.mi-notices-list li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid #e2e8f0}.mi-notices-list li>div{flex:1;min-width:0}.mi-notices-list li b{display:block;font-size:14px}.mi-notices-list li p{margin:2px 0 0;font-size:13px;color:#334155;line-height:1.6}.mi-notices-list li small{color:var(--muted);font-size:11px}.mi-notices-ic{font-size:20px;line-height:1}
 .mi-exit-units{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)}.mi-exit-uk{margin:0 0 6px;font-size:12.5px;color:var(--muted);font-weight:800}.mi-ustrip{list-style:none;margin:0;padding:0;display:flex;gap:4px;flex-wrap:wrap}.mi-u{display:inline-grid;place-items:center;min-width:46px;padding:4px 6px;border-radius:8px;font-size:11px;font-weight:900;border:1px solid #e2e8f0;background:#f1f5f9;color:#334155}.mi-u b{font-size:12px}.mi-u.ok{background:#dcfce7;border-color:#86efac;color:#166534}.mi-u.watch{background:#fef3c7;border-color:#fcd34d;color:#92400e}.mi-u.weak{background:#fee2e2;border-color:#fca5a5;color:#991b1b}.mi-exit-review{margin:8px 0 0;font-size:13px;line-height:1.8}.mi-exit-review small{color:var(--muted)}
 .mi-rec.gold{background:var(--gold-soft);border-color:var(--gold-line)}.mi-room-invite .mi-next{margin-top:8px}
-.mi{--navy:#0f2a4e;--ink:#0f172a;--teal:#0b8a83;--teal-deep:#0f5c57;--teal-soft:#e6f4f3;--teal-line:#cfe9e6;--gold:#c9a24b;--gold-line:#ead9a6;--gold-soft:#fbf5e4;--page:#f3f6fa;--line:#e4eaf2;--muted:#64748b;--grad:linear-gradient(135deg,#0f2a4e 0%,#143a66 55%,#0b6b66 100%);min-height:100vh;color:var(--ink);background:linear-gradient(180deg,#f6f8fb,#eef5f4);font-family:var(--font-ar,Tajawal),"Noto Naskh Arabic",system-ui,sans-serif;font-size:17px;line-height:1.6}
+.mi{--navy:#0f2a4e;--ink:#0f172a;--teal:#0b8a83;--teal-deep:#0f5c57;--teal-soft:#e6f4f3;--teal-line:#cfe9e6;--gold:#c9a24b;--gold-line:#ead9a6;--gold-soft:#fbf5e4;--page:#f3f6fa;--line:#e4eaf2;--muted:#64748b;--grad:linear-gradient(135deg,#0f2a4e 0%,#143a66 55%,#0b6b66 100%);min-height:100vh;color:var(--ink);background:linear-gradient(180deg,#f6f8fb,#eef5f4);font-family:var(--font-ar,"IBM Plex Sans Arabic"),"Noto Naskh Arabic",system-ui,sans-serif;font-size:17px;line-height:1.6}
 .mi *{box-sizing:border-box}.mi a{color:inherit;text-decoration:none}.mi button,.mi input,.mi select{font-family:inherit}
 .mi h1,.mi h2,.mi h3{font-weight:900;letter-spacing:0;margin:0}
 .mi-large{font-size:20px}.mi-contrast{--navy:#000;--ink:#000;--teal:#004d49;--muted:#222;--grad:linear-gradient(135deg,#000,#0a2a2a)}
@@ -890,9 +892,9 @@ const CSS = `
 .mi-door:hover,.mi-door[aria-pressed="true"]{background:rgba(255,255,255,.12);border-color:var(--gold)}
 .mi-arab{background:#fff;color:var(--navy);border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-top:10px}
 .mi-arab.stage{width:100%;background:transparent;color:#fff;border:0;padding:0;box-shadow:none}.mi-arab.stage .mi-q,.mi-arab.stage .mi-q span{color:#fff}
-.mi-hero .mi-arab .mi-q,.mi-q{white-space:pre-line;font-family:var(--mi-ruqaa,"Aref Ruqaa"),"Noto Naskh Arabic",serif;font-size:clamp(24px,3vw,34px);line-height:1.7;margin:0 0 14px;color:var(--navy)}
-.mi-lv{font-family:var(--font-ar,Tajawal),sans-serif;font-size:13px;font-weight:900;color:var(--gold);margin-inline-end:8px}
-.mi-opts-arab{display:grid;gap:8px}.mi-opts-arab button{border:1px solid #e2e8f0;background:#fff;color:var(--navy);border-radius:12px;padding:12px 14px;font-weight:900;font-size:15px;cursor:pointer;text-align:right}
+.mi-hero .mi-arab .mi-q,.mi-q{white-space:pre-line;font-family:var(--font-read),"Noto Naskh Arabic","Amiri",serif;font-size:calc(clamp(21px,2.6vw,28px) * var(--read-size,1));line-height:2;margin:0 0 14px;color:var(--navy);font-weight:400} /* «خطّ أَثَر»: نسخ تعليمي بدل الرقعة — المتقدّم غير الناطق يقرأ ما يقرؤه في كتبه */
+.mi-lv{font-family:var(--font-ar,"IBM Plex Sans Arabic"),sans-serif;font-size:13px;font-weight:900;color:var(--gold);margin-inline-end:8px}
+.mi-opts-arab{display:grid;gap:8px}.mi-opts-arab button{border:1px solid #e2e8f0;background:#fff;color:var(--navy);border-radius:12px;padding:12px 14px;font-weight:400;font-family:var(--font-read),"Noto Naskh Arabic",serif;font-size:calc(17px * var(--read-size,1));cursor:pointer;text-align:right}
 .mi-opts-arab button:hover,.mi-opts-arab button.on{background:var(--gold);border-color:var(--gold);color:#1f2937}
 .mi-sealbox{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:24px;padding:16px;backdrop-filter:blur(6px)}
 .mi-stagehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#fff;font-size:13px;font-weight:800}
@@ -990,7 +992,7 @@ const CSS = `
 .mi-lvface{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid #e2e8f0;border-radius:16px;padding:18px;background:#fff;color:var(--navy);box-shadow:0 10px 28px rgba(15,42,78,.05)}.mi-lvface.back{transform:rotateY(180deg);background:linear-gradient(160deg,#0f2a4e,#1b4a80);color:#fff;border-color:transparent}
 .mi-lvface .mi-lvcode{display:flex;align-items:center;gap:8px}.mi-lvface .mi-lvcode b{display:inline-block;font-weight:900;font-size:14px;padding:3px 10px;border-radius:8px;background:rgba(11,138,131,.1);color:var(--teal)}.mi-level.independent .mi-lvcode b{background:rgba(201,162,75,.16);color:#8a6a1f}.mi-level.proficient .mi-lvcode b{background:rgba(15,42,78,.1);color:var(--navy)}.mi-lvface.back .mi-lvcode b{background:var(--gold);color:var(--navy)}.mi-lvface .mi-lvcode small{color:#64748b;font-weight:700;font-size:12px}.mi-lvface.back .mi-lvcode small{color:#cbd5e1}
 .mi-lvface h3{margin:10px 0 4px;font-size:17px}.mi-lvface h3 small{color:#64748b;font-weight:700;font-size:12px;margin-inline-start:6px}.mi-lvface .mi-lvcan{margin:0;font-size:13.5px;color:#475569;line-height:1.7}
-.mi-lvface .mi-lvline{margin:12px 0 8px;font-weight:800;color:#e2e8f0;font-size:14px}.mi-levels.v3 .mi-lvface.back .mi-specimen{margin:0;padding:10px 12px;border:1px solid rgba(201,162,75,.45);border-radius:12px;background:rgba(255,255,255,.08);font-family:'Aref Ruqaa',serif;font-size:21px;color:#fff;line-height:1.9;box-shadow:none}.mi-lvface .mi-specimen small{display:block;font-family:inherit;font-size:10px;color:var(--gold);letter-spacing:.06em}
+.mi-lvface .mi-lvline{margin:12px 0 8px;font-weight:800;color:#e2e8f0;font-size:14px}.mi-levels.v3 .mi-lvface.back .mi-specimen{margin:0;padding:10px 12px;border:1px solid rgba(201,162,75,.45);border-radius:12px;background:rgba(255,255,255,.08);font-family:var(--font-read),"Noto Naskh Arabic",serif;font-size:calc(18px * var(--read-size,1));line-height:2;font-size:21px;color:#fff;line-height:1.9;box-shadow:none}.mi-lvface .mi-specimen small{display:block;font-family:inherit;font-size:10px;color:var(--gold);letter-spacing:.06em}
 .mi-finale.v3{margin:36px 7vw 56px;border-radius:28px;padding:44px}.mi-finale.v3 .mi-go{margin-top:16px}
 @media (max-width:980px){.mi-v3hero{grid-template-columns:1fr}.mi-v3steps,.mi-doors.v3,.mi-levels.v3{grid-template-columns:1fr}.mi-scene{min-height:0}.mi-sealwrap{position:static;transform:none;margin:14px auto 0}.mi-scale.v3{margin-top:16px}.mi-v3bands span{white-space:normal}}
 @media (prefers-reduced-motion:reduce){.mi-cert{animation:none}.mi-flip,.mi-lvflip,.mi-v3step,.mi-doors.v3 .mi-door{transition:none}}
@@ -1009,8 +1011,8 @@ const CSS = `
 .mi-lvbody h3{font-size:17px;color:var(--navy);margin:0 0 4px}.mi-lvdesc{margin:0 0 6px;display:inline-block;border-radius:999px;background:var(--gold-soft);border:1px solid var(--gold-line);color:#8a6a14;padding:2px 10px;font-size:12px;font-weight:900}
 .mi-lvcan{margin:0;color:#334155;font-size:15px;line-height:1.7}.mi-lvcan span{display:block;color:var(--teal);font-size:11.5px;font-weight:900}
 .mi-lvline{margin:6px 0 0;color:var(--muted);font-size:13.5px;line-height:1.6}
-.mi-specimen{margin:0;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:16px;padding:12px 14px;font-family:var(--mi-ruqaa,"Aref Ruqaa"),"Noto Naskh Arabic",serif;font-size:clamp(20px,1.8vw,26px);line-height:1.6;color:var(--navy)}
-.mi-specimen small{display:block;font-family:var(--font-ar,Tajawal),sans-serif;font-size:11px;font-weight:900;color:#8a6a14;margin-bottom:2px}
+.mi-specimen{margin:0;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:16px;padding:12px 14px;font-family:var(--font-read),"Noto Naskh Arabic",serif;line-height:2;font-size:clamp(20px,1.8vw,26px);line-height:1.6;color:var(--navy)}
+.mi-specimen small{display:block;font-family:var(--font-ar,"IBM Plex Sans Arabic"),sans-serif;font-size:11px;font-weight:900;color:#8a6a14;margin-bottom:2px}
 .mi-band{background:var(--grad);color:#fff;padding:34px 7vw 48px}.mi-band h1{font-size:clamp(28px,4vw,44px);line-height:1.3;margin:8px 0;color:#fff}.mi-band h2{font-size:clamp(24px,3vw,34px);color:#fff;margin:6px 0 10px}.mi-band p{color:rgba(255,255,255,.85)}
 .mi-band .mi-lead{margin:0}
 .mi-finale{padding:56px 7vw 64px}.mi-tools{display:grid;gap:10px}
@@ -1060,7 +1062,7 @@ const CSS = `
 .mi-qtext{margin:0 0 18px;color:#0f172a;font-size:clamp(22px,2.4vw,28px);line-height:1.8;font-weight:800;white-space:pre-line}
 .mi-stim{display:block;max-width:100%;max-height:260px;border-radius:14px;border:1px solid var(--line);margin:0 0 14px}
 .mi-opts{display:grid;gap:10px}.mi-opts.pics{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
-.mi-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:1px solid #dbe3ea;background:#fff;border-radius:16px;padding:14px;cursor:pointer;color:#334155;font-weight:700;font-size:16px;line-height:1.7}
+.mi-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:1px solid #dbe3ea;background:#fff;border-radius:16px;padding:14px;cursor:pointer;color:#334155;font-weight:400;font-family:var(--font-read),"Noto Naskh Arabic",serif;font-size:calc(17px * var(--read-size,1));line-height:1.9}.mi-opt .mi-letter{font-family:var(--font-ar);font-weight:700}
 .mi-opt.on{border-color:var(--teal);background:var(--teal-soft);color:var(--teal-deep)}.mi-opt img{max-width:100%;max-height:140px;border-radius:10px}
 .mi-letter{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;flex:none;background:var(--teal-soft);color:var(--teal);font-weight:900}.mi-opt.on .mi-letter{background:var(--teal);color:#fff}
 .mi-check{margin-inline-start:auto;display:grid;place-items:center;width:28px;height:28px;border-radius:999px;border:1px solid #dbe3ea;background:#fff;flex:none;font-size:13px}.mi-opt.on .mi-check{background:var(--teal);border-color:var(--teal);color:#fff}

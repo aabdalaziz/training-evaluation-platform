@@ -141,7 +141,7 @@ export function updateEmail(r: ConsultingRequest, u: Update, siteUrl: string, to
 export const QW = 1654, QH = 2339;
 export function renderQuote(canvas: HTMLCanvasElement, d: { r: ConsultingRequest; q: Quote; settings: PaymentSettings | null; legal: { name_ar: string; name_en: string; city: string; email: string }; lang: Lang }): void {
   const { r, q, lang } = d; const rtl = lang === 'ar'; const ctx = canvas.getContext('2d')!; canvas.width = QW; canvas.height = QH;
-  const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b', MUTED = '#64748b', TXT = '#0f172a'; const F = 'Tajawal, Arial, sans-serif';
+  const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b', MUTED = '#64748b', TXT = '#0f172a'; const F = '"IBM Plex Sans Arabic", Tajawal, Arial, sans-serif';
   const Lm = 110, R = QW - 110, W = R - Lm; const x0 = rtl ? R : Lm; const dir = rtl ? -1 : 1;
   ctx.direction = rtl ? 'rtl' : 'ltr'; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, QW, QH);
   const text = (str: string, x: number, y: number, size: number, opt: { color?: string; weight?: string; align?: CanvasTextAlign; max?: number } = {}) => { ctx.fillStyle = opt.color || TXT; ctx.font = `${opt.weight || '400'} ${size}px ${F}`; ctx.textAlign = opt.align || (rtl ? 'right' : 'left'); if (opt.max) ctx.fillText(str, x, y, opt.max); else ctx.fillText(str, x, y); };

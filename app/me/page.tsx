@@ -199,7 +199,7 @@ export default function MePage() {
 }
 
 const CSS = `
-.me{font-family:var(--font-ar),Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:18px 12px 60px;color:#0f172a}
+.me{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:18px 12px 60px;color:#0f172a}
 .me *{box-sizing:border-box}
 .me-wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .me-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}

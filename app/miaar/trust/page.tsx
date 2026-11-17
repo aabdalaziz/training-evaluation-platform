@@ -27,7 +27,7 @@ export default async function Page() {
   const rows = ORDER.map((L) => byLevel.get(L) || { level: L, n: 0, k: 0, rel: 0, sem: 0, decision: 0, light: 'gray', light_ar: 'قيد المعايرة', method: null });
   const when = data?.computed_at ? new Date(data.computed_at).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
   const pct = (x: number) => (x > 0 ? `${Math.round(x * 100)}%` : '—');
-  return <main dir="rtl" lang="ar" style={{ fontFamily: 'var(--font-ar, Tajawal), system-ui, sans-serif', background: '#f6f3ea', minHeight: '100vh', color: '#0f172a' }} data-testid="mi-trust-page">
+  return <main dir="rtl" lang="ar" style={{ fontFamily: 'var(--font-ar, "IBM Plex Sans Arabic"), system-ui, sans-serif', background: '#f6f3ea', minHeight: '100vh', color: '#0f172a' }} data-testid="mi-trust-page">
     <style dangerouslySetInnerHTML={{ __html: `
 .tr-wrap{max-width:880px;margin:0 auto;padding:40px 20px 72px}.tr-hero{background:#0f2a4e;color:#fff;border-radius:22px;padding:34px 30px;position:relative;overflow:hidden}
 .tr-hero:after{content:'';position:absolute;inset:auto -60px -80px auto;width:260px;height:260px;border-radius:50%;border:26px solid rgba(201,162,75,.18)}

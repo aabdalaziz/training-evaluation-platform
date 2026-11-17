@@ -128,7 +128,7 @@ function CardView({ c, keep, busy, onKeep, examHear, examBusy, onEntryPublic }: 
 }
 
 const CSS = `
-.lv{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:1000px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.lv *{box-sizing:border-box}
+.lv{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:1000px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.lv *{box-sizing:border-box}
 .lv-nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}.lv-link{color:#0f2a4e;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:14px}.lv-link:hover{text-decoration:underline}
 .lv-head h1{margin:4px 0 6px;font-size:32px;color:#0f2a4e}.lv-head h1 small{display:block;font-size:15px;color:#0b8a83;font-weight:800;margin-top:2px}.lv-head p{margin:0 0 14px;color:#475569;line-height:1.9;max-width:760px}
 .lv-muted{color:#64748b;font-size:13px;line-height:1.8;margin:4px 0}.lv-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.lv-ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}

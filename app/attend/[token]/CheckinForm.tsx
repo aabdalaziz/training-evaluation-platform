@@ -145,7 +145,7 @@ export function CheckinForm({ token }: { token: string }) {
 }
 
 const CSS = `
-.at{min-height:100vh;background:radial-gradient(900px 500px at 90% -10%,rgba(11,138,131,.18),transparent 60%),#f3f6fa;font-family:Tajawal,Arial,sans-serif;color:#0f172a;padding:18px 14px 40px}
+.at{min-height:100vh;background:radial-gradient(900px 500px at 90% -10%,rgba(11,138,131,.18),transparent 60%),#f3f6fa;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;padding:18px 14px 40px}
 .at *{box-sizing:border-box}
 .at-wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .at-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #e2e8f0;border-top:4px solid #c9a24b;border-radius:16px;padding:12px 16px}

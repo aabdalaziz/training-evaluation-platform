@@ -21,7 +21,7 @@ export default function NotFound() {
   );
 }
 
-const CSS = `.nf{min-height:60vh;display:grid;place-items:center;padding:48px 16px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f2a4e}
+const CSS = `.nf{min-height:60vh;display:grid;place-items:center;padding:48px 16px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e}
 .nf-card{max-width:560px;width:100%;background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:28px 26px;box-shadow:0 10px 30px rgba(15,42,78,.08);text-align:center}
 .nf-kicker{font-size:12px;font-weight:800;color:#0b8a83}.nf h1{margin:6px 0 8px;font-size:26px;font-weight:900}.nf p{margin:0 0 14px;color:#475569;line-height:1.8}
 .nf-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 8px}

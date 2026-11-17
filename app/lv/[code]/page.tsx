@@ -38,7 +38,7 @@ function Inner() {
   </main>;
 }
 const CSS = `
-.pl{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:820px;margin:0 auto;padding:26px 16px 60px;overflow-wrap:anywhere;min-width:0}.pl *{box-sizing:border-box}
+.pl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:820px;margin:0 auto;padding:26px 16px 60px;overflow-wrap:anywhere;min-width:0}.pl *{box-sizing:border-box}
 .pl-muted{color:#64748b;font-size:13px;line-height:1.8;margin:4px 0}.pl-kicker{display:inline-flex;gap:6px;align-items:center;color:#0b8a83;font-weight:800;font-size:13px}
 .pl-head h1{margin:6px 0 4px;font-size:28px;color:#0f2a4e;line-height:1.5}
 .pl-line{margin:18px 0;padding:18px 22px;background:linear-gradient(160deg,#ecfeff,#f0fdfa);border:1px solid #99f6e4;border-radius:18px;font-size:22px;line-height:1.9;color:#134e4a;font-weight:700}

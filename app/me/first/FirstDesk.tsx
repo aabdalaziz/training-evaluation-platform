@@ -119,7 +119,7 @@ export default function FirstDesk() {
 }
 
 const CSS = `
-.fd{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:960px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.fd *{box-sizing:border-box}
+.fd{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:960px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.fd *{box-sizing:border-box}
 .fd-nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}.fd-link{color:#0f2a4e;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:14px}.fd-link:hover{text-decoration:underline}
 .fd-head h1{margin:4px 0 6px;font-size:32px;color:#0f2a4e}.fd-head h1 small{display:block;font-size:15px;color:#b45309;font-weight:800;margin-top:2px}.fd-head p{margin:0 0 14px;color:#475569;line-height:1.9;max-width:760px}
 .fd-muted{color:#64748b;font-size:13px;line-height:1.8;margin:4px 0}.fd-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.fd-ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}

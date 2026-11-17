@@ -137,7 +137,7 @@ function Inner() {
 }
 
 const CSS = `
-.hz{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:880px;margin:0 auto;padding:28px 18px 60px}
+.hz{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:880px;margin:0 auto;padding:28px 18px 60px}
 .hz-head h1{margin:4px 0 6px;font-size:30px;color:#0f2a4e}.hz-head h1 small{font-size:16px;color:#0b8a83;font-weight:800}.hz-head p{margin:0 0 18px;color:#475569;line-height:1.9}
 .hz-muted{color:#64748b;font-size:13px;line-height:1.8}.hz-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.hz-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
 .hz-warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:8px 12px;color:#92400e;font-size:13px}

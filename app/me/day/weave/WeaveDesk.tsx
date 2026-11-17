@@ -93,7 +93,7 @@ export default function WeaveDesk() {
 }
 
 const CSS = `
-.wv{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:1040px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.wv *{box-sizing:border-box}
+.wv{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:1040px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.wv *{box-sizing:border-box}
 .wv-nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}.wv-link{color:#334155;text-decoration:none;font-size:13px;display:inline-flex;gap:4px;align-items:center}.wv-link:hover{text-decoration:underline}
 .wv-head h1{margin:6px 0 6px;font-size:26px}.wv-head h1 small{display:block;font-size:14px;color:#b45309;font-weight:700;margin-top:2px}.wv-head p{color:#334155;line-height:1.8;margin:0 0 14px;max-width:820px}
 .wv-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:8px 12px;margin:8px 0}.wv-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:8px 12px;margin:8px 0}

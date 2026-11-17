@@ -206,7 +206,7 @@ function Inner() {
 
 const CSS = `
 .pp-tabs{display:inline-flex;gap:4px;background:#e2e8f0;border-radius:999px;padding:4px;margin:0 0 12px}.pp-tabs button{all:unset;cursor:pointer;display:inline-flex;gap:6px;align-items:center;font:inherit;font-weight:900;font-size:14px;color:#1e293b;padding:7px 16px;border-radius:999px}.pp-tabs button.on{background:#0f2a4e;color:#fff}.pp-tabs button:focus-visible{outline:3px solid #0f2a4e;outline-offset:2px}
-.pp{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:920px;margin:0 auto;padding:28px 18px 60px}
+.pp{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:920px;margin:0 auto;padding:28px 18px 60px}
 .pp-head h1{margin:4px 0 6px;font-size:30px;color:#0f2a4e}.pp-head h1 small{font-size:16px;color:#0b8a83;font-weight:800}.pp-head p{margin:0 0 18px;color:#475569;line-height:1.9}
 .pp-muted{color:#64748b;font-size:13px;line-height:1.8}.pp-muted.light{color:#cbd5e1}.pp-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.pp-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
 .pp-warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:8px 12px;color:#92400e;font-size:13px}

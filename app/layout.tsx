@@ -1,13 +1,17 @@
 import type { Metadata, Viewport } from 'next';
-import { Tajawal } from 'next/font/google';
+import { IBM_Plex_Sans_Arabic, Noto_Naskh_Arabic } from 'next/font/google';
 import './style.css';
 import GlobalNavigation from './components/GlobalNavigation';
 import { PocketProvider } from './components/Pocket';
 import Guide from './components/Guide';
 import { normalizeSite } from '../lib/portal/open'; /* النطاق الرسمي للـ JSON-LD */ /* «دليل أَثَر» (P41): البحث والأوامر في كل صفحة — Ctrl+K */
 
-// خط عربي موحّد يُحمَّل مع البناء (بدون طلبات خارجية وقت التشغيل ولا وميض عند التحميل)
-const tajawal = Tajawal({ subsets: ['arabic', 'latin'], weight: ['400', '700', '900'] /* خِفّة أَثَر (P40): 3 أوزان بدل 5 — الوزنان 500/800 يُقرّبهما المتصفح من 400/700 */, display: 'swap', variable: '--font-ar' });
+// «خطّ أَثَر» (2026-11-17): خطّان مستضافان ذاتيًّا مع البناء (بلا طلبات خارجية ولا وميض):
+//  --font-ar   IBM Plex Sans Arabic — خطّ الواجهة (من الهوية): نقاط أوضح وعين أعرض من الخطّ السابق، ولاتينية بالجودة نفسها (رموز CEFR · البريد · الأرقام)
+//  --font-read Noto Naskh Arabic — خطّ القراءة التعليمية: نسخ الكتب المدرسية لما يقرؤه المتعلّم (نصوص الحلقات · البطاقات · المِران · بنود البنك · مقاطع الاختبارات)
+//  خِفّة أَثَر (P40) محفوظة: 3 أوزان للواجهة + وزنان للقراءة (حروف عربية + لاتينية أساسية فقط)
+const plex = IBM_Plex_Sans_Arabic({ subsets: ['arabic', 'latin'], weight: ['400', '500', '700'], display: 'swap', variable: '--font-ar' });
+const naskh = Noto_Naskh_Arabic({ subsets: ['arabic', 'latin'], weight: ['400', '700'], display: 'swap', variable: '--font-read', preload: true });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.com'), /* النطاق الرسمي (2026-11-15): روابط OpenGraph مطلقة */
@@ -41,8 +45,8 @@ export const viewport: Viewport = { themeColor: '#0f2a4e', width: 'device-width'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" className={tajawal.variable}>
-      <body className={tajawal.className}>
+    <html lang="ar" dir="rtl" className={`${plex.variable} ${naskh.variable}`}>
+      <body className={plex.className}>
         {/* JSON-LD يُولَّد على الخادم من نصّ ثابت (لا مدخلات مستخدم) — آمن ضمن CSP لأن script data لا تُنفَّذ */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd(normalizeSite(process.env.NEXT_PUBLIC_SITE_URL))) }} />
         <PocketProvider>

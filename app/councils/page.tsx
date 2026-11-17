@@ -122,7 +122,7 @@ function CircleCard({ c }: { c: Circle }) {
 
 const CSS = `
 .cn-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px}.cn-book{display:flex;flex-direction:column;gap:4px;background:linear-gradient(160deg,#0f2a4e,#0b8a83);color:#fff;border-radius:16px;padding:16px;text-decoration:none;min-height:150px;position:relative;overflow:hidden;box-shadow:inset 6px 0 0 #c9a24b}.cn-book:hover{transform:translateY(-2px)}.cn-bookyear{color:#c9a24b;font-weight:900;font-size:20px}.cn-book b{font-size:16px;line-height:1.5}.cn-book small{color:#cbd5e1;font-size:12px}.cn-book p{margin:6px 0 0;font-size:12.5px;line-height:1.75;color:#e2e8f0}.cn-book i{margin-top:auto;font-style:normal;font-size:11px;color:#cbd5e1;padding-top:8px}
-.cn{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:1100px;margin:0 auto;padding:28px 18px 60px}
+.cn{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 .cn-hero{background:radial-gradient(1200px 400px at 80% -20%,rgba(11,138,131,.18),transparent),linear-gradient(135deg,#0f2a4e,#123a66);color:#fff;border-radius:24px;padding:36px 30px;margin-bottom:28px}
 .cn-hero .pt-kicker{color:#c9a24b}.cn-hero h1{margin:6px 0 10px;font-size:34px;line-height:1.3}.cn-hero p{margin:0;max-width:820px;line-height:1.95;font-size:16px;color:#e2e8f0}
 .cn-kpis{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.cn-kpis span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 14px;font-size:13px}.cn-kpis b{color:#c9a24b;font-size:16px}

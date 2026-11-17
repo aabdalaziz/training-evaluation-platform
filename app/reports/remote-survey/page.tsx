@@ -317,10 +317,9 @@ function Row({ label, n, total, color }: { label: string; n: number; total: numb
 }
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box;}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.rr{min-height:100vh;background:#f4f6f8;font-family:Tajawal,Arial,sans-serif;color:#0f172a;padding-bottom:40px;}
+.rr{min-height:100vh;background:#f4f6f8;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;padding-bottom:40px;}
 .rr-load{display:flex;align-items:center;justify-content:center;background:#14466B;}
 .rr-spin{width:64px;height:64px;border:6px solid rgba(255,255,255,.14);border-top-color:#1FA39A;border-radius:50%;animation:spin 1s linear infinite;}
 .rr-top{background:linear-gradient(135deg,#14466B,#0d3049);color:#fff;padding:22px 28px;border-bottom:3px solid #C9A24B;}

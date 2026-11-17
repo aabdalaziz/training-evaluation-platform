@@ -51,7 +51,7 @@ function Inner() {
 }
 
 const CSS = `
-.pj{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:860px;margin:0 auto;padding:28px 18px 60px}
+.pj{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:860px;margin:0 auto;padding:28px 18px 60px}
 .pj-muted{color:#64748b;font-size:13px;line-height:1.8}.pj-gone{text-align:center;color:#334155}.pj-gone b{display:block;margin:8px 0 4px;color:#0f2a4e;font-size:18px}
 .pj-head{background:linear-gradient(135deg,#0f2a4e,#123a66);color:#fff;border-radius:22px;padding:24px;margin:0 0 18px}.pj-head h1{margin:4px 0 6px;font-size:30px}.pj-arc{margin:0;color:#cbd5e1}
 .pj-intro{margin:14px 0 0;padding:12px 16px;border-inline-start:3px solid #c9a24b;background:rgba(255,255,255,.08);border-radius:0 12px 12px 0;line-height:1.95;font-size:15px;white-space:pre-wrap}.pj-intro small{display:block;color:#cbd5e1;font-size:11px;margin-top:6px}

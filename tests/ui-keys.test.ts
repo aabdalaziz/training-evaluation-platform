@@ -25,9 +25,10 @@ test('مفاتيح أَثَر: الحالات الأربع + معطَّل + مش
   assert.ok(/\.pt-btn\{[^}]*background:var\(--gold-500\)/.test(css), 'pt-btn أساسي ذهبي'); assert.ok(/\.pt-btn:hover\{[^}]*--gold-600/.test(css) && /\.pt-btn:active\{[^}]*--gold-700/.test(css), 'درجتان للتحويم والضغط');
   assert.ok(css.includes('.pt-btn>svg:first-child') && css.includes('--key-ring'), 'قرص الأيقونة وحلقة التركيز'); assert.ok(css.includes('prefers-reduced-motion'), 'reduced motion');
 });
-test('خِفّة أَثَر: 3 أوزان لخط البوابة · رقعة بوزن واحد · القشرة والجيب والتنقّل بلا استيراد ثابت لـ Supabase · واجهة /api/home مخزَّنة', () => {
-  const layout = readFileSync(join(root, 'app/layout.tsx'), 'utf8'); assert.ok(layout.includes("weight: ['400', '700', '900']"), 'Tajawal 3 أوزان');
-  const fonts = readFileSync(join(root, 'app/miaar/fonts.ts'), 'utf8'); assert.ok(fonts.includes("weight: ['400']") && fonts.includes("subsets: ['arabic']") && !fonts.includes('Tajawal('), 'رقعة واحدة بلا Tajawal ثانية');
+test('خِفّة أَثَر: 3 أوزان لخط الواجهة + نسخ القراءة بوزنين · بلا رقعة · القشرة والجيب والتنقّل بلا استيراد ثابت لـ Supabase · واجهة /api/home مخزَّنة', () => {
+  /* «خطّ أَثَر» (2026-11-17): Plex للواجهة بثلاثة أوزان + نسخ Noto للقراءة بوزنين — ولا خطّ ثالثًا في مِعيار */
+  const layout = readFileSync(join(root, 'app/layout.tsx'), 'utf8'); assert.ok(layout.includes("IBM_Plex_Sans_Arabic({ subsets: ['arabic', 'latin'], weight: ['400', '500', '700']") && layout.includes("Noto_Naskh_Arabic({ subsets: ['arabic', 'latin'], weight: ['400', '700']") && layout.includes("variable: '--font-read'") && !layout.includes('Tajawal'), 'Plex 3 أوزان + نسخ وزنان');
+  const fonts = readFileSync(join(root, 'app/miaar/fonts.ts'), 'utf8'); assert.ok(!fonts.includes("next/font") && fonts.includes("miaarFontClass = ''"), 'مِعيار بلا خطّ ثالث (أُزيلت الرقعة)');
   for (const f of ['app/components/PortalShell.tsx', 'app/components/GlobalNavigation.tsx', 'app/components/Pocket.tsx', 'app/page.tsx']) {
     const src = readFileSync(join(root, f), 'utf8'); assert.ok(!/^import \{ supabase \} from/m.test(src), `${f} بلا استيراد ثابت`); assert.ok(src.includes('hasStoredSession'), `${f} يفحص الجلسة المخزَّنة`);
   }

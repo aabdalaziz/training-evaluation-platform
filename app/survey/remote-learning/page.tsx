@@ -394,9 +394,8 @@ function SurveyForm() {
  * Styles (responsive, RTL/LTR aware via logical properties)
  * ------------------------------------------------------------------------- */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-.rs-wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px;font-family:Tajawal,Cairo,Arial,sans-serif;color:#0f172a;}
-.rs-center{min-height:60vh;display:flex;align-items:center;justify-content:center;color:#64748b;font-family:Tajawal,Arial,sans-serif;font-weight:700;}
+.rs-wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;}
+.rs-center{min-height:60vh;display:flex;align-items:center;justify-content:center;color:#64748b;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;font-weight:700;}
 .rs-header{text-align:center;margin-bottom:18px;position:relative;}
 .rs-badge{display:inline-block;background:#ede9fe;color:#6d28d9;font-weight:800;font-size:12px;padding:4px 12px;border-radius:999px;margin-bottom:10px;}
 .rs-title{margin:0;font-size:22px;font-weight:900;color:#14466B;display:flex;flex-direction:column;gap:4px;}

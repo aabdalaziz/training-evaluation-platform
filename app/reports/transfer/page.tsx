@@ -193,7 +193,7 @@ function Inner() {
 }
 
 const CSS = `
-.tr{font-family:var(--font-ar),Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
+.tr{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
 .tr *{box-sizing:border-box}
 .tr-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
 .tr-head h1{margin:2px 0 4px;font-size:24px;color:${NAVY}}.tr-head p{margin:0;color:#64748b;font-size:13px;max-width:760px;line-height:1.7}

@@ -50,7 +50,7 @@ function Inner() {
 }
 
 const CSS = `
-.pv{max-width:1100px;margin:0 auto;padding:18px 16px 60px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f2a4e}
+.pv{max-width:1100px;margin:0 auto;padding:18px 16px 60px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e}
 .pv-head h1{margin:6px 0 6px;font-size:30px}.pv-head p{color:#475569;line-height:1.9;margin:0;max-width:820px}
 .pv-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;font-size:13px}.pv-meta span{background:#fff;border:1px solid #e5e9f0;border-radius:999px;padding:4px 12px;color:#334155}.pv-meta a[dir=ltr]{font-family:ui-monospace,monospace;font-size:12px;color:#0b8a83}.pv-draft{background:#fffbeb!important;border-color:#fde68a!important;color:#92400e!important}
 .pv-box{background:#fff;border:1px solid #e5e9f0;border-radius:16px;padding:16px 18px;margin-top:14px}.pv-box h2{display:flex;align-items:center;gap:8px;font-size:18px;margin:0 0 6px}.pv-box p{line-height:1.9;color:#334155;font-size:14px;margin:6px 0}.pv-muted{color:#64748b!important;font-size:13px!important}.pv-err{color:#b91c1c}

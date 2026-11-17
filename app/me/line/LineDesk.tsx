@@ -134,7 +134,7 @@ const CSS = `
 .ln-structline{margin:0;font-size:12px;color:#475569;font-weight:700}.ln-thread{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:6px 10px;font-size:13px}.ln-thread ul{margin:4px 0 0;padding-inline-start:18px}.ln-leave p{margin:0 0 4px;font-size:13.5px}
 .ln-move{margin:4px 0 8px;font-size:13px}
 
-.ln{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:920px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.ln *{box-sizing:border-box}
+.ln{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:920px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.ln *{box-sizing:border-box}
 .ln-nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}.ln-link{color:#0f2a4e;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:14px}.ln-link:hover{text-decoration:underline}
 .ln-head h1{margin:4px 0 6px;font-size:30px;color:#0f2a4e}.ln-head h1 small{display:block;font-size:14px;color:#b45309;font-weight:800;margin-top:2px}.ln-head p{margin:0 0 14px;color:#475569;line-height:1.9;max-width:760px}
 .ln-muted{color:#64748b;font-size:13px;line-height:1.8;margin:4px 0}.ln-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.ln-ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}

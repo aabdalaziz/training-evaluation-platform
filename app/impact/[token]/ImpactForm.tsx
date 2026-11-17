@@ -162,7 +162,7 @@ export function ImpactForm({ token, initialPhase }: { token: string; initialPhas
 }
 
 const CSS = `
-.im{font-family:Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:18px 12px 60px;color:#0f172a}
+.im{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:18px 12px 60px;color:#0f172a}
 .im-wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .im-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px}
 .im-head{border-top:5px solid #c9a24b}

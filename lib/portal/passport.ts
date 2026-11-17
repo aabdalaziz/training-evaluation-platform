@@ -71,7 +71,7 @@ export function passportFilename(d: PassportData): string { const base = (d.name
 export const PW = 1754, PH = 2480; // A4 عمودي ~150dpi
 const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b', INK = '#0f172a', MUTED = '#64748b', LINE = '#e2e8f0', SOFT = '#f8fafc';
 const TONE: Record<string, string> = { navy: NAVY, teal: TEAL, gold: GOLD, ok: '#047857', violet: '#6d28d9', sky: '#0284c7', warn: '#d97706', rose: '#be123c' };
-function font(): string { if (typeof document === 'undefined') return 'Tajawal, Tahoma, Arial, sans-serif'; const f = getComputedStyle(document.body).fontFamily || ''; return f ? `${f}, Tajawal, Tahoma, Arial, sans-serif` : 'Tajawal, Tahoma, Arial, sans-serif'; }
+function font(): string { if (typeof document === 'undefined') return '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif'; const f = getComputedStyle(document.body).fontFamily || ''; return f ? `${f}, "IBM Plex Sans Arabic", Tahoma, Arial, sans-serif` : '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif'; }
 function txt(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, o: { size: number; weight?: number; color?: string; align?: CanvasTextAlign; dir?: 'rtl' | 'ltr'; maxW?: number }) {
   if (!s) return; ctx.save(); ctx.direction = o.dir || 'rtl'; ctx.textAlign = o.align || 'right'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = o.color || INK; let size = o.size;
   ctx.font = `${o.weight || 400} ${size}px ${font()}`; if (o.maxW) { while (size > 18 && ctx.measureText(s).width > o.maxW) { size -= 2; ctx.font = `${o.weight || 400} ${size}px ${font()}`; } if (ctx.measureText(s).width > o.maxW) { while (s.length > 3 && ctx.measureText(s + '…').width > o.maxW) s = s.slice(0, -1); s += '…'; } }

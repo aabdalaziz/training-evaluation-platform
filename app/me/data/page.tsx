@@ -128,7 +128,7 @@ function Inner() {
 
 const CSS = `
 .md-looked{display:grid;gap:3px;border:1px solid #e5e9f0;border-radius:12px;padding:10px 12px;background:#fafbfd;margin:6px 0 10px;font-size:13px;color:#334155}.md-looked.on{border-color:#fcd34d;background:#fffbeb}.md-looked b{color:#0f2a4e}.md-looked small{color:#64748b}
-.md{max-width:1060px;margin:0 auto;padding:18px 16px 60px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f2a4e}
+.md{max-width:1060px;margin:0 auto;padding:18px 16px 60px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e}
 .md-head h1{margin:6px 0 4px;font-size:30px}.md-head p{color:#475569;line-height:1.9;margin:0;max-width:760px}
 .md-box{margin-top:14px;padding:16px 18px}.md-box h2{display:flex;align-items:center;gap:8px;font-size:17px;margin:0 0 4px}.md-muted{color:#64748b;font-size:13px;line-height:1.8;margin:4px 0}
 .md-err{margin-top:12px;background:#fff5f5;border:1px solid #fecaca;color:#b91c1c;border-radius:12px;padding:10px 14px;font-size:14px}.md-ok{margin-top:12px;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:12px;padding:10px 14px;font-size:14px}

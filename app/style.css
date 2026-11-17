@@ -3,7 +3,7 @@
    الهوية: كحلي مؤسسي (navy) + تركوازي للأفعال (teal) + ذهبي للتمييز (gold)
    ===================================================================== */
 :root{
-  --font-ar: Tajawal, 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-ar: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif; /* احتياط فقط — next/font يضبط المتغيّر فعليًّا من app/layout.tsx */
   /* الهوية */
   --navy:#0f2a4e; --navy-2:#163b6e; --navy-3:#1f4f8f; --navy-soft:#e8eef7;
   --teal:#0b8a83; --teal-2:#0fa39a; --teal-soft:#e6f4f3; --teal-line:#b7e1dd;
@@ -26,6 +26,11 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ar);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+/* «خطّ أَثَر» — طبقة القراءة التعليمية: ما يقرؤه المتعلّم يُعرض بنسخ واضح، بحجم يختاره هو (ReadSize: 1 · 2 · 3 تُحفظ على جهازه) */
+:root{--read-size:1}html[data-read="2"]{--read-size:1.15}html[data-read="3"]{--read-size:1.35}
+.read{font-family:var(--font-read),"Noto Naskh Arabic","Amiri",serif;font-size:calc(18px * var(--read-size));line-height:2;font-weight:400;letter-spacing:0}
+.read b,.read strong{font-weight:700}
+.rs{display:inline-flex;align-items:center;gap:2px;border:1px solid #dbe3ea;border-radius:999px;padding:2px;background:#fff}.rs button{font:inherit;border:0;background:transparent;color:#0f2a4e;border-radius:999px;min-width:30px;height:28px;cursor:pointer;font-weight:700;line-height:1}.rs button[aria-pressed="true"]{background:#0f2a4e;color:#fff}.rs button:nth-child(2){font-size:15px}.rs button:nth-child(3){font-size:18px}
 button,input,select,textarea{font-family:inherit}
 ::selection{background:rgba(11,138,131,.18)}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
@@ -68,8 +73,8 @@ bdi,.ltr{direction:ltr;unicode-bidi:plaintext}
 @media(max-width:560px){.global-brand span{display:none}.global-nav{padding:8px 12px}.global-btn{padding:7px 9px;font-size:12px}}
 @media(max-width:1480px){.global-link{padding:8px 7px;font-size:12px;gap:4px}.global-links .global-btn{padding:7px 9px;font-size:12px;margin-inline-start:4px}.global-nav.admin{gap:8px}}
 @media(max-width:1280px){.global-burger{display:block}.global-links{display:none;position:absolute;top:100%;right:0;left:0;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px;flex-direction:column;align-items:stretch;box-shadow:var(--shadow)}.global-links.open{display:flex}.global-nav{position:sticky}}
-/* إصلاح الخط: ضمان استخدام Tajawal المحمّل عبر next/font في كل الصفحات */
-.aa,.at,.aw,.ct,.dl,.ev,.ia,.im,.ir,.mg,.rr,.rs-center,.rs-wrap,.st,.vf,.bf,.fu,.tr,.me,.nt,.oc,.ch,.pr,.co,.au,.he,.ac,.tp,.rd,.hp,.bk,.pt,.ib,.en,.ct{font-family:var(--font-ar),Tajawal,Arial,sans-serif!important}
+/* إصلاح الخط: ضمان استخدام خطّ الواجهة (IBM Plex Sans Arabic) المحمّل عبر next/font في كل الصفحات */
+.aa,.at,.aw,.ct,.dl,.ev,.ia,.im,.ir,.mg,.rr,.rs-center,.rs-wrap,.st,.vf,.bf,.fu,.tr,.me,.nt,.oc,.ch,.pr,.co,.au,.he,.ac,.tp,.rd,.hp,.bk,.pt,.ib,.en,.ct{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif!important}
 
 
 /* =====================================================================

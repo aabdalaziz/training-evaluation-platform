@@ -65,7 +65,7 @@ export function VerifyCard({ code }: { code: string }) {
 export const VERIFY_CSS = `
 .vf-readable{margin:10px 0 0;font-size:12.5px;color:#475569;line-height:1.8;border-top:1px dashed #e2e8f0;padding-top:8px}.vf-readable a{color:#0b6f69}
 .vf-readable{margin:10px 0 0;font-size:12.5px;color:#475569;line-height:1.8;border-top:1px dashed #e2e8f0;padding-top:8px}.vf-readable a{color:#0b6f69}
-.vf{font-family:Tajawal,Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#0f2a4e 0%,#0b8a83 100%);display:flex;align-items:center;justify-content:center;padding:24px;color:#0f172a}
+.vf{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;min-height:100vh;background:linear-gradient(160deg,#0f2a4e 0%,#0b8a83 100%);display:flex;align-items:center;justify-content:center;padding:24px;color:#0f172a}
 .vf-box{background:#fff;border-radius:20px;padding:28px 30px;max-width:620px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.3);border-top:6px solid #c9a24b}
 .vf-logos{display:flex;justify-content:center;gap:18px;margin-bottom:10px}.vf-logos img{height:54px;width:auto;object-fit:contain}
 .vf h1{margin:0 0 6px;font-size:22px;color:#0f2a4e;display:flex;align-items:center;gap:8px;justify-content:center}

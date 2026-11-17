@@ -189,7 +189,7 @@ export function FollowupForm({ token, initialRole, traineeName, traineeEmail }: 
 }
 
 const CSS = `
-.fu{min-height:100vh;background:radial-gradient(900px 500px at 90% -10%,rgba(11,138,131,.18),transparent 60%),#f3f6fa;font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;padding:18px 14px 40px}
+.fu{min-height:100vh;background:radial-gradient(900px 500px at 90% -10%,rgba(11,138,131,.18),transparent 60%),#f3f6fa;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;padding:18px 14px 40px}
 .fu *{box-sizing:border-box}
 .fu-wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .fu form{display:flex;flex-direction:column;gap:12px}
