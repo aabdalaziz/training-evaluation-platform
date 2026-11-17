@@ -73,25 +73,52 @@ def norm_speaker(s: str) -> str: return re.sub(r'\s*\([^)]*\)?', '', s).strip()
 # سطر الحوار: «اسم: نصّ» — الاسم قد يحمل ملاحظة بين قوسين فيها نقطتان «ليلى (٨:٣٠): …»
 LINE_RE = re.compile(r'^([^:：(]{1,24}(?:\s*\([^)]*\))?)[:：]\s*(.+)$')
 _SCENE = {}  # الشخصيّات غير المسمّاة في النصّ الحالي → ترتيب الاحتياطي (يُصفَّر مع كلّ نصّ)
-def scene_reset(): _SCENE.clear()
-def who(speaker: str):
-    """→ (voice, pitch, rate_adj, g, a, canonical) لصوت المتكلّم: الاسم في السجلّ (أو كنيته: الجدّة → فاطمة)، ثمّ الجنس من العلامات، ثمّ احتياطيّ مرقّم داخل النصّ."""
-    sp = norm_speaker(speaker); sp = V.get('aliases', {}).get(sp, sp)
+_ROLE = {}  # دور عُرِّف باسم من الطاقم في هذا النصّ: «الموظّف فهد:» أو «السائق (أبو محمد):» → بقيّة سطور «الموظّف:»/«السائق:» بصوته
+def scene_reset(): _SCENE.clear(); _ROLE.clear()
+def _cast_in(s: str):
     for name, c in sorted(V['cast'].items(), key=lambda kv: -len(kv[0])):
-        if re.search('(?<![' + AR + '])' + re.escape(name) + '(?![' + AR + '])', sp):
-            a = V['role_avatars'].get(sp, c['a']); return c['voice'], c.get('pitch', '+0Hz'), c.get('rate'), c['g'], a, name
+        if re.search('(?<![' + AR + '])' + re.escape(name) + '(?![' + AR + '])', s): return name, c
+    return None, None
+def who(speaker: str):
+    """→ (voice, pitch, rate_adj, g, a, canonical) لصوت المتكلّم: الاسم في السجلّ (أو كنيته: الجدّة → فاطمة)، أو دور عُرِّف باسمه في النصّ، ثمّ الجنس من العلامات، ثمّ احتياطيّ مرقّم داخل النصّ."""
+    sp = norm_speaker(speaker); sp = V.get('aliases', {}).get(sp, sp); sp = _ROLE.get(sp, sp)
+    name, c = _cast_in(sp); role = sp
+    if not name:
+        par = re.search(r'\(([^)]*)\)', speaker)
+        if par: name, c = _cast_in(par.group(1))
+    if name:
+        role = re.sub('(?<![' + AR + '])' + re.escape(name) + '(?![' + AR + '])', '', role).strip(' ،—-')
+        if role and role not in V['cast'] and re.fullmatch(r'[\u0621-\u064A\u064B-\u0652 ]{2,20}', role) and len(role.split()) <= 2: _ROLE.setdefault(role, name)
+        a = V['role_avatars'].get(sp, c['a']); return c['voice'], c.get('pitch', '+0Hz'), c.get('rate'), c['g'], a, name
     g = 'f' if any(m in sp for m in V['female_markers']) or re.match(r'^(ال)?[' + AR + ']+ة$', sp.split()[0]) else 'm'
     fbs = V['fallback'][g]; fbs = fbs if isinstance(fbs, list) else [fbs]
     key = (g, sp)
     if key not in _SCENE: _SCENE[key] = len([k for k in _SCENE if k[0] == g])
     fb = fbs[_SCENE[key] % len(fbs)]; a = V['role_avatars'].get(sp, fb['a'])
     return fb['voice'], '+0Hz', None, g, a, sp
+def in_cast(name: str) -> bool:
+    sp = norm_speaker(name); return sp in V['cast'] or sp in V.get('aliases', {})
+SPLIT_RE = re.compile(r'\s[—–·]\s*([^:،.!؟—·]{2,30}?)\s?[:：]\s*')
+def split_speakers(first: str, rest: str):
+    """سطر يجمع متكلّمَين أو أكثر «فهد: …؟ — سامي: … — نورة: …» → [(نصّ، who), …] بصوت كلّ متكلّم؛ None إن لم يكن فيه فاصل أسماء من الطاقم."""
+    bits = SPLIT_RE.split(rest)
+    if len(bits) < 3 or not all(in_cast(n) for n in bits[1::2]): return None
+    parts = [(bits[0], who(first))] + [(bits[j + 1], who(bits[j])) for j in range(1, len(bits), 2)]
+    return [(t.strip(), w) for t, w in parts if t.strip()]
 def narr(): n = V['narrator']; return n['voice'], n.get('pitch', '+0Hz'), None, n['g'], n['a'], ''
 HEADER_RE = re.compile(r'^[\(\[]?[٠-٩0-9]+[\)\]\-—.:]')
+CUR_AUTHOR = {}
 def author_of(code: str, idx: int, line: str):
-    """صوت كاتب النصّ (رسالة/دفتر/بطاقة بضمير المتكلّم) من voices.json → authors؛ العناوين والسطر الأوّل الذي يسمّي الكاتب تبقى للراوي."""
-    name = (V.get('authors') or {}).get(code)
-    if not name or HEADER_RE.match(line) or (idx == 0 and name in line and len(line.split()) <= 8 and re.search(r'كتب|رسالة|دفتر|دليل|بطاقة', line)) or re.match(r'^(رسالة|بطاقة|دفتر|ملاحظة)\b.*:$', line): return narr()
+    """صوت كاتب النصّ (رسالة/دفتر/بطاقة بضمير المتكلّم) من voices.json → authors؛ العناوين والسطر الأوّل الذي يسمّي الكاتب تبقى للراوي.
+    القيمة إمّا اسم، وإمّا {"start": اسم, "at": {"بداية سطر العنوان": اسم}} لنصّ فيه أكثر من كاتب (رسالة وردّها)."""
+    spec = (V.get('authors') or {}).get(code)
+    if isinstance(spec, dict):
+        if idx == 0 or code not in CUR_AUTHOR: CUR_AUTHOR[code] = spec.get('start')
+        for pref, nm in (spec.get('at') or {}).items():
+            if line.startswith(pref): CUR_AUTHOR[code] = nm; return narr()
+        name = CUR_AUTHOR[code]
+    else: name = spec
+    if not name or (HEADER_RE.match(line) and (len([x for x in line.split() if re.search('[\u0621-\u064A]', x)]) <= 5 or line.rstrip().endswith(':'))) or (idx == 0 and name in line and len(line.split()) <= 8 and re.search(r'كتب|رسالة|دفتر|دليل|بطاقة', line)) or re.match(r'^(رسالة|بطاقة|دفتر|ملاحظة)\b.*:$', line): return narr()
     return who(name)
 def mark(key: dict, w):
     if w[5]: key.update({'r': w[5], 'g': w[3], 'a': w[4]})
@@ -120,9 +147,9 @@ def segments_lesson(l):
             if not ln: continue
             m = re.match(r'^\((.+)\)$', ln)
             if m: S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, m.group(1), narr())); continue
-            m = LINE_RE.match(ln)
-            if m and c['text'].get('kind') == 'dialogue':
-                w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, m.group(2), w))
+            m = LINE_RE.match(ln); parts = m and split_speakers(m.group(1), m.group(2))
+            if m and (c['text'].get('kind') == 'dialogue' or (in_cast(m.group(1)) and (parts or not re.search(r'[،.!؟]\s*[^:،.!؟]{2,14}\s?:', m.group(2))))):  # سطر «هند: …» داخل نصّ سرديّ يُقرأ بصوت هند (وإن جمع السطر عدّة متكلّمين من الطاقم قُسِّم بينهم، وإلّا فالراوي)
+                w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, parts or m.group(2), w))
             else: w = author_of(l['code'], i, ln); S.append((mark({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, w), ln, w))
     for cd in l.get('cards', []):
         S.append(({'k': 'card', 't': cd['word_ar']}, cd['word_ar'], narr()))
@@ -132,10 +159,10 @@ def segments_lesson(l):
     for e in (c.get('grammar') or {}).get('examples', []): S.append(({'k': 'gex', 't': e}, e, narr()))
     said = {}
     if c.get('text') and c['text'].get('body'):
-        for ln in c['text']['body'].split('\n'):
+        for i, ln in enumerate(c['text']['body'].split('\n')):
             m = LINE_RE.match(ln.strip())
             if m: said[re.sub(r'[^' + AR + ']', '', m.group(2))] = who(m.group(1))
-            elif ln.strip() and (V.get('authors') or {}).get(l['code']): said[re.sub(r'[^' + AR + ']', '', ln)] = author_of(l['code'], 1, ln.strip())
+            elif ln.strip() and (V.get('authors') or {}).get(l['code']): said[re.sub(r'[^' + AR + ']', '', ln)] = author_of(l['code'], i, ln.strip())
     for ex in l.get('exercises', []):
         if ex['kind'] == 'short_dictation':
             t = ex['text_ar']; w = said.get(re.sub(r'[^' + AR + ']', '', t)) or next((v for k, v in said.items() if re.sub(r'[^' + AR + ']', '', t) and re.sub(r'[^' + AR + ']', '', t) in k), None) or narr()
@@ -151,24 +178,34 @@ def segments_library(t):
         if not ln: continue
         m = LINE_RE.match(ln); sc = re.match(r'^\((.+)\)$', ln)
         if sc: S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, sc.group(1), narr())); continue
+        vm = listen and re.match(r'^(الرسالة\s+\S+،[^:]*):\s*(.+)$', ln)  # بريد صوتيّ: «الرسالة الأولى، اليوم في…: صباح الخير، أنا نورة…» → العنوان بصوت الهاتف والرسالة بصوت صاحبها
+        if vm:
+            spk = next((n for n in sorted(V['cast'], key=len, reverse=True) if re.search(r'(?:أنا|هذه|هذا|معك|معكِ)\s+(?:ال(?:دكتور|أستاذ|معلّم|ممرّض)(?:ة)?\s+)?' + re.escape(n) + '(?![' + AR + '])', vm.group(2))), None)
+            w = who(spk) if spk else narr(); ph = who('الهاتف')
+            S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, [(vm.group(1) + ':', ph), (vm.group(2), w)], w)); continue
         named = m and (norm_speaker(m.group(1)) in V['cast'] or norm_speaker(m.group(1)) in V.get('aliases', {}) or any(re.search('(?<![' + AR + '])' + re.escape(n) + '(?![' + AR + '])', m.group(1)) for n in V['cast']))
-        if m and len(m.group(1).split()) <= 3 and (named or (listen and (any(x in m.group(1) for x in V['female_markers']) or norm_speaker(m.group(1)) in V['role_avatars'] or m.group(1).startswith('ال') or not re.search(r'[٠-٩0-9]', m.group(1))))):
-            w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, m.group(2), w))
+        multi = m and not listen and re.search(r'[،.!؟]\s*[^:،.!؟]{2,14}\s?:', m.group(2))  # سطر قراءة يجمع متكلّمَين «كين: … — يوسف: …» → الراوي
+        if m and not multi and len(norm_speaker(m.group(1)).split()) <= 3 and (named or (listen and (any(x in m.group(1) for x in V['female_markers']) or norm_speaker(m.group(1)) in V['role_avatars'] or m.group(1).startswith('ال') or not re.search(r'[٠-٩0-9]', m.group(1))))):
+            w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, split_speakers(m.group(1), m.group(2)) or m.group(2), w))
         else: w = author_of(t['code'], i, ln); S.append((mark({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, w), ln, w))
     return S
 def build(code, level, S, out_dir):
-    tmp = tempfile.mkdtemp(); cues = []; pos = 0.0; parts = []
+    tmp = tempfile.mkdtemp(); cues = []; pos = 0.0; parts_files = []
     for n, (key, text, w) in enumerate(S):
-        sp = speakable(text)
-        if not sp: continue
-        voice, pitch, adj, g, a, name = w; full = dabt_of(speakable_raw(text))
-        f = os.path.join(tmp, f'{n:03d}.mp3'); tts(sp, voice, rate_of(level, adj), pitch, f)
-        d = MP3(f).info.length; cue = {**key, 's': round(pos, 2), 'e': round(pos + d, 2)}
+        parts = text if isinstance(text, list) else [(text, w)]
+        if not any(speakable(t) for t, _ in parts): continue
+        d = 0.0; full = ' '.join(x for x in (dabt_of(speakable_raw(t)) or '' for t, _ in parts) if x) or None
+        for j, (t, pw) in enumerate(parts):
+            sp = speakable(t)
+            if not sp: continue
+            voice, pitch, adj, g, a, name = pw
+            f = os.path.join(tmp, f'{n:03d}-{j}.mp3'); tts(sp, voice, rate_of(level, adj), pitch, f); d += MP3(f).info.length; parts_files.append(f)
+        cue = {**key, 's': round(pos, 2), 'e': round(pos + d, 2)}
         if full: cue['d'] = full  # الصورة المضبوطة الكاملة لعرضها عند «أظهر التشكيل»
-        cues.append(cue); pos += d; parts.append(f)
+        cues.append(cue); pos += d
     mp3 = os.path.join(out_dir, code + '.mp3')
     with open(mp3, 'wb') as wfh:
-        for f in parts: wfh.write(open(f, 'rb').read())
+        for f in parts_files: wfh.write(open(f, 'rb').read())
     shutil.rmtree(tmp)
     json.dump({'v': 1, 'code': code, 'src': f'/iqra/audio/{code}.mp3', 'level': level, 'rate': V['rate'].get(level, '+0%'), 'dur': round(pos, 2), 'cast': 'athar-voices-1', 'cues': cues}, open(os.path.join(out_dir, code + '.cues.json'), 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     return len(cues), round(pos, 1), os.path.getsize(mp3)
@@ -198,8 +235,9 @@ if __name__ == '__main__':
                 if only and code not in only: continue
                 raws = []
                 for key, text, w in S:
-                    r = speakable_raw(text)
-                    if r and r not in raws: raws.append(r)
+                    for t in ([x for x, _ in text] if isinstance(text, list) else [text]):
+                        r = speakable_raw(t)
+                        if r and r not in raws: raws.append(r)
                 miss = [r for r in raws if dabt_of(r) is None]
                 print(f'{code}: {len(raws)} مقطعًا فريدًا · بلا ضبط {len(miss)}')
                 for r in miss: print('  ' + r)

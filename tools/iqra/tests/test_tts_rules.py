@@ -38,4 +38,17 @@ assert dabt_of(speakable_raw('(١ — عند البائع)')) is None and dabt_o
 V = g['V']; _rej = {v for k, vs in V['rejected'].items() if not k.startswith('_') for v in vs}
 assert not ({c['voice'] for c in V['cast'].values()} | {c['voice'] for g in V['fallback'].values() for c in g} | {V['narrator']['voice']}) & _rej
 assert who('ريم')[:2] == ('ar-QA-AmalNeural', '+6Hz') and who('أبو سعد')[:2] == ('ar-KW-FahedNeural', '-6Hz')
+# الجولة 4: الدور المعرَّف باسمه، تقسيم السطر بين متكلّمين، البريد الصوتيّ، العناوين المرقّمة القصيرة
+split_speakers, author_of, segments_library = g['split_speakers'], g['author_of'], g['segments_library']
+scene_reset(); assert who('الموظّف فهد')[5] == 'فهد' and who('الموظّف')[5] == 'فهد', 'بعد «الموظّف فهد:» يبقى «الموظّف:» بصوت فهد'
+scene_reset(); assert who('السائق (أبو محمد)')[5] == 'أبو محمد' and who('السائق')[5] == 'أبو محمد'
+scene_reset(); assert who('السائق')[0] == 'ar-IQ-BasselNeural', 'بلا تعريف يبقى الاحتياطيّ'
+scene_reset(); ps = split_speakers('فهد', 'هل ضغطت الزرّ الأزرق؟ — سامي: … الآن يعمل. شكرًا!'); assert ps and [w[5] for _, w in ps] == ['فهد', 'سامي'] and ps[1][0].startswith('…'), ps
+assert split_speakers('هند', 'حسنًا، الدرس الأوّل: الأرقام') is None and split_speakers('كين', 'بطاقة المعهد! — الرجل: نعم.') is None
+assert [w[5] for _, w in split_speakers('كين', 'طبقي سوشي. · ماريا: تورتيّا. · يوسف: أرزّ. · عمر (ليس في الصفّ): سوشي!')] == ['كين', 'ماريا', 'يوسف', 'عمر']
+t = {'code': 'T-VM', 'kind': 'listen', 'body_ar': 'الهاتف: لديكِ رسالة.\nالرسالة الأولى، اليوم في الثامنة: صباح الخير يا ماريا، أنا نورة من مكتب التسجيل.\nانتهت الرسائل.'}
+S = segments_library(t); assert isinstance(S[1][1], list) and S[1][0]['r'] == 'نورة' and S[1][1][0][1][0] == S[0][2][0] and S[1][1][1][1][5] == 'نورة', 'عنوان الرسالة بصوت الهاتف ونصّها بصوت نورة'
+g['CUR_AUTHOR'].clear(); assert author_of('A1-U06-L05', 2, '٢) إلى الجدّة فاطمة — شكر')[5] == '' and author_of('A1-U06-L05', 8, '٥) إلى كين — سؤال عن مريض')[5] == '' and author_of('A1-U06-L05', 3, 'جدّتي الحبيبة، شكرًا جزيلًا على الغداء أمس.')[5] == 'ليلى'
+assert author_of('A1-U04-L05', 3, '١) اخرجوا من المعهد واتّجهوا إلى اليسار (نحو البنك).')[5] == 'ليلى', 'خطوات الدليل المرقّمة الطويلة بصوت كاتبتها'
+g['CUR_AUTHOR'].clear(); assert author_of('A1-U07-L05', 0, 'نموذج تسجيل النزيل — فندق الواحة')[5] == '' and author_of('A1-U07-L05', 12, 'رسالة سامي إلى الاستقبال')[5] == '' and author_of('A1-U07-L05', 13, 'صباح الخير. أنا سامي العتيبي.')[5] == 'سامي'
 print('tts rules OK')
