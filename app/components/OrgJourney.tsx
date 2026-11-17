@@ -150,7 +150,7 @@ export function OrgJourney({ orgId, orgName, lang, token }: Props) {
 }
 
 const CSS = `
-.oj{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a}
+.oj{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a}
 .oj-muted{color:#64748b;font-size:13px;line-height:1.8}.oj-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
 .oj-warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:8px 12px;color:#92400e;font-size:13px;display:flex;gap:6px;align-items:center}
 .oj-arc{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;background:linear-gradient(135deg,#0f2a4e,#0b8a83);color:#fff;border-radius:20px;padding:20px;margin:0 0 12px}.oj-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:#c9a24b;font-weight:900}.oj-arc b{display:block;font-size:19px;line-height:1.7;margin:4px 0}.oj-arc p{margin:0;color:#cbd5e1;font-size:13px;line-height:1.8}

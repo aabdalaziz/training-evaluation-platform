@@ -33,7 +33,7 @@ export default function PlacementCard({ lang = 'ar', compact = false, programLev
   );
 }
 const CSS = `
-.plc{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;display:grid;gap:12px;font-family:var(--font-ar),Tajawal,Arial,sans-serif}.plc.compact{padding:12px 14px;gap:8px}.plc.empty{background:linear-gradient(135deg,#eef4fb,#e6f4f3)}
+.plc{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;display:grid;gap:12px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}.plc.compact{padding:12px 14px;gap:8px}.plc.empty{background:linear-gradient(135deg,#eef4fb,#e6f4f3)}
 .plc-empty{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}.plc-empty b{display:block;font-size:14.5px;color:#0f2a4e}.plc-empty small{color:#475569;font-size:12.5px;line-height:1.7}.plc-ic{width:40px;height:40px;border-radius:12px;background:#0f2a4e;color:#c9a24b;display:inline-grid;place-items:center}
 .plc-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.plc-head b{display:block;font-size:15px;color:#0f172a}.plc-head small{color:#64748b;font-size:12.5px}
 .plc-level{width:54px;height:54px;border-radius:14px;display:inline-grid;place-items:center;font-size:20px;font-weight:900;color:#fff;background:#64748b;direction:ltr}.plc-level.a{background:#0b8a83}.plc-level.b{background:#0f2a4e}.plc-level.c{background:#c9a24b;color:#1f2937}

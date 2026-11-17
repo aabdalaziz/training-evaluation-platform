@@ -134,7 +134,7 @@ function Inner() {
 }
 
 const CSS = `
-.ac{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:1100px;margin:0 auto;padding:22px 18px 60px}
+.ac{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:1100px;margin:0 auto;padding:22px 18px 60px}
 .ac-head h1{margin:4px 0 6px;font-size:28px;color:#0f2a4e}.ac-head p{margin:0 0 14px;color:#475569;line-height:1.8}
 .ac-muted{color:#64748b;font-size:13px;line-height:1.8}.ac-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.ac-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
 .ac-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:12px 0}.ac-kpi{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px;text-align:center}.ac-kpi b{display:block;font-size:22px;color:#0f2a4e}.ac-kpi small{color:#64748b;font-size:11px}

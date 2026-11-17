@@ -92,7 +92,7 @@ export default function InboxPage() {
 }
 
 const CSS = `
-.ib{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif}
+.ib{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .ib-wrap{max-width:980px;margin:0 auto;display:grid;gap:12px}
 .ib-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.ib-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.ib-head p{margin:0;color:#64748b;font-size:14px}
 .ib-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#0b8a83}

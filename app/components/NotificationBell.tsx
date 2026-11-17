@@ -74,7 +74,7 @@ const CSS = `
 .nb-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#0f2a4e;cursor:pointer}
 .nb.dark .nb-btn{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18);color:#fff}
 .nb-badge{position:absolute;top:-6px;inset-inline-end:-6px;min-width:18px;height:18px;border-radius:999px;background:#dc2626;color:#fff;font-size:10.5px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #fff}
-.nb-pop{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:340px;max-width:calc(100vw - 24px);background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 18px 40px rgba(15,42,78,.18);z-index:400;overflow:hidden;color:#0f172a;font-family:var(--font-ar),Tajawal,Arial,sans-serif}
+.nb-pop{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:340px;max-width:calc(100vw - 24px);background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 18px 40px rgba(15,42,78,.18);z-index:400;overflow:hidden;color:#0f172a;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .nb-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f1f5f9;font-size:13.5px}
 .nb-link{background:none;border:0;color:#0b8a83;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
 .nb-empty{padding:22px;text-align:center;color:#64748b;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px}

@@ -12,7 +12,7 @@ export default function SurveySettingsRedirect() {
   const router = useRouter();
   useEffect(() => { router.replace('/admin/management?tab=rooms'); }, [router]);
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', fontFamily: 'Tajawal, Arial, sans-serif', color: '#14466B', fontWeight: 800 }}>
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', fontFamily: 'var(--font-ar), "IBM Plex Sans Arabic", Arial, sans-serif', color: '#14466B', fontWeight: 800 }}>
       جارٍ التحويل إلى لوحة الإدارة المركزية… / Redirecting to the central admin panel…
     </div>
   );

@@ -138,7 +138,7 @@ export default function GuidePanel({ onClose, initialQuery = '' }: { onClose: ()
 
 const CSS = `
 .gd-back{position:fixed;inset:0;z-index:9100;background:rgba(15,42,78,.48);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:min(10vh,96px) 12px 12px;animation:gdIn .14s ease-out}
-.gd-dlg{width:min(680px,100%);max-height:min(72vh,640px);display:flex;flex-direction:column;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(2,6,23,.45);overflow:hidden;border:1px solid #e2e8f0;font-family:var(--font-ar,Tajawal),system-ui,sans-serif}
+.gd-dlg{width:min(680px,100%);max-height:min(72vh,640px);display:flex;flex-direction:column;background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(2,6,23,.45);overflow:hidden;border:1px solid #e2e8f0;font-family:var(--font-ar,"IBM Plex Sans Arabic"),system-ui,sans-serif}
 .gd-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .gd-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #e2e8f0;color:#0f2a4e}
 .gd-in{flex:1;border:0;outline:0;font:inherit;font-size:17px;font-weight:700;color:#0f172a;background:transparent;min-width:0}.gd-in::placeholder{color:#94a3b8;font-weight:500;font-size:14px}

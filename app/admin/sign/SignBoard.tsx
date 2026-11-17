@@ -76,7 +76,7 @@ export default function SignBoard() {
 }
 
 const CSS = `
-.sg{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f2a4e}.sg :is(button,a):focus-visible{outline:3px solid #0f2a4e;outline-offset:2px}
+.sg{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e}.sg :is(button,a):focus-visible{outline:3px solid #0f2a4e;outline-offset:2px}
 .sg-wrap{max-width:1000px;margin:0 auto;display:grid;gap:12px}
 .sg-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.sg-kicker{display:inline-flex;gap:6px;align-items:center;color:#c9a24b;font-weight:800;font-size:13px}.sg-head h1{margin:4px 0 4px;font-size:28px}.sg-head h1 small{font-size:15px;color:#475569;font-weight:600;margin-inline-start:8px}.sg-lead{margin:0;color:#475569;font-size:14px;line-height:1.9;max-width:720px}
 .sg-acts{display:flex;gap:8px;flex-wrap:wrap}

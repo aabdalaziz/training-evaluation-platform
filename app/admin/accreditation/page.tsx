@@ -35,7 +35,7 @@ export default function AdminAccreditationPage() {
   );
 }
 const CSS = `
-.am{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;direction:rtl}
+.am{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
 .am :is(button,a,input,select,textarea):focus-visible{outline:3px solid #0f2a4e;outline-offset:2px}
 .am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}.am-muted{color:#64748b}
 .am-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.am-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.am-head p{margin:0;color:#475569;font-size:14px;line-height:1.7;max-width:900px}.am-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b6f69}

@@ -145,7 +145,7 @@ function RopaTable({ tok }: { tok: string }) {
 }
 
 const CSS = `
-.vt{min-height:100vh;background:#f4f6fa;font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f2a4e;direction:rtl}.vt-wrap{max-width:1200px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:12px}
+.vt{min-height:100vh;background:#f4f6fa;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e;direction:rtl}.vt-wrap{max-width:1200px;margin:0 auto;padding:18px 16px 60px;display:grid;gap:12px}
 .vt-head h1{margin:4px 0;font-size:26px}.vt-head p{margin:0;color:#475569;font-size:14px;line-height:1.8;max-width:900px}.vt-kicker{display:inline-flex;align-items:center;gap:6px;background:#0f2a4e;color:#c9a24b;border-radius:999px;padding:3px 12px;font-size:12px;font-weight:900}
 .vt-card{background:#fff;border:1px solid #e5e9f0;border-radius:16px;padding:16px 18px}.vt-card h2{font-size:17px;margin:0 0 8px}.vt-card h2 small{display:block;color:#64748b;font-weight:400;font-size:12.5px;margin-top:2px}
 .vt-kpis{display:flex;gap:8px;flex-wrap:wrap}.vt-kpis span{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:8px 12px;font-size:13px;color:#334155}.vt-kpis b{color:#0f2a4e;font-size:16px}.vt-kpis .bad{border-color:#fecaca;background:#fff5f5}.vt-kpis .good{border-color:#bbf7d0;background:#f0fdf4}.vt-kpis .warn{border-color:#fde68a;background:#fffbeb}.vt-kpis code{font-size:11px}

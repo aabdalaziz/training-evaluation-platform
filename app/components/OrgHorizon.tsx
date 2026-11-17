@@ -143,7 +143,7 @@ export function OrgHorizon({ orgId, orgName, lang, token }: Props) {
 }
 
 const CSS = `
-.oh{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:900px;margin:0 auto}
+.oh{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:900px;margin:0 auto}
 .oh-head h2{margin:4px 0 6px;font-size:26px;color:#0f2a4e}.oh-head h2 small{display:block;font-size:14px;color:#0b8a83;font-weight:800;margin-top:4px}.oh-head p{margin:0 0 16px;color:#475569;line-height:1.9}
 .oh-muted{color:#64748b;font-size:13px;line-height:1.8}.oh-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.oh-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
 .oh-warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:8px 12px;color:#92400e;font-size:13px}

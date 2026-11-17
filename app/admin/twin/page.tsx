@@ -84,7 +84,7 @@ export default function AdminTwinPage() {
 }
 
 const CSS = `
-.at{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;direction:rtl}
+.at{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
 .at-wrap{max-width:1120px;margin:0 auto;display:grid;gap:12px}
 .at-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.at-head p{margin:0;color:#64748b;font-size:14px;line-height:1.7;max-width:860px}.at-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b8a83}
 .at-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;overflow-x:auto}.at-empty{color:#64748b;font-size:14px;text-align:center;padding:20px}.at-err{color:#b91c1c;font-size:13px}

@@ -384,7 +384,7 @@ function Inner() {
 }
 
 const CSS = `
-.bf{font-family:var(--font-ar),Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
+.bf{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
 .bf *{box-sizing:border-box}
 .bf-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-top:4px solid #c9a24b;border-radius:16px;padding:18px 22px;margin-bottom:14px}
 .bf-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.bf-head p{margin:0;color:#64748b;font-size:13px;max-width:780px;line-height:1.7}

@@ -135,7 +135,7 @@ export function DirectoryProfile({ slug, face }: { slug: string; face: Face }) {
 }
 
 export const CSS = `
-.dr{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;max-width:1100px;margin:0 auto;padding:24px 18px 60px}
+.dr{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;max-width:1100px;margin:0 auto;padding:24px 18px 60px}
 .dr :is(button,a,input,select,textarea):focus-visible{outline:3px solid #0f2a4e;outline-offset:2px;border-radius:8px}
 .dr-hero h1{margin:8px 0 6px;font-size:30px;color:#0f2a4e}.dr-hero p{margin:0 0 12px;color:#334155;line-height:1.9;font-size:15px;max-width:820px}
 .dr-faces{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}.dr-face{border:1px solid #cbd5e1;border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;color:#0f2a4e;text-decoration:none;background:#fff;display:inline-flex;gap:6px;align-items:center;min-height:24px}.dr-face.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.dr-face.join{border-color:#c9a24b;background:#fffdf7}

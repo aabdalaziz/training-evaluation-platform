@@ -148,7 +148,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
 
 const NAVY = BRAND.colors.navy, TEAL = BRAND.colors.teal, GOLD = BRAND.colors.gold;
 const CSS = `
-.pt{font-family:var(--font-ar),Tajawal,Arial,sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;display:flex;flex-direction:column}
+.pt{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f8fafc;color:#0f172a;min-height:100vh;display:flex;flex-direction:column}
 .pt *{box-sizing:border-box}
 .pt a{color:inherit}
 .pt-header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px max(18px,calc((100% - 1200px)/2));background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid #e2e8f0}

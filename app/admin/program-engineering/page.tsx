@@ -143,7 +143,7 @@ export default function ProgramEngineeringPage() {
 
 const CSS = `
 .fc-mem{border-color:#cfe9e6;background:#f6fffe}.fc-muted{color:#64748b;font-size:12px;margin:0 0 8px}.fc-gaps{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}.fc-gap{text-align:start;background:#fff;border:1px solid #e2e8f0;border-inline-start:4px solid #c9a24b;border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;display:grid;gap:4px}.fc-gap b{font-size:13px;color:#0f2a4e}.fc-gap span{font-size:12px;color:#475569;line-height:1.6}.fc-gap small{font-size:11px;color:#94a3b8}.fc-gap:hover{border-color:#0b8a83}
-.fc{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;direction:rtl}
+.fc{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
 .fc-wrap{max-width:1200px;margin:0 auto;display:grid;gap:12px}
 .fc-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.fc-head p{margin:0;color:#64748b;font-size:14px;line-height:1.8;max-width:960px}.fc-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b8a83}
 .fc-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;overflow-x:auto}.fc-card h3{margin:0 0 10px;color:#0f2a4e;font-size:17px}.fc-card h4{margin:0 0 8px;color:#0b8a83;font-size:13.5px;display:flex;align-items:center;gap:8px}

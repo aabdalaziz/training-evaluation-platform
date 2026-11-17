@@ -27,7 +27,7 @@ const fmt = (iso?: string | null) => { if (!iso) return '—'; try { return new 
 const pct = (p: number | null) => (p === null ? null : `${Math.round(p)}%`);
 
 export const SHEET_CSS = `
-.lrs{direction:rtl;font-family:Tajawal,"Noto Naskh Arabic",Arial,sans-serif;color:#0f2a4e;background:#fff;max-width:210mm;margin:0 auto;padding:14mm 14mm 10mm;box-sizing:border-box;position:relative;line-height:1.55}
+.lrs{direction:rtl;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e;background:#fff;max-width:210mm;margin:0 auto;padding:14mm 14mm 10mm;box-sizing:border-box;position:relative;line-height:1.55}
 .lrs.revoked:before{content:"مُلغى — صدر بعده تقرير أحدث";position:absolute;inset:40% 0 auto 0;text-align:center;font-size:34px;font-weight:900;color:#b91c1c;opacity:.18;transform:rotate(-14deg);pointer-events:none}
 .lrs-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:3px solid #0b8a83;padding-bottom:10px}
 .lrs-org{display:flex;align-items:center;gap:12px}.lrs-org img{height:52px;max-width:120px;object-fit:contain}.lrs-org h1{margin:0;font-size:20px}.lrs-org small{display:block;color:#475569;font-size:12px;font-weight:700}

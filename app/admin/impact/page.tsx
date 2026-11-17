@@ -466,7 +466,7 @@ function Inner() {
 }
 
 const CSS = `
-.ia{font-family:Tajawal,Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
+.ia{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
 .ia-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 22px;margin-bottom:14px}
 .ia-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.ia-head p{margin:0;color:#64748b;font-size:13px;max-width:760px;line-height:1.7}
 .ia-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}

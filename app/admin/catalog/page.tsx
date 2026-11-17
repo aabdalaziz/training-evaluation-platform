@@ -96,7 +96,7 @@ export default function CatalogAdminPage() {
 }
 
 const CSS = `
-.ct{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif}
+.ct{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .ct-wrap{max-width:1080px;margin:0 auto;display:grid;gap:12px}
 .ct-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.ct-head p{margin:0;color:#64748b;font-size:14px;line-height:1.7}.ct-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#0b8a83}
 .ct-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px}.ct-row.hidden{opacity:.7;background:#fafafa}

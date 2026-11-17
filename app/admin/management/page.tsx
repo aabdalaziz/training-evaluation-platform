@@ -527,7 +527,6 @@ export default function ManagementPage() {
 }
 
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box;}
 :root{--upm-navy:#14466B;--upm-navy-2:#0d3049;--upm-emerald:#00897B;--upm-teal:#1FA39A;--upm-gold:#C9A24B;}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
@@ -564,7 +563,7 @@ const CSS = `
 .tog.on{background:#d1fae5;color:#047857;}
 .tog.off{background:#f1f5f9;color:#64748b;}
 body{margin:0;background:#f4f6f8;}
-.mg{min-height:100vh;background:#f4f6f8;font-family:Tajawal,Arial,sans-serif;color:#0f172a;padding-bottom:40px;}
+.mg{min-height:100vh;background:#f4f6f8;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;padding-bottom:40px;}
 .ls{display:flex;align-items:center;justify-content:center;background:var(--upm-navy);}
 .sp{width:64px;height:64px;border:6px solid rgba(255,255,255,.14);border-top-color:var(--upm-teal);border-radius:50%;animation:spin 1s linear infinite;}
 .top{background:linear-gradient(135deg,var(--upm-navy),var(--upm-navy-2));color:#fff;padding:22px 28px;border-bottom:3px solid var(--upm-gold);}

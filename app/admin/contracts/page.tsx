@@ -138,7 +138,7 @@ export default function AdminContractsPage() {
 
 const CSS = `
 .ac-fromfactory{display:inline-flex;align-items:center;gap:4px;margin-inline-start:8px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#fef3c7;color:#92400e;vertical-align:middle}
-.ac{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),Tajawal,Arial,sans-serif;direction:rtl}
+.ac{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
 .ac-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}
 .ac-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.ac-head p{margin:0;color:#64748b;font-size:14px;line-height:1.7;max-width:900px}.ac-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b8a83}
 .ac-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;overflow-x:auto}.ac-card h3{margin:0 0 10px;color:#0f2a4e;font-size:17px}.ac-card h4{margin:12px 0 6px;color:#0b8a83;font-size:13px;display:flex;align-items:center;gap:8px}

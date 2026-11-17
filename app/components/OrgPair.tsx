@@ -202,7 +202,7 @@ function PastList({ past, side }: { past: Past[]; side: Side }) {
 }
 
 const CSS = `
-.op{font-family:var(--font-ar),Tajawal,Arial,sans-serif;color:#0f172a;margin:18px 0 0}
+.op{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;margin:18px 0 0}
 .op :is(button,a,input,select,textarea):focus-visible{outline:3px solid #0f2a4e;outline-offset:2px;border-radius:8px}
 .op-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#0b6f69;background:#e6f7f5;border-radius:999px;padding:3px 10px}
 .op-head h2{margin:6px 0 4px;font-size:24px;color:#0f2a4e}.op-head h2 small{font-size:14px;color:#0b6f69;font-weight:800}.op-head p{margin:0 0 12px;color:#334155;line-height:1.9;font-size:14px}
