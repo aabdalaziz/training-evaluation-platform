@@ -47,9 +47,11 @@
    "a": "nurse"
   },
   "ريم": {
-   "voice": "ar-OM-AyshaNeural",
+   "voice": "ar-QA-AmalNeural",
+   "pitch": "+6Hz",
    "g": "f",
-   "a": "woman"
+   "a": "woman",
+   "note": "كان ar-OM-Aysha (رُفض في اختبار الفرقة 2026-11-17 رقم 8) → صوت أمل بطبقة أعلى؛ لا تشارك هند مشهدًا."
   },
   "ماريا": {
    "voice": "ar-LB-LaylaNeural",
@@ -108,9 +110,11 @@
    "a": "man"
   },
   "أبو سعد": {
-   "voice": "ar-OM-AbdullahNeural",
+   "voice": "ar-KW-FahedNeural",
+   "pitch": "-6Hz",
    "g": "m",
-   "a": "man"
+   "a": "man",
+   "note": "كان ar-OM-Abdullah (رُفض في اختبار الفرقة 2026-11-17 رقم 14) → طبقة أخفض لصوت مقبول؛ لا يشارك صاحبه الأصلي مشهدًا."
   },
   "أبو فيصل": {
    "voice": "ar-BH-AliNeural",
@@ -118,19 +122,15 @@
    "a": "man"
   },
   "أبو محمد": {
-   "voice": "ar-OM-AbdullahNeural",
-   "pitch": "-10Hz",
+   "voice": "ar-BH-AliNeural",
+   "pitch": "-6Hz",
    "g": "m",
-   "a": "man"
+   "a": "man",
+   "note": "كان ar-OM-Abdullah (رُفض في اختبار الفرقة 2026-11-17 رقم 14) → طبقة أخفض لصوت مقبول؛ لا يشارك صاحبه الأصلي مشهدًا."
   }
  },
  "fallback": {
   "f": [
-   {
-    "voice": "ar-SY-AmanyNeural",
-    "g": "f",
-    "a": "woman"
-   },
    {
     "voice": "ar-IQ-RanaNeural",
     "g": "f",
@@ -145,11 +145,6 @@
   "m": [
    {
     "voice": "ar-IQ-BasselNeural",
-    "g": "m",
-    "a": "man"
-   },
-   {
-    "voice": "ar-LB-RamiNeural",
     "g": "m",
     "a": "man"
    },
@@ -232,5 +227,20 @@
   "A1-U04-L02": "ليلى",
   "A1-U04-L05": "ليلى",
   "A1-U06-L05": "ليلى"
+ },
+ "rejected": {
+  "_note": "أصوات رفضها المالك بالسماع في اختبار الفرقة (الجملة الموحَّدة) — لا تُستخدم أبدًا",
+  "2026-11-17": [
+   "ar-OM-AyshaNeural",
+   "ar-OM-AbdullahNeural",
+   "ar-SY-AmanyNeural",
+   "ar-LB-RamiNeural",
+   "ar-SY-LaithNeural",
+   "ar-EG-ShakirNeural"
+  ]
+ },
+ "audition": {
+  "sentence": "ثَلَاثَةُ ضُيُوفٍ ظَهَرُوا عِنْدَ الظُّهْرِ، فَذَهَبَتْ خَدِيجَةُ إِلَى الْحَدِيقَةِ وَغَسَلَتِ الْعِنَبَ. هَلْ عِنْدَكِ قَهْوَةٌ وَاحِدَةٌ يَا صَدِيقَتِي؟",
+  "rule": "لا يدخل صوت جديد إلى الفرقة إلا بعد قراءة هذه الجملة وموافقة المالك بالسماع."
  }
 }

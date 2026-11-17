@@ -14,7 +14,7 @@ assert who('الموظّف أبو فيصل')[5] == 'أبو فيصل' and who('ا
 m = LINE_RE.match('ليلى (٨:٣٠): صباح الخير.'); assert m and m.group(1) == 'ليلى (٨:٣٠)' and m.group(2) == 'صباح الخير.' and who(m.group(1))[5] == 'ليلى'
 assert LINE_RE.match('القطار ٤: يغادر ٧:٣٠').group(1) == 'القطار ٤'
 scene_reset(); a = who('الرجل'); b = who('رجل كبير'); c = who('الرجل'); w = who('زوجته'); assert a[0] != b[0] and a[0] == c[0] and w[3] == 'f', 'احتياطيّ مرقّم داخل المشهد'
-scene_reset(); assert who('السائق')[0] == 'ar-IQ-BasselNeural' and who('الكاشيرة')[0] == 'ar-SY-AmanyNeural'
+scene_reset(); assert who('السائق')[0] == 'ar-IQ-BasselNeural' and who('الكاشيرة')[0] == 'ar-IQ-RanaNeural'
 assert who('الموظّف أبو فيصل')[0] == 'ar-BH-AliNeural'
 assert who('المذيعة')[3] == 'f' and who('المفتّش')[4] == 'officer' and who('المفتّش')[3] == 'm'
 assert who('عمر (يدخل مسرعًا)')[5] == 'عمر' and who('عمر (يدخل مسرعًا)')[1] == '+25Hz'
@@ -34,4 +34,8 @@ assert pausal('كِيلُو') == 'كِيلُو' and pausal('عُلْبَةٌ') =
 full = dabt_of(speakable_raw('السلام عليكم يا عمّ. بكم كيلو العجوة؟')); assert full and full.startswith('السَّلَامُ'), 'المعجم المؤلَّف يُقرأ من tools/iqra/dabt'
 assert speakable('السلام عليكم يا عمّ. بكم كيلو العجوة؟') == 'السَّلَامُ عَلَيْكُمْ يَا عَمّ. بِكَمْ كِيلُو الْعَجْوَهْ؟'
 assert dabt_of(speakable_raw('(١ — عند البائع)')) is None and dabt_of('١ ، عند البائع') == 'الْمَشْهَدُ الْأَوَّلُ: عِنْدَ الْبَائِعِ.'
+# الأصوات المرفوضة بالسماع لا تظهر في الطاقم ولا في الاحتياطيّ
+V = g['V']; _rej = {v for k, vs in V['rejected'].items() if not k.startswith('_') for v in vs}
+assert not ({c['voice'] for c in V['cast'].values()} | {c['voice'] for g in V['fallback'].values() for c in g} | {V['narrator']['voice']}) & _rej
+assert who('ريم')[:2] == ('ar-QA-AmalNeural', '+6Hz') and who('أبو سعد')[:2] == ('ar-KW-FahedNeural', '-6Hz')
 print('tts rules OK')
