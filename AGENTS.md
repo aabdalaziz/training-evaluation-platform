@@ -129,6 +129,7 @@
 - `.agents/skills/athar-ui/SKILL.md` — PortalShell, `pt-*`, RTL, Canvas PDFs, known pitfalls.
 - `.agents/skills/athar-qa/SKILL.md` — tsc → tests → build → mock → Playwright → delivery verification.
 - `.agents/skills/athar-dialogue/SKILL.md` — rules of the human dialogue loop (P51–P66‑ب): no evaluation, k ≥ 5, no names, private voice, no server AI, dedupe ≤ 1/day, signed‑document pattern.
+- `.agents/skills/athar-iqra/SKILL.md` — «اقْرَأْ — من أَثَر»: pack authoring, fairness/skills rules, and the voice studio (full ضبط, speaker rules, no device voice, shipping/space discipline).
 - `.agents/skills/athar-release/SKILL.md` — SQL‑first → low‑mem build → QA gate → zip (repo‑root tree) → Arabic steps → post‑«تم» verification.
 
 ## 6. Roadmap context (all LIVE unless noted)
