@@ -204,7 +204,9 @@ test('الخزانة — iqra_time_log بياناتٌ شخصية بسياسة ح
 
 test('واجهة المتعلّم — الصوت من الجهاز فقط (Web Speech) · نبضة 30 ث وخمول 90 ث · ستّ محطّات · «say» لا يُعرض نصًّا · لا خادم صوت', () => {
   const app = read('app/iqra/IqraApp.tsx');
-  assert.ok(app.includes('speechSynthesis')); assert.equal(/fetch\([^)]*(tts|speech|audio)/i.test(app), false, 'لا طلب صوت إلى خادم');
+  const voice = read('lib/iqra/voice.ts'); assert.ok(voice.includes('speechSynthesis') && app.includes("from '../../lib/iqra/voice'"), 'الاحتياط صوت الجهاز في lib/iqra/voice.ts');
+  assert.equal(/fetch\([^)]*(tts|speech|audio)/i.test(app), false, 'لا طلب صوت إلى خادم'); assert.ok(voice.includes('.cues.json') && voice.includes("'/iqra/audio'") && !/fetch\([^)]*\/api\//.test(voice), 'شريط الحلقة ملفّات ثابتة لا واجهة خادم');
+  assert.ok(app.includes('data-testid="iq-stage"') && app.includes('skipRole') && app.includes('iq-turn-done'), 'مسرح الحلقة والعب الدور'); assert.ok(app.includes('maxPlays={t.kind === \'listen\' ? 2 : undefined}'), 'استماع المكتبة مرّتان كمِعيار');
   assert.ok(app.includes('30_000') && app.includes('90_000')); assert.ok(app.includes("action: 'tick'"));
   assert.ok(app.includes("'أسمع وأقرأ', 'كلماتي', 'القاعدة', 'المِران', 'أُنتج', 'أثر الحلقة'"));
   assert.equal(/\{ex\.say\}/.test(app), false, 'نصّ الإملاء لا يُطبع'); assert.ok(app.includes('data-testid="iq-hours"')); assert.ok(app.includes('data-testid="iq-external"')); assert.ok(app.includes('data-testid="iq-produce"'));

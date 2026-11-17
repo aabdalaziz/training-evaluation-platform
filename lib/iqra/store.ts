@@ -210,8 +210,10 @@ export async function libraryAnswer(db: Db, e: Enrolment, id: unknown, picks: un
 export async function reviewsDue(db: Db, e: Enrolment, now = new Date()) {
   const { data } = await db.from('iqra_reviews').select('id, kind, ref_id, interval_days, ease, lapses, due_at').eq('learner_email', e.learner_email).lte('due_at', now.toISOString()).order('due_at').limit(IQRA_LIMITS.review_batch);
   const rows = (data || []) as any[]; const cardIds = rows.filter((r) => r.kind === 'card').map((r) => r.ref_id); const itemIds = rows.filter((r) => r.kind === 'item').map((r) => r.ref_id);
-  const [cards, items] = await Promise.all([cardIds.length ? db.from('iqra_cards').select('id, word_ar, pos, gloss_ar, example_ar, audio_path, image_path').in('id', cardIds) : { data: [] }, itemIds.length ? itemsOf(db, itemIds) : []]);
-  const cardBy = new Map(((cards.data || []) as any[]).map((c) => [c.id, c])); const itemBy = new Map((items as any[]).map((r) => [r.id, publicExercise(r)]));
+  const [cards, items] = await Promise.all([cardIds.length ? db.from('iqra_cards').select('id, lesson_id, word_ar, pos, gloss_ar, example_ar, audio_path, image_path').in('id', cardIds) : { data: [] }, itemIds.length ? itemsOf(db, itemIds) : []]);
+  const lids = Array.from(new Set(((cards.data || []) as any[]).map((c) => c.lesson_id).filter(Boolean))); const { data: lrows } = lids.length ? await db.from('iqra_lessons').select('id, code').in('id', lids) : { data: [] };
+  const codeBy = new Map(((lrows || []) as any[]).map((l) => [l.id, l.code])); /* رمز الحلقة → شريط الصوت في «أراجع» */
+  const cardBy = new Map(((cards.data || []) as any[]).map((c) => [c.id, { ...c, lesson_code: codeBy.get(c.lesson_id) || null }])); const itemBy = new Map((items as any[]).map((r) => [r.id, publicExercise(r)]));
   const { count: total } = await db.from('iqra_reviews').select('id', { count: 'exact', head: true }).eq('learner_email', e.learner_email).lte('due_at', now.toISOString());
   return { total: Number(total || 0), بطاقات: rows.map((r) => (r.kind === 'card' ? { review_id: r.id, kind: 'card', interval_days: r.interval_days, card: cardBy.get(r.ref_id) || null } : { review_id: r.id, kind: 'item', interval_days: r.interval_days, exercise: itemBy.get(r.ref_id) || null })).filter((x: any) => x.card || x.exercise) };
 }

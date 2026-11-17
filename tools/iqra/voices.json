@@ -1,0 +1,224 @@
+{
+ "_about": "«فرقة أَثَر» — سجلّ الأصوات الواحد لمِعيار واقرأ. الراوي حامد (ar-SA) كما في tools/miaar-tts.py. كلّ شخصية صوت ثابت عبر كلّ المستويات. edge-tts بلا مفتاح وبلا كلفة.",
+ "narrator": {
+  "voice": "ar-SA-HamedNeural",
+  "pitch": "+0Hz",
+  "g": "m",
+  "a": "man"
+ },
+ "rate": {
+  "PRE_A1": "-25%",
+  "A1": "-20%",
+  "A2": "-15%",
+  "B1": "-5%",
+  "B2": "+0%",
+  "C1": "+5%",
+  "C2": "+10%"
+ },
+ "cast": {
+  "ليلى": {
+   "voice": "ar-SA-ZariyahNeural",
+   "g": "f",
+   "a": "woman"
+  },
+  "سارة": {
+   "voice": "ar-KW-NouraNeural",
+   "g": "f",
+   "a": "doctor"
+  },
+  "هند": {
+   "voice": "ar-QA-AmalNeural",
+   "g": "f",
+   "a": "teacher"
+  },
+  "نورة": {
+   "voice": "ar-BH-LailaNeural",
+   "g": "f",
+   "a": "woman"
+  },
+  "نوف": {
+   "voice": "ar-AE-FatimaNeural",
+   "g": "f",
+   "a": "woman"
+  },
+  "سلمى": {
+   "voice": "ar-JO-SanaNeural",
+   "g": "f",
+   "a": "nurse"
+  },
+  "ريم": {
+   "voice": "ar-OM-AyshaNeural",
+   "g": "f",
+   "a": "woman"
+  },
+  "ماريا": {
+   "voice": "ar-LB-LaylaNeural",
+   "g": "f",
+   "a": "student"
+  },
+  "فاطمة": {
+   "voice": "ar-SA-ZariyahNeural",
+   "pitch": "-12Hz",
+   "rate": "-8%",
+   "g": "f",
+   "a": "grandma"
+  },
+  "خالد": {
+   "voice": "ar-SA-HamedNeural",
+   "g": "m",
+   "a": "engineer"
+  },
+  "حسن": {
+   "voice": "ar-SA-HamedNeural",
+   "pitch": "-15Hz",
+   "rate": "-8%",
+   "g": "m",
+   "a": "grandpa"
+  },
+  "أحمد": {
+   "voice": "ar-JO-TaimNeural",
+   "g": "m",
+   "a": "man"
+  },
+  "يوسف": {
+   "voice": "ar-SY-LaithNeural",
+   "g": "m",
+   "a": "doctor",
+   "note": "كان ar-EG-ShakirNeural؛ الخدمة أسقطته 2026-11-17 (NoAudioReceived حتى على كلمة واحدة) فثُبّت ليث — لا يُغيَّر لاحقًا حفاظًا على ثبات صوت الشخصية."
+  },
+  "كين": {
+   "voice": "ar-AE-HamdanNeural",
+   "g": "m",
+   "a": "engineer"
+  },
+  "عمر": {
+   "voice": "ar-JO-TaimNeural",
+   "pitch": "+25Hz",
+   "g": "m",
+   "a": "boy"
+  },
+  "سامي": {
+   "voice": "ar-QA-MoazNeural",
+   "g": "m",
+   "a": "man"
+  },
+  "فهد": {
+   "voice": "ar-KW-FahedNeural",
+   "g": "m",
+   "a": "man"
+  },
+  "أبو سعد": {
+   "voice": "ar-OM-AbdullahNeural",
+   "g": "m",
+   "a": "man"
+  },
+  "أبو فيصل": {
+   "voice": "ar-BH-AliNeural",
+   "g": "m",
+   "a": "man"
+  },
+  "أبو محمد": {
+   "voice": "ar-OM-AbdullahNeural",
+   "pitch": "-10Hz",
+   "g": "m",
+   "a": "man"
+  }
+ },
+ "fallback": {
+  "f": [
+   {
+    "voice": "ar-SY-AmanyNeural",
+    "g": "f",
+    "a": "woman"
+   },
+   {
+    "voice": "ar-IQ-RanaNeural",
+    "g": "f",
+    "a": "woman"
+   },
+   {
+    "voice": "ar-EG-SalmaNeural",
+    "g": "f",
+    "a": "woman"
+   }
+  ],
+  "m": [
+   {
+    "voice": "ar-IQ-BasselNeural",
+    "g": "m",
+    "a": "man"
+   },
+   {
+    "voice": "ar-LB-RamiNeural",
+    "g": "m",
+    "a": "man"
+   },
+   {
+    "voice": "ar-YE-SalehNeural",
+    "g": "m",
+    "a": "man"
+   }
+  ]
+ },
+ "female_markers": [
+  "المذيعة",
+  "الكاشيرة",
+  "الموظّفة",
+  "المضيفة",
+  "الممرّضة",
+  "الطبيبة",
+  "المعلّمة",
+  "البائعة",
+  "الجدّة",
+  "الأمّ",
+  "أمّ",
+  "البنت",
+  "الطالبة",
+  "السيّدة",
+  "الجارة",
+  "الصيدلانية",
+  "زوجته",
+  "زوجة",
+  "زوجتي",
+  "راكبة",
+  "الحارسة",
+  "الصيدلانيّة",
+  "أمينة المكتبة",
+  "السيدة",
+  "الفتاة",
+  "المرأة",
+  "أمّه",
+  "أمّي"
+ ],
+ "role_avatars": {
+  "الضابط": "officer",
+  "المفتّش": "officer",
+  "الشرطيّ": "officer",
+  "موظّف التفتيش": "officer",
+  "الموظّف": "man",
+  "الموظّفة": "woman",
+  "السائق": "man",
+  "المذيعة": "woman",
+  "المذيع": "man",
+  "الكاشيرة": "woman",
+  "المضيفة": "woman",
+  "البائع": "man",
+  "البائعة": "woman",
+  "الطبيبة": "doctor",
+  "الطبيب": "doctor",
+  "الممرّضة": "nurse",
+  "المعلّمة": "teacher",
+  "المعلّم": "teacher",
+  "الجميع": "group",
+  "الكلّ": "group"
+ },
+ "aliases": {
+  "الجدّة": "فاطمة",
+  "جدّتي": "فاطمة",
+  "الجدّ": "حسن",
+  "جدّي": "حسن",
+  "الجدّة فاطمة": "فاطمة",
+  "الجدّ حسن": "حسن"
+ },
+ "fallback_note": "الشخصيّات غير المسمّاة: أوّل شخصية غير مسمّاة في النصّ تأخذ الصوت الأوّل، والثانية الثاني… (حتى لا يتكلّم رجلان في مشهد واحد بصوت واحد)."
+}
