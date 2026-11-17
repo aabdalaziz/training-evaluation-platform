@@ -12,7 +12,7 @@
  */
 import { invalidatePoolCache } from './bank';
 /* بلا استيراد من exit.ts تفاديًا لدورة الاستيراد (blueprint → syllabus → exit → blueprint) */
-export const UNIT_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const;
+export const UNIT_LEVELS = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const; /* اقْرَأْ ق1: اتّسعت الخريطة إلى المستويات السبعة (Pre-A1 وC2 لرِواقات اقْرَأْ؛ اختبارات العبور تبقى A1–C1 في exit.ts) */
 export type ExitLevel = (typeof UNIT_LEVELS)[number];
 
 type Db = any;
@@ -72,7 +72,7 @@ export const UNIT_SEED: UnitSeed[] = [
   U('C1', 5, 'المعاني الضمنية والتلميح', 'Implicit meaning and allusion', 'المعاني الضمنية، والسخرية والتلميح والتحفّظ، في المقروء والمسموع', ['public', 'professional'], ['RD-C1-01', 'RD-C1-03', 'LI-C1-02', 'LI-C1-04']),
   U('C1', 6, 'بنية الحجّة والحديث الممتدّ', 'Argument structure and extended talk', 'تقييم بنية الحجّة وتماسكها، وفهم حديث ممتدّ غير واضح البنية', ['educational', 'public'], ['RD-C1-04', 'LI-C1-01']),
 ];
-export const UNIT_CODE_RE = /^(A1|A2|B1|B2|C1)-U\d{2}$/;
+export const UNIT_CODE_RE = /^(PRE_A1|A1|A2|B1|B2|C1|C2)-U\d{2}$/;
 export const isUnitCode = (v: unknown): v is string => typeof v === 'string' && UNIT_CODE_RE.test(v);
 export const unitLevelOf = (code: string): ExitLevel | null => { const m = code.match(UNIT_CODE_RE); return m ? (m[1] as ExitLevel) : null; };
 
@@ -178,7 +178,7 @@ export function parseSuggestions(raw: string, items: readonly SuggestItem[], uni
 /* ---------- التحقّق ---------- */
 const clean = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, max) : '');
 export function validateUnit(b: Record<string, unknown>): { ok: true; unit: Omit<Unit, 'updated_at' | 'updated_by'> } | { ok: false; error: string } {
-  const level = String(b.level || ''); if (!(UNIT_LEVELS as readonly string[]).includes(level)) return { ok: false, error: 'المستوى من A1 إلى C1' };
+  const level = String(b.level || ''); if (!(UNIT_LEVELS as readonly string[]).includes(level)) return { ok: false, error: 'المستوى من Pre-A1 إلى C2' };
   const idx = Number(b.idx); if (!Number.isInteger(idx) || idx < 1 || idx > 40) return { ok: false, error: 'رقم الوحدة من 1 إلى 40' };
   const title_ar = clean(b.title_ar, 80); if (title_ar.length < 2) return { ok: false, error: 'عنوان الوحدة بالعربية مطلوب' };
   const title_en = clean(b.title_en, 80); const focus_ar = clean(b.focus_ar, 300);

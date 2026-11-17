@@ -10,7 +10,7 @@ import { normalizeSite } from '../lib/portal/open';
 export default function robots(): MetadataRoute.Robots {
   const site = normalizeSite(process.env.NEXT_PUBLIC_SITE_URL);
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/api/', '/admin/', '/me/', '/org/', '/dashboard', '/reports/', '/command-center', '/verify/', '/e/', '/m/', '/p/', '/oauth/', '/mcp', '/miaar/result/', '/miaar/d/', '/miaar/client/', '/miaar/certificate/', '/miaar/growth/', '/miaar/practice/'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/api/', '/admin/', '/me/', '/org/', '/dashboard', '/reports/', '/command-center', '/verify/', '/e/', '/m/', '/p/', '/oauth/', '/mcp', '/miaar/result/', '/miaar/d/', '/miaar/client/', '/miaar/certificate/', '/miaar/growth/', '/miaar/practice/', '/iqra'] }],
     sitemap: `${site}/sitemap.xml`,
     host: site,
   };

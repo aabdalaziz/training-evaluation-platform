@@ -23,12 +23,13 @@ const pool = (perCell = 8, tagger?: (level: string, skill: string, i: number) =>
 };
 
 test('م6-ب: البذرة — 38 وحدة (8×A1–B2 + 6×C1) · رموز صالحة وفريدة · كل واصف A1–C1 الـ60 في وحدة · عناوين عربية/إنجليزية ومجالات CEFR', () => {
-  assert.equal(UNIT_SEED.length, 38); assert.deepEqual([...UNIT_LEVELS], ['A1', 'A2', 'B1', 'B2', 'C1']);
-  for (const L of UNIT_LEVELS) assert.equal(UNIT_SEED.filter((u) => u.level === L).length, L === 'C1' ? 6 : 8, L);
+  assert.equal(UNIT_SEED.length, 38); assert.deepEqual([...UNIT_LEVELS], ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']); /* اقْرَأْ ق1: الخريطة سبعة مستويات؛ بذرة م6-ب تبقى A1–C1 */
+  const SEED_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const;
+  for (const L of SEED_LEVELS) assert.equal(UNIT_SEED.filter((u) => u.level === L).length, L === 'C1' ? 6 : 8, L);
   const codes = UNIT_SEED.map((u) => u.code); assert.equal(new Set(codes).size, 38); for (const c of codes) { assert.match(c, UNIT_CODE_RE); assert.ok(isUnitCode(c)); }
-  assert.equal(unitLevelOf('B2-U07'), 'B2'); assert.equal(unitLevelOf('C2-U01'), null); assert.equal(isUnitCode('A1-U1'), false);
+  assert.equal(unitLevelOf('B2-U07'), 'B2'); assert.equal(unitLevelOf('C2-U01'), 'C2'); assert.equal(unitLevelOf('PRE_A1-U03'), 'PRE_A1'); assert.equal(unitLevelOf('D1-U01'), null); assert.equal(isUnitCode('A1-U1'), false);
   const descs = new Set(UNIT_SEED.flatMap((u) => u.descriptor_codes)); assert.equal(descs.size, 60);
-  for (const m of ['LI', 'RD', 'LU']) for (const L of UNIT_LEVELS) for (let i = 1; i <= 4; i += 1) assert.ok(descs.has(`${m}-${L}-0${i}`), `${m}-${L}-0${i}`);
+  for (const m of ['LI', 'RD', 'LU']) for (const L of SEED_LEVELS) for (let i = 1; i <= 4; i += 1) assert.ok(descs.has(`${m}-${L}-0${i}`), `${m}-${L}-0${i}`);
   for (const u of UNIT_SEED) { assert.ok(u.title_ar.length >= 4 && u.title_en.length >= 4 && u.focus_ar.length >= 10, u.code); assert.ok(u.domains.length >= 1 && u.domains.every((d) => ['personal', 'public', 'professional', 'educational'].includes(d)), u.code); assert.equal(u.code, `${u.level}-U${String(u.idx).padStart(2, '0')}`); }
   const du = descriptorUnits(units()); assert.deepEqual(du.get('LU-A1-01'), ['A1-U01']); assert.equal(unitIndex(units()).get('C1-U05')?.title_ar, 'المعاني الضمنية والتلميح');
   assert.equal(SYLLABUS_TITLE.ar, 'خريطة المنهج — وسم وحدات المستوى'); assert.equal(approvedFor(units('draft'), 'A1').length, 0); assert.equal(approvedFor(units(), 'C1').length, 6);

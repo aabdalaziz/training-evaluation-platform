@@ -4,10 +4,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadApprovedPool, loadPassages, invalidatePoolCache, mediaUrls, lazyMediaUrl, signedMediaUrl, isReferencedMediaPath } from '../lib/miaar/bank';
 
-type Q = { select: () => Q; eq: () => Q; limit: () => Promise<{ data: unknown[]; error: null }> };
+type Q = { select: () => Q; eq: () => Q; neq: () => Q; limit: () => Promise<{ data: unknown[]; error: null }> };
 function fakeDb(counter: { items: number; passages: number; keys: number; signed: string[][] }) {
   const table = (name: string): Q => {
-    const q: Q = { select: () => q, eq: () => q, limit: async () => { if (name === 'question_bank_items') counter.items += 1; else if (name === 'miaar_passages') counter.passages += 1; else counter.keys += 1; return { data: [], error: null }; } };
+    const q: Q = { select: () => q, eq: () => q, neq: () => q /* اقْرَأْ ق1 */, limit: async () => { if (name === 'question_bank_items') counter.items += 1; else if (name === 'miaar_passages') counter.passages += 1; else counter.keys += 1; return { data: [], error: null }; } };
     return q;
   };
   return {

@@ -106,6 +106,7 @@ import './miaar-m6c.test';
 import './miaar-m9.test';
 import './p39-notices.test';
 import './miaar-m10.test';
+import './iqra-q1.test'; /* اقْرَأْ ق1 */
 import './miaar-m11.test';
 import './miaar-m12.test';
 import './p50-sign.test'; /* P50 «توقيعي» */

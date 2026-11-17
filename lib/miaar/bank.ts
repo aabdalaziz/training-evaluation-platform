@@ -37,7 +37,7 @@ export function invalidatePoolCache(): void { PASSAGES_CACHE = null; POOL_CACHE 
 /** م4-ب: مهام الكتابة/التحدّث المعتمدة (لا مهمة تُعرض قبل اعتماد إنسان) — ذاكرة 90 ثانية كالبنك */
 export async function loadApprovedTasks(db: any): Promise<TaskItem[]> {
   if (TASKS_CACHE && fresh(TASKS_CACHE.at)) return TASKS_CACHE.value;
-  const { data, error } = await db.from('question_bank_items').select('id, item_code, level, skill, question_text, item_type, task, media_path, media_alt, descriptor_code').eq('status', 'approved').in('item_type', ['writing_task', 'speaking_task']).limit(1000);
+  const { data, error } = await db.from('question_bank_items').select('id, item_code, level, skill, question_text, item_type, task, media_path, media_alt, descriptor_code').eq('status', 'approved').neq('source_kind', 'iqra').in('item_type', ['writing_task', 'speaking_task']).limit(1000);
   if (error) throw new Error('tasks_unavailable');
   const seen = new Set<string>(); const value: TaskItem[] = [];
   for (const row of (data || []) as Record<string, unknown>[]) { const t = taskItemFrom(row); if (!t || seen.has(t.code)) continue; seen.add(t.code); value.push(t); }
@@ -59,11 +59,11 @@ export async function loadApprovedPool(db: any, passages?: Map<string, PassageRo
   const P = passages || await loadPassages(db);
   const COLS = 'id, item_code, level, skill, passage_id, question_text, options, item_type, stimulus, media_path, media_alt, descriptor_code, cefr_descriptor';
   let [items, keys] = await Promise.all([
-    db.from('question_bank_items').select(`${COLS}, unit_codes`).eq('status', 'approved').limit(2000),  /* م6-ب: وسوم الوحدات في الرحلة نفسها */
+    db.from('question_bank_items').select(`${COLS}, unit_codes`).eq('status', 'approved').neq('source_kind', 'iqra').limit(2000), /* اقْرَأْ: مِران الحلقات لا يدخل الاختبارات */  /* م6-ب: وسوم الوحدات في الرحلة نفسها */
     db.from('question_bank_answer_keys').select('item_id, correct_option_id').limit(5000),
   ]);
   /* قبل هجرة م6-ب (العمود غائب) تعاد القراءة بلا العمود — حتى لا يتوقّف البنك كلّه على عمود اختياري */
-  if (items.error) items = await db.from('question_bank_items').select(COLS).eq('status', 'approved').limit(2000);
+  if (items.error) items = await db.from('question_bank_items').select(COLS).eq('status', 'approved').neq('source_kind', 'iqra').limit(2000);
   if (items.error || keys.error) throw new Error('approved_pool_unavailable');
   const keyOf = new Map<string, string>(((keys.data || []) as any[]).map((r) => [r.item_id, r.correct_option_id]));
   const seen = new Set<string>(); const pool: PoolItem[] = [];
@@ -154,7 +154,7 @@ export type Coverage = { cells: Array<{ level: BankLevel; skill: Skill; approved
 export const itemBatch = (r: { content_version?: string | null; legacy_extra?: any }): string => (r.legacy_extra && typeof r.legacy_extra === 'object' && typeof r.legacy_extra.batch === 'string') ? r.legacy_extra.batch : (r.content_version || '—');
 export async function bankCoverage(db: any): Promise<Coverage> {
   const [{ data: items }, { data: passages }] = await Promise.all([
-    db.from('question_bank_items').select('level, skill, status, item_type, descriptor_code, content_version, legacy_extra').limit(5000),
+    db.from('question_bank_items').select('level, skill, status, item_type, descriptor_code, content_version, legacy_extra').neq('source_kind', 'iqra').limit(5000),
     db.from('miaar_passages').select('id').eq('status', 'approved').limit(2000),
   ]);
   const rows = (items || []) as any[]; const by_status: Record<string, number> = {}; const used = new Set<string>(); const by_batch: Coverage['by_batch'] = {};

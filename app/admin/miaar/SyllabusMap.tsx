@@ -14,7 +14,8 @@ type CovRow = { code: string; title_ar: string; items: number; by_skill: Record<
 type Data = { ready: boolean; level: string; units: Unit[]; counts: Record<string, { total: number; approved: number; draft: number }>; coverage: { rows: CovRow[]; uncovered: string[]; tagged: number; untagged: number; total: number }; items: Item[]; can_edit: boolean; seed_total: number; title: { ar: string; en: string } };
 type Sug = { item_id: string; unit_code: string; why: string; source: 'descriptor' | 'ai'; unit_title: string; item_code: string };
 
-const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'];
+const LEVELS = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']; /* اقْرَأْ ق1 */
+const LEVEL_LABEL: Record<string, string> = { PRE_A1: 'Pre-A1', A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
 const SKILL_AR: Record<string, string> = { grammar_vocab: 'اللغة', reading: 'القراءة', listening: 'الاستماع', writing: 'الكتابة', speaking: 'المحادثة' };
 const DOMAIN_AR: Record<string, string> = { personal: 'شخصي', public: 'عام', professional: 'مهني', educational: 'تعليمي' };
 const STATUS_AR: Record<string, string> = { draft: 'مسوَّدة', approved: 'معتمدة', retired: 'موقوفة' };
@@ -60,7 +61,7 @@ export default function SyllabusMap({ auth }: { auth: () => Promise<Record<strin
     <style>{CSS}</style>
     {err && <div className="am-err" role="alert">{err}</div>}{ok && <div className="am-ok" role="status" data-testid="sy-ok">{ok}</div>}
     <section className="am-card sy-head">
-      <div className="sy-levels" role="tablist" aria-label="المستوى">{LEVELS.map((L) => <button key={L} role="tab" aria-selected={level === L} className={`sy-lv${level === L ? ' on' : ''}`} onClick={() => setLevel(L)} data-testid={`sy-lv-${L}`}>{L}<small>{d.counts[L]?.approved || 0}/{d.counts[L]?.total || 0}</small></button>)}</div>
+      <div className="sy-levels" role="tablist" aria-label="المستوى">{LEVELS.map((L) => <button key={L} role="tab" aria-selected={level === L} className={`sy-lv${level === L ? ' on' : ''}`} onClick={() => setLevel(L)} data-testid={`sy-lv-${L}`}>{LEVEL_LABEL[L] || L}<small>{d.counts[L]?.approved || 0}/{d.counts[L]?.total || 0}</small></button>)}</div>
       {!d.ready && <p className="sy-warn" data-testid="sy-notready">جدول وحدات المستوى غير موجود بعد — نفّذ هجرة م6-ب في Supabase ثم أعد التحميل. (الاختبارات والتقارير تعمل كالمعتاد بلا وحدات.)</p>}
       <div className="sy-sum" data-testid="sy-sum">
         <div><b>{approved}</b><span>وحدة معتمدة من {d.units.length}</span></div>
