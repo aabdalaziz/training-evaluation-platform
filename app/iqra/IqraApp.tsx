@@ -3,13 +3,13 @@
 /**
  * «اقْرَأْ — من أَثَر» — واجهة المتعلّم (ق1). عربية فقط.
  *  الهوية: رمز نتيجة مِعيار من الرابط (?code=ML-…) أو جلسة حساب أَثَر؛ وإلا بوّابة «ابدأ بمِعيار أولًا».
- *  الشاشات: الرِّواق (المنازل → الحلقات · خطواتي · أيامي · سؤال اليوم) → الحلقة بخمس محطّات (مدخل/نصّ → بطاقات → قاعدة → مِران → أثر الحلقة)
+ *  الشاشات: المستوى (المنازل → الحلقات · خطواتي · أيامي · سؤال اليوم) → الحلقة بخمس محطّات (مدخل/نصّ → بطاقات → قاعدة → مِران → أثر الحلقة)
  *          → «أراجع» (بطاقات مستحقّة بتقليب + مِران الأخطاء) → «دفتري» (كلماتي ونسبة الإتقان + طباعة).
  *  المِران: اختيار · مطابقة باللمس (يسار ثم يمين) · ترتيب باللمس (انقر الكلمات بالترتيب) — كلّها بلوحة المفاتيح أيضًا. التصحيح على الخادم.
  *  WCAG: أهداف ≥ 44px · aria-live للتغذية الراجعة · تباين · بلا سحب إلزامي.
  *  الخطوة 2 (2026-11-17): الحلقة بستّ محطّات (أسمع وأقرأ · كلماتي · القاعدة · المِران 10 من 30 · أُنتج · أثر الحلقة) · تسعة أنواع مِران ·
  *   «اسمع» بصوت الجهاز (Web Speech — بلا خادم ولا كلفة ولا بيانات تخرج) · «ساعاتي» (نبضة كلّ 30 ث مع تفاعل خلال 90 ث وصفحة ظاهرة) ·
- *   مكتبة الرِّواق · شارة المهارة و«أستطيع أن…» على كلّ حلقة · ساعات خارج أَثَر تُعرض منفصلة.
+ *   مكتبة المستوى · شارة المهارة و«أستطيع أن…» على كلّ حلقة · ساعات خارج أَثَر تُعرض منفصلة.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import WayBar from '../components/WayBar';
@@ -22,7 +22,7 @@ type Hours = { hours: number; target: number; pct: number; external_hours: numbe
 type Skill = { key: string; name_ar: string } | null;
 type Activity = 'lesson' | 'review' | 'daily' | 'library' | 'free' | 'produce';
 type Card = { id: string; word_ar: string; pos: string | null; gloss_ar: string; example_ar: string; audio_path: string | null; image_path: string | null };
-type Home = { gate: string; copy?: { title: string; body: string; cta?: string; href?: string }; الرِّواق?: { label: string; name_ar: string; code: string; line_ar: string; can_ar: string; next: string | null }; منازل?: { code: string; title_ar: string; focus_ar: string; حلقات: { id: string; title_ar: string; goal_ar: string; minutes: number; minutes_total: number; مهارة: Skill; can_do_ar: string; حالة: 'new' | 'started' | 'done'; درجة: number | null; مجاب: number; الكلّ: number; مكتملة: boolean }[] }[]; خطواتي?: { done: number; total: number; pct: number }; أيامي?: number; أراجع_مستحقّ?: number; التالية?: { id: string; title_ar: string } | null; سؤال_اليوم?: Ex | null; فارغ?: boolean; ساعاتي?: Hours | null; مكتبة?: number };
+type Home = { gate: string; copy?: { title: string; body: string; cta?: string; href?: string }; المستوى?: { label: string; name_ar: string; code: string; line_ar: string; can_ar: string; next: string | null }; منازل?: { code: string; title_ar: string; focus_ar: string; حلقات: { id: string; title_ar: string; goal_ar: string; minutes: number; minutes_total: number; مهارة: Skill; can_do_ar: string; حالة: 'new' | 'started' | 'done'; درجة: number | null; مجاب: number; الكلّ: number; مكتملة: boolean }[] }[]; خطواتي?: { done: number; total: number; pct: number }; أيامي?: number; أراجع_مستحقّ?: number; التالية?: { id: string; title_ar: string } | null; سؤال_اليوم?: Ex | null; فارغ?: boolean; ساعاتي?: Hours | null; مكتبة?: number };
 type Lesson = { id: string; title_ar: string; goal_ar: string; minutes: number; minutes_total: number; مهارة: Skill; can_do_ar: string; can_do_en: string; descriptor_codes: string[]; المنزلة: { code: string; title_ar: string }; content: { intro_ar: string; text?: { kind: string; body: string; audio_path?: string | null } | null; grammar?: { title_ar: string; explanation_ar: string; examples: string[] } | null; speaking?: { prompt_ar: string; guide_ar: string } | null; writing?: { topic_ar: string; instructions_ar: string } | null; produce?: { kind: 'write' | 'speak'; prompt_ar: string; checklist: string[]; model_ar: string; min_words?: number } | null; closing_ar?: string | null }; بطاقات: Card[]; مِران: Ex[]; زيارة: { رقم: number; مسحوب: number; مجاب: number; الكلّ: number; مكتملة: boolean }; أُنتج: { saved_at: string; words: number; checked: boolean[] } | null; تقدّمي: { status: string; score: number | null; attempts: number; answered: number }; قريبًا: string[] };
 type Review = { review_id: string; kind: 'card' | 'item'; interval_days: number; card?: Card | null; exercise?: Ex | null };
 type Screen = { s: 'home' } | { s: 'lesson'; id: string } | { s: 'reviews' } | { s: 'notebook' } | { s: 'library'; id?: string };
@@ -54,15 +54,15 @@ export default function IqraApp({ fontClass = '' }: { fontClass?: string }) {
   useEffect(() => { if (ready) void loadHome(); }, [ready, loadHome]);
 
   return <div className={`iq ${fontClass}`} dir="rtl" lang="ar" data-testid="iq-page">
-    <header className="iq-top"><div className="iq-head"><a className="iq-brand" href="/" aria-label="أَثَر — الرئيسة">أَثَر<small>اقْرَأْ — تعلّم في رِواقك</small></a>
+    <header className="iq-top"><div className="iq-head"><a className="iq-brand" href="/" aria-label="أَثَر — الرئيسة">أَثَر<small>اقْرَأْ — تعلّم على مستواك</small></a>
       <nav className="iq-nav" aria-label="أقسام اقْرَأْ">{home?.gate === 'enrolled' && <>
-        <button type="button" className={screen.s === 'home' ? 'on' : ''} onClick={() => setScreen({ s: 'home' })} data-testid="iq-nav-home">رِواقي</button>
+        <button type="button" className={screen.s === 'home' ? 'on' : ''} onClick={() => setScreen({ s: 'home' })} data-testid="iq-nav-home">مستواي</button>
         <button type="button" className={screen.s === 'reviews' ? 'on' : ''} onClick={() => setScreen({ s: 'reviews' })} data-testid="iq-nav-reviews">أراجع{home.أراجع_مستحقّ ? <i>{home.أراجع_مستحقّ}</i> : null}</button>
         <button type="button" className={screen.s === 'notebook' ? 'on' : ''} onClick={() => setScreen({ s: 'notebook' })} data-testid="iq-nav-notebook">دفتري</button>
         {(home.مكتبة || 0) > 0 && <button type="button" className={screen.s === 'library' ? 'on' : ''} onClick={() => setScreen({ s: 'library' })} data-testid="iq-nav-library">مكتبتي</button>}</>}
         {code ? <a className="iq-lnk" href={`/miaar/result/${encodeURIComponent(code)}`}>بطاقة نتيجتي</a> : <a className="iq-lnk" href="/me">صفحتي</a>}<ReadSize /></nav></div><WayBar /></header>
     <p className="iq-live" aria-live="polite" role="status">{live}</p>
-    {!ready || (!home && !err) ? <p className="iq-wait">نفتح رِواقك…</p> : null}
+    {!ready || (!home && !err) ? <p className="iq-wait">نفتح مستواك…</p> : null}
     {err && <section className="iq-wrap"><div className="iq-card"><p className="iq-err" role="alert">{err}</p></div></section>}
     {home && home.gate !== 'enrolled' && <Gate home={home} code={code} setCode={(c) => { setCode(c); window.history.replaceState(null, '', `/iqra?code=${encodeURIComponent(c)}`); }} reload={loadHome} />}
     {home?.gate === 'enrolled' && screen.s === 'home' && <HomeView home={home} open={(id) => setScreen({ s: 'lesson', id })} post={post} setLive={setLive} />}
@@ -80,25 +80,25 @@ function Gate({ home, code, setCode, reload }: { home: Home; code: string; setCo
   const anon = home.gate === 'anon';
   return <section className="iq-wrap"><div className="iq-gate" data-testid="iq-gate" data-gate={home.gate}>
     <p className="iq-kicker">اقْرَأْ — من أَثَر</p>
-    <h1>{anon ? 'ادخل رِواقك' : home.copy?.title}</h1>
+    <h1>{anon ? 'ادخل مستواك' : home.copy?.title}</h1>
     <p className="iq-lead">{anon ? 'اقْرَأْ يفتح بنتيجة «مِعيار» المعتمدة. أدخل رمز نتيجتك (ML-XXXX-XXXX) أو سجّل الدخول بحساب أَثَر.' : home.copy?.body}</p>
     {anon && <form className="iq-row" onSubmit={(e) => { e.preventDefault(); const c = v.trim().toUpperCase(); if (/^ML-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(c)) { setCode(c); setTimeout(reload, 0); } }}>
       <label className="iq-sr" htmlFor="iq-code">رمز النتيجة</label><input id="iq-code" dir="ltr" value={v} onChange={(e) => setV(e.target.value)} placeholder="ML-XXXX-XXXX" inputMode="text" autoComplete="off" data-testid="iq-code" />
       <button type="submit" className="iq-btn" data-testid="iq-code-go">افتح</button><a className="iq-btn ghost" href="/login?next=/iqra">تسجيل الدخول</a></form>}
     {home.gate === 'none' && <a className="iq-btn" href={home.copy?.href || '/miaar'} data-testid="iq-gate-cta">{home.copy?.cta}</a>}
-    <ul className="iq-levels" aria-label="الرِّواقات السبعة">{['تمهيدي · Pre-A1', 'مكتشف · A1', 'مبتدئ · A2', 'متوسط · B1', 'مستقل · B2', 'متقدّم · C1', 'متقن · C2'].map((l) => <li key={l}>{l}</li>)}</ul>
+    <ul className="iq-levels" aria-label="المستويات السبعة">{['تمهيدي · Pre-A1', 'مكتشف · A1', 'مبتدئ · A2', 'متوسط · B1', 'مستقل · B2', 'متقدّم · C1', 'متقن · C2'].map((l) => <li key={l}>{l}</li>)}</ul>
   </div></section>;
 }
 
 function HomeView({ home, open, post, setLive }: { home: Home; open: (id: string) => void; post: (b: Record<string, unknown>) => Promise<any>; setLive: (s: string) => void }) {
-  const r = home.الرِّواق!; const [dailyFb, setDailyFb] = useState<Fb | null>(null); const [dailyPick, setDailyPick] = useState(''); const h = home.ساعاتي; const [extMin, setExtMin] = useState(''); const [extNote, setExtNote] = useState(''); const [extMsg, setExtMsg] = useState('');
+  const r = home.المستوى!; const [dailyFb, setDailyFb] = useState<Fb | null>(null); const [dailyPick, setDailyPick] = useState(''); const h = home.ساعاتي; const [extMin, setExtMin] = useState(''); const [extNote, setExtNote] = useState(''); const [extMsg, setExtMsg] = useState('');
   useTicker(home.سؤال_اليوم && !dailyFb ? 'daily' : null, post);
   async function external(e: React.FormEvent) { e.preventDefault(); const m = Number(extMin); if (!Number.isFinite(m) || m < 5 || m > 480) { setExtMsg('من 5 إلى 480 دقيقة'); return; } const d = await post({ action: 'external', minutes: m, note: extNote }); setExtMsg(d.ok ? 'سُجّلت — تُعرض منفصلة ولا تُحتسب في العَتَبة.' : 'تعذّر الحفظ'); setExtMin(''); setExtNote(''); }
   async function daily(opt: string) { if (dailyFb || !home.سؤال_اليوم) return; setDailyPick(opt); const d = await post({ action: 'daily', item_id: home.سؤال_اليوم.id, answer: { option: opt } }); if (d.ok) { setDailyFb(d); setLive(d.correct ? 'أحسنت' : 'ليس بعد'); } }
   return <>
-    <section className="iq-band"><div className="iq-bandin"><p className="iq-kicker" data-testid="iq-level">{r.label}</p><h1>رِواق {r.name_ar}</h1><p className="iq-lead">{r.line_ar} — {r.can_ar}</p>
+    <section className="iq-band"><div className="iq-bandin"><p className="iq-kicker" data-testid="iq-level">{r.label}</p><h1>مستوى {r.name_ar}</h1><p className="iq-lead">{r.line_ar} — {r.can_ar}</p>
       <div className="iq-stats"><div><b data-testid="iq-steps">{home.خطواتي?.done}</b><span>من {home.خطواتي?.total} حلقة</span></div><div><b data-testid="iq-streak">{home.أيامي}</b><span>أيام متّصلة</span></div><div><b>{home.أراجع_مستحقّ}</b><span>للمراجعة اليوم</span></div></div>
-      {h && <div className="iq-hours" data-testid="iq-hours" data-state={h.threshold.state}><div className="iq-hours-top"><b>ساعاتي في رِواق {r.name_ar}: <span data-testid="iq-hours-n">{h.hours}</span> من {h.target} ساعة</b><small>{h.today_min > 0 ? `اليوم ${h.today_min} د · ` : ''}{h.per_week > 0 ? `وتيرتك ${h.per_week} س/أسبوع` : 'ابدأ اليوم — كلّ دقيقة نشطة تُحسب'}{h.weeks_left ? ` · بهذه الوتيرة تبلغ العَتَبة في ${h.weeks_left} ${h.weeks_left === 1 ? 'أسبوع' : 'أسابيع'}` : ''}</small></div>
+      {h && <div className="iq-hours" data-testid="iq-hours" data-state={h.threshold.state}><div className="iq-hours-top"><b>ساعاتي في مستوى {r.name_ar}: <span data-testid="iq-hours-n">{h.hours}</span> من {h.target} ساعة</b><small>{h.today_min > 0 ? `اليوم ${h.today_min} د · ` : ''}{h.per_week > 0 ? `وتيرتك ${h.per_week} س/أسبوع` : 'ابدأ اليوم — كلّ دقيقة نشطة تُحسب'}{h.weeks_left ? ` · بهذه الوتيرة تبلغ العَتَبة في ${h.weeks_left} ${h.weeks_left === 1 ? 'أسبوع' : 'أسابيع'}` : ''}</small></div>
         <div className="iq-hbar" role="progressbar" aria-valuenow={h.pct} aria-valuemin={0} aria-valuemax={100} aria-label="ساعات التعلّم"><i style={{ width: `${h.pct}%` }} /><em style={{ insetInlineStart: '70%' }} title="الاختبار المبكر" /></div>
         <small className="iq-hnote">{h.threshold.state === 'ready' ? 'بلغتَ الأرضية والإتقان — العَتَبة تُفتح في مرحلة اقْرَأْ القادمة.' : h.threshold.state === 'early' ? 'يحقّ لك اختبار مبكر (مرحلة قادمة): بلغتَ 70% من الساعات مع إتقان 90%.' : `الاختبار المبكر عند ${h.threshold.early_rule}؛ وإلّا ${h.target} ساعة كاملة. المرجع: ساعات التعلّم الموجَّه في الإطار الأوروبي.`}{h.external_hours > 0 ? ` · خارج أَثَر: ${h.external_hours} س (لا تُحتسب)` : ''}</small></div>}
       {home.التالية && <button type="button" className="iq-btn gold" onClick={() => open(home.التالية!.id)} data-testid="iq-next">أكمل: {home.التالية.title_ar} ←</button>}</div></section>
@@ -106,12 +106,12 @@ function HomeView({ home, open, post, setLive }: { home: Home; open: (id: string
       {home.سؤال_اليوم && <div className="iq-card iq-daily" data-testid="iq-daily"><h2>سؤال اليوم</h2><p className="iq-q">{home.سؤال_اليوم.prompt_ar}</p>
         <div className="iq-opts">{home.سؤال_اليوم.options?.map((o) => <button key={o.id} type="button" className={`iq-opt ${dailyFb ? (o.id === dailyFb.correct_option ? 'right' : o.id === dailyPick ? 'wrong' : '') : ''}`} onClick={() => void daily(o.id)} disabled={!!dailyFb}>{o.text}</button>)}</div>
         {dailyFb && <p className="iq-fb">{dailyFb.correct ? 'أحسنت.' : 'ليس بعد.'} {dailyFb.explanation_ar}</p>}</div>}
-      {home.فارغ ? <div className="iq-card"><p className="iq-empty" data-testid="iq-empty">حلقات هذا الرِّواق قيد الإعداد والاعتماد — تعود قريبًا.</p></div> : null}
+      {home.فارغ ? <div className="iq-card"><p className="iq-empty" data-testid="iq-empty">حلقات هذا المستوى قيد الإعداد والاعتماد — تعود قريبًا.</p></div> : null}
       {home.منازل?.map((u) => <div key={u.code} className="iq-unit" data-testid="iq-unit"><h2><span>{u.code}</span>{u.title_ar}</h2><p className="iq-focus">{u.focus_ar}</p>
         <ol className="iq-lessons">{u.حلقات.map((l, i) => <li key={l.id} className={`iq-les ${l.حالة}`}><button type="button" onClick={() => open(l.id)} data-testid="iq-lesson" data-state={l.حالة} data-id={l.id} data-skill={l.مهارة?.key || ''}><i>{i + 1}</i><span>{l.مهارة && <u className="iq-skill" data-testid="iq-skill">{l.مهارة.name_ar}</u>}<b>{l.title_ar}</b><small>{l.can_do_ar || l.goal_ar || ''} · ≈{Math.round((l.minutes_total || 120) / 60 * 10) / 10} س · مِران {l.مجاب}/{l.الكلّ}</small></span><em>{l.مكتملة ? 'اكتملت' : l.حالة === 'done' ? `تمّت · ${l.درجة ?? ''}٪` : l.حالة === 'started' ? 'بدأتها' : 'ابدأ'}</em></button></li>)}</ol></div>)}
       <div className="iq-card iq-ext" data-testid="iq-external"><h2>ساعات خارج أَثَر <small>كتاب · درس · حديث — تُسجَّل لك وتُعرض منفصلة، ولا تُحتسب في العَتَبة</small></h2>
         <form className="iq-row start" onSubmit={(e) => void external(e)}><input type="number" min={5} max={480} value={extMin} onChange={(e) => setExtMin(e.target.value)} placeholder="دقائق" aria-label="دقائق" data-testid="iq-ext-min" /><input value={extNote} onChange={(e) => setExtNote(e.target.value)} placeholder="ماذا فعلت؟ (اختياري)" aria-label="ملاحظة" maxLength={120} /><button type="submit" className="iq-btn ghost" data-testid="iq-ext-save">سجّل</button>{extMsg && <small className="iq-fb">{extMsg}</small>}</form></div>
-      {r.next && <p className="iq-note">بعد هذا الرِّواق: {r.next}. طلب اختبار المستوى المبكّر يُفتح في مرحلة قادمة من اقْرَأْ.</p>}
+      {r.next && <p className="iq-note">بعد هذا المستوى: {r.next}. طلب اختبار المستوى المبكّر يُفتح في مرحلة قادمة من اقْرَأْ.</p>}
     </section></>;
 }
 
@@ -131,7 +131,7 @@ function LessonView({ id, q, H, post, setLive, back, next }: { id: string; q: (v
   /* «حاول مرّة أخرى»: بعد قراءة الشرح يعيد المتعلّم المحاولة؛ الخادم يعدّ المحاولات والإجابة الأخيرة هي التي تُحسب — تعلّم لا امتحان */
   const retry = (ex: Ex) => { setFb((p) => { const n2 = { ...p }; delete n2[ex.id]; return n2; }); setTries((t) => ({ ...t, [ex.id]: (t[ex.id] || 0) + 1 })); };
   return <section className="iq-wrap" ref={topRef}>
-    <p className="iq-crumb"><button type="button" className="iq-lnkbtn" onClick={back} data-testid="iq-back">← رِواقي</button> · {l.المنزلة.code} {l.المنزلة.title_ar}</p>
+    <p className="iq-crumb"><button type="button" className="iq-lnkbtn" onClick={back} data-testid="iq-back">← مستواي</button> · {l.المنزلة.code} {l.المنزلة.title_ar}</p>
     <h1 className="iq-h1" data-testid="iq-lesson-title">{l.title_ar}</h1>
     <p className="iq-goal">{l.مهارة && <u className="iq-skill" data-testid="iq-lesson-skill">{l.مهارة.name_ar}</u>}{l.can_do_ar ? <>أستطيع أن… {l.can_do_ar.replace(/^أستطيع أن\s*/, '')}</> : l.goal_ar}{l.can_do_en && <small lang="en" dir="ltr"> · {l.can_do_en}</small>}{l.descriptor_codes.length > 0 && <small> · {l.descriptor_codes.join(' · ')}</small>}<small> · ≈{Math.round((l.minutes_total || 120) / 60 * 10) / 10} س على أيام</small></p>
     <ol className="iq-stations" aria-label="محطّات الحلقة">{stations.map((s, i) => <li key={s}><button type="button" className={i === st ? 'on' : i < st ? 'done' : ''} onClick={() => go(i)} aria-current={i === st ? 'step' : undefined} data-testid="iq-station">{s}</button></li>)}</ol>
@@ -156,8 +156,8 @@ function LessonView({ id, q, H, post, setLive, back, next }: { id: string; q: (v
       {fin.passed ? <><p className="iq-closing">{fin.closing_ar || 'أحسنت. كلمات هذه الحلقة ستعود إليك غدًا في «أراجع».'}</p>
         {!fin.complete && <p className="iq-note" data-testid="iq-remaining">بقي {fin.remaining} مِرانًا في هذه الحلقة — عد غدًا لزيارة ثانية، أو <button type="button" className="iq-lnkbtn" onClick={nextVisit} data-testid="iq-next-visit">تابع الآن</button>.</p>}
         {(l.content.speaking || l.content.writing) && <div className="iq-prod">{l.content.speaking && <p><b>تحدّث:</b> {l.content.speaking.prompt_ar} <small>{l.content.speaking.guide_ar}</small></p>}{l.content.writing && <p><b>اكتب:</b> {l.content.writing.topic_ar} <small>{l.content.writing.instructions_ar}</small></p>}<small>تمرينان لك وحدك — لا يُرسلان ولا يُصحَّحان آليًّا.</small></div>}
-        <div className="iq-rowb">{fin.next ? <button type="button" className="iq-btn gold" onClick={() => next(fin.next!.id)} data-testid="iq-next-lesson">الحلقة التالية: {fin.next.title_ar} ←</button> : <button type="button" className="iq-btn gold" onClick={back}>إلى رِواقي</button>}</div></>
-        : <><p className="iq-closing">تحتاج ٧٠٪ ليُفتح أثر الحلقة. راجع الشرح تحت كلّ تمرين ثم أعدها — الإعادة مفتوحة دائمًا.</p><div className="iq-rowb"><button type="button" className="iq-btn" onClick={() => { setFb({}); setFin(null); go(stations.indexOf('المِران')); }} data-testid="iq-again">أعيدها</button><button type="button" className="iq-btn ghost" onClick={back}>إلى رِواقي</button></div></>}</>}</div>}
+        <div className="iq-rowb">{fin.next ? <button type="button" className="iq-btn gold" onClick={() => next(fin.next!.id)} data-testid="iq-next-lesson">الحلقة التالية: {fin.next.title_ar} ←</button> : <button type="button" className="iq-btn gold" onClick={back}>إلى مستواي</button>}</div></>
+        : <><p className="iq-closing">تحتاج ٧٠٪ ليُفتح أثر الحلقة. راجع الشرح تحت كلّ تمرين ثم أعدها — الإعادة مفتوحة دائمًا.</p><div className="iq-rowb"><button type="button" className="iq-btn" onClick={() => { setFb({}); setFin(null); go(stations.indexOf('المِران')); }} data-testid="iq-again">أعيدها</button><button type="button" className="iq-btn ghost" onClick={back}>إلى مستواي</button></div></>}</>}</div>}
   </section>;
 }
 
@@ -210,7 +210,7 @@ function Produce({ l, post, setLive, back, next }: { l: Lesson; post: (b: Record
   </div>;
 }
 
-/* ---------- مكتبة الرِّواق: نصوص قراءة/استماع موسَّعة (25–30 د) بأسئلة؛ الزمن يُحسب نشاط library ---------- */
+/* ---------- مكتبة المستوى: نصوص قراءة/استماع موسَّعة (25–30 د) بأسئلة؛ الزمن يُحسب نشاط library ---------- */
 function LibraryView({ id, q, H, post, setLive, open, back }: { id?: string; q: (v: string, e?: string) => string; H: () => Record<string, string>; post: (b: Record<string, unknown>) => Promise<any>; setLive: (s: string) => void; open: (id: string) => void; back: () => void }) {
   const [list, setList] = useState<{ id: string; code: string; kind: string; title_ar: string; minutes: number; درجة: number | null; تمّ: boolean }[] | null>(null); const [t, setT] = useState<{ id: string; kind: string; title_ar: string; body_ar: string; minutes: number; أسئلة: { i: number; q: string; options: { id: string; text: string }[] }[] } | null>(null); const [picks, setPicks] = useState<Record<number, string>>({}); const [res, setRes] = useState<{ score: number; results: { i: number; correct: boolean; correct_option: string; explanation_ar: string | null }[] } | null>(null);
   useEffect(() => { if (id) { setT(null); setPicks({}); setRes(null); fetch(q('library', `&id=${id}`), { headers: H(), cache: 'no-store' }).then((r) => r.json()).then((d) => d.ok ? setT(d.نصّ) : setLive('تعذّر فتح النصّ')); } else fetch(q('library'), { headers: H(), cache: 'no-store' }).then((r) => r.json()).then((d) => setList(d.ok ? d.نصوص : [])).catch(() => setList([])); }, [id, q, H, setLive]);
@@ -223,7 +223,7 @@ function LibraryView({ id, q, H, post, setLive, open, back }: { id?: string; q: 
         {!res ? <button type="button" className="iq-btn" disabled={!all} onClick={async () => { const d = await post({ action: 'library', id: t.id, picks: t.أسئلة.map((x) => Number(picks[x.i])) }); if (d.ok) { setRes(d); setLive(`${d.score}٪`); } }} data-testid="iq-lib-check">تحقّق</button> : <p className="iq-closing" data-testid="iq-lib-score">{res.score}٪ — {res.score >= 70 ? 'فهمتَ النصّ.' : 'اقرأه مرّة أخرى ببطء؛ الفهم يأتي بالتكرار.'}</p>}</div></section>; }
   if (!list) return <p className="iq-wait">نفتح المكتبة…</p>;
   return <section className="iq-wrap"><div className="iq-card"><h1 className="iq-h1">مكتبتي <small>نصوص قراءة واستماع أطول من الحلقة — 25 إلى 30 دقيقة لكلّ نصّ</small></h1>
-    {list.length === 0 ? <p className="iq-empty">لا نصوص معتمدة بعد في رِواقك.</p> : <ol className="iq-lessons">{list.map((x, i) => <li key={x.id} className={`iq-les ${x.تمّ ? 'done' : 'new'}`}><button type="button" onClick={() => open(x.id)} data-testid="iq-lib-item"><i>{i + 1}</i><span><u className="iq-skill">{x.kind === 'listen' ? 'أسمع وأفهم' : 'أقرأ وأفهم'}</u><b>{x.title_ar}</b><small>{x.code} · ≈{x.minutes} د</small></span><em>{x.تمّ ? `تمّ · ${x.درجة ?? ''}٪` : 'افتح'}</em></button></li>)}</ol>}</div></section>;
+    {list.length === 0 ? <p className="iq-empty">لا نصوص معتمدة بعد في مستواك.</p> : <ol className="iq-lessons">{list.map((x, i) => <li key={x.id} className={`iq-les ${x.تمّ ? 'done' : 'new'}`}><button type="button" onClick={() => open(x.id)} data-testid="iq-lib-item"><i>{i + 1}</i><span><u className="iq-skill">{x.kind === 'listen' ? 'أسمع وأفهم' : 'أقرأ وأفهم'}</u><b>{x.title_ar}</b><small>{x.code} · ≈{x.minutes} د</small></span><em>{x.تمّ ? `تمّ · ${x.درجة ?? ''}٪` : 'افتح'}</em></button></li>)}</ol>}</div></section>;
 }
 
 function ReviewsView({ q, H, post, setLive, done }: { q: (v: string) => string; H: () => Record<string, string>; post: (b: Record<string, unknown>) => Promise<any>; setLive: (s: string) => void; done: () => void }) {

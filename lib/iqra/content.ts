@@ -13,7 +13,7 @@
  *   - word_tap            : stimulus.words · مفتاح accepted.word
  *   - short_dictation     : stimulus.say (يُنطق على جهاز المتعلّم ولا يُعرض) · مفتاح accepted.text + accepted.alt (مقارنة بعد تطبيع الرسم)
  *   - picture_sequence    : stimulus.frames [{image, text}] · مفتاح accepted.order [نصوص الإطارات]
- *  + الحلقة تحمل مهارتها (skill) و«أستطيع أن…» وأكواد الواصفات · محطّة «أُنتج» (produce) · مكتبة الرِّواق · فاحص الإنصاف 60/40 · سحب 10 من 30.
+ *  + الحلقة تحمل مهارتها (skill) و«أستطيع أن…» وأكواد الواصفات · محطّة «أُنتج» (produce) · مكتبة المستوى · فاحص الإنصاف 60/40 · سحب 10 من 30.
  */
 import { IQRA_LIMITS, IQRA_SKILLS, SKILL_META, isIqraLevel, isIqraSkill, type IqraLevel, type IqraSkill } from './registry';
 

@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * «اقْرَأْ — من أَثَر» (ق1) — السجلّ: الأسماء الرسمية · الرِّواقات السبعة · الحدود الثابتة.
+ * «اقْرَأْ — من أَثَر» (ق1) — السجلّ: الأسماء الرسمية · المستويات السبعة · الحدود الثابتة.
  *  الاسم بالرسم القرآني «اقْرَأْ» (همزة وصل) — وفي الكلام العادي «إقرأ»؛ بالإنجليزية Iqra.
  *  المبدأ: تعلّم ذاتي غير متزامن على سُلّم الإطار الأوروبي المرجعي المشترك (CEFR)؛ الدخول بنتيجة «مِعيار» المعتمدة فقط؛
  *  واجهة المتعلّم عربية فقط؛ المحتوى يعتمده إنسان؛ لا أثر على التقييم أو الشهادة؛ التقدّم ملك المتعلّم ويُحذف فورًا عند الطلب.
@@ -10,7 +10,7 @@ export const IQRA_NAMES_AR = {
   full: 'اقْرَأْ — من أَثَر',
   en: 'Iqra — self-paced Arabic',
   nature: 'تعلّم ذاتي غير متزامن للعربية على سُلّم الإطار الأوروبي المرجعي',
-  hall: 'رِواق',           /* رِواق المستوى: بيت المتعلّم داخل اقْرَأْ */
+  hall: 'مستوى',           /* المستوى: بيت المتعلّم داخل اقْرَأْ */
   unit: 'مَنزِلة', units: 'المنازل',
   lesson: 'حَلْقة', lessons: 'الحلقات',
   exercise: 'مِران',
@@ -43,14 +43,14 @@ export const levelLabel = (l: IqraLevel) => `${LEVEL_META[l].name_ar} · ${LEVEL
 export const levelOrder = (l: IqraLevel) => IQRA_LEVELS.indexOf(l);
 export const nextLevel = (l: IqraLevel): IqraLevel | null => IQRA_LEVELS[levelOrder(l) + 1] || null;
 
-/** تحويل قرار مِعيار (assigned_level) إلى رِواق — مستويات السجلّ تتطابق؛ أي قيمة أخرى تعود null (لا تخمين) */
+/** تحويل قرار مِعيار (assigned_level) إلى مستوى — مستويات السجلّ تتطابق؛ أي قيمة أخرى تعود null (لا تخمين) */
 export const levelFromDecision = (v: unknown): IqraLevel | null => (isIqraLevel(v) ? v : v === 'BELOW_A1' || v === 'A0' ? 'PRE_A1' : null);
 
 export const IQRA_LIMITS = {
   lesson_pass_pct: 70,          /* «أثر الحلقة» يُفتح بـ 70% فأكثر — وتبقى الحلقة قابلة للإعادة بلا حدّ */
   review_steps_days: [1, 3, 7, 14, 30] as readonly number[],   /* التكرار المتباعد */
   review_batch: 12,             /* أقصى بطاقات في جلسة «أراجع» */
-  daily_question_pool: 1,       /* سؤال اليوم: واحد من بنود الرِّواق المعتمدة (بذرة اليوم + البريد) */
+  daily_question_pool: 1,       /* سؤال اليوم: واحد من بنود المستوى المعتمدة (بذرة اليوم + البريد) */
   cards_per_lesson_max: 16,
   items_per_lesson_max: 30,     /* الخطوة 2: 30 تمرينًا في الحلقة — 10 تُسحب في كلّ زيارة على ثلاثة أيام */
   items_per_lesson_target: 30,
@@ -84,7 +84,7 @@ export const STATIONS_AR = ['أسمع وأقرأ', 'كلماتي', 'القاعد
 export const EXERCISE_KINDS = ['mcq', 'matching', 'ordering', 'picture_choice', 'cloze_bank', 'true_false_notgiven', 'word_tap', 'short_dictation', 'picture_sequence'] as const;
 export const KIND_AR: Record<(typeof EXERCISE_KINDS)[number], string> = { mcq: 'اختيار', matching: 'مطابقة', ordering: 'ترتيب الجملة', picture_choice: 'اختيار بالصورة', cloze_bank: 'ملء الفراغ', true_false_notgiven: 'صحيح · خطأ · غير مذكور', word_tap: 'المس الكلمة', short_dictation: 'إملاء قصير', picture_sequence: 'ترتيب الصور' };
 
-/** «مِئة ساعة» — عقد الزمن (قرار 2026-11-17، السلّم المتدرّج): ساعات تعلّم ذاتي مقيسة داخل البوابة لكلّ رِواق.
+/** «مِئة ساعة» — عقد الزمن (قرار 2026-11-17، السلّم المتدرّج): ساعات تعلّم ذاتي مقيسة داخل البوابة لكلّ مستوى.
  *  مرجعيًّا: Cambridge GLH التراكمي A1 90–100 · A2 180–200 · B1 350–400 · B2 500–600 · C1 700–800 · C2 1000–1200؛ والعربية فئة FSI الرابعة فالسلّم يصعد. */
 export const HOURS_TARGET: Record<IqraLevel, number> = { PRE_A1: 40, A1: 100, A2: 120, B1: 180, B2: 200, C1: 220, C2: 240 };
 /** العَتَبة المرنة: الاختبار المبكّر يُفتح عند ≥ 70% من الساعات مع إتقان ≥ 90% من الحلقات؛ وإلّا الأرضية كاملة + الإتقان */
@@ -96,11 +96,11 @@ export const isActivity = (v: unknown): v is Activity => typeof v === 'string' &
 /** مفاتيح واجهة المتعلّم (عربية فقط) */
 export const UI_AR = {
   gate_title: 'ابدأ بمِعيار أولًا',
-  gate_body: 'اقْرَأْ يفتح رِواقك بعد نتيجة «مِعيار» المعتمدة، حتى تبدأ من موضعك الصحيح على السُّلّم لا قبله ولا بعده.',
+  gate_body: 'اقْرَأْ يفتح مستواك بعد نتيجة «مِعيار» المعتمدة، حتى تبدأ من موضعك الصحيح على السُّلّم لا قبله ولا بعده.',
   gate_cta: 'إلى مِعيار',
   pending_title: 'نتيجتك في انتظار الاعتماد',
-  pending_body: 'سيفتح رِواقك فور اعتماد الطاقم لقرار التسكين.',
-  empty_level: 'حلقات هذا الرِّواق قيد الإعداد والاعتماد — تعود قريبًا.',
+  pending_body: 'سيفتح مستواك فور اعتماد الطاقم لقرار التسكين.',
+  empty_level: 'حلقات هذا المستوى قيد الإعداد والاعتماد — تعود قريبًا.',
   ready: 'أتممتُ الحلقة',
   again: 'أعيدها',
   next: 'الحلقة التالية',

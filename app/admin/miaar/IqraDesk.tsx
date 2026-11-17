@@ -2,11 +2,11 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * «اقْرَأْ — مكتب المحتوى» (ق1) — للطاقم داخل قشرة مِعيار (التبويب 12).
- *  أعلى: الرِّواقات السبعة بحالات حلقاتها (مسوَّدة/مراجعة/معتمدة) وعدد المتعلّمين (k ≥ 5 وإلا «—»).
+ *  أعلى: المستويات السبعة بحالات حلقاتها (مسوَّدة/مراجعة/معتمدة) وعدد المتعلّمين (k ≥ 5 وإلا «—»).
  *  وسط: حلقات المستوى المختار — عرض كامل (النصّ · البطاقات · المِران بمفاتيحه) · اعتماد/إرجاع/أرشفة (مديرون) — اعتماد الحلقة يعتمد مِرانها.
  *  أسفل: استيراد حزمة iqra-pack-1 (ملف أو لصق) → فحص → استيراد كمسوَّدات · تسكين يدوي (مديرون).
  *  مبدأ: لا يصل المتعلّم إلا ما اعتمده إنسان هنا.
- *  الخطوة 2 (2026-11-17): شارة المهارة و«أستطيع أن…» لكلّ حلقة · ساعات الرِّواق (متوسّط ونسبة من بلغ الأرضية؛ k ≥ 5) · مكتبة الرِّواق باعتمادها ·
+ *  الخطوة 2 (2026-11-17): شارة المهارة و«أستطيع أن…» لكلّ حلقة · ساعات المستوى (متوسّط ونسبة من بلغ الأرضية؛ k ≥ 5) · مكتبة المستوى باعتمادها ·
  *   الحزمة iqra-pack-2 (9 أنواع مِران + مكتبة) مع تحذيرات القالب والإنصاف (60/40) غير المانعة.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -44,7 +44,7 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
 
   return <div className="iqd" data-testid="iqd">
     {err && <p className="am-err" role="alert">{err}</p>}{ok && <p className="iqd-ok" role="status">{ok}</p>}
-    <section className="am-card"><h3>الرِّواقات السبعة <small>حلقات كلّ مستوى بحالاتها · المتعلّمون النشطون (يُعرض الرقم عند 5 فأكثر)</small></h3>
+    <section className="am-card"><h3>المستويات السبعة <small>حلقات كلّ مستوى بحالاتها · المتعلّمون النشطون (يُعرض الرقم عند 5 فأكثر)</small></h3>
       <div className="iqd-levels" role="tablist" aria-label="المستوى">{ORDER.map((L) => { const o = d?.overview?.[L]; const m = d?.levels?.[L]; return <button key={L} role="tab" aria-selected={level === L} className={`iqd-lv${level === L ? ' on' : ''}`} onClick={() => setLevel(L)} data-testid={`iqd-lv-${L}`}><b>{m?.name_ar || L} · {m?.code || L}</b>{d?.hours_target && <small className="iqd-hrs" data-testid={`iqd-hrs-${L}`}>{d.hours_target[L]} س{d.hours?.[L] ? ` · متوسّط ${d.hours[L]!.avg_hours} س · بلغ الأرضية ${d.hours[L]!.reached_pct}٪` : ''}</small>}<span><i className="ap">{o?.approved || 0}</i> معتمدة · <i>{(o?.draft || 0) + (o?.in_review || 0)}</i> مسوَّدة</span><small>{o?.learners == null ? 'متعلّمون: —' : `متعلّمون: ${o.learners}`}</small></button>; })}</div></section>
 
     <section className="am-card"><h3>حلقات {d?.levels?.[level]?.name_ar} · {d?.levels?.[level]?.code} <small>{d?.lessons.length || 0} حلقة — لا يرى المتعلّم إلا المعتمدة</small></h3>
@@ -75,7 +75,7 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
         {open.status !== 'archived' && <button className="am-btn ghost" disabled={!!busy} onClick={() => void setStatus(open, 'archived')}>أرشفة</button>}</div>
       {!open.items.length && <p className="mm-note">لا تُعتمد حلقة بلا مِران — أضف تمارين عبر حزمة محدَّثة.</p>}</section>}
 
-    <section className="am-card"><h3>مكتبة الرِّواق <small>نصوص قراءة/استماع موسَّعة (25–30 د) — لا يراها المتعلّم إلا معتمدة</small></h3>
+    <section className="am-card"><h3>مكتبة المستوى <small>نصوص قراءة/استماع موسَّعة (25–30 د) — لا يراها المتعلّم إلا معتمدة</small></h3>
       {!d?.library?.length ? <p className="am-empty" data-testid="iqd-lib-empty">لا نصوص لهذا المستوى بعد — تأتي مع حزمة iqra-pack-2.</p> : <table className="mm-t" data-testid="iqd-lib-table"><thead><tr><th>الرمز</th><th>النصّ</th><th>النوع</th><th>أسئلة</th><th>الحالة</th><th></th></tr></thead><tbody>
         {d.library.map((x) => <tr key={x.id} data-testid="iqd-lib-row" data-status={x.status}><td dir="ltr">{x.code}</td><td><b>{x.title_ar}</b> <small>≈{x.minutes} د</small></td><td>{x.kind === 'listen' ? 'استماع' : 'قراءة'}</td><td>{x.questions}</td><td><span className={`iqd-st ${x.status}`}>{ST[x.status] || x.status}</span></td><td className="mm-acts"><button className="am-btn" onClick={() => void viewLib(x)} data-testid="iqd-lib-view">عرض</button></td></tr>)}</tbody></table>}
       {lib && <div className="iqd-open" data-testid="iqd-lib-open" style={{ marginTop: 12 }}><div className="iqd-oh"><h3>{lib.title_ar} <small dir="ltr">{lib.code}</small></h3><button className="am-btn ghost" onClick={() => setLib(null)}>إغلاق</button></div>
@@ -88,6 +88,7 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
       {packRes && <div className="iqd-res" data-testid="iqd-res">{packRes.success ? <><p><b>الحزمة:</b> {packRes.summary.lessons} حلقة · {packRes.summary.cards} بطاقة · {packRes.summary.exercises} مِران{packRes.summary.units ? ` · ${packRes.summary.units} منزلة` : ''}{packRes.summary.library ? ` · ${packRes.summary.library} نصّ مكتبة` : ''}{packRes.summary.kinds?.length ? ` · أنواع: ${packRes.summary.kinds.map((k: string) => KIND[k] || k).join('، ')}` : ''}{packRes.summary.fairness_warnings ? ` · تنبيهات إنصاف: ${packRes.summary.fairness_warnings} (غير مانعة)` : ''}</p>
         {packRes.summary.warnings?.length > 0 && <ul className="iqd-warn">{packRes.summary.warnings.map((w: any, i: number) => <li key={i}>{w.at}: {w.msg}</li>)}</ul>}
         {packRes.report && <p><b>النتيجة:</b> أُنشئت {packRes.report.lessons_created} · حُدّثت {packRes.report.lessons_updated} · تُركت معتمدة {packRes.report.lessons_skipped.length} · بطاقات {packRes.report.cards} · مِران {packRes.report.items}{packRes.report.errors.length ? ` · أخطاء ${packRes.report.errors.length}` : ''}</p>}
+        {packRes.report && packRes.report.lessons_skipped.length > 0 && <p className="iqd-hint" data-testid="iqd-skipped">حلقات معتمدة تُركت كما هي: {packRes.report.lessons_skipped.join(' · ')} — لاستبدالها بالمحتوى الجديد افتح كلّ واحدة ثم «إرجاع إلى مسوَّدة»، وأعد الاستيراد، ثم اعتمدها من جديد.</p>}
         {packRes.report?.errors?.length > 0 && <ul className="iqd-warn">{packRes.report.errors.map((w: string, i: number) => <li key={i}>{w}</li>)}</ul>}</>
         : <><p className="am-err">{packRes.error}</p>{packRes.problems && <ul className="iqd-warn">{packRes.problems.map((p: any, i: number) => <li key={i}>{p.at}: {p.msg}</li>)}</ul>}</>}</div>}</section>
 
@@ -96,7 +97,7 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
     <style jsx global>{`
 .iqd{display:grid;gap:14px}.iqd-ok{color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px 12px;font-size:13px;margin:0}
 .iqd-levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.iqd-lv{font:inherit;text-align:start;border:1px solid var(--line,#e8eef3);background:#fff;border-radius:14px;padding:10px 12px;cursor:pointer;display:grid;gap:2px}.iqd-lv.on{border-color:#0f2a4e;box-shadow:0 0 0 3px rgba(15,42,78,.12)}.iqd-lv b{color:#0f2a4e;font-size:14px}.iqd-lv span{font-size:12px;color:#475569}.iqd-lv i{font-style:normal;font-weight:900;color:#334155}.iqd-lv i.ap{color:#0f5c57}.iqd-lv small{font-size:11.5px;color:#64748b}
-.iqd-st{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;background:#f1f5f9;color:#334155}.iqd-st.approved{background:#dcfce7;color:#166534}.iqd-st.in_review{background:#fef9c3;color:#854d0e}.iqd-st.archived{background:#f1f5f9;color:#64748b}
+.iqd-hint{margin:8px 0 0;padding:8px 12px;border-radius:10px;background:#fef9c3;color:#854d0e;font-size:13px;line-height:1.8}.iqd-st{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;background:#f1f5f9;color:#334155}.iqd-st.approved{background:#dcfce7;color:#166534}.iqd-st.in_review{background:#fef9c3;color:#854d0e}.iqd-st.archived{background:#f1f5f9;color:#64748b}
 .iqd-open{border-top:3px solid #0b8a83}.iqd-oh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.iqd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.iqd h4{margin:12px 0 6px;color:#0f2a4e;font-size:15px}
 .iqd-text{white-space:pre-wrap;font:inherit;font-family:var(--font-read),"Noto Naskh Arabic",serif;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:15px;line-height:1.9}.iqd-rule{background:#fbf7ea;border-radius:12px;padding:8px 12px;margin-top:8px}.iqd-rule ul{margin:4px 0 0;padding-inline-start:18px}
 .iqd-cards{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14.5px;font-family:var(--font-read),"Noto Naskh Arabic",serif}.iqd-cards li{border-bottom:1px dashed #e2e8f0;padding:4px 0}.iqd-cards em{color:#475569}

@@ -1,13 +1,13 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /api/admin/iqra — «اقْرَأْ» (ق1) للطاقم: اعتماد الحلقات · استيراد حزم المحتوى · تسكين يدوي
- *  GET  ?level=A1              → نظرة عامّة (حلقات كل رِواق بحالاتها · المتعلّمون k≥5) + حلقات المستوى
+ *  GET  ?level=A1              → نظرة عامّة (حلقات كل مستوى بحالاتها · المتعلّمون k≥5) + حلقات المستوى
  *  GET  ?lesson=<uuid>         → الحلقة كاملةً للمراجعة (المحتوى · البطاقات · المِران مع مفاتيحه)
  *  POST {action:'status', id, status:'draft'|'in_review'|'approved'|'archived', note?}  (مديرون) — اعتماد الحلقة يعتمد مِرانها
  *       {action:'import', pack}                 (الطاقم) حزمة iqra-pack-1 → مسوَّدات (الحلقة المعتمدة لا تُمَسّ)
  *       {action:'validate', pack}               (الطاقم) فحص الحزمة بلا كتابة
  *       {action:'enrol', email, level, note?}   (مديرون) تسكين يدوي — يُسجَّل في التدقيق
- *  الخطوة 2: GET ?library=<uuid> نصّ مكتبة · GET يعيد hours (ساعات الرِّواقات k≥5) و library للمستوى · POST {action:'library_status', id, status} (مديرون)
+ *  الخطوة 2: GET ?library=<uuid> نصّ مكتبة · GET يعيد hours (ساعات المستويات k≥5) و library للمستوى · POST {action:'library_status', id, status} (مديرون)
  *            validate/import تقبل iqra-pack-2 (حلقات بمهارة و«أستطيع أن…» و30 تمرينًا من 9 أنواع + مكتبة) وتعيد تحذيرات القالب والإنصاف.
  *  كل كتابة تُسجَّل في audit_logs. لا ذكاء اصطناعي هنا.
  */

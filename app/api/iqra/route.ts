@@ -1,9 +1,9 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /api/iqra — «اقْرَأْ — من أَثَر» (ق1): واجهة المتعلّم
- *  الهوية: حساب أَثَر (Bearer) أو رمز نتيجة مِعيار (?code=ML-XXXX-XXXX) — كلاهما يفضي إلى البريد المطبَّع، وهو مفتاح الرِّواق.
- *  البوّابة: لا رِواق إلا بقرار تسكين معتمد من مِعيار (gate: none | pending | enrolled).
- *  GET  ?view=home                → الرِّواق: المنازل والحلقات المعتمدة · خطواتي · أيامي · أراجع المستحقّ · سؤال اليوم
+ *  الهوية: حساب أَثَر (Bearer) أو رمز نتيجة مِعيار (?code=ML-XXXX-XXXX) — كلاهما يفضي إلى البريد المطبَّع، وهو مفتاح المستوى.
+ *  البوّابة: لا مستوى إلا بقرار تسكين معتمد من مِعيار (gate: none | pending | enrolled).
+ *  GET  ?view=home                → المستوى: المنازل والحلقات المعتمدة · خطواتي · أيامي · أراجع المستحقّ · سؤال اليوم
  *  GET  ?view=lesson&id=<uuid>    → الحلقة: المحطّات الخمس (بلا مفاتيح الإجابة)
  *  GET  ?view=reviews             → بطاقات «أراجع» المستحقّة اليوم
  *  GET  ?view=notebook            → «دفتري»: كلماتي ونسبة الإتقان
@@ -12,7 +12,7 @@
  *  POST {action:'finish', lesson_id}                                         → إغلاق الحلقة (≥70% = تمّت وتُفتح البطاقات في «أراجع»)
  *  POST {action:'review', review_id, result:'again'|'good'|'easy'}           → التكرار المتباعد 1·3·7·14·30
  *  الخطوة 2 (2026-11-17):
- *  GET  ?view=library | ?view=library&id=<uuid>                              → مكتبة الرِّواق (نصوص قراءة/استماع معتمدة) · نصّ بأسئلته
+ *  GET  ?view=library | ?view=library&id=<uuid>                              → مكتبة المستوى (نصوص قراءة/استماع معتمدة) · نصّ بأسئلته
  *  POST {action:'tick', activity, seconds}                                   → «ساعاتي»: نبضة زمن نشط (≤ 60 ث لكلّ نبضة؛ سقف يومي)
  *  POST {action:'external', minutes, note}                                   → ساعات خارج أَثَر (تُعرض منفصلة ولا تُحتسب)
  *  POST {action:'produce', lesson_id, text, checked[]}                       → محطّة «أُنتج» (النصّ للمتعلّم وحده؛ الصوت لا يغادر الجهاز)

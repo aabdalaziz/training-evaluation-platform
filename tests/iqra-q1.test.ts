@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** «اقْرَأْ — من أَثَر» ق1 — المستويات السبعة · الحزمة (فحص/تطبيع/تحويل إلى البنك) · ما يراه المتعلّم بلا مفاتيح · التصحيح · التكرار المتباعد · السلسلة · البوّابة (لا رِواق بلا قرار مِعيار) · الاستيراد والاعتماد · الحلقة والإجابة والإغلاق · أراجع · دفتري · k≥5 · الخزنة والمسارات */
+/** «اقْرَأْ — من أَثَر» ق1 — المستويات السبعة · الحزمة (فحص/تطبيع/تحويل إلى البنك) · ما يراه المتعلّم بلا مفاتيح · التصحيح · التكرار المتباعد · السلسلة · البوّابة (لا مستوى بلا قرار مِعيار) · الاستيراد والاعتماد · الحلقة والإجابة والإغلاق · أراجع · دفتري · k≥5 · الخزنة والمسارات */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -109,16 +109,16 @@ test('اقْرَأْ: الاستيراد → مسوَّدات وبنود بنك 
   const back = await setLessonStatus(db, first.id, 'draft', STAFF, null); assert.ok(back.ok); assert.ok(first.item_ids.every((id: string) => db.T.question_bank_items.find((i) => i.id === id).status === 'draft'), 'الإرجاع يُرجع البنود');
 });
 
-test('اقْرَأْ: رِواق المتعلّم — المعتمد فقط · الحلقة بمحطّاتها بلا مفاتيح · الإجابة تُحفظ والخطأ يدخل «أراجع» · الإغلاق ≥70% يفتح «أثر الحلقة» والبطاقات · أقلّ من ذلك يُعاد', async () => {
+test('اقْرَأْ: مستوى المتعلّم — المعتمد فقط · الحلقة بمحطّاتها بلا مفاتيح · الإجابة تُحفظ والخطأ يدخل «أراجع» · الإغلاق ≥70% يفتح «أثر الحلقة» والبطاقات · أقلّ من ذلك يُعاد', async () => {
   const { db } = await seeded(true); const e = enrolled('A1');
   /* أرجع واحدة إلى مسوَّدة لنتأكد أنها تختفي */
   const hidden = db.T.iqra_lessons[10]; await setLessonStatus(db, hidden.id, 'draft', STAFF, null);
   const home = await learnerHome(db, e, new Date('2026-11-17T06:00:00Z'));
-  assert.equal(home.الرِّواق.label, 'مكتشف · A1'); assert.equal(home.الرِّواق.next, 'مبتدئ · A2'); assert.equal(home.خطواتي.total, 10); assert.equal(home.خطواتي.done, 0); assert.equal(home.فارغ, false); assert.equal(home.أيامي, 0); assert.equal(home.أراجع_مستحقّ, 0);
+  assert.equal(home.المستوى.label, 'مكتشف · A1'); assert.equal(home.المستوى.next, 'مبتدئ · A2'); assert.equal(home.خطواتي.total, 10); assert.equal(home.خطواتي.done, 0); assert.equal(home.فارغ, false); assert.equal(home.أيامي, 0); assert.equal(home.أراجع_مستحقّ, 0);
   assert.ok(home.منازل.length >= 3 && home.منازل.every((u) => u.حلقات.length > 0), 'المنازل التي فيها حلقات فقط'); assert.ok(home.منازل.flatMap((u) => u.حلقات).every((h) => h.حالة === 'new' && !('content' in h)));
   assert.ok(home.سؤال_اليوم && home.سؤال_اليوم.kind === 'mcq' && !JSON.stringify(home.سؤال_اليوم).includes('correct'), 'سؤال اليوم بلا مفتاح');
   const same = await learnerHome(db, e, new Date('2026-11-17T18:00:00Z')); assert.equal(same.سؤال_اليوم!.id, home.سؤال_اليوم!.id, 'يثبت لليوم نفسه');
-  assert.equal(await lessonView(db, e, hidden.id), null, 'المسوَّدة لا تُفتح'); assert.equal(await lessonView(db, enrolled('B1'), home.التالية!.id), null, 'حلقة من رِواق آخر لا تُفتح');
+  assert.equal(await lessonView(db, e, hidden.id), null, 'المسوَّدة لا تُفتح'); assert.equal(await lessonView(db, enrolled('B1'), home.التالية!.id), null, 'حلقة من مستوى آخر لا تُفتح');
   const v = (await lessonView(db, e, home.التالية!.id))!; assert.ok(v.content.intro_ar && v.بطاقات.length > 0 && v.مِران.length >= 3); assert.equal(JSON.stringify(v.مِران).includes('correct'), false); assert.deepEqual(v.قريبًا, [IQRA_NAMES_AR.tutor_soon, IQRA_NAMES_AR.voice_soon]); assert.equal(v.تقدّمي.status, 'started');
   assert.equal(db.T.iqra_progress.length, 1, 'فتح الحلقة يسجّل البدء');
   /* إجابات: الأولى خطأ ثم صواب للبقية */

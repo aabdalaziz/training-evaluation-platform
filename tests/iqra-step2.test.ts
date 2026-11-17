@@ -2,7 +2,7 @@
 /** «اقْرَأْ — من أَثَر» الخطوة 2 («100 ساعة» + جولة الملاحظات 1):
  *  سلّم الساعات وقاعدة العَتَبة · المهارات الخمس والمحطّات الستّ · تسعة أنواع مِران (تطبيع · بنك · ما يراه المتعلّم بلا مفاتيح · تصحيح) ·
  *  السحب 10 من 30 على زيارات (جديد → خطأ → صواب، مستقرّ بالبذرة) · «ساعاتي» (نبضة ≤ 60 ث · سقف يومي · خارج أَثَر لا يُحتسب · تقدير صادق) ·
- *  محطّة «أُنتج» · مكتبة الرِّواق · فاحص الإنصاف 60/40 غير المانع · فاحص القالب · الخزانة · النسيان الفوري.
+ *  محطّة «أُنتج» · مكتبة المستوى · فاحص الإنصاف 60/40 غير المانع · فاحص القالب · الخزانة · النسيان الفوري.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -121,7 +121,20 @@ test('الاستيراد — الأعمدة الجديدة · المكتبة ت�
   const ov = await adminOverview(db); assert.equal(ov.A1.approved, 5); assert.equal(ov.A1.library, 2);
 });
 
-test('المتعلّم — الرِّواق يعرض المهارة و«أستطيع أن» و«ساعاتي» (0 من 100) · الحلقة تسحب 10 من 30 · الإتمام يحتاج إجابة العشرة · الزيارة التالية تسحب غيرها · 3 زيارات تكمل الحلقة', async () => {
+test('الاستيراد فوق حلقة قائمة — المسوَّدة تُستبدل كاملةً · البنود القديمة التي لم تعد في الحزمة تُؤرشف لا تُحذف · المعتمدة تُترك حتى تُرجَع إلى مسوَّدة', async () => {
+  const { db } = await seeded(); const l0 = db.T.iqra_lessons.find((x) => x.code === 'A1-U01-L01'); assert.equal(l0.item_ids.length, 30);
+  const smaller = normalizePack({ ...PACK2, lessons: [{ ...PACK2.lessons[0], title_ar: 'عنوان محدَّث', exercises: PACK2.lessons[0].exercises.slice(0, 12) }] }); assert.ok(smaller.ok, JSON.stringify(smaller));
+  const skip = await importPack(db, smaller.pack, STAFF, 'batch-s2c'); assert.deepEqual(skip.lessons_skipped, ['A1-U01-L01']); assert.equal(skip.lessons_updated, 0); assert.equal(l0.title_ar, 'أسمع وأفهم: التعارف', 'المعتمدة لا تُمَسّ');
+  const back = await setLessonStatus(db, l0.id, 'draft', STAFF, null); assert.ok(back.ok);
+  const rep = await importPack(db, smaller.pack, STAFF, 'batch-s2d'); assert.equal(rep.lessons_updated, 1); assert.equal(rep.items, 12); assert.equal(rep.errors.length, 0);
+  const l1 = db.T.iqra_lessons.find((x) => x.code === 'A1-U01-L01'); assert.equal(l1.id, l0.id, 'المعرّف نفسه — تقدّم المتعلّمين لا يضيع'); assert.equal(l1.title_ar, 'عنوان محدَّث'); assert.equal(l1.item_ids.length, 12); assert.equal(l1.status, 'draft');
+  const mine = db.T.question_bank_items.filter((r) => r.item_code.startsWith('IQ-A1-U01-L01-')); assert.equal(mine.length, 30, 'لا حذف');
+  assert.equal(mine.filter((r) => r.status === 'archived').length, 18, 'الـ18 الزائدة تُؤرشف'); assert.ok(mine.filter((r) => r.status !== 'archived').every((r) => l1.item_ids.includes(r.id)));
+  assert.equal(db.T.iqra_cards.filter((c) => c.lesson_id === l0.id).length, PACK2.lessons[0].cards.length, 'البطاقات تُستبدل لا تتراكم');
+  const ok = await setLessonStatus(db, l0.id, 'approved', STAFF, null); assert.ok(ok.ok); assert.equal(mine.filter((r) => r.status === 'approved').length, 12); assert.equal(mine.filter((r) => r.status === 'archived').length, 18, 'الاعتماد لا يُحيي المؤرشف');
+});
+
+test('المتعلّم — المستوى يعرض المهارة و«أستطيع أن» و«ساعاتي» (0 من 100) · الحلقة تسحب 10 من 30 · الإتمام يحتاج إجابة العشرة · الزيارة التالية تسحب غيرها · 3 زيارات تكمل الحلقة', async () => {
   const { db } = await seeded(); const e = enrolled();
   const home = await learnerHome(db, e); assert.equal(home.ساعاتي!.target, 100); assert.equal(home.ساعاتي!.hours, 0); assert.equal(home.ساعاتي!.threshold.state, 'building'); assert.equal(home.مكتبة, 2);
   const first = home.منازل![0].حلقات[0]; assert.equal(first.مهارة!.key, 'listen'); assert.ok(first.can_do_ar.startsWith('أستطيع')); assert.equal(first.الكلّ, 30); assert.equal(first.مجاب, 0); assert.equal(first.minutes_total, 120);
@@ -171,7 +184,7 @@ test('«أُنتج» — النصّ يُحفظ للمتعلّم وحده ويُ�
   assert.equal((await saveProduce(db, e, { lesson_id: '00000000-0000-4000-8000-000000000999', text: 'x', checked: [] })).ok, false);
 });
 
-test('مكتبة الرِّواق — المعتمد فقط · نصّ الاستماع لا يكشف جسمه قبل الإجابة؟ (يكشفه بعد) · الأسئلة بلا مفاتيح · التصحيح والدرجة · التكرار يحدّث لا يكرّر', async () => {
+test('مكتبة المستوى — المعتمد فقط · نصّ الاستماع لا يكشف جسمه قبل الإجابة؟ (يكشفه بعد) · الأسئلة بلا مفاتيح · التصحيح والدرجة · التكرار يحدّث لا يكرّر', async () => {
   const { db } = await seeded(); const e = enrolled();
   const lst = await libraryList(db, e); assert.equal(lst.نصوص.length, 2); assert.equal(lst.نصوص[0].تمّ, false);
   await setLibraryStatus(db, db.T.iqra_library[1].id, 'draft', STAFF); assert.equal((await libraryList(db, e)).نصوص.length, 1); await setLibraryStatus(db, db.T.iqra_library[1].id, 'approved', STAFF);
@@ -179,7 +192,7 @@ test('مكتبة الرِّواق — المعتمد فقط · نصّ الاست
   const r = await libraryAnswer(db, e, v.id, [0, 1, 0]); assert.ok(r.ok); assert.equal(r.score, 67); assert.equal(r.results.filter((x) => x.correct).length, 2); assert.equal(r.results[0].explanation_ar, 'قالت: أنا من جدّة.');
   const r2 = await libraryAnswer(db, e, v.id, [0, 1, 2]); assert.ok(r2.ok); assert.equal(r2.score, 100); assert.equal(db.T.iqra_progress.filter((x) => x.library_id === v.id).length, 1, 'صفّ واحد');
   assert.equal((await libraryList(db, e)).نصوص.find((x) => x.code === 'A1-U01-R01')!.درجة, 100); assert.equal((await learnerHome(db, e)).خطواتي!.done, 0, 'المكتبة لا تُعدّ حلقة');
-  assert.equal((await libraryAnswer(db, e, v.id, [0])).ok, false); assert.equal((await libraryView(db, enrolled('A2'), v.id)), null, 'نصّ من رِواق آخر لا يُفتح');
+  assert.equal((await libraryAnswer(db, e, v.id, [0])).ok, false); assert.equal((await libraryView(db, enrolled('A2'), v.id)), null, 'نصّ من مستوى آخر لا يُفتح');
 });
 
 test('الخزانة — iqra_time_log بياناتٌ شخصية بسياسة حذف · iqra_library محتوى بلا بيانات شخصية · لا بيانات شخصية في الصور', () => {

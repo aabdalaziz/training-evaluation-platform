@@ -12,7 +12,7 @@
  */
 import { invalidatePoolCache } from './bank';
 /* بلا استيراد من exit.ts تفاديًا لدورة الاستيراد (blueprint → syllabus → exit → blueprint) */
-export const UNIT_LEVELS = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const; /* اقْرَأْ ق1: اتّسعت الخريطة إلى المستويات السبعة (Pre-A1 وC2 لرِواقات اقْرَأْ؛ اختبارات العبور تبقى A1–C1 في exit.ts) */
+export const UNIT_LEVELS = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const; /* اقْرَأْ ق1: اتّسعت الخريطة إلى المستويات السبعة (Pre-A1 وC2 لمستويات اقْرَأْ؛ اختبارات العبور تبقى A1–C1 في exit.ts) */
 export type ExitLevel = (typeof UNIT_LEVELS)[number];
 
 type Db = any;

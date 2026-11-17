@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * «اقْرَأْ» ق1 — طبقة القاعدة: التسكين من قرار مِعيار · رِواق المتعلّم · الحلقة · التصحيح على الخادم · أراجع · دفتري · الطاقم (اعتماد/استيراد).
+ * «اقْرَأْ» ق1 — طبقة القاعدة: التسكين من قرار مِعيار · مستوى المتعلّم · الحلقة · التصحيح على الخادم · أراجع · دفتري · الطاقم (اعتماد/استيراد).
  *  مفتاح المتعلّم = البريد المطبَّع (كما مِعيار). لا أسماء في أي ردّ جماعي؛ أرقام الطاقم الجماعية تُحجب تحت k < 5.
  */
 import { IQRA_LIMITS, IQRA_NAMES_AR, LEVEL_META, HOURS_TARGET, THRESHOLD_RULE, SKILL_META, COUNTED_ACTIVITIES, levelFromDecision, levelLabel, isIqraLevel, isActivity, nextLevel, type IqraLevel, type IqraSkill, type Activity } from './registry';
@@ -69,7 +69,7 @@ export async function logTime(db: Db, e: Enrolment, activity: unknown, seconds: 
   else await db.from('iqra_time_log').insert({ learner_email: e.learner_email, user_id: e.user_id, level: e.level, day, activity, seconds: total, note, updated_at: nowIso() });
   return { ok: true as const, day, activity, seconds: total };
 }
-/** ملخّص الساعات للرِّواق: مقيسة (تُحتسب) · خارج أَثَر (تُعرض) · الهدف · الأسبوعان الأخيران · تقدير صادق للوصول */
+/** ملخّص الساعات للمستوى: مقيسة (تُحتسب) · خارج أَثَر (تُعرض) · الهدف · الأسبوعان الأخيران · تقدير صادق للوصول */
 export async function hoursSummary(db: Db, e: Enrolment, masteryPct: number, now = new Date()) {
   const { data } = await db.from('iqra_time_log').select('day, activity, seconds').eq('learner_email', e.learner_email).eq('level', e.level).limit(5000);
   const rows = (data || []) as { day: string; activity: Activity; seconds: number }[];
@@ -83,7 +83,7 @@ export async function hoursSummary(db: Db, e: Enrolment, masteryPct: number, now
   return { hours, target, pct, external_hours: Math.round((external / 3600) * 10) / 10, by_activity: Object.fromEntries(COUNTED_ACTIVITIES.map((a) => [a, Math.round(((by[a] || 0) / 3600) * 10) / 10])), per_week: perWeek, weeks_left: weeks, today_min: Math.round((weekly[today] || 0) / 60), mastery_pct: masteryPct, threshold: { early_ready: early, full_ready: full, early_rule: `${THRESHOLD_RULE.early_hours_pct}% من الساعات مع إتقان ${THRESHOLD_RULE.early_mastery_pct}%`, state: full ? 'ready' : early ? 'early' : 'building' } };
 }
 
-/* ---------- رِواق المتعلّم ---------- */
+/* ---------- مستوى المتعلّم ---------- */
 export async function learnerHome(db: Db, e: Enrolment, now = new Date()) {
   const [units, lessons, prog] = await Promise.all([unitsOf(db, e.level), approvedLessons(db, e.level), progressOf(db, e.learner_email)]);
   const byUnit = new Map<string, LessonRow[]>(); for (const l of lessons) { const a = byUnit.get(l.unit_code) || []; a.push(l); byUnit.set(l.unit_code, a); }
@@ -100,14 +100,14 @@ export async function learnerHome(db: Db, e: Enrolment, now = new Date()) {
   const { count: libN } = await db.from('iqra_library').select('id', { count: 'exact', head: true }).eq('level', e.level).eq('status', 'approved');
   return {
     ساعاتي, مكتبة: Number(libN || 0),
-    الرِّواق: { level: e.level, label: levelLabel(e.level), name_ar: LEVEL_META[e.level].name_ar, code: LEVEL_META[e.level].code, line_ar: LEVEL_META[e.level].line_ar, can_ar: LEVEL_META[e.level].can_ar, next: nextLevel(e.level) ? levelLabel(nextLevel(e.level) as IqraLevel) : null, source: e.source },
+    المستوى: { level: e.level, label: levelLabel(e.level), name_ar: LEVEL_META[e.level].name_ar, code: LEVEL_META[e.level].code, line_ar: LEVEL_META[e.level].line_ar, can_ar: LEVEL_META[e.level].can_ar, next: nextLevel(e.level) ? levelLabel(nextLevel(e.level) as IqraLevel) : null, source: e.source },
     منازل, خطواتي: { done, total, pct: scorePct(done, total) }, أيامي: streakDays(days, riyadhDate(now)), أراجع_مستحقّ: Number(due || 0),
     التالية: nextOne ? { id: nextOne.id, title_ar: nextOne.title_ar, unit_code: nextOne.unit_code } : null,
     سؤال_اليوم: daily, فارغ: total === 0,
   };
 }
 
-/** سؤال اليوم: بند معتمد واحد من رِواق المتعلّم، يثبت لليوم نفسه (بذرة التاريخ + البريد) — تصحيحه عبر action=answer بلا حفظ */
+/** سؤال اليوم: بند معتمد واحد من مستوى المتعلّم، يثبت لليوم نفسه (بذرة التاريخ + البريد) — تصحيحه عبر action=answer بلا حفظ */
 export async function dailyQuestion(db: Db, e: Enrolment, now: Date): Promise<(PublicExercise & { seed: string }) | null> {
   const { data } = await db.from('question_bank_items').select('id, item_type, question_text, options, stimulus').eq('source_kind', 'iqra').eq('status', 'approved').eq('level', e.level).eq('item_type', 'mcq').limit(300);
   const rows = (data || []) as any[]; if (!rows.length) return null;
@@ -120,7 +120,7 @@ async function lessonById(db: Db, id: string): Promise<LessonRow | null> { if (!
 async function itemsOf(db: Db, ids: string[]) { if (!ids.length) return [] as any[]; const { data } = await db.from('question_bank_items').select('id, item_type, question_text, options, stimulus, status').in('id', ids); const by = new Map(((data || []) as any[]).map((r) => [r.id, r])); return ids.map((i) => by.get(i)).filter(Boolean); }
 export async function lessonView(db: Db, e: Enrolment, lessonId: string) {
   const l = await lessonById(db, lessonId); if (!l || l.status !== 'approved') return null;
-  const u = (await unitsOf(db, e.level)).find((x) => x.code === l.unit_code); if (!u) return null; /* حلقة من رِواق آخر */
+  const u = (await unitsOf(db, e.level)).find((x) => x.code === l.unit_code); if (!u) return null; /* حلقة من مستوى آخر */
   const [items, cards, p] = await Promise.all([itemsOf(db, l.item_ids || []), db.from('iqra_cards').select('id, idx, word_ar, pos, gloss_ar, example_ar, audio_path, image_path').eq('lesson_id', l.id).order('idx'), db.from('iqra_progress').select('status, score, attempts, answers').eq('learner_email', e.learner_email).eq('lesson_id', l.id).maybeSingle()]);
   await db.from('iqra_progress').upsert({ learner_email: e.learner_email, user_id: e.user_id, lesson_id: l.id, status: p.data?.status || 'started', score: p.data?.score ?? null, attempts: p.data?.attempts || 0, answers: p.data?.answers || {}, last_seen_at: nowIso(), done_at: p.data?.done_at || null }, { onConflict: 'learner_email,lesson_id' });
   /* الخطوة 2: 10 من 30 في كلّ زيارة — ما لم يُجَب أولًا، ثم الأخطاء؛ البذرة = الحلقة + رقم الزيارة فيثبت السحب داخل الزيارة نفسها */
@@ -185,7 +185,7 @@ export async function saveProduce(db: Db, e: Enrolment, input: { lesson_id: unkn
   return { ok: true as const, words, model_ar: l.content?.produce?.model_ar || '' };
 }
 
-/* ---------- مكتبة الرِّواق ---------- */
+/* ---------- مكتبة المستوى ---------- */
 const LIB_COLS = 'id, code, unit_code, level, kind, title_ar, body_ar, minutes, questions, descriptor_codes, status';
 export async function libraryList(db: Db, e: Enrolment) {
   const [{ data }, { data: pr }] = await Promise.all([db.from('iqra_library').select('id, code, unit_code, kind, title_ar, minutes, status').eq('level', e.level).eq('status', 'approved').order('code').limit(200), db.from('iqra_progress').select('library_id, score, done_at').eq('learner_email', e.learner_email).not('library_id', 'is', null).limit(500)]);
@@ -264,7 +264,7 @@ export async function setLibraryStatus(db: Db, id: unknown, status: unknown, by:
   if (!isId(id) || !(LESSON_STATUSES as readonly string[]).includes(String(status))) return { ok: false as const, error: 'bad_input' };
   const r = await db.from('iqra_library').update({ status, reviewed_by: by.email, reviewed_at: nowIso(), updated_at: nowIso() }).eq('id', id); return r.error ? { ok: false as const, error: r.error.message } : { ok: true as const };
 }
-/** ساعات الرِّواق للطاقم: متوسّط الساعات ومن بلغ الأرضية — مجموعات ≥ 5 فقط، بلا أسماء */
+/** ساعات المستوى للطاقم: متوسّط الساعات ومن بلغ الأرضية — مجموعات ≥ 5 فقط، بلا أسماء */
 export async function adminHours(db: Db) {
   const { data } = await db.from('iqra_time_log').select('learner_email, level, activity, seconds').neq('activity', 'external').limit(20000);
   const per = new Map<string, Map<string, number>>(); for (const r of (data || []) as any[]) { const m = per.get(r.level) || new Map(); m.set(r.learner_email, (m.get(r.learner_email) || 0) + Number(r.seconds || 0)); per.set(r.level, m); }
@@ -299,6 +299,7 @@ export async function importPack(db: Db, pack: Pack, by: { email: string; id: st
     const level = (have.get(l.unit_code) as any).level as IqraLevel;
     const { data: old } = await db.from('iqra_lessons').select('id, status, item_ids').eq('code', l.code).maybeSingle();
     if (old && old.status === 'approved') { report.lessons_skipped.push(l.code); continue; }
+    const oldItemIds: string[] = [...(((old?.item_ids as string[] | null) || []))];
     /* البنود */
     const rows = l.exercises.map((e, i) => exerciseToBank(e, l.code, i + 1, level, l.unit_code, l.skill || null, version)); const itemIds: string[] = [];
     for (const r of rows) {
@@ -310,7 +311,7 @@ export async function importPack(db: Db, pack: Pack, by: { email: string; id: st
     }
     const row = { code: l.code, unit_code: l.unit_code, idx: l.idx, title_ar: l.title_ar, goal_ar: l.goal_ar || '', minutes: l.minutes || 10, minutes_total: l.minutes_total || 120, skill: l.skill || null, can_do_ar: l.can_do_ar || '', can_do_en: l.can_do_en || '', descriptor_codes: l.descriptor_codes || [], domain: l.domain || 'شخصي', content: l.content, item_ids: itemIds, status: 'draft', version, import_batch_id: batchId, updated_at: nowIso() };
     let lessonId: string | null = null;
-    if (old) { const r = await db.from('iqra_lessons').update(row).eq('id', old.id); if (r.error) { report.errors.push(`${l.code}: ${r.error.message}`); continue; } lessonId = old.id; report.lessons_updated += 1; await db.from('iqra_cards').delete().eq('lesson_id', old.id); }
+    if (old) { const r = await db.from('iqra_lessons').update(row).eq('id', old.id); if (r.error) { report.errors.push(`${l.code}: ${r.error.message}`); continue; } lessonId = old.id; report.lessons_updated += 1; await db.from('iqra_cards').delete().eq('lesson_id', old.id); const stale = oldItemIds.filter((id) => !itemIds.includes(id)); if (stale.length) { await db.from('question_bank_items').update({ status: 'archived', updated_at: nowIso() }).in('id', stale).eq('source_kind', 'iqra'); invalidatePoolCache(); } /* البنود القديمة التي لم تعد في الحلقة تُؤرشف لا تُحذف (سجلّ المتعلّمين) */ }
     else { const r = await db.from('iqra_lessons').insert({ ...row, created_at: nowIso() }).select('id').single(); if (r.error || !r.data?.id) { report.errors.push(`${l.code}: ${r.error?.message || 'no id'}`); continue; } lessonId = r.data.id; report.lessons_created += 1; }
     if (l.cards.length) { const r = await db.from('iqra_cards').insert(l.cards.map((c, i) => ({ lesson_id: lessonId, unit_code: l.unit_code, idx: i + 1, word_ar: c.word_ar, pos: c.pos || null, gloss_ar: c.gloss_ar, example_ar: c.example_ar || '', audio_path: c.audio_path || null, image_path: c.image_path || null, created_at: nowIso() }))); if (!r.error) report.cards += l.cards.length; else report.errors.push(`${l.code}/cards: ${r.error.message}`); }
   }
