@@ -164,7 +164,7 @@ def segments_lesson(l):
     if c.get('text') and c['text'].get('body'):
         for i, ln in enumerate(c['text']['body'].split('\n')):
             m = LINE_RE.match(ln.strip())
-            if m: said[re.sub(r'[^' + AR + ']', '', m.group(2))] = who(m.group(1))
+            if m and (c['text'].get('kind') == 'dialogue' or in_cast(m.group(1))): said[re.sub(r'[^' + AR + ']', '', m.group(2))] = who(m.group(1))  # «الموضوع: …» في مذكّرة ليس متكلّمًا
             elif ln.strip() and (V.get('authors') or {}).get(l['code']): said[re.sub(r'[^' + AR + ']', '', ln)] = author_of(l['code'], i, ln.strip())
     for ex in l.get('exercises', []):
         if ex['kind'] == 'short_dictation':
