@@ -149,7 +149,7 @@ def segments_lesson(l):
             ln = ln.strip()
             if not ln: continue
             m = re.match(r'^\((.+)\)$', ln)
-            if m: S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, m.group(1), narr())); continue
+            if m: author_of(l['code'], i, ln); S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, m.group(1), narr())); continue  # عنوان المشهد «(١ — …)» للراوي، لكنّه يحدّث كاتب الفقرات التالية (authors.at)
             m = LINE_RE.match(ln); parts = m and split_speakers(m.group(1), m.group(2))
             if m and (c['text'].get('kind') == 'dialogue' or (in_cast(m.group(1)) and (parts or not re.search(r'[،.!؟]\s*[^:،.!؟]{2,14}\s?:', m.group(2))))):  # سطر «هند: …» داخل نصّ سرديّ يُقرأ بصوت هند (وإن جمع السطر عدّة متكلّمين من الطاقم قُسِّم بينهم، وإلّا فالراوي)
                 w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, parts or m.group(2), w))
