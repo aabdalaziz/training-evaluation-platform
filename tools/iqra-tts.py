@@ -34,7 +34,7 @@ def dabt_lint(t: str):
     for w in re.findall('[' + AR + ']+', t):
         letters = re.findall('([^' + HARAKAT + '])([' + HARAKAT + ']*)', w)
         for i, (ch, hk) in enumerate(letters):
-            if hk or ch in 'اىآءٱ' or ch in '٠١٢٣٤٥٦٧٨٩': continue
+            if hk or ch in 'اىآءٱـ' or ch in '٠١٢٣٤٥٦٧٨٩': continue
             prev_hk = letters[i - 1][1] if i else ''
             if ch == 'و' and '\u064F' in prev_hk: continue
             if ch == 'ي' and '\u0650' in prev_hk: continue
@@ -44,7 +44,9 @@ def dabt_lint(t: str):
     return bad
 PAUSE_RE = re.compile('([' + AR + ']+)(?=\\s*(?:[.،؟!:؛,;?]|$))')
 def waqf(word: str) -> str:
-    """الوقف: تسقط الحركة الأخيرة قبل الترقيم ونهاية المقطع؛ تنوين الفتح مع الألف يبقى ألفًا."""
+    """الوقف: تسقط الحركة الأخيرة قبل الترقيم ونهاية المقطع؛ تنوين الفتح مع الألف يبقى ألفًا.
+    استثناء المؤلّف: تطويل «ـ» بعد الحركة الأخيرة (كَتَبْتُـ،) = لا وقف، تُنطق الحركة (جداول التصريف في حلقات النحو)."""
+    if word.endswith('\u0640'): return word[:-1]
     if word.endswith('\u064Bا'): return word[:-2] + 'ا'
     if word.endswith('\u064Bى'): return word[:-2] + 'ى'
     w = re.sub('[\u064B\u064C\u064D\u064E\u064F\u0650]*(\u0651?)[\u064B\u064C\u064D\u064E\u064F\u0650]*$', r'\1', word)  # الشدّة تبقى أيًّا كان ترتيبها
@@ -82,6 +84,7 @@ def _cast_in(s: str):
 def who(speaker: str):
     """→ (voice, pitch, rate_adj, g, a, canonical) لصوت المتكلّم: الاسم في السجلّ (أو كنيته: الجدّة → فاطمة)، أو دور عُرِّف باسمه في النصّ، ثمّ الجنس من العلامات، ثمّ احتياطيّ مرقّم داخل النصّ."""
     sp = norm_speaker(speaker); sp = V.get('aliases', {}).get(sp, sp); sp = _ROLE.get(sp, sp)
+    if sp in ('الراوي', 'الراوية'): return narr()  # A2 «الراوي يسأل»: سطر «الراوي: …» داخل النصّ بصوت الراوي نفسه لا بصوت احتياطي
     name, c = _cast_in(sp); role = sp
     if not name:
         par = re.search(r'\(([^)]*)\)', speaker)
