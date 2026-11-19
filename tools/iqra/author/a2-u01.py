@@ -401,6 +401,7 @@ LIBRARY = [
      {'q': 'ماذا فعلت العائلة في اليوم الثاني؟', 'options': ['سافرت إلى جدّة', 'زارت الجيران ووزّعت الكعك', 'ذهبت إلى السوق'], 'correct': 1},
      {'q': 'ماذا طلبت الجدّة من كين؟', 'options': ['أن يرسل الصور', 'أن يتعلّم الطبخ', 'أن يأتي في العيد القادم'], 'correct': 2}]}]
 
+import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import _h; _h.UNIT_CODE = 'A2-U01'; _h.apply_uplift([L01, L02, L03, L04, L05])  # دفعة رفع «أُنتج» 2026-11-19
 PACK = {'version': 'iqra-pack-2', 'source': 'athar-authored · A2 batch 1 · U01 (2026-11-18)', 'units': [UNIT], 'lessons': [L01, L02, L03, L04, L05], 'library': LIBRARY}
 json.dump(PACK, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print('wrote', OUT, 'lessons', len(PACK['lessons']), 'exercises', sum(len(l['exercises']) for l in PACK['lessons']), 'cards', sum(len(l['cards']) for l in PACK['lessons']))
