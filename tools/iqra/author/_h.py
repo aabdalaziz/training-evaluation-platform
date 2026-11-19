@@ -22,7 +22,25 @@ def lesson(idx, title, skill, domain, goal, can_ar, can_en, codes, intro, text, 
             'content': {'intro_ar': intro, 'text': text, 'grammar': grammar, 'produce': produce, 'closing_ar': closing}, 'cards': cards, 'exercises': exercises}
 
 
+def apply_uplift(lessons):
+    """دفعة رفع «أُنتج» (2026-11-18، الخيار أ): إن وُجد uplift/<UNIT>.json طُبّقت تعديلاته على الحلقات (goal_ar · can_do_ar · can_do_en · content.produce)
+    فوق ما يولّده المولّد — المولّد يبقى كما هو، والرفع ملفّ مستقلّ قابل للمراجعة."""
+    f = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uplift', f'{UNIT_CODE}.json')
+    if not os.path.exists(f): return 0
+    ov = json.load(open(f, encoding='utf-8')); n = 0
+    for l in lessons:
+        o = ov.get(l['code'])
+        if not o: continue
+        for k in ('goal_ar', 'can_do_ar', 'can_do_en'):
+            if k in o: l[k] = o[k]
+        if 'produce' in o: l['content']['produce'] = o['produce']
+        if 'closing_ar' in o: l['content']['closing_ar'] = o['closing_ar']
+        n += 1
+    print('uplift', UNIT_CODE, n, 'lessons')
+    return n
+
 def write_pack(unit, lessons, library, out, source):
+    apply_uplift(lessons)
     pack = {'version': 'iqra-pack-2', 'source': source, 'units': [unit], 'lessons': lessons, 'library': library}
     json.dump(pack, open(out, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print('wrote', out, 'lessons', len(lessons), 'exercises', sum(len(l['exercises']) for l in lessons), 'cards', sum(len(l['cards']) for l in lessons))
