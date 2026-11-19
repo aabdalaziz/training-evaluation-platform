@@ -57,7 +57,7 @@ export const IQRA_LIMITS = {
   draw_per_visit: 10,
   cards_per_lesson_min: 8,
   kinds_per_lesson_min: 4,      /* تنوّع المِران: 4 أنواع على الأقل في الحلقة */
-  content_max_bytes: 40_000,
+  content_max_bytes: 60_000,   /* B2/C1: نصّ حتى 9,000 حرف + نموذج حتى 4,000 */
   import_max_lessons: 60,
   tick_max_seconds: 60,         /* «ساعاتي»: أقصى ما تضيفه نبضة واحدة (كلّ 30 ث) */
   tick_day_cap_seconds: 6 * 3600, /* سقف يوم واحد لنشاط واحد — ضدّ الصفحات المنسيّة */

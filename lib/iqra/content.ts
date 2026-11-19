@@ -60,27 +60,43 @@ const uniq = <T,>(a: T[]) => [...new Set(a)];
 /* ---------- التحقّق ---------- */
 export type Problem = { at: string; msg: string };
 
-export function normalizeContent(c: unknown, at: string, problems: Problem[]): LessonContent {
+/** حدود حقول المحتوى — مضبوطة على أطول نصوص CEFR (B2/C1): نصّ قراءة/استماع حتى ≈ 1,200 كلمة، نموذج «أُنتج» حتى ≈ 500 كلمة (تحدّث 300 ث).
+ *  كلّ اقتطاع يُبلَّغ تحذيرًا (لا يُسكَت عنه) حتى لا يصل المتعلّمَ نصٌّ مبتور. */
+export const CONTENT_CAPS = { intro_ar: 1000, body: 9000, explanation_ar: 3000, examples: 10, example: 240, prompt_ar: 900, checklist: 8, check: 200, model_ar: 4000, min_words: 400, closing_ar: 700, guide_ar: 600 } as const;
+const cut = (warn: Problem[] | undefined, at: string, field: string, raw: unknown, max: number) => { if (warn && typeof raw === 'string' && raw.trim().length > max) warn.push({ at, msg: `«${field}» أطول من الحدّ (${raw.trim().length} > ${max} حرفًا) — اقتُطع` }); };
+
+export function normalizeContent(c: unknown, at: string, problems: Problem[], warnings?: Problem[]): LessonContent {
   const o = (c && typeof c === 'object' ? c : {}) as Record<string, any>;
-  const intro_ar = P(o.intro_ar, 600); if (!intro_ar) problems.push({ at, msg: 'مدخل الحلقة (intro_ar) مطلوب' });
+  const C = CONTENT_CAPS;
+  cut(warnings, at, 'intro_ar', o.intro_ar, C.intro_ar);
+  const intro_ar = P(o.intro_ar, C.intro_ar); if (!intro_ar) problems.push({ at, msg: 'مدخل الحلقة (intro_ar) مطلوب' });
   const out: LessonContent = { intro_ar };
   if (o.text && typeof o.text === 'object') {
-    const kind: TextKind = o.text.kind === 'narrative' ? 'narrative' : 'dialogue'; const body = P(o.text.body, 3000);
+    const kind: TextKind = o.text.kind === 'narrative' ? 'narrative' : 'dialogue'; cut(warnings, at, 'text.body', o.text.body, C.body); const body = P(o.text.body, C.body);
     if (body) out.text = { kind, body, audio_path: typeof o.text.audio_path === 'string' ? o.text.audio_path.slice(0, 200) : null };
   }
   if (o.grammar && typeof o.grammar === 'object') {
-    const title_ar = S(o.grammar.title_ar, 120); const explanation_ar = P(o.grammar.explanation_ar, 1200);
-    const examples = Array.isArray(o.grammar.examples) ? o.grammar.examples.map((e: unknown) => S(e, 200)).filter(Boolean).slice(0, 8) : [];
+    cut(warnings, at, 'grammar.explanation_ar', o.grammar.explanation_ar, C.explanation_ar);
+    const title_ar = S(o.grammar.title_ar, 120); const explanation_ar = P(o.grammar.explanation_ar, C.explanation_ar);
+    const rawEx = Array.isArray(o.grammar.examples) ? o.grammar.examples : [];
+    if (rawEx.length > C.examples && warnings) warnings.push({ at, msg: `أمثلة القاعدة أكثر من ${C.examples} — تُقتطع` });
+    rawEx.forEach((e: unknown) => cut(warnings, at, 'grammar.examples[]', e, C.example));
+    const examples = rawEx.map((e: unknown) => S(e, C.example)).filter(Boolean).slice(0, C.examples);
     if (title_ar || explanation_ar) out.grammar = { title_ar: title_ar || 'القاعدة', explanation_ar, examples };
   }
-  if (o.speaking && typeof o.speaking === 'object') { const prompt_ar = S(o.speaking.prompt_ar, 300); if (prompt_ar) out.speaking = { prompt_ar, guide_ar: P(o.speaking.guide_ar, 600) }; }
-  if (o.writing && typeof o.writing === 'object') { const topic_ar = S(o.writing.topic_ar, 300); if (topic_ar) out.writing = { topic_ar, instructions_ar: P(o.writing.instructions_ar, 600) }; }
+  if (o.speaking && typeof o.speaking === 'object') { const prompt_ar = S(o.speaking.prompt_ar, 300); if (prompt_ar) out.speaking = { prompt_ar, guide_ar: P(o.speaking.guide_ar, C.guide_ar) }; }
+  if (o.writing && typeof o.writing === 'object') { const topic_ar = S(o.writing.topic_ar, 300); if (topic_ar) out.writing = { topic_ar, instructions_ar: P(o.writing.instructions_ar, C.guide_ar) }; }
   if (o.produce && typeof o.produce === 'object') {
-    const kind = o.produce.kind === 'speak' ? 'speak' : 'write'; const prompt_ar = P(o.produce.prompt_ar, 600);
-    const checklist = Array.isArray(o.produce.checklist) ? o.produce.checklist.map((x: unknown) => S(x, 160)).filter(Boolean).slice(0, 6) : [];
-    if (prompt_ar) { out.produce = { kind, prompt_ar, checklist, model_ar: P(o.produce.model_ar, 1200), min_words: Number.isInteger(Number(o.produce.min_words)) ? Math.max(0, Math.min(200, Number(o.produce.min_words))) : undefined }; if (checklist.length < 2) problems.push({ at, msg: 'محطّة «أُنتج»: قائمة تدقيق ذاتي من بندين على الأقل' }); }
+    const kind = o.produce.kind === 'speak' ? 'speak' : 'write'; cut(warnings, at, 'produce.prompt_ar', o.produce.prompt_ar, C.prompt_ar); const prompt_ar = P(o.produce.prompt_ar, C.prompt_ar);
+    const rawCl = Array.isArray(o.produce.checklist) ? o.produce.checklist : [];
+    if (rawCl.length > C.checklist && warnings) warnings.push({ at, msg: `قائمة التدقيق أكثر من ${C.checklist} بنود — تُقتطع` });
+    rawCl.forEach((x: unknown) => cut(warnings, at, 'produce.checklist[]', x, C.check));
+    const checklist = rawCl.map((x: unknown) => S(x, C.check)).filter(Boolean).slice(0, C.checklist);
+    cut(warnings, at, 'produce.model_ar', o.produce.model_ar, C.model_ar);
+    if (prompt_ar) { out.produce = { kind, prompt_ar, checklist, model_ar: P(o.produce.model_ar, C.model_ar), min_words: Number.isInteger(Number(o.produce.min_words)) ? Math.max(0, Math.min(C.min_words, Number(o.produce.min_words))) : undefined }; if (checklist.length < 2) problems.push({ at, msg: 'محطّة «أُنتج»: قائمة تدقيق ذاتي من بندين على الأقل' }); }
   }
-  out.closing_ar = P(o.closing_ar, 400) || null;
+  cut(warnings, at, 'closing_ar', o.closing_ar, C.closing_ar);
+  out.closing_ar = P(o.closing_ar, C.closing_ar) || null;
   if (JSON.stringify(out).length > IQRA_LIMITS.content_max_bytes) problems.push({ at, msg: 'محتوى الحلقة أطول من الحدّ' });
   return out;
 }
@@ -236,7 +252,7 @@ export function normalizePack(raw: unknown): Normalized {
     if (!Number.isInteger(idx) || idx < 1 || idx > 12) { problems.push({ at: `lessons[${i}]`, msg: 'ترتيب الحلقة من 1 إلى 12' }); continue; }
     const code = lessonCode(unit_code, idx); if (seen.has(code)) { problems.push({ at: code, msg: 'حلقة مكرّرة في الحزمة' }); continue; } seen.add(code);
     const title_ar = S(l?.title_ar, 100); if (!title_ar) { problems.push({ at: code, msg: 'عنوان الحلقة مطلوب' }); continue; }
-    const content = normalizeContent(l?.content, code, problems);
+    const content = normalizeContent(l?.content, code, problems, warnings);
     const cards = (Array.isArray(l?.cards) ? l.cards : []).map((c: unknown, k: number) => normalizeCard(c, `${code}/card${k + 1}`, problems)).filter(Boolean) as Card[];
     const exercises = (Array.isArray(l?.exercises) ? l.exercises : []).map((e: unknown, k: number) => normalizeExercise(e, `${code}/ex${k + 1}`, problems)).filter(Boolean) as Exercise[];
     if (cards.length > IQRA_LIMITS.cards_per_lesson_max) warnings.push({ at: code, msg: `بطاقات أكثر من ${IQRA_LIMITS.cards_per_lesson_max} — تُقتطع` });
@@ -252,7 +268,7 @@ export function normalizePack(raw: unknown): Normalized {
     const code = S(x?.code, 16).toUpperCase(); const unit_code = S(x?.unit_code, 12).toUpperCase();
     if (!LIBRARY_CODE_RE.test(code) || !code.startsWith(unit_code + '-')) { problems.push({ at: `library[${i}]`, msg: `رمز مكتبة غير صالح: ${code} (مثل A1-U01-R01 أو A1-U01-A01)` }); continue; }
     if (seenLib.has(code)) { problems.push({ at: code, msg: 'نصّ مكتبة مكرّر' }); continue; } seenLib.add(code);
-    const kind = code.includes('-A') ? 'listen' : 'read'; const title_ar = S(x?.title_ar, 100); const body_ar = P(x?.body_ar, 6000);
+    const kind = code.includes('-A') ? 'listen' : 'read'; const title_ar = S(x?.title_ar, 100); cut(warnings, code, 'body_ar', x?.body_ar, CONTENT_CAPS.body); const body_ar = P(x?.body_ar, CONTENT_CAPS.body);
     if (!title_ar || !body_ar || !hasArabic(body_ar)) { problems.push({ at: code, msg: 'نصّ المكتبة: عنوان ومتن عربيّان مطلوبان' }); continue; }
     const questions = (Array.isArray(x?.questions) ? x.questions : []).map((qq: any, k: number) => { const q = S(qq?.q, 300); const options = Array.isArray(qq?.options) ? uniq(qq.options.map((y: unknown) => S(y, 120)).filter(Boolean)) : []; const correct = Number(qq?.correct); if (!q || options.length < 2 || options.length > 4 || !Number.isInteger(correct) || correct < 0 || correct >= options.length) { problems.push({ at: `${code}/q${k + 1}`, msg: 'سؤال المكتبة: نصّ + 2 إلى 4 خيارات + رقم الصحيح' }); return null; } return { q, options, correct, explanation_ar: S(qq?.explanation_ar, 300) || undefined }; }).filter(Boolean) as PackLibrary['questions'];
     if (questions.length < 3) warnings.push({ at: code, msg: 'نصّ المكتبة بأقلّ من 3 أسئلة' });

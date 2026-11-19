@@ -181,3 +181,22 @@ test('اقْرَأْ: الخزنة — جداول المتعلّم مسجَّل�
   const api = read('app/api/iqra/route.ts'); assert.match(api, /crossSiteBrowserWrite/); assert.match(api, /rateLimit/); assert.match(api, /isResultCode/); assert.doesNotMatch(api, /gemini/i);
   assert.ok(fs.existsSync(path.join(ROOT, 'tools/iqra/convert.ts')) && fs.existsSync(path.join(ROOT, 'tools/iqra/packs/iqra-pack-A1-batch1.json')));
 });
+
+test('اقْرَأْ: حدود المحتوى على مقاس CEFR B2 — نصّ 3,600 حرف ونموذج 2,300 حرف وقائمة 7 بنود تمرّ كاملةً · وما يتجاوز الحدّ يُبلَّغ تحذيرًا لا يُسكَت عنه', () => {
+  const b2 = JSON.parse(read('tools/iqra/packs/iqra-pack-B2-U01.json'));
+  const n = normalizePack(b2); assert.ok(n.ok); if (!n.ok) return;
+  const l01 = n.pack.lessons.find((l) => l.code === 'B2-U01-L01')!; const raw = b2.lessons.find((l: any) => l.code === 'B2-U01-L01');
+  assert.ok(raw.content.text.body.length > 3000 && raw.content.produce.model_ar.length > 1200 && raw.content.produce.checklist.length === 7, 'عيّنة B2 أطول من الحدود القديمة فعلًا');
+  assert.equal(l01.content.text!.body.length, raw.content.text.body.trim().length, 'نصّ الحلقة لا يُقتطع');
+  assert.equal(l01.content.produce!.model_ar.length, raw.content.produce.model_ar.trim().length, 'نموذج «أُنتج» لا يُقتطع');
+  assert.equal(l01.content.produce!.checklist.length, 7, 'قائمة التدقيق كاملة (بند الطول هو الأخير)');
+  assert.equal(n.warnings.filter((w) => /اقتُطع|تُقتطع/.test(w.msg)).length, 0, 'لا اقتطاع في حزمة B2-U01');
+  const huge = JSON.parse(JSON.stringify(b2)); huge.lessons[0].content.text.body = 'كلمة '.repeat(2000); huge.lessons[0].content.produce.model_ar = 'نموذج '.repeat(1000); huge.lessons[0].content.produce.checklist = Array.from({ length: 9 }, (_, i) => `بند ${i + 1}`);
+  const h = normalizePack(huge); assert.ok(h.ok); if (!h.ok) return;
+  const ws = h.warnings.filter((w) => w.at === 'B2-U01-L01').map((w) => w.msg);
+  assert.ok(ws.some((m) => m.includes('text.body') && m.includes('اقتُطع')), 'اقتطاع النصّ يُبلَّغ');
+  assert.ok(ws.some((m) => m.includes('produce.model_ar')), 'اقتطاع النموذج يُبلَّغ');
+  assert.ok(ws.some((m) => m.includes('قائمة التدقيق')), 'اقتطاع القائمة يُبلَّغ');
+  assert.equal(h.pack.lessons[0].content.produce!.checklist.length, 8);
+  const ui = read('app/iqra/IqraApp.tsx'); assert.doesNotMatch(ui, /30–60 ثانية/, 'تلميح «أتحدّث» لم يعد ثابتًا دون الإطار'); assert.match(ui, /B2: '180–240'/);
+});
