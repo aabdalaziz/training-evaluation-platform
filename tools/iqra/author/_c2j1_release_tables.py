@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""يطبع جدولي §6 (أطوال الأشرطة) و§7 (توجيه الأصوات) لوثيقة إصدار C2 ج١ من ملفّات cues الموجودة."""
-import json, os, glob, collections
+"""يطبع جدولي §6 (أطوال الأشرطة) و§7 (توجيه الأصوات) لوثيقة إصدار C2 (ج١ افتراضًا؛ مرّر أرقام المنازل لدفعة أخرى) من ملفّات cues الموجودة."""
+import json, os, glob, collections, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, '..', '..', '..'))
 AUD = os.path.join(ROOT, 'public', 'iqra', 'audio')
 V = json.load(open(os.path.join(ROOT, 'tools', 'iqra', 'voices.json'), encoding='utf-8'))
-codes = [f'C2-U0{u}-{c}' for u in (1, 2) for c in ('L01', 'L02', 'L03', 'L04', 'L05', 'R01', 'R02', 'A01')]
+UNITS = tuple(int(x) for x in sys.argv[1:]) or (1, 2)  # مثال: _c2j1_release_tables.py 3 4 → ج٢
+codes = [f'C2-U0{u}-{c}' for u in UNITS for c in ('L01', 'L02', 'L03', 'L04', 'L05', 'R01', 'R02', 'A01')]
 def ar(n): return str(n).translate(str.maketrans('0123456789', '٠١٢٣٤٥٦٧٨٩'))
 print('6) أطوال الأشرطة (ثوانٍ):'); tot_s = tot_kb = tot_c = 0
 for c in codes:
