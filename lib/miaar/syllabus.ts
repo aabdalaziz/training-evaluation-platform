@@ -31,8 +31,13 @@ export type Unit = { code: string; level: ExitLevel; idx: number; title_ar: stri
 export type UnitSeed = Omit<Unit, 'status' | 'updated_at' | 'updated_by'>;
 
 const U = (level: ExitLevel, idx: number, title_ar: string, title_en: string, focus_ar: string, domains: string[], descriptor_codes: string[]): UnitSeed => ({ code: `${level}-U${String(idx).padStart(2, '0')}`, level, idx, title_ar, title_en, focus_ar, domains, descriptor_codes });
-/** البذرة: 8 وحدات لكل مستوى A1–B2 و6 لـ C1 = 38 — كل واصف من الـ60 (A1–C1) يظهر في وحدة واحدة على الأقل */
+/** البذرة: 4 منازل Pre-A1 + 8 وحدات لكل مستوى A1–B2 و6 لـ C1 = 42 — كل واصف من الـ60 (A1–C1) والـ18 (Pre-A1) يظهر في وحدة واحدة على الأقل */
 export const UNIT_SEED: UnitSeed[] = [
+  /* Pre-A1 (تمهيدي): الحروف والأصوات وكلماتي الأولى — 4 منازل (اقْرَأْ ت١/ت٢) */
+  U('PRE_A1', 1, 'حروفي الأولى: من الألف إلى الكاف', 'My first letters: alif to kaf', 'الحروف ا ب ت ث ن ي ج ح خ د ذ ر ز م ل ك والتاء المربوطة، والحركات الثلاث والمدّ، وأوّل عشرين كلمة مع صورها', ['personal', 'educational'], ['LI-PRE_A1-01', 'LI-PRE_A1-04', 'RD-PRE_A1-01', 'RD-PRE_A1-04', 'LU-PRE_A1-01', 'SP-PRE_A1-03', 'WR-PRE_A1-01']),
+  U('PRE_A1', 2, 'حروفي الثانية: من السين إلى الهمزة', 'My second letters: sin to hamza', 'الحروف س ش ص ض ط ظ ع غ ف ق هـ و والهمزة، والسكون والشدّة والتنوين و«ال»، وقراءة ستّين كلمة مع صورها', ['personal', 'public'], ['LI-PRE_A1-01', 'LI-PRE_A1-02', 'RD-PRE_A1-02', 'RD-PRE_A1-03', 'SP-PRE_A1-02', 'WR-PRE_A1-02']),
+  U('PRE_A1', 3, 'أنا وأنتَ وهذا وهذه: التحيّة والتعارف', 'Me, you, this and that: greetings', 'الضمائر أنا/أنتَ/أنتِ/هو/هي مع صورة، هذا/هذه، التحيّة والوداع والشكر، وبطاقة الاسم والبلد', ['personal'], ['LU-PRE_A1-02', 'LU-PRE_A1-04', 'LI-PRE_A1-02', 'SP-PRE_A1-01', 'WR-PRE_A1-03']),
+  U('PRE_A1', 4, 'الأعداد والألوان والأسعار', 'Numbers, colours and prices', 'الأعداد من صفر إلى عشرة مسموعة ومقروءة، ثمانية ألوان، وأسعار وأوقات بسيطة على لافتة أو زرّ', ['public'], ['LU-PRE_A1-03', 'LI-PRE_A1-03', 'RD-PRE_A1-02', 'RD-PRE_A1-03', 'SP-PRE_A1-02']),
   U('A1', 1, 'أنا وعائلتي', 'Me and my family', 'التعريف بالنفس والعائلة: مفردات أساسية، فهم جُمل قصيرة عن النفس مسموعة ومقروءة', ['personal'], ['LU-A1-01', 'LI-A1-01', 'RD-A1-04']),
   U('A1', 2, 'الأسماء: المذكّر والمؤنّث والعدد', 'Nouns: gender and number', 'تمييز المذكّر والمؤنّث والمفرد والجمع في كلمات مألوفة', ['personal'], ['LU-A1-03']),
   U('A1', 3, 'الجملة الاسمية والسؤال', 'Nominal sentence and questions', 'الجملة الاسمية البسيطة وأدوات الاستفهام الأساسية (من، ما، أين، كم)', ['personal', 'educational'], ['LU-A1-04']),

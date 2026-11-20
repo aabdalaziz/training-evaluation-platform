@@ -1,0 +1,3248 @@
+{
+ "version": "iqra-pack-2",
+ "source": "athar-iqra-pre-a1-u01",
+ "units": [
+  {
+   "code": "PRE_A1-U01",
+   "level": "PRE_A1",
+   "idx": 1,
+   "title_ar": "حروفي الأولى: من الألف إلى الكاف",
+   "title_en": "My first letters: alif to kaf",
+   "focus_ar": "الحروف ا ب ت ث ن ي ج ح خ د ذ ر ز م ل ك والتاء المربوطة، والحركات الثلاث والمدّ، وأوّل عشرين كلمة مع صورها",
+   "domains": [
+    "personal",
+    "educational"
+   ]
+  }
+ ],
+ "lessons": [
+  {
+   "code": "PRE_A1-U01-L01",
+   "unit_code": "PRE_A1-U01",
+   "idx": 1,
+   "title_ar": "أسمع وألمس: ا ب ت ث ن ي",
+   "skill": "listen",
+   "minutes": 15,
+   "minutes_total": 90,
+   "domain": "تعليمي",
+   "goal_ar": "أستطيع أن أميّز أصوات الحروف ا ب ت ث ن ي وأتعرّف أوّل كلماتي مع صورها",
+   "can_do_ar": "أستطيع أن أتعرّف كلمة مسموعة مألوفة جدًّا مع صورتها، وأميّز صوت الحرف الأوّل",
+   "can_do_en": "I can recognise very familiar spoken words with a picture and tell the first letter sound",
+   "descriptor_codes": [
+    "LI-PRE_A1-01",
+    "LI-PRE_A1-04",
+    "RD-PRE_A1-01"
+   ],
+   "content": {
+    "intro_ar": "هَذَا أَوَّلُ دَرْسٍ فِي «صَفِّ الشَّاشَةِ». هِنْدُ مُعَلِّمَةٌ، وَمَعَهَا ثَلَاثَةُ طُلَّابٍ مِنْ ثَلَاثِ دُوَلٍ. الْيَوْمَ سِتَّةُ حُرُوفٍ فَقَطْ. اِسْمَعْ، ثُمَّ الْمِسِ الْحَرْفَ.",
+    "text": {
+     "kind": "dialogue",
+     "body": "(١ — الشَّاشَةُ تُضِيءُ)\nهند: أَهْلًا! أَنَا هِنْد. هَذَا حَرْفُ الْأَلِف: ا. وَهَذَا حَرْفُ الْبَاء: ب.\nماريا: ب… بَاب!\nهند: أَحْسَنْتِ يَا مَارْيَا. بَاب. وَهَذَا حَرْفُ التَّاء: ت. تِين.\nيوسف: ت… وَهَذَا؟ ث؟\nهند: نَعَمْ، ثَاء: ث. ثَلَاثُ نُقَطٍ فَوْقَ الْحَرْفِ.\nكين: وَالنُّقْطَةُ تَحْتَ الْحَرْفِ؟\nهند: بَاء: ب. نُقْطَةٌ وَاحِدَةٌ تَحْتَ. وَنُون: ن، نُقْطَةٌ فَوْقَ. وَيَاء: ي، نُقْطَتَانِ تَحْتَ.\nماريا: ا ب ت ث ن ي!\nهند: مُمْتَازٌ. سِتَّةُ حُرُوفٍ، وَعَشَرَاتُ الْكَلِمَاتِ: بَاب، بَيْت، بِنْت، تِين، نَاي، أَب."
+    },
+    "grammar": {
+     "title_ar": "النقطة تصنع الفرق",
+     "explanation_ar": "خمسة حروف لها الجسم نفسه وتختلف بالنقاط: ب نقطة تحت، ت نقطتان فوق، ث ثلاث نقط فوق، ن نقطة فوق، ي نقطتان تحت. أمّا الألف فعصا بلا نقطة. انظر إلى النقطة أوّلًا، ثم إلى الجسم.",
+     "examples": [
+      "بَاب · تِين · ثَلَاث",
+      "نَاي · بَيْت · بِنْت"
+     ]
+    },
+    "produce": {
+     "kind": "speak",
+     "prompt_ar": "اسمع هند مرّة ثانية، ثمّ سجّل خمس ثوانٍ: قل أسماء الحروف الستّة بالترتيب: أَلِف، بَاء، تَاء، ثَاء، نُون، يَاء.",
+     "checklist": [
+      "قلتُ الحروف الستّة",
+      "بالترتيب الصحيح",
+      "بصوت واضح وبطيء"
+     ],
+     "model_ar": "أَلِف، بَاء، تَاء، ثَاء، نُون، يَاء."
+    },
+    "closing_ar": "سِتَّةُ حُرُوفٍ فِي جَيْبِكَ الْيَوْمَ. غَدًا نَقْرَأُ الْحَرَكَاتِ: فَتْحَةٌ وَضَمَّةٌ وَكَسْرَةٌ."
+   },
+   "cards": [
+    {
+     "word_ar": "ا",
+     "gloss_ar": "أَلِف · ا ـا ـا",
+     "example_ar": "بَاب · نَاي"
+    },
+    {
+     "word_ar": "ب",
+     "gloss_ar": "بَاء · بـ ـبـ ـب · بَ بُ بِ",
+     "example_ar": "بَاب · بِنْت"
+    },
+    {
+     "word_ar": "ت",
+     "gloss_ar": "تَاء · تـ ـتـ ـت · تَ تُ تِ",
+     "example_ar": "بِنْت · بَيْت"
+    },
+    {
+     "word_ar": "ث",
+     "gloss_ar": "ثَاء · ثـ ـثـ ـث · ثَ ثُ ثِ",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "ن",
+     "gloss_ar": "نُون · نـ ـنـ ـن · نَ نُ نِ",
+     "example_ar": "بِنْت · تِين"
+    },
+    {
+     "word_ar": "ي",
+     "gloss_ar": "يَاء · يـ ـيـ ـي · يَ يُ يِ",
+     "example_ar": "بَيْت · تِين"
+    },
+    {
+     "word_ar": "بَاب",
+     "gloss_ar": "بَاء ، أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بِنْت",
+     "gloss_ar": "بَاء ، نُون ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَيْت",
+     "gloss_ar": "بَاء ، يَاء ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "تِين",
+     "gloss_ar": "تَاء ، يَاء ، نُون",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بُنّ",
+     "gloss_ar": "بَاء ، نُون",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "نَاي",
+     "gloss_ar": "نُون ، أَلِف ، يَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "أَب",
+     "gloss_ar": "أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَنَات",
+     "gloss_ar": "بَاء ، نُون ، أَلِف ، تَاء",
+     "example_ar": ""
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «بَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-nun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ba.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذَا حَرْفُ بَاء: ب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «ثَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ba.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا حَرْفُ ثَاء: ث"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «نُون»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-nun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-alif.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا حَرْفُ نُون: ن"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «يَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-alif.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ba.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذَا حَرْفُ يَاء: ي"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «نَاي»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fig.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/coffee-beans.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "نَاي"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بَنَات»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/father.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girls.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "بَنَات"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بَاب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/father.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/coffee-beans.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "بَاب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بُنّ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/coffee-beans.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/house.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "بُنّ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الحرف باسمه",
+     "pairs": [
+      {
+       "l": "ب",
+       "r": "بَاء"
+      },
+      {
+       "l": "ي",
+       "r": "يَاء"
+      },
+      {
+       "l": "ت",
+       "r": "تَاء"
+      },
+      {
+       "l": "ا",
+       "r": "أَلِف"
+      }
+     ],
+     "explanation_ar": "اِقْرَأِ الْحَرْفَ ثُمَّ اسْمَهُ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأوّل",
+     "pairs": [
+      {
+       "l": "تِين",
+       "r": "ت"
+      },
+      {
+       "l": "بِنْت",
+       "r": "ب"
+      },
+      {
+       "l": "نَاي",
+       "r": "ن"
+      },
+      {
+       "l": "أَب",
+       "r": "ا"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَوَّلُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأخير",
+     "pairs": [
+      {
+       "l": "بُنّ",
+       "r": "ن"
+      },
+      {
+       "l": "نَاي",
+       "r": "ي"
+      },
+      {
+       "l": "بَاب",
+       "r": "ب"
+      },
+      {
+       "l": "بَنَات",
+       "r": "ت"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَخِيرُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: نَاي",
+     "words": [
+      "نَ",
+      "ا",
+      "ي"
+     ],
+     "order": [
+      "نَ",
+      "ا",
+      "ي"
+     ],
+     "explanation_ar": "نَ ، ا ، ي = نَاي"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: أَب",
+     "words": [
+      "أَ",
+      "ب"
+     ],
+     "order": [
+      "أَ",
+      "ب"
+     ],
+     "explanation_ar": "أَ ، ب = أَب"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: بُنّ",
+     "words": [
+      "بُ",
+      "نّ"
+     ],
+     "order": [
+      "بُ",
+      "نّ"
+     ],
+     "explanation_ar": "بُ ، نّ = بُنّ"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف الثَّاء",
+     "words": [
+      "ي",
+      "ب",
+      "ت",
+      "ا",
+      "ث",
+      "ن"
+     ],
+     "correct": "ث",
+     "explanation_ar": "ثَاء = ث"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف الْأَلِف",
+     "words": [
+      "ن",
+      "ا",
+      "ث",
+      "ت",
+      "ب",
+      "ي"
+     ],
+     "correct": "ا",
+     "explanation_ar": "أَلِف = ا"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس الكلمة التي تبدأ بحرف الْبَاء",
+     "words": [
+      "تِين",
+      "نَاي",
+      "بَيْت",
+      "أَب"
+     ],
+     "correct": "بَيْت",
+     "explanation_ar": "بَيْت تَبْدَأُ بِـالْبَاء"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "بَ___ت",
+     "gaps": [
+      "يْ"
+     ],
+     "bank": [
+      "يْ",
+      "نْ",
+      "تْ"
+     ],
+     "explanation_ar": "بَيْت"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "بُ___",
+     "gaps": [
+      "نّ"
+     ],
+     "bank": [
+      "نّ",
+      "اّ",
+      "يّ"
+     ],
+     "explanation_ar": "بُنّ"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "نَا___",
+     "gaps": [
+      "ي"
+     ],
+     "bank": [
+      "ي",
+      "ا",
+      "ث"
+     ],
+     "explanation_ar": "نَاي"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "بُنّ",
+     "alt": [],
+     "explanation_ar": "بُنّ"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "بَيْت",
+     "alt": [],
+     "explanation_ar": "بَيْت"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "بِنْت",
+     "alt": [],
+     "explanation_ar": "بِنْت"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما اسم هذا الحرف: ث ؟",
+     "options": [
+      "بَاء",
+      "تَاء",
+      "ثَاء",
+      "نُون"
+     ],
+     "correct": 2,
+     "explanation_ar": "ث = ثَاء"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما الحركة على حرف النُّون في «نَاي»؟",
+     "options": [
+      "فَتْحَة",
+      "ضَمَّة",
+      "كَسْرَة"
+     ],
+     "correct": 0,
+     "explanation_ar": "نَاي: نَ فَتْحَة"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "كم حرفًا في كلمة «بَنَات»؟",
+     "options": [
+      "أَرْبَعَة",
+      "خَمْسَة",
+      "ثَلَاثَة"
+     ],
+     "correct": 0,
+     "explanation_ar": "ب ، ن ، ا ، ت"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "تبدأ الكلمة بحرف النُّون",
+     "passage_ar": "نَاي",
+     "correct": "true",
+     "explanation_ar": "نَاي تَبْدَأُ بِـالنُّون"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "في الكلمة حرف الثَّاء",
+     "passage_ar": "بَيْت",
+     "correct": "false",
+     "explanation_ar": "لَيْسَ فِي «بَيْت» حَرْفُ الثَّاء"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "آخر حرف في الكلمة هو الْبَاء",
+     "passage_ar": "بَاب",
+     "correct": "true",
+     "explanation_ar": "بَاب تَنْتَهِي بِـالْبَاء"
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب الصور بترتيب حروفها الأولى في الهجاء: الْأَلِف ثمّ الْبَاء ثمّ التَّاء ثمّ النُّون",
+     "frames": [
+      {
+       "image": "/iqra/img/father.svg",
+       "text": "أَب"
+      },
+      {
+       "image": "/iqra/img/door.svg",
+       "text": "بَاب"
+      },
+      {
+       "image": "/iqra/img/fig.svg",
+       "text": "تِين"
+      },
+      {
+       "image": "/iqra/img/flute.svg",
+       "text": "نَاي"
+      }
+     ],
+     "order": [
+      "أَب",
+      "بَاب",
+      "تِين",
+      "نَاي"
+     ],
+     "explanation_ar": "أَب ← بَاب ← تِين ← نَاي"
+    }
+   ]
+  },
+  {
+   "code": "PRE_A1-U01-L02",
+   "unit_code": "PRE_A1-U01",
+   "idx": 2,
+   "title_ar": "أقرأ: فَتْحَة ضَمَّة كَسْرَة والمدّ",
+   "skill": "read",
+   "minutes": 15,
+   "minutes_total": 90,
+   "domain": "تعليمي",
+   "goal_ar": "أستطيع أن أقرأ الحرف بحركته (بَ بُ بِ) وبالمدّ (بَا بُو بِي) وأقرأ كلمات قصيرة",
+   "can_do_ar": "أستطيع أن أقرأ كلمات مألوفة جدًّا مكتوبة بحركاتها وأطابقها بصورها",
+   "can_do_en": "I can read very familiar words with short vowels and match them to pictures",
+   "descriptor_codes": [
+    "RD-PRE_A1-01",
+    "RD-PRE_A1-04",
+    "LU-PRE_A1-01"
+   ],
+   "content": {
+    "intro_ar": "الْحَرْفُ وَحْدَهُ صَامِتٌ، وَالْحَرَكَةُ تَجْعَلُهُ يَتَكَلَّمُ. عُمَر، أَخُو لَيْلَى، عُمُرُهُ تِسْعُ سَنَوَاتٍ، يَقْرَأُ الْيَوْمَ مَعَ الصَّفِّ.",
+    "text": {
+     "kind": "dialogue",
+     "body": "(٢ — ثَلَاثُ حَرَكَاتٍ)\nهند: فَتْحَةٌ فَوْقَ الْحَرْفِ: بَ. ضَمَّةٌ فَوْقَ الْحَرْفِ: بُ. كَسْرَةٌ تَحْتَ الْحَرْفِ: بِ.\nعمر: بَ، بُ، بِ. تَ، تُ، تِ. نَ، نُ، نِ.\nهند: وَالْمَدُّ يُطَوِّلُ الصَّوْتَ: بَا، بُو، بِي.\nيوسف: بَا… بَاب. بِي… بِنْت؟\nهند: بِنْت فِيهَا كَسْرَةٌ قَصِيرَةٌ: بِ. أَمَّا تِين فَفِيهَا مَدٌّ: تِي.\nكين: نَا… نَاي!\nماريا: بَيْت، بَيْتَان، نَبَات.\nهند: أَحْسَنْتُمْ جَمِيعًا. اِقْرَؤُوا مَعِي: بَاب، بَيْت، بِنْت، تِين، نَاي، أَب، بُنّ."
+    },
+    "grammar": {
+     "title_ar": "الحركات الثلاث والمدّ",
+     "explanation_ar": "الفتحة ( ـَ ) صوت قصير مفتوح: بَ. الضمّة ( ـُ ) صوت قصير مضموم: بُ. الكسرة ( ـِ ) تحت الحرف: بِ. وإذا جاء بعد الفتحة ألف، أو بعد الضمّة واو، أو بعد الكسرة ياء، صار الصوت طويلًا: بَا بُو بِي.",
+     "examples": [
+      "بَ بُ بِ",
+      "بَا بُو بِي",
+      "بَاب · تِين · بِنْت"
+     ]
+    },
+    "produce": {
+     "kind": "speak",
+     "prompt_ar": "اقرأ بصوتك وسجّل: بَ بُ بِ · تَ تُ تِ · نَ نُ نِ، ثمّ ثلاث كلمات تختارها من الحلقة.",
+     "checklist": [
+      "قرأتُ الحركات الثلاث مع ثلاثة حروف",
+      "ميّزتُ بين الصوت القصير والطويل",
+      "قرأتُ ثلاث كلمات"
+     ],
+     "model_ar": "بَ بُ بِ. تَ تُ تِ. نَ نُ نِ. بَاب، تِين، بِنْت."
+    },
+    "closing_ar": "الْآنَ تَقْرَأُ! كُلُّ كَلِمَةٍ فِيهَا حَرْفٌ وَحَرَكَةٌ. غَدًا خَمْسَةُ حُرُوفٍ جَدِيدَةٍ."
+   },
+   "cards": [
+    {
+     "word_ar": "بَ · بُ · بِ",
+     "gloss_ar": "فَتْحَة · ضَمَّة · كَسْرَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَا · بُو · بِي",
+     "gloss_ar": "المدّ بالألف · بالواو · بالياء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "تَ · تُ · تِ",
+     "gloss_ar": "التاء بالحركات الثلاث",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "نَ · نُ · نِ",
+     "gloss_ar": "النون بالحركات الثلاث",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "يَ · يُ · يِ",
+     "gloss_ar": "الياء بالحركات الثلاث",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "ثَ · ثُ · ثِ",
+     "gloss_ar": "الثاء بالحركات الثلاث",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَيْتَان",
+     "gloss_ar": "بَاء ، يَاء ، تَاء ، أَلِف ، نُون",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "نَبَات",
+     "gloss_ar": "نُون ، بَاء ، أَلِف ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَاب",
+     "gloss_ar": "بَاء ، أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بِنْت",
+     "gloss_ar": "بَاء ، نُون ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَيْت",
+     "gloss_ar": "بَاء ، يَاء ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "تِين",
+     "gloss_ar": "تَاء ، يَاء ، نُون",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "نَاي",
+     "gloss_ar": "نُون ، أَلِف ، يَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "أَب",
+     "gloss_ar": "أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَنَات",
+     "gloss_ar": "بَاء ، نُون ، أَلِف ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بُنّ",
+     "gloss_ar": "بَاء ، نُون",
+     "example_ar": ""
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «بَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ba.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا حَرْفُ بَاء: ب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «نُون»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-nun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ba.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذَا حَرْفُ نُون: ن"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «أَلِف»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-alif.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ba.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "هَذَا حَرْفُ أَلِف: ا"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «تَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-nun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-alif.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ba.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "هَذَا حَرْفُ تَاء: ت"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «نَاي»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/house.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/tree.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "نَاي"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بَيْتَان»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/coffee-beans.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "بَيْتَان"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «تِين»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/girls.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fig.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "تِين"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بَاب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/tree.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flute.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girls.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "بَاب"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الحرف باسمه",
+     "pairs": [
+      {
+       "l": "ت",
+       "r": "تَاء"
+      },
+      {
+       "l": "ا",
+       "r": "أَلِف"
+      },
+      {
+       "l": "ب",
+       "r": "بَاء"
+      },
+      {
+       "l": "ي",
+       "r": "يَاء"
+      }
+     ],
+     "explanation_ar": "اِقْرَأِ الْحَرْفَ ثُمَّ اسْمَهُ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأوّل",
+     "pairs": [
+      {
+       "l": "بِنْت",
+       "r": "ب"
+      },
+      {
+       "l": "نَاي",
+       "r": "ن"
+      },
+      {
+       "l": "تِين",
+       "r": "ت"
+      },
+      {
+       "l": "أَب",
+       "r": "ا"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَوَّلُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأخير",
+     "pairs": [
+      {
+       "l": "تِين",
+       "r": "ن"
+      },
+      {
+       "l": "أَب",
+       "r": "ب"
+      },
+      {
+       "l": "بَيْت",
+       "r": "ت"
+      },
+      {
+       "l": "نَاي",
+       "r": "ي"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَخِيرُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: تِين",
+     "words": [
+      "تِ",
+      "ي",
+      "ن"
+     ],
+     "order": [
+      "تِ",
+      "ي",
+      "ن"
+     ],
+     "explanation_ar": "تِ ، ي ، ن = تِين"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: بَيْتَان",
+     "words": [
+      "بَ",
+      "يْ",
+      "تَ",
+      "ا",
+      "ن"
+     ],
+     "order": [
+      "بَ",
+      "يْ",
+      "تَ",
+      "ا",
+      "ن"
+     ],
+     "explanation_ar": "بَ ، يْ ، تَ ، ا ، ن = بَيْتَان"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: بَيْت",
+     "words": [
+      "بَ",
+      "يْ",
+      "ت"
+     ],
+     "order": [
+      "بَ",
+      "يْ",
+      "ت"
+     ],
+     "explanation_ar": "بَ ، يْ ، ت = بَيْت"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف الْبَاء",
+     "words": [
+      "ا",
+      "ب",
+      "ن",
+      "ث",
+      "ي",
+      "ت"
+     ],
+     "correct": "ب",
+     "explanation_ar": "بَاء = ب"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف النُّون",
+     "words": [
+      "ي",
+      "ب",
+      "ت",
+      "ن",
+      "ث",
+      "ا"
+     ],
+     "correct": "ن",
+     "explanation_ar": "نُون = ن"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس الكلمة التي تبدأ بحرف الْبَاء",
+     "words": [
+      "نَبَات",
+      "بِنْت",
+      "نَاي",
+      "أَب"
+     ],
+     "correct": "بِنْت",
+     "explanation_ar": "بِنْت تَبْدَأُ بِـالْبَاء"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "تِي___",
+     "gaps": [
+      "ن"
+     ],
+     "bank": [
+      "ن",
+      "ث",
+      "ا"
+     ],
+     "explanation_ar": "تِين"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "نَ___ات",
+     "gaps": [
+      "بَ"
+     ],
+     "bank": [
+      "بَ",
+      "اَ",
+      "ثَ"
+     ],
+     "explanation_ar": "نَبَات"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "___ب",
+     "gaps": [
+      "أَ"
+     ],
+     "bank": [
+      "أَ",
+      "بَ",
+      "يَ"
+     ],
+     "explanation_ar": "أَب"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "نَاي",
+     "alt": [],
+     "explanation_ar": "نَاي"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "نَبَات",
+     "alt": [],
+     "explanation_ar": "نَبَات"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "بَيْت",
+     "alt": [],
+     "explanation_ar": "بَيْت"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما اسم هذا الحرف: ن ؟",
+     "options": [
+      "نُون",
+      "أَلِف",
+      "يَاء",
+      "تَاء"
+     ],
+     "correct": 0,
+     "explanation_ar": "ن = نُون"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما الحركة على حرف الْبَاء في «بَنَات»؟",
+     "options": [
+      "فَتْحَة",
+      "ضَمَّة",
+      "كَسْرَة"
+     ],
+     "correct": 0,
+     "explanation_ar": "بَنَات: بَ فَتْحَة"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "كم حرفًا في كلمة «بَاب»؟",
+     "options": [
+      "ثَلَاثَة",
+      "حَرْفَان",
+      "أَرْبَعَة"
+     ],
+     "correct": 0,
+     "explanation_ar": "ب ، ا ، ب"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "تبدأ الكلمة بحرف الْبَاء",
+     "passage_ar": "بَيْت",
+     "correct": "true",
+     "explanation_ar": "بَيْت تَبْدَأُ بِـالْبَاء"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "في الكلمة حرف الثَّاء",
+     "passage_ar": "نَبَات",
+     "correct": "false",
+     "explanation_ar": "لَيْسَ فِي «نَبَات» حَرْفُ الثَّاء"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "آخر حرف في الكلمة هو الْيَاء",
+     "passage_ar": "نَاي",
+     "correct": "true",
+     "explanation_ar": "نَاي تَنْتَهِي بِـالْيَاء"
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب الصور بترتيب حروفها الأولى في الهجاء: الْأَلِف ثمّ الْبَاء ثمّ التَّاء ثمّ النُّون",
+     "frames": [
+      {
+       "image": "/iqra/img/father.svg",
+       "text": "أَب"
+      },
+      {
+       "image": "/iqra/img/two-houses.svg",
+       "text": "بَيْتَان"
+      },
+      {
+       "image": "/iqra/img/fig.svg",
+       "text": "تِين"
+      },
+      {
+       "image": "/iqra/img/tree.svg",
+       "text": "نَبَات"
+      }
+     ],
+     "order": [
+      "أَب",
+      "بَيْتَان",
+      "تِين",
+      "نَبَات"
+     ],
+     "explanation_ar": "أَب ← بَيْتَان ← تِين ← نَبَات"
+    }
+   ]
+  },
+  {
+   "code": "PRE_A1-U01-L03",
+   "unit_code": "PRE_A1-U01",
+   "idx": 3,
+   "title_ar": "أفهم: ج ح خ د ذ — الحرف يتّصل أو لا يتّصل",
+   "skill": "grammar",
+   "minutes": 15,
+   "minutes_total": 90,
+   "domain": "تعليمي",
+   "goal_ar": "أستطيع أن أميّز ج ح خ د ذ وأعرف أنّ د ذ ا لا تتّصل بما بعدها",
+   "can_do_ar": "أستطيع أن أتعرّف أسماء أشياء يوميّة مع صورها وأعرف شكل الحرف في أوّل الكلمة ووسطها وآخرها",
+   "can_do_en": "I can recognise everyday object names with pictures and tell a letter’s initial, medial and final shapes",
+   "descriptor_codes": [
+    "LU-PRE_A1-01",
+    "RD-PRE_A1-01",
+    "RD-PRE_A1-04"
+   ],
+   "content": {
+    "intro_ar": "خَمْسَةُ حُرُوفٍ جَدِيدَةٍ: ثَلَاثَةٌ مُتَشَابِهَةٌ (ج ح خ) وَاثْنَانِ قَصِيرَانِ (د ذ). وَسِرٌّ صَغِيرٌ: بَعْضُ الْحُرُوفِ لَا تُمْسِكُ بِيَدِ الْحَرْفِ الَّذِي بَعْدَهَا.",
+    "text": {
+     "kind": "dialogue",
+     "body": "(٣ — حُرُوفٌ تَتَّصِلُ وَحُرُوفٌ تَقِفُ وَحْدَهَا)\nهند: جِيم: ج، نُقْطَةٌ فِي الْبَطْنِ. حَاء: ح، بِلَا نُقْطَةٍ. خَاء: خ، نُقْطَةٌ فَوْقَ.\nكين: جَدّ، حُبّ، أَخ.\nهند: وَدَال: د. ذَال: ذ، نُقْطَةٌ فَوْقَ. دُبّ، ذُبَاب.\nماريا: لِمَاذَا الْبَاءُ فِي «بَاب» تَتَّصِلُ، وَالدَّالُ فِي «دَجَاج» لَا تَتَّصِلُ؟\nهند: سُؤَالٌ جَمِيلٌ! سِتَّةُ حُرُوفٍ لَا تَتَّصِلُ بِمَا بَعْدَهَا: ا د ذ ر ز و. نَكْتُبُهَا ثُمَّ نَرْفَعُ الْقَلَمَ.\nيوسف: يَد: الْيَاءُ تَتَّصِلُ بِالدَّالِ، وَالدَّالُ تَقِفُ.\nهند: تَمَامًا. وَالْبَاءُ لَهَا ثَلَاثَةُ أَشْكَالٍ: بـ فِي الْأَوَّلِ، ـبـ فِي الْوَسَطِ، ـب فِي الْآخِرِ. اِنْظُرُوا: بَاب، دُبّ، بِنْت."
+    },
+    "grammar": {
+     "title_ar": "أشكال الحرف: أوّل · وسط · آخر",
+     "explanation_ar": "أكثر الحروف تتّصل بما قبلها وما بعدها، فيتغيّر شكلها: بـ ـبـ ـب، جـ ـجـ ـج، حـ ـحـ ـح. لكن ستّة حروف تتّصل بما قبلها فقط ولا تتّصل بما بعدها: ا د ذ ر ز و، لذلك يأتي الحرف الذي بعدها بشكله الأوّل. في «دَجَاج»: د وحدها، ثمّ جـ أوّل، ثمّ ـا، ثمّ ج آخر.",
+     "examples": [
+      "بَاب · دُبّ · بِنْت",
+      "دَجَاج · يَد · جَدّ",
+      "حُبّ · أَخ · ذُبَاب"
+     ]
+    },
+    "produce": {
+     "kind": "write",
+     "prompt_ar": "انسخ خمس كلمات بحروفها المتّصلة: دَجَاج · دُبّ · يَد · جَدّ · حُبّ. اكتب كلّ كلمة مرّة واحدة.",
+     "checklist": [
+      "خمس كلمات مكتوبة",
+      "الحروف متّصلة في مكانها الصحيح",
+      "الدال والذال لم تتّصلا بما بعدهما"
+     ],
+     "model_ar": "دَجَاج · دُبّ · يَد · جَدّ · حُبّ"
+    },
+    "closing_ar": "أَحَدَ عَشَرَ حَرْفًا حَتَّى الْآنَ. غَدًا نَتَكَلَّمُ: رَاء زَاي مِيم لَام كَاف."
+   },
+   "cards": [
+    {
+     "word_ar": "ج",
+     "gloss_ar": "جِيم · جـ ـجـ ـج · جَ جُ جِ",
+     "example_ar": "دَجَاج · جَدّ"
+    },
+    {
+     "word_ar": "ح",
+     "gloss_ar": "حَاء · حـ ـحـ ـح · حَ حُ حِ",
+     "example_ar": "حُبّ"
+    },
+    {
+     "word_ar": "خ",
+     "gloss_ar": "خَاء · خـ ـخـ ـخ · خَ خُ خِ",
+     "example_ar": "أَخ · أُخْت"
+    },
+    {
+     "word_ar": "د",
+     "gloss_ar": "دَال · د ـد ـد · دَ دُ دِ",
+     "example_ar": "دَجَاج · دُبّ"
+    },
+    {
+     "word_ar": "ذ",
+     "gloss_ar": "ذَال · ذ ـذ ـذ · ذَ ذُ ذِ",
+     "example_ar": "ذُبَاب"
+    },
+    {
+     "word_ar": "دَجَاج",
+     "gloss_ar": "دَال ، جِيم ، أَلِف ، جِيم",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "دُبّ",
+     "gloss_ar": "دَال ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "ذُبَاب",
+     "gloss_ar": "ذَال ، بَاء ، أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "جَدّ",
+     "gloss_ar": "جِيم ، دَال",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "حُبّ",
+     "gloss_ar": "حَاء ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "أَخ",
+     "gloss_ar": "أَلِف ، خَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "أُخْت",
+     "gloss_ar": "أَلِف ، خَاء ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "يَد",
+     "gloss_ar": "يَاء ، دَال",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بِنْت",
+     "gloss_ar": "بَاء ، نُون ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "تِين",
+     "gloss_ar": "تَاء ، يَاء ، نُون",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَنَات",
+     "gloss_ar": "بَاء ، نُون ، أَلِف ، تَاء",
+     "example_ar": ""
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «ذَال»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-jim.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dhal.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dal.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ha.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "هَذَا حَرْفُ ذَال: ذ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «خَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dal.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-kha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dhal.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "هَذَا حَرْفُ خَاء: خ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «جِيم»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-kha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-jim.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dal.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذَا حَرْفُ جِيم: ج"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «حَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-jim.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dhal.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dal.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا حَرْفُ حَاء: ح"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «دُبّ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/fig.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bear.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girls.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/hand.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "دُبّ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «تِين»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/hand.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/heart.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fig.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bear.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "تِين"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بِنْت»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/heart.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fig.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/chicken.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "بِنْت"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «جَدّ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/woman.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girls.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/boy.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/grandpa.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "جَدّ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الحرف باسمه",
+     "pairs": [
+      {
+       "l": "د",
+       "r": "دَال"
+      },
+      {
+       "l": "ح",
+       "r": "حَاء"
+      },
+      {
+       "l": "ذ",
+       "r": "ذَال"
+      },
+      {
+       "l": "ج",
+       "r": "جِيم"
+      }
+     ],
+     "explanation_ar": "اِقْرَأِ الْحَرْفَ ثُمَّ اسْمَهُ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأوّل",
+     "pairs": [
+      {
+       "l": "جَدّ",
+       "r": "ج"
+      },
+      {
+       "l": "ذُبَاب",
+       "r": "ذ"
+      },
+      {
+       "l": "أُخْت",
+       "r": "ا"
+      },
+      {
+       "l": "دُبّ",
+       "r": "د"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَوَّلُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأخير",
+     "pairs": [
+      {
+       "l": "دَجَاج",
+       "r": "ج"
+      },
+      {
+       "l": "يَد",
+       "r": "د"
+      },
+      {
+       "l": "حُبّ",
+       "r": "ب"
+      },
+      {
+       "l": "تِين",
+       "r": "ن"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَخِيرُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: حُبّ",
+     "words": [
+      "حُ",
+      "بّ"
+     ],
+     "order": [
+      "حُ",
+      "بّ"
+     ],
+     "explanation_ar": "حُ ، بّ = حُبّ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: أَخ",
+     "words": [
+      "أَ",
+      "خ"
+     ],
+     "order": [
+      "أَ",
+      "خ"
+     ],
+     "explanation_ar": "أَ ، خ = أَخ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: يَد",
+     "words": [
+      "يَ",
+      "د"
+     ],
+     "order": [
+      "يَ",
+      "د"
+     ],
+     "explanation_ar": "يَ ، د = يَد"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف الْجِيم",
+     "words": [
+      "ث",
+      "د",
+      "ج",
+      "ح",
+      "خ",
+      "ذ",
+      "ا"
+     ],
+     "correct": "ج",
+     "explanation_ar": "جِيم = ج"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف الذَّال",
+     "words": [
+      "ج",
+      "خ",
+      "د",
+      "ذ",
+      "ح",
+      "ث",
+      "ا"
+     ],
+     "correct": "ذ",
+     "explanation_ar": "ذَال = ذ"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس الكلمة التي تبدأ بحرف الْبَاء",
+     "words": [
+      "بِنْت",
+      "ذُبَاب",
+      "يَد",
+      "أَخ"
+     ],
+     "correct": "بِنْت",
+     "explanation_ar": "بِنْت تَبْدَأُ بِـالْبَاء"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "دُ___",
+     "gaps": [
+      "بّ"
+     ],
+     "bank": [
+      "بّ",
+      "جّ",
+      "دّ"
+     ],
+     "explanation_ar": "دُبّ"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "ذُبَا___",
+     "gaps": [
+      "ب"
+     ],
+     "bank": [
+      "ب",
+      "د",
+      "ذ"
+     ],
+     "explanation_ar": "ذُبَاب"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "___خْت",
+     "gaps": [
+      "أُ"
+     ],
+     "bank": [
+      "أُ",
+      "جُ",
+      "حُ"
+     ],
+     "explanation_ar": "أُخْت"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "أُخْت",
+     "alt": [],
+     "explanation_ar": "أُخْت"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "يَد",
+     "alt": [],
+     "explanation_ar": "يَد"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "دُبّ",
+     "alt": [],
+     "explanation_ar": "دُبّ"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما اسم هذا الحرف: خ ؟",
+     "options": [
+      "خَاء",
+      "نُون",
+      "بَاء",
+      "أَلِف"
+     ],
+     "correct": 0,
+     "explanation_ar": "خ = خَاء"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما الحركة على حرف الدَّال في «دُبّ»؟",
+     "options": [
+      "فَتْحَة",
+      "ضَمَّة",
+      "كَسْرَة"
+     ],
+     "correct": 1,
+     "explanation_ar": "دُبّ: دُ ضَمَّة"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "كم حرفًا في كلمة «دُبّ»؟",
+     "options": [
+      "أَرْبَعَة",
+      "حَرْفَان",
+      "ثَلَاثَة"
+     ],
+     "correct": 1,
+     "explanation_ar": "د ، ب"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "تبدأ الكلمة بحرف الْحَاء",
+     "passage_ar": "حُبّ",
+     "correct": "true",
+     "explanation_ar": "حُبّ تَبْدَأُ بِـالْحَاء"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "في الكلمة حرف الْحَاء",
+     "passage_ar": "أَخ",
+     "correct": "false",
+     "explanation_ar": "لَيْسَ فِي «أَخ» حَرْفُ الْحَاء"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "آخر حرف في الكلمة هو النُّون",
+     "passage_ar": "تِين",
+     "correct": "true",
+     "explanation_ar": "تِين تَنْتَهِي بِـالنُّون"
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب الصور بترتيب حروفها الأولى في الهجاء: الْأَلِف ثمّ الْبَاء ثمّ التَّاء ثمّ الْجِيم",
+     "frames": [
+      {
+       "image": "/iqra/img/boy.svg",
+       "text": "أَخ"
+      },
+      {
+       "image": "/iqra/img/girl.svg",
+       "text": "بِنْت"
+      },
+      {
+       "image": "/iqra/img/fig.svg",
+       "text": "تِين"
+      },
+      {
+       "image": "/iqra/img/grandpa.svg",
+       "text": "جَدّ"
+      }
+     ],
+     "order": [
+      "أَخ",
+      "بِنْت",
+      "تِين",
+      "جَدّ"
+     ],
+     "explanation_ar": "أَخ ← بِنْت ← تِين ← جَدّ"
+    }
+   ]
+  },
+  {
+   "code": "PRE_A1-U01-L04",
+   "unit_code": "PRE_A1-U01",
+   "idx": 4,
+   "title_ar": "أتكلّم: ر ز م ل ك — أسمّي ما أرى",
+   "skill": "speak",
+   "minutes": 15,
+   "minutes_total": 90,
+   "domain": "شخصي",
+   "goal_ar": "أستطيع أن أنطق ر ز م ل ك وأسمّي عشر صور بكلمة واحدة",
+   "can_do_ar": "أستطيع أن أسمّي أشياء مألوفة من صورة بكلمة واحدة واضحة",
+   "can_do_en": "I can name familiar objects from a picture with one clear word",
+   "descriptor_codes": [
+    "SP-PRE_A1-03",
+    "LU-PRE_A1-01",
+    "LI-PRE_A1-04"
+   ],
+   "content": {
+    "intro_ar": "الْيَوْمَ تَفْتَحُ فَمَكَ. كِين يُحِبُّ الْقَهْوَةَ وَلَا يُحِبُّ الْحَلِيبَ، وَمَارْيَا تُحِبُّ التَّمْرَ. كُلُّ وَاحِدٍ يُسَمِّي مَا يَرَى.",
+    "text": {
+     "kind": "dialogue",
+     "body": "(٤ — مَا هَذَا؟)\nهند: رَاء: ر. زَاي: ز، نُقْطَةٌ فَوْقَ. مِيم: م. لَام: ل. كَاف: ك.\nعمر: رَجُل، زَيْت، مَكْتَب، لَبَن، كِتَاب!\nهند: أَحْسَنْتَ يَا عُمَر. الْآنَ أَرْفَعُ صُورَةً، وَأَنْتُمْ تَقُولُونَ الْكَلِمَةَ. مَا هَذَا؟\nماريا: جَمَل!\nهند: وَهَذَا؟\nيوسف: كَلْب. وَهَذِهِ نَمْل.\nهند: وَهَذَا؟\nكين: بَحْر… وَجَبَل… وَخُبْز!\nهند: وَهَذِهِ؟\nماريا: أُمّ. وَهَذَا أَب.\nهند: مُمْتَازٌ. الْكَلِمَةُ الْوَاحِدَةُ تَكْفِي الْيَوْمَ. تَمْر، لَيْل، بَنْك، كُتُب."
+    },
+    "grammar": {
+     "title_ar": "ر وز لا تتّصلان بما بعدهما · م ل ك تتّصل",
+     "explanation_ar": "الراء والزاي من الحروف الستّة التي ترفع القلم بعدها: رَجُل، زَيْت. أمّا الميم واللام والكاف فتتّصل من الجهتين: مَكْتَب، لَبَن، كِتَاب. في «كِتَاب» أربعة حروف: كـ ـتـ ـا ب، واللام في «لَبَن» أوّل، وفي «جَمَل» آخر.",
+     "examples": [
+      "رَجُل · زَيْت · تَمْر",
+      "مَكْتَب · لَبَن · كِتَاب",
+      "جَمَل · كَلْب · نَمْل"
+     ]
+    },
+    "produce": {
+     "kind": "speak",
+     "prompt_ar": "سجّل عشر ثوانٍ إلى خمس عشرة ثانية: سمِّ ستّ صور من بطاقات الحلقة بكلمة واحدة لكلّ صورة (مثل: كِتَاب، جَمَل، لَبَن)، ثمّ قل اسمك.",
+     "checklist": [
+      "ستّ كلمات واضحة",
+      "الراء والكاف مسموعتان بوضوح",
+      "قلتُ اسمي في الآخر"
+     ],
+     "model_ar": "كِتَاب. جَمَل. لَبَن. كَلْب. خُبْز. زَيْت. أَنَا كِين."
+    },
+    "closing_ar": "سِتَّةَ عَشَرَ حَرْفًا، وَأَنْتَ تُسَمِّي الصُّوَرَ بِصَوْتِكَ. غَدًا نَكْتُبُ، وَنَتَعَرَّفُ التَّاءَ الْمَرْبُوطَةَ."
+   },
+   "cards": [
+    {
+     "word_ar": "ر",
+     "gloss_ar": "رَاء · ر ـر ـر · رَ رُ رِ",
+     "example_ar": "رَجُل · بَحْر"
+    },
+    {
+     "word_ar": "ز",
+     "gloss_ar": "زَاي · ز ـز ـز · زَ زُ زِ",
+     "example_ar": "خُبْز · زَيْت"
+    },
+    {
+     "word_ar": "م",
+     "gloss_ar": "مِيم · مـ ـمـ ـم · مَ مُ مِ",
+     "example_ar": "جَمَل · أُمّ"
+    },
+    {
+     "word_ar": "ل",
+     "gloss_ar": "لَام · لـ ـلـ ـل · لَ لُ لِ",
+     "example_ar": "رَجُل · لَبَن"
+    },
+    {
+     "word_ar": "ك",
+     "gloss_ar": "كَاف · كـ ـكـ ـك · كَ كُ كِ",
+     "example_ar": "كِتَاب · كَلْب"
+    },
+    {
+     "word_ar": "خُبْز",
+     "gloss_ar": "خَاء ، بَاء ، زَاي",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "زَيْت",
+     "gloss_ar": "زَاي ، يَاء ، تَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "رَجُل",
+     "gloss_ar": "رَاء ، جِيم ، لَام",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "كِتَاب",
+     "gloss_ar": "كَاف ، تَاء ، أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "لَبَن",
+     "gloss_ar": "لَام ، بَاء ، نُون",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "كَلْب",
+     "gloss_ar": "كَاف ، لَام ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "جَمَل",
+     "gloss_ar": "جِيم ، مِيم ، لَام",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "أُمّ",
+     "gloss_ar": "أَلِف ، مِيم",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "أَب",
+     "gloss_ar": "أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "مَكْتَب",
+     "gloss_ar": "مِيم ، كَاف ، تَاء ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "بَنْك",
+     "gloss_ar": "بَاء ، نُون ، كَاف",
+     "example_ar": ""
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «كَاف»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-mim.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-lam.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-kaf.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-zay.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذَا حَرْفُ كَاف: ك"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «زَاي»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-lam.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-mim.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-kaf.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-zay.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "هَذَا حَرْفُ زَاي: ز"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «مِيم»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-mim.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-lam.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-kaf.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ra.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا حَرْفُ مِيم: م"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «رَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-zay.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-kaf.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-lam.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ra.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "هَذَا حَرْفُ رَاء: ر"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «كَلْب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/bread.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/office.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bank.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/dog.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "كَلْب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «كِتَاب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/dog.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/oil.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bank.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/book.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "كِتَاب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «خُبْز»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/father.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bread.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/moon.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/mountain.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "خُبْز"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «أَب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/dog.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/mother.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/mountain.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/father.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "أَب"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الحرف باسمه",
+     "pairs": [
+      {
+       "l": "ك",
+       "r": "كَاف"
+      },
+      {
+       "l": "ر",
+       "r": "رَاء"
+      },
+      {
+       "l": "ل",
+       "r": "لَام"
+      },
+      {
+       "l": "م",
+       "r": "مِيم"
+      }
+     ],
+     "explanation_ar": "اِقْرَأِ الْحَرْفَ ثُمَّ اسْمَهُ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأوّل",
+     "pairs": [
+      {
+       "l": "نَمْل",
+       "r": "ن"
+      },
+      {
+       "l": "لَبَن",
+       "r": "ل"
+      },
+      {
+       "l": "كَلْب",
+       "r": "ك"
+      },
+      {
+       "l": "أُمّ",
+       "r": "ا"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَوَّلُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأخير",
+     "pairs": [
+      {
+       "l": "زَيْت",
+       "r": "ت"
+      },
+      {
+       "l": "كَلْب",
+       "r": "ب"
+      },
+      {
+       "l": "لَبَن",
+       "r": "ن"
+      },
+      {
+       "l": "جَمَل",
+       "r": "ل"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَخِيرُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: لَبَن",
+     "words": [
+      "لَ",
+      "بَ",
+      "ن"
+     ],
+     "order": [
+      "لَ",
+      "بَ",
+      "ن"
+     ],
+     "explanation_ar": "لَ ، بَ ، ن = لَبَن"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: كُتُب",
+     "words": [
+      "كُ",
+      "تُ",
+      "ب"
+     ],
+     "order": [
+      "كُ",
+      "تُ",
+      "ب"
+     ],
+     "explanation_ar": "كُ ، تُ ، ب = كُتُب"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: أَب",
+     "words": [
+      "أَ",
+      "ب"
+     ],
+     "order": [
+      "أَ",
+      "ب"
+     ],
+     "explanation_ar": "أَ ، ب = أَب"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف الرَّاء",
+     "words": [
+      "ك",
+      "خ",
+      "ز",
+      "ل",
+      "م",
+      "ر",
+      "ث"
+     ],
+     "correct": "ر",
+     "explanation_ar": "رَاء = ر"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف اللَّام",
+     "words": [
+      "خ",
+      "م",
+      "ز",
+      "ث",
+      "ك",
+      "ل",
+      "ر"
+     ],
+     "correct": "ل",
+     "explanation_ar": "لَام = ل"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس الكلمة التي تبدأ بحرف الْبَاء",
+     "words": [
+      "تَمْر",
+      "بَنْك",
+      "رَجُل",
+      "كِتَاب"
+     ],
+     "correct": "بَنْك",
+     "explanation_ar": "بَنْك تَبْدَأُ بِـالْبَاء"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "تَمْ___",
+     "gaps": [
+      "ر"
+     ],
+     "bank": [
+      "ر",
+      "ز",
+      "ك"
+     ],
+     "explanation_ar": "تَمْر"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "___كْتَب",
+     "gaps": [
+      "مَ"
+     ],
+     "bank": [
+      "مَ",
+      "رَ",
+      "لَ"
+     ],
+     "explanation_ar": "مَكْتَب"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "رَجُ___",
+     "gaps": [
+      "ل"
+     ],
+     "bank": [
+      "ل",
+      "م",
+      "ك"
+     ],
+     "explanation_ar": "رَجُل"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "زَيْت",
+     "alt": [],
+     "explanation_ar": "زَيْت"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "جَبَل",
+     "alt": [],
+     "explanation_ar": "جَبَل"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "أُمّ",
+     "alt": [],
+     "explanation_ar": "أُمّ"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما اسم هذا الحرف: م ؟",
+     "options": [
+      "رَاء",
+      "مِيم",
+      "حَاء",
+      "يَاء"
+     ],
+     "correct": 1,
+     "explanation_ar": "م = مِيم"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما الحركة على حرف الْجِيم في «جَبَل»؟",
+     "options": [
+      "فَتْحَة",
+      "ضَمَّة",
+      "كَسْرَة"
+     ],
+     "correct": 0,
+     "explanation_ar": "جَبَل: جَ فَتْحَة"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "كم حرفًا في كلمة «تَمْر»؟",
+     "options": [
+      "أَرْبَعَة",
+      "ثَلَاثَة",
+      "حَرْفَان"
+     ],
+     "correct": 1,
+     "explanation_ar": "ت ، م ، ر"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "تبدأ الكلمة بحرف التَّاء",
+     "passage_ar": "تَمْر",
+     "correct": "true",
+     "explanation_ar": "تَمْر تَبْدَأُ بِـالتَّاء"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "في الكلمة حرف الزَّاي",
+     "passage_ar": "كِتَاب",
+     "correct": "false",
+     "explanation_ar": "لَيْسَ فِي «كِتَاب» حَرْفُ الزَّاي"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "آخر حرف في الكلمة هو اللَّام",
+     "passage_ar": "جَبَل",
+     "correct": "true",
+     "explanation_ar": "جَبَل تَنْتَهِي بِـاللَّام"
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب الصور بترتيب حروفها الأولى في الهجاء: الْأَلِف ثمّ الْبَاء ثمّ التَّاء ثمّ الْجِيم",
+     "frames": [
+      {
+       "image": "/iqra/img/mother.svg",
+       "text": "أُمّ"
+      },
+      {
+       "image": "/iqra/img/bank.svg",
+       "text": "بَنْك"
+      },
+      {
+       "image": "/iqra/img/dates.svg",
+       "text": "تَمْر"
+      },
+      {
+       "image": "/iqra/img/camel.svg",
+       "text": "جَمَل"
+      }
+     ],
+     "order": [
+      "أُمّ",
+      "بَنْك",
+      "تَمْر",
+      "جَمَل"
+     ],
+     "explanation_ar": "أُمّ ← بَنْك ← تَمْر ← جَمَل"
+    }
+   ]
+  },
+  {
+   "code": "PRE_A1-U01-L05",
+   "unit_code": "PRE_A1-U01",
+   "idx": 5,
+   "title_ar": "أكتب: التاء المربوطة ة — أنسخ كلماتي",
+   "skill": "write",
+   "minutes": 15,
+   "minutes_total": 90,
+   "domain": "شخصي",
+   "goal_ar": "أستطيع أن أنسخ حروفًا وكلمات مألوفة وأميّز التاء المربوطة في آخر الكلمة",
+   "can_do_ar": "أستطيع أن أنسخ حروفًا وكلمات مألوفة بخطّ مقروء",
+   "can_do_en": "I can copy familiar letters and words legibly",
+   "descriptor_codes": [
+    "WR-PRE_A1-01",
+    "RD-PRE_A1-04",
+    "LU-PRE_A1-01"
+   ],
+   "content": {
+    "intro_ar": "آخِرُ حَرْفٍ فِي هَذِهِ الْمَنْزِلَةِ صَغِيرٌ وَمُهِمٌّ: التَّاءُ الْمَرْبُوطَةُ. جَدَّةُ لَيْلَى، فَاطِمَةُ، تَكْتُبُ اسْمَهَا عَلَى الشَّاشَةِ، وَالْكُلُّ يَنْسَخُ.",
+    "text": {
+     "kind": "dialogue",
+     "body": "(٥ — تَاءٌ مَرْبُوطَةٌ)\nهند: هَذِهِ التَّاءُ الْمَرْبُوطَةُ: ة. تَأْتِي فِي آخِرِ الْكَلِمَةِ فَقَطْ. جَدّ… جَدَّة. تَمْر… تَمْرَة.\nيوسف: كُرَة؟\nهند: نَعَمْ، كُرَة. وَمَكْتَبَة، وَدَرَّاجَة، وَثَلَّاجَة، وَجَرِيدَة، وَذُرَة.\nماريا: مَدِينَة! أَنَا أُسَافِرُ إِلَى الْمَدِينَةِ.\nهند: أَحْسَنْتِ. وَالْآنَ نَكْتُبُ. الْقَلَمُ فِي الْيَدِ، وَالْحَرْفُ مِنَ الْيَمِينِ إِلَى الْيَسَارِ.\nكين: فِي الْيَابَانِ نَكْتُبُ مِنْ فَوْقُ إِلَى تَحْتُ!\nهند: وَهُنَا مِنَ الْيَمِينِ. اِكْتُبُوا مَعِي: بِنْت، كِتَاب، جَمَل، كَلْب، نَار، كُرَة.\nعمر: كَتَبْتُ سِتَّ كَلِمَاتٍ!"
+    },
+    "grammar": {
+     "title_ar": "ة في آخر الكلمة · نكتب من اليمين إلى اليسار",
+     "explanation_ar": "التاء المربوطة ( ة ) حرف يأتي في آخر الكلمة فقط، وتُنطق هاءً ساكنة عند الوقف: جَدَّة، كُرَة. تتّصل بما قبلها (ـة) إذا كان الحرف قبلها يتّصل: مَكْتَبَة، وتقف وحدها بعد ا د ذ ر ز و: ذُرَة، جَرِيدَة. والكتابة العربيّة تبدأ من اليمين.",
+     "examples": [
+      "جَدَّة · كُرَة · تَمْرَة",
+      "مَكْتَبَة · دَرَّاجَة · جَرِيدَة",
+      "ذُرَة · نَار · مَدِينَة"
+     ]
+    },
+    "produce": {
+     "kind": "write",
+     "prompt_ar": "انسخ ستّ كلمات من بطاقات الحلقة، ثلاثًا منها تنتهي بالتاء المربوطة، ثمّ اكتب اسمك بالحروف العربيّة إن استطعت.",
+     "checklist": [
+      "ستّ كلمات منسوخة",
+      "ثلاث منها بالتاء المربوطة",
+      "الكتابة من اليمين إلى اليسار",
+      "اسمي مكتوب (إن أمكن)"
+     ],
+     "model_ar": "جَدَّة · كُرَة · مَكْتَبَة · كِتَاب · جَمَل · نَار · مَارْيَا"
+    },
+    "closing_ar": "سَبْعَةَ عَشَرَ حَرْفًا وَأَكْثَرُ مِنْ أَرْبَعِينَ كَلِمَةً. فِي الْمَنْزِلَةِ الثَّانِيَةِ نُكْمِلُ الْحُرُوفَ: سِين وَشِين وَصَاد وَضَاد وَأَخَوَاتُهَا."
+   },
+   "cards": [
+    {
+     "word_ar": "ة",
+     "gloss_ar": "تَاء مَرْبُوطَة · ة ـة",
+     "example_ar": "جَدَّة · كُرَة"
+    },
+    {
+     "word_ar": "جَدَّة",
+     "gloss_ar": "جِيم ، دَال ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "كُرَة",
+     "gloss_ar": "كَاف ، رَاء ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "مَكْتَبَة",
+     "gloss_ar": "مِيم ، كَاف ، تَاء ، بَاء ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "دَرَّاجَة",
+     "gloss_ar": "دَال ، رَاء ، أَلِف ، جِيم ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "ثَلَّاجَة",
+     "gloss_ar": "ثَاء ، لَام ، أَلِف ، جِيم ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "جَرِيدَة",
+     "gloss_ar": "جِيم ، رَاء ، يَاء ، دَال ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "ذُرَة",
+     "gloss_ar": "ذَال ، رَاء ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "نَار",
+     "gloss_ar": "نُون ، أَلِف ، رَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "مَدِينَة",
+     "gloss_ar": "مِيم ، دَال ، يَاء ، نُون ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "تَمْرَة",
+     "gloss_ar": "تَاء ، مِيم ، رَاء ، تَاء مَرْبُوطَة",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "جَدّ",
+     "gloss_ar": "جِيم ، دَال",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "أَب",
+     "gloss_ar": "أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "كِتَاب",
+     "gloss_ar": "كَاف ، تَاء ، أَلِف ، بَاء",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "جَمَل",
+     "gloss_ar": "جِيم ، مِيم ، لَام",
+     "example_ar": ""
+    },
+    {
+     "word_ar": "كَلْب",
+     "gloss_ar": "كَاف ، لَام ، بَاء",
+     "example_ar": ""
+    }
+   ],
+   "exercises": [
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «تَاء مَرْبُوطَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta-marbuta.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-lam.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-alif.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا حَرْفُ تَاء مَرْبُوطَة: ة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «تَاء مَرْبُوطَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-kaf.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta-marbuta.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "هَذَا حَرْفُ تَاء مَرْبُوطَة: ة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «تَاء مَرْبُوطَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-jim.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta-marbuta.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-dhal.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذَا حَرْفُ تَاء مَرْبُوطَة: ة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع والمس الحرف: «تَاء مَرْبُوطَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/letter-tha.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ta-marbuta.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-ya.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/letter-zay.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "هَذَا حَرْفُ تَاء مَرْبُوطَة: ة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «ثَلَّاجَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/bicycle.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fridge.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/father.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fire.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "ثَلَّاجَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «أَب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/grandma.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fridge.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/father.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bicycle.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "أَب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «نَار»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/dates.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/ball.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fire.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/dog.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "نَار"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «كُرَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/grandma.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/father.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/fridge.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/ball.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "كُرَة"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الحرف باسمه",
+     "pairs": [
+      {
+       "l": "ة",
+       "r": "تَاء مَرْبُوطَة"
+      },
+      {
+       "l": "ز",
+       "r": "زَاي"
+      },
+      {
+       "l": "ل",
+       "r": "لَام"
+      },
+      {
+       "l": "ب",
+       "r": "بَاء"
+      }
+     ],
+     "explanation_ar": "اِقْرَأِ الْحَرْفَ ثُمَّ اسْمَهُ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأوّل",
+     "pairs": [
+      {
+       "l": "كُرَة",
+       "r": "ك"
+      },
+      {
+       "l": "جَدَّة",
+       "r": "ج"
+      },
+      {
+       "l": "أَب",
+       "r": "ا"
+      },
+      {
+       "l": "تَمْرَة",
+       "r": "ت"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَوَّلُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "matching",
+     "prompt_ar": "طابق الكلمة بحرفها الأخير",
+     "pairs": [
+      {
+       "l": "نَار",
+       "r": "ر"
+      },
+      {
+       "l": "تَمْرَة",
+       "r": "ة"
+      },
+      {
+       "l": "كِتَاب",
+       "r": "ب"
+      },
+      {
+       "l": "جَمَل",
+       "r": "ل"
+      }
+     ],
+     "explanation_ar": "الْحَرْفُ الْأَخِيرُ مِنَ الْكَلِمَةِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: جَرِيدَة",
+     "words": [
+      "جَ",
+      "رِ",
+      "ي",
+      "دَ",
+      "ة"
+     ],
+     "order": [
+      "جَ",
+      "رِ",
+      "ي",
+      "دَ",
+      "ة"
+     ],
+     "explanation_ar": "جَ ، رِ ، ي ، دَ ، ة = جَرِيدَة"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: جَمَل",
+     "words": [
+      "جَ",
+      "مَ",
+      "ل"
+     ],
+     "order": [
+      "جَ",
+      "مَ",
+      "ل"
+     ],
+     "explanation_ar": "جَ ، مَ ، ل = جَمَل"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الحروف لتكتب: أَب",
+     "words": [
+      "أَ",
+      "ب"
+     ],
+     "order": [
+      "أَ",
+      "ب"
+     ],
+     "explanation_ar": "أَ ، ب = أَب"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف التَّاء مَرْبُوطَة",
+     "words": [
+      "ا",
+      "ث",
+      "ج",
+      "ب",
+      "ن",
+      "ي",
+      "ة",
+      "ت"
+     ],
+     "correct": "ة",
+     "explanation_ar": "تَاء مَرْبُوطَة = ة"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس حرف الْخَاء",
+     "words": [
+      "ن",
+      "خ",
+      "ث",
+      "ب",
+      "ت",
+      "ا",
+      "ي",
+      "ج"
+     ],
+     "correct": "خ",
+     "explanation_ar": "خَاء = خ"
+    },
+    {
+     "kind": "word_tap",
+     "prompt_ar": "المس الكلمة التي تبدأ بحرف الْمِيم",
+     "words": [
+      "مَدِينَة",
+      "جَرِيدَة",
+      "كُرَة",
+      "ذُرَة"
+     ],
+     "correct": "مَدِينَة",
+     "explanation_ar": "مَدِينَة تَبْدَأُ بِـالْمِيم"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "تَمْرَ___",
+     "gaps": [
+      "ة"
+     ],
+     "bank": [
+      "ة",
+      "د",
+      "ث"
+     ],
+     "explanation_ar": "تَمْرَة"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "___مَل",
+     "gaps": [
+      "جَ"
+     ],
+     "bank": [
+      "جَ",
+      "خَ",
+      "رَ"
+     ],
+     "explanation_ar": "جَمَل"
+    },
+    {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الحرف الناقص",
+     "text": "___رَة",
+     "gaps": [
+      "ذُ"
+     ],
+     "bank": [
+      "ذُ",
+      "حُ",
+      "جُ"
+     ],
+     "explanation_ar": "ذُرَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "ذُرَة",
+     "alt": [],
+     "explanation_ar": "ذُرَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مَكْتَبَة",
+     "alt": [],
+     "explanation_ar": "مَكْتَبَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "جَرِيدَة",
+     "alt": [],
+     "explanation_ar": "جَرِيدَة"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما اسم هذا الحرف: ة ؟",
+     "options": [
+      "خَاء",
+      "جِيم",
+      "تَاء مَرْبُوطَة",
+      "أَلِف"
+     ],
+     "correct": 2,
+     "explanation_ar": "ة = تَاء مَرْبُوطَة"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "ما الحركة على حرف الْجِيم في «جَدَّة»؟",
+     "options": [
+      "فَتْحَة",
+      "ضَمَّة",
+      "كَسْرَة"
+     ],
+     "correct": 0,
+     "explanation_ar": "جَدَّة: جَ فَتْحَة"
+    },
+    {
+     "kind": "mcq",
+     "prompt_ar": "كم حرفًا في كلمة «جَدّ»؟",
+     "options": [
+      "حَرْفَان",
+      "ثَلَاثَة",
+      "أَرْبَعَة"
+     ],
+     "correct": 0,
+     "explanation_ar": "ج ، د"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "تبدأ الكلمة بحرف الْكَاف",
+     "passage_ar": "كَلْب",
+     "correct": "true",
+     "explanation_ar": "كَلْب تَبْدَأُ بِـالْكَاف"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "في الكلمة حرف الْخَاء",
+     "passage_ar": "أَب",
+     "correct": "false",
+     "explanation_ar": "لَيْسَ فِي «أَب» حَرْفُ الْخَاء"
+    },
+    {
+     "kind": "true_false_notgiven",
+     "prompt_ar": "آخر حرف في الكلمة هو التَّاء مَرْبُوطَة",
+     "passage_ar": "ذُرَة",
+     "correct": "true",
+     "explanation_ar": "ذُرَة تَنْتَهِي بِـالتَّاء مَرْبُوطَة"
+    },
+    {
+     "kind": "picture_sequence",
+     "prompt_ar": "رتّب الصور بترتيب حروفها الأولى في الهجاء: الْأَلِف ثمّ التَّاء ثمّ الثَّاء ثمّ الْجِيم",
+     "frames": [
+      {
+       "image": "/iqra/img/father.svg",
+       "text": "أَب"
+      },
+      {
+       "image": "/iqra/img/dates.svg",
+       "text": "تَمْرَة"
+      },
+      {
+       "image": "/iqra/img/fridge.svg",
+       "text": "ثَلَّاجَة"
+      },
+      {
+       "image": "/iqra/img/grandma.svg",
+       "text": "جَدَّة"
+      }
+     ],
+     "order": [
+      "أَب",
+      "تَمْرَة",
+      "ثَلَّاجَة",
+      "جَدَّة"
+     ],
+     "explanation_ar": "أَب ← تَمْرَة ← ثَلَّاجَة ← جَدَّة"
+    }
+   ]
+  }
+ ],
+ "library": [
+  {
+   "code": "PRE_A1-U01-R01",
+   "unit_code": "PRE_A1-U01",
+   "kind": "read",
+   "title_ar": "لوحة الكلمات: عشرون كلمة بصورها",
+   "minutes": 15,
+   "descriptor_codes": [
+    "RD-PRE_A1-01",
+    "RD-PRE_A1-04"
+   ],
+   "body_ar": "(لَوْحَةُ الصَّفِّ — تَقْرَؤُهَا هِنْدُ وَيُكَرِّرُ الطُّلَّابُ)\nالْبَيْتُ: بَاب · بَيْت · بَيْتَان · مَكْتَب · ثَلَّاجَة\nالْعَائِلَةُ: أَب · أُمّ · أَخ · بِنْت · بَنَات · جَدّ · جَدَّة · رَجُل\nالطَّعَامُ: تِين · تَمْر · لَبَن · خُبْز · زَيْت · ذُرَة · بُنّ\nالْحَيَوَانَاتُ: جَمَل · كَلْب · دُبّ · نَمْل · ذُبَاب · دَجَاج\nالْمَدْرَسَةُ: كِتَاب · كُتُب · مَكْتَبَة · جَرِيدَة · كُرَة · دَرَّاجَة\nالطَّبِيعَةُ: بَحْر · جَبَل · نَار · لَيْل · نَبَات · مَدِينَة\nهند: عِشْرُونَ كَلِمَةً وَأَكْثَرُ، كُلُّهَا مِنْ سَبْعَةَ عَشَرَ حَرْفًا. اِقْرَأْهَا كُلَّ يَوْمٍ مَرَّةً.",
+   "questions": [
+    {
+     "q": "أيّ كلمة من كلمات «الطعام»؟",
+     "options": [
+      "خُبْز",
+      "كَلْب",
+      "جَبَل"
+     ],
+     "correct": 0,
+     "explanation_ar": "خُبْز فِي سَطْرِ الطَّعَامِ"
+    },
+    {
+     "q": "كم كلمة في سطر «الحيوانات»؟",
+     "options": [
+      "خمس",
+      "ستّ",
+      "سبع"
+     ],
+     "correct": 1,
+     "explanation_ar": "جَمَل · كَلْب · دُبّ · نَمْل · ذُبَاب · دَجَاج"
+    },
+    {
+     "q": "أيّ كلمة تنتهي بالتاء المربوطة؟",
+     "options": [
+      "كِتَاب",
+      "ثَلَّاجَة",
+      "بَحْر"
+     ],
+     "correct": 1,
+     "explanation_ar": "ثَلَّاجَة ← ة"
+    },
+    {
+     "q": "كلمة «بَنَات» في سطر…",
+     "options": [
+      "الْبَيْتُ",
+      "الْعَائِلَةُ",
+      "الْمَدْرَسَةُ"
+     ],
+     "correct": 1
+    },
+    {
+     "q": "كم حرفًا في اللوحة كلّها؟",
+     "options": [
+      "سبعة عشر",
+      "عشرون",
+      "ثمانية وعشرون"
+     ],
+     "correct": 0,
+     "explanation_ar": "قَالَتْ هِنْد: مِنْ سَبْعَةَ عَشَرَ حَرْفًا"
+    }
+   ]
+  },
+  {
+   "code": "PRE_A1-U01-A01",
+   "unit_code": "PRE_A1-U01",
+   "kind": "listen",
+   "title_ar": "لعبة الحرف الأوّل: من يسبق؟",
+   "minutes": 15,
+   "descriptor_codes": [
+    "LI-PRE_A1-01",
+    "LI-PRE_A1-04"
+   ],
+   "body_ar": "(آخِرُ دَرْسٍ فِي الْأُسْبُوعِ — لُعْبَةٌ عَلَى الشَّاشَةِ)\nهند: الْلُّعْبَةُ سَهْلَةٌ: أَقُولُ حَرْفًا، وَأَنْتُمْ تَقُولُونَ كَلِمَةً تَبْدَأُ بِهِ. الْحَرْفُ الْأَوَّلُ: بَاء.\nماريا: بَاب!\nيوسف: بَيْت!\nكين: بِنْت!\nهند: ثَلَاثُ كَلِمَاتٍ! الْحَرْفُ الثَّانِي: كَاف.\nعمر: كِتَاب، كَلْب، كُرَة!\nهند: عُمَر سَبَقَ الْجَمِيعَ. الْحَرْفُ الثَّالِثُ: جِيم.\nماريا: جَمَل.\nكين: جَدّ… وَجَدَّة.\nهند: وَالْحَرْفُ الرَّابِعُ: دَال.\nيوسف: دُبّ! دَجَاج! دَرَّاجَة!\nهند: الْأَخِيرُ: نُون.\nماريا: نَار.\nعمر: نَمْل، وَنَاي.\nهند: أَحْسَنْتُمْ جَمِيعًا. الْفَائِزُ الْيَوْمَ: عُمَر، وَبَعْدَهُ مَارْيَا. إِلَى اللِّقَاءِ فِي الْمَنْزِلَةِ الثَّانِيَةِ.",
+   "questions": [
+    {
+     "q": "ما الحرف الأوّل في اللعبة؟",
+     "options": [
+      "بَاء",
+      "كَاف",
+      "جِيم"
+     ],
+     "correct": 0
+    },
+    {
+     "q": "من قال «كِتَاب، كَلْب، كُرَة»؟",
+     "options": [
+      "يُوسُف",
+      "عُمَر",
+      "كِين"
+     ],
+     "correct": 1,
+     "explanation_ar": "عُمَر سَبَقَ الْجَمِيعَ"
+    },
+    {
+     "q": "أيّ كلمة قالتها ماريا مع حرف الجيم؟",
+     "options": [
+      "جَدّ",
+      "جَمَل",
+      "جَدَّة"
+     ],
+     "correct": 1
+    },
+    {
+     "q": "كم كلمة قال يوسف مع حرف الدال؟",
+     "options": [
+      "كلمة",
+      "كلمتين",
+      "ثلاث كلمات"
+     ],
+     "correct": 2,
+     "explanation_ar": "دُبّ، دَجَاج، دَرَّاجَة"
+    },
+    {
+     "q": "من الفائز؟",
+     "options": [
+      "مَارْيَا",
+      "كِين",
+      "عُمَر"
+     ],
+     "correct": 2
+    }
+   ]
+  }
+ ]
+}
