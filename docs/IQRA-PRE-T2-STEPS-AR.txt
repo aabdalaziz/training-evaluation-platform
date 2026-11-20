@@ -1,0 +1,27 @@
+خطوات رفع اقْرَأْ · التمهيديّ ت٢ (U03 + U04) — تُكمِل المستوى
+==============================================================
+لا SQL هذه المرّة (المنزلتان في الخريطة منذ ت١). الزيب: ATHAR-IQRA-PRE-T2.zip (63 ملفًا — تحت حدّ 100 ملف، التزام واحد).
+
+الخطوة 1 — الرفع إلى GitHub (3 دقائق)
+  https://github.com/aabdalaziz/training-evaluation-platform/upload/main
+  فكّ الزيب واسحب المجلّدات الثلاثة: tools · public · docs
+  رسالة الالتزام: Iqra Pre-A1 batch 2 (final): U03 greetings + U04 numbers/colours/prices (packs, dabt, 14 tapes, 9 SVGs)
+  → Commit changes → انتظر نشر Vercel (3–5 دقائق): https://vercel.com/dashboard
+
+الخطوة 2 — التحقّق من النشر
+  https://athar-portal.com/iqra/audio/PRE_A1-U04-L04.cues.json  ← يبدأ بـ {"v":…,"code":"PRE_A1-U04-L04","rate":"-25%"
+  https://athar-portal.com/iqra/img/flag-saudi.svg  ← علم أخضر
+
+الخطوة 3 — الاستيراد والاعتماد
+  https://athar-portal.com/admin/iqra → تبويب «تمهيدي» → استيراد حزمة محتوى
+  3.1 iqra-pack-PRE_A1-U03.json → فحص (150 · 0 مشكلات) → استيراد → المتوقّع: أُنشئت 5 · بطاقات 80 · مِران 150 · مكتبة 2
+  3.2 iqra-pack-PRE_A1-U04.json → المتوقّع نفسه
+  3.3 اعتماد الحلقات العشر والنصوص الأربعة (كما في الدفعات السابقة)
+
+الخطوة 4 — عين المتعلّم
+  https://athar-portal.com/iqra (حساب مسكَّن في Pre-A1) → أربع منازل × 5 حلقات
+  4.1 افتح «أتكلّم: بِكَمْ؟ — أشتري من السوق» → شغّل الشريط (ليلى تبيع في سوق الجدّ) → محطّة المِران: الصور والمطابقة والترتيب
+  4.2 افتح «أكتب: كَمِ السَّاعَةُ؟» → بطاقات الساعة (clock-one/three/eight/ten) → آخر إغلاق يسلّم إلى A1
+
+ثمّ أرسل «تم» — وأطابق 28 ملفًا و9 صور على Vercel.
+ملاحظة: دخان هذه الدفعة اكتمل على بناء الإنتاج المحلّي بلقطات المتصفّح (dashboard-redesign/phase112-iqra-pre-t2/).

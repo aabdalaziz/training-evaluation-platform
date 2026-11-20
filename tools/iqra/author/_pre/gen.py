@@ -200,12 +200,12 @@ def fairness(l):
             elif w0 in _M or w in _M: m += 1
     tot = f + m; pct = round(f / tot * 100) if tot else 50
     return f, m, pct, (tot < 6 or 40 <= pct <= 60)
-def fair_lesson(key, *args, tries=60):
-    """يبني الحلقة ثمّ يعيد توليد التمارين ببذور متتالية حتى يتوازن حضور الجنسين (40–60٪)."""
+def fair_lesson(key, *args, tries=60, builder=None):
+    """يبني الحلقة ثمّ يعيد توليد التمارين ببذور متتالية حتى يتوازن حضور الجنسين (40–60٪). builder: build (حروف) أو gen2.build2 (جمل)."""
     l = lesson(*args)
-    code = l['code']
+    code = l['code']; builder = builder or build
     for i in range(tries):
-        l['exercises'] = build(key, code if i == 0 else f'{code}#{i}')
+        l['exercises'] = builder(key, code if i == 0 else f'{code}#{i}')
         f, m, pct, ok = fairness(l)
         if ok: return l
     raise SystemExit(f'{code}: لم يتوازن الإنصاف بعد {tries} محاولة — آخر نسبة {pct}% ({f}/{m})')

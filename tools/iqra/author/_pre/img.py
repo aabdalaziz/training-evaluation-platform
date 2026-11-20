@@ -75,3 +75,16 @@ svg('apple', C(32, 36, 17, '#C62828') + P('M32 20c0-6 3-9 6-11', 'none', f'strok
 svg('shop', R(10, 28, 44, 28, SAND, 2, f'stroke="{NAVY}" stroke-width="2.5"') + P('M8 28l6-12h36l6 12z', RED) + ''.join(R(8 + i * 8, 24, 8, 6, WHITE if i % 2 else RED) for i in range(6)) + R(26, 38, 12, 18, NAVY, 2) + R(14, 36, 8, 8, '#BFDDE3'))
 svg('mountain', P('M4 54l20-32 10 16 8-12 18 28z', '#6E7B8B') + P('M24 22l6 10 4-6-4-6z', WHITE) + C(50, 16, 6, GOLD))
 print('ok', len(os.listdir(OUT)), 'svg files')
+
+# ───── ت٢ (U03 + U04): أعلام ثلاثة بلدان · بطاقة اسم · تلويح · ساعات بعقارب ─────
+svg('flag-spain', R(8, 16, 48, 32, '#C60B1E', 3) + R(8, 24, 48, 16, '#FFC400'))
+svg('flag-japan', R(8, 16, 48, 32, WHITE, 3, 'stroke="#BBBBBB" stroke-width="1"') + C(32, 32, 9, '#BC002D'))
+svg('flag-saudi', R(8, 16, 48, 32, '#006C35', 3) + R(18, 28, 28, 3, WHITE, 1) + R(18, 36, 22, 2.5, WHITE, 1) + R(42, 35, 6, 4, WHITE, 1))
+svg('name-card', R(8, 18, 48, 28, WHITE, 4, f'stroke="{NAVY}" stroke-width="2"') + R(14, 25, 10, 10, GOLD, 2) + R(28, 26, 20, 3, NAVY, 1) + R(28, 33, 14, 3, GREY, 1) + R(14, 39, 34, 2, TEAL, 1))
+svg('wave', P('M26 56V36a3 3 0 0 1 6 0V24a3 3 0 0 1 6 0v12V20a3 3 0 0 1 6 0v16V24a3 3 0 0 1 6 0v20c0 7-5 12-12 12h-4a8 8 0 0 1-8-8z', SKIN) + P('M26 46l-6-8a3 3 0 0 1 5-3l5 7z', SKIN)
+    + P('M14 20a10 10 0 0 1 0 14', 'none', f'stroke="{TEAL}" stroke-width="3" stroke-linecap="round"') + P('M9 15a16 16 0 0 1 0 24', 'none', f'stroke="{TEAL}" stroke-width="3" stroke-linecap="round"'))
+def clockface(h):
+    import math
+    a = math.radians(h * 30 - 90); x2, y2 = 32 + 13 * math.cos(a), 32 + 13 * math.sin(a)
+    return C(32, 32, 22, WHITE, f'stroke="{NAVY}" stroke-width="3"') + L(32, 32, 32, 14, NAVY, 3) + L(32, 32, round(x2, 1), round(y2, 1), RED, 3) + C(32, 32, 2.5, NAVY) + ''.join(C(32 + 18 * math.cos(math.radians(k * 30 - 90)), 32 + 18 * math.sin(math.radians(k * 30 - 90)), 1.5, GREY) for k in range(12))
+for n, h in [('clock-one', 1), ('clock-three', 3), ('clock-eight', 8), ('clock-ten', 10)]: svg(n, clockface(h))
