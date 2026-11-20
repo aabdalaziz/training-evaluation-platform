@@ -15,7 +15,7 @@
  *   - picture_sequence    : stimulus.frames [{image, text}] · مفتاح accepted.order [نصوص الإطارات]
  *  + الحلقة تحمل مهارتها (skill) و«أستطيع أن…» وأكواد الواصفات · محطّة «أُنتج» (produce) · مكتبة المستوى · فاحص الإنصاف 60/40 · سحب 10 من 30.
  */
-import { IQRA_LIMITS, IQRA_SKILLS, SKILL_META, isIqraLevel, isIqraSkill, type IqraLevel, type IqraSkill } from './registry';
+import { IQRA_LIMITS, itemsMaxFor, IQRA_SKILLS, SKILL_META, isIqraLevel, isIqraSkill, type IqraLevel, type IqraSkill } from './registry';
 
 export type TextKind = 'dialogue' | 'narrative';
 export type LessonContent = {
@@ -256,12 +256,13 @@ export function normalizePack(raw: unknown): Normalized {
     const cards = (Array.isArray(l?.cards) ? l.cards : []).map((c: unknown, k: number) => normalizeCard(c, `${code}/card${k + 1}`, problems)).filter(Boolean) as Card[];
     const exercises = (Array.isArray(l?.exercises) ? l.exercises : []).map((e: unknown, k: number) => normalizeExercise(e, `${code}/ex${k + 1}`, problems)).filter(Boolean) as Exercise[];
     if (cards.length > IQRA_LIMITS.cards_per_lesson_max) warnings.push({ at: code, msg: `بطاقات أكثر من ${IQRA_LIMITS.cards_per_lesson_max} — تُقتطع` });
-    if (exercises.length > IQRA_LIMITS.items_per_lesson_max) warnings.push({ at: code, msg: `مِران أكثر من ${IQRA_LIMITS.items_per_lesson_max} — يُقتطع` });
+    const exMax = itemsMaxFor(unitLevel(unit_code)); /* ت٣: التمهيديّ 40 */
+    if (exercises.length > exMax) warnings.push({ at: code, msg: `مِران أكثر من ${exMax} — يُقتطع` });
     if (!exercises.length) warnings.push({ at: code, msg: 'حلقة بلا مِران — تُقبل مسوَّدةً ويلزم إضافة تمارين قبل الاعتماد' });
     const minutes = Number(l?.minutes); const minutes_total = Number(l?.minutes_total);
     const skill = isIqraSkill(l?.skill) ? l.skill : null; if (l?.skill && !skill) problems.push({ at: code, msg: `مهارة غير معروفة: ${String(l.skill)}` });
     const descriptor_codes: string[] = Array.isArray(l?.descriptor_codes) ? uniq<string>(l.descriptor_codes.map((x: unknown) => S(x, 24).toUpperCase()).filter((x: string) => /^[A-Z0-9_-]{3,24}$/.test(x))).slice(0, 8) : [];
-    lessons.push({ code, unit_code, idx, title_ar, goal_ar: S(l?.goal_ar, 200), minutes: Number.isInteger(minutes) && minutes >= 3 && minutes <= 20 ? minutes : 10, minutes_total: Number.isInteger(minutes_total) && minutes_total >= 20 && minutes_total <= 240 ? minutes_total : 120, skill, can_do_ar: S(l?.can_do_ar, 200), can_do_en: S(l?.can_do_en, 200), descriptor_codes, domain: S(l?.domain, 20) || 'شخصي', fairness_exempt: l?.fairness_exempt === true, content, cards: cards.slice(0, IQRA_LIMITS.cards_per_lesson_max), exercises: exercises.slice(0, IQRA_LIMITS.items_per_lesson_max) });
+    lessons.push({ code, unit_code, idx, title_ar, goal_ar: S(l?.goal_ar, 200), minutes: Number.isInteger(minutes) && minutes >= 3 && minutes <= 20 ? minutes : 10, minutes_total: Number.isInteger(minutes_total) && minutes_total >= 20 && minutes_total <= 240 ? minutes_total : 120, skill, can_do_ar: S(l?.can_do_ar, 200), can_do_en: S(l?.can_do_en, 200), descriptor_codes, domain: S(l?.domain, 20) || 'شخصي', fairness_exempt: l?.fairness_exempt === true, content, cards: cards.slice(0, IQRA_LIMITS.cards_per_lesson_max), exercises: exercises.slice(0, exMax) });
   }
   const library: PackLibrary[] = []; const seenLib = new Set<string>();
   for (const [i, x] of (Array.isArray(o.library) ? o.library : []).entries()) {

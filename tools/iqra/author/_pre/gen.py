@@ -47,8 +47,9 @@ def haraka_of(w, idx):
         if h in hk and h != '\u0651': return h
     return None
 
+N_EX = 40   # ت٣ (2026-11-20): سقف التمهيديّ 40 (IQRA_LIMITS.items_per_lesson_max_pre_a1) — كان 30
 def build(key, code, letters_pool=None):
-    """30 تمرينًا للحلقة key (مثل U01L03) — 8 اختيار بالصورة (4 حروف + 4 كلمات) · 3 مطابقة · 3 ترتيب · 3 المس · 3 فراغ · 3 إملاء · 3 اختيار · 3 صواب/خطأ · 1 ترتيب صور."""
+    """40 تمرينًا للحلقة key (مثل U01L03) — 12 اختيار بالصورة (6 حروف + 6 كلمات) · 3 مطابقة · 5 ترتيب · 4 المس · 4 فراغ · 5 إملاء · 3 اختيار · 3 صواب/خطأ · 1 ترتيب صور."""
     rnd = random.Random(code)
     new = NEW[key]; kn = known(key); words = W[key]
     pool = letters_pool or (new if len(new) >= 4 else kn)       # حروف التمارين: الجديدة، أو كلّ المعروف في حلقات المراجعة
@@ -59,12 +60,12 @@ def build(key, code, letters_pool=None):
         others = [img for _, img in words if img != correct_img]
         others = list(dict.fromkeys(others)); rnd.shuffle(others)
         return others[:n]
-    # 1) اسمع والمس الحرف ×4
-    for g in rnd.sample(focus, min(4, len(focus))) if len(focus) >= 4 else [focus[i % len(focus)] for i in range(4)]:
+    # 1) اسمع والمس الحرف ×6
+    for g in (rnd.sample(focus, 6) if len(focus) >= 6 else [focus[i % len(focus)] for i in range(6)]):
         others = [x for x in pool if x != g]; rnd.shuffle(others); opts = [g] + others[:3]; rnd.shuffle(opts)
         ex.append(pic(f'اسمع والمس الحرف: «{NAME[g]}»', [LIMG[x] for x in opts], opts.index(g), f'هَذَا حَرْفُ {NAME[g]}: {g}'))
-    # 2) اسمع واختر الصورة ×4
-    for w, img in rnd.sample(words, 4):
+    # 2) اسمع واختر الصورة ×6
+    for w, img in rnd.sample(words, min(6, len(words))):
         opts = [img] + distinct_imgs(img, 3); rnd.shuffle(opts)
         ex.append(pic(f'اسمع واختر الصورة: «{w}»', opts, opts.index(img), f'{w}'))
     # 3) مطابقة ×3
@@ -82,28 +83,29 @@ def build(key, code, letters_pool=None):
         if g not in seen: seen.add(g); ws2.append((w, g))
         if len(ws2) == 4: break
     ex.append(match('طابق الكلمة بحرفها الأخير', [(w, g) for w, g in ws2], 'الْحَرْفُ الْأَخِيرُ مِنَ الْكَلِمَةِ'))
-    # 4) ترتيب الحروف ×3
-    for w, _ in rnd.sample([x for x in words if len(tokens(x[0])) >= 2], 3):
+    # 4) ترتيب الحروف ×5
+    _ord = [x for x in words if len(tokens(x[0])) >= 2]
+    for w, _ in rnd.sample(_ord, min(5, len(_ord))):
         t = tokens(w); ex.append(order(f'رتّب الحروف لتكتب: {w}', t, f'{" ، ".join(t)} = {w}'))
     # 5) المس ×3
     row = list(dict.fromkeys(pool + rnd.sample(kn, min(len(kn), 3))))[:8]
     if len(row) < 3: row = (row + kn)[:4]
-    for g in (rnd.sample(focus, 2) if len(focus) >= 2 else [focus[0], rnd.choice([x for x in kn if x != focus[0]])]):
+    for g in (rnd.sample(focus, 3) if len(focus) >= 3 else (focus + [x for x in rnd.sample(kn, len(kn)) if x not in focus])[:3]):
         r = row if g in row else [g] + row[:7]; r = list(dict.fromkeys(r)); rnd.shuffle(r)
         ex.append(tap(f'المس حرف {al(g)}', r, g, f'{NAME[g]} = {g}'))
     w, _ = rnd.choice(words); g = first_glyph(w)
     cand = [x for x, _ in words if first_glyph(x) != g]; rnd.shuffle(cand); r = [w] + cand[:3]; rnd.shuffle(r)
     ex.append(tap(f'المس الكلمة التي تبدأ' + (' بعد «ال»' if has_al(w) else '') + f' بحرف {al(g)}', r, w, f'{w} تَبْدَأُ بِـ{al(g)}'))
-    # 6) الحرف الناقص ×3
-    for w, _ in rnd.sample(words, 3):
+    # 6) الحرف الناقص ×4
+    for w, _ in rnd.sample(words, min(4, len(words))):
         u = units(w); i = rnd.randrange(len(u)); missing = u[i][0] + u[i][1]
         text = ''.join(a + b for a, b in u[:i]) + '___' + ''.join(a + b for a, b in u[i + 1:])
         g = glyphs(w)[i] if i < len(glyphs(w)) else None
         dis = [x + u[i][1] for x in rnd.sample([x for x in pool if x != g and x not in 'ءة'], 2)] if g else []
         dis = [d for d in dis if d != missing][:2] or [x + u[i][1] for x in rnd.sample([x for x in kn if x != g and x not in 'ءة'], 2)]
         ex.append(cloze('أكمل الحرف الناقص', text, [missing], dis, f'{w}'))
-    # 7) إملاء ×3
-    for w, _ in rnd.sample(words, 3): ex.append(dic(w, [], f'{w}'))
+    # 7) إملاء ×5
+    for w, _ in rnd.sample(words, min(5, len(words))): ex.append(dic(w, [], f'{w}'))
     # 8) اختيار ×3
     g = rnd.choice(focus); others = [NAME[x] for x in rnd.sample([x for x in kn if x != g], 3)]; opts = [NAME[g]] + others; rnd.shuffle(opts)
     ex.append(mcq(f'ما اسم هذا الحرف: {g} ؟', opts, opts.index(NAME[g]), f'{g} = {NAME[g]}'))
@@ -133,7 +135,7 @@ def build(key, code, letters_pool=None):
         if g not in seen and img not in [c[1] for c in cand]: seen.add(g); cand.append((w, img))
     cand = cand[:4] if len(cand) >= 3 else cand
     ex.append(seq('رتّب الصور بترتيب حروفها الأولى' + (' بعد «ال»' if has_al(cand[0][0]) else '') + ' في الهجاء: ' + ' ثمّ '.join(al(first_glyph(w)) for w, _ in cand), [(img, w) for w, img in cand], ' ← '.join(w for w, _ in cand)))
-    assert len(ex) == 30, len(ex)
+    assert len(ex) == N_EX, (key, len(ex))
     kinds = {e['kind'] for e in ex}; assert len(kinds) == 9, kinds
     return ex
 

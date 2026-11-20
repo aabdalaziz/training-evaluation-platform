@@ -53,6 +53,7 @@ export const IQRA_LIMITS = {
   daily_question_pool: 1,       /* سؤال اليوم: واحد من بنود المستوى المعتمدة (بذرة اليوم + البريد) */
   cards_per_lesson_max: 16,
   items_per_lesson_max: 30,     /* الخطوة 2: 30 تمرينًا في الحلقة — 10 تُسحب في كلّ زيارة على ثلاثة أيام */
+  items_per_lesson_max_pre_a1: 40, /* اقْرَأْ ت٣ (2026-11-20): التمهيديّ 40 تمرينًا (تمارين قصيرة جدًّا: حرف/كلمة/صورة) — 4 زيارات × 10 */
   items_per_lesson_target: 30,
   draw_per_visit: 10,
   cards_per_lesson_min: 8,
@@ -72,6 +73,8 @@ export const IQRA_LIMITS = {
   threshold_invite_days: 30,    /* صلاحية دعوة «العَتَبة» الشخصية */
   offline_units_max: 2,         /* «المنزلة في جيبي»: منزلتان محمّلتان معًا على الجهاز */
 } as const;
+/** سقف المِران حسب المستوى: التمهيديّ 40، وما سواه 30 */
+export const itemsMaxFor = (level: string | null | undefined): number => (level === 'PRE_A1' ? IQRA_LIMITS.items_per_lesson_max_pre_a1 : IQRA_LIMITS.items_per_lesson_max);
 
 /* ---------- ق٢: «العَتَبة» (Level-exit gate) · طابور «أُنتج» (analytic rubric) ---------- */
 /** حالات طلب العَتَبة — المصدر الوحيد للحكم هو تقرير مِعيار (اختبار نهاية المستوى المعياري «عُبور») */

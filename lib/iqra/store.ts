@@ -308,8 +308,8 @@ export async function setLessonStatus(db: Db, id: unknown, status: unknown, by: 
   if ((l.item_ids || []).length) { const st = status === 'approved' ? 'approved' : status === 'archived' ? 'archived' : 'draft'; await db.from('question_bank_items').update({ status: st, reviewed_by: by.id, reviewed_at: nowIso(), updated_at: nowIso() }).in('id', l.item_ids).eq('source_kind', 'iqra'); invalidatePoolCache(); }
   return { ok: true as const };
 }
-/** استيراد حزمة: المنازل الناقصة تُنشأ مسوَّدةً · الحلقة المعتمدة لا تُمَسّ · المسوَّدة تُستبدل كاملةً (بطاقات ومِران) */
-export async function importPack(db: Db, pack: Pack, by: { email: string; id: string }, batchId: string) {
+/** استيراد حزمة: المنازل الناقصة تُنشأ مسوَّدةً · الحلقة المعتمدة لا تُمَسّ (إلا بخيار replaceApproved: تُحدَّث وتبقى معتمدة مع بنودها) · المسوَّدة تُستبدل كاملةً (بطاقات ومِران) */
+export async function importPack(db: Db, pack: Pack, by: { email: string; id: string }, batchId: string, opts: { replaceApproved?: boolean } = {}) {
   const report = { units_created: 0, lessons_created: 0, lessons_updated: 0, lessons_skipped: [] as string[], cards: 0, items: 0, library_created: 0, library_updated: 0, library_skipped: [] as string[], errors: [] as string[] };
   const version = pack.version === 'iqra-pack-2' ? 'iqra-s2' : 'iqra-q1';
   const { data: ex } = await db.from('miaar_syllabus_units').select('code, level, status').limit(400); const have = new Map(((ex || []) as any[]).map((u) => [u.code, u]));
@@ -318,7 +318,8 @@ export async function importPack(db: Db, pack: Pack, by: { email: string; id: st
     if (!have.has(l.unit_code)) { report.errors.push(`${l.code}: المنزلة ${l.unit_code} غير موجودة في خريطة المنهج`); continue; }
     const level = (have.get(l.unit_code) as any).level as IqraLevel;
     const { data: old } = await db.from('iqra_lessons').select('id, status, item_ids').eq('code', l.code).maybeSingle();
-    if (old && old.status === 'approved') { report.lessons_skipped.push(l.code); continue; }
+    if (old && old.status === 'approved' && !opts.replaceApproved) { report.lessons_skipped.push(l.code); continue; }
+    const keepApproved = !!(old && old.status === 'approved' && opts.replaceApproved); /* ت٣: تحديث محتوى حلقة معتمدة (سقف 30→40) دون إسقاط اعتمادها */
     const oldItemIds: string[] = [...(((old?.item_ids as string[] | null) || []))];
     /* البنود */
     const rows = l.exercises.map((e, i) => exerciseToBank(e, l.code, i + 1, level, l.unit_code, l.skill || null, version)); const itemIds: string[] = [];
@@ -329,17 +330,17 @@ export async function importPack(db: Db, pack: Pack, by: { email: string; id: st
       await db.from('question_bank_answer_keys').upsert({ item_id: up.data.id, correct_option_id: key.correct_option_id, accepted: key.accepted, updated_at: nowIso() }, { onConflict: 'item_id' });
       itemIds.push(up.data.id); report.items += 1;
     }
-    const row = { code: l.code, unit_code: l.unit_code, idx: l.idx, title_ar: l.title_ar, goal_ar: l.goal_ar || '', minutes: l.minutes || 10, minutes_total: l.minutes_total || 120, skill: l.skill || null, can_do_ar: l.can_do_ar || '', can_do_en: l.can_do_en || '', descriptor_codes: l.descriptor_codes || [], domain: l.domain || 'شخصي', content: l.content, item_ids: itemIds, status: 'draft', version, import_batch_id: batchId, updated_at: nowIso() };
+    const row = { code: l.code, unit_code: l.unit_code, idx: l.idx, title_ar: l.title_ar, goal_ar: l.goal_ar || '', minutes: l.minutes || 10, minutes_total: l.minutes_total || 120, skill: l.skill || null, can_do_ar: l.can_do_ar || '', can_do_en: l.can_do_en || '', descriptor_codes: l.descriptor_codes || [], domain: l.domain || 'شخصي', content: l.content, item_ids: itemIds, status: keepApproved ? 'approved' : 'draft', version, import_batch_id: batchId, updated_at: nowIso() };
     let lessonId: string | null = null;
-    if (old) { const r = await db.from('iqra_lessons').update(row).eq('id', old.id); if (r.error) { report.errors.push(`${l.code}: ${r.error.message}`); continue; } lessonId = old.id; report.lessons_updated += 1; await db.from('iqra_cards').delete().eq('lesson_id', old.id); const stale = oldItemIds.filter((id) => !itemIds.includes(id)); if (stale.length) { await db.from('question_bank_items').update({ status: 'archived', updated_at: nowIso() }).in('id', stale).eq('source_kind', 'iqra'); invalidatePoolCache(); } /* البنود القديمة التي لم تعد في الحلقة تُؤرشف لا تُحذف (سجلّ المتعلّمين) */ }
+    if (old) { const r = await db.from('iqra_lessons').update(row).eq('id', old.id); if (r.error) { report.errors.push(`${l.code}: ${r.error.message}`); continue; } lessonId = old.id; report.lessons_updated += 1; await db.from('iqra_cards').delete().eq('lesson_id', old.id); if (keepApproved && itemIds.length) await db.from('question_bank_items').update({ status: 'approved', reviewed_by: by.id, reviewed_at: nowIso(), updated_at: nowIso() }).in('id', itemIds).eq('source_kind', 'iqra'); const stale = oldItemIds.filter((id) => !itemIds.includes(id)); if (stale.length) { await db.from('question_bank_items').update({ status: 'archived', updated_at: nowIso() }).in('id', stale).eq('source_kind', 'iqra'); invalidatePoolCache(); } /* البنود القديمة التي لم تعد في الحلقة تُؤرشف لا تُحذف (سجلّ المتعلّمين) */ }
     else { const r = await db.from('iqra_lessons').insert({ ...row, created_at: nowIso() }).select('id').single(); if (r.error || !r.data?.id) { report.errors.push(`${l.code}: ${r.error?.message || 'no id'}`); continue; } lessonId = r.data.id; report.lessons_created += 1; }
     if (l.cards.length) { const r = await db.from('iqra_cards').insert(l.cards.map((c, i) => ({ lesson_id: lessonId, unit_code: l.unit_code, idx: i + 1, word_ar: c.word_ar, pos: c.pos || null, gloss_ar: c.gloss_ar, example_ar: c.example_ar || '', audio_path: c.audio_path || null, image_path: c.image_path || null, created_at: nowIso() }))); if (!r.error) report.cards += l.cards.length; else report.errors.push(`${l.code}/cards: ${r.error.message}`); }
   }
   for (const x of pack.library || []) {
     if (!have.has(x.unit_code)) { report.errors.push(`${x.code}: المنزلة ${x.unit_code} غير موجودة`); continue; }
     const level = (have.get(x.unit_code) as any).level as IqraLevel; const { data: old } = await db.from('iqra_library').select('id, status').eq('code', x.code).maybeSingle();
-    if (old && old.status === 'approved') { report.library_skipped.push(x.code); continue; }
-    const row = { code: x.code, unit_code: x.unit_code, level, kind: x.kind, title_ar: x.title_ar, body_ar: x.body_ar, minutes: x.minutes, questions: x.questions, descriptor_codes: x.descriptor_codes || [], status: 'draft', version: 'iqra-s2', updated_at: nowIso() };
+    if (old && old.status === 'approved' && !opts.replaceApproved) { report.library_skipped.push(x.code); continue; }
+    const row = { code: x.code, unit_code: x.unit_code, level, kind: x.kind, title_ar: x.title_ar, body_ar: x.body_ar, minutes: x.minutes, questions: x.questions, descriptor_codes: x.descriptor_codes || [], status: old && old.status === 'approved' && opts.replaceApproved ? 'approved' : 'draft', version: 'iqra-s2', updated_at: nowIso() };
     const r = old ? await db.from('iqra_library').update(row).eq('id', old.id) : await db.from('iqra_library').insert({ ...row, created_at: nowIso() });
     if (r.error) report.errors.push(`${x.code}: ${r.error.message}`); else if (old) report.library_updated += 1; else report.library_created += 1;
   }

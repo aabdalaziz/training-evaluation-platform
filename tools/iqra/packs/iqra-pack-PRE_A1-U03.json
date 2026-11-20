@@ -156,22 +156,22 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/sun.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/gift.svg"
       },
       {
        "text": "",
+       "image": "/iqra/img/plane.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/cancel.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/entrance.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/sun.svg"
       }
      ],
-     "correct": 3,
+     "correct": 0,
      "explanation_ar": "صَبَاحُ الْخَيْرِ"
     },
     {
@@ -180,7 +180,7 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/airport.svg"
+       "image": "/iqra/img/check.svg"
       },
       {
        "text": "",
@@ -188,7 +188,7 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/sun.svg"
+       "image": "/iqra/img/door.svg"
       },
       {
        "text": "",
@@ -248,80 +248,60 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «لَا شُكْرًا»",
+     "prompt_ar": "اسمع واختر الصورة: «حَقِيبَة»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/wave.svg"
+       "image": "/iqra/img/crescent.svg"
       },
-      {
-       "text": "",
-       "image": "/iqra/img/plane.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/door.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/cancel.svg"
-      }
-     ],
-     "correct": 3,
-     "explanation_ar": "لَا شُكْرًا"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «تَفَضَّلِي يَا مَارْيَا»",
-     "options": [
       {
        "text": "",
        "image": "/iqra/img/sun.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/airport.svg"
+       "image": "/iqra/img/plane.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/entrance.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/door.svg"
+       "image": "/iqra/img/suitcase.svg"
       }
      ],
      "correct": 3,
-     "explanation_ar": "تَفَضَّلِي يَا مَارْيَا"
+     "explanation_ar": "حَقِيبَة"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «مَعَ السَّلَامَةِ يَا عُمَر»",
+     "prompt_ar": "اسمع واختر الصورة: «شُكْرًا»",
      "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/gift.svg"
+      },
       {
        "text": "",
        "image": "/iqra/img/plane.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/hand.svg"
+       "image": "/iqra/img/check.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/door.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/cancel.svg"
+       "image": "/iqra/img/entrance.svg"
       }
      ],
      "correct": 0,
-     "explanation_ar": "مَعَ السَّلَامَةِ يَا عُمَر"
+     "explanation_ar": "شُكْرًا"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «صَبَاحُ الْخَيْرِ يَا هِنْد»",
+     "prompt_ar": "اسمع واختر الصورة: «مَسَاءُ الْخَيْرِ»",
      "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/suitcase.svg"
+      },
       {
        "text": "",
        "image": "/iqra/img/check.svg"
@@ -332,74 +312,230 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/sun.svg"
+       "image": "/iqra/img/crescent.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "مَسَاءُ الْخَيْرِ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «شُكْرًا يَا يُوسُف»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/airport.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/hand.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/gift.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "شُكْرًا يَا يُوسُف"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «تَفَضَّلِي يَا مَارْيَا»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/wave.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/cancel.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/gift.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "تَفَضَّلِي يَا مَارْيَا"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَهْلًا وَسَهْلًا فِي جُدَّةَ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/check.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/airport.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/cancel.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "أَهْلًا وَسَهْلًا فِي جُدَّةَ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «لَا شُكْرًا»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/airport.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/cancel.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/check.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "لَا شُكْرًا"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «صَبَاحُ الْخَيْرِ يَا هِنْد»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/plane.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/check.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/hand.svg"
       }
      ],
      "correct": 2,
      "explanation_ar": "صَبَاحُ الْخَيْرِ يَا هِنْد"
     },
     {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «نَعَمْ مِنْ فَضْلِكَ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/hand.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/check.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/plane.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/crescent.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "نَعَمْ مِنْ فَضْلِكَ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «مَعَ السَّلَامَةِ يَا عُمَر»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/hand.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/suitcase.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/plane.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "مَعَ السَّلَامَةِ يَا عُمَر"
+    },
+    {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
-      {
-       "l": "صَبَاحُ الْخَيْرِ",
-       "r": "صَبَاحُ النُّورِ"
-      },
       {
        "l": "شُكْرًا",
        "r": "عَفْوًا"
       },
       {
-       "l": "السَّلَامُ عَلَيْكُمْ",
-       "r": "وَعَلَيْكُمُ السَّلَامُ"
-      },
-      {
        "l": "مَسَاءُ الْخَيْرِ",
        "r": "مَسَاءُ النُّورِ"
+      },
+      {
+       "l": "صَبَاحُ الْخَيْرِ",
+       "r": "صَبَاحُ النُّورِ"
+      },
+      {
+       "l": "السَّلَامُ عَلَيْكُمْ",
+       "r": "وَعَلَيْكُمُ السَّلَامُ"
       }
      ],
-     "explanation_ar": "صَبَاحُ الْخَيْرِ ← صَبَاحُ النُّورِ · شُكْرًا ← عَفْوًا · السَّلَامُ عَلَيْكُمْ ← وَعَلَيْكُمُ السَّلَامُ · مَسَاءُ الْخَيْرِ ← مَسَاءُ النُّورِ"
+     "explanation_ar": "شُكْرًا ← عَفْوًا · مَسَاءُ الْخَيْرِ ← مَسَاءُ النُّورِ · صَبَاحُ الْخَيْرِ ← صَبَاحُ النُّورِ · السَّلَامُ عَلَيْكُمْ ← وَعَلَيْكُمُ السَّلَامُ"
     },
     {
      "kind": "matching",
      "prompt_ar": "صِل كلّ عبارة بما يناسبها",
      "pairs": [
       {
-       "l": "مَعَ السَّلَامَةِ",
-       "r": "إِلَى اللِّقَاءِ"
+       "l": "كَيْفَ حَالُكَ؟",
+       "r": "بِخَيْرٍ، الْحَمْدُ لِلَّهِ"
       },
       {
-       "l": "تَصْبِحُ عَلَى خَيْرٍ",
-       "r": "وَأَنْتَ مِنْ أَهْلِهِ"
+       "l": "مَعَ السَّلَامَةِ",
+       "r": "إِلَى اللِّقَاءِ"
       },
       {
        "l": "أَهْلًا وَسَهْلًا",
        "r": "أَهْلًا بِكَ"
       },
       {
-       "l": "كَيْفَ حَالُكَ؟",
-       "r": "بِخَيْرٍ، الْحَمْدُ لِلَّهِ"
+       "l": "تَصْبِحُ عَلَى خَيْرٍ",
+       "r": "وَأَنْتَ مِنْ أَهْلِهِ"
       }
      ],
-     "explanation_ar": "مَعَ السَّلَامَةِ ← إِلَى اللِّقَاءِ · تَصْبِحُ عَلَى خَيْرٍ ← وَأَنْتَ مِنْ أَهْلِهِ · أَهْلًا وَسَهْلًا ← أَهْلًا بِكَ · كَيْفَ حَالُكَ؟ ← بِخَيْرٍ، الْحَمْدُ لِلَّهِ"
+     "explanation_ar": "كَيْفَ حَالُكَ؟ ← بِخَيْرٍ، الْحَمْدُ لِلَّهِ · مَعَ السَّلَامَةِ ← إِلَى اللِّقَاءِ · أَهْلًا وَسَهْلًا ← أَهْلًا بِكَ · تَصْبِحُ عَلَى خَيْرٍ ← وَأَنْتَ مِنْ أَهْلِهِ"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
-      {
-       "l": "عِنْدَ السَّفَرِ",
-       "r": "مَعَ السَّلَامَةِ"
-      },
-      {
-       "l": "فِي الصَّبَاحِ",
-       "r": "صَبَاحُ الْخَيْرِ"
-      },
       {
        "l": "فِي الْمَسَاءِ",
        "r": "مَسَاءُ الْخَيْرِ"
@@ -407,9 +543,62 @@
       {
        "l": "عِنْدَ الْهَدِيَّةِ",
        "r": "شُكْرًا"
+      },
+      {
+       "l": "فِي الصَّبَاحِ",
+       "r": "صَبَاحُ الْخَيْرِ"
+      },
+      {
+       "l": "عِنْدَ السَّفَرِ",
+       "r": "مَعَ السَّلَامَةِ"
       }
      ],
-     "explanation_ar": "عِنْدَ السَّفَرِ ← مَعَ السَّلَامَةِ · فِي الصَّبَاحِ ← صَبَاحُ الْخَيْرِ · فِي الْمَسَاءِ ← مَسَاءُ الْخَيْرِ · عِنْدَ الْهَدِيَّةِ ← شُكْرًا"
+     "explanation_ar": "فِي الْمَسَاءِ ← مَسَاءُ الْخَيْرِ · عِنْدَ الْهَدِيَّةِ ← شُكْرًا · فِي الصَّبَاحِ ← صَبَاحُ الْخَيْرِ · عِنْدَ السَّفَرِ ← مَعَ السَّلَامَةِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "لَا",
+      "شُكْرًا"
+     ],
+     "order": [
+      "لَا",
+      "شُكْرًا"
+     ],
+     "explanation_ar": "لَا شُكْرًا"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "تَفَضَّلِي",
+      "يَا",
+      "مَارْيَا"
+     ],
+     "order": [
+      "تَفَضَّلِي",
+      "يَا",
+      "مَارْيَا"
+     ],
+     "explanation_ar": "تَفَضَّلِي يَا مَارْيَا"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "مَسَاءُ",
+      "الْخَيْرِ",
+      "يَا",
+      "كِين"
+     ],
+     "order": [
+      "مَسَاءُ",
+      "الْخَيْرِ",
+      "يَا",
+      "كِين"
+     ],
+     "explanation_ar": "مَسَاءُ الْخَيْرِ يَا كِين"
     },
     {
      "kind": "ordering",
@@ -430,40 +619,27 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
-      "لَا",
-      "شُكْرًا"
+      "مَعَ",
+      "السَّلَامَةِ",
+      "يَا",
+      "عُمَر"
      ],
      "order": [
-      "لَا",
-      "شُكْرًا"
+      "مَعَ",
+      "السَّلَامَةِ",
+      "يَا",
+      "عُمَر"
      ],
-     "explanation_ar": "لَا شُكْرًا"
-    },
-    {
-     "kind": "ordering",
-     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
-     "words": [
-      "أَهْلًا",
-      "وَسَهْلًا",
-      "فِي",
-      "جُدَّةَ"
-     ],
-     "order": [
-      "أَهْلًا",
-      "وَسَهْلًا",
-      "فِي",
-      "جُدَّةَ"
-     ],
-     "explanation_ar": "أَهْلًا وَسَهْلًا فِي جُدَّةَ"
+     "explanation_ar": "مَعَ السَّلَامَةِ يَا عُمَر"
     },
     {
      "kind": "word_tap",
      "prompt_ar": "المس التحيّة",
      "words": [
       "بَاب",
+      "السَّلَامُ عَلَيْكُمْ",
       "شُكْرًا",
-      "لَا",
-      "السَّلَامُ عَلَيْكُمْ"
+      "لَا"
      ],
      "correct": "السَّلَامُ عَلَيْكُمْ",
      "explanation_ar": "السَّلَامُ عَلَيْكُمْ"
@@ -472,10 +648,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس كلمة الوداع",
      "words": [
-      "مَعَ السَّلَامَةِ",
       "كِتَاب",
-      "مِنْ فَضْلِكَ",
-      "نَعَمْ"
+      "نَعَمْ",
+      "مَعَ السَّلَامَةِ",
+      "مِنْ فَضْلِكَ"
      ],
      "correct": "مَعَ السَّلَامَةِ",
      "explanation_ar": "مَعَ السَّلَامَةِ"
@@ -485,9 +661,9 @@
      "prompt_ar": "المس كلمة الشكر",
      "words": [
       "صَبَاح",
-      "شُكْرًا",
+      "لَا",
       "تَفَضَّلْ",
-      "لَا"
+      "شُكْرًا"
      ],
      "correct": "شُكْرًا",
      "explanation_ar": "شُكْرًا"
@@ -509,20 +685,6 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "السَّلَامُ ___",
-     "gaps": [
-      "عَلَيْكُمْ"
-     ],
-     "bank": [
-      "عَلَيْكُمْ",
-      "شُكْرًا",
-      "نَعَمْ"
-     ],
-     "explanation_ar": "السَّلَامُ عَلَيْكُمْ"
-    },
-    {
-     "kind": "cloze_bank",
-     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
      "text": "مَعَ ___",
      "gaps": [
       "السَّلَامَةِ"
@@ -535,18 +697,46 @@
      "explanation_ar": "مَعَ السَّلَامَةِ"
     },
     {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "لَا",
-     "alt": [],
-     "explanation_ar": "لَا"
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
+     "text": "السَّلَامُ ___",
+     "gaps": [
+      "عَلَيْكُمْ"
+     ],
+     "bank": [
+      "عَلَيْكُمْ",
+      "شُكْرًا",
+      "نَعَمْ"
+     ],
+     "explanation_ar": "السَّلَامُ عَلَيْكُمْ"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "تَفَضَّلْ",
+     "text_ar": "حَقِيبَة",
      "alt": [],
-     "explanation_ar": "تَفَضَّلْ"
+     "explanation_ar": "حَقِيبَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "شُكْرًا",
+     "alt": [],
+     "explanation_ar": "شُكْرًا"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "صَبَاحُ الْخَيْرِ",
+     "alt": [],
+     "explanation_ar": "صَبَاحُ الْخَيْرِ"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مَطَار",
+     "alt": [],
+     "explanation_ar": "مَطَار"
     },
     {
      "kind": "short_dictation",
@@ -559,33 +749,33 @@
      "kind": "mcq",
      "prompt_ar": "ماذا نقول في الصباح؟",
      "options": [
+      "مَعَ السَّلَامَةِ",
       "مَسَاءُ الْخَيْرِ",
-      "صَبَاحُ الْخَيْرِ",
-      "مَعَ السَّلَامَةِ"
+      "صَبَاحُ الْخَيْرِ"
      ],
-     "correct": 1,
+     "correct": 2,
      "explanation_ar": "فِي الصَّبَاحِ: صَبَاحُ الْخَيْرِ"
     },
     {
      "kind": "mcq",
      "prompt_ar": "قال كين: «شُكْرًا». ماذا تردّ؟",
      "options": [
-      "نَعَمْ",
       "لَا",
-      "عَفْوًا"
+      "عَفْوًا",
+      "نَعَمْ"
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "شُكْرًا ← عَفْوًا"
     },
     {
      "kind": "mcq",
      "prompt_ar": "ماذا نقول عند السفر؟",
      "options": [
-      "أَهْلًا وَسَهْلًا",
+      "مَعَ السَّلَامَةِ",
       "صَبَاحُ النُّورِ",
-      "مَعَ السَّلَامَةِ"
+      "أَهْلًا وَسَهْلًا"
      ],
-     "correct": 2,
+     "correct": 0,
      "explanation_ar": "عِنْدَ السَّفَرِ: مَعَ السَّلَامَةِ"
     },
     {
@@ -773,22 +963,22 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/nurse.svg"
+       "image": "/iqra/img/woman.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/grandma.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/engineer.svg"
+       "image": "/iqra/img/teacher.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/grandpa.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
       }
      ],
-     "correct": 3,
+     "correct": 2,
      "explanation_ar": "جَدّ"
     },
     {
@@ -797,15 +987,15 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/doctor.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/teacher.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/man.svg"
+       "image": "/iqra/img/woman.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/officer.svg"
       },
       {
        "text": "",
@@ -821,22 +1011,22 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/grandma.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/officer.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/doctor.svg"
+       "image": "/iqra/img/boy.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/grandpa.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/nurse.svg"
+       "image": "/iqra/img/girl.svg"
       }
      ],
-     "correct": 0,
+     "correct": 1,
      "explanation_ar": "شُرْطِيّ"
     },
     {
@@ -845,31 +1035,11 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/grandpa.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/man.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/officer.svg"
+       "image": "/iqra/img/nurse.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/woman.svg"
-      }
-     ],
-     "correct": 1,
-     "explanation_ar": "رَجُل"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هُوَ رَجُل»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/teacher.svg"
       },
       {
        "text": "",
@@ -877,7 +1047,27 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/student.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "رَجُل"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بِنْت»",
+     "options": [
+      {
+       "text": "",
        "image": "/iqra/img/doctor.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/woman.svg"
       },
       {
        "text": "",
@@ -885,11 +1075,11 @@
       }
      ],
      "correct": 1,
-     "explanation_ar": "هُوَ رَجُل"
+     "explanation_ar": "بِنْت"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هُوَ وَلَد»",
+     "prompt_ar": "اسمع واختر الصورة: «وَلَد»",
      "options": [
       {
        "text": "",
@@ -897,7 +1087,7 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/doctor.svg"
+       "image": "/iqra/img/man.svg"
       },
       {
        "text": "",
@@ -909,15 +1099,15 @@
       }
      ],
      "correct": 0,
-     "explanation_ar": "هُوَ وَلَد"
+     "explanation_ar": "وَلَد"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «أَنَا طَالِب»",
+     "prompt_ar": "اسمع واختر الصورة: «مُهَنْدِس»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/engineer.svg"
+       "image": "/iqra/img/doctor.svg"
       },
       {
        "text": "",
@@ -925,23 +1115,143 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/man.svg"
+       "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/engineer.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "مُهَنْدِس"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَنَا طَالِب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/officer.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/man.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
       }
      ],
-     "correct": 3,
+     "correct": 1,
      "explanation_ar": "أَنَا طَالِب"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هُوَ مُهَنْدِس»",
+     "prompt_ar": "اقرأ واختر الصورة: «هِيَ بِنْت»",
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/girl.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/doctor.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/grandpa.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "هِيَ بِنْت"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هِيَ مُعَلِّمَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/teacher.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/doctor.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/grandma.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/engineer.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هِيَ مُعَلِّمَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هِيَ مُمَرِّضَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/teacher.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/grandma.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/nurse.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/grandpa.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هِيَ مُمَرِّضَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هُوَ وَلَد»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/man.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/grandma.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/boy.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "هُوَ وَلَد"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هُوَ رَجُل»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/man.svg"
       },
       {
        "text": "",
@@ -953,24 +1263,40 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/grandpa.svg"
+       "image": "/iqra/img/officer.svg"
       }
      ],
-     "correct": 2,
-     "explanation_ar": "هُوَ مُهَنْدِس"
+     "correct": 0,
+     "explanation_ar": "هُوَ رَجُل"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هُوَ شُرْطِيّ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/nurse.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/grandpa.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/officer.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "هُوَ شُرْطِيّ"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
-      {
-       "l": "هُوَ",
-       "r": "وَلَد"
-      },
-      {
-       "l": "أَنْتَ",
-       "r": "يَا يُوسُف"
-      },
       {
        "l": "هِيَ",
        "r": "بِنْت"
@@ -978,9 +1304,17 @@
       {
        "l": "أَنْتِ",
        "r": "يَا مَارْيَا"
+      },
+      {
+       "l": "أَنْتَ",
+       "r": "يَا يُوسُف"
+      },
+      {
+       "l": "هُوَ",
+       "r": "وَلَد"
       }
      ],
-     "explanation_ar": "هُوَ ← وَلَد · أَنْتَ ← يَا يُوسُف · هِيَ ← بِنْت · أَنْتِ ← يَا مَارْيَا"
+     "explanation_ar": "هِيَ ← بِنْت · أَنْتِ ← يَا مَارْيَا · أَنْتَ ← يَا يُوسُف · هُوَ ← وَلَد"
     },
     {
      "kind": "matching",
@@ -991,42 +1325,81 @@
        "r": "طَبِيبَة"
       },
       {
-       "l": "مُهَنْدِس",
-       "r": "مُهَنْدِسَة"
-      },
-      {
        "l": "مُعَلِّم",
        "r": "مُعَلِّمَة"
+      },
+      {
+       "l": "مُهَنْدِس",
+       "r": "مُهَنْدِسَة"
       },
       {
        "l": "طَالِب",
        "r": "طَالِبَة"
       }
      ],
-     "explanation_ar": "طَبِيب ← طَبِيبَة · مُهَنْدِس ← مُهَنْدِسَة · مُعَلِّم ← مُعَلِّمَة · طَالِب ← طَالِبَة"
+     "explanation_ar": "طَبِيب ← طَبِيبَة · مُعَلِّم ← مُعَلِّمَة · مُهَنْدِس ← مُهَنْدِسَة · طَالِب ← طَالِبَة"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
       {
-       "l": "هُوَ عُمَر",
-       "r": "وَلَد"
+       "l": "هُوَ يُوسُف",
+       "r": "طَبِيب"
       },
       {
        "l": "هِيَ سَارَة",
        "r": "طَبِيبَة"
       },
       {
-       "l": "هُوَ يُوسُف",
-       "r": "طَبِيب"
+       "l": "هُوَ عُمَر",
+       "r": "وَلَد"
       },
       {
        "l": "هِيَ هِنْد",
        "r": "مُعَلِّمَة"
       }
      ],
-     "explanation_ar": "هُوَ عُمَر ← وَلَد · هِيَ سَارَة ← طَبِيبَة · هُوَ يُوسُف ← طَبِيب · هِيَ هِنْد ← مُعَلِّمَة"
+     "explanation_ar": "هُوَ يُوسُف ← طَبِيب · هِيَ سَارَة ← طَبِيبَة · هُوَ عُمَر ← وَلَد · هِيَ هِنْد ← مُعَلِّمَة"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هِيَ",
+      "اِمْرَأَة"
+     ],
+     "order": [
+      "هِيَ",
+      "اِمْرَأَة"
+     ],
+     "explanation_ar": "هِيَ اِمْرَأَة"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هِيَ",
+      "مُعَلِّمَة"
+     ],
+     "order": [
+      "هِيَ",
+      "مُعَلِّمَة"
+     ],
+     "explanation_ar": "هِيَ مُعَلِّمَة"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هُوَ",
+      "رَجُل"
+     ],
+     "order": [
+      "هُوَ",
+      "رَجُل"
+     ],
+     "explanation_ar": "هُوَ رَجُل"
     },
     {
      "kind": "ordering",
@@ -1046,19 +1419,6 @@
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
       "هُوَ",
-      "وَلَد"
-     ],
-     "order": [
-      "هُوَ",
-      "وَلَد"
-     ],
-     "explanation_ar": "هُوَ وَلَد"
-    },
-    {
-     "kind": "ordering",
-     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
-     "words": [
-      "هُوَ",
       "مُهَنْدِس"
      ],
      "order": [
@@ -1071,10 +1431,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس ضمير المتكلّم",
      "words": [
-      "هِيَ",
-      "أَنْتَ",
       "أَنَا",
-      "هُوَ"
+      "أَنْتَ",
+      "هُوَ",
+      "هِيَ"
      ],
      "correct": "أَنَا",
      "explanation_ar": "أَنَا"
@@ -1084,9 +1444,9 @@
      "prompt_ar": "المس الضمير الذي يناسب «بِنْت»",
      "words": [
       "هِيَ",
-      "هُوَ",
       "أَنَا",
-      "أَنْتَ"
+      "أَنْتَ",
+      "هُوَ"
      ],
      "correct": "هِيَ",
      "explanation_ar": "هِيَ"
@@ -1095,10 +1455,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس الضمير الذي نقوله لماريا",
      "words": [
-      "أَنْتِ",
       "أَنْتَ",
-      "هُوَ",
-      "هِيَ"
+      "هِيَ",
+      "أَنْتِ",
+      "هُوَ"
      ],
      "correct": "أَنْتِ",
      "explanation_ar": "أَنْتِ"
@@ -1120,20 +1480,6 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "___ بِنْت",
-     "gaps": [
-      "هِيَ"
-     ],
-     "bank": [
-      "هِيَ",
-      "هُوَ",
-      "أَنْتَ"
-     ],
-     "explanation_ar": "هِيَ بِنْت"
-    },
-    {
-     "kind": "cloze_bank",
-     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
      "text": "___ طَبِيب",
      "gaps": [
       "هُوَ"
@@ -1146,35 +1492,63 @@
      "explanation_ar": "هُوَ طَبِيب"
     },
     {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "مُهَنْدِس",
-     "alt": [],
-     "explanation_ar": "مُهَنْدِس"
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
+     "text": "___ بِنْت",
+     "gaps": [
+      "هِيَ"
+     ],
+     "bank": [
+      "هِيَ",
+      "هُوَ",
+      "أَنْتَ"
+     ],
+     "explanation_ar": "هِيَ بِنْت"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "وَلَد",
+     "text_ar": "طَبِيب",
      "alt": [],
-     "explanation_ar": "وَلَد"
+     "explanation_ar": "طَبِيب"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "جَدَّة",
+     "text_ar": "جَدّ",
      "alt": [],
-     "explanation_ar": "جَدَّة"
+     "explanation_ar": "جَدّ"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "اِمْرَأَة",
+     "alt": [],
+     "explanation_ar": "اِمْرَأَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "بِنْت",
+     "alt": [],
+     "explanation_ar": "بِنْت"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مُمَرِّضَة",
+     "alt": [],
+     "explanation_ar": "مُمَرِّضَة"
     },
     {
      "kind": "mcq",
      "prompt_ar": "«… طَبِيبَة». ما الضمير؟",
      "options": [
-      "هِيَ",
       "هُوَ",
+      "هِيَ",
       "أَنْتَ"
      ],
-     "correct": 0,
+     "correct": 1,
      "explanation_ar": "طَبِيبَة مُؤَنَّثٌ ← هِيَ"
     },
     {
@@ -1182,10 +1556,10 @@
      "prompt_ar": "نقول ليوسف:",
      "options": [
       "أَنْتِ",
-      "أَنْتَ",
-      "هِيَ"
+      "هِيَ",
+      "أَنْتَ"
      ],
-     "correct": 1,
+     "correct": 2,
      "explanation_ar": "يُوسُف مُذَكَّرٌ ← أَنْتَ"
     },
     {
@@ -1193,8 +1567,8 @@
      "prompt_ar": "«أَنَا هِنْد». من يتكلّم؟",
      "options": [
       "هِنْد",
-      "يُوسُف",
-      "كِين"
+      "كِين",
+      "يُوسُف"
      ],
      "correct": 0,
      "explanation_ar": "أَنَا = الْمُتَكَلِّمُ"
@@ -1384,22 +1758,22 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/key.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/clock.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/book.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/phone.svg"
+       "image": "/iqra/img/car.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/table.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/clock.svg"
       }
      ],
-     "correct": 1,
+     "correct": 3,
      "explanation_ar": "سَاعَة"
     },
     {
@@ -1408,11 +1782,7 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/table.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/clock.svg"
+       "image": "/iqra/img/paper.svg"
       },
       {
        "text": "",
@@ -1420,10 +1790,14 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/pen.svg"
+       "image": "/iqra/img/phone.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bag.svg"
       }
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "كُرْسِيّ"
     },
     {
@@ -1436,15 +1810,15 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/paper.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/chair.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/phone.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/window.svg"
+       "image": "/iqra/img/clock.svg"
       }
      ],
      "correct": 0,
@@ -1456,7 +1830,11 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/car.svg"
+       "image": "/iqra/img/paper.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/phone.svg"
       },
       {
        "text": "",
@@ -1464,15 +1842,131 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/paper.svg"
+       "image": "/iqra/img/clock.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "وَرَقَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «نَافِذَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/key.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/table.svg"
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/window.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/car.svg"
       }
      ],
      "correct": 2,
-     "explanation_ar": "وَرَقَة"
+     "explanation_ar": "نَافِذَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «سَيَّارَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/bag.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/car.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/key.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "سَيَّارَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «حَقِيبَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/chair.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bag.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/cup.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "حَقِيبَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذَا كُوب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/chair.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/car.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/cup.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "هَذَا كُوب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذِهِ سَيَّارَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/bag.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/phone.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/car.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذِهِ سَيَّارَة"
     },
     {
      "kind": "picture_choice",
@@ -1480,12 +1974,28 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/window.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/pen.svg"
+       "image": "/iqra/img/bag.svg"
       },
+      {
+       "text": "",
+       "image": "/iqra/img/phone.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا قَلَم"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذَا هَاتِف»",
+     "options": [
       {
        "text": "",
        "image": "/iqra/img/key.svg"
@@ -1493,10 +2003,18 @@
       {
        "text": "",
        "image": "/iqra/img/phone.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/car.svg"
       }
      ],
      "correct": 1,
-     "explanation_ar": "هَذَا قَلَم"
+     "explanation_ar": "هَذَا هَاتِف"
     },
     {
      "kind": "picture_choice",
@@ -1508,31 +2026,55 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/window.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/car.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/bag.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/book.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/key.svg"
       }
      ],
-     "correct": 1,
+     "correct": 3,
      "explanation_ar": "هَذِهِ حَقِيبَة"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هَذَا هَاتِف»",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذَا كِتَاب»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/clock.svg"
+       "image": "/iqra/img/book.svg"
       },
       {
        "text": "",
+       "image": "/iqra/img/car.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/key.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/phone.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "هَذَا كِتَاب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذِهِ سَاعَة»",
+     "options": [
+      {
+       "text": "",
        "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/clock.svg"
       },
       {
        "text": "",
@@ -1543,60 +2085,44 @@
        "image": "/iqra/img/pen.svg"
       }
      ],
-     "correct": 2,
-     "explanation_ar": "هَذَا هَاتِف"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هَذَا كُوب»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/cup.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/phone.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/table.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/paper.svg"
-      }
-     ],
-     "correct": 0,
-     "explanation_ar": "هَذَا كُوب"
+     "correct": 1,
+     "explanation_ar": "هَذِهِ سَاعَة"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
       {
-       "l": "مَنْ؟",
-       "r": "لِلْإِنْسَانِ"
+       "l": "هَذِهِ",
+       "r": "لِلْمُؤَنَّثِ"
       },
       {
        "l": "مَا؟",
        "r": "لِلشَّيْءِ"
       },
       {
-       "l": "هَذِهِ",
-       "r": "لِلْمُؤَنَّثِ"
-      },
-      {
        "l": "هَذَا",
        "r": "لِلْمُذَكَّرِ"
+      },
+      {
+       "l": "مَنْ؟",
+       "r": "لِلْإِنْسَانِ"
       }
      ],
-     "explanation_ar": "مَنْ؟ ← لِلْإِنْسَانِ · مَا؟ ← لِلشَّيْءِ · هَذِهِ ← لِلْمُؤَنَّثِ · هَذَا ← لِلْمُذَكَّرِ"
+     "explanation_ar": "هَذِهِ ← لِلْمُؤَنَّثِ · مَا؟ ← لِلشَّيْءِ · هَذَا ← لِلْمُذَكَّرِ · مَنْ؟ ← لِلْإِنْسَانِ"
     },
     {
      "kind": "matching",
      "prompt_ar": "صِل كلّ عبارة بما يناسبها",
      "pairs": [
+      {
+       "l": "مَا هَذَا؟",
+       "r": "هَذَا مِفْتَاح"
+      },
+      {
+       "l": "مَنْ هَذِهِ؟",
+       "r": "هَذِهِ هِنْد"
+      },
       {
        "l": "مَنْ هَذَا؟",
        "r": "هَذَا يُوسُف"
@@ -1604,53 +2130,45 @@
       {
        "l": "مَا هَذِهِ؟",
        "r": "هَذِهِ حَقِيبَة"
-      },
-      {
-       "l": "مَنْ هَذِهِ؟",
-       "r": "هَذِهِ هِنْد"
-      },
-      {
-       "l": "مَا هَذَا؟",
-       "r": "هَذَا مِفْتَاح"
       }
      ],
-     "explanation_ar": "مَنْ هَذَا؟ ← هَذَا يُوسُف · مَا هَذِهِ؟ ← هَذِهِ حَقِيبَة · مَنْ هَذِهِ؟ ← هَذِهِ هِنْد · مَا هَذَا؟ ← هَذَا مِفْتَاح"
+     "explanation_ar": "مَا هَذَا؟ ← هَذَا مِفْتَاح · مَنْ هَذِهِ؟ ← هَذِهِ هِنْد · مَنْ هَذَا؟ ← هَذَا يُوسُف · مَا هَذِهِ؟ ← هَذِهِ حَقِيبَة"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
       {
-       "l": "كُوب",
-       "r": "هَذَا كُوب"
+       "l": "كُرْسِيّ",
+       "r": "هَذَا كُرْسِيّ"
       },
       {
        "l": "نَافِذَة",
        "r": "هَذِهِ نَافِذَة"
       },
       {
-       "l": "كُرْسِيّ",
-       "r": "هَذَا كُرْسِيّ"
+       "l": "كُوب",
+       "r": "هَذَا كُوب"
       },
       {
        "l": "طَاوِلَة",
        "r": "هَذِهِ طَاوِلَة"
       }
      ],
-     "explanation_ar": "كُوب ← هَذَا كُوب · نَافِذَة ← هَذِهِ نَافِذَة · كُرْسِيّ ← هَذَا كُرْسِيّ · طَاوِلَة ← هَذِهِ طَاوِلَة"
+     "explanation_ar": "كُرْسِيّ ← هَذَا كُرْسِيّ · نَافِذَة ← هَذِهِ نَافِذَة · كُوب ← هَذَا كُوب · طَاوِلَة ← هَذِهِ طَاوِلَة"
     },
     {
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
-      "هَذِهِ",
-      "حَقِيبَة"
+      "هَذَا",
+      "هَاتِف"
      ],
      "order": [
-      "هَذِهِ",
-      "حَقِيبَة"
+      "هَذَا",
+      "هَاتِف"
      ],
-     "explanation_ar": "هَذِهِ حَقِيبَة"
+     "explanation_ar": "هَذَا هَاتِف"
     },
     {
      "kind": "ordering",
@@ -1670,6 +2188,19 @@
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
       "هَذَا",
+      "قَلَم"
+     ],
+     "order": [
+      "هَذَا",
+      "قَلَم"
+     ],
+     "explanation_ar": "هَذَا قَلَم"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هَذَا",
       "كِتَاب"
      ],
      "order": [
@@ -1679,13 +2210,26 @@
      "explanation_ar": "هَذَا كِتَاب"
     },
     {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هَذِهِ",
+      "طَاوِلَة"
+     ],
+     "order": [
+      "هَذِهِ",
+      "طَاوِلَة"
+     ],
+     "explanation_ar": "هَذِهِ طَاوِلَة"
+    },
+    {
      "kind": "word_tap",
      "prompt_ar": "المس الكلمة التي تناسب «هَذِهِ»",
      "words": [
-      "كُوب",
       "كِتَاب",
-      "سَاعَة",
-      "قَلَم"
+      "قَلَم",
+      "كُوب",
+      "سَاعَة"
      ],
      "correct": "سَاعَة",
      "explanation_ar": "سَاعَة"
@@ -1696,8 +2240,8 @@
      "words": [
       "حَقِيبَة",
       "سَيَّارَة",
-      "وَرَقَة",
-      "مِفْتَاح"
+      "مِفْتَاح",
+      "وَرَقَة"
      ],
      "correct": "مِفْتَاح",
      "explanation_ar": "مِفْتَاح"
@@ -1706,10 +2250,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس اسم الإشارة للمؤنّث",
      "words": [
-      "هَذِهِ",
-      "هُوَ",
       "أَنَا",
-      "هَذَا"
+      "هَذَا",
+      "هَذِهِ",
+      "هُوَ"
      ],
      "correct": "هَذِهِ",
      "explanation_ar": "هَذِهِ"
@@ -1731,20 +2275,6 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "___ سَيَّارَة",
-     "gaps": [
-      "هَذِهِ"
-     ],
-     "bank": [
-      "هَذِهِ",
-      "هَذَا",
-      "هُوَ"
-     ],
-     "explanation_ar": "هَذِهِ سَيَّارَة"
-    },
-    {
-     "kind": "cloze_bank",
-     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
      "text": "___ كِتَاب",
      "gaps": [
       "هَذَا"
@@ -1757,11 +2287,32 @@
      "explanation_ar": "هَذَا كِتَاب"
     },
     {
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
+     "text": "___ سَيَّارَة",
+     "gaps": [
+      "هَذِهِ"
+     ],
+     "bank": [
+      "هَذِهِ",
+      "هَذَا",
+      "هُوَ"
+     ],
+     "explanation_ar": "هَذِهِ سَيَّارَة"
+    },
+    {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "مِفْتَاح",
+     "text_ar": "سَيَّارَة",
      "alt": [],
-     "explanation_ar": "مِفْتَاح"
+     "explanation_ar": "سَيَّارَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "هَاتِف",
+     "alt": [],
+     "explanation_ar": "هَاتِف"
     },
     {
      "kind": "short_dictation",
@@ -1769,6 +2320,13 @@
      "text_ar": "كُوب",
      "alt": [],
      "explanation_ar": "كُوب"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "طَاوِلَة",
+     "alt": [],
+     "explanation_ar": "طَاوِلَة"
     },
     {
      "kind": "short_dictation",
@@ -1782,10 +2340,10 @@
      "prompt_ar": "«… حَقِيبَة». ماذا نقول؟",
      "options": [
       "هَذَا",
-      "هُوَ",
-      "هَذِهِ"
+      "هَذِهِ",
+      "هُوَ"
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "حَقِيبَة تَنْتَهِي بِـ ة ← هَذِهِ"
     },
     {
@@ -1793,8 +2351,8 @@
      "prompt_ar": "«… هَاتِف». ماذا نقول؟",
      "options": [
       "هَذَا",
-      "هِيَ",
-      "هَذِهِ"
+      "هَذِهِ",
+      "هِيَ"
      ],
      "correct": 0,
      "explanation_ar": "هَاتِف مُذَكَّرٌ ← هَذَا"
@@ -1803,11 +2361,11 @@
      "kind": "mcq",
      "prompt_ar": "سألت هند: «مَا هَذَا؟» وأشارت إلى القلم. الجواب:",
      "options": [
-      "هَذَا قَلَم",
+      "هَذَا كِتَاب",
       "هَذِهِ قَلَم",
-      "هَذَا كِتَاب"
+      "هَذَا قَلَم"
      ],
-     "correct": 0,
+     "correct": 2,
      "explanation_ar": "قَلَم ← هَذَا قَلَم"
     },
     {
@@ -1995,34 +2553,6 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/two-women.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/name-card.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/flag-saudi.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/family.svg"
-      }
-     ],
-     "correct": 1,
-     "explanation_ar": "بِطَاقَة"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اسمع واختر الصورة: «مَدْرَسَة»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/sea.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/family.svg"
       },
       {
@@ -2031,7 +2561,35 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/airport.svg"
+       "image": "/iqra/img/name-card.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/passport.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "بِطَاقَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «مَدْرَسَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/flag-spain.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/street.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/school.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/phone.svg"
       }
      ],
      "correct": 2,
@@ -2043,22 +2601,22 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/airport.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/street.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/sea.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/phone.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/two-women.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-japan.svg"
       }
      ],
-     "correct": 3,
+     "correct": 2,
      "explanation_ar": "صَدِيقَة"
     },
     {
@@ -2071,15 +2629,15 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/phone.svg"
+       "image": "/iqra/img/flag-japan.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/school.svg"
+       "image": "/iqra/img/sea.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/name-card.svg"
+       "image": "/iqra/img/family.svg"
       }
      ],
      "correct": 0,
@@ -2087,15 +2645,15 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «أَنَا مِنَ الْيَابَانِ»",
+     "prompt_ar": "اسمع واختر الصورة: «الْيَابَان»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/flag-japan.svg"
+       "image": "/iqra/img/street.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/passport.svg"
+       "image": "/iqra/img/family.svg"
       },
       {
        "text": "",
@@ -2103,15 +2661,15 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/two-women.svg"
+       "image": "/iqra/img/flag-japan.svg"
       }
      ],
-     "correct": 0,
-     "explanation_ar": "أَنَا مِنَ الْيَابَانِ"
+     "correct": 3,
+     "explanation_ar": "الْيَابَان"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هَذِهِ عَائِلَتِي»",
+     "prompt_ar": "اسمع واختر الصورة: «عَائِلَة»",
      "options": [
       {
        "text": "",
@@ -2123,14 +2681,134 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/flag-japan.svg"
+       "image": "/iqra/img/street.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/airport.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "عَائِلَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «السُّعُودِيَّة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/phone.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/airport.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-saudi.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/name-card.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "السُّعُودِيَّة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَنَا فِي الْمَطَارِ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/street.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-saudi.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/airport.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-spain.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "أَنَا فِي الْمَطَارِ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذِهِ بِطَاقَتِي»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/street.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-spain.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/name-card.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/airport.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذِهِ بِطَاقَتِي"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَنَا فِي الْمَدْرَسَةِ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/phone.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/school.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/street.svg"
       }
      ],
-     "correct": 1,
+     "correct": 2,
+     "explanation_ar": "أَنَا فِي الْمَدْرَسَةِ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذِهِ عَائِلَتِي»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/street.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-spain.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/family.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
+      }
+     ],
+     "correct": 2,
      "explanation_ar": "هَذِهِ عَائِلَتِي"
     },
     {
@@ -2139,11 +2817,11 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/school.svg"
+       "image": "/iqra/img/phone.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/name-card.svg"
+       "image": "/iqra/img/street.svg"
       },
       {
        "text": "",
@@ -2151,7 +2829,7 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/family.svg"
+       "image": "/iqra/img/school.svg"
       }
      ],
      "correct": 2,
@@ -2159,19 +2837,19 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «أَنَا فِي الْمَدْرَسَةِ»",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذِهِ صَدِيقَتِي»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/passport.svg"
+       "image": "/iqra/img/name-card.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/flag-japan.svg"
+       "image": "/iqra/img/airport.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/school.svg"
+       "image": "/iqra/img/two-women.svg"
       },
       {
        "text": "",
@@ -2179,12 +2857,40 @@
       }
      ],
      "correct": 2,
-     "explanation_ar": "أَنَا فِي الْمَدْرَسَةِ"
+     "explanation_ar": "هَذِهِ صَدِيقَتِي"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَنَا مِنْ إِسْبَانْيَا»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/flag-spain.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-saudi.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/passport.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "أَنَا مِنْ إِسْبَانْيَا"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
+      {
+       "l": "كَيْفَ حَالُكَ؟",
+       "r": "بِخَيْرٍ، شُكْرًا"
+      },
       {
        "l": "مَا اسْمُكِ؟",
        "r": "اِسْمِي لَيْلَى"
@@ -2194,27 +2900,23 @@
        "r": "هَذِهِ سَارَة"
       },
       {
-       "l": "كَيْفَ حَالُكَ؟",
-       "r": "بِخَيْرٍ، شُكْرًا"
-      },
-      {
        "l": "مِنْ أَيْنَ أَنْتِ؟",
        "r": "أَنَا مِنْ إِسْبَانْيَا"
       }
      ],
-     "explanation_ar": "مَا اسْمُكِ؟ ← اِسْمِي لَيْلَى · مَنْ هَذِهِ؟ ← هَذِهِ سَارَة · كَيْفَ حَالُكَ؟ ← بِخَيْرٍ، شُكْرًا · مِنْ أَيْنَ أَنْتِ؟ ← أَنَا مِنْ إِسْبَانْيَا"
+     "explanation_ar": "كَيْفَ حَالُكَ؟ ← بِخَيْرٍ، شُكْرًا · مَا اسْمُكِ؟ ← اِسْمِي لَيْلَى · مَنْ هَذِهِ؟ ← هَذِهِ سَارَة · مِنْ أَيْنَ أَنْتِ؟ ← أَنَا مِنْ إِسْبَانْيَا"
     },
     {
      "kind": "matching",
      "prompt_ar": "صِل كلّ عبارة بما يناسبها",
      "pairs": [
       {
-       "l": "هِنْد",
-       "r": "جُدَّة"
-      },
-      {
        "l": "يُوسُف",
        "r": "السُّعُودِيَّة"
+      },
+      {
+       "l": "هِنْد",
+       "r": "جُدَّة"
       },
       {
        "l": "مَارْيَا",
@@ -2225,30 +2927,56 @@
        "r": "الْيَابَان"
       }
      ],
-     "explanation_ar": "هِنْد ← جُدَّة · يُوسُف ← السُّعُودِيَّة · مَارْيَا ← إِسْبَانْيَا · كِين ← الْيَابَان"
+     "explanation_ar": "يُوسُف ← السُّعُودِيَّة · هِنْد ← جُدَّة · مَارْيَا ← إِسْبَانْيَا · كِين ← الْيَابَان"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
       {
-       "l": "أَنْتَ",
-       "r": "اِسْمُكَ"
-      },
-      {
        "l": "أَنْتِ",
        "r": "اِسْمُكِ"
       },
       {
-       "l": "أَنَا",
-       "r": "اِسْمِي"
+       "l": "أَنْتَ",
+       "r": "اِسْمُكَ"
       },
       {
        "l": "هِيَ",
        "r": "اِسْمُهَا"
+      },
+      {
+       "l": "أَنَا",
+       "r": "اِسْمِي"
       }
      ],
-     "explanation_ar": "أَنْتَ ← اِسْمُكَ · أَنْتِ ← اِسْمُكِ · أَنَا ← اِسْمِي · هِيَ ← اِسْمُهَا"
+     "explanation_ar": "أَنْتِ ← اِسْمُكِ · أَنْتَ ← اِسْمُكَ · هِيَ ← اِسْمُهَا · أَنَا ← اِسْمِي"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هَذِهِ",
+      "صَدِيقَتِي"
+     ],
+     "order": [
+      "هَذِهِ",
+      "صَدِيقَتِي"
+     ],
+     "explanation_ar": "هَذِهِ صَدِيقَتِي"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هَذِهِ",
+      "عَائِلَتِي"
+     ],
+     "order": [
+      "هَذِهِ",
+      "عَائِلَتِي"
+     ],
+     "explanation_ar": "هَذِهِ عَائِلَتِي"
     },
     {
      "kind": "ordering",
@@ -2299,10 +3027,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس السؤال عن الاسم",
      "words": [
-      "كَيْفَ حَالُكَ؟",
       "مَا هَذَا؟",
+      "مِنْ أَيْنَ أَنْتَ؟",
       "مَا اسْمُكَ؟",
-      "مِنْ أَيْنَ أَنْتَ؟"
+      "كَيْفَ حَالُكَ؟"
      ],
      "correct": "مَا اسْمُكَ؟",
      "explanation_ar": "مَا اسْمُكَ؟"
@@ -2311,8 +3039,8 @@
      "kind": "word_tap",
      "prompt_ar": "المس السؤال عن البلد",
      "words": [
-      "مِنْ أَيْنَ أَنْتِ؟",
       "مَا اسْمُكِ؟",
+      "مِنْ أَيْنَ أَنْتِ؟",
       "كَيْفَ حَالُكِ؟",
       "مَنْ هَذِهِ؟"
      ],
@@ -2323,10 +3051,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس جواب «كَيْفَ حَالُكَ؟»",
      "words": [
-      "هَذَا هَاتِفِي",
+      "اِسْمِي كِين",
       "أَنَا مِنَ الْيَابَانِ",
       "بِخَيْرٍ، الْحَمْدُ لِلَّهِ",
-      "اِسْمِي كِين"
+      "هَذَا هَاتِفِي"
      ],
      "correct": "بِخَيْرٍ، الْحَمْدُ لِلَّهِ",
      "explanation_ar": "بِخَيْرٍ، الْحَمْدُ لِلَّهِ"
@@ -2334,16 +3062,16 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "أَنَا ___ إِسْبَانْيَا",
+     "text": "كَيْفَ ___؟ بِخَيْرٍ",
      "gaps": [
-      "مِنْ"
+      "حَالُكَ"
      ],
      "bank": [
-      "مِنْ",
-      "فِي",
-      "مَا"
+      "حَالُكَ",
+      "اسْمُكَ",
+      "أَنْتَ"
      ],
-     "explanation_ar": "أَنَا مِنْ إِسْبَانْيَا"
+     "explanation_ar": "كَيْفَ حَالُكَ؟ بِخَيْرٍ"
     },
     {
      "kind": "cloze_bank",
@@ -2362,69 +3090,83 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "كَيْفَ ___؟ بِخَيْرٍ",
+     "text": "أَنَا ___ إِسْبَانْيَا",
      "gaps": [
-      "حَالُكَ"
+      "مِنْ"
      ],
      "bank": [
-      "حَالُكَ",
-      "اسْمُكَ",
-      "أَنْتَ"
+      "مِنْ",
+      "فِي",
+      "مَا"
      ],
-     "explanation_ar": "كَيْفَ حَالُكَ؟ بِخَيْرٍ"
+     "explanation_ar": "أَنَا مِنْ إِسْبَانْيَا"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "إِسْبَانْيَا",
+     "text_ar": "الْيَابَان",
      "alt": [],
-     "explanation_ar": "إِسْبَانْيَا"
+     "explanation_ar": "الْيَابَان"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "مَدْرَسَة",
+     "text_ar": "بَحْر",
      "alt": [],
-     "explanation_ar": "مَدْرَسَة"
+     "explanation_ar": "بَحْر"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "جَوَاز",
+     "text_ar": "عَائِلَة",
      "alt": [],
-     "explanation_ar": "جَوَاز"
+     "explanation_ar": "عَائِلَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "هَاتِف",
+     "alt": [],
+     "explanation_ar": "هَاتِف"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مَطَار",
+     "alt": [],
+     "explanation_ar": "مَطَار"
     },
     {
      "kind": "mcq",
      "prompt_ar": "«مِنْ أَيْنَ أَنْتَ يَا كِين؟»",
      "options": [
       "أَنَا طَبِيب",
-      "أَنَا مِنَ الْيَابَانِ",
-      "أَنَا مِنْ إِسْبَانْيَا"
+      "أَنَا مِنْ إِسْبَانْيَا",
+      "أَنَا مِنَ الْيَابَانِ"
      ],
-     "correct": 1,
+     "correct": 2,
      "explanation_ar": "كِين مِنَ الْيَابَانِ"
     },
     {
      "kind": "mcq",
      "prompt_ar": "«مَا اسْمُكِ؟» نسأل بها…",
      "options": [
+      "رَجُلًا",
       "بِنْتًا",
-      "وَلَدًا",
-      "رَجُلًا"
+      "وَلَدًا"
      ],
-     "correct": 0,
+     "correct": 1,
      "explanation_ar": "اِسْمُكِ بِالْكَسْرَةِ ← لِلْمُؤَنَّثِ"
     },
     {
      "kind": "mcq",
      "prompt_ar": "ماريا من…",
      "options": [
+      "مَدْرِيد",
       "طُوكْيُو",
-      "جُدَّة",
-      "مَدْرِيد"
+      "جُدَّة"
      ],
-     "correct": 2,
+     "correct": 0,
      "explanation_ar": "مَارْيَا مِنْ مَدْرِيد فِي إِسْبَانْيَا"
     },
     {
@@ -2620,11 +3362,11 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/sea.svg"
+       "image": "/iqra/img/office.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/office.svg"
+       "image": "/iqra/img/flag-spain.svg"
       }
      ],
      "correct": 1,
@@ -2704,11 +3446,11 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «أَنَا مِنَ الْيَابَانِ»",
+     "prompt_ar": "اسمع واختر الصورة: «وَرَقَة»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/map.svg"
+       "image": "/iqra/img/school.svg"
       },
       {
        "text": "",
@@ -2716,67 +3458,19 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/doctor.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/flag-japan.svg"
-      }
-     ],
-     "correct": 3,
-     "explanation_ar": "أَنَا مِنَ الْيَابَانِ"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «بَلَدِي إِسْبَانْيَا»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/doctor.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/pen.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/flag-spain.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/school.svg"
-      }
-     ],
-     "correct": 2,
-     "explanation_ar": "بَلَدِي إِسْبَانْيَا"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «مَدِينَتِي جُدَّة»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/sea.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/map.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/school.svg"
+       "image": "/iqra/img/street.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/paper.svg"
       }
      ],
-     "correct": 0,
-     "explanation_ar": "مَدِينَتِي جُدَّة"
+     "correct": 3,
+     "explanation_ar": "وَرَقَة"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «أَنَا طَالِب»",
+     "prompt_ar": "اسمع واختر الصورة: «صَفّ»",
      "options": [
       {
        "text": "",
@@ -2784,7 +3478,27 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/name-card.svg"
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/school.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-japan.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "صَفّ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «مَدِينَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/street.svg"
       },
       {
        "text": "",
@@ -2792,43 +3506,211 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/doctor.svg"
+       "image": "/iqra/img/flag-japan.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/school.svg"
       }
      ],
      "correct": 0,
+     "explanation_ar": "مَدِينَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذِهِ وَرَقَتِي»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/map.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-japan.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/paper.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/doctor.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "هَذِهِ وَرَقَتِي"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «مَدِينَتِي جُدَّة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/map.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-japan.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "مَدِينَتِي جُدَّة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «بَلَدِي إِسْبَانْيَا»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/paper.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/school.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-spain.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "بَلَدِي إِسْبَانْيَا"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَنَا طَالِب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/paper.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/map.svg"
+      }
+     ],
+     "correct": 1,
      "explanation_ar": "أَنَا طَالِب"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَنَا مِنَ الْيَابَانِ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/flag-spain.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/student.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/flag-japan.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "أَنَا مِنَ الْيَابَانِ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هَذَا قَلَمِي»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/name-card.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/office.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/map.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "هَذَا قَلَمِي"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَنَا طَبِيب»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/doctor.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/school.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/office.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "أَنَا طَبِيب"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
       {
-       "l": "عَمَلِي",
-       "r": "طَبِيب"
-      },
-      {
        "l": "اِسْمِي",
        "r": "يُوسُف"
+      },
+      {
+       "l": "مَدِينَتِي",
+       "r": "جُدَّة"
       },
       {
        "l": "بَلَدِي",
        "r": "السُّعُودِيَّة"
       },
       {
-       "l": "مَدِينَتِي",
-       "r": "جُدَّة"
+       "l": "عَمَلِي",
+       "r": "طَبِيب"
       }
      ],
-     "explanation_ar": "عَمَلِي ← طَبِيب · اِسْمِي ← يُوسُف · بَلَدِي ← السُّعُودِيَّة · مَدِينَتِي ← جُدَّة"
+     "explanation_ar": "اِسْمِي ← يُوسُف · مَدِينَتِي ← جُدَّة · بَلَدِي ← السُّعُودِيَّة · عَمَلِي ← طَبِيب"
     },
     {
      "kind": "matching",
      "prompt_ar": "صِل كلّ عبارة بما يناسبها",
      "pairs": [
-      {
-       "l": "اِسْم",
-       "r": "اِسْمِي"
-      },
       {
        "l": "بِطَاقَة",
        "r": "بِطَاقَتِي"
@@ -2838,34 +3720,38 @@
        "r": "قَلَمِي"
       },
       {
+       "l": "اِسْم",
+       "r": "اِسْمِي"
+      },
+      {
        "l": "كِتَاب",
        "r": "كِتَابِي"
       }
      ],
-     "explanation_ar": "اِسْم ← اِسْمِي · بِطَاقَة ← بِطَاقَتِي · قَلَم ← قَلَمِي · كِتَاب ← كِتَابِي"
+     "explanation_ar": "بِطَاقَة ← بِطَاقَتِي · قَلَم ← قَلَمِي · اِسْم ← اِسْمِي · كِتَاب ← كِتَابِي"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
       {
-       "l": "هُوَ",
-       "r": "اِسْمُهُ"
-      },
-      {
        "l": "هِيَ",
        "r": "اِسْمُهَا"
       },
       {
-       "l": "أَنَا",
-       "r": "اِسْمِي"
+       "l": "هُوَ",
+       "r": "اِسْمُهُ"
       },
       {
        "l": "أَنْتَ",
        "r": "اِسْمُكَ"
+      },
+      {
+       "l": "أَنَا",
+       "r": "اِسْمِي"
       }
      ],
-     "explanation_ar": "هُوَ ← اِسْمُهُ · هِيَ ← اِسْمُهَا · أَنَا ← اِسْمِي · أَنْتَ ← اِسْمُكَ"
+     "explanation_ar": "هِيَ ← اِسْمُهَا · هُوَ ← اِسْمُهُ · أَنْتَ ← اِسْمُكَ · أَنَا ← اِسْمِي"
     },
     {
      "kind": "ordering",
@@ -2884,14 +3770,42 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
-      "بَلَدِي",
-      "إِسْبَانْيَا"
+      "مَدِينَتِي",
+      "جُدَّة"
      ],
      "order": [
-      "بَلَدِي",
-      "إِسْبَانْيَا"
+      "مَدِينَتِي",
+      "جُدَّة"
      ],
-     "explanation_ar": "بَلَدِي إِسْبَانْيَا"
+     "explanation_ar": "مَدِينَتِي جُدَّة"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "اِسْمِي",
+      "كِين"
+     ],
+     "order": [
+      "اِسْمِي",
+      "كِين"
+     ],
+     "explanation_ar": "اِسْمِي كِين"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "أَنَا",
+      "مِنَ",
+      "الْيَابَانِ"
+     ],
+     "order": [
+      "أَنَا",
+      "مِنَ",
+      "الْيَابَانِ"
+     ],
+     "explanation_ar": "أَنَا مِنَ الْيَابَانِ"
     },
     {
      "kind": "ordering",
@@ -2910,10 +3824,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس الكلمة التي نكتبها أوّلًا في البطاقة",
      "words": [
-      "مَدِينَتِي",
-      "عَمَلِي",
       "اِسْمِي",
-      "بَلَدِي"
+      "عَمَلِي",
+      "بَلَدِي",
+      "مَدِينَتِي"
      ],
      "correct": "اِسْمِي",
      "explanation_ar": "اِسْمِي"
@@ -2923,9 +3837,9 @@
      "prompt_ar": "المس كلمة «بَلَدِي»",
      "words": [
       "بَلَدِي",
-      "مَدِينَتِي",
       "بِطَاقَتِي",
-      "قَلَمِي"
+      "قَلَمِي",
+      "مَدِينَتِي"
      ],
      "correct": "بَلَدِي",
      "explanation_ar": "بَلَدِي"
@@ -2934,9 +3848,9 @@
      "kind": "word_tap",
      "prompt_ar": "المس ما نكتبه بعد «عَمَلِي»",
      "words": [
+      "كِين",
       "إِسْبَانْيَا",
       "جُدَّة",
-      "كِين",
       "طَالِبَة"
      ],
      "correct": "طَالِبَة",
@@ -2959,20 +3873,6 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "___ يُوسُف",
-     "gaps": [
-      "اِسْمِي"
-     ],
-     "bank": [
-      "اِسْمِي",
-      "بَلَدِي",
-      "عَمَلِي"
-     ],
-     "explanation_ar": "اِسْمِي يُوسُف"
-    },
-    {
-     "kind": "cloze_bank",
-     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
      "text": "___ طَبِيب",
      "gaps": [
       "عَمَلِي"
@@ -2985,18 +3885,25 @@
      "explanation_ar": "عَمَلِي طَبِيب"
     },
     {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "قَلَم",
-     "alt": [],
-     "explanation_ar": "قَلَم"
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
+     "text": "___ يُوسُف",
+     "gaps": [
+      "اِسْمِي"
+     ],
+     "bank": [
+      "اِسْمِي",
+      "بَلَدِي",
+      "عَمَلِي"
+     ],
+     "explanation_ar": "اِسْمِي يُوسُف"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "طَالِب",
+     "text_ar": "بِطَاقَة",
      "alt": [],
-     "explanation_ar": "طَالِب"
+     "explanation_ar": "بِطَاقَة"
     },
     {
      "kind": "short_dictation",
@@ -3004,6 +3911,27 @@
      "text_ar": "صَفّ",
      "alt": [],
      "explanation_ar": "صَفّ"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مُعَلِّمَة",
+     "alt": [],
+     "explanation_ar": "مُعَلِّمَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مَدِينَة",
+     "alt": [],
+     "explanation_ar": "مَدِينَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "كِتَاب",
+     "alt": [],
+     "explanation_ar": "كِتَاب"
     },
     {
      "kind": "mcq",

@@ -159,18 +159,18 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/two-cars.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/two.svg"
+       "image": "/iqra/img/two-books.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/four.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
       }
      ],
-     "correct": 3,
+     "correct": 2,
      "explanation_ar": "أَرْبَعَة"
     },
     {
@@ -179,22 +179,22 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/two-cups.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/two-houses.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/book.svg"
+       "image": "/iqra/img/two-cars.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/two-pens.svg"
+       "image": "/iqra/img/two-cups.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/books.svg"
       }
      ],
-     "correct": 0,
+     "correct": 2,
      "explanation_ar": "كُوبَان"
     },
     {
@@ -203,11 +203,11 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/two.svg"
+       "image": "/iqra/img/books.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/two-cars.svg"
+       "image": "/iqra/img/two.svg"
       },
       {
        "text": "",
@@ -231,15 +231,15 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/car.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/books.svg"
+       "image": "/iqra/img/four.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
       }
      ],
      "correct": 0,
@@ -247,11 +247,15 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «قَلَمٌ وَاحِدٌ»",
+     "prompt_ar": "اسمع واختر الصورة: «ثَلَاثَة»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/two-pens.svg"
+       "image": "/iqra/img/five.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/three.svg"
       },
       {
        "text": "",
@@ -259,15 +263,83 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/two-books.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "ثَلَاثَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «صِفْر»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/two-books.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/zero.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/three.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "صِفْر"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «خَمْسَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-books.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/five.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "خَمْسَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «سَيَّارَتَانِ اثْنَتَانِ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/two-cars.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/zero.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/two.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/pen.svg"
+       "image": "/iqra/img/books.svg"
       }
      ],
-     "correct": 3,
-     "explanation_ar": "قَلَمٌ وَاحِدٌ"
+     "correct": 0,
+     "explanation_ar": "سَيَّارَتَانِ اثْنَتَانِ"
     },
     {
      "kind": "picture_choice",
@@ -279,15 +351,15 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/book.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/car.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/four.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/two.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/pen.svg"
       }
      ],
      "correct": 0,
@@ -299,15 +371,15 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/zero.svg"
+       "image": "/iqra/img/two-houses.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/three.svg"
+       "image": "/iqra/img/car.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/five.svg"
+       "image": "/iqra/img/books.svg"
       },
       {
        "text": "",
@@ -319,15 +391,11 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «كِتَابٌ وَاحِدٌ»",
+     "prompt_ar": "اقرأ واختر الصورة: «قَلَمَانِ اثْنَانِ»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/two-books.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/book.svg"
+       "image": "/iqra/img/three.svg"
       },
       {
        "text": "",
@@ -336,22 +404,98 @@
       {
        "text": "",
        "image": "/iqra/img/two-pens.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/book.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "قَلَمَانِ اثْنَانِ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «بَيْتَانِ اثْنَانِ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-books.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/zero.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "بَيْتَانِ اثْنَانِ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «كِتَابَانِ اثْنَانِ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/two-houses.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/two-books.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/five.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/book.svg"
       }
      ],
      "correct": 1,
-     "explanation_ar": "كِتَابٌ وَاحِدٌ"
+     "explanation_ar": "كِتَابَانِ اثْنَانِ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «قَلَمٌ وَاحِدٌ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/two-books.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/five.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/one.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pen.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "قَلَمٌ وَاحِدٌ"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
       {
-       "l": "٠",
-       "r": "صِفْر"
-      },
-      {
        "l": "٢",
        "r": "اِثْنَان"
+      },
+      {
+       "l": "٠",
+       "r": "صِفْر"
       },
       {
        "l": "١",
@@ -362,7 +506,7 @@
        "r": "ثَلَاثَة"
       }
      ],
-     "explanation_ar": "٠ ← صِفْر · ٢ ← اِثْنَان · ١ ← وَاحِد · ٣ ← ثَلَاثَة"
+     "explanation_ar": "٢ ← اِثْنَان · ٠ ← صِفْر · ١ ← وَاحِد · ٣ ← ثَلَاثَة"
     },
     {
      "kind": "matching",
@@ -373,55 +517,42 @@
        "r": "٤"
       },
       {
+       "l": "صِفْر",
+       "r": "٠"
+      },
+      {
        "l": "خَمْسَة",
        "r": "٥"
       },
       {
        "l": "وَاحِد",
        "r": "١"
-      },
-      {
-       "l": "صِفْر",
-       "r": "٠"
       }
      ],
-     "explanation_ar": "أَرْبَعَة ← ٤ · خَمْسَة ← ٥ · وَاحِد ← ١ · صِفْر ← ٠"
+     "explanation_ar": "أَرْبَعَة ← ٤ · صِفْر ← ٠ · خَمْسَة ← ٥ · وَاحِد ← ١"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
       {
-       "l": "وَاحِد + وَاحِد",
-       "r": "اِثْنَان"
+       "l": "اِثْنَان + وَاحِد",
+       "r": "ثَلَاثَة"
       },
       {
        "l": "اِثْنَان + اِثْنَان",
        "r": "أَرْبَعَة"
       },
       {
-       "l": "اِثْنَان + وَاحِد",
-       "r": "ثَلَاثَة"
-      },
-      {
        "l": "أَرْبَعَة + وَاحِد",
        "r": "خَمْسَة"
+      },
+      {
+       "l": "وَاحِد + وَاحِد",
+       "r": "اِثْنَان"
       }
      ],
-     "explanation_ar": "وَاحِد + وَاحِد ← اِثْنَان · اِثْنَان + اِثْنَان ← أَرْبَعَة · اِثْنَان + وَاحِد ← ثَلَاثَة · أَرْبَعَة + وَاحِد ← خَمْسَة"
-    },
-    {
-     "kind": "ordering",
-     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
-     "words": [
-      "قَلَمَانِ",
-      "اثْنَانِ"
-     ],
-     "order": [
-      "قَلَمَانِ",
-      "اثْنَانِ"
-     ],
-     "explanation_ar": "قَلَمَانِ اثْنَانِ"
+     "explanation_ar": "اِثْنَان + وَاحِد ← ثَلَاثَة · اِثْنَان + اِثْنَان ← أَرْبَعَة · أَرْبَعَة + وَاحِد ← خَمْسَة · وَاحِد + وَاحِد ← اِثْنَان"
     },
     {
      "kind": "ordering",
@@ -440,6 +571,19 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
+      "كُوبَانِ",
+      "اثْنَانِ"
+     ],
+     "order": [
+      "كُوبَانِ",
+      "اثْنَانِ"
+     ],
+     "explanation_ar": "كُوبَانِ اثْنَانِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
       "كِتَابٌ",
       "وَاحِدٌ"
      ],
@@ -450,13 +594,39 @@
      "explanation_ar": "كِتَابٌ وَاحِدٌ"
     },
     {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "قَلَمَانِ",
+      "اثْنَانِ"
+     ],
+     "order": [
+      "قَلَمَانِ",
+      "اثْنَانِ"
+     ],
+     "explanation_ar": "قَلَمَانِ اثْنَانِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "قَلَمٌ",
+      "وَاحِدٌ"
+     ],
+     "order": [
+      "قَلَمٌ",
+      "وَاحِدٌ"
+     ],
+     "explanation_ar": "قَلَمٌ وَاحِدٌ"
+    },
+    {
      "kind": "word_tap",
      "prompt_ar": "المس العدد ٣",
      "words": [
-      "صِفْر",
       "وَاحِد",
-      "ثَلَاثَة",
-      "خَمْسَة"
+      "صِفْر",
+      "خَمْسَة",
+      "ثَلَاثَة"
      ],
      "correct": "ثَلَاثَة",
      "explanation_ar": "ثَلَاثَة"
@@ -465,10 +635,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس العدد الأكبر",
      "words": [
-      "أَرْبَعَة",
+      "صِفْر",
       "وَاحِد",
-      "اِثْنَان",
-      "صِفْر"
+      "أَرْبَعَة",
+      "اِثْنَان"
      ],
      "correct": "أَرْبَعَة",
      "explanation_ar": "أَرْبَعَة"
@@ -478,9 +648,9 @@
      "prompt_ar": "المس كلمة «اِثْنَان»",
      "words": [
       "اِثْنَان",
-      "أَرْبَعَة",
+      "ثَلَاثَة",
       "خَمْسَة",
-      "ثَلَاثَة"
+      "أَرْبَعَة"
      ],
      "correct": "اِثْنَان",
      "explanation_ar": "اِثْنَان"
@@ -530,16 +700,23 @@
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "أَرْبَعَة",
+     "text_ar": "قَلَمَان",
      "alt": [],
-     "explanation_ar": "أَرْبَعَة"
+     "explanation_ar": "قَلَمَان"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "وَاحِد",
+     "text_ar": "كُوبَان",
      "alt": [],
-     "explanation_ar": "وَاحِد"
+     "explanation_ar": "كُوبَان"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "ثَلَاثَة",
+     "alt": [],
+     "explanation_ar": "ثَلَاثَة"
     },
     {
      "kind": "short_dictation",
@@ -549,36 +726,43 @@
      "explanation_ar": "كُتُب"
     },
     {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "وَاحِد",
+     "alt": [],
+     "explanation_ar": "وَاحِد"
+    },
+    {
      "kind": "mcq",
      "prompt_ar": "كم بيتًا في «بَيْتَان»؟",
      "options": [
-      "اِثْنَان",
+      "ثَلَاثَة",
       "وَاحِد",
-      "ثَلَاثَة"
+      "اِثْنَان"
      ],
-     "correct": 0,
+     "correct": 2,
      "explanation_ar": "بَيْت + ان = بَيْتَان: اِثْنَانِ"
     },
     {
      "kind": "mcq",
      "prompt_ar": "ما العدد بعد ثَلَاثَة؟",
      "options": [
-      "اِثْنَان",
       "أَرْبَعَة",
-      "خَمْسَة"
+      "خَمْسَة",
+      "اِثْنَان"
      ],
-     "correct": 1,
+     "correct": 0,
      "explanation_ar": "ثَلَاثَة، أَرْبَعَة، خَمْسَة"
     },
     {
      "kind": "mcq",
      "prompt_ar": "ما العدد قبل وَاحِد؟",
      "options": [
+      "اِثْنَان",
       "خَمْسَة",
-      "صِفْر",
-      "اِثْنَان"
+      "صِفْر"
      ],
-     "correct": 1,
+     "correct": 2,
      "explanation_ar": "صِفْر، وَاحِد، اِثْنَان"
     },
     {
@@ -766,22 +950,22 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/eight.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/nine.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/train.svg"
+       "image": "/iqra/img/ticket.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/bus.svg"
+       "image": "/iqra/img/six.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/train.svg"
       }
      ],
-     "correct": 2,
+     "correct": 3,
      "explanation_ar": "قِطَار"
     },
     {
@@ -794,11 +978,11 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/school.svg"
+       "image": "/iqra/img/ten.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/nine.svg"
+       "image": "/iqra/img/ticket.svg"
       },
       {
        "text": "",
@@ -814,22 +998,22 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/train.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/ten.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/twenty.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/door.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/ticket.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/eight.svg"
       }
      ],
-     "correct": 0,
+     "correct": 1,
      "explanation_ar": "عَشَرَة"
     },
     {
@@ -838,11 +1022,35 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/station.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/twenty.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/station.svg"
+       "image": "/iqra/img/nine.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/six.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "سِتَّة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «عِشْرُون»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/ticket.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/elevator.svg"
       },
       {
        "text": "",
@@ -850,39 +1058,39 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/nine.svg"
+       "image": "/iqra/img/twenty.svg"
       }
      ],
-     "correct": 2,
-     "explanation_ar": "سِتَّة"
+     "correct": 3,
+     "explanation_ar": "عِشْرُون"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «الْحَافِلَةُ رَقْمُ سَبْعَة»",
+     "prompt_ar": "اسمع واختر الصورة: «تَذْكِرَة»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/school.svg"
+       "image": "/iqra/img/ticket.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/nine.svg"
+       "image": "/iqra/img/seven.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/entrance.svg"
+       "image": "/iqra/img/twenty.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/bus.svg"
       }
      ],
-     "correct": 3,
-     "explanation_ar": "الْحَافِلَةُ رَقْمُ سَبْعَة"
+     "correct": 0,
+     "explanation_ar": "تَذْكِرَة"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «الْبَابُ رَقْمُ عِشْرِينَ»",
+     "prompt_ar": "اسمع واختر الصورة: «بَوَّابَة»",
      "options": [
       {
        "text": "",
@@ -890,7 +1098,51 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/elevator.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/six.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/entrance.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "بَوَّابَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْمِصْعَدُ رَقْمُ ثَمَانِيَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/elevator.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/train.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/ticket.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الْمِصْعَدُ رَقْمُ ثَمَانِيَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الصَّفُّ رَقْمُ سِتَّة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/school.svg"
       },
       {
        "text": "",
@@ -898,11 +1150,15 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/school.svg"
+       "image": "/iqra/img/ticket.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/ten.svg"
       }
      ],
      "correct": 0,
-     "explanation_ar": "الْبَابُ رَقْمُ عِشْرِينَ"
+     "explanation_ar": "الصَّفُّ رَقْمُ سِتَّة"
     },
     {
      "kind": "picture_choice",
@@ -910,7 +1166,11 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/ten.svg"
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/train.svg"
       },
       {
        "text": "",
@@ -918,15 +1178,59 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/eight.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الْقِطَارُ رَقْمُ سِتَّة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْبَوَّابَةُ رَقْمُ عَشَرَة»",
+     "options": [
+      {
+       "text": "",
        "image": "/iqra/img/bus.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/train.svg"
+       "image": "/iqra/img/school.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/station.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
       }
      ],
      "correct": 3,
-     "explanation_ar": "الْقِطَارُ رَقْمُ سِتَّة"
+     "explanation_ar": "الْبَوَّابَةُ رَقْمُ عَشَرَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْمَحَطَّةُ رَقْمُ تِسْعَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/eight.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/station.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/twenty.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/ten.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الْمَحَطَّةُ رَقْمُ تِسْعَة"
     },
     {
      "kind": "picture_choice",
@@ -934,28 +1238,56 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/six.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/eight.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/ticket.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/entrance.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/seven.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/train.svg"
       }
      ],
-     "correct": 2,
+     "correct": 0,
      "explanation_ar": "تَذْكِرَةٌ وَاحِدَةٌ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْبَابُ رَقْمُ عِشْرِينَ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/six.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/door.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/train.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bus.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الْبَابُ رَقْمُ عِشْرِينَ"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
+      {
+       "l": "٧",
+       "r": "سَبْعَة"
+      },
       {
        "l": "٩",
        "r": "تِسْعَة"
@@ -967,13 +1299,9 @@
       {
        "l": "٦",
        "r": "سِتَّة"
-      },
-      {
-       "l": "٧",
-       "r": "سَبْعَة"
       }
      ],
-     "explanation_ar": "٩ ← تِسْعَة · ٨ ← ثَمَانِيَة · ٦ ← سِتَّة · ٧ ← سَبْعَة"
+     "explanation_ar": "٧ ← سَبْعَة · ٩ ← تِسْعَة · ٨ ← ثَمَانِيَة · ٦ ← سِتَّة"
     },
     {
      "kind": "matching",
@@ -984,19 +1312,19 @@
        "r": "٦"
       },
       {
-       "l": "عَشَرَة",
-       "r": "١٠"
+       "l": "عِشْرُون",
+       "r": "٢٠"
       },
       {
        "l": "ثَمَانِيَة",
        "r": "٨"
       },
       {
-       "l": "عِشْرُون",
-       "r": "٢٠"
+       "l": "عَشَرَة",
+       "r": "١٠"
       }
      ],
-     "explanation_ar": "سِتَّة ← ٦ · عَشَرَة ← ١٠ · ثَمَانِيَة ← ٨ · عِشْرُون ← ٢٠"
+     "explanation_ar": "سِتَّة ← ٦ · عِشْرُون ← ٢٠ · ثَمَانِيَة ← ٨ · عَشَرَة ← ١٠"
     },
     {
      "kind": "matching",
@@ -1007,19 +1335,34 @@
        "r": "تِسْعَة"
       },
       {
-       "l": "خَمْسَة + وَاحِد",
-       "r": "سِتَّة"
-      },
-      {
        "l": "خَمْسَة + اِثْنَان",
        "r": "سَبْعَة"
+      },
+      {
+       "l": "خَمْسَة + وَاحِد",
+       "r": "سِتَّة"
       },
       {
        "l": "خَمْسَة + خَمْسَة",
        "r": "عَشَرَة"
       }
      ],
-     "explanation_ar": "خَمْسَة + أَرْبَعَة ← تِسْعَة · خَمْسَة + وَاحِد ← سِتَّة · خَمْسَة + اِثْنَان ← سَبْعَة · خَمْسَة + خَمْسَة ← عَشَرَة"
+     "explanation_ar": "خَمْسَة + أَرْبَعَة ← تِسْعَة · خَمْسَة + اِثْنَان ← سَبْعَة · خَمْسَة + وَاحِد ← سِتَّة · خَمْسَة + خَمْسَة ← عَشَرَة"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "الْقِطَارُ",
+      "رَقْمُ",
+      "سِتَّة"
+     ],
+     "order": [
+      "الْقِطَارُ",
+      "رَقْمُ",
+      "سِتَّة"
+     ],
+     "explanation_ar": "الْقِطَارُ رَقْمُ سِتَّة"
     },
     {
      "kind": "ordering",
@@ -1040,40 +1383,55 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
-      "الصَّفُّ",
+      "الْمَحَطَّةُ",
       "رَقْمُ",
-      "سِتَّة"
+      "تِسْعَة"
      ],
      "order": [
-      "الصَّفُّ",
+      "الْمَحَطَّةُ",
       "رَقْمُ",
-      "سِتَّة"
+      "تِسْعَة"
      ],
-     "explanation_ar": "الصَّفُّ رَقْمُ سِتَّة"
+     "explanation_ar": "الْمَحَطَّةُ رَقْمُ تِسْعَة"
     },
     {
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
-      "الْقِطَارُ",
+      "الْبَابُ",
       "رَقْمُ",
-      "سِتَّة"
+      "عِشْرِينَ"
      ],
      "order": [
-      "الْقِطَارُ",
+      "الْبَابُ",
       "رَقْمُ",
-      "سِتَّة"
+      "عِشْرِينَ"
      ],
-     "explanation_ar": "الْقِطَارُ رَقْمُ سِتَّة"
+     "explanation_ar": "الْبَابُ رَقْمُ عِشْرِينَ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "الْبَوَّابَةُ",
+      "رَقْمُ",
+      "عَشَرَة"
+     ],
+     "order": [
+      "الْبَوَّابَةُ",
+      "رَقْمُ",
+      "عَشَرَة"
+     ],
+     "explanation_ar": "الْبَوَّابَةُ رَقْمُ عَشَرَة"
     },
     {
      "kind": "word_tap",
      "prompt_ar": "المس العدد ٧",
      "words": [
       "سِتَّة",
-      "تِسْعَة",
       "عَشَرَة",
-      "سَبْعَة"
+      "سَبْعَة",
+      "تِسْعَة"
      ],
      "correct": "سَبْعَة",
      "explanation_ar": "سَبْعَة"
@@ -1083,9 +1441,9 @@
      "prompt_ar": "المس العدد الأصغر",
      "words": [
       "ثَمَانِيَة",
-      "سِتَّة",
+      "عَشَرَة",
       "تِسْعَة",
-      "عَشَرَة"
+      "سِتَّة"
      ],
      "correct": "سِتَّة",
      "explanation_ar": "سِتَّة"
@@ -1094,10 +1452,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس رقم الحافلة في «الْحَافِلَةُ رَقْمُ ثَمَانِيَة»",
      "words": [
+      "٩",
       "٨",
-      "٦",
       "١٠",
-      "٩"
+      "٦"
      ],
      "correct": "٨",
      "explanation_ar": "٨"
@@ -1105,16 +1463,16 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "سِتَّة، ___، ثَمَانِيَة",
+     "text": "الْحَافِلَةُ رَقْمُ ___ (٧)",
      "gaps": [
       "سَبْعَة"
      ],
      "bank": [
       "سَبْعَة",
-      "تِسْعَة",
-      "عَشَرَة"
+      "سِتَّة",
+      "تِسْعَة"
      ],
-     "explanation_ar": "سِتَّة، سَبْعَة، ثَمَانِيَة"
+     "explanation_ar": "الْحَافِلَةُ رَقْمُ سَبْعَة (٧)"
     },
     {
      "kind": "cloze_bank",
@@ -1133,16 +1491,37 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "الْحَافِلَةُ رَقْمُ ___ (٧)",
+     "text": "سِتَّة، ___، ثَمَانِيَة",
      "gaps": [
       "سَبْعَة"
      ],
      "bank": [
       "سَبْعَة",
-      "سِتَّة",
-      "تِسْعَة"
+      "تِسْعَة",
+      "عَشَرَة"
      ],
-     "explanation_ar": "الْحَافِلَةُ رَقْمُ سَبْعَة (٧)"
+     "explanation_ar": "سِتَّة، سَبْعَة، ثَمَانِيَة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "عِشْرُون",
+     "alt": [],
+     "explanation_ar": "عِشْرُون"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مَحَطَّة",
+     "alt": [],
+     "explanation_ar": "مَحَطَّة"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "قِطَار",
+     "alt": [],
+     "explanation_ar": "قِطَار"
     },
     {
      "kind": "short_dictation",
@@ -1154,16 +1533,9 @@
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "سَبْعَة",
+     "text_ar": "تَذْكِرَة",
      "alt": [],
-     "explanation_ar": "سَبْعَة"
-    },
-    {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "مَحَطَّة",
-     "alt": [],
-     "explanation_ar": "مَحَطَّة"
+     "explanation_ar": "تَذْكِرَة"
     },
     {
      "kind": "mcq",
@@ -1180,22 +1552,22 @@
      "kind": "mcq",
      "prompt_ar": "«الْبَوَّابَةُ رَقْمُ عَشَرَة». أيّ رقم نبحث عنه؟",
      "options": [
-      "٩",
+      "١٠",
       "٢٠",
-      "١٠"
+      "٩"
      ],
-     "correct": 2,
+     "correct": 0,
      "explanation_ar": "عَشَرَة = ١٠"
     },
     {
      "kind": "mcq",
      "prompt_ar": "كم مرّة خمسة في عَشَرَة؟",
      "options": [
-      "مَرَّتَانِ",
       "مَرَّةٌ",
-      "ثَلَاثُ مَرَّاتٍ"
+      "ثَلَاثُ مَرَّاتٍ",
+      "مَرَّتَانِ"
      ],
-     "correct": 0,
+     "correct": 2,
      "explanation_ar": "خَمْسَة + خَمْسَة = عَشَرَة"
     },
     {
@@ -1383,22 +1755,22 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/moon.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/sea.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/color-white.svg"
       },
       {
        "text": "",
+       "image": "/iqra/img/tree.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/sun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
       }
      ],
-     "correct": 3,
+     "correct": 2,
      "explanation_ar": "شَمْس"
     },
     {
@@ -1407,11 +1779,7 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/color-white.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/color-blue.svg"
+       "image": "/iqra/img/color-orange.svg"
       },
       {
        "text": "",
@@ -1419,10 +1787,14 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/color-orange.svg"
+       "image": "/iqra/img/moon.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sun.svg"
       }
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "بُنِّيّ"
     },
     {
@@ -1431,7 +1803,7 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/milk.svg"
+       "image": "/iqra/img/moon.svg"
       },
       {
        "text": "",
@@ -1439,11 +1811,11 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/color-black.svg"
+       "image": "/iqra/img/sun.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/sea.svg"
+       "image": "/iqra/img/tree.svg"
       }
      ],
      "correct": 1,
@@ -1475,39 +1847,11 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هَذَا أَحْمَر»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/moon.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/milk.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/color-red.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/color-orange.svg"
-      }
-     ],
-     "correct": 2,
-     "explanation_ar": "هَذَا أَحْمَر"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هَذَا أَزْرَق»",
+     "prompt_ar": "اسمع واختر الصورة: «أَزْرَق»",
      "options": [
       {
        "text": "",
        "image": "/iqra/img/color-red.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/coffee-beans.svg"
       },
       {
        "text": "",
@@ -1515,23 +1859,47 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/color-yellow.svg"
-      }
-     ],
-     "correct": 2,
-     "explanation_ar": "هَذَا أَزْرَق"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «الْحَلِيبُ أَبْيَضُ»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/color-yellow.svg"
+       "image": "/iqra/img/color-green.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/milk.svg"
+       "image": "/iqra/img/color-yellow.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "أَزْرَق"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «أَحْمَر»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/color-red.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/tree.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "أَحْمَر"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «أَخْضَر»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/moon.svg"
       },
       {
        "text": "",
@@ -1540,18 +1908,26 @@
       {
        "text": "",
        "image": "/iqra/img/apple.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-yellow.svg"
       }
      ],
      "correct": 1,
-     "explanation_ar": "الْحَلِيبُ أَبْيَضُ"
+     "explanation_ar": "أَخْضَر"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هَذَا بُرْتُقَالِيّ»",
+     "prompt_ar": "اقرأ واختر الصورة: «التُّفَّاحَةُ حَمْرَاءُ»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/color-black.svg"
+       "image": "/iqra/img/tree.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-yellow.svg"
       },
       {
        "text": "",
@@ -1559,15 +1935,155 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/apple.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "التُّفَّاحَةُ حَمْرَاءُ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الشَّجَرَةُ خَضْرَاءُ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/sun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/tree.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/color-white.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/color-orange.svg"
+       "image": "/iqra/img/coffee-beans.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الشَّجَرَةُ خَضْرَاءُ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْبُنُّ بُنِّيٌّ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/apple.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-black.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-white.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/coffee-beans.svg"
       }
      ],
      "correct": 3,
-     "explanation_ar": "هَذَا بُرْتُقَالِيّ"
+     "explanation_ar": "الْبُنُّ بُنِّيٌّ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «اللَّيْلُ أَسْوَدُ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/color-white.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/moon.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-yellow.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/tree.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "اللَّيْلُ أَسْوَدُ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْبَحْرُ أَزْرَقُ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/sea.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-white.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-green.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-blue.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "الْبَحْرُ أَزْرَقُ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْحَلِيبُ أَبْيَضُ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/tree.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/milk.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-white.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-red.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الْحَلِيبُ أَبْيَضُ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الشَّمْسُ صَفْرَاءُ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/sun.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-yellow.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-green.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/color-blue.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "الشَّمْسُ صَفْرَاءُ"
     },
     {
      "kind": "matching",
@@ -1578,19 +2094,19 @@
        "r": "حَمْرَاء"
       },
       {
-       "l": "أَخْضَر",
-       "r": "خَضْرَاء"
+       "l": "أَصْفَر",
+       "r": "صَفْرَاء"
       },
       {
        "l": "أَزْرَق",
        "r": "زَرْقَاء"
       },
       {
-       "l": "أَصْفَر",
-       "r": "صَفْرَاء"
+       "l": "أَخْضَر",
+       "r": "خَضْرَاء"
       }
      ],
-     "explanation_ar": "أَحْمَر ← حَمْرَاء · أَخْضَر ← خَضْرَاء · أَزْرَق ← زَرْقَاء · أَصْفَر ← صَفْرَاء"
+     "explanation_ar": "أَحْمَر ← حَمْرَاء · أَصْفَر ← صَفْرَاء · أَزْرَق ← زَرْقَاء · أَخْضَر ← خَضْرَاء"
     },
     {
      "kind": "matching",
@@ -1601,19 +2117,19 @@
        "r": "خَضْرَاء"
       },
       {
-       "l": "الْبَحْر",
-       "r": "أَزْرَق"
-      },
-      {
        "l": "اللَّيْل",
        "r": "أَسْوَد"
+      },
+      {
+       "l": "الْبَحْر",
+       "r": "أَزْرَق"
       },
       {
        "l": "الشَّمْس",
        "r": "صَفْرَاء"
       }
      ],
-     "explanation_ar": "الشَّجَرَة ← خَضْرَاء · الْبَحْر ← أَزْرَق · اللَّيْل ← أَسْوَد · الشَّمْس ← صَفْرَاء"
+     "explanation_ar": "الشَّجَرَة ← خَضْرَاء · اللَّيْل ← أَسْوَد · الْبَحْر ← أَزْرَق · الشَّمْس ← صَفْرَاء"
     },
     {
      "kind": "matching",
@@ -1642,6 +2158,19 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
+      "التُّفَّاحَةُ",
+      "حَمْرَاءُ"
+     ],
+     "order": [
+      "التُّفَّاحَةُ",
+      "حَمْرَاءُ"
+     ],
+     "explanation_ar": "التُّفَّاحَةُ حَمْرَاءُ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
       "الْبَحْرُ",
       "أَزْرَقُ"
      ],
@@ -1655,36 +2184,49 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
-      "الشَّجَرَةُ",
-      "خَضْرَاءُ"
+      "اللَّيْلُ",
+      "أَسْوَدُ"
      ],
      "order": [
-      "الشَّجَرَةُ",
-      "خَضْرَاءُ"
+      "اللَّيْلُ",
+      "أَسْوَدُ"
      ],
-     "explanation_ar": "الشَّجَرَةُ خَضْرَاءُ"
+     "explanation_ar": "اللَّيْلُ أَسْوَدُ"
     },
     {
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
       "هَذَا",
-      "أَزْرَق"
+      "أَحْمَر"
      ],
      "order": [
       "هَذَا",
-      "أَزْرَق"
+      "أَحْمَر"
      ],
-     "explanation_ar": "هَذَا أَزْرَق"
+     "explanation_ar": "هَذَا أَحْمَر"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هَذَا",
+      "بُرْتُقَالِيّ"
+     ],
+     "order": [
+      "هَذَا",
+      "بُرْتُقَالِيّ"
+     ],
+     "explanation_ar": "هَذَا بُرْتُقَالِيّ"
     },
     {
      "kind": "word_tap",
      "prompt_ar": "المس لون الشمس",
      "words": [
       "أَبْيَض",
-      "أَزْرَق",
       "أَسْوَد",
-      "أَصْفَر"
+      "أَصْفَر",
+      "أَزْرَق"
      ],
      "correct": "أَصْفَر",
      "explanation_ar": "أَصْفَر"
@@ -1705,10 +2247,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس لون البحر",
      "words": [
-      "أَزْرَق",
+      "أَصْفَر",
       "بُنِّيّ",
       "بُرْتُقَالِيّ",
-      "أَصْفَر"
+      "أَزْرَق"
      ],
      "correct": "أَزْرَق",
      "explanation_ar": "أَزْرَق"
@@ -1730,20 +2272,6 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "الْبَحْرُ ___",
-     "gaps": [
-      "أَزْرَقُ"
-     ],
-     "bank": [
-      "أَزْرَقُ",
-      "زَرْقَاءُ",
-      "أَبْيَضُ"
-     ],
-     "explanation_ar": "الْبَحْرُ أَزْرَقُ"
-    },
-    {
-     "kind": "cloze_bank",
-     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
      "text": "سَيَّارَةٌ ___",
      "gaps": [
       "حَمْرَاءُ"
@@ -1756,18 +2284,25 @@
      "explanation_ar": "سَيَّارَةٌ حَمْرَاءُ"
     },
     {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "بُنِّيّ",
-     "alt": [],
-     "explanation_ar": "بُنِّيّ"
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
+     "text": "الْبَحْرُ ___",
+     "gaps": [
+      "أَزْرَقُ"
+     ],
+     "bank": [
+      "أَزْرَقُ",
+      "زَرْقَاءُ",
+      "أَبْيَضُ"
+     ],
+     "explanation_ar": "الْبَحْرُ أَزْرَقُ"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "أَخْضَر",
+     "text_ar": "أَزْرَق",
      "alt": [],
-     "explanation_ar": "أَخْضَر"
+     "explanation_ar": "أَزْرَق"
     },
     {
      "kind": "short_dictation",
@@ -1775,6 +2310,27 @@
      "text_ar": "أَصْفَر",
      "alt": [],
      "explanation_ar": "أَصْفَر"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "حَلِيب",
+     "alt": [],
+     "explanation_ar": "حَلِيب"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "أَسْوَد",
+     "alt": [],
+     "explanation_ar": "أَسْوَد"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "بُنِّيّ",
+     "alt": [],
+     "explanation_ar": "بُنِّيّ"
     },
     {
      "kind": "mcq",
@@ -1791,22 +2347,22 @@
      "kind": "mcq",
      "prompt_ar": "«كِتَاب …». ما الصواب؟",
      "options": [
-      "زَرْقَاء",
       "زُرْق",
-      "أَزْرَق"
+      "أَزْرَق",
+      "زَرْقَاء"
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "كِتَاب مُذَكَّرٌ ← أَزْرَق"
     },
     {
      "kind": "mcq",
      "prompt_ar": "ما لون الحليب؟",
      "options": [
-      "أَسْوَد",
       "أَخْضَر",
-      "أَبْيَض"
+      "أَبْيَض",
+      "أَسْوَد"
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "الْحَلِيبُ أَبْيَضُ"
     },
     {
@@ -1994,22 +2550,22 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/shop.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/bread.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/coins.svg"
+       "image": "/iqra/img/tea.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/cash.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/dates.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/price-tag.svg"
       }
      ],
-     "correct": 3,
+     "correct": 1,
      "explanation_ar": "نُقُود"
     },
     {
@@ -2018,22 +2574,22 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/cash.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/tea.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/sale.svg"
+       "image": "/iqra/img/dates.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/receipt.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/price-tag.svg"
+       "image": "/iqra/img/coins.svg"
       }
      ],
-     "correct": 0,
+     "correct": 1,
      "explanation_ar": "شَاي"
     },
     {
@@ -2042,22 +2598,22 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/apple.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/bread.svg"
-      },
-      {
-       "text": "",
        "image": "/iqra/img/credit-card.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/market.svg"
+       "image": "/iqra/img/apple.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/dates.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/receipt.svg"
       }
      ],
-     "correct": 0,
+     "correct": 1,
      "explanation_ar": "تُفَّاح"
     },
     {
@@ -2070,7 +2626,99 @@
       },
       {
        "text": "",
+       "image": "/iqra/img/price-tag.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/receipt.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/cash.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "تَخْفِيض"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «مَاء»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/water.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/sale.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/credit-card.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/shop.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "مَاء"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «بِطَاقَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/bread.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/coins.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/apple.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/credit-card.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "بِطَاقَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «رِيَال»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/price-tag.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/coins.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/water.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bread.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "رِيَال"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «هُنَا تَخْفِيضٌ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/sale.svg"
       },
       {
        "text": "",
@@ -2078,11 +2726,39 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/coins.svg"
+       "image": "/iqra/img/shop.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/water.svg"
       }
      ],
      "correct": 0,
-     "explanation_ar": "تَخْفِيض"
+     "explanation_ar": "هُنَا تَخْفِيضٌ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «الْمَاءُ بِرِيَالٍ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/apple.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/water.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bread.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/shop.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الْمَاءُ بِرِيَالٍ"
     },
     {
      "kind": "picture_choice",
@@ -2094,15 +2770,15 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/sale.svg"
+       "image": "/iqra/img/credit-card.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/dates.svg"
+       "image": "/iqra/img/tea.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/cash.svg"
+       "image": "/iqra/img/price-tag.svg"
       }
      ],
      "correct": 0,
@@ -2110,7 +2786,7 @@
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «هَذَا السِّعْرُ غَالٍ»",
+     "prompt_ar": "اقرأ واختر الصورة: «الشَّايُ بِخَمْسَةِ رِيَالَاتٍ»",
      "options": [
       {
        "text": "",
@@ -2118,19 +2794,19 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/water.svg"
+       "image": "/iqra/img/tea.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/coins.svg"
+       "image": "/iqra/img/sale.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/price-tag.svg"
+       "image": "/iqra/img/apple.svg"
       }
      ],
-     "correct": 3,
-     "explanation_ar": "هَذَا السِّعْرُ غَالٍ"
+     "correct": 1,
+     "explanation_ar": "الشَّايُ بِخَمْسَةِ رِيَالَاتٍ"
     },
     {
      "kind": "picture_choice",
@@ -2146,11 +2822,11 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/shop.svg"
+       "image": "/iqra/img/cash.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/cash.svg"
+       "image": "/iqra/img/coins.svg"
       }
      ],
      "correct": 1,
@@ -2162,11 +2838,11 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/market.svg"
+       "image": "/iqra/img/bread.svg"
       },
       {
        "text": "",
-       "image": "/iqra/img/cash.svg"
+       "image": "/iqra/img/coins.svg"
       },
       {
        "text": "",
@@ -2174,16 +2850,48 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/coins.svg"
+       "image": "/iqra/img/price-tag.svg"
       }
      ],
      "correct": 2,
      "explanation_ar": "التَّمْرُ بِعِشْرِينَ رِيَالًا"
     },
     {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «أَدْفَعُ نُقُودًا»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/cash.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/bread.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/credit-card.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/coins.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "أَدْفَعُ نُقُودًا"
+    },
+    {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
+      {
+       "l": "مِائَةُ رِيَالٍ",
+       "r": "١٠٠"
+      },
+      {
+       "l": "عَشَرَةُ رِيَالَاتٍ",
+       "r": "١٠"
+      },
       {
        "l": "خَمْسَةُ رِيَالَاتٍ",
        "r": "٥"
@@ -2191,30 +2899,14 @@
       {
        "l": "عِشْرُونَ رِيَالًا",
        "r": "٢٠"
-      },
-      {
-       "l": "عَشَرَةُ رِيَالَاتٍ",
-       "r": "١٠"
-      },
-      {
-       "l": "مِائَةُ رِيَالٍ",
-       "r": "١٠٠"
       }
      ],
-     "explanation_ar": "خَمْسَةُ رِيَالَاتٍ ← ٥ · عِشْرُونَ رِيَالًا ← ٢٠ · عَشَرَةُ رِيَالَاتٍ ← ١٠ · مِائَةُ رِيَالٍ ← ١٠٠"
+     "explanation_ar": "مِائَةُ رِيَالٍ ← ١٠٠ · عَشَرَةُ رِيَالَاتٍ ← ١٠ · خَمْسَةُ رِيَالَاتٍ ← ٥ · عِشْرُونَ رِيَالًا ← ٢٠"
     },
     {
      "kind": "matching",
      "prompt_ar": "صِل كلّ عبارة بما يناسبها",
      "pairs": [
-      {
-       "l": "بِكَمِ الشَّايُ؟",
-       "r": "بِخَمْسَةِ رِيَالَاتٍ"
-      },
-      {
-       "l": "بِكَمِ التَّمْرُ؟",
-       "r": "بِعِشْرِينَ رِيَالًا"
-      },
       {
        "l": "بِكَمِ التُّفَّاحُ؟",
        "r": "بِعَشَرَةِ رِيَالَاتٍ"
@@ -2222,21 +2914,29 @@
       {
        "l": "بِكَمِ الْمَاءُ؟",
        "r": "بِرِيَالٍ"
+      },
+      {
+       "l": "بِكَمِ التَّمْرُ؟",
+       "r": "بِعِشْرِينَ رِيَالًا"
+      },
+      {
+       "l": "بِكَمِ الشَّايُ؟",
+       "r": "بِخَمْسَةِ رِيَالَاتٍ"
       }
      ],
-     "explanation_ar": "بِكَمِ الشَّايُ؟ ← بِخَمْسَةِ رِيَالَاتٍ · بِكَمِ التَّمْرُ؟ ← بِعِشْرِينَ رِيَالًا · بِكَمِ التُّفَّاحُ؟ ← بِعَشَرَةِ رِيَالَاتٍ · بِكَمِ الْمَاءُ؟ ← بِرِيَالٍ"
+     "explanation_ar": "بِكَمِ التُّفَّاحُ؟ ← بِعَشَرَةِ رِيَالَاتٍ · بِكَمِ الْمَاءُ؟ ← بِرِيَالٍ · بِكَمِ التَّمْرُ؟ ← بِعِشْرِينَ رِيَالًا · بِكَمِ الشَّايُ؟ ← بِخَمْسَةِ رِيَالَاتٍ"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
       {
-       "l": "فَاتُورَة",
-       "r": "الْفَاتُورَةُ مِنْ فَضْلِكَ"
-      },
-      {
        "l": "نُقُود",
        "r": "أَدْفَعُ نُقُودًا"
+      },
+      {
+       "l": "فَاتُورَة",
+       "r": "الْفَاتُورَةُ مِنْ فَضْلِكَ"
       },
       {
        "l": "بِطَاقَة",
@@ -2247,7 +2947,35 @@
        "r": "السِّعْرُ أَقَلُّ"
       }
      ],
-     "explanation_ar": "فَاتُورَة ← الْفَاتُورَةُ مِنْ فَضْلِكَ · نُقُود ← أَدْفَعُ نُقُودًا · بِطَاقَة ← أَدْفَعُ بِالْبِطَاقَةِ · تَخْفِيض ← السِّعْرُ أَقَلُّ"
+     "explanation_ar": "نُقُود ← أَدْفَعُ نُقُودًا · فَاتُورَة ← الْفَاتُورَةُ مِنْ فَضْلِكَ · بِطَاقَة ← أَدْفَعُ بِالْبِطَاقَةِ · تَخْفِيض ← السِّعْرُ أَقَلُّ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "بِكَمِ",
+      "الْخُبْزُ؟"
+     ],
+     "order": [
+      "بِكَمِ",
+      "الْخُبْزُ؟"
+     ],
+     "explanation_ar": "بِكَمِ الْخُبْزُ؟"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "هَذَا",
+      "السِّعْرُ",
+      "غَالٍ"
+     ],
+     "order": [
+      "هَذَا",
+      "السِّعْرُ",
+      "غَالٍ"
+     ],
+     "explanation_ar": "هَذَا السِّعْرُ غَالٍ"
     },
     {
      "kind": "ordering",
@@ -2268,6 +2996,19 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
+      "أَدْفَعُ",
+      "بِالْبِطَاقَةِ"
+     ],
+     "order": [
+      "أَدْفَعُ",
+      "بِالْبِطَاقَةِ"
+     ],
+     "explanation_ar": "أَدْفَعُ بِالْبِطَاقَةِ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
       "التُّفَّاحُ",
       "بِعَشَرَةِ",
       "رِيَالَاتٍ"
@@ -2280,28 +3021,13 @@
      "explanation_ar": "التُّفَّاحُ بِعَشَرَةِ رِيَالَاتٍ"
     },
     {
-     "kind": "ordering",
-     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
-     "words": [
-      "التَّمْرُ",
-      "بِعِشْرِينَ",
-      "رِيَالًا"
-     ],
-     "order": [
-      "التَّمْرُ",
-      "بِعِشْرِينَ",
-      "رِيَالًا"
-     ],
-     "explanation_ar": "التَّمْرُ بِعِشْرِينَ رِيَالًا"
-    },
-    {
      "kind": "word_tap",
      "prompt_ar": "المس السؤال عن السعر",
      "words": [
-      "كَيْفَ حَالُكَ؟",
-      "مَا هَذَا؟",
       "مِنْ أَيْنَ؟",
-      "بِكَمْ؟"
+      "كَيْفَ حَالُكَ؟",
+      "بِكَمْ؟",
+      "مَا هَذَا؟"
      ],
      "correct": "بِكَمْ؟",
      "explanation_ar": "بِكَمْ؟"
@@ -2310,9 +3036,9 @@
      "kind": "word_tap",
      "prompt_ar": "المس السعر الأغلى",
      "words": [
-      "عَشَرَةُ رِيَالَاتٍ",
-      "خَمْسَةُ رِيَالَاتٍ",
       "عِشْرُونَ رِيَالًا",
+      "خَمْسَةُ رِيَالَاتٍ",
+      "عَشَرَةُ رِيَالَاتٍ",
       "رِيَالٌ"
      ],
      "correct": "عِشْرُونَ رِيَالًا",
@@ -2323,9 +3049,9 @@
      "prompt_ar": "المس ما تدفع به",
      "words": [
       "شَاي",
+      "خُبْز",
       "سُوق",
-      "نُقُود",
-      "خُبْز"
+      "نُقُود"
      ],
      "correct": "نُقُود",
      "explanation_ar": "نُقُود"
@@ -2347,20 +3073,6 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "هُنَا ___، السِّعْرُ أَقَلُّ",
-     "gaps": [
-      "تَخْفِيضٌ"
-     ],
-     "bank": [
-      "تَخْفِيضٌ",
-      "فَاتُورَةٌ",
-      "مَطَارٌ"
-     ],
-     "explanation_ar": "هُنَا تَخْفِيضٌ، السِّعْرُ أَقَلُّ"
-    },
-    {
-     "kind": "cloze_bank",
-     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
      "text": "___ الْخُبْزُ؟",
      "gaps": [
       "بِكَمِ"
@@ -2373,18 +3085,18 @@
      "explanation_ar": "بِكَمِ الْخُبْزُ؟"
     },
     {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "دُكَّان",
-     "alt": [],
-     "explanation_ar": "دُكَّان"
-    },
-    {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "تَخْفِيض",
-     "alt": [],
-     "explanation_ar": "تَخْفِيض"
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
+     "text": "هُنَا ___، السِّعْرُ أَقَلُّ",
+     "gaps": [
+      "تَخْفِيضٌ"
+     ],
+     "bank": [
+      "تَخْفِيضٌ",
+      "فَاتُورَةٌ",
+      "مَطَارٌ"
+     ],
+     "explanation_ar": "هُنَا تَخْفِيضٌ، السِّعْرُ أَقَلُّ"
     },
     {
      "kind": "short_dictation",
@@ -2394,36 +3106,64 @@
      "explanation_ar": "تَمْر"
     },
     {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "شَاي",
+     "alt": [],
+     "explanation_ar": "شَاي"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "خُبْز",
+     "alt": [],
+     "explanation_ar": "خُبْز"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "دُكَّان",
+     "alt": [],
+     "explanation_ar": "دُكَّان"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "سُوق",
+     "alt": [],
+     "explanation_ar": "سُوق"
+    },
+    {
      "kind": "mcq",
      "prompt_ar": "«بِكَمِ الْمَاءُ؟» الجواب:",
      "options": [
-      "نَعَمْ",
       "هَذَا مَاء",
-      "بِرِيَالٍ"
+      "بِرِيَالٍ",
+      "نَعَمْ"
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "بِكَمْ؟ ← بِـ + السِّعْر"
     },
     {
      "kind": "mcq",
      "prompt_ar": "الشاي بخمسة والتفّاح بعشرة. أيّهما أغلى؟",
      "options": [
+      "مُتَسَاوِيَانِ",
       "الشَّاي",
-      "التُّفَّاح",
-      "مُتَسَاوِيَانِ"
+      "التُّفَّاح"
      ],
-     "correct": 1,
+     "correct": 2,
      "explanation_ar": "١٠ > ٥"
     },
     {
      "kind": "mcq",
      "prompt_ar": "أين نشتري الخبز والتمر؟",
      "options": [
-      "فِي الْمَدْرَسَةِ",
       "فِي الْمَطَارِ",
-      "فِي السُّوقِ"
+      "فِي السُّوقِ",
+      "فِي الْمَدْرَسَةِ"
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "فِي السُّوقِ أَوِ الدُّكَّانِ"
     },
     {
@@ -2611,22 +3351,22 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/no-entry.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/open.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/sun.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/entrance.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/closed.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/open.svg"
       }
      ],
-     "correct": 1,
+     "correct": 3,
      "explanation_ar": "دُخُول"
     },
     {
@@ -2635,8 +3375,148 @@
      "options": [
       {
        "text": "",
+       "image": "/iqra/img/no-entry.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/parking.svg"
+      },
+      {
+       "text": "",
        "image": "/iqra/img/open.svg"
       },
+      {
+       "text": "",
+       "image": "/iqra/img/sun.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "مَوْقِف"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «اِسْحَبْ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/no-entry.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/hospital.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pull.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
+      }
+     ],
+     "correct": 2,
+     "explanation_ar": "اِسْحَبْ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «خُرُوج»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/open.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/exit.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/push.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "خُرُوج"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «سَاعَة»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/clock.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/hospital.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/clock-ten.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/no-entry.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "سَاعَة"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «اِدْفَعْ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/crescent.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/closed.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/push.svg"
+      }
+     ],
+     "correct": 3,
+     "explanation_ar": "اِدْفَعْ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اسمع واختر الصورة: «مُغْلَق»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/clock-one.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/closed.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/push.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/no-entry.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "مُغْلَق"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «مِنْ هُنَا الْخُرُوجُ»",
+     "options": [
       {
        "text": "",
        "image": "/iqra/img/clock-one.svg"
@@ -2647,16 +3527,28 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/hospital.svg"
+       "image": "/iqra/img/exit.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
       }
      ],
      "correct": 2,
-     "explanation_ar": "مَوْقِف"
+     "explanation_ar": "مِنْ هُنَا الْخُرُوجُ"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اسمع واختر الصورة: «اِسْحَبْ»",
+     "prompt_ar": "اقرأ واختر الصورة: «اِسْحَبِ الْبَابَ»",
      "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/hospital.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/clock.svg"
+      },
       {
        "text": "",
        "image": "/iqra/img/pull.svg"
@@ -2664,30 +3556,70 @@
       {
        "text": "",
        "image": "/iqra/img/crescent.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/sun.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/parking.svg"
       }
      ],
-     "correct": 0,
-     "explanation_ar": "اِسْحَبْ"
+     "correct": 2,
+     "explanation_ar": "اِسْحَبِ الْبَابَ"
     },
     {
      "kind": "picture_choice",
-     "prompt_ar": "اسمع واختر الصورة: «خُرُوج»",
+     "prompt_ar": "اقرأ واختر الصورة: «الدُّكَّانُ مُغْلَقٌ»",
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/push.svg"
+       "image": "/iqra/img/clock-three.svg"
       },
       {
        "text": "",
        "image": "/iqra/img/closed.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/crescent.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pull.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "الدُّكَّانُ مُغْلَقٌ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «السَّاعَةُ الثَّامِنَةُ مَسَاءً»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/clock-eight.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/clock.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/exit.svg"
+      }
+     ],
+     "correct": 0,
+     "explanation_ar": "السَّاعَةُ الثَّامِنَةُ مَسَاءً"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «السَّاعَةُ الْعَاشِرَةُ صَبَاحًا»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/clock-eight.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/hospital.svg"
       },
       {
        "text": "",
@@ -2698,80 +3630,8 @@
        "image": "/iqra/img/clock-ten.svg"
       }
      ],
-     "correct": 2,
-     "explanation_ar": "خُرُوج"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «الدُّكَّانُ مُغْلَقٌ»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/exit.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/closed.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/no-entry.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/parking.svg"
-      }
-     ],
-     "correct": 1,
-     "explanation_ar": "الدُّكَّانُ مُغْلَقٌ"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «السَّاعَةُ الْوَاحِدَةُ»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/sun.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/no-entry.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/clock-one.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/hospital.svg"
-      }
-     ],
-     "correct": 2,
-     "explanation_ar": "السَّاعَةُ الْوَاحِدَةُ"
-    },
-    {
-     "kind": "picture_choice",
-     "prompt_ar": "اقرأ واختر الصورة: «مِنْ هُنَا الْخُرُوجُ»",
-     "options": [
-      {
-       "text": "",
-       "image": "/iqra/img/hospital.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/exit.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/no-entry.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/clock-eight.svg"
-      }
-     ],
-     "correct": 1,
-     "explanation_ar": "مِنْ هُنَا الْخُرُوجُ"
+     "correct": 3,
+     "explanation_ar": "السَّاعَةُ الْعَاشِرَةُ صَبَاحًا"
     },
     {
      "kind": "picture_choice",
@@ -2779,11 +3639,7 @@
      "options": [
       {
        "text": "",
-       "image": "/iqra/img/clock.svg"
-      },
-      {
-       "text": "",
-       "image": "/iqra/img/push.svg"
+       "image": "/iqra/img/parking.svg"
       },
       {
        "text": "",
@@ -2791,39 +3647,75 @@
       },
       {
        "text": "",
-       "image": "/iqra/img/hospital.svg"
+       "image": "/iqra/img/exit.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/pull.svg"
       }
      ],
-     "correct": 2,
+     "correct": 1,
      "explanation_ar": "السَّاعَةُ الثَّالِثَةُ"
+    },
+    {
+     "kind": "picture_choice",
+     "prompt_ar": "اقرأ واختر الصورة: «السَّاعَةُ الْوَاحِدَةُ»",
+     "options": [
+      {
+       "text": "",
+       "image": "/iqra/img/hospital.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/clock-one.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/exit.svg"
+      },
+      {
+       "text": "",
+       "image": "/iqra/img/entrance.svg"
+      }
+     ],
+     "correct": 1,
+     "explanation_ar": "السَّاعَةُ الْوَاحِدَةُ"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق",
      "pairs": [
       {
-       "l": "١",
-       "r": "الْوَاحِدَة"
-      },
-      {
        "l": "٣",
        "r": "الثَّالِثَة"
       },
       {
-       "l": "٨",
-       "r": "الثَّامِنَة"
+       "l": "١",
+       "r": "الْوَاحِدَة"
       },
       {
        "l": "١٠",
        "r": "الْعَاشِرَة"
+      },
+      {
+       "l": "٨",
+       "r": "الثَّامِنَة"
       }
      ],
-     "explanation_ar": "١ ← الْوَاحِدَة · ٣ ← الثَّالِثَة · ٨ ← الثَّامِنَة · ١٠ ← الْعَاشِرَة"
+     "explanation_ar": "٣ ← الثَّالِثَة · ١ ← الْوَاحِدَة · ١٠ ← الْعَاشِرَة · ٨ ← الثَّامِنَة"
     },
     {
      "kind": "matching",
      "prompt_ar": "صِل كلّ عبارة بما يناسبها",
      "pairs": [
+      {
+       "l": "مُغْلَق",
+       "r": "لَا تَدْخُلْ"
+      },
+      {
+       "l": "مَفْتُوح",
+       "r": "اُدْخُلْ"
+      },
       {
        "l": "اِدْفَعْ",
        "r": "إِلَى الْأَمَامِ"
@@ -2831,40 +3723,73 @@
       {
        "l": "اِسْحَبْ",
        "r": "إِلَى الْخَلْفِ"
-      },
-      {
-       "l": "مَفْتُوح",
-       "r": "اُدْخُلْ"
-      },
-      {
-       "l": "مُغْلَق",
-       "r": "لَا تَدْخُلْ"
       }
      ],
-     "explanation_ar": "اِدْفَعْ ← إِلَى الْأَمَامِ · اِسْحَبْ ← إِلَى الْخَلْفِ · مَفْتُوح ← اُدْخُلْ · مُغْلَق ← لَا تَدْخُلْ"
+     "explanation_ar": "مُغْلَق ← لَا تَدْخُلْ · مَفْتُوح ← اُدْخُلْ · اِدْفَعْ ← إِلَى الْأَمَامِ · اِسْحَبْ ← إِلَى الْخَلْفِ"
     },
     {
      "kind": "matching",
      "prompt_ar": "طابق العمودين",
      "pairs": [
       {
-       "l": "مَوْقِف",
-       "r": "لِلسَّيَّارَاتِ"
-      },
-      {
-       "l": "خُرُوج",
-       "r": "مِنْ هُنَا نَخْرُجُ"
-      },
-      {
        "l": "دُخُول",
        "r": "مِنْ هُنَا نَدْخُلُ"
       },
       {
+       "l": "مَوْقِف",
+       "r": "لِلسَّيَّارَاتِ"
+      },
+      {
        "l": "مَمْنُوع",
        "r": "لَا"
+      },
+      {
+       "l": "خُرُوج",
+       "r": "مِنْ هُنَا نَخْرُجُ"
       }
      ],
-     "explanation_ar": "مَوْقِف ← لِلسَّيَّارَاتِ · خُرُوج ← مِنْ هُنَا نَخْرُجُ · دُخُول ← مِنْ هُنَا نَدْخُلُ · مَمْنُوع ← لَا"
+     "explanation_ar": "دُخُول ← مِنْ هُنَا نَدْخُلُ · مَوْقِف ← لِلسَّيَّارَاتِ · مَمْنُوع ← لَا · خُرُوج ← مِنْ هُنَا نَخْرُجُ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "الدُّكَّانُ",
+      "مُغْلَقٌ"
+     ],
+     "order": [
+      "الدُّكَّانُ",
+      "مُغْلَقٌ"
+     ],
+     "explanation_ar": "الدُّكَّانُ مُغْلَقٌ"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "السَّاعَةُ",
+      "الثَّامِنَةُ",
+      "مَسَاءً"
+     ],
+     "order": [
+      "السَّاعَةُ",
+      "الثَّامِنَةُ",
+      "مَسَاءً"
+     ],
+     "explanation_ar": "السَّاعَةُ الثَّامِنَةُ مَسَاءً"
+    },
+    {
+     "kind": "ordering",
+     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
+     "words": [
+      "السَّاعَةُ",
+      "الْوَاحِدَةُ"
+     ],
+     "order": [
+      "السَّاعَةُ",
+      "الْوَاحِدَةُ"
+     ],
+     "explanation_ar": "السَّاعَةُ الْوَاحِدَةُ"
     },
     {
      "kind": "ordering",
@@ -2883,38 +3808,23 @@
      "kind": "ordering",
      "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
      "words": [
-      "السَّاعَةُ",
-      "الْوَاحِدَةُ"
+      "اِدْفَعِ",
+      "الْبَابَ"
      ],
      "order": [
-      "السَّاعَةُ",
-      "الْوَاحِدَةُ"
+      "اِدْفَعِ",
+      "الْبَابَ"
      ],
-     "explanation_ar": "السَّاعَةُ الْوَاحِدَةُ"
-    },
-    {
-     "kind": "ordering",
-     "prompt_ar": "رتّب الكلمات لتكوّن الجملة",
-     "words": [
-      "مِنْ",
-      "هُنَا",
-      "الْخُرُوجُ"
-     ],
-     "order": [
-      "مِنْ",
-      "هُنَا",
-      "الْخُرُوجُ"
-     ],
-     "explanation_ar": "مِنْ هُنَا الْخُرُوجُ"
+     "explanation_ar": "اِدْفَعِ الْبَابَ"
     },
     {
      "kind": "word_tap",
      "prompt_ar": "المس كلمة «مَفْتُوح»",
      "words": [
-      "مَفْتُوح",
+      "خُرُوج",
       "مُغْلَق",
-      "مَمْنُوع",
-      "خُرُوج"
+      "مَفْتُوح",
+      "مَمْنُوع"
      ],
      "correct": "مَفْتُوح",
      "explanation_ar": "مَفْتُوح"
@@ -2923,10 +3833,10 @@
      "kind": "word_tap",
      "prompt_ar": "المس ما تقرؤه على الباب حين تدخل",
      "words": [
-      "مَوْقِف",
       "خُرُوج",
-      "دُخُول",
-      "مَسَاءً"
+      "مَوْقِف",
+      "مَسَاءً",
+      "دُخُول"
      ],
      "correct": "دُخُول",
      "explanation_ar": "دُخُول"
@@ -2936,9 +3846,9 @@
      "prompt_ar": "المس كلمة الصباح",
      "words": [
       "مُغْلَق",
-      "سَاعَة",
+      "صَبَاحًا",
       "مَسَاءً",
-      "صَبَاحًا"
+      "سَاعَة"
      ],
      "correct": "صَبَاحًا",
      "explanation_ar": "صَبَاحًا"
@@ -2960,20 +3870,6 @@
     {
      "kind": "cloze_bank",
      "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
-     "text": "كَلِمَةُ الْبَابِ: ___ — إِلَى الْأَمَامِ",
-     "gaps": [
-      "اِدْفَعْ"
-     ],
-     "bank": [
-      "اِدْفَعْ",
-      "اِسْحَبْ",
-      "خُرُوج"
-     ],
-     "explanation_ar": "كَلِمَةُ الْبَابِ: اِدْفَعْ — إِلَى الْأَمَامِ"
-    },
-    {
-     "kind": "cloze_bank",
-     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
      "text": "الدُّكَّانُ ___ مِنَ الثَّامِنَةِ صَبَاحًا",
      "gaps": [
       "مَفْتُوحٌ"
@@ -2986,33 +3882,61 @@
      "explanation_ar": "الدُّكَّانُ مَفْتُوحٌ مِنَ الثَّامِنَةِ صَبَاحًا"
     },
     {
-     "kind": "short_dictation",
-     "prompt_ar": "اسمع واكتب",
-     "text_ar": "مَمْنُوع",
-     "alt": [],
-     "explanation_ar": "مَمْنُوع"
+     "kind": "cloze_bank",
+     "prompt_ar": "أكمل الجملة بالكلمة الصحيحة",
+     "text": "كَلِمَةُ الْبَابِ: ___ — إِلَى الْأَمَامِ",
+     "gaps": [
+      "اِدْفَعْ"
+     ],
+     "bank": [
+      "اِدْفَعْ",
+      "اِسْحَبْ",
+      "خُرُوج"
+     ],
+     "explanation_ar": "كَلِمَةُ الْبَابِ: اِدْفَعْ — إِلَى الْأَمَامِ"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "صَبَاحًا",
+     "text_ar": "دُخُول",
      "alt": [],
-     "explanation_ar": "صَبَاحًا"
+     "explanation_ar": "دُخُول"
     },
     {
      "kind": "short_dictation",
      "prompt_ar": "اسمع واكتب",
-     "text_ar": "مُسْتَشْفَى",
+     "text_ar": "مَسَاءً",
      "alt": [],
-     "explanation_ar": "مُسْتَشْفَى"
+     "explanation_ar": "مَسَاءً"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مَوْقِف",
+     "alt": [],
+     "explanation_ar": "مَوْقِف"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "مَفْتُوح",
+     "alt": [],
+     "explanation_ar": "مَفْتُوح"
+    },
+    {
+     "kind": "short_dictation",
+     "prompt_ar": "اسمع واكتب",
+     "text_ar": "اِدْفَعْ",
+     "alt": [],
+     "explanation_ar": "اِدْفَعْ"
     },
     {
      "kind": "mcq",
      "prompt_ar": "على الباب كلمة «اِسْحَبْ». ماذا تفعل؟",
      "options": [
       "أَسْحَبُ إِلَيَّ",
-      "أَدْفَعُ إِلَى الْأَمَامِ",
-      "أَنْتَظِرُ"
+      "أَنْتَظِرُ",
+      "أَدْفَعُ إِلَى الْأَمَامِ"
      ],
      "correct": 0,
      "explanation_ar": "اِسْحَبْ = إِلَى الْخَلْفِ"
@@ -3022,18 +3946,18 @@
      "prompt_ar": "اللافتة: «مُغْلَق». هل أدخل؟",
      "options": [
       "رُبَّمَا",
-      "لَا",
-      "نَعَمْ"
+      "نَعَمْ",
+      "لَا"
      ],
-     "correct": 1,
+     "correct": 2,
      "explanation_ar": "مُغْلَق = لَا نَدْخُلُ"
     },
     {
      "kind": "mcq",
      "prompt_ar": "«السَّاعَةُ الثَّامِنَةُ مَسَاءً». أيّ رقم؟",
      "options": [
-      "٣",
       "١٠",
+      "٣",
       "٨"
      ],
      "correct": 2,

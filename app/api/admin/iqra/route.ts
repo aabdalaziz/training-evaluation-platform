@@ -86,8 +86,9 @@ export async function POST(req: Request) {
     const summary = { source: n.pack.source, version: n.pack.version, units: (n.pack.units || []).length, lessons: n.pack.lessons.length, cards: n.pack.lessons.reduce((s, l) => s + l.cards.length, 0), exercises: n.pack.lessons.reduce((s, l) => s + l.exercises.length, 0), library: (n.pack.library || []).length, kinds: [...new Set(n.pack.lessons.flatMap((l) => l.exercises.map((e) => e.kind)))], fairness_warnings: n.warnings.filter((w) => w.msg.startsWith('الإنصاف')).length, warnings: n.warnings.slice(0, 60) };
     if (action === 'validate') return NextResponse.json({ success: true, summary }, { headers: NO });
     const batchId = (globalThis.crypto?.randomUUID?.() || `${Date.now()}`) as string;
-    const report = await importPack(c.db, n.pack, c.user, batchId);
-    await audit(c.db, c.user, 'iqra.import', batchId, `استيراد حزمة اقْرَأْ (${n.pack.source})`, { ...report, lessons: n.pack.lessons.length });
+    const replaceApproved = b.replace_approved === true && ADMINS.includes(c.user.role); /* ت٣: تحديث الحلقات المعتمدة — للمديرين فقط */
+    const report = await importPack(c.db, n.pack, c.user, batchId, { replaceApproved });
+    await audit(c.db, c.user, 'iqra.import', batchId, `استيراد حزمة اقْرَأْ (${n.pack.source})${replaceApproved ? ' — مع تحديث المعتمدة' : ''}`, { ...report, lessons: n.pack.lessons.length, replace_approved: replaceApproved });
     return NextResponse.json({ success: true, summary, report, batch_id: batchId }, { headers: NO });
   }
   if (action === 'library_status') {
