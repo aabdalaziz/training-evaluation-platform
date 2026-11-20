@@ -73,8 +73,11 @@ export const IQRA_LIMITS = {
   threshold_invite_days: 30,    /* صلاحية دعوة «العَتَبة» الشخصية */
   offline_units_max: 2,         /* «المنزلة في جيبي»: منزلتان محمّلتان معًا على الجهاز */
 } as const;
-/** سقف المِران حسب المستوى: التمهيديّ 40، وما سواه 30 */
-export const itemsMaxFor = (level: string | null | undefined): number => (level === 'PRE_A1' ? IQRA_LIMITS.items_per_lesson_max_pre_a1 : IQRA_LIMITS.items_per_lesson_max);
+/** سقف المِران حسب المستوى: التمهيديّ 40 (تمارين قصيرة جدًّا) والمتقن C2 40 (أسئلة في طبقات حرفيّ/استدلاليّ/نقديّ)، وما سواهما 30 */
+export const ITEMS_MAX_BY_LEVEL: Partial<Record<IqraLevel, number>> = { PRE_A1: IQRA_LIMITS.items_per_lesson_max_pre_a1, C2: IQRA_LIMITS.items_per_lesson_max_pre_a1 };
+export const itemsMaxFor = (level: string | null | undefined): number => (level && ITEMS_MAX_BY_LEVEL[level as IqraLevel]) || IQRA_LIMITS.items_per_lesson_max;
+/** سقف البطاقات حسب المستوى: المتقن C2 20 (تراثيّ · أكاديميّ · أمثال)، وما سواه 16 */
+export const cardsMaxFor = (level: string | null | undefined): number => (level === 'C2' ? 20 : IQRA_LIMITS.cards_per_lesson_max);
 
 /* ---------- ق٢: «العَتَبة» (Level-exit gate) · طابور «أُنتج» (analytic rubric) ---------- */
 /** حالات طلب العَتَبة — المصدر الوحيد للحكم هو تقرير مِعيار (اختبار نهاية المستوى المعياري «عُبور») */

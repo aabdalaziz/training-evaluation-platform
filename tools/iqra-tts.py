@@ -151,7 +151,7 @@ def segments_lesson(l):
             m = re.match(r'^\((.+)\)$', ln)
             if m: author_of(l['code'], i, ln); S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, m.group(1), narr())); continue  # عنوان المشهد «(١ — …)» للراوي، لكنّه يحدّث كاتب الفقرات التالية (authors.at)
             m = LINE_RE.match(ln); parts = m and split_speakers(m.group(1), m.group(2))
-            if m and (c['text'].get('kind') == 'dialogue' or (in_cast(m.group(1)) and (parts or not re.search(r'[،.!؟]\s*[^:،.!؟]{2,14}\s?:', m.group(2))))):  # سطر «هند: …» داخل نصّ سرديّ يُقرأ بصوت هند (وإن جمع السطر عدّة متكلّمين من الطاقم قُسِّم بينهم، وإلّا فالراوي)
+            if m and (c['text'].get('kind') == 'dialogue' or (in_cast(m.group(1)) and (parts or not re.search(r'[،.!؟]\s*(?!(?:ف|و)ال|بل\s|ثمّ\s|أي\s|أو\s)[^\s:،.!؟][^:،.!؟]{1,13}\s?:', m.group(2))))):  # سطر «هند: …» داخل نصّ سرديّ يُقرأ بصوت هند (وإن جمع السطر عدّة متكلّمين من الطاقم قُسِّم بينهم، وإلّا فالراوي)
                 w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, parts or m.group(2), w))
             else: w = author_of(l['code'], i, ln); S.append((mark({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, w), ln, w))
     for cd in l.get('cards', []):
@@ -180,14 +180,14 @@ def segments_library(t):
         ln = ln.strip()
         if not ln: continue
         m = LINE_RE.match(ln); sc = re.match(r'^\((.+)\)$', ln)
-        if sc: S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, sc.group(1), narr())); continue
+        if sc: author_of(t['code'], i, ln); S.append(({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, sc.group(1), narr())); continue  # «(النصّ)» / «(تعقيب هند)» في نصّ مكتبة: العنوان للراوي، ويبدّل كاتب الفقرات التالية (C2)
         vm = listen and re.match(r'^(الرسالة\s+\S+،[^:]*):\s*(.+)$', ln)  # بريد صوتيّ: «الرسالة الأولى، اليوم في…: صباح الخير، أنا نورة…» → العنوان بصوت الهاتف والرسالة بصوت صاحبها
         if vm:
             spk = next((n for n in sorted(V['cast'], key=len, reverse=True) if re.search(r'(?:أنا|هذه|هذا|معك|معكِ)\s+(?:ال(?:دكتور|أستاذ|معلّم|ممرّض)(?:ة)?\s+)?' + re.escape(n) + '(?![' + AR + '])', vm.group(2))), None)
             w = who(spk) if spk else narr(); ph = who('الهاتف')
             S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, [(vm.group(1) + ':', ph), (vm.group(2), w)], w)); continue
         named = m and (norm_speaker(m.group(1)) in V['cast'] or norm_speaker(m.group(1)) in V.get('aliases', {}) or any(re.search('(?<![' + AR + '])' + re.escape(n) + '(?![' + AR + '])', m.group(1)) for n in V['cast']))
-        multi = m and not listen and re.search(r'[،.!؟]\s*[^:،.!؟]{2,14}\s?:', m.group(2))  # سطر قراءة يجمع متكلّمَين «كين: … — يوسف: …» → الراوي
+        multi = m and not listen and re.search(r'[،.!؟]\s*(?!(?:ف|و)ال|بل\s|ثمّ\s|أي\s|أو\s)[^\s:،.!؟][^:،.!؟]{1,13}\s?:', m.group(2))  # سطر قراءة يجمع متكلّمَين «كين: … — يوسف: …» → الراوي
         if m and not multi and len(norm_speaker(m.group(1)).split()) <= 3 and (named or (listen and (any(x in m.group(1) for x in V['female_markers']) or norm_speaker(m.group(1)) in V['role_avatars'] or m.group(1).startswith('ال') or not re.search(r'[٠-٩0-9]', m.group(1))))):
             w = who(m.group(1)); S.append(({'k': 'line', 'i': i, 'r': w[5], 'g': w[3], 'a': w[4]}, split_speakers(m.group(1), m.group(2)) or m.group(2), w))
         else: w = author_of(t['code'], i, ln); S.append((mark({'k': 'line', 'i': i, 'r': '', 'g': 'n', 'a': ''}, w), ln, w))

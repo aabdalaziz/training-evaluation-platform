@@ -15,7 +15,7 @@
  *   - picture_sequence    : stimulus.frames [{image, text}] · مفتاح accepted.order [نصوص الإطارات]
  *  + الحلقة تحمل مهارتها (skill) و«أستطيع أن…» وأكواد الواصفات · محطّة «أُنتج» (produce) · مكتبة المستوى · فاحص الإنصاف 60/40 · سحب 10 من 30.
  */
-import { IQRA_LIMITS, itemsMaxFor, IQRA_SKILLS, SKILL_META, isIqraLevel, isIqraSkill, type IqraLevel, type IqraSkill } from './registry';
+import { IQRA_LIMITS, itemsMaxFor, cardsMaxFor, IQRA_SKILLS, SKILL_META, isIqraLevel, isIqraSkill, type IqraLevel, type IqraSkill } from './registry';
 
 export type TextKind = 'dialogue' | 'narrative';
 export type LessonContent = {
@@ -62,7 +62,9 @@ export type Problem = { at: string; msg: string };
 
 /** حدود حقول المحتوى — مضبوطة على أطول نصوص CEFR (B2/C1): نصّ قراءة/استماع حتى ≈ 1,200 كلمة، نموذج «أُنتج» حتى ≈ 500 كلمة (تحدّث 300 ث).
  *  كلّ اقتطاع يُبلَّغ تحذيرًا (لا يُسكَت عنه) حتى لا يصل المتعلّمَ نصٌّ مبتور. */
-export const CONTENT_CAPS = { intro_ar: 1000, body: 9000, explanation_ar: 3000, examples: 10, example: 240, prompt_ar: 900, checklist: 8, check: 200, model_ar: 4000, min_words: 400, closing_ar: 700, guide_ar: 600 } as const;
+/* ترويسة الحلقة والمكتبة (C2 ج١ 2026-11-20): كانت تُقتطع صامتةً (عنوان 100 · هدف 200 · أستطيع 200 · عنوان القاعدة 120 · خيار المكتبة 120) — رُفعت وصار الفائض تحذيرًا «اقتُطع». */
+export const HEAD_CAPS = { title_ar: 240, goal_ar: 700, can_do_ar: 450, can_do_en: 600, grammar_title_ar: 240, library_title_ar: 160, library_option: 200 } as const;
+export const CONTENT_CAPS = { intro_ar: 1000, body: 9000, explanation_ar: 3000, examples: 12 /* C2 ج١ (2026-11-20): 12 مثالًا (كان 10) */, example: 240, prompt_ar: 900, checklist: 8, check: 200, model_ar: 4000, min_words: 400, closing_ar: 700, guide_ar: 600 } as const;
 const cut = (warn: Problem[] | undefined, at: string, field: string, raw: unknown, max: number) => { if (warn && typeof raw === 'string' && raw.trim().length > max) warn.push({ at, msg: `«${field}» أطول من الحدّ (${raw.trim().length} > ${max} حرفًا) — اقتُطع` }); };
 
 export function normalizeContent(c: unknown, at: string, problems: Problem[], warnings?: Problem[]): LessonContent {
@@ -77,7 +79,7 @@ export function normalizeContent(c: unknown, at: string, problems: Problem[], wa
   }
   if (o.grammar && typeof o.grammar === 'object') {
     cut(warnings, at, 'grammar.explanation_ar', o.grammar.explanation_ar, C.explanation_ar);
-    const title_ar = S(o.grammar.title_ar, 120); const explanation_ar = P(o.grammar.explanation_ar, C.explanation_ar);
+    cut(warnings, at, 'grammar.title_ar', o.grammar.title_ar, HEAD_CAPS.grammar_title_ar); const title_ar = S(o.grammar.title_ar, HEAD_CAPS.grammar_title_ar); const explanation_ar = P(o.grammar.explanation_ar, C.explanation_ar);
     const rawEx = Array.isArray(o.grammar.examples) ? o.grammar.examples : [];
     if (rawEx.length > C.examples && warnings) warnings.push({ at, msg: `أمثلة القاعدة أكثر من ${C.examples} — تُقتطع` });
     rawEx.forEach((e: unknown) => cut(warnings, at, 'grammar.examples[]', e, C.example));
@@ -183,8 +185,8 @@ export function normArabic(s: string): string {
 
 /* ---------- ميثاق الإنصاف: حضور متوازن للجنسين في نصوص الحلقة (تحذير 60/40، غير مانع) ---------- */
 // ملاحظة: حرف الجرّ «على» يُستبعد قبل التطبيع حتى لا يُحسب اسمًا (عليّ) — إصلاح الدفعة 4.
-const F_WORDS = ['هي', 'أم', 'أمي', 'أمك', 'أخت', 'أختي', 'بنت', 'ابنة', 'ابنتي', 'امرأة', 'سيدة', 'زوجة', 'زوجتي', 'جدة', 'جدتي', 'معلمة', 'طالبة', 'طبيبة', 'مهندسة', 'صديقة', 'صديقتي', 'موظفة', 'مديرة', 'ممرضة', 'بائعة', 'كاتبة', 'خالة', 'عمة', 'فاطمة', 'نورة', 'مريم', 'سارة', 'ليلى', 'هند', 'سلمى', 'ريم', 'عائشة', 'خديجة', 'زينب', 'أمل', 'منى', 'هدى', 'لمى', 'دانة', 'جود', 'رنا', 'آمنة', 'حنان', 'نادية', 'سعاد', 'لينا', 'شهد', 'غادة', 'أسماء', 'رقية', 'إيمان'];
-const M_WORDS = ['هو', 'أب', 'أبي', 'أبوك', 'والد', 'والدي', 'أخ', 'أخي', 'ولد', 'ابن', 'ابني', 'رجل', 'سيد', 'زوج', 'زوجي', 'جد', 'جدي', 'معلم', 'طالب', 'طبيب', 'مهندس', 'صديق', 'صديقي', 'موظف', 'مدير', 'ممرض', 'بائع', 'كاتب', 'خال', 'عم', 'أحمد', 'محمد', 'خالد', 'علي', 'عمر', 'سعيد', 'يوسف', 'سالم', 'فهد', 'عبدالله', 'حسن', 'كريم', 'ماجد', 'طارق', 'ناصر', 'بدر', 'إبراهيم', 'عثمان', 'حمد', 'راشد', 'سلطان', 'ياسر', 'زياد', 'آدم', 'عادل'];
+const F_WORDS = ['هي', 'أم', 'أمي', 'أمك', 'أخت', 'أختي', 'بنت', 'ابنة', 'ابنتي', 'امرأة', 'سيدة', 'زوجة', 'زوجتي', 'جدة', 'جدتي', 'معلمة', 'طالبة', 'طبيبة', 'مهندسة', 'صديقة', 'صديقتي', 'موظفة', 'مديرة', 'ممرضة', 'بائعة', 'كاتبة', 'خالة', 'عمة', 'فاطمة', 'نورة', 'مريم', 'سارة', 'ليلى', 'هند', 'سلمى', 'ريم', 'عائشة', 'خديجة', 'زينب', 'أمل', 'منى', 'هدى', 'لمى', 'دانة', 'جود', 'رنا', 'آمنة', 'حنان', 'نادية', 'سعاد', 'لينا', 'شهد', 'غادة', 'أسماء', 'رقية', 'إيمان', 'ماريا', 'نورة'];  /* C2: ماريا من طاقم القصّة منذ التمهيديّ */
+const M_WORDS = ['هو', 'أب', 'أبي', 'أبوك', 'والد', 'والدي', 'أخ', 'أخي', 'ولد', 'ابن', 'ابني', 'رجل', 'سيد', 'زوج', 'زوجي', 'جد', 'جدي', 'معلم', 'طالب', 'طبيب', 'مهندس', 'صديق', 'صديقي', 'موظف', 'مدير', 'ممرض', 'بائع', 'كاتب', 'خال', 'عم', 'أحمد', 'محمد', 'خالد', 'علي', 'عمر', 'سعيد', 'يوسف', 'سالم', 'فهد', 'عبدالله', 'حسن', 'كريم', 'ماجد', 'طارق', 'ناصر', 'بدر', 'إبراهيم', 'عثمان', 'حمد', 'راشد', 'سلطان', 'ياسر', 'زياد', 'آدم', 'عادل', 'كين', 'فارس'];  /* C2: كين من طاقم القصّة منذ التمهيديّ · فارس ضيف U07 */
 const fset = new Set(F_WORDS.map(normArabic)), mset = new Set(M_WORDS.map(normArabic));
 export type Fairness = { f: number; m: number; pct_f: number; warn: string | null };
 export function fairnessLint(texts: string[], exempt = false): Fairness {
@@ -251,27 +253,29 @@ export function normalizePack(raw: unknown): Normalized {
     if (!unitLevel(unit_code)) { problems.push({ at: `lessons[${i}]`, msg: `رمز منزلة غير صالح: ${unit_code}` }); continue; }
     if (!Number.isInteger(idx) || idx < 1 || idx > 12) { problems.push({ at: `lessons[${i}]`, msg: 'ترتيب الحلقة من 1 إلى 12' }); continue; }
     const code = lessonCode(unit_code, idx); if (seen.has(code)) { problems.push({ at: code, msg: 'حلقة مكرّرة في الحزمة' }); continue; } seen.add(code);
-    const title_ar = S(l?.title_ar, 100); if (!title_ar) { problems.push({ at: code, msg: 'عنوان الحلقة مطلوب' }); continue; }
+    for (const k of ['title_ar', 'goal_ar', 'can_do_ar', 'can_do_en'] as const) cut(warnings, code, k, l?.[k], HEAD_CAPS[k]);
+    const title_ar = S(l?.title_ar, HEAD_CAPS.title_ar); if (!title_ar) { problems.push({ at: code, msg: 'عنوان الحلقة مطلوب' }); continue; }
     const content = normalizeContent(l?.content, code, problems, warnings);
     const cards = (Array.isArray(l?.cards) ? l.cards : []).map((c: unknown, k: number) => normalizeCard(c, `${code}/card${k + 1}`, problems)).filter(Boolean) as Card[];
     const exercises = (Array.isArray(l?.exercises) ? l.exercises : []).map((e: unknown, k: number) => normalizeExercise(e, `${code}/ex${k + 1}`, problems)).filter(Boolean) as Exercise[];
-    if (cards.length > IQRA_LIMITS.cards_per_lesson_max) warnings.push({ at: code, msg: `بطاقات أكثر من ${IQRA_LIMITS.cards_per_lesson_max} — تُقتطع` });
+    const cardsMax = cardsMaxFor(unitLevel(unit_code)); /* C2 ج١: المتقن 20 بطاقة */
+    if (cards.length > cardsMax) warnings.push({ at: code, msg: `بطاقات أكثر من ${cardsMax} — تُقتطع` });
     const exMax = itemsMaxFor(unitLevel(unit_code)); /* ت٣: التمهيديّ 40 */
     if (exercises.length > exMax) warnings.push({ at: code, msg: `مِران أكثر من ${exMax} — يُقتطع` });
     if (!exercises.length) warnings.push({ at: code, msg: 'حلقة بلا مِران — تُقبل مسوَّدةً ويلزم إضافة تمارين قبل الاعتماد' });
     const minutes = Number(l?.minutes); const minutes_total = Number(l?.minutes_total);
     const skill = isIqraSkill(l?.skill) ? l.skill : null; if (l?.skill && !skill) problems.push({ at: code, msg: `مهارة غير معروفة: ${String(l.skill)}` });
     const descriptor_codes: string[] = Array.isArray(l?.descriptor_codes) ? uniq<string>(l.descriptor_codes.map((x: unknown) => S(x, 24).toUpperCase()).filter((x: string) => /^[A-Z0-9_-]{3,24}$/.test(x))).slice(0, 8) : [];
-    lessons.push({ code, unit_code, idx, title_ar, goal_ar: S(l?.goal_ar, 200), minutes: Number.isInteger(minutes) && minutes >= 3 && minutes <= 20 ? minutes : 10, minutes_total: Number.isInteger(minutes_total) && minutes_total >= 20 && minutes_total <= 240 ? minutes_total : 120, skill, can_do_ar: S(l?.can_do_ar, 200), can_do_en: S(l?.can_do_en, 200), descriptor_codes, domain: S(l?.domain, 20) || 'شخصي', fairness_exempt: l?.fairness_exempt === true, content, cards: cards.slice(0, IQRA_LIMITS.cards_per_lesson_max), exercises: exercises.slice(0, exMax) });
+    lessons.push({ code, unit_code, idx, title_ar, goal_ar: S(l?.goal_ar, HEAD_CAPS.goal_ar), minutes: Number.isInteger(minutes) && minutes >= 3 && minutes <= 20 ? minutes : 10, minutes_total: Number.isInteger(minutes_total) && minutes_total >= 20 && minutes_total <= 240 ? minutes_total : 120, skill, can_do_ar: S(l?.can_do_ar, HEAD_CAPS.can_do_ar), can_do_en: S(l?.can_do_en, HEAD_CAPS.can_do_en), descriptor_codes, domain: S(l?.domain, 20) || 'شخصي', fairness_exempt: l?.fairness_exempt === true, content, cards: cards.slice(0, cardsMax), exercises: exercises.slice(0, exMax) });
   }
   const library: PackLibrary[] = []; const seenLib = new Set<string>();
   for (const [i, x] of (Array.isArray(o.library) ? o.library : []).entries()) {
     const code = S(x?.code, 16).toUpperCase(); const unit_code = S(x?.unit_code, 12).toUpperCase();
     if (!LIBRARY_CODE_RE.test(code) || !code.startsWith(unit_code + '-')) { problems.push({ at: `library[${i}]`, msg: `رمز مكتبة غير صالح: ${code} (مثل A1-U01-R01 أو A1-U01-A01)` }); continue; }
     if (seenLib.has(code)) { problems.push({ at: code, msg: 'نصّ مكتبة مكرّر' }); continue; } seenLib.add(code);
-    const kind = code.includes('-A') ? 'listen' : 'read'; const title_ar = S(x?.title_ar, 100); cut(warnings, code, 'body_ar', x?.body_ar, CONTENT_CAPS.body); const body_ar = P(x?.body_ar, CONTENT_CAPS.body);
+    const kind = code.includes('-A') ? 'listen' : 'read'; cut(warnings, code, 'title_ar', x?.title_ar, HEAD_CAPS.library_title_ar); const title_ar = S(x?.title_ar, HEAD_CAPS.library_title_ar); cut(warnings, code, 'body_ar', x?.body_ar, CONTENT_CAPS.body); const body_ar = P(x?.body_ar, CONTENT_CAPS.body);
     if (!title_ar || !body_ar || !hasArabic(body_ar)) { problems.push({ at: code, msg: 'نصّ المكتبة: عنوان ومتن عربيّان مطلوبان' }); continue; }
-    const questions = (Array.isArray(x?.questions) ? x.questions : []).map((qq: any, k: number) => { const q = S(qq?.q, 300); const options = Array.isArray(qq?.options) ? uniq(qq.options.map((y: unknown) => S(y, 120)).filter(Boolean)) : []; const correct = Number(qq?.correct); if (!q || options.length < 2 || options.length > 4 || !Number.isInteger(correct) || correct < 0 || correct >= options.length) { problems.push({ at: `${code}/q${k + 1}`, msg: 'سؤال المكتبة: نصّ + 2 إلى 4 خيارات + رقم الصحيح' }); return null; } return { q, options, correct, explanation_ar: S(qq?.explanation_ar, 300) || undefined }; }).filter(Boolean) as PackLibrary['questions'];
+    const questions = (Array.isArray(x?.questions) ? x.questions : []).map((qq: any, k: number) => { const q = S(qq?.q, 300); const options = Array.isArray(qq?.options) ? uniq(qq.options.map((y: unknown) => S(y, HEAD_CAPS.library_option)).filter(Boolean)) : []; const correct = Number(qq?.correct); if (!q || options.length < 2 || options.length > 4 || !Number.isInteger(correct) || correct < 0 || correct >= options.length) { problems.push({ at: `${code}/q${k + 1}`, msg: 'سؤال المكتبة: نصّ + 2 إلى 4 خيارات + رقم الصحيح' }); return null; } return { q, options, correct, explanation_ar: S(qq?.explanation_ar, 300) || undefined }; }).filter(Boolean) as PackLibrary['questions'];
     if (questions.length < 3) warnings.push({ at: code, msg: 'نصّ المكتبة بأقلّ من 3 أسئلة' });
     const minutes = Number(x?.minutes); library.push({ code, unit_code, kind, title_ar, body_ar, minutes: Number.isInteger(minutes) && minutes >= 5 && minutes <= 60 ? minutes : 25, questions: questions.slice(0, 10), descriptor_codes: Array.isArray(x?.descriptor_codes) ? x.descriptor_codes.map((y: unknown) => S(y, 24).toUpperCase()).filter(Boolean).slice(0, 8) : [] });
   }

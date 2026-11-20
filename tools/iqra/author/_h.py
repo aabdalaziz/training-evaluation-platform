@@ -15,8 +15,9 @@ def dic(text, alt=None, ex=''): return {'kind': 'short_dictation', 'prompt_ar': 
 def seq(q, frames, ex=''): return {'kind': 'picture_sequence', 'prompt_ar': q, 'frames': [{'image': IMG(i), 'text': t} for i, t in frames], 'order': [t for _, t in frames], 'explanation_ar': ex}
 def card(w, g, e): return {'word_ar': w, 'gloss_ar': g, 'example_ar': e}
 UNIT_CODE = 'A2-U00'
+N_CARDS, N_EX = 14, 30   # C2 ج١ (2026-11-20): المتقن يضبطهما 20/40 من head.py
 def lesson(idx, title, skill, domain, goal, can_ar, can_en, codes, intro, text, grammar, produce, closing, cards, exercises):
-    assert len(cards) == 14, (title, len(cards)); assert len(exercises) == 30, (title, len(exercises))
+    assert len(cards) == N_CARDS, (title, len(cards)); assert len(exercises) == N_EX, (title, len(exercises))
     return {'code': f'{UNIT_CODE}-L0{idx}', 'unit_code': UNIT_CODE, 'idx': idx, 'title_ar': title, 'skill': skill, 'minutes': 20, 'minutes_total': 120, 'domain': domain,
             'goal_ar': goal, 'can_do_ar': can_ar, 'can_do_en': can_en, 'descriptor_codes': codes,
             'content': {'intro_ar': intro, 'text': text, 'grammar': grammar, 'produce': produce, 'closing_ar': closing}, 'cards': cards, 'exercises': exercises}

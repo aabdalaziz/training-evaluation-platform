@@ -31,7 +31,7 @@ export type Unit = { code: string; level: ExitLevel; idx: number; title_ar: stri
 export type UnitSeed = Omit<Unit, 'status' | 'updated_at' | 'updated_by'>;
 
 const U = (level: ExitLevel, idx: number, title_ar: string, title_en: string, focus_ar: string, domains: string[], descriptor_codes: string[]): UnitSeed => ({ code: `${level}-U${String(idx).padStart(2, '0')}`, level, idx, title_ar, title_en, focus_ar, domains, descriptor_codes });
-/** البذرة: 4 منازل Pre-A1 + 8 وحدات لكل مستوى A1–B2 و6 لـ C1 = 42 — كل واصف من الـ60 (A1–C1) والـ18 (Pre-A1) يظهر في وحدة واحدة على الأقل */
+/** البذرة: 4 منازل Pre-A1 + 8 وحدات لكل مستوى A1–B2 و6 لـ C1 و8 لـ C2 = 50 — كل واصف من الـ60 (A1–C1) والـ18 (Pre-A1) يظهر في وحدة واحدة على الأقل */
 export const UNIT_SEED: UnitSeed[] = [
   /* Pre-A1 (تمهيدي): الحروف والأصوات وكلماتي الأولى — 4 منازل (اقْرَأْ ت١/ت٢) */
   U('PRE_A1', 1, 'حروفي الأولى: من الألف إلى الكاف', 'My first letters: alif to kaf', 'الحروف ا ب ت ث ن ي ج ح خ د ذ ر ز م ل ك والتاء المربوطة، والحركات الثلاث والمدّ، وأوّل عشرين كلمة مع صورها', ['personal', 'educational'], ['LI-PRE_A1-01', 'LI-PRE_A1-04', 'RD-PRE_A1-01', 'RD-PRE_A1-04', 'LU-PRE_A1-01', 'SP-PRE_A1-03', 'WR-PRE_A1-01']),
@@ -76,6 +76,15 @@ export const UNIT_SEED: UnitSeed[] = [
   U('C1', 4, 'المصطلح الأكاديمي والمهني', 'Academic and professional terminology', 'المصطلحات الأكاديمية والمهنية، والمقالات المتخصّصة، والنقاش المتخصّص', ['educational', 'professional'], ['LU-C1-04', 'RD-C1-02', 'LI-C1-03']),
   U('C1', 5, 'المعاني الضمنية والتلميح', 'Implicit meaning and allusion', 'المعاني الضمنية، والسخرية والتلميح والتحفّظ، في المقروء والمسموع', ['public', 'professional'], ['RD-C1-01', 'RD-C1-03', 'LI-C1-02', 'LI-C1-04']),
   U('C1', 6, 'بنية الحجّة والحديث الممتدّ', 'Argument structure and extended talk', 'تقييم بنية الحجّة وتماسكها، وفهم حديث ممتدّ غير واضح البنية', ['educational', 'public'], ['RD-C1-04', 'LI-C1-01']),
+  /* C2 (متقن): التراث والأكاديميا والمناظرة — 8 منازل (اقْرَأْ ج١–ج٤ · 2026-11-20) — الواصفات الـ18 (RD/LI/LU-C2-01..04 · SP/WR-C2-01..03) كلّ منها في منزلتين على الأقلّ */
+  U('C2', 1, 'قراءة التراث: من الجاحظ إلى ابن خلدون', 'Reading the classical heritage: al-Jahiz to Ibn Khaldun', 'النصّ التراثيّ النثريّ الطويل ومعجمه وبناؤه، والفرق الأسلوبيّ بين الفصحى التراثيّة والمعاصرة، وإعادة الصياغة المعاصرة بلا خيانة', ['educational', 'public'], ['RD-C2-03', 'RD-C2-01', 'LU-C2-02', 'LI-C2-02', 'WR-C2-01']),
+  U('C2', 2, 'طبقات المعنى: الشعر والنثر الفنّيّ', 'Layers of meaning: poetry and artistic prose', 'المعنى الحرفيّ والمجازيّ والمقصد، والأسلوب والصوت والإيقاع، والتورية والكناية والمفارقة: لماذا هذه الكلمة لا تلك', ['educational', 'public'], ['RD-C2-02', 'LU-C2-02', 'LU-C2-03', 'LI-C2-02', 'SP-C2-01', 'WR-C2-02']),
+  U('C2', 3, 'التحكّم التامّ: التراكيب المعقّدة والنادرة', 'Full control: complex and rare structures', 'الاشتغال والتنازع والحال المركّبة وإعمال المصدر و«ما» بأنواعها والقصر والاستثناء المفرّغ والتضمين والجملة المعترضة', ['educational', 'professional'], ['LU-C2-01', 'LU-C2-04', 'WR-C2-01', 'RD-C2-02', 'LI-C2-01']),
+  U('C2', 4, 'الأمثال والتعابير والمستويات اللغويّة', 'Idioms, proverbs and register', 'الأمثال والتعابير الاصطلاحيّة في موضعها، ومستويات الخطاب والانتقال بينها عمدًا، والسخرية والتحفّظ في الكلام السريع', ['public', 'personal'], ['LU-C2-03', 'LI-C2-02', 'LI-C2-01', 'SP-C2-02', 'SP-C2-01']),
+  U('C2', 5, 'الأكاديميا: المنهج والمسلّمات والنقد', 'Academia: method, assumptions and critique', 'الورقة البحثيّة ونقد منهجها ومسلّماتها، والمراجعة العلميّة، والملخّص من مصادر متعارضة، والاقتباس والإحالة', ['educational', 'professional'], ['RD-C2-04', 'RD-C2-01', 'LI-C2-04', 'WR-C2-02', 'WR-C2-03']),
+  U('C2', 6, 'المناظرة: مصداقيّة الحجّة والكلام السريع', 'Debate: credibility of argument and fast speech', 'تقييم جودة الحجّة ومصداقيّة مصدرها، والمغالطات الاثنتا عشرة، والاستماع لحديث سريع متداخل الأصوات، والردّ الفوريّ', ['public', 'educational'], ['LI-C2-03', 'LI-C2-01', 'SP-C2-02', 'SP-C2-03', 'RD-C2-04']),
+  U('C2', 7, 'خارج مجالي: النقاش المجرّد المعقّد', 'Outside my field: complex abstract discussion', 'فهم حوار مجرّد معقّد في خمسة علوم لا يعرفها المتعلّم وإعادة بنائه، والمصطلح المشتقّ من سياقه، والتعريف والتمييز والتفريع', ['educational', 'professional'], ['LI-C2-04', 'RD-C2-01', 'LU-C2-04', 'SP-C2-01', 'WR-C2-03']),
+  U('C2', 8, 'التحرير والإجازة', 'Editing and the ijaza', 'تصحيح الأخطاء الدقيقة في نصوص متقدّمة، والمراجعة اللغويّة الكاملة، والخطاب الختاميّ بمستوى مختار، ومشروع «كتاب المجلس»', ['educational', 'professional'], ['LU-C2-04', 'LU-C2-01', 'WR-C2-01', 'WR-C2-03', 'SP-C2-03', 'RD-C2-03', 'LI-C2-03']),
 ];
 export const UNIT_CODE_RE = /^(PRE_A1|A1|A2|B1|B2|C1|C2)-U\d{2}$/;
 export const isUnitCode = (v: unknown): v is string => typeof v === 'string' && UNIT_CODE_RE.test(v);
@@ -188,7 +197,7 @@ export function validateUnit(b: Record<string, unknown>): { ok: true; unit: Omit
   const title_ar = clean(b.title_ar, 80); if (title_ar.length < 2) return { ok: false, error: 'عنوان الوحدة بالعربية مطلوب' };
   const title_en = clean(b.title_en, 80); const focus_ar = clean(b.focus_ar, 300);
   const domains = Array.isArray(b.domains) ? [...new Set(b.domains.map(String).filter((d) => (DOMAINS as readonly string[]).includes(d)))] : [];
-  const descriptor_codes = Array.isArray(b.descriptor_codes) ? [...new Set(b.descriptor_codes.map((d) => String(d).trim().toUpperCase()).filter((d) => /^(LI|RD|LU)-(A1|A2|B1|B2|C1)-\d{2}$/.test(d)))].slice(0, 12) : [];
+  const descriptor_codes = Array.isArray(b.descriptor_codes) ? [...new Set(b.descriptor_codes.map((d) => String(d).trim().toUpperCase()).filter((d) => /^(LI|RD|LU|SP|WR)-(PRE_A1|A1|A2|B1|B2|C1|C2)-\d{2}$/ /* C2 (2026-11-20): الخريطة تقبل واصفات المستويات السبعة والمهارات الخمس */.test(d)))].slice(0, 12) : [];
   const status = (UNIT_STATUSES as readonly string[]).includes(String(b.status)) ? (b.status as UnitStatus) : 'draft';
   const code = isUnitCode(b.code) && unitLevelOf(b.code as string) === level ? (b.code as string) : `${level}-U${String(idx).padStart(2, '0')}`;
   return { ok: true, unit: { code, level: level as ExitLevel, idx, title_ar, title_en, focus_ar, domains, descriptor_codes, status } };
