@@ -4,6 +4,7 @@
  * «اقْرَأْ» ق٢ — مكتب الطاقم: (أ) «العَتَبة»: طلبات المتعلّمين لاختبار نهاية المستوى المعياري (مِعيار «عُبور») — اقبل (دعوة شخصية أو ضمّ لدعوة مفتوحة) / أجّل بسبب يراه المتعلّم؛
  *  الحالة بعد الاختبار تُلتقط من التقرير، والترقية من لوحة «عُبور» كما هي. إحصاء الاجتياز حسب البوّابة (k ≥ 5).
  *  (ب) طابور «أُنتج»: نصوص الكتابة المرسَلة للمراجعة البشرية — سلّم تقدير تحليلي 1..4 على أربعة أبعاد + تعليق + جملة واحدة معادة الكتابة. للطاقم وللمصحّح (RATER).
+ *  (ج) «إجازة أَثَر» (C2 ج٤): لا عَتَبة بعد المتقن — من رُوجع مشروعه الختاميّ يُجاز بزرّ واحد (مديرون)، مرّة واحدة.
  */
 import { useCallback, useEffect, useState } from 'react';
 
@@ -11,10 +12,11 @@ type Req = { id: string; learner_email: string; level: string; level_label: stri
 type Board = { live: Req[]; done: Req[]; stats: Record<'early' | 'full', { n: number; pass_pct: number } | null>; open_invites: { id: string; code: string; label_ar: string; level: string; opens_at: string | null; expires_at: string | null }[] };
 type PRow = { id: string; learner_email: string; level_label: string; words: number; text: string; checked: boolean[]; status: string; score: number | null; comment: string | null; rewritten: string | null; days: number; created_at: string; reviewed_at: string | null; lesson: { code: string; title_ar: string; prompt_ar: string; model_ar: string; checklist: string[] } | null; rubric: Record<string, { score: number | null; name_ar: string; band_ar: string }> | null };
 type PQ = { depth: number; dims: string[]; rubric: Record<string, { name_ar: string; bands_ar: string[] }>; rows: PRow[] };
+type LQ = { lesson: { code: string; title_ar: string } | null; rows: { learner_email: string; score: number | null; reviewed_at: string | null }[]; issued: { learner_email: string; issued_at: string; issued_by: string | null; text_ar: string }[] }; /* C2 ج٤: «إجازة أَثَر» */
 const fmt = (s: string | null) => (s ? new Date(s).toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'short' }) : '—');
 
 export default function IqraQ2Desk({ auth, raterOnly = false }: { auth: () => Promise<Record<string, string>>; raterOnly?: boolean }) {
-  const [tab, setTab] = useState<'thr' | 'prod'>(raterOnly ? 'prod' : 'thr'); const [b, setB] = useState<Board | null>(null); const [pq, setPq] = useState<PQ | null>(null); const [which, setWhich] = useState<'queue' | 'done'>('queue');
+  const [tab, setTab] = useState<'thr' | 'prod' | 'lic'>(raterOnly ? 'prod' : 'thr'); const [b, setB] = useState<Board | null>(null); const [pq, setPq] = useState<PQ | null>(null); const [lq, setLq] = useState<LQ | null>(null); const [which, setWhich] = useState<'queue' | 'done'>('queue');
   const [err, setErr] = useState<string | null>(null); const [ok, setOk] = useState<string | null>(null); const [busy, setBusy] = useState('');
   const [defer, setDefer] = useState<Record<string, string>>({}); const [pick, setPick] = useState<Record<string, string>>({}); const [openP, setOpenP] = useState<PRow | null>(null);
   const [rb, setRb] = useState<Record<string, number>>({}); const [comment, setComment] = useState(''); const [rew, setRew] = useState('');
@@ -22,7 +24,9 @@ export default function IqraQ2Desk({ auth, raterOnly = false }: { auth: () => Pr
   const post = useCallback(async (body: Record<string, unknown>, label: string) => { setBusy(label); setErr(null); setOk(null); const H = await auth(); const j = await fetch('/api/admin/iqra', { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => null); setBusy(''); if (!j?.success) setErr(j?.error || 'تعذّر التنفيذ'); return j; }, [auth]);
   const loadThr = useCallback(async () => { const j = await get('threshold=1'); if (j?.success) setB(j); else setErr(j?.error || 'تعذّر التحميل'); }, [get]);
   const loadProd = useCallback(async (w: 'queue' | 'done') => { const j = await get(`produce=${w}`); if (j?.success) setPq(j); else setErr(j?.error || 'تعذّر التحميل'); }, [get]);
-  useEffect(() => { if (tab === 'thr' && !raterOnly) void loadThr(); else void loadProd(which); }, [tab, which, raterOnly, loadThr, loadProd]);
+  const loadLic = useCallback(async () => { const j = await get('licence=1'); if (j?.success) setLq(j); else setErr(j?.error || 'تعذّر التحميل'); }, [get]);
+  useEffect(() => { if (tab === 'thr' && !raterOnly) void loadThr(); else if (tab === 'lic' && !raterOnly) void loadLic(); else void loadProd(which); }, [tab, which, raterOnly, loadThr, loadProd, loadLic]);
+  const issue = async (email: string) => { const j = await post({ action: 'licence_issue', email }, email); if (j?.success) { setOk(`صدرت إجازة أَثَر لـ ${email}`); void loadLic(); } };
   const accept = async (r: Req) => { const inv = pick[r.id] || ''; const j = await post({ action: 'threshold_accept', id: r.id, invite_id: inv || undefined }, r.id); if (j?.success) { setOk(`قُبل طلب ${r.learner_email} — الرابط: ${j.url}`); void loadThr(); } };
   const doDefer = async (r: Req) => { const n = (defer[r.id] || '').trim(); if (!n) { setErr('اكتب سببًا يراه المتعلّم'); return; } const j = await post({ action: 'threshold_defer', id: r.id, note: n }, r.id); if (j?.success) { setOk(`أُجّل طلب ${r.learner_email}`); void loadThr(); } };
   const openReview = (p: PRow) => { setOpenP(p); setRb({}); setComment(''); setRew(''); };
@@ -31,7 +35,7 @@ export default function IqraQ2Desk({ auth, raterOnly = false }: { auth: () => Pr
 
   return <div className="iqd iqd-q2" data-testid="iqd-q2">
     {err && <p className="am-err" role="alert">{err}</p>}{ok && <p className="iqd-ok" role="status">{ok}</p>}
-    <div className="iqd-tabs" role="tablist" aria-label="ق٢">{!raterOnly && <button role="tab" aria-selected={tab === 'thr'} className={tab === 'thr' ? 'on' : ''} onClick={() => setTab('thr')} data-testid="iqd-thr-tab">العَتَبة{b?.live.length ? <i>{b.live.length}</i> : null}</button>}<button role="tab" aria-selected={tab === 'prod'} className={tab === 'prod' ? 'on' : ''} onClick={() => setTab('prod')} data-testid="iqd-prod-tab">طابور «أُنتج»{pq?.depth ? <i>{pq.depth}</i> : null}</button></div>
+    <div className="iqd-tabs" role="tablist" aria-label="ق٢">{!raterOnly && <button role="tab" aria-selected={tab === 'thr'} className={tab === 'thr' ? 'on' : ''} onClick={() => setTab('thr')} data-testid="iqd-thr-tab">العَتَبة{b?.live.length ? <i>{b.live.length}</i> : null}</button>}<button role="tab" aria-selected={tab === 'prod'} className={tab === 'prod' ? 'on' : ''} onClick={() => setTab('prod')} data-testid="iqd-prod-tab">طابور «أُنتج»{pq?.depth ? <i>{pq.depth}</i> : null}</button>{!raterOnly && <button role="tab" aria-selected={tab === 'lic'} className={tab === 'lic' ? 'on' : ''} onClick={() => setTab('lic')} data-testid="iqd-lic-tab">إجازة أَثَر{lq?.rows.length ? <i>{lq.rows.length}</i> : null}</button>}</div>
 
     {tab === 'thr' && !raterOnly && <section className="am-card" data-testid="iqd-thr"><h3>طلبات العَتَبة <small>اختبار نهاية المستوى — معياري (CEFR) في مِعيار «عُبور». القبول يصنع دعوة شخصية (30 يومًا) أو يضمّ المتعلّم إلى دعوة مستوى مفتوحة؛ الترقية من لوحة «عُبور» كما هي.</small></h3>
       {b && <p className="mm-note" data-testid="iqd-thr-stats">الاجتياز حسب البوّابة (مجموعات ≥ 5): مبكّر {b.stats.early ? `${b.stats.early.pass_pct}% من ${b.stats.early.n}` : '—'} · الأرضية {b.stats.full ? `${b.stats.full.pass_pct}% من ${b.stats.full.n}` : '—'}</p>}
@@ -58,6 +62,11 @@ export default function IqraQ2Desk({ auth, raterOnly = false }: { auth: () => Pr
         <div className="mm-row col"><textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={400} rows={3} placeholder="تعليقك للمتعلّم (≤ 400 حرف): ما أحسن فيه، وما يفعله في النصّ القادم" aria-label="التعليق" data-testid="iqd-prod-comment" />
           <input value={rew} onChange={(e) => setRew(e.target.value)} maxLength={300} placeholder="جملة واحدة من نصّه تعيد كتابتها صحيحة (اختياري)" aria-label="جملة معادة الكتابة" data-testid="iqd-prod-rewrite" />
           <button className="am-btn" disabled={!!busy || !comment.trim() || (pq?.dims || []).some((d) => !rb[d])} onClick={() => void sendReview()} data-testid="iqd-prod-send">أرسل الردّ {(pq?.dims || []).every((d) => rb[d]) ? `(${Math.round((pq?.dims || []).reduce((s, d) => s + rb[d], 0) / (pq?.dims.length || 1))} من 4)` : ''}</button></div></div>}
+    </section>}
+    {tab === 'lic' && !raterOnly && <section className="am-card" data-testid="iqd-lic"><h3>«إجازة أَثَر» <small>لا عَتَبة بعد المتقن C2. حين يُراجَع مشروع المتعلّم الختاميّ «كتاب المجلس» ({lq?.lesson?.code || 'C2-U08-L05'}) في طابور «أُنتج» يظهر هنا؛ الإصدار مرّة واحدة بنصّ ثابت وتاريخ، ويصل المتعلّم إشعارًا ويظهر في «خريطة أثري». للمديرين.</small></h3>
+      {!lq ? <p className="am-empty">…</p> : !lq.lesson ? <p className="am-empty" data-testid="iqd-lic-nolesson">حلقة الإجازة لم تُستورد بعد.</p> : lq.rows.length === 0 ? <p className="am-empty" data-testid="iqd-lic-empty">لا مستحقّين الآن.</p> : <table className="mm-t"><thead><tr><th>المتعلّم</th><th>مشروعه</th><th>رُوجع</th><th>القرار</th></tr></thead><tbody>
+        {lq.rows.map((r) => <tr key={r.learner_email} data-testid="iqd-lic-row"><td dir="ltr">{r.learner_email}</td><td>{r.score !== null ? `${r.score} / 4` : '—'}</td><td>{fmt(r.reviewed_at)}</td><td><button className="am-btn" disabled={!!busy} onClick={() => void issue(r.learner_email)} data-testid="iqd-lic-issue">أصدر الإجازة</button></td></tr>)}</tbody></table>}
+      {lq && lq.issued.length > 0 && <details className="iqd-done"><summary>الصادرة ({lq.issued.length})</summary><table className="mm-t"><tbody>{lq.issued.map((r) => <tr key={r.learner_email} data-testid="iqd-lic-done"><td dir="ltr">{r.learner_email}</td><td>{fmt(r.issued_at)}</td><td dir="ltr"><small>{r.issued_by || '—'}</small></td></tr>)}</tbody></table></details>}
     </section>}
     <style jsx global>{`
 .iqd-tabs{display:flex;gap:6px;flex-wrap:wrap}.iqd-tabs button{font:inherit;border:1px solid var(--line,#e8eef3);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:800;color:#0f2a4e;display:inline-flex;gap:6px;align-items:center}.iqd-tabs button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}.iqd-tabs button i{font-style:normal;background:#d9a441;color:#0b222a;border-radius:999px;padding:0 7px;font-size:11px}.iqd-tabs.small button{padding:5px 11px;font-size:12.5px;margin-bottom:8px}

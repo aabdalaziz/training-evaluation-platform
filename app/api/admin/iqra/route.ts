@@ -12,6 +12,7 @@
  *  ق٢ (2026-11-17): GET ?threshold=1 → مكتب العَتَبة (الطلبات الحيّة · المنتهية · دعوات المستوى المفتوحة · إحصاء k≥5) · GET ?produce=queue|done → طابور «أُنتج» (الطاقم + RATER)
  *       POST {action:'threshold_accept', id, invite_id?, opens_at?, note?} (مديرون) → دعوة «عُبور» شخصية أو ضمّ إلى دعوة مفتوحة · {action:'threshold_defer', id, note} (مديرون)
  *       POST {action:'produce_review', id, rubric:{content,organisation,vocabulary,accuracy 1..4}, comment, rewritten?} (الطاقم + RATER)
+ *  C2 ج٤ (2026-11-20): GET ?licence=1 → «إجازة أَثَر»: من رُوجع مشروعه الختاميّ ولم يُجَز · الصادرة · POST {action:'licence_issue', email} (مديرون) → إصدارها مرّة واحدة
  *  كل كتابة تُسجَّل في audit_logs. لا ذكاء اصطناعي هنا.
  */
 import { NextResponse } from 'next/server';
@@ -21,7 +22,7 @@ import { normEmail } from '../../../../lib/portal/roles';
 import { IQRA_NAMES_AR, LEVEL_META, isIqraLevel } from '../../../../lib/iqra/registry';
 import { normalizePack } from '../../../../lib/iqra/content';
 import { adminOverview, adminLessons, adminLesson, setLessonStatus, importPack, manualEnrol, adminLibrary, setLibraryStatus, adminHours } from '../../../../lib/iqra/store';
-import { adminThresholds, acceptThreshold, deferThreshold, adminProduce, reviewProduce } from '../../../../lib/iqra/q2';
+import { adminThresholds, acceptThreshold, deferThreshold, adminProduce, reviewProduce, licenceQueue, issueLicence } from '../../../../lib/iqra/q2';
 import { HOURS_TARGET, SKILL_META } from '../../../../lib/iqra/registry';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
@@ -29,6 +30,7 @@ const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUA
 const RATERS = [...STAFF, 'RATER']; /* ق٢: مصحّحو مِعيار يقرؤون طابور «أُنتج» فقط */
 const ADMINS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'];
 const NO = { 'Cache-Control': 'no-store' };
+const LIC_ERR_AR: Record<string, string> = { bad_input: 'أدخل بريد المتعلّم', not_enrolled: 'المتعلّم غير مسكَّن في اقْرَأْ', not_c2: 'الإجازة لمن في المتقن C2 فقط', already_issued: 'صدرت إجازته من قبل', no_lesson: 'حلقة الإجازة (C2-U08-L05) لم تُستورد بعد', project_not_reviewed: 'لم يُراجَع مشروعه الختاميّ بعد', db: 'تعذّر الحفظ' }; /* C2 ج٤ */
 const bad = (error: string, status = 400) => NextResponse.json({ success: false, error }, { status, headers: NO });
 async function ctx(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -51,6 +53,7 @@ export async function GET(req: Request) {
   const produce = u.searchParams.get('produce'); if (produce) return NextResponse.json({ success: true, ...(await adminProduce(c.db, produce === 'done' ? 'done' : 'queue')) }, { headers: NO });
   if (c.raterOnly) return bad('غير مصرّح — للطاقم فقط', 403);
   if (u.searchParams.get('threshold')) return NextResponse.json({ success: true, ...(await adminThresholds(c.db)) }, { headers: NO });
+  if (u.searchParams.get('licence')) return NextResponse.json({ success: true, ...(await licenceQueue(c.db)) }, { headers: NO }); /* C2 ج٤: «إجازة أَثَر» */
   if (lessonId) { const l = await adminLesson(c.db, lessonId); return l ? NextResponse.json({ success: true, lesson: l }, { headers: NO }) : bad('الحلقة غير موجودة', 404); }
   const libId = u.searchParams.get('library'); if (libId) { const x = await adminLibrary(c.db, libId); return x ? NextResponse.json({ success: true, text: x }, { headers: NO }) : bad('النصّ غير موجود', 404); }
   const level = isIqraLevel(u.searchParams.get('level')) ? (u.searchParams.get('level') as any) : 'A1';
@@ -74,6 +77,11 @@ export async function POST(req: Request) {
     const r = action === 'threshold_accept' ? await acceptThreshold(c.db, b.id, c.user, site, { invite_id: b.invite_id, opens_at: b.opens_at, note: b.note }) : await deferThreshold(c.db, b.id, b.note, c.user);
     if (!r.ok) return bad(r.error);
     await audit(c.db, c.user, `iqra.${action}`, String(b.id), 'طلب العَتَبة', { invite_id: (r as any).invite_id || b.invite_id || null }); return NextResponse.json({ success: true, ...r }, { headers: NO });
+  }
+  if (action === 'licence_issue') { /* C2 ج٤: «إجازة أَثَر» — بعد اعتماد المشروع الختاميّ */
+    if (!ADMINS.includes(c.user.role)) return bad('إصدار الإجازة للمديرين', 403);
+    const r = await issueLicence(c.db, b.email, c.user); if (!r.ok) return bad(LIC_ERR_AR[r.error] || r.error);
+    await audit(c.db, c.user, 'iqra.licence.issue', String(b.email || ''), 'إجازة أَثَر', { id: r.licence.id }); return NextResponse.json({ success: true, ...r }, { headers: NO });
   }
   if (action === 'status') {
     if (!ADMINS.includes(c.user.role)) return bad('اعتماد الحلقات للمديرين', 403);

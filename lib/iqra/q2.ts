@@ -5,7 +5,7 @@
  *  اقْرَأْ يفتح الباب إليه (دعوة شخصية بعد قبول الطاقم) ويلتقط نتيجته من التقرير، ويلتقط قرار الترقية المعتمد فيغلق المستوى ويفتح التالي.
  *  لا كتابة في جداول مِعيار إلا عبر واجهاتها (createInvite). كلّ ما يكتبه المتعلّم ملكه ويُحذف مع تقدّمه.
  */
-import { IQRA_LIMITS, LEVEL_META, THRESHOLD_LIVE, THRESHOLD_STATUS_AR, PRODUCE_RUBRIC, RUBRIC_AR, HOURS_TARGET, UI_AR, levelLabel, nextLevel, isIqraLevel, type IqraLevel, type ThresholdStatus, type RubricDim } from './registry';
+import { IQRA_LIMITS, LEVEL_META, THRESHOLD_LIVE, THRESHOLD_STATUS_AR, PRODUCE_RUBRIC, RUBRIC_AR, HOURS_TARGET, UI_AR, LICENCE_LESSON_CODE, LICENCE_TITLE_AR, licenceText, levelLabel, nextLevel, isIqraLevel, type IqraLevel, type ThresholdStatus, type RubricDim } from './registry';
 import { hoursSummary, masteryOf, type Enrolment } from './store';
 import { createInvite } from '../miaar/invites';
 import { exitBlueprintCode, EXIT_SPEC, EXIT_CUT, EXIT_SKILL_MIN, EXIT_TITLE, RETAKE_DAYS, SKILL_RETAKE_DAYS, isExitLevel, type ExitLevel } from '../miaar/exit';
@@ -51,7 +51,8 @@ export async function thresholdView(db: Db, e: Enrolment, now = new Date()) {
   return {
     state: h.threshold.state, gate: h.threshold.state === 'ready' ? 'full' : h.threshold.state === 'early' ? 'early' : null, hours: h.hours, target: h.target, mastery_pct: mastery,
     eligible, reason, next_label: next ? levelLabel(next) : null, exam: facts,
-    copy: { what: UI_AR.thr_what, who: UI_AR.thr_who, pre_a1: e.level === 'PRE_A1' ? UI_AR.thr_pre_a1 : null },
+    copy: { what: UI_AR.thr_what, who: UI_AR.thr_who, pre_a1: e.level === 'PRE_A1' ? UI_AR.thr_pre_a1 : null, c2: !next ? UI_AR.thr_c2 : null },
+    licence: !next ? await licenceOf(db, e.learner_email) : null,
     request: r ? { id: r.id, status: r.status, status_ar: THRESHOLD_STATUS_AR[r.status], gate: r.gate, created_at: r.created_at, updated_at: r.updated_at, defer_note: r.defer_note, exit_total: r.exit_total, invite_url, opens_at: (r as any).opens_at || null, expires_at: (r as any).expires_at || null, report_id: r.report_id } : null,
   };
 }
@@ -207,6 +208,40 @@ export async function reviewProduce(db: Db, id: unknown, actor: { id: string }, 
   await db.from('iqra_produce_reviews').update({ status: 'reviewed', score, rubric, comment, rewritten: rewritten || null, reviewer_id: actor.id, reviewed_at: nowIso() }).eq('id', r.id);
   try { await pushNotice(db, { email: r.learner_email, user_id: r.user_id, kind: 'iqra_produce', title_ar: `قرأ مصحّح أَثَر نصّك: ${score} من 4`, body_ar: comment.slice(0, 160), url: '/iqra', ref_id: r.id, dedupe_key: `iqra_produce:${r.id}` }); } catch { /* لا يعطّل */ }
   return { ok: true as const, score };
+}
+
+/* ---------- «إجازة أَثَر» (C2 ج٤): لا عَتَبة بعد المتقن ---------- */
+export type Licence = { id: string; level: IqraLevel; title_ar: string; text_ar: string; issued_at: string; issued_by: string | null };
+const pubLicence = (r: any): Licence | null => (r && r.answers?.licence ? { id: r.id, level: r.answers.licence.level || 'C2', title_ar: LICENCE_TITLE_AR, text_ar: String(r.answers.licence.text_ar || ''), issued_at: String(r.answers.licence.issued_at || r.done_at || r.created_at), issued_by: r.answers.licence.issued_by || null } : null);
+/** الإجازة الصادرة للمتعلّم إن وُجدت — سطر iqra_progress بلا حلقة ولا نصّ (station = 'licence') */
+export async function licenceOf(db: Db, email: string): Promise<Licence | null> {
+  const { data } = await db.from('iqra_progress').select('id, answers, done_at, created_at').eq('learner_email', email).eq('station', 'licence').is('lesson_id', null).limit(1);
+  return pubLicence(Array.isArray(data) ? data[0] : null);
+}
+/** من يستحقّ الإجازة ولم تصدر له: متعلّم مسكَّن في C2 رُوجع مشروعه الختاميّ (حلقة الإجازة) في طابور «أُنتج» — للطاقم */
+export async function licenceQueue(db: Db) {
+  const { data: l } = await db.from('iqra_lessons').select('id, code, title_ar').eq('code', LICENCE_LESSON_CODE).maybeSingle(); if (!l) return { lesson: null, rows: [] as any[], issued: [] as any[] };
+  const [{ data: rv }, { data: lic }] = await Promise.all([db.from('iqra_produce_reviews').select('id, learner_email, user_id, score, reviewed_at').eq('lesson_id', l.id).eq('status', 'reviewed').order('reviewed_at', { ascending: true }).limit(500), db.from('iqra_progress').select('id, learner_email, answers, done_at, created_at').eq('station', 'licence').is('lesson_id', null).limit(1000)]);
+  const have = new Set(((lic || []) as any[]).map((r) => r.learner_email));
+  const seen = new Set<string>(); const rows: any[] = [];
+  for (const r of (rv || []) as any[]) { if (have.has(r.learner_email) || seen.has(r.learner_email)) continue; seen.add(r.learner_email); rows.push({ learner_email: r.learner_email, score: r.score, reviewed_at: r.reviewed_at }); }
+  return { lesson: { code: l.code, title_ar: l.title_ar }, rows, issued: ((lic || []) as any[]).map((r) => ({ learner_email: r.learner_email, ...pubLicence(r) })).slice(-100).reverse() };
+}
+/** إصدار الإجازة (مديرون): مرّة واحدة لكلّ متعلّم، بعد مراجعة مشروعه الختاميّ، وهو في المتقن. تُكتب سطرًا في التقدّم + حدثًا في «خريطة أثري» + إشعارًا. */
+export async function issueLicence(db: Db, email: unknown, actor: { id: string; email: string }, now = new Date()) {
+  const em = typeof email === 'string' ? email.trim().toLowerCase() : ''; if (!em) return { ok: false as const, error: 'bad_input' };
+  const { data: e } = await db.from('iqra_enrolments').select('id, learner_email, user_id, level, active').eq('learner_email', em).eq('active', true).maybeSingle();
+  if (!e) return { ok: false as const, error: 'not_enrolled' }; if (e.level !== 'C2') return { ok: false as const, error: 'not_c2' };
+  if (await licenceOf(db, em)) return { ok: false as const, error: 'already_issued' };
+  const { data: l } = await db.from('iqra_lessons').select('id').eq('code', LICENCE_LESSON_CODE).maybeSingle(); if (!l) return { ok: false as const, error: 'no_lesson' };
+  const { data: rv } = await db.from('iqra_produce_reviews').select('id, score').eq('learner_email', em).eq('lesson_id', l.id).eq('status', 'reviewed').limit(1);
+  if (!Array.isArray(rv) || !rv[0]) return { ok: false as const, error: 'project_not_reviewed' };
+  const issued_at = now.toISOString(); const text_ar = licenceText(em, issued_at);
+  const ins = await db.from('iqra_progress').insert({ learner_email: em, user_id: e.user_id || null, lesson_id: null, library_id: null, station: 'licence', status: 'done', score: null, attempts: 0, answers: { licence: { level: 'C2', title_ar: LICENCE_TITLE_AR, text_ar, issued_at, issued_by: actor.email, review_id: rv[0].id } }, last_seen_at: issued_at, done_at: issued_at }).select('id').single();
+  if (ins.error || !ins.data) return { ok: false as const, error: 'db' };
+  try { await db.from('portal_learning_events').insert({ user_id: e.user_id || null, email: em, verb: 'issued', object_type: 'iqra_licence', object_id: String(ins.data.id), skills: [], context: { level: 'C2', title_ar: LICENCE_TITLE_AR, issued_at } }); } catch { /* الخريطة اختياريّة */ }
+  try { await pushNotice(db, { email: em, user_id: e.user_id || null, kind: 'iqra_threshold', title_ar: LICENCE_TITLE_AR, body_ar: 'أجازك طاقم أَثَر. نصّ الإجازة في صفحة اقْرَأْ وفي «خريطة أثري».', url: '/iqra', ref_id: String(ins.data.id), dedupe_key: `iqra_licence:${em}` }); } catch { /* لا يعطّل */ }
+  return { ok: true as const, licence: { id: String(ins.data.id), level: 'C2' as IqraLevel, title_ar: LICENCE_TITLE_AR, text_ar, issued_at, issued_by: actor.email } };
 }
 
 /* ---------- النسيان ---------- */

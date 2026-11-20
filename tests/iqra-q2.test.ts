@@ -199,3 +199,43 @@ test('ق٢ د٣ — «المَنزِلة في جيبي»: عامل الخدمة 
   assert.ok(ui.includes("type: 'warm-pages', paths: ['/iqra']") && ui.includes("e.data?.type === 'athar-sync'") && ui.includes("addEventListener('online'"), 'التسخين والمزامنة وعودة الاتصال');
   assert.ok(ui.includes('حُفظت بلا اتصال — تُصحَّح حين يعود الاتصال'), 'صدق الرسالة: التصحيح عند عودة الاتصال');
 });
+
+test('C2 ج٤ — «إجازة أَثَر»: لا عَتَبة بعد المتقن · الإصدار بعد مراجعة المشروع الختاميّ فقط · مرّة واحدة · سطر في التقدّم بلا حلقة + حدث للخريطة + إشعار · البطاقة تعرضها', async () => {
+  const { LICENCE_LESSON_CODE, LICENCE_TITLE_AR, UI_AR } = await import('../lib/iqra/registry');
+  const { licenceOf, licenceQueue, issueLicence } = await import('../lib/iqra/q2');
+  const { buildJourney } = await import('../lib/journey/registry');
+  assert.equal(LICENCE_LESSON_CODE, 'C2-U08-L05'); assert.ok(UI_AR.thr_c2.includes('إجازة أَثَر'));
+  const db = fakeDb({ miaar_syllabus_units: [UNIT('C2-U08')] });
+  const lid = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  db.T.iqra_lessons.push({ id: lid, code: 'C2-U08-L05', unit_code: 'C2-U08', level: 'C2', title_ar: 'الإجازة', status: 'approved', item_ids: [], content: {} });
+  db.T.iqra_enrolments.push({ id: 'e9', learner_email: 'c2@x.sa', user_id: 'u9', level: 'C2', source: 'placement', report_id: null, active: true, created_at: new Date().toISOString() });
+  const e = db.T.iqra_enrolments[0];
+  // أعلى السُّلّم: لا عَتَبة، نصّ الإجازة بدلها، ولا إجازة بعد
+  const v = await thresholdView(db, e); assert.equal(v.reason, 'top_level'); assert.equal(v.copy.c2, UI_AR.thr_c2); assert.equal(v.licence, null);
+  // قبل مراجعة المشروع: لا إصدار · ولا يظهر في الطابور
+  assert.deepEqual((await licenceQueue(db)).rows, []);
+  assert.equal((await issueLicence(db, 'c2@x.sa', STAFF)).error, 'project_not_reviewed');
+  assert.equal((await issueLicence(db, 'nobody@x.sa', STAFF)).error, 'not_enrolled');
+  // مشروع مُراجَع → يظهر في الطابور → الإصدار مرّة واحدة
+  db.T.iqra_produce_reviews.push({ id: 'r1', learner_email: 'c2@x.sa', user_id: 'u9', lesson_id: lid, level: 'C2', kind: 'write', status: 'reviewed', score: 3, reviewed_at: new Date().toISOString(), created_at: new Date().toISOString() });
+  const q1 = await licenceQueue(db); assert.equal(q1.rows.length, 1); assert.equal(q1.rows[0].learner_email, 'c2@x.sa'); assert.equal(q1.lesson?.code, 'C2-U08-L05');
+  const r = await issueLicence(db, 'C2@x.sa ', STAFF); assert.ok(r.ok); if (!r.ok) return;
+  assert.equal(r.licence.title_ar, LICENCE_TITLE_AR); assert.ok(r.licence.text_ar.includes('c2@x.sa') && r.licence.text_ar.includes('كتاب المجلس') && r.licence.text_ar.includes('يبقى لمِعيار'));
+  assert.equal((await issueLicence(db, 'c2@x.sa', STAFF)).error, 'already_issued');
+  const row = db.T.iqra_progress.find((p: any) => p.station === 'licence'); assert.ok(row); assert.equal(row.lesson_id, null); assert.equal(row.library_id, null); assert.equal(row.answers.licence.issued_by, STAFF.email);
+  const lic = await licenceOf(db, 'c2@x.sa'); assert.ok(lic); assert.equal(lic!.id, row.id);
+  const q2 = await licenceQueue(db); assert.equal(q2.rows.length, 0); assert.equal(q2.issued.length, 1);
+  // البطاقة تعرض الإجازة · التقدّم في الحلقات لا يرى السطر (lesson_id فارغ)
+  const v2 = await thresholdView(db, e); assert.equal(v2.licence?.id, row.id);
+  const home = await learnerHome(db, e); assert.ok(home);
+  // الحدث → فصل في «رحلتي/خريطة أثري»
+  const ev = db.T.portal_learning_events.find((x: any) => x.object_type === 'iqra_licence'); assert.ok(ev); assert.equal(ev.verb, 'issued'); assert.equal(ev.email, 'c2@x.sa');
+  const j = buildJourney({ events: [{ at: ev.at || new Date().toISOString(), verb: 'issued', object_type: 'iqra_licence', object_id: String(ev.object_id), skills: [], context: ev.context }], daily: [], sims: [], missions: [], memberships: [], cases: [], attestations: [], levels: [], credentials: [], skills: {} } as any);
+  assert.ok(j.chapters.some((c: any) => c.key === `iqra_licence:${row.id}` && c.kind === 'credential' && c.title_ar === 'إجازة أَثَر'));
+  // الإشعار
+  assert.ok(db.T.portal_learner_notices.some((n: any) => n.dedupe_key === 'iqra_licence:c2@x.sa'));
+  // الواجهتان
+  const ui = read('app/iqra/IqraApp.tsx'); assert.ok(ui.includes('data-testid="iq-licence"') && ui.includes('iq-ijaza-text'));
+  const desk = read('app/admin/miaar/IqraQ2Desk.tsx'); for (const t of ['iqd-lic-tab', 'iqd-lic-row', 'iqd-lic-issue', 'iqd-lic-done']) assert.ok(desk.includes(`data-testid="${t}"`), t);
+  const api = read('app/api/admin/iqra/route.ts'); assert.ok(api.includes("action === 'licence_issue'") && api.includes("searchParams.get('licence')"));
+});
