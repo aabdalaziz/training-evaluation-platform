@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/miaar' },
   openGraph: { title: 'مِعيار — من أَثَر', description: 'حدّد مستواك في العربية في أقل من ساعة — بطاقة مستوى وفق CEFR.', type: 'website' },
 };
-export const dynamic = 'force-dynamic';
+/* م17-ب: غلاف ثابت يُخدَم من حافّة Vercel القريبة من المستخدم (≈60 مللي ثانية بدل رحلة إلى سيدني) — كلّ المحتوى الحيّ يأتي من API داخل المكوّن */
+export const revalidate = 3600;
 
 export default function Page() { return <MiaarApp fontClass={miaarFontClass} />; }

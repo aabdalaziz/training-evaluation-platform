@@ -1,0 +1,5 @@
+م17-ب — خطوات الرفع (دقيقتان)
+1) فكّ ATHAR-M17B-SPEED.zip → ارفع app/ lib/ docs/ إلى https://github.com/aabdalaziz/training-evaluation-platform/upload/main
+   رسالة الالتزام:  M17b: fewer round trips (static shells for /miaar /iqra, ISR trust page, edge-cached public APIs, parallel pool load)
+2) بعد ≈5 دقائق أخبرني «تم» — أعيد قياس /miaar و/miaar/trust قبل/بعد بالأرقام.
+3) لا تغيّر منطقة Vercel ولا Supabase (كلاهما سيدني — متطابقان وهذا صحيح).

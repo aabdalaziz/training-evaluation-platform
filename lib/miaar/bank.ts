@@ -42,7 +42,7 @@ export function optionList(value: unknown, type: ItemType): Option[] | null {
 export type PassageRow = { id: string; level: string; skill: 'reading' | 'listening'; title: string; body: string; audio_public_path: string | null; audio_storage_path: string | null; status: string; meta?: Record<string, unknown> | null };
 /* «سرعة مِعيار» (2026-11-02): البنك المعتمد لا يتغيّر إلا باعتماد بشري — فيُقرأ مرة ويُعاد استعماله 90 ثانية داخل الخادم نفسه
    (كان يُحمَّل كاملًا ≈700 بند مع كل إجابة وكل بدء). الاعتماد/السحب من لوحة البنك يُفرغ الذاكرة فورًا (invalidatePoolCache). */
-const POOL_TTL_MS = 90_000;
+const POOL_TTL_MS = 180_000; /* م17-ب: 3 دقائق — الكتابة تُبطل كاش النسخة نفسها فورًا */
 let PASSAGES_CACHE: { at: number; value: Map<string, PassageRow> } | null = null;
 let POOL_CACHE: { at: number; value: PoolItem[] } | null = null;
 let TASKS_CACHE: { at: number; value: TaskItem[] } | null = null;
@@ -77,17 +77,25 @@ export async function fetchAll(make: () => any, page = 1000, max = 50000): Promi
   }
   return { data: out, error: null };
 }
+/** م17-ب: مفاتيح مجموعة بنود — رُزم 200 معرّف بالتوازي (PostgREST يقبل in(...) بهذا الحجم براحة) */
+export async function keysFor(db: any, ids: string[]): Promise<{ data: Array<{ item_id: string; correct_option_id: string }>; error: any }> {
+  const parts: string[][] = []; for (let i = 0; i < ids.length; i += 200) parts.push(ids.slice(i, i + 200));
+  const rs = await Promise.all(parts.map((part) => db.from('question_bank_answer_keys').select('item_id, correct_option_id').in('item_id', part)));
+  const err = rs.find((r: any) => r.error)?.error || null; return { data: rs.flatMap((r: any) => (r.data || []) as any[]), error: err };
+}
 export async function loadApprovedPool(db: any, passages?: Map<string, PassageRow>): Promise<PoolItem[]> {
   if (POOL_CACHE && fresh(POOL_CACHE.at)) return POOL_CACHE.value;
-  const P = passages || await loadPassages(db);
   const COLS = 'id, item_code, level, skill, passage_id, question_text, options, item_type, stimulus, media_path, media_alt, descriptor_code, cefr_descriptor';
-  let [items, keys] = await Promise.all([
+  /* م17-ب: المقاطع والبنود بالتوازي؛ ثم المفاتيح بمعرّفات البنود المعتمدة فقط (رُزم متوازية) بدل قراءة جدول المفاتيح كلّه (≈9 صفحات متسلسلة مع اقْرَأْ) — النسخة الباردة تجهز في رحلتين لا عشر */
+  let [P, items] = await Promise.all([
+    passages ? Promise.resolve(passages) : loadPassages(db),
     fetchAll(() => db.from('question_bank_items').select(`${COLS}, unit_codes`).eq('status', 'approved').neq('source_kind', 'iqra').order('id')), /* اقْرَأْ: مِران الحلقات لا يدخل الاختبارات */  /* م6-ب: وسوم الوحدات في الرحلة نفسها */
-    fetchAll(() => db.from('question_bank_answer_keys').select('item_id, correct_option_id').order('item_id')),
   ]);
   /* قبل هجرة م6-ب (العمود غائب) تعاد القراءة بلا العمود — حتى لا يتوقّف البنك كلّه على عمود اختياري */
   if (items.error) items = await fetchAll(() => db.from('question_bank_items').select(COLS).eq('status', 'approved').neq('source_kind', 'iqra').order('id'));
-  if (items.error || keys.error) throw new Error('approved_pool_unavailable');
+  if (items.error) throw new Error('approved_pool_unavailable');
+  const keys = await keysFor(db, ((items.data || []) as any[]).map((r) => r.id));
+  if (keys.error) throw new Error('approved_pool_unavailable');
   const keyOf = new Map<string, string>(((keys.data || []) as any[]).map((r) => [r.item_id, r.correct_option_id]));
   const seen = new Set<string>(); const pool: PoolItem[] = [];
   for (const row of (items.data || []) as any[]) {

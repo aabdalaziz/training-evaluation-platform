@@ -81,8 +81,8 @@ async function pulse(db: any) {  /* eslint-disable-line @typescript-eslint/no-ex
 export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('server_not_configured', 500);
   const u = new URL(req.url);
-  if (u.searchParams.get('trust')) return NextResponse.json(await trustSummary(db).catch(() => ({ levels: [], sessions: 0, computed_at: null })), { headers: { 'Cache-Control': 'public, max-age=300' } });   /* م3: «سجلّ الصدق» — أضواء المستويات فقط */
-  if (u.searchParams.get('pulse')) return NextResponse.json(await pulse(db).catch(() => ({ ok: true, now: null, today: null, week: null, month: null, recent: [] })), { headers: { 'Cache-Control': 'public, max-age=60' } });
+  if (u.searchParams.get('trust')) return NextResponse.json(await trustSummary(db).catch(() => ({ levels: [], sessions: 0, computed_at: null })), { headers: { 'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=3600' } });   /* م17-ب: s-maxage → من حافّة Vercel القريبة لا من سيدني */ /* م3: «سجلّ الصدق» — أضواء المستويات فقط */
+  if (u.searchParams.get('pulse')) return NextResponse.json(await pulse(db).catch(() => ({ ok: true, now: null, today: null, week: null, month: null, recent: [] })), { headers: { 'Cache-Control': 'public, max-age=60, s-maxage=60, stale-while-revalidate=600' } });
   if (u.searchParams.get('probe')) {
     /* م2-ب: بنود متجدّدة من البنك المعتمد في كل زيارة (بذرة عشوائية) مع استبعاد ما رآه الزائر مؤخرًا (?seen=رمز,رمز) — والبنود الثابتة احتياط */
     const seen = String(u.searchParams.get('seen') || '').split(',').map((c) => c.trim()).filter(Boolean).slice(0, 30);

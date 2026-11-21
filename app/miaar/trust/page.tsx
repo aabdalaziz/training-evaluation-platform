@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   description: 'موثوقية اختبار مِعيار لكل مستوى من A1 إلى C2: معامل الثبات وخطأ القياس وثبات قرار الاجتياز — أرقام مجمّعة علنية بلا أسماء.',
   alternates: { canonical: '/miaar/trust' },
 };
-export const dynamic = 'force-dynamic';
+/* م17-ب: أرقام مجمّعة تتغيّر مع الوزن فقط → تُصيَّر وتُخزَّن على الحافّة وتتجدّد كلّ 5 دقائق */
+export const revalidate = 300;
 
 const LIGHT_COLOR: Record<string, string> = { green: '#0b8a83', yellow: '#c9a24b', red: '#b42318', gray: '#94a3b8' };
 const LIGHT_LABEL: Record<string, string> = { green: 'معتمد', yellow: 'مقبول', red: 'يحتاج مراجعة', gray: 'قيد المعايرة' };
@@ -22,7 +23,7 @@ const ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 export default async function Page() {
   const U = process.env.NEXT_PUBLIC_SUPABASE_URL; const S = process.env.SUPABASE_SERVICE_ROLE_KEY;
   let data: Awaited<ReturnType<typeof trustSummary>> | null = null;
-  if (U && S) { try { data = await trustSummary(createClient(U, S, { auth: { persistSession: false }, global: { fetch: (i: any, o: any) => fetch(i, { ...(o || {}), cache: 'no-store' }) } })); } catch { data = null; } }
+  if (U && S) { try { data = await trustSummary(createClient(U, S, { auth: { persistSession: false }, global: { fetch: (i: any, o: any) => fetch(i, { ...(o || {}), next: { revalidate: 300 } }) } /* م17-ب: يتبع تجديد الصفحة (5 د) لا no-store */ })); } catch { data = null; } }
   const byLevel = new Map((data?.levels || []).map((l) => [l.level, l]));
   const rows = ORDER.map((L) => byLevel.get(L) || { level: L, n: 0, k: 0, rel: 0, sem: 0, decision: 0, light: 'gray', light_ar: 'قيد المعايرة', method: null });
   const when = data?.computed_at ? new Date(data.computed_at).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
