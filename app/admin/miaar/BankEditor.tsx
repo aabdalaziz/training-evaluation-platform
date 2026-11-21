@@ -91,6 +91,7 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false, 
   const savePassage = async () => { if (!pEdit) return; const j = await post({ action: 'passage_update', id: pEdit.id, title: pEdit.title, body: pEdit.body, status: pEdit.status, audio_public_path: pEdit.audio_public_path || '' }); if (j) { setPEdit(null); await loadPassages(); onChanged(); } };
   const createPassage = async () => { const j = await post({ action: 'passage_create', ...newP }); if (j) { setCreating(false); setNewP({ id: '', level: 'A1', skill: 'reading', title: '', body: '' }); await loadPassages(); } };
   const m2a = byBatch['athar-m2a'] || {}; const legacy = byBatch['miaar-legacy'] || {}; const m4a = byBatch['athar-m4a'] || {};
+  const pending = Object.entries(byBatch).filter(([k, c]) => !['athar-m2a', 'athar-m4a', 'miaar-legacy'].includes(k) && !k.startsWith('iqra') && Number((c as any)?.in_review || 0) > 0).sort((a, b) => a[0].localeCompare(b[0])) as Array<[string, Record<string, number>]>;
 
   return <section className="am-card bk" data-testid="bank-editor">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -109,6 +110,11 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false, 
         <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'archived')}>أرشفة التأسيسية</button>
         <button type="button" className="bk-soft" disabled={!!busy} onClick={() => batchAct('miaar-legacy', 'approved')}>إعادة اعتماد التأسيسية</button>
       </div>
+      {/* م15.2: دفعات التوسعة قيد المراجعة — زرّ اعتماد لكلّ دفعة فيها بنود in_review (المدير المستورِد يُسأل عن سبب الاعتماد الذاتي) */}
+      {pending.length > 0 && <div className="bk-row" data-testid="bank-batch-pending">
+        <span>قيد المراجعة:</span>
+        {pending.map(([k, c]) => <button key={k} type="button" className="mm-hbtn" disabled={!!busy} onClick={() => batchAct(k, 'approved')} data-testid={`bank-approve-${k}`}>اعتماد {BATCH_AR[k] || k} <small>({c.in_review}{batchLevel ? ` · ${BANK_LEVEL_AR[batchLevel as keyof typeof BANK_LEVEL_AR] || batchLevel}` : ''})</small></button>)}
+      </div>}
       <p className="mm-note">الترتيب المقترح: راجع الجديد مستوىً مستوى ← «اعتماد الجديد» ← حين تكتفي بالجديد «أرشفة التأسيسية» (الدفعة التأسيسية ملك أَثَر الكامل ولا صلة لها بأي مشروع خارجي). الاختبار الحيّ يسحب من المعتمد فقط، فلا يتوقّف في أي لحظة.</p>
     </div>
 
