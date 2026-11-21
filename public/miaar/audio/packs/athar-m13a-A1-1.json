@@ -1,0 +1,1271 @@
+{
+ "version": "miaar-pack-1",
+ "source": "athar-m13a-A1-1",
+ "content_version": "athar-m13a",
+ "passages": [
+  {
+   "id": "R-A1-M13-01",
+   "level": "A1",
+   "skill": "reading",
+   "title": "أُسْرَتي",
+   "body": "اِسْمي عُمَر. أَنا مِنَ الأُرْدُنّ، وَأَسْكُنُ في عَمّان. أَبي طَبيبٌ، وَأُمّي مُعَلِّمَة. عِنْدي أَخٌ واحِدٌ اسْمُهُ سامي، وَأُخْتانِ: لَيْلى وَهُدى. سامي طالِبٌ في الجامِعَة، وَلَيْلى في المَدْرَسَة، وَهُدى صَغيرَة، عُمْرُها ثَلاثُ سَنَوات. نَحْنُ نُحِبُّ البَحْرَ، وَنَذْهَبُ إِلى العَقَبَةِ في الصَّيْف.",
+   "meta": {
+    "replays": 2,
+    "speeds": [
+     0.75,
+     1,
+     1.25
+    ]
+   }
+  },
+  {
+   "id": "R-A1-M13-02",
+   "level": "A1",
+   "skill": "reading",
+   "title": "رِسالَةٌ مِنْ نورَة",
+   "body": "مَرْحَبًا سارَة، كَيْفَ حالُكِ؟\nمَوْعِدُنا غَدًا الخَميسَ في السّاعَةِ الخامِسَةِ مَساءً، في مَقْهى الحَديقَةِ قُرْبَ الجامِعَة.\nأُحْضِري الكِتابَ مَعَكِ مِنْ فَضْلِكِ.\nإِلى اللِّقاء!\nنورَة",
+   "meta": {
+    "replays": 2,
+    "speeds": [
+     0.75,
+     1,
+     1.25
+    ]
+   }
+  },
+  {
+   "id": "R-A1-M13-03",
+   "level": "A1",
+   "skill": "reading",
+   "title": "مَواعيدُ الحافِلات",
+   "body": "مَحَطَّةُ الحافِلات — خَطُّ ٥ (إِلى المَطار)\nالحافِلَةُ الأولى: ٦:٣٠ صَباحًا\nالحافِلَةُ الأَخيرَة: ١١:٠٠ مَساءً\nحافِلَةٌ كُلَّ ٢٠ دَقيقَة\nالتَّذْكِرَة: ٨ رِيالات\nالأَطْفالُ تَحْتَ ٦ سَنَوات: مَجّانًا",
+   "meta": {
+    "replays": 2,
+    "speeds": [
+     0.75,
+     1,
+     1.25
+    ]
+   }
+  },
+  {
+   "id": "L-A1-M13-01",
+   "level": "A1",
+   "skill": "listening",
+   "title": "أَنا مَرْيَم",
+   "body": "مَرْحَبًا، اِسْمي مَرْيَم. أَنا مِنْ ماليزْيا، وَأَسْكُنُ الآنَ في جَدَّةَ مَعَ زَوْجي وَابْنَتي. زَوْجي مُهَنْدِس، وَابْنَتي في المَدْرَسَة. أَنا طالِبَة، أَدْرُسُ العَرَبِيَّةَ في المَعْهَدِ كُلَّ صَباح.",
+   "meta": {
+    "replays": 2,
+    "speeds": [
+     0.75,
+     1,
+     1.25
+    ],
+    "twice": true
+   },
+   "audio_public_path": "/miaar/audio/L-A1-M13-01.mp3"
+  },
+  {
+   "id": "L-A1-M13-02",
+   "level": "A1",
+   "skill": "listening",
+   "title": "في الفُنْدُق",
+   "body": "— مَساءَ الخَيْر، أَهْلًا بِكِ في فُنْدُقِ النَّخيل.\n— مَساءَ النّور. عِنْدي حَجْز، اِسْمي لَيْلى أَحْمَد.\n— جَوازَ السَّفَرِ مِنْ فَضْلِكِ. كَمْ لَيْلَةً تَبْقَيْن؟\n— ثَلاثَ لَيالٍ.\n— هَلْ تُريدينَ الفُطورَ في الغُرْفَة؟\n— لا، شُكْرًا. في المَطْعَم.\n— غُرْفَتُكِ رَقْمُ مِئَتَيْنِ وَأَرْبَعَةَ عَشَر، في الدَّوْرِ الثّاني. هٰذا المِفْتاح.",
+   "meta": {
+    "replays": 2,
+    "speeds": [
+     0.75,
+     1,
+     1.25
+    ],
+    "twice": true
+   },
+   "audio_public_path": "/miaar/audio/L-A1-M13-02.mp3"
+  },
+  {
+   "id": "L-A1-M13-03",
+   "level": "A1",
+   "skill": "listening",
+   "title": "أَيْنَ الصَّيْدَلِيَّة؟",
+   "body": "— عَفْوًا، أَيْنَ الصَّيْدَلِيَّة؟\n— اِمْشِ إِلى الأَمام، ثُمَّ اِتَّجِهْ إِلى اليَسارِ عِنْدَ البَنْك. الصَّيْدَلِيَّةُ بِجانِبِ المَسْجِد.\n— هَلْ هِيَ بَعيدَة؟\n— لا، خَمْسُ دَقائِقَ فَقَط.",
+   "meta": {
+    "replays": 2,
+    "speeds": [
+     0.75,
+     1,
+     1.25
+    ],
+    "twice": true
+   },
+   "audio_public_path": "/miaar/audio/L-A1-M13-03.mp3"
+  },
+  {
+   "id": "L-A1-M13-04",
+   "level": "A1",
+   "skill": "listening",
+   "title": "إِعْلانٌ في المَطار",
+   "body": "اِنْتِباه، مِنْ فَضْلِكُم. الرِّحْلَةُ رَقْمُ ثَلاثِمِئَةٍ وَخَمْسَةٍ وَأَرْبَعينَ إِلى الرِّياضِ تُغادِرُ في السّاعَةِ الرّابِعَةِ وَالنِّصْف، مِنَ البَوّابَةِ رَقْمِ اثْنَيْ عَشَر. الرَّجاءُ التَّوَجُّهُ إِلى البَوّابَةِ الآن. شُكْرًا.",
+   "meta": {
+    "replays": 2,
+    "speeds": [
+     0.75,
+     1,
+     1.25
+    ],
+    "twice": true
+   },
+   "audio_public_path": "/miaar/audio/L-A1-M13-04.mp3"
+  }
+ ],
+ "items": [
+  {
+   "item_code": "AR-LU-A1-M13-001",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "picture_label",
+   "question_text": "مَنْ في الصّورَة؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "عائِلَة"
+    },
+    {
+     "id": "b",
+     "text": "مُعَلِّم"
+    },
+    {
+     "id": "c",
+     "text": "طَبيبَة"
+    },
+    {
+     "id": "d",
+     "text": "طالِب"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "LU-A1-01",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "الصورة لأب وأمّ وأطفال",
+    "b": "شخص واحد بمهنة",
+    "c": "شخص واحد بمهنة",
+    "d": "شخص واحد"
+   },
+   "media_path": "/miaar/img/family.svg",
+   "media_alt": "أب وأمّ وطفلان"
+  },
+  {
+   "item_code": "AR-LU-A1-M13-002",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "mcq",
+   "question_text": "أَبو أَبي هُوَ ___.",
+   "options": [
+    {
+     "id": "a",
+     "text": "عَمّي"
+    },
+    {
+     "id": "b",
+     "text": "خالي"
+    },
+    {
+     "id": "c",
+     "text": "جَدّي"
+    },
+    {
+     "id": "d",
+     "text": "أَخي"
+    }
+   ],
+   "correct": "c",
+   "descriptor_code": "LU-A1-01",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "أخو الأب",
+    "b": "أخو الأمّ",
+    "c": "أبو الأب هو الجدّ",
+    "d": "ابن الأب"
+   }
+  },
+  {
+   "item_code": "AR-LU-A1-M13-003",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "mcq",
+   "question_text": "الكِتابُ ___ الحَقيبَة.",
+   "options": [
+    {
+     "id": "a",
+     "text": "إِلى"
+    },
+    {
+     "id": "b",
+     "text": "في"
+    },
+    {
+     "id": "c",
+     "text": "مِنْ"
+    },
+    {
+     "id": "d",
+     "text": "عَنْ"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "LU-A1-02",
+   "unit_codes": [
+    "A1-U04"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "اتجاه لا مكان",
+    "b": "الظرفية داخل الحقيبة",
+    "c": "ابتداء الغاية",
+    "d": "لا تناسب المكان"
+   }
+  },
+  {
+   "item_code": "AR-LU-A1-M13-004",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "mcq",
+   "question_text": "أَنا ___ السُّعودِيَّة، وَأَسْكُنُ ___ الدَّمّام.",
+   "options": [
+    {
+     "id": "a",
+     "text": "مِنْ / في"
+    },
+    {
+     "id": "b",
+     "text": "في / مِنْ"
+    },
+    {
+     "id": "c",
+     "text": "إِلى / عَلى"
+    },
+    {
+     "id": "d",
+     "text": "عَلى / إِلى"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "LU-A1-02",
+   "unit_codes": [
+    "A1-U04"
+   ],
+   "domain": "personal",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "الأصل بـ«من» والسكن بـ«في»",
+    "b": "معكوسان",
+    "c": "لا يناسبان الأصل والسكن",
+    "d": "لا يناسبان"
+   }
+  },
+  {
+   "item_code": "AR-LU-A1-M13-005",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "mcq",
+   "question_text": "هٰذا ___ جَديد.",
+   "options": [
+    {
+     "id": "a",
+     "text": "سَيّارَة"
+    },
+    {
+     "id": "b",
+     "text": "مَدْرَسَة"
+    },
+    {
+     "id": "c",
+     "text": "قَلَم"
+    },
+    {
+     "id": "d",
+     "text": "حَقيبَة"
+    }
+   ],
+   "correct": "c",
+   "descriptor_code": "LU-A1-03",
+   "unit_codes": [
+    "A1-U02"
+   ],
+   "domain": "personal",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "مؤنّث مع «هذا» و«جديد»",
+    "b": "مؤنّث",
+    "c": "مذكّر يطابق الإشارة والصفة",
+    "d": "مؤنّث"
+   }
+  },
+  {
+   "item_code": "AR-LU-A1-M13-006",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "picture_label",
+   "question_text": "مَنْ هٰذِهِ المَرْأَة؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "طَبيب"
+    },
+    {
+     "id": "b",
+     "text": "طَبيبَة"
+    },
+    {
+     "id": "c",
+     "text": "مُمَرِّض"
+    },
+    {
+     "id": "d",
+     "text": "مُهَنْدِس"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "LU-A1-03",
+   "unit_codes": [
+    "A1-U02"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "مذكّر والصورة لامرأة",
+    "b": "مؤنّث يطابق الصورة والإشارة",
+    "c": "مذكّر ومهنة أخرى",
+    "d": "مذكّر ومهنة أخرى"
+   },
+   "media_path": "/miaar/img/doctor_f.svg",
+   "media_alt": "طبيبة بمعطف أبيض وسمّاعة"
+  },
+  {
+   "item_code": "AR-LU-A1-M13-007",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "mcq",
+   "question_text": "___ هٰذا الرَّجُل؟ — هٰذا أَبي.",
+   "options": [
+    {
+     "id": "a",
+     "text": "ما"
+    },
+    {
+     "id": "b",
+     "text": "أَيْنَ"
+    },
+    {
+     "id": "c",
+     "text": "كَمْ"
+    },
+    {
+     "id": "d",
+     "text": "مَنْ"
+    }
+   ],
+   "correct": "d",
+   "descriptor_code": "LU-A1-04",
+   "unit_codes": [
+    "A1-U03"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "لغير العاقل",
+    "b": "للمكان",
+    "c": "للعدد",
+    "d": "السؤال عن شخص بـ«من»"
+   }
+  },
+  {
+   "item_code": "AR-LU-A1-M13-008",
+   "level": "A1",
+   "skill": "grammar_vocab",
+   "item_type": "mcq",
+   "question_text": "___ عُمْرُ أَخيكَ؟ — عَشْرُ سَنَوات.",
+   "options": [
+    {
+     "id": "a",
+     "text": "كَمْ"
+    },
+    {
+     "id": "b",
+     "text": "مَنْ"
+    },
+    {
+     "id": "c",
+     "text": "أَيْنَ"
+    },
+    {
+     "id": "d",
+     "text": "مَتى"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "LU-A1-04",
+   "unit_codes": [
+    "A1-U03"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "السؤال عن العدد",
+    "b": "للشخص",
+    "c": "للمكان",
+    "d": "للزمان"
+   }
+  },
+  {
+   "item_code": "AR-RD-A1-M13-001",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "mcq",
+   "question_text": "ما مِهْنَةُ أُمِّ عُمَر؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "طَبيبَة"
+    },
+    {
+     "id": "b",
+     "text": "طالِبَة"
+    },
+    {
+     "id": "c",
+     "text": "مُعَلِّمَة"
+    },
+    {
+     "id": "d",
+     "text": "مُمَرِّضَة"
+    }
+   ],
+   "correct": "c",
+   "descriptor_code": "RD-A1-04",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "مهنة الأب",
+    "b": "سامي هو الطالب",
+    "c": "النصّ: «أمّي معلّمة»",
+    "d": "لم تُذكر"
+   },
+   "passage_id": "R-A1-M13-01"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-002",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "mcq",
+   "question_text": "كَمْ أُخْتًا عِنْدَ عُمَر؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "واحِدَة"
+    },
+    {
+     "id": "b",
+     "text": "اثْنَتان"
+    },
+    {
+     "id": "c",
+     "text": "ثَلاث"
+    },
+    {
+     "id": "d",
+     "text": "لَيْسَ عِنْدَهُ أَخَوات"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "RD-A1-04",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "عنده أخ واحد لا أخت",
+    "b": "النصّ: «أختان: ليلى وهدى»",
+    "c": "خلط بعمر هدى",
+    "d": "مخالف للنصّ"
+   },
+   "passage_id": "R-A1-M13-01"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-003",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "true_false_notgiven",
+   "question_text": "هُدى طالِبَةٌ في الجامِعَة.",
+   "options": [
+    {
+     "id": "a",
+     "text": "صَواب"
+    },
+    {
+     "id": "b",
+     "text": "خَطَأ"
+    },
+    {
+     "id": "c",
+     "text": "غَيْرُ مَذْكور"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "RD-A1-04",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "سامي هو طالب الجامعة",
+    "b": "هدى صغيرة عمرها ثلاث سنوات",
+    "c": "مذكور صراحة"
+   },
+   "passage_id": "R-A1-M13-01"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-004",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "mcq",
+   "question_text": "مَتى مَوْعِدُ نورَةَ وَسارَة؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "الخَميس في الخامِسَةِ مَساءً"
+    },
+    {
+     "id": "b",
+     "text": "الخَميس في الخامِسَةِ صَباحًا"
+    },
+    {
+     "id": "c",
+     "text": "الأَرْبِعاء في الخامِسَةِ مَساءً"
+    },
+    {
+     "id": "d",
+     "text": "الخَميس في السّادِسَةِ مَساءً"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "RD-A1-02",
+   "unit_codes": [
+    "A1-U06"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "كما في الرسالة",
+    "b": "مساءً لا صباحًا",
+    "c": "اليوم الخميس",
+    "d": "الساعة الخامسة"
+   },
+   "passage_id": "R-A1-M13-02"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-005",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "true_false_notgiven",
+   "question_text": "المَقْهى بَعيدٌ عَنِ الجامِعَة.",
+   "options": [
+    {
+     "id": "a",
+     "text": "صَواب"
+    },
+    {
+     "id": "b",
+     "text": "خَطَأ"
+    },
+    {
+     "id": "c",
+     "text": "غَيْرُ مَذْكور"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "RD-A1-02",
+   "unit_codes": [
+    "A1-U06"
+   ],
+   "domain": "personal",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "الرسالة تقول قرب الجامعة",
+    "b": "«قرب الجامعة» = ليس بعيدًا",
+    "c": "المكان مذكور"
+   },
+   "passage_id": "R-A1-M13-02"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-006",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "true_false_notgiven",
+   "question_text": "سارَةُ تَدْرُسُ في الجامِعَة.",
+   "options": [
+    {
+     "id": "a",
+     "text": "صَواب"
+    },
+    {
+     "id": "b",
+     "text": "خَطَأ"
+    },
+    {
+     "id": "c",
+     "text": "غَيْرُ مَذْكور"
+    }
+   ],
+   "correct": "c",
+   "descriptor_code": "RD-A1-02",
+   "unit_codes": [
+    "A1-U06"
+   ],
+   "domain": "personal",
+   "difficulty_est": 3,
+   "rationale": {
+    "a": "لم يرد",
+    "b": "لم يرد نفيه",
+    "c": "الرسالة لا تذكر دراسة سارة"
+   },
+   "passage_id": "R-A1-M13-02"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-007",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "mcq",
+   "question_text": "مَتى الحافِلَةُ الأولى؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "١١:٠٠ صَباحًا"
+    },
+    {
+     "id": "b",
+     "text": "٧:٠٠ صَباحًا"
+    },
+    {
+     "id": "c",
+     "text": "٦:٣٠ مَساءً"
+    },
+    {
+     "id": "d",
+     "text": "٦:٣٠ صَباحًا"
+    }
+   ],
+   "correct": "d",
+   "descriptor_code": "RD-A1-03",
+   "unit_codes": [
+    "A1-U08"
+   ],
+   "domain": "public",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "١١:٠٠ مساءً هي الأخيرة",
+    "b": "ليست في الجدول",
+    "c": "صباحًا لا مساءً",
+    "d": "كما في الجدول"
+   },
+   "passage_id": "R-A1-M13-03",
+   "media_path": "/miaar/img/bus.svg",
+   "media_alt": "حافلة صفراء"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-008",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "mcq",
+   "question_text": "كَمْ يَدْفَعُ أَبٌ مَعَ طِفْلٍ عُمْرُهُ أَرْبَعُ سَنَوات؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "٨ رِيالات"
+    },
+    {
+     "id": "b",
+     "text": "١٦ رِيالًا"
+    },
+    {
+     "id": "c",
+     "text": "٤ رِيالات"
+    },
+    {
+     "id": "d",
+     "text": "لا يَدْفَعُ شَيْئًا"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "RD-A1-03",
+   "unit_codes": [
+    "A1-U08"
+   ],
+   "domain": "public",
+   "difficulty_est": 3,
+   "rationale": {
+    "a": "الطفل مجّانًا فيدفع تذكرة واحدة",
+    "b": "الطفل تحت ٦ سنوات مجّانًا",
+    "c": "لا نصف تذكرة في الجدول",
+    "d": "الأب يدفع"
+   },
+   "passage_id": "R-A1-M13-03"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-009",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "true_false_notgiven",
+   "question_text": "تَذْهَبُ الحافِلَةُ إِلى المَطار.",
+   "options": [
+    {
+     "id": "a",
+     "text": "صَواب"
+    },
+    {
+     "id": "b",
+     "text": "خَطَأ"
+    },
+    {
+     "id": "c",
+     "text": "غَيْرُ مَذْكور"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "RD-A1-03",
+   "unit_codes": [
+    "A1-U08"
+   ],
+   "domain": "public",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "العنوان: خطّ ٥ إلى المطار",
+    "b": "مخالف للعنوان",
+    "c": "مذكور صراحة"
+   },
+   "passage_id": "R-A1-M13-03"
+  },
+  {
+   "item_code": "AR-RD-A1-M13-010",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "picture_choice",
+   "question_text": "أَيُّ لافِتَةٍ تَعْني: مَمْنوعُ الدُّخول؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "",
+     "image": "/miaar/img/restroom.svg",
+     "alt": "لافتة دورات المياه"
+    },
+    {
+     "id": "b",
+     "text": "",
+     "image": "/miaar/img/noentry.svg",
+     "alt": "دائرة حمراء بخطّ أبيض"
+    },
+    {
+     "id": "c",
+     "text": "",
+     "image": "/miaar/img/hospital.svg",
+     "alt": "لافتة مستشفى"
+    },
+    {
+     "id": "d",
+     "text": "",
+     "image": "/miaar/img/airport.svg",
+     "alt": "لافتة مطار"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "RD-A1-01",
+   "unit_codes": [
+    "A1-U05"
+   ],
+   "domain": "public",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "دورات مياه",
+    "b": "إشارة المنع الدولية",
+    "c": "مستشفى",
+    "d": "مطار"
+   }
+  },
+  {
+   "item_code": "AR-RD-A1-M13-011",
+   "level": "A1",
+   "skill": "reading",
+   "item_type": "picture_label",
+   "question_text": "ماذا تَعْني هٰذِهِ الإِشارَةُ في الشّارِع؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "قِفْ"
+    },
+    {
+     "id": "b",
+     "text": "اِذْهَبْ"
+    },
+    {
+     "id": "c",
+     "text": "اِنْتَظِرْ"
+    },
+    {
+     "id": "d",
+     "text": "اُدْخُلْ"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "RD-A1-01",
+   "unit_codes": [
+    "A1-U05"
+   ],
+   "domain": "public",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "إشارة التوقّف الحمراء",
+    "b": "عكس المعنى",
+    "c": "ليست إشارة انتظار",
+    "d": "عكس المعنى"
+   },
+   "media_path": "/miaar/img/stop.svg",
+   "media_alt": "إشارة مرور حمراء ثمانية الأضلاع"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-001",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "mcq",
+   "question_text": "مِنْ أَيْنَ مَرْيَم؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "إِنْدونيسْيا"
+    },
+    {
+     "id": "b",
+     "text": "ماليزْيا"
+    },
+    {
+     "id": "c",
+     "text": "تُرْكِيا"
+    },
+    {
+     "id": "d",
+     "text": "الهِنْد"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "LI-A1-01",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "بلد مجاور",
+    "b": "كما قالت",
+    "c": "لم يُذكر",
+    "d": "لم يُذكر"
+   },
+   "passage_id": "L-A1-M13-01"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-002",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "mcq",
+   "question_text": "مَعَ مَنْ تَسْكُنُ مَرْيَم؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "مَعَ أُمِّها"
+    },
+    {
+     "id": "b",
+     "text": "مَعَ أُخْتِها"
+    },
+    {
+     "id": "c",
+     "text": "مَعَ زَوْجِها وَابْنَتِها"
+    },
+    {
+     "id": "d",
+     "text": "وَحْدَها"
+    }
+   ],
+   "correct": "c",
+   "descriptor_code": "LI-A1-01",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "لم تُذكر",
+    "b": "لم تُذكر",
+    "c": "كما قالت",
+    "d": "مخالف"
+   },
+   "passage_id": "L-A1-M13-01"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-003",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "true_false_notgiven",
+   "question_text": "زَوْجُ مَرْيَمَ طَبيب.",
+   "options": [
+    {
+     "id": "a",
+     "text": "صَواب"
+    },
+    {
+     "id": "b",
+     "text": "خَطَأ"
+    },
+    {
+     "id": "c",
+     "text": "غَيْرُ مَذْكور"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "LI-A1-01",
+   "unit_codes": [
+    "A1-U01"
+   ],
+   "domain": "personal",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "مخالف",
+    "b": "قالت: زوجي مهندس",
+    "c": "مهنة الزوج مذكورة"
+   },
+   "passage_id": "L-A1-M13-01"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-004",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "mcq",
+   "question_text": "ماذا يَطْلُبُ المُوَظَّف؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "جَوازَ السَّفَر"
+    },
+    {
+     "id": "b",
+     "text": "التَّذْكِرَة"
+    },
+    {
+     "id": "c",
+     "text": "المِفْتاح"
+    },
+    {
+     "id": "d",
+     "text": "الحَقيبَة"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "LI-A1-02",
+   "unit_codes": [
+    "A1-U07"
+   ],
+   "domain": "public",
+   "difficulty_est": 1,
+   "rationale": {
+    "a": "قال: جواز السفر من فضلك",
+    "b": "لا تذكرة في الفندق",
+    "c": "المفتاح يعطيه هو",
+    "d": "لم تُذكر"
+   },
+   "passage_id": "L-A1-M13-02"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-005",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "mcq",
+   "question_text": "كَمْ لَيْلَةً تَبْقى لَيْلى؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "لَيْلَتَيْن"
+    },
+    {
+     "id": "b",
+     "text": "ثَلاثَ لَيالٍ"
+    },
+    {
+     "id": "c",
+     "text": "أَرْبَعَ لَيالٍ"
+    },
+    {
+     "id": "d",
+     "text": "لَيْلَةً واحِدَة"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "LI-A1-02",
+   "unit_codes": [
+    "A1-U07"
+   ],
+   "domain": "public",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "خلط بالدور الثاني",
+    "b": "قالت: ثلاث ليالٍ",
+    "c": "خلط برقم الغرفة",
+    "d": "مخالف"
+   },
+   "passage_id": "L-A1-M13-02"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-006",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "true_false_notgiven",
+   "question_text": "غُرْفَةُ لَيْلى في الدَّوْرِ الثّاني.",
+   "options": [
+    {
+     "id": "a",
+     "text": "صَواب"
+    },
+    {
+     "id": "b",
+     "text": "خَطَأ"
+    },
+    {
+     "id": "c",
+     "text": "غَيْرُ مَذْكور"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "LI-A1-02",
+   "unit_codes": [
+    "A1-U07"
+   ],
+   "domain": "public",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "قال الموظّف: في الدور الثاني",
+    "b": "مخالف",
+    "c": "مذكور صراحة"
+   },
+   "passage_id": "L-A1-M13-02"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-007",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "picture_choice",
+   "question_text": "إِلى أَيِّ جِهَةٍ يَتَّجِهُ عِنْدَ البَنْك؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "",
+     "image": "/miaar/img/right.svg",
+     "alt": "سهم إلى اليمين"
+    },
+    {
+     "id": "b",
+     "text": "",
+     "image": "/miaar/img/up.svg",
+     "alt": "سهم إلى أعلى"
+    },
+    {
+     "id": "c",
+     "text": "",
+     "image": "/miaar/img/left.svg",
+     "alt": "سهم إلى اليسار"
+    },
+    {
+     "id": "d",
+     "text": "",
+     "image": "/miaar/img/down.svg",
+     "alt": "سهم إلى أسفل"
+    }
+   ],
+   "correct": "c",
+   "descriptor_code": "LI-A1-03",
+   "unit_codes": [
+    "A1-U04"
+   ],
+   "domain": "public",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "عكس المسموع",
+    "b": "إلى الأمام كان قبل البنك",
+    "c": "قال: اتّجه إلى اليسار عند البنك",
+    "d": "لم يُذكر"
+   },
+   "passage_id": "L-A1-M13-03"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-008",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "mcq",
+   "question_text": "أَيْنَ الصَّيْدَلِيَّة؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "بِجانِبِ البَنْك"
+    },
+    {
+     "id": "b",
+     "text": "أَمامَ المَدْرَسَة"
+    },
+    {
+     "id": "c",
+     "text": "خَلْفَ المُسْتَشْفى"
+    },
+    {
+     "id": "d",
+     "text": "بِجانِبِ المَسْجِد"
+    }
+   ],
+   "correct": "d",
+   "descriptor_code": "LI-A1-03",
+   "unit_codes": [
+    "A1-U04"
+   ],
+   "domain": "public",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "البنك نقطة الانعطاف لا الموقع",
+    "b": "لم تُذكر",
+    "c": "لم يُذكر",
+    "d": "قال: بجانب المسجد"
+   },
+   "passage_id": "L-A1-M13-03"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-009",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "mcq",
+   "question_text": "ما رَقْمُ الرِّحْلَة؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "٣٤٥"
+    },
+    {
+     "id": "b",
+     "text": "٣٥٤"
+    },
+    {
+     "id": "c",
+     "text": "٤٣٥"
+    },
+    {
+     "id": "d",
+     "text": "٥٤٣"
+    }
+   ],
+   "correct": "a",
+   "descriptor_code": "LI-A1-04",
+   "unit_codes": [
+    "A1-U08"
+   ],
+   "domain": "public",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "كما في الإعلان",
+    "b": "ترتيب مختلف",
+    "c": "ترتيب مختلف",
+    "d": "ترتيب مختلف"
+   },
+   "passage_id": "L-A1-M13-04"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-010",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "mcq",
+   "question_text": "مَتى تُغادِرُ الطّائِرَة؟",
+   "options": [
+    {
+     "id": "a",
+     "text": "الرّابِعَة"
+    },
+    {
+     "id": "b",
+     "text": "الرّابِعَة وَالرُّبْع"
+    },
+    {
+     "id": "c",
+     "text": "الخامِسَة"
+    },
+    {
+     "id": "d",
+     "text": "الرّابِعَة وَالنِّصْف"
+    }
+   ],
+   "correct": "d",
+   "descriptor_code": "LI-A1-04",
+   "unit_codes": [
+    "A1-U08"
+   ],
+   "domain": "public",
+   "difficulty_est": 2,
+   "rationale": {
+    "a": "ناقصة النصف",
+    "b": "ربع لا نصف",
+    "c": "ساعة أخرى",
+    "d": "كما في الإعلان"
+   },
+   "passage_id": "L-A1-M13-04"
+  },
+  {
+   "item_code": "AR-LI-A1-M13-011",
+   "level": "A1",
+   "skill": "listening",
+   "item_type": "true_false_notgiven",
+   "question_text": "البَوّابَةُ رَقْمُ واحِدٍ وَعِشْرين.",
+   "options": [
+    {
+     "id": "a",
+     "text": "صَواب"
+    },
+    {
+     "id": "b",
+     "text": "خَطَأ"
+    },
+    {
+     "id": "c",
+     "text": "غَيْرُ مَذْكور"
+    }
+   ],
+   "correct": "b",
+   "descriptor_code": "LI-A1-04",
+   "unit_codes": [
+    "A1-U08"
+   ],
+   "domain": "public",
+   "difficulty_est": 3,
+   "rationale": {
+    "a": "مخالف",
+    "b": "البوّابة رقم اثني عشر",
+    "c": "الرقم مذكور"
+   },
+   "passage_id": "L-A1-M13-04"
+  }
+ ]
+}

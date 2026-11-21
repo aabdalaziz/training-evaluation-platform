@@ -1,0 +1,45 @@
+مِعيار — م13-أ · حزمة المحتوى A1 (ATHAR-MIAAR-M13A-A1)
+================================================================
+التاريخ: 2026-11-22 · الصيغة: miaar-pack-1 · الإصدار: athar-m13a
+
+ما في الحزمة
+------------
+packs/athar-m13a-A1-1.json   30 بندًا (لغة 8 · قراءة 11 · استماع 11) · 7 مقاطع (3 قراءة + 4 استماع)
+packs/athar-m13a-A1-2.json   30 بندًا (لغة 8 · قراءة 11 · استماع 11) · 8 مقاطع (4 قراءة + 4 استماع)
+public/miaar/audio/L-A1-M13-01..08.mp3   صوت المقاطع الاستماعية (edge-tts، سرعة A1 = -25%)
+
+الأنواع: mcq 36 (60%) · صواب/خطأ/غير مذكور 15 · اختيار صورة 4 · تسمية صورة 5
+الواصفات: LU/RD/LI-A1-01..04 — كلّ واصف ≥ 6 بنود عبر الحزمتين (مع الرصيد الحالي)
+الوحدات: A1-U01..A1-U08 · تشكيل كامل · مجالات personal/public · صعوبة مقدَّرة 1–3
+فحص مسبق: المدقّق normalizePack بلا تحذيرات · استيراد تجريبي ضدّ بذرة البنك: 0 مرفوض · 0 تكرار محتمل
+الصور: كلّها من /miaar/img الموجودة سلفًا (لا صور جديدة)
+
+شرط البدء
+----------
+م13-ج (المستورِد) منشور على athar-portal.com وظهر تبويب «استيراد» في /admin/miaar/bank.
+
+الخطوات
+-------
+1) ارفع الصوت إلى المستودع:
+   public/miaar/audio/L-A1-M13-01.mp3 … L-A1-M13-08.mp3  (8 ملفات)
+   https://github.com/aabdalaziz/training-evaluation-platform/upload/main/public/miaar/audio
+   انتظر Vercel: Ready، ثم تأكّد أنّ https://athar-portal.com/miaar/audio/L-A1-M13-01.mp3 يعمل.
+
+2) افتح /admin/miaar/bank ← تبويب «استيراد»:
+   أ) اختر packs/athar-m13a-A1-1.json ← «تشغيل جافّ» ← المتوقَّع: 30 بندًا · 7 مقاطع · 0 مرفوض.
+   ب) «استيراد» ← تظهر الدفعة في سجلّ الدفعات بحالة completed · 30 بندًا in_review.
+   ج) كرّر (أ) و(ب) مع athar-m13a-A1-2.json ← 30 بندًا · 8 مقاطع.
+
+3) المراجعة والاعتماد (حوكمة): البنود كلّها in_review بمصدر imported.
+   يراجعها شخص غير المستورِد من تبويب «المراجعة» ويعتمد بندًا بندًا (أو يرفض/يعدّل).
+   لا نشر تلقائيًّا.
+
+4) التحقّق (SQL في Supabase):
+   select skill, item_type, status, count(*) from question_bank_items
+    where content_version='athar-m13a' and level='A1' group by 1,2,3 order by 1,2,3;
+   -- المتوقَّع بعد الاستيراد: 60 بندًا in_review (grammar_vocab 16 · reading 22 · listening 22)
+   select id, skill from miaar_passages where id like '%-A1-M13-%' order by 1;  -- 15 مقطعًا
+
+5) أرسل لي: لقطة سجلّ الدفعات + ناتج SQL، لأُغلق A1 في BACKLOG وأبدأ A2.
+
+ملاحظة: إعادة استيراد الحزمة نفسها آمنة — المستورِد يتخطّى الرموز الموجودة (skipped_existing).
