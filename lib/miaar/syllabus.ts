@@ -31,7 +31,7 @@ export type Unit = { code: string; level: ExitLevel; idx: number; title_ar: stri
 export type UnitSeed = Omit<Unit, 'status' | 'updated_at' | 'updated_by'>;
 
 const U = (level: ExitLevel, idx: number, title_ar: string, title_en: string, focus_ar: string, domains: string[], descriptor_codes: string[]): UnitSeed => ({ code: `${level}-U${String(idx).padStart(2, '0')}`, level, idx, title_ar, title_en, focus_ar, domains, descriptor_codes });
-/** البذرة: 4 منازل Pre-A1 + 8 وحدات لكل مستوى A1–B2 و6 لـ C1 و8 لـ C2 = 50 — كل واصف من الـ60 (A1–C1) والـ18 (Pre-A1) يظهر في وحدة واحدة على الأقل */
+/** البذرة: 4 منازل Pre-A1 + 8 وحدات لكل مستوى A1–C2 = 52 (C1 صارت ثماني منازل في ج٤ 2026-11-20) — كل واصف من الـ60 (A1–C1) والـ18 (Pre-A1) يظهر في وحدة واحدة على الأقل */
 export const UNIT_SEED: UnitSeed[] = [
   /* Pre-A1 (تمهيدي): الحروف والأصوات وكلماتي الأولى — 4 منازل (اقْرَأْ ت١/ت٢) */
   U('PRE_A1', 1, 'حروفي الأولى: من الألف إلى الكاف', 'My first letters: alif to kaf', 'الحروف ا ب ت ث ن ي ج ح خ د ذ ر ز م ل ك والتاء المربوطة، والحركات الثلاث والمدّ، وأوّل عشرين كلمة مع صورها', ['personal', 'educational'], ['LI-PRE_A1-01', 'LI-PRE_A1-04', 'RD-PRE_A1-01', 'RD-PRE_A1-04', 'LU-PRE_A1-01', 'SP-PRE_A1-03', 'WR-PRE_A1-01']),
@@ -76,6 +76,9 @@ export const UNIT_SEED: UnitSeed[] = [
   U('C1', 4, 'المصطلح الأكاديمي والمهني', 'Academic and professional terminology', 'المصطلحات الأكاديمية والمهنية، والمقالات المتخصّصة، والنقاش المتخصّص', ['educational', 'professional'], ['LU-C1-04', 'RD-C1-02', 'LI-C1-03']),
   U('C1', 5, 'المعاني الضمنية والتلميح', 'Implicit meaning and allusion', 'المعاني الضمنية، والسخرية والتلميح والتحفّظ، في المقروء والمسموع', ['public', 'professional'], ['RD-C1-01', 'RD-C1-03', 'LI-C1-02', 'LI-C1-04']),
   U('C1', 6, 'بنية الحجّة والحديث الممتدّ', 'Argument structure and extended talk', 'تقييم بنية الحجّة وتماسكها، وفهم حديث ممتدّ غير واضح البنية', ['educational', 'public'], ['RD-C1-04', 'LI-C1-01']),
+  /* C1 ج٤ (2026-11-20): منزلتان تحملان واصفات الكتابة والتحدّث الستّة (WR/SP-C1-01..03) التي لم تكن في أيّ منزلة، ووسائط الصوت (CEFR CV 2020: «بعض الاستعمال غير المعياريّ» تعرُّفًا لا إنتاجًا) */
+  U('C1', 7, 'الكتابة الممتدّة: التقرير والمقال والمقترح', 'Extended writing: report, essay, proposal', 'بنية التقرير المهنيّ والمقال الحِجاجيّ والمقترح، وضبط الأسلوب بحسب القارئ، وإبراز النقاط الجوهريّة وإسنادها، وتحرير النفس بالمرور الثلاثة', ['educational', 'professional'], ['WR-C1-01', 'WR-C1-02', 'WR-C1-03', 'LU-C1-01', 'LU-C1-03', 'RD-C1-02']),
+  U('C1', 8, 'الإعلام والسجلّ المُذاع', 'Broadcast media and spoken register', 'النشرة والمقابلة والبودكاست، والفصحى المُذاعة بلمسة غير معياريّة تعرُّفًا لا إنتاجًا، والتنغيم والسخرية والتحفّظ في المسموع، والردّ الفصيح المرن والعرض الشفهيّ الممتدّ بخاتمة', ['public', 'professional'], ['LI-C1-01', 'LI-C1-02', 'LI-C1-04', 'SP-C1-01', 'SP-C1-02', 'SP-C1-03']),
   /* C2 (متقن): التراث والأكاديميا والمناظرة — 8 منازل (اقْرَأْ ج١–ج٤ · 2026-11-20) — الواصفات الـ18 (RD/LI/LU-C2-01..04 · SP/WR-C2-01..03) كلّ منها في منزلتين على الأقلّ */
   U('C2', 1, 'قراءة التراث: من الجاحظ إلى ابن خلدون', 'Reading the classical heritage: al-Jahiz to Ibn Khaldun', 'النصّ التراثيّ النثريّ الطويل ومعجمه وبناؤه، والفرق الأسلوبيّ بين الفصحى التراثيّة والمعاصرة، وإعادة الصياغة المعاصرة بلا خيانة', ['educational', 'public'], ['RD-C2-03', 'RD-C2-01', 'LU-C2-02', 'LI-C2-02', 'WR-C2-01']),
   U('C2', 2, 'طبقات المعنى: الشعر والنثر الفنّيّ', 'Layers of meaning: poetry and artistic prose', 'المعنى الحرفيّ والمجازيّ والمقصد، والأسلوب والصوت والإيقاع، والتورية والكناية والمفارقة: لماذا هذه الكلمة لا تلك', ['educational', 'public'], ['RD-C2-02', 'LU-C2-02', 'LU-C2-03', 'LI-C2-02', 'SP-C2-01', 'WR-C2-02']),

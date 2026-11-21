@@ -22,13 +22,14 @@ const pool = (perCell = 8, tagger?: (level: string, skill: string, i: number) =>
   return out;
 };
 
-test('م6-ب: البذرة — 50 وحدة (4×Pre-A1 + 8×A1–B2 + 6×C1 + 8×C2) · رموز صالحة وفريدة · كل واصف A1–C1 الـ60 في وحدة · عناوين عربية/إنجليزية ومجالات CEFR', () => {
-  assert.equal(UNIT_SEED.length, 50); assert.equal(UNIT_SEED.filter((u) => u.level === 'PRE_A1').length, 4); assert.equal(UNIT_SEED.filter((u) => u.level === 'C2').length, 8); /* اقْرَأْ C2 ج١: ثماني منازل متقن */ /* اقْرَأْ ت١: أربع منازل Pre-A1 */ assert.deepEqual([...UNIT_LEVELS], ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']); /* اقْرَأْ ق1: الخريطة سبعة مستويات؛ بذرة م6-ب تبقى A1–C1 */
+test('م6-ب: البذرة — 52 وحدة (4×Pre-A1 + 8×A1–C2) · رموز صالحة وفريدة · كل واصف A1–C1 الـ60 في وحدة · عناوين عربية/إنجليزية ومجالات CEFR', () => {
+  assert.equal(UNIT_SEED.length, 52); assert.equal(UNIT_SEED.filter((u) => u.level === 'PRE_A1').length, 4); assert.equal(UNIT_SEED.filter((u) => u.level === 'C2').length, 8); /* اقْرَأْ C2 ج١: ثماني منازل متقن */ /* اقْرَأْ ت١: أربع منازل Pre-A1 */ assert.deepEqual([...UNIT_LEVELS], ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']); /* اقْرَأْ ق1: الخريطة سبعة مستويات؛ بذرة م6-ب تبقى A1–C1 */
   const SEED_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const;
-  for (const L of SEED_LEVELS) assert.equal(UNIT_SEED.filter((u) => u.level === L).length, L === 'C1' ? 6 : 8, L);
-  const codes = UNIT_SEED.map((u) => u.code); assert.equal(new Set(codes).size, 50); for (const c of codes) { assert.match(c, UNIT_CODE_RE); assert.ok(isUnitCode(c)); }
+  for (const L of SEED_LEVELS) assert.equal(UNIT_SEED.filter((u) => u.level === L).length, 8, L); /* C1 ج٤: ثماني منازل */
+  const codes = UNIT_SEED.map((u) => u.code); assert.equal(new Set(codes).size, 52); for (const c of codes) { assert.match(c, UNIT_CODE_RE); assert.ok(isUnitCode(c)); }
   assert.equal(unitLevelOf('B2-U07'), 'B2'); assert.equal(unitLevelOf('C2-U01'), 'C2'); assert.equal(unitLevelOf('PRE_A1-U03'), 'PRE_A1'); assert.equal(unitLevelOf('D1-U01'), null); assert.equal(isUnitCode('A1-U1'), false);
-  const descs = new Set(UNIT_SEED.flatMap((u) => u.descriptor_codes)); assert.equal(descs.size, 96); /* 60 (A1–C1) + 18 (Pre-A1) + 18 (C2) */
+  const descs = new Set(UNIT_SEED.flatMap((u) => u.descriptor_codes)); assert.equal(descs.size, 102); /* 60 (A1–C1 RD/LI/LU) + 6 (SP/WR-C1، ج٤) + 18 (Pre-A1) + 18 (C2) */
+  for (const m of ['SP', 'WR']) for (let i = 1; i <= 3; i += 1) assert.ok(descs.has(`${m}-C1-0${i}`), `${m}-C1-0${i}`);
   for (const m of ['LI', 'RD', 'LU']) for (let i = 1; i <= 4; i += 1) assert.ok(descs.has(`${m}-C2-0${i}`), `${m}-C2-0${i}`);
   for (const m of ['SP', 'WR']) for (let i = 1; i <= 3; i += 1) assert.ok(descs.has(`${m}-C2-0${i}`), `${m}-C2-0${i}`);
   for (const d of [...descs].filter((x) => x.includes('-C2-'))) assert.ok(UNIT_SEED.filter((u) => u.level === 'C2' && u.descriptor_codes.includes(d)).length >= 2, `${d} في منزلتين على الأقلّ`);
@@ -37,7 +38,7 @@ test('م6-ب: البذرة — 50 وحدة (4×Pre-A1 + 8×A1–B2 + 6×C1 + 8×
   for (const m of ['LI', 'RD', 'LU']) for (const L of SEED_LEVELS) for (let i = 1; i <= 4; i += 1) assert.ok(descs.has(`${m}-${L}-0${i}`), `${m}-${L}-0${i}`);
   for (const u of UNIT_SEED) { assert.ok(u.title_ar.length >= 4 && u.title_en.length >= 4 && u.focus_ar.length >= 10, u.code); assert.ok(u.domains.length >= 1 && u.domains.every((d) => ['personal', 'public', 'professional', 'educational'].includes(d)), u.code); assert.equal(u.code, `${u.level}-U${String(u.idx).padStart(2, '0')}`); }
   const du = descriptorUnits(units()); assert.deepEqual(du.get('LU-A1-01'), ['A1-U01']); assert.equal(unitIndex(units()).get('C1-U05')?.title_ar, 'المعاني الضمنية والتلميح');
-  assert.equal(SYLLABUS_TITLE.ar, 'خريطة المنهج — وسم وحدات المستوى'); assert.equal(approvedFor(units('draft'), 'A1').length, 0); assert.equal(approvedFor(units(), 'C1').length, 6);
+  assert.equal(SYLLABUS_TITLE.ar, 'خريطة المنهج — وسم وحدات المستوى'); assert.equal(approvedFor(units('draft'), 'A1').length, 0); assert.equal(approvedFor(units(), 'C1').length, 8); /* C1 ج٤ */
 });
 
 test('م6-ب: balancedOrder — البنود التي تغطّي وحدة غير مغطّاة تتقدّم ثم يبقى الترتيب · المجموعة تُحدَّث · بلا وحدات = بلا تغيير', () => {
@@ -171,7 +172,9 @@ test('م6-ب: الهجرة والعقد — SQL (جدول · RLS · عمودان
   assert.equal((sql.match(/^  \('(A1|A2|B1|B2|C1)-U\d{2}', /gm) || []).length, 38); assert.match(sql, /on conflict \(code\) do nothing/); assert.match(sql, /notify pgrst, 'reload schema'/); assert.match(sql, /units_table = 1 · item_col = 1 · invite_col = 1 · seeded = 38/);
   const sqlPre = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20270210_portal_miaar_pre_a1_units.sql'), 'utf8'); /* اقْرَأْ ت١: منازل Pre-A1 في هجرة لاحقة */
   const sqlC2 = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20270215_portal_miaar_c2_units.sql'), 'utf8'); /* اقْرَأْ C2 ج١: منازل متقن */
-  for (const u of UNIT_SEED) assert.ok((u.level === 'PRE_A1' ? sqlPre : u.level === 'C2' ? sqlC2 : sql).includes(`('${u.code}', '${u.level}', ${u.idx}, '${u.title_ar}'`), `بذرة SQL = بذرة الكود: ${u.code}`);
+  const sqlC1 = fs.readFileSync(path.join(ROOT, 'supabase/migrations/20270216_portal_miaar_c1_units_7_8.sql'), 'utf8'); /* اقْرَأْ C1 ج٤: المنزلتان 7 و8 */
+  for (const u of UNIT_SEED) assert.ok((u.level === 'PRE_A1' ? sqlPre : u.level === 'C2' ? sqlC2 : u.level === 'C1' && u.idx >= 7 ? sqlC1 : sql).includes(`('${u.code}', '${u.level}', ${u.idx}, '${u.title_ar}'`), `بذرة SQL = بذرة الكود: ${u.code}`);
+  assert.equal((sqlC1.match(/^  \('C1-U0[78]', /gm) || []).length, 2); assert.match(sqlC1, /on conflict \(code\) do update set/); assert.match(sqlC1, /notify pgrst, 'reload schema'/);
   assert.equal((sqlPre.match(/^  \('PRE_A1-U\d{2}', /gm) || []).length, 4); assert.match(sqlPre, /on conflict \(code\) do update set/); assert.match(sqlPre, /delete from public.miaar_syllabus_units u\s+where u.level = .PRE_A1. and u.code not in/); assert.match(sqlPre, /add constraint miaar_syllabus_units_level_check check \(level in \('PRE_A1','A1','A2','B1','B2','C1','C2'\)\)/);
   const api = fs.readFileSync(path.join(ROOT, 'app/api/admin/miaar/syllabus/route.ts'), 'utf8');
   for (const a of ['unit_save', 'unit_status', 'seed_level', 'tag_items', 'suggest', 'apply_suggestions']) assert.match(api, new RegExp(`action === '${a}'`), a);
