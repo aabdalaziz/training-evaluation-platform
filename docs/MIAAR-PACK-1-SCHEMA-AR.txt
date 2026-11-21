@@ -1,0 +1,40 @@
+صيغة حزمة بنود مِعيار — miaar-pack-1 (م13-ج) · © 2026 د. أحمد محمد عبدالعزيز بدوي
+=====================================================================================
+تُستورد من /admin/miaar ▸ البنك ▸ «استيراد». الفاحص: lib/miaar/pack.ts (normalizePack ثم importPack).
+
+{
+  "version": "miaar-pack-1",                 // ثابت
+  "source": "athar-m13a-A1-1",               // اسم الحزمة (3–60 حرفًا) — يُسجَّل في author_notes.authored_by وفي سجلّ الدفعات
+  "content_version": "athar-m13a",           // الدفعة في البنك: athar-xxx · محجوزة: athar-m2a · athar-m4a · athar-staff · miaar-legacy
+  "passages": [                              // ≤ 200 · الجديد يُنشأ (approved) والموجود لا يُمَسّ
+    { "id": "R-A1-M13-01", "level": "A1", "skill": "reading", "title": "لافتة", "body": "…", "meta": {} },
+    { "id": "L-A1-M13-01", "level": "A1", "skill": "listening", "title": "حوار", "body": "النصّ المسموع", "audio_public_path": "/miaar/audio/L-A1-M13-01.mp3", "meta": { "replays": 2, "speeds": [0.75, 1, 1.25] } }
+  ],
+  "items": [                                 // ≤ 600 · كلّها in_review
+    {
+      "item_code": "AR-LU-A1-M13-001",       // فريد داخل الدفعة؛ الموجود يُتخطّى (لا يُحدَّث)
+      "level": "A1",                         // PRE_A1 | A1 | A2 | B1 | B2 | C1 | C2
+      "skill": "grammar_vocab",              // grammar_vocab | reading | listening
+      "item_type": "mcq",                    // الأنواع الحيّة: mcq (4 خيارات) · true_false_notgiven (3) · picture_choice (2–4، كل خيار image) · picture_label (2–4 + media_path)
+      "question_text": "…",
+      "options": [{ "id": "a", "text": "…" }, { "id": "b", "text": "…" }, { "id": "c", "text": "…" }, { "id": "d", "text": "…" }],   // image/alt اختياريان
+      "correct": "a",
+      "descriptor_code": "LU-A1-01",         // مطلوب؛ RD|LI|LU + المستوى نفسه؛ يجب أن يوجد في miaar_descriptors
+      "unit_codes": ["A1-U01"],              // حتى 4 وحدات من خريطة المنهج، من المستوى نفسه
+      "domain": "personal",                  // personal | public | educational | professional
+      "difficulty_est": 2,                   // 1–5
+      "passage_id": null,                    // مطلوب للاستماع؛ معتاد للقراءة؛ يُتجاهَل للكفاية اللغوية
+      "media_path": null, "media_alt": null, // صورة السؤال (picture_label تحتاجها)
+      "rationale": { "a": "الصواب لأنّ…", "b": "مشتّت: …", "c": "…", "d": "…" }   // مبرّر لكل خيار → author_notes.options
+    }
+  ],
+  "tasks": [                                 // اختياري ≤ 100 · مهام كتابة/تحدّث (تُقدَّر بالسُلّم)
+    { "item_code": "AR-WR-A1-M13-001", "level": "A1", "skill": "writing", "question_text": "…", "task": { "genre": "message", "tips_ar": ["…"], "min_words": 40, "max_words": 60 }, "descriptor_code": "WR-A1-01", "unit_codes": ["A1-U02"] }
+  ]
+}
+
+الرفض (يمنع الاستيراد كلّه): إصدار/دفعة غير صالحة · نوع غير مدعوم (cloze_bank · matching · ordering · word_tap · short_dictation · picture_sequence → م13-ب)
+  · خيارات لا تناسب النوع · مفتاح لا يطابق · واصف ناقص أو من مستوى/مهارة أخرى · وحدة من مستوى آخر · استماع بلا مقطع · رمز أو جذع مكرّر داخل الحزمة · مقطع من مستوى آخر.
+الرفض لبند واحد عند الفحص ضدّ القاعدة (يُسجَّل في import_errors ويمرّ الباقي): واصف غير موجود · مقطع غير موجود (لا في الحزمة ولا في القاعدة).
+تحذيرات غير مانعة: مفتاح واحد > 40% · mcq > 60% · تشكيل ناقص في Pre-A1/A1 أو زائد من B1 · مبرّر ناقص · صورة بلا وصف · مقطع بلا بنود · تكرار محتمل مع بند قائم (يُعلَّم في author_notes.possible_duplicate_of).
+الحوكمة: كل بند in_review · المؤلّف = المستورِد (created_by) · الاعتماد من تبويب «البنود» بيد مراجع آخر · لا يُمَسّ بند أو مقطع قائم.

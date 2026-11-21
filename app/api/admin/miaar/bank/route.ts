@@ -15,6 +15,12 @@
  *   task_update   {id, question_text, task{genre,prompt_en?,tips_ar[],sample_ar?,min_words|min_seconds…}, descriptor_code?, domain?, media_path?, media_alt?, note?}
  *   task_create   {level, skill: writing|speaking, question_text, task, descriptor_code?, domain?, media_path?, media_alt?}
  *   اعتماد المهمة لا يحتاج مفتاحًا (تُقدَّر بالسُلّم لا بمفتاح) — item_status/batch_status يميّزان ذلك.
+ *  م13-ج «المستورِد + إحصاءات البنود + لوحة الإرث»:
+ *   GET ?imports=1 → آخر الدفعات المستورَدة · ?heritage=1 → عدّاد الإرث «رُوجع x/y» بالمستوى · البنود تعود مع stats (من question_bank_item_stats — ميزان م3) · ?flagged=1 → البنود خارج النطاق فقط · ?review_flag=legacy_recheck|kept|upgraded|retired
+ *   pack_validate {pack}                 فحص بنيوي + فحص ضدّ القاعدة (تشغيل جافّ) — لا يكتب شيئًا
+ *   pack_import   {pack, file_name?}     استيراد miaar-pack-1: مقاطع جديدة + بنود in_review + مفاتيح + سجلّ الدفعة (lib/miaar/pack.ts)
+ *   heritage_mark {ids[], outcome: kept|upgraded|retired, note?}   نتيجة مراجعة بنود التأسيسية
+ *   heritage_archive_unreviewed {confirm:'أرشفة'}  (المديرون) أرشفة ما لم يُراجَع — يدويّ وبتأكيد، لا يعمل آليًا
  *  القرار الأكاديمي بيد الطاقم؛ لا يقرّر الذكاء الاصطناعي هنا شيئًا.
  */
 import { NextResponse } from 'next/server';
@@ -24,9 +30,12 @@ import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLev
 import { validateTask } from '../../../../../lib/miaar/rubric';
 import type { ItemType } from '../../../../../lib/miaar/registry';
 import { optionList, MEDIA_BUCKET, itemBatch, invalidatePoolCache } from '../../../../../lib/miaar/bank';
+import { normalizePack, summarize, importPack, recentImports } from '../../../../../lib/miaar/pack';
+import { heritageSummary, markHeritage, archiveUnreviewed, isHeritageOutcome, HERITAGE_OUTCOMES } from '../../../../../lib/miaar/heritage';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
+const ADMINS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'];
 const STATUSES = ['draft', 'in_review', 'approved', 'archived'];
 const DOMAINS = ['personal', 'public', 'educational', 'professional'];
 const NEW_VERSION = 'athar-staff';
@@ -50,6 +59,8 @@ export async function GET(req: Request) {
     const { data } = await db.from('miaar_descriptors').select('code, level, mode, text_ar, text_en, sort').order('sort').limit(500);
     return NextResponse.json({ success: true, descriptors: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
   }
+  if (p.get('imports') === '1') return NextResponse.json({ success: true, imports: await recentImports(db) }, { headers: { 'Cache-Control': 'no-store' } });
+  if (p.get('heritage') === '1') return NextResponse.json({ success: true, heritage: await heritageSummary(db) }, { headers: { 'Cache-Control': 'no-store' } });
   if (p.get('rubric') === '1') {
     const { data } = await db.from('miaar_rubric_bands').select('skill, dimension, dimension_ar, dimension_en, score, text_ar, text_en, sort').order('sort').limit(200);
     return NextResponse.json({ success: true, bands: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
@@ -67,6 +78,12 @@ export async function GET(req: Request) {
   const batch = str(p.get('batch'), 40); if (batch) q = batchFilter(q, batch);
   const text = str(p.get('q'), 80); if (text) q = q.or(`item_code.ilike.%${text.replace(/[%,()]/g, '')}%,question_text.ilike.%${text.replace(/[%,()]/g, '')}%`);
   if (p.get('dupes') === '1') q = q.not('legacy_extra->>duplicate_of', 'is', null);
+  const rf = str(p.get('review_flag'), 20); if (rf === 'legacy_recheck' || (HERITAGE_OUTCOMES as readonly string[]).includes(rf)) q = q.eq('legacy_extra->>review_flag', rf);
+  if (p.get('flagged') === '1') { /* م13-ج: خارج النطاق وفق ميزان م3 (p · rpb · المشتّتات) */
+    const { data: fl } = await db.from('question_bank_item_stats').select('item_code').neq('flags', '[]').limit(1000); const codes = ((fl || []) as any[]).map((r) => r.item_code);
+    if (!codes.length) return NextResponse.json({ success: true, items: [], total: 0, offset: 0, limit, levels: BANK_LEVELS, skills: SKILLS, statuses: STATUSES, domains: DOMAINS }, { headers: { 'Cache-Control': 'no-store' } });
+    q = q.in('item_code', codes.slice(0, 500));
+  }
   q = q.order('level').order('skill').order('item_code').range(offset, offset + limit - 1);
   const { data, error, count } = await q; if (error) return bad(error.message, 500);
   const rows = (data || []) as any[]; const ids = rows.map((r) => r.id);
@@ -75,7 +92,10 @@ export async function GET(req: Request) {
   const pids = [...new Set(rows.map((r) => r.passage_id).filter(Boolean))];
   const pas = pids.length ? await db.from('miaar_passages').select('id, title, skill, status, audio_public_path, audio_storage_path').in('id', pids) : { data: [] };
   const pasOf = new Map<string, any>(((pas.data || []) as any[]).map((x) => [x.id, x]));
-  const items = rows.map((r) => ({ ...r, correct: keyOf.get(r.id) || null, batch: itemBatch(r), passage: r.passage_id ? pasOf.get(r.passage_id) || null : null }));
+  const codesOnPage = rows.map((r) => r.item_code).filter(Boolean);
+  const st = codesOnPage.length ? await db.from('question_bank_item_stats').select('item_code, n, p, rpb, distractors, flags, exposure, computed_at').in('item_code', codesOnPage) : { data: [] };
+  const statOf = new Map<string, any>(((st.data || []) as any[]).map((x) => [x.item_code, { n: x.n || 0, p: x.p == null ? null : Number(x.p), rpb: x.rpb == null ? null : Number(x.rpb), distractors: x.distractors || {}, flags: Array.isArray(x.flags) ? x.flags : [], exposure: x.exposure || 0, computed_at: x.computed_at }]));
+  const items = rows.map((r) => ({ ...r, correct: keyOf.get(r.id) || null, batch: itemBatch(r), passage: r.passage_id ? pasOf.get(r.passage_id) || null : null, stats: statOf.get(r.item_code) || null }));
   return NextResponse.json({ success: true, items, total: count || 0, offset, limit, levels: BANK_LEVELS, skills: SKILLS, statuses: STATUSES, domains: DOMAINS }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -100,6 +120,27 @@ export async function POST(req: Request) {
   const action = String(b.action || ''); const note = str(b.note, 600); const now = new Date().toISOString();
   invalidatePoolCache();  /* «سرعة مِعيار»: أي تعديل في البنك يُفرغ ذاكرة البنك المعتمد فورًا على هذا الخادم (والباقي خلال 90 ث) */
 
+  if (action === 'pack_validate' || action === 'pack_import') {
+    const n = normalizePack(b.pack); if (!n.ok) return NextResponse.json({ success: false, error: 'الحزمة غير صالحة', problems: n.problems.slice(0, 80), warnings: n.warnings.slice(0, 80) }, { status: 400 });
+    const summary = summarize(n.pack, n.warnings.slice(0, 120));
+    try {
+      const report = await importPack(db, n.pack, user, { dryRun: action === 'pack_validate', fileName: str(b.file_name, 120) || null });
+      if (action === 'pack_import') { try { await db.from('audit_logs').insert({ actor_id: user.id, actor_role: user.role, action: 'miaar.bank.import', entity_type: 'miaar_bank', entity_id: report.batch_id, entity_label: `استيراد ${n.pack.source}`, source: 'admin', metadata: { ...report, source: n.pack.source, content_version: n.pack.content_version } }); } catch { /* التدقيق لا يوقف الاستيراد */ } }
+      const note_ar = action === 'pack_validate' ? `صالحة: ${report.items_created} بندًا و${report.tasks_created} مهمة و${report.passages_created} مقطعًا ستدخل قيد المراجعة${report.rejected.length ? ` · سيُرفض ${report.rejected.length}` : ''}${report.skipped_existing.length ? ` · موجود مسبقًا ${report.skipped_existing.length}` : ''}.` : `استُوردت: ${report.items_created} بندًا و${report.tasks_created} مهمة و${report.passages_created} مقطعًا (قيد المراجعة)${report.rejected.length ? ` · رُفض ${report.rejected.length}` : ''}.`;
+      return NextResponse.json({ success: true, summary, report, note_ar });
+    } catch (e: any) { return bad(`تعذّر الاستيراد: ${e?.message || 'خطأ'}`, 500); }
+  }
+  if (action === 'heritage_mark') {
+    const outcome = b.outcome; if (!isHeritageOutcome(outcome)) return bad('نتيجة غير معروفة (kept|upgraded|retired)');
+    const ids = (Array.isArray(b.ids) ? b.ids : [b.id]).map((x) => str(x, 60)).filter(Boolean); if (!ids.length) return bad('لا بنود');
+    const r = await markHeritage(db, ids, outcome, user, note); if (!r.ok) return bad(r.error);
+    return NextResponse.json({ success: true, count: r.count, note_ar: `سُجّلت مراجعة ${r.count} بندًا من التأسيسية.` });
+  }
+  if (action === 'heritage_archive_unreviewed') {
+    if (!ADMINS.includes(user.role)) return bad('أرشفة التأسيسية للمديرين', 403); if (str(b.confirm, 20) !== 'أرشفة') return bad('يلزم تأكيد نصّي: أرشفة');
+    const r = await archiveUnreviewed(db, user, note); if (!r.ok) return bad(r.error);
+    return NextResponse.json({ success: true, count: r.count, note_ar: `أُرشف ${r.count} بندًا لم يُراجَع من التأسيسية.` });
+  }
   if (action === 'item_update') {
     const id = str(b.id, 60); if (!id) return bad('معرّف مفقود');
     const { data: cur } = await db.from('question_bank_items').select('id, item_type, status').eq('id', id).maybeSingle(); if (!cur) return bad('البند غير موجود', 404);

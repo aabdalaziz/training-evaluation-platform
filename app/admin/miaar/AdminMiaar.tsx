@@ -38,7 +38,7 @@ type Tab = 'overview' | 'invites' | 'bank' | 'forms' | 'balance' | 'rating' | 'l
 
 export default function AdminMiaar({ tab }: { tab: Tab }) {
   const router = useRouter(); const db = useMemo(() => supabase(), []);
-  const [ready, setReady] = useState(false); const [rater, setRater] = useState(false); /* م4-ج: دور «المصحّح» — غرفة التصحيح فقط */ const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
+  const [ready, setReady] = useState(false); const [rater, setRater] = useState(false); const [isAdmin, setIsAdmin] = useState(false); /* م13-ج: أرشفة التأسيسية للمديرين */ /* م4-ج: دور «المصحّح» — غرفة التصحيح فقط */ const [tok, setTok] = useState(''); const [data, setData] = useState<any>(null); const [error, setError] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState('');
   const [form, setForm] = useState({ kind: 'group', label_ar: '', lang: 'en', exam_mode: 'adaptive', blueprint_id: '', purpose: '', expires_at: '', max_seats: '', note: '', recipients: '', proctor_mode: '', location: '', org_id: '' }); /* م8-ب: '' = الافتراضي العام · P68-ج: org_id = الجهة (شعارها على البطاقة) */
   const [bps, setBps] = useState<any[]>([]);  /* م2-ب: المخطّطات النشطة للدعوات */
   const [orgs, setOrgs] = useState<{ id: string; name_ar: string; logo: string | null }[]>([]);  /* P68-ج: الجهات وشعاراتها لبطاقة الدعوة */
@@ -51,6 +51,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   useEffect(() => { (async () => {
     const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/miaar'); return; }
     const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).maybeSingle();
+    setIsAdmin(['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'].includes(String((prof as any)?.role || '').toUpperCase()));
     if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) {
       /* م4-ج: من يحمل صلاحية miaar.rate عبر طبقة الأدوار (دور «المصحّح») يدخل غرفة التصحيح وحدها */
       const { data: s0 } = await db.auth.getSession(); const tk0 = s0.session?.access_token || '';
@@ -200,7 +201,7 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
             <p className="mm-note">«ما قبل A1» أرضية مصوّرة تُقدَّم في التكيفي لمن لم يجتز A1. الاختبار يسحب من «معتمد» فقط؛ البنود «للمراجعة» تنتظر قرارك في المحرّر أدناه. عمودا «صوتك وقلمك» (م4-أ): مهام الكتابة والتحدّث — المطلوب 3 معتمدة لكل خلية لتسحب «غرفة الأداء» مهمة عشوائية؛ تعتمدها من تبويب «المهام الإنتاجية» في البنك.</p>
           </>}
         </section>}
-        {tab === 'bank' && <BankEditor auth={() => H()} byBatch={cov?.by_batch || {}} onChanged={() => { void load(); }} />}
+        {tab === 'bank' && <BankEditor auth={() => H()} byBatch={cov?.by_batch || {}} isAdmin={isAdmin} onChanged={() => { void load(); }} />}
         {tab === 'forms' && <FormBuilder auth={() => H()} />}
         {tab === 'balance' && <Balance auth={() => H()} />}
         {tab === 'rating' && <Rating auth={() => H()} />}

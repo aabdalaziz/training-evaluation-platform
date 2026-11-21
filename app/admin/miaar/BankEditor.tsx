@@ -6,14 +6,17 @@
  *  · حالة بند/بنود · «مراجعة الدفعة» (اعتماد athar-m2a كلّها أو مستوىً واحدًا) · «أرشفة التأسيسية» · إنشاء بند
  *  مقاطع: تحرير العنوان/النص/الحالة · رفع MP3 إلى الدلو · إنشاء مقطع · «استوديو مِعيار» (الصوت يُنتَج خارج الخادم ويُرفع هنا)
  *  م4-أ «صوتك وقلمك»: تبويب «المهام الإنتاجية» — مهام الكتابة والتحدّث (تصفية · تحرير النصّ والحدود والإرشادات والإجابة النموذجية · معاينة كما يراها المتقدّم · سُلّم التقدير بجوار المحرّر · اعتماد الدفعة athar-m4a)
+ *  م13-ج: تبويب «استيراد» (BankImport — حزم miaar-pack-1) · تبويب «التأسيسية» (BankHeritage — عدّاد الإرث ونتائج المراجعة) · شارة الميزان (n · p · rpb · ⚑) في جدول البنود + مرشّح «خارج النطاق».
  *  القرار الأكاديمي بيد الطاقم.
  */
 import { useEffect, useState } from 'react';
 import { BANK_LEVEL_AR, skillLabel } from '../../../lib/miaar/registry';
 import { RUBRIC_DIMENSIONS, DIMENSION_AR, WRITING_LIMITS, SPEAKING_LIMITS, validateTask, countWords } from '../../../lib/miaar/rubric';
+import BankImport from './BankImport';
+import BankHeritage, { StatChip } from './BankHeritage';
 
 type Opt = { id: string; text: string; image?: string | null; alt?: string | null };
-type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; task?: any; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
+type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; task?: any; stats?: { n: number; p: number | null; rpb: number | null; flags: string[] } | null; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
 type Passage = { id: string; level: string; skill: string; title: string; body: string; status: string; source: string; version: string | null; audio_public_path: string | null; audio_storage_path: string | null; meta: any };
 type Desc = { code: string; level: string; mode: string; text_ar: string };
 const LEVELS_ALL = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
@@ -21,17 +24,17 @@ const SKILLS_ALL = ['grammar_vocab', 'reading', 'listening'];
 const STATUS_AR: Record<string, string> = { draft: 'مسودّة', in_review: 'قيد المراجعة', approved: 'معتمد', archived: 'مؤرشف' };
 const TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور' };
 const DOMAIN_AR: Record<string, string> = { personal: 'شخصي', public: 'عام', educational: 'تعليمي', professional: 'مهني' };
-const BATCH_AR: Record<string, string> = { 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم', 'athar-m4a': 'صوتك وقلمك (م4-أ)' };
+const BATCH_AR: Record<string, string> = { 'athar-m13a': 'توسعة البنك (م13-أ)', 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم', 'athar-m4a': 'صوتك وقلمك (م4-أ)' };
 type Band = { skill: string; dimension: string; dimension_ar: string; score: number; text_ar: string };
 const GENRE_AR: Record<string, string> = { copy: 'نسخ', form: 'نموذج', self_intro: 'تعريف بالنفس', card: 'بطاقة', message: 'رسالة', diary: 'مذكّرات', description: 'وصف', note: 'ملاحظة', request: 'طلب', article: 'مقال قصير', blog: 'تدوينة', narrative: 'سرد', opinion: 'رأي', formal_email: 'بريد رسمي', essay: 'مقال', report: 'تقرير', summary: 'تلخيص', formal_letter: 'خطاب رسمي', proposal: 'مقترح', review: 'مراجعة', adapt: 'تكييف السجلّ', position_paper: 'ورقة موقف', critique: 'نقد', style: 'أسلوب', greet: 'تحيّة', numbers: 'أعداد', name_picture: 'تسمية صورة', questions: 'أسئلة', answer: 'إجابة', routine: 'روتين', family: 'عائلة', service: 'موقف خدمة', plans: 'خطط', situation: 'موقف', spontaneous: 'ارتجال', interaction: 'تفاعل', presentation: 'عرض', debate: 'نقاش', fluent_talk: 'حديث متدفّق', professional_setting: 'سياق مهني', complex_presentation: 'عرض معقّد', effortless: 'حديث حرّ', nuance: 'فروق دقيقة', repair: 'تدارك' };
 const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f'];
 
-export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => Promise<Record<string, string>>; byBatch: Record<string, Record<string, number>>; onChanged: () => void }) {
-  const [view, setView] = useState<'items' | 'passages' | 'tasks'>('items');
+export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false }: { auth: () => Promise<Record<string, string>>; byBatch: Record<string, Record<string, number>>; onChanged: () => void; isAdmin?: boolean }) {
+  const [view, setView] = useState<'items' | 'passages' | 'tasks' | 'import' | 'heritage'>('items');
   /* م4-أ: المهام الإنتاجية */
   const [tf, setTf] = useState({ level: '', skill: '', status: '', q: '' }); const [tasks, setTasks] = useState<Item[]>([]); const [tTotal, setTTotal] = useState(0);
   const [tEdit, setTEdit] = useState<Item | null>(null); const [tDraft, setTDraft] = useState<any>(null); const [bands, setBands] = useState<Band[]>([]); const [preview, setPreview] = useState(false);
-  const [f, setF] = useState({ level: '', skill: '', status: '', batch: 'athar-m2a', type: '', q: '', dupes: false });
+  const [f, setF] = useState({ level: '', skill: '', status: '', batch: 'athar-m2a', type: '', q: '', dupes: false, flagged: false });
   const [items, setItems] = useState<Item[]>([]); const [total, setTotal] = useState(0); const [offset, setOffset] = useState(0); const LIMIT = 40;
   const [sel, setSel] = useState<Set<string>>(new Set()); const [edit, setEdit] = useState<Item | null>(null); const [draft, setDraft] = useState<any>(null);
   const [descs, setDescs] = useState<Desc[]>([]); const [passages, setPassages] = useState<Passage[]>([]); const [pEdit, setPEdit] = useState<Passage | null>(null);
@@ -41,7 +44,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
   async function api(qs: string) { const j = await fetch(`/api/admin/miaar/bank${qs}`, { headers: await auth(), cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (!j?.success) { setErr(j?.error || 'تعذّر التحميل'); return null; } return j; }
   async function post(body: any) { setBusy(body.action); setErr(''); setMsg(''); try { const j = await fetch('/api/admin/miaar/bank', { method: 'POST', headers: await auth(), body: JSON.stringify(body) }).then((r) => r.json()); if (!j?.success) { setErr(j?.error || 'تعذّر التنفيذ'); return null; } setMsg(j.note_ar || 'تم'); return j; } finally { setBusy(''); } }
   async function load(off = 0) {
-    const qs = new URLSearchParams(); Object.entries(f).forEach(([k, v]) => { if (v && v !== true) qs.set(k, String(v)); }); if (f.dupes) qs.set('dupes', '1'); qs.set('offset', String(off)); qs.set('limit', String(LIMIT));
+    const qs = new URLSearchParams(); Object.entries(f).forEach(([k, v]) => { if (v && v !== true) qs.set(k, String(v)); }); if (f.dupes) qs.set('dupes', '1'); if (f.flagged) qs.set('flagged', '1'); qs.set('offset', String(off)); qs.set('limit', String(LIMIT));
     const j = await api(`?${qs.toString()}`); if (j) { setItems(j.items); setTotal(j.total); setOffset(off); setSel(new Set()); }
   }
   async function loadPassages() { const j = await api('?passages=1'); if (j) setPassages(j.passages); }
@@ -57,7 +60,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
   const taskStatus = (ids: string[], status: string) => post({ action: 'item_status', ids, status, note }).then(async (j) => { if (j) { await loadTasks(); onChanged(); } });
   const bandsFor = (skill: string) => RUBRIC_DIMENSIONS[(skill === 'speaking' ? 'speaking' : 'writing') as 'writing' | 'speaking'].map((dim) => ({ dim, rows: bands.filter((b) => b.skill === skill && b.dimension === dim).sort((a, b) => b.score - a.score) }));
   useEffect(() => { void load(0); if (!descs.length) void api('?descriptors=1').then((j) => j && setDescs(j.descriptors)); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [f.level, f.skill, f.status, f.batch, f.type, f.dupes]);
+  }, [f.level, f.skill, f.status, f.batch, f.type, f.dupes, f.flagged]);
   useEffect(() => { if (view === 'passages' && !passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
   useEffect(() => { if (!edit && !pEdit && !tEdit) return; const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setEdit(null); setPEdit(null); setTEdit(null); } }; window.addEventListener('keydown', onKey); const prev = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; }; }, [edit, pEdit, tEdit]);
@@ -79,7 +82,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
   return <section className="am-card bk" data-testid="bank-editor">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <div className="bk-head"><h3>محرّر البنك <small>البنود والمقاطع · المراجعة بيد الطاقم</small></h3>
-      <div className="bk-tabs" role="tablist"><button type="button" role="tab" aria-selected={view === 'items'} className={view === 'items' ? 'on' : ''} onClick={() => setView('items')}>البنود</button><button type="button" role="tab" aria-selected={view === 'tasks'} className={view === 'tasks' ? 'on' : ''} onClick={() => setView('tasks')} data-testid="bank-tab-tasks">المهام الإنتاجية <small>صوتك وقلمك</small></button><button type="button" role="tab" aria-selected={view === 'passages'} className={view === 'passages' ? 'on' : ''} onClick={() => setView('passages')}>المقاطع والصوت</button></div></div>
+      <div className="bk-tabs" role="tablist"><button type="button" role="tab" aria-selected={view === 'items'} className={view === 'items' ? 'on' : ''} onClick={() => setView('items')}>البنود</button><button type="button" role="tab" aria-selected={view === 'tasks'} className={view === 'tasks' ? 'on' : ''} onClick={() => setView('tasks')} data-testid="bank-tab-tasks">المهام الإنتاجية <small>صوتك وقلمك</small></button><button type="button" role="tab" aria-selected={view === 'passages'} className={view === 'passages' ? 'on' : ''} onClick={() => setView('passages')}>المقاطع والصوت</button><button type="button" role="tab" aria-selected={view === 'import'} className={view === 'import' ? 'on' : ''} onClick={() => setView('import')} data-testid="bank-tab-import">استيراد</button><button type="button" role="tab" aria-selected={view === 'heritage'} className={view === 'heritage' ? 'on' : ''} onClick={() => setView('heritage')} data-testid="bank-tab-heritage">التأسيسية</button></div></div>
     {err && <p className="am-err" role="alert">{err}</p>}{msg && <p className="bk-ok" role="status">{msg}</p>}
 
     <div className="bk-batch" data-testid="bank-batch">
@@ -105,6 +108,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
         <select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} aria-label="النوع"><option value="">كل الأنواع</option>{Object.entries(TYPE_AR).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <input value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') void load(0); }} placeholder="بحث بالرمز أو النص" aria-label="بحث" />
         <label className="bk-chk"><input type="checkbox" checked={f.dupes} onChange={(e) => setF({ ...f, dupes: e.target.checked })} /> المكرّرات فقط</label>
+        <label className="bk-chk" title="بنود خرجت عن نطاق الميزان (p خارج 0.30–0.85 · rpb < 0.20 · مشتّت < 5%) — للعرض والتعليم لا السحب الآلي"><input type="checkbox" checked={f.flagged} onChange={(e) => setF({ ...f, flagged: e.target.checked })} data-testid="bank-flagged" /> خارج النطاق ⚑</label>
         <button type="button" className="bk-soft" onClick={() => void load(0)}>بحث</button>
         <button type="button" className="bk-primary" onClick={startNew} data-testid="bank-new"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none"/></svg>إضافة بند جديد</button>
       </div>
@@ -115,7 +119,7 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
         {items.map((it) => <tr key={it.id} className={it.legacy_extra?.duplicate_of ? 'dup' : ''}><td><input type="checkbox" aria-label={it.item_code} checked={sel.has(it.id)} onChange={(e) => setSel((s) => { const c = new Set(s); e.target.checked ? c.add(it.id) : c.delete(it.id); return c; })} /></td>
           <td><code>{it.item_code}</code><br /><small>{BATCH_AR[it.batch] || it.batch}</small></td><td>{BANK_LEVEL_AR[it.level as keyof typeof BANK_LEVEL_AR] || it.level}</td><td>{skillLabel(it.skill)}</td><td>{TYPE_AR[it.item_type] || it.item_type}</td>
           <td className="bk-stem">{it.media_path && <img src={it.media_path} alt={it.media_alt || ''} />}{it.question_text.slice(0, 90)}{it.passage && <small>📄 {it.passage.title}</small>}{it.legacy_extra?.duplicate_of && <small className="bk-dup">مكرّر مع {it.legacy_extra.duplicate_of}</small>}</td>
-          <td><small>{it.descriptor_code || '—'}</small>{Array.isArray((it as any).unit_codes) && (it as any).unit_codes.length > 0 && <div className="bk-units" data-testid="bk-units" title="وحدات خريطة المنهج — تُعدَّل من تبويب «خريطة المنهج»">{(it as any).unit_codes.map((c: string) => <span key={c} className="bk-unit">{c}</span>)}</div>}</td><td><span className={`bk-st ${it.status}`}>{STATUS_AR[it.status] || it.status}</span></td>
+          <td><small>{it.descriptor_code || '—'}</small>{Array.isArray((it as any).unit_codes) && (it as any).unit_codes.length > 0 && <div className="bk-units" data-testid="bk-units" title="وحدات خريطة المنهج — تُعدَّل من تبويب «خريطة المنهج»">{(it as any).unit_codes.map((c: string) => <span key={c} className="bk-unit">{c}</span>)}</div>}<div><StatChip stats={it.stats || null} /></div></td><td><span className={`bk-st ${it.status}`}>{STATUS_AR[it.status] || it.status}</span></td>
           <td className="bk-acts"><button type="button" className="bk-act" onClick={() => setEdit(it)} data-testid="bank-edit">تعديل</button>
             {it.status === 'in_review' ? <button type="button" className="bk-act ok" disabled={!!busy} onClick={() => void setStatus([it.id], 'approved')} data-testid="bank-row-approve">اعتماد</button>
               : it.status === 'approved' ? <button type="button" className="bk-act" disabled={!!busy} onClick={() => void setStatus([it.id], 'in_review')} data-testid="bank-row-review">إعادة للمراجعة</button>
@@ -158,6 +162,9 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
         </div>
       </div></div>}
     </>}
+
+    {view === 'import' && <BankImport auth={auth} onChanged={() => { onChanged(); void load(0); }} />}
+    {view === 'heritage' && <BankHeritage auth={auth} isAdmin={isAdmin} onChanged={onChanged} onEdit={(it) => setEdit(it as unknown as Item)} />}
 
     {view === 'tasks' && <>
       <div className="bk-studio bk-prodintro"><b>صوتك وقلمك</b><p>مهام الكتابة والتحدّث تُقدَّر بـ«سُلّم التقدير» (أربعة أبعاد × 0–5) لا بمفتاح. كل مهمة تحمل حدودها وإرشاداتها وإجابة نموذجية لا تغادر الخادم. القاعدة: الآلة تقترح درجة، والإنسان يعتمدها (م4-ج). لا مهمة تصل إلى متقدّم قبل اعتمادك.</p>
@@ -255,6 +262,9 @@ export default function BankEditor({ auth, byBatch, onChanged }: { auth: () => P
   </section>;
 }
 const CSS = `
+.bk-stat{display:inline-block;margin-top:3px;font-size:11.5px;color:#334155;background:#f1f5f9;border-radius:6px;padding:1px 6px;font-variant-numeric:tabular-nums}.bk-stat.none{background:transparent;color:#94a3b8}.bk-stat.low{color:#64748b}.bk-stat.flag{background:#fef3c7;color:#92400e;font-weight:800}
+.bk-imp-text{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:8px 10px;font:inherit;font-size:12.5px;direction:ltr;text-align:left;margin:8px 0}.bk-imp-res{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin:8px 0;display:grid;gap:6px}.bk-imp-grid{display:grid;gap:4px;font-size:13px}.bk-imp-warn{margin:4px 0;padding-inline-start:18px;font-size:12.5px;color:#92400e}.bk-imp-note{margin:4px 0;padding-inline-start:18px;font-size:12.5px;color:#334155}.bk-imp-details summary{cursor:pointer;font-size:13px;font-weight:800}.bk-imp-h{margin:14px 0 6px}
+.bk-her-sum{display:grid;grid-template-columns:minmax(220px,1fr) 2fr;gap:14px;align-items:start;margin:10px 0}@media(max-width:760px){.bk-her-sum{grid-template-columns:1fr}}.bk-her-counter{border:1px solid #e2e8f0;border-radius:12px;padding:12px;display:grid;gap:6px}.bk-her-counter b{font-size:18px}.bk-her-bar{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}.bk-her-bar span{display:block;height:100%;background:#0f5c57}.bk-her-t td,.bk-her-t th{font-size:13px}.bk-her-t tr.on td{background:#ecfdf5}.bk-her-danger{border:1px solid #fecaca;background:#fff7f7;border-radius:12px;padding:12px;margin-top:14px;display:grid;gap:6px}
 .bk-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.bk-tabs{display:flex;gap:6px}.bk-tabs button{border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:6px 14px;font-weight:800;cursor:pointer;min-height:36px}.bk-tabs button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}
 .bk-ok{color:#0f5c57;font-weight:800;margin:6px 0}.bk-batch{border:1px solid #ead9a6;background:#fbf5e4;border-radius:14px;padding:12px 14px;margin:10px 0;display:grid;gap:8px}.bk-batch>div:first-child{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
 .bk-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.bk-row input{flex:1;min-width:180px}.bk-soft{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:7px 12px;font-weight:800;cursor:pointer;min-height:36px}.bk-soft:disabled{opacity:.5;cursor:not-allowed}.bk-acts{white-space:nowrap}.bk-act{border:1px solid #e2e8f0;background:#fff;color:var(--navy);border-radius:999px;padding:5px 11px;font-weight:800;font-size:12.5px;cursor:pointer;min-height:30px;margin-inline-end:4px;transition:background-color .15s,border-color .15s}.bk-act:hover{background:#f1f5f9;border-color:#cbd5e1}.bk-act:active{background:#e2e8f0}.bk-act:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px var(--teal)}.bk-act.ok{color:#047857;border-color:#a7f3d0}.bk-act.ok:hover{background:#ecfdf5}.bk-act.warn{color:#a16207;border-color:#fde68a}.bk-act.warn:hover{background:#fffbeb}.bk-act.danger{color:#b91c1c;border-color:#fecaca}.bk-act.danger:hover{background:#fef2f2}.bk-act:disabled{opacity:.45;cursor:not-allowed}
