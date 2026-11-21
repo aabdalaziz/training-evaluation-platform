@@ -8,6 +8,7 @@
  *  inviteReport(db, inviteId): «الميزان في الدعوة» — كيف أدّى الاختبار على مجموعة واحدة (مجمّع، بلا أسماء).
  *  الاقتراحات (نقل بند لمستوى آخر) تبقى اقتراحات حتى يعتمدها المعدّ: acceptMove/dismissSuggestion/setAnchor.
  */
+import { fetchAll } from './bank';
 import { itemStats, formReliability, rasch, bandMap, suggestLevel, MIN_N_CALIB, MIN_N_ITEM, FLAG_AR, FLAG_SEVERITY, LIGHT_AR, type Response, type ItemStat, type FormReliability, type Light } from './psychometrics';
 import { planFromSession } from './blueprint';
 import { PASS_PERCENT } from './registry';
@@ -28,8 +29,8 @@ export async function collect(db: any, opts: { maxSessions?: number; inviteId?: 
   const answers: { session_id: string; question_id: string; selected_option_id: string; submitted_at: string }[] = [];
   for (const part of chunk(ids, 150)) { const { data } = await db.from('placement_secure_answers').select('session_id, question_id, selected_option_id, submitted_at').in('session_id', part).limit(20000); for (const a of (data || []) as any[]) answers.push(a); }
   const [items, keys] = await Promise.all([
-    db.from('question_bank_items').select('id, item_code, level, skill, status, options, is_anchor, content_version, item_type, question_text').neq('source_kind', 'iqra').limit(3000) /* اقْرَأْ خارج الإحصاء (8400 صفًّا تتجاوز السقف) */,
-    db.from('question_bank_answer_keys').select('item_id, correct_option_id').limit(5000),
+    fetchAll(() => db.from('question_bank_items').select('id, item_code, level, skill, status, options, is_anchor, content_version, item_type, question_text').neq('source_kind', 'iqra').order('id')) /* اقْرَأْ خارج الإحصاء (8400 صفًّا تتجاوز السقف) */,
+    fetchAll(() => db.from('question_bank_answer_keys').select('item_id, correct_option_id').order('item_id')),
   ]);
   const rows = ((items.data || []) as ItemRow[]); const keyById = new Map<string, string>(((keys.data || []) as any[]).map((k) => [k.item_id, k.correct_option_id]));
   /* الرمز → صف واحد (المعتمد أولًا) */
@@ -100,7 +101,7 @@ export async function balanceSummary(db: any) {
   const [{ data: st }, { data: rel }, { data: items }] = await Promise.all([
     db.from('question_bank_item_stats').select('*').order('n', { ascending: false }).limit(3000),
     db.from('miaar_reliability').select('*').order('scope'),
-    db.from('question_bank_items').select('item_code, status, is_anchor, question_text, level, skill').neq('source_kind', 'iqra').limit(3000),
+    fetchAll(() => db.from('question_bank_items').select('id, item_code, status, is_anchor, question_text, level, skill').neq('source_kind', 'iqra').order('id')), /* م15.1: تجاوز سقف 1000 صف */
   ]);
   const info = new Map<string, any>(); for (const r of (items || []) as any[]) { const prev = info.get(r.item_code); if (!prev || (prev.status !== 'approved' && r.status === 'approved')) info.set(r.item_code, r); }
   const rows: ItemStatRow[] = ((st || []) as any[]).map((r) => { const i = info.get(r.item_code) || {}; const flags: string[] = Array.isArray(r.flags) ? r.flags : []; return { item: r.item_code, item_id: r.item_id, level: r.level, skill: r.skill, n: r.n, p: Number(r.p), rpb: Number(r.rpb), distractors: r.distractors || {}, median_ms: r.median_ms, exposure: r.exposure, flags, flags_ar: flags.map((f) => (FLAG_AR as any)[f] || f), severity: Math.max(0, ...flags.map((f) => (FLAG_SEVERITY as any)[f] || 0)), b: r.b == null ? null : Number(r.b), se: r.se == null ? null : Number(r.se), infit: r.infit == null ? null : Number(r.infit), outfit: r.outfit == null ? null : Number(r.outfit), calib_n: r.calib_n || 0, suggest_level: r.suggest_level || null, dismissed_at: r.dismissed_at || null, computed_at: r.computed_at, is_anchor: !!i.is_anchor, status: i.status || 'unknown', question_text: String(i.question_text || '').slice(0, 140) }; });

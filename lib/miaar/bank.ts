@@ -67,16 +67,26 @@ const listeningReady = (p: PassageRow | undefined) => !!p && p.skill === 'listen
 const readingReady = (p: PassageRow | undefined) => !!p && p.skill === 'reading' && !!p.body;
 
 /** البنود المعتمدة الصالحة للتقديم في م1 (الأنواع الأربعة · مقاطع جاهزة · مفتاح صالح · ليست مسحوبة) */
+/** م15: PostgREST يقصّ أيّ طلب عند 1000 صفّ مهما كان limit — القراءات الشاملة تُقلَّب صفحةً صفحة (مرتّبة بالمعرّف) حتى تنفد.
+ *  make() يبني الاستعلام من جديد لكلّ صفحة (المنشئ لا يُعاد استعماله). يرجع {data, error} كصيغة supabase. */
+export async function fetchAll(make: () => any, page = 1000, max = 50000): Promise<{ data: any[]; error: any }> {
+  const out: any[] = [];
+  for (let from = 0; from < max; from += page) {
+    const r = await make().range(from, from + page - 1); if (r.error) return { data: out, error: r.error };
+    const part = (r.data || []) as any[]; out.push(...part); if (part.length < page) break;
+  }
+  return { data: out, error: null };
+}
 export async function loadApprovedPool(db: any, passages?: Map<string, PassageRow>): Promise<PoolItem[]> {
   if (POOL_CACHE && fresh(POOL_CACHE.at)) return POOL_CACHE.value;
   const P = passages || await loadPassages(db);
   const COLS = 'id, item_code, level, skill, passage_id, question_text, options, item_type, stimulus, media_path, media_alt, descriptor_code, cefr_descriptor';
   let [items, keys] = await Promise.all([
-    db.from('question_bank_items').select(`${COLS}, unit_codes`).eq('status', 'approved').neq('source_kind', 'iqra').limit(2000), /* اقْرَأْ: مِران الحلقات لا يدخل الاختبارات */  /* م6-ب: وسوم الوحدات في الرحلة نفسها */
-    db.from('question_bank_answer_keys').select('item_id, correct_option_id').limit(5000),
+    fetchAll(() => db.from('question_bank_items').select(`${COLS}, unit_codes`).eq('status', 'approved').neq('source_kind', 'iqra').order('id')), /* اقْرَأْ: مِران الحلقات لا يدخل الاختبارات */  /* م6-ب: وسوم الوحدات في الرحلة نفسها */
+    fetchAll(() => db.from('question_bank_answer_keys').select('item_id, correct_option_id').order('item_id')),
   ]);
   /* قبل هجرة م6-ب (العمود غائب) تعاد القراءة بلا العمود — حتى لا يتوقّف البنك كلّه على عمود اختياري */
-  if (items.error) items = await db.from('question_bank_items').select(COLS).eq('status', 'approved').neq('source_kind', 'iqra').limit(2000);
+  if (items.error) items = await fetchAll(() => db.from('question_bank_items').select(COLS).eq('status', 'approved').neq('source_kind', 'iqra').order('id'));
   if (items.error || keys.error) throw new Error('approved_pool_unavailable');
   const keyOf = new Map<string, string>(((keys.data || []) as any[]).map((r) => [r.item_id, r.correct_option_id]));
   const seen = new Set<string>(); const pool: PoolItem[] = [];
@@ -171,8 +181,8 @@ export type Coverage = { cells: Array<{ level: BankLevel; skill: Skill; approved
 export const itemBatch = (r: { content_version?: string | null; legacy_extra?: any }): string => (r.legacy_extra && typeof r.legacy_extra === 'object' && typeof r.legacy_extra.batch === 'string') ? r.legacy_extra.batch : (r.content_version || '—');
 export async function bankCoverage(db: any): Promise<Coverage> {
   const [{ data: items }, { data: passages }] = await Promise.all([
-    db.from('question_bank_items').select('level, skill, status, item_type, descriptor_code, content_version, legacy_extra').neq('source_kind', 'iqra').limit(5000),
-    db.from('miaar_passages').select('id').eq('status', 'approved').limit(2000),
+    fetchAll(() => db.from('question_bank_items').select('id, level, skill, status, item_type, descriptor_code, content_version, legacy_extra').neq('source_kind', 'iqra').order('id')),
+    fetchAll(() => db.from('miaar_passages').select('id').eq('status', 'approved').order('id')),
   ]);
   const rows = (items || []) as any[]; const by_status: Record<string, number> = {}; const used = new Set<string>(); const by_batch: Coverage['by_batch'] = {};
   for (const r of rows) { by_status[r.status] = (by_status[r.status] || 0) + 1; if (r.descriptor_code) used.add(r.descriptor_code); const b = itemBatch(r); by_batch[b] = by_batch[b] || {}; by_batch[b][r.status] = (by_batch[b][r.status] || 0) + 1; }

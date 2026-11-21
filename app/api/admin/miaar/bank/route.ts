@@ -30,7 +30,7 @@ import { readJson } from '../../../../../lib/shield/body';
 import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLevel, isSkill, isProductiveSkill, isResponseFor, isCompositeType, isPermutationType, isIdentityKey, countBlanks, CLOZE_BLANKS, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
 import { validateTask } from '../../../../../lib/miaar/rubric';
 import type { ItemType } from '../../../../../lib/miaar/registry';
-import { optionList, leftList, MEDIA_BUCKET, itemBatch, invalidatePoolCache, lazyMediaUrl } from '../../../../../lib/miaar/bank';
+import { optionList, leftList, MEDIA_BUCKET, itemBatch, invalidatePoolCache, lazyMediaUrl, fetchAll } from '../../../../../lib/miaar/bank';
 import { normalizePack, summarize, importPack, recentImports, acceptedOf } from '../../../../../lib/miaar/pack';
 import { heritageSummary, markHeritage, archiveUnreviewed, isHeritageOutcome, HERITAGE_OUTCOMES } from '../../../../../lib/miaar/heritage';
 import { canApprove, isOwnItem, reviewSummary, APPROVE_REASON_AR } from '../../../../../lib/miaar/review';
@@ -63,8 +63,9 @@ export async function GET(req: Request) {
   }
   if (p.get('imports') === '1') return NextResponse.json({ success: true, imports: await recentImports(db) }, { headers: { 'Cache-Control': 'no-store' } });
   if (p.get('review_summary') === '1') { /* م15: تقدّم المراجعة — عدّ خفيف على الأعمدة الثلاثة */
-    const { data, error } = await db.from('question_bank_items').select('content_version, level, status, legacy_extra').not('skill', 'in', `(${[...PRODUCTIVE_SKILLS].join(',')})`).limit(5000); if (error) return bad(error.message, 500);
-    const agg = new Map<string, number>(); for (const r of (data || []) as any[]) { const k = `${itemBatch(r)}|${r.level}|${r.status}`; agg.set(k, (agg.get(k) || 0) + 1); }
+    /* سقف PostgREST 1000 صفًّا للطلب — نقرأ على صفحات مرتّبة بالمعرّف حتى تنفد */
+    const { data: all, error } = await fetchAll(() => db.from('question_bank_items').select('id, content_version, level, status, legacy_extra').not('skill', 'in', `(${[...PRODUCTIVE_SKILLS].join(',')})`).order('id')); if (error) return bad(error.message, 500);
+    const agg = new Map<string, number>(); for (const r of all) { const batch = itemBatch(r); if (batch.startsWith('iqra-')) continue; /* لاقْرَأْ مكتبها */ const k = `${batch}|${r.level}|${r.status}`; agg.set(k, (agg.get(k) || 0) + 1); }
     const rows = [...agg.entries()].map(([k, n]) => { const [batch, level, status] = k.split('|'); return { batch, level, status, n }; });
     return NextResponse.json({ success: true, summary: reviewSummary(rows), me: c.user.id }, { headers: { 'Cache-Control': 'no-store' } });
   }

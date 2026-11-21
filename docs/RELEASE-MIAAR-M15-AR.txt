@@ -27,3 +27,19 @@ tests/miaar-m15.test.ts 4/4 (القفل · الفحص الآلي · المفتا
 ---------------------------------------
 lib/miaar/review.ts (جديد) · app/admin/miaar/ReviewDesk.tsx (جديد) · app/admin/miaar/BankEditor.tsx · app/admin/miaar/AdminMiaar.tsx · app/api/admin/miaar/bank/route.ts · tests/miaar-m15.test.ts (جديد)
 docs/RELEASE-MIAAR-M15-AR.txt · docs/MIAAR-M15-STEPS-AR.txt · docs/MIAAR-M15-SPEC-AR.txt
+
+════════════════════════════════════════════
+م15.1 — إصلاح عاجل (2026-11-23): لوحة المراجعة كانت تعرض أصفارًا
+════════════════════════════════════════════
+السبب: PostgREST (Supabase) يقطع كلّ طلب عند 1000 صف مهما كان `.limit(N)`.
+  ملخّص المراجعة كان يقرأ بنك البنود كاملًا (≈1700 صف غير iqra + 900 صف iqra) بطلب واحد،
+  فلم يرَ إلا أوّل 1000 صف (أغلبها iqra) → «قيد المراجعة الآن: 0» ودفعات م13-أ/م13-ب/م14 غائبة.
+الإصلاح:
+  • lib/miaar/bank.ts: دالة `fetchAll(make)` تقرأ بالصفحات (range 1000 مرتَّبة بـ id) حتى النهاية.
+  • review_summary في app/api/admin/miaar/bank/route.ts يستخدم fetchAll ويستثني دفعات iqra-*.
+  • تحصين القرّاء الآخرين الذين قد يتجاوزون 1000 صف: loadApprovedPool (البنود + المفاتيح + الاحتياط)،
+    bankCoverage، balance.ts (البنود + المفاتيح + معلومات البنود في balanceSummary).
+  • tests/iqra-fake-db.ts و tests/miaar-m10.test.ts: دعم `range()` في قاعدة البيانات الوهمية.
+الأثر على المستخدم: لا تغيير في الواجهة — فقط أرقام صحيحة في لوحة المراجعة، ومجمّع البنود المعتمدة
+  في التدريب/الاختبار لن يُبتَر بعد تجاوز 1000 بند معتمد.
+الاختبارات: 47 ناجح / 1 فشل معروف مسبقًا (م10:182 practiceFactsForReports) · tsc محدود 0 · next build 0.

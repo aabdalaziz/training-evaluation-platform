@@ -8,10 +8,10 @@ export function fakeDb(seed: Record<string, any[]> = {}) {
   /* م13-ج: مسار JSON كما في PostgREST — legacy_extra->>batch */
   const g = (r: any, k: string): any => { if (!k.includes('->>')) return r[k]; const [col, key] = k.split('->>'); const o = r[col]; return o && typeof o === 'object' ? (o[key] ?? null) : null; };
   const q = (table: string) => {
-    const rows = T[table] || (T[table] = []); const f: Array<(r: any) => boolean> = []; let mode: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select'; let payload: any = null; let single = false; let lim = 0; let head = false; let orders: [string, boolean][] = []; let ignoreDup = false; let conflict: string[] | null = null;
+    const rows = T[table] || (T[table] = []); const f: Array<(r: any) => boolean> = []; let mode: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select'; let payload: any = null; let single = false; let lim = 0; let from0 = 0; let head = false; let orders: [string, boolean][] = []; let ignoreDup = false; let conflict: string[] | null = null;
     const b: any = {
       select(_c?: string, o?: any) { if (o?.head) head = true; return b; }, eq(k: string, v: any) { f.push((r) => g(r, k) === v); return b; }, ilike(k: string, v: any) { f.push((r) => String(r[k] || '').toLowerCase() === String(v).toLowerCase()); return b; }, gte(k: string, v: any) { f.push((r) => String(r[k]) >= String(v)); return b; }, neq(k: string, v: any) { f.push((r) => { const x = g(r, k); return (typeof x === 'object' && x !== null ? JSON.stringify(x) : x) !== v; }); return b; }, in(k: string, v: any[]) { f.push((r) => v.includes(g(r, k))); return b; }, is(k: string, v: any) { f.push((r) => (g(r, k) ?? null) === v); return b; }, not(k: string, op: string, v: any) { f.push((r) => (op === 'is' ? (g(r, k) ?? null) !== v : g(r, k) !== v)); return b; }, lte(k: string, v: any) { f.push((r) => String(r[k]) <= String(v)); return b; },
-      order(k: string, o?: any) { orders.push([k, o?.ascending === false]); return b; }, limit(n: number) { lim = n; return b; }, maybeSingle() { single = true; return b; }, single() { single = true; return b; },
+      order(k: string, o?: any) { orders.push([k, o?.ascending === false]); return b; }, limit(n: number) { lim = n; return b; }, range(a: number, z: number) { from0 = a; lim = z - a + 1; return b; }, maybeSingle() { single = true; return b; }, single() { single = true; return b; },
       insert(p: any) { mode = 'insert'; payload = p; return b; }, update(p: any) { mode = 'update'; payload = p; return b; }, delete() { mode = 'delete'; return b; }, upsert(p: any, o?: any) { mode = 'upsert'; payload = p; ignoreDup = !!o?.ignoreDuplicates; conflict = o?.onConflict ? String(o.onConflict).split(',') : CONFLICT[table] || null; return b; },
       then(res: any) {
         const hit = () => { let h = rows.filter((r) => f.every((p) => p(r))); for (const [k, desc] of [...orders].reverse()) h = [...h].sort((a, c) => (String(a[k]) < String(c[k]) ? -1 : String(a[k]) > String(c[k]) ? 1 : 0) * (desc ? -1 : 1)); return h; };
@@ -30,7 +30,7 @@ export function fakeDb(seed: Record<string, any[]> = {}) {
         if (mode === 'update') { const h = hit(); for (const r of h) Object.assign(r, payload); return res({ data: single ? h[0] || null : h, error: null }); }
         if (mode === 'delete') { const h = hit(); for (const r of h) rows.splice(rows.indexOf(r), 1); return res({ data: h, error: null }); }
         const h = hit(); if (head) return res({ data: null, count: h.length, error: null });
-        return res({ data: single ? h[0] || null : (lim ? h.slice(0, lim) : h), count: h.length, error: null });
+        return res({ data: single ? h[0] || null : (lim ? h.slice(from0, from0 + lim) : h), count: h.length, error: null });
       },
     };
     return b;
