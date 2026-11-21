@@ -3,6 +3,7 @@
 // تعرض سبب العطل بالعربية (رسالة الخطأ + المُعرِّف) مع أزرار: إعادة المحاولة · الرئيسة · نسخ التفاصيل.
 // لا تعتمد على أي سياق أو مكوّن آخر (قد يكون هو نفسه سبب العطل) — تنسيق مضمّن فقط.
 import { useEffect, useState } from 'react';
+import { isChunkError, autoRecoverChunk } from '../lib/ui/chunk';
 
 const CSS = `
 .pe-wrap{min-height:70vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit;direction:rtl}
@@ -20,6 +21,7 @@ const CSS = `
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [recovering] = useState(() => autoRecoverChunk(error));
   useEffect(() => { try { console.error('[أَثَر] client error', error); } catch { /* ignore */ } }, [error]);
   const details = `${error?.name || 'Error'}: ${error?.message || '—'}\n${error?.digest ? `digest: ${error.digest}\n` : ''}${typeof window !== 'undefined' ? `url: ${window.location.href}\n` : ''}${error?.stack ? `\n${error.stack}` : ''}`;
   async function copy() { try { await navigator.clipboard.writeText(details); setCopied(true); setTimeout(() => setCopied(false), 2500); } catch { /* ignore */ } }
@@ -31,11 +33,16 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
       else window.location.reload();
     } catch { window.location.reload(); }
   }
+  if (recovering) return (
+    <div className="pe-wrap"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="pe-card" role="status" data-testid="pe-recovering"><h1>صدر تحديث جديد للبوابة</h1><p>نعيد تحميل الصفحة تلقائيًا… لم تُفقد بياناتك.</p></div></div>
+  );
+  const chunk = isChunkError(error);
   return (
     <div className="pe-wrap">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="pe-card" role="alert">
-        <h1>حدث خطأ في عرض هذه الصفحة</h1>
+        <h1>{chunk ? 'صدر تحديث جديد للبوابة' : 'حدث خطأ في عرض هذه الصفحة'}</h1>
+        {chunk && <p>اضغط «تحديث كامل» لتحميل النسخة الجديدة — لم تُفقد بياناتك.</p>}
         <p>لم تُفقد بياناتك. جرّب «إعادة المحاولة» أولًا؛ وإن تكرّر الخطأ انسخ التفاصيل أدناه وأرسلها للدعم.</p>
         <div className="pe-msg" data-testid="pe-msg">{(error?.name || 'Error') + ': ' + (error?.message || '—')}</div>
         <div className="pe-meta">{error?.digest ? `المُعرِّف: ${error.digest} · ` : ''}أَثَر · {new Date().toLocaleString('ar-SA')}</div>

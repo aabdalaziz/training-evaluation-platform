@@ -1,0 +1,7 @@
+م17-أ — خطوات الرفع (دقيقتان)
+1) فكّ ATHAR-M17A-RESILIENCE.zip → ارفع app/ lib/ tests/ docs/ إلى https://github.com/aabdalaziz/training-evaluation-platform/upload/main
+   رسالة الالتزام:  M17a: resilience shield (chunk auto-recovery, segment error boundaries, loading skeletons)
+2) إجراء بلا شيفرة (الأهمّ للسرعة): افتح Supabase → Project Settings → General → Region واقرأ المنطقة،
+   ثم Vercel → Project → Settings → Functions → Function Region → اختر الأقرب إليها (fra1 إن كانت eu-central-1 …) → Save → Redeploy.
+3) التحقق بعد النشر: افتح أيّ صفحة إدارة وأعد تحميلها — يظهر هيكل رمادي متحرّك لحظة ثم المحتوى. 
+   وبعد أيّ نشر لاحق، من كانت صفحته مفتوحة يرى «صدر تحديث جديد للبوابة» وتُعاد تلقائيًا بدل البياض.
