@@ -8,7 +8,8 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import WayBar from '../../components/WayBar';
-import { Matcher, Orderer, COMPOSITE_CSS } from '../Composite'; /* م13-ب */
+import { Matcher, Orderer, Cloze, COMPOSITE_CSS } from '../Composite'; /* م13-ب · م14 */
+const COMPOSITE = new Set(['matching', 'ordering', 'cloze_bank', 'picture_sequence']);
 
 type Q = { id: string; skill: string; type?: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null; left?: { id: string; text: string; image?: string | null; alt?: string | null }[] };
 type P = { id: string; skill: 'reading' | 'listening'; title: string; text: string; audioUrl: string | null };
@@ -69,8 +70,9 @@ export default function PracticeApp({ code, fontClass = '' }: { code: string; fo
               <legend><span className="mp-qn">{i + 1}</span> {q.questionText} <small>· {SK[q.skill] || q.skill}</small></legend>
               {q.stimulus?.image && <img className="mp-stim" src={q.stimulus.image} alt={q.stimulus.alt || ''} />}
               {q.type === 'matching' && <><Matcher left={q.left || []} options={q.options} value={pend[q.id] || null} disabled={!!fb || busy === q.id} onComplete={(v) => setPend((p) => ({ ...p, [q.id]: v }))} testId="mp-match" />{!fb && pend[q.id] && <button type="button" className="mp-opt right" disabled={busy === q.id} onClick={() => void answer(q, pend[q.id])} data-testid="mp-submit">تأكيد الإجابة</button>}</>}
-              {q.type === 'ordering' && <><Orderer options={q.options} value={pend[q.id] || null} disabled={!!fb || busy === q.id} onComplete={(v) => setPend((p) => ({ ...p, [q.id]: v }))} testId="mp-order" />{!fb && pend[q.id] && <button type="button" className="mp-opt right" disabled={busy === q.id} onClick={() => void answer(q, pend[q.id])} data-testid="mp-submit">تأكيد الإجابة</button>}</>}
-              {q.type !== 'matching' && q.type !== 'ordering' && <div className="mp-opts">{q.options.map((o) => <button key={o.id} type="button" className={`mp-opt ${fb && o.text === fb.correct_option ? 'right' : ''}`} disabled={!!fb || busy === q.id} onClick={() => void answer(q, o.id)} data-testid="mp-opt">{o.image ? <img src={o.image} alt={o.alt || o.text} /> : null}{o.text}</button>)}</div>}
+              {q.type === 'cloze_bank' && <><Cloze text={q.questionText} options={q.options} value={pend[q.id] || null} disabled={!!fb || busy === q.id} onComplete={(v) => setPend((p) => ({ ...p, [q.id]: v }))} testId="mp-cloze" />{!fb && pend[q.id] && <button type="button" className="mp-opt right" disabled={busy === q.id} onClick={() => void answer(q, pend[q.id])} data-testid="mp-submit">تأكيد الإجابة</button>}</>}
+              {(q.type === 'ordering' || q.type === 'picture_sequence') && <><Orderer options={q.options} pictures={q.type === 'picture_sequence'} value={pend[q.id] || null} disabled={!!fb || busy === q.id} onComplete={(v) => setPend((p) => ({ ...p, [q.id]: v }))} testId="mp-order" />{!fb && pend[q.id] && <button type="button" className="mp-opt right" disabled={busy === q.id} onClick={() => void answer(q, pend[q.id])} data-testid="mp-submit">تأكيد الإجابة</button>}</>}
+              {!COMPOSITE.has(q.type || '') && <div className="mp-opts">{q.options.map((o) => <button key={o.id} type="button" className={`mp-opt ${fb && o.text === fb.correct_option ? 'right' : ''}`} disabled={!!fb || busy === q.id} onClick={() => void answer(q, o.id)} data-testid="mp-opt">{o.image ? <img src={o.image} alt={o.alt || o.text} /> : null}{o.text}</button>)}</div>}
               {fb && <p className="mp-fb" data-testid="mp-fb">{fb.correct ? '✓ ' : '✗ '}{fb.why_ar}</p>}
             </fieldset>; })}
           </div>; })}

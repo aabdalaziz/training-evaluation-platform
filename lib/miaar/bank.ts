@@ -5,13 +5,13 @@
  */
 import { taskItemFrom } from './performance';
 import type { TaskItem } from './performance';
-import { LEVELS, SKILLS, PRODUCTIVE_SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, PLAYER_ITEM_TYPES, MATCHING_LEFT, isResponseFor, isBankLevel, isSkill, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
+import { LEVELS, SKILLS, PRODUCTIVE_SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, PLAYER_ITEM_TYPES, MATCHING_LEFT, CLOZE_BLANKS, countBlanks, isResponseFor, isBankLevel, isSkill, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
 import type { PoolItem, PublicForm, PublicQuestion, PublicPassage, SecureItem, Option, LeftItem, ItemType, BankLevel, Skill } from './registry';
 
 export const MEDIA_BUCKET = 'miaar-media';
 const SIGN_SECONDS = 3 * 60 * 60;
 /** نوع البند ← عدد الخيارات المقبول */
-const OPTION_COUNT: Partial<Record<ItemType, [number, number]>> = { mcq: [4, 4], picture_choice: [2, 4], picture_label: [2, 4], true_false_notgiven: [3, 3], matching: [3, 5], ordering: [3, 6] };
+const OPTION_COUNT: Partial<Record<ItemType, [number, number]>> = { mcq: [4, 4], picture_choice: [2, 4], picture_label: [2, 4], true_false_notgiven: [3, 3], matching: [3, 5], ordering: [3, 6], cloze_bank: [3, 6], picture_sequence: [3, 5] };
 
 /** م13-ب: العمود الأيسر للمطابقة (3–4 · معرّفات 1..4 · نصّ أو صورة) — null إن لم يصلح */
 export function leftList(value: unknown): LeftItem[] | null {
@@ -33,7 +33,7 @@ export function optionList(value: unknown, type: ItemType): Option[] | null {
     const o = value[i]; if (!o || typeof o !== 'object') return null; const r = o as Record<string, unknown>;
     const id = typeof r.id === 'string' && ids.includes(r.id) ? r.id : ids[i];
     const text = typeof r.text === 'string' ? r.text.trim() : ''; const image = typeof r.image === 'string' && r.image.trim() ? r.image.trim() : null;
-    if (type === 'picture_choice' ? !image : type === 'matching' ? !text && !image : !text) return null;
+    if (type === 'picture_choice' || type === 'picture_sequence' ? !image : type === 'matching' ? !text && !image : !text) return null;
     out.push({ id, text, image, alt: typeof r.alt === 'string' ? r.alt.trim() : null });
   }
   return new Set(out.map((o) => o.id)).size === out.length ? out : null;
@@ -86,7 +86,8 @@ export async function loadApprovedPool(db: any, passages?: Map<string, PassageRo
     const options = optionList(row.options, type); const correct = keyOf.get(row.id);
     const stim0 = row.stimulus && typeof row.stimulus === 'object' ? row.stimulus : null;
     const left = type === 'matching' ? leftList(stim0?.left) : null; if (type === 'matching' && !left) continue;
-    if (!options || typeof correct !== 'string' || !isResponseFor(type, options.map((o) => o.id), left?.length || 0, correct) || !isBankLevel(row.level) || !isSkill(row.skill)) continue;
+    const blanks = type === 'cloze_bank' && typeof row.question_text === 'string' ? countBlanks(row.question_text) : 0; if (type === 'cloze_bank' && (blanks < CLOZE_BLANKS[0] || blanks > CLOZE_BLANKS[1])) continue;
+    if (!options || typeof correct !== 'string' || !isResponseFor(type, options.map((o) => o.id), left?.length || blanks, correct) || !isBankLevel(row.level) || !isSkill(row.skill)) continue;
     const passageId = typeof row.passage_id === 'string' && row.passage_id.trim() ? row.passage_id.trim() : null;
     if (row.skill === 'listening' && !listeningReady(P.get(passageId || ''))) continue;
     if (row.skill === 'reading' && passageId && !readingReady(P.get(passageId))) continue;
@@ -161,7 +162,7 @@ export async function formFromPool(db: any, pool: readonly PoolItem[], codes: re
 }
 export const secureItems = (pool: readonly PoolItem[], codes: readonly string[]): SecureItem[] | null => {
   const byCode = new Map(pool.map((i) => [i.code, i])); const items = codes.map((c) => byCode.get(c)).filter((i): i is PoolItem => !!i);
-  return items.length === codes.length ? items.map((i) => ({ id: i.code, level: i.level, skill: i.skill, correctOptionId: i.correctOptionId, type: i.type, optionIds: i.options.map((o) => o.id), leftCount: i.left?.length || 0 })) : null;
+  return items.length === codes.length ? items.map((i) => ({ id: i.code, level: i.level, skill: i.skill, correctOptionId: i.correctOptionId, type: i.type, optionIds: i.options.map((o) => o.id), leftCount: i.left?.length || (i.type === 'cloze_bank' ? countBlanks(i.questionText) : 0) })) : null;
 };
 
 /** تغطية البنك للوحة: لكل مستوى×مهارة عدد المعتمد مقابل الخطة، وبالنوع */

@@ -57,9 +57,17 @@ export type ItemType = (typeof ITEM_TYPES)[number];
 /** الأنواع التي يقدّمها م1 للمتقدّم (الباقي يُبنى في م4) */
 export const M1_ITEM_TYPES: readonly ItemType[] = ['mcq', 'picture_choice', 'picture_label', 'true_false_notgiven'];
 /** م13-ب: ما يقدّمه المشغّل اليوم = الأربعة + المطابقة والترتيب (استجابة مركّبة «b-a-d-c» · كلّه أو لا شيء) */
-export const COMPOSITE_ITEM_TYPES: readonly ItemType[] = ['matching', 'ordering'];
+export const COMPOSITE_ITEM_TYPES: readonly ItemType[] = ['matching', 'ordering', 'cloze_bank', 'picture_sequence']; /* م14: الفراغات والتسلسل بالآلية نفسها */
 export const PLAYER_ITEM_TYPES: readonly ItemType[] = [...M1_ITEM_TYPES, ...COMPOSITE_ITEM_TYPES];
-export const isCompositeType = (t: unknown): t is 'matching' | 'ordering' => t === 'matching' || t === 'ordering';
+export type CompositeType = 'matching' | 'ordering' | 'cloze_bank' | 'picture_sequence';
+export const isCompositeType = (t: unknown): t is CompositeType => t === 'matching' || t === 'ordering' || t === 'cloze_bank' || t === 'picture_sequence';
+/** م14: أنواع «اختيار لكلّ موضع» (مطابقة/فراغات) مقابل «تبديل كامل» (ترتيب/تسلسل صور) */
+export const isSlotType = (t: unknown): t is 'matching' | 'cloze_bank' => t === 'matching' || t === 'cloze_bank';
+export const isPermutationType = (t: unknown): t is 'ordering' | 'picture_sequence' => t === 'ordering' || t === 'picture_sequence';
+/** م14: فراغات النصّ «___» (ثلاث شرطات سفلية فأكثر) — تُعدّ بترتيبها */
+export const BLANK_RE = /_{3,}/g;
+export const countBlanks = (text: string): number => (text.match(BLANK_RE) || []).length;
+export const CLOZE_BLANKS: [number, number] = [2, 4];
 export const ITEM_TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور', matching: 'مطابقة', ordering: 'ترتيب', picture_sequence: 'تسلسل صور', cloze_bank: 'فراغات', word_tap: 'نقر كلمات', short_dictation: 'إملاء قصير', writing_task: 'مهمة كتابة', speaking_task: 'مهمة تحدّث' };
 /** حدود المطابقة والترتيب (MIAAR-M13B-SPEC §2) */
 export const MATCHING_LEFT: [number, number] = [3, 4]; export const ORDERING_PARTS: [number, number] = [3, 6];
@@ -107,12 +115,12 @@ export const isSkill = (v: unknown): v is Skill => typeof v === 'string' && (SKI
 export const isExamMode = (v: unknown): v is ExamMode => v === 'comprehensive' || v === 'adaptive';
 export const isOptionId = (v: unknown): v is string => typeof v === 'string' && /^[a-f]$/.test(v);
 /** م13-ب: الاستجابة المركّبة «b-a-d-c» — معرّفات خيارات بلا تكرار موصولة بشرطة */
-export const parseComposite = (v: unknown): string[] | null => { if (typeof v !== 'string' || !/^[a-f](-[a-f]){2,5}$/.test(v)) return null; const p = v.split('-'); return new Set(p).size === p.length ? p : null; };
+export const parseComposite = (v: unknown): string[] | null => { if (typeof v !== 'string' || !/^[a-f](-[a-f]){1,5}$/.test(v)) return null; const p = v.split('-'); return new Set(p).size === p.length ? p : null; };
 /** هل الاستجابة صالحة لهذا البند؟ mcq وأخواته: حرف واحد من خياراته · matching: طول العمود الأيسر من معرّفات اليمين · ordering: تبديل كامل للخيارات */
 export function isResponseFor(type: ItemType, optionIds: readonly string[], leftCount: number, v: unknown): boolean {
   if (!isCompositeType(type)) return isOptionId(v) && optionIds.includes(v);
   const p = parseComposite(v); if (!p || !p.every((x) => optionIds.includes(x))) return false;
-  return type === 'matching' ? p.length === leftCount : p.length === optionIds.length;
+  return isSlotType(type) ? p.length === leftCount : p.length === optionIds.length;
 }
 /** المفتاح الهويّة (a-b-c-d…) يكشف الجواب بترتيب العرض */
 export const isIdentityKey = (key: string, optionIds: readonly string[]): boolean => key === optionIds.slice(0, key.split('-').length).join('-');

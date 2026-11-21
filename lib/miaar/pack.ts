@@ -11,10 +11,11 @@
  *     passages:[{id, level, skill:'reading'|'listening', title, body, audio_public_path?, meta?}],
  *     items:[{item_code, level, skill, item_type, question_text, options:[{id,text,image?,alt?}], correct, descriptor_code, unit_codes?, domain?, difficulty_est?, passage_id?, media_path?, media_alt?, rationale?:{a:'…'}}],
  *     م13-ب: matching يضيف left:[{id,text|image,alt?} ×3..4] والمفتاح «b-a-d-c» (يمين كلّ أيسر بترتيبه) · ordering: options القطع مبعثرة والمفتاح «c-a-d-b» تبديل كامل.
+ *     م14: cloze_bank: question_text فيه 2–4 فراغات «___» و options مصرف كلمات (الفراغات + 1–2 مشتّت) والمفتاح كلمة كلّ فراغ بترتيبه · picture_sequence: options صور مبعثرة (3–5) والمفتاح تبديل كامل.
  *     tasks?:[{item_code, level, skill:'writing'|'speaking', question_text, task, descriptor_code?, unit_codes?, domain?, media_path?, media_alt?}] }
  *  القرار الأكاديمي بيد الطاقم: لا يُعتمد بند هنا، ولا يُمَسّ بند قائم.
  */
-import { PLAYER_ITEM_TYPES, isCompositeType, isResponseFor, isIdentityKey, parseComposite, isBankLevel, isSkill, isProductiveSkill, PRODUCTIVE_ITEM_TYPES, FLOOR_LEVEL } from './registry';
+import { PLAYER_ITEM_TYPES, isCompositeType, isSlotType, isPermutationType, countBlanks, CLOZE_BLANKS, isResponseFor, isIdentityKey, parseComposite, isBankLevel, isSkill, isProductiveSkill, PRODUCTIVE_ITEM_TYPES, FLOOR_LEVEL } from './registry';
 import type { ItemType, BankLevel, LeftItem } from './registry';
 import { optionList, leftList } from './bank';
 import { isUnitCode, unitLevelOf } from './syllabus';
@@ -97,10 +98,15 @@ export function normalizePack(raw: unknown): { ok: true; pack: Pack; problems: P
     const left = type === 'matching' ? leftList(it?.left) : null;
     if (type === 'matching' && !left) { problems.push({ at, msg: 'المطابقة تحتاج left من 3–4 عناصر (نصّ أو صورة) بلا تكرار' }); return; }
     if (left && (options.length < left.length || options.length > left.length + 1)) { problems.push({ at, msg: `خيارات المطابقة ${options.length} — المطلوب ${left.length} أو ${left.length + 1} (مشتّت واحد)` }); return; }
+    /* م14: الفراغات — 2–4 «___» في النصّ، والمصرف = الفراغات + 1–2 مشتّت */
+    const blanks = type === 'cloze_bank' ? countBlanks(question_text) : 0;
+    if (type === 'cloze_bank' && (blanks < CLOZE_BLANKS[0] || blanks > CLOZE_BLANKS[1])) { problems.push({ at, msg: `الفراغات تحتاج ${CLOZE_BLANKS[0]}–${CLOZE_BLANKS[1]} فراغات «___» في النصّ (وُجد ${blanks})` }); return; }
+    if (type === 'cloze_bank' && (options.length < blanks + 1 || options.length > blanks + 2)) { problems.push({ at, msg: `مصرف الكلمات ${options.length} — المطلوب ${blanks + 1} أو ${blanks + 2} (مشتّت أو اثنان)` }); return; }
+    const slots = left?.length || blanks;
     const correct = typeof it?.correct === 'string' ? it.correct.trim() : '';
-    if (!isResponseFor(type, options.map((o) => o.id), left?.length || 0, correct)) { problems.push({ at, msg: isCompositeType(type) ? (type === 'matching' ? 'مفتاح المطابقة: معرّفات اليمين لكلّ عنصر أيسر بترتيبه بلا تكرار (مثل b-a-d-c)' : 'مفتاح الترتيب: تبديل كامل لكلّ القطع (مثل c-a-d-b)') : 'المفتاح لا يطابق خيارًا' }); return; }
-    if (type === 'ordering' && isIdentityKey(correct, options.map((o) => o.id))) { problems.push({ at, msg: 'القطع مكتوبة بترتيبها الصحيح (a-b-c…) — ابعثرها في الحزمة' }); return; }
-    if (type === 'matching' && isIdentityKey(correct, options.map((o) => o.id))) warnings.push({ at, msg: 'مفتاح المطابقة هو الهويّة a-b-c… — بعثر العمود الأيمن' });
+    if (!isResponseFor(type, options.map((o) => o.id), slots, correct)) { problems.push({ at, msg: isCompositeType(type) ? (type === 'matching' ? 'مفتاح المطابقة: معرّفات اليمين لكلّ عنصر أيسر بترتيبه بلا تكرار (مثل b-a-d-c)' : type === 'cloze_bank' ? `مفتاح الفراغات: كلمة كلّ فراغ بترتيبه (${blanks} معرّفات بلا تكرار، مثل c-a-d)` : 'مفتاح الترتيب: تبديل كامل لكلّ القطع (مثل c-a-d-b)') : 'المفتاح لا يطابق خيارًا' }); return; }
+    if (isPermutationType(type) && isIdentityKey(correct, options.map((o) => o.id))) { problems.push({ at, msg: 'القطع مكتوبة بترتيبها الصحيح (a-b-c…) — ابعثرها في الحزمة' }); return; }
+    if (isSlotType(type) && isIdentityKey(correct, options.map((o) => o.id))) warnings.push({ at, msg: `مفتاح ${type === 'matching' ? 'المطابقة' : 'الفراغات'} هو الهويّة a-b-c… — بعثر الخيارات` });
     const descriptor_code = descriptor(it?.descriptor_code, level, skill, at, problems, true) || '';
     const unit_codes = unitCodes(it?.unit_codes, level, at, problems);
     const domain = (DOMAINS as readonly string[]).includes(String(it?.domain)) ? String(it.domain) : null;
@@ -111,9 +117,9 @@ export function normalizePack(raw: unknown): { ok: true; pack: Pack; problems: P
     const media_path = s(it?.media_path, 300) || null; const media_alt = s(it?.media_alt, 200) || null;
     if ((type === 'picture_label') && !media_path) problems.push({ at, msg: 'تسمية الصورة تحتاج media_path' });
     if (media_path && !media_alt) warnings.push({ at, msg: 'صورة بلا وصف بديل (media_alt)' });
-    const rationale: Record<string, string> = {}; const ratKeys = type === 'matching' ? (left || []).map((l) => l.id) : type === 'ordering' ? ['why'] : options.map((o) => o.id);
+    const rationale: Record<string, string> = {}; const ratKeys = type === 'matching' ? (left || []).map((l) => l.id) : type === 'cloze_bank' ? Array.from({ length: blanks }, (_, i) => String(i + 1)) : isPermutationType(type) ? ['why'] : options.map((o) => o.id);
     if (it?.rationale && typeof it.rationale === 'object') for (const k of ratKeys) { const v = s((it.rationale as any)[k], 300); if (v) rationale[k] = v; }
-    if (Object.keys(rationale).length < ratKeys.length) warnings.push({ at, msg: type === 'ordering' ? 'مبرّر الترتيب (rationale.why) ناقص' : type === 'matching' ? 'مبرّر ناقص لبعض عناصر المطابقة' : 'مبرّر ناقص لبعض المشتّتات' });
+    if (Object.keys(rationale).length < ratKeys.length) warnings.push({ at, msg: isPermutationType(type) ? 'مبرّر الترتيب (rationale.why) ناقص' : type === 'matching' ? 'مبرّر ناقص لبعض عناصر المطابقة' : type === 'cloze_bank' ? 'مبرّر ناقص لبعض الفراغات' : 'مبرّر ناقص لبعض المشتّتات' });
     const key = `${level}:${normStem(question_text)}`; const prev = stems.get(key); if (prev) problems.push({ at, msg: `جذع مكرّر داخل الحزمة (مثل ${prev})` }); else stems.set(key, code);
     const full = `${question_text} ${options.map((o) => o.text).join(' ')} ${(left || []).map((l) => l.text).join(' ')}`;
     if (FULL_TASHKEEL_LEVELS.includes(level) && !hasTashkeel(full)) warnings.push({ at, msg: `بند ${level} بلا تشكيل — المعيار: تشكيل كامل` });
@@ -154,8 +160,9 @@ export function summarize(pack: Pack, warnings: Problem[]): Summary {
 
 /** م13-ب: الصيغة المقروءة للمفتاح المركّب في answer_keys.accepted — {pairs:[{l,r}]} للمطابقة · {order:[…]} للترتيب */
 export function acceptedOf(it: Pick<PackItem, 'item_type' | 'options' | 'correct' | 'left'>): Record<string, unknown> {
-  const parts = parseComposite(it.correct) || []; const label = (id: string) => it.options.find((o) => o.id === id)?.text || it.options.find((o) => o.id === id)?.image || id;
-  if (it.item_type === 'ordering') return { order: parts, order_text: parts.map(label) };
+  const parts = parseComposite(it.correct) || []; const label = (id: string) => it.options.find((o) => o.id === id)?.text || it.options.find((o) => o.id === id)?.alt || it.options.find((o) => o.id === id)?.image || id;
+  if (isPermutationType(it.item_type)) return { order: parts, order_text: parts.map(label) };
+  if (it.item_type === 'cloze_bank') return { fills: parts.map((r, i) => ({ blank: i + 1, r: label(r), right_id: r })) };
   return { pairs: parts.map((r, i) => ({ l: it.left?.[i]?.text || it.left?.[i]?.image || String(i + 1), r: label(r), left_id: String(i + 1), right_id: r })) };
 }
 export type ImportReport = { batch_id: string | null; dry_run: boolean; passages_created: number; passages_existing: string[]; items_created: number; tasks_created: number; skipped_existing: string[]; rejected: Array<{ item_code: string; field: string; msg: string }>; possible_duplicates: Array<{ item_code: string; of: string }>; descriptors_unknown: string[] };

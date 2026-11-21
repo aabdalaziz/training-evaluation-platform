@@ -26,7 +26,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson } from '../../../../../lib/shield/body';
-import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLevel, isSkill, isProductiveSkill, isResponseFor, isCompositeType, isIdentityKey, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
+import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLevel, isSkill, isProductiveSkill, isResponseFor, isCompositeType, isPermutationType, isIdentityKey, countBlanks, CLOZE_BLANKS, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
 import { validateTask } from '../../../../../lib/miaar/rubric';
 import type { ItemType } from '../../../../../lib/miaar/registry';
 import { optionList, leftList, MEDIA_BUCKET, itemBatch, invalidatePoolCache } from '../../../../../lib/miaar/bank';
@@ -110,9 +110,12 @@ function parseItemFields(b: Record<string, unknown>, type: ItemType) {
   const left = type === 'matching' ? leftList(b.left) : null;
   if (type === 'matching' && !left) return { error: 'المطابقة تحتاج عمودًا أيسر من 3–4 عناصر بلا تكرار' };
   if (left && (options.length < left.length || options.length > left.length + 1)) return { error: `خيارات المطابقة ${options.length} — المطلوب ${left.length} أو ${left.length + 1}` };
+  const blanks = type === 'cloze_bank' ? countBlanks(question_text) : 0; /* م14 */
+  if (type === 'cloze_bank' && (blanks < CLOZE_BLANKS[0] || blanks > CLOZE_BLANKS[1])) return { error: `الفراغات تحتاج ${CLOZE_BLANKS[0]}–${CLOZE_BLANKS[1]} فراغات «___» في النصّ (وُجد ${blanks})` };
+  if (type === 'cloze_bank' && (options.length < blanks + 1 || options.length > blanks + 2)) return { error: `مصرف الكلمات ${options.length} — المطلوب ${blanks + 1} أو ${blanks + 2}` };
   const correct = typeof b.correct === 'string' ? b.correct.trim() : '';
-  if (!isResponseFor(type, options.map((o) => o.id), left?.length || 0, correct)) return { error: isCompositeType(type) ? 'المفتاح المركّب غير صالح (مثل b-a-d-c بطول العمود/القطع بلا تكرار)' : 'المفتاح لا يطابق خيارًا' };
-  if (type === 'ordering' && isIdentityKey(correct, options.map((o) => o.id))) return { error: 'القطع بترتيبها الصحيح — ابعثرها' };
+  if (!isResponseFor(type, options.map((o) => o.id), left?.length || blanks, correct)) return { error: isCompositeType(type) ? 'المفتاح المركّب غير صالح (مثل b-a-d-c بطول العمود/الفراغات/القطع بلا تكرار)' : 'المفتاح لا يطابق خيارًا' };
+  if (isPermutationType(type) && isIdentityKey(correct, options.map((o) => o.id))) return { error: 'القطع بترتيبها الصحيح — ابعثرها' };
   const descriptor_code = str(b.descriptor_code, 40) || null; const domain = DOMAINS.includes(String(b.domain)) ? String(b.domain) : null;
   const d = Number(b.difficulty_est); const difficulty_est = Number.isInteger(d) && d >= 1 && d <= 5 ? d : null;
   const passage_id = str(b.passage_id, 80) || null; const media_path = str(b.media_path, 300) || null; const media_alt = str(b.media_alt, 200) || null;

@@ -22,7 +22,8 @@ const EntryLine = dynamic(() => import('./EntryLine'), { ssr: false, loading: ()
 import { entryPromptFor } from '../../lib/first/entry-pure';
 import { AUDIO_METER_CSS } from '../components/AudioMeter'; /* P72-أ */
 import Witness from './Witness'; /* م8 «شاهِد» */
-import { Matcher, Orderer, COMPOSITE_CSS, COMP_LABELS_AR, COMP_LABELS_EN } from './Composite'; /* م13-ب: المطابقة والترتيب */
+import { Matcher, Orderer, Cloze, COMPOSITE_CSS, COMP_LABELS_AR, COMP_LABELS_EN } from './Composite'; /* م13-ب: المطابقة والترتيب · م14: الفراغات وتسلسل الصور */
+const COMPOSITE = new Set(['matching', 'ordering', 'cloze_bank', 'picture_sequence']);
 import type { WitnessApi, WitnessCfg } from './Witness';
 const PerformanceRoom = dynamic(() => import('./PerformanceRoom'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* م4-ب: غرفة الأداء تُحمَّل عند الحاجة */
 const ProductiveBlock = dynamic(() => import('./ProductiveBlock'), { ssr: false }); /* كتلة «المهارات الإنتاجية» — فقط حين تحملها البطاقة (ميزانية P40) */
@@ -283,7 +284,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   }
   useEffect(() => {
     if (step !== 'test') return;
-    const onKey = (e: KeyboardEvent) => { const tgt = e.target as HTMLElement; if (tgt && ['INPUT', 'TEXTAREA', 'SELECT'].includes(tgt.tagName)) return; const n = Number(e.key); if (current && (current.type === 'matching' || current.type === 'ordering')) return; if (n >= 1 && n <= 6 && current && current.options[n - 1]) { void choose(current.options[n - 1].id); } else if (e.key === 'Enter') { void next(); } else if (e.key.toLowerCase() === 'd' && current) { setDeferred((d) => { const c = new Set(d); c.has(current.id) ? c.delete(current.id) : c.add(current.id); return c; }); } };
+    const onKey = (e: KeyboardEvent) => { const tgt = e.target as HTMLElement; if (tgt && ['INPUT', 'TEXTAREA', 'SELECT'].includes(tgt.tagName)) return; const n = Number(e.key); if (current && COMPOSITE.has(current.type)) return; if (n >= 1 && n <= 6 && current && current.options[n - 1]) { void choose(current.options[n - 1].id); } else if (e.key === 'Enter') { void next(); } else if (e.key.toLowerCase() === 'd' && current) { setDeferred((d) => { const c = new Set(d); c.has(current.id) ? c.delete(current.id) : c.add(current.id); return c; }); } };
     window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, current, answers, qIdx]);
 
@@ -611,11 +612,12 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
         <article className={`mi-qcard${deferred.has(current.id) ? ' mark' : ''}`}>
           <div className="mi-tags"><span className={`mi-skilltag ${current.skill === 'reading' ? 'read' : current.skill === 'listening' ? 'listen' : ''}`}>{skillName(current.skill)}</span><span className="mi-leveltag">{current.level === FLOOR_LEVEL ? x('floor_level') : current.level}</span>{deferred.has(current.id) && <span className="mi-flag">{t('test', 'deferred')}</span>}<span className="mi-count">{t('test', 'qOf', { a: qIdx + 1, b: levelQs.length })}</span></div>
           {current.stimulus?.image && <img className="mi-stim" src={current.stimulus.image} alt={current.stimulus.alt || ''} />}
-          <h2 className="mi-qtext" dir="rtl" lang="ar" data-voice-read="1">{current.questionText}</h2>
+          <h2 className="mi-qtext" dir="rtl" lang="ar" data-voice-read="1">{current.type === 'cloze_bank' ? (lang === 'ar' ? COMP_LABELS_AR : COMP_LABELS_EN).clozeHint : current.questionText}</h2>
           {current.type === 'picture_choice' && <p className="mi-muted">{x('pick_picture')}</p>}
           {current.type === 'matching' && <Matcher key={current.id} left={current.left || []} options={current.options} value={answers[current.id] || null} disabled={busy} onComplete={(v) => void choose(v)} labels={lang === 'ar' ? COMP_LABELS_AR : COMP_LABELS_EN} />}
-          {current.type === 'ordering' && <Orderer key={current.id} options={current.options} value={answers[current.id] || null} disabled={busy} onComplete={(v) => void choose(v)} labels={lang === 'ar' ? COMP_LABELS_AR : COMP_LABELS_EN} />}
-          {current.type !== 'matching' && current.type !== 'ordering' && <div className={`mi-opts${current.type === 'picture_choice' ? ' pics' : ''}`} role="radiogroup" aria-label={t('test', 'choices')} data-voice-read="2">
+          {(current.type === 'ordering' || current.type === 'picture_sequence') && <Orderer key={current.id} options={current.options} pictures={current.type === 'picture_sequence'} value={answers[current.id] || null} disabled={busy} onComplete={(v) => void choose(v)} labels={lang === 'ar' ? COMP_LABELS_AR : COMP_LABELS_EN} />}
+          {current.type === 'cloze_bank' && <Cloze key={current.id} hint={false} text={current.questionText} options={current.options} value={answers[current.id] || null} disabled={busy} onComplete={(v) => void choose(v)} labels={lang === 'ar' ? COMP_LABELS_AR : COMP_LABELS_EN} />}
+          {!COMPOSITE.has(current.type) && <div className={`mi-opts${current.type === 'picture_choice' ? ' pics' : ''}`} role="radiogroup" aria-label={t('test', 'choices')} data-voice-read="2">
             {current.options.map((o, i) => <button key={o.id} type="button" role="radio" aria-checked={answers[current.id] === o.id} className={`mi-opt${answers[current.id] === o.id ? ' on' : ''}`} onClick={() => void choose(o.id)} data-testid="mi-opt">
               <span className="mi-letter">{letters[i]}</span>{o.image ? <img src={o.image} alt={o.alt || o.text || ''} /> : <span dir="rtl" lang="ar">{optionText(current, o)}</span>}<span className="mi-check" aria-hidden="true">{answers[current.id] === o.id ? '✓' : ''}</span>
             </button>)}

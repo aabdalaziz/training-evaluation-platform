@@ -43,12 +43,12 @@ test('م13-ج: normalizePack — الحزمة الصالحة تمرّ · الم�
   const raw = good(); raw.items[0].question_text = 'لَوْ كُنْتُ مَكانَكَ'; const w = normalizePack(raw); assert.ok(w.ok); assert.ok(w.warnings.some((x) => /مشكول/.test(x.msg)), 'تشكيل في B1 → تحذير');
 });
 
-test('م13-ج: normalizePack — الرفض: إصدار خاطئ · دفعة محجوزة · نوع غير مدعوم (cloze_bank) · مفتاح لا يطابق · واصف من مستوى آخر · وحدة من مستوى آخر · استماع بلا مقطع · رمز مكرّر · جذع مكرّر · بلا بنود', () => {
+test('م13-ج: normalizePack — الرفض: إصدار خاطئ · دفعة محجوزة · نوع غير مدعوم (word_tap) · مفتاح لا يطابق · واصف من مستوى آخر · وحدة من مستوى آخر · استماع بلا مقطع · رمز مكرّر · جذع مكرّر · بلا بنود', () => {
   const bad = (mut: (p: any) => void, re: RegExp) => { const p = good(); mut(p); const n = normalizePack(p); assert.ok(!n.ok, `كان يجب الرفض: ${re}`); assert.ok(n.problems.some((x) => re.test(x.msg)), `${re} — ${JSON.stringify(n.problems)}`); };
   bad((p) => { p.version = 'miaar-pack-0'; }, /الإصدار/);
   for (const v of RESERVED_VERSIONS) bad((p) => { p.content_version = v; }, /محجوزة/);
   bad((p) => { p.content_version = 'M13'; }, /athar-xxx/);
-  bad((p) => { p.items[0].item_type = 'cloze_bank'; }, /غير مدعوم/);
+  bad((p) => { p.items[0].item_type = 'word_tap'; }, /غير مدعوم/);
   bad((p) => { p.items[0].correct = 'e'; }, /المفتاح/);
   bad((p) => { p.items[0].descriptor_code = 'LU-A1-01'; }, /مستوى آخر/);
   bad((p) => { p.items[0].descriptor_code = 'RD-B1-01'; }, /لا يناسب/);

@@ -22,8 +22,9 @@ type Desc = { code: string; level: string; mode: string; text_ar: string };
 const LEVELS_ALL = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const SKILLS_ALL = ['grammar_vocab', 'reading', 'listening'];
 const STATUS_AR: Record<string, string> = { draft: 'مسودّة', in_review: 'قيد المراجعة', approved: 'معتمد', archived: 'مؤرشف' };
-const TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور', matching: 'مطابقة (م13-ب)', ordering: 'ترتيب (م13-ب)' };
-const isComposite = (t: string) => t === 'matching' || t === 'ordering';
+const TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور', matching: 'مطابقة (م13-ب)', ordering: 'ترتيب (م13-ب)', cloze_bank: 'فراغات بمصرف كلمات (م14)', picture_sequence: 'تسلسل صور (م14)' };
+const isComposite = (t: string) => t === 'matching' || t === 'ordering' || t === 'cloze_bank' || t === 'picture_sequence';
+const blanksOf = (t: string) => (t.match(/_{3,}/g) || []).length;
 /** م13-ب: المفتاح المركّب «b-a-d-c» ↔ مصفوفة */
 const keyParts = (k: string | null | undefined, n: number): string[] => { const p = typeof k === 'string' && k.includes('-') ? k.split('-') : []; return Array.from({ length: n }, (_, i) => p[i] || ''); };
 const DOMAIN_AR: Record<string, string> = { personal: 'شخصي', public: 'عام', educational: 'تعليمي', professional: 'مهني' };
@@ -156,8 +157,12 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false }
           </div>)}
           {draft.left.length < 4 && <button type="button" className="bk-soft" onClick={() => setDraft({ ...draft, left: [...draft.left, { id: String(draft.left.length + 1), text: '' }] })}>+ عنصر أيسر</button>}
         </div>}
-        {draft.item_type === 'ordering' && <div className="bk-left" data-testid="bank-order">
-          <p className="mm-note">اكتب القطع أدناه <b>مبعثرة</b>، ثم حدّد الترتيب الصحيح هنا. المفتاح: <code dir="ltr">{draft.correct}</code></p>
+        {draft.item_type === 'cloze_bank' && <div className="bk-left" data-testid="bank-cloze">
+          <p className="mm-note">اكتب في نصّ السؤال 2–4 فراغات «___»؛ المصرف أدناه = الفراغات + مشتّت أو اثنان. الفراغات المكتشفة: <b>{blanksOf(draft.question_text)}</b> · المفتاح: <code dir="ltr">{draft.correct}</code></p>
+          <div className="bk-row">{Array.from({ length: blanksOf(draft.question_text) }, (_, i) => <select key={i} aria-label={`الفراغ ${i + 1}`} value={keyParts(draft.correct, blanksOf(draft.question_text))[i]} onChange={(e) => { const parts = keyParts(draft.correct, blanksOf(draft.question_text)); parts[i] = e.target.value; setDraft({ ...draft, correct: parts.join('-') }); }}><option value="">{i + 1}: —</option>{draft.options.map((o: Opt) => <option key={o.id} value={o.id}>{i + 1}: {o.id} — {o.text}</option>)}</select>)}</div>
+        </div>}
+        {(draft.item_type === 'ordering' || draft.item_type === 'picture_sequence') && <div className="bk-left" data-testid="bank-order">
+          <p className="mm-note">اكتب القطع أدناه <b>مبعثرة</b>{draft.item_type === 'picture_sequence' ? ' (صورة لكلّ قطعة)' : ''}، ثم حدّد الترتيب الصحيح هنا. المفتاح: <code dir="ltr">{draft.correct}</code></p>
           <div className="bk-row">{draft.options.map((_: Opt, i: number) => <select key={i} aria-label={`القطعة رقم ${i + 1}`} value={keyParts(draft.correct, draft.options.length)[i]} onChange={(e) => { const parts = keyParts(draft.correct, draft.options.length); parts[i] = e.target.value; setDraft({ ...draft, correct: parts.join('-') }); }}><option value="">{i + 1}: —</option>{draft.options.map((o: Opt) => <option key={o.id} value={o.id}>{i + 1}: {o.id}</option>)}</select>)}</div>
         </div>}
         <div className="bk-opts">{draft.options.map((o: Opt, i: number) => <div key={o.id} className={`bk-opt${draft.correct === o.id ? ' key' : ''}`}>
