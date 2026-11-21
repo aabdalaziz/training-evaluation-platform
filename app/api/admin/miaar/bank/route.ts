@@ -33,7 +33,7 @@ import type { ItemType } from '../../../../../lib/miaar/registry';
 import { optionList, leftList, MEDIA_BUCKET, itemBatch, invalidatePoolCache, lazyMediaUrl, fetchAll } from '../../../../../lib/miaar/bank';
 import { normalizePack, summarize, importPack, recentImports, acceptedOf } from '../../../../../lib/miaar/pack';
 import { heritageSummary, markHeritage, archiveUnreviewed, isHeritageOutcome, HERITAGE_OUTCOMES } from '../../../../../lib/miaar/heritage';
-import { canApprove, isOwnItem, reviewSummary, APPROVE_REASON_AR } from '../../../../../lib/miaar/review';
+import { canApprove, isOwnItem, reviewSummary, APPROVE_REASON_AR, APPROVER_ADMINS } from '../../../../../lib/miaar/review';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -215,14 +215,20 @@ export async function POST(req: Request) {
     const from = status === 'approved' ? ['in_review', 'draft'] : status === 'archived' ? ['approved', 'in_review', 'draft'] : ['approved', 'draft'];
     let sel = batchFilter(db.from('question_bank_items').select('id'), batch).in('status', from); if (level) sel = sel.eq('level', level);
     const { data: rows, error } = await sel.limit(2000); if (error) return bad(error.message, 500);
-    let ids = ((rows || []) as any[]).map((r) => r.id); let skippedOwn = 0;
-    if (status === 'approved' && ids.length) { /* م15: تخطّي بنود المستخدم نفسه */
-      const { data: owners } = await db.from('question_bank_items').select('id, created_by, author_notes').in('id', ids); const own = new Set(((owners || []) as any[]).filter((r) => isOwnItem(r, user)).map((r) => r.id)); skippedOwn = own.size; ids = ids.filter((x) => !own.has(x));
+    let ids = ((rows || []) as any[]).map((r) => r.id); let skippedOwn = 0; let selfCount = 0;
+    /* م15.2: اعتماد ذاتي موثَّق للدفعة — للمديرين فقط مع ملاحظة ≥3 أحرف؛ وإلا تُتخطّى بنود المستخدم نفسه (م15) */
+    const selfBatch = status === 'approved' && b.self_approve === true;
+    if (selfBatch && !APPROVER_ADMINS.includes(String(user.role || '').toUpperCase())) return bad(APPROVE_REASON_AR.self_needs_admin, 403);
+    if (selfBatch && note.length < 3) return bad(APPROVE_REASON_AR.self_needs_note);
+    if (status === 'approved' && ids.length) {
+      const { data: owners } = await db.from('question_bank_items').select('id, created_by, author_notes').in('id', ids); const own = new Set(((owners || []) as any[]).filter((r) => isOwnItem(r, user)).map((r) => r.id));
+      if (selfBatch) selfCount = own.size; else { skippedOwn = own.size; ids = ids.filter((x) => !own.has(x)); }
     }
     if (status === 'approved' && ids.length) { const { data: keys } = await db.from('question_bank_answer_keys').select('item_id').in('item_id', ids); const have = new Set(((keys || []) as any[]).map((k) => k.item_id)); const { data: prod } = await db.from('question_bank_items').select('id').in('id', ids).in('skill', [...PRODUCTIVE_SKILLS]); for (const r of (prod || []) as any[]) have.add(r.id); ids = ids.filter((x) => have.has(x)); }
     if (!ids.length) return NextResponse.json({ success: true, count: 0, skipped_own: skippedOwn, note_ar: skippedOwn ? `لا بنود يمكنك اعتمادها — ${skippedOwn} بندًا من استيرادك (الاعتماد بيد مراجع آخر).` : 'لا بنود مطابقة.' });
-    for (let i = 0; i < ids.length; i += 200) { const part = ids.slice(i, i + 200); const up = await db.from('question_bank_items').update({ status, latest_review_note: note || `دفعة ${batch}`, reviewed_by: user.id, reviewed_at: now, updated_at: now }).in('id', part); if (up.error) return bad(up.error.message, 500); await reviewEvent(db, part, `batch:${status}`, note || `دفعة ${batch}`, user.id); }
-    return NextResponse.json({ success: true, count: ids.length, skipped_own: skippedOwn, note_ar: `${status === 'approved' ? 'اعتُمد' : status === 'archived' ? 'أُرشف' : 'أُعيد للمراجعة'} ${ids.length} بندًا من دفعة ${batch}${level ? ` (${level})` : ''}${skippedOwn ? ` · تُخطّي ${skippedOwn} من استيرادك` : ''}.` });
+    for (let i = 0; i < ids.length; i += 200) { const part = ids.slice(i, i + 200); const up = await db.from('question_bank_items').update({ status, latest_review_note: note || `دفعة ${batch}`, reviewed_by: user.id, reviewed_at: now, updated_at: now }).in('id', part); if (up.error) return bad(up.error.message, 500); await reviewEvent(db, part, selfBatch && selfCount ? 'batch:approved:self' : `batch:${status}`, note || `دفعة ${batch}`, user.id); }
+    if (selfBatch && selfCount) { try { await db.from('audit_logs').insert({ actor_id: user.id, actor_role: user.role, action: 'miaar.bank.self_approve', entity_type: 'miaar_bank', entity_id: batch, entity_label: `اعتماد ذاتي لدفعة ${batch}${level ? ` (${level})` : ''} — ${selfCount} بندًا`, source: 'admin', metadata: { batch, level, count: ids.length, own: selfCount, note } }); } catch { /* التدقيق لا يعطّل العمل */ } }
+    return NextResponse.json({ success: true, count: ids.length, skipped_own: skippedOwn, self_approved: selfCount, note_ar: `${status === 'approved' ? 'اعتُمد' : status === 'archived' ? 'أُرشف' : 'أُعيد للمراجعة'} ${ids.length} بندًا من دفعة ${batch}${level ? ` (${level})` : ''}${skippedOwn ? ` · تُخطّي ${skippedOwn} من استيرادك` : ''}${selfCount ? ` · منها ${selfCount} اعتماد ذاتي موثَّق` : ''}.` });
   }
   if (action === 'task_update' || action === 'task_create') {
     const create = action === 'task_create';

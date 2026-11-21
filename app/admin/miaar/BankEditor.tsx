@@ -15,6 +15,7 @@ import { RUBRIC_DIMENSIONS, DIMENSION_AR, WRITING_LIMITS, SPEAKING_LIMITS, valid
 import BankImport from './BankImport';
 import BankHeritage, { StatChip } from './BankHeritage';
 import ReviewDesk from './ReviewDesk';
+import { APPROVER_ADMINS } from '../../../lib/miaar/review';
 
 type Opt = { id: string; text: string; image?: string | null; alt?: string | null };
 type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; task?: any; stats?: { n: number; p: number | null; rpb: number | null; flags: string[] } | null; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; stimulus?: any; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
@@ -74,7 +75,14 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false, 
 
   const after = async (j: any) => { if (j) { await load(offset); onChanged(); } };
   const setStatus = (ids: string[], status: string) => post({ action: 'item_status', ids, status, note }).then(after);
-  const batchAct = (batch: string, status: string) => { const lvl = batchLevel || ''; const what = status === 'approved' ? 'اعتماد' : status === 'archived' ? 'أرشفة' : 'إعادة'; if (!confirm(`${what} كل بنود «${BATCH_AR[batch] || batch}»${lvl ? ` في ${BANK_LEVEL_AR[lvl as keyof typeof BANK_LEVEL_AR] || lvl}` : ''}؟`)) return; void post({ action: 'batch_status', batch, status, level: lvl || undefined, note }).then(after); };
+  const batchAct = (batch: string, status: string) => { const lvl = batchLevel || ''; const what = status === 'approved' ? 'اعتماد' : status === 'archived' ? 'أرشفة' : 'إعادة'; if (!confirm(`${what} كل بنود «${BATCH_AR[batch] || batch}»${lvl ? ` في ${BANK_LEVEL_AR[lvl as keyof typeof BANK_LEVEL_AR] || lvl}` : ''}؟`)) return; void post({ action: 'batch_status', batch, status, level: lvl || undefined, note }).then(async (j) => {
+      /* م15.2: المدير المستورِد — اعتماد ذاتي موثَّق للدفعة بعد تأكيد مع ملاحظة إلزامية */
+      if (j && status === 'approved' && Number(j.skipped_own) > 0 && APPROVER_ADMINS.includes(String(role || '').toUpperCase())) {
+        const why = window.prompt(`${j.skipped_own} بندًا من استيرادك تُخطّيت (الاعتماد بيد مراجع آخر).\nاعتماد ذاتي موثَّق؟ اكتب سبب الاعتماد (3 أحرف فأكثر) — يُسجَّل في سجل التدقيق:`, note || '');
+        if (why && why.trim().length >= 3) { const k = await post({ action: 'batch_status', batch, status, level: lvl || undefined, note: why.trim(), self_approve: true }); after(k); return; }
+      }
+      after(j);
+    }); };
   const save = async () => { if (!edit || !draft) return; const j = await post({ action: edit.id === 'new' ? 'item_create' : 'item_update', id: edit.id, level: edit.level, skill: edit.skill, ...draft, note }); if (j) { setEdit(null); await load(offset); onChanged(); } };
   const startNew = () => { const level = f.level || 'A1'; const skill = f.skill || 'grammar_vocab'; setEdit({ id: 'new', item_code: 'جديد', content_version: 'athar-staff', level, skill, passage_id: null, question_text: '', options: [{ id: 'a', text: '' }, { id: 'b', text: '' }, { id: 'c', text: '' }, { id: 'd', text: '' }], item_type: 'mcq', status: 'draft', descriptor_code: null, domain: null, difficulty_est: 3, media_path: null, media_alt: null, author_notes: null, legacy_extra: null, latest_review_note: null, correct: 'a', batch: 'athar-staff', passage: null }); };
   const audioOf = (p: { audio_public_path: string | null; audio_storage_path: string | null } | null) => p?.audio_public_path || (p?.audio_storage_path ? `(دلو) ${p.audio_storage_path}` : '');

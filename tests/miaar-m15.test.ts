@@ -1,7 +1,7 @@
 /* مِعيار م15 — مكتب المراجعة: القفل · الفحص الآلي · المفتاح المقروء · ملخّص التقدّم */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { canApprove, isOwnItem, creatorsOf, reviewChecklist, keyText, reviewSummary, APPROVE_REASON_AR } from '../lib/miaar/review';
+import { canApprove, isOwnItem, creatorsOf, reviewChecklist, keyText, reviewSummary, APPROVE_REASON_AR, APPROVER_ADMINS } from '../lib/miaar/review';
 
 const O = (ids: string, texts?: string[]) => [...ids].map((id, i) => ({ id, text: texts ? texts[i] : `خيار ${id}` }));
 
@@ -45,4 +45,13 @@ test('م15: keyText — mcq · فراغات · مطابقة · ترتيب', () =
 test('م15: reviewSummary — تجميع دفعة × مستوى × حالة', () => {
   const s = reviewSummary([{ batch: 'athar-m14', level: 'A1', status: 'in_review', n: 12 }, { batch: 'athar-m14', level: 'A1', status: 'approved', n: 3 }, { batch: 'athar-m14', level: 'B1', status: 'in_review', n: 12 }, { batch: 'athar-m13b', level: 'A1', status: 'in_review', n: 12 }]);
   assert.deepEqual(s['athar-m14'].total, { in_review: 24, approved: 3 }); assert.deepEqual(s['athar-m14'].levels.A1, { in_review: 12, approved: 3 }); assert.equal(s['athar-m13b'].total.in_review, 12);
+});
+
+test('م15.2: الاعتماد الذاتي للدفعة — المدير مع ملاحظة فقط · المحلّل يُرفض · بلا ملاحظة يُرفض', () => {
+  /* القاعدة نفسها التي يطبّقها batch_status على مستوى الدفعة */
+  const own = { created_by: 'u-owner', author_notes: { imported_by: 'u-owner' } };
+  assert.ok(APPROVER_ADMINS.includes('ADMIN') && !APPROVER_ADMINS.includes('QUALITY_ANALYST'));
+  assert.deepEqual(canApprove(own, { id: 'u-owner', role: 'ADMIN' }, { selfApprove: true, note: 'إنهاء مرحلة التجريب' }), { ok: true, self: true });
+  assert.equal(canApprove(own, { id: 'u-owner', role: 'QUALITY_ANALYST' }, { selfApprove: true, note: 'سبب' }).ok, false);
+  assert.equal(canApprove(own, { id: 'u-owner', role: 'ADMIN' }, { selfApprove: true, note: 'ق' }).ok, false);
 });
