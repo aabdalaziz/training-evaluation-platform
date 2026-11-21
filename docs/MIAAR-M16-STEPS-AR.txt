@@ -1,0 +1,6 @@
+م16 — خطوات الرفع (≈3 دقائق)
+1) فكّ ATHAR-MIAAR-M16.zip ثم افتح https://github.com/aabdalaziz/training-evaluation-platform/upload/main
+2) اسحب المجلدات lib/ app/ tests/ docs/ (تحلّ محلّ الملفات نفسها) · رسالة الالتزام:
+   Miaar m16: composite item analysis (per-part p, near-miss, swaps) in balance
+3) بعد ≈5 دقائق: https://athar-portal.com/admin/miaar/balance → «أعد الوزن الآن» → لا شيء جديد يظهر قبل 30 إجابة على بند مركّب — طبيعي.
+4) حين تصل البنود للعتبة: «بنود تحتاج نظرة» تعرض سطر «الفراغ ١ 95% · الفراغ ٢ 45% (أكثر خطأ: …)» والأعلام الجديدة؛ وفي البنك «خارج النطاق» يلتقطها.

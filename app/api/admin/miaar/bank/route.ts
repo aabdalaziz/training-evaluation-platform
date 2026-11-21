@@ -34,6 +34,8 @@ import { optionList, leftList, MEDIA_BUCKET, itemBatch, invalidatePoolCache, laz
 import { normalizePack, summarize, importPack, recentImports, acceptedOf } from '../../../../../lib/miaar/pack';
 import { heritageSummary, markHeritage, archiveUnreviewed, isHeritageOutcome, HERITAGE_OUTCOMES } from '../../../../../lib/miaar/heritage';
 import { canApprove, isOwnItem, reviewSummary, APPROVE_REASON_AR, APPROVER_ADMINS } from '../../../../../lib/miaar/review';
+import { splitDist } from '../../../../../lib/miaar/balance';
+import { FLAG_AR, type FlagCode } from '../../../../../lib/miaar/psychometrics';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -120,7 +122,7 @@ export async function GET(req: Request) {
   const pasOf = new Map<string, any>(((pas.data || []) as any[]).map((x) => [x.id, x]));
   const codesOnPage = rows.map((r) => r.item_code).filter(Boolean);
   const st = codesOnPage.length ? await db.from('question_bank_item_stats').select('item_code, n, p, rpb, distractors, flags, exposure, computed_at').in('item_code', codesOnPage) : { data: [] };
-  const statOf = new Map<string, any>(((st.data || []) as any[]).map((x) => [x.item_code, { n: x.n || 0, p: x.p == null ? null : Number(x.p), rpb: x.rpb == null ? null : Number(x.rpb), distractors: x.distractors || {}, flags: Array.isArray(x.flags) ? x.flags : [], exposure: x.exposure || 0, computed_at: x.computed_at }]));
+  const statOf = new Map<string, any>(((st.data || []) as any[]).map((x) => [x.item_code, { n: x.n || 0, p: x.p == null ? null : Number(x.p), rpb: x.rpb == null ? null : Number(x.rpb), distractors: splitDist(x.distractors).dist, composite: splitDist(x.distractors).composite /* م16 */, flags: Array.isArray(x.flags) ? x.flags : [], flags_ar: (Array.isArray(x.flags) ? x.flags : []).map((f: string) => FLAG_AR[f as FlagCode] || f), exposure: x.exposure || 0, computed_at: x.computed_at }]));
   const items = rows.map((r) => ({ ...r, correct: keyOf.get(r.id) || null, batch: itemBatch(r), passage: r.passage_id ? pasOf.get(r.passage_id) || null : null, stats: statOf.get(r.item_code) || null }));
   return NextResponse.json({ success: true, items, total: count || 0, offset, limit, levels: BANK_LEVELS, skills: SKILLS, statuses: STATUSES, domains: DOMAINS }, { headers: { 'Cache-Control': 'no-store' } });
 }

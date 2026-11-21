@@ -9,7 +9,7 @@
  *  الاقتراحات (نقل بند لمستوى آخر) تبقى اقتراحات حتى يعتمدها المعدّ: acceptMove/dismissSuggestion/setAnchor.
  */
 import { fetchAll } from './bank';
-import { itemStats, formReliability, rasch, bandMap, suggestLevel, MIN_N_CALIB, MIN_N_ITEM, FLAG_AR, FLAG_SEVERITY, LIGHT_AR, type Response, type ItemStat, type FormReliability, type Light } from './psychometrics';
+import { itemStats, formReliability, rasch, bandMap, suggestLevel, MIN_N_CALIB, MIN_N_ITEM, FLAG_AR, FLAG_SEVERITY, LIGHT_AR, type Response, type ItemStat, type FormReliability, type Light, type CompositeStat } from './psychometrics';
 import { planFromSession } from './blueprint';
 import { PASS_PERCENT } from './registry';
 
@@ -49,14 +49,15 @@ export async function collect(db: any, opts: { maxSessions?: number; inviteId?: 
       responses.push({ session: s.id, item: a.question_id, correct: a.selected_option_id === key ? 1 : 0, selected: a.selected_option_id, level: row.level, ms });
     }
   }
-  return { sessions: S, sessionOf, responses, byCode, keyByCode, exposure, rows };
+  const typeByCode = new Map<string, string>(); for (const [code, r] of byCode) typeByCode.set(code, String(r.item_type || 'mcq')); /* م16 */
+  return { sessions: S, sessionOf, responses, byCode, keyByCode, typeByCode, exposure, rows };
 }
 
 export type ReweighResult = { sessions: number; responses: number; items: number; calibrated: number; suggestions: number; scopes: number; ms: number };
 /** الوزن الكامل: يكتب الجداول ويعيد ملخّصًا */
 export async function reweigh(db: any): Promise<ReweighResult> {
   const t0 = Date.now(); const C = await collect(db);
-  const stats = itemStats(C.responses, C.keyByCode);
+  const stats = itemStats(C.responses, C.keyByCode, C.typeByCode); /* م16: تحليل أجزاء البنود المركّبة */
   const R = rasch(C.responses, MIN_N_ITEM); const rb = new Map(R.items.map((i) => [i.item, i]));
   const calibrated = R.items.filter((i) => i.n >= MIN_N_CALIB && C.byCode.get(i.item)?.status === 'approved').map((i) => ({ item: i.item, level: C.byCode.get(i.item)!.level, b: i.b }));
   const map = bandMap(calibrated);
@@ -68,7 +69,7 @@ export async function reweigh(db: any): Promise<ReweighResult> {
     const row = C.byCode.get(s.item); const r = rb.get(s.item);
     const canCalib = !!r && r.n >= MIN_N_CALIB; const sug = canCalib && row?.status === 'approved' ? suggestLevel(row.level, r!.b, map) : null;
     const keep = sug && dismissed.get(s.item) === sug ? null : sug; if (keep) suggestions += 1;
-    statRows.push({ item_code: s.item, item_id: row?.id || null, level: s.level, skill: row?.skill || null, n: s.n, p: s.p, rpb: s.rpb, distractors: s.distractors, median_ms: s.median_ms, exposure: C.exposure.get(s.item) || s.n, flags: s.flags,
+    statRows.push({ item_code: s.item, item_id: row?.id || null, level: s.level, skill: row?.skill || null, n: s.n, p: s.p, rpb: s.rpb, distractors: s.composite ? { ...s.distractors, _composite: s.composite } : s.distractors /* م16: بلا ترحيل — داخل jsonb */, median_ms: s.median_ms, exposure: C.exposure.get(s.item) || s.n, flags: s.flags,
       b: r ? r.b : null, se: r ? r.se : null, infit: r ? r.infit : null, outfit: r ? r.outfit : null, calib_n: r ? r.n : 0, suggest_level: keep, dismissed_level: dismissed.get(s.item) || null, computed_at: now });
   }
   for (const part of chunk(statRows, 200)) { const { error } = await db.from('question_bank_item_stats').upsert(part, { onConflict: 'item_code' }); if (error) throw new Error('stats_write_failed: ' + error.message); }
@@ -96,6 +97,12 @@ export async function reweighIfDue(db: any): Promise<ReweighResult | null> {
 }
 
 /* ───────────── القراءة ───────────── */
+/** م16: distractors jsonb قد يحمل تحليل الأجزاء تحت "_composite" — نفصله عن حصص الخيارات */
+export function splitDist(d: any): { dist: Record<string, number>; composite: CompositeStat | null } {
+  const dist: Record<string, number> = {}; let composite: CompositeStat | null = null;
+  for (const [k, v] of Object.entries((d && typeof d === 'object' ? d : {}) as Record<string, unknown>)) { if (k === '_composite') composite = (v as CompositeStat) || null; else if (!k.startsWith('_') && typeof v === 'number') dist[k] = v; }
+  return { dist, composite };
+}
 export type ItemStatRow = ItemStat & { item_id: string | null; skill: string | null; exposure: number; b: number | null; se: number | null; infit: number | null; outfit: number | null; calib_n: number; suggest_level: string | null; dismissed_at: string | null; computed_at: string; is_anchor: boolean; status: string; question_text: string; flags_ar: string[]; severity: number };
 export async function balanceSummary(db: any) {
   const [{ data: st }, { data: rel }, { data: items }] = await Promise.all([
@@ -104,7 +111,7 @@ export async function balanceSummary(db: any) {
     fetchAll(() => db.from('question_bank_items').select('id, item_code, status, is_anchor, question_text, level, skill').neq('source_kind', 'iqra').order('id')), /* م15.1: تجاوز سقف 1000 صف */
   ]);
   const info = new Map<string, any>(); for (const r of (items || []) as any[]) { const prev = info.get(r.item_code); if (!prev || (prev.status !== 'approved' && r.status === 'approved')) info.set(r.item_code, r); }
-  const rows: ItemStatRow[] = ((st || []) as any[]).map((r) => { const i = info.get(r.item_code) || {}; const flags: string[] = Array.isArray(r.flags) ? r.flags : []; return { item: r.item_code, item_id: r.item_id, level: r.level, skill: r.skill, n: r.n, p: Number(r.p), rpb: Number(r.rpb), distractors: r.distractors || {}, median_ms: r.median_ms, exposure: r.exposure, flags, flags_ar: flags.map((f) => (FLAG_AR as any)[f] || f), severity: Math.max(0, ...flags.map((f) => (FLAG_SEVERITY as any)[f] || 0)), b: r.b == null ? null : Number(r.b), se: r.se == null ? null : Number(r.se), infit: r.infit == null ? null : Number(r.infit), outfit: r.outfit == null ? null : Number(r.outfit), calib_n: r.calib_n || 0, suggest_level: r.suggest_level || null, dismissed_at: r.dismissed_at || null, computed_at: r.computed_at, is_anchor: !!i.is_anchor, status: i.status || 'unknown', question_text: String(i.question_text || '').slice(0, 140) }; });
+  const rows: ItemStatRow[] = ((st || []) as any[]).map((r) => { const i = info.get(r.item_code) || {}; const flags: string[] = Array.isArray(r.flags) ? r.flags : []; return { item: r.item_code, item_id: r.item_id, level: r.level, skill: r.skill, n: r.n, p: Number(r.p), rpb: Number(r.rpb), distractors: splitDist(r.distractors).dist, composite: splitDist(r.distractors).composite, median_ms: r.median_ms, exposure: r.exposure, flags, flags_ar: flags.map((f) => (FLAG_AR as any)[f] || f), severity: Math.max(0, ...flags.map((f) => (FLAG_SEVERITY as any)[f] || 0)), b: r.b == null ? null : Number(r.b), se: r.se == null ? null : Number(r.se), infit: r.infit == null ? null : Number(r.infit), outfit: r.outfit == null ? null : Number(r.outfit), calib_n: r.calib_n || 0, suggest_level: r.suggest_level || null, dismissed_at: r.dismissed_at || null, computed_at: r.computed_at, is_anchor: !!i.is_anchor, status: i.status || 'unknown', question_text: String(i.question_text || '').slice(0, 140) }; });
   const meta = ((rel || []) as any[]).find((r) => r.scope === 'meta'); let metaInfo: any = null; try { metaInfo = meta ? JSON.parse(meta.advice) : null; } catch { metaInfo = null; }
   const scopes = ((rel || []) as any[]).filter((r) => r.scope !== 'meta').map((r) => ({ ...r, rel: Number(r.rel), light_ar: LIGHT_AR[r.light as Light] || r.light }));
   const attention = rows.filter((r) => r.severity >= 2 || r.suggest_level).sort((a, b) => b.severity - a.severity || b.n - a.n).slice(0, 60);

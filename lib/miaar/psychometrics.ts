@@ -28,20 +28,66 @@ const r3 = (v: number) => Math.round(v * 1000) / 1000;
 /* ───────────── تحليل البنود (CTT) ───────────── */
 export type ItemStat = {
   item: string; level: string; n: number; p: number; rpb: number; distractors: Record<string, number>; median_ms: number | null; flags: string[];
+  composite?: CompositeStat | null; /* م16: تحليل الأجزاء للبند المركّب */
 };
-export type FlagCode = 'too_easy' | 'too_hard' | 'no_discrimination' | 'negative_discrimination' | 'dead_distractor' | 'distractor_beats_key' | 'collecting';
+export type FlagCode = 'too_easy' | 'too_hard' | 'no_discrimination' | 'negative_discrimination' | 'dead_distractor' | 'distractor_beats_key' | 'collecting'
+  | 'part_too_hard' | 'part_ambiguous' | 'pair_swapped' | 'near_miss_heavy'; /* م16 */
 export const FLAG_AR: Record<FlagCode, string> = {
   too_easy: 'سهل جدًا لمستواه', too_hard: 'صعب جدًا لمستواه', no_discrimination: 'لا يميّز بين من يعرف ومن لا يعرف',
   negative_discrimination: 'يميّز عكسيًا — راجع المفتاح أو الصياغة', dead_distractor: 'مشتِّت ميت (لا يختاره أحد)',
   distractor_beats_key: 'مشتِّت أقوى من المفتاح — خطأ محتمل في المفتاح!', collecting: 'ما زال يجمع إجابات',
+  part_too_hard: 'جزء واحد وحده يُسقط البند — راجع ذلك الجزء', part_ambiguous: 'جزء يقبل إجابةً ثانية — راجع المفتاح أو المشتِّت',
+  pair_swapped: 'جزءان يتبادلان عند المتقدّمين — قد يصلحان معًا', near_miss_heavy: 'أكثر الأخطاء خطأ جزء واحد — البند يميّز بجزء واحد',
 };
-export const FLAG_SEVERITY: Record<FlagCode, 1 | 2 | 3> = { distractor_beats_key: 3, negative_discrimination: 3, no_discrimination: 2, too_easy: 1, too_hard: 2, dead_distractor: 1, collecting: 0 as any };
+export const FLAG_SEVERITY: Record<FlagCode, 1 | 2 | 3> = { distractor_beats_key: 3, negative_discrimination: 3, no_discrimination: 2, too_easy: 1, too_hard: 2, dead_distractor: 1, collecting: 0 as any, part_too_hard: 2, part_ambiguous: 3, pair_swapped: 2, near_miss_heavy: 1 };
+
+/* ───────────── م16: البنود المركّبة (مطابقة · فراغات من قائمة · ترتيب · تسلسل صور) ───────────── */
+export type CompositeKind = 'slot' | 'perm';
+export type PartStat = { i: number; p: number; top_wrong: string | null; top_wrong_share: number };
+export type CompositeStat = { type: string; kind: CompositeKind; n: number; parts: PartStat[]; near_miss: number; swaps: Array<{ a: number; b: number; share: number }>; flags: string[]; detail_ar: string[] };
+export const COMPOSITE_KIND: Record<string, CompositeKind> = { matching: 'slot', cloze_bank: 'slot', ordering: 'perm', picture_sequence: 'perm' };
+export const PART_AR: Record<string, string> = { matching: 'الزوج', cloze_bank: 'الفراغ', ordering: 'الموضع', picture_sequence: 'الموضع' };
+const AR_DIGITS = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩']; export const arNum = (n: number) => String(n).split('').map((d) => AR_DIGITS[Number(d)] ?? d).join('');
+/**
+ * تحليل الأجزاء: لكلّ جزء حصة الصواب وأكثر إجابة خاطئة · «قريب من الصواب» بين الأخطاء (جزء واحد خطأ للخانات، تبديل متجاور واحد للترتيب)
+ * · أزواج التبادل (resp[i]=key[j] ∧ resp[j]=key[i]). الأعلام فقط عند n ≥ MIN_N_ITEM. الاستجابات بطول مخالف للمفتاح تُهمَل من تحليل الأجزاء.
+ */
+export function compositeStats(rs: readonly { selected: string; correct: 0 | 1 }[], key: string, type: string): CompositeStat | null {
+  const kind = COMPOSITE_KIND[type]; if (!kind) return null;
+  const K = key.split('-'); const L = K.length; if (L < 2) return null;
+  const valid = rs.map((r) => r.selected.split('-')).filter((p) => p.length === L); const n = valid.length; if (!n) return null;
+  const parts: PartStat[] = [];
+  for (let i = 0; i < L; i += 1) {
+    let ok = 0; const wrong: Record<string, number> = {};
+    for (const p of valid) { if (p[i] === K[i]) ok += 1; else wrong[p[i]] = (wrong[p[i]] || 0) + 1; }
+    const top = Object.entries(wrong).sort((a, b) => b[1] - a[1])[0];
+    parts.push({ i, p: r3(ok / n), top_wrong: top ? top[0] : null, top_wrong_share: top ? r3(top[1] / n) : 0 });
+  }
+  let wrongN = 0, near = 0; const swapCount = new Map<string, number>();
+  for (const p of valid) {
+    const bad = K.map((k, i) => (p[i] === k ? 0 : 1)); const nb = bad.reduce((a: number, b) => a + b, 0); if (!nb) continue; wrongN += 1;
+    if (kind === 'slot' ? nb === 1 : false) near += 1;
+    for (let i = 0; i < L; i += 1) for (let j = i + 1; j < L; j += 1) if (p[i] === K[j] && p[j] === K[i] && p[i] !== p[j]) { const id = `${i}-${j}`; swapCount.set(id, (swapCount.get(id) || 0) + 1); if (kind === 'perm' && nb === 2 && j === i + 1) near += 1; }
+  }
+  const swaps = [...swapCount.entries()].map(([id, c]) => { const [a, b] = id.split('-').map(Number); return { a, b, share: r3(c / n) }; }).sort((x, y) => y.share - x.share).slice(0, 3);
+  const near_miss = wrongN ? r3(near / wrongN) : 0; const p = r3(valid.filter((q) => q.every((v, i) => v === K[i])).length / n);
+  const flags: string[] = []; const detail_ar: string[] = []; const P = PART_AR[type] || 'الجزء';
+  if (n >= MIN_N_ITEM) {
+    /* p الكلّي ≤ أدنى جزء دائمًا؛ العلم يعني: جزء دون 0.25 بينما بقيّة الأجزاء سهلة (وسيطها ≥ 0.6) — أي أن جزءًا واحدًا هو ما يُسقط البند */
+    const hard = parts.filter((x) => x.p < 0.25); const rest = parts.filter((x) => x.p >= 0.25).map((x) => x.p);
+    if (hard.length && rest.length && median(rest) >= 0.6) { flags.push('part_too_hard'); detail_ar.push(`${P} ${hard.map((x) => arNum(x.i + 1)).join('،')} صعب وحده (${hard.map((x) => `${Math.round(x.p * 100)}%`).join(' · ')})`); }
+    const amb = parts.filter((x) => x.top_wrong && x.top_wrong_share >= x.p); if (amb.length) { flags.push('part_ambiguous'); for (const x of amb) detail_ar.push(`${P} ${arNum(x.i + 1)}: «${x.top_wrong}» ${Math.round(x.top_wrong_share * 100)}% مقابل المفتاح ${Math.round(x.p * 100)}%`); }
+    const sw = swaps.filter((x) => x.share >= 0.2); if (sw.length) { flags.push('pair_swapped'); for (const x of sw) detail_ar.push(`تبادل ${P} ${arNum(x.a + 1)}↔${arNum(x.b + 1)} عند ${Math.round(x.share * 100)}%`); }
+    if (near_miss >= 0.6 && p < 0.75 && wrongN >= 10) { flags.push('near_miss_heavy'); detail_ar.push(`${Math.round(near_miss * 100)}% من الأخطاء ${kind === 'slot' ? 'جزء واحد فقط' : 'تبديل متجاور واحد'}`); }
+  }
+  return { type, kind, n, parts, near_miss, swaps, flags, detail_ar };
+}
 
 /**
  * إحصاءات كل بند. r-pb = ارتباط صواب البند بـ «درجة باقي كتلة المستوى» في الجلسة نفسها (تصحيح الذات).
  * correctKey: مفتاح كل بند (لحصص المشتِّتات). distractor thresholds: ميت < 3% · أقوى من المفتاح = حصته > حصة المفتاح وn ≥ MIN_N_ITEM.
  */
-export function itemStats(responses: readonly Response[], correctKey: ReadonlyMap<string, string>): ItemStat[] {
+export function itemStats(responses: readonly Response[], correctKey: ReadonlyMap<string, string>, typeByItem?: ReadonlyMap<string, string>): ItemStat[] {
   const bySession = new Map<string, Response[]>(); for (const r of responses) { const a = bySession.get(r.session) || []; a.push(r); bySession.set(r.session, a); }
   const byItem = new Map<string, Response[]>(); for (const r of responses) { const a = byItem.get(r.item) || []; a.push(r); byItem.set(r.item, a); }
   const out: ItemStat[] = [];
@@ -56,14 +102,16 @@ export function itemStats(responses: readonly Response[], correctKey: ReadonlyMa
     const dist: Record<string, number> = {}; for (const r of rs) dist[r.selected] = (dist[r.selected] || 0) + 1; for (const k of Object.keys(dist)) dist[k] = r3(dist[k] / n);
     const times = rs.map((r) => r.ms).filter((v): v is number => typeof v === 'number' && v > 0);
     const key = correctKey.get(item) || ''; const flags: string[] = [];
+    const type = typeByItem?.get(item) || 'mcq'; const comp = COMPOSITE_KIND[type] ? compositeStats(rs, key, type) : null; /* م16 */
     if (n < MIN_N_ITEM) flags.push('collecting');
     else {
       if (p > 0.9) flags.push('too_easy'); if (p < 0.25) flags.push('too_hard');
       if (rpb < 0) flags.push('negative_discrimination'); else if (rpb < 0.15) flags.push('no_discrimination');
       for (const [opt, share] of Object.entries(dist)) { if (opt === key) continue; if (share > (dist[key] || 0)) { flags.push('distractor_beats_key'); break; } }
-      if (Object.keys(dist).length >= 3 && Object.entries(dist).some(([opt, share]) => opt !== key && share < 0.03)) flags.push('dead_distractor');
+      if (!comp && Object.keys(dist).length >= 3 && Object.entries(dist).some(([opt, share]) => opt !== key && share < 0.03)) flags.push('dead_distractor'); /* م16: لا معنى له للمركّب */
+      if (comp) flags.push(...comp.flags);
     }
-    out.push({ item, level: rs[0].level, n, p: r3(p), rpb: r3(rpb), distractors: dist, median_ms: times.length ? Math.round(median(times)) : null, flags });
+    out.push({ item, level: rs[0].level, n, p: r3(p), rpb: r3(rpb), distractors: dist, median_ms: times.length ? Math.round(median(times)) : null, flags, ...(comp ? { composite: comp } : {}) });
   }
   return out.sort((a, b) => b.n - a.n);
 }

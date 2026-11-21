@@ -71,10 +71,10 @@ export default function BankHeritage({ auth, isAdmin, onChanged, onEdit }: { aut
 }
 
 /** شارة إحصاءات الميزان (م3): n · p · rpb · أعلام خارج النطاق — تُستعمل في تبويب البنود أيضًا */
-export function StatChip({ stats }: { stats: { n: number; p: number | null; rpb: number | null; flags: string[] } | null }) {
+export function StatChip({ stats }: { stats: { n: number; p: number | null; rpb: number | null; flags: string[]; flags_ar?: string[] } | null }) {
   if (!stats || !stats.n) return <small className="bk-stat none" title="لا إجابات بعد — «تجربة صامتة» حتى 30 إجابة">—</small>;
   const flagged = stats.flags.length > 0; const low = stats.n < 30;
-  return <small className={`bk-stat${flagged ? ' flag' : ''}${low ? ' low' : ''}`} dir="ltr" title={flagged ? `خارج النطاق: ${stats.flags.join(' · ')}` : low ? 'أقل من 30 إجابة — مؤقّت' : 'ضمن النطاق'} data-testid="bk-stat">
+  return <small className={`bk-stat${flagged ? ' flag' : ''}${low ? ' low' : ''}`} dir="ltr" title={flagged ? `خارج النطاق: ${(stats.flags_ar && stats.flags_ar.length ? stats.flags_ar : stats.flags).join(' · ')}` : low ? 'أقل من 30 إجابة — مؤقّت' : 'ضمن النطاق'} data-testid="bk-stat">
     n{stats.n} · p{stats.p == null ? '—' : stats.p.toFixed(2)} · r{stats.rpb == null ? '—' : stats.rpb.toFixed(2)}{flagged ? ' ⚑' : ''}
   </small>;
 }

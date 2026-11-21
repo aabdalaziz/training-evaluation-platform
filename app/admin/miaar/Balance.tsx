@@ -11,7 +11,9 @@ import Link from 'next/link';
 import { Icon } from '../../../lib/ui/icons';
 
 type Scope = { scope: string; n: number; k: number; method: string; rel: number; sem: number; cut: number; pass_rate: number; livingston: number; light: 'green' | 'yellow' | 'red' | 'gray'; light_ar: string; advice: string };
-type Row = { item: string; level: string; skill: string | null; n: number; p: number; rpb: number; distractors: Record<string, number>; median_ms: number | null; exposure: number; flags: string[]; flags_ar: string[]; severity: number; b: number | null; se: number | null; infit: number | null; outfit: number | null; calib_n: number; suggest_level: string | null; is_anchor: boolean; status: string; question_text: string };
+type PartStat = { i: number; p: number; top_wrong: string | null; top_wrong_share: number };
+type Composite = { type: string; kind: 'slot' | 'perm'; n: number; parts: PartStat[]; near_miss: number; swaps: Array<{ a: number; b: number; share: number }>; flags: string[]; detail_ar: string[] };
+type Row = { item: string; level: string; skill: string | null; n: number; p: number; rpb: number; distractors: Record<string, number>; composite?: Composite | null; median_ms: number | null; exposure: number; flags: string[]; flags_ar: string[]; severity: number; b: number | null; se: number | null; infit: number | null; outfit: number | null; calib_n: number; suggest_level: string | null; is_anchor: boolean; status: string; question_text: string };
 type Summary = { computed_at: string | null; sessions: number; items: number; scopes: Scope[]; rows: Row[]; attention: Row[]; overexposed: Row[]; rasch: { persons: number; iterations: number; converged: boolean; calibrated: number } | null; bands: { medians: Record<string, number> } | null; thresholds: { min_n_item: number; min_n_calib: number; reweigh_every: number } };
 
 type PairStat = { a: string; b: string; n: number; kappa: number | null; exact: number; light: string; light_ar: string };
@@ -20,6 +22,17 @@ const LIGHT_COLOR: Record<string, string> = { green: '#0b8a83', yellow: '#b7791f
 const LEVEL_AR: Record<string, string> = { PRE_A1: 'ما قبل A1', A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
 const SKILL_AR: Record<string, string> = { grammar_vocab: 'قواعد ومفردات', reading: 'قراءة', listening: 'استماع' };
 const pct = (v: number) => `${Math.round(v * 100)}%`;
+const PART_AR: Record<string, string> = { matching: 'الزوج', cloze_bank: 'الفراغ', ordering: 'الموضع', picture_sequence: 'الموضع' };
+const AR_D = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩']; const arNum = (n: number) => String(n).split('').map((d) => AR_D[Number(d)] ?? d).join('');
+/** م16: سطر أجزاء البند المركّب — حصة صواب كلّ جزء، أكثر خطأ، قريب من الصواب، التبادلات */
+export function CompositeLine({ c }: { c: Composite }) {
+  const P = PART_AR[c.type] || 'الجزء';
+  return <small className="bal-comp" data-testid="bal-composite" dir="rtl">
+    {c.parts.map((x) => <span key={x.i} className={x.p < 0.25 ? 'hard' : x.top_wrong && x.top_wrong_share >= x.p ? 'amb' : ''}>{P} {arNum(x.i + 1)} <b>{pct(x.p)}</b>{x.top_wrong && x.top_wrong_share >= 0.1 ? <i> (أكثر خطأ: {x.top_wrong} {pct(x.top_wrong_share)})</i> : null}</span>)}
+    <span>قريب من الصواب {pct(c.near_miss)} من الأخطاء</span>
+    {c.swaps.filter((w) => w.share >= 0.1).map((w) => <span key={`${w.a}-${w.b}`}>تبادل {arNum(w.a + 1)}↔{arNum(w.b + 1)} {pct(w.share)}</span>)}
+  </small>;
+}
 const secs = (ms: number | null) => (ms == null ? '—' : `${Math.round(ms / 1000)} ث`);
 
 export default function Balance({ auth }: { auth: () => Promise<Record<string, string>> }) {
@@ -83,7 +96,7 @@ export default function Balance({ auth }: { auth: () => Promise<Record<string, s
         {!d?.attention.length ? <div className="am-empty" data-testid="bal-attention-empty">لا شيء يستدعي النظر الآن.</div> : <table className="mm-t" data-testid="bal-attention"><thead><tr><th>البند</th><th>المستوى</th><th>n</th><th>p</th><th>r-pb</th><th>الأعلام</th><th>المعايرة</th><th></th></tr></thead><tbody>
           {d.attention.map((r) => <tr key={r.item} data-testid="bal-attn-row" data-item={r.item} data-severity={r.severity}>
             <td><code dir="ltr">{r.item}</code><br /><small>{r.question_text}</small></td><td>{LEVEL_AR[r.level] || r.level}{r.skill ? <><br /><small>{SKILL_AR[r.skill] || r.skill}</small></> : null}</td><td>{r.n}</td><td>{r.p.toFixed(2)}</td><td style={{ color: r.rpb < 0 ? '#b91c1c' : r.rpb < 0.15 ? '#b7791f' : '#0b8a83', fontWeight: 800 }}>{r.rpb.toFixed(2)}</td>
-            <td><ul className="bal-flags">{r.flags_ar.map((f) => <li key={f} className={r.flags.includes('distractor_beats_key') && f.startsWith('مشتِّت أقوى') ? 'hot' : ''}>{f}</li>)}</ul><small>الخيارات: {Object.entries(r.distractors).map(([k, v]) => `${k} ${pct(v)}`).join(' · ')}</small></td>
+            <td><ul className="bal-flags">{r.flags_ar.map((f) => <li key={f} className={(r.flags.includes('distractor_beats_key') && f.startsWith('مشتِّت أقوى')) || (r.flags.includes('part_ambiguous') && f.startsWith('جزء يقبل')) ? 'hot' : ''}>{f}</li>)}</ul>{r.composite?.detail_ar?.length ? <div className="bal-sug" data-testid="bal-comp-detail">{r.composite.detail_ar.join(' · ')}</div> : null}{r.composite ? <CompositeLine c={r.composite} /> : <small>الخيارات: {Object.entries(r.distractors).map(([k, v]) => `${k} ${pct(v)}`).join(' · ')}</small>}</td>
             <td>{r.b != null ? <>b = {r.b.toFixed(2)} ± {Number(r.se).toFixed(2)}<br /><small>infit {Number(r.infit).toFixed(2)} · outfit {Number(r.outfit).toFixed(2)}</small></> : <small>بلا معايرة بعد ({r.calib_n}/{d.thresholds.min_n_calib})</small>}
               {r.suggest_level ? <div className="bal-sug" data-testid="bal-suggest">يُقترح نقله إلى <b>{LEVEL_AR[r.suggest_level] || r.suggest_level}</b></div> : null}</td>
             <td className="mm-acts">
@@ -124,6 +137,7 @@ export default function Balance({ auth }: { auth: () => Promise<Record<string, s
 }
 
 const CSS = `
+.bal-comp{display:flex;flex-wrap:wrap;gap:4px 10px;color:#334155}.bal-comp span{white-space:nowrap}.bal-comp span.hard b{color:#b91c1c}.bal-comp span.amb b{color:#b7791f}.bal-comp i{font-style:normal;color:#64748b}
 .bal-agr{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:8px 0}.bal-agr-card{border:2px solid #e2e8f0;border-radius:14px;padding:12px 14px;background:#fff}.bal-agr-card b{display:block;color:#0f2a4e}.bal-agr-card strong{display:block;font-size:34px;line-height:1.2}.bal-agr-card span{display:block;font-weight:800;font-size:13px;color:#334155}.bal-agr-card small{display:block;color:#64748b;font-size:12px;margin-top:4px}.bal-agr-card ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:3px}.bal-agr-card li{display:flex;justify-content:space-between;font-size:12px;color:#334155}.bal-agr-card li i{font-style:normal;font-weight:900}.bal-raters small{display:block;color:#64748b;font-size:11px}
 .bal-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
 .bal-lights{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
