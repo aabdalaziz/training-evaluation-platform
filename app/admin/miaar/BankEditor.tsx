@@ -14,6 +14,7 @@ import { BANK_LEVEL_AR, skillLabel } from '../../../lib/miaar/registry';
 import { RUBRIC_DIMENSIONS, DIMENSION_AR, WRITING_LIMITS, SPEAKING_LIMITS, validateTask, countWords } from '../../../lib/miaar/rubric';
 import BankImport from './BankImport';
 import BankHeritage, { StatChip } from './BankHeritage';
+import ReviewDesk from './ReviewDesk';
 
 type Opt = { id: string; text: string; image?: string | null; alt?: string | null };
 type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; task?: any; stats?: { n: number; p: number | null; rpb: number | null; flags: string[] } | null; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; stimulus?: any; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
@@ -28,13 +29,13 @@ const blanksOf = (t: string) => (t.match(/_{3,}/g) || []).length;
 /** م13-ب: المفتاح المركّب «b-a-d-c» ↔ مصفوفة */
 const keyParts = (k: string | null | undefined, n: number): string[] => { const p = typeof k === 'string' && k.includes('-') ? k.split('-') : []; return Array.from({ length: n }, (_, i) => p[i] || ''); };
 const DOMAIN_AR: Record<string, string> = { personal: 'شخصي', public: 'عام', educational: 'تعليمي', professional: 'مهني' };
-const BATCH_AR: Record<string, string> = { 'athar-m13a': 'توسعة البنك (م13-أ)', 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم', 'athar-m4a': 'صوتك وقلمك (م4-أ)' };
+const BATCH_AR: Record<string, string> = { 'athar-m14': 'الفراغات والتسلسل (م14)', 'athar-m13b': 'المطابقة والترتيب (م13-ب)', 'athar-m13a': 'توسعة البنك (م13-أ)', 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم', 'athar-m4a': 'صوتك وقلمك (م4-أ)' };
 type Band = { skill: string; dimension: string; dimension_ar: string; score: number; text_ar: string };
 const GENRE_AR: Record<string, string> = { copy: 'نسخ', form: 'نموذج', self_intro: 'تعريف بالنفس', card: 'بطاقة', message: 'رسالة', diary: 'مذكّرات', description: 'وصف', note: 'ملاحظة', request: 'طلب', article: 'مقال قصير', blog: 'تدوينة', narrative: 'سرد', opinion: 'رأي', formal_email: 'بريد رسمي', essay: 'مقال', report: 'تقرير', summary: 'تلخيص', formal_letter: 'خطاب رسمي', proposal: 'مقترح', review: 'مراجعة', adapt: 'تكييف السجلّ', position_paper: 'ورقة موقف', critique: 'نقد', style: 'أسلوب', greet: 'تحيّة', numbers: 'أعداد', name_picture: 'تسمية صورة', questions: 'أسئلة', answer: 'إجابة', routine: 'روتين', family: 'عائلة', service: 'موقف خدمة', plans: 'خطط', situation: 'موقف', spontaneous: 'ارتجال', interaction: 'تفاعل', presentation: 'عرض', debate: 'نقاش', fluent_talk: 'حديث متدفّق', professional_setting: 'سياق مهني', complex_presentation: 'عرض معقّد', effortless: 'حديث حرّ', nuance: 'فروق دقيقة', repair: 'تدارك' };
 const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f'];
 
-export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false }: { auth: () => Promise<Record<string, string>>; byBatch: Record<string, Record<string, number>>; onChanged: () => void; isAdmin?: boolean }) {
-  const [view, setView] = useState<'items' | 'passages' | 'tasks' | 'import' | 'heritage'>('items');
+export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false, role }: { auth: () => Promise<Record<string, string>>; byBatch: Record<string, Record<string, number>>; onChanged: () => void; isAdmin?: boolean; role?: string }) {
+  const [view, setView] = useState<'items' | 'passages' | 'tasks' | 'import' | 'heritage' | 'review'>('items');
   /* م4-أ: المهام الإنتاجية */
   const [tf, setTf] = useState({ level: '', skill: '', status: '', q: '' }); const [tasks, setTasks] = useState<Item[]>([]); const [tTotal, setTTotal] = useState(0);
   const [tEdit, setTEdit] = useState<Item | null>(null); const [tDraft, setTDraft] = useState<any>(null); const [bands, setBands] = useState<Band[]>([]); const [preview, setPreview] = useState(false);
@@ -86,7 +87,7 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false }
   return <section className="am-card bk" data-testid="bank-editor">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <div className="bk-head"><h3>محرّر البنك <small>البنود والمقاطع · المراجعة بيد الطاقم</small></h3>
-      <div className="bk-tabs" role="tablist"><button type="button" role="tab" aria-selected={view === 'items'} className={view === 'items' ? 'on' : ''} onClick={() => setView('items')}>البنود</button><button type="button" role="tab" aria-selected={view === 'tasks'} className={view === 'tasks' ? 'on' : ''} onClick={() => setView('tasks')} data-testid="bank-tab-tasks">المهام الإنتاجية <small>صوتك وقلمك</small></button><button type="button" role="tab" aria-selected={view === 'passages'} className={view === 'passages' ? 'on' : ''} onClick={() => setView('passages')}>المقاطع والصوت</button><button type="button" role="tab" aria-selected={view === 'import'} className={view === 'import' ? 'on' : ''} onClick={() => setView('import')} data-testid="bank-tab-import">استيراد</button><button type="button" role="tab" aria-selected={view === 'heritage'} className={view === 'heritage' ? 'on' : ''} onClick={() => setView('heritage')} data-testid="bank-tab-heritage">التأسيسية</button></div></div>
+      <div className="bk-tabs" role="tablist"><button type="button" role="tab" aria-selected={view === 'items'} className={view === 'items' ? 'on' : ''} onClick={() => setView('items')}>البنود</button><button type="button" role="tab" aria-selected={view === 'tasks'} className={view === 'tasks' ? 'on' : ''} onClick={() => setView('tasks')} data-testid="bank-tab-tasks">المهام الإنتاجية <small>صوتك وقلمك</small></button><button type="button" role="tab" aria-selected={view === 'passages'} className={view === 'passages' ? 'on' : ''} onClick={() => setView('passages')}>المقاطع والصوت</button><button type="button" role="tab" aria-selected={view === 'import'} className={view === 'import' ? 'on' : ''} onClick={() => setView('import')} data-testid="bank-tab-import">استيراد</button><button type="button" role="tab" aria-selected={view === 'review'} className={view === 'review' ? 'on' : ''} onClick={() => setView('review')} data-testid="bank-tab-review">المراجعة <small>بندًا بندًا</small></button><button type="button" role="tab" aria-selected={view === 'heritage'} className={view === 'heritage' ? 'on' : ''} onClick={() => setView('heritage')} data-testid="bank-tab-heritage">التأسيسية</button></div></div>
     {err && <p className="am-err" role="alert">{err}</p>}{msg && <p className="bk-ok" role="status">{msg}</p>}
 
     <div className="bk-batch" data-testid="bank-batch">
@@ -188,6 +189,7 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false }
 
     {view === 'import' && <BankImport auth={auth} onChanged={() => { onChanged(); void load(0); }} />}
     {view === 'heritage' && <BankHeritage auth={auth} isAdmin={isAdmin} onChanged={onChanged} onEdit={(it) => setEdit(it as unknown as Item)} />}
+    {view === 'review' && <ReviewDesk auth={auth} role={role} onChanged={() => { onChanged(); void load(0); }} onEdit={(it) => setEdit({ ...(it as unknown as Item), stats: null })} />}
 
     {view === 'tasks' && <>
       <div className="bk-studio bk-prodintro"><b>صوتك وقلمك</b><p>مهام الكتابة والتحدّث تُقدَّر بـ«سُلّم التقدير» (أربعة أبعاد × 0–5) لا بمفتاح. كل مهمة تحمل حدودها وإرشاداتها وإجابة نموذجية لا تغادر الخادم. القاعدة: الآلة تقترح درجة، والإنسان يعتمدها (م4-ج). لا مهمة تصل إلى متقدّم قبل اعتمادك.</p>
