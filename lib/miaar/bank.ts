@@ -5,13 +5,26 @@
  */
 import { taskItemFrom } from './performance';
 import type { TaskItem } from './performance';
-import { LEVELS, SKILLS, PRODUCTIVE_SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, isBankLevel, isSkill, isOptionId, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
-import type { PoolItem, PublicForm, PublicQuestion, PublicPassage, SecureItem, Option, ItemType, BankLevel, Skill } from './registry';
+import { LEVELS, SKILLS, PRODUCTIVE_SKILLS, WITHDRAWN_CODES, M1_ITEM_TYPES, PLAYER_ITEM_TYPES, MATCHING_LEFT, isResponseFor, isBankLevel, isSkill, FORM_PLAN, FLOOR_LEVEL, FLOOR_PLAN, playerPolicy } from './registry';
+import type { PoolItem, PublicForm, PublicQuestion, PublicPassage, SecureItem, Option, LeftItem, ItemType, BankLevel, Skill } from './registry';
 
 export const MEDIA_BUCKET = 'miaar-media';
 const SIGN_SECONDS = 3 * 60 * 60;
 /** نوع البند ← عدد الخيارات المقبول */
-const OPTION_COUNT: Partial<Record<ItemType, [number, number]>> = { mcq: [4, 4], picture_choice: [2, 4], picture_label: [2, 4], true_false_notgiven: [3, 3] };
+const OPTION_COUNT: Partial<Record<ItemType, [number, number]>> = { mcq: [4, 4], picture_choice: [2, 4], picture_label: [2, 4], true_false_notgiven: [3, 3], matching: [3, 5], ordering: [3, 6] };
+
+/** م13-ب: العمود الأيسر للمطابقة (3–4 · معرّفات 1..4 · نصّ أو صورة) — null إن لم يصلح */
+export function leftList(value: unknown): LeftItem[] | null {
+  if (!Array.isArray(value) || value.length < MATCHING_LEFT[0] || value.length > MATCHING_LEFT[1]) return null;
+  const out: LeftItem[] = [];
+  for (let i = 0; i < value.length; i += 1) {
+    const o = value[i]; if (!o || typeof o !== 'object') return null; const r = o as Record<string, unknown>;
+    const text = typeof r.text === 'string' ? r.text.trim() : ''; const image = typeof r.image === 'string' && r.image.trim() ? r.image.trim() : null;
+    if (!text && !image) return null;
+    out.push({ id: String(i + 1), text, image, alt: typeof r.alt === 'string' ? r.alt.trim() : null });
+  }
+  const keys = out.map((o) => (o.text || o.image || '').toLowerCase()); return new Set(keys).size === keys.length ? out : null;
+}
 
 export function optionList(value: unknown, type: ItemType): Option[] | null {
   if (!Array.isArray(value)) return null; const [min, max] = OPTION_COUNT[type] || [2, 6]; if (value.length < min || value.length > max) return null;
@@ -20,7 +33,7 @@ export function optionList(value: unknown, type: ItemType): Option[] | null {
     const o = value[i]; if (!o || typeof o !== 'object') return null; const r = o as Record<string, unknown>;
     const id = typeof r.id === 'string' && ids.includes(r.id) ? r.id : ids[i];
     const text = typeof r.text === 'string' ? r.text.trim() : ''; const image = typeof r.image === 'string' && r.image.trim() ? r.image.trim() : null;
-    if (type === 'picture_choice' ? !image : !text) return null;
+    if (type === 'picture_choice' ? !image : type === 'matching' ? !text && !image : !text) return null;
     out.push({ id, text, image, alt: typeof r.alt === 'string' ? r.alt.trim() : null });
   }
   return new Set(out.map((o) => o.id)).size === out.length ? out : null;
@@ -69,9 +82,11 @@ export async function loadApprovedPool(db: any, passages?: Map<string, PassageRo
   const seen = new Set<string>(); const pool: PoolItem[] = [];
   for (const row of (items.data || []) as any[]) {
     const code = typeof row.item_code === 'string' ? row.item_code.trim() : ''; if (!code || seen.has(code) || WITHDRAWN_CODES.has(code)) continue;
-    const type = (M1_ITEM_TYPES as readonly string[]).includes(row.item_type) ? (row.item_type as ItemType) : null; if (!type) continue;
+    const type = (PLAYER_ITEM_TYPES as readonly string[]).includes(row.item_type) ? (row.item_type as ItemType) : null; if (!type) continue;
     const options = optionList(row.options, type); const correct = keyOf.get(row.id);
-    if (!options || !isOptionId(correct) || !options.some((o) => o.id === correct) || !isBankLevel(row.level) || !isSkill(row.skill)) continue;
+    const stim0 = row.stimulus && typeof row.stimulus === 'object' ? row.stimulus : null;
+    const left = type === 'matching' ? leftList(stim0?.left) : null; if (type === 'matching' && !left) continue;
+    if (!options || typeof correct !== 'string' || !isResponseFor(type, options.map((o) => o.id), left?.length || 0, correct) || !isBankLevel(row.level) || !isSkill(row.skill)) continue;
     const passageId = typeof row.passage_id === 'string' && row.passage_id.trim() ? row.passage_id.trim() : null;
     if (row.skill === 'listening' && !listeningReady(P.get(passageId || ''))) continue;
     if (row.skill === 'reading' && passageId && !readingReady(P.get(passageId))) continue;
@@ -79,7 +94,7 @@ export async function loadApprovedPool(db: any, passages?: Map<string, PassageRo
     const stim = row.stimulus && typeof row.stimulus === 'object' ? row.stimulus : null; const image = (stim?.image as string) || row.media_path || null;
     if ((type === 'picture_label') && !image) continue;
     seen.add(code);
-    pool.push({ id: row.id, code, level: row.level, skill: row.skill, type, passageId, questionText: row.question_text.trim(), options, correctOptionId: correct, stimulus: image ? { image, alt: (stim?.alt as string) || row.media_alt || null } : null, descriptor: row.descriptor_code || row.cefr_descriptor || null , ...(Array.isArray(row.unit_codes) && row.unit_codes.length ? { unitCodes: row.unit_codes.filter((c: unknown) => typeof c === 'string') } : {}) });
+    pool.push({ id: row.id, code, level: row.level, skill: row.skill, type, passageId, questionText: row.question_text.trim(), options, correctOptionId: correct, stimulus: image ? { image, alt: (stim?.alt as string) || row.media_alt || null } : null, descriptor: row.descriptor_code || row.cefr_descriptor || null , ...(Array.isArray(row.unit_codes) && row.unit_codes.length ? { unitCodes: row.unit_codes.filter((c: unknown) => typeof c === 'string') } : {}) , ...(left ? { left } : {}) });
   }
   POOL_CACHE = { at: Date.now(), value: pool };
   return pool;
@@ -140,12 +155,13 @@ export async function formFromPool(db: any, pool: readonly PoolItem[], codes: re
   const out: PublicPassage[] = (passRows as PassageRow[]).map((p) => { const pol = playerPolicy(p.level, (p.meta || null) as any); return { id: p.id, level: p.level, skill: p.skill, title: p.title, text: p.body, audioUrl: p.skill === 'listening' ? urlOf(p.audio_public_path || p.audio_storage_path) : null, player: p.skill === 'listening' ? { ...pol, twice: (p.meta as any)?.twice === true } : undefined }; });
   const questions: PublicQuestion[] = selected.map((i) => ({ id: i.code, level: i.level, skill: i.skill, type: i.type, passageId: i.passageId, questionText: i.questionText,
     options: i.options.map((o) => ({ id: o.id, text: o.text, image: o.image ? urlOf(o.image) : null, alt: o.alt || null })) as Option[],
-    stimulus: i.stimulus ? { image: urlOf(i.stimulus.image), alt: i.stimulus.alt || null } : null }));
+    stimulus: i.stimulus ? { image: urlOf(i.stimulus.image), alt: i.stimulus.alt || null } : null,
+    ...(i.left ? { left: i.left.map((l) => ({ id: l.id, text: l.text, image: l.image ? urlOf(l.image) : null, alt: l.alt || null })) } : {}) }));
   return { questions, passages: out };
 }
 export const secureItems = (pool: readonly PoolItem[], codes: readonly string[]): SecureItem[] | null => {
   const byCode = new Map(pool.map((i) => [i.code, i])); const items = codes.map((c) => byCode.get(c)).filter((i): i is PoolItem => !!i);
-  return items.length === codes.length ? items.map((i) => ({ id: i.code, level: i.level, skill: i.skill, correctOptionId: i.correctOptionId })) : null;
+  return items.length === codes.length ? items.map((i) => ({ id: i.code, level: i.level, skill: i.skill, correctOptionId: i.correctOptionId, type: i.type, optionIds: i.options.map((o) => o.id), leftCount: i.left?.length || 0 })) : null;
 };
 
 /** تغطية البنك للوحة: لكل مستوى×مهارة عدد المعتمد مقابل الخطة، وبالنوع */

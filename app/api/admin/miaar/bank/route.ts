@@ -3,7 +3,7 @@
  * /api/admin/miaar/bank — محرّر بنك مِعيار (م2-أ) للطاقم
  *  GET ?level&skill&status&batch&type&q&offset&limit → البنود (مع المفتاح والمقطع) · ?passages=1 → المقاطع · ?descriptors=1 → الواصفات
  *  POST {action}
- *   item_update   {id, question_text, options[{id,text,image?,alt?}], correct, descriptor_code?, domain?, difficulty_est?, passage_id?, media_path?, media_alt?, note?}
+ *   item_update   {id, question_text, options[{id,text,image?,alt?}], correct(«b-a-d-c» للمطابقة/الترتيب · م13-ب), left?[{id,text|image}] للمطابقة, descriptor_code?, domain?, difficulty_est?, passage_id?, media_path?, media_alt?, note?}
  *   item_status   {id | ids[], status: approved|in_review|archived|draft, note?}   (حدث مراجعة لكل بند)
  *   item_delete   {id}  حذف نهائي — فقط لبند غير معتمد لم يُجب عنه أحد قط (وإلا: أرشفة). المفاتيح والأحداث تُحذف بالتتابع.
  *   batch_status  {batch: athar-m2a|miaar-legacy|<content_version>, status, level?}  → «مراجعة الدفعة» (in_review → approved) أو «أرشفة التأسيسية»
@@ -26,11 +26,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson } from '../../../../../lib/shield/body';
-import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLevel, isSkill, isProductiveSkill, isOptionId, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
+import { ITEM_TYPES, SKILLS, PRODUCTIVE_SKILLS, PRODUCTIVE_ITEM_TYPES, isBankLevel, isSkill, isProductiveSkill, isResponseFor, isCompositeType, isIdentityKey, BANK_LEVELS, FLOOR_LEVEL } from '../../../../../lib/miaar/registry';
 import { validateTask } from '../../../../../lib/miaar/rubric';
 import type { ItemType } from '../../../../../lib/miaar/registry';
-import { optionList, MEDIA_BUCKET, itemBatch, invalidatePoolCache } from '../../../../../lib/miaar/bank';
-import { normalizePack, summarize, importPack, recentImports } from '../../../../../lib/miaar/pack';
+import { optionList, leftList, MEDIA_BUCKET, itemBatch, invalidatePoolCache } from '../../../../../lib/miaar/bank';
+import { normalizePack, summarize, importPack, recentImports, acceptedOf } from '../../../../../lib/miaar/pack';
 import { heritageSummary, markHeritage, archiveUnreviewed, isHeritageOutcome, HERITAGE_OUTCOMES } from '../../../../../lib/miaar/heritage';
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
@@ -106,12 +106,21 @@ async function reviewEvent(db: any, itemIds: string[], status: string, note: str
 function parseItemFields(b: Record<string, unknown>, type: ItemType) {
   const question_text = str(b.question_text, 1200); if (question_text.length < 2) return { error: 'نص السؤال قصير' };
   const options = optionList(b.options, type); if (!options) return { error: 'الخيارات غير صالحة لهذا النوع (العدد أو النص/الصورة)' };
-  const correct = b.correct; if (!isOptionId(correct) || !options.some((o) => o.id === correct)) return { error: 'المفتاح لا يطابق خيارًا' };
+  /* م13-ب: المطابقة تحتاج العمود الأيسر (3–4) وخيارات = اليسار أو +1 · المفتاح مركّب «b-a-d-c» · الترتيب يرفض الهويّة */
+  const left = type === 'matching' ? leftList(b.left) : null;
+  if (type === 'matching' && !left) return { error: 'المطابقة تحتاج عمودًا أيسر من 3–4 عناصر بلا تكرار' };
+  if (left && (options.length < left.length || options.length > left.length + 1)) return { error: `خيارات المطابقة ${options.length} — المطلوب ${left.length} أو ${left.length + 1}` };
+  const correct = typeof b.correct === 'string' ? b.correct.trim() : '';
+  if (!isResponseFor(type, options.map((o) => o.id), left?.length || 0, correct)) return { error: isCompositeType(type) ? 'المفتاح المركّب غير صالح (مثل b-a-d-c بطول العمود/القطع بلا تكرار)' : 'المفتاح لا يطابق خيارًا' };
+  if (type === 'ordering' && isIdentityKey(correct, options.map((o) => o.id))) return { error: 'القطع بترتيبها الصحيح — ابعثرها' };
   const descriptor_code = str(b.descriptor_code, 40) || null; const domain = DOMAINS.includes(String(b.domain)) ? String(b.domain) : null;
   const d = Number(b.difficulty_est); const difficulty_est = Number.isInteger(d) && d >= 1 && d <= 5 ? d : null;
   const passage_id = str(b.passage_id, 80) || null; const media_path = str(b.media_path, 300) || null; const media_alt = str(b.media_alt, 200) || null;
   const opts = options.map((o) => ({ id: o.id, text: o.text, ...(o.image ? { image: o.image, alt: o.alt || null } : {}) }));
-  return { value: { question_text, options: opts, correct, descriptor_code, domain, difficulty_est, passage_id, media_path, media_alt, stimulus: media_path ? { image: media_path, alt: media_alt } : null } };
+  const lefts = left ? left.map((l) => ({ id: l.id, text: l.text, ...(l.image ? { image: l.image, alt: l.alt || null } : {}) })) : null;
+  const stimulus = media_path || lefts ? { ...(media_path ? { image: media_path, alt: media_alt } : {}), ...(lefts ? { left: lefts } : {}) } : null;
+  const accepted = isCompositeType(type) ? acceptedOf({ item_type: type, options: opts, correct, left: lefts || undefined }) : null;
+  return { value: { question_text, options: opts, correct, descriptor_code, domain, difficulty_est, passage_id, media_path, media_alt, stimulus, accepted } };
 }
 
 export async function POST(req: Request) {
@@ -149,7 +158,7 @@ export async function POST(req: Request) {
     const v = f.value!;
     const up = await db.from('question_bank_items').update({ question_text: v.question_text, options: v.options, item_type: type, descriptor_code: v.descriptor_code, cefr_descriptor: v.descriptor_code, domain: v.domain, difficulty_est: v.difficulty_est, passage_id: v.passage_id, media_path: v.media_path, media_alt: v.media_alt, stimulus: v.stimulus, latest_review_note: note || null, reviewed_by: user.id, reviewed_at: now, updated_at: now }).eq('id', id);
     if (up.error) return bad(up.error.message, 500);
-    const k = await db.from('question_bank_answer_keys').upsert({ item_id: id, correct_option_id: v.correct, updated_at: now }, { onConflict: 'item_id' }); if (k.error) return bad(k.error.message, 500);
+    const k = await db.from('question_bank_answer_keys').upsert({ item_id: id, correct_option_id: v.correct, accepted: v.accepted, updated_at: now }, { onConflict: 'item_id' }); if (k.error) return bad(k.error.message, 500);
     await reviewEvent(db, [id], `edited:${cur.status}`, note, user.id);
     return NextResponse.json({ success: true, note_ar: 'حُفظ البند.' });
   }
@@ -225,7 +234,7 @@ export async function POST(req: Request) {
     const item_code = `${pre}${String((count || 0) + 1).padStart(3, '0')}`;
     const ins = await db.from('question_bank_items').insert({ item_code, content_version: NEW_VERSION, level, skill, passage_id: v.passage_id, question_text: v.question_text, options: v.options, item_type: type, status: 'draft', source_kind: 'manual', descriptor_code: v.descriptor_code, cefr_descriptor: v.descriptor_code, domain: v.domain, difficulty_est: v.difficulty_est, media_path: v.media_path, media_alt: v.media_alt, stimulus: v.stimulus, created_by: user.id, author_notes: { authored_by: 'staff' } }).select('id').single();
     if (ins.error || !ins.data) return bad(ins.error?.message || 'تعذّر الإنشاء', 500);
-    const k = await db.from('question_bank_answer_keys').insert({ item_id: ins.data.id, correct_option_id: v.correct }); if (k.error) return bad(k.error.message, 500);
+    const k = await db.from('question_bank_answer_keys').insert({ item_id: ins.data.id, correct_option_id: v.correct, accepted: v.accepted }); if (k.error) return bad(k.error.message, 500);
     await reviewEvent(db, [ins.data.id], 'draft', note, user.id);
     return NextResponse.json({ success: true, id: ins.data.id, item_code, note_ar: `أُنشئ ${item_code} كمسودّة.` });
   }

@@ -10,12 +10,13 @@
  *   { version:'miaar-pack-1', source:'athar-m13a-A1-1', content_version:'athar-m13a',
  *     passages:[{id, level, skill:'reading'|'listening', title, body, audio_public_path?, meta?}],
  *     items:[{item_code, level, skill, item_type, question_text, options:[{id,text,image?,alt?}], correct, descriptor_code, unit_codes?, domain?, difficulty_est?, passage_id?, media_path?, media_alt?, rationale?:{a:'…'}}],
+ *     م13-ب: matching يضيف left:[{id,text|image,alt?} ×3..4] والمفتاح «b-a-d-c» (يمين كلّ أيسر بترتيبه) · ordering: options القطع مبعثرة والمفتاح «c-a-d-b» تبديل كامل.
  *     tasks?:[{item_code, level, skill:'writing'|'speaking', question_text, task, descriptor_code?, unit_codes?, domain?, media_path?, media_alt?}] }
  *  القرار الأكاديمي بيد الطاقم: لا يُعتمد بند هنا، ولا يُمَسّ بند قائم.
  */
-import { M1_ITEM_TYPES, isBankLevel, isSkill, isOptionId, isProductiveSkill, PRODUCTIVE_ITEM_TYPES, FLOOR_LEVEL } from './registry';
-import type { ItemType, BankLevel } from './registry';
-import { optionList } from './bank';
+import { PLAYER_ITEM_TYPES, isCompositeType, isResponseFor, isIdentityKey, parseComposite, isBankLevel, isSkill, isProductiveSkill, PRODUCTIVE_ITEM_TYPES, FLOOR_LEVEL } from './registry';
+import type { ItemType, BankLevel, LeftItem } from './registry';
+import { optionList, leftList } from './bank';
 import { isUnitCode, unitLevelOf } from './syllabus';
 import { validateTask } from './rubric';
 
@@ -31,7 +32,7 @@ const TASHKEEL = /[\u064B-\u0652\u0670]/g;
 
 export type Problem = { at: string; msg: string };
 export type PackPassage = { id: string; level: BankLevel; skill: 'reading' | 'listening'; title: string; body: string; audio_public_path: string | null; meta: Record<string, unknown> | null };
-export type PackItem = { item_code: string; level: BankLevel; skill: 'grammar_vocab' | 'reading' | 'listening'; item_type: ItemType; question_text: string; options: Array<{ id: string; text: string; image?: string; alt?: string | null }>; correct: string; descriptor_code: string; unit_codes: string[]; domain: string | null; difficulty_est: number | null; passage_id: string | null; media_path: string | null; media_alt: string | null; rationale: Record<string, string> };
+export type PackItem = { item_code: string; level: BankLevel; skill: 'grammar_vocab' | 'reading' | 'listening'; item_type: ItemType; question_text: string; options: Array<{ id: string; text: string; image?: string; alt?: string | null }>; correct: string; left?: LeftItem[]; descriptor_code: string; unit_codes: string[]; domain: string | null; difficulty_est: number | null; passage_id: string | null; media_path: string | null; media_alt: string | null; rationale: Record<string, string> };
 export type PackTask = { item_code: string; level: BankLevel; skill: 'writing' | 'speaking'; question_text: string; task: Record<string, unknown>; descriptor_code: string | null; unit_codes: string[]; domain: string | null; media_path: string | null; media_alt: string | null };
 export type Pack = { version: string; source: string; content_version: string; passages: PackPassage[]; items: PackItem[]; tasks: PackTask[] };
 export type Summary = { source: string; content_version: string; passages: number; items: number; tasks: number; by_level: Record<string, number>; by_type: Record<string, number>; warnings: Problem[] };
@@ -88,11 +89,18 @@ export function normalizePack(raw: unknown): { ok: true; pack: Pack; problems: P
     const level = isBankLevel(it?.level) ? (it.level as BankLevel) : null; const skill = isSkill(it?.skill) ? it.skill : null;
     if (!level || !skill) { problems.push({ at, msg: 'المستوى أو المهارة غير صالح' }); return; }
     const type = s(it?.item_type, 30) as ItemType;
-    if (!(M1_ITEM_TYPES as readonly string[]).includes(type)) { problems.push({ at, msg: `النوع ${type || '—'} غير مدعوم في المشغّل بعد (يأتي مع م13-ب)` }); return; }
+    if (!(PLAYER_ITEM_TYPES as readonly string[]).includes(type)) { problems.push({ at, msg: `النوع ${type || '—'} غير مدعوم في المشغّل بعد` }); return; }
     const question_text = s(it?.question_text, 1200); if (question_text.length < 2) { problems.push({ at, msg: 'نص السؤال قصير' }); return; }
     const options = optionList(it?.options, type); if (!options) { problems.push({ at, msg: 'الخيارات غير صالحة لهذا النوع (العدد أو النص/الصورة)' }); return; }
-    const correct = it?.correct; if (!isOptionId(correct) || !options.some((o) => o.id === correct)) { problems.push({ at, msg: 'المفتاح لا يطابق خيارًا' }); return; }
     const texts = options.map((o) => normStem(o.text || o.image || '')); if (new Set(texts).size !== texts.length) problems.push({ at, msg: 'خياران متطابقان' });
+    /* م13-ب: العمود الأيسر للمطابقة + المفتاح المركّب (MIAAR-M13B-SPEC §2) */
+    const left = type === 'matching' ? leftList(it?.left) : null;
+    if (type === 'matching' && !left) { problems.push({ at, msg: 'المطابقة تحتاج left من 3–4 عناصر (نصّ أو صورة) بلا تكرار' }); return; }
+    if (left && (options.length < left.length || options.length > left.length + 1)) { problems.push({ at, msg: `خيارات المطابقة ${options.length} — المطلوب ${left.length} أو ${left.length + 1} (مشتّت واحد)` }); return; }
+    const correct = typeof it?.correct === 'string' ? it.correct.trim() : '';
+    if (!isResponseFor(type, options.map((o) => o.id), left?.length || 0, correct)) { problems.push({ at, msg: isCompositeType(type) ? (type === 'matching' ? 'مفتاح المطابقة: معرّفات اليمين لكلّ عنصر أيسر بترتيبه بلا تكرار (مثل b-a-d-c)' : 'مفتاح الترتيب: تبديل كامل لكلّ القطع (مثل c-a-d-b)') : 'المفتاح لا يطابق خيارًا' }); return; }
+    if (type === 'ordering' && isIdentityKey(correct, options.map((o) => o.id))) { problems.push({ at, msg: 'القطع مكتوبة بترتيبها الصحيح (a-b-c…) — ابعثرها في الحزمة' }); return; }
+    if (type === 'matching' && isIdentityKey(correct, options.map((o) => o.id))) warnings.push({ at, msg: 'مفتاح المطابقة هو الهويّة a-b-c… — بعثر العمود الأيمن' });
     const descriptor_code = descriptor(it?.descriptor_code, level, skill, at, problems, true) || '';
     const unit_codes = unitCodes(it?.unit_codes, level, at, problems);
     const domain = (DOMAINS as readonly string[]).includes(String(it?.domain)) ? String(it.domain) : null;
@@ -103,13 +111,14 @@ export function normalizePack(raw: unknown): { ok: true; pack: Pack; problems: P
     const media_path = s(it?.media_path, 300) || null; const media_alt = s(it?.media_alt, 200) || null;
     if ((type === 'picture_label') && !media_path) problems.push({ at, msg: 'تسمية الصورة تحتاج media_path' });
     if (media_path && !media_alt) warnings.push({ at, msg: 'صورة بلا وصف بديل (media_alt)' });
-    const rationale: Record<string, string> = {}; if (it?.rationale && typeof it.rationale === 'object') for (const o of options) { const v = s((it.rationale as any)[o.id], 300); if (v) rationale[o.id] = v; }
-    if (Object.keys(rationale).length < options.length) warnings.push({ at, msg: 'مبرّر ناقص لبعض المشتّتات' });
+    const rationale: Record<string, string> = {}; const ratKeys = type === 'matching' ? (left || []).map((l) => l.id) : type === 'ordering' ? ['why'] : options.map((o) => o.id);
+    if (it?.rationale && typeof it.rationale === 'object') for (const k of ratKeys) { const v = s((it.rationale as any)[k], 300); if (v) rationale[k] = v; }
+    if (Object.keys(rationale).length < ratKeys.length) warnings.push({ at, msg: type === 'ordering' ? 'مبرّر الترتيب (rationale.why) ناقص' : type === 'matching' ? 'مبرّر ناقص لبعض عناصر المطابقة' : 'مبرّر ناقص لبعض المشتّتات' });
     const key = `${level}:${normStem(question_text)}`; const prev = stems.get(key); if (prev) problems.push({ at, msg: `جذع مكرّر داخل الحزمة (مثل ${prev})` }); else stems.set(key, code);
-    const full = `${question_text} ${options.map((o) => o.text).join(' ')}`;
+    const full = `${question_text} ${options.map((o) => o.text).join(' ')} ${(left || []).map((l) => l.text).join(' ')}`;
     if (FULL_TASHKEEL_LEVELS.includes(level) && !hasTashkeel(full)) warnings.push({ at, msg: `بند ${level} بلا تشكيل — المعيار: تشكيل كامل` });
     if (NO_TASHKEEL_LEVELS.includes(level) && hasTashkeel(full)) warnings.push({ at, msg: `بند ${level} مشكول — المعيار: بلا تشكيل من B1` });
-    items.push({ item_code: code, level, skill, item_type: type, question_text, options: options.map((o) => ({ id: o.id, text: o.text, ...(o.image ? { image: o.image, alt: o.alt || null } : {}) })), correct, descriptor_code, unit_codes, domain, difficulty_est, passage_id, media_path, media_alt, rationale });
+    items.push({ item_code: code, level, skill, item_type: type, question_text, options: options.map((o) => ({ id: o.id, text: o.text, ...(o.image ? { image: o.image, alt: o.alt || null } : {}) })), correct, ...(left ? { left: left.map((l) => ({ id: l.id, text: l.text, ...(l.image ? { image: l.image, alt: l.alt || null } : {}) })) } : {}), descriptor_code, unit_codes, domain, difficulty_est, passage_id, media_path, media_alt, rationale });
   });
   const tasks: PackTask[] = []; const rawT = Array.isArray(r.tasks) ? r.tasks : []; if (rawT.length > PACK_LIMITS.tasks) problems.push({ at: 'tasks', msg: `الحدّ ${PACK_LIMITS.tasks} مهمة` });
   rawT.slice(0, PACK_LIMITS.tasks).forEach((t: any, i: number) => {
@@ -129,7 +138,7 @@ export function normalizePack(raw: unknown): { ok: true; pack: Pack; problems: P
   for (const [level, list] of byLevel) {
     if (list.length < 8) continue;
     const mcq = list.filter((x) => x.item_type === 'mcq').length; if (mcq / list.length > MCQ_MAX_SHARE) warnings.push({ at: level, msg: `حصّة mcq ${Math.round((100 * mcq) / list.length)}% — المعيار ≤ 60%` });
-    const keys: Record<string, number> = {}; for (const x of list.filter((y) => y.item_type !== 'true_false_notgiven')) keys[x.correct] = (keys[x.correct] || 0) + 1;
+    const keys: Record<string, number> = {}; for (const x of list.filter((y) => y.item_type !== 'true_false_notgiven' && !isCompositeType(y.item_type))) keys[x.correct] = (keys[x.correct] || 0) + 1;
     const n = Object.values(keys).reduce((a, b) => a + b, 0); for (const [k, v] of Object.entries(keys)) if (n >= 8 && v / n > KEY_MAX_SHARE) warnings.push({ at: level, msg: `المفتاح «${k}» في ${Math.round((100 * v) / n)}% من البنود — وزّع المفاتيح` });
   }
   if (problems.length) return { ok: false, problems, warnings };
@@ -143,6 +152,12 @@ export function summarize(pack: Pack, warnings: Problem[]): Summary {
   return { source: pack.source, content_version: pack.content_version, passages: pack.passages.length, items: pack.items.length, tasks: pack.tasks.length, by_level, by_type, warnings };
 }
 
+/** م13-ب: الصيغة المقروءة للمفتاح المركّب في answer_keys.accepted — {pairs:[{l,r}]} للمطابقة · {order:[…]} للترتيب */
+export function acceptedOf(it: Pick<PackItem, 'item_type' | 'options' | 'correct' | 'left'>): Record<string, unknown> {
+  const parts = parseComposite(it.correct) || []; const label = (id: string) => it.options.find((o) => o.id === id)?.text || it.options.find((o) => o.id === id)?.image || id;
+  if (it.item_type === 'ordering') return { order: parts, order_text: parts.map(label) };
+  return { pairs: parts.map((r, i) => ({ l: it.left?.[i]?.text || it.left?.[i]?.image || String(i + 1), r: label(r), left_id: String(i + 1), right_id: r })) };
+}
 export type ImportReport = { batch_id: string | null; dry_run: boolean; passages_created: number; passages_existing: string[]; items_created: number; tasks_created: number; skipped_existing: string[]; rejected: Array<{ item_code: string; field: string; msg: string }>; possible_duplicates: Array<{ item_code: string; of: string }>; descriptors_unknown: string[] };
 const chunk = <T,>(a: T[], n: number): T[][] => { const out: T[][] = []; for (let i = 0; i < a.length; i += n) out.push(a.slice(i, i + n)); return out; };
 
@@ -194,10 +209,10 @@ export async function importPack(db: any, pack: Pack, user: { id: string }, opts
   }
   /* 7) البنود (in_review) + المفاتيح + حدث المراجعة */
   for (const part of chunk(okItems, 100)) {
-    const rows = part.map((it) => ({ item_code: it.item_code, content_version: pack.content_version, level: it.level, skill: it.skill, passage_id: it.skill === 'grammar_vocab' ? null : it.passage_id, question_text: it.question_text, options: it.options, item_type: it.item_type, status: 'in_review', source_kind: 'imported', descriptor_code: it.descriptor_code, cefr_descriptor: it.descriptor_code, unit_codes: it.unit_codes.length ? it.unit_codes : null, domain: it.domain, difficulty_est: it.difficulty_est, media_path: it.media_path, media_alt: it.media_alt, stimulus: it.media_path ? { image: it.media_path, alt: it.media_alt } : null, created_by: user.id, import_batch_id: batchId, author_notes: { options: it.rationale, authored_by: pack.source, imported_by: user.id, ...(report.possible_duplicates.find((d) => d.item_code === it.item_code) ? { possible_duplicate_of: report.possible_duplicates.find((d) => d.item_code === it.item_code)!.of } : {}) } }));
+    const rows = part.map((it) => ({ item_code: it.item_code, content_version: pack.content_version, level: it.level, skill: it.skill, passage_id: it.skill === 'grammar_vocab' ? null : it.passage_id, question_text: it.question_text, options: it.options, item_type: it.item_type, status: 'in_review', source_kind: 'imported', descriptor_code: it.descriptor_code, cefr_descriptor: it.descriptor_code, unit_codes: it.unit_codes.length ? it.unit_codes : null, domain: it.domain, difficulty_est: it.difficulty_est, media_path: it.media_path, media_alt: it.media_alt, stimulus: it.media_path || it.left ? { ...(it.media_path ? { image: it.media_path, alt: it.media_alt } : {}), ...(it.left ? { left: it.left } : {}) } : null, created_by: user.id, import_batch_id: batchId, author_notes: { options: it.rationale, authored_by: pack.source, imported_by: user.id, ...(report.possible_duplicates.find((d) => d.item_code === it.item_code) ? { possible_duplicate_of: report.possible_duplicates.find((d) => d.item_code === it.item_code)!.of } : {}) } }));
     const ins = await db.from('question_bank_items').insert(rows).select('id, item_code'); if (ins.error || !ins.data) throw new Error(ins.error?.message || 'items_insert_failed');
     const idOf = new Map<string, string>(((ins.data || []) as any[]).map((r) => [r.item_code, r.id]));
-    const keys = part.filter((it) => idOf.has(it.item_code)).map((it) => ({ item_id: idOf.get(it.item_code)!, correct_option_id: it.correct }));
+    const keys = part.filter((it) => idOf.has(it.item_code)).map((it) => ({ item_id: idOf.get(it.item_code)!, correct_option_id: it.correct, ...(isCompositeType(it.item_type) ? { accepted: acceptedOf(it) } : {}) }));
     const k = await db.from('question_bank_answer_keys').insert(keys); if (k.error) throw new Error(k.error.message);
     await db.from('question_bank_review_events').insert(keys.map((x) => ({ item_id: x.item_id, review_status: 'in_review', academic_note: `استيراد ${pack.source}`, reviewed_by: user.id })));
     report.items_created += keys.length;

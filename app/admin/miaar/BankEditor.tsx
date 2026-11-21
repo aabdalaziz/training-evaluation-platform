@@ -16,13 +16,16 @@ import BankImport from './BankImport';
 import BankHeritage, { StatChip } from './BankHeritage';
 
 type Opt = { id: string; text: string; image?: string | null; alt?: string | null };
-type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; task?: any; stats?: { n: number; p: number | null; rpb: number | null; flags: string[] } | null; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
+type Item = { id: string; item_code: string; content_version: string; level: string; skill: string; passage_id: string | null; question_text: string; options: Opt[]; item_type: string; status: string; task?: any; stats?: { n: number; p: number | null; rpb: number | null; flags: string[] } | null; descriptor_code: string | null; domain: string | null; difficulty_est: number | null; media_path: string | null; media_alt: string | null; author_notes: any; legacy_extra: any; latest_review_note: string | null; correct: string | null; stimulus?: any; batch: string; passage: { id: string; title: string; skill: string; status: string; audio_public_path: string | null; audio_storage_path: string | null } | null };
 type Passage = { id: string; level: string; skill: string; title: string; body: string; status: string; source: string; version: string | null; audio_public_path: string | null; audio_storage_path: string | null; meta: any };
 type Desc = { code: string; level: string; mode: string; text_ar: string };
 const LEVELS_ALL = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const SKILLS_ALL = ['grammar_vocab', 'reading', 'listening'];
 const STATUS_AR: Record<string, string> = { draft: 'مسودّة', in_review: 'قيد المراجعة', approved: 'معتمد', archived: 'مؤرشف' };
-const TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور' };
+const TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور', matching: 'مطابقة (م13-ب)', ordering: 'ترتيب (م13-ب)' };
+const isComposite = (t: string) => t === 'matching' || t === 'ordering';
+/** م13-ب: المفتاح المركّب «b-a-d-c» ↔ مصفوفة */
+const keyParts = (k: string | null | undefined, n: number): string[] => { const p = typeof k === 'string' && k.includes('-') ? k.split('-') : []; return Array.from({ length: n }, (_, i) => p[i] || ''); };
 const DOMAIN_AR: Record<string, string> = { personal: 'شخصي', public: 'عام', educational: 'تعليمي', professional: 'مهني' };
 const BATCH_AR: Record<string, string> = { 'athar-m13a': 'توسعة البنك (م13-أ)', 'athar-m2a': 'بنك مِعيار الجديد (م2-أ)', 'miaar-legacy': 'الدفعة التأسيسية (295 بندًا — ملك أَثَر)', 'athar-staff': 'بنود الطاقم', 'athar-m4a': 'صوتك وقلمك (م4-أ)' };
 type Band = { skill: string; dimension: string; dimension_ar: string; score: number; text_ar: string };
@@ -64,7 +67,7 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false }
   useEffect(() => { if (view === 'passages' && !passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
   useEffect(() => { if (!edit && !pEdit && !tEdit) return; const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setEdit(null); setPEdit(null); setTEdit(null); } }; window.addEventListener('keydown', onKey); const prev = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; }; }, [edit, pEdit, tEdit]);
-  useEffect(() => { if (!edit) { setDraft(null); return; } setDraft({ question_text: edit.question_text, options: edit.options.map((o) => ({ ...o })), correct: edit.correct || 'a', descriptor_code: edit.descriptor_code || '', domain: edit.domain || '', difficulty_est: edit.difficulty_est || 3, passage_id: edit.passage_id || '', media_path: edit.media_path || '', media_alt: edit.media_alt || '', item_type: edit.item_type }); if (!passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!edit) { setDraft(null); return; } setDraft({ question_text: edit.question_text, options: edit.options.map((o) => ({ ...o })), correct: edit.correct || 'a', left: Array.isArray(edit.stimulus?.left) ? edit.stimulus.left.map((l: any) => ({ ...l })) : [{ id: '1', text: '' }, { id: '2', text: '' }, { id: '3', text: '' }], descriptor_code: edit.descriptor_code || '', domain: edit.domain || '', difficulty_est: edit.difficulty_est || 3, passage_id: edit.passage_id || '', media_path: edit.media_path || '', media_alt: edit.media_alt || '', item_type: edit.item_type }); if (!passages.length) void loadPassages(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edit]);
 
   const after = async (j: any) => { if (j) { await load(offset); onChanged(); } };
@@ -142,8 +145,23 @@ export default function BankEditor({ auth, byBatch, onChanged, isAdmin = false }
           <label>وصف الصورة<input value={draft.media_alt} onChange={(e) => setDraft({ ...draft, media_alt: e.target.value })} /></label>
         </div>
         <label className="bk-full">نص السؤال<textarea rows={3} value={draft.question_text} onChange={(e) => setDraft({ ...draft, question_text: e.target.value })} dir="rtl" lang="ar" /></label>
+        {draft.item_type === 'matching' && <div className="bk-left" data-testid="bank-left">
+          <p className="mm-note">العمود الأيسر (3–4 عناصر) — ولكلّ عنصر خياره الأيمن الصحيح؛ الخيارات أدناه = اليسار أو +1 مشتّت. المفتاح: <code dir="ltr">{draft.correct}</code></p>
+          {draft.left.map((l: any, i: number) => <div key={i} className="bk-opt">
+            <span className="bk-radio">{i + 1}</span>
+            <input value={l.text || ''} onChange={(e) => { const left = draft.left.slice(); left[i] = { ...l, text: e.target.value }; setDraft({ ...draft, left }); }} placeholder="نص العنصر الأيسر" dir="rtl" lang="ar" />
+            <input value={l.image || ''} onChange={(e) => { const left = draft.left.slice(); left[i] = { ...l, image: e.target.value || null }; setDraft({ ...draft, left }); }} placeholder="صورة (مسار)" dir="ltr" className="bk-img" />
+            <select aria-label={`الخيار الصحيح للعنصر ${i + 1}`} value={keyParts(draft.correct, draft.left.length)[i]} onChange={(e) => { const parts = keyParts(draft.correct, draft.left.length); parts[i] = e.target.value; setDraft({ ...draft, correct: parts.join('-') }); }}><option value="">—</option>{draft.options.map((o: Opt) => <option key={o.id} value={o.id}>{o.id} — {o.text || o.image}</option>)}</select>
+            <button type="button" className="bk-x" aria-label="حذف العنصر" disabled={draft.left.length <= 3} onClick={() => { const left = draft.left.filter((_: any, k: number) => k !== i).map((x: any, k: number) => ({ ...x, id: String(k + 1) })); const parts = keyParts(draft.correct, draft.left.length).filter((_, k) => k !== i); setDraft({ ...draft, left, correct: parts.join('-') }); }}>×</button>
+          </div>)}
+          {draft.left.length < 4 && <button type="button" className="bk-soft" onClick={() => setDraft({ ...draft, left: [...draft.left, { id: String(draft.left.length + 1), text: '' }] })}>+ عنصر أيسر</button>}
+        </div>}
+        {draft.item_type === 'ordering' && <div className="bk-left" data-testid="bank-order">
+          <p className="mm-note">اكتب القطع أدناه <b>مبعثرة</b>، ثم حدّد الترتيب الصحيح هنا. المفتاح: <code dir="ltr">{draft.correct}</code></p>
+          <div className="bk-row">{draft.options.map((_: Opt, i: number) => <select key={i} aria-label={`القطعة رقم ${i + 1}`} value={keyParts(draft.correct, draft.options.length)[i]} onChange={(e) => { const parts = keyParts(draft.correct, draft.options.length); parts[i] = e.target.value; setDraft({ ...draft, correct: parts.join('-') }); }}><option value="">{i + 1}: —</option>{draft.options.map((o: Opt) => <option key={o.id} value={o.id}>{i + 1}: {o.id}</option>)}</select>)}</div>
+        </div>}
         <div className="bk-opts">{draft.options.map((o: Opt, i: number) => <div key={o.id} className={`bk-opt${draft.correct === o.id ? ' key' : ''}`}>
-          <label className="bk-radio"><input type="radio" name="key" checked={draft.correct === o.id} onChange={() => setDraft({ ...draft, correct: o.id })} /> {o.id}</label>
+          {isComposite(draft.item_type) ? <span className="bk-radio">{o.id}</span> : <label className="bk-radio"><input type="radio" name="key" checked={draft.correct === o.id} onChange={() => setDraft({ ...draft, correct: o.id })} /> {o.id}</label>}
           <input value={o.text} onChange={(e) => { const options = draft.options.slice(); options[i] = { ...o, text: e.target.value }; setDraft({ ...draft, options }); }} placeholder="نص الخيار" dir="rtl" lang="ar" />
           <input value={o.image || ''} onChange={(e) => { const options = draft.options.slice(); options[i] = { ...o, image: e.target.value || null }; setDraft({ ...draft, options }); }} placeholder="صورة (مسار)" dir="ltr" className="bk-img" />
           {o.image && <img src={o.image} alt={o.alt || ''} />}
@@ -279,6 +297,7 @@ const CSS = `
 .bk-edit.bk-inline{width:auto;max-height:none;box-shadow:none;background:#f8fafc;margin-top:12px}.bk-eh{display:flex;justify-content:space-between;align-items:center}.bk-eh h4{margin:0}.bk-eh small{color:#64748b;font-weight:600;margin-inline-start:8px}
 .bk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.bk-grid label,.bk-full{display:grid;gap:4px;font-size:13px;font-weight:800}.bk-full textarea{font-weight:500}
 .bk-opts{display:grid;gap:6px}.bk-opt{display:grid;grid-template-columns:auto 1fr 180px auto auto;gap:8px;align-items:center;border:1px solid #e2e8f0;border-radius:10px;padding:6px 8px;background:#fff}.bk-opt.key{border-color:#0b8a83;background:#ecfdf5}.bk-opt img{width:40px;height:40px}.bk-radio{font-weight:800}.bk-rat{grid-column:2/-1;color:#64748b}.bk-x{border:none;background:transparent;font-size:18px;cursor:pointer;color:#94a3b8}
+.bk-left{border:1px dashed #cbd5e1;border-radius:10px;padding:8px;margin:8px 0;display:grid;gap:6px;background:#f8fafc}.bk-left select{min-width:110px}
 .bk-studio{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px dashed #0b8a83;border-radius:14px;padding:12px;margin:10px 0}.bk-studio p{margin:0;flex:1;font-size:13px}.bk-up{display:inline-block;border:1px solid #cbd5e1;border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer;margin-top:4px}.bk-up input{display:none}
 audio{height:30px;max-width:200px;vertical-align:middle}
 .bk-tabs button small{display:block;font-size:10px;font-weight:600;color:#8a6d1f;line-height:1}.bk-count{align-self:center;font-size:13px}.bk-prodintro{border-color:#c9a24b;background:#fffbea}.bk-soft.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}

@@ -56,6 +56,13 @@ export const MIAAR_PRODUCTIVE_NAMES_AR = { narrative: 'صوتك وقلمك', off
 export type ItemType = (typeof ITEM_TYPES)[number];
 /** الأنواع التي يقدّمها م1 للمتقدّم (الباقي يُبنى في م4) */
 export const M1_ITEM_TYPES: readonly ItemType[] = ['mcq', 'picture_choice', 'picture_label', 'true_false_notgiven'];
+/** م13-ب: ما يقدّمه المشغّل اليوم = الأربعة + المطابقة والترتيب (استجابة مركّبة «b-a-d-c» · كلّه أو لا شيء) */
+export const COMPOSITE_ITEM_TYPES: readonly ItemType[] = ['matching', 'ordering'];
+export const PLAYER_ITEM_TYPES: readonly ItemType[] = [...M1_ITEM_TYPES, ...COMPOSITE_ITEM_TYPES];
+export const isCompositeType = (t: unknown): t is 'matching' | 'ordering' => t === 'matching' || t === 'ordering';
+export const ITEM_TYPE_AR: Record<string, string> = { mcq: 'اختيار من متعدد', picture_choice: 'اختيار صورة', picture_label: 'تسمية صورة', true_false_notgiven: 'صواب/خطأ/غير مذكور', matching: 'مطابقة', ordering: 'ترتيب', picture_sequence: 'تسلسل صور', cloze_bank: 'فراغات', word_tap: 'نقر كلمات', short_dictation: 'إملاء قصير', writing_task: 'مهمة كتابة', speaking_task: 'مهمة تحدّث' };
+/** حدود المطابقة والترتيب (MIAAR-M13B-SPEC §2) */
+export const MATCHING_LEFT: [number, number] = [3, 4]; export const ORDERING_PARTS: [number, number] = [3, 6];
 export const PASS_PERCENT = 60;
 export const DURATION_SECONDS = 50 * 60;
 export const COOKIE_NAME = 'miaar_placement_session';
@@ -73,13 +80,16 @@ export const FORM_PLAN: Record<Level, Record<Skill, number>> = {
 };
 
 export type Option = { id: string; text: string; image?: string | null; alt?: string | null };
+/** م13-ب: عنصر العمود الأيسر في المطابقة (نصّ أو صورة) */
+export type LeftItem = { id: string; text: string; image?: string | null; alt?: string | null };
 export type PoolItem = {
   id: string; code: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string;
   options: Option[]; correctOptionId: string; stimulus: { image?: string | null; alt?: string | null } | null; descriptor: string | null;
   unitCodes?: string[]; /* م6-ب: وحدات المستوى التي يخدمها البند */
+  left?: LeftItem[]; /* م13-ب: العمود الأيسر للمطابقة */
 };
-export type SecureItem = { id: string; level: BankLevel; skill: Skill; correctOptionId: string };
-export type PublicQuestion = { id: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string; options: Option[]; stimulus: { image: string | null; alt: string | null } | null };
+export type SecureItem = { id: string; level: BankLevel; skill: Skill; correctOptionId: string; type?: ItemType; optionIds?: string[]; leftCount?: number };
+export type PublicQuestion = { id: string; level: BankLevel; skill: Skill; type: ItemType; passageId: string | null; questionText: string; options: Option[]; stimulus: { image: string | null; alt: string | null } | null; left?: LeftItem[] };
 export type PublicPassage = { id: string; level: string; skill: 'reading' | 'listening'; title: string; text: string; audioUrl: string | null; player?: { speeds: number[]; replays: number; twice?: boolean } };
 export type PublicForm = { questions: PublicQuestion[]; passages: PublicPassage[] };
 export type Candidate = { name: string; email: string; phone?: string; nativeLanguage?: string; studiedBefore?: boolean | null; purpose?: string; idNumber?: string /* م7: رقم هوية/طالب عند طلب الجهة */; city?: string /* م8-ب: مدينة يصرّح بها المتقدّم عن بُعد (اختياري · بلا تتبّع) */ };
@@ -96,6 +106,16 @@ export const levelAtIndex = (index: number): BankLevel => index === FLOOR_INDEX 
 export const isSkill = (v: unknown): v is Skill => typeof v === 'string' && (SKILLS as readonly string[]).includes(v);
 export const isExamMode = (v: unknown): v is ExamMode => v === 'comprehensive' || v === 'adaptive';
 export const isOptionId = (v: unknown): v is string => typeof v === 'string' && /^[a-f]$/.test(v);
+/** م13-ب: الاستجابة المركّبة «b-a-d-c» — معرّفات خيارات بلا تكرار موصولة بشرطة */
+export const parseComposite = (v: unknown): string[] | null => { if (typeof v !== 'string' || !/^[a-f](-[a-f]){2,5}$/.test(v)) return null; const p = v.split('-'); return new Set(p).size === p.length ? p : null; };
+/** هل الاستجابة صالحة لهذا البند؟ mcq وأخواته: حرف واحد من خياراته · matching: طول العمود الأيسر من معرّفات اليمين · ordering: تبديل كامل للخيارات */
+export function isResponseFor(type: ItemType, optionIds: readonly string[], leftCount: number, v: unknown): boolean {
+  if (!isCompositeType(type)) return isOptionId(v) && optionIds.includes(v);
+  const p = parseComposite(v); if (!p || !p.every((x) => optionIds.includes(x))) return false;
+  return type === 'matching' ? p.length === leftCount : p.length === optionIds.length;
+}
+/** المفتاح الهويّة (a-b-c-d…) يكشف الجواب بترتيب العرض */
+export const isIdentityKey = (key: string, optionIds: readonly string[]): boolean => key === optionIds.slice(0, key.split('-').length).join('-');
 
 export function cleanText(value: unknown, max: number): string { return typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').slice(0, max) : ''; }
 export function normalizeCandidate(value: unknown): Candidate | null {

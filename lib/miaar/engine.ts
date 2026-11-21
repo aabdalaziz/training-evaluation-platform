@@ -7,7 +7,7 @@
  */
 import { createHash, randomBytes } from 'node:crypto';
 import {
-  PASS_PERCENT, DURATION_SECONDS, CONTENT_VERSION, MIAAR_NAMES_AR, isExamMode, isOptionId, cleanText, normalizeCandidate, normalizeAccess,
+  PASS_PERCENT, DURATION_SECONDS, CONTENT_VERSION, MIAAR_NAMES_AR, isExamMode, isOptionId, isResponseFor, cleanText, normalizeCandidate, normalizeAccess,
   accessDuration, nextStep, calculateReport, resultCode, bankLevelIndex, levelAtIndex, hasFloor, FLOOR_INDEX,
 } from './registry';
 import type { Answer, Candidate, ExamMode, FinishReason, PublicForm, SecureItem, Access, Report, PoolItem } from './registry';
@@ -188,9 +188,11 @@ export async function answerSession(db: any, s: SessionRow, body: Record<string,
   if (s.finish_reason === 'completed' || s.finish_reason === 'failed') return fail('session_finalized', 409);
   if (remainingSeconds(s.expires_at) === 0) return fail('session_expired', 409);
   const questionId = cleanText(body.questionId, 80); const selected = body.selectedOptionId;
-  if (!questionId || !isOptionId(selected)) return fail('invalid_answer', 400);
+  if (!questionId || typeof selected !== 'string' || selected.length > 12) return fail('invalid_answer', 400);
   const scored = await scoredItems(db, s); if (!scored) return fail('form_unavailable', 409); sw?.mark('pool');
   const item = scored.items.find((i) => i.id === questionId); if (!item) return fail('invalid_question', 404);
+  /* م13-ب: mcq وأخواته حرف واحد؛ المطابقة/الترتيب استجابة مركّبة «b-a-d-c» بطول العمود/كلّ القطع */
+  if (!isResponseFor(item.type || 'mcq', item.optionIds || ['a', 'b', 'c', 'd', 'e', 'f'], item.leftCount || 0, selected)) return fail('invalid_answer', 400);
   const itemIndex = bankLevelIndex(item.level); if (itemIndex < FLOOR_INDEX || itemIndex !== s.current_level_index) return fail('question_not_current', 403);
   const saved = await db.from('placement_secure_answers').upsert({ session_id: s.id, question_id: questionId, selected_option_id: selected, submitted_at: nowIso() }, { onConflict: 'session_id,question_id' });
   if (saved.error) return fail('answer_save_failed', 500);

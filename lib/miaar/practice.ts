@@ -10,7 +10,7 @@
  *  المنطق الخالص أعلى الملف (يُختبر وحدةً)، ودوال القاعدة أسفله. لا يستورد exitflow (تفاديًا لدورة الاستيراد).
  */
 import type { PoolItem, PublicForm } from './registry';
-import { shufflePool } from './registry';
+import { shufflePool, isResponseFor, isCompositeType, parseComposite } from './registry';
 import { formFromPool, loadApprovedPool, loadPassages } from './bank';
 import { listUnits, unitIndex, isUnitCode, unitLevelOf, approvedFor } from './syllabus';
 import type { Unit, UnitTally, ExitLevel } from './syllabus';
@@ -134,10 +134,18 @@ export function pickMirror(attempts: readonly Pick<AttemptRow, 'item_code' | 'co
 
 /* ───────── 5) التصحيح والتغذية الراجعة ───────── */
 export type Feedback = { correct: boolean; correct_option: string; why_ar: string };
-export function gradeAnswer(item: Pick<PoolItem, 'options' | 'correctOptionId' | 'descriptor'>, option: string, unit?: Pick<Unit, 'title_ar' | 'focus_ar'> | null): Feedback {
-  const correct = option === item.correctOptionId; const co = item.options.find((o) => o.id === item.correctOptionId);
+export function gradeAnswer(item: Pick<PoolItem, 'options' | 'correctOptionId' | 'descriptor'> & Partial<Pick<PoolItem, 'type' | 'left'>>, option: string, unit?: Pick<Unit, 'title_ar' | 'focus_ar'> | null): Feedback {
+  const correct = option === item.correctOptionId;
   const why = unit ? `هذا البند من وحدة «${unit.title_ar}»: ${unit.focus_ar}` : item.descriptor ? `الواصف ${item.descriptor}` : 'راجع الوحدة ثم أعد المحاولة غدًا';
-  return { correct, correct_option: co?.text || '', why_ar: correct ? `أحسنت — ${why}` : `الإجابة الصحيحة: «${co?.text || '—'}». ${why}` };
+  return { correct, correct_option: correctText(item), why_ar: correct ? `أحسنت — ${why}` : `الإجابة الصحيحة: «${correctText(item) || '—'}». ${why}` };
+}
+/** نصّ المفتاح للعرض: mcq نصّ الخيار · المطابقة «١ ← ب …» · الترتيب القطع بترتيبها (م13-ب) */
+export function correctText(item: Pick<PoolItem, 'options' | 'correctOptionId'> & Partial<Pick<PoolItem, 'type' | 'left'>>): string {
+  const label = (id: string) => { const o = item.options.find((x) => x.id === id); return o ? (o.text || o.alt || o.image || id) : id; };
+  if (!isCompositeType(item.type)) return label(item.correctOptionId);
+  const parts = parseComposite(item.correctOptionId) || [];
+  if (item.type === 'ordering') return parts.map(label).join(' ← ');
+  return parts.map((r, i) => { const l = item.left?.[i]; return `${l ? (l.text || l.alt || l.id) : i + 1} ← ${label(r)}`; }).join(' · ');
 }
 
 /* ───────── 6) التقدّم والمرآة والجاهزية ───────── */
@@ -317,7 +325,7 @@ export async function answerItem(db: Db, rep: { id: string; report: any }, body:
   const code = String(body.item || ''); if (!(day.items || []).includes(code)) return { ok: false, error: 'item_not_in_card' };
   const attempts = await attemptsFor(db, plan.id); if (attempts.some((a) => a.day === d && a.kind === 'item' && a.item_code === code)) return { ok: false, error: 'already_answered' };
   const pool = await loadApprovedPool(db); const item = pool.find((i) => i.code === code); if (!item) return { ok: false, error: 'item_unavailable' };
-  const option = String(body.option || ''); if (!item.options.some((o) => o.id === option)) return { ok: false, error: 'bad_option' };
+  const option = String(body.option || ''); if (!isResponseFor(item.type, item.options.map((o) => o.id), item.left?.length || 0, option)) return { ok: false, error: 'bad_option' };
   const units = await listUnits(db).catch(() => [] as Unit[]); const u = day.unit ? unitIndex(units).get(day.unit) || null : null; const fb = gradeAnswer(item, option, u);
   const ins = await db.from('miaar_practice_attempts').insert({ plan_id: plan.id, email: plan.email, day: d, kind: 'item', item_code: code, option_id: option, correct: fb.correct, at: now.toISOString() }); if (ins.error) return { ok: false, error: ins.error.message || 'save_failed' };
   const mine = attempts.filter((a) => a.day === d && a.kind === 'item'); const n = mine.length + 1; const correct = mine.filter((a) => a.correct).length + (fb.correct ? 1 : 0);

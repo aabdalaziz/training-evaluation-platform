@@ -8,8 +8,9 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import WayBar from '../../components/WayBar';
+import { Matcher, Orderer, COMPOSITE_CSS } from '../Composite'; /* م13-ب */
 
-type Q = { id: string; skill: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
+type Q = { id: string; skill: string; type?: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null; left?: { id: string; text: string; image?: string | null; alt?: string | null }[] };
 type P = { id: string; skill: 'reading' | 'listening'; title: string; text: string; audioUrl: string | null };
 type Fb = { correct: boolean; correct_option: string; why_ar: string };
 type Card = { d: number; kind: 'drill' | 'mirror'; unit: string | null; unit_title: string; focus_ar: string; form: { questions: Q[]; passages: P[] } | null; text: { prompt_ar: string; min_words: number; earlier: { d: number; text: string } | null } | null; answered: Record<string, Fb>; note_ar: string | null; note_audio: string | null; first_of_unit: boolean };
@@ -17,7 +18,7 @@ type View = { ok: boolean; code: string; name: string; النوع?: 'exit' | 'pl
 const SK: Record<string, string> = { listening: 'استماع', reading: 'قراءة', grammar_vocab: 'مفردات وتراكيب', writing: 'الكتابة', speaking: 'المحادثة' };
 
 export default function PracticeApp({ code, fontClass = '' }: { code: string; fontClass?: string }) {
-  const [v, setV] = useState<View | null>(null); const [err, setErr] = useState<'nf' | 'noplan' | null>(null); const [busy, setBusy] = useState(''); const [live, setLive] = useState('');
+  const [v, setV] = useState<View | null>(null); const [err, setErr] = useState<'nf' | 'noplan' | null>(null); const [busy, setBusy] = useState(''); const [pend, setPend] = useState<Record<string, string>>({}); /* م13-ب: استجابة مركّبة قبل التأكيد */ const [live, setLive] = useState('');
   const [text, setText] = useState(''); const [tm, setTm] = useState<{ notes_ar: string[]; words: number } | null>(null); const [ai, setAi] = useState<{ notes_ar: string[]; rewrite_ar: string | null; source: string } | null>(null); const [consent, setConsent] = useState(false);
   const load = useCallback(async () => { try { const r = await fetch(`/api/miaar/practice?code=${encodeURIComponent(code)}`, { cache: 'no-store' }); const d = await r.json(); if (!r.ok || !d.ok) { setErr(d?.error === 'no_plan' ? 'noplan' : 'nf'); return; } setErr(null); setV(d); } catch { setErr('nf'); } }, [code]);
   useEffect(() => { void load(); }, [load]);
@@ -67,7 +68,9 @@ export default function PracticeApp({ code, fontClass = '' }: { code: string; fo
             {qs.map((q, i) => { const fb = card.answered[q.id]; return <fieldset key={q.id} className={`mp-q ${fb ? (fb.correct ? 'ok' : 'bad') : ''}`} data-testid="mp-q" data-state={fb ? (fb.correct ? 'ok' : 'bad') : 'open'}>
               <legend><span className="mp-qn">{i + 1}</span> {q.questionText} <small>· {SK[q.skill] || q.skill}</small></legend>
               {q.stimulus?.image && <img className="mp-stim" src={q.stimulus.image} alt={q.stimulus.alt || ''} />}
-              <div className="mp-opts">{q.options.map((o) => <button key={o.id} type="button" className={`mp-opt ${fb && o.text === fb.correct_option ? 'right' : ''}`} disabled={!!fb || busy === q.id} onClick={() => void answer(q, o.id)} data-testid="mp-opt">{o.image ? <img src={o.image} alt={o.alt || o.text} /> : null}{o.text}</button>)}</div>
+              {q.type === 'matching' && <><Matcher left={q.left || []} options={q.options} value={pend[q.id] || null} disabled={!!fb || busy === q.id} onComplete={(v) => setPend((p) => ({ ...p, [q.id]: v }))} testId="mp-match" />{!fb && pend[q.id] && <button type="button" className="mp-opt right" disabled={busy === q.id} onClick={() => void answer(q, pend[q.id])} data-testid="mp-submit">تأكيد الإجابة</button>}</>}
+              {q.type === 'ordering' && <><Orderer options={q.options} value={pend[q.id] || null} disabled={!!fb || busy === q.id} onComplete={(v) => setPend((p) => ({ ...p, [q.id]: v }))} testId="mp-order" />{!fb && pend[q.id] && <button type="button" className="mp-opt right" disabled={busy === q.id} onClick={() => void answer(q, pend[q.id])} data-testid="mp-submit">تأكيد الإجابة</button>}</>}
+              {q.type !== 'matching' && q.type !== 'ordering' && <div className="mp-opts">{q.options.map((o) => <button key={o.id} type="button" className={`mp-opt ${fb && o.text === fb.correct_option ? 'right' : ''}`} disabled={!!fb || busy === q.id} onClick={() => void answer(q, o.id)} data-testid="mp-opt">{o.image ? <img src={o.image} alt={o.alt || o.text} /> : null}{o.text}</button>)}</div>}
               {fb && <p className="mp-fb" data-testid="mp-fb">{fb.correct ? '✓ ' : '✗ '}{fb.why_ar}</p>}
             </fieldset>; })}
           </div>; })}
@@ -93,6 +96,8 @@ export default function PracticeApp({ code, fontClass = '' }: { code: string; fo
       </div>
     </>}
     <style jsx global>{`
+${COMPOSITE_CSS}
+.mp .mi-opt{display:flex;align-items:center;gap:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;padding:8px 12px;min-height:44px;cursor:pointer}.mp .mi-opt.on{border-color:#0b8a83;background:#ecfdf5}.mp .mi-letter{font-weight:800;color:#0b8a83}.mp .mi-muted{color:#64748b;margin:0 0 6px}
 .mp{min-height:100vh;background:#f8fafc;color:#0f172a;font-family:inherit;line-height:1.7}
 .mp-top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid #e2e8f0}
 .mp-head{max-width:980px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}

@@ -22,12 +22,13 @@ const EntryLine = dynamic(() => import('./EntryLine'), { ssr: false, loading: ()
 import { entryPromptFor } from '../../lib/first/entry-pure';
 import { AUDIO_METER_CSS } from '../components/AudioMeter'; /* P72-أ */
 import Witness from './Witness'; /* م8 «شاهِد» */
+import { Matcher, Orderer, COMPOSITE_CSS, COMP_LABELS_AR, COMP_LABELS_EN } from './Composite'; /* م13-ب: المطابقة والترتيب */
 import type { WitnessApi, WitnessCfg } from './Witness';
 const PerformanceRoom = dynamic(() => import('./PerformanceRoom'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* م4-ب: غرفة الأداء تُحمَّل عند الحاجة */
 const ProductiveBlock = dynamic(() => import('./ProductiveBlock'), { ssr: false }); /* كتلة «المهارات الإنتاجية» — فقط حين تحملها البطاقة (ميزانية P40) */
 
 type Copy = Record<string, Record<string, Record<string, string>>> & { langs?: { id: string; name: string; find: string }[]; native?: { value: string; labels: Record<string, string> }[] };
-type Q = { id: string; level: string; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null };
+type Q = { id: string; level: string; skill: string; type: string; passageId: string | null; questionText: string; options: { id: string; text: string; image?: string | null; alt?: string | null }[]; stimulus: { image: string | null; alt: string | null } | null; left?: { id: string; text: string; image?: string | null; alt?: string | null }[] };
 type Player = { speeds: number[]; replays: number; twice?: boolean };
 type P = { id: string; level: string; skill: string; title: string; text: string; audioUrl: string | null; player?: Player };
 type Session = { plan?: { code: string; name_ar: string; name_en: string; type: string; ladder: string; levels: string[]; cut: number; floor: boolean } | null; examMode: 'comprehensive' | 'adaptive'; currentLevel: string; currentLevelIndex: number; startLevelIndex: number; direction: 'up' | 'down'; status: string; finishReason: string | null; expiresAt: string; remainingSeconds: number; durationSeconds: number; access: any; answers: Record<string, string>; form: { questions: Q[]; passages: P[] } | null; paper?: 'a' | 'b' | null /* P68-ب-2 «الجلوس بالألوان» */ };
@@ -282,7 +283,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   }
   useEffect(() => {
     if (step !== 'test') return;
-    const onKey = (e: KeyboardEvent) => { const tgt = e.target as HTMLElement; if (tgt && ['INPUT', 'TEXTAREA', 'SELECT'].includes(tgt.tagName)) return; const n = Number(e.key); if (n >= 1 && n <= 6 && current && current.options[n - 1]) { void choose(current.options[n - 1].id); } else if (e.key === 'Enter') { void next(); } else if (e.key.toLowerCase() === 'd' && current) { setDeferred((d) => { const c = new Set(d); c.has(current.id) ? c.delete(current.id) : c.add(current.id); return c; }); } };
+    const onKey = (e: KeyboardEvent) => { const tgt = e.target as HTMLElement; if (tgt && ['INPUT', 'TEXTAREA', 'SELECT'].includes(tgt.tagName)) return; const n = Number(e.key); if (current && (current.type === 'matching' || current.type === 'ordering')) return; if (n >= 1 && n <= 6 && current && current.options[n - 1]) { void choose(current.options[n - 1].id); } else if (e.key === 'Enter') { void next(); } else if (e.key.toLowerCase() === 'd' && current) { setDeferred((d) => { const c = new Set(d); c.has(current.id) ? c.delete(current.id) : c.add(current.id); return c; }); } };
     window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, current, answers, qIdx]);
 
@@ -612,11 +613,13 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
           {current.stimulus?.image && <img className="mi-stim" src={current.stimulus.image} alt={current.stimulus.alt || ''} />}
           <h2 className="mi-qtext" dir="rtl" lang="ar" data-voice-read="1">{current.questionText}</h2>
           {current.type === 'picture_choice' && <p className="mi-muted">{x('pick_picture')}</p>}
-          <div className={`mi-opts${current.type === 'picture_choice' ? ' pics' : ''}`} role="radiogroup" aria-label={t('test', 'choices')} data-voice-read="2">
+          {current.type === 'matching' && <Matcher key={current.id} left={current.left || []} options={current.options} value={answers[current.id] || null} disabled={busy} onComplete={(v) => void choose(v)} labels={lang === 'ar' ? COMP_LABELS_AR : COMP_LABELS_EN} />}
+          {current.type === 'ordering' && <Orderer key={current.id} options={current.options} value={answers[current.id] || null} disabled={busy} onComplete={(v) => void choose(v)} labels={lang === 'ar' ? COMP_LABELS_AR : COMP_LABELS_EN} />}
+          {current.type !== 'matching' && current.type !== 'ordering' && <div className={`mi-opts${current.type === 'picture_choice' ? ' pics' : ''}`} role="radiogroup" aria-label={t('test', 'choices')} data-voice-read="2">
             {current.options.map((o, i) => <button key={o.id} type="button" role="radio" aria-checked={answers[current.id] === o.id} className={`mi-opt${answers[current.id] === o.id ? ' on' : ''}`} onClick={() => void choose(o.id)} data-testid="mi-opt">
               <span className="mi-letter">{letters[i]}</span>{o.image ? <img src={o.image} alt={o.alt || o.text || ''} /> : <span dir="rtl" lang="ar">{optionText(current, o)}</span>}<span className="mi-check" aria-hidden="true">{answers[current.id] === o.id ? '✓' : ''}</span>
             </button>)}
-          </div>
+          </div>}
           <div className="mi-tfoot">
             <p className="mi-hint">{!access.simple && t('test', 'shortcuts')}</p>
             <div className="mi-actions">
@@ -1129,6 +1132,7 @@ const CSS = `
 .mi-why-voice{margin-top:8px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .mi-why-review{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 ${AUDIO_METER_CSS}
+${COMPOSITE_CSS}
 .mi-why-review audio{height:36px;max-width:260px}
 .mi-why-actions{margin-top:16px}
 .mi-why-foot{font-size:13px;margin-top:12px}
