@@ -162,9 +162,9 @@ export async function importPack(db: any, pack: Pack, user: { id: string }, opts
   const pIds = [...new Set([...pack.passages.map((p) => p.id), ...pack.items.map((i) => i.passage_id || '').filter(Boolean)])];
   const dbPassages = new Set<string>(); for (const part of chunk(pIds, 200)) { const { data } = await db.from('miaar_passages').select('id').in('id', part); for (const r of (data || []) as any[]) dbPassages.add(r.id); }
   const packP = new Set(pack.passages.map((p) => p.id));
-  /* 4) تكرار الجذع ضدّ بنود المستوى نفسه في القاعدة (غير المؤرشفة) */
+  /* 4) تكرار الجذع ضدّ بنود المستوى نفسه في القاعدة (غير المؤرشفة · بلا بنود اقْرَأْ: مِران الحلقات ليس من بنك مِعيار) */
   const levels = [...new Set(pack.items.map((i) => i.level))]; const stemOf = new Map<string, string>();
-  for (const level of levels) { const { data } = await db.from('question_bank_items').select('item_code, level, question_text, status').eq('level', level).neq('status', 'archived').limit(3000); for (const r of (data || []) as any[]) if (typeof r.question_text === 'string') stemOf.set(`${r.level}:${normStem(r.question_text)}`, r.item_code); }
+  for (const level of levels) { const { data } = await db.from('question_bank_items').select('item_code, level, question_text, status').eq('level', level).neq('status', 'archived').neq('source_kind', 'iqra').limit(3000); for (const r of (data || []) as any[]) if (typeof r.question_text === 'string') stemOf.set(`${r.level}:${normStem(r.question_text)}`, r.item_code); }
   const okItems: PackItem[] = [];
   for (const it of pack.items) {
     if (existing.has(it.item_code)) { report.skipped_existing.push(it.item_code); continue; }

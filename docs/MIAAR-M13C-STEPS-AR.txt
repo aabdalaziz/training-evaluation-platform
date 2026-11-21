@@ -19,7 +19,8 @@
   1.1  نزّل ATHAR-MIAAR-M13C.zip وفكّه؛ ستجد: lib/ · app/ · tests/ · docs/ (بنفس مسارات المستودع).
   1.2  افتح:  https://github.com/aabdalaziz/training-evaluation-platform/upload/main
   1.3  اسحب المجلّدات الأربعة إلى صندوق الرفع. المتوقّع: 12 ملفًا:
-       lib/miaar/pack.ts · lib/miaar/heritage.ts · app/api/admin/miaar/bank/route.ts · app/admin/miaar/BankEditor.tsx · app/admin/miaar/BankImport.tsx
+       lib/miaar/pack.ts
+  lib/miaar/balance.ts        (إصلاح: استثناء بنود اقْرَأْ من إحصاءات التوازن — انظر RELEASE) · lib/miaar/heritage.ts · app/api/admin/miaar/bank/route.ts · app/admin/miaar/BankEditor.tsx · app/admin/miaar/BankImport.tsx
        · app/admin/miaar/BankHeritage.tsx · app/admin/miaar/AdminMiaar.tsx · tests/miaar-m13.test.ts · tests/iqra-fake-db.ts · docs/RELEASE-MIAAR-M13C-AR.txt · docs/MIAAR-PACK-1-SCHEMA-AR.txt · docs/MIAAR-M13C-STEPS-AR.txt
   1.4  رسالة الالتزام:  Miaar m13-c: bank pack importer (miaar-pack-1), item stats chips, heritage review board
        → Commit changes. انتظر Vercel حتّى «Ready» (≈ 3 دقائق). إن فشل البناء فأرسل لي سطر الخطأ ولا تتابع.
