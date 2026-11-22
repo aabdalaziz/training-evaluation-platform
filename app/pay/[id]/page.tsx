@@ -60,7 +60,7 @@ function Inner() {
     const init = () => {
       const M = (window as any).Moyasar; if (!M) return;
       const el = document.querySelector('.mysr-form'); if (!el) return; el.innerHTML = '';
-      M.init({ element: '.mysr-form', amount: toHalalas(inv.total), currency: inv.currency || 'SAR', description: `${inv.invoice_no} — ${programName}`.slice(0, 250), publishable_api_key: MOYASAR_PK, callback_url: `${window.location.origin}/pay/${inv.id}`, methods: ['creditcard', 'applepay', 'stcpay'], language: lang, metadata: { invoice_id: inv.id, invoice_no: inv.invoice_no } });
+      M.init({ element: '.mysr-form', amount: toHalalas(inv.total), currency: inv.currency || 'SAR', description: `${inv.invoice_no} — ${programName}`.slice(0, 250), publishable_api_key: MOYASAR_PK, callback_url: `${window.location.origin}/pay/${inv.id}`, methods: ['creditcard', 'stcpay'], /* Apple Pay يحتاج apple_pay:{label,validate_merchant_url,country} وتوثيق النطاق في Moyasar — يُفعَّل لاحقًا وإلا رفض النموذج كلّه الظهور */ language: lang, metadata: { invoice_id: inv.id, invoice_no: inv.invoice_no } });
       setCardReady(true);
     };
     if ((window as any).Moyasar) { init(); return; }
