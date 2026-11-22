@@ -115,7 +115,25 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
             <Link href="/miaar" className="mm-hbtn"><Icon name="play" />صفحة الاختبار</Link>
           </div>
         </header>
-        <nav className="mm-tabs" aria-label="أقسام مِعيار">{([['overview', '01', 'التقارير', '/admin/miaar'], ['bank', '02', 'بنك الأسئلة', '/admin/miaar/bank'], ['forms', '03', 'منشئ النماذج', '/admin/miaar/forms'], ['invites', '04', MIAAR_NAMES_AR.invites, '/admin/miaar/invites'], ['balance', '05', 'الميزان', '/admin/miaar/balance'], ['rating', '06', 'التصحيح', '/admin/miaar/rating'], ['ledger', '07', 'السجلّ', '/admin/miaar/ledger'], ['growth', '08', 'النموّ', '/admin/miaar/growth'], ['exit', '09', 'نهاية المستوى', '/admin/miaar/exit'], ['hall', '10', 'القاعة', '/admin/miaar/hall'], ['syllabus', '11', 'خريطة المنهج', '/admin/miaar/syllabus'], ['iqra', '12', 'اقْرَأْ', '/admin/iqra']] as const).map(([k, n, l, h]) => <Link key={k} href={h} className={tab === k || (tab === 'witness' && k === 'exit') ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}><i>{n}</i><span>{l}</span></Link>)}</nav>
+        {/* هوية v1.2 (2026-11-23): من 12 لسانًا مرقّمًا إلى ثلاثة مكاتب بحسب من دخل — مكتب المدير · مكتب المؤلّف · مكتب المصحّح والشاهد.
+            مكتبك أوّلًا ومفتوح، والمكتبان الآخران مطويان بعنوانهما (تفتحهما بنقرة). الصلاحيات الفعلية تبقى على الخادم لكل قسم كما كانت. */}
+        <nav className="mm-desks" aria-label="مكاتب مِعيار">
+          {(() => {
+            const DESKS = [
+              { id: 'manager', label: 'مكتب المدير', who: 'مدير النظام · مدير البرامج · محلّل الجودة', color: '#6A3350', tabs: [['overview', 'التقارير', '/admin/miaar'], ['invites', MIAAR_NAMES_AR.invites, '/admin/miaar/invites'], ['ledger', 'السجلّ', '/admin/miaar/ledger'], ['growth', 'النموّ والمقارنة', '/admin/miaar/growth'], ['exit', 'نهاية المستوى · عُبور', '/admin/miaar/exit'], ['balance', 'الميزان', '/admin/miaar/balance']] },
+              { id: 'author', label: 'مكتب المؤلّف', who: 'مؤلّف البنود · محلّل الجودة', color: '#D4614A', tabs: [['bank', 'بنك البنود', '/admin/miaar/bank'], ['forms', 'منشئ النماذج', '/admin/miaar/forms'], ['syllabus', 'خريطة المنهج', '/admin/miaar/syllabus'], ['iqra', 'اقْرَأْ', '/admin/iqra']] },
+              { id: 'rater', label: 'مكتب المصحّح والشاهد', who: 'المصحّح · الشاهد · محلّل الجودة', color: '#D9A866', tabs: [['rating', 'التصحيح', '/admin/miaar/rating'], ['hall', 'القاعة', '/admin/miaar/hall'], ['witness', 'غرفة الشاهد', '/admin/miaar/witness']] },
+            ] as const;
+            const mine = rater ? 'rater' : /AUTHOR|ITEM/.test(role) ? 'author' : 'manager';
+            const here = DESKS.find(d => (d.tabs as readonly (readonly string[])[]).some(t => t[0] === tab))?.id || mine;
+            const order = [...DESKS].sort((a, b) => (a.id === mine ? -1 : b.id === mine ? 1 : 0));
+            return order.map(d => { const open = d.id === here || d.id === mine; return (
+              <details key={d.id} className={`mm-desk ${d.id === mine ? 'mine' : ''} ${d.id === here ? 'here' : ''}`} open={open} style={{ ['--d' as string]: d.color } as React.CSSProperties} data-testid={`mm-desk-${d.id}`}>
+                <summary><i /><b>{d.label}</b><small>{d.who}</small>{d.id === mine && <em>مكتبك</em>}</summary>
+                <div className="mm-desk-links">{d.tabs.map(([k, l, h]) => <Link key={k} href={h} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined}>{l}</Link>)}</div>
+              </details>); });
+          })()}
+        </nav>
         <LiveBadge auth={() => H()} active={tab === 'hall'} />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         <div className="mm-cards">
@@ -226,6 +244,20 @@ const CSS = `
 .mm-hero h1{margin:8px 0 0;font-size:34px;font-weight:900;color:#fff}.mm-lead{margin:10px 0 0;max-width:640px;line-height:1.8;color:#d5e0ea;font-size:15px}
 .mm-heroacts{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;justify-content:flex-end}
 .mm-hbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:1px solid rgba(255,255,255,.25);background:#fff;color:var(--navy);border-radius:12px;padding:8px 16px;font-size:13.5px;font-weight:800;text-decoration:none;cursor:pointer}.mm-hbtn:hover{background:#F6EBE0;filter:none}.mm-hbtn:active{background:#EADFD6}.mm-hbtn>svg:first-child{width:20px;height:20px;flex:none;border-radius:50%;padding:3px;background:var(--navy);color:#fff;box-sizing:border-box}.mm-hbtn.gold:hover{background:var(--gold-600,#B8893F)}.mm-hbtn.gold:active{background:var(--gold-700,#B8893F)}.mm-hbtn.gold{background:var(--gold);border-color:var(--gold);color:#1f2937}.mm-hbtn.gold:hover{background:#b8923f}
+.mm-desks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
+.mm-desk{border:1px solid #EADFD6;border-radius:16px;background:#fff;overflow:hidden;border-top:4px solid var(--d)}
+.mm-desk.mine{box-shadow:0 14px 34px rgba(42,22,38,.1)}
+.mm-desk summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:12px 14px}
+.mm-desk summary::-webkit-details-marker{display:none}
+.mm-desk summary i{grid-row:1/3;width:12px;height:12px;border-radius:50%;background:var(--d);box-shadow:0 0 0 3px #fff,0 0 0 4px var(--d)}
+.mm-desk summary b{font-size:16px;color:#3A1F36}.mm-desk summary small{grid-column:2;color:#8E7F8A;font-size:12px}
+.mm-desk summary em{grid-row:1/3;font-style:normal;font-size:11px;font-weight:800;background:#F1D9A8;color:#8A5A1E;border-radius:999px;padding:2px 9px}
+.mm-desk-links{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 14px}
+.mm-desk-links a{display:inline-flex;align-items:center;border:1px solid #EADFD6;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:#3A1F36;text-decoration:none;background:#FBF4EE;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.mm-desk-links a:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(42,22,38,.1)}
+.mm-desk-links a.on{background:var(--d);color:#fff;border-color:var(--d)}
+@media(max-width:1100px){.mm-desks{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.mm-desk-links a{transition:none}}
 .mm-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.mm-tabs a{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 22px;font-size:15px;font-weight:900;color:var(--navy);text-decoration:none;box-shadow:0 4px 14px rgba(42,22,38,.04)}
 .mm-tabs a i{font-style:normal;font-size:11px;font-weight:900;color:var(--teal);letter-spacing:.14em}.mm-tabs a.on{background:var(--navy);border-color:var(--navy);color:#fff}.mm-tabs a.on i{color:#d7e2ee}
 .mm-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
