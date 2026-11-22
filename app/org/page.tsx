@@ -35,6 +35,7 @@ const OrgPolicy = dynamic(() => import('../components/OrgPolicy').then(m => m.Or
 const OrgReport = dynamic(() => import('../components/OrgReport').then(m => m.OrgReport), { ssr: false });   // P68 «تقرير القيادة» — صفحة واحدة موقَّعة ATH-LR تنتهي بقرار   // P67 «السياسة والهوية» — مفاتيح الجهة + الدخول بالرمز + ختم ATH-OP   // P52: «رسالة الشهر» — أرشيف الرسائل الموقَّعة + ردّ الجهة
 const AccredOrgCard = dynamic(() => import('../components/Accreditation').then(m => m.AccredOrgCard), { ssr: false });   // P48-ب: ملفات اعتماد برامج الجهة — أرقام فقط   // P46 ر4-ب «قراءة الدفعة»   // P38 «الشهادة التي تكبر» — سطر الجهة · P39 «محطة الجهة»
 import { OrgNeeds } from '../components/Needs';   // P44 «جهة تحتاج»
+import ZoneDoor from '../components/ZoneDoor';   // هـ-2 «باب الجهات» بالهوية v1.2
 
 export default function OrgPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
@@ -91,20 +92,29 @@ function Inner() {
 
   return (
     <main className="pt-main og">
-      <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <span>{lang === 'ar' ? 'بوابة الجهات' : 'Organizations portal'}</span></div>
-        <h1>{lang === 'ar' ? 'بوابة الجهات' : 'Organizations Portal'}{org ? ` — ${lang === 'en' && org.name_en ? org.name_en : org.name_ar}` : ''}</h1>
-        {org?.demo ? <div data-testid="org-demo-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa', borderRadius: 999, padding: '4px 12px', fontSize: 12.5, fontWeight: 900, margin: '4px 0 8px' }}>{lang === 'ar' ? 'عرض — بيانات افتراضية · تُبنى وتُمحى من غرفة العرض' : 'Demo — synthetic data · built and erased from the Demo room'}</div> : null}
-        <p>{lang === 'ar' ? 'لوحة واحدة ترى فيها الجهة أثر التدريب على منسوبيها: المهارات المكتسبة، الحضور، الشهادات، مستويات مِعيار — وتدير أعضاءها وتطلب التسجيل الجماعي.' : 'One dashboard where an organization sees the impact of training on its people — skills, attendance, credentials, Mi‘yar levels — and manages members and bulk enrolment.'}</p>
-        {orgs.length > 1 && <select className="og-pick" value={orgId} onChange={e => { setOrgId(e.target.value); loadDash(e.target.value); }}>{orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select>}
-      </div></section>
+      {/* هـ-2: «باب الجهات» — للزائر باب كامل بالوعود وخانة الدخول؛ لمدير الجهة ترويسة مضغوطة بالهوية */}
+      {loaded && (!user || orgs.length === 0) ? (
+        <ZoneDoor zone="org" crumb={lang === 'ar' ? 'بوّابة الجهات' : 'Organizations'} kicker={lang === 'ar' ? 'بوّابة الجهات · أَثَر' : 'Organizations · Athar'} title={lang === 'ar' ? 'جهتك ترى أثر التدريب —' : 'Your organization sees training'} word={lang === 'ar' ? 'لا ساعاته' : 'impact — not hours'}
+          lead={lang === 'ar' ? 'لوحة واحدة ترى فيها الجهة ما كسبه منسوبوها فعلًا: مهارات مُصدَّقة، مستويات مِعيار، حضور وشهادات — وتقرير قيادة موقَّع، وخريطة قدرات، وعقود أثر تُدفع بالنتيجة.' : 'One dashboard where your organization sees what its people actually gained: approved skills, Mi‘yar levels, attendance and credentials — plus a signed leadership report, a capability map, and impact contracts paid on results.'}
+          promises={[
+            { icon: 'trend', title: lang === 'ar' ? 'قياس الأثر' : 'Impact measurement', body: lang === 'ar' ? 'ما تغيّر في العمل بعد ٣٠ و٩٠ يومًا — بشهادة المشرف لا بالاستبيان وحده.' : 'What changed at work after 30 and 90 days — witnessed by supervisors, not surveys alone.' },
+            { icon: 'star', title: lang === 'ar' ? 'خريطة القدرات' : 'Capability map', body: lang === 'ar' ? 'أين تقف جهتك في كلّ مهارة، وما الخطوات الثلاث التالية.' : 'Where your organization stands in every skill, and the next three steps.' },
+            { icon: 'scale', title: lang === 'ar' ? 'عقود الأثر وتقرير القيادة' : 'Impact contracts & leadership report', body: lang === 'ar' ? 'عقد يُدفع بالنتيجة، وصفحة واحدة موقَّعة للقيادة.' : 'A contract paid on outcomes, and one signed page for leadership.' },
+          ]}
+          aside={!user ? <div data-testid="org-door-login"><h3><Icon name="login" size={18} /> {lang === 'ar' ? 'دخول مدير الجهة' : 'Org admin sign-in'}</h3><p className="pt-muted">{lang === 'ar' ? 'ادخل ببريدك المعيّن مديرًا للجهة — بلا كلمة مرور.' : 'Sign in with your org-admin email — no password.'}</p>{sent ? <div className="pt-alert ok">{lang === 'ar' ? 'أرسلنا رابط الدخول إلى بريدك.' : 'Sign-in link sent.'}</div> : <form onSubmit={sendLink} className="pt-form"><label>{lang === 'ar' ? 'بريدك' : 'Your email'}<input dir="ltr" type="email" value={email} onChange={e => setEmail(e.target.value)} required /></label><button className="pt-btn" disabled={busy === 'link'}><Icon name="mail" size={15} /> {lang === 'ar' ? 'أرسل رابط الدخول' : 'Send sign-in link'}</button></form>}{err && <div className="pt-alert err">{err}</div>}<p className="pt-muted" style={{ marginTop: 10 }}>{lang === 'ar' ? 'ليست لجهتكم بوّابة بعد؟' : 'No portal for your organization yet?'} <Link href="/contact?subject=organizations">{lang === 'ar' ? 'اطلب تفعيلها' : 'Request activation'}</Link></p></div>
+            : <div data-testid="org-door-noadmin"><h3><Icon name="users" size={18} /> {lang === 'ar' ? 'لست مدير جهة بعد' : 'You are not an org admin yet'}</h3>
+              {memberships.length > 0 ? <p className="pt-muted">{lang === 'ar' ? `أنت عضو في ${memberships.length} جهة (${memberships.map(m => memberStatusLabel(m.status, 'ar')).join('، ')}). صلاحية «مدير الجهة» تمنحها إدارة أَثَر.` : `You are a member of ${memberships.length} organization(s). Admin rights are granted by Athar.`}</p> : <p className="pt-muted">{lang === 'ar' ? 'لتفعيل بوابة جهتكم تواصل معنا وسنعيّن مدير الجهة.' : 'To activate your organization portal, contact us and we will assign an admin.'}</p>}
+              <div className="pt-chips"><Link href="/contact?subject=organizations" className="pt-btn small">{lang === 'ar' ? 'تواصل معنا' : 'Contact us'}</Link><Link href="/me" className="pt-btn light small">{lang === 'ar' ? 'بوابتي' : 'My portal'}</Link></div></div>}
+        />
+      ) : (
+        <ZoneDoor zone="org" compact crumb={lang === 'ar' ? 'بوّابة الجهات' : 'Organizations'} kicker={lang === 'ar' ? 'بوّابة الجهات · أَثَر' : 'Organizations · Athar'} title={org ? (lang === 'en' && org.name_en ? org.name_en : org.name_ar) : (lang === 'ar' ? 'بوابة الجهات' : 'Organizations Portal')} lead={lang === 'ar' ? 'لوحة واحدة ترى فيها الجهة أثر التدريب على منسوبيها: المهارات المكتسبة، الحضور، الشهادات، مستويات مِعيار — وتدير أعضاءها وتطلب التسجيل الجماعي.' : 'One dashboard where an organization sees the impact of training on its people and manages members and bulk enrolment.'}>
+          {org?.demo ? <div data-testid="org-demo-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa', borderRadius: 999, padding: '4px 12px', fontSize: 12.5, fontWeight: 900, margin: '4px 0 8px' }}>{lang === 'ar' ? 'عرض — بيانات افتراضية · تُبنى وتُمحى من غرفة العرض' : 'Demo — synthetic data · built and erased from the Demo room'}</div> : null}
+          {orgs.length > 1 && <select className="og-pick" value={orgId} onChange={e => { setOrgId(e.target.value); loadDash(e.target.value); }}>{orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select>}
+        </ZoneDoor>
+      )}
 
       <section className="pt-sec"><div className="pt-wrap">
         {!loaded && <div className="pt-empty">…</div>}
-        {loaded && !user && <div className="pt-box" style={{ maxWidth: 440 }}><h3><Icon name="login" size={18} /> {lang === 'ar' ? 'دخول مدير الجهة' : 'Org admin sign-in'}</h3><p className="pt-muted">{lang === 'ar' ? 'ادخل ببريدك المعيّن مديرًا للجهة — بلا كلمة مرور.' : 'Sign in with your org-admin email — no password.'}</p>{sent ? <div className="pt-alert ok">{lang === 'ar' ? 'أرسلنا رابط الدخول إلى بريدك.' : 'Sign-in link sent.'}</div> : <form onSubmit={sendLink} className="pt-form"><label>{lang === 'ar' ? 'بريدك' : 'Your email'}<input dir="ltr" type="email" value={email} onChange={e => setEmail(e.target.value)} required /></label><button className="pt-btn" disabled={busy === 'link'}><Icon name="mail" size={15} /> {lang === 'ar' ? 'أرسل رابط الدخول' : 'Send sign-in link'}</button></form>}{err && <div className="pt-alert err">{err}</div>}</div>}
-        {loaded && user && orgs.length === 0 && <div className="pt-box" style={{ maxWidth: 560 }}><h3><Icon name="users" size={18} /> {lang === 'ar' ? 'لست مدير جهة بعد' : 'You are not an org admin yet'}</h3>
-          {memberships.length > 0 ? <p className="pt-muted">{lang === 'ar' ? `أنت عضو في ${memberships.length} جهة (${memberships.map(m => memberStatusLabel(m.status, 'ar')).join('، ')}). صلاحية «مدير الجهة» تمنحها إدارة أَثَر.` : `You are a member of ${memberships.length} organization(s). Admin rights are granted by Athar.`}</p> : <p className="pt-muted">{lang === 'ar' ? 'لتفعيل بوابة جهتكم تواصل معنا وسنعيّن مدير الجهة ببريده الرسمي.' : 'To activate your organization’s portal, contact us and we will assign the admin by official email.'}</p>}
-          <div className="pt-chips"><Link href="/contact?subject=organizations" className="pt-btn small">{lang === 'ar' ? 'تواصل معنا' : 'Contact us'}</Link><Link href="/me" className="pt-btn light small">{lang === 'ar' ? 'بوابتي' : 'My portal'}</Link></div></div>}
 
         {loaded && user && org && <>
           {err && <div className="pt-alert err">{err}</div>}{ok && <div className="pt-alert ok">{ok}</div>}

@@ -19,6 +19,8 @@
 }
 [data-zone="org"]{--zone-echo:#6A3350}
 [data-zone="staff"],[data-zone="admin"]{--zone-echo:#D9A866}
+[data-zone="experts"]{--zone-echo:#D9A866} /* هـ-2: الهيئة ذهبية — الاعتماد والتوثيق */
+[data-zone="trainers"]{--zone-echo:#E8795C}
 [data-zone="iqra"][data-level]{--zone-echo:var(--lvl-flat)}
 
 /* ── (2) قوس اليوم — المستوى الذي اجتازه المتعلّم في مِعيار هو لون منزلته في اقْرَأْ ونتيجته وشهادته ── */

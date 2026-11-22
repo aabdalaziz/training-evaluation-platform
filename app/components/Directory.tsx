@@ -8,6 +8,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import ZoneDoor from './ZoneDoor';   // هـ-2 «باب الهيئة» بالهوية v1.2
 import { Icon } from '../../lib/ui/icons';
 
 export type Face = 'expert' | 'trainer';
@@ -38,13 +39,24 @@ export function DirectoryList({ face }: { face: Face }) {
   const title = face === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'; const other: Face = face === 'expert' ? 'trainer' : 'expert';
   const sectorName = meta ? nameMap(meta.sectors) : {};
   return (
+    <>
+      <ZoneDoor zone={face === 'expert' ? 'experts' : 'trainers'} crumb={title} kicker={`هيئة أَثَر · ${meta?.rules.tagline_ar || 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر'}`}
+        title={face === 'expert' ? 'خبراء كتبوا سيرهم بأنفسهم —' : 'مدربون قدّموا في أَثَر —'} word={face === 'expert' ? 'وأَثَر شهد لهم' : 'وأَثَر سجّل لهم'}
+        lead={face === 'expert' ? 'خبراء استشاريون وثّقوا سيرهم بكلماتهم، وراجعها طاقم أَثَر واعتمدها بشهادة موقَّعة. بجانب كل سيرة «ما شهده أَثَر»: ما سجّلته المنصة لهم فعلًا — لا نجوم ولا تقييمات.' : 'مدربون قدّموا في أَثَر أو انضمّوا إلى هيئتها، وثّقوا سيرهم بكلماتهم، وراجعها طاقم أَثَر. بجانب كل سيرة «ما شهده أَثَر»: جلسات وحضور وشهادات سجّلتها المنصة فعلًا.'}
+        promises={face === 'expert' ? [
+          { icon: 'doc', title: 'سيرة بكلماتك', body: 'أنت تكتبها، وطاقم أَثَر يراجعها قبل النشر — لا قوالب ولا تنجيم.' },
+          { icon: 'certificate', title: 'شهادة توثيق موقَّعة', body: 'لكل عضو شهادة برمز تحقّق عام يمكن لأيّ جهة التأكّد منه.' },
+          { icon: 'trend', title: 'ما شهده أَثَر', body: 'ما سجّلته المنصة فعلًا: تصديقات، جلسات، برامج — سجلّ لا رأي.' },
+        ] : [
+          { icon: 'school', title: 'سجلّ تقديم حقيقي', body: 'جلسات وحضور وشهادات سجّلتها المنصة — لا ادّعاء.' },
+          { icon: 'certificate', title: 'شهادة توثيق موقَّعة', body: 'رمز تحقّق عام لكل عضو في الهيئة.' },
+          { icon: 'users', title: 'الجهات تجدك', body: 'بحث بالمجال والقطاع والمدينة والنمط — وطلب تواصل من صفحتك.' },
+        ]}
+        aside={<div data-testid="dir-door-join"><h3><Icon name="plus" size={18} /> انضمّ إلى الهيئة</h3><p className="pt-muted">اكتب سيرتك بكلماتك من بوابتك، أرفق ما يوثّقها، وسيراجعها طاقم أَثَر ويصدر لك شهادة التوثيق عند الاعتماد.</p><ol className="zd-steps"><li>سيرة بكلماتك</li><li>مراجعة طاقم أَثَر</li><li>شهادة توثيق ورمز تحقّق</li></ol><div className="pt-chips"><Link href="/me/directory" className="pt-btn small"><Icon name="plus" size={14} /> ابدأ سيرتك</Link><Link href={`/${PATH[other]}`} className="pt-btn light small">{other === 'expert' ? 'هيئة الخبراء' : 'هيئة المدربين'}</Link></div></div>}
+      >
+        <nav className="dr-faces dark" aria-label="وجها الهيئة"><span className="dr-face on" aria-current="page">{title}</span><Link className="dr-face" href={`/${PATH[other]}`}>{other === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'}</Link></nav>
+      </ZoneDoor>
     <main className="dr" dir="rtl" data-testid={`dir-${face}`}><style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <header className="dr-hero">
-        <span className="pt-kicker"><Icon name="users" size={14} /> هيئة أَثَر · {meta?.rules.tagline_ar || 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر'}</span>
-        <h1>{title}</h1>
-        <p>{face === 'expert' ? 'خبراء استشاريون وثّقوا سيرهم بكلماتهم، وراجعها طاقم أَثَر واعتمدها بشهادة موقَّعة. بجانب كل سيرة «ما شهده أَثَر»: ما سجّلته المنصة لهم فعلًا — لا نجوم ولا تقييمات.' : 'مدربون قدّموا في أَثَر أو انضمّوا إليه، سيرهم بكلماتهم وشهادة توثيقهم من أَثَر. ما قدّموه من برامج يظهر من سجلات المنصة نفسها — لا نجوم ولا تقييمات.'}</p>
-        <nav className="dr-faces" aria-label="وجها الهيئة"><span className="dr-face on" aria-current="page">{title}</span><Link className="dr-face" href={`/${PATH[other]}`}>{other === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'}</Link><Link className="dr-face join" href="/me/directory"><Icon name="plus" size={14} /> انضمّ إلى الهيئة</Link></nav>
-      </header>
       <form className="dr-search" role="search" aria-label={`البحث في ${title}`} onSubmit={e => { e.preventDefault(); run(1); }}>
         <label className="dr-lbl grow">كلمة بحث<input className="dr-in" value={q} onChange={e => setQ(e.target.value)} placeholder="اسم · مجال · قطاع · مدينة" maxLength={80} data-testid="dir-q" /></label>
         <label className="dr-lbl">مجال الخبرة<select className="dr-in" value={skill} onChange={e => setSkill(e.target.value)} data-testid="dir-skill"><option value="">الكل</option>{(meta?.skills || []).map(s => <option key={s.id} value={s.id}>{s.name_ar}</option>)}</select></label>
@@ -70,6 +82,7 @@ export function DirectoryList({ face }: { face: Face }) {
       {pages > 1 && <nav className="dr-pager" aria-label="الصفحات"><button className="pt-btn ghost small" disabled={page <= 1 || busy} onClick={() => run(page - 1)}>السابقة</button><span>صفحة {page} من {pages}</span><button className="pt-btn ghost small" disabled={page >= pages || busy} onClick={() => run(page + 1)}>التالية</button></nav>}
       <p className="dr-privacy"><Icon name="shield" size={13} /> {meta?.privacy_ar || 'لا يظهر بريد ولا هاتف لأحد؛ الطلبات تصل عبر أَثَر وحده.'}</p>
     </main>
+    </>
   );
 }
 
@@ -83,6 +96,8 @@ export function DirectoryProfile({ slug, face }: { slug: string; face: Face }) {
   if (!p) return <main className="dr" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} /><p className="dr-count" role="status">جارٍ فتح الصفحة…</p></main>;
   const card = p.cards[face] || p.cards.expert || p.cards.trainer;
   return (
+    <>
+    <ZoneDoor zone={face === 'expert' ? 'experts' : 'trainers'} compact crumb={face === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'} kicker={card ? `عضو موثَّق · شهادة ${card.code}` : 'عضو في هيئة أَثَر'} title={p.name_ar} lead={p.title_ar || undefined} />
     <main className="dr" dir="rtl" data-testid="dir-profile"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <nav className="dr-crumbs" aria-label="المسار"><Link href={`/${PATH[face]}`}>{face === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'}</Link> <span aria-hidden="true">›</span> <span aria-current="page">{p.name_ar}</span></nav>
       <header className="dr-phead">
@@ -131,14 +146,17 @@ export function DirectoryProfile({ slug, face }: { slug: string; face: Face }) {
         </aside>
       </div>
     </main>
+    </>
   );
 }
 
 export const CSS = `
-.dr{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;max-width:1100px;margin:0 auto;padding:24px 18px 60px}
+.dr{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;max-width:1100px;margin:0 auto;padding:8px 18px 60px}
 .dr :is(button,a,input,select,textarea):focus-visible{outline:3px solid #3A1F36;outline-offset:2px;border-radius:8px}
 .dr-hero h1{margin:8px 0 6px;font-size:30px;color:#3A1F36}.dr-hero p{margin:0 0 12px;color:#4A3645;line-height:1.9;font-size:15px;max-width:820px}
 .dr-faces{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}.dr-face{border:1px solid #D9CBC2;border-radius:999px;padding:7px 14px;font-weight:800;font-size:13px;color:#3A1F36;text-decoration:none;background:#fff;display:inline-flex;gap:6px;align-items:center;min-height:24px}.dr-face.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.dr-face.join{border-color:#D9A866;background:#fffdf7}
+.dr-faces.dark{margin:4px 0 0}.dr-faces.dark .dr-face{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#FBF4EE}.dr-faces.dark .dr-face.on{background:#D9A866;border-color:#D9A866;color:#22101F}
+.zd-steps{margin:8px 0 10px;padding:0 18px 0 0;color:#3A2634;font-size:13px;line-height:1.9;font-weight:700}
 .dr-search{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;background:#FBF4EE;border:1px solid #EADFD6;border-radius:18px;padding:14px}.dr-lbl{display:block;font-size:13px;font-weight:800;color:#3A2634}.dr-lbl small{font-weight:600;color:#5C4858}.dr-in{width:100%;box-sizing:border-box;font:inherit;border:1px solid #B3A5AE;border-radius:12px;padding:9px 12px;margin-top:4px;background:#fff;color:#2A1626;min-height:40px}.dr-sbtns{display:flex;gap:6px}
 .dr-count{margin:12px 0 6px;color:#4A3645;font-weight:800;font-size:14px}.dr-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.dr-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800;line-height:1.8}
 .dr-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}.dr-card{display:grid;grid-template-columns:auto 1fr;gap:12px;border:1px solid #D9CBC2;border-radius:18px;padding:14px;background:#fff}.dr-card h2{margin:0;font-size:17px}.dr-card h2 a{color:#3A1F36;text-decoration:none}.dr-card h2 a:hover{text-decoration:underline}
