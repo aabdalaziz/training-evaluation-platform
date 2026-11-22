@@ -74,7 +74,7 @@ async function staff(req: Request) {
 export async function GET(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!URL_ || !SVC) return bad('server_not_configured', 500);
-  const u = new URL(req.url); const zone = String(u.searchParams.get('zone') || 'portal') as Zone;
+  const u = new URL(req.url); const zoneQ = String(u.searchParams.get('zone') || 'all'); const zone = (zoneQ === 'all' ? 'portal' : zoneQ) as Zone;
   if (!ZONES.includes(zone)) return bad('bad_zone');
   const db = createClient(URL_, SVC, { auth: { persistSession: false } });
   if (u.searchParams.get('all') === '1') {
@@ -85,6 +85,17 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: true, items: data || [], rows: data || [] }, { headers: NO });
   }
   const nowIso = new Date().toISOString();
+  if (zoneQ === 'all') {
+    /* هـ-1/4ج: شريط واحد ثابت في كلّ الصفحات يجمع أخبار البوّابة كلّها (عدا منطقة الطاقم) — من بالداخل يعرف ما يحدث في أَثَر كلّه */
+    const PUBLIC_ZONES: Zone[] = ['portal', 'miaar', 'iqra', 'programs', 'org', 'experts'];
+    const { data: all } = await db.from('zone_news').select('id, zone, title_ar, body_ar, href, tone, pinned, starts_at').in('zone', PUBLIC_ZONES).eq('published', true).lte('starts_at', nowIso).or(`ends_at.is.null,ends_at.gt.${nowIso}`).order('pinned', { ascending: false }).order('starts_at', { ascending: false }).limit(12);
+    const newsAll: ZoneItem[] = ((all || []) as any[]).map((r) => ({ id: r.id, kind: 'news', zone: r.zone, title: r.title_ar, body: r.body_ar || '', href: r.href || null, tone: r.tone || 'plum', pinned: !!r.pinned, at: r.starts_at }));
+    const autos = (await Promise.all((['miaar', 'iqra', 'programs'] as Zone[]).map((z) => autoItems(db, z)))).flat();
+    const seen = new Set<string>(); const merged = [...newsAll, ...autos].filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)));
+    merged.sort((a, b) => Number(b.pinned) - Number(a.pinned) || (a.kind === 'news' ? -1 : 0) - (b.kind === 'news' ? -1 : 0) || b.at.localeCompare(a.at));
+    if (!merged.length) merged.push(...FALLBACK.miaar, ...FALLBACK.iqra, ...FALLBACK.programs);
+    return NextResponse.json({ ok: true, zone: 'all', items: merged.slice(0, 10) }, { headers: PUB });
+  }
   const { data } = await db.from('zone_news').select('id, zone, title_ar, body_ar, href, tone, pinned, starts_at').eq('zone', zone).eq('published', true).lte('starts_at', nowIso).or(`ends_at.is.null,ends_at.gt.${nowIso}`).order('pinned', { ascending: false }).order('starts_at', { ascending: false }).limit(6);
   const news: ZoneItem[] = ((data || []) as any[]).map((r) => ({ id: r.id, kind: 'news', zone: r.zone, title: r.title_ar, body: r.body_ar || '', href: r.href || null, tone: r.tone || 'plum', pinned: !!r.pinned, at: r.starts_at }));
   const auto = await autoItems(db, zone);

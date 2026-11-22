@@ -388,7 +388,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
         <div className="mi-ticker-view"><div className="mi-ticker-track" style={{ animationDuration: `${Math.max(24, tickerItems.length * 7)}s` }}>{[0, 1].map((rp) => <span key={rp} className="mi-ticker-row" aria-hidden={rp === 1}>{tickerItems.map((it, i) => <span key={i} className="mi-ticker-item">{it}</span>)}</span>)}</div></div>
         <button type="button" className="mi-ticker-btn" aria-pressed={tickerPaused} onClick={() => setTickerPaused((v) => !v)} data-testid="mi-ticker-toggle">{tickerPaused ? '▶' : '❚❚'}<span className="mi-sr">{tickerPaused ? t('intro', 'tickerPlay') : t('intro', 'tickerPause')}</span></button>
       </section>
-      <ZoneTape zone="miaar" compact /> {/* هـ-1/4ب «شريط أخبار المنطقة» */}
+      <ZoneTape compact /> {/* هـ-1/4ب «شريط أخبار المنطقة» */}
 
       {/* ===== V3 «واجهة الوعد الواحد» — الطيّة ===== */}
       <section className="mi-v3hero" data-testid="mi-intro">

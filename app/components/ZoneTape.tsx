@@ -9,12 +9,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
-type Item = { id: string; kind: 'news' | 'auto'; title: string; body: string; href: string | null; tone: string; pinned: boolean };
+type Item = { id: string; kind: 'news' | 'auto'; zone?: string; title: string; body: string; href: string | null; tone: string; pinned: boolean };
+const ZONE_CHIP: Record<string, string> = { miaar: 'مِعيار', iqra: 'اقْرَأْ', programs: 'البرامج', org: 'الجهات', experts: 'الخبراء', staff: 'الطاقم', portal: 'أَثَر' };
 const ZONE_AR: Record<string, string> = { miaar: 'الآن في مِعيار', iqra: 'الآن في اقْرَأْ', programs: 'الآن في البرامج', org: 'الآن في بوّابة الجهات', experts: 'الآن عند الخبراء', staff: 'الآن في مركز القيادة', portal: 'الآن في أَثَر' };
 const TONE: Record<string, string> = { plum: 'linear-gradient(135deg,#3A1F36,#6A3350)', coral: 'linear-gradient(135deg,#D4614A,#E8795C)', sand: 'linear-gradient(135deg,#8A5A1E,#D9A866)', sea: 'linear-gradient(135deg,#3F7F79,#5EA8A0)' };
 const cache = new Map<string, { at: number; items: Item[] }>();
 
-export default function ZoneTape({ zone, compact = false, className = '' }: { zone: string; compact?: boolean; className?: string }) {
+/** هـ-1/4ج: الافتراضي zone="all" — شريط واحد ثابت في كلّ الصفحات يجمع أخبار البوّابة كلّها */
+export default function ZoneTape({ zone = 'all', compact = false, className = '' }: { zone?: string; compact?: boolean; className?: string }) {
   const [items, setItems] = useState<Item[] | null>(() => cache.get(zone)?.items ?? null);
   const [i, setI] = useState(0); const [hold, setHold] = useState(false); const timer = useRef<number | null>(null);
   const load = useCallback(async () => {
@@ -29,13 +31,13 @@ export default function ZoneTape({ zone, compact = false, className = '' }: { zo
     timer.current = window.setInterval(() => setI((k) => (k + 1) % items.length), 7000);
     return () => { if (timer.current) window.clearInterval(timer.current); };
   }, [items, hold]);
-  if (!items || !items.length || zone === 'home') return null;
+  if (!items || !items.length) return null;
   const it = items[i % items.length];
   const inner = <>
     <span className="zt-live" aria-hidden="true"><i /></span>
-    <span className="zt-zone">{ZONE_AR[zone] || ZONE_AR.portal}</span>
+    <span className="zt-zone">{zone === 'all' ? ZONE_AR.portal : ZONE_AR[zone] || ZONE_AR.portal}</span>
     <span key={it.id} className="zt-item" style={{ ['--t' as string]: TONE[it.tone] || TONE.plum } as React.CSSProperties}>
-      {it.pinned && <b className="zt-pin" title="مثبّت">●</b>}<strong>{it.title}</strong>{!compact && it.body && <small> — {it.body}</small>}
+      {it.pinned && <b className="zt-pin" title="مثبّت">●</b>}{zone === 'all' && it.zone && it.zone !== 'portal' && <em className="zt-chip">{ZONE_CHIP[it.zone] || it.zone}</em>}<strong>{it.title}</strong>{!compact && it.body && <small> — {it.body}</small>}
     </span>
     {items.length > 1 && <span className="zt-dots" role="tablist" aria-label="أخبار المنطقة">{items.map((x, k) => <button key={x.id} type="button" role="tab" aria-selected={k === i} className={k === i ? 'on' : ''} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setI(k); }} aria-label={`${k + 1}`} />)}</span>}
   </>;
@@ -57,6 +59,7 @@ a.zt-in:hover{box-shadow:0 14px 32px rgba(42,22,38,.12);transform:translateY(-1p
 .zt-item strong{font-size:14px;font-weight:800;background:var(--t);-webkit-background-clip:text;background-clip:text;color:transparent}
 .zt-item small{font-size:12.5px;color:#5C4858;overflow:hidden;text-overflow:ellipsis}
 .zt-pin{color:#D9A866;font-size:9px}
+.zt-chip{flex:none;font-style:normal;font-size:11px;font-weight:900;color:#6A3350;background:#F6EBE0;border-radius:999px;padding:2px 8px;align-self:center}
 .zt-dots{flex:none;display:flex;gap:5px}.zt-dots button{width:7px;height:7px;border-radius:50%;border:0;background:#D9CBC2;padding:0;cursor:pointer;transition:transform .3s,background .3s}.zt-dots button.on{background:#D4614A;transform:scale(1.35)}
 .zt.compact .zt-in{min-height:36px;padding:4px 12px}.zt.compact .zt-zone{display:none}
 @keyframes ztIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}

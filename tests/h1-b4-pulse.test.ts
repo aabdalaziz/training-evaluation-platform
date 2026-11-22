@@ -32,13 +32,13 @@ test('صياغات عربية للأعداد والمتوسّط', () => {
   assert.equal(satisfaction([0, 0, 1, 1, 2]), 75); assert.equal(satisfaction([0, 0, 0, 0, 0]), 0);
 });
 
-test('خريطة المناطق: الشريط لا يظهر في الرئيسة ويظهر في المناطق', () => {
-  assert.equal(zoneOf('/'), 'home'); assert.equal(zoneOf('/iqra/start'), 'iqra'); assert.equal(zoneOf('/miaar'), 'miaar');
-  assert.equal(zoneOf('/org'), 'org'); assert.equal(zoneOf('/experts'), 'experts'); assert.equal(zoneOf('/admin/pulse'), 'staff');
-  assert.equal(zoneOf('/programs/x'), 'portal'); // تُترجَم إلى programs في PortalShell
+test('هـ-1/4ج: شريط واحد ثابت في كل الصفحات (الرئيسة أيضًا) يجمع أخبار البوّابة كلّها', () => {
+  assert.equal(zoneOf('/'), 'home'); assert.equal(zoneOf('/iqra/start'), 'iqra');
   const shell = R('app/components/PortalShell.tsx');
-  assert.match(shell, /pathname\.startsWith\('\/programs'\) \? 'programs' : zoneOf\(pathname\)/);
-  assert.match(shell, /pathname !== '\/' && !pathname\.startsWith\('\/admin'\)/);
+  assert.ok(shell.includes('<ZoneTape />')); assert.ok(!shell.includes("pathname !== '/' &&"));
+  const api = R('app/api/zone-news/route.ts');
+  assert.ok(api.includes("zoneQ === 'all'")); assert.ok(api.includes("['portal', 'miaar', 'iqra', 'programs', 'org', 'experts']")); assert.ok(!api.includes("PUBLIC_ZONES: Zone[] = ['portal', 'miaar', 'iqra', 'programs', 'org', 'experts', 'staff']"));
+  const z = R('app/components/ZoneTape.tsx'); assert.ok(z.includes("zone = 'all'")); assert.ok(z.includes('zt-chip'));
 });
 
 test('الترحيل: جداول ودوال هـ-1/4 بأسمائها', () => {
@@ -52,7 +52,7 @@ test('ZoneTape: يدور كل ٧ ثوانٍ، يتوقّف بالتحويم، س
   const z = R('app/components/ZoneTape.tsx');
   assert.ok(z.includes('7000')); assert.ok(z.includes('onMouseEnter={() => setHold(true)}'));
   assert.ok(z.includes("prefers-reduced-motion: reduce") && z.includes("dataset.engrave === 'none'"));
-  assert.ok(z.includes("if (!items || !items.length || zone === 'home') return null"));
+  assert.ok(z.includes('if (!items || !items.length) return null'));
   assert.ok(z.includes('data-testid="zone-tape"'));
 });
 
@@ -81,7 +81,7 @@ test('نبض أَثَر مُسجَّل في التبويبات والغرف', ()
 
 test('نقاط التركيب: مِعيار النتيجة · اقْرَأْ · البرنامج · بعد الدفع', () => {
   assert.ok(R('app/miaar/MiaarApp.tsx').includes('<RateService service="miaar" refId={code} code={code}'));
-  assert.ok(R('app/iqra/IqraApp.tsx').includes('<RateService service="iqra"') && R('app/iqra/IqraApp.tsx').includes('<ZoneTape zone="iqra" compact />'));
+  assert.ok(R('app/iqra/IqraApp.tsx').includes('<RateService service="iqra"') && R('app/iqra/IqraApp.tsx').includes('<ZoneTape compact />'));
   assert.ok(R('app/programs/[id]/page.tsx').includes('{mine && rateTok && <RateService service="program"'));
   assert.ok(R('app/pay/[id]/page.tsx').includes("{inv.status === 'paid' && rateTok && <RateService service=\"payment\""));
 });
@@ -91,7 +91,14 @@ test('هـ-1/4ب: الشريط في كل منطقة — خبر ثابت حين �
   for (const z of ['miaar', 'iqra', 'programs', 'org', 'experts', 'staff', 'portal']) assert.ok(n.includes(`  ${z}: [F('${z}'`), z);
   assert.ok(n.includes('if (!items.length) items.push(...FALLBACK[zone])'));
   assert.ok(n.includes('items: data || [], rows: data || []'));
-  assert.ok(R('app/iqra/start/IqraStart.tsx').includes('<ZoneTape zone="iqra" />'));
-  assert.ok(R('app/miaar/MiaarApp.tsx').includes('<ZoneTape zone="miaar" compact />'));
-  assert.ok(R('app/iqra/IqraApp.tsx').includes("{home && screen.s === 'home' && <ZoneTape zone=\"iqra\" compact />}"));
+  assert.ok(R('app/iqra/start/IqraStart.tsx').includes('<ZoneTape />'));
+  assert.ok(R('app/miaar/MiaarApp.tsx').includes('<ZoneTape compact />'));
+  assert.ok(R('app/iqra/IqraApp.tsx').includes("{screen.s === 'home' && <ZoneTape compact />}"));
+});
+
+test('هـ-1/4ج: مسرح «الآن في أَثَر» — أيقونة لكل نوع، عدّاد، تذييل بأيقونات', () => {
+  const h = R('app/page.tsx');
+  assert.ok(h.includes("const KIND_ICON: Record<string, any> = { program: 'certificate', session: 'play', sim: 'target', daily: 'spark' }"));
+  assert.ok(h.includes('className="hm-stagen"') && h.includes('className="hm-footic"') && h.includes('className="hm-stagecta"'));
+  assert.ok(h.includes('.hm-stagecard h3{margin:2px 0 0;font-size:24px'));
 });

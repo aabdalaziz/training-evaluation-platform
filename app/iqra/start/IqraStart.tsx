@@ -50,7 +50,7 @@ export default function IqraStart({ fontClass }: { fontClass?: string }) {
           {lvl && <div className="iqs-level lvl-surface" data-level={a?.level || undefined} data-testid="iqs-level"><i aria-hidden="true" /><div><small>مستواك من مِعيار</small><b>{lvl.code} · {lvl.name_ar}</b><span>{lvl.line_ar}</span></div></div>}
         </div>
       </section>
-      <ZoneTape zone="iqra" /> {/* هـ-1/4ب «شريط أخبار المنطقة» */}
+      <ZoneTape /> {/* هـ-1/4ب «شريط أخبار المنطقة» */}
 
       <div className="iqs-wrap">
         {err && <div className="iqs-err" role="alert" data-testid="iqs-err">{err}</div>}
