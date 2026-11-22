@@ -22,6 +22,8 @@ import WayBar from '../components/WayBar';
 import ReadSize from '../components/ReadSize'; /* «خطّ أَثَر»: حجم القراءة */
 import { supabase } from '../../lib/supabase/client';
 import { downloadUnit, removeUnit, listUnits, enqueue, flush, outboxCount, requestSync, isNetworkError, fmtBytes, IQRA_UNIT_CAP, type UnitMeta } from '../../lib/iqra/offline'; /* ق٢ د٣: المَنزِلة في جيبي */
+import ZoneTape from '../components/ZoneTape'; /* هـ-1/4 */
+import RateService from '../components/RateService'; /* هـ-1/4 */
 
 type Ex = { id: string; kind: 'mcq' | 'matching' | 'ordering' | 'picture_choice' | 'cloze_bank' | 'true_false_notgiven' | 'word_tap' | 'short_dictation' | 'picture_sequence'; prompt_ar: string; options?: { id: string; text: string; image?: string }[]; left?: string[]; right?: string[]; words?: string[]; text?: string; bank?: string[]; passage_ar?: string; say?: string; frames?: { image: string; text: string }[] };
 type Fb = { correct: boolean; explanation_ar: string | null; correct_option?: string; correct_pairs?: [string, string][]; correct_order?: string[]; correct_gaps?: string[]; correct_word?: string; correct_text?: string };
@@ -142,6 +144,7 @@ export default function IqraApp({ fontClass = '' }: { fontClass?: string }) {
         {code ? <a className="iq-lnk" href={`/miaar/result/${encodeURIComponent(code)}`}>بطاقة نتيجتي</a> : <a className="iq-lnk" href="/me">صفحتي</a>}<ReadSize /></nav></div><WayBar /></header>
     <p className="iq-live" aria-live="polite" role="status">{live}</p>
     {(offline || pending > 0) && <p className="iq-offline" data-testid="iq-offline" data-pending={pending}>{offline ? 'بلا اتصال — تعمل الحلقات المحمَّلة، وتُحفَظ إجاباتك ونبضات وقتك هنا حتى يعود الاتصال' : 'عاد الاتصال — نرسل ما حفظته'}{pending > 0 ? ` · في الصندوق ${pending}` : ''}{!offline && pending > 0 ? <button type="button" className="iq-mini" onClick={() => void drain()}>أرسل الآن</button> : null}</p>}
+    {home?.gate === 'enrolled' && screen.s === 'home' && <ZoneTape zone="iqra" compact />} {/* هـ-1/4 «شريط أخبار المنطقة» */}
     {!ready || (!home && !err) ? <p className="iq-wait">نفتح مستواك…</p> : null}
     {err && <section className="iq-wrap"><div className="iq-card"><p className="iq-err" role="alert">{err}</p></div></section>}
     {home && home.gate !== 'enrolled' && <Gate home={home} code={code} setCode={(c) => { setCode(c); window.history.replaceState(null, '', `/iqra?code=${encodeURIComponent(c)}`); }} reload={loadHome} />}
@@ -211,6 +214,7 @@ function HomeView({ home, open, post, setLive, q, H }: { home: Home; open: (id: 
         <form className="iq-row start" onSubmit={(e) => void external(e)}><input type="number" min={5} max={480} value={extMin} onChange={(e) => setExtMin(e.target.value)} placeholder="دقائق" aria-label="دقائق" data-testid="iq-ext-min" /><input value={extNote} onChange={(e) => setExtNote(e.target.value)} placeholder="ماذا فعلت؟ (اختياري)" aria-label="ملاحظة" maxLength={120} /><button type="submit" className="iq-btn ghost" data-testid="iq-ext-save">سجّل</button>{extMsg && <small className="iq-fb">{extMsg}</small>}</form></div>
       {home.عبرتُ && <Crossed c={home.عبرتُ} />}
       <Threshold home={home} q={q} H={H} post={post} setLive={setLive} />
+      <RateService service="iqra" refId={String(home.المستوى?.code || '')} token={(H().Authorization || '').replace(/^Bearer /, '') || null} compact title="كيف تجد اقْرَأْ على مستواك؟" /> {/* هـ-1/4 «تقييم الخدمة» */}
     </section></>;
 }
 

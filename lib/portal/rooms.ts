@@ -76,6 +76,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/missions', label: 'مهمات العمل', hint: 'المهمات الميدانية', icon: 'flag', perms: ['programs.write', 'enrollments.write'] },
   { href: '/admin/onair', label: 'اسأل خبيرًا', hint: 'الخبراء على الهواء', icon: 'chat', perms: ['onair.answer', 'programs.write', 'invites.write'] },
   { href: '/admin/after', label: 'المتابعة بعد التدريب', hint: 'ما بعد البرنامج', icon: 'certificate', perms: ['programs.write', 'impact.read'] },
+  { href: '/admin/pulse', label: 'نبض أَثَر', hint: 'شريط أخبار المناطق · تقييم الخدمة', icon: 'spark', perms: ['programs.write', 'reports.read'] }, /* هـ-1/4 */
   { href: '/admin/needs', label: 'الاحتياجات التدريبية', hint: 'ما يطلبه الممارسون قبل أن يُكتب البرنامج', icon: 'spark', perms: ['programs.write'] },
   { href: '/admin/rehearsals', label: 'التدريب التبادلي', hint: 'التمرين التبادلي بين الممارسين', icon: 'users', perms: ['programs.write'] },
   { href: '/admin/reports', label: 'التقارير', hint: 'محور التقارير — توثيق الجودة والأداء', icon: 'doc', perms: ['programs.write'] },

@@ -7,6 +7,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { PortalShell, useLang } from '../../components/PortalShell';
+import RateService from '../../components/RateService'; /* هـ-1/4 */
 import { BRAND, CONTACT, UI, t } from '../../../lib/portal/content';
 import { money, invStatusLabel, methodLabel, formatIban, receiptPath, renderInvoice, jpegToPortraitPdf, toHalalas, IW, IH } from '../../../lib/portal/payments';
 import type { Invoice, PaymentSettings } from '../../../lib/portal/payments';
@@ -20,7 +21,8 @@ const MPF = 'https://cdn.moyasar.com/mpf/1.15.0/moyasar';
 function Inner() {
   const { lang } = useLang(); const params = useParams<{ id: string }>(); const sp = useSearchParams(); const id = String(params?.id || '');
   const db = useMemo(() => supabase(), []);
-  const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [inv, setInv] = useState<Invoice | null>(null); const [settings, setSettings] = useState<PaymentSettings | null>(null); const [programName, setProgramName] = useState('');
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [inv, setInv] = useState<Invoice | null>(null);
+  const [rateTok, setRateTok] = useState<string | null>(null); useEffect(() => { if (!user) { setRateTok(null); return; } db.auth.getSession().then(({ data }) => setRateTok(data.session?.access_token || null)).catch(() => setRateTok(null)); }, [user, db]); /* هـ-1/4 */ const [settings, setSettings] = useState<PaymentSettings | null>(null); const [programName, setProgramName] = useState('');
   const [loaded, setLoaded] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false);
   const [file, setFile] = useState<File | null>(null); const [ref, setRef] = useState(''); const [payerNote, setPayerNote] = useState('');
@@ -134,7 +136,8 @@ function Inner() {
 
         <aside className="pt-box pt-sticky">
           {!open ? (
-            <div><h3><Icon name={inv.status === 'paid' ? 'check' : 'x'} size={18} /> {invStatusLabel(inv.status, lang)}</h3><p className="pt-muted">{inv.status === 'paid' ? (lang === 'ar' ? 'شكرًا لك — سدادك مؤكّد ومقعدك محجوز. يمكنك تنزيل الفاتورة بصيغة PDF.' : 'Thank you — your payment is confirmed and your seat is secured. You can download the PDF invoice.') : (lang === 'ar' ? 'هذه الفاتورة لم تعد مستحقة.' : 'This invoice is no longer due.')}</p>{inv.service === 'iqra' ? <Link href={inv.status === 'paid' ? '/iqra' : '/iqra/start'} className="pt-btn small" data-testid="pay-iqra-enter">{lang === 'ar' ? (inv.status === 'paid' ? 'ادخل إلى اقْرَأْ' : 'باب اقْرَأْ') : (inv.status === 'paid' ? 'Enter Iqra' : 'Iqra door')}</Link> : inv.program_id ? <Link href={`/programs/${inv.program_id}`} className="pt-btn ghost small">{lang === 'ar' ? 'صفحة البرنامج' : 'Program page'}</Link> : null}</div>
+            <><div><h3><Icon name={inv.status === 'paid' ? 'check' : 'x'} size={18} /> {invStatusLabel(inv.status, lang)}</h3><p className="pt-muted">{inv.status === 'paid' ? (lang === 'ar' ? 'شكرًا لك — سدادك مؤكّد ومقعدك محجوز. يمكنك تنزيل الفاتورة بصيغة PDF.' : 'Thank you — your payment is confirmed and your seat is secured. You can download the PDF invoice.') : (lang === 'ar' ? 'هذه الفاتورة لم تعد مستحقة.' : 'This invoice is no longer due.')}</p>{inv.service === 'iqra' ? <Link href={inv.status === 'paid' ? '/iqra' : '/iqra/start'} className="pt-btn small" data-testid="pay-iqra-enter">{lang === 'ar' ? (inv.status === 'paid' ? 'ادخل إلى اقْرَأْ' : 'باب اقْرَأْ') : (inv.status === 'paid' ? 'Enter Iqra' : 'Iqra door')}</Link> : inv.program_id ? <Link href={`/programs/${inv.program_id}`} className="pt-btn ghost small">{lang === 'ar' ? 'صفحة البرنامج' : 'Program page'}</Link> : null}</div>
+            {inv.status === 'paid' && rateTok && <RateService service="payment" refId={inv.invoice_no || inv.id} token={rateTok} compact title={lang === 'ar' ? 'كيف كانت تجربة الدفع؟' : 'How was the payment experience?'} context={{ method: String(inv.method || ''), service: String(inv.service || '') }} />}</>
           ) : (
             <div>
               <h3><Icon name="shield" size={18} /> {lang === 'ar' ? 'طريقة الدفع' : 'Payment method'}</h3>

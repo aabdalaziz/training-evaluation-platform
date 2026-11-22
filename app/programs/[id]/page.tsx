@@ -19,7 +19,8 @@ import type { SkillLite } from '../../../lib/portal/open';
 import { SimplerText } from '../../components/Inclusion';
 import { FEATURE_LABEL, cleanFeatures } from '../../../lib/inclusion/registry';
 import type { Feature } from '../../../lib/inclusion/registry';
-import { ProgramAfter } from '../../components/ProgramAfter';   // P38 «الشهادة التي تكبر»
+import { ProgramAfter } from '../../components/ProgramAfter';
+import RateService from '../../components/RateService'; /* هـ-1/4 */   // P38 «الشهادة التي تكبر»
 import { ProgramBorn } from '../../components/Needs';   // P44 «وُلد من حاجة» + المقاعد الأولى
 import { ProgramRehearsals } from '../../components/Rehearsal';   // P45 «بروفات مفتوحة» لزملاء البرنامج
 import dynamic from 'next/dynamic';
@@ -39,6 +40,7 @@ function Inner() {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null); const [mine, setMine] = useState<Enrollment | null>(null); const [inv, setInv] = useState<{ id: string; invoice_no: string; status: string; total: number; currency: string } | null>(null);
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false);
   const [prio, setPrio] = useState<{ active: boolean; am: boolean }>({ active: false, am: false });   // P44: نافذة المقاعد الأولى (72 ساعة) لمن أعلنوا الحاجة
+  const [rateTok, setRateTok] = useState<string | null>(null); useEffect(() => { if (!user) { setRateTok(null); return; } db.auth.getSession().then(({ data }) => setRateTok(data.session?.access_token || null)).catch(() => setRateTok(null)); }, [user, db]); /* هـ-1/4 */
   const bornToken = useMemo(() => (user ? async () => { const { data } = await db.auth.getSession(); return data.session?.access_token || ''; } : null), [user, db]);
   const [f, setF] = useState<EnrollForm>({ full_name: '', email: '', phone: '', organization: '', city: '', notes: '' });
   const [busy, setBusy] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [ldSkills, setLdSkills] = useState<SkillLite[]>([]);
@@ -129,6 +131,7 @@ function Inner() {
           <ProgramReviewStrip programId={p.id} />
           <AccredStrip programId={p.id} />
           <ProgramAfter programId={p.id} lang={lang} />
+          {mine && rateTok && <RateService service="program" refId={p.id} token={rateTok} title={lang === 'ar' ? 'كيف كانت تجربتك مع هذا البرنامج؟' : 'How was this program?'} />}
           {loaded && <ProgramBorn programId={p.id} token={bornToken} onState={setPrio} lang={lang} />}
           {loaded && <ProgramRehearsals programId={p.id} lang={lang} />}
           <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#4A3645', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر أَثَر، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>

@@ -17,6 +17,8 @@ import { OnAirButton, OnAirPanel, ONAIR_CSS } from './OnAir';
 import { NoticesBell, NOTICES_CSS } from './Notices'; /* P39 «تنبيهاتي» */
 import { SignCounter } from './SignCounter'; /* P50 «توقيعي» */
 import WayBar from './WayBar';
+import ZoneTape from './ZoneTape'; /* هـ-1/4: «شريط أخبار المنطقة» تحت الطريق في كل منطقة */
+import { zoneOf } from './AtharBackdrop';
 import AtharBackdrop from './AtharBackdrop'; /* هوية v1.2: ورق أَثَر خلف كل صفحة */
 import AtharVeil from './AtharVeil';         /* ستار الأثر: مرّة عند الدخول وبعد سكون */  /* «الطريق»: رجوع · الرئيسة · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسة */
 
@@ -89,6 +91,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <WayBar lang={lang} />
+        {pathname !== '/' && !pathname.startsWith('/admin') && !pathname.startsWith('/pay') && <ZoneTape zone={pathname.startsWith('/programs') ? 'programs' : zoneOf(pathname)} />}
 
         {children}
         <Athir />

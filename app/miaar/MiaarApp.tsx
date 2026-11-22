@@ -7,7 +7,8 @@
  *  التصحيح كله على الخادم (/api/miaar). هوية مِعيار/أَثَر البصرية كما في شاشات مِعيار الأصلية: كحلي #3A1F36 · تركوازي #D4614A · ذهبي #D9A866؛ خطّ الواجهة IBM Plex Sans Arabic وخطّ القراءة Noto Naskh Arabic (next/font في app/layout.tsx — مستضافان ذاتيًا؛ «خطّ أَثَر» 2026-11-17).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { lockEngrave } from '../components/AtharBackdrop'; /* هوية v1.2: شاشة التقييم ساكنة — لا ورق ولا أفق ولا ستار أثناء الاختبار */
+import { lockEngrave } from '../components/AtharBackdrop';
+import RateService from '../components/RateService'; /* هـ-1/4 */ /* هوية v1.2: شاشة التقييم ساكنة — لا ورق ولا أفق ولا ستار أثناء الاختبار */
 import { qrSvg } from '../../lib/certificates/qr';
 import { CAN_DO, LEVELS, SKILLS, FLOOR_LEVEL, FLOOR_INDEX } from '../../lib/miaar/registry';
 import { parseRules, countPoints } from '../../lib/miaar/rules'; /* م8-ج */
@@ -770,6 +771,7 @@ function ResultCard({ report, code, name, lang, t, x, site, copied, onCopy, onLa
       {code && <div className="mi-code"><div><small>{x('result_code')}</small><b dir="ltr" data-testid="mi-code">{code}</b><a href={url} dir="ltr">{url}</a></div><div className="mi-qr" dangerouslySetInnerHTML={{ __html: qrSvg(url, 96, 'M', '#3A1F36') }} /></div>}
       <div className="mi-actions mi-nolink"><button type="button" className="mi-defer" onClick={() => window.print()}>{t('result', 'print')}</button>{code && <button type="button" className="mi-defer" onClick={onCopy}>{copied ? x('copied') : x('copy_link')}</button>}{code && <a className="mi-defer" href={`/miaar/result/${code}/detail`} data-testid="mi-detail-link">{ar ? 'التقرير التفصيلي' : 'Detailed report'}</a>}<a className="mi-next" href={`/programs?level=${entry}`}>{t('result', 'programs')} →</a></div>
     </div></div>
+    {code && <div className="mi-rate"><RateService service="miaar" refId={code} code={code} title={ar ? 'كيف كانت تجربتك مع مِعيار؟' : 'How was your Miaar experience?'} context={{ level: String(demo), lang }} /></div>} {/* هـ-1/4 «تقييم الخدمة» */}
   </section>;
 }
 
@@ -1120,6 +1122,7 @@ const CSS = `
 .mi-code{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;border:1px solid var(--line);border-radius:16px;padding:14px;background:#FBF4EE}
 .mi-code small{display:block;color:var(--muted);font-size:12px;font-weight:800}.mi-code b{display:block;font-size:22px;color:var(--navy);letter-spacing:.04em}.mi-code a{display:block;color:var(--teal);font-size:13px;text-decoration:underline;text-underline-offset:3px;word-break:break-all}
 .mi-qr{background:#fff;border-radius:12px;padding:6px;border:1px solid var(--line)}.mi-qr svg{display:block}
+.mi-rate{padding:0 7vw;max-width:980px;margin:0 auto}
 .mi-foot{text-align:center;color:var(--muted);font-size:13px;padding:18px 7vw 28px}.mi-foot a{text-decoration:underline;text-underline-offset:3px}
 @media(min-width:720px){.mi-two{grid-template-columns:1fr 1fr}.mi-stats{grid-template-columns:repeat(4,1fr)}.mi-rgrid{grid-template-columns:repeat(4,1fr)}}
 @media(min-width:980px){.mi-hero{grid-template-columns:1.1fr .9fr}.mi-split{grid-template-columns:1fr 1fr}.mi-doors{grid-template-columns:1fr 1fr}.mi-rsplit{grid-template-columns:2fr 3fr}}

@@ -1,232 +1,129 @@
-// © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 'use client';
-/** P49-هـ — «نبض البيئة التدريبية» (/admin/pulse)
- *  يقرأ الاستبيان الختامي (END) عبر الدفعات ويُظهر: متوسّط كل قسم من أقسام رحلة المتدرّب · أدنى/أعلى 3 بنود ·
- *  اتجاه التغيّر بين آخر دفعتين · «بند الأسبوع» = أضعف بند في آخر دفعة → يُسجَّل كمهمّة تحسين واحدة تُغلق بملاحظة.
- *  قواعد: k ≥ 5 · لا أسماء · الحساب في lib/evaluation/pulse.ts (خالص ومُختبَر)
+// © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
+/**
+ * /admin/pulse — «نبض أَثَر» (هـ-1/4): شريط أخبار المناطق + تقييم الخدمة
+ *  · الأخبار: الطاقم يكتب خبرًا لمنطقة (مِعيار/اقْرَأْ/البرامج/…) بعنوان وسطر ورابط داخلي ولون، يثبّته أو يؤقّته أو يخفيه
+ *  · التقييم: متوسّط كلّ خدمة وتوزيع النجوم ونسبة الرضا + آخر الكلمات (بريد مُقنَّع)
  */
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
-import { computePulse, actionDraft, tone, TONE_AR, K_MIN } from '../../../lib/evaluation/pulse';
-import type { PulseEval, PulseAnswer, PulseQ } from '../../../lib/evaluation/pulse';
+import PortalAdminTabs from '../../components/PortalAdminTabs';
+import { SERVICE_AR, RATING_TAGS, fmtAvg, fmtCount, satisfaction } from '../../../lib/portal/ratings';
 
-const NAVY = '#3A1F36', GOLD = '#D9A866';
-const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST', 'QUALITY_MANAGER'];
-type Program = { id: string; name_ar: string; name_en?: string | null };
-type Room = { id: string; code?: string | null; program_id: string };
-type Action = { id: string; program_id: string; classroom_id: string | null; cohort_key: string; question_key: string; question_text: string; section?: string | null; mean: number; n: number; status: 'open' | 'done'; note?: string | null; created_at: string; closed_at?: string | null };
+const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
+const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
+const ZONES = [{ k: 'miaar', ar: 'مِعيار' }, { k: 'iqra', ar: 'اقْرَأْ' }, { k: 'programs', ar: 'البرامج' }, { k: 'org', ar: 'الجهات' }, { k: 'experts', ar: 'الخبراء' }, { k: 'staff', ar: 'الطاقم' }, { k: 'portal', ar: 'البوّابة' }];
+const TONES = [{ k: 'plum', ar: 'برقوقي' }, { k: 'coral', ar: 'مرجاني' }, { k: 'sand', ar: 'رملي' }, { k: 'sea', ar: 'بحري' }];
+type News = { id?: string; zone: string; title_ar: string; body_ar: string; href: string; tone: string; pinned: boolean; starts_at: string | null; ends_at: string | null; published: boolean };
+const EMPTY: News = { zone: 'miaar', title_ar: '', body_ar: '', href: '', tone: 'plum', pinned: false, starts_at: null, ends_at: null, published: true };
+const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 
 export default function PulsePage() {
-  const db = supabase(); const router = useRouter();
-  const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [uid, setUid] = useState('');
-  const [programs, setPrograms] = useState<Program[]>([]); const [rooms, setRooms] = useState<Room[]>([]);
-  const [evals, setEvals] = useState<PulseEval[]>([]); const [answers, setAnswers] = useState<PulseAnswer[]>([]); const [questions, setQuestions] = useState<PulseQ[]>([]);
-  const [actions, setActions] = useState<Action[]>([]); const [programId, setProgramId] = useState(''); const [note, setNote] = useState<Record<string, string>>({}); const [busy, setBusy] = useState('');
-
+  const router = useRouter(); const db = useMemo(() => supabase(), []);
+  const [ready, setReady] = useState(false); const [role, setRole] = useState(''); const [tok, setTok] = useState(''); const [error, setError] = useState(''); const [ok, setOk] = useState('');
+  const [tab, setTab] = useState<'news' | 'ratings'>('news'); const [news, setNews] = useState<News[]>([]); const [form, setForm] = useState<News>(EMPTY); const [busy, setBusy] = useState(false);
+  const [sum, setSum] = useState<{ services: Record<string, { avg: number; n: number; dist: number[] }>; refs: Record<string, { avg: number; n: number }> } | null>(null); const [rows, setRows] = useState<any[]>([]); const [svc, setSvc] = useState('');
+  const canWrite = WRITERS.includes(role);
+  const H = (tk = tok) => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` });
+  async function loadNews(tk = tok) { const j = await fetch('/api/zone-news?all=1', { headers: H(tk), cache: 'no-store' }).then((r) => r.json()).catch(() => null); if (j?.ok) setNews(j.items || []); else setError(j?.error || 'تعذّر تحميل الأخبار'); }
+  async function loadRatings(tk = tok, s = svc) {
+    const [a, b] = await Promise.all([fetch('/api/ratings?summary=1', { cache: 'no-store' }).then((r) => r.json()).catch(() => null), fetch(`/api/ratings?list=1&service=${s}`, { headers: H(tk), cache: 'no-store' }).then((r) => r.json()).catch(() => null)]);
+    if (a?.ok) setSum({ services: a.services, refs: a.refs }); if (b?.ok) setRows(b.rows || []);
+  }
   useEffect(() => { (async () => {
-    const { data: { user } } = await db.auth.getUser();
-    if (!user) { router.replace('/login?next=/admin/pulse'); return; }
-    const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single();
-    if (!STAFF.includes(String((prof as any)?.role || '').toUpperCase())) { router.replace('/dashboard'); return; }
-    setUid(user.id);
-    try {
-      const [p, c, e, q, a] = await Promise.all([
-        db.from('programs').select('id,name_ar,name_en').is('archived_at', null).order('start_date', { ascending: false }).limit(500),
-        db.from('classrooms').select('id,code,program_id').limit(2000),
-        db.from('evaluations').select('id,program_id,classroom_id,submitted_at,created_at').eq('kind', 'END').limit(20000),
-        db.from('questions').select('id,kind,question_key,text_ar,text_en,section_ar,section_en').limit(5000),
-        db.from('end_survey_actions').select('*').order('created_at', { ascending: false }).limit(200),
-      ]);
-      const evRows = (e.data || []) as PulseEval[]; const ids = evRows.map(x => x.id); const ans: PulseAnswer[] = [];
-      for (let i = 0; i < ids.length; i += 200) {   /* دفعات لتفادي طول الاستعلام */
-        const { data } = await db.from('evaluation_answers').select('evaluation_id,question_id,rating_value').in('evaluation_id', ids.slice(i, i + 200));
-        ans.push(...((data || []) as PulseAnswer[]));
-      }
-      setPrograms((p.data || []) as Program[]); setRooms((c.data || []) as Room[]); setEvals(evRows); setQuestions((q.data || []) as PulseQ[]); setAnswers(ans);
-      setActions((a.error ? [] : (a.data || [])) as Action[]);
-    } catch (err: any) { setError(err?.message || 'تعذّر التحميل'); }
-    setReady(true);
-  })(); }, []);
-
-  const pulse = useMemo(() => computePulse(evals, answers, questions, { programId: programId || undefined }), [evals, answers, questions, programId]);
-  const pname = (id: string) => programs.find(p => p.id === id)?.name_ar || '—';
-  const cohortLabel = (key: string, classroom_id: string | null, program_id: string) => classroom_id ? `${pname(program_id)} · شعبة ${rooms.find(r => r.id === classroom_id)?.code || key.slice(0, 6)}` : pname(program_id);
-  const draft = actionDraft(pulse);
-  const openForDraft = draft ? actions.find(a => a.status === 'open' && a.cohort_key === draft.cohort_key && a.question_key === draft.question_key) : null;
-  const visibleActions = actions.filter(a => !programId || a.program_id === programId);
-
-  async function recordAction() {
-    if (!draft || busy) return; setBusy('new');
-    const { data, error: err } = await db.from('end_survey_actions').insert({ ...draft, status: 'open', created_by: uid } as any).select('*').single();
-    if (err) setError(err.message); else setActions(x => [data as Action, ...x]);
-    setBusy('');
+    const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/admin/pulse'); return; }
+    const { data: prof } = await db.from('profiles').select('role').eq('id', user.id).single(); const r = String((prof as any)?.role || '').toUpperCase(); if (!STAFF.includes(r)) { router.replace('/dashboard'); return; } setRole(r);
+    const { data: s } = await db.auth.getSession(); const tk = s.session?.access_token || ''; setTok(tk); await Promise.all([loadNews(tk), loadRatings(tk)]); setReady(true);
+  })(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  async function save() {
+    if (!form.title_ar.trim()) { setError('اكتب عنوان الخبر'); return; } setBusy(true); setError(''); setOk('');
+    const j = await fetch('/api/zone-news', { method: 'POST', headers: H(), body: JSON.stringify({ action: 'upsert', item: form }) }).then((r) => r.json()).catch(() => null);
+    setBusy(false); if (!j?.ok) { setError(j?.error || 'تعذّر الحفظ'); return; } setOk(form.id ? 'حُدِّث الخبر' : 'نُشر الخبر — يظهر في شريط المنطقة خلال دقيقة'); setForm(EMPTY); await loadNews();
   }
-  async function closeAction(a: Action) {
-    const n = (note[a.id] || '').trim(); if (n.length < 5 || busy) return; setBusy(a.id);
-    const patch = { status: 'done', note: n, closed_at: new Date().toISOString(), closed_by: uid };
-    const { error: err } = await db.from('end_survey_actions').update(patch as any).eq('id', a.id);
-    if (err) setError(err.message); else setActions(x => x.map(y => y.id === a.id ? { ...y, ...patch } as Action : y));
-    setBusy('');
-  }
+  async function del(id: string) { if (!confirm('حذف الخبر؟')) return; const j = await fetch('/api/zone-news', { method: 'POST', headers: H(), body: JSON.stringify({ action: 'delete', id }) }).then((r) => r.json()).catch(() => null); if (j?.ok) { setOk('حُذف'); await loadNews(); } else setError(j?.error || 'تعذّر الحذف'); }
+  async function toggle(n: News, k: 'published' | 'pinned') { const j = await fetch('/api/zone-news', { method: 'POST', headers: H(), body: JSON.stringify({ action: 'upsert', item: { ...n, [k]: !n[k] } }) }).then((r) => r.json()).catch(() => null); if (j?.ok) await loadNews(); }
+  const toLocal = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : ''); const fromLocal = (v: string) => (v ? new Date(v).toISOString() : null);
 
-  const Bar = ({ m }: { m: number }) => <div className="pl-bar"><i className={tone(m)} style={{ width: `${Math.max(4, (m / 5) * 100)}%` }} /></div>;
-  const Arrow = ({ d }: { d: number }) => <span className={`pl-arrow ${d > 0.05 ? 'up' : d < -0.05 ? 'down' : 'flat'}`}>{d > 0.05 ? '▲' : d < -0.05 ? '▼' : '■'} {d > 0 ? '+' : ''}{d.toFixed(2)}</span>;
-
+  if (!ready) return <div className="pu"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="pu-wrap"><div className="pu-card">{error ? <span className="pu-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  const services = Object.entries(sum?.services || {}).sort((a, b) => b[1].n - a[1].n);
   return (
-    <div className="pl" dir="rtl">
-      <style>{CSS}</style>
-      <header className="pl-head">
-        <div>
-          <div className="pl-kicker"><Icon name="trend" size={14} /> الجودة · نبض البيئة التدريبية</div>
-          <h1>أين تتسرّب الجودة؟ — من الاستقبال إلى الشهادة</h1>
-          <p>يقرأ الاستبيان الختامي عبر الدفعات ويُظهر متوسّط كل قسم من رحلة المتدرّب، وأضعف البنود، واتجاه التغيّر بين آخر دفعتين. ثم يختار «بند الأسبوع» — أضعف بند في آخر دفعة — ليصبح مهمّة تحسين واحدة تُغلق بملاحظة. لا أرقام دون {K_MIN} استجابات، ولا أسماء.</p>
-        </div>
-        <nav className="pl-nav">
-          <Link href="/dashboard" className="pl-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/admin/templates" className="pl-btn"><Icon name="doc" size={16} /> قوالب التقييم</Link>
-          <Link href="/admin/loop" className="pl-btn"><Icon name="refresh" size={16} /> حلقة التحسين</Link>
-        </nav>
-      </header>
+    <div className="pu" data-testid="pulse-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="pu-wrap">
+        <header className="pu-head"><div><span className="pu-kicker"><Icon name="spark" size={14} /> بوابة أَثَر · هـ-1/4</span><h1>نبض أَثَر</h1><p>شريط أخبار كلّ منطقة بيدك، وتقييم كلّ خدمة أمام عينك. الأخبار الآلية (تقارير مِعيار، دروس اقْرَأْ المعتمدة، البرامج المفتوحة…) تُضاف وحدها.</p></div></header>
+        <PortalAdminTabs />
+        {error && <div className="pu-err" role="alert">{error}</div>}{ok && <div className="pu-ok" role="status">{ok}</div>}
+        <nav className="pu-tabs" role="tablist"><button role="tab" aria-selected={tab === 'news'} className={tab === 'news' ? 'on' : ''} onClick={() => setTab('news')} data-testid="pulse-tab-news">شريط أخبار المنطقة <i>{news.length}</i></button><button role="tab" aria-selected={tab === 'ratings'} className={tab === 'ratings' ? 'on' : ''} onClick={() => setTab('ratings')} data-testid="pulse-tab-ratings">تقييم الخدمة <i>{services.reduce((n, [, v]) => n + v.n, 0)}</i></button></nav>
 
-      {error && <div className="pl-err" data-testid="pl-error">{error}</div>}
-      {!ready && <div className="pl-card pl-muted" style={{ textAlign: 'center' }}>جارٍ القراءة…</div>}
-      {ready && (
-        <>
-          <div className="pl-tools">
-            <label>البرنامج <select data-testid="pl-program" value={programId} onChange={e => setProgramId(e.target.value)}><option value="">كل البرامج</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
-            <div className="pl-kpis" data-testid="pl-kpis">
-              <span><b>{pulse.n}</b> استجابة</span><span><b>{pulse.cohorts.length}</b> دفعة</span><span><b>{pulse.sections.length}</b> قسم</span><span><b>{visibleActions.filter(a => a.status === 'open').length}</b> مهمّة مفتوحة</span>
-            </div>
+        {tab === 'news' && <div className="pu-grid">
+          {canWrite && <form className="pu-card pu-form" onSubmit={(e) => { e.preventDefault(); void save(); }} data-testid="zn-form">
+            <h3>{form.id ? 'تعديل خبر' : 'خبر جديد'}</h3>
+            <div className="pu-row"><label>المنطقة<select value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })}>{ZONES.map((z) => <option key={z.k} value={z.k}>{z.ar}</option>)}</select></label><label>اللون<select value={form.tone} onChange={(e) => setForm({ ...form, tone: e.target.value })}>{TONES.map((z) => <option key={z.k} value={z.k}>{z.ar}</option>)}</select></label></div>
+            <label>العنوان (حتى ٨٠ حرفًا)<input value={form.title_ar} maxLength={80} onChange={(e) => setForm({ ...form, title_ar: e.target.value })} placeholder="مثال: فُتح باب نموذج B1 الجديد" data-testid="zn-title" /></label>
+            <label>سطر توضيحي (اختياري)<input value={form.body_ar} maxLength={160} onChange={(e) => setForm({ ...form, body_ar: e.target.value })} placeholder="سطر واحد يُكمل العنوان" /></label>
+            <label>رابط داخلي (اختياري، يبدأ بـ /)<input value={form.href} onChange={(e) => setForm({ ...form, href: e.target.value })} placeholder="/miaar" dir="ltr" /></label>
+            <div className="pu-row"><label>يبدأ<input type="datetime-local" value={toLocal(form.starts_at)} onChange={(e) => setForm({ ...form, starts_at: fromLocal(e.target.value) })} /></label><label>ينتهي<input type="datetime-local" value={toLocal(form.ends_at)} onChange={(e) => setForm({ ...form, ends_at: fromLocal(e.target.value) })} /></label></div>
+            <div className="pu-row pu-checks"><label><input type="checkbox" checked={form.pinned} onChange={(e) => setForm({ ...form, pinned: e.target.checked })} /> مثبّت أوّلًا</label><label><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> منشور</label></div>
+            <div className="pu-act"><button type="submit" className="pu-btn" disabled={busy} data-testid="zn-save">{busy ? 'يُحفظ…' : form.id ? 'حفظ التعديل' : 'نشر الخبر'}</button>{form.id && <button type="button" className="pu-btn ghost" onClick={() => setForm(EMPTY)}>إلغاء</button>}</div>
+            <p className="pu-hint">معاينة: <span className="pu-prev" data-tone={form.tone}><b>{form.title_ar || 'العنوان'}</b>{form.body_ar && <small> — {form.body_ar}</small>}</span></p>
+          </form>}
+          <div className="pu-card">
+            <h3>الأخبار <small>— {news.length}</small></h3>
+            {news.length === 0 && <p className="pu-muted" data-testid="zn-empty">لا أخبار مكتوبة بعد. الشريط يعرض الأخبار الآلية وحدها حتى تكتب.</p>}
+            <table className="pu-table"><tbody>{news.map((n) => <tr key={n.id} className={n.published ? '' : 'off'} data-testid="zn-row">
+              <td><span className="pu-zone">{ZONES.find((z) => z.k === n.zone)?.ar || n.zone}</span></td>
+              <td><b data-tone={n.tone} className="pu-prev">{n.pinned && '● '}{n.title_ar}</b>{n.body_ar && <div className="pu-muted">{n.body_ar}</div>}{n.href && <div className="pu-muted" dir="ltr">{n.href}</div>}</td>
+              <td className="pu-muted">{n.starts_at || n.ends_at ? `${fmt(n.starts_at)} ← ${fmt(n.ends_at)}` : 'دائم'}</td>
+              {canWrite && <td className="pu-ops"><button type="button" onClick={() => toggle(n, 'published')} title={n.published ? 'إخفاء' : 'نشر'}>{n.published ? 'إخفاء' : 'نشر'}</button><button type="button" onClick={() => toggle(n, 'pinned')}>{n.pinned ? 'فكّ التثبيت' : 'تثبيت'}</button><button type="button" onClick={() => { setForm({ ...n, href: n.href || '', body_ar: n.body_ar || '' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>تعديل</button><button type="button" className="danger" onClick={() => del(n.id!)}>حذف</button></td>}
+            </tr>)}</tbody></table>
           </div>
+        </div>}
 
-          {!pulse.enough && <div className="pl-card pl-muted" data-testid="pl-few">الاستجابات أقلّ من {K_MIN} — لا تُعرض أرقام قبل بلوغ الحدّ الأدنى (حماية الخصوصية وصدق المؤشّر). الحالي: {pulse.n}.</div>}
-
-          {pulse.enough && (
-            <>
-              {/* بند الأسبوع */}
-              <section className="pl-card pl-week" data-testid="pl-week">
-                <div className="pl-ct"><Icon name="flag" size={16} /> بند الأسبوع — أضعف بند في آخر دفعة</div>
-                {!pulse.itemOfWeek && <p className="pl-muted">لا توجد دفعة واحدة بلغت {K_MIN} استجابات بعد.</p>}
-                {pulse.itemOfWeek && (
-                  <div className="pl-weekbody">
-                    <div>
-                      <div className="pl-sec">{pulse.itemOfWeek.section} · {cohortLabel(pulse.itemOfWeek.cohort.key, pulse.itemOfWeek.cohort.classroom_id, pulse.itemOfWeek.cohort.program_id)}</div>
-                      <h3>{pulse.itemOfWeek.text_ar}</h3>
-                      <div className="pl-stat"><b className={tone(pulse.itemOfWeek.mean)}>{pulse.itemOfWeek.mean.toFixed(2)}</b> / 5 · {pulse.itemOfWeek.n} إجابة · {TONE_AR[tone(pulse.itemOfWeek.mean)]}</div>
-                    </div>
-                    {openForDraft
-                      ? <span className="pl-pill open">مسجَّل كمهمّة مفتوحة</span>
-                      : <button className="pl-primary" data-testid="pl-week-record" disabled={busy === 'new'} onClick={recordAction}>سجّله كمهمّة تحسين</button>}
-                  </div>
-                )}
-              </section>
-
-              {/* الأقسام */}
-              <section className="pl-card">
-                <div className="pl-ct"><Icon name="chart" size={16} /> رحلة المتدرّب — متوسّط كل قسم{pulse.trend.length ? ' · والتغيّر عن الدفعة السابقة' : ''}</div>
-                <ul className="pl-secs" data-testid="pl-sections">
-                  {pulse.sections.map(s => { const tr = pulse.trend.find(t => t.section === s.name); return (
-                    <li key={s.name} className="pl-secrow">
-                      <div className="pl-secname"><span>{s.name}</span><small>{s.items.length} بند · {s.n} إجابة</small></div>
-                      <Bar m={s.mean} />
-                      <b className={`pl-m ${tone(s.mean)}`}>{s.mean.toFixed(2)}</b>
-                      {tr ? <Arrow d={tr.delta} /> : <span className="pl-arrow none">—</span>}
-                    </li>
-                  ); })}
-                </ul>
-                {!pulse.trend.length && <p className="pl-muted" style={{ marginTop: 8 }}>الاتجاه يظهر عندما تبلغ دفعتان على الأقل {K_MIN} استجابات لكلّ منهما.</p>}
-              </section>
-
-              <div className="pl-grid">
-                <section className="pl-card">
-                  <div className="pl-ct"><Icon name="alert" size={16} /> أدنى 3 بنود (عبر كل الدفعات)</div>
-                  <ol className="pl-items" data-testid="pl-weakest">{pulse.weakest.map(i => <li key={i.key}><span className="pl-sec">{i.section}</span><span>{i.text_ar}</span><b className={tone(i.mean)}>{i.mean.toFixed(2)}</b><small>{i.n}</small></li>)}</ol>
-                </section>
-                <section className="pl-card">
-                  <div className="pl-ct"><Icon name="star" size={16} /> أعلى 3 بنود — ما نحافظ عليه</div>
-                  <ol className="pl-items" data-testid="pl-strongest">{pulse.strongest.map(i => <li key={i.key}><span className="pl-sec">{i.section}</span><span>{i.text_ar}</span><b className={tone(i.mean)}>{i.mean.toFixed(2)}</b><small>{i.n}</small></li>)}</ol>
-                </section>
-              </div>
-
-              <section className="pl-card">
-                <div className="pl-ct"><Icon name="table" size={16} /> الدفعات (آخر إرسال أولًا)</div>
-                <table className="pl-table" data-testid="pl-cohorts"><thead><tr><th>الدفعة</th><th>الاستجابات</th><th>المتوسّط</th><th>آخر إرسال</th></tr></thead>
-                  <tbody>{pulse.cohorts.map(c => <tr key={c.key} className={c.n < K_MIN ? 'dim' : ''}><td>{cohortLabel(c.key, c.classroom_id, c.program_id)}</td><td>{c.n}{c.n < K_MIN && <small> (أقلّ من {K_MIN} — لا متوسّط)</small>}</td><td>{c.n >= K_MIN ? <b className={tone(c.mean)}>{c.mean.toFixed(2)}</b> : '—'}</td><td>{(c.last || '').slice(0, 10)}</td></tr>)}</tbody></table>
-              </section>
-            </>
-          )}
-
-          {/* مهامّ التحسين */}
-          <section className="pl-card" data-testid="pl-actions">
-            <div className="pl-ct"><Icon name="check" size={16} /> مهامّ التحسين المسجَّلة ({visibleActions.length})</div>
-            {!visibleActions.length && <p className="pl-muted">لا مهامّ بعد — كل «بند أسبوع» تسجّله يظهر هنا حتى يُغلق بملاحظة (5 أحرف فأكثر).</p>}
-            <ul className="pl-acts">
-              {visibleActions.map(a => (
-                <li key={a.id} className={a.status} data-testid={`pl-act-${a.id}`}>
-                  <div className="pl-actbody">
-                    <div className="pl-sec">{a.section || '—'} · {cohortLabel(a.cohort_key, a.classroom_id, a.program_id)} · {a.created_at.slice(0, 10)}</div>
-                    <b>{a.question_text}</b>
-                    <small>{Number(a.mean).toFixed(2)} / 5 · {a.n} إجابة</small>
-                    {a.status === 'done' && <em>أُغلقت {a.closed_at?.slice(0, 10)} — {a.note}</em>}
-                  </div>
-                  {a.status === 'open' && (
-                    <div className="pl-close">
-                      <input placeholder="ماذا فعلنا؟ (5 أحرف فأكثر)" value={note[a.id] || ''} onChange={e => setNote(x => ({ ...x, [a.id]: e.target.value }))} data-testid={`pl-note-${a.id}`} />
-                      <button className="pl-btn" disabled={(note[a.id] || '').trim().length < 5 || busy === a.id} onClick={() => closeAction(a)} data-testid={`pl-done-${a.id}`}>أُغلقت</button>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
-      )}
+        {tab === 'ratings' && <div className="pu-grid">
+          <div className="pu-card">
+            <h3>متوسّط كلّ خدمة</h3>
+            {services.length === 0 && <p className="pu-muted" data-testid="rt-empty">لا تقييمات بعد — تظهر هنا أوّل نجمة يضعها مستفيد.</p>}
+            <div className="pu-svcs">{services.map(([k, v]) => <button type="button" key={k} className={`pu-svc ${svc === k ? 'on' : ''}`} onClick={() => { const s = svc === k ? '' : k; setSvc(s); void loadRatings(tok, s); }} data-testid={`rt-svc-${k}`}>
+              <span className="pu-svc-name">{(SERVICE_AR as any)[k] || k}</span><span className="pu-svc-avg">{fmtAvg(v.avg)} <i>★</i></span><span className="pu-muted">{fmtCount(v.n)} · رضا {satisfaction(v.dist)}٪</span>
+              <span className="pu-dist">{[4, 3, 2, 1, 0].map((i) => <i key={i} style={{ height: `${v.n ? Math.max(6, (v.dist[i] / v.n) * 100) : 6}%` }} title={`${i + 1}★: ${v.dist[i]}`} />)}</span>
+            </button>)}</div>
+          </div>
+          <div className="pu-card">
+            <h3>آخر التقييمات {svc && <small>— {(SERVICE_AR as any)[svc]}</small>}</h3>
+            <table className="pu-table"><tbody>{rows.map((r) => <tr key={r.id} data-testid="rt-row">
+              <td><b className="pu-stars">{'★'.repeat(r.stars)}<i>{'★'.repeat(5 - r.stars)}</i></b><div className="pu-muted">{(SERVICE_AR as any)[r.service] || r.service}{r.ref_id ? ` · ${r.ref_id}` : ''}</div></td>
+              <td>{(r.tags || []).map((t: string) => <span key={t} className="pu-tag">{RATING_TAGS.find((x) => x.key === t)?.ar || t}</span>)}{r.comment && <div className="pu-comment">«{r.comment}»</div>}</td>
+              <td className="pu-muted"><bdi>{r.rater_email}</bdi><br />{fmt(r.created_at)}</td>
+            </tr>)}</tbody></table>
+            {rows.length === 0 && <p className="pu-muted">لا شيء بعد.</p>}
+          </div>
+        </div>}
+      </div>
     </div>
   );
 }
 
 const CSS = `
-.pl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.pl *{box-sizing:border-box}
-.pl-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.pl-head h1{margin:2px 0 4px;font-size:22px;color:${NAVY}}.pl-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:760px;line-height:1.7}
-.pl-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.pl-nav{display:flex;gap:8px;flex-wrap:wrap}
-.pl-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;color:${NAVY};border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
-.pl-btn:disabled{opacity:.5;cursor:not-allowed}
-.pl-primary{border:0;background:${NAVY};color:#fff;border-radius:10px;padding:10px 16px;font:inherit;font-weight:800;cursor:pointer}
-.pl-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;margin-bottom:14px}
-.pl-ct{font-weight:900;color:${NAVY};display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.pl-muted{color:#8E7F8A;font-size:13px}
-.pl-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;margin-bottom:12px}
-.pl-tools{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.pl-tools label{font-size:13px;font-weight:800;color:${NAVY};display:flex;gap:8px;align-items:center}
-.pl-tools select{font:inherit;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;min-width:220px;background:#fff}
-.pl-kpis{display:flex;gap:8px;flex-wrap:wrap}.pl-kpis span{background:#fff;border:1px solid #EADFD6;border-radius:999px;padding:6px 12px;font-size:12.5px;color:#5C4858}.pl-kpis b{color:${NAVY};font-size:14px;margin-inline-end:4px}
-.pl-week{border-inline-start:5px solid ${GOLD}}
-.pl-weekbody{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
-.pl-weekbody h3{margin:4px 0;font-size:18px;color:${NAVY}}
-.pl-sec{font-size:12px;color:#D4614A;font-weight:800}
-.pl-stat{font-size:13px;color:#5C4858}.pl-stat b{font-size:20px;margin-inline-end:4px}
-.pl-pill{border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
-.pl-secs{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.pl-secrow{display:grid;grid-template-columns:minmax(160px,1.2fr) 3fr 56px 80px;gap:10px;align-items:center}
-.pl-secname{display:flex;flex-direction:column}.pl-secname span{font-weight:800;font-size:13.5px}.pl-secname small{color:#B3A5AE;font-size:11px}
-.pl-bar{height:12px;background:#F6EBE0;border-radius:999px;overflow:hidden}.pl-bar i{display:block;height:100%;border-radius:999px}
-.pl-bar i.ok{background:#15803d}.pl-bar i.good{background:#D4614A}.pl-bar i.warn{background:#b45309}.pl-bar i.bad{background:#b91c1c}
-.pl-m{font-size:14px;text-align:center}
-b.ok,.pl-m.ok{color:#15803d}b.good,.pl-m.good{color:#D4614A}b.warn,.pl-m.warn{color:#b45309}b.bad,.pl-m.bad{color:#b91c1c}
-.pl-arrow{font-size:12px;font-weight:800;text-align:center}.pl-arrow.up{color:#15803d}.pl-arrow.down{color:#b91c1c}.pl-arrow.flat{color:#8E7F8A}.pl-arrow.none{color:#D9CBC2}
-.pl-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.pl-items{margin:0;padding-inline-start:18px;display:grid;gap:8px}.pl-items li{display:grid;grid-template-columns:1fr;gap:2px;font-size:13.5px}.pl-items li b{font-size:15px}.pl-items li small{color:#B3A5AE}
-.pl-table{width:100%;border-collapse:collapse;font-size:13px}.pl-table th{text-align:right;color:#8E7F8A;font-weight:800;border-bottom:1px solid #EADFD6;padding:6px}.pl-table td{padding:8px 6px;border-bottom:1px solid #F6EBE0}.pl-table tr.dim td{color:#B3A5AE}
-.pl-acts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.pl-acts li{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid #EADFD6;border-radius:12px;padding:10px 12px}
-.pl-acts li.done{background:#f0fdf4;border-color:#bbf7d0}.pl-acts li.open{border-inline-start:4px solid ${GOLD}}
-.pl-actbody{display:flex;flex-direction:column;gap:2px;font-size:13px}.pl-actbody em{color:#166534;font-style:normal;font-size:12.5px}.pl-actbody small{color:#8E7F8A}
-.pl-close{display:flex;gap:6px;align-items:center}.pl-close input{font:inherit;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;min-width:240px}
-@media(max-width:760px){.pl{padding:12px}.pl-grid{grid-template-columns:1fr}.pl-secrow{grid-template-columns:1fr 2fr 48px 64px}.pl-close input{min-width:0;flex:1}}
+.pu{min-height:100vh;background:#FBF4EE;font-family:'Noto Kufi Arabic','IBM Plex Sans Arabic',system-ui,sans-serif;direction:rtl;color:#2A1626}
+.pu-wrap{max-width:1180px;margin:0 auto;padding:26px 18px 60px}
+.pu-head h1{margin:4px 0 6px;font-size:28px;color:#3A1F36}.pu-head p{margin:0 0 14px;color:#5C4858;font-size:14px;max-width:720px}
+.pu-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#8A5A1E}
+.pu-tabs{display:flex;gap:8px;margin:14px 0}.pu-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:8px 16px;font:inherit;font-weight:800;font-size:13.5px;cursor:pointer;color:#5C4858}.pu-tabs button.on{background:#3A1F36;color:#FBF4EE;border-color:#3A1F36}.pu-tabs i{font-style:normal;opacity:.7;margin-inline-start:4px}
+.pu-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px}@media(max-width:900px){.pu-grid{grid-template-columns:1fr}}
+.pu-card{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:16px 18px;box-shadow:0 10px 28px rgba(42,22,38,.05)}.pu-card h3{margin:0 0 10px;font-size:16px;color:#3A1F36}.pu-card h3 small{font-weight:600;color:#8A5A1E}
+.pu-form label{display:block;font-size:12.5px;font-weight:800;color:#5C4858;margin-top:10px}.pu-form input:not([type=checkbox]),.pu-form select{display:block;width:100%;margin-top:4px;border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;background:#FBF4EE}
+.pu-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.pu-checks label{display:flex;gap:6px;align-items:center;margin-top:12px}
+.pu-act{display:flex;gap:8px;margin-top:14px}.pu-btn{background:#D4614A;color:#fff;border:0;border-radius:999px;padding:9px 20px;font:inherit;font-weight:900;cursor:pointer}.pu-btn.ghost{background:transparent;color:#5C4858;border:1px solid #EADFD6}.pu-btn:disabled{opacity:.6}
+.pu-hint{margin:12px 0 0;font-size:12.5px;color:#5C4858}.pu-prev{font-weight:800}.pu-prev[data-tone=plum]{color:#3A1F36}.pu-prev[data-tone=coral]{color:#D4614A}.pu-prev[data-tone=sand]{color:#8A5A1E}.pu-prev[data-tone=sea]{color:#3F7F79}
+.pu-table{width:100%;border-collapse:collapse;font-size:13.5px}.pu-table td{padding:10px 6px;border-top:1px solid #F3E9E1;vertical-align:top}.pu-table tr.off{opacity:.5}
+.pu-zone{display:inline-block;background:#F6EBE0;color:#8A5A1E;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:900;white-space:nowrap}
+.pu-muted{color:#8C7A86;font-size:12.5px}.pu-ops{white-space:nowrap}.pu-ops button{border:1px solid #EADFD6;background:#fff;border-radius:8px;padding:4px 8px;font:inherit;font-size:12px;cursor:pointer;margin-inline-start:4px}.pu-ops button.danger{color:#B03A2E}
+.pu-err{background:#fdecea;color:#B03A2E;border-radius:12px;padding:10px 14px;margin:8px 0;font-weight:700}.pu-ok{background:#ecfdf5;color:#065f46;border-radius:12px;padding:10px 14px;margin:8px 0;font-weight:700}
+.pu-svcs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.pu-svc{position:relative;text-align:right;border:1px solid #EADFD6;background:#FBF4EE;border-radius:14px;padding:12px;cursor:pointer;font:inherit;display:flex;flex-direction:column;gap:4px;min-height:110px}.pu-svc.on{border-color:#3A1F36;box-shadow:0 0 0 2px rgba(58,31,54,.15)}
+.pu-svc-name{font-weight:900;color:#3A1F36}.pu-svc-avg{font-size:24px;font-weight:900;color:#2A1626}.pu-svc-avg i{font-style:normal;color:#D9A866;font-size:18px}
+.pu-dist{position:absolute;left:10px;bottom:10px;display:flex;align-items:flex-end;gap:2px;height:36px}.pu-dist i{display:block;width:6px;border-radius:3px;background:#D9A866}.pu-dist i:nth-child(1){background:#5EA8A0}.pu-dist i:nth-child(5){background:#D4614A}
+.pu-stars{color:#D9A866;letter-spacing:1px}.pu-stars i{font-style:normal;color:#E8DCD2}
+.pu-tag{display:inline-block;background:#F6EBE0;color:#5C4858;border-radius:999px;padding:2px 9px;font-size:12px;margin:0 0 4px 4px}.pu-comment{margin-top:4px;font-size:13px;color:#2A1626}
 `;

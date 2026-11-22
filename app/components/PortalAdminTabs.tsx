@@ -34,6 +34,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/inclusion', label: 'إتاحة الوصول', icon: 'users' },
   { href: '/admin/onair', label: 'اسأل خبيرًا', icon: 'chat' },
   { href: '/admin/after', label: 'المتابعة بعد التدريب', icon: 'certificate' },
+  { href: '/admin/pulse', label: 'نبض أَثَر — الأخبار والتقييم', icon: 'spark' }, /* هـ-1/4 */
   { href: '/admin/needs', label: 'الاحتياجات التدريبية', icon: 'spark' },
   { href: '/admin/rehearsals', label: 'التدريب التبادلي', icon: 'users' },
   { href: '/admin/reports', label: 'التقارير', icon: 'doc' },
