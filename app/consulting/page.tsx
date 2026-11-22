@@ -71,7 +71,7 @@ function Inner() {
 
       <section className="pt-sec alt"><div className="pt-wrap">
         <div className="pt-sechead"><h2>{lang === 'ar' ? 'كيف نعمل' : 'How we work'}</h2></div>
-        <div className="cs-steps">{STEPS.map((s, i) => <div key={i} className="cs-step"><b>{i + 1}</b><h4>{t(s.label, lang)}</h4><p>{t(s.desc, lang)}</p></div>)}</div>
+        <div className="cs-steps">{STEPS.map((s, i) => <div key={i} className="cs-step"><b><span>{i + 1}</span></b><h4>{t(s.label, lang)}</h4><p>{t(s.desc, lang)}</p></div>)}</div>
       </div></section>
 
       {user && mine.length > 0 && (
@@ -120,8 +120,8 @@ const CSS = `
 .cs-areas{grid-template-columns:repeat(4,1fr)}.cs-area{text-align:start;cursor:pointer;font:inherit;border:1px solid #EADFD6;background:#fff}.cs-area.on{border-color:#D4614A;box-shadow:0 0 0 3px rgba(212,97,74,.15)}.cs-area h3{margin:10px 0 6px;font-size:16px}.cs-area p{margin:0 0 10px;color:#8E7F8A;font-size:13.5px;line-height:1.7}
 .cs-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pt-muted{color:#8E7F8A;font-size:13.5px;line-height:1.8}
 .cs-mine{display:grid;gap:8px}.cs-minerow{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #EADFD6;border-radius:12px;padding:12px 16px;text-decoration:none;color:#2A1626}.cs-minerow b{flex:1}.cs-minerow small{color:#8E7F8A}
-.pt-tag.new,.pt-tag.reviewing{background:#eff6ff;color:#1e40af}.pt-tag.quoted{background:#fff7ed;color:#9a3412}.pt-tag.accepted,.pt-tag.in_progress{background:#ecfdf5;color:#065f46}.pt-tag.completed{background:#FBEDE7;color:#D4614A}.pt-tag.declined,.pt-tag.closed,.pt-tag.cancelled{background:#F6EBE0;color:#5C4858}
+.pt-tag.new,.pt-tag.reviewing{background:#F3E8EF;color:#6A3350}.pt-tag.quoted{background:#FBF4EE;color:#8A5A1E}.pt-tag.accepted,.pt-tag.in_progress{background:#E6F3F1;color:#2F6B66}.pt-tag.completed{background:#FBEDE7;color:#D4614A}.pt-tag.declined,.pt-tag.closed,.pt-tag.cancelled{background:#F6EBE0;color:#5C4858}
 .pt-sec.alt{background:#FBF4EE}
-.cs-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.cs-step{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:20px;position:relative}.cs-step b{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#D9A866;color:#1f2937;font-size:17px;margin-bottom:10px}.cs-step h4{margin:0 0 6px;font-size:16px;color:#3A1F36}.cs-step p{margin:0;color:#8E7F8A;font-size:13.5px;line-height:1.7}
+.cs-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.cs-step{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:20px;position:relative}.cs-step b{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#D9A866;color:#3A1F36;font-size:17px;margin-bottom:12px;transform:rotate(45deg);margin-inline-start:6px}.cs-step b span{transform:rotate(-45deg)}.cs-step{border-radius:18px 18px 22px 22px}.cs-step:after{content:'';position:absolute;inset-inline-end:16px;top:18px;width:28px;height:14px;border:2px solid #F0C9BC;border-bottom:0;border-radius:30px 30px 0 0}.cs-step h4{margin:0 0 6px;font-size:16px;color:#3A1F36}.cs-step p{margin:0;color:#8E7F8A;font-size:13.5px;line-height:1.7}
 @media(max-width:960px){.cs-areas,.cs-steps{grid-template-columns:1fr 1fr}}@media(max-width:640px){.cs-areas,.cs-two{grid-template-columns:1fr}}
 `;
