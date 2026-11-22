@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import IqraQ2Desk from './IqraQ2Desk'; /* ق٢: مكتب العَتَبة وطابور «أُنتج» */
+import IqraSeats from './IqraSeats'; /* هـ-1/3: المقاعد (تجربة · فواتير · منح) */
 
 type Lvl = Record<string, { name_ar: string; code: string; line_ar: string }>;
 type Hrs = Record<string, { learners: number; avg_hours: number; reached_pct: number; target: number } | null>;
@@ -96,6 +97,7 @@ export default function IqraDesk({ auth }: { auth: () => Promise<Record<string, 
         {packRes.report?.errors?.length > 0 && <ul className="iqd-warn">{packRes.report.errors.map((w: string, i: number) => <li key={i}>{w}</li>)}</ul>}</>
         : <><p className="am-err">{packRes.error}</p>{packRes.problems && <ul className="iqd-warn">{packRes.problems.map((p: any, i: number) => <li key={i}>{p.at}: {p.msg}</li>)}</ul>}</>}</div>}</section>
 
+    <IqraSeats auth={auth} />
     <section className="am-card"><h3>تسكين يدوي <small>للمديرين — الأصل أن يأتي التسكين من قرار مِعيار المعتمد</small></h3>
       <div className="mm-row"><input dir="ltr" value={enrol.email} onChange={(e) => setEnrol({ ...enrol, email: e.target.value })} placeholder="learner@example.com" aria-label="البريد" data-testid="iqd-enrol-email" /><select value={enrol.level} onChange={(e) => setEnrol({ ...enrol, level: e.target.value })} aria-label="المستوى">{ORDER.map((L) => <option key={L} value={L}>{d?.levels?.[L]?.name_ar || L} · {d?.levels?.[L]?.code || L}</option>)}</select><input value={enrol.note} onChange={(e) => setEnrol({ ...enrol, note: e.target.value })} placeholder="سبب التسكين" aria-label="سبب" /><button className="am-btn" disabled={!enrol.email || !!busy} onClick={() => void doEnrol()} data-testid="iqd-enrol">تسكين</button></div></section>
     <style jsx global>{`

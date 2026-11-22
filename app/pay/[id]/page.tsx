@@ -134,7 +134,7 @@ function Inner() {
 
         <aside className="pt-box pt-sticky">
           {!open ? (
-            <div><h3><Icon name={inv.status === 'paid' ? 'check' : 'x'} size={18} /> {invStatusLabel(inv.status, lang)}</h3><p className="pt-muted">{inv.status === 'paid' ? (lang === 'ar' ? 'شكرًا لك — سدادك مؤكّد ومقعدك محجوز. يمكنك تنزيل الفاتورة بصيغة PDF.' : 'Thank you — your payment is confirmed and your seat is secured. You can download the PDF invoice.') : (lang === 'ar' ? 'هذه الفاتورة لم تعد مستحقة.' : 'This invoice is no longer due.')}</p><Link href={`/programs/${inv.program_id}`} className="pt-btn ghost small">{lang === 'ar' ? 'صفحة البرنامج' : 'Program page'}</Link></div>
+            <div><h3><Icon name={inv.status === 'paid' ? 'check' : 'x'} size={18} /> {invStatusLabel(inv.status, lang)}</h3><p className="pt-muted">{inv.status === 'paid' ? (lang === 'ar' ? 'شكرًا لك — سدادك مؤكّد ومقعدك محجوز. يمكنك تنزيل الفاتورة بصيغة PDF.' : 'Thank you — your payment is confirmed and your seat is secured. You can download the PDF invoice.') : (lang === 'ar' ? 'هذه الفاتورة لم تعد مستحقة.' : 'This invoice is no longer due.')}</p>{inv.service === 'iqra' ? <Link href={inv.status === 'paid' ? '/iqra' : '/iqra/start'} className="pt-btn small" data-testid="pay-iqra-enter">{lang === 'ar' ? (inv.status === 'paid' ? 'ادخل إلى اقْرَأْ' : 'باب اقْرَأْ') : (inv.status === 'paid' ? 'Enter Iqra' : 'Iqra door')}</Link> : inv.program_id ? <Link href={`/programs/${inv.program_id}`} className="pt-btn ghost small">{lang === 'ar' ? 'صفحة البرنامج' : 'Program page'}</Link> : null}</div>
           ) : (
             <div>
               <h3><Icon name="shield" size={18} /> {lang === 'ar' ? 'طريقة الدفع' : 'Payment method'}</h3>

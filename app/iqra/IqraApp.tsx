@@ -109,6 +109,8 @@ function useTicker(activity: Activity | null, post: (b: Record<string, unknown>)
 export default function IqraApp({ fontClass = '' }: { fontClass?: string }) {
   const [code, setCode] = useState(''); const [tok, setTok] = useState<string | null>(null); const [ready, setReady] = useState(false);
   const [home, setHome] = useState<Home | null>(null); const [err, setErr] = useState<string | null>(null); const [screen, setScreen] = useState<Screen>({ s: 'home' }); const [live, setLive] = useState('');
+  /* هوية v1.2: لون المستوى على الجذر (التوأمة مع مِعيار) */
+  useEffect(() => { const lv = home?.gate === 'enrolled' ? String(home.المستوى?.code || '').replace('-', '_').toUpperCase() : ''; if (lv) document.documentElement.setAttribute('data-level', lv); else document.documentElement.removeAttribute('data-level'); return () => { document.documentElement.removeAttribute('data-level'); }; }, [home?.gate, home?.المستوى?.code]);
   useEffect(() => { (async () => { const c = new URLSearchParams(window.location.search).get('code') || ''; setCode(c.toUpperCase()); try { const { data } = await supabase().auth.getSession(); setTok(data.session?.access_token || null); } catch { setTok(null); } setReady(true); })(); }, []);
   const H = useCallback((): Record<string, string> => (tok ? { Authorization: `Bearer ${tok}` } : {}), [tok]);
   const q = useCallback((view: string, extra = '') => `/api/iqra?view=${view}${code ? `&code=${encodeURIComponent(code)}` : ''}${extra}`, [code]);
@@ -163,7 +165,7 @@ function Gate({ home, code, setCode, reload }: { home: Home; code: string; setCo
     {anon && <form className="iq-row" onSubmit={(e) => { e.preventDefault(); const c = v.trim().toUpperCase(); if (/^ML-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(c)) { setCode(c); setTimeout(reload, 0); } }}>
       <label className="iq-sr" htmlFor="iq-code">رمز النتيجة</label><input id="iq-code" dir="ltr" value={v} onChange={(e) => setV(e.target.value)} placeholder="ML-XXXX-XXXX" inputMode="text" autoComplete="off" data-testid="iq-code" />
       <button type="submit" className="iq-btn" data-testid="iq-code-go">افتح</button><a className="iq-btn ghost" href="/login?next=/iqra">تسجيل الدخول</a></form>}
-    {home.gate === 'none' && <a className="iq-btn" href={home.copy?.href || '/miaar'} data-testid="iq-gate-cta">{home.copy?.cta}</a>}
+    {(home.gate === 'none' || home.gate === 'noSeat' || home.gate === 'expired') && <a className="iq-btn" href={home.copy?.href || '/miaar'} data-testid="iq-gate-cta">{home.copy?.cta}</a>}
     <ul className="iq-levels" aria-label="المستويات السبعة">{['تمهيدي · Pre-A1', 'مكتشف · A1', 'مبتدئ · A2', 'متوسط · B1', 'مستقل · B2', 'متقدّم · C1', 'متقن · C2'].map((l) => <li key={l}>{l}</li>)}</ul>
   </div></section>;
 }
@@ -192,7 +194,7 @@ function HomeView({ home, open, post, setLive, q, H }: { home: Home; open: (id: 
   async function external(e: React.FormEvent) { e.preventDefault(); const m = Number(extMin); if (!Number.isFinite(m) || m < 5 || m > 480) { setExtMsg('من 5 إلى 480 دقيقة'); return; } const d = await post({ action: 'external', minutes: m, note: extNote }); setExtMsg(d.ok ? 'سُجّلت — تُعرض منفصلة ولا تُحتسب في العَتَبة.' : 'تعذّر الحفظ'); setExtMin(''); setExtNote(''); }
   async function daily(opt: string) { if (dailyFb || !home.سؤال_اليوم) return; setDailyPick(opt); const d = await post({ action: 'daily', item_id: home.سؤال_اليوم.id, answer: { option: opt } }); if (d.ok) { setDailyFb(d); setLive(d.correct ? 'أحسنت' : 'ليس بعد'); } }
   return <>
-    <section className="iq-band"><div className="iq-bandin"><p className="iq-kicker" data-testid="iq-level">{r.label}</p><h1>مستوى {r.name_ar}</h1><p className="iq-lead">{r.line_ar} — {r.can_ar}</p>
+    <section className="iq-band lvl-surface" data-level={String(r.code || '').replace('-', '_').toUpperCase() || undefined}><div className="iq-bandin"><p className="iq-kicker" data-testid="iq-level">{r.label}</p><h1>مستوى {r.name_ar}</h1><p className="iq-lead">{r.line_ar} — {r.can_ar}</p>
       <div className="iq-stats"><div><b data-testid="iq-steps">{home.خطواتي?.done}</b><span>من {home.خطواتي?.total} حلقة</span></div><div><b data-testid="iq-streak">{home.أيامي}</b><span>أيام متّصلة</span></div><div><b>{home.أراجع_مستحقّ}</b><span>للمراجعة اليوم</span></div></div>
       {h && <div className="iq-hours" data-testid="iq-hours" data-state={h.threshold.state}><div className="iq-hours-top"><b>ساعاتي في مستوى {r.name_ar}: <span data-testid="iq-hours-n">{h.hours}</span> من {h.target} ساعة</b><small>{h.today_min > 0 ? `اليوم ${h.today_min} د · ` : ''}{h.per_week > 0 ? `وتيرتك ${h.per_week} س/أسبوع` : 'ابدأ اليوم — كلّ دقيقة نشطة تُحسب'}{h.weeks_left ? ` · بهذه الوتيرة تبلغ العَتَبة في ${h.weeks_left} ${h.weeks_left === 1 ? 'أسبوع' : 'أسابيع'}` : ''}</small></div>
         <div className="iq-hbar" role="progressbar" aria-valuenow={h.pct} aria-valuemin={0} aria-valuemax={100} aria-label="ساعات التعلّم"><i style={{ width: `${h.pct}%` }} /><em style={{ insetInlineStart: '70%' }} title="الاختبار المبكر" /></div>

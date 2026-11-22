@@ -14,6 +14,7 @@ export type Invoice = {
   subtotal: number | string; vat_rate: number | string; vat_amount: number | string; total: number | string; status: InvoiceStatus; method?: string | null;
   due_date?: string | null; paid_at?: string | null; receipt_path?: string | null; receipt_uploaded_at?: string | null; transfer_ref?: string | null; payer_note?: string | null;
   gateway_payment_id?: string | null; notes?: string | null; lang?: string | null;
+  service?: string | null; plan_code?: string | null; /* هـ-1/3: فاتورة خدمة (اقْرَأْ) بلا تسجيل برنامج */
 };
 
 export const INV_STATUS: Record<InvoiceStatus, T> = {

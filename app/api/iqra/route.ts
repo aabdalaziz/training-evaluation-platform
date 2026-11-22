@@ -28,6 +28,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { rateLimit, ipOf, tooMany } from '../../../lib/shield/ratelimit';
+import { seatsOf, currentSeat, SEAT_COPY, SEAT_FREE_ROLES } from '../../../lib/portal/entitlements';
 import { normEmail } from '../../../lib/portal/roles';
 import { isResultCode } from '../../../lib/miaar/registry';
 import { IQRA_NAMES_AR, IQRA_LIMITS, UI_AR } from '../../../lib/iqra/registry';
@@ -46,22 +47,34 @@ async function ctx(req: Request, code: string) {
   const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (token) {
     const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } }); const { data } = await userDb.auth.getUser(token);
-    if (data?.user?.email) return { db, email: normEmail(data.user.email), userId: data.user.id, via: 'account' as const };
+    if (data?.user?.email) {
+      const { data: prof } = await db.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+      return { db, email: normEmail(data.user.email), userId: data.user.id, via: 'account' as const, role: String((prof as any)?.role || '').toUpperCase() };
+    }
   }
   if (isResultCode(code)) {
     const { data: rep } = await db.from('placement_reports').select('id, candidate_email, user_id').eq('access_code', code).maybeSingle();
-    if (rep?.candidate_email) return { db, email: normEmail(rep.candidate_email), userId: (rep.user_id as string) || null, via: 'code' as const };
+    if (rep?.candidate_email) return { db, email: normEmail(rep.candidate_email), userId: (rep.user_id as string) || null, via: 'code' as const, role: '' };
     return { error: bad('invalid_code', 404) };
   }
   return { error: bad('sign_in_or_code', 401) };
 }
 const gateJson = (g: { state: string }) => NextResponse.json({ ok: true, gate: g.state, title: IQRA_NAMES_AR, copy: g.state === 'none' ? { title: UI_AR.gate_title, body: UI_AR.gate_body, cta: UI_AR.gate_cta, href: '/miaar' } : { title: UI_AR.pending_title, body: UI_AR.pending_body } }, { headers: NO });
+/* هـ-1/3: المقعد — بعد المستوى يأتي المقعد (تجربة ٧ أيام أو خطّة مدفوعة). الطاقم يدخل بلا مقعد. يُعطَّل كلّه بـ IQRA_SEATS=off. */
+async function seatGate(db: any, email: string, role: string): Promise<NextResponse | null> {
+  if (process.env.IQRA_SEATS === 'off') return null;
+  if (role && SEAT_FREE_ROLES.includes(role)) return null;
+  const seats = await seatsOf(db, 'iqra', email); if (currentSeat(seats)) return null;
+  const st = seats.length ? 'expired' : 'noSeat'; const c = SEAT_COPY[st];
+  return NextResponse.json({ ok: true, gate: st, title: IQRA_NAMES_AR, copy: { title: c.title, body: c.body, cta: st === 'expired' ? 'جدّد مقعدك' : 'اختر مقعدك', href: '/iqra/start' } }, { headers: NO });
+}
 
 export async function GET(req: Request) {
   const u = new URL(req.url); const code = String(u.searchParams.get('code') || '').toUpperCase();
   const c = await ctx(req, code); if ('error' in c) return c.error;
   const rl = await rateLimit(c.db, `iqra_read:${ipOf(req)}`, 3600, 600); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
   const g = await gate(c.db, c.email, c.userId); if (g.state !== 'enrolled') return gateJson(g);
+  const sg = await seatGate(c.db, c.email, c.role); if (sg) return sg;
   const view = String(u.searchParams.get('view') || 'home');
   if (view === 'home') return NextResponse.json({ ok: true, gate: 'enrolled', via: c.via, title: IQRA_NAMES_AR, ...(await learnerHome(c.db, g.enrolment)) }, { headers: NO });
   if (view === 'lesson') { const v = await lessonView(c.db, g.enrolment, String(u.searchParams.get('id') || '')); return v ? NextResponse.json({ ok: true, gate: 'enrolled', حلقة: v }, { headers: NO }) : bad('lesson_not_found', 404); }
@@ -79,6 +92,7 @@ export async function POST(req: Request) {
   const c = await ctx(req, String(b.code || '').toUpperCase()); if ('error' in c) return c.error;
   const rl = await rateLimit(c.db, `iqra_write:${ipOf(req)}`, 3600, IQRA_LIMITS.writes_per_hour); if (!rl.allowed) return tooMany(rl, 'محاولات كثيرة');
   const g = await gate(c.db, c.email, c.userId); if (g.state !== 'enrolled') return gateJson(g);
+  const sg = await seatGate(c.db, c.email, c.role); if (sg) return sg;
   const action = String(b.action || '');
   const codeOf = (e: string) => (e === 'lesson_unavailable' || e === 'item_unavailable' || e === 'not_found' ? 404 : 400);
   if (action === 'answer') { const r = await answerItem(c.db, g.enrolment, { lesson_id: b.lesson_id, item_id: b.item_id, answer: (b.answer || {}) as any }); return r.ok ? NextResponse.json(r, { headers: NO }) : bad(r.error, codeOf(r.error)); }
