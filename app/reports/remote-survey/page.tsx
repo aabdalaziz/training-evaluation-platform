@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { downloadCSV, safeFilename } from '../../../lib/export/csv';
+import { Icon } from '../../../lib/ui/icons';
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ك «عدّة الغرفة» */
 import {
   ATTENDANCE, DAYS, DIFFICULTIES, SCALE, STATEMENTS, UI,
   applyFilters, classroomLabel, compareGroups, formatRiyadh, levelLabel, responsesToCsvRows,
@@ -97,23 +99,17 @@ export default function RemoteSurveyReportPage() {
   if (!mounted || loading) return (<div className="rr rr-load"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="rr-spin" /></div>);
 
   return (
-    <div className="rr" style={{ direction: ar ? 'rtl' : 'ltr' }}>
+    <div className="rr rm-page" style={{ direction: ar ? 'rtl' : 'ltr' }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
-      <header className="rr-top noprint">
-        <div className="rr-top-in">
-          <div>
-            <div className="rr-ttl">📊 {ar ? 'نتائج استطلاع التعلم عن بُعد عبر Teams' : 'Remote Learning (Teams) Survey Results'}</div>
-            <div className="rr-sub">{ar ? 'التوقيت: الرياض (Asia/Riyadh) — الإجابات مجهولة الهوية' : 'Time zone: Asia/Riyadh — anonymous responses'}</div>
-          </div>
-          <div className="rr-actions">
-            <button className="rr-ghost" onClick={() => setLang(ar ? 'en' : 'ar')}>🌐 {ar ? 'English' : 'العربية'}</button>
-            <button className="rr-ghost" onClick={() => router.push('/admin/management?tab=rooms')}>🏫 {ar ? 'لوحة الإدارة (المجموعات والمدربون)' : 'Admin panel (groups & trainers)'}</button>
-            <button className="rr-ghost" onClick={() => router.push('/reports')}>📑 {ar ? 'التقارير الأخرى' : 'Other reports'}</button>
-            <button className="rr-ghost" onClick={() => window.print()}>🖨️ {ar ? 'طباعة' : 'Print'}</button>
-          </div>
-        </div>
-      </header>
+      <RoomHead
+        title={<>{ar ? 'نتائج استطلاع التعلم عن بُعد عبر Teams' : 'Remote Learning (Teams) Survey Results'}</>}
+        desc={<><p>{ar ? 'التوقيت: الرياض (Asia/Riyadh) — الإجابات مجهولة الهوية' : 'Time zone: Asia/Riyadh — anonymous responses'}</p></>}
+        actions={<>
+            <button className="rm-btn" onClick={() => setLang(ar ? 'en' : 'ar')}><Icon name="globe" size={16} /> {ar ? 'English' : 'العربية'}</button>
+            <button className="rm-btn" onClick={() => window.print()}><Icon name="print" size={16} /> {ar ? 'طباعة' : 'Print'}</button>
+        </>}
+      />
 
       <main className="rr-wrap">
         {err && <div className="rr-err">{err}</div>}
@@ -161,11 +157,11 @@ export default function RemoteSurveyReportPage() {
             <label>{ar ? 'إلى تاريخ' : 'To date'}<input type="date" value={f.dateTo} onChange={e => setFilter({ dateTo: e.target.value })} /></label>
           </div>
           <div className="rr-toolbar">
-            <button className="rr-btn" onClick={reset}>↺ {ar ? 'إعادة ضبط' : 'Reset'}</button>
-            <button className="rr-btn" onClick={() => loadAll()}>🔄 {ar ? 'تحديث' : 'Refresh'}</button>
+            <button className="rm-btn" onClick={reset}>↺ {ar ? 'إعادة ضبط' : 'Reset'}</button>
+            <button className="rm-btn" onClick={() => loadAll()}>🔄 {ar ? 'تحديث' : 'Refresh'}</button>
             <span style={{ flex: 1 }} />
-            <button className="rr-btn rr-btn-primary" disabled={!filtered.length} onClick={() => downloadCSV(safeFilename('RemoteSurvey_Responses'), responsesToCsvRows(filtered, ctx))}>⬇️ CSV — {ar ? 'الإجابات' : 'Responses'}</button>
-            <button className="rr-btn rr-btn-primary" disabled={!filtered.length} onClick={() => downloadCSV(safeFilename('RemoteSurvey_Summary'), summaryToCsvRows(summary, lang))}>⬇️ CSV — {ar ? 'الملخص' : 'Summary'}</button>
+            <button className="rm-btn primary" disabled={!filtered.length} onClick={() => downloadCSV(safeFilename('RemoteSurvey_Responses'), responsesToCsvRows(filtered, ctx))}>⬇️ CSV — {ar ? 'الإجابات' : 'Responses'}</button>
+            <button className="rm-btn primary" disabled={!filtered.length} onClick={() => downloadCSV(safeFilename('RemoteSurvey_Summary'), summaryToCsvRows(summary, lang))}>⬇️ CSV — {ar ? 'الملخص' : 'Summary'}</button>
           </div>
         </section>
 
@@ -319,14 +315,14 @@ function Row({ label, n, total, color }: { label: string; n: number; total: numb
 const CSS = `
 *{box-sizing:border-box;}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.rr{min-height:100vh;background:#f4f6f8;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;padding-bottom:40px;}
+.rr{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;}
 .rr-load{display:flex;align-items:center;justify-content:center;background:#14466B;}
 .rr-spin{width:64px;height:64px;border:6px solid rgba(255,255,255,.14);border-top-color:#1FA39A;border-radius:50%;animation:spin 1s linear infinite;}
-.rr-top{background:linear-gradient(135deg,#14466B,#0d3049);color:#fff;padding:22px 28px;border-bottom:3px solid #D9A866;}
-.rr-top-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;}
-.rr-ttl{font-size:22px;font-weight:900;} .rr-sub{color:#9fc3d6;font-size:13px;margin-top:4px;font-weight:700;}
-.rr-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.rr-ghost{background:rgba(255,255,255,.10);border:1px solid rgba(217,168,102,.35);color:#fff;border-radius:12px;padding:10px 16px;font-family:inherit;font-weight:800;cursor:pointer;}
+
+
+ 
+
+
 .rr-wrap{max-width:1240px;margin:20px auto 0;padding:0 28px;}
 .rr-err{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:12px 16px;font-weight:800;margin-bottom:16px;}
 .rr-card{background:#fff;border:1px solid #EADFD6;border-radius:22px;padding:22px;box-shadow:0 8px 28px rgba(15,23,42,.04);margin-bottom:18px;}
@@ -336,9 +332,6 @@ const CSS = `
 .rr-filters label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;color:#5C4858;}
 .rr-filters select,.rr-filters input{border:1px solid #D9CBC2;border-radius:10px;padding:9px 10px;font-family:inherit;font-weight:700;background:#fff;color:#2A1626;}
 .rr-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center;}
-.rr-btn{border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 14px;font-family:inherit;font-weight:800;cursor:pointer;color:#14466B;}
-.rr-btn-primary{background:linear-gradient(135deg,#00897B,#1FA39A);color:#fff;border-color:transparent;}
-.rr-btn:disabled{opacity:.5;cursor:not-allowed;}
 .rr-mini{border:1px solid #D9CBC2;background:#fff;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer;color:#14466B;}
 .rr-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px;}
 .rr-kpi{background:#fff;border:1px solid #EADFD6;border-top:5px solid;border-radius:18px;padding:16px;text-align:center;}
@@ -360,6 +353,6 @@ td{padding:11px;font-size:13.5px;border-bottom:1px solid #F6EBE0;font-weight:700
 .rr-row{margin-bottom:10px;} .rr-row-top{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-bottom:4px;}
 .rr-row-bar{height:8px;background:#F6EBE0;border-radius:4px;overflow:hidden;} .rr-row-bar div{height:100%;border-radius:4px;}
 @media(max-width:1000px){.rr-kpis{grid-template-columns:repeat(2,1fr);}.rr-filters{grid-template-columns:1fr 1fr;}.rr-grid3{grid-template-columns:1fr;}}
-@media(max-width:600px){.rr-filters{grid-template-columns:1fr;}.rr-kpis{grid-template-columns:1fr;}.rr-top-in{flex-direction:column;align-items:flex-start;}}
+@media(max-width:600px){.rr-filters{grid-template-columns:1fr;}.rr-kpis{grid-template-columns:1fr;}}
 @media print{.noprint{display:none !important;}.rr{background:#fff;}.rr-card{box-shadow:none;break-inside:avoid;}}
 `;

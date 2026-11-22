@@ -9,6 +9,7 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { KIND_LABEL_AR, TREND_AR } from '../../../lib/portal/loop';
 import type { SuggestionKind, Trend } from '../../../lib/portal/loop';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 type Sugg = { id: string; kind: SuggestionKind; title_ar: string; why_ar: string; evidence: { label: string; value: string }[]; target: any; score: number; status: 'draft' | 'accepted' | 'dismissed' | 'expired'; note: string | null; outcome: any; created_at: string; decided_at: string | null; expires_at: string };
 type Learned = { proposed: number; accepted: number; dismissed: number; expired: number; outcomes: number; acceptance: number; kinds: Record<string, { proposed: number; accepted: number; dismissed: number }>; lessons: string[] };
@@ -50,56 +51,59 @@ export default function AdminLoopPage() {
   const list = (data?.suggestions || []).filter(s => (filter === 'draft' ? s.status === 'draft' : s.status !== 'draft')).filter(s => kind === 'all' || s.kind === kind);
   const L = data?.learned;
 
-  if (!ready) return <div className="lp"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="lp-wrap"><div className="lp-card">{error ? <span className="lp-err">{error}</span> : 'جارٍ التحقق من الصلاحية…'}</div></div></div>;
+  if (!ready) return <div className="lp rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="lp-wrap"><div className="rm-card">{error ? <span className="lp-err">{error}</span> : 'جارٍ التحقق من الصلاحية…'}</div></div></div>;
   return (
-    <div className="lp"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="lp rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="lp-wrap">
-        <header className="lp-head"><div><span className="lp-kicker"><Icon name="refresh" size={14} /> بوابة أَثَر · P15</span><h1>التحسين المستمر — الحلقة المغلقة بالأدلة</h1><p>الذاكرة الحية تقترح برامج ومهمات وتركيزات وخطوات مدعومة بسلسلة دليل كاملة؛ الإنسان يقبل أو يتجاهل؛ وكل قرار يغيّر ما تقترحه الحلقة في الشهر التالي. حيث لا يكفي الدليل، تقول الشاشة ذلك صراحة.</p></div>
-          <button className="lp-run" onClick={run} disabled={!!busy} data-testid="loop-run"><Icon name="play" size={14} /> {busy === 'run' ? 'جارٍ التشغيل…' : 'شغّل الحلقة الآن'}</button></header>
+        <RoomHead
+        title={<>التحسين المستمر — الحلقة المغلقة بالأدلة</>}
+        desc={<><p>الذاكرة الحية تقترح برامج ومهمات وتركيزات وخطوات مدعومة بسلسلة دليل كاملة؛ الإنسان يقبل أو يتجاهل؛ وكل قرار يغيّر ما تقترحه الحلقة في الشهر التالي. حيث لا يكفي الدليل، تقول الشاشة ذلك صراحة.</p></>}
+        actions={<><button className="rm-btn primary" onClick={run} disabled={!!busy} data-testid="loop-run"><Icon name="play" size={14} /> {busy === 'run' ? 'جارٍ التشغيل…' : 'شغّل الحلقة الآن'}</button></>}
+      />
         <PortalAdminTabs counts={{ '/admin/loop': data?.stats.draft || 0 }} />
         {error && <div className="lp-err">{error}</div>}
         {msg && <div className="lp-msg" data-testid="loop-msg">{msg}</div>}
-        <div className="lp-kpis"><span><b>{data?.stats.draft ?? 0}</b> بانتظار قرار</span><span><b>{data?.stats.accepted ?? 0}</b> مقبول</span><span><b>{data?.stats.dismissed ?? 0}</b> متجاهَل</span><span><b>{data?.stats.forecasts ?? 0}</b> توقّع قدرة</span><span><b>{data?.stats.orgs ?? 0}</b> جهة</span></div>
+        <div className="rm-kpis"><span><b>{data?.stats.draft ?? 0}</b> بانتظار قرار</span><span><b>{data?.stats.accepted ?? 0}</b> مقبول</span><span><b>{data?.stats.dismissed ?? 0}</b> متجاهَل</span><span><b>{data?.stats.forecasts ?? 0}</b> توقّع قدرة</span><span><b>{data?.stats.orgs ?? 0}</b> جهة</span></div>
 
         {/* ما تعلّمته أَثَر هذا الشهر */}
-        <section className="lp-card lp-learned" data-testid="loop-learned">
+        <section className="rm-card lp-learned" data-testid="loop-learned">
           <h3><Icon name="star" size={16} /> ما تعلّمته أَثَر هذا الشهر — {data ? monthAr(data.month) : ''}</h3>
-          {L && L.proposed + L.accepted + L.dismissed + L.expired === 0 ? <p className="lp-muted">لا دليل كافٍ بعد — لم تقترح الحلقة شيئًا هذا الشهر. شغّلها الآن أو انتظر الدورة الليلية.</p> : (
+          {L && L.proposed + L.accepted + L.dismissed + L.expired === 0 ? <p className="rm-muted">لا دليل كافٍ بعد — لم تقترح الحلقة شيئًا هذا الشهر. شغّلها الآن أو انتظر الدورة الليلية.</p> : (
             <><div className="lp-lrow"><span><b>{L?.proposed}</b> اقتُرح</span><span><b>{L?.accepted}</b> قُبل</span><span><b>{L?.dismissed}</b> تُجوهل</span><span><b>{L?.expired}</b> انتهى بلا قرار</span><span><b>{L?.outcomes}</b> أثر مسجَّل</span><span><b>{L?.acceptance}%</b> نسبة القبول</span></div>
               <ul className="lp-lines">{(L?.lessons || []).map((x, i) => <li key={i}>{x}</li>)}</ul></>)}
         </section>
 
         {/* الاقتراحات */}
-        <section className="lp-card">
+        <section className="rm-card">
           <div className="lp-bar"><div className="lp-tabs"><button className={filter === 'draft' ? 'on' : ''} onClick={() => setFilter('draft')}>بانتظار قرار</button><button className={filter === 'decided' ? 'on' : ''} onClick={() => setFilter('decided')}>ما حُسم</button></div>
             <div className="lp-chips"><button className={kind === 'all' ? 'on' : ''} onClick={() => setKind('all')}>الكل</button>{KINDS.map(k => <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>{KIND_LABEL_AR[k]}</button>)}</div></div>
-          {!list.length && <p className="lp-muted" data-testid="loop-empty">{filter === 'draft' ? 'لا اقتراحات بانتظار قرار. حين تتراكم أدلة جديدة ستظهر هنا — ولن تخمّن الحلقة بلا دليل.' : 'لا قرارات بعد.'}</p>}
+          {!list.length && <p className="rm-muted" data-testid="loop-empty">{filter === 'draft' ? 'لا اقتراحات بانتظار قرار. حين تتراكم أدلة جديدة ستظهر هنا — ولن تخمّن الحلقة بلا دليل.' : 'لا قرارات بعد.'}</p>}
           <div className="lp-list" data-testid="loop-list">
             {list.map(s => (
               <article key={s.id} className={`lp-s ${s.status}`} data-kind={s.kind}>
                 <div className="lp-stop"><span className="lp-kind"><Icon name={KIND_ICON[s.kind] as any} size={13} /> {KIND_LABEL_AR[s.kind]}</span><span className="lp-score" title="الأولوية (تتعلّم من قراراتكم)">{s.score}</span>{s.status !== 'draft' && <span className={`lp-st ${s.status}`}>{s.status === 'accepted' ? 'مقبول' : s.status === 'dismissed' ? 'متجاهَل' : 'منتهٍ'}</span>}</div>
                 <h4>{s.title_ar}</h4><p>{s.why_ar}</p>
                 <div className="lp-ev">{(s.evidence || []).map((e, i) => <span key={i}><i>{e.label}</i> {e.value}</span>)}</div>
-                {s.status !== 'draft' && <div className="lp-out">{s.note && <span>ملاحظة: {s.note}</span>}{s.outcome?.kind === 'program_draft' && <span>الأثر: مسودة برنامج أُنشئت</span>}{s.outcome?.kind === 'missions' && <span>الأثر: {s.outcome.created} مهمة أُسندت</span>}<span className="lp-muted">{fmt(s.decided_at)}</span></div>}
-                {s.status === 'draft' && (open !== s.id ? <div className="lp-acts"><button className="lp-btn" onClick={() => { setOpen(s.id); setNote(''); setTpl(s.target?.template_id || ''); setEmails(''); }} data-testid="loop-open">قرّر</button><span className="lp-muted">ينتهي {fmt(s.expires_at)}</span></div> : (
+                {s.status !== 'draft' && <div className="lp-out">{s.note && <span>ملاحظة: {s.note}</span>}{s.outcome?.kind === 'program_draft' && <span>الأثر: مسودة برنامج أُنشئت</span>}{s.outcome?.kind === 'missions' && <span>الأثر: {s.outcome.created} مهمة أُسندت</span>}<span className="rm-muted">{fmt(s.decided_at)}</span></div>}
+                {s.status === 'draft' && (open !== s.id ? <div className="lp-acts"><button className="rm-btn" onClick={() => { setOpen(s.id); setNote(''); setTpl(s.target?.template_id || ''); setEmails(''); }} data-testid="loop-open">قرّر</button><span className="rm-muted">ينتهي {fmt(s.expires_at)}</span></div> : (
                   <div className="lp-decide">
                     {s.kind === 'mission' && <><label>قالب المهمة<select value={tpl} onChange={e => setTpl(e.target.value)}><option value="">— اختر —</option>{(data?.templates || []).map(t => <option key={t.id} value={t.id}>{t.title_ar}</option>)}</select></label>
                       <label>بريد المتعلمين (مفصولة بفواصل)<textarea value={emails} onChange={e => setEmails(e.target.value)} onBlur={checkReach} rows={2} placeholder="name@org.sa, …" /></label>
                       {reach && reach.length > 0 && <div className="lp-reach" data-testid="loop-reach"><b>نبض الوصول قبل الإسناد:</b> {reach.map(r => <span key={r.email} className={`lp-rc ${r.level}`} title={r.why}><i /> <bdi dir="ltr">{r.email}</bdi> — {r.label}</span>)}<small>{reach.filter(r => r.level === 'grey').length ? `${reach.filter(r => r.level === 'grey').length} بلا قناة آلية: ستصلهم رسائلهم عبر «قائمة اليد» في الإبلاغ متعدد القنوات.` : 'كل العناوين لها قناة.'}</small></div>}</>}
                     {s.kind === 'program' && <p className="lp-hint">القبول يُنشئ مسودة احتياج في «هندسة البرامج التدريبية» مملوءة بالقطاع والفجوة — لتكمل الفريق هناك.</p>}
                     <label>ملاحظة (اختيارية)<input value={note} onChange={e => setNote(e.target.value)} maxLength={600} placeholder="لماذا قبلت/تجاهلت؟ — تتعلّم الحلقة منها" /></label>
-                    <div className="lp-acts"><button className="lp-btn ok" disabled={busy === s.id} onClick={() => decide(s, 'accepted')} data-testid="loop-accept">اقبل ونفّذ</button><button className="lp-btn warn" disabled={busy === s.id} onClick={() => decide(s, 'dismissed')} data-testid="loop-dismiss">تجاهل</button><button className="lp-btn ghost" onClick={() => setOpen(null)}>إلغاء</button></div>
+                    <div className="lp-acts"><button className="rm-btn ok" disabled={busy === s.id} onClick={() => decide(s, 'accepted')} data-testid="loop-accept">اقبل ونفّذ</button><button className="rm-btn warn" disabled={busy === s.id} onClick={() => decide(s, 'dismissed')} data-testid="loop-dismiss">تجاهل</button><button className="rm-btn ghost" onClick={() => setOpen(null)}>إلغاء</button></div>
                   </div>))}
               </article>))}
           </div>
         </section>
 
         {/* توقّع القدرة المؤسسية */}
-        <section className="lp-card" data-testid="loop-forecasts">
+        <section className="rm-card" data-testid="loop-forecasts">
           <h3><Icon name="trend" size={16} /> توقّع القدرة المؤسسية (90 يومًا) — لكل جهة مؤكَّدة الأعضاء</h3>
-          {!data?.forecasts.length ? <p className="lp-muted">لا دليل كافٍ بعد — تظهر التوقّعات حين يكون لجهةٍ أعضاء مؤكَّدون تركوا أدلة تعلّم في نافذتي 45 يومًا.</p> : (
+          {!data?.forecasts.length ? <p className="rm-muted">لا دليل كافٍ بعد — تظهر التوقّعات حين يكون لجهةٍ أعضاء مؤكَّدون تركوا أدلة تعلّم في نافذتي 45 يومًا.</p> : (
             <table className="lp-tbl"><thead><tr><th>الجهة</th><th>المهارة</th><th>الاتجاه</th><th>الميل</th><th>أشخاص</th><th>أدلة</th><th>حُسب</th></tr></thead>
-              <tbody>{[...data.forecasts].sort((a, b) => ({ fading: 0, rising: 1, steady: 2, unknown: 3 }[a.trend] - { fading: 0, rising: 1, steady: 2, unknown: 3 }[b.trend]) || b.people - a.people).slice(0, 60).map((f, i) => <tr key={i}><td>{f.org_ar}</td><td>{f.skill_ar}</td><td><b style={{ color: TREND_COLOR[f.trend] }}>{TREND_AR[f.trend]}</b></td><td dir="ltr">{f.slope > 0 ? '+' : ''}{f.slope}</td><td>{f.people}{f.people < 5 && <small title="أقل من 5 — يبقى الاتجاه تقديريًا"> ⚠</small>}</td><td>{f.evidence}</td><td className="lp-muted">{fmt(f.computed_at)}</td></tr>)}</tbody></table>)}
+              <tbody>{[...data.forecasts].sort((a, b) => ({ fading: 0, rising: 1, steady: 2, unknown: 3 }[a.trend] - { fading: 0, rising: 1, steady: 2, unknown: 3 }[b.trend]) || b.people - a.people).slice(0, 60).map((f, i) => <tr key={i}><td>{f.org_ar}</td><td>{f.skill_ar}</td><td><b style={{ color: TREND_COLOR[f.trend] }}>{TREND_AR[f.trend]}</b></td><td dir="ltr">{f.slope > 0 ? '+' : ''}{f.slope}</td><td>{f.people}{f.people < 5 && <small title="أقل من 5 — يبقى الاتجاه تقديريًا"> ⚠</small>}</td><td>{f.evidence}</td><td className="rm-muted">{fmt(f.computed_at)}</td></tr>)}</tbody></table>)}
         </section>
         <p className="lp-foot">الحلقة لا تنفّذ شيئًا من تلقاء نفسها: كل أثر هنا سبقه قرار بشري مسجَّل · P15 © 2026</p>
       </div>
@@ -108,22 +112,18 @@ export default function AdminLoopPage() {
 }
 
 const CSS = `
-.lp{padding:20px 16px 48px;background:#FBF4EE;min-height:60vh;font-family:inherit}
+.lp{font-family:inherit}
 .lp-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}
-.lp-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.lp-head h1{margin:4px 0;font-size:24px;color:#3A1F36}.lp-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.7;max-width:820px}.lp-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
 .lp-run{display:inline-flex;align-items:center;gap:6px;background:#3A1F36;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer;font-family:inherit}.lp-run:disabled{opacity:.6}
-.lp-card{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:16px}.lp-card h3{margin:0 0 8px;font-size:16px;color:#3A1F36;display:flex;align-items:center;gap:6px}
 .lp-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:10px;padding:10px 12px;font-size:13px}.lp-msg{background:#ecfeff;color:#0e7490;border:1px solid #a5f3fc;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:700}
-.lp-kpis{display:flex;flex-wrap:wrap;gap:8px}.lp-kpis span{background:#fff;border:1px solid #EADFD6;border-radius:10px;padding:8px 12px;font-size:12px;color:#5C4858}.lp-kpis b{font-size:18px;color:#3A1F36;margin-inline-end:4px}
-.lp-learned{background:linear-gradient(135deg,#3A1F36,#0b3d5c);color:#fff;border:0}.lp-learned h3{color:#fde68a}.lp-learned .lp-muted{color:#D9CBC2}.lp-lrow{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.lp-lrow span{background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:12px}.lp-lrow b{font-size:16px;color:#fde68a;margin-inline-end:4px}.lp-lines{margin:6px 0 0;padding-inline-start:18px;font-size:13px;line-height:1.8;color:#EADFD6}
+.lp-learned{background:linear-gradient(135deg,#3A1F36,#0b3d5c);color:#fff;border:0}.lp-learned h3{color:#fde68a}.lp-learned .rm-muted{color:#D9CBC2}.lp-lrow{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.lp-lrow span{background:rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:12px}.lp-lrow b{font-size:16px;color:#fde68a;margin-inline-end:4px}.lp-lines{margin:6px 0 0;padding-inline-start:18px;font-size:13px;line-height:1.8;color:#EADFD6}
 .lp-bar{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}.lp-tabs button,.lp-chips button{background:#F6EBE0;border:1px solid #EADFD6;border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:#4A3645;margin-inline-end:4px}.lp-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.lp-chips button.on{background:#D4614A;color:#fff;border-color:#D4614A}
-.lp-muted{color:#B3A5AE;font-size:12px;margin:0}
 .lp-list{display:grid;gap:10px}.lp-s{border:1px solid #EADFD6;border-radius:12px;padding:12px 14px;border-inline-start:4px solid #D9A866}.lp-s[data-kind=mission]{border-inline-start-color:#D4614A}.lp-s[data-kind=org_step]{border-inline-start-color:#fb923c}.lp-s[data-kind=session_focus]{border-inline-start-color:#38bdf8}.lp-s.dismissed{opacity:.7}
 .lp-stop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.lp-kind{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#D4614A;background:#ecfeff;border-radius:999px;padding:3px 8px}.lp-score{font-size:11px;font-weight:900;color:#3A1F36;background:#fef3c7;border-radius:999px;padding:3px 8px}.lp-st{font-size:11px;border-radius:999px;padding:3px 8px;background:#F6EBE0;color:#5C4858}.lp-st.accepted{background:#dcfce7;color:#166534}.lp-st.dismissed{background:#fee2e2;color:#991b1b}
 .lp-s h4{margin:6px 0 2px;font-size:15px;color:#3A1F36}.lp-s p{margin:0;font-size:13px;color:#5C4858;line-height:1.7}
 .lp-ev{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.lp-ev span{font-size:11px;background:#FBF4EE;border:1px solid #EADFD6;border-radius:8px;padding:3px 8px;color:#4A3645}.lp-ev i{font-style:normal;color:#B3A5AE;margin-inline-end:4px}
 .lp-out{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:#166534}
-.lp-acts{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}.lp-btn{background:#3A1F36;color:#fff;border:0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}.lp-btn.ok{background:#D4614A}.lp-btn.warn{background:#fff;color:#b91c1c;border:1px solid #fecaca}.lp-btn.ghost{background:transparent;color:#8E7F8A;border:1px solid #EADFD6}.lp-btn:disabled{opacity:.6}
+.lp-acts{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
 .lp-reach{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:12px;color:#4A3645;background:#fff;border:1px solid #EADFD6;border-radius:8px;padding:8px 10px}.lp-reach b{color:#3A1F36}.lp-reach small{flex-basis:100%;color:#8E7F8A}.lp-rc{display:inline-flex;align-items:center;gap:4px}.lp-rc i{width:9px;height:9px;border-radius:50%;background:#B3A5AE;display:inline-block}.lp-rc.green i{background:#D4614A}.lp-rc.yellow i{background:#f59e0b}.lp-rc.grey i{background:#D9CBC2}
 .lp-decide{margin-top:10px;background:#FBF4EE;border:1px dashed #D9CBC2;border-radius:10px;padding:12px;display:grid;gap:8px}.lp-decide label{display:grid;gap:4px;font-size:12px;color:#5C4858;font-weight:700}.lp-decide input,.lp-decide select,.lp-decide textarea{font-family:inherit;font-size:13px;border:1px solid #D9CBC2;border-radius:8px;padding:8px}.lp-hint{margin:0;font-size:12px;color:#0e7490}
 .lp-tbl{width:100%;border-collapse:collapse;font-size:13px}.lp-tbl th{text-align:start;color:#8E7F8A;font-weight:700;border-bottom:1px solid #EADFD6;padding:6px}.lp-tbl td{padding:6px;border-bottom:1px solid #F6EBE0}

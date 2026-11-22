@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
 import ErrorState from "./components/ErrorState";
 import { Icon } from "../../lib/ui/icons";
+import { RoomHead } from '../components/RoomKit'; /* هـ-3 ك «عدّة الغرفة» */
 
 /* ============ Helpers ============ */
 function safeRating(v){const n=Number(v);return Number.isFinite(n)&&n>=1&&n<=5?n:null;}
@@ -937,8 +938,16 @@ const setLang = (v: string) => {
   }
 
   return(
-    <div className="rw" style={{direction:t.dir,fontFamily:t.font}}>
+    <div className="rw rm-page" style={{direction:t.dir,fontFamily:t.font}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
+      <RoomHead
+        title={<>{t.title}</>}
+        desc={<><p>{isAr?"بوّابة أَثَر للتعليم والتدريب والتطوير والجودة — اللوحة التحليلية":"Athar Portal — Analytics dashboard"}</p></>}
+        actions={<>
+          <button className="rm-btn" onClick={()=>setLang(isAr?"en":"ar")} aria-label={isAr?"Switch to English":"التبديل إلى العربية"}><Icon name="globe" size={16}/><span>{t.lang}</span></button>
+          <button className="rm-btn primary" onClick={()=>window.print()}><Icon name="print" size={16}/><span>{isAr?"طباعة":"Print"}</span></button>
+        </>}
+      />
       {fetchError && (
         <ErrorState
           message={fetchError}
@@ -951,24 +960,7 @@ const setLang = (v: string) => {
         />
       )}
       <div className="lay">
-        {/* Header card: logos + title + actions */}
-        <header className="rp-head noprint">
-          <div className="rp-brand">
-            <img src="/brand/athar-mark.svg" alt="أَثَر" className="rp-logo"/>
-            <div className="rp-logo-sep"/>
-            
-            <div className="rp-brand-text">
-              <b>{t.title}</b>
-              <span>{isAr?"أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة":"Athar Portal"}</span>
-            </div>
-          </div>
-          <div className="rp-actions">
-            <button className="rp-act" onClick={()=>setLang(isAr?"en":"ar")} aria-label={isAr?"Switch to English":"التبديل إلى العربية"}><Icon name="globe" size={16}/><span>{t.lang}</span></button>
-            <button className="rp-act primary" onClick={()=>router.push("/reports/center")} aria-label={isAr?"مركز التقارير":"Reports Center"}><Icon name="folder" size={16}/><span>{isAr?"مركز التقارير":"Reports Center"}</span></button>
-            <button className="rp-act" onClick={()=>router.push("/admin/management")} aria-label={isAr?"لوحة الإدارة":"Admin panel"}><Icon name="settings" size={16}/><span>{isAr?"الإدارة":"Admin"}</span></button>
-          </div>
-        </header>
-
+        
         {/* Tabs */}
         <nav className="side noprint" role="tablist" aria-label={isAr?"أقسام التقرير":"Report sections"}>
           <button className={tab==="dashboard"?"ton":"tof"} onClick={()=>setTab("dashboard")} aria-label={t.tab1} aria-current={tab==="dashboard"?"page":undefined} role="tab"><span className="nav-label"><span className="nav-ico" aria-hidden="true"><Icon name="dashboard" size={16}/></span>{t.tab1}</span></button>
@@ -1428,7 +1420,7 @@ const CSS=`
 
 @media(max-width:1150px){.g4{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:950px){
-.rw{padding:12px 12px 32px;}
+.rw{padding:0 0 32px;}
 .g2,.g4,.igrid{grid-template-columns:1fr;}
 .fgrid{grid-template-columns:1fr;}
 .rp-head{flex-direction:column;align-items:stretch;}

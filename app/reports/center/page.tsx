@@ -13,6 +13,7 @@ import { buildPptx, downloadPptx, type PptSlide } from '../../../lib/export/pptx
 import { buildReportEmailHtml, mailSubject, parseRecipients, toBase64 } from '../../../lib/email/report-mail';
 import { AUDIENCES, PERIOD_PRESETS, REPORTS, REPORT_GROUPS, reportById, type ReportDef, type SectionId } from '../../../lib/reports/catalog';
 import { Icon, REPORT_ICON } from '../../../lib/ui/icons';
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ك «عدّة الغرفة» */
 import {
   TARGET, THRESHOLDS, PERF_LABEL, RISK_LABEL, KIND_LABEL, CATEGORY_LABEL,
   actionsToTable, applyFilters, briefText, buildComments, buildEvaluations, buildFacts, commentsToTable, factsOf, groupBy,
@@ -286,7 +287,7 @@ function ReportsCenter() {
   if (loading) return <div className="rc-loading" style={{ direction: ar ? 'rtl' : 'ltr' }}><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="rc-spin" /></div>;
 
   return (
-    <div className="rc" dir={ar ? 'rtl' : 'ltr'}>
+    <div className="rc rm-page" dir={ar ? 'rtl' : 'ltr'}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {toast && <div className="rc-toast noprint">{toast}</div>}
       {mail.open && (
@@ -318,23 +319,15 @@ function ReportsCenter() {
 
 
       {/* ===== header ===== */}
-      <header className="rc-top noprint">
-        <div className="rc-top-in">
-          <button className="rc-burger" onClick={() => setMenuOpen(o => !o)} aria-label="menu">☰</button>
-          <div className="rc-brand">
-            <div className="rc-brand-ico"><Icon name="reports" size={24} /></div>
-            <div>
-            <div className="rc-ttl">{ar ? 'مركز التقارير' : 'Reports Center'}</div>
-            <div className="rc-sub">{ar ? 'تقارير متعددة الأنواع من نفس البيانات — للقراءة والتصدير واتخاذ القرار' : 'Many report types from one dataset — read, export, decide'}</div>
-            </div>
-          </div>
-          <div className="rc-actions">
-            <button className="rc-ghost" onClick={() => setLang(ar ? 'en' : 'ar')}><Icon name="globe" size={16} /> {ar ? 'English' : 'العربية'}</button>
-            <button className="rc-ghost" onClick={() => window.print()}><Icon name="print" size={16} /> {ar ? 'طباعة' : 'Print'}</button>
-            <button className="rc-ghost" onClick={() => router.push('/dashboard')}><Icon name="dashboard" size={16} /> {ar ? 'لوحة القيادة' : 'Dashboard'}</button>
-          </div>
-        </div>
-      </header>
+      <RoomHead
+        title={<>{ar ? 'مركز التقارير' : 'Reports Center'}</>}
+        desc={<><p>{ar ? 'تقارير متعددة الأنواع من نفس البيانات — للقراءة والتصدير واتخاذ القرار' : 'Many report types from one dataset — read, export, decide'}</p></>}
+        actions={<>
+            <button className="rm-btn rc-burger" onClick={() => setMenuOpen(o => !o)} aria-label="menu">☰</button>
+            <button className="rm-btn" onClick={() => setLang(ar ? 'en' : 'ar')}><Icon name="globe" size={16} /> {ar ? 'English' : 'العربية'}</button>
+            <button className="rm-btn" onClick={() => window.print()}><Icon name="print" size={16} /> {ar ? 'طباعة' : 'Print'}</button>
+        </>}
+      />
 
       <div className="rc-lay">
         {/* ===== catalog sidebar ===== */}
@@ -819,25 +812,25 @@ function scopeLabel(f: Filters, lk: Lookups, lang: Lang, preset: string): string
 
 /* ====================================================================== styles */
 const CSS = `
-.rc{min-height:100vh;color:var(--ink);background:var(--bg)}
+.rc{color:var(--ink)}
 .rc-loading{min-height:100vh;display:grid;place-items:center;background:var(--navy)}
 @keyframes rcspin{to{transform:rotate(360deg)}}
 .rc-spin{width:52px;height:52px;border:5px solid rgba(255,255,255,.14);border-top-color:var(--teal-2);border-radius:50%;animation:rcspin .9s linear infinite}
 .rc-muted{color:var(--muted-2);font-weight:700;font-size:12px}
 .rc-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:50;background:var(--navy);color:#fff;padding:10px 18px;border-radius:var(--r);font-weight:800;box-shadow:var(--shadow);border-inline-start:4px solid var(--teal-2)}
 /* ---------- page header ---------- */
-.rc-top{background:linear-gradient(135deg,var(--navy) 0%,#0b2240 100%);color:#fff;position:relative;overflow:hidden}
-.rc-top::before{content:'';position:absolute;inset:0;background:radial-gradient(600px 200px at 85% 120%,rgba(212,97,74,.35),transparent 70%)}
-.rc-top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal-2))}
-.rc-top-in{max-width:1400px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:relative}
+
+
+
+
 .rc-burger{display:none;background:rgba(255,255,255,.12);border:0;color:#fff;font-size:20px;border-radius:10px;padding:6px 12px;cursor:pointer}
-.rc-brand{flex:1;min-width:220px;display:flex;gap:14px;align-items:center}
-.rc-brand-ico{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);display:grid;place-items:center;color:#f1dfa6;flex-shrink:0}
-.rc-ttl{font-size:22px;font-weight:800;line-height:1.2}
-.rc-sub{color:#a9c4d8;font-size:12.5px;font-weight:700;margin-top:3px}
-.rc-actions{display:flex;gap:8px;flex-wrap:wrap}
-.rc-ghost{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;font-size:13px;transition:.15s}
-.rc-ghost:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35)}
+
+
+
+
+
+
+
 /* ---------- layout ---------- */
 .rc-lay{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:296px 1fr;gap:18px;padding:18px 22px 36px}
 .rc-side{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px;align-self:start;position:sticky;top:70px;max-height:calc(100vh - 84px);overflow:auto;box-shadow:var(--shadow-sm)}
@@ -882,7 +875,7 @@ const CSS = `
 .rc-sep{width:1px;height:22px;background:var(--line);margin:0 6px}
 .rc-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer;font-size:12.5px;color:var(--ink-2);transition:.15s;line-height:1.3}
 .rc-btn svg{color:var(--navy);opacity:.8}
-.rc-btn:hover{background:var(--navy-soft);border-color:#b9c7d8;color:var(--navy)}
+.rc-btn:hover{background:var(--navy-soft);border-color:#C9A6B6;color:var(--navy)}
 .rc-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 4px 12px rgba(212,97,74,.22)}
 .rc-btn.primary svg{color:#fff;opacity:1}
 .rc-btn.primary:hover{background:var(--teal-2);border-color:var(--teal-2);color:#fff}

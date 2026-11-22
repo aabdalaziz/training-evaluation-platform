@@ -11,6 +11,7 @@ import { normalizeSpec } from '../../../lib/impact/generate';
 import { TEMPLATE, DEFAULT_BARRIERS, KIND_LABEL, AUDIENCE_LABEL, ROLE_LABEL, makeToken, followupUrl, suggestOpenAt, parseRecipients, recipientsText } from '../../../lib/behavior/model';
 import type { BehaviorFollowup, BehaviorQuestion, BehaviorKind, Audience, Recipient } from '../../../lib/behavior/model';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Program = { id: string; name_ar: string; name_en?: string | null; status?: string | null; end_date?: string | null; objectives_ar?: string | null; description_ar?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null };
 type Draft = Omit<BehaviorQuestion, 'id'> & { id?: string; _tmp: string };
@@ -212,32 +213,27 @@ function Inner() {
   const allowed = ALLOWED.includes(role.toUpperCase()); const canWrite = WRITERS.includes(role.toUpperCase());
   const progClassrooms = classrooms.filter(c => !form.program_id || c.program_id === form.program_id);
   const today = new Date().toISOString().slice(0, 10);
-  if (!ready) return <div className="bf" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="bf rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
 
   return (
-    <div className="bf" dir="rtl">
+    <div className="bf rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="bf-head">
-        <div>
-          <div className="bf-kicker"><Icon name="trend" size={14} /> مركز الإدارة · كيركباتريك — المستوى 3</div>
-          <h1>متابعة أثر التدريب في بيئة العمل</h1>
-          <p>بعد 60–90 يومًا من ختام البرنامج يصل للمشرف المباشر وللمتدرب استبيان قصير: هل تغيّر السلوك والأداء فعلًا؟ تُرسل الروابط تلقائيًا في الموعد، وتُقرأ النتائج في «تقرير نقل الأثر» بجانب القياس القبلي/البعدي.</p>
-        </div>
-        <nav className="bf-nav">
-          <Link href="/dashboard" className="bf-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/reports/transfer" className="bf-btn"><Icon name="chart" size={16} /> تقرير نقل الأثر</Link>
-          <Link href="/admin/impact" className="bf-btn"><Icon name="target" size={16} /> القبلي/البعدي</Link>
-          {mode === 'edit' && <button className="bf-btn" onClick={() => { setMode('list'); setEditing(null); }}><Icon name="arrow" size={16} /> كل الحملات</button>}
-          {canWrite && mode === 'list' && <button className="bf-btn primary" onClick={() => startNew()}><Icon name="plus" size={16} /> حملة متابعة جديدة</button>}
-        </nav>
-      </header>
-      {!allowed && <div className="bf-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة.</div>}
-      {error && <div className="bf-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="bf-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
+      <RoomHead
+        title={<>متابعة أثر التدريب في بيئة العمل</>}
+        desc={<><p>بعد 60–90 يومًا من ختام البرنامج يصل للمشرف المباشر وللمتدرب استبيان قصير: هل تغيّر السلوك والأداء فعلًا؟ تُرسل الروابط تلقائيًا في الموعد، وتُقرأ النتائج في «تقرير نقل الأثر» بجانب القياس القبلي/البعدي.</p></>}
+        actions={<>
+          <Link href="/reports/transfer" className="rm-btn"><Icon name="chart" size={16} /> تقرير نقل الأثر</Link>
+          {mode === 'edit' && <button className="rm-btn" onClick={() => { setMode('list'); setEditing(null); }}><Icon name="arrow" size={16} /> كل الحملات</button>}
+          {canWrite && mode === 'list' && <button className="rm-btn primary" onClick={() => startNew()}><Icon name="plus" size={16} /> حملة متابعة جديدة</button>}
+        </>}
+      />
+      {!allowed && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة.</div>}
+      {error && <div className="rm-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="bf-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
 
       {mode === 'list' && (
-        <section className="bf-card">
+        <section className="rm-card">
           <h2><Icon name="folder" size={18} /> حملات المتابعة <span className="bf-pill">{list.length}</span></h2>
-          {!list.length && <div className="bf-empty"><Icon name="trend" size={34} /><b>لا توجد حملات بعد</b><span>ابدأ بـ «حملة متابعة جديدة» — قالب جاهز من 10 بنود، وتحديد موعد الإرسال التلقائي بعد 60 أو 90 يومًا من نهاية البرنامج.</span></div>}
+          {!list.length && <div className="rm-empty"><Icon name="trend" size={34} /><b>لا توجد حملات بعد</b><span>ابدأ بـ «حملة متابعة جديدة» — قالب جاهز من 10 بنود، وتحديد موعد الإرسال التلقائي بعد 60 أو 90 يومًا من نهاية البرنامج.</span></div>}
           <div className="bf-list">
             {list.map(f => {
               const c = counts[f.id] || { supervisor: 0, trainee: 0, trainees: 0 }; const n = Array.isArray(f.recipients) ? f.recipients.length : 0;
@@ -246,30 +242,30 @@ function Inner() {
                 <article key={f.id} className={`bf-item ${f.status}`}>
                   <div>
                     <div className="bf-item-title"><b>{f.title_ar}</b><span className={`bf-status ${f.status}`}>{f.status === 'open' ? 'مفتوحة' : f.status === 'closed' ? 'مغلقة' : 'مسودة'}</span></div>
-                    <div className="bf-muted">{pName(f.program_id)}{f.classroom_id ? ` · ${cCode(f.classroom_id)}` : ''} · بعد {f.due_days} يومًا · {due} · المستلمون {n} · الرمز <bdi className="bf-token">{f.token}</bdi></div>
+                    <div className="rm-muted">{pName(f.program_id)}{f.classroom_id ? ` · ${cCode(f.classroom_id)}` : ''} · بعد {f.due_days} يومًا · {due} · المستلمون {n} · الرمز <bdi className="bf-token">{f.token}</bdi></div>
                     <div className="bf-counts"><span>مشرفون <b>{c.supervisor}</b></span><span>متدربون <b>{c.trainee}</b></span><span className={c.trainees ? 'ok' : ''}>متدربون مقيَّمون <b>{c.trainees}</b></span>{f.auto_send ? <span className="ok">إرسال تلقائي</span> : <span>إرسال يدوي</span>}</div>
                   </div>
                   <div className="bf-actions">
-                    <button className="bf-btn small" onClick={() => setLinksFor(f)}><Icon name="link" size={14} /> الروابط / QR</button>
-                    <Link href={`/reports/transfer?followup=${f.id}`} className="bf-btn small"><Icon name="chart" size={14} /> النتائج</Link>
-                    {canWrite && <button className="bf-btn small primary" disabled={!!busy || f.status !== 'open'} onClick={() => send(f, 'send')}><Icon name="send" size={14} /> {busy === 'send-' + f.id ? 'جارٍ…' : 'إرسال الآن'}</button>}
-                    {canWrite && f.sent_at && <button className="bf-btn small" disabled={!!busy} onClick={() => send(f, 'remind')}><Icon name="mail" size={14} /> تذكير</button>}
-                    {canWrite && <button className="bf-btn small" onClick={() => startEdit(f)}><Icon name="edit" size={14} /> تعديل</button>}
-                    {canWrite && (f.status === 'open' ? <button className="bf-btn small" onClick={() => setStatus(f, 'closed')}><Icon name="pause" size={14} /> إغلاق</button> : <button className="bf-btn small" onClick={() => setStatus(f, 'open')}><Icon name="play" size={14} /> فتح</button>)}
-                    {canWrite && <button className="bf-btn small danger" onClick={() => remove(f)}><Icon name="trash" size={14} /></button>}
+                    <button className="rm-btn small" onClick={() => setLinksFor(f)}><Icon name="link" size={14} /> الروابط / QR</button>
+                    <Link href={`/reports/transfer?followup=${f.id}`} className="rm-btn small"><Icon name="chart" size={14} /> النتائج</Link>
+                    {canWrite && <button className="rm-btn small primary" disabled={!!busy || f.status !== 'open'} onClick={() => send(f, 'send')}><Icon name="send" size={14} /> {busy === 'send-' + f.id ? 'جارٍ…' : 'إرسال الآن'}</button>}
+                    {canWrite && f.sent_at && <button className="rm-btn small" disabled={!!busy} onClick={() => send(f, 'remind')}><Icon name="mail" size={14} /> تذكير</button>}
+                    {canWrite && <button className="rm-btn small" onClick={() => startEdit(f)}><Icon name="edit" size={14} /> تعديل</button>}
+                    {canWrite && (f.status === 'open' ? <button className="rm-btn small" onClick={() => setStatus(f, 'closed')}><Icon name="pause" size={14} /> إغلاق</button> : <button className="rm-btn small" onClick={() => setStatus(f, 'open')}><Icon name="play" size={14} /> فتح</button>)}
+                    {canWrite && <button className="rm-btn small danger" onClick={() => remove(f)}><Icon name="trash" size={14} /></button>}
                   </div>
                 </article>
               );
             })}
           </div>
           {sendRes && <div className="bf-note ok">{sendRes}</div>}
-          {canWrite && <div className="bf-row"><span className="bf-muted">تجربة شكل الرسالة:</span><input placeholder="بريدك" dir="ltr" value={testEmail} onChange={e => setTestEmail(e.target.value)} style={{ width: 240 }} /><button className="bf-btn small" disabled={!list.length || !!busy} onClick={() => list[0] && send(list[0], 'test')}><Icon name="mail" size={14} /> أرسل رسالة تجريبية</button></div>}
+          {canWrite && <div className="bf-row"><span className="rm-muted">تجربة شكل الرسالة:</span><input placeholder="بريدك" dir="ltr" value={testEmail} onChange={e => setTestEmail(e.target.value)} style={{ width: 240 }} /><button className="rm-btn small" disabled={!list.length || !!busy} onClick={() => list[0] && send(list[0], 'test')}><Icon name="mail" size={14} /> أرسل رسالة تجريبية</button></div>}
         </section>
       )}
 
       {mode === 'edit' && (
         <>
-          <section className="bf-card">
+          <section className="rm-card">
             <h2><Icon name="settings" size={18} /> 1) إعدادات الحملة</h2>
             <div className="bf-grid">
               <label><span>البرنامج <i>*</i></span><select value={form.program_id} onChange={e => pickProgram(e.target.value)}><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
@@ -285,22 +281,22 @@ function Inner() {
               <label className="bf-check"><input type="checkbox" checked={form.trainee_open} onChange={e => setForm({ ...form, trainee_open: e.target.checked })} /> التقييم الذاتي للمتدرب</label>
               <label className="bf-check"><input type="checkbox" checked={form.auto_send} onChange={e => setForm({ ...form, auto_send: e.target.checked })} /> إرسال تلقائي في الموعد (يتطلب قائمة مستلمين)</label>
             </div>
-            <p className="bf-muted" style={{ marginTop: 8 }}>نهاية البرنامج المسجّلة: <b>{programs.find(p => p.id === form.program_id)?.end_date || 'غير محددة'}</b>. يعمل الإرسال التلقائي يوميًا الساعة 6 صباحًا (الرياض) عبر Vercel Cron.</p>
+            <p className="rm-muted" style={{ marginTop: 8 }}>نهاية البرنامج المسجّلة: <b>{programs.find(p => p.id === form.program_id)?.end_date || 'غير محددة'}</b>. يعمل الإرسال التلقائي يوميًا الساعة 6 صباحًا (الرياض) عبر Vercel Cron.</p>
           </section>
 
-          <section className="bf-card">
+          <section className="rm-card">
             <h2><Icon name="users" size={18} /> 2) المستلمون <span className="bf-pill">{rec.recipients.length}</span></h2>
             <div className="bf-row" style={{ marginTop: 0 }}>
-              <button className="bf-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('attendance')}><Icon name="check" size={14} /> متدربون من سجل الحضور</button>
-              <button className="bf-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('evaluations')}><Icon name="evaluations" size={14} /> متدربون من التقييمات</button>
-              <span className="bf-muted">سطر لكل مستلم: <b>الاسم, البريد, الدور</b> (مشرف/متدرب) — وللمشرف يمكن إضافة <b>, اسم المتدرب, بريد المتدرب</b></span>
+              <button className="rm-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('attendance')}><Icon name="check" size={14} /> متدربون من سجل الحضور</button>
+              <button className="rm-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('evaluations')}><Icon name="evaluations" size={14} /> متدربون من التقييمات</button>
+              <span className="rm-muted">سطر لكل مستلم: <b>الاسم, البريد, الدور</b> (مشرف/متدرب) — وللمشرف يمكن إضافة <b>, اسم المتدرب, بريد المتدرب</b></span>
             </div>
             <textarea rows={6} value={recText} onChange={e => setRecText(e.target.value)} placeholder={'سارة القحطاني, sara@example.com, متدرب\nم. خالد العتيبي, khalid@example.com, مشرف, سارة القحطاني, sara@example.com'} />
             {rec.warnings.length > 0 && <div className="bf-note bad">{rec.warnings.slice(0, 5).join(' · ')}{rec.warnings.length > 5 ? ` … (+${rec.warnings.length - 5})` : ''}</div>}
             <div className="bf-counts"><span>مشرفون <b>{rec.recipients.filter(r => r.role === 'supervisor').length}</b></span><span>متدربون <b>{rec.recipients.filter(r => r.role === 'trainee').length}</b></span><span>زملاء <b>{rec.recipients.filter(r => r.role === 'peer').length}</b></span></div>
           </section>
 
-          <section className="bf-card">
+          <section className="rm-card">
             <h2><Icon name="edit" size={18} /> 3) بنود الاستبيان <span className="bf-pill">{qs.length}</span></h2>
             <div className="bf-modes">
               <button type="button" className={`bf-mode ${build === 'manual' ? 'on' : ''}`} onClick={() => setBuild('manual')}><b>القالب / يدوي</b><small>10 بنود جاهزة قابلة للتعديل: مقياس، نسبة تطبيق، معوقات، مثال</small></button>
@@ -310,7 +306,7 @@ function Inner() {
             {build === 'upload' && (
               <div className="bf-panel">
                 <textarea rows={7} value={upText} onChange={e => setUpText(e.target.value)} placeholder={'المحور: التطبيق\n1. يطبّق أساليب التقويم البديل في الفصل\n2. يستخدم أدوات رقمية لرصد تقدم الطلاب\nالمحور: نقل الأثر\n3. يدرّب زملاءه على ما تعلّمه'} />
-                <div className="bf-row"><button className="bf-btn primary" onClick={() => importUpload(false)} disabled={!upText.trim()}><Icon name="check" size={15} /> استبدال بنود المقياس</button><button className="bf-btn" onClick={() => importUpload(true)} disabled={!upText.trim()}><Icon name="plus" size={15} /> إضافة إلى البنود الحالية</button></div>
+                <div className="bf-row"><button className="rm-btn primary" onClick={() => importUpload(false)} disabled={!upText.trim()}><Icon name="check" size={15} /> استبدال بنود المقياس</button><button className="rm-btn" onClick={() => importUpload(true)} disabled={!upText.trim()}><Icon name="plus" size={15} /> إضافة إلى البنود الحالية</button></div>
               </div>
             )}
             {build === 'ai' && (
@@ -320,8 +316,8 @@ function Inner() {
                   <label><span>المحاور (سطر لكل محور)</span><textarea rows={4} value={ai.axes} onChange={e => setAi({ ...ai, axes: e.target.value })} /></label>
                   <label><span>بنود لكل محور</span><input type="number" min={1} max={6} value={ai.per_axis} onChange={e => setAi({ ...ai, per_axis: Number(e.target.value) })} /></label>
                 </div>
-                <div className="bf-row"><button className="bf-btn primary" onClick={() => runAi(false)} disabled={aiBusy}><Icon name="play" size={15} /> {aiBusy ? 'جارٍ التوليد…' : 'توليد (استبدال بنود المقياس)'}</button><button className="bf-btn" onClick={() => runAi(true)} disabled={aiBusy}><Icon name="plus" size={15} /> توليد وإضافة</button>{aiNote && <span className="bf-muted">{aiNote}</span>}</div>
-                <p className="bf-muted">يستخدم نفس إعداد الذكاء الاصطناعي لأدوات القياس القبلي/البعدي (AI_API_KEY). بدون مفتاح يعمل المولّد المحلي.</p>
+                <div className="bf-row"><button className="rm-btn primary" onClick={() => runAi(false)} disabled={aiBusy}><Icon name="play" size={15} /> {aiBusy ? 'جارٍ التوليد…' : 'توليد (استبدال بنود المقياس)'}</button><button className="rm-btn" onClick={() => runAi(true)} disabled={aiBusy}><Icon name="plus" size={15} /> توليد وإضافة</button>{aiNote && <span className="rm-muted">{aiNote}</span>}</div>
+                <p className="rm-muted">يستخدم نفس إعداد الذكاء الاصطناعي لأدوات القياس القبلي/البعدي (AI_API_KEY). بدون مفتاح يعمل المولّد المحلي.</p>
               </div>
             )}
             <div className="bf-qs">
@@ -342,18 +338,18 @@ function Inner() {
               ))}
             </div>
             <div className="bf-row">
-              <button className="bf-btn" onClick={() => addQ('scale')}><Icon name="plus" size={15} /> بند مقياس</button>
-              <button className="bf-btn" onClick={() => addQ('percent')}><Icon name="plus" size={15} /> نسبة تطبيق</button>
-              <button className="bf-btn" onClick={() => addQ('multi')}><Icon name="plus" size={15} /> معوقات</button>
-              <button className="bf-btn" onClick={() => addQ('text')}><Icon name="plus" size={15} /> سؤال مفتوح</button>
-              <button className="bf-btn" onClick={() => setQs(fromTemplate())}><Icon name="refresh" size={15} /> استعادة القالب</button>
+              <button className="rm-btn" onClick={() => addQ('scale')}><Icon name="plus" size={15} /> بند مقياس</button>
+              <button className="rm-btn" onClick={() => addQ('percent')}><Icon name="plus" size={15} /> نسبة تطبيق</button>
+              <button className="rm-btn" onClick={() => addQ('multi')}><Icon name="plus" size={15} /> معوقات</button>
+              <button className="rm-btn" onClick={() => addQ('text')}><Icon name="plus" size={15} /> سؤال مفتوح</button>
+              <button className="rm-btn" onClick={() => setQs(fromTemplate())}><Icon name="refresh" size={15} /> استعادة القالب</button>
             </div>
           </section>
 
           <div className="bf-save">
-            <button className="bf-btn primary" onClick={save} disabled={!!busy}><Icon name="save" size={16} /> {busy === 'save' ? 'جارٍ الحفظ…' : editing ? 'حفظ التعديلات' : 'إنشاء الحملة'}</button>
-            <button className="bf-btn" onClick={() => { setMode('list'); setEditing(null); }}>إلغاء</button>
-            <span className="bf-muted">بعد الإنشاء: «الروابط / QR» للمشاركة اليدوية، أو «إرسال الآن»، أو اترك الإرسال التلقائي في الموعد.</span>
+            <button className="rm-btn primary" onClick={save} disabled={!!busy}><Icon name="save" size={16} /> {busy === 'save' ? 'جارٍ الحفظ…' : editing ? 'حفظ التعديلات' : 'إنشاء الحملة'}</button>
+            <button className="rm-btn" onClick={() => { setMode('list'); setEditing(null); }}>إلغاء</button>
+            <span className="rm-muted">بعد الإنشاء: «الروابط / QR» للمشاركة اليدوية، أو «إرسال الآن»، أو اترك الإرسال التلقائي في الموعد.</span>
           </div>
         </>
       )}
@@ -362,19 +358,19 @@ function Inner() {
         <div className="bf-modal" onClick={() => setLinksFor(null)}>
           <div className="bf-modal-box" onClick={e => e.stopPropagation()}>
             <h3>{linksFor.title_ar}</h3>
-            <p className="bf-muted">{pName(linksFor.program_id)} · الرمز <bdi className="bf-token">{linksFor.token}</bdi></p>
+            <p className="rm-muted">{pName(linksFor.program_id)} · الرمز <bdi className="bf-token">{linksFor.token}</bdi></p>
             <div className="bf-links">
               {(['supervisor', 'trainee'] as const).filter(r => (r === 'supervisor' ? linksFor.supervisor_open : linksFor.trainee_open)).map(r => (
                 <div key={r} className="bf-linkcard">
                   <b>{ROLE_LABEL[r].ar}</b>
                   <div className="bf-qr" dangerouslySetInnerHTML={{ __html: qrSvg(followupUrl(linksFor.token, r), 150, 'M', NAVY) }} />
                   <span className="bf-url" dir="ltr">{followupUrl(linksFor.token, r)}</span>
-                  <button className="bf-btn small" onClick={() => copy(followupUrl(linksFor.token, r))}><Icon name="copy" size={14} /> نسخ</button>
+                  <button className="rm-btn small" onClick={() => copy(followupUrl(linksFor.token, r))}><Icon name="copy" size={14} /> نسخ</button>
                 </div>
               ))}
             </div>
-            <p className="bf-muted">رابط المشرف يسمح له بإدخال اسم المتدرب؛ ويمكن تخصيصه لمتدرب بعينه بإضافة <code dir="ltr" style={{ background: '#F6EBE0', padding: '1px 6px', borderRadius: 6 }}>?role=supervisor&amp;tn=NAME&amp;te=EMAIL</code> — وهو ما يفعله الإرسال بالبريد تلقائيًا.</p>
-            <div className="bf-row" style={{ justifyContent: 'center' }}><button className="bf-btn primary" onClick={() => window.print()}><Icon name="print" size={16} /> طباعة</button><button className="bf-btn" onClick={() => setLinksFor(null)}><Icon name="x" size={16} /> إغلاق</button></div>
+            <p className="rm-muted">رابط المشرف يسمح له بإدخال اسم المتدرب؛ ويمكن تخصيصه لمتدرب بعينه بإضافة <code dir="ltr" style={{ background: '#F6EBE0', padding: '1px 6px', borderRadius: 6 }}>?role=supervisor&amp;tn=NAME&amp;te=EMAIL</code> — وهو ما يفعله الإرسال بالبريد تلقائيًا.</p>
+            <div className="bf-row" style={{ justifyContent: 'center' }}><button className="rm-btn primary" onClick={() => window.print()}><Icon name="print" size={16} /> طباعة</button><button className="rm-btn" onClick={() => setLinksFor(null)}><Icon name="x" size={16} /> إغلاق</button></div>
           </div>
         </div>
       )}
@@ -384,20 +380,10 @@ function Inner() {
 }
 
 const CSS = `
-.bf{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.bf *{box-sizing:border-box}
-.bf-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid #D9A866;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.bf-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.bf-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:780px;line-height:1.7}
-.bf-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.bf-nav{display:flex;gap:8px;flex-wrap:wrap}
-.bf-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
-.bf-btn:disabled{opacity:.5;cursor:not-allowed}.bf-btn.primary{background:${NAVY};color:#fff;border-color:${NAVY}}.bf-btn.small{padding:6px 10px;font-size:12px}.bf-btn.danger{color:#b91c1c;border-color:#fecaca}
-.bf-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;font-weight:700;line-height:1.7}.bf-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.bf{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
+.bf *{box-sizing:border-box}.rm-btn.small{padding:6px 10px;font-size:12px}.rm-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .bf-x{border:0;background:transparent;cursor:pointer;color:inherit}
-.bf-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}.bf-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
 .bf-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858}
-.bf-muted{color:#8E7F8A;font-size:12.5px;font-weight:700;line-height:1.7}
-.bf-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;text-align:center;color:#8E7F8A;border:1px dashed #D9CBC2;border-radius:14px}.bf-empty b{color:${NAVY};font-size:15px}
 .bf-list{display:flex;flex-direction:column;gap:12px}
 .bf-item{border:1px solid #EADFD6;border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;border-inline-start:5px solid #D4614A}.bf-item.closed{border-inline-start-color:#B3A5AE;opacity:.9}.bf-item.draft{border-inline-start-color:#f59e0b}
 .bf-item-title{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.bf-item-title b{font-size:15px;color:${NAVY}}
@@ -430,6 +416,6 @@ const CSS = `
 .bf-linkcard{border:1px solid #EADFD6;border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px}.bf-linkcard b{color:${NAVY}}
 .bf-qr svg{display:block}.bf-url{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#4A3645;word-break:break-all}
 .bf-toast{position:fixed;bottom:18px;inset-inline-start:18px;background:${NAVY};color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:120}
-@media print{.bf>*:not(.bf-modal){display:none!important}.bf{padding:0;background:#fff}.bf-modal{position:static;background:#fff;padding:0;display:block}.bf-modal-box{max-width:none}.global-nav{display:none!important}}
-@media(max-width:980px){.bf{padding:12px}.bf-grid,.bf-modes,.bf-links{grid-template-columns:1fr}.bf-span2,.bf-span3{grid-column:auto}.bf-item{grid-template-columns:1fr}.bf-actions{justify-content:flex-start;max-width:none}}
+@media print{.bf>*:not(.bf-modal){display:none!important}.bf{}.bf-modal{position:static;background:#fff;padding:0;display:block}.bf-modal-box{max-width:none}.global-nav{display:none!important}}
+@media(max-width:980px){.bf{}.bf-grid,.bf-modes,.bf-links{grid-template-columns:1fr}.bf-span2,.bf-span3{grid-column:auto}.bf-item{grid-template-columns:1fr}.bf-actions{justify-content:flex-start;max-width:none}}
 `;

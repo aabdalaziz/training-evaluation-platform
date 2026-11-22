@@ -9,6 +9,7 @@ import { downloadCSV, safeFilename } from '../../../lib/export/csv';
 import { KPI_TEMPLATES, UNITS, DEFAULT_KPI, kpiRows, programOutcomeIndex, achievementLabel } from '../../../lib/outcomes/model';
 import type { OutcomeKpi, OutcomeMeasurement, KpiRow } from '../../../lib/outcomes/model';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Program = { id: string; name_ar: string; status?: string | null; end_date?: string | null };
 const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866';
 const ALLOWED = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST', 'TRAINER'];
@@ -109,29 +110,25 @@ function Inner() {
     downloadCSV(safeFilename(`outcomes_${(program?.name_ar || 'program').slice(0, 30)}`), [head, ...rows.map(r => [program?.name_ar || '', r.name_ar, r.unit, r.direction === 'up' ? 'أعلى أفضل' : 'أقل أفضل', r.baseline, r.baseline_date, r.target, r.target_date, r.current, r.measured_on, r.achievement, r.change_pct, r.weight, r.source, r.owner_name])]);
   }
 
-  if (!ready) return <div className="oc" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
-  if (!allowed) return <div className="oc" dir="rtl"><style>{CSS}</style><div className="oc-card oc-alert">هذه الصفحة متاحة للإدارة ومديري البرامج ومحللي الجودة فقط.</div></div>;
+  if (!ready) return <div className="oc rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!allowed) return <div className="oc rm-page" dir="rtl"><style>{CSS}</style><div className="rm-card rm-alert">هذه الصفحة متاحة للإدارة ومديري البرامج ومحللي الجودة فقط.</div></div>;
 
   const idxLabel = achievementLabel(summary.index);
   return (
-    <div className="oc" dir="rtl">
+    <div className="oc rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="oc-head">
-        <div>
-          <div className="oc-kicker"><Icon name="flag" size={14} /> كيركباتريك — المستوى 4 (النتائج المؤسسية)</div>
-          <h1>مؤشرات نتائج التدريب</h1>
-          <p>لكل برنامج 2–4 مؤشرات مؤسسية بخط أساس ومستهدف، ثم قياسات دورية بعد البرنامج. تُحسب نسبة تحقق المستهدف تلقائيًا وتغذّي «سلسلة الأثر 1→4».</p>
-        </div>
-        <nav className="oc-nav">
-          <Link href="/dashboard" className="oc-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href={`/reports/chain${programId ? `?program=${programId}` : ''}`} className="oc-btn primary"><Icon name="trend" size={16} /> سلسلة الأثر 1→4</Link>
-          <button className="oc-btn" onClick={exportCsv} disabled={!rows.length}><Icon name="download" size={16} /> CSV</button>
-        </nav>
-      </header>
-      {error && <div className="oc-alert">{error} <button className="oc-x" onClick={() => setError('')}>×</button></div>}
+      <RoomHead
+        title={<>مؤشرات نتائج التدريب</>}
+        desc={<><p>لكل برنامج 2–4 مؤشرات مؤسسية بخط أساس ومستهدف، ثم قياسات دورية بعد البرنامج. تُحسب نسبة تحقق المستهدف تلقائيًا وتغذّي «سلسلة الأثر 1→4».</p></>}
+        actions={<>
+          <Link href={`/reports/chain${programId ? `?program=${programId}` : ''}`} className="rm-btn primary"><Icon name="trend" size={16} /> سلسلة الأثر 1→4</Link>
+          <button className="rm-btn" onClick={exportCsv} disabled={!rows.length}><Icon name="download" size={16} /> CSV</button>
+        </>}
+      />
+      {error && <div className="rm-alert">{error} <button className="oc-x" onClick={() => setError('')}>×</button></div>}
       {flash && <div className="oc-flash">{flash}</div>}
 
-      <section className="oc-card">
+      <section className="rm-card">
         <div className="oc-filters">
           <label>البرنامج<select value={programId} onChange={e => { setProgramId(e.target.value); setEdit(null); setMeasure(null); }}>{!programs.length && <option value="">— لا توجد برامج —</option>}{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
           <div className="oc-cov"><span>التغطية</span><b>{coverage.withKpis} / {coverage.total}</b><small>برنامجًا له مؤشرات نتائج</small></div>
@@ -141,20 +138,20 @@ function Inner() {
 
       {canWrite && (
         <div className="oc-actions">
-          <button className="oc-btn primary" disabled={!programId} onClick={() => { setEdit(DEFAULT_KPI(programId)); setMeasure(null); }}><Icon name="plus" size={16} /> مؤشر جديد</button>
-          <button className="oc-btn" disabled={!programId} onClick={() => setTplOpen(o => !o)}><Icon name="book" size={16} /> إضافة من القوالب</button>
+          <button className="rm-btn primary" disabled={!programId} onClick={() => { setEdit(DEFAULT_KPI(programId)); setMeasure(null); }}><Icon name="plus" size={16} /> مؤشر جديد</button>
+          <button className="rm-btn" disabled={!programId} onClick={() => setTplOpen(o => !o)}><Icon name="book" size={16} /> إضافة من القوالب</button>
         </div>
       )}
 
       {tplOpen && (
-        <section className="oc-card oc-tpl">
+        <section className="rm-card oc-tpl">
           <h3><Icon name="book" size={16} /> قوالب مؤشرات جاهزة — اختر مجموعة لإضافتها دفعة واحدة</h3>
           <div className="oc-tpl-grid">
             {KPI_TEMPLATES.map(g => (
               <div key={g.group} className="oc-tpl-card">
                 <b>{g.group}</b>
                 <ul>{g.items.map(i => <li key={i.name_ar}>{i.name_ar} <small>({i.unit} · {i.direction === 'up' ? '↑' : '↓'})</small></li>)}</ul>
-                <button className="oc-btn small primary" disabled={busy} onClick={() => addFromTemplate(g.items)}><Icon name="plus" size={14} /> إضافة المجموعة</button>
+                <button className="rm-btn small primary" disabled={busy} onClick={() => addFromTemplate(g.items)}><Icon name="plus" size={14} /> إضافة المجموعة</button>
               </div>
             ))}
           </div>
@@ -162,7 +159,7 @@ function Inner() {
       )}
 
       {edit && (
-        <section className="oc-card oc-form">
+        <section className="rm-card oc-form">
           <h3><Icon name={edit.id ? 'edit' : 'plus'} size={16} /> {edit.id ? 'تعديل مؤشر' : 'مؤشر جديد'} — {program?.name_ar}</h3>
           <div className="oc-grid">
             <label className="span2">اسم المؤشر (عربي) *<input value={edit.name_ar} onChange={e => setEdit({ ...edit, name_ar: e.target.value })} placeholder="مثال: نسبة اجتياز اختبار المستوى" /></label>
@@ -179,35 +176,35 @@ function Inner() {
             <label className="span3">ملاحظات<input value={edit.notes || ''} onChange={e => setEdit({ ...edit, notes: e.target.value })} /></label>
           </div>
           <div className="oc-form-actions">
-            <button className="oc-btn primary" disabled={busy} onClick={saveKpi}><Icon name="save" size={16} /> {busy ? 'جارٍ الحفظ…' : 'حفظ'}</button>
-            <button className="oc-btn" onClick={() => setEdit(null)}>إلغاء</button>
+            <button className="rm-btn primary" disabled={busy} onClick={saveKpi}><Icon name="save" size={16} /> {busy ? 'جارٍ الحفظ…' : 'حفظ'}</button>
+            <button className="rm-btn" onClick={() => setEdit(null)}>إلغاء</button>
           </div>
         </section>
       )}
 
       {measure && (
-        <section className="oc-card oc-form">
+        <section className="rm-card oc-form">
           <h3><Icon name="plus" size={16} /> تسجيل قياس — {measure.kpi.name_ar}</h3>
           <div className="oc-grid">
             <label>القيمة ({measure.kpi.unit}) *<input type="number" step="any" value={measure.value} onChange={e => setMeasure({ ...measure, value: e.target.value })} dir="ltr" autoFocus /></label>
             <label>تاريخ القياس<input type="date" value={measure.measured_on} onChange={e => setMeasure({ ...measure, measured_on: e.target.value })} dir="ltr" /></label>
             <label className="span2">ملاحظة<input value={measure.note} onChange={e => setMeasure({ ...measure, note: e.target.value })} placeholder="مثال: قياس بعد 3 أشهر من نهاية البرنامج" /></label>
           </div>
-          <div className="oc-muted">خط الأساس: <bdi>{measure.kpi.baseline ?? '—'}</bdi> · المستهدف: <bdi>{measure.kpi.target ?? '—'}</bdi> · آخر قياس: <bdi>{measure.kpi.current ?? '—'}</bdi></div>
+          <div className="rm-muted">خط الأساس: <bdi>{measure.kpi.baseline ?? '—'}</bdi> · المستهدف: <bdi>{measure.kpi.target ?? '—'}</bdi> · آخر قياس: <bdi>{measure.kpi.current ?? '—'}</bdi></div>
           <div className="oc-form-actions">
-            <button className="oc-btn primary" disabled={busy} onClick={saveMeasurement}><Icon name="save" size={16} /> {busy ? 'جارٍ الحفظ…' : 'حفظ القياس'}</button>
-            <button className="oc-btn" onClick={() => setMeasure(null)}>إلغاء</button>
+            <button className="rm-btn primary" disabled={busy} onClick={saveMeasurement}><Icon name="save" size={16} /> {busy ? 'جارٍ الحفظ…' : 'حفظ القياس'}</button>
+            <button className="rm-btn" onClick={() => setMeasure(null)}>إلغاء</button>
           </div>
         </section>
       )}
 
-      {!rows.length && <div className="oc-card oc-empty"><Icon name="flag" size={34} /><b>لا توجد مؤشرات نتائج لهذا البرنامج بعد</b><span>ابدأ بـ«إضافة من القوالب» أو «مؤشر جديد»، ثم سجّل خط الأساس والمستهدف، وبعد البرنامج سجّل القياسات.</span></div>}
+      {!rows.length && <div className="rm-card rm-empty"><Icon name="flag" size={34} /><b>لا توجد مؤشرات نتائج لهذا البرنامج بعد</b><span>ابدأ بـ«إضافة من القوالب» أو «مؤشر جديد»، ثم سجّل خط الأساس والمستهدف، وبعد البرنامج سجّل القياسات.</span></div>}
 
       {rows.length > 0 && (
-        <section className="oc-card">
+        <section className="rm-card">
           <h3><Icon name="table" size={16} /> مؤشرات البرنامج ({rows.length})</h3>
           <div className="oc-tablewrap">
-            <table className="oc-table">
+            <table className="rm-table">
               <thead><tr><th>المؤشر</th><th>الاتجاه</th><th>خط الأساس</th><th>المستهدف</th><th>الحالي</th><th>التحقق</th><th>الوزن</th><th>المسؤول</th>{canWrite && <th></th>}</tr></thead>
               <tbody>
                 {rows.map(r => {
@@ -215,11 +212,11 @@ function Inner() {
                   return (
                     <>
                       <tr key={r.id}>
-                        <td><b>{r.name_ar}</b>{r.source && <div className="oc-muted">المصدر: {r.source}</div>}</td>
+                        <td><b>{r.name_ar}</b>{r.source && <div className="rm-muted">المصدر: {r.source}</div>}</td>
                         <td><span className="oc-pill">{r.direction === 'up' ? 'أعلى أفضل ↑' : 'أقل أفضل ↓'}</span></td>
-                        <td><bdi>{r.baseline ?? '—'}</bdi> {r.unit}{r.baseline_date && <div className="oc-muted"><bdi>{r.baseline_date}</bdi></div>}</td>
-                        <td><bdi>{r.target ?? '—'}</bdi> {r.unit}{r.target_date && <div className="oc-muted"><bdi>{r.target_date}</bdi></div>}</td>
-                        <td>{r.current == null ? <span className="oc-muted">لا قياس</span> : <><b><bdi>{r.current}</bdi></b> {r.unit}<div className="oc-muted"><bdi>{r.measured_on}</bdi>{r.change_pct != null && <> · <bdi>{r.change_pct > 0 ? '+' : ''}{r.change_pct}%</bdi></>}</div></>}</td>
+                        <td><bdi>{r.baseline ?? '—'}</bdi> {r.unit}{r.baseline_date && <div className="rm-muted"><bdi>{r.baseline_date}</bdi></div>}</td>
+                        <td><bdi>{r.target ?? '—'}</bdi> {r.unit}{r.target_date && <div className="rm-muted"><bdi>{r.target_date}</bdi></div>}</td>
+                        <td>{r.current == null ? <span className="rm-muted">لا قياس</span> : <><b><bdi>{r.current}</bdi></b> {r.unit}<div className="rm-muted"><bdi>{r.measured_on}</bdi>{r.change_pct != null && <> · <bdi>{r.change_pct > 0 ? '+' : ''}{r.change_pct}%</bdi></>}</div></>}</td>
                         <td>
                           <div className="oc-prog"><i style={{ width: `${r.achievement ?? 0}%` }} className={lab.tone} /></div>
                           <span className={`oc-st ${lab.tone}`}>{r.achievement == null ? '—' : `${r.achievement}%`} · {lab.ar}</span>
@@ -227,15 +224,15 @@ function Inner() {
                         <td>{r.weight}</td>
                         <td>{r.owner_name || '—'}</td>
                         {canWrite && <td className="oc-rowact">
-                          <button className="oc-btn small primary" onClick={() => { setMeasure({ kpi: r, value: '', measured_on: today(), note: '' }); setEdit(null); }}><Icon name="plus" size={13} /> قياس</button>
-                          <button className="oc-btn small" onClick={() => setOpenHist(openHist === r.id ? null : r.id)} title="سجل القياسات"><Icon name="clock" size={13} /> {r.measurements.length}</button>
-                          <button className="oc-btn small" onClick={() => { const { current, measured_on, achievement, change_pct, measurements, ...k } = r; setEdit(k); setMeasure(null); }}><Icon name="edit" size={13} /></button>
-                          <button className="oc-btn small danger" onClick={() => removeKpi(r)}><Icon name="trash" size={13} /></button>
+                          <button className="rm-btn small primary" onClick={() => { setMeasure({ kpi: r, value: '', measured_on: today(), note: '' }); setEdit(null); }}><Icon name="plus" size={13} /> قياس</button>
+                          <button className="rm-btn small" onClick={() => setOpenHist(openHist === r.id ? null : r.id)} title="سجل القياسات"><Icon name="clock" size={13} /> {r.measurements.length}</button>
+                          <button className="rm-btn small" onClick={() => { const { current, measured_on, achievement, change_pct, measurements, ...k } = r; setEdit(k); setMeasure(null); }}><Icon name="edit" size={13} /></button>
+                          <button className="rm-btn small danger" onClick={() => removeKpi(r)}><Icon name="trash" size={13} /></button>
                         </td>}
                       </tr>
                       {openHist === r.id && (
                         <tr key={r.id + '-h'} className="oc-hist"><td colSpan={canWrite ? 9 : 8}>
-                          {!r.measurements.length && <span className="oc-muted">لا توجد قياسات بعد.</span>}
+                          {!r.measurements.length && <span className="rm-muted">لا توجد قياسات بعد.</span>}
                           {r.measurements.length > 0 && <div className="oc-hist-list">{r.measurements.map(m => <div key={m.id} className="oc-hist-item"><b><bdi>{m.value}</bdi> {r.unit}</b><span><bdi>{m.measured_on}</bdi></span>{m.note && <small>{m.note}</small>}{canWrite && <button className="oc-x" onClick={() => removeMeasurement(m)} title="حذف">×</button>}</div>)}</div>}
                         </td></tr>
                       )}
@@ -245,7 +242,7 @@ function Inner() {
               </tbody>
             </table>
           </div>
-          <p className="oc-muted" style={{ marginTop: 10 }}>نسبة التحقق = (الحالي − خط الأساس) ÷ (المستهدف − خط الأساس)، محصورة بين 0 و100% ومعكوسة للمؤشرات التي «أقل أفضل». مؤشر النتائج للبرنامج = متوسط موزون بالأوزان.</p>
+          <p className="rm-muted" style={{ marginTop: 10 }}>نسبة التحقق = (الحالي − خط الأساس) ÷ (المستهدف − خط الأساس)، محصورة بين 0 و100% ومعكوسة للمؤشرات التي «أقل أفضل». مؤشر النتائج للبرنامج = متوسط موزون بالأوزان.</p>
         </section>
       )}
     </div>
@@ -253,19 +250,10 @@ function Inner() {
 }
 
 const CSS = `
-.oc{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.oc *{box-sizing:border-box}
-.oc-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.oc-head h1{margin:2px 0 4px;font-size:24px;color:${NAVY}}.oc-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:760px;line-height:1.7}
-.oc-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.oc-nav,.oc-actions{display:flex;gap:8px;flex-wrap:wrap}.oc-actions{margin-bottom:14px}
-.oc-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}.oc-btn:disabled{opacity:.5;cursor:default}
-.oc-btn.primary{background:${TEAL};border-color:${TEAL};color:#fff}.oc-btn.small{padding:5px 9px;font-size:12px;border-radius:8px}.oc-btn.danger{color:#b91c1c;border-color:#fecaca}
-.oc-alert{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:700;display:flex;justify-content:space-between;gap:10px}
+.oc{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
+.oc *{box-sizing:border-box}.oc-actions{margin-bottom:14px}.rm-btn.small{padding:5px 9px;font-size:12px;border-radius:8px}
 .oc-flash{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-weight:800}
 .oc-x{border:0;background:transparent;font:inherit;font-size:18px;cursor:pointer;color:inherit;line-height:1}
-.oc-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}.oc-card h3{margin:0 0 12px;font-size:15px;color:${NAVY};display:flex;align-items:center;gap:8px}
-.oc-muted{color:#8E7F8A;font-size:12px;font-weight:700;line-height:1.6}
 .oc-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858;white-space:nowrap}
 .oc-filters{display:grid;grid-template-columns:1fr 200px 260px;gap:12px;align-items:stretch}.oc-filters label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#5C4858;min-width:0}
 .oc select,.oc input{border:1px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;background:#fff;width:100%;min-width:0}
@@ -276,12 +264,10 @@ const CSS = `
 .oc-form{border-color:#99f6e4;background:#FBEDE7}
 .oc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.oc-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:800;color:#5C4858;min-width:0}.oc-grid .span2{grid-column:span 2}.oc-grid .span3{grid-column:span 3}
 .oc-form-actions{display:flex;gap:8px;margin-top:12px}
-.oc-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:34px;text-align:center;color:#8E7F8A}.oc-empty b{color:${NAVY};font-size:15px}
 .oc-tablewrap{overflow:auto;border:1px solid #EADFD6;border-radius:12px}
-.oc-table{width:100%;border-collapse:collapse;font-size:13px;min-width:900px}.oc-table th{background:#FBF4EE;color:#5C4858;font-size:12px;text-align:start;padding:9px 10px;border-bottom:1px solid #EADFD6;white-space:nowrap}.oc-table td{padding:9px 10px;border-bottom:1px solid #F6EBE0;vertical-align:top}
 .oc-prog{height:8px;background:#F6EBE0;border-radius:999px;overflow:hidden;width:120px;margin-bottom:4px}.oc-prog i{display:block;height:100%;border-radius:999px;background:#B3A5AE}.oc-prog i.ok{background:#059669}.oc-prog i.info{background:#2563eb}.oc-prog i.warn{background:#d97706}.oc-prog i.bad{background:#dc2626}
 .oc-st{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:900;white-space:nowrap;background:#F6EBE0;color:#5C4858}.oc-st.ok{background:#ecfdf5;color:#047857}.oc-st.info{background:#eff6ff;color:#1d4ed8}.oc-st.warn{background:#fff7ed;color:#b45309}.oc-st.bad{background:#fef2f2;color:#b91c1c}
-.oc-rowact{white-space:nowrap}.oc-rowact .oc-btn{margin-inline-end:4px}
+.oc-rowact{white-space:nowrap}.oc-rowact .rm-btn{margin-inline-end:4px}
 .oc-hist td{background:#FBF4EE}.oc-hist-list{display:flex;gap:8px;flex-wrap:wrap}.oc-hist-item{border:1px solid #EADFD6;background:#fff;border-radius:10px;padding:6px 10px;display:flex;align-items:center;gap:8px;font-size:12.5px}.oc-hist-item b{color:${TEAL}}.oc-hist-item span{color:#5C4858;font-weight:700}.oc-hist-item small{color:#B3A5AE}
-@media(max-width:980px){.oc{padding:12px}.oc-filters,.oc-tpl-grid,.oc-grid{grid-template-columns:1fr}.oc-grid .span2,.oc-grid .span3{grid-column:auto}}
+@media(max-width:980px){.oc{}.oc-filters,.oc-tpl-grid,.oc-grid{grid-template-columns:1fr}.oc-grid .span2,.oc-grid .span3{grid-column:auto}}
 `;

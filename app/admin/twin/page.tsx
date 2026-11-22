@@ -11,6 +11,7 @@ import { domainLabel } from '../../../lib/portal/skills';
 import { orgTwin, twinSkill, fmtLevel, STATUS_LABEL } from '../../../lib/portal/twin';
 import type { OrgTwinRow } from '../../../lib/portal/twin';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const fmt = (iso: string | null) => iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 type Row = { user_id: string; skill_id: string; computed_level: number; confidence: number; evidence: any[]; approved_level: number | null };
@@ -41,39 +42,42 @@ export default function AdminTwinPage() {
   const maxLv = 5;
   const Bar = ({ v, c }: { v: number; c: string }) => <div className="at-bar"><i style={{ width: `${(v / maxLv) * 100}%`, background: c }} /><b>{fmtLevel(v)}</b></div>;
 
-  if (!ready) return <div className="at"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="at-wrap"><div className="at-card">{error ? <span className="at-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  if (!ready) return <div className="at rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="at-wrap"><div className="rm-card">{error ? <span className="at-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   return (
-    <div className="at"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="at rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="at-wrap">
-        <header className="at-head"><div><span className="at-kicker"><Icon name="star" size={14} /> بوابة أَثَر · P11</span><h1>خريطة قدرات المؤسسة والشهادات الحية</h1><p>مجموع التوائم المهارية للأعضاء: أين ستكون القدرات بعد 180 يومًا إن لم يحدث شيء (السياسة أ) مقابل «محاكاة أداء واحدة شهريًا لكل عضو» (السياسة ب). المهارات الصدئة تُعرض لتتدخّل قبل أن تُفقد. أرقام إرشادية شفافة من أدلة P8 — بلا نموذج لغوي.</p></div></header>
+        <RoomHead
+        title={<>خريطة قدرات المؤسسة والشهادات الحية</>}
+        desc={<><p>مجموع التوائم المهارية للأعضاء: أين ستكون القدرات بعد 180 يومًا إن لم يحدث شيء (السياسة أ) مقابل «محاكاة أداء واحدة شهريًا لكل عضو» (السياسة ب). المهارات الصدئة تُعرض لتتدخّل قبل أن تُفقد. أرقام إرشادية شفافة من أدلة P8 — بلا نموذج لغوي.</p></>}
+      />
         <PortalAdminTabs />
         {error && <div className="at-err">{error}</div>}
         <div className="at-bar2">
           {data?.staff && <label>الجهة <select value={org} onChange={async e => { setOrg(e.target.value); await load(tok, e.target.value); }}><option value="">كل المتعلمين</option>{(data.organizations || []).map((o: any) => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>}
-          <div className="at-kpis"><span><b>{twin.members}</b> عضو</span><span><b>{twin.skills}</b> مهارة بأدلة</span><span className="rusty"><b>{twin.rusty_now}</b> صدئة الآن</span><span><b>{(data?.watchers || []).filter((w: any) => !w.unsubscribed_at).length}</b> جهة مشتركة في شهادات</span></div>
+          <div className="rm-kpis"><span><b>{twin.members}</b> عضو</span><span><b>{twin.skills}</b> مهارة بأدلة</span><span className="rusty"><b>{twin.rusty_now}</b> صدئة الآن</span><span><b>{(data?.watchers || []).filter((w: any) => !w.unsubscribed_at).length}</b> جهة مشتركة في شهادات</span></div>
           <div className="at-tabs">{([['twin', 'توأم المؤسسة'], ['rusty', `إنذار الصدأ (${rusty.length})`], ['watchers', `مشتركو الشهادات (${(data?.watchers || []).length})`]] as const).map(([k, l]) => <button key={k} type="button" className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
         </div>
 
-        {tab === 'twin' && <div className="at-card">
-          {twin.domains.length === 0 && <div className="at-empty">لا مستويات مهارات بعد لهذه المجموعة.</div>}
-          {twin.domains.length > 0 && <table className="at-table"><thead><tr><th>المجال</th><th>أعضاء</th><th>مهارات</th><th>المستوى الآن</th><th>+180 يومًا · السياسة أ (لا تدخّل)</th><th>+180 يومًا · السياسة ب (محاكاة شهرية)</th><th>صدئة الآن → أ → ب</th></tr></thead><tbody>
+        {tab === 'twin' && <div className="rm-card">
+          {twin.domains.length === 0 && <div className="rm-empty">لا مستويات مهارات بعد لهذه المجموعة.</div>}
+          {twin.domains.length > 0 && <table className="rm-table"><thead><tr><th>المجال</th><th>أعضاء</th><th>مهارات</th><th>المستوى الآن</th><th>+180 يومًا · السياسة أ (لا تدخّل)</th><th>+180 يومًا · السياسة ب (محاكاة شهرية)</th><th>صدئة الآن → أ → ب</th></tr></thead><tbody>
             {twin.domains.map((d: OrgTwinRow) => <tr key={d.domain}><td><b>{domainLabel(d.domain, 'ar')}</b></td><td>{d.members}</td><td>{d.skills}</td><td><Bar v={d.level_now} c="#3A1F36" /></td><td><Bar v={d.level_180_a} c="#b45309" /></td><td><Bar v={d.level_180_b} c="#D4614A" /><small className="at-gain">{d.level_180_b >= d.level_180_a ? `+${fmtLevel(d.level_180_b - d.level_180_a)}` : fmtLevel(d.level_180_b - d.level_180_a)} مقابل أ</small></td><td><span className="at-rust">{d.rusty_now}</span> → <span className="at-rust">{d.rusty_180_a}</span> → <span className="at-ok">{d.rusty_180_b}</span></td></tr>)}
           </tbody></table>}
           <p className="at-note">القراءة: السياسة ب تكلف ~20 دقيقة شهريًا للعضو (محاكاة بلا رسوم) وتحوّل مهارات من «صدئة» إلى «متوهّجة». استخدم الفرق بين العمودين في عرضك للجهة: الأثر المتوقّع لقرار صغير.</p>
         </div>}
 
-        {tab === 'rusty' && <div className="at-card">
-          {rusty.length === 0 && <div className="at-empty">لا مهارات مهددة بالصدأ خلال 30 يومًا. 🎉</div>}
+        {tab === 'rusty' && <div className="rm-card">
+          {rusty.length === 0 && <div className="rm-empty">لا مهارات مهددة بالصدأ خلال 30 يومًا. 🎉</div>}
           {bySkill.length > 0 && <div className="at-chips">{bySkill.map(([sid, g]) => <span key={sid} className="at-chip"><b>{skills.get(sid)?.name_ar || sid}</b> · {g.n} عضو · {g.rusty} صدئة</span>)}</div>}
-          {rusty.length > 0 && <table className="at-table"><thead><tr><th>المهارة</th><th>العضو</th><th>المستوى</th><th>الطزاجة</th><th>الحالة</th><th>تصدأ خلال</th><th>آخر دليل</th></tr></thead><tbody>
+          {rusty.length > 0 && <table className="rm-table"><thead><tr><th>المهارة</th><th>العضو</th><th>المستوى</th><th>الطزاجة</th><th>الحالة</th><th>تصدأ خلال</th><th>آخر دليل</th></tr></thead><tbody>
             {rusty.map(({ l, t }, i) => <tr key={i}><td><b>{skills.get(l.skill_id)?.name_ar}</b><br /><small dir="ltr">{skills.get(l.skill_id)?.code}</small></td><td><small dir="ltr">{l.user_id.slice(0, 8)}…</small></td><td>{fmtLevel(t.level_now)}{t.approved ? ' ✓' : ''}</td><td>{t.freshness}%</td><td><span className="at-st" style={{ background: STATUS_LABEL[t.status].color }}>{STATUS_LABEL[t.status].ar}</span></td><td>{t.status === 'rusty' ? `صدئت منذ ${Math.abs(t.rust_in_days || 0)} يومًا` : `${t.rust_in_days} يومًا`}</td><td>{t.last_at ? fmt(t.last_at) : '—'}</td></tr>)}
           </tbody></table>}
           <p className="at-note">الإجراء المقترح: أرسل للأعضاء المهددين رابط محاكاة مناسبة من <a href="/admin/sim">التدريب بالمحاكاة</a> أو أدرج المهارة في «كل يوم مهارة». يرى كل متعلم الإنذار نفسه في صفحة «توأمي».</p>
         </div>}
 
-        {tab === 'watchers' && <div className="at-card">
-          {(data?.watchers || []).length === 0 && <div className="at-empty">لا جهات مشتركة بعد. يظهر نموذج الاشتراك على كل شهادة حية في /credential/&lt;code&gt;.</div>}
-          {(data?.watchers || []).length > 0 && <table className="at-table"><thead><tr><th>البريد</th><th>الاسم / الجهة</th><th>الشهادة</th><th>صاحبها</th><th>اشترك</th><th>آخر إشعار</th><th>الحالة</th></tr></thead><tbody>
+        {tab === 'watchers' && <div className="rm-card">
+          {(data?.watchers || []).length === 0 && <div className="rm-empty">لا جهات مشتركة بعد. يظهر نموذج الاشتراك على كل شهادة حية في /credential/&lt;code&gt;.</div>}
+          {(data?.watchers || []).length > 0 && <table className="rm-table"><thead><tr><th>البريد</th><th>الاسم / الجهة</th><th>الشهادة</th><th>صاحبها</th><th>اشترك</th><th>آخر إشعار</th><th>الحالة</th></tr></thead><tbody>
             {(data!.watchers as any[]).map(w => <tr key={w.id} className={w.unsubscribed_at ? 'off' : ''}><td dir="ltr">{w.email}</td><td>{w.name || '—'}{w.organization ? ` · ${w.organization}` : ''}</td><td><a href={`/credential/${w.credential?.verify_code}`} target="_blank" rel="noreferrer">{w.credential?.title_ar}</a><br /><small dir="ltr">{w.credential?.verify_code}</small></td><td>{w.credential?.full_name || '—'}</td><td>{fmt(w.created_at)}</td><td>{fmt(w.last_notified_at)}</td><td>{w.unsubscribed_at ? 'ألغى' : 'نشط'}</td></tr>)}
           </tbody></table>}
           <p className="at-note">الإشعارات تُرسل من الكرون اليومي الموجود (followups) عند تغيّر مستوى/حالة مهارة، بحد أقصى مرة كل 6 أيام للمشترك، وأول اشتراك يُخزَّن كلقطة أساس بلا بريد.</p>
@@ -84,14 +88,10 @@ export default function AdminTwinPage() {
 }
 
 const CSS = `
-.at{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
-.at-wrap{max-width:1120px;margin:0 auto;display:grid;gap:12px}
-.at-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.at-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.7;max-width:860px}.at-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
-.at-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;overflow-x:auto}.at-empty{color:#8E7F8A;font-size:14px;text-align:center;padding:20px}.at-err{color:#b91c1c;font-size:13px}
-.at-bar2{display:grid;gap:10px}.at-bar2 label{font-size:13px;color:#4A3645;display:inline-flex;gap:8px;align-items:center}.at-bar2 select{border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;min-width:220px}
-.at-kpis{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#5C4858}.at-kpis b{font-size:20px;color:#3A1F36;margin-inline-end:4px}.at-kpis .rusty b{color:#b45309}
-.at-tabs{display:flex;gap:6px;flex-wrap:wrap}.at-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#4A3645;cursor:pointer}.at-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
-.at-table{width:100%;border-collapse:collapse;font-size:13px}.at-table th{text-align:right;color:#8E7F8A;font-weight:800;font-size:12px;padding:8px 10px;border-bottom:1px solid #EADFD6;white-space:nowrap}.at-table td{padding:9px 10px;border-bottom:1px solid #F6EBE0;vertical-align:middle;color:#2A1626}.at-table tr.off{opacity:.5}.at-table small{color:#8E7F8A}
+.at{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
+.at-wrap{max-width:1120px;margin:0 auto;display:grid;gap:12px}.at-err{color:#b91c1c;font-size:13px}
+.at-bar2{display:grid;gap:10px}.at-bar2 label{font-size:13px;color:#4A3645;display:inline-flex;gap:8px;align-items:center}.at-bar2 select{border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;min-width:220px}.rm-kpis .rusty b{color:#b45309}
+.at-tabs{display:flex;gap:6px;flex-wrap:wrap}.at-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#4A3645;cursor:pointer}.at-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.rm-table tr.off{opacity:.5}
 .at-bar{position:relative;height:18px;background:#F6EBE0;border-radius:999px;min-width:120px;overflow:hidden}.at-bar i{display:block;height:100%;border-radius:999px}.at-bar b{position:absolute;inset:0;display:grid;place-content:center;font-size:11.5px;color:#2A1626;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}.at-gain{display:block;color:#D4614A;font-weight:800;margin-top:2px}
 .at-rust{color:#b45309;font-weight:900}.at-ok{color:#D4614A;font-weight:900}.at-st{color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px}
 .at-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.at-chip{font-size:12px;background:#fff7ed;border:1px solid #fcd9b6;color:#9a3412;border-radius:999px;padding:4px 10px}

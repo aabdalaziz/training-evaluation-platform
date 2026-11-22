@@ -18,6 +18,7 @@ import { typeLabel } from '../../../lib/portal/catalog';
 import { AI_DISCLAIMER } from '../../../lib/ai/prompts';
 import type { ImpactBrief, ImpactFacts } from '../../../lib/ai/prompts';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
 type Prog = { id: string; name_ar: string; sector?: string | null; program_type?: string | null; start_date?: string | null };
@@ -84,17 +85,22 @@ function SectorImpact() {
   const unclassified = progs.filter(p => !p.sector).length;
   const classRows = progs.filter(p => !classQ || p.name_ar.includes(classQ));
 
-  if (!ready) return <div className="en"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="en-wrap"><div className="en-card">…</div></div></div>;
+  if (!ready) return <div className="en rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="en-wrap"><div className="rm-card">…</div></div></div>;
   return (
     <div className="en im"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="en-wrap">
-        <header className="en-head no-print"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>تقارير الأثر القطاعية</h1><p>مؤشرات موحّدة عبر كل الخدمات: التسجيل والحضور والشهادات ومِعيار والملف المهاري، مع الرضا والقياس القبلي/البعدي ونقل الأثر من مركز قيادة أَثَر — بحسب القطاع أو المهارة أو الجهة أو الفترة. للجهات الحكومية والممولين ولوحات المتابعة.</p></div>
-          <div className="en-acts"><button type="button" className="en-btn ghost" disabled={!applied} onClick={() => downloadXlsx(safeFilename('athar_sector_impact', 'xlsx'), impactSheets(report, applied!, names))}><Icon name="download" size={14} /> Excel</button><button type="button" className="en-btn ghost" disabled={!applied} onClick={() => window.print()}><Icon name="print" size={14} /> طباعة / PDF</button><button type="button" className="en-btn ok im-ai" disabled={!applied || busy === 'ai'} onClick={aiBrief}><Icon name="star" size={14} /> {busy === 'ai' ? 'جارٍ التوليد…' : 'موجز ذكي'}</button><Link href="/admin/skills" className="en-btn ghost"><Icon name="target" size={14} /> المهارات والجهات</Link></div></header>
+        <RoomHead
+        title={<>تقارير الأثر القطاعية</>}
+        desc={<><p>مؤشرات موحّدة عبر كل الخدمات: التسجيل والحضور والشهادات ومِعيار والملف المهاري، مع الرضا والقياس القبلي/البعدي ونقل الأثر من مركز قيادة أَثَر — بحسب القطاع أو المهارة أو الجهة أو الفترة. للجهات الحكومية والممولين ولوحات المتابعة.</p></>}
+        actions={<>
+<button type="button" className="rm-btn ghost" disabled={!applied} onClick={() => downloadXlsx(safeFilename('athar_sector_impact', 'xlsx'), impactSheets(report, applied!, names))}><Icon name="download" size={14} /> Excel</button><button type="button" className="rm-btn ghost" disabled={!applied} onClick={() => window.print()}><Icon name="print" size={14} /> طباعة / PDF</button><button type="button" className="rm-btn ok im-ai" disabled={!applied || busy === 'ai'} onClick={aiBrief}><Icon name="star" size={14} /> {busy === 'ai' ? 'جارٍ التوليد…' : 'موجز ذكي'}</button><Link href="/admin/skills" className="rm-btn ghost"><Icon name="target" size={14} /> المهارات والجهات</Link>
+        </>}
+      />
         <div className="no-print"><PortalAdminTabs /></div>
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok no-print">{notice}</div>}
 
         {/* المرشحات */}
-        <div className="en-card im-filters no-print">
+        <div className="rm-card im-filters no-print">
           <div className="en-tabs">{presets.map(p => <button key={p.key} type="button" className={f.from === p.from && f.to === p.to ? 'on' : ''} onClick={() => { const nf = { ...f, from: p.from, to: p.to }; setF(nf); run(nf); }}>{p.label.ar}</button>)}</div>
           <div className="im-grid">
             <label className="en-note">من<input type="date" value={f.from} onChange={e => setF({ ...f, from: e.target.value })} /></label>
@@ -102,7 +108,7 @@ function SectorImpact() {
             <label className="en-note">القطاع<select value={f.sector} onChange={e => setF({ ...f, sector: e.target.value })}><option value="">كل القطاعات</option>{sectors.map(s => <option key={s.code} value={s.code}>{s.name_ar}</option>)}</select></label>
             <label className="en-note">المهارة<select value={f.skill} onChange={e => setF({ ...f, skill: e.target.value })}><option value="">كل المهارات</option>{skills.map(s => <option key={s.id} value={s.id}>{s.code} · {s.name_ar}</option>)}</select></label>
             <label className="en-note">الجهة<select value={f.org} onChange={e => setF({ ...f, org: e.target.value })}><option value="">كل الجهات</option>{orgs.map(o => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>
-            <div className="en-acts" style={{ alignSelf: 'end' }}><button type="button" className="en-btn" disabled={busy === 'run'} onClick={() => run()}><Icon name="refresh" size={14} /> {busy === 'run' ? 'جارٍ الحساب…' : 'تحديث التقرير'}</button>{(f.sector || f.skill || f.org) && <button type="button" className="en-btn ghost" onClick={() => { const nf = { ...f, sector: '', skill: '', org: '' }; setF(nf); run(nf); }}>مسح المرشحات</button>}</div>
+            <div className="en-acts" style={{ alignSelf: 'end' }}><button type="button" className="rm-btn" disabled={busy === 'run'} onClick={() => run()}><Icon name="refresh" size={14} /> {busy === 'run' ? 'جارٍ الحساب…' : 'تحديث التقرير'}</button>{(f.sector || f.skill || f.org) && <button type="button" className="rm-btn ghost" onClick={() => { const nf = { ...f, sector: '', skill: '', org: '' }; setF(nf); run(nf); }}>مسح المرشحات</button>}</div>
           </div>
         </div>
 
@@ -117,7 +123,7 @@ function SectorImpact() {
             ].map(([k, v, suf]) => <div key={String(k)} className={`im-kpi ${v === null ? 'na' : ''}`}><b>{n0(v as number | null, String(suf))}</b><span>{kpiLabel(String(k), 'ar')}</span>{k === 'satisfaction' && tt.satisfaction.n > 0 && <small>{tt.satisfaction.n} استبانة</small>}{k === 'improvement' && tt.prepost.pre !== null && <small>{tt.prepost.pre} ← {tt.prepost.post}</small>}{k === 'transfer' && tt.transfer.n > 0 && <small>{tt.transfer.n} استجابة</small>}{k === 'attendance' && tt.attendance.sessions > 0 && <small>{tt.attendance.sessions} جلسة</small>}{k === 'proven' && <small>{tt.skillsApproved} معتمدة</small>}</div>)}
           </div>
           {/* السرد التنفيذي */}
-          <div className="en-card im-story"><h3><Icon name="doc" size={16} /> الخلاصة التنفيذية</h3><ul>{story.map((s, i) => <li key={i}>{s}</li>)}</ul>
+          <div className="rm-card im-story"><h3><Icon name="doc" size={16} /> الخلاصة التنفيذية</h3><ul>{story.map((s, i) => <li key={i}>{s}</li>)}</ul>
             {tt.placements.total > 0 && <div className="im-levels">{tt.placements.levels.map(l => <span key={l.level}><b>{l.level}</b> {l.n}</span>)}</div>}
             {brief && <div className="im-brief"><div className="im-briefhead"><b><Icon name="star" size={14} /> {brief.data.headline}</b><span className={`im-src ${brief.source}`}>{brief.source === 'ai' ? `نموذج: ${brief.model || 'AI'}` : 'بديل محلي'}</span></div>
               <div className="im-briefgrid">
@@ -126,7 +132,7 @@ function SectorImpact() {
                 {brief.data.risks.length > 0 && <div><h4>مخاطر وفجوات قياس</h4><ul>{brief.data.risks.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
                 {brief.data.next_quarter.length > 0 && <div><h4>الربع القادم</h4><ul>{brief.data.next_quarter.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
               </div><small className="im-disc">{AI_DISCLAIMER.ar} · <Link href="/ai">سياسة الذكاء الاصطناعي المسؤول</Link></small></div>}
-            <small className="en-muted">المنهجية: المتعلمون = تسجيلات مقبولة ضمن الفترة؛ الساعات = ساعات البرنامج × متعلموه؛ الحضور = حاضرون ÷ (جلسات × متعلمون)؛ الرضا من بنود التقويم (1–5)؛ القبلي/البعدي من أداة قياس الأثر (0–100)؛ نقل الأثر = متوسط نسبة التطبيق من المشرفين والمتدربين؛ المهارة «مُثبتة» عند مستوى ≥ 3 وثقة ≥ 35%.</small></div>
+            <small className="rm-muted">المنهجية: المتعلمون = تسجيلات مقبولة ضمن الفترة؛ الساعات = ساعات البرنامج × متعلموه؛ الحضور = حاضرون ÷ (جلسات × متعلمون)؛ الرضا من بنود التقويم (1–5)؛ القبلي/البعدي من أداة قياس الأثر (0–100)؛ نقل الأثر = متوسط نسبة التطبيق من المشرفين والمتدربين؛ المهارة «مُثبتة» عند مستوى ≥ 3 وثقة ≥ 35%.</small></div>
 
           {/* الجداول */}
           <div className="en-tabs no-print">
@@ -137,27 +143,27 @@ function SectorImpact() {
             {canWrite && <button type="button" className={tab === 'classify' ? 'on' : ''} onClick={() => setTab('classify')}><Icon name="edit" size={13} /> تصنيف البرامج{unclassified ? ` (${unclassified} بلا قطاع)` : ''}</button>}
           </div>
 
-          <div className={`en-card sk-table im-sec ${tab === 'programs' ? '' : 'print-only'}`}><h3 className="print-only">البرامج</h3>
-            {pRows.length === 0 ? <p className="en-muted" style={{ padding: 12 }}>لا برامج في هذا النطاق.</p> : <table><thead><tr><th>البرنامج</th><th>القطاع</th><th>المتعلمون</th><th>الساعات</th><th>الحضور</th><th>الرضا</th><th>قبلي ← بعدي</th><th>نقل الأثر</th><th>شهادات</th></tr></thead><tbody>
+          <div className={`rm-card sk-table im-sec ${tab === 'programs' ? '' : 'print-only'}`}><h3 className="print-only">البرامج</h3>
+            {pRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا برامج في هذا النطاق.</p> : <table><thead><tr><th>البرنامج</th><th>القطاع</th><th>المتعلمون</th><th>الساعات</th><th>الحضور</th><th>الرضا</th><th>قبلي ← بعدي</th><th>نقل الأثر</th><th>شهادات</th></tr></thead><tbody>
               {pRows.map(p => <tr key={p.id}><td><b>{p.name_ar}</b><small>{typeLabel(p.program_type, 'ar')}{p.cefr_level ? ` · ${p.cefr_level}` : ''}{p.start_date ? ` · ${p.start_date}` : ''}{p.pending ? ` · ${p.pending} قيد المراجعة` : ''}</small></td><td>{sectors.find(s => s.code === p.sector)?.name_ar || '—'}</td><td><b>{p.learners}</b>{p.orgs ? <small>{p.orgs} جهة</small> : null}</td><td>{p.hoursDelivered || '—'}</td><td>{p.attendanceRate === null ? '—' : <span className="im-bar"><i style={{ width: `${p.attendanceRate}%` }} /><em>{p.attendanceRate}%</em></span>}</td><td>{p.satisfaction?.mean ?? '—'}{p.satisfaction?.n ? <small>{p.satisfaction.n}</small> : null}</td><td>{p.prepost?.pre ?? '—'} ← {p.prepost?.post ?? '—'}{p.improvement !== null && <small className={p.improvement >= 0 ? 'up' : 'down'}>{p.improvement > 0 ? '+' : ''}{p.improvement}%</small>}</td><td>{p.transfer?.mean === null || p.transfer?.mean === undefined ? '—' : `${p.transfer.mean}%`}</td><td>{p.credentials}</td></tr>)}
             </tbody></table>}</div>
 
-          <div className={`en-card sk-table im-sec ${tab === 'orgs' ? '' : 'print-only'}`}><h3 className="print-only">مقارنة الجهات</h3>
-            {oRows.length === 0 ? <p className="en-muted" style={{ padding: 12 }}>لا جهات مرتبطة بتسجيلات في هذا النطاق. (تُربط التسجيلات بالجهة تلقائيًا عبر نطاق البريد أو التسجيل الجماعي.)</p> : <table><thead><tr><th>الجهة</th><th>القطاع</th><th>المنسوبون</th><th>المتعلمون</th><th>التسجيلات</th><th>الشهادات</th><th>متوسط المستوى</th></tr></thead><tbody>
+          <div className={`rm-card sk-table im-sec ${tab === 'orgs' ? '' : 'print-only'}`}><h3 className="print-only">مقارنة الجهات</h3>
+            {oRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا جهات مرتبطة بتسجيلات في هذا النطاق. (تُربط التسجيلات بالجهة تلقائيًا عبر نطاق البريد أو التسجيل الجماعي.)</p> : <table><thead><tr><th>الجهة</th><th>القطاع</th><th>المنسوبون</th><th>المتعلمون</th><th>التسجيلات</th><th>الشهادات</th><th>متوسط المستوى</th></tr></thead><tbody>
               {oRows.map(o => <tr key={o.id}><td><b>{o.name_ar}</b>{o.city && <small>{o.city}</small>}</td><td>{sectors.find(s => s.code === o.sector)?.name_ar || '—'}</td><td>{o.members}</td><td><span className="im-bar wide"><i style={{ width: `${Math.round((o.learners / maxLearners) * 100)}%` }} /><em>{o.learners}</em></span></td><td>{o.enrollments}</td><td>{o.credentials}{o.credPerLearner !== null && <small>{o.credPerLearner}/متعلم</small>}</td><td>{o.avg_level ?? '—'}</td></tr>)}
             </tbody></table>}</div>
 
-          <div className={`en-card sk-table im-sec ${tab === 'skills' ? '' : 'print-only'}`}><h3 className="print-only">المهارات</h3>
-            {sRows.length === 0 ? <p className="en-muted" style={{ padding: 12 }}>لا مهارات موسومة على برامج هذا النطاق — وسّم البرامج بالمهارات من «نشر البرامج».</p> : <table><thead><tr><th>الرمز</th><th>المهارة</th><th>المجال</th><th>الأطر</th><th>المتعلمون</th><th>مُثبتة</th><th>معتمدة</th><th>متوسط المستوى</th><th>البرامج</th></tr></thead><tbody>
+          <div className={`rm-card sk-table im-sec ${tab === 'skills' ? '' : 'print-only'}`}><h3 className="print-only">المهارات</h3>
+            {sRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا مهارات موسومة على برامج هذا النطاق — وسّم البرامج بالمهارات من «نشر البرامج».</p> : <table><thead><tr><th>الرمز</th><th>المهارة</th><th>المجال</th><th>الأطر</th><th>المتعلمون</th><th>مُثبتة</th><th>معتمدة</th><th>متوسط المستوى</th><th>البرامج</th></tr></thead><tbody>
               {sRows.map(s => <tr key={s.id}><td dir="ltr">{s.code}</td><td><b>{skillName(s as any, 'ar')}</b></td><td>{domainLabel(s.domain, 'ar')}</td><td><small>{[s.saqf_level ? `SAQF ${s.saqf_level}` : '', s.cefr_level ? `CEFR ${s.cefr_level}` : '', s.sdaia_code || ''].filter(Boolean).join(' · ') || '—'}</small></td><td>{s.learners}</td><td>{s.proven}{s.provenPct !== null && <small>{s.provenPct}%</small>}</td><td>{s.approved}</td><td>{s.avg_level ?? '—'}</td><td>{s.programs}</td></tr>)}
             </tbody></table>}</div>
 
-          <div className={`en-card sk-table im-sec ${tab === 'sectors' ? '' : 'print-only'}`}><h3 className="print-only">القطاعات</h3>
-            {secRows.length === 0 ? <p className="en-muted" style={{ padding: 12 }}>لا بيانات قطاعية بعد — صنّف البرامج بالقطاعات من تبويب «تصنيف البرامج»، أو اربط الجهات بقطاعاتها.</p> : <table><thead><tr><th>القطاع</th><th>البرامج</th><th>الجهات</th><th>المتعلمون</th></tr></thead><tbody>
+          <div className={`rm-card sk-table im-sec ${tab === 'sectors' ? '' : 'print-only'}`}><h3 className="print-only">القطاعات</h3>
+            {secRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا بيانات قطاعية بعد — صنّف البرامج بالقطاعات من تبويب «تصنيف البرامج»، أو اربط الجهات بقطاعاتها.</p> : <table><thead><tr><th>القطاع</th><th>البرامج</th><th>الجهات</th><th>المتعلمون</th></tr></thead><tbody>
               {secRows.map(s => <tr key={s.code}><td><b>{s.name_ar}</b><small dir="ltr">{s.code}</small></td><td>{s.programs}</td><td>{s.orgs}</td><td><span className="im-bar wide"><i style={{ width: `${Math.round((s.learners / maxLearners) * 100)}%` }} /><em>{s.learners}</em></span></td></tr>)}
             </tbody></table>}</div>
 
-          {canWrite && tab === 'classify' && <div className="en-card sk-table no-print"><div className="en-tools" style={{ padding: 12 }}><span className="en-muted">اختر قطاع كل برنامج — يُستخدم في هذا التقرير وفي الكتالوج المفتوح (JSON-LD). البرامج بلا قطاع تُحسب فقط عبر قطاع الجهة المسجّلة.</span><input placeholder="بحث باسم البرنامج…" value={classQ} onChange={e => setClassQ(e.target.value)} style={{ marginInlineStart: 'auto', border: '1px solid #D9CBC2', borderRadius: 10, padding: '7px 10px', font: 'inherit', fontSize: 13 }} /></div>
+          {canWrite && tab === 'classify' && <div className="rm-card sk-table no-print"><div className="en-tools" style={{ padding: 12 }}><span className="rm-muted">اختر قطاع كل برنامج — يُستخدم في هذا التقرير وفي الكتالوج المفتوح (JSON-LD). البرامج بلا قطاع تُحسب فقط عبر قطاع الجهة المسجّلة.</span><input placeholder="بحث باسم البرنامج…" value={classQ} onChange={e => setClassQ(e.target.value)} style={{ marginInlineStart: 'auto', border: '1px solid #D9CBC2', borderRadius: 10, padding: '7px 10px', font: 'inherit', fontSize: 13 }} /></div>
             <table><thead><tr><th>البرنامج</th><th>النوع</th><th>القطاع</th></tr></thead><tbody>{classRows.map(p => <tr key={p.id} className={p.sector ? '' : 'off'}><td><b>{p.name_ar}</b>{p.start_date && <small>{p.start_date}</small>}</td><td>{typeLabel(p.program_type, 'ar')}</td><td><select value={p.sector || ''} disabled={busy === 'cls' + p.id} onChange={e => setProgramSector(p.id, e.target.value)}><option value="">— بلا قطاع —</option>{sectors.map(s => <option key={s.code} value={s.code}>{s.name_ar}</option>)}</select></td></tr>)}</tbody></table></div>}
 
           <div className="im-foot print-only">© 2026 د. أحمد محمد عبدالعزيز بدوي — بوابة أَثَر · تقرير مُولَّد آليًا من بيانات المنصة؛ المؤشرات التقويمية (الرضا/القبلي-البعدي/نقل الأثر) من منصة التقويم المتكاملة.</div>
@@ -168,14 +174,11 @@ function SectorImpact() {
 }
 
 const CSS = `
-.en{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
+.en{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .en-wrap{max-width:1120px;margin:0 auto;display:grid;gap:12px}
-.en-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.en-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.en-head p{margin:0;color:#8E7F8A;font-size:14px;max-width:760px}.en-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#D4614A}
-.en-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:14px 16px}.en-muted{color:#8E7F8A;font-size:13.5px}
 .en-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.en-tabs{display:flex;gap:6px;flex-wrap:wrap}.en-tabs button{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;color:#4A3645;display:inline-flex;gap:5px;align-items:center}.en-tabs button.on{background:#3A1F36;border-color:#3A1F36;color:#fff}
 .en-note{display:grid;gap:4px;font-size:12.5px;font-weight:800;color:#4A3645}.en-note input,.en-note select{font:inherit;font-size:13.5px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;background:#fff;font-weight:500}
 .en-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.en-btn{display:inline-flex;gap:6px;align-items:center;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;text-decoration:none;background:#3A1F36;color:#fff;border:1px solid #3A1F36}.en-btn.ghost{background:#fff;color:#3A1F36;border-color:#D9CBC2;padding:6px 10px}.en-btn:disabled{opacity:.6;cursor:not-allowed}
 .en-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}.en-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}
 .sk-table{overflow:auto;padding:0}.sk-table table{width:100%;border-collapse:collapse;font-size:13px}.sk-table th{background:#F6EBE0;color:#4A3645;font-size:12px;text-align:start;padding:9px 10px;white-space:nowrap}.sk-table td{padding:9px 10px;border-top:1px solid #F6EBE0;vertical-align:top}.sk-table td b{color:#2A1626;font-size:13.5px}.sk-table td small{display:block;color:#8E7F8A;font-size:11.5px;margin-top:2px}.sk-table tr.off{opacity:.65}.sk-table select{font:inherit;font-size:12.5px;border:1px solid #D9CBC2;border-radius:8px;padding:5px 8px;background:#fff}
 .im-filters{display:grid;gap:10px}.im-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
@@ -188,5 +191,5 @@ const CSS = `
 small.up{color:#047857!important;font-weight:900}small.down{color:#b91c1c!important;font-weight:900}
 .im-print-head,.print-only{display:none}
 @media(max-width:900px){.im-grid{grid-template-columns:repeat(2,1fr)}.im-kpis{grid-template-columns:repeat(3,1fr)}}
-@media print{@page{size:A4;margin:12mm}.en{padding:0;background:#fff}.no-print,header.en-head,nav,.pat{display:none!important}.print-only{display:block}.im-print-head{display:block;border-bottom:3px solid #D9A866;padding-bottom:8px;margin-bottom:6px}.im-print-head h2{margin:2px 0;color:#3A1F36;font-size:22px}.im-print-head p{margin:0;color:#8E7F8A;font-size:12px}.im-kpis{grid-template-columns:repeat(4,1fr)}.im-kpi{break-inside:avoid}.en-card{break-inside:avoid;border-color:#D9CBC2}.sk-table h3{margin:10px 12px 4px;font-size:15px;color:#3A1F36}.im-sec{margin-top:6px}.im-foot{margin-top:10px;font-size:11px;color:#8E7F8A;text-align:center}}
+@media print{@page{size:A4;margin:12mm}.en{}.print-only{display:block}.im-print-head{display:block;border-bottom:3px solid #D9A866;padding-bottom:8px;margin-bottom:6px}.im-print-head h2{margin:2px 0;color:#3A1F36;font-size:22px}.im-print-head p{margin:0;color:#8E7F8A;font-size:12px}.im-kpis{grid-template-columns:repeat(4,1fr)}.im-kpi{break-inside:avoid}.sk-table h3{margin:10px 12px 4px;font-size:15px;color:#3A1F36}.im-sec{margin-top:6px}.im-foot{margin-top:10px;font-size:11px;color:#8E7F8A;text-align:center}}
 `;
