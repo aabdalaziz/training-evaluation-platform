@@ -13,7 +13,7 @@ import { AtharMark } from './Brand';
 
 type Item = { id: string; kind: 'news' | 'auto'; zone?: string; title: string; body: string; href: string | null; tone: string; pinned: boolean };
 type Group = { zone: string; label: string; items: Item[] };
-export const ZONE_LABEL: Record<string, string> = { miaar: 'مِعيار', iqra: 'اقْرَأْ', programs: 'البرامج', org: 'الجهات', experts: 'الخبراء', staff: 'الطاقم', portal: 'أَثَر' };
+export const ZONE_LABEL: Record<string, string> = { miaar: 'مِعيار', iqra: 'اقْرَأْ', programs: 'البرامج', org: 'الجهات', experts: 'خبراء أَثَر', staff: 'الطاقم', portal: 'أَثَر' };
 const ZONE_ORDER = ['portal', 'miaar', 'iqra', 'programs', 'org', 'experts', 'staff'];
 const cache = new Map<string, { at: number; items: Item[] }>();
 

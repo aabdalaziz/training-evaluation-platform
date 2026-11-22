@@ -8,7 +8,7 @@ import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { PortalShell, useLang } from '../../components/PortalShell';
 import { t, fmtDate } from '../../../lib/portal/content';
-import { DOMAINS, domainLabel, domainTone, skillName, frameworkBadges } from '../../../lib/portal/skills';
+import { DOMAINS, loadDomains, domainLabel, domainTone, skillName, frameworkBadges } from '../../../lib/portal/skills';
 import type { Skill } from '../../../lib/portal/skills';
 import { displayLevel, levelName, confidenceLabel, EVIDENCE_LABEL, SHARE_MODES, credentialTitle, credentialKindLabel, credentialStatus } from '../../../lib/portal/profile';
 import type { SkillLevelRow, Credential, ShareMode } from '../../../lib/portal/profile';
@@ -39,6 +39,7 @@ function Inner() {
     if (!j.success) { setErr(j.error || 'خطأ'); return; }
     setProfile(j.profile); setLevels(j.levels || []); setCreds(j.credentials || []);
     const ids = Array.from(new Set([...(j.levels || []).map((l: any) => l.skill_id), ...(j.credentials || []).flatMap((c: any) => c.skills || [])])) as string[];
+    await loadDomains(db); // هـ-2 (ب): المجالات الحيّة
     if (ids.length) { const [{ data: sk }, { data: rs }] = await Promise.all([db.from('portal_skills').select('*').in('id', ids), db.from('portal_resources').select('id,title_ar,title_en,type,level,access,skills,status').eq('status', 'published').overlaps('skills', ids).limit(6)]); setSkills(new Map(((sk || []) as Skill[]).map(s => [s.id, s]))); setNext((rs || []) as Resource[]); }
   }
   useEffect(() => { (async () => { try { const { data: { user: u } } = await db.auth.getUser(); if (u) { setUser({ id: u.id, email: u.email || '' }); try { localStorage.removeItem(RESUME_KEY); } catch { /* ignore */ } await load(); } } catch { /* ignore */ } setLoaded(true); })(); }, [db]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -39,8 +39,8 @@ export const ROUTES: Entry[] = [
   P('onair-seasons', '/on-air/seasons', 'مواسم أَثَر معك', 'On-air seasons', ['موسم', 'season']),
   P('miaar', '/miaar', 'مِعيار — حدّد مستواك في اللغة العربية', 'Miaar — Arabic placement test', ['معيار', 'miaar', 'اختبار', 'تحديد المستوى', 'placement', 'cefr', 'مستواك', 'a1', 'c2']),
   P('miaar-trust', '/miaar/trust', 'مِعيار — سجلّ الصدق (موثوقية كل مستوى)', 'Miaar — trust ledger (reliability per level)', ['صدق', 'موثوقية', 'trust', 'reliability', 'معيار']),
-  P('experts', '/experts', 'هيئة أَثَر — الخبراء', 'Athar faculty — experts', ['خبير', 'expert', 'هيئة']),
-  P('trainers', '/trainers', 'هيئة أَثَر — المدرّبون', 'Athar faculty — trainers', ['مدرب', 'trainer', 'هيئة', 'سيرة']),
+  P('experts', '/experts', 'خبراء أَثَر', 'Athar experts', ['خبير', 'expert', 'هيئة']),
+  P('trainers', '/trainers', 'مدرّبو أَثَر', 'Athar trainers', ['مدرب', 'trainer', 'هيئة', 'سيرة']),
   P('org', '/org', 'بوابة الجهات والمؤسسات', 'Organizations portal', ['مؤسسة', 'جهة', 'منظمة', 'org', 'organization', 'شركة', 'جامعة']),
   P('verify', '/verify', 'التحقق من شهادة', 'Verify a credential', ['تحقق', 'شهادة', 'verify', 'qr', 'رمز']),
   P('ai', '/ai', 'الذكاء الاصطناعي المسؤول', 'Responsible AI', ['ai', 'ذكاء', 'اثير', 'athir', 'gemini']),
@@ -68,7 +68,7 @@ export const ROUTES: Entry[] = [
   P('me-data', '/me/data', 'بياناتي وحقوقي', 'My data & rights', ['بيانات', 'data', 'حذف', 'تصدير', 'pdpl'], 'user', 'me'),
   P('me-access', '/me/access', 'تفضيلات الوصول', 'Access preferences', ['وصول', 'access', 'تباين', 'خط'], 'user', 'me'),
   P('me-horizon', '/me/horizon', 'أفقي', 'My horizon', ['افق', 'horizon', 'عهد'], 'user', 'me'),
-  P('me-directory', '/me/directory', 'سيرتي في هيئة أَثَر', 'My faculty CV', ['سيرة', 'cv', 'هيئة', 'خبير', 'مدرب'], 'user', 'me'),
+  P('me-directory', '/me/directory', 'سيرتي الذاتية في هيئة أَثَر الاستشارية', 'My faculty CV', ['سيرة', 'cv', 'هيئة', 'خبير', 'مدرب'], 'user', 'me'),
   P('me-agents', '/me/agents', 'وكلائي المفوَّضون', 'My delegated agents', ['وكيل', 'agent', 'مفتاح'], 'user', 'me'),
   P('me-onair', '/me/onair', 'أَثَر معك — طلباتي', 'On air — my requests', ['طلب', 'مساعد', 'on air'], 'user', 'me'),
   P('me-pair', '/me/pair', 'شريكي', 'My pair', ['شريك', 'pair', 'زميل'], 'user', 'me'),
@@ -101,7 +101,7 @@ export const ROUTES: Entry[] = [
   P('admin-sim', '/admin/sim', 'التدريب بالمحاكاة', 'Simulation training', ['محاكي', 'محاكيات', 'اثير', 'سيناريو'], 'staff', 'admin'),
   P('admin-twin', '/admin/twin', 'خريطة قدرات المؤسسة', 'Organization capability map', ['توام', 'توأم المؤسسة', 'قدرات', 'twin'], 'staff', 'admin'),
   P('admin-missions', '/admin/missions', 'مهمات العمل', 'Workflow missions', ['مهمة'], 'staff', 'admin'),
-  P('admin-directory', '/admin/directory', 'هيئة أَثَر — الاعتماد', 'Faculty — approvals', ['هيئة', 'خبير', 'مدرب', 'سيرة', 'اعتماد'], 'staff', 'admin'),
+  P('admin-directory', '/admin/directory', 'هيئة أَثَر الاستشارية — توثيق أَثَر', 'Advisory body — approvals', ['هيئة', 'خبير', 'مدرب', 'سيرة', 'اعتماد'], 'staff', 'admin'),
   P('admin-inclusion', '/admin/inclusion', 'إتاحة الوصول — البلاغات', 'Accessibility reports', ['وصول', 'أثر للجميع', 'إتاحة', 'عائق', 'wcag'], 'staff', 'admin'),
   P('admin-onair', '/admin/onair', 'اسأل خبيرًا — الإدارة', 'Ask an expert — admin', ['على الهواء', 'أثر معك', 'خبير', 'مساعد', 'امانة'], 'staff', 'admin'),
   P('admin-after', '/admin/after', 'المتابعة بعد التدريب', 'Post-training follow-up', ['محطات', 'متابعة', 'بعد البرنامج', 'بعد'], 'staff', 'admin'),
@@ -192,7 +192,7 @@ export function suggestions(ctx: { user: boolean; staff: boolean; recent?: strin
 }
 export const GROUP_LABEL: Record<Group, { ar: string; en: string }> = {
   page: { ar: 'صفحات', en: 'Pages' }, me: { ar: 'حسابي', en: 'My account' }, admin: { ar: 'الإدارة', en: 'Admin' }, command: { ar: 'أوامر', en: 'Commands' },
-  program: { ar: 'برامج', en: 'Programs' }, resource: { ar: 'حقائب', en: 'Resources' }, person: { ar: 'هيئة أَثَر', en: 'Faculty' }, sim: { ar: 'محاكيات', en: 'Simulations' },
+  program: { ar: 'برامج', en: 'Programs' }, resource: { ar: 'حقائب', en: 'Resources' }, person: { ar: 'هيئة أَثَر الاستشارية', en: 'Faculty' }, sim: { ar: 'محاكيات', en: 'Simulations' },
   session: { ar: 'جلسات', en: 'Sessions' }, credential: { ar: 'شهاداتي', en: 'My credentials' }, result: { ar: 'نتائج مِعيار', en: 'Miaar results' }, org: { ar: 'مؤسسات', en: 'Organizations' },
   invite: { ar: 'دعوات', en: 'Invitations' }, item: { ar: 'بنود البنك', en: 'Bank items' }, trainee: { ar: 'متدرّبون', en: 'Trainees' }, answer: { ar: 'إجابة أثير', en: 'Athir answer' },
 };

@@ -27,7 +27,7 @@ export const DOORS: Record<DoorSlug, Door> = {
   finance: { title_ar: 'المالية', title_en: 'Finance', roles: ['FINANCE_MANAGER'], lead: 'المدفوعات والعقود والتحصيل — بلا الوصول إلى ما لا يخصّ المالية.', links: [
     { href: '/admin/payments', label: 'المدفوعات', hint: 'الحالة والتحصيل' }, { href: '/admin/contracts', label: 'العقود', hint: 'عقود التعاون' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'الطلبات والعروض' }] },
   expert: { title_ar: 'الخبراء والمستشارون', title_en: 'Experts & consultants', roles: ['CONSULTANT', 'EXPERT'], lead: 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر — ومهامك عقدٌ على كل مهمة.', links: [
-    { href: '/experts', label: 'هيئة أَثَر — الخبراء', hint: 'ملفك العام' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك ومهامك' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'المهام المسندة' }] },
+    { href: '/experts', label: 'خبراء أَثَر', hint: 'ملفك العام' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك ومهامك' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'المهام المسندة' }] },
   trainer: { title_ar: 'المدرّبون', title_en: 'Trainers', roles: ['TRAINER'], lead: 'برامجك، جلساتك الحيّة، حضور متدرّبيك، وما قاله المتدرّبون عن الأثر.', links: [
     { href: '/me/day', label: 'دفتر اليوم', hint: 'صباحك في صفحة واحدة: جلساتك، من غاب، من توقّف، و«كلمة»' }, /* P51 */ { href: '/trainers', label: 'هيئة أَثَر — المدرّبون', hint: 'ملفك العام' }, { href: '/admin/live', label: 'جلساتي الحيّة', hint: 'الغرف والروابط' }, { href: '/admin/attendance', label: 'الحضور', hint: 'جلساتك' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك وشهاداتك' }] },
 };
@@ -39,7 +39,7 @@ export const DOOR_STEPS: Record<DoorSlug, [string, string, string]> = {
   quality: ['اقرأ اقتراحات حلقة التحسين — اقبل أو ارفض بالأدلة', 'اعتمد بنود بنك مِعيار «قيد المراجعة» مستوى مستوى', 'تحقّق من الاستبانات المفتوحة ومواعيد إغلاقها'],
   operations: ['ابدأ بالوارد الجديد ثم المهام المتأخرة', 'طلبات حقوق البيانات لها 30 يومًا نظامًا — الأقدم أولًا', 'راجع التنبيهات: ما أُرسل وما فشل وما ينتظر قناة بديلة'],
   finance: ['الفواتير «قيد المراجعة» تحتاج تأكيد الدفع يدويًا', 'راجع المتأخّر عن موعده وتواصل عبر قناة المشارك المفضّلة', 'عقود الأثر النشطة: ما الدفعة التالية وما دليلها؟'],
-  expert: ['أكمل سيرتك في هيئة أَثَر — الصورة شرط للاعتماد', 'راجع عقود المهام المقترحة ووقّع ما توافق عليه', 'فعّل «أثر معك» ليصلك ما يخصّك فقط'],
+  expert: ['أكمل سيرتك الذاتية في هيئة أَثَر الاستشارية — الصورة شرط للاعتماد', 'راجع عقود المهام المقترحة ووقّع ما توافق عليه', 'فعّل «أثر معك» ليصلك ما يخصّك فقط'],
   trainer: ['راجع جلساتك القادمة وجرّب رابط الغرفة', 'سجّل الحضور في نهاية كل جلسة — هو دليل الأثر الأول', 'اقرأ ما قاله متدرّبوك في مرآة الأداء'],
 };
 
@@ -207,7 +207,7 @@ const CALC: Record<DoorSlug, Calc> = {
         { key: 'unpaid', label: 'فواتير غير مدفوعة', value: unpaid, unit: sar(money(unpaidSum)), href: '/admin/payments', tone: 'navy' },
         { key: 'overdue', label: 'متأخّرة عن موعدها', value: overdue, href: '/admin/payments', tone: overdue ? 'warn' : undefined },
         { key: 'contracts', label: 'عقود أثر نشطة', value: contracts, unit: sar(money(contractsSum)), href: '/admin/contracts', tone: 'gold' },
-        { key: 'engagements', label: 'مهام هيئة أَثَر نشطة', value: engagements, unit: sar(money(engagementsSum)), href: '/admin/directory' },
+        { key: 'engagements', label: 'مهام هيئة أَثَر الاستشارية نشطة', value: engagements, unit: sar(money(engagementsSum)), href: '/admin/directory' },
         { key: 'quotes', label: 'عروض أسعار مرسلة', value: quotes, href: '/admin/consulting' }],
       decisions: dropNull([dec('review', 'فاتورة قيد المراجعة تنتظر تأكيد الدفع', review, '/admin/payments', true), dec('overdue', 'فاتورة متأخّرة تحتاج متابعة', overdue, '/admin/payments')]),
     };
@@ -232,7 +232,7 @@ async function personalDoor(db: any, me: Me, face: 'expert' | 'trainer'): Promis
     sumRows(db, 'portal_directory_engagements', 'fee_amount', q => byMe(q).eq('status', 'active')),
   ]);
   const indicators: Indicator[] = [
-    { key: 'profile', label: 'سيرتي في هيئة أَثَر', value: profile ? (PROFILE_STATE_AR[profile.status] || profile.status) : 'لم تُنشأ بعد', href: profile?.slug && profile.status === 'approved' ? `${dirHref}/${profile.slug}` : dirHref, tone: profile?.status === 'approved' ? 'teal' : 'gold' },
+    { key: 'profile', label: 'سيرتي الذاتية في هيئة أَثَر الاستشارية', value: profile ? (PROFILE_STATE_AR[profile.status] || profile.status) : 'لم تُنشأ بعد', href: profile?.slug && profile.status === 'approved' ? `${dirHref}/${profile.slug}` : dirHref, tone: profile?.status === 'approved' ? 'teal' : 'gold' },
     { key: 'active', label: 'مهام نشطة', value: active, unit: feeActive && feeActive.sum ? `${feeActive.sum.toLocaleString('en-US')} ر.س` : undefined, href: '/me', tone: 'navy' },
     { key: 'completed', label: 'مهام مكتملة', value: completed, href: '/me' },
   ];

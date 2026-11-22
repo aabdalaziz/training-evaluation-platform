@@ -92,9 +92,9 @@ function Inner() {
   return (
     <main className="dr me" dir="rtl" data-testid="me-directory"><style dangerouslySetInnerHTML={{ __html: DR_CSS + CSS }} />
       <header className="dr-hero">
-        <span className="pt-kicker"><Icon name="users" size={14} /> هيئة أَثَر · {rules.tagline_ar}</span>
-        <h1>سيرتي في هيئة أَثَر</h1>
-        <p>اكتب سيرتك بكلماتك، وأَثَر يضع بجانبها ما شهده لك من سجلاته. يراجعها الطاقم ويعتمدها بشهادة توثيق موقَّعة؛ ثم تُدرَج في <Link href="/experts">هيئة الخبراء</Link> و/أو <Link href="/trainers">هيئة المدربين</Link>. لا يظهر بريدك ولا هاتفك لأحد.</p>
+        <span className="pt-kicker"><Icon name="users" size={14} /> هيئة أَثَر الاستشارية · {rules.tagline_ar}</span>
+        <h1>سيرتي الذاتية في هيئة أَثَر الاستشارية</h1>
+        <p>اكتب سيرتك الذاتية بكلماتك، وأَثَر يضع بجانبها ما شهده لك من سجلاته. يراجعها الطاقم ويعتمدها بشهادة توثيق موقَّعة؛ ثم تُدرَج في <Link href="/experts">هيئة الخبراء</Link> و/أو <Link href="/trainers">هيئة المدربين</Link>. لا يظهر بريدك ولا هاتفك لأحد.</p>
       </header>
       {/* الحالة */}
       <section className={`me-status s-${st}`} aria-labelledby="st-h" data-testid="me-status">

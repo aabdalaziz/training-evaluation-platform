@@ -32,7 +32,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/miaar/rating', label: 'تصحيح الاختبارات', hint: 'أداءات الكتابة والتحدّث — يقرؤها إنسان', icon: 'edit', perms: ['miaar.rate', 'miaar.write'] }, /* م4-ج: باب المصحّح وحده — قبل /admin/miaar لأن roomFor يأخذ أوّل مطابقة */
   { href: '/admin/miaar', label: 'إدارة مِعيار', hint: 'البنك · النماذج · الدعوات', icon: 'target', perms: ['miaar.write', 'miaar.bank.write', 'miaar.forms.write'] },
   { href: '/admin/roles', label: 'الأدوار والدعوات', hint: 'باب واحد لكل صفة · للطاقم قراءة وللمدير كتابة', icon: 'users', perms: ['staff'] },
-  { href: '/admin/directory', label: 'هيئة أَثَر', hint: 'اعتماد السير · المدرّبون والخبراء', icon: 'users', perms: ['invites.write'] },
+  { href: '/admin/directory', label: 'هيئة أَثَر الاستشارية', hint: 'توثيق أَثَر · خبراء أَثَر ومدرّبو أَثَر', icon: 'users', perms: ['invites.write'] },
   { href: '/admin/enrollments', label: 'طلبات التسجيل والمدفوعات', hint: 'طلبات التسجيل · المدفوعات · نشر البرامج · رسائل التواصل', icon: 'globe', perms: ['enrollments.write', 'payments.write'], side: true },
   { href: '/admin/notifications', label: 'مركز الإشعارات', hint: 'تنبيهات الجودة التلقائية', icon: 'bell', perms: ['staff'], side: true },
   { href: '/admin/certificates', label: 'الشهادات الإلكترونية', hint: 'إصدار · تحقق QR · إرسال', icon: 'certificate', perms: ['credentials.write', 'programs.write'], side: true },

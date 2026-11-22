@@ -151,7 +151,7 @@ function Inner() {
         <li>{ar ? 'احتياجاتك (أَثَر يلبّي احتياجاتي) لا تدخل في اختيار من يردّ — إلا إن طلبت مترجم إشارة بنفسك.' : 'Your access needs never enter matching — unless you ask for an interpreter yourself.'}</li>
       </ol>
       <p className="pt-muted">{d?.privacy_ar}</p>
-      <p><Link href="/experts" className="pt-btn ghost small">{ar ? 'هيئة أَثَر' : 'Athar Faculty'}</Link> <Link href="/accessibility" className="pt-btn ghost small">{ar ? 'بيان الوصول' : 'Accessibility'}</Link> <Link href="/verify/vc" className="pt-btn ghost small">{ar ? 'تحقّق من شهادة' : 'Verify a certificate'}</Link></p>
+      <p><Link href="/experts" className="pt-btn ghost small">{ar ? 'هيئة أَثَر الاستشارية' : 'Athar Advisory Body'}</Link> <Link href="/accessibility" className="pt-btn ghost small">{ar ? 'بيان الوصول' : 'Accessibility'}</Link> <Link href="/verify/vc" className="pt-btn ghost small">{ar ? 'تحقّق من شهادة' : 'Verify a certificate'}</Link></p>
     </section>
   </main>;
 }

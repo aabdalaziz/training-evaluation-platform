@@ -10,8 +10,8 @@ import { Icon } from '../../../lib/ui/icons';
 import { downloadXlsx } from '../../../lib/export/xlsx';
 import { safeFilename } from '../../../lib/export/csv';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
-import { DOMAINS, SKILL_LEVELS, CEFR, SAQF_LEVELS, SECTORS_FALLBACK, EMPTY_SKILL, validateSkill, skillPayload, skillToForm, nextSkillCode, domainLabel, skillLevelLabel, frameworkBadges, EMPTY_ORG, validateOrg, orgPayload, orgToForm, skillsSheet, orgsSheet } from '../../../lib/portal/skills';
-import type { Skill, Sector, Organization, SkillForm, OrgForm, SkillDomain } from '../../../lib/portal/skills';
+import { DOMAINS, loadDomains, registerDomains, EMPTY_DOMAIN, validateDomain, domainPayload, DOMAIN_TONES, SKILL_LEVELS, CEFR, SAQF_LEVELS, SECTORS_FALLBACK, EMPTY_SKILL, validateSkill, skillPayload, skillToForm, nextSkillCode, domainLabel, skillLevelLabel, frameworkBadges, EMPTY_ORG, validateOrg, orgPayload, orgToForm, skillsSheet, orgsSheet } from '../../../lib/portal/skills';
+import type { Skill, Sector, Organization, SkillForm, OrgForm, SkillDomain, DomainForm } from '../../../lib/portal/skills';
 
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
@@ -28,10 +28,12 @@ function SkillsAdmin() {
   const [sf, setSf] = useState<SkillForm | null>(null); const [sEdit, setSEdit] = useState<string | null>(null);
   const [of, setOf] = useState<OrgForm | null>(null); const [oEdit, setOEdit] = useState<string | null>(null);
   const [secForm, setSecForm] = useState<{ code: string; name_ar: string; name_en: string } | null>(null);
+  const [df, setDf] = useState<DomainForm | null>(null); const [domVer, setDomVer] = useState(0); // هـ-2 (ب): مجالات الخبرة الحيّة
   const [orgAdmins, setOrgAdmins] = useState<Record<string, { email: string; full_name?: string | null; status: string }[]>>({}); const [adminEmail, setAdminEmail] = useState<Record<string, string>>({}); const [orgReqs, setOrgReqs] = useState<any[]>([]);
   const canWrite = !!me && WRITERS.includes(me.role);
 
   async function load() {
+    await loadDomains(db); setDomVer(v => v + 1);
     const [{ data: s, error: e1 }, { data: sec }, { data: o }, { data: r }] = await Promise.all([
       db.from('portal_skills').select('*').order('code'),
       db.from('portal_sectors').select('*').order('sort'),
@@ -56,7 +58,9 @@ function SkillsAdmin() {
   const run = async (key: string, fn: () => Promise<string | void>) => { setBusy(key); setError(''); setNotice(''); try { const m = await fn(); if (m) setNotice(m); await load(); } catch (e: any) { setError(e.message || String(e)); } setBusy(''); };
 
   const shownSkills = useMemo(() => skills.filter(s => (dom === 'all' || s.domain === dom) && (!q.trim() || `${s.code} ${s.name_ar} ${s.name_en} ${s.sdaia_code || ''}`.toLowerCase().includes(q.trim().toLowerCase()))), [skills, dom, q]);
-  const byDomain = useMemo(() => DOMAINS.map(d => ({ ...d, n: skills.filter(s => s.domain === d.value).length })), [skills]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const byDomain = useMemo(() => DOMAINS.map(d => ({ ...d, n: skills.filter(s => s.domain === d.value).length })), [skills, domVer]);
+  const saveDomain = () => run('dom', async () => { if (!df) return; const err = validateDomain(df); if (err) throw new Error(err); const p = domainPayload(df); const { error } = await db.from('portal_skill_domains').insert(p); if (error) throw error; registerDomains([p]); setDf(null); return `أُضيف مجال «${p.name_ar}» — رموز مهاراته ATH-${p.prefix}-001 فصاعدًا`; });
 
   const newSkill = () => { setSEdit(null); setSf({ ...EMPTY_SKILL, code: nextSkillCode('pedagogy', skills) }); };
   const changeDomain = (d: SkillDomain) => setSf(f => f ? { ...f, domain: d, code: sEdit ? f.code : nextSkillCode(d, skills) } : f);
@@ -102,8 +106,21 @@ function SkillsAdmin() {
           <div className="en-tools">
             <input placeholder="بحث: الرمز، الاسم، SDAIA…" value={q} onChange={e => setQ(e.target.value)} />
             {canWrite && <button type="button" className="en-btn" onClick={newSkill}><Icon name="plus" size={14} /> مهارة جديدة</button>}
+            {canWrite && <button type="button" className="en-btn ghost" onClick={() => { setSf(null); setDf({ ...EMPTY_DOMAIN }); }} data-testid="dom-new"><Icon name="folder" size={14} /> مجال جديد</button>}
             <button type="button" className="en-btn ghost" onClick={() => downloadXlsx(safeFilename('athar_skills', 'xlsx'), [skillsSheet(shownSkills, sectors)])}><Icon name="download" size={14} /> Excel</button>
           </div>
+          {df && <div className="en-card sk-form" data-testid="dom-form">
+            <h2><Icon name="folder" size={18} /> مجال خبرة جديد</h2>
+            <p className="en-note">المجال يظهر فورًا في مهارات أَثَر، وفي قائمة «مجال الخبرة» لدى خبراء أَثَر ومدرّبي أَثَر، وفي سيرة العضو — بلا نشر جديد.</p>
+            <div className="sk-g4">
+              <label className="en-note">الاسم العربي<input value={df.name_ar} onChange={e => setDf({ ...df, name_ar: e.target.value })} placeholder="مثل: المالية والاستثمار" /></label>
+              <label className="en-note">الاسم الإنجليزي<input dir="ltr" value={df.name_en} onChange={e => setDf({ ...df, name_en: e.target.value })} placeholder="Finance & investment" /></label>
+              <label className="en-note">رمز المجال (لاتيني صغير)<input dir="ltr" value={df.code} onChange={e => setDf({ ...df, code: e.target.value.toLowerCase() })} placeholder="finance" /></label>
+              <label className="en-note">بادئة رموز المهارات (حرفان)<input dir="ltr" maxLength={2} value={df.prefix} onChange={e => setDf({ ...df, prefix: e.target.value.toUpperCase() })} placeholder="FN" /></label>
+              <label className="en-note">اللون<select value={df.tone} onChange={e => setDf({ ...df, tone: e.target.value })}>{DOMAIN_TONES.map(t => <option key={t} value={t}>{t}</option>)}</select></label>
+            </div>
+            <div className="en-tools"><button type="button" className="en-btn" disabled={busy === 'dom'} onClick={saveDomain} data-testid="dom-save"><Icon name="save" size={14} /> إضافة المجال</button><button type="button" className="en-btn ghost" onClick={() => setDf(null)}>إلغاء</button></div>
+          </div>}
           {sf && <div className="en-card sk-form">
             <h2><Icon name={sEdit ? 'edit' : 'plus'} size={18} /> {sEdit ? 'تحرير المهارة' : 'مهارة جديدة'}</h2>
             <div className="sk-g4">

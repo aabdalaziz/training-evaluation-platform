@@ -24,8 +24,9 @@ export const PUBLIC_BUCKET = 'athar-public', PRIVATE_BUCKET = 'athar-media';
 export type Face = 'expert' | 'trainer';
 export const FACES: Face[] = ['expert', 'trainer'];
 export const FACE_AR: Record<Face, string> = { expert: 'خبير استشاري', trainer: 'مدرب' };
-export const FACE_TITLE_AR: Record<Face, string> = { expert: 'هيئة أَثَر للخبراء', trainer: 'هيئة أَثَر للمدربين' };
-export const TAGLINE_AR = 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر';
+export const FACE_TITLE_AR: Record<Face, string> = { expert: 'خبراء أَثَر', trainer: 'مدرّبو أَثَر' };
+export const TAGLINE_AR = 'سيرتك الذاتية بكلماتك — وتوثيقها من أَثَر';
+export const BODY_AR = 'هيئة أَثَر الاستشارية'; // هـ-2: الاسم الجامع لوجهَي الهيئة (خبراء أَثَر · مدرّبو أَثَر)
 export type ProfileStatus = 'draft' | 'submitted' | 'approved' | 'changes_requested' | 'suspended';
 export const STATUS_AR: Record<ProfileStatus, string> = { draft: 'مسودة', submitted: 'بانتظار الاعتماد', approved: 'معتمد — عضو هيئة أَثَر', changes_requested: 'طُلب تعديل', suspended: 'موقوف' };
 

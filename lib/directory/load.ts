@@ -2,7 +2,7 @@
 /** هيئة أَثَر (P31) — طبقة القراءة: السيرة · القوائم العامة · «ما شهده أَثَر» من جداول الأحداث القائمة · مدرب منصة التقييم · عقود التعاون. كل استعلام محميّ: الفشل = لا شيء. */
 import { PROFILE_COLS, ENGAGEMENT_COLS, EMPTY_WITNESS, engagementFacts, lower } from './registry';
 import type { Profile, Engagement, WitnessFacts } from './registry';
-import { domainLabel } from '../portal/skills';
+import { domainLabel, loadDomains } from '../portal/skills';
 
 const safe = async <T,>(p: PromiseLike<{ data: T | null; error?: any }>, fb: T): Promise<T> => { try { const r = await p; return (r && !r.error && r.data != null ? r.data : fb) as T; } catch { return fb; } };
 const rows = <T,>(v: T[] | null | undefined): T[] => (Array.isArray(v) ? v : []);
@@ -21,7 +21,7 @@ export const loadAllProfiles = (db: any) => safe<Profile[]>(db.from('portal_dire
 export type Meta = { skills: { id: string; code: string; name_ar: string; domain: string; domain_ar: string }[]; sectors: { code: string; name_ar: string }[] };
 export async function loadMeta(db: any): Promise<Meta> {
   const [skills, sectors] = await Promise.all([
-    safe<any[]>(db.from('portal_skills').select('id,code,name_ar,domain').order('domain', { ascending: true }).limit(500), []),
+    loadDomains(db).then(() => safe<any[]>(db.from('portal_skills').select('id,code,name_ar,domain').order('domain', { ascending: true }).limit(500), [])), // هـ-2 (ب): المجالات الحيّة أولًا كي تُسمّى صحيحًا
     safe<any[]>(db.from('portal_sectors').select('code,name_ar,sort').eq('active', true).order('sort', { ascending: true }).limit(100), []),
   ]);
   return { skills: rows(skills).map(s => ({ id: String(s.id), code: String(s.code || ''), name_ar: String(s.name_ar || ''), domain: String(s.domain || ''), domain_ar: domainLabel(String(s.domain || ''), 'ar') })), sectors: rows(sectors).map(s => ({ code: String(s.code), name_ar: String(s.name_ar || '') })) };

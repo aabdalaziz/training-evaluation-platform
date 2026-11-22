@@ -24,6 +24,13 @@ export function Avatar({ src, name, size = 72 }: { src: string | null; name: str
   return src ? <img className="dr-photo" src={src} alt={`صورة ${name}`} width={size} height={size} loading="lazy" style={{ width: size, height: size }} /> : <span className="dr-photo dr-noimg" aria-hidden="true" style={{ width: size, height: size, fontSize: size / 3 }}>{initials(name)}</span>;
 }
 
+/** هـ-2 (ب): تجميع المهارات بمجالها الحيّ — أيّ مجال يُضاف من «مهارات أَثَر» يظهر مجموعةً جديدة تلقائيًا */
+export function groupByDomain<T extends { domain: string; domain_ar?: string }>(skills: T[]): { domain: string; domain_ar: string; items: T[] }[] {
+  const out: { domain: string; domain_ar: string; items: T[] }[] = [];
+  for (const s of skills) { let g = out.find(x => x.domain === s.domain); if (!g) { g = { domain: s.domain, domain_ar: s.domain_ar || s.domain, items: [] }; out.push(g); } g.items.push(s); }
+  return out;
+}
+
 export function DirectoryList({ face }: { face: Face }) {
   const [meta, setMeta] = useState<Meta | null>(null); const [items, setItems] = useState<Card[]>([]); const [total, setTotal] = useState(0); const [page, setPage] = useState(1); const [pages, setPages] = useState(1);
   const [q, setQ] = useState(''); const [skill, setSkill] = useState(''); const [sector, setSector] = useState(''); const [service, setService] = useState(''); const [mode, setMode] = useState(''); const [city, setCity] = useState('');
@@ -36,30 +43,30 @@ export function DirectoryList({ face }: { face: Face }) {
     try { const url = new URL(window.location.href); url.search = ''; for (const [k, v] of Object.entries(f)) if (v) url.searchParams.set(k, v); if (pg > 1) url.searchParams.set('page', String(pg)); window.history.replaceState(null, '', url.toString()); } catch { /* لا شيء */ }
   }, [face, q, skill, sector, service, mode, city]);
   useEffect(() => { if (!first.current) return; first.current = false; let init: Record<string, string> = {}; let pg = 1; try { const sp = new URLSearchParams(window.location.search); init = { q: sp.get('q') || '', skill: sp.get('skill') || '', sector: sp.get('sector') || '', service: sp.get('service') || '', mode: sp.get('mode') || '', city: sp.get('city') || '' }; pg = Number(sp.get('page') || 1) || 1; } catch { /* لا شيء */ } setQ(init.q || ''); setSkill(init.skill || ''); setSector(init.sector || ''); setService(init.service || ''); setMode(init.mode || ''); setCity(init.city || ''); run(pg, init); }, [run]);
-  const title = face === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'; const other: Face = face === 'expert' ? 'trainer' : 'expert';
+  const title = face === 'expert' ? 'خبراء أَثَر' : 'مدرّبو أَثَر'; const other: Face = face === 'expert' ? 'trainer' : 'expert';
   const sectorName = meta ? nameMap(meta.sectors) : {};
   return (
     <>
-      <ZoneDoor zone={face === 'expert' ? 'experts' : 'trainers'} crumb={title} kicker={`هيئة أَثَر · ${meta?.rules.tagline_ar || 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر'}`}
-        title={face === 'expert' ? 'خبراء كتبوا سيرهم بأنفسهم —' : 'مدربون قدّموا في أَثَر —'} word={face === 'expert' ? 'وأَثَر شهد لهم' : 'وأَثَر سجّل لهم'}
-        lead={face === 'expert' ? 'خبراء استشاريون وثّقوا سيرهم بكلماتهم، وراجعها طاقم أَثَر واعتمدها بشهادة موقَّعة. بجانب كل سيرة «ما شهده أَثَر»: ما سجّلته المنصة لهم فعلًا — لا نجوم ولا تقييمات.' : 'مدربون قدّموا في أَثَر أو انضمّوا إلى هيئتها، وثّقوا سيرهم بكلماتهم، وراجعها طاقم أَثَر. بجانب كل سيرة «ما شهده أَثَر»: جلسات وحضور وشهادات سجّلتها المنصة فعلًا.'}
+      <ZoneDoor zone={face === 'expert' ? 'experts' : 'trainers'} crumb={title} kicker={`هيئة أَثَر الاستشارية · ${meta?.rules.tagline_ar || 'سيرتك الذاتية بكلماتك — وتوثيقها من أَثَر'}`}
+        title={face === 'expert' ? 'خبراء أَثَر —' : 'مدرّبو أَثَر —'} word={face === 'expert' ? 'سيرهم الذاتية بكلماتهم، وتوثيقهم من أَثَر' : 'سجلّهم من أَثَر، وتوثيقهم من أَثَر'}
+        lead={face === 'expert' ? 'خبراء استشاريون كتبوا سيرهم الذاتية بكلماتهم، وراجعها طاقم أَثَر ومنحها «توثيق أَثَر» موقَّعًا. بجانب كل سيرة «ما شهده أَثَر»: ما سجّلته المنصة لهم فعلًا — لا نجوم ولا تقييمات.' : 'مدرّبون قدّموا في أَثَر أو انضمّوا إلى هيئتها الاستشارية، كتبوا سيرهم الذاتية بكلماتهم، وراجعها طاقم أَثَر ومنحها «توثيق أَثَر». بجانب كل سيرة «ما شهده أَثَر»: جلسات وحضور وشهادات سجّلتها المنصة فعلًا.'}
         promises={face === 'expert' ? [
-          { icon: 'doc', title: 'سيرة بكلماتك', body: 'أنت تكتبها، وطاقم أَثَر يراجعها قبل النشر — لا قوالب ولا تنجيم.' },
-          { icon: 'certificate', title: 'شهادة توثيق موقَّعة', body: 'لكل عضو شهادة برمز تحقّق عام يمكن لأيّ جهة التأكّد منه.' },
+          { icon: 'doc', title: 'سيرتك الذاتية بكلماتك', body: 'أنت تكتبها، وطاقم أَثَر يراجعها قبل النشر — لا قوالب ولا تنجيم.' },
+          { icon: 'certificate', title: 'توثيق أَثَر', body: 'لكل عضو وثيقة موقَّعة برمز تحقّق عام يمكن لأيّ جهة التأكّد منه.' },
           { icon: 'trend', title: 'ما شهده أَثَر', body: 'ما سجّلته المنصة فعلًا: تصديقات، جلسات، برامج — سجلّ لا رأي.' },
         ] : [
           { icon: 'school', title: 'سجلّ تقديم حقيقي', body: 'جلسات وحضور وشهادات سجّلتها المنصة — لا ادّعاء.' },
-          { icon: 'certificate', title: 'شهادة توثيق موقَّعة', body: 'رمز تحقّق عام لكل عضو في الهيئة.' },
+          { icon: 'certificate', title: 'توثيق أَثَر', body: 'وثيقة موقَّعة برمز تحقّق عام لكل عضو في الهيئة.' },
           { icon: 'users', title: 'الجهات تجدك', body: 'بحث بالمجال والقطاع والمدينة والنمط — وطلب تواصل من صفحتك.' },
         ]}
-        aside={<div data-testid="dir-door-join"><h3><Icon name="plus" size={18} /> انضمّ إلى الهيئة</h3><p className="pt-muted">اكتب سيرتك بكلماتك من بوابتك، أرفق ما يوثّقها، وسيراجعها طاقم أَثَر ويصدر لك شهادة التوثيق عند الاعتماد.</p><ol className="zd-steps"><li>سيرة بكلماتك</li><li>مراجعة طاقم أَثَر</li><li>شهادة توثيق ورمز تحقّق</li></ol><div className="pt-chips"><Link href="/me/directory" className="pt-btn small"><Icon name="plus" size={14} /> ابدأ سيرتك</Link><Link href={`/${PATH[other]}`} className="pt-btn light small">{other === 'expert' ? 'هيئة الخبراء' : 'هيئة المدربين'}</Link></div></div>}
+        aside={<div data-testid="dir-door-join"><h3><Icon name="plus" size={18} /> انضمّ إلى هيئة أَثَر الاستشارية</h3><p className="pt-muted">اكتب سيرتك الذاتية بكلماتك من بوابتك، أرفق ما يوثّقها، وسيراجعها طاقم أَثَر ويمنحك «توثيق أَثَر» عند الاعتماد.</p><ol className="zd-steps"><li>سيرتك الذاتية بكلماتك</li><li>مراجعة طاقم أَثَر</li><li>توثيق أَثَر ورمز تحقّق</li></ol><div className="pt-chips"><Link href="/me/directory" className="pt-btn small"><Icon name="plus" size={14} /> ابدأ سيرتك</Link><Link href={`/${PATH[other]}`} className="pt-btn light small">{other === 'expert' ? 'خبراء أَثَر' : 'مدرّبو أَثَر'}</Link></div></div>}
       >
-        <nav className="dr-faces dark" aria-label="وجها الهيئة"><span className="dr-face on" aria-current="page">{title}</span><Link className="dr-face" href={`/${PATH[other]}`}>{other === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'}</Link></nav>
+        <nav className="dr-faces dark" aria-label="وجها هيئة أَثَر الاستشارية"><span className="dr-face on" aria-current="page">{title}</span><Link className="dr-face" href={`/${PATH[other]}`}>{other === 'expert' ? 'خبراء أَثَر' : 'مدرّبو أَثَر'}</Link></nav>
       </ZoneDoor>
     <main className="dr" dir="rtl" data-testid={`dir-${face}`}><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <form className="dr-search" role="search" aria-label={`البحث في ${title}`} onSubmit={e => { e.preventDefault(); run(1); }}>
         <label className="dr-lbl grow">كلمة بحث<input className="dr-in" value={q} onChange={e => setQ(e.target.value)} placeholder="اسم · مجال · قطاع · مدينة" maxLength={80} data-testid="dir-q" /></label>
-        <label className="dr-lbl">مجال الخبرة<select className="dr-in" value={skill} onChange={e => setSkill(e.target.value)} data-testid="dir-skill"><option value="">الكل</option>{(meta?.skills || []).map(s => <option key={s.id} value={s.id}>{s.name_ar}</option>)}</select></label>
+        <label className="dr-lbl">مجال الخبرة<select className="dr-in" value={skill} onChange={e => setSkill(e.target.value)} data-testid="dir-skill"><option value="">الكل</option>{groupByDomain(meta?.skills || []).map(g => <optgroup key={g.domain} label={g.domain_ar}>{g.items.map(s => <option key={s.id} value={s.id}>{s.name_ar}</option>)}</optgroup>)}</select></label>
         <label className="dr-lbl">القطاع<select className="dr-in" value={sector} onChange={e => setSector(e.target.value)}><option value="">الكل</option>{(meta?.sectors || []).map(s => <option key={s.code} value={s.code}>{s.name_ar}</option>)}</select></label>
         <label className="dr-lbl">الخدمة<select className="dr-in" value={service} onChange={e => setService(e.target.value)}><option value="">الكل</option>{(meta?.rules.services || []).map(s => <option key={s.code} value={s.code}>{s.name_ar}</option>)}</select></label>
         <label className="dr-lbl">النمط<select className="dr-in" value={mode} onChange={e => setMode(e.target.value)}><option value="">الكل</option>{(meta?.rules.modes || []).map(s => <option key={s.code} value={s.code}>{s.name_ar}</option>)}</select></label>
@@ -92,14 +99,14 @@ export function DirectoryProfile({ slug, face }: { slug: string; face: Face }) {
   useEffect(() => { fetch(`/api/directory?slug=${encodeURIComponent(slug)}`, { cache: 'no-store' }).then(r => r.json()).then(j => { if (j?.success) { setP(j.profile); setW(j.witness); setHint(j.request_hint_ar || ''); } else setErr(j?.error || 'لا صفحة بهذا العنوان'); }).catch(() => setErr('انقطع الاتصال')); fetch('/api/directory?meta=1', { cache: 'no-store' }).then(r => r.json()).then(j => { if (j?.success) setMeta(j); }).catch(() => null); }, [slug]);
   async function send(e: React.FormEvent) { e.preventDefault(); setBusy(true); setRerr(''); try { const j = await fetch('/api/directory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'request', slug, kind, full_name: fn, email: em, phone: ph, organization: org, title, details }) }).then(r => r.json()); if (j?.success) setDone(j.message_ar); else setRerr(j?.error || 'تعذّر الإرسال'); } catch { setRerr('انقطع الاتصال'); } finally { setBusy(false); } }
   const sectorName = meta ? nameMap(meta.sectors) : {}; const svcName = meta ? nameMap(meta.rules.services) : {}; const modeName = meta ? nameMap(meta.rules.modes) : {}; const langName = meta ? nameMap(meta.rules.languages) : {};
-  if (err) return <main className="dr" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} /><p className="dr-err" role="alert">{err}</p><p><Link className="pt-btn ghost small" href={`/${PATH[face]}`}>العودة إلى {face === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'}</Link></p></main>;
+  if (err) return <main className="dr" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} /><p className="dr-err" role="alert">{err}</p><p><Link className="pt-btn ghost small" href={`/${PATH[face]}`}>العودة إلى {face === 'expert' ? 'خبراء أَثَر' : 'مدرّبو أَثَر'}</Link></p></main>;
   if (!p) return <main className="dr" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} /><p className="dr-count" role="status">جارٍ فتح الصفحة…</p></main>;
   const card = p.cards[face] || p.cards.expert || p.cards.trainer;
   return (
     <>
-    <ZoneDoor zone={face === 'expert' ? 'experts' : 'trainers'} compact crumb={face === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'} kicker={card ? `عضو موثَّق · شهادة ${card.code}` : 'عضو في هيئة أَثَر'} title={p.name_ar} lead={p.title_ar || undefined} />
+    <ZoneDoor zone={face === 'expert' ? 'experts' : 'trainers'} compact crumb={face === 'expert' ? 'خبراء أَثَر' : 'مدرّبو أَثَر'} kicker={card ? `هيئة أَثَر الاستشارية · توثيق أَثَر ${card.code}` : 'هيئة أَثَر الاستشارية'} title={p.name_ar} lead={p.title_ar || undefined} />
     <main className="dr" dir="rtl" data-testid="dir-profile"><style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <nav className="dr-crumbs" aria-label="المسار"><Link href={`/${PATH[face]}`}>{face === 'expert' ? 'هيئة أَثَر للخبراء' : 'هيئة أَثَر للمدربين'}</Link> <span aria-hidden="true">›</span> <span aria-current="page">{p.name_ar}</span></nav>
+      <nav className="dr-crumbs" aria-label="المسار"><Link href={`/${PATH[face]}`}>{face === 'expert' ? 'خبراء أَثَر' : 'مدرّبو أَثَر'}</Link> <span aria-hidden="true">›</span> <span aria-current="page">{p.name_ar}</span></nav>
       <header className="dr-phead">
         <Avatar src={p.photo_url} name={p.name_ar} size={128} />
         <div>
@@ -107,7 +114,7 @@ export function DirectoryProfile({ slug, face }: { slug: string; face: Face }) {
           <h1>{p.name_ar}{p.name_en && <small lang="en" dir="ltr">{p.name_en}</small>}</h1>
           <p className="dr-title big">{p.title_ar}</p>
           <p className="dr-meta">{p.city && <span><Icon name="globe" size={13} /> {p.city}</span>}{p.languages.length > 0 && <span>{p.languages.map(l => langName[l] || l).join(' · ')}</span>}{p.modes.length > 0 && <span>{p.modes.map(m => modeName[m] || m).join(' · ')}</span>}</p>
-          {card && <p className="dr-cert" data-testid="dir-cert"><Icon name="certificate" size={14} /> شهادة توثيق أَثَر <b dir="ltr">{card.code}</b> · {fmtD(card.issued_at)} · <a href={`/verify/vc?code=${encodeURIComponent(card.code)}`}>تحقّق</a></p>}
+          {card && <p className="dr-cert" data-testid="dir-cert"><Icon name="certificate" size={14} /> توثيق أَثَر <b dir="ltr">{card.code}</b> · {fmtD(card.issued_at)} · <a href={`/verify/vc?code=${encodeURIComponent(card.code)}`}>تحقّق</a></p>}
         </div>
       </header>
       <div className="dr-two">

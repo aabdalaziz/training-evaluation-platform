@@ -3,7 +3,9 @@
 import type { Lang, T } from './content';
 import { t } from './content';
 
-export type SkillDomain = 'arabic' | 'pedagogy' | 'leadership' | 'quality' | 'data_ai' | 'digital' | 'research' | 'wellbeing';
+/** هـ-2 (ب): المجال رمز نصّي حيّ — المجالات الثمانية الأصلية مضمَّنة كبذرة، وأيّ مجال جديد يُضاف من «مهارات أَثَر» (جدول portal_skill_domains) ويُسجَّل هنا بـ registerDomains. */
+export type SkillDomain = string;
+export type DomainDef = { value: SkillDomain; label: T; tone: string; prefix: string; sort: number; active: boolean };
 export type Skill = {
   id: string; code: string; name_ar: string; name_en: string; domain: SkillDomain; level: number;
   description_ar?: string | null; description_en?: string | null;
@@ -16,16 +18,50 @@ export type Organization = {
   contact_name?: string | null; contact_email?: string | null; contact_phone?: string | null; email_domain?: string | null; notes?: string | null; active: boolean;
 };
 
-export const DOMAINS: { value: SkillDomain; label: T; tone: string }[] = [
-  { value: 'arabic', label: { ar: 'اللغة العربية', en: 'Arabic language' }, tone: 'teal' },
-  { value: 'pedagogy', label: { ar: 'التعليم والتدريب', en: 'Pedagogy & training' }, tone: 'navy' },
-  { value: 'leadership', label: { ar: 'القيادة والإدارة', en: 'Leadership & management' }, tone: 'gold' },
-  { value: 'quality', label: { ar: 'الجودة والقياس', en: 'Quality & measurement' }, tone: 'ok' },
-  { value: 'data_ai', label: { ar: 'البيانات والذكاء الاصطناعي', en: 'Data & AI' }, tone: 'violet' },
-  { value: 'digital', label: { ar: 'التعلّم الرقمي', en: 'Digital learning' }, tone: 'sky' },
-  { value: 'research', label: { ar: 'البحث والتطوير', en: 'Research & development' }, tone: 'warn' },
-  { value: 'wellbeing', label: { ar: 'الرفاه والمهارات الشخصية', en: 'Wellbeing & soft skills' }, tone: 'rose' },
+export const DOMAIN_TONES = ['teal', 'navy', 'gold', 'ok', 'violet', 'sky', 'warn', 'rose'] as const;
+const SEED_DOMAINS: DomainDef[] = [
+  { value: 'arabic', label: { ar: 'اللغة العربية', en: 'Arabic language' }, tone: 'teal', prefix: 'AR', sort: 10, active: true },
+  { value: 'pedagogy', label: { ar: 'التعليم والتدريب', en: 'Pedagogy & training' }, tone: 'navy', prefix: 'PD', sort: 20, active: true },
+  { value: 'leadership', label: { ar: 'القيادة والإدارة', en: 'Leadership & management' }, tone: 'gold', prefix: 'LD', sort: 30, active: true },
+  { value: 'quality', label: { ar: 'الجودة والتقييم', en: 'Quality & evaluation' }, tone: 'ok', prefix: 'QA', sort: 40, active: true },
+  { value: 'data_ai', label: { ar: 'البيانات والذكاء الاصطناعي', en: 'Data & AI' }, tone: 'violet', prefix: 'DA', sort: 50, active: true },
+  { value: 'digital', label: { ar: 'التعلّم الرقمي', en: 'Digital learning' }, tone: 'sky', prefix: 'DG', sort: 60, active: true },
+  { value: 'research', label: { ar: 'البحث والتطوير', en: 'Research & development' }, tone: 'warn', prefix: 'RS', sort: 70, active: true },
+  { value: 'wellbeing', label: { ar: 'الرفاه والمهارات الشخصية', en: 'Wellbeing & soft skills' }, tone: 'rose', prefix: 'WB', sort: 80, active: true },
 ];
+/** القائمة الحيّة — مصفوفة واحدة مشتركة تُحدَّث في مكانها كي ترى الصفحات كلّها المجال الجديد فور تسجيله. */
+export const DOMAINS: DomainDef[] = [...SEED_DOMAINS];
+export type DomainRow = { code: string; name_ar: string; name_en?: string | null; prefix?: string | null; tone?: string | null; sort?: number | null; active?: boolean | null };
+/** دمج صفوف جدول portal_skill_domains في القائمة الحيّة (تحديث الموجود · إضافة الجديد · ترتيب حسب sort). يعيد عدد المجالات. */
+export function registerDomains(rows: DomainRow[] | null | undefined): number {
+  for (const r of rows || []) {
+    const code = String(r.code || '').trim(); if (!/^[a-z][a-z0-9_]{1,30}$/.test(code)) continue;
+    const def: DomainDef = { value: code, label: { ar: String(r.name_ar || code), en: String(r.name_en || r.name_ar || code) }, tone: (DOMAIN_TONES as readonly string[]).includes(String(r.tone)) ? String(r.tone) : 'navy', prefix: /^[A-Z]{2}$/.test(String(r.prefix)) ? String(r.prefix) : code.slice(0, 2).toUpperCase(), sort: Number(r.sort ?? 100), active: r.active !== false };
+    const i = DOMAINS.findIndex(d => d.value === code); if (i >= 0) DOMAINS[i] = def; else DOMAINS.push(def);
+  }
+  DOMAINS.sort((a, b) => a.sort - b.sort || a.value.localeCompare(b.value));
+  return DOMAINS.length;
+}
+export const activeDomains = (): DomainDef[] => DOMAINS.filter(d => d.active);
+/** تحميل المجالات من القاعدة (عميل أو خادم — أيّ كائن فيه .from) وتسجيلها؛ صامت عند الفشل (تبقى البذرة). */
+export async function loadDomains(db: { from: (t: string) => any }): Promise<DomainDef[]> {
+  try { const { data } = await db.from('portal_skill_domains').select('code,name_ar,name_en,prefix,tone,sort,active').order('sort'); registerDomains((data || []) as DomainRow[]); } catch { /* تبقى البذرة */ }
+  return DOMAINS;
+}
+export type DomainForm = { code: string; name_ar: string; name_en: string; prefix: string; tone: string };
+export const EMPTY_DOMAIN: DomainForm = { code: '', name_ar: '', name_en: '', prefix: '', tone: 'navy' };
+export function validateDomain(f: DomainForm, existing: Pick<DomainDef, 'value' | 'prefix'>[] = DOMAINS): string | null {
+  const code = f.code.trim().toLowerCase(); const prefix = f.prefix.trim().toUpperCase();
+  if (!/^[a-z][a-z0-9_]{1,30}$/.test(code)) return 'رمز المجال: حروف لاتينية صغيرة وأرقام وشرطة سفلية (مثل: finance أو green_energy)';
+  if (existing.some(d => d.value === code)) return 'رمز المجال مستخدم';
+  if (f.name_ar.trim().length < 3) return 'الاسم العربي للمجال مطلوب';
+  if (f.name_en.trim().length < 3) return 'الاسم الإنجليزي للمجال مطلوب';
+  if (!/^[A-Z]{2}$/.test(prefix)) return 'بادئة الرمز حرفان لاتينيان كبيران (مثل FN) — تظهر في رموز المهارات ATH-FN-001';
+  if (existing.some(d => d.prefix === prefix)) return 'بادئة الرمز مستخدمة لمجال آخر';
+  if (!(DOMAIN_TONES as readonly string[]).includes(f.tone)) return 'اللون غير صالح';
+  return null;
+}
+export function domainPayload(f: DomainForm, sort?: number) { return { code: f.code.trim().toLowerCase(), name_ar: f.name_ar.trim(), name_en: f.name_en.trim(), prefix: f.prefix.trim().toUpperCase(), tone: f.tone, sort: sort ?? (DOMAINS.reduce((a, d) => Math.max(a, d.sort), 0) + 10), active: true }; }
 export const SKILL_LEVELS: { value: number; label: T }[] = [
   { value: 1, label: { ar: 'أساسي', en: 'Foundation' } },
   { value: 2, label: { ar: 'مبتدئ متقدم', en: 'Developing' } },
@@ -73,8 +109,8 @@ export function frameworkBadges(s: Pick<Skill, 'saqf_level' | 'sdaia_code' | 'ce
 }
 
 export function nextSkillCode(domain: SkillDomain, existing: Pick<Skill, 'code'>[]): string {
-  const pref: Record<SkillDomain, string> = { arabic: 'AR', pedagogy: 'PD', leadership: 'LD', quality: 'QA', data_ai: 'DA', digital: 'DG', research: 'RS', wellbeing: 'WB' };
-  const p = `ATH-${pref[domain]}-`;
+  const pref = DOMAINS.find(d => d.value === domain)?.prefix || String(domain).slice(0, 2).toUpperCase();
+  const p = `ATH-${pref}-`;
   const max = existing.map(s => s.code).filter(c => c.startsWith(p)).map(c => parseInt(c.slice(p.length), 10) || 0).reduce((a, b) => Math.max(a, b), 0);
   return p + String(max + 1).padStart(3, '0');
 }

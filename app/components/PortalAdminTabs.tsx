@@ -30,7 +30,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
   { href: '/admin/sim', label: 'التدريب بالمحاكاة', icon: 'play' },
   { href: '/admin/twin', label: 'خريطة قدرات المؤسسة', icon: 'star' },
   { href: '/admin/missions', label: 'مهمات العمل', icon: 'flag' },
-  { href: '/admin/directory', label: 'هيئة أَثَر', icon: 'certificate' },
+  { href: '/admin/directory', label: 'هيئة أَثَر الاستشارية', icon: 'certificate' },
   { href: '/admin/inclusion', label: 'إتاحة الوصول', icon: 'users' },
   { href: '/admin/onair', label: 'اسأل خبيرًا', icon: 'chat' },
   { href: '/admin/after', label: 'المتابعة بعد التدريب', icon: 'certificate' },
