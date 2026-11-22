@@ -63,7 +63,7 @@ export default function GlobalNavigation() {
           <button type="button" className="global-btn danger" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
         </div>
       </nav>
-      <WayBar lang="ar" />
+      {/* هـ-3 ي: لا WayBar هنا — شريط غلاف مركز القيادة (AdminShell) يحمل المسار وزر الرجوع، فلا شريطان متتاليان */}
     </>);
   }
 

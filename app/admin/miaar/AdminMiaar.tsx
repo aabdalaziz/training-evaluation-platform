@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '../../../lib/supabase/client';
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ي «عدّة الغرفة» */
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { qrSvg } from '../../../lib/certificates/qr';
 import { LEVELS, SKILLS, skillLabel, MIAAR_NAMES_AR, FLOOR_LEVEL, BANK_LEVEL_AR } from '../../../lib/miaar/registry';
@@ -79,42 +80,25 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   };
 
   if (ready && rater) return (
-    <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap" data-testid="mi-rater-mode">
-        <header className="mm-hero">
-          <div>
-            <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <span>غرفة التصحيح</span></p>
-            <h1>غرفة التصحيح</h1>
-            <p className="mm-lead">أنت هنا بصفة «المصحّح»: ترى الأداءات بلا أسماء، وتقرأ قراءتك وحدك، وما تعتمده يظهر في بطاقة المتقدّم على الرمز نفسه. لا بنك ولا سجلّ هنا — عمدًا.</p>
-          </div>
-          <div className="mm-heroacts"><Link href="/hub" className="mm-hbtn"><Icon name="home" />مركز القيادة</Link><Link href="/me" className="mm-hbtn"><Icon name="users" />صفحتي</Link></div>
-        </header>
+        <RoomHead title={<>غرفة التصحيح</>} desc={<><p>أنت هنا بصفة «المصحّح»: ترى الأداءات بلا أسماء، وتقرأ قراءتك وحدك، وما تعتمده يظهر في بطاقة المتقدّم على الرمز نفسه. لا بنك ولا سجلّ هنا — عمدًا.</p></>} actions={<><Link href="/me" className="rm-btn"><Icon name="users" size={16} /> صفحتي</Link></>} />
         <Rating auth={() => H()} />
         <section className="am-card" style={{ marginTop: 14 }}><h3>طابور «أُنتج» — اقْرَأْ <small>نصوص كتابة أرسلها متعلّمو اقْرَأْ لقراءة بشرية: سلّم تحليلي من 4 وتعليق وجملة واحدة تعيد كتابتها.</small></h3><IqraQ2Desk auth={() => H()} raterOnly /></section>
       </div>
     </div>
   );
-  if (!ready) return <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="am-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  if (!ready) return <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="am-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   const invites: any[] = data?.invites || []; const latest: any[] = data?.latest || []; const cov = data?.coverage;
   const openInv = invites.filter((i) => i.status === 'open').length;
   return (
-    <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
         <PortalAdminTabs counts={{ '/admin/miaar': openInv }} />
-        <header className="mm-hero">
-          <div>
-            <p className="mm-crumb"><Link href="/">أَثَر</Link> · <span>مِعيار</span> · <Link href="/miaar">صفحة الأداة</Link></p>
-            <h1>{tab === 'iqra' ? 'اقْرَأْ — مكتب المحتوى' : tab === 'syllabus' ? 'خريطة المنهج — وسم وحدات المستوى' : tab === 'hall' ? 'قاعة الشاهد — مركز المراقبة الإلكترونية للاختبارات' : tab === 'witness' ? 'غرفة الشاهد — سجلّ نزاهة الاختبار' : tab === 'exit' ? 'اختبار نهاية المستوى — معياري (CEFR)' : tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : tab === 'balance' ? 'ميزان مِعيار' : tab === 'rating' ? 'غرفة التصحيح' : tab === 'ledger' ? 'سجلّ مِعيار' : tab === 'growth' ? 'النموّ والمقارنة' : MIAAR_NAMES_AR.invites}</h1>
-            <p className="mm-lead">{tab === 'iqra' ? 'حلقات التعلّم الذاتي لكلّ مستوى من Pre-A1 إلى C2: تُستورد مسوَّداتٍ وتُعتمد بيدك، ولا يرى المتعلّم إلا ما اعتُمد. التسكين من قرار مِعيار.' : tab === 'syllabus' ? 'وحدات كل مستوى (من واصفات CEFR) تُعتمد بيدك، وتُوسم بها بنود البنك، فيوازن اختبار العبور تغطيتها دون أن يغيّر عددًا أو وزنًا — ويقرأ المتعلّم «وحدات تحتاج مراجعة»، وتقرأ أنت «أين ضعفت المجموعة؟».' : tab === 'hall' ? 'كل من يختبر الآن — في كل الدعوات والاختبار الفردي — على شاشة واحدة: فرديًّا، أو حسب القاعات، أو حسب الأماكن. الأسوأ أولًا، والهمسة بدل الإنذار.' : tab === 'witness' ? 'الفرصة الثانية للمراقبة: شريط اللقطات بالزمن، الأحداث مثبَّتة عليه، لقطة الهوية، ثم «حكم الشاهد» بتوقيعك — لا حكم آلي، ولا تغادر الصور هذه الغرفة.' : tab === 'exit' ? 'لوحة المجموعة: من بدأ ومن أنهى، الحكم المركّب (استقبالي 60% · كتابة 20% · تحدّث 20%)، عدّاد الاجتياز، و«قرار العبور» بتوقيع إنسان. الدعوة تُنشأ من زرّ «اختبار نهاية المستوى» بجانب كل قاعة في إدارة القاعات.' : tab === 'growth' ? 'هل نما المتقدّم؟ وهل أثّر البرنامج؟ رحلةُ كلّ متقدّم على سُلّم واحد بحكمٍ يحترم خطأ القياس، ومجموعةٌ مقابل مجموعة بحجم الأثر، وقبل/بعد البرنامج بالأزواج — و«شهادة النموّ» لا يُصدرها إلا إنسان.' : tab === 'ledger' ? 'دفتر النتائج: أمام كل متقدّم قرارُ تسكينه (المستوى والبرنامج والشعبة) وإجراءاتُه — أرشفة، إعادة، حذف. ما لا يحسمه إنسان في مهلته يُسكَّن على توصية مِعيار، إلا «المنطقة الرمادية» فتبقى لإنسان.' : tab === 'rating' ? 'أداءات الكتابة والتحدّث من «غرفة الأداء»: يقرؤها ويسمعها إنسان على سُلّم تقدير معلن، ويُصدرها إلى بطاقة المتقدّم على الرمز نفسه. الذكاء الاصطناعي يقترح للنصوص بموافقة المتقدّم فقط — ولا يُنشر شيء قبل إنسان.' : tab === 'balance' ? 'المقياس الذي يزن نفسه: تحليل البنود من إجابات حقيقية، شهادة موثوقية لكل مستوى، ومعايرة راش تقترح — وأنت تعتمد. لا اسم ولا بريد في أي رقم.' : tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p>
-          </div>
-          <div className="mm-heroacts">
-            <Link href="/admin/placements" className="mm-hbtn gold"><Icon name="download" />تصدير النتائج CSV</Link>
-            <Link href="/admin/miaar/bank" className="mm-hbtn"><Icon name="search" />تقرير البنك</Link>
-            <Link href="/admin/miaar/forms" className="mm-hbtn"><Icon name="table" />منشئ النماذج</Link>
-            <Link href="/admin/miaar/invites" className="mm-hbtn"><Icon name="qr" />{MIAAR_NAMES_AR.invites}</Link>
-            <Link href="/miaar" className="mm-hbtn"><Icon name="play" />صفحة الاختبار</Link>
-          </div>
-        </header>
+        <RoomHead title={<>{tab === 'iqra' ? 'اقْرَأْ — مكتب المحتوى' : tab === 'syllabus' ? 'خريطة المنهج — وسم وحدات المستوى' : tab === 'hall' ? 'قاعة الشاهد — مركز المراقبة الإلكترونية للاختبارات' : tab === 'witness' ? 'غرفة الشاهد — سجلّ نزاهة الاختبار' : tab === 'exit' ? 'اختبار نهاية المستوى — معياري (CEFR)' : tab === 'overview' ? 'التقارير' : tab === 'bank' ? 'بنك الأسئلة' : tab === 'forms' ? 'منشئ النماذج' : tab === 'balance' ? 'ميزان مِعيار' : tab === 'rating' ? 'غرفة التصحيح' : tab === 'ledger' ? 'سجلّ مِعيار' : tab === 'growth' ? 'النموّ والمقارنة' : MIAAR_NAMES_AR.invites}</>} desc={<><p>{tab === 'iqra' ? 'حلقات التعلّم الذاتي لكلّ مستوى من Pre-A1 إلى C2: تُستورد مسوَّداتٍ وتُعتمد بيدك، ولا يرى المتعلّم إلا ما اعتُمد. التسكين من قرار مِعيار.' : tab === 'syllabus' ? 'وحدات كل مستوى (من واصفات CEFR) تُعتمد بيدك، وتُوسم بها بنود البنك، فيوازن اختبار العبور تغطيتها دون أن يغيّر عددًا أو وزنًا — ويقرأ المتعلّم «وحدات تحتاج مراجعة»، وتقرأ أنت «أين ضعفت المجموعة؟».' : tab === 'hall' ? 'كل من يختبر الآن — في كل الدعوات والاختبار الفردي — على شاشة واحدة: فرديًّا، أو حسب القاعات، أو حسب الأماكن. الأسوأ أولًا، والهمسة بدل الإنذار.' : tab === 'witness' ? 'الفرصة الثانية للمراقبة: شريط اللقطات بالزمن، الأحداث مثبَّتة عليه، لقطة الهوية، ثم «حكم الشاهد» بتوقيعك — لا حكم آلي، ولا تغادر الصور هذه الغرفة.' : tab === 'exit' ? 'لوحة المجموعة: من بدأ ومن أنهى، الحكم المركّب (استقبالي 60% · كتابة 20% · تحدّث 20%)، عدّاد الاجتياز، و«قرار العبور» بتوقيع إنسان. الدعوة تُنشأ من زرّ «اختبار نهاية المستوى» بجانب كل قاعة في إدارة القاعات.' : tab === 'growth' ? 'هل نما المتقدّم؟ وهل أثّر البرنامج؟ رحلةُ كلّ متقدّم على سُلّم واحد بحكمٍ يحترم خطأ القياس، ومجموعةٌ مقابل مجموعة بحجم الأثر، وقبل/بعد البرنامج بالأزواج — و«شهادة النموّ» لا يُصدرها إلا إنسان.' : tab === 'ledger' ? 'دفتر النتائج: أمام كل متقدّم قرارُ تسكينه (المستوى والبرنامج والشعبة) وإجراءاتُه — أرشفة، إعادة، حذف. ما لا يحسمه إنسان في مهلته يُسكَّن على توصية مِعيار، إلا «المنطقة الرمادية» فتبقى لإنسان.' : tab === 'rating' ? 'أداءات الكتابة والتحدّث من «غرفة الأداء»: يقرؤها ويسمعها إنسان على سُلّم تقدير معلن، ويُصدرها إلى بطاقة المتقدّم على الرمز نفسه. الذكاء الاصطناعي يقترح للنصوص بموافقة المتقدّم فقط — ولا يُنشر شيء قبل إنسان.' : tab === 'balance' ? 'المقياس الذي يزن نفسه: تحليل البنود من إجابات حقيقية، شهادة موثوقية لكل مستوى، ومعايرة راش تقترح — وأنت تعتمد. لا اسم ولا بريد في أي رقم.' : tab === 'overview' ? 'تقرير فردي أو جماعي أو مرحلة، أو تقرير عن حالة البنك. النتائج تُكتب في «التسكين» مباشرة، والقرار الأكاديمي بيد إنسان.' : tab === 'forms' ? 'نموذج الاختبار مخطّط: نوعه (تحديد مستوى · شامل · تكيفي · قصير · اجتياز مستوى · خاص) ومستوياته ومصفوفة البنود وطريقة السحب والمدة وحدّ الاجتياز. البنود نفسها تُسحب عشوائيًا في كل جلسة من البنك المعتمد — المسؤول يضبط البنية، لا الأسئلة بعينها إلا إن أراد.' : tab === 'bank' ? 'عمليات البنك: تغطية كل مستوى ومهارة مقابل خطة النموذج، وتحرير البنود والمقاطع واعتماد الدفعات. البند الجديد يبدأ «قيد المراجعة» ولا يصل إلى المتقدّم إلا بعد اعتماد بشري.' : 'دعوة جماعية برمز وQR وملصق، أو شخصية برابط لكل بريد — مع تتبّع مَن فتح ومَن بدأ ومَن أنهى ومستواه.'}</p></>} actions={<>
+          <Link href="/admin/placements" className="rm-btn primary"><Icon name="download" size={16} /> تصدير النتائج CSV</Link>
+          <Link href="/miaar" className="rm-btn"><Icon name="play" size={16} /> صفحة الاختبار</Link>
+        </>} />
         {/* هوية v1.2 (2026-11-23): من 12 لسانًا مرقّمًا إلى ثلاثة مكاتب بحسب من دخل — مكتب المدير · مكتب المؤلّف · مكتب المصحّح والشاهد.
             مكتبك أوّلًا ومفتوح، والمكتبان الآخران مطويان بعنوانهما (تفتحهما بنقرة). الصلاحيات الفعلية تبقى على الخادم لكل قسم كما كانت. */}
         <nav className="mm-desks" aria-label="مكاتب مِعيار">
@@ -236,14 +220,10 @@ export default function AdminMiaar({ tab }: { tab: Tab }) {
   );
 }
 const CSS = `
-.am{--navy:#3A1F36;--teal:#D4614A;--teal-deep:#0f5c57;--gold:#D9A866;--gold-line:#F1D9A8;--gold-soft:#FBF4EE;--line:#e8eef3;min-height:100vh;background:linear-gradient(180deg,#FBF4EE 0%,#FBEDE7 100%);padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl;color:#2A1626}
+.am{--navy:#3A1F36;--teal:#D4614A;--teal-deep:#2F6B66;--gold:#D9A866;--gold-line:#F1D9A8;--gold-soft:#FBF4EE;--line:#EADFD6;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl;color:#2A1626}
 .am :is(button,a,input,select,textarea):focus-visible{outline:3px solid var(--navy);outline-offset:2px}
 .am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:14px}
-.mm-hero{display:flex;flex-wrap:wrap;justify-content:space-between;gap:18px;border-radius:24px;padding:28px 30px;color:#fff;background:linear-gradient(135deg,#3A1F36 0%,#4A2946 55%,#6A3350 100%);box-shadow:0 10px 30px rgba(42,22,38,.12)}
-.mm-crumb{margin:0;font-size:12px;font-weight:900;letter-spacing:.14em;color:#d7e2ee}.mm-crumb a{color:#fff;text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:4px}.mm-crumb span{color:var(--gold)}
-.mm-hero h1{margin:8px 0 0;font-size:34px;font-weight:900;color:#fff}.mm-lead{margin:10px 0 0;max-width:640px;line-height:1.8;color:#d5e0ea;font-size:15px}
-.mm-heroacts{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;justify-content:flex-end}
-.mm-hbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:1px solid rgba(255,255,255,.25);background:#fff;color:var(--navy);border-radius:12px;padding:8px 16px;font-size:13.5px;font-weight:800;text-decoration:none;cursor:pointer}.mm-hbtn:hover{background:#F6EBE0;filter:none}.mm-hbtn:active{background:#EADFD6}.mm-hbtn>svg:first-child{width:20px;height:20px;flex:none;border-radius:50%;padding:3px;background:var(--navy);color:#fff;box-sizing:border-box}.mm-hbtn.gold:hover{background:var(--gold-600,#B8893F)}.mm-hbtn.gold:active{background:var(--gold-700,#B8893F)}.mm-hbtn.gold{background:var(--gold);border-color:var(--gold);color:#1f2937}.mm-hbtn.gold:hover{background:#b8923f}
+.mm-hbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:1px solid #D9CBC2;background:#fff;color:var(--navy);border-radius:12px;padding:8px 16px;font-size:13.5px;font-weight:800;text-decoration:none;cursor:pointer}.mm-hbtn:hover{background:#F6EBE0;filter:none}.mm-hbtn:active{background:#EADFD6}.mm-hbtn>svg:first-child{width:20px;height:20px;flex:none;border-radius:50%;padding:3px;background:var(--navy);color:#fff;box-sizing:border-box}.mm-hbtn.gold:hover{background:var(--gold-600,#B8893F)}.mm-hbtn.gold:active{background:var(--gold-700,#B8893F)}.mm-hbtn.gold{background:var(--gold);border-color:var(--gold);color:#1f2937}.mm-hbtn.gold:hover{background:#b8923f}
 .mm-desks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
 .mm-desk{border:1px solid #EADFD6;border-radius:16px;background:#fff;overflow:hidden;border-top:4px solid var(--d)}
 .mm-desk.mine{box-shadow:0 14px 34px rgba(42,22,38,.1)}

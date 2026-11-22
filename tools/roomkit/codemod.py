@@ -25,7 +25,7 @@ def transform(path: str, dry=False):
     header = src[start:end]
     body = header[m.end() - start:-len('</header>')]
     # nav
-    nav_m = re.search(r'<nav className="%s-nav[^"]*">(.*?)</nav>' % pre, body, re.S)
+    nav_m = re.search(r'<nav className="%s-nav[^"]*">(.*?)</nav>' % pre, body, re.S) or re.search(r'<div className="%s-(?:acts|actions|heroacts)[^"]*">(.*?)</div>\s*$' % pre, body, re.S)
     nav_inner = nav_m.group(1) if nav_m else ''
     text_block = body[:nav_m.start()] if nav_m else body
     # kicker
@@ -70,7 +70,7 @@ def transform(path: str, dry=False):
             sel, decl = mm.group(1), mm.group(2)
             s = sel.strip()
             if s.startswith('@'): return mm.group(0)
-            if re.search(r'\.%s-(head|kicker|nav)\b' % pre, s): return ''
+            if re.search(r'\.%s-(head|kicker|nav|heroacts)\b' % pre, s): return ''
             if kit_owned(s): return ''
             if s == '.' + pre:
                 decl = ';'.join(d for d in decl.split(';') if d.strip() and not re.match(r'\s*(background|min-height|padding)\s*:', d))

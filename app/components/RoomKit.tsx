@@ -106,6 +106,7 @@ export const RM_CSS = `
 .rm-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end;align-self:center}
 .rm-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:#3A1F36;cursor:pointer;text-decoration:none;line-height:1.2;white-space:nowrap;transition:background .15s,border-color .15s,transform .1s}
 .rm-btn:hover{background:#FBF4EE;border-color:#C9A6B6}.rm-btn:active{transform:translateY(1px)}.rm-btn:disabled{opacity:.5;cursor:default}
+.rm-btn:focus-visible{outline:3px solid var(--rm-tone,#D9A866);outline-offset:2px}.rm-btn[aria-busy="true"]{opacity:.7;cursor:progress}
 .rm-btn.primary{background:#D4614A;border-color:#D4614A;color:#fff}.rm-btn.primary:hover{background:#B94E3A;border-color:#B94E3A}
 .rm-btn.danger{background:#fff;border-color:#f3b4b4;color:#9A2A2A}.rm-btn.danger:hover{background:#fdf0f0}
 .rm-btn.ghost{background:transparent}

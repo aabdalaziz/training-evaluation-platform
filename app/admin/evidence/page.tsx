@@ -10,6 +10,7 @@ import { VoiceButton } from '../../components/Channel';
 import { KIND_LABEL } from '../../../lib/portal/evidence';
 import type { EvidenceAnswer, StarNode, Rel, NodeKind } from '../../../lib/portal/evidence';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 type Lesson = { id: string; week: string; title_ar: string; body_ar: string; evidence: { label: string; value: string }[]; status: 'draft' | 'approved' | 'rejected'; created_at: string };
 type Data = { stats: { nodes: number; edges: number; skills: number; people: number; evidence: number; updated_at: string | null }; constellation: { stars: StarNode[]; links: { a: string; b: string; w: number; rel: Rel }[] }; lessons: Lesson[]; recent: { id: string; created_at: string; question: string; template: string | null; source: string; ok: boolean; answer: EvidenceAnswer | null }[]; templates: { id: string; title_ar: string; example_ar: string }[] };
@@ -47,19 +48,22 @@ export default function AdminEvidencePage() {
   async function openNode(id: string) { setPick(id); setStory([]); const j = await fetch(`/api/evidence?node=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${await fresh()}` } }).then(r => r.json()); setStory(j?.story || []); }
   function printBrief() { window.print(); }
 
-  if (!ready) return <div className="ev"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="ev-wrap"><div className="ev-card">{error ? <span className="ev-err">{error}</span> : 'جارٍ فتح الذاكرة…'}</div></div></div>;
+  if (!ready) return <div className="ev rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="ev-wrap"><div className="rm-card">{error ? <span className="ev-err">{error}</span> : 'جارٍ فتح الذاكرة…'}</div></div></div>;
   const st = data?.stats; const con = data?.constellation; const drafts = (data?.lessons || []).filter(l => l.status === 'draft');
   return (
-    <div className="ev"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="ev rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="ev-wrap">
-        <header className="ev-head no-print"><div><span className="ev-kicker"><Icon name="compass" size={14} /> بوابة أَثَر · P14-أ</span><h1>شواهد الأثر — الذاكرة الحية للمؤسسة</h1><p>كل برنامج ومهارة وجلسة ومحاكٍ ومهمة وجهة = عقدة؛ وكل دليل تعلّم = خيط موزون. اسأل بالعربية وسيُجاب من قوالب أسئلة معتمدة — الذكاء الاصطناعي يوجّه السؤال ولا يكتب استعلامات، والأرقام كلها من الأدلة.</p></div></header>
+        <RoomHead
+        title={<>شواهد الأثر — الذاكرة الحية للمؤسسة</>}
+        desc={<><p>كل برنامج ومهارة وجلسة ومحاكٍ ومهمة وجهة = عقدة؛ وكل دليل تعلّم = خيط موزون. اسأل بالعربية وسيُجاب من قوالب أسئلة معتمدة — الذكاء الاصطناعي يوجّه السؤال ولا يكتب استعلامات، والأرقام كلها من الأدلة.</p></>}
+      />
         <div className="no-print"><PortalAdminTabs counts={{ '/admin/evidence': drafts.length }} /></div>
         {error && <div className="ev-err no-print">{error}</div>}
-        <div className="ev-kpis no-print"><span><b>{st?.evidence ?? 0}</b> الأدلة</span><span><b>{st?.people ?? 0}</b> الأشخاص</span><span><b>{st?.skills ?? 0}</b> مهارات تحرّكت</span><span><b>{st?.edges ?? 0}</b> خيوط الشبكة</span><span className="ev-upd">آخر بناء: {fmt(st?.updated_at || null)} <button type="button" className="pt-btn ghost small" onClick={refresh} disabled={refreshing}><Icon name="refresh" size={13} /> {refreshing ? 'يُبنى…' : 'حدّث الذاكرة الآن'}</button></span></div>
+        <div className="rm-kpis no-print"><span><b>{st?.evidence ?? 0}</b> الأدلة</span><span><b>{st?.people ?? 0}</b> الأشخاص</span><span><b>{st?.skills ?? 0}</b> مهارات تحرّكت</span><span><b>{st?.edges ?? 0}</b> خيوط الشبكة</span><span className="ev-upd">آخر بناء: {fmt(st?.updated_at || null)} <button type="button" className="pt-btn ghost small" onClick={refresh} disabled={refreshing}><Icon name="refresh" size={13} /> {refreshing ? 'يُبنى…' : 'حدّث الذاكرة الآن'}</button></span></div>
         <div className="ev-tabs no-print"><button className={tab === 'ask' ? 'on' : ''} onClick={() => setTab('ask')}>اسأل الذاكرة</button><button className={tab === 'map' ? 'on' : ''} onClick={() => setTab('map')}>كوكبة الأثر</button><button className={tab === 'lessons' ? 'on' : ''} onClick={() => setTab('lessons')}>درس الأسبوع {drafts.length ? <i>{drafts.length}</i> : null}</button></div>
 
         {tab === 'ask' && (
-          <section className="ev-card">
+          <section className="rm-card">
             <div className="ev-askrow no-print" data-testid="evidence-ask"><input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') ask(); }} maxLength={400} placeholder="مثال: أي قناة تعلّم تنقل الأثر أكثر؟ · ماذا فعلت الجهة في 2026؟ · أين الفجوات؟" /><VoiceButton lang="ar" onText={t => setQ(x => (x ? x + ' ' : '') + t)} /><button type="button" className="pt-btn gold" disabled={busy || q.trim().length < 4} onClick={() => ask()}>{busy ? 'تبحث في الأدلة…' : 'اسأل'}</button></div>
             <div className="ev-chips no-print">{(data?.templates || []).slice(0, 10).map(t => <button key={t.id} type="button" onClick={() => ask(t.example_ar)}>{t.example_ar}</button>)}</div>
             {ans && (
@@ -77,7 +81,7 @@ export default function AdminEvidencePage() {
         )}
 
         {tab === 'map' && con && (
-          <section className="ev-card ev-mapcard">
+          <section className="rm-card ev-mapcard">
             <div className="ev-maphead"><div><h3>كوكبة الأثر</h3><p>المهارات ذهبية في الحلقة الوسطى، قنوات التعلّم بيضاء في المركز، والبرامج والجلسات والجهات والمدربون في المدار الخارجي. سُمك الخيط = وزن الدليل. اضغط نجمة لتقرأ قصتها.</p></div><div className="ev-legend">{(Object.keys(KIND_LABEL) as NodeKind[]).filter(k => k !== 'sector').map(k => <span key={k}><i style={{ background: KIND_COLOR[k] }} />{KIND_LABEL[k].ar}</span>)}</div></div>
             <div className="ev-mapgrid">
               <svg viewBox="0 0 900 520" className="ev-svg" data-testid="constellation" role="img" aria-label="كوكبة الأثر">
@@ -87,15 +91,15 @@ export default function AdminEvidencePage() {
                 {con.stars.map(s => <g key={s.id} className="ev-star" onClick={() => openNode(s.id)} style={{ cursor: 'pointer' }}><circle cx={s.x} cy={s.y} r={s.r + (pick === s.id ? 4 : 0)} fill={KIND_COLOR[s.kind]} fillOpacity={s.kind === 'channel' ? 0.95 : 0.85} stroke={pick === s.id ? '#fff' : 'rgba(255,255,255,.35)'} strokeWidth={pick === s.id ? 2 : 1} /><text x={s.x} y={s.y + s.r + 12} textAnchor="middle" fontSize={s.kind === 'skill' ? 11 : 10} fill="#EADFD6">{s.label_ar.length > 18 ? s.label_ar.slice(0, 17) + '…' : s.label_ar}</text></g>)}
                 {!con.stars.length && <text x="450" y="260" textAnchor="middle" fill="#D9CBC2" fontSize="16">الذاكرة فارغة — اضغط «حدّث الذاكرة الآن»</text>}
               </svg>
-              <aside className="ev-story" data-testid="node-story">{pick ? (story.length ? <><b>{con.stars.find(s => s.id === pick)?.label_ar || pick}</b>{story.map((s, i) => <p key={i}>{s}</p>)}</> : <p>…</p>) : <p className="ev-muted">اختر نجمة لتقرأ قصتها في ثلاث جمل.</p>}</aside>
+              <aside className="ev-story" data-testid="node-story">{pick ? (story.length ? <><b>{con.stars.find(s => s.id === pick)?.label_ar || pick}</b>{story.map((s, i) => <p key={i}>{s}</p>)}</> : <p>…</p>) : <p className="rm-muted">اختر نجمة لتقرأ قصتها في ثلاث جمل.</p>}</aside>
             </div>
           </section>
         )}
 
         {tab === 'lessons' && (
-          <section className="ev-card">
+          <section className="rm-card">
             <div className="ev-maphead"><div><h3>درس الأسبوع</h3><p>كل أحد تقترح الذاكرة درسًا واحدًا تعلّمته المؤسسة من أدلتها. لا يظهر في الرئيسة ولا في تقارير الجهات حتى يعتمده إنسان.</p></div><button type="button" className="pt-btn light small" onClick={draftLesson}><Icon name="plus" size={13} /> مسودة هذا الأسبوع</button></div>
-            {!data?.lessons?.length && <p className="ev-muted">لا دروس بعد — تُقترح تلقائيًا حين تبلغ الأدلة 5 أشخاص فأكثر.</p>}
+            {!data?.lessons?.length && <p className="rm-muted">لا دروس بعد — تُقترح تلقائيًا حين تبلغ الأدلة 5 أشخاص فأكثر.</p>}
             <ul className="ev-lessons" data-testid="lessons">{(data?.lessons || []).map(l => <li key={l.id} className={l.status}><div className="ev-lhead"><span className={`ev-st ${l.status}`}>{l.status === 'draft' ? 'مسودة' : l.status === 'approved' ? 'معتمد' : 'مرفوض'}</span><small>أسبوع {l.week}</small></div><b>{l.title_ar}</b><p>{l.body_ar}</p>{!!l.evidence?.length && <div className="ev-chain small">{l.evidence.map((c, i) => <span key={i}><small>{c.label}</small><b>{c.value}</b></span>)}</div>}{l.status === 'draft' && <div className="ev-decide"><button type="button" className="pt-btn gold small" onClick={() => decideLesson(l.id, 'approved')}><Icon name="check" size={13} /> اعتمد وانشر</button><button type="button" className="pt-btn ghost small" onClick={() => decideLesson(l.id, 'rejected')}><Icon name="x" size={13} /> ارفض</button></div>}</li>)}</ul>
           </section>
         )}
@@ -105,11 +109,8 @@ export default function AdminEvidencePage() {
 }
 
 const CSS = `
-.ev{padding:20px 16px 48px;background:#FBF4EE;min-height:60vh;font-family:inherit}
-.ev-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}
-.ev-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.ev-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.7;max-width:900px}.ev-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
-.ev-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px}.ev-err{color:#b91c1c;font-size:13px}.ev-muted{color:#8E7F8A;font-size:13.5px}
-.ev-kpis{display:flex;gap:16px;font-size:14px;color:#5C4858;flex-wrap:wrap;align-items:center}.ev-kpis b{color:#3A1F36;font-size:20px;margin-inline-end:4px}.ev-upd{margin-inline-start:auto;font-size:12.5px;display:inline-flex;gap:8px;align-items:center}
+.ev{font-family:inherit}
+.ev-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.ev-err{color:#b91c1c;font-size:13px}.ev-upd{margin-inline-start:auto;font-size:12.5px;display:inline-flex;gap:8px;align-items:center}
 .ev-tabs{display:flex;gap:6px;flex-wrap:wrap}.ev-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.ev-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.ev-tabs i{font-style:normal;background:#D9A866;color:#3A1F36;border-radius:999px;padding:0 7px;font-size:11px;margin-inline-start:4px}
 .ev-askrow{display:flex;gap:8px;align-items:center}.ev-askrow input{flex:1;border:1px solid #D9CBC2;border-radius:12px;padding:12px 14px;font:inherit;font-size:15px}
 .ev-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.ev-chips button{border:1px dashed #D9CBC2;background:#FBF4EE;border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;color:#3A1F36;cursor:pointer}.ev-chips button:hover{background:#F3E6DC}
@@ -123,10 +124,10 @@ const CSS = `
 .ev-maphead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.ev-maphead h3{margin:0;font-size:18px;color:#3A1F36}.ev-maphead p{margin:4px 0 0;color:#8E7F8A;font-size:13px;line-height:1.7;max-width:720px}
 .ev-legend{display:flex;gap:8px;flex-wrap:wrap;font-size:11.5px;color:#5C4858}.ev-legend span{display:inline-flex;align-items:center;gap:4px}.ev-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;border:1px solid #D9CBC2}
 .ev-mapgrid{display:grid;grid-template-columns:1fr 260px;gap:12px;margin-top:12px}.ev-svg{width:100%;height:auto;border-radius:16px;display:block}.ev-star:hover circle{stroke:#fff;stroke-width:2}
-.ev-story{background:#3A1F36;color:#fff;border-radius:16px;padding:14px 16px;font-size:13.5px;line-height:1.8}.ev-story b{display:block;color:#D9A866;margin-bottom:6px}.ev-story p{margin:0 0 6px}.ev-story .ev-muted{color:#D9CBC2}
+.ev-story{background:#3A1F36;color:#fff;border-radius:16px;padding:14px 16px;font-size:13.5px;line-height:1.8}.ev-story b{display:block;color:#D9A866;margin-bottom:6px}.ev-story p{margin:0 0 6px}.ev-story .rm-muted{color:#D9CBC2}
 .ev-lessons{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}.ev-lessons li{border:1px solid #EADFD6;border-radius:14px;padding:12px 14px}.ev-lessons li.approved{border-color:#D4614A}.ev-lessons li.rejected{opacity:.6}.ev-lhead{display:flex;gap:8px;align-items:center;margin-bottom:4px}.ev-lhead small{color:#8E7F8A;font-size:12px}.ev-lessons b{display:block;color:#3A1F36;font-size:15px}.ev-lessons p{margin:4px 0 6px;color:#3A2634;font-size:13.5px;line-height:1.8}
 .ev-st{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#FBF4EE;color:#8A5A1E}.ev-st.approved{background:#e6f4f1;color:#D4614A}.ev-st.rejected{background:#fee2e2;color:#b91c1c}.ev-decide{display:flex;gap:8px;margin-top:8px}
 .print-only{display:none}
-@media print{.no-print,.pt-header,.pt-footer,nav,header.pt-top{display:none!important}.ev{background:#fff;padding:0}.ev-card{border:0;padding:0}.ev-answer{border:0;padding:0;margin:0}.print-only{display:block}.ev-brieffoot{margin-top:24px;border-top:1px solid #999;padding-top:8px;font-size:11px;color:#444}.ev-chain span{border:1px solid #000;color:#000;background:#fff}.ev-chain small{color:#000}}
+@media print{.no-print,.pt-header,.pt-footer,nav,header.pt-top{display:none!important}.ev{}.ev-answer{border:0;padding:0;margin:0}.print-only{display:block}.ev-brieffoot{margin-top:24px;border-top:1px solid #999;padding-top:8px;font-size:11px;color:#444}.ev-chain span{border:1px solid #000;color:#000;background:#fff}.ev-chain small{color:#000}}
 @media (max-width:860px){.ev-mapgrid{grid-template-columns:1fr}.ev-askrow{flex-wrap:wrap}.ev-askrow input{min-width:100%}}
 `;

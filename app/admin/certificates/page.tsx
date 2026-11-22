@@ -12,6 +12,7 @@ import type { CertRow, IssueInput } from '../../../lib/certificates/issue';
 import { summarize, eligible } from '../../../lib/attendance/model';
 import type { AttendanceRecord } from '../../../lib/attendance/model';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Program = { id: string; name_ar: string | null; name_en: string | null; status?: string | null; start_date?: string | null; end_date?: string | null; delivery_mode?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id: string | null };
 type Trainer = { id: string; name: string };
@@ -244,25 +245,20 @@ export default function CertificatesPage() {
   }
 
   const allowed = ALLOWED.includes(role.toUpperCase());
-  if (!ready) return <div className="ct" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="ct rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
 
   return (
-    <div className="ct" dir="rtl">
+    <div className="ct rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="ct-head">
-        <div>
-          <div className="ct-kicker"><Icon name="certificate" size={14} /> مركز الإدارة</div>
-          <h1>الشهادات الإلكترونية</h1>
-          <p>إصدار شهادات الإتمام والحضور والتقدير بأرقام تسلسلية ورمز تحقق QR، وتنزيلها PDF أو إرسالها بالبريد مباشرة.</p>
-        </div>
-        <nav className="ct-nav">
-          <Link href="/dashboard" className="ct-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/admin/awards" className="ct-btn"><Icon name="award" size={16} /> تكريم المدربين</Link>
-          <Link href="/verify" className="ct-btn" target="_blank"><Icon name="search" size={16} /> صفحة التحقق</Link>
-        </nav>
-      </header>
+      <RoomHead
+        title={<>الشهادات الإلكترونية</>}
+        desc={<><p>إصدار شهادات الإتمام والحضور والتقدير بأرقام تسلسلية ورمز تحقق QR، وتنزيلها PDF أو إرسالها بالبريد مباشرة.</p></>}
+        actions={<>
+          <Link href="/verify" className="rm-btn" target="_blank"><Icon name="search" size={16} /> صفحة التحقق</Link>
+        </>}
+      />
 
-      {!allowed && <div className="ct-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة. صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
+      {!allowed && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة. صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
 
       <div className="ct-tabs">
         {([['issue', 'إصدار شهادات', 'plus'], ['registry', 'سجل الشهادات', 'folder'], ['settings', 'إعدادات الشهادة', 'settings']] as [Tab, string, any][]).map(([t, l, ic]) => (
@@ -270,12 +266,12 @@ export default function CertificatesPage() {
         ))}
       </div>
 
-      {error && <div className="ct-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="ct-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
+      {error && <div className="rm-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="ct-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
 
       {/* ================= ISSUE ================= */}
       {tab === 'issue' && (
         <div className="ct-two">
-          <section className="ct-card">
+          <section className="rm-card">
             <h2><Icon name="target" size={18} /> 1) بيانات الشهادة</h2>
             <div className="ct-grid">
               <label>البرنامج *<select value={programId} onChange={e => setProgramId(e.target.value)}><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}{p.status === 'COMPLETED' ? ' (مكتمل)' : ''}</option>)}</select></label>
@@ -288,59 +284,59 @@ export default function CertificatesPage() {
 
             <h2 style={{ marginTop: 18 }}><Icon name="users" size={18} /> 2) المستفيدون <span className="ct-count">{recipients.length}</span></h2>
             <div className="ct-import">
-              <button className="ct-btn" onClick={importFromEvaluations} disabled={!programId || !!busy}><Icon name="evaluations" size={15} /> استيراد من التقييمات</button>
-              <button className="ct-btn" onClick={importFromEnrollments} disabled={!programId || !!busy}><Icon name="school" size={15} /> استيراد من المسجلين</button>
-              <span className="ct-att"><button className="ct-btn" onClick={importFromAttendance} disabled={!programId || !!busy}><Icon name="check" size={15} /> استيراد من سجل الحضور</button><label>≥ <input type="number" min={0} max={100} value={minAtt} onChange={e => setMinAtt(Number(e.target.value))} /> %</label></span>
-              <span className="ct-muted">أو الصق القائمة: <b>اسم, بريد</b> في كل سطر (البريد اختياري للتنزيل، مطلوب للإرسال)</span>
+              <button className="rm-btn" onClick={importFromEvaluations} disabled={!programId || !!busy}><Icon name="evaluations" size={15} /> استيراد من التقييمات</button>
+              <button className="rm-btn" onClick={importFromEnrollments} disabled={!programId || !!busy}><Icon name="school" size={15} /> استيراد من المسجلين</button>
+              <span className="ct-att"><button className="rm-btn" onClick={importFromAttendance} disabled={!programId || !!busy}><Icon name="check" size={15} /> استيراد من سجل الحضور</button><label>≥ <input type="number" min={0} max={100} value={minAtt} onChange={e => setMinAtt(Number(e.target.value))} /> %</label></span>
+              <span className="rm-muted">أو الصق القائمة: <b>اسم, بريد</b> في كل سطر (البريد اختياري للتنزيل، مطلوب للإرسال)</span>
             </div>
             <textarea className="ct-ta" rows={7} value={recText} onChange={e => setRecText(e.target.value)} placeholder={'محمد بن أحمد العتيبي, mohammed@example.com\nسارة القحطاني, sara@example.com\nخالد الحربي'} />
             {recipients.length > 0 && (
               <div className="ct-chips">
                 {recipients.slice(0, 60).map((r, i) => <button key={i} className={`ct-chip ${i === previewIdx ? 'on' : ''} ${r.email ? '' : 'nomail'}`} title={r.email || 'بدون بريد'} onClick={() => setPreviewIdx(i)}>{r.name}{r.email ? '' : ' ✉︎✕'}</button>)}
-                {recipients.length > 60 && <span className="ct-muted">+{recipients.length - 60}</span>}
+                {recipients.length > 60 && <span className="rm-muted">+{recipients.length - 60}</span>}
               </div>
             )}
 
             <h2 style={{ marginTop: 18 }}><Icon name="send" size={18} /> 3) الإصدار</h2>
             <label>رسالة مرافقة للبريد (اختياري)<textarea className="ct-ta" rows={2} value={note} onChange={e => setNote(e.target.value)} placeholder="مثال: نبارك لكم إتمام البرنامج، ونتطلع لمشاركتكم في البرامج القادمة." /></label>
             <div className="ct-actions">
-              <button className="ct-btn primary" onClick={() => issue('download')} disabled={!allowed || !!busy || !recipients.length || !programId}><Icon name="download" size={16} /> إصدار وتنزيل PDF</button>
-              <button className="ct-btn teal" onClick={() => issue('email')} disabled={!allowed || !!busy || !recipients.length || !programId}><Icon name="mail" size={16} /> إصدار وإرسال بالبريد</button>
-              <button className="ct-btn" onClick={() => issue('both')} disabled={!allowed || !!busy || !recipients.length || !programId}><Icon name="save" size={16} /> الاثنان معًا</button>
+              <button className="rm-btn primary" onClick={() => issue('download')} disabled={!allowed || !!busy || !recipients.length || !programId}><Icon name="download" size={16} /> إصدار وتنزيل PDF</button>
+              <button className="rm-btn teal" onClick={() => issue('email')} disabled={!allowed || !!busy || !recipients.length || !programId}><Icon name="mail" size={16} /> إصدار وإرسال بالبريد</button>
+              <button className="rm-btn" onClick={() => issue('both')} disabled={!allowed || !!busy || !recipients.length || !programId}><Icon name="save" size={16} /> الاثنان معًا</button>
             </div>
             {progress && <div className="ct-progress"><div style={{ width: `${progress.total ? Math.round(progress.done / progress.total * 100) : 0}%` }} /><span>{busy === 'issue' ? 'جارٍ الإصدار…' : ''} {progress.done}/{progress.total}</span></div>}
-            {issuedSummary && <div className="ct-alert ok"><Icon name="check" size={18} /> صدرت {issuedSummary.count} شهادة وسُجّلت بأرقام تسلسلية.{issuedSummary.sent ? ` أُرسل ${issuedSummary.sent} بالبريد.` : ''}{issuedSummary.failed ? ` فشل ${issuedSummary.failed}.` : ''}{issuedSummary.skipped ? ` ${issuedSummary.skipped} بدون بريد (نزّلها من السجل).` : ''} <button className="ct-link" onClick={() => setTab('registry')}>فتح السجل</button></div>}
+            {issuedSummary && <div className="rm-alert ok"><Icon name="check" size={18} /> صدرت {issuedSummary.count} شهادة وسُجّلت بأرقام تسلسلية.{issuedSummary.sent ? ` أُرسل ${issuedSummary.sent} بالبريد.` : ''}{issuedSummary.failed ? ` فشل ${issuedSummary.failed}.` : ''}{issuedSummary.skipped ? ` ${issuedSummary.skipped} بدون بريد (نزّلها من السجل).` : ''} <button className="ct-link" onClick={() => setTab('registry')}>فتح السجل</button></div>}
           </section>
 
-          <section className="ct-card ct-preview">
-            <h2><Icon name="certificate" size={18} /> معاينة حيّة {recipients[previewIdx] ? <span className="ct-muted" style={{ fontWeight: 700 }}>— {recipients[previewIdx].name}</span> : <span className="ct-muted" style={{ fontWeight: 700 }}>— نموذج</span>}</h2>
+          <section className="rm-card ct-preview">
+            <h2><Icon name="certificate" size={18} /> معاينة حيّة {recipients[previewIdx] ? <span className="rm-muted" style={{ fontWeight: 700 }}>— {recipients[previewIdx].name}</span> : <span className="rm-muted" style={{ fontWeight: 700 }}>— نموذج</span>}</h2>
             <div className="ct-canvas-wrap"><canvas ref={canvasRef} /></div>
-            <div className="ct-muted" style={{ marginTop: 8 }}>الشهادة بمقاس A4 أفقي بدقة طباعة (300dpi). الشعارات من <code>/logos</code>، والتوقيعات والجهة من تبويب «إعدادات الشهادة».</div>
+            <div className="rm-muted" style={{ marginTop: 8 }}>الشهادة بمقاس A4 أفقي بدقة طباعة (300dpi). الشعارات من <code>/logos</code>، والتوقيعات والجهة من تبويب «إعدادات الشهادة».</div>
           </section>
         </div>
       )}
 
       {/* ================= REGISTRY ================= */}
       {tab === 'registry' && (
-        <section className="ct-card">
+        <section className="rm-card">
           <div className="ct-reg-head">
             <h2><Icon name="folder" size={18} /> سجل الشهادات <span className="ct-count">{regFiltered.length}</span></h2>
             <div className="ct-reg-tools">
               <select value={regProgram} onChange={e => setRegProgram(e.target.value)}><option value="">كل البرامج</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select>
               <input placeholder="بحث بالاسم / البريد / الرقم التسلسلي" value={regQ} onChange={e => setRegQ(e.target.value)} />
-              <button className="ct-btn" onClick={loadRegistry}><Icon name="refresh" size={15} /> تحديث</button>
+              <button className="rm-btn" onClick={loadRegistry}><Icon name="refresh" size={15} /> تحديث</button>
             </div>
           </div>
-          {regFiltered.length === 0 ? <div className="ct-muted">لا توجد شهادات بعد.</div> : (
-            <div className="ct-tw"><table className="ct-table">
+          {regFiltered.length === 0 ? <div className="rm-muted">لا توجد شهادات بعد.</div> : (
+            <div className="ct-tw"><table className="rm-table">
               <thead><tr><th>الرقم التسلسلي</th><th>النوع</th><th>المستفيد</th><th>البرنامج</th><th>الإصدار</th><th>البريد</th><th>الحالة</th><th></th></tr></thead>
               <tbody>{regFiltered.map(r => (
                 <tr key={r.id} className={r.revoked_at ? 'revoked' : ''}>
-                  <td dir="ltr" style={{ textAlign: 'end' }}><b>{r.serial}</b><div className="ct-muted" style={{ fontSize: 11 }}>{r.verify_code}</div></td>
-                  <td>{KIND_LABEL[r.kind]?.ar || r.kind}{r.award_title ? <div className="ct-muted" style={{ fontSize: 11 }}>{r.award_title}</div> : null}</td>
-                  <td><b>{r.recipient_name}</b>{r.recipient_email ? <div className="ct-muted" style={{ fontSize: 11 }} dir="ltr">{r.recipient_email}</div> : null}</td>
-                  <td>{r.program_name}{r.classroom_code ? <div className="ct-muted" style={{ fontSize: 11 }}>القاعة {r.classroom_code}</div> : null}</td>
-                  <td dir="ltr" style={{ textAlign: 'end' }}>{fmtDate(r.issued_at)}<div className="ct-muted" style={{ fontSize: 11 }}>{r.issued_by_name || ''}</div></td>
+                  <td dir="ltr" style={{ textAlign: 'end' }}><b>{r.serial}</b><div className="rm-muted" style={{ fontSize: 11 }}>{r.verify_code}</div></td>
+                  <td>{KIND_LABEL[r.kind]?.ar || r.kind}{r.award_title ? <div className="rm-muted" style={{ fontSize: 11 }}>{r.award_title}</div> : null}</td>
+                  <td><b>{r.recipient_name}</b>{r.recipient_email ? <div className="rm-muted" style={{ fontSize: 11 }} dir="ltr">{r.recipient_email}</div> : null}</td>
+                  <td>{r.program_name}{r.classroom_code ? <div className="rm-muted" style={{ fontSize: 11 }}>القاعة {r.classroom_code}</div> : null}</td>
+                  <td dir="ltr" style={{ textAlign: 'end' }}>{fmtDate(r.issued_at)}<div className="rm-muted" style={{ fontSize: 11 }}>{r.issued_by_name || ''}</div></td>
                   <td>{r.sent_at ? <span className="ct-pill ok">أُرسلت {fmtDate(r.sent_at.slice(0, 10))}</span> : <span className="ct-pill">لم تُرسل</span>}</td>
                   <td>{r.revoked_at ? <span className="ct-pill bad" title={r.revoke_reason || ''}>ملغاة</span> : <span className="ct-pill ok">سارية</span>}</td>
                   <td><div className="ct-row-acts">
@@ -359,7 +355,7 @@ export default function CertificatesPage() {
       {/* ================= SETTINGS ================= */}
       {tab === 'settings' && (
         <div className="ct-two">
-          <section className="ct-card">
+          <section className="rm-card">
             <h2><Icon name="settings" size={18} /> إعدادات الشهادة</h2>
             <div className="ct-grid">
               {([
@@ -374,13 +370,13 @@ export default function CertificatesPage() {
             </div>
             <label style={{ marginTop: 12 }}>نص التذييل<textarea className="ct-ta" rows={2} value={settingsDraft.footer_ar} onChange={e => setSettingsDraft(s => ({ ...s, footer_ar: e.target.value }))} /></label>
             <div className="ct-actions">
-              <button className="ct-btn primary" onClick={doSaveSettings} disabled={!allowed || busy === 'settings'}><Icon name="save" size={16} /> حفظ الإعدادات</button>
-              <button className="ct-btn" onClick={() => setSettingsDraft({ ...DEFAULT_SETTINGS })}><Icon name="refresh" size={16} /> استعادة الافتراضي</button>
-              <button className="ct-btn" onClick={() => { setSettings(settingsDraft); setTab('issue'); }}><Icon name="certificate" size={16} /> معاينة دون حفظ</button>
+              <button className="rm-btn primary" onClick={doSaveSettings} disabled={!allowed || busy === 'settings'}><Icon name="save" size={16} /> حفظ الإعدادات</button>
+              <button className="rm-btn" onClick={() => setSettingsDraft({ ...DEFAULT_SETTINGS })}><Icon name="refresh" size={16} /> استعادة الافتراضي</button>
+              <button className="rm-btn" onClick={() => { setSettings(settingsDraft); setTab('issue'); }}><Icon name="certificate" size={16} /> معاينة دون حفظ</button>
             </div>
-            <div className="ct-muted" style={{ marginTop: 10 }}>الحقول المحفوظة: {SETTINGS_FIELDS.length}. تنطبق الإعدادات على كل الشهادات الجديدة والمعاد تنزيلها.</div>
+            <div className="rm-muted" style={{ marginTop: 10 }}>الحقول المحفوظة: {SETTINGS_FIELDS.length}. تنطبق الإعدادات على كل الشهادات الجديدة والمعاد تنزيلها.</div>
           </section>
-          <section className="ct-card">
+          <section className="rm-card">
             <h2><Icon name="shield" size={18} /> كيف يعمل التحقق؟</h2>
             <ol className="ct-ol">
               <li>كل شهادة تحمل رقمًا تسلسليًا فريدًا (<code>{settingsDraft.serial_prefix}-2026-000123</code>) ورمز تحقق من 10 رموز.</li>
@@ -399,8 +395,8 @@ export default function CertificatesPage() {
             <p>المستفيد: <b>{revoke.row.recipient_name}</b> · {revoke.row.program_name}</p>
             <label>سبب الإلغاء *<input value={revoke.reason} onChange={e => setRevoke(v => v && { ...v, reason: e.target.value })} placeholder="مثال: صدرت بالخطأ / عدم استيفاء نسبة الحضور" /></label>
             <div className="ct-actions">
-              <button className="ct-btn" onClick={() => setRevoke(null)}>تراجع</button>
-              <button className="ct-btn danger" onClick={doRevoke}>إلغاء الشهادة</button>
+              <button className="rm-btn" onClick={() => setRevoke(null)}>تراجع</button>
+              <button className="rm-btn danger" onClick={doRevoke}>إلغاء الشهادة</button>
             </div>
           </div>
         </div>
@@ -419,20 +415,11 @@ function explain(m: string): string {
 }
 
 const CSS = `
-.ct{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.ct-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.ct-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.ct-head p{margin:0;color:#8E7F8A;font-size:13px}
-.ct-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.ct-nav{display:flex;gap:8px;flex-wrap:wrap}
-.ct-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
-.ct-btn:disabled{opacity:.5;cursor:not-allowed}.ct-btn.primary{background:${NAVY};color:#fff;border-color:${NAVY}}.ct-btn.teal{background:#D4614A;color:#fff;border-color:#D4614A}.ct-btn.danger{background:#b91c1c;color:#fff;border-color:#b91c1c}
+.ct{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}.rm-btn.teal{background:#D4614A;color:#fff;border-color:#D4614A}
 .ct-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .ct-tab{display:inline-flex;align-items:center;gap:6px;border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.ct-tab.on{background:${NAVY};border-color:${NAVY};color:#fff}
-.ct-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;font-weight:700;line-height:1.7}
-.ct-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.ct-alert.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
+.rm-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .ct-x{border:0;background:transparent;cursor:pointer;color:inherit;padding:2px}
-.ct-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.ct-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
 .ct-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
 .ct-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .ct label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#5C4858}
@@ -441,7 +428,6 @@ const CSS = `
 .ct-check{flex-direction:row!important;align-items:center;gap:8px!important;padding-top:22px}.ct-check input{width:auto}
 .ct-import{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
 .ct-att{display:inline-flex;align-items:center;gap:6px}.ct-att label{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#5C4858;white-space:nowrap;margin:0}.ct-att input{width:64px;padding:6px 8px;border:1px solid #D9CBC2;border-radius:8px;font:inherit;font-weight:800}
-.ct-muted{color:#8E7F8A;font-size:12.5px;font-weight:700}
 .ct-count{background:#F3E6DC;color:${NAVY};border-radius:999px;padding:2px 10px;font-size:12px}
 .ct-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .ct-chip{border:1px solid #EADFD6;background:#FBF4EE;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:800;color:#4A3645;cursor:pointer}.ct-chip.on{background:${NAVY};border-color:${NAVY};color:#fff}.ct-chip.nomail{border-style:dashed}
@@ -453,8 +439,7 @@ const CSS = `
 .ct-reg-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.ct-reg-head h2{margin:0}
 .ct-reg-tools{display:flex;gap:8px;flex-wrap:wrap}.ct-reg-tools input{min-width:260px}.ct-reg-tools select,.ct-reg-tools input{width:auto}
 .ct-tw{overflow:auto}
-.ct-table{width:100%;border-collapse:collapse;font-size:12.5px}.ct-table th{background:#FBF4EE;text-align:right;padding:8px;color:#5C4858;font-size:12px;border-bottom:1px solid #EADFD6;white-space:nowrap}.ct-table td{padding:8px;border-bottom:1px solid #F6EBE0;vertical-align:top}
-.ct-table tr.revoked td{opacity:.6}
+.rm-table tr.revoked td{opacity:.6}
 .ct-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858;white-space:nowrap}.ct-pill.ok{background:#ecfdf5;color:#047857}.ct-pill.bad{background:#fef2f2;color:#b91c1c}
 .ct-row-acts{display:flex;gap:4px}
 .ct-ic{width:30px;height:30px;border:1px solid #EADFD6;background:#fff;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:${NAVY}}.ct-ic:disabled{opacity:.4;cursor:not-allowed}.ct-ic.danger{color:#b91c1c}
@@ -464,5 +449,5 @@ const CSS = `
 .ct-modal-box h3{margin:0;color:#b91c1c;display:flex;align-items:center;gap:8px}.ct-modal-box p{margin:0;line-height:1.7}
 .ct-toast{position:fixed;bottom:18px;inset-inline-start:18px;background:${NAVY};color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:120}
 @media(max-width:1000px){.ct-two{grid-template-columns:1fr}.ct-preview{position:static}}
-@media(max-width:700px){.ct-grid{grid-template-columns:1fr}.ct{padding:12px}}
+@media(max-width:700px){.ct-grid{grid-template-columns:1fr}.ct{}}
 `;

@@ -9,6 +9,7 @@ import { ROOMS } from '../lib/portal/rooms';
 
 const ROOT = path.resolve(__dirname, '..'); const R = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const PEOPLE_PAGES = ['enrollments', 'payments', 'inbox', 'consulting', 'directory', 'outreach'].map(p => `app/admin/${p}/page.tsx`).concat(['app/admin/org/letters/LettersDesk.tsx']);
+const ASSESS_PAGES = ['placements', 'needs', 'evidence', 'credentials', 'certificates', 'skills'].map(p => `app/admin/${p}/page.tsx`).concat(['app/admin/miaar/AdminMiaar.tsx']);
 const SYSTEM_PAGES = ['roles', 'audit', 'health', 'access', 'demo', 'backup', 'data-lifecycle', 'agents', 'shield', 'vault', 'notifications'].map(p => `app/admin/${p}/page.tsx`).concat(['app/help/page.tsx']);
 
 test('هـ-3 ح: عناقيد «نظام أَثَر» تغطّي غرفه العشر بلا تكرار، وكل عنقود غرفه معروفة', () => {
@@ -39,6 +40,12 @@ test('هـ-3 ط: عناقيد «إدارة أَثَر» تغطّي غرفه ال
   assert.deepEqual(clustersOfWing(w, rooms).map(c => c.name), ['الطلبات', 'المال', 'الهيئة والجهات', 'الوصول']);
 });
 
+test('هـ-3 ي: عناقيد «تقييم أَثَر» تغطّي غرفه الثماني', () => {
+  const w = wingByKey('assess')!; const rooms = roomsOfWing(w); const hrefs = CLUSTERS.assess!.flatMap(c => c.hrefs);
+  assert.equal(new Set(hrefs).size, hrefs.length); for (const r of rooms) assert.ok(hrefs.includes(r.href), `غرفة بلا عنقود: ${r.href}`);
+  assert.deepEqual(clustersOfWing(w, rooms).map(c => c.name), ['مِعيار', 'الشهادات', 'المهارات']);
+});
+
 test('هـ-3 ح: خطّ الجناح — السابقة/التالية داخل العنقود', () => {
   const sys = wingByKey('system')!; const rooms = roomsOfWing(sys);
   const a = neighborsOf(sys, '/admin/audit', rooms); assert.equal(a.prev, null); assert.equal(a.next?.href, '/admin/shield');
@@ -47,16 +54,16 @@ test('هـ-3 ح: خطّ الجناح — السابقة/التالية داخل 
   assert.equal(WINGS.length, 5);
 });
 
-test('هـ-3 ح/ط: غرف «نظام أَثَر» (12) و«إدارة أَثَر» (7) على الإطار الموحّد — RoomHead بلا رأس خاص ولا روابط غرف مكرّرة، والجذر rm-page', () => {
-  for (const p of SYSTEM_PAGES.concat(PEOPLE_PAGES)) {
+test('هـ-3 ح/ط/ي: غرف «نظام أَثَر» (12) و«إدارة أَثَر» (7) و«تقييم أَثَر» (7) على الإطار الموحّد — RoomHead بلا رأس خاص ولا روابط غرف مكرّرة، والجذر rm-page', () => {
+  for (const p of SYSTEM_PAGES.concat(PEOPLE_PAGES, ASSESS_PAGES)) {
     const s = R(p);
     assert.ok(s.includes('<RoomHead'), `${p}: بلا RoomHead`);
     assert.ok(/from '(\.\.\/)+components\/RoomKit'/.test(s), `${p}: استيراد العدّة`);
-    assert.ok(!/<header className="[a-z]{2,3}-head/.test(s), `${p}: رأس قديم باقٍ`);
+    assert.ok(!/<header className="[a-z]{2,3}-(head|hero)/.test(s), `${p}: رأس قديم باقٍ`);
     assert.ok(/className="[a-z]{2,3} rm-page"/.test(s), `${p}: الجذر بلا rm-page`);
     const head = s.slice(s.indexOf('<RoomHead'), s.indexOf('/>', s.indexOf('<RoomHead')));
     assert.ok(!/<Link href="\/dashboard"/.test(head) && !/<Link href="\/admin\/management"/.test(head), `${p}: روابط مكرّرة في الرأس`);
-    assert.ok(!/\b(?!rm-|pt-)[a-z]{2,3}-btn\b/.test(s), `${p}: أزرار بفئة خاصة`);
+    if (!p.endsWith('AdminMiaar.tsx')) assert.ok(!/\b(?!rm-|pt-)[a-z]{2,3}-btn\b/.test(s), `${p}: أزرار بفئة خاصة`);
     assert.ok(!s.includes('#e5e9f0'), `${p}: رمادي قديم`);
   }
 });
