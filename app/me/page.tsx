@@ -17,6 +17,7 @@ import ReportLinesCard from '../components/ReportLinesCard';
 import { AtharMark } from '../components/PortalShell';
 import type { IconName } from '../../lib/ui/icons';
 import { CERT_KIND_AR, STATUS_AR, attendancePct, attendanceTone, buildTasks, isRunning, type MePortal, type Task } from '../../lib/me/model';
+import ExitCard from './ExitCard'; /* هـ-1/5 */
 
 const TASK_ICON: Record<Task['kind'], IconName> = { attend: 'check', daily: 'calendar', final: 'flag', impact_pre: 'target', impact_post: 'target', followup: 'trend' };
 
@@ -146,6 +147,7 @@ export default function MePage() {
 
       {tab === 'programs' && (
         <section className="me-stack">
+          <ExitCard /> {/* هـ-1/5 «لو خرجت اليوم تحمل معك» — تظهر لمن له قيد في دبلوم */}
           {!me.programs.length && <div className="me-card me-center"><div className="me-ring"><Icon name="folder" size={28} /></div><b>لا يوجد برنامج مرتبط ببريدك بعد.</b><p className="me-muted">يُربط البرنامج تلقائيًا عند تسجيل حضورك أو تقييمك ببريدك، أو عند إضافتك من إدارة البرنامج.</p></div>}
           {me.programs.map(p => {
             const pct = attendancePct(p.attendance); const tone = attendanceTone(pct);

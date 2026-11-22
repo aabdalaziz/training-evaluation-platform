@@ -109,7 +109,7 @@ export function statusEntry(site: string, index: number) { return { id: `${site}
 
 /** شهادة أَثَر → وثيقة OB 3.0 / VC 2.0 غير موقَّعة بعد (المُصدِر = did:web) */
 export function buildCredentialDoc(c: Omit<Credential, 'badge'>, skills: SkillMeta[], site: string, did: string, statusIndex: number | null) {
-  const url = `${site}/credential/${c.verify_code}`; const ach = c.kind === 'program_completion' ? 'Certificate' : c.kind === 'skill' ? 'Competency' : c.kind === 'placement' ? 'Assessment' : 'Badge';
+  const url = `${site}/credential/${c.verify_code}`; const ach = c.kind === 'program_completion' ? 'Certificate' : c.kind === 'skill' ? 'Competency' : c.kind === 'placement' ? 'Assessment' : c.kind === 'achievement_record' ? 'LearningRecord' : 'Badge';
   return {
     '@context': VC_CONTEXTS, id: url, type: ['VerifiableCredential', 'OpenBadgeCredential'], name: c.title_en || c.title_ar,
     issuer: issuerBlock(did, site), validFrom: c.issued_at, ...(c.valid_until ? { validUntil: c.valid_until } : {}),

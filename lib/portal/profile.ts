@@ -85,11 +85,12 @@ export const verifyCode = (rnd?: () => number) => `ATH-${randomCode(4, rnd)}-${r
 export const publicId = (rnd?: () => number) => randomCode(8, rnd).toLowerCase();
 
 // ---------- الشهادات الرقمية ----------
-export type CredentialKind = 'program_completion' | 'skill' | 'attendance' | 'placement';
+export type CredentialKind = 'program_completion' | 'skill' | 'attendance' | 'placement' | 'achievement_record'; /* هـ-1/5: سجلّ الإنجاز عند الخروج من الدبلوم */
 export type Credential = { id: string; created_at?: string; user_id?: string | null; email: string; full_name?: string | null; kind: CredentialKind; title_ar: string; title_en?: string | null; description_ar?: string | null; program_id?: string | null; session_id?: string | null; skills: string[]; level?: string | null; hours?: number | null; verify_code: string; issued_at: string; valid_until?: string | null; revoked_at?: string | null; revoke_reason?: string | null; badge?: Record<string, unknown> };
 export const CREDENTIAL_KINDS: { value: CredentialKind; label: T }[] = [
   { value: 'program_completion', label: { ar: 'إتمام برنامج', en: 'Program completion' } }, { value: 'skill', label: { ar: 'إثبات مهارة', en: 'Skill credential' } },
   { value: 'attendance', label: { ar: 'حضور جلسة/ندوة', en: 'Attendance' } }, { value: 'placement', label: { ar: 'مستوى لغوي (مِعيار)', en: 'Language level (Mi‘yar)' } },
+  { value: 'achievement_record', label: { ar: 'سجلّ إنجاز (دبلوم)', en: 'Achievement record (diploma)' } },
 ];
 export const credentialKindLabel = (v: string, lang: Lang) => { const x = CREDENTIAL_KINDS.find(k => k.value === v); return x ? t(x.label, lang) : v; };
 export function credentialTitle(c: Pick<Credential, 'title_ar' | 'title_en'>, lang: Lang): string { return (lang === 'en' && c.title_en) ? c.title_en : c.title_ar; }
@@ -104,7 +105,7 @@ export function buildBadge(c: Omit<Credential, 'badge'>, skills: Pick<Skill, 'id
     issuer: { id: `${site}/.well-known/athar.json`, type: ['Profile'], name: 'Athar · TRACE — Portal for Education, Training, Development & Quality', url: site },
     validFrom: c.issued_at, ...(c.valid_until ? { validUntil: c.valid_until } : {}),
     credentialSubject: { type: ['AchievementSubject'], identifier: [{ type: 'IdentityObject', identityType: 'emailAddress', hashed: false, identityHash: c.email }],
-      achievement: { id: `${site}/credential/${c.verify_code}#achievement`, type: ['Achievement'], name: c.title_en || c.title_ar, description: c.description_ar || c.title_ar, achievementType: c.kind === 'program_completion' ? 'Certificate' : c.kind === 'skill' ? 'Competency' : c.kind === 'placement' ? 'Assessment' : 'Badge',
+      achievement: { id: `${site}/credential/${c.verify_code}#achievement`, type: ['Achievement'], name: c.title_en || c.title_ar, description: c.description_ar || c.title_ar, achievementType: c.kind === 'program_completion' ? 'Certificate' : c.kind === 'skill' ? 'Competency' : c.kind === 'placement' ? 'Assessment' : c.kind === 'achievement_record' ? 'LearningRecord' : 'Badge',
         criteria: { narrative: c.kind === 'program_completion' ? 'Completed the program with ≥80% attendance and the final evaluation.' : c.kind === 'placement' ? 'Achieved the stated CEFR level in the Mi‘yar adaptive placement test.' : 'Evidence recorded in the Athar learning record.' },
         ...(c.level ? { fieldOfStudy: c.level } : {}),
         alignment: skills.map(s => ({ type: ['Alignment'], targetName: s.name_en, targetCode: s.code, targetDescription: s.name_ar, targetFramework: s.saqf_level ? `SAQF level ${s.saqf_level}` : s.cefr_level ? `CEFR ${s.cefr_level}` : s.sdaia_code ? `SDAIA ${s.sdaia_code}` : 'Athar skills taxonomy', targetUrl: `${site}/resources?skill=${s.id}` })) },
