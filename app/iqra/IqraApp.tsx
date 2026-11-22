@@ -144,7 +144,7 @@ export default function IqraApp({ fontClass = '' }: { fontClass?: string }) {
         {code ? <a className="iq-lnk" href={`/miaar/result/${encodeURIComponent(code)}`}>بطاقة نتيجتي</a> : <a className="iq-lnk" href="/me">صفحتي</a>}<ReadSize /></nav></div><WayBar /></header>
     <p className="iq-live" aria-live="polite" role="status">{live}</p>
     {(offline || pending > 0) && <p className="iq-offline" data-testid="iq-offline" data-pending={pending}>{offline ? 'بلا اتصال — تعمل الحلقات المحمَّلة، وتُحفَظ إجاباتك ونبضات وقتك هنا حتى يعود الاتصال' : 'عاد الاتصال — نرسل ما حفظته'}{pending > 0 ? ` · في الصندوق ${pending}` : ''}{!offline && pending > 0 ? <button type="button" className="iq-mini" onClick={() => void drain()}>أرسل الآن</button> : null}</p>}
-    {home?.gate === 'enrolled' && screen.s === 'home' && <ZoneTape zone="iqra" compact />} {/* هـ-1/4 «شريط أخبار المنطقة» */}
+    {home && screen.s === 'home' && <ZoneTape zone="iqra" compact />} {/* هـ-1/4 «شريط أخبار المنطقة» */}
     {!ready || (!home && !err) ? <p className="iq-wait">نفتح مستواك…</p> : null}
     {err && <section className="iq-wrap"><div className="iq-card"><p className="iq-err" role="alert">{err}</p></div></section>}
     {home && home.gate !== 'enrolled' && <Gate home={home} code={code} setCode={(c) => { setCode(c); window.history.replaceState(null, '', `/iqra?code=${encodeURIComponent(c)}`); }} reload={loadHome} />}

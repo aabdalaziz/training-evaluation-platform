@@ -8,6 +8,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import ZoneTape from '../../components/ZoneTape';
 import { supabase } from '../../../lib/supabase/client';
 import { Flip, Reveal, Horizon, ArcDivider, CountUp } from '../../../lib/ui/motion';
 import { LEVEL_META, type IqraLevel } from '../../../lib/iqra/registry';
@@ -49,6 +50,7 @@ export default function IqraStart({ fontClass }: { fontClass?: string }) {
           {lvl && <div className="iqs-level lvl-surface" data-level={a?.level || undefined} data-testid="iqs-level"><i aria-hidden="true" /><div><small>مستواك من مِعيار</small><b>{lvl.code} · {lvl.name_ar}</b><span>{lvl.line_ar}</span></div></div>}
         </div>
       </section>
+      <ZoneTape zone="iqra" /> {/* هـ-1/4ب «شريط أخبار المنطقة» */}
 
       <div className="iqs-wrap">
         {err && <div className="iqs-err" role="alert" data-testid="iqs-err">{err}</div>}

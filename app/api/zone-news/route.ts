@@ -21,6 +21,17 @@ const n = (x: any) => Number(x) || 0;
 const arN = (x: number) => new Intl.NumberFormat('ar-EG').format(x);
 
 /** أخبار آلية لكلّ منطقة — أعداد فقط، لا أسماء ولا نتائج */
+const AT0 = '2026-01-01T00:00:00.000Z';
+const F = (zone: Zone, id: string, title: string, body: string, href: string, tone: string): ZoneItem => ({ id: `fallback:${id}`, kind: 'auto', zone, title, body, href, tone, pinned: false, at: AT0 });
+const FALLBACK: Record<Zone, ZoneItem[]> = {
+  miaar: [F('miaar', 'm1', 'مِعيار يحدّد مستواك في ٣ دقائق', 'تقييم عربي على الإطار الأوروبي المرجعي — مجّانًا وبلا تسجيل.', '/miaar', 'coral')],
+  iqra: [F('iqra', 'i1', 'تجربة ٧ أيام مجّانًا — بلا بطاقة', 'بعد تحديد مستواك في مِعيار، يفتح اقْرَأْ كاملًا سبعة أيام.', '/iqra/start', 'sand')],
+  programs: [F('programs', 'p1', 'برامج أَثَر تُقاس بأثرها لا بساعاتها', 'تصفّح الدليل — كل برنامج له «شهادة تكبر» بعد التدريب.', '/programs', 'plum')],
+  org: [F('org', 'o1', 'بوّابة الجهات: قِس أثر التدريب في مؤسستك', 'خريطة قدرات · تقارير أثر · عقود أثر.', '/org', 'sea')],
+  experts: [F('experts', 'e1', 'انضمّ إلى هيئة أَثَر', 'مدرّبون وخبراء مُصدِّقون — اعتماد السير من الطاقم.', '/experts', 'plum')],
+  staff: [F('staff', 's1', 'مركز القيادة', 'كلّ غرفة بابها بصفتك.', '/dashboard', 'plum')],
+  portal: [F('portal', 'g1', 'الآن في أَثَر', 'مِعيار يحدّد مستواك · اقْرَأْ يعلّمك عليه · البرامج تُقاس بأثرها.', '/', 'plum')],
+};
 async function autoItems(db: any, zone: Zone): Promise<ZoneItem[]> {
   const out: ZoneItem[] = []; const now = new Date(); const week = new Date(now.getTime() - 7 * 86400000).toISOString();
   const push = (id: string, title: string, body: string, href: string | null, tone = 'plum') => out.push({ id: `auto:${id}`, kind: 'auto', zone, title, body, href, tone, pinned: false, at: now.toISOString() });
@@ -68,14 +79,17 @@ export async function GET(req: Request) {
   const db = createClient(URL_, SVC, { auth: { persistSession: false } });
   if (u.searchParams.get('all') === '1') {
     const s = await staff(req); if (!s) return bad('forbidden', 403);
-    const { data } = await db.from('zone_news').select('*').eq('zone', zone).order('pinned', { ascending: false }).order('starts_at', { ascending: false }).limit(100);
-    return NextResponse.json({ ok: true, rows: data || [] }, { headers: NO });
+    /* هـ-1/4ب: قائمة الطاقم تشمل كلّ المناطق (أو منطقة واحدة إن طُلبت) وتُعاد باسم items */
+    let qb = db.from('zone_news').select('*').order('pinned', { ascending: false }).order('starts_at', { ascending: false }).limit(200); if (u.searchParams.get('zone')) qb = qb.eq('zone', zone);
+    const { data } = await qb;
+    return NextResponse.json({ ok: true, items: data || [], rows: data || [] }, { headers: NO });
   }
   const nowIso = new Date().toISOString();
   const { data } = await db.from('zone_news').select('id, zone, title_ar, body_ar, href, tone, pinned, starts_at').eq('zone', zone).eq('published', true).lte('starts_at', nowIso).or(`ends_at.is.null,ends_at.gt.${nowIso}`).order('pinned', { ascending: false }).order('starts_at', { ascending: false }).limit(6);
   const news: ZoneItem[] = ((data || []) as any[]).map((r) => ({ id: r.id, kind: 'news', zone: r.zone, title: r.title_ar, body: r.body_ar || '', href: r.href || null, tone: r.tone || 'plum', pinned: !!r.pinned, at: r.starts_at }));
   const auto = await autoItems(db, zone);
-  return NextResponse.json({ ok: true, zone, items: [...news, ...auto].slice(0, 8) }, { headers: PUB });
+  const items = [...news, ...auto]; if (!items.length) items.push(...FALLBACK[zone]); /* هـ-1/4ب: الشريط لا يختفي — خبر ثابت لكلّ منطقة حين لا جديد */
+  return NextResponse.json({ ok: true, zone, items: items.slice(0, 8) }, { headers: PUB });
 }
 
 export async function POST(req: Request) {

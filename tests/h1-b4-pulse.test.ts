@@ -85,3 +85,13 @@ test('نقاط التركيب: مِعيار النتيجة · اقْرَأْ · 
   assert.ok(R('app/programs/[id]/page.tsx').includes('{mine && rateTok && <RateService service="program"'));
   assert.ok(R('app/pay/[id]/page.tsx').includes("{inv.status === 'paid' && rateTok && <RateService service=\"payment\""));
 });
+
+test('هـ-1/4ب: الشريط في كل منطقة — خبر ثابت حين لا جديد، وقائمة الطاقم تشمل كل المناطق', () => {
+  const n = R('app/api/zone-news/route.ts');
+  for (const z of ['miaar', 'iqra', 'programs', 'org', 'experts', 'staff', 'portal']) assert.ok(n.includes(`  ${z}: [F('${z}'`), z);
+  assert.ok(n.includes('if (!items.length) items.push(...FALLBACK[zone])'));
+  assert.ok(n.includes('items: data || [], rows: data || []'));
+  assert.ok(R('app/iqra/start/IqraStart.tsx').includes('<ZoneTape zone="iqra" />'));
+  assert.ok(R('app/miaar/MiaarApp.tsx').includes('<ZoneTape zone="miaar" compact />'));
+  assert.ok(R('app/iqra/IqraApp.tsx').includes("{home && screen.s === 'home' && <ZoneTape zone=\"iqra\" compact />}"));
+});
