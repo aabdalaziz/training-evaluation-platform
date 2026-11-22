@@ -13,14 +13,14 @@ export default function VerifyIndexPage() {
     <div className="vf" dir="rtl">
       <style>{VERIFY_CSS}</style>
       <div className="vf-box">
-        <div className="vf-logos"><img src="/logos/upm.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /><img src="/logos/gate.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
+        <div className="vf-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
         <h1><Icon name="shield" size={22} /> التحقق من صحة شهادة</h1>
-        <p className="vf-muted">أدخل الرقم التسلسلي المطبوع على الشهادة (مثل <code>UPM-2026-000123</code>) أو رمز التحقق المكوّن من 10 رموز، أو امسح رمز QR الموجود على الشهادة.</p>
+        <p className="vf-muted">أدخل الرقم التسلسلي المطبوع على الشهادة (مثل <code>ATH-2026-000123</code>) أو رمز التحقق المكوّن من 10 رموز، أو امسح رمز QR الموجود على الشهادة.</p>
         <form onSubmit={go} className="vf-form">
-          <input dir="ltr" value={code} onChange={e => setCode(e.target.value)} placeholder="UPM-2026-000123" autoFocus />
+          <input dir="ltr" value={code} onChange={e => setCode(e.target.value)} placeholder="ATH-2026-000123" autoFocus />
           <button type="submit" className="vf-btn"><Icon name="search" size={16} /> تحقق</button>
         </form>
-        <div className="vf-foot">جامعة الأمير مقرن بن عبدالعزيز · بوابة التميز للاستشارات والتدريب</div>
+        <div className="vf-foot">أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة</div>
       </div>
     </div>
   );

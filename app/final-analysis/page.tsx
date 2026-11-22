@@ -56,9 +56,9 @@ export default function FinalAxisAnalysis() {
   const Header = () => (
     <header className="fa-head">
       <div className="fa-brand">
-        <img src="/logos/upm.png" alt="جامعة الأمير مقرن" className="fa-logo" />
+        <img src="/brand/athar-mark.svg" alt="أَثَر" className="fa-logo" />
         <div className="fa-sep" />
-        <img src="/logos/center.png" alt="المركز العالمي" className="fa-logo" />
+        
         <div className="fa-brand-text">
           <b>التحليل التفصيلي لمحاور التقييم النهائي</b>
           <span>برنامج تعليم اللغة العربية للناطقين بغيرها · التقييمات الختامية (FINAL) فقط</span>
@@ -170,7 +170,7 @@ export default function FinalAxisAnalysis() {
 
       <footer className="fa-foot">
         <div><b>دليل القراءة:</b> ممتاز ≥{TARGET} | جيد ≥3.7 | يحتاج متابعة ≥3.0 | أولوية عاجلة &lt;3.0 — الفجوة تُقاس من المستهدف {TARGET}.</div>
-        <div>منصة الجودة والتقييم — جامعة الأمير مقرن بن عبدالعزيز</div>
+        <div>أَثَر — منصّة الجودة والتقييم</div>
       </footer>
     </main>
   );

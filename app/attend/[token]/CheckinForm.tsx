@@ -88,7 +88,7 @@ export function CheckinForm({ token }: { token: string }) {
       <style>{CSS}</style>
       <div className="at-wrap">
         <header className="at-head">
-          <div className="at-logos"><img src="/logos/upm.png" alt="UPM" /><img src="/logos/gate.png" alt="Gate" /></div>
+          <div className="at-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
           <div className="at-kicker"><Icon name="check" size={14} /> {t.kicker}</div>
           <button type="button" className="at-lang" onClick={() => setLang(l => (l === 'ar' ? 'en' : 'ar'))}>{lang === 'ar' ? 'English' : 'العربية'}</button>
         </header>

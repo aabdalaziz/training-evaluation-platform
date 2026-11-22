@@ -141,10 +141,10 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
               </ul>
             </div>
           </div>
-          <div className="pt-partnersrow">
+          {PARTNERS.length > 0 && <div className="pt-partnersrow">
             {PARTNERS.map(p => <span key={p.logo} className="pt-partnerchip"><img src={p.logo} alt={t(p.name, lang)} /><span>{t(p.name, lang)}</span></span>)}
-          </div>
-          <div className="pt-copy">© {BRAND.copyrightYear} {t(BRAND.owner, lang)} · {t(BRAND.name, lang)} — {t(UI.rights, lang)}<br /><small>{t(BRAND.operatedBy, lang)} {t(BRAND.legal, lang)}</small></div>
+          </div>}
+          <div className="pt-copy">© {BRAND.copyrightYear} {t(BRAND.owner, lang)} · {t(BRAND.name, lang)} — {t(UI.rights, lang)}</div>
         </footer>
       </div>
       </AccessProvider>

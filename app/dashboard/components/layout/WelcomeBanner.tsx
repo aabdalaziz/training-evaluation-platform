@@ -47,7 +47,7 @@ export default function WelcomeBanner() {
               fontWeight: 900,
             }}
           >
-            بوابة التميز للتعليم والتطوير
+            أَثَر · مركز القيادة
           </h1>
 
           <p

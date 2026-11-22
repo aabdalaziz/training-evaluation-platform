@@ -500,12 +500,12 @@ export default function ExecutiveReportPage(){
       <div className="wrap">
         <header className="rp-head noprint">
           <div className="rp-brand">
-            <img src="/logos/upm.png" alt="UPM" className="rp-logo"/>
+            <img src="/brand/athar-mark.svg" alt="أَثَر" className="rp-logo"/>
             <div className="rp-logo-sep"/>
-            <img src="/logos/center.png" alt="Center" className="rp-logo"/>
+            
             <div className="rp-brand-text">
               <b>{isAr?"التقرير التنفيذي لجودة البرنامج":"Executive Quality Report"}</b>
-              <span>{isAr?"لوحة القيادة للإدارة العليا · المركز العالمي لتعليم اللغة العربية":"Leadership Dashboard · World Center for Arabic Language"}</span>
+              <span>{isAr?"لوحة القيادة للإدارة العليا · أَثَر":"Leadership Dashboard · Athar"}</span>
             </div>
           </div>
           <div className="rp-actions">

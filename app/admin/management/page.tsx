@@ -222,7 +222,7 @@ export default function ManagementPage() {
       <header className="top">
         <div className="top-in">
           <div className="brand-row">
-            <div className="logo-box"><img src="/logos/upm.png" alt="UPM" /></div>
+            <div className="logo-box"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
             <div>
               <div className="ttl">{ar ? "لوحة الإدارة المركزية" : "Central Admin Panel"}</div>
               <div className="sub">{ar ? "المدربون · القاعات والمجموعات · المستويات · المواعيد — مصدر واحد لكل المنصة" : "Trainers · Rooms & groups · Levels · Schedules — one source for the whole platform"}</div>

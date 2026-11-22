@@ -123,7 +123,7 @@ function Inner() {
       {error && <div className="ch-alert ch-noprint">{error}</div>}
 
       <div className="ch-print-head">
-        <div className="ch-logos"><img src="/logos/upm.png" alt="" /><img src="/logos/gate.png" alt="" /></div>
+        <div className="ch-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
         <h2>سلسلة أثر التدريب — {sel ? sel.program.name_ar : 'جميع البرامج'}</h2>
         <p>نموذج كيركباتريك (المستويات 1–4) · <bdi>{printedAt}</bdi></p>
       </div>

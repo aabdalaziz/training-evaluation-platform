@@ -93,7 +93,7 @@ export function ImpactForm({ token, initialPhase }: { token: string; initialPhas
   return shell(
     <>
       <header className="im-card im-head">
-        <div className="im-logos"><img src="/logos/upm.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /><img src="/logos/gate.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
+        <div className="im-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
         <div className="im-kicker"><Icon name="target" size={14} /> {lang === 'en' ? 'Training impact measurement' : 'قياس أثر التدريب'}</div>
         <h1>{T(a.title_ar, a.title_en)}</h1>
         <p className="im-muted">{T(a.program_name || '', a.program_name_en)}{a.classroom_code ? ` · ${a.classroom_code}` : ''}</p>

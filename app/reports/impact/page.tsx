@@ -110,7 +110,7 @@ function Inner() {
       {a && (
         <>
           <section className="ir-title">
-            <div className="ir-logos"><img src="/logos/upm.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /><img src="/logos/gate.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
+            <div className="ir-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
             <h2>{a.title_ar}</h2>
             <p>{pName(a.program_id)} · الرمز {a.token} · {gender ? (gender === 'M' ? 'ذكور' : 'إناث') : 'كل المشاركين'} · طُبع {new Date().toLocaleDateString('ar-SA')}</p>
           </section>

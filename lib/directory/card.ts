@@ -48,7 +48,7 @@ export function buildCollabDoc(inp: { code: string; e: Pick<Engagement, 'kind' |
     issuer: issuerBlock(inp.did, inp.site), validFrom: now.toISOString(), ...(inp.e.end_at ? { validUntil: `${inp.e.end_at}T23:59:59.000Z` } : {}),
     credentialSubject: { type: ['AchievementSubject'], name: `${inp.memberName} · ${athar}`,
       achievement: { id: `${inp.site}/me/directory`, type: ['Achievement'], name: `Collaboration agreement (${inp.e.kind}) — ${inp.e.title_ar}`, achievementType: 'Badge',
-        description: 'A per-assignment collaboration agreement between a member of the Athar Faculty and Athar (CenterGate for Excellence). The member signed by name; Athar signed in its capacity. Scope, deliverables and dates are recorded here; the fee is agreed per project and is never part of this document.',
+        description: 'A per-assignment collaboration agreement between a member of the Athar Faculty and Athar. The member signed by name; Athar signed in its capacity. Scope, deliverables and dates are recorded here; the fee is agreed per project and is never part of this document.',
         criteria: { narrative: `${inp.e.title_ar} — ${inp.e.scope_ar.slice(0, 400)}` } },
       result: [{ type: ['Result'], resultDescription: 'kind', value: inp.e.kind }, { type: ['Result'], resultDescription: 'period', value: `${inp.e.start_at || '—'} → ${inp.e.end_at || '—'}` }, { type: ['Result'], resultDescription: 'deliverables', value: String(inp.e.deliverables.length) }] },
     ...(inp.statusIndex !== null ? { credentialStatus: statusEntry(inp.site, inp.statusIndex) } : {}),

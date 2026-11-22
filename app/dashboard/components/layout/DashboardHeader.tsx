@@ -70,7 +70,7 @@ export default function DashboardHeader({
               opacity: .9,
             }}
           >
-            <span>🏛️ بوابة التميز للتعليم والتطوير</span>
+            <span>أَثَر · مركز القيادة</span>
 
             <span>•</span>
 

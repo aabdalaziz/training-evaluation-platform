@@ -182,7 +182,7 @@ export function contractStory(c: Contract, s: ContractState, lang: Lang): string
   return out;
 }
 
-const shell = (title: string, body: string) => `<div dir="rtl" style="font-family:Tahoma,Arial;max-width:620px;margin:auto;border:1px solid #EADFD6;border-radius:16px;overflow:hidden"><div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="font-size:12px;opacity:.8">أَثَر · عقود الأثر</div><h2 style="margin:6px 0 0;font-size:18px">${title}</h2></div><div style="padding:20px 22px;color:#2A1626;line-height:1.8">${body}</div><div style="background:#FBF4EE;color:#8E7F8A;font-size:11px;padding:12px 22px">© 2026 د. أحمد محمد عبدالعزيز بدوي · أَثَر — تُشغَّل تجاريًا عبر شركة بوابة التميز للاستشارات والتدريب</div></div>`;
+const shell = (title: string, body: string) => `<div dir="rtl" style="font-family:Tahoma,Arial;max-width:620px;margin:auto;border:1px solid #EADFD6;border-radius:16px;overflow:hidden"><div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="font-size:12px;opacity:.8">أَثَر · عقود الأثر</div><h2 style="margin:6px 0 0;font-size:18px">${title}</h2></div><div style="padding:20px 22px;color:#2A1626;line-height:1.8">${body}</div><div style="background:#FBF4EE;color:#8E7F8A;font-size:11px;padding:12px 22px">بوّابة أَثَر للتعليم والتدريب والتطوير والجودة</div></div>`;
 const btn = (href: string, label: string) => `<p style="margin:18px 0"><a href="${href}" style="background:#D9A866;color:#3A1F36;text-decoration:none;padding:11px 22px;border-radius:999px;font-weight:700;display:inline-block">${label}</a></p>`;
 const esc = (s: string) => String(s || '').replace(/[<>&]/g, ch => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[ch] as string));
 
@@ -191,7 +191,7 @@ export function activationMailHtml(c: Contract, url: string) {
 }
 export function releaseMailHtml(c: Contract, r: Release, s: ContractState, url: string) {
   const m = s.milestones.find(x => x.key === r.milestone)!;
-  return { subject: `مذكرة إفراج ${r.memo_no}: دفعة «${MILESTONE_LABEL[r.milestone].ar}» — ${c.title_ar}`, html: shell(`مذكرة إفراج عن دفعة · ${r.memo_no}`, `<p>بموجب عقد الأثر <b>${esc(c.title_ar)}</b>، أُفرج عن دفعة <b>«${MILESTONE_LABEL[r.milestone].ar}» (${r.pct}%)</b> بقيمة <b>${money(Number(r.amount), c.currency, 'ar')}</b>.</p><p><b>الأساس:</b> ${esc(m.metric.ar)}.<br/>${esc(m.detail.ar)}</p>${r.note ? `<p><b>ملاحظة:</b> ${esc(r.note)}</p>` : ''}<p>أُفرج عنها بواسطة ${esc(r.released_by_name || 'فريق أَثَر')} في ${fmtD(r.released_at, 'ar')}.</p>${btn(url, 'صفحة العقد الحية')}<p style="font-size:12px;color:#8E7F8A">تُصدر الفاتورة الرسمية وفق إجراءات شركة بوابة التميز للاستشارات والتدريب.</p>`) };
+  return { subject: `مذكرة إفراج ${r.memo_no}: دفعة «${MILESTONE_LABEL[r.milestone].ar}» — ${c.title_ar}`, html: shell(`مذكرة إفراج عن دفعة · ${r.memo_no}`, `<p>بموجب عقد الأثر <b>${esc(c.title_ar)}</b>، أُفرج عن دفعة <b>«${MILESTONE_LABEL[r.milestone].ar}» (${r.pct}%)</b> بقيمة <b>${money(Number(r.amount), c.currency, 'ar')}</b>.</p><p><b>الأساس:</b> ${esc(m.metric.ar)}.<br/>${esc(m.detail.ar)}</p>${r.note ? `<p><b>ملاحظة:</b> ${esc(r.note)}</p>` : ''}<p>أُفرج عنها بواسطة ${esc(r.released_by_name || 'فريق أَثَر')} في ${fmtD(r.released_at, 'ar')}.</p>${btn(url, 'صفحة العقد الحية')}<p style="font-size:12px;color:#8E7F8A">تُصدر الفاتورة الرسمية وفق إجراءات أَثَر.</p>`) };
 }
 export function pulseMailHtml(c: Contract, ev: { subject: T; body: T }, url: string) {
   return { subject: ev.subject.ar, html: shell(ev.subject.ar, `<p>${esc(ev.body.ar)}</p>${btn(url, 'صفحة العقد الحية')}`) };

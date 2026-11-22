@@ -19,8 +19,8 @@ export const BRAND = {
   /** مالك الحقوق الفكرية للمنصة والهوية والمنهجيات */
   owner: { ar: 'د. أحمد محمد عبدالعزيز بدوي', en: 'Dr. Ahmed Mohamed Abdelaziz Badawi' } as T,
   /** الكيان التجاري المشغِّل حاليًا (الفواتير والتعاقدات) — لا يحمل أي حق ملكية */
-  legal: { ar: 'شركة بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T,
-  operatedBy: { ar: 'تُشغَّل تجاريًا عبر', en: 'Commercially operated by' } as T,
+  legal: { ar: 'بوّابة أَثَر للتعليم والتدريب والتطوير والجودة', en: 'Athar Portal for Education, Training, Development & Quality' } as T, /* هـ-3 ز: الكيان المشغِّل يُضاف بعد الاتفاق */
+  operatedBy: { ar: '', en: '' } as T,
   copyrightYear: 2026,
   colors: { navy: '#3A1F36', teal: '#D4614A', gold: '#D9A866' },
   /** الاختصار الإنجليزي الرسمي: TRACE = أثر، وحروفه أوائل الخدمات */
@@ -30,7 +30,7 @@ export const BRAND = {
   /** P43-أ «أَثَر الواحد»: الاسم المهني الرسمي للواجهة الإدارية (كانت «منصة التقويم · مركز القيادة التنفيذي») — باب واحد /login وغُرَف بالصلاحيات */
   command: { ar: 'مركز قيادة أَثَر', en: 'Athar Command Center' } as T,
   /** المؤسسة المستضيفة الظاهرة في ترويسة مركز القيادة — قيمة إعداد واحدة هنا إلى أن تُنقل إلى شاشة الإعدادات */
-  institution: { ar: 'جامعة الأمير مقرن بن عبدالعزيز', en: 'Prince Mugrin University' } as T,
+  institution: { ar: 'أَثَر', en: 'Athar' } as T, /* هـ-3 ز: لا جهة قبل الاتفاق */
   placementUrl: '/miaar', // مِعيار — من أَثَر: منتج أَثَر القائم بذاته داخل البوابة منذ م1 (مستقلّ عن أي مشروع خارجي — الفصل 2026-11-02)
 };
 
@@ -48,7 +48,7 @@ export const CONTACT = {
 
 export const ABOUT = {
   /** بيان الملكية — يُعرض في «من نحن» */
-  ownership: { ar: 'أَثَر مشروع فكري ومهني للدكتور أحمد محمد عبدالعزيز بدوي: فكرته ومنهجيته (TRACE) وتصميمه ومحتواه ملك حصري له. الجهات الأكاديمية والمؤسسات المذكورة في البوابة هي جهات عمل وتعاون، ويُدار النشاط التجاري حاليًا عبر شركة بوابة التميز للاستشارات والتدريب.', en: 'Athar is the intellectual and professional project of Dr. Ahmed Mohamed Abdelaziz Badawi; its concept, TRACE methodology, design and content are his exclusive property. The institutions named on this portal are employers and collaborators; commercial operations currently run through CenterGate for Excellence.' } as T,
+  ownership: { ar: 'أَثَر مشروع فكري ومهني للدكتور أحمد محمد عبدالعزيز بدوي: فكرته ومنهجيته (TRACE) وتصميمه ومحتواه ملك حصري له. يُعلَن عن الكيان المشغِّل والشركاء بعد اكتمال الاتفاقات.', en: 'Athar is the intellectual and professional project of Dr. Ahmed Mohamed Abdelaziz Badawi; its concept, TRACE methodology, design and content are his exclusive property. The operating entity and partners will be announced once agreements are finalised.' } as T,
   intro: { ar: 'أَثَر بوابة متكاملة تجمع تحت سقف واحد ثلاث رحلات: التعليم، والتدريب، والتطوير المؤسسي — وتربطها بمنظومة قياس تبدأ قبل الرحلة باختبار «مِعيار»، وتستمر أثناءها بتقويم البرامج وقياس الأثر، وتُثبت نتائجها بعدها بقياس الأثر وفق مستويات كيركباتريك الأربعة.', en: 'Athar is an integrated portal bringing together three journeys — education, training and institutional development — bound by a measurement system that starts before the journey (Miaar placement test), continues during it (the Evaluation Platform) and proves results after it through Kirkpatrick levels 1–4.' } as T,
   vision: { ar: 'أن نكون المرجع الأول في المنطقة لحلول التعليم والتدريب التي تُثبت أثرها بالأرقام.', en: 'To be the region’s first reference for education and training solutions that prove their impact with numbers.' } as T,
   mission: { ar: 'تقديم برامج وخدمات تعليمية وتدريبية واستشارية عالية الجودة، تُصمَّم على احتياج حقيقي، وتُنفَّذ بخبرات متخصصة، وتُقاس نتائجها بشفافية.', en: 'To deliver high-quality education, training and consulting services designed on real needs, delivered by specialists, and measured transparently.' } as T,
@@ -65,11 +65,7 @@ export const ABOUT = {
   ],
 };
 
-export const PARTNERS = [
-  { logo: '/logos/upm.png', name: { ar: 'جامعة الأمير مقرن بن عبدالعزيز', en: 'Prince Mugrin University' } as T, role: { ar: 'جهة عمل وتعاون أكاديمي', en: 'Employer & academic collaborator' } as T },
-  { logo: '/logos/center.png', name: { ar: 'المركز العالمي لتعليم اللغة العربية', en: 'Global Center for Teaching Arabic' } as T, role: { ar: 'جهة تعاون متخصصة', en: 'Specialised collaborator' } as T },
-  { logo: '/logos/gate.png', name: { ar: 'شركة بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T, role: { ar: 'الكيان التجاري المشغِّل حاليًا', en: 'Current operating entity' } as T, wide: true },
-];
+export const PARTNERS: { logo: string; name: T; role: T }[] = []; /* هـ-3 ز: الشركاء يُعرضون بعد الاتفاق مع المشغّل */
 
 /** خريطة الاختصار TRACE → الخدمات (تُعرض في الرئيسة والتذييل) */
 export const ACRONYM: { letter: string; word: string; ar: string; slug: string }[] = [

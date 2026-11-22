@@ -30,7 +30,7 @@ export function VerifyCard({ code }: { code: string }) {
     <div className="vf" dir="rtl">
       <style>{VERIFY_CSS}</style>
       <div className="vf-box">
-        <div className="vf-logos"><img src="/logos/upm.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /><img src="/logos/gate.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
+        <div className="vf-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
         <h1><Icon name="shield" size={22} /> التحقق من صحة شهادة</h1>
         <div className="vf-code">الرمز: <bdi>{code}</bdi></div>
 

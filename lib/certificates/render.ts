@@ -20,10 +20,10 @@ export type CertData = {
 };
 
 export const DEFAULT_SETTINGS: CertSettings = {
-  issuer_ar: 'جامعة الأمير مقرن بن عبدالعزيز', issuer_en: 'Prince Mugrin University',
-  unit_ar: 'بوابة التميز للاستشارات والتدريب', unit_en: 'CenterGate for Excellence — Consulting & Training',
+  issuer_ar: 'أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة', issuer_en: 'Athar Portal for Education, Training, Development & Quality',
+  unit_ar: '', unit_en: '',
   sign1_name: '', sign1_title: 'مدير البرامج التدريبية', sign2_name: '', sign2_title: 'المشرف العام',
-  serial_prefix: 'UPM', default_hours: 20, city_ar: 'المدينة المنورة', show_en: true,
+  serial_prefix: 'ATH', default_hours: 20, city_ar: 'المدينة المنورة', show_en: true,
   footer_ar: 'هذه الشهادة صادرة إلكترونيًا ويمكن التحقق من صحتها عبر رمز الاستجابة السريعة أو الرقم التسلسلي.',
 };
 
@@ -75,7 +75,7 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d')!;
   if (typeof document !== 'undefined' && document.fonts) { try { await document.fonts.ready; await Promise.all([400, 700, 800].map(w => document.fonts.load(`${w} 40px ${fontFamily().split(',')[0]}`))); } catch { /* ignore */ } }
-  const [logoUpm, logoGate] = await Promise.all([loadImage('/logos/upm.png'), loadImage('/logos/gate.png')]);
+  const logoAthar = await loadImage('/brand/athar-mark.png'); /* هـ-3 ز: شعار أَثَر وحده */
   const K = KIND_LABEL[d.kind];
 
   /* background + frame */
@@ -91,11 +91,10 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
 
   /* header: logos + issuer */
   const logoH = 150;
-  if (logoUpm) { const w = logoUpm.width * (logoH / logoUpm.height); ctx.drawImage(logoUpm, W - 200 - w, 150, w, logoH); }
-  if (logoGate) { const w = logoGate.width * (logoH / logoGate.height); ctx.drawImage(logoGate, 200, 150, w, logoH); }
+  if (logoAthar) { const w = logoAthar.width * (logoH / logoAthar.height); ctx.drawImage(logoAthar, W - 200 - w, 150, w, logoH); }
   text(ctx, s.issuer_ar, W / 2, 205, { size: 50, weight: 800, color: NAVY, maxW: 1200 });
-  text(ctx, s.unit_ar, W / 2, 262, { size: 34, weight: 700, color: TEAL, maxW: 1200 });
-  if (s.show_en) text(ctx, `${s.issuer_en} · ${s.unit_en}`, W / 2, 306, { size: 24, weight: 400, color: MUTED, dir: 'ltr', maxW: 1300 });
+  if (s.unit_ar) text(ctx, s.unit_ar, W / 2, 262, { size: 34, weight: 700, color: TEAL, maxW: 1200 });
+  if (s.show_en) text(ctx, [s.issuer_en, s.unit_en].filter(Boolean).join(' · '), W / 2, 306, { size: 24, weight: 400, color: MUTED, dir: 'ltr', maxW: 1300 });
 
   /* title */
   ctx.fillStyle = GOLD; ctx.fillRect(W / 2 - 160, 352, 320, 5);
@@ -103,7 +102,7 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
   if (s.show_en) text(ctx, K.en, W / 2, 552, { size: 40, weight: 700, color: TEAL, dir: 'ltr' });
 
   /* body */
-  text(ctx, d.kind === 'appreciation' ? `تتقدم ${s.unit_ar} بخالص الشكر والتقدير إلى` : 'تُمنح هذه الشهادة إلى', W / 2, 640, { size: 42, weight: 400, color: INK, maxW: 1700 });
+  text(ctx, d.kind === 'appreciation' ? `تتقدم ${s.unit_ar || s.issuer_ar} بخالص الشكر والتقدير إلى` : 'تُمنح هذه الشهادة إلى', W / 2, 640, { size: 42, weight: 400, color: INK, maxW: 1700 });
   const nameSize = text(ctx, d.recipient_name, W / 2, 760, { size: 104, weight: 800, color: TEAL, maxW: 1800, min: 56 });
   ctx.save(); ctx.font = `800 ${nameSize}px ${fontFamily()}`; const nw = Math.min(1800, ctx.measureText(d.recipient_name).width); ctx.restore();
   ctx.fillStyle = GOLD; ctx.fillRect(W / 2 - nw / 2 - 20, 790, nw + 40, 4);

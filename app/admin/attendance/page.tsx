@@ -373,7 +373,7 @@ function Inner() {
           {qrOpen && (
             <div className="aa-modal" onClick={() => setQrOpen(false)}>
               <div className="aa-modal-box aa-print" onClick={e => e.stopPropagation()}>
-                <div className="aa-print-logos"><img src="/logos/upm.png" alt="" /><img src="/logos/gate.png" alt="" /></div>
+                <div className="aa-print-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
                 <h3>{current.title}</h3>
                 <p>{pName(current.program_id)}{current.classroom_id ? ` · ${cCode(current.classroom_id)}` : ''} · {current.session_date}</p>
                 <div className="aa-qr" dangerouslySetInnerHTML={{ __html: qrSvg(attendUrl(current.token), 300, 'M', NAVY) }} />

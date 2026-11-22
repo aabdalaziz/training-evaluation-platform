@@ -449,7 +449,7 @@ function Inner() {
         <div className="ia-modal" onClick={() => setQrFor(null)}>
           <div className="ia-modal-box" onClick={e => e.stopPropagation()}>
             <div className="ia-print">
-              <div className="ia-print-logos"><img src="/logos/upm.png" alt="" /><img src="/logos/gate.png" alt="" /></div>
+              <div className="ia-print-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
               <h3>{qrFor.a.title_ar}</h3>
               <p>{qrFor.phase === 'pre' ? 'القياس القبلي — قبل بدء البرنامج' : 'القياس البعدي — بعد ختام البرنامج'}</p>
               <div className="ia-qr" dangerouslySetInnerHTML={{ __html: qrSvg(impactUrl(qrFor.a.token, qrFor.phase), 220) }} />

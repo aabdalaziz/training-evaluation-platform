@@ -101,7 +101,7 @@ function Inner() {
         <div className="pr-sheet">
           {/* رأس الطباعة */}
           <div className="pr-top">
-            <img src="/logos/upm.png" alt="" className="pr-logo" />
+            <img src="/brand/athar-mark.svg" alt="أَثَر" className="pr-logo" />
             <div className="pr-title">
               <div className="pr-kicker">التقرير الشامل للبرنامج · <bdi>{printedAt}</bdi></div>
               <h2>{rep.program.name_ar}</h2>
@@ -112,7 +112,7 @@ function Inner() {
                 <span>{rep.trainers.length ? `المدربون: ${rep.trainers.join('، ')}` : 'بلا مدرب محدد'}</span>
               </div>
             </div>
-            <img src="/logos/gate.png" alt="" className="pr-logo" />
+            
           </div>
 
           {/* الخلاصة */}

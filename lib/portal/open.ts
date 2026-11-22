@@ -16,7 +16,7 @@ export const stripNil = <T extends Record<string, unknown>>(o: T): T => { for (c
 export function organizationJsonLd(site: string) {
   return stripNil({
     '@context': 'https://schema.org', '@type': 'EducationalOrganization', '@id': `${site}/#organization`,
-    name: BRAND.full.en, alternateName: [BRAND.full.ar, BRAND.name.ar, 'Athar', 'TRACE'], url: site, logo: `${site}/logos/gate.png`,
+    name: BRAND.full.en, alternateName: [BRAND.full.ar, BRAND.name.ar, 'Athar', 'TRACE'], url: site, logo: `${site}/brand/athar-mark.png`,
     description: BRAND.promise.en, slogan: BRAND.tagline.en, inLanguage: ['ar', 'en'],
     founder: { '@type': 'Person', name: BRAND.owner.en, alternateName: BRAND.owner.ar },
     address: { '@type': 'PostalAddress', addressLocality: 'Madinah', addressCountry: 'SA' },
@@ -30,7 +30,7 @@ export function issuerProfile(site: string) {
   return {
     '@context': ['https://www.w3.org/ns/credentials/v2', 'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'],
     id: `${site}/.well-known/athar.json`, type: ['Profile'],
-    name: BRAND.full.en, alternateName: BRAND.full.ar, url: site, email: CONTACT.email, image: `${site}/logos/gate.png`,
+    name: BRAND.full.en, alternateName: BRAND.full.ar, url: site, email: CONTACT.email, image: `${site}/brand/athar-mark.png`,
     description: 'Athar · TRACE issues verifiable digital credentials and skills profiles mapped to SAQF, SDAIA and CEFR. Verify any credential at /credential/<code>.',
     address: { type: ['Address'], addressCountry: 'SA', addressLocality: 'Madinah' },
     official: BRAND.owner.en, otherIdentifier: [{ type: ['IdentifierEntry'], identifier: 'athar-portal', identifierType: 'name' }],

@@ -51,7 +51,7 @@ export function buildReportEmailHtml(i: ReportMailInput): string {
   const align = ar ? 'right' : 'left';
   const k = i.k;
   const perf = PERF_LABEL[k.perf]; const risk = RISK_LABEL[k.risk];
-  const org = i.brand?.org || (ar ? 'جامعة الأمير مقرن · بوابة التميز للاستشارات والتدريب' : 'Prince Mugrin University · CenterGate for Excellence');
+  const org = i.brand?.org || (ar ? 'أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة' : 'Athar Portal');
   const platform = i.brand?.platform || (ar ? 'منصة تقويم البرامج التدريبية' : 'Training Evaluation Platform');
   const kpis: MailKpi[] = k.responses ? [
     { label: ar ? 'المتوسط العام' : 'Overall mean', value: `${k.mean.toFixed(2)}/5`, sub: `${ar ? 'الهدف' : 'Target'} ${TARGET} · ${ar ? 'الفجوة' : 'gap'} ${(k.mean - TARGET).toFixed(2)}`, color: perf.color },

@@ -325,7 +325,6 @@ export default function Dashboard() {
         <div className="db-brand" data-testid="command-side-brand">
           <div className="db-logos">{/* هـ-3: علامة القسم من عائلة المناطق (الطاقم إن لم يُحدَّد قسم) */}
             <ZoneMark zone={wing?.zone || 'staff'} size={46} light title={wing ? wing.name : 'مركز قيادة أَثَر — الطاقم'} />
-            <img src="/logos/upm.png" alt={BRAND.institution.ar} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           </div>
           <div className="db-brand-text"><b data-testid="command-side-wing">{wing ? wing.name : `${BRAND.name.ar} · مركز القيادة`}</b><small>{wing ? `مركز القيادة · ${wing.verb}` : BRAND.institution.ar}</small></div>
           {mine.length > 1 && <button type="button" className="db-hall" onClick={() => { setLobby(true); try { window.history.replaceState(null, '', '?lobby=1'); } catch { /* لا شيء */ } }} data-testid="command-side-lobby"><Icon name="compass" size={16} /> ← الردهة · أقسامي {mine.length}</button>}
@@ -348,7 +347,7 @@ export default function Dashboard() {
           ))}
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
-        <small className="db-owner">{BRAND.operatedBy.ar} {BRAND.legal.ar} · © {BRAND.copyrightYear}</small>
+        <small className="db-owner">© {BRAND.copyrightYear} {BRAND.owner.ar}</small>
       </aside>
 
       {/* ===== main ===== */}

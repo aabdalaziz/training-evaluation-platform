@@ -34,9 +34,8 @@ export default function LoginHero() {
       </ul>
       <div className="au-hero-foot">
         <span><Icon name="shield" size={14} /> اتصال مشفّر · لا نشارك بريدك مع أحد</span>
-        <span className="au-partners" aria-label="بالشراكة مع">
-          <img src="/logos/upm.png" alt="جامعة الأمير مقرن بن عبدالعزيز" />
-          <img src="/logos/center.png" alt="المركز العالمي لتعليم اللغة العربية" />
+        <span className="au-partners" aria-label="أَثَر">
+          <img src="/brand/athar-mark.svg" alt="أَثَر" />
         </span>
       </div>
     </aside>

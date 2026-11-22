@@ -92,7 +92,7 @@ export function FollowupForm({ token, initialRole, traineeName, traineeEmail }: 
       <style>{CSS}</style>
       <div className="fu-wrap">
         <header className="fu-head">
-          <div className="fu-logos"><img src="/logos/upm.png" alt="UPM" /><img src="/logos/gate.png" alt="Gate" /></div>
+          <div className="fu-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
           <div className="fu-kicker"><Icon name="trend" size={14} /> {t.kicker}</div>
           <button type="button" className="fu-lang" onClick={() => setLang(l => (l === 'ar' ? 'en' : 'ar'))}>{lang === 'ar' ? 'English' : 'العربية'}</button>
         </header>

@@ -103,7 +103,7 @@ function Inner() {
       {f && (
         <>
           <div className="tr-print-head">
-            <div className="tr-logos"><img src="/logos/upm.png" alt="" /><img src="/logos/gate.png" alt="" /></div>
+            <div className="tr-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
             <h2>{f.title_ar}</h2>
             <p>{pName(f.program_id)} · متابعة بعد {f.due_days} يومًا · {s.n} استجابة ({s.n_sup} مشرف · {s.n_tr} متدرب) · {s.n_trainees} متدربًا مقيَّمًا</p>
           </div>

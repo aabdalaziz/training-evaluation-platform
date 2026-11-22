@@ -137,8 +137,8 @@ export default function CommandCenterPage() {
       {/* ===== الشريط العلوي ===== */}
       <header className="cc-top">
         <div className="cc-brand">
-          <span className="cc-logo"><img src="/logos/upm.png" alt="جامعة الأمير مقرن" /></span>
-          <span className="cc-logo"><img src="/logos/center.png" alt="المركز العالمي" /></span>
+          <span className="cc-logo"><img src="/brand/athar-mark.svg" alt="أَثَر" /></span>
+          <span className="cc-logo"></span>
           <div>
             <b><Icon name="dashboard" size={18} /> غرفة القيادة — المؤشرات الحية</b>
             <span>منصة الجودة والتقييم · تحديث تلقائي كل {REFRESH_SEC} ثانية</span>

@@ -191,7 +191,7 @@ function ReportsCenter() {
     const t = mainTables()[0] || { name: 'kpis', rows: kpisToTable(k, lang) };
     downloadCSV(`${fileBase()}-${cleanName(t.name)}.csv`, t.rows); flash(ar ? '✅ تم تنزيل CSV' : '✅ CSV downloaded');
   };
-  const PPT_OPTS = { rtl: ar, footer: ar ? 'منصة تقويم البرامج التدريبية · جامعة الأمير مقرن' : 'Training Evaluation Platform · Prince Mugrin University' };
+  const PPT_OPTS = { rtl: ar, footer: ar ? 'أَثَر · منصّة الجودة والتقييم' : 'Athar · Quality & Evaluation Platform' };
   const pptxSlides = (): PptSlide[] => {
     const slides: PptSlide[] = [];
     slides.push({ title, subtitle: scopeText, bullets: [`${ar ? 'الجمهور' : 'Audience'}: ${report.audience[lang]}`, `${ar ? 'تاريخ الإعداد' : 'Generated'}: ${today} · Asia/Riyadh`, ar ? 'منصة تقويم البرامج التدريبية — النتائج مجمّعة ولا تعرض هوية المشاركين' : 'Training Evaluation Platform — aggregated, anonymous results'] });
@@ -429,7 +429,7 @@ function ReportsCenter() {
           {/* report document */}
           <article className="rc-doc">
             <header className="rc-doc-head">
-              <div className="rc-logos"><img src="/logos/upm.png" alt="UPM" /><img src="/logos/center.png" alt="Center" /></div>
+              <div className="rc-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
               <div className="rc-doc-title">
                 <div className="rc-kicker"><Icon name={REPORT_ICON[report.id] || 'reports'} size={14} /> {REPORT_GROUPS.find(g => g.id === report.group)?.[lang]} · {ar ? 'الجمهور' : 'Audience'}: {report.audience[lang]}</div>
                 <h1>{title}</h1>

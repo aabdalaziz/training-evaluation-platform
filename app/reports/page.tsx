@@ -954,12 +954,12 @@ const setLang = (v: string) => {
         {/* Header card: logos + title + actions */}
         <header className="rp-head noprint">
           <div className="rp-brand">
-            <img src="/logos/upm.png" alt="جامعة الأمير مقرن" className="rp-logo"/>
+            <img src="/brand/athar-mark.svg" alt="أَثَر" className="rp-logo"/>
             <div className="rp-logo-sep"/>
-            <img src="/logos/center.png" alt="المركز العالمي" className="rp-logo"/>
+            
             <div className="rp-brand-text">
               <b>{t.title}</b>
-              <span>{isAr?"جامعة الأمير مقرن بن عبدالعزيز — المركز العالمي لتعليم اللغة العربية":"University of Prince Mugrin — World Center for Arabic Language"}</span>
+              <span>{isAr?"أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة":"Athar Portal"}</span>
             </div>
           </div>
           <div className="rp-actions">
@@ -981,12 +981,12 @@ const setLang = (v: string) => {
         {/* Main */}
         <div className="main">
           <div className="report-header print-only">
-            <img src="/logos/upm.png" alt="UPM"/>
+            <img src="/brand/athar-mark.svg" alt="أَثَر"/>
             <div className="report-header-text">
-              <b>{isAr?"جامعة الأمير مقرن بن عبدالعزيز":"University of Prince Mugrin"}</b>
-              <span>{isAr?"المركز العالمي لتعليم اللغة العربية — منصة الجودة والتقييم":"World Center for Arabic Language — Quality Platform"}</span>
+              <b>{isAr?"أَثَر":"Athar"}</b>
+              <span>{isAr?"بوّابة أَثَر — منصّة الجودة والتقييم":"Athar Portal — Quality & Evaluation Platform"}</span>
             </div>
-            <img src="/logos/center.png" alt="Center"/>
+            
           </div>
 
           {/* ===== Executive Dashboard ===== */}
@@ -1174,8 +1174,8 @@ const setLang = (v: string) => {
               {certBest?(
                 <div className="card" style={{textAlign:"center",padding:40,background:"#FBF4EE",border:`3px solid ${GOLD}`}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-                    <img src="/logos/upm.png" alt="UPM" style={{height:64}}/>
-                    <img src="/logos/center.png" alt="Center" style={{height:64}}/>
+                    <img src="/brand/athar-mark.svg" alt="أَثَر" style={{height:64}}/>
+                    
                   </div>
                   <h1 style={{fontSize:34,fontWeight:900,color:"#8a6a14",marginBottom:8}}>{isAr?"شهادة تميز وإشادة":"Certificate of Excellence"}</h1>
                   <p style={{color:"#8E7F8A",marginBottom:24}}>{isAr?"تُمنح لأفضل مدرب وفق محاور التعليم وحجم العينة":"Awarded to the best trainer by education axes and sample size"}</p>

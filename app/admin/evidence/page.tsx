@@ -60,7 +60,7 @@ export default function AdminEvidencePage() {
 
         {tab === 'ask' && (
           <section className="ev-card">
-            <div className="ev-askrow no-print" data-testid="evidence-ask"><input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') ask(); }} maxLength={400} placeholder="مثال: أي قناة تعلّم تنقل الأثر أكثر؟ · ماذا فعلت جامعة الأمير مقرن في 2026؟ · أين الفجوات؟" /><VoiceButton lang="ar" onText={t => setQ(x => (x ? x + ' ' : '') + t)} /><button type="button" className="pt-btn gold" disabled={busy || q.trim().length < 4} onClick={() => ask()}>{busy ? 'تبحث في الأدلة…' : 'اسأل'}</button></div>
+            <div className="ev-askrow no-print" data-testid="evidence-ask"><input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') ask(); }} maxLength={400} placeholder="مثال: أي قناة تعلّم تنقل الأثر أكثر؟ · ماذا فعلت الجهة في 2026؟ · أين الفجوات؟" /><VoiceButton lang="ar" onText={t => setQ(x => (x ? x + ' ' : '') + t)} /><button type="button" className="pt-btn gold" disabled={busy || q.trim().length < 4} onClick={() => ask()}>{busy ? 'تبحث في الأدلة…' : 'اسأل'}</button></div>
             <div className="ev-chips no-print">{(data?.templates || []).slice(0, 10).map(t => <button key={t.id} type="button" onClick={() => ask(t.example_ar)}>{t.example_ar}</button>)}</div>
             {ans && (
               <article className="ev-answer" data-testid="evidence-answer">
@@ -69,7 +69,7 @@ export default function AdminEvidencePage() {
                 {!!ans.answer.chain.length && <div className="ev-chain">{ans.answer.chain.map((c, i) => <span key={i}><small>{c.label}</small><b>{c.value}</b></span>)}</div>}
                 {!!ans.answer.rows.length && <ul className="ev-rows">{ans.answer.rows.map((r, i) => <li key={i}><span className="ev-rank">{i + 1}</span><div><b>{r.label}</b>{r.sub && <small>{r.sub}</small>}</div><em>{r.value}</em>{r.id && <button type="button" className="ev-link no-print" onClick={() => { setTab('map'); openNode(r.id!); }}>افتح الدليل</button>}</li>)}</ul>}
                 <div className="ev-ansfoot"><div className="no-print">{ans.answer.suggestions.map(s => <button key={s} type="button" className="ev-sugg" onClick={() => ask(s)}>{s}</button>)}</div><button type="button" className="pt-btn light small no-print" onClick={printBrief}><Icon name="print" size={13} /> حوّله إلى موجز أدلة</button></div>
-                <footer className="ev-brieffoot print-only">موجز أدلة من قاعدة الأدلة المؤسسية — بوابة أَثَر · {new Date().toLocaleDateString('ar-SA-u-nu-latn-ca-gregory')} · الأرقام من أدلة تعلّم موزونة يعتمدها بشر؛ لا أسماء أفراد. © 2026 د. أحمد محمد عبدالعزيز بدوي — شركة بوابة التميز للاستشارات والتدريب</footer>
+                <footer className="ev-brieffoot print-only">موجز أدلة من قاعدة الأدلة المؤسسية — بوابة أَثَر · {new Date().toLocaleDateString('ar-SA-u-nu-latn-ca-gregory')} · الأرقام من أدلة تعلّم موزونة يعتمدها بشر؛ لا أسماء أفراد. © 2026 د. أحمد محمد عبدالعزيز بدوي</footer>
               </article>
             )}
             {!ans && !!data?.recent?.length && <div className="ev-recent no-print"><h4>آخر الأسئلة</h4>{data.recent.slice(0, 8).map(r => <button key={r.id} type="button" onClick={() => ask(r.question)}><span>{r.question}</span><small>{r.template || '—'} · {r.source === 'ai' ? 'ذكاء اصطناعي' : 'محلي'}</small></button>)}</div>}

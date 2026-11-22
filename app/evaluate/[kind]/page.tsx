@@ -230,7 +230,7 @@ export default function GuestEvaluationPage() {
   const shell = (child: React.ReactNode) => <main className="ev" dir={dir}><style>{CSS}</style><div className="ev-wrap">{child}</div></main>;
   const header = (
     <header className="ev-card ev-head">
-      <div className="ev-logos"><img src="/logos/upm.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /><img src="/logos/gate.png" alt="" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
+      <div className="ev-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
       <div className="ev-kicker"><Icon name={kind === 'daily' ? 'calendar' : 'flag'} size={14} /> {t('kicker')}</div>
       <h1>{kind === 'daily' ? t('dailyTitle') : kind === 'end' ? t('endTitle') : t('finalTitle')}</h1>
       {program && <div className="ev-prog"><Icon name="book" size={14} /> {L(program.name_ar, program.name_en)}</div>}
