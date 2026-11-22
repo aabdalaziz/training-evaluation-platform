@@ -116,7 +116,7 @@ export default function AlertCenter() {
 
                 <div
                   style={{
-                    color: '#475569',
+                    color: '#5C4858',
                     lineHeight: 1.8,
                   }}
                 >

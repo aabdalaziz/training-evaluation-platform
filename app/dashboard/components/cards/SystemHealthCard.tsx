@@ -95,7 +95,7 @@ export default function SystemHealthCard({
               background: '#fff',
               borderRadius: 10,
               padding: '10px 14px',
-              color: '#334155',
+              color: '#4A3645',
               fontWeight: 700,
             }}
           >

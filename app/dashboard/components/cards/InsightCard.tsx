@@ -94,8 +94,8 @@ export default function InsightCard({
           marginTop: 18,
           padding: 14,
           borderRadius: 12,
-          background: '#f8fafc',
-          color: '#475569',
+          background: '#FBF4EE',
+          color: '#5C4858',
           lineHeight: 1.8,
         }}
       >

@@ -58,7 +58,7 @@ export default function ProgramsNeedingAttention() {
 
       <p
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           marginBottom: 24,
         }}
       >
@@ -110,7 +110,7 @@ export default function ProgramsNeedingAttention() {
 
             <div
               style={{
-                color: '#475569',
+                color: '#5C4858',
                 marginBottom: 14,
               }}
             >

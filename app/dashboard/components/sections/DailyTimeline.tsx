@@ -63,7 +63,7 @@ export default function DailyTimeline() {
 
       <p
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           marginBottom: 24,
         }}
       >
@@ -78,7 +78,7 @@ export default function DailyTimeline() {
             top: 0,
             bottom: 0,
             width: 3,
-            background: '#e2e8f0',
+            background: '#EADFD6',
           }}
         />
 
@@ -112,7 +112,7 @@ export default function DailyTimeline() {
             <div style={{ flex: 1 }}>
               <div
                 style={{
-                  color: '#94a3b8',
+                  color: '#B3A5AE',
                   fontSize: 13,
                   marginBottom: 4,
                 }}
@@ -133,7 +133,7 @@ export default function DailyTimeline() {
               <div
                 style={{
                   marginTop: 6,
-                  color: '#475569',
+                  color: '#5C4858',
                   lineHeight: 1.8,
                 }}
               >

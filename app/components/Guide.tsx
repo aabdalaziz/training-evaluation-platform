@@ -51,11 +51,11 @@ export default function Guide() {
 }
 
 const CSS = `
-.gd-trigger{display:inline-flex;align-items:center;gap:7px;border:1px solid #cbd5e1;background:#fff;color:#0f2a4e;border-radius:12px;padding:7px 12px;font:inherit;font-weight:800;font-size:13px;cursor:pointer;line-height:1}
-.gd-trigger:hover{border-color:#0b8a83;color:#0b8a83}.gd-trigger kbd{font:inherit;font-size:10px;font-weight:900;border:1px solid #cbd5e1;border-radius:6px;padding:1px 5px;color:#64748b;background:#f8fafc}
-.gd-trigger.compact{padding:8px;border-radius:10px}.gd-trigger:focus-visible{outline:3px solid #c9a24b;outline-offset:2px}
-.gd-fab{position:fixed;bottom:18px;inset-inline-end:18px;z-index:9050;width:48px;height:48px;border-radius:999px;border:0;background:#0f2a4e;color:#fff;box-shadow:0 10px 26px rgba(15,42,78,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}
-.gd-fab:hover{transform:translateY(-2px);background:#0b8a83}.gd-fab:focus-visible{outline:3px solid #c9a24b;outline-offset:3px}
+.gd-trigger{display:inline-flex;align-items:center;gap:7px;border:1px solid #D9CBC2;background:#fff;color:#3A1F36;border-radius:12px;padding:7px 12px;font:inherit;font-weight:800;font-size:13px;cursor:pointer;line-height:1}
+.gd-trigger:hover{border-color:#D4614A;color:#D4614A}.gd-trigger kbd{font:inherit;font-size:10px;font-weight:900;border:1px solid #D9CBC2;border-radius:6px;padding:1px 5px;color:#8E7F8A;background:#FBF4EE}
+.gd-trigger.compact{padding:8px;border-radius:10px}.gd-trigger:focus-visible{outline:3px solid #D9A866;outline-offset:2px}
+.gd-fab{position:fixed;bottom:18px;inset-inline-end:18px;z-index:9050;width:48px;height:48px;border-radius:999px;border:0;background:#3A1F36;color:#fff;box-shadow:0 10px 26px rgba(42,22,38,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.gd-fab:hover{transform:translateY(-2px);background:#D4614A}.gd-fab:focus-visible{outline:3px solid #D9A866;outline-offset:3px}
 @media(min-width:761px){.gd-fab{width:42px;height:42px;opacity:.9}}
 @media print{.gd-fab,.gd-back{display:none!important}}
 `;

@@ -64,7 +64,7 @@ export default function LiveActivity() {
             <div
               style={{
                 minWidth: 70,
-                color: '#64748b',
+                color: '#8E7F8A',
                 fontWeight: 800,
               }}
             >
@@ -82,7 +82,7 @@ export default function LiveActivity() {
 
             <div
               style={{
-                color: '#334155',
+                color: '#4A3645',
                 fontWeight: 700,
               }}
             >

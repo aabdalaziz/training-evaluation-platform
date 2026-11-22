@@ -65,7 +65,7 @@ export default function OrganizationPulse() {
         <div>
           <div
             style={{
-              color: '#64748b',
+              color: '#8E7F8A',
               fontSize: 14,
               fontWeight: 700,
             }}
@@ -87,7 +87,7 @@ export default function OrganizationPulse() {
           <p
             style={{
               margin: 0,
-              color: '#64748b',
+              color: '#8E7F8A',
               lineHeight: 1.8,
             }}
           >

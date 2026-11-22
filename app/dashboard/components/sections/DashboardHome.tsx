@@ -96,7 +96,7 @@ export default function DashboardHome({
 
         <p
           style={{
-            color: '#64748b',
+            color: '#8E7F8A',
             marginBottom: 24,
           }}
         >
@@ -144,9 +144,9 @@ export default function DashboardHome({
               style={{
                 padding: 40,
                 borderRadius: 16,
-                border: '2px dashed #cbd5e1',
+                border: '2px dashed #D9CBC2',
                 textAlign: 'center',
-                color: '#64748b',
+                color: '#8E7F8A',
                 gridColumn: '1 / -1',
               }}
             >

@@ -47,17 +47,17 @@ export default function WayBar({ lang = 'ar', tone = 'light', onBack, extra, loc
   );
 }
 const CSS = `
-.way{display:flex;align-items:center;gap:10px;padding:6px max(18px,calc((100% - 1200px)/2));font-size:13px;line-height:1.3;border-bottom:1px solid rgba(15,42,78,.08);background:rgba(255,255,255,.7);backdrop-filter:blur(6px);position:relative;z-index:5}
-.way.dark{background:rgba(15,42,78,.55);border-color:rgba(255,255,255,.12);color:#fff}
-.way-back{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(15,42,78,.18);background:#fff;color:#0f2a4e;font:inherit;font-weight:700;cursor:pointer;flex:none}
-.way-back:hover{background:#f3f6fa}.way-back:focus-visible,.way-link:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px #0b8a83}
+.way{display:flex;align-items:center;gap:10px;padding:6px max(18px,calc((100% - 1200px)/2));font-size:13px;line-height:1.3;border-bottom:1px solid rgba(42,22,38,.08);background:rgba(255,255,255,.7);backdrop-filter:blur(6px);position:relative;z-index:5}
+.way.dark{background:rgba(42,22,38,.55);border-color:rgba(255,255,255,.12);color:#fff}
+.way-back{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(42,22,38,.18);background:#fff;color:#3A1F36;font:inherit;font-weight:700;cursor:pointer;flex:none}
+.way-back:hover{background:#F6EBE0}.way-back:focus-visible,.way-link:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px #D4614A}
 .way.dark .way-back{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff}
 .way-crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:4px;list-style:none;margin:0;padding:0;min-width:0}
 .way-crumbs li{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.way-dead{color:#64748b}
-.way-link{display:inline-flex;align-items:center;gap:4px;color:#0b8a83;text-decoration:none;padding:6px 4px;border-radius:6px;min-height:36px}
+.way-dead{color:#8E7F8A}
+.way-link{display:inline-flex;align-items:center;gap:4px;color:#D4614A;text-decoration:none;padding:6px 4px;border-radius:6px;min-height:36px}
 .way-link:hover{text-decoration:underline}.way.dark .way-link{color:#dfeeea}
-.way-sep{color:#8a97a8;margin:0 2px}.way-cur{color:#0f2a4e;font-weight:700;padding:6px 4px}.way.dark .way-cur{color:#fff}
+.way-sep{color:#8a97a8;margin:0 2px}.way-cur{color:#3A1F36;font-weight:700;padding:6px 4px}.way.dark .way-cur{color:#fff}
 @media (max-width:640px){.way{font-size:12px}.way-back span{display:none}.way-back{padding:0 10px}.way-crumbs li:not(:last-child):not(:first-child){display:none}}
 @media print{.way{display:none}}
 .way[hidden]{display:none}

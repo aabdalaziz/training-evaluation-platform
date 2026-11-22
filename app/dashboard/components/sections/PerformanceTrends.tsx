@@ -45,7 +45,7 @@ export default function PerformanceTrends() {
           <p
             style={{
               marginTop: 8,
-              color: '#64748b',
+              color: '#8E7F8A',
             }}
           >
             تطور مؤشر التميز خلال الأسبوع الحالي.
@@ -105,7 +105,7 @@ export default function PerformanceTrends() {
               style={{
                 marginTop: 4,
                 fontSize: 12,
-                color: '#64748b',
+                color: '#8E7F8A',
               }}
             >
               {item.day}

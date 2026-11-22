@@ -55,8 +55,8 @@ export default function Nadi() {
 }
 
 const CSS = `
-.nd-fab{position:fixed;bottom:74px;inset-inline-end:18px;z-index:9050;width:48px;height:48px;border-radius:999px;border:0;background:#0b8a83;color:#fff;box-shadow:0 10px 26px rgba(11,138,131,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .15s}
-.nd-fab:hover{transform:translateY(-2px);background:#0f2a4e}.nd-fab.on{background:#c9a24b;color:#0f2a4e}.nd-fab:focus-visible{outline:3px solid #c9a24b;outline-offset:3px}
+.nd-fab{position:fixed;bottom:74px;inset-inline-end:18px;z-index:9050;width:48px;height:48px;border-radius:999px;border:0;background:#D4614A;color:#fff;box-shadow:0 10px 26px rgba(212,97,74,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .15s}
+.nd-fab:hover{transform:translateY(-2px);background:#3A1F36}.nd-fab.on{background:#D9A866;color:#3A1F36}.nd-fab:focus-visible{outline:3px solid #D9A866;outline-offset:3px}
 @media(min-width:761px){.nd-fab{width:42px;height:42px;bottom:68px;opacity:.92}}
 @media print{.nd-fab{display:none!important}}
 @media(prefers-reduced-motion:reduce){.nd-fab{transition:none}}

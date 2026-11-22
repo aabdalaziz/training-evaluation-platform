@@ -59,7 +59,7 @@ export default function InstitutionalExcellence() {
         <div>
           <div
             style={{
-              color: '#64748b',
+              color: '#8E7F8A',
               fontWeight: 700,
               fontSize: 14,
             }}
@@ -80,7 +80,7 @@ export default function InstitutionalExcellence() {
 
           <div
             style={{
-              color: '#64748b',
+              color: '#8E7F8A',
             }}
           >
             يقيس الأداء العام للمؤسسة بصورة لحظية.
@@ -158,7 +158,7 @@ function MetricCard({
   return (
     <div
       style={{
-        border: '1px solid #e2e8f0',
+        border: '1px solid #EADFD6',
         borderRadius: 18,
         padding: 20,
       }}
@@ -173,7 +173,7 @@ function MetricCard({
         <div
           style={{
             fontWeight: 800,
-            color: '#334155',
+            color: '#4A3645',
           }}
         >
           {metric.title}

@@ -37,7 +37,7 @@ export default function OperationsCenter() {
           <p
             style={{
               marginTop: 8,
-              color: '#64748b',
+              color: '#8E7F8A',
             }}
           >
             الوصول السريع إلى أكثر العمليات استخدامًا.

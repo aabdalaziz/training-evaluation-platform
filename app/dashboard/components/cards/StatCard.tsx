@@ -84,7 +84,7 @@ export default function StatCard({
           marginTop: 12,
           fontSize: 18,
           fontWeight: 800,
-          color: '#334155',
+          color: '#4A3645',
         }}
       >
         {title}
@@ -94,7 +94,7 @@ export default function StatCard({
         <div
           style={{
             marginTop: 8,
-            color: '#64748b',
+            color: '#8E7F8A',
             fontSize: 14,
           }}
         >

@@ -81,7 +81,7 @@ export default function ExecutiveAdvisor() {
           <p
             style={{
               marginTop: 8,
-              color: '#64748b',
+              color: '#8E7F8A',
             }}
           >
             توصيات مبنية على بيانات المنصة.
@@ -163,7 +163,7 @@ export default function ExecutiveAdvisor() {
 
                 <div
                   style={{
-                    color: '#475569',
+                    color: '#5C4858',
                     lineHeight: 1.8,
                   }}
                 >

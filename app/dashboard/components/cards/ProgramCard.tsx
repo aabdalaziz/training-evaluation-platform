@@ -20,8 +20,8 @@ type ProgramCardProps = {
 const STATUS = {
   DRAFT: {
     label: 'مسودة',
-    color: '#64748b',
-    bg: '#f1f5f9',
+    color: '#8E7F8A',
+    bg: '#F6EBE0',
   },
   ACTIVE: {
     label: 'نشط',
@@ -77,7 +77,7 @@ export default function ProgramCard(props: ProgramCardProps) {
           {props.nameEn && (
             <div
               style={{
-                color: '#64748b',
+                color: '#8E7F8A',
                 marginTop: 6,
                 fontSize: 14,
               }}
@@ -127,7 +127,7 @@ export default function ProgramCard(props: ProgramCardProps) {
 
       <div
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           fontSize: 13,
           marginBottom: 18,
         }}
@@ -173,14 +173,14 @@ function Info({
   return (
     <div
       style={{
-        background: '#f8fafc',
+        background: '#FBF4EE',
         borderRadius: 12,
         padding: 14,
       }}
     >
       <div
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           fontSize: 12,
           marginBottom: 6,
         }}

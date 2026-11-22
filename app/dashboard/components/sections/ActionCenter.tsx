@@ -63,7 +63,7 @@ export default function ActionCenter() {
 
       <p
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           marginBottom: 28,
         }}
       >
@@ -81,7 +81,7 @@ export default function ActionCenter() {
           <button
             key={item.title}
             style={{
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               background: '#fff',
               borderRadius: 20,
               padding: 24,
@@ -120,7 +120,7 @@ export default function ActionCenter() {
             <div
               style={{
                 marginTop: 10,
-                color: '#64748b',
+                color: '#8E7F8A',
                 fontSize: 14,
                 lineHeight: 1.7,
               }}

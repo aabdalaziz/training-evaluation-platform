@@ -134,5 +134,5 @@ export async function POST(req: Request) {
 
 async function notifyStaff(subject: string, html: string) {
   const to = String(process.env.NOTIFY_EMAILS || process.env.ADMIN_EMAILS || '').split(/[,;\s]+/).filter(Boolean); if (!to.length || !process.env.RESEND_API_KEY) return;
-  try { await sendViaResend({ to, subject: `أَثَر | ${subject}`, html: `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.9;color:#0f172a">${html}</div>`, tags: [{ name: 'kind', value: 'agent_request' }] }); } catch { /* تجاهل */ }
+  try { await sendViaResend({ to, subject: `أَثَر | ${subject}`, html: `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.9;color:#2A1626">${html}</div>`, tags: [{ name: 'kind', value: 'agent_request' }] }); } catch { /* تجاهل */ }
 }

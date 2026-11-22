@@ -24,9 +24,9 @@ export default function ProgramResources({ programId, lang = 'ar', compact = fal
 }
 
 const CSS = `
-.prx h3{display:flex;gap:8px;align-items:center;margin:0 0 10px;font-size:16px;color:#0f2a4e}.prx h3 small{color:#64748b;font-weight:600}
-.prx.compact{margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0}.prx.compact h3{font-size:14px}
-.prx-list{display:grid;gap:6px}.prx-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid #e2e8f0;border-radius:12px;padding:8px 12px;text-decoration:none;color:#0f2a4e;background:#fff}.prx-item:hover{border-color:#0b8a83}
-.prx-ic{width:32px;height:32px;border-radius:9px;background:#e6f4f3;color:#0b8a83;display:inline-grid;place-items:center}.prx-t{display:grid;gap:1px;min-width:0}.prx-t b{font-size:13.5px;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.prx-t small{color:#64748b;font-size:11.5px}
-.prx-acc{font-weight:800;color:#065f46}.prx-acc.registered{color:#1e40af}.prx-acc.program{color:#9a3412}.prx-acc.org{color:#5b21b6}.prx-acc.staff{color:#334155}
+.prx h3{display:flex;gap:8px;align-items:center;margin:0 0 10px;font-size:16px;color:#3A1F36}.prx h3 small{color:#8E7F8A;font-weight:600}
+.prx.compact{margin-top:10px;padding-top:10px;border-top:1px dashed #EADFD6}.prx.compact h3{font-size:14px}
+.prx-list{display:grid;gap:6px}.prx-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid #EADFD6;border-radius:12px;padding:8px 12px;text-decoration:none;color:#3A1F36;background:#fff}.prx-item:hover{border-color:#D4614A}
+.prx-ic{width:32px;height:32px;border-radius:9px;background:#FBEDE7;color:#D4614A;display:inline-grid;place-items:center}.prx-t{display:grid;gap:1px;min-width:0}.prx-t b{font-size:13.5px;color:#2A1626;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.prx-t small{color:#8E7F8A;font-size:11.5px}
+.prx-acc{font-weight:800;color:#065f46}.prx-acc.registered{color:#1e40af}.prx-acc.program{color:#9a3412}.prx-acc.org{color:#5b21b6}.prx-acc.staff{color:#4A3645}
 `;

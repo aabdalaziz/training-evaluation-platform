@@ -37,8 +37,8 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
   const b = bundle?.data; const dc = daily?.data; const mineDone = !!dc?.mine || !!queuedDaily || (queuedDay && queuedDay === dc?.day);
   return (
     <div className="pk" dir="rtl" data-testid="pocket-home">
-      <style dangerouslySetInnerHTML={{ __html: `.pk{display:grid;gap:14px;max-width:860px;margin:0 auto}.pk .st{font-size:12px;border-radius:999px;padding:3px 10px;display:inline-flex;gap:6px;align-items:center}.pk .st.on{background:#dcfce7;color:#166534}.pk .st.off{background:#fef3c7;color:#92400e}.pk .card{border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px;background:#fff}.pk h3{margin:0 0 8px;display:flex;gap:8px;align-items:center;color:#0f2a4e;font-size:16px}.pk .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px dashed #e2e8f0;font-size:14px}.pk .lv{display:flex;flex-wrap:wrap;gap:6px}.pk .lv span{background:#f1f5f9;border-radius:999px;padding:3px 10px;font-size:13px}.pk .lv span b{color:#0b8a83}.pk textarea{width:100%;min-height:120px;border:1px solid #cbd5e1;border-radius:12px;padding:10px;font:inherit;line-height:1.8}.pk .b{background:#0f2a4e;color:#fff;border:0;border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer;font-family:inherit}.pk .b.g{background:#0b8a83}.pk .b.x{background:#f1f5f9;color:#334155}.pk .muted{color:#64748b;font-size:13px;line-height:1.8}.pk .err{color:#b91c1c;font-size:12px}` }} />
-      {!compact && <div className="card" style={{ background: 'linear-gradient(135deg,#0f2a4e,#0b8a83)', color: '#fff', border: 0 }}>
+      <style dangerouslySetInnerHTML={{ __html: `.pk{display:grid;gap:14px;max-width:860px;margin:0 auto}.pk .st{font-size:12px;border-radius:999px;padding:3px 10px;display:inline-flex;gap:6px;align-items:center}.pk .st.on{background:#dcfce7;color:#166534}.pk .st.off{background:#fef3c7;color:#92400e}.pk .card{border:1px solid #EADFD6;border-radius:16px;padding:14px 16px;background:#fff}.pk h3{margin:0 0 8px;display:flex;gap:8px;align-items:center;color:#3A1F36;font-size:16px}.pk .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px dashed #EADFD6;font-size:14px}.pk .lv{display:flex;flex-wrap:wrap;gap:6px}.pk .lv span{background:#F6EBE0;border-radius:999px;padding:3px 10px;font-size:13px}.pk .lv span b{color:#D4614A}.pk textarea{width:100%;min-height:120px;border:1px solid #D9CBC2;border-radius:12px;padding:10px;font:inherit;line-height:1.8}.pk .b{background:#3A1F36;color:#fff;border:0;border-radius:999px;padding:8px 16px;font-weight:700;cursor:pointer;font-family:inherit}.pk .b.g{background:#D4614A}.pk .b.x{background:#F6EBE0;color:#4A3645}.pk .muted{color:#8E7F8A;font-size:13px;line-height:1.8}.pk .err{color:#b91c1c;font-size:12px}` }} />
+      {!compact && <div className="card" style={{ background: 'linear-gradient(135deg,#3A1F36,#D4614A)', color: '#fff', border: 0 }}>
         <h3 style={{ color: '#fff' }}><Icon name="shield" size={18} /> أَثَر في الجيب</h3>
         <p style={{ margin: 0, lineHeight: 1.9, fontSize: 14 }}>هذه الشاشة تعمل من جهازك. <span className={`st ${ob.online ? 'on' : 'off'}`} data-testid="net-state">{ob.online ? 'متصل' : 'بلا اتصال'}</span> {ob.lastSync ? <span style={{ opacity: .85, fontSize: 12 }}>· آخر مزامنة {new Date(ob.lastSync).toLocaleString('ar-SA')}</span> : null}</p>
       </div>}
@@ -52,7 +52,7 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
         {b && <>
           <p className="muted" data-testid="wallet-line">{offlineLine(bundle?.stale ? bundle.cachedAt : null, ob.online)}</p>
           <div className="lv">{b.levels.slice(0, 8).map(l => <span key={l.code}>{l.name_ar} <b>{LEVEL_NAME_AR[Math.round(l.level)] || l.level}</b>{l.approved ? ' ✓' : ''}</span>)}{!b.levels.length && <span>لا مستويات بعد</span>}</div>
-          {b.issuances.filter(i => !i.revoked_at).slice(0, 6).map(i => <div className="row" key={i.id}><span>{i.kind === 'snapshot' ? 'لقطة قدرة' : (i.title_ar || 'شهادة')}</span><span style={{ fontFamily: 'monospace', fontSize: 12, color: '#475569' }}>{i.code}</span></div>)}
+          {b.issuances.filter(i => !i.revoked_at).slice(0, 6).map(i => <div className="row" key={i.id}><span>{i.kind === 'snapshot' ? 'لقطة قدرة' : (i.title_ar || 'شهادة')}</span><span style={{ fontFamily: 'monospace', fontSize: 12, color: '#5C4858' }}>{i.code}</span></div>)}
           {(b as any).accreditation?.length > 0 && <div className="row" data-testid="wallet-accred" style={{ display: 'grid', gap: 4 }}>{(b as any).accreditation.map((a: any) => <span key={a.program_id} style={{ fontSize: 13 }}>ملف الاعتماد — {a.name_ar}: {a.code ? <><b>{a.met}/{a.total}</b> مستوفى · نسخة مختومة <span dir="ltr" style={{ fontFamily: 'monospace' }}>{a.code}</span></> : 'لم تُختم نسخة بعد'}</span>)}</div>}
           <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}><Link href="/me/card" className="b g" style={{ textDecoration: 'none' }}>بطاقة قدرتي</Link><Link href="/me/twin" className="b x" style={{ textDecoration: 'none' }}>المحفظة الكاملة</Link></div>
         </>}
@@ -65,9 +65,9 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
         {daily && !dc && <p className="muted">لا نسخة محلية من موقف اليوم. افتح الصفحة الرئيسة مرة مع اتصال.</p>}
         {dc && <>
           <p className="muted">{dc.day} · {daily?.stale ? `نسخة محلية (${offlineLine(daily.cachedAt, ob.online)})` : 'حيّ'}</p>
-          <div style={{ fontWeight: 700, color: '#0f2a4e', marginBottom: 6 }}>{dc.case?.title_ar}</div>
+          <div style={{ fontWeight: 700, color: '#3A1F36', marginBottom: 6 }}>{dc.case?.title_ar}</div>
           <p style={{ lineHeight: 1.9, margin: '0 0 8px', fontSize: 14 }}>{dc.case?.situation_ar}</p>
-          {dc.case?.ask_ar && <p style={{ lineHeight: 1.9, margin: '0 0 8px', fontSize: 14, color: '#0b8a83' }}>{dc.case.ask_ar}</p>}
+          {dc.case?.ask_ar && <p style={{ lineHeight: 1.9, margin: '0 0 8px', fontSize: 14, color: '#D4614A' }}>{dc.case.ask_ar}</p>}
           {mineDone ? <p className="muted" data-testid="daily-done">{dc.mine ? 'رددتَ على موقف اليوم ✓' : 'ردّك محفوظ في صندوق الأدلة وسيُقوَّم حين يعود الاتصال ✓'}</p> : tok ? <>
             <textarea value={text} onChange={e => setText(e.target.value)} placeholder="كيف تتصرّف فعلًا؟ اكتب بصدق — سيُقوَّم ردّك بتاريخ كتابته حين يعود الاتصال" data-testid="daily-offline-text" />
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}><button className="b" onClick={queue} data-testid="daily-offline-send">{ob.online ? 'أرسل ردّي' : 'احفظ في صندوق الأدلة'}</button><span className="muted">{text.trim().length}/{MIN_RESPONSE_CHARS}+</span>{msg && <span className="muted" data-testid="daily-offline-msg">{msg}</span>}</div>
@@ -77,7 +77,7 @@ export default function PocketHome({ compact }: { compact?: boolean }) {
 
       {/* الصندوق */}
       <div className="card" id="outbox" data-testid="outbox">
-        <h3><Icon name="inbox" size={18} /> صندوق الأدلة الميداني <span className="st on" style={{ background: '#f1f5f9', color: '#334155' }}>{ob.count}</span></h3>
+        <h3><Icon name="inbox" size={18} /> صندوق الأدلة الميداني <span className="st on" style={{ background: '#F6EBE0', color: '#4A3645' }}>{ob.count}</span></h3>
         {!ob.supported && <p className="err">هذا المتصفح لا يدعم الحفظ بلا اتصال.</p>}
         {ob.count === 0 && <p className="muted">فارغ — كل ما التقطته وصل. ما تكتبه أو تصوّره بلا اتصال يظهر هنا مشفَّرًا على جهازك حتى يُرسل.</p>}
         {ob.items.map(i => <div className="row" key={i.id} data-testid="outbox-item"><span>{OUTBOX_LABEL[i.kind]?.ar || i.kind}{i.payload.title ? ` · ${i.payload.title}` : ''}{i.payload._has_file ? ' · 📎' : ''}<br /><span className="muted">{new Date(i.captured_at).toLocaleString('ar-SA')}{i.tries ? ` · محاولات ${i.tries}` : ''}{i.last_error ? <span className="err"> · {i.last_error}</span> : null}</span></span><button className="b x" onClick={() => { if (confirm('حذف هذا العنصر من الصندوق نهائيًا؟')) ob.remove(i.id); }} aria-label="حذف">×</button></div>)}

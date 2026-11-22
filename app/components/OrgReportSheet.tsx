@@ -27,25 +27,25 @@ const fmt = (iso?: string | null) => { if (!iso) return '—'; try { return new 
 const pct = (p: number | null) => (p === null ? null : `${Math.round(p)}%`);
 
 export const SHEET_CSS = `
-.lrs{direction:rtl;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f2a4e;background:#fff;max-width:210mm;margin:0 auto;padding:14mm 14mm 10mm;box-sizing:border-box;position:relative;line-height:1.55}
+.lrs{direction:rtl;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#3A1F36;background:#fff;max-width:210mm;margin:0 auto;padding:14mm 14mm 10mm;box-sizing:border-box;position:relative;line-height:1.55}
 .lrs.revoked:before{content:"مُلغى — صدر بعده تقرير أحدث";position:absolute;inset:40% 0 auto 0;text-align:center;font-size:34px;font-weight:900;color:#b91c1c;opacity:.18;transform:rotate(-14deg);pointer-events:none}
-.lrs-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:3px solid #0b8a83;padding-bottom:10px}
-.lrs-org{display:flex;align-items:center;gap:12px}.lrs-org img{height:52px;max-width:120px;object-fit:contain}.lrs-org h1{margin:0;font-size:20px}.lrs-org small{display:block;color:#475569;font-size:12px;font-weight:700}
-.lrs-title{text-align:center;flex:1}.lrs-title b{display:block;font-size:22px;color:#0b8a83}.lrs-title span{display:block;font-size:11px;color:#64748b}.lrs-title em{display:inline-block;font-style:normal;margin-top:4px;font-size:13px;font-weight:800;background:#f1f5f9;border-radius:999px;padding:2px 12px}
-.lrs-qr{text-align:center;font-size:10px;color:#475569;direction:ltr}.lrs-qr svg{width:74px;height:74px;display:block;margin:0 auto 2px}.lrs-qr code{font-size:11px;font-weight:900;color:#0f2a4e;letter-spacing:.04em}
+.lrs-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;border-bottom:3px solid #D4614A;padding-bottom:10px}
+.lrs-org{display:flex;align-items:center;gap:12px}.lrs-org img{height:52px;max-width:120px;object-fit:contain}.lrs-org h1{margin:0;font-size:20px}.lrs-org small{display:block;color:#5C4858;font-size:12px;font-weight:700}
+.lrs-title{text-align:center;flex:1}.lrs-title b{display:block;font-size:22px;color:#D4614A}.lrs-title span{display:block;font-size:11px;color:#8E7F8A}.lrs-title em{display:inline-block;font-style:normal;margin-top:4px;font-size:13px;font-weight:800;background:#F6EBE0;border-radius:999px;padding:2px 12px}
+.lrs-qr{text-align:center;font-size:10px;color:#5C4858;direction:ltr}.lrs-qr svg{width:74px;height:74px;display:block;margin:0 auto 2px}.lrs-qr code{font-size:11px;font-weight:900;color:#3A1F36;letter-spacing:.04em}
 .lrs-badge{display:inline-block;font-size:11px;font-weight:800;color:#7c2d12;background:#fff7ed;border:1px solid #fdba74;border-radius:999px;padding:1px 10px;margin-top:4px}
-.lrs h2{font-size:13px;margin:12px 0 6px;color:#0b8a83;display:flex;align-items:center;gap:8px}.lrs h2:after{content:"";flex:1;height:1px;background:#e2e8f0}.lrs h2 i{font-style:normal;font-size:11px;color:#94a3b8;font-weight:700}
-.lrs-prev{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:700}
-.lrs-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.lrs-num{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;min-height:84px}.lrs-num b{display:block;font-size:12px;color:#475569}.lrs-num strong{display:block;font-size:30px;line-height:1.1;margin:4px 0 2px;color:#0f2a4e}.lrs-num strong.na{font-size:13px;color:#b45309;line-height:1.4;margin-top:8px}.lrs-num small{color:#64748b;font-size:11px}
-.lrs-table{width:100%;border-collapse:collapse;font-size:12.5px}.lrs-table th{background:#f8fafc;color:#334155;padding:5px 8px;text-align:right;font-weight:800;border-bottom:1px solid #e2e8f0}.lrs-table td{padding:5px 8px;border-bottom:1px solid #f1f5f9}.lrs-table td:not(:first-child),.lrs-table th:not(:first-child){text-align:center;width:16%}
-.lrs-field{margin:0;padding:0;list-style:none}.lrs-field li{position:relative;padding:4px 18px 4px 0;font-size:13.5px}.lrs-field li:before{content:"”";position:absolute;right:0;top:-2px;font-size:22px;color:#0b8a83;line-height:1}
-.lrs-src{font-size:11px;color:#64748b;margin-top:4px}.lrs-note{font-size:12.5px;color:#92400e;background:#fffbeb;border:1px dashed #fcd34d;border-radius:8px;padding:6px 10px}
+.lrs h2{font-size:13px;margin:12px 0 6px;color:#D4614A;display:flex;align-items:center;gap:8px}.lrs h2:after{content:"";flex:1;height:1px;background:#EADFD6}.lrs h2 i{font-style:normal;font-size:11px;color:#B3A5AE;font-weight:700}
+.lrs-prev{background:#FBEDE7;border:1px solid #99f6e4;border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:700}
+.lrs-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.lrs-num{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;min-height:84px}.lrs-num b{display:block;font-size:12px;color:#5C4858}.lrs-num strong{display:block;font-size:30px;line-height:1.1;margin:4px 0 2px;color:#3A1F36}.lrs-num strong.na{font-size:13px;color:#b45309;line-height:1.4;margin-top:8px}.lrs-num small{color:#8E7F8A;font-size:11px}
+.lrs-table{width:100%;border-collapse:collapse;font-size:12.5px}.lrs-table th{background:#FBF4EE;color:#4A3645;padding:5px 8px;text-align:right;font-weight:800;border-bottom:1px solid #EADFD6}.lrs-table td{padding:5px 8px;border-bottom:1px solid #F6EBE0}.lrs-table td:not(:first-child),.lrs-table th:not(:first-child){text-align:center;width:16%}
+.lrs-field{margin:0;padding:0;list-style:none}.lrs-field li{position:relative;padding:4px 18px 4px 0;font-size:13.5px}.lrs-field li:before{content:"”";position:absolute;right:0;top:-2px;font-size:22px;color:#D4614A;line-height:1}
+.lrs-src{font-size:11px;color:#8E7F8A;margin-top:4px}.lrs-note{font-size:12.5px;color:#92400e;background:#fffbeb;border:1px dashed #fcd34d;border-radius:8px;padding:6px 10px}
 .lrs-qs{margin:0;padding:0 18px 0 0;font-size:13.5px}.lrs-qs li{padding:3px 0;font-weight:700}
-.lrs-dec{border:2px solid #0b8a83;border-radius:12px;padding:10px 14px;background:#f0fdfa}.lrs-dec b{display:block;font-size:12px;color:#0b8a83}.lrs-dec p{margin:4px 0 0;font-size:15px;font-weight:900}.lrs-dec small{color:#475569;font-size:11.5px}
-.lrs-dec.empty{border-style:dashed;background:#fff;color:#64748b;font-size:13px}
-.lrs-foot{margin-top:12px;border-top:1px solid #e2e8f0;padding-top:8px;display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#475569;flex-wrap:wrap}.lrs-foot div{flex:1;min-width:180px}.lrs-foot b{color:#0f2a4e}
-.lrs-sign{text-align:left;direction:rtl}.lrs-sign strong{display:block;font-size:13px;color:#0f2a4e}.lrs-ok{color:#047857;font-weight:800}
-.lrs-brand{font-size:10.5px;color:#94a3b8;text-align:center;margin-top:8px}
+.lrs-dec{border:2px solid #D4614A;border-radius:12px;padding:10px 14px;background:#FBEDE7}.lrs-dec b{display:block;font-size:12px;color:#D4614A}.lrs-dec p{margin:4px 0 0;font-size:15px;font-weight:900}.lrs-dec small{color:#5C4858;font-size:11.5px}
+.lrs-dec.empty{border-style:dashed;background:#fff;color:#8E7F8A;font-size:13px}
+.lrs-foot{margin-top:12px;border-top:1px solid #EADFD6;padding-top:8px;display:flex;justify-content:space-between;gap:12px;font-size:11px;color:#5C4858;flex-wrap:wrap}.lrs-foot div{flex:1;min-width:180px}.lrs-foot b{color:#3A1F36}
+.lrs-sign{text-align:left;direction:rtl}.lrs-sign strong{display:block;font-size:13px;color:#3A1F36}.lrs-ok{color:#047857;font-weight:800}
+.lrs-brand{font-size:10.5px;color:#B3A5AE;text-align:center;margin-top:8px}
 @media print{@page{size:A4;margin:8mm}.lrs{padding:4mm 6mm;max-width:none;box-shadow:none}.lrs-num strong{font-size:26px}body{background:#fff}}
 `;
 
@@ -61,7 +61,7 @@ export function OrgReportSheet({ body: b, site, logo, status, compact }: Props) 
       <header className="lrs-head">
         <div className="lrs-org">{logo ? <img src={logo} alt="" /> : null}<div><h1>{b.organization.name_ar}</h1><small>{b.people.members} منسوبًا مؤكَّدًا{b.people.pending ? ` · ${b.people.pending} بانتظار التأكيد` : ''}{b.people.programs ? ` · ${b.people.programs} برنامجًا في الفترة` : ''}</small>{b.pseudonymous ? <span className="lrs-badge" data-testid="lrs-pseud">أرقام تدريبية لا أسماء</span> : null}</div></div>
         <div className="lrs-title"><b>تقرير القيادة</b><span>التقرير الدوري الموقَّع لأثر التدريب على مستوى الجهة</span><em data-testid="lrs-period">{b.period.label_ar}</em></div>
-        <div className="lrs-qr"><span dangerouslySetInnerHTML={{ __html: qrSvg(verifyUrl, 74, 'M', '#0f2a4e') }} /><code data-testid="lrs-code">{b.code}</code></div>
+        <div className="lrs-qr"><span dangerouslySetInnerHTML={{ __html: qrSvg(verifyUrl, 74, 'M', '#3A1F36') }} /><code data-testid="lrs-code">{b.code}</code></div>
       </header>
 
       {b.previous ? <><h2>ما قرّرتم آخر مرّة <i>{b.previous.code}</i></h2><div className="lrs-prev" data-testid="lrs-prev">{b.previous.read_ar}</div></> : null}

@@ -129,11 +129,11 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
       {children}
       {showBar && (
         <div dir="rtl" data-testid="pocket-bar" style={{ position: 'fixed', bottom: 12, insetInlineStart: 12, insetInlineEnd: 12, zIndex: 60, display: 'grid', gap: 6, justifyItems: 'center', pointerEvents: 'none' }}>
-          {waiting && <div style={pill('#0f2a4e')}><span>نسخة جديدة من أَثَر جاهزة</span><button onClick={() => { wantReload.current = true; try { waiting.postMessage({ type: 'SKIP_WAITING' }); } catch { /* ignore */ } setTimeout(() => { if (wantReload.current) { wantReload.current = false; location.reload(); } }, 1500); }} style={btn} data-testid="sw-update">حدّث الآن</button></div>}
-          {install === 'prompt' && <div style={pill('#0b8a83')} data-testid="install-prompt"><span>ثبّت أَثَر في جيبك — محفظتك وصندوق أدلتك يعملان بلا اتصال</span><button onClick={doInstall} style={btn}>تثبيت</button><button onClick={dismissInstall} style={{ ...btn, background: 'transparent', color: '#fff' }}>لاحقًا</button></div>}
-          {install === 'ios_hint' && <div style={pill('#0b8a83')} data-testid="install-ios"><span>على iPhone: زر المشاركة ثم «إضافة إلى الشاشة الرئيسة» — لتعمل المحفظة والصندوق بلا اتصال</span><button onClick={dismissInstall} style={btn}>فهمت</button></div>}
+          {waiting && <div style={pill('#3A1F36')}><span>نسخة جديدة من أَثَر جاهزة</span><button onClick={() => { wantReload.current = true; try { waiting.postMessage({ type: 'SKIP_WAITING' }); } catch { /* ignore */ } setTimeout(() => { if (wantReload.current) { wantReload.current = false; location.reload(); } }, 1500); }} style={btn} data-testid="sw-update">حدّث الآن</button></div>}
+          {install === 'prompt' && <div style={pill('#D4614A')} data-testid="install-prompt"><span>ثبّت أَثَر في جيبك — محفظتك وصندوق أدلتك يعملان بلا اتصال</span><button onClick={doInstall} style={btn}>تثبيت</button><button onClick={dismissInstall} style={{ ...btn, background: 'transparent', color: '#fff' }}>لاحقًا</button></div>}
+          {install === 'ios_hint' && <div style={pill('#D4614A')} data-testid="install-ios"><span>على iPhone: زر المشاركة ثم «إضافة إلى الشاشة الرئيسة» — لتعمل المحفظة والصندوق بلا اتصال</span><button onClick={dismissInstall} style={btn}>فهمت</button></div>}
           {!online && <div style={pill('#7c2d12')} data-testid="offline-pill"><span>بلا اتصال — ما تكتبه يُحفظ في صندوق الأدلة ويُرسل تلقائيًا حين يعود الاتصال</span>{items.length > 0 && <b>{items.length}</b>}</div>}
-          {online && items.length > 0 && <div style={pill('#334155')} data-testid="outbox-pill"><span>{syncing ? 'جارٍ إرسال صندوق الأدلة…' : `${items.length} في صندوق الأدلة بانتظار الإرسال`}</span>{!syncing && <button onClick={() => sync()} style={btn}>أرسل الآن</button>}</div>}
+          {online && items.length > 0 && <div style={pill('#4A3645')} data-testid="outbox-pill"><span>{syncing ? 'جارٍ إرسال صندوق الأدلة…' : `${items.length} في صندوق الأدلة بانتظار الإرسال`}</span>{!syncing && <button onClick={() => sync()} style={btn}>أرسل الآن</button>}</div>}
           {toast && <div style={pill('#166534')} data-testid="pocket-toast">{toast}</div>}
         </div>
       )}
@@ -141,5 +141,5 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
   );
 }
 const strip = (p: Record<string, any>) => { const { _has_file, _file_type, _file_name, ...rest } = p; void _has_file; void _file_type; void _file_name; return rest; };
-const pill = (bg: string): React.CSSProperties => ({ pointerEvents: 'auto', background: bg, color: '#fff', borderRadius: 999, padding: '8px 14px', fontSize: 13, display: 'flex', gap: 10, alignItems: 'center', boxShadow: '0 6px 24px rgba(15,42,78,.25)', maxWidth: 'min(96vw, 720px)', lineHeight: 1.6 });
-const btn: React.CSSProperties = { background: '#c9a24b', color: '#0f2a4e', border: 0, borderRadius: 999, padding: '4px 12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' };
+const pill = (bg: string): React.CSSProperties => ({ pointerEvents: 'auto', background: bg, color: '#fff', borderRadius: 999, padding: '8px 14px', fontSize: 13, display: 'flex', gap: 10, alignItems: 'center', boxShadow: '0 6px 24px rgba(42,22,38,.25)', maxWidth: 'min(96vw, 720px)', lineHeight: 1.6 });
+const btn: React.CSSProperties = { background: '#D9A866', color: '#3A1F36', border: 0, borderRadius: 999, padding: '4px 12px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' };

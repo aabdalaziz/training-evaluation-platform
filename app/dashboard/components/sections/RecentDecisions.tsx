@@ -51,7 +51,7 @@ export default function RecentDecisions() {
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '16px 0',
-            borderBottom: '1px solid #eef2f7',
+            borderBottom: '1px solid #F3E6DC',
           }}
         >
           <div>
@@ -67,7 +67,7 @@ export default function RecentDecisions() {
             <div
               style={{
                 marginTop: 6,
-                color: '#64748b',
+                color: '#8E7F8A',
                 fontSize: 14,
               }}
             >
@@ -92,7 +92,7 @@ export default function RecentDecisions() {
             <div
               style={{
                 marginTop: 6,
-                color: '#94a3b8',
+                color: '#B3A5AE',
                 fontSize: 13,
               }}
             >

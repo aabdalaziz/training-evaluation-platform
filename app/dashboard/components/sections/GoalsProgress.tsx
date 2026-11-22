@@ -51,7 +51,7 @@ export default function GoalsProgress() {
 
       <p
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           marginBottom: 30,
         }}
       >

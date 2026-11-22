@@ -10,7 +10,7 @@ import type { CSSProperties } from 'react';
 import type { Station, Thread, MapLayout, StationKind, RuleKey } from '../../lib/map/registry';
 import { KIND_AR, degree, strokeOf } from '../../lib/map/registry';
 
-export const KIND_COLOR: Record<StationKind, string> = { placement: '#64748b', program: '#0f2a4e', session: '#2563eb', skill: '#0e7490', credential: '#b45309', badge: '#b45309', daily: '#7c3aed', mission: '#15803d', simulation: '#2563eb', council: '#9d174d', case: '#9d174d', horizon: '#ea580c', hand: '#7c3aed' };
+export const KIND_COLOR: Record<StationKind, string> = { placement: '#8E7F8A', program: '#3A1F36', session: '#2563eb', skill: '#0e7490', credential: '#b45309', badge: '#b45309', daily: '#7c3aed', mission: '#15803d', simulation: '#2563eb', council: '#9d174d', case: '#9d174d', horizon: '#ea580c', hand: '#7c3aed' };
 type Light = { key: string; kind: StationKind; at: string; title_ar: string };
 export type SvgThread = Pick<Thread, 'from' | 'to' | 'status' | 'rule'> & { note_ar?: string | null };
 type Props = { stations: (Station | Light)[]; threads: SvgThread[]; layout: MapLayout; selected?: string | null; focus?: string | null; onStation?: (key: string) => void; onThread?: (t: SvgThread) => void; title_ar?: string; rules?: Record<RuleKey, { title: string }>; style?: CSSProperties; testid?: string; compact?: boolean;
@@ -32,11 +32,11 @@ export function AtharMapSvg({ stations, threads, layout, selected, focus, onStat
   const kinds = Array.from(new Set(stations.map((s) => s.kind)));
   return (
     <figure style={{ margin: 0, ...style }} data-testid={testid}>
-      <svg viewBox={`0 0 ${layout.w} ${layout.h}`} width="100%" role="img" aria-label={title_ar || 'خريطة الأثر'} style={{ display: 'block', background: 'radial-gradient(ellipse at 70% 20%, #0f2a4e 0%, #0b1b33 55%, #070f1f 100%)', borderRadius: 18 }}>
+      <svg viewBox={`0 0 ${layout.w} ${layout.h}`} width="100%" role="img" aria-label={title_ar || 'خريطة الأثر'} style={{ display: 'block', background: 'radial-gradient(ellipse at 70% 20%, #3A1F36 0%, #0b1b33 55%, #070f1f 100%)', borderRadius: 18 }}>
         <title>{title_ar || 'خريطة الأثر'}</title>
         <defs><filter id="am-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
         {/* نجوم خلفية هادئة */}
-        {Array.from({ length: 36 }).map((_, i) => <circle key={`bg${i}`} cx={(i * 173) % layout.w} cy={(i * 97 + 13) % layout.h} r={(i % 3) * 0.4 + 0.4} fill="#cbd5e1" opacity={0.25 + (i % 4) * 0.1} />)}
+        {Array.from({ length: 36 }).map((_, i) => <circle key={`bg${i}`} cx={(i * 173) % layout.w} cy={(i * 97 + 13) % layout.h} r={(i % 3) * 0.4 + 0.4} fill="#D9CBC2" opacity={0.25 + (i % 4) * 0.1} />)}
         {/* الخيوط */}
         {threads.map((t) => { const a = pos[t.from]; const b = pos[t.to]; if (!a || !b) return null; const kept = t.status === 'kept'; const w = wOf(t); const st = isStar(t); const faded = focus ? !(t.from === focus || t.to === focus) : false; const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2 - Math.min(60, Math.abs(a.x - b.x) * 0.18);
           const d = `M ${a.x} ${a.y} Q ${mx} ${my} ${b.x} ${b.y}`; const label = (rules?.[t.rule]?.title || '') + (t.note_ar ? ` — لأن ${t.note_ar}` : '') + (weights && kept ? ` — نسجه ${weights[`${t.from}>${t.to}`] || 0}` : '') + (st ? ' — نجمة الشعبة' : '');
@@ -44,7 +44,7 @@ export function AtharMapSvg({ stations, threads, layout, selected, focus, onStat
             <path d={d} fill="none" stroke="transparent" strokeWidth={14} />
             {st && <path d={d} fill="none" stroke="#fde68a" strokeWidth={w + 8} strokeLinecap="round" opacity={0.28} filter="url(#am-glow)" data-testid="am-star" />}
             {isActive(t) && <path d={d} fill="none" stroke="#fff7ed" strokeWidth={w + 6} strokeLinecap="round" opacity={0.55} filter="url(#am-glow)" data-testid="am-active"><animate attributeName="opacity" values="0.25;0.7;0.25" dur="1.6s" repeatCount="indefinite" /></path>}
-            <path d={d} fill="none" stroke={kept ? (st ? '#fde68a' : '#fbbf24') : '#94a3b8'} strokeWidth={w} strokeDasharray={kept ? undefined : '3 5'} strokeLinecap="round" opacity={kept ? 0.95 : 0.7}>{label && <title>{label}</title>}</path>
+            <path d={d} fill="none" stroke={kept ? (st ? '#fde68a' : '#fbbf24') : '#B3A5AE'} strokeWidth={w} strokeDasharray={kept ? undefined : '3 5'} strokeLinecap="round" opacity={kept ? 0.95 : 0.7}>{label && <title>{label}</title>}</path>
           </g>; })}
         {/* المحطات */}
         {stations.map((s) => { const p = pos[s.key]; if (!p) return null; const sel = selected === s.key; const c = KIND_COLOR[s.kind]; const rr = r(s.key);
@@ -53,18 +53,18 @@ export function AtharMapSvg({ stations, threads, layout, selected, focus, onStat
             {activeEnds.includes(s.key) && <circle r={rr + 9} fill="none" stroke="#fff7ed" strokeWidth={2} opacity={0.8}><animate attributeName="r" values={`${rr + 6};${rr + 14};${rr + 6}`} dur="1.6s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.6s" repeatCount="indefinite" /></circle>}
             <circle r={rr} fill={sel ? '#fff7ed' : '#fff'} stroke={c} strokeWidth={sel ? 3 : 2} filter="url(#am-glow)" />
             <title>{`${KIND_AR[s.kind]}: ${titleOf(s)}${counts ? ` — بلغها ${counts[s.key] || 0}` : ` — ${fmt(s.at)}`}`}</title>
-            {!compact && (agg || (deg[s.key] || 0) > 0) && <text y={-rr - 7} textAnchor="middle" fontSize={10} fill="#e2e8f0" fontFamily="Tajawal, Arial, sans-serif">{(titleOf(s).length > 22 ? titleOf(s).slice(0, 21) + '…' : titleOf(s)) + (counts ? ` ×${counts[s.key] || 0}` : '')}</text>}
+            {!compact && (agg || (deg[s.key] || 0) > 0) && <text y={-rr - 7} textAnchor="middle" fontSize={10} fill="#EADFD6" fontFamily="var(--font-ar), Arial, sans-serif">{(titleOf(s).length > 22 ? titleOf(s).slice(0, 21) + '…' : titleOf(s)) + (counts ? ` ×${counts[s.key] || 0}` : '')}</text>}
           </g>; })}
         {/* محور الزمن */}
         {stations.length > 1 && <>
-          <text x={layout.w - 14} y={layout.h - 10} textAnchor="end" fontSize={10} fill="#94a3b8" fontFamily="Tajawal, Arial, sans-serif">{fmt(stations[0].at)} ←</text>
-          <text x={14} y={layout.h - 10} textAnchor="start" fontSize={10} fill="#94a3b8" fontFamily="Tajawal, Arial, sans-serif">→ {fmt(stations[stations.length - 1].at)}</text>
+          <text x={layout.w - 14} y={layout.h - 10} textAnchor="end" fontSize={10} fill="#B3A5AE" fontFamily="var(--font-ar), Arial, sans-serif">{fmt(stations[0].at)} ←</text>
+          <text x={14} y={layout.h - 10} textAnchor="start" fontSize={10} fill="#B3A5AE" fontFamily="var(--font-ar), Arial, sans-serif">→ {fmt(stations[stations.length - 1].at)}</text>
         </>}
       </svg>
-      {!compact && <figcaption style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', padding: '8px 4px', fontSize: 12, color: '#475569' }} aria-hidden="true">
+      {!compact && <figcaption style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', padding: '8px 4px', fontSize: 12, color: '#5C4858' }} aria-hidden="true">
         {kinds.map((k) => <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><i style={{ width: 10, height: 10, borderRadius: 99, background: KIND_COLOR[k], display: 'inline-block' }} />{KIND_AR[k]}</span>)}
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><i style={{ width: 22, height: 0, borderTop: '2px solid #d97706', display: 'inline-block' }} />{legend?.kept || 'خيط أبقيتَه'}</span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><i style={{ width: 22, height: 0, borderTop: '2px dotted #64748b', display: 'inline-block' }} />{legend?.proposed || 'خيط ينتظر كلمتك'}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><i style={{ width: 22, height: 0, borderTop: '2px dotted #8E7F8A', display: 'inline-block' }} />{legend?.proposed || 'خيط ينتظر كلمتك'}</span>
         {star && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><i style={{ width: 22, height: 0, borderTop: '4px solid #fde68a', display: 'inline-block' }} />نجمة الشعبة</span>}
       </figcaption>}
     </figure>

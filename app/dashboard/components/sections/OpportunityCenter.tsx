@@ -48,7 +48,7 @@ export default function OpportunityCenter() {
       <p
         style={{
           marginTop: 10,
-          color: '#64748b',
+          color: '#8E7F8A',
           marginBottom: 24,
         }}
       >
@@ -104,7 +104,7 @@ export default function OpportunityCenter() {
 
             <div
               style={{
-                color: '#64748b',
+                color: '#8E7F8A',
                 marginBottom: 16,
               }}
             >

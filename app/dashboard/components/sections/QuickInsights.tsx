@@ -60,7 +60,7 @@ export default function QuickInsights() {
           <div
             key={item.title}
             style={{
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               borderRadius: 18,
               padding: 20,
               display: 'flex',
@@ -87,7 +87,7 @@ export default function QuickInsights() {
             <div>
               <div
                 style={{
-                  color: '#64748b',
+                  color: '#8E7F8A',
                   fontSize: 13,
                 }}
               >

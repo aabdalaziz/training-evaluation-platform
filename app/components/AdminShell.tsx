@@ -76,13 +76,13 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
 const CSS = `
 .as{display:flex;flex-direction:column;min-height:calc(100vh - 58px)}
 .as-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px max(18px,calc((100% - 1320px)/2));background:#fff;border-bottom:1px solid #e5e9f0;font-size:12.5px}
-.as-crumb{display:flex;align-items:center;gap:8px;min-width:0;color:#64748b;font-weight:700}.as-crumb a{color:#0b8a83;text-decoration:none}.as-crumb a:hover{text-decoration:underline}.as-crumb b{color:#0f2a4e;font-weight:900}.as-crumb small{color:#94a3b8;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.as-right{display:inline-flex;gap:8px;align-items:center}.as-hall{display:inline-flex;align-items:center;gap:5px;color:#0f2a4e;text-decoration:none;font-weight:800;border:1px solid #ead9a6;background:#fbf5e4;border-radius:999px;padding:4px 10px;white-space:nowrap}.as-hall:hover{background:#fff4d6}
+.as-crumb{display:flex;align-items:center;gap:8px;min-width:0;color:#8E7F8A;font-weight:700}.as-crumb a{color:#D4614A;text-decoration:none}.as-crumb a:hover{text-decoration:underline}.as-crumb b{color:#3A1F36;font-weight:900}.as-crumb small{color:#B3A5AE;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.as-right{display:inline-flex;gap:8px;align-items:center}.as-hall{display:inline-flex;align-items:center;gap:5px;color:#3A1F36;text-decoration:none;font-weight:800;border:1px solid #F1D9A8;background:#FBF4EE;border-radius:999px;padding:4px 10px;white-space:nowrap}.as-hall:hover{background:#fff4d6}
 .as-body{flex:1;min-width:0}
-.as-foot{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;align-items:center;padding:12px max(18px,calc((100% - 1320px)/2));background:#0f2a4e;color:#cbd5e1;font-size:12px;line-height:1.7}.as-foot b{color:#fff}.as-foot-links{display:flex;gap:14px}.as-foot-links a{color:#fde68a;text-decoration:none}.as-foot-links a:hover{text-decoration:underline}
-.as-deny{align-items:center;justify-content:center;padding:40px 16px;background:#f6f8fb;min-height:60vh}
-.as-deny-card{max-width:620px;background:#fff;border:1px solid #e5e9f0;border-top:4px solid #c9a24b;border-radius:16px;padding:24px 26px}.as-deny-card h1{margin:6px 0 8px;color:#0f2a4e;font-size:24px}.as-deny-card p{margin:0 0 16px;color:#475569;line-height:1.8}
-.as-kicker{display:inline-flex;gap:6px;align-items:center;color:#0b8a83;font-weight:800;font-size:12.5px}.as-deny-links{display:flex;flex-wrap:wrap;gap:8px}
+.as-foot{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;align-items:center;padding:12px max(18px,calc((100% - 1320px)/2));background:#3A1F36;color:#D9CBC2;font-size:12px;line-height:1.7}.as-foot b{color:#fff}.as-foot-links{display:flex;gap:14px}.as-foot-links a{color:#fde68a;text-decoration:none}.as-foot-links a:hover{text-decoration:underline}
+.as-deny{align-items:center;justify-content:center;padding:40px 16px;background:#FBF4EE;min-height:60vh}
+.as-deny-card{max-width:620px;background:#fff;border:1px solid #e5e9f0;border-top:4px solid #D9A866;border-radius:16px;padding:24px 26px}.as-deny-card h1{margin:6px 0 8px;color:#3A1F36;font-size:24px}.as-deny-card p{margin:0 0 16px;color:#5C4858;line-height:1.8}
+.as-kicker{display:inline-flex;gap:6px;align-items:center;color:#D4614A;font-weight:800;font-size:12.5px}.as-deny-links{display:flex;flex-wrap:wrap;gap:8px}
 @media(max-width:700px){.as-crumb small{display:none}.as-foot{flex-direction:column;align-items:flex-start}}
 @media print{.as-strip,.as-foot{display:none}}
 `;

@@ -61,7 +61,7 @@ export default function DecisionCenter() {
 
       <p
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           marginBottom: 24,
         }}
       >
@@ -81,7 +81,7 @@ export default function DecisionCenter() {
             style={{
               borderLeft: `6px solid ${colors[item.priority]}`,
               borderRadius: 14,
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               padding: 18,
             }}
           >
@@ -121,7 +121,7 @@ export default function DecisionCenter() {
 
             <p
               style={{
-                color: '#475569',
+                color: '#5C4858',
                 lineHeight: 1.8,
                 marginBottom: 14,
               }}

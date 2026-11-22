@@ -80,7 +80,7 @@ function Status({
         <div>
           <div
             style={{
-              color: '#64748b',
+              color: '#8E7F8A',
               fontSize: 13,
               marginBottom: 4,
             }}

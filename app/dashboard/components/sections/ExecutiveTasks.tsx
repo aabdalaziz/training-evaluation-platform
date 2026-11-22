@@ -59,7 +59,7 @@ export default function ExecutiveTasks() {
         <p
           style={{
             marginTop: 10,
-            color: '#64748b',
+            color: '#8E7F8A',
           }}
         >
           أهم الأعمال التي تحتاج إلى اهتمامك اليوم.
@@ -79,7 +79,7 @@ export default function ExecutiveTasks() {
             style={{
               borderLeft: `6px solid ${colors[task.priority]}`,
               borderRadius: 16,
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               padding: 20,
             }}
           >
@@ -106,7 +106,7 @@ export default function ExecutiveTasks() {
                 <p
                   style={{
                     marginTop: 8,
-                    color: '#64748b',
+                    color: '#8E7F8A',
                     lineHeight: 1.8,
                   }}
                 >

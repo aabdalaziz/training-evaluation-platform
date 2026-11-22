@@ -31,7 +31,7 @@ export default function LoginCard({ onSubmit, onMagic, loading = false, error = 
     if (mode === 'magic' && onMagic) { const m = await onMagic(email); if (m) setSent(m); return; }
     await onSubmit(email, password);
   }
-  const tabBtn = (on: boolean): React.CSSProperties => ({ flex: 1, minHeight: 44, padding: '9px 10px', borderRadius: 10, border: on ? '1.5px solid #0f2a4e' : '1px solid #e2e8f0', background: on ? '#0f2a4e' : '#fff', color: on ? '#fff' : '#334155', fontWeight: 800, cursor: 'pointer', fontSize: 14 });
+  const tabBtn = (on: boolean): React.CSSProperties => ({ flex: 1, minHeight: 44, padding: '9px 10px', borderRadius: 10, border: on ? '1.5px solid #3A1F36' : '1px solid #EADFD6', background: on ? '#3A1F36' : '#fff', color: on ? '#fff' : '#4A3645', fontWeight: 800, cursor: 'pointer', fontSize: 14 });
 
   return (
     <AuthCard standalone={false} icon={<Icon name="login" size={30} />} title="ادخل إلى أَثَر" subtitle="بابٌ واحد لكل صفة: متدرّب أو مدرّب أو طاقم — اكتب بريدك ويفتح لك بابك">
@@ -53,7 +53,7 @@ export default function LoginCard({ onSubmit, onMagic, loading = false, error = 
           <div style={{ position: 'relative' }}>
             <input id="login-password" type={show ? 'text' : 'password'} required autoComplete="current-password" dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...authInput, paddingLeft: 44 }} placeholder="••••••••" />
             <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'} title={show ? 'إخفاء' : 'إظهار'}
-              style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', border: 0, background: 'transparent', color: '#64748b', cursor: 'pointer', padding: 6, display: 'flex' }}>
+              style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', border: 0, background: 'transparent', color: '#8E7F8A', cursor: 'pointer', padding: 6, display: 'flex' }}>
               {show ? (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
               ) : (
@@ -62,7 +62,7 @@ export default function LoginCard({ onSubmit, onMagic, loading = false, error = 
             </button>
           </div>
         </>)}
-        {mode === 'magic' && <p style={{ margin: '10px 0 0', fontSize: 13, color: '#64748b', lineHeight: 1.7 }}>نرسل إلى بريدك رابطًا صالحًا لمرة واحدة. اضغطه من الجهاز نفسه وستجد نفسك داخل بابك مباشرة — بلا كلمة مرور تحفظها.</p>}
+        {mode === 'magic' && <p style={{ margin: '10px 0 0', fontSize: 13, color: '#8E7F8A', lineHeight: 1.7 }}>نرسل إلى بريدك رابطًا صالحًا لمرة واحدة. اضغطه من الجهاز نفسه وستجد نفسك داخل بابك مباشرة — بلا كلمة مرور تحفظها.</p>}
 
         {error && <AuthMessage kind="err">{error}</AuthMessage>}
         {sent && <AuthMessage kind="ok">{sent}</AuthMessage>}

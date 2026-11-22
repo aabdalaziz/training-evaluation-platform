@@ -60,7 +60,7 @@ export default function InstitutionTrend() {
           <div
             key={item.title}
             style={{
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               borderRadius: 18,
               padding: 20,
               textAlign: 'center',

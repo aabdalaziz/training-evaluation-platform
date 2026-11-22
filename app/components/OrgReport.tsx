@@ -100,17 +100,17 @@ export function OrgReport({ orgId, lang, token }: Props) {
 }
 
 const CSS = `
-.olr .olr-lead{color:#475569;font-size:13.5px;max-width:760px;margin:0}
-.olr section{margin-top:18px}.olr h3{display:flex;align-items:center;gap:8px;font-size:15px;margin:0 0 10px;color:#0f2a4e}.olr h3 small{color:#94a3b8;font-weight:700}
-.olr-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.olr-presets button{border:1px solid #e2e8f0;background:#fff;border-radius:12px;padding:8px 14px;font:inherit;font-weight:800;cursor:pointer;text-align:right}.olr-presets button small{display:block;font-weight:600;color:#64748b;font-size:11px}.olr-presets button.on{border-color:#0b8a83;background:#f0fdfa}
-.olr-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}.olr-form label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:800;color:#334155;min-width:150px}.olr-form input{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;font:inherit}
-.olr-hint{color:#64748b;font-size:12.5px;margin:8px 0 0}
+.olr .olr-lead{color:#5C4858;font-size:13.5px;max-width:760px;margin:0}
+.olr section{margin-top:18px}.olr h3{display:flex;align-items:center;gap:8px;font-size:15px;margin:0 0 10px;color:#3A1F36}.olr h3 small{color:#B3A5AE;font-weight:700}
+.olr-presets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.olr-presets button{border:1px solid #EADFD6;background:#fff;border-radius:12px;padding:8px 14px;font:inherit;font-weight:800;cursor:pointer;text-align:right}.olr-presets button small{display:block;font-weight:600;color:#8E7F8A;font-size:11px}.olr-presets button.on{border-color:#D4614A;background:#FBEDE7}
+.olr-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}.olr-form label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:800;color:#4A3645;min-width:150px}.olr-form input{border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;font:inherit}
+.olr-hint{color:#8E7F8A;font-size:12.5px;margin:8px 0 0}
 .olr-acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.olr-acts b{font-family:ui-monospace,monospace;direction:ltr;letter-spacing:.04em}
-.olr-st{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;background:#f1f5f9;color:#334155}.olr-st.issued{background:#dcfce7;color:#166534}.olr-st.revoked{background:#fee2e2;color:#991b1b}.olr-st.ok{background:#e0f2fe;color:#075985}
-.olr-decide{border:2px solid #0b8a83;border-radius:14px;padding:14px 16px;background:#f0fdfa;margin-bottom:12px}
-.olr-decs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin:10px 0}.olr-decs label{display:flex;gap:10px;align-items:flex-start;border:1px solid #e2e8f0;background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer}.olr-decs label.on{border-color:#0b8a83;box-shadow:0 0 0 2px #99f6e4 inset}.olr-decs label b{display:block;font-size:13.5px}.olr-decs label small{color:#64748b;font-size:11.5px;line-height:1.5}.olr-decs input{margin-top:4px}
-.olr-paper{border:1px solid #e2e8f0;border-radius:14px;overflow:auto;background:#f8fafc;padding:12px}
+.olr-st{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;background:#F6EBE0;color:#4A3645}.olr-st.issued{background:#dcfce7;color:#166534}.olr-st.revoked{background:#fee2e2;color:#991b1b}.olr-st.ok{background:#e0f2fe;color:#075985}
+.olr-decide{border:2px solid #D4614A;border-radius:14px;padding:14px 16px;background:#FBEDE7;margin-bottom:12px}
+.olr-decs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px;margin:10px 0}.olr-decs label{display:flex;gap:10px;align-items:flex-start;border:1px solid #EADFD6;background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer}.olr-decs label.on{border-color:#D4614A;box-shadow:0 0 0 2px #99f6e4 inset}.olr-decs label b{display:block;font-size:13.5px}.olr-decs label small{color:#8E7F8A;font-size:11.5px;line-height:1.5}.olr-decs input{margin-top:4px}
+.olr-paper{border:1px solid #EADFD6;border-radius:14px;overflow:auto;background:#FBF4EE;padding:12px}
 .olr-rowacts{white-space:nowrap}.olr-rowacts button{margin-inline-start:4px}tr.revoked td{opacity:.65}
-.olr-foot{color:#94a3b8;font-size:11.5px;margin-top:16px}
+.olr-foot{color:#B3A5AE;font-size:11.5px;margin-top:16px}
 .pt-btn.danger{background:#fee2e2;color:#991b1b;border-color:#fecaca}
 `;

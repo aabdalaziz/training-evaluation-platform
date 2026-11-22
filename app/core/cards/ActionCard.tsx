@@ -24,7 +24,7 @@ export default function ActionCard({
       onClick={() => router.push(href)}
       style={{
         width: '100%',
-        border: '1px solid #e2e8f0',
+        border: '1px solid #EADFD6',
         background: '#fff',
         borderRadius: 20,
         padding: 22,
@@ -74,7 +74,7 @@ export default function ActionCard({
 
       <div
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           fontSize: 13,
         }}
       >

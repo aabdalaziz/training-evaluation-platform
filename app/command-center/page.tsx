@@ -22,7 +22,7 @@ const REFRESH_SEC = 60;
 const RANGES: { id: Range; label: string; days: number | null }[] = [
   { id: 'today', label: 'اليوم', days: 1 }, { id: '7d', label: '7 أيام', days: 7 }, { id: '30d', label: '30 يومًا', days: 30 }, { id: 'all', label: 'الكل', days: null },
 ];
-const TONE: Record<string, string> = { EXCELLENT: '#34d399', GOOD: '#2dd4bf', WATCH: '#fbbf24', RISK: '#f87171', NA: '#94a3b8' };
+const TONE: Record<string, string> = { EXCELLENT: '#34d399', GOOD: '#2dd4bf', WATCH: '#fbbf24', RISK: '#f87171', NA: '#B3A5AE' };
 
 export default function CommandCenterPage() {
   const db = useMemo(() => supabase(), []);
@@ -245,7 +245,7 @@ export default function CommandCenterPage() {
               <div className="cc-ticker-in">
                 {(latest.length ? [...latest, ...latest] : []).map((e, i) => {
                   const room = raw.classrooms.find((c: any) => c.id === e.classroom_id)?.code || '—';
-                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#94a3b8' : e.mean >= TARGET ? '#34d399' : e.mean >= THRESHOLDS.good ? '#2dd4bf' : e.mean >= THRESHOLDS.watch ? '#fbbf24' : '#f87171' }} />{timeAgo(String(e.submitted_at))} · قاعة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
+                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#B3A5AE' : e.mean >= TARGET ? '#34d399' : e.mean >= THRESHOLDS.good ? '#2dd4bf' : e.mean >= THRESHOLDS.watch ? '#fbbf24' : '#f87171' }} />{timeAgo(String(e.submitted_at))} · قاعة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
                 })}
                 {!latest.length && <span>لا توجد استجابات بعد</span>}
               </div>
@@ -278,9 +278,9 @@ function Gauge({ value, color }: { value: number | null; color: string }) {
     <svg viewBox="0 0 140 84" className="cc-gauge" aria-hidden="true">
       <path d="M16 70 A54 54 0 0 1 124 70" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="12" strokeLinecap="round" />
       <path d="M16 70 A54 54 0 0 1 124 70" fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={`${half * pct} ${C}`} style={{ transition: 'stroke-dasharray .8s ease' }} />
-      <circle cx={tx} cy={ty} r="4.5" fill="#c9a24b" stroke="#0f2a4e" strokeWidth="2" />
+      <circle cx={tx} cy={ty} r="4.5" fill="#D9A866" stroke="#3A1F36" strokeWidth="2" />
       <text x="70" y="66" textAnchor="middle" fontSize="22" fontWeight="900" fill="#fff" style={{ direction: 'ltr' }}>{value === null ? '—' : value.toFixed(2)}</text>
-      <text x="16" y="82" fontSize="8" fill="#94a3b8">1</text><text x="124" y="82" fontSize="8" fill="#94a3b8" textAnchor="end">5</text>
+      <text x="16" y="82" fontSize="8" fill="#B3A5AE">1</text><text x="124" y="82" fontSize="8" fill="#B3A5AE" textAnchor="end">5</text>
     </svg>
   );
 }
@@ -295,13 +295,13 @@ function Trend({ series }: { series: { key: string; label: string; mean: number 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="cc-svg">
       <defs><linearGradient id="ccg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#2dd4bf" stopOpacity=".35" /><stop offset="1" stopColor="#2dd4bf" stopOpacity="0" /></linearGradient></defs>
-      {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,.08)" /><text x={P - 8} y={y(v) + 3} fontSize="10" textAnchor="end" fill="#94a3b8">{v}</text></g>)}
-      <line x1={P} x2={W - P} y1={y(TARGET)} y2={y(TARGET)} stroke="#c9a24b" strokeDasharray="6 4" strokeWidth="1.5" />
+      {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,.08)" /><text x={P - 8} y={y(v) + 3} fontSize="10" textAnchor="end" fill="#B3A5AE">{v}</text></g>)}
+      <line x1={P} x2={W - P} y1={y(TARGET)} y2={y(TARGET)} stroke="#D9A866" strokeDasharray="6 4" strokeWidth="1.5" />
       <path d={area} fill="url(#ccg)" /><path d={d} fill="none" stroke="#2dd4bf" strokeWidth="3" />
       {pts.map((p, i) => <g key={p.key}>
-        <circle cx={x(i)} cy={y(p.mean as number)} r="4.5" fill={(p.mean as number) >= TARGET ? '#34d399' : (p.mean as number) >= THRESHOLDS.good ? '#2dd4bf' : '#f87171'} stroke="#0f2a4e" strokeWidth="2"><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
-        <text x={x(i)} y={y(p.mean as number) - 10} fontSize="10" textAnchor="middle" fill="#e2e8f0" fontWeight="700">{(p.mean as number).toFixed(2)}</text>
-        <text x={x(i)} y={H - 10} fontSize="9" textAnchor="middle" fill="#94a3b8">{p.label.slice(-5)}</text>
+        <circle cx={x(i)} cy={y(p.mean as number)} r="4.5" fill={(p.mean as number) >= TARGET ? '#34d399' : (p.mean as number) >= THRESHOLDS.good ? '#2dd4bf' : '#f87171'} stroke="#3A1F36" strokeWidth="2"><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
+        <text x={x(i)} y={y(p.mean as number) - 10} fontSize="10" textAnchor="middle" fill="#EADFD6" fontWeight="700">{(p.mean as number).toFixed(2)}</text>
+        <text x={x(i)} y={H - 10} fontSize="9" textAnchor="middle" fill="#B3A5AE">{p.label.slice(-5)}</text>
       </g>)}
     </svg>
   );
@@ -340,8 +340,8 @@ function timeAgo(iso: string): string {
 /* ===== الأنماط ===== */
 const CSS = `
 body.cc-present .global-nav{display:none !important;}
-.cc{--navy:#0f2a4e;--navy-2:#0b1f3a;--teal:#2dd4bf;--gold:#c9a24b;--line:rgba(255,255,255,.1);--card:rgba(255,255,255,.05);--muted:#94a3b8;--txt:#e2e8f0;
-  min-height:100vh;background:radial-gradient(1200px 600px at 85% -10%,rgba(11,138,131,.28),transparent 60%),linear-gradient(180deg,#0f2a4e 0%,#0b1f3a 100%);color:var(--txt);padding:16px 18px 70px;font-family:inherit;}
+.cc{--navy:#3A1F36;--navy-2:#0b1f3a;--teal:#2dd4bf;--gold:#D9A866;--line:rgba(255,255,255,.1);--card:rgba(255,255,255,.05);--muted:#B3A5AE;--txt:#EADFD6;
+  min-height:100vh;background:radial-gradient(1200px 600px at 85% -10%,rgba(212,97,74,.28),transparent 60%),linear-gradient(180deg,#3A1F36 0%,#0b1f3a 100%);color:var(--txt);padding:16px 18px 70px;font-family:inherit;}
 .cc *{box-sizing:border-box;}
 .cc .ltr{direction:ltr;unicode-bidi:plaintext;}
 .cc a{text-decoration:none;color:inherit;}
@@ -392,7 +392,7 @@ body.cc-present .global-nav{display:none !important;}
 .cc-hero-val b{font-size:52px;font-weight:900;color:#fff;line-height:1;}
 .cc-hero-val span{color:var(--muted);font-weight:700;font-size:16px;}
 .cc-hero-val em{font-style:normal;color:var(--navy);font-weight:900;font-size:12.5px;padding:4px 12px;border-radius:999px;}
-.cc-hero-txt p{margin:0;color:#cbd5e1;font-size:13.5px;line-height:1.8;font-weight:600;}
+.cc-hero-txt p{margin:0;color:#D9CBC2;font-size:13.5px;line-height:1.8;font-weight:600;}
 .cc-dist{display:flex;height:10px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.1);margin-top:12px;}
 .cc-dist i{display:block;height:100%;transition:width .6s ease;}
 .cc-dist-l{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:11.5px;font-weight:700;}
@@ -404,13 +404,13 @@ body.cc-present .global-nav{display:none !important;}
 .cc-tile-ico{grid-row:1/4;width:38px;height:38px;border-radius:10px;background:rgba(45,212,191,.14);color:var(--teal);display:inline-flex;align-items:center;justify-content:center;align-self:start;}
 .cc-tile small{color:var(--muted);font-weight:700;font-size:12px;}
 .cc-tile b{font-size:26px;font-weight:900;color:#fff;line-height:1.15;}
-.cc-tile span{color:#94a3b8;font-size:11.5px;font-weight:600;}
+.cc-tile span{color:#B3A5AE;font-size:11.5px;font-weight:600;}
 .cc-tile em{font-style:normal;font-weight:800;}
 
 /* bars */
 .cc-bars{display:grid;gap:10px;}
 .cc-bar{display:grid;grid-template-columns:120px 1fr 48px;gap:10px;align-items:center;font-size:12.5px;font-weight:700;}
-.cc-bar-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0;}
+.cc-bar-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#EADFD6;}
 .cc-bar-t{position:relative;height:12px;background:rgba(255,255,255,.1);border-radius:999px;overflow:visible;}
 .cc-bar-t i{display:block;height:100%;border-radius:999px;transition:width .6s ease;}
 .cc-bar-t u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--gold);}
@@ -418,7 +418,7 @@ body.cc-present .global-nav{display:none !important;}
 
 /* alerts */
 .cc-alerts ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;}
-.cc-alerts li{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:12.5px;line-height:1.6;font-weight:600;color:#e2e8f0;}
+.cc-alerts li{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:12.5px;line-height:1.6;font-weight:600;color:#EADFD6;}
 .cc-alerts li i{width:9px;height:9px;border-radius:50%;margin-top:6px;flex-shrink:0;}
 .cc-alerts li.red i{background:#f87171;box-shadow:0 0 0 4px rgba(248,113,113,.2);}
 .cc-alerts li.amber i{background:#fbbf24;box-shadow:0 0 0 4px rgba(251,191,36,.2);}
@@ -427,7 +427,7 @@ body.cc-present .global-nav{display:none !important;}
 /* rank */
 .cc-rank{list-style:none;margin:0;padding:0;display:grid;gap:7px;}
 .cc-rank li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);}
-.cc-rank-n{width:24px;height:24px;border-radius:7px;background:rgba(201,162,75,.2);color:var(--gold);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;flex-shrink:0;}
+.cc-rank-n{width:24px;height:24px;border-radius:7px;background:rgba(217,168,102,.2);color:var(--gold);display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;flex-shrink:0;}
 .cc-rank li:first-child .cc-rank-n{background:var(--gold);color:var(--navy);}
 .cc-rank-l{flex:1;min-width:0;font-weight:700;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cc-rank-l small{display:block;color:var(--muted);font-size:11px;font-weight:600;}
@@ -439,11 +439,11 @@ body.cc-present .global-nav{display:none !important;}
 .cc-pri{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;margin-bottom:8px;}
 .cc-pri.HIGH{background:rgba(248,113,113,.18);color:#fca5a5;} .cc-pri.MED{background:rgba(251,191,36,.18);color:#fde68a;} .cc-pri.LOW{background:rgba(52,211,153,.18);color:#a7f3d0;}
 .cc-decision b{display:block;font-size:17px;font-weight:800;color:#fff;margin-bottom:6px;}
-.cc-decision p{margin:0;color:#cbd5e1;font-size:13px;line-height:1.8;font-weight:600;}
+.cc-decision p{margin:0;color:#D9CBC2;font-size:13px;line-height:1.8;font-weight:600;}
 .cc-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px;font-weight:700;}
 .cc-meta span{display:inline-flex;align-items:center;gap:5px;}
 .cc-ok{display:flex;gap:8px;align-items:center;color:#a7f3d0 !important;}
-.cc-best{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;color:#e2e8f0;font-size:12.5px;font-weight:600;}
+.cc-best{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;color:#EADFD6;font-size:12.5px;font-weight:600;}
 .cc-best svg{color:var(--gold);flex-shrink:0;}
 .cc-best b{display:inline;font-size:inherit;margin:0;}
 
@@ -456,7 +456,7 @@ body.cc-present .global-nav{display:none !important;}
 .cc-ticker-r{color:var(--muted);font-weight:600;}
 .cc-ticker-track{flex:1;overflow:hidden;min-width:0;}
 .cc-ticker-in{display:inline-flex;gap:34px;white-space:nowrap;animation:cctick 60s linear infinite;padding-inline-start:100%;}
-.cc-ticker-in span{display:inline-flex;align-items:center;gap:6px;color:#e2e8f0;font-weight:600;}
+.cc-ticker-in span{display:inline-flex;align-items:center;gap:6px;color:#EADFD6;font-weight:600;}
 .cc-ticker-in i{width:8px;height:8px;border-radius:50%;}
 .cc-ticker-in b{color:#fff;}
 @keyframes cctick{from{transform:translateX(0);}to{transform:translateX(100%);}}
