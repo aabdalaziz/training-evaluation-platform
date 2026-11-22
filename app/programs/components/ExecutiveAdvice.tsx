@@ -4,7 +4,7 @@ export default function ExecutiveAdvice() {
   return (
     <section
       style={{
-        background: 'linear-gradient(135deg,#0F766E,#115E59)',
+        background: 'linear-gradient(135deg,#B9544A,#115E59)',
         color: '#fff',
         borderRadius: 24,
         padding: 30,
@@ -56,7 +56,7 @@ export default function ExecutiveAdvice() {
         <button
           style={{
             background: '#fff',
-            color: '#0F766E',
+            color: '#B9544A',
             border: 0,
             borderRadius: 12,
             padding: '12px 18px',

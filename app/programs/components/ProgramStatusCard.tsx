@@ -80,7 +80,7 @@ function Item({
   return (
     <div
       style={{
-        background: '#f8fafc',
+        background: '#FBF4EE',
         borderRadius: 14,
         padding: 16,
         textAlign: 'center',
@@ -88,7 +88,7 @@ function Item({
     >
       <div
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           fontSize: 13,
         }}
       >

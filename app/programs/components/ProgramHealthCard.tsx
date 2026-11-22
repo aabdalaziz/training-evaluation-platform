@@ -57,7 +57,7 @@ export default function ProgramHealthCard({
         <div>
           <div
             style={{
-              color: '#64748b',
+              color: '#8E7F8A',
               fontSize: 14,
             }}
           >
@@ -78,7 +78,7 @@ export default function ProgramHealthCard({
           <p
             style={{
               margin: 0,
-              color: '#64748b',
+              color: '#8E7F8A',
             }}
           >
             مؤشر يجمع جودة البرنامج في رقم واحد.
@@ -171,7 +171,7 @@ function Metric({
   return (
     <div
       style={{
-        background: '#f8fafc',
+        background: '#FBF4EE',
         borderRadius: 16,
         padding: 18,
         textAlign: 'center',
@@ -179,7 +179,7 @@ function Metric({
     >
       <div
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           fontSize: 13,
         }}
       >

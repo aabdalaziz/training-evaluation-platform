@@ -89,7 +89,7 @@ export default function ProgramStatistics() {
               <div
                 style={{
                   marginTop: 8,
-                  color: '#64748b',
+                  color: '#8E7F8A',
                   fontSize: 14,
                 }}
               >

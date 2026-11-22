@@ -60,7 +60,7 @@ export default function TodaysAgenda() {
               gridTemplateColumns: '90px 1fr 180px',
               gap: 18,
               alignItems: 'center',
-              borderBottom: '1px solid #eef2f7',
+              borderBottom: '1px solid #F3E6DC',
               paddingBottom: 16,
             }}
           >
@@ -85,7 +85,7 @@ export default function TodaysAgenda() {
 
             <div
               style={{
-                color: '#64748b',
+                color: '#8E7F8A',
               }}
             >
               📍 {item.place}

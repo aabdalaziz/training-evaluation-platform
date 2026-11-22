@@ -60,7 +60,7 @@ export default function TrafficLightBoard() {
           <div
             key={item.title}
             style={{
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               borderRadius: 18,
               padding: 20,
               display: 'flex',
@@ -97,7 +97,7 @@ export default function TrafficLightBoard() {
               <div
                 style={{
                   marginTop: 6,
-                  color: '#64748b',
+                  color: '#8E7F8A',
                 }}
               >
                 {item.status}

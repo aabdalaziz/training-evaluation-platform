@@ -94,18 +94,18 @@ export default function JoinPage({ params }: { params: { token: string } }) {
 }
 
 const CSS = `
-.jn{min-height:70vh;display:grid;place-items:center;padding:28px 14px;background:radial-gradient(1000px 500px at 50% -10%,#e9f4f3,transparent 60%),#f6f8fb;font-family:inherit}
-.jn-card{width:100%;max-width:560px;background:#fff;border:1px solid #e5e9f0;border-radius:22px;padding:26px 24px;box-shadow:0 20px 50px -30px rgba(15,42,78,.35)}
-.jn-kicker{display:inline-flex;gap:6px;align-items:center;color:#0b8a83;font-weight:800;font-size:13px;background:#e6f4f3;padding:5px 10px;border-radius:999px}
-.jn h1{margin:14px 0 4px;color:#0f2a4e;font-size:26px}.jn-lead{margin:0 0 10px;color:#334155}
-.jn-roles{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}.jn-roles li{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #e5e9f0;border-right:4px solid #c9a24b;border-radius:12px;padding:10px 12px}.jn-roles b{color:#0f2a4e}.jn-roles span{color:#64748b;font-size:12px;direction:ltr}
-.jn-org{display:flex;gap:6px;align-items:center;color:#334155;margin:0 0 8px}
-.jn-msg{margin:8px 0 12px;padding:10px 14px;border-right:3px solid #0b8a83;background:#f8fafc;border-radius:10px;color:#334155;line-height:1.8}
-.jn-muted{color:#64748b;font-size:13px;line-height:1.7}.jn-muted code{background:#f1f5f9;padding:1px 6px;border-radius:6px}
-.jn-form{margin-top:14px;padding-top:14px;border-top:1px dashed #e5e9f0;display:grid;gap:10px}.jn-form label{font-weight:800;color:#0f2a4e}
-.jn-form input{border:1.5px solid #cbd5e1;border-radius:12px;padding:11px 12px;font-size:16px;font-family:inherit}.jn-form input:focus-visible{outline:3px solid #0b8a83;outline-offset:1px}
-.jn-form button{display:inline-flex;gap:8px;align-items:center;justify-content:center;border:0;border-radius:12px;padding:12px 16px;background:#0f2a4e;color:#fff;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;min-height:44px}.jn-form button:disabled{opacity:.6;cursor:wait}
+.jn{min-height:70vh;display:grid;place-items:center;padding:28px 14px;background:radial-gradient(1000px 500px at 50% -10%,#e9f4f3,transparent 60%),#FBF4EE;font-family:inherit}
+.jn-card{width:100%;max-width:560px;background:#fff;border:1px solid #e5e9f0;border-radius:22px;padding:26px 24px;box-shadow:0 20px 50px -30px rgba(42,22,38,.35)}
+.jn-kicker{display:inline-flex;gap:6px;align-items:center;color:#D4614A;font-weight:800;font-size:13px;background:#FBEDE7;padding:5px 10px;border-radius:999px}
+.jn h1{margin:14px 0 4px;color:#3A1F36;font-size:26px}.jn-lead{margin:0 0 10px;color:#4A3645}
+.jn-roles{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}.jn-roles li{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid #e5e9f0;border-right:4px solid #D9A866;border-radius:12px;padding:10px 12px}.jn-roles b{color:#3A1F36}.jn-roles span{color:#8E7F8A;font-size:12px;direction:ltr}
+.jn-org{display:flex;gap:6px;align-items:center;color:#4A3645;margin:0 0 8px}
+.jn-msg{margin:8px 0 12px;padding:10px 14px;border-right:3px solid #D4614A;background:#FBF4EE;border-radius:10px;color:#4A3645;line-height:1.8}
+.jn-muted{color:#8E7F8A;font-size:13px;line-height:1.7}.jn-muted code{background:#F6EBE0;padding:1px 6px;border-radius:6px}
+.jn-form{margin-top:14px;padding-top:14px;border-top:1px dashed #e5e9f0;display:grid;gap:10px}.jn-form label{font-weight:800;color:#3A1F36}
+.jn-form input{border:1.5px solid #D9CBC2;border-radius:12px;padding:11px 12px;font-size:16px;font-family:inherit}.jn-form input:focus-visible{outline:3px solid #D4614A;outline-offset:1px}
+.jn-form button{display:inline-flex;gap:8px;align-items:center;justify-content:center;border:0;border-radius:12px;padding:12px 16px;background:#3A1F36;color:#fff;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;min-height:44px}.jn-form button:disabled{opacity:.6;cursor:wait}
 .jn-ok{display:flex;gap:6px;align-items:center;color:#065f46;background:#ecfdf5;border-radius:10px;padding:10px 12px;margin:0;line-height:1.7}.jn-err{color:#991b1b;background:#fef2f2;border-radius:10px;padding:10px 12px;margin:0;line-height:1.7}
-.jn-foot{margin:18px 0 0;text-align:center;color:#94a3b8;font-size:12px}.jn-foot a{color:#0b8a83;text-decoration:none}
+.jn-foot{margin:18px 0 0;text-align:center;color:#B3A5AE;font-size:12px}.jn-foot a{color:#D4614A;text-decoration:none}
 @media (prefers-reduced-motion:reduce){.jn *{transition:none!important}}
 `;

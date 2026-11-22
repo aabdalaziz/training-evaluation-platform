@@ -33,7 +33,7 @@ export default function ProgramToolbar({
           minWidth: 260,
           padding: 14,
           borderRadius: 12,
-          border: '1px solid #cbd5e1',
+          border: '1px solid #D9CBC2',
           outline: 'none',
           fontSize: 16,
         }}

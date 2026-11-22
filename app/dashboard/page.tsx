@@ -42,15 +42,15 @@ type View = 'overview' | 'programs' | 'evaluations' | 'reports' | 'settings';
 type FormState = { name_ar: string; name_en: string; description_ar: string; start_date: string; end_date: string; delivery_mode: 'onsite' | 'remote'; intro_ar: string; intro_en: string; objectives_ar: string; objectives_en: string; outcomes_ar: string; outcomes_en: string; audience_ar: string; audience_en: string };
 type Range = '7d' | '14d' | '30d' | 'all';
 
-const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#C9A24B';
+const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866';
 const PROFILE_KEYS = ['intro_ar', 'intro_en', 'objectives_ar', 'objectives_en', 'outcomes_ar', 'outcomes_en', 'audience_ar', 'audience_en'] as const;
 const emptyForm: FormState = { name_ar: '', name_en: '', description_ar: '', start_date: '', end_date: '', delivery_mode: 'onsite', intro_ar: '', intro_en: '', objectives_ar: '', objectives_en: '', outcomes_ar: '', outcomes_en: '', audience_ar: '', audience_en: '' };
 const STATUS_STYLE: Record<Program['status'], { bg: string; color: string; label: string }> = {
-  DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'مسودة' }, ACTIVE: { bg: '#d1fae5', color: '#047857', label: 'نشط' },
+  DRAFT: { bg: '#F6EBE0', color: '#5C4858', label: 'مسودة' }, ACTIVE: { bg: '#d1fae5', color: '#047857', label: 'نشط' },
   COMPLETED: { bg: '#dbeafe', color: '#1d4ed8', label: 'مكتمل' }, CANCELLED: { bg: '#fee2e2', color: '#b91c1c', label: 'ملغى' },
 };
 const APPROVAL_STYLE: Record<ApprovalStatus, { bg: string; color: string; label: string; hint: string }> = {
-  DRAFT: { bg: '#f1f5f9', color: '#475569', label: 'بانتظار الإرسال', hint: 'البرنامج مسودة ولم يُرسل للمراجعة والاعتماد بعد' },
+  DRAFT: { bg: '#F6EBE0', color: '#5C4858', label: 'بانتظار الإرسال', hint: 'البرنامج مسودة ولم يُرسل للمراجعة والاعتماد بعد' },
   PENDING_REVIEW: { bg: '#fff7e6', color: '#b45309', label: 'بانتظار المراجعة', hint: 'أُرسل من مدير البرامج وينتظر المراجعة' },
   REVIEWED: { bg: '#eef4ff', color: '#1d4ed8', label: 'تمت المراجعة', hint: 'روجع وينتظر اعتماد محلل الجودة / مدير المنصة' },
   APPROVED: { bg: '#eafaf0', color: '#15803d', label: 'معتمد', hint: 'معتمد — يمكن تفعيله' },
@@ -361,7 +361,7 @@ export default function Dashboard() {
               <div className="db-hero-main">
                 <div className="db-kicker">الحالة العامة · {rangeLabel}</div>
                 <div className="db-hero-row">
-                  <span className="db-hero-score" style={{ color: k.responses ? perf.color : '#94a3b8' }}>{k.responses ? k.mean.toFixed(2) : '—'}<small>/5</small></span>
+                  <span className="db-hero-score" style={{ color: k.responses ? perf.color : '#B3A5AE' }}>{k.responses ? k.mean.toFixed(2) : '—'}<small>/5</small></span>
                   <div>
                     <div className="db-hero-badges"><span className="db-badge" style={{ background: perf.bg, color: perf.color }}>{perf.ar}</span><span className="db-badge" style={{ background: risk.bg, color: risk.color }}>مخاطر: {risk.ar}</span>{cmp?.deltaMean !== null && cmp?.deltaMean !== undefined && <span className="db-badge" style={{ background: cmp.deltaMean >= 0 ? '#d1fae5' : '#fee2e2', color: cmp.deltaMean >= 0 ? '#047857' : '#b91c1c' }}>{cmp.deltaMean >= 0 ? '▲' : '▼'} {Math.abs(cmp.deltaMean).toFixed(2)} عن الفترة السابقة</span>}</div>
                     <p className="db-hero-text">{heroText(k, cmp)}</p>
@@ -501,7 +501,7 @@ export default function Dashboard() {
                       <td><span className="db-badge" style={{ background: p.delivery_mode === 'remote' ? '#ede9fe' : '#e0f2fe', color: p.delivery_mode === 'remote' ? '#6d28d9' : '#0369a1' }}>{p.delivery_mode === 'remote' ? 'عن بُعد' : 'حضوري'}</span></td>
                       <td className="ltr">{p.start_date || '—'}{p.end_date ? ` → ${p.end_date}` : ''}</td>
                       <td>{nRooms}</td><td>{pk.responses}</td>
-                      <td className="ltr" style={{ fontWeight: 900, color: pk.responses ? PERF_LABEL[pk.perf].color : '#94a3b8' }}>{pk.responses ? pk.mean.toFixed(2) : '—'}</td>
+                      <td className="ltr" style={{ fontWeight: 900, color: pk.responses ? PERF_LABEL[pk.perf].color : '#B3A5AE' }}>{pk.responses ? pk.mean.toFixed(2) : '—'}</td>
                       <td><span className="db-badge" style={{ background: st.bg, color: st.color }}>{st.label}</span></td>
                       <td><button className="db-ap-pill" title={`${aps.hint}${p.approved_at ? ` · اعتُمد ${p.approved_at.slice(0, 10)}` : p.submitted_at ? ` · أُرسل ${p.submitted_at.slice(0, 10)}` : ''} — اضغط لعرض السجل`} style={{ background: aps.bg, color: aps.color }} onClick={() => loadHistory(p.id)}>{aps.label}{ap === 'REJECTED' && p.rejection_reason ? <small>{p.rejection_reason}</small> : null}</button></td>
                       <td className="db-acts"><div className="db-row" style={{ gap: 4, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
@@ -524,7 +524,7 @@ export default function Dashboard() {
                           <div className="db-hist-head"><Icon name="clock" size={15} /> سجل اعتماد «{p.name_ar}»<button className="db-link" onClick={() => setHistoryFor(null)}>إغلاق</button></div>
                           {history.length === 0 ? <div className="db-muted">لا توجد انتقالات مسجّلة بعد — سيبدأ السجل مع أول إرسال للمراجعة.</div> : (
                             <ol className="db-timeline">
-                              {history.map(h => <li key={h.id}><span className="db-tl-dot" style={{ background: APPROVAL_STYLE[h.to_status]?.color || '#94a3b8' }} /><div><b>{APPROVAL_STYLE[h.to_status]?.label || h.to_status}</b>{h.from_status && <span className="db-muted"> ← {APPROVAL_STYLE[h.from_status as ApprovalStatus]?.label || h.from_status}</span>}<div className="db-muted">{h.actor_name || '—'}{h.actor_role ? ` · ${ROLE_LABEL[h.actor_role] || h.actor_role}` : ''} · <bdi>{new Date(h.created_at).toLocaleString('ar-SA', { dateStyle: 'medium', timeStyle: 'short' })}</bdi></div>{h.comment && <div className="db-hist-note">{h.comment}</div>}</div></li>)}
+                              {history.map(h => <li key={h.id}><span className="db-tl-dot" style={{ background: APPROVAL_STYLE[h.to_status]?.color || '#B3A5AE' }} /><div><b>{APPROVAL_STYLE[h.to_status]?.label || h.to_status}</b>{h.from_status && <span className="db-muted"> ← {APPROVAL_STYLE[h.from_status as ApprovalStatus]?.label || h.from_status}</span>}<div className="db-muted">{h.actor_name || '—'}{h.actor_role ? ` · ${ROLE_LABEL[h.actor_role] || h.actor_role}` : ''} · <bdi>{new Date(h.created_at).toLocaleString('ar-SA', { dateStyle: 'medium', timeStyle: 'short' })}</bdi></div>{h.comment && <div className="db-hist-note">{h.comment}</div>}</div></li>)}
                             </ol>
                           )}
                         </div>
@@ -633,7 +633,7 @@ function Kpi({ icon, label, value, sub, delta, suffix = '', good = 'up', color }
         <small>{label}</small>
         <b style={{ color: color || NAVY }}>{value}</b>
         <span>{sub}</span>
-        {delta !== null && delta !== undefined && <em style={{ color: delta === 0 ? '#64748b' : pos ? '#047857' : '#b91c1c' }}>{delta > 0 ? '▲' : delta < 0 ? '▼' : '•'} {Number.isInteger(delta) ? Math.abs(delta) : Math.abs(delta).toFixed(suffix ? 1 : 2)}{suffix} <i>عن الفترة السابقة</i></em>}
+        {delta !== null && delta !== undefined && <em style={{ color: delta === 0 ? '#8E7F8A' : pos ? '#047857' : '#b91c1c' }}>{delta > 0 ? '▲' : delta < 0 ? '▼' : '•'} {Number.isInteger(delta) ? Math.abs(delta) : Math.abs(delta).toFixed(suffix ? 1 : 2)}{suffix} <i>عن الفترة السابقة</i></em>}
       </div>
     </div>
   );
@@ -649,10 +649,10 @@ function Spark({ series }: { series: { key: string; label: string; mean: number 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="db-svg">
       <defs><linearGradient id="dbg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor={TEAL} stopOpacity=".25" /><stop offset="1" stopColor={TEAL} stopOpacity="0" /></linearGradient></defs>
-      {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="#eef2f7" /><text x={P - 6} y={y(v) + 3} fontSize="9" textAnchor="end" fill="#94a3b8">{v}</text></g>)}
+      {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="#F3E6DC" /><text x={P - 6} y={y(v) + 3} fontSize="9" textAnchor="end" fill="#B3A5AE">{v}</text></g>)}
       <line x1={P} x2={W - P} y1={y(TARGET)} y2={y(TARGET)} stroke={GOLD} strokeDasharray="5 4" strokeWidth="1.5" />
       <path d={area} fill="url(#dbg)" /><path d={d} fill="none" stroke={NAVY} strokeWidth="2.5" />
-      {pts.map((p, i) => <g key={p.key}><circle cx={x(i)} cy={y(p.mean as number)} r="3.5" fill={(p.mean as number) >= TARGET ? '#059669' : (p.mean as number) >= THRESHOLDS.good ? NAVY : '#dc2626'}><title>{p.label}: {p.mean} (n={p.responses})</title></circle><text x={x(i)} y={H - P + 12} fontSize="8" textAnchor="middle" fill="#94a3b8">{p.label.slice(5)}</text></g>)}
+      {pts.map((p, i) => <g key={p.key}><circle cx={x(i)} cy={y(p.mean as number)} r="3.5" fill={(p.mean as number) >= TARGET ? '#059669' : (p.mean as number) >= THRESHOLDS.good ? NAVY : '#dc2626'}><title>{p.label}: {p.mean} (n={p.responses})</title></circle><text x={x(i)} y={H - P + 12} fontSize="8" textAnchor="middle" fill="#B3A5AE">{p.label.slice(5)}</text></g>)}
     </svg>
   );
 }
@@ -701,7 +701,7 @@ const CSS = `
 /* ---------- sidebar ---------- */
 .db-side{background:linear-gradient(180deg,var(--navy) 0%,#0b2240 100%);color:#fff;padding:16px 14px;display:flex;flex-direction:column;gap:14px;position:sticky;top:0;height:100vh;overflow:auto;align-self:start;border-inline-start:1px solid rgba(255,255,255,.06)}
 .db-brand{display:flex;flex-direction:column;gap:10px}.db-brand-text{text-align:center}
-.db-logos svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}.db-hall{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(201,162,75,.6);background:rgba(201,162,75,.12);color:#fde68a;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:800;text-decoration:none}.db-hall:hover{background:rgba(201,162,75,.22)}.db-owner{display:block;text-align:center;color:#8fb0c9;font-size:10.5px;font-weight:700;line-height:1.6;padding:0 6px}
+.db-logos svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}.db-hall{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(217,168,102,.6);background:rgba(217,168,102,.12);color:#fde68a;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:800;text-decoration:none}.db-hall:hover{background:rgba(217,168,102,.22)}.db-owner{display:block;text-align:center;color:#8fb0c9;font-size:10.5px;font-weight:700;line-height:1.6;padding:0 6px}
 .db-logos{background:#fff;border-radius:var(--r);padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 0 2px var(--gold-soft)}
 .db-logos img{height:46px;width:auto;max-width:128px;object-fit:contain;display:block}
 .db-brand b{display:block;font-size:16px;letter-spacing:.2px}.db-brand small,.db-user small{display:block;color:#a9c4d8;font-size:11px;font-weight:700}
@@ -736,7 +736,7 @@ const CSS = `
 /* buttons */
 .db-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:10px;padding:9px 14px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;transition:.15s;line-height:1.3}
 .db-btn:hover{background:var(--surface-2);border-color:#b9c7d8;color:var(--navy)}
-.db-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 12px rgba(15,42,78,.18)}
+.db-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 12px rgba(42,22,38,.18)}
 .db-btn.primary:hover{background:var(--navy-2);border-color:var(--navy-2);color:#fff}
 .db-btn.teal{background:var(--teal);color:#fff;border-color:var(--teal)}.db-btn.teal:hover{background:var(--teal-2);color:#fff}
 .db-btn:disabled{opacity:.6;cursor:not-allowed}
@@ -767,14 +767,14 @@ const CSS = `
 .db-pills .db-badge{background:var(--surface)!important;border:1px solid var(--line);color:var(--ink-2)!important;padding:5px 12px;font-size:12px;box-shadow:var(--shadow-sm)}
 .db-pills .db-badge::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--dot,var(--muted-2))}
 /* hero */
-.db-hero{display:grid;grid-template-columns:1fr 300px;gap:16px;background:linear-gradient(135deg,var(--navy) 0%,#0b2240 100%);color:#fff;border-radius:var(--r-xl);padding:22px 24px;border:1px solid rgba(201,162,75,.35);position:relative;overflow:hidden;box-shadow:var(--shadow)}
-.db-hero::after{content:'';position:absolute;inset-inline-end:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(11,138,131,.35),transparent 70%);pointer-events:none}
+.db-hero{display:grid;grid-template-columns:1fr 300px;gap:16px;background:linear-gradient(135deg,var(--navy) 0%,#0b2240 100%);color:#fff;border-radius:var(--r-xl);padding:22px 24px;border:1px solid rgba(217,168,102,.35);position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.db-hero::after{content:'';position:absolute;inset-inline-end:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(212,97,74,.35),transparent 70%);pointer-events:none}
 .db-kicker{font-size:11px;font-weight:800;color:#a9c4d8;letter-spacing:.5px;margin-bottom:8px;text-transform:uppercase}
 .db-hero-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .db-hero-score{font-size:58px;font-weight:900;line-height:1;direction:ltr;unicode-bidi:plaintext;font-variant-numeric:tabular-nums}
 .db-hero-score small{font-size:18px;color:#a9c4d8;font-weight:700}
 .db-hero-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.db-hero-text{margin:0;font-size:14px;line-height:1.9;color:#e2e8f0;max-width:720px}
+.db-hero-text{margin:0;font-size:14px;line-height:1.9;color:#EADFD6;max-width:720px}
 .db-hero-side{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative}
 .db-hero-side div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--r);padding:10px;text-align:center}
 .db-hero-side small{display:block;font-size:11px;color:#a9c4d8;font-weight:800}

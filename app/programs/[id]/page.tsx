@@ -121,7 +121,7 @@ function Inner() {
           </div>
           {objectives.length > 0 && <div className="pt-box"><h3><Icon name="target" size={18} /> {lang === 'ar' ? 'الأهداف' : 'Objectives'}</h3><ul>{objectives.map((x, i) => <li key={i}><Icon name="check" size={15} /> {x}</li>)}</ul></div>}
           {outcomes.length > 0 && <div className="pt-box"><h3><Icon name="award" size={18} /> {lang === 'ar' ? 'المخرجات' : 'Outcomes'}</h3><ul>{outcomes.map((x, i) => <li key={i}><Icon name="check" size={15} /> {x}</li>)}</ul></div>}
-          {audience && <div className="pt-box"><h3><Icon name="users" size={18} /> {lang === 'ar' ? 'الفئة المستهدفة' : 'Who is it for'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155' }}>{audience}</p></div>}
+          {audience && <div className="pt-box"><h3><Icon name="users" size={18} /> {lang === 'ar' ? 'الفئة المستهدفة' : 'Who is it for'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#4A3645' }}>{audience}</p></div>}
           {(p.program_type === 'arabic' || p.cefr_level) && <PlacementCard lang={lang} compact programLevel={p.cefr_level || null} />}
           <UpcomingSessions programId={p.id} lang={lang} />
           <ProgramResources programId={p.id} lang={lang} />
@@ -131,7 +131,7 @@ function Inner() {
           <ProgramAfter programId={p.id} lang={lang} />
           {loaded && <ProgramBorn programId={p.id} token={bornToken} onState={setPrio} lang={lang} />}
           {loaded && <ProgramRehearsals programId={p.id} lang={lang} />}
-          <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#334155', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر أَثَر، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>
+          <div className="pt-box"><h3><Icon name="trend" size={18} /> {lang === 'ar' ? 'كيف نقيس الأثر؟' : 'How we measure impact'}</h3><p style={{ margin: 0, lineHeight: 1.9, color: '#4A3645', fontSize: 14 }}>{lang === 'ar' ? 'تقييمات يومية وختامية عبر أَثَر، تسجيل حضور رقمي، وشهادة قابلة للتحقق عند الإتمام — ثم متابعة نقل الأثر بعد 60–90 يومًا.' : 'Daily and final evaluations via the Evaluation Platform, digital attendance, a verifiable certificate on completion — then transfer-of-learning follow-up after 60–90 days.'}</p></div>
         </div>
 
         <aside id="register" className="pt-box pt-sticky">
@@ -187,11 +187,11 @@ function Inner() {
 }
 
 const CSS = `
-.pt-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.pt-facts>div{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px 14px;color:#0b8a83}.pt-facts span{display:flex;flex-direction:column;color:#0f172a}.pt-facts small{font-size:11.5px;color:#64748b;font-weight:800}.pt-facts b{font-size:14px}
+.pt-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.pt-facts>div{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;color:#D4614A}.pt-facts span{display:flex;flex-direction:column;color:#2A1626}.pt-facts small{font-size:11.5px;color:#8E7F8A;font-weight:800}.pt-facts b{font-size:14px}
 .pt-sticky{position:sticky;top:84px}
-.pt-status{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;background:#f1f5f9;color:#334155}.pt-status.approved{background:#ecfdf5;color:#065f46}.pt-status.pending{background:#eff6ff;color:#1e40af}.pt-status.waitlisted{background:#fff7ed;color:#9a3412}.pt-status.rejected,.pt-status.cancelled{background:#f1f5f9;color:#475569}.pt-status b{font-size:16px}.pt-paybox{display:grid;gap:6px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f}.pt-paybox b{color:#0f2a4e;font-size:14px}.pt-paybox a{justify-self:start}.pt-status small{font-size:12px;opacity:.85}
-.pt-muted{color:#64748b;font-size:13.5px;line-height:1.8;margin:8px 0}.pt-note{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#334155;line-height:1.7}
-.pt-aside-foot{margin-top:14px;padding-top:12px;border-top:1px dashed #e2e8f0;font-size:12.5px;color:#64748b;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pt-aside-foot a{color:#0b8a83;font-weight:800}
-.pt-tag.off{background:#f1f5f9;color:#475569}
+.pt-status{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;background:#F6EBE0;color:#4A3645}.pt-status.approved{background:#ecfdf5;color:#065f46}.pt-status.pending{background:#eff6ff;color:#1e40af}.pt-status.waitlisted{background:#fff7ed;color:#9a3412}.pt-status.rejected,.pt-status.cancelled{background:#F6EBE0;color:#5C4858}.pt-status b{font-size:16px}.pt-paybox{display:grid;gap:6px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f}.pt-paybox b{color:#3A1F36;font-size:14px}.pt-paybox a{justify-self:start}.pt-status small{font-size:12px;opacity:.85}
+.pt-muted{color:#8E7F8A;font-size:13.5px;line-height:1.8;margin:8px 0}.pt-note{background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#4A3645;line-height:1.7}
+.pt-aside-foot{margin-top:14px;padding-top:12px;border-top:1px dashed #EADFD6;font-size:12.5px;color:#8E7F8A;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pt-aside-foot a{color:#D4614A;font-weight:800}
+.pt-tag.off{background:#F6EBE0;color:#5C4858}
 @media(max-width:760px){.pt-facts{grid-template-columns:1fr 1fr}.pt-sticky{position:static}}
 `;

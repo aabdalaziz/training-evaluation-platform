@@ -60,7 +60,7 @@ export default function TodayKPIs() {
           <div
             key={item.title}
             style={{
-              background: '#f8fafc',
+              background: '#FBF4EE',
               borderRadius: 18,
               padding: 22,
               textAlign: 'center',
@@ -97,7 +97,7 @@ export default function TodayKPIs() {
             <div
               style={{
                 marginTop: 8,
-                color: '#64748b',
+                color: '#8E7F8A',
                 fontWeight: 700,
               }}
             >

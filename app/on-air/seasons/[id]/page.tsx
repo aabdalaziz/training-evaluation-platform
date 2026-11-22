@@ -55,10 +55,10 @@ function Inner({ id }: { id: string }) {
   </main>;
 }
 const CSS = `
-.osn{max-width:900px;margin:0 auto;padding:28px 18px 60px}.osn-crumb{color:#64748b;font-size:13px;margin:0 0 8px}.osn-crumb a{color:#0b6f69}.osn-err{color:#b91c1c;font-weight:800}
-.osn-h h1{margin:6px 0 6px;font-size:30px;color:#0f2a4e}.osn-sub{color:#334155;margin:0 0 8px;font-size:15px}.osn-line{background:#0f2a4e;color:#fde68a;border-radius:999px;padding:6px 14px;display:inline-block;font-weight:800;margin:0 0 10px}.osn-links{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
-.osn .pt-box{margin-bottom:16px}.osn h2{font-size:19px;color:#0f2a4e;margin:0 0 10px}.osn h3{font-size:15px;color:#0f2a4e;margin:12px 0 6px}
-.osn-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.osn-kpis div{background:#f8fafc;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;color:#334155;font-size:13px}.osn-kpis b{font-size:22px;color:#0f2a4e}
+.osn{max-width:900px;margin:0 auto;padding:28px 18px 60px}.osn-crumb{color:#8E7F8A;font-size:13px;margin:0 0 8px}.osn-crumb a{color:#0b6f69}.osn-err{color:#b91c1c;font-weight:800}
+.osn-h h1{margin:6px 0 6px;font-size:30px;color:#3A1F36}.osn-sub{color:#4A3645;margin:0 0 8px;font-size:15px}.osn-line{background:#3A1F36;color:#fde68a;border-radius:999px;padding:6px 14px;display:inline-block;font-weight:800;margin:0 0 10px}.osn-links{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.osn .pt-box{margin-bottom:16px}.osn h2{font-size:19px;color:#3A1F36;margin:0 0 10px}.osn h3{font-size:15px;color:#3A1F36;margin:12px 0 6px}
+.osn-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}.osn-kpis div{background:#FBF4EE;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;color:#4A3645;font-size:13px}.osn-kpis b{font-size:22px;color:#3A1F36}
 .osn-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:700px){.osn-two{grid-template-columns:1fr}}
-.osn-slots,.osn-cities,.osn-docs{list-style:none;margin:0;padding:0;display:grid;gap:6px;color:#334155}.osn-peak{margin:0;padding-inline-start:20px;color:#334155;line-height:1.9}.osn-sign{color:#701a75;font-weight:800}.osn-shared{color:#9a3412;font-weight:800}.osn-docs code{background:#f1f5f9;border-radius:6px;padding:1px 6px}
+.osn-slots,.osn-cities,.osn-docs{list-style:none;margin:0;padding:0;display:grid;gap:6px;color:#4A3645}.osn-peak{margin:0;padding-inline-start:20px;color:#4A3645;line-height:1.9}.osn-sign{color:#701a75;font-weight:800}.osn-shared{color:#9a3412;font-weight:800}.osn-docs code{background:#F6EBE0;border-radius:6px;padding:1px 6px}
 `;

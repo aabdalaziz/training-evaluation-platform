@@ -101,32 +101,32 @@ function Inner() {
 
 const CSS = `
 .obs{max-width:1100px;margin:0 auto;padding:18px 16px 40px;font-family:inherit}
-.obs-hero{background:linear-gradient(135deg,#0f2a4e,#0b8a83);color:#fff;border-radius:22px;padding:28px 24px;margin-bottom:18px;position:relative;overflow:hidden}
-.obs-hero:after{content:'';position:absolute;inset:auto -60px -80px auto;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,75,.35),transparent 70%)}
+.obs-hero{background:linear-gradient(135deg,#3A1F36,#D4614A);color:#fff;border-radius:22px;padding:28px 24px;margin-bottom:18px;position:relative;overflow:hidden}
+.obs-hero:after{content:'';position:absolute;inset:auto -60px -80px auto;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(217,168,102,.35),transparent 70%)}
 .obs-kicker{font-size:13px;letter-spacing:.3px;opacity:.9;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .obs-hero h1{margin:6px 0 4px;font-size:34px;line-height:1.2}.obs-day{font-size:15px;opacity:.85;font-weight:400;margin-inline-start:8px}
 .obs-lead{font-size:18px;margin:6px 0 2px;font-weight:600}.obs-sub{opacity:.88;font-size:13px;margin:0}
 .obs-totals{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:13px}.obs-totals span{background:rgba(255,255,255,.12);padding:6px 10px;border-radius:999px}.obs-totals b{margin-inline-start:4px}
-.obs-chip{background:#c9a24b;color:#0f2a4e;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;text-decoration:none}
+.obs-chip{background:#D9A866;color:#3A1F36;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700;text-decoration:none}
 .obs-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:16px}
-.obs-cell{border:2px solid transparent;border-radius:16px;padding:14px 12px;background:#fff;box-shadow:0 2px 10px rgba(15,42,78,.06);cursor:pointer;text-align:start;display:flex;flex-direction:column;gap:4px;transition:transform .15s;position:relative;overflow:hidden;font:inherit}
+.obs-cell{border:2px solid transparent;border-radius:16px;padding:14px 12px;background:#fff;box-shadow:0 2px 10px rgba(42,22,38,.06);cursor:pointer;text-align:start;display:flex;flex-direction:column;gap:4px;transition:transform .15s;position:relative;overflow:hidden;font:inherit}
 .obs-cell:before{content:'';position:absolute;inset:0 0 auto 0;height:5px;background:var(--c)}
-.obs-cell:hover{transform:translateY(-2px)}.obs-cell.on{border-color:var(--c)}.obs-cell.mute{opacity:.55;background:#f8fafc}
-.obs-ico{font-size:26px;line-height:1}.obs-name{font-weight:700;color:#0f2a4e;font-size:14px}.obs-idx{font-size:30px;font-weight:800;color:var(--c);line-height:1}.obs-w{font-size:12px;color:#475569}
-.obs-empty{grid-column:1/-1;padding:30px;text-align:center;color:#64748b}
+.obs-cell:hover{transform:translateY(-2px)}.obs-cell.on{border-color:var(--c)}.obs-cell.mute{opacity:.55;background:#FBF4EE}
+.obs-ico{font-size:26px;line-height:1}.obs-name{font-weight:700;color:#3A1F36;font-size:14px}.obs-idx{font-size:30px;font-weight:800;color:var(--c);line-height:1}.obs-w{font-size:12px;color:#5C4858}
+.obs-empty{grid-column:1/-1;padding:30px;text-align:center;color:#8E7F8A}
 .obs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}@media(max-width:820px){.obs-grid{grid-template-columns:1fr}}
-.obs h2{font-size:17px;margin:0 0 10px;color:#0f2a4e}.obs h3{font-size:14px;margin:0 0 6px;color:#334155}
-.obs-gauge{display:flex;align-items:center;gap:10px;margin-bottom:8px}.obs-gauge b{font-size:32px;color:#0f2a4e}.obs-gauge span{color:#64748b}
-.obs-bar{flex:1;height:14px;background:#e2e8f0;border-radius:999px;overflow:hidden}.obs-bar i{display:block;height:100%;background:#0b8a83;border-radius:999px;transition:width .6s}.obs-bar.sm{height:8px}
-.obs-facts{list-style:none;padding:0;margin:0 0 10px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:13px;color:#334155}
+.obs h2{font-size:17px;margin:0 0 10px;color:#3A1F36}.obs h3{font-size:14px;margin:0 0 6px;color:#4A3645}
+.obs-gauge{display:flex;align-items:center;gap:10px;margin-bottom:8px}.obs-gauge b{font-size:32px;color:#3A1F36}.obs-gauge span{color:#8E7F8A}
+.obs-bar{flex:1;height:14px;background:#EADFD6;border-radius:999px;overflow:hidden}.obs-bar i{display:block;height:100%;background:#D4614A;border-radius:999px;transition:width .6s}.obs-bar.sm{height:8px}
+.obs-facts{list-style:none;padding:0;margin:0 0 10px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:13px;color:#4A3645}
 .obs-doms{display:flex;flex-direction:column;gap:6px}.obs-dom{display:grid;grid-template-columns:150px 1fr 36px;align-items:center;gap:8px;font-size:13px}.obs-dom b{text-align:end}
-.obs-sig-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}.obs-sig{border-inline-start:3px solid #0b8a83;padding:4px 10px;margin-bottom:8px;display:flex;flex-direction:column}.obs-sig.down{border-color:#b45309}.obs-sig span{font-size:12px;color:#0b8a83}.obs-sig.down span{color:#b45309}.obs-sig small{color:#64748b;font-size:12px}
-.obs-gap-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.obs-gap-row>div{display:flex;flex-direction:column}.obs-gap-row span{font-size:12px;color:#64748b}.obs-gap-row b{font-size:28px;color:#0f2a4e}.obs-vs{color:#94a3b8;font-size:13px}
-.obs-verdict{padding:8px 12px;border-radius:12px;background:#f1f5f9;font-weight:600;color:#0f2a4e}.obs-verdict.over{background:#fff7ed;color:#9a3412}.obs-verdict.under{background:#ecfeff;color:#155e75}.obs-verdict small{display:block;font-weight:400;color:#64748b;font-size:12px}
-.obs-muted{color:#64748b;font-size:13px}.obs-supp{margin:4px 0 0}.obs-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.obs-issues ul,.obs-method ul{padding-inline-start:18px;font-size:13px}.obs-issues li{margin-bottom:6px}.obs-issues small{color:#94a3b8;margin-inline-start:6px}
-.obs-method ol{padding-inline-start:18px;font-size:13px;color:#334155;line-height:1.8}.obs-method details{margin-top:6px;font-size:13px}.obs-contrib{font-size:13px;color:#334155;margin:10px 0 0}
-.obs-editorial p{font-size:15px;line-height:1.9;color:#1e293b;white-space:pre-wrap}.obs-foot{text-align:center;color:#94a3b8;font-size:12px;margin-top:20px}
-.obs .pt-btn.ghost{background:#fff;color:#0f2a4e;border:1px solid #cbd5e1}
-@media print{.obs-hero{background:#0f2a4e!important;-webkit-print-color-adjust:exact}.obs-cell{break-inside:avoid}.pt-btn,.obs-foot a{display:none}}
+.obs-sig-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}.obs-sig{border-inline-start:3px solid #D4614A;padding:4px 10px;margin-bottom:8px;display:flex;flex-direction:column}.obs-sig.down{border-color:#b45309}.obs-sig span{font-size:12px;color:#D4614A}.obs-sig.down span{color:#b45309}.obs-sig small{color:#8E7F8A;font-size:12px}
+.obs-gap-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.obs-gap-row>div{display:flex;flex-direction:column}.obs-gap-row span{font-size:12px;color:#8E7F8A}.obs-gap-row b{font-size:28px;color:#3A1F36}.obs-vs{color:#B3A5AE;font-size:13px}
+.obs-verdict{padding:8px 12px;border-radius:12px;background:#F6EBE0;font-weight:600;color:#3A1F36}.obs-verdict.over{background:#fff7ed;color:#9a3412}.obs-verdict.under{background:#ecfeff;color:#155e75}.obs-verdict small{display:block;font-weight:400;color:#8E7F8A;font-size:12px}
+.obs-muted{color:#8E7F8A;font-size:13px}.obs-supp{margin:4px 0 0}.obs-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.obs-issues ul,.obs-method ul{padding-inline-start:18px;font-size:13px}.obs-issues li{margin-bottom:6px}.obs-issues small{color:#B3A5AE;margin-inline-start:6px}
+.obs-method ol{padding-inline-start:18px;font-size:13px;color:#4A3645;line-height:1.8}.obs-method details{margin-top:6px;font-size:13px}.obs-contrib{font-size:13px;color:#4A3645;margin:10px 0 0}
+.obs-editorial p{font-size:15px;line-height:1.9;color:#3A2634;white-space:pre-wrap}.obs-foot{text-align:center;color:#B3A5AE;font-size:12px;margin-top:20px}
+.obs .pt-btn.ghost{background:#fff;color:#3A1F36;border:1px solid #D9CBC2}
+@media print{.obs-hero{background:#3A1F36!important;-webkit-print-color-adjust:exact}.obs-cell{break-inside:avoid}.pt-btn,.obs-foot a{display:none}}
 `;

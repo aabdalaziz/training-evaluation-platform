@@ -58,7 +58,7 @@ export default function ProgramDecisionCenter() {
             style={{
               borderLeft: `6px solid ${item.color}`,
               borderRadius: 18,
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               padding: 22,
             }}
           >
@@ -95,7 +95,7 @@ export default function ProgramDecisionCenter() {
             <p
               style={{
                 margin: 0,
-                color: '#64748b',
+                color: '#8E7F8A',
                 lineHeight: 1.8,
               }}
             >

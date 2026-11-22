@@ -59,13 +59,13 @@ export function MeasureBox({ item, post, busy, ar }: { item: any; post: Post; bu
 }
 
 const CSS = `
-.vo-door{margin-top:6px}.vo-gradlink{margin-inline-start:auto;font-size:12px;font-weight:800;color:#0f2a4e;text-decoration:none;border:1px solid #cbd5e1;border-radius:999px;padding:2px 10px}.vo-gradlink:hover{background:#f1f5f9}
-.vo-letter,.vo-offer,.vo-measure{border:1.5px solid #e2e8f0;border-radius:14px;padding:12px 14px;background:#fff;margin:10px 0;display:grid;gap:8px}
-.vo-letter.opened{border-color:#c9a24b;background:#fffdf5}.vo-letter.open{border-color:#0b8a83;background:#f0fdfa}.vo-offer{border-color:#0f2a4e;background:#f8fafc}.vo-measure{border-style:dashed}
-.vo-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#0f2a4e}.vo-head b{font-size:15px}.vo-ph{font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;background:#e2e8f0;color:#334155}
-.vo-letter blockquote{margin:0;padding:10px 14px;border-inline-start:3px solid #c9a24b;background:#fff;border-radius:8px;line-height:2;color:#1f2937;font-size:16px}
-.vo-form{display:grid;gap:10px}.vo-form>label{display:grid;gap:6px;font-weight:700;color:#0f2a4e}.vo-form textarea{border:1.5px solid #cbd5e1;border-radius:10px;padding:9px 12px;font:inherit;min-height:110px;width:100%;box-sizing:border-box;line-height:1.8}
+.vo-door{margin-top:6px}.vo-gradlink{margin-inline-start:auto;font-size:12px;font-weight:800;color:#3A1F36;text-decoration:none;border:1px solid #D9CBC2;border-radius:999px;padding:2px 10px}.vo-gradlink:hover{background:#F6EBE0}
+.vo-letter,.vo-offer,.vo-measure{border:1.5px solid #EADFD6;border-radius:14px;padding:12px 14px;background:#fff;margin:10px 0;display:grid;gap:8px}
+.vo-letter.opened{border-color:#D9A866;background:#fffdf5}.vo-letter.open{border-color:#D4614A;background:#FBEDE7}.vo-offer{border-color:#3A1F36;background:#FBF4EE}.vo-measure{border-style:dashed}
+.vo-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#3A1F36}.vo-head b{font-size:15px}.vo-ph{font-size:11px;font-weight:800;border-radius:999px;padding:2px 10px;background:#EADFD6;color:#4A3645}
+.vo-letter blockquote{margin:0;padding:10px 14px;border-inline-start:3px solid #D9A866;background:#fff;border-radius:8px;line-height:2;color:#1f2937;font-size:16px}
+.vo-form{display:grid;gap:10px}.vo-form>label{display:grid;gap:6px;font-weight:700;color:#3A1F36}.vo-form textarea{border:1.5px solid #D9CBC2;border-radius:10px;padding:9px 12px;font:inherit;min-height:110px;width:100%;box-sizing:border-box;line-height:1.8}
 .vo-acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.vo-chk{display:flex;gap:8px;align-items:center;font-size:14px;color:#1f2937;min-height:44px}.vo-chk input{width:20px;height:20px}
-.vo-otext{margin:0;line-height:1.9;color:#1f2937}.vo-link{color:#0b6f69;font-weight:800;text-decoration:underline}.vo-mline{margin:0;font-weight:800;color:#0f2a4e;line-height:1.9}
-.vo-letter :focus-visible,.vo-offer :focus-visible,.vo-measure :focus-visible{outline:3px solid #c9a24b;outline-offset:2px}
+.vo-otext{margin:0;line-height:1.9;color:#1f2937}.vo-link{color:#0b6f69;font-weight:800;text-decoration:underline}.vo-mline{margin:0;font-weight:800;color:#3A1F36;line-height:1.9}
+.vo-letter :focus-visible,.vo-offer :focus-visible,.vo-measure :focus-visible{outline:3px solid #D9A866;outline-offset:2px}
 `;

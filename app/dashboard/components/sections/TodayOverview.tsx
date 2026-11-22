@@ -58,7 +58,7 @@ export default function TodayOverview() {
 
       <p
         style={{
-          color: '#64748b',
+          color: '#8E7F8A',
           marginBottom: 24,
         }}
       >
@@ -77,7 +77,7 @@ export default function TodayOverview() {
           <div
             key={item.title}
             style={{
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               borderRadius: 18,
               padding: 20,
               display: 'flex',
@@ -105,7 +105,7 @@ export default function TodayOverview() {
               <div
                 style={{
                   fontSize: 13,
-                  color: '#64748b',
+                  color: '#8E7F8A',
                   marginBottom: 6,
                 }}
               >

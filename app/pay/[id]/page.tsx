@@ -170,14 +170,14 @@ function Inner() {
 }
 
 const CSS = `
-.pt-sticky{position:sticky;top:84px}.pt-muted{color:#64748b;font-size:13.5px;line-height:1.8;margin:8px 0}
+.pt-sticky{position:sticky;top:84px}.pt-muted{color:#8E7F8A;font-size:13.5px;line-height:1.8;margin:8px 0}
 .pt-invtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.pt-invstatus{border-radius:999px;padding:5px 14px;font-size:13px;font-weight:900;background:#eff6ff;color:#1e40af}.pt-invstatus.paid{background:#ecfdf5;color:#065f46}.pt-invstatus.under_review{background:#fff7ed;color:#9a3412}.pt-invstatus.cancelled,.pt-invstatus.refunded,.pt-invstatus.waived{background:#f1f5f9;color:#475569}
-.pt-invtable{width:100%;border-collapse:collapse;font-size:14px}.pt-invtable td{padding:9px 0;border-bottom:1px solid #f1f5f9}.pt-invtable td:first-child{color:#64748b;width:45%}.pt-invtable td:last-child{font-weight:800;color:#0f172a}.pt-invtable tr.tot td{font-size:17px;color:#0f2a4e;border-bottom:2px solid #c9a24b}
-.pt-paytabs{display:flex;gap:6px;margin:8px 0 12px}.pt-paytabs button{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:6px;border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px;font:inherit;font-size:13px;font-weight:900;color:#334155;cursor:pointer}.pt-paytabs button.on{background:#0f2a4e;border-color:#0f2a4e;color:#fff}
-.pt-bank{display:grid;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px}.pt-bank div{display:flex;flex-direction:column;gap:2px}.pt-bank small{font-size:11.5px;color:#64748b;font-weight:800}.pt-bank b{font-size:14px;color:#0f172a;word-break:break-all}
-.pt-ibanrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.pt-copy{border:1px solid #cbd5e1;background:#fff;border-radius:8px;padding:3px 8px;font:inherit;font-size:11.5px;font-weight:800;color:#0f2a4e;cursor:pointer;display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
-.pt-aside-foot{margin-top:14px;padding-top:12px;border-top:1px dashed #e2e8f0;font-size:12.5px;color:#64748b;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pt-aside-foot a{color:#0b8a83;font-weight:800}
+.pt-invstatus{border-radius:999px;padding:5px 14px;font-size:13px;font-weight:900;background:#eff6ff;color:#1e40af}.pt-invstatus.paid{background:#ecfdf5;color:#065f46}.pt-invstatus.under_review{background:#fff7ed;color:#9a3412}.pt-invstatus.cancelled,.pt-invstatus.refunded,.pt-invstatus.waived{background:#F6EBE0;color:#5C4858}
+.pt-invtable{width:100%;border-collapse:collapse;font-size:14px}.pt-invtable td{padding:9px 0;border-bottom:1px solid #F6EBE0}.pt-invtable td:first-child{color:#8E7F8A;width:45%}.pt-invtable td:last-child{font-weight:800;color:#2A1626}.pt-invtable tr.tot td{font-size:17px;color:#3A1F36;border-bottom:2px solid #D9A866}
+.pt-paytabs{display:flex;gap:6px;margin:8px 0 12px}.pt-paytabs button{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px;font:inherit;font-size:13px;font-weight:900;color:#4A3645;cursor:pointer}.pt-paytabs button.on{background:#3A1F36;border-color:#3A1F36;color:#fff}
+.pt-bank{display:grid;gap:8px;background:#FBF4EE;border:1px solid #EADFD6;border-radius:12px;padding:12px}.pt-bank div{display:flex;flex-direction:column;gap:2px}.pt-bank small{font-size:11.5px;color:#8E7F8A;font-weight:800}.pt-bank b{font-size:14px;color:#2A1626;word-break:break-all}
+.pt-ibanrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.pt-copy{border:1px solid #D9CBC2;background:#fff;border-radius:8px;padding:3px 8px;font:inherit;font-size:11.5px;font-weight:800;color:#3A1F36;cursor:pointer;display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+.pt-aside-foot{margin-top:14px;padding-top:12px;border-top:1px dashed #EADFD6;font-size:12.5px;color:#8E7F8A;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pt-aside-foot a{color:#D4614A;font-weight:800}
 .pt-form input[type=file]{padding:8px}
 @media(max-width:760px){.pt-sticky{position:static}}
 `;

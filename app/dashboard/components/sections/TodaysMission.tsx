@@ -73,7 +73,7 @@ export default function TodaysMission() {
           <p
             style={{
               marginTop: 8,
-              color: '#64748b',
+              color: '#8E7F8A',
             }}
           >
             أهم الأعمال المطلوب إنجازها اليوم.
@@ -97,7 +97,7 @@ export default function TodaysMission() {
 
           <div
             style={{
-              color: '#64748b',
+              color: '#8E7F8A',
             }}
           >
             نسبة الإنجاز
@@ -137,7 +137,7 @@ export default function TodaysMission() {
               display: 'flex',
               alignItems: 'center',
               gap: 14,
-              border: '1px solid #e2e8f0',
+              border: '1px solid #EADFD6',
               borderRadius: 14,
               padding: 16,
             }}

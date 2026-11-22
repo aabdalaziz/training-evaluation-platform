@@ -48,10 +48,10 @@ export default function ForgotPasswordPage() {
             إذا كان البريد <bdi dir="ltr">{email}</bdi> مسجَّلًا في المنصة فستصلك رسالة خلال دقيقة تحتوي على رابط إعادة التعيين.
             <br />الرابط صالح لمدة محدودة ولاستخدام واحد فقط.
           </AuthMessage>
-          <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.9, marginTop: 16 }}>
+          <p style={{ color: '#8E7F8A', fontSize: 14, lineHeight: 1.9, marginTop: 16 }}>
             لم تصلك الرسالة؟ تحقق من مجلد الرسائل غير المرغوبة (Spam)، أو أعد المحاولة بعد 60 ثانية.
           </p>
-          <button type="button" onClick={() => setSent(false)} style={{ ...authButton, background: '#fff', color: '#14466B', border: '1px solid #cbd5e1' }}>
+          <button type="button" onClick={() => setSent(false)} style={{ ...authButton, background: '#fff', color: '#14466B', border: '1px solid #D9CBC2' }}>
             إعادة الإرسال
           </button>
         </>
