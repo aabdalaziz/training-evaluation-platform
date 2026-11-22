@@ -14,7 +14,7 @@ export const presenterNo = (i: number) => `RX-P${String(i).padStart(2, '0')}`;
 export const STALE_DAYS = 7;               // «ساعة العرض»: أعد البناء إن مضى أكثر من 7 أيام
 
 /** شعار محايد مضمَّن (SVG صغير) — لا شعار جهة حقيقية */
-export const DEMO_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="20" fill="#0f2a4e"/><path d="M48 14l28 12v22c0 17-12 30-28 36C32 78 20 65 20 48V26z" fill="none" stroke="#c9a24b" stroke-width="5"/><text x="48" y="58" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="700" fill="#fff">س</text></svg>');
+export const DEMO_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="20" fill="#3A1F36"/><path d="M48 14l28 12v22c0 17-12 30-28 36C32 78 20 65 20 48V26z" fill="none" stroke="#D9A866" stroke-width="5"/><text x="48" y="58" text-anchor="middle" font-family="sans-serif" font-size="30" font-weight="700" fill="#fff">س</text></svg>');
 
 export type DemoProgram = { key: 'A' | 'B' | 'C'; name_ar: string; name_en: string; cefr_level: string | null; hours: number; start: number; end: number; classrooms: { code: string; name_ar: string; learners: [number, number] }[]; sessions: number; objectives_ar: string[]; intro_ar: string };
 /** الأيام نسبية إلى «ساعة الصفر» (سالب = مضى) */

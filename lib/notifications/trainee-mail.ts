@@ -62,13 +62,13 @@ export function planMails(d: {
 
 export function buildMail(site: string, p: Plan): { subject: string; html: string } {
   const me = `${site}/me`;
-  const shell = (title: string, body: string, cta: { href: string; label: string }) => `<!doctype html><html dir="rtl" lang="ar"><body style="margin:0;background:#f3f6fa;font-family:Tahoma,Arial,sans-serif;color:#0f172a">
-<div style="max-width:620px;margin:24px auto;background:#fff;border-radius:16px;border-top:5px solid #c9a24b;padding:28px 30px">
-<div style="font-size:12px;font-weight:bold;color:#0b8a83">منصة تقييم التدريب</div>
-<h1 style="margin:6px 0 12px;font-size:21px;color:#0f2a4e">${title}</h1>
+  const shell = (title: string, body: string, cta: { href: string; label: string }) => `<!doctype html><html dir="rtl" lang="ar"><body style="margin:0;background:#F6EBE0;font-family:Tahoma,Arial,sans-serif;color:#2A1626">
+<div style="max-width:620px;margin:24px auto;background:#fff;border-radius:16px;border-top:5px solid #D9A866;padding:28px 30px">
+<div style="font-size:12px;font-weight:bold;color:#D4614A">منصة تقييم التدريب</div>
+<h1 style="margin:6px 0 12px;font-size:21px;color:#3A1F36">${title}</h1>
 <div style="font-size:15px;line-height:1.9">${body}</div>
-<p style="margin:22px 0"><a href="${cta.href}" style="background:#0b8a83;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${cta.label}</a></p>
-<p style="font-size:12px;color:#64748b;line-height:1.8">إن لم يعمل الزر، انسخ الرابط: <span dir="ltr">${cta.href}</span><br>هذه رسالة تلقائية من بوابة المتدرب — يمكنك الدخول بالبريد نفسه عبر رمز تحقق.</p>
+<p style="margin:22px 0"><a href="${cta.href}" style="background:#D4614A;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${cta.label}</a></p>
+<p style="font-size:12px;color:#8E7F8A;line-height:1.8">إن لم يعمل الزر، انسخ الرابط: <span dir="ltr">${cta.href}</span><br>هذه رسالة تلقائية من بوابة المتدرب — يمكنك الدخول بالبريد نفسه عبر رمز تحقق.</p>
 </div></body></html>`;
   if (p.kind === 'final_open') {
     return {

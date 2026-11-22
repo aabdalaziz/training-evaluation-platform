@@ -100,7 +100,7 @@ export default function ResetPasswordPage() {
           <label htmlFor="rp-pass" style={authLabel}>كلمة المرور الجديدة</label>
           <div style={{ position: 'relative' }}>
             <input id="rp-pass" type={show ? 'text' : 'password'} required minLength={8} autoComplete="new-password" dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...authInput, paddingLeft: 48 }} />
-            <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'إخفاء' : 'إظهار'} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', border: 0, background: 'transparent', color: '#64748b', cursor: 'pointer', padding: 6, display: 'flex' }}>
+            <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'إخفاء' : 'إظهار'} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', border: 0, background: 'transparent', color: '#8E7F8A', cursor: 'pointer', padding: 6, display: 'flex' }}>
               {show ? (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><path d="M1 1l22 22" /></svg>
               ) : (
@@ -142,7 +142,7 @@ function Strength({ value }: { value: string }) {
   return (
     <div style={{ marginTop: 12 }}>
       <div style={{ display: 'flex', gap: 6 }}>
-        {[0, 1, 2].map((i) => <div key={i} style={{ flex: 1, height: 6, borderRadius: 6, background: i <= level ? color : '#e2e8f0' }} />)}
+        {[0, 1, 2].map((i) => <div key={i} style={{ flex: 1, height: 6, borderRadius: 6, background: i <= level ? color : '#EADFD6' }} />)}
       </div>
       <div style={{ fontSize: 12, fontWeight: 800, color, marginTop: 6 }}>قوة كلمة المرور: {label}</div>
     </div>

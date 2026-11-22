@@ -72,12 +72,12 @@ export function localSummary(f: SummaryFacts): ExecSummary {
 
 export function summaryHtml(s: ExecSummary): string {
   const li = (xs: string[]) => xs.map(x => `<li style="margin:0 0 4px">${x}</li>`).join('');
-  return `<div style="border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin:0 0 16px;background:#f8fafc">
-<div style="font-size:11px;font-weight:bold;color:#0b8a83">الملخص التنفيذي ${s.source === 'ai' ? '· مُولَّد بالذكاء الاصطناعي' + (s.model ? ` (${s.model})` : '') : '· تحليل آلي'}</div>
-<div style="font-size:16px;font-weight:bold;color:#0f2a4e;margin:4px 0 8px;line-height:1.6">${s.headline}</div>
+  return `<div style="border:1px solid #EADFD6;border-radius:12px;padding:14px 16px;margin:0 0 16px;background:#FBF4EE">
+<div style="font-size:11px;font-weight:bold;color:#D4614A">الملخص التنفيذي ${s.source === 'ai' ? '· مُولَّد بالذكاء الاصطناعي' + (s.model ? ` (${s.model})` : '') : '· تحليل آلي'}</div>
+<div style="font-size:16px;font-weight:bold;color:#3A1F36;margin:4px 0 8px;line-height:1.6">${s.headline}</div>
 ${s.bullets.length ? `<ul style="margin:0 0 8px;padding:0 18px 0 0;font-size:13.5px;line-height:1.7">${li(s.bullets)}</ul>` : ''}
 ${s.risks.length ? `<div style="font-size:12px;font-weight:bold;color:#b45309">المخاطر</div><ul style="margin:0 0 8px;padding:0 18px 0 0;font-size:13px;line-height:1.7;color:#9a3412">${li(s.risks)}</ul>` : ''}
-${s.actions.length ? `<div style="font-size:12px;font-weight:bold;color:#0f2a4e">الإجراءات</div><ol style="margin:0;padding:0 18px 0 0;font-size:13px;line-height:1.7">${li(s.actions)}</ol>` : ''}
+${s.actions.length ? `<div style="font-size:12px;font-weight:bold;color:#3A1F36">الإجراءات</div><ol style="margin:0;padding:0 18px 0 0;font-size:13px;line-height:1.7">${li(s.actions)}</ol>` : ''}
 </div>`;
 }
 

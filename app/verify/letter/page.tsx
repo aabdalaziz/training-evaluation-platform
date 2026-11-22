@@ -20,7 +20,7 @@ function Inner() {
       <h1 style={{ margin: '4px 0' }}>تحقّق من «رسالة الشهر»</h1>
       <p className="pt-muted">أدخل رمز الرسالة (مثل ATH-ML-7K2Q-9M4X). نُظهر الجهة والشهر وتاريخ التوقيع وسلامة البصمة — <b>ولا نُظهر محتوى الرسالة</b>؛ المحتوى للجهة وحدها.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-ML-XXXX-XXXX" aria-label="رمز الرسالة" style={{ flex: 1, minWidth: 220, border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '10px 12px', font: 'inherit', letterSpacing: 1 }} data-testid="vl-code" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-ML-XXXX-XXXX" aria-label="رمز الرسالة" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '10px 12px', font: 'inherit', letterSpacing: 1 }} data-testid="vl-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vl-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vl-invalid"><b>لا توجد رسالة موقَّعة بهذا الرمز.</b> تأكد من الرمز كما ورد في ذيل الرسالة.</div>}

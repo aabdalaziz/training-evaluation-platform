@@ -97,7 +97,7 @@ export default function KpiCards({
               <div
                 style={{
                   marginTop: 6,
-                  color: '#64748b',
+                  color: '#8E7F8A',
                 }}
               >
                 {card.title}

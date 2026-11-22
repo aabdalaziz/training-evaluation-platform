@@ -88,8 +88,8 @@ function Inner() {
 
 const CSS = `
 .pt-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:22px}
-.pt-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #cbd5e1;border-radius:12px;padding:0 12px;flex:1;min-width:220px;color:#64748b}.pt-search input{border:0;outline:0;font:inherit;font-size:14px;padding:11px 0;flex:1;background:transparent;color:#0f172a}
-.pt-filters select{font:inherit;font-size:13.5px;font-weight:800;color:#334155;border:1px solid #cbd5e1;border-radius:12px;padding:10px 12px;background:#fff}
-.pt-check{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#334155}
-.pt-tag.off{background:#f1f5f9;color:#475569}.pt-fee{color:#0f2a4e;font-size:15px}
+.pt-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #D9CBC2;border-radius:12px;padding:0 12px;flex:1;min-width:220px;color:#8E7F8A}.pt-search input{border:0;outline:0;font:inherit;font-size:14px;padding:11px 0;flex:1;background:transparent;color:#2A1626}
+.pt-filters select{font:inherit;font-size:13.5px;font-weight:800;color:#4A3645;border:1px solid #D9CBC2;border-radius:12px;padding:10px 12px;background:#fff}
+.pt-check{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#4A3645}
+.pt-tag.off{background:#F6EBE0;color:#5C4858}.pt-fee{color:#3A1F36;font-size:15px}
 `;

@@ -24,15 +24,15 @@ export function buildEmail(f: BehaviorFollowup, programName: string, r: Recipien
   const who = r.role === 'supervisor' ? `بصفتك المشرف المباشر${r.trainee_name ? ` على <b>${esc(r.trainee_name)}</b>` : ''}` : r.role === 'peer' ? 'بصفتك زميل عمل' : 'بصفتك أحد المشاركين في البرنامج';
   const subject = `${remind ? 'تذكير: ' : ''}متابعة أثر التدريب — ${programName}`;
   const html = `
-  <div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#f3f6fa;padding:24px">
-    <div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-top:4px solid #c9a24b;border-radius:14px;padding:24px">
-      <div style="color:#0b8a83;font-weight:bold;font-size:12px">أَثَر — متابعة أثر التدريب في بيئة العمل</div>
-      <h2 style="color:#0f2a4e;margin:8px 0 4px">${esc(f.title_ar)}</h2>
-      <div style="color:#475569;font-size:13px;margin-bottom:14px">البرنامج: <b>${esc(programName)}</b></div>
-      <p style="color:#0f172a;font-size:14px;line-height:1.9">مرحبًا ${esc(r.name)}،<br>${who}، نرجو تخصيص <b>3 دقائق</b> لتقييم ما تم تطبيقه فعليًا في العمل من محتوى البرنامج. إجاباتك تساعدنا على قياس الأثر الحقيقي وتحسين البرامج القادمة.</p>
+  <div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#F6EBE0;padding:24px">
+    <div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #EADFD6;border-top:4px solid #D9A866;border-radius:14px;padding:24px">
+      <div style="color:#D4614A;font-weight:bold;font-size:12px">أَثَر — متابعة أثر التدريب في بيئة العمل</div>
+      <h2 style="color:#3A1F36;margin:8px 0 4px">${esc(f.title_ar)}</h2>
+      <div style="color:#5C4858;font-size:13px;margin-bottom:14px">البرنامج: <b>${esc(programName)}</b></div>
+      <p style="color:#2A1626;font-size:14px;line-height:1.9">مرحبًا ${esc(r.name)}،<br>${who}، نرجو تخصيص <b>3 دقائق</b> لتقييم ما تم تطبيقه فعليًا في العمل من محتوى البرنامج. إجاباتك تساعدنا على قياس الأثر الحقيقي وتحسين البرامج القادمة.</p>
       ${remind ? '<p style="color:#9a3412;font-size:13px;font-weight:bold">هذا تذكير — إن كنت قد أجبت مسبقًا فتجاهل هذه الرسالة.</p>' : ''}
-      <p style="text-align:center;margin:22px 0"><a href="${link}" style="background:#0f2a4e;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:bold;font-size:15px;display:inline-block">ابدأ التقييم</a></p>
-      <p style="color:#94a3b8;font-size:11.5px;line-height:1.7">إن لم يعمل الزر انسخ الرابط: <br><span dir="ltr">${link}</span></p>
+      <p style="text-align:center;margin:22px 0"><a href="${link}" style="background:#3A1F36;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:bold;font-size:15px;display:inline-block">ابدأ التقييم</a></p>
+      <p style="color:#B3A5AE;font-size:11.5px;line-height:1.7">إن لم يعمل الزر انسخ الرابط: <br><span dir="ltr">${link}</span></p>
     </div>
   </div>`;
   return { subject, html };

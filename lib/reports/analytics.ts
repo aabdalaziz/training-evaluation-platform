@@ -91,16 +91,16 @@ export const KIND_LABEL: Record<string, { ar: string; en: string }> = {
 };
 export const PERF_LABEL: Record<PerfKey, { ar: string; en: string; color: string; bg: string }> = {
   EXCELLENT: { ar: 'ممتاز', en: 'Excellent', color: '#047857', bg: '#d1fae5' },
-  GOOD: { ar: 'جيد', en: 'Good', color: '#0f766e', bg: '#ccfbf1' },
+  GOOD: { ar: 'جيد', en: 'Good', color: '#B9544A', bg: '#ccfbf1' },
   WATCH: { ar: 'مراقبة', en: 'Watch', color: '#b45309', bg: '#fef3c7' },
   RISK: { ar: 'خطر', en: 'At risk', color: '#b91c1c', bg: '#fee2e2' },
-  NA: { ar: 'بيانات غير كافية', en: 'Insufficient', color: '#64748b', bg: '#f1f5f9' },
+  NA: { ar: 'بيانات غير كافية', en: 'Insufficient', color: '#8E7F8A', bg: '#F6EBE0' },
 };
 export const RISK_LABEL: Record<RiskKey, { ar: string; en: string; color: string; bg: string }> = {
   HIGH: { ar: 'عالٍ', en: 'High', color: '#b91c1c', bg: '#fee2e2' },
   MED: { ar: 'متوسط', en: 'Medium', color: '#b45309', bg: '#fef3c7' },
   LOW: { ar: 'منخفض', en: 'Low', color: '#047857', bg: '#d1fae5' },
-  NA: { ar: 'غير محدد', en: 'N/A', color: '#64748b', bg: '#f1f5f9' },
+  NA: { ar: 'غير محدد', en: 'N/A', color: '#8E7F8A', bg: '#F6EBE0' },
 };
 export const CATEGORY_LABEL: Record<Category, { ar: string; en: string }> = {
   trainer: { ar: 'المدرب', en: 'Trainer' }, education: { ar: 'التعليم والمحتوى', en: 'Teaching & content' },

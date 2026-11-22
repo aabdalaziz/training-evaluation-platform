@@ -16,11 +16,11 @@ function Inner() {
   useEffect(() => { const c = new URLSearchParams(window.location.search).get('code') || ''; if (c) { setCode(c.toUpperCase()); void check(c); } }, []);
   return <main className="pt-main" dir="rtl" data-testid="vl-root">
     <section className="pt-box" style={{ maxWidth: 900, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#0b8a83', fontWeight: 800 }}>أَثَر · P70 · صفحة المستوى — بكلمات المتدرّب</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#D4614A', fontWeight: 800 }}>أَثَر · P70 · صفحة المستوى — بكلمات المتدرّب</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «صفحة مستوى»</h1>
       <p className="pt-muted">أدخل الرمز (مثل ATH-LV-7K2Q-9M4X). نُظهر البرنامج والمستوى وتاريخ الختم وسلامة البصمة — <b>ولا نُظهر الصفحة نفسها</b>؛ وجهها العام في رابطها /lv/… إن فتحه صاحبها، وبما اختاره هو فقط. الإبطال فوري ومعلَن.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-LV-XXXX-XXXX" aria-label="رمز الصفحة" style={{ flex: 1, minWidth: 220, border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '9px 12px', fontFamily: 'inherit', fontSize: 15, letterSpacing: 1 }} data-testid="vl-code" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-LV-XXXX-XXXX" aria-label="رمز الصفحة" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '9px 12px', fontFamily: 'inherit', fontSize: 15, letterSpacing: 1 }} data-testid="vl-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vl-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && !r.revoked && <div role="alert" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px', fontWeight: 800 }} data-testid="vl-invalid">لا توجد صفحة بهذا الرمز.</div>}

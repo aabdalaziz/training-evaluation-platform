@@ -18,11 +18,11 @@ function Inner() {
   const s = r?.seal; const on = s ? Object.keys(s.policy).filter(k => s.policy[k]) : [];
   return <main className="pt-main" dir="rtl" data-testid="vp-root">
     <section className="pt-box" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#0b8a83', fontWeight: 800 }}>أَثَر · سياسة الجهة · ختم ATH-OP</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#D4614A', fontWeight: 800 }}>أَثَر · سياسة الجهة · ختم ATH-OP</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «ختم سياسة الجهة»</h1>
       <p className="pt-muted">أدخل رمز الختم (مثل ATH-OP-7K2Q-9M4X). نُظهر اسم الجهة والمفاتيح التي قرّرتها وتاريخ الختم وسلامة البصمة — ولا نُظهر أي شخص.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-OP-XXXX-XXXX" aria-label="رمز الختم" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '10px 12px', fontSize: 16 }} data-testid="vp-code" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-OP-XXXX-XXXX" aria-label="رمز الختم" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '10px 12px', fontSize: 16 }} data-testid="vp-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vp-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vp-invalid"><b>لا يوجد ختم بهذا الرمز.</b> تأكّد من الحروف (لا نستعمل 0 و O و 1 و I).</div>}

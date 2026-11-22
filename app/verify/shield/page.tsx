@@ -21,7 +21,7 @@ function Inner() {
       <h1 style={{ margin: '4px 0' }}>تحقّق من «شهادة الدرع»</h1>
       <p className="pt-muted">أدخل رمز الختم (مثل ATH-SH-7K2Q-9M4X). نُظهر الشهر وأيام التمرين وأيام النجاح الكامل وسلامة البصمة — ولا نُظهر أي تفصيل داخلي.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-SH-XXXX-XXXX" aria-label="رمز الختم" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '8px 10px', font: 'inherit' }} data-testid="vs-code" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-SH-XXXX-XXXX" aria-label="رمز الختم" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '8px 10px', font: 'inherit' }} data-testid="vs-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vs-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vs-invalid"><b>لا يوجد ختم بهذا الرمز.</b> تأكّد من الأحرف (لا تحوي 0 أو O أو 1 أو I).</div>}

@@ -22,7 +22,7 @@ function Inner() {
       <h1 style={{ margin: '4px 0' }}>تحقّق من «إيصال المحو»</h1>
       <p className="pt-muted">أدخل رمز الإيصال (مثل ATH-ER-7K2Q-9M4X). نُظهر ماذا مُحي (أسماء الجداول وأعداد الصفوف) ومتى، وسلامة البصمة — ولا نُظهر اسم الجهة ولا أي محتوى.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-ER-XXXX-XXXX" aria-label="رمز الإيصال" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '8px 10px', font: 'inherit' }} data-testid="ve-code" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-ER-XXXX-XXXX" aria-label="رمز الإيصال" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '8px 10px', font: 'inherit' }} data-testid="ve-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="ve-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="ve-invalid"><b>لا يوجد إيصال بهذا الرمز.</b></div>}

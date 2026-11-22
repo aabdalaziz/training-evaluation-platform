@@ -73,18 +73,18 @@ export function invoicesSheet(rows: (Invoice & { program_name?: string })[]) {
 // ---------- البريد ----------
 const esc = (s: string) => String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
 function shell(lang: Lang, inner: string): string {
-  return `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
-  <div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</div></div>
-  <div style="padding:22px;color:#0f172a;line-height:1.9;font-size:15px">${inner}</div>
-  <div style="background:#f8fafc;color:#64748b;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
+  return `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #EADFD6;border-radius:14px;overflow:hidden">
+  <div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</div></div>
+  <div style="padding:22px;color:#2A1626;line-height:1.9;font-size:15px">${inner}</div>
+  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
 }
 export function invoiceEmail(inv: Invoice, programName: string, siteUrl: string): { subject: string; html: string } {
   const lang: Lang = inv.lang === 'en' ? 'en' : 'ar'; const url = `${siteUrl}/pay/${inv.id}`;
   const subject = lang === 'ar' ? `فاتورة ${inv.invoice_no} — ${programName}` : `Invoice ${inv.invoice_no} — ${programName}`;
   const html = shell(lang, `<p style="margin:0 0 10px">${lang === 'ar' ? 'مرحبًا' : 'Dear'} ${esc(inv.customer_name)}،</p>
     <p style="margin:0 0 10px">${inv.program_id ? (lang === 'ar' ? `صدرت فاتورة رسوم التسجيل في <b>${esc(programName)}</b>.` : `Your registration invoice for <b>${esc(programName)}</b> has been issued.`) : (lang === 'ar' ? `صدرت فاتورة <b>${esc(programName || inv.description)}</b>.` : `Your invoice for <b>${esc(programName || inv.description)}</b> has been issued.`)}</p>
-    <table style="border-collapse:collapse;width:100%;font-size:14px"><tr><td style="padding:6px 0;color:#64748b">${lang === 'ar' ? 'رقم الفاتورة' : 'Invoice no.'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}"><b>${esc(inv.invoice_no)}</b></td></tr><tr><td style="padding:6px 0;color:#64748b">${lang === 'ar' ? 'الإجمالي شامل الضريبة' : 'Total incl. VAT'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}"><b>${money(inv.total, inv.currency, lang)}</b></td></tr>${inv.due_date ? `<tr><td style="padding:6px 0;color:#64748b">${lang === 'ar' ? 'آخر موعد للسداد' : 'Due date'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}">${inv.due_date}</td></tr>` : ''}</table>
-    <p style="margin:14px 0 0"><a href="${url}" style="background:#0b8a83;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'عرض الفاتورة والدفع' : 'View invoice & pay'}</a></p>`);
+    <table style="border-collapse:collapse;width:100%;font-size:14px"><tr><td style="padding:6px 0;color:#8E7F8A">${lang === 'ar' ? 'رقم الفاتورة' : 'Invoice no.'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}"><b>${esc(inv.invoice_no)}</b></td></tr><tr><td style="padding:6px 0;color:#8E7F8A">${lang === 'ar' ? 'الإجمالي شامل الضريبة' : 'Total incl. VAT'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}"><b>${money(inv.total, inv.currency, lang)}</b></td></tr>${inv.due_date ? `<tr><td style="padding:6px 0;color:#8E7F8A">${lang === 'ar' ? 'آخر موعد للسداد' : 'Due date'}</td><td style="padding:6px 0;text-align:${lang === 'ar' ? 'left' : 'right'}">${inv.due_date}</td></tr>` : ''}</table>
+    <p style="margin:14px 0 0"><a href="${url}" style="background:#D4614A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'عرض الفاتورة والدفع' : 'View invoice & pay'}</a></p>`);
   return { subject, html };
 }
 export function receiptEmail(inv: Invoice, programName: string, siteUrl: string): { subject: string; html: string } {
@@ -92,7 +92,7 @@ export function receiptEmail(inv: Invoice, programName: string, siteUrl: string)
   const subject = lang === 'ar' ? `تأكيد السداد — ${inv.invoice_no}` : `Payment confirmed — ${inv.invoice_no}`;
   const html = shell(lang, `<p style="margin:0 0 10px">${lang === 'ar' ? 'مرحبًا' : 'Dear'} ${esc(inv.customer_name)}،</p>
     <p style="margin:0 0 10px">${lang === 'ar' ? `تم تأكيد سداد الفاتورة <b>${esc(inv.invoice_no)}</b> بمبلغ <b>${money(inv.total, inv.currency, lang)}</b> ${inv.program_id ? 'لبرنامج' : 'عن'} <b>${esc(programName || inv.description)}</b>. شكرًا لك${inv.program_id ? ' — مقعدك مؤكّد' : ' — سنباشر العمل وفق الاتفاق'}.` : `Payment of <b>${money(inv.total, inv.currency, lang)}</b> for invoice <b>${esc(inv.invoice_no)}</b> (<b>${esc(programName || inv.description)}</b>) is confirmed. Thank you${inv.program_id ? ' — your seat is secured' : ' — work will proceed as agreed'}.`}</p>
-    <p style="margin:14px 0 0"><a href="${siteUrl}/pay/${inv.id}" style="background:#0f2a4e;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'تنزيل الفاتورة PDF' : 'Download invoice PDF'}</a></p>`);
+    <p style="margin:14px 0 0"><a href="${siteUrl}/pay/${inv.id}" style="background:#3A1F36;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'تنزيل الفاتورة PDF' : 'Download invoice PDF'}</a></p>`);
   return { subject, html };
 }
 
@@ -101,7 +101,7 @@ export const IW = 1654, IH = 2339;
 export type InvoiceRender = { inv: Invoice; programName: string; settings: PaymentSettings; legal: { name_ar: string; name_en: string; city: string; email: string }; lang: Lang; qrUrl?: string };
 export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void {
   const { inv, settings: s, lang } = d; const rtl = lang === 'ar'; const ctx = canvas.getContext('2d')!; canvas.width = IW; canvas.height = IH;
-  const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b', MUTED = '#64748b', TXT = '#0f172a'; const F = '"IBM Plex Sans Arabic", Tajawal, Arial, sans-serif';
+  const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866', MUTED = '#8E7F8A', TXT = '#2A1626'; const F = '"IBM Plex Sans Arabic", Tajawal, Arial, sans-serif';
   const L = 110, R = IW - 110; const x0 = rtl ? R : L; const dir = rtl ? -1 : 1;
   ctx.direction = rtl ? 'rtl' : 'ltr'; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, IW, IH);
   const text = (str: string, x: number, y: number, size: number, opt: { color?: string; weight?: string; align?: CanvasTextAlign; max?: number } = {}) => { ctx.fillStyle = opt.color || TXT; ctx.font = `${opt.weight || '400'} ${size}px ${F}`; ctx.textAlign = opt.align || (rtl ? 'right' : 'left'); if (opt.max) ctx.fillText(str, x, y, opt.max); else ctx.fillText(str, x, y); };
@@ -124,7 +124,7 @@ export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void
   const y2 = block(rtl ? 'إلى' : 'Bill to', buyer, IW - x0, rtl ? 'left' : 'right');
   y = Math.max(y1, y2) + 20;
   // meta row
-  ctx.fillStyle = '#f8fafc'; ctx.fillRect(L, y, R - L, 110);
+  ctx.fillStyle = '#FBF4EE'; ctx.fillRect(L, y, R - L, 110);
   const meta = [[rtl ? 'تاريخ الإصدار' : 'Issue date', inv.created_at.slice(0, 10)], [rtl ? 'آخر موعد للسداد' : 'Due date', inv.due_date || '—'], [rtl ? 'الحالة' : 'Status', invStatusLabel(inv.status, lang)], [rtl ? 'طريقة الدفع' : 'Method', methodLabel(inv.method, lang)]];
   const cw = (R - L) / meta.length;
   meta.forEach((m, i) => { const cx = rtl ? R - i * cw - 24 : L + i * cw + 24; text(m[0], cx, y + 42, 22, { color: MUTED, weight: '700' }); text(m[1], cx, y + 84, 27, { weight: '800' }); });
@@ -137,7 +137,7 @@ export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void
   y += 64;
   const desc = rtl || !inv.program_id ? `${inv.description}` : `Registration fee: ${d.programName}`;
   text(desc, cols[0] + dir * 24, y + 56, 27, { weight: '700', max: 730 }); text('1', cols[1] + dir * 24, y + 56, 27); text(money(inv.subtotal, inv.currency, lang), cols[2] + dir * 24, y + 56, 27); text(money(inv.subtotal, inv.currency, lang), cols[3] + dir * 24, y + 56, 27, { weight: '800' });
-  y += 90; ctx.fillStyle = '#e2e8f0'; ctx.fillRect(L, y, R - L, 2); y += 40;
+  y += 90; ctx.fillStyle = '#EADFD6'; ctx.fillRect(L, y, R - L, 2); y += 40;
   // totals
   const tx = rtl ? L + 520 : R - 520; const tl = rtl ? L : R;
   const row = (k: string, v: string, big = false) => { text(k, tx, y, big ? 30 : 26, { color: big ? TXT : MUTED, weight: big ? '900' : '700', align: rtl ? 'right' : 'left' }); text(v, tl, y, big ? 34 : 27, { weight: big ? '900' : '800', align: rtl ? 'left' : 'right', color: big ? NAVY : TXT }); y += big ? 60 : 46; };
@@ -149,7 +149,7 @@ export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void
   y += 60;
   // payment instructions
   if (inv.status === 'unpaid' || inv.status === 'under_review') {
-    ctx.fillStyle = '#f0fdfa'; ctx.fillRect(L, y, R - L, 230); ctx.fillStyle = TEAL; ctx.fillRect(rtl ? R - 8 : L, y, 8, 230);
+    ctx.fillStyle = '#FBEDE7'; ctx.fillRect(L, y, R - L, 230); ctx.fillStyle = TEAL; ctx.fillRect(rtl ? R - 8 : L, y, 8, 230);
     text(rtl ? 'بيانات التحويل البنكي' : 'Bank transfer details', x0 + dir * 30, y + 50, 28, { color: TEAL, weight: '900' });
     const lines = [`${rtl ? 'البنك' : 'Bank'}: ${s.bank_name}`, `${rtl ? 'اسم الحساب' : 'Account name'}: ${s.account_name}`, `IBAN: ${formatIban(s.iban)}`, `${rtl ? 'يرجى كتابة رقم الفاتورة في وصف التحويل' : 'Please quote the invoice number in the transfer description'}: ${inv.invoice_no}`];
     lines.forEach((l, i) => text(l, x0 + dir * 30, y + 100 + i * 40, 25, { weight: i === 2 ? '800' : '600' }));

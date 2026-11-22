@@ -190,7 +190,7 @@ export function qrMatrix(text: string, ecc: Ecc = 'M', forceMask = -1, minVersio
 }
 
 /** SVG جاهز للعرض (بإطار هادئ quiet zone = 2 وحدة). */
-export function qrSvg(text: string, px = 160, ecc: Ecc = 'M', dark = '#0f2a4e'): string {
+export function qrSvg(text: string, px = 160, ecc: Ecc = 'M', dark = '#3A1F36'): string {
   const m = qrMatrix(text, ecc); const q = 2, n = m.size + q * 2;
   let d = '';
   for (let y = 0; y < m.size; y++) for (let x = 0; x < m.size; x++) if (m.get(x, y)) d += `M${x + q} ${y + q}h1v1h-1z`;
@@ -198,7 +198,7 @@ export function qrSvg(text: string, px = 160, ecc: Ecc = 'M', dark = '#0f2a4e'):
 }
 
 /** رسم على Canvas (للشهادات). */
-export function drawQr(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, sizePx: number, ecc: Ecc = 'M', dark = '#0f2a4e'): void {
+export function drawQr(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, sizePx: number, ecc: Ecc = 'M', dark = '#3A1F36'): void {
   const m = qrMatrix(text, ecc); const q = 2, n = m.size + q * 2, cell = sizePx / n;
   ctx.save(); ctx.fillStyle = '#fff'; ctx.fillRect(x, y, sizePx, sizePx); ctx.fillStyle = dark;
   for (let yy = 0; yy < m.size; yy++) for (let xx = 0; xx < m.size; xx++) if (m.get(xx, yy)) ctx.fillRect(x + (xx + q) * cell, y + (yy + q) * cell, cell + 0.4, cell + 0.4);

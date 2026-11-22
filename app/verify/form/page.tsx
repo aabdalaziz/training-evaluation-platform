@@ -19,15 +19,15 @@ function Inner() {
   const f = r?.form; const good = !!(r?.valid && r.intact);
   return <main className="pt-main" dir="rtl" data-testid="vf-root">
     <section className="pt-box" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#0b8a83', fontWeight: 800 }}>مِعيار — من أَثَر · النموذج المثبَّت · ختم ATH-FM</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#D4614A', fontWeight: 800 }}>مِعيار — من أَثَر · النموذج المثبَّت · ختم ATH-FM</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «نموذج اختبار مثبَّت»</h1>
       <p className="pt-muted">أدخل رمز النموذج المطبوع على نسخة المراقب أو التقرير التفصيلي (مثل ATH-FM-7K2Q-9M4X). نُظهر أن كل من امتُحن على هذه الدعوة حُكم بالورقة نفسها بهذه البصمة — بلا أي نصّ سؤال.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-FM-XXXX-XXXX" aria-label="رمز النموذج" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1px solid #cbd5e1', borderRadius: 10, padding: '8px 12px', fontFamily: 'ui-monospace, monospace' }} data-testid="vf-code" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-FM-XXXX-XXXX" aria-label="رمز النموذج" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1px solid #D9CBC2', borderRadius: 10, padding: '8px 12px', fontFamily: 'ui-monospace, monospace' }} data-testid="vf-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vf-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vf-invalid"><b>لا يوجد نموذج بهذا الرمز.</b> تأكّد من الحروف (لا O ولا I ولا 0 ولا 1).</div>}
-      {r && r.valid && f && <div role="status" style={{ background: good && r.live ? '#ecfdf5' : good ? '#f8fafc' : '#fffbeb', border: `1px solid ${good && r.live ? '#a7f3d0' : good ? '#cbd5e1' : '#fcd34d'}`, borderRadius: 12, padding: '10px 14px' }} data-testid="vf-valid">
+      {r && r.valid && f && <div role="status" style={{ background: good && r.live ? '#ecfdf5' : good ? '#FBF4EE' : '#fffbeb', border: `1px solid ${good && r.live ? '#a7f3d0' : good ? '#D9CBC2' : '#fcd34d'}`, borderRadius: 12, padding: '10px 14px' }} data-testid="vf-valid">
         <b data-testid="vf-state">{!r.intact ? '⚠ نموذج موجود لكن بصمته لا تطابق بنوده' : r.live ? '✓ نموذج مثبَّت صادر من أَثَر وبصمته سليمة — وهو الإصدار الحيّ للدعوة' : r.status === 'withdrawn' ? '○ نموذج صادر من أَثَر وبصمته سليمة — لكنه مسحوب' : '○ نموذج صادر من أَثَر وبصمته سليمة — إصدار قديم'}</b>
         <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', margin: '8px 0 0' }}>
           <dt>الرمز</dt><dd style={{ margin: 0 }} dir="ltr">{f.code} <span className="pt-muted">v{f.version}</span></dd>

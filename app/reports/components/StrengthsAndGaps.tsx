@@ -88,7 +88,7 @@ function Panel({
             borderBottom:
               index === items.length - 1
                 ? 'none'
-                : '1px solid #eef2f7',
+                : '1px solid #F3E6DC',
           }}
         >
           <div>

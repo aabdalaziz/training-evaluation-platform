@@ -94,12 +94,12 @@ export function requestsSheet(rows: (ConsultingRequest & { quote_total?: number 
 // ---------- البريد ----------
 const esc = (s: string) => String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
 function shell(lang: Lang, inner: string): string {
-  return `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
-  <div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'الاستشارات' : 'Consulting'}</div></div>
-  <div style="padding:22px;color:#0f172a;line-height:1.9;font-size:15px">${inner}</div>
-  <div style="background:#f8fafc;color:#64748b;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
+  return `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #EADFD6;border-radius:14px;overflow:hidden">
+  <div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'الاستشارات' : 'Consulting'}</div></div>
+  <div style="padding:22px;color:#2A1626;line-height:1.9;font-size:15px">${inner}</div>
+  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
 }
-const btn = (href: string, label: string) => `<p style="margin:18px 0"><a href="${href}" style="background:#0b8a83;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:800;display:inline-block">${label}</a></p>`;
+const btn = (href: string, label: string) => `<p style="margin:18px 0"><a href="${href}" style="background:#D4614A;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:800;display:inline-block">${label}</a></p>`;
 const link = (siteUrl: string, r: ConsultingRequest) => `${siteUrl}/consulting/${r.id}`;
 const L = (r: ConsultingRequest): Lang => (r.lang === 'en' ? 'en' : 'ar');
 
@@ -130,18 +130,18 @@ export function statusEmail(r: ConsultingRequest, status: ReqStatus, note: strin
     closed: { ar: 'أُغلق الطلب. يمكنكم فتح طلب جديد في أي وقت.', en: 'The request has been closed. You may open a new request at any time.' },
   };
   const txt = t(body[status] || { ar: `تحدّثت حالة طلبكم إلى: ${st}`, en: `Your request status is now: ${st}` }, lang);
-  return { subject: lang === 'ar' ? `تحديث طلب الاستشارة — ${r.title}` : `Consulting request update — ${r.title}`, html: shell(lang, `<p>${lang === 'ar' ? 'مرحبًا' : 'Hello'} ${esc(r.full_name)}،</p><p><b>${st}</b> — ${txt}</p>${note ? `<p style="background:#f8fafc;border-radius:10px;padding:10px 14px">${esc(note)}</p>` : ''}${btn(u, lang === 'ar' ? 'صفحة الطلب' : 'Request page')}`) };
+  return { subject: lang === 'ar' ? `تحديث طلب الاستشارة — ${r.title}` : `Consulting request update — ${r.title}`, html: shell(lang, `<p>${lang === 'ar' ? 'مرحبًا' : 'Hello'} ${esc(r.full_name)}،</p><p><b>${st}</b> — ${txt}</p>${note ? `<p style="background:#FBF4EE;border-radius:10px;padding:10px 14px">${esc(note)}</p>` : ''}${btn(u, lang === 'ar' ? 'صفحة الطلب' : 'Request page')}`) };
 }
 export function updateEmail(r: ConsultingRequest, u: Update, siteUrl: string, toClient: boolean) {
   const lang = toClient ? L(r) : 'ar'; const href = toClient ? link(siteUrl, r) : `${siteUrl}/admin/consulting?open=${r.id}`;
-  return { subject: lang === 'ar' ? `تحديث جديد — ${r.title}` : `New update — ${r.title}`, html: shell(lang, `<p><b>${esc(u.author_name || (u.by_staff ? 'فريق أَثَر' : r.full_name))}</b>:</p><p style="background:#f8fafc;border-radius:10px;padding:10px 14px;white-space:pre-wrap">${esc(u.body)}</p>${btn(href, lang === 'ar' ? 'فتح الطلب' : 'Open request')}`) };
+  return { subject: lang === 'ar' ? `تحديث جديد — ${r.title}` : `New update — ${r.title}`, html: shell(lang, `<p><b>${esc(u.author_name || (u.by_staff ? 'فريق أَثَر' : r.full_name))}</b>:</p><p style="background:#FBF4EE;border-radius:10px;padding:10px 14px;white-space:pre-wrap">${esc(u.body)}</p>${btn(href, lang === 'ar' ? 'فتح الطلب' : 'Open request')}`) };
 }
 
 // ---------- عرض السعر PDF (Canvas A4 عمودي — نفس أسلوب الفاتورة) ----------
 export const QW = 1654, QH = 2339;
 export function renderQuote(canvas: HTMLCanvasElement, d: { r: ConsultingRequest; q: Quote; settings: PaymentSettings | null; legal: { name_ar: string; name_en: string; city: string; email: string }; lang: Lang }): void {
   const { r, q, lang } = d; const rtl = lang === 'ar'; const ctx = canvas.getContext('2d')!; canvas.width = QW; canvas.height = QH;
-  const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b', MUTED = '#64748b', TXT = '#0f172a'; const F = '"IBM Plex Sans Arabic", Tajawal, Arial, sans-serif';
+  const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866', MUTED = '#8E7F8A', TXT = '#2A1626'; const F = '"IBM Plex Sans Arabic", Tajawal, Arial, sans-serif';
   const Lm = 110, R = QW - 110, W = R - Lm; const x0 = rtl ? R : Lm; const dir = rtl ? -1 : 1;
   ctx.direction = rtl ? 'rtl' : 'ltr'; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, QW, QH);
   const text = (str: string, x: number, y: number, size: number, opt: { color?: string; weight?: string; align?: CanvasTextAlign; max?: number } = {}) => { ctx.fillStyle = opt.color || TXT; ctx.font = `${opt.weight || '400'} ${size}px ${F}`; ctx.textAlign = opt.align || (rtl ? 'right' : 'left'); if (opt.max) ctx.fillText(str, x, y, opt.max); else ctx.fillText(str, x, y); };
@@ -160,7 +160,7 @@ export function renderQuote(canvas: HTMLCanvasElement, d: { r: ConsultingRequest
   const y1 = block(rtl ? 'من' : 'From', [rtl ? d.legal.name_ar : d.legal.name_en, d.legal.city, d.legal.email, d.settings?.vat_number ? `${rtl ? 'الرقم الضريبي' : 'VAT No.'}: ${d.settings.vat_number}` : ''], x0, rtl ? 'right' : 'left');
   const y2 = block(rtl ? 'إلى' : 'To', [r.organization || '', r.full_name, r.email, r.phone || ''], QW - x0, rtl ? 'left' : 'right');
   y = Math.max(y1, y2) + 10;
-  ctx.fillStyle = '#f8fafc'; ctx.fillRect(Lm, y, W, 110);
+  ctx.fillStyle = '#FBF4EE'; ctx.fillRect(Lm, y, W, 110);
   const meta = [[rtl ? 'تاريخ العرض' : 'Date', (q.sent_at || q.created_at).slice(0, 10)], [rtl ? 'صالح حتى' : 'Valid until', q.valid_until || '—'], [rtl ? 'المجال' : 'Area', areaLabel(r.area, lang)], [rtl ? 'المدة' : 'Duration', q.duration || '—']];
   const cw = W / meta.length; meta.forEach((m, i) => { const cx = rtl ? R - i * cw - 24 : Lm + i * cw + 24; text(m[0], cx, y + 42, 22, { color: MUTED, weight: '700' }); text(m[1], cx, y + 84, 26, { weight: '800', max: cw - 40 }); });
   y += 150;
@@ -176,7 +176,7 @@ export function renderQuote(canvas: HTMLCanvasElement, d: { r: ConsultingRequest
     const ls = wrap(it.d, 24, 840, '700'); const rowH = Math.max(1, ls.length) * 32 + 22;
     ls.forEach((l, i) => text(l, cols[0] + dir * 20, y + 38 + i * 32, 24, { weight: '700' }));
     text(String(it.q), cols[1] + dir * 20, y + 38, 24); text(money(it.u, q.currency, lang), cols[2] + dir * 20, y + 38, 24); text(money(it.q * it.u, q.currency, lang), cols[3] + dir * 20, y + 38, 24, { weight: '800' });
-    y += rowH; ctx.fillStyle = '#e2e8f0'; ctx.fillRect(Lm, y, W, 2);
+    y += rowH; ctx.fillStyle = '#EADFD6'; ctx.fillRect(Lm, y, W, 2);
   }
   y += 44;
   const tx = rtl ? Lm + 520 : R - 520; const tl = rtl ? Lm : R;

@@ -137,16 +137,16 @@ export function decisionEmail(e: Enrollment, programName: string, status: Enroll
   };
   const esc = (s: string) => s.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string));
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
-  const html = `<div dir="${dir}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden">
-  <div style="background:#0f2a4e;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</div></div>
-  <div style="padding:22px;color:#0f172a;line-height:1.9;font-size:15px">
+  const html = `<div dir="${dir}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #EADFD6;border-radius:14px;overflow:hidden">
+  <div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</div></div>
+  <div style="padding:22px;color:#2A1626;line-height:1.9;font-size:15px">
     <p style="margin:0 0 10px">${lang === 'ar' ? 'مرحبًا' : 'Dear'} ${esc(e.full_name)}،</p>
     <p style="margin:0 0 10px"><b>${esc(programName)}</b></p>
     <p style="margin:0 0 10px">${t(body[status], lang)}</p>
-    ${note ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin:10px 0"><b>${lang === 'ar' ? 'ملاحظة من الإدارة:' : 'Note from our team:'}</b><br>${esc(note)}</div>` : ''}
-    <p style="margin:14px 0 0"><a href="${siteUrl}/programs/${e.program_id}" style="background:#0b8a83;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'صفحة البرنامج' : 'Program page'}</a></p>
+    ${note ? `<div style="background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:10px 14px;margin:10px 0"><b>${lang === 'ar' ? 'ملاحظة من الإدارة:' : 'Note from our team:'}</b><br>${esc(note)}</div>` : ''}
+    <p style="margin:14px 0 0"><a href="${siteUrl}/programs/${e.program_id}" style="background:#D4614A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'صفحة البرنامج' : 'Program page'}</a></p>
   </div>
-  <div style="background:#f8fafc;color:#64748b;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'هذه رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div>
+  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'هذه رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div>
 </div>`;
   return { subject: t(subj[status], lang), html };
 }

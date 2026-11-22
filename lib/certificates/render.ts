@@ -34,7 +34,7 @@ export const KIND_LABEL: Record<CertKind, { ar: string; en: string; verb_ar: str
 };
 
 export const W = 2480, H = 1754;
-const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b', INK = '#1e293b', MUTED = '#64748b';
+const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866', INK = '#3A2634', MUTED = '#8E7F8A';
 
 const imgCache = new Map<string, Promise<HTMLImageElement | null>>();
 function loadImage(src: string): Promise<HTMLImageElement | null> {
@@ -80,7 +80,7 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
 
   /* background + frame */
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
-  const grad = ctx.createLinearGradient(0, 0, W, H); grad.addColorStop(0, '#f8fafc'); grad.addColorStop(1, '#ffffff'); ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  const grad = ctx.createLinearGradient(0, 0, W, H); grad.addColorStop(0, '#FBF4EE'); grad.addColorStop(1, '#ffffff'); ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
   ctx.lineWidth = 16; ctx.strokeStyle = NAVY; ctx.strokeRect(56, 56, W - 112, H - 112);
   ctx.lineWidth = 4; ctx.strokeStyle = GOLD; ctx.strokeRect(92, 92, W - 184, H - 184);
   // corner ornaments
@@ -133,7 +133,7 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
   sig(W - 480, s.sign1_name, s.sign1_title);
   sig(480, s.sign2_name, s.sign2_title);
   const qrSize = 200, qx = W / 2 - qrSize / 2, qy = H - 475;
-  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 3; ctx.fillRect(qx - 14, qy - 14, qrSize + 28, qrSize + 28); ctx.strokeRect(qx - 14, qy - 14, qrSize + 28, qrSize + 28);
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#EADFD6'; ctx.lineWidth = 3; ctx.fillRect(qx - 14, qy - 14, qrSize + 28, qrSize + 28); ctx.strokeRect(qx - 14, qy - 14, qrSize + 28, qrSize + 28);
   drawQr(ctx, d.verify_url, qx, qy, qrSize, 'M', NAVY);
   text(ctx, `الرقم التسلسلي: ${d.serial}`, W / 2, qy + qrSize + 48, { size: 28, weight: 800, color: NAVY });
   text(ctx, `تاريخ الإصدار: ${fmtDate(d.issued_at)} · ${s.city_ar}`, W / 2, qy + qrSize + 84, { size: 26, weight: 400, color: MUTED });

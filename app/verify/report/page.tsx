@@ -17,11 +17,11 @@ function Inner() {
   const s = r?.report; const live = r?.valid && r.status === 'issued' && !r.superseded;
   return <main className="pt-main" dir="rtl" data-testid="vr-root">
     <section className="pt-box" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#0b8a83', fontWeight: 800 }}>أَثَر · تقرير القيادة · ختم ATH-LR</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#D4614A', fontWeight: 800 }}>أَثَر · تقرير القيادة · ختم ATH-LR</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «تقرير القيادة»</h1>
       <p className="pt-muted">أدخل الرمز المطبوع أسفل الصفحة (مثل ATH-LR-7K2Q-9M4X). نُظهر الجهة والفترة وتاريخ الإصدار وسلامة البصمة، وهل ما زال التقرير حيًّا أم صدر بعده أحدث — ولا نُظهر أيّ شخص.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-LR-XXXX-XXXX" aria-label="رمز التقرير" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '10px 12px', font: 'inherit', letterSpacing: '.06em' }} data-testid="vr-input" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-LR-XXXX-XXXX" aria-label="رمز التقرير" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '10px 12px', font: 'inherit', letterSpacing: '.06em' }} data-testid="vr-input" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vr-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vr-invalid"><b>لا يوجد تقرير بهذا الرمز.</b> تأكّد من الحروف (لا تُستخدم O/I/0/1).</div>}

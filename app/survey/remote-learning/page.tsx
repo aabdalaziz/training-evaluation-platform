@@ -394,15 +394,15 @@ function SurveyForm() {
  * Styles (responsive, RTL/LTR aware via logical properties)
  * ------------------------------------------------------------------------- */
 const CSS = `
-.rs-wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#0f172a;}
-.rs-center{min-height:60vh;display:flex;align-items:center;justify-content:center;color:#64748b;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;font-weight:700;}
+.rs-wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;}
+.rs-center{min-height:60vh;display:flex;align-items:center;justify-content:center;color:#8E7F8A;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;font-weight:700;}
 .rs-header{text-align:center;margin-bottom:18px;position:relative;}
 .rs-badge{display:inline-block;background:#ede9fe;color:#6d28d9;font-weight:800;font-size:12px;padding:4px 12px;border-radius:999px;margin-bottom:10px;}
 .rs-title{margin:0;font-size:22px;font-weight:900;color:#14466B;display:flex;flex-direction:column;gap:4px;}
-.rs-title-en{font-size:15px;color:#64748b;font-weight:700;}
-.rs-lang{margin-top:12px;border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:8px 16px;font:inherit;font-weight:800;color:#14466B;cursor:pointer;}
-.rs-lang:hover{background:#f1f5f9;}
-.rs-card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,23,42,.04);}
+.rs-title-en{font-size:15px;color:#8E7F8A;font-weight:700;}
+.rs-lang{margin-top:12px;border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:8px 16px;font:inherit;font-weight:800;color:#14466B;cursor:pointer;}
+.rs-lang:hover{background:#F6EBE0;}
+.rs-card{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(15,23,42,.04);}
 .rs-card.rs-invalid{border-color:#fca5a5;}
 .rs-intro p{margin:0 0 10px;line-height:1.9;font-size:15px;}
 .rs-anon{margin-top:8px;padding:10px 12px;background:#f0fdf4;border-radius:10px;color:#166534;font-size:13px;font-weight:700;}
@@ -410,50 +410,50 @@ const CSS = `
 .rs-h2 .rs-primary{font-size:18px;font-weight:900;color:#14466B;}
 .rs-bi{display:flex;flex-direction:column;gap:2px;}
 .rs-primary{font-weight:800;font-size:15px;line-height:1.6;}
-.rs-secondary{font-weight:600;font-size:13px;color:#64748b;line-height:1.5;}
+.rs-secondary{font-weight:600;font-size:13px;color:#8E7F8A;line-height:1.5;}
 .rs-req{color:#ef4444;}
-.rs-hint{color:#64748b;font-size:13px;margin:0 0 14px;}
+.rs-hint{color:#8E7F8A;font-size:13px;margin:0 0 14px;}
 .rs-alert{padding:14px 16px;border-radius:12px;margin-bottom:16px;font-weight:700;line-height:1.7;}
 .rs-alert-err{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;}
 .rs-alert ul{margin:8px 0 0;padding-inline-start:20px;}
 .rs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .rs-field{display:flex;flex-direction:column;gap:6px;}
-.rs-field select,.rs-field input,.rs-field textarea{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;font-weight:700;background:#fff;color:#0f172a;outline:none;box-sizing:border-box;}
-.rs-field select:disabled{background:#f1f5f9;color:#94a3b8;}
+.rs-field select,.rs-field input,.rs-field textarea{width:100%;padding:11px 12px;border:1px solid #D9CBC2;border-radius:10px;font:inherit;font-weight:700;background:#fff;color:#2A1626;outline:none;box-sizing:border-box;}
+.rs-field select:disabled{background:#F6EBE0;color:#B3A5AE;}
 .rs-field select:focus,.rs-field input:focus,.rs-field textarea:focus{border-color:#0d9488;box-shadow:0 0 0 3px rgba(13,148,136,.15);}
 .rs-field.rs-invalid select,.rs-field.rs-invalid input{border-color:#ef4444;background:#fff7f7;}
 .rs-warn{color:#b45309;font-weight:700;font-size:12px;}
-.rs-q{padding:14px 0;border-bottom:1px solid #f1f5f9;}
+.rs-q{padding:14px 0;border-bottom:1px solid #F6EBE0;}
 .rs-q:last-child{border-bottom:0;}
 .rs-q.rs-invalid{background:#fff7f7;border-radius:10px;padding-inline:10px;}
 .rs-pills,.rs-checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
-.rs-pill{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;color:#475569;cursor:pointer;text-align:start;}
+.rs-pill{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;color:#5C4858;cursor:pointer;text-align:start;}
 .rs-pill .rs-primary{font-size:13px;} .rs-pill .rs-secondary{font-size:11px;}
 .rs-pill.on{border:2px solid #2563eb;background:#eff6ff;color:#1d4ed8;}
-.rs-check{display:flex;align-items:center;gap:10px;border:1px solid #cbd5e1;background:#fff;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;text-align:start;flex:1 1 calc(50% - 8px);min-width:220px;color:#475569;}
+.rs-check{display:flex;align-items:center;gap:10px;border:1px solid #D9CBC2;background:#fff;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;text-align:start;flex:1 1 calc(50% - 8px);min-width:220px;color:#5C4858;}
 .rs-check .rs-primary{font-size:13px;} .rs-check .rs-secondary{font-size:11px;}
-.rs-check.on{border:2px solid #0d9488;background:#f0fdfa;color:#0f766e;}
-.rs-box{width:22px;height:22px;border-radius:6px;border:2px solid #94a3b8;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;}
+.rs-check.on{border:2px solid #0d9488;background:#FBEDE7;color:#B9544A;}
+.rs-box{width:22px;height:22px;border-radius:6px;border:2px solid #B3A5AE;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;}
 .rs-check.on .rs-box{border-color:#0d9488;background:#0d9488;color:#fff;}
 .rs-statement{display:flex;gap:12px;align-items:flex-start;}
 .rs-num{width:30px;height:30px;border-radius:50%;background:#14466B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;margin-top:2px;}
 .rs-statement-body{flex:1;min-width:0;}
 .rs-scale{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
-.rs-scale-btn{border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:8px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#475569;min-height:58px;}
+.rs-scale-btn{border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:8px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#5C4858;min-height:58px;}
 .rs-scale-btn span:first-child{font-weight:800;font-size:12px;line-height:1.3;text-align:center;}
-.rs-scale-en{font-size:10px;color:#94a3b8;line-height:1.2;text-align:center;}
+.rs-scale-en{font-size:10px;color:#B3A5AE;line-height:1.2;text-align:center;}
 .rs-scale-btn.on{border:2px solid #10b981;background:#d1fae5;color:#047857;}
 .rs-scale-btn.on .rs-scale-en{color:#047857;}
-.rs-scale-btn.na{background:#f8fafc;}
-.rs-scale-btn.na.on{border-color:#64748b;background:#e2e8f0;color:#334155;}
+.rs-scale-btn.na{background:#FBF4EE;}
+.rs-scale-btn.na.on{border-color:#8E7F8A;background:#EADFD6;color:#4A3645;}
 .rs-submit{width:100%;border:0;border-radius:14px;padding:16px;background:linear-gradient(135deg,#00897B,#1FA39A);color:#fff;font:inherit;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 10px 24px rgba(0,137,123,.25);}
 .rs-submit .rs-primary,.rs-submit .rs-secondary{color:#fff;}
 .rs-submit:disabled{opacity:.7;cursor:wait;}
-.rs-once-btn{margin-top:14px;font:inherit;font-weight:800;font-size:13px;color:#0f2a4e;background:#fff;border:1.5px solid #cbd5e1;border-radius:999px;padding:9px 16px;cursor:pointer}.rs-once-btn:hover{border-color:#0f2a4e}
+.rs-once-btn{margin-top:14px;font:inherit;font-weight:800;font-size:13px;color:#3A1F36;background:#fff;border:1.5px solid #D9CBC2;border-radius:999px;padding:9px 16px;cursor:pointer}.rs-once-btn:hover{border-color:#3A1F36}
 .rs-thanks{text-align:center;padding:40px 24px;border-top:8px solid #10b981;}
 .rs-thanks-icon{font-size:64px;margin-bottom:10px;}
 .rs-thanks h1{margin:0 0 10px;color:#047857;} .rs-thanks h1 .rs-primary{font-size:26px;}
-.rs-thanks p{margin:0;color:#475569;}
+.rs-thanks p{margin:0;color:#5C4858;}
 @media(max-width:700px){
   .rs-grid{grid-template-columns:1fr;}
   .rs-scale{grid-template-columns:repeat(3,1fr);}

@@ -69,7 +69,7 @@ export function passportFilename(d: PassportData): string { const base = (d.name
 
 // ---------- الرسم ----------
 export const PW = 1754, PH = 2480; // A4 عمودي ~150dpi
-const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#c9a24b', INK = '#0f172a', MUTED = '#64748b', LINE = '#e2e8f0', SOFT = '#f8fafc';
+const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866', INK = '#2A1626', MUTED = '#8E7F8A', LINE = '#EADFD6', SOFT = '#FBF4EE';
 const TONE: Record<string, string> = { navy: NAVY, teal: TEAL, gold: GOLD, ok: '#047857', violet: '#6d28d9', sky: '#0284c7', warn: '#d97706', rose: '#be123c' };
 function font(): string { if (typeof document === 'undefined') return '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif'; const f = getComputedStyle(document.body).fontFamily || ''; return f ? `${f}, "IBM Plex Sans Arabic", Tahoma, Arial, sans-serif` : '"IBM Plex Sans Arabic", Tahoma, Arial, sans-serif'; }
 function txt(ctx: CanvasRenderingContext2D, s: string, x: number, y: number, o: { size: number; weight?: number; color?: string; align?: CanvasTextAlign; dir?: 'rtl' | 'ltr'; maxW?: number }) {
@@ -119,7 +119,7 @@ export async function renderPassportPage(canvas: HTMLCanvasElement, p: PassportP
   // الشهادات
   if (p.credentials.length) {
     y += 40; txt(ctx, ar ? 'الشهادات الرقمية (قابلة للتحقق)' : 'Digital credentials (verifiable)', X, y, { size: 34, weight: 900, color: NAVY, align, dir }); y += 24;
-    for (const c of p.credentials) { rrect(ctx, L, y, PW - 180, 70, 14, '#fdf6e3'); txt(ctx, c.title, ar ? R - 22 : L + 22, y + 30, { size: 24, weight: 700, align, dir, maxW: 900 }); txt(ctx, `${c.kind}${c.level ? ' · ' + c.level : ''} · ${c.date}`, ar ? R - 22 : L + 22, y + 56, { size: 17, color: MUTED, align, dir }); txt(ctx, c.code, ar ? L + 22 : R - 22, y + 44, { size: 24, weight: 900, color: TEAL, align: ar ? 'left' : 'right', dir: 'ltr' }); y += 82; }
+    for (const c of p.credentials) { rrect(ctx, L, y, PW - 180, 70, 14, '#FBF4EE'); txt(ctx, c.title, ar ? R - 22 : L + 22, y + 30, { size: 24, weight: 700, align, dir, maxW: 900 }); txt(ctx, `${c.kind}${c.level ? ' · ' + c.level : ''} · ${c.date}`, ar ? R - 22 : L + 22, y + 56, { size: 17, color: MUTED, align, dir }); txt(ctx, c.code, ar ? L + 22 : R - 22, y + 44, { size: 24, weight: 900, color: TEAL, align: ar ? 'left' : 'right', dir: 'ltr' }); y += 82; }
   }
   // التذييل
   ctx.fillStyle = SOFT; ctx.fillRect(0, PH - 150, PW, 150); ctx.fillStyle = LINE; ctx.fillRect(0, PH - 150, PW, 2);

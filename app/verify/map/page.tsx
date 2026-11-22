@@ -22,7 +22,7 @@ function Inner() {
       <h1 style={{ margin: '4px 0' }}>تحقّق من «خريطة أثري»</h1>
       <p className="pt-muted">أدخل رمز اللقطة (مثل ATH-MP-7K2Q-9M4X). نُظهر السنة وتاريخ التوقيع وسلامة البصمة وأعداد المحطات والخيوط — <b>ولا نُظهر الخريطة نفسها إلا إن جعلها صاحبها عامة</b>، وبوجهها العام فقط: بلا أسماء أشخاص، وحالات اليوم بموضوعها لا بعنوانها.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
-        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-MP-XXXX-XXXX" aria-label="رمز اللقطة" style={{ flex: 1, minWidth: 220, border: '1.5px solid #cbd5e1', borderRadius: 10, padding: '9px 12px', fontFamily: 'inherit', fontSize: 15, letterSpacing: 1 }} data-testid="vm-code" />
+        <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-MP-XXXX-XXXX" aria-label="رمز اللقطة" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '9px 12px', fontFamily: 'inherit', fontSize: 15, letterSpacing: 1 }} data-testid="vm-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vm-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
       {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px', fontWeight: 800 }} data-testid="vm-invalid">لا توجد لقطة بهذا الرمز.</div>}

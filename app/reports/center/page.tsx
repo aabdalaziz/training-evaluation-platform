@@ -21,7 +21,7 @@ import {
   type Action, type Comparison, type Evaluation, type Fact, type Filters, type GroupRow, type Kpis, type Lang, type Lookups, type SeriesPoint, type Comment,
 } from '../../../lib/reports/analytics';
 
-const NAVY = '#0f2a4e', TEAL = '#0b8a83', GOLD = '#C9A24B';
+const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866';
 
 type Preset = { name: string; report: string; filters: Filters; compare: boolean; preset: string };
 const PRESETS_KEY = 'tep.reportCenter.presets';
@@ -258,10 +258,10 @@ function ReportsCenter() {
   const exportWord = () => {
     const doc = document.querySelector('.rc-doc');
     if (!doc) return;
-    const css = `body{font-family:var(--font-ar),"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;direction:${ar ? 'rtl' : 'ltr'};color:#0f172a;font-size:12pt}
-      h1{color:#0f2a4e;font-size:20pt;margin:0 0 6pt}h2,h3{color:#0f2a4e;margin:14pt 0 6pt}
-      table{border-collapse:collapse;width:100%;margin:8pt 0}th,td{border:1px solid #cbd5e1;padding:4pt 6pt;font-size:10.5pt}th{background:#eef2f7}
-      .noprint{display:none}.rc-muted{color:#64748b}p{line-height:1.7;margin:4pt 0}`;
+    const css = `body{font-family:var(--font-ar),"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;direction:${ar ? 'rtl' : 'ltr'};color:#2A1626;font-size:12pt}
+      h1{color:#3A1F36;font-size:20pt;margin:0 0 6pt}h2,h3{color:#3A1F36;margin:14pt 0 6pt}
+      table{border-collapse:collapse;width:100%;margin:8pt 0}th,td{border:1px solid #D9CBC2;padding:4pt 6pt;font-size:10.5pt}th{background:#F3E6DC}
+      .noprint{display:none}.rc-muted{color:#8E7F8A}p{line-height:1.7;margin:4pt 0}`;
     const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${title}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]--><style>${css}</style></head><body>${doc.innerHTML}</body></html>`;
     const blob = new Blob(['\ufeff', html], { type: 'application/msword;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${fileBase()}.doc`; a.click(); URL.revokeObjectURL(a.href);
@@ -549,10 +549,10 @@ function PriorityGauge({ actions, k, lang }: { actions: Action[]; k: Kpis; lang:
     <Card title={ar ? '🎯 أولوية التدخل' : '🎯 Intervention priority'}>
       <div className="rc-gauge">
         <svg width="120" height="120" viewBox="0 0 120 120" aria-label={`${score}/100`}>
-          <circle cx="60" cy="60" r={r} fill="none" stroke="#e2e8f0" strokeWidth="12" />
+          <circle cx="60" cy="60" r={r} fill="none" stroke="#EADFD6" strokeWidth="12" />
           <circle cx="60" cy="60" r={r} fill="none" stroke={color} strokeWidth="12" strokeLinecap="round" strokeDasharray={`${dash} ${c - dash}`} transform="rotate(-90 60 60)" />
           <text x="60" y="56" textAnchor="middle" fontSize="26" fontWeight="900" fill={color}>{score}</text>
-          <text x="60" y="76" textAnchor="middle" fontSize="11" fill="#64748b">/100</text>
+          <text x="60" y="76" textAnchor="middle" fontSize="11" fill="#8E7F8A">/100</text>
         </svg>
         <div className="rc-gauge-txt">
           <b style={{ color }}>{label}</b>
@@ -574,7 +574,7 @@ function Badge({ kind, value, lang }: { kind: 'perf' | 'risk'; value: string; la
 const Delta = ({ v, suffix = '', good = 'up' }: { v: number | null; suffix?: string; good?: 'up' | 'down' }) => {
   if (v === null || v === undefined) return <span className="rc-muted">—</span>;
   const pos = good === 'up' ? v >= 0 : v <= 0;
-  return <span className="rc-delta" style={{ color: v === 0 ? '#64748b' : pos ? '#047857' : '#b91c1c' }}>{v > 0 ? '▲' : v < 0 ? '▼' : '•'} {Number.isInteger(v) ? Math.abs(v) : Math.abs(v).toFixed(suffix === '%' ? 1 : 2)}{suffix}</span>;
+  return <span className="rc-delta" style={{ color: v === 0 ? '#8E7F8A' : pos ? '#047857' : '#b91c1c' }}>{v > 0 ? '▲' : v < 0 ? '▼' : '•'} {Number.isInteger(v) ? Math.abs(v) : Math.abs(v).toFixed(suffix === '%' ? 1 : 2)}{suffix}</span>;
 };
 
 function KpiStrip({ k, cmp, lang }: { k: Kpis; cmp: Comparison | null; lang: Lang }) {
@@ -664,13 +664,13 @@ function LineChart({ series, lang }: { series: SeriesPoint[]; lang: Lang }) {
   const step = Math.max(1, Math.ceil(pts.length / 10));
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="rc-svg" role="img">
-      {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="#e2e8f0" /><text x={P - 8} y={y(v) + 4} fontSize="10" textAnchor="end" fill="#64748b">{v}</text></g>)}
+      {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="#EADFD6" /><text x={P - 8} y={y(v) + 4} fontSize="10" textAnchor="end" fill="#8E7F8A">{v}</text></g>)}
       <line x1={P} x2={W - P} y1={y(TARGET)} y2={y(TARGET)} stroke={GOLD} strokeDasharray="6 4" strokeWidth="2" />
       <text x={W - P} y={y(TARGET) - 6} fontSize="10" textAnchor="end" fill={GOLD}>{ar ? 'الهدف' : 'target'} {TARGET}</text>
       <path d={path(p => p.mean)} fill="none" stroke={NAVY} strokeWidth="2.5" />
       <path d={path(p => p.ma)} fill="none" stroke={TEAL} strokeWidth="2" strokeDasharray="3 3" />
       {pts.map((p, i) => <g key={p.key}><circle cx={x(i)} cy={y(p.mean as number)} r="4" fill={(p.mean as number) >= TARGET ? '#059669' : (p.mean as number) >= THRESHOLDS.good ? NAVY : '#dc2626'}><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
-        {i % step === 0 && <text x={x(i)} y={H - P + 14} fontSize="9" textAnchor="middle" fill="#64748b">{p.label.slice(5)}</text>}</g>)}
+        {i % step === 0 && <text x={x(i)} y={H - P + 14} fontSize="9" textAnchor="middle" fill="#8E7F8A">{p.label.slice(5)}</text>}</g>)}
       <text x={P} y={14} fontSize="10" fill={NAVY}>— {ar ? 'المتوسط اليومي' : 'daily mean'}</text>
       <text x={P + 120} y={14} fontSize="10" fill={TEAL}>- - {ar ? 'متوسط متحرك' : 'moving avg'}</text>
     </svg>
@@ -770,7 +770,7 @@ function Comments({ comments, lk, lang }: { comments: Comment[]; lk: Lookups; la
   const [filter, setFilter] = useState<'all' | 'positive' | 'negative' | 'neutral'>('all');
   const list = comments.filter(c => filter === 'all' || c.sentiment === filter);
   const counts = { positive: comments.filter(c => c.sentiment === 'positive').length, negative: comments.filter(c => c.sentiment === 'negative').length, neutral: comments.filter(c => c.sentiment === 'neutral').length };
-  const col = { positive: '#047857', negative: '#b91c1c', neutral: '#64748b' };
+  const col = { positive: '#047857', negative: '#b91c1c', neutral: '#8E7F8A' };
   return (
     <Card title={ar ? `💬 التعليقات المفتوحة (${comments.length})` : `💬 Open comments (${comments.length})`}>
       <div className="rc-seg noprint">
@@ -787,14 +787,14 @@ function Comments({ comments, lk, lang }: { comments: Comment[]; lk: Lookups; la
 
 function Actions({ actions, lang }: { actions: Action[]; lang: Lang }) {
   const ar = lang === 'ar';
-  const pr = { HIGH: { ar: 'عالية', en: 'High', c: '#b91c1c', bg: '#fee2e2' }, MED: { ar: 'متوسطة', en: 'Medium', c: '#b45309', bg: '#fef3c7' }, LOW: { ar: 'منخفضة', en: 'Low', c: '#0f766e', bg: '#ccfbf1' } };
+  const pr = { HIGH: { ar: 'عالية', en: 'High', c: '#b91c1c', bg: '#fee2e2' }, MED: { ar: 'متوسطة', en: 'Medium', c: '#b45309', bg: '#fef3c7' }, LOW: { ar: 'منخفضة', en: 'Low', c: '#B9544A', bg: '#ccfbf1' } };
   return (
     <Card title={ar ? `🎯 خطة الإجراءات (${actions.length})` : `🎯 Action plan (${actions.length})`}>
       {actions.length ? actions.map((a, i) => (
         <div key={a.id} className="rc-action">
           <div className="rc-action-n" style={{ background: pr[a.priority].c }}>{i + 1}</div>
           <div style={{ flex: 1 }}>
-            <div className="rc-action-head"><b>{a.label}</b><span className="rc-badge" style={{ background: pr[a.priority].bg, color: pr[a.priority].c }}>{ar ? 'أولوية' : 'Priority'} {pr[a.priority][lang]}</span><span className="rc-badge" style={{ background: '#f1f5f9', color: '#334155' }}>{CATEGORY_LABEL[a.category][lang]}</span><span className="ltr rc-muted">{a.mean.toFixed(2)}/5 · {ar ? 'منخفض' : 'low'} {a.lowPct.toFixed(0)}% · n={a.responses} · {ar ? 'الأثر' : 'impact'} {a.impact}</span></div>
+            <div className="rc-action-head"><b>{a.label}</b><span className="rc-badge" style={{ background: pr[a.priority].bg, color: pr[a.priority].c }}>{ar ? 'أولوية' : 'Priority'} {pr[a.priority][lang]}</span><span className="rc-badge" style={{ background: '#F6EBE0', color: '#4A3645' }}>{CATEGORY_LABEL[a.category][lang]}</span><span className="ltr rc-muted">{a.mean.toFixed(2)}/5 · {ar ? 'منخفض' : 'low'} {a.lowPct.toFixed(0)}% · n={a.responses} · {ar ? 'الأثر' : 'impact'} {a.impact}</span></div>
             <div className="rc-action-rec">{a.recommendation}</div>
             <div className="rc-action-meta"><span>👤 {a.owner}</span><span>⏱️ {a.dueDays} {ar ? 'يوم' : 'days'}</span><span>📏 {a.kpi}</span></div>
           </div>
@@ -827,7 +827,7 @@ const CSS = `
 .rc-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:50;background:var(--navy);color:#fff;padding:10px 18px;border-radius:var(--r);font-weight:800;box-shadow:var(--shadow);border-inline-start:4px solid var(--teal-2)}
 /* ---------- page header ---------- */
 .rc-top{background:linear-gradient(135deg,var(--navy) 0%,#0b2240 100%);color:#fff;position:relative;overflow:hidden}
-.rc-top::before{content:'';position:absolute;inset:0;background:radial-gradient(600px 200px at 85% 120%,rgba(11,138,131,.35),transparent 70%)}
+.rc-top::before{content:'';position:absolute;inset:0;background:radial-gradient(600px 200px at 85% 120%,rgba(212,97,74,.35),transparent 70%)}
 .rc-top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--teal-2))}
 .rc-top-in{max-width:1400px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:relative}
 .rc-burger{display:none;background:rgba(255,255,255,.12);border:0;color:#fff;font-size:20px;border-radius:10px;padding:6px 12px;cursor:pointer}
@@ -883,7 +883,7 @@ const CSS = `
 .rc-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);border-radius:9px;padding:8px 12px;font-weight:800;cursor:pointer;font-size:12.5px;color:var(--ink-2);transition:.15s;line-height:1.3}
 .rc-btn svg{color:var(--navy);opacity:.8}
 .rc-btn:hover{background:var(--navy-soft);border-color:#b9c7d8;color:var(--navy)}
-.rc-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 4px 12px rgba(11,138,131,.22)}
+.rc-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 4px 12px rgba(212,97,74,.22)}
 .rc-btn.primary svg{color:#fff;opacity:1}
 .rc-btn.primary:hover{background:var(--teal-2);border-color:var(--teal-2);color:#fff}
 .rc-btn.gold{background:var(--gold-soft);border-color:var(--gold-line);color:#7a5c0f}.rc-btn.gold svg{color:var(--gold);opacity:1}
@@ -996,7 +996,7 @@ const CSS = `
   .noprint,.global-nav{display:none!important}
   .rc-lay{display:block;padding:0;max-width:none}
   .rc-doc{border:0;padding:0;box-shadow:none}
-  .rc-card{border:1px solid #e2e8f0;box-shadow:none;page-break-inside:avoid}
+  .rc-card{border:1px solid #EADFD6;box-shadow:none;page-break-inside:avoid}
   .rc-kpi-v{font-size:22px}
   .rc-tbl{font-size:11px}
   .rc-comments{max-height:none}

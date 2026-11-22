@@ -35,7 +35,7 @@ const arr = <T = any>(x: unknown): T[] => (Array.isArray(x) ? (x as T[]) : []);
 
 export type Variant = 'a' | 'b';
 export const VARIANT_AR: Record<Variant, string> = { a: 'أ', b: 'ب' };
-export const VARIANT_COLOR: Record<Variant, string> = { a: '#0b8a83', b: '#c9a24b' }; /* «الجلوس بالألوان»: أ أخضر · ب ذهبي */
+export const VARIANT_COLOR: Record<Variant, string> = { a: '#D4614A', b: '#D9A866' }; /* «الجلوس بالألوان»: أ أخضر · ب ذهبي */
 const variantOf = (x: any): Variant => (x?.variant === 'b' ? 'b' : 'a');
 /** توزيع حتمي بالبريد (أو ببذرة الجلسة إن غاب): ثابت عند إعادة الدخول · ≈ 50/50 · بلا عدّاد */
 export function variantFor(formCode: string, email: unknown, fallback = ''): Variant { const id = String(email || fallback || '').trim().toLowerCase(); return createHash('sha256').update(`${formCode}:${id}`).digest()[0] & 1 ? 'b' : 'a'; }

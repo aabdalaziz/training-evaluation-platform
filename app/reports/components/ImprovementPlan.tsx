@@ -79,7 +79,7 @@ export default function ImprovementPlan() {
           }}
         >
           <thead>
-            <tr style={{ background: '#f1f5f9', color: '#14466B' }}>
+            <tr style={{ background: '#F6EBE0', color: '#14466B' }}>
               <th style={th}>#</th>
               <th style={th}>المؤشر</th>
               <th style={th}>الدرجة</th>
@@ -96,7 +96,7 @@ export default function ImprovementPlan() {
                   borderBottom:
                     index === actions.length - 1
                       ? 'none'
-                      : '1px solid #eef2f7',
+                      : '1px solid #F3E6DC',
                 }}
               >
                 <td style={td}>{index + 1}</td>
@@ -140,5 +140,5 @@ const td: React.CSSProperties = {
   padding: '14px',
   textAlign: 'right',
   verticalAlign: 'top',
-  color: '#0f172a',
+  color: '#2A1626',
 };
