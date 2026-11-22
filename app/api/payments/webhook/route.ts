@@ -19,17 +19,18 @@ export async function POST(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!secret || !apiKey || !URL_ || !SVC) return NextResponse.json({ ok: false, error: 'webhook not configured' }, { status: 503 });
   let ev: MoyasarEvent; try { ev = await req.json(); } catch { return NextResponse.json({ ok: false, error: 'bad json' }, { status: 400 }); }
-  if (!safeEqual(String(ev.secret_token || ''), secret)) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
-
-  const db = createClient(URL_, SVC);
-  /* هـ-1/3: توثيق الـWebhook من لوحة Moyasar — يرسل حدث webhook_verification ومعه data.verification_code؛ نحفظه في سجلّ التدقيق ليقرأه المدير من /admin/payments → الإعدادات */
+  const secretOk = safeEqual(String(ev.secret_token || ''), secret);
+  /* هـ-1/3: توثيق الـWebhook من لوحة Moyasar — حدث webhook_verification ومعه data.verification_code. نحفظ الرمز (مع نتيجة مطابقة السرّ لتشخيص الإعداد)
+     ليقرأه المدير من /admin/payments → الإعدادات. الرمز بذاته لا يمنح شيئًا — لا يصلح إلا داخل لوحة Moyasar. */
   if (ev.type === 'webhook_verification') {
-    const code = String((ev.data as any)?.verification_code || '').replace(/[^0-9A-Za-z-]/g, '').slice(0, 16);
-    console.log(`[moyasar] webhook_verification code=${code}`);
-    if (code) await db.from('audit_logs').insert({ action: 'moyasar_webhook_verification', entity_type: 'webhook', entity_id: 'moyasar', metadata: { code, live: !!ev.live, at: new Date().toISOString() } });
+    const code = String((ev.data as any)?.verification_code || (ev as any)?.verification_code || '').replace(/[^0-9A-Za-z-]/g, '').slice(0, 16);
+    console.log(`[moyasar] webhook_verification code=${code} secret_ok=${secretOk}`);
+    if (code) await createClient(URL_, SVC).from('audit_logs').insert({ action: 'moyasar_webhook_verification', entity_type: 'webhook', entity_id: 'moyasar', metadata: { code, secret_ok: secretOk, live: !!ev.live, at: new Date().toISOString() } });
     return NextResponse.json({ ok: true, verification: true });
   }
+  if (!secretOk) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
 
+  const db = createClient(URL_, SVC);
   const action = eventAction(ev.type); const pid = String(ev.data?.id || '').replace(/[^a-zA-Z0-9-]/g, '');
   if (action === 'ignore' || !pid) return NextResponse.json({ ok: true, ignored: true });
 
@@ -71,5 +72,5 @@ export async function GET(req: Request) {
   const db = createClient(URL_, SVC); const { data: prof } = await db.from('profiles').select('role').eq('id', ud.user.id).maybeSingle();
   if (!['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'].includes(String((prof as any)?.role || '').toUpperCase())) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
   const { data } = await db.from('audit_logs').select('created_at, metadata').eq('action', 'moyasar_webhook_verification').order('created_at', { ascending: false }).limit(1);
-  const r = Array.isArray(data) && data[0]; return NextResponse.json({ ok: true, configured, code: r ? String((r as any).metadata?.code || '') : null, at: r ? (r as any).created_at : null }, { headers: { 'Cache-Control': 'private, no-store' } });
+  const r = Array.isArray(data) && data[0]; return NextResponse.json({ ok: true, configured, code: r ? String((r as any).metadata?.code || '') : null, at: r ? (r as any).created_at : null, secret_ok: r ? (r as any).metadata?.secret_ok !== false : null }, { headers: { 'Cache-Control': 'private, no-store' } });
 }
