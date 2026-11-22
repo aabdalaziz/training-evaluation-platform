@@ -19,7 +19,7 @@ const enc = new TextEncoder();
 
 export function buildPptx(slides: PptSlide[], opts: PptOptions = {}): Uint8Array {
   const rtl = opts.rtl !== false;
-  const navy = (opts.navy || '0F2A4E').replace('#', '');
+  const navy = (opts.navy || '3A1F36').replace('#', '');
   const accent = (opts.accent || '078981').replace('#', '');
   const font = opts.font || 'IBM Plex Sans Arabic'; /* «خطّ أَثَر»: خطّ الواجهة من الهوية؛ PowerPoint يستبدله بـ Arial إن لم يكن مثبَّتًا */
   const footer = opts.footer || '';

@@ -1,0 +1,107 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   أَثَر — هوية v1.2 «غروب الحجاز» (2026-11-23) — طبقة الهوية فوق style.css
+   المحتوى: (1) رموز اللون والتدرّج  (2) قوس اليوم: ألوان المستويات السبعة
+             (3) منظومة الحركة  (4) خلفية «ورق أَثَر + أفق الأثر + الفواصل المقوّسة»  (5) ستار الأثر
+   القاعدة: لا فواصل لونية حادّة؛ تدرّجات ناعمة؛ حركة واحدة بسيطة بإيقاع واحد؛ شاشة التقييم ساكنة.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root{
+  --plum:#3A1F36; --deep:#22101F; --plum-soft:#6A3350; --plum-2:#4A2946;
+  --coral:#D4614A; --coral-hot:#E8795C; --coral-soft:#F0A48C; --coral-dark:#B9544A;
+  --sand:#D9A866; --sand-light:#F1D9A8; --sand-deep:#B8893F; --sand-ink:#8A5A1E;
+  --shell:#F6EBE0; --shell-2:#FBF4EE; --sea:#5EA8A0; --ash:#8E7F8A; --ink-athar:#2A1626;
+  --athar-dusk: linear-gradient(135deg,#22101F 0%,#3A1F36 42%,#6A3350 70%,#D4614A 100%);
+  --athar-ember: linear-gradient(135deg,#D4614A 0%,#E8795C 55%,#D9A866 100%);
+  --athar-gilt: linear-gradient(135deg,#D9A866 0%,#F1D9A8 100%);
+  --athar-paper: linear-gradient(180deg,#FBF4EE 0%,#F6EBE0 100%);
+  --ease-athar: cubic-bezier(.2,.8,.2,1);
+  --dur-athar: .6s;
+  --zone-echo:#D4614A; /* لون صدى المنطقة: الرئيسية/مِعيار مرجاني · اقْرَأْ = لون المستوى · الجهات برقوقي · مركز القيادة ذهبي */
+}
+[data-zone="org"]{--zone-echo:#6A3350}
+[data-zone="staff"],[data-zone="admin"]{--zone-echo:#D9A866}
+[data-zone="iqra"][data-level]{--zone-echo:var(--lvl-flat)}
+
+/* ── (2) قوس اليوم — المستوى الذي اجتازه المتعلّم في مِعيار هو لون منزلته في اقْرَأْ ونتيجته وشهادته ── */
+:root{
+  --lvl-PRE_A1: linear-gradient(135deg,#FBF4EE 0%,#F1D9A8 100%);
+  --lvl-A1:     linear-gradient(135deg,#F1D9A8 0%,#D9A866 100%);
+  --lvl-A2:     linear-gradient(135deg,#D9A866 0%,#E8795C 100%);
+  --lvl-B1:     linear-gradient(135deg,#E8795C 0%,#D4614A 100%);
+  --lvl-B2:     linear-gradient(135deg,#D4614A 0%,#6A3350 100%);
+  --lvl-C1:     linear-gradient(135deg,#6A3350 0%,#3A1F36 100%);
+  --lvl-C2:     linear-gradient(135deg,#3A1F36 0%,#22101F 100%);
+  --lvl-ink-PRE_A1:#3A1F36; --lvl-ink-A1:#3A1F36; --lvl-ink-A2:#22101F; --lvl-ink-B1:#FFFFFF; --lvl-ink-B2:#F6EBE0; --lvl-ink-C1:#F6EBE0; --lvl-ink-C2:#F1D9A8;
+  --lvl-flat-PRE_A1:#E6CDBD; --lvl-flat-A1:#D9A866; --lvl-flat-A2:#E8795C; --lvl-flat-B1:#D4614A; --lvl-flat-B2:#8E4A68; --lvl-flat-C1:#6A3350; --lvl-flat-C2:#3A1F36;
+  --lvl-name-PRE_A1:'فجر'; --lvl-name-A1:'شروق'; --lvl-name-A2:'ضحى'; --lvl-name-B1:'عصر'; --lvl-name-B2:'غروب'; --lvl-name-C1:'شفق'; --lvl-name-C2:'ليل';
+}
+[data-level]{--lvl:var(--lvl-PRE_A1);--lvl-ink:var(--lvl-ink-PRE_A1);--lvl-flat:var(--lvl-flat-PRE_A1)}
+[data-level="A1"]{--lvl:var(--lvl-A1);--lvl-ink:var(--lvl-ink-A1);--lvl-flat:var(--lvl-flat-A1)}
+[data-level="A2"]{--lvl:var(--lvl-A2);--lvl-ink:var(--lvl-ink-A2);--lvl-flat:var(--lvl-flat-A2)}
+[data-level="B1"]{--lvl:var(--lvl-B1);--lvl-ink:var(--lvl-ink-B1);--lvl-flat:var(--lvl-flat-B1)}
+[data-level="B2"]{--lvl:var(--lvl-B2);--lvl-ink:var(--lvl-ink-B2);--lvl-flat:var(--lvl-flat-B2)}
+[data-level="C1"]{--lvl:var(--lvl-C1);--lvl-ink:var(--lvl-ink-C1);--lvl-flat:var(--lvl-flat-C1)}
+[data-level="C2"]{--lvl:var(--lvl-C2);--lvl-ink:var(--lvl-ink-C2);--lvl-flat:var(--lvl-flat-C2)}
+.lvl-surface{background:var(--lvl);color:var(--lvl-ink)}
+.lvl-surface[data-level="C2"]{box-shadow:inset 0 3px 0 0 #D9A866}
+
+/* ── (3) منظومة الحركة — سبع حركات، إيقاع واحد ── */
+.ath-flip{position:relative;perspective:1200px;display:block;width:100%;background:transparent;border:0;padding:0;font:inherit;color:inherit;text-align:start;cursor:pointer}
+.ath-flip-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s var(--ease-athar)}
+.ath-flip[aria-pressed="true"] .ath-flip-inner{transform:rotateY(180deg)}
+.ath-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:inherit;overflow:hidden}
+.ath-face.back{transform:rotateY(180deg)}
+.ath-flip:focus-visible{outline:2px solid var(--sand);outline-offset:4px;border-radius:16px}
+.ath-tilt{transition:transform .5s var(--ease-athar),box-shadow .5s var(--ease-athar);transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(0);will-change:transform}
+.ath-echo{position:absolute;inset:0;pointer-events:none;overflow:visible}
+.ath-echo i{position:absolute;left:50%;top:50%;width:1.2em;height:1.2em;margin:-.6em 0 0 -.6em;border-radius:50%;border:1.5px solid var(--zone-echo);opacity:0;animation:ath-rip 2.4s var(--ease-athar) infinite}
+.ath-echo i:nth-child(2){animation-delay:.5s}.ath-echo i:nth-child(3){animation-delay:1s}
+@keyframes ath-rip{0%{opacity:0;transform:scale(.6)}12%{opacity:.6}100%{opacity:0;transform:scale(3.4)}}
+.ath-reveal{opacity:0;transform:translateY(14px);transition:opacity .7s var(--ease-athar),transform .7s var(--ease-athar)}
+.ath-reveal.in{opacity:1;transform:none}
+.ath-tabs{position:relative}
+.ath-tabink{position:absolute;bottom:0;height:3px;border-radius:3px;background:var(--athar-ember);transition:inset-inline-start .45s var(--ease-athar),width .45s var(--ease-athar)}
+.ath-live{position:relative;display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--coral);vertical-align:middle;margin-inline-end:6px}
+.ath-live::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--coral);animation:ath-rip 1.8s var(--ease-athar) infinite}
+.ath-new{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--sand);box-shadow:0 0 10px var(--sand);vertical-align:middle;margin-inline-end:6px;animation:ath-glow 2.6s ease-in-out infinite}
+@keyframes ath-glow{0%,100%{box-shadow:0 0 6px var(--sand)}50%{box-shadow:0 0 16px var(--sand-light)}}
+/* شاشة التقييم وخفض الحركة: سكون تامّ */
+html[data-engrave="none"] .ath-flip-inner,html[data-engrave="none"] .ath-tilt,html[data-engrave="none"] .ath-reveal{transition:none!important}
+html[data-engrave="none"] .ath-echo,html[data-engrave="none"] .ath-live::after,html[data-engrave="none"] .ath-new{animation:none!important}
+@media (prefers-reduced-motion:reduce){.ath-flip-inner,.ath-tilt,.ath-reveal,.ath-tabink{transition:none!important}.ath-echo i,.ath-live::after,.ath-new,.ath-hz .ath-hzglow,.ath-paper::after,.ath-veil *{animation:none!important}.ath-reveal{opacity:1;transform:none}}
+
+/* ── (4) الخلفية: ورق أَثَر (نسيج العلامة الصغيرة) + أفق الأثر (قوسا الانتشار عبر الترويسة) + الفواصل المقوّسة ── */
+.ath-paper{position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='112' viewBox='0 0 256 224'><g fill='none' stroke='%232A1626' stroke-width='2.2' stroke-linejoin='round'><g transform='translate(8,-20) scale(.45)'><path d='M72 192A129.6 129.6 0 0 1 120 71.6A129.6 129.6 0 0 1 168 192L153 192A114.6 114.6 0 0 0 120 87.9A114.6 114.6 0 0 0 87 192Z'/><path d='M72 74.9A129.6 129.6 0 0 1 146 192L131 192A114.6 114.6 0 0 0 16.4 74.9Z'/><path d='M168 74.9A129.6 129.6 0 0 0 94 192L109 192A114.6 114.6 0 0 1 223.6 74.9Z'/></g><g transform='translate(136,92) scale(.45)'><path d='M72 192A129.6 129.6 0 0 1 120 71.6A129.6 129.6 0 0 1 168 192L153 192A114.6 114.6 0 0 0 120 87.9A114.6 114.6 0 0 0 87 192Z'/><path d='M72 74.9A129.6 129.6 0 0 1 146 192L131 192A114.6 114.6 0 0 0 16.4 74.9Z'/><path d='M168 74.9A129.6 129.6 0 0 0 94 192L109 192A114.6 114.6 0 0 1 223.6 74.9Z'/></g></g></svg>");
+  opacity:.045}
+.ath-paper::after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 44%,rgba(255,255,255,.8) 50%,transparent 56%);mix-blend-mode:soft-light;opacity:0;animation:ath-sheen 14s var(--ease-athar) infinite}
+@keyframes ath-sheen{0%{transform:translateX(60%);opacity:0}8%{opacity:1}40%{transform:translateX(-60%);opacity:0}100%{transform:translateX(-60%);opacity:0}}
+.ath-paper.dark{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='112' viewBox='0 0 256 224'><g fill='none' stroke='%23F6EBE0' stroke-width='2.2' stroke-linejoin='round'><g transform='translate(8,-20) scale(.45)'><path d='M72 192A129.6 129.6 0 0 1 120 71.6A129.6 129.6 0 0 1 168 192L153 192A114.6 114.6 0 0 0 120 87.9A114.6 114.6 0 0 0 87 192Z'/><path d='M72 74.9A129.6 129.6 0 0 1 146 192L131 192A114.6 114.6 0 0 0 16.4 74.9Z'/><path d='M168 74.9A129.6 129.6 0 0 0 94 192L109 192A114.6 114.6 0 0 1 223.6 74.9Z'/></g><g transform='translate(136,92) scale(.45)'><path d='M72 192A129.6 129.6 0 0 1 120 71.6A129.6 129.6 0 0 1 168 192L153 192A114.6 114.6 0 0 0 120 87.9A114.6 114.6 0 0 0 87 192Z'/><path d='M72 74.9A129.6 129.6 0 0 1 146 192L131 192A114.6 114.6 0 0 0 16.4 74.9Z'/><path d='M168 74.9A129.6 129.6 0 0 0 94 192L109 192A114.6 114.6 0 0 1 223.6 74.9Z'/></g></g></svg>");opacity:.07}
+.ath-hz{position:absolute;top:0;left:0;right:0;height:140px;pointer-events:none;overflow:hidden;z-index:0}
+.ath-hz svg{width:100%;height:140px;display:block}
+.ath-hz path{fill:none;stroke:var(--hz-color,#F1D9A8);stroke-width:1.1;vector-effect:non-scaling-stroke;opacity:.32}
+.ath-hz .ath-hzglow{stroke-width:2.6;opacity:0;stroke-dasharray:200 4000;animation:ath-travel 9s var(--ease-athar) infinite}
+.ath-hz .ath-hzglow.b{animation-delay:1.2s}
+@keyframes ath-travel{0%{stroke-dashoffset:0;opacity:0}8%{opacity:.9}60%{stroke-dashoffset:-4200;opacity:0}100%{stroke-dashoffset:-4200;opacity:0}}
+.ath-hz.light{--hz-color:#D4614A}
+.ath-divider{display:block;width:100%;height:18px;margin:6px 0 10px}
+.ath-divider path{fill:none;stroke:var(--zone-echo);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.45}
+.ath-divider rect{fill:var(--zone-echo);opacity:.75}
+html[data-engrave="none"] .ath-paper,html[data-engrave="none"] .ath-hz{display:none}
+html[data-engrave="soft"] .ath-paper{opacity:.03}html[data-engrave="soft"] .ath-paper::after,html[data-engrave="soft"] .ath-hzglow{animation:none}
+html[data-athar-plain="1"] .ath-paper,html[data-athar-plain="1"] .ath-hz{display:none} /* مفتاح «تبسيط الخلفية» */
+@media print{.ath-paper,.ath-hz,.ath-veil{display:none!important}}
+
+/* ── (5) ستار الأثر — العلامة الكاملة مرّة عند الدخول، وبعد سكون طويل؛ ثم تتفرّق في الطبقات ── */
+.ath-veil{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--athar-dusk);color:#F6EBE0;opacity:1;transition:opacity .7s var(--ease-athar),visibility 0s linear .7s;visibility:visible}
+.ath-veil.hide{opacity:0;visibility:hidden;pointer-events:none}
+.ath-veil svg{width:min(42vw,220px);height:auto;overflow:visible;animation:ath-veil-in .9s var(--ease-athar) both}
+.ath-veil .ath-veil-echo{transform-origin:120px 192px;opacity:0;animation:ath-veil-rip 3s var(--ease-athar) infinite}
+.ath-veil .ath-veil-echo.b{animation-delay:.6s}.ath-veil .ath-veil-echo.c{animation-delay:1.2s}
+.ath-veil .ath-veil-echo path{fill:none;stroke:#E8795C;stroke-width:2.2;stroke-linecap:round}
+@keyframes ath-veil-rip{0%{opacity:0;transform:scale(.92)}12%{opacity:.8}100%{opacity:0;transform:scale(1.28)}}
+@keyframes ath-veil-in{0%{opacity:0;transform:scale(.86)}100%{opacity:1;transform:none}}
+.ath-veil b{font-family:var(--font-read),serif;font-size:clamp(40px,8vw,64px);font-weight:700;letter-spacing:.02em;animation:ath-veil-in 1s .25s var(--ease-athar) both}
+.ath-veil small{font-size:clamp(14px,2.6vw,18px);color:#F1D9A8;font-weight:500;animation:ath-veil-in 1s .5s var(--ease-athar) both}
+.ath-veil .ath-veil-doors{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;animation:ath-veil-in 1s .8s var(--ease-athar) both}
+.ath-veil .ath-veil-doors span{border:1px solid rgba(246,235,224,.4);background:rgba(246,235,224,.1);border-radius:999px;padding:4px 14px;font-size:13px}
+.ath-veil button{position:absolute;bottom:26px;inset-inline-end:26px;background:transparent;border:1px solid rgba(246,235,224,.4);color:#F6EBE0;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer}

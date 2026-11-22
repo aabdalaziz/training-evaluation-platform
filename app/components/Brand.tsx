@@ -11,18 +11,32 @@ import { sbLazy, hasStoredSession } from '../../lib/supabase/lazy';
 import { BRAND } from '../../lib/portal/content';
 import type { Lang } from '../../lib/portal/content';
 
-/** شعار أَثَر: حلقات أثر متدرجة + الاسم */
-export function AtharMark({ size = 36, light = false }: { size?: number; light?: boolean }) {
-  const c1 = light ? '#fff' : BRAND.colors.navy, c2 = light ? '#c9a24b' : BRAND.colors.teal;
+/** شعار أَثَر v1.2 (المَعلَم «ج» + شريط R1): قوس بخطّين جانبيين منتشرين، شريط تدرّج واحد متّصل (ليل → برقوقي → مرجاني → رملي)،
+ *  معيّن مرجاني في القلب وقمّة رملية. `light` للسطوح الداكنة (الشريط يبدأ من برقوقي فاتح بدل الليل). الـ id فريد لكل نسخة حتى لا تتصادم التدرّجات. */
+let markSeq = 0;
+export function AtharMark({ size = 36, light = false, echo = false }: { size?: number; light?: boolean; echo?: boolean }) {
+  const [uid] = useState(() => `am${++markSeq}`);
+  const g = `${uid}g`;
+  const stops = light ? ['#7A3E5C', '#8E4A68', '#D4614A', '#D9A866'] : ['#22101F', '#3A1F36', '#D4614A', '#D9A866'];
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
-      <circle cx="24" cy="24" r="21" fill="none" stroke={c1} strokeWidth="2.5" opacity=".25" />
-      <circle cx="24" cy="24" r="14" fill="none" stroke={c1} strokeWidth="2.5" opacity=".55" />
-      <circle cx="24" cy="24" r="7" fill={c2} />
-      <circle cx="24" cy="24" r="2.5" fill={light ? c1 : '#fff'} />
+    <svg width={size} height={size} viewBox="0 30 240 180" aria-hidden="true" style={{ overflow: 'visible' }}>
+      <defs><linearGradient id={g} gradientUnits="userSpaceOnUse" x1="120" y1="192" x2="120" y2="60"><stop offset="0" stopColor={stops[0]} /><stop offset=".42" stopColor={stops[1]} /><stop offset=".72" stopColor={stops[2]} /><stop offset="1" stopColor={stops[3]} /></linearGradient></defs>
+      {echo && <g className="ath-mark-echo"><path d="M1.4 49.2 A143.6 143.6 0 0 1 129.6 103.6" fill="none" stroke="#E8795C" strokeWidth="2.2" strokeLinecap="round" opacity=".5" /><path d="M238.6 49.2 A143.6 143.6 0 0 0 110.4 103.6" fill="none" stroke="#E8795C" strokeWidth="2.2" strokeLinecap="round" opacity=".5" /></g>}
+      <path d="M72.0 192 A129.6 129.6 0 0 1 120.0 71.6 A129.6 129.6 0 0 1 168.0 192 L153.0 192 A114.6 114.6 0 0 0 120.0 87.9 A114.6 114.6 0 0 0 87.0 192 Z" fill={`url(#${g})`} />
+      <path d="M72.0 74.9 A129.6 129.6 0 0 1 146.0 192 L131.0 192 A114.6 114.6 0 0 0 16.4 74.9 Z" fill={`url(#${g})`} />
+      <path d="M168.0 74.9 A129.6 129.6 0 0 0 94.0 192 L109.0 192 A114.6 114.6 0 0 1 223.6 74.9 Z" fill={`url(#${g})`} />
+      <rect x="115.5" y="97.54" width="9" height="9" rx="1.26" transform="rotate(45 120 102.035)" fill="#E8795C" />
+      <rect x="112.5" y="63.12" width="15" height="15" rx="2.1" transform="rotate(45 120 70.617)" fill="#D9A866" />
     </svg>
   );
 }
+/** مسارات العلامة الخام (للستار والنقوش) */
+export const MARK_PATHS = [
+  'M72.0 192 A129.6 129.6 0 0 1 120.0 71.6 A129.6 129.6 0 0 1 168.0 192 L153.0 192 A114.6 114.6 0 0 0 120.0 87.9 A114.6 114.6 0 0 0 87.0 192 Z',
+  'M72.0 74.9 A129.6 129.6 0 0 1 146.0 192 L131.0 192 A114.6 114.6 0 0 0 16.4 74.9 Z',
+  'M168.0 74.9 A129.6 129.6 0 0 0 94.0 192 L109.0 192 A114.6 114.6 0 0 1 223.6 74.9 Z',
+];
+export const MARK_ARCS = ['M1.4 49.2 A143.6 143.6 0 0 1 129.6 103.6', 'M238.6 49.2 A143.6 143.6 0 0 0 110.4 103.6'];
 
 /** صفاتي وصلاحياتي (P43-ب): قراءة واحدة من /api/roles لكل جلسة (ذاكرة الجلسة 10 دقائق، مفتاحها ذيل الرمز حتى لا تختلط جلستان)،
  *  يتشاركها شارة الباب وشريط مركز القيادة وغلاف AdminShell. الزائر بلا جلسة مخزَّنة لا يدفع شيئًا. */

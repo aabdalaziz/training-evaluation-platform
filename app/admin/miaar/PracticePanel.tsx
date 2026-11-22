@@ -92,11 +92,11 @@ export default function PracticePanel({ inviteId, auth, onChanged }: { inviteId:
   </div>;
 }
 export const PR_CSS = `
-.pr{margin-top:12px;border-top:1px dashed #e2e8f0;padding-top:10px;display:grid;gap:8px}.pr h4{margin:0;font-size:15px}.pr h4 small{font-weight:600;color:#64748b;font-size:12px;margin-inline-start:6px}
+.pr{margin-top:12px;border-top:1px dashed #EADFD6;padding-top:10px;display:grid;gap:8px}.pr h4{margin:0;font-size:15px}.pr h4 small{font-weight:600;color:#8E7F8A;font-size:12px;margin-inline-start:6px}
 .pr-units{display:flex;flex-wrap:wrap;gap:4px;max-width:220px}.pr-t td{font-size:12.5px}.pr-foot{margin:0;font-size:12px}
-.pr-modal{width:min(820px,100%)}.pr-days{list-style:none;margin:0;padding:0;display:grid;gap:6px}.pr-day{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;display:grid;gap:6px}.pr-day.mirror{background:#fffbeb;border-color:#fde68a}.pr-day.past{opacity:.7;background:#f8fafc}
-.pr-dh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}.pr-dh select{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid #cbd5e1;border-radius:8px;max-width:360px}.pr-dh small{color:#64748b;margin-inline-start:auto}
-.pr-note{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pr-note input{flex:1;min-width:200px;font:inherit;font-size:12.5px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px}.pr-note audio{height:32px;max-width:220px}
-.pr-text{margin:0;font-size:12.5px;color:#334155;background:#f0fdfa;border-radius:8px;padding:6px 8px;white-space:pre-wrap}
+.pr-modal{width:min(820px,100%)}.pr-days{list-style:none;margin:0;padding:0;display:grid;gap:6px}.pr-day{border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;display:grid;gap:6px}.pr-day.mirror{background:#fffbeb;border-color:#fde68a}.pr-day.past{opacity:.7;background:#FBF4EE}
+.pr-dh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}.pr-dh select{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid #D9CBC2;border-radius:8px;max-width:360px}.pr-dh small{color:#8E7F8A;margin-inline-start:auto}
+.pr-note{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pr-note input{flex:1;min-width:200px;font:inherit;font-size:12.5px;padding:6px 8px;border:1px solid #D9CBC2;border-radius:8px}.pr-note audio{height:32px;max-width:220px}
+.pr-text{margin:0;font-size:12.5px;color:#4A3645;background:#FBEDE7;border-radius:8px;padding:6px 8px;white-space:pre-wrap}
 
-.pr-creq{border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;margin:8px 0;background:#f8fafc;font-size:13px}.pr-creq.open{border-color:#fcd34d;background:#fffbeb}.pr-creq p{margin:0}.pr-creq-msg{margin:6px 0;padding:6px 10px;border-right:3px solid #0b8a83;background:#fff;border-radius:8px;color:#0f172a}.pr-creq-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}.pr-creq-act small{color:#64748b}`;
+.pr-creq{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;margin:8px 0;background:#FBF4EE;font-size:13px}.pr-creq.open{border-color:#fcd34d;background:#fffbeb}.pr-creq p{margin:0}.pr-creq-msg{margin:6px 0;padding:6px 10px;border-right:3px solid #D4614A;background:#fff;border-radius:8px;color:#2A1626}.pr-creq-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}.pr-creq-act small{color:#8E7F8A}`;

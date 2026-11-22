@@ -22,7 +22,7 @@ export const BRAND = {
   legal: { ar: 'شركة بوابة التميز للاستشارات والتدريب', en: 'CenterGate for Excellence' } as T,
   operatedBy: { ar: 'تُشغَّل تجاريًا عبر', en: 'Commercially operated by' } as T,
   copyrightYear: 2026,
-  colors: { navy: '#0f2a4e', teal: '#0b8a83', gold: '#c9a24b' },
+  colors: { navy: '#3A1F36', teal: '#D4614A', gold: '#D9A866' },
   /** الاختصار الإنجليزي الرسمي: TRACE = أثر، وحروفه أوائل الخدمات */
   acronym: 'TRACE',
   acronymLine: { ar: 'أَثَر = TRACE: حروفه أوائل خدماتنا', en: 'Athar means “trace” — and TRACE spells our services' } as T,

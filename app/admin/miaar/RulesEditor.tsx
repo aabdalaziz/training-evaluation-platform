@@ -66,12 +66,12 @@ export default function RulesEditor({ auth }: { auth: () => Promise<Record<strin
 
 const CSS = `
 .re .re-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.re h3{margin:0;font-size:17px}.re h3 small{display:block;font-size:12.5px;color:var(--muted);font-weight:700;margin-top:4px;line-height:1.6}
-.re-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.re-pill{display:inline-block;padding:3px 10px;border-radius:999px;background:#e2e8f0;color:#0f2a4e;font-size:12px;font-weight:900}
+.re-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.re-pill{display:inline-block;padding:3px 10px;border-radius:999px;background:#EADFD6;color:#3A1F36;font-size:12px;font-weight:900}
 .re-body{margin-top:14px;border-top:1px solid var(--line);padding-top:14px}.re-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.re-col{display:flex;flex-direction:column;gap:6px;font-weight:800;font-size:13px}.re-col small{color:var(--muted);font-weight:700;margin-inline-start:8px}
-.re-col textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;font-size:14px;line-height:1.8;resize:vertical;background:#fff;min-width:0}.re-col textarea[readonly]{background:#f8fafc}
+.re-col textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;font-size:14px;line-height:1.8;resize:vertical;background:#fff;min-width:0}.re-col textarea[readonly]{background:#FBF4EE}
 .re-help{font-size:12.5px;color:var(--muted);line-height:1.7;margin:10px 0}
-.re-pv{border:1px solid var(--line);border-radius:14px;overflow:hidden}.re-pvhead{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f1f5f9;font-size:13px}.re-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;font:inherit;font-size:12px;font-weight:800;margin-inline-start:6px;cursor:pointer}.re-tabs button.on{background:var(--navy,#0f2a4e);color:#fff;border-color:transparent}
-.re-box{max-height:320px;overflow:auto;padding:14px 18px;line-height:1.9;font-size:14.5px;background:#fbfcfe}.re-box h4{margin:12px 0 4px;font-size:15px;color:var(--navy,#0f2a4e)}.re-box h4:first-child{margin-top:0}.re-box ul{margin:0;padding-inline-start:22px}.re-box p{margin:6px 0}
+.re-pv{border:1px solid var(--line);border-radius:14px;overflow:hidden}.re-pvhead{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#F6EBE0;font-size:13px}.re-tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;font:inherit;font-size:12px;font-weight:800;margin-inline-start:6px;cursor:pointer}.re-tabs button.on{background:var(--navy,#3A1F36);color:#fff;border-color:transparent}
+.re-box{max-height:320px;overflow:auto;padding:14px 18px;line-height:1.9;font-size:14.5px;background:#fbfcfe}.re-box h4{margin:12px 0 4px;font-size:15px;color:var(--navy,#3A1F36)}.re-box h4:first-child{margin-top:0}.re-box ul{margin:0;padding-inline-start:22px}.re-box p{margin:6px 0}
 .re-msg{margin:10px 0 0;font-weight:800;font-size:13.5px}.re-msg.ok{color:#166534}.re-msg.err{color:#991b1b}
 .re-foot{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}.re-hint{color:var(--muted);font-weight:700}
 @media (max-width:860px){.re-cols{grid-template-columns:1fr}}

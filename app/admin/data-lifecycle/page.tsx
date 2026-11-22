@@ -13,7 +13,7 @@ type AuditRow = { id: string; created_at: string; actor_id: string | null; actio
 type Kind = 'BOTH' | 'DAILY' | 'FINAL' | 'END' | 'ALL' | 'REMOTE' | 'LINKS' | 'EMPTY_ROOMS';   /* P49 */
 const KIND_TXT: Record<Kind, string> = { BOTH: 'اليومي والختامي', DAILY: 'اليومي فقط', FINAL: 'الختامي فقط', END: 'استبيان نهاية البرنامج فقط', ALL: 'كل الاستبيانات (يومي + ختامي + نهاية البرنامج)', REMOTE: 'استطلاع التعلّم عن بُعد', LINKS: 'روابط التقويم (/e/…) — الاستجابات تبقى', EMPTY_ROOMS: 'الشعب الفارغة (بلا أيّ استجابة أو رابط) — داخل برنامج محدّد' };
 
-const NAVY = '#0f2a4e';
+const NAVY = '#3A1F36';
 
 export default function DataLifecyclePage() {
   const db = supabase();
@@ -227,28 +227,28 @@ function explain(m: string): string {
 }
 
 const CSS = `
-.dl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
-.dl-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.dl-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.dl-head p{margin:0;color:#64748b;font-size:13px}
+.dl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
+.dl-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
+.dl-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.dl-head p{margin:0;color:#8E7F8A;font-size:13px}
 .dl-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
 .dl-nav{display:flex;gap:8px;flex-wrap:wrap}
-.dl-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
+.dl-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
 .dl-btn:disabled{opacity:.5;cursor:not-allowed}.dl-btn.primary{background:${NAVY};color:#fff;border-color:${NAVY}}.dl-btn.danger{background:#b91c1c;color:#fff;border-color:#b91c1c}
 .dl-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;font-weight:700;line-height:1.7}
 .dl-alert.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}.dl-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.dl-alert.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
-.dl-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 22px;margin-bottom:14px}
+.dl-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
 .dl-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
 .dl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.dl label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#475569}
-.dl select,.dl input{border:1px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;color:#0f172a;background:#fff}
-.dl-scope{margin:12px 0;font-size:12px;font-weight:800;color:#334155;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:8px 12px;display:flex;gap:6px;align-items:center}
+.dl label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#5C4858}
+.dl select,.dl input{border:1px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;color:#2A1626;background:#fff}
+.dl-scope{margin:12px 0;font-size:12px;font-weight:800;color:#4A3645;background:#FBF4EE;border:1px dashed #D9CBC2;border-radius:10px;padding:8px 12px;display:flex;gap:6px;align-items:center}
 .dl-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start;margin-top:4px}
 .dl-preview{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px}
-.dl-preview.empty{background:#f8fafc;border-color:#e2e8f0}
-.dl-num{background:#fff;border-radius:10px;padding:10px 18px;text-align:center;min-width:120px}.dl-num b{display:block;font-size:26px;color:#b91c1c}.dl-preview.empty .dl-num b{color:#64748b}.dl-num span{font-size:12px;color:#64748b;font-weight:800}
-.dl-note{font-size:13px;font-weight:800;color:#7f1d1d;flex:1}.dl-preview.empty .dl-note{color:#475569}
-.dl-muted{color:#64748b;font-size:13px}
-.dl-table{width:100%;border-collapse:collapse;font-size:12.5px}.dl-table th{background:#f8fafc;text-align:right;padding:8px;color:#475569;font-size:12px;border-bottom:1px solid #e2e8f0}.dl-table td{padding:8px;border-bottom:1px solid #f1f5f9}
+.dl-preview.empty{background:#FBF4EE;border-color:#EADFD6}
+.dl-num{background:#fff;border-radius:10px;padding:10px 18px;text-align:center;min-width:120px}.dl-num b{display:block;font-size:26px;color:#b91c1c}.dl-preview.empty .dl-num b{color:#8E7F8A}.dl-num span{font-size:12px;color:#8E7F8A;font-weight:800}
+.dl-note{font-size:13px;font-weight:800;color:#7f1d1d;flex:1}.dl-preview.empty .dl-note{color:#5C4858}
+.dl-muted{color:#8E7F8A;font-size:13px}
+.dl-table{width:100%;border-collapse:collapse;font-size:12.5px}.dl-table th{background:#FBF4EE;text-align:right;padding:8px;color:#5C4858;font-size:12px;border-bottom:1px solid #EADFD6}.dl-table td{padding:8px;border-bottom:1px solid #F6EBE0}
 .dl-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
 .dl-modal-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px}
 .dl-modal-box h3{margin:0;color:#b91c1c;display:flex;align-items:center;gap:8px}.dl-modal-box p{margin:0;line-height:1.7}

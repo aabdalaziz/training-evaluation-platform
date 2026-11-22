@@ -17,7 +17,7 @@ import type { CertSettings } from '../../../lib/certificates/render';
 type AwardRow = { id: string; period_key: string; period_label: string; category: AwardCategory; category_label: string; rank: number; trainer_id: string | null; trainer_name: string; metric_value: number | null; metric_label: string | null; responses: number | null; mean: number | null; certificate_id: string | null; note: string | null; created_by_name: string | null; created_at: string };
 type Raw = { evaluations: any[]; answers: any[]; questions: any[]; classrooms: any[]; trainers: any[]; programs: any[] };
 
-const NAVY = '#0f2a4e';
+const NAVY = '#3A1F36';
 const ALLOWED = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const MEDAL = ['🥇', '🥈', '🥉'];
 
@@ -217,40 +217,40 @@ function explain(m: string): string {
 }
 
 const CSS = `
-.aw{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#f1f5f9;min-height:100vh;padding:22px;color:#0f172a}
-.aw-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.aw-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.aw-head p{margin:0;color:#64748b;font-size:13px}
+.aw{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
+.aw-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
+.aw-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.aw-head p{margin:0;color:#8E7F8A;font-size:13px}
 .aw-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
 .aw-nav{display:flex;gap:8px;flex-wrap:wrap}
-.aw-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
+.aw-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
 .aw-btn:disabled{opacity:.5;cursor:not-allowed}.aw-btn.primary{background:${NAVY};color:#fff;border-color:${NAVY}}
 .aw-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;font-weight:700;line-height:1.7}.aw-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .aw-x{border:0;background:transparent;cursor:pointer;color:inherit}
-.aw-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px 22px;margin-bottom:14px}.aw-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
+.aw-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}.aw-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
 .aw-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.aw label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#475569}
-.aw select,.aw input{border:1px solid #cbd5e1;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;color:#0f172a;background:#fff}
-.aw-scope{margin:12px 0 0;font-size:12.5px;font-weight:800;color:#334155;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.aw-muted{color:#64748b;font-size:12.5px;font-weight:700}
-.aw-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#f1f5f9;color:#475569}.aw-pill.ok{background:#ecfdf5;color:#047857}
+.aw label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#5C4858}
+.aw select,.aw input{border:1px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;color:#2A1626;background:#fff}
+.aw-scope{margin:12px 0 0;font-size:12.5px;font-weight:800;color:#4A3645;background:#FBF4EE;border:1px dashed #D9CBC2;border-radius:10px;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.aw-muted{color:#8E7F8A;font-size:12.5px;font-weight:700}
+.aw-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858}.aw-pill.ok{background:#ecfdf5;color:#047857}
 .aw-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
-.aw-cat{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;border-top:4px solid #cbd5e1}.aw-cat.has{border-top-color:#c9a24b}
+.aw-cat{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;border-top:4px solid #D9CBC2}.aw-cat.has{border-top-color:#D9A866}
 .aw-cat-head{display:flex;gap:10px;align-items:center;margin-bottom:10px}.aw-cat-head b{color:${NAVY};font-size:15px}
 .aw-cat-ic{width:38px;height:38px;border-radius:10px;background:#fff7e6;color:#b45309;display:grid;place-items:center;flex-shrink:0}
 .aw-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.aw-list li{display:flex;gap:10px;align-items:center;background:#f8fafc;border:1px solid #eef2f7;border-radius:12px;padding:8px 12px}.aw-list li.win{background:#fffbeb;border-color:#fde68a}.aw-list li.inel{opacity:.6}
-.aw-medal{font-size:20px;width:28px;text-align:center}.aw-who{flex:1}.aw-who b{font-size:14px;color:#0f172a}
+.aw-list li{display:flex;gap:10px;align-items:center;background:#FBF4EE;border:1px solid #F3E6DC;border-radius:12px;padding:8px 12px}.aw-list li.win{background:#fffbeb;border-color:#fde68a}.aw-list li.inel{opacity:.6}
+.aw-medal{font-size:20px;width:28px;text-align:center}.aw-who{flex:1}.aw-who b{font-size:14px;color:#2A1626}
 .aw-winners{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.aw-win{display:flex;flex-direction:column;gap:4px;background:linear-gradient(135deg,#0f2a4e,#0b8a83);color:#fff;border-radius:14px;padding:12px 16px;min-width:200px}.aw-win b{font-size:16px}.aw-win .aw-muted{color:#dbeafe}
+.aw-win{display:flex;flex-direction:column;gap:4px;background:linear-gradient(135deg,#3A1F36,#D4614A);color:#fff;border-radius:14px;padding:12px 16px;min-width:200px}.aw-win b{font-size:16px}.aw-win .aw-muted{color:#dbeafe}
 .aw-win-cat{font-size:11px;font-weight:900;background:rgba(255,255,255,.18);border-radius:999px;padding:2px 10px;align-self:flex-start}
-.aw-hrow .aw-win-cat{background:#eef2f7;color:${NAVY}}
-.aw-check{flex-direction:row!important;align-items:center;gap:8px!important;font-size:13px!important;color:#334155!important;margin:6px 0}
+.aw-hrow .aw-win-cat{background:#F3E6DC;color:${NAVY}}
+.aw-check{flex-direction:row!important;align-items:center;gap:8px!important;font-size:13px!important;color:#4A3645!important;margin:6px 0}
 .aw-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-.aw-period{border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.aw-period{border:1px solid #EADFD6;border-radius:12px;padding:12px 14px;margin-bottom:10px}
 .aw-period-head{display:flex;gap:10px;align-items:center;margin-bottom:8px}.aw-period-head b{color:${NAVY};flex:1}
 .aw-period-list{display:flex;flex-direction:column;gap:6px}
 .aw-hrow{display:flex;gap:10px;align-items:center;font-size:13px}
-.aw-ic{width:28px;height:28px;border:1px solid #e2e8f0;background:#fff;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:${NAVY}}.aw-ic:disabled{opacity:.4}
+.aw-ic{width:28px;height:28px;border:1px solid #EADFD6;background:#fff;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:${NAVY}}.aw-ic:disabled{opacity:.4}
 .aw-toast{position:fixed;bottom:18px;inset-inline-start:18px;background:${NAVY};color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:120}
 @media(max-width:900px){.aw-board{grid-template-columns:1fr}.aw-grid{grid-template-columns:1fr}.aw{padding:12px}}
 `;

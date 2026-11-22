@@ -57,7 +57,7 @@ export default function AdminTwinPage() {
         {tab === 'twin' && <div className="at-card">
           {twin.domains.length === 0 && <div className="at-empty">لا مستويات مهارات بعد لهذه المجموعة.</div>}
           {twin.domains.length > 0 && <table className="at-table"><thead><tr><th>المجال</th><th>أعضاء</th><th>مهارات</th><th>المستوى الآن</th><th>+180 يومًا · السياسة أ (لا تدخّل)</th><th>+180 يومًا · السياسة ب (محاكاة شهرية)</th><th>صدئة الآن → أ → ب</th></tr></thead><tbody>
-            {twin.domains.map((d: OrgTwinRow) => <tr key={d.domain}><td><b>{domainLabel(d.domain, 'ar')}</b></td><td>{d.members}</td><td>{d.skills}</td><td><Bar v={d.level_now} c="#0f2a4e" /></td><td><Bar v={d.level_180_a} c="#b45309" /></td><td><Bar v={d.level_180_b} c="#0b8a83" /><small className="at-gain">{d.level_180_b >= d.level_180_a ? `+${fmtLevel(d.level_180_b - d.level_180_a)}` : fmtLevel(d.level_180_b - d.level_180_a)} مقابل أ</small></td><td><span className="at-rust">{d.rusty_now}</span> → <span className="at-rust">{d.rusty_180_a}</span> → <span className="at-ok">{d.rusty_180_b}</span></td></tr>)}
+            {twin.domains.map((d: OrgTwinRow) => <tr key={d.domain}><td><b>{domainLabel(d.domain, 'ar')}</b></td><td>{d.members}</td><td>{d.skills}</td><td><Bar v={d.level_now} c="#3A1F36" /></td><td><Bar v={d.level_180_a} c="#b45309" /></td><td><Bar v={d.level_180_b} c="#D4614A" /><small className="at-gain">{d.level_180_b >= d.level_180_a ? `+${fmtLevel(d.level_180_b - d.level_180_a)}` : fmtLevel(d.level_180_b - d.level_180_a)} مقابل أ</small></td><td><span className="at-rust">{d.rusty_now}</span> → <span className="at-rust">{d.rusty_180_a}</span> → <span className="at-ok">{d.rusty_180_b}</span></td></tr>)}
           </tbody></table>}
           <p className="at-note">القراءة: السياسة ب تكلف ~20 دقيقة شهريًا للعضو (محاكاة بلا رسوم) وتحوّل مهارات من «صدئة» إلى «متوهّجة». استخدم الفرق بين العمودين في عرضك للجهة: الأثر المتوقّع لقرار صغير.</p>
         </div>}
@@ -84,16 +84,16 @@ export default function AdminTwinPage() {
 }
 
 const CSS = `
-.at{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
+.at{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
 .at-wrap{max-width:1120px;margin:0 auto;display:grid;gap:12px}
-.at-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.at-head p{margin:0;color:#64748b;font-size:14px;line-height:1.7;max-width:860px}.at-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b8a83}
-.at-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 18px;overflow-x:auto}.at-empty{color:#64748b;font-size:14px;text-align:center;padding:20px}.at-err{color:#b91c1c;font-size:13px}
-.at-bar2{display:grid;gap:10px}.at-bar2 label{font-size:13px;color:#334155;display:inline-flex;gap:8px;align-items:center}.at-bar2 select{border:1px solid #cbd5e1;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;min-width:220px}
-.at-kpis{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#475569}.at-kpis b{font-size:20px;color:#0f2a4e;margin-inline-end:4px}.at-kpis .rusty b{color:#b45309}
-.at-tabs{display:flex;gap:6px;flex-wrap:wrap}.at-tabs button{border:1px solid #e2e8f0;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#334155;cursor:pointer}.at-tabs button.on{background:#0f2a4e;color:#fff;border-color:#0f2a4e}
-.at-table{width:100%;border-collapse:collapse;font-size:13px}.at-table th{text-align:right;color:#64748b;font-weight:800;font-size:12px;padding:8px 10px;border-bottom:1px solid #e2e8f0;white-space:nowrap}.at-table td{padding:9px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;color:#0f172a}.at-table tr.off{opacity:.5}.at-table small{color:#64748b}
-.at-bar{position:relative;height:18px;background:#f1f5f9;border-radius:999px;min-width:120px;overflow:hidden}.at-bar i{display:block;height:100%;border-radius:999px}.at-bar b{position:absolute;inset:0;display:grid;place-content:center;font-size:11.5px;color:#0f172a;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}.at-gain{display:block;color:#0b8a83;font-weight:800;margin-top:2px}
-.at-rust{color:#b45309;font-weight:900}.at-ok{color:#0b8a83;font-weight:900}.at-st{color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px}
+.at-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.at-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.7;max-width:860px}.at-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
+.at-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;overflow-x:auto}.at-empty{color:#8E7F8A;font-size:14px;text-align:center;padding:20px}.at-err{color:#b91c1c;font-size:13px}
+.at-bar2{display:grid;gap:10px}.at-bar2 label{font-size:13px;color:#4A3645;display:inline-flex;gap:8px;align-items:center}.at-bar2 select{border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;min-width:220px}
+.at-kpis{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:#5C4858}.at-kpis b{font-size:20px;color:#3A1F36;margin-inline-end:4px}.at-kpis .rusty b{color:#b45309}
+.at-tabs{display:flex;gap:6px;flex-wrap:wrap}.at-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#4A3645;cursor:pointer}.at-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
+.at-table{width:100%;border-collapse:collapse;font-size:13px}.at-table th{text-align:right;color:#8E7F8A;font-weight:800;font-size:12px;padding:8px 10px;border-bottom:1px solid #EADFD6;white-space:nowrap}.at-table td{padding:9px 10px;border-bottom:1px solid #F6EBE0;vertical-align:middle;color:#2A1626}.at-table tr.off{opacity:.5}.at-table small{color:#8E7F8A}
+.at-bar{position:relative;height:18px;background:#F6EBE0;border-radius:999px;min-width:120px;overflow:hidden}.at-bar i{display:block;height:100%;border-radius:999px}.at-bar b{position:absolute;inset:0;display:grid;place-content:center;font-size:11.5px;color:#2A1626;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}.at-gain{display:block;color:#D4614A;font-weight:800;margin-top:2px}
+.at-rust{color:#b45309;font-weight:900}.at-ok{color:#D4614A;font-weight:900}.at-st{color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px}
 .at-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.at-chip{font-size:12px;background:#fff7ed;border:1px solid #fcd9b6;color:#9a3412;border-radius:999px;padding:4px 10px}
-.at-note{margin:12px 0 0;color:#64748b;font-size:12.5px;line-height:1.8}.at-note a{color:#0f2a4e;font-weight:800}
+.at-note{margin:12px 0 0;color:#8E7F8A;font-size:12.5px;line-height:1.8}.at-note a{color:#3A1F36;font-weight:800}
 `;

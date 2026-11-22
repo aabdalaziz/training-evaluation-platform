@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { IBM_Plex_Sans_Arabic, Noto_Naskh_Arabic } from 'next/font/google';
 import './style.css';
+import './athar-identity.css'; /* هوية v1.2 «غروب الحجاز»: الرموز · قوس اليوم · الحركة · الخلفية · الستار */
 import GlobalNavigation from './components/GlobalNavigation';
 import { PocketProvider } from './components/Pocket';
 import Guide from './components/Guide';
@@ -41,7 +42,7 @@ export function siteJsonLd(site: string) {
   return { '@context': 'https://schema.org', '@graph': [org, web] };
 }
 
-export const viewport: Viewport = { themeColor: '#0f2a4e', width: 'device-width', initialScale: 1 };
+export const viewport: Viewport = { themeColor: '#3A1F36', width: 'device-width', initialScale: 1 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

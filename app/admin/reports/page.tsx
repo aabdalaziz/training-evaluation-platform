@@ -35,9 +35,9 @@ export default function AdminReportsPage() {
   );
 }
 const CSS = `
-.am{min-height:100vh;background:#f8fafc;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
-.am :is(button,a,input,select,textarea):focus-visible{outline:3px solid #0f2a4e;outline-offset:2px}
-.am-xlink{margin:0}.am-xlink a{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:800;color:#0f2a4e;background:#fffaf0;border:1px solid #c9a24b;border-radius:999px;padding:6px 12px;text-decoration:none}.am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}.am-muted{color:#64748b}
-.am-head h1{margin:4px 0;font-size:26px;color:#0f2a4e}.am-head p{margin:0;color:#475569;font-size:14px;line-height:1.7;max-width:900px}.am-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b6f69}
-.am .pt-main{padding:0}.am .pt-box{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:18px;margin-bottom:12px}.am .pt-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b6f69}.am .pt-muted{color:#64748b}
+.am{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
+.am :is(button,a,input,select,textarea):focus-visible{outline:3px solid #3A1F36;outline-offset:2px}
+.am-xlink{margin:0}.am-xlink a{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:800;color:#3A1F36;background:#fffaf0;border:1px solid #D9A866;border-radius:999px;padding:6px 12px;text-decoration:none}.am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}.am-muted{color:#8E7F8A}
+.am-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.am-head p{margin:0;color:#5C4858;font-size:14px;line-height:1.7;max-width:900px}.am-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b6f69}
+.am .pt-main{padding:0}.am .pt-box{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:18px;margin-bottom:12px}.am .pt-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b6f69}.am .pt-muted{color:#8E7F8A}
 `;

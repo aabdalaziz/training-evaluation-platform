@@ -5,12 +5,12 @@
 :root{
   --font-ar: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif; /* احتياط فقط — next/font يضبط المتغيّر فعليًّا من app/layout.tsx */
   /* الهوية */
-  --navy:#0f2a4e; --navy-2:#163b6e; --navy-3:#1f4f8f; --navy-soft:#e8eef7;
-  --teal:#0b8a83; --teal-2:#0fa39a; --teal-soft:#e6f4f3; --teal-line:#b7e1dd;
-  --gold:#c9a24b; --gold-soft:#fbf5e4; --gold-line:#ead9a6;
+  --navy:#3A1F36; --navy-2:#4A2946; --navy-3:#6A3350; --navy-soft:#F6EBE0;
+  --teal:#D4614A; --teal-2:#E8795C; --teal-soft:#FBEDE7; --teal-line:#F0C9BC;
+  --gold:#D9A866; --gold-soft:#FBF4EE; --gold-line:#F1D9A8;
   /* المحايدات */
-  --bg:#f3f6fa; --surface:#ffffff; --surface-2:#f8fafc; --line:#e4eaf2; --line-2:#cfd9e6;
-  --ink:#0f172a; --ink-2:#334155; --muted:#64748b; --muted-2:#94a3b8;
+  --bg:#F6EBE0; --surface:#ffffff; --surface-2:#FBF4EE; --line:#EADFD6; --line-2:#D9CBC2;
+  --ink:#2A1626; --ink-2:#4A3645; --muted:#8E7F8A; --muted-2:#B3A5AE;
   /* الدلالات */
   --ok:#15803d; --ok-soft:#eafaf0; --ok-line:#b7e4c7;
   --info:#1d4ed8; --info-soft:#eef4ff; --info-line:#c3d4fb;
@@ -20,8 +20,8 @@
   /* الأشكال */
   --r-sm:8px; --r:12px; --r-lg:16px; --r-xl:20px;
   --shadow-sm:0 1px 2px rgba(15,23,42,.05);
-  --shadow:0 2px 6px rgba(15,42,78,.05), 0 10px 28px rgba(15,42,78,.06);
-  --ring:0 0 0 3px rgba(11,138,131,.18);
+  --shadow:0 2px 6px rgba(42,22,38,.05), 0 10px 28px rgba(42,22,38,.06);
+  --ring:0 0 0 3px rgba(212,97,74,.18);
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -30,9 +30,9 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ar);f
 :root{--read-size:1}html[data-read="2"]{--read-size:1.15}html[data-read="3"]{--read-size:1.35}
 .read{font-family:var(--font-read),"Noto Naskh Arabic","Amiri",serif;font-size:calc(18px * var(--read-size));line-height:2;font-weight:400;letter-spacing:0}
 .read b,.read strong{font-weight:700}
-.rs{display:inline-flex;align-items:center;gap:2px;border:1px solid #dbe3ea;border-radius:999px;padding:2px;background:#fff}.rs button{font:inherit;border:0;background:transparent;color:#0f2a4e;border-radius:999px;min-width:30px;height:28px;cursor:pointer;font-weight:700;line-height:1}.rs button[aria-pressed="true"]{background:#0f2a4e;color:#fff}.rs button:nth-child(2){font-size:15px}.rs button:nth-child(3){font-size:18px}
+.rs{display:inline-flex;align-items:center;gap:2px;border:1px solid #dbe3ea;border-radius:999px;padding:2px;background:#fff}.rs button{font:inherit;border:0;background:transparent;color:#3A1F36;border-radius:999px;min-width:30px;height:28px;cursor:pointer;font-weight:700;line-height:1}.rs button[aria-pressed="true"]{background:#3A1F36;color:#fff}.rs button:nth-child(2){font-size:15px}.rs button:nth-child(3){font-size:18px}
 button,input,select,textarea{font-family:inherit}
-::selection{background:rgba(11,138,131,.18)}
+::selection{background:rgba(212,97,74,.18)}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 bdi,.ltr{direction:ltr;unicode-bidi:plaintext}
 .num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:plaintext}
@@ -61,7 +61,7 @@ bdi,.ltr{direction:ltr;unicode-bidi:plaintext}
 /* P43-أ «أَثَر الواحد»: شعار أَثَر بدل الشريط اللوني، وشارة «بابي» مشتركة بين غلاف البوابة ومركز القيادة */
 .global-brand.athar::before{display:none}.global-brand.athar span{color:var(--navy)}.global-brand.athar svg{flex:none}
 .global-btn.hall{border-color:var(--gold-line);background:var(--gold-soft);color:var(--navy)}.global-btn.hall:hover{background:#fff4d6;border-color:var(--gold)}
-.pt-doorbadge{display:inline-flex;align-items:center;gap:7px;text-decoration:none;border:1px solid #c9a24b;background:#fffaf0;border-radius:999px;padding:5px 12px 5px 10px;min-height:38px;color:var(--navy)}.pt-doorbadge b{font-size:12.5px;font-weight:900}.pt-doorbadge small{font-size:11.5px;color:#64748b;font-weight:700;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pt-doordot{width:8px;height:8px;border-radius:50%;background:#c9a24b;box-shadow:0 0 0 3px rgba(201,162,75,.25)}.pt-doorbadge:hover{background:#fff4d6}.pt-doorbadge:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.pt-doorbadge{display:inline-flex;align-items:center;gap:7px;text-decoration:none;border:1px solid #D9A866;background:#fffaf0;border-radius:999px;padding:5px 12px 5px 10px;min-height:38px;color:var(--navy)}.pt-doorbadge b{font-size:12.5px;font-weight:900}.pt-doorbadge small{font-size:11.5px;color:#8E7F8A;font-weight:700;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pt-doordot{width:8px;height:8px;border-radius:50%;background:#D9A866;box-shadow:0 0 0 3px rgba(217,168,102,.25)}.pt-doorbadge:hover{background:#fff4d6}.pt-doorbadge:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 .global-burger{display:none;border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r-sm);padding:6px 10px;font-size:16px;cursor:pointer;color:var(--navy)}
 .global-links{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
 .global-link{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--r-sm);color:var(--ink-2);font-size:13px;font-weight:800;text-decoration:none;border:1px solid transparent;transition:.15s;position:relative}
@@ -84,7 +84,7 @@ bdi,.ltr{direction:ltr;unicode-bidi:plaintext}
    التباين: نص كحلي على ذهبي 500 = 5.99:1 · على 600 = 5.04:1 · على 700 = 4.63:1 (كلها ≥ 4.5).
    كل فئات الأزرار المحلية في البوابة (الـ63) تأخذ طبقة الحالات نفسها من هنا دون تعديل ملفاتها.
    ===================================================================== */
-:root{--gold-500:#c9a24b;--gold-600:#bb9340;--gold-700:#b58c33;--navy-700:#0f2a4e;--navy-800:#0b2140;--navy-900:#081a33;--key-ring:0 0 0 3px #fff,0 0 0 6px var(--teal)}
+:root{--gold-500:#D9A866;--gold-600:#B8893F;--gold-700:#B8893F;--navy-700:#3A1F36;--navy-800:#2E1A2C;--navy-900:#22101F;--key-ring:0 0 0 3px #fff,0 0 0 6px var(--teal)}
 .aa-btn,.ac-btn,.am-btn,.as-btn,.as-cta,.at-btn,.au-btn,.aw-btn,.ax-btn,.bf-btn,.bk-btn,.cc-btn,.ch-btn,.co-btn,.ct-btn,.db-btn,.dl-btn,.en-btn,.ev-btn,.fc-btn,.fu-btn,.he-btn,.hp-btn,.ia-btn,.ib-btn,.im-btn,.ir-btn,.lp-btn,.me-btn,.mi-btn,.mm-hbtn,.nb-btn,.nt-btn,.oap-cta,.ob-btn,.oc-btn,.ou-btn,.pe-btn,.pr-btn,.pt-btn,.py-btn,.rc-btn,.rd-btn,.rr-btn,.rs-cta,.tp-btn,.tr-btn,.vf-btn,.vt-btn,.bk-primary,.bk-soft{transition:background-color .15s ease,border-color .15s ease,color .15s ease,filter .15s ease,transform .12s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}
 .aa-btn:hover,.ac-btn:hover,.am-btn:hover,.as-btn:hover,.as-cta:hover,.at-btn:hover,.au-btn:hover,.aw-btn:hover,.ax-btn:hover,.bf-btn:hover,.bk-btn:hover,.cc-btn:hover,.ch-btn:hover,.co-btn:hover,.ct-btn:hover,.db-btn:hover,.dl-btn:hover,.en-btn:hover,.ev-btn:hover,.fc-btn:hover,.fu-btn:hover,.he-btn:hover,.hp-btn:hover,.ia-btn:hover,.ib-btn:hover,.im-btn:hover,.ir-btn:hover,.lp-btn:hover,.me-btn:hover,.mi-btn:hover,.mm-hbtn:hover,.nb-btn:hover,.nt-btn:hover,.oap-cta:hover,.ob-btn:hover,.oc-btn:hover,.ou-btn:hover,.pe-btn:hover,.pr-btn:hover,.pt-btn:hover,.py-btn:hover,.rc-btn:hover,.rd-btn:hover,.rr-btn:hover,.rs-cta:hover,.tp-btn:hover,.tr-btn:hover,.vf-btn:hover,.vt-btn:hover,.bk-primary:hover,.bk-soft:hover{filter:brightness(.94)}
 .aa-btn:active,.ac-btn:active,.am-btn:active,.as-btn:active,.as-cta:active,.at-btn:active,.au-btn:active,.aw-btn:active,.ax-btn:active,.bf-btn:active,.bk-btn:active,.cc-btn:active,.ch-btn:active,.co-btn:active,.ct-btn:active,.db-btn:active,.dl-btn:active,.en-btn:active,.ev-btn:active,.fc-btn:active,.fu-btn:active,.he-btn:active,.hp-btn:active,.ia-btn:active,.ib-btn:active,.im-btn:active,.ir-btn:active,.lp-btn:active,.me-btn:active,.mi-btn:active,.mm-hbtn:active,.nb-btn:active,.nt-btn:active,.oap-cta:active,.ob-btn:active,.oc-btn:active,.ou-btn:active,.pe-btn:active,.pr-btn:active,.pt-btn:active,.py-btn:active,.rc-btn:active,.rd-btn:active,.rr-btn:active,.rs-cta:active,.tp-btn:active,.tr-btn:active,.vf-btn:active,.vt-btn:active,.bk-primary:active,.bk-soft:active{filter:brightness(.88);transform:translateY(1px);box-shadow:inset 0 2px 6px rgba(8,26,51,.22)}
@@ -103,8 +103,8 @@ bdi,.ltr{direction:ltr;unicode-bidi:plaintext}
 .pt-btn.gold{background:var(--gold-500);border-color:var(--gold-500);color:var(--navy-700)}.pt-btn.gold:hover{background:var(--gold-600);border-color:var(--gold-600)}.pt-btn.gold:active{background:var(--gold-700);border-color:var(--gold-700)}
 .pt-btn.navy{background:var(--navy-700);border-color:var(--navy-700);color:#fff}.pt-btn.navy:hover{background:var(--navy-800);border-color:var(--navy-800)}.pt-btn.navy:active{background:var(--navy-900);border-color:var(--navy-900)}.pt-btn.navy>svg:first-child{background:var(--gold-500);color:var(--navy-700)}
 .pt-btn.teal{background:var(--teal);border-color:var(--teal);color:#fff}.pt-btn.teal:hover{background:#0a7a74;border-color:#0a7a74}.pt-btn.teal:active{background:#096a65}.pt-btn.teal>svg:first-child{background:#fff;color:var(--teal)}
-.pt-btn.ghost{background:#fff;color:var(--navy-700);border-color:#cbd5e1}.pt-btn.ghost:hover{background:#f1f5f9;border-color:#94a3b8}.pt-btn.ghost:active{background:#e2e8f0}
-.pt-btn.light{background:#fff;color:var(--navy-700);border-color:#fff}.pt-btn.light:hover{background:#f1f5f9;border-color:#f1f5f9}.pt-btn.light:active{background:#e2e8f0}
+.pt-btn.ghost{background:#fff;color:var(--navy-700);border-color:#D9CBC2}.pt-btn.ghost:hover{background:#F6EBE0;border-color:#B3A5AE}.pt-btn.ghost:active{background:#EADFD6}
+.pt-btn.light{background:#fff;color:var(--navy-700);border-color:#fff}.pt-btn.light:hover{background:#F6EBE0;border-color:#F6EBE0}.pt-btn.light:active{background:#EADFD6}
 .pt-btn.outline{background:transparent;color:#fff;border-color:rgba(255,255,255,.6)}.pt-btn.outline:hover{background:rgba(255,255,255,.12);border-color:#fff}.pt-btn.outline:active{background:rgba(255,255,255,.2)}.pt-btn.outline>svg:first-child{background:#fff;color:var(--navy-700)}
 .pt-btn.small{min-height:36px;padding:6px 14px;font-size:13px}.pt-btn.small>svg:first-child{width:18px;height:18px}
 .pt-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
