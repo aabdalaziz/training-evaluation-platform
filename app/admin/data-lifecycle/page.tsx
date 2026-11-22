@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Program = { id: string; name_ar: string | null; name_en: string | null; status?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id: string | null };
 type Trainer = { id: string; name: string };
@@ -114,32 +115,27 @@ export default function DataLifecyclePage() {
   function closeConfirm() { setConfirmOpen(false); setConfirmCode(''); setConfirmText(''); }
   function onConfirmKey(e: KeyboardEvent) { if (e.key === 'Escape') closeConfirm(); else if (e.key === 'Enter' && canConfirm) { e.preventDefault(); void doPurge(); } }
 
-  if (!ready) return <div className="dl" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="dl rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
 
   return (
-    <div className="dl" dir="rtl">
+    <div className="dl rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="dl-head">
-        <div>
-          <div className="dl-kicker"><Icon name="admin" size={14} /> مركز الإدارة</div>
-          <h1>إدارة دورة حياة البيانات</h1>
-          <p>معاينة ثم حذف نهائي منضبط لاستجابات التقييم فقط — البرامج والقاعات والمدربون والقوالب لا تتأثر.</p>
-        </div>
-        <nav className="dl-nav">
-          <Link href="/dashboard" className="dl-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/admin/management" className="dl-btn"><Icon name="admin" size={16} /> لوحة الإدارة</Link>
-          <Link href="/reports/center?type=raw" className="dl-btn"><Icon name="folder" size={16} /> تصدير البيانات أولًا</Link>
-        </nav>
-      </header>
+      <RoomHead
+        title={<>إدارة دورة حياة البيانات</>}
+        desc={<><p>معاينة ثم حذف نهائي منضبط لاستجابات التقييم فقط — البرامج والقاعات والمدربون والقوالب لا تتأثر.</p></>}
+        actions={<>
+          <Link href="/reports/center?type=raw" className="rm-btn"><Icon name="folder" size={16} /> تصدير البيانات أولًا</Link>
+        </>}
+      />
 
-      {!isAdmin && <div className="dl-alert err"><Icon name="alert" size={18} /> هذه الصفحة لمديري المنصة فقط (PLATFORM_ADMIN / ADMIN). صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
+      {!isAdmin && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة لمديري المنصة فقط (PLATFORM_ADMIN / ADMIN). صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
 
-      <div className="dl-alert warn">
+      <div className="rm-alert warn">
         <Icon name="alert" size={18} />
         <div><b>تنبيه:</b> الحذف نهائي ولا يمكن التراجع عنه. يُنصح بتصدير البيانات (Excel) من مركز التقارير قبل التفريغ. كل عملية تُسجَّل في سجل التدقيق باسم المنفّذ ونطاق الحذف والأعداد.</div>
       </div>
 
-      <section className="dl-card">
+      <section className="rm-card">
         <h2><Icon name="target" size={18} /> نطاق التفريغ</h2>
         <div className="dl-grid">
           <label>البرنامج<select value={programId} onChange={e => { setProgramId(e.target.value); setClassroomId('ALL'); setPreview(null); }}><option value="ALL">كل البرامج</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar || p.name_en}{p.status ? ` (${p.status})` : ''}</option>)}</select></label>
@@ -152,11 +148,11 @@ export default function DataLifecyclePage() {
         </div>
         <div className="dl-scope"><Icon name="flag" size={14} /> النطاق الحالي: {scope}</div>
         <div className="dl-actions">
-          <button className="dl-btn primary" onClick={doPreview} disabled={!isAdmin || busy !== null}><Icon name="evaluations" size={16} /> {busy === 'preview' ? 'جارٍ الحساب…' : 'معاينة ما سيُحذف'}</button>
-          {preview && preview.evaluations > 0 && <button className="dl-btn danger" onClick={() => setConfirmOpen(true)} disabled={busy !== null}><Icon name="trash" size={16} /> متابعة إلى الحذف النهائي</button>}
+          <button className="rm-btn primary" onClick={doPreview} disabled={!isAdmin || busy !== null}><Icon name="evaluations" size={16} /> {busy === 'preview' ? 'جارٍ الحساب…' : 'معاينة ما سيُحذف'}</button>
+          {preview && preview.evaluations > 0 && <button className="rm-btn danger" onClick={() => setConfirmOpen(true)} disabled={busy !== null}><Icon name="trash" size={16} /> متابعة إلى الحذف النهائي</button>}
         </div>
 
-        {error && <div className="dl-alert err"><Icon name="alert" size={18} /> {error}</div>}
+        {error && <div className="rm-alert err"><Icon name="alert" size={18} /> {error}</div>}
 
         {preview && (
           <div className={`dl-preview ${preview.evaluations ? '' : 'empty'}`}>
@@ -166,15 +162,15 @@ export default function DataLifecyclePage() {
           </div>
         )}
 
-        {done && <div className="dl-alert ok"><Icon name="check" size={18} /> تم الحذف: {done.evaluations.toLocaleString('en')} استجابة و{done.answers.toLocaleString('en')} إجابة. سُجّلت العملية في سجل التدقيق.</div>}
+        {done && <div className="rm-alert ok"><Icon name="check" size={18} /> تم الحذف: {done.evaluations.toLocaleString('en')} استجابة و{done.answers.toLocaleString('en')} إجابة. سُجّلت العملية في سجل التدقيق.</div>}
       </section>
 
-      <section className="dl-card">
+      <section className="rm-card">
         <h2><Icon name="clock" size={18} /> سجل التدقيق — آخر 20 عملية تفريغ</h2>
-        {auditErr && <div className="dl-muted">تعذّر قراءة سجل التدقيق ({auditErr}). تأكد من تنفيذ ملف SQL الخاص بجدول <code>audit_logs</code>.</div>}
-        {!auditErr && audit.length === 0 && <div className="dl-muted">لا توجد عمليات مسجلة.</div>}
+        {auditErr && <div className="rm-muted">تعذّر قراءة سجل التدقيق ({auditErr}). تأكد من تنفيذ ملف SQL الخاص بجدول <code>audit_logs</code>.</div>}
+        {!auditErr && audit.length === 0 && <div className="rm-muted">لا توجد عمليات مسجلة.</div>}
         {audit.length > 0 && (
-          <table className="dl-table">
+          <table className="rm-table">
             <thead><tr><th>التاريخ</th><th>النوع</th><th>النطاق</th><th>استجابات</th><th>إجابات</th><th>المنفّذ</th></tr></thead>
             <tbody>
               {audit.map(r => {
@@ -207,8 +203,8 @@ export default function DataLifecyclePage() {
             <label><span>رمز التأكيد الإداري</span><input name="dl-confirm-code" className="dl-mask" type="text" value={confirmCode} onChange={e => setConfirmCode(e.target.value)} onKeyDown={onConfirmKey} autoComplete="one-time-code" inputMode="numeric" data-lpignore="true" data-form-type="other" data-1p-ignore aria-describedby="dl-confirm-hint" data-testid="dl-code" /></label>
             <small id="dl-confirm-hint" className={`dl-hint${canConfirm ? ' ok' : ''}`} aria-live="polite" data-testid="dl-hint">{confirmHint}</small>
             <div className="dl-actions">
-              <button className="dl-btn" onClick={closeConfirm} disabled={busy !== null}>إلغاء</button>
-              <button className="dl-btn danger" onClick={doPurge} disabled={!canConfirm}>{busy === 'purge' ? 'جارٍ الحذف…' : 'احذف نهائيًا'}</button>
+              <button className="rm-btn" onClick={closeConfirm} disabled={busy !== null}>إلغاء</button>
+              <button className="rm-btn danger" onClick={doPurge} disabled={!canConfirm}>{busy === 'purge' ? 'جارٍ الحذف…' : 'احذف نهائيًا'}</button>
             </div>
           </div>
         </div>
@@ -227,17 +223,7 @@ function explain(m: string): string {
 }
 
 const CSS = `
-.dl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.dl-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.dl-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.dl-head p{margin:0;color:#8E7F8A;font-size:13px}
-.dl-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.dl-nav{display:flex;gap:8px;flex-wrap:wrap}
-.dl-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
-.dl-btn:disabled{opacity:.5;cursor:not-allowed}.dl-btn.primary{background:${NAVY};color:#fff;border-color:${NAVY}}.dl-btn.danger{background:#b91c1c;color:#fff;border-color:#b91c1c}
-.dl-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;font-weight:700;line-height:1.7}
-.dl-alert.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}.dl-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.dl-alert.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
-.dl-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.dl-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
+.dl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}.rm-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .dl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .dl label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#5C4858}
 .dl select,.dl input{border:1px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;color:#2A1626;background:#fff}
@@ -247,11 +233,9 @@ const CSS = `
 .dl-preview.empty{background:#FBF4EE;border-color:#EADFD6}
 .dl-num{background:#fff;border-radius:10px;padding:10px 18px;text-align:center;min-width:120px}.dl-num b{display:block;font-size:26px;color:#b91c1c}.dl-preview.empty .dl-num b{color:#8E7F8A}.dl-num span{font-size:12px;color:#8E7F8A;font-weight:800}
 .dl-note{font-size:13px;font-weight:800;color:#7f1d1d;flex:1}.dl-preview.empty .dl-note{color:#5C4858}
-.dl-muted{color:#8E7F8A;font-size:13px}
-.dl-table{width:100%;border-collapse:collapse;font-size:12.5px}.dl-table th{background:#FBF4EE;text-align:right;padding:8px;color:#5C4858;font-size:12px;border-bottom:1px solid #EADFD6}.dl-table td{padding:8px;border-bottom:1px solid #F6EBE0}
 .dl-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
 .dl-modal-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px}
 .dl-modal-box h3{margin:0;color:#b91c1c;display:flex;align-items:center;gap:8px}.dl-modal-box p{margin:0;line-height:1.7}
 .dl-modal-box label span{display:block;font-weight:800;font-size:13px;margin-bottom:4px}.dl-mask{-webkit-text-security:disc}.dl-hint{display:block;font-size:12.5px;color:#92400e;font-weight:700;line-height:1.6}.dl-hint.ok{color:#047857}
-@media(max-width:800px){.dl-grid{grid-template-columns:1fr}.dl{padding:12px}}
+@media(max-width:800px){.dl-grid{grid-template-columns:1fr}.dl{}}
 `;

@@ -11,6 +11,7 @@ import { Icon } from '../../../lib/ui/icons';
 import type { IconName } from '../../../lib/ui/icons';
 import { SEVERITY_LABEL, countBySeverity, kindIcon, kindLabel, openOnes, timeAgo, type Notification, type Severity } from '../../../lib/notifications/model';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Run = { id: number; ran_at: string; source: string; inserted: number; resolved: number };
 const WRITE_ROLES = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 
@@ -82,35 +83,30 @@ export default function NotificationsPage() {
     setList(l => l.map(n => (ids.includes(n.id) ? { ...n, ...patch } : n)));
   }
 
-  if (!ready) return <div className="nt" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="nt rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
   const lastRun = runs[0];
 
   return (
-    <div className="nt" dir="rtl">
+    <div className="nt rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="nt-head">
-        <div>
-          <div className="nt-kicker"><Icon name="bell" size={14} /> مركز الإدارة · الإشعارات</div>
-          <h1>مركز الإشعارات</h1>
-          <p>تنبيهات تلقائية من قواعد الجودة: حملات متابعة ناقصة أو صامتة، جلسات حضور لم تُغلق، شهادات لم تُصدر، قياس بعدي معطّل، نقل أثر ضعيف، وبرامج تجاوزت موعدها. يُفحص يوميًا 06:00 صباحًا ويمكن فحصه الآن.</p>
-        </div>
-        <nav className="nt-nav">
-          <Link href="/dashboard" className="nt-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/reports/center" className="nt-btn"><Icon name="chart" size={16} /> مركز التقارير</Link>
-          {canWrite && <button className="nt-btn primary" disabled={busy} onClick={scanNow}><Icon name="refresh" size={16} /> {busy ? 'جارٍ الفحص…' : 'فحص الآن'}</button>}
-        </nav>
-      </header>
-      {error && <div className="nt-alert bad">{error}</div>}
-      {msg && <div className="nt-alert ok">{msg}</div>}
+      <RoomHead
+        title={<>مركز الإشعارات</>}
+        desc={<><p>تنبيهات تلقائية من قواعد الجودة: حملات متابعة ناقصة أو صامتة، جلسات حضور لم تُغلق، شهادات لم تُصدر، قياس بعدي معطّل، نقل أثر ضعيف، وبرامج تجاوزت موعدها. يُفحص يوميًا 06:00 صباحًا ويمكن فحصه الآن.</p></>}
+        actions={<>
+          {canWrite && <button className="rm-btn primary" disabled={busy} onClick={scanNow}><Icon name="refresh" size={16} /> {busy ? 'جارٍ الفحص…' : 'فحص الآن'}</button>}
+        </>}
+      />
+      {error && <div className="rm-alert bad">{error}</div>}
+      {msg && <div className="rm-alert ok">{msg}</div>}
 
-      <section className="nt-kpis">
-        <button className={`nt-kpi ${sev === 'critical' ? 'on' : ''} critical`} onClick={() => setSev(sev === 'critical' ? '' : 'critical')}><span>حرج</span><b>{bySev.critical}</b></button>
-        <button className={`nt-kpi ${sev === 'warn' ? 'on' : ''} warn`} onClick={() => setSev(sev === 'warn' ? '' : 'warn')}><span>تنبيه</span><b>{bySev.warn}</b></button>
-        <button className={`nt-kpi ${sev === 'info' ? 'on' : ''} info`} onClick={() => setSev(sev === 'info' ? '' : 'info')}><span>معلومة</span><b>{bySev.info}</b></button>
-        <div className="nt-kpi plain"><span>آخر فحص</span><b>{lastRun && now ? timeAgo(lastRun.ran_at, now) : '—'}</b><small>{lastRun ? `${lastRun.source === 'cron' ? 'تلقائي' : 'يدوي'} · +${lastRun.inserted} / حُلّ ${lastRun.resolved}` : 'لم يُنفَّذ بعد'}</small></div>
+      <section className="rm-kpis">
+        <button className={`rm-kpi ${sev === 'critical' ? 'on' : ''} critical`} onClick={() => setSev(sev === 'critical' ? '' : 'critical')}><span>حرج</span><b>{bySev.critical}</b></button>
+        <button className={`rm-kpi ${sev === 'warn' ? 'on' : ''} warn`} onClick={() => setSev(sev === 'warn' ? '' : 'warn')}><span>تنبيه</span><b>{bySev.warn}</b></button>
+        <button className={`rm-kpi ${sev === 'info' ? 'on' : ''} info`} onClick={() => setSev(sev === 'info' ? '' : 'info')}><span>معلومة</span><b>{bySev.info}</b></button>
+        <div className="rm-kpi plain"><span>آخر فحص</span><b>{lastRun && now ? timeAgo(lastRun.ran_at, now) : '—'}</b><small>{lastRun ? `${lastRun.source === 'cron' ? 'تلقائي' : 'يدوي'} · +${lastRun.inserted} / حُلّ ${lastRun.resolved}` : 'لم يُنفَّذ بعد'}</small></div>
       </section>
 
-      <section className="nt-card">
+      <section className="rm-card">
         <div className="nt-toolbar">
           <div className="nt-seg">
             <button className={tab === 'open' ? 'on' : ''} onClick={() => setTab('open')}>المفتوحة <i>{open.length}</i></button>
@@ -119,11 +115,11 @@ export default function NotificationsPage() {
           </div>
           <select value={kind} onChange={e => setKind(e.target.value)}><option value="">كل الأنواع</option>{kinds.map(k => <option key={k} value={k}>{kindLabel(k)} · {k}</option>)}</select>
           <div className="nt-spacer" />
-          {tab !== 'resolved' && <button className="nt-btn small" disabled={!shown.some(n => !n.read_at)} onClick={() => setRead(shown.filter(n => !n.read_at).map(n => n.id), true)}><Icon name="check" size={14} /> تعليم الكل كمقروء</button>}
-          {canWrite && tab !== 'resolved' && <button className="nt-btn small" disabled={!shown.length} onClick={() => { if (confirm(`حلّ ${shown.length} إشعارًا يدويًا؟`)) resolve(shown.map(n => n.id), true); }}><Icon name="x" size={14} /> حلّ الكل</button>}
+          {tab !== 'resolved' && <button className="rm-btn small" disabled={!shown.some(n => !n.read_at)} onClick={() => setRead(shown.filter(n => !n.read_at).map(n => n.id), true)}><Icon name="check" size={14} /> تعليم الكل كمقروء</button>}
+          {canWrite && tab !== 'resolved' && <button className="rm-btn small" disabled={!shown.length} onClick={() => { if (confirm(`حلّ ${shown.length} إشعارًا يدويًا؟`)) resolve(shown.map(n => n.id), true); }}><Icon name="x" size={14} /> حلّ الكل</button>}
         </div>
 
-        {!shown.length && <div className="nt-empty"><Icon name="check" size={32} /><b>{tab === 'resolved' ? 'لا توجد إشعارات محلولة' : 'كل شيء على ما يرام'}</b><span>{tab === 'resolved' ? '' : 'لا توجد إشعارات مفتوحة تطابق الفلتر الحالي.'}</span></div>}
+        {!shown.length && <div className="rm-empty"><Icon name="check" size={32} /><b>{tab === 'resolved' ? 'لا توجد إشعارات محلولة' : 'كل شيء على ما يرام'}</b><span>{tab === 'resolved' ? '' : 'لا توجد إشعارات مفتوحة تطابق الفلتر الحالي.'}</span></div>}
         <div className="nt-list">
           {shown.map(n => (
             <article key={n.id} className={`nt-item ${n.severity} ${n.read_at ? '' : 'unread'} ${n.resolved_at ? 'resolved' : ''}`}>
@@ -134,16 +130,16 @@ export default function NotificationsPage() {
                 <small>{now ? timeAgo(n.created_at, now) : ''}{n.read_at ? ' · مقروء' : ''}{n.resolved_at ? ` · حُلّ ${now ? timeAgo(n.resolved_at, now) : ''}` : ''}</small>
               </div>
               <div className="nt-actions">
-                {n.href && <Link href={n.href} className="nt-btn small primary" onClick={() => setRead([n.id], true)}><Icon name="arrow" size={14} /> فتح</Link>}
-                {!n.resolved_at && (n.read_at ? <button className="nt-btn small" onClick={() => setRead([n.id], false)}>غير مقروء</button> : <button className="nt-btn small" onClick={() => setRead([n.id], true)}><Icon name="check" size={14} /> مقروء</button>)}
-                {canWrite && (n.resolved_at ? <button className="nt-btn small" onClick={() => resolve([n.id], false)}><Icon name="refresh" size={14} /> إعادة فتح</button> : <button className="nt-btn small" onClick={() => resolve([n.id], true)}><Icon name="x" size={14} /> حلّ</button>)}
+                {n.href && <Link href={n.href} className="rm-btn small primary" onClick={() => setRead([n.id], true)}><Icon name="arrow" size={14} /> فتح</Link>}
+                {!n.resolved_at && (n.read_at ? <button className="rm-btn small" onClick={() => setRead([n.id], false)}>غير مقروء</button> : <button className="rm-btn small" onClick={() => setRead([n.id], true)}><Icon name="check" size={14} /> مقروء</button>)}
+                {canWrite && (n.resolved_at ? <button className="rm-btn small" onClick={() => resolve([n.id], false)}><Icon name="refresh" size={14} /> إعادة فتح</button> : <button className="rm-btn small" onClick={() => resolve([n.id], true)}><Icon name="x" size={14} /> حلّ</button>)}
               </div>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="nt-card nt-rules">
+      <section className="rm-card nt-rules">
         <h3><Icon name="settings" size={16} /> القواعد المفعّلة</h3>
         <ul>
           <li><b>متابعة الأثر:</b> برنامج ينتهي خلال 14 يومًا أو انتهى خلال 45 يومًا بلا حملة متابعة · حملة أُرسلت قبل 7 أيام بلا استجابات · حملة يدوية بلغ موعدها.</li>
@@ -153,31 +149,19 @@ export default function NotificationsPage() {
           <li><b>نقل الأثر (حرج):</b> متوسط تقدير المشرفين أقل من 60% عبر 3 تقييمات فأكثر.</li>
           <li><b>البرامج:</b> برنامج «نشط» تجاوز تاريخ نهايته بأكثر من 7 أيام.</li>
         </ul>
-        <p className="nt-muted">تُحلّ الإشعارات تلقائيًا عند زوال سببها، وتعود للظهور إن تكرر. بريد ملخص يصل لمديري المنصة عند ظهور إشعارات جديدة في الفحص اليومي (يمكن تخصيص المستلمين عبر المتغير <code>NOTIFY_EMAILS</code>).</p>
+        <p className="rm-muted">تُحلّ الإشعارات تلقائيًا عند زوال سببها، وتعود للظهور إن تكرر. بريد ملخص يصل لمديري المنصة عند ظهور إشعارات جديدة في الفحص اليومي (يمكن تخصيص المستلمين عبر المتغير <code>NOTIFY_EMAILS</code>).</p>
       </section>
     </div>
   );
 }
 
 const CSS = `
-.nt{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.nt *{box-sizing:border-box}
-.nt-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid #D9A866;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.nt-head h1{margin:2px 0 4px;font-size:24px;color:#3A1F36}.nt-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:760px;line-height:1.7}
-.nt-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.nt-nav{display:flex;gap:8px;flex-wrap:wrap}
-.nt-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:#3A1F36;cursor:pointer;text-decoration:none;white-space:nowrap}
-.nt-btn.primary{background:#3A1F36;color:#fff;border-color:#3A1F36}.nt-btn.small{padding:6px 10px;font-size:12px}.nt-btn:disabled{opacity:.5;cursor:default}
-.nt-alert{border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:700}.nt-alert.bad{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.nt-alert.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
-.nt-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
-.nt-kpi{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;text-align:start;font:inherit;cursor:pointer;min-width:0}
-.nt-kpi span{font-size:12px;font-weight:800;color:#8E7F8A}.nt-kpi b{font-size:28px;line-height:1.2;color:#3A1F36}.nt-kpi small{font-size:11px;color:#B3A5AE;font-weight:700}
-.nt-kpi.critical b{color:#dc2626}.nt-kpi.warn b{color:#d97706}.nt-kpi.info b{color:#D4614A}.nt-kpi.on{outline:2px solid #3A1F36}.nt-kpi.plain{cursor:default}
-.nt-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 20px;margin-bottom:14px}
+.nt{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
+.nt *{box-sizing:border-box}.rm-btn.small{padding:6px 10px;font-size:12px}
+.rm-kpi.critical b{color:#dc2626}.rm-kpi.plain{cursor:default}
 .nt-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.nt-spacer{flex:1}
 .nt-seg{display:inline-flex;border:1px solid #D9CBC2;border-radius:10px;overflow:hidden}.nt-seg button{border:0;background:#fff;padding:8px 12px;font:inherit;font-size:12.5px;font-weight:800;color:#5C4858;cursor:pointer;display:inline-flex;gap:6px;align-items:center}.nt-seg button.on{background:#3A1F36;color:#fff}.nt-seg i{font-style:normal;background:rgba(0,0,0,.08);border-radius:999px;padding:0 7px;font-size:11px}.nt-seg button.on i{background:rgba(255,255,255,.2)}
 .nt select{border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;font:inherit;font-size:12.5px;font-weight:700;background:#fff}
-.nt-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px;text-align:center;color:#8E7F8A}.nt-empty b{color:#3A1F36;font-size:15px}.nt-empty svg{color:#D4614A}
 .nt-list{display:flex;flex-direction:column;gap:8px}
 .nt-item{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:start;border:1px solid #EADFD6;border-radius:12px;padding:12px 14px;border-inline-start:4px solid #D9CBC2}
 .nt-item.critical{border-inline-start-color:#dc2626}.nt-item.warn{border-inline-start-color:#d97706}.nt-item.info{border-inline-start-color:#D4614A}
@@ -189,6 +173,5 @@ const CSS = `
 .nt-kind{font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 8px;background:#F6EBE0;color:#5C4858}
 .nt-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .nt-rules h3{margin:0 0 8px;font-size:14px;color:#3A1F36;display:flex;gap:8px;align-items:center}.nt-rules ul{margin:0;padding:0 18px 0 0;font-size:13px;line-height:1.9;color:#4A3645}.nt-rules code{background:#F6EBE0;padding:1px 6px;border-radius:6px;direction:ltr;display:inline-block}
-.nt-muted{color:#8E7F8A;font-size:12.5px;font-weight:700;line-height:1.7;margin:8px 0 0}
-@media(max-width:900px){.nt{padding:12px}.nt-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.nt-item{grid-template-columns:36px 1fr}.nt-actions{grid-column:1/-1;justify-content:flex-start}}
+@media(max-width:900px){.nt{}.nt-item{grid-template-columns:36px 1fr}.nt-actions{grid-column:1/-1;justify-content:flex-start}}
 `;

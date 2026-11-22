@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const NAVY = '#3A1F36', GOLD = '#D9A866';
 const ADMINS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'];
 type Step = { key: string; label_ar: string; done: boolean };
@@ -59,32 +60,28 @@ export default function DemoRoomPage() {
     w.document.close();
   };
 
-  if (!ready) return <div className="dm" dir="rtl"><style>{CSS}</style><div className="dm-card">…</div></div>;
+  if (!ready) return <div className="dm rm-page" dir="rtl"><style>{CSS}</style><div className="rm-card">…</div></div>;
   const run = st?.run || null; const status: string = run?.status || 'none'; const doneN = (st?.steps || []).filter((s) => s.done).length; const total = (st?.steps || []).length || 1;
   return (
-    <div className="dm" dir="rtl" data-testid="dm-root">
+    <div className="dm rm-page" dir="rtl" data-testid="dm-root">
       <style>{CSS}</style>
-      <header className="dm-head">
-        <div>
-          <div className="dm-kicker"><Icon name="play" size={14} /> العرض · غرفة العرض</div>
-          <h1>غرفة العرض — «{st?.org.name_ar || 'قيادة افتراضية — المنطقة س'}»</h1>
-          <p>جهة افتراضية مكتملة الحياة تُبنى بزرّ واحد عبر المسارات الحقيقية نفسها (رموز تدريبية بلا أسماء · برامج بتواريخ نسبية · نموذج مثبَّت · تقرير قيادة بقرار) وتُمحى بزرّ واحد دون أن تمسّ صفًّا واحدًا غير موسوم. كل صفحة تخصّها تحمل اسمها: «افتراضية».</p>
-        </div>
-        <nav className="dm-nav">
-          <Link href="/dashboard" className="dm-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/admin/miaar/invites" className="dm-btn"><Icon name="qr" size={16} /> دعوات مِعيار</Link>
-          <Link href="/org" className="dm-btn"><Icon name="users" size={16} /> بوابة الجهات</Link>
-        </nav>
-      </header>
+      <RoomHead
+        title={<>غرفة العرض — «{st?.org.name_ar || 'قيادة افتراضية — المنطقة س'}»</>}
+        desc={<><p>جهة افتراضية مكتملة الحياة تُبنى بزرّ واحد عبر المسارات الحقيقية نفسها (رموز تدريبية بلا أسماء · برامج بتواريخ نسبية · نموذج مثبَّت · تقرير قيادة بقرار) وتُمحى بزرّ واحد دون أن تمسّ صفًّا واحدًا غير موسوم. كل صفحة تخصّها تحمل اسمها: «افتراضية».</p></>}
+        actions={<>
+          <Link href="/admin/miaar/invites" className="rm-btn"><Icon name="qr" size={16} /> دعوات مِعيار</Link>
+          <Link href="/org" className="rm-btn"><Icon name="users" size={16} /> بوابة الجهات</Link>
+        </>}
+      />
       {err && <div className="dm-err" data-testid="dm-err">{err}</div>}
       {msg && <div className="dm-ok" data-testid="dm-msg">{msg}</div>}
 
-      <section className="dm-card dm-state" data-testid="dm-state" data-status={status}>
+      <section className="rm-card dm-state" data-testid="dm-state" data-status={status}>
         <div className="dm-ct"><Icon name="spark" size={16} /> حالة المشهد</div>
         <div className="dm-staterow">
           <div>
             {status === 'none' || status === 'destroyed' ? <b>غير مبنيّ</b> : status === 'ready' ? <b className="ok">مبنيّ · {fmt(run.built_at)}</b> : status === 'building' ? <b className="warn">يُبنى الآن — {stepAr || run.step_ar || '…'}</b> : status === 'destroying' ? <b className="warn">يُمحى الآن…</b> : <b className="bad">فشل: {run.error_ar}</b>}
-            {status === 'ready' && <p className="dm-muted">ساعة الصفر: {run.anchor} · {st?.learners} منسوبًا · {st?.presenters_n} عارضين · النموذج {run.manifest?.form_code || '—'} · التقرير السابق {run.manifest?.prev_report || '—'}</p>}
+            {status === 'ready' && <p className="rm-muted">ساعة الصفر: {run.anchor} · {st?.learners} منسوبًا · {st?.presenters_n} عارضين · النموذج {run.manifest?.form_code || '—'} · التقرير السابق {run.manifest?.prev_report || '—'}</p>}
             {st?.stale && <p className="dm-stale" data-testid="dm-stale"><Icon name="clock" size={14} /> ساعة العرض: مضى {st.days} يومًا على البناء — التواريخ النسبية تشيخ؛ أعد البناء قبل العرض (المحو ثم البناء يضبط «ساعة الصفر» على اليوم).</p>}
           </div>
           <div className="dm-acts">
@@ -102,15 +99,15 @@ export default function DemoRoomPage() {
       </section>
 
       {status === 'ready' && st?.cards?.length ? (
-        <section className="dm-card" data-testid="dm-cards">
-          <div className="dm-ct"><Icon name="qr" size={16} /> بطاقات العارضين ({st.cards.length}) <button type="button" className="dm-btn" data-testid="dm-print" onClick={printCards}><Icon name="print" size={14} /> طباعة A6</button></div>
-          <p className="dm-muted">حسابات افتراضية على نطاق محجوز لا يستقبل بريدًا. الأولى لرئيس اللجنة (مدير الجهة — يختم القرار)، والبقية منسوبون يرون صداه على الشاشة الثانية.</p>
-          <div className="dm-grid">{st.cards.map((c) => <div key={c.training_no} className="dm-pc" data-testid={`dm-card-${c.training_no}`}><b>{c.training_no}</b><span className="dm-pin">{c.pin}</span><p>{c.label_ar}</p><p className="dm-muted">{c.note_ar}</p><p className="dm-url">{c.enter_url}</p></div>)}</div>
+        <section className="rm-card" data-testid="dm-cards">
+          <div className="dm-ct"><Icon name="qr" size={16} /> بطاقات العارضين ({st.cards.length}) <button type="button" className="rm-btn" data-testid="dm-print" onClick={printCards}><Icon name="print" size={14} /> طباعة A6</button></div>
+          <p className="rm-muted">حسابات افتراضية على نطاق محجوز لا يستقبل بريدًا. الأولى لرئيس اللجنة (مدير الجهة — يختم القرار)، والبقية منسوبون يرون صداه على الشاشة الثانية.</p>
+          <div className="dm-grid">{st.cards.map((c) => <div key={c.training_no} className="dm-pc" data-testid={`rm-card-${c.training_no}`}><b>{c.training_no}</b><span className="dm-pin">{c.pin}</span><p>{c.label_ar}</p><p className="rm-muted">{c.note_ar}</p><p className="dm-url">{c.enter_url}</p></div>)}</div>
         </section>
       ) : null}
 
-      <section className="dm-card" data-testid="dm-path">
-        <div className="dm-ct"><Icon name="compass" size={16} /> مسار العرض — 9 محطّات <button type="button" className="dm-btn" data-testid="dm-copy" onClick={copyPath}><Icon name="copy" size={14} /> نسخ المسار</button></div>
+      <section className="rm-card" data-testid="dm-path">
+        <div className="dm-ct"><Icon name="compass" size={16} /> مسار العرض — 9 محطّات <button type="button" className="rm-btn" data-testid="dm-copy" onClick={copyPath}><Icon name="copy" size={14} /> نسخ المسار</button></div>
         <ol className="dm-st">
           {(st?.path || []).map((s) => <li key={s.no} data-testid={`dm-station-${s.no}`}>
             <div className="dm-stn">{s.no}</div>
@@ -120,7 +117,7 @@ export default function DemoRoomPage() {
         {pathTxt && <textarea className="dm-ta" readOnly value={pathTxt} data-testid="dm-path-text" />}
       </section>
 
-      <section className="dm-card dm-guard" data-testid="dm-guard">
+      <section className="rm-card dm-guard" data-testid="dm-guard">
         <div className="dm-ct"><Icon name="shield" size={16} /> الحواجز</div>
         <ul>
           <li>كل ما يُنشأ يُسجَّل في «البيان»؛ المحو يحذف من البيان فقط بترتيب التبعيات (جلسات → تقارير → نماذج → دعوات → حسابات → برامج → الجهة).</li>
@@ -134,19 +131,12 @@ export default function DemoRoomPage() {
 }
 
 const CSS = `
-.dm{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
+.dm{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
 .dm *{box-sizing:border-box}
-.dm-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.dm-head h1{margin:2px 0 4px;font-size:22px;color:${NAVY}}.dm-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:780px;line-height:1.7}
-.dm-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.dm-nav{display:flex;gap:8px;flex-wrap:wrap}
-.dm-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;color:${NAVY};border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none}
 .dm-primary{border:0;background:${NAVY};color:#fff;border-radius:10px;padding:10px 18px;font:inherit;font-weight:800;cursor:pointer;min-height:44px}.dm-primary:disabled{opacity:.5;cursor:not-allowed}
 .dm-danger{border:1px solid #fecaca;background:#fff;color:#991b1b;border-radius:10px;padding:10px 16px;font:inherit;font-weight:800;cursor:pointer;min-height:44px}.dm-danger:disabled{opacity:.4;cursor:not-allowed}
 .dm-in{font:inherit;border:1px solid #D9CBC2;border-radius:10px;padding:9px 12px;min-height:44px;min-width:170px}
-.dm-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;margin-bottom:14px}
 .dm-ct{font-weight:900;color:${NAVY};display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.dm-muted{color:#8E7F8A;font-size:13px;margin:4px 0}
 .dm-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;margin-bottom:12px}
 .dm-ok{background:#FBEDE7;border:1px solid #99f6e4;color:#115e59;border-radius:12px;padding:10px 14px;margin-bottom:12px}
 .dm-staterow{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:flex-start}
@@ -168,5 +158,5 @@ const CSS = `
 .dm-stb p{margin:3px 0;font-size:13px;color:#4A3645;line-height:1.75}.dm-stb a{color:#0b5fa5;word-break:break-all}
 .dm-ta{width:100%;min-height:220px;font:12.5px/1.7 ui-monospace,monospace;border:1px solid #D9CBC2;border-radius:12px;padding:10px;margin-top:10px;direction:rtl}
 .dm-guard ul{margin:0;padding-inline-start:20px;color:#4A3645;font-size:13px;line-height:1.9}
-@media (max-width:640px){.dm{padding:12px}.dm-head{padding:14px}.dm-st li{flex-direction:column}}
+@media (max-width:640px){.dm{}.dm-st li{flex-direction:column}}
 `;

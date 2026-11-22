@@ -11,6 +11,7 @@ import type { Dataset, ArchivableProgram, BackupStatus } from '../../../lib/back
 import { parseBackup, restorePlan, chunk, emptyResult, summarize, strategyLabel } from '../../../lib/backup/restore';
 import type { ParsedBackup, Strategy, TableResult } from '../../../lib/backup/restore';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866';
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const ADMINS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'];
@@ -169,34 +170,29 @@ export default function BackupPage() {
     }
   }
 
-  if (!ready) return <div className="bk" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="bk rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
   const scoped = data ? (scope === 'all' ? data : scopeToProgram(data, scope)) : null;
   const scopedCounts = scoped ? counts(scoped) : null;
 
   return (
-    <div className="bk" dir="rtl">
+    <div className="bk rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="bk-head">
-        <div>
-          <div className="bk-kicker"><Icon name="save" size={14} /> الاستدامة · النسخ الاحتياطي والأرشفة</div>
-          <h1>نسخة شاملة من بياناتك — وأرشفة منظّمة للبرامج المنتهية</h1>
-          <p>صدّر كل الجداول في ملف Excel واحد (ورقة لكل جدول + ورقة «الإجابات المفكوكة» الجاهزة للتحليل) أو ملف JSON كامل للاستعادة. أرشِف البرامج القديمة لتختفي من الاستمارات والجاهزية مع بقائها في التقارير التاريخية. كل عملية تُسجَّل في سجل التدقيق.</p>
-        </div>
-        <nav className="bk-nav">
-          <Link href="/dashboard" className="bk-btn"><Icon name="home" size={16} /> اللوحة</Link>
-          <Link href="/admin/health" className="bk-btn"><Icon name="check" size={16} /> صحة المنصة</Link>
-          <Link href="/help#backup" className="bk-btn"><Icon name="question" size={16} /> الدليل</Link>
-        </nav>
-      </header>
+      <RoomHead
+        title={<>نسخة شاملة من بياناتك — وأرشفة منظّمة للبرامج المنتهية</>}
+        desc={<><p>صدّر كل الجداول في ملف Excel واحد (ورقة لكل جدول + ورقة «الإجابات المفكوكة» الجاهزة للتحليل) أو ملف JSON كامل للاستعادة. أرشِف البرامج القديمة لتختفي من الاستمارات والجاهزية مع بقائها في التقارير التاريخية. كل عملية تُسجَّل في سجل التدقيق.</p></>}
+        actions={<>
+          <Link href="/help#backup" className="rm-btn"><Icon name="question" size={16} /> الدليل</Link>
+        </>}
+      />
 
-      {error && <div className="bk-alert">{error} <button className="bk-x" onClick={() => setError('')}>×</button></div>}
+      {error && <div className="rm-alert">{error} <button className="bk-x" onClick={() => setError('')}>×</button></div>}
       {notice && <div className="bk-notice">{notice} <button className="bk-x" onClick={() => setNotice('')}>×</button></div>}
 
-      <section className="bk-kpis">
-        <div className={`bk-kpi ${status.status === 'ok' ? 'ok' : status.status === 'warn' ? 'warn' : ''}`}><b>{status.days == null ? '—' : status.days}</b><span>يومًا منذ آخر نسخة</span><small>{status.label}</small></div>
-        <div className="bk-kpi"><b>{log.length}</b><span>نسخة مسجّلة</span><small>{lastBackup ? `آخرها ${lastBackup.format.toUpperCase()} · ${fmtDate(lastBackup.created_at)}` : 'لا يوجد بعد'}</small></div>
-        <div className="bk-kpi"><b>{split.active.length}</b><span>برنامج نشط</span><small>{candidates.length ? `${candidates.length} مرشح للأرشفة` : 'لا مرشحين للأرشفة'}</small></div>
-        <div className="bk-kpi"><b>{split.archived.length}</b><span>برنامج مؤرشف</span><small>مخفي من الاستمارات والجاهزية</small></div>
+      <section className="rm-kpis">
+        <div className={`rm-kpi ${status.status === 'ok' ? 'ok' : status.status === 'warn' ? 'warn' : ''}`}><b>{status.days == null ? '—' : status.days}</b><span>يومًا منذ آخر نسخة</span><small>{status.label}</small></div>
+        <div className="rm-kpi"><b>{log.length}</b><span>نسخة مسجّلة</span><small>{lastBackup ? `آخرها ${lastBackup.format.toUpperCase()} · ${fmtDate(lastBackup.created_at)}` : 'لا يوجد بعد'}</small></div>
+        <div className="rm-kpi"><b>{split.active.length}</b><span>برنامج نشط</span><small>{candidates.length ? `${candidates.length} مرشح للأرشفة` : 'لا مرشحين للأرشفة'}</small></div>
+        <div className="rm-kpi"><b>{split.archived.length}</b><span>برنامج مؤرشف</span><small>مخفي من الاستمارات والجاهزية</small></div>
       </section>
 
       <div className="bk-tabs" role="tablist">
@@ -207,8 +203,8 @@ export default function BackupPage() {
       </div>
 
       {tab === 'backup' && (
-        <section className="bk-card">
-          <div className="bk-card-head"><h2><Icon name="download" size={18} /> إنشاء نسخة</h2><span>تُبنى الملفات داخل متصفحك وتُحفظ على جهازك — لا تمر عبر أي خادم خارجي</span></div>
+        <section className="rm-card">
+          <div className="rm-card-head"><h2><Icon name="download" size={18} /> إنشاء نسخة</h2><span>تُبنى الملفات داخل متصفحك وتُحفظ على جهازك — لا تمر عبر أي خادم خارجي</span></div>
           <div className="bk-form">
             <label>النطاق
               <select value={scope} onChange={e => setScope(e.target.value)}>
@@ -219,14 +215,14 @@ export default function BackupPage() {
               </select>
             </label>
             <div className="bk-actions">
-              <button className="bk-btn primary" disabled={!!busy || !canWrite} onClick={exportXlsx}><Icon name="table" size={16} /> Excel (ورقة لكل جدول)</button>
-              <button className="bk-btn" disabled={!!busy || !canWrite} onClick={exportJson}><Icon name="doc" size={16} /> JSON (كامل للاستعادة)</button>
-              <button className="bk-btn small" disabled={!!busy} onClick={() => loadAll()}><Icon name="refresh" size={14} /> معاينة الأعداد</button>
+              <button className="rm-btn primary" disabled={!!busy || !canWrite} onClick={exportXlsx}><Icon name="table" size={16} /> Excel (ورقة لكل جدول)</button>
+              <button className="rm-btn" disabled={!!busy || !canWrite} onClick={exportJson}><Icon name="doc" size={16} /> JSON (كامل للاستعادة)</button>
+              <button className="rm-btn small" disabled={!!busy} onClick={() => loadAll()}><Icon name="refresh" size={14} /> معاينة الأعداد</button>
             </div>
           </div>
-          {!canWrite && <div className="bk-muted">التصدير والأرشفة متاحان لمديري المنصة فقط؛ يمكنك الاطلاع على السجل.</div>}
+          {!canWrite && <div className="rm-muted">التصدير والأرشفة متاحان لمديري المنصة فقط؛ يمكنك الاطلاع على السجل.</div>}
           {busy && <div className="bk-busy"><Icon name="refresh" size={14} /> {busy}</div>}
-          {missing.length > 0 && <div className="bk-muted">جداول تعذّر قراءتها (تُستثنى من النسخة): {missing.join(' · ')}</div>}
+          {missing.length > 0 && <div className="rm-muted">جداول تعذّر قراءتها (تُستثنى من النسخة): {missing.join(' · ')}</div>}
 
           {scopedCounts && (
             <div className="bk-grid">
@@ -245,21 +241,21 @@ export default function BackupPage() {
       )}
 
       {tab === 'archive' && (
-        <section className="bk-card">
-          <div className="bk-card-head"><h2><Icon name="folder" size={18} /> أرشفة البرامج</h2><span>المؤرشف: يختفي من استمارات التقييم العامة وقائمة الجاهزية، ويبقى في التقارير والبطاقات والتحليلات التاريخية</span></div>
+        <section className="rm-card">
+          <div className="rm-card-head"><h2><Icon name="folder" size={18} /> أرشفة البرامج</h2><span>المؤرشف: يختفي من استمارات التقييم العامة وقائمة الجاهزية، ويبقى في التقارير والبطاقات والتحليلات التاريخية</span></div>
           {candidates.length > 0 && <div className="bk-hint"><Icon name="alert" size={15} /> مرشحون للأرشفة (مكتملون أو انتهوا منذ أكثر من 90 يومًا): {candidates.map(c => c.name_ar).join('، ')}</div>}
           <div className="bk-two">
             <div>
               <h3>نشطة ({split.active.length})</h3>
               <ul className="bk-list">
-                {split.active.length === 0 && <li className="bk-empty">لا توجد برامج نشطة</li>}
+                {split.active.length === 0 && <li className="rm-empty">لا توجد برامج نشطة</li>}
                 {split.active.map(p => {
                   const cand = candidates.some(c => c.id === p.id); const d = p.end_date ? daysSince(p.end_date + 'T00:00:00Z') : null;
                   return (
                     <li key={p.id} className={cand ? 'cand' : ''}>
                       <div className="bk-pinfo"><b>{p.name_ar}</b><small>{String(p.status || '—')} · {p.end_date ? <>{d != null && d > 0 ? 'انتهى' : 'ينتهي'} <bdi>{p.end_date}</bdi>{d != null && d > 0 ? ` (منذ ${d} يومًا)` : ''}</> : 'بلا تاريخ انتهاء'}</small></div>
                       {cand && <span className="bk-tag">مرشح</span>}
-                      <button className="bk-btn small" disabled={!canWrite || archiving === p.id} onClick={() => setArchived(p, true)}><Icon name="folder" size={13} /> أرشفة</button>
+                      <button className="rm-btn small" disabled={!canWrite || archiving === p.id} onClick={() => setArchived(p, true)}><Icon name="folder" size={13} /> أرشفة</button>
                     </li>
                   );
                 })}
@@ -268,12 +264,12 @@ export default function BackupPage() {
             <div>
               <h3>مؤرشفة ({split.archived.length})</h3>
               <ul className="bk-list">
-                {split.archived.length === 0 && <li className="bk-empty">لا توجد برامج مؤرشفة</li>}
+                {split.archived.length === 0 && <li className="rm-empty">لا توجد برامج مؤرشفة</li>}
                 {split.archived.map(p => (
                   <li key={p.id} className="arch">
                     <div className="bk-pinfo"><b>{p.name_ar}</b><small>أُرشف <bdi>{fmtDate(p.archived_at)}</bdi></small></div>
                     <Link href={`/reports/program?program=${p.id}`} className="bk-link">البطاقة</Link>
-                    <button className="bk-btn small" disabled={!canWrite || archiving === p.id} onClick={() => setArchived(p, false)}><Icon name="refresh" size={13} /> إلغاء الأرشفة</button>
+                    <button className="rm-btn small" disabled={!canWrite || archiving === p.id} onClick={() => setArchived(p, false)}><Icon name="refresh" size={13} /> إلغاء الأرشفة</button>
                   </li>
                 ))}
               </ul>
@@ -283,9 +279,9 @@ export default function BackupPage() {
       )}
 
       {tab === 'restore' && (
-        <section className="bk-card">
-          <div className="bk-card-head"><h2><Icon name="refresh" size={18} /> الاستعادة من نسخة JSON</h2><span>ارفع ملف نسخة احتياطية (JSON) → افحصه بلا تغيير → ثم نفّذ. الاستعادة تعمل بصلاحيات الخادم وتُسجَّل كاملة في التدقيق.</span></div>
-          {!canRestore && <div className="bk-alert">الاستعادة متاحة لمدير المنصة (PLATFORM_ADMIN / SUPER_ADMIN) فقط.</div>}
+        <section className="rm-card">
+          <div className="rm-card-head"><h2><Icon name="refresh" size={18} /> الاستعادة من نسخة JSON</h2><span>ارفع ملف نسخة احتياطية (JSON) → افحصه بلا تغيير → ثم نفّذ. الاستعادة تعمل بصلاحيات الخادم وتُسجَّل كاملة في التدقيق.</span></div>
+          {!canRestore && <div className="rm-alert">الاستعادة متاحة لمدير المنصة (PLATFORM_ADMIN / SUPER_ADMIN) فقط.</div>}
           <div className="bk-form">
             <label>ملف النسخة (JSON)
               <input type="file" accept=".json,application/json" disabled={!canRestore} onChange={e => onFile(e.target.files?.[0] || null)} />
@@ -311,13 +307,13 @@ export default function BackupPage() {
                 </div>
               </div>
               <div className="bk-actions">
-                <button className="bk-btn" disabled={!!busy || !canRestore || !selTables.length} onClick={() => runRestore('dry')}><Icon name="search" size={16} /> فحص بلا تغيير</button>
+                <button className="rm-btn" disabled={!!busy || !canRestore || !selTables.length} onClick={() => runRestore('dry')}><Icon name="search" size={16} /> فحص بلا تغيير</button>
                 <input className="bk-confirm" placeholder="اكتب: استعادة" value={confirmWord} onChange={e => setConfirmWord(e.target.value)} disabled={!checked} />
-                <button className="bk-btn primary" disabled={!!busy || !canRestore || !checked || confirmWord.trim() !== 'استعادة'} onClick={() => { if (window.confirm(`تنفيذ الاستعادة؟\nالاستراتيجية: ${strategyLabel(strategy)}`)) runRestore(strategy); }}><Icon name="play" size={16} /> تنفيذ الاستعادة</button>
+                <button className="rm-btn primary" disabled={!!busy || !canRestore || !checked || confirmWord.trim() !== 'استعادة'} onClick={() => { if (window.confirm(`تنفيذ الاستعادة؟\nالاستراتيجية: ${strategyLabel(strategy)}`)) runRestore(strategy); }}><Icon name="play" size={16} /> تنفيذ الاستعادة</button>
               </div>
               {busy && <div className="bk-busy"><Icon name="refresh" size={14} /> {busy} {progress && <small>— {progress}</small>}</div>}
               {results.length > 0 && (
-                <div className="bk-tablewrap"><table className="bk-table">
+                <div className="bk-tablewrap"><table className="rm-table">
                   <thead><tr><th>الجدول</th><th>في النسخة</th><th>موجود مسبقًا</th><th>أُضيف</th><th>حُدّث</th><th>تُرك</th><th>فشل</th></tr></thead>
                   <tbody>{results.map(r => <tr key={r.table} className={r.failed ? 'bad' : ''}><td>{r.label}<br /><small className="bk-small" dir="ltr">{r.table}</small></td><td>{r.total}</td><td>{r.existing}</td><td>{r.inserted}</td><td>{r.updated}</td><td>{r.skipped}</td><td>{r.failed}{r.error && <div className="bk-err">{r.error}</div>}</td></tr>)}</tbody>
                 </table></div>
@@ -337,12 +333,12 @@ export default function BackupPage() {
       )}
 
       {tab === 'log' && (
-        <section className="bk-card">
-          <div className="bk-card-head"><h2><Icon name="clock" size={18} /> سجل النسخ الاحتياطي</h2><span>آخر 30 عملية</span></div>
-          {logErr && <div className="bk-muted">تعذّر قراءة السجل ({logErr}) — نفّذ ملف SQL الخاص بهذه المرحلة.</div>}
-          {log.length === 0 && !logErr && <div className="bk-empty">لم تُسجَّل أي نسخة بعد — ابدأ من تبويب «النسخ الاحتياطي».</div>}
+        <section className="rm-card">
+          <div className="rm-card-head"><h2><Icon name="clock" size={18} /> سجل النسخ الاحتياطي</h2><span>آخر 30 عملية</span></div>
+          {logErr && <div className="rm-muted">تعذّر قراءة السجل ({logErr}) — نفّذ ملف SQL الخاص بهذه المرحلة.</div>}
+          {log.length === 0 && !logErr && <div className="rm-empty">لم تُسجَّل أي نسخة بعد — ابدأ من تبويب «النسخ الاحتياطي».</div>}
           {log.length > 0 && (
-            <div className="bk-tablewrap"><table className="bk-table">
+            <div className="bk-tablewrap"><table className="rm-table">
               <thead><tr><th>التاريخ</th><th>المنفّذ</th><th>الصيغة</th><th>النطاق</th><th>الصفوف</th><th>الحجم</th><th>أكبر الجداول</th></tr></thead>
               <tbody>{log.map(r => {
                 const top = Object.entries(r.tables || {}).sort((a, b) => Number(b[1]) - Number(a[1])).slice(0, 3).map(([t, n]) => `${tableLabel(t)} ${n}`).join(' · ');
@@ -357,26 +353,16 @@ export default function BackupPage() {
 }
 
 const CSS = `
-.bk{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.bk *{box-sizing:border-box}
-.bk-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.bk-head h1{margin:2px 0 4px;font-size:22px;color:${NAVY}}.bk-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:760px;line-height:1.7}
-.bk-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.bk-nav{display:flex;gap:8px;flex-wrap:wrap}
-.bk-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none;white-space:nowrap}.bk-btn.primary{background:${TEAL};border-color:${TEAL};color:#fff}.bk-btn.small{padding:6px 10px;font-size:12px}.bk-btn:disabled{opacity:.5;cursor:not-allowed}
-.bk-alert{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:700;display:flex;justify-content:space-between;gap:10px}
+.bk{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
+.bk *{box-sizing:border-box}.rm-btn.small{padding:6px 10px;font-size:12px}
 .bk-notice{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:700;display:flex;justify-content:space-between;gap:10px}
 .bk-x{border:0;background:transparent;font:inherit;font-size:18px;cursor:pointer;color:inherit;line-height:1}
-.bk-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.bk-kpi{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px}.bk-kpi b{display:block;font-size:22px;color:${NAVY}}.bk-kpi span{font-size:12px;font-weight:800;color:#8E7F8A;display:block}.bk-kpi small{display:block;font-size:11.5px;color:#B3A5AE;margin-top:2px}.bk-kpi.ok b{color:#047857}.bk-kpi.warn b{color:#b45309}
 .bk-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.bk-tab{display:inline-flex;align-items:center;gap:6px;border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.bk-tab.on{background:${NAVY};border-color:${NAVY};color:#fff}
 .bk-badge{font-style:normal;background:#f59e0b;color:#fff;border-radius:999px;font-size:11px;padding:1px 7px;font-weight:900}
-.bk-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;margin-bottom:14px}
-.bk-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.bk-card-head h2{margin:0;font-size:16px;color:${NAVY};display:flex;align-items:center;gap:8px}.bk-card-head span{font-size:12px;color:#8E7F8A;font-weight:700;max-width:620px;line-height:1.6}
-.bk-card h3{margin:0 0 8px;font-size:14px;color:${NAVY}}
+.rm-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.rm-card-head h2{margin:0;font-size:16px;color:${NAVY};display:flex;align-items:center;gap:8px}.rm-card-head span{font-size:12px;color:#8E7F8A;font-weight:700;max-width:620px;line-height:1.6}
 .bk-form{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}.bk-form label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:800;color:#5C4858;min-width:260px}.bk-form select{font:inherit;font-size:13px;padding:9px 11px;border:1px solid #D9CBC2;border-radius:10px;background:#fff;color:#2A1626}
 .bk-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .bk-busy{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:${TEAL};margin:6px 0}
-.bk-muted{font-size:12.5px;color:#8E7F8A;margin:6px 0;line-height:1.7}
 .bk-hint{display:flex;gap:8px;align-items:flex-start;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;font-weight:700;line-height:1.6}
 .bk-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0}.bk-tile{border:1px solid #EADFD6;border-radius:12px;padding:10px;background:#FBF4EE}.bk-tile b{display:block;font-size:18px;color:${NAVY}}.bk-tile span{display:block;font-size:12px;font-weight:800;color:#5C4858}.bk-tile small{display:block;font-size:10.5px;color:#B3A5AE;direction:ltr;text-align:right}.bk-tile.empty{opacity:.55}
 .bk-how{font-size:12.5px;color:#5C4858;line-height:1.8;background:#FBF4EE;border:1px dashed #D9CBC2;border-radius:12px;padding:10px 14px;margin-top:8px}.bk-how ul{margin:4px 0 0;padding-inline-start:18px}
@@ -385,16 +371,15 @@ const CSS = `
 .bk-pinfo{flex:1;min-width:0;display:flex;flex-direction:column}.bk-pinfo b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bk-pinfo small{color:#8E7F8A;font-size:11.5px}
 .bk-tag{font-size:11px;font-weight:900;background:#f59e0b;color:#fff;border-radius:999px;padding:2px 8px}
 .bk-link{font-size:11.5px;font-weight:900;color:${TEAL};text-decoration:none;border:1px solid #99f6e4;border-radius:7px;padding:4px 8px;background:#FBEDE7;white-space:nowrap}
-.bk-empty{text-align:center;padding:18px 10px;color:#8E7F8A;font-size:12.5px;border:1px dashed #EADFD6;border-radius:12px}
-.bk-tablewrap{overflow-x:auto}.bk-table{width:100%;border-collapse:collapse;font-size:12.5px}.bk-table th{text-align:right;background:#FBF4EE;color:#5C4858;font-weight:800;padding:8px 10px;border-bottom:1px solid #EADFD6;white-space:nowrap}.bk-table td{padding:8px 10px;border-bottom:1px solid #F6EBE0;vertical-align:top}.bk-small{font-size:11.5px;color:#8E7F8A}
+.bk-tablewrap{overflow-x:auto}.bk-small{font-size:11.5px;color:#8E7F8A}
 .bk-strats{display:flex;flex-direction:column;gap:6px}.bk-radio{display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:700;color:#4A3645;cursor:pointer}
 .bk-form input[type=file]{font:inherit;font-size:12.5px;padding:7px;border:1px dashed #D9CBC2;border-radius:10px;background:#FBF4EE;max-width:100%}
 .bk-manifest{background:#FBF4EE;border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;margin:10px 0;font-size:12.5px}.bk-manifest b{display:block;direction:ltr;text-align:right;color:${NAVY}}.bk-manifest span{color:#5C4858}.bk-warns{margin:6px 0 0;padding-inline-start:18px;color:#9a3412;font-size:12px}
 .bk-tsel{margin:10px 0}.bk-tsel-head{display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:13px}.bk-tsel-head .bk-link{border:0;background:transparent;cursor:pointer;font:inherit;font-size:12px;font-weight:900;color:${TEAL}}.bk-tsel-head .bk-link.muted{color:#8E7F8A}
 .bk-tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.bk-tcheck{display:flex;gap:8px;align-items:center;border:1px solid #EADFD6;border-radius:10px;padding:7px 10px;font-size:12.5px;cursor:pointer;background:#fff}.bk-tcheck.on{border-color:${TEAL};background:#FBEDE7}.bk-tcheck span{flex:1}.bk-tcheck small{color:#8E7F8A;font-weight:800}
 .bk-confirm{font:inherit;font-size:13px;padding:9px 11px;border:1px solid #D9CBC2;border-radius:10px;width:160px}.bk-confirm:disabled{background:#F6EBE0}
-.bk-table tr.bad td{background:#fef2f2}.bk-err{font-size:11.5px;color:#b91c1c;font-weight:700;margin-top:3px}
+.rm-table tr.bad td{background:#fef2f2}.bk-err{font-size:11.5px;color:#b91c1c;font-weight:700;margin-top:3px}
 .bk-fmt{font-size:11px;font-weight:900;border-radius:6px;padding:2px 7px;background:#dcfce7;color:#166534}.bk-fmt.json{background:#dbeafe;color:#1e40af}
 @media(max-width:1100px){.bk-grid{grid-template-columns:repeat(3,1fr)}.bk-tgrid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:900px){.bk{padding:12px}.bk-kpis{grid-template-columns:repeat(2,1fr)}.bk-two{grid-template-columns:1fr}.bk-grid{grid-template-columns:repeat(2,1fr)}.bk-form label{min-width:100%}.bk-tgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.bk{}.bk-two{grid-template-columns:1fr}.bk-grid{grid-template-columns:repeat(2,1fr)}.bk-form label{min-width:100%}.bk-tgrid{grid-template-columns:repeat(2,1fr)}}
 `;

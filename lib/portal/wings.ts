@@ -72,4 +72,48 @@ export const readLastWing = (): string | null => { try { return typeof window ==
 export const writeLastWing = (k: string) => { try { if (typeof window !== 'undefined') window.localStorage.setItem(LAST_WING_KEY, k); } catch { /* لا شيء */ } };
 /** فحص الاكتمال (للاختبار): كلّ غرفة في الخريطة لها قسم أو مشتركة */
 export const unassignedRooms = (): string[] => ROOMS.map(r => r.href).filter(h => !isShared(h) && wingsOfHref(h).length === 0);
+
+/* ───── هـ-3 ح «عدّة الغرفة»: عناقيد الجناح — محطّات «خطّ الجناح» في القائمة الجانبية ورأس الغرفة ─────
+ * كل جناح يقسّم غرفه عناقيد صغيرة مسمّاة؛ جناح بلا عناقيد بعدُ → عنقود واحد بلا اسم. الغرف المشتركة → «أدواتي» في آخر الخطّ. */
+export type Cluster = { name: string; hrefs: string[] };
+export const CLUSTERS: Partial<Record<WingKey, Cluster[]>> = {
+  system: [
+    { name: 'الأبواب', hrefs: ['/admin/roles', '/admin/access', '/admin/agents'] },
+    { name: 'الرقابة', hrefs: ['/admin/audit', '/admin/shield', '/admin/vault'] },
+    { name: 'السلامة', hrefs: ['/admin/health', '/admin/backup', '/admin/data-lifecycle'] },
+    { name: 'العرض', hrefs: ['/admin/demo'] },
+  ],
+};
+export const SHARED_CLUSTER = 'أدواتي';
+export type ClusterOf = { name: string; rooms: Room[]; shared?: boolean };
+/** عناقيد الجناح من قائمة غرف (مرشَّحة بالصلاحية سلفًا)، بترتيب التعريف؛ غرف الجناح غير المعنقدة تُلحق بعنقود بلا اسم؛ المشتركة في «أدواتي» */
+export function clustersOfWing(w: Wing | null, rooms: Room[]): ClusterOf[] {
+  const defs = (w && CLUSTERS[w.key]) || [];
+  const out: ClusterOf[] = [];
+  const used = new Set<string>();
+  for (const d of defs) {
+    const rs = d.hrefs.map(h => rooms.find(r => r.href === h)).filter((r): r is Room => !!r);
+    rs.forEach(r => used.add(r.href));
+    if (rs.length) out.push({ name: d.name, rooms: rs });
+  }
+  const rest = rooms.filter(r => !used.has(r.href) && !isShared(r.href) && r.href !== '/dashboard');
+  if (rest.length) out.push({ name: defs.length ? 'غرف أخرى' : '', rooms: rest });
+  const sh = rooms.filter(r => isShared(r.href) && r.href !== '/dashboard');
+  if (sh.length) out.push({ name: SHARED_CLUSTER, rooms: sh, shared: true });
+  return out;
+}
+/** اسم عنقود غرفة داخل جناحها (للرأس «نظام أَثَر · الرقابة») */
+export function clusterNameOf(w: Wing | null, href: string): string | null {
+  if (isShared(href)) return SHARED_CLUSTER;
+  const defs = (w && CLUSTERS[w.key]) || [];
+  const d = defs.find(c => c.hrefs.some(h => under(href, h)));
+  return d ? d.name : null;
+}
+/** جيران الغرفة على خطّ الجناح (السابقة/التالية داخل العنقود، وإلا داخل الجناح) */
+export function neighborsOf(w: Wing | null, href: string, rooms: Room[]): { prev: Room | null; next: Room | null } {
+  const cl = clustersOfWing(w, rooms);
+  const seq = (cl.find(c => c.rooms.some(r => under(href, r.href)))?.rooms) || rooms;
+  const i = seq.findIndex(r => under(href, r.href));
+  return { prev: i > 0 ? seq[i - 1] : null, next: i >= 0 && i < seq.length - 1 ? seq[i + 1] : null };
+}
 export { roomFor };

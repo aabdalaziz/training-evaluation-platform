@@ -16,7 +16,7 @@ import dynamic from 'next/dynamic';
 const EvalLinks = dynamic(() => import('../components/EvalLinks'), { ssr: false, loading: () => <div className="db-muted">تحميل مولّد الروابط…</div> });   /* P49 */
 import { useMyRoles, invalidateMyRoles } from '../components/Brand';
 import { ZoneMark } from '../components/ZoneMark';
-import { wingsFor, wingByKey, hrefsInWing, roomsOfWing, readLastWing, writeLastWing, type Wing, type WingKey } from '../../lib/portal/wings'; /* هـ-3 و «الكلّ لا يرى الكلّ» */
+import { wingsFor, wingByKey, hrefsInWing, roomsOfWing, clustersOfWing, readLastWing, writeLastWing, type Wing, type WingKey } from '../../lib/portal/wings'; /* هـ-3 و «الكلّ لا يرى الكلّ» */
 import { Horizon } from '../../lib/ui/motion';
 import { sideRooms } from '../../lib/portal/rooms';
 import { BRAND } from '../../lib/portal/content';
@@ -340,10 +340,16 @@ export default function Dashboard() {
               <Icon name={n.icon} size={20} /><span><b>{n.label}</b><small>{n.hint}</small></span>
             </button>
           ))}
-          <div className="db-nav-sep">الإدارة</div>
-          {/* P43-ب: غُرَف مركز القيادة من خريطة واحدة (lib/portal/rooms.ts) بحسب صلاحياتي */}
-          {(() => { const all = sideRooms(my ? my.permissions : null, !!my?.staff); const ok = new Set(hrefsInWing(wing, all.map(r => r.href))); return all.filter(r => ok.has(r.href)); })().map(r => (
-            <Link key={r.href} href={r.href} className="db-navlink" data-testid={`side-room-${r.href.replace(/\//g, '-').slice(1)}`}><Icon name={r.icon} size={20} /><span><b>{r.label}</b><small>{r.href === '/reports/remote-survey' ? `${raw?.remoteResponses || 0} استجابة` : r.hint}</small></span></Link>
+          {/* P43-ب: غُرَف مركز القيادة من خريطة واحدة (lib/portal/rooms.ts) بحسب صلاحياتي — هـ-3 ح: «خطّ الجناح» عناقيد كمحطّات على خطّ بلون الجناح */}
+          {(() => { const all = sideRooms(my ? my.permissions : null, !!my?.staff); const ok = new Set(hrefsInWing(wing, all.map(r => r.href))); return clustersOfWing(wing, all.filter(r => ok.has(r.href))); })().map((c, ci) => (
+            <div key={c.name || ci} className={`db-cl${c.shared ? ' shared' : ''}`} style={{ ['--cl' as string]: c.shared ? '#C9A6B6' : (wing?.tone || '#D9A866') } as React.CSSProperties} data-testid={`side-cluster-${c.shared ? 'shared' : ci}`}>
+              <div className="db-cl-name"><i /> {c.name || 'الغرف'}</div>
+              <div className="db-cl-line">
+                {c.rooms.map(r => (
+                  <Link key={r.href} href={r.href} className="db-navlink db-stop" data-testid={`side-room-${r.href.replace(/\//g, '-').slice(1)}`}><i className="db-stn" /><Icon name={r.icon} size={18} /><span><b>{r.label}</b><small>{r.href === '/reports/remote-survey' ? `${raw?.remoteResponses || 0} استجابة` : r.hint}</small></span></Link>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
         <button className="db-logout" onClick={logout}><Icon name="logout" size={18} /> تسجيل الخروج</button>
@@ -750,7 +756,12 @@ function WingDoor({ wing, my }: { wing: Wing; my: ReturnType<typeof useMyRoles> 
   return (
     <section className="db-wd" style={{ ['--w' as string]: wing.tone, ['--ws' as string]: wing.tone_soft } as React.CSSProperties} data-testid="wing-door">
       <div className="db-wd-head"><ZoneMark zone={wing.zone} size={42} /><div><b>{wing.name}</b><small>{wing.verb} — {wing.line}</small></div><span className="db-wd-n">{rooms.length} غرفة</span></div>
-      <div className="db-wd-rooms">{rooms.map(r => <Link key={r.href} href={r.href} className="db-wd-room" data-testid="wing-room"><Icon name={r.icon} size={16} /><span><b>{r.label}</b>{r.hint && <small>{r.hint}</small>}</span></Link>)}</div>
+      {clustersOfWing(wing, rooms).map((c, ci) => (
+        <div key={c.name || ci} className="db-wd-cl" data-testid="wing-cluster">
+          {c.name && <h4 className="db-wd-cl-name"><i /> {c.name}</h4>}
+          <div className="db-wd-rooms">{c.rooms.map(r => <Link key={r.href} href={r.href} className="db-wd-room" data-testid="wing-room"><Icon name={r.icon} size={16} /><span><b>{r.label}</b>{r.hint && <small>{r.hint}</small>}</span></Link>)}</div>
+        </div>
+      ))}
     </section>
   );
 }
@@ -797,6 +808,13 @@ const CSS = `
 .db-nav button.on svg{opacity:1;color:#f1dfa6}
 .db-nav span{display:flex;flex-direction:column;min-width:0}.db-nav b{font-size:14px}.db-nav small{font-size:11px;color:#D9C6CF;font-weight:700}
 .db-nav-sep{font-size:10.5px;font-weight:800;color:#C9A6B6;letter-spacing:.6px;padding:12px 10px 4px;border-top:1px solid rgba(255,255,255,.08);margin-top:6px;text-transform:uppercase}
+.db-cl{margin-top:10px;position:relative}.db-cl:first-of-type{margin-top:4px}
+.db-cl-name{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:900;color:var(--cl);letter-spacing:.5px;padding:8px 10px 3px}.db-cl-name i{width:7px;height:7px;transform:rotate(45deg);background:var(--cl);border-radius:1px;flex-shrink:0}
+.db-cl.shared .db-cl-name{border-top:1px solid rgba(255,255,255,.08);margin-top:6px;padding-top:12px}
+.db-cl-line{position:relative;padding-inline-start:12px}.db-cl-line::before{content:'';position:absolute;inset-inline-start:13px;top:12px;bottom:12px;width:2px;border-radius:2px;background:linear-gradient(180deg,var(--cl) 0%,color-mix(in srgb,var(--cl) 30%,transparent) 100%)}
+.db-stop{position:relative;padding-inline-start:16px!important}.db-stn{position:absolute;inset-inline-start:-2px;top:50%;width:6px;height:6px;margin-top:-5px;border-radius:50%;background:#3A1F36;border:2px solid var(--cl);box-sizing:content-box;transition:transform .15s,background .15s;z-index:1}
+.db-stop:hover .db-stn,.db-stop.on .db-stn{background:var(--cl);transform:scale(1.25);box-shadow:0 0 0 4px color-mix(in srgb,var(--cl) 30%,transparent)}
+.db-wd-cl{margin-top:10px}.db-wd-cl-name{margin:0 0 6px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:900;color:var(--w)}.db-wd-cl-name i{width:7px;height:7px;transform:rotate(45deg);background:var(--w);border-radius:1px}
 .db-logout{display:flex;gap:8px;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,.18);color:#fbd5d5;border-radius:10px;padding:10px;cursor:pointer;font-weight:800;transition:.15s}
 .db-logout:hover{background:rgba(220,38,38,.18);border-color:rgba(252,165,165,.4);color:#fff}
 /* ---------- main ---------- */

@@ -9,6 +9,7 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { AGENT_TOOLS, SCOPE_LABEL, DEFAULT_SCOPES } from '../../../lib/portal/agents';
 import type { Scope } from '../../../lib/portal/agents';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 type KeyRow = { id: string; created_at: string; organization_id: string | null; org_name: string | null; name: string; prefix: string; scopes: Scope[]; daily_limit: number; expires_at: string | null; revoked_at: string | null; last_used_at: string | null; uses: number; note: string | null };
 type Req = { id: string; created_at: string; kind: 'quote' | 'reserve' | 'dialogue' | 'report'; payload: any; status: string; response: any; decided_at: string | null; note: string | null; org_name: string | null; key_name: string | null };
@@ -44,20 +45,23 @@ export default function AdminAgentsPage() {
   async function decide(id: string, status: 'approved' | 'rejected') { setBusy(id); const j = await post({ action: 'decide', id, status, note: note[id] || '' }); if (!j?.success) setError(j?.error || 'تعذّر الحفظ'); await load(await fresh()); setBusy(''); }
   async function runSandbox() { setBusy('sb'); setSbOut(null); let args: any = {}; try { args = JSON.parse(sbArgs || '{}'); } catch { setSbOut({ success: false, error: 'JSON غير صالح' }); setBusy(''); return; } const j = await fetch('/api/agent', { method: 'POST', headers: await hdr(), body: JSON.stringify({ tool: sbTool, args, sandbox: true }) }).then(r => r.json()).catch(e => ({ success: false, error: String(e) })); setSbOut(j); await load(await fresh()); setBusy(''); }
 
-  if (!ready) return <div className="ag"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="ag-wrap"><div className="ag-card">{error ? <span className="ag-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  if (!ready) return <div className="ag rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="ag-wrap"><div className="rm-card">{error ? <span className="ag-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   const pending = (data?.requests || []).filter(r => r.status === 'pending');
   return (
-    <div className="ag"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="ag rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="ag-wrap">
-        <header className="ag-head"><div><span className="ag-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P14-ب</span><h1>مساعدو الذكاء الاصطناعي — الوكلاء المفوَّضون</h1><p>وكيل الموارد البشرية في الجهة يكتشف، يسأل الذاكرة «أي برنامج أثبت رفع هذه المهارة؟»، يطلب عرضًا، يحجز، ويتحقق — وكل التزام يمرّ من هنا على إنسان. المفاتيح لكل جهة بصلاحيات وحدود، والسجل كامل. الصفحة العامة: <a href="/agents" target="_blank" rel="noreferrer">/agents</a> · بطاقة الاكتشاف: <a href="/.well-known/ai-plugin.json" target="_blank" rel="noreferrer">ai-plugin.json</a></p></div></header>
+        <RoomHead
+        title={<>مساعدو الذكاء الاصطناعي — الوكلاء المفوَّضون</>}
+        desc={<><p>وكيل الموارد البشرية في الجهة يكتشف، يسأل الذاكرة «أي برنامج أثبت رفع هذه المهارة؟»، يطلب عرضًا، يحجز، ويتحقق — وكل التزام يمرّ من هنا على إنسان. المفاتيح لكل جهة بصلاحيات وحدود، والسجل كامل. الصفحة العامة: <a href="/agents" target="_blank" rel="noreferrer">/agents</a> · بطاقة الاكتشاف: <a href="/.well-known/ai-plugin.json" target="_blank" rel="noreferrer">ai-plugin.json</a></p></>}
+      />
         <PortalAdminTabs counts={{ '/admin/agents': pending.length }} />
         {error && <div className="ag-err">{error}</div>}
-        <div className="ag-kpis"><span><b>{pending.length}</b> طلبًا ينتظر قرارك</span><span><b>{(data?.keys || []).filter(k => !k.revoked_at).length}</b> مفتاحًا نشطًا</span><span><b>{data?.log?.length ?? 0}</b> نداءً أخيرًا</span></div>
+        <div className="rm-kpis"><span><b>{pending.length}</b> طلبًا ينتظر قرارك</span><span><b>{(data?.keys || []).filter(k => !k.revoked_at).length}</b> مفتاحًا نشطًا</span><span><b>{data?.log?.length ?? 0}</b> نداءً أخيرًا</span></div>
         <div className="ag-tabs"><button className={tab === 'requests' ? 'on' : ''} onClick={() => setTab('requests')}>الطلبات {pending.length ? <i>{pending.length}</i> : null}</button><button className={tab === 'keys' ? 'on' : ''} onClick={() => setTab('keys')}>المفاتيح</button><button className={tab === 'log' ? 'on' : ''} onClick={() => setTab('log')}>السجل</button><button className={tab === 'sandbox' ? 'on' : ''} onClick={() => setTab('sandbox')}>جرّب كوكيل</button><button className={tab === 'embassy' ? 'on' : ''} onClick={() => setTab('embassy')} data-testid="tab-embassy">السفارة (MCP)</button></div>
 
         {tab === 'requests' && (
-          <section className="ag-card" data-testid="agent-requests">
-            {!data?.requests?.length && <p className="ag-muted">لا طلبات من وكلاء بعد.</p>}
+          <section className="rm-card" data-testid="agent-requests">
+            {!data?.requests?.length && <p className="rm-muted">لا طلبات من وكلاء بعد.</p>}
             {(data?.requests || []).map(r => (
               <article key={r.id} className={`ag-req ${r.status}`}>
                 <div className="ag-reqhead"><span className={`ag-st ${r.status}`}>{r.status === 'pending' ? 'ينتظر إنسانًا' : r.status === 'approved' ? 'معتمد' : r.status === 'rejected' ? 'مرفوض' : 'مُجاب'}</span><b>{KIND[r.kind]}</b><small>{fmt(r.created_at)} · {r.org_name || r.key_name || (r.payload?.sandbox ? 'تجريبي' : 'بلا مفتاح')}</small></div>
@@ -75,7 +79,7 @@ export default function AdminAgentsPage() {
         )}
 
         {tab === 'keys' && (
-          <section className="ag-card" data-testid="agent-keys">
+          <section className="rm-card" data-testid="agent-keys">
             <h3>إصدار مفتاح لجهة</h3>
             <div className="ag-form">
               <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="اسم المفتاح — مثل: وكيل الموارد البشرية · جامعة الأمير مقرن" />
@@ -84,33 +88,33 @@ export default function AdminAgentsPage() {
               <div className="ag-row"><label>حد يومي <input type="number" min={10} max={5000} value={form.daily_limit} onChange={e => setForm(f => ({ ...f, daily_limit: Number(e.target.value) }))} /></label><label>ينتهي بعد (يوم) <input type="number" min={0} max={730} value={form.expires_days} onChange={e => setForm(f => ({ ...f, expires_days: Number(e.target.value) }))} /></label><input value={form.note} onChange={e => setForm(f => ({ ...f, note: e.target.value }))} placeholder="ملاحظة داخلية" /><button type="button" className="pt-btn gold" disabled={busy === 'key' || form.name.trim().length < 2} onClick={createKey}><Icon name="plus" size={14} /> أصدر المفتاح</button></div>
             </div>
             {issued && <div className="ag-issued" data-testid="issued-key"><b>المفتاح الكامل لـ«{issued.name}» — يُعرض مرة واحدة فقط:</b><code>{issued.key}</code><small>انسخه الآن وسلّمه للجهة عبر قناة آمنة. يُرسَل في الترويسة <code>X-Agent-Key</code> إلى <code>/api/agent</code>.</small><button type="button" className="pt-btn light small" onClick={() => { navigator.clipboard?.writeText(issued.key); }}><Icon name="copy" size={13} /> انسخ</button></div>}
-            <table className="ag-table"><thead><tr><th>المفتاح</th><th>الجهة</th><th>الصلاحيات</th><th>الاستخدام</th><th>الحالة</th><th></th></tr></thead><tbody>{(data?.keys || []).map(k => <tr key={k.id} className={k.revoked_at ? 'off' : ''}><td><b>{k.name}</b><small>{k.prefix}…</small></td><td>{k.org_name || '—'}</td><td><small>{k.scopes.map(s => SCOPE_LABEL[s]?.ar || s).join(' · ')}</small></td><td>{k.uses} · حد {k.daily_limit}/يوم<small>آخر: {fmt(k.last_used_at)}</small></td><td>{k.revoked_at ? 'مُبطَل' : k.expires_at && k.expires_at < new Date().toISOString() ? 'منتهٍ' : 'نشط'}</td><td>{!k.revoked_at && <><button type="button" className="pt-btn light small" disabled={busy === k.id} onClick={() => rotate(k.id, k.name)} title="مفتاح جديد بالصلاحيات نفسها؛ القديم يعمل 24 ساعة" data-testid="key-rotate">دوِّر</button> <button type="button" className="pt-btn ghost small" disabled={busy === k.id} onClick={() => revoke(k.id)}>أبطل</button></>}</td></tr>)}{!data?.keys?.length && <tr><td colSpan={6} className="ag-muted">لا مفاتيح بعد.</td></tr>}</tbody></table>
+            <table className="rm-table"><thead><tr><th>المفتاح</th><th>الجهة</th><th>الصلاحيات</th><th>الاستخدام</th><th>الحالة</th><th></th></tr></thead><tbody>{(data?.keys || []).map(k => <tr key={k.id} className={k.revoked_at ? 'off' : ''}><td><b>{k.name}</b><small>{k.prefix}…</small></td><td>{k.org_name || '—'}</td><td><small>{k.scopes.map(s => SCOPE_LABEL[s]?.ar || s).join(' · ')}</small></td><td>{k.uses} · حد {k.daily_limit}/يوم<small>آخر: {fmt(k.last_used_at)}</small></td><td>{k.revoked_at ? 'مُبطَل' : k.expires_at && k.expires_at < new Date().toISOString() ? 'منتهٍ' : 'نشط'}</td><td>{!k.revoked_at && <><button type="button" className="pt-btn light small" disabled={busy === k.id} onClick={() => rotate(k.id, k.name)} title="مفتاح جديد بالصلاحيات نفسها؛ القديم يعمل 24 ساعة" data-testid="key-rotate">دوِّر</button> <button type="button" className="pt-btn ghost small" disabled={busy === k.id} onClick={() => revoke(k.id)}>أبطل</button></>}</td></tr>)}{!data?.keys?.length && <tr><td colSpan={6} className="rm-muted">لا مفاتيح بعد.</td></tr>}</tbody></table>
           </section>
         )}
 
         {tab === 'log' && (
-          <section className="ag-card" data-testid="agent-log">
-            <table className="ag-table"><thead><tr><th>الوقت</th><th>الوكيل</th><th>الأداة</th><th>النتيجة</th><th>زمن</th></tr></thead><tbody>{(data?.log || []).map(l => <tr key={l.id}><td>{fmt(l.at)}</td><td>{l.meta?.sandbox ? 'تجريبي (طاقم)' : l.key_name || (l.meta?.tier === 'personal' ? `تفويض شخصي · ${l.meta?.client || ''}` : l.meta?.anon ? `${l.meta?.transport === 'mcp' ? 'MCP عام' : 'بلا مفتاح'} · ${String(l.meta?.ip || '').startsWith('dg:') ? 'تفويض شخصي' : l.meta?.ip || ''}` : '—')}</td><td><code>{l.tool}</code></td><td>{l.ok ? '✓' : `✗ ${l.meta?.denied || l.meta?.invalid || l.meta?.error || ''}`}</td><td>{l.ms} م.ث</td></tr>)}{!data?.log?.length && <tr><td colSpan={5} className="ag-muted">لا نداءات بعد.</td></tr>}</tbody></table>
+          <section className="rm-card" data-testid="agent-log">
+            <table className="rm-table"><thead><tr><th>الوقت</th><th>الوكيل</th><th>الأداة</th><th>النتيجة</th><th>زمن</th></tr></thead><tbody>{(data?.log || []).map(l => <tr key={l.id}><td>{fmt(l.at)}</td><td>{l.meta?.sandbox ? 'تجريبي (طاقم)' : l.key_name || (l.meta?.tier === 'personal' ? `تفويض شخصي · ${l.meta?.client || ''}` : l.meta?.anon ? `${l.meta?.transport === 'mcp' ? 'MCP عام' : 'بلا مفتاح'} · ${String(l.meta?.ip || '').startsWith('dg:') ? 'تفويض شخصي' : l.meta?.ip || ''}` : '—')}</td><td><code>{l.tool}</code></td><td>{l.ok ? '✓' : `✗ ${l.meta?.denied || l.meta?.invalid || l.meta?.error || ''}`}</td><td>{l.ms} م.ث</td></tr>)}{!data?.log?.length && <tr><td colSpan={5} className="rm-muted">لا نداءات بعد.</td></tr>}</tbody></table>
           </section>
         )}
 
         {tab === 'embassy' && (
-          <section className="ag-card" data-testid="agent-embassy">
-            <h3>سفارة أَثَر — خادم MCP</h3><p className="ag-muted">أَثَر خادم MCP رسمي: <code dir="ltr">{typeof location !== 'undefined' ? location.origin : ''}/mcp</code> (مفوَّض) · <code dir="ltr">/mcp/public</code> (عام). المتعلمون يفوّضون مساعديهم من شاشة الموافقة ويبطلون من «وكلائي»؛ الجهات تستخدم مفاتيحها نفسها.</p>
-            <div className="ag-kpis"><span><b>{data?.mcp?.calls_7d ?? 0}</b> نداءً خلال 7 أيام</span><span><b>{data?.mcp?.errors_7d ?? 0}</b> مرفوض/خطأ</span><span><b>{data?.mcp?.delegations_active ?? 0}</b> تفويضًا شخصيًا نشطًا</span><span><b>{data?.mcp?.registered_clients ?? 0}</b> عميلًا مسجَّلًا</span><span><b>{data?.mcp?.last_call ? fmt(data.mcp.last_call) : '—'}</b> آخر نداء</span></div>
+          <section className="rm-card" data-testid="agent-embassy">
+            <h3>سفارة أَثَر — خادم MCP</h3><p className="rm-muted">أَثَر خادم MCP رسمي: <code dir="ltr">{typeof location !== 'undefined' ? location.origin : ''}/mcp</code> (مفوَّض) · <code dir="ltr">/mcp/public</code> (عام). المتعلمون يفوّضون مساعديهم من شاشة الموافقة ويبطلون من «وكلائي»؛ الجهات تستخدم مفاتيحها نفسها.</p>
+            <div className="rm-kpis"><span><b>{data?.mcp?.calls_7d ?? 0}</b> نداءً خلال 7 أيام</span><span><b>{data?.mcp?.errors_7d ?? 0}</b> مرفوض/خطأ</span><span><b>{data?.mcp?.delegations_active ?? 0}</b> تفويضًا شخصيًا نشطًا</span><span><b>{data?.mcp?.registered_clients ?? 0}</b> عميلًا مسجَّلًا</span><span><b>{data?.mcp?.last_call ? fmt(data.mcp.last_call) : '—'}</b> آخر نداء</span></div>
             <div className="ag-grid3">
-              <div><h4>نسخ البروتوكول</h4>{(data?.mcp?.by_proto || []).length ? (data?.mcp?.by_proto || []).map(x => <div key={x.k} className="ag-row"><code dir="ltr">{x.k}</code><b>{x.n}</b></div>) : <p className="ag-muted">لا نداءات بعد.</p>}</div>
+              <div><h4>نسخ البروتوكول</h4>{(data?.mcp?.by_proto || []).length ? (data?.mcp?.by_proto || []).map(x => <div key={x.k} className="ag-row"><code dir="ltr">{x.k}</code><b>{x.n}</b></div>) : <p className="rm-muted">لا نداءات بعد.</p>}</div>
               <div><h4>الطبقات</h4>{(data?.mcp?.by_tier || []).map(x => <div key={x.k} className="ag-row"><span>{TIER_AR[x.k] || x.k}</span><b>{x.n}</b></div>)}</div>
               <div><h4>الأدوات الأكثر نداءً</h4>{(data?.mcp?.top_tools || []).map(x => <div key={x.k} className="ag-row"><code dir="ltr">{x.k}</code><b>{x.n}</b></div>)}</div>
             </div>
             {(data?.mcp?.clients || []).length > 0 && <div><h4>العملاء (المساعدون)</h4>{(data?.mcp?.clients || []).map(x => <div key={x.k} className="ag-row"><span>{x.k}</span><b>{x.n}</b></div>)}</div>}
-            <p className="ag-muted">الاكتشاف: <code dir="ltr">/.well-known/oauth-protected-resource/mcp</code> · <code dir="ltr">/.well-known/oauth-authorization-server</code> · التسجيل الديناميكي <code dir="ltr">/oauth/register</code>. القاعدة ثابتة: الكتابة المؤسسية تنتظر اعتمادًا بشريًا هنا في تبويب «الطلبات».</p>
+            <p className="rm-muted">الاكتشاف: <code dir="ltr">/.well-known/oauth-protected-resource/mcp</code> · <code dir="ltr">/.well-known/oauth-authorization-server</code> · التسجيل الديناميكي <code dir="ltr">/oauth/register</code>. القاعدة ثابتة: الكتابة المؤسسية تنتظر اعتمادًا بشريًا هنا في تبويب «الطلبات».</p>
           </section>
         )}
 
         {tab === 'sandbox' && (
-          <section className="ag-card" data-testid="agent-sandbox">
-            <h3>جرّب كوكيل</h3><p className="ag-muted">تحاكي وكيل جهة بكل الصلاحيات؛ الطلبات التي تُنشأ هنا تُعلَّم «تجريبي» ولا تُنشئ تسجيلات عند الاعتماد.</p>
+          <section className="rm-card" data-testid="agent-sandbox">
+            <h3>جرّب كوكيل</h3><p className="rm-muted">تحاكي وكيل جهة بكل الصلاحيات؛ الطلبات التي تُنشأ هنا تُعلَّم «تجريبي» ولا تُنشئ تسجيلات عند الاعتماد.</p>
             <div className="ag-sb"><select value={sbTool} onChange={e => { setSbTool(e.target.value); setSbArgs(SAMPLE[e.target.value] || '{}'); setSbOut(null); }}>{AGENT_TOOLS.map(t => <option key={t.name} value={t.name}>{t.name} — {t.title_ar}</option>)}</select><textarea value={sbArgs} onChange={e => setSbArgs(e.target.value)} rows={4} dir="ltr" /><button type="button" className="pt-btn gold" disabled={busy === 'sb'} onClick={runSandbox}><Icon name="play" size={14} /> نفّذ</button></div>
             <p className="ag-tooldesc">{AGENT_TOOLS.find(t => t.name === sbTool)?.desc_ar}</p>
             {sbOut && <pre className="ag-out" dir="ltr" data-testid="sandbox-out">{JSON.stringify(sbOut, null, 2)}</pre>}
@@ -122,12 +126,9 @@ export default function AdminAgentsPage() {
 }
 
 const CSS = `
-.ag{padding:20px 16px 48px;background:#FBF4EE;min-height:60vh;font-family:inherit}
-.ag-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}
-.ag-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.ag-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.7;max-width:900px}.ag-head a{color:#D4614A}.ag-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
-.ag-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px}.ag-card h3{margin:0 0 8px;font-size:16px;color:#3A1F36}.ag-err{color:#b91c1c;font-size:13px}.ag-muted{color:#8E7F8A;font-size:13.5px}
+.ag{font-family:inherit}
+.ag-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.ag-err{color:#b91c1c;font-size:13px}
 .ag-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px}.ag-grid3 h4,.ag h4{margin:0 0 6px;font-size:14px;color:#3A1F36}.ag-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#4A3645;padding:5px 0;border-bottom:1px dashed #EADFD6}.ag-row b{color:#3A1F36}
-.ag-kpis{display:flex;gap:16px;font-size:14px;color:#5C4858;flex-wrap:wrap}.ag-kpis b{color:#3A1F36;font-size:20px;margin-inline-end:4px}
 .ag-tabs{display:flex;gap:6px;flex-wrap:wrap}.ag-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.ag-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.ag-tabs i{font-style:normal;background:#D9A866;color:#3A1F36;border-radius:999px;padding:0 7px;font-size:11px;margin-inline-start:4px}
 .ag-req{border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;margin-bottom:10px}.ag-req.pending{border-color:#D9A866;background:#fffdf7}.ag-reqhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ag-reqhead b{color:#3A1F36}.ag-reqhead small{color:#8E7F8A;font-size:12px}
 .ag-reqbody p{margin:6px 0;font-size:14px;color:#3A2634}.ag-reqbody small{display:block;color:#8E7F8A;font-size:12.5px;margin-top:2px}.ag-reqbody a{color:#D4614A}
@@ -135,8 +136,7 @@ const CSS = `
 .ag-decide{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}.ag-decide input{flex:1;min-width:220px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px}
 .ag-form{display:grid;gap:8px}.ag-form input,.ag-form select{border:1px solid #D9CBC2;border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;background:#fff}.ag-scopes{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:#3A2634}.ag-scopes label{display:inline-flex;gap:4px;align-items:center;border:1px solid #EADFD6;border-radius:999px;padding:4px 10px}
 .ag-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ag-row label{font-size:12.5px;color:#5C4858;display:inline-flex;gap:6px;align-items:center}.ag-row input[type=number]{width:90px}.ag-row>input{flex:1;min-width:160px}
-.ag-issued{margin-top:12px;background:#3A1F36;color:#fff;border-radius:14px;padding:14px 16px;display:grid;gap:6px}.ag-issued code{font-size:16px;letter-spacing:.5px;background:rgba(255,255,255,.1);padding:8px 12px;border-radius:10px;direction:ltr;text-align:left;word-break:break-all}.ag-issued small{color:#D9CBC2;font-size:12px}.ag-issued small code{font-size:11px;padding:1px 6px}
-.ag-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}.ag-table th{text-align:start;color:#8E7F8A;font-weight:800;font-size:12px;border-bottom:1px solid #EADFD6;padding:6px 8px}.ag-table td{border-bottom:1px solid #F6EBE0;padding:8px;vertical-align:top;color:#3A2634}.ag-table td small{display:block;color:#B3A5AE;font-size:11.5px}.ag-table tr.off td{opacity:.55}.ag-table code{font-size:12px;background:#F6EBE0;padding:2px 6px;border-radius:6px}
+.ag-issued{margin-top:12px;background:#3A1F36;color:#fff;border-radius:14px;padding:14px 16px;display:grid;gap:6px}.ag-issued code{font-size:16px;letter-spacing:.5px;background:rgba(255,255,255,.1);padding:8px 12px;border-radius:10px;direction:ltr;text-align:left;word-break:break-all}.ag-issued small{color:#D9CBC2;font-size:12px}.ag-issued small code{font-size:11px;padding:1px 6px}.rm-table td small{display:block;color:#B3A5AE;font-size:11.5px}.rm-table tr.off td{opacity:.55}.rm-table code{font-size:12px;background:#F6EBE0;padding:2px 6px;border-radius:6px}
 .ag-sb{display:grid;grid-template-columns:1fr;gap:8px}.ag-sb select,.ag-sb textarea{border:1px solid #D9CBC2;border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px}.ag-sb textarea{font-family:ui-monospace,Menlo,Consolas,monospace}.ag-tooldesc{color:#5C4858;font-size:13px;margin:8px 0 0}
 .ag-out{margin-top:10px;background:#2A1626;color:#EADFD6;border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.6;max-height:420px;overflow:auto;text-align:left}
 `;

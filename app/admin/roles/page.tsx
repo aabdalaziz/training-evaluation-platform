@@ -13,6 +13,7 @@ import { Icon } from '../../../lib/ui/icons';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { qrSvg } from '../../../lib/certificates/qr';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type InviteState = 'pending' | 'accepted' | 'expired' | 'revoked';
 const INVITE_STATE_AR: Record<InviteState, string> = { pending: 'بانتظار القبول', accepted: 'مقبولة', expired: 'منتهية', revoked: 'ملغاة' }; // نسخة عميل (lib/portal/roles يستورد crypto)
 
@@ -73,14 +74,17 @@ export default function AdminRolesPage() {
   const pendingInv = (data?.invites || []).filter(i => i.state === 'pending').length;
   const byEmail = useMemo(() => { const m = new Map<string, Grant[]>(); for (const g of data?.grants || []) m.set(g.email, [...(m.get(g.email) || []), g]); return m; }, [data]);
 
-  if (!ready) return <div className="rl"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="rl-wrap"><div className="rl-card">{error ? <span className="rl-err">{error}</span> : 'جارٍ فتح الأدوار…'}</div></div></div>;
+  if (!ready) return <div className="rl rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="rl-wrap"><div className="rm-card">{error ? <span className="rl-err">{error}</span> : 'جارٍ فتح الأدوار…'}</div></div></div>;
   return (
-    <div className="rl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="rl rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="rl-wrap">
-        <header className="rl-head"><div><span className="rl-kicker"><Icon name="users" size={14} /> بوابة أَثَر · P42</span><h1>الأدوار والدعوات</h1><p>دعوة واحدة لكل مستخدم: تدعو الشخص برابط واحد، يدخل ببريده، فتُفتح له صفحات دوره فقط. {admin ? '' : '(أنت تقرأ فقط — الكتابة لمدير النظام)'}</p></div></header>
+        <RoomHead
+        title={<>الأدوار والدعوات</>}
+        desc={<><p>دعوة واحدة لكل مستخدم: تدعو الشخص برابط واحد، يدخل ببريده، فتُفتح له صفحات دوره فقط. {admin ? '' : '(أنت تقرأ فقط — الكتابة لمدير النظام)'}</p></>}
+      />
         <PortalAdminTabs counts={{ '/admin/roles': pendingInv }} />
         {error && <div className="rl-err" role="alert">{error}</div>}{ok && <div className="rl-ok" role="status">{ok}</div>}
-        <div className="rl-kpis" data-testid="roles-kpis">
+        <div className="rm-kpis" data-testid="roles-kpis">
           <span><b>{byEmail.size}</b> مستخدمًا لهم أدوار</span><span><b>{data?.grants.length || 0}</b> صلاحية فعّالة</span><span><b>{pendingInv}</b> دعوة بانتظار القبول</span><span><b>{active.length}</b> دورًا متاحًا ({roles.filter(r => !r.is_system).length} مخصّصة)</span>
         </div>
         <div className="rl-tabs" role="tablist">
@@ -88,14 +92,14 @@ export default function AdminRolesPage() {
         </div>
 
         {tab === 'invite' && (
-          <section className="rl-card">
+          <section className="rm-card">
             {made && (
               <div className="rl-made" data-testid="invite-made">
                 <h3><Icon name="check" size={16} /> {made.kind === 'group' ? `الدعوة الجماعية «${made.label}» جاهزة — اعرض الرمز أو اطبع الملصق` : 'الدعوة جاهزة — انسخ الرابط وأرسله بالقناة التي تناسبك'}</h3>
                 {made.kind === 'group' && <div className="rl-qrwrap"><div className="rl-qr" data-testid="invite-qr" dangerouslySetInnerHTML={{ __html: qrSvg(made.url, 200) }} /><div className="rl-qrside"><b>{made.max_uses} مقعدًا</b><span>كل من يمسح الرمز ويدخل ببريده يأخذ مقعدًا واحدًا ويُفعَّل حسابه فورًا.</span><button type="button" onClick={printPoster} data-testid="invite-print"><Icon name="print" size={14} /> اطبع الملصق</button></div></div>}
                 <code dir="ltr" data-testid="invite-url">{made.url}</code>
-                <div className="rl-row"><button type="button" onClick={() => copy(made.url)} data-testid="invite-copy"><Icon name="copy" size={14} /> نسخ الرابط</button><button type="button" onClick={() => copy(made.text)}><Icon name="copy" size={14} /> نسخ رسالة كاملة</button><a className="rl-btn" href={`https://wa.me/?text=${encodeURIComponent(made.text)}`} target="_blank" rel="noopener noreferrer"><Icon name="send" size={14} /> عبر واتساب</a><a className="rl-btn" href={`mailto:?subject=${encodeURIComponent('دعوة إلى بوابة أَثَر')}&body=${encodeURIComponent(made.text)}`}><Icon name="mail" size={14} /> عبر البريد</a></div>
-                <p className="rl-muted">الرابط يُعرض مرة واحدة ولا يُخزَّن — إن ضاع أنشئ دعوة جديدة. صالح حتى {fmt(made.expires_at)}.</p>
+                <div className="rl-row"><button type="button" onClick={() => copy(made.url)} data-testid="invite-copy"><Icon name="copy" size={14} /> نسخ الرابط</button><button type="button" onClick={() => copy(made.text)}><Icon name="copy" size={14} /> نسخ رسالة كاملة</button><a className="rm-btn" href={`https://wa.me/?text=${encodeURIComponent(made.text)}`} target="_blank" rel="noopener noreferrer"><Icon name="send" size={14} /> عبر واتساب</a><a className="rm-btn" href={`mailto:?subject=${encodeURIComponent('دعوة إلى بوابة أَثَر')}&body=${encodeURIComponent(made.text)}`}><Icon name="mail" size={14} /> عبر البريد</a></div>
+                <p className="rm-muted">الرابط يُعرض مرة واحدة ولا يُخزَّن — إن ضاع أنشئ دعوة جديدة. صالح حتى {fmt(made.expires_at)}.</p>
               </div>
             )}
             <form onSubmit={submitInvite} className="rl-form" data-testid="invite-form">
@@ -120,34 +124,34 @@ export default function AdminRolesPage() {
                 <label>رسالة قصيرة تظهر في الدعوة (اختياري)<input value={message} onChange={e => setMessage(e.target.value)} maxLength={600} placeholder="مثال: نرحّب بك مديرًا لبرامج العربية ابتداءً من يناير" disabled={!admin} /></label>
               </div>
               {!group && <label className="rl-check"><input type="checkbox" checked={direct} onChange={e => setDirect(e.target.checked)} disabled={!admin} data-testid="inv-direct" /> إسناد مباشر بلا دعوة (لمستخدم مسجَّل أصلًا يحتاج دورًا إضافيًا الآن)</label>}
-              <div className="rl-row"><button type="submit" disabled={!admin || busy === 'invite' || !picked.length} data-testid="inv-submit"><Icon name={direct ? 'check' : 'link'} size={16} /> {busy === 'invite' ? 'لحظة…' : direct ? 'أسنِد الدور الآن' : group ? 'أنشئ الدعوة الجماعية والرمز' : 'أنشئ رابط الدعوة'}</button><span className="rl-muted">{picked.length ? picked.map(roleName).join(' + ') : 'لم تختر دورًا بعد'}</span></div>
+              <div className="rl-row"><button type="submit" disabled={!admin || busy === 'invite' || !picked.length} data-testid="inv-submit"><Icon name={direct ? 'check' : 'link'} size={16} /> {busy === 'invite' ? 'لحظة…' : direct ? 'أسنِد الدور الآن' : group ? 'أنشئ الدعوة الجماعية والرمز' : 'أنشئ رابط الدعوة'}</button><span className="rm-muted">{picked.length ? picked.map(roleName).join(' + ') : 'لم تختر دورًا بعد'}</span></div>
             </form>
           </section>
         )}
 
         {tab === 'grants' && (
-          <section className="rl-card">
-            <div className="rl-row"><input className="rl-search" value={q} onChange={e => setQ(e.target.value)} placeholder="ابحث بالبريد أو الدور…" aria-label="بحث" data-testid="grants-q" /><span className="rl-muted">{grants.length} صلاحية</span></div>
-            <div className="rl-tablewrap"><table className="rl-table" data-testid="grants-table"><thead><tr><th>البريد</th><th>الدور</th><th>الجهة</th><th>المصدر</th><th>منذ</th><th>الحالة</th><th></th></tr></thead><tbody>
+          <section className="rm-card">
+            <div className="rl-row"><input className="rl-search" value={q} onChange={e => setQ(e.target.value)} placeholder="ابحث بالبريد أو الدور…" aria-label="بحث" data-testid="grants-q" /><span className="rm-muted">{grants.length} صلاحية</span></div>
+            <div className="rl-tablewrap"><table className="rm-table" data-testid="grants-table"><thead><tr><th>البريد</th><th>الدور</th><th>الجهة</th><th>المصدر</th><th>منذ</th><th>الحالة</th><th></th></tr></thead><tbody>
               {grants.map(g => <tr key={g.id} data-testid="grant-row"><td dir="ltr">{g.email}</td><td><b>{roleName(g.role_code)}</b> <small>{g.role_code}</small></td><td>{orgName(g.org_id)}</td><td>{g.source === 'invite' ? 'دعوة' : g.source === 'manual' ? 'إسناد مباشر' : g.source}</td><td>{fmt(g.created_at)}</td><td>{g.user_id ? <span className="rl-tag ok">مرتبط بحساب</span> : <span className="rl-tag">بانتظار أول دخول</span>}</td><td>{admin && <button type="button" className="rl-x" onClick={() => revoke(g)} disabled={busy === g.id} data-testid="grant-revoke">إلغاء</button>}</td></tr>)}
-              {!grants.length && <tr><td colSpan={7} className="rl-muted">لا صلاحيات بعد — ابدأ بدعوة.</td></tr>}
+              {!grants.length && <tr><td colSpan={7} className="rm-muted">لا صلاحيات بعد — ابدأ بدعوة.</td></tr>}
             </tbody></table></div>
           </section>
         )}
 
         {tab === 'invites' && (
-          <section className="rl-card">
-            <div className="rl-tablewrap"><table className="rl-table" data-testid="invites-table"><thead><tr><th>البريد</th><th>الاسم</th><th>الأدوار</th><th>الجهة</th><th>الحالة</th><th>تنتهي</th><th></th></tr></thead><tbody>
-              {(data?.invites || []).map(i => <tr key={i.id} data-testid="invite-row" data-state={i.state} data-kind={i.kind || 'personal'}><td dir={i.kind === 'group' ? 'rtl' : 'ltr'}>{i.kind === 'group' ? <><Icon name="qr" size={13} /> {i.label} <small className="rl-muted">({i.uses || 0}/{i.max_uses})</small></> : i.email}</td><td>{i.full_name || '—'}</td><td>{i.role_codes.map(roleName).join(' · ')}</td><td>{orgName(i.org_id)}</td><td><span className={`rl-tag ${i.state === 'accepted' ? 'ok' : i.state === 'pending' ? 'warn' : ''}`}>{i.kind === 'group' ? GROUP_STATE_AR[i.state] : INVITE_STATE_AR[i.state]}</span></td><td>{fmt(i.expires_at)}</td><td>{admin && i.state === 'pending' && <button type="button" className="rl-x" onClick={() => revokeInvite(i)} disabled={busy === i.id} data-testid="invite-revoke">إلغاء</button>}</td></tr>)}
-              {!data?.invites.length && <tr><td colSpan={7} className="rl-muted">لا دعوات بعد.</td></tr>}
+          <section className="rm-card">
+            <div className="rl-tablewrap"><table className="rm-table" data-testid="invites-table"><thead><tr><th>البريد</th><th>الاسم</th><th>الأدوار</th><th>الجهة</th><th>الحالة</th><th>تنتهي</th><th></th></tr></thead><tbody>
+              {(data?.invites || []).map(i => <tr key={i.id} data-testid="invite-row" data-state={i.state} data-kind={i.kind || 'personal'}><td dir={i.kind === 'group' ? 'rtl' : 'ltr'}>{i.kind === 'group' ? <><Icon name="qr" size={13} /> {i.label} <small className="rm-muted">({i.uses || 0}/{i.max_uses})</small></> : i.email}</td><td>{i.full_name || '—'}</td><td>{i.role_codes.map(roleName).join(' · ')}</td><td>{orgName(i.org_id)}</td><td><span className={`rl-tag ${i.state === 'accepted' ? 'ok' : i.state === 'pending' ? 'warn' : ''}`}>{i.kind === 'group' ? GROUP_STATE_AR[i.state] : INVITE_STATE_AR[i.state]}</span></td><td>{fmt(i.expires_at)}</td><td>{admin && i.state === 'pending' && <button type="button" className="rl-x" onClick={() => revokeInvite(i)} disabled={busy === i.id} data-testid="invite-revoke">إلغاء</button>}</td></tr>)}
+              {!data?.invites.length && <tr><td colSpan={7} className="rm-muted">لا دعوات بعد.</td></tr>}
             </tbody></table></div>
-            <p className="rl-muted">الرابط نفسه لا يُعرض هنا (لا نخزّنه) — إن احتاج الشخص رابطًا جديدًا ألغِ الدعوة وأنشئ أخرى.</p>
+            <p className="rm-muted">الرابط نفسه لا يُعرض هنا (لا نخزّنه) — إن احتاج الشخص رابطًا جديدًا ألغِ الدعوة وأنشئ أخرى.</p>
           </section>
         )}
 
         {tab === 'catalog' && (
-          <section className="rl-card">
-            <div className="rl-tablewrap"><table className="rl-table" data-testid="catalog-table"><thead><tr><th>الدور</th><th>الرمز</th><th>النطاق</th><th>الصفحة الرئيسة</th><th>إداري؟</th><th>جسر قديم</th><th>الحالة</th><th></th></tr></thead><tbody>
+          <section className="rm-card">
+            <div className="rl-tablewrap"><table className="rm-table" data-testid="catalog-table"><thead><tr><th>الدور</th><th>الرمز</th><th>النطاق</th><th>الصفحة الرئيسة</th><th>إداري؟</th><th>جسر قديم</th><th>الحالة</th><th></th></tr></thead><tbody>
               {roles.map(r => <tr key={r.code} data-testid="catalog-row"><td><b>{r.name_ar}</b><br /><small dir="ltr">{r.name_en}</small></td><td dir="ltr"><code>{r.code}</code></td><td>{SCOPE_AR[r.scope]}</td><td dir="ltr">{r.landing}</td><td>{r.is_staff ? 'نعم' : '—'}</td><td dir="ltr">{r.legacy_role || '—'}</td><td>{r.active ? <span className="rl-tag ok">فعّالة</span> : <span className="rl-tag">معطَّلة</span>}{r.is_system ? '' : <span className="rl-tag">مخصّصة</span>}</td><td>{admin && !r.is_system && <button type="button" className="rl-x" onClick={() => toggleRole(r)} disabled={busy === r.code}>{r.active ? 'تعطيل' : 'تفعيل'}</button>}</td></tr>)}
             </tbody></table></div>
             {admin && (
@@ -170,26 +174,23 @@ export default function AdminRolesPage() {
 }
 
 const CSS = `
-.rl{min-height:100vh;background:#FBF4EE;padding:22px 14px 60px}.rl-wrap{max-width:1180px;margin:0 auto}
-.rl-kicker{display:inline-flex;gap:6px;align-items:center;color:#D4614A;font-weight:800;font-size:13px}.rl-head h1{margin:6px 0 4px;color:#3A1F36;font-size:28px}.rl-head p{margin:0 0 14px;color:#5C4858;line-height:1.8}
-.rl-kpis{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.rl-kpis span{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:8px 12px;color:#4A3645;font-size:14px}.rl-kpis b{color:#3A1F36;font-size:18px;margin-inline-end:4px}
+.rl{}.rl-wrap{max-width:1180px;margin:0 auto}
 .rl-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px}.rl-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:8px 14px;font-weight:800;color:#4A3645;cursor:pointer;font-family:inherit;min-height:40px}.rl-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
-.rl-card{background:#fff;border:1px solid #e5e9f0;border-radius:18px;padding:18px}
 .rl-form{display:grid;gap:14px}.rl-form label{display:grid;gap:6px;font-weight:700;color:#3A1F36;font-size:14px}.rl-form label em{font-style:normal;color:#b45309;font-weight:600}.rl-form input,.rl-form select{border:1.5px solid #D9CBC2;border-radius:12px;padding:10px 12px;font-size:15px;font-family:inherit;font-weight:500;width:100%;box-sizing:border-box;min-height:44px}.rl-form input:focus-visible,.rl-form select:focus-visible{outline:3px solid #D4614A;outline-offset:1px}
 .rl-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:720px){.rl-two{grid-template-columns:1fr}}
 .rl-form fieldset{border:1px dashed #D9CBC2;border-radius:14px;padding:12px}.rl-form legend{font-weight:800;color:#3A1F36;padding:0 6px}
-.rl-roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}.rl-roles label{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;border:1px solid #e5e9f0;border-radius:12px;padding:8px 10px;cursor:pointer;font-weight:600}.rl-roles label.on{border-color:#D4614A;background:#FBEDE7}.rl-roles input{grid-row:1/3;width:18px;height:18px;min-height:0}.rl-roles b{color:#3A1F36}.rl-roles span{color:#8E7F8A;font-size:11px;grid-column:2}
+.rl-roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}.rl-roles label{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;border:1px solid #EADFD6;border-radius:12px;padding:8px 10px;cursor:pointer;font-weight:600}.rl-roles label.on{border-color:#D4614A;background:#FBEDE7}.rl-roles input{grid-row:1/3;width:18px;height:18px;min-height:0}.rl-roles b{color:#3A1F36}.rl-roles span{color:#8E7F8A;font-size:11px;grid-column:2}
 .rl-modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.rl-modes button{display:inline-flex;gap:6px;align-items:center;min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid #EADFD6;background:#fff;color:#4A3645;font:inherit;font-weight:800;cursor:pointer}.rl-modes button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.rl-modes button:focus-visible{outline:3px solid #D4614A;outline-offset:2px}
 .rl-qrwrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:10px 0}.rl-qr{background:#fff;border:4px solid #D9A866;border-radius:16px;padding:10px;line-height:0}.rl-qr svg{width:200px;height:200px}.rl-qrside{display:grid;gap:6px;max-width:320px}.rl-qrside b{font-size:18px;color:#3A1F36}.rl-qrside span{color:#5C4858;font-size:13px;line-height:1.7}.rl-qrside button{justify-self:start}
 .rl-check{display:flex!important;gap:8px;align-items:center;font-weight:600!important}.rl-check input{width:18px;height:18px;min-height:0!important}
 .rl-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.rl-form button,.rl-made button,.rl-btn{display:inline-flex;gap:6px;align-items:center;border:0;border-radius:12px;padding:10px 16px;background:#3A1F36;color:#fff;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px;min-height:44px;text-decoration:none}.rl-form button:disabled{opacity:.5;cursor:not-allowed}.rl-made button,.rl-btn{background:#D4614A}
+.rl-form button,.rl-made button,.rm-btn{display:inline-flex;gap:6px;align-items:center;border:0;border-radius:12px;padding:10px 16px;background:#3A1F36;color:#fff;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px;min-height:44px;text-decoration:none}.rl-form button:disabled{opacity:.5;cursor:not-allowed}.rl-made button,.rm-btn{background:#D4614A}
 .rl-made{border:1px solid #a7f3d0;background:#ecfdf5;border-radius:14px;padding:14px;margin-bottom:16px;display:grid;gap:10px}.rl-made h3{margin:0;color:#065f46;display:flex;gap:6px;align-items:center;font-size:16px}.rl-made code{display:block;background:#fff;border:1px solid #d1fae5;border-radius:10px;padding:10px;word-break:break-all;font-size:13px;color:#3A1F36}
 .rl-search{border:1.5px solid #D9CBC2;border-radius:12px;padding:9px 12px;font-family:inherit;font-size:15px;min-width:260px;min-height:44px}
-.rl-tablewrap{overflow:auto;margin-top:10px}.rl-table{width:100%;border-collapse:collapse;font-size:14px}.rl-table th{text-align:right;color:#8E7F8A;font-weight:700;padding:8px;border-bottom:1px solid #e5e9f0;white-space:nowrap}.rl-table td{padding:9px 8px;border-bottom:1px solid #F6EBE0;vertical-align:top;color:#4A3645}.rl-table small{color:#B3A5AE;font-size:11px}.rl-table code{background:#F6EBE0;padding:1px 6px;border-radius:6px;font-size:12px}
+.rl-tablewrap{overflow:auto;margin-top:10px}.rm-table code{background:#F6EBE0;padding:1px 6px;border-radius:6px;font-size:12px}
 .rl-tag{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;background:#F6EBE0;color:#5C4858;margin-inline-end:4px}.rl-tag.ok{background:#ecfdf5;color:#065f46}.rl-tag.warn{background:#fffbeb;color:#92400e}
 .rl-x{border:1px solid #fecaca;background:#fff;color:#991b1b;border-radius:10px;padding:6px 10px;font-weight:800;cursor:pointer;font-family:inherit;min-height:36px}.rl-x:disabled{opacity:.5}
-.rl-newrole{margin-top:18px;padding-top:16px;border-top:1px dashed #e5e9f0}.rl-newrole h3{margin:0;color:#3A1F36}
-.rl-err{color:#991b1b;background:#fef2f2;border-radius:10px;padding:10px 12px;margin:8px 0}.rl-ok{color:#065f46;background:#ecfdf5;border-radius:10px;padding:10px 12px;margin:8px 0}.rl-muted{color:#8E7F8A;font-size:13px}
+.rl-newrole{margin-top:18px;padding-top:16px;border-top:1px dashed #EADFD6}.rl-newrole h3{margin:0;color:#3A1F36}
+.rl-err{color:#991b1b;background:#fef2f2;border-radius:10px;padding:10px 12px;margin:8px 0}.rl-ok{color:#065f46;background:#ecfdf5;border-radius:10px;padding:10px 12px;margin:8px 0}
 .rl-foot{margin-top:20px;color:#B3A5AE;font-size:12px;line-height:1.8}
 `;

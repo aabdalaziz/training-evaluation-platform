@@ -15,7 +15,8 @@ import { Icon } from '../../lib/ui/icons';
 import { BRAND } from '../../lib/portal/content';
 import { ROOMS, canOpen, roomFor } from '../../lib/portal/rooms';
 import { ADMIN_GROUPS, groupOf } from './PortalAdminTabs';
-import { wingsFor, resolveWing, readLastWing } from '../../lib/portal/wings'; /* هـ-3 و */
+import { wingsFor, resolveWing, readLastWing, roomsOfWing, clusterNameOf } from '../../lib/portal/wings'; /* هـ-3 و */
+import { RoomContext, RM_CSS } from './RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 import { useMyRoles } from './Brand';
 import { SignCounter } from './SignCounter'; /* P50 «توقيعي» */
 import { isPiiPath } from '../../lib/shield/paths'; /* P65 منارة الوصول الإداري */
@@ -32,6 +33,10 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
   /* الحارس: غرفة معروفة → صلاحيتها؛ غرفة غير معروفة تحت /admin → أي صفة طاقم */
   const denied = !!my && (room ? !canOpen(room, my.permissions, my.staff) : !(my.staff || my.permissions.includes('*')));
   const title = room?.label || 'غرفة إدارية';
+  const cluster = clusterNameOf(wing, pathname);
+  const wingRooms = wing && my ? roomsOfWing(wing).filter(r => canOpen(r, my.permissions, my.staff)) : [];
+  const roomCtx = { pathname, room: room || null, wing, cluster, rooms: wingRooms };
+  const toneStyle = { ['--rm-tone' as string]: wing?.tone || '#D9A866', ['--rm-tone-dark' as string]: wing?.tone_dark || '#F6D9A8' } as React.CSSProperties;
   /* P65: صفحة إدارية تحمل بيانات شخصية → منارة واحدة (الخادم يجمعها صفًّا لكل مستخدم × مسار × يوم) */
   useEffect(() => {
     if (denied || !my || !isPiiPath(pathname)) return;
@@ -57,12 +62,12 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
       </main>
     );
   }
-  if (bare) return <>{children}</>;
+  if (bare) return <RoomContext.Provider value={roomCtx}>{children}</RoomContext.Provider>;
   return (
-    <div className="as" dir="rtl" data-testid="admin-shell"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <RoomContext.Provider value={roomCtx}><div className="as" dir="rtl" data-testid="admin-shell" style={toneStyle}><style dangerouslySetInnerHTML={{ __html: CSS + RM_CSS }} />
       <div className="as-strip" data-testid="as-strip">
         <nav className="as-crumb" aria-label="موقعك في مركز القيادة">
-          <Link href="/dashboard">{BRAND.command.ar}</Link>{wing && <><span aria-hidden="true">›</span><span className="as-wing" style={{ ["--w" as string]: wing.tone } as React.CSSProperties} data-testid="as-wing">{wing.name}</span></>}{grp && <><span aria-hidden="true">›</span><span className="as-grp" style={{ ["--g" as string]: grp.color } as React.CSSProperties} data-testid="as-group">{grp.label}</span></>}<span aria-hidden="true">›</span><b data-testid="as-room">{title}</b>
+          <Link href="/dashboard">{BRAND.command.ar}</Link>{wing && <><span aria-hidden="true">›</span><span className="as-wing" style={{ ["--w" as string]: wing.tone } as React.CSSProperties} data-testid="as-wing">{wing.name}</span></>}{cluster && <><span aria-hidden="true">›</span><span className="as-cluster" data-testid="as-cluster">{cluster}</span></>}{grp && <><span aria-hidden="true">›</span><span className="as-grp" style={{ ["--g" as string]: grp.color } as React.CSSProperties} data-testid="as-group">{grp.label}</span></>}<span aria-hidden="true">›</span><b data-testid="as-room">{title}</b>
           {room?.hint && <small>{room.hint}</small>}
         </nav>
         <span className="as-right"><SignCounter lang="ar" tone="strip" /><Link href={HALL} className="as-hall" data-testid="as-hall"><Icon name="compass" size={14} /> صفحاتي</Link></span>
@@ -73,16 +78,16 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
         <span>© {BRAND.copyrightYear} {BRAND.owner.ar}</span>
         <span className="as-foot-links"><Link href="/help">دليل مركز القيادة</Link><Link href="/accessibility">أَثَر للجميع</Link><Link href="/security">درع أَثَر</Link><Link href="/">بوابة أَثَر</Link></span>
       </footer>
-    </div>
+    </div></RoomContext.Provider>
   );
 }
 
 const CSS = `
 .as{display:flex;flex-direction:column;min-height:calc(100vh - 58px)}
-.as-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px max(18px,calc((100% - 1320px)/2));background:#FBF4EE;border-bottom:1px solid #EADFD6;font-size:12.5px}
-.as-crumb{display:flex;align-items:center;gap:8px;min-width:0;color:#8E7F8A;font-weight:700}.as-crumb a{color:#D4614A;text-decoration:none}.as-crumb a:hover{text-decoration:underline}.as-crumb b{color:#3A1F36;font-weight:900}.as-crumb .as-grp{display:inline-flex;align-items:center;gap:6px;color:#4A3645;font-weight:800}.as-crumb .as-grp::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--g)}.as-crumb small{color:#B3A5AE;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.as-wing{display:inline-flex;align-items:center;gap:6px;color:#3A1F36;font-weight:900}.as-wing:before{content:'';width:8px;height:8px;transform:rotate(45deg);background:var(--w);border-radius:1px}
-.as-right{display:inline-flex;gap:8px;align-items:center}.as-hall{display:inline-flex;align-items:center;gap:5px;color:#3A1F36;text-decoration:none;font-weight:800;border:1px solid #F1D9A8;background:#FBF4EE;border-radius:999px;padding:4px 10px;white-space:nowrap}.as-hall:hover{background:#fff4d6}
+.as-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px max(18px,calc((100% - 1320px)/2));background:#22101F;border-bottom:1px solid rgba(255,255,255,.08);font-size:12.5px;color:#D9CBC2}
+.as-crumb{display:flex;align-items:center;gap:8px;min-width:0;color:#B9A6B3;font-weight:700}.as-crumb a{color:#F6D9A8;text-decoration:none}.as-crumb a:hover{text-decoration:underline}.as-crumb b{color:#fff;font-weight:900}.as-crumb .as-grp{display:inline-flex;align-items:center;gap:6px;color:#EADFD6;font-weight:800}.as-crumb .as-grp:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--g)}.as-crumb small{color:#8E7F8A;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.as-cluster{color:#EADFD6;font-weight:800}
+.as-wing{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:900}.as-wing:before{content:'';width:8px;height:8px;transform:rotate(45deg);background:var(--w);border-radius:1px}
+.as-right{display:inline-flex;gap:8px;align-items:center}.as-hall{display:inline-flex;align-items:center;gap:5px;color:#F6D9A8;text-decoration:none;font-weight:800;border:1px solid rgba(246,217,168,.4);background:rgba(255,255,255,.05);border-radius:999px;padding:4px 10px;white-space:nowrap}.as-hall:hover{background:rgba(255,255,255,.12)}
 .as-body{flex:1;min-width:0}
 .as-foot{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;align-items:center;padding:12px max(18px,calc((100% - 1320px)/2));background:#3A1F36;color:#D9CBC2;font-size:12px;line-height:1.7}.as-foot b{color:#fff}.as-foot-links{display:flex;gap:14px}.as-foot-links a{color:#fde68a;text-decoration:none}.as-foot-links a:hover{text-decoration:underline}
 .as-deny{align-items:center;justify-content:center;padding:40px 16px;background:#FBF4EE;min-height:60vh}
