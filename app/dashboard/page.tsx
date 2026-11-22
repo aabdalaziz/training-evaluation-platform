@@ -16,6 +16,7 @@ import dynamic from 'next/dynamic';
 const EvalLinks = dynamic(() => import('../components/EvalLinks'), { ssr: false, loading: () => <div className="db-muted">تحميل مولّد الروابط…</div> });   /* P49 */
 import { useMyRoles, invalidateMyRoles } from '../components/Brand';
 import { ZoneMark } from '../components/ZoneMark';
+import { wingsFor, wingByKey, hrefsInWing, roomsOfWing, readLastWing, writeLastWing, type Wing, type WingKey } from '../../lib/portal/wings'; /* هـ-3 و «الكلّ لا يرى الكلّ» */
 import { Horizon } from '../../lib/ui/motion';
 import { sideRooms } from '../../lib/portal/rooms';
 import { BRAND } from '../../lib/portal/content';
@@ -81,6 +82,18 @@ export default function Dashboard() {
   const [raw, setRaw] = useState<{ evaluations: any[]; answers: any[]; questions: any[]; classrooms: Classroom[]; trainers: Trainer[]; schedules: any[]; remoteResponses: number } | null>(null);
   const [view, setView] = useState<View>('overview');
   const [range, setRange] = useState<Range>('7d');
+  /* هـ-3 و: أقسام مركز القيادة — القسم الحالي من ?wing= أو آخر قسم فتحته؛ من يملك أكثر من قسم بلا اختيار سابق يرى الردهة */
+  const [lobby, setLobby] = useState(false); const [wingKey, setWingKey] = useState<WingKey | null>(null);
+  const mine = useMemo(() => wingsFor(my?.permissions, !!my?.staff), [my]);
+  useEffect(() => {
+    if (!my) return; let sp: URLSearchParams | null = null; try { sp = new URLSearchParams(window.location.search); } catch { /* لا شيء */ }
+    const want = sp?.get('wing') || null; const last = readLastWing();
+    const w = (want && mine.find(m => m.key === want)) || mine.find(m => m.key === last) || (mine.length === 1 ? mine[0] : null) || null;
+    if (sp?.get('lobby') === '1' || (!w && mine.length > 1)) { setLobby(true); return; }
+    setLobby(false); if (w) { setWingKey(w.key); writeLastWing(w.key); }
+  }, [my, mine]);
+  const wing: Wing | null = wingByKey(wingKey) || null;
+  const pickWing = (k: WingKey) => { setWingKey(k); writeLastWing(k); setLobby(false); setView('overview'); try { window.history.replaceState(null, '', `?wing=${k}`); } catch { /* لا شيء */ } };
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
@@ -284,8 +297,10 @@ export default function Dashboard() {
   const perf = PERF_LABEL[k.perf], risk = RISK_LABEL[k.risk];
   const freshness = lastSubmit ? timeAgo(lastSubmit) : 'لا توجد استجابات بعد';
 
+  if (lobby && mine.length > 0) return <Lobby mine={mine} last={readLastWing()} name={profile.full_name || ''} pick={pickWing} logout={logout} />;
+
   return (
-    <div className="db" dir="rtl">
+    <div className="db" dir="rtl" data-wing={wing?.key || ''}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       {notice && <div className="db-toast">{notice}</div>}
       {apModal && (
@@ -308,11 +323,12 @@ export default function Dashboard() {
       {/* ===== sidebar ===== */}
       <aside className={`db-side ${menuOpen ? 'open' : ''}`}>
         <div className="db-brand" data-testid="command-side-brand">
-          <div className="db-logos">{/* هـ-3: علامة «الطاقم» من عائلة المناطق — العتبة الذهبية على خطّ القاعدة */}
-            <ZoneMark zone="staff" size={46} light title="مركز قيادة أَثَر — الطاقم" />
+          <div className="db-logos">{/* هـ-3: علامة القسم من عائلة المناطق (الطاقم إن لم يُحدَّد قسم) */}
+            <ZoneMark zone={wing?.zone || 'staff'} size={46} light title={wing ? wing.name : 'مركز قيادة أَثَر — الطاقم'} />
             <img src="/logos/upm.png" alt={BRAND.institution.ar} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           </div>
-          <div className="db-brand-text"><b>{BRAND.name.ar} · مركز القيادة</b><small>{BRAND.institution.ar}</small></div>
+          <div className="db-brand-text"><b data-testid="command-side-wing">{wing ? wing.name : `${BRAND.name.ar} · مركز القيادة`}</b><small>{wing ? `مركز القيادة · ${wing.verb}` : BRAND.institution.ar}</small></div>
+          {mine.length > 1 && <button type="button" className="db-hall" onClick={() => { setLobby(true); try { window.history.replaceState(null, '', '?lobby=1'); } catch { /* لا شيء */ } }} data-testid="command-side-lobby"><Icon name="compass" size={16} /> ← الردهة · أقسامي {mine.length}</button>}
           <Link href="/hub?stay=1" className="db-hall" data-testid="command-side-hall"><Icon name="compass" size={16} /> صفحاتي — كل صفحات أدوارك</Link>
         </div>
         <div className="db-user">
@@ -320,14 +336,14 @@ export default function Dashboard() {
           <div><b>{profile.full_name || 'مدير المنصة'}</b><small>{myRoleLabel(my) || ROLE_LABEL[profile.role] || profile.role}</small></div>
         </div>
         <nav className="db-nav">
-          {NAV.map(n => (
+          {NAV.filter(n => !wing || VIEWS_BY_WING[wing.key].includes(n.id)).map(n => (
             <button key={n.id} className={view === n.id ? 'on' : ''} onClick={() => { setView(n.id); setMenuOpen(false); window.history.replaceState(null, '', `?view=${n.id}`); }}>
               <Icon name={n.icon} size={20} /><span><b>{n.label}</b><small>{n.hint}</small></span>
             </button>
           ))}
           <div className="db-nav-sep">الإدارة</div>
           {/* P43-ب: غُرَف مركز القيادة من خريطة واحدة (lib/portal/rooms.ts) بحسب صلاحياتي */}
-          {sideRooms(my ? my.permissions : null, !!my?.staff).map(r => (
+          {(() => { const all = sideRooms(my ? my.permissions : null, !!my?.staff); const ok = new Set(hrefsInWing(wing, all.map(r => r.href))); return all.filter(r => ok.has(r.href)); })().map(r => (
             <Link key={r.href} href={r.href} className="db-navlink" data-testid={`side-room-${r.href.replace(/\//g, '-').slice(1)}`}><Icon name={r.icon} size={20} /><span><b>{r.label}</b><small>{r.href === '/reports/remote-survey' ? `${raw?.remoteResponses || 0} استجابة` : r.hint}</small></span></Link>
           ))}
         </nav>
@@ -358,6 +374,7 @@ export default function Dashboard() {
         {/* ================= OVERVIEW ================= */}
         {view === 'overview' && (
           <div className="db-content">
+            {wing && <WingDoor wing={wing} my={my} />}
             {/* status banner */}
             <section className="db-hero">
               <div className="db-hero-hz" aria-hidden="true"><Horizon light height={120} /></div>
@@ -695,7 +712,67 @@ function FormCard({ icon, title, desc, href, admin }: { icon: IconName; title: s
 }
 
 /* ============================================================ styles */
+/* هـ-3 و: ما يراه كلّ قسم من أدوات لوحة القيادة — النظرة التنفيذية مشتركة الآن وتُخصَّص لاحقًا */
+const VIEWS_BY_WING: Record<WingKey, View[]> = {
+  programs: ['overview', 'programs', 'evaluations', 'settings'],
+  assess: ['overview', 'evaluations', 'reports', 'settings'],
+  quality: ['overview', 'programs', 'evaluations', 'reports', 'settings'],
+  people: ['overview', 'programs', 'settings'],
+  system: ['overview', 'settings'],
+};
+
+/** «الردهة» — أبواب أقسامي فقط؛ من يملك قسمًا واحدًا لا يراها */
+function Lobby({ mine, last, name, pick, logout }: { mine: Wing[]; last: string | null; name: string; pick: (k: WingKey) => void; logout: () => void }) {
+  return (
+    <main className="lb" dir="rtl" data-testid="command-lobby">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="lb-hz"><Horizon light height={180} /></div>
+      <div className="lb-in">
+        <p className="lb-k"><ZoneMark zone="staff" size={22} light /> مركز قيادة أَثَر · الردهة</p>
+        <h1>{name ? `${name}، ` : ''}أيّ قسم تدير الآن؟</h1>
+        <p className="lb-lead">لك {mine.length} أقسام. تدخل واحدًا فلا ترى سواه — وتعود إلى هنا من زرّ «الردهة» متى شئت.</p>
+        <div className="lb-doors">
+          {mine.map((w, i) => { const n = roomsOfWing(w).length; return (
+            <button type="button" key={w.key} className={`lb-door ${w.key === last ? 'last' : ''}`} style={{ ['--w' as string]: w.tone_dark, animationDelay: `${i * 90}ms` } as React.CSSProperties} onClick={() => pick(w.key)} data-testid={`lobby-door-${w.key}`}>
+              <ZoneMark zone={w.zone} size={64} light />
+              <b>{w.name}</b><em>{w.verb}</em><small>{w.line}</small>
+              <span className="lb-n">{n} غرفة{w.key === last ? ' · آخر ما فتحت' : ''}</span>
+            </button>); })}
+        </div>
+        <div className="lb-foot"><Link href="/hub?stay=1" className="db-hall"><Icon name="compass" size={16} /> صفحاتي — كل صفحات أدوارك</Link><button type="button" className="db-hall" onClick={logout}><Icon name="logout" size={16} /> تسجيل الخروج</button></div>
+      </div>
+    </main>
+  );
+}
+
+/** «باب القسم» فوق النظرة التنفيذية: علامة القسم وغرفه المتاحة لي — فلا أرى غرف غيره */
+function WingDoor({ wing, my }: { wing: Wing; my: ReturnType<typeof useMyRoles> }) {
+  const rooms = roomsOfWing(wing).filter(r => !my || my.permissions.includes('*') || (my.staff && r.perms.includes('staff')) || r.perms.some(p => my.permissions.includes(p) || my.permissions.includes(`${p.split('.')[0]}.*`)));
+  return (
+    <section className="db-wd" style={{ ['--w' as string]: wing.tone, ['--ws' as string]: wing.tone_soft } as React.CSSProperties} data-testid="wing-door">
+      <div className="db-wd-head"><ZoneMark zone={wing.zone} size={42} /><div><b>{wing.name}</b><small>{wing.verb} — {wing.line}</small></div><span className="db-wd-n">{rooms.length} غرفة</span></div>
+      <div className="db-wd-rooms">{rooms.map(r => <Link key={r.href} href={r.href} className="db-wd-room" data-testid="wing-room"><Icon name={r.icon} size={16} /><span><b>{r.label}</b>{r.hint && <small>{r.hint}</small>}</span></Link>)}</div>
+    </section>
+  );
+}
+
 const CSS = `
+/* هـ-3 و: الردهة وباب القسم */
+.lb{min-height:100vh;position:relative;overflow:hidden;background:linear-gradient(135deg,#22101F 0%,#3A1F36 55%,#4A2946 100%);color:#FBF4EE;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
+.lb-hz{position:absolute;inset:0 0 auto 0;opacity:.5;pointer-events:none}.lb-in{position:relative;max-width:1100px;margin:0 auto;padding:60px 20px 40px}
+.lb-k{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:#F6D9A8;margin:0 0 10px}.lb h1{margin:0 0 8px;font-size:34px;font-weight:900}.lb-lead{margin:0 0 28px;color:rgba(251,244,238,.8);font-size:15px;line-height:1.9}
+.lb-doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.lb-door{display:grid;justify-items:start;gap:4px;text-align:start;font:inherit;color:#FBF4EE;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-top:4px solid var(--w);border-radius:18px 18px 24px 24px;padding:18px 16px 16px;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),background .3s;animation:lbin .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes lbin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.lb-door:hover{transform:translateY(-4px);background:rgba(255,255,255,.12)}.lb-door.last{box-shadow:0 0 0 2px #D9A866 inset}
+.lb-door b{font-size:19px;font-weight:900;margin-top:8px}.lb-door em{font-style:normal;color:var(--w);font-weight:800;font-size:13px}.lb-door small{color:rgba(251,244,238,.75);font-size:12.5px;line-height:1.7;min-height:42px}
+.lb-n{margin-top:8px;font-size:11.5px;font-weight:800;color:#F6D9A8;background:rgba(217,168,102,.15);border:1px solid rgba(217,168,102,.4);border-radius:999px;padding:3px 10px}
+.lb-foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.lb .db-hall{font:inherit;cursor:pointer}
+.db-wd{background:linear-gradient(90deg,var(--ws),#fff 60%);border:1px solid var(--line);border-inline-start:5px solid var(--w);border-radius:16px 16px 22px 22px;padding:14px 16px}
+.db-wd-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}.db-wd-head b{display:block;font-size:17px;color:var(--navy);font-weight:900}.db-wd-head small{color:var(--muted);font-size:12.5px}.db-wd-n{margin-inline-start:auto;font-size:12px;font-weight:800;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.db-wd-rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.db-wd-room{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;text-decoration:none;color:var(--ink);transition:border-color .2s,transform .25s}.db-wd-room:hover{border-color:var(--w);transform:translateY(-1px)}
+.db-wd-room svg{color:var(--w);flex-shrink:0}.db-wd-room span{display:grid;min-width:0}.db-wd-room b{font-size:13.5px;font-weight:800}.db-wd-room small{color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .db{display:grid;grid-template-columns:276px 1fr;min-height:100vh;color:var(--ink);background:linear-gradient(to left,#22101F 276px,var(--bg) 276px)}
 .db-loading{min-height:100vh;display:grid;place-items:center;background:var(--navy)}
 @keyframes dbspin{to{transform:rotate(360deg)}}
