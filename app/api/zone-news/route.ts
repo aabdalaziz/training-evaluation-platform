@@ -38,6 +38,8 @@ async function autoItems(db: any, zone: Zone): Promise<ZoneItem[]> {
   try {
     if (zone === 'miaar') {
       const { count } = await db.from('placement_reports').select('id', { count: 'exact', head: true }).gte('created_at', week);
+      const { count: today } = await db.from('placement_reports').select('id', { count: 'exact', head: true }).gte('created_at', new Date(now.getTime() - 86400000).toISOString());
+      if (n(today) >= 2) push('today', `${arN(n(today))} يقيّمون مستواهم اليوم`, 'ثلاث دقائق — وتعرف مستواك.', '/miaar', 'coral');
       if (n(count) >= 3) push('placed', `${arN(n(count))} متعلّمًا حدّدوا مستواهم هذا الأسبوع`, 'قيّم نفسك في ثلاث دقائق وانضمّ إليهم.', '/miaar', 'coral');
       const { count: inv } = await db.from('placement_invites').select('id', { count: 'exact', head: true }).eq('status', 'open');
       if (n(inv) > 0) push('invites', 'دعوات تقييم مفتوحة الآن', 'لديك رمز دعوة من جهتك؟ أدخله من صفحة مِعيار.', '/miaar', 'sand');
@@ -93,8 +95,8 @@ export async function GET(req: Request) {
     const autos = (await Promise.all((['miaar', 'iqra', 'programs'] as Zone[]).map((z) => autoItems(db, z)))).flat();
     const seen = new Set<string>(); const merged = [...newsAll, ...autos].filter((x) => (seen.has(x.id) ? false : (seen.add(x.id), true)));
     merged.sort((a, b) => Number(b.pinned) - Number(a.pinned) || (a.kind === 'news' ? -1 : 0) - (b.kind === 'news' ? -1 : 0) || b.at.localeCompare(a.at));
-    if (!merged.length) merged.push(...FALLBACK.miaar, ...FALLBACK.iqra, ...FALLBACK.programs);
-    return NextResponse.json({ ok: true, zone: 'all', items: merged.slice(0, 10) }, { headers: PUB });
+    for (const z of PUBLIC_ZONES) if (z !== 'portal' && !merged.some((x) => x.zone === z)) merged.push(...FALLBACK[z]); /* كلّ منطقة حاضرة في الحزام بخبر ثابت على الأقل */
+    return NextResponse.json({ ok: true, zone: 'all', items: merged.slice(0, 24) }, { headers: PUB });
   }
   const { data } = await db.from('zone_news').select('id, zone, title_ar, body_ar, href, tone, pinned, starts_at').eq('zone', zone).eq('published', true).lte('starts_at', nowIso).or(`ends_at.is.null,ends_at.gt.${nowIso}`).order('pinned', { ascending: false }).order('starts_at', { ascending: false }).limit(6);
   const news: ZoneItem[] = ((data || []) as any[]).map((r) => ({ id: r.id, kind: 'news', zone: r.zone, title: r.title_ar, body: r.body_ar || '', href: r.href || null, tone: r.tone || 'plum', pinned: !!r.pinned, at: r.starts_at }));

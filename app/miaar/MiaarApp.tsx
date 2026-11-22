@@ -383,12 +383,8 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     {toast && <div className="mi-toast" role="status" data-testid="mi-toast">{toast}</div>}
 
     {step === 'intro' && <>
-      <section className={`mi-ticker${tickerPaused || reduced ? ' paused' : ''}`} aria-label={t('intro', 'tickerK')} data-testid="mi-ticker">
-        <span className="mi-ticker-k"><i aria-hidden="true" />{t('intro', 'tickerK')}</span>
-        <div className="mi-ticker-view"><div className="mi-ticker-track" style={{ animationDuration: `${Math.max(24, tickerItems.length * 7)}s` }}>{[0, 1].map((rp) => <span key={rp} className="mi-ticker-row" aria-hidden={rp === 1}>{tickerItems.map((it, i) => <span key={i} className="mi-ticker-item">{it}</span>)}</span>)}</div></div>
-        <button type="button" className="mi-ticker-btn" aria-pressed={tickerPaused} onClick={() => setTickerPaused((v) => !v)} data-testid="mi-ticker-toggle">{tickerPaused ? '▶' : '❚❚'}<span className="mi-sr">{tickerPaused ? t('intro', 'tickerPlay') : t('intro', 'tickerPause')}</span></button>
-      </section>
-      <ZoneTape compact /> {/* هـ-1/4ب «شريط أخبار المنطقة» */}
+      {/* هـ-1/4د: «حزام أَثَر» بدل شريط النبض المحلّي — الحركة نفسها، وأخبار البوّابة كلّها (نبض مِعيار يأتي ضمن منطقة مِعيار) */}
+      <ZoneTape />
 
       {/* ===== V3 «واجهة الوعد الواحد» — الطيّة ===== */}
       <section className="mi-v3hero" data-testid="mi-intro">

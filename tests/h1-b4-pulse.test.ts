@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { RATING_SERVICES, RATING_TAGS, SERVICE_AR, STAR_WORDS, maskEmail, fmtAvg, fmtCount, satisfaction } from '../lib/portal/ratings';
 import { zoneOf } from '../app/components/AtharBackdrop';
+import { groupByZone } from '../app/components/ZoneTape';
 
 const R = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), 'utf8');
 
@@ -38,7 +39,7 @@ test('هـ-1/4ج: شريط واحد ثابت في كل الصفحات (الرئ�
   assert.ok(shell.includes('<ZoneTape />')); assert.ok(!shell.includes("pathname !== '/' &&"));
   const api = R('app/api/zone-news/route.ts');
   assert.ok(api.includes("zoneQ === 'all'")); assert.ok(api.includes("['portal', 'miaar', 'iqra', 'programs', 'org', 'experts']")); assert.ok(!api.includes("PUBLIC_ZONES: Zone[] = ['portal', 'miaar', 'iqra', 'programs', 'org', 'experts', 'staff']"));
-  const z = R('app/components/ZoneTape.tsx'); assert.ok(z.includes("zone = 'all'")); assert.ok(z.includes('zt-chip'));
+  const z = R('app/components/ZoneTape.tsx'); assert.ok(z.includes("zone = 'all'")); assert.ok(z.includes('ab-brand'));
 });
 
 test('الترحيل: جداول ودوال هـ-1/4 بأسمائها', () => {
@@ -48,12 +49,18 @@ test('الترحيل: جداول ودوال هـ-1/4 بأسمائها', () => {
   assert.ok(/zone\s+text\s+not null\s+check\s*\(zone in \('miaar','iqra','programs','org','experts','staff','portal'\)\)/i.test(sql));
 });
 
-test('ZoneTape: يدور كل ٧ ثوانٍ، يتوقّف بالتحويم، ساكن مع خفض الحركة، ولا يظهر بلا أخبار', () => {
+test('هـ-1/4د «حزام أَثَر»: حركة مِعيار نفسها، شعار + اسم المنطقة قبل كل مجموعة، ✦ بين الأخبار و✦✦✦ بين المناطق، دائرة من الخلف، ساكن مع خفض الحركة', () => {
   const z = R('app/components/ZoneTape.tsx');
-  assert.ok(z.includes('7000')); assert.ok(z.includes('onMouseEnter={() => setHold(true)}'));
-  assert.ok(z.includes("prefers-reduced-motion: reduce") && z.includes("dataset.engrave === 'none'"));
+  assert.ok(z.includes('@keyframes abRtl{from{transform:translateX(0)}to{transform:translateX(50%)}}')); assert.ok(z.includes('{row(0)}{row(1)}'));
+  assert.ok(z.includes('.ab:hover .ab-track,.ab:focus-within .ab-track,.ab.paused .ab-track{animation-play-state:paused}'));
+  assert.ok(z.includes('<span className="ab-brand"><AtharMark size={18} light /><b>{g.label}</b></span>'));
+  assert.ok(z.includes('<i className="ab-sep" aria-hidden="true">✦</i>') && z.includes('<i className="ab-sep3" aria-hidden="true">✦✦✦</i>'));
+  assert.ok(z.includes('requestAnimationFrame(tick)') && z.includes('scale(${(1 - 0.2 * d).toFixed(3)})'));
+  assert.ok(z.includes("prefers-reduced-motion: reduce") && z.includes("dataset.engrave === 'none'") && z.includes('.ab.still .ab-track{animation:none}'));
   assert.ok(z.includes('if (!items || !items.length) return null'));
-  assert.ok(z.includes('data-testid="zone-tape"'));
+  const groups = groupByZone([{ id: 'a', kind: 'auto', zone: 'iqra', title: 'x', body: '', href: null, tone: 'plum', pinned: false }, { id: 'b', kind: 'news', zone: 'miaar', title: 'y', body: '', href: null, tone: 'plum', pinned: false }, { id: 'c', kind: 'news', zone: 'miaar', title: 'z', body: '', href: null, tone: 'plum', pinned: false }, { id: 'd', kind: 'news', zone: 'nope', title: 'w', body: '', href: null, tone: 'plum', pinned: false }] as any);
+  assert.deepEqual(groups.map((g) => [g.zone, g.label, g.items.length]), [['portal', 'أَثَر', 1], ['miaar', 'مِعيار', 2], ['iqra', 'اقْرَأْ', 1]]);
+  assert.ok(!R('app/miaar/MiaarApp.tsx').includes('className={`mi-ticker${')); // بدل شريط النبض المحلّي
 });
 
 test('RateService: نجوم ١–٥ ووسوم حسب النجمة وكلمة ≤٣٠٠ وتعديل بعد الإرسال', () => {
@@ -92,7 +99,7 @@ test('هـ-1/4ب: الشريط في كل منطقة — خبر ثابت حين �
   assert.ok(n.includes('if (!items.length) items.push(...FALLBACK[zone])'));
   assert.ok(n.includes('items: data || [], rows: data || []'));
   assert.ok(R('app/iqra/start/IqraStart.tsx').includes('<ZoneTape />'));
-  assert.ok(R('app/miaar/MiaarApp.tsx').includes('<ZoneTape compact />'));
+  assert.ok(R('app/miaar/MiaarApp.tsx').includes('<ZoneTape />'));
   assert.ok(R('app/iqra/IqraApp.tsx').includes("{screen.s === 'home' && <ZoneTape compact />}"));
 });
 
