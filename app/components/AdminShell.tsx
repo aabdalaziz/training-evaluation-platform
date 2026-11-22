@@ -15,6 +15,7 @@ import { Icon } from '../../lib/ui/icons';
 import { BRAND } from '../../lib/portal/content';
 import { ROOMS, canOpen, roomFor } from '../../lib/portal/rooms';
 import { ADMIN_GROUPS, groupOf } from './PortalAdminTabs';
+import { wingsFor, resolveWing, readLastWing } from '../../lib/portal/wings'; /* هـ-3 و */
 import { useMyRoles } from './Brand';
 import { SignCounter } from './SignCounter'; /* P50 «توقيعي» */
 import { isPiiPath } from '../../lib/shield/paths'; /* P65 منارة الوصول الإداري */
@@ -27,6 +28,7 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
   const my = useMyRoles();
   const room = roomFor(pathname);
   const grp = ADMIN_GROUPS.find(g => g.id === groupOf(pathname || '')); /* هوية v1.2: المجموعة بين المركز والغرفة */
+  const wing = my ? resolveWing(pathname, wingsFor(my.permissions, my.staff), typeof window !== 'undefined' ? readLastWing() : null) : null; /* هـ-3 و: القسم قبل المجموعة */
   /* الحارس: غرفة معروفة → صلاحيتها؛ غرفة غير معروفة تحت /admin → أي صفة طاقم */
   const denied = !!my && (room ? !canOpen(room, my.permissions, my.staff) : !(my.staff || my.permissions.includes('*')));
   const title = room?.label || 'غرفة إدارية';
@@ -60,7 +62,7 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
     <div className="as" dir="rtl" data-testid="admin-shell"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="as-strip" data-testid="as-strip">
         <nav className="as-crumb" aria-label="موقعك في مركز القيادة">
-          <Link href="/dashboard">{BRAND.command.ar}</Link>{grp && <><span aria-hidden="true">›</span><span className="as-grp" style={{ ["--g" as string]: grp.color } as React.CSSProperties} data-testid="as-group">{grp.label}</span></>}<span aria-hidden="true">›</span><b data-testid="as-room">{title}</b>
+          <Link href="/dashboard">{BRAND.command.ar}</Link>{wing && <><span aria-hidden="true">›</span><span className="as-wing" style={{ ["--w" as string]: wing.tone } as React.CSSProperties} data-testid="as-wing">{wing.name}</span></>}{grp && <><span aria-hidden="true">›</span><span className="as-grp" style={{ ["--g" as string]: grp.color } as React.CSSProperties} data-testid="as-group">{grp.label}</span></>}<span aria-hidden="true">›</span><b data-testid="as-room">{title}</b>
           {room?.hint && <small>{room.hint}</small>}
         </nav>
         <span className="as-right"><SignCounter lang="ar" tone="strip" /><Link href={HALL} className="as-hall" data-testid="as-hall"><Icon name="compass" size={14} /> صفحاتي</Link></span>
@@ -77,13 +79,14 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
 
 const CSS = `
 .as{display:flex;flex-direction:column;min-height:calc(100vh - 58px)}
-.as-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px max(18px,calc((100% - 1320px)/2));background:#fff;border-bottom:1px solid #e5e9f0;font-size:12.5px}
+.as-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px max(18px,calc((100% - 1320px)/2));background:#FBF4EE;border-bottom:1px solid #EADFD6;font-size:12.5px}
 .as-crumb{display:flex;align-items:center;gap:8px;min-width:0;color:#8E7F8A;font-weight:700}.as-crumb a{color:#D4614A;text-decoration:none}.as-crumb a:hover{text-decoration:underline}.as-crumb b{color:#3A1F36;font-weight:900}.as-crumb .as-grp{display:inline-flex;align-items:center;gap:6px;color:#4A3645;font-weight:800}.as-crumb .as-grp::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--g)}.as-crumb small{color:#B3A5AE;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.as-wing{display:inline-flex;align-items:center;gap:6px;color:#3A1F36;font-weight:900}.as-wing:before{content:'';width:8px;height:8px;transform:rotate(45deg);background:var(--w);border-radius:1px}
 .as-right{display:inline-flex;gap:8px;align-items:center}.as-hall{display:inline-flex;align-items:center;gap:5px;color:#3A1F36;text-decoration:none;font-weight:800;border:1px solid #F1D9A8;background:#FBF4EE;border-radius:999px;padding:4px 10px;white-space:nowrap}.as-hall:hover{background:#fff4d6}
 .as-body{flex:1;min-width:0}
 .as-foot{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;align-items:center;padding:12px max(18px,calc((100% - 1320px)/2));background:#3A1F36;color:#D9CBC2;font-size:12px;line-height:1.7}.as-foot b{color:#fff}.as-foot-links{display:flex;gap:14px}.as-foot-links a{color:#fde68a;text-decoration:none}.as-foot-links a:hover{text-decoration:underline}
 .as-deny{align-items:center;justify-content:center;padding:40px 16px;background:#FBF4EE;min-height:60vh}
-.as-deny-card{max-width:620px;background:#fff;border:1px solid #e5e9f0;border-top:4px solid #D9A866;border-radius:16px;padding:24px 26px}.as-deny-card h1{margin:6px 0 8px;color:#3A1F36;font-size:24px}.as-deny-card p{margin:0 0 16px;color:#5C4858;line-height:1.8}
+.as-deny-card{max-width:620px;background:#fff;border:1px solid #EADFD6;border-top:4px solid #D9A866;border-radius:16px;padding:24px 26px}.as-deny-card h1{margin:6px 0 8px;color:#3A1F36;font-size:24px}.as-deny-card p{margin:0 0 16px;color:#5C4858;line-height:1.8}
 .as-kicker{display:inline-flex;gap:6px;align-items:center;color:#D4614A;font-weight:800;font-size:12.5px}.as-deny-links{display:flex;flex-wrap:wrap;gap:8px}
 @media(max-width:700px){.as-crumb small{display:none}.as-foot{flex-direction:column;align-items:flex-start}}
 @media print{.as-strip,.as-foot{display:none}}

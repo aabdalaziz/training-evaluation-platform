@@ -17,7 +17,7 @@ test('هـ-3: ثماني مناطق بألوانها، والأسماء البد
 test('هـ-3 ب: العلامة في باب المنطقة وحزام أَثَر ومركز القيادة', () => {
   const zd = R('app/components/ZoneDoor.tsx'); assert.ok(zd.includes("import { ZoneMark } from './ZoneMark'")); assert.ok(zd.includes('<ZoneMark zone={zone} size={compact ? 22 : 30} light />')); assert.ok(/miaar: \{ echo: '#D4614A'/.test(zd) && /pulse: \{ echo: '#5EA8A0'/.test(zd));
   const tape = R('app/components/ZoneTape.tsx'); assert.ok(tape.includes('<ZoneMark zone={g.zone} size={20} light />')); assert.ok(!tape.includes('AtharMark'));
-  const db = R('app/dashboard/page.tsx'); assert.ok(db.includes('<ZoneMark zone="staff" size={46} light')); assert.ok(!db.includes('#0b2240'), 'لا كحلي قديم في مركز القيادة'); assert.ok(db.includes('<Horizon light height={120} />'));
+  const db = R('app/dashboard/page.tsx'); assert.ok(db.includes(`<ZoneMark zone={wing?.zone || 'staff'} size={46} light`)); assert.ok(!db.includes('#0b2240'), 'لا كحلي قديم في مركز القيادة'); assert.ok(db.includes('<Horizon light height={120} />'));
   const cc = R('app/command-center/page.tsx'); assert.ok(!cc.includes('#0b1f3a') && !cc.includes('#2dd4bf'));
 });
 

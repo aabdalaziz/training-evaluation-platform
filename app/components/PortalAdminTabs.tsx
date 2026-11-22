@@ -10,6 +10,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Icon } from '../../lib/ui/icons';
 import type { IconName } from '../../lib/ui/icons';
+import { wingsFor, resolveWing, hrefsInWing, readLastWing, writeLastWing, LOBBY_HREF } from '../../lib/portal/wings'; /* هـ-3 و «الكلّ لا يرى الكلّ» */
+import { ZoneMark } from './ZoneMark';
 import { useMyRoles } from './Brand';
 import { canOpen, roomFor } from '../../lib/portal/rooms';
 
@@ -68,7 +70,13 @@ export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<st
   const pathname = usePathname() || '';
   const my = useMyRoles();
   /* قبل قراءة الصلاحيات (أو لمدير النظام) تُعرض كل الألسنة كما كانت؛ وبعدها يبقى ما تفتحه صلاحياته فقط — لسان بلا غرفة معرَّفة يُعامل كغرفة طاقم */
-  const tabs = !my ? TABS : TABS.filter(x => canOpen(roomFor(x.href) || { perms: ['staff'] }, my.permissions, my.staff));
+  const allowed = !my ? TABS : TABS.filter(x => canOpen(roomFor(x.href) || { perms: ['staff'] }, my.permissions, my.staff));
+  /* هـ-3 و: أقسامي، والقسم الذي أقف فيه؛ داخل القسم لا تظهر إلّا غرفه (+ المشتركة) */
+  const [last, setLast] = useState<string | null>(null); useEffect(() => { setLast(readLastWing()); }, []);
+  const mine = useMemo(() => wingsFor(my?.permissions, !!my?.staff), [my]);
+  const wing = useMemo(() => (my ? resolveWing(pathname, mine, last) : null), [my, pathname, mine, last]);
+  useEffect(() => { if (wing) writeLastWing(wing.key); }, [wing]);
+  const tabs = useMemo(() => { const ok = new Set(hrefsInWing(wing, allowed.map(t => t.href))); return allowed.filter(t => ok.has(t.href)); }, [allowed, wing]);
   const dash = !my || my.staff || my.permissions.includes('*');
   /* المجموعة الحالية من المسار؛ المستخدم يفتح غيرها بالنقر (ولا تُحفظ — كل صفحة تعود لمجموعتها) */
   const current = useMemo(() => groupOf(pathname) || (pathname.startsWith('/admin') ? 'people' : null), [pathname]);
@@ -89,8 +97,15 @@ export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<st
   const openK = (e: React.MouseEvent) => { e.preventDefault(); try { window.dispatchEvent(new CustomEvent('athar:guide')); } catch { /* ignore */ } };
 
   return (
-    <nav className="pat" aria-label="portal admin" data-testid="portal-admin-tabs" data-group={open || ''}>
+    <nav className="pat" aria-label="portal admin" data-testid="portal-admin-tabs" data-group={open || ''} data-wing={wing?.key || ''}>
       <style>{CSS}</style>
+      {wing && (
+        <div className="pat-wing" style={{ ['--w' as string]: wing.tone, ['--ws' as string]: wing.tone_soft } as React.CSSProperties} data-testid="pat-wing">
+          <ZoneMark zone={wing.zone} size={34} title={wing.name} />
+          <span className="pat-wing-t"><b>{wing.name}</b><small>{wing.verb} — {wing.line}</small></span>
+          {mine.length > 1 && <Link href={LOBBY_HREF} className="pat-lobby" data-testid="pat-lobby"><Icon name="compass" size={14} /> الردهة · أقسامي {mine.length}</Link>}
+        </div>
+      )}
       {pendingTotal > 0 && (
         <div className="pat-today" data-testid="pat-today"><b><Icon name="spark" size={14} /> ينتظر قرارك اليوم · {pendingTotal}</b>
           {pending.map(([href, n]) => { const t = TABS.find(x => x.href === href); return <Link key={href} href={href}>{t?.label || href} <i>{n}</i></Link>; })}
@@ -121,6 +136,9 @@ export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<st
 
 const CSS = `
 .pat{display:grid;gap:8px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
+.pat-wing{display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:16px;background:linear-gradient(90deg,var(--ws),#fff 70%);border:1px solid #EADFD6;border-inline-start:4px solid var(--w)}
+.pat-wing-t{display:grid;line-height:1.3;flex:1;min-width:0}.pat-wing-t b{font-size:15px;color:#3A1F36;font-weight:900}.pat-wing-t small{font-size:12px;color:#8E7F8A}
+.pat-lobby{display:inline-flex;align-items:center;gap:6px;color:#3A1F36;text-decoration:none;font-size:12.5px;font-weight:800;border:1px solid #F1D9A8;background:#FBF4EE;border-radius:999px;padding:5px 11px;white-space:nowrap}.pat-lobby:hover{background:#fff4d6}
 .pat-today{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-radius:14px;background:linear-gradient(135deg,#F1D9A8,#FBF4EE);border:1px solid #D9A866;color:#8A5A1E;font-size:13px}
 .pat-today b{display:inline-flex;gap:6px;align-items:center;color:#3A1F36}
 .pat-today a{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #F1D9A8;border-radius:999px;padding:3px 10px;color:#3A1F36;text-decoration:none;font-weight:700}
