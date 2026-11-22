@@ -29,7 +29,7 @@ def transform(path: str, dry=False):
     nav_inner = nav_m.group(1) if nav_m else ''
     text_block = body[:nav_m.start()] if nav_m else body
     # kicker
-    text_block = re.sub(r'\s*<div className="%s-kicker[^"]*">.*?</div>' % pre, '', text_block, count=1, flags=re.S)
+    text_block = re.sub(r'\s*<(div|span) className="%s-kicker[^"]*">.*?</\1>' % pre, '', text_block, count=1, flags=re.S)
     h1 = re.search(r'<h1>(.*?)</h1>', text_block, re.S)
     title = h1.group(1).strip() if h1 else None
     if h1: text_block = text_block[:h1.start()] + text_block[h1.end():]

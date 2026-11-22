@@ -8,6 +8,7 @@ import { Icon } from '../../../lib/ui/icons';
 import { CONTACT_SUBJECTS, t } from '../../../lib/portal/content';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 type Msg = { id: string; created_at: string; name: string; email: string; phone: string | null; organization: string | null; subject: string; message: string; lang: string; page: string | null; status: string; handled_at: string | null; notes: string | null };
 type Filter = 'new' | 'handled' | 'spam' | 'all';
@@ -49,21 +50,22 @@ export default function InboxPage() {
   }
 
   const shown = rows.filter(r => filter === 'all' || r.status === filter);
-  if (!ready) return <div className="ib"><style>{CSS}</style><div className="ib-wrap"><div className="ib-card">{error ? <span className="ib-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  if (!ready) return <div className="ib rm-page"><style>{CSS}</style><div className="ib-wrap"><div className="rm-card">{error ? <span className="ib-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   return (
-    <div className="ib"><style>{CSS}</style>
+    <div className="ib rm-page"><style>{CSS}</style>
       <div className="ib-wrap">
-        <header className="ib-head">
-          <div><span className="ib-kicker"><Icon name="inbox" size={14} /> بوابة أَثَر</span><h1>صندوق رسائل التواصل</h1><p>رسائل الزوار من صفحة «تواصل معنا» — عالجها ثم علّمها كمُنجزة.</p></div>
-        </header>
+        <RoomHead
+        title={<>صندوق رسائل التواصل</>}
+        desc={<><p>رسائل الزوار من صفحة «تواصل معنا» — عالجها ثم علّمها كمُنجزة.</p></>}
+      />
         <PortalAdminTabs counts={{ '/admin/inbox': counts.new }} />
         {error && <div className="ib-err">{error}</div>}
         <div className="ib-tabs">
           {([['new', `جديدة (${counts.new})`], ['handled', `منجزة (${counts.handled})`], ['spam', `مزعجة (${counts.spam})`], ['all', 'الكل']] as [Filter, string][]).map(([k, l]) => <button key={k} type="button" className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}</button>)}
         </div>
-        {shown.length === 0 && <div className="ib-card ib-empty">لا توجد رسائل في هذا التصنيف.</div>}
+        {shown.length === 0 && <div className="rm-card rm-empty">لا توجد رسائل في هذا التصنيف.</div>}
         {shown.map(r => (
-          <article key={r.id} className={`ib-card ib-msg ${r.status}`}>
+          <article key={r.id} className={`rm-card ib-msg ${r.status}`}>
             <div className="ib-row" onClick={() => setOpen(open === r.id ? null : r.id)} role="button" tabIndex={0}>
               <div className="ib-who"><b>{r.name}</b><span dir="ltr">{r.email}</span>{r.organization && <span>· {r.organization}</span>}</div>
               <div className="ib-meta"><span className="ib-tag">{subjectLabel(r.subject)}</span><span className="ib-tag soft">{r.lang === 'en' ? 'EN' : 'عربي'}</span><bdi>{fmt(r.created_at)}</bdi></div>
@@ -77,10 +79,10 @@ export default function InboxPage() {
                   {r.handled_at && <span><Icon name="check" size={13} /> عولجت <bdi>{fmt(r.handled_at)}</bdi></span>}
                 </div>
                 <div className="ib-acts">
-                  <a className="ib-btn" href={`mailto:${r.email}?subject=${encodeURIComponent('رد من بوابة أَثَر: ' + subjectLabel(r.subject))}`}><Icon name="mail" size={15} /> الرد بالبريد</a>
-                  {r.status !== 'handled' && <button type="button" className="ib-btn ok" disabled={busy === r.id} onClick={() => setStatus(r.id, 'handled')}><Icon name="check" size={15} /> تمّت المعالجة</button>}
-                  {r.status !== 'spam' && <button type="button" className="ib-btn ghost" disabled={busy === r.id} onClick={() => setStatus(r.id, 'spam')}><Icon name="flag" size={15} /> مزعجة</button>}
-                  {r.status !== 'new' && <button type="button" className="ib-btn ghost" disabled={busy === r.id} onClick={() => setStatus(r.id, 'new')}><Icon name="refresh" size={15} /> إعادة إلى جديدة</button>}
+                  <a className="rm-btn" href={`mailto:${r.email}?subject=${encodeURIComponent('رد من بوابة أَثَر: ' + subjectLabel(r.subject))}`}><Icon name="mail" size={15} /> الرد بالبريد</a>
+                  {r.status !== 'handled' && <button type="button" className="rm-btn ok" disabled={busy === r.id} onClick={() => setStatus(r.id, 'handled')}><Icon name="check" size={15} /> تمّت المعالجة</button>}
+                  {r.status !== 'spam' && <button type="button" className="rm-btn ghost" disabled={busy === r.id} onClick={() => setStatus(r.id, 'spam')}><Icon name="flag" size={15} /> مزعجة</button>}
+                  {r.status !== 'new' && <button type="button" className="rm-btn ghost" disabled={busy === r.id} onClick={() => setStatus(r.id, 'new')}><Icon name="refresh" size={15} /> إعادة إلى جديدة</button>}
                 </div>
               </div>
             )}
@@ -92,11 +94,8 @@ export default function InboxPage() {
 }
 
 const CSS = `
-.ib{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
+.ib{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .ib-wrap{max-width:980px;margin:0 auto;display:grid;gap:12px}
-.ib-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.ib-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.ib-head p{margin:0;color:#8E7F8A;font-size:14px}
-.ib-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#D4614A}
-.ib-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px}.ib-empty{text-align:center;color:#8E7F8A}
 .ib-tabs{display:flex;gap:6px;flex-wrap:wrap}.ib-tabs button{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;color:#4A3645}.ib-tabs button.on{background:#3A1F36;border-color:#3A1F36;color:#fff}
 .ib-msg.new{border-inline-start:4px solid #D4614A}.ib-msg.handled{opacity:.85}.ib-msg.spam{opacity:.6}
 .ib-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer}.ib-who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}.ib-who b{color:#3A1F36;font-size:15px}.ib-who span{color:#8E7F8A;font-size:13px}
@@ -105,6 +104,5 @@ const CSS = `
 .ib-body{margin-top:12px;border-top:1px dashed #EADFD6;padding-top:12px}.ib-body p{white-space:pre-wrap;line-height:1.9;font-size:14.5px;color:#2A1626;margin:0 0 10px}
 .ib-details{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A;margin-bottom:12px}.ib-details span{display:inline-flex;gap:5px;align-items:center}
 .ib-acts{display:flex;gap:8px;flex-wrap:wrap}
-.ib-btn{display:inline-flex;gap:6px;align-items:center;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;text-decoration:none;background:#3A1F36;color:#fff;border:1px solid #3A1F36}.ib-btn.ok{background:#D4614A;border-color:#D4614A}.ib-btn.ghost{background:#fff;color:#3A1F36;border-color:#D9CBC2}.ib-btn:disabled{opacity:.6}
 .ib-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}
 `;

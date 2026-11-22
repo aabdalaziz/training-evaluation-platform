@@ -42,6 +42,7 @@ export function RoomLine({ compact = false }: { compact?: boolean }) {
   const { prev, next } = neighborsOf(wing, pathname, rooms);
   const seq = clustersOfWing(wing, rooms).find(c => c.rooms.some(r => under(pathname, r.href)))?.rooms || rooms; /* محطّات العنقود الحالي */
   const here = seq.findIndex(r => under(pathname, r.href));
+  if (seq.length < 2 && !prev && !next) return null; /* عنقود بغرفة واحدة: لا خطّ */
   return (
     <nav className={`rm-line${compact ? ' compact' : ''}`} aria-label={`خطّ ${wing.name}`} data-testid="rm-line">
       {prev ? <Link href={prev.href} className="rm-line-step" data-testid="rm-line-prev"><Icon name="arrow" size={13} /> <span>{prev.label}</span></Link> : <span className="rm-line-step off" />}
@@ -125,9 +126,10 @@ export const RM_CSS = `
 .rm-card h3,.rm-card h2{margin:0 0 12px;font-size:15px;color:#3A1F36;display:flex;align-items:center;gap:8px}
 .rm-card.tone{border-top:3px solid var(--rm-tone,#D9A866)}
 .rm-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.rm-kpi{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;min-width:0;position:relative;overflow:hidden}
-.rm-kpi::after{content:'';position:absolute;inset-inline-start:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:#EADFD6}
-.rm-kpi b{display:block;font-size:22px;color:#3A1F36;line-height:1.2}.rm-kpi span,.rm-kpi small{font-size:12px;font-weight:800;color:#8E7F8A;display:block;margin-top:2px}
+.rm-kpis>*,.rm-kpi{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;min-width:0;position:relative;overflow:hidden;color:#5C4858;font-size:12px;font-weight:800;line-height:1.5;display:block}
+.rm-kpis>*::after,.rm-kpi::after{content:'';position:absolute;inset-inline-start:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:#EADFD6}
+.rm-kpis>* b,.rm-kpi b{display:block;font-size:22px;color:#3A1F36;line-height:1.2;font-weight:900}.rm-kpis>* span,.rm-kpis>* small,.rm-kpi span,.rm-kpi small{font-size:12px;font-weight:800;color:#8E7F8A;display:block;margin-top:2px}
+.rm-kpis>* a{color:#D4614A}
 .rm-kpi.ok b{color:#2F6B66}.rm-kpi.ok::after{background:#5EA8A0}.rm-kpi.info b{color:#6A3350}.rm-kpi.info::after{background:#6A3350}
 .rm-kpi.bad b{color:#9A3A2A}.rm-kpi.bad::after{background:#D4614A}.rm-kpi.gold b,.rm-kpi.warn b{color:#8A5A1E}.rm-kpi.gold::after,.rm-kpi.warn::after{background:#D9A866}
 .rm-alert{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:700;line-height:1.7}

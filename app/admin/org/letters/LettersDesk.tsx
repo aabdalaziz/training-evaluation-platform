@@ -14,6 +14,7 @@ import WayBar from '../../../components/WayBar';
 import { LetterSheet, type LetterView } from '../../../components/LetterSheet';
 import { SIGN_EVENT } from '../../../components/SignCounter';
 
+import { RoomHead } from '../../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Letter = LetterView & { id: string; organization_id: string; created_at: string; reply_seen_at?: string | null };
 type Data = { target_month: string; drafts: Letter[]; signed: Letter[]; missing: { id: string; name_ar: string; members: number }[]; promises: { key: string; text_ar: string }[]; line_max: number; writer: boolean; unread_replies: number };
 const monthAr = (m: string) => { const [y, mo] = m.split('-').map(Number); return `${['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'][mo - 1]} ${y}`; };
@@ -37,23 +38,25 @@ export default function LettersDesk() {
     setBusy('sign'); setOk(''); const H = await hdr(); if (!H) return; const r = await fetch('/api/admin/org/letters', { method: 'POST', headers: H, body: JSON.stringify({ action: 'sign', id: cur.id, line_ar: line, promise_ar: p, ask_ar: ask, signed_title: title }) }); const j = await r.json().catch(() => ({})); setBusy('');
     if (!r.ok || !j.success) { setErr({ code: r.status, msg: j.error || 'تعذّر التوقيع' }); return; } setErr(null); setOk(j.message || 'وُقِّعت'); setCur(j.letter); await load(); window.dispatchEvent(new CustomEvent(SIGN_EVENT, { detail: {} }));
   }
-  return <div className="ol" dir="rtl" data-testid="ol-root" data-drafts={d?.drafts.length ?? ''}>
+  return <div className="ol rm-page" dir="rtl" data-testid="ol-root" data-drafts={d?.drafts.length ?? ''}>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <div className="ol-wrap">
       <WayBar lang="ar" />
-      <header className="ol-head"><div><span className="ol-kicker"><Icon name="mail" size={14} /> بوابة أَثَر · P52 · التقرير الشهري لأثر الجهة</span><h1>رسالة الشهر <small>للجهات</small></h1>
-        <p className="ol-lead">ثلاثة أرقام تُصاغ آليًّا من الواقع، وخيوط الشهر بلا أسماء — ثم <b>سطر تكتبه أنت</b>، ووعد للشهر القادم، وتوقيعك. بلا توقيع لا تصل الرسالة.</p></div>
-        <div className="ol-acts"><Link href="/admin/sign" className="ol-btn ghost"><Icon name="check" size={14} /> توقيعي</Link><button type="button" className="ol-btn ghost" onClick={() => void load()}><Icon name="refresh" size={14} /> تحديث</button></div></header>
+      <RoomHead
+        title={<>رسالة الشهر <small>للجهات</small></>}
+        desc={<><p>ثلاثة أرقام تُصاغ آليًّا من الواقع، وخيوط الشهر بلا أسماء — ثم <b>سطر تكتبه أنت</b>، ووعد للشهر القادم، وتوقيعك. بلا توقيع لا تصل الرسالة.</p></>}
+        actions={<><Link href="/admin/sign" className="rm-btn"><Icon name="check" size={14} /> توقيعي</Link><button type="button" className="rm-btn" onClick={() => void load()}><Icon name="refresh" size={14} /> تحديث</button></>}
+      />
       {err && <p className="ol-msg" role="alert" data-testid="ol-err">{err.code === 403 ? 'هذه الصفحة للطاقم — والتوقيع لمدير البرامج فأعلى.' : err.msg}</p>}
       {ok && <p className="ol-ok" role="status" data-testid="ol-ok">{ok}</p>}
       {d && <>
         <section className="ol-box" data-testid="ol-drafts"><h2>مسوَّدات تنتظر سطرك وتوقيعك <small>{d.drafts.length}</small></h2>
-          {d.drafts.length === 0 && <p className="ol-muted">لا مسوَّدات — الكرون ينشئها في اليوم الثالث من كل شهر عن الشهر المنصرم، أو أنشئها الآن من القائمة أدناه.</p>}
+          {d.drafts.length === 0 && <p className="rm-muted">لا مسوَّدات — الكرون ينشئها في اليوم الثالث من كل شهر عن الشهر المنصرم، أو أنشئها الآن من القائمة أدناه.</p>}
           <ul className="ol-list">{d.drafts.map((l) => <li key={l.id} data-testid="ol-draft" data-id={l.id} className={cur?.id === l.id ? 'on' : ''}>
-            <div><b>{l.body.org.name_ar}</b> · {monthAr(l.month)} <small>{ago(l.created_at)}</small><p className="ol-muted">{l.body.lines_ar[0]}</p></div>
-            <button type="button" className="ol-btn sm" onClick={() => open(l)} data-testid="ol-open">افتح واكتب سطرك</button></li>)}</ul></section>
+            <div><b>{l.body.org.name_ar}</b> · {monthAr(l.month)} <small>{ago(l.created_at)}</small><p className="rm-muted">{l.body.lines_ar[0]}</p></div>
+            <button type="button" className="rm-btn sm" onClick={() => open(l)} data-testid="ol-open">افتح واكتب سطرك</button></li>)}</ul></section>
         {d.missing.length > 0 && <section className="ol-box" data-testid="ol-missing"><h2>جهات مؤهَّلة بلا رسالة عن {monthAr(d.target_month)} <small>{d.missing.length}</small></h2>
-          <ul className="ol-list">{d.missing.map((o) => <li key={o.id} data-testid="ol-missing-row" data-org={o.id}><div><b>{o.name_ar}</b> <small>{o.members} منسوبًا مؤكَّدًا</small></div>{d.writer && <button type="button" className="ol-btn sm ghost" disabled={busy === `make:${o.id}`} onClick={() => void make(o.id)} data-testid="ol-make">أنشئ المسوَّدة الآن</button>}</li>)}</ul></section>}
+          <ul className="ol-list">{d.missing.map((o) => <li key={o.id} data-testid="ol-missing-row" data-org={o.id}><div><b>{o.name_ar}</b> <small>{o.members} منسوبًا مؤكَّدًا</small></div>{d.writer && <button type="button" className="rm-btn sm ghost" disabled={busy === `make:${o.id}`} onClick={() => void make(o.id)} data-testid="ol-make">أنشئ المسوَّدة الآن</button>}</li>)}</ul></section>}
         {cur && <section className="ol-box ol-editor" id="ol-editor" data-testid="ol-editor">
           <h2>{cur.status === 'signed' ? 'رسالة موقَّعة' : 'اكتب سطرك ووقّع'} — {cur.body.org.name_ar} · {monthAr(cur.month)}</h2>
           <div className="ol-grid">
@@ -64,31 +67,31 @@ export default function LettersDesk() {
                   <label className="ol-radio"><input type="radio" name="promise" checked={pk === ''} onChange={() => setPk('')} /> وعد آخر:</label><input type="text" value={pfree} onChange={(e) => { setPfree(e.target.value.slice(0, 200)); setPk(''); }} placeholder="اكتب وعدًا واحدًا قابلًا للوفاء" data-testid="ol-promise-free" /></fieldset>
                 <label>ما نحتاجه منكم <small>اختياري</small><input type="text" value={ask} onChange={(e) => setAsk(e.target.value.slice(0, 200))} data-testid="ol-ask" /></label>
                 <label>صفة الموقِّع<input type="text" value={title} onChange={(e) => setTitle(e.target.value.slice(0, 80))} data-testid="ol-title" /></label>
-                <div className="ol-acts"><button type="button" className="ol-btn" onClick={() => void sign()} disabled={busy === 'sign'} data-testid="ol-sign"><Icon name="send" size={14} /> {busy === 'sign' ? '…' : 'وقّع وأرسل'}</button><button type="button" className="ol-btn ghost" onClick={() => void make(cur.organization_id, cur.month)} disabled={!!busy}>حدّث الأرقام</button><button type="button" className="ol-btn ghost" onClick={() => setCur(null)}>إغلاق</button></div>
+                <div className="ol-acts"><button type="button" className="rm-btn" onClick={() => void sign()} disabled={busy === 'sign'} data-testid="ol-sign"><Icon name="send" size={14} /> {busy === 'sign' ? '…' : 'وقّع وأرسل'}</button><button type="button" className="rm-btn ghost" onClick={() => void make(cur.organization_id, cur.month)} disabled={!!busy}>حدّث الأرقام</button><button type="button" className="rm-btn ghost" onClick={() => setCur(null)}>إغلاق</button></div>
               </>}
-              {cur.status === 'draft' && !d.writer && <p className="ol-muted">تستطيع معاينة المسوَّدة؛ التوقيع لمدير البرامج فأعلى.</p>}
-              {cur.status === 'signed' && <div className="ol-acts"><button type="button" className="ol-btn ghost" onClick={() => window.print()}><Icon name="print" size={14} /> اطبع</button><button type="button" className="ol-btn ghost" onClick={() => setCur(null)}>إغلاق</button></div>}
+              {cur.status === 'draft' && !d.writer && <p className="rm-muted">تستطيع معاينة المسوَّدة؛ التوقيع لمدير البرامج فأعلى.</p>}
+              {cur.status === 'signed' && <div className="ol-acts"><button type="button" className="rm-btn ghost" onClick={() => window.print()}><Icon name="print" size={14} /> اطبع</button><button type="button" className="rm-btn ghost" onClick={() => setCur(null)}>إغلاق</button></div>}
             </div>
             <div className="ol-preview"><LetterSheet l={cur} draftLine={line} draftPromise={promiseText()} draftAsk={ask} /></div>
           </div></section>}
         <section className="ol-box" data-testid="ol-signed"><h2>موقَّعة حديثًا <small>{d.signed.length}</small>{d.unread_replies > 0 && <em className="ol-badge" data-testid="ol-reply-badge">{d.unread_replies} ردّ جديد</em>}</h2>
-          {d.signed.length === 0 && <p className="ol-muted">لا رسائل موقَّعة بعد.</p>}
-          <ul className="ol-list">{d.signed.map((l) => <li key={l.id} data-testid="ol-signed-row" data-id={l.id}><div><b>{l.body.org.name_ar}</b> · {monthAr(l.month)} <small>{l.signed_name} · {l.code}</small>{l.reply_ar && <p className="ol-reply">💌 «{l.reply_ar}» — {l.reply_by}</p>}</div><button type="button" className="ol-btn sm ghost" onClick={() => open(l)}>افتح</button></li>)}</ul></section>
-        <p className="ol-foot ol-muted">لا أسماء منسوبين في أي رسالة · ما دون خمسة لا يُذكر رقمًا · الرسالة الموقَّعة تُجمَّد وتُحسب بصمتها · © 2026 أَثَر.</p>
+          {d.signed.length === 0 && <p className="rm-muted">لا رسائل موقَّعة بعد.</p>}
+          <ul className="ol-list">{d.signed.map((l) => <li key={l.id} data-testid="ol-signed-row" data-id={l.id}><div><b>{l.body.org.name_ar}</b> · {monthAr(l.month)} <small>{l.signed_name} · {l.code}</small>{l.reply_ar && <p className="ol-reply">💌 «{l.reply_ar}» — {l.reply_by}</p>}</div><button type="button" className="rm-btn sm ghost" onClick={() => open(l)}>افتح</button></li>)}</ul></section>
+        <p className="ol-foot rm-muted">لا أسماء منسوبين في أي رسالة · ما دون خمسة لا يُذكر رقمًا · الرسالة الموقَّعة تُجمَّد وتُحسب بصمتها · © 2026 أَثَر.</p>
       </>}
     </div>
   </div>;
 }
 
 const CSS = `
-.ol{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#3A1F36}.ol :is(button,a,input,textarea):focus-visible{outline:3px solid #3A1F36;outline-offset:2px}
-.ol-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.ol-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.ol-kicker{color:#b45309;font-weight:800;font-size:12.5px;display:inline-flex;gap:6px;align-items:center}.ol h1{margin:4px 0;font-size:26px}.ol h1 small{font-size:14px;color:#8E7F8A;font-weight:600}.ol-lead{margin:0;color:#4A3645;max-width:720px}
-.ol-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.ol-btn{display:inline-flex;align-items:center;gap:6px;background:#3A1F36;color:#fff;border:1.5px solid #3A1F36;border-radius:10px;padding:9px 14px;font:inherit;font-weight:800;cursor:pointer;text-decoration:none;min-height:38px}.ol-btn.ghost{background:#fff;color:#3A1F36}.ol-btn.sm{padding:6px 10px;font-size:13px;min-height:32px}.ol-btn:disabled{opacity:.6;cursor:wait}
-.ol-box{background:#fff;border:1px solid #e5e9f0;border-radius:16px;padding:16px}.ol-box h2{margin:0 0 10px;font-size:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ol-box h2 small{background:#F3E6DC;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:800}.ol-badge{background:#ecfdf5;color:#047857;border-radius:999px;padding:2px 10px;font-size:12.5px;font-style:normal;font-weight:800}
-.ol-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}.ol-list li{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #F3E6DC;border-radius:12px;padding:10px 12px}.ol-list li.on{border-color:#D9A866;background:#fffbeb}.ol-list small{color:#8E7F8A;margin-inline-start:6px}.ol-list p{margin:2px 0 0;font-size:13px}.ol-muted{color:#8E7F8A}.ol-reply{color:#047857}
+.ol{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#3A1F36}.ol :is(button,a,input,textarea):focus-visible{outline:3px solid #3A1F36;outline-offset:2px}
+.ol-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.rm-head h1 small{font-size:14px;color:#D9CBC2;font-weight:600}.ol-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rm-btn.sm{padding:6px 10px;font-size:13px;min-height:32px}
+.ol-box{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px}.ol-box h2{margin:0 0 10px;font-size:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ol-box h2 small{background:#F3E6DC;border-radius:999px;padding:2px 10px;font-size:12.5px;font-weight:800}.ol-badge{background:#ecfdf5;color:#047857;border-radius:999px;padding:2px 10px;font-size:12.5px;font-style:normal;font-weight:800}
+.ol-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}.ol-list li{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid #F3E6DC;border-radius:12px;padding:10px 12px}.ol-list li.on{border-color:#D9A866;background:#fffbeb}.ol-list small{color:#8E7F8A;margin-inline-start:6px}.ol-list p{margin:2px 0 0;font-size:13px}.ol-reply{color:#047857}
 .ol-grid{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:16px;align-items:start}.ol-form{display:grid;gap:10px}.ol-form label{display:grid;gap:4px;font-weight:800;font-size:14px}.ol-form label small{font-weight:400;color:#8E7F8A}.ol-form textarea,.ol-form input[type=text]{border:1.5px solid #D9CBC2;border-radius:10px;padding:9px 10px;font:inherit;font-weight:400;width:100%;box-sizing:border-box}
-.ol-form fieldset{border:1px solid #e5e9f0;border-radius:12px;padding:8px 12px;display:grid;gap:6px}.ol-form legend{font-weight:800;font-size:14px;padding:0 6px}.ol-radio{display:flex!important;gap:8px;align-items:flex-start;font-weight:400!important;font-size:13.5px}
+.ol-form fieldset{border:1px solid #EADFD6;border-radius:12px;padding:8px 12px;display:grid;gap:6px}.ol-form legend{font-weight:800;font-size:14px;padding:0 6px}.ol-radio{display:flex!important;gap:8px;align-items:flex-start;font-weight:400!important;font-size:13.5px}
 .ol-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:0}.ol-ok{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px;margin:0}.ol-foot{font-size:12.5px;margin:4px 0 0}
 @media (max-width:860px){.ol-grid{grid-template-columns:1fr}.ol h1{font-size:22px}}
-@media print{.ol{padding:0;background:#fff}.ol-head,.ol-acts,.ol-form,.wb,.ol-drafts,.ol-box:not(.ol-editor),.ol-foot,nav,header.pt-header{display:none!important}.ol-editor{border:none;padding:0}.ol-editor h2{display:none}}
+@media print{.ol{}.ol-editor{border:none;padding:0}.ol-editor h2{display:none}}
 `;
