@@ -53,7 +53,7 @@ test('هـ-1/4د «حزام أَثَر»: حركة مِعيار نفسها، ش�
   const z = R('app/components/ZoneTape.tsx');
   assert.ok(z.includes('@keyframes abRtl{from{transform:translateX(0)}to{transform:translateX(50%)}}')); assert.ok(z.includes('{row(0)}{row(1)}'));
   assert.ok(z.includes('.ab:hover .ab-track,.ab:focus-within .ab-track,.ab.paused .ab-track{animation-play-state:paused}'));
-  assert.ok(z.includes('<span className="ab-brand"><AtharMark size={18} light /><b>{g.label}</b></span>'));
+  assert.ok(z.includes('<span className="ab-brand"><ZoneMark zone={g.zone} size={20} light /><b>{g.label}</b></span>'));
   assert.ok(z.includes('<i className="ab-sep" aria-hidden="true">✦</i>') && z.includes('<i className="ab-sep3" aria-hidden="true">✦✦✦</i>'));
   assert.ok(z.includes('requestAnimationFrame(tick)') && z.includes('scale(${(1 - 0.2 * d).toFixed(3)})'));
   assert.ok(z.includes("prefers-reduced-motion: reduce") && z.includes("dataset.engrave === 'none'") && z.includes('.ab.still .ab-track{animation:none}'));

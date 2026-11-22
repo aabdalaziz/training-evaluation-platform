@@ -14,7 +14,9 @@ import { Icon, type IconName } from '../../lib/ui/icons';
 import NotificationBell from '../components/NotificationBell';
 import dynamic from 'next/dynamic';
 const EvalLinks = dynamic(() => import('../components/EvalLinks'), { ssr: false, loading: () => <div className="db-muted">تحميل مولّد الروابط…</div> });   /* P49 */
-import { AtharMark, useMyRoles, invalidateMyRoles } from '../components/Brand';
+import { useMyRoles, invalidateMyRoles } from '../components/Brand';
+import { ZoneMark } from '../components/ZoneMark';
+import { Horizon } from '../../lib/ui/motion';
 import { sideRooms } from '../../lib/portal/rooms';
 import { BRAND } from '../../lib/portal/content';
 /* P43-أ «أَثَر الواحد»: هذه اللوحة هي «مركز قيادة أَثَر» — غرفة داخل البيت الواحد؛ الهوية والاسم من lib/portal/content، والردهة على بعد نقرة */
@@ -306,8 +308,8 @@ export default function Dashboard() {
       {/* ===== sidebar ===== */}
       <aside className={`db-side ${menuOpen ? 'open' : ''}`}>
         <div className="db-brand" data-testid="command-side-brand">
-          <div className="db-logos">
-            <AtharMark size={44} />
+          <div className="db-logos">{/* هـ-3: علامة «الطاقم» من عائلة المناطق — العتبة الذهبية على خطّ القاعدة */}
+            <ZoneMark zone="staff" size={46} light title="مركز قيادة أَثَر — الطاقم" />
             <img src="/logos/upm.png" alt={BRAND.institution.ar} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           </div>
           <div className="db-brand-text"><b>{BRAND.name.ar} · مركز القيادة</b><small>{BRAND.institution.ar}</small></div>
@@ -358,6 +360,8 @@ export default function Dashboard() {
           <div className="db-content">
             {/* status banner */}
             <section className="db-hero">
+              <div className="db-hero-hz" aria-hidden="true"><Horizon light height={120} /></div>
+              <ZoneMark zone="staff" size={220} light style={{ position: 'absolute', insetInlineStart: 12, bottom: -56, opacity: .1, pointerEvents: 'none' }} />
               <div className="db-hero-main">
                 <div className="db-kicker">الحالة العامة · {rangeLabel}</div>
                 <div className="db-hero-row">
@@ -692,30 +696,30 @@ function FormCard({ icon, title, desc, href, admin }: { icon: IconName; title: s
 
 /* ============================================================ styles */
 const CSS = `
-.db{display:grid;grid-template-columns:276px 1fr;min-height:100vh;color:var(--ink);background:linear-gradient(to left,#0b2240 276px,var(--bg) 276px)}
+.db{display:grid;grid-template-columns:276px 1fr;min-height:100vh;color:var(--ink);background:linear-gradient(to left,#22101F 276px,var(--bg) 276px)}
 .db-loading{min-height:100vh;display:grid;place-items:center;background:var(--navy)}
 @keyframes dbspin{to{transform:rotate(360deg)}}
 .db-spin{width:52px;height:52px;border:5px solid rgba(255,255,255,.14);border-top-color:var(--teal-2);border-radius:50%;animation:dbspin .9s linear infinite}
 .db-muted{color:var(--muted);font-size:12px;font-weight:700}
 .db-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:60;background:var(--navy);color:#fff;padding:10px 18px;border-radius:var(--r);font-weight:800;box-shadow:var(--shadow);border-inline-start:4px solid var(--teal-2)}
 /* ---------- sidebar ---------- */
-.db-side{background:linear-gradient(180deg,var(--navy) 0%,#0b2240 100%);color:#fff;padding:16px 14px;display:flex;flex-direction:column;gap:14px;position:sticky;top:0;height:100vh;overflow:auto;align-self:start;border-inline-start:1px solid rgba(255,255,255,.06)}
+.db-side{background:linear-gradient(180deg,var(--navy) 0%,var(--deep,#22101F) 100%);color:#fff;padding:16px 14px;display:flex;flex-direction:column;gap:14px;position:sticky;top:0;height:100vh;overflow:auto;align-self:start;border-inline-start:1px solid rgba(255,255,255,.06)}
 .db-brand{display:flex;flex-direction:column;gap:10px}.db-brand-text{text-align:center}
 .db-logos svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}.db-hall{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(217,168,102,.6);background:rgba(217,168,102,.12);color:#fde68a;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:800;text-decoration:none}.db-hall:hover{background:rgba(217,168,102,.22)}.db-owner{display:block;text-align:center;color:#8fb0c9;font-size:10.5px;font-weight:700;line-height:1.6;padding:0 6px}
-.db-logos{background:#fff;border-radius:var(--r);padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 0 0 2px var(--gold-soft)}
+.db-logos{background:rgba(255,255,255,.07);border-radius:var(--r);padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid rgba(217,168,102,.35)}.db-logos img{background:#fff;border-radius:8px;padding:3px}
 .db-logos img{height:46px;width:auto;max-width:128px;object-fit:contain;display:block}
-.db-brand b{display:block;font-size:16px;letter-spacing:.2px}.db-brand small,.db-user small{display:block;color:#a9c4d8;font-size:11px;font-weight:700}
+.db-brand b{display:block;font-size:16px;letter-spacing:.2px}.db-brand small,.db-user small{display:block;color:#D9C6CF;font-size:11px;font-weight:700}
 .db-user{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:10px}
 .db-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#e6c979);color:var(--navy);font-weight:900;display:grid;place-items:center;font-size:17px}
 .db-user b{display:block;font-size:14px}
 .db-nav{display:flex;flex-direction:column;gap:3px;flex:1}
-.db-nav button,.db-navlink{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:1px solid transparent;color:#d7e3ee;border-radius:10px;padding:9px 10px;cursor:pointer;text-align:start;text-decoration:none;position:relative;transition:.15s}
+.db-nav button,.db-navlink{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:1px solid transparent;color:#EADFD6;border-radius:10px;padding:9px 10px;cursor:pointer;text-align:start;text-decoration:none;position:relative;transition:.15s}
 .db-nav button svg,.db-navlink svg{opacity:.85;flex-shrink:0}
 .db-nav button:hover,.db-navlink:hover{background:rgba(255,255,255,.07);color:#fff}
 .db-nav button.on{background:rgba(255,255,255,.1);color:#fff}
 .db-nav button.on::before{content:'';position:absolute;inset-inline-start:-14px;top:9px;bottom:9px;width:4px;border-radius:0 3px 3px 0;background:var(--gold)}
 .db-nav button.on svg{opacity:1;color:#f1dfa6}
-.db-nav span{display:flex;flex-direction:column;min-width:0}.db-nav b{font-size:14px}.db-nav small{font-size:11px;color:#a9c4d8;font-weight:700}
+.db-nav span{display:flex;flex-direction:column;min-width:0}.db-nav b{font-size:14px}.db-nav small{font-size:11px;color:#D9C6CF;font-weight:700}
 .db-nav-sep{font-size:10.5px;font-weight:800;color:#8fb0c9;letter-spacing:.6px;padding:12px 10px 4px;border-top:1px solid rgba(255,255,255,.08);margin-top:6px;text-transform:uppercase}
 .db-logout{display:flex;gap:8px;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,.18);color:#fbd5d5;border-radius:10px;padding:10px;cursor:pointer;font-weight:800;transition:.15s}
 .db-logout:hover{background:rgba(220,38,38,.18);border-color:rgba(252,165,165,.4);color:#fff}
@@ -767,17 +771,18 @@ const CSS = `
 .db-pills .db-badge{background:var(--surface)!important;border:1px solid var(--line);color:var(--ink-2)!important;padding:5px 12px;font-size:12px;box-shadow:var(--shadow-sm)}
 .db-pills .db-badge::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--dot,var(--muted-2))}
 /* hero */
-.db-hero{display:grid;grid-template-columns:1fr 300px;gap:16px;background:linear-gradient(135deg,var(--navy) 0%,#0b2240 100%);color:#fff;border-radius:var(--r-xl);padding:22px 24px;border:1px solid rgba(217,168,102,.35);position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.db-hero{display:grid;grid-template-columns:1fr 300px;gap:16px;background:linear-gradient(135deg,var(--deep,#22101F) 0%,var(--navy) 55%,#4A2946 100%);color:#fff;border-radius:var(--r-xl);padding:22px 24px;border:1px solid rgba(217,168,102,.35);position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.db-hero-hz{position:absolute;inset:0 0 auto 0;opacity:.5;pointer-events:none}.db-hero-main,.db-hero>*:not(.db-hero-hz){position:relative}
 .db-hero::after{content:'';position:absolute;inset-inline-end:-80px;top:-80px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(212,97,74,.35),transparent 70%);pointer-events:none}
-.db-kicker{font-size:11px;font-weight:800;color:#a9c4d8;letter-spacing:.5px;margin-bottom:8px;text-transform:uppercase}
+.db-kicker{font-size:11px;font-weight:800;color:#D9C6CF;letter-spacing:.5px;margin-bottom:8px;text-transform:uppercase}
 .db-hero-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .db-hero-score{font-size:58px;font-weight:900;line-height:1;direction:ltr;unicode-bidi:plaintext;font-variant-numeric:tabular-nums}
-.db-hero-score small{font-size:18px;color:#a9c4d8;font-weight:700}
+.db-hero-score small{font-size:18px;color:#D9C6CF;font-weight:700}
 .db-hero-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
 .db-hero-text{margin:0;font-size:14px;line-height:1.9;color:#EADFD6;max-width:720px}
 .db-hero-side{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative}
 .db-hero-side div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--r);padding:10px;text-align:center}
-.db-hero-side small{display:block;font-size:11px;color:#a9c4d8;font-weight:800}
+.db-hero-side small{display:block;font-size:11px;color:#D9C6CF;font-weight:800}
 .db-hero-side b{font-size:22px;direction:ltr;unicode-bidi:plaintext;font-variant-numeric:tabular-nums}
 /* kpis */
 .db-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}.db-kpis.four{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:1500px){.db-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.db-kpis.four{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.db-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}

@@ -1,0 +1,114 @@
+[
+ {
+  "key": "athar",
+  "name_ar": "أَثَر",
+  "verb_ar": "الأمّ — البوّابة",
+  "tone": "#D4614A",
+  "tone_on_dark": "#E8795C",
+  "files": {
+   "color": "zone-athar.svg",
+   "dark": "zone-athar-dark.svg",
+   "mono": "zone-athar-mono.svg",
+   "mono-light": "zone-athar-mono-light.svg",
+   "icon": "zone-athar-icon.svg"
+  }
+ },
+ {
+  "key": "miaar",
+  "name_ar": "مِعيار",
+  "verb_ar": "يَقيس — سلّم الدرجات داخل القوس",
+  "tone": "#D4614A",
+  "tone_on_dark": "#E8795C",
+  "files": {
+   "color": "zone-miaar.svg",
+   "dark": "zone-miaar-dark.svg",
+   "mono": "zone-miaar-mono.svg",
+   "mono-light": "zone-miaar-mono-light.svg",
+   "icon": "zone-miaar-icon.svg"
+  }
+ },
+ {
+  "key": "iqra",
+  "name_ar": "اقْرَأْ",
+  "verb_ar": "يُدرِّج — السطر يخرج مع اتجاه القراءة",
+  "tone": "#D4614A",
+  "tone_on_dark": "#E8795C",
+  "files": {
+   "color": "zone-iqra.svg",
+   "dark": "zone-iqra-dark.svg",
+   "mono": "zone-iqra-mono.svg",
+   "mono-light": "zone-iqra-mono-light.svg",
+   "icon": "zone-iqra-icon.svg"
+  }
+ },
+ {
+  "key": "programs",
+  "name_ar": "البرامج",
+  "verb_ar": "يَبني — درجات تحت العتبة تتّسع مستوىً بعد مستوى",
+  "tone": "#D4614A",
+  "tone_on_dark": "#E8795C",
+  "files": {
+   "color": "zone-programs.svg",
+   "dark": "zone-programs-dark.svg",
+   "mono": "zone-programs-mono.svg",
+   "mono-light": "zone-programs-mono-light.svg",
+   "icon": "zone-programs-icon.svg"
+  }
+ },
+ {
+  "key": "org",
+  "name_ar": "الجهات",
+  "verb_ar": "تَرى — ثلاثة تحت سقف واحد",
+  "tone": "#6A3350",
+  "tone_on_dark": "#B07A9A",
+  "files": {
+   "color": "zone-org.svg",
+   "dark": "zone-org-dark.svg",
+   "mono": "zone-org-mono.svg",
+   "mono-light": "zone-org-mono-light.svg",
+   "icon": "zone-org-icon.svg"
+  }
+ },
+ {
+  "key": "experts",
+  "name_ar": "هيئة أَثَر الاستشارية",
+  "verb_ar": "يُوثِّق — الخاتم الصغير حول الشخص",
+  "tone": "#D9A866",
+  "tone_on_dark": "#D9A866",
+  "files": {
+   "color": "zone-experts.svg",
+   "dark": "zone-experts-dark.svg",
+   "mono": "zone-experts-mono.svg",
+   "mono-light": "zone-experts-mono-light.svg",
+   "icon": "zone-experts-icon.svg"
+  }
+ },
+ {
+  "key": "staff",
+  "name_ar": "الطاقم",
+  "verb_ar": "يُدير — العتبة الثابتة على خطّ القاعدة",
+  "tone": "#D9A866",
+  "tone_on_dark": "#D9A866",
+  "files": {
+   "color": "zone-staff.svg",
+   "dark": "zone-staff-dark.svg",
+   "mono": "zone-staff-mono.svg",
+   "mono-light": "zone-staff-mono-light.svg",
+   "icon": "zone-staff-icon.svg"
+  }
+ },
+ {
+  "key": "pulse",
+  "name_ar": "نبض أَثَر",
+  "verb_ar": "يَنبِض — ضربة القلب تحت القاعدة",
+  "tone": "#5EA8A0",
+  "tone_on_dark": "#8FD0C8",
+  "files": {
+   "color": "zone-pulse.svg",
+   "dark": "zone-pulse-dark.svg",
+   "mono": "zone-pulse-mono.svg",
+   "mono-light": "zone-pulse-mono-light.svg",
+   "icon": "zone-pulse-icon.svg"
+  }
+ }
+]

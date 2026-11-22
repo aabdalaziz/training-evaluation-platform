@@ -7,9 +7,10 @@
  */
 import type { CSSProperties, ReactNode } from 'react';
 import Link from 'next/link';
-import { Horizon, Reveal, ArcDivider, Echo } from '../../lib/ui/motion';
+import { Horizon, Reveal, ArcDivider } from '../../lib/ui/motion';
 import { Icon } from '../../lib/ui/icons';
 import type { IconName } from '../../lib/ui/icons';
+import { ZoneMark } from './ZoneMark';
 
 export type Promise_ = { icon: IconName; title: string; body: string; href?: string };
 export const ZONE_TONE: Record<string, { echo: string; grad: string; word: string }> = {
@@ -18,6 +19,11 @@ export const ZONE_TONE: Record<string, { echo: string; grad: string; word: strin
   trainers: { echo: '#E8795C', grad: 'linear-gradient(135deg,#3A1F36,#6A3350 55%,#8E4A68)', word: '#F3A58F' },
   programs: { echo: '#D4614A', grad: 'linear-gradient(135deg,#3A1F36,#6A3350)', word: '#F3A58F' },
   portal: { echo: '#3A1F36', grad: 'linear-gradient(135deg,#22101F,#3A1F36)', word: '#D9A866' },
+  /* هـ-3: بقيّة عائلة المناطق بألوانها */
+  miaar: { echo: '#D4614A', grad: 'linear-gradient(135deg,#22101F,#3A1F36 55%,#5a2d4a)', word: '#F3A58F' },
+  iqra: { echo: '#D4614A', grad: 'linear-gradient(135deg,#22101F,#3A1F36 55%,#5a2d4a)', word: '#F3A58F' },
+  staff: { echo: '#D9A866', grad: 'linear-gradient(135deg,#22101F,#3A1F36 60%,#4A2946)', word: '#F6D9A8' },
+  pulse: { echo: '#5EA8A0', grad: 'linear-gradient(135deg,#22101F,#3A1F36 55%,#2f4a52)', word: '#9FD8D1' },
 };
 
 export default function ZoneDoor({ zone, crumb, kicker, title, word, lead, promises = [], aside, compact = false, children, testid }: {
@@ -28,10 +34,11 @@ export default function ZoneDoor({ zone, crumb, kicker, title, word, lead, promi
     <section className={`zd ${compact ? 'compact' : ''}`} dir="rtl" data-zone={zone} data-testid={testid || `zone-door-${zone}`} style={{ ['--zd-grad' as string]: t.grad, ['--zd-word' as string]: t.word, ['--zone-echo' as string]: t.echo } as CSSProperties}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <Horizon light height={compact ? 90 : 150} />
+      {!compact && <ZoneMark zone={zone} size={300} light style={{ position: 'absolute', insetInlineStart: 24, bottom: -70, opacity: .09, pointerEvents: 'none' }} />}
       <div className="zd-in">
         <div className="zd-main">
           {crumb && <p className="zd-crumb"><Link href="/">أَثَر</Link> <span aria-hidden="true">›</span> <span>{crumb}</span></p>}
-          <span className="zd-k"><Echo size={14} /> {kicker}</span>
+          <span className="zd-k"><ZoneMark zone={zone} size={compact ? 22 : 30} light /> {kicker}</span>
           <h1>{title}{word && <> <em>{word}</em></>}</h1>
           {lead && <p className="zd-lead">{lead}</p>}
           {children}
@@ -50,7 +57,7 @@ const CSS = `
 .zd-in{position:relative;max-width:1180px;margin:0 auto;padding:34px 20px 30px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,.9fr);gap:28px;align-items:start}
 .zd.compact .zd-in{padding:22px 20px 18px;grid-template-columns:1fr}
 .zd-crumb{margin:0 0 8px;font-size:12.5px;color:rgba(251,244,238,.7)}.zd-crumb a{color:#F6D9A8;text-decoration:none}
-.zd-k{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;letter-spacing:.03em;color:#F6D9A8}
+.zd-k{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:900;letter-spacing:.03em;color:#F6D9A8}
 .zd h1{margin:8px 0 10px;font-size:34px;line-height:1.35;font-weight:900;letter-spacing:-.01em;color:#FBF4EE}.zd.compact h1{font-size:26px;margin:6px 0 6px}
 .zd h1 em{font-style:normal;color:var(--zd-word)}
 .zd-lead{margin:0 0 14px;font-size:15px;line-height:1.9;color:rgba(251,244,238,.86);max-width:62ch}.zd.compact .zd-lead{font-size:13.5px;margin-bottom:8px}

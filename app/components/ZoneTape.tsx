@@ -9,7 +9,7 @@
  */
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { AtharMark } from './Brand';
+import { ZoneMark } from './ZoneMark';
 
 type Item = { id: string; kind: 'news' | 'auto'; zone?: string; title: string; body: string; href: string | null; tone: string; pinned: boolean };
 type Group = { zone: string; label: string; items: Item[] };
@@ -65,7 +65,7 @@ export default function ZoneTape({ zone = 'all', compact = false, className = ''
     <div className="ab-row" aria-hidden={rp === 1} key={rp}>
       {groups.map((g) => (
         <Fragment key={g.zone + rp}>
-          <span className="ab-brand"><AtharMark size={18} light /><b>{g.label}</b></span>
+          <span className="ab-brand"><ZoneMark zone={g.zone} size={20} light /><b>{g.label}</b></span>
           {g.items.map((it, k) => (
             <Fragment key={it.id + rp}>
               {k > 0 && <i className="ab-sep" aria-hidden="true">✦</i>}

@@ -22,7 +22,7 @@ const REFRESH_SEC = 60;
 const RANGES: { id: Range; label: string; days: number | null }[] = [
   { id: 'today', label: 'اليوم', days: 1 }, { id: '7d', label: '7 أيام', days: 7 }, { id: '30d', label: '30 يومًا', days: 30 }, { id: 'all', label: 'الكل', days: null },
 ];
-const TONE: Record<string, string> = { EXCELLENT: '#34d399', GOOD: '#2dd4bf', WATCH: '#fbbf24', RISK: '#f87171', NA: '#B3A5AE' };
+const TONE: Record<string, string> = { EXCELLENT: '#34d399', GOOD: '#8FD0C8', WATCH: '#fbbf24', RISK: '#f87171', NA: '#B3A5AE' };
 
 export default function CommandCenterPage() {
   const db = useMemo(() => supabase(), []);
@@ -245,7 +245,7 @@ export default function CommandCenterPage() {
               <div className="cc-ticker-in">
                 {(latest.length ? [...latest, ...latest] : []).map((e, i) => {
                   const room = raw.classrooms.find((c: any) => c.id === e.classroom_id)?.code || '—';
-                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#B3A5AE' : e.mean >= TARGET ? '#34d399' : e.mean >= THRESHOLDS.good ? '#2dd4bf' : e.mean >= THRESHOLDS.watch ? '#fbbf24' : '#f87171' }} />{timeAgo(String(e.submitted_at))} · قاعة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
+                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#B3A5AE' : e.mean >= TARGET ? '#34d399' : e.mean >= THRESHOLDS.good ? '#8FD0C8' : e.mean >= THRESHOLDS.watch ? '#fbbf24' : '#f87171' }} />{timeAgo(String(e.submitted_at))} · قاعة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
                 })}
                 {!latest.length && <span>لا توجد استجابات بعد</span>}
               </div>
@@ -294,12 +294,12 @@ function Trend({ series }: { series: { key: string; label: string; mean: number 
   const area = `${d} L${x(pts.length - 1)},${H - P} L${x(0)},${H - P} Z`;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="cc-svg">
-      <defs><linearGradient id="ccg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#2dd4bf" stopOpacity=".35" /><stop offset="1" stopColor="#2dd4bf" stopOpacity="0" /></linearGradient></defs>
+      <defs><linearGradient id="ccg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#8FD0C8" stopOpacity=".35" /><stop offset="1" stopColor="#8FD0C8" stopOpacity="0" /></linearGradient></defs>
       {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="rgba(255,255,255,.08)" /><text x={P - 8} y={y(v) + 3} fontSize="10" textAnchor="end" fill="#B3A5AE">{v}</text></g>)}
       <line x1={P} x2={W - P} y1={y(TARGET)} y2={y(TARGET)} stroke="#D9A866" strokeDasharray="6 4" strokeWidth="1.5" />
-      <path d={area} fill="url(#ccg)" /><path d={d} fill="none" stroke="#2dd4bf" strokeWidth="3" />
+      <path d={area} fill="url(#ccg)" /><path d={d} fill="none" stroke="#8FD0C8" strokeWidth="3" />
       {pts.map((p, i) => <g key={p.key}>
-        <circle cx={x(i)} cy={y(p.mean as number)} r="4.5" fill={(p.mean as number) >= TARGET ? '#34d399' : (p.mean as number) >= THRESHOLDS.good ? '#2dd4bf' : '#f87171'} stroke="#3A1F36" strokeWidth="2"><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
+        <circle cx={x(i)} cy={y(p.mean as number)} r="4.5" fill={(p.mean as number) >= TARGET ? '#34d399' : (p.mean as number) >= THRESHOLDS.good ? '#8FD0C8' : '#f87171'} stroke="#3A1F36" strokeWidth="2"><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
         <text x={x(i)} y={y(p.mean as number) - 10} fontSize="10" textAnchor="middle" fill="#EADFD6" fontWeight="700">{(p.mean as number).toFixed(2)}</text>
         <text x={x(i)} y={H - 10} fontSize="9" textAnchor="middle" fill="#B3A5AE">{p.label.slice(-5)}</text>
       </g>)}
@@ -340,8 +340,8 @@ function timeAgo(iso: string): string {
 /* ===== الأنماط ===== */
 const CSS = `
 body.cc-present .global-nav{display:none !important;}
-.cc{--navy:#3A1F36;--navy-2:#0b1f3a;--teal:#2dd4bf;--gold:#D9A866;--line:rgba(255,255,255,.1);--card:rgba(255,255,255,.05);--muted:#B3A5AE;--txt:#EADFD6;
-  min-height:100vh;background:radial-gradient(1200px 600px at 85% -10%,rgba(212,97,74,.28),transparent 60%),linear-gradient(180deg,#3A1F36 0%,#0b1f3a 100%);color:var(--txt);padding:16px 18px 70px;font-family:inherit;}
+.cc{--navy:#3A1F36;--navy-2:#22101F;--teal:#8FD0C8;--gold:#D9A866;--line:rgba(255,255,255,.1);--card:rgba(255,255,255,.05);--muted:#B3A5AE;--txt:#EADFD6;
+  min-height:100vh;background:radial-gradient(1200px 600px at 85% -10%,rgba(212,97,74,.28),transparent 60%),linear-gradient(180deg,#3A1F36 0%,#22101F 100%);color:var(--txt);padding:16px 18px 70px;font-family:inherit;}
 .cc *{box-sizing:border-box;}
 .cc .ltr{direction:ltr;unicode-bidi:plaintext;}
 .cc a{text-decoration:none;color:inherit;}
@@ -451,7 +451,7 @@ body.cc-present .global-nav{display:none !important;}
 .cc-svg{width:100%;height:auto;display:block;}
 
 /* ticker */
-.cc-ticker{position:fixed;inset-inline:0;bottom:0;background:#0b1f3a;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:8px 16px;z-index:50;font-size:12.5px;}
+.cc-ticker{position:fixed;inset-inline:0;bottom:0;background:#22101F;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:8px 16px;z-index:50;font-size:12.5px;}
 .cc-ticker-l,.cc-ticker-r{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-weight:800;white-space:nowrap;flex-shrink:0;}
 .cc-ticker-r{color:var(--muted);font-weight:600;}
 .cc-ticker-track{flex:1;overflow:hidden;min-width:0;}
