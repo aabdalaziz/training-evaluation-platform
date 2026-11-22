@@ -13,7 +13,11 @@ export async function loadMyProfile(db: any, me: { id?: string | null; email: st
   return list.find(p => p.user_id && p.user_id === me.id) || list.find(p => lower(p.email) === lower(me.email)) || list[0] || null;
 }
 export const loadProfileById = (db: any, id: string) => safe<Profile | null>(db.from('portal_directory_profiles').select(PROFILE_COLS).eq('id', id).maybeSingle(), null);
-export const loadProfileBySlug = (db: any, slug: string) => safe<Profile | null>(db.from('portal_directory_profiles').select(PROFILE_COLS).eq('slug', slug).maybeSingle(), null);
+export const loadProfileBySlug = async (db: any, slug: string): Promise<Profile | null> => {
+  const cur = await safe<Profile | null>(db.from('portal_directory_profiles').select(PROFILE_COLS).eq('slug', slug).maybeSingle(), null); if (cur) return cur;
+  // هـ-2 (د): الروابط القديمة تبقى تعمل بعد تغيير اسم الرابط
+  return safe<Profile | null>(db.from('portal_directory_profiles').select(PROFILE_COLS).contains('slug_history', [slug]).limit(1).maybeSingle(), null);
+};
 /** المعتمدون المدرجون (التصفية الدقيقة في الذاكرة عبر registry.matches) */
 export const loadPublicProfiles = (db: any) => safe<Profile[]>(db.from('portal_directory_profiles').select(PROFILE_COLS).eq('status', 'approved').eq('listed', true).order('updated_at', { ascending: false }).limit(2000), []).then(rows);
 export const loadAllProfiles = (db: any) => safe<Profile[]>(db.from('portal_directory_profiles').select(PROFILE_COLS).order('updated_at', { ascending: false }).limit(2000), []).then(rows);

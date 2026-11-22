@@ -32,7 +32,7 @@ export default function Page() { return <PortalShell><Inner /></PortalShell>; }
 function Inner() {
   const db = useMemo(() => supabase(), []); const [tok, setTok] = useState<string | null>(null);
   const [d, setD] = useState<any>(null); const [f, setF] = useState<Form>(EMPTY); const [dirty, setDirty] = useState(false); const [err, setErr] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState('');
-  const [photoConsent, setPhotoConsent] = useState(false); const [note, setNote] = useState<Record<string, string>>({});
+  const [photoConsent, setPhotoConsent] = useState(false); const [slugIn, setSlugIn] = useState(''); /* هـ-2 (د) رابط باسمك */ const [note, setNote] = useState<Record<string, string>>({});
   // P31-ب: اختيار الصورة (من الجهاز / الكاميرا) + «ابدأ من سيرتك الذاتية»
   const [photoMenu, setPhotoMenu] = useState(false); const [cam, setCam] = useState<MediaStream | null>(null); const videoRef = useRef<HTMLVideoElement | null>(null); const fileRef = useRef<HTMLInputElement | null>(null); const capRef = useRef<HTMLInputElement | null>(null);
   const [cvBusy, setCvBusy] = useState(false); const [cvRes, setCvRes] = useState<any>(null); const [cvOverwrite, setCvOverwrite] = useState(false); const prevForm = useRef<Form | null>(null);
@@ -176,6 +176,11 @@ function Inner() {
           </div>}
         </section>
 
+        {p && <section className="me-sec" aria-labelledby="h-slug" data-testid="me-slug"><h2 id="h-slug"><Icon name="link" size={16} /> رابط صفحتك <small>اختياري — اسم بالحروف اللاتينية بدل الرمز التلقائي</small></h2>
+          <div className="me-slugrow"><span dir="ltr" className="me-slugpre">athar-portal.com/experts/</span><input dir="ltr" className="dr-in" value={slugIn || p.slug || ''} onChange={e => setSlugIn(e.target.value.toLowerCase())} maxLength={40} placeholder="ahmed-abdelaziz" data-testid="me-slug-in" /><button type="button" className="pt-btn small" disabled={!!busy || !slugIn || slugIn === p.slug} onClick={async () => { const j = await act({ action: 'slug', slug: slugIn }); if (j?.profile) { setD((d: any) => ({ ...d, profile: j.profile })); setSlugIn(''); } }} data-testid="me-slug-save"><Icon name="save" size={14} /> احفظ الرابط</button></div>
+          <p className="dr-fine">حروف لاتينية صغيرة وأرقام وشرطات (3–40). الروابط القديمة التي نشرتها تبقى تعمل وتحوّل إلى الجديد.</p>
+        </section>}
+
         <section className="me-sec" aria-labelledby="h-sum"><h2 id="h-sum"><Icon name="doc" size={16} /> ملخص السيرة * <small>{f.summary_ar.length} / {rules.summary_max} · {rules.summary_min} حرفًا على الأقل</small></h2>
           <textarea className="dr-in" rows={6} value={f.summary_ar} onChange={e => set('summary_ar', e.target.value.slice(0, rules.summary_max))} aria-label="ملخص السيرة" placeholder="من أنت مهنيًّا، وما الذي تحسنه، ولمن عملت، وما الذي يميّز طريقتك — بكلماتك." data-testid="me-summary" />
         </section>
@@ -242,6 +247,7 @@ const CSS = `
 .me-form{display:grid;gap:12px}.me-sec{border:1px solid #EADFD6;border-radius:18px;padding:14px 16px;background:#fff}.me-sec h2{margin:0 0 8px;font-size:17px;color:#3A1F36;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.me-sec h2 small,.me-sec h3 small{font-size:12px;color:#5C4858;font-weight:700}.me-sec h3{margin:10px 0 4px;font-size:14px;color:#0b6f69}.me-sec.witness{background:#FBF4EE}
 .me-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.me-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}.me-chip{font:inherit;font-size:13px;font-weight:800;border:1px solid #B3A5AE;border-radius:999px;padding:6px 12px;background:#fff;color:#3A1F36;cursor:pointer;min-height:24px}.me-chip.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.me-chip.sec.on{background:#7c5a12;border-color:#7c5a12}.me-chip.svc.on{background:#0b6f69;border-color:#0b6f69}
 .me-dom h3{margin:8px 0 2px}.me-photo{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}.me-consent{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.7;margin:8px 0;color:#3A2634}.me-file{position:relative;overflow:hidden;cursor:pointer}.me-file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.me-slugrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.me-slugpre{font-size:13px;color:#5C4858;background:#F6EBE0;border-radius:8px;padding:8px 10px}.me-slugrow .dr-in{max-width:260px;margin:0}
 .me-rows{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:8px}.me-rows li{display:flex;gap:6px;align-items:flex-end}.me-rows li .dr-in{margin-top:4px}.me-rowgrid{flex-wrap:wrap;border:1px solid #EADFD6;border-radius:12px;padding:8px 10px}.me-rowgrid .dr-lbl{flex:1 1 160px;font-size:12px}.me-del{font:inherit;border:1px solid #fecaca;background:#fff;color:#991b1b;border-radius:10px;padding:8px;cursor:pointer;min-width:36px;min-height:36px}
 .me-savebar{position:sticky;bottom:0;background:rgba(255,255,255,.95);border-top:1px solid #EADFD6;padding:10px 0;display:flex;gap:12px;align-items:center;z-index:2}
 .me-engs{list-style:none;margin:0;padding:0;display:grid;gap:10px}.me-eng{border:1px solid #D9CBC2;border-radius:16px;padding:12px 14px;background:#fff}.me-eng.s-proposed{border-color:#D9A866;background:#fffdf7}.me-eng.s-active{border-color:#D4614A;background:#FBEDE7}.me-enghead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.me-enghead b{color:#3A1F36;font-size:16px}.me-scope{white-space:pre-wrap;line-height:1.85;color:#3A2634;margin:6px 0}.me-engact{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}.me-engact .grow{flex:1 1 220px}

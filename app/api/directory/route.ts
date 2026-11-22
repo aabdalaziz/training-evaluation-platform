@@ -17,7 +17,7 @@ import { signerFromEnv } from '../../../lib/portal/vc-server';
 import { didWeb } from '../../../lib/portal/vc';
 import { notify } from '../../../lib/portal/notify';
 import { limitFor, tooMany, ipOf } from '../../../lib/shield/ratelimit';
-import { DIRECTORY_VERSION, TAGLINE_AR, FACE_AR, FACE_TITLE_AR, STATUS_AR, SERVICES, SERVICE_AR, MODES, MODE_AR, LANG_AR, SECTIONS, SECTION_AR, DEFAULT_VISIBILITY, SUMMARY_MIN, SUMMARY_MAX, ACHIEVEMENTS_MAX, ACHIEVEMENT_LEN, SKILLS_MAX, SECTORS_MAX, PHOTO_MAX_BYTES, PHOTO_TYPES, SEARCH_PAGE, SEARCH_Q_MAX, PRIVATE_BUCKET, PUBLIC_BUCKET, PROFILE_COLS, lower, sanitizeProfileInput, profileIssues, canSubmit, isPublic, publicView, cardView, ownerView, searchPlain, search, witnessLines, WITNESS_EMPTY_AR, memberCode, slugFor, privatePhotoPath, memberTransition, engagementMemberView, prefillFromLegacyTrainer, summaryOf } from '../../../lib/directory/registry';
+import { normalizeSlug, slugIssue, DIRECTORY_VERSION, TAGLINE_AR, FACE_AR, FACE_TITLE_AR, STATUS_AR, SERVICES, SERVICE_AR, MODES, MODE_AR, LANG_AR, SECTIONS, SECTION_AR, DEFAULT_VISIBILITY, SUMMARY_MIN, SUMMARY_MAX, ACHIEVEMENTS_MAX, ACHIEVEMENT_LEN, SKILLS_MAX, SECTORS_MAX, PHOTO_MAX_BYTES, PHOTO_TYPES, SEARCH_PAGE, SEARCH_Q_MAX, PRIVATE_BUCKET, PUBLIC_BUCKET, PROFILE_COLS, lower, sanitizeProfileInput, profileIssues, canSubmit, isPublic, publicView, cardView, ownerView, searchPlain, search, witnessLines, WITNESS_EMPTY_AR, memberCode, slugFor, privatePhotoPath, memberTransition, engagementMemberView, prefillFromLegacyTrainer, summaryOf } from '../../../lib/directory/registry';
 import type { Profile, Engagement, Face } from '../../../lib/directory/registry';
 import { loadMyProfile, loadProfileBySlug, loadPublicProfiles, loadMeta, resolveNames, legacyTrainer, witnessFacts, loadEngagements, loadEngagement } from '../../../lib/directory/load';
 import { signEngagement } from '../../../lib/directory/card';
@@ -134,6 +134,17 @@ export async function POST(req: Request) {
         const path = privatePhotoPath(me.id, type); const { error } = await db.storage.from(PRIVATE_BUCKET).upload(path, bytes, { contentType: type, upsert: true }); if (error) return bad(`تعذّر رفع الصورة: ${error.message}`, 500);
         p = await patchMine(reviewFlag(p, { photo_path: path, photo_consent_at: body.consent === true ? iso : null }));
         return NextResponse.json({ success: true, profile: ownerView(p), message_ar: body.consent === true ? 'رُفعت الصورة وسُجّلت موافقتك بتاريخ اليوم.' : 'رُفعت الصورة — بقيت الموافقة على ظهورها.' });
+      }
+      case 'slug': {
+        // هـ-2 (د) «رابط باسمك» — صاحب السيرة يختار اسم رابط صفحته؛ القديم يُحفظ في slug_history فتبقى الروابط المنشورة تعمل
+        if (!p) return bad('احفظ سيرتك أولًا');
+        const slug = normalizeSlug(String(body.slug || '')); const issue = slugIssue(slug); if (issue) return bad(issue);
+        if (slug === p.slug) return NextResponse.json({ success: true, profile: ownerView(p), message_ar: 'هذا هو اسم رابطك الحالي.' });
+        const { data: taken } = await db.from('portal_directory_profiles').select('id').or(`slug.eq.${slug},slug_history.cs.{${slug}}`).neq('id', p.id).limit(1);
+        if ((taken || []).length) return bad('اسم الرابط مستخدم لعضو آخر — جرّب صيغة أخرى', 409);
+        const hist = Array.from(new Set([...(p.slug_history || []), ...(p.slug ? [p.slug] : [])])).filter(h => h !== slug).slice(-10);
+        try { p = await patchMine({ slug, slug_history: hist }); } catch (e: any) { return bad(/duplicate|unique/i.test(String(e?.message)) ? 'اسم الرابط مستخدم لعضو آخر' : `تعذّر تغيير الرابط: ${e?.message || e}`, 409); }
+        return NextResponse.json({ success: true, profile: ownerView(p), message_ar: `صار رابط صفحتك: /experts/${slug} — والروابط القديمة تبقى تعمل.` });
       }
       case 'photo_consent': {
         if (!p?.photo_path) return bad('ارفع صورة أولًا'); if (body.consent !== true) return bad('الموافقة الصريحة مطلوبة (consent:true)');

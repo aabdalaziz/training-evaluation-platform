@@ -49,7 +49,7 @@ export type Publication = { title: string; type: string; year: string; url?: str
 export type StaffOnly = { availability?: string; docs?: { name: string; path: string; mime: string; bytes: number; at: string }[]; notes?: string };
 export type Card = { code: string; vc_issuance_id: string | null; issued_at: string } | null;
 export type Profile = {
-  id: string; created_at: string; updated_at: string; user_id: string | null; email: string; status: ProfileStatus; faces: Face[]; listed: boolean; slug: string | null; code: string | null;
+  id: string; created_at: string; updated_at: string; user_id: string | null; email: string; status: ProfileStatus; faces: Face[]; listed: boolean; slug: string | null; slug_history?: string[]; code: string | null;
   name_ar: string; name_en: string | null; title_ar: string; title_en: string | null; city: string | null; languages: string[];
   photo_path: string | null; photo_public_path: string | null; photo_consent_at: string | null;
   summary_ar: string; summary_en: string | null; achievements: string[]; education: Education[]; experience: Experience[]; certifications: Certification[]; publications: Publication[];
@@ -57,7 +57,7 @@ export type Profile = {
   visibility: Partial<Record<Section, boolean>>; witness_hidden: boolean; staff_only: StaffOnly; staff_note_ar: string | null; search_plain: string;
   submitted_at: string | null; approved_at: string | null; approved_by: string | null; suspended_at: string | null; card_expert: Card; card_trainer: Card; legacy_trainer_id: string | null; meta: Record<string, any>;
 };
-export const PROFILE_COLS = 'id,created_at,updated_at,user_id,email,status,faces,listed,slug,code,name_ar,name_en,title_ar,title_en,city,languages,photo_path,photo_public_path,photo_consent_at,summary_ar,summary_en,achievements,education,experience,certifications,publications,skill_ids,skill_names,sectors,services,modes,coverage,visibility,witness_hidden,staff_only,staff_note_ar,search_plain,submitted_at,approved_at,approved_by,suspended_at,card_expert,card_trainer,legacy_trainer_id,meta';
+export const PROFILE_COLS = 'id,created_at,updated_at,user_id,email,status,faces,listed,slug,slug_history,code,name_ar,name_en,title_ar,title_en,city,languages,photo_path,photo_public_path,photo_consent_at,summary_ar,summary_en,achievements,education,experience,certifications,publications,skill_ids,skill_names,sectors,services,modes,coverage,visibility,witness_hidden,staff_only,staff_note_ar,search_plain,submitted_at,approved_at,approved_by,suspended_at,card_expert,card_trainer,legacy_trainer_id,meta';
 /** الحقول التي يحرّرها صاحب السيرة (لا status ولا الحقول المشتقة ولا حقول الطاقم) */
 export const EDITABLE_FIELDS = ['faces', 'name_ar', 'name_en', 'title_ar', 'title_en', 'city', 'languages', 'summary_ar', 'summary_en', 'achievements', 'education', 'experience', 'certifications', 'publications', 'skill_ids', 'sectors', 'services', 'modes', 'coverage', 'visibility', 'witness_hidden'] as const;
 
@@ -213,6 +213,17 @@ export const collabCode = (rnd: () => string = () => randomCode(4)) => `${CODE_P
 export function slugFor(p: Pick<Profile, 'name_en' | 'code'>, rnd: () => string = () => randomCode(4)): string {
   const base = String(p.name_en || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'member';
   const tail = (p.code ? p.code.split('-').pop() : rnd()) || rnd(); return `${base}-${tail.toLowerCase()}`;
+}
+/** هـ-2 (د) «رابط باسمك»: 3–40 حرفًا لاتينيًا صغيرًا/أرقامًا بشرطات، لا يبدأ بـ member-، وليس كلمة محجوزة */
+export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/; export const SLUG_MIN = 3, SLUG_MAX = 40;
+export const SLUG_RESERVED = ['new', 'me', 'admin', 'experts', 'trainers', 'athar', 'staff', 'api', 'verify', 'login', 'null', 'undefined'];
+export function normalizeSlug(raw: string): string { return String(raw || '').trim().toLowerCase().replace(/[\s_]+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-+|-+$/g, '').slice(0, SLUG_MAX); }
+export function slugIssue(slug: string): string | null {
+  if (slug.length < SLUG_MIN) return `اسم الرابط ${SLUG_MIN} أحرف على الأقل`;
+  if (!SLUG_RE.test(slug)) return 'اسم الرابط: حروف لاتينية صغيرة وأرقام وشرطات فقط (مثل ahmed-abdelaziz)';
+  if (SLUG_RESERVED.includes(slug)) return 'هذا الاسم محجوز';
+  if (/^member-/.test(slug)) return 'الأسماء التي تبدأ بـ member- محجوزة للروابط التلقائية';
+  return null;
 }
 export const photoExt = (mime: string) => mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
 export const privatePhotoPath = (userId: string, mime: string) => `directory/${userId}/photo-${Date.now().toString(36)}.${photoExt(mime)}`;
