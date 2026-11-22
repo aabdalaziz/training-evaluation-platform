@@ -23,6 +23,8 @@ const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-
 export default function PaymentsPage() {
   const db = useMemo(() => supabase(), []); const router = useRouter();
   const [ready, setReady] = useState(false); const [role, setRole] = useState(''); const [error, setError] = useState(''); const [notice, setNotice] = useState('');
+  const [whCode, setWhCode] = useState<{ code: string | null; at: string | null; configured: boolean } | null>(null); /* هـ-1/3: رمز توثيق Webhook من Moyasar */
+  const fetchWhCode = async () => { const { data: s } = await db.auth.getSession(); const r = await fetch('/api/payments/webhook?verification=1', { headers: { Authorization: `Bearer ${s.session?.access_token || ''}` }, cache: 'no-store' }); const j = await r.json().catch(() => ({})); if (j.ok) setWhCode({ code: j.code, at: j.at, configured: !!j.configured }); else setError(j.error || `HTTP ${r.status}`); };
   const [tab, setTab] = useState<Tab>('invoices'); const [filter, setFilter] = useState<InvoiceStatus | 'all' | 'overdue'>('under_review'); const [q, setQ] = useState('');
   const [rows, setRows] = useState<Row[]>([]); const [programs, setPrograms] = useState<Record<string, { name_ar: string; fee: number | null; currency: string | null }>>({});
   const [pending, setPending] = useState<(Enrollment & { program_name?: string; fee?: number | null })[]>([]);
@@ -159,6 +161,10 @@ export default function PaymentsPage() {
             <div className="g3">
               <label className="chk"><input type="checkbox" checked={form.bank_transfer_enabled} onChange={e => setForm({ ...form, bank_transfer_enabled: e.target.checked })} disabled={!isAdmin} /> التحويل البنكي (رفع إيصال + تأكيد الإدارة)</label>
               <label className="chk"><input type="checkbox" checked={form.card_enabled} onChange={e => setForm({ ...form, card_enabled: e.target.checked })} disabled={!isAdmin} /> البطاقات / Apple Pay عبر Moyasar</label>
+              {isAdmin && <div className="py-preview" style={{ gridColumn: '1/-1', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }} data-testid="wh-verify">
+                <button type="button" className="py-btn" onClick={() => void fetchWhCode()}>رمز توثيق Webhook (من Moyasar)</button>
+                {whCode && (whCode.code ? <span>الرمز: <b dir="ltr" style={{ fontSize: 22, letterSpacing: '.15em' }} data-testid="wh-code">{whCode.code}</b> <small>({new Date(whCode.at || '').toLocaleString('ar-SA')}) — ألصقه في نافذة Verify Webhook (يصلح ٣٠ دقيقة)</small></span> : <span>لم يصل رمز بعد — اضغط «Resend code» في Moyasar ثم أعد الضغط هنا.{!whCode.configured && ' (المفاتيح غير مهيّأة في Vercel)'}</span>)}
+              </div>}
               <div className="py-preview" style={{ gridColumn: '1/-1' }}>لتفعيل البطاقات: أنشئ حسابًا في moyasar.com، ثم أضف في Vercel المتغيرين <code>NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY</code> و<code>MOYASAR_SECRET_KEY</code> وأعد النشر، ثم فعّل الخيار أعلاه. للتأكيد الآلي حتى لو أغلق العميل المتصفح: في لوحة Moyasar → Settings → Webhooks أضف <code>{typeof window !== 'undefined' ? window.location.origin : ''}/api/payments/webhook</code> (POST، حدث payment_paid وpayment_refunded) مع Secret token تضعه أيضًا في Vercel باسم <code>MOYASAR_WEBHOOK_SECRET</code>. {process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY ? <b style={{ color: '#059669' }}>المفتاح العام مضبوط ✓</b> : <b style={{ color: '#9a3412' }}>المفتاح العام غير مضبوط بعد</b>}</div>
             </div>
             <h3><Icon name="doc" size={18} /> الشروط على الفاتورة</h3>

@@ -21,10 +21,18 @@ export async function POST(req: Request) {
   let ev: MoyasarEvent; try { ev = await req.json(); } catch { return NextResponse.json({ ok: false, error: 'bad json' }, { status: 400 }); }
   if (!safeEqual(String(ev.secret_token || ''), secret)) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
 
+  const db = createClient(URL_, SVC);
+  /* هـ-1/3: توثيق الـWebhook من لوحة Moyasar — يرسل حدث webhook_verification ومعه data.verification_code؛ نحفظه في سجلّ التدقيق ليقرأه المدير من /admin/payments → الإعدادات */
+  if (ev.type === 'webhook_verification') {
+    const code = String((ev.data as any)?.verification_code || '').replace(/[^0-9A-Za-z-]/g, '').slice(0, 16);
+    console.log(`[moyasar] webhook_verification code=${code}`);
+    if (code) await db.from('audit_logs').insert({ action: 'moyasar_webhook_verification', entity_type: 'webhook', entity_id: 'moyasar', metadata: { code, live: !!ev.live, at: new Date().toISOString() } });
+    return NextResponse.json({ ok: true, verification: true });
+  }
+
   const action = eventAction(ev.type); const pid = String(ev.data?.id || '').replace(/[^a-zA-Z0-9-]/g, '');
   if (action === 'ignore' || !pid) return NextResponse.json({ ok: true, ignored: true });
 
-  const db = createClient(URL_, SVC);
   // إيجاد الفاتورة: metadata.invoice_id ثم gateway_payment_id
   let inv: Invoice | null = null; const invId = invoiceIdFrom(ev);
   if (invId) { const { data } = await db.from('portal_invoices').select('*').eq('id', invId).maybeSingle(); inv = (data as Invoice) || null; }
@@ -50,4 +58,18 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, status: 'paid', mail_error });
 }
 
-export async function GET() { return NextResponse.json({ ok: true, endpoint: 'moyasar-webhook', configured: !!(process.env.MOYASAR_WEBHOOK_SECRET && process.env.MOYASAR_SECRET_KEY) }); }
+export async function GET(req: Request) {
+  const configured = !!(process.env.MOYASAR_WEBHOOK_SECRET && process.env.MOYASAR_SECRET_KEY);
+  const u = new URL(req.url);
+  if (u.searchParams.get('verification') !== '1') return NextResponse.json({ ok: true, endpoint: 'moyasar-webhook', configured });
+  /* آخر رمز توثيق — لمديري المنصّة فقط (Bearer) */
+  const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  if (!URL_ || !ANON || !SVC || !token) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } }); const { data: ud } = await userDb.auth.getUser(token);
+  if (!ud?.user) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  const db = createClient(URL_, SVC); const { data: prof } = await db.from('profiles').select('role').eq('id', ud.user.id).maybeSingle();
+  if (!['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'].includes(String((prof as any)?.role || '').toUpperCase())) return NextResponse.json({ ok: false, error: 'forbidden' }, { status: 403 });
+  const { data } = await db.from('audit_logs').select('created_at, metadata').eq('action', 'moyasar_webhook_verification').order('created_at', { ascending: false }).limit(1);
+  const r = Array.isArray(data) && data[0]; return NextResponse.json({ ok: true, configured, code: r ? String((r as any).metadata?.code || '') : null, at: r ? (r as any).created_at : null }, { headers: { 'Cache-Control': 'private, no-store' } });
+}
