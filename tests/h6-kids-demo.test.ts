@@ -7,6 +7,7 @@ import { SESSIONS, DEFAULT_SESSION, STATIONS, getSession } from '../lib/kids/ses
 import { FATIHA, ayahUrl } from '../lib/kids/souq';
 import { kidsImg, kidsSnd } from '../lib/kids/types';
 import { RETIRED_PATTERNS } from '../lib/lexicon';
+import { COMMON, COMMON_WORDS } from '../lib/kids/common';
 
 const ROOT = path.join(__dirname, '..');
 const exists = (p: string) => fs.existsSync(path.join(ROOT, 'public', p));
@@ -31,24 +32,40 @@ for (const S of SESSIONS) {
     assert.equal(S.quran.newKidsAyat, 3);
     assert.equal(S.harf.words.length, 4); assert.equal(S.harf.harakat.items.length, 3);
     const keys = new Set(S.vocab.map(v => v.key));
-    assert.ok(keys.has(S.game.luluMistake.word) && keys.has(S.game.luluMistake.onto) && S.game.luluMistake.word !== S.game.luluMistake.onto);
-    if (S.game.kind === 'scene') { assert.equal(S.game.hotspots.length, 4); S.game.hotspots.forEach(h => { assert.ok(keys.has(h.key)); assert.ok(h.x >= 0 && h.x + h.w <= 100 && h.y >= 0 && h.y + h.h <= 100, h.key); }); }
+    const G0 = S.games[0];
+    assert.ok(G0.kind === 'match' || G0.kind === 'scene', 'اللعبة الأولى رئيسة');
+    if (G0.kind === 'match' || G0.kind === 'scene') assert.ok(keys.has(G0.luluMistake.word) && keys.has(G0.luluMistake.onto) && G0.luluMistake.word !== G0.luluMistake.onto);
+    if (G0.kind === 'scene') { assert.equal(G0.hotspots.length, 4); G0.hotspots.forEach(h => { assert.ok(keys.has(h.key)); assert.ok(h.x >= 0 && h.x + h.w <= 100 && h.y >= 0 && h.y + h.h <= 100, h.key); }); }
   });
 
   test(`هـ-6 [${S.slug}]: كل الأصول موجودة — اللوحات · البطاقات · الشارة · (المشهد) · كل مفتاح صوتي`, () => {
     for (let i = 1; i <= 8; i++) assert.ok(exists(kidsImg(S.slug, `panel-0${i}`)), `panel-0${i}`);
     for (const v of S.vocab) assert.ok(exists(kidsImg(S.slug, v.img)), v.img);
     assert.ok(exists(kidsImg(S.slug, S.meta.badge.img)), S.meta.badge.img);
-    if (S.game.kind === 'scene') assert.ok(exists(kidsImg(S.slug, S.game.img)), S.game.img);
+    for (const g of [...S.games, ...(S.extraGame ? [S.extraGame] : [])]) if (g.kind === 'scene') assert.ok(exists(kidsImg(S.slug, g.img)), g.img);
     const audio = new Set<string>([
       ...Object.values(S.lulu).map(l => l.audio),
       ...S.panels.flatMap(p => p.lines.map(l => l.audio!).filter(Boolean)),
       S.harf.intro.audio, S.harf.harakat.audio, ...S.harf.words.map(w => w.audio), ...S.vocab.map(v => v.audio),
       S.hadith.story.audio, S.hadith.repeat.audio, S.hadith.lesson.audio, S.hadith.question.audio, ...S.hadith.options.map(o => `s-opt-${o.key}`),
       S.quran.intro.audio, S.quran.meaning.audio, S.quran.closing.audio,
+      ...S.harf.activities.flatMap(a => (a.kind === 'hear' ? a.items.map(x => x.audio) : [])),
+      ...[...S.games, ...(S.extraGame ? [S.extraGame] : [])].flatMap(g => ('items' in g ? g.items.map(x => x.audio) : [])),
     ]);
     const missing = [...audio].filter(a => !exists(kidsSnd(S.slug, a)));
     assert.deepEqual(missing, [], `أصوات ناقصة: ${missing.join(' ')}`);
+  });
+
+  test(`هـ-6 [${S.slug}]: بنك الأنشطة — ≥ 4 أنشطة حرف (منها تتبّع حسّي وأسمع الصوت) · ≥ 3 ألعاب (منها حركية/صوتية) · لعبة إضافية · لا تكرار`, () => {
+    const kinds = S.harf.activities.map(a => a.kind);
+    assert.ok(kinds.length >= 4 && kinds.includes('trace') && kinds.includes('hear') && kinds[0] === 'morph', kinds.join());
+    assert.equal(new Set(kinds).size, kinds.length);
+    const gk = S.games.map(g => g.kind);
+    assert.ok(gk.length >= 3, gk.join()); assert.equal(new Set(gk).size, gk.length);
+    assert.ok(gk.some(k => ['jump', 'clap', 'basket'].includes(k)), 'لعبة حركية/صوتية');
+    assert.ok(S.extraGame && !gk.includes(S.extraGame.kind));
+    for (const a of S.harf.activities) if (a.kind === 'hear') { assert.ok(a.items.filter(x => x.yes).length >= 3 && a.items.filter(x => !x.yes).length >= 2); }
+    for (const g of S.games) if (g.kind === 'clap') for (const it of g.items) assert.ok(it.syllables.length >= 1 && it.syllables.join('') === it.w, it.w);
   });
 
   test(`هـ-6 [${S.slug}]: قاعدة الوقف — كل جملة منطوقة تنتهي بسكون أو همزة/مدّ`, () => {
@@ -59,6 +76,8 @@ for (const S of SESSIONS) {
       ...S.roles.me.lines, ...S.roles.you.lines,
       S.hadith.story.text, S.hadith.lesson.text, S.hadith.question.text, ...S.hadith.options.map(o => o.text), ...S.hadith.options.map(o => o.reply),
       S.quran.intro.text, S.quran.meaning.text, S.quran.closing.text,
+      ...S.harf.activities.flatMap(a => (a.kind === 'hear' ? a.items.map(x => x.w) : [])),
+      ...[...S.games, ...(S.extraGame ? [S.extraGame] : [])].flatMap(g => ('items' in g ? g.items.map(x => x.w) : [])),
     ];
     const bad: string[] = [];
     for (const t of spoken) {
@@ -93,8 +112,15 @@ test('هـ-6: لؤلؤ تصمت في محطّتي الحديث والقرآن ·
   assert.match(ll, /--ll-amp/);
 });
 
+test('هـ-6: التعليمات العامّة للبنك (/kids/common/audio) موجودة كلّها ووفق قاعدة الوقف', () => {
+  for (const [k, L] of Object.entries(COMMON)) assert.ok(exists(kidsSnd('x', L.audio)), k);
+  for (const w of Object.values(COMMON_WORDS)) assert.ok(exists(kidsSnd('x', w.audio)), w.w);
+  const bad = Object.values(COMMON).map(l => l.text).flatMap(t => t.split(/[.!؟]+/).map(c => c.replace(/[»«]/g, '').trim()).filter(Boolean)).filter(c => !/[…،:]$/.test(c) && !/[ْـاىيوءةأإآ]$/.test(c));
+  assert.deepEqual(bad, []);
+});
+
 test('هـ-6: معجم أَثَر محفوظ في ملفات بَيان (وليّ الأمر · الطفل · الميسّر)', () => {
-  for (const f of ['lib/kids/souq.ts', 'lib/kids/bayt.ts', 'lib/kids/sessions.ts', 'app/components/kids/BayanSession.tsx', 'app/components/kids/LuluLive.tsx', 'app/kids/page.tsx']) {
+  for (const f of ['lib/kids/souq.ts', 'lib/kids/bayt.ts', 'lib/kids/sessions.ts', 'lib/kids/common.ts', 'app/components/kids/activities.tsx', 'app/components/kids/BayanSession.tsx', 'app/components/kids/LuluLive.tsx', 'app/kids/page.tsx']) {
     const s = fs.readFileSync(path.join(ROOT, f), 'utf8');
     for (const P of RETIRED_PATTERNS) {
       const m = s.match(P.re);

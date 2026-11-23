@@ -13,10 +13,26 @@ export type LuluKey =
 
 export interface VocabItem { key: string; w: string; img: string; audio: string }
 
-/** لعبة المحطّة 4 — إمّا مطابقة كلمة/بطاقة (السوق) أو وضع الكلمة في مشهد (البيت) */
+/** أنشطة «حَرْف يرسم» (بنك هـ-6-د) — morph = التحوّل البصري الموجود؛ trace = تتبّع بالإصبع؛ hear = أسمع الصوت؛ name = الحرف في اسمي */
+export type HarfActivity =
+  | { kind: 'morph' }
+  | { kind: 'trace'; strokes: string[] }
+  | { kind: 'hear'; items: SoundItem[] }
+  | { kind: 'name'; letterRe: string; fallback: string };
+
+/** عنصر صوتي عامّ: كلمة + مفتاح صوتها ('common:' = من /kids/common/audio) + هل تبدأ بحرف اليوم */
+export interface SoundItem { w: string; emoji: string; audio: string; yes: boolean }
+
+/** ألعاب المحطّة 4 (بنك هـ-6-د). الأولى في المصفوفة هي اللعبة الرئيسة وتحمل جولة «لؤلؤ تخطئ» */
 export type Game =
   | { kind: 'match'; title: string; luluMistake: { word: string; onto: string } }
-  | { kind: 'scene'; title: string; img: string; hotspots: { key: string; x: number; y: number; w: number; h: number }[]; luluMistake: { word: string; onto: string } };
+  | { kind: 'scene'; title: string; img: string; hotspots: { key: string; x: number; y: number; w: number; h: number }[]; luluMistake: { word: string; onto: string } }
+  | { kind: 'memory'; title: string }
+  | { kind: 'missing'; title: string; rounds: number }
+  | { kind: 'listen'; title: string; rounds: number }
+  | { kind: 'clap'; title: string; items: { w: string; audio: string; syllables: string[] }[] }
+  | { kind: 'jump'; title: string; items: SoundItem[] }
+  | { kind: 'basket'; title: string; items: SoundItem[] };
 
 export interface SessionData {
   slug: string;                       // bayt | souq — مجلد الأصول تحت /public/kids/<slug>
@@ -34,12 +50,16 @@ export interface SessionData {
   storyChoice: { after: number; options: { key: string; text: string; emoji: string }[] };
   harf: {
     glyph: 'baa' | 'alif'; name: string; hint: string;
+    activities: HarfActivity[];
     intro: Said;
     words: { w: string; emoji: string; audio: string }[];
     harakat: { text: string; audio: string; items: { h: string; name: string; color: string; w: string }[] };
   };
   vocab: VocabItem[];
-  game: Game;
+  /** الألعاب: [رئيسة (مع جولة لؤلؤ), ثانية, …] */
+  games: Game[];
+  /** لعبة اختيارية بزرّ «لُعْبَةٌ أُخْرى؟» خارج زمن الجلسة */
+  extraGame?: Game;
   roles: { me: { title: string; lines: string[] }; you: { title: string; lines: string[] }; parentTip: string; mePrompt: string };
   hadith: {
     story: { who: Speaker; text: string; audio: string };
@@ -58,7 +78,7 @@ export interface SessionData {
 }
 
 export const kidsImg = (slug: string, n: string) => `/kids/${slug}/img/${n}.jpg`;
-export const kidsSnd = (slug: string, n: string) => `/kids/${slug}/audio/${n}.mp3`;
+export const kidsSnd = (slug: string, n: string) => (n.startsWith('common:') ? `/kids/common/audio/${n.slice(7)}.mp3` : `/kids/${slug}/audio/${n}.mp3`);
 /** وضعيات لؤلؤ الشفّافة المشتركة بين كل الجلسات (من ورقة النموذج المعتمدة) */
 export type LuluPose = 'wave' | 'cheer' | 'sleep' | 'point' | 'think' | 'dance' | 'date' | 'calm';
 export const luluPose = (p: LuluPose) => `/kids/lulu/${p}.png`;

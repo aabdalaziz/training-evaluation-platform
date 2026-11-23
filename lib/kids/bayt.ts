@@ -1,6 +1,7 @@
 /* بَيان (هـ-6-ج) — بيانات الجلسة الأولى «في البيت» · الأسبوع 1 (أ) · المسار أ · 4–6 · حرف الألف (والهمزة صديقته) · قيمة النظام
  * النصّ المعتمد: kids/curriculum/PILOT-SESSION-BAYT.md · كل النصوص وفق «قاعدة الوقف». الأصول تحت /public/kids/bayt. */
 import type { SessionData } from './types';
+import { COMMON_WORDS as CW } from './common';
 
 export const BAYT: SessionData = {
   slug: 'bayt',
@@ -44,6 +45,15 @@ export const BAYT: SessionData = {
   storyChoice: { after: 4, options: [{ key: 'tidy', text: 'يُرَتِّبُ الْغُرْفَةْ', emoji: '🧺' }, { key: 'oneshoe', text: 'يَذْهَبُ بِحِذاءٍ واحِدْ', emoji: '🩴' }] },
   harf: {
     glyph: 'alif', name: 'أَلِفْ', hint: 'خَطٌّ واقِفٌ مِثْلُ النَّخْلَةْ',
+    activities: [
+      { kind: 'morph' },
+      { kind: 'trace', strokes: ['M100 28 L100 172'] },
+      { kind: 'hear', items: [
+        { ...CW.arnab, yes: true }, { ...CW.qamar, yes: false }, { ...CW.asad, yes: true },
+        { ...CW.samak, yes: false }, { ...CW.anf, yes: true }, { ...CW.warda, yes: false },
+      ] },
+      { kind: 'name', letterRe: '[اأإآ]', fallback: 'أَثير' },
+    ],
     intro: { text: 'أَنا حَرْفْ، الْقَلَمُ الظَّريفْ! حَرْفُ الْيَوْمِ… أَلِفْ! خَطٌّ واقِفٌ مِثْلُ النَّخْلَةْ… مِنْ فَوْقُ إِلى تَحْتْ… هٰكَذا: ا، أَلِفْ!', audio: 'h-intro' },
     words: [{ w: 'أَبْ', emoji: '🧔', audio: 'h-ab' }, { w: 'أُمّْ', emoji: '🧕', audio: 'h-umm' }, { w: 'بابْ', emoji: '🚪', audio: 'h-bab' }, { w: 'بَيْتْ', emoji: '🏠', audio: 'h-bayt' }],
     harakat: {
@@ -57,16 +67,24 @@ export const BAYT: SessionData = {
     { key: 'bab',  w: 'بابْ',   img: 'card-bab',  audio: 'w-bab' },
     { key: 'bayt', w: 'بَيْتْ', img: 'card-bayt', audio: 'w-bayt' },
   ],
-  game: {
-    kind: 'scene', title: 'اِلْمِسِ الْكَلِمَةَ… ثُمَّ مَكانَها في الْبَيْتْ', img: 'house-game',
-    hotspots: [
-      { key: 'ab',   x: 13, y: 27, w: 16, h: 38 },
-      { key: 'umm',  x: 72, y: 27, w: 13, h: 36 },
-      { key: 'bab',  x: 41, y: 65, w: 18, h: 33 },
-      { key: 'bayt', x: 80, y: 1,  w: 19, h: 32 },
-    ],
-    luluMistake: { word: 'bab', onto: 'ab' },
-  },
+  games: [
+    {
+      kind: 'scene', title: 'اِلْمِسِ الْكَلِمَةَ… ثُمَّ مَكانَها في الْبَيْتْ', img: 'house-game',
+      hotspots: [
+        { key: 'ab',   x: 13, y: 27, w: 16, h: 38 },
+        { key: 'umm',  x: 72, y: 27, w: 13, h: 36 },
+        { key: 'bab',  x: 41, y: 65, w: 18, h: 33 },
+        { key: 'bayt', x: 80, y: 1,  w: 19, h: 32 },
+      ],
+      luluMistake: { word: 'bab', onto: 'ab' },
+    },
+    { kind: 'missing', title: 'ماذا اخْتَفى؟', rounds: 3 },
+    { kind: 'jump', title: 'اِقْفِزْ مَعَ الْأَلِفْ!', items: [
+      { ...CW.arnab, yes: true }, { ...CW.samak, yes: false }, { ...CW.asad, yes: true },
+      { ...CW.warda, yes: false }, { ...CW.anf, yes: true }, { ...CW.qamar, yes: false },
+    ] },
+  ],
+  extraGame: { kind: 'memory', title: 'الذّاكِرَةْ: صورَةٌ وَكَلِمَةْ' },
   roles: {
     me:  { title: 'الْمُرَتِّبْ', lines: ['عِنْدَ الْبابْ!', 'عَلَى الْمِشْجَبْ!', 'في الصُّنْدوقْ!'] },
     you: { title: 'السّائِلْ', lines: ['أَيْنَ مَكانُ الْحِذاءْ؟', 'أَيْنَ مَكانُ الْحَقيبَةْ؟', 'أَيْنَ مَكانُ الْأَلْعابْ؟'] },

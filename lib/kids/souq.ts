@@ -2,6 +2,7 @@
  * كل النصوص المنطوقة وفق «قاعدة الوقف» (kids/bible/voices.md). الصور والأصوات تحت /public/kids/souq. */
 
 import type { SessionData } from './types';
+import { COMMON_WORDS as CW } from './common';
 
 export const KIDS_BASE = '/kids/souq';
 export const img = (n: string) => `${KIDS_BASE}/img/${n}.jpg`;
@@ -143,9 +144,33 @@ export const SOUQ: SessionData = {
   goLabel: 'إِلَى السّوقْ! 🧺',
   panels: PANELS,
   storyChoice: STORY_CHOICE,
-  harf: { glyph: 'baa', name: 'باءْ', hint: 'قارِبٌ صَغيرْ، وَتَحْتَهُ نُقْطَةْ', ...HARF },
+  harf: {
+    glyph: 'baa', name: 'باءْ', hint: 'قارِبٌ صَغيرْ، وَتَحْتَهُ نُقْطَةْ', ...HARF,
+    activities: [
+      { kind: 'morph' },
+      { kind: 'trace', strokes: ['M168 64 Q100 168 32 64', 'M100 186 L100 186'] },
+      { kind: 'hear', items: [
+        { ...CW.batta, yes: true }, { w: 'تَمْرْ', emoji: '🌴', audio: 'w-tamr', yes: false }, { ...CW.baqara, yes: true },
+        { ...CW.qamar, yes: false }, { ...CW.bahr, yes: true }, { ...CW.samak, yes: false },
+      ] },
+      { kind: 'name', letterRe: 'ب', fallback: 'بابا' },
+    ],
+  },
   vocab: VOCAB,
-  game: { kind: 'match', title: 'اِلْمِسِ الْكَلِمَةَ… ثُمَّ صورَتَها', luluMistake: { word: 'khubz', onto: 'halib' } },
+  games: [
+    { kind: 'match', title: 'اِلْمِسِ الْكَلِمَةَ… ثُمَّ صورَتَها', luluMistake: { word: 'khubz', onto: 'halib' } },
+    { kind: 'listen', title: 'اِسْمَعْ… ثُمَّ الْمِسِ الصّورَةْ!', rounds: 6 },
+    { kind: 'clap', title: 'صَفِّقْ مَعَ الْمَقاطِعْ', items: [
+      { w: 'تَمْرْ', audio: 'w-tamr', syllables: ['تَمْرْ'] },
+      { w: 'حَليبْ', audio: 'w-halib', syllables: ['حَ', 'ليبْ'] },
+      { w: 'بائِعْ', audio: 'w-baie', syllables: ['با', 'ئِعْ'] },
+      { w: 'بُرْتُقالْ', audio: 'h-burtuqal', syllables: ['بُرْ', 'تُ', 'قالْ'] },
+    ] },
+  ],
+  extraGame: { kind: 'basket', title: 'سَلَّةُ لُؤْلُؤ: ما يَبْدَأُ بِالْباءْ', items: [
+    { ...CW.batta, yes: true }, { ...CW.qamar, yes: false }, { ...CW.baqara, yes: true },
+    { ...CW.tuffaha, yes: false }, { ...CW.bahr, yes: true }, { ...CW.samak, yes: false },
+  ] },
   roles: { me: ROLES.seller, you: ROLES.buyer, parentTip: ROLES.parentTip, mePrompt: LULU.act.text },
   hadith: { ...HADITH, story: { ...HADITH.story, who: 'جدّ سالم' }, goodLabel: 'اِخْتَرْ فِعْلَ الْأَمينْ' },
   quran: QURAN,

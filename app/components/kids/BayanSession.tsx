@@ -9,6 +9,9 @@ import { kidsImg, kidsSnd } from '../../../lib/kids/types';
 import { STATIONS, type StationKey, SESSIONS } from '../../../lib/kids/sessions';
 import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
 import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
+import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, ACT_CSS } from './activities';
+import { COMMON } from '../../../lib/kids/common';
+import type { Game, HarfActivity } from '../../../lib/kids/types';
 
 /* ───────── صوت (+ قياس شدّة الصوت لتحريك لؤلؤ) ───────── */
 function useAudio(onLevel: (v: number) => void, onSpeaking: (v: boolean) => void) {
@@ -98,7 +101,7 @@ export default function BayanSession({ session }: { session: SessionData }) {
   const others = SESSIONS.filter(x => x.slug !== S.slug);
   return (
     <div className="by" dir="rtl" data-station={station} data-session={S.slug} ref={rootRef}>
-      <style dangerouslySetInnerHTML={{ __html: BAYAN_CSS + LULU_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: BAYAN_CSS + LULU_CSS + ACT_CSS }} />
       <header className="by-top">
         <Link href="/kids" className="by-exit" aria-label="خروج">✕</Link>
         <ol className="by-stations" aria-label="محطّات الرحلة">
@@ -237,7 +240,7 @@ function Glyph({ g }: { g: 'baa' | 'alif' }) {
   if (g === 'alif') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M100 26 L100 126" fill="none" stroke="#3A1F36" strokeWidth="16" strokeLinecap="round" /><text x="100" y="22" textAnchor="middle" fontSize="30" fontWeight="700" fill="#E8795C">ء</text></svg>;
   return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="118" r="9" fill="#E8795C" /></svg>;
 }
-function Harf(p: Ctx) {
+function HarfMorph(p: Ctx & { onDone: () => void }) {
   const { S } = p; const H = S.harf;
   const [wi, setWi] = useState(-1);
   const [vi, setVi] = useState(-1);
@@ -246,7 +249,7 @@ function Harf(p: Ctx) {
   const allHeard = S.vocab.every(v => heard[v.key]);
   const mark = (w: string) => { const m = w.match(/^(.[\u064B-\u0652]*)/); const n = m ? m[1].length : 1; return [w.slice(0, n), w.slice(n)]; };
   return (
-    <section className="by-card">
+    <>
       <div className="by-harf">
         <div className="by-letter" onClick={() => p.play(p.snd(H.intro.audio))} role="button" aria-label="اسمع الحرف">
           <Glyph g={H.glyph} />
@@ -274,15 +277,40 @@ function Harf(p: Ctx) {
           </button>
         ))}
       </div>
-      <nav className="by-nav end"><button className="by-big" disabled={!allHeard} onClick={() => { p.finish('harf'); p.next(); }}>{allHeard ? 'هَيّا نَلْعَبْ 🎲' : 'اِسْمَعِ الْكَلِماتِ الْأَرْبَعَ أَوَّلًا'}</button></nav>
+      <nav className="by-nav end"><button className="by-big" disabled={!allHeard} onClick={p.onDone}>{allHeard ? 'التّالي ◀' : 'اِسْمَعِ الْكَلِماتِ الْأَرْبَعَ أَوَّلًا'}</button></nav>
+    </>
+  );
+}
+
+const ACT_NAMES: Record<HarfActivity['kind'], string> = { morph: 'الحرف يتحوّل', trace: 'تتبّع بإصبعك', hear: 'أسمع الصوت', name: 'الحرف في اسمي' };
+const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ' };
+function Bar({ items, at }: { items: string[]; at: number }) { return <div className="ac-bar" aria-label="تقدّم النشاط">{items.map((t, i) => <span key={i} className={i === at ? 'on' : i < at ? 'ok' : ''}>{i < at ? '★ ' : ''}{t}</span>)}</div>; }
+
+/** حَرْف يرسم — سلسلة أنشطة من البنك (HARF-PLAY-BANK.md) */
+function Harf(p: Ctx) {
+  const acts = p.S.harf.activities;
+  const [ai, setAi] = useState(0);
+  const a = acts[ai];
+  const onDone = () => { if (ai + 1 < acts.length) { setAi(ai + 1); window.scrollTo({ top: 0 }); } else { p.finish('harf'); p.next(); } };
+  const star = () => { p.lulu('yasalam', 'cheer', onDone, 'cheer'); };
+  return (
+    <section className="by-card">
+      <Bar items={acts.map(x => ACT_NAMES[x.kind])} at={ai} />
+      {a.kind === 'morph' && <HarfMorph {...p} onDone={onDone} />}
+      {a.kind === 'trace' && <Trace key={ai} p={p} strokes={a.strokes} onDone={star} />}
+      {a.kind === 'hear' && <Hear key={ai} p={p} items={a.items} onDone={onDone} />}
+      {a.kind === 'name' && <NameLetter key={ai} p={p} re={a.letterRe} fallback={a.fallback} onDone={onDone} />}
+      {ai + 1 === acts.length && a.kind !== 'morph' && <p className="by-muted">بَعْدَ هٰذا النَّشاطْ: هَيّا نَلْعَبْ 🎲</p>}
     </section>
   );
 }
 
+
+
 /* ───────── 4) هيّا بنا نلعب: مطابقة (كلمة → بطاقة) أو مشهد (كلمة → مكانها) ───────── */
 function shuffle<T>(a: T[], seed = 3): T[] { const r = [...a]; let s = seed; for (let i = r.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; const j = Math.floor((s / 233280) * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
-function Play(p: Ctx) {
-  const { S } = p; const G = S.game; const V = S.vocab;
+function PrimaryGame(p: Ctx & { G: Extract<Game, { kind: 'match' | 'scene' }>; onDone: () => void }) {
+  const { S, G } = p; const V = S.vocab;
   const words = useMemo(() => shuffle(V, 5), [V]);
   const pics = useMemo(() => shuffle(V, 11), [V]);
   const [sel, setSel] = useState<string | null>(null);
@@ -311,7 +339,7 @@ function Play(p: Ctx) {
   const cls = (k: string) => `${matched[k] ? 'ok' : ''} ${shake === k ? 'shake' : ''} ${round === 2 && k === G.luluMistake.onto ? 'lulu-wrong' : ''}`;
   const onTarget = (k: string) => (round === 3 ? fix(k) : tapTarget(k));
   return (
-    <section className="by-card">
+    <>
       <h2 className="by-h2">{round === 1 ? G.title : round === 2 ? 'دَوْرُ لُؤْلُؤ!' : `صَحِّحْ لِلُؤْلُؤ: أَيْنَ «${mistakeWord.w}»؟`}</h2>
       {G.kind === 'match' ? (
         <div className="by-pics">
@@ -347,7 +375,48 @@ function Play(p: Ctx) {
       {brk && (
         <div className="by-break">
           <p>🤸 اِسْتِراحَةُ الْحَيَوِيَّةْ: {S.lulu.brk.text}</p>
-          <button className="by-big" onClick={() => { p.finish('play'); p.next(); }}>جَلَسْتُ! هَيّا نُمَثِّلْ 🎭</button>
+          <button className="by-big" onClick={p.onDone}>جَلَسْتُ! لُعْبَةٌ ثانِيَةْ ◀</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** هيّا بنا نلعب — اللعبة الرئيسة (مع جولة لؤلؤ) ثم ألعاب البنك، ثم «لُعْبَةٌ أُخْرى؟» اختيارية */
+function GameView({ p, G, onDone }: { p: Ctx; G: Game; onDone: () => void }) {
+  switch (G.kind) {
+    case 'match': case 'scene': return <PrimaryGame {...p} G={G} onDone={onDone} />;
+    case 'memory': return <Memory p={p} onDone={onDone} />;
+    case 'missing': return <Missing p={p} rounds={G.rounds} onDone={onDone} />;
+    case 'listen': return <Listen p={p} rounds={G.rounds} onDone={onDone} />;
+    case 'clap': return <Clap p={p} items={G.items} onDone={onDone} />;
+    case 'jump': return <Jump p={p} items={G.items} onDone={onDone} />;
+    case 'basket': return <Basket p={p} items={G.items} onDone={onDone} />;
+  }
+}
+function Play(p: Ctx) {
+  const { S } = p;
+  const [gi, setGi] = useState(0);
+  const [offer, setOffer] = useState(false);
+  const [extra, setExtra] = useState(false);
+  const games = extra && S.extraGame ? [...S.games, S.extraGame] : S.games;
+  const G = games[gi];
+  const leave = () => { p.finish('play'); p.next(); };
+  const onDone = () => {
+    if (gi + 1 < games.length) { setGi(gi + 1); window.scrollTo({ top: 0 }); return; }
+    if (S.extraGame && !extra) { setOffer(true); p.luluSay(COMMON.another.text, COMMON.another.audio, 'think', p.awaitAnswer); return; }
+    leave();
+  };
+  const titles = games.map(g => GAME_NAMES[g.kind]);
+  return (
+    <section className="by-card">
+      <Bar items={S.extraGame && !extra ? [...titles, 'لعبة أخرى؟'] : titles} at={gi} />
+      {!offer && G && <GameView key={gi} p={p} G={G} onDone={onDone} />}
+      {offer && (
+        <div className="by-choices row">
+          <p className="by-q">{COMMON.another.text} 🎲</p>
+          <button className="by-opt good" onClick={() => { p.stopWaiting(); setOffer(false); setExtra(true); setGi(S.games.length); }}>نَعَمْ! {S.extraGame ? GAME_NAMES[S.extraGame.kind] : ''} 🎉</button>
+          <button className="by-opt" onClick={() => { p.stopWaiting(); leave(); }}>لا، هَيّا نُمَثِّلْ 🎭</button>
         </div>
       )}
     </section>
