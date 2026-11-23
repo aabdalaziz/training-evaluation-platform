@@ -17,7 +17,7 @@ let markSeq = 0;
 export function AtharMark({ size = 36, light = false, echo = false }: { size?: number; light?: boolean; echo?: boolean }) {
   const [uid] = useState(() => `am${++markSeq}`);
   const g = `${uid}g`;
-  const stops = light ? ['#7A3E5C', '#8E4A68', '#D4614A', '#D9A866'] : ['#22101F', '#3A1F36', '#D4614A', '#D9A866'];
+  const stops = light ? ['#6A3350', '#8E4A68', '#D4614A', '#D9A866'] : ['#22101F', '#3A1F36', '#D4614A', '#D9A866'];
   return (
     <svg width={size} height={size} viewBox="0 30 240 180" aria-hidden="true" style={{ overflow: 'visible' }}>
       <defs><linearGradient id={g} gradientUnits="userSpaceOnUse" x1="120" y1="192" x2="120" y2="60"><stop offset="0" stopColor={stops[0]} /><stop offset=".42" stopColor={stops[1]} /><stop offset=".72" stopColor={stops[2]} /><stop offset="1" stopColor={stops[3]} /></linearGradient></defs>

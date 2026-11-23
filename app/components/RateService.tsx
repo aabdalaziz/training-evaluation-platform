@@ -69,7 +69,7 @@ const CSS = `
 .rs-tags{display:flex;flex-wrap:wrap;gap:6px}.rs-tags button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:700;color:#5C4858;cursor:pointer;transition:all .2s}.rs-tags button.on{background:#3A1F36;color:#FBF4EE;border-color:#3A1F36}
 .rs textarea{display:block;width:100%;margin-top:10px;border:1px solid #EADFD6;border-radius:12px;padding:8px 10px;font:inherit;font-size:13px;background:#fff;resize:vertical}
 .rs-act{display:flex;align-items:center;gap:10px;margin-top:10px}.rs-send{background:#D4614A;color:#fff;border:0;border-radius:999px;padding:8px 18px;font-weight:900;font-size:13.5px;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s}.rs-send:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(212,97,74,.35)}.rs-send:disabled{opacity:.6}
-.rs-err{font-size:12.5px;color:#B03A2E;font-weight:700}
+.rs-err{font-size:12.5px;color:#B9544A;font-weight:700}
 .rs-thanks{text-align:center}.rs-big{font-size:26px;color:#D9A866;letter-spacing:2px}.rs-big i{font-style:normal;color:rgba(251,244,238,.25)}.rs-thanks p{margin:6px 0 8px;font-size:14px;font-weight:700}
 .rs-edit{background:transparent;color:#FBF4EE;border:1px solid rgba(251,244,238,.5);border-radius:999px;padding:4px 14px;font-size:12px;cursor:pointer}
 .rs.compact .rs-face{padding:12px 14px}.rs.compact .rs-stars button{font-size:24px}

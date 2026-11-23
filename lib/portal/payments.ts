@@ -146,7 +146,7 @@ export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void
   row(rtl ? `ضريبة القيمة المضافة (${num(inv.vat_rate)}%)` : `VAT (${num(inv.vat_rate)}%)`, money(inv.vat_amount, inv.currency, lang));
   ctx.fillStyle = GOLD; ctx.fillRect(rtl ? L : R - 520, y - 30, 520, 3); y += 10;
   row(rtl ? 'الإجمالي المستحق' : 'Total due', money(inv.total, inv.currency, lang), true);
-  if (inv.status === 'paid') { ctx.save(); ctx.translate(rtl ? R - 320 : L + 320, y - 80); ctx.rotate(rtl ? 0.25 : -0.25); ctx.strokeStyle = '#059669'; ctx.lineWidth = 8; ctx.strokeRect(-200, -60, 400, 120); text(rtl ? 'مدفوعة' : 'PAID', 0, 25, 70, { color: '#059669', weight: '900', align: 'center' }); ctx.restore(); }
+  if (inv.status === 'paid') { ctx.save(); ctx.translate(rtl ? R - 320 : L + 320, y - 80); ctx.rotate(rtl ? 0.25 : -0.25); ctx.strokeStyle = '#2F6B66'; ctx.lineWidth = 8; ctx.strokeRect(-200, -60, 400, 120); text(rtl ? 'مدفوعة' : 'PAID', 0, 25, 70, { color: '#2F6B66', weight: '900', align: 'center' }); ctx.restore(); }
   y += 60;
   // payment instructions
   if (inv.status === 'unpaid' || inv.status === 'under_review') {

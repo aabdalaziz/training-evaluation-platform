@@ -22,13 +22,13 @@ export function buildCertificateEmailHtml(i: CertMailInput): string {
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center">
 <table role="presentation" width="600" style="max-width:600px;width:100%;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #EADFD6" cellspacing="0" cellpadding="0">
   <tr><td style="background:${NAVY};padding:22px 26px;border-bottom:4px solid ${GOLD}">
-    <div style="font:700 13px Tahoma,Arial;color:#cfe0f5;opacity:.9">${esc(i.issuer)} · ${esc(i.unit)}</div>
+    <div style="font:700 13px Tahoma,Arial;color:#E2CBDA;opacity:.9">${esc(i.issuer)} · ${esc(i.unit)}</div>
     <div style="font:800 24px/1.4 Tahoma,Arial;color:#fff;margin-top:6px">${esc(i.kindLabel)}</div>
   </td></tr>
   <tr><td style="padding:24px 26px 8px">
     <p style="margin:0 0 10px;font:16px/1.8 Tahoma,Arial;color:#3A2634">الأستاذ/ة <b style="color:${TEAL}">${esc(i.recipientName)}</b> المحترم/ة،</p>
     <p style="margin:0 0 14px;font:14px/1.8 Tahoma,Arial;color:#4A3645">يسرّنا أن نرفق لكم ${esc(i.kindLabel)} الخاصة بكم. الشهادة صادرة إلكترونيًا وتحمل رقمًا تسلسليًا ورمز تحقق يمكن لأي جهة التأكد من صحتها من خلاله.</p>
-    ${i.note ? `<div style="margin:0 0 14px;padding:12px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font:14px/1.8 Tahoma,Arial;color:#78350f">${esc(i.note).replace(/\n/g, '<br>')}</div>` : ''}
+    ${i.note ? `<div style="margin:0 0 14px;padding:12px 14px;background:#FBF4EE;border:1px solid #E9C98A;border-radius:10px;font:14px/1.8 Tahoma,Arial;color:#8A5A1E">${esc(i.note).replace(/\n/g, '<br>')}</div>` : ''}
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:10px 14px">${details}</table>
   </td></tr>
   <tr><td align="center" style="padding:14px 26px 24px">

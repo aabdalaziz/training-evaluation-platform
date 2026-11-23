@@ -43,7 +43,7 @@ export default function AtharVeil({ doors = ['مِعيار', 'اقْرَأْ', '
   return (
     <div className={`ath-veil ${show ? '' : 'hide'}`} aria-hidden={!show} data-testid="athar-veil" onClick={() => setShow(false)}>
       <svg viewBox="0 30 240 180" aria-hidden="true">
-        <defs><linearGradient id="veilg" gradientUnits="userSpaceOnUse" x1="120" y1="192" x2="120" y2="60"><stop offset="0" stopColor="#7A3E5C" /><stop offset=".42" stopColor="#8E4A68" /><stop offset=".72" stopColor="#D4614A" /><stop offset="1" stopColor="#D9A866" /></linearGradient></defs>
+        <defs><linearGradient id="veilg" gradientUnits="userSpaceOnUse" x1="120" y1="192" x2="120" y2="60"><stop offset="0" stopColor="#6A3350" /><stop offset=".42" stopColor="#8E4A68" /><stop offset=".72" stopColor="#D4614A" /><stop offset="1" stopColor="#D9A866" /></linearGradient></defs>
         {['', 'b', 'c'].map(k => <g key={k} className={`ath-veil-echo ${k}`}>{MARK_ARCS.map((d, i) => <path key={i} d={d} />)}</g>)}
         {MARK_PATHS.map((d, i) => <path key={i} d={d} fill="url(#veilg)" />)}
         <rect x="115.5" y="97.54" width="9" height="9" rx="1.26" transform="rotate(45 120 102.035)" fill="#E8795C" />

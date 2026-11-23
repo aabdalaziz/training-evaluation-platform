@@ -90,16 +90,16 @@ export const KIND_LABEL: Record<string, { ar: string; en: string }> = {
   DAILY: { ar: 'يومي', en: 'Daily' }, FINAL: { ar: 'ختامي', en: 'Final' }, END: { ar: 'نهاية البرنامج', en: 'End-of-program' }, ALL: { ar: 'الكل', en: 'All' },
 };
 export const PERF_LABEL: Record<PerfKey, { ar: string; en: string; color: string; bg: string }> = {
-  EXCELLENT: { ar: 'ممتاز', en: 'Excellent', color: '#047857', bg: '#d1fae5' },
-  GOOD: { ar: 'جيد', en: 'Good', color: '#B9544A', bg: '#ccfbf1' },
-  WATCH: { ar: 'مراقبة', en: 'Watch', color: '#b45309', bg: '#fef3c7' },
-  RISK: { ar: 'خطر', en: 'At risk', color: '#b91c1c', bg: '#fee2e2' },
+  EXCELLENT: { ar: 'ممتاز', en: 'Excellent', color: '#2F6B66', bg: '#BFE1DC' },
+  GOOD: { ar: 'جيد', en: 'Good', color: '#B9544A', bg: '#BFE1DC' },
+  WATCH: { ar: 'مراقبة', en: 'Watch', color: '#8A5A1E', bg: '#F1D9A8' },
+  RISK: { ar: 'خطر', en: 'At risk', color: '#B9544A', bg: '#FBEDE7' },
   NA: { ar: 'بيانات غير كافية', en: 'Insufficient', color: '#8E7F8A', bg: '#F6EBE0' },
 };
 export const RISK_LABEL: Record<RiskKey, { ar: string; en: string; color: string; bg: string }> = {
-  HIGH: { ar: 'عالٍ', en: 'High', color: '#b91c1c', bg: '#fee2e2' },
-  MED: { ar: 'متوسط', en: 'Medium', color: '#b45309', bg: '#fef3c7' },
-  LOW: { ar: 'منخفض', en: 'Low', color: '#047857', bg: '#d1fae5' },
+  HIGH: { ar: 'عالٍ', en: 'High', color: '#B9544A', bg: '#FBEDE7' },
+  MED: { ar: 'متوسط', en: 'Medium', color: '#8A5A1E', bg: '#F1D9A8' },
+  LOW: { ar: 'منخفض', en: 'Low', color: '#2F6B66', bg: '#BFE1DC' },
   NA: { ar: 'غير محدد', en: 'N/A', color: '#8E7F8A', bg: '#F6EBE0' },
 };
 export const CATEGORY_LABEL: Record<Category, { ar: string; en: string }> = {

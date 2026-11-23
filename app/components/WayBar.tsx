@@ -56,8 +56,8 @@ const CSS = `
 .way-crumbs li{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .way-dead{color:#8E7F8A}
 .way-link{display:inline-flex;align-items:center;gap:4px;color:#D4614A;text-decoration:none;padding:6px 4px;border-radius:6px;min-height:36px}
-.way-link:hover{text-decoration:underline}.way.dark .way-link{color:#dfeeea}
-.way-sep{color:#8a97a8;margin:0 2px}.way-cur{color:#3A1F36;font-weight:700;padding:6px 4px}.way.dark .way-cur{color:#fff}
+.way-link:hover{text-decoration:underline}.way.dark .way-link{color:#EADFD6}
+.way-sep{color:#8E4A68;margin:0 2px}.way-cur{color:#3A1F36;font-weight:700;padding:6px 4px}.way.dark .way-cur{color:#fff}
 @media (max-width:640px){.way{font-size:12px}.way-back span{display:none}.way-back{padding:0 10px}.way-crumbs li:not(:last-child):not(:first-child){display:none}}
 @media print{.way{display:none}}
 .way[hidden]{display:none}

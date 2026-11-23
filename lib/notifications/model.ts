@@ -57,7 +57,7 @@ export function timeAgo(iso: string, now: Date = new Date()): string {
 
 /** نص بريد الملخص للإدارة عند ظهور إشعارات جديدة */
 export function scanEmailHtml(site: string, items: ScanResult['new'], ranAt: string): { subject: string; html: string } {
-  const sev = (s: Severity) => (s === 'critical' ? '#dc2626' : s === 'warn' ? '#d97706' : '#D4614A');
+  const sev = (s: Severity) => (s === 'critical' ? '#D4614A' : s === 'warn' ? '#8A5A1E' : '#D4614A');
   const rows = items.map(i => `<tr><td style="padding:8px 10px;border-bottom:1px solid #eee"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${sev(i.severity)};margin-inline-end:8px"></span>${esc(i.title)}</td><td style="padding:8px 10px;border-bottom:1px solid #eee;white-space:nowrap">${i.href ? `<a href="${site}${i.href}" style="color:#3A1F36;font-weight:700">فتح</a>` : ''}</td></tr>`).join('');
   const crit = items.filter(i => i.severity === 'critical').length;
   return {

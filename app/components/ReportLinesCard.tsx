@@ -27,6 +27,6 @@ export default function ReportLinesCard() {
   );
 }
 const CSS = `
-.rlc{background:#FBEDE7;border:1px solid #b9e6e1;border-radius:18px;padding:16px 18px;margin:0 0 14px}.rlc h3{margin:0 0 8px;font-size:15px;color:#0b6f69;display:flex;align-items:center;gap:6px}
-.rlc ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}.rlc li p{margin:0;font-size:16px;line-height:1.8;color:#2A1626}.rlc small{color:#8E7F8A;font-size:12px}.rlc-final{color:#9a7a2a;background:#fff7e6;border:1px solid #F1D9A8;border-radius:999px;padding:1px 8px;font-size:11px}.rlc small a{color:#0b6f69;font-weight:700;text-decoration:none}.rlc small a:hover{text-decoration:underline}.rlc-cohort{border-bottom:1px dashed #b9e6e1;margin:0 0 10px;padding:0 0 8px}.rlc-cohort h3{color:#7a5c12}.rlc-cohort li p{border-right:3px solid #D9A866;padding-right:8px}
+.rlc{background:#FBEDE7;border:1px solid #BFE1DC;border-radius:18px;padding:16px 18px;margin:0 0 14px}.rlc h3{margin:0 0 8px;font-size:15px;color:#2F6B66;display:flex;align-items:center;gap:6px}
+.rlc ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}.rlc li p{margin:0;font-size:16px;line-height:1.8;color:#2A1626}.rlc small{color:#8E7F8A;font-size:12px}.rlc-final{color:#8A5A1E;background:#FBF4EE;border:1px solid #F1D9A8;border-radius:999px;padding:1px 8px;font-size:11px}.rlc small a{color:#2F6B66;font-weight:700;text-decoration:none}.rlc small a:hover{text-decoration:underline}.rlc-cohort{border-bottom:1px dashed #BFE1DC;margin:0 0 10px;padding:0 0 8px}.rlc-cohort h3{color:#8A5A1E}.rlc-cohort li p{border-right:3px solid #D9A866;padding-right:8px}
 `;

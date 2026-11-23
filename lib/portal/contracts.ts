@@ -55,7 +55,7 @@ export const MILESTONE_DESC: Record<MilestoneKey, T> = {
   return: { ar: 'تستحق عند إغلاق النافذة بحسب نسبة من عادوا في مجالس أَثَر بالتزام حقيقي وقالوا ما حدث فعلًا — تناسبيًا. الجهة لا تدفع للمقعد؛ تدفع للعودة.', en: 'Due when the window closes, by the share of the cohort who returned on a real commitment in an Athar peer council — pro-rata. You pay for the return, not the seat.' },
 };
 export const STATUS_LABEL: Record<ContractStatus, T & { color: string }> = {
-  draft: { ar: 'مسودة', en: 'Draft', color: '#8E7F8A' }, active: { ar: 'نشط', en: 'Active', color: '#D4614A' }, settled: { ar: 'مُسوّى', en: 'Settled', color: '#D9A866' }, cancelled: { ar: 'ملغى', en: 'Cancelled', color: '#b91c1c' },
+  draft: { ar: 'مسودة', en: 'Draft', color: '#8E7F8A' }, active: { ar: 'نشط', en: 'Active', color: '#D4614A' }, settled: { ar: 'مُسوّى', en: 'Settled', color: '#D9A866' }, cancelled: { ar: 'ملغى', en: 'Cancelled', color: '#B9544A' },
 };
 export const MS_STATUS_LABEL: Record<MilestoneStatus, T> = { locked: { ar: 'مقفلة', en: 'Locked' }, progress: { ar: 'قيد التحقق', en: 'In progress' }, due: { ar: 'مستحقة — بانتظار الاعتماد', en: 'Due — awaiting release' }, released: { ar: 'أُفرج عنها', en: 'Released' } };
 export const HEALTH_LABEL: Record<ContractState['health'], T> = { draft: { ar: 'مسودة', en: 'Draft' }, on_track: { ar: 'على المسار', en: 'On track' }, attention: { ar: 'يحتاج انتباهًا', en: 'Needs attention' }, due: { ar: 'دفعة مستحقة', en: 'Payment due' }, settled: { ar: 'مُسوّى', en: 'Settled' }, cancelled: { ar: 'ملغى', en: 'Cancelled' } };

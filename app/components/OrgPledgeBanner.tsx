@@ -30,8 +30,8 @@ export default function OrgPledgeBanner() {
 }
 
 const CSS = `
-.opb{margin:10px 0}.opb-row{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(135deg,#fffdf7,#fff);border:1px solid #f1e3b8;border-inline-start:4px solid #D9A866;border-radius:14px;padding:10px 14px;margin:6px 0}
+.opb{margin:10px 0}.opb-row{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(135deg,#FBF4EE,#fff);border:1px solid #F1D9A8;border-inline-start:4px solid #D9A866;border-radius:14px;padding:10px 14px;margin:6px 0}
 .opb-ic{width:32px;height:32px;border-radius:50%;background:#3A1F36;color:#fff;display:inline-flex;align-items:center;justify-content:center;flex:none}
-.opb-row.lead{border-color:#99f6e4;border-inline-start-color:#D4614A;background:linear-gradient(135deg,#FBEDE7,#fff)}
+.opb-row.lead{border-color:#BFE1DC;border-inline-start-color:#D4614A;background:linear-gradient(135deg,#FBEDE7,#fff)}
 .opb-row b{color:#3A1F36;font-size:14px}.opb-row p{margin:3px 0 0;color:#5C4858;font-size:13px;line-height:1.8}
 `;

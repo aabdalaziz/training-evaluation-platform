@@ -63,7 +63,7 @@ export function PushOptIn({ lang, tok, compact, topics, extra, labels, testid, c
       {st === 'denied' && <small style={{ color: '#8E7F8A', fontSize: 12 }}>{ar ? 'الإشعارات محظورة في المتصفح — اسمح بها من إعدادات الموقع ثم أعد المحاولة.' : 'Notifications are blocked — allow them in site settings and retry.'}</small>}
       {(st === 'idle' || st === 'busy') && <button type="button" className={cls} disabled={st === 'busy'} onClick={enable} data-testid={testid || 'push-optin'}>🔔 {st === 'busy' ? (ar ? 'لحظة…' : 'One moment…') : (labels?.idle || (ar ? 'ذكّرني بموقف الغد' : 'Remind me of tomorrow’s case'))}</button>}
       {st === 'on' && <button type="button" className={cls} onClick={disable} title={ar ? 'إيقاف الإشعارات على هذا الجهاز' : 'Turn off on this device'} data-testid={(testid || 'push-optin') + '-on'}>🔔 {labels?.on || (ar ? 'التذكير اليومي مفعّل — إيقاف' : 'Daily reminder on — turn off')}</button>}
-      {msg && <small style={{ color: msg.length > 60 || /تم|Done/.test(msg) ? '#166534' : '#991b1b', fontSize: 12 }}>{msg}</small>}
+      {msg && <small style={{ color: msg.length > 60 || /تم|Done/.test(msg) ? '#2F6B66' : '#9A3A2A', fontSize: 12 }}>{msg}</small>}
     </span>
   );
 }

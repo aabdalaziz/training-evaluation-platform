@@ -38,8 +38,8 @@ export const MODE_HINT: Record<EvidenceMode, T> = {
   link: { ar: 'الصق رابطًا لملف أو منتج عمل حقيقي (مستند مشترك، عرض، نموذج) مع وصف قصير.', en: 'Paste a link to a real work artifact (shared doc, deck, form) with a short description.' },
 };
 export const STATUS_LABEL: Record<MissionStatus, T & { color: string }> = {
-  assigned: { ar: 'بانتظار الدليل', en: 'Awaiting evidence', color: '#f59e0b' }, submitted: { ar: 'بانتظار تأكيد المشرف', en: 'Awaiting supervisor', color: '#3b82f6' },
-  confirmed: { ar: 'مؤكَّدة', en: 'Confirmed', color: '#10b981' }, returned: { ar: 'أُعيدت للمتدرب', en: 'Returned', color: '#f43f5e' }, expired: { ar: 'انتهت مهلتها', en: 'Expired', color: '#8E7F8A' },
+  assigned: { ar: 'بانتظار الدليل', en: 'Awaiting evidence', color: '#D9A866' }, submitted: { ar: 'بانتظار تأكيد المشرف', en: 'Awaiting supervisor', color: '#8E4A68' },
+  confirmed: { ar: 'مؤكَّدة', en: 'Confirmed', color: '#3F7F79' }, returned: { ar: 'أُعيدت للمتدرب', en: 'Returned', color: '#D4614A' }, expired: { ar: 'انتهت مهلتها', en: 'Expired', color: '#8E7F8A' },
 };
 export const modeLabel = (m: string, lang: Lang) => t(MODE_LABEL[m as EvidenceMode] || { ar: m, en: m }, lang);
 export const statusLabel = (s: string, lang: Lang) => t(STATUS_LABEL[s as MissionStatus] || { ar: s, en: s }, lang);

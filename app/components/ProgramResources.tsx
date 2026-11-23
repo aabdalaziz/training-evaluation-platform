@@ -28,5 +28,5 @@ const CSS = `
 .prx.compact{margin-top:10px;padding-top:10px;border-top:1px dashed #EADFD6}.prx.compact h3{font-size:14px}
 .prx-list{display:grid;gap:6px}.prx-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid #EADFD6;border-radius:12px;padding:8px 12px;text-decoration:none;color:#3A1F36;background:#fff}.prx-item:hover{border-color:#D4614A}
 .prx-ic{width:32px;height:32px;border-radius:9px;background:#FBEDE7;color:#D4614A;display:inline-grid;place-items:center}.prx-t{display:grid;gap:1px;min-width:0}.prx-t b{font-size:13.5px;color:#2A1626;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.prx-t small{color:#8E7F8A;font-size:11.5px}
-.prx-acc{font-weight:800;color:#065f46}.prx-acc.registered{color:#1e40af}.prx-acc.program{color:#9a3412}.prx-acc.org{color:#5b21b6}.prx-acc.staff{color:#4A3645}
+.prx-acc{font-weight:800;color:#1F4F4A}.prx-acc.registered{color:#6A3350}.prx-acc.program{color:#9A3A2A}.prx-acc.org{color:#6A3350}.prx-acc.staff{color:#4A3645}
 `;

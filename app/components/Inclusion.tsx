@@ -184,7 +184,7 @@ export function CaptionBoard({ lines, lang }: { lines: CaptionMsg[]; lang: Lang 
 /** CSS التكييف — يُحقن مرة واحدة من الغلاف؛ يقرأ data-access على <html> */
 export const ACCESS_CSS = `
 .ax-btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #D9CBC2;background:#fff;color:#3A1F36;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;min-height:36px}
-.ax-btn.on{border-color:#0b6f69;background:#FBEDE7}.ax-btn b{background:#0b6f69;color:#fff;border-radius:999px;padding:0 7px;font-size:11px;line-height:18px}
+.ax-btn.on{border-color:#2F6B66;background:#FBEDE7}.ax-btn b{background:#2F6B66;color:#fff;border-radius:999px;padding:0 7px;font-size:11px;line-height:18px}
 .ax-backdrop{position:fixed;inset:0;background:rgba(42,22,38,.45);z-index:9000;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
 .ax-panel{background:#fff;border-radius:18px;width:min(640px,100%);box-shadow:0 30px 80px rgba(0,0,0,.3);max-height:92vh;overflow:auto}
 .ax-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #EADFD6}.ax-head h2{margin:0;font-size:18px;display:flex;align-items:center;gap:8px;color:#3A1F36}
@@ -192,18 +192,18 @@ export const ACCESS_CSS = `
 .ax-tabs{display:flex;gap:6px;padding:10px 20px 0}.ax-tabs button{border:0;background:#F6EBE0;border-radius:10px 10px 0 0;padding:10px 14px;font:inherit;font-weight:800;cursor:pointer;color:#4A3645;min-height:44px}.ax-tabs button.on{background:#3A1F36;color:#fff}
 .ax-body{padding:14px 20px 20px}.ax-lead{margin:0 0 12px;color:#4A3645;line-height:1.8}
 .ax-needs{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
-.ax-needs label{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #EADFD6;border-radius:12px;padding:10px 12px;cursor:pointer;min-height:44px}.ax-needs label:has(input:checked){border-color:#0b6f69;background:#f0fbfa}
-.ax-needs input{width:22px;height:22px;margin-top:2px;flex:0 0 auto;accent-color:#0b6f69}.ax-needs b{display:block;color:#3A1F36}.ax-needs small{display:block;color:#5C4858;line-height:1.6;margin-top:2px}
-.ax-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ax-msg{margin:10px 0 0;color:#0b6f69;font-weight:800}.ax-foot{margin:12px 0 0;font-size:13px;color:#5C4858}.ax-muted{color:#5C4858;font-size:13px;margin:8px 0 0}
+.ax-needs label{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #EADFD6;border-radius:12px;padding:10px 12px;cursor:pointer;min-height:44px}.ax-needs label:has(input:checked){border-color:#2F6B66;background:#E6F3F1}
+.ax-needs input{width:22px;height:22px;margin-top:2px;flex:0 0 auto;accent-color:#2F6B66}.ax-needs b{display:block;color:#3A1F36}.ax-needs small{display:block;color:#5C4858;line-height:1.6;margin-top:2px}
+.ax-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ax-msg{margin:10px 0 0;color:#2F6B66;font-weight:800}.ax-foot{margin:12px 0 0;font-size:13px;color:#5C4858}.ax-muted{color:#5C4858;font-size:13px;margin:8px 0 0}
 .ax-field{display:block;margin-top:10px;font-weight:800;color:#3A1F36}.ax-field textarea,.ax-field input{display:block;width:100%;margin-top:6px;border:1.5px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-weight:400;min-height:44px}
-.ax-read{position:fixed;bottom:88px;inset-inline-start:16px;z-index:800;border:0;border-radius:999px;background:#3A1F36;color:#fff;font:inherit;font-weight:800;padding:12px 18px;box-shadow:0 10px 30px rgba(42,22,38,.35);cursor:pointer;min-height:44px}.ax-read.on{background:#0b6f69}
-.ax-simple{margin:6px 0}.ax-simple-btn{border:1.5px dashed #0b6f69;background:#fff;color:#0b6f69;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;min-height:36px}.ax-simple-btn.on{background:#0b6f69;color:#fff;border-style:solid}
-.ax-simple-text{background:#f0fbfa;border:1px solid #cdebe8;border-radius:12px;padding:12px 16px;margin-top:8px;font-size:17px;line-height:2}.ax-simple-text p{margin:0 0 6px}.ax-simple-text small{display:block;color:#5C4858;font-size:12px;margin-top:6px;line-height:1.6}
+.ax-read{position:fixed;bottom:88px;inset-inline-start:16px;z-index:800;border:0;border-radius:999px;background:#3A1F36;color:#fff;font:inherit;font-weight:800;padding:12px 18px;box-shadow:0 10px 30px rgba(42,22,38,.35);cursor:pointer;min-height:44px}.ax-read.on{background:#2F6B66}
+.ax-simple{margin:6px 0}.ax-simple-btn{border:1.5px dashed #2F6B66;background:#fff;color:#2F6B66;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;min-height:36px}.ax-simple-btn.on{background:#2F6B66;color:#fff;border-style:solid}
+.ax-simple-text{background:#E6F3F1;border:1px solid #BFE1DC;border-radius:12px;padding:12px 16px;margin-top:8px;font-size:17px;line-height:2}.ax-simple-text p{margin:0 0 6px}.ax-simple-text small{display:block;color:#5C4858;font-size:12px;margin-top:6px;line-height:1.6}
 .ax-captions{position:absolute;inset-inline:12px;bottom:12px;background:rgba(0,0,0,.78);color:#fff;border-radius:12px;padding:10px 14px;font-size:18px;line-height:1.7;min-height:44px;z-index:5;pointer-events:none}.ax-captions p{margin:0}.ax-captions .interim{opacity:.75}.ax-cap-empty{opacity:.7;font-size:14px}
 html[data-access~="low_vision"] .pt{zoom:1.25}
 html[data-access~="low_vision"] .pt,html[data-access~="low_vision"] .pt *{text-shadow:none}
 html[data-access~="low_vision"] .pt .pt-muted,html[data-access~="low_vision"] .pt small,html[data-access~="low_vision"] .pt .ax-muted{color:#3A2634!important}
-html[data-access~="low_vision"] :focus-visible,html[data-access~="motor"] :focus-visible{outline:4px solid #3A1F36!important;outline-offset:3px!important;box-shadow:0 0 0 7px #fde68a!important}
+html[data-access~="low_vision"] :focus-visible,html[data-access~="motor"] :focus-visible{outline:4px solid #3A1F36!important;outline-offset:3px!important;box-shadow:0 0 0 7px #E9C98A!important}
 html[data-access~="read_hard"] .pt{line-height:2.05;letter-spacing:.01em;word-spacing:.08em}html[data-access~="read_hard"] .pt p,html[data-access~="read_hard"] .pt li{max-width:68ch}
 html[data-access~="motor"] .pt button,html[data-access~="motor"] .pt a.pt-btn,html[data-access~="motor"] .pt input,html[data-access~="motor"] .pt select,html[data-access~="motor"] .pt .pt-navlink{min-height:44px;min-width:44px;padding-top:10px;padding-bottom:10px}
 html[data-access~="focus"] *,html[data-access~="focus"] *::before,html[data-access~="focus"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}

@@ -59,11 +59,11 @@ export default function SovereignWallet({ lang, credentials = [] }: Props) {
   );
 }
 const CSS = `
-.sw .pt-muted{color:#8E7F8A;font-size:13px;line-height:1.8}.sw-snap{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid #D9A86655;background:linear-gradient(135deg,#fffbeb,#fff);border-radius:14px;padding:10px 14px;margin:10px 0}.sw-snap b{display:block;color:#3A1F36;font-size:14px}.sw-snap small{color:#8E7F8A;font-size:12px;line-height:1.7;display:block;max-width:560px}
+.sw .pt-muted{color:#8E7F8A;font-size:13px;line-height:1.8}.sw-snap{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid #D9A86655;background:linear-gradient(135deg,#FBF4EE,#fff);border-radius:14px;padding:10px 14px;margin:10px 0}.sw-snap b{display:block;color:#3A1F36;font-size:14px}.sw-snap small{color:#8E7F8A;font-size:12px;line-height:1.7;display:block;max-width:560px}
 .sw-list{display:grid;gap:8px}.sw-item{border:1px solid #EADFD6;border-radius:12px;padding:10px 14px;display:grid;gap:8px}.sw-item.off{opacity:.6}.sw-item.snapshot{border-color:#D9A86666}
-.sw-meta b{display:block;color:#2A1626;font-size:14px}.sw-meta small{color:#8E7F8A;font-size:11.5px}.sw-meta em{color:#991b1b;font-style:normal;font-weight:800}
-.sw-k{font-size:10.5px;font-weight:900;border-radius:999px;padding:2px 8px;background:#e0f2fe;color:#075985;margin-inline-end:6px}.sw-k.snapshot{background:#fef3c7;color:#92400e}
+.sw-meta b{display:block;color:#2A1626;font-size:14px}.sw-meta small{color:#8E7F8A;font-size:11.5px}.sw-meta em{color:#9A3A2A;font-style:normal;font-weight:800}
+.sw-k{font-size:10.5px;font-weight:900;border-radius:999px;padding:2px 8px;background:#E6F3F1;color:#2F6B66;margin-inline-end:6px}.sw-k.snapshot{background:#F1D9A8;color:#8A5A1E}
 .sw-qr{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;border-top:1px dashed #EADFD6;padding-top:8px}.sw-qr svg{border:1px solid #EADFD6;border-radius:10px}.sw-qr b{display:block;color:#3A1F36;font-size:13px}.sw-qr small{display:block;color:#8E7F8A;font-size:11.5px;word-break:break-all}
-.pt-btn.danger{color:#991b1b;border-color:#fecaca}
+.pt-btn.danger{color:#9A3A2A;border-color:#F3C4B6}
 @media(max-width:600px){.sw-qr{grid-template-columns:1fr}}
 `;

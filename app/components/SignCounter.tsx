@@ -34,8 +34,8 @@ export function SignCounter({ lang = 'ar', tone = 'light' }: { lang?: 'ar' | 'en
 
 const CSS = `
 .sc-link{display:inline-flex;align-items:center;justify-content:center;gap:4px;border:1.5px solid #D9CBC2;background:#fff;color:#3A1F36;border-radius:999px;min-width:36px;height:36px;padding:0 8px;text-decoration:none;position:relative;font:inherit}
-.sc-link.has{border-color:#D9A866;background:#fffbeb}.sc-ic{font-size:16px;line-height:1}.sc-link b{min-width:18px;height:18px;border-radius:999px;background:#b45309;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
-.sc-link.strip{height:30px;border-radius:999px;font-size:12.5px;font-weight:800;background:rgba(255,255,255,.05);border-color:rgba(246,217,168,.4);color:#F6D9A8}.sc-link.strip.has{background:rgba(217,168,102,.18);border-color:#D9A866}.sc-txt{line-height:1}
+.sc-link.has{border-color:#D9A866;background:#FBF4EE}.sc-ic{font-size:16px;line-height:1}.sc-link b{min-width:18px;height:18px;border-radius:999px;background:#8A5A1E;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.sc-link.strip{height:30px;border-radius:999px;font-size:12.5px;font-weight:800;background:rgba(255,255,255,.05);border-color:rgba(246,217,168,.4);color:#F1D9A8}.sc-link.strip.has{background:rgba(217,168,102,.18);border-color:#D9A866}.sc-txt{line-height:1}
 @media (max-width:640px){.sc-link.light .sc-ic{font-size:15px}}
 `;
 export default SignCounter;

@@ -51,10 +51,10 @@ export function hakeGain(pre: number | null, post: number | null, max = 100): nu
 
 export function hakeLabel(g: number | null): { key: 'high' | 'medium' | 'low' | 'none' | 'na'; ar: string; color: string } {
   if (g === null || !Number.isFinite(g)) return { key: 'na', ar: 'لا تتوفر بيانات مزدوجة كافية', color: '#8E7F8A' };
-  if (g >= 0.7) return { key: 'high', ar: 'أثر مرتفع', color: '#047857' };
+  if (g >= 0.7) return { key: 'high', ar: 'أثر مرتفع', color: '#2F6B66' };
   if (g >= 0.3) return { key: 'medium', ar: 'أثر متوسط', color: '#D4614A' };
-  if (g > 0) return { key: 'low', ar: 'أثر منخفض', color: '#b45309' };
-  return { key: 'none', ar: 'لا يوجد أثر ملموس', color: '#b91c1c' };
+  if (g > 0) return { key: 'low', ar: 'أثر منخفض', color: '#8A5A1E' };
+  return { key: 'none', ar: 'لا يوجد أثر ملموس', color: '#B9544A' };
 }
 
 export function cohenLabel(d: number | null): string {

@@ -14,7 +14,7 @@ export const K_PERSONS = 5; export const K_ORGS = 2; export const WINDOW_DAYS = 
 export type Weather = 'rising' | 'stable' | 'cooling' | 'unknown';
 export const WEATHER_LABEL: Record<Weather, { ar: string; en: string; icon: string; color: string }> = {
   rising: { ar: 'صاعد', en: 'Rising', icon: '↗', color: '#D4614A' }, stable: { ar: 'مستقر', en: 'Stable', icon: '→', color: '#D9A866' },
-  cooling: { ar: 'متراجع', en: 'Declining', icon: '↘', color: '#b45309' }, unknown: { ar: 'لا دليل كافٍ', en: 'Not enough evidence', icon: '·', color: '#B3A5AE' },
+  cooling: { ar: 'متراجع', en: 'Declining', icon: '↘', color: '#8A5A1E' }, unknown: { ar: 'لا دليل كافٍ', en: 'Not enough evidence', icon: '·', color: '#B3A5AE' },
 };
 export type Band = '5–9' | '10–49' | '50–199' | '200+';
 export const band = (n: number): Band => (n >= 200 ? '200+' : n >= 50 ? '50–199' : n >= 10 ? '10–49' : '5–9');

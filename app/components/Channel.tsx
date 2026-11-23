@@ -150,21 +150,21 @@ const CSS = `
 .ch textarea{width:100%;border:1px solid rgba(42,22,38,.18);border-radius:12px;padding:12px;font:inherit;font-size:.95rem;line-height:1.75;resize:vertical;background:#fff;color:#2A1626;min-height:72px}
 .ch-voice,.ch-video{display:flex;flex-direction:column;gap:8px}
 .ch-act{display:inline-flex;align-items:center;gap:8px;border:1px solid #D4614A;background:#D4614A;color:#fff;border-radius:10px;padding:9px 14px;font:inherit;font-weight:800;font-size:.88rem;cursor:pointer;width:fit-content}
-.ch-act.live{background:#b91c1c;border-color:#b91c1c;animation:chpulse 1.2s infinite}
+.ch-act.live{background:#B9544A;border-color:#B9544A;animation:chpulse 1.2s infinite}
 .ch-act.gold{background:#D9A866;border-color:#D9A866;color:#3A1F36}
 .ch-act.ghost{background:rgba(255,255,255,.92);color:#3A1F36;border-color:rgba(42,22,38,.25)}
 .ch-act:disabled{opacity:.6;cursor:default}
-@keyframes chpulse{0%,100%{box-shadow:0 0 0 0 rgba(185,28,28,.5)}50%{box-shadow:0 0 0 8px rgba(185,28,28,0)}}
+@keyframes chpulse{0%,100%{box-shadow:0 0 0 0 rgba(185,84,74,.5)}50%{box-shadow:0 0 0 8px rgba(185,84,74,0)}}
 .ch-interim{font-size:.85rem;color:#D4614A;font-style:italic}
 .ch-note{font-size:.76rem;color:#8E7F8A;line-height:1.6}
-.ch-err{font-size:.82rem;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:8px 10px}
-.ch-stage{position:relative;background:#0b1526;border-radius:14px;overflow:hidden;aspect-ratio:4/3;max-height:300px;display:flex;align-items:center;justify-content:center}
+.ch-err{font-size:.82rem;color:#B9544A;background:#FBEDE7;border:1px solid #F3C4B6;border-radius:10px;padding:8px 10px}
+.ch-stage{position:relative;background:#22101F;border-radius:14px;overflow:hidden;aspect-ratio:4/3;max-height:300px;display:flex;align-items:center;justify-content:center}
 .ch-stage video{width:100%;height:100%;object-fit:cover;background:#000}
 .ch-stage.idle video{display:none}
 .ch-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#D9CBC2;padding:20px;text-align:center}
 .ch-idle p{margin:0;font-size:.84rem;line-height:1.7;max-width:34ch}
 .ch-rec{position:absolute;top:10px;inset-inline-start:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:4px 10px;font-size:.78rem;font-weight:800;display:inline-flex;align-items:center;gap:6px;direction:ltr}
-.ch-rec i{width:9px;height:9px;border-radius:50%;background:#ef4444;animation:chpulse 1.2s infinite}
+.ch-rec i{width:9px;height:9px;border-radius:50%;background:#D4614A;animation:chpulse 1.2s infinite}
 .ch-vacts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .ch-saved{font-size:.84rem;color:#D4614A;font-weight:700}
 .ch-read{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(42,22,38,.2);background:#fff;color:#3A1F36;border-radius:999px;padding:4px 10px;font:inherit;font-size:.76rem;font-weight:700;cursor:pointer}
@@ -184,4 +184,4 @@ export function VoiceButton({ lang, onText, className }: { lang: 'ar' | 'en'; on
   }
   return <button type="button" className={`ch-mic ${on ? 'on' : ''} ${className || ''}`} onClick={toggle} title={ar ? (on ? 'أسمعك…' : 'تكلّم بدل الكتابة') : (on ? 'Listening…' : 'Speak instead of typing')} aria-label={ar ? 'إملاء صوتي' : 'Voice dictation'}><style dangerouslySetInnerHTML={{ __html: CSS + MIC_CSS }} /><MicSvg on={on} /></button>;
 }
-const MIC_CSS = `.ch-mic{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid rgba(42,22,38,.2);background:#fff;color:#3A1F36;cursor:pointer;flex:0 0 auto}.ch-mic.on{background:#b91c1c;border-color:#b91c1c;color:#fff;animation:chpulse 1.2s infinite}`;
+const MIC_CSS = `.ch-mic{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid rgba(42,22,38,.2);background:#fff;color:#3A1F36;cursor:pointer;flex:0 0 auto}.ch-mic.on{background:#B9544A;border-color:#B9544A;color:#fff;animation:chpulse 1.2s infinite}`;

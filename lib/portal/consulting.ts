@@ -183,7 +183,7 @@ export function renderQuote(canvas: HTMLCanvasElement, d: { r: ConsultingRequest
   const row = (k: string, v: string, big = false) => { text(k, tx, y, big ? 30 : 26, { color: big ? TXT : MUTED, weight: big ? '900' : '700', align: rtl ? 'right' : 'left' }); text(v, tl, y, big ? 34 : 27, { weight: big ? '900' : '800', align: rtl ? 'left' : 'right', color: big ? NAVY : TXT }); y += big ? 60 : 46; };
   row(rtl ? 'المجموع قبل الضريبة' : 'Subtotal', money(q.subtotal, q.currency, lang)); row(rtl ? `ضريبة القيمة المضافة (${num(q.vat_rate)}%)` : `VAT (${num(q.vat_rate)}%)`, money(q.vat_amount, q.currency, lang));
   ctx.fillStyle = GOLD; ctx.fillRect(rtl ? Lm : R - 520, y - 30, 520, 3); y += 10; row(rtl ? 'الإجمالي' : 'Total', money(q.total, q.currency, lang), true);
-  if (q.status === 'accepted') { ctx.save(); ctx.translate(rtl ? R - 320 : Lm + 320, y - 80); ctx.rotate(rtl ? 0.25 : -0.25); ctx.strokeStyle = '#059669'; ctx.lineWidth = 8; ctx.strokeRect(-200, -60, 400, 120); text(rtl ? 'مقبول' : 'ACCEPTED', 0, 25, 70, { color: '#059669', weight: '900', align: 'center' }); ctx.restore(); }
+  if (q.status === 'accepted') { ctx.save(); ctx.translate(rtl ? R - 320 : Lm + 320, y - 80); ctx.rotate(rtl ? 0.25 : -0.25); ctx.strokeStyle = '#2F6B66'; ctx.lineWidth = 8; ctx.strokeRect(-200, -60, 400, 120); text(rtl ? 'مقبول' : 'ACCEPTED', 0, 25, 70, { color: '#2F6B66', weight: '900', align: 'center' }); ctx.restore(); }
   y += 30;
   const terms = q.terms || (rtl ? d.settings?.terms_ar : d.settings?.terms_en) || '';
   if (terms && y < QH - 260) { text(rtl ? 'الشروط' : 'Terms', x0, y, 22, { color: TEAL, weight: '900' }); y += 34; wrap(terms, 21, W).forEach(l => { if (y < QH - 130) { text(l, x0, y, 21, { color: MUTED }); y += 30; } }); }

@@ -76,7 +76,7 @@ export function summaryHtml(s: ExecSummary): string {
 <div style="font-size:11px;font-weight:bold;color:#D4614A">الملخص التنفيذي ${s.source === 'ai' ? '· مُولَّد بالذكاء الاصطناعي' + (s.model ? ` (${s.model})` : '') : '· تحليل آلي'}</div>
 <div style="font-size:16px;font-weight:bold;color:#3A1F36;margin:4px 0 8px;line-height:1.6">${s.headline}</div>
 ${s.bullets.length ? `<ul style="margin:0 0 8px;padding:0 18px 0 0;font-size:13.5px;line-height:1.7">${li(s.bullets)}</ul>` : ''}
-${s.risks.length ? `<div style="font-size:12px;font-weight:bold;color:#b45309">المخاطر</div><ul style="margin:0 0 8px;padding:0 18px 0 0;font-size:13px;line-height:1.7;color:#9a3412">${li(s.risks)}</ul>` : ''}
+${s.risks.length ? `<div style="font-size:12px;font-weight:bold;color:#8A5A1E">المخاطر</div><ul style="margin:0 0 8px;padding:0 18px 0 0;font-size:13px;line-height:1.7;color:#9A3A2A">${li(s.risks)}</ul>` : ''}
 ${s.actions.length ? `<div style="font-size:12px;font-weight:bold;color:#3A1F36">الإجراءات</div><ol style="margin:0;padding:0 18px 0 0;font-size:13px;line-height:1.7">${li(s.actions)}</ol>` : ''}
 </div>`;
 }

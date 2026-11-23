@@ -57,10 +57,10 @@ export function buildReportEmailHtml(i: ReportMailInput): string {
     { label: ar ? 'المتوسط العام' : 'Overall mean', value: `${k.mean.toFixed(2)}/5`, sub: `${ar ? 'الهدف' : 'Target'} ${TARGET} · ${ar ? 'الفجوة' : 'gap'} ${(k.mean - TARGET).toFixed(2)}`, color: perf.color },
     { label: ar ? 'الاستجابات' : 'Responses', value: String(k.responses), sub: `${k.participants} ${ar ? 'مشارك' : 'participants'}` },
     { label: ar ? 'رضا مرتفع (4–5)' : 'High (4–5)', value: `${k.highPct.toFixed(0)}%` },
-    { label: ar ? 'تقييمات منخفضة (1–2)' : 'Low (1–2)', value: `${k.lowPct.toFixed(0)}%`, color: k.lowPct > 15 ? '#b91c1c' : undefined },
+    { label: ar ? 'تقييمات منخفضة (1–2)' : 'Low (1–2)', value: `${k.lowPct.toFixed(0)}%`, color: k.lowPct > 15 ? '#B9544A' : undefined },
   ] : [];
   const delta = i.deltaMean === null || i.deltaMean === undefined ? '' :
-    `<span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:${i.deltaMean >= 0 ? '#eafaf0' : '#fef2f2'};color:${i.deltaMean >= 0 ? '#15803d' : '#b91c1c'}">${i.deltaMean >= 0 ? '▲' : '▼'} ${Math.abs(i.deltaMean).toFixed(2)} ${ar ? 'عن الفترة السابقة' : 'vs previous period'}</span>`;
+    `<span style="display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:${i.deltaMean >= 0 ? '#E6F3F1' : '#FBEDE7'};color:${i.deltaMean >= 0 ? '#2F6B66' : '#B9544A'}">${i.deltaMean >= 0 ? '▲' : '▼'} ${Math.abs(i.deltaMean).toFixed(2)} ${ar ? 'عن الفترة السابقة' : 'vs previous period'}</span>`;
   const kpiCells = kpis.map(x => `
     <td width="25%" style="padding:6px">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #EADFD6;border-top:3px solid ${x.color || NAVY};border-radius:10px;background:#fff">
@@ -74,7 +74,7 @@ export function buildReportEmailHtml(i: ReportMailInput): string {
     <tr>
       <td style="padding:10px 8px;border-bottom:1px solid #EADFD6;font:700 13px Tahoma,Arial;color:${NAVY};width:28px;text-align:center">${n + 1}</td>
       <td style="padding:10px 8px;border-bottom:1px solid #EADFD6;font:13px/1.7 Tahoma,Arial;color:#2A1626">
-        <b>${esc(a.label)}</b> <span style="display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;background:${a.priority === 'HIGH' ? '#fef2f2' : a.priority === 'MED' ? '#fff7e6' : '#F6EBE0'};color:${a.priority === 'HIGH' ? '#b91c1c' : a.priority === 'MED' ? '#b45309' : '#5C4858'}">${ar ? 'أولوية' : 'Priority'} ${a.priority === 'HIGH' ? (ar ? 'عالية' : 'High') : a.priority === 'MED' ? (ar ? 'متوسطة' : 'Medium') : (ar ? 'منخفضة' : 'Low')}</span><br>
+        <b>${esc(a.label)}</b> <span style="display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;background:${a.priority === 'HIGH' ? '#FBEDE7' : a.priority === 'MED' ? '#FBF4EE' : '#F6EBE0'};color:${a.priority === 'HIGH' ? '#B9544A' : a.priority === 'MED' ? '#8A5A1E' : '#5C4858'}">${ar ? 'أولوية' : 'Priority'} ${a.priority === 'HIGH' ? (ar ? 'عالية' : 'High') : a.priority === 'MED' ? (ar ? 'متوسطة' : 'Medium') : (ar ? 'منخفضة' : 'Low')}</span><br>
         <span style="color:#4A3645">${esc(a.recommendation)}</span><br>
         <span style="font-size:11.5px;color:#8E7F8A">${ar ? 'المالك' : 'Owner'}: ${esc(a.owner)} · ${ar ? 'خلال' : 'within'} ${a.dueDays} ${ar ? 'يوم' : 'days'} · ${a.mean.toFixed(2)}/5 · n=${a.responses}</span>
       </td>
@@ -88,9 +88,9 @@ export function buildReportEmailHtml(i: ReportMailInput): string {
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F6EBE0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="680" cellspacing="0" cellpadding="0" style="max-width:680px;width:100%">
   <tr><td style="background:${NAVY};border-radius:16px 16px 0 0;padding:22px 26px;border-bottom:3px solid ${GOLD}">
-    <div style="font:700 11px Tahoma,Arial;color:#a9c4d8;letter-spacing:.5px">${esc(platform)}</div>
+    <div style="font:700 11px Tahoma,Arial;color:#C9A6B6;letter-spacing:.5px">${esc(platform)}</div>
     <div style="font:900 22px/1.3 Tahoma,Arial;color:#fff;margin-top:4px">${esc(i.title)}</div>
-    <div style="font:700 12.5px Tahoma,Arial;color:#a9c4d8;margin-top:6px">${esc(i.scope)}</div>
+    <div style="font:700 12.5px Tahoma,Arial;color:#C9A6B6;margin-top:6px">${esc(i.scope)}</div>
   </td></tr>
   <tr><td style="background:#fff;padding:22px 26px;border:1px solid #EADFD6;border-top:0">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
@@ -106,7 +106,7 @@ export function buildReportEmailHtml(i: ReportMailInput): string {
     </td></tr></table>
     ${storyHtml ? `<h3 style="margin:0 0 8px;font:800 15px Tahoma,Arial;color:${NAVY};border-${ar ? 'right' : 'left'}:4px solid ${TEAL};padding-${ar ? 'right' : 'left'}:10px">${ar ? 'القراءة التحليلية' : 'Analytical reading'}</h3>${storyHtml}` : ''}
     ${actionsHtml ? `<h3 style="margin:18px 0 8px;font:800 15px Tahoma,Arial;color:${NAVY};border-${ar ? 'right' : 'left'}:4px solid ${TEAL};padding-${ar ? 'right' : 'left'}:10px">${ar ? 'القرارات المطلوبة' : 'Decisions required'}</h3><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #EADFD6;border-radius:10px">${actionsHtml}</table>` : ''}
-    ` : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:14px 16px;background:#fff7e6;border:1px solid #f5d9a3;border-radius:10px;font:700 14px/1.7 Tahoma,Arial;color:#7c4a03">${ar ? 'لا توجد استجابات ضمن هذا النطاق خلال الفترة المحددة.' : 'No responses in this scope for the selected period.'}</td></tr></table>`}
+    ` : `<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:14px 16px;background:#FBF4EE;border:1px solid #F1D9A8;border-radius:10px;font:700 14px/1.7 Tahoma,Arial;color:#8A5A1E">${ar ? 'لا توجد استجابات ضمن هذا النطاق خلال الفترة المحددة.' : 'No responses in this scope for the selected period.'}</td></tr></table>`}
     ${btn}
     ${att}
   </td></tr>

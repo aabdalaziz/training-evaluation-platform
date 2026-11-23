@@ -52,12 +52,12 @@ export default function ContactPrefs() {
 const CSS = `
 .cp{background:#fff;border:1px solid #EADFD6;border-radius:16px;overflow:hidden}
 .cp-head{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:14px 18px;cursor:pointer;font-family:inherit}.cp-head:hover{background:#FBF4EE}
-.cp-ic{width:36px;height:36px;border-radius:50%;background:#e8f8f5;color:#D4614A;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.cp-ic{width:36px;height:36px;border-radius:50%;background:#E6F3F1;color:#D4614A;display:inline-flex;align-items:center;justify-content:center;flex:none}
 .cp-t{display:grid;gap:2px;flex:1}.cp-t b{font-size:15px;color:#3A1F36}.cp-t small{font-size:12px;color:#8E7F8A}
 .cp-body{border-top:1px solid #F6EBE0;padding:14px 18px;display:grid;gap:10px}.cp-body label{display:grid;gap:4px;font-size:12px;font-weight:700;color:#5C4858}
 .cp-body input,.cp-body select{border:1px solid #D9CBC2;border-radius:10px;padding:9px 12px;font-family:inherit;font-size:14px;color:#2A1626;background:#fff}
-.cp-check{display:flex!important;gap:8px;align-items:flex-start;font-weight:500!important;line-height:1.7}.cp-check input{margin-top:4px}.cp-check em{color:#b45309;font-style:normal}
+.cp-check{display:flex!important;gap:8px;align-items:flex-start;font-weight:500!important;line-height:1.7}.cp-check input{margin-top:4px}.cp-check em{color:#8A5A1E;font-style:normal}
 .cp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cp-note{margin:0;font-size:12px;color:#8E7F8A;line-height:1.7}
-.cp-msg{border-radius:10px;padding:8px 12px;font-size:13px}.cp-msg.ok{background:#ecfdf5;color:#065f46}.cp-msg.bad{background:#fef2f2;color:#991b1b}
+.cp-msg{border-radius:10px;padding:8px 12px;font-size:13px}.cp-msg.ok{background:#E6F3F1;color:#1F4F4A}.cp-msg.bad{background:#FBEDE7;color:#9A3A2A}
 .cp-acts{display:flex;gap:8px}.cp-save{display:inline-flex;align-items:center;gap:6px;background:#3A1F36;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:800;cursor:pointer;font-family:inherit}.cp-save:disabled{opacity:.6}.cp-cancel{background:none;border:1px solid #D9CBC2;border-radius:10px;padding:9px 14px;font-family:inherit;cursor:pointer;color:#4A3645}
 `;

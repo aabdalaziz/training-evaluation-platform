@@ -73,13 +73,13 @@ const CSS = `
 .nb{position:relative;display:inline-flex}
 .nb-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;border:1px solid #D9CBC2;background:#fff;color:#3A1F36;cursor:pointer}
 .nb.dark .nb-btn{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18);color:#fff}
-.nb-badge{position:absolute;top:-6px;inset-inline-end:-6px;min-width:18px;height:18px;border-radius:999px;background:#dc2626;color:#fff;font-size:10.5px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #fff}
+.nb-badge{position:absolute;top:-6px;inset-inline-end:-6px;min-width:18px;height:18px;border-radius:999px;background:#D4614A;color:#fff;font-size:10.5px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid #fff}
 .nb-pop{position:absolute;top:calc(100% + 8px);inset-inline-end:0;width:340px;max-width:calc(100vw - 24px);background:#fff;border:1px solid #EADFD6;border-radius:14px;box-shadow:0 18px 40px rgba(42,22,38,.18);z-index:400;overflow:hidden;color:#2A1626;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .nb-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #F6EBE0;font-size:13.5px}
 .nb-link{background:none;border:0;color:#D4614A;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
 .nb-empty{padding:22px;text-align:center;color:#8E7F8A;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:6px}
 .nb-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid #F6EBE0;text-decoration:none;color:inherit;border-inline-start:3px solid transparent}
-.nb-item.unread{background:#FBF4EE}.nb-item.critical{border-inline-start-color:#dc2626}.nb-item.warn{border-inline-start-color:#d97706}.nb-item.info{border-inline-start-color:#D4614A}
+.nb-item.unread{background:#FBF4EE}.nb-item.critical{border-inline-start-color:#D4614A}.nb-item.warn{border-inline-start-color:#8A5A1E}.nb-item.info{border-inline-start-color:#D4614A}
 .nb-item:hover{background:#F6EBE0}
 .nb-ic{width:28px;height:28px;border-radius:8px;background:#F3E6DC;display:flex;align-items:center;justify-content:center;color:#3A1F36;flex-shrink:0}
 .nb-txt{display:flex;flex-direction:column;gap:2px;min-width:0}.nb-txt b{font-size:12.5px;line-height:1.5}.nb-txt small{font-size:11px;color:#B3A5AE;font-weight:700}

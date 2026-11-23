@@ -43,26 +43,26 @@ export default function LoginHero() {
 }
 
 const CSS = `
-.au-hero{background:linear-gradient(160deg,#3A1F36 0%,#123763 55%,#D4614A 140%);color:#fff;border-radius:18px;padding:36px 34px;height:100%;display:flex;flex-direction:column;justify-content:center;border-inline-start:6px solid #D9A866;box-shadow:0 20px 45px rgba(42,22,38,.22);position:relative;overflow:hidden;}
+.au-hero{background:linear-gradient(160deg,#3A1F36 0%,#3A1F36 55%,#D4614A 140%);color:#fff;border-radius:18px;padding:36px 34px;height:100%;display:flex;flex-direction:column;justify-content:center;border-inline-start:6px solid #D9A866;box-shadow:0 20px 45px rgba(42,22,38,.22);position:relative;overflow:hidden;}
 .au-hero::after{content:"";position:absolute;width:360px;height:360px;border-radius:50%;border:38px solid rgba(217,168,102,.10);left:-140px;bottom:-170px;}
 .au-hero::before{content:"";position:absolute;width:220px;height:220px;border-radius:50%;border:22px solid rgba(255,255,255,.06);right:-80px;top:-90px;}
 .au-hero>*{position:relative;z-index:1;}
 .au-brand{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
 .au-brand b{display:block;font-size:30px;font-weight:900;line-height:1.1;letter-spacing:.5px;}
-.au-brand small{display:block;color:#d8e2ee;font-size:13px;font-weight:600;margin-top:4px;}
+.au-brand small{display:block;color:#E2CBDA;font-size:13px;font-weight:600;margin-top:4px;}
 .au-hero h1{margin:0 0 10px;font-size:28px;font-weight:900;line-height:1.35;}
 .au-hero h1::after{content:"";display:block;width:56px;height:4px;border-radius:4px;background:#D9A866;margin-top:12px;}
-.au-lead{color:#e3eaf3;line-height:1.95;margin:0 0 22px;font-size:15px;font-weight:600;}
+.au-lead{color:#F3E8EF;line-height:1.95;margin:0 0 22px;font-size:15px;font-weight:600;}
 .au-ways{list-style:none;margin:0;padding:0;display:grid;gap:12px;}
 .au-ways li{display:flex;gap:12px;align-items:flex-start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px 14px;}
 .au-ways li>div{display:grid;gap:3px;min-width:0;}
 .au-ways b{font-size:14.5px;font-weight:800;}
-.au-ways li span:not(.au-wico){font-size:13px;color:#dbe4ee;line-height:1.8;font-weight:500;}
+.au-ways li span:not(.au-wico){font-size:13px;color:#E2CBDA;line-height:1.8;font-weight:500;}
 .au-wico{flex:none;width:36px;height:36px;border-radius:10px;background:#D9A866;color:#3A1F36;display:inline-flex;align-items:center;justify-content:center;}
-.au-wlink{color:#f3dfa7;font-weight:800;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;min-height:24px;width:max-content;}
+.au-wlink{color:#F1D9A8;font-weight:800;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;min-height:24px;width:max-content;}
 .au-wlink:hover{text-decoration:underline;}
 .au-wlink:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:6px;}
-.au-hero-foot{margin-top:26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#cfdbe8;font-weight:700;}
+.au-hero-foot{margin-top:26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#E2CBDA;font-weight:700;}
 .au-hero-foot>span:first-child{display:inline-flex;align-items:center;gap:6px;}
 .au-partners{display:inline-flex;gap:8px;align-items:center;}
 .au-partners img{height:34px;background:#fff;border-radius:8px;padding:3px 8px;}

@@ -99,10 +99,10 @@ const CSS = `
 .ab-track{position:relative;display:flex;width:max-content;animation:abRtl linear infinite;will-change:transform}
 .ab-row{display:flex;flex:none;align-items:center;padding-inline-end:28px}
 .ab-row>*{will-change:transform,opacity;transform-origin:center}
-.ab-brand{flex:none;display:inline-flex;align-items:center;gap:7px;margin:0 10px 0 14px;padding:3px 12px 3px 8px;border-radius:999px;background:rgba(217,168,102,.14);border:1px solid rgba(217,168,102,.45);color:#F6D9A8;font-weight:900;font-size:12.5px;white-space:nowrap}
+.ab-brand{flex:none;display:inline-flex;align-items:center;gap:7px;margin:0 10px 0 14px;padding:3px 12px 3px 8px;border-radius:999px;background:rgba(217,168,102,.14);border:1px solid rgba(217,168,102,.45);color:#F1D9A8;font-weight:900;font-size:12.5px;white-space:nowrap}
 .ab-item{flex:none;display:inline-flex;align-items:baseline;gap:7px;white-space:nowrap;padding:0 4px;color:#FBF4EE;text-decoration:none;transition:color .25s}
 .ab-item strong{font-weight:800}.ab-item small{font-size:12px;color:rgba(234,223,214,.72);font-weight:600}.ab-item em{font-style:normal;color:#D9A866;font-size:9px;align-self:center}
-.ab-item.coral strong{color:#F3A58F}.ab-item.sand strong{color:#F6D9A8}.ab-item.sea strong{color:#9FD8D1}
+.ab-item.coral strong{color:#F0A48C}.ab-item.sand strong{color:#F1D9A8}.ab-item.sea strong{color:#8FD0C8}
 a.ab-item:hover strong{text-decoration:underline;text-underline-offset:4px;text-decoration-color:#D9A866}
 .ab-sep{flex:none;font-style:normal;color:#D9A866;font-size:10px;padding:0 14px;opacity:.9}
 .ab-sep3{flex:none;font-style:normal;color:#D9A866;font-size:10px;letter-spacing:4px;padding:0 10px 0 22px;opacity:.95}

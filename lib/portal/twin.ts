@@ -206,7 +206,7 @@ export function buildLiving(v: any, now = new Date()) {
 
 // ================================================================ تسميات
 export const STATUS_LABEL: Record<TwinStatus, { ar: string; en: string; color: string }> = {
-  bright: { ar: 'متوهّجة', en: 'Bright', color: '#D4614A' }, fading: { ar: 'تخفت', en: 'Fading', color: '#D9A866' }, rusty: { ar: 'صدئة', en: 'Rusty', color: '#b45309' }, dormant: { ar: 'خامدة', en: 'Dormant', color: '#B3A5AE' },
+  bright: { ar: 'متوهّجة', en: 'Bright', color: '#D4614A' }, fading: { ar: 'تخفت', en: 'Fading', color: '#D9A866' }, rusty: { ar: 'صدئة', en: 'Rusty', color: '#8A5A1E' }, dormant: { ar: 'خامدة', en: 'Dormant', color: '#B3A5AE' },
 };
 export const statusLabel = (s: TwinStatus, lang: Lang) => STATUS_LABEL[s][lang === 'en' ? 'en' : 'ar'];
 export function rustSentence(s: TwinSkill, name: string, lang: Lang): string {

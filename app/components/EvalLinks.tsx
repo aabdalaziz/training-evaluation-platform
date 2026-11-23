@@ -96,7 +96,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
     }).join('');
     const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ورقة الطباعة — روابط التقويم</title><style>
       @page{size:A4;margin:12mm}body{font-family:Tahoma,Arial,sans-serif;color:#3A1F36;margin:0}.g{display:grid;grid-template-columns:repeat(2,1fr);gap:10mm}
-      .c{border:1.5px solid #D9A866;border-radius:14px;padding:8mm 6mm;text-align:center;break-inside:avoid;display:grid;gap:4px;justify-items:center}.k{font-size:11px;font-weight:900;color:#8a6a1f;letter-spacing:.3px}
+      .c{border:1.5px solid #D9A866;border-radius:14px;padding:8mm 6mm;text-align:center;break-inside:avoid;display:grid;gap:4px;justify-items:center}.k{font-size:11px;font-weight:900;color:#8A5A1E;letter-spacing:.3px}
       h2{font-size:17px;margin:0;font-weight:900}.p{font-size:12px;color:#4A3645;font-weight:700}.u{font-family:monospace;font-size:13px;font-weight:900;direction:ltr}.w{font-size:11px;color:#D4614A;font-weight:800}.h{font-size:10.5px;color:#8E7F8A;max-width:62mm}.h.en{direction:ltr;color:#D4614A;font-weight:700}
       .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6mm;font-size:12px;color:#8E7F8A}@media print{.np{display:none}}
     </style></head><body><div class="top"><b>أَثَر · روابط التقويم</b><span>${rows.length} بطاقة · ${esc(new Date().toLocaleDateString('ar-SA'))}</span><button class="np" onclick="print()">طباعة</button></div><div class="g">${cards}</div></body></html>`;
@@ -194,8 +194,8 @@ function esc(s: string) { return String(s || '').replace(/[&<>"]/g, c => ({ '&':
 
 const CSS = `
 .el{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px;display:grid;gap:14px;margin-top:14px}
-.el-h h2{margin:2px 0 4px;font-size:20px;color:#3A1F36}.el-h p{margin:0;color:#5C4858;font-size:13.5px;max-width:70ch}.el-k{font-size:12px;font-weight:900;color:#8a6a1f;display:inline-flex;gap:6px;align-items:center}
-.el-msg{border-radius:10px;padding:9px 12px;font-weight:800;font-size:13.5px}.el-msg.ok{background:#ecfdf5;color:#047857}.el-msg.bad{background:#fef2f2;color:#b91c1c}
+.el-h h2{margin:2px 0 4px;font-size:20px;color:#3A1F36}.el-h p{margin:0;color:#5C4858;font-size:13.5px;max-width:70ch}.el-k{font-size:12px;font-weight:900;color:#8A5A1E;display:inline-flex;gap:6px;align-items:center}
+.el-msg{border-radius:10px;padding:9px 12px;font-weight:800;font-size:13.5px}.el-msg.ok{background:#E6F3F1;color:#2F6B66}.el-msg.bad{background:#FBEDE7;color:#B9544A}
 .el-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}@media(max-width:860px){.el-grid{grid-template-columns:1fr}}
 .el-form{display:grid;gap:10px;background:#FBF4EE;border:1px solid #EADFD6;border-radius:12px;padding:14px;min-width:0}.el-row{display:grid;gap:10px}.el-row.two{grid-template-columns:1fr 1fr}@media(max-width:560px){.el-row.two{grid-template-columns:1fr}}
 .el-form label{display:grid;gap:4px;font-size:12.5px;font-weight:800;color:#4A3645;min-width:0}.el-form input,.el-form select{font:inherit;font-size:14px;padding:9px 10px;border:1px solid #D9CBC2;border-radius:9px;background:#fff;min-width:0;width:100%}.el-form small{font-weight:600;color:#8E7F8A;font-size:11.5px}
@@ -206,8 +206,8 @@ const CSS = `
 .el-mini{display:flex;gap:6px}.el-mini button,.el-mini a{font:inherit;font-size:11.5px;font-weight:800;border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:4px 9px;cursor:pointer;color:#3A1F36;text-decoration:none;display:inline-flex;gap:4px;align-items:center}
 .el-list{display:grid;gap:10px}.el-lh{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.el-lh h3{margin:0;font-size:16px;color:#3A1F36}.el-lh select{font:inherit;font-size:13px;padding:7px 9px;border:1px solid #D9CBC2;border-radius:9px;background:#fff}.el-lh-a{margin-inline-start:auto;display:flex;gap:6px}
 .el-tbl{display:grid;gap:6px}.el-r{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:10px;align-items:center;border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;min-width:0}.el-r.dim{opacity:.6}.el-rt{display:grid;gap:1px;min-width:0}.el-rt b{color:#3A1F36;font-size:13.5px}.el-rt small{color:#5C4858;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.el-when{color:#8E7F8A!important}
-.el-code{font-size:13px;font-weight:900;color:#3A1F36;background:#F6EBE0;border-radius:6px;padding:3px 7px}.el-st{font-size:11.5px;font-weight:900;border-radius:999px;padding:4px 9px}.el-st.ok{background:#ecfdf5;color:#047857}.el-st.wait{background:#fffbeb;color:#92400e}.el-st.off{background:#F6EBE0;color:#5C4858}
-.el-ra{display:flex;gap:4px}.el-ra button,.el-ra a{width:30px;height:30px;display:grid;place-items:center;border:1px solid #D9CBC2;background:#fff;border-radius:8px;cursor:pointer;color:#3A1F36}.el-ra .danger{color:#b91c1c;border-color:#fecaca}.el-ra button:disabled{opacity:.5}
+.el-code{font-size:13px;font-weight:900;color:#3A1F36;background:#F6EBE0;border-radius:6px;padding:3px 7px}.el-st{font-size:11.5px;font-weight:900;border-radius:999px;padding:4px 9px}.el-st.ok{background:#E6F3F1;color:#2F6B66}.el-st.wait{background:#FBF4EE;color:#8A5A1E}.el-st.off{background:#F6EBE0;color:#5C4858}
+.el-ra{display:flex;gap:4px}.el-ra button,.el-ra a{width:30px;height:30px;display:grid;place-items:center;border:1px solid #D9CBC2;background:#fff;border-radius:8px;cursor:pointer;color:#3A1F36}.el-ra .danger{color:#B9544A;border-color:#F3C4B6}.el-ra button:disabled{opacity:.5}
 .el-muted{color:#8E7F8A;font-size:13px;margin:0}.el-chk input{width:16px;height:16px}
 @media(max-width:700px){.el-r{grid-template-columns:auto 1fr;grid-auto-rows:auto}.el-code,.el-st,.el-ra{grid-column:2}}
 `;

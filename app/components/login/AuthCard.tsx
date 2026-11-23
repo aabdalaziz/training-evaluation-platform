@@ -42,7 +42,7 @@ export const authButton: React.CSSProperties = {
 export const authLabel: React.CSSProperties = { display: 'block', marginBottom: 8, fontWeight: 700, color: '#4A3645', fontSize: 14 };
 
 export function AuthMessage({ kind, children }: { kind: 'ok' | 'err' | 'info'; children: React.ReactNode }) {
-  const c = kind === 'ok' ? { bg: '#eafaf0', fg: '#15803d', bd: '#b7e4c7' } : kind === 'err' ? { bg: '#fef2f2', fg: '#b91c1c', bd: '#f6c4c4' } : { bg: '#eef4ff', fg: '#1d4ed8', bd: '#c3d4fb' };
+  const c = kind === 'ok' ? { bg: '#E6F3F1', fg: '#2F6B66', bd: '#BFE1DC' } : kind === 'err' ? { bg: '#FBEDE7', fg: '#B9544A', bd: '#F3C4B6' } : { bg: '#F3E8EF', fg: '#6A3350', bd: '#E2CBDA' };
   return (
     <div role={kind === 'err' ? 'alert' : 'status'} style={{ marginTop: 16, padding: '12px 14px', borderRadius: 10, background: c.bg, color: c.fg, border: `1px solid ${c.bd}`, fontWeight: 700, lineHeight: 1.8, fontSize: 14 }}>
       {children}

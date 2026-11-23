@@ -138,7 +138,7 @@ const CSS = `
 .pat{display:grid;gap:8px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .pat-wing{display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:16px;background:linear-gradient(90deg,var(--ws),#fff 70%);border:1px solid #EADFD6;border-inline-start:4px solid var(--w)}
 .pat-wing-t{display:grid;line-height:1.3;flex:1;min-width:0}.pat-wing-t b{font-size:15px;color:#3A1F36;font-weight:900}.pat-wing-t small{font-size:12px;color:#8E7F8A}
-.pat-lobby{display:inline-flex;align-items:center;gap:6px;color:#3A1F36;text-decoration:none;font-size:12.5px;font-weight:800;border:1px solid #F1D9A8;background:#FBF4EE;border-radius:999px;padding:5px 11px;white-space:nowrap}.pat-lobby:hover{background:#fff4d6}
+.pat-lobby{display:inline-flex;align-items:center;gap:6px;color:#3A1F36;text-decoration:none;font-size:12.5px;font-weight:800;border:1px solid #F1D9A8;background:#FBF4EE;border-radius:999px;padding:5px 11px;white-space:nowrap}.pat-lobby:hover{background:#FBF4EE}
 .pat-today{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-radius:14px;background:linear-gradient(135deg,#F1D9A8,#FBF4EE);border:1px solid #D9A866;color:#8A5A1E;font-size:13px}
 .pat-today b{display:inline-flex;gap:6px;align-items:center;color:#3A1F36}
 .pat-today a{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #F1D9A8;border-radius:999px;padding:3px 10px;color:#3A1F36;text-decoration:none;font-weight:700}
