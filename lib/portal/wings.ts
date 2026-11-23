@@ -81,7 +81,7 @@ export const CLUSTERS: Partial<Record<WingKey, Cluster[]>> = {
     { name: 'التشغيل', hrefs: ['/admin/management', '/admin/attendance', '/admin/readiness', '/admin/live', '/admin/resources'] },
     { name: 'التصميم', hrefs: ['/admin/program-engineering', '/admin/catalog', '/admin/templates', '/admin/sim', '/admin/missions', '/admin/rehearsals'] },
     { name: 'الحضور الحيّ', hrefs: ['/admin/onair', '/admin/media', '/admin/councils'] },
-    { name: 'المناخ', hrefs: ['/admin/pulse', '/admin/awards', '/admin/inclusion'] },
+    { name: 'المناخ', hrefs: ['/admin/pulse', '/admin/env-pulse', '/admin/awards', '/admin/inclusion'] },
   ],
   quality: [
     { name: 'الأثر', hrefs: ['/admin/impact', '/admin/followup', '/admin/after', '/admin/outcomes'] },
