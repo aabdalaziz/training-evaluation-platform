@@ -140,3 +140,10 @@ test('هـ-6: معجم أَثَر محفوظ في ملفات بَيان (ولي�
     assert.ok(!/العميل|المنصة/.test(s), f);
   }
 });
+
+test('نشيد بَيان: السطر الأخير «في قَلْبي وَلِساني» (على وزن «طَيِّبَةْ») في النصّ والصوت المحدَّث', () => {
+  const s = fs.readFileSync(path.join(ROOT, 'app/components/kids/BayanSession.tsx'), 'utf8');
+  assert.ok(/في قَلْبي وَلِساني'/.test(s) && !/وَلِسانْ/.test(s));
+  assert.ok(/في قَلْبي وَلِساني'/.test(fs.readFileSync(path.join(ROOT, 'lib/kids/souq.ts'), 'utf8')));
+  assert.ok(fs.statSync(path.join(ROOT, 'public/kids/common/audio/anthem.mp3')).size > 200000);
+});
