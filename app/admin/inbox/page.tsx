@@ -100,9 +100,9 @@ const CSS = `
 .ib-msg.new{border-inline-start:4px solid #D4614A}.ib-msg.handled{opacity:.85}.ib-msg.spam{opacity:.6}
 .ib-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer}.ib-who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}.ib-who b{color:#3A1F36;font-size:15px}.ib-who span{color:#8E7F8A;font-size:13px}
 .ib-meta{display:flex;gap:8px;align-items:center;font-size:12.5px;color:#8E7F8A;flex-wrap:wrap}
-.ib-tag{background:#eff6ff;color:#1e40af;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:900}.ib-tag.soft{background:#F6EBE0;color:#4A3645}
+.ib-tag{background:#F3E8EF;color:#6A3350;border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:900}.ib-tag.soft{background:#F6EBE0;color:#4A3645}
 .ib-body{margin-top:12px;border-top:1px dashed #EADFD6;padding-top:12px}.ib-body p{white-space:pre-wrap;line-height:1.9;font-size:14.5px;color:#2A1626;margin:0 0 10px}
 .ib-details{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A;margin-bottom:12px}.ib-details span{display:inline-flex;gap:5px;align-items:center}
 .ib-acts{display:flex;gap:8px;flex-wrap:wrap}
-.ib-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}
+.ib-err{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}
 `;

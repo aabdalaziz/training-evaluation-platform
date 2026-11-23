@@ -391,7 +391,7 @@ export default function CertificatesPage() {
       {revoke && (
         <div className="ct-modal" role="dialog" aria-modal="true">
           <div className="ct-modal-box">
-            <h3><Icon name="alert" size={20} color="#b91c1c" /> إلغاء الشهادة {revoke.row.serial}</h3>
+            <h3><Icon name="alert" size={20} color="#B9544A" /> إلغاء الشهادة {revoke.row.serial}</h3>
             <p>المستفيد: <b>{revoke.row.recipient_name}</b> · {revoke.row.program_name}</p>
             <label>سبب الإلغاء *<input value={revoke.reason} onChange={e => setRevoke(v => v && { ...v, reason: e.target.value })} placeholder="مثال: صدرت بالخطأ / عدم استيفاء نسبة الحضور" /></label>
             <div className="ct-actions">
@@ -418,7 +418,7 @@ const CSS = `
 .ct{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}.rm-btn.teal{background:#D4614A;color:#fff;border-color:#D4614A}
 .ct-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
 .ct-tab{display:inline-flex;align-items:center;gap:6px;border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.ct-tab.on{background:${NAVY};border-color:${NAVY};color:#fff}
-.rm-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.rm-alert.err{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A}
 .ct-x{border:0;background:transparent;cursor:pointer;color:inherit;padding:2px}
 .ct-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
 .ct-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -440,13 +440,13 @@ const CSS = `
 .ct-reg-tools{display:flex;gap:8px;flex-wrap:wrap}.ct-reg-tools input{min-width:260px}.ct-reg-tools select,.ct-reg-tools input{width:auto}
 .ct-tw{overflow:auto}
 .rm-table tr.revoked td{opacity:.6}
-.ct-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858;white-space:nowrap}.ct-pill.ok{background:#ecfdf5;color:#047857}.ct-pill.bad{background:#fef2f2;color:#b91c1c}
+.ct-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858;white-space:nowrap}.ct-pill.ok{background:#E6F3F1;color:#2F6B66}.ct-pill.bad{background:#FBEDE7;color:#B9544A}
 .ct-row-acts{display:flex;gap:4px}
-.ct-ic{width:30px;height:30px;border:1px solid #EADFD6;background:#fff;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:${NAVY}}.ct-ic:disabled{opacity:.4;cursor:not-allowed}.ct-ic.danger{color:#b91c1c}
+.ct-ic{width:30px;height:30px;border:1px solid #EADFD6;background:#fff;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:${NAVY}}.ct-ic:disabled{opacity:.4;cursor:not-allowed}.ct-ic.danger{color:#B9544A}
 .ct-ol{margin:0;padding-inline-start:18px;line-height:1.9;font-size:13.5px;color:#4A3645}.ct-ol code{background:#F6EBE0;padding:1px 6px;border-radius:6px;direction:ltr;unicode-bidi:embed}
-.ct-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+.ct-modal{position:fixed;inset:0;background:rgba(42,22,38,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
 .ct-modal-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px}
-.ct-modal-box h3{margin:0;color:#b91c1c;display:flex;align-items:center;gap:8px}.ct-modal-box p{margin:0;line-height:1.7}
+.ct-modal-box h3{margin:0;color:#B9544A;display:flex;align-items:center;gap:8px}.ct-modal-box p{margin:0;line-height:1.7}
 .ct-toast{position:fixed;bottom:18px;inset-inline-start:18px;background:${NAVY};color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:120}
 @media(max-width:1000px){.ct-two{grid-template-columns:1fr}.ct-preview{position:static}}
 @media(max-width:700px){.ct-grid{grid-template-columns:1fr}.ct{}}

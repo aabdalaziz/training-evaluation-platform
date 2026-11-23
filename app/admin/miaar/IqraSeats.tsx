@@ -36,7 +36,7 @@ export default function IqraSeats({ auth }: { auth: () => Promise<Record<string,
         </div></details>
       <div style={{ overflowX: 'auto', marginTop: 10 }}>
         <table className="mm-t"><thead><tr><th>البريد</th><th>المصدر</th><th>الخطّة</th><th>من</th><th>إلى</th><th>الحالة</th><th>ملاحظة</th></tr></thead>
-          <tbody>{rows.map((r) => <tr key={r.id} data-testid="iqra-seat-row"><td dir="ltr" style={{ textAlign: 'start' }}>{r.learner_email}</td><td>{SRC[r.source] || r.source}</td><td>{r.plan_code}</td><td dir="ltr">{d10(r.starts_at)}</td><td dir="ltr">{d10(r.ends_at)}</td><td>{r.active ? <b style={{ color: '#166534' }}>سارٍ · {r.days_left} ي</b> : <span style={{ color: '#8E7F8A' }}>منتهٍ</span>}</td><td>{r.note || '—'}</td></tr>)}
+          <tbody>{rows.map((r) => <tr key={r.id} data-testid="iqra-seat-row"><td dir="ltr" style={{ textAlign: 'start' }}>{r.learner_email}</td><td>{SRC[r.source] || r.source}</td><td>{r.plan_code}</td><td dir="ltr">{d10(r.starts_at)}</td><td dir="ltr">{d10(r.ends_at)}</td><td>{r.active ? <b style={{ color: '#2F6B66' }}>سارٍ · {r.days_left} ي</b> : <span style={{ color: '#8E7F8A' }}>منتهٍ</span>}</td><td>{r.note || '—'}</td></tr>)}
             {!rows.length && <tr><td colSpan={7} style={{ color: '#8E7F8A' }}>لا مقاعد بعد — أوّل مقعد يأتي من تجربة متعلّم أو فاتورة مسدَّدة.</td></tr>}</tbody></table>
       </div>
     </>}

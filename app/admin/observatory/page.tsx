@@ -101,12 +101,12 @@ const CSS = `
 .ob-actions{display:flex;gap:8px;flex-wrap:wrap}.rm-card h3 small{font-weight:400;color:#8E7F8A;font-size:12px}
 .ob-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
 .ob-tot{display:flex;gap:10px;flex-wrap:wrap;font-size:13px}.ob-tot span{background:#F6EBE0;border-radius:999px;padding:4px 10px}.ob-tot b{margin-inline-start:4px;color:#3A1F36}.rm-table tr.mute td{color:#B3A5AE}
-.ob-sig{display:flex;flex-direction:column;gap:2px}.ob-sig .up{color:#D4614A}.ob-sig .down{color:#b45309}
+.ob-sig{display:flex;flex-direction:column;gap:2px}.ob-sig .up{color:#D4614A}.ob-sig .down{color:#8A5A1E}
 .ob-chk{display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer}
 .ob-lbl{display:grid;gap:4px;font-size:13px;color:#4A3645}.ob-lbl input,.ob-lbl textarea{border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;font-family:inherit;font-size:14px}
-.ob-hint{margin:0;color:#8E7F8A;font-size:12px}.ob-hint.warn{color:#b45309}.ob-badge{background:#fef3c7;color:#92400e;border-radius:999px;padding:2px 8px}
-.ob-checks{list-style:none;margin:0;padding:0;font-size:13px;line-height:1.9}.ob-checks .ok{color:#D4614A}.ob-checks .bad{color:#dc2626;font-weight:700}
-.ob-msg{background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;border-radius:10px;padding:8px 12px;font-size:13px}.ob-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:8px 12px;font-size:13px}
+.ob-hint{margin:0;color:#8E7F8A;font-size:12px}.ob-hint.warn{color:#8A5A1E}.ob-badge{background:#F1D9A8;color:#8A5A1E;border-radius:999px;padding:2px 8px}
+.ob-checks{list-style:none;margin:0;padding:0;font-size:13px;line-height:1.9}.ob-checks .ok{color:#D4614A}.ob-checks .bad{color:#D4614A;font-weight:700}
+.ob-msg{background:#E6F3F1;border:1px solid #BFE1DC;color:#2F6B66;border-radius:10px;padding:8px 12px;font-size:13px}.ob-err{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A;border-radius:10px;padding:8px 12px;font-size:13px}
 .ob-pub{border-color:#D4614A;background:#FBEDE7}.ob-pub code{background:#fff;padding:2px 6px;border-radius:6px}
 .ob-doms{margin:0;font-size:13px;color:#4A3645}.rm-card details{font-size:12px;color:#8E7F8A}.rm-card ul{margin:0;padding-inline-start:18px;font-size:13px;line-height:1.9}
 .ob-foot{text-align:center;color:#B3A5AE;font-size:12px;margin:8px 0 0}

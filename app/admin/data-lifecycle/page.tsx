@@ -195,7 +195,7 @@ export default function DataLifecyclePage() {
       {confirmOpen && preview && (
         <div className="dl-modal" role="dialog" aria-modal="true" aria-labelledby="dl-confirm-title">
           <div className="dl-modal-box">
-            <h3 id="dl-confirm-title"><Icon name="trash" size={20} color="#b91c1c" /> تأكيد الحذف النهائي</h3>
+            <h3 id="dl-confirm-title"><Icon name="trash" size={20} color="#B9544A" /> تأكيد الحذف النهائي</h3>
             <p>سيتم حذف <b>{preview.evaluations.toLocaleString('en')}</b> استجابة و<b>{preview.answers.toLocaleString('en')}</b> إجابة نهائيًا من النطاق:</p>
             <div className="dl-scope">{scope}</div>
             {/* P49-ب.3: حقل «كلمة» + حقل password كانا يُقرآن كنموذج دخول فيملؤهما المتصفّح تلقائيًّا بالبريد وكلمة المرور ويبقى الزرّ معطّلًا بلا تفسير — الآن: حقول نصّية بلا تعبئة تلقائية، الرمز مُقنَّع بـ CSS، وتلميح حيّ يشرح ما ينقص، وEnter/Esc يعملان */}
@@ -223,19 +223,19 @@ function explain(m: string): string {
 }
 
 const CSS = `
-.dl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}.rm-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.dl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}.rm-alert.err{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A}
 .dl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .dl label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#5C4858}
 .dl select,.dl input{border:1px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;color:#2A1626;background:#fff}
 .dl-scope{margin:12px 0;font-size:12px;font-weight:800;color:#4A3645;background:#FBF4EE;border:1px dashed #D9CBC2;border-radius:10px;padding:8px 12px;display:flex;gap:6px;align-items:center}
 .dl-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-start;margin-top:4px}
-.dl-preview{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:14px}
+.dl-preview{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px;background:#FBEDE7;border:1px solid #F3C4B6;border-radius:12px;padding:14px}
 .dl-preview.empty{background:#FBF4EE;border-color:#EADFD6}
-.dl-num{background:#fff;border-radius:10px;padding:10px 18px;text-align:center;min-width:120px}.dl-num b{display:block;font-size:26px;color:#b91c1c}.dl-preview.empty .dl-num b{color:#8E7F8A}.dl-num span{font-size:12px;color:#8E7F8A;font-weight:800}
-.dl-note{font-size:13px;font-weight:800;color:#7f1d1d;flex:1}.dl-preview.empty .dl-note{color:#5C4858}
-.dl-modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
+.dl-num{background:#fff;border-radius:10px;padding:10px 18px;text-align:center;min-width:120px}.dl-num b{display:block;font-size:26px;color:#B9544A}.dl-preview.empty .dl-num b{color:#8E7F8A}.dl-num span{font-size:12px;color:#8E7F8A;font-weight:800}
+.dl-note{font-size:13px;font-weight:800;color:#9A3A2A;flex:1}.dl-preview.empty .dl-note{color:#5C4858}
+.dl-modal{position:fixed;inset:0;background:rgba(42,22,38,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100}
 .dl-modal-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:12px}
-.dl-modal-box h3{margin:0;color:#b91c1c;display:flex;align-items:center;gap:8px}.dl-modal-box p{margin:0;line-height:1.7}
-.dl-modal-box label span{display:block;font-weight:800;font-size:13px;margin-bottom:4px}.dl-mask{-webkit-text-security:disc}.dl-hint{display:block;font-size:12.5px;color:#92400e;font-weight:700;line-height:1.6}.dl-hint.ok{color:#047857}
+.dl-modal-box h3{margin:0;color:#B9544A;display:flex;align-items:center;gap:8px}.dl-modal-box p{margin:0;line-height:1.7}
+.dl-modal-box label span{display:block;font-weight:800;font-size:13px;margin-bottom:4px}.dl-mask{-webkit-text-security:disc}.dl-hint{display:block;font-size:12.5px;color:#8A5A1E;font-weight:700;line-height:1.6}.dl-hint.ok{color:#2F6B66}
 @media(max-width:800px){.dl-grid{grid-template-columns:1fr}.dl{}}
 `;

@@ -61,7 +61,7 @@ export default function AdminTwinPage() {
         {tab === 'twin' && <div className="rm-card">
           {twin.domains.length === 0 && <div className="rm-empty">لا مستويات مهارات بعد لهذه المجموعة.</div>}
           {twin.domains.length > 0 && <table className="rm-table"><thead><tr><th>المجال</th><th>أعضاء</th><th>مهارات</th><th>المستوى الآن</th><th>+180 يومًا · السياسة أ (لا تدخّل)</th><th>+180 يومًا · السياسة ب (محاكاة شهرية)</th><th>صدئة الآن → أ → ب</th></tr></thead><tbody>
-            {twin.domains.map((d: OrgTwinRow) => <tr key={d.domain}><td><b>{domainLabel(d.domain, 'ar')}</b></td><td>{d.members}</td><td>{d.skills}</td><td><Bar v={d.level_now} c="#3A1F36" /></td><td><Bar v={d.level_180_a} c="#b45309" /></td><td><Bar v={d.level_180_b} c="#D4614A" /><small className="at-gain">{d.level_180_b >= d.level_180_a ? `+${fmtLevel(d.level_180_b - d.level_180_a)}` : fmtLevel(d.level_180_b - d.level_180_a)} مقابل أ</small></td><td><span className="at-rust">{d.rusty_now}</span> → <span className="at-rust">{d.rusty_180_a}</span> → <span className="at-ok">{d.rusty_180_b}</span></td></tr>)}
+            {twin.domains.map((d: OrgTwinRow) => <tr key={d.domain}><td><b>{domainLabel(d.domain, 'ar')}</b></td><td>{d.members}</td><td>{d.skills}</td><td><Bar v={d.level_now} c="#3A1F36" /></td><td><Bar v={d.level_180_a} c="#8A5A1E" /></td><td><Bar v={d.level_180_b} c="#D4614A" /><small className="at-gain">{d.level_180_b >= d.level_180_a ? `+${fmtLevel(d.level_180_b - d.level_180_a)}` : fmtLevel(d.level_180_b - d.level_180_a)} مقابل أ</small></td><td><span className="at-rust">{d.rusty_now}</span> → <span className="at-rust">{d.rusty_180_a}</span> → <span className="at-ok">{d.rusty_180_b}</span></td></tr>)}
           </tbody></table>}
           <p className="at-note">القراءة: السياسة ب تكلف ~20 دقيقة شهريًا للعضو (محاكاة بلا رسوم) وتحوّل مهارات من «صدئة» إلى «متوهّجة». استخدم الفرق بين العمودين في عرضك للجهة: الأثر المتوقّع لقرار صغير.</p>
         </div>}
@@ -89,11 +89,11 @@ export default function AdminTwinPage() {
 
 const CSS = `
 .at{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
-.at-wrap{max-width:1120px;margin:0 auto;display:grid;gap:12px}.at-err{color:#b91c1c;font-size:13px}
-.at-bar2{display:grid;gap:10px}.at-bar2 label{font-size:13px;color:#4A3645;display:inline-flex;gap:8px;align-items:center}.at-bar2 select{border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;min-width:220px}.rm-kpis .rusty b{color:#b45309}
+.at-wrap{max-width:1120px;margin:0 auto;display:grid;gap:12px}.at-err{color:#B9544A;font-size:13px}
+.at-bar2{display:grid;gap:10px}.at-bar2 label{font-size:13px;color:#4A3645;display:inline-flex;gap:8px;align-items:center}.at-bar2 select{border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;min-width:220px}.rm-kpis .rusty b{color:#8A5A1E}
 .at-tabs{display:flex;gap:6px;flex-wrap:wrap}.at-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#4A3645;cursor:pointer}.at-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.rm-table tr.off{opacity:.5}
 .at-bar{position:relative;height:18px;background:#F6EBE0;border-radius:999px;min-width:120px;overflow:hidden}.at-bar i{display:block;height:100%;border-radius:999px}.at-bar b{position:absolute;inset:0;display:grid;place-content:center;font-size:11.5px;color:#2A1626;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 2px #fff}.at-gain{display:block;color:#D4614A;font-weight:800;margin-top:2px}
-.at-rust{color:#b45309;font-weight:900}.at-ok{color:#D4614A;font-weight:900}.at-st{color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px}
-.at-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.at-chip{font-size:12px;background:#fff7ed;border:1px solid #fcd9b6;color:#9a3412;border-radius:999px;padding:4px 10px}
+.at-rust{color:#8A5A1E;font-weight:900}.at-ok{color:#D4614A;font-weight:900}.at-st{color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px}
+.at-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.at-chip{font-size:12px;background:#FBF4EE;border:1px solid #F1D9A8;color:#9A3A2A;border-radius:999px;padding:4px 10px}
 .at-note{margin:12px 0 0;color:#8E7F8A;font-size:12.5px;line-height:1.8}.at-note a{color:#3A1F36;font-weight:800}
 `;

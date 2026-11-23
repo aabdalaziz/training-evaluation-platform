@@ -15,7 +15,7 @@ const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUA
 type Lesson = { id: string; week: string; title_ar: string; body_ar: string; evidence: { label: string; value: string }[]; status: 'draft' | 'approved' | 'rejected'; created_at: string };
 type Data = { stats: { nodes: number; edges: number; skills: number; people: number; evidence: number; updated_at: string | null }; constellation: { stars: StarNode[]; links: { a: string; b: string; w: number; rel: Rel }[] }; lessons: Lesson[]; recent: { id: string; created_at: string; question: string; template: string | null; source: string; ok: boolean; answer: EvidenceAnswer | null }[]; templates: { id: string; title_ar: string; example_ar: string }[] };
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
-const KIND_COLOR: Record<NodeKind, string> = { skill: '#D9A866', program: '#D4614A', session: '#38bdf8', scenario: '#a78bfa', mission: '#f472b6', channel: '#ffffff', sector: '#B3A5AE', org: '#fb923c', trainer: '#34d399', contract: '#f87171' };
+const KIND_COLOR: Record<NodeKind, string> = { skill: '#D9A866', program: '#D4614A', session: '#5EA8A0', scenario: '#C9A6B6', mission: '#C9A6B6', channel: '#ffffff', sector: '#B3A5AE', org: '#D9A866', trainer: '#5EA8A0', contract: '#F0A48C' };
 const CONF = { strong: 'أدلة قوية', medium: 'أدلة متوسطة', weak: 'أدلة أولية' };
 
 export default function AdminEvidencePage() {
@@ -85,9 +85,9 @@ export default function AdminEvidencePage() {
             <div className="ev-maphead"><div><h3>كوكبة الأثر</h3><p>المهارات ذهبية في الحلقة الوسطى، قنوات التعلّم بيضاء في المركز، والبرامج والجلسات والجهات والمدربون في المدار الخارجي. سُمك الخيط = وزن الدليل. اضغط نجمة لتقرأ قصتها.</p></div><div className="ev-legend">{(Object.keys(KIND_LABEL) as NodeKind[]).filter(k => k !== 'sector').map(k => <span key={k}><i style={{ background: KIND_COLOR[k] }} />{KIND_LABEL[k].ar}</span>)}</div></div>
             <div className="ev-mapgrid">
               <svg viewBox="0 0 900 520" className="ev-svg" data-testid="constellation" role="img" aria-label="كوكبة الأثر">
-                <defs><radialGradient id="evbg" cx="50%" cy="50%" r="70%"><stop offset="0" stopColor="#163b6b" /><stop offset="1" stopColor="#0a1f3a" /></radialGradient></defs>
+                <defs><radialGradient id="evbg" cx="50%" cy="50%" r="70%"><stop offset="0" stopColor="#3A1F36" /><stop offset="1" stopColor="#22101F" /></radialGradient></defs>
                 <rect width="900" height="520" fill="url(#evbg)" rx="16" />
-                {con.links.map((l, i) => { const a = con.stars.find(s => s.id === l.a), b = con.stars.find(s => s.id === l.b); if (!a || !b) return null; const hot = pick && (l.a === pick || l.b === pick); return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={hot ? '#D9A866' : l.rel === 'raised' ? '#7dd3fc' : '#B3A5AE'} strokeOpacity={hot ? 0.95 : 0.22} strokeWidth={Math.min(6, 0.6 + l.w * 0.12)} />; })}
+                {con.links.map((l, i) => { const a = con.stars.find(s => s.id === l.a), b = con.stars.find(s => s.id === l.b); if (!a || !b) return null; const hot = pick && (l.a === pick || l.b === pick); return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={hot ? '#D9A866' : l.rel === 'raised' ? '#8FD0C8' : '#B3A5AE'} strokeOpacity={hot ? 0.95 : 0.22} strokeWidth={Math.min(6, 0.6 + l.w * 0.12)} />; })}
                 {con.stars.map(s => <g key={s.id} className="ev-star" onClick={() => openNode(s.id)} style={{ cursor: 'pointer' }}><circle cx={s.x} cy={s.y} r={s.r + (pick === s.id ? 4 : 0)} fill={KIND_COLOR[s.kind]} fillOpacity={s.kind === 'channel' ? 0.95 : 0.85} stroke={pick === s.id ? '#fff' : 'rgba(255,255,255,.35)'} strokeWidth={pick === s.id ? 2 : 1} /><text x={s.x} y={s.y + s.r + 12} textAnchor="middle" fontSize={s.kind === 'skill' ? 11 : 10} fill="#EADFD6">{s.label_ar.length > 18 ? s.label_ar.slice(0, 17) + '…' : s.label_ar}</text></g>)}
                 {!con.stars.length && <text x="450" y="260" textAnchor="middle" fill="#D9CBC2" fontSize="16">الذاكرة فارغة — اضغط «حدّث الذاكرة الآن»</text>}
               </svg>
@@ -110,7 +110,7 @@ export default function AdminEvidencePage() {
 
 const CSS = `
 .ev{font-family:inherit}
-.ev-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.ev-err{color:#b91c1c;font-size:13px}.ev-upd{margin-inline-start:auto;font-size:12.5px;display:inline-flex;gap:8px;align-items:center}
+.ev-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.ev-err{color:#B9544A;font-size:13px}.ev-upd{margin-inline-start:auto;font-size:12.5px;display:inline-flex;gap:8px;align-items:center}
 .ev-tabs{display:flex;gap:6px;flex-wrap:wrap}.ev-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.ev-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.ev-tabs i{font-style:normal;background:#D9A866;color:#3A1F36;border-radius:999px;padding:0 7px;font-size:11px;margin-inline-start:4px}
 .ev-askrow{display:flex;gap:8px;align-items:center}.ev-askrow input{flex:1;border:1px solid #D9CBC2;border-radius:12px;padding:12px 14px;font:inherit;font-size:15px}
 .ev-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.ev-chips button{border:1px dashed #D9CBC2;background:#FBF4EE;border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;color:#3A1F36;cursor:pointer}.ev-chips button:hover{background:#F3E6DC}
@@ -126,7 +126,7 @@ const CSS = `
 .ev-mapgrid{display:grid;grid-template-columns:1fr 260px;gap:12px;margin-top:12px}.ev-svg{width:100%;height:auto;border-radius:16px;display:block}.ev-star:hover circle{stroke:#fff;stroke-width:2}
 .ev-story{background:#3A1F36;color:#fff;border-radius:16px;padding:14px 16px;font-size:13.5px;line-height:1.8}.ev-story b{display:block;color:#D9A866;margin-bottom:6px}.ev-story p{margin:0 0 6px}.ev-story .rm-muted{color:#D9CBC2}
 .ev-lessons{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}.ev-lessons li{border:1px solid #EADFD6;border-radius:14px;padding:12px 14px}.ev-lessons li.approved{border-color:#D4614A}.ev-lessons li.rejected{opacity:.6}.ev-lhead{display:flex;gap:8px;align-items:center;margin-bottom:4px}.ev-lhead small{color:#8E7F8A;font-size:12px}.ev-lessons b{display:block;color:#3A1F36;font-size:15px}.ev-lessons p{margin:4px 0 6px;color:#3A2634;font-size:13.5px;line-height:1.8}
-.ev-st{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#FBF4EE;color:#8A5A1E}.ev-st.approved{background:#e6f4f1;color:#D4614A}.ev-st.rejected{background:#fee2e2;color:#b91c1c}.ev-decide{display:flex;gap:8px;margin-top:8px}
+.ev-st{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#FBF4EE;color:#8A5A1E}.ev-st.approved{background:#e6f4f1;color:#D4614A}.ev-st.rejected{background:#FBEDE7;color:#B9544A}.ev-decide{display:flex;gap:8px;margin-top:8px}
 .print-only{display:none}
 @media print{.no-print,.pt-header,.pt-footer,nav,header.pt-top{display:none!important}.ev{}.ev-answer{border:0;padding:0;margin:0}.print-only{display:block}.ev-brieffoot{margin-top:24px;border-top:1px solid #999;padding-top:8px;font-size:11px;color:#444}.ev-chain span{border:1px solid #000;color:#000;background:#fff}.ev-chain small{color:#000}}
 @media (max-width:860px){.ev-mapgrid{grid-template-columns:1fr}.ev-askrow{flex-wrap:wrap}.ev-askrow input{min-width:100%}}

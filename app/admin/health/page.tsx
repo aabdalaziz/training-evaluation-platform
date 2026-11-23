@@ -125,17 +125,17 @@ const CSS = `
 .he{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
 .he *{box-sizing:border-box}
 .he-hero{display:flex;align-items:center;gap:18px;background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px;flex-wrap:wrap}
-.he-hero.ok{border-color:#a7f3d0;background:linear-gradient(90deg,#ecfdf5,#fff)}.he-hero.warn{border-color:#fed7aa;background:linear-gradient(90deg,#fff7ed,#fff)}.he-hero.bad{border-color:#fecaca;background:linear-gradient(90deg,#fef2f2,#fff)}
+.he-hero.ok{border-color:#BFE1DC;background:linear-gradient(90deg,#E6F3F1,#fff)}.he-hero.warn{border-color:#F1D9A8;background:linear-gradient(90deg,#FBF4EE,#fff)}.he-hero.bad{border-color:#F3C4B6;background:linear-gradient(90deg,#FBEDE7,#fff)}
 .he-score{display:flex;align-items:baseline;gap:2px;min-width:120px}.he-score b{font-size:46px;color:${NAVY};line-height:1}.he-score span{color:#B3A5AE;font-weight:800}
-.he-hero.ok .he-score b{color:#047857}.he-hero.warn .he-score b{color:#b45309}.he-hero.bad .he-score b{color:#b91c1c}
+.he-hero.ok .he-score b{color:#2F6B66}.he-hero.warn .he-score b{color:#8A5A1E}.he-hero.bad .he-score b{color:#B9544A}
 .he-hero-txt{flex:1;min-width:240px}.he-hero-txt h2{margin:0 0 4px;font-size:19px;color:${NAVY}}.he-hero-txt p{margin:0;color:#8E7F8A;font-size:12.5px;font-weight:700}
 .he-toggle{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.rm-card h3 small{margin-inline-start:auto;font-size:12px;color:#8E7F8A;font-weight:800}
 .he-tests{display:grid;grid-template-columns:1fr 1fr;gap:12px}.he-test{border:1px solid #EADFD6;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;background:#FBF4EE}.he-test b{color:${NAVY};font-size:14px}.he-test>span{font-size:12.5px;color:#8E7F8A;font-weight:700}
-.he-res{font-size:12.5px;font-weight:800;border-radius:8px;padding:6px 10px;width:100%}.he-res.ok{background:#ecfdf5;color:#065f46}.he-res.bad{background:#fef2f2;color:#991b1b}
+.he-res{font-size:12.5px;font-weight:800;border-radius:8px;padding:6px 10px;width:100%}.he-res.ok{background:#E6F3F1;color:#1F4F4A}.he-res.bad{background:#FBEDE7;color:#9A3A2A}
 .he-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .he-list li{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;border:1px solid #EADFD6;border-radius:12px;padding:10px 14px;background:#fff;border-inline-start:4px solid #D9CBC2}
-.he-list li.ok{border-inline-start-color:#059669}.he-list li.warn{border-inline-start-color:#d97706;background:#fffbf5}.he-list li.bad{border-inline-start-color:#dc2626;background:#fff7f7}.he-list li.info{border-inline-start-color:#B3A5AE}
-.he-st{font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;background:#F6EBE0;color:#5C4858;white-space:nowrap;margin-top:2px}.he-st.ok{background:#ecfdf5;color:#047857}.he-st.warn{background:#fff7ed;color:#b45309}.he-st.bad{background:#fef2f2;color:#b91c1c}
+.he-list li.ok{border-inline-start-color:#2F6B66}.he-list li.warn{border-inline-start-color:#8A5A1E;background:#FBF4EE}.he-list li.bad{border-inline-start-color:#D4614A;background:#FBEDE7}.he-list li.info{border-inline-start-color:#B3A5AE}
+.he-st{font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;background:#F6EBE0;color:#5C4858;white-space:nowrap;margin-top:2px}.he-st.ok{background:#E6F3F1;color:#2F6B66}.he-st.warn{background:#FBF4EE;color:#8A5A1E}.he-st.bad{background:#FBEDE7;color:#B9544A}
 .he-body{display:flex;flex-direction:column;gap:2px;min-width:0}.he-body b{font-size:13.5px;color:#2A1626}.he-body span{font-size:12.5px;color:#5C4858;font-weight:700;line-height:1.7}.he-body em{font-style:normal;font-size:11.5px;color:#D4614A;font-weight:800;display:flex;align-items:center;gap:4px;word-break:break-word}
 .he-go{font-size:12px;font-weight:900;color:${NAVY};text-decoration:none;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;margin-top:4px}
 .he-foot{color:#B3A5AE;font-size:11.5px;font-weight:700;text-align:center;padding:6px;line-height:1.8}

@@ -127,12 +127,12 @@ export default function AdminAgentsPage() {
 
 const CSS = `
 .ag{font-family:inherit}
-.ag-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.ag-err{color:#b91c1c;font-size:13px}
+.ag-wrap{max-width:1100px;margin:0 auto;display:grid;gap:12px}.ag-err{color:#B9544A;font-size:13px}
 .ag-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px}.ag-grid3 h4,.ag h4{margin:0 0 6px;font-size:14px;color:#3A1F36}.ag-row{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#4A3645;padding:5px 0;border-bottom:1px dashed #EADFD6}.ag-row b{color:#3A1F36}
 .ag-tabs{display:flex;gap:6px;flex-wrap:wrap}.ag-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#5C4858;cursor:pointer}.ag-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.ag-tabs i{font-style:normal;background:#D9A866;color:#3A1F36;border-radius:999px;padding:0 7px;font-size:11px;margin-inline-start:4px}
-.ag-req{border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;margin-bottom:10px}.ag-req.pending{border-color:#D9A866;background:#fffdf7}.ag-reqhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ag-reqhead b{color:#3A1F36}.ag-reqhead small{color:#8E7F8A;font-size:12px}
+.ag-req{border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;margin-bottom:10px}.ag-req.pending{border-color:#D9A866;background:#FBF4EE}.ag-reqhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ag-reqhead b{color:#3A1F36}.ag-reqhead small{color:#8E7F8A;font-size:12px}
 .ag-reqbody p{margin:6px 0;font-size:14px;color:#3A2634}.ag-reqbody small{display:block;color:#8E7F8A;font-size:12.5px;margin-top:2px}.ag-reqbody a{color:#D4614A}
-.ag-st{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#FBF4EE;color:#8A5A1E}.ag-st.approved,.ag-st.answered{background:#e6f4f1;color:#D4614A}.ag-st.rejected{background:#fee2e2;color:#b91c1c}
+.ag-st{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#FBF4EE;color:#8A5A1E}.ag-st.approved,.ag-st.answered{background:#e6f4f1;color:#D4614A}.ag-st.rejected{background:#FBEDE7;color:#B9544A}
 .ag-decide{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}.ag-decide input{flex:1;min-width:220px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 12px;font:inherit;font-size:13px}
 .ag-form{display:grid;gap:8px}.ag-form input,.ag-form select{border:1px solid #D9CBC2;border-radius:10px;padding:9px 12px;font:inherit;font-size:14px;background:#fff}.ag-scopes{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;color:#3A2634}.ag-scopes label{display:inline-flex;gap:4px;align-items:center;border:1px solid #EADFD6;border-radius:999px;padding:4px 10px}
 .ag-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.ag-row label{font-size:12.5px;color:#5C4858;display:inline-flex;gap:6px;align-items:center}.ag-row input[type=number]{width:90px}.ag-row>input{flex:1;min-width:160px}

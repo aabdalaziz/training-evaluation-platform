@@ -41,6 +41,6 @@ export default function AdminReportsPage() {
 const CSS = `
 .am{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
 .am :is(button,a,input,select,textarea):focus-visible{outline:3px solid #3A1F36;outline-offset:2px}
-.am-xlink{margin:0}.am-xlink a{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:800;color:#3A1F36;background:#fffaf0;border:1px solid #D9A866;border-radius:999px;padding:6px 12px;text-decoration:none}.am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}
-.am .pt-main{padding:0}.am .pt-box{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:18px;margin-bottom:12px}.am .pt-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b6f69}.am .pt-muted{color:#8E7F8A}
+.am-xlink{margin:0}.am-xlink a{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:800;color:#3A1F36;background:#FBF4EE;border:1px solid #D9A866;border-radius:999px;padding:6px 12px;text-decoration:none}.am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}
+.am .pt-main{padding:0}.am .pt-box{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:18px;margin-bottom:12px}.am .pt-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#2F6B66}.am .pt-muted{color:#8E7F8A}
 `;
