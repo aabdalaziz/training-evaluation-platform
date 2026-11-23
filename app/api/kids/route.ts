@@ -7,6 +7,7 @@
  *  POST consent  {child, kind, granted}                       → صفّ موافقة جديد (سجلّ إلحاقي)
  *  POST progress {child, session, stations, badge, self, selfVoice, talk, startedAt} → حدث نهاية جلسة (من جهاز الطفل بجلسة وليّ الأمر)
  *  POST task     {child, progress}                            → «تَمَّتْ ✓» مهمّة البيت
+ *  POST intro    {child}                                      → شاهد «رسالة لؤلؤ» (افتتاحية بَيان) — مرّة
  *  POST delete   {child}                                      → حذف كلّ بيانات الطفل فعليًّا (cascade)
  *  لا صوت ولا صورة تُقبل هنا (hasMedia) · النصّ يُحفظ بإذن save_text فقط · كلّ شيء لوليّ الأمر المالك وحده.
  */
@@ -42,7 +43,7 @@ function childView(c: any, progress: any[], consents: ConsentRow[], talks: any[]
   const doneSlugs = new Set(mine.filter(p => p.finished_at).map(p => p.session_slug));
   const next = SESSIONS.find(s => !doneSlugs.has(s.slug)) || SESSIONS[0];
   return {
-    id: c.id, nick: c.nick, gender: c.gender, birth_year: c.birth_year, avatar: c.avatar,
+    id: c.id, nick: c.nick, gender: c.gender, birth_year: c.birth_year, avatar: c.avatar, intro_seen_at: c.intro_seen_at || null,
     stage: stageOf(finished), finished, fruits, consents: eff, next: { slug: next.slug, world: next.meta.world, order: next.meta.order },
     progress: mine.map(p => { const S = getSession(p.session_slug); return { id: p.id, session: p.session_slug, world: S?.meta.world || p.session_slug, started_at: p.started_at, finished_at: p.finished_at, stations: p.stations, badge: p.badge, self_check: p.self_check, self_voice: p.self_voice, home_task: S?.athari.homeTask || null, home_task_done_at: p.home_task_done_at }; }),
     talks: myTalks.map(t => ({ id: t.id, session: t.session_slug, at: t.at, results: eff.save_text ? t.results : (t.results || []).map((r: any) => ({ role: r.role, matched: r.matched, attempts: r.attempts })), self_voice: t.self_voice })),
@@ -60,7 +61,7 @@ export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500);
   const me = await who(req); if (!me) return bad('سجّل الدخول', 401);
   const sp = new URL(req.url).searchParams;
-  const { data: kids } = await db.from('kids_children').select('id,nick,gender,birth_year,avatar,created_at').eq('parent_id', me.id).is('archived_at', null).order('created_at');
+  const { data: kids } = await db.from('kids_children').select('id,nick,gender,birth_year,avatar,created_at,intro_seen_at').eq('parent_id', me.id).is('archived_at', null).order('created_at');
   const ids = (kids || []).map((k: any) => k.id);
   if (!ids.length) return NextResponse.json({ success: true, children: [], consents_meta: CONSENTS, limits: LIMITS, sessions: SESSIONS.map(s => ({ slug: s.slug, world: s.meta.world, order: s.meta.order, letter: s.meta.letterName, value: s.meta.value })) });
   const [{ data: progress }, { data: consents }, { data: talks }, { data: letters }] = await Promise.all([
@@ -113,6 +114,11 @@ export async function POST(req: Request) {
     const { data: prog, error } = await db.from('kids_progress').upsert(row, { onConflict: 'child_id,session_slug,started_at' }).select('id').single(); if (error) return bad(error.message, 500);
     if (r.p.talk && r.p.talk.length) { const { error: e2 } = await db.from('kids_talks').insert({ child_id: child.id, session_slug: r.p.session, results: r.p.talk, self_voice: r.p.selfVoice }); if (e2) return bad(e2.message, 500); }
     return NextResponse.json({ success: true, id: prog.id, finished: done });
+  }
+
+  if (action === 'intro') {
+    const { error } = await db.from('kids_children').update({ intro_seen_at: new Date().toISOString() }).eq('id', child.id).eq('parent_id', me.id); if (error) return bad(error.message, 500);
+    return NextResponse.json({ success: true });
   }
 
   if (action === 'task') {

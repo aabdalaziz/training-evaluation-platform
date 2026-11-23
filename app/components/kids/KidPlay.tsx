@@ -10,11 +10,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import BayanSession, { type KidChild } from './BayanSession';
+import { BayanIntro } from './BayanIntro';
 import { api } from './ParentHome';
 import { SESSIONS, getSession } from '../../../lib/kids/sessions';
 import { adultGate, checkGate, STAGE_AR, type ConsentKind, type Stage } from '../../../lib/kids/parent';
 
-type Child = { id: string; nick: string; gender: 'm' | 'f'; avatar: string; stage: Stage; finished: number; consents: Record<ConsentKind, boolean>; next: { slug: string; world: string; order: number }; progress: { session: string; finished_at: string | null }[] };
+type Child = { id: string; nick: string; gender: 'm' | 'f'; avatar: string; intro_seen_at?: string | null; stage: Stage; finished: number; consents: Record<ConsentKind, boolean>; next: { slug: string; world: string; order: number }; progress: { session: string; finished_at: string | null }[] };
 
 export function KidPlay({ childId }: { childId: string }) {
   const sp = useSearchParams();
@@ -27,6 +28,7 @@ export function KidPlay({ childId }: { childId: string }) {
   const [open, setOpen] = useState(false);
   const [slug, setSlug] = useState<string | null>(null);
   const [sent, setSent] = useState<'idle' | 'ok' | 'err'>('idle');
+  const [intro, setIntro] = useState<'auto' | 'force' | 'off'>('auto');
   const lastRef = useRef<string>('');
 
   useEffect(() => { (async () => {
@@ -49,6 +51,8 @@ export function KidPlay({ childId }: { childId: string }) {
   if (err) return <Shell><h1>عذرًا</h1><p>{err}</p><Link className="by-ghost" href="/kids/parent">إلى بَيْتُ بَيان</Link></Shell>;
   if (!child || !slug) return <Shell><p className="kp-wait">لحظة… نوقظ لؤلؤ 🦜</p></Shell>;
 
+  /** «رسالة لؤلؤ» (افتتاحية بَيان): أوّل مرّة تلقائيًّا بعد بوّابة الكبار، وتُعاد من «قصّتنا» */
+  const introDone = () => { setIntro('off'); if (!child?.intro_seen_at) { api('/api/kids', { action: 'intro', child: childId }).catch(() => {}); setChild(c => c ? { ...c, intro_seen_at: new Date().toISOString() } : c); } };
   if (!open) {
     const doneSlugs = new Set(child.progress.filter(p => p.finished_at).map(p => p.session));
     return (
@@ -68,11 +72,13 @@ export function KidPlay({ childId }: { childId: string }) {
         <div className="kp-row">
           <button className="by-big" onClick={tryGate} disabled={!ans.trim()}>سَلِّمِ الجهازَ ل{child.gender === 'f' ? 'ها' : 'ه'} ▶</button>
           <Link className="by-ghost" href={`/kids/parent/${child.id}`}>رجوع إلى البذرة</Link>
+          <button className="by-ghost" onClick={() => { setIntro('force'); setOpen(true); }}>قِصَّتُنا 📖</button>
         </div>
       </Shell>
     );
   }
 
+  if (intro === 'force' || (intro === 'auto' && !child.intro_seen_at)) return <BayanIntro mode="child" name={child.nick} onDone={introDone} onSkip={introDone} />;
   const S = getSession(slug)!;
   const kid: KidChild = { id: child.id, nick: child.nick, gender: child.gender, consents: { speech_recog: !!child.consents.speech_recog, save_text: !!child.consents.save_text }, exitHref: `/kids/parent/${child.id}`, playHref: s => `/kids/play/${child.id}?s=${s}`, report };
   return <>

@@ -4,6 +4,7 @@
  * تجربة لا لوحة: نبتة لكلّ طفل تكبر بالجلسات وتُثمر بمهامّ البيت. كلّ القراءة عبر /api/kids بجلسة وليّ الأمر. */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { IntroButton } from './IntroButton';
 import { sbLazy, hasStoredSession } from '../../../lib/supabase/lazy';
 import { AVATARS, CONSENTS, STAGE_AR, LIMITS, ageOf, type ConsentKind, type Stage } from '../../../lib/kids/parent';
 
@@ -144,6 +145,7 @@ export function ParentHome({ childId }: { childId?: string }) {
         <div>
           <h1>بَيْتُ بَيان</h1>
           <p className="kp-muted">لكلّ طفل بذرة تكبر بجلساته وتُثمر بمهامّ البيت. {home.children.length ? '' : 'ازرع أوّل بذرة 👇'}</p>
+          <IntroButton className="kp-small" label="كيف يصنع بَيان أثرًا؟ ▶ 3 دقائق" />
         </div>
       </section>
       {err && <p className="kp-err">{err}</p>}

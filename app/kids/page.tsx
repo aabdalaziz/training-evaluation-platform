@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PortalShell } from '../components/PortalShell';
 import { SESSIONS } from '../../lib/kids/sessions';
+import { IntroButton } from '../components/kids/IntroButton';
 
 export const metadata: Metadata = { title: 'بَيان — برنامج أَثَر للأطفال', description: 'بَيان: لغةٌ تُحَبّ… وأثرٌ يبقى. برنامج تعليم العربية للأطفال (4–9 سنوات) بشخصيات كرتونية ومواقف حياتية وقيم وقرآن.' };
 
@@ -13,7 +14,10 @@ export default function KidsPage() {
         <section className="rm-card" style={{ padding: 24, borderRadius: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <p style={{ color: '#8E7F8A', margin: 0 }}>برنامج أَثَر للأطفال · 4–9 سنوات</p>
-            <Link href="/kids/parent" style={{ background: '#5EA8A0', color: '#fff', borderRadius: 999, padding: '8px 16px', textDecoration: 'none', fontWeight: 700 }}>🏡 بَيْتُ بَيان لِأُسْرَتي</Link>
+            <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <IntroButton style={{ background: '#fff', color: '#3A1F36', border: '2px solid #F1D9A8', borderRadius: 999, padding: '8px 16px', fontWeight: 700, font: 'inherit', cursor: 'pointer' }} />
+              <Link href="/kids/parent" style={{ background: '#5EA8A0', color: '#fff', borderRadius: 999, padding: '8px 16px', textDecoration: 'none', fontWeight: 700 }}>🏡 بَيْتُ بَيان لِأُسْرَتي</Link>
+            </span>
           </div>
           <h1 style={{ color: '#3A1F36', margin: '6px 0' }}>بَيان — لغةٌ تُحَبّ… وأثرٌ يبقى</h1>
           <p style={{ fontSize: 18, lineHeight: 1.9 }}>

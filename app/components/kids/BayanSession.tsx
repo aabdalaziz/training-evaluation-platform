@@ -12,6 +12,8 @@ import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
 import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, ACT_CSS } from './activities';
 import { COMMON } from '../../../lib/kids/common';
 import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled, type TalkOutcome } from './Talk';
+import { BayanIntro } from './BayanIntro';
+import { INTRO_DEMO_KEY } from '../../../lib/kids/intro';
 import type { Game, HarfActivity } from '../../../lib/kids/types';
 
 /* ───────── صوت (+ قياس شدّة الصوت لتحريك لؤلؤ) ───────── */
@@ -159,8 +161,10 @@ type Ctx = {
 function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f') => void }) {
   const { S } = p;
   const [step, setStep] = useState<'gate' | 'hello' | 'anthem'>(p.child || p.name ? 'hello' : 'gate');
+  const [intro, setIntro] = useState(false);
+  const save = () => { try { localStorage.setItem('bayan_demo_child', JSON.stringify({ name: p.name.trim(), gender: p.gender })); } catch { /* ignore */ } let seen = true; try { seen = localStorage.getItem(INTRO_DEMO_KEY) === '1'; } catch { /* ignore */ } if (seen || p.child) setStep('hello'); else setIntro(true); };
+  const introDone = () => { try { localStorage.setItem(INTRO_DEMO_KEY, '1'); } catch { /* ignore */ } setIntro(false); setStep('hello'); };
   const [line, setLine] = useState(-1);
-  const save = () => { try { localStorage.setItem('bayan_demo_child', JSON.stringify({ name: p.name.trim(), gender: p.gender })); } catch { /* ignore */ } setStep('hello'); };
   const hello = () => { p.lulu('welcome', 'wave', undefined, 'wait'); };
   const ready = () => { p.lulu('yasalam', 'cheer', () => { setStep('anthem'); }, 'dance'); };
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -185,8 +189,10 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
           </div>
           {S.talk && <label className="by-toggle"><input type="checkbox" defaultChecked={talkRecogEnabled()} onChange={e => { try { localStorage.setItem(TALK_RECOG_KEY, e.target.checked ? '1' : '0'); } catch { /* ignore */ } }} /> <span>تعرّف تلقائي على كلام الطفل في «حَديثٌ مَعَ لُؤْلُؤ» عبر خدمة المتصفّح <small>(قد يُرسَل الصوت لمزوّد المتصفّح لتحويله إلى نصّ — بدونه يؤكّد وليّ الأمر بنفسه ولا يغادر الجهاز شيء)</small></span></label>}
           <button className="by-big" disabled={!p.name.trim()} onClick={save}>هَيّا نَبْدَأ ☀️</button>
+          <button className="by-ghost" onClick={() => setIntro(true)}>قِصَّتُنا 📖 (رسالة لؤلؤ)</button>
         </div>
       )}
+      {intro && <BayanIntro mode="child" name={p.name.trim() || undefined} onDone={introDone} onSkip={introDone} />}
       {step === 'hello' && (
         <div className="by-center">
           <h1 className="by-huge">أَهْلًا يا {p.name}!</h1>
