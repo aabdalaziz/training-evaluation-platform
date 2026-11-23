@@ -64,7 +64,7 @@ export function miaarEvidence(f: MiaarFacts, kMin = K_MIN): Evidence[] {
 export function practiceText(pr: PracticeFacts): string {
   return `مِران — تدريب موجَّه بين الحكم والإعادة: ${pr.approved} خطّة اعتمدها مدرّب · ${pr.days_done} يوم تمرين مُنجَز${pr.with_delta >= 1 && pr.avg_delta !== null ? ` · متوسط تحسّن الوحدات ${pr.avg_delta > 0 ? '+' : ''}${pr.avg_delta} نقطة` : ''}${pr.retook ? ` · ${pr.retook} أعادوا بعد مِران و${pr.passed_after} اجتازوا` : ''}${pr.placement ? ` · منها ${pr.placement} «مِران البداية» بعد التشخيص (م11)` : ''}${pr.client_requested ? ` · منها ${pr.client_requested} بطلب من جهة` : ''}`;
 }
-/** ملخّص رقمي للتجميع المؤسسي (P48-ب) ولسطر البوابة */
+/** ملخّص رقمي للتجميع المؤسسي (P48-ب) ولسطر البوّابة */
 export function miaarSummary(f: MiaarFacts, kMin = K_MIN) {
   const inv = f.invites.filter((i) => i.finals >= kMin); /* القاعدة نفسها: لا دعوة دون 5 أحكام */
   const exits = inv.length; const finals = inv.reduce((a, i) => a + i.finals, 0); const promoted = inv.reduce((a, i) => a + i.promoted, 0);

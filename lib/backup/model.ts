@@ -8,7 +8,7 @@ export type Dataset = Record<string, Row[]>;
 export type TableSpec = {
   table: string;
   label: string;
-  /** عمود البرنامج المباشر، أو via:classroom للجداول المرتبطة بالقاعة، أو null للجداول العامة */
+  /** عمود البرنامج المباشر، أو via:classroom للجداول المرتبطة بالشعبة، أو null للجداول العامة */
   programKey: string | 'via:classroom' | 'via:evaluation' | 'via:template' | null;
   /** أعمدة تُستبعد من Excel (تقنية/حساسة) */
   hide?: string[];
@@ -19,8 +19,8 @@ export type TableSpec = {
 
 export const CATALOG: TableSpec[] = [
   { table: 'programs', label: 'البرامج', programKey: 'id', order: 'name_ar' },
-  { table: 'trainers', label: 'المدربون', programKey: null, order: 'name' },
-  { table: 'classrooms', label: 'القاعات', programKey: 'program_id', order: 'code' },
+  { table: 'trainers', label: 'المدرّبون', programKey: null, order: 'name' },
+  { table: 'classrooms', label: 'الشُّعب', programKey: 'program_id', order: 'code' },
   { table: 'class_schedules', label: 'الجداول', programKey: 'via:classroom' },
   { table: 'evaluation_templates', label: 'قوالب التقييم', programKey: null },
   { table: 'questions', label: 'الأسئلة', programKey: null, order: 'order_index' },
@@ -41,8 +41,8 @@ export const CATALOG: TableSpec[] = [
   { table: 'behavior_responses', label: 'استجابات المتابعة', programKey: 'via:followup' as any },
   { table: 'outcome_kpis', label: 'مؤشرات النتائج', programKey: 'program_id' },
   { table: 'outcome_measurements', label: 'قياسات المؤشرات', programKey: 'via:kpi' as any },
-  { table: 'remote_learning_survey_responses', label: 'استطلاع التعلم عن بُعد', programKey: 'program_id' },
-  { table: 'trainer_awards', label: 'تكريم المدربين', programKey: null },
+  { table: 'remote_learning_survey_responses', label: 'استبيان التعلم عن بُعد', programKey: 'program_id' },
+  { table: 'trainer_awards', label: 'تكريم المدرّبين', programKey: null },
   { table: 'report_subscriptions', label: 'اشتراكات التقارير', programKey: null },
   { table: 'certificate_settings', label: 'إعدادات الشهادات', programKey: null, conflict: 'organization_id' },
 ];
@@ -124,7 +124,7 @@ export function wideAnswers(data: Dataset): Sheet {
   const byEval = new Map<string, Row[]>();
   for (const a of data.evaluation_answers || []) { const arr = byEval.get(a.evaluation_id) || []; arr.push(a); byEval.set(a.evaluation_id, arr); }
   const usedQ = qs.filter(q => (data.evaluation_answers || []).some(a => a.question_id === q.id));
-  const head = ['التقييم', 'البرنامج', 'القاعة', 'النوع', 'التاريخ', 'المتوسط', ...usedQ.map(q => q.text_ar || q.id)];
+  const head = ['التقييم', 'البرنامج', 'الشعبة', 'النوع', 'التاريخ', 'المتوسط', ...usedQ.map(q => q.text_ar || q.id)];
   const rows: Cell[][] = (data.evaluations || []).map(e => {
     const answers = byEval.get(e.id) || [];
     const vals = usedQ.map(q => {

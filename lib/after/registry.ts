@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P38 «الشهادة التي تكبر» — متابعة أثر التدريب (دوال صافية، بلا اعتماديات)
- *  الشهادة لا تُختم يوم انتهاء البرنامج؛ تُفتح: بعد 30 · 90 · 365 يومًا يكتب المتدرّب بكلماته ما فعله بما تعلّم،
+ *  الشهادة لا تُختم يوم انتهاء البرنامج؛ تُفتح: بعد 30 · 90 · 365 يومًا يكتب المشارك بكلماته ما فعله بما تعلّم،
  *  ويختار حالة واحدة بالكلمات (لا نجوم ولا نسب)، ويدعو شاهدًا إن شاء. المحطة الفائتة تبقى فارغة — الصدق أهم من الاكتمال.
  *  لا شيء هنا يكتبه الذكاء الاصطناعي؛ خلاصة الميسِّر لهندسة البرامج مسودّة يطلبها إنسان من الطاقم.
  */
@@ -14,7 +14,7 @@ export const WINDOW_DAYS = 14;            // نافذة كل محطة ± 14 يو
 export const TEXT_MIN = 40;               // «ما الذي فعلته بما تعلّمت؟» — من 40 حرفًا
 export const TEXT_MAX = 1200;
 export const WITNESS_MAX = 300;
-export const AFTER_K = 5;                 // صفحة البرنامج تتكلم من 5 متدرّبين مختلفين كتبوا محطة الـ90
+export const AFTER_K = 5;                 // صفحة البرنامج تتكلم من 5 مشاركين مختلفين كتبوا محطة الـ90
 export const DOC_MIN_WRITTEN = 2;         // وثيقة ATH-AF عند المحطة الثالثة إن كُتبت محطتان فأكثر
 export const EXCERPTS_MAX = 3;            // حتى ثلاث شهادات مجهولة يختارها إنسان
 export const STATES = ['applied', 'partly', 'no_chance', 'not_useful'] as const;
@@ -65,7 +65,7 @@ export function cleanStation(b: any): { ok: true; s: { station: Station; state: 
   const t = scrubPii(cleanText(b?.text_ar, TEXT_MAX)); if (t.length < TEXT_MIN) return { ok: false, error: `اكتب من ${TEXT_MIN} حرفًا على الأقل — بكلماتك` };
   return { ok: true, s: { station, state, text_ar: t, may_publish: !!b?.may_publish } };
 }
-/** الشاهد: يدعوه المتدرّب وحده، ببريد، لمحطة كُتبت، ما لم يوقّع أحد بعد */
+/** الشاهد: يدعوه المشارك وحده، ببريد، لمحطة كُتبت، ما لم يوقّع أحد بعد */
 export function canInviteWitness(row: Pick<StationRow, 'written_at' | 'witness_status' | 'email'>, email: string): { ok: true } | { ok: false; error: string } {
   if (!row.written_at) return { ok: false, error: 'اكتب المحطة أولًا ثم ادعُ شاهدًا' };
   if (row.witness_status === 'signed') return { ok: false, error: 'وقّع الشاهد — لا يُبدَّل' };
@@ -95,14 +95,14 @@ export function bandAr(n: number, total: number): string {
   return r >= 0.75 ? 'أكثرهم' : r >= 0.5 ? 'نحو النصف أو أكثر' : r >= 0.25 ? 'قرابة الربع إلى النصف' : 'قلّة';
 }
 export type ProgramAfter = { shown: boolean; n: number; k: number; states: { key: AfterState; ar: string; band_ar: string; n: number }[]; witnessed: number; excerpts: { station: Station; state: AfterState; text_ar: string; witness_text: string | null }[]; line_ar: string };
-/** «ما قاله من تدرّب هنا» — من محطة الـ90 لخمسة متدرّبين مختلفين؛ الاقتباسات ما اعتمده إنسان من بين ما أذن أصحابه */
+/** «ما قاله من تدرّب هنا» — من محطة الـ90 لخمسة مشاركين مختلفين؛ الاقتباسات ما اعتمده إنسان من بين ما أذن أصحابه */
 export function programAfter(rows: StationRow[], k = AFTER_K, now = new Date()): ProgramAfter {
   const ninety = rows.filter(r => r.station === 90 && r.written_at && r.state); const people = new Set(ninety.map(r => (r.user_id || r.email || '').toLowerCase()).filter(Boolean));
   const n = people.size; const shown = n >= k;
   const states = STATES.map(key => { const c = ninety.filter(r => r.state === key).length; return { key, ar: STATE_AR[key], band_ar: shown ? bandAr(c, ninety.length) : '—', n: shown ? c : 0 }; });
   const witnessed = shown ? ninety.filter(r => r.witness_status === 'signed').length : 0;
   const excerpts = shown ? rows.filter(r => r.published_at && r.may_publish && r.text_ar).sort((a, b) => String(b.published_at).localeCompare(String(a.published_at))).slice(0, EXCERPTS_MAX).map(r => ({ station: r.station, state: r.state as AfterState, text_ar: String(r.text_ar), witness_text: r.witness_status === 'signed' ? r.witness_text : null })) : [];
-  const line_ar = shown ? `كتب ${n} متدرّبين ما فعلوه بعد ثلاثة أشهر: ${states.filter(s => s.n > 0).map(s => `${s.band_ar} ${s.ar === 'طبّقته' ? 'طبّقوه' : s.ar === 'طبّقته جزئيًا' ? 'طبّقوا جزءًا منه' : s.ar === 'لم تسنح الفرصة' ? 'لم تسنح لهم الفرصة' : 'لم ينفعهم'}`).join(' · ')}${witnessed ? ` — وشهد مشرفون على ${witnessed}` : ''}.` : `تتكلم هذه الصفحة حين يكتب ${k} متدرّبين محطة الأشهر الثلاثة — كُتبت ${n} حتى الآن.`;
+  const line_ar = shown ? `كتب ${n} مشاركين ما فعلوه بعد ثلاثة أشهر: ${states.filter(s => s.n > 0).map(s => `${s.band_ar} ${s.ar === 'طبّقته' ? 'طبّقوه' : s.ar === 'طبّقته جزئيًا' ? 'طبّقوا جزءًا منه' : s.ar === 'لم تسنح الفرصة' ? 'لم تسنح لهم الفرصة' : 'لم ينفعهم'}`).join(' · ')}${witnessed ? ` — وشهد مشرفون على ${witnessed}` : ''}.` : `تتكلم هذه الصفحة حين يكتب ${k} مشاركين محطة الأشهر الثلاثة — كُتبت ${n} حتى الآن.`;
   void now; return { shown, n, k, states, witnessed, excerpts, line_ar };
 }
 /** سطر الجهة — منسوبوها (k≥5)، سطر لا رسم */
@@ -112,14 +112,14 @@ export function orgAfterLine(rows: StationRow[], k = AFTER_K): { shown: boolean;
   const applied = w.filter(r => r.state === 'applied' || r.state === 'partly').length;
   return { shown: true, n: people.size, line_ar: `${people.size} من منسوبيكم كتبوا ما فعلوه بعد برامجهم — ${bandAr(applied, w.length)} طبّقوه كليًّا أو جزئيًا.` };
 }
-/** سطر «ما شهده أَثَر» للمتدرّب */
+/** سطر «ما شهده أَثَر» للمشارك */
 export function afterFactLine(rows: Pick<StationRow, 'written_at' | 'witness_status'>[]): string | null {
   const w = rows.filter(r => r.written_at).length; if (!w) return null; const s = rows.filter(r => r.witness_status === 'signed').length;
   return `كتب ${w} ${w === 1 ? 'محطة' : w === 2 ? 'محطتين' : 'محطات'} بعد برامجه${s ? ` وشهد على ${s} منها مشرف` : ''}`;
 }
 /** مسودّة الميسِّر لهندسة البرامج — من نصوص محطات مجهَّلة؛ محلّي بلا مفتاح */
 export function summaryPrompt(input: { program_ar: string; texts: { station: Station; state: AfterState; text: string }[] }) {
-  const system = 'أنت ميسِّر في أَثَر. تلخّص ما كتبه متدرّبون بكلماتهم عمّا فعلوه بعد برنامج تدريبي، لمهندس البرنامج البشري. لا تذكر أسماء، لا تقيّم الأشخاص، لا تخترع ما لم يُكتب. أجب بـJSON: {"kept_ar":[..3 جمل: ما نفع فعلًا..],"gaps_ar":[..3 جمل: ما لم ينتقل إلى العمل ولماذا..],"next_ar":[..3 اقتراحات ملموسة للنسخة التالية..]}';
+  const system = 'أنت ميسِّر في أَثَر. تلخّص ما كتبه مشاركون بكلماتهم عمّا فعلوه بعد برنامج تدريبي، لمهندس البرنامج البشري. لا تذكر أسماء، لا تقيّم الأشخاص، لا تخترع ما لم يُكتب. أجب بـJSON: {"kept_ar":[..3 جمل: ما نفع فعلًا..],"gaps_ar":[..3 جمل: ما لم ينتقل إلى العمل ولماذا..],"next_ar":[..3 اقتراحات ملموسة للنسخة التالية..]}';
   const user = `البرنامج: ${input.program_ar}\n${input.texts.map(t => `[${STATION_AR[t.station]} · ${STATE_AR[t.state]}] ${t.text}`).join('\n')}`;
   return { system, user };
 }

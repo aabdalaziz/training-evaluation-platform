@@ -67,7 +67,7 @@ function Inner() {
 
   function exportCsv() {
     if (!a) return;
-    const head = [['المتدرب (مُقنَّع)', 'الجنس', 'قبلي', 'بعدي', 'الفرق', ...qs.map(q => `${q.order_no}. ${q.text_ar} (قبلي)`), ...qs.map(q => `${q.order_no}. ${q.text_ar} (بعدي)`)]];
+    const head = [['المشارك (مُقنَّع)', 'الجنس', 'قبلي', 'بعدي', 'الفرق', ...qs.map(q => `${q.order_no}. ${q.text_ar} (قبلي)`), ...qs.map(q => `${q.order_no}. ${q.text_ar} (بعدي)`)]];
     const body = pairs.map(p => [p.label, p.gender || '', p.pre.score, p.post.score, p.gain, ...qs.map(q => p.pre.answers?.[q.id] ?? ''), ...qs.map(q => p.post.answers?.[q.id] ?? '')]);
     downloadCSV(`impact-${a.token}.csv`, [...head, ...body]);
   }
@@ -83,7 +83,7 @@ function Inner() {
         <div>
           <div className="ir-kicker"><Icon name="trend" size={14} /> مركز التقارير</div>
           <h1>تقرير أثر التدريب — قبلي / بعدي</h1>
-          <p>يقارن أداء المتدربين قبل البرنامج وبعده (أزواج الاستجابات لنفس المتدرب)، ويحسب الكسب المعياري وحجم الأثر والدلالة الإحصائية.</p>
+          <p>يقارن أداء المشاركين قبل البرنامج وبعده (أزواج الاستجابات لنفس المشارك)، ويحسب الكسب المعياري وحجم الأثر والدلالة الإحصائية.</p>
         </div>
         <nav className="ir-nav">
           <Link href="/dashboard" className="ir-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
@@ -105,7 +105,7 @@ function Inner() {
         </div>
       </section>
 
-      {!a && <section className="ir-card ir-empty"><Icon name="target" size={34} /><b>لا توجد أداة قياس مختارة</b><span>أنشئ أداة من صفحة «إدارة الأدوات» وشارك رابط القياس القبلي مع المتدربين.</span><Link href="/admin/impact?new=1" className="ir-btn primary">إنشاء أداة قياس</Link></section>}
+      {!a && <section className="ir-card ir-empty"><Icon name="target" size={34} /><b>لا توجد أداة قياس مختارة</b><span>أنشئ أداة من صفحة «إدارة الأدوات» وشارك رابط القياس القبلي مع المشاركين.</span><Link href="/admin/impact?new=1" className="ir-btn primary">إنشاء أداة قياس</Link></section>}
 
       {a && (
         <>
@@ -131,7 +131,7 @@ function Inner() {
                 <div><small>الكسب المعياري (Hake g)</small><b>{fmt(s.hake, 2)}</b><span>{'< 0.3 منخفض · 0.3–0.7 متوسط · > 0.7 مرتفع'}</span></div>
                 <div><small>حجم الأثر (Cohen&apos;s d)</small><b>{fmt(s.cohenD, 2)}</b><span>{cohenLabel(s.cohenD)}</span></div>
                 <div><small>اختبار t للأزواج</small><b>{s.p === null ? '—' : s.p < 0.001 ? 'p < 0.001' : `p = ${s.p}`}</b><span>{s.t !== null ? `t = ${s.t} · df = ${s.df}` : 'يلزم زوجان فأكثر'}</span></div>
-                <div><small>اتجاه المتدربين</small><b><span className="g">{s.improved}▲</span> <span className="n">{s.same}■</span> <span className="r">{s.declined}▼</span></b><span>تحسّن · ثبات · تراجع</span></div>
+                <div><small>اتجاه المشاركين</small><b><span className="g">{s.improved}▲</span> <span className="n">{s.same}■</span> <span className="r">{s.declined}▼</span></b><span>تحسّن · ثبات · تراجع</span></div>
               </div>
             </div>
             <ul className="ir-story">{story.map((t, i) => <li key={i}>{t}</li>)}</ul>
@@ -176,7 +176,7 @@ function Inner() {
 
           {compare.length > 1 && (
             <section className="ir-card">
-              <h3><Icon name="compass" size={16} /> مقارنة أدوات القياس {programId ? 'في البرنامج' : 'في المنصة'}</h3>
+              <h3><Icon name="compass" size={16} /> مقارنة أدوات القياس {programId ? 'في البرنامج' : 'في البوّابة'}</h3>
               <table className="ir-table">
                 <thead><tr><th>الأداة</th><th>البرنامج</th><th>أزواج</th><th>قبل</th><th>بعد</th><th>الكسب</th><th>Hake g</th><th>الحكم</th></tr></thead>
                 <tbody>{compare.map(({ a: x, s: ss }) => <tr key={x.id} className={x.id === assessmentId ? 'cur' : ''} onClick={() => setAssessmentId(x.id)} style={{ cursor: 'pointer' }}><td><b>{x.title_ar}</b></td><td>{pName(x.program_id)}</td><td>{ss.nPaired}</td><td>{fmt(ss.pre.mean)}</td><td>{fmt(ss.post.mean)}</td><td className={ss.gain !== null && ss.gain > 0 ? 'up' : ''}>{ss.gain !== null && ss.gain > 0 ? '+' : ''}{fmt(ss.gain)}</td><td>{fmt(ss.hake, 2)}</td><td><span className="ir-g" style={{ background: ss.verdict.color }}>{ss.verdict.ar}</span></td></tr>)}</tbody>
@@ -185,8 +185,8 @@ function Inner() {
           )}
 
           <section className="ir-card">
-            <h3><Icon name="users" size={16} /> الأزواج المكتملة <span className="ir-pill">{pairs.length}</span> <small className="ir-muted">(معرّفات مُقنَّعة — لا تُعرض هوية المتدرب)</small></h3>
-            {!pairs.length && <p className="ir-muted">لا توجد أزواج بعد — يحتاج التقرير إلى متدربين أكملوا القياسين بنفس المعرّف.</p>}
+            <h3><Icon name="users" size={16} /> الأزواج المكتملة <span className="ir-pill">{pairs.length}</span> <small className="ir-muted">(معرّفات مُقنَّعة — لا تُعرض هوية المشارك)</small></h3>
+            {!pairs.length && <p className="ir-muted">لا توجد أزواج بعد — يحتاج التقرير إلى مشاركين أكملوا القياسين بنفس المعرّف.</p>}
             {pairs.length > 0 && (
               <table className="ir-table">
                 <thead><tr><th>#</th><th>المعرّف</th><th>الجنس</th><th>قبل</th><th>بعد</th><th>الفرق</th><th>الاتجاه</th></tr></thead>

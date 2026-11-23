@@ -19,14 +19,14 @@ function Inner() {
   return (
     <main className="pv" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <header className="pv-head"><span className="pt-kicker"><Icon name="shield" size={14} /> خزنة أَثَر · الصندوق الزجاجي</span><h1>إشعار الخصوصية</h1>
-        <p>هذه الصفحة ليست نصًّا كُتب مرة ونُسي: إنها تُولَّد الآن من <b>سجل أنشطة المعالجة</b> نفسه الذي تعمل به أَثَر. ما يظهر هنا هو ما تفعله البوابة فعلًا، بندًا بندًا، وفق <b>نظام حماية البيانات الشخصية</b> في المملكة العربية السعودية ولائحته التنفيذية.</p>
+        <p>هذه الصفحة ليست نصًّا كُتب مرة ونُسي: إنها تُولَّد الآن من <b>سجل أنشطة المعالجة</b> نفسه الذي تعمل به أَثَر. ما يظهر هنا هو ما تفعله البوّابة فعلًا، بندًا بندًا، وفق <b>نظام حماية البيانات الشخصية</b> في المملكة العربية السعودية ولائحته التنفيذية.</p>
         {n && <div className="pv-meta"><span>الإصدار {n.version}</span><span>{n.tables} نوع بيانات</span>{n.draft && <span className="pv-draft">مسودة بانتظار المراجعة النظامية</span>}<a href="/.well-known/privacy.json" target="_blank" rel="noreferrer" dir="ltr">privacy.json</a><Link href="/me/data" className="pt-btn small">افتح ذاكرتي</Link></div>}
       </header>
       {err && <p className="pv-err">{err}</p>}
       {n && (
         <>
           <section className="pv-box" id="controller"><h2><Icon name="home" size={18} /> من نحن</h2><p><b>{n.org.name}</b> — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ، تشغّلها <b>{n.org.legal}</b> (جهة التحكم) ويملك حقوقها {n.org.owner}. {n.org.contact ? <>جهة الاتصال لحماية البيانات: <a href={`mailto:${n.org.contact}`} dir="ltr">{n.org.contact}</a>.</> : 'جهة الاتصال لحماية البيانات تُعلن هنا فور ضبطها.'} ولك الحق في التظلّم لدى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p></section>
-          <section className="pv-box" id="data"><h2><Icon name="compass" size={18} /> ما نجمع — ولماذا — وإلى متى</h2><p className="pv-muted">كل بند أدناه حقيقي ومُطابق لما في قاعدة البيانات. البنود الموسومة «منصة التقييم» تخصّ منصة تقييم التدريب الأصلية التي تشغّلها الجهات عبر أَثَر.</p>
+          <section className="pv-box" id="data"><h2><Icon name="compass" size={18} /> ما نجمع — ولماذا — وإلى متى</h2><p className="pv-muted">كل بند أدناه حقيقي ومُطابق لما في قاعدة البيانات. البنود الموسومة «منصة التقييم» تخصّ بوّابة أَثَر الأصلية التي تشغّلها الجهات عبر أَثَر.</p>
             {n.categories.map(c => (
               <div key={c.id} className="pv-cat"><h3>{c.title_ar}</h3>
                 <div className="pv-table"><table><thead><tr><th>البيانات</th><th>ما فيها</th><th>لماذا</th><th>الأساس</th><th>كم نحتفظ</th><th>عند النسيان</th><th>من يصل</th></tr></thead><tbody>

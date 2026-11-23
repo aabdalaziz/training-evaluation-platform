@@ -9,13 +9,13 @@ export default function ProgramStatistics() {
       color: '#8E4A68',
     },
     {
-      title: 'إجمالي المتدربين',
+      title: 'إجمالي المشاركين',
       value: 1823,
       icon: '👨‍🎓',
       color: '#3F7F79',
     },
     {
-      title: 'إجمالي المدربين',
+      title: 'إجمالي المدرّبين',
       value: 42,
       icon: '👨‍🏫',
       color: '#8E4A68',

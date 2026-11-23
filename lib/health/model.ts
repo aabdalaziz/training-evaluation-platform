@@ -1,5 +1,5 @@
 /**
- * صحة المنصة — نموذج التقييم (دوال نقية)
+ * صحة البوّابة — نموذج التقييم (دوال نقية)
  */
 export type Status = 'ok' | 'warn' | 'bad' | 'info';
 export type Group = 'env' | 'cron' | 'mail' | 'data' | 'ai';
@@ -8,18 +8,18 @@ export type HealthCheck = { id: string; group: Group; label: string; status: Sta
 
 export type EnvSpec = { key: string; label: string; required: boolean; breaks: string; public?: boolean };
 export const ENV_SPECS: EnvSpec[] = [
-  { key: 'NEXT_PUBLIC_SUPABASE_URL', label: 'رابط Supabase', required: true, breaks: 'المنصة كلها', public: true },
+  { key: 'NEXT_PUBLIC_SUPABASE_URL', label: 'رابط Supabase', required: true, breaks: 'البوّابة كلها', public: true },
   { key: 'NEXT_PUBLIC_SUPABASE_ANON_KEY', label: 'مفتاح Supabase العام', required: true, breaks: 'تسجيل الدخول وكل الصفحات', public: true },
-  { key: 'SUPABASE_SERVICE_ROLE_KEY', label: 'مفتاح الخدمة (Service Role)', required: true, breaks: 'الكرون، البريد، تفريغ البيانات، سجل التدقيق التطبيقي، OTP بوابة المتدرب' },
-  { key: 'CRON_SECRET', label: 'سرّ الكرون', required: true, breaks: 'التقرير الأسبوعي، المتابعات اليومية، فحص الإشعارات، بريد المتدربين' },
+  { key: 'SUPABASE_SERVICE_ROLE_KEY', label: 'مفتاح الخدمة (Service Role)', required: true, breaks: 'الكرون، البريد، تفريغ البيانات، سجل التدقيق التطبيقي، OTP بوّابة المتعلّم' },
+  { key: 'CRON_SECRET', label: 'سرّ الكرون', required: true, breaks: 'التقرير الأسبوعي، المتابعات اليومية، فحص الإشعارات، بريد المشاركين' },
   { key: 'RESEND_API_KEY', label: 'مفتاح Resend للبريد', required: true, breaks: 'كل الرسائل: التقارير، الشهادات، المتابعات، الإشعارات، OTP' },
   { key: 'REPORTS_FROM_EMAIL', label: 'عنوان المُرسِل', required: false, breaks: 'لا شيء — الافتراضي «أَثَر <reports@athar-portal.com>» (نطاق متحقَّق في Resend)؛ اضبطه فقط لتغيير المُرسِل' },
   { key: 'NEXT_PUBLIC_SITE_URL', label: 'رابط الموقع العام', required: false, breaks: 'روابط البريد قد تشير إلى نطاق المعاينة بدل النطاق الرسمي', public: true },
   { key: 'AI_API_KEY', label: 'مفتاح الذكاء الاصطناعي', required: false, breaks: 'توليد الأدوات والملخص التنفيذي بالنموذج (يعمل البديل المحلي)' },
   { key: 'AI_PROVIDER', label: 'مزوّد الذكاء الاصطناعي', required: false, breaks: 'يُكتشف تلقائيًا من شكل المفتاح' },
   { key: 'AI_MODEL', label: 'اسم النموذج', required: false, breaks: 'يُكتشف تلقائيًا (أحدث نموذج متاح)' },
-  { key: 'NOTIFY_EMAILS', label: 'بريد تنبيهات الإدارة', required: false, breaks: 'تُرسل التنبيهات لمديري المنصة من جدول profiles' },
-  { key: 'TRAINEE_MAIL', label: 'بريد المتدربين التلقائي', required: false, breaks: 'يعمل افتراضيًا؛ ضع 0 للتعطيل' },
+  { key: 'NOTIFY_EMAILS', label: 'بريد تنبيهات الإدارة', required: false, breaks: 'تُرسل التنبيهات لمديري البوّابة من جدول profiles' },
+  { key: 'TRAINEE_MAIL', label: 'بريد المشاركين التلقائي', required: false, breaks: 'يعمل افتراضيًا؛ ضع 0 للتعطيل' },
   { key: 'AUDIT_RETENTION_DAYS', label: 'مدة الاحتفاظ بسجل التدقيق', required: false, breaks: 'الافتراضي 730 يومًا' },
 ];
 
@@ -67,22 +67,22 @@ export function evaluateHealth(raw: HealthRaw): HealthCheck[] {
   out.push({ id: 'db', group: 'data', label: 'الاتصال بقاعدة البيانات', status: raw.db.ok ? (raw.db.latencyMs != null && raw.db.latencyMs > 1500 ? 'warn' : 'ok') : 'bad', detail: raw.db.ok ? `يعمل · زمن الاستجابة ${raw.db.latencyMs ?? '—'} ms` : `فشل: ${raw.db.error || ''}` });
   // 3) الكرون
   const f = cronStatus(raw.crons.followups || raw.crons.notificationScan, 24, now);
-  out.push({ id: 'cron:followups', group: 'cron', label: 'المهمة اليومية (06:00): المتابعات · فحص الإشعارات · بريد المتدربين', status: f.status, detail: f.detail, hint: f.status === 'bad' || f.status === 'warn' ? 'تحقق من CRON_SECRET وأن vercel.json يحتوي /api/followups/send، ثم Vercel → Cron Jobs → Run' : undefined });
+  out.push({ id: 'cron:followups', group: 'cron', label: 'المهمة اليومية (06:00): المتابعات · فحص الإشعارات · بريد المشاركين', status: f.status, detail: f.detail, hint: f.status === 'bad' || f.status === 'warn' ? 'تحقق من CRON_SECRET وأن vercel.json يحتوي /api/followups/send، ثم Vercel → Cron Jobs → Run' : undefined });
   const d = cronStatus(raw.crons.digest, 24 * 7, now);
   out.push({ id: 'cron:digest', group: 'cron', label: 'المهمة الأسبوعية (الأحد 05:00): التقرير الدوري · الملخص الذكي · تنظيف السجل', status: d.status, detail: d.detail, hint: d.status === 'bad' || d.status === 'warn' ? 'تحقق من CRON_SECRET وأن vercel.json يحتوي /api/reports/digest' : undefined });
   if (raw.counts.subscriptions_active === 0) out.push({ id: 'cron:subs', group: 'cron', label: 'اشتراكات التقرير الأسبوعي', status: 'warn', detail: 'لا يوجد مشترك نشط — لن تصل رسالة الأحد لأحد', href: '/reports/center', hint: 'مركز التقارير → اشترك بالبريد' });
   else out.push({ id: 'cron:subs', group: 'cron', label: 'اشتراكات التقرير الأسبوعي', status: 'ok', detail: `${raw.counts.subscriptions_active} اشتراك نشط` });
   // 4) البريد
   const m = raw.mail7d; const failed = m.trainee_failed + m.certificates_failed; const sent = m.trainee_ok + m.reports + m.certificates_sent;
-  out.push({ id: 'mail:7d', group: 'mail', label: 'البريد خلال 7 أيام', status: !raw.env.RESEND_API_KEY ? 'bad' : failed > 0 && failed >= sent ? 'bad' : failed > 0 ? 'warn' : 'ok', detail: !raw.env.RESEND_API_KEY ? 'لا يمكن إرسال أي بريد — RESEND_API_KEY مفقود' : `${sent} رسالة ناجحة (${m.reports} تقارير · ${m.certificates_sent} شهادات · ${m.trainee_ok} متدربين)${failed ? ` · ${failed} فاشلة` : ''}`, hint: failed ? `آخر خطأ: ${m.last_failure || '—'}` : undefined });
+  out.push({ id: 'mail:7d', group: 'mail', label: 'البريد خلال 7 أيام', status: !raw.env.RESEND_API_KEY ? 'bad' : failed > 0 && failed >= sent ? 'bad' : failed > 0 ? 'warn' : 'ok', detail: !raw.env.RESEND_API_KEY ? 'لا يمكن إرسال أي بريد — RESEND_API_KEY مفقود' : `${sent} رسالة ناجحة (${m.reports} تقارير · ${m.certificates_sent} شهادات · ${m.trainee_ok} مشاركين)${failed ? ` · ${failed} فاشلة` : ''}`, hint: failed ? `آخر خطأ: ${m.last_failure || '—'}` : undefined });
   // 5) البيانات
   const c = raw.counts;
   out.push({ id: 'data:questions', group: 'data', label: 'أسئلة التقييم', status: c.questions === 0 ? 'bad' : 'ok', detail: c.questions === 0 ? 'لا توجد أسئلة — نماذج التقييم فارغة' : `${c.questions} سؤالًا`, href: '/admin/management' });
   out.push({ id: 'data:evals', group: 'data', label: 'التقييمات', status: c.evaluations === 0 ? 'info' : c.programs_active > 0 && c.evaluations_7d === 0 ? 'warn' : 'ok', detail: `${c.evaluations} إجمالًا · ${c.evaluations_7d} خلال 7 أيام${c.programs_active > 0 && c.evaluations_7d === 0 ? ' — برامج نشطة بلا تقييمات هذا الأسبوع' : ''}` });
   const ig = raw.integrity;
-  out.push({ id: 'data:rooms', group: 'data', label: 'برامج نشطة بلا قاعات/شُعب', status: ig.active_programs_without_rooms.length ? 'warn' : 'ok', detail: ig.active_programs_without_rooms.length ? list(ig.active_programs_without_rooms) : 'لا يوجد', href: '/admin/management?tab=rooms' });
-  out.push({ id: 'data:trainer', group: 'data', label: 'قاعات بلا مدرب', status: ig.rooms_without_trainer.length ? 'warn' : 'ok', detail: ig.rooms_without_trainer.length ? list(ig.rooms_without_trainer) : 'لا يوجد', href: '/admin/management?tab=rooms' });
-  out.push({ id: 'data:idle-trainers', group: 'data', label: 'مدربون بلا أي قاعة', status: ig.trainers_without_rooms.length ? 'info' : 'ok', detail: ig.trainers_without_rooms.length ? list(ig.trainers_without_rooms) : 'لا يوجد' });
+  out.push({ id: 'data:rooms', group: 'data', label: 'برامج نشطة بلا شُعب/شُعب', status: ig.active_programs_without_rooms.length ? 'warn' : 'ok', detail: ig.active_programs_without_rooms.length ? list(ig.active_programs_without_rooms) : 'لا يوجد', href: '/admin/management?tab=rooms' });
+  out.push({ id: 'data:trainer', group: 'data', label: 'شُعب بلا مدرّب', status: ig.rooms_without_trainer.length ? 'warn' : 'ok', detail: ig.rooms_without_trainer.length ? list(ig.rooms_without_trainer) : 'لا يوجد', href: '/admin/management?tab=rooms' });
+  out.push({ id: 'data:idle-trainers', group: 'data', label: 'مدرّبون بلا أي شعبة', status: ig.trainers_without_rooms.length ? 'info' : 'ok', detail: ig.trainers_without_rooms.length ? list(ig.trainers_without_rooms) : 'لا يوجد' });
   out.push({ id: 'data:silent', group: 'data', label: 'برامج نشطة بلا تقييمات منذ 14 يومًا', status: ig.active_programs_silent_14d.length ? 'warn' : 'ok', detail: ig.active_programs_silent_14d.length ? list(ig.active_programs_silent_14d) : 'لا يوجد', href: '/admin/attendance' });
   out.push({ id: 'data:ended', group: 'data', label: 'برامج انتهى تاريخها وما زالت «نشطة»', status: ig.programs_ended_still_active.length ? 'info' : 'ok', detail: ig.programs_ended_still_active.length ? list(ig.programs_ended_still_active) : 'لا يوجد', href: '/admin/management' });
   out.push({ id: 'data:roles', group: 'data', label: 'مستخدمون بلا دور', status: c.profiles_no_role ? 'warn' : 'ok', detail: c.profiles_no_role ? `${c.profiles_no_role} من ${c.profiles} — لن يستطيعوا الدخول للوحات` : `${c.profiles} مستخدمًا، كلهم بأدوار` });
@@ -123,7 +123,7 @@ export function healthAlerts(checks: HealthCheck[]): { dedupe_key: string; sever
   const out: { dedupe_key: string; severity: 'warn' | 'critical'; title: string; body: string; href: string }[] = [];
   for (const c of checks) {
     if (c.status !== 'bad' && !(c.status === 'warn' && (c.group === 'cron' || c.id === 'data:backup'))) continue;
-    if (c.group === 'env' || c.group === 'cron' || c.group === 'mail' || c.id === 'db' || c.id === 'data:backup') out.push({ dedupe_key: `health:${c.id}`, severity: c.status === 'bad' ? 'critical' : 'warn', title: `صحة المنصة: ${c.label}`, body: c.detail, href: '/admin/health' });
+    if (c.group === 'env' || c.group === 'cron' || c.group === 'mail' || c.id === 'db' || c.id === 'data:backup') out.push({ dedupe_key: `health:${c.id}`, severity: c.status === 'bad' ? 'critical' : 'warn', title: `صحة البوّابة: ${c.label}`, body: c.detail, href: '/admin/health' });
   }
   return out;
 }

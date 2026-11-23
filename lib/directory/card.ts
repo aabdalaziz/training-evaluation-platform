@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * هيئة أَثَر (P31) — الوثائق الموقَّعة Ed25519:
- *  - «شهادة توثيق عضو هيئة أَثَر» ATH-EX (خبير استشاري) / ATH-TR (مدرب): تصدر عند اعتماد الطاقم — بلا انتهاء، تُسحب عند الإيقاف. تحمل الاسم والوجه والمجالات وتاريخ الاعتماد وأعداد «ما شهده أَثَر» يومها. لا بريد.
+ *  - «شهادة توثيق عضو هيئة أَثَر» ATH-EX (خبير استشاري) / ATH-TR (مدرّب): تصدر عند اعتماد الطاقم — بلا انتهاء، تُسحب عند الإيقاف. تحمل الاسم والوجه والمجالات وتاريخ الاعتماد وأعداد «ما شهده أَثَر» يومها. لا بريد.
  *  - «عقد تعاون» ATH-CO: وثيقة واحدة بحاملَين (عضو الهيئة + أَثَر) تصدر حين يوقّع العضو ويوقّع أَثَر بصفته — تحمل العنوان والنطاق والمدة والطرفين، ولا تحمل الأجر.
  */
 import { VC_CONTEXTS, issuerBlock, statusEntry, documentDigest } from '../portal/vc';
@@ -14,7 +14,7 @@ import type { Profile, Face, Engagement, WitnessFacts } from './registry';
 export function buildCardDoc(inp: { code: string; face: Face; profile: Pick<Profile, 'name_ar' | 'name_en' | 'title_ar' | 'skill_names' | 'sectors' | 'services' | 'slug'>; facts: WitnessFacts; site: string; did: string; now?: Date; statusIndex: number | null }) {
   const now = inp.now || new Date(); const url = `${inp.site}/verify/vc?code=${encodeURIComponent(inp.code)}`; const page = `${inp.site}/${inp.face === 'expert' ? 'experts' : 'trainers'}/${inp.profile.slug || ''}`; const counts = witnessCounts(inp.facts);
   return {
-    '@context': VC_CONTEXTS, id: url, type: ['VerifiableCredential', 'OpenBadgeCredential'], name: inp.face === 'expert' ? 'Athar Faculty — Consulting Expert · عضو هيئة أَثَر — خبير استشاري' : 'Athar Faculty — Trainer · عضو هيئة أَثَر — مدرب',
+    '@context': VC_CONTEXTS, id: url, type: ['VerifiableCredential', 'OpenBadgeCredential'], name: inp.face === 'expert' ? 'Athar Faculty — Consulting Expert · عضو هيئة أَثَر — خبير استشاري' : 'Athar Faculty — Trainer · عضو هيئة أَثَر — مدرّب',
     issuer: issuerBlock(inp.did, inp.site), validFrom: now.toISOString(),
     credentialSubject: { type: ['AchievementSubject'], name: inp.profile.name_ar,
       achievement: { id: page, type: ['Achievement'], name: `Member of the Athar Faculty (${inp.face}) — ${inp.profile.title_ar}`, achievementType: 'Membership',

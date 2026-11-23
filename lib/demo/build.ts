@@ -22,7 +22,7 @@ export type Manifest = { org_id?: string; user_ids: string[]; member_ids: string
 export type RunRow = { id: number; slug: string; status: 'building' | 'ready' | 'destroying' | 'destroyed' | 'failed'; step_ar: string | null; log: LogEntry[]; manifest: Manifest; presenters: Presenter[]; anchor: string; built_by: string | null; built_at: string | null; destroyed_at: string | null; error_ar: string | null; created_at: string; updated_at: string };
 export type LogEntry = { at: string; step: string; ok: boolean; n?: number; note_ar?: string };
 export type Presenter = { training_no: string; pin: string; role: 'org_admin' | 'learner'; label_ar: string };
-export const STEPS_AR: Record<string, string> = { org: 'الجهة والسياسة المختومة', codes: 'الرموز التدريبية والحسابات', programs: 'البرامج والقاعات والتسجيلات', attendance: 'الحضور', impact: 'القياس القبلي والبعدي', transfer: 'نقل الأثر (مشرف ومتدرّب)', survey: 'الاستبيان الختامي', voices: 'سطور التطبيق الميداني', miaar: 'دعوتا مِعيار والنموذج المثبَّت', sessions: 'جلسات الاجتياز (24)', report: 'تقرير القيادة السابق وقراره', done: 'اكتمل' };
+export const STEPS_AR: Record<string, string> = { org: 'الجهة والسياسة المختومة', codes: 'الرموز التدريبية والحسابات', programs: 'البرامج والشُعب والتسجيلات', attendance: 'الحضور', impact: 'القياس القبلي والبعدي', transfer: 'نقل الأثر (مشرف ومتدرّب)', survey: 'الاستبيان الختامي', voices: 'سطور التطبيق الميداني', miaar: 'دعوتا مِعيار والنموذج المثبَّت', sessions: 'جلسات الاجتياز (24)', report: 'تقرير القيادة السابق وقراره', done: 'اكتمل' };
 export const STEP_ORDER = ['org', 'codes', 'programs', 'attendance', 'impact', 'transfer', 'survey', 'voices', 'miaar', 'sessions', 'report'];
 
 const nowIso = () => new Date().toISOString();
@@ -121,7 +121,7 @@ const STEP_FN: Record<string, (c: Ctx) => Promise<StepOut>> = {
     if (created.failed.length) throw new Error(`codes: ${created.failed[0].error}`);
     return { n: created.created.length, note_ar: `${created.created.length} حسابًا · ${created.skipped.length} متجاوزًا` };
   },
-  /* 3) البرامج والقاعات والتسجيلات */
+  /* 3) البرامج والشُعب والتسجيلات */
   async programs({ db, m, anchor }) {
     const legacyOrg = await safe<any[]>(() => db.from('programs').select('organization_id').not('organization_id', 'is', null).limit(1), []); const legacyOrgId = legacyOrg[0]?.organization_id || null;
     const userOf = await usersOf(db, m.org_id!); m.programs = {}; m.classrooms = {};
@@ -135,7 +135,7 @@ const STEP_FN: Record<string, (c: Ctx) => Promise<StepOut>> = {
         const er = await db.from('portal_enrollments').insert(rows).select('id'); if (er.error) throw new Error(`enrollments ${c.code}: ${er.error.message}`); for (const r of arr<any>(er.data)) m.enrollment_ids.push(String(r.id));
       }
     }
-    return { n: m.enrollment_ids.length, note_ar: `${m.program_ids.length} برامج · ${m.classroom_ids.length} قاعات · ${m.enrollment_ids.length} تسجيلًا` };
+    return { n: m.enrollment_ids.length, note_ar: `${m.program_ids.length} برامج · ${m.classroom_ids.length} شُعب · ${m.enrollment_ids.length} تسجيلًا` };
   },
   /* 4) الحضور: جلسات منتهية فقط (A كاملًا · B حتى اليوم) */
   async attendance({ db, o, m, anchor, R, run }) {
@@ -164,7 +164,7 @@ const STEP_FN: Record<string, (c: Ctx) => Promise<StepOut>> = {
     const ir = await db.from('impact_responses').insert(irows); if (ir.error) throw new Error(`impact_responses: ${ir.error.message}`);
     return { n: irows.length, note_ar: '24 قبلي · 22 بعدي' };
   },
-  /* 6) نقل الأثر بعد 30 يومًا من نهاية A: 20 متدرّبًا + 14 مشرفًا (الأيام −6…−2) */
+  /* 6) نقل الأثر بعد 30 يومًا من نهاية A: 20 مشاركًا + 14 مشرفًا (الأيام −6…−2) */
   async transfer({ db, o, m, anchor, R, run }) {
     const A = DEMO_PROGRAMS[0];
     const bf = await db.from('behavior_followups').insert({ program_id: m.programs!.A, title_ar: `متابعة نقل الأثر — ${A.name_ar}`, intro_ar: 'متابعة افتراضية للعرض', token: `rxbf${md5(`${run.id}:bf`).slice(0, 18)}`, status: 'open', due_days: 30, open_at: dayIso(anchor, A.end + 30), auto_send: false, sent_at: atIso(anchor, A.end + 30, 7), created_by: o.by.id, created_by_name: 'غرفة العرض' }).select('id').single();
@@ -172,9 +172,9 @@ const STEP_FN: Record<string, (c: Ctx) => Promise<StepOut>> = {
     const brows: any[] = [];
     ALL_A().slice(0, 20).forEach((i, k) => { const no = trainingNo(i); const day = -6 + (k % 5); const t = Math.round(62 + R() * 26); brows.push({ followup_id: bf.data.id, role: 'trainee', respondent_hash: md5(`${run.id}:t:${i}`), respondent_label: `…${String(i).padStart(3, '0')}`, trainee_key: syntheticEmail(no), trainee_label: no, answers: {}, scale_mean: +(3 + (t / 100) * 2).toFixed(2), application_pct: t, barriers: t < 70 ? ['ضيق الوقت'] : [], submitted_at: atIso(anchor, day, 13) }); if (k < 14) { const s = Math.max(40, Math.min(100, t - 4 + Math.round(R() * 10))); brows.push({ followup_id: bf.data.id, role: 'supervisor', respondent_hash: md5(`${run.id}:s:${i}`), respondent_label: 'مشرف', trainee_key: syntheticEmail(no), trainee_label: no, answers: {}, scale_mean: +(3 + (s / 100) * 2).toFixed(2), application_pct: s, barriers: [], submitted_at: atIso(anchor, day, 15) }); } });
     const br = await db.from('behavior_responses').insert(brows); if (br.error) throw new Error(`behavior_responses: ${br.error.message}`);
-    return { n: brows.length, note_ar: '20 متدرّبًا · 14 مشرفًا' };
+    return { n: brows.length, note_ar: '20 مشاركًا · 14 مشرفًا' };
   },
-  /* 7) الاستبيان الختامي (القالب الافتراضي END): 9 استجابات لكل قاعة في A — بند واحد ضعيف عمدًا ليظهر «بند الأسبوع» */
+  /* 7) الاستبيان الختامي (القالب الافتراضي END): 9 استجابات لكل شعبة في A — بند واحد ضعيف عمدًا ليظهر «بند الأسبوع» */
   async survey({ db, m, anchor, R, log }) {
     const A = DEMO_PROGRAMS[0]; let evN = 0;
     const tpls = await safe<any[]>(() => db.from('evaluation_templates').select('id,kind,is_default').eq('kind', 'END').limit(20), []);
@@ -304,5 +304,5 @@ export async function destroyDemo(db: Db, o: { by: Who; env?: Record<string, str
 }
 /** بطاقات العارضين (A6) — تُطبع من غرفة العرض؛ حسابات افتراضية فقط */
 export function presenterCards(run: RunRow, site: string) {
-  return (run.presenters || []).map((p) => ({ ...p, org_ar: DEMO_ORG.name_ar, enter_url: `${site}/enter?o=${DEMO_SLUG}`, note_ar: p.role === 'org_admin' ? 'يفتح بوابة الجهة: السياسة · تقرير القيادة · القرار' : 'يفتح الصفحة الشخصية /me — يرى صدى القرار' }));
+  return (run.presenters || []).map((p) => ({ ...p, org_ar: DEMO_ORG.name_ar, enter_url: `${site}/enter?o=${DEMO_SLUG}`, note_ar: p.role === 'org_admin' ? 'يفتح بوّابة الجهة: السياسة · تقرير القيادة · القرار' : 'يفتح الصفحة الشخصية /me — يرى صدى القرار' }));
 }

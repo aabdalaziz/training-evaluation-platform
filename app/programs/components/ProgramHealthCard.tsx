@@ -138,7 +138,7 @@ export default function ProgramHealthCard({
         }}
       >
         <Metric
-          title="رضا المتدربين"
+          title="رضا المشاركين"
           value="96%"
         />
 

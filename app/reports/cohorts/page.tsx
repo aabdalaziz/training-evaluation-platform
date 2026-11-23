@@ -72,7 +72,7 @@ function Inner() {
     <div className="co rm-page" dir="rtl">
       <style>{CSS}</style>
       <RoomHead
-        title={<>مقارنة الدفعات · عدالة تقييم المدربين · الملخص التنفيذي الذكي</>}
+        title={<>مقارنة الدفعات · عدالة تقييم المدرّبين · الملخص التنفيذي الذكي</>}
         desc={<><p>هل تتحسن الدفعات المتعاقبة للبرنامج نفسه؟ من يتفوق فعلًا بعد تصحيح أثر حجم العينة وصعوبة البرنامج؟ وما الذي يجب أن يقرأه المدير في 30 ثانية؟</p></>}
         actions={<>
           <button className="rm-btn" onClick={() => window.print()}><Icon name="print" size={16} /> طباعة</button>
@@ -84,7 +84,7 @@ function Inner() {
 
       <div className="co-tabs co-noprint">
         <button className={tab === 'cohorts' ? 'on' : ''} onClick={() => setTab('cohorts')}><Icon name="users" size={15} /> مقارنة الدفعات</button>
-        <button className={tab === 'trainers' ? 'on' : ''} onClick={() => setTab('trainers')}><Icon name="scale" size={15} /> المدربون بعدالة</button>
+        <button className={tab === 'trainers' ? 'on' : ''} onClick={() => setTab('trainers')}><Icon name="scale" size={15} /> المدرّبون بعدالة</button>
         <button className={tab === 'summary' ? 'on' : ''} onClick={() => setTab('summary')}><Icon name="compass" size={15} /> الملخص التنفيذي الذكي</button>
       </div>
 
@@ -93,7 +93,7 @@ function Inner() {
           <section className="rm-card co-noprint">
             <div className="co-filters">
               <label>البرنامج<select value={programId} onChange={e => setProgramId(e.target.value)}>{lk.programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
-              <label>تقسيم الدفعات<select value={mode} onChange={e => setMode(e.target.value as CohortMode)}><option value="classroom">حسب القاعة/الشعبة</option><option value="month">حسب الشهر</option><option value="quarter">حسب الربع</option></select></label>
+              <label>تقسيم الدفعات<select value={mode} onChange={e => setMode(e.target.value as CohortMode)}><option value="classroom">حسب الشعبة/الشعبة</option><option value="month">حسب الشهر</option><option value="quarter">حسب الربع</option></select></label>
             </div>
           </section>
           <div className="co-print-title">مقارنة الدفعات — {pName(programId)}</div>
@@ -115,7 +115,7 @@ function Inner() {
                 <section className="rm-card">
                   <h3><Icon name="table" size={16} /> تفاصيل الدفعات</h3>
                   <div className="co-tablewrap"><table className="rm-table">
-                    <thead><tr><th>الدفعة</th><th>الفترة</th><th>ن</th><th>المتوسط</th><th>Δ السابقة</th><th>Δ الأفضل</th><th>% منخفض</th><th>المدربون</th><th>الأدنى</th></tr></thead>
+                    <thead><tr><th>الدفعة</th><th>الفترة</th><th>ن</th><th>المتوسط</th><th>Δ السابقة</th><th>Δ الأفضل</th><th>% منخفض</th><th>المدرّبون</th><th>الأدنى</th></tr></thead>
                     <tbody>{rows.map(r => <tr key={r.key}><td><b>{r.label}</b></td><td><bdi>{r.from}</bdi>{r.to && r.to !== r.from ? <> → <bdi>{r.to}</bdi></> : ''}</td><td>{r.n}</td><td><span className={`co-st ${r.perf}`}>{r.mean ?? '—'}</span></td><td className={r.delta == null ? '' : r.delta > 0 ? 'up' : r.delta < 0 ? 'down' : ''}>{r.delta == null ? '—' : <bdi>{(r.delta > 0 ? '+' : '') + r.delta}</bdi>}</td><td>{r.vsBest == null ? '—' : <bdi>{r.vsBest}</bdi>}</td><td>{r.lowPct}%</td><td>{r.trainers.join('، ') || '—'}</td><td>{r.axes[r.axes.length - 1]?.label || '—'}</td></tr>)}</tbody>
                   </table></div>
                 </section>
@@ -133,9 +133,9 @@ function Inner() {
               <label>الفترة<select value={days} onChange={e => setDays(Number(e.target.value))}><option value={0}>كل الوقت</option><option value={30}>آخر 30 يومًا</option><option value={90}>آخر 90 يومًا</option><option value={180}>آخر 180 يومًا</option></select></label>
             </div>
           </section>
-          <div className="co-print-title">مقارنة المدربين بعدالة إحصائية</div>
+          <div className="co-print-title">مقارنة المدرّبين بعدالة إحصائية</div>
           <section className="rm-card co-how">
-            <b>كيف نُنصف المدرب؟</b> المتوسط الخام يظلم من درّس عينة صغيرة أو برنامجًا صعبًا. لذلك نعرض: <b>المعدّل</b> (انكماش بايزي نحو المتوسط العام {fair.globalMean ?? '—'} بقوة {fair.k} استبانات)، <b>السياق</b> (فرق المدرب عن متوسط برامجه)، و<b>± الثقة 95%</b>. الترتيب يعتمد المعدّل، ولا يُرتَّب من لديه أقل من 5 استبانات.
+            <b>كيف نُنصف المدرّب؟</b> المتوسط الخام يظلم من درّس عينة صغيرة أو برنامجًا صعبًا. لذلك نعرض: <b>المعدّل</b> (انكماش بايزي نحو المتوسط العام {fair.globalMean ?? '—'} بقوة {fair.k} استبيانات)، <b>السياق</b> (فرق المدرّب عن متوسط برامجه)، و<b>± الثقة 95%</b>. الترتيب يعتمد المعدّل، ولا يُرتَّب من لديه أقل من 5 استبيانات.
           </section>
           <div className="co-grid2">
             <section className="rm-card">
@@ -149,9 +149,9 @@ function Inner() {
             </section>
           </div>
           <section className="rm-card">
-            <h3><Icon name="table" size={16} /> جدول المدربين ({fair.rows.length})</h3>
+            <h3><Icon name="table" size={16} /> جدول المدرّبين ({fair.rows.length})</h3>
             <div className="co-tablewrap"><table className="rm-table">
-              <thead><tr><th>#</th><th>المدرب</th><th>ن</th><th>برامج</th><th>الخام</th><th>المعدّل</th><th>السياق</th><th>± ثقة</th><th>% منخفض</th><th>الثقة</th><th>الاتجاه</th></tr></thead>
+              <thead><tr><th>#</th><th>المدرّب</th><th>ن</th><th>برامج</th><th>الخام</th><th>المعدّل</th><th>السياق</th><th>± ثقة</th><th>% منخفض</th><th>الثقة</th><th>الاتجاه</th></tr></thead>
               <tbody>{fair.rows.map(r => <tr key={r.id} className={r.rank ? '' : 'dim'}><td>{r.rank ?? '—'}</td><td><b>{r.name}</b></td><td>{r.n}</td><td>{r.programs}</td><td>{r.raw ?? '—'}</td><td><span className={`co-st ${r.perf}`}>{r.adjusted ?? '—'}</span></td><td className={r.context == null ? '' : r.context > 0 ? 'up' : r.context < 0 ? 'down' : ''}>{r.context == null ? '—' : <bdi>{(r.context > 0 ? '+' : '') + r.context}</bdi>}</td><td>{r.ci == null ? '—' : <bdi>±{r.ci}</bdi>}</td><td>{r.lowPct}%</td><td><span className={`co-conf ${r.confidence}`}>{r.confidence === 'high' ? 'عالية' : r.confidence === 'medium' ? 'متوسطة' : r.confidence === 'low' ? 'منخفضة' : 'غير كافية'}</span></td><td className={r.delta == null ? '' : r.delta > 0 ? 'up' : r.delta < 0 ? 'down' : ''}>{r.delta == null ? '—' : <bdi>{(r.delta > 0 ? '+' : '') + r.delta}</bdi>}</td></tr>)}</tbody>
             </table></div>
           </section>

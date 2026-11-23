@@ -159,9 +159,9 @@ function ReportsCenter() {
     const t: { name: string; rows: (string | number)[][] }[] = [];
     const dim = (a: string, e: string) => (ar ? a : e);
     const s = new Set(report.sections);
-    if (s.has('trainerTable') || s.has('trainerBars')) t.push({ name: dim('المدربون', 'Trainers'), rows: groupRowsToTable(trainers, lang, dim('المدرب', 'Trainer')) });
+    if (s.has('trainerTable') || s.has('trainerBars')) t.push({ name: dim('المدرّبون', 'Trainers'), rows: groupRowsToTable(trainers, lang, dim('المدرّب', 'Trainer')) });
     if (s.has('programTable')) t.push({ name: dim('البرامج', 'Programs'), rows: groupRowsToTable(programs, lang, dim('البرنامج', 'Program')) });
-    if (s.has('classroomTable') || s.has('heatmap')) t.push({ name: dim('القاعات', 'Rooms'), rows: groupRowsToTable(classrooms, lang, dim('القاعة', 'Room')) });
+    if (s.has('classroomTable') || s.has('heatmap')) t.push({ name: dim('الشُّعب', 'Rooms'), rows: groupRowsToTable(classrooms, lang, dim('الشعبة', 'Room')) });
     if (s.has('axisBars') || s.has('strengthsGaps') || s.has('distribution')) t.push({ name: dim('المحاور', 'Axes'), rows: groupRowsToTable(axes, lang, dim('المحور', 'Axis')) });
     if (s.has('questionTable')) t.push({ name: dim('الأسئلة', 'Questions'), rows: groupRowsToTable(questions, lang, dim('السؤال', 'Question')) });
     if (s.has('trendLine') || s.has('weeklyTable')) {
@@ -195,7 +195,7 @@ function ReportsCenter() {
   const PPT_OPTS = { rtl: ar, footer: ar ? 'أَثَر · منصّة الجودة والتقييم' : 'Athar · Quality & Evaluation Platform' };
   const pptxSlides = (): PptSlide[] => {
     const slides: PptSlide[] = [];
-    slides.push({ title, subtitle: scopeText, bullets: [`${ar ? 'الجمهور' : 'Audience'}: ${report.audience[lang]}`, `${ar ? 'تاريخ الإعداد' : 'Generated'}: ${today} · Asia/Riyadh`, ar ? 'منصة تقويم البرامج التدريبية — النتائج مجمّعة ولا تعرض هوية المشاركين' : 'Training Evaluation Platform — aggregated, anonymous results'] });
+    slides.push({ title, subtitle: scopeText, bullets: [`${ar ? 'الجمهور' : 'Audience'}: ${report.audience[lang]}`, `${ar ? 'تاريخ الإعداد' : 'Generated'}: ${today} · Asia/Riyadh`, ar ? 'بوّابة أَثَر — النتائج مجمّعة ولا تعرض هوية المشاركين' : 'Training Evaluation Platform — aggregated, anonymous results'] });
     if (k.responses) {
       slides.push({ title: ar ? 'المؤشرات الرئيسة' : 'Key indicators', bullets: [
         `${ar ? 'المتوسط العام' : 'Overall mean'}: ${k.mean.toFixed(2)}/5 — ${ar ? 'الهدف' : 'target'} ${TARGET} (${ar ? 'الفجوة' : 'gap'} ${(k.mean - TARGET).toFixed(2)})`,
@@ -312,7 +312,7 @@ function ReportsCenter() {
               <button className="rc-btn" onClick={() => setMail(m => ({ ...m, open: false }))} disabled={mail.sending}>{ar ? 'إلغاء' : 'Cancel'}</button>
               <button className="rc-btn primary" onClick={sendMail} disabled={mail.sending}><Icon name="mail" size={15} /> {mail.sending ? (ar ? 'جارٍ الإرسال…' : 'Sending…') : (ar ? 'إرسال الآن' : 'Send now')}</button>
             </div>
-            <p className="rc-modal-foot">{ar ? 'تُرسل الرسالة من عنوان المنصة ويُسجَّل الإرسال في سجل التدقيق. الرد على الرسالة يصل إلى بريدك.' : 'Sent from the platform address and logged in the audit trail; replies go to your inbox.'}</p>
+            <p className="rc-modal-foot">{ar ? 'تُرسل الرسالة من عنوان البوّابة ويُسجَّل الإرسال في سجل التدقيق. الرد على الرسالة يصل إلى بريدك.' : 'Sent from the platform address and logged in the audit trail; replies go to your inbox.'}</p>
           </div>
         </div>
       )}
@@ -375,14 +375,14 @@ function ReportsCenter() {
                   <option value="">{ar ? 'كل البرامج' : 'All programs'}</option>
                   {programOpts.map(p => <option key={p.id} value={p.id}>{p.delivery_mode === 'remote' ? '💻 ' : ''}{ar ? p.name_ar : (p.name_en || p.name_ar)}</option>)}
                 </select></label>
-              <label><span>{ar ? 'المدرب' : 'Trainer'}</span>
+              <label><span>{ar ? 'المدرّب' : 'Trainer'}</span>
                 <select value={filters.trainerId} onChange={e => upd({ trainerId: e.target.value, classroomId: '' })}>
-                  <option value="">{ar ? 'كل المدربين' : 'All trainers'}</option>
+                  <option value="">{ar ? 'كل المدرّبين' : 'All trainers'}</option>
                   {trainerOpts.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select></label>
-              <label><span>{ar ? 'القاعة / المجموعة' : 'Room / group'}</span>
+              <label><span>{ar ? 'الشعبة' : 'Room / group'}</span>
                 <select value={filters.classroomId} onChange={e => upd({ classroomId: e.target.value })}>
-                  <option value="">{ar ? 'كل القاعات' : 'All rooms'}</option>
+                  <option value="">{ar ? 'كل الشُّعب' : 'All rooms'}</option>
                   {classroomOpts.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
                 </select></label>
               <label><span>{ar ? 'نوع التقييم' : 'Evaluation kind'}</span>
@@ -473,11 +473,11 @@ function Section({ id, lang, ctx }: { id: SectionId; lang: Lang; ctx: Ctx }) {
     case 'axisBars': return <Card title={ar ? '🧭 المحاور مقابل الهدف' : '🧭 Axes vs target'}><Bars rows={axes} lang={lang} /></Card>;
     case 'trendLine': return <Card title={ar ? '📈 الاتجاه الزمني (يومي) مع متوسط متحرك 3 أيام' : '📈 Daily trend with 3-day moving average'}><LineChart series={daily} lang={lang} /></Card>;
     case 'distribution': return <Card title={ar ? '📊 توزيع الدرجات 1–5' : '📊 Rating distribution 1–5'}><Distribution dist={k.dist} lang={lang} /></Card>;
-    case 'trainerBars': return <Card title={ar ? '🏅 ترتيب المدربين' : '🏅 Trainer ranking'}><Bars rows={trainers} lang={lang} showN /></Card>;
-    case 'trainerTable': return <Card title={ar ? '👨‍🏫 جدول أداء المدربين' : '👨‍🏫 Trainer performance table'}><GroupTable rows={trainers} lang={lang} dim={ar ? 'المدرب' : 'Trainer'} /></Card>;
+    case 'trainerBars': return <Card title={ar ? '🏅 ترتيب المدرّبين' : '🏅 Trainer ranking'}><Bars rows={trainers} lang={lang} showN /></Card>;
+    case 'trainerTable': return <Card title={ar ? '👨‍🏫 جدول أداء المدرّبين' : '👨‍🏫 Trainer performance table'}><GroupTable rows={trainers} lang={lang} dim={ar ? 'المدرّب' : 'Trainer'} /></Card>;
     case 'programTable': return <Card title={ar ? '📚 جدول البرامج' : '📚 Programs table'}><GroupTable rows={programs} lang={lang} dim={ar ? 'البرنامج' : 'Program'} /></Card>;
-    case 'classroomTable': return <Card title={ar ? '🏫 جدول القاعات / المجموعات' : '🏫 Rooms / groups table'}><GroupTable rows={classrooms.map(r => ({ ...r, label: `${r.label}${r.meta?.trainer_id ? ' — ' + labelFor('trainer', String(r.meta.trainer_id), lk, lang) : ''}` }))} lang={lang} dim={ar ? 'القاعة — المدرب' : 'Room — trainer'} /></Card>;
-    case 'heatmap': return <Card title={ar ? '🗺️ الخريطة الحرارية: المحاور × القاعات' : '🗺️ Heat map: axes × rooms'}><HeatMap evals={evals} facts={facts} lk={lk} lang={lang} /></Card>;
+    case 'classroomTable': return <Card title={ar ? '🏫 جدول الشُّعب' : '🏫 Rooms / groups table'}><GroupTable rows={classrooms.map(r => ({ ...r, label: `${r.label}${r.meta?.trainer_id ? ' — ' + labelFor('trainer', String(r.meta.trainer_id), lk, lang) : ''}` }))} lang={lang} dim={ar ? 'الشعبة — المدرّب' : 'Room — trainer'} /></Card>;
+    case 'heatmap': return <Card title={ar ? '🗺️ الخريطة الحرارية: المحاور × الشُّعب' : '🗺️ Heat map: axes × rooms'}><HeatMap evals={evals} facts={facts} lk={lk} lang={lang} /></Card>;
     case 'questionTable': return <Card title={ar ? '❓ تحليل الأسئلة (مرتبة من الأدنى)' : '❓ Question analysis (lowest first)'}><GroupTable rows={[...questions].sort((a, b) => a.mean - b.mean)} lang={lang} dim={ar ? 'السؤال' : 'Question'} extra={r => String(r.meta?.section || '')} extraLabel={ar ? 'المحور' : 'Axis'} /></Card>;
     case 'periodCompare': return <PeriodCompare cmp={cmp} lang={lang} />;
     case 'weeklyTable': return <Card title={ar ? '📅 الملخص الأسبوعي' : '📅 Weekly summary'}><GroupTable rows={weekly} lang={lang} dim={ar ? 'الأسبوع (من → إلى)' : 'Week (from → to)'} /></Card>;
@@ -578,7 +578,7 @@ function KpiStrip({ k, cmp, lang }: { k: Kpis; cmp: Comparison | null; lang: Lan
     { l: ar ? 'رضا مرتفع' : 'High ratings', v: `${k.highPct.toFixed(0)}%`, s: ar ? 'درجات 4–5' : 'scores 4–5', d: cmp?.deltaHighPct ?? null, suffix: '%' },
     { l: ar ? 'تقييمات منخفضة' : 'Low ratings', v: `${k.lowPct.toFixed(0)}%`, s: ar ? 'درجات 1–2' : 'scores 1–2', d: cmp?.deltaLowPct ?? null, suffix: '%', good: 'down' as const },
     { l: ar ? 'الفجوة للهدف' : 'Gap to target', v: (k.gap > 0 ? '-' : '+') + Math.abs(k.gap).toFixed(2), s: ar ? 'درجة' : 'points', color: k.gap > 0 ? '#B9544A' : '#2F6B66' },
-    { l: ar ? 'التغطية' : 'Coverage', v: k.rooms, s: `${ar ? 'قاعة' : 'rooms'} · ${k.trainers} ${ar ? 'مدرب' : 'trainers'} · ${k.days} ${ar ? 'يوم' : 'days'}` },
+    { l: ar ? 'التغطية' : 'Coverage', v: k.rooms, s: `${ar ? 'شعبة' : 'rooms'} · ${k.trainers} ${ar ? 'مدرّب' : 'trainers'} · ${k.days} ${ar ? 'يوم' : 'days'}` },
   ];
   return (
     <div className="rc-kpis">
@@ -721,7 +721,7 @@ function HeatMap({ evals, facts, lk, lang }: { evals: Evaluation[]; facts: Fact[
   const color = (m: number) => m >= THRESHOLDS.excellent ? '#BFE1DC' : m >= THRESHOLDS.good ? '#BFE1DC' : m >= THRESHOLDS.watch ? '#E9C98A' : '#F3C4B6';
   return (
     <div className="rc-tw"><table className="rc-tbl rc-heat">
-      <thead><tr><th>{ar ? 'القاعة \\ المحور' : 'Room \\ Axis'}</th>{axesKeys.map(a => <th key={a}>{a}</th>)}</tr></thead>
+      <thead><tr><th>{ar ? 'الشعبة \\ المحور' : 'Room \\ Axis'}</th>{axesKeys.map(a => <th key={a}>{a}</th>)}</tr></thead>
       <tbody>{rooms.map(r => <tr key={r}><td className="rc-td-l"><b>{labelFor('classroom', r, lk, lang)}</b><br /><small className="rc-muted">{labelFor('trainer', lk.classrooms.find(c => c.id === r)?.trainer_id || '', lk, lang)}</small></td>
         {axesKeys.map(a => { const v = cell.get(`${r}|${a}`); if (!v?.length) return <td key={a} className="rc-muted">—</td>; const m = v.reduce((x, y) => x + y, 0) / v.length; return <td key={a} className="ltr" style={{ background: color(m), fontWeight: 800 }}>{m.toFixed(2)}<br /><small style={{ fontWeight: 400 }}>n={v.length}</small></td>; })}
       </tr>)}</tbody>

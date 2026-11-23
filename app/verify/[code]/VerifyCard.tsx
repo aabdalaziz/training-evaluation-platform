@@ -56,7 +56,7 @@ export function VerifyCard({ code }: { code: string }) {
           </>
         )}
         <div className="vf-actions"><Link href="/verify" className="vf-btn ghost"><Icon name="search" size={15} /> تحقق من شهادة أخرى</Link></div>
-        <div className="vf-foot">نتيجة التحقق صادرة مباشرة من سجل الشهادات الرسمي للمنصة ولا تعرض أي بيانات شخصية إضافية.</div>
+        <div className="vf-foot">نتيجة التحقق صادرة مباشرة من سجل الشهادات الرسمي للبوّابة ولا تعرض أي بيانات شخصية إضافية.</div>
       </div>
     </div>
   );

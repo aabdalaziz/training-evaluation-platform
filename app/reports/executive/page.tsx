@@ -87,7 +87,7 @@ function verdictOf(summary,lang){
 /* ============ Axes & Recommendations ============ */
 function axisCategory(ar="",en=""){
   const s=`${ar} ${en}`.toLowerCase();
-  if(s.includes("مدرب")||s.includes("معلم")||s.includes("teacher")||s.includes("trainer"))return"trainer";
+  if(s.includes("مدرّب")||s.includes("معلم")||s.includes("teacher")||s.includes("trainer"))return"trainer";
   if(s.includes("تعليم")||s.includes("تعلم")||s.includes("مادة")||s.includes("محتوى")||s.includes("درس")||s.includes("حصة")||s.includes("learning")||s.includes("content"))return"education";
   if(s.includes("قاعة")||s.includes("تجهيز")||s.includes("facility")||s.includes("room"))return"facility";
   if(s.includes("وصول")||s.includes("استقبال")||s.includes("airport")||s.includes("arrival")||s.includes("reception"))return"arrival";
@@ -101,7 +101,7 @@ function axisCategory(ar="",en=""){
   return"general";
 }
 const RECS={
-  trainer:{ar:"رفع التفاعل داخل القاعة، استخدام أمثلة تطبيقية، تخصيص وقت للأسئلة، وتلخيص أهم النقاط نهاية الحصة.",en:"Increase engagement, practical examples, Q&A time, end-of-session summary.",owner:{ar:"شؤون المدربين",en:"Faculty Affairs"},days:14},
+  trainer:{ar:"رفع التفاعل داخل القاعة، استخدام أمثلة تطبيقية، تخصيص وقت للأسئلة، وتلخيص أهم النقاط نهاية الحصة.",en:"Increase engagement, practical examples, Q&A time, end-of-session summary.",owner:{ar:"شؤون المدرّبين",en:"Faculty Affairs"},days:14},
   education:{ar:"مراجعة وضوح المحتوى وملاءمته للمستوى، إضافة أنشطة تطبيقية قصيرة، وربط المحتوى بمخرجات التعلم.",en:"Review content clarity/level fit, add short activities, align with outcomes.",owner:{ar:"التطوير الأكاديمي",en:"Academic Development"},days:21},
   facility:{ar:"فحص الصوت والعرض والإنترنت قبل الجلسة، وتفعيل قناة سريعة للإبلاغ عن الأعطال.",en:"Pre-check AV/internet; fast issue-reporting channel.",owner:{ar:"الخدمات المساندة",en:"Support Services"},days:7},
   arrival:{ar:"تأكيد ترتيبات الوصول قبل 24 ساعة، تعليمات موحدة، مسؤول ميداني، ورقم دعم فوري.",en:"Confirm arrivals 24h ahead, unified instructions, field coordinator, live support.",owner:{ar:"إدارة البرنامج",en:"Program Office"},days:7},
@@ -389,7 +389,7 @@ function ComparisonBars({title,icon,data,avgLine,lang}){
             <div className="cmpline" style={{insetInlineStart:`${(avgLine/5)*100}%`}}/>
             <div className="cmpline gold" style={{insetInlineStart:`${(TARGET/5)*100}%`}}/>
           </div>
-          <small style={{color:"#B3A5AE",fontWeight:700}}>{isAr?`استبانات: ${r.count}`:`Forms: ${r.count}`}</small>
+          <small style={{color:"#B3A5AE",fontWeight:700}}>{isAr?`استبيانات: ${r.count}`:`Forms: ${r.count}`}</small>
         </div>);})}
       <div className="legend">
         <span><i style={{background:"#8E7F8A"}}/> {isAr?"المتوسط المؤسسي":"Institutional avg"}</span>
@@ -401,14 +401,14 @@ function ComparisonBars({title,icon,data,avgLine,lang}){
 function HeatMap({data,lang}){
   const isAr=lang==="ar";
   if(!data?.axes?.length||!data?.rooms?.length)
-    return(<div className="card"><h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × قاعات)":"Heat Map"}</span></h3><div className="empty">{isAr?"لا توجد بيانات كافية.":"Not enough data."}</div></div>);
+    return(<div className="card"><h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × شُعب)":"Heat Map"}</span></h3><div className="empty">{isAr?"لا توجد بيانات كافية.":"Not enough data."}</div></div>);
   return(
     <div className="card">
-      <h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × قاعات)":"Heat Map (Axes × Rooms)"}</span></h3>
+      <h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × شُعب)":"Heat Map (Axes × Rooms)"}</span></h3>
       <p className="cdesc">{isAr?"الأحمر منخفض، الأصفر متابعة، الأخضر جيد.":"Red low, yellow watch, green good."}</p>
       <div className="twrap">
         <table className="heat">
-          <thead><tr><th>{isAr?"المحور":"Axis"}</th>{data.rooms.map(r=>(<th key={r.id}>{isAr?"قاعة":"Room"} {r.code}</th>))}</tr></thead>
+          <thead><tr><th>{isAr?"المحور":"Axis"}</th>{data.rooms.map(r=>(<th key={r.id}>{isAr?"شعبة":"Room"} {r.code}</th>))}</tr></thead>
           <tbody>
             {data.axes.map(ax=>(
               <tr key={ax.axisLabel}>
@@ -530,15 +530,15 @@ export default function ExecutiveReportPage(){
         <div className="card noprint" style={{padding:16}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:10,alignItems:"center",gap:10}}>
             <b style={{color:NAVY,display:"inline-flex",alignItems:"center",gap:6}}><Icon name="filter" size={15}/>{isAr?"الفلاتر":"Filters"}</b>
-            <span className="badge" style={{background:"#F3E8EF",color:"#6A3350",direction:"ltr"}}>{isAr?"عدد الاستبانات":"Forms"}: {fRows.length}</span>
+            <span className="badge" style={{background:"#F3E8EF",color:"#6A3350",direction:"ltr"}}>{isAr?"عدد الاستبيانات":"Forms"}: {fRows.length}</span>
           </div>
           <div className="fgrid">
             <select className="sel" value={f.trainerId} onChange={e=>setF(o=>({...o,trainerId:e.target.value,classroomId:"ALL"}))}>
-              <option value="ALL">{isAr?"كل المدربين":"All trainers"}</option>
+              <option value="ALL">{isAr?"كل المدرّبين":"All trainers"}</option>
               {trainers.map(tr=>(<option key={tr.id} value={tr.id}>{tr.name}</option>))}
             </select>
             <select className="sel" value={f.classroomId} onChange={e=>setF(o=>({...o,classroomId:e.target.value}))} disabled={f.trainerId!=="ALL"&&rooms.length===0}>
-              <option value="ALL">{isAr?"كل القاعات":"All rooms"}</option>
+              <option value="ALL">{isAr?"كل الشُّعب":"All rooms"}</option>
               {rooms.map(c=>(<option key={c.id} value={c.id}>{c.code}</option>))}
             </select>
             <input className="inp" type="date" value={f.from} onChange={e=>setF(o=>({...o,from:e.target.value}))}/>
@@ -562,7 +562,7 @@ export default function ExecutiveReportPage(){
 
         {/* KPIs */}
         <div className="g4">
-          <MetricCard icon="doc" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={fRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={fRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:fRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
+          <MetricCard icon="doc" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={fRows.length} sub={isAr?"استبيان ضمن الفلاتر":"Forms in filters"} badge={fRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:fRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
           <MetricCard icon="chart" color={summary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${summary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${summary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-summary.mean).toFixed(2)}`:`Median: ${summary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-summary.mean).toFixed(2)}`} badge={{label:summary.perf.label,bg:summary.perf.bg,fg:summary.perf.fg}}/>
           <MetricCard icon="alert" color={highRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={highRisk} sub={isAr?"محاور تتطلب تدخلًا فوريًا":"Axes needing immediate action"}/>
           <MetricCard icon="trend" color={ORANGE} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${summary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا من إجمالي القياسات":"Dissatisfaction share"}/>
@@ -579,12 +579,12 @@ export default function ExecutiveReportPage(){
         <PriorityActions items={axis} lang={lang}/>
 
         <ComparisonBars
-          title={isAr?"مقارنة القاعات بالمتوسط المؤسسي":"Rooms vs Institutional Average"} icon="school"
-          data={roomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))}
+          title={isAr?"مقارنة الشُّعب بالمتوسط المؤسسي":"Rooms vs Institutional Average"} icon="school"
+          data={roomRank.map(r=>({id:r.id,label:(isAr?"شعبة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))}
           avgLine={summary.mean} lang={lang}/>
 
         <ComparisonBars
-          title={isAr?"ترتيب المدربين — محاور التعليم فقط (تقييم عادل)":"Trainer Ranking — Education Axes Only (Fair)"} icon="users"
+          title={isAr?"ترتيب المدرّبين — محاور التعليم فقط (تقييم عادل)":"Trainer Ranking — Education Axes Only (Fair)"} icon="users"
           data={trainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))}
           avgLine={summary.mean} lang={lang}/>
 
@@ -596,7 +596,7 @@ export default function ExecutiveReportPage(){
             <b>{isAr?"دليل قراءة التقرير:":"How to read:"}</b>{" "}
             {isAr?`ممتاز ≥${TARGET} | جيد ≥3.7 | مراقبة ≥3.0 | خطر <3.0 — "الفجوة" تقاس من الهدف ${TARGET}. N أقل من 5 = بيانات إرشادية فقط.`:`Excellent ≥${TARGET} | Good ≥3.7 | Watch ≥3.0 | Risk <3.0 — Gap measured from ${TARGET}. N<5 = indicative only.`}
           </div>
-          <div className="ltr" style={{whiteSpace:"nowrap"}}>{isAr?"منصة الجودة والتقييم":"Quality Platform"} — {reportDate}</div>
+          <div className="ltr" style={{whiteSpace:"nowrap"}}>{isAr?"بوّابة أَثَر":"Quality Platform"} — {reportDate}</div>
         </div>
       </div>
     </div>

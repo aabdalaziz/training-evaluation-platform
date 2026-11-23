@@ -77,7 +77,7 @@ function Inner() {
       <style>{CSS}</style>
       <RoomHead
         title={<>بطاقة البرنامج لصانع القرار</>}
-        desc={<><p>صفحة واحدة تجمع الحضور، رضا المتدربين، الكسب المعرفي، نقل الأثر، الشهادات، ومؤشرات النتائج — مع خلاصة وتوصيات. للطباعة PDF أو التصدير Excel بملف واحد.</p></>}
+        desc={<><p>صفحة واحدة تجمع الحضور، رضا المشاركين، الكسب المعرفي، نقل الأثر، الشهادات، ومؤشرات النتائج — مع خلاصة وتوصيات. للطباعة PDF أو التصدير Excel بملف واحد.</p></>}
         actions={<>
           <Link href={`/reports/chain${programId ? `?program=${programId}` : ''}`} className="rm-btn"><Icon name="trend" size={16} /> سلسلة الأثر</Link>
           <button className="rm-btn" onClick={() => window.print()} disabled={!rep}><Icon name="print" size={16} /> طباعة / PDF</button>
@@ -104,8 +104,8 @@ function Inner() {
               <div className="pr-meta">
                 {rep.program.name_en && <span dir="ltr">{rep.program.name_en}</span>}
                 <span><bdi>{rep.program.start_date || '—'}</bdi> ← <bdi>{rep.program.end_date || '—'}</bdi></span>
-                <span>{rep.rooms.length ? `القاعات: ${rep.rooms.map(r => r.code).join('، ')}` : 'بلا قاعات'}</span>
-                <span>{rep.trainers.length ? `المدربون: ${rep.trainers.join('، ')}` : 'بلا مدرب محدد'}</span>
+                <span>{rep.rooms.length ? `الشُّعب: ${rep.rooms.map(r => r.code).join('، ')}` : 'بلا شُعب'}</span>
+                <span>{rep.trainers.length ? `المدرّبون: ${rep.trainers.join('، ')}` : 'بلا مدرّب محدد'}</span>
               </div>
             </div>
             
@@ -124,7 +124,7 @@ function Inner() {
           <div className="rm-kpis">
             <div className="rm-kpi"><span>المشاركون</span><b>{rep.attendance.participants || (k?.participants ?? 0)}</b><small>{rep.attendance.sessions} جلسة حضور</small></div>
             <div className={`rm-kpi ${rep.attendance.avgPct != null && rep.attendance.avgPct < 80 ? 'warn' : ''}`}><span>متوسط الحضور</span><b>{rep.attendance.avgPct == null ? '—' : `${rep.attendance.avgPct}%`}</b><small>{rep.attendance.eligible80} مستوفٍ لشرط 80%</small></div>
-            <div className={`rm-kpi ${k && k.mean < TARGET ? 'warn' : ''}`}><span>رضا المتدربين</span><b>{k ? k.mean.toFixed(2) : '—'}</b><small>{k ? `${k.responses} استبانة · المستهدف ${TARGET}` : 'لا تقييمات'}</small></div>
+            <div className={`rm-kpi ${k && k.mean < TARGET ? 'warn' : ''}`}><span>رضا المشاركين</span><b>{k ? k.mean.toFixed(2) : '—'}</b><small>{k ? `${k.responses} استبيان · المستهدف ${TARGET}` : 'لا تقييمات'}</small></div>
             <div className="rm-kpi"><span>الكسب المعياري g</span><b>{l?.hake == null ? '—' : l.hake.toFixed(2)}</b><small>{l && l.nPaired ? `${l.nPaired} زوجًا · ${hakeLabel(l.hake).ar}` : 'لا قياس قبلي/بعدي'}</small></div>
             <div className="rm-kpi"><span>نقل الأثر</span><b>{t?.transfer_index ?? '—'}</b><small>{t ? `${t.n} استجابة · تطبيق ${t.app_all == null ? '—' : Math.round(t.app_all) + '%'}` : 'لا متابعة'}</small></div>
             <div className="rm-kpi"><span>مؤشرات النتائج</span><b>{rep.outcomes.index == null ? '—' : `${rep.outcomes.index}%`}</b><small>{rep.outcomes.rows.length ? `${rep.outcomes.measured}/${rep.outcomes.rows.length} مقاس` : 'لا مؤشرات'}</small></div>
@@ -134,7 +134,7 @@ function Inner() {
           <div className="pr-grid">
             {/* التقييم */}
             <section className="rm-card">
-              <h3><Icon name="star" size={15} /> رضا المتدربين (المستوى 1)</h3>
+              <h3><Icon name="star" size={15} /> رضا المشاركين (المستوى 1)</h3>
               {!k && <div className="rm-muted">لا توجد تقييمات لهذا البرنامج.</div>}
               {k && (
                 <>
@@ -196,7 +196,7 @@ function Inner() {
 
           {rep.evaluation.comments.length > 0 && (
             <section className="rm-card pr-comments">
-              <h3><Icon name="chat" size={15} /> من أصوات المتدربين</h3>
+              <h3><Icon name="chat" size={15} /> من أصوات المشاركين</h3>
               <div className="pr-quotes">{rep.evaluation.comments.slice(0, 6).map((cm, i) => <blockquote key={i} className={cm.sentiment}>«{cm.text.slice(0, 180)}{cm.text.length > 180 ? '…' : ''}»<small>{cm.question_ar}</small></blockquote>)}</div>
             </section>
           )}

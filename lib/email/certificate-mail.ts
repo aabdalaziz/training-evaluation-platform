@@ -36,7 +36,7 @@ export function buildCertificateEmailHtml(i: CertMailInput): string {
     <div style="margin-top:8px;font:12px Tahoma,Arial;color:#B3A5AE;direction:ltr">${esc(i.verifyUrl)}</div>
   </td></tr>
   <tr><td style="padding:14px 26px;background:#FBF4EE;border-top:1px solid #EADFD6;font:12px/1.7 Tahoma,Arial;color:#8E7F8A">
-    ${i.senderName ? `أُرسلت بواسطة: ${esc(i.senderName)} · ` : ''}${esc(i.unit)} — ${esc(i.issuer)}. هذه رسالة آلية من المنصة؛ الشهادة مرفقة بصيغة PDF.
+    ${i.senderName ? `أُرسلت بواسطة: ${esc(i.senderName)} · ` : ''}${esc(i.unit)} — ${esc(i.issuer)}. هذه رسالة آلية من البوّابة؛ الشهادة مرفقة بصيغة PDF.
   </td></tr>
 </table></td></tr></table></body></html>`;
 }

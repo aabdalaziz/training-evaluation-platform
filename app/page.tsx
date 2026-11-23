@@ -333,7 +333,7 @@ function Heard({ lang }: { lang: 'ar' | 'en' }) {
       <div className="pt-wrap">
         <div className="hm-sechead light"><div><span className="pt-kicker"><Icon name="mic" size={14} /> {ar ? 'سمعناكم · لقاء التأمل الأسبوعي للشعبة' : 'We heard you · weekly reflection hour'}</span><h2>{ar ? 'سمعناكم — سطور كتبتها شُعبنا هذا الأسبوع' : 'We heard you — lines our sections wrote this week'}</h2><p className="hm-dailysub" data-testid="hd-head">{ar ? d.head_ar : `Sections sealed their lines in «Athar Hour» this week — ${d.sections} sections, ${d.people} trainees, no names.`}</p></div><a className="hm-memlink" href="/me/hour">{ar ? 'ساعة أَثَر لشعبتك ←' : 'Your section’s hour →'}</a></div>
         <ol className="hd-list" data-testid="hd-list">{d.items.map((it, i) => <li key={it.day} className={`hd-item ${i < shown ? 'in' : ''}`} data-testid="hd-item" onPointerDown={() => down(it, i)} onPointerUp={up} onPointerLeave={up} onContextMenu={(e) => { e.preventDefault(); copy(it, i); }} title={ar ? 'اضغط مطوّلًا لنسخ السطر' : 'Long-press to copy'}><span className="hd-day">{it.weekday_ar}</span><p>{it.line}</p>{copied === i && <small className="hd-copied">{ar ? 'نُسخ — «شعبة في أَثَر»' : 'Copied'}</small>}</li>)}</ol>
-        <small className="hd-foot">{ar ? 'كل سطر كتبته شعبة كاملة واختارته بالتصويت وختمه أستاذها في «ساعة أَثَر» — بلا اسم شعبة ولا برنامج ولا متدرّب. لا يدخل أي تقييم.' : 'Each line was written by a whole section, chosen by vote and sealed by its instructor in «Athar Hour» — no section, program or trainee names. Never part of any assessment.'}</small>
+        <small className="hd-foot">{ar ? 'كل سطر كتبته شعبة كاملة واختارته بالتصويت وختمه أستاذها في «ساعة أَثَر» — بلا اسم شعبة ولا برنامج ولا مشارك. لا يدخل أي تقييم.' : 'Each line was written by a whole section, chosen by vote and sealed by its instructor in «Athar Hour» — no section, program or trainee names. Never part of any assessment.'}</small>
       </div>
     </section>
   );
@@ -371,7 +371,7 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
                   {busy && <div className="hm-turn persona"><small>{s.persona.name}</small><div className="hm-think"><i /><i /><i /></div></div>}
                   {score && (
                     <div className="hm-score">
-                      <div className="hm-scorehead"><b>{score.total}<small>/100</small></b><div><span>{bandLabel(score.total, lang)}</span><small>{ar ? 'تقييم أولي بمعيار معلن — يعتمده مدرب بشري في النسخة الكاملة' : 'Preliminary rubric score — approved by a human trainer in the full version'}</small></div></div>
+                      <div className="hm-scorehead"><b>{score.total}<small>/100</small></b><div><span>{bandLabel(score.total, lang)}</span><small>{ar ? 'تقييم أولي بمعيار معلن — يعتمده مدرّب بشري في النسخة الكاملة' : 'Preliminary rubric score — approved by a human trainer in the full version'}</small></div></div>
                       <div className="hm-crit">{score.criteria.map(c => { const r = s.rubric.find(x => x.key === c.key); return <div key={c.key}><span>{r?.title_ar || c.key}</span><i><b style={{ width: `${c.score}%` }} /></i><em>{c.score}</em></div>; })}</div>
                       {!!score.improve.length && <p><b>{ar ? 'لتتحسن:' : 'To improve:'}</b> {score.improve[0]}</p>}
                       <div className="pt-chips"><Link href="/sim" className="pt-btn gold small">{ar ? 'كل مواقف المحاكاة' : 'All simulation situations'}</Link><Link href="/me" className="pt-btn light small">{ar ? 'سجّل الدخول ليُحفظ الدليل' : 'Sign in to keep the evidence'}</Link><button type="button" className="pt-btn outline small" onClick={start}>{ar ? 'أعد المحاولة' : 'Try again'}</button></div>
@@ -395,7 +395,7 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
               <><h3>{ar ? 'نُعدّ الجلسة القادمة' : 'Next session is being prepared'}</h3><p className="hm-nextdesc">{ar ? 'جلسات حوارية مباشرة مع خبراء في تعليم العربية وتصميم التدريب وقياس الأثر. اترك سؤالك وسنبني الجلسة حوله.' : 'Live dialogues with experts in Arabic teaching, training design and impact measurement. Leave your question and we will build the session around it.'}</p><div className="pt-chips"><Link href="/live" className="pt-btn light small">{ar ? 'جدول الجلسات' : 'Schedule'}</Link></div></>
             )}
             <div className="hm-roombox" data-testid="roombox">
-              <b><Icon name="users" size={15} /> {ar ? 'غرفة أَثَر الصغيرة — فيديو من داخل المنصة' : 'Athar small room — in-platform video'}</b>
+              <b><Icon name="users" size={15} /> {ar ? 'غرفة أَثَر الصغيرة — فيديو من داخل البوّابة' : 'Athar small room — in-platform video'}</b>
               <p>{ar ? 'حتى 6 أشخاص، بلا تطبيق ولا رابط خارجي: افتح غرفة حوار الآن وشارك رمزها، أو ادخل برمز وصلك.' : 'Up to 6 people, no app or external link: open a dialogue room now and share its code, or join with a code.'}</p>
               <div className="hm-roomrow">
                 {tok ? <button type="button" className="pt-btn gold small" onClick={openRoom} disabled={roomBusy}>{roomBusy ? (ar ? 'نفتح الغرفة…' : 'Opening…') : (ar ? 'افتح غرفة حوار الآن' : 'Open a room now')}</button> : <Link href="/me" className="pt-btn gold small">{ar ? 'سجّل الدخول لفتح غرفة' : 'Sign in to open a room'}</Link>}
@@ -405,7 +405,7 @@ function Dialogue({ lang, tok, sessions, now }: { lang: 'ar' | 'en'; tok: string
             </div>
             <div className="hm-askguest">
               <b>{ar ? 'اطرح سؤالك على الضيف مسبقًا' : 'Ask the guest in advance'}</b>
-              {qSent ? <div className="hm-ok light"><Icon name="check" size={14} /> {qSent}</div> : <><textarea value={qs} onChange={e => setQs(e.target.value)} rows={2} maxLength={400} placeholder={ar ? 'سؤالك…' : 'Your question…'} /><div className="hm-askrow"><input value={qEmail} onChange={e => setQEmail(e.target.value)} type="email" placeholder={ar ? 'بريدك للرد' : 'Email for reply'} /><button type="button" className="pt-btn gold small" onClick={sendQ} disabled={qs.trim().length < 5 || !qEmail}>{ar ? 'أرسل' : 'Send'}</button></div></>}
+              {qSent ? <div className="hm-ok light"><Icon name="check" size={14} /> {qSent}</div> : <><textarea value={qs} onChange={e => setQs(e.target.value)} rows={2} maxLength={400} placeholder={ar ? 'سؤالك…' : 'Your question…'} /><div className="hm-askrow"><input value={qEmail} onChange={e => setQEmail(e.target.value)} type="email" placeholder={ar ? 'بريدك للرد' : 'Email for reply'} /><button type="button" className="pt-btn gold small" onClick={sendQ} disabled={qs.trim().length < 5 || !qEmail}>{ar ? 'إرسال' : 'Send'}</button></div></>}
             </div>
           </div>
         </div>

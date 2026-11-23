@@ -3,7 +3,7 @@
 /**
  * «مِران» — /miaar/practice/<ML-code> (م10): تدريب ما بين الحكم والإعادة
  *  بلا حساب — برمز النتيجة نفسه. شريط 14 يومًا · «تمرين اليوم» (5 بنود بتغذية راجعة فورية، أو «يوم المرآة») · مطلب كتابة/تحدّث قصير للمهارة الإنتاجية
- *  مع مرآة نصّ محلية و«تمرين مزدوج» (اليوم 1 بجانب اليوم 12) · «رفيق التمرين» (ملاحظة المدرّب نصًّا أو صوتًا) · «مرآة التحسّن» (نسبة الوحدة يوم الحكم ← اليوم)
+ *  مع مرآة نصّ محلية و«تمرين مزدوج» (اليوم 1 بجانب اليوم 12) · «رفيق التمرين» (ملاحظة الميسّر نصًّا أو صوتًا) · «مرآة التحسّن» (نسبة الوحدة يوم الحكم ← اليوم)
  *  · مؤشّر الجاهزية (ليس حكمًا). WCAG 2.2 AA: أزرار ≥ 40px · aria-live للتغذية الراجعة · تباين · تنقّل بلوحة المفاتيح.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -47,22 +47,22 @@ export default function PracticeApp({ code, fontClass = '' }: { code: string; fo
   const r = v?.الجاهزية;
   const DAY0 = v?.النوع === 'placement' ? 'يوم التشخيص' : 'يوم الحكم'; /* م11: نقطة «قبل» في المرآة */
   return <div className={`mp ${fontClass}`} dir="rtl" lang="ar" data-testid="mp-page">
-    <div className="mp-top"><header className="mp-head"><div className="mp-brandside"><a className="mp-brand" href="/">أَثَر<small>بوابة التميّز للاستشارات والتدريب</small></a><a className="mp-mark" href="/miaar">مِعيار</a></div>
+    <div className="mp-top"><header className="mp-head"><div className="mp-brandside"><a className="mp-brand" href="/">أَثَر<small>بوّابة التميّز للاستشارات والتدريب</small></a><a className="mp-mark" href="/miaar">مِعيار</a></div>
       <a className="mp-lnk" href={`/miaar/result/${encodeURIComponent(code)}`} data-testid="mp-back-result">← بطاقة نتيجتي</a></header><WayBar lang="ar" /></div>
     {!v && !err && <p className="mp-wait" role="status">جارٍ فتح مِران…</p>}
-    {err && <section className="mp-wrap"><div className="mp-card"><p className="mp-err" role="alert" data-testid="mp-nf">{err === 'noplan' ? 'لا خطّة مِران معتمدة لهذا الرمز بعد — حين يعتمدها مدرّبك يصلك تنبيه.' : 'لم نجد هذا الرمز.'}</p><a className="mp-btn ghost" href={`/miaar/result/${encodeURIComponent(code)}`}>إلى بطاقة النتيجة</a></div></section>}
+    {err && <section className="mp-wrap"><div className="mp-card"><p className="mp-err" role="alert" data-testid="mp-nf">{err === 'noplan' ? 'لا خطّة مِران معتمدة لهذا الرمز بعد — حين يعتمدها ميسّرك يصلك تنبيه.' : 'لم نجد هذا الرمز.'}</p><a className="mp-btn ghost" href={`/miaar/result/${encodeURIComponent(code)}`}>إلى بطاقة النتيجة</a></div></section>}
     {v && <>
       <section className="mp-band"><p className="mp-kicker" data-testid="mp-kicker" data-kind={v.النوع || 'exit'}>{v.النوع === 'placement' ? 'مِران البداية · أول أسبوعين قبل أول درس' : 'مِران · تدريب ما بين الحكم والإعادة'} · مستوى {v.المستوى}{v.المهارة ? ` · ${SK[v.المهارة] || v.المهارة}` : ''}</p>
         <h1 data-testid="mp-title">{v.انتهت ? 'انتهت أيامك الأربعة عشر' : v.اليوم > 0 ? `اليوم ${v.اليوم} من 14` : 'تبدأ قريبًا'} · {v.name}</h1>
         <p className="mp-lead"><span className={`mp-ready ${r?.state}`} data-testid="mp-ready" data-state={r?.state}>{r?.label_ar}</span> {r?.sentence_ar}</p></section>
       <div className="mp-wrap">
-        <ol className="mp-days" aria-label="أيام الخطّة">{v.الأيام.map((d) => <li key={d.d} className={`mp-day ${d.kind} ${d.done ? 'done' : ''} ${d.today ? 'today' : ''} ${!d.done && d.d < v.اليوم ? 'missed' : ''}`} data-testid="mp-day" data-done={d.done ? '1' : '0'} title={`${d.unit_title}${d.done ? ` · ${d.correct}/${d.n}` : ''}`}><b>{d.d}</b><span>{d.kind === 'mirror' ? '🪞' : d.unit ? d.unit.split('-')[1] : ''}</span>{d.done && <i aria-label="أُنجز">✓</i>}{d.has_note && <em aria-label="ملاحظة من مدرّبك">✎</em>}</li>)}</ol>
+        <ol className="mp-days" aria-label="أيام الخطّة">{v.الأيام.map((d) => <li key={d.d} className={`mp-day ${d.kind} ${d.done ? 'done' : ''} ${d.today ? 'today' : ''} ${!d.done && d.d < v.اليوم ? 'missed' : ''}`} data-testid="mp-day" data-done={d.done ? '1' : '0'} title={`${d.unit_title}${d.done ? ` · ${d.correct}/${d.n}` : ''}`}><b>{d.d}</b><span>{d.kind === 'mirror' ? '🪞' : d.unit ? d.unit.split('-')[1] : ''}</span>{d.done && <i aria-label="أُنجز">✓</i>}{d.has_note && <em aria-label="ملاحظة من ميسّرك">✎</em>}</li>)}</ol>
         <p className="mp-hint">أنجزت <b data-testid="mp-done">{v.أُنجز}</b> من 14 · اليوم الفائت لا يضيع — يعود إليك بعد يومك الحالي.</p>
 
         {card ? <section className="mp-card mp-today" data-testid="mp-card" data-day={card.d} data-kind={card.kind}>
           <p className="mp-k">{card.kind === 'mirror' ? '🪞 يوم المرآة' : `تمرين اليوم ${card.d}`}{card.unit ? ` · ${card.unit}` : ''}</p>
           <h2>{card.unit_title}</h2>{card.focus_ar && <p className="mp-focus">{card.focus_ar}</p>}
-          {(card.note_ar || card.note_audio) && <div className="mp-note" data-testid="mp-note"><b>رفيق التمرين — من مدرّبك:</b>{card.note_ar && <p>{card.note_ar}</p>}{card.note_audio && <audio controls src={card.note_audio} preload="none" aria-label="ملاحظة صوتية من مدرّبك" />}</div>}
+          {(card.note_ar || card.note_audio) && <div className="mp-note" data-testid="mp-note"><b>رفيق التمرين — من ميسّرك:</b>{card.note_ar && <p>{card.note_ar}</p>}{card.note_audio && <audio controls src={card.note_audio} preload="none" aria-label="ملاحظة صوتية من ميسّرك" />}</div>}
           {total > 0 && <p className="mp-prog" aria-live="polite">{done}/{total} بنود{done === total ? ' — أتممت بنود اليوم' : ''}</p>}
           {[...byPassage.entries()].map(([pid, qs]) => { const p = pid ? passages.get(pid) : null; return <div key={pid || 'none'} className="mp-group">
             {p && <div className="mp-passage"><b>{p.title}</b>{p.skill === 'listening' && p.audioUrl ? <audio controls src={p.audioUrl} preload="none" /> : <p>{p.text}</p>}</div>}

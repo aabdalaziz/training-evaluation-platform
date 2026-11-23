@@ -52,13 +52,13 @@ export function parseSummary(text: string): Omit<ExecSummary, 'source'> | null {
 /** بديل محلي قائم على القواعد — يعمل دائمًا */
 export function localSummary(f: SummaryFacts): ExecSummary {
   const k = f.kpis;
-  if (!k) return { headline: `لا توجد تقييمات في ${f.period} (${f.scope}).`, bullets: ['لم تصل استبانات خلال الفترة — تحقق من فتح التقييمات وروابط QR.'], risks: [], actions: ['تأكد من تفعيل التقييم اليومي في القاعات النشطة.'], source: 'local' };
+  if (!k) return { headline: `لا توجد تقييمات في ${f.period} (${f.scope}).`, bullets: ['لم تصل استبيانات خلال الفترة — تحقق من فتح التقييمات وروابط QR.'], risks: [], actions: ['تأكد من تفعيل التقييم اليومي في الشُّعب النشطة.'], source: 'local' };
   const gap = r2(k.mean - TARGET); const dir = f.deltaMean == null ? '' : f.deltaMean > 0 ? ` بتحسّن قدره ${Math.abs(f.deltaMean)} عن الفترة السابقة` : f.deltaMean < 0 ? ` بتراجع قدره ${Math.abs(f.deltaMean)} عن الفترة السابقة` : ' دون تغيير عن الفترة السابقة';
-  const headline = `${k.responses} استبانة من ${k.participants} مشاركًا بمتوسط ${k.mean}/5 (${gap >= 0 ? 'فوق' : 'دون'} المستهدف ${TARGET} بـ${Math.abs(gap)})${dir}.`;
+  const headline = `${k.responses} استبيان من ${k.participants} مشاركًا بمتوسط ${k.mean}/5 (${gap >= 0 ? 'فوق' : 'دون'} المستهدف ${TARGET} بـ${Math.abs(gap)})${dir}.`;
   const bullets: string[] = [];
   if (f.axesTop[0]) bullets.push(`أقوى المحاور: ${f.axesTop.map(a => `${a.label} (${a.mean})`).join('، ')}.`);
   if (f.axesLow[0]) bullets.push(`أضعف المحاور: ${f.axesLow.map(a => `${a.label} (${a.mean})`).join('، ')}.`);
-  bullets.push(`${k.highPct}% تقييمات مرتفعة (4–5) مقابل ${k.lowPct}% منخفضة (1–2) عبر ${k.programs} برنامج و${k.trainers} مدربًا.`);
+  bullets.push(`${k.highPct}% تقييمات مرتفعة (4–5) مقابل ${k.lowPct}% منخفضة (1–2) عبر ${k.programs} برنامج و${k.trainers} مدرّبًا.`);
   if (f.programs.length >= 2) bullets.push(`أعلى برنامج: ${f.programs[0].label} (${f.programs[0].mean}) · أدنى برنامج: ${f.programs[f.programs.length - 1].label} (${f.programs[f.programs.length - 1].mean}).`);
   if (f.extras?.chain_index != null) bullets.push(`مؤشر سلسلة الأثر على مستوى المؤسسة: ${f.extras.chain_index}/100.`);
   const risks: string[] = [];

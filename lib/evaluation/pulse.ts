@@ -28,7 +28,7 @@ const r2 = (x: number) => Math.round(x * 100) / 100;
 export const cohortKey = (e: PulseEval) => e.classroom_id || e.program_id;
 const when = (e: PulseEval) => e.submitted_at || e.created_at || '';
 
-/** ترتيب الأقسام كما في رحلة المتدرّب؛ الأقسام غير المعروفة (قوالب خاصة) تأتي بعدها بترتيب الظهور */
+/** ترتيب الأقسام كما في رحلة المشارك؛ الأقسام غير المعروفة (قوالب خاصة) تأتي بعدها بترتيب الظهور */
 export function sectionOrder(name: string): number { const i = END_SURVEY_SECTIONS_AR.indexOf(name); return i < 0 ? 100 : i; }
 
 export function tone(m: number): 'ok' | 'good' | 'warn' | 'bad' { return m >= 4.2 ? 'ok' : m >= 3.7 ? 'good' : m >= 3 ? 'warn' : 'bad'; }

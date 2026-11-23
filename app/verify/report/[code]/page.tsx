@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /verify/report/[code] — التحقّق العام من تقرير تعلّم معتمَد (P46): البرنامج والفترة والمعتمِد فقط — بلا أسماء طلاب ولا درجات */
+/** /verify/report/[code] — التحقّق العام من تقرير تعلّم معتمَد (P46): البرنامج والفترة والمعتمِد فقط — بلا أسماء مشاركين ولا درجات */
 import { PortalShell } from '../../../components/PortalShell';
 import { ReportVerify } from '../../../components/Reports';
 

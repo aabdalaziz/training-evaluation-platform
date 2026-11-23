@@ -5,8 +5,8 @@
  *  predecessorLines «قال من سبقك»: portal_grad_pages (مختومة · غير مُبطلة · live_public) لهذا البرنامج ولكل برنامج يحمل اسمه نفسه (دفعات سابقة بمعرّف آخر)
  *                   — السطر من جسم الختم (ثابت) · أشخاص مختلفون ≥ 5 · خلط يومي ثابت · ≤ 7 · لا أسماء
  *  writeWhy        «لماذا جئتُ» → writeLetter (P62) بأفق التخرّج وسياق first_day — لا تُحسب ضمن الرسائل الثلاث · واحدة لكل برنامج
- *  runFirstDays    (ضمن الكرون اليومي القائم): 🌅 «اليوم يومك الأول» للمتدرّب يوم start_date (يُدفع) · «اكتب كلمة الاستقبال» للمدرّب قبلها بيوم (داخل أَثَر)
- *                  · «سطرك ينتظر N متدرّبًا» لخرّيجٍ أظهر سطره حين تبدأ دفعة جديدة من خمسة فأكثر (داخل أَثَر) — لا رجعية؛ dedupe لكل شيء
+ *  runFirstDays    (ضمن الكرون اليومي القائم): 🌅 «اليوم يومك الأول» للمشارك يوم start_date (يُدفع) · «اكتب كلمة الاستقبال» للمدرّب قبلها بيوم (داخل أَثَر)
+ *                  · «سطرك ينتظر N مشاركًا» لخرّيجٍ أظهر سطره حين تبدأ دفعة جديدة من خمسة فأكثر (داخل أَثَر) — لا رجعية؛ dedupe لكل شيء
  */
 import { writeLetter, LETTER_COLS } from '../letters/store';
 import { entryOfEmail, entryView } from './entry'; /* P71 «يوم دخلتُ» */
@@ -73,7 +73,7 @@ async function roomsOf(db: Db, programId: string): Promise<{ id: string; code: s
 async function welcomeOf(db: Db, me: Me, roomIds: Set<string>): Promise<FirstView['welcome']> {
   try { const { data: n } = await db.from('portal_learner_notices').select('body_ar,title_ar,created_at,ref_id,meta').eq('email', lower(me.email)).eq('kind', 'trainer_word').order('created_at', { ascending: false }).limit(60);
     const f = arr<any>(n).find((x) => x.meta && (x.meta as any).welcome && (!x.ref_id || roomIds.has(String(x.ref_id)))); if (!f) return null;
-    return { text_ar: String(f.body_ar || ''), at: String(f.created_at), voice_sec: f.meta?.voice?.sec ? Number(f.meta.voice.sec) : null, trainer_ar: String(f.title_ar || '').replace(/^🌅\s*/, '').replace(/^كلمة الاستقبال من مدرّبك\s*/, '').trim() || null };
+    return { text_ar: String(f.body_ar || ''), at: String(f.created_at), voice_sec: f.meta?.voice?.sec ? Number(f.meta.voice.sec) : null, trainer_ar: String(f.title_ar || '').replace(/^🌅\s*/, '').replace(/^كلمة الاستقبال من (?:مدرّبك|ميسّرك)\s*/, '').trim() || null };
   } catch { return null; }
 }
 async function whyOf(db: Db, me: Me, programId: string, now: Date): Promise<FirstView['why']> {

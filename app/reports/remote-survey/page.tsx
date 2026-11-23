@@ -103,7 +103,7 @@ export default function RemoteSurveyReportPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       <RoomHead
-        title={<>{ar ? 'نتائج استطلاع التعلم عن بُعد عبر Teams' : 'Remote Learning (Teams) Survey Results'}</>}
+        title={<>{ar ? 'نتائج استبيان التعلم عن بُعد عبر Teams' : 'Remote Learning (Teams) Survey Results'}</>}
         desc={<><p>{ar ? 'التوقيت: الرياض (Asia/Riyadh) — الإجابات مجهولة الهوية' : 'Time zone: Asia/Riyadh — anonymous responses'}</p></>}
         actions={<>
             <button className="rm-btn" onClick={() => setLang(ar ? 'en' : 'ar')}><Icon name="globe" size={16} /> {ar ? 'English' : 'العربية'}</button>
@@ -129,13 +129,13 @@ export default function RemoteSurveyReportPage() {
                 {levelOpts.map(l => <option key={l.id} value={l.id}>{levelLabel(l, lang)}</option>)}
               </select>
             </label>
-            <label>{ar ? 'المدرب' : 'Trainer'}
+            <label>{ar ? 'المدرّب' : 'Trainer'}
               <select value={f.trainerId} onChange={e => setFilter({ trainerId: e.target.value, classroomId: '', scheduleId: '' })}>
                 <option value="">{ar ? 'الكل' : 'All'}</option>
                 {trainerOpts.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
               </select>
             </label>
-            <label>{ar ? 'المجموعة/الشعبة' : 'Group/section'}
+            <label>{ar ? 'الشعبة' : 'Group/section'}
               <select value={f.classroomId} onChange={e => setFilter({ classroomId: e.target.value, scheduleId: '' })}>
                 <option value="">{ar ? 'الكل' : 'All'}</option>
                 {classroomOpts.map(c => <option key={c.id} value={c.id}>{classroomLabel(c, { trainers, levels }, lang)}</option>)}
@@ -171,7 +171,7 @@ export default function RemoteSurveyReportPage() {
           <Kpi title={ar ? 'متوسط الموافقة (1–5)' : 'Average agreement (1–5)'} value={summary.overallAvg ?? '—'} color={TEAL} icon="⭐" />
           <Kpi title={ar ? 'نسبة الموافقة العامة' : 'Overall agree %'} value={summary.overallAgreePct == null ? '—' : `${summary.overallAgreePct}%`} color={pctColor(summary.overallAgreePct)} icon="👍" />
           <Kpi title={ar ? 'الرضا عن التجربة' : 'Satisfied with experience'} value={summary.satisfactionAgreePct == null ? '—' : `${summary.satisfactionAgreePct}%`} color={pctColor(summary.satisfactionAgreePct)} icon="😊" />
-          <Kpi title={ar ? 'عدد المجموعات' : 'Groups'} value={groups.length} color="#8E4A68" icon="🧩" />
+          <Kpi title={ar ? 'عدد الشُّعب' : 'Groups'} value={groups.length} color="#8E4A68" icon="🧩" />
         </section>
 
         {/* ================= Group comparison ================= */}

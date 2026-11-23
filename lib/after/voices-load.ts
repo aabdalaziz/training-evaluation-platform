@@ -43,7 +43,7 @@ export async function writeLetter(db: any, me: { id: string; email: string }, e:
   const { error } = await db.from('portal_after_letters').insert({ enrollment_id: e.id, program_id: e.program_id, user_id: e.user_id || me.id, email: e.email, text_ar, sealed_at: now.toISOString() });
   if (error) return { ok: false, error: error.message }; return { ok: true };
 }
-/** فتح الرسائل التي حانت محطة سنتها — تُستدعى من openStations (الكرون القائم) ومن زيارة المتدرّب؛ مرة واحدة لكل رسالة */
+/** فتح الرسائل التي حانت محطة سنتها — تُستدعى من openStations (الكرون القائم) ومن زيارة المشارك؛ مرة واحدة لكل رسالة */
 export async function unsealLetters(db: any, items: { e: Enr; row: LetterRow | null }[], site: string, now = new Date(), dry = false): Promise<number> {
   let n = 0;
   for (const { e, row } of items) {
@@ -66,7 +66,7 @@ export async function openOffersFor(db: any, programIds: string[]): Promise<Offe
 export async function allOffersFor(db: any, programIds: string[]): Promise<OfferRow[]> { if (!programIds.length) return []; return safe<OfferRow[]>(db.from('portal_after_offers').select(OCOLS).in('program_id', programIds).order('created_at', { ascending: false }).limit(200), []); }
 export async function repliesOf(db: any, offerIds: (string | number)[]): Promise<{ offer_id: number | string; enrollment_id: string; reply: OfferReply; at: string }[]> { if (!offerIds.length) return []; return safe<any[]>(db.from('portal_after_offer_replies').select('offer_id,enrollment_id,user_id,email,reply,at').in('offer_id', offerIds).limit(5000), []); }
 export type OfferView = { id: number | string; title_ar: string; text_ar: string; link: string | null; created_at: string; my_reply: OfferReply | null };
-/** ما يراه المتدرّب: عرض مفتوح لبرنامجه إن كان ممّن كتبوا «لم تسنح الفرصة» */
+/** ما يراه المشارك: عرض مفتوح لبرنامجه إن كان ممّن كتبوا «لم تسنح الفرصة» */
 export function offerViewFor(e: Enr, stations: StationRow[], offers: OfferRow[], replies: { offer_id: number | string; enrollment_id: string; reply: OfferReply }[]): OfferView | null {
   const mine = stations.some(r => String(r.enrollment_id) === e.id && r.written_at && r.state === 'no_chance'); if (!mine) return null;
   const o = offers.find(x => String(x.program_id) === e.program_id && !x.closed_at); if (!o) return null;

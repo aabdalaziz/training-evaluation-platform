@@ -50,7 +50,7 @@ export async function myAfter(db: any, me: { id: string; email: string }, now = 
   const invites = await safe<StationRow[]>(db.from('portal_after_stations').select(COLS).eq('witness_email', lower(me.email)).eq('witness_status', 'invited').limit(50), []);
   const invitePrograms = invites.length ? await safe<any[]>(db.from('programs').select('id,name_ar').in('id', Array.from(new Set(invites.map(i => String(i.program_id))))).limit(50), []) : [];
   const inviteEnroll = invites.length ? await safe<any[]>(db.from('portal_enrollments').select('id,full_name').in('id', Array.from(new Set(invites.map(i => String(i.enrollment_id))))).limit(50), []) : [];
-  return { items, invites: invites.map(i => ({ id: i.id, station: i.station, station_ar: STATION_AR[i.station], state_ar: i.state ? STATE_AR[i.state] : '', text_ar: i.text_ar, written_at: i.written_at, program_ar: String(invitePrograms.find(p => String(p.id) === String(i.program_id))?.name_ar || 'برنامج'), learner_ar: String(inviteEnroll.find(e => String(e.id) === String(i.enrollment_id))?.full_name || 'متدرّب') })), fact_line_ar: afterFactLine(rows) };
+  return { items, invites: invites.map(i => ({ id: i.id, station: i.station, station_ar: STATION_AR[i.station], state_ar: i.state ? STATE_AR[i.state] : '', text_ar: i.text_ar, written_at: i.written_at, program_ar: String(invitePrograms.find(p => String(p.id) === String(i.program_id))?.name_ar || 'برنامج'), learner_ar: String(inviteEnroll.find(e => String(e.id) === String(i.enrollment_id))?.full_name || 'مشارك') })), fact_line_ar: afterFactLine(rows) };
 }
 async function enrollmentOf(db: any, me: { id: string; email: string }, enrollmentId: string, now = new Date()): Promise<DoneEnrollment | null> { return (await doneEnrollments(db, me, now)).find(e => e.id === String(enrollmentId)) || null; }
 
@@ -74,7 +74,7 @@ export async function inviteWitness(db: any, me: { id: string; email: string; na
   const row = await safe<StationRow | null>(db.from('portal_after_stations').select(COLS).eq('id', id).maybeSingle(), null); if (!row || !(row.user_id === me.id || lower(row.email) === lower(me.email))) return { ok: false, error: 'ليست محطتك' };
   const can = canInviteWitness(row, email); if (!can.ok) return can;
   await db.from('portal_after_stations').update({ witness_email: lower(email), witness_status: 'invited', witness_user_id: null, witness_text: null, witness_at: null }).eq('id', row.id);
-  try { await notify(db, { kind: 'after_witness', to: { email: lower(email), name: null }, ref: `after:witness:${row.id}`, subject: `${me.name || 'متدرّب'} يدعوك شاهدًا على ما فعله بعد برنامجه`, text: `${me.name || 'متدرّب'} كتب في أَثَر ما فعله بما تعلّم (${STATION_AR[row.station]}) ويدعوك لتشهد بجملة واحدة — أو تعتذر.\nافتح: ${site}/me/after#witness`, url: `${site}/me/after#witness` }); } catch { /* داخلي */ }
+  try { await notify(db, { kind: 'after_witness', to: { email: lower(email), name: null }, ref: `after:witness:${row.id}`, subject: `${me.name || 'مشارك'} يدعوك شاهدًا على ما فعله بعد برنامجه`, text: `${me.name || 'مشارك'} كتب في أَثَر ما فعله بما تعلّم (${STATION_AR[row.station]}) ويدعوك لتشهد بجملة واحدة — أو تعتذر.\nافتح: ${site}/me/after#witness`, url: `${site}/me/after#witness` }); } catch { /* داخلي */ }
   return { ok: true };
 }
 export async function answerWitness(db: any, me: { id: string; email: string }, id: string | number, accept: boolean, text: unknown, now = new Date()): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -85,7 +85,7 @@ export async function answerWitness(db: any, me: { id: string; email: string }, 
   try { await notify(db, { kind: 'after_witnessed', to: { email: row.email, name: null }, ref: `after:witnessed:${row.id}`, subject: accept ? 'شهد مشرفك على محطتك' : 'اعتذر الشاهد', text: accept ? `وقّع شاهدك على محطة «${STATION_AR[row.station]}»: «${t}»` : 'اعتذر من دعوته للشهادة — يمكنك دعوة غيره.', url: null }); } catch { /* داخلي */ }
   return { ok: true };
 }
-/** فصول تُعرض في الشهادة الحيّة (ما أذن المتدرّب بإظهاره فقط) */
+/** فصول تُعرض في الشهادة الحيّة (ما أذن المشارك بإظهاره فقط) */
 export async function chaptersForCredential(db: any, code: string): Promise<{ program_id: string | null; chapters: { station: Station; station_ar: string; state_ar: string; text_ar: string; witness_text: string | null; written_at: string }[] }> {
   const cred = await safe<any>(db.from('portal_credentials').select('id,user_id,email,program_id,kind').ilike('verify_code', code).maybeSingle(), null); if (!cred?.program_id) return { program_id: null, chapters: [] };
   const rows = await safe<StationRow[]>(db.from('portal_after_stations').select(COLS).eq('program_id', cred.program_id).eq('shown_on_credential', true).or(`user_id.eq.${cred.user_id || '00000000-0000-0000-0000-000000000000'},email.eq.${lower(cred.email)}`).limit(10), []);
@@ -135,7 +135,7 @@ export async function issueAfterDoc(db: any, me: { id: string; email: string; na
   const code = afterCode(rnd); const url = `${site}/verify/vc?code=${encodeURIComponent(code)}`; if (!signer) return { ok: true, code, verify_url: url };
   const { data: ins, error } = await db.from('portal_vc_issuances').insert({ code, kind: 'after', credential_id: null, user_id: me.id, email: lower(me.email), full_name: me.name, title_ar: `أثر بعد — ${e.program_ar} — ${me.name}`, kid: signer.kid, vc: {}, digest: '', issued_at: now.toISOString(), expires_at: null, issued_by: me.id }).select('id,status_index').single();
   if (error || !ins) return { ok: false, error: error?.message || 'تعذّر إصدار الوثيقة' };
-  const letter = (await lettersOf(db, [e.id]))[0] || null; const l365 = (await stationsOf(db, [e.id])).find(r => Number(r.station) === 365) as any; const measure = l365?.in_doc_measure ? await measureFor(db, e) : null;   /* P39: بخيار المتدرّب */
+  const letter = (await lettersOf(db, [e.id]))[0] || null; const l365 = (await stationsOf(db, [e.id])).find(r => Number(r.station) === 365) as any; const measure = l365?.in_doc_measure ? await measureFor(db, e) : null;   /* P39: بخيار المشارك */
   const vc = await signDocument(buildAfterDoc({ code, name: me.name, program_ar: e.program_ar, enrollment_id: e.id, end_day: e.end_day, stations: rows.sort((a, b) => Number(a.station) - Number(b.station)).map(r => ({ station: r.station, state: r.state as AfterState, text_ar: String(r.text_ar), witness: r.witness_status === 'signed' })), site, did, now, statusIndex: Number((ins as any).status_index), letter: !!(letter && letter.opened_at && letter.in_doc), measure }), signer, now);
   await db.from('portal_vc_issuances').update({ vc, digest: await documentDigest(vc, sha256) }).eq('id', (ins as any).id);
   return { ok: true, code, verify_url: url };

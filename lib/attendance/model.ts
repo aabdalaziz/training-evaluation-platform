@@ -98,7 +98,7 @@ export type PersonSummary = {
   absent: number;
   attended: number;   // present + late
   total: number;      // عدد جلسات البرنامج/النطاق
-  effective: number;  // total − excused (الاعتذار لا يُحتسب ضد المتدرب)
+  effective: number;  // total − excused (الاعتذار لا يُحتسب ضد المشارك)
   pct: number;        // attended / effective × 100 (مقرّب لعدد صحيح)
 };
 
@@ -145,7 +145,7 @@ export function eligible(summary: PersonSummary[], minPct: number): PersonSummar
 
 /** صفوف CSV لسجلات جلسة واحدة */
 export function sessionCsvRows(session: AttendanceSession, records: AttendanceRecord[], programName: string, classroomCode: string | null): (string | number | null)[][] {
-  const head = ['الجلسة', 'البرنامج', 'القاعة', 'التاريخ', 'الاسم', 'البريد', 'الجوال', 'الحالة', 'الطريقة', 'وقت التسجيل'];
+  const head = ['الجلسة', 'البرنامج', 'الشعبة', 'التاريخ', 'الاسم', 'البريد', 'الجوال', 'الحالة', 'الطريقة', 'وقت التسجيل'];
   const rows = records.map(r => [session.title, programName, classroomCode || '', session.session_date, r.full_name, r.email || '', r.phone || '', STATUS_LABEL[r.status].ar, r.method, r.checked_in_at ? r.checked_in_at.replace('T', ' ').slice(0, 16) : '']);
   return [head, ...rows];
 }

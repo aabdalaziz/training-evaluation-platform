@@ -117,7 +117,7 @@ function buildNarrative({summary,axis,trend,lang,kind}){
   if(topEdu){
     const pc=Math.round(topEdu.highPct*topEdu.measurements/100);
     praise=isAr
-      ?`وفي صلب التجربة التعليمية، أشاد ${pc} مشاركًا (${topEdu.highPct.toFixed(0)}%) بـ"${topEdu.axisLabel}" مسجلًا ${topEdu.mean.toFixed(2)}/5، وهو ما يعكس ثقة المتدربين بالكفاءة التدريسية.`
+      ?`وفي صلب التجربة التعليمية، أشاد ${pc} مشاركًا (${topEdu.highPct.toFixed(0)}%) بـ"${topEdu.axisLabel}" مسجلًا ${topEdu.mean.toFixed(2)}/5، وهو ما يعكس ثقة المشاركين بالكفاءة التدريسية.`
       :`On the teaching side, ${pc} participants (${topEdu.highPct.toFixed(0)}%) praised "${topEdu.axisLabel}" at ${topEdu.mean.toFixed(2)}/5, reflecting strong trainee confidence in instructional quality.`;
   }
 
@@ -142,7 +142,7 @@ function buildNarrative({summary,axis,trend,lang,kind}){
 
   if(isAr){
     return{
-      p1:`بلغ عدد الاستبانات المحللة في ${kindAr} ${n} استبانة ضمن الفلاتر المحددة. سجّل المؤشر العام ${m.toFixed(2)} من 5 بوسيط ${med.toFixed(2)}، ليصنّف الأداء ضمن مستوى "${v.label}" قياسًا بالهدف المرجعي (${TARGET}/5). وأبدى ${hp.toFixed(0)}% من المشاركين رضًا مرتفعًا (4–5 نجوم)، فيما توزّعت ${np.toFixed(0)}% عند التقييم المحايد (3 نجوم)، وبقيت نسبة غير الراضين (1–2 نجمة) عند ${lp.toFixed(0)}%.`,
+      p1:`بلغ عدد الاستبيانات المحللة في ${kindAr} ${n} استبيان ضمن الفلاتر المحددة. سجّل المؤشر العام ${m.toFixed(2)} من 5 بوسيط ${med.toFixed(2)}، ليصنّف الأداء ضمن مستوى "${v.label}" قياسًا بالهدف المرجعي (${TARGET}/5). وأبدى ${hp.toFixed(0)}% من المشاركين رضًا مرتفعًا (4–5 نجوم)، فيما توزّعت ${np.toFixed(0)}% عند التقييم المحايد (3 نجوم)، وبقيت نسبة غير الراضين (1–2 نجمة) عند ${lp.toFixed(0)}%.`,
       p2:`${strengthTxt} ${praise} ${concernTxt}`,
       p3:`${trendTxt} وتؤكد هذه القراءة أهمية تعزيز نقاط القوة وتوثيق ممارساتها، بالتوازي مع معالجة الفجوات المرصودة ضمن إطار زمني محدد ومؤشرات نجاح قابلة للقياس.`
     };
@@ -157,7 +157,7 @@ function buildNarrative({summary,axis,trend,lang,kind}){
 /* ============ Axes & Recommendations ============ */
 function axisCategory(ar="",en=""){
   const s=`${ar} ${en}`.toLowerCase();
-  if(s.includes("مدرب")||s.includes("معلم")||s.includes("teacher")||s.includes("trainer"))return"trainer";
+  if(s.includes("مدرّب")||s.includes("معلم")||s.includes("teacher")||s.includes("trainer"))return"trainer";
   if(s.includes("تعليم")||s.includes("تعلم")||s.includes("مادة")||s.includes("محتوى")||s.includes("درس")||s.includes("حصة")||s.includes("learning")||s.includes("content"))return"education";
   if(s.includes("قاعة")||s.includes("تجهيز")||s.includes("facility")||s.includes("room"))return"facility";
   if(s.includes("وصول")||s.includes("استقبال")||s.includes("airport")||s.includes("arrival")||s.includes("reception"))return"arrival";
@@ -171,7 +171,7 @@ function axisCategory(ar="",en=""){
   return"general";
 }
 const RECS={
-  trainer:{ar:"رفع التفاعل داخل القاعة، استخدام أمثلة تطبيقية، تخصيص وقت للأسئلة، وتلخيص أهم النقاط نهاية الحصة.",en:"Increase engagement, practical examples, Q&A time, end-of-session summary.",owner:{ar:"شؤون المدربين",en:"Faculty Affairs"},days:14},
+  trainer:{ar:"رفع التفاعل داخل القاعة، استخدام أمثلة تطبيقية، تخصيص وقت للأسئلة، وتلخيص أهم النقاط نهاية الحصة.",en:"Increase engagement, practical examples, Q&A time, end-of-session summary.",owner:{ar:"شؤون المدرّبين",en:"Faculty Affairs"},days:14},
   education:{ar:"مراجعة وضوح المحتوى وملاءمته للمستوى، إضافة أنشطة تطبيقية قصيرة، وربط المحتوى بمخرجات التعلم.",en:"Review content clarity/level fit, add short activities, align with outcomes.",owner:{ar:"التطوير الأكاديمي",en:"Academic Development"},days:21},
   facility:{ar:"فحص الصوت والعرض والإنترنت قبل الجلسة، وتفعيل قناة سريعة للإبلاغ عن الأعطال.",en:"Pre-check AV/internet; fast issue-reporting channel.",owner:{ar:"الخدمات المساندة",en:"Support Services"},days:7},
   arrival:{ar:"تأكيد ترتيبات الوصول قبل 24 ساعة، تعليمات موحدة، مسؤول ميداني، ورقم دعم فوري.",en:"Confirm arrivals 24h ahead, unified instructions, field coordinator, live support.",owner:{ar:"إدارة البرنامج",en:"Program Office"},days:7},
@@ -334,13 +334,13 @@ const TEAL="#D4614A",TEAL_DARK="#2F6B66",BLUE="#6A3350",NAVY="#3A1F36",GOLD="#D9
 const dict={
   ar:{dir:"rtl",font:"inherit",title:"لوحة ذكاء الأعمال",sub:"النظام المركزي للتحليلات",
     tab1:"الملخص التنفيذي",tab2:"التقرير اليومي",tab3:"التقرير النهائي",tab4:"سجل المشاركين",tab5:"شهادة التميز",
-    lang:"English",noData:"لا توجد بيانات ضمن الفلاتر الحالية.",filters:"الفلاتر",allTrainers:"كل المدربين",allRooms:"كل القاعات",
+    lang:"English",noData:"لا توجد بيانات ضمن الفلاتر الحالية.",filters:"الفلاتر",allTrainers:"كل المدرّبين",allRooms:"كل الشُّعب",
     reset:"إعادة تعيين",search:"بحث (اسم/بريد/جوال)",reveal:"إظهار البيانات",hide:"إخفاء البيانات",export:"تصدير Excel",
-    print:"طباعة التقرير",minResponses:"حد أدنى للاستجابات",sample:"عدد الاستبانات",clear:"إفراغ",purge:"حذف الاستجابات",
+    print:"طباعة التقرير",minResponses:"حد أدنى للاستجابات",sample:"عدد الاستبيانات",clear:"إفراغ",purge:"حذف الاستجابات",
     executiveHint:"تقرير تنفيذي بمعايير دولية: مؤشرات، فجوات أداء، توصيات بأولويات.",
-    dailyHint:"تحليل إحصائي لأداء الحصص والمدربين والتجربة اليومية مقابل الهدف المرجعي.",
+    dailyHint:"تحليل إحصائي لأداء الحصص والمدرّبين والتجربة اليومية مقابل الهدف المرجعي.",
     finalHint:"تحليل رضا المشاركين عن التعليم والخدمات وإدارة البرنامج مقابل الهدف المرجعي.",
-    participantsHint:"فلترة حسب القاعة + المدرب + الفترة، مع بحث وتصدير."},
+    participantsHint:"فلترة حسب الشعبة + المدرّب + الفترة، مع بحث وتصدير."},
   en:{dir:"ltr",font:"inherit",title:"BI Dashboard",sub:"Central Analytics",
     tab1:"Executive Summary",tab2:"Daily Report",tab3:"Final Report",tab4:"Participants",tab5:"Certificate",
     lang:"العربية",noData:"No data for current filters.",filters:"Filters",allTrainers:"All trainers",allRooms:"All rooms",
@@ -605,7 +605,7 @@ function ComparisonBars({title,icon,data,avgLine,lang}){
             <div className="cmpline" style={{insetInlineStart:`${(avgLine/5)*100}%`}}/>
             <div className="cmpline gold" style={{insetInlineStart:`${(TARGET/5)*100}%`}}/>
           </div>
-          <small style={{color:"#8E7F8A",fontWeight:700}}>{isAr?`استبانات: ${r.count}`:`Forms: ${r.count}`}</small>
+          <small style={{color:"#8E7F8A",fontWeight:700}}>{isAr?`استبيانات: ${r.count}`:`Forms: ${r.count}`}</small>
         </div>);})}
       <div className="legend">
         <span><i style={{background:"#8E7F8A"}}/> {isAr?"متوسط التقرير":"Report average"}</span>
@@ -617,14 +617,14 @@ function ComparisonBars({title,icon,data,avgLine,lang}){
 function HeatMap({data,lang}){
   const isAr=lang==="ar";
   if(!data?.axes?.length||!data?.rooms?.length)
-    return(<div className="card"><h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × قاعات)":"Heat Map"}</span></h3><div className="empty">{isAr?"لا توجد بيانات كافية.":"Not enough data."}</div></div>);
+    return(<div className="card"><h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × شُعب)":"Heat Map"}</span></h3><div className="empty">{isAr?"لا توجد بيانات كافية.":"Not enough data."}</div></div>);
   return(
     <div className="card">
-      <h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × قاعات)":"Heat Map (Axes × Rooms)"}</span></h3>
+      <h3 className="ctitle"><Icon name="compass" size={18}/><span>{isAr?"الخريطة الحرارية (محاور × شُعب)":"Heat Map (Axes × Rooms)"}</span></h3>
       <p className="cdesc">{isAr?"الأحمر منخفض، الأصفر متابعة، الأخضر جيد.":"Red low, yellow watch, green good."}</p>
       <div className="twrap">
         <table className="heat">
-          <thead><tr><th>{isAr?"المحور":"Axis"}</th>{data.rooms.map(r=>(<th key={r.id}>{isAr?"قاعة":"Room"} {r.code}</th>))}</tr></thead>
+          <thead><tr><th>{isAr?"المحور":"Axis"}</th>{data.rooms.map(r=>(<th key={r.id}>{isAr?"شعبة":"Room"} {r.code}</th>))}</tr></thead>
           <tbody>
             {data.axes.map(ax=>(
               <tr key={ax.axisLabel}>
@@ -691,7 +691,7 @@ function ReportFooter({lang}){
         <b>{isAr?"دليل قراءة التقرير:":"How to read:"}</b>{" "}
         {isAr?`ممتاز ≥${TARGET} | جيد ≥3.7 | مراقبة ≥3.0 | خطر <3.0 — "الفجوة" تقاس من الهدف ${TARGET}. N أقل من 5 = بيانات إرشادية فقط.`:`Excellent ≥${TARGET} | Good ≥3.7 | Watch ≥3.0 | Risk <3.0 — Gap measured from ${TARGET}. N<5 = indicative only.`}
       </div>
-      <div className="ltr" style={{whiteSpace:"nowrap"}}>{isAr?"منصة الجودة والتقييم":"Quality Platform"} — {d}</div>
+      <div className="ltr" style={{whiteSpace:"nowrap"}}>{isAr?"بوّابة أَثَر":"Quality Platform"} — {d}</div>
     </div>
   );
 }
@@ -790,7 +790,7 @@ const setLang = (v: string) => {
       const json=await res.json();
       if(!json.success)throw new Error(json.error||"Failed");
       setPurgeMsg("success:"+(isAr
-        ?`تم الحذف النهائي: ${json.deleted.evaluations} استبانة و ${json.deleted.answers} إجابة.`
+        ?`تم الحذف النهائي: ${json.deleted.evaluations} استبيان و ${json.deleted.answers} إجابة.`
         :`Deleted: ${json.deleted.evaluations} evaluations, ${json.deleted.answers} answers.`));
       await fetchAllData();
     }catch(e){
@@ -915,7 +915,7 @@ const setLang = (v: string) => {
           <select className="sel" value={value.classroomId} onChange={e=>setValue(f=>({...f,classroomId:e.target.value}))} disabled={value.trainerId!=="ALL"&&rooms.length===0}>
             <option value="ALL">{t.allRooms}</option>
             {value.trainerId!=="ALL"&&rooms.length===0
-              ?(<option value="NONE" disabled>{isAr?"لا توجد قاعات لهذا المدرب":"No rooms for this trainer"}</option>)
+              ?(<option value="NONE" disabled>{isAr?"لا توجد شُعب لهذا المدرّب":"No rooms for this trainer"}</option>)
               :(rooms.map(c=>(<option key={c.id} value={c.id}>{c.code}</option>)))}
           </select>
           {"from" in value&&(<input className="inp" type="date" value={value.from} onChange={e=>setValue(f=>({...f,from:e.target.value}))}/>)}
@@ -995,7 +995,7 @@ const setLang = (v: string) => {
               <NarrativeCard narrative={dashNarr} lang={lang} accent={GOLD}/>
 
               <div className="g4">
-                <MetricCard icon="doc" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={dashRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={dashRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:dashRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
+                <MetricCard icon="doc" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={dashRows.length} sub={isAr?"استبيان ضمن الفلاتر":"Forms in filters"} badge={dashRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:dashRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
                 <MetricCard icon="chart" color={dashSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${dashSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dashSummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`:`Median: ${dashSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`} badge={{label:dashSummary.perf.label,bg:dashSummary.perf.bg,fg:dashSummary.perf.fg}}/>
                 <MetricCard icon="alert" color={dashHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={dashHighRisk} sub={isAr?"محاور تتطلب تدخلًا فوريًا":"Axes needing immediate action"}/>
                 <MetricCard icon="trend" color={ORANGE} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${dashSummary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا":"Dissatisfaction share"}/>
@@ -1011,8 +1011,8 @@ const setLang = (v: string) => {
               <ScorecardTable title={isAr?"بطاقة أداء المحاور (Scorecard)":"Axis Scorecard"} icon="shield" items={dashAxis} lang={lang}/>
               <PriorityActions items={dashAxis} lang={lang}/>
 
-              <ComparisonBars title={isAr?"مقارنة القاعات بالمتوسط المؤسسي":"Rooms vs Institutional Average"} icon="school" data={dashRanking.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={dashSummary.mean} lang={lang}/>
-              <ComparisonBars title={isAr?"ترتيب المدربين — محاور التعليم فقط":"Trainer Ranking — Education Axes Only"} icon="users" data={dashTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={dashSummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"مقارنة الشُّعب بالمتوسط المؤسسي":"Rooms vs Institutional Average"} icon="school" data={dashRanking.map(r=>({id:r.id,label:(isAr?"شعبة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={dashSummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"ترتيب المدرّبين — محاور التعليم فقط":"Trainer Ranking — Education Axes Only"} icon="users" data={dashTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={dashSummary.mean} lang={lang}/>
 
               <HeatMap data={dashHeat} lang={lang}/>
               <ReportFooter lang={lang}/>
@@ -1023,7 +1023,7 @@ const setLang = (v: string) => {
           {tab==="daily"&&(
             <div>
               <ReportHero
-                title={isAr?"التقرير اليومي لأداء الحصص التدريبية":"Daily Sessions Performance Report"}
+                title={isAr?"التقرير اليومي لأداء الجلسات التدريبية":"Daily Sessions Performance Report"}
                 sub={isAr?"تحليل إحصائي يومي مقابل الهدف المرجعي":"Daily statistical analysis vs benchmark"}
                 accent={BLUE} verdict={dailyVerdict} score={dailySummary.mean} perfLabel={dailySummary.perf.label} lang={lang}
                 onPrint={()=>window.print()}/>
@@ -1033,7 +1033,7 @@ const setLang = (v: string) => {
               <NarrativeCard narrative={dailyNarr} lang={lang} accent={BLUE}/>
 
               <div className="g4">
-                <MetricCard icon="doc" color={BLUE} title={isAr?"الاستبانات":"Forms"} value={dailySummary.respondents} sub={isAr?"استجابات يومية صالحة":"Valid daily forms"} badge={dailySummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:dailySummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
+                <MetricCard icon="doc" color={BLUE} title={isAr?"الاستبيانات":"Forms"} value={dailySummary.respondents} sub={isAr?"استجابات يومية صالحة":"Valid daily forms"} badge={dailySummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:dailySummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
                 <MetricCard icon="chart" color={dailySummary.mean>=TARGET?TEAL:BLUE} title={isAr?"المتوسط":"Mean"} value={`${dailySummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dailySummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-dailySummary.mean).toFixed(2)}`:`Median: ${dailySummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dailySummary.mean).toFixed(2)}`} badge={{label:dailySummary.perf.label,bg:dailySummary.perf.bg,fg:dailySummary.perf.fg}}/>
                 <MetricCard icon="↔️" color={ORANGE} title={isAr?"الانحراف المعياري":"Std Dev"} value={dailySummary.stddev.toFixed(2)} sub={isAr?"ارتفاعه = تذبذب التجربة":"Higher = less consistent"}/>
                 <MetricCard icon="alert" color={dailyHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={dailyHighRisk} sub={isAr?`منخفض 1–2: ${dailySummary.lowPct.toFixed(0)}%`:`Low 1–2: ${dailySummary.lowPct.toFixed(0)}%`}/>
@@ -1049,8 +1049,8 @@ const setLang = (v: string) => {
               <ScorecardTable title={isAr?"بطاقة أداء المحاور اليومية":"Daily Scorecard"} icon="shield" items={dailyAxis} lang={lang}/>
               <PriorityActions items={dailyAxis} lang={lang}/>
 
-              <ComparisonBars title={isAr?"مقارنة القاعات — الأداء اليومي":"Rooms Comparison — Daily"} icon="school" data={dailyRoomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={dailySummary.mean} lang={lang}/>
-              <ComparisonBars title={isAr?"ترتيب المدربين — الأداء اليومي (محاور التعليم)":"Trainer Ranking — Daily (Education Axes)"} icon="users" data={dailyTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={dailySummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"مقارنة الشُّعب — الأداء اليومي":"Rooms Comparison — Daily"} icon="school" data={dailyRoomRank.map(r=>({id:r.id,label:(isAr?"شعبة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={dailySummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"ترتيب المدرّبين — الأداء اليومي (محاور التعليم)":"Trainer Ranking — Daily (Education Axes)"} icon="users" data={dailyTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={dailySummary.mean} lang={lang}/>
 
               <HeatMap data={dailyHeat} lang={lang}/>
               <ReportFooter lang={lang}/>
@@ -1071,7 +1071,7 @@ const setLang = (v: string) => {
               <NarrativeCard narrative={finalNarr} lang={lang} accent={TEAL}/>
 
               <div className="g4">
-                <MetricCard icon="doc" color={TEAL} title={isAr?"الاستبانات":"Forms"} value={finalSummary.respondents} sub={isAr?"استجابات ختامية صالحة":"Valid final forms"} badge={finalSummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:finalSummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
+                <MetricCard icon="doc" color={TEAL} title={isAr?"الاستبيانات":"Forms"} value={finalSummary.respondents} sub={isAr?"استجابات ختامية صالحة":"Valid final forms"} badge={finalSummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:finalSummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
                 <MetricCard icon="chart" color={finalSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المتوسط":"Mean"} value={`${finalSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${finalSummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-finalSummary.mean).toFixed(2)}`:`Median: ${finalSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-finalSummary.mean).toFixed(2)}`} badge={{label:finalSummary.perf.label,bg:finalSummary.perf.bg,fg:finalSummary.perf.fg}}/>
                 <MetricCard icon="↔️" color={ORANGE} title={isAr?"الانحراف المعياري":"Std Dev"} value={finalSummary.stddev.toFixed(2)} sub={isAr?"تذبذب تجربة المشاركين":"Experience consistency"}/>
                 <MetricCard icon="alert" color={finalHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={finalHighRisk} sub={isAr?`منخفض 1–2: ${finalSummary.lowPct.toFixed(0)}%`:`Low 1–2: ${finalSummary.lowPct.toFixed(0)}%`}/>
@@ -1092,8 +1092,8 @@ const setLang = (v: string) => {
               <AllFinalAxisPrintDetails items={finalAxis} lang={lang}/>
               <PriorityActions items={finalAxis} lang={lang}/>
 
-              <ComparisonBars title={isAr?"مقارنة القاعات — التقييم الختامي":"Rooms Comparison — Final"} icon="school" data={finalRoomRank.map(r=>({id:r.id,label:(isAr?"قاعة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={finalSummary.mean} lang={lang}/>
-              <ComparisonBars title={isAr?"ترتيب المدربين — التقييم الختامي (محاور التعليم)":"Trainer Ranking — Final (Education Axes)"} icon="users" data={finalTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={finalSummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"مقارنة الشُّعب — التقييم الختامي":"Rooms Comparison — Final"} icon="school" data={finalRoomRank.map(r=>({id:r.id,label:(isAr?"شعبة ":"Room ")+r.code,sub:r.trainer,avg:r.avg,count:r.count}))} avgLine={finalSummary.mean} lang={lang}/>
+              <ComparisonBars title={isAr?"ترتيب المدرّبين — التقييم الختامي (محاور التعليم)":"Trainer Ranking — Final (Education Axes)"} icon="users" data={finalTrainerRank.map(x=>({id:x.id,label:x.name,sub:isAr?"محاور التعليم":"education axes",avg:x.avg,count:x.respondents}))} avgLine={finalSummary.mean} lang={lang}/>
 
               <HeatMap data={finalHeat} lang={lang}/>
               <ReportFooter lang={lang}/>
@@ -1119,19 +1119,19 @@ const setLang = (v: string) => {
                   <button className="btn2" onClick={()=>{
                     const flat=[];
                     for(const r of partRoomData)for(const s of r.students)flat.push([r.code,r.trainer,s.name,s.phone,s.email]);
-                    downloadCSV(buildExportFilename("Participants", partF.classroomId !== "ALL" ? partF.classroomId : "All"),[[isAr?"القاعة":"Room",isAr?"المدرب":"Trainer",isAr?"الاسم":"Name",isAr?"الجوال":"Phone",isAr?"البريد":"Email"],...flat]);
+                    downloadCSV(buildExportFilename("Participants", partF.classroomId !== "ALL" ? partF.classroomId : "All"),[[isAr?"الشعبة":"Room",isAr?"المدرّب":"Trainer",isAr?"الاسم":"Name",isAr?"الجوال":"Phone",isAr?"البريد":"Email"],...flat]);
                   }}><Icon name="download" size={16}/> {t.export}</button>
                   <button className="btn2" onClick={()=>{setPartF({trainerId:"ALL",classroomId:"ALL",from:"",to:"",q:""});setPartKind("ALL");setRevealPII(false);}}><Icon name="refresh" size={16}/> {t.clear}</button>
                   <button className="btn2" style={{borderColor:"#F3C4B6",color:RED}} onClick={()=>setPurgeOpen(true)}><Icon name="trash" size={16}/> {t.purge}</button>
                 </div>
-                <div className="badge" style={{background:"#F6EBE0",color:"#2A1626"}}>{isAr?"قاعات":"Rooms"}: {partRoomData.length}</div>
+                <div className="badge" style={{background:"#F6EBE0",color:"#2A1626"}}>{isAr?"شُعب":"Rooms"}: {partRoomData.length}</div>
               </div>
 
               {partRoomData.map(r=>(
                 <div key={r.id} className="card" style={{padding:0,overflow:"hidden"}}>
                   <div style={{background:"#FBF4EE",padding:16,borderBottom:"1px solid #EADFD6",display:"flex",gap:16,alignItems:"center"}}>
-                    <b style={{fontSize:18,color:TEAL}}>{r.id==="FINAL_PARTICIPANTS"?r.code:((isAr?"قاعة ":"Room ")+r.code)}</b>
-                    <span style={{color:"#8E7F8A"}}>{(isAr?"المدرب: ":"Trainer: ")+r.trainer}</span>
+                    <b style={{fontSize:18,color:TEAL}}>{r.id==="FINAL_PARTICIPANTS"?r.code:((isAr?"شعبة ":"Room ")+r.code)}</b>
+                    <span style={{color:"#8E7F8A"}}>{(isAr?"المدرّب: ":"Trainer: ")+r.trainer}</span>
                     <span style={{background:"#F3E8EF",color:"#6A3350",padding:"4px 12px",borderRadius:999,fontSize:12,fontWeight:900,marginInlineStart:"auto"}}>
                       {r.students.length} {isAr?"مشارك":"participants"}
                     </span>
@@ -1158,7 +1158,7 @@ const setLang = (v: string) => {
             <div>
               <div className="card" style={{borderInlineStart:`6px solid ${GOLD}`}}>
                 <h1 style={{fontSize:26,fontWeight:900,marginBottom:8,color:"#8A5A1E"}}>{t.tab5}</h1>
-                <p style={{color:"#8E7F8A",margin:0}}>{isAr?"اختيار أفضل مدرب من محاور التعليم فقط — تقييم عادل.":"Best trainer from education axes only — fair evaluation."}</p>
+                <p style={{color:"#8E7F8A",margin:0}}>{isAr?"اختيار أفضل مدرّب من محاور التعليم فقط — تقييم عادل.":"Best trainer from education axes only — fair evaluation."}</p>
               </div>
 
               <FiltersBar value={certF} setValue={setCertF} count={certRows.length} withMin/>
@@ -1170,7 +1170,7 @@ const setLang = (v: string) => {
                     
                   </div>
                   <h1 style={{fontSize:34,fontWeight:900,color:"#8A5A1E",marginBottom:8}}>{isAr?"شهادة تميز وإشادة":"Certificate of Excellence"}</h1>
-                  <p style={{color:"#8E7F8A",marginBottom:24}}>{isAr?"تُمنح لأفضل مدرب وفق محاور التعليم وحجم العينة":"Awarded to the best trainer by education axes and sample size"}</p>
+                  <p style={{color:"#8E7F8A",marginBottom:24}}>{isAr?"تُمنح لأفضل مدرّب وفق محاور التعليم وحجم العينة":"Awarded to the best trainer by education axes and sample size"}</p>
                   <h2 style={{fontSize:48,fontWeight:900,color:TEAL,marginBottom:16}}>{certBest.trainer}</h2>
                   <p style={{fontSize:20,color:"#4A3645"}}>
                     {isAr?"معدل التعليم":"Education average"}:{" "}
@@ -1199,8 +1199,8 @@ const setLang = (v: string) => {
             </div>
             <div className="modal-body">
               <ul className="modal-warning-list">
-                <li>{isAr?"سيتم حذف استجابات المتدربين نهائيًا من قاعدة البيانات.":"Responses will be permanently deleted."}</li>
-                <li>{isAr?"الحذف يطبق على الفلاتر الحالية (المدرب / القاعة / الفترة).":"Applies to current filters (trainer / room / dates)."}</li>
+                <li>{isAr?"سيتم حذف استجابات المشاركين نهائيًا من قاعدة البيانات.":"Responses will be permanently deleted."}</li>
+                <li>{isAr?"الحذف يطبق على الفلاتر الحالية (المدرّب / الشعبة / الفترة).":"Applies to current filters (trainer / room / dates)."}</li>
                 <li>{isAr?"ستتأثر التقارير فورًا بعد الحذف.":"Reports will be affected immediately."}</li>
                 <li>{isAr?"يُوصى بشدة بتصدير البيانات قبل المتابعة.":"Export data first."}</li>
               </ul>

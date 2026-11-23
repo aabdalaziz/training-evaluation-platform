@@ -7,9 +7,9 @@ type Indicator = {
 
 const strengths: Indicator[] = [
   { name: 'وضوح الشرح', score: 4.92 },
-  { name: 'احترام المدرب للوقت', score: 4.87 },
+  { name: 'احترام المدرّب للوقت', score: 4.87 },
   { name: 'جودة المادة العلمية', score: 4.83 },
-  { name: 'التفاعل مع المتدربين', score: 4.79 },
+  { name: 'التفاعل مع المشاركين', score: 4.79 },
   { name: 'تنظيم البرنامج', score: 4.75 },
 ];
 

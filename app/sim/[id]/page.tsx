@@ -123,7 +123,7 @@ function Inner() {
                 {!!score.improve.length && <div className="sp-list2 imp"><b>{ar ? 'لتتحسن' : 'To improve'}</b><ul>{score.improve.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
                 {score.expert_path && <div className="sp-expert"><b>{ar ? 'كيف كان سيتصرف خبير' : 'How an expert would act'}</b><p>{score.expert_path}</p></div>}
                 {score.closing_ar && <p className="sp-closing">{score.closing_ar}</p>}
-                <small className="sp-src">{scoreSrc === 'ai' ? (ar ? 'تقييم أولي بالذكاء الاصطناعي وفق معايير الأداء' : 'Preliminary AI score against the rubric') : (ar ? 'تقدير محلي أولي' : 'Preliminary local estimate')} · {ar ? 'يعتمده مدرب بشري قبل أن يصبح دليلًا كامل الوزن' : 'A human trainer approves it before it becomes full‑weight evidence'}</small>
+                <small className="sp-src">{scoreSrc === 'ai' ? (ar ? 'تقييم أولي بالذكاء الاصطناعي وفق معايير الأداء' : 'Preliminary AI score against the rubric') : (ar ? 'تقدير محلي أولي' : 'Preliminary local estimate')} · {ar ? 'يعتمده مدرّب بشري قبل أن يصبح دليلًا كامل الوزن' : 'A human trainer approves it before it becomes full‑weight evidence'}</small>
                 <div className="pt-chips">{tok && !run?.stateless && <Link href="/me/skills" className="pt-btn small">{ar ? 'ملفي المهاري' : 'My skills'}</Link>}{!tok && <Link href="/me" className="pt-btn gold small">{ar ? 'سجّل الدخول لحفظ الدليل' : 'Sign in to save'}</Link>}<button type="button" className="pt-btn light small" onClick={() => { setRun(null); setTurns([]); setScore(null); setStartedAt(null); }}>{ar ? 'أعد المحاولة' : 'Try again'}</button><Link href="/sim" className="pt-btn outline small">{ar ? 'سيناريو آخر' : 'Another scenario'}</Link></div>
               </div>
             )}

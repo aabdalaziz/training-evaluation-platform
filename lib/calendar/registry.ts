@@ -18,7 +18,7 @@ export const P66_NAMES_AR = {
 export const LINE_PATH = '/me/line';
 export const FIELD_CASE_PATH = '/#daily';
 export const CAL_LIMITS = { maxDays: 400, joinGap: 2, applyGap: 7, lineMin: 5, lineMax: 200, k: 5, show: 5, summaryBeforeDays: 3, commitTailDays: 1 } as const;
-export const LINE_FOOT_AR = 'سطورك لا تدخل في أي درجة أو تقييم. مدرّبك يرى عدد من كتبوا وسطورًا مجمَّعة بلا أسماء حين تبلغون خمسة — لا أكثر.';
+export const LINE_FOOT_AR = 'سطورك لا تدخل في أي درجة أو تقييم. ميسّرك يرى عدد من كتبوا وسطورًا مجمَّعة بلا أسماء حين تبلغون خمسة — لا أكثر.';
 
 export type Block = { no: number; start: string; end: string; days: string[] };
 export type ApplyPeriod = { no: number; from: string; to: string; after_block: number; next_block_start: string; weeks: number; days: number };
@@ -91,7 +91,7 @@ export function phaseOf(cal: Calendar | null | undefined, today: string): DayPha
   const nb = cal.blocks.find((x) => x.start > today) || null; /* عطلة قصيرة داخل كتلة/بين كتلتين: صمت */
   return { phase: 'rest', today, next: nb ? { kind: 'block', start: nb.start, days: daysBetween(today, nb.start) } : null };
 }
-/** ما يُسمح للمتدرّب بكتابته اليوم */
+/** ما يُسمح للمشارك بكتابته اليوم */
 export type LineKind = 'learn' | 'apply' | 'commit';
 export function allowedKinds(ph: DayPhase): LineKind[] {
   if (ph.phase === 'training' && ph.block) { const out: LineKind[] = ['learn']; if (ph.block.is_last_day && ph.block.next_block_start && !ph.block.is_program_last) out.push('commit'); return out; }
@@ -113,7 +113,7 @@ export const PROMPTS_AR: Record<LineKind, { title: string; hint: string; blocker
 export const DONE_AR: Record<'yes' | 'part' | 'no', string> = { yes: 'فعلت', part: 'جزئيًا', no: 'لم أفعل بعد' };
 export const isDone = (v: unknown): v is 'yes' | 'part' | 'no' => v === 'yes' || v === 'part' || v === 'no';
 export const arN = (n: number, one: string, two: string, few: string, many: string) => n === 1 ? one : n === 2 ? two : n >= 3 && n <= 10 ? `${n} ${few}` : `${n} ${many}`;
-/** كلمة أَثَر القصيرة في صفحة المتدرّب بحسب الطور */
+/** كلمة أَثَر القصيرة في صفحة المشارك بحسب الطور */
 export function atharLine(ph: DayPhase, programAr: string): string {
   if (ph.phase === 'training' && ph.block) { if (ph.block.is_program_first) return `يومك الأول في «${programAr}» — خذ منه سطرًا واحدًا على الأقل.`; if (ph.block.is_program_last) return `آخر يوم تدريب في «${programAr}». ما كتبتَه طوال الطريق صار لك.`; if (ph.block.is_last_day) return `آخر يوم في الكتلة ${ph.block.no}. قبل أن تعود إلى موقعك: ما الشيء الواحد الذي ستطبّقه؟`; return `الكتلة ${ph.block.no} — اليوم ${ph.block.day_idx} من ${ph.block.len}.`; }
   if (ph.phase === 'apply' && ph.apply) return `${P66_NAMES_AR.apply}. الأسبوع ${ph.apply.week_no} من ${ph.apply.weeks} — نلتقي في الكتلة القادمة ${countdownAr(ph.apply.days_left)}.`;
@@ -139,13 +139,13 @@ export function shuffleSeeded<T>(xs: T[], seed: string): T[] { let h = 216613626
 
 /* ───────── الإشعارات (نصوص فقط) ───────── */
 export const applyStartNotice = (programAr: string, nextStart: string) => ({ title_ar: `«${programAr}» معك في موقعك 🧭`, body_ar: `انتهت الكتلة، وبدأ الجزء الذي يصنع الأثر: طبّق ما أخذتَه، ووثّق كل أسبوع سطرًا واحدًا — ماذا طبّقتَ وما الذي منعك. نلتقي في الكتلة القادمة ${fmtShortAr(nextStart)}.` });
-export const applyWeekNotice = (programAr: string, weekNo: number, weeks: number) => ({ title_ar: `سطر التطبيق — الأسبوع ${weekNo} من ${weeks}`, body_ar: `سطر واحد من موقعك في «${programAr}»: ماذا طبّقتَ هذا الأسبوع؟ وإن منعك شيء فقله — فهو أهمّ ما سيسمعه مدرّبك.` });
+export const applyWeekNotice = (programAr: string, weekNo: number, weeks: number) => ({ title_ar: `سطر التطبيق — الأسبوع ${weekNo} من ${weeks}`, body_ar: `سطر واحد من موقعك في «${programAr}»: ماذا طبّقتَ هذا الأسبوع؟ وإن منعك شيء فقله — فهو أهمّ ما سيسمعه ميسّرك.` });
 export const fieldSummaryNotice = (roomCode: string, s: FieldSummary, nextStart: string) => ({ title_ar: `ما جرى في الميدان — شعبة ${roomCode}`, body_ar: `${s.head_ar} تعود الكتلة ${fmtShortAr(nextStart)} — افتتحها بما جرى في مواقعهم فعلًا.` });
 export const commitOpenNotice = (programAr: string) => ({ title_ar: 'هذا ما وعدتَ به نفسك ✉️', body_ar: `عدتَ إلى «${programAr}». التزامك الذي كتبتَه آخر يوم في الكتلة الماضية يُفتح لك وحدك اليوم — هل فعلت؟` });
-export const calendarAskNotice = (programAr: string, roomCode: string) => ({ title_ar: `تقويم شعبة ${roomCode}`, body_ar: `«${programAr}» يبدأ قريبًا. إن كانت أيامه موزّعة على كتل، ضع تقويم الشعبة ليعرف متدرّبوك متى تلتقون ومتى يطبّقون — دقيقة واحدة.` });
+export const calendarAskNotice = (programAr: string, roomCode: string) => ({ title_ar: `تقويم شعبة ${roomCode}`, body_ar: `«${programAr}» يبدأ قريبًا. إن كانت أيامه موزّعة على كتل، ضع تقويم الشعبة ليعرف مشاركوك متى تلتقون ومتى يطبّقون — دقيقة واحدة.` });
 export const NOTICE_KINDS_P66 = ['apply_start', 'apply_week', 'field_summary', 'commit_open', 'calendar_ask'] as const;
 
-/* ───────── «الطريق» في صفحة المتدرّب ───────── */
+/* ───────── «الطريق» في صفحة المشارك ───────── */
 export type RoadItem = { label: string; sub: string; state: 'done' | 'now' | 'next' };
 export function roadOf(cal: Calendar, ph: DayPhase): RoadItem[] {
   const out: RoadItem[] = [];

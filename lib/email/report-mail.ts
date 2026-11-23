@@ -52,7 +52,7 @@ export function buildReportEmailHtml(i: ReportMailInput): string {
   const k = i.k;
   const perf = PERF_LABEL[k.perf]; const risk = RISK_LABEL[k.risk];
   const org = i.brand?.org || (ar ? 'أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة' : 'Athar Portal');
-  const platform = i.brand?.platform || (ar ? 'منصة تقويم البرامج التدريبية' : 'Training Evaluation Platform');
+  const platform = i.brand?.platform || (ar ? 'بوّابة أَثَر' : 'Training Evaluation Platform');
   const kpis: MailKpi[] = k.responses ? [
     { label: ar ? 'المتوسط العام' : 'Overall mean', value: `${k.mean.toFixed(2)}/5`, sub: `${ar ? 'الهدف' : 'Target'} ${TARGET} · ${ar ? 'الفجوة' : 'gap'} ${(k.mean - TARGET).toFixed(2)}`, color: perf.color },
     { label: ar ? 'الاستجابات' : 'Responses', value: String(k.responses), sub: `${k.participants} ${ar ? 'مشارك' : 'participants'}` },
@@ -111,7 +111,7 @@ export function buildReportEmailHtml(i: ReportMailInput): string {
     ${att}
   </td></tr>
   <tr><td style="background:#FBF4EE;border:1px solid #EADFD6;border-top:0;border-radius:0 0 16px 16px;padding:14px 26px;font:700 11px/1.7 Tahoma,Arial;color:#B3A5AE">
-    ${esc(org)}<br>${ar ? 'النتائج مجمّعة ولا تعرض هوية المشاركين. هذه رسالة آلية من المنصة — لا تردّ عليها.' : 'Aggregated, anonymous results. Automated message — please do not reply.'}
+    ${esc(org)}<br>${ar ? 'النتائج مجمّعة ولا تعرض هوية المشاركين. هذه رسالة آلية من البوّابة — لا تردّ عليها.' : 'Aggregated, anonymous results. Automated message — please do not reply.'}
   </td></tr>
 </table>
 </td></tr></table>

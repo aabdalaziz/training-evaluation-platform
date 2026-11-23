@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * هيئة أَثَر (P31) — المحرّك النقيّ (بلا DB ولا env):
- *  «سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر» — سيرة واحدة بوجهين (خبير استشاري · مدرب)
+ *  «سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر» — سيرة واحدة بوجهين (خبير استشاري · مدرّب)
  *  - الثوابت والأنواع · التحقق · شروط الإرسال للاعتماد (الصورة إلزامية) · العرض العام بندًا بندًا (لا بريد · لا هاتف · لا حقول الطاقم)
  *  - «ما شهده أَثَر»: أسطر مشتقة من أعداد الأحداث — لا تُحرَّر
  *  - البحث والترتيب (حداثة التحديث ثم أبجديًا — لا نجوم ولا ترتيب تفضيلي)
@@ -23,7 +23,7 @@ export const PUBLIC_BUCKET = 'athar-public', PRIVATE_BUCKET = 'athar-media';
 
 export type Face = 'expert' | 'trainer';
 export const FACES: Face[] = ['expert', 'trainer'];
-export const FACE_AR: Record<Face, string> = { expert: 'خبير استشاري', trainer: 'مدرب' };
+export const FACE_AR: Record<Face, string> = { expert: 'خبير استشاري', trainer: 'مدرّب' };
 export const FACE_TITLE_AR: Record<Face, string> = { expert: 'خبراء أَثَر', trainer: 'مدرّبو أَثَر' };
 export const TAGLINE_AR = 'سيرتك الذاتية بكلماتك — وتوثيقها من أَثَر';
 export const BODY_AR = 'هيئة أَثَر الاستشارية'; // هـ-2: الاسم الجامع لوجهَي الهيئة (خبراء أَثَر · مدرّبو أَثَر)
@@ -99,7 +99,7 @@ export function sanitizeProfileInput(body: any): Partial<Profile> {
 /** أخطاء السيرة قبل الإرسال للاعتماد (مصفوفة فارغة = جاهزة) — الصورة والموافقة إلزاميتان بقرار المالك */
 export function profileIssues(p: Partial<Profile>): string[] {
   const out: string[] = [];
-  if (!(p.faces || []).length) out.push('اختر وجهًا واحدًا على الأقل: خبير استشاري أو مدرب');
+  if (!(p.faces || []).length) out.push('اختر وجهًا واحدًا على الأقل: خبير استشاري أو مدرّب');
   if (!str(p.name_ar, NAME_MAX)) out.push('الاسم بالعربية مطلوب');
   if (!str(p.title_ar, TITLE_MAX)) out.push('اللقب المهني مطلوب');
   const sum = String(p.summary_ar || '').trim(); if (sum.length < SUMMARY_MIN) out.push(`ملخص السيرة ${SUMMARY_MIN} حرفًا على الأقل (الآن ${sum.length})`);
@@ -202,7 +202,7 @@ export function witnessLines(f: WitnessFacts): { key: string; text: string }[] {
   if (f.org_charter) out.push({ key: 'charter', text: `جهته «${f.org_charter}» وقّعت ميثاق أَثَر` });
   return out;
 }
-export const WITNESS_EMPTY_AR = 'لم تشهد المنصة بعد عملًا له — سيرته هنا بكلماته.';
+export const WITNESS_EMPTY_AR = 'لم تشهد البوّابة بعد عملًا له — سيرته هنا بكلماته.';
 export const witnessCounts = (f: WitnessFacts) => ({ programs: f.programs, councils: f.councils_chaired, attestations: f.attestations_approved, levels: f.levels_approved, missions: f.missions_confirmed, engagements: f.engagements_consult + f.engagements_train });
 
 /** الرموز */
@@ -268,6 +268,6 @@ export function engagementFacts(rows: Pick<Engagement, 'kind' | 'status' | 'comp
 }
 /** سيرة مسبقة التعبئة لمدرب منصة التقييم القائمة */
 export function prefillFromLegacyTrainer(t: { id: string; name: string | null; email: string | null }, facts: WitnessFacts): Partial<Profile> {
-  return { faces: ['trainer'], name_ar: String(t.name || '').trim().slice(0, NAME_MAX), title_ar: 'مدرب في أَثَر', legacy_trainer_id: t.id, summary_ar: facts.programs ? `مدرب في أَثَر: ${witnessLines({ ...EMPTY_WITNESS, programs: facts.programs, classrooms: facts.classrooms, program_years: facts.program_years })[0].text}.` : '' };
+  return { faces: ['trainer'], name_ar: String(t.name || '').trim().slice(0, NAME_MAX), title_ar: 'مدرّب في أَثَر', legacy_trainer_id: t.id, summary_ar: facts.programs ? `مدرّب في أَثَر: ${witnessLines({ ...EMPTY_WITNESS, programs: facts.programs, classrooms: facts.classrooms, program_years: facts.program_years })[0].text}.` : '' };
 }
 export const summaryOf = (p: Profile | null, legacy: boolean) => ({ version: DIRECTORY_VERSION, status: p?.status || null, faces: p?.faces || [], listed: !!p?.listed, legacy_trainer: legacy, slug: p && isPublic(p) ? p.slug : null });

@@ -44,7 +44,7 @@ export async function dispatchFollowup(db: SupabaseClient, f: BehaviorFollowup, 
   const { data: pr } = await db.from('programs').select('name_ar').eq('id', f.program_id || '').maybeSingle();
   const programName = String((pr as any)?.name_ar || '—');
   let recipients: Recipient[] = Array.isArray(f.recipients) ? f.recipients : [];
-  if (mode === 'test') recipients = [{ name: 'تجربة', email: String(testEmail || ''), role: 'supervisor', trainee_name: 'اسم المتدرب' }];
+  if (mode === 'test') recipients = [{ name: 'تجربة', email: String(testEmail || ''), role: 'supervisor', trainee_name: 'اسم المشارك' }];
   recipients = recipients.filter(r => r.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email));
   res.total = recipients.length;
   if (!recipients.length) return res;

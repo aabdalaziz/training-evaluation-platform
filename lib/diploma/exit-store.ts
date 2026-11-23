@@ -2,7 +2,7 @@
 /**
  * هـ-1/5 — توأمة البرامج والدبلومات + EXIT — طبقة القاعدة
  *  diplomaOverview(program)      للطاقم: كلّ المقيَّدين بتقدّمهم وإشارتهم المبكرة وحالتهم
- *  learnerCarry(email)           للمتدرّب: «لو خرجت اليوم تحمل معك» لكلّ دبلوم مقيَّد فيه
+ *  learnerCarry(email)           للطالب: «لو خرجت اليوم تحمل معك» لكلّ دبلوم مقيَّد فيه
  *  autoCompletions(program)      يملأ إتمام المقرّرات آليًّا (حضور ≥ ٧٥٪ بعد الإغلاق · شهادة برنامج مرتبط) — لا يمسّ القرارات اليدوية
  *  setCompletion                 قرار يدوي من الطاقم
  *  exitCredentials(enrollment)   يصدر شهادات المستويات المكتملة + سجلّ الإنجاز عبر مسار P17 ويسجّل الخروج
@@ -61,7 +61,7 @@ export async function diplomaOverview(db: Db, programId: string): Promise<{ ok: 
   return { ok: true, program, units, rows, names: EXIT_NAMES_AR };
 }
 
-/* ───────── المتدرّب: «لو خرجت اليوم» ───────── */
+/* ───────── الطالب: «لو خرجت اليوم» ───────── */
 export async function learnerCarry(db: Db, email: string, userId: string | null) {
   const low = email.toLowerCase();
   const enr = await safe<any[]>(db.from('portal_enrollments').select('id,program_id,status,programs!inner(id,name_ar,program_type)').ilike('email', low).in('status', ENROLLED).limit(20), []);

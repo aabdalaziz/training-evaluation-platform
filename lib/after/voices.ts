@@ -3,10 +3,10 @@
  * P39 «أصوات حول الشهادة» — متابعة أثر التدريب، المستوى الثاني (دوال صافية، بلا اعتماديات خادم)
  *  في P38 صار للشهادة صوت واحد: صاحبها يكتب ما فعل. هنا أربعة أصوات حولها — من غير أن تمسّ قاعدتها
  *  (كلمات لا أرقام · لا أثر رجعي · k≥5 · الإنسان يعتمد):
- *   1) صوت المتدرّب من الماضي — «رسالة إلى نفسي بعد سنة»: تُكتب في آخر أيام البرنامج وتُختم، وتُفتح مع محطة السنة. خاصة دائمًا.
+ *   1) صوت المشارك من الماضي — «رسالة إلى نفسي بعد سنة»: تُكتب في آخر أيام البرنامج وتُختم، وتُفتح مع محطة السنة. خاصة دائمًا.
  *   2) صوت البرنامج — «البرنامج يردّ»: حين يكتب خمسة «لم تسنح الفرصة» يعرض البرنامج ورشة تطبيق — إنسان يكتب العرض ويقرّر.
  *   3) صوت الجهة — «محطة الجهة»: بعد سنة تكتب الجهة سطرها هي: ماذا تغيّر عندنا؟ (حالة بالكلمات + نصّ) — تُفتح بخمسة منسوبين.
- *   4) صوت القياس — «أثر بعد» في مِعيار: مستوى الالتحاق وآخر قياس بعد البرنامج إلى جوار كلمات المتدرّب — بخياره.
+ *   4) صوت القياس — «أثر بعد» في مِعيار: مستوى الالتحاق وآخر قياس بعد البرنامج إلى جوار كلمات المشارك — بخياره.
  */
 import { scrubPii, cleanText } from '../onair/registry';
 import { stationWindow, stationPhase, bandAr, addDays, AFTER_K } from './registry';
@@ -47,7 +47,7 @@ export function canWriteLetter(endDay: string, row: Pick<LetterRow, 'opened_at'>
 export function cleanLetter(s: unknown): { ok: true; text_ar: string } | { ok: false; error: string } {
   const t = scrubPii(cleanText(s, LETTER_MAX)); if (t.length < LETTER_MIN) return { ok: false, error: `اكتب من ${LETTER_MIN} حرفًا على الأقل — لنفسك بعد سنة` }; return { ok: true, text_ar: t };
 }
-/** تُفتح الرسالة حين تدخل محطة السنة نافذتها (بلا كرون جديد: داخل openStations أو عند زيارة المتدرّب) */
+/** تُفتح الرسالة حين تدخل محطة السنة نافذتها (بلا كرون جديد: داخل openStations أو عند زيارة المشارك) */
 export function shouldUnseal(endDay: string, row: Pick<LetterRow, 'opened_at'> | null | undefined, now = new Date()): boolean {
   return !!row && !row.opened_at && ymd(now) >= letterWindow(endDay).unseals;
 }
@@ -59,13 +59,13 @@ export type OfferRow = { id: number | string; program_id: string; title_ar: stri
 export type OfferReply = 'want' | 'no';
 export const OFFER_REPLY_AR: Record<OfferReply, string> = { want: 'أرغب', no: 'لا، شكرًا' };
 export const OFFER_LINE_AR = 'وردّ البرنامج بورشة تطبيق لمن لم تسنح لهم الفرصة.';
-/** كم متدرّبًا مختلفًا كتب «لم تسنح الفرصة» في هذا البرنامج (أيّ محطة) */
+/** كم مشاركًا مختلفًا كتب «لم تسنح الفرصة» في هذا البرنامج (أيّ محطة) */
 export function noChancePeople(rows: Pick<StationRow, 'state' | 'written_at' | 'user_id' | 'email'>[]): number {
   return new Set(rows.filter(r => r.written_at && r.state === 'no_chance').map(r => (r.user_id || r.email || '').toLowerCase()).filter(Boolean)).size;
 }
 export function offerTrigger(rows: Pick<StationRow, 'state' | 'written_at' | 'user_id' | 'email'>[], k = OFFER_K): { ready: boolean; n: number; k: number; line_ar: string } {
   const n = noChancePeople(rows); const ready = n >= k;
-  return { ready, n, k, line_ar: ready ? `${n} لم تسنح لهم الفرصة — هل يردّ البرنامج؟` : `يُعرض الردّ حين يكتب ${k} متدرّبين «لم تسنح الفرصة» — كتب ${n} حتى الآن.` };
+  return { ready, n, k, line_ar: ready ? `${n} لم تسنح لهم الفرصة — هل يردّ البرنامج؟` : `يُعرض الردّ حين يكتب ${k} مشاركين «لم تسنح الفرصة» — كتب ${n} حتى الآن.` };
 }
 export function cleanOffer(b: any): { ok: true; o: { title_ar: string; text_ar: string; link: string | null } } | { ok: false; error: string } {
   const title_ar = cleanText(b?.title_ar, OFFER_TITLE_MAX); if (title_ar.length < 3) return { ok: false, error: 'اكتب عنوانًا للعرض' };
@@ -122,7 +122,7 @@ export const MEASURE_LEVELS = ['PRE_A1', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as 
 export const MEASURE_LEVEL_AR: Record<string, string> = { PRE_A1: 'ما قبل A1', A1: 'A1', A2: 'A2', B1: 'B1', B2: 'B2', C1: 'C1', C2: 'C2' };
 export const levelIdx = (l: unknown) => (MEASURE_LEVELS as readonly string[]).indexOf(String(l || '').toUpperCase().replace('-', '_'));
 export type Measure = { entry_level: string | null; entry_ar: string | null; after_level: string | null; after_ar: string | null; after_at: string | null; after_code: string | null; steps: number | null; line_ar: string; has_after: boolean };
-/** سطر القياس للمتدرّب: مستوى الالتحاق ↔ أول قياس بعد نهاية البرنامج */
+/** سطر القياس للمشارك: مستوى الالتحاق ↔ أول قياس بعد نهاية البرنامج */
 export function measureOf(entry: string | null, after: { level: string; at: string; code: string | null } | null): Measure {
   const ei = levelIdx(entry); const entry_level = ei >= 0 ? MEASURE_LEVELS[ei] : null; const entry_ar = entry_level ? MEASURE_LEVEL_AR[entry_level] : null;
   if (!after) return { entry_level, entry_ar, after_level: null, after_ar: null, after_at: null, after_code: null, steps: null, has_after: false, line_ar: entry_ar ? `كنت ${entry_ar} عند الالتحاق — لم تقِس مستواك بعد البرنامج بعد.` : 'لم تقِس مستواك بعد البرنامج بعد.' };
@@ -136,7 +136,7 @@ export function programMeasureLine(steps: number[], k = AFTER_K): { shown: boole
   const n = steps.length; if (n < k) return { shown: false, n, line_ar: null };
   const up = steps.filter(s => s > 0).length; const same = steps.filter(s => s === 0).length;
   const what = up >= same ? `${bandAr(up, n)} تقدّموا مستوى فأكثر` : `${bandAr(same, n)} ثبتوا على مستواهم`;
-  return { shown: true, n, line_ar: `وقاس ${n} متدرّبين مستواهم في مِعيار بعد البرنامج: ${what}.` };
+  return { shown: true, n, line_ar: `وقاس ${n} مشاركين مستواهم في مِعيار بعد البرنامج: ${what}.` };
 }
 export const nAr = (n: number) => n === 1 ? 'واحد' : n === 2 ? 'اثنان' : String(n);
 

@@ -24,7 +24,7 @@ export function parseBackup(text: string): ParsedBackup {
   for (const [table, rows] of Object.entries(data)) {
     if (!Array.isArray(rows)) { warnings.push(`«${table}» ليس قائمة صفوف — تم تجاهله`); delete (data as any)[table]; continue; }
     const spec = specOf(table);
-    if (!spec) { warnings.push(`جدول غير معروف للمنصة: ${table} (${rows.length} صفًا) — لن يُستعاد`); continue; }
+    if (!spec) { warnings.push(`جدول غير معروف للبوّابة: ${table} (${rows.length} صفًا) — لن يُستعاد`); continue; }
     const key = conflictKey(table).split(',');
     const badRows = rows.filter(r => !r || typeof r !== 'object' || key.some(k => r[k] === undefined || r[k] === null)).length;
     if (badRows) warnings.push(`«${spec.label}»: ${badRows} صفًا بلا مفتاح (${key.join(',')}) — ستُتجاهل`);

@@ -8,7 +8,7 @@
  *  suggest/adopt        «الميسِّر يقترح الجدول» (خوارزمية قيود) ← المدير يعتمد ما يشاء
  *  substitutes/applySubstitute «البديل بلمسة» ليوم بعينه ← إشعار الشعبة بالتسلسل الرسمي
  *  corridor             «الممرّ»: بطاقة الشعبة القادمة لأستاذ المادة (خيط «قبل أن تغادر» k ≥ 5 · التزامات مفتوحة)
- *  myLecturesToday      «ماذا عندي اليوم؟» للمتدرّب وللأستاذ (نداء + شاشة)
+ *  myLecturesToday      «ماذا عندي اليوم؟» للطالب وللأستاذ (نداء + شاشة)
  *  requestMove/decideMove  طلب نقل الشعبة — القرار بشري
  *  lectureDaysOf        أيام المحاضرات لشعبة (لتقويم الشعبة المشتقّ في P66 حين لا يوجد تقويم يدوي)
  *  runLevelClose        (ضمن الكرون اليومي) «محطّة المستوى» في أول يوم من الأسبوع الأخير للمستوى
@@ -238,7 +238,7 @@ export async function lectureDaysOf(db: Db, classroomIds: string[]): Promise<Map
   for (const [cid, st] of sets) out.set(cid, [...st].sort()); return out;
 }
 
-/* ───────── بطاقات المحاضرات للمتدرّب («سطري») — ★ «قبل أن تغادر» + «خيط المقرّر» ───────── */
+/* ───────── بطاقات المحاضرات للطالب («سطري») — ★ «قبل أن تغادر» + «خيط المقرّر» ───────── */
 export type LectureCard = { session_id: string; unit_id: string; course: string; instructor: string | null; starts: string; ends: string; state: 'upcoming' | 'live' | 'ended'; line_ar: string; written: boolean; question_ar: string; thread: { intro_ar: string; head_ar: string; applied: string[]; shown: boolean } };
 export async function lectureCardsFor(db: Db, me: Me, classroomIds: string[], now = new Date()): Promise<Map<string, { lectures: LectureCard[]; move_open: boolean }>> {
   const out = new Map<string, { lectures: LectureCard[]; move_open: boolean }>(); const cids = [...new Set(classroomIds.filter(Boolean))]; if (!cids.length) return out;
@@ -283,7 +283,7 @@ export async function requestMove(db: Db, me: Me, b: { program_id?: unknown; to_
   const r = await db.from('portal_section_requests').insert({ user_id: me.id, email: lower(me.email), program_id: pid, enrollment_id: String(en.id), from_classroom: String(en.classroom_id), to_classroom: to, reason_ar: reason, status: 'open' }).select('id').maybeSingle(); if (r.error || !r.data) return fail(r.error?.message || 'تعذّر الحفظ', 500);
   const n = namesOf(L); const line = structureLine({ diploma: L.program?.name_ar, section: n.section(String(en.classroom_id)) }) + (to ? ` ← ${n.section(to)}` : ' ← أي شعبة أخرى');
   const coord = L.sections.find((s) => s.id === String(en.classroom_id))?.trainer_id; const email = coord ? L.instructors.find((t) => t.id === coord)?.email || null : null; let notified = 0;
-  if (email) { const { pushNotice } = await import('../portal/notices'); const t = moveRequestNotice(me.name || 'متدرّب', line, reason); const res = await pushNotice(db, { email, user_id: null, report_id: null, kind: 'move_request' as any, ...t, url: `${DIPLOMA_PATH}?program=${pid}#requests`, ref_id: String(r.data.id), dedupe_key: `move_request:${r.data.id}` }, { dry: !!opts.dry, now }); if (res.inserted) notified += 1; }
+  if (email) { const { pushNotice } = await import('../portal/notices'); const t = moveRequestNotice(me.name || 'طالب', line, reason); const res = await pushNotice(db, { email, user_id: null, report_id: null, kind: 'move_request' as any, ...t, url: `${DIPLOMA_PATH}?program=${pid}#requests`, ref_id: String(r.data.id), dedupe_key: `move_request:${r.data.id}` }, { dry: !!opts.dry, now }); if (res.inserted) notified += 1; }
   return { ok: true, id: Number(r.data.id), notified };
 }
 export async function decideMove(db: Db, me: Me, b: { program_id?: unknown; id?: unknown; status?: unknown; note_ar?: unknown; to_classroom?: unknown }, now = new Date(), opts: { dry?: boolean } = {}): Promise<{ ok: true; moved: boolean } | Fail> {

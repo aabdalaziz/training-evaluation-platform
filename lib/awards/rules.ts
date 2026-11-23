@@ -1,6 +1,6 @@
 /**
- * قواعد تكريم المدربين (لوحة الشرف) — منطق خالص قابل للاختبار.
- * المدخلات: صفوف المدربين للفترة الحالية والفترة السابقة (من groupBy('trainer')).
+ * قواعد تكريم المدرّبين (لوحة الشرف) — منطق خالص قابل للاختبار.
+ * المدخلات: صفوف المدرّبين للفترة الحالية والفترة السابقة (من groupBy('trainer')).
  */
 import type { GroupRow } from '../reports/analytics';
 import { THRESHOLDS, round } from '../reports/analytics';
@@ -16,7 +16,7 @@ export const DEFAULT_RULES: AwardRules = { minResponses: 10, minMean: THRESHOLDS
 export const CATEGORY_META: Record<AwardCategory, { ar: string; en: string; desc_ar: string; icon: string; certTitle: string }> = {
   top_mean: { ar: 'أعلى تقييم', en: 'Highest rating', desc_ar: 'أعلى متوسط رضا مع عينة كافية', icon: 'star', certTitle: 'جائزة التميز في التدريب — أعلى تقييم' },
   most_improved: { ar: 'الأكثر تحسنًا', en: 'Most improved', desc_ar: 'أكبر ارتفاع في المتوسط مقارنة بالفترة السابقة', icon: 'trend', certTitle: 'جائزة التطور المهني — الأكثر تحسنًا' },
-  most_engaged: { ar: 'الأعلى مشاركة', en: 'Most engaged', desc_ar: 'أكبر عدد من استجابات المتدربين', icon: 'users', certTitle: 'جائزة التفاعل — الأعلى مشاركة' },
+  most_engaged: { ar: 'الأعلى مشاركة', en: 'Most engaged', desc_ar: 'أكبر عدد من استجابات المشاركين', icon: 'users', certTitle: 'جائزة التفاعل — الأعلى مشاركة' },
   most_consistent: { ar: 'الأكثر ثباتًا', en: 'Most consistent', desc_ar: 'أقل تشتت في التقييمات مع متوسط جيد', icon: 'shield', certTitle: 'جائزة الاتساق — الأكثر ثباتًا' },
 };
 
@@ -46,7 +46,7 @@ export function previousRange(from: string, to: string): { from: string; to: str
 
 /** حساب المرشحين لكل فئة */
 export function computeAwards(current: GroupRow[], previous: GroupRow[], rules: AwardRules = DEFAULT_RULES): AwardCandidate[] {
-  const cur = current.filter(r => r.key); // استبعاد "بدون مدرب"
+  const cur = current.filter(r => r.key); // استبعاد "بدون مدرّب"
   const prevMap = new Map(previous.map(r => [r.key, r]));
   const out: AwardCandidate[] = [];
   const mk = (category: AwardCategory, rows: { r: GroupRow; value: number; label: string }[], eligibleFn: (r: GroupRow, v: number) => string | null) => {
@@ -74,7 +74,7 @@ export function computeAwards(current: GroupRow[], previous: GroupRow[], rules: 
   return out;
 }
 
-/** الفائزون المؤهلون فقط (المركز الأول في كل فئة، دون تكرار مدرب في أكثر من فئتين) */
+/** الفائزون المؤهلون فقط (المركز الأول في كل فئة، دون تكرار مدرّب في أكثر من فئتين) */
 export function winners(cands: AwardCandidate[], maxPerTrainer = 2): AwardCandidate[] {
   const count = new Map<string, number>(); const out: AwardCandidate[] = [];
   for (const cat of Object.keys(CATEGORY_META) as AwardCategory[]) {

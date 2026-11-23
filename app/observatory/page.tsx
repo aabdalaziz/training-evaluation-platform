@@ -94,7 +94,7 @@ function Inner() {
 
     {s && <section className="pt-box obs-method" data-testid="obs-method"><h2>{ar ? 'المنهجية والخصوصية' : 'Method & privacy'}</h2><ol>{(ar ? s.method_ar : s.method_en).map((m, i) => <li key={i}>{m}</li>)}</ol>
       {s.suppressed_log.length > 0 && <details><summary>{ar ? `سجل الكتم (${s.suppressed_log.length})` : `Suppression log (${s.suppressed_log.length})`}</summary><ul>{s.suppressed_log.map((l, i) => <li key={i}>{l.scope} — {l.reason_ar}</li>)}</ul></details>}
-      <p className="obs-muted">{ar ? 'الجهات: موقعكم مقابل قطاعكم في بوابة الجهة → تبويب «المرصد».' : 'Organisations: your position vs your sector in the org portal → “Observatory” tab.'} <Link href="/org">/org</Link></p></section>}
+      <p className="obs-muted">{ar ? 'الجهات: موقعكم مقابل قطاعكم في بوّابة الجهة → تبويب «المرصد».' : 'Organisations: your position vs your sector in the org portal → “Observatory” tab.'} <Link href="/org">/org</Link></p></section>}
     <footer className="obs-foot">© 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — {ar ? 'مرصد أَثَر للقدرة البشرية' : 'Athar Human Capability Observatory'}</footer>
   </div>;
 }

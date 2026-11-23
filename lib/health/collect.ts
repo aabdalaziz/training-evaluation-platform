@@ -1,5 +1,5 @@
 /**
- * صحة المنصة — جمع المؤشرات من قاعدة البيانات (خادم فقط، مفتاح الخدمة)
+ * صحة البوّابة — جمع المؤشرات من قاعدة البيانات (خادم فقط، مفتاح الخدمة)
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ENV_SPECS } from './model';

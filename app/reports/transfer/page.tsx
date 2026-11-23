@@ -78,7 +78,7 @@ function Inner() {
         <div>
           <div className="tr-kicker"><Icon name="trend" size={14} /> التقارير · كيركباتريك — المستوى 3 (السلوك)</div>
           <h1>تقرير نقل أثر التدريب إلى بيئة العمل</h1>
-          <p>ماذا تغيّر فعلًا بعد 60–90 يومًا؟ مقارنة تقدير المشرف المباشر بالتقدير الذاتي للمتدرب، نسبة التطبيق المصرّح بها، معوقات النقل، وتوصيات تلقائية.</p>
+          <p>ماذا تغيّر فعلًا بعد 60–90 يومًا؟ مقارنة تقدير المشرف المباشر بالتقدير الذاتي للمشارك، نسبة التطبيق المصرّح بها، معوقات النقل، وتوصيات تلقائية.</p>
         </div>
         <nav className="tr-nav">
           <Link href="/dashboard" className="tr-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
@@ -105,7 +105,7 @@ function Inner() {
           <div className="tr-print-head">
             <div className="tr-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
             <h2>{f.title_ar}</h2>
-            <p>{pName(f.program_id)} · متابعة بعد {f.due_days} يومًا · {s.n} استجابة ({s.n_sup} مشرف · {s.n_tr} متدرب) · {s.n_trainees} متدربًا مقيَّمًا</p>
+            <p>{pName(f.program_id)} · متابعة بعد {f.due_days} يومًا · {s.n} استجابة ({s.n_sup} مشرف · {s.n_tr} مشارك) · {s.n_trainees} مشاركًا مقيَّمًا</p>
           </div>
 
           <section className="tr-hero">
@@ -118,7 +118,7 @@ function Inner() {
               <div className="tr-kpi"><span>تقدير المشرف</span><b>{s.mean_sup ?? '—'}</b><small>/ {max} · n={s.n_sup}</small></div>
               <div className="tr-kpi"><span>التقدير الذاتي</span><b>{s.mean_tr ?? '—'}</b><small>/ {max} · n={s.n_tr}</small></div>
               <div className="tr-kpi"><span>نسبة التطبيق</span><b>{s.app_all == null ? '—' : `${Math.round(s.app_all)}%`}</b><small>مشرف {s.app_sup == null ? '—' : Math.round(s.app_sup) + '%'} · ذاتي {s.app_tr == null ? '—' : Math.round(s.app_tr) + '%'}</small></div>
-              <div className={`tr-kpi ${s.gap != null && Math.abs(s.gap) >= 0.5 ? 'warn' : ''}`}><span>فجوة الإدراك (مشرف − متدرب)</span><b>{s.gap == null ? '—' : (s.gap > 0 ? '+' : '') + s.gap}</b><small>{s.gap == null ? 'تحتاج تقييمين لنفس المتدرب' : s.gap <= -0.5 ? 'المتدرب يقدّر نفسه أعلى' : s.gap >= 0.5 ? 'المشرف يرى أثرًا أعلى' : 'توافق جيد'}</small></div>
+              <div className={`tr-kpi ${s.gap != null && Math.abs(s.gap) >= 0.5 ? 'warn' : ''}`}><span>فجوة الإدراك (مشرف − مشارك)</span><b>{s.gap == null ? '—' : (s.gap > 0 ? '+' : '') + s.gap}</b><small>{s.gap == null ? 'تحتاج تقييمين لنفس المشارك' : s.gap <= -0.5 ? 'المشارك يقدّر نفسه أعلى' : s.gap >= 0.5 ? 'المشرف يرى أثرًا أعلى' : 'توافق جيد'}</small></div>
             </div>
           </section>
 
@@ -137,7 +137,7 @@ function Inner() {
                   </div>
                 ))}
               </div>
-              <div className="tr-legend"><span><i style={{ background: NAVY }} /> المشرف</span><span><i style={{ background: TEAL }} /> المتدرب</span></div>
+              <div className="tr-legend"><span><i style={{ background: NAVY }} /> المشرف</span><span><i style={{ background: TEAL }} /> المشارك</span></div>
             </section>
             <section className="tr-card">
               <h3><Icon name="alert" size={16} /> معوقات نقل الأثر</h3>
@@ -166,11 +166,11 @@ function Inner() {
           )}
 
           <section className="tr-card">
-            <h3><Icon name="users" size={16} /> المتدربون — المزاوجة بين المشرف والتقدير الذاتي <span className="tr-pill">{s.pairs.length}</span></h3>
+            <h3><Icon name="users" size={16} /> المشاركون — المزاوجة بين المشرف والتقدير الذاتي <span className="tr-pill">{s.pairs.length}</span></h3>
             {!s.pairs.length && <div className="tr-muted">لا توجد استجابات بعد.</div>}
             {!!s.pairs.length && (
               <div className="tr-tablewrap"><table className="tr-table">
-                <thead><tr><th>#</th><th>المتدرب</th><th>تقدير المشرف</th><th>تقدير ذاتي</th><th>الفجوة</th><th>تطبيق (مشرف)</th><th>تطبيق (ذاتي)</th><th>الحالة</th></tr></thead>
+                <thead><tr><th>#</th><th>المشارك</th><th>تقدير المشرف</th><th>تقدير ذاتي</th><th>الفجوة</th><th>تطبيق (مشرف)</th><th>تطبيق (ذاتي)</th><th>الحالة</th></tr></thead>
                 <tbody>{s.pairs.map((p, i) => {
                   const m = p.supervisor ?? p.trainee; const lbl = transferLabel(m == null ? null : Math.round(((pct(m)) + ((p.app_sup ?? p.app_tr) ?? pct(m))) / 2));
                   return <tr key={p.trainee_key}><td>{i + 1}</td><td><b>{p.label}</b></td><td>{p.supervisor ?? '—'}</td><td>{p.trainee ?? '—'}</td><td className={p.gap != null && Math.abs(p.gap) >= 0.5 ? 'warn' : ''}>{p.gap == null ? '—' : (p.gap > 0 ? '+' : '') + p.gap}</td><td>{p.app_sup == null ? '—' : Math.round(p.app_sup) + '%'}</td><td>{p.app_tr == null ? '—' : Math.round(p.app_tr) + '%'}</td><td><span className={`tr-st ${lbl.tone}`}>{lbl.ar}</span></td></tr>;

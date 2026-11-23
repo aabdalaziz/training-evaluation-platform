@@ -27,7 +27,7 @@ function SurveyForm() {
   const db = supabase();
   const params = useSearchParams();
 
-  /* P49-ب «بلغة المتدرّب»: بلا ?lang يُفتح بلغة المتصفّح (غير العربي → الإنجليزية) */
+  /* P49-ب «بلغة الطالب»: بلا ?lang يُفتح بلغة المتصفّح (غير العربي → الإنجليزية) */
   const [lang, setLang] = useState<Lang>(() => (params.get('lang') === 'en' ? 'en' : 'ar'));
   useEffect(() => { if (!params.get('lang')) setLang(resolveOpenLang('auto', navigator.language)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -47,7 +47,7 @@ function SurveyForm() {
   /* هـ-3 ن «محطّات»: 0 البداية · 1 المجموعة · 2 عنك · 3..6 محاور العبارات · 7 الصعوبات · 8 رأيك+إرسال */
   const [step, setStep] = useState(0); const [reached, setReached] = useState(0); const [stepErr, setStepErr] = useState('');
   useStepScroll(step);
-  /* P49-ج «مرّة واحدة في اليوم»: الاستطلاع مجهول الهوية، فالطبقة الوحيدة هنا ذاكرة الجهاز (لكل مجموعة/يوم) */
+  /* P49-ج «مرّة واحدة في اليوم»: الاستبيان مجهول الهوية، فالطبقة الوحيدة هنا ذاكرة الجهاز (لكل مجموعة/يوم) */
   const [onceAt, setOnceAt] = useState<string | null>(null); const [onceOverride, setOnceOverride] = useState(false);
   useEffect(() => { if (!loading && draft.classroomId) setOnceAt(wasDone({ kind: 'REMOTE', programId: draft.programId, classroomId: draft.classroomId })); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [loading, draft.classroomId]);
 

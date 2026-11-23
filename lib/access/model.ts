@@ -19,7 +19,7 @@ export function scopeOf(role: string | null | undefined, assignments: Assignment
     if (!mine.length) return { kind: 'all', programIds: [], reason: 'مدير برنامج بلا ربط — يرى كل البرامج (الوضع الافتراضي)' };
     return { kind: 'subset', programIds: Array.from(new Set(mine)), reason: `مقيّد بـ ${new Set(mine).size} برنامج` };
   }
-  if (r === 'TRAINER') return { kind: 'all', programIds: [], reason: 'مدرب — قراءة فقط حسب سياسات الجداول' };
+  if (r === 'TRAINER') return { kind: 'all', programIds: [], reason: 'مدرّب — قراءة فقط حسب سياسات الجداول' };
   return { kind: 'none', programIds: [], reason: r ? `الدور ${r} لا يملك صلاحية لوحات الإدارة` : 'بلا دور' };
 }
 
@@ -48,7 +48,7 @@ export function accessMatrix(profiles: Profile[], assignments: Assignment[], pro
     .sort((a, b) => (SCOPABLE_ROLES.includes(a.role) ? 0 : 1) - (SCOPABLE_ROLES.includes(b.role) ? 0 : 1) || String(a.profile.full_name || a.profile.email || '').localeCompare(String(b.profile.full_name || b.profile.email || ''), 'ar'));
 }
 
-export const ROLE_LABEL: Record<string, string> = { PLATFORM_ADMIN: 'مدير المنصة', SUPER_ADMIN: 'مشرف عام', ADMIN: 'إداري', PROGRAM_MANAGER: 'مدير برنامج', QUALITY_ANALYST: 'محلل جودة', TRAINER: 'مدرب', TRAINEE: 'متدرب', STUDENT: 'متدرب' };
+export const ROLE_LABEL: Record<string, string> = { PLATFORM_ADMIN: 'مدير البوّابة', SUPER_ADMIN: 'مشرف عام', ADMIN: 'إداري', PROGRAM_MANAGER: 'مدير برنامج', QUALITY_ANALYST: 'محلل جودة', TRAINER: 'مدرّب', TRAINEE: 'مشارك', STUDENT: 'مشارك' };
 export const roleLabel = (r: string | null | undefined) => ROLE_LABEL[String(r || '').toUpperCase()] || (r || '—');
 
 export function accessCsv(rows: AccessRow[]): string[][] {

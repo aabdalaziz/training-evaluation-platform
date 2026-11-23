@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** هيئة أَثَر (P31) — طبقة القراءة: السيرة · القوائم العامة · «ما شهده أَثَر» من جداول الأحداث القائمة · مدرب منصة التقييم · عقود التعاون. كل استعلام محميّ: الفشل = لا شيء. */
+/** هيئة أَثَر (P31) — طبقة القراءة: السيرة · القوائم العامة · «ما شهده أَثَر» من جداول الأحداث القائمة · مدرّب منصة التقييم · عقود التعاون. كل استعلام محميّ: الفشل = لا شيء. */
 import { PROFILE_COLS, ENGAGEMENT_COLS, EMPTY_WITNESS, engagementFacts, lower } from './registry';
 import type { Profile, Engagement, WitnessFacts } from './registry';
 import { domainLabel, loadDomains } from '../portal/skills';
@@ -37,12 +37,12 @@ export async function resolveNames(db: any, skillIds: string[], sectorCodes: str
 }
 
 export type LegacyTrainer = { id: string; name: string | null; email: string | null };
-/** مدرب منصة التقييم القائمة بالبريد نفسه */
+/** مدرّب منصة التقييم القائمة بالبريد نفسه */
 export async function legacyTrainer(db: any, email: string): Promise<LegacyTrainer | null> {
   const t = rows<any>(await safe(db.from('trainers').select('id,name,email').ilike('email', lower(email)).limit(1), []))[0]; return t ? { id: String(t.id), name: t.name ?? null, email: t.email ?? null } : null;
 }
 
-/** «ما شهده أَثَر» — من الجداول القائمة فقط: شُعب المدرب وبرامجه · رئاسة المجالس · شهادات الأقران والمستويات التي اعتمدها · مهام أكّدها مشرفًا · عقود منجَزة · ميثاق جهته */
+/** «ما شهده أَثَر» — من الجداول القائمة فقط: شُعب المدرّب وبرامجه · رئاسة المجالس · شهادات الأقران والمستويات التي اعتمدها · مهام أكّدها مشرفًا · عقود منجَزة · ميثاق جهته */
 export async function witnessFacts(db: any, me: { id?: string | null; email: string }, legacy: LegacyTrainer | null, engagements?: Engagement[]): Promise<WitnessFacts> {
   const email = lower(me.email); const f: WitnessFacts = { ...EMPTY_WITNESS };
   const [classrooms, chairs, atts, levels, missions, memberships] = await Promise.all([

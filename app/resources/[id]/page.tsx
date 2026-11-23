@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — صفحة الحقيبة: التفاصيل، المهارات (مع الأطر المرجعية)، الملفات والتنزيل الآمن، بوابة الوصول بالبريد
+// أَثَر — صفحة الحقيبة: التفاصيل، المهارات (مع الأطر المرجعية)، الملفات والتنزيل الآمن، بوّابة الوصول بالبريد
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';

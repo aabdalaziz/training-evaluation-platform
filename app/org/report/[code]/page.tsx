@@ -11,13 +11,13 @@ type Full = { code: string; status: 'issued' | 'revoked'; body: SheetBody; logo?
 export default function OrgReportPrintPage({ params }: { params: { code: string } }) {
   const [r, setR] = useState<{ report: Full; site: string } | null>(null); const [err, setErr] = useState('');
   useEffect(() => { (async () => {
-    const { data } = await supabase().auth.getSession(); const tk = data.session?.access_token || ''; if (!tk) { setErr('سجّل الدخول أولًا من بوابة الجهة ثم افتح هذه الصفحة.'); return; }
+    const { data } = await supabase().auth.getSession(); const tk = data.session?.access_token || ''; if (!tk) { setErr('سجّل الدخول أولًا من بوّابة الجهة ثم افتح هذه الصفحة.'); return; }
     const res = await fetch(`/api/org/report?code=${encodeURIComponent(params.code)}`, { headers: { Authorization: `Bearer ${tk}` }, cache: 'no-store' }); const j = await res.json().catch(() => ({}));
     if (!res.ok || !j.success) { setErr(j.error || 'تعذّر التحميل'); return; } setR(j); document.title = `تقرير القيادة — ${j.report.code}`;
   })(); }, [params.code]);
   return <div dir="rtl" style={{ background: '#F3E6DC', minHeight: '100vh', padding: '16px 8px' }} className="lrp-root" data-testid="lrp-root">
     <style dangerouslySetInnerHTML={{ __html: SHEET_CSS + '.lrp-bar{max-width:210mm;margin:0 auto 10px;display:flex;gap:8px;justify-content:space-between;align-items:center;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}.lrp-bar button,.lrp-bar a{border:1px solid #D4614A;background:#D4614A;color:#fff;border-radius:10px;padding:8px 16px;font:inherit;font-weight:800;cursor:pointer;text-decoration:none}.lrp-bar a.ghost{background:#fff;color:#D4614A}@media print{.lrp-bar,footer,nav,.way-bar,[data-testid="way-bar"],[data-testid="nadi-fab"],.nadi-fab,[data-testid="athir-fab"],.athir-fab,.pt-skip{display:none!important}body{background:#fff}.lrp-root{background:#fff!important;padding:0!important}}' }} />
-    <div className="lrp-bar"><a className="ghost" href="/org?tab=leader">← بوابة الجهة</a><span style={{ color: '#5C4858', fontSize: 13 }}>احفظها PDF من نافذة الطباعة (الوجهة: Save as PDF)</span><button type="button" onClick={() => window.print()} data-testid="lrp-print">طباعة / PDF</button></div>
+    <div className="lrp-bar"><a className="ghost" href="/org?tab=leader">← بوّابة الجهة</a><span style={{ color: '#5C4858', fontSize: 13 }}>احفظها PDF من نافذة الطباعة (الوجهة: Save as PDF)</span><button type="button" onClick={() => window.print()} data-testid="lrp-print">طباعة / PDF</button></div>
     {err ? <p style={{ textAlign: 'center', color: '#9A3A2A', fontFamily: 'var(--font-ar),"IBM Plex Sans Arabic",Arial' }} data-testid="lrp-err">{err}</p> : !r ? <p style={{ textAlign: 'center', fontFamily: 'Tajawal,Arial' }}>…</p> : <Sheet body={r.report.body} site={r.site} logo={r.report.logo} status={r.report.status} />}
   </div>;
 }

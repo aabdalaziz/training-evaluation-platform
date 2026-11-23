@@ -92,7 +92,7 @@ function Inner() {
   };
   const levelsOf = (r: ChainRow, compact?: boolean) => (
     <div className="ch-levels">
-      <Level n={1} score={r.s.s1} raw={r.c.l1 == null ? 'لا تقييمات' : `${r.c.l1} / 5`} sub={r.c.l1_n ? `${r.c.l1_n} استبانة` : LEVEL_META[1].source} compact={compact} />
+      <Level n={1} score={r.s.s1} raw={r.c.l1 == null ? 'لا تقييمات' : `${r.c.l1} / 5`} sub={r.c.l1_n ? `${r.c.l1_n} استبيان` : LEVEL_META[1].source} compact={compact} />
       <span className="ch-arrow">←</span>
       <Level n={2} score={r.s.s2} raw={r.c.l2 == null ? 'لا قياس قبلي/بعدي' : `g = ${r.c.l2}`} sub={r.c.l2_pairs ? `${r.c.l2_pairs} زوجًا · كسب ${r.c.l2_gain ?? '—'} نقطة` : LEVEL_META[2].source} compact={compact} />
       <span className="ch-arrow">←</span>
@@ -107,7 +107,7 @@ function Inner() {
       <style>{CSS}</style>
       <RoomHead
         title={<>سلسلة أثر التدريب 1→4</>}
-        desc={<><p>من رضا المتدرب إلى نتائج المؤسسة في صفحة واحدة: رد الفعل (التقييمات) ← التعلم (القبلي/البعدي) ← السلوك (المتابعة) ← النتائج (مؤشرات الأداء). يحدد التقرير أين تنكسر السلسلة ويقترح الإجراء.</p></>}
+        desc={<><p>من رضا المشارك إلى نتائج المؤسسة في صفحة واحدة: رد الفعل (التقييمات) ← التعلم (القبلي/البعدي) ← السلوك (المتابعة) ← النتائج (مؤشرات الأداء). يحدد التقرير أين تنكسر السلسلة ويقترح الإجراء.</p></>}
         actions={<>
           <Link href="/reports/impact" className="rm-btn"><Icon name="target" size={16} /> المستوى 2</Link>
           <Link href="/reports/transfer" className="rm-btn"><Icon name="trend" size={16} /> المستوى 3</Link>

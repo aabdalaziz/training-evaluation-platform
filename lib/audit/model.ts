@@ -12,8 +12,8 @@ export type AuditRow = {
 export type Change = { field: string; label: string; from: string; to: string };
 
 export const ENTITY_LABEL: Record<string, string> = {
-  programs: 'برنامج', trainers: 'مدرب', classrooms: 'قاعة/شعبة', questions: 'سؤال تقييم', evaluation_templates: 'نموذج تقييم', program_evaluation_templates: 'ربط نموذج ببرنامج',
-  profiles: 'مستخدم', certificate_settings: 'إعدادات الشهادات', certificates: 'شهادة', trainer_awards: 'تكريم مدرب', report_subscriptions: 'اشتراك تقرير',
+  programs: 'برنامج', trainers: 'مدرّب', classrooms: 'شعبة/شعبة', questions: 'سؤال تقييم', evaluation_templates: 'نموذج تقييم', program_evaluation_templates: 'ربط نموذج ببرنامج',
+  profiles: 'مستخدم', certificate_settings: 'إعدادات الشهادات', certificates: 'شهادة', trainer_awards: 'تكريم مدرّب', report_subscriptions: 'اشتراك تقرير',
   outcome_kpis: 'مؤشر مؤسسي', outcome_measurements: 'قياس مؤشر', impact_assessments: 'أداة قياس أثر', impact_questions: 'سؤال أثر',
   behavior_followups: 'متابعة سلوكية', behavior_questions: 'سؤال متابعة', attendance_sessions: 'جلسة حضور', program_levels: 'مستوى برنامج', class_schedules: 'جدول حصص',
   evaluations: 'تقييمات', report: 'تقرير', certificate: 'شهادة', ai: 'ذكاء اصطناعي', system: 'النظام',
@@ -28,7 +28,7 @@ export const ACTION_LABEL: Record<string, string> = {
 export const FIELD_LABEL: Record<string, string> = {
   name_ar: 'الاسم (عربي)', name_en: 'الاسم (إنجليزي)', full_name: 'الاسم', name: 'الاسم', email: 'البريد', phone: 'الجوال', role: 'الدور', status: 'الحالة',
   start_date: 'تاريخ البداية', end_date: 'تاريخ النهاية', delivery_mode: 'نمط التنفيذ', approval_status: 'حالة الاعتماد', rejection_reason: 'سبب الرفض',
-  code: 'الرمز', capacity: 'السعة', trainer_id: 'المدرب', program_id: 'البرنامج', classroom_id: 'القاعة', organization_id: 'الجهة', is_active: 'نشط', active: 'نشط',
+  code: 'الرمز', capacity: 'السعة', trainer_id: 'المدرّب', program_id: 'البرنامج', classroom_id: 'الشعبة', organization_id: 'الجهة', is_active: 'نشط', active: 'نشط',
   text_ar: 'النص (عربي)', text_en: 'النص (إنجليزي)', section_ar: 'المحور', kind: 'النوع', sort_order: 'الترتيب', weight: 'الوزن', target: 'المستهدف', baseline: 'خط الأساس',
   direction: 'الاتجاه', unit: 'الوحدة', value: 'القيمة', measured_on: 'تاريخ القياس', note: 'ملاحظة', notes: 'ملاحظات', threshold: 'الحد الأدنى', signer_name: 'اسم الموقّع', signer_title: 'صفة الموقّع',
   sent_at: 'وقت الإرسال', sent_to: 'أُرسل إلى', issued_at: 'تاريخ الإصدار', revoked_at: 'تاريخ الإلغاء', title: 'العنوان', opens_at: 'يفتح في', closes_at: 'يغلق في', mode: 'الوضع',

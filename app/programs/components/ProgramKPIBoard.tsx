@@ -3,19 +3,19 @@
 const cards = [
   {
     icon: '👨‍🎓',
-    title: 'المتدربون',
+    title: 'المشاركون',
     value: '126',
     color: '#8E4A68',
   },
   {
     icon: '👨‍🏫',
-    title: 'المدربون',
+    title: 'المدرّبون',
     value: '6',
     color: '#8E4A68',
   },
   {
     icon: '🏫',
-    title: 'القاعات',
+    title: 'الشُّعب',
     value: '8',
     color: '#3F7F79',
   },

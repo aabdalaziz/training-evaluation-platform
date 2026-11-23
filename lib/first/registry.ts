@@ -1,15 +1,15 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P64 «أول يوم — قال من سبقك» (الاسم الرسمي: صفحة اليوم الأول للمتدرّب) — السجلّ النقي (بلا قاعدة، بلا شبكة)
- *  الفكرة: يوم start_date يفتح للمتدرّب بابٌ يبدأ بكلمة من أَثَر (شكر وتقدير وأمنيات — نصّ إنساني ثابت، لا ذكاء اصطناعي)،
+ * P64 «أول يوم — قال من سبقك» (الاسم الرسمي: صفحة اليوم الأول للمشارك) — السجلّ النقي (بلا قاعدة، بلا شبكة)
+ *  الفكرة: يوم start_date يفتح للمشارك بابٌ يبدأ بكلمة من أَثَر (شكر وتقدير وأمنيات — نصّ إنساني ثابت، لا ذكاء اصطناعي)،
  *  ثم «قال من سبقك»: سطور تخرّج خرّيجي هذا البرنامج (P63 — الوجه العام فقط · خمسة أشخاص على الأقل · سبعة سطور كحدّ · لا أسماء أبدًا)
  *  وما قاله من تدرّب هنا بعد أشهر (P38)، ثم يكتب هو «لماذا جئتُ» — سطرًا يُختم رسالةً إلى نفسه تُفتح يوم تخرّجه (محرّك P62)،
- *  وكلمة استقبال من مدرّبه (P51 بعلامة welcome) تبقى في صفحة تخرّجه. لا درجة ولا تقييم؛ لا أسماء؛ صفر SQL.
- *  التسمية: «أول يوم» لأن الباب يُفتح مرة واحدة في بداية كل برنامج؛ «قال من سبقك» لأن الكلام للخرّيج لا للمنصّة.
+ *  وكلمة استقبال من ميسّره (P51 بعلامة welcome) تبقى في صفحة تخرّجه. لا درجة ولا تقييم؛ لا أسماء؛ صفر SQL.
+ *  التسمية: «أول يوم» لأن الباب يُفتح مرة واحدة في بداية كل برنامج؛ «قال من سبقك» لأن الكلام للخرّيج لا للبوّابة.
  */
 export const P64_NAMES_AR = {
-  title: 'أول يوم', sub: 'قال من سبقك', official_ar: 'صفحة اليوم الأول للمتدرّب',
-  athar: 'شكر وتقدير وأمنيات', said: 'قال من سبقك', after: 'وقالوا بعد أشهر', why: 'لماذا جئتُ', welcome: 'كلمة الاستقبال من مدرّبك', road: 'ما ينتظرك في أَثَر', mates: 'شعبتك',
+  title: 'أول يوم', sub: 'قال من سبقك', official_ar: 'صفحة اليوم الأول للمشارك',
+  athar: 'شكر وتقدير وأمنيات', said: 'قال من سبقك', after: 'وقالوا بعد أشهر', why: 'لماذا جئتُ', welcome: 'كلمة الاستقبال من ميسّرك', road: 'ما ينتظرك في أَثَر', mates: 'شعبتك',
 } as const;
 export const FIRST_PATH = '/me/first';
 export const FIRST_LIMITS = { k: 5, show: 7, whyMin: 10, whyMax: 160, windowDays: 7, welcomeBeforeDays: 1, afterMax: 3 } as const;
@@ -69,14 +69,14 @@ export function validateWhy(b: { body_ar?: unknown }): string | null {
   return null;
 }
 export const WHY_CONTEXT = 'first_day' as const; export const WHY_PROMPT_KEY = 'why_came' as const;
-export const matesLineAr = (n: number) => (n >= FIRST_LIMITS.k ? `معك في شعبتك ${n} متدرّبًا بدؤوا اليوم نفسه.` : null);
+export const matesLineAr = (n: number) => (n >= FIRST_LIMITS.k ? `معك في شعبتك ${n} مشاركًا بدؤوا اليوم نفسه.` : null);
 export const whyCountLineAr = (n: number, k = FIRST_LIMITS.k) => (n >= k ? `${n} من شعبتك كتبوا «لماذا جئتُ»` : null);
 
 /* ───────── «ما ينتظرك في أَثَر» — خارطة الطريق الثابتة ───────── */
 export type RoadStep = { when_ar: string; what_ar: string; href: string };
 export const ROAD: RoadStep[] = [
   { when_ar: 'اليوم', what_ar: 'سطر «لماذا جئتُ» — يُختم ويُفتح لك يوم تخرّجك', href: '/me/first' },
-  { when_ar: 'كل يوم', what_ar: 'كلمة من مدرّبك في «دفتر اليوم» — وردّك عليها إن شئت', href: '/me' },
+  { when_ar: 'كل يوم', what_ar: 'كلمة من ميسّرك في «دفتر اليوم» — وردّك عليها إن شئت', href: '/me' },
   { when_ar: 'كل أسبوع', what_ar: '«صدى الأسبوع» — ما قالته شعبتك بلا أسماء', href: '/me' },
   { when_ar: 'في أثناء البرنامج', what_ar: '«خريطة أثرك» و«لأن… بصوتك» و«نسيج الشعبة»', href: '/me/athar-map' },
   { when_ar: 'متى شئت', what_ar: '«رسالة إلى نفسي» — تُفتح بعد شهر أو سنة أو يوم تخرّجك', href: '/me/letter' },
@@ -87,6 +87,6 @@ export const ROAD: RoadStep[] = [
 /* ───────── الإشعارات (داخل أَثَر؛ «اليوم يومك الأول» وحده يُدفع) ───────── */
 export const firstDayNotice = (program_ar: string) => ({ title_ar: 'اليوم يومك الأول 🌅 — قال من سبقك كلمة لك', body_ar: `يبدأ «${program_ar}» اليوم. كلمة من أَثَر، وسطور من خرّيجي هذا البرنامج، وسطرٌ تكتبه أنت يُفتح يوم تخرّجك.` });
 export const welcomeAskNotice = (program_ar: string, room_code: string, startDay: string) => ({ title_ar: `دفعة جديدة تبدأ ${fmtDayShortAr(startDay)} — اكتب كلمة الاستقبال`, body_ar: `شعبة ${room_code} في «${program_ar}» تبدأ غدًا. كلمة الاستقبال تصل إلى كل متعلّم في أول يوم وتبقى في صفحة تخرّجه.` });
-export const lineAwaitsNotice = (program_ar: string, n: number) => ({ title_ar: `سطرك ينتظر ${n} متدرّبًا جديدًا 🌅`, body_ar: `بدأت اليوم دفعة جديدة في «${program_ar}» — سطر تخرّجك من أول ما يقرؤونه، بلا اسمك. شكرًا لأنك تركتَه لهم.` });
+export const lineAwaitsNotice = (program_ar: string, n: number) => ({ title_ar: `سطرك ينتظر ${n} مشاركًا جديدًا 🌅`, body_ar: `بدأت اليوم دفعة جديدة في «${program_ar}» — سطر تخرّجك من أول ما يقرؤونه، بلا اسمك. شكرًا لأنك تركتَه لهم.` });
 export const fmtDayShortAr = (day: string) => { try { return new Intl.DateTimeFormat('ar-SA-u-nu-latn-ca-gregory', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${dayKey(day)}T00:00:00Z`)); } catch { return day; } };
 export const fmtDayAr = (day: string) => { try { return new Intl.DateTimeFormat('ar-SA-u-nu-latn-ca-gregory', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(`${dayKey(day)}T00:00:00Z`)); } catch { return day; } };

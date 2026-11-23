@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — «غرفة أَثَر الصغيرة» (P13-ج): فيديو من داخل المنصة حتى 6 أشخاص — WebRTC بين المتصفحات، والتنسيق عبر قناة Supabase الفورية
+// أَثَر — «غرفة أَثَر الصغيرة» (P13-ج): فيديو من داخل البوّابة حتى 6 أشخاص — WebRTC بين المتصفحات، والتنسيق عبر قناة Supabase الفورية
 //  لا خادم وسائط ولا اعتمادية جديدة: STUN عام + شبكة متداخلة (mesh). للجلسات الكبيرة تبقى Teams/Zoom/Meet؛ هذه للغرف الصغيرة و«جلسة حوار» والاستشارة.
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -130,8 +130,8 @@ function Inner() {
             {room.kind === 'rehearsal' && tok && <RehearsalRoomPanel code={code} token={async () => tok} lang={lang} onClosed={() => { leave(); load(tok); }} />}
             {room.kind !== 'rehearsal' && <section className="rm-notes">
               <b><Icon name="flag" size={15} /> {ar ? 'السطر الذي نعود به' : 'The line we bring back'}</b>
-              <p className="rm-noteshint">{ar ? 'بعد الحوار: جملة واحدة تلخّص ما اتفقتم عليه. تظهر للمدرب في الميسِّر وتدخل محضر الأثر.' : 'After the talk: one line summarising what you agreed. It reaches the trainer’s facilitator and the impact memo.'}</p>
-              <div className="rm-noterow"><input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder={ar ? 'اتفقنا على…' : 'We agreed that…'} /><VoiceButton lang={lang} onText={t => setNote(x => (x ? x + ' ' : '') + t)} /><button type="button" className="pt-btn gold small" onClick={saveNote} disabled={noteBusy || note.trim().length < 3}>{ar ? 'أرسل' : 'Send'}</button></div>
+              <p className="rm-noteshint">{ar ? 'بعد الحوار: جملة واحدة تلخّص ما اتفقتم عليه. تظهر للمدرّب في الميسِّر وتدخل محضر الأثر.' : 'After the talk: one line summarising what you agreed. It reaches the trainer’s facilitator and the impact memo.'}</p>
+              <div className="rm-noterow"><input value={note} onChange={e => setNote(e.target.value)} maxLength={500} placeholder={ar ? 'اتفقنا على…' : 'We agreed that…'} /><VoiceButton lang={lang} onText={t => setNote(x => (x ? x + ' ' : '') + t)} /><button type="button" className="pt-btn gold small" onClick={saveNote} disabled={noteBusy || note.trim().length < 3}>{ar ? 'إرسال' : 'Send'}</button></div>
               {!!notes.length && <ul className="rm-notelist">{notes.slice().reverse().map((n, k) => <li key={k}><b>{n.name || ''}</b> {n.text}</li>)}</ul>}
             </section>}
             <p className="rm-foot">{ar ? 'الاتصال مباشر بين المتصفحات (WebRTC) ولا يمر عبر خوادم أَثَر؛ في بعض الشبكات المؤسسية الصارمة قد لا يكتمل الاتصال — استخدم شبكة أخرى أو رابط Teams/Zoom للجلسة الكبيرة.' : 'Connection is browser-to-browser (WebRTC) and never passes through Athar servers; strict corporate networks may block it — use another network or the session’s Teams/Zoom link.'}</p>

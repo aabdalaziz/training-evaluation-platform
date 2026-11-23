@@ -1,10 +1,10 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P63 «يوم تخرّجي — بكلماتي» — النواة النقيّة (بلا قاعدة بيانات)
- *  الاسم الرسمي: صفحة التخرّج الذاتية للمتدرّب / Learner-authored graduation page
+ *  الاسم الرسمي: صفحة التخرّج الذاتية للمشارك / Learner-authored graduation page
  *  يوم end_date تُفتح لكل خرّيج صفحة واحدة تجمع ما كتبه **هو** في هذا البرنامج — لا ما كُتب عنه:
- *   • أول «لأن…» على خيطه (P58) · ردوده على كلمات مدرّبه (P53 — سطره هو) · فصول رحلته داخل النافذة (P25)
- *   • سطره في ظرف الدفعة (P62) · حال رسالته «عند تخرّجي» (P62 — بلا نصّ) · رمز لقطة خريطته (P58) · كلمة الوداع من مدرّبه (P51/P55)
+ *   • أول «لأن…» على خيطه (P58) · ردوده على كلمات ميسّره (P53 — سطره هو) · فصول رحلته داخل النافذة (P25)
+ *   • سطره في ظرف الدفعة (P62) · حال رسالته «عند تخرّجي» (P62 — بلا نصّ) · رمز لقطة خريطته (P58) · كلمة الوداع من ميسّره (P51/P55)
  *  ثم يكملها بيده: يُبقي أو يُخفي كل بطاقة، يكتب «سطر التخرّج» (≤ 160)، ويختمها إن شاء: رمز ATH-GD + بصمة SHA-256 على JCS.
  *  «تبقى حيّة»: بعد الختم شريط «منذ ذلك اليوم» يُحسب طازجًا (أعداد فقط) — المختوم لا يتغيّر، والحيّ معلَن.
  *  قواعد: لا درجة ولا مستوى ولا تقييم · لا ذكاء اصطناعي · خاصّة افتراضيًا (الوجه العام: السطر والأعداد) · الصوت لا يسافر · الحذف فوري · k ≥ 5 للدفعة والاعتماد.
@@ -12,8 +12,8 @@
 import { scrubPii, cleanText } from '../onair/registry';
 
 export const P63_NAMES_AR = {
-  title: 'يوم تخرّجي', sub: 'ما كتبتُه بيدي في هذا البرنامج — لا ما كُتب عنّي', official_ar: 'صفحة التخرّج الذاتية للمتدرّب', official_en: 'Learner-authored graduation page',
-  words: 'بكلماتي', line: 'سطر التخرّج', farewell: 'قال مدرّبك يوم تخرّجك', since: 'منذ ذلك اليوم', seal: 'اختم صفحتي', cohort: 'دفعتك', public_face: 'الوجه العام',
+  title: 'يوم تخرّجي', sub: 'ما كتبتُه بيدي في هذا البرنامج — لا ما كُتب عنّي', official_ar: 'صفحة التخرّج الذاتية للمشارك', official_en: 'Learner-authored graduation page',
+  words: 'بكلماتي', line: 'سطر التخرّج', farewell: 'قال ميسّرك يوم تخرّجك', since: 'منذ ذلك اليوم', seal: 'اختم صفحتي', cohort: 'دفعتك', public_face: 'الوجه العام',
 } as const;
 export const GRAD_PATH = '/me/grad';
 export const GRAD_PUBLIC_PREFIX = '/g';
@@ -25,9 +25,9 @@ export const CODE_RE = /^ATH-GD-[A-Z2-9]{4}-[A-Z2-9]{4}$/;
 export type CardKey = 'first_because' | 'replies' | 'chapters' | 'cohort_line' | 'grad_letter' | 'map_code' | 'farewell' | 'welcome' | 'first_why' /* P64 */ | 'level_lines' /* P70 */ | 'entry' /* P71 */;
 export const CARD_KEYS: CardKey[] = ['entry', 'farewell', 'welcome', 'first_why', 'level_lines', 'first_because', 'replies', 'chapters', 'cohort_line', 'grad_letter', 'map_code'];
 export const CARD_AR: Record<CardKey, string> = {
-  farewell: 'قال مدرّبك يوم تخرّجك', first_because: 'أول «لأن…» على خيطي', replies: 'ردودي على كلمات مدرّبي', chapters: 'فصول رحلتي في هذا البرنامج',
+  farewell: 'قال ميسّرك يوم تخرّجك', first_because: 'أول «لأن…» على خيطي', replies: 'ردودي على كلمات ميسّري', chapters: 'فصول رحلتي في هذا البرنامج',
   cohort_line: 'سطري في ظرف الدفعة', grad_letter: 'رسالتي إلى نفسي عند تخرّجي', map_code: 'لقطة خريطة أثري',
-  welcome: 'قال مدرّبك في أول يوم', first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»' /* P64 */,
+  welcome: 'قال ميسّرك في أول يوم', first_why: 'ما كتبتُه أول يوم — «لماذا جئتُ»' /* P64 */,
   level_lines: 'سطوري عبر المستويات' /* P70: سطر كل مستوى ختمتُه في «بكلماتي عبر المستوى» */,
   entry: 'يوم دخلتُ — أول كلمة قلتُها، بجانب آخر كلمة' /* P71: ما قاله يوم التسكين قبل أن يعرف نتيجته — بلغته كما كتبه */,
 };
@@ -36,8 +36,8 @@ export type PublicKey = 'line' | 'counts' | 'name' | 'farewell' | 'first_because
 export const PUBLIC_KEYS: PublicKey[] = ['line', 'counts', 'name', 'farewell', 'first_because', 'replies', 'chapters', 'cohort_line', 'map_code', 'since', 'welcome', 'first_why', 'level_lines'];
 export const PUBLIC_DEFAULT: PublicKey[] = ['line', 'counts'];
 export const PUBLIC_AR: Record<PublicKey, string> = {
-  line: 'سطر التخرّج', counts: 'الأعداد (بلا تفاصيل)', name: 'اسمي', farewell: 'كلمة الوداع من مدرّبي', first_because: 'أول «لأن…»', replies: 'ردودي (كلماتي أنا)',
-  chapters: 'فصول رحلتي', cohort_line: 'سطري في ظرف الدفعة', map_code: 'رمز لقطة خريطتي', since: 'شريط «منذ ذلك اليوم» (أعداد حيّة)', welcome: 'كلمة الاستقبال من مدرّبي (أول يوم)', first_why: 'ما كتبتُه أول يوم', level_lines: 'سطوري عبر المستويات (P70)',
+  line: 'سطر التخرّج', counts: 'الأعداد (بلا تفاصيل)', name: 'اسمي', farewell: 'كلمة الوداع من ميسّري', first_because: 'أول «لأن…»', replies: 'ردودي (كلماتي أنا)',
+  chapters: 'فصول رحلتي', cohort_line: 'سطري في ظرف الدفعة', map_code: 'رمز لقطة خريطتي', since: 'شريط «منذ ذلك اليوم» (أعداد حيّة)', welcome: 'كلمة الاستقبال من ميسّري (أول يوم)', first_why: 'ما كتبتُه أول يوم', level_lines: 'سطوري عبر المستويات (P70)',
 };
 
 export type Card = { key: CardKey; title_ar: string; text_ar: string | null; at: string | null; items?: { text_ar: string; at: string; state_ar?: string | null }[]; href?: string | null; voice_sec?: number | null; state_ar?: string | null };

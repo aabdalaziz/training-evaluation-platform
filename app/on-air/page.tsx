@@ -51,7 +51,7 @@ function Inner() {
     <section className="pt-box oap-two">
       <div><h2>{ar ? P34_NAMES_AR.map : 'Live presence map'}</h2><OnAirMap map={d?.map} lang={lang} /><p className="pt-muted">{ar ? 'المدينة من الملف العام المعتمَد في «هيئة أَثَر» — أعداد بلا أسماء. من لم يُعلن مدينة يُعدّ بلا نقطة.' : 'City from the public Faculty profile — counts only, no names.'}</p></div>
       <div><h2>{ar ? P34_NAMES_AR.golden : 'Golden Hour'}</h2>
-        {!golden && <p className="pt-muted" data-testid="oap-golden-none">{ar ? 'لم يُعلن الطاقم ساعة ذهبية بعد — حين تُعلن، يتواعد فيها أعضاء الهيئة على الصعود معًا فتصبح البوابة ساعةً كاملة غرفةً مفتوحة.' : 'No Golden Hour announced yet.'}</p>}
+        {!golden && <p className="pt-muted" data-testid="oap-golden-none">{ar ? 'لم يُعلن الطاقم ساعة ذهبية بعد — حين تُعلن، يتواعد فيها أعضاء الهيئة على الصعود معًا فتصبح البوّابة ساعةً كاملة غرفةً مفتوحة.' : 'No Golden Hour announced yet.'}</p>}
         {golden && <div className="oap-golden" data-testid="oap-golden" data-live={golden.live ? '1' : '0'}>
           <p className="oap-gold-big">{golden.live ? (ar ? 'جارية الآن' : 'Live now') : golden.countdown_ar}</p>
           <p><b>{golden.title_ar}</b> · {golden.weekday_ar} {golden.from} · {golden.duration_min} {ar ? 'دقيقة' : 'min'}</p>

@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /verify/level?code=ATH-LV-XXXX-XXXX — P70: تحقّق عام من «صفحة المستوى — بكلمات المتدرّب» بالرمز والبصمة — البرنامج والمستوى وتاريخ الختم وسلامة البصمة؛ الإبطال فوري ومعلَن؛ الرمز المستبدَل بختم أحدث يُقال عنه ذلك. لا يُعرض المحتوى هنا — الوجه العام في /lv/<code> إن فتحه صاحبه. */
+/** /verify/level?code=ATH-LV-XXXX-XXXX — P70: تحقّق عام من «صفحة المستوى — بكلمات المشارك» بالرمز والبصمة — البرنامج والمستوى وتاريخ الختم وسلامة البصمة؛ الإبطال فوري ومعلَن؛ الرمز المستبدَل بختم أحدث يُقال عنه ذلك. لا يُعرض المحتوى هنا — الوجه العام في /lv/<code> إن فتحه صاحبه. */
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PortalShell } from '../../components/PortalShell';
@@ -16,7 +16,7 @@ function Inner() {
   useEffect(() => { const c = new URLSearchParams(window.location.search).get('code') || ''; if (c) { setCode(c.toUpperCase()); void check(c); } }, []);
   return <main className="pt-main" dir="rtl" data-testid="vl-root">
     <section className="pt-box" style={{ maxWidth: 900, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#D4614A', fontWeight: 800 }}>أَثَر · P70 · صفحة المستوى — بكلمات المتدرّب</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#D4614A', fontWeight: 800 }}>أَثَر · P70 · صفحة المستوى — بكلمات المشارك</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «صفحة مستوى»</h1>
       <p className="pt-muted">أدخل الرمز (مثل ATH-LV-7K2Q-9M4X). نُظهر البرنامج والمستوى وتاريخ الختم وسلامة البصمة — <b>ولا نُظهر الصفحة نفسها</b>؛ وجهها العام في رابطها /lv/… إن فتحه صاحبها، وبما اختاره هو فقط. الإبطال فوري ومعلَن.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
@@ -28,7 +28,7 @@ function Inner() {
       {r && r.valid && <div data-testid="vl-valid">
         <div style={{ background: r.intact ? '#E6F3F1' : '#FBEDE7', color: r.intact ? '#2F6B66' : '#B9544A', border: `1px solid ${r.intact ? '#BFE1DC' : '#F3C4B6'}`, borderRadius: 12, padding: '10px 14px', fontWeight: 800 }}>{r.intact ? '✓ صفحة صحيحة والبصمة سليمة — لم تتغيّر منذ ختمها' : '⚠ الرمز موجود لكن البصمة لا تطابق المحتوى'}</div>
         <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '6px 14px', margin: '12px 0' }}>
-          <dt className="pt-muted">النوع</dt><dd style={{ margin: 0 }}>صفحة مستوى — كتبها المتدرّب بنفسه مما كتبه وقاله في مستواه (لا درجة ولا قرار عبور)</dd>
+          <dt className="pt-muted">النوع</dt><dd style={{ margin: 0 }}>صفحة مستوى — كتبها المشارك بنفسه مما كتبه وقاله في مستواه (لا درجة ولا قرار عبور)</dd>
           <dt className="pt-muted">البرنامج</dt><dd style={{ margin: 0, fontWeight: 800 }}>{r.program_ar} — المستوى {r.level_no}</dd>
           <dt className="pt-muted">خُتمت</dt><dd style={{ margin: 0 }}>{fmt(r.sealed_at)}</dd>
           <dt className="pt-muted">البصمة</dt><dd style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all' }}>{r.digest}</dd>

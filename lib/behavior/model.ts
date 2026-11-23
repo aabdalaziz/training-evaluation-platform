@@ -31,11 +31,11 @@ export type BehaviorResponse = {
 
 export const ROLE_LABEL: Record<Role, { ar: string; en: string }> = {
   supervisor: { ar: 'المشرف المباشر', en: 'Direct supervisor' },
-  trainee: { ar: 'المتدرب (تقييم ذاتي)', en: 'Trainee (self-assessment)' },
+  trainee: { ar: 'المشارك (تقييم ذاتي)', en: 'Trainee (self-assessment)' },
   peer: { ar: 'زميل عمل', en: 'Peer' },
 };
 export const KIND_LABEL: Record<BehaviorKind, string> = { scale: 'مقياس 1–5', percent: 'نسبة التطبيق %', multi: 'اختيار متعدد (معوقات)', text: 'إجابة مفتوحة' };
-export const AUDIENCE_LABEL: Record<Audience, string> = { all: 'الجميع', supervisor: 'المشرف فقط', trainee: 'المتدرب فقط' };
+export const AUDIENCE_LABEL: Record<Audience, string> = { all: 'الجميع', supervisor: 'المشرف فقط', trainee: 'المشارك فقط' };
 
 export const PERCENT_STEPS = [0, 25, 50, 75, 100];
 export const DEFAULT_BARRIERS = ['ضيق الوقت وضغط العمل', 'عدم توفر دعم الإدارة', 'نقص الأدوات أو الموارد', 'المحتوى غير مرتبط بطبيعة العمل', 'لم تتوفر فرصة للتطبيق بعد', 'مقاومة التغيير لدى الفريق', 'لا توجد معوقات'];
@@ -78,15 +78,15 @@ export function suggestOpenAt(programEnd: string | null | undefined, dueDays: nu
 }
 
 /* ---------------- المستلمون ---------------- */
-/** صيغة السطر: الاسم, البريد, الدور[, اسم المتدرب, بريد المتدرب]
- *  الدور: مشرف | supervisor | متدرب | trainee | زميل | peer (افتراضيًا متدرب) */
+/** صيغة السطر: الاسم, البريد, الدور[, اسم المشارك, بريد المشارك]
+ *  الدور: مشرف | supervisor | مشارك | trainee | زميل | peer (افتراضيًا مشارك) */
 export function parseRecipients(text: string): { recipients: Recipient[]; warnings: string[] } {
   const out: Recipient[] = []; const warnings: string[] = []; const seen = new Set<string>();
   const roleOf = (s: string): Role | null => {
     const t = s.trim().toLowerCase();
     if (!t) return null;
     if (/^(مشرف|supervisor|sup|مدير)/.test(t)) return 'supervisor';
-    if (/^(متدرب|trainee|self|ذاتي)/.test(t)) return 'trainee';
+    if (/^(متدرب|مشارك|trainee|self|ذاتي)/.test(t)) return 'trainee';
     if (/^(زميل|peer)/.test(t)) return 'peer';
     return null;
   };
@@ -104,7 +104,7 @@ export function parseRecipients(text: string): { recipients: Recipient[]; warnin
   return { recipients: out, warnings };
 }
 export function recipientsText(rs: Recipient[]): string {
-  return rs.map(r => [r.name, r.email, r.role === 'supervisor' ? 'مشرف' : r.role === 'peer' ? 'زميل' : 'متدرب', r.trainee_name || '', r.trainee_email || ''].filter((x, i) => i < 3 || x).join(', ')).join('\n');
+  return rs.map(r => [r.name, r.email, r.role === 'supervisor' ? 'مشرف' : r.role === 'peer' ? 'زميل' : 'مشارك', r.trainee_name || '', r.trainee_email || ''].filter((x, i) => i < 3 || x).join(', ')).join('\n');
 }
 
 /* ---------------- التحليل ---------------- */
@@ -116,7 +116,7 @@ export type TransferSummary = {
   mean_sup: number | null; mean_tr: number | null; mean_all: number | null;
   app_sup: number | null; app_tr: number | null; app_all: number | null;
   transfer_index: number | null; // 0..100
-  gap: number | null;            // مشرف − متدرب (سلبي = المتدرب يبالغ في تقدير نفسه)
+  gap: number | null;            // مشرف − مشارك (سلبي = المشارك يبالغ في تقدير نفسه)
   barriers: BarrierCount[]; domains: DomainMean[]; pairs: Pair[]; comments: { role: Role; who: string | null; text: string }[];
   label: { ar: string; tone: 'ok' | 'info' | 'warn' | 'bad' };
 };
@@ -162,7 +162,7 @@ export function analyze(questions: BehaviorQuestion[], responses: BehaviorRespon
     return { domain, supervisor: r2(avg(vs)), trainee: r2(avg(vt)), n_sup: vs.length, n_tr: vt.length };
   });
 
-  // المزاوجة مشرف/متدرب
+  // المزاوجة مشرف/مشارك
   const byKey = new Map<string, Pair>();
   for (const r of responses) {
     const p = byKey.get(r.trainee_key) || { trainee_key: r.trainee_key, label: r.trainee_label || r.trainee_key.replace(/^[en]:/, ''), supervisor: null, trainee: null, gap: null, app_sup: null, app_tr: null };
@@ -186,22 +186,22 @@ export function analyze(questions: BehaviorQuestion[], responses: BehaviorRespon
 /** توصيات تلقائية مختصرة بناءً على النتائج */
 export function recommendations(s: TransferSummary): string[] {
   const out: string[] = [];
-  if (s.n === 0) return ['لم تصل استجابات بعد — أرسل الروابط للمشرفين والمتدربين أو فعّل الإرسال التلقائي.'];
+  if (s.n === 0) return ['لم تصل استجابات بعد — أرسل الروابط للمشرفين والمشاركين أو فعّل الإرسال التلقائي.'];
   if (s.transfer_index != null && s.transfer_index < 60) out.push('مؤشر نقل الأثر دون 60%: خطّط لجلسة تعزيز (Refresher) قصيرة وورشة تطبيق عملي خلال 30 يومًا.');
-  if (s.gap != null && s.gap <= -0.5) out.push('المتدربون يقدّرون أداءهم أعلى من تقدير مشرفيهم بفارق واضح — نسّق جلسة تغذية راجعة فردية بين المشرف والمتدرب.');
-  if (s.gap != null && s.gap >= 0.5) out.push('المشرفون يرون أثرًا أعلى مما يدركه المتدربون — وثّق قصص النجاح وشاركها لتعزيز الثقة.');
+  if (s.gap != null && s.gap <= -0.5) out.push('المشاركون يقدّرون أداءهم أعلى من تقدير مشرفيهم بفارق واضح — نسّق جلسة تغذية راجعة فردية بين المشرف والمشارك.');
+  if (s.gap != null && s.gap >= 0.5) out.push('المشرفون يرون أثرًا أعلى مما يدركه المشاركون — وثّق قصص النجاح وشاركها لتعزيز الثقة.');
   const top = s.barriers[0];
   if (top && top.pct >= 40 && !/لا توجد/.test(top.label)) out.push(`أبرز معوق: «${top.label}» (${top.pct}%) — عالجه مع الإدارة المباشرة قبل الدفعة القادمة.`);
   if (s.app_all != null && s.app_all < 50) out.push('نسبة التطبيق المصرّح بها أقل من 50%: أضف خطة تطبيق فردية (Action Plan) في ختام البرنامج ومتابعة بعد 30 يومًا.');
   const weakest = [...s.domains].filter(d => d.supervisor != null || d.trainee != null).sort((a, b) => ((a.supervisor ?? a.trainee)! - (b.supervisor ?? b.trainee)!))[0];
   if (weakest && (weakest.supervisor ?? weakest.trainee)! < 3.5) out.push(`المحور الأضعف «${weakest.domain}» — راجع تصميم الأنشطة المرتبطة به في البرنامج.`);
   const weakTr = s.pairs.filter(p => ((p.supervisor ?? p.trainee) ?? 9) < 3 || ((p.app_sup ?? p.app_tr) ?? 100) <= 25).length;
-  if (weakTr) out.push(`${weakTr} من المتدربين (${Math.round((100 * weakTr) / Math.max(1, s.pairs.length))}%) بتقدير أو تطبيق منخفض — خصّص لهم متابعة فردية (Coaching) من المشرف المباشر.`);
+  if (weakTr) out.push(`${weakTr} من المشاركين (${Math.round((100 * weakTr) / Math.max(1, s.pairs.length))}%) بتقدير أو تطبيق منخفض — خصّص لهم متابعة فردية (Coaching) من المشرف المباشر.`);
   if (!out.length) out.push('المؤشرات جيدة — استمر في المتابعة الدورية ووثّق الممارسات الناجحة كحالات دراسية.');
   return out;
 }
 
 export function csvRows(f: BehaviorFollowup, programName: string, s: TransferSummary): (string | number | null)[][] {
-  const head = ['الحملة', 'البرنامج', 'المتدرب', 'تقدير المشرف', 'تقدير ذاتي', 'الفجوة', 'تطبيق المشرف %', 'تطبيق ذاتي %'];
+  const head = ['الحملة', 'البرنامج', 'المشارك', 'تقدير المشرف', 'تقدير ذاتي', 'الفجوة', 'تطبيق المشرف %', 'تطبيق ذاتي %'];
   return [head, ...s.pairs.map(p => [f.title_ar, programName, p.label, p.supervisor, p.trainee, p.gap, p.app_sup, p.app_tr])];
 }

@@ -2,7 +2,7 @@
 /**
  * P66 «أيام التدريب وفترات التطبيق» — طبقة القاعدة
  *  getCalendar / saveCalendar   تقويم الشعبة (المدرّب صاحب الشعبة أو الطاقم) · roomView للمدرّب: التقويم + الطور + «ما جرى في الميدان» (k ≥ 5)
- *  myLinePage                   صفحة المتدرّب «سطري»: شُعبي · طور اليوم · ما يُسمح بكتابته · سطوري · التزامي المفتوح
+ *  myLinePage                   صفحة المشارك «سطري»: شُعبي · طور اليوم · ما يُسمح بكتابته · سطوري · التزامي المفتوح
  *  writeLine / answerCommit     learn (يوم تدريب · واحد لليوم) · apply (أسبوع في فترة تطبيق · واحد للأسبوع) · commit (آخر يوم الكتلة · يُفتح أول يوم الكتلة التالية)
  *  overlayCalendars             لـ P64/P63/P62: اليوم الأول/الأخير من التقويم بدل start_date/end_date حين يوجد تقويم
  *  runRoomCalendar              (ضمن الكرون اليومي القائم) 🧭 بداية فترة التطبيق · تذكير أسبوعي · «ما جرى في الميدان» للمدرّب قبل الكتلة بثلاثة أيام · فتح الالتزام يوم العودة
@@ -103,7 +103,7 @@ export async function roomsSummary(db: Db, classroomIds: string[], now = new Dat
   for (const id of classroomIds) { const c = cals.get(id) || null; out[id] = { has: !!c, phase: phaseOf(c, today), blocks: c ? c.blocks.length : 0, applies: c ? c.applies.length : 0, first: c?.first || null, last: c?.last || null }; } return out;
 }
 
-/* ───────── صفحة المتدرّب «سطري» ───────── */
+/* ───────── صفحة المشارك «سطري» ───────── */
 export type MyLine = { id: number; kind: LineKind; day: string; day_ar: string; unit_id: string | null; body_ar: string; blocker_ar: string | null; block_no: number | null; apply_no: number | null; week_no: number | null; opens_on: string | null; opens_ar: string | null; done: 'yes' | 'part' | 'no' | null; done_ar: string | null; open: boolean };
 export type MyRoom = { classroom_id: string; code: string; program_id: string | null; program_ar: string; enrollment_id: string; has_calendar: boolean; lectures: LectureCard[]; move_open: boolean; phase: DayPhase; allowed: LineKind[]; written_today: Partial<Record<LineKind, boolean>>; athar_ar: string; road: RoadItem[]; commit_open: MyLine | null; lines: MyLine[]; counts: { learn: number; apply: number; commit: number; days: number } };
 const toMy = (r: any, today: string): MyLine => ({ id: Number(r.id), kind: r.kind, day: String(r.day), day_ar: fmtDayAr(String(r.day)), unit_id: r.unit_id ? String(r.unit_id) : null, body_ar: String(r.body_ar || ''), blocker_ar: r.blocker_ar || null, block_no: r.block_no ?? null, apply_no: r.apply_no ?? null, week_no: r.week_no ?? null, opens_on: r.opens_on || null, opens_ar: r.opens_on ? fmtDayAr(String(r.opens_on)) : null, done: isDone(r.done) ? r.done : null, done_ar: isDone(r.done) ? DONE_AR[r.done as 'yes' | 'part' | 'no'] : null, open: r.kind !== 'commit' || (!!r.opens_on && String(r.opens_on) <= today) });

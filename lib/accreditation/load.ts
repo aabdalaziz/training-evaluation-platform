@@ -85,7 +85,7 @@ export async function collectEvidence(db: any, program: any): Promise<{ evidence
   /* م9: أدلة مِعيار — عُبور وخريطة المنهج وجلسات التعويض والإعادة (أحكام نهائية · ترقية موقَّعة · k ≥ 5) */
   const miaar = await collectMiaarEvidence(db, pid, rooms.map(r => String(r.id)), units as any[]);
   for (const e of miaar.evidence) push(e);
-  /* P61: نسيج البرنامج — ما نسجه المتدرّبون بأيديهم (kept · k ≥ 5 · بلا أسماء ولا اقتباس) */
+  /* P61: نسيج البرنامج — ما نسجه المشاركون بأيديهم (kept · k ≥ 5 · بلا أسماء ولا اقتباس) */
   let weave: ProgramWeave | null = null; try { weave = await loadProgramWeave(db, { id: pid, name_ar: program.name_ar, end_date: program.end_date || null }); for (const e of weaveEvidence(weave)) push(e); } catch { weave = null; }
   try { for (const e of await gradEvidence(db, pid)) push(e); } catch { /* P63 اختياري */ }
   try { for (const e of await levelEvidence(db, pid)) push(e); } catch { /* P70-ب اختياري */ }

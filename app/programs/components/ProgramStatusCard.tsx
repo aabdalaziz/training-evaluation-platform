@@ -45,9 +45,9 @@ export default function ProgramStatusCard(props: Props) {
           marginTop: 24,
         }}
       >
-        <Item label="المتدربون" value={props.participants} />
-        <Item label="المدربون" value={props.trainers} />
-        <Item label="القاعات" value={props.classrooms} />
+        <Item label="المشاركون" value={props.participants} />
+        <Item label="المدرّبون" value={props.trainers} />
+        <Item label="الشُّعب" value={props.classrooms} />
         <Item label="الرضا" value={`${props.satisfaction}%`} />
       </div>
 

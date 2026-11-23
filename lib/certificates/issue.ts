@@ -1,6 +1,6 @@
 /**
  * إصدار الشهادات (جانب المتصفح): إدراج في قاعدة البيانات → رسم → PDF / بريد.
- * مشترك بين صفحة الشهادات وصفحة تكريم المدربين.
+ * مشترك بين صفحة الشهادات وصفحة تكريم المدرّبين.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { renderCertificate, canvasToJpeg, jpegsToPdf, bytesToBase64, cleanFilename, DEFAULT_SETTINGS, KIND_LABEL, W, H, fmtDate } from './render';
@@ -51,7 +51,7 @@ export function rowToData(r: CertRow): CertData {
 }
 export function previewData(i: IssueInput, programEn?: string | null): CertData {
   return {
-    kind: i.kind, recipient_name: i.recipient_name || 'اسم المتدرب', recipient_name_en: i.recipient_name_en || null, program_ar: i.program_name || 'اسم البرنامج', program_en: programEn || null,
+    kind: i.kind, recipient_name: i.recipient_name || 'اسم المشارك', recipient_name_en: i.recipient_name_en || null, program_ar: i.program_name || 'اسم البرنامج', program_en: programEn || null,
     classroom: i.classroom_code || null, trainer: i.trainer_name || null, start: i.start_date || null, end: i.end_date || null, hours: i.hours || null,
     issued_at: new Date().toISOString().slice(0, 10), serial: 'ATH-2026-000000', verify_url: verifyUrl('PREVIEW'), award_title: i.award_title || null,
   };

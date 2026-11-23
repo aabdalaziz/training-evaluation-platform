@@ -16,7 +16,7 @@ export type CertData = {
   kind: CertKind; recipient_name: string; recipient_name_en?: string | null;
   program_ar: string; program_en?: string | null; classroom?: string | null; trainer?: string | null;
   start?: string | null; end?: string | null; hours?: number | null; issued_at: string; serial: string; verify_url: string;
-  award_title?: string | null; // للشهادات التقديرية: مثل «أفضل مدرب للشهر»
+  award_title?: string | null; // للشهادات التقديرية: مثل «أفضل مدرّب للشهر»
 };
 
 export const DEFAULT_SETTINGS: CertSettings = {
@@ -117,8 +117,8 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
   if (d.start && d.end) parts.push(`المنفّذ خلال الفترة من ${fmtDate(d.start)} إلى ${fmtDate(d.end)}`);
   else if (d.start) parts.push(`بتاريخ ${fmtDate(d.start)}`);
   if (d.hours && d.kind !== 'appreciation') parts.push(`بواقع ${d.hours} ساعة تدريبية`);
-  if (d.classroom) parts.push(`القاعة ${d.classroom}`);
-  if (d.trainer && d.kind !== 'appreciation') parts.push(`بإشراف المدرب ${d.trainer}`);
+  if (d.classroom) parts.push(`الشعبة ${d.classroom}`);
+  if (d.trainer && d.kind !== 'appreciation') parts.push(`بإشراف المدرّب ${d.trainer}`);
   if (parts.length) y = paragraph(ctx, parts.join(' · '), W / 2, y, 1900, 34, 400, MUTED, 1.5) + 10;
   text(ctx, `متمنين لهم دوام التوفيق والنجاح`, W / 2, y + 60, { size: 32, weight: 400, color: INK });
 
