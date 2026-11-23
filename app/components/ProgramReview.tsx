@@ -62,7 +62,7 @@ function Head({ r, c, mode, onBack, busy, dirty, editable, act, save, print, ext
         {onBack ? <button className="pt-btn ghost small" type="button" onClick={onBack}><Icon name="arrow" size={14} /> القائمة</button> : <Link className="pt-btn ghost small" href="/me/reports#review"><Icon name="arrow" size={14} /> {P46_NAMES_AR.page}</Link>}
         {print && <button className="pt-btn ghost small" type="button" onClick={print} data-testid="dr-print"><Icon name="print" size={14} /> معاينة الطباعة</button>}
         {editable && <button className="pt-btn ghost small" type="button" onClick={() => act('recompute')} disabled={!!busy} data-testid="dr-recompute"><Icon name="refresh" size={14} /> {P46_NAMES_AR.recompute}</button>}
-        {editable && <button className="pt-btn navy small" type="button" onClick={() => save()} disabled={!!busy || !dirty} data-testid="dr-save"><Icon name="save" size={14} /> {busy === 'save' ? '…' : dirty ? 'احفظ' : 'محفوظ'}</button>}
+        {editable && <button className="pt-btn navy small" type="button" onClick={() => save()} disabled={!!busy || !dirty} data-testid="dr-save"><Icon name="save" size={14} /> {busy === 'save' ? '…' : dirty ? 'حفظ' : 'محفوظ'}</button>}
         {editable && mode === 'author' && <button className="pt-btn gold small" type="button" onClick={() => act('submit')} disabled={!!busy} data-testid="dr-submit"><Icon name="send" size={14} /> {P46_NAMES_AR.submit}</button>}
         {r.can_decide && <button className="pt-btn gold small" type="button" onClick={() => act('approve')} disabled={!!busy} data-testid="dr-approve"><Icon name="check" size={14} /> {P46_NAMES_AR.approve}</button>}
       </div>
@@ -138,7 +138,7 @@ function VersionPanel({ id, token, body, cohort, onApplied }: { id: string; toke
       <div className="ba" data-testid="pv-version-ba"><span>النسخة <b>{pv.next_version}</b></span><span>الوحدات <b>{pv.plan.units.length}</b></span><span>الساعات <b>{pv.plan.hours}</b></span><span>الكفايات <b>{pv.plan.skills.length}</b></span></div>
       <div><b style={{ fontSize: '.88rem' }}>يُطبَّق آليًا ({pv.plan.applied.length})</b>{pv.plan.applied.length ? <ul data-testid="pv-version-applied">{pv.plan.applied.map((x: any, i: number) => <li key={i}><b>{x.target_ar}</b> · {x.action_ar} — <span className="pt-muted">{x.note_ar}</span></li>)}</ul> : <p className="pt-muted" style={{ margin: 0 }}>لا شيء آلي — النسخة تحفظ القرار وتفتح الوحدات من جديد.</p>}</div>
       {pv.plan.manual.length > 0 && <div><b style={{ fontSize: '.88rem' }}>{P47B_NAMES_AR.manual} ({pv.plan.manual.length})</b><ul className="m" data-testid="pv-version-manual">{pv.plan.manual.map((x: any, i: number) => <li key={i}><b>{x.target_ar}</b> · {x.action_ar} — {x.note_ar}</li>)}</ul></div>}
-      <label style={{ fontSize: '.88rem', fontWeight: 800 }}>{P47B_NAMES_AR.message} <small className="pt-muted">— يراها متدرّبو الدفعة {cohort + 1} في صفحتهم وعلى صفحة البرنامج · بلا أسماء ({msg.length}/{VERSION_MESSAGE_MAX})</small>
+      <label style={{ fontSize: '.88rem', fontWeight: 800 }}>{P47B_NAMES_AR.message} <small className="pt-muted">— يراها مشاركو الدفعة {cohort + 1} في صفحتهم وعلى صفحة البرنامج · بلا أسماء ({msg.length}/{VERSION_MESSAGE_MAX})</small>
         <textarea value={msg} onChange={e => setMsg(e.target.value.slice(0, VERSION_MESSAGE_MAX))} maxLength={VERSION_MESSAGE_MAX} rows={2} data-testid="pv-message" /></label>
       <div className="row"><button className="pt-btn gold small" type="button" onClick={apply} disabled={!!busy || msg.trim().length < VERSION_MESSAGE_MIN} data-testid="pv-apply"><Icon name="check" size={14} /> {busy === 'apply' ? '…' : `أصدر النسخة ${pv.next_version}`}</button><button className="pt-btn ghost small" type="button" onClick={() => setOpen(false)} disabled={!!busy}>ليس الآن</button></div>
     </>}
@@ -184,6 +184,6 @@ export function VerifyReview({ d }: { d: any }) {
     <ul style={{ listStyle: 'none', padding: 0, display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>{(d.gaps || []).map((g: any, i: number) => <li key={i}><span className="pv-g" data-g={g.grade}>{g.grade_ar}</span> {g.label_ar}</li>)}</ul>
     <h2 style={{ fontSize: '1.05rem' }}>ما يدخل النسخة القادمة ({(d.changes || []).length}){d.rejected ? ` · رُفض ${d.rejected}` : ''}</h2>
     {(d.changes || []).length ? <ul data-testid="pv-verify-changes">{d.changes.map((x: any, i: number) => <li key={i}><b>{x.target_ar}</b>: {x.text_ar}</li>)}</ul> : <p className="pt-muted">لا تعديلات — البرنامج وفى بوعده.</p>}
-    <p className="pt-muted">{P47_NAMES_AR.motto}. لا أسماء متدرّبين ولا أرقام أفراد في هذه الصفحة.</p>
+    <p className="pt-muted">{P47_NAMES_AR.motto}. لا أسماء مشاركين ولا أرقام أفراد في هذه الصفحة.</p>
   </div>;
 }

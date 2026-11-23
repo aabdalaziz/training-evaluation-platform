@@ -1,9 +1,9 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * أَثَر — واجهة التوأم المهاري (P11)
- *  GET  (Bearer)                 → حزمة التوأم للمتعلم: مستويات المهارات بأدلتها + تعريف المهارات + خيارات المسار (برامج مفتوحة، محاكيات، جلسات) + شهاداته
+ *  GET  (Bearer)                 → حزمة التوأم للمتعلّم: مستويات المهارات بأدلتها + تعريف المهارات + خيارات المسار (برامج مفتوحة، محاكيات، جلسات) + شهاداته
  *  GET  ?admin=1[&org=ID] (STAFF أو مدير جهة) → صفوف المستويات لأعضاء الجهة (أو الجميع للموظفين) + المهارات + الجهات + مشتركو الشهادات
- *  POST (Bearer) { action:'export' }                → تصدير توأم المتعلم كاملًا (JSON) — حق المتعلم في بياناته
+ *  POST (Bearer) { action:'export' }                → تصدير توأم المتعلّم كاملًا (JSON) — حق المتعلّم في بياناته
  *       { action:'forget', confirm:'امحُ توأمي' }   → محو أحداث التعلّم ومستويات المهارات (لا يمسّ الشهادات الصادرة)
  *       { action:'live', credential_id, enabled }   → تشغيل/إيقاف «الشهادة الحية» لشهادة يملكها
  *  الحساب كله يجري في المتصفح/الاختبارات بدوال lib/portal/twin.ts؛ هذا المسار يجمع البيانات فقط.
@@ -90,7 +90,7 @@ export async function POST(req: Request) {
       db.from('portal_profiles').select('public_id,display_name,headline,city,share_mode').eq('user_id', user.id).maybeSingle(),
     ]);
     await db.from('portal_twin_exports').insert({ user_id: user.id, action: 'export', events: (events || []).length, levels: (levels || []).length });
-    return NextResponse.json({ success: true, twin: { exported_at: new Date().toISOString(), owner: { email: user.email, name: user.name }, profile: profile || null, levels: levels || [], events: events || [], credentials: creds || [], license: 'بيانات المتعلم ملكه؛ تُصدَّر بصيغة مفتوحة قابلة للنقل — أَثَر © 2026' } });
+    return NextResponse.json({ success: true, twin: { exported_at: new Date().toISOString(), owner: { email: user.email, name: user.name }, profile: profile || null, levels: levels || [], events: events || [], credentials: creds || [], license: 'بيانات المتعلّم ملكه؛ تُصدَّر بصيغة مفتوحة قابلة للنقل — أَثَر © 2026' } });
   }
   if (action === 'forget') {
     if (String(body.confirm || '').trim() !== 'امحُ توأمي') return bad('اكتب عبارة التأكيد كما هي: امحُ توأمي');

@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// الجلسات القادمة لبرنامج/شعبة — تُعرض في صفحة البرنامج العامة (الجلسات العامة) وفي بوابة المتدرب (/me — جلسات شعبته)
+// الجلسات القادمة لبرنامج/شعبة — تُعرض في صفحة البرنامج العامة (الجلسات العامة) وفي بوّابة المتعلّم (/me — جلسات شعبته)
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase/client';

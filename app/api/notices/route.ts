@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     const r = await submitReply(db, { email: user.email, name: (body.name && String(body.name).slice(0, 80)) || null }, { notice_id: String(body.notice_id || ''), chip: body.chip, text: body.text });
     if ('error' in r) return bad(r.error, r.status);
     try { await db.from('audit_logs').insert({ actor_id: user.id, actor_email: user.email, actor_role: 'LEARNER', action: 'word_reply', entity_type: 'notice', entity_id: r.row.notice_id, entity_label: 'ردّ على كلمة', source: 'portal', metadata: { chip: r.row.chip, chars: (r.row.text || '').length, created: r.created } }); } catch { /* التدقيق لا يوقف الردّ */ }
-    return NextResponse.json({ success: true, reply: { chip: r.row.chip, chip_ar: chipLabel(r.row.chip), text: r.row.text, at: r.row.updated_at, editable: true, voice_sec: (r.row.meta as any)?.voice?.sec ?? null, transcript: (r.row.meta as any)?.transcript ?? null }, created: r.created, message: r.created ? 'وصل ردّك إلى مدرّبك — له وحده.' : 'عُدِّل ردّك.' }, { headers: NO });
+    return NextResponse.json({ success: true, reply: { chip: r.row.chip, chip_ar: chipLabel(r.row.chip), text: r.row.text, at: r.row.updated_at, editable: true, voice_sec: (r.row.meta as any)?.voice?.sec ?? null, transcript: (r.row.meta as any)?.transcript ?? null }, created: r.created, message: r.created ? 'وصل ردّك إلى ميسّرك — له وحده.' : 'عُدِّل ردّك.' }, { headers: NO });
   }
   return bad('إجراء غير معروف');
 }

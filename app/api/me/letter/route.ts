@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P62 «رسالة إلى نفسي بعد سنة» — الطبعة الثانية (الاسم الرسمي: الرسالة المؤجَّلة للمتدرّب)
+ * P62 «رسالة إلى نفسي بعد سنة» — الطبعة الثانية (الاسم الرسمي: الرسالة المؤجَّلة للمشارك)
  *  GET  /api/me/letter                      → رسائلي (النصّ محجوب حتى الفتح) · ظرف الدفعة · برامجي · الآفاق · بذرة اليوم · الحدود
  *  POST /api/me/letter { action }
  *       write  { body_ar?, media_id?, horizon?, program_id?, prompt_key?, context_key?, chain_of? } → ختم

@@ -1,18 +1,18 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P73 «ساعة أَثَر» (الرسمي: لقاء التأمل الأسبوعي للشعبة)
- *  GET  /api/me/hour                        → شُعبي وساعاتها (متدرّبًا أو أستاذًا): التثبيت · الطور الآن · سطر آخر ساعة
+ *  GET  /api/me/hour                        → شُعبي وساعاتها (مشاركًا أو أستاذًا): التثبيت · الطور الآن · سطر آخر ساعة
  *  GET  /api/me/hour?classroom=<id>         → الغرفة: «ما كتبناه هذا الأسبوع» (k ≥ 5) · ما حملتُه · سحابة الكلمات (k ≥ 5) · السطور والأصوات · الختم · ساعات سابقة
  *  POST { action:'pin', classroom_id, weekday, time }  (الأستاذ) تثبيت أسبوعي حتى نهاية البرنامج — لا موعد افتراضي
  *  POST { action:'unpin', classroom_id }               (الأستاذ) إلغاء المواعيد القادمة
- *  POST { action:'carry', classroom_id, line_id }      (المتدرّب) «أحمله معي» — إشعار لصاحب السطر بلا اسم
- *  POST { action:'word',  classroom_id, text }         (المتدرّب) كلمة واحدة ≤ 24
- *  POST { action:'line',  classroom_id, text }         (المتدرّب) سطر مقترَح ≤ 120
- *  POST { action:'vote',  classroom_id, line_id }      (المتدرّب) صوت واحد لسطر غيري (يُبدَّل)
+ *  POST { action:'carry', classroom_id, line_id }      (المشارك) «أحمله معي» — إشعار لصاحب السطر بلا اسم
+ *  POST { action:'word',  classroom_id, text }         (المشارك) كلمة واحدة ≤ 24
+ *  POST { action:'line',  classroom_id, text }         (المشارك) سطر مقترَح ≤ 120
+ *  POST { action:'vote',  classroom_id, line_id }      (المشارك) صوت واحد لسطر غيري (يُبدَّل)
  *  POST { action:'seal',  classroom_id }               (الأستاذ) ختم الساعة — الأعلى أصواتًا، والتعادل للأقصر
  *  POST { action:'seal',  classroom_id, public? }      (الأستاذ) public=false يُخرج سطر هذه الساعة من «سمعناكم» على الرئيسة (P74)
  *  POST { action:'seal_public', classroom_id, seal_id, public } (الأستاذ) تبديل الظهور بعد الختم
- *  POST multipart { classroom_id, seal_id, duration_sec, file } (المتدرّب) «بصوتِ واحدٍ منّا» — قراءة ≤ 15 ث لسطر الشعبة المختوم (P74)
+ *  POST multipart { classroom_id, seal_id, duration_sec, file } (المشارك) «بصوتِ واحدٍ منّا» — قراءة ≤ 15 ث لسطر الشعبة المختوم (P74)
  *  POST { action:'voice_delete', classroom_id, seal_id } (صاحب الصوت أو الأستاذ) حذف فوري
  *  GET  /api/me/hour?classroom=<id>&voice=<seal_id>  → رابط موقّع 300 ث لقراءة ختم سابق (عضو الشعبة فقط)
  *  المبدأ: لا درجة ولا حضور ولا تقرير؛ لا أسماء؛ لا ذكاء اصطناعي. المصادقة: Bearer · الحدّ: 60 كتابة/ساعة.

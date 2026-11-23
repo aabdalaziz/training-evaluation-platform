@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/miaar/client — م7 «عُبور للجهات»: بوابة الجهة الطالبة (رابط سرّي، بلا حساب، قراءة فقط)
+ * /api/miaar/client — م7 «عُبور للجهات»: بوّابة الجهة الطالبة (رابط سرّي، بلا حساب، قراءة فقط)
  *  GET  ?t=<token>            → لوحة طلاب الجهة (العدّادات · الصفوف · تقرير الجهة · المعيار المرجعي) — لا بنود ولا مفاتيح
  *  GET  ?t=<token>&csv=1      → CSV
  *  POST {t, action:'sign', name} → «ختم المراقب» من منسّق الجهة (مرة واحدة)

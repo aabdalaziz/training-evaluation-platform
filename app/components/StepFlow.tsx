@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * هـ-3 ن «محطّات» — عدّة التدفّق لأدوات التقييم والاستطلاع: شاشة لكل محور بدل النموذج الطولي.
+ * هـ-3 ن «محطّات» — عدّة التدفّق لأدوات التقييم والاستبيان: شاشة لكل محور بدل النموذج الطولي.
  *  FlowShell: الغلاف + الرأس (علامة أَثَر · عنوان · سطر البرنامج · زرّ اللغة)
  *  Stations : شريط المحطّات (مكتمل/جارٍ/لم يبدأ/ينقصه) + نسبة التقدّم — الضغط ينقل إلى محطّة سبق بلوغها
  *  FlowNav  : السابق/التالي/إرسال + «المحور i من n» + رسالة الخطأ الموضعية
@@ -19,7 +19,7 @@ const T = {
   stepOf: { ar: (i: number, n: number) => `المحور ${i} من ${n}`, en: (i: number, n: number) => `Step ${i} of ${n}` },
   next: { ar: 'التالي', en: 'Next' }, back: { ar: 'السابق', en: 'Back' }, start: { ar: 'ابدأ', en: 'Start' },
   submit: { ar: 'إرسال الإجابات', en: 'Submit answers' }, sending: { ar: 'جارٍ الإرسال…', en: 'Submitting…' },
-  journey: { ar: 'محطّات الاستطلاع', en: 'Survey stations' }, progress: { ar: 'التقدّم', en: 'Progress' },
+  journey: { ar: 'محطّات الاستبيان', en: 'Survey stations' }, progress: { ar: 'التقدّم', en: 'Progress' },
   optional: { ar: 'اختياري', en: 'Optional' }, missing: { ar: 'ينقصه إلزامي', en: 'Required missing' },
 };
 

@@ -1,12 +1,12 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/sim — محاكيات الأداء (بوابة أَثَر · P10)
+ * /api/sim — محاكيات الأداء (بوّابة أَثَر · P10)
  *  GET                                   → السيناريوهات المنشورة (عام)
  *  GET ?run=<id>                         → تشغيلة واحدة (صاحبها أو موظف)
  *  GET ?mine=1                           → تشغيلات المستخدم
  *  GET ?admin=1&status=scored            → موظف: التشغيلات بانتظار الاعتماد (+ أسئلة المستشار الأخيرة)
  *  POST { action:'start', scenario }     → بدء تشغيلة (زائر: سيناريو demo بلا حفظ؛ مستخدم: تُحفظ)
- *  POST { action:'turn', run_id|turns, scenario, text } → دور المتعلم → ردّ الشخصية (ذكاء اصطناعي أو بديل محلي)؛ عند بلوغ الحد تُقيَّم تلقائيًا
+ *  POST { action:'turn', run_id|turns, scenario, text } → دور المتعلّم → ردّ الشخصية (ذكاء اصطناعي أو بديل محلي)؛ عند بلوغ الحد تُقيَّم تلقائيًا
  *  POST { action:'finish', run_id|turns, scenario }     → إنهاء مبكر وتقييم
  *  POST { action:'approve', run_id, decision:'approved'|'rejected', note? } → موظف: اعتماد الدليل (يُحدَّث سياق حدث التعلّم)
  *  الحوكمة: الذكاء الاصطناعي يمثّل الشخصية ويقترح الدرجة؛ الدليل لا يصبح معتمدًا إلا بقرار بشري. للزوار حدّ 40 دورًا/ساعة لكل IP.

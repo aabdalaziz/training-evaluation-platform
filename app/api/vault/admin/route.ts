@@ -40,7 +40,7 @@ async function ctx(req: Request) {
 }
 
 function ropaRows() {
-  return REGISTRY.filter(r => r.policy !== 'none').map(r => ({ activity: r.label_ar, activity_en: r.label_en, table: r.table, category: CATEGORY_AR[r.category], purpose: r.purpose_ar, data: r.data_ar, basis: BASIS_AR[r.basis], retention: retentionText(r), on_erasure: POLICY_AR[r.policy], recipients: r.access.map(a => ACCESS_AR[a]).join(' / '), processors: 'Supabase · Vercel' + (r.category === 'agents' ? ' · مزوّد الذكاء الاصطناعي' : '') + (r.category === 'communication' ? ' · Resend / Meta' : '') + (r.table === 'portal_invoices' ? ' · Moyasar' : ''), cross_border: 'نعم (مزوّدو السحابة خارج المملكة) — يُراجع عند الهجرة', legacy: r.legacy ? 'منصة التقييم' : 'بوابة أَثَر' }));
+  return REGISTRY.filter(r => r.policy !== 'none').map(r => ({ activity: r.label_ar, activity_en: r.label_en, table: r.table, category: CATEGORY_AR[r.category], purpose: r.purpose_ar, data: r.data_ar, basis: BASIS_AR[r.basis], retention: retentionText(r), on_erasure: POLICY_AR[r.policy], recipients: r.access.map(a => ACCESS_AR[a]).join(' / '), processors: 'Supabase · Vercel' + (r.category === 'agents' ? ' · مزوّد الذكاء الاصطناعي' : '') + (r.category === 'communication' ? ' · Resend / Meta' : '') + (r.table === 'portal_invoices' ? ' · Moyasar' : ''), cross_border: 'نعم (مزوّدو السحابة خارج المملكة) — يُراجع عند الهجرة', legacy: r.legacy ? 'منصة التقييم' : 'بوّابة أَثَر' }));
 }
 const csvCell = (v: any) => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
 

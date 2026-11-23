@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P38 «الشهادة التي تكبر» — ثلاثة مكوّنات صغيرة تُعرض في صفحات قائمة:
- *  <ProgramAfter programId>     صفحة البرنامج العامة: «ما قاله من تدرّب هنا» — من خمسة متدرّبين كتبوا محطة الأشهر الثلاثة؛ كلمات لا نسب؛ اقتباسات اعتمدها إنسان
+ *  <ProgramAfter programId>     صفحة البرنامج العامة: «ما قاله من تدرّب هنا» — من خمسة مشاركين كتبوا محطة الأشهر الثلاثة؛ كلمات لا نسب؛ اقتباسات اعتمدها إنسان
  *  <CredentialChapters code>    الشهادة الحيّة: «فصول بعد البرنامج» التي أظهرها صاحبها
  *  <OrgAfterLine orgId token>   /org (لوحة الأثر): سطر واحد عن المنسوبين (k≥5) — سطر لا رسم
  *  P64 «قال من سبقك»: صفحة البرنامج تضيف سطور تخرّج الخرّيجين (الوجه العام من P63) — خمسة أشخاص على الأقل، سبعة سطور كحدّ، بلا أسماء
@@ -32,7 +32,7 @@ export function ProgramAfter({ programId, lang = 'ar' }: { programId: string; la
       {(d.org_said || []).map((o: any, i: number) => <blockquote key={i} className="pa-orgsaid" data-testid="pa-org-said"><small>{P39_NAMES_AR.org_said} — {o.org_ar} · {o.state_ar}</small>{o.text_ar}</blockquote>)}
       {d.measure_line_ar && <p className="pa-voice" data-testid="pa-measure-line"><Icon name="trend" size={14} /> {d.measure_line_ar}</p>}
     </div>}
-    <small className="pa-note">{ar ? 'بكلمات المتدرّبين بعد ثلاثة أشهر من البرنامج — لا نجوم ولا نسب؛ لا تتكلم الصفحة إلا من خمسة متدرّبين مختلفين، والاقتباسات بإذن أصحابها واعتماد إنسان.' : 'In learners’ own words three months after the program — no stars, no percentages; the page speaks only from five distinct learners.'} <Link href="/me/after">{ar ? 'محطاتي' : 'My stations'}</Link></small>
+    <small className="pa-note">{ar ? 'بكلمات المشاركين بعد ثلاثة أشهر من البرنامج — لا نجوم ولا نسب؛ لا تتكلم الصفحة إلا من خمسة مشاركين مختلفين، والاقتباسات بإذن أصحابها واعتماد إنسان.' : 'In learners’ own words three months after the program — no stars, no percentages; the page speaks only from five distinct learners.'} <Link href="/me/after">{ar ? 'محطاتي' : 'My stations'}</Link></small>
   </section>;
 }
 

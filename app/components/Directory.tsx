@@ -49,13 +49,13 @@ export function DirectoryList({ face }: { face: Face }) {
     <>
       <ZoneDoor zone={face === 'expert' ? 'experts' : 'trainers'} crumb={title} kicker={`هيئة أَثَر الاستشارية · ${meta?.rules.tagline_ar || 'سيرتك الذاتية بكلماتك — وتوثيقها من أَثَر'}`}
         title={face === 'expert' ? 'خبراء أَثَر —' : 'مدرّبو أَثَر —'} word={face === 'expert' ? 'سيرهم الذاتية بكلماتهم، وتوثيقهم من أَثَر' : 'سجلّهم من أَثَر، وتوثيقهم من أَثَر'}
-        lead={face === 'expert' ? 'خبراء استشاريون كتبوا سيرهم الذاتية بكلماتهم، وراجعها طاقم أَثَر ومنحها «توثيق أَثَر» موقَّعًا. بجانب كل سيرة «ما شهده أَثَر»: ما سجّلته المنصة لهم فعلًا — لا نجوم ولا تقييمات.' : 'مدرّبون قدّموا في أَثَر أو انضمّوا إلى هيئتها الاستشارية، كتبوا سيرهم الذاتية بكلماتهم، وراجعها طاقم أَثَر ومنحها «توثيق أَثَر». بجانب كل سيرة «ما شهده أَثَر»: جلسات وحضور وشهادات سجّلتها المنصة فعلًا.'}
+        lead={face === 'expert' ? 'خبراء استشاريون كتبوا سيرهم الذاتية بكلماتهم، وراجعها طاقم أَثَر ومنحها «توثيق أَثَر» موقَّعًا. بجانب كل سيرة «ما شهده أَثَر»: ما سجّلته البوّابة لهم فعلًا — لا نجوم ولا تقييمات.' : 'مدرّبون قدّموا في أَثَر أو انضمّوا إلى هيئتها الاستشارية، كتبوا سيرهم الذاتية بكلماتهم، وراجعها طاقم أَثَر ومنحها «توثيق أَثَر». بجانب كل سيرة «ما شهده أَثَر»: جلسات وحضور وشهادات سجّلتها البوّابة فعلًا.'}
         promises={face === 'expert' ? [
           { icon: 'doc', title: 'سيرتك الذاتية بكلماتك', body: 'أنت تكتبها، وطاقم أَثَر يراجعها قبل النشر — لا قوالب ولا تنجيم.' },
           { icon: 'certificate', title: 'توثيق أَثَر', body: 'لكل عضو وثيقة موقَّعة برمز تحقّق عام يمكن لأيّ جهة التأكّد منه.' },
-          { icon: 'trend', title: 'ما شهده أَثَر', body: 'ما سجّلته المنصة فعلًا: تصديقات، جلسات، برامج — سجلّ لا رأي.' },
+          { icon: 'trend', title: 'ما شهده أَثَر', body: 'ما سجّلته البوّابة فعلًا: تصديقات، جلسات، برامج — سجلّ لا رأي.' },
         ] : [
-          { icon: 'school', title: 'سجلّ تقديم حقيقي', body: 'جلسات وحضور وشهادات سجّلتها المنصة — لا ادّعاء.' },
+          { icon: 'school', title: 'سجلّ تقديم حقيقي', body: 'جلسات وحضور وشهادات سجّلتها البوّابة — لا ادّعاء.' },
           { icon: 'certificate', title: 'توثيق أَثَر', body: 'وثيقة موقَّعة برمز تحقّق عام لكل عضو في الهيئة.' },
           { icon: 'users', title: 'الجهات تجدك', body: 'بحث بالمجال والقطاع والمدينة والنمط — وطلب تواصل من صفحتك.' },
         ]}
@@ -73,7 +73,7 @@ export function DirectoryList({ face }: { face: Face }) {
         <label className="dr-lbl">المدينة<input className="dr-in" value={city} onChange={e => setCity(e.target.value)} maxLength={60} /></label>
         <div className="dr-sbtns"><button type="submit" className="pt-btn small" disabled={busy} data-testid="dir-go"><Icon name="search" size={15} /> ابحث</button><button type="button" className="pt-btn ghost small" onClick={() => { setQ(''); setSkill(''); setSector(''); setService(''); setMode(''); setCity(''); run(1, {}); }}>مسح</button></div>
       </form>
-      <p className="dr-count" role="status" aria-live="polite" data-testid="dir-count">{busy ? 'جارٍ البحث…' : total ? `${total} ${face === 'expert' ? 'خبيرًا' : 'مدربًا'} — صفحة ${page} من ${pages} · الترتيب: آخر تحديث ثم الاسم` : 'لا نتائج بهذه المعايير — جرّب كلمة أعمّ أو امسح المرشّحات.'}</p>
+      <p className="dr-count" role="status" aria-live="polite" data-testid="dir-count">{busy ? 'جارٍ البحث…' : total ? `${total} ${face === 'expert' ? 'خبيرًا' : 'مدرّبًا'} — صفحة ${page} من ${pages} · الترتيب: آخر تحديث ثم الاسم` : 'لا نتائج بهذه المعايير — جرّب كلمة أعمّ أو امسح المرشّحات.'}</p>
       {err && <p className="dr-err" role="alert">{err}</p>}
       <ul className="dr-grid" aria-label="النتائج">
         {items.map(c => (<li key={c.slug} className="dr-card" data-testid="dir-card">
@@ -129,7 +129,7 @@ export function DirectoryProfile({ slug, face }: { slug: string; face: Face }) {
         <aside>
           <section className="dr-sec side" aria-labelledby="s-wit"><h2 id="s-wit"><Icon name="shield" size={16} /> ما شهده أَثَر</h2>
             {w ? (w.lines.length ? <ul className="dr-witness" data-testid="dir-witness">{w.lines.map(l => <li key={l.key}><Icon name="check" size={13} /> {l.text}</li>)}</ul> : <p className="dr-muted">{w.empty_ar}</p>) : <p className="dr-muted">اختار العضو إخفاء هذا القسم.</p>}
-            <p className="dr-fine">مشتق من سجلات المنصة ولا يُكتب باليد.</p></section>
+            <p className="dr-fine">مشتق من سجلات البوّابة ولا يُكتب باليد.</p></section>
           <section className="dr-sec side" aria-labelledby="s-exp2"><h2 id="s-exp2"><Icon name="target" size={16} /> مجالات الخبرة</h2><p className="dr-chips">{p.skill_names.map(s => <span key={s} className="dr-chip">{s}</span>)}</p>
             <h3>القطاعات</h3><p className="dr-chips">{p.sectors.map(s => <span key={s} className="dr-chip sec">{sectorName[s] || s}</span>)}</p>
             <h3>الخدمات</h3><p className="dr-chips">{p.services.map(s => <span key={s} className="dr-chip svc">{svcName[s] || s}</span>)}</p>

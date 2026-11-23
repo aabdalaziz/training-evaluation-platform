@@ -16,11 +16,11 @@ const CommandRooms = dynamic(() => import('./CommandRooms'));
 import { BRAND } from '../../lib/portal/content';
 import WayBar from './WayBar';
 /* P43-أ «أَثَر الواحد»: هذا الشريط هو «مركز قيادة أَثَر» — غرفة إدارية داخل البيت الواحد، لا منتجًا منفصلًا اسمه «منصة التقويم».
-   الردهة (/hub?stay=1) ⇄ مركز القيادة بزرّ واحد، وشارة «بابي» نفسها التي في غلاف البوابة. */
+   الردهة (/hub?stay=1) ⇄ مركز القيادة بزرّ واحد، وشارة «بابي» نفسها التي في غلاف البوّابة. */
 const HALL = '/hub?stay=1';
 
 /** عناصر التنقل الإداري الموحّد — نفس الترتيب في لوحة التحكم وفي كل الصفحات الإدارية */
-// صفحات بوابة أَثَر العامة (PortalShell) — لها رأسها الخاص
+// صفحات بوّابة أَثَر العامة (PortalShell) — لها رأسها الخاص
 const PORTAL_PREFIXES = ['/about', '/contact', '/services', '/programs', '/consulting', '/resources', '/live', '/sim', '/me', '/org', '/ai', '/credential', '/p', '/pay', '/accessibility', '/miaar', '/iqra', '/login', '/join', '/hub', '/forgot-password', '/reset-password', '/verify/letter' /* P52: صفحة التحقّق من رسالة الشهر داخل PortalShell */, '/verify/shield', '/verify/erasure', '/verify/policy', '/verify/report', '/verify/form' /* P68: تقرير القيادة + تقرير البرنامج (P46) — كلاهما داخل PortalShell */, '/enter' /* P67 */, '/g', '/verify/grad', '/verify/map' /* P63/P58: داخل PortalShell */, '/lv', '/verify/level' /* P70 */, '/privacy/processing' /* P65: داخل PortalShell */];
 /* P43-ب: قائمة الشريط تُبنى من خريطة الغُرَف (lib/portal/rooms.ts) بحسب صلاحياتي — المالية لا ترى «نقل الأثر» */
 
@@ -40,7 +40,7 @@ export default function GlobalNavigation() {
   }, []);
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  // لوحة التحكم تملك قائمتها الجانبية الكاملة، وصفحات بوابة أَثَر العامة تملك رأسها الخاص (PortalShell)
+  // لوحة التحكم تملك قائمتها الجانبية الكاملة، وصفحات بوّابة أَثَر العامة تملك رأسها الخاص (PortalShell)
   if (pathname.startsWith('/dashboard')) return null;
   if (pathname === '/' || PORTAL_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))) return null;
 

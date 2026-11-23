@@ -107,11 +107,11 @@ export default function CommandCenterPage() {
     const recentRooms = new Set(applyFilters(allEvals, { from: addDays(today, -2), to: today }, lk).map(e => e.classroom_id));
     const silent = raw.classrooms.filter((c: any) => c.program_id && activeIds.has(c.program_id) && !recentRooms.has(c.id));
     for (const a of actions.filter(x => x.priority === 'HIGH').slice(0, 3)) out.push({ level: 'red', text: `${a.label}: متوسط ${a.mean.toFixed(2)}/5 و${a.lowPct.toFixed(0)}% تقييمات منخفضة (n=${a.responses})` });
-    if (silent.length) out.push({ level: 'amber', text: `${silent.length} قاعة في برامج نشطة بلا استجابة خلال 3 أيام: ${silent.slice(0, 4).map((c: any) => c.code).join('، ')}${silent.length > 4 ? '…' : ''}` });
+    if (silent.length) out.push({ level: 'amber', text: `${silent.length} شعبة في برامج نشطة بلا استجابة خلال 3 أيام: ${silent.slice(0, 4).map((c: any) => c.code).join('، ')}${silent.length > 4 ? '…' : ''}` });
     const declining = trainers.filter(t => t.delta !== null && (t.delta as number) <= -0.3);
     if (declining.length) out.push({ level: 'amber', text: `اتجاه تنازلي: ${declining.slice(0, 3).map(t => `${t.label} (${(t.delta as number).toFixed(2)})`).join('، ')}` });
     const noTrainer = raw.classrooms.filter((c: any) => !c.trainer_id && c.program_id && activeIds.has(c.program_id));
-    if (noTrainer.length) out.push({ level: 'amber', text: `${noTrainer.length} قاعة بدون مدرب مرتبط` });
+    if (noTrainer.length) out.push({ level: 'amber', text: `${noTrainer.length} شعبة بدون مدرّب مرتبط` });
     const schedRooms = new Set(raw.schedules.filter((s: any) => s.is_active !== false).map((s: any) => s.classroom_id));
     const remoteIncomplete = raw.classrooms.filter((c: any) => c.delivery_mode === 'remote' && (!(c.level_id || c.level) || !schedRooms.has(c.id)));
     if (remoteIncomplete.length) out.push({ level: 'amber', text: `${remoteIncomplete.length} مجموعة عن بُعد بلا مستوى أو مواعيد` });
@@ -141,7 +141,7 @@ export default function CommandCenterPage() {
           <span className="cc-logo"></span>
           <div>
             <b><Icon name="dashboard" size={18} /> غرفة القيادة — المؤشرات الحية</b>
-            <span>منصة الجودة والتقييم · تحديث تلقائي كل {REFRESH_SEC} ثانية</span>
+            <span>بوّابة أَثَر · تحديث تلقائي كل {REFRESH_SEC} ثانية</span>
           </div>
         </div>
         <div className="cc-clock" aria-live="off">
@@ -177,7 +177,7 @@ export default function CommandCenterPage() {
                 <small>المؤشر العام للرضا · {RANGES.find(r => r.id === range)!.label}</small>
                 <div className="cc-hero-val"><b className="ltr">{k.measurements ? k.mean.toFixed(2) : '—'}</b><span>/ 5</span><em style={{ background: tone }}>{perf.ar}</em></div>
                 <p>
-                  {k.responses ? <>{k.responses} استجابة من {k.participants} مشاركًا · {k.rooms} قاعة · {k.trainers} مدرب · الفجوة عن المستهدف {TARGET}: <b className="ltr" style={{ color: k.gap > 0 ? '#D9A866' : '#5EA8A0' }}>{k.gap > 0 ? '-' : '+'}{Math.abs(k.gap).toFixed(2)}</b></> : 'لا توجد استجابات في هذا النطاق — وسّع النطاق الزمني أو شارك روابط التقييم.'}
+                  {k.responses ? <>{k.responses} استجابة من {k.participants} مشاركًا · {k.rooms} شعبة · {k.trainers} مدرّب · الفجوة عن المستهدف {TARGET}: <b className="ltr" style={{ color: k.gap > 0 ? '#D9A866' : '#5EA8A0' }}>{k.gap > 0 ? '-' : '+'}{Math.abs(k.gap).toFixed(2)}</b></> : 'لا توجد استجابات في هذا النطاق — وسّع النطاق الزمني أو شارك روابط التقييم.'}
                   {cmp && cmp.deltaMean !== null && <> · مقارنة بالفترة السابقة <b className="ltr" style={{ color: cmp.deltaMean >= 0 ? '#5EA8A0' : '#F0A48C' }}>{cmp.deltaMean >= 0 ? '▲' : '▼'} {Math.abs(cmp.deltaMean).toFixed(2)}</b></>}
                 </p>
                 <div className="cc-dist" aria-label="توزيع التقييمات">
@@ -192,9 +192,9 @@ export default function CommandCenterPage() {
               <Tile icon="send" label="استجابات اليوم" value={kToday.responses} sub={kToday.measurements ? `متوسط اليوم ${kToday.mean.toFixed(2)}` : 'لا استجابات بعد اليوم'} />
               <Tile icon="evaluations" label="استجابات النطاق" value={k.responses} sub={`يومي ${k.daily} · ختامي ${k.final}`} delta={cmp?.deltaResponses ?? null} />
               <Tile icon="programs" label="برامج نشطة" value={activePrograms} sub={`${raw.programs.length} إجمالي البرامج`} />
-              <Tile icon="school" label="القاعات / المدربون" value={`${raw.classrooms.length} / ${raw.trainers.length}`} sub={`${k.rooms} قاعة نشطة في النطاق`} />
+              <Tile icon="school" label="الشُّعب / المدرّبون" value={`${raw.classrooms.length} / ${raw.trainers.length}`} sub={`${k.rooms} شعبة نشطة في النطاق`} />
               <Tile icon="alert" label="محاور تحتاج تدخلًا" value={actions.filter(a => a.priority === 'HIGH').length} sub={`${actions.length} إجراء مقترح`} tone={actions.some(a => a.priority === 'HIGH') ? '#F0A48C' : '#5EA8A0'} />
-              <Tile icon="laptop" label="استطلاع التعلم عن بُعد" value={raw.remoteResponses} sub="إجمالي الاستجابات" />
+              <Tile icon="laptop" label="استبيان التعلم عن بُعد" value={raw.remoteResponses} sub="إجمالي الاستجابات" />
             </div>
           </section>
 
@@ -214,15 +214,15 @@ export default function CommandCenterPage() {
             </div>
           </section>
 
-          {/* ===== الصف الثالث: المدربون + القاعات + قرار اليوم ===== */}
+          {/* ===== الصف الثالث: المدرّبون + الشُّعب + قرار اليوم ===== */}
           <section className="cc-row3">
             <div className="cc-card">
-              <h2><Icon name="users" size={18} />ترتيب المدربين <small>n ≥ {THRESHOLDS.minSample}</small></h2>
-              <Rank rows={trainers.filter(r => r.responses >= THRESHOLDS.minSample).sort((a, b) => b.mean - a.mean).slice(0, 6)} empty="لا توجد عينة كافية للمدربين في هذا النطاق" />
+              <h2><Icon name="users" size={18} />ترتيب المدرّبين <small>n ≥ {THRESHOLDS.minSample}</small></h2>
+              <Rank rows={trainers.filter(r => r.responses >= THRESHOLDS.minSample).sort((a, b) => b.mean - a.mean).slice(0, 6)} empty="لا توجد عينة كافية للمدرّبين في هذا النطاق" />
             </div>
             <div className="cc-card">
-              <h2><Icon name="school" size={18} />ترتيب القاعات</h2>
-              <Rank rows={rooms.sort((a, b) => b.mean - a.mean).slice(0, 6)} empty="لا توجد بيانات قاعات في هذا النطاق" />
+              <h2><Icon name="school" size={18} />ترتيب الشُّعب</h2>
+              <Rank rows={rooms.sort((a, b) => b.mean - a.mean).slice(0, 6)} empty="لا توجد بيانات شُعب في هذا النطاق" />
             </div>
             <div className="cc-card cc-decision">
               <h2><Icon name="target" size={18} />قرار اليوم</h2>
@@ -245,7 +245,7 @@ export default function CommandCenterPage() {
               <div className="cc-ticker-in">
                 {(latest.length ? [...latest, ...latest] : []).map((e, i) => {
                   const room = raw.classrooms.find((c: any) => c.id === e.classroom_id)?.code || '—';
-                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#B3A5AE' : e.mean >= TARGET ? '#5EA8A0' : e.mean >= THRESHOLDS.good ? '#8FD0C8' : e.mean >= THRESHOLDS.watch ? '#D9A866' : '#F0A48C' }} />{timeAgo(String(e.submitted_at))} · قاعة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
+                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#B3A5AE' : e.mean >= TARGET ? '#5EA8A0' : e.mean >= THRESHOLDS.good ? '#8FD0C8' : e.mean >= THRESHOLDS.watch ? '#D9A866' : '#F0A48C' }} />{timeAgo(String(e.submitted_at))} · شعبة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
                 })}
                 {!latest.length && <span>لا توجد استجابات بعد</span>}
               </div>

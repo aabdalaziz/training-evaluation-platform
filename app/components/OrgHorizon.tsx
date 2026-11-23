@@ -49,7 +49,7 @@ export function OrgHorizon({ orgId, orgName, lang, token }: Props) {
       {!d && !err && <section className="pt-box"><p className="oh-muted">نقرأ فصول الجهة…</p></section>}
       {d && (<>
         <ol className="oh-stepper" aria-label="الحركات الخمس">{[`نحن في ${yr}`, 'خطوة لهذه السنة', 'عهد الجهة', 'أين نحن من خطوتنا', 'ما وعدنا / ما وقع'].map((s, i) => <li key={s} className={i + 1 < stage || (stage === 4 && i + 1 <= 4) ? 'done' : i + 1 === stage ? 'on' : ''}><span>{i + 1}</span>{s}</li>)}</ol>
-        {d.me.staff && !can && <p className="oh-warn" data-testid="oh-staff">تقرأ بصفتك طاقم المنصة: ترى حالة الأفق والعهد والدرب — ولا ترى نص الأفق (لا يغادر الجهة) ولا تكتب.</p>}
+        {d.me.staff && !can && <p className="oh-warn" data-testid="oh-staff">تقرأ بصفتك طاقم البوّابة: ترى حالة الأفق والعهد والدرب — ولا ترى نص الأفق (لا يغادر الجهة) ولا تكتب.</p>}
 
         {!d.eligible.ok && !h && (
           <section className="pt-box oh-empty" data-testid="oh-elig"><Icon name="compass" size={26} /><b>أفق الجهة يُكتب بعد {d.eligible.min_members} منسوبين مؤكَّدين و{d.eligible.min === 2 ? 'فصلين' : `${d.eligible.min} فصول`}</b><p className="oh-muted">{d.eligible.read_ar}</p>

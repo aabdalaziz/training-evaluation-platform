@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// تفضيلات التواصل للمتعلم (P16 · نبض الوصول): هاتف، موافقة واتساب الصريحة، القناة المفضّلة، ساعات الهدوء — خاصة به، ولا تُستخدم إلا لرسائل أَثَر إليه
+// تفضيلات التواصل للمتعلّم (P16 · نبض الوصول): هاتف، موافقة واتساب الصريحة، القناة المفضّلة، ساعات الهدوء — خاصة به، ولا تُستخدم إلا لرسائل أَثَر إليه
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
@@ -37,7 +37,7 @@ export default function ContactPrefs() {
       {open && (
         <div className="cp-body">
           <label>رقم الجوال (لواتساب)<input dir="ltr" value={phone} onChange={e => setPhone(e.target.value)} placeholder="05xxxxxxxx أو +9665xxxxxxxx" inputMode="tel" /></label>
-          <label className="cp-check"><input type="checkbox" checked={opt} onChange={e => setOpt(e.target.checked)} disabled={!phone.trim()} /> <span>أوافق على استقبال رسائل أَثَر (مهمات، تذكيرات، شهادات) عبر واتساب على هذا الرقم. {ch && !ch.whatsapp && <em>— قناة واتساب لم تُفعَّل بعد في المنصة؛ ستُستخدم موافقتك فور تفعيلها.</em>}</span></label>
+          <label className="cp-check"><input type="checkbox" checked={opt} onChange={e => setOpt(e.target.checked)} disabled={!phone.trim()} /> <span>أوافق على استقبال رسائل أَثَر (مهمات، تذكيرات، شهادات) عبر واتساب على هذا الرقم. {ch && !ch.whatsapp && <em>— قناة واتساب لم تُفعَّل بعد في البوّابة؛ ستُستخدم موافقتك فور تفعيلها.</em>}</span></label>
           <label>القناة المفضّلة<select value={pref} onChange={e => setPref(e.target.value as any)}><option value="whatsapp" disabled={!opt}>واتساب</option><option value="email">البريد الإلكتروني</option><option value="push">إشعار المتصفح/الهاتف</option></select></label>
           <div className="cp-row"><label>لا تراسلني من<input type="time" value={qf} onChange={e => setQf(e.target.value)} /></label><label>إلى<input type="time" value={qt} onChange={e => setQt(e.target.value)} /></label></div>
           <p className="cp-note">البريد لا يتأثر بساعات الهدوء؛ تؤجَّل فيها رسائل واتساب والإشعارات فقط. بياناتك خاصة ولا تُشارك مع أي جهة.</p>

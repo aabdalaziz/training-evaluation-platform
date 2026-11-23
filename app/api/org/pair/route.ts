@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       if (action === 'decline') { const { error } = await save(p.id, { status: 'declined', meta: { ...(p.meta || {}), declined_at: iso, declined_by: c.me.email } }); if (error) return bad(error.message, 500); await tellMember(p, 'org_pair_declined', 'لم يكتمل العهد مع جهتك هذه المرة', `${p.member_name ? `${p.member_name}، ` : ''}لم تكتمل خطوتك مع جهتك هذه المرة. الطلب يبقى لك متى شئت.`, `org_pair:${p.id}:declined`); return NextResponse.json({ success: true, message: 'اعتذرت الجهة بلا تعليل.' }); }
       if (!oe.ok) return bad(oe.read_ar, 409); if (lower(p.member_email) === c.me.email) return bad('مدير الجهة لا يقبل طلبه هو — يقبله مدير آخر', 409);
       const { row, error } = await save(p.id, { status: 'proposing', accepted_at: iso, meta: { ...(p.meta || {}), accepted_by: c.me.email } }); if (error || !row) return bad(error?.message || 'تعذّر القبول', 500);
-      await tellMember(row, 'org_pair_accepted', `${orgName(row)} قبلت طلبك`, `${row.member_name ? `${row.member_name}، ` : ''}قبلت جهتك طلبك. الآن: اقترح لها خطوة واحدة لك من الخطوات التي تشهدها المنصة، واكتب لماذا — ولديكما ${ORG_PAIR_PROPOSE_DAYS} يومًا حتى يكتمل التوقيعان.`, `org_pair:${row.id}:accepted`);
+      await tellMember(row, 'org_pair_accepted', `${orgName(row)} قبلت طلبك`, `${row.member_name ? `${row.member_name}، ` : ''}قبلت جهتك طلبك. الآن: اقترح لها خطوة واحدة لك من الخطوات التي تشهدها البوّابة، واكتب لماذا — ولديكما ${ORG_PAIR_PROPOSE_DAYS} يومًا حتى يكتمل التوقيعان.`, `org_pair:${row.id}:accepted`);
       return NextResponse.json({ success: true, pair: await pairView(db, row, 'org', site, now.getTime(), null), message: `قبلتم. الآن اقترحوا لـ${memberName(row)} خطوة واحدة — وهو يقترح لكم.` });
     }
     if (!(p.status === 'proposing' || p.status === 'active' || p.status === 'review')) return bad('العهد ليس حيًّا', 409);
@@ -193,7 +193,7 @@ export async function POST(req: Request) {
     if (!st.eligible.ok) return bad(st.eligible.read_ar, 409); if (p) return bad('لديك عهد حيّ مع جهتك — عهد واحد في كل مرة', 409);
     if (body.name_mode !== undefined && !['full', 'first', 'anon'].includes(String(body.name_mode))) return bad('وضع الاسم: full أو first أو anon');
     const { row, error } = await save(inv.id, { status: 'proposing', accepted_at: iso, member_user_id: me.id, member_name: me.name || inv.member_name, member_name_mode: String(body.name_mode || 'first'), meta: { ...(inv.meta || {}), member_chapters: st.chapters } }); if (error || !row) return bad(error?.message || 'تعذّر القبول', 500);
-    await tellOrg(row, 'org_pair_accepted', `${memberName(row)} قبل دعوة الجهة`, `قبل ${memberName(row)} دعوة الجهة إلى العهد. الآن: اقترحوا له خطوة واحدة من الخطوات التي تشهدها المنصة، واكتبوا لماذا — ولديكما ${ORG_PAIR_PROPOSE_DAYS} يومًا حتى يكتمل التوقيعان.`, `org_pair:${row.id}:accepted`);
+    await tellOrg(row, 'org_pair_accepted', `${memberName(row)} قبل دعوة الجهة`, `قبل ${memberName(row)} دعوة الجهة إلى العهد. الآن: اقترحوا له خطوة واحدة من الخطوات التي تشهدها البوّابة، واكتبوا لماذا — ولديكما ${ORG_PAIR_PROPOSE_DAYS} يومًا حتى يكتمل التوقيعان.`, `org_pair:${row.id}:accepted`);
     return NextResponse.json({ success: true, pair: await pairView(db, row, 'member', site, now.getTime(), st.chapters), message: `قبلتَ. الآن اقترح لجهتك خطوة واحدة لك — وهي تقترح لك.` });
   }
   if (!p) return bad('لا عهد حيًّا مع جهتك', 409);

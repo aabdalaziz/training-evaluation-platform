@@ -4,8 +4,8 @@
  * P48-أ «ملف الاعتماد الحيّ» (الرسمي: ملف الدراسة الذاتية للاعتماد البرامجي)
  *  <AccredFile>   /me/accreditation?program=<pid>  — المصمّم/قائد البرنامج: 4 معايير × (ما ثبت · ما ينقص · فقرة موقَّعة) + شروط التأهّل + خريطة الكفايات إلى معايير المعلّم
  *  <AccredAdmin>  /admin/accreditation             — الطاقم: كل الملفات موجزةً · أضعف معيار عبر البرامج · تحرير نصوص المعايير بلا نشر كود
- *  قواعد: التغطية بكلمات (مستوفى · جزئي · ناقص · يدوي) لا ألوان وحدها · الذكاء يسوّد والإنسان يوقّع · لا أسماء متدرّبين.
- *  P61 <ProgramWeavePanel> «نسيج البرنامج» (#weave): ما نسجه المتدرّبون بأيديهم — أعداد فقط · k ≥ 5 · يَعُدّ ولا يَقتبس · «الجديلة» و«عبر الدفعات» · testids ac-weave-*
+ *  قواعد: التغطية بكلمات (مستوفى · جزئي · ناقص · يدوي) لا ألوان وحدها · الذكاء يسوّد والإنسان يوقّع · لا أسماء مشاركين.
+ *  P61 <ProgramWeavePanel> «نسيج البرنامج» (#weave): ما نسجه المشاركون بأيديهم — أعداد فقط · k ≥ 5 · يَعُدّ ولا يَقتبس · «الجديلة» و«عبر الدفعات» · testids ac-weave-*
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -149,7 +149,7 @@ export function AccredVerify({ code }: { code: string }) {
         <p className={`ac-intact ${d.intact ? 'ok' : 'no'}`} data-testid="ac-verify-intact"><Icon name={d.intact ? 'check' : 'alert'} size={14} /> {d.intact ? P48B_NAMES_AR.intact : P48B_NAMES_AR.tampered} — SHA-256 <code dir="ltr">{d.sha256}</code> · إصدار نصوص المعايير <code dir="ltr">{d.standards_sha_short}</code></p>
         <div className="ac-kpis"><span className="b"><b>{d.met}</b>/{d.total} <small>معيارًا فرعيًّا مستوفى</small></span><span><b>{d.pct}%</b> <small>التغطية</small></span><span><b>{(d.narratives || []).length}</b> <small>فقرة موقَّعة</small></span><span><b>{(d.timeline || []).length}</b> <small>دليلًا</small></span>{d.ageing_n > 0 && <span><b>{d.ageing_n}</b> <small>{P48B_NAMES_AR.ageing}</small></span>}<span className={d.eligible ? 'b' : ''}><small>{d.eligible ? 'شروط التأهّل متحقّقة' : 'شروط التأهّل غير مكتملة (مُعلَنة)'}</small></span></div>
         {d.note_ar && <blockquote className="ac-note" data-testid="ac-verify-note"><b>{P48B_NAMES_AR.note}:</b> «{d.note_ar}»</blockquote>}
-        {d.weave_ar && <p className="ac-weave-line" data-testid="ac-verify-weave">🧶 <b>{P61_NAMES_AR.title}</b> (كما كان عند الختم): {d.weave_ar} — بأيدي المتدرّبين، بلا أسماء، خمسة فأكثر.</p>}
+        {d.weave_ar && <p className="ac-weave-line" data-testid="ac-verify-weave">🧶 <b>{P61_NAMES_AR.title}</b> (كما كان عند الختم): {d.weave_ar} — بأيدي المشاركين، بلا أسماء، خمسة فأكثر.</p>}
         <div className="ac-row no-print"><button type="button" className="pt-btn ghost small" onClick={() => window.print()} data-testid="ac-verify-print"><Icon name="print" size={14} /> طباعة / {P48B_NAMES_AR.delivery}</button><Link href="/" className="pt-btn ghost small"><Icon name="home" size={14} /> الرئيسة</Link></div>
       </>}
     </section>
@@ -163,7 +163,7 @@ export function AccredVerify({ code }: { code: string }) {
         </div></section>; })}
       {d.diff && <section className="pt-box" data-testid="ac-verify-diff"><h2>{P48B_NAMES_AR.diff}</h2><p>{d.diff.improved.length ? <>صعد: {d.diff.improved.map((x: any) => <span key={x.code} className="ac-st ok">{x.code}</span>)}</> : 'لا صعود'}{d.diff.regressed.length ? <> · نزل: {d.diff.regressed.map((x: any) => <span key={x.code} className="ac-st no">{x.code}</span>)}</> : null} · المستوفى {d.diff.met_from} → {d.diff.met_to}</p></section>}
       <ReviewerClock timeline={d.timeline || []} compact />
-      <p className="pt-muted ac-foot">هذه النسخة لا تحمل أسماء متدرّبين؛ الأعداد مجاميع لخمسة أشخاص فأكثر. التحقّق يعيد حساب البصمة من النسخة المحفوظة لحظيًّا. © 2026 بوابة أَثَر.</p>
+      <p className="pt-muted ac-foot">هذه النسخة لا تحمل أسماء مشاركين؛ الأعداد مجاميع لخمسة أشخاص فأكثر. التحقّق يعيد حساب البصمة من النسخة المحفوظة لحظيًّا. © 2026 بوّابة أَثَر.</p>
     </>}
   </main>;
 }
@@ -208,14 +208,14 @@ export function AccredAdmin({ token }: { token: Tok }) {
       {d.weakest?.length > 0 && d.files.length > 0 && <p className="ac-weak" data-testid="ac-weakest">أضعف معيار عبر البرامج: <b>{d.weakest[0].code} — {d.weakest[0].title_ar}</b> ({d.weakest[0].avg}%) · أقواها: <b>{d.weakest[d.weakest.length - 1].code}</b> ({d.weakest[d.weakest.length - 1].avg}%)</p>}
     </section>
     <section className="pt-box" data-testid="ac-standards">
-      <h2><Icon name="doc" size={16} /> سجلّ المعايير — {P48_NAMES_AR.pas} <small className="pt-muted">— النصّ كما طُرح على منصّة استطلاع؛ حدِّثه من الوثيقة الرسمية هنا بلا نشر كود</small></h2>
+      <h2><Icon name="doc" size={16} /> سجلّ المعايير — {P48_NAMES_AR.pas} <small className="pt-muted">— النصّ كما طُرح على منصّة استبيان؛ حدِّثه من الوثيقة الرسمية هنا بلا نشر كود</small></h2>
       {ok && <p className="ac-ok" data-testid="ac-std-ok">{ok}</p>}
-      <ol className="ac-stdlist">{pas.map((s: any) => <li key={s.code} data-top={s.parent ? '0' : '1'}>{edit?.code === s.code ? <div className="ac-edit" data-testid="ac-std-edit"><input value={edit.title_ar} onChange={e => setEdit({ ...edit, title_ar: e.target.value.slice(0, 160) })} aria-label="عنوان المعيار" /><textarea value={edit.text_ar} onChange={e => setEdit({ ...edit, text_ar: e.target.value.slice(0, 1200) })} rows={3} aria-label="نصّ المعيار" data-testid="ac-std-text" /><label><input type="checkbox" checked={edit.source === 'draft'} onChange={e => setEdit({ ...edit, source: e.target.checked ? 'draft' : 'official' })} /> مسودّة (لم تُطابَق مع الوثيقة الرسمية بعد)</label><div className="ac-row"><button type="button" className="pt-btn gold small" onClick={save} disabled={busy} data-testid="ac-std-save">احفظ</button><button type="button" className="pt-btn ghost small" onClick={() => setEdit(null)}>إلغاء</button></div></div>
+      <ol className="ac-stdlist">{pas.map((s: any) => <li key={s.code} data-top={s.parent ? '0' : '1'}>{edit?.code === s.code ? <div className="ac-edit" data-testid="ac-std-edit"><input value={edit.title_ar} onChange={e => setEdit({ ...edit, title_ar: e.target.value.slice(0, 160) })} aria-label="عنوان المعيار" /><textarea value={edit.text_ar} onChange={e => setEdit({ ...edit, text_ar: e.target.value.slice(0, 1200) })} rows={3} aria-label="نصّ المعيار" data-testid="ac-std-text" /><label><input type="checkbox" checked={edit.source === 'draft'} onChange={e => setEdit({ ...edit, source: e.target.checked ? 'draft' : 'official' })} /> مسودّة (لم تُطابَق مع الوثيقة الرسمية بعد)</label><div className="ac-row"><button type="button" className="pt-btn gold small" onClick={save} disabled={busy} data-testid="ac-std-save">حفظ</button><button type="button" className="pt-btn ghost small" onClick={() => setEdit(null)}>إلغاء</button></div></div>
         : <><b>{s.code}</b> {s.title_ar}{s.source === 'draft' && <span className="ac-st man">مسودّة</span>} <small className="pt-muted">{s.parent ? s.text_ar : ''}</small> <button type="button" className="ac-link" onClick={() => setEdit({ code: s.code, title_ar: s.title_ar, text_ar: s.text_ar, source: s.source })} data-testid="ac-std-editbtn">تحرير</button></>}</li>)}</ol>
     </section>
   </main>;
 }
-/* ───────── P61: نسيج البرنامج — ما نسجه متدرّبوه بأيديهم ───────── */
+/* ───────── P61: نسيج البرنامج — ما نسجه مشاركوه بأيديهم ───────── */
 function Braid({ sources }: { sources: { from: string; to: string; n: number }[] }) {
   if (!sources.length) return null;
   const L = Array.from(new Set(sources.map(s => s.from))); const R = Array.from(new Set(sources.map(s => s.to)));
@@ -233,7 +233,7 @@ export function ProgramWeavePanel({ w, program_ar }: { w: any; program_ar: strin
   if (!w) return null;
   return <section className="pt-box ac-weave" id="weave" data-testid="ac-weave" data-belowk={w.below_k ? '1' : '0'} data-n={w.threads_n}>
     <h2>🧶 {P61_NAMES_AR.title} — {P61_NAMES_AR.sub} <small className="pt-muted">· {P61_NAMES_AR.official}</small></h2>
-    <p className="ac-lead">{P61_NAMES_AR.motto}. كل خيط هنا كتبه متدرّب بيده في «خريطة أثره» («هذا قاد إلى ذاك — لأن…»)؛ الملف يَعُدّ ولا يَقتبس: لا أسماء، لا جُمل، لا عدد تحت {K_PROGRAM}. لا يدخل شيء من هذا في تقييم أحد.</p>
+    <p className="ac-lead">{P61_NAMES_AR.motto}. كل خيط هنا كتبه مشارك بيده في «خريطة أثره» («هذا قاد إلى ذاك — لأن…»)؛ الملف يَعُدّ ولا يَقتبس: لا أسماء، لا جُمل، لا عدد تحت {K_PROGRAM}. لا يدخل شيء من هذا في تقييم أحد.</p>
     <ul className="ac-weave-mirror" data-testid="ac-weave-mirror">{(w.mirror?.lines_ar || []).map((l: string, i: number) => <li key={i} data-testid="ac-weave-line">{l}</li>)}</ul>
     <p className="ac-weave-line" data-testid="ac-letter-door">✉️ وأنت؟ ما الذي ترجو أن يكون خيطك بعد سنة؟ <Link href="/me/letter?door=weave">اكتب رسالة إلى نفسك</Link> — تعود إليك وحدك، في ساعة كتابتها.</p>
     {w.below_k && <p className="ac-task" data-testid="ac-weave-belowk"><Icon name="target" size={12} /> حين يبلغ الناسجون {K_PROGRAM} تظهر الخيوط والجديلة والدفعات — والدليل يعلّق نفسه تحت معياره تلقائيًا.</p>}

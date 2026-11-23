@@ -37,7 +37,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
   const [classroomId, setClassroomId] = useState(''); const [level, setLevel] = useState('');
   const [preset, setPreset] = useState<TitlePreset>('group'); const [label, setLabel] = useState(''); const [labelTouched, setLabelTouched] = useState(false);
   const [slot, setSlot] = useState(''); const [opensAt, setOpensAt] = useState(''); const [closesAt, setClosesAt] = useState('');
-  const [linkLang, setLinkLang] = useState<LinkLang>('auto');   /* P49-ب «بلغة المتدرّب» */
+  const [linkLang, setLinkLang] = useState<LinkLang>('auto');   /* P49-ب «بلغة المشارك» */
   const [created, setCreated] = useState<LinkRow[]>([]);
 
   useEffect(() => { try { setOrigin(window.location.origin); } catch { /* ignore */ } void supabase().auth.getSession().then(({ data }) => setToken(data.session?.access_token || '')); }, []);
@@ -109,7 +109,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
     <section className="el" id="eval-links" data-testid="eval-links">
       <style>{CSS}</style>
       <header className="el-h">
-        <div><div className="el-k"><Icon name="link" size={14} /> مولّد الروابط</div><h2>الرابط الذي لا يُخطئ</h2><p>رابط قصير + QR لكل برنامج أو شعبة أو فترة — يفتح الاستبيان الصحيح والبرنامج محدّد مسبقًا، فلا يختار المتدرّب شيئًا ولا يُخطئ.</p></div>
+        <div><div className="el-k"><Icon name="link" size={14} /> مولّد الروابط</div><h2>الرابط الذي لا يُخطئ</h2><p>رابط قصير + QR لكل برنامج أو شعبة أو فترة — يفتح الاستبيان الصحيح والبرنامج محدّد مسبقًا، فلا يختار المشارك شيئًا ولا يُخطئ.</p></div>
       </header>
       {msg && <div className={`el-msg ${msg.ok ? 'ok' : 'bad'}`} role="status">{msg.t}</div>}
 
@@ -122,7 +122,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
           <div className="el-row two">
             <label>البرنامج<select value={programId} onChange={e => { setProgramId(e.target.value); setClassroomId(''); setLevel(''); setLabelTouched(false); }} data-testid="el-program"><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
             <label>النطاق<select value={scope} onChange={e => { setScope(e.target.value as any); setLabelTouched(false); }} data-testid="el-scope">
-              <option value="all">كل الشعب (المتدرّب يختار شعبته)</option>
+              <option value="all">كل الشعب (المشارك يختار شعبته)</option>
               <option value="room" disabled={!rooms.length}>شعبة واحدة</option>
               <option value="level" disabled={!levels.length}>مستوى واحد (كل شعبه)</option>
               <option value="bulk" disabled={!rooms.length}>رابط لكل شعبة دفعة واحدة</option>
@@ -134,7 +134,7 @@ export default function EvalLinks({ programs, classrooms, defaultProgram }: { pr
             <label>تسمية العنوان<select value={preset} onChange={e => { setPreset(e.target.value as TitlePreset); setLabelTouched(false); }} data-testid="el-preset">{TITLE_PRESETS.map(p => <option key={p} value={p}>{TITLE_PRESET_AR[p]}</option>)}</select></label>
             <label>الفترة/الموعد (اختياري)<input value={slot} onChange={e => setSlot(e.target.value)} placeholder="مثال: الأسبوع الثالث · مساءً" maxLength={80} data-testid="el-slot" /></label>
           </div>
-          {scope !== 'bulk' && <div className="el-row"><label>العنوان الظاهر للمتدرّب<input value={label} onChange={e => { setLabel(e.target.value); setLabelTouched(true); }} maxLength={120} data-testid="el-label" /><small>يتولّد من القالب تلقائيًّا، ويمكنك تعديله — {labelTouched && <button type="button" className="el-lnk" onClick={() => setLabelTouched(false)}>أعد الاقتراح</button>}</small></label></div>}
+          {scope !== 'bulk' && <div className="el-row"><label>العنوان الظاهر للمشارك<input value={label} onChange={e => { setLabel(e.target.value); setLabelTouched(true); }} maxLength={120} data-testid="el-label" /><small>يتولّد من القالب تلقائيًّا، ويمكنك تعديله — {labelTouched && <button type="button" className="el-lnk" onClick={() => setLabelTouched(false)}>أعد الاقتراح</button>}</small></label></div>}
           <div className="el-row"><label>لغة الفتح<div className="el-seg">{LINK_LANGS.map(l => <button key={l} type="button" className={linkLang === l ? 'on' : ''} onClick={() => setLinkLang(l)} data-testid={`el-lang-${l}`}>{LINK_LANG_AR[l]}</button>)}</div><small>«تلقائي»: الناطق بالعربية يرى العربية، وغيره يرى الإنجليزية — من الرمز نفسه.</small></label></div>
           <div className="el-row two">
             <label>يُفتح من (اختياري)<input type="datetime-local" value={opensAt} onChange={e => setOpensAt(e.target.value)} data-testid="el-opens" /></label>

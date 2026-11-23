@@ -189,12 +189,12 @@ export default function DashboardHome({
 
           <QuickButton
             icon="🏫"
-            title="إضافة قاعة"
+            title="إضافة شعبة"
           />
 
           <QuickButton
             icon="👨‍🏫"
-            title="إضافة مدرب"
+            title="إضافة مدرّب"
           />
 
           <QuickButton

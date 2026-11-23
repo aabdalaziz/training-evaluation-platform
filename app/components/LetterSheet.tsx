@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P52 «رسالة الشهر» — ورقة الرسالة كما تصل إلى الجهة (A4 واحدة · تُطبع) — تُستخدم في مكتب التوقيع (معاينة) وفي بوابة الجهات (الأرشيف)
+ * P52 «رسالة الشهر» — ورقة الرسالة كما تصل إلى الجهة (A4 واحدة · تُطبع) — تُستخدم في مكتب التوقيع (معاينة) وفي بوّابة الجهات (الأرشيف)
  *  testids: ls-root[data-status] ls-lines ls-pulse[data-k] ls-pulse-line ls-pulse-mirror ls-pulse-say ls-threads ls-line ls-promise ls-ask ls-sign ls-code ls-reply
  *  P57 «نبض الشهر»: قسم رابع من body.pulse (محسوب مع المسوَّدة · متجمّد مع التوقيع) — سطر أرقام + مرآة + 🔊.
  */

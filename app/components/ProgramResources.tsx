@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// قائمة حقائب البرنامج — تُعرض في صفحة البرنامج العامة وفي بوابة المتدرب (/me)
+// قائمة حقائب البرنامج — تُعرض في صفحة البرنامج العامة وفي بوّابة المتعلّم (/me)
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase/client';

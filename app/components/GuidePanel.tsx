@@ -19,7 +19,7 @@ const readRecent = (): string[] => { try { return JSON.parse(localStorage.getIte
 const pushRecent = (id: string) => { try { const r = [id, ...readRecent().filter(x => x !== id)].slice(0, 8); localStorage.setItem(RECENT_KEY, JSON.stringify(r)); } catch { /* ignore */ } };
 const T = {
   open: { ar: 'البحث في أَثَر', en: 'Search Athar' }, ph: { ar: 'ابحث عن صفحة أو برنامج أو شهادة… أو اسأل سؤالًا ينتهي بـ ؟', en: 'Search pages, programs, credentials… or ask a question ending with ?' },
-  hint: { ar: '↑↓ للتنقل · Enter للفتح · Esc للإغلاق', en: '↑↓ navigate · Enter open · Esc close' }, none: { ar: 'لا نتائج داخل البوابة لهذه الكلمات — جرّب كلمة أقصر، أو اسأل بعلامة استفهام.', en: 'No results — try a shorter word, or ask with a question mark.' },
+  hint: { ar: '↑↓ للتنقل · Enter للفتح · Esc للإغلاق', en: '↑↓ navigate · Enter open · Esc close' }, none: { ar: 'لا نتائج داخل البوّابة لهذه الكلمات — جرّب كلمة أقصر، أو اسأل بعلامة استفهام.', en: 'No results — try a shorter word, or ask with a question mark.' },
   start: { ar: 'اقتراحات', en: 'Suggestions' }, ask: { ar: 'اسأل أثير:', en: 'Ask Athir:' }, asking: { ar: 'أثير يقرأ النتائج…', en: 'Athir is reading the results…' }, loading: { ar: 'نبحث في المحتوى…', en: 'Searching content…' },
   count: (n: number, l: Lang) => (l === 'ar' ? `${n} نتيجة` : `${n} results`), copied: { ar: 'نُسخ الرابط', en: 'Link copied' }, srcs: { ar: 'المصادر', en: 'Sources' }, kbd: { ar: 'Ctrl K', en: 'Ctrl K' },
   staffOnly: { ar: 'نتائج الإدارة تظهر للطاقم بعد الدخول', en: 'Admin results appear for staff after sign-in' },
@@ -32,7 +32,7 @@ export default function GuidePanel({ onClose, initialQuery = '' }: { onClose: ()
   const [remote, setRemote] = useState<Entry[]>([]); const [busy, setBusy] = useState(false); const [answer, setAnswer] = useState<{ text: string; src: Entry[] } | null>(null); const [asking, setAsking] = useState(false);
   const [active, setActive] = useState(0); const [toast, setToast] = useState(''); const [recent, setRecent] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null); const dlgRef = useRef<HTMLDivElement>(null); const tokenRef = useRef<string>(''); const seq = useRef(0);
-  /* اللغة: صفحة مِعيار تحفظ athar-page-lang، وبقية البوابة athar_lang، وإلا لغة الوثيقة */
+  /* اللغة: صفحة مِعيار تحفظ athar-page-lang، وبقية البوّابة athar_lang، وإلا لغة الوثيقة */
   const detectLang = useCallback((): Lang => { try { const a = localStorage.getItem('athar-page-lang') || localStorage.getItem('athar_lang'); if (pathname.startsWith('/miaar') && a) return a === 'ar' ? 'ar' : 'en'; const b = localStorage.getItem('athar_lang'); if (b === 'en') return 'en'; } catch { /* ignore */ } return (document.documentElement.lang || 'ar').startsWith('en') ? 'en' : 'ar'; }, [pathname]);
   const close = useCallback(() => { onClose(); }, [onClose]);
   useEffect(() => { setLang(detectLang()); setRecent(readRecent()); setTimeout(() => inputRef.current?.focus(), 20); document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = ''; }; }, [detectLang]);
@@ -61,7 +61,7 @@ export default function GuidePanel({ onClose, initialQuery = '' }: { onClose: ()
     return () => clearTimeout(h);
   }, [q, lang]);
 
-  const items = useMemo<Item[]>(() => { const seen = new Set(local.map(l => l.href)); const list: Item[] = [...local, ...remote.filter(r => !seen.has(r.href))]; if (intent.kind === 'ask') list.unshift({ id: 'ask', href: '#ask', ar: `${T.ask.ar} ${intent.value}؟`, en: `${T.ask.en} ${intent.value}?`, group: 'answer' as Group, cmd: 'ask', hint: { ar: 'إجابة من نتائج البوابة فقط — Enter', en: 'Answer from portal results only — Enter' } }); return list; }, [local, remote, intent]);
+  const items = useMemo<Item[]>(() => { const seen = new Set(local.map(l => l.href)); const list: Item[] = [...local, ...remote.filter(r => !seen.has(r.href))]; if (intent.kind === 'ask') list.unshift({ id: 'ask', href: '#ask', ar: `${T.ask.ar} ${intent.value}؟`, en: `${T.ask.en} ${intent.value}?`, group: 'answer' as Group, cmd: 'ask', hint: { ar: 'إجابة من نتائج البوّابة فقط — Enter', en: 'Answer from portal results only — Enter' } }); return list; }, [local, remote, intent]);
   const groups = useMemo(() => groupHits(items), [items]);
   const flat = useMemo(() => groups.flatMap(g => g.items), [groups]);
   useEffect(() => { setActive(0); }, [q, remote.length]);
@@ -107,7 +107,7 @@ export default function GuidePanel({ onClose, initialQuery = '' }: { onClose: ()
             <div className="gd-sr" aria-live="polite">{busy ? T.loading[lang] : T.count(flat.length, lang)}</div>
             {answer && (
               <div className="gd-answer" data-testid="guide-answer">
-                <div className="gd-ans-head"><span className="gd-athir">أثير</span>{lang === 'ar' ? 'إجابة من نتائج البوابة فقط — تحقّق من المصدر قبل القرار' : 'Answer from portal results only — verify the source'}</div>
+                <div className="gd-ans-head"><span className="gd-athir">أثير</span>{lang === 'ar' ? 'إجابة من نتائج البوّابة فقط — تحقّق من المصدر قبل القرار' : 'Answer from portal results only — verify the source'}</div>
                 <p>{answer.text}</p>
                 {answer.src.length > 0 && <div className="gd-srcs"><b>{T.srcs[lang]}:</b> {answer.src.map((s, i) => <a key={s.id} href={s.href} onClick={e => { e.preventDefault(); pick(s); }}>[{i + 1}] {lang === 'ar' ? s.ar : s.en}</a>)}</div>}
               </div>

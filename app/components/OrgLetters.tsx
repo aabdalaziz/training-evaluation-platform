@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P52 «رسالة الشهر» — تبويب في بوابة الجهات: أرشيف الرسائل الموقَّعة شهرًا بشهر · فتح الرسالة · طباعة · «ردّ الجهة» من سطر واحد
+ * P52 «رسالة الشهر» — تبويب في بوّابة الجهات: أرشيف الرسائل الموقَّعة شهرًا بشهر · فتح الرسالة · طباعة · «ردّ الجهة» من سطر واحد
  *  testids: orl-root orl-list orl-item[data-id] orl-empty orl-open orl-sheet orl-reply orl-reply-send orl-ok orl-err orl-print
  */
 import { useCallback, useEffect, useState } from 'react';
@@ -33,7 +33,7 @@ export function OrgLetters({ orgId, lang, token }: Props) {
       <ul className="orl-list no-print" data-testid="orl-list">{letters.map((l) => <li key={l.id} data-testid="orl-item" data-id={l.id} className={cur?.id === l.id ? 'on' : ''}><button type="button" onClick={() => { setCur(l); setOk(''); setErr(''); }} data-testid="orl-open"><b>{monthAr(l.month)}</b><small>{l.signed_name}{l.reply_ar ? ' · 💌' : ''}</small></button></li>)}</ul>
       <div className="orl-main">
         {cur && <div data-testid="orl-sheet"><LetterSheet l={cur} />
-          {!cur.reply_ar && <div className="orl-reply no-print" data-testid="orl-reply"><label>{ar ? 'ردّ الجهة — سطر واحد يصل إلى موقِّع الرسالة' : 'One-line reply to the signer'}<textarea value={reply} onChange={(e) => setReply(e.target.value.slice(0, 280))} rows={2} placeholder={ar ? 'شكرًا، أو سؤال، أو ما تودّون أن نراه الشهر القادم…' : 'Thanks, a question, or what you want next month…'} /></label><div className="orl-acts"><button type="button" className="pt-btn small" onClick={() => void send()} disabled={busy || reply.trim().length < 2} data-testid="orl-reply-send"><Icon name="send" size={14} /> {busy ? '…' : (ar ? 'أرسل الردّ' : 'Send reply')}</button><small className="pt-muted">{reply.length}/280</small></div></div>}
+          {!cur.reply_ar && <div className="orl-reply no-print" data-testid="orl-reply"><label>{ar ? 'ردّ الجهة — سطر واحد يصل إلى موقِّع الرسالة' : 'One-line reply to the signer'}<textarea value={reply} onChange={(e) => setReply(e.target.value.slice(0, 280))} rows={2} placeholder={ar ? 'شكرًا، أو سؤال، أو ما تودّون أن نراه الشهر القادم…' : 'Thanks, a question, or what you want next month…'} /></label><div className="orl-acts"><button type="button" className="pt-btn small" onClick={() => void send()} disabled={busy || reply.trim().length < 2} data-testid="orl-reply-send"><Icon name="send" size={14} /> {busy ? '…' : (ar ? 'إرسال الردّ' : 'Send reply')}</button><small className="pt-muted">{reply.length}/280</small></div></div>}
         </div>}
       </div>
     </div>}

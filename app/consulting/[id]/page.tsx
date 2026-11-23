@@ -1,6 +1,6 @@
 'use client';
 
-// أَثَر — صفحة طلب الاستشارة للعميل: الخط الزمني، عرض السعر (قبول/اعتذار + PDF)، الفاتورة، مراحل التنفيذ، التحديثات
+// أَثَر — صفحة طلب الاستشارة للجهة: الخط الزمني، عرض السعر (قبول/اعتذار + PDF)، الفاتورة، مراحل التنفيذ، التحديثات
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';

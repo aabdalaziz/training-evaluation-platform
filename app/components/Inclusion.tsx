@@ -55,7 +55,7 @@ export function SkipLink({ lang }: { lang: Lang }) {
 /** زر الرأس «احتياجاتي» */
 export function AccessButton({ lang }: { lang: Lang }) {
   const a = useAccess(); const n = a.needs.length;
-  return <button type="button" className={`ax-btn ${n ? 'on' : ''}`} onClick={() => a.setOpen(true, 'needs')} aria-haspopup="dialog" aria-expanded={a.open} data-testid="ax-open" title={lang === 'ar' ? 'أَثَر يلبّي احتياجاتي — كيّف البوابة لاحتياجك' : 'Athar meets my needs — adapt the portal to you'}>
+  return <button type="button" className={`ax-btn ${n ? 'on' : ''}`} onClick={() => a.setOpen(true, 'needs')} aria-haspopup="dialog" aria-expanded={a.open} data-testid="ax-open" title={lang === 'ar' ? 'أَثَر يلبّي احتياجاتي — كيّف البوّابة لاحتياجك' : 'Athar meets my needs — adapt the portal to you'}>
     <Icon name="users" size={15} /> {lang === 'ar' ? 'احتياجاتي' : 'My needs'}{n ? <b aria-hidden="true">{n}</b> : null}
   </button>;
 }
@@ -87,7 +87,7 @@ export function AccessPanel({ lang }: { lang: Lang }) {
         <header className="ax-head"><h2 id="ax-title"><Icon name="users" size={18} /> {ar ? 'أَثَر يلبّي احتياجاتي' : 'Athar meets my needs'}</h2><button type="button" className="ax-x" onClick={() => a.setOpen(false)} aria-label={ar ? 'إغلاق' : 'Close'}>✕</button></header>
         <div className="ax-tabs" role="tablist"><button type="button" role="tab" aria-selected={a.tab === 'needs'} className={a.tab === 'needs' ? 'on' : ''} onClick={() => a.setOpen(true, 'needs')}>{ar ? 'ما يساعدني' : 'What helps me'}</button><button type="button" role="tab" aria-selected={a.tab === 'report'} className={a.tab === 'report' ? 'on' : ''} onClick={() => a.setOpen(true, 'report')}>{ar ? 'أخبرنا بعائق' : 'Report a barrier'}</button></div>
         {a.tab === 'needs' ? <div className="ax-body">
-          <p className="ax-lead">{ar ? 'اختر ما ينطبق عليك بكلماتك — لا نسأل عن سبب ولا نطلب وثيقة. البوابة تتكيّف فورًا، وأنت وحدك ترى هذه القائمة.' : 'Pick what applies, in your words — no reasons, no documents. The portal adapts at once; only you see this list.'}</p>
+          <p className="ax-lead">{ar ? 'اختر ما ينطبق عليك بكلماتك — لا نسأل عن سبب ولا نطلب وثيقة. البوّابة تتكيّف فورًا، وأنت وحدك ترى هذه القائمة.' : 'Pick what applies, in your words — no reasons, no documents. The portal adapts at once; only you see this list.'}</p>
           <ul className="ax-needs">{NEEDS.map(n => <li key={n}><label><input type="checkbox" checked={draft.includes(n)} onChange={() => toggle(n)} data-testid={`ax-need-${n}`} /><span><b>{NEED_LABEL[n][lang]}</b><small>{NEED_EFFECT_AR[n]}</small></span></label></li>)}</ul>
           <div className="ax-actions">
             <button type="button" className="pt-btn navy" onClick={applyLocal} data-testid="ax-apply">{ar ? 'طبّق على هذا الجهاز' : 'Apply on this device'}</button>

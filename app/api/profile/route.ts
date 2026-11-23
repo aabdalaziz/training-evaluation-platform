@@ -1,9 +1,9 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/profile — الحساب الموحّد والملف المهاري والشهادات الرقمية (بوابة أَثَر · P8-أ)
+ * /api/profile — الحساب الموحّد والملف المهاري والشهادات الرقمية (بوّابة أَثَر · P8-أ)
  *  POST { action: 'me' }                                   → مستخدم: ينشئ ملفه إن لم يوجد، يعيد حساب مستوياته من الأدلة، ويعيد (profile, levels, credentials)
  *  POST { action: 'share', share_mode, display_name?, headline?, city? } → مستخدم: إعدادات الملف والمشاركة
- *  POST { action: 'recompute', email }                     → موظف: إعادة حساب مستويات متعلم
+ *  POST { action: 'recompute', email }                     → موظف: إعادة حساب مستويات متعلّم
  *  POST { action: 'approve', email, skill_id, level|null, note? } → موظف: اعتماد مستوى مهارة يدويًا
  *  POST { action: 'issue', form, recipients:[{email,full_name}] } → موظف: إصدار شهادات رقمية (Open Badges 3.0) + بريد + حدث issued
  *  POST { action: 'revoke', id, reason }                   → موظف: إلغاء شهادة
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
   if (!c.staff) return bad('غير مصرّح', 403);
 
   if (action === 'recompute') {
-    const email = String(body.email || '').toLowerCase(); const uid = await userIdByEmail(db, email); if (!uid) return bad('لا حساب مرتبط بهذا البريد بعد (يُنشأ عند أول دخول للمتعلم)', 404);
+    const email = String(body.email || '').toLowerCase(); const uid = await userIdByEmail(db, email); if (!uid) return bad('لا حساب مرتبط بهذا البريد بعد (يُنشأ عند أول دخول للمتعلّم)', 404);
     const rows = await recompute(db, uid, email); return NextResponse.json({ success: true, user_id: uid, levels: rows.length });
   }
   if (action === 'eligible') {

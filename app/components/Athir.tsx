@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// «أثير» — المدرب الرفيق العائم (P10): تحية مبادِرة، حوار نصي وصوتي (Web Speech API)، ذاكرة شفافة يملكها المتعلم، إجراءات سريعة
+// «أثير» — المدرّب الرفيق العائم (P10): تحية مبادِرة، حوار نصي وصوتي (Web Speech API)، ذاكرة شفافة يملكها المتعلّم، إجراءات سريعة
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -78,7 +78,7 @@ export default function Athir() {
           <Orb size={18} pulse /><div><b>{ar ? 'أثير' : 'Athir'}</b><span>{hello.nudge || hello.greeting}</span></div>
         </div>
       )}
-      <button type="button" className={`at-fab ${open ? 'on' : ''}`} onClick={() => { setOpen(o => !o); setPeek(false); }} aria-label={ar ? 'أثير — المدرب الرفيق' : 'Athir — AI companion'} aria-expanded={open}>
+      <button type="button" className={`at-fab ${open ? 'on' : ''}`} onClick={() => { setOpen(o => !o); setPeek(false); }} aria-label={ar ? 'أثير — المدرّب الرفيق' : 'Athir — AI companion'} aria-expanded={open}>
         <Orb size={26} pulse={!open} /><span>{ar ? 'أثير' : 'Athir'}</span>
       </button>
       {open && (

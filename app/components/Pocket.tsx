@@ -133,7 +133,7 @@ export function PocketProvider({ children }: { children: React.ReactNode }) {
           {install === 'prompt' && <div style={pill('#D4614A')} data-testid="install-prompt"><span>ثبّت أَثَر في جيبك — محفظتك وصندوق أدلتك يعملان بلا اتصال</span><button onClick={doInstall} style={btn}>تثبيت</button><button onClick={dismissInstall} style={{ ...btn, background: 'transparent', color: '#fff' }}>لاحقًا</button></div>}
           {install === 'ios_hint' && <div style={pill('#D4614A')} data-testid="install-ios"><span>على iPhone: زر المشاركة ثم «إضافة إلى الشاشة الرئيسة» — لتعمل المحفظة والصندوق بلا اتصال</span><button onClick={dismissInstall} style={btn}>فهمت</button></div>}
           {!online && <div style={pill('#9A3A2A')} data-testid="offline-pill"><span>بلا اتصال — ما تكتبه يُحفظ في صندوق الأدلة ويُرسل تلقائيًا حين يعود الاتصال</span>{items.length > 0 && <b>{items.length}</b>}</div>}
-          {online && items.length > 0 && <div style={pill('#4A3645')} data-testid="outbox-pill"><span>{syncing ? 'جارٍ إرسال صندوق الأدلة…' : `${items.length} في صندوق الأدلة بانتظار الإرسال`}</span>{!syncing && <button onClick={() => sync()} style={btn}>أرسل الآن</button>}</div>}
+          {online && items.length > 0 && <div style={pill('#4A3645')} data-testid="outbox-pill"><span>{syncing ? 'جارٍ إرسال صندوق الأدلة…' : `${items.length} في صندوق الأدلة بانتظار الإرسال`}</span>{!syncing && <button onClick={() => sync()} style={btn}>إرسال الآن</button>}</div>}
           {toast && <div style={pill('#2F6B66')} data-testid="pocket-toast">{toast}</div>}
         </div>
       )}

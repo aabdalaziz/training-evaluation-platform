@@ -1,9 +1,9 @@
 'use client';
 /**
- * P49-ب «QR المجموعة» — زرّ واحد بجانب كل مجموعة/قاعة في إدارة القاعات:
+ * P49-ب «QR الشعبة» — زرّ واحد بجانب كل شعبة في إدارة الشُّعب:
  *  يختار المشرف الاستبيان (يومي / ختامي / نهاية البرنامج) واللغة (تلقائي / عربي / إنجليزي)،
  *  فيُعاد استخدام الرابط المفتوح نفسه لهذه المجموعة (reuse) أو يُنشأ، ويظهر QR كبير + الرابط القصير + نسخ + طباعة بطاقة + فتح.
- *  لا قوائم للمتدرّب: البرنامج والمجموعة في الرمز، واللغة تُحسم من متصفّحه.
+ *  لا قوائم للمشارك: البرنامج والمجموعة في الرمز، واللغة تُحسم من متصفّحه.
  */
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
@@ -48,14 +48,14 @@ export default function GroupQr({ programId, programName, classroomId = null, cl
     <>
       <button type="button" className={`gq-btn${compact ? ' sm' : ''}`} onClick={() => setOpen(true)} title={ar ? 'QR الاستبيان لهذه المجموعة' : 'Survey QR for this group'} data-testid="gq-open"><Icon name="qr" size={14} /> {ar ? 'QR الاستبيان' : 'Survey QR'}</button>
       {open && (
-        <div className="gq-back" role="dialog" aria-modal="true" aria-label={ar ? 'QR المجموعة' : 'Group QR'} onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}>
+        <div className="gq-back" role="dialog" aria-modal="true" aria-label={ar ? 'QR الشعبة' : 'Group QR'} onClick={e => { if (e.target === e.currentTarget) setOpen(false); }}>
           <div className="gq-modal" data-testid="gq-modal">
             <style>{CSS}</style>
-            <header><div><div className="gq-k"><Icon name="qr" size={14} /> {ar ? 'QR المجموعة' : 'Group QR'}</div><h3>{classroomLabel}</h3><small>{programName}</small></div><button type="button" className="gq-x" onClick={() => setOpen(false)} aria-label="close">✕</button></header>
+            <header><div><div className="gq-k"><Icon name="qr" size={14} /> {ar ? 'QR الشعبة' : 'Group QR'}</div><h3>{classroomLabel}</h3><small>{programName}</small></div><button type="button" className="gq-x" onClick={() => setOpen(false)} aria-label="close">✕</button></header>
             <div className="gq-row"><span>{ar ? 'الاستبيان' : 'Survey'}</span><div className="gq-seg">{remote && <button type="button" className={isRemote ? 'on' : ''} onClick={() => setKind('REMOTE')} data-testid="gq-kind-REMOTE">{ar ? 'التعلّم عن بُعد' : 'Remote learning'}</button>}{LINK_KINDS.map(k => <button key={k} type="button" className={kind === k ? 'on' : ''} onClick={() => setKind(k)} data-testid={`gq-kind-${k}`}>{ar ? KIND_AR[k] : KIND_EN[k]}</button>)}</div></div>
             <div className="gq-row"><span>{ar ? 'لغة الفتح' : 'Opens in'}</span><div className="gq-seg">{LINK_LANGS.map(l => <button key={l} type="button" className={lg === l ? 'on' : ''} onClick={() => setLg(l)} data-testid={`gq-lang-${l}`}>{ar ? LINK_LANG_AR[l] : l === 'auto' ? 'Learner’s browser language' : l === 'ar' ? 'Arabic' : 'English'}</button>)}</div></div>
             {isRemote && schedules.length > 0 && (
-              <div className="gq-row"><span>{ar ? 'الموعد' : 'Session'}</span><select className="gq-sel" value={sched} onChange={e => setSched(e.target.value)} data-testid="gq-sched"><option value="">{ar ? 'يختاره المتدرّب' : 'Learner picks'}</option>{schedules.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}</select></div>)}
+              <div className="gq-row"><span>{ar ? 'الموعد' : 'Session'}</span><select className="gq-sel" value={sched} onChange={e => setSched(e.target.value)} data-testid="gq-sched"><option value="">{ar ? 'يختاره المشارك' : 'Learner picks'}</option>{schedules.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}</select></div>)}
             {err && !isRemote && <div className="gq-err">{err}</div>}
             {busy && !ready && <div className="gq-muted">{ar ? 'جارٍ التجهيز…' : 'Preparing…'}</div>}
             {ready && (

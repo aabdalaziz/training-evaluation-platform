@@ -1,6 +1,6 @@
 /**
  * /api/notifications/scan
- *  POST  Authorization: Bearer <access_token> — «فحص الآن» من مركز الإشعارات (موظفو المنصة)
+ *  POST  Authorization: Bearer <access_token> — «فحص الآن» من مركز الإشعارات (موظفو البوّابة)
  *  GET   ?key=<CRON_SECRET>                — تشغيل يدوي/مجدول (يُشغَّل أيضًا تلقائيًا ضمن Cron /api/followups/send)
  *  يحتاج: SUPABASE_SERVICE_ROLE_KEY (للـ GET)، RESEND_API_KEY (اختياري لبريد الملخص)، NOTIFY_EMAILS (اختياري)
  */

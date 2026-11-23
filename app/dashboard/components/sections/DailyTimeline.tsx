@@ -19,7 +19,7 @@ const timeline: TimelineItem[] = [
   {
     time: '08:30',
     title: 'تسجيل الحضور',
-    description: 'حضر 126 متدرباً حتى الآن.',
+    description: 'حضر 126 مشاركاً حتى الآن.',
     color: '#3F7F79',
     icon: '✅',
   },
@@ -67,7 +67,7 @@ export default function DailyTimeline() {
           marginBottom: 24,
         }}
       >
-        آخر الأحداث والعمليات داخل البوابة.
+        آخر الأحداث والعمليات داخل البوّابة.
       </p>
 
       <div style={{ position: 'relative' }}>

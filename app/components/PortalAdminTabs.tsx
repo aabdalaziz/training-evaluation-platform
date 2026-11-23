@@ -1,6 +1,6 @@
 'use client';
 
-// شريط تنقّل موحّد لصفحات إدارة بوابة أَثَر
+// شريط تنقّل موحّد لصفحات إدارة بوّابة أَثَر
 // P43-ب: الشريط يعرض غُرَف مركز القيادة المفتوحة لصاحب الجلسة فقط (الغرف من lib/portal/rooms.ts؛ الصلاحيات من useMyRoles)
 // هوية v1.2 (2026-11-23) — «مركز القيادة مُجمَّعًا بحسب الدور»: الغرف الـ36 في ستّ مجموعات على السلّم (التقييم · البناء · الإثبات · الأداء والأثر
 //  · الناس والجهات · النظام) بدل القائمة الواحدة؛ المجموعة التي فيها الصفحة الحالية مفتوحة والبقية مطوية؛ شريط ذهبي «ينتظر قرارك اليوم» يجمع
@@ -118,7 +118,7 @@ export default function PortalAdminTabs({ counts }: { counts?: Partial<Record<st
           </button>; })}
         <span className="pat-spacer" />
         <a href="#" className="pat-k" onClick={openK} title="بحث سريع في كل الغرف"><Icon name="search" size={13} /> ⌘K</a>
-        <Link href="/" target="_blank" className="pat-site"><Icon name="link" size={14} /> فتح البوابة</Link>
+        <Link href="/" target="_blank" className="pat-site"><Icon name="link" size={14} /> فتح البوّابة</Link>
         {dash ? <Link href="/dashboard" className="pat-site"><Icon name="dashboard" size={14} /> لوحة القيادة</Link> : null}
       </div>
       {openGroup && openTabs.length > 0 && (

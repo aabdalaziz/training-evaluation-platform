@@ -2,10 +2,10 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P46 ر4-ب «محور التقارير» — «كشف الكفايات» («العودة إلى الجواز»)
- *  <ProfilesPanel>     داخل بطاقة الدبلوم (/me/reports#diploma)   متدرّبو الشعبة وحالة كشف كلٍّ منهم · «افتح الكشف» (يُنشأ آليًا من أول وحدة معتمَدة، أو عند الطلب) · «نسخة جديدة» بعد الاعتماد
+ *  <ProfilesPanel>     داخل بطاقة الدبلوم (/me/reports#diploma)   مشاركو الشعبة وحالة كشف كلٍّ منهم · «افتح الكشف» (يُنشأ آليًا من أول وحدة معتمَدة، أو عند الطلب) · «نسخة جديدة» بعد الاعتماد
  *  <ProfileEditor>     /me/reports/[id] · /admin                    أربعة أقسام: المسار (جاهز من أَثَر) · الكفايات (أدلّة + «اقتراح من الأدلّة» + مستوى المعلّم + جملة شاهد + «رتّب الأدلّة») · ما يميّزه/ما يواصله · التوصية بالكلمات
  *  <ProfileDoc>        المطبوع A4                                  وثيقة واحدة: المسار · جدول الكفايات · الاقتباسات بمصادرها · التوصية · التوقيعان
- *  <MyProfileLine>     /me/reports/line/[id]                        المتدرّب يرى كشفه كاملًا بعد الاعتماد و«أظهِر كفاياتي في شهادتي»
+ *  <MyProfileLine>     /me/reports/line/[id]                        المشارك يرى كشفه كاملًا بعد الاعتماد و«أظهِر كفاياتي في شهادتي»
  *  <CohortReading>     /verify/report/<code> (وحدة) · /org          قراءة الدفعة: توزيع المستويات لكل كفاية (k ≥ 5 · بلا أسماء)
  *  القاعدة: الأدلّة من أَثَر، والاقتراح محليّ بقاعدة مُعلنة، والمستوى للمعلّم على سُلّم الجواز، والاعتماد لزميل غير الكاتب — ثم يعود المستوى إلى جواز المهارات بملاحظة تحمل رمز الكشف.
  */
@@ -42,9 +42,9 @@ export function ProfilesPanel({ programId, classroomId, token }: { programId: st
   useEffect(() => { load(); }, [load]);
   async function open(email: string, renew = false) { setBusy(email); setErr(''); const j = await api(token, '/api/reports', { action: 'create_profile', program_id: programId, classroom_id: classroomId, email, renew }); setBusy(''); if (!j.success) { setErr(j.error || 'فشل'); return; } window.location.href = `/me/reports/${j.report.id}`; }
   return <div className="dr-units" data-testid="dp-panel"><style dangerouslySetInnerHTML={{ __html: CSS }} />
-    <p className="pt-muted" style={{ margin: 0 }}><b>{R4B_NAMES_AR.open}</b> — «{R4B_NAMES_AR.motto}». يُنشأ كشف كل متدرّب آليًا عند اعتماد أول تقرير وحدة ويُحدَّث بعد كل وحدة؛ تكتب مستوياته في آخر الدبلوم ويعتمده زميل، فيعود إلى {R4B_NAMES_AR.passport}.</p>
+    <p className="pt-muted" style={{ margin: 0 }}><b>{R4B_NAMES_AR.open}</b> — «{R4B_NAMES_AR.motto}». يُنشأ كشف كل مشارك آليًا عند اعتماد أول تقرير وحدة ويُحدَّث بعد كل وحدة؛ تكتب مستوياته في آخر الدبلوم ويعتمده زميل، فيعود إلى {R4B_NAMES_AR.passport}.</p>
     {err && <p className="mr-err" role="alert">{err}</p>}
-    {rows === null ? <p className="pt-muted">…</p> : !rows.length ? <p className="pt-muted" data-testid="dp-empty">لا متدرّبين ببريد في هذه الشعبة.</p> : <ul className="dp-pl">{rows.map(r => <li key={r.key} data-testid="dp-row" data-status={r.profile?.status || 'none'}>
+    {rows === null ? <p className="pt-muted">…</p> : !rows.length ? <p className="pt-muted" data-testid="dp-empty">لا مشاركين ببريد في هذه الشعبة.</p> : <ul className="dp-pl">{rows.map(r => <li key={r.key} data-testid="dp-row" data-status={r.profile?.status || 'none'}>
       <div><b>{r.name}</b><br /><small>{r.profile ? <>{statusAr(r.profile.status)}{r.profile.total ? ` · أثبت ${r.profile.proven} من ${r.profile.total}` : ''}{r.profile.verify_code ? <> · <span dir="ltr">{r.profile.verify_code}</span></> : ''}</> : 'لا كشف بعد'}</small></div>
       {r.profile ? <Link className="pt-btn navy small" href={`/me/reports/${r.profile.id}`} data-testid="dp-open">افتح الكشف</Link> : <button type="button" className="pt-btn gold small" onClick={() => open(r.email)} disabled={!!busy} data-testid="dp-create">{busy === r.email ? '…' : 'أنشئ الكشف الآن'}</button>}
       {r.profile?.status === 'approved' ? <button type="button" className="pt-btn ghost small" onClick={() => open(r.email, true)} disabled={!!busy} data-testid="dp-renew" title="نسخة جديدة تَنسخ المعتمَدة وتُحدِّث الجواز عند اعتمادها">نسخة جديدة</button> : <span />}
@@ -104,13 +104,13 @@ export function ProfileEditor({ id, token, mode = 'author', onBack }: { id: stri
       {!c.competencies.length && <p className="pt-muted">لا كفايات في قالب هذا البرنامج — اختر مهارات البرنامج أولًا.</p>}
     </section>}
     {sec === 3 && <section className="pt-box mr-sec" data-testid="dp-s3"><h3>٣ · {R4B_NAMES_AR.distinguish} · {R4B_NAMES_AR.keep}</h3>
-      <label>{R4B_NAMES_AR.distinguish}<textarea value={body.strengths} onChange={e => setB({ strengths: e.target.value.slice(0, TEXT_MAX) })} rows={3} readOnly={ro} maxLength={TEXT_MAX} placeholder="ما الذي يفعله هذا المتدرّب ولا يفعله غيره بالطريقة نفسها؟" data-testid="dp-strengths" /></label>
+      <label>{R4B_NAMES_AR.distinguish}<textarea value={body.strengths} onChange={e => setB({ strengths: e.target.value.slice(0, TEXT_MAX) })} rows={3} readOnly={ro} maxLength={TEXT_MAX} placeholder="ما الذي يفعله هذا المشارك ولا يفعله غيره بالطريقة نفسها؟" data-testid="dp-strengths" /></label>
       <label>{R4B_NAMES_AR.keep}<textarea value={body.keep} onChange={e => setB({ keep: e.target.value.slice(0, TEXT_MAX) })} rows={3} readOnly={ro} maxLength={TEXT_MAX} placeholder="لا نقاط ضعف — ما الذي يحتاج أن يواصله بعد الدبلوم؟" data-testid="dp-keep-txt" /></label>
     </section>}
-    {sec === 4 && <section className="pt-box mr-sec" data-testid="dp-s4"><h3>٤ · {R4B_NAMES_AR.recommendation} بالكلمات <small className="pt-muted">— لا درجة نهائية؛ توصية يحملها المتدرّب</small></h3>
+    {sec === 4 && <section className="pt-box mr-sec" data-testid="dp-s4"><h3>٤ · {R4B_NAMES_AR.recommendation} بالكلمات <small className="pt-muted">— لا درجة نهائية؛ توصية يحملها المشارك</small></h3>
       <div className="dp-rec" role="radiogroup">{PROFILE_REC.map(x => <label key={x} data-on={body.recommendation === x ? '1' : '0'}><input type="radio" name="rec" checked={body.recommendation === x} onChange={() => setB({ recommendation: x })} disabled={ro} data-testid={`dp-rec-${x}`} /> <span className={`mr-chip ${REC_TONE[x]}`}>{PROFILE_REC_AR[x]}</span></label>)}</div>
       {body.recommendation && body.recommendation !== 'complete' && <label>{body.recommendation === 'finish_units' ? 'ما الوحدات التي تُستكمل؟' : 'خطة المتابعة/الإعادة'}<textarea value={body.plan} onChange={e => setB({ plan: e.target.value.slice(0, TEXT_MAX) })} rows={3} readOnly={ro} maxLength={TEXT_MAX} data-testid="dp-plan" /></label>}
-      <label>ملاحظات إدارية (لا تصل المتدرّب)<textarea value={body.admin} onChange={e => setB({ admin: e.target.value.slice(0, TEXT_MAX) })} rows={2} readOnly={ro} maxLength={TEXT_MAX} data-testid="dp-admin" /></label>
+      <label>ملاحظات إدارية (لا تصل المشارك)<textarea value={body.admin} onChange={e => setB({ admin: e.target.value.slice(0, TEXT_MAX) })} rows={2} readOnly={ro} maxLength={TEXT_MAX} data-testid="dp-admin" /></label>
       {missing.length > 0 && r.status !== 'approved' && <p className="mr-missing">قبل الإرسال: {missing.join(' · ')}</p>}
     </section>}
   </main>;
@@ -136,7 +136,7 @@ export function ProfileDoc({ r, onClose }: { r: any; onClose?: () => void }) {
   </main>;
 }
 
-/* ───────── 4) صفحة المتدرّب: كشفي كاملًا ───────── */
+/* ───────── 4) صفحة المشارك: كشفي كاملًا ───────── */
 export function MyProfileLine({ id, token }: { id: string; token: Tok }) {
   const [d, setD] = useState<any>(null); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
   const load = useCallback(async () => { const j = await api(token, `/api/reports?line=${encodeURIComponent(id)}`); if (!j?.success) { setErr(j?.error || 'تعذّر التحميل'); return; } setD(j); }, [token, id]);

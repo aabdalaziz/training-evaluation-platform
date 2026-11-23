@@ -150,10 +150,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ success: true, request: viewOf(r, me, t, presence), messages: await messagesOf(db, r.id), echo: me?.staff || r.receiver_user_id === me?.id ? await echoOf(db, r.id) : null, receiver: r.receiver_user_id ? { name_ar: rp?.name_ar || (presence?.face === 'staff' ? 'طاقم أَثَر' : 'عضو هيئة أَثَر'), face_ar: presence ? FACE_AR[presence.face] : null, photo_url: rp?.photo_url || null, slug: rp?.slug || null } : null });
   }
   if (!me) return bad('يلزم تسجيل الدخول', 401);
-  if (u.searchParams.get('org_time')) {   // P36 4) خريطة الزمن للجهة: شبكة 7×24 لمنسوبي الجهة (ضبابية تحت 5) بجوار المنصّة + أنسب ثلاث ساعات
+  if (u.searchParams.get('org_time')) {   // P36 4) خريطة الزمن للجهة: شبكة 7×24 لمنسوبي الجهة (ضبابية تحت 5) بجوار البوّابة + أنسب ثلاث ساعات
     const orgId = String(u.searchParams.get('org_time')); const mine = await orgsOf(db, me); if (!me.staff && !mine.some(o => o.id === orgId)) return bad('لست من منسوبي هذه الجهة', 403);
     const g = await orgTimeGridOf(db, orgId, now);
-    return NextResponse.json({ success: true, ...g, best: g.best.map(b => ({ ...b, weekday_ar: WEEKDAY_AR[b.weekday], hour_ar: `${String(b.hour).padStart(2, '0')}:00` })), k: ORG_TIME_K, names_ar: P36_NAMES_AR, note_ar: g.org.shown ? `كثافة حضور منسوبيكم آخر ${g.org.weeks} أسابيع بتوقيت الرياض — خلية بلا رقم إن كان أصحابها أقل من ${ORG_TIME_K}.` : `تظهر شبكة الجهة حين يصعد من منسوبيكم ${ORG_TIME_K} أشخاص مختلفون خلال ${g.org.weeks} أسابيع؛ حتى ذلك الحين نقترح من كثافة المنصّة.` });
+    return NextResponse.json({ success: true, ...g, best: g.best.map(b => ({ ...b, weekday_ar: WEEKDAY_AR[b.weekday], hour_ar: `${String(b.hour).padStart(2, '0')}:00` })), k: ORG_TIME_K, names_ar: P36_NAMES_AR, note_ar: g.org.shown ? `كثافة حضور منسوبيكم آخر ${g.org.weeks} أسابيع بتوقيت الرياض — خلية بلا رقم إن كان أصحابها أقل من ${ORG_TIME_K}.` : `تظهر شبكة الجهة حين يصعد من منسوبيكم ${ORG_TIME_K} أشخاص مختلفون خلال ${g.org.weeks} أسابيع؛ حتى ذلك الحين نقترح من كثافة البوّابة.` });
   }
   if (u.searchParams.get('org')) {   // 5) هواء الجهة — أرقام مجمّعة لمنسوبي الجهة (عضو مؤكَّد أو طاقم)
     const orgId = String(u.searchParams.get('org')); const mine = await orgsOf(db, me); if (!me.staff && !mine.some(o => o.id === orgId)) return bad('لست من منسوبي هذه الجهة', 403);

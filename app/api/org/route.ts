@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/org — بوابة الجهات (بوابة أَثَر · P8-ب)
+ * /api/org — بوّابة الجهات (بوّابة أَثَر · P8-ب)
  *  POST { action: 'me' }                                        → مستخدم: انضمام تلقائي بنطاق البريد (بانتظار التأكيد) + جهاتي وأدواري
  *  POST { action: 'dashboard', org_id }                          → مدير جهة/موظف: لوحة الأثر (RPC)
  *  POST { action: 'member_status', member_id, status }           → مدير جهة/موظف: تأكيد/رفض عضو
@@ -23,7 +23,7 @@ const bad = (error: string, status = 400) => NextResponse.json({ success: false,
 const siteUrl = (req: Request) => (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, '');
 const admins = () => String(process.env.NOTIFY_EMAILS || '').split(/[,;\s]+/).filter(Boolean);
 async function mail(fn: () => Promise<any>): Promise<string | null> { try { await fn(); return null; } catch (e: any) { return String(e?.message || e); } }
-const shell = (title: string, body: string) => `<div dir="rtl" style="font-family:Tahoma,Arial;max-width:600px;margin:auto;border:1px solid #EADFD6;border-radius:16px;overflow:hidden"><div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="color:#D9A866;font-size:12px;font-weight:bold">أَثَر — بوابة الجهات</div><div style="font-size:18px;font-weight:bold;margin-top:4px">${title}</div></div><div style="padding:20px 22px;font-size:14px;line-height:1.9;color:#2A1626">${body}</div><div style="padding:12px 22px;background:#FBF4EE;color:#8E7F8A;font-size:11.5px">© 2026 د. أحمد محمد عبدالعزيز بدوي — أَثَر</div></div>`;
+const shell = (title: string, body: string) => `<div dir="rtl" style="font-family:Tahoma,Arial;max-width:600px;margin:auto;border:1px solid #EADFD6;border-radius:16px;overflow:hidden"><div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="color:#D9A866;font-size:12px;font-weight:bold">أَثَر — بوّابة الجهات</div><div style="font-size:18px;font-weight:bold;margin-top:4px">${title}</div></div><div style="padding:20px 22px;font-size:14px;line-height:1.9;color:#2A1626">${body}</div><div style="padding:12px 22px;background:#FBF4EE;color:#8E7F8A;font-size:11.5px">© 2026 د. أحمد محمد عبدالعزيز بدوي — أَثَر</div></div>`;
 
 async function ctx(req: Request) {
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
       const { data: ex } = await db.from('portal_org_members').select('id,status').eq('organization_id', orgId).ilike('email', p.email).maybeSingle();
       if (ex) { if ((ex as any).status !== 'confirmed') { await db.from('portal_org_members').update({ status: 'confirmed', source: 'invite', confirmed_by: user.id, confirmed_at: new Date().toISOString(), full_name: p.full_name || null }).eq('id', (ex as any).id); updated++; } continue; }
       const { error } = await db.from('portal_org_members').insert({ organization_id: orgId, email: p.email, full_name: p.full_name || null, role, status: 'confirmed', source: 'invite', invited_by: user.id, confirmed_by: user.id, confirmed_at: new Date().toISOString() }); if (error) { errors.push(`${p.email}: ${error.message}`); continue; } added++;
-      if (body.notify !== false) await mail(() => sendViaResend({ to: [p.email], subject: `دعوة من ${(org as any)?.name_ar || 'جهتك'} عبر أَثَر`, html: shell(`أنت الآن ضمن منسوبي ${(org as any)?.name_ar || 'الجهة'}`, `<p>مرحبًا ${p.full_name || ''}،</p><p>أضافتك جهتك إلى بوابة أَثَر. ادخل ببريدك هذا لترى برامجك وجلساتك وحقائب جهتك وملفك المهاري — بلا كلمة مرور.</p><p><a href="${site}/me" style="display:inline-block;background:#D4614A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:bold">الدخول إلى بوابتي</a></p>`), tags: [{ name: 'kind', value: 'org_invite' }] }));
+      if (body.notify !== false) await mail(() => sendViaResend({ to: [p.email], subject: `دعوة من ${(org as any)?.name_ar || 'جهتك'} عبر أَثَر`, html: shell(`أنت الآن ضمن منسوبي ${(org as any)?.name_ar || 'الجهة'}`, `<p>مرحبًا ${p.full_name || ''}،</p><p>أضافتك جهتك إلى بوّابة أَثَر. ادخل ببريدك هذا لترى برامجك وجلساتك وحقائب جهتك وملفك المهاري — بلا كلمة مرور.</p><p><a href="${site}/me" style="display:inline-block;background:#D4614A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:bold">الدخول إلى بوابتي</a></p>`), tags: [{ name: 'kind', value: 'org_invite' }] }));
     }
     return NextResponse.json({ success: true, added, updated, errors: errors.length ? errors.slice(0, 5) : undefined });
   }
@@ -109,7 +109,7 @@ export async function POST(req: Request) {
     const patch = { role: 'org_admin', status: 'confirmed', source: 'admin', confirmed_by: user.id, confirmed_at: new Date().toISOString(), full_name: String(body.full_name || '').trim() || undefined };
     const { error } = ex ? await db.from('portal_org_members').update(patch).eq('id', (ex as any).id) : await db.from('portal_org_members').insert({ organization_id: orgId, email, invited_by: user.id, ...patch }); if (error) return bad(error.message, 500);
     const { data: org } = await db.from('portal_organizations').select('name_ar').eq('id', orgId).maybeSingle();
-    const mail_error = body.notify === false ? null : await mail(() => sendViaResend({ to: [email], subject: `تم تعيينك مديرًا لجهة ${(org as any)?.name_ar || ''} في أَثَر`, html: shell('بوابة الجهات — صلاحية مدير الجهة', `<p>تم تعيينك مديرًا لجهة <b>${(org as any)?.name_ar || ''}</b>. ادخل ببريدك هذا إلى بوابة الجهات لترى لوحة أثر التدريب على منسوبيكم، وتؤكد الأعضاء، وتطلب التسجيل الجماعي.</p><p><a href="${site}/org" style="display:inline-block;background:#D4614A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:bold">بوابة الجهات</a></p>`), tags: [{ name: 'kind', value: 'org_admin' }] }));
+    const mail_error = body.notify === false ? null : await mail(() => sendViaResend({ to: [email], subject: `تم تعيينك مديرًا لجهة ${(org as any)?.name_ar || ''} في أَثَر`, html: shell('بوّابة الجهات — صلاحية مدير الجهة', `<p>تم تعيينك مديرًا لجهة <b>${(org as any)?.name_ar || ''}</b>. ادخل ببريدك هذا إلى بوّابة الجهات لترى لوحة أثر التدريب على منسوبيكم، وتؤكد الأعضاء، وتطلب التسجيل الجماعي.</p><p><a href="${site}/org" style="display:inline-block;background:#D4614A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:bold">بوّابة الجهات</a></p>`), tags: [{ name: 'kind', value: 'org_admin' }] }));
     return NextResponse.json({ success: true, mail_error });
   }
   if (action === 'request_status') {

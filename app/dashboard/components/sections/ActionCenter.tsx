@@ -9,14 +9,14 @@ const actions = [
   },
   {
     icon: '👨‍🏫',
-    title: 'تعيين مدرب',
-    description: 'ربط المدربين بالبرامج',
+    title: 'تعيين مدرّب',
+    description: 'ربط المدرّبين بالبرامج',
     color: '#8E4A68',
   },
   {
     icon: '🏫',
-    title: 'إدارة القاعات',
-    description: 'ربط القاعات والجداول',
+    title: 'إدارة الشُّعب',
+    description: 'ربط الشُّعب والجداول',
     color: '#3F7F79',
   },
   {

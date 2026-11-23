@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P54 «أمانة صوتية» — ردّ صوتي للمتعلّم على «كلمة» مدرّبه (≤ 15 ثانية)
+ * P54 «أمانة صوتية» — ردّ صوتي للمتعلّم على «كلمة» ميسّره (≤ 15 ثانية)
  *  POST   /api/me/voice-reply  multipart: file (audio) · notice_id · [chip] · [transcript ≤ 300] · [duration_sec]
  *         → يرفع الملف إلى المخزن الخاص athar-media تحت word-voice/<trainer_id>/<uuid>.<ext> ثم يسجّله في ردّ المتعلّم نفسه (meta.voice)
  *         صوت جديد على الكلمة نفسها يحلّ محلّ القديم (ويُحذف القديم من المخزن) · لا يدخل في أي تقييم
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
   if ('error' in r) { await removeQuiet(db, path); return bad(r.error, r.status); }
   await removeQuiet(db, r.replaced_voice); /* الصوت القديم على الكلمة نفسها */
   await audit(db, user, req, { notice_id: r.row.notice_id, sec: v.sec, bytes: file.size, mime: v.mime, transcript_chars: (String(fd.get('transcript') || '')).length, created: r.created, replaced: !!r.replaced_voice });
-  return NextResponse.json({ success: true, created: r.created, reply: { chip: r.row.chip, chip_ar: chipLabel(r.row.chip), text: r.row.text, at: r.row.updated_at, editable: true, voice_sec: v.sec, transcript: (r.row.meta as any)?.transcript || null }, message: r.replaced_voice ? 'حلّت أمانتك الجديدة محلّ القديمة.' : 'وصلت أمانتك الصوتية إلى مدرّبك — له وحده.' }, { headers: NO });
+  return NextResponse.json({ success: true, created: r.created, reply: { chip: r.row.chip, chip_ar: chipLabel(r.row.chip), text: r.row.text, at: r.row.updated_at, editable: true, voice_sec: v.sec, transcript: (r.row.meta as any)?.transcript || null }, message: r.replaced_voice ? 'حلّت أمانتك الجديدة محلّ القديمة.' : 'وصلت أمانتك الصوتية إلى ميسّرك — له وحده.' }, { headers: NO });
 }
 
 export async function DELETE(req: Request) {

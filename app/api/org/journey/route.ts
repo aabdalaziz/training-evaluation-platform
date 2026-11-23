@@ -12,7 +12,7 @@
  *  POST { org, action:'share_revoke', id }
  *  POST { org, action:'capsule', body_ar?, media_id?, kind?, confirm:true }         → رسالة الجهة إلى نفسها بعد 365 يومًا (تصل مديريها يومئذ)
  *  POST { org, action:'capsule_cancel', id }
- *  الكتابة لمدير الجهة المؤكَّد فقط؛ طاقم المنصة يقرأ ولا يكتب (صوت الجهة لا يُكتب نيابة عنها).
+ *  الكتابة لمدير الجهة المؤكَّد فقط؛ طاقم البوّابة يقرأ ولا يكتب (صوت الجهة لا يُكتب نيابة عنها).
  */
 import { NextResponse } from 'next/server';
 import { randomCode } from '../../../../lib/portal/profile';

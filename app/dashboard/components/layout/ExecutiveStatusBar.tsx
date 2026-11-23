@@ -13,7 +13,7 @@ export default function ExecutiveStatusBar() {
       <Status
         color="#3F7F79"
         icon="🟢"
-        title="حالة المنصة"
+        title="حالة البوّابة"
         value="جميع الخدمات تعمل"
       />
 

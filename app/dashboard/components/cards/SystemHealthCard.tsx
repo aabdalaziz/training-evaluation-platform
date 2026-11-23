@@ -66,7 +66,7 @@ export default function SystemHealthCard({
               fontWeight: 900,
             }}
           >
-            مؤشر صحة المنصة
+            مؤشر صحة البوّابة
           </h2>
 
           <div

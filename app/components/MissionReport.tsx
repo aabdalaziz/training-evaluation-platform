@@ -67,7 +67,7 @@ export function MissionEditor({ id, token, mode = 'author', onBack }: { id: stri
           {onBack ? <button className="pt-btn ghost small" type="button" onClick={onBack}><Icon name="arrow" size={14} /> القائمة</button> : <Link className="pt-btn ghost small" href="/me/reports"><Icon name="arrow" size={14} /> تقاريري</Link>}
           <button className="pt-btn ghost small" type="button" onClick={() => setPrint(true)} data-testid="mr-print"><Icon name="print" size={14} /> معاينة الطباعة</button>
           {editable && <button className="pt-btn ghost small" type="button" onClick={() => act('recompute')} disabled={!!busy} data-testid="mr-recompute"><Icon name="refresh" size={14} /> {P46_NAMES_AR.recompute}</button>}
-          {editable && <button className="pt-btn navy small" type="button" onClick={() => save()} disabled={!!busy || !dirty} data-testid="mr-save"><Icon name="save" size={14} /> {busy === 'save' ? '…' : dirty ? 'احفظ' : 'محفوظ'}</button>}
+          {editable && <button className="pt-btn navy small" type="button" onClick={() => save()} disabled={!!busy || !dirty} data-testid="mr-save"><Icon name="save" size={14} /> {busy === 'save' ? '…' : dirty ? 'حفظ' : 'محفوظ'}</button>}
           {editable && mode === 'author' && <button className="pt-btn gold small" type="button" onClick={() => act('submit')} disabled={!!busy} data-testid="mr-submit"><Icon name="send" size={14} /> {P46_NAMES_AR.submit}</button>}
           {r.can_decide && <button className="pt-btn gold small" type="button" onClick={() => act('approve')} disabled={!!busy} data-testid="mr-approve"><Icon name="check" size={14} /> {P46_NAMES_AR.approve}</button>}
         </div>

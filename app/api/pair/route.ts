@@ -7,7 +7,7 @@
  *  POST { action:'cancel', confirm:true }                            → سحب دعوتي الصادرة
  *  POST { action:'accept', id, name_mode?, confirm:true }            → قبول الدعوة (يلزم 3 فصول) → مرحلة الاقتراح
  *  POST { action:'decline', id, confirm:true }                       → رفض بلا تعليل
- *  POST { action:'suggest' }                                          → خيارات المنصة لخطوة صاحبي (من فصوله هو)
+ *  POST { action:'suggest' }                                          → خيارات البوّابة لخطوة صاحبي (من فصوله هو)
  *  POST { action:'propose', index, title_ar?, why_ar }               → «خطوة أطلبها منك» لصاحبي
  *  POST { action:'rework', confirm:true }                             → «اطلب مني غيرها» (مرة واحدة)
  *  POST { action:'sign', title_ar?, confirm:true }                    → أوقّع على ما طُلب مني — حين يوقّع الطرفان تُصدر وثيقة ATH-MP واحدة
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
     if (!st.eligible.ok) return bad(st.eligible.read_ar, 409); if (p) return bad('لديك عهد متقابل حيّ — عهد واحد في كل مرة', 409);
     if (body.name_mode !== undefined && !['full', 'first', 'anon'].includes(String(body.name_mode))) return bad('وضع الاسم: full أو first أو anon');
     const { row, error } = await save(inv.id, { status: 'proposing', accepted_at: iso, b_user_id: me.id, b_name: me.name || inv.b_name, b_name_mode: String(body.name_mode || 'first'), meta: { ...(inv.meta || {}), b_chapters: st.chapters } }); if (error || !row) return bad(error?.message || 'تعذّر القبول', 500);
-    await tell(partyOf(row, 'a'), 'pair_accepted', `${nameFor(row, 'b')} قبل دعوتك`, `${row.a_name ? `${row.a_name}، ` : ''}قبل ${nameFor(row, 'b')} دعوتك إلى العهد المتقابل. الآن: اقترح له خطوة واحدة من الخطوات التي تشهدها المنصة، واكتب لماذا — ولديكما ${PAIR_PROPOSE_DAYS} يومًا حتى يكتمل التوقيعان.`, `pair:${row.id}:accepted`);
+    await tell(partyOf(row, 'a'), 'pair_accepted', `${nameFor(row, 'b')} قبل دعوتك`, `${row.a_name ? `${row.a_name}، ` : ''}قبل ${nameFor(row, 'b')} دعوتك إلى العهد المتقابل. الآن: اقترح له خطوة واحدة من الخطوات التي تشهدها البوّابة، واكتب لماذا — ولديكما ${PAIR_PROPOSE_DAYS} يومًا حتى يكتمل التوقيعان.`, `pair:${row.id}:accepted`);
     return NextResponse.json({ success: true, pair: viewFor(row, 'b'), message: `قبلتَ. الآن اقترح لـ${nameFor(row, 'a')} خطوة واحدة — وهو يقترح لك.` });
   }
   if (!p || !side) return bad('لا عهد متقابل حيًّا لديك', 409);

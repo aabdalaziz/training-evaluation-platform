@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * أَثَر — مهمات في قلب العمل (P12-أ) — واجهة المتدرب والطاقم (تسجيل دخول)
+ * أَثَر — مهمات في قلب العمل (P12-أ) — واجهة المشارك والطاقم (تسجيل دخول)
  *  GET                        → مهماتي + إحصاء أدلتي من قلب العمل
  *  GET ?admin=1               → (STAFF) القوالب + المهمات (آخر 400) + البرامج + المهارات + الإحصاءات
  *  GET ?admin=1&completers=PID&template=TID → (STAFF) مُتمّو البرنامج (شهادة إتمام) الذين لم تُسند لهم هذه المهمة
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     const { data: m } = await db.from('portal_missions').select(MISSION_COLS).eq('id', String(body.id || '')).maybeSingle(); if (!m) return bad('المهمة غير موجودة', 404);
     if ((m as Mission).status !== 'submitted') return bad('لا يوجد دليل مُرسل بانتظار القرار');
     const decision = body.decision === 'returned' ? 'returned' : 'confirmed'; const note = String(body.note || '').slice(0, 600);
-    if (decision === 'returned' && note.length < 5) return bad('اكتب ملاحظة للمتدرب عند الإعادة');
+    if (decision === 'returned' && note.length < 5) return bad('اكتب ملاحظة للمشارك عند الإعادة');
     const r = await decideMission(db, m as Mission, decision, { name: user.name || user.email, note }, site());
     return NextResponse.json({ success: true, mission: strip(r) });
   }

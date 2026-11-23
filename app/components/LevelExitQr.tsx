@@ -83,7 +83,7 @@ export default function LevelExitQr({ classroomId, classroomLabel, programName =
           <div className="lx-acts">
             <button type="button" onClick={() => void copy()} data-testid="lx-copy"><Icon name="copy" size={14} /> {ar ? 'نسخ' : 'Copy'}</button>
             <button type="button" onClick={print} data-testid="lx-print"><Icon name="print" size={14} /> {ar ? 'بطاقة A4' : 'A4 card'}</button>
-            <a href={`/admin/miaar/exit?invite=${res.invite.id}`} target="_blank" rel="noreferrer" data-testid="lx-board"><Icon name="arrow" size={14} /> {ar ? 'لوحة المجموعة' : 'Group board'}</a>
+            <a href={`/admin/miaar/exit?invite=${res.invite.id}`} target="_blank" rel="noreferrer" data-testid="lx-board"><Icon name="arrow" size={14} /> {ar ? 'لوحة الشعبة' : 'Group board'}</a>
             <a href={url} target="_blank" rel="noreferrer">{ar ? 'معاينة' : 'Preview'}</a>
           </div>
           {Array.isArray(res.invite?.unit_scope) && res.invite.unit_scope.length > 0 && <p className="lx-spec" data-testid="lx-scoped">{ar ? 'ما دُرّس فقط: ' : 'Taught units only: '}<span dir="ltr">{res.invite.unit_scope.join(' · ')}</span></p>}

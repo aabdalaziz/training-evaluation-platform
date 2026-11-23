@@ -2,22 +2,22 @@
 /**
  * /api/reports — P46 «محور التقارير» (توثيق الجودة والأداء) — ر1: تقرير التعلّم الأسبوعي
  *  GET  ?meta=1            → الأسماء · مفتاح التقدير · الحدود (عام)
- *  GET  ?verify=<code>     → التحقّق العام من تقرير معتمَد (بلا أسماء طلاب ولا درجات)
+ *  GET  ?verify=<code>     → التحقّق العام من تقرير معتمَد (بلا أسماء مشاركين ولا درجات)
  *  GET  ?lines=1           → «سطر لك من تقرير الأسبوع» الذي وصلني (مسجَّل)
  *  GET  ?id=<id>           → تقرير واحد (المؤلّف أو الطاقم)
  *  GET  ?admin=1           → الطاقم: كل التقارير
  *  GET                     → نطاقي (برامجي وشُعبي) + تقاريري
  *  POST create {program_id, classroom_id?, period_from?, period_to?} · save {id, body?, students?, lines?, lines_ok?} · recompute {id}
  *       submit {id} · approve {id, as?: quality|manager} · return {id, note} · delete {id} · template {program_id, skills, strategies} · phrase {id}
- *  ر2 (التقرير الختامي «خاتمة الرحلة»): GET ?line=<id> (صفحة المتدرّب) · ?credential=<code> (ما يظهر في الشهادة بإذنه — عام)
- *       POST create_final {program_id, classroom_id?} · paragraph {id, key} (AI يصوغ فقرة مسار متدرّب من أرقامه فقط) · promote {id, program_id} (الطاقم: المرشَّحون للرفع → تسجيل معلَّق في برنامج الهدف) · line_show {line_id, on}
+ *  ر2 (التقرير الختامي «خاتمة الرحلة»): GET ?line=<id> (صفحة المشارك) · ?credential=<code> (ما يظهر في الشهادة بإذنه — عام)
+ *       POST create_final {program_id, classroom_id?} · paragraph {id, key} (AI يصوغ فقرة مسار مشارك من أرقامه فقط) · promote {id, program_id} (الطاقم: المرشَّحون للرفع → تسجيل معلَّق في برنامج الهدف) · line_show {line_id, on}
  *  ر3 (تقرير إنجاز المهمة «أثرُ المهمة»): GET ?verify=<code>&k=<رمز الإقرار> (الجهة ترى التقرير كاملًا بلا دخول) · GET يعيد missions[] (عقودي الموقَّعة)
  *       POST create_mission {engagement_id} · mission_phrase {id} (AI يصوغ من المخرجات والمراحل فقط) · send_client {id, email?} (الطاقم) · addendum {id, text} (الطاقم) · ack {code, k, name, note} (عام — بلا دخول)
  *  ر3-ب (التقرير الاستشاري «أثرُ الرأي»: رأي استشاري · دراسة): GET يعيد work[] (عقودي وطلباتي المكلَّف بها) · GET ?request=<id> (الجهة/الطاقم: وثائق الطلب المعتمَدة بروابط إقرار) · GET ?id لتقرير إنجاز يعيد docs[] (الوثائق المعتمَدة للربط)
  *       POST create_doc {kind: advisory|study, engagement_id? | consulting_request_id?} · create_mission يقبل consulting_request_id بلا عقد · bullets_to_paragraph {id, text, section} (AI يصوغ نقاط الخبير فقرة بلا إضافة حقيقة أو رقم) · send_client/addendum/ack تعمل على الأنواع الثلاثة
- *  ر4-ب («كشف الكفايات» — ملف الدبلوم لكل متدرّب → جواز المهارات): GET ?profiles=<program_id>&classroom=<id> (الطاقم/المعلّم: الكشوف بحسب المتدرّب) · ?credential=<code> يعيد profile{} المعتمَد (بإذن) · ?verify=<code> للكشف: مُثبَت n/m + التوزيع بلا اسم
+ *  ر4-ب («كشف الكفايات» — ملف الدبلوم لكل مشارك → جواز المهارات): GET ?profiles=<program_id>&classroom=<id> (الطاقم/المعلّم: الكشوف بحسب المشارك) · ?credential=<code> يعيد profile{} المعتمَد (بإذن) · ?verify=<code> للكشف: مُثبَت n/m + التوزيع بلا اسم
  *       GET ?cohort=<program_id> (عام: قراءة الدفعة ≥ 5 بلا أسماء) · ?org_cohorts=<org_id> (مسجَّل: دفعات الجهة) · ?id يعيد me:{staff,email,admin}
- *       POST create_profile {program_id, classroom_id, email, renew?} (يُنشأ تلقائيًا كمسودّة عند اعتماد أول تقرير وحدة) · arrange {id, code} (AI يرتّب الأدلّة المحلّية جملًا شاهدة فقط؛ محليًا إن غاب) · approve يكتب المستويات 1..5 في portal_skill_levels بملاحظة «كشف الكفايات <code>» ويُشعر المتدرّب بسطر · renew يَنسخ الكشف السابق (supersedes)
+ *       POST create_profile {program_id, classroom_id, email, renew?} (يُنشأ تلقائيًا كمسودّة عند اعتماد أول تقرير وحدة) · arrange {id, code} (AI يرتّب الأدلّة المحلّية جملًا شاهدة فقط؛ محليًا إن غاب) · approve يكتب المستويات 1..5 في portal_skill_levels بملاحظة «كشف الكفايات <code>» ويُشعر المشارك بسطر · renew يَنسخ الكشف السابق (supersedes)
  *  P47 («مراجعة البرنامج بعد الدفعة» — «البرنامج الذي يراجع نفسه»): GET يعيد reviews[] (بطاقات «راجع الدفعة» حين تكتمل) · ?reviews=<program_id> (عام: كم مرة تغيّر البرنامج وآخر تعديلاته بلا أسماء) · ?verify للمراجعة: درجات الفجوات والتعديلات
  *       GET ?versions=<pid> (عام: سجلّ نسخ الدفعات) · POST version_preview {id} · apply_version {id, message_ar} (P47-ب)
  *       POST create_review {program_id, classroom_id} · propose {id, local?} (AI يقترح من الفجوات أفعالًا من قائمة مغلقة؛ محليًا إن غاب) · save {body:{decisions, context_ar}} · submit · approve (زميل غير الكاتب)
@@ -116,13 +116,13 @@ export async function POST(req: Request) {
   if (action === 'promote') { const pid = String(body.program_id || ''); if (!ID.test(pid)) return bad('اختر برنامج الهدف'); const r = await promoteFromFinal(db, me, id, pid); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, created: r.created, skipped: r.skipped, program_ar: r.program_ar }); }
   if (action === 'paragraph') {
     const r = await reportById(db, id); if (!r) return bad('التقرير غير موجود', 404); if (!canView(r, me)) return bad('غير مصرّح', 403); if (r.kind !== 'final') return bad('الفقرة للتقرير الختامي فقط');
-    const c: FinalComputed = r.computed; const students: FinalStudent[] = Array.isArray(r.students) ? r.students : []; const key = String(body.key || ''); const s = students.find(x => x.key === key); const t = (c.trajectory || []).find(x => x.key === key); if (!s || !t) return bad('المتدرّب غير موجود في الكشف');
+    const c: FinalComputed = r.computed; const students: FinalStudent[] = Array.isArray(r.students) ? r.students : []; const key = String(body.key || ''); const s = students.find(x => x.key === key); const t = (c.trajectory || []).find(x => x.key === key); if (!s || !t) return bad('المشارك غير موجود في الكشف');
     const live = body.student && typeof body.student === 'object' ? { avg: typeof body.student.avg === 'number' ? body.student.avg : s.avg, attendance_pct: s.attendance_pct, scores: body.student.scores && typeof body.student.scores === 'object' ? body.student.scores : s.scores } : { avg: s.avg, attendance_pct: s.attendance_pct, scores: s.scores };
     const usage = await aiUsage(db, me.id, 'report_phrase'); const local = () => localParagraph(t, c.skills || [], live);
     if (!usage.allowed) return NextResponse.json({ success: true, text: local(), source: 'local', note_ar: 'بلغت حدّ الاستخدام اليومي — هذه صياغة محلية من الأرقام' });
     const p = paragraphPrompt(t, c.skills || [], live); const res = await runAi({ system: p.system, user: p.user, parse: parseParagraph, local, budgetMs: 20000, json: true });
     await logAi(db, { user_id: me.id, email: me.email, role: me.staff ? 'staff' : 'trainer', purpose: 'report_phrase', result: res, context: { report: id, final: true } });
-    return NextResponse.json({ success: true, text: res.data, source: res.source, note_ar: res.source === 'ai' ? 'صاغها الذكاء الاصطناعي من مسار المتدرّب — لا تُحفظ حتى تعتمدها' : 'صياغة محلية من الأرقام' });
+    return NextResponse.json({ success: true, text: res.data, source: res.source, note_ar: res.source === 'ai' ? 'صاغها الذكاء الاصطناعي من مسار المشارك — لا تُحفظ حتى تعتمدها' : 'صياغة محلية من الأرقام' });
   }
   if (action === 'arrange') {   // ر4-ب «رتّب الأدلّة»: ≤3 جمل بمصدر لكفاية واحدة — تنقية محلية صارمة، ولا يُحفظ شيء حتى يُبقيها المعلّم
     const code = String(body.code || '').slice(0, 40); const usage = await aiUsage(db, me.id, 'report_diploma'); const parseJson = (raw: string) => { try { const m = String(raw || '').match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; } catch { return null; } };

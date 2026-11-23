@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/resources — تنزيل آمن وسجل أحداث التعلّم (بوابة أَثَر · P5)
+ * /api/resources — تنزيل آمن وسجل أحداث التعلّم (بوّابة أَثَر · P5)
  *  POST { action: 'download', resource_id, file_id }  → زائر أو مستخدم: قرار الوصول (RPC portal_resource_access) ⇒ رابط موقّع 120 ثانية + حدث downloaded + عدّادات
  *  POST { action: 'view', resource_id }                → زائر أو مستخدم: حدث viewed + عدّاد المشاهدات (مرة لكل جلسة من العميل)
  *  GET  ?resource_id=…                                 → حالة الوصول للمستخدم الحالي (ok|login|program|org|staff|not_found)

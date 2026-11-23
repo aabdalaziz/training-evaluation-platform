@@ -63,7 +63,7 @@ export async function GET(req: Request) {
   const configured = !!(process.env.MOYASAR_WEBHOOK_SECRET && process.env.MOYASAR_SECRET_KEY);
   const u = new URL(req.url);
   if (u.searchParams.get('verification') !== '1') return NextResponse.json({ ok: true, endpoint: 'moyasar-webhook', configured });
-  /* آخر رمز توثيق — لمديري المنصّة فقط (Bearer) */
+  /* آخر رمز توثيق — لمديري البوّابة فقط (Bearer) */
   const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL; const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; const SVC = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
   if (!URL_ || !ANON || !SVC || !token) return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });

@@ -17,8 +17,8 @@ const alerts: AlertItem[] = [
   {
     id: 2,
     level: 'warning',
-    title: 'قاعة غير مرتبطة بمدرب',
-    description: 'القاعة 203 تحتاج إلى تعيين مدرب.',
+    title: 'شعبة غير مرتبطة بمدرب',
+    description: 'القاعة 203 تحتاج إلى تعيين مدرّب.',
   },
   {
     id: 3,

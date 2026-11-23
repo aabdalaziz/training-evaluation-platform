@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * هوية أَثَر المشتركة (P43-أ «أَثَر الواحد»): الشعار + شارة الباب
- *  تعيش في ملف صغير مستقل حتى يستعملها غلاف البوابة (PortalShell) وشريط «مركز قيادة أَثَر» (GlobalNavigation)
+ *  تعيش في ملف صغير مستقل حتى يستعملها غلاف البوّابة (PortalShell) وشريط «مركز قيادة أَثَر» (GlobalNavigation)
  *  معًا دون أن يحمل أيٌّ منهما الآخر — وبلا كلفة على الزائر (لا Supabase بلا جلسة مخزَّنة).
  */
 import { useEffect, useState } from 'react';

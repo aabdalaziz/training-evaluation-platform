@@ -3,7 +3,7 @@
 /**
  * م7 «عُبور للجهات» — نافذة «طلب خدمة»: خدمة الاختبار المعياري (CEFR) لمجموعة من خارج البرامج (معهد آخر · أفراد طلبوا الاختبار فقط).
  *  تُفتح من منشئ النماذج (بطاقة SYS-EXIT-<L>) ومن لسان الدعوات. الاختبار نفسه لا يتغيّر — ما يتغيّر «الوعاء»:
- *  الجهة الطالبة · منسّقها · النافذة · المقاعد · وضع الهوية · «رمز القاعة» للمراقب → QR + رابط + بطاقة A4 باسم الجهة + رابط «بوابة الجهة» (يُعرض مرة واحدة).
+ *  الجهة الطالبة · منسّقها · النافذة · المقاعد · وضع الهوية · «رمز القاعة» للمراقب → QR + رابط + بطاقة A4 باسم الجهة + رابط «بوّابة الجهة» (يُعرض مرة واحدة).
  */
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
@@ -77,11 +77,11 @@ ${res.pin ? `<div><small>رمز القاعة — يعلنه المراقب عن�
         <div className="sv-qr" dangerouslySetInnerHTML={{ __html: qrSvg(res.url, 200) }} />
         <code dir="ltr">{res.url}</code>
         {res.pin && <div className="sv-pin" data-testid="sv-pin-shown"><small>رمز القاعة — يعلنه المراقب عند البدء</small><b dir="ltr">{res.pin}</b></div>}
-        <div className="sv-client" data-testid="sv-client-link"><small>رابط «بوابة الجهة» — يُعرض مرة واحدة؛ أرسله لمنسّق الجهة (قراءة فقط · قابل للإبطال)</small><code dir="ltr">{res.client_url}</code><button type="button" onClick={() => void copy(res.client_url, 'c')}>{copied === 'c' ? 'نُسخ ✓' : 'نسخ رابط الجهة'}</button></div>
+        <div className="sv-client" data-testid="sv-client-link"><small>رابط «بوّابة الجهة» — يُعرض مرة واحدة؛ أرسله لمنسّق الجهة (قراءة فقط · قابل للإبطال)</small><code dir="ltr">{res.client_url}</code><button type="button" onClick={() => void copy(res.client_url, 'c')}>{copied === 'c' ? 'نُسخ ✓' : 'نسخ رابط الجهة'}</button></div>
         <div className="sv-acts">
           <button type="button" onClick={() => void copy(res.url, 'u')} data-testid="sv-copy"><Icon name="copy" size={14} /> {copied === 'u' ? 'نُسخ ✓' : 'نسخ رابط الاختبار'}</button>
           <button type="button" onClick={printCard} data-testid="sv-print"><Icon name="print" size={14} /> بطاقة A4</button>
-          <a href={`/admin/miaar/exit?invite=${res.invite.id}`} target="_blank" rel="noreferrer" data-testid="sv-board"><Icon name="arrow" size={14} /> لوحة المجموعة</a>
+          <a href={`/admin/miaar/exit?invite=${res.invite.id}`} target="_blank" rel="noreferrer" data-testid="sv-board"><Icon name="arrow" size={14} /> لوحة الشعبة</a>
           <a href={res.url} target="_blank" rel="noreferrer">معاينة</a>
         </div>
       </div>}

@@ -13,7 +13,7 @@ const metrics: Metric[] = [
     color: '#8E4A68',
   },
   {
-    title: 'رضا المتدربين',
+    title: 'رضا المشاركين',
     value: 95,
     color: '#3F7F79',
   },

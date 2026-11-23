@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بطاقة نتيجة مِعيار للمتعلم: المستوى، المهارات الثلاث، التوصية، وملاءمة البرنامج الحالي — تُزامن النتيجة من مِعيار عند العرض
+// بطاقة نتيجة مِعيار للمتعلّم: المستوى، المهارات الثلاث، التوصية، وملاءمة البرنامج الحالي — تُزامن النتيجة من مِعيار عند العرض
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';

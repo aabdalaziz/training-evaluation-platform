@@ -52,7 +52,7 @@ export const SHEET_CSS = `
 export function OrgReportSheet({ body: b, site, logo, status, compact }: Props) {
   const verifyUrl = `${site}/verify/report?code=${b.code}`; const n = b.numbers;
   const tiles: { k: string; label: string; v: string | null; sub: string; note: string | null }[] = [
-    { k: 'transfer', label: 'الانتقال إلى الميدان', v: pct(n.transfer.pct), sub: n.transfer.pct === null ? '' : `متابعة الأثر · n=${n.transfer.n}${n.transfer.supervisor != null && n.transfer.trainee != null ? ` · مشرف ${n.transfer.supervisor} / متدرّب ${n.transfer.trainee} من 5` : ''}`, note: n.transfer.note_ar },
+    { k: 'transfer', label: 'الانتقال إلى الميدان', v: pct(n.transfer.pct), sub: n.transfer.pct === null ? '' : `متابعة الأثر · n=${n.transfer.n}${n.transfer.supervisor != null && n.transfer.trainee != null ? ` · مشرف ${n.transfer.supervisor} / مشارك ${n.transfer.trainee} من 5` : ''}`, note: n.transfer.note_ar },
     { k: 'gain', label: 'الكسب المعياري (قبلي ← بعدي)', v: n.gain.pct === null ? null : `${n.gain.pct > 0 ? '+' : ''}${n.gain.pct}%`, sub: n.gain.pct === null ? '' : `${n.gain.pre} ← ${n.gain.post} · n=${n.gain.n}`, note: n.gain.note_ar },
     { k: 'attendance', label: 'الالتزام بالحضور', v: pct(n.attendance.pct), sub: n.attendance.pct === null ? '' : `${n.attendance.sessions} جلسة · ${n.attendance.n} منسوبًا`, note: n.attendance.note_ar },
   ];
@@ -72,20 +72,20 @@ export function OrgReportSheet({ body: b, site, logo, status, compact }: Props) 
       <h2>خريطة المهارات <i>أعلى خمس مهارات في الفترة</i></h2>
       {b.skills.length ? <table className="lrs-table" data-testid="lrs-skills"><thead><tr><th>المهارة</th><th>متوسط المستوى</th><th>المنسوبون</th><th>معتمَد</th><th>مُثبَت ميدانيًّا</th></tr></thead><tbody>{b.skills.map((s) => <tr key={s.name_ar}><td>{s.name_ar}</td><td>{s.avg_level ?? '—'}</td><td>{s.learners}</td><td>{s.approved}</td><td>{s.proven}</td></tr>)}</tbody></table> : <div className="lrs-note">لا مهارات مقيسة في هذه الفترة بعد — تظهر هنا حين تُحسب مستويات المنسوبين وتُعتمد.</div>}
 
-      <h2>ما قاله الميدان <i>سطور مجهَّلة · k ≥ 5 · مما سُمح بعرضه داخل بوابة الجهة</i></h2>
+      <h2>ما قاله الميدان <i>سطور مجهَّلة · k ≥ 5 · مما سُمح بعرضه داخل بوّابة الجهة</i></h2>
       {b.field.lines.length ? <><ul className="lrs-field" data-testid="lrs-field">{b.field.lines.map((l, i) => <li key={i}>{l}</li>)}</ul><div className="lrs-src">المصدر: {b.field.sources_ar.join(' · ')}{b.field.people ? ` · ${b.field.people} كاتبًا` : ''}</div></> : <div className="lrs-note" data-testid="lrs-field-empty">{b.field.note_ar}</div>}
 
       <h2>ثلاثة أسئلة للقيادة <i>تُولَّد من فجوات البيانات لا من ذكاء اصطناعي</i></h2>
       <ol className="lrs-qs" data-testid="lrs-questions">{b.questions.map((q, i) => <li key={i}>{q}</li>)}</ol>
 
       <h2>قرار القيادة <i>قرارٌ واحد يكفي — يُختم داخل الوثيقة ويعود صداه إلى المنسوبين</i></h2>
-      {b.decision ? <div className="lrs-dec" data-testid="lrs-decision"><b>قرّرت القيادة في {fmt(b.decision.at)}</b><p>{b.decision.text_ar}</p>{b.decision.note_ar ? <small>{b.decision.note_ar}</small> : null}</div> : <div className="lrs-dec empty" data-testid="lrs-decision-empty">لم يُختم قرار بعد — يختاره مدير الجهة من بوابة الجهة ← «تقرير القيادة»، فيُعاد توقيع هذه الصفحة بنفس الرمز.</div>}
+      {b.decision ? <div className="lrs-dec" data-testid="lrs-decision"><b>قرّرت القيادة في {fmt(b.decision.at)}</b><p>{b.decision.text_ar}</p>{b.decision.note_ar ? <small>{b.decision.note_ar}</small> : null}</div> : <div className="lrs-dec empty" data-testid="lrs-decision-empty">لم يُختم قرار بعد — يختاره مدير الجهة من بوّابة الجهة ← «تقرير القيادة»، فيُعاد توقيع هذه الصفحة بنفس الرمز.</div>}
 
       <footer className="lrs-foot">
         <div><b>الدرع:</b> {b.tail.shield ? `${b.tail.shield.month_ar} — ${b.tail.shield.passed_days}/${b.tail.shield.total_days} يومًا · ${b.tail.shield.code}` : 'لا ختم شهري بعد'}<br /><b>سياسة الجهة:</b> {b.tail.policy_seal ? `${b.tail.policy_seal.code} (${fmt(b.tail.policy_seal.issued_at)})` : 'الافتراضات'}{b.tail.charter ? <><br /><b>الميثاق:</b> {b.tail.charter.code || 'موقَّع'}{b.tail.charter.expires_at ? ` حتى ${fmt(b.tail.charter.expires_at)}` : ''}</> : null}{b.tail.pledge ? <><br /><b>عهد الجهة:</b> {b.tail.pledge.title_ar}</> : null}</div>
         <div className="lrs-sign"><strong>{b.issued.name || 'مدير الجهة'}{b.issued.title ? ` — ${b.issued.title}` : ''}</strong>صدر في {fmt(b.issued.at)} · {b.proof ? <span className="lrs-ok">موقَّع رقميًّا Ed25519 ✓</span> : 'بلا توقيع رقمي (مفتاح الخادم غير مهيّأ)'}<br />للتحقّق: <span dir="ltr">{verifyUrl}</span></div>
       </footer>
-      <div className="lrs-brand">بوابة أَثَر — منهجية قياس أثر التدريب وضمان انتقاله إلى الميدان · أرقام وأعداد فقط، لا أسماء · © 2026</div>
+      <div className="lrs-brand">بوّابة أَثَر — منهجية قياس أثر التدريب وضمان انتقاله إلى الميدان · أرقام وأعداد فقط، لا أسماء · © 2026</div>
     </article>
   );
 }

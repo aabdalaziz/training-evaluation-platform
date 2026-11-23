@@ -15,7 +15,7 @@ export function setWayLock(locked: boolean): void { if (typeof window === 'undef
 export default function WayBar({ lang = 'ar', tone = 'light', onBack, extra, lock }: { lang?: 'ar' | 'en'; tone?: 'light' | 'dark'; onBack?: (() => void) | null; extra?: string[]; lock?: boolean }) {
   const pathname = usePathname() || '/'; const router = useRouter();
   const [locked, setLocked] = useState(false);
-  /* شريط واحد فقط في الصفحة: حين يعرضه الرأس العام (GlobalNavigation) وغلاف البوابة (PortalShell) معًا، يختفي الثاني — إلا إن كان يحمل خصوصية (onBack/extra) فيختفي الأول */
+  /* شريط واحد فقط في الصفحة: حين يعرضه الرأس العام (GlobalNavigation) وغلاف البوّابة (PortalShell) معًا، يختفي الثاني — إلا إن كان يحمل خصوصية (onBack/extra) فيختفي الأول */
   const ref = useRef<HTMLElement>(null); const [dup, setDup] = useState(false);
   useEffect(() => {
     const all = Array.from(document.querySelectorAll('[data-testid="way-bar"]')); if (all.length < 2 || !ref.current) { setDup(false); return; }

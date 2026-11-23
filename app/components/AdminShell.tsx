@@ -76,7 +76,7 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
       <footer className="as-foot" data-testid="as-foot">
         <span><b>{BRAND.name.ar} · مركز القيادة</b></span>
         <span>© {BRAND.copyrightYear} {BRAND.owner.ar}</span>
-        <span className="as-foot-links"><Link href="/help">دليل مركز القيادة</Link><Link href="/accessibility">أَثَر للجميع</Link><Link href="/security">درع أَثَر</Link><Link href="/">بوابة أَثَر</Link></span>
+        <span className="as-foot-links"><Link href="/help">دليل مركز القيادة</Link><Link href="/accessibility">أَثَر للجميع</Link><Link href="/security">درع أَثَر</Link><Link href="/">بوّابة أَثَر</Link></span>
       </footer>
     </div></RoomContext.Provider>
   );

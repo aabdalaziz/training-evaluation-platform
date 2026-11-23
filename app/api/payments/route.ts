@@ -1,5 +1,5 @@
 /**
- * /api/payments — عمليات الدفع (بوابة أَثَر)
+ * /api/payments — عمليات الدفع (بوّابة أَثَر)
  *  POST { action: 'issue',   enrollment_id }                   → موظف: إصدار فاتورة لطلب مقبول + بريد الفاتورة
  *  POST { action: 'send',    id }                              → موظف: إعادة إرسال بريد الفاتورة
  *  POST { action: 'set',     id, status, method?, note? }      → موظف: paid | cancelled | refunded | waived | unpaid (+ بريد تأكيد عند paid)

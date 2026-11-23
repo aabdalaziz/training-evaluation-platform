@@ -109,9 +109,9 @@ export default function ProgramCard(props: ProgramCardProps) {
           marginBottom: 20,
         }}
       >
-        <Info title="🏫 القاعات" value={props.classrooms ?? 0} />
+        <Info title="🏫 الشُّعب" value={props.classrooms ?? 0} />
 
-        <Info title="👨‍🏫 المدربون" value={props.trainers ?? 0} />
+        <Info title="👨‍🏫 المدرّبون" value={props.trainers ?? 0} />
 
         <Info title="👨‍🎓 المشاركون" value={props.participants ?? 0} />
 

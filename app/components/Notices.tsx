@@ -6,7 +6,7 @@
  *  - لا بيانات شخصية في النصوص (الإشعارات نفسها بلا درجات).
  *  P54 «أمانة صوتية»: تحت «كلمة» المدرّب زرّ 🎙️ «قُل لي» — تسجيل ≤ 15 ثانية على الجهاز، معاينة، ثم إرسال multipart إلى /api/me/voice-reply؛
  *    نصّ تقريبي اختياري من تعرّف المتصفّح (إن وُجد) يمكن حذفه قبل الإرسال · يُخفى الزرّ إن لم يدعم المتصفّح التسجيل · لا يدخل في أي تقييم.
- *  P55 «كلمة صوتية»: إن حملت كلمة المدرّب صوتًا (voice.sec) يظهر «▶ استمع إلى مدرّبك (0:14)» — رابط موقَّع 5 دقائق عبر /api/notices?voice=<id> — ونصّه التقريبي رماديًّا.
+ *  P55 «كلمة صوتية»: إن حملت كلمة المدرّب صوتًا (voice.sec) يظهر «▶ استمع إلى ميسّرك (0:14)» — رابط موقَّع 5 دقائق عبر /api/notices?voice=<id> — ونصّه التقريبي رماديًّا.
  *    المسجّل نفسه صار مكوّنًا مشتركًا VoiceRecorder (يستعمله المدرّب في دفتر اليوم أيضًا).
  *  P56 «صدى الأسبوع»: إشعار 🪞 week_echo يحمل زرّ 🔊 «اسمعه» — يقرأ الصدى بصوت الجهاز (Web Speech · صفر خادم) · يُخفى إن لم يُدعم.
  */
@@ -56,8 +56,8 @@ function WordReply({ n, ar, chips, max, voiceSec }: { n: Notice; ar: boolean; ch
   async function go(chip: string | null) { if (busy) return; const t = text.trim(); if (!chip && !t) { setMsg({ ok: false, t: ar ? 'اختر لمسة أو اكتب سطرًا' : 'Pick a chip or write a line' }); return; } setBusy(true); const r = await sendReply(n.id, chip, t); setBusy(false);
     if (!r.ok) { setMsg({ ok: false, t: r.error || '' }); return; } setMine((m) => r.reply ? { ...r.reply, voice_sec: r.reply.voice_sec ?? m?.voice_sec ?? null, transcript: r.reply.transcript ?? m?.transcript ?? null } : null); setEdit(false); setText(''); setMsg({ ok: true, t: r.message || '' }); }
   async function dropVoice() { if (busy) return; setBusy(true); const r = await deleteVoice(n.id); setBusy(false); if (!r.ok) { setMsg({ ok: false, t: r.error || '' }); return; } setMine((m) => r.row_deleted || !m ? null : { ...m, voice_sec: null, transcript: null }); setMsg({ ok: true, t: ar ? 'حُذف الصوت.' : 'Voice removed.' }); }
-  if (voice) return <VoiceRecorder ar={ar} maxSec={voiceSec} testid="nt-voice" sendLabel={ar ? 'أرسل الأمانة' : 'Send voice note'} hint={ar ? `أمانة صوتية ≤ ${voiceSec} ثانية · يسمعها مدرّبك وحده · لا تدخل في أي تقييم · تُحذف بعد 180 يومًا` : `Voice note ≤ ${voiceSec}s · heard by your trainer only · never part of any assessment · deleted after 180 days`} transcriptLabel={ar ? 'نصّ تقريبي (من جهازك — يراه مدرّبك مع الصوت):' : 'Rough transcript (on-device — shown to your trainer with the audio):'} onCancel={() => setVoice(false)}
-    onSend={async (t) => { const r = await sendVoice(n.id, t.blob, t.sec, t.transcript); if (!r.ok || !r.reply) return r.error || 'تعذّر الإرسال'; setMine(r.reply); setVoice(false); setEdit(false); setMsg({ ok: true, t: ar ? 'وصلت أمانتك الصوتية إلى مدرّبك — له وحده.' : 'Your voice note reached your trainer — only them.' }); return null; }} />;
+  if (voice) return <VoiceRecorder ar={ar} maxSec={voiceSec} testid="nt-voice" sendLabel={ar ? 'أرسل الأمانة' : 'Send voice note'} hint={ar ? `أمانة صوتية ≤ ${voiceSec} ثانية · يسمعها ميسّرك وحده · لا تدخل في أي تقييم · تُحذف بعد 180 يومًا` : `Voice note ≤ ${voiceSec}s · heard by your trainer only · never part of any assessment · deleted after 180 days`} transcriptLabel={ar ? 'نصّ تقريبي (من جهازك — يراه ميسّرك مع الصوت):' : 'Rough transcript (on-device — shown to your trainer with the audio):'} onCancel={() => setVoice(false)}
+    onSend={async (t) => { const r = await sendVoice(n.id, t.blob, t.sec, t.transcript); if (!r.ok || !r.reply) return r.error || 'تعذّر الإرسال'; setMine(r.reply); setVoice(false); setEdit(false); setMsg({ ok: true, t: ar ? 'وصلت أمانتك الصوتية إلى ميسّرك — له وحده.' : 'Your voice note reached your trainer — only them.' }); return null; }} />;
   if (mine && !edit) return <div className="nt-reply done" data-testid="nt-reply-done" data-chip={mine.chip || ''} data-voice={mine.voice_sec ? '1' : '0'}>
     <span>{ar ? 'ردّك: ' : 'Your reply: '}<b>{mine.chip_ar}{mine.chip_ar && mine.text ? ' · ' : ''}{mine.text ? `«${mine.text}»` : ''}{(mine.chip_ar || mine.text) && mine.voice_sec ? ' · ' : ''}{mine.voice_sec ? <span data-testid="nt-voice-done">🎙️ {fmtSec(mine.voice_sec)}</span> : null}</b></span>
     {mine.editable && <button type="button" className="nt-link" onClick={() => { setEdit(true); setText(mine.text || ''); setMsg(null); }} data-testid="nt-reply-edit">{ar ? 'عدِّل' : 'Edit'}</button>}
@@ -69,8 +69,8 @@ function WordReply({ n, ar, chips, max, voiceSec }: { n: Notice; ar: boolean; ch
     <div className="nt-chips" role="group" aria-label={ar ? 'ردّ بلمسة' : 'Quick reply'}>{chips.map((c) => <button key={c.key} type="button" className="nt-chip" onClick={() => void go(c.key)} disabled={busy} data-testid="nt-chip" data-chip={c.key}><span aria-hidden="true">{c.icon}</span> {ar ? c.label_ar : c.label_en}</button>)}
       {canVoice && <button type="button" className="nt-chip nt-chip-voice" onClick={() => { setVoice(true); setMsg(null); }} disabled={busy} data-testid="nt-voice" title={ar ? `أمانة صوتية ≤ ${voiceSec} ثانية` : `Voice note ≤ ${voiceSec}s`}><span aria-hidden="true">🎙️</span> {ar ? 'قُل لي' : 'Tell me'}</button>}</div>
     <div className="nt-line"><input value={text} onChange={(e) => setText(e.target.value.slice(0, max))} maxLength={max} placeholder={ar ? `أو اكتب سطرًا لمدرّبك (≤ ${max} حرفًا)…` : `Or write one line (≤ ${max})…`} aria-label={ar ? 'سطر الردّ' : 'Reply line'} data-testid="nt-reply-text" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void go(null); } }} />
-      <button type="button" className="nt-send" onClick={() => void go(null)} disabled={busy || !text.trim()} data-testid="nt-reply-send">{ar ? 'أرسل' : 'Send'}</button></div>
-    <small className="nt-reply-hint">{ar ? 'يصل إلى مدرّبك وحده · لا يدخل في أي تقييم' : 'Reaches your trainer only · never part of any assessment'}{edit && <> · <button type="button" className="nt-link" onClick={() => setEdit(false)}>{ar ? 'إلغاء' : 'Cancel'}</button></>}</small>
+      <button type="button" className="nt-send" onClick={() => void go(null)} disabled={busy || !text.trim()} data-testid="nt-reply-send">{ar ? 'إرسال' : 'Send'}</button></div>
+    <small className="nt-reply-hint">{ar ? 'يصل إلى ميسّرك وحده · لا يدخل في أي تقييم' : 'Reaches your trainer only · never part of any assessment'}{edit && <> · <button type="button" className="nt-link" onClick={() => setEdit(false)}>{ar ? 'إلغاء' : 'Cancel'}</button></>}</small>
     {msg && !msg.ok && <small className="nt-reply-err" role="alert" data-testid="nt-reply-err">{msg.t}</small>}
   </div>;
 }
@@ -81,10 +81,10 @@ function TrainerVoice({ n, ar }: { n: Notice; ar: boolean }) {
   async function play() { setErr(''); if (url) { const a = ref.current; if (!a) return; if (on) { a.pause(); setOn(false); } else { try { await a.play(); setOn(true); } catch { setErr(ar ? 'اضغط مرّة أخرى للتشغيل' : 'Tap again to play'); } } return; }
     setBusy(true); const r = await trainerVoiceUrl(n.id); setBusy(false); if (!r.url) { setErr(r.error || ''); return; } setUrl(r.url); setTimeout(async () => { try { await ref.current?.play(); setOn(true); void markRead([n.id]); } catch { /* يضغط ثانية */ } }, 50); }
   return <div className="nt-tvoice" data-testid="nt-tvoice" data-sec={n.voice!.sec}>
-    <button type="button" className={`nt-tvoice-btn ${on ? 'on' : ''}`} onClick={() => void play()} disabled={busy} aria-pressed={on} data-testid="nt-tvoice-play">{on ? '❚❚' : '▶'} {ar ? `استمع إلى مدرّبك (${fmtSec(n.voice!.sec)})` : `Listen to your trainer (${fmtSec(n.voice!.sec)})`}</button>
+    <button type="button" className={`nt-tvoice-btn ${on ? 'on' : ''}`} onClick={() => void play()} disabled={busy} aria-pressed={on} data-testid="nt-tvoice-play">{on ? '❚❚' : '▶'} {ar ? `استمع إلى ميسّرك (${fmtSec(n.voice!.sec)})` : `Listen to your trainer (${fmtSec(n.voice!.sec)})`}</button>
     <audio ref={ref} src={url || undefined} preload="none" onEnded={() => setOn(false)} onPause={() => setOn(false)} aria-hidden="true" />
     {n.voice!.transcript && <em className="nt-tvoice-tr" data-testid="nt-tvoice-tr" title={ar ? 'نصّ تقريبي من جهاز المدرّب — الصوت هو الأصل' : 'Rough on-device transcript — audio is the original'}>≈ {n.voice!.transcript}</em>}
-    <small className="nt-reply-hint">{ar ? 'صوت مدرّبك لك وحدك · لا يدخل في أي تقييم · يُحذف بعد 180 يومًا' : 'Your trainer’s voice, for you only · never part of any assessment · deleted after 180 days'}</small>
+    <small className="nt-reply-hint">{ar ? 'صوت ميسّرك لك وحدك · لا يدخل في أي تقييم · يُحذف بعد 180 يومًا' : 'Your trainer’s voice, for you only · never part of any assessment · deleted after 180 days'}</small>
     {err && <small className="nt-reply-err" role="alert">{err}</small>}
   </div>;
 }

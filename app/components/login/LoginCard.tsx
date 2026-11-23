@@ -34,7 +34,7 @@ export default function LoginCard({ onSubmit, onMagic, loading = false, error = 
   const tabBtn = (on: boolean): React.CSSProperties => ({ flex: 1, minHeight: 44, padding: '9px 10px', borderRadius: 10, border: on ? '1.5px solid #3A1F36' : '1px solid #EADFD6', background: on ? '#3A1F36' : '#fff', color: on ? '#fff' : '#4A3645', fontWeight: 800, cursor: 'pointer', fontSize: 14 });
 
   return (
-    <AuthCard standalone={false} icon={<Icon name="login" size={30} />} title="ادخل إلى أَثَر" subtitle="بابٌ واحد لكل صفة: متدرّب أو مدرّب أو طاقم — اكتب بريدك ويفتح لك بابك">
+    <AuthCard standalone={false} icon={<Icon name="login" size={30} />} title="ادخل إلى أَثَر" subtitle="بابٌ واحد لكل صفة: مشارك أو مدرّب أو طاقم — اكتب بريدك ويفتح لك بابك">
       {onMagic && (
         <div role="tablist" aria-label="طريقة الدخول" style={{ display: 'flex', gap: 8, marginBottom: 16 }} data-testid="login-modes">
           <button type="button" role="tab" aria-selected={mode === 'magic'} style={tabBtn(mode === 'magic')} onClick={() => setMode('magic')} data-testid="login-mode-magic">رابط الدخول (بلا كلمة مرور)</button>

@@ -64,7 +64,7 @@ function Inner() {
           </>}
         </div>}
         <CredentialChapters code={code} lang={lang} />
-        <p className="pt-muted" style={{ marginTop: 16 }}>{ar ? 'الشهادات الرقمية في أَثَر تُصدر بصيغة Open Badges 3.0 القابلة للتحقق، وترتبط بسجل تعلّم المتعلم ومهاراته المربوطة بالأطر المرجعية (SAQF · SDAIA · CEFR). «الشهادة الحية» امتداد من أَثَر: المستوى الحالي وطزاجة المهارات يُحسبان لحظة الطلب من الأدلة نفسها، وصاحب الشهادة يتحكم في تفعيلها.' : 'Athar credentials are verifiable Open Badges 3.0 tied to the learner’s evidence record and framework-mapped skills (SAQF · SDAIA · CEFR). “Living credential” is Athar’s extension: current level and freshness are computed on request from the same evidence, and the holder controls it.'}</p>
+        <p className="pt-muted" style={{ marginTop: 16 }}>{ar ? 'الشهادات الرقمية في أَثَر تُصدر بصيغة Open Badges 3.0 القابلة للتحقق، وترتبط بسجل تعلّم المتعلّم ومهاراته المربوطة بالأطر المرجعية (SAQF · SDAIA · CEFR). «الشهادة الحية» امتداد من أَثَر: المستوى الحالي وطزاجة المهارات يُحسبان لحظة الطلب من الأدلة نفسها، وصاحب الشهادة يتحكم في تفعيلها.' : 'Athar credentials are verifiable Open Badges 3.0 tied to the learner’s evidence record and framework-mapped skills (SAQF · SDAIA · CEFR). “Living credential” is Athar’s extension: current level and freshness are computed on request from the same evidence, and the holder controls it.'}</p>
       </div></section>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
     </main>

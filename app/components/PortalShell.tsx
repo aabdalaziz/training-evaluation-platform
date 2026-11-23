@@ -1,6 +1,6 @@
 'use client';
 
-// غلاف البوابة العامة (أَثَر): رأس + تذييل + مبدّل اللغة + أنماط مشتركة ببادئة .pt
+// غلاف البوّابة العامة (أَثَر): رأس + تذييل + مبدّل اللغة + أنماط مشتركة ببادئة .pt
 import { createContext, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -37,7 +37,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
   useEffect(() => { setOpen(false); }, [pathname]);
   // استئناف التسجيل بعد العودة من رابط الدخول بالبريد (إن أعادنا Supabase إلى الصفحة الرئيسة)
   const router = useRouter();
-  /* P49-ج: رأس واعٍ بالجلسة — «خروج» في كل صفحة من صفحات البوابة (حاسوب + جوال)، «دخول» للزائر */
+  /* P49-ج: رأس واعٍ بالجلسة — «خروج» في كل صفحة من صفحات البوّابة (حاسوب + جوال)، «دخول» للزائر */
   const [loggedIn, setLoggedIn] = useState(false);
   useEffect(() => {
     if (!hasStoredSession()) { setLoggedIn(false); return; }
@@ -115,7 +115,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
               <ul>
                 {NAV.map(n => <li key={n.href}><Link href={n.href}>{t(n.label, lang)}</Link></li>)}
                 <li><Link href="/me">{t(UI.student, lang)}</Link></li>
-                <li><Link href="/org">{lang === 'ar' ? 'بوابة الجهات' : 'Organizations portal'}</Link></li>
+                <li><Link href="/org">{lang === 'ar' ? 'بوّابة الجهات' : 'Organizations portal'}</Link></li>
                 <li><Link href="/me/skills">{lang === 'ar' ? 'ملفي المهاري' : 'My skills profile'}</Link></li>
                 <li><Link href="/me/twin">{lang === 'ar' ? 'توأمي المهاري' : 'My skills twin'}</Link></li>
                 <li><Link href="/me/missions">{lang === 'ar' ? 'مهماتي من قلب العمل' : 'My workflow missions'}</Link></li>

@@ -1,11 +1,11 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/rooms — غرف أَثَر الصغيرة: فيديو من داخل المنصة حتى 6 أشخاص (أَثَر · P13-ج)
+ * /api/rooms — غرف أَثَر الصغيرة: فيديو من داخل البوّابة حتى 6 أشخاص (أَثَر · P13-ج)
  *  التنسيق (signaling) يجري في المتصفح عبر قناة Supabase الفورية `room:<code>`؛ هذا المسار يدير دورة حياة الغرفة فقط.
  *  GET  ?code=<ABC234>                                      → بيانات الغرفة (مسجّل دخول)
  *  GET  ?session=<id>                                       → غرف جلسة حية (مسجّل دخول)
  *  POST { action:'create', kind:'dialogue'|'consult'|'support', title?, prompt?, minutes? }            → غرفة واحدة (أي مستخدم مسجّل · 3 غرف مفتوحة كحد أقصى)
- *  POST { action:'breakouts', session_id, count?, prompt?, minutes? }                        → غرف صغيرة لجلسة (موظف/مدرب الجلسة/منشئها)
+ *  POST { action:'breakouts', session_id, count?, prompt?, minutes? }                        → غرف صغيرة لجلسة (موظف/مدرّب الجلسة/منشئها)
  *  POST { action:'note', code, text }                                                        → سطر الغرفة الذي تعود به إلى الجلسة (يظهر في الميسِّر والمحضر)
  *  POST { action:'close', code }                                                             → إغلاق (المنشئ/موظف)
  */

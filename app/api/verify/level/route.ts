@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /api/verify/level?code=ATH-LV-XXXX-XXXX — P70: تحقّق عام من «صفحة المستوى — بكلمات المتدرّب» بالرمز والبصمة — البرنامج والمستوى · تاريخ الختم · السلامة · الإبطال (فوري ومعلَن) · الاستبدال بختم أحدث؛ والوجه العام (face=1) بما اختاره صاحبه فقط. لا بريد ولا هاتف ولا درجة. */
+/** /api/verify/level?code=ATH-LV-XXXX-XXXX — P70: تحقّق عام من «صفحة المستوى — بكلمات المشارك» بالرمز والبصمة — البرنامج والمستوى · تاريخ الختم · السلامة · الإبطال (فوري ومعلَن) · الاستبدال بختم أحدث؛ والوجه العام (face=1) بما اختاره صاحبه فقط. لا بريد ولا هاتف ولا درجة. */
 import { NextResponse } from 'next/server';
 import { rateLimit, ipOf, tooMany } from '../../../../lib/shield/ratelimit';
 import { createClient } from '@supabase/supabase-js';

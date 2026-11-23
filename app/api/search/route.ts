@@ -1,10 +1,10 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * «دليل أَثَر» (P41) — GET /api/search?q=…&lang=ar|en[&ask=1]
- *  يبحث في المحتوى الحيّ بحسب صلاحية الطالب — ثلاث طبقات:
+ *  يبحث في المحتوى الحيّ بحسب صلاحية المشارك — ثلاث طبقات:
  *   · الزائر: البرامج المنشورة · الحقائب المنشورة · الجلسات القادمة · المحاكيات · هيئة أَثَر المعتمَدة.
  *   · الداخل: + شهاداتي · نتائج مِعيار ببريدي.
- *   · الطاقم: + المتدرّبون (اسم/بريد) · المؤسسات · دعوات مِعيار · بنود البنك.
+ *   · الطاقم: + المشاركون (اسم/بريد) · المؤسسات · دعوات مِعيار · بنود البنك.
  *  ask=1 (سؤال ينتهي بعلامة استفهام): «أثير» يجيب من النتائج فقط (لا يختلق) ويعيد المصادر — والإنسان يقرّر.
  *  الصفحات والأوامر تُفهرَس في المتصفح (lib/portal/search.ts) ولا تمرّ من هنا.
  *  درع أَثَر: 120 نداء/دقيقة/IP للبحث · 12/دقيقة للسؤال. كل مصدر داخل safe() — تعطّل جدول لا يُسقط اللوحة.
@@ -89,9 +89,9 @@ function keywords(s: string): string[] { const out: string[] = []; for (const w0
 
 async function ask(question: string, sources: Entry[], lang: 'ar' | 'en'): Promise<{ text: string; source: 'ai' | 'local'; error: string | null; model: string | null; ms: number; provider: string | null }> {
   const list = sources.slice(0, 12).map((s, i) => `[${i + 1}] ${lang === 'ar' ? s.ar : s.en} — ${s.href}${s.hint ? ' — ' + (lang === 'ar' ? s.hint.ar : s.hint.en) : ''}`).join('\n');
-  const local = () => (lang === 'ar' ? (sources.length ? `أقرب ما وجدته لسؤالك: ${sources.slice(0, 3).map(s => s.ar).join(' · ')}. افتح أيًّا منها من القائمة أدناه.` : 'لم أجد ما يطابق سؤالك داخل البوابة. جرّب كلمات أقل، أو اسأل فريق أَثَر من صفحة «تواصل معنا».') : (sources.length ? `Closest matches: ${sources.slice(0, 3).map(s => s.en).join(' · ')}.` : 'Nothing in the portal matches that. Try fewer words or contact the Athar team.'));
+  const local = () => (lang === 'ar' ? (sources.length ? `أقرب ما وجدته لسؤالك: ${sources.slice(0, 3).map(s => s.ar).join(' · ')}. افتح أيًّا منها من القائمة أدناه.` : 'لم أجد ما يطابق سؤالك داخل البوّابة. جرّب كلمات أقل، أو اسأل فريق أَثَر من صفحة «تواصل معنا».') : (sources.length ? `Closest matches: ${sources.slice(0, 3).map(s => s.en).join(' · ')}.` : 'Nothing in the portal matches that. Try fewer words or contact the Athar team.'));
   const r = await runAi<string>({
-    system: lang === 'ar' ? 'أنت «أثير»، مرشد بوابة أَثَر. أجب عن سؤال الزائر في جملتين أو ثلاث بالعربية الفصحى الواضحة، اعتمادًا على قائمة المصادر فقط. إن لم تكفِ المصادر فقل ذلك صراحة ووجّهه إلى «تواصل معنا». لا تختلق أرقامًا أو روابط. أشر إلى المصدر برقمه بين قوسين مربعين.' : 'You are Athir, the Athar portal guide. Answer in two or three clear sentences using ONLY the listed sources; if they are insufficient say so and point to Contact us. Never invent numbers or links. Cite sources as [n].',
+    system: lang === 'ar' ? 'أنت «أثير»، مرشد بوّابة أَثَر. أجب عن سؤال الزائر في جملتين أو ثلاث بالعربية الفصحى الواضحة، اعتمادًا على قائمة المصادر فقط. إن لم تكفِ المصادر فقل ذلك صراحة ووجّهه إلى «تواصل معنا». لا تختلق أرقامًا أو روابط. أشر إلى المصدر برقمه بين قوسين مربعين.' : 'You are Athir, the Athar portal guide. Answer in two or three clear sentences using ONLY the listed sources; if they are insufficient say so and point to Contact us. Never invent numbers or links. Cite sources as [n].',
     user: `${lang === 'ar' ? 'السؤال' : 'Question'}: ${question}\n\n${lang === 'ar' ? 'المصادر' : 'Sources'}:\n${list || '(none)'}`,
     parse: raw => { const t = String(raw || '').trim(); return t.length > 4 ? t.slice(0, 700) : null; }, local, budgetMs: 16000, fast: true, json: false,   // P42-ب: نصّ حرّ — المزوّد الحيّ (OpenAI) كان يرفض json_object بلا كلمة json → سقوط محلي   // P42: كانت 9 ث فسقطت إلى المحلي على Vercel البارد
   });
