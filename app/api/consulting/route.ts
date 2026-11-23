@@ -1,9 +1,9 @@
 /**
- * /api/consulting — بريد وإجراءات الاستشارات (بوابة أَثَر)
- *  POST { action: 'submitted', id }                         → المالك: بريد استلام للعميل + تنبيه الإدارة
- *  POST { action: 'send_quote', quote_id }                   → موظف: وسم العرض «مُرسل» (والأقدم «مستبدل») + حالة الطلب quoted + بريد للعميل
+ * /api/consulting — بريد وإجراءات الاستشارات (بوّابة أَثَر)
+ *  POST { action: 'submitted', id }                         → المالك: بريد استلام للجهة + تنبيه الإدارة
+ *  POST { action: 'send_quote', quote_id }                   → موظف: وسم العرض «مُرسل» (والأقدم «مستبدل») + حالة الطلب quoted + بريد للجهة
  *  POST { action: 'respond', quote_id, accept, note? }       → المالك: RPC portal_quote_respond (قبول ⇒ فاتورة) + بريد الفاتورة + تنبيه الإدارة
- *  POST { action: 'status', id, status, note?, notify? }     → موظف: تغيير الحالة + بريد للعميل
+ *  POST { action: 'status', id, status, note?, notify? }     → موظف: تغيير الحالة + بريد للجهة
  *  POST { action: 'update_posted', update_id }               → أي طرف: إشعار الطرف الآخر بتحديث جديد
  * الأخطاء البريدية لا تُفشل العملية (mail_error)
  */

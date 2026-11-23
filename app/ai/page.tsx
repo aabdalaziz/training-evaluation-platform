@@ -38,9 +38,9 @@ function Inner() {
   ];
   const services: { p: AiPurpose; who: string; where: string; href: string }[] = [
     { p: 'impact_brief', who: ar ? 'الإدارة والجودة' : 'Staff & quality', where: ar ? 'تقارير الأثر القطاعية' : 'Sector impact reports', href: '/admin/sector-impact' },
-    { p: 'learner_plan', who: ar ? 'المتعلم' : 'Learner', where: ar ? 'ملفي المهاري' : 'My skills profile', href: '/me/skills' },
-    { p: 'org_brief', who: ar ? 'مدير الجهة' : 'Organization admin', where: ar ? 'بوابة الجهات' : 'Organizations portal', href: '/org' },
-    { p: 'activity_draft', who: ar ? 'المدرب والإدارة' : 'Trainer & staff', where: ar ? 'إدارة البث المباشر' : 'Live sessions admin', href: '/admin/live' },
+    { p: 'learner_plan', who: ar ? 'المتعلّم' : 'Learner', where: ar ? 'ملفي المهاري' : 'My skills profile', href: '/me/skills' },
+    { p: 'org_brief', who: ar ? 'مدير الجهة' : 'Organization admin', where: ar ? 'بوّابة الجهات' : 'Organizations portal', href: '/org' },
+    { p: 'activity_draft', who: ar ? 'المدرّب والإدارة' : 'Trainer & staff', where: ar ? 'إدارة البث المباشر' : 'Live sessions admin', href: '/admin/live' },
     { p: 'cv_extract', who: ar ? 'عضو هيئة أَثَر' : 'Athar Faculty member', where: ar ? 'سيرتي في هيئة أَثَر — «ابدأ من سيرتك الذاتية»' : 'My Athar Faculty profile — start from your CV', href: '/me/directory' },
     { p: 'access_simplify', who: ar ? 'أي مسجَّل' : 'Any signed-in user', where: ar ? 'زر «نسخة أبسط» على نبذة البرنامج وموقف اليوم — لا يُعرض قبل اعتماد الطاقم' : 'The "simpler version" button on program and daily-case texts — shown only after staff approval', href: '/accessibility' },
     { p: 'onair_summary', who: ar ? 'المُستقبِل على الهواء' : 'The on-air receiver', where: ar ? 'عند إغلاق «عونٍ سريع»: تلخيص الخيط في ثلاث جمل للمُستقبِل — الإنسان يردّ باسمه، والآلة لا تتكلم باسم أحد' : 'When a quick-help thread closes: a three-sentence summary for the receiver — humans answer in their own name', href: '/on-air' },
@@ -67,9 +67,9 @@ function Inner() {
         <div className="pt-two" style={{ marginTop: 18 }}>
           <div className="pt-box"><h3><Icon name="check" size={18} /> {ar ? 'ما يفعله' : 'What it does'}</h3><ul>
             <li>{ar ? 'يكتب موجزًا تنفيذيًا من أرقام تقرير الأثر، مع المخاطر وما ينقص القياس.' : 'Writes an executive brief from the impact numbers, including risks and measurement gaps.'}</li>
-            <li>{ar ? 'يقترح للمتعلم خطة 4–8 أسابيع من البرامج والحقائب والجلسات المتاحة فعلًا.' : 'Suggests a 4–8 week plan for learners from programs, resources and sessions that actually exist.'}</li>
+            <li>{ar ? 'يقترح للمتعلّم خطة 4–8 أسابيع من البرامج والحقائب والجلسات المتاحة فعلًا.' : 'Suggests a 4–8 week plan for learners from programs, resources and sessions that actually exist.'}</li>
             <li>{ar ? 'يلخّص للجهة فجوات منسوبيها ويقترح برامج مناسبة دون تسمية أفراد.' : 'Summarises an organization’s skill gaps and suggests programs without naming individuals.'}</li>
-            <li>{ar ? 'يقترح للمدرب مسودّات أسئلة وأنشطة يعدّلها ويعتمدها قبل النشر.' : 'Drafts questions and activities for trainers to edit and approve before publishing.'}</li>
+            <li>{ar ? 'يقترح للمدرّب مسودّات أسئلة وأنشطة يعدّلها ويعتمدها قبل النشر.' : 'Drafts questions and activities for trainers to edit and approve before publishing.'}</li>
           </ul></div>
           <div className="pt-box"><h3><Icon name="x" size={18} /> {ar ? 'ما لا يفعله أبدًا' : 'What it never does'}</h3><ul>
             <li>{ar ? 'لا يعتمد مهارة ولا يصدر شهادة ولا يقبل أو يرفض متقدمًا.' : 'Never approves a skill, issues a credential, or admits/rejects an applicant.'}</li>

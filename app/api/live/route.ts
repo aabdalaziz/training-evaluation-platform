@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/live — التعلّم المباشر (بوابة أَثَر · P6)
+ * /api/live — التعلّم المباشر (بوّابة أَثَر · P6)
  *  POST { action: 'join', session_id }                         → أي زائر/مستخدم: تحقق الوصول (RLS) ⇒ رابط الانضمام + حدث joined
  *  POST { action: 'register', session_id, full_name, organization? } → مستخدم: تسجيل في ندوة عامة + بريد تأكيد
  *  POST { action: 'remind', session_id }                       → موظف: تذكير بالبريد لمتدربي الشعبة/البرنامج والمسجّلين
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     if (ses.classroom_id) { const { data } = await db.from('portal_enrollments').select('email,full_name').eq('classroom_id', ses.classroom_id).eq('status', 'approved'); for (const e of (data || []) as any[]) to.set(String(e.email).toLowerCase(), e.full_name || ''); }
     else if (ses.program_id) { const { data } = await db.from('portal_enrollments').select('email,full_name').eq('program_id', ses.program_id).eq('status', 'approved'); for (const e of (data || []) as any[]) to.set(String(e.email).toLowerCase(), e.full_name || ''); }
     const { data: regs } = await db.from('portal_session_registrations').select('email,full_name').eq('session_id', id); for (const r of (regs || []) as any[]) to.set(String(r.email).toLowerCase(), r.full_name || '');
-    if (to.size === 0) return bad('لا يوجد مستلمون (لا متدربون مُسكَنون ولا مسجّلون)', 409);
+    if (to.size === 0) return bad('لا يوجد مستلمون (لا مشاركون مُسكَنون ولا مسجّلون)', 409);
     const lang = ses.lang === 'en' ? 'en' : 'ar'; const url = joinOf(ses) || `${site}/live/${id}`; let sent = 0; const errors: string[] = [];
     for (const [email, name] of to) { const m = reminderEmail(ses, url, `${site}/live/${id}`, lang, name); const e = await mail(() => sendViaResend({ to: [email], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: 'live_reminder' }] })); if (e) errors.push(`${email}: ${e}`); else sent++; }
     await db.from('portal_sessions').update({ reminder_sent_at: new Date().toISOString() }).eq('id', id);

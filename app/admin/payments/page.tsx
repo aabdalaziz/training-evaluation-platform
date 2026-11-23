@@ -1,6 +1,6 @@
 'use client';
 
-// بوابة أَثَر — المدفوعات: الفواتير · تأكيد التحويلات · الإعدادات البنكية والضريبية
+// بوّابة أَثَر — المدفوعات: الفواتير · تأكيد التحويلات · الإعدادات البنكية والضريبية
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
@@ -66,12 +66,12 @@ export default function PaymentsPage() {
   }
   async function setStatus(id: string, status: InvoiceStatus, method?: string) {
     setBusy(id); setError(''); setNotice('');
-    try { const j = await api({ action: 'set', id, status, method, note: note.trim() || undefined }); setNotice(j.mail_error ? `تم التحديث، لكن تعذّر إرسال البريد: ${j.mail_error}` : (status === 'paid' ? 'تم تأكيد السداد وإرسال إشعار للعميل.' : 'تم تحديث الحالة.')); setNote(''); setOpen(null); await load(); } catch (e: any) { setError(e.message); }
+    try { const j = await api({ action: 'set', id, status, method, note: note.trim() || undefined }); setNotice(j.mail_error ? `تم التحديث، لكن تعذّر إرسال البريد: ${j.mail_error}` : (status === 'paid' ? 'تم تأكيد السداد وإرسال إشعار للجهة.' : 'تم تحديث الحالة.')); setNote(''); setOpen(null); await load(); } catch (e: any) { setError(e.message); }
     setBusy('');
   }
   async function issue(enrollmentId: string) {
     setBusy(enrollmentId); setError(''); setNotice('');
-    try { const j = await api({ action: 'issue', enrollment_id: enrollmentId }); setNotice(j.invoice_id ? (j.mail_error ? `صدرت الفاتورة لكن تعذّر البريد: ${j.mail_error}` : 'صدرت الفاتورة وأُرسلت للعميل.') : (j.message || 'لا فاتورة')); await load(); } catch (e: any) { setError(e.message); }
+    try { const j = await api({ action: 'issue', enrollment_id: enrollmentId }); setNotice(j.invoice_id ? (j.mail_error ? `صدرت الفاتورة لكن تعذّر البريد: ${j.mail_error}` : 'صدرت الفاتورة وأُرسلت للجهة.') : (j.message || 'لا فاتورة')); await load(); } catch (e: any) { setError(e.message); }
     setBusy('');
   }
   async function resend(id: string) { setBusy(id); try { const j = await api({ action: 'send', id }); setNotice(j.mail_error ? `تعذّر البريد: ${j.mail_error}` : 'أُعيد إرسال الفاتورة.'); } catch (e: any) { setError(e.message); } setBusy(''); }
@@ -117,7 +117,7 @@ export default function PaymentsPage() {
               </div>
               {open === r.id && (
                 <div className="py-body">
-                  <div className="py-details"><span>قبل الضريبة: <bdi>{money(r.subtotal, r.currency, 'ar')}</bdi></span><span>الضريبة ({Number(r.vat_rate)}%): <bdi>{money(r.vat_amount, r.currency, 'ar')}</bdi></span><span>الاستحقاق: <bdi>{r.due_date || '—'}</bdi></span><span>الطريقة: {methodLabel(r.method, 'ar')}</span>{r.paid_at && <span>السداد: <bdi>{fmt(r.paid_at)}</bdi></span>}{r.transfer_ref && <span>مرجع التحويل: <bdi>{r.transfer_ref}</bdi></span>}{r.gateway_payment_id && <span>Moyasar: <bdi>{r.gateway_payment_id}</bdi></span>}{r.receipt_uploaded_at && <span>رفع الإيصال: <bdi>{fmt(r.receipt_uploaded_at)}</bdi></span>}{r.payer_note && <span>ملاحظة العميل: {r.payer_note}</span>}{r.notes && <span>ملاحظات: {r.notes}</span>}</div>
+                  <div className="py-details"><span>قبل الضريبة: <bdi>{money(r.subtotal, r.currency, 'ar')}</bdi></span><span>الضريبة ({Number(r.vat_rate)}%): <bdi>{money(r.vat_amount, r.currency, 'ar')}</bdi></span><span>الاستحقاق: <bdi>{r.due_date || '—'}</bdi></span><span>الطريقة: {methodLabel(r.method, 'ar')}</span>{r.paid_at && <span>السداد: <bdi>{fmt(r.paid_at)}</bdi></span>}{r.transfer_ref && <span>مرجع التحويل: <bdi>{r.transfer_ref}</bdi></span>}{r.gateway_payment_id && <span>Moyasar: <bdi>{r.gateway_payment_id}</bdi></span>}{r.receipt_uploaded_at && <span>رفع الإيصال: <bdi>{fmt(r.receipt_uploaded_at)}</bdi></span>}{r.payer_note && <span>ملاحظة الجهة: {r.payer_note}</span>}{r.notes && <span>ملاحظات: {r.notes}</span>}</div>
                   {canWrite && <label className="py-note">ملاحظة داخلية (اختياري)<input value={note} onChange={e => setNote(e.target.value)} /></label>}
                   <div className="py-acts">
                     {r.receipt_path && <button type="button" className="rm-btn ghost" onClick={() => viewReceipt(r)}><Icon name="doc" size={15} /> عرض الإيصال</button>}
@@ -169,11 +169,11 @@ export default function PaymentsPage() {
                 <button type="button" className="rm-btn" onClick={() => void fetchWhCode()}>رمز توثيق Webhook (من Moyasar)</button>
                 {whCode && (whCode.code ? <span>الرمز: <b dir="ltr" style={{ fontSize: 22, letterSpacing: '.15em' }} data-testid="wh-code">{whCode.code}</b> <small>({new Date(whCode.at || '').toLocaleString('ar-SA')}) — ألصقه في نافذة Verify Webhook (يصلح ٣٠ دقيقة)</small>{whCode.secret_ok === false && <b style={{ color: '#B9544A', display: 'block' }}>تنبيه: النصّ السرّي في Moyasar لا يطابق MOYASAR_WEBHOOK_SECRET في Vercel — صحّح أحدهما وإلا لن تُعتمد المدفوعات آليًّا.</b>}</span> : <span>لم يصل رمز بعد — اضغط «Resend code» في Moyasar ثم أعد الضغط هنا.{!whCode.configured && ' (المفاتيح غير مهيّأة في Vercel)'}</span>)}
               </div>}
-              <div className="py-preview" style={{ gridColumn: '1/-1' }}>لتفعيل البطاقات: أنشئ حسابًا في moyasar.com، ثم أضف في Vercel المتغيرين <code>NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY</code> و<code>MOYASAR_SECRET_KEY</code> وأعد النشر، ثم فعّل الخيار أعلاه. للتأكيد الآلي حتى لو أغلق العميل المتصفح: في لوحة Moyasar → Settings → Webhooks أضف <code>{typeof window !== 'undefined' ? window.location.origin : ''}/api/payments/webhook</code> (POST، حدث payment_paid وpayment_refunded) مع Secret token تضعه أيضًا في Vercel باسم <code>MOYASAR_WEBHOOK_SECRET</code>. {process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY ? <b style={{ color: '#2F6B66' }}>المفتاح العام مضبوط ✓</b> : <b style={{ color: '#9A3A2A' }}>المفتاح العام غير مضبوط بعد</b>}</div>
+              <div className="py-preview" style={{ gridColumn: '1/-1' }}>لتفعيل البطاقات: أنشئ حسابًا في moyasar.com، ثم أضف في Vercel المتغيرين <code>NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY</code> و<code>MOYASAR_SECRET_KEY</code> وأعد النشر، ثم فعّل الخيار أعلاه. للتأكيد الآلي حتى لو أغلقت الجهة المتصفح: في لوحة Moyasar → Settings → Webhooks أضف <code>{typeof window !== 'undefined' ? window.location.origin : ''}/api/payments/webhook</code> (POST، حدث payment_paid وpayment_refunded) مع Secret token تضعه أيضًا في Vercel باسم <code>MOYASAR_WEBHOOK_SECRET</code>. {process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY ? <b style={{ color: '#2F6B66' }}>المفتاح العام مضبوط ✓</b> : <b style={{ color: '#9A3A2A' }}>المفتاح العام غير مضبوط بعد</b>}</div>
             </div>
             <h3><Icon name="doc" size={18} /> الشروط على الفاتورة</h3>
             <div className="g2"><label>عربي<textarea value={form.terms_ar} onChange={e => setForm({ ...form, terms_ar: e.target.value })} disabled={!isAdmin} /></label><label>English<textarea dir="ltr" value={form.terms_en} onChange={e => setForm({ ...form, terms_en: e.target.value })} disabled={!isAdmin} /></label></div>
-            {isAdmin ? <div><button className="rm-btn ok" disabled={busy === 'settings'}><Icon name="save" size={15} /> حفظ الإعدادات</button></div> : <p className="rm-muted">تعديل الإعدادات لمديري المنصة فقط.</p>}
+            {isAdmin ? <div><button className="rm-btn ok" disabled={busy === 'settings'}><Icon name="save" size={15} /> حفظ الإعدادات</button></div> : <p className="rm-muted">تعديل الإعدادات لمديري البوّابة فقط.</p>}
           </form>
         )}
       </div>

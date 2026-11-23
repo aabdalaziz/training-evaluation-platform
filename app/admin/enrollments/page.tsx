@@ -1,6 +1,6 @@
 'use client';
 
-// بوابة أَثَر — طلبات التسجيل (مراجعة · قبول · انتظار · اعتذار · تصدير)
+// بوّابة أَثَر — طلبات التسجيل (مراجعة · قبول · انتظار · اعتذار · تصدير)
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';

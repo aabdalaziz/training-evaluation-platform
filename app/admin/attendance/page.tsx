@@ -116,7 +116,7 @@ function Inner() {
       };
       const { data, error } = await db.from('attendance_sessions').insert(payload).select('*').single();
       if (error) throw new Error(error.message);
-      flash('تم إنشاء الجلسة — اعرض رمز QR للمتدربين');
+      flash('تم إنشاء الجلسة — اعرض رمز QR للمشاركين');
       await loadSessions();
       openSession((data as any).id, data as AttendanceSession);
       setQrOpen(true);
@@ -233,14 +233,14 @@ function Inner() {
       <style>{CSS}</style>
       <RoomHead
         title={<>الحضور الرقمي (QR)</>}
-        desc={<><p>أنشئ جلسة حضور لكل لقاء تدريبي، اعرض رمز QR على الشاشة أو اطبعه، ويسجّل المتدربون حضورهم من جوالاتهم خلال ثوانٍ. تُحتسب نسبة الحضور تلقائيًا لكل متدرب وتُستخدم شرطًا لإصدار الشهادات.</p></>}
+        desc={<><p>أنشئ جلسة حضور لكل جلسة تدريبية، اعرض رمز QR على الشاشة أو اطبعه، ويسجّل المشاركون حضورهم من جوالاتهم خلال ثوانٍ. تُحتسب نسبة الحضور تلقائيًا لكل مشارك وتُستخدم شرطًا لإصدار الشهادات.</p></>}
         actions={<>
           {mode !== 'summary' && <button className="rm-btn" onClick={() => { setSumProgram(sumProgram || filterProgram || programs[0]?.id || ''); setMode('summary'); }}><Icon name="table" size={16} /> ملخص الحضور</button>}
           {mode !== 'list' && <button className="rm-btn" onClick={backToList}><Icon name="arrow" size={16} /> كل الجلسات</button>}
           {canWrite && mode === 'list' && <button className="rm-btn primary" onClick={() => startNew()}><Icon name="plus" size={16} /> جلسة جديدة</button>}
         </>}
       />
-      {!allowed && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج والمدربين.</div>}
+      {!allowed && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج والمدرّبين.</div>}
       {error && <div className="rm-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="aa-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
 
       {/* ===== قائمة الجلسات ===== */}
@@ -260,7 +260,7 @@ function Inner() {
                 <div className="aa-seg">{(['all', 'open', 'closed'] as const).map(k => <button key={k} className={filterStatus === k ? 'on' : ''} onClick={() => setFilterStatus(k)}>{k === 'all' ? 'الكل' : k === 'open' ? 'مفتوحة' : 'مغلقة'}</button>)}</div>
               </div>
             </div>
-            {!visible.length && <div className="rm-empty"><Icon name="check" size={34} /><b>لا توجد جلسات بعد</b><span>ابدأ بـ «جلسة جديدة»: اختر البرنامج والقاعة والوقت، ثم اعرض رمز QR على الشاشة.</span></div>}
+            {!visible.length && <div className="rm-empty"><Icon name="check" size={34} /><b>لا توجد جلسات بعد</b><span>ابدأ بـ «جلسة جديدة»: اختر البرنامج والشعبة والوقت، ثم اعرض رمز QR على الشاشة.</span></div>}
             <div className="aa-list">
               {visible.map(s => {
                 const c = counts[s.id] || { present: 0, late: 0, excused: 0, absent: 0 };
@@ -290,8 +290,8 @@ function Inner() {
           <h2><Icon name="plus" size={18} /> جلسة حضور جديدة</h2>
           <div className="aa-grid">
             <label><span>البرنامج <i>*</i></span><select value={form.program_id} onChange={e => setForm({ ...form, program_id: e.target.value, classroom_id: '' })}><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
-            <label><span>القاعة / المجموعة</span><select value={form.classroom_id} onChange={e => pickClassroom(e.target.value)}><option value="">— بدون —</option>{formClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
-            <label><span>المدرب</span><select value={form.trainer_id} onChange={e => setForm({ ...form, trainer_id: e.target.value })}><option value="">— بدون —</option>{trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+            <label><span>الشعبة</span><select value={form.classroom_id} onChange={e => pickClassroom(e.target.value)}><option value="">— بدون —</option>{formClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
+            <label><span>المدرّب</span><select value={form.trainer_id} onChange={e => setForm({ ...form, trainer_id: e.target.value })}><option value="">— بدون —</option>{trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
             <label className="aa-span2"><span>عنوان الجلسة</span><input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder={`مثال: اليوم الأول — مقدمة (يُولَّد تلقائيًا إن تُرك فارغًا)`} /></label>
             <label><span>التاريخ <i>*</i></span><input type="date" value={form.session_date} onChange={e => setForm({ ...form, session_date: e.target.value })} /></label>
             <label><span>وقت البداية</span><input type="time" value={form.start_time} onChange={e => setForm({ ...form, start_time: e.target.value })} /></label>
@@ -391,20 +391,20 @@ function Inner() {
       {mode === 'summary' && (
         <section className="rm-card">
           <div className="aa-toolbar">
-            <h2><Icon name="table" size={18} /> ملخص الحضور حسب المتدرب</h2>
+            <h2><Icon name="table" size={18} /> ملخص الحضور حسب المشارك</h2>
             <div className="aa-filters">
               <select value={sumProgram} onChange={e => { setSumProgram(e.target.value); setSumClassroom(''); }}><option value="">— اختر البرنامج —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select>
-              <select value={sumClassroom} onChange={e => setSumClassroom(e.target.value)} disabled={!sumProgram}><option value="">كل القاعات</option>{sumClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
+              <select value={sumClassroom} onChange={e => setSumClassroom(e.target.value)} disabled={!sumProgram}><option value="">كل الشُّعب</option>{sumClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
               <label className="aa-inline">الحد الأدنى للشهادة <input type="number" min={0} max={100} value={minPct} onChange={e => setMinPct(Number(e.target.value))} /> %</label>
               <button className="rm-btn" onClick={exportSummary} disabled={!summary.length}><Icon name="download" size={16} /> CSV</button>
             </div>
           </div>
           {!sumProgram && <div className="rm-empty"><Icon name="table" size={30} /><b>اختر برنامجًا</b></div>}
-          {sumProgram && !sumSessions.length && <div className="rm-empty"><Icon name="calendar" size={30} /><b>لا توجد جلسات حضور لهذا البرنامج</b><span>أنشئ جلسة لكل لقاء تدريبي أولًا.</span></div>}
+          {sumProgram && !sumSessions.length && <div className="rm-empty"><Icon name="calendar" size={30} /><b>لا توجد جلسات حضور لهذا البرنامج</b><span>أنشئ جلسة لكل جلسة تدريبية أولًا.</span></div>}
           {sumProgram && !!sumSessions.length && (
             <>
               <div className="aa-sumbar">
-                <span>الجلسات <b>{sumSessions.length}</b></span><span>المتدربون <b>{summary.length}</b></span>
+                <span>الجلسات <b>{sumSessions.length}</b></span><span>المشاركون <b>{summary.length}</b></span>
                 <span className="ok">مستوفون ≥ {minPct}% <b>{okList.length}</b></span><span className="bad">غير مستوفين <b>{summary.length - okList.length}</b></span>
                 <span>متوسط الحضور <b>{summary.length ? Math.round(summary.reduce((a, p) => a + p.pct, 0) / summary.length) : 0}%</b></span>
                 {sumBusy && <span>جارٍ التحميل…</span>}

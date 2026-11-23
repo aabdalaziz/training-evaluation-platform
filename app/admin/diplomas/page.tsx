@@ -3,7 +3,7 @@
 /**
  * /admin/diplomas — «الدبلومات: التوأمة والخروج» (هـ-1/5)
  *  (1) اختيار الدبلوم  (2) المقرّرات ⇄ البرامج: ربط كل مقرّر ببرنامج من الكتالوج (إتمامه يُحتسب)  (3) المقيَّدون: سلّم المستويات · إشارة مبكرة · «لو خرج اليوم يحمل» · تسجيل خروج/عودة
- *  (4) مصفوفة الإتمام: المتدرّب × المقرّر (آلي من الحضور/الشهادات، أو بلمسة من الطاقم)
+ *  (4) مصفوفة الإتمام: الطالب × المقرّر (آلي من الحضور/الشهادات، أو بلمسة من الطاقم)
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -41,7 +41,7 @@ export default function DiplomasPage() {
   return (
     <div className="dp" data-testid="diplomas-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="dp-wrap">
-        <header className="dp-head"><div><span className="dp-kicker"><Icon name="award" size={14} /> بوابة أَثَر · هـ-1/5</span><h1>الدبلومات — التوأمة والخروج</h1><p>الدبلوم مسارٌ من برامج: كلّ مقرّر وحدة تُحتسب، ومن يخرج يحمل شهادات ما أتمّ وسجلّ إنجاز موقَّعًا — ويعود خلال ٢٤ شهرًا من حيث توقّف. «لا انسحاب بلا شيء».</p></div></header>
+        <header className="dp-head"><div><span className="dp-kicker"><Icon name="award" size={14} /> بوّابة أَثَر · هـ-1/5</span><h1>الدبلومات — التوأمة والخروج</h1><p>الدبلوم مسارٌ من برامج: كلّ مقرّر وحدة تُحتسب، ومن يخرج يحمل شهادات ما أتمّ وسجلّ إنجاز موقَّعًا — ويعود خلال ٢٤ شهرًا من حيث توقّف. «لا انسحاب بلا شيء».</p></div></header>
         <PortalAdminTabs counts={{ '/admin/diplomas': kpi.risk }} />
         {err && <div className="dp-err" role="alert">{err}</div>}{ok && <div className="dp-ok" role="status">{ok}</div>}
         <div className="dp-bar">
@@ -54,7 +54,7 @@ export default function DiplomasPage() {
         {tab === 'people' && d && <div className="dp-card">
           <div className="dp-filters">{(['all', 'risk', 'exited'] as const).map((f) => <button key={f} type="button" className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{{ all: 'الكلّ', risk: 'يقتربون من الخروج', exited: 'خارجون' }[f]}</button>)}</div>
           {!shown.length && <p className="dp-muted" data-testid="dp-empty">لا أحد هنا.</p>}
-          <table className="dp-table"><thead><tr><th>المتدرّب</th><th>السلّم</th><th>الإشارة المبكرة</th><th>لو خرج اليوم يحمل</th><th>الحالة</th>{canWrite && <th />}</tr></thead><tbody>
+          <table className="dp-table"><thead><tr><th>الطالب</th><th>السلّم</th><th>الإشارة المبكرة</th><th>لو خرج اليوم يحمل</th><th>الحالة</th>{canWrite && <th />}</tr></thead><tbody>
             {shown.map((r) => <tr key={r.enrollment_id} data-testid="dp-row" data-state={r.state} className={r.risk.level}>
               <td><b>{r.full_name}</b><div className="dp-muted" dir="ltr">{r.email}</div></td>
               <td><ol className="dp-ladder">{r.carry.levels.filter((l: any) => l.level_no > 0).map((l: any) => <li key={l.level_no} className={l.complete ? 'done' : l.done ? 'now' : ''} title={`${l.title}: ${l.done}/${l.total}`}>{arN(l.level_no)}</li>)}</ol><small className="dp-muted">{arN(r.carry.unitsDone)}/{arN(r.carry.unitsTotal)} مقرّر · {arN(Math.round(r.carry.hours))} س</small></td>
@@ -86,7 +86,7 @@ export default function DiplomasPage() {
 
         {tab === 'matrix' && d && <div className="dp-card dp-scroll">
           <p className="dp-muted">✓ متمّ (آلي: حضور ≥ ٧٥٪ بعد إغلاق المقرّر، أو شهادة برنامج مرتبط) · ✎ قرار يدوي · انقر الخانة لتبديلها.</p>
-          <table className="dp-table dp-matrix"><thead><tr><th>المتدرّب</th>{units.map((u) => <th key={u.id} title={u.title_ar}><small>{u.level_no ? `م${arN(u.level_no)}` : ''}</small><br />{u.title_ar.slice(0, 14)}</th>)}</tr></thead><tbody>
+          <table className="dp-table dp-matrix"><thead><tr><th>الطالب</th>{units.map((u) => <th key={u.id} title={u.title_ar}><small>{u.level_no ? `م${arN(u.level_no)}` : ''}</small><br />{u.title_ar.slice(0, 14)}</th>)}</tr></thead><tbody>
             {rows.map((r) => <tr key={r.enrollment_id}><td><b>{r.full_name}</b></td>{units.map((u) => { const c = r.completions.find((x: any) => x.unit_id === u.id); const done = c?.status === 'done'; return <td key={u.id} className={done ? 'done' : ''}>{canWrite ? <button type="button" className="dp-cell" disabled={!!busy} title={c ? `${c.source === 'attendance' ? `حضور ${c.attendance_pct ?? ''}٪` : c.source === 'credential' ? 'شهادة برنامج مرتبط' : 'يدوي'}` : 'لم يُقرَّر'} onClick={async () => { const j = await post({ action: 'complete', program_id: pid, unit_id: u.id, email: r.email, done: !done }); if (j) await load(); }} data-testid="dp-cell">{done ? (c?.source === 'manual' ? '✎' : '✓') : c ? '✗' : '·'}</button> : <span>{done ? '✓' : '·'}</span>}</td>; })}</tr>)}
           </tbody></table>
         </div>}

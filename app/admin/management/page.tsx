@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase/client";
 import GroupQr from "../../components/GroupQr";   /* P49-ب: QR الاستبيان لكل مجموعة */
-import LevelExitQr from "../../components/LevelExitQr";   /* م6 «عُبور»: اختبار نهاية المستوى لكل قاعة */
+import LevelExitQr from "../../components/LevelExitQr";   /* م6 «عُبور»: اختبار نهاية المستوى لكل شعبة */
 import { Icon } from '../../../lib/ui/icons';
 import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ل «عدّة الغرفة» */
 
@@ -59,7 +59,7 @@ export default function ManagementPage() {
     setPrograms(pg.data || []);
     setLevels(lv.data || []);
     setSchedules(sc.data || []);
-    if (lv.error || sc.error) flash(ar ? "⚠️ جداول المستويات/المواعيد غير موجودة — نفّذ ملف SQL الخاص بالاستطلاع في Supabase" : "⚠️ Levels/schedules tables missing — run the survey SQL in Supabase");
+    if (lv.error || sc.error) flash(ar ? "⚠️ جداول المستويات/المواعيد غير موجودة — نفّذ ملف SQL الخاص بالاستبيان في Supabase" : "⚠️ Levels/schedules tables missing — run the survey SQL in Supabase");
   };
 
   useEffect(() => {
@@ -104,10 +104,10 @@ export default function ManagementPage() {
     const { error } = await db.from("trainers").insert({ name: tName.trim(), phone: tPhone.trim() || null, email: tEmail.trim() || null });
     if (error) { flash(error.message); return; }
     setTName(""); setTPhone(""); setTEmail("");
-    await loadAll(); flash(ar ? "تمت إضافة المدرب" : "Trainer added");
+    await loadAll(); flash(ar ? "تمت إضافة المدرّب" : "Trainer added");
   };
   const deleteTrainer = async (id) => {
-    if (!window.confirm(ar ? "حذف المدرب؟" : "Delete trainer?")) return;
+    if (!window.confirm(ar ? "حذف المدرّب؟" : "Delete trainer?")) return;
     await db.from("classrooms").update({ trainer_id: null }).eq("trainer_id", id);
     const { error } = await db.from("trainers").delete().eq("id", id);
     if (error) { flash(error.message); return; }
@@ -129,10 +129,10 @@ export default function ManagementPage() {
     let code = cCode.trim();
     if (isRemote) {
       if (!cLevel) { flash(ar ? "يرجى اختيار المستوى" : "Please select the level"); return; }
-      if (!cTrainer) { flash(ar ? "يرجى اختيار المدرب للمجموعة عن بُعد" : "Please select the trainer of the remote group"); return; }
+      if (!cTrainer) { flash(ar ? "يرجى اختيار المدرّب للمجموعة عن بُعد" : "Please select the trainer of the remote group"); return; }
       if (!cSlots.length) { flash(ar ? "أضف موعدًا واحدًا على الأقل (اليوم + الوقت)" : "Add at least one schedule (day + time)"); return; }
       if (!code) code = [ar ? "عن بعد" : "Remote", lvl?.code || "", slotText(cSlots[0])].filter(Boolean).join(" - ");
-    } else if (!code) { flash(ar ? "رقم / اسم القاعة مطلوب" : "Room number / name required"); return; }
+    } else if (!code) { flash(ar ? "رقم / اسم الشعبة مطلوب" : "Room number / name required"); return; }
 
     const { data: room, error } = await db.from("classrooms").insert({
       code,
@@ -153,7 +153,7 @@ export default function ManagementPage() {
       if (e2) flash(e2.message);
     }
     setCCode(""); setCProgram(""); setCLevel(""); setCSection(""); setCTrainer(""); setCSlots([]);
-    await loadAll(); flash(ar ? "تمت إضافة القاعة/المجموعة" : "Room/group added");
+    await loadAll(); flash(ar ? "تمت إضافة الشعبة" : "Room/group added");
   };
 
   const linkRoom = async (roomId, trainerId) => {
@@ -182,7 +182,7 @@ export default function ManagementPage() {
     await loadAll();
   };
   const deleteClassroom = async (id) => {
-    if (!window.confirm(ar ? "حذف القاعة/المجموعة ومواعيدها؟" : "Delete room/group and its schedules?")) return;
+    if (!window.confirm(ar ? "حذف الشعبة ومواعيدها؟" : "Delete room/group and its schedules?")) return;
     const { error } = await db.from("classrooms").delete().eq("id", id);
     if (error) { flash(error.message); return; }
     await loadAll(); flash(ar ? "تم الحذف" : "Deleted");
@@ -205,7 +205,7 @@ export default function ManagementPage() {
   };
   const deleteLevel = async (l) => {
     const used = classrooms.filter(c => c.level_id === l.id).length;
-    if (used) { flash(ar ? `لا يمكن الحذف: المستوى مستخدم في ${used} قاعة — عطّله بدلًا من ذلك` : `Cannot delete: used by ${used} rooms — deactivate instead`); return; }
+    if (used) { flash(ar ? `لا يمكن الحذف: المستوى مستخدم في ${used} شعبة — عطّله بدلًا من ذلك` : `Cannot delete: used by ${used} rooms — deactivate instead`); return; }
     if (!window.confirm(ar ? "حذف المستوى؟" : "Delete level?")) return;
     const { error } = await db.from("program_levels").delete().eq("id", l.id);
     if (error) { flash(error.message); return; }
@@ -223,7 +223,7 @@ export default function ManagementPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <RoomHead
         title={<>{ar ? "مركز الإدارة" : "Management Center"}</>}
-        desc={<><p>{ar ? "المدربون · القاعات والمجموعات · المستويات · المواعيد — مصدر واحد لكل المنصة" : "Trainers · Rooms & groups · Levels · Schedules — one source for the whole platform"}</p></>}
+        desc={<><p>{ar ? "المدرّبون · الشُّعب · المستويات · المواعيد — مصدر واحد لكل البوّابة" : "Trainers · Rooms & groups · Levels · Schedules — one source for the whole platform"}</p></>}
         actions={<>
             <button className="rm-btn" onClick={() => setLang(ar ? "en" : "ar")}><Icon name="globe" size={16} /> {ar ? "English" : "العربية"}</button>
         </>}
@@ -232,8 +232,8 @@ export default function ManagementPage() {
       {msg && <div className="toast">{msg}</div>}
 
       <div className="tabs">
-        <button className={tab === "trainers" ? "tab-on" : "tab-off"} onClick={() => setTab("trainers")}>👨‍🏫 {ar ? `المدربون (${trainers.length})` : `Trainers (${trainers.length})`}</button>
-        <button className={tab === "rooms" ? "tab-on" : "tab-off"} onClick={() => setTab("rooms")}>🏫 {ar ? `القاعات والمجموعات (${classrooms.length})` : `Rooms & Groups (${classrooms.length})`}</button>
+        <button className={tab === "trainers" ? "tab-on" : "tab-off"} onClick={() => setTab("trainers")}>👨‍🏫 {ar ? `المدرّبون (${trainers.length})` : `Trainers (${trainers.length})`}</button>
+        <button className={tab === "rooms" ? "tab-on" : "tab-off"} onClick={() => setTab("rooms")}>🏫 {ar ? `الشُّعب (${classrooms.length})` : `Rooms & Groups (${classrooms.length})`}</button>
         <button className={tab === "levels" ? "tab-on" : "tab-off"} onClick={() => setTab("levels")}>🎓 {ar ? `المستويات (${levels.length})` : `Levels (${levels.length})`}</button>
       </div>
 
@@ -242,28 +242,28 @@ export default function ManagementPage() {
         {tab === "trainers" && (
           <div className="grid2">
             <div className="card">
-              <h3 className="ct">➕ {ar ? "إضافة مدرب جديد" : "Add new trainer"}</h3>
+              <h3 className="ct">➕ {ar ? "إضافة مدرّب جديد" : "Add new trainer"}</h3>
               <label className="lb2">{ar ? "الاسم الكامل *" : "Full name *"}</label>
-              <input className="inp" value={tName} onChange={e => setTName(e.target.value)} placeholder={ar ? "د/ اسم المدرب" : "Dr. Trainer name"} />
+              <input className="inp" value={tName} onChange={e => setTName(e.target.value)} placeholder={ar ? "د/ اسم المدرّب" : "Dr. Trainer name"} />
               <label className="lb2">{ar ? "رقم الجوال" : "Phone"}</label>
               <input className="inp" value={tPhone} onChange={e => setTPhone(e.target.value)} placeholder="05xxxxxxxx" />
               <label className="lb2">{ar ? "البريد الإلكتروني" : "Email"}</label>
               <input className="inp" value={tEmail} onChange={e => setTEmail(e.target.value)} placeholder="trainer@domain.com" />
-              <button className="btn-primary" onClick={addTrainer}>{ar ? "حفظ المدرب" : "Save trainer"}</button>
+              <button className="btn-primary" onClick={addTrainer}>{ar ? "حفظ المدرّب" : "Save trainer"}</button>
             </div>
             <div className="card">
               <h3 className="ct">📌 {ar ? "إحصاءات سريعة" : "Quick stats"}</h3>
               <div className="stat-grid">
-                <div className="stat"><div className="stat-n">{trainers.length}</div><div className="stat-l">{ar ? "إجمالي المدربين" : "Total trainers"}</div></div>
-                <div className="stat"><div className="stat-n" style={{ color: EMERALD }}>{linked}</div><div className="stat-l">{ar ? "قاعات مربوطة" : "Linked rooms"}</div></div>
-                <div className="stat"><div className="stat-n" style={{ color: RED }}>{unlinked}</div><div className="stat-l">{ar ? "قاعات بدون مدرب" : "Unlinked rooms"}</div></div>
+                <div className="stat"><div className="stat-n">{trainers.length}</div><div className="stat-l">{ar ? "إجمالي المدرّبين" : "Total trainers"}</div></div>
+                <div className="stat"><div className="stat-n" style={{ color: EMERALD }}>{linked}</div><div className="stat-l">{ar ? "شُعب مربوطة" : "Linked rooms"}</div></div>
+                <div className="stat"><div className="stat-n" style={{ color: RED }}>{unlinked}</div><div className="stat-l">{ar ? "شُعب بدون مدرّب" : "Unlinked rooms"}</div></div>
               </div>
             </div>
             <div className="card full">
-              <h3 className="ct">📋 {ar ? "قائمة المدربين ومجموعاتهم" : "Trainers and their groups"}</h3>
+              <h3 className="ct">📋 {ar ? "قائمة المدرّبين ومجموعاتهم" : "Trainers and their groups"}</h3>
               <div className="tw">
                 <table className="tbl">
-                  <thead><tr><th className="th">{ar ? "الاسم" : "Name"}</th><th className="th">{ar ? "الجوال" : "Phone"}</th><th className="th">{ar ? "البريد" : "Email"}</th><th className="th">{ar ? "القاعات / المجموعات" : "Rooms / Groups"}</th><th className="th"></th></tr></thead>
+                  <thead><tr><th className="th">{ar ? "الاسم" : "Name"}</th><th className="th">{ar ? "الجوال" : "Phone"}</th><th className="th">{ar ? "البريد" : "Email"}</th><th className="th">{ar ? "الشُّعب" : "Rooms / Groups"}</th><th className="th"></th></tr></thead>
                   <tbody>
                     {trainers.map(t => {
                       const rooms = classrooms.filter(c => c.trainer_id === t.id);
@@ -280,7 +280,7 @@ export default function ManagementPage() {
                         <td className="td"><button className="del" onClick={() => deleteTrainer(t.id)}>🗑️</button></td>
                       </tr>);
                     })}
-                    {!trainers.length && <tr><td className="td es" colSpan={5}>{ar ? "لا يوجد مدربون" : "No trainers"}</td></tr>}
+                    {!trainers.length && <tr><td className="td es" colSpan={5}>{ar ? "لا يوجد مدرّبون" : "No trainers"}</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -292,7 +292,7 @@ export default function ManagementPage() {
         {tab === "rooms" && (
           <div className="grid2">
             <div className="card">
-              <h3 className="ct">➕ {ar ? "إضافة قاعة / مجموعة" : "Add room / group"}</h3>
+              <h3 className="ct">➕ {ar ? "إضافة شعبة" : "Add room / group"}</h3>
               <label className="lb2">{ar ? "البرنامج *" : "Program *"}</label>
               <select className="inp" value={cProgram} onChange={e => { setCProgram(e.target.value); setCCode(""); setCLevel(""); setCSlots([]); }}>
                 <option value="">{ar ? "اختر البرنامج" : "Select program"}</option>
@@ -303,13 +303,13 @@ export default function ManagementPage() {
 
               {cProgram && (
                 <div className={isRemote ? "mode-badge remote" : "mode-badge onsite"}>
-                  {isRemote ? (ar ? "💻 برنامج عن بعد — ستظهر المجموعة تلقائيًا في استطلاع التعلم عن بُعد" : "💻 Remote program — the group will appear automatically in the remote survey") : (ar ? "🏫 برنامج حضوري" : "🏫 On-site program")}
+                  {isRemote ? (ar ? "💻 برنامج عن بعد — ستظهر المجموعة تلقائيًا في استبيان التعلم عن بُعد" : "💻 Remote program — the group will appear automatically in the remote survey") : (ar ? "🏫 برنامج حضوري" : "🏫 On-site program")}
                 </div>
               )}
 
               {cProgram && (
                 <>
-                  <label className="lb2">{isRemote ? (ar ? "اسم المجموعة (اختياري — يُولَّد تلقائيًا)" : "Group name (optional — auto-generated)") : (ar ? "رقم / اسم القاعة *" : "Room number / name *")}</label>
+                  <label className="lb2">{isRemote ? (ar ? "اسم الشعبة (اختياري — يُولَّد تلقائيًا)" : "Group name (optional — auto-generated)") : (ar ? "رقم / اسم الشعبة *" : "Room number / name *")}</label>
                   <input className="inp" value={cCode} onChange={e => setCCode(e.target.value)} placeholder={isRemote ? (ar ? "مثال: مجموعة 1" : "e.g. Group 1") : (ar ? "مثال: 101 أو قاعة الملك فهد" : "e.g. 101 or Main Hall")} />
 
                   <label className="lb2">{ar ? `المستوى ${isRemote ? "*" : ""}` : `Level ${isRemote ? "*" : ""}`}</label>
@@ -328,9 +328,9 @@ export default function ManagementPage() {
                 </>
               )}
 
-              <label className="lb2">{ar ? `المدرب ${isRemote ? "*" : ""}` : `Trainer ${isRemote ? "*" : ""}`}</label>
+              <label className="lb2">{ar ? `المدرّب ${isRemote ? "*" : ""}` : `Trainer ${isRemote ? "*" : ""}`}</label>
               <select className="inp" value={cTrainer} onChange={e => setCTrainer(e.target.value)}>
-                <option value="">{ar ? "بدون مدرب" : "No trainer"}</option>
+                <option value="">{ar ? "بدون مدرّب" : "No trainer"}</option>
                 {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
 
@@ -361,13 +361,13 @@ export default function ManagementPage() {
             <div className="card">
               <h3 className="ct">📌 {ar ? "ملخص الربط" : "Linking summary"}</h3>
               <div className="stat-grid">
-                <div className="stat"><div className="stat-n">{classrooms.length}</div><div className="stat-l">{ar ? "إجمالي القاعات" : "Total rooms"}</div></div>
+                <div className="stat"><div className="stat-n">{classrooms.length}</div><div className="stat-l">{ar ? "إجمالي الشُّعب" : "Total rooms"}</div></div>
                 <div className="stat"><div className="stat-n" style={{ color: EMERALD }}>{linked}</div><div className="stat-l">{ar ? "مربوطة بمدرب" : "Linked to trainer"}</div></div>
-                <div className="stat"><div className="stat-n" style={{ color: RED }}>{unlinked}</div><div className="stat-l">{ar ? "بدون مدرب" : "No trainer"}</div></div>
+                <div className="stat"><div className="stat-n" style={{ color: RED }}>{unlinked}</div><div className="stat-l">{ar ? "بدون مدرّب" : "No trainer"}</div></div>
               </div>
               {(remoteNoLevel > 0 || remoteNoSched > 0) && (
                 <div className="warn">
-                  {ar ? "⚠️ مجموعات عن بُعد لن تظهر للطلاب في الاستطلاع حتى تكتمل بياناتها:" : "⚠️ Remote groups hidden from the survey until completed:"}
+                  {ar ? "⚠️ مجموعات عن بُعد لن تظهر للطلاب في الاستبيان حتى تكتمل بياناتها:" : "⚠️ Remote groups hidden from the survey until completed:"}
                   <ul>
                     {remoteNoLevel > 0 && <li>{ar ? `${remoteNoLevel} بدون مستوى` : `${remoteNoLevel} without level`}</li>}
                     {remoteNoSched > 0 && <li>{ar ? `${remoteNoSched} بدون مواعيد` : `${remoteNoSched} without schedules`}</li>}
@@ -375,13 +375,13 @@ export default function ManagementPage() {
                 </div>
               )}
               <div className="hint" style={{ marginTop: 12 }}>
-                {ar ? "🔗 لكل موعد زر «نسخ الرابط» يُنتج رابطًا يملأ المجموعة والموعد تلقائيًا للطالب، وزر QR لعرضه في Teams." : "🔗 Each schedule has a “copy link” button that pre-fills group & schedule for students, and a QR button for Teams."}
+                {ar ? "🔗 لكل موعد زر «نسخ الرابط» يُنتج رابطًا يملأ المجموعة والموعد تلقائيًا للمشارك، وزر QR لعرضه في Teams." : "🔗 Each schedule has a “copy link” button that pre-fills group & schedule for students, and a QR button for Teams."}
               </div>
             </div>
 
             <div className="card full">
               <div className="row-between">
-                <h3 className="ct" style={{ margin: 0 }}>🏫 {ar ? "القاعات والمجموعات — المستوى، المدرب، المواعيد" : "Rooms & groups — level, trainer, schedules"}</h3>
+                <h3 className="ct" style={{ margin: 0 }}>🏫 {ar ? "الشُّعب — المستوى، المدرّب، المواعيد" : "Rooms & groups — level, trainer, schedules"}</h3>
                 <div className="seg">
                   {[["all", ar ? "الكل" : "All"], ["remote", ar ? "💻 عن بعد" : "💻 Remote"], ["onsite", ar ? "🏫 حضوري" : "🏫 On-site"]].map(([v, l]) => (
                     <button key={v} className={roomFilter === v ? "seg-on" : "seg-off"} onClick={() => setRoomFilter(v)}>{l}</button>
@@ -391,11 +391,11 @@ export default function ManagementPage() {
               <div className="tw">
                 <table className="tbl">
                   <thead><tr>
-                    <th className="th">{ar ? "القاعة / المجموعة" : "Room / Group"}</th>
+                    <th className="th">{ar ? "الشعبة" : "Room / Group"}</th>
                     <th className="th">{ar ? "البرنامج" : "Program"}</th>
                     <th className="th">{ar ? "المستوى" : "Level"}</th>
-                    <th className="th">{ar ? "المدرب" : "Trainer"}</th>
-                    <th className="th">{ar ? "المواعيد وروابط الاستطلاع" : "Schedules & survey links"}</th>
+                    <th className="th">{ar ? "المدرّب" : "Trainer"}</th>
+                    <th className="th">{ar ? "المواعيد وروابط الاستبيان" : "Schedules & survey links"}</th>
                     <th className="th"></th>
                   </tr></thead>
                   <tbody>
@@ -420,7 +420,7 @@ export default function ManagementPage() {
                           </td>
                           <td className="td">
                             <select className="mini-sel" value={c.trainer_id || ""} onChange={e => linkRoom(c.id, e.target.value)}>
-                              <option value="">{ar ? "بدون مدرب" : "No trainer"}</option>
+                              <option value="">{ar ? "بدون مدرّب" : "No trainer"}</option>
                               {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                             </select>
                           </td>
@@ -431,7 +431,7 @@ export default function ManagementPage() {
                                   {list.map(s => (
                                     <span key={s.id} className="chip sched">
                                       {slotText(s)}
-                                      <button type="button" className="lnk" title={ar ? "نسخ رابط الاستطلاع" : "Copy survey link"} onClick={() => copy(surveyLink(c.id, s.id))}>🔗</button>
+                                      <button type="button" className="lnk" title={ar ? "نسخ رابط الاستبيان" : "Copy survey link"} onClick={() => copy(surveyLink(c.id, s.id))}>🔗</button>
                                       <button type="button" className="lnk" title="QR" onClick={() => openQR(surveyLink(c.id, s.id))}>▦</button>
                                       <button type="button" className="x" onClick={() => deleteSchedule(c, s.id)}>✕</button>
                                     </span>
@@ -453,7 +453,7 @@ export default function ManagementPage() {
                         </tr>
                       );
                     })}
-                    {!visibleRooms.length && <tr><td className="td es" colSpan={6}>{ar ? "لا توجد قاعات" : "No rooms"}</td></tr>}
+                    {!visibleRooms.length && <tr><td className="td es" colSpan={6}>{ar ? "لا توجد شُعب" : "No rooms"}</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -484,9 +484,9 @@ export default function ManagementPage() {
             <div className="card">
               <h3 className="ct">ℹ️ {ar ? "كيف تُستخدم المستويات؟" : "How levels are used"}</h3>
               <ul className="info">
-                <li>{ar ? "تُختار عند إضافة القاعة/المجموعة (بدل الكتابة اليدوية)." : "Selected when adding a room/group (instead of free text)."}</li>
-                <li>{ar ? "يراها الطالب في استطلاع التعلم عن بُعد كسؤال «ما مستواك؟» وكأساس لتصفية المدرب والمجموعة." : "Shown to students in the remote survey (“What is your level?”) and used to filter trainer → group."}</li>
-                <li>{ar ? "القاعات القديمة المكتوب مستواها نصًا (مثل B1) تُطابَق تلقائيًا إذا تطابق الرمز أو الاسم." : "Legacy rooms with free-text level (e.g. B1) are auto-matched by code or name."}</li>
+                <li>{ar ? "تُختار عند إضافة الشعبة (بدل الكتابة اليدوية)." : "Selected when adding a room/group (instead of free text)."}</li>
+                <li>{ar ? "يراها المشارك في استبيان التعلم عن بُعد كسؤال «ما مستواك؟» وكأساس لتصفية المدرّب والمجموعة." : "Shown to students in the remote survey (“What is your level?”) and used to filter trainer → group."}</li>
+                <li>{ar ? "الشُّعب القديمة المكتوب مستواها نصًا (مثل B1) تُطابَق تلقائيًا إذا تطابق الرمز أو الاسم." : "Legacy rooms with free-text level (e.g. B1) are auto-matched by code or name."}</li>
                 <li>{ar ? "عطّل المستوى بدل حذفه إذا كان مستخدمًا." : "Deactivate rather than delete a level that is in use."}</li>
               </ul>
             </div>
@@ -494,7 +494,7 @@ export default function ManagementPage() {
               <h3 className="ct">🎓 {ar ? "قائمة المستويات" : "Levels list"}</h3>
               <div className="tw">
                 <table className="tbl">
-                  <thead><tr><th className="th">{ar ? "الرمز" : "Code"}</th><th className="th">{ar ? "الاسم" : "Name"}</th><th className="th">{ar ? "البرنامج" : "Program"}</th><th className="th">{ar ? "الترتيب" : "Order"}</th><th className="th">{ar ? "القاعات" : "Rooms"}</th><th className="th">{ar ? "الحالة" : "Status"}</th><th className="th"></th></tr></thead>
+                  <thead><tr><th className="th">{ar ? "الرمز" : "Code"}</th><th className="th">{ar ? "الاسم" : "Name"}</th><th className="th">{ar ? "البرنامج" : "Program"}</th><th className="th">{ar ? "الترتيب" : "Order"}</th><th className="th">{ar ? "الشُّعب" : "Rooms"}</th><th className="th">{ar ? "الحالة" : "Status"}</th><th className="th"></th></tr></thead>
                   <tbody>
                     {levels.map(l => (
                       <tr key={l.id} style={{ opacity: l.is_active === false ? .55 : 1 }}>

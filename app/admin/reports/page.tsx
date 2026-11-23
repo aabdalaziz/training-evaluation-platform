@@ -29,7 +29,7 @@ export default function AdminReportsPage() {
       <div className="am-wrap">
         <RoomHead
         title={<>{P46_NAMES_AR.axis} — {P46_NAMES_AR.official}</>}
-        desc={<><p>المعلّم لا يكتب الأرقام؛ أَثَر يلتقطها (المسجَّلون · المنتظمون · الجلسات والساعات · الحضور). المعلّم يكتب الحكم والتوصية، وأنت تعتمد أو تُعيد بملاحظة. عند الاعتماد يصدر رمز تحقّق ويصل كل متدرّب «{P46_NAMES_AR.line}» إن أذن المعلّم.</p></>}
+        desc={<><p>المعلّم لا يكتب الأرقام؛ أَثَر يلتقطها (المسجَّلون · المنتظمون · الجلسات والساعات · الحضور). المعلّم يكتب الحكم والتوصية، وأنت تعتمد أو تُعيد بملاحظة. عند الاعتماد يصدر رمز تحقّق ويصل كل مشارك «{P46_NAMES_AR.line}» إن أذن المعلّم.</p></>}
       />
         <PortalAdminTabs counts={{ '/admin/reports': pending }} />
         <p className="am-xlink"><Link href="/admin/accreditation" data-testid="am-accred-link"><Icon name="award" size={14} /> ملفات الاعتماد الحيّة (P48) — ما ثبت وما ينقص لكل برنامج منتهٍ بمؤهل ←</Link></p>

@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/advisor — «مستشارك: اسأل وأنا أجيب» (بوابة أَثَر · P10)
+ * /api/advisor — «مستشارك: اسأل وأنا أجيب» (بوّابة أَثَر · P10)
  *  GET                                           → حقائق عامة للصفحة الحيّة {feed_programs, feed_sessions, counters}
  *  POST { question, name?, email?, page?, lang? } → إجابة من الحقائق الحيّة فقط (برامج/جلسات/خدمات) عبر الذكاء الاصطناعي أو بديل محلي؛ تُسجَّل في portal_advisor_questions
  *  POST { action:'handoff', question_id?, question, answer?, name, email, phone? } → تحويل إلى مستشار بشري (صندوق الوارد portal_contact_messages بموضوع advisor)

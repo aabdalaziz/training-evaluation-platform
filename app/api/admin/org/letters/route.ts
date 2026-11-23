@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     const r = await signLetter(db, id, { id: me.id, email: me.email, name: me.name }, { line_ar: b.line_ar, promise_ar: b.promise_ar, ask_ar: b.ask_ar, signed_title: b.signed_title }); if ('error' in r) return bad(r.error, r.status);
     try { await db.from('audit_logs').insert({ actor_id: me.id, actor_email: me.email, actor_role: 'STAFF', action: 'org_letter_sign', entity_type: 'portal_org_letters', entity_id: r.row.id, entity_label: `${r.row.body?.org?.name_ar || ''} · ${r.row.month}`, source: 'portal', metadata: { code: r.row.code, digest: r.row.digest, notified: r.notified } }); } catch { /* تجاهل */ }
     try { const { invalidateSignCache } = await import('../../../../../lib/portal/sign'); invalidateSignCache(); } catch { /* تجاهل */ }
-    return NextResponse.json({ success: true, letter: r.row, notified: r.notified, message: r.notified ? `وُقِّعت الرسالة وأُرسلت إلى ${r.notified} من مديري الجهة · الرمز ${r.row.code}` : `وُقِّعت الرسالة · الرمز ${r.row.code} — لا مدير جهة مؤكَّدًا ليُخبَر بعد؛ ستظهر في بوابة الجهة حين يُؤكَّد مديرها` });
+    return NextResponse.json({ success: true, letter: r.row, notified: r.notified, message: r.notified ? `وُقِّعت الرسالة وأُرسلت إلى ${r.notified} من مديري الجهة · الرمز ${r.row.code}` : `وُقِّعت الرسالة · الرمز ${r.row.code} — لا مدير جهة مؤكَّدًا ليُخبَر بعد؛ ستظهر في بوّابة الجهة حين يُؤكَّد مديرها` });
   }
   if (action === 'seen_reply') { const id = String(b.id || ''); if (!id) return bad('معرّف الرسالة مطلوب'); await db.from('portal_org_letters').update({ reply_seen_at: new Date().toISOString() }).eq('id', id); return NextResponse.json({ success: true }); }
   return bad('إجراء غير معروف');

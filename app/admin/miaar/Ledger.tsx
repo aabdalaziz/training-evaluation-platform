@@ -154,8 +154,8 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
         <span className="lg-sep" />
         <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => void post({ action: 'archive', ids }, 'archive-bulk')} data-testid="lg-bulk-archive">أرشفة</button>
         <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => void post({ action: 'unarchive', ids }, 'unarchive-bulk')}>إلغاء الأرشفة</button>
-        <label>وسم<input value={bulk.tag} onChange={(e) => setBulk({ ...bulk, tag: e.target.value })} placeholder="اسم المجموعة" data-testid="lg-bulk-tag" /></label>
-        <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => void post({ action: 'tag', ids, tag: bulk.tag }, 'tag-bulk')} data-testid="lg-bulk-tag-go">وسم المجموعة</button>
+        <label>وسم<input value={bulk.tag} onChange={(e) => setBulk({ ...bulk, tag: e.target.value })} placeholder="اسم الشعبة" data-testid="lg-bulk-tag" /></label>
+        <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => void post({ action: 'tag', ids, tag: bulk.tag }, 'tag-bulk')} data-testid="lg-bulk-tag-go">وسم الشعبة</button>
         <span className="lg-sep" />
         <label>سبب الإعادة<input value={bulk.reason} onChange={(e) => setBulk({ ...bulk, reason: e.target.value })} placeholder="مثل: بعد نهاية البرنامج" /></label>
         <label>صالح (يومًا)<input type="number" min={1} max={365} value={bulk.days} onChange={(e) => setBulk({ ...bulk, days: e.target.value })} className="lg-num" /></label>
@@ -214,7 +214,7 @@ export default function Ledger({ auth }: { auth: () => Promise<Record<string, st
                   <div className="lg-ladder" role="radiogroup" aria-label="مستوى التسكين" data-testid="lg-level" data-value={p.level} data-rec={r.entry}>{LEVELS.map((l, i) => <button key={l} type="button" role="radio" aria-checked={p.level === l} className={`${p.level === l ? 'on' : ''}${l === r.entry ? ' rec' : ''}${(i < LEVELS.indexOf(p.level as any) && i >= LEVELS.indexOf(r.entry as any)) || (i > LEVELS.indexOf(p.level as any) && i <= LEVELS.indexOf(r.entry as any)) ? ' path' : ''}`} title={l === r.entry ? `${LV[l]} — توصية مِعيار` : LV[l]} onClick={() => setLevel(r, l)} data-testid={`lg-lv-${l}`}>{LV[l]}</button>)}</div>
                   <span className="lg-arrow" aria-hidden="true">←</span>
                   <select aria-label="البرنامج" value={p.program} onChange={(e) => setPick({ ...pick, [r.id]: { ...p, program: e.target.value } })} data-testid="lg-program"><option value="">بلا تسجيل في برنامج</option>{programs.map((pr) => <option key={pr.id} value={pr.id} disabled={pr.remaining === 0}>{progLabel(pr)}</option>)}</select>
-                  <button type="button" className="am-btn lg-go" disabled={!!busy || !!r.archived_at} onClick={() => void decideOne(r)} data-testid="lg-decide"><Icon name="check" />اعتمد</button>
+                  <button type="button" className="am-btn lg-go" disabled={!!busy || !!r.archived_at} onClick={() => void decideOne(r)} data-testid="lg-decide"><Icon name="check" />اعتماد</button>
                   <small className={ovr ? 'lg-ovr' : 'lg-rec'}>{ovr ? `تسكين يدوي: ${LV[p.level]} بدل ${LV[r.entry]}` : 'على توصية مِعيار'}</small>
                 </div>}
             </div>

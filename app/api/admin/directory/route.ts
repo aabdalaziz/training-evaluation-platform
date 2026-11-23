@@ -10,7 +10,7 @@
  *   staff_note{id,availability?,notes?} → حقول الطاقم فقط (لا تظهر للعضو ولا للعامة)
  *   engagement_new{profile_id,kind,title_ar,scope_ar,deliverables[],start_at,end_at,mode,fee_amount,currency,terms_ar,consulting_request_id?} → عقد مقترح · إشعار العضو
  *   engagement{id,op:update|complete|settle|cancel,...,confirm} → تعديل المقترح (يعود «بانتظار توقيعك») · إنجاز · تسوية · إلغاء (يسحب الوثيقة)
- *   invite{dry}                → تشغيل دعوات المدربين القائمين والتذكير السنوي الآن (نفس منطق الكرون)
+ *   invite{dry}                → تشغيل دعوات المدرّبين القائمين والتذكير السنوي الآن (نفس منطق الكرون)
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';

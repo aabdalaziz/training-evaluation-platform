@@ -156,7 +156,7 @@ export default function TemplatesPage() {
     <div className="tp-editor">
       <div className="tp-grid2">
         <label>نوع السؤال<select value={draft.kind} onChange={e => setDraft({ ...draft, kind: e.target.value })}>{QUESTION_KINDS.map(k => <option key={k.id} value={k.id}>{k.label}</option>)}</select><small>{kindMeta?.hint}</small></label>
-        <label>القسم (عربي)<input value={draft.section_ar} onChange={e => setDraft({ ...draft, section_ar: e.target.value })} placeholder="مثال: المدرب / المحتوى / البيئة التدريبية" list="tp-sections" /><datalist id="tp-sections">{Array.from(new Set(currentQs.map(q => q.section_ar).filter(Boolean))).map(s => <option key={s as string} value={s as string} />)}</datalist></label>
+        <label>القسم (عربي)<input value={draft.section_ar} onChange={e => setDraft({ ...draft, section_ar: e.target.value })} placeholder="مثال: المدرّب / المحتوى / البيئة التدريبية" list="tp-sections" /><datalist id="tp-sections">{Array.from(new Set(currentQs.map(q => q.section_ar).filter(Boolean))).map(s => <option key={s as string} value={s as string} />)}</datalist></label>
       </div>
       <label>نص السؤال (عربي) *<textarea rows={2} value={draft.text_ar} onChange={e => setDraft({ ...draft, text_ar: e.target.value })} /></label>
       <div className="tp-grid2">
@@ -185,7 +185,7 @@ export default function TemplatesPage() {
       />
       {error && <div className="rm-alert">{error}</div>}
       {ok && <div className="rm-alert ok">{ok}</div>}
-      {!canEdit && <div className="rm-alert warn">عرض فقط — التحرير متاح لمديري المنصة والإداريين ومديري البرامج.</div>}
+      {!canEdit && <div className="rm-alert warn">عرض فقط — التحرير متاح لمديري البوّابة والإداريين ومديري البرامج.</div>}
 
       <section className="rm-kpis">
         <div className="rm-kpi"><b>{templates.length}</b><span>قالبًا</span></div>

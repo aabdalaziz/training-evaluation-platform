@@ -73,7 +73,7 @@ export async function POST(req: Request) {
   if (action === 'options') {
     if (!h) return bad('اكتب أفقك أولًا — لا خطوات بلا أفق', 409); if (h.status !== 'draft') return bad('لديك عهد نشط — المهمات تُقترح بعد المراجعة', 409);
     const options = proposePledges(st.chapters, st.input); const { data, error } = await db.from('portal_horizons').update({ options, updated_at: now.toISOString() }).eq('id', h.id).select(HORIZON_COLS).single(); if (error) return bad(error.message, 500);
-    return NextResponse.json({ success: true, horizon: data, options, note_ar: 'ثلاث خطوات تعرفها المنصة — اختر واحدة فقط، وعدّل صياغتها إن شئت.' });
+    return NextResponse.json({ success: true, horizon: data, options, note_ar: 'ثلاث خطوات تعرفها البوّابة — اختر واحدة فقط، وعدّل صياغتها إن شئت.' });
   }
   if (action === 'pledge') {
     if (body.confirm !== true) return bad('يلزم تأكيد صريح'); if (!h) return bad('اكتب أفقك أولًا', 409); if (h.status !== 'draft') return bad('لديك عهد نشط بالفعل — عهد واحد في كل سنة', 409);

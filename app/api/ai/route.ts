@@ -1,11 +1,11 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/ai — بوابة الذكاء الاصطناعي المسؤول (بوابة أَثَر · P9-أ)
+ * /api/ai — بوّابة الذكاء الاصطناعي المسؤول (بوّابة أَثَر · P9-أ)
  *  GET                                                   → الحالة العامة {enabled, provider, limits} (+ سجل آخر 50 استدعاءً واستخدام المستخدم إن كان Bearer صالحًا)
  *  POST { purpose:'impact_brief', lang?, facts }         → موظف: موجز تنفيذي لتقرير الأثر (الحقائق من التقرير المعروض)
  *  POST { purpose:'learner_plan', lang?, goal? }         → مستخدم: خطة تطوير شخصية من ملفه المهاري + العروض المتاحة (تُجمع في الخادم)
  *  POST { purpose:'org_brief', lang?, org_id }           → مدير جهة/موظف: توصيات للجهة من لوحتها
- *  POST { purpose:'activity_draft', lang?, session_id, kind?, count?, skill_id? } → موظف/مدرب الجلسة: مسودّات أنشطة يراجعها المدرب
+ *  POST { purpose:'activity_draft', lang?, session_id, kind?, count?, skill_id? } → موظف/مدرّب الجلسة: مسودّات أنشطة يراجعها المدرّب
  *  الحوكمة: حدود استخدام لكل مستخدم/غرض خلال 24 ساعة، سجل portal_ai_log بلا محتوى شخصي، بديل محلي دائمًا، لا قرار آلي نهائي.
  */
 import { NextResponse } from 'next/server';
@@ -133,7 +133,7 @@ export async function POST(req: Request) {
     return respond(r);
   }
 
-  // 4) مسودّات أنشطة — موظف أو مدرب الجلسة
+  // 4) مسودّات أنشطة — موظف أو مدرّب الجلسة
   if (purpose === 'activity_draft') {
     const sid = String(body.session_id || ''); if (!sid) return bad('معرّف الجلسة مطلوب');
     const { data: s } = await db.from('portal_sessions').select('id,title_ar,title_en,description_ar,description_en,kind,program_id,trainer_id,skills,lang').eq('id', sid).maybeSingle(); if (!s) return bad('الجلسة غير موجودة', 404);

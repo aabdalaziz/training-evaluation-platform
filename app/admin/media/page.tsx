@@ -42,7 +42,7 @@ export default function AdminMediaPage() {
       <div className="am-wrap">
         <RoomHead
         title={<>مقاطع الأداء</>}
-        desc={<><p>تسجيلات الفيديو والصوت التي سجّلها المتعلمون من «القناة الواحدة» في موقف اليوم و«ماذا لو؟» وغيرها. النص المفرَّغ يُقدَّر آليًا بمعايير شفافة، لكن الدليل لا يرتفع من 0.6 إلى 0.85 في التوأم المهاري إلا بعد أن يشاهده إنسان ويعتمده. المرفوض يُستبعد من الحساب. تُحذف التسجيلات غير المعتمدة تلقائيًا بعد 180 يومًا.</p></>}
+        desc={<><p>تسجيلات الفيديو والصوت التي سجّلها المتعلّمون من «القناة الواحدة» في موقف اليوم و«ماذا لو؟» وغيرها. النص المفرَّغ يُقدَّر آليًا بمعايير شفافة، لكن الدليل لا يرتفع من 0.6 إلى 0.85 في التوأم المهاري إلا بعد أن يشاهده إنسان ويعتمده. المرفوض يُستبعد من الحساب. تُحذف التسجيلات غير المعتمدة تلقائيًا بعد 180 يومًا.</p></>}
       />
         <PortalAdminTabs counts={{ '/admin/media': stats.pending }} />
         {error && <div className="am-err">{error}</div>}
@@ -72,7 +72,7 @@ export default function AdminMediaPage() {
                   </div>
                   <div className="am-decide">
                     <label>الدرجة النهائية <input type="number" min={0} max={100} value={score} onChange={e => setScore(e.target.value === '' ? '' : Math.max(0, Math.min(100, Number(e.target.value))))} /></label>
-                    <input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتعلم (اختياري)" maxLength={500} />
+                    <input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتعلّم (اختياري)" maxLength={500} />
                     <button type="button" className="rm-btn ok" disabled={busy === m.id} onClick={() => decide(m.id, 'approve')}><Icon name="check" size={14} /> اعتمد (0.85)</button>
                     <button type="button" className="rm-btn bad" disabled={busy === m.id} onClick={() => decide(m.id, 'reject')}><Icon name="x" size={14} /> ارفض</button>
                   </div>

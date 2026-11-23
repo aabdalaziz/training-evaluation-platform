@@ -132,7 +132,7 @@ export default function CertificatesPage() {
         if (!name) continue; const key = email || name.toLowerCase(); if (seen.has(key)) continue; seen.add(key);
         lines.push(email ? `${name}, ${email}` : name);
       }
-      if (!lines.length) { setError('لا توجد أسماء متدربين في تقييمات هذا النطاق'); return; }
+      if (!lines.length) { setError('لا توجد أسماء مشاركين في تقييمات هذا النطاق'); return; }
       setRecText(prev => [prev.trim(), ...lines].filter(Boolean).join('\n'));
       flash(`✓ استُوردت ${lines.length} اسمًا من التقييمات`);
     } catch (e: any) { setError('تعذر الاستيراد: ' + e.message); } finally { setBusy(''); }
@@ -144,14 +144,14 @@ export default function CertificatesPage() {
       const { data: en, error } = await db.from('enrollments').select('trainee_id').eq('program_id', programId).eq('is_active', true).limit(2000);
       if (error) throw new Error(error.message);
       const ids = Array.from(new Set((en || []).map((x: any) => x.trainee_id).filter(Boolean)));
-      if (!ids.length) { setError('لا يوجد متدربون مسجلون في هذا البرنامج'); return; }
+      if (!ids.length) { setError('لا يوجد مشاركون مسجلون في هذا البرنامج'); return; }
       let profs: any[] = [];
       const r1 = await db.from('profiles').select('id,full_name,email').in('id', ids);
       if (r1.error) { const r2 = await db.from('profiles').select('id,full_name').in('id', ids); profs = r2.data || []; } else profs = r1.data || [];
       const lines = profs.map(p => [p.full_name, p.email].filter(Boolean).join(', ')).filter(Boolean);
       if (!lines.length) { setError('تعذر قراءة أسماء المسجلين'); return; }
       setRecText(prev => [prev.trim(), ...lines].filter(Boolean).join('\n'));
-      flash(`✓ استُورد ${lines.length} متدربًا من قائمة المسجلين`);
+      flash(`✓ استُورد ${lines.length} مشاركًا من قائمة المسجلين`);
     } catch (e: any) { setError('تعذر الاستيراد من المسجلين: ' + e.message); } finally { setBusy(''); }
   }
 
@@ -169,10 +169,10 @@ export default function CertificatesPage() {
       if (e2) throw new Error(e2.message);
       const summary = summarize(sessions, (rc || []) as AttendanceRecord[]);
       const ok = eligible(summary, minAtt);
-      if (!ok.length) { setError(`لا أحد يستوفي حد الحضور ${minAtt}% (${summary.length} متدربًا في ${sessions.length} جلسة)`); return; }
+      if (!ok.length) { setError(`لا أحد يستوفي حد الحضور ${minAtt}% (${summary.length} مشاركًا في ${sessions.length} جلسة)`); return; }
       const lines = ok.map(p => (p.email ? `${p.name}, ${p.email}` : p.name));
       setRecText(prev => [prev.trim(), ...lines].filter(Boolean).join('\n'));
-      flash(`✓ استُورد ${ok.length} متدربًا مستوفيًا لحد الحضور ${minAtt}% (استُبعد ${summary.length - ok.length})`);
+      flash(`✓ استُورد ${ok.length} مشاركًا مستوفيًا لحد الحضور ${minAtt}% (استُبعد ${summary.length - ok.length})`);
     } catch (e: any) { setError('تعذر الاستيراد من الحضور: ' + e.message); } finally { setBusy(''); }
   }
 
@@ -276,7 +276,7 @@ export default function CertificatesPage() {
             <div className="ct-grid">
               <label>البرنامج *<select value={programId} onChange={e => setProgramId(e.target.value)}><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}{p.status === 'COMPLETED' ? ' (مكتمل)' : ''}</option>)}</select></label>
               <label>نوع الشهادة<select value={kind} onChange={e => setKind(e.target.value as CertKind)}>{(Object.keys(KIND_LABEL) as CertKind[]).filter(k => k !== 'appreciation').map(k => <option key={k} value={k}>{KIND_LABEL[k].ar}</option>)}</select></label>
-              <label>القاعة (اختياري)<select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">— بدون —</option>{rooms.map(r => <option key={r.id} value={r.id}>{r.code}{trainers.find(t => t.id === r.trainer_id)?.name ? ` · ${trainers.find(t => t.id === r.trainer_id)?.name}` : ''}</option>)}</select></label>
+              <label>الشعبة (اختياري)<select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">— بدون —</option>{rooms.map(r => <option key={r.id} value={r.id}>{r.code}{trainers.find(t => t.id === r.trainer_id)?.name ? ` · ${trainers.find(t => t.id === r.trainer_id)?.name}` : ''}</option>)}</select></label>
               <label>الساعات التدريبية<input type="number" min={1} max={999} value={hours} onChange={e => setHours(Number(e.target.value))} /></label>
               <label>من تاريخ<input type="date" value={start} onChange={e => setStart(e.target.value)} /></label>
               <label>إلى تاريخ<input type="date" value={end} onChange={e => setEnd(e.target.value)} /></label>
@@ -335,7 +335,7 @@ export default function CertificatesPage() {
                   <td dir="ltr" style={{ textAlign: 'end' }}><b>{r.serial}</b><div className="rm-muted" style={{ fontSize: 11 }}>{r.verify_code}</div></td>
                   <td>{KIND_LABEL[r.kind]?.ar || r.kind}{r.award_title ? <div className="rm-muted" style={{ fontSize: 11 }}>{r.award_title}</div> : null}</td>
                   <td><b>{r.recipient_name}</b>{r.recipient_email ? <div className="rm-muted" style={{ fontSize: 11 }} dir="ltr">{r.recipient_email}</div> : null}</td>
-                  <td>{r.program_name}{r.classroom_code ? <div className="rm-muted" style={{ fontSize: 11 }}>القاعة {r.classroom_code}</div> : null}</td>
+                  <td>{r.program_name}{r.classroom_code ? <div className="rm-muted" style={{ fontSize: 11 }}>الشعبة {r.classroom_code}</div> : null}</td>
                   <td dir="ltr" style={{ textAlign: 'end' }}>{fmtDate(r.issued_at)}<div className="rm-muted" style={{ fontSize: 11 }}>{r.issued_by_name || ''}</div></td>
                   <td>{r.sent_at ? <span className="ct-pill ok">أُرسلت {fmtDate(r.sent_at.slice(0, 10))}</span> : <span className="ct-pill">لم تُرسل</span>}</td>
                   <td>{r.revoked_at ? <span className="ct-pill bad" title={r.revoke_reason || ''}>ملغاة</span> : <span className="ct-pill ok">سارية</span>}</td>

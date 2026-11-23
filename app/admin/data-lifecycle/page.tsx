@@ -12,7 +12,7 @@ type Classroom = { id: string; code: string; program_id: string | null; trainer_
 type Trainer = { id: string; name: string };
 type AuditRow = { id: string; created_at: string; actor_id: string | null; action: string; metadata: any };
 type Kind = 'BOTH' | 'DAILY' | 'FINAL' | 'END' | 'ALL' | 'REMOTE' | 'LINKS' | 'EMPTY_ROOMS';   /* P49 */
-const KIND_TXT: Record<Kind, string> = { BOTH: 'اليومي والختامي', DAILY: 'اليومي فقط', FINAL: 'الختامي فقط', END: 'استبيان نهاية البرنامج فقط', ALL: 'كل الاستبيانات (يومي + ختامي + نهاية البرنامج)', REMOTE: 'استطلاع التعلّم عن بُعد', LINKS: 'روابط التقويم (/e/…) — الاستجابات تبقى', EMPTY_ROOMS: 'الشعب الفارغة (بلا أيّ استجابة أو رابط) — داخل برنامج محدّد' };
+const KIND_TXT: Record<Kind, string> = { BOTH: 'اليومي والختامي', DAILY: 'اليومي فقط', FINAL: 'الختامي فقط', END: 'استبيان نهاية البرنامج فقط', ALL: 'كل الاستبيانات (يومي + ختامي + نهاية البرنامج)', REMOTE: 'استبيان التعلّم عن بُعد', LINKS: 'روابط التقويم (/e/…) — الاستجابات تبقى', EMPTY_ROOMS: 'الشعب الفارغة (بلا أيّ استجابة أو رابط) — داخل برنامج محدّد' };
 
 const NAVY = '#3A1F36';
 
@@ -74,8 +74,8 @@ export default function DataLifecyclePage() {
     parts.push(KIND_TXT[kind]);
     if (olderThan) parts.push(`أقدم من ${olderThan} شهرًا`);
     if (programId !== 'ALL') parts.push('البرنامج: ' + (programs.find(p => p.id === programId)?.name_ar || programId));
-    if (trainerId !== 'ALL') parts.push('المدرب: ' + (trainers.find(t => t.id === trainerId)?.name || trainerId));
-    if (classroomId !== 'ALL') parts.push('القاعة: ' + (classrooms.find(c => c.id === classroomId)?.code || classroomId));
+    if (trainerId !== 'ALL') parts.push('المدرّب: ' + (trainers.find(t => t.id === trainerId)?.name || trainerId));
+    if (classroomId !== 'ALL') parts.push('الشعبة: ' + (classrooms.find(c => c.id === classroomId)?.code || classroomId));
     if (from || to) parts.push(`الفترة: ${from || '…'} → ${to || '…'}`);
     return parts.join(' · ');
   }, [kind, programId, trainerId, classroomId, from, to, olderThan, programs, trainers, classrooms]);
@@ -122,13 +122,13 @@ export default function DataLifecyclePage() {
       <style>{CSS}</style>
       <RoomHead
         title={<>إدارة دورة حياة البيانات</>}
-        desc={<><p>معاينة ثم حذف نهائي منضبط لاستجابات التقييم فقط — البرامج والقاعات والمدربون والقوالب لا تتأثر.</p></>}
+        desc={<><p>معاينة ثم حذف نهائي منضبط لاستجابات التقييم فقط — البرامج والشُعب والمدرّبون والقوالب لا تتأثر.</p></>}
         actions={<>
           <Link href="/reports/center?type=raw" className="rm-btn"><Icon name="folder" size={16} /> تصدير البيانات أولًا</Link>
         </>}
       />
 
-      {!isAdmin && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة لمديري المنصة فقط (PLATFORM_ADMIN / ADMIN). صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
+      {!isAdmin && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة لمديري البوّابة فقط (PLATFORM_ADMIN / ADMIN). صلاحيتك الحالية: {role || 'غير معروفة'}.</div>}
 
       <div className="rm-alert warn">
         <Icon name="alert" size={18} />
@@ -139,8 +139,8 @@ export default function DataLifecyclePage() {
         <h2><Icon name="target" size={18} /> نطاق التفريغ</h2>
         <div className="dl-grid">
           <label>البرنامج<select value={programId} onChange={e => { setProgramId(e.target.value); setClassroomId('ALL'); setPreview(null); }}><option value="ALL">كل البرامج</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar || p.name_en}{p.status ? ` (${p.status})` : ''}</option>)}</select></label>
-          <label>المدرب<select value={trainerId} onChange={e => { setTrainerId(e.target.value); setClassroomId('ALL'); setPreview(null); }}><option value="ALL">كل المدربين</option>{trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
-          <label>القاعة<select value={classroomId} onChange={e => { setClassroomId(e.target.value); setPreview(null); }}><option value="ALL">كل القاعات ضمن النطاق</option>{visibleRooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
+          <label>المدرّب<select value={trainerId} onChange={e => { setTrainerId(e.target.value); setClassroomId('ALL'); setPreview(null); }}><option value="ALL">كل المدرّبين</option>{trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+          <label>الشعبة<select value={classroomId} onChange={e => { setClassroomId(e.target.value); setPreview(null); }}><option value="ALL">كل الشُّعب ضمن النطاق</option>{visibleRooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
           <label>نوع التقييم<select value={kind} onChange={e => { setKind(e.target.value as Kind); setPreview(null); }}>{(Object.keys(KIND_TXT) as Kind[]).map(k => <option key={k} value={k}>{KIND_TXT[k]}</option>)}</select></label>
           <label>أقدم من (شهرًا)<select value={olderThan} onChange={e => { setOlderThan(e.target.value); setPreview(null); }} data-testid="dl-older"><option value="">— بلا —</option>{[3, 6, 12, 18, 24, 36].map(n => <option key={n} value={String(n)}>{n} شهرًا</option>)}</select></label>
           <label>من تاريخ<input type="date" value={from} onChange={e => { setFrom(e.target.value); setPreview(null); }} /></label>
@@ -156,7 +156,7 @@ export default function DataLifecyclePage() {
 
         {preview && (
           <div className={`dl-preview ${preview.evaluations ? '' : 'empty'}`}>
-            <div className="dl-num"><b>{preview.evaluations.toLocaleString('en')}</b><span>{kind === 'LINKS' ? 'رابط' : kind === 'EMPTY_ROOMS' ? 'شعبة فارغة' : kind === 'REMOTE' ? 'استجابة استطلاع' : 'استجابة تقييم'}</span></div>
+            <div className="dl-num"><b>{preview.evaluations.toLocaleString('en')}</b><span>{kind === 'LINKS' ? 'رابط' : kind === 'EMPTY_ROOMS' ? 'شعبة فارغة' : kind === 'REMOTE' ? 'استجابة استبيان' : 'استجابة تقييم'}</span></div>
             {!['LINKS', 'EMPTY_ROOMS', 'REMOTE'].includes(kind) && <div className="dl-num"><b>{preview.answers.toLocaleString('en')}</b><span>إجابة سؤال</span></div>}
             <div className="dl-note">{preview.evaluations ? 'هذه الأعداد هي ما سيُحذف نهائيًا عند التأكيد. لم يُحذف شيء بعد.' : 'لا توجد استجابات ضمن هذا النطاق — لا شيء لحذفه.'}</div>
           </div>
@@ -175,7 +175,7 @@ export default function DataLifecyclePage() {
             <tbody>
               {audit.map(r => {
                 const m = r.metadata || {}; const f = m.filters || {};
-                const scopeTxt = [f.programId && f.programId !== 'ALL' ? 'برنامج: ' + (programs.find(p => p.id === f.programId)?.name_ar || f.programId) : null, f.trainerId && f.trainerId !== 'ALL' ? 'مدرب: ' + (trainers.find(t => t.id === f.trainerId)?.name || f.trainerId) : null, f.classroomId && f.classroomId !== 'ALL' ? 'قاعة: ' + (classrooms.find(c => c.id === f.classroomId)?.code || f.classroomId) : null, f.from || f.to ? `${f.from || '…'} → ${f.to || '…'}` : null].filter(Boolean).join(' · ') || 'الكل';
+                const scopeTxt = [f.programId && f.programId !== 'ALL' ? 'برنامج: ' + (programs.find(p => p.id === f.programId)?.name_ar || f.programId) : null, f.trainerId && f.trainerId !== 'ALL' ? 'مدرّب: ' + (trainers.find(t => t.id === f.trainerId)?.name || f.trainerId) : null, f.classroomId && f.classroomId !== 'ALL' ? 'شعبة: ' + (classrooms.find(c => c.id === f.classroomId)?.code || f.classroomId) : null, f.from || f.to ? `${f.from || '…'} → ${f.to || '…'}` : null].filter(Boolean).join(' · ') || 'الكل';
                 return (
                   <tr key={r.id}>
                     <td dir="ltr">{new Date(r.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Riyadh' })}</td>

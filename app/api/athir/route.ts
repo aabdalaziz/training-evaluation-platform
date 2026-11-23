@@ -1,11 +1,11 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/athir — «أثير» المدرب الرفيق (بوابة أَثَر · P10)
- *  POST { action:'hello', page? }                  → تحية مبادِرة من ذاكرة المتعلم وملفه المهاري (visits++، last_seen) — للزائر تحية عامة
+ * /api/athir — «أثير» المدرّب الرفيق (بوّابة أَثَر · P10)
+ *  POST { action:'hello', page? }                  → تحية مبادِرة من ذاكرة المتعلّم وملفه المهاري (visits++، last_seen) — للزائر تحية عامة
  *  POST { action:'chat', text, history?[], page? } → حوار قصير يعرف الملف المهاري والأهداف والعروض الحيّة (ذكاء اصطناعي أو بديل محلي)، ويحدّث الذاكرة الموجزة كل بضع رسائل
- *  POST { action:'goal', text }                    → إضافة هدف (حد 5)؛ { action:'forget' } → مسح الذاكرة بالكامل (حق المتعلم)
+ *  POST { action:'goal', text }                    → إضافة هدف (حد 5)؛ { action:'forget' } → مسح الذاكرة بالكامل (حق المتعلّم)
  *  POST { action:'prefs', prefs:{voice?, name?} }  → تفضيلات (الصوت، اسم المناداة)
- *  الحوكمة: الذاكرة ملخص ≤ 400 حرف بلا بيانات حساسة، يراها المتعلم ويمسحها متى شاء؛ أثير يقترح ولا يقرّر؛ لا يُقيّم أحدًا نيابة عن مدرب.
+ *  الحوكمة: الذاكرة ملخص ≤ 400 حرف بلا بيانات حساسة، يراها المتعلّم ويمسحها متى شاء؛ أثير يقترح ولا يقرّر؛ لا يُقيّم أحدًا نيابة عن مدرّب.
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -44,7 +44,7 @@ async function loadMemory(db: any, uid: string): Promise<Memory> {
 }
 async function saveMemory(db: any, m: Memory) { await db.from('portal_companion_memory').upsert({ user_id: m.user_id, summary: m.summary, goals: m.goals, prefs: m.prefs, visits: m.visits, last_seen_at: m.last_seen_at, updated_at: new Date().toISOString() }, { onConflict: 'user_id' }); }
 
-/** حقائق المتعلم: مهارات (الأضعف/الأقوى + آخر ممارسة)، مهارة اليوم، الجلسة القادمة */
+/** حقائق المتعلّم: مهارات (الأضعف/الأقوى + آخر ممارسة)، مهارة اليوم، الجلسة القادمة */
 async function learnerFacts(db: any, user: { id: string; email: string; name: string }, mem: Memory, page: string): Promise<{ c: CompanionContext; skills: { name: string; level: number }[]; enrollments: string[] }> {
   const nowIso = new Date().toISOString();
   const [{ data: levels }, { data: skills }, { data: daily }, { data: regs }, { data: enr }] = await Promise.all([
@@ -111,16 +111,16 @@ export async function POST(req: Request) {
   if (action === 'chat') {
     const text = S(body.text, 600); if (text.length < 2) return bad('اكتب رسالتك');
     const q = await aiUsage(db, user.id, 'companion'); if (!q.allowed) return bad(`بلغت حدّ الحوار اليومي مع أثير (${q.limit})`, 429);
-    const history = (Array.isArray(body.history) ? body.history : []).slice(-8).map((h: any) => ({ role: h?.role === 'athir' ? 'أثير' : 'المتعلم', text: S(h?.text, 300) })).filter((h: any) => h.text);
+    const history = (Array.isArray(body.history) ? body.history : []).slice(-8).map((h: any) => ({ role: h?.role === 'athir' ? 'أثير' : 'المتعلّم', text: S(h?.text, 300) })).filter((h: any) => h.text);
     const [lf, facts] = await Promise.all([learnerFacts(db, user, mem, page), liveFacts(db, lang)]);
     facts.profile = { name: lf.c.name, skills: lf.skills.slice(0, 12), enrollments: lf.enrollments };
-    const convo = `${mem.summary ? `ذاكرتي عن المتعلم: ${mem.summary}\n` : ''}${mem.goals.length ? `أهدافه: ${mem.goals.join(' | ')}\n` : ''}${history.length ? `آخر الحوار:\n${history.map((h: any) => `${h.role}: ${h.text}`).join('\n')}\n` : ''}رسالته الآن: ${text}`;
+    const convo = `${mem.summary ? `ذاكرتي عن المتعلّم: ${mem.summary}\n` : ''}${mem.goals.length ? `أهدافه: ${mem.goals.join(' | ')}\n` : ''}${history.length ? `آخر الحوار:\n${history.map((h: any) => `${h.role}: ${h.text}`).join('\n')}\n` : ''}رسالته الآن: ${text}`;
     const p = buildAdvisorPrompt(convo, facts, lang, 'companion');
     const res = await runAi<AdvisorAnswer>({ system: p.system + SIMPLE_HINT, user: p.user, parse: raw => parseAdvisor(parseJsonLoose(raw), facts), local: () => localAdvisor(text, facts), budgetMs: 18000 });
     await logAi(db, { user_id: user.id, email: user.email, role: 'USER', purpose: 'companion', result: res, context: { action: 'chat' } });
     // تحديث الذاكرة كل 4 رسائل (أو عند ذكر هدف صريح)
     const wantsGoal = /هدفي|أريد أن|أبغى|أطمح|خطتي/.test(text);
-    if (res.source === 'ai' && (history.length >= 4 || wantsGoal)) { const mp = buildMemoryPrompt(mem.summary, [...history, { role: 'المتعلم', text }, { role: 'أثير', text: res.data.answer_ar }]); const m = await runAi<string>({ system: mp.system, user: mp.user, parse: raw => parseMemory(parseJsonLoose(raw)), local: () => mem.summary, budgetMs: 10000 }); if (m.source === 'ai' && m.data) { mem.summary = m.data; await saveMemory(db, mem); } }
+    if (res.source === 'ai' && (history.length >= 4 || wantsGoal)) { const mp = buildMemoryPrompt(mem.summary, [...history, { role: 'المتعلّم', text }, { role: 'أثير', text: res.data.answer_ar }]); const m = await runAi<string>({ system: mp.system, user: mp.user, parse: raw => parseMemory(parseJsonLoose(raw)), local: () => mem.summary, budgetMs: 10000 }); if (m.source === 'ai' && m.data) { mem.summary = m.data; await saveMemory(db, mem); } }
     else if (wantsGoal && !mem.goals.includes(text)) { mem.goals = [text.slice(0, 140), ...mem.goals].slice(0, 5); await saveMemory(db, mem); }
     return NextResponse.json({ success: true, answer: res.data.answer_ar, links: res.data.links, handoff: res.data.handoff, source: res.source, goals: mem.goals });
   }

@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, links: links.map(l => ({ ...l, state: linkState(l) })), ...nm });
   }
   if (v.value.classroom_id) { const { data: room } = await s.admin.from('classrooms').select('id,program_id').eq('id', v.value.classroom_id).maybeSingle(); if (!room || String((room as any).program_id) !== v.value.program_id) return bad('الشعبة لا تتبع هذا البرنامج'); }
-  if (b.reuse) {   // P49-ب «QR المجموعة»: أعد الرابط المفتوح نفسه لهذه المجموعة/النوع بدل توليد رمز جديد كل مرّة
+  if (b.reuse) {   // P49-ب «QR الشعبة»: أعد الرابط المفتوح نفسه لهذه المجموعة/النوع بدل توليد رمز جديد كل مرّة
     let q = admin.from('evaluation_links').select(LINK_COLS).eq('program_id', v.value.program_id).eq('kind', v.value.kind).eq('active', true).is('opens_at', null).is('closes_at', null).order('created_at', { ascending: false }).limit(20);
     q = v.value.classroom_id ? q.eq('classroom_id', v.value.classroom_id) : q.is('classroom_id', null);
     const { data: ex } = await q; const hit = ((ex || []) as EvalLink[]).find(l => String(l.level || '') === String(v.value.level || '') && normalizeLinkLang(l.lang) === v.value.lang);

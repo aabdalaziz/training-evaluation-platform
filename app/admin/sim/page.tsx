@@ -62,12 +62,12 @@ export default function AdminSimPage() {
                 {open === r.id && (
                   <div className="as-body">
                     <div className="as-cols">
-                      <div><h4>الحوار</h4><div className="as-turns">{(r.turns || []).map((t, i) => <div key={i} className={`as-turn ${t.role}`}><small>{t.role === 'persona' ? (s?.persona?.name || 'الشخصية') : 'المتعلم'}</small><p>{t.text}</p></div>)}</div></div>
+                      <div><h4>الحوار</h4><div className="as-turns">{(r.turns || []).map((t, i) => <div key={i} className={`as-turn ${t.role}`}><small>{t.role === 'persona' ? (s?.persona?.name || 'الشخصية') : 'المتعلّم'}</small><p>{t.text}</p></div>)}</div></div>
                       <div><h4>التقييم المقترح</h4>{sc ? <>
                         <div className="as-crit">{sc.criteria.map(c => { const rb = s?.rubric.find(x => x.key === c.key); return <div key={c.key}><span>{rb?.title_ar || c.key} <em>{rb?.weight}%</em></span><i><b style={{ width: `${c.score}%` }} /></i><b>{c.score}</b>{c.note && <small>{c.note}</small>}</div>; })}</div>
                         {!!sc.strengths?.length && <p><b>قوة:</b> {sc.strengths.join(' · ')}</p>}{!!sc.improve?.length && <p><b>تحسين:</b> {sc.improve.join(' · ')}</p>}{sc.expert_path && <p><b>مسار الخبير:</b> {sc.expert_path}</p>}
                       </> : <p>لا تقييم.</p>}
-                        {r.status === 'scored' && <div className="as-decide"><input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتعلم (اختياري)" maxLength={400} /><button type="button" className="rm-btn ok" disabled={busy === r.id} onClick={() => decide(r.id, 'approved')}><Icon name="check" size={14} /> اعتماد الدليل</button><button type="button" className="rm-btn bad" disabled={busy === r.id} onClick={() => decide(r.id, 'rejected')}><Icon name="x" size={14} /> رفض</button></div>}
+                        {r.status === 'scored' && <div className="as-decide"><input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتعلّم (اختياري)" maxLength={400} /><button type="button" className="rm-btn ok" disabled={busy === r.id} onClick={() => decide(r.id, 'approved')}><Icon name="check" size={14} /> اعتماد الدليل</button><button type="button" className="rm-btn bad" disabled={busy === r.id} onClick={() => decide(r.id, 'rejected')}><Icon name="x" size={14} /> رفض</button></div>}
                         {r.status !== 'scored' && <p className="as-note">{r.note ? `ملاحظة: ${r.note}` : ''} {r.approved_at ? `· ${fmt(r.approved_at)}` : ''}</p>}
                       </div>
                     </div>

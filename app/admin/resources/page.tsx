@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — إدارة مستودع الحقائب: إنشاء/تحرير · وسم المهارات والقطاع · مستوى الوصول · رفع الملفات · نشر/أرشفة · إحصاءات التنزيل · Excel
+// بوّابة أَثَر — إدارة مستودع الحقائب: إنشاء/تحرير · وسم المهارات والقطاع · مستوى الوصول · رفع الملفات · نشر/أرشفة · إحصاءات التنزيل · Excel
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -80,7 +80,7 @@ function ResourcesAdmin() {
     setForm(null); setOpen((data as any).id); return 'أُنشئت المادة كمسودة — ارفع الملفات ثم انشرها.';
   });
   const setStatus = (r: Resource, s: ResStatus) => run('st' + r.id, async () => {
-    if (s === 'published' && !window.confirm(`نشر «${r.title_ar}» على البوابة العامة؟`)) return;
+    if (s === 'published' && !window.confirm(`نشر «${r.title_ar}» على البوّابة العامة؟`)) return;
     const patch: any = { status: s, updated_at: new Date().toISOString() }; if (s === 'published' && !r.published_at) patch.published_at = new Date().toISOString();
     const { error } = await db.from('portal_resources').update(patch).eq('id', r.id); if (error) throw error; return s === 'published' ? 'نُشرت المادة.' : s === 'archived' ? 'أُرشفت المادة.' : 'أُعيدت إلى المسودات.';
   });
@@ -142,7 +142,7 @@ function ResourcesAdmin() {
             <label className="en-note">اللغة<select value={form.lang} onChange={e => setForm({ ...form, lang: e.target.value as any })}>{RES_LANGS.map(x => <option key={x.value} value={x.value}>{x.label.ar}</option>)}</select></label>
             <label className="en-note">الإصدار<input dir="ltr" value={form.version} onChange={e => setForm({ ...form, version: e.target.value })} /></label>
             <label className="en-note">رابط صورة الغلاف (اختياري)<input dir="ltr" value={form.cover_url} onChange={e => setForm({ ...form, cover_url: e.target.value })} placeholder="https://…" /></label>
-            <label className="en-note">وسوم (مفصولة بفاصلة)<input value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder="تقويم، CEFR، دليل مدرب" /></label>
+            <label className="en-note">وسوم (مفصولة بفاصلة)<input value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder="تقويم، CEFR، دليل مدرّب" /></label>
           </div>
           <div className="rs-access">
             <b>مستوى الوصول</b>
@@ -180,7 +180,7 @@ function ResourcesAdmin() {
               {sk.length > 0 && <div className="rs-chips">{sk.map(s => <span key={s.id} className="rs-chip">{s.code} · {skillName(s, 'ar')}</span>)}</div>}
               <div className="cs-grid2">
                 <div className="cs-sec"><h3><Icon name="folder" size={16} /> الملفات ({files.length})</h3>
-                  {files.length === 0 && <span className="rm-muted">لا ملفات بعد — المادة لن تكون مفيدة للمتعلم حتى تُرفع ملفاتها.</span>}
+                  {files.length === 0 && <span className="rm-muted">لا ملفات بعد — المادة لن تكون مفيدة للمتعلّم حتى تُرفع ملفاتها.</span>}
                   {files.map(f => <div key={f.id} className="rs-file"><Icon name="doc" size={16} /><div><b>{f.name}</b><small>{fmtSize(f.size, 'ar')} · v{f.version} · {f.downloads || 0} تنزيل</small></div><div className="en-acts"><button type="button" className="rm-btn ghost" onClick={() => preview(f)} disabled={!!busy}>معاينة</button>{canWrite && <button type="button" className="cs-x" title="حذف" onClick={() => removeFile(f)} disabled={!!busy}>×</button>}</div></div>)}
                   {canWrite && <label className="rs-upload"><Icon name="plus" size={14} /> {progress || 'رفع ملفات (PDF، Word، PowerPoint، Excel، فيديو، ZIP — حتى 100 م.ب للملف)'}<input type="file" multiple style={{ display: 'none' }} onChange={e => { upload(r, e.target.files); e.currentTarget.value = ''; }} disabled={busy === 'up'} /></label>}
                 </div>

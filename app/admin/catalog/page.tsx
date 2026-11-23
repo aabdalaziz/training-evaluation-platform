@@ -1,6 +1,6 @@
 'use client';
 
-// بوابة أَثَر — نشر البرامج في الكتالوج (الرسوم · المقاعد · النوع · فتح/إغلاق التسجيل)
+// بوّابة أَثَر — نشر البرامج في الكتالوج (الرسوم · المقاعد · النوع · فتح/إغلاق التسجيل)
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -45,7 +45,7 @@ export default function CatalogAdminPage() {
     if (fee !== null && (!isFinite(fee) || fee < 0)) { setError('الرسوم يجب أن تكون رقمًا موجبًا (أو اتركها فارغة = عند التواصل، أو 0 = مجاني).'); setBusy(''); return; }
     if (seats !== null && (!isFinite(seats) || seats < 1)) { setError('عدد المقاعد يجب أن يكون 1 فأكثر، أو اتركه فارغًا = غير محدود.'); setBusy(''); return; }
     const { error: e } = await db.from('programs').update({ fee, currency: f.currency, seats, hours, program_type: f.program_type, cefr_level: f.cefr_level || null, is_public: f.is_public, registration_open: f.registration_open, registration_deadline: f.registration_deadline || null, location_ar: f.location_ar.trim() || null, location_en: f.location_en.trim() || null }).eq('id', id);
-    if (e) setError(e.message); else { setNotice('تم الحفظ — التغيير ظاهر فورًا في البوابة.'); setEdit(null); setF(null); await load(); }
+    if (e) setError(e.message); else { setNotice('تم الحفظ — التغيير ظاهر فورًا في البوّابة.'); setEdit(null); setF(null); await load(); }
     setBusy('');
   }
   async function quick(id: string, patch: Partial<CatalogProgram>) { setBusy(id); const { error: e } = await db.from('programs').update(patch).eq('id', id); if (e) setError(e.message); else await load(); setBusy(''); }
@@ -56,7 +56,7 @@ export default function CatalogAdminPage() {
       <div className="ct-wrap">
         <RoomHead
         title={<>نشر البرامج في الكتالوج</>}
-        desc={<><p>بيانات البرنامج الأساسية (الاسم، المواعيد، الأهداف…) تُحرَّر من لوحة القيادة؛ هنا تضبط ما يخص البوابة: الظهور، الرسوم، المقاعد، النوع، وفتح التسجيل.</p></>}
+        desc={<><p>بيانات البرنامج الأساسية (الاسم، المواعيد، الأهداف…) تُحرَّر من لوحة القيادة؛ هنا تضبط ما يخص البوّابة: الظهور، الرسوم، المقاعد، النوع، وفتح التسجيل.</p></>}
       />
         <PortalAdminTabs />
         {error && <div className="ct-err">{error}</div>}{notice && <div className="ct-ok">{notice}</div>}
@@ -66,7 +66,7 @@ export default function CatalogAdminPage() {
           return (
             <article key={p.id} className={`rm-card ct-row ${p.is_public === false ? 'hidden' : ''}`}>
               <div className="ct-top">
-                <div className="ct-name"><b>{p.name_ar}</b><span>{p.name_en || ''}</span><div className="ct-chips"><span className="ct-tag">{t(TYPES.find(x => x.value === (p.program_type || 'course'))?.label || TYPES[0].label, 'ar')}</span><span className="ct-tag">{String(p.status || '')}</span><span className={`ct-tag ${s === 'open' ? 'ok' : s === 'waitlist' ? 'warn' : ''}`}>{t(REG_LABEL[s], 'ar')}</span>{p.is_public === false && <span className="ct-tag off">مخفي من البوابة</span>}</div></div>
+                <div className="ct-name"><b>{p.name_ar}</b><span>{p.name_en || ''}</span><div className="ct-chips"><span className="ct-tag">{t(TYPES.find(x => x.value === (p.program_type || 'course'))?.label || TYPES[0].label, 'ar')}</span><span className="ct-tag">{String(p.status || '')}</span><span className={`ct-tag ${s === 'open' ? 'ok' : s === 'waitlist' ? 'warn' : ''}`}>{t(REG_LABEL[s], 'ar')}</span>{p.is_public === false && <span className="ct-tag off">مخفي من البوّابة</span>}</div></div>
                 <div className="ct-stats"><span><small>الرسوم</small><b>{feeLabel(p.fee, p.currency, 'ar')}</b></span><span><small>المقاعد</small><b>{p.seats ? `${left} / ${p.seats}` : 'غير محدود'}</b></span><span><small>الطلبات</small><b>{c ? `${c.pending} مراجعة · ${c.approved} مقبول` : '—'}</b></span></div>
                 <div className="ct-acts">
                   <button type="button" className="rm-btn ghost" disabled={busy === p.id} onClick={() => quick(p.id, { is_public: p.is_public === false })}>{p.is_public === false ? <><Icon name="globe" size={14} /> إظهار</> : <><Icon name="x" size={14} /> إخفاء</>}</button>
@@ -86,7 +86,7 @@ export default function CatalogAdminPage() {
                   <label>آخر موعد للتسجيل<input type="date" dir="ltr" value={f.registration_deadline} onChange={e => setF({ ...f, registration_deadline: e.target.value })} /></label>
                   <label>المكان (عربي)<input value={f.location_ar} onChange={e => setF({ ...f, location_ar: e.target.value })} placeholder="المدينة المنورة — قاعة 3 / Teams" /></label>
                   <label>Location (EN)<input dir="ltr" value={f.location_en} onChange={e => setF({ ...f, location_en: e.target.value })} /></label>
-                  <label className="ct-check"><input type="checkbox" checked={f.is_public} onChange={e => setF({ ...f, is_public: e.target.checked })} /> ظاهر في البوابة</label>
+                  <label className="ct-check"><input type="checkbox" checked={f.is_public} onChange={e => setF({ ...f, is_public: e.target.checked })} /> ظاهر في البوّابة</label>
                   <label className="ct-check"><input type="checkbox" checked={f.registration_open} onChange={e => setF({ ...f, registration_open: e.target.checked })} /> التسجيل مفتوح</label>
                   <div className="ct-formacts"><button type="submit" className="rm-btn ok" disabled={busy === p.id}><Icon name="save" size={14} /> حفظ</button><button type="button" className="rm-btn ghost" onClick={() => { setEdit(null); setF(null); }}>إلغاء</button></div>
                 </form>

@@ -112,7 +112,7 @@ export default function AdminShieldPage() {
         {tab === 'access' && (
           <section className="rm-card" data-testid="shield-access">
             <div className="sh-row"><h2>الوصول الإداري — مَن فتح بيانات مَن؟ (7 أيام)</h2><a className="pt-btn ghost small" href="#" onClick={async (e) => { e.preventDefault(); const tk = await fresh(); const r = await fetch('/api/shield?format=csv', { headers: { Authorization: `Bearer ${tk}` } }); const b = await r.blob(); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'athar-admin-access.csv'; a.click(); }}>تصدير CSV</a></div>
-            <p className="rm-muted">صفّ واحد لكل (عضو طاقم × صفحة تحمل بيانات شخصية × يوم) — خفيف، يُكنس بعد 180 يومًا. المتدرّب يرى في «ذاكرتي» مَن فتح ملفّه بعينه (أدوار لا أسماء). الصفحات المرصودة: {(data as any)?.pii_paths?.length || 0}.</p>
+            <p className="rm-muted">صفّ واحد لكل (عضو طاقم × صفحة تحمل بيانات شخصية × يوم) — خفيف، يُكنس بعد 180 يومًا. المشارك يرى في «ذاكرتي» مَن فتح ملفّه بعينه (أدوار لا أسماء). الصفحات المرصودة: {(data as any)?.pii_paths?.length || 0}.</p>
             {!data?.access && <p className="sh-err">الجدول غير جاهز — نفّذ supabase/p65-shield-layer2.sql.</p>}
             {data?.access && <div className="sh-grid">
               <div className="sh-box"><b>حسب الصفحة</b><table className="rm-table small"><thead><tr><th>الصفحة</th><th>أعضاء</th><th>مرّات</th><th>آخر مرّة</th></tr></thead><tbody>{data.access.by_path.map(x => <tr key={x.path}><td>{x.title_ar} <small dir="ltr">{x.path}</small></td><td>{x.users}</td><td>{x.hits}</td><td>{fmt(x.last_at)}</td></tr>)}{!data.access.by_path.length && <tr><td colSpan={4} className="rm-muted">لا وصول مسجَّلًا بعد.</td></tr>}</tbody></table></div>

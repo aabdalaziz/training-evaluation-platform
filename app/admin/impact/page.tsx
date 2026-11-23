@@ -236,7 +236,7 @@ function Inner() {
         const r = q.id ? await db.from('impact_questions').update(row as any).eq('id', q.id) : await db.from('impact_questions').insert(row as any);
         if (r.error) throw r.error;
       }
-      flash(editing ? 'تم حفظ التعديلات' : 'تم إنشاء الأداة — انسخ الرابط القبلي وشاركه مع المتدربين');
+      flash(editing ? 'تم حفظ التعديلات' : 'تم إنشاء الأداة — انسخ الرابط القبلي وشاركه مع المشاركين');
       await load(); setMode('list');
     } catch (e: any) { setError(e?.message || 'تعذر الحفظ'); }
     setBusy(false);
@@ -323,12 +323,12 @@ function Inner() {
             <h2><Icon name="edit" size={18} /> {editing ? 'تعديل الأداة' : 'أداة قياس جديدة'}</h2>
             <div className="ia-grid">
               <label>البرنامج *<select value={form.program_id} onChange={e => setForm(f => ({ ...f, program_id: e.target.value, classroom_id: '' }))}><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
-              <label>القاعة (اختياري)<select value={form.classroom_id} onChange={e => setForm(f => ({ ...f, classroom_id: e.target.value }))}><option value="">كل قاعات البرنامج</option>{progClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
+              <label>الشعبة (اختياري)<select value={form.classroom_id} onChange={e => setForm(f => ({ ...f, classroom_id: e.target.value }))}><option value="">كل شُعب البرنامج</option>{progClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
               <label>سلّم المقياس<select value={form.scale_max} onChange={e => setForm(f => ({ ...f, scale_max: Number(e.target.value) }))}><option value={5}>1 – 5</option><option value={4}>1 – 4</option><option value={7}>1 – 7</option><option value={10}>1 – 10</option></select></label>
               <label>عنوان الأداة *<input value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} placeholder="مثال: قياس أثر برنامج الانغماس اللغوي — الدفعة 3" /></label>
               <label>العنوان بالإنجليزية<input value={form.title_en} onChange={e => setForm(f => ({ ...f, title_en: e.target.value }))} dir="ltr" /></label>
               <label>تلميح المعرّف الشخصي<input value={form.identity_hint_ar} onChange={e => setForm(f => ({ ...f, identity_hint_ar: e.target.value }))} /></label>
-              <label className="ia-span3">مقدمة تظهر للمتدرب<textarea rows={2} value={form.intro_ar} onChange={e => setForm(f => ({ ...f, intro_ar: e.target.value }))} /></label>
+              <label className="ia-span3">مقدمة تظهر للمشارك<textarea rows={2} value={form.intro_ar} onChange={e => setForm(f => ({ ...f, intro_ar: e.target.value }))} /></label>
             </div>
             <div className="ia-row">
               <label className="ia-check"><input type="checkbox" checked={form.pre_open} onChange={e => setForm(f => ({ ...f, pre_open: e.target.checked }))} /> فتح القياس القبلي الآن</label>
@@ -341,7 +341,7 @@ function Inner() {
             <h2><Icon name="question" size={18} /> طريقة بناء الأداة</h2>
             <div className="ia-modes">
               <button className={`ia-mode ${build === 'manual' ? 'on' : ''}`} onClick={() => setBuild('manual')}><Icon name="edit" size={18} /><b>بناء يدوي</b><small>قالب جاهز أو من الصفر: نوع السؤال، النص، 4 بدائل، نموذج الإجابة</small></button>
-              <button className={`ia-mode ${build === 'upload' ? 'on' : ''}`} onClick={() => setBuild('upload')}><Icon name="folder" size={18} /><b>رفع أداة جاهزة</b><small>Word / Excel / CSV / نص + نموذج الإجابة — وتقوم المنصة بالإعداد</small></button>
+              <button className={`ia-mode ${build === 'upload' ? 'on' : ''}`} onClick={() => setBuild('upload')}><Icon name="folder" size={18} /><b>رفع أداة جاهزة</b><small>Word / Excel / CSV / نص + نموذج الإجابة — وتقوم البوّابة بالإعداد</small></button>
               <button className={`ia-mode ${build === 'ai' ? 'on' : ''}`} onClick={() => { setBuild('ai'); prefillAi(form.program_id); }}><Icon name="star" size={18} /><b>توليد بالذكاء الاصطناعي</b><small>وفق أهداف البرنامج ومحاوره: بنود مقياس + أسئلة معرفية بإجاباتها</small></button>
             </div>
 
@@ -363,7 +363,7 @@ function Inner() {
             {build === 'ai' && (
               <div className="ia-panel">
                 <div className="ia-grid">
-                  <label className="ia-span3">أهداف/مخرجات البرنامج (تُقرأ تلقائيًا من بطاقة البرنامج إن وُجدت)<textarea rows={4} value={ai.objectives} onChange={e => setAi(a => ({ ...a, objectives: e.target.value }))} placeholder={'أن يتمكن المتدرب من…\nأن يميّز المتدرب بين…'} /></label>
+                  <label className="ia-span3">أهداف/مخرجات البرنامج (تُقرأ تلقائيًا من بطاقة البرنامج إن وُجدت)<textarea rows={4} value={ai.objectives} onChange={e => setAi(a => ({ ...a, objectives: e.target.value }))} placeholder={'أن يتمكن المشارك من…\nأن يميّز المشارك بين…'} /></label>
                   <label>محاور البرنامج (محور في كل سطر)<textarea rows={4} value={ai.axes} onChange={e => setAi(a => ({ ...a, axes: e.target.value }))} /></label>
                   <label>الفئة المستهدفة<input value={ai.audience} onChange={e => setAi(a => ({ ...a, audience: e.target.value }))} placeholder="مثال: معلمو المرحلة الابتدائية" /></label>
                   <label>المستوى<select value={ai.level} onChange={e => setAi(a => ({ ...a, level: e.target.value as any }))}><option value="basic">أساسي</option><option value="intermediate">متوسط</option><option value="advanced">متقدم</option></select></label>

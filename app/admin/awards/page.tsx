@@ -85,7 +85,7 @@ export default function AwardsPage() {
     setError('');
     if (!wins.length) { setError('لا يوجد فائزون مؤهلون في هذه الفترة وفق القواعد الحالية'); return; }
     if (alreadySaved.length && !window.confirm('توجد جوائز محفوظة لهذه الفترة مسبقًا. سيتم استبدالها. متابعة؟')) return;
-    if (!window.confirm(`اعتماد ${wins.length} جائزة لفترة «${pLabel}» وإصدار شهادات تقدير بأرقام تسلسلية${emailWinners ? ' وإرسالها بالبريد للمدربين' : ''}؟`)) return;
+    if (!window.confirm(`اعتماد ${wins.length} جائزة لفترة «${pLabel}» وإصدار شهادات تقدير بأرقام تسلسلية${emailWinners ? ' وإرسالها بالبريد للمدرّبين' : ''}؟`)) return;
     setBusy('approve');
     try {
       const { data: { user } } = await db.auth.getUser();
@@ -134,10 +134,10 @@ export default function AwardsPage() {
     <div className="aw rm-page" dir="rtl">
       <style>{CSS}</style>
       <RoomHead
-        title={<>تكريم المدربين — لوحة الشرف</>}
+        title={<>تكريم المدرّبين — لوحة الشرف</>}
         desc={<><p>اختيار آلي شفاف للمتميزين وفق قواعد معلنة (أعلى تقييم، الأكثر تحسنًا، الأعلى مشاركة، الأكثر ثباتًا)، مع إصدار شهادات تقدير رسمية.</p></>}
         actions={<>
-          <Link href="/reports/center?type=trainers" className="rm-btn"><Icon name="users" size={16} /> تقرير المدربين</Link>
+          <Link href="/reports/center?type=trainers" className="rm-btn"><Icon name="users" size={16} /> تقرير المدرّبين</Link>
         </>}
       />
       {!allowed && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة.</div>}
@@ -153,7 +153,7 @@ export default function AwardsPage() {
           <label>الحد الأدنى للاستجابات<input type="number" min={1} value={rules.minResponses} onChange={e => setRules(r => ({ ...r, minResponses: Number(e.target.value) || 1 }))} /></label>
           <label>الحد الأدنى للمتوسط (الثبات)<input type="number" step={0.1} min={1} max={5} value={rules.minMean} onChange={e => setRules(r => ({ ...r, minMean: Number(e.target.value) || THRESHOLDS.good }))} /></label>
         </div>
-        <div className="aw-scope"><Icon name="flag" size={14} /> {pLabel} · مقارنة بـ {prev.from} → {prev.to} · {curRows.length} مدرب · {totalResponses} استجابة {alreadySaved.length ? <span className="aw-pill ok">محفوظة مسبقًا ({alreadySaved.length})</span> : null}</div>
+        <div className="aw-scope"><Icon name="flag" size={14} /> {pLabel} · مقارنة بـ {prev.from} → {prev.to} · {curRows.length} مدرّب · {totalResponses} استجابة {alreadySaved.length ? <span className="aw-pill ok">محفوظة مسبقًا ({alreadySaved.length})</span> : null}</div>
       </section>
 
       {/* honor board */}
@@ -182,7 +182,7 @@ export default function AwardsPage() {
         {wins.length === 0 ? <div className="rm-muted">لا يوجد فائزون مؤهلون — خفّض الحد الأدنى للاستجابات أو وسّع الفترة.</div> : (
           <div className="aw-winners">{wins.map(w => <div key={w.category} className="aw-win"><span className="aw-win-cat">{CATEGORY_META[w.category].ar}</span><b>{w.trainer_name}</b><span className="rm-muted">{w.metric_label}</span></div>)}</div>
         )}
-        <label className="aw-check"><input type="checkbox" checked={emailWinners} onChange={e => setEmailWinners(e.target.checked)} /> إرسال شهادة التقدير بالبريد للمدربين الذين لديهم بريد مسجّل في جدول المدربين</label>
+        <label className="aw-check"><input type="checkbox" checked={emailWinners} onChange={e => setEmailWinners(e.target.checked)} /> إرسال شهادة التقدير بالبريد للمدرّبين الذين لديهم بريد مسجّل في جدول المدرّبين</label>
         <div className="aw-actions">
           <button className="rm-btn primary" onClick={approve} disabled={!allowed || !!busy || !wins.length}><Icon name="award" size={16} /> {busy === 'approve' ? (progress || 'جارٍ الاعتماد…') : 'اعتماد الجوائز وإصدار شهادات التقدير'}</button>
         </div>

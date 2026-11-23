@@ -1,6 +1,6 @@
 'use client';
 
-// بوابة أَثَر — إدارة الاستشارات: خط سير الطلبات · الدراسة والإسناد · عرض السعر · مراحل التنفيذ · التحديثات · تصدير Excel
+// بوّابة أَثَر — إدارة الاستشارات: خط سير الطلبات · الدراسة والإسناد · عرض السعر · مراحل التنفيذ · التحديثات · تصدير Excel
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -82,7 +82,7 @@ function ConsultingAdmin() {
   async function api(payload: any) { const { data: s } = await db.auth.getSession(); const res = await fetch('/api/consulting', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token || ''}` }, body: JSON.stringify(payload) }); const j = await res.json().catch(() => ({})); if (!res.ok || !j.success) throw new Error(j.error || `HTTP ${res.status}`); return j; }
   const run = async (key: string, fn: () => Promise<string | void>) => { setBusy(key); setError(''); setNotice(''); try { const m = await fn(); if (m) setNotice(m); await load(); if (open) await loadDetail(open); } catch (e: any) { setError(e.message || String(e)); } setBusy(''); };
 
-  const setStatus = (r: ConsultingRequest, s: ReqStatus) => run('st', async () => { const j = await api({ action: 'status', id: r.id, status: s, note: note.trim() || undefined, notify }); setNote(''); return j.mail_error ? `تم تحديث الحالة، لكن تعذّر إرسال البريد: ${j.mail_error}` : 'تم تحديث الحالة' + (notify && ['reviewing', 'in_progress', 'completed', 'closed'].includes(s) ? ' وإشعار العميل.' : '.'); });
+  const setStatus = (r: ConsultingRequest, s: ReqStatus) => run('st', async () => { const j = await api({ action: 'status', id: r.id, status: s, note: note.trim() || undefined, notify }); setNote(''); return j.mail_error ? `تم تحديث الحالة، لكن تعذّر إرسال البريد: ${j.mail_error}` : 'تم تحديث الحالة' + (notify && ['reviewing', 'in_progress', 'completed', 'closed'].includes(s) ? ' وإشعار الجهة.' : '.'); });
   const assign = (r: ConsultingRequest, to: string) => run('as', async () => { const { error } = await db.from('portal_consulting_requests').update({ assigned_to: to || null, updated_at: new Date().toISOString() }).eq('id', r.id); if (error) throw error; return 'تم تحديث المسؤول.'; });
   const saveInternal = (r: ConsultingRequest) => run('in', async () => { const { error } = await db.from('portal_consulting_requests').update({ internal_notes: internal.trim() || null, updated_at: new Date().toISOString() }).eq('id', r.id); if (error) throw error; return 'حُفظت الملاحظات الداخلية.'; });
   const saveQuote = (r: ConsultingRequest, send: boolean) => run(send ? 'qs' : 'qd', async () => {
@@ -91,14 +91,14 @@ function ConsultingAdmin() {
     const { data, error } = await db.from('portal_consulting_quotes').insert({ request_id: r.id, created_by: me?.id, version, currency: settings?.currency || 'SAR', items, subtotal: tt.subtotal, vat_rate: Number(settings?.vat_rate ?? 15), vat_amount: tt.vat, total: tt.total, valid_until: qf.valid_until || null, scope: qf.scope.trim() || null, deliverables: qf.deliverables.trim() || null, duration: qf.duration.trim() || null, terms: qf.terms.trim() || null, status: 'draft' }).select('*').single();
     if (error) throw error; setQf(null);
     if (!send) return `حُفظت المسودة (الإصدار ${version}).`;
-    const j = await api({ action: 'send_quote', quote_id: (data as any).id }); return j.mail_error ? `أُرسل العرض لكن تعذّر البريد: ${j.mail_error}` : `أُرسل عرض السعر (الإصدار ${version}) للعميل بالبريد.`;
+    const j = await api({ action: 'send_quote', quote_id: (data as any).id }); return j.mail_error ? `أُرسل العرض لكن تعذّر البريد: ${j.mail_error}` : `أُرسل عرض السعر (الإصدار ${version}) للجهة بالبريد.`;
   });
-  const sendDraft = (qid: string) => run('qs', async () => { const j = await api({ action: 'send_quote', quote_id: qid }); return j.mail_error ? `أُرسل العرض لكن تعذّر البريد: ${j.mail_error}` : 'أُرسل عرض السعر للعميل.'; });
+  const sendDraft = (qid: string) => run('qs', async () => { const j = await api({ action: 'send_quote', quote_id: qid }); return j.mail_error ? `أُرسل العرض لكن تعذّر البريد: ${j.mail_error}` : 'أُرسل عرض السعر للجهة.'; });
   const deleteDraft = (qid: string) => run('qx', async () => { if (!window.confirm('حذف المسودة؟')) return; const { error } = await db.from('portal_consulting_quotes').delete().eq('id', qid).eq('status', 'draft'); if (error) throw error; return 'حُذفت المسودة.'; });
   const addMs = (r: ConsultingRequest) => run('ma', async () => { if (msTitle.trim().length < 2) throw new Error('اكتب عنوان المرحلة'); const { error } = await db.from('portal_consulting_milestones').insert({ request_id: r.id, position: (ms[ms.length - 1]?.position || 0) + 1, title: msTitle.trim(), due_date: msDue || null, status: 'planned', visible_to_client: true }); if (error) throw error; setMsTitle(''); setMsDue(''); return 'أُضيفت المرحلة.'; });
   const setMs_ = (m: Milestone, status: Milestone['status']) => run('m' + m.id, async () => { const { error } = await db.from('portal_consulting_milestones').update({ status, done_at: status === 'done' ? new Date().toISOString() : null }).eq('id', m.id); if (error) throw error; });
   const delMs = (m: Milestone) => run('m' + m.id, async () => { if (!window.confirm('حذف المرحلة؟')) return; const { error } = await db.from('portal_consulting_milestones').delete().eq('id', m.id); if (error) throw error; });
-  const postUp = (r: ConsultingRequest) => run('up', async () => { if (upBody.trim().length < 2) throw new Error('اكتب نص التحديث'); const { data, error } = await db.from('portal_consulting_updates').insert({ request_id: r.id, author_id: me?.id, author_name: me?.name, by_staff: true, body: upBody.trim().slice(0, 4000), visible_to_client: upVisible }).select('*').single(); if (error) throw error; setUpBody(''); if (!upVisible) return 'حُفظت ملاحظة داخلية.'; const j = await api({ action: 'update_posted', update_id: (data as any).id }); return j.mail_error ? `نُشر التحديث لكن تعذّر البريد: ${j.mail_error}` : 'نُشر التحديث وأُشعر العميل بالبريد.'; });
+  const postUp = (r: ConsultingRequest) => run('up', async () => { if (upBody.trim().length < 2) throw new Error('اكتب نص التحديث'); const { data, error } = await db.from('portal_consulting_updates').insert({ request_id: r.id, author_id: me?.id, author_name: me?.name, by_staff: true, body: upBody.trim().slice(0, 4000), visible_to_client: upVisible }).select('*').single(); if (error) throw error; setUpBody(''); if (!upVisible) return 'حُفظت ملاحظة داخلية.'; const j = await api({ action: 'update_posted', update_id: (data as any).id }); return j.mail_error ? `نُشر التحديث لكن تعذّر البريد: ${j.mail_error}` : 'نُشر التحديث وأُشعرت الجهة بالبريد.'; });
 
   const pipe = useMemo(() => pipeline(rows), [rows]);
   const tally = useMemo(() => Object.fromEntries(FILTERS.map(f => [f.k, f.k === 'all' ? rows.length : f.k === 'open' ? rows.filter(r => OPEN.includes(r.status)).length : rows.filter(r => r.status === f.k).length])), [rows]);
@@ -113,7 +113,7 @@ function ConsultingAdmin() {
       <div className="en-wrap">
         <RoomHead
         title={<>الاستشارات</>}
-        desc={<><p>من الطلب إلى عرض السعر إلى التنفيذ: كل انتقال موثّق، وكل عرض مُرسل يصل العميل بالبريد ويُقبل من صفحته.</p></>}
+        desc={<><p>من الطلب إلى عرض السعر إلى التنفيذ: كل انتقال موثّق، وكل عرض مُرسل يصل الجهة بالبريد ويُقبل من صفحته.</p></>}
       />
         <PortalAdminTabs counts={{ '/admin/consulting': pipe.needsAction }} />
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok">{notice}</div>}
@@ -140,23 +140,23 @@ function ConsultingAdmin() {
             </div>
             {isOpen && (
               <div className="en-body">
-                <div className="en-details"><span>📧 <bdi>{r.email}</bdi></span>{r.phone && <span>📱 <bdi>{r.phone}</bdi></span>}<span>القطاع: {sectorLabel(r.sector, 'ar')}</span><span>الميزانية: {budgetLabel(r.budget_range, 'ar')}</span>{r.timeline && <span>التوقيت: {r.timeline}</span>}<span>اللغة: {r.lang === 'en' ? 'EN' : 'AR'}</span><span>الرقم: <bdi>{r.id.slice(0, 8).toUpperCase()}</bdi></span><Link href={`/consulting/${r.id}`} target="_blank">صفحة العميل ↗</Link></div>
-                <p><b>الوصف:</b> {r.details}</p>{r.goals && <p><b>الأهداف:</b> {r.goals}</p>}{r.client_note && <p className="cs-cn"><b>ملاحظة العميل على العرض:</b> {r.client_note}</p>}
+                <div className="en-details"><span>📧 <bdi>{r.email}</bdi></span>{r.phone && <span>📱 <bdi>{r.phone}</bdi></span>}<span>القطاع: {sectorLabel(r.sector, 'ar')}</span><span>الميزانية: {budgetLabel(r.budget_range, 'ar')}</span>{r.timeline && <span>التوقيت: {r.timeline}</span>}<span>اللغة: {r.lang === 'en' ? 'EN' : 'AR'}</span><span>الرقم: <bdi>{r.id.slice(0, 8).toUpperCase()}</bdi></span><Link href={`/consulting/${r.id}`} target="_blank">صفحة الجهة ↗</Link></div>
+                <p><b>الوصف:</b> {r.details}</p>{r.goals && <p><b>الأهداف:</b> {r.goals}</p>}{r.client_note && <p className="cs-cn"><b>ملاحظة الجهة على العرض:</b> {r.client_note}</p>}
                 {inv && <div className="cs-invrow"><Icon name="shield" size={14} /> الفاتورة <b dir="ltr">{inv.invoice_no}</b> · <bdi>{money(inv.total, inv.currency, 'ar')}</bdi> · {invStatusLabel(inv.status, 'ar')} <Link href={`/admin/payments?open=${inv.id}`}>إدارة الفاتورة ↗</Link></div>}
 
                 {canWrite && (
                   <div className="cs-grid2">
                     <label className="en-note">المسؤول عن الطلب<select value={r.assigned_to || ''} onChange={e => assign(r, e.target.value)} disabled={!!busy}><option value="">غير مُسند</option>{staff.map(s => <option key={s.id} value={s.id}>{s.full_name || s.email}</option>)}</select></label>
-                    <label className="en-note">ملاحظات داخلية (لا تظهر للعميل)<textarea value={internal} onChange={e => setInternal(e.target.value)} /><button type="button" className="rm-btn ghost" style={{ justifySelf: 'start' }} disabled={busy === 'in'} onClick={() => saveInternal(r)}><Icon name="save" size={14} /> حفظ</button></label>
+                    <label className="en-note">ملاحظات داخلية (لا تظهر للجهة)<textarea value={internal} onChange={e => setInternal(e.target.value)} /><button type="button" className="rm-btn ghost" style={{ justifySelf: 'start' }} disabled={busy === 'in'} onClick={() => saveInternal(r)}><Icon name="save" size={14} /> حفظ</button></label>
                   </div>
                 )}
 
-                {['accepted', 'in_progress', 'completed'].includes(r.status) && <section className="cs-sec" data-testid="ac-docs"><h3><Icon name="shield" size={16} /> وثائق أَثَر على هذا الطلب</h3><span className="rm-muted">تقرير إنجاز المهمة · رأي استشاري · دراسة — تُكتب وتُعتمد في محور التقارير، وتظهر للعميل في صفحة طلبه بعد الاعتماد.</span><div className="en-acts"><Link className="rm-btn ghost" href={`/admin/reports?request=${r.id}`} data-testid="ac-docs-link"><Icon name="doc" size={12} /> افتح وثائق الطلب في محور التقارير</Link></div></section>}
+                {['accepted', 'in_progress', 'completed'].includes(r.status) && <section className="cs-sec" data-testid="ac-docs"><h3><Icon name="shield" size={16} /> وثائق أَثَر على هذا الطلب</h3><span className="rm-muted">تقرير إنجاز المهمة · رأي استشاري · دراسة — تُكتب وتُعتمد في محور التقارير، وتظهر للجهة في صفحة طلبه بعد الاعتماد.</span><div className="en-acts"><Link className="rm-btn ghost" href={`/admin/reports?request=${r.id}`} data-testid="ac-docs-link"><Icon name="doc" size={12} /> افتح وثائق الطلب في محور التقارير</Link></div></section>}
                 <section className="cs-sec"><h3><Icon name="doc" size={16} /> عروض السعر</h3>
                   {quotes.length === 0 && <span className="rm-muted">لا عروض بعد.</span>}
                   {quotes.map(x => <div key={x.id} className={`cs-q ${x.status}`}><div className="cs-qh"><b>الإصدار {x.version}</b><span className={`en-tag q-${x.status}`}>{x.status === 'draft' ? 'مسودة' : x.status === 'sent' ? (isQuoteExpired(x, today) ? 'منتهي الصلاحية' : 'مُرسل — بانتظار الرد') : x.status === 'accepted' ? 'مقبول' : x.status === 'declined' ? 'معتذر عنه' : 'مستبدل'}</span><span className="rm-muted"><bdi>{money(x.total, x.currency, 'ar')}</bdi> شامل الضريبة · صالح حتى <bdi>{x.valid_until || '—'}</bdi>{x.sent_at && <> · أُرسل {fmt(x.sent_at)}</>}{x.responded_at && <> · الرد {fmt(x.responded_at)}</>}</span>
-                    {canWrite && x.status === 'draft' && <span className="en-acts"><button type="button" className="rm-btn" disabled={!!busy} onClick={() => sendDraft(x.id)}><Icon name="send" size={14} /> إرسال للعميل</button><button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => deleteDraft(x.id)}><Icon name="trash" size={14} /></button></span>}</div>
-                    <ul className="cs-ql">{cleanItems(x.items).map((it, i) => <li key={i}>{it.d} — {it.q} × <bdi>{money(it.u, x.currency, 'ar')}</bdi></li>)}</ul>{x.client_note && <p className="cs-cn">ملاحظة العميل: {x.client_note}</p>}</div>)}
+                    {canWrite && x.status === 'draft' && <span className="en-acts"><button type="button" className="rm-btn" disabled={!!busy} onClick={() => sendDraft(x.id)}><Icon name="send" size={14} /> إرسال للجهة</button><button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => deleteDraft(x.id)}><Icon name="trash" size={14} /></button></span>}</div>
+                    <ul className="cs-ql">{cleanItems(x.items).map((it, i) => <li key={i}>{it.d} — {it.q} × <bdi>{money(it.u, x.currency, 'ar')}</bdi></li>)}</ul>{x.client_note && <p className="cs-cn">ملاحظة الجهة: {x.client_note}</p>}</div>)}
                   {canWrite && !['cancelled', 'completed'].includes(r.status) && !qf && <button type="button" className="rm-btn ghost" onClick={() => setQf(emptyQ(settings))}><Icon name="plus" size={14} /> {quotes.length ? 'عرض سعر جديد (إصدار معدّل)' : 'إعداد عرض سعر'}</button>}
                   {qf && (
                     <div className="cs-qf">
@@ -167,8 +167,8 @@ function ConsultingAdmin() {
                         <tfoot><tr><td colSpan={5}><button type="button" className="rm-btn ghost" onClick={() => setQf({ ...qf, items: [...qf.items, { d: '', q: 1, u: 0 }] })}><Icon name="plus" size={12} /> بند</button></td></tr>
                           {qt && <><tr><td colSpan={3}>قبل الضريبة</td><td colSpan={2}><bdi>{money(qt.subtotal, settings?.currency || 'SAR', 'ar')}</bdi></td></tr><tr><td colSpan={3}>الضريبة ({Number(settings?.vat_rate ?? 15)}%){settings?.prices_include_vat ? ' — الأسعار شاملة' : ''}</td><td colSpan={2}><bdi>{money(qt.vat, settings?.currency || 'SAR', 'ar')}</bdi></td></tr><tr className="tot"><td colSpan={3}>الإجمالي</td><td colSpan={2}><bdi>{money(qt.total, settings?.currency || 'SAR', 'ar')}</bdi></td></tr></>}</tfoot></table>
                       <label className="en-note">الشروط<textarea value={qf.terms} onChange={e => setQf({ ...qf, terms: e.target.value })} /></label>
-                      <div className="en-acts"><button type="button" className="rm-btn ok" disabled={!!busy} onClick={() => saveQuote(r, true)}><Icon name="send" size={14} /> حفظ وإرسال للعميل</button><button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => saveQuote(r, false)}><Icon name="save" size={14} /> حفظ كمسودة</button><button type="button" className="rm-btn ghost" onClick={() => setQf(null)}>إلغاء</button></div>
-                      <span className="rm-muted">الإرسال يضع الطلب في حالة «أُرسل عرض السعر» ويُرسل بريدًا للعميل برابط صفحته؛ قبوله يُصدر فاتورة تلقائيًا. الإصدار الجديد يستبدل أي عرض سابق مُرسل.</span>
+                      <div className="en-acts"><button type="button" className="rm-btn ok" disabled={!!busy} onClick={() => saveQuote(r, true)}><Icon name="send" size={14} /> حفظ وإرسال للجهة</button><button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => saveQuote(r, false)}><Icon name="save" size={14} /> حفظ كمسودة</button><button type="button" className="rm-btn ghost" onClick={() => setQf(null)}>إلغاء</button></div>
+                      <span className="rm-muted">الإرسال يضع الطلب في حالة «أُرسل عرض السعر» ويُرسل بريدًا للجهة برابط صفحته؛ قبوله يُصدر فاتورة تلقائيًا. الإصدار الجديد يستبدل أي عرض سابق مُرسل.</span>
                     </div>
                   )}
                 </section>
@@ -183,17 +183,17 @@ function ConsultingAdmin() {
 
                 <section className="cs-sec"><h3><Icon name="chat" size={16} /> التحديثات والمراسلات</h3>
                   {ups.length === 0 && <span className="rm-muted">لا تحديثات بعد.</span>}
-                  <div className="cs-ups">{ups.map(u => <div key={u.id} className={`cs-up ${u.by_staff ? (u.visible_to_client ? 'staff' : 'internal') : 'client'}`}><small>{u.by_staff ? (u.author_name || 'الفريق') : `العميل — ${u.author_name || r.full_name}`}{u.by_staff && !u.visible_to_client && ' · داخلي'} · {fmt(u.created_at)}</small><p>{u.body}</p></div>)}</div>
-                  {canWrite && <div className="cs-upadd"><textarea value={upBody} onChange={e => setUpBody(e.target.value)} placeholder="تحديث للعميل أو ملاحظة داخلية…" /><div className="en-acts"><label className="cs-chk"><input type="checkbox" checked={upVisible} onChange={e => setUpVisible(e.target.checked)} /> يظهر للعميل ويُرسل بالبريد</label><button type="button" className="rm-btn" disabled={busy === 'up'} onClick={() => postUp(r)}><Icon name="send" size={14} /> نشر</button></div></div>}
+                  <div className="cs-ups">{ups.map(u => <div key={u.id} className={`cs-up ${u.by_staff ? (u.visible_to_client ? 'staff' : 'internal') : 'client'}`}><small>{u.by_staff ? (u.author_name || 'الفريق') : `الجهة — ${u.author_name || r.full_name}`}{u.by_staff && !u.visible_to_client && ' · داخلي'} · {fmt(u.created_at)}</small><p>{u.body}</p></div>)}</div>
+                  {canWrite && <div className="cs-upadd"><textarea value={upBody} onChange={e => setUpBody(e.target.value)} placeholder="تحديث للجهة أو ملاحظة داخلية…" /><div className="en-acts"><label className="cs-chk"><input type="checkbox" checked={upVisible} onChange={e => setUpVisible(e.target.checked)} /> يظهر للجهة ويُرسل بالبريد</label><button type="button" className="rm-btn" disabled={busy === 'up'} onClick={() => postUp(r)}><Icon name="send" size={14} /> نشر</button></div></div>}
                 </section>
 
                 {canWrite && (NEXT[r.status] || []).length > 0 && (
                   <section className="cs-sec"><h3><Icon name="flag" size={16} /> تغيير الحالة</h3>
-                    <label className="en-note">رسالة للعميل (اختياري — تُدرج في بريد الإشعار)<textarea value={note} onChange={e => setNote(e.target.value)} /></label>
-                    <div className="en-acts"><label className="cs-chk"><input type="checkbox" checked={notify} onChange={e => setNotify(e.target.checked)} /> إشعار العميل بالبريد</label>{(NEXT[r.status] || []).map(n => <button type="button" key={n.s} className={`rm-btn ${n.cls}`} disabled={busy === 'st'} onClick={() => setStatus(r, n.s)}>{n.l}</button>)}{r.status === 'quoted' && sentQ && <span className="rm-muted">العرض الإصدار {sentQ.version} بانتظار رد العميل.</span>}</div>
+                    <label className="en-note">رسالة للجهة (اختياري — تُدرج في بريد الإشعار)<textarea value={note} onChange={e => setNote(e.target.value)} /></label>
+                    <div className="en-acts"><label className="cs-chk"><input type="checkbox" checked={notify} onChange={e => setNotify(e.target.checked)} /> إشعار الجهة بالبريد</label>{(NEXT[r.status] || []).map(n => <button type="button" key={n.s} className={`rm-btn ${n.cls}`} disabled={busy === 'st'} onClick={() => setStatus(r, n.s)}>{n.l}</button>)}{r.status === 'quoted' && sentQ && <span className="rm-muted">العرض الإصدار {sentQ.version} بانتظار ردّ الجهة.</span>}</div>
                   </section>
                 )}
-                <div className="en-details"><span>آخر تحديث: {fmt(r.updated_at)}</span>{r.decided_at && <span>قرار العميل: {fmt(r.decided_at)}</span>}{r.completed_at && <span>الإنجاز: {fmt(r.completed_at)}</span>}</div>
+                <div className="en-details"><span>آخر تحديث: {fmt(r.updated_at)}</span>{r.decided_at && <span>قرار الجهة: {fmt(r.decided_at)}</span>}{r.completed_at && <span>الإنجاز: {fmt(r.completed_at)}</span>}</div>
               </div>
             )}
           </div>); })}

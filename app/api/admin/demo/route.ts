@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** P69 «غرفة العرض» — واجهة الطاقم (مدير المنصّة فقط):
+/** P69 «غرفة العرض» — واجهة الطاقم (مدير البوّابة فقط):
  *  GET                       → الحالة · الخطوات · مسار العرض · بطاقات العارضين (إن كان جاهزًا)
  *  POST {action:'build'}     → خطوة بناء واحدة (العميل يكرّر حتى done=true — حدود زمن الدوالّ)
  *  POST {action:'destroy', confirm:'المنطقة س'} → محو كل ما في «البيان» بترتيب التبعيات
@@ -23,7 +23,7 @@ async function ctx(req: Request) {
   const auth = req.headers.get('authorization') || ''; const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''; if (!token) return { error: bad('يلزم تسجيل الدخول', 401) };
   const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } }); const { data } = await userDb.auth.getUser(token); if (!data?.user) return { error: bad('جلسة غير صالحة', 401) };
   const { data: prof } = await userDb.from('profiles').select('role').eq('id', data.user.id).maybeSingle(); const role = String((prof as any)?.role || '').toUpperCase();
-  if (!ADMINS.includes(role)) return { error: bad('غير مصرّح — لمدير المنصّة فقط', 403) };
+  if (!ADMINS.includes(role)) return { error: bad('غير مصرّح — لمدير البوّابة فقط', 403) };
   return { db, user: { id: data.user.id, email: String(data.user.email || '').toLowerCase() } };
 }
 

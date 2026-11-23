@@ -41,7 +41,7 @@ export default function SignBoard() {
     <div className="sg-wrap">
       <WayBar lang="ar" />
       <header className="sg-head">
-        <div><span className="sg-kicker"><Icon name="check" size={14} /> بوابة أَثَر · P50 · سجلّ التوقيعات المعلّقة</span><h1>توقيعي <small>ما ينتظر توقيعي</small></h1>
+        <div><span className="sg-kicker"><Icon name="check" size={14} /> بوّابة أَثَر · P50 · سجلّ التوقيعات المعلّقة</span><h1>توقيعي <small>ما ينتظر توقيعي</small></h1>
           <p className="sg-lead">الذكاء يصوغ، والإنسان يوقّع. هذه الصفحة تجمع كل ما ينتظر إنسانًا في أَثَر ومِعيار — منذ متى، وأين يُوقَّع، وما يمكن توقيعه بلمسة.{reg ? ` ${SCOPE_AR[reg.scope]}.` : ''}</p></div>
         <div className="sg-acts"><button type="button" className="sg-btn ghost" onClick={() => void load(true)} data-testid="sg-refresh"><Icon name="refresh" size={14} /> تحديث</button><Link href="/hub" className="sg-btn ghost">صفحاتي</Link></div>
       </header>

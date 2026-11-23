@@ -41,12 +41,12 @@ export default function AdminAfterPage() {
       <div className="am-wrap">
         <RoomHead
         title={<>{P38_NAMES_AR.phase} — {P38_NAMES_AR.official}</>}
-        desc={<><p>الشهادة لا تُختم يوم انتهاء البرنامج؛ تُفتح. المتدرّب يكتب بكلماته بعد شهر وثلاثة أشهر وسنة. الطاقم هنا لا يقيّم أحدًا: يرى الأعداد، ويختار من بين ما أذن أصحابه اقتباسات تظهر مجهولةً على صفحة البرنامج حين تتكلم (من {AFTER_K})، ويطلب من الميسِّر خلاصة لمهندس البرنامج — مسودّةً لا قرارًا.</p></>}
+        desc={<><p>الشهادة لا تُختم يوم انتهاء البرنامج؛ تُفتح. المشارك يكتب بكلماته بعد شهر وثلاثة أشهر وسنة. الطاقم هنا لا يقيّم أحدًا: يرى الأعداد، ويختار من بين ما أذن أصحابه اقتباسات تظهر مجهولةً على صفحة البرنامج حين تتكلم (من {AFTER_K})، ويطلب من الميسِّر خلاصة لمهندس البرنامج — مسودّةً لا قرارًا.</p></>}
       />
         <PortalAdminTabs counts={{ '/admin/after': programs.reduce((n, p) => n + (p.candidates || []).length, 0) }} />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         <div className="rm-kpis" data-testid="aa-kpis"><span className="g"><b>{data?.total_written ?? 0}</b> محطة مكتوبة</span><span><b>{programs.length}</b> برنامجًا له محطات</span><span><b>{programs.filter(p => p.public).length}</b> صفحة برنامج تتكلم</span><span><b>{data?.offers_open ?? 0}</b> ورشة تطبيق معروضة</span><span className={data?.triggers_ready ? 'g' : ''}><b>{data?.triggers_ready ?? 0}</b> برنامج ينتظر ردًّا</span><span><b>{programs.reduce((n, p) => n + (p.candidates || []).length, 0)}</b> اقتباسًا ينتظر اختيارًا</span></div>
-        {programs.length === 0 && <div className="rm-card rm-empty" data-testid="aa-empty">لا محطات بعد. تُفتح المحطات وحدها بعد 16 يومًا من نهاية أي برنامج له تسجيلات معتمَدة (داخل كرون المتابعة اليومي)، ويكتبها المتدرّبون من «محطاتي».</div>}
+        {programs.length === 0 && <div className="rm-card rm-empty" data-testid="aa-empty">لا محطات بعد. تُفتح المحطات وحدها بعد 16 يومًا من نهاية أي برنامج له تسجيلات معتمَدة (داخل كرون المتابعة اليومي)، ويكتبها المشاركون من «محطاتي».</div>}
         {programs.map(p => <section key={p.program_id} className="rm-card" data-testid="aa-prog">
           <h3>{p.program_ar} <small>انتهى {p.end_day || '—'} · {p.opened} محطة مفتوحة · {p.written} مكتوبة · {p.witnessed} مشهودة · {p.public ? <span className="aa-pub">صفحته تتكلم</span> : <span className="aa-quiet">صفحته صامتة حتى {AFTER_K}</span>}</small></h3>
           <div className="aa-grid">

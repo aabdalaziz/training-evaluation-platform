@@ -46,13 +46,13 @@ export default function AdminInclusionPage() {
     <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
         <RoomHead
-        title={<>إتاحة الوصول — الشمول في البوابة نفسها</>}
+        title={<>إتاحة الوصول — الشمول في البوّابة نفسها</>}
         desc={<><p>هنا ثلاثة أشياء لا غير: نصوص «نسخة أبسط» يقترحها الذكاء الاصطناعي وتعتمدها أنت أو تحرّرها · بلاغات العوائق وحالتها · ما يوفّره كل برنامج فعلًا. لا ترى هنا ملف احتياج أي شخص؛ الأرقام مجمَّعة ولا رقم أقل من {data?.meta?.k || 5}.</p></>}
       />
         <PortalAdminTabs counts={{ '/admin/inclusion': pendingTexts + openReports }} />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         {data?.pending_sql && <div className="am-err" role="alert">لم يُنفَّذ ملف SQL الخاص بـ P32 بعد (عمود <code>programs.access_features</code>) — نفّذه أولًا ثم أعد التحميل.</div>}
-        {st && <div className="rm-kpis" data-testid="ai-kpis"><span><b>{st.people === null ? `< ${st.k}` : st.people}</b> كيّفوا البوابة</span><span className="g"><b>{st.programs_ready}</b> برامج مهيَّأة</span><span><b>{pendingTexts}</b> نصوص تنتظر</span><span><b>{openReports}</b> بلاغات مفتوحة</span><span><b>{st.reports.fixed}</b> أُصلحت</span>
+        {st && <div className="rm-kpis" data-testid="ai-kpis"><span><b>{st.people === null ? `< ${st.k}` : st.people}</b> كيّفوا البوّابة</span><span className="g"><b>{st.programs_ready}</b> برامج مهيَّأة</span><span><b>{pendingTexts}</b> نصوص تنتظر</span><span><b>{openReports}</b> بلاغات مفتوحة</span><span><b>{st.reports.fixed}</b> أُصلحت</span>
           {st.needs.length > 0 && <span>{st.needs.map((x: any) => `${NEED_LABEL[x.key as Need].ar} ${x.n}`).join(' · ')}</span>}<span className="am-cycle"><Link href="/accessibility" className="rm-btn ghost small">بيان الوصول</Link></span></div>}
         <div className="am-tabs" role="tablist">{([['texts', `نسخة أبسط (${pendingTexts})`], ['reports', `بلاغات الوصول (${openReports})`], ['programs', 'ما توفّره البرامج']] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} data-testid={`ai-tab-${k}`}>{l}</button>)}</div>
 
@@ -63,7 +63,7 @@ export default function AdminInclusionPage() {
             <div className="ai-texthead"><b>{SOURCE_AR[t.source] || t.source}</b> <code>{t.source_id}</code> · <span className="am-st" style={{ background: t.status === 'approved' ? '#2F6B66' : t.status === 'pending' ? '#D9A866' : '#8E7F8A' }}>{TEXT_ST[t.status]}</span> · <small>{fmt(t.created_at)} · {t.model || '—'}</small></div>
             <textarea rows={6} value={edit[t.id] ?? t.simple_ar} onChange={e => setEdit(x => ({ ...x, [t.id]: e.target.value }))} aria-label="النص الأبسط" />
             <div className="am-decide">
-              <button className="rm-btn" disabled={!!busy} onClick={async () => { const changed = edit[t.id] !== undefined && edit[t.id] !== t.simple_ar; const j = await post(changed ? { action: 'text', id: t.id, op: 'edit', simple_ar: edit[t.id] } : { action: 'text', id: t.id, op: 'approve' }); if (j) setOk('اعتُمدت النسخة الأبسط وصارت تُعرض'); }} data-testid="ai-approve">{edit[t.id] !== undefined && edit[t.id] !== t.simple_ar ? 'احفظ تحريري واعتمد' : 'اعتمد'}</button>
+              <button className="rm-btn" disabled={!!busy} onClick={async () => { const changed = edit[t.id] !== undefined && edit[t.id] !== t.simple_ar; const j = await post(changed ? { action: 'text', id: t.id, op: 'edit', simple_ar: edit[t.id] } : { action: 'text', id: t.id, op: 'approve' }); if (j) setOk('اعتُمدت النسخة الأبسط وصارت تُعرض'); }} data-testid="ai-approve">{edit[t.id] !== undefined && edit[t.id] !== t.simple_ar ? 'احفظ تحريري واعتمد' : 'اعتماد'}</button>
               {t.status !== 'rejected' && <button className="rm-btn ghost danger" disabled={!!busy} onClick={async () => { const j = await post({ action: 'text', id: t.id, op: 'reject' }); if (j) setOk('رُفضت النسخة — لن تُعرض'); }}>ارفض</button>}
             </div>
           </div>)}

@@ -1,14 +1,14 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /api/diploma/exit — توأمة البرامج والدبلومات + EXIT (هـ-1/5)
- *  GET  ?mine=1                         (متدرّب)  → «لو خرجت اليوم تحمل معك» لكلّ دبلوم مقيَّد فيه + حالة الخروج/العودة
+ *  GET  ?mine=1                         (مشارك)  → «لو خرجت اليوم تحمل معك» لكلّ دبلوم مقيَّد فيه + حالة الخروج/العودة
  *  GET  ?program=<id>                   (طاقم)    → نظرة الدبلوم: المقيَّدون · التقدّم · الإشارة المبكرة · الحالة
  *  GET  ?programs=1                     (طاقم)    → قائمة الدبلومات + البرامج (للربط)
  *  POST { action:'auto', program_id }                       (طاقم) → ملء الإتمام الآلي
  *  POST { action:'complete', program_id, unit_id, email, done, note } (طاقم)
  *  POST { action:'link', program_id, unit_id, linked_program_id }     (طاقم)
- *  POST { action:'exit', enrollment_id, reason_code, reason }         (طاقم أو المتدرّب لقيده) → شهادات + سجلّ + قيد خروج
- *  POST { action:'return', enrollment_id }                            (طاقم أو المتدرّب خلال المهلة)
+ *  POST { action:'exit', enrollment_id, reason_code, reason }         (طاقم أو المشارك لقيده) → شهادات + سجلّ + قيد خروج
+ *  POST { action:'return', enrollment_id }                            (طاقم أو المشارك خلال المهلة)
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';

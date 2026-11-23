@@ -142,7 +142,7 @@ export default function AdminOutreachPage() {
           <section className="rm-card" data-testid="out-test">
             <h3>إرسال تجريبي</h3>
             <p className="rm-muted">تُرسل رسالة قصيرة إلى العنوان أدناه عبر أول قناة تنجح حسب تفضيلاته — وتظهر النتيجة الحقيقية هنا وفي السجل.</p>
-            <div className="ou-filters"><input value={testTo} onChange={e => setTestTo(e.target.value)} placeholder="name@org.sa" dir="ltr" /><button className="rm-btn primary" onClick={test} disabled={!!busy} data-testid="out-test-send"><Icon name="send" size={13} /> {busy === 'test' ? 'جارٍ الإرسال…' : 'أرسل الآن'}</button></div>
+            <div className="ou-filters"><input value={testTo} onChange={e => setTestTo(e.target.value)} placeholder="name@org.sa" dir="ltr" /><button className="rm-btn primary" onClick={test} disabled={!!busy} data-testid="out-test-send"><Icon name="send" size={13} /> {busy === 'test' ? 'جارٍ الإرسال…' : 'إرسال الآن'}</button></div>
           </section>
         )}
         <p className="ou-foot">لا واتساب بلا موافقة صريحة، ولا رسائل في ساعات الهدوء، وما لم يُؤكَّد يبقى «أُرسلت» لا «وصلت» · P16 © 2026</p>

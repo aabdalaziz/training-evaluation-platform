@@ -26,7 +26,7 @@ async function authorize(req: Request) {
   if (uErr || !u?.user) return { error: bad('جلسة المستخدم غير صالحة', 401) };
   const { data: profile } = await userClient.from('profiles').select('role,full_name').eq('id', u.user.id).single();
   const role = String((profile as any)?.role || '').toUpperCase();
-  if (!ALLOWED.includes(role)) return { error: bad('غير مصرح — الاستعادة لمدير المنصة فقط', 403) };
+  if (!ALLOWED.includes(role)) return { error: bad('غير مصرح — الاستعادة لمدير البوّابة فقط', 403) };
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!service) return { error: bad('SUPABASE_SERVICE_ROLE_KEY غير مضبوط في Vercel — الاستعادة تحتاجه', 500) };
   return { user: u.user, role, name: String((profile as any)?.full_name || u.user.email || ''), db: createClient(SUPABASE_URL, service) };

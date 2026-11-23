@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     // نوع الاستجابات
-    // P49: END (نهاية البرنامج) · ALL (الأنواع الثلاثة) · REMOTE (استطلاع التعلم عن بُعد) · LINKS (روابط التقويم) · EMPTY_ROOMS (شعب بلا استجابات)
+    // P49: END (نهاية البرنامج) · ALL (الأنواع الثلاثة) · REMOTE (استبيان التعلم عن بُعد) · LINKS (روابط التقويم) · EMPTY_ROOMS (شعب بلا استجابات)
     if (!["DAILY", "FINAL", "END", "BOTH", "ALL", "REMOTE", "LINKS", "EMPTY_ROOMS"].includes(String(kind))) {
       return NextResponse.json(
         { success: false, error: "نوع استجابات غير مسموح" },
@@ -120,12 +120,12 @@ export async function POST(req: Request) {
     if (filters?.programId && filters.programId !== "ALL") {
       query = query.eq("program_id", filters.programId);
     }
-    // فلترة القاعة
+    // فلترة الشعبة
     if (filters?.classroomId && filters.classroomId !== "ALL") {
       query = query.eq("classroom_id", filters.classroomId);
     }
 
-    // فلترة المدرب
+    // فلترة المدرّب
     if (
       !filters?.classroomId &&
       filters?.trainerId &&
@@ -261,7 +261,7 @@ export async function POST(req: Request) {
 
 
 /* ============================================================ P49: تفريغ ما ليس «evaluations»
- *  REMOTE      → remote_learning_survey_responses (برنامج/قاعة/مدرّب/فترة على submitted_at)
+ *  REMOTE      → remote_learning_survey_responses (برنامج/شعبة/مدرّب/فترة على submitted_at)
  *  LINKS       → evaluation_links (برنامج · الموقوفة أو المغلقة فقط عند filters.onlyInactive) — الاستجابات تبقى (link_id يصبح null)
  *  EMPTY_ROOMS → classrooms بلا أيّ استجابة (evaluations/remote) وبلا روابط — داخل البرنامج المحدّد (قاعدة P49: لا حذف لشعبة فيها بيانات)
  */

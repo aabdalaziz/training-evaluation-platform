@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — الشهادات الرقمية والاعتماد: إصدار جماعي لمكملي البرنامج (حضور ≥80%)، إصدار مخصص، إلغاء، اعتماد مستويات المهارات، Excel،
+// بوّابة أَثَر — الشهادات الرقمية والاعتماد: إصدار جماعي لمكملي البرنامج (حضور ≥80%)، إصدار مخصص، إلغاء، اعتماد مستويات المهارات، Excel،
 // + P17 «المفتاح والتوقيع»: مفتاح Ed25519 (VC_SIGNING_KEY)، توقيع الشهادات غير الموقَّعة، تدوير المفتاح، سجل الإصدارات الموقَّعة
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
@@ -58,7 +58,7 @@ function CredentialsAdmin() {
   const recipients = useMemo(() => { const fromElig = elig.filter(e => picked.has(e.email)).map(e => ({ email: e.email, full_name: e.full_name })); const extra = manual.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean).map(s => { const m = s.match(/^(.*?)\s*<([^>]+)>$/); return m ? { email: m[2].toLowerCase(), full_name: m[1].trim() } : { email: s.toLowerCase(), full_name: '' }; }); return [...fromElig, ...extra]; }, [elig, picked, manual]);
   const issue = () => run('issue', async () => { const v = validateIssue(form, recipients.length); if (v) throw new Error(v); if (!window.confirm(`إصدار ${recipients.length} شهادة «${form.title_ar}»؟`)) return; const j = await api({ action: 'issue', form, recipients, notify }); setPicked(new Set()); setManual(''); if (form.program_id) await pickProgram(form.program_id); return `صدرت ${j.issued} شهادة${j.errors ? ' — أخطاء: ' + j.errors.join(' | ') : ''}.`; });
   const revoke = (c: Credential) => run('rv' + c.id, async () => { const reason = window.prompt('سبب الإلغاء (اختياري):') ?? null; if (reason === null) return; await api({ action: 'revoke', id: c.id, reason }); return 'أُلغيت الشهادة.'; });
-  const loadApprove = async () => { setApRows([]); setError(''); const email = apEmail.trim().toLowerCase(); if (!email) return; setApBusy('load'); try { const j = await api({ action: 'recompute', email }); const { data } = await db.from('portal_skill_levels').select('*').eq('user_id', j.user_id); const map = new Map(skills.map(s => [s.id, s])); setApRows(((data || []) as SkillLevelRow[]).map(r => ({ ...r, skill: map.get(r.skill_id) })).sort((a, b) => displayLevel(b) - displayLevel(a))); if (!(data || []).length) setNotice('لا أدلة مهارية لهذا المتعلم بعد.'); } catch (e: any) { setError(e.message); } setApBusy(''); };
+  const loadApprove = async () => { setApRows([]); setError(''); const email = apEmail.trim().toLowerCase(); if (!email) return; setApBusy('load'); try { const j = await api({ action: 'recompute', email }); const { data } = await db.from('portal_skill_levels').select('*').eq('user_id', j.user_id); const map = new Map(skills.map(s => [s.id, s])); setApRows(((data || []) as SkillLevelRow[]).map(r => ({ ...r, skill: map.get(r.skill_id) })).sort((a, b) => displayLevel(b) - displayLevel(a))); if (!(data || []).length) setNotice('لا أدلة مهارية لهذا المتعلّم بعد.'); } catch (e: any) { setError(e.message); } setApBusy(''); };
   const approve = async (r: SkillLevelRow, level: number | null) => { setApBusy(r.skill_id); try { const note = level ? (window.prompt('ملاحظة الاعتماد (اختياري):') ?? '') : ''; await api({ action: 'approve', email: apEmail.trim().toLowerCase(), skill_id: r.skill_id, level, note }); setApRows(rows => rows.map(x => x.skill_id === r.skill_id ? { ...x, approved_level: level, approved_note: note || null } : x)); setNotice(level ? `اعتُمد المستوى ${level}.` : 'أُلغي الاعتماد.'); } catch (e: any) { setError(e.message); } setApBusy(''); };
   const shown = useMemo(() => creds.filter(c => !q.trim() || `${c.full_name || ''} ${c.email} ${c.title_ar} ${c.verify_code}`.toLowerCase().includes(q.trim().toLowerCase())), [creds, q]);
   const pgMap = useMemo(() => new Map(progs.map(p => [p.id, p.name_ar])), [progs]);
@@ -69,7 +69,7 @@ function CredentialsAdmin() {
       <div className="en-wrap">
         <RoomHead
         title={<>الشهادات الرقمية واعتماد المهارات</>}
-        desc={<><p>شهادات قابلة للتحقق بصيغة Open Badges 3.0 تُصدر لمكملي البرامج (حضور ≥80%) أو كإثبات مهارة، وتظهر فورًا في الملف المهاري للمتعلم وصفحته العامة.</p></>}
+        desc={<><p>شهادات قابلة للتحقق بصيغة Open Badges 3.0 تُصدر لمكملي البرامج (حضور ≥80%) أو كإثبات مهارة، وتظهر فورًا في الملف المهاري للمتعلّم وصفحته العامة.</p></>}
       />
         <PortalAdminTabs />
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok">{notice}</div>}
@@ -122,7 +122,7 @@ function CredentialsAdmin() {
           </>}
         </div>}
         {tab === 'approve' && <div className="rm-card cr-form">
-          <div className="en-tools"><input dir="ltr" placeholder="بريد المتعلم…" value={apEmail} onChange={e => setApEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadApprove()} /><button type="button" className="rm-btn" disabled={apBusy === 'load'} onClick={loadApprove}><Icon name="search" size={14} /> عرض المهارات</button><span className="rm-muted">يُعاد حساب المستويات من الأدلة عند العرض. الاعتماد اليدوي يظهر للمتعلم بشارة «معتمد» ويتقدم على المحسوب.</span></div>
+          <div className="en-tools"><input dir="ltr" placeholder="بريد المتعلّم…" value={apEmail} onChange={e => setApEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadApprove()} /><button type="button" className="rm-btn" disabled={apBusy === 'load'} onClick={loadApprove}><Icon name="search" size={14} /> عرض المهارات</button><span className="rm-muted">يُعاد حساب المستويات من الأدلة عند العرض. الاعتماد اليدوي يظهر للمتعلّم بشارة «معتمد» ويتقدم على المحسوب.</span></div>
           {apRows.map(r => <div key={r.skill_id} className="cr-ap"><div><b>{r.skill ? skillName(r.skill, 'ar') : r.skill_id}</b><small>{r.skill?.code} · {r.skill ? domainLabel(r.skill.domain, 'ar') : ''} · محسوب {r.computed_level.toFixed(1)} ({confidenceLabel(r.confidence, 'ar')}) · {r.evidence.length} دليل{r.evidence.slice(0, 3).map((e, i) => <em key={i}> · {EVIDENCE_LABEL[e.kind].ar}{e.label ? ` ${e.label}` : ''}</em>)}</small></div><div className="cr-apacts"><span className="rm-muted">المعتمد:</span>{[1, 2, 3, 4, 5].map(n => <button type="button" key={n} className={r.approved_level === n ? 'on' : ''} disabled={!canWrite || apBusy === r.skill_id} onClick={() => approve(r, n)}>{n}</button>)}{r.approved_level && <button type="button" className="cr-x" disabled={!canWrite || apBusy === r.skill_id} onClick={() => approve(r, null)}>إلغاء</button>}<b>{levelName(displayLevel(r), 'ar')}</b></div></div>)}
         </div>}
       </div>

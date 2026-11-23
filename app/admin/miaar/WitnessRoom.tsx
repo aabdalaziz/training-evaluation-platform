@@ -37,7 +37,7 @@ export default function WitnessRoom({ auth }: { auth: () => Promise<Record<strin
     if (!d || !whisper.trim()) return; const H = await auth(); const j = await fetch('/api/admin/miaar/witness', { method: 'POST', headers: { ...H, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'whisper', session_id: d.session.id, text: whisper }) }).then((r) => r.json()).catch(() => null);
     if (j?.success) { setOk('أُرسلت الهمسة — تظهر للمتقدّم خلال ثوانٍ'); await load(); } else setErr(j?.error || 'تعذّر الإرسال');
   }
-  if (!sid) return <section className="am-card" data-testid="wr-none"><style>{CSS}</style><p className="wr-muted">افتح هذه الغرفة من لوحة المجموعة (لسان 09) → زرّ «غرفة الشاهد» بجانب المتعلّم.</p><a className="wr-btn" href="/admin/miaar/exit">← لوحة نهاية المستوى</a></section>;
+  if (!sid) return <section className="am-card" data-testid="wr-none"><style>{CSS}</style><p className="wr-muted">افتح هذه الغرفة من لوحة الشعبة (لسان 09) → زرّ «غرفة الشاهد» بجانب المتعلّم.</p><a className="wr-btn" href="/admin/miaar/exit">← لوحة نهاية المستوى</a></section>;
   if (err && !d) return <section className="am-card" role="alert" data-testid="wr-err"><style>{CSS}</style><p className="wr-err">{err}</p><a className="wr-btn" href="/admin/miaar/exit">← لوحة نهاية المستوى</a></section>;
   if (!d) return <section className="am-card"><style>{CSS}</style><p className="wr-muted">جارٍ القراءة…</p></section>;
   const f = d.frames[cur] || null; const s = d.summary; const integ = d.report?.integrity_status || null; const sealed = integ && integ !== 'pending';
@@ -54,7 +54,7 @@ export default function WitnessRoom({ auth }: { auth: () => Promise<Record<strin
           {/* م8-ج: إقرار الممتحن بالتعليمات */}
           {(d as any).instructions_ack?.version ? <> · <span className="wr-pill ok" data-testid="wr-ack">أقرّ بالتعليمات (إصدار {(d as any).instructions_ack.version}) {fmt((d as any).instructions_ack.at)}</span></> : <> · <span className="wr-pill warn" data-testid="wr-ack">بلا إقرار مسجَّل (جلسة سابقة لـ م8-ج)</span></>}</p>
       </div>
-      <div className="wr-acts">{d.invite?.id && <a className="wr-btn" href={`/admin/miaar/exit?invite=${encodeURIComponent(d.invite.id)}`}>← لوحة المجموعة</a>}{d.report?.access_code && <a className="wr-btn" href={`/miaar/result/${d.report.access_code}`} target="_blank" rel="noreferrer">بطاقة النتيجة</a>}</div>
+      <div className="wr-acts">{d.invite?.id && <a className="wr-btn" href={`/admin/miaar/exit?invite=${encodeURIComponent(d.invite.id)}`}>← لوحة الشعبة</a>}{d.report?.access_code && <a className="wr-btn" href={`/miaar/result/${d.report.access_code}`} target="_blank" rel="noreferrer">بطاقة النتيجة</a>}</div>
     </section>
 
     <section className="wr-grid">

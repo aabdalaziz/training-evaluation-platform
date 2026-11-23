@@ -46,7 +46,7 @@ export default function AdminMissionsPage() {
   function adopt(s: any) { setForm(f => ({ ...f, title_ar: s.title_ar, brief_ar: s.brief_ar, evidence_mode: s.evidence_mode, rubric: s.rubric, days_after: String(s.days_after), due_days: String(s.due_days), skills: f.skills.length ? f.skills : (suggest?.skill_ids || []).slice(0, 3) })); setOk('نُسخ المقترح إلى النموذج — راجعه ثم احفظ'); }
   async function loadPeople(tplId: string) { setAsgTpl(tplId); setPeople(null); setPicked(new Set()); const tpl = data?.templates.find(t => t.id === tplId); if (!tpl?.program_id) { setPeople([]); return; } const j = await fetch(`/api/missions?admin=1&completers=${encodeURIComponent(tpl.program_id)}&template=${encodeURIComponent(tplId)}`, { headers: await H() }).then(r => r.json()); setPeople(j.success ? j.people : []); }
   async function assign() { const emails = Array.from(picked).concat(manual.split(/[\s,;]+/).map(x => x.trim()).filter(Boolean)); const j = await post({ action: 'assign', template_id: asgTpl, emails }); if (j) { setOk(`أُسندت ${j.created} مهمة${j.skipped ? ` · تم تخطي ${j.skipped} (مُسندة سابقًا)` : ''}`); setManual(''); await loadPeople(asgTpl); await load(); } }
-  async function decide(m: Mission, decision: 'confirmed' | 'returned') { const j = await post({ action: 'decide', id: m.id, decision, note }); if (j) { setOk(decision === 'confirmed' ? 'تم التأكيد' : 'أُعيدت للمتدرب'); setSel(null); setNote(''); await load(); } }
+  async function decide(m: Mission, decision: 'confirmed' | 'returned') { const j = await post({ action: 'decide', id: m.id, decision, note }); if (j) { setOk(decision === 'confirmed' ? 'تم التأكيد' : 'أُعيدت للمشارك'); setSel(null); setNote(''); await load(); } }
   async function remind(m: Mission) { const j = await post({ action: 'remind', id: m.id }); if (j) setOk(j.mailed ? 'أُرسل التذكير' : `لم يُرسل البريد (تحقق من RESEND) — الرابط: ${j.url}`); await load(); }
   async function cycle(dry: boolean) { const j = await post({ action: 'cycle', dry }); if (j) { setOk(`${dry ? 'معاينة' : 'تنفيذ'}: إسناد ${j.assigned} · تذكير ${j.reminded} · انتهاء ${j.expired}${j.previews?.length ? ` — ${j.previews.slice(0, 3).map((p: any) => p.email).join('، ')}` : ''}`); if (!dry) await load(); } }
   const St = ({ s }: { s: Mission['status'] }) => <span className="am-st" style={{ background: STATUS_LABEL[s]?.color || '#8E7F8A' }}>{statusLabel(s, 'ar')}</span>;
@@ -58,7 +58,7 @@ export default function AdminMissionsPage() {
       <div className="am-wrap">
         <RoomHead
         title={<>مهمات في قلب العمل</>}
-        desc={<><p>بدل استبانة «هل طبّقت؟»: مهمة دقيقة بدليل حقيقي من بيئة العمل، معيار معلن، فحص أولي، وتأكيد المشرف بضغطة. كل دليل مؤكَّد يدخل الملف المهاري والتوأم والشهادة الحية — ويبني قاعدة أدلة انتقال الأثر.</p></>}
+        desc={<><p>بدل استبيان «هل طبّقت؟»: مهمة دقيقة بدليل حقيقي من بيئة العمل، معيار معلن، فحص أولي، وتأكيد المشرف بضغطة. كل دليل مؤكَّد يدخل الملف المهاري والتوأم والشهادة الحية — ويبني قاعدة أدلة انتقال الأثر.</p></>}
       />
         <PortalAdminTabs />
         {error && <div className="am-err">{error}</div>}{ok && <div className="am-ok">{ok}</div>}
@@ -68,7 +68,7 @@ export default function AdminMissionsPage() {
         {tab === 'board' && <div className="rm-card">
           <div className="am-filters">{(['all', 'assigned', 'submitted', 'confirmed', 'returned', 'expired'] as const).map(f => <button key={f} className={filter === f ? 'on' : ''} onClick={() => setFilter(f)}>{f === 'all' ? 'الكل' : STATUS_LABEL[f].ar} <small>{counts[f] || 0}</small></button>)}</div>
           {!missions.length && <div className="rm-empty">لا مهمات هنا بعد. أنشئ قالبًا ثم أسنده لمتمّي برنامج — أو انتظر الدورة اليومية (06:00) التي تُسند تلقائيًا بعد شهادة الإتمام.</div>}
-          {!!missions.length && <table className="rm-table"><thead><tr><th>المتدرب</th><th>المهمة</th><th>الدليل</th><th>الحالة</th><th>المهلة</th><th>الفحص</th><th>المشرف</th><th></th></tr></thead><tbody>
+          {!!missions.length && <table className="rm-table"><thead><tr><th>المشارك</th><th>المهمة</th><th>الدليل</th><th>الحالة</th><th>المهلة</th><th>الفحص</th><th>المشرف</th><th></th></tr></thead><tbody>
             {missions.map(m => { const dl = daysLeft(m.due_at); return <tr key={m.id} className={sel?.id === m.id ? 'sel' : ''}>
               <td><b>{m.full_name || '—'}</b><br /><small dir="ltr">{m.email}</small></td>
               <td>{m.title_ar}<br /><small>{programs.get(m.program_id || '') || '—'}</small></td>
@@ -86,7 +86,7 @@ export default function AdminMissionsPage() {
               <div><h4>المعيار والفحص الأولي ({sel.ai?.score ?? '—'}% · {sel.ai?.source === 'ai' ? 'ذكاء اصطناعي' : 'محلي'})</h4><ol>{sel.rubric.map((c, i) => <li key={i}>{c.c} <small className={sel.ai?.criteria?.[i]?.met}>{sel.ai?.criteria?.[i]?.met === 'yes' ? 'ورد' : sel.ai?.criteria?.[i]?.met === 'partly' ? 'جزئيًا' : 'لم يرد'}</small></li>)}</ol><p>{sel.ai?.feedback_ar}</p></div>
               <div><h4>الدليل ({modeLabel(sel.evidence_mode, 'ar')})</h4>{sel.evidence?.file_path && <p><a href={`/m/confirm-preview`} onClick={e => { e.preventDefault(); window.open(`/m/${sel.token}`, '_blank'); }}>الملف يُعرض في صفحة المهمة ↗</a></p>}{sel.evidence?.link && <p><a href={sel.evidence.link} target="_blank" rel="noopener noreferrer" dir="ltr">{sel.evidence.link}</a></p>}<blockquote>{sel.evidence?.text || sel.evidence?.caption || sel.evidence?.transcript || '—'}</blockquote></div>
             </div>
-            <div className="am-decide"><input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتدرب (مطلوبة عند الإعادة)" /><button className="rm-btn" disabled={!!busy} onClick={() => decide(sel, 'confirmed')}>أؤكد كطاقم</button><button className="rm-btn ghost" disabled={!!busy || note.trim().length < 5} onClick={() => decide(sel, 'returned')}>أعِد للمتدرب</button><button className="rm-btn ghost" onClick={() => setSel(null)}>إغلاق</button></div>
+            <div className="am-decide"><input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمشارك (مطلوبة عند الإعادة)" /><button className="rm-btn" disabled={!!busy} onClick={() => decide(sel, 'confirmed')}>أؤكد كطاقم</button><button className="rm-btn ghost" disabled={!!busy || note.trim().length < 5} onClick={() => decide(sel, 'returned')}>أعِد للمشارك</button><button className="rm-btn ghost" onClick={() => setSel(null)}>إغلاق</button></div>
             <small className="am-note">الأفضل أن يؤكد المشرف المباشر (وزن 0.85). تأكيد الطاقم مقبول حين لا مشرف — ويُسجَّل باسمك.</small>
           </div>}
         </div>}

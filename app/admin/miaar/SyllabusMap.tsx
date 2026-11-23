@@ -82,7 +82,7 @@ export default function SyllabusMap({ auth }: { auth: () => Promise<Record<strin
           <p className="sy-focus">{u.focus_ar}</p>
           <p className="sy-meta">{u.domains.map((x) => DOMAIN_AR[x] || x).join(' · ')}{u.descriptor_codes.length ? <> · <span dir="ltr">{u.descriptor_codes.join(', ')}</span></> : null}</p>
           {d.can_edit && <div className="sy-ua">
-            {u.status !== 'approved' && <button className="sy-btn ok" onClick={() => void setStatus(u, 'approved')} disabled={!!busy} data-testid="sy-approve">اعتمد</button>}
+            {u.status !== 'approved' && <button className="sy-btn ok" onClick={() => void setStatus(u, 'approved')} disabled={!!busy} data-testid="sy-approve">اعتماد</button>}
             {u.status === 'approved' && <button className="sy-btn" onClick={() => void setStatus(u, 'draft')} disabled={!!busy}>أعد إلى مسوَّدة</button>}
             {u.status !== 'retired' && <button className="sy-btn" onClick={() => void setStatus(u, 'retired')} disabled={!!busy}>أوقف</button>}
             <button className="sy-btn" onClick={() => setEdit({ ...u })} disabled={!!busy}>حرّر</button>
@@ -131,7 +131,7 @@ export default function SyllabusMap({ auth }: { auth: () => Promise<Record<strin
           <label className="full">الواصفات (رموز مفصولة بفاصلة — مثل LU-A1-01)<input dir="ltr" value={edit.descriptor_codes.join(', ')} onChange={(e) => setEdit({ ...edit, descriptor_codes: e.target.value.split(/[,\s]+/).filter(Boolean) })} /></label>
           <fieldset className="full"><legend>المجالات</legend>{Object.entries(DOMAIN_AR).map(([k, v]) => <label key={k} className="inl"><input type="checkbox" checked={edit.domains.includes(k)} onChange={() => setEdit({ ...edit, domains: edit.domains.includes(k) ? edit.domains.filter((x) => x !== k) : [...edit.domains, k] })} /> {v}</label>)}</fieldset>
         </div>
-        <div className="sy-acts"><button className="sy-btn ok" onClick={() => void saveEdit()} disabled={!!busy || edit.title_ar.trim().length < 2} data-testid="sy-e-save">احفظ</button><button className="sy-btn" onClick={() => setEdit(null)}>إلغاء</button></div>
+        <div className="sy-acts"><button className="sy-btn ok" onClick={() => void saveEdit()} disabled={!!busy || edit.title_ar.trim().length < 2} data-testid="sy-e-save">حفظ</button><button className="sy-btn" onClick={() => setEdit(null)}>إلغاء</button></div>
       </div>
     </div>}
     <p className="sy-foot">خريطة المنهج لا تغيّر مواصفة «عُبور» (exit-2026.11): العدد والأوزان وحدّ الاجتياز كما هي؛ التغيير في <b>أيّ</b> البنود تُسحب داخل كل خلية، وفي ما يُقرأ بعد الاختبار. الوسم الآلي اقتراح حتى يعتمده إنسان، وكل اعتماد في سجلّ التدقيق.</p>

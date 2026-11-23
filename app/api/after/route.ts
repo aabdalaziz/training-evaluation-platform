@@ -56,7 +56,7 @@ export async function GET(req: Request) {
   const db = svc(); if (!db) return bad('إعدادات الخادم غير مكتملة', 500);
   const sp = new URL(req.url).searchParams; const now = new Date();
   if (sp.get('meta') === '1') return NextResponse.json({ success: true, ...META }, { headers: { 'Cache-Control': 'public, max-age=300' } });
-  if (sp.get('program')) { const id = String(sp.get('program') || '').trim(); if (!UUID.test(id)) return bad('رقم البرنامج غير صالح'); const a = await programAfterOf(db, id, now); return NextResponse.json({ success: true, program_id: id, ...a, note_ar: a.shown ? 'من محطة الأشهر الثلاثة لخمسة متدرّبين مختلفين فأكثر — بالكلمات لا بالنسب؛ الاقتباسات اعتمدها إنسان من بين ما أذن أصحابه' : 'تتكلم الصفحة من خمسة متدرّبين' }, { headers: { 'Cache-Control': 'no-store' } }); }
+  if (sp.get('program')) { const id = String(sp.get('program') || '').trim(); if (!UUID.test(id)) return bad('رقم البرنامج غير صالح'); const a = await programAfterOf(db, id, now); return NextResponse.json({ success: true, program_id: id, ...a, note_ar: a.shown ? 'من محطة الأشهر الثلاثة لخمسة مشاركين مختلفين فأكثر — بالكلمات لا بالنسب؛ الاقتباسات اعتمدها إنسان من بين ما أذن أصحابه' : 'تتكلم الصفحة من خمسة مشاركين' }, { headers: { 'Cache-Control': 'no-store' } }); }
   if (sp.get('credential')) { const code = String(sp.get('credential') || '').trim().toUpperCase().slice(0, 40); const c = await chaptersForCredential(db, code); return NextResponse.json({ success: true, ...c }, { headers: { 'Cache-Control': 'no-store' } }); }
   const me = await who(req, db);
   if (sp.get('org')) { if (!me) return bad('سجّل الدخول', 401); const id = String(sp.get('org') || '').trim(); if (!UUID.test(id) || !(await memberOf(db, me, id))) return bad('ليست جهتك', 403); const admin = await orgAdminOf(db, me, id); return NextResponse.json({ success: true, org_id: id, ...(await orgAfterOf(db, id)), org_stations: await orgStationsOf(db, id, now, ORG_K), can_write: admin, meta: META.voices.org }, { headers: { 'Cache-Control': 'no-store' } }); }
@@ -79,7 +79,7 @@ export async function POST(req: Request) {
   if (action === 'witness_answer') { const r = await answerWitness(db, me, b.id, !!b.accept, b.text_ar, now); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, note_ar: b.accept ? 'وُقّعت شهادتك.' : 'اعتذرت — أُبلغ صاحب المحطة.' }); }
   if (action === 'doc') {
     const eid = String(b.enrollment_id || ''); if (!UUID.test(eid)) return bad('رقم التسجيل غير صالح');
-    const r = await issueAfterDoc(db, { id: me.id, email: me.email, name: me.name || 'متدرّب في أَثَر' }, eid, signerFromEnv(process.env, site), site, didWeb(site), () => randomCode(4), now); if (!r.ok) return bad(r.error);
+    const r = await issueAfterDoc(db, { id: me.id, email: me.email, name: me.name || 'مشارك في أَثَر' }, eid, signerFromEnv(process.env, site), site, didWeb(site), () => randomCode(4), now); if (!r.ok) return bad(r.error);
     return NextResponse.json({ success: true, code: r.code, verify_url: r.verify_url, note_ar: `صدرت وثيقة «${P38_NAMES_AR.doc}» ${r.code} — موقَّعة إلى محفظتك.` });
   }
   /* P39 — أصوات حول الشهادة */

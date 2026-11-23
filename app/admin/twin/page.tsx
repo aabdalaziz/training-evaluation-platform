@@ -53,7 +53,7 @@ export default function AdminTwinPage() {
         <PortalAdminTabs />
         {error && <div className="at-err">{error}</div>}
         <div className="at-bar2">
-          {data?.staff && <label>الجهة <select value={org} onChange={async e => { setOrg(e.target.value); await load(tok, e.target.value); }}><option value="">كل المتعلمين</option>{(data.organizations || []).map((o: any) => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>}
+          {data?.staff && <label>الجهة <select value={org} onChange={async e => { setOrg(e.target.value); await load(tok, e.target.value); }}><option value="">كل المتعلّمين</option>{(data.organizations || []).map((o: any) => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select></label>}
           <div className="rm-kpis"><span><b>{twin.members}</b> عضو</span><span><b>{twin.skills}</b> مهارة بأدلة</span><span className="rusty"><b>{twin.rusty_now}</b> صدئة الآن</span><span><b>{(data?.watchers || []).filter((w: any) => !w.unsubscribed_at).length}</b> جهة مشتركة في شهادات</span></div>
           <div className="at-tabs">{([['twin', 'توأم المؤسسة'], ['rusty', `إنذار الصدأ (${rusty.length})`], ['watchers', `مشتركو الشهادات (${(data?.watchers || []).length})`]] as const).map(([k, l]) => <button key={k} type="button" className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
         </div>
@@ -72,7 +72,7 @@ export default function AdminTwinPage() {
           {rusty.length > 0 && <table className="rm-table"><thead><tr><th>المهارة</th><th>العضو</th><th>المستوى</th><th>الطزاجة</th><th>الحالة</th><th>تصدأ خلال</th><th>آخر دليل</th></tr></thead><tbody>
             {rusty.map(({ l, t }, i) => <tr key={i}><td><b>{skills.get(l.skill_id)?.name_ar}</b><br /><small dir="ltr">{skills.get(l.skill_id)?.code}</small></td><td><small dir="ltr">{l.user_id.slice(0, 8)}…</small></td><td>{fmtLevel(t.level_now)}{t.approved ? ' ✓' : ''}</td><td>{t.freshness}%</td><td><span className="at-st" style={{ background: STATUS_LABEL[t.status].color }}>{STATUS_LABEL[t.status].ar}</span></td><td>{t.status === 'rusty' ? `صدئت منذ ${Math.abs(t.rust_in_days || 0)} يومًا` : `${t.rust_in_days} يومًا`}</td><td>{t.last_at ? fmt(t.last_at) : '—'}</td></tr>)}
           </tbody></table>}
-          <p className="at-note">الإجراء المقترح: أرسل للأعضاء المهددين رابط محاكاة مناسبة من <a href="/admin/sim">التدريب بالمحاكاة</a> أو أدرج المهارة في «كل يوم مهارة». يرى كل متعلم الإنذار نفسه في صفحة «توأمي».</p>
+          <p className="at-note">الإجراء المقترح: أرسل للأعضاء المهددين رابط محاكاة مناسبة من <a href="/admin/sim">التدريب بالمحاكاة</a> أو أدرج المهارة في «كل يوم مهارة». يرى كل متعلّم الإنذار نفسه في صفحة «توأمي».</p>
         </div>}
 
         {tab === 'watchers' && <div className="rm-card">

@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — نتائج مِعيار (من أَثَر، مستقلّ): تُكتب مباشرة من المحرّك لحظة اكتمال الاختبار، توزيع المستويات، المهارات الثلاث، الربط بالتسجيلات والبرامج الموصى بها، Excel
+// بوّابة أَثَر — نتائج مِعيار (من أَثَر، مستقلّ): تُكتب مباشرة من المحرّك لحظة اكتمال الاختبار، توزيع المستويات، المهارات الثلاث، الربط بالتسجيلات والبرامج الموصى بها، Excel
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -57,7 +57,7 @@ function PlacementsAdmin() {
       <div className="en-wrap">
         <RoomHead
         title={<>نتائج مِعيار — اختبار تحديد المستوى</>}
-        desc={<><p>كل نتيجة يكتبها مِعيار — من أَثَر لحظة اكتمال الاختبار وتُسجَّل كدليل مهارة (استماع · قراءة · قواعد ومفردات) في ملف المتعلم، وتوجّه التسكين في الشعب والتوصية بالبرامج.</p></>}
+        desc={<><p>كل نتيجة يكتبها مِعيار — من أَثَر لحظة اكتمال الاختبار وتُسجَّل كدليل مهارة (استماع · قراءة · قواعد ومفردات) في ملف المتعلّم، وتوجّه التسكين في الشعب والتوصية بالبرامج.</p></>}
         actions={<>
 <button type="button" className="rm-btn" onClick={sync} disabled={busy === 'sync'}><Icon name="refresh" size={14} /> {busy === 'sync' ? 'جارٍ التحديث…' : 'تحديث القائمة'}</button><a className="rm-btn ghost" href="/admin/miaar"><Icon name="arrow" size={14} /> فتح مِعيار</a>
         </>}

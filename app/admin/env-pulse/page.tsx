@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 'use client';
 /** P49-هـ — «نبض البيئة التدريبية» (/admin/env-pulse)
- *  يقرأ الاستبيان الختامي (END) عبر الدفعات ويُظهر: متوسّط كل قسم من أقسام رحلة المتدرّب · أدنى/أعلى 3 بنود ·
+ *  يقرأ الاستبيان الختامي (END) عبر الدفعات ويُظهر: متوسّط كل قسم من أقسام رحلة المشارك · أدنى/أعلى 3 بنود ·
  *  اتجاه التغيّر بين آخر دفعتين · «بند الأسبوع» = أضعف بند في آخر دفعة → يُسجَّل كمهمّة تحسين واحدة تُغلق بملاحظة.
  *  قواعد: k ≥ 5 · لا أسماء · الحساب في lib/evaluation/pulse.ts (خالص ومُختبَر)
  */
@@ -81,7 +81,7 @@ export default function PulsePage() {
       <RoomHead
         title={<>نبض البيئة التدريبية</>}
         kicker="أين تتسرّب الجودة؟ — من الاستقبال إلى الشهادة"
-        desc={<><p>يقرأ الاستبيان الختامي عبر الدفعات ويُظهر متوسّط كل قسم من رحلة المتدرّب، وأضعف البنود، واتجاه التغيّر بين آخر دفعتين. ثم يختار «بند الأسبوع» — أضعف بند في آخر دفعة — ليصبح مهمّة تحسين واحدة تُغلق بملاحظة. لا أرقام دون {K_MIN} استجابات، ولا أسماء.</p></>}
+        desc={<><p>يقرأ الاستبيان الختامي عبر الدفعات ويُظهر متوسّط كل قسم من رحلة المشارك، وأضعف البنود، واتجاه التغيّر بين آخر دفعتين. ثم يختار «بند الأسبوع» — أضعف بند في آخر دفعة — ليصبح مهمّة تحسين واحدة تُغلق بملاحظة. لا أرقام دون {K_MIN} استجابات، ولا أسماء.</p></>}
       />
 
       {error && <div className="pl-err" data-testid="pl-error">{error}</div>}
@@ -119,7 +119,7 @@ export default function PulsePage() {
 
               {/* الأقسام */}
               <section className="rm-card">
-                <div className="pl-ct"><Icon name="chart" size={16} /> رحلة المتدرّب — متوسّط كل قسم{pulse.trend.length ? ' · والتغيّر عن الدفعة السابقة' : ''}</div>
+                <div className="pl-ct"><Icon name="chart" size={16} /> رحلة المشارك — متوسّط كل قسم{pulse.trend.length ? ' · والتغيّر عن الدفعة السابقة' : ''}</div>
                 <ul className="pl-secs" data-testid="pl-sections">
                   {pulse.sections.map(s => { const tr = pulse.trend.find(t => t.section === s.name); return (
                     <li key={s.name} className="pl-secrow">

@@ -3,8 +3,8 @@
  *  POST { followup_id, mode: 'send'|'remind'|'test', test_email? }  — من لوحة الإدارة (Bearer <access_token> لمستخدم إداري)
  *  GET  ?key=<CRON_SECRET>  — التشغيل التلقائي اليومي (vercel.json): يرسل الحملات التي بلغ موعدها، ويذكّر بعد remind_after_days،
  *                            ثم يشغّل فحص مركز الإشعارات (notifications_scan) ويراسل الإدارة بالجديد،
- *                            ثم بريد المتدربين التلقائي (فتح التقييم النهائي · إصدار الشهادة) — TRAINEE_MAIL=0 للتعطيل
- *                            ثم تذكيرات جلسات البث المباشر لبوابة أَثَر (خلال 30 ساعة)
+ *                            ثم بريد المشاركين التلقائي (فتح التقييم النهائي · إصدار الشهادة) — TRAINEE_MAIL=0 للتعطيل
+ *                            ثم تذكيرات جلسات البث المباشر لبوّابة أَثَر (خلال 30 ساعة)
  *                            ثم نبض «الشهادة الحية» للمشتركين (أَثَر · P11): بريد مجمّع عند تغيّر مستوى/حالة مهارة (أسبوعيًا على الأكثر)
  *                            ثم إشعار «موقف اليوم» (Web Push · أَثَر · P13-ب) لكل اشتراك نشط — يعمل فقط إن كانت VAPID_* مضبوطة
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, (للـ Cron) CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL
@@ -113,7 +113,7 @@ export async function GET(req: Request) {
   // فحص الإشعارات اليومي (نفس الـ Cron — بلا حاجة لمهمة Cron إضافية)
   let notifications: any = null;
   if (!dry) { try { notifications = await runNotificationScan(db, { source: 'cron', site, email: url.searchParams.get('email') !== '0' }); } catch (e: any) { notifications = { ok: false, error: e?.message || String(e) }; } }
-  // بريد المتدربين التلقائي: فتح التقييم النهائي · إصدار الشهادة (TRAINEE_MAIL=0 للتعطيل · dry=1 للمعاينة)
+  // بريد المشاركين التلقائي: فتح التقييم النهائي · إصدار الشهادة (TRAINEE_MAIL=0 للتعطيل · dry=1 للمعاينة)
   let trainee_mail: any = null;
   try { trainee_mail = await runTraineeMail(db, site, { dry }); } catch (e: any) { trainee_mail = { ok: false, error: e?.message || String(e) }; }
   // تذكيرات جلسات البث المباشر (أَثَر · P6): الجلسات خلال 30 ساعة القادمة التي لم تُذكَّر بعد
@@ -163,13 +163,13 @@ export async function GET(req: Request) {
   /* P63 «يوم تخرّجي»: 🎓 «اليوم يومك» للخرّيج يوم end_date · «اكتب كلمة الوداع» للمدرّب قبلها بثلاثة أيام — داخل أَثَر، بلا إشعارات رجعية */
   let grad_days: any = null;
   try { grad_days = await runGradDays(db, { site, dry }); } catch (e: any) { grad_days = { ok: false, error: e?.message || String(e) }; }
-  /* P64 «أول يوم»: 🌅 «اليوم يومك الأول» للمتدرّب يوم start_date · «اكتب كلمة الاستقبال» للمدرّب قبلها بيوم · «سطرك ينتظر N» للخرّيج الذي أظهر سطره — داخل أَثَر؛ لا رجعية */
+  /* P64 «أول يوم»: 🌅 «اليوم يومك الأول» للمشارك يوم start_date · «اكتب كلمة الاستقبال» للمدرّب قبلها بيوم · «سطرك ينتظر N» للخرّيج الذي أظهر سطره — داخل أَثَر؛ لا رجعية */
   let first_days: any = null;
   try { first_days = await runFirstDays(db, { site, dry }); } catch (e: any) { first_days = { ok: false, error: e?.message || String(e) }; }
   /* P66 «أيام التدريب وفترات التطبيق»: بداية فترة التطبيق · التذكير الأسبوعي · «ما جرى في الميدان» للمدرّب · فتح الالتزام يوم العودة · أول/آخر يوم من التقويم */
   let room_calendar: any = null;
   try { room_calendar = await runRoomCalendar(db, { site, dry }); } catch (e: any) { room_calendar = { ok: false, error: e?.message || String(e) }; }
-  /* P66-ب «محطّة المستوى»: أول يوم من الأسبوع الأخير لكل مستوى — إشعار واحد لكل متدرّب (level_close:<enr>:<level>) */
+  /* P66-ب «محطّة المستوى»: أول يوم من الأسبوع الأخير لكل مستوى — إشعار واحد لكل مشارك (level_close:<enr>:<level>) */
   let level_close: any = null;
   try { level_close = await runLevelClose(db, new Date(), { site, dry }); } catch (e: any) { level_close = { ok: false, error: e?.message || String(e) }; }
   let self_letters: any = null;
@@ -228,10 +228,10 @@ export async function GET(req: Request) {
   // P30 عهد الممارس وجهته: المهل نفسها — انقضاء · «خطوة … وقعت» · منتصف السنة · المراجعة · الطيّ
   let org_pair: any = null;
   try { org_pair = await runOrgPair(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { org_pair = { ok: false, error: e?.message || String(e) }; }
-  // P31 هيئة أَثَر: دعوة مدربي منصة التقييم القائمين (مرة لكل بريد) · تذكير سنوي بتحديث السيرة
+  // P31 هيئة أَثَر: دعوة مدرّبي منصة التقييم القائمين (مرة لكل بريد) · تذكير سنوي بتحديث السيرة
   let directory: any = null;
   try { directory = await runDirectory(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { directory = { ok: false, error: e?.message || String(e) }; }
-  // نبضة الكرون اليومي (لصفحة صحة المنصة)
+  // نبضة الكرون اليومي (لصفحة صحة البوّابة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
   return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, level_close, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory });
 }

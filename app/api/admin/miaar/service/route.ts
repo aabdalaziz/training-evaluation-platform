@@ -4,7 +4,7 @@
  *  GET                      → سجلّ الخدمة (الطلبات مع عدّاداتها) + المستويات + فحص السلال لكل مستوى
  *  GET ?order=<id>          → طلب واحد + لوحته (الصفوف · العدّاد) + تقرير الجهة + المعيار المرجعي
  *  POST {action}
- *    create       {client_name, client_contact?, level, opens_at?, expires_at?, max_seats?, lang?, identity_mode?, pin?|auto_pin?, note?} → الدعوة + رابط بوابة الجهة (مرة واحدة) + الرمز
+ *    create       {client_name, client_contact?, level, opens_at?, expires_at?, max_seats?, lang?, identity_mode?, pin?|auto_pin?, note?} → الدعوة + رابط بوّابة الجهة (مرة واحدة) + الرمز
  *    status       {order_id, status}                 → open|rating|delivered|invoiced|cancelled (بتوقيع بشري)
  *    client_link  {order_id}                         → رابط جديد لبوابة الجهة (يُبطل القديم)
  *    revoke_link  {order_id}
@@ -82,8 +82,8 @@ export async function POST(req: Request) {
   }
   if (!isId(b.order_id)) return bad('طلب غير صالح');
   if (action === 'status') { const r = await setOrderStatus(db, b.order_id, b.status, user.id); if (!r.ok) return bad(r.error); await audit(db, user, 'miaar_service_status', b.order_id, `حالة الخدمة → ${String(b.status)}`, { status: b.status }); return NextResponse.json({ success: true, order: r.order }, { headers: NO }); }
-  if (action === 'client_link') { const r = await rotateClientToken(db, b.order_id, user.id, site); if (!r.ok) return bad(r.error); await audit(db, user, 'miaar_service_client_link', b.order_id, 'رابط بوابة الجهة', {}); return NextResponse.json({ success: true, client_url: r.client_url }, { headers: NO }); }
-  if (action === 'revoke_link') { const ok = await revokeClientToken(db, b.order_id, user.id); if (!ok) return bad('تعذّر الإبطال'); await audit(db, user, 'miaar_service_revoke_link', b.order_id, 'إبطال رابط بوابة الجهة', {}); return NextResponse.json({ success: true }, { headers: NO }); }
+  if (action === 'client_link') { const r = await rotateClientToken(db, b.order_id, user.id, site); if (!r.ok) return bad(r.error); await audit(db, user, 'miaar_service_client_link', b.order_id, 'رابط بوّابة الجهة', {}); return NextResponse.json({ success: true, client_url: r.client_url }, { headers: NO }); }
+  if (action === 'revoke_link') { const ok = await revokeClientToken(db, b.order_id, user.id); if (!ok) return bad('تعذّر الإبطال'); await audit(db, user, 'miaar_service_revoke_link', b.order_id, 'إبطال رابط بوّابة الجهة', {}); return NextResponse.json({ success: true }, { headers: NO }); }
   if (action === 'sign') { const r = await signProctor(db, b.order_id, b.name, `staff:${user.id}`); if (!r.ok) return bad(r.error); await audit(db, user, 'miaar_service_sign', b.order_id, 'ختم المراقب', { name: b.name }); return NextResponse.json({ success: true, order: r.order }, { headers: NO }); }
   return bad('إجراء غير معروف');
 }

@@ -82,7 +82,7 @@ export async function POST(req: Request) {
     const m = await byToken(db, 'confirm_token', String(body.confirm_token || '')); if (!m) return bad('رابط غير صالح', 404);
     if (m.status !== 'submitted') return bad(m.status === 'confirmed' ? 'سبق تأكيد هذه المهمة' : 'لا يوجد دليل مُرسل بعد');
     const name = clean(body.name, 120); if (name.length < 2) return bad('اكتب اسمك');
-    const note = clean(body.note, 600); if (action === 'return' && note.length < 5) return bad('اكتب ملاحظة قصيرة للمتدرب عند الإعادة');
+    const note = clean(body.note, 600); if (action === 'return' && note.length < 5) return bad('اكتب ملاحظة قصيرة للمشارك عند الإعادة');
     const r = await decideMission(db, m, action === 'confirm' ? 'confirmed' : 'returned', { name, note }, site());
     const { token: _t, confirm_token: _c, supervisor_email: _s, ...rest } = r;
     return NextResponse.json({ success: true, mission: rest });

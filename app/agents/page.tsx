@@ -27,7 +27,7 @@ function Inner() {
 
       <section className="gl-card gl-mcp" id="mcp" data-testid="mcp-section">
         <div className="gl-livehead"><h2><Icon name="link" size={16} /> سفارة أَثَر — خادم MCP رسمي</h2><span>Model Context Protocol · 2026-07-28 + توافق خلفي</span></div>
-        <p>لا تحتاج برمجة خاصة بعد اليوم: أي مساعد يدعم MCP (ChatGPT · Claude · Cursor · وكلاء جهتك) يضيف أَثَر بلصق رابط واحد — فيرى الأدوات نفسها، ويتحقق من الشهادات، ويقرأ <b>مؤشر الأداء</b> من المرصد، ويطلب عرض سعر ينتظر إنسانًا. والمتعلم يمنح مساعده <b>أدوات «أنا»</b> (محفظتي · موقف اليوم معي · مهامي) بشاشة موافقة عربية ونطاقات دقيقة يبطلها متى شاء من <Link href="/me/agents">وكلائي</Link>.</p>
+        <p>لا تحتاج برمجة خاصة بعد اليوم: أي مساعد يدعم MCP (ChatGPT · Claude · Cursor · وكلاء جهتك) يضيف أَثَر بلصق رابط واحد — فيرى الأدوات نفسها، ويتحقق من الشهادات، ويقرأ <b>مؤشر الأداء</b> من المرصد، ويطلب عرض سعر ينتظر إنسانًا. والمتعلّم يمنح مساعده <b>أدوات «أنا»</b> (محفظتي · موقف اليوم معي · مهامي) بشاشة موافقة عربية ونطاقات دقيقة يبطلها متى شاء من <Link href="/me/agents">وكلائي</Link>.</p>
         <div className="gl-urls">
           <div><small>مفوَّض (تفويض شخصي OAuth 2.1 أو مفتاح جهة)</small><code dir="ltr">{site}/mcp</code><button type="button" className="pt-btn light small" onClick={() => { navigator.clipboard?.writeText(`${site}/mcp`); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>{copied ? 'نُسخ' : 'نسخ'}</button></div>
           <div><small>عام بلا هوية (اكتشاف · تحقق · مؤشر الأداء)</small><code dir="ltr">{site}/mcp/public</code></div>

@@ -1,9 +1,9 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /api/copilot — «الميسِّر الحي» للجلسات المباشرة (أَثَر · P13-ب)
- *  يصل إليه: موظفو البوابة، أو مدرب الجلسة (trainers.email = بريد المستخدم و portal_sessions.trainer_id = trainers.id)، أو من أنشأ الجلسة.
+ *  يصل إليه: موظفو البوّابة، أو مدرّب الجلسة (trainers.email = بريد المستخدم و portal_sessions.trainer_id = trainers.id)، أو من أنشأ الجلسة.
  *  GET  ?id=<session>                                   → { session, pulse, suggestions, notes, log, memo, skills }
- *  POST { action:'accept',  session_id, suggestion }    → تنفيذ مقترح: إنشاء نشاط (activity) أو تذكير الغائبين (remind) — بضغطة واحدة، والقرار للمدرب
+ *  POST { action:'accept',  session_id, suggestion }    → تنفيذ مقترح: إنشاء نشاط (activity) أو تذكير الغائبين (remind) — بضغطة واحدة، والقرار للمدرّب
  *  POST { action:'dismiss', session_id, code }          → تجاهل مقترح (لا يعود في هذه الجلسة)
  *  POST { action:'note',    session_id, text }          → ملاحظة لحظية («لحظة مهمة») تدخل المحضر
  *  POST { action:'memo',    session_id }                → توليد «محضر الأثر» (محلي + تحسين بالذكاء الاصطناعي) كمسودة
@@ -59,7 +59,7 @@ async function snapshot(db: any, s: LiveSession) {
     db.from('portal_session_memos').select('*').eq('session_id', s.id).maybeSingle(),
   ]);
   const log = ((logRows || []) as any[]);
-  // جمهور الجلسة: المسجّلون، وإن كانت جلسة شعبة/برنامج فالمتدربون المقبولون
+  // جمهور الجلسة: المسجّلون، وإن كانت جلسة شعبة/برنامج فالمشاركون المقبولون
   let audience = registered || 0;
   if (s.classroom_id) { const { count } = await db.from('portal_enrollments').select('id', { count: 'exact', head: true }).eq('classroom_id', s.classroom_id).eq('status', 'approved'); audience = Math.max(audience, count || 0); }
   else if (s.program_id) { const { count } = await db.from('portal_enrollments').select('id', { count: 'exact', head: true }).eq('program_id', s.program_id).eq('status', 'approved'); audience = Math.max(audience, count || 0); }

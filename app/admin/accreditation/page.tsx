@@ -26,7 +26,7 @@ export default function AdminAccreditationPage() {
   return (
     <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
-        <header className="am-head"><div><span className="am-kicker"><Icon name="award" size={14} /> بوابة أَثَر · P48</span><h1>{P48_NAMES_AR.file} — {P48_NAMES_AR.official}</h1><p>{P48_NAMES_AR.motto}. الملف يجمع أدلته من كل ما اعتُمد في أَثَر ويضعها تحت معاييرها الفرعية ({P48_NAMES_AR.pas} — {P48_NAMES_AR.body_ar})؛ المصمّم يكتب الفقرات ويوقّعها، والطاقم يرى الصورة الكاملة ويحدّث نصوص المعايير من هنا.</p></div>
+        <header className="am-head"><div><span className="am-kicker"><Icon name="award" size={14} /> بوّابة أَثَر · P48</span><h1>{P48_NAMES_AR.file} — {P48_NAMES_AR.official}</h1><p>{P48_NAMES_AR.motto}. الملف يجمع أدلته من كل ما اعتُمد في أَثَر ويضعها تحت معاييرها الفرعية ({P48_NAMES_AR.pas} — {P48_NAMES_AR.body_ar})؛ المصمّم يكتب الفقرات ويوقّعها، والطاقم يرى الصورة الكاملة ويحدّث نصوص المعايير من هنا.</p></div>
           <nav className="am-links" aria-label="روابط"><Link href="/admin/reports" className="am-link"><Icon name="arrow" size={14} /> محور التقارير</Link><Link href="/dashboard" className="am-link"><Icon name="home" size={14} /> لوحة التحكّم</Link></nav></header>
         <PortalAdminTabs />
         {tok === null ? <p className="am-muted">…</p> : <AccredAdmin token={token} />}

@@ -3,7 +3,7 @@
  * P66-ب «هيكل الدبلوم» — المستويات · المقرّرات · الشُّعب · أساتذة المواد · جدول المحاضرات · الفترات الخاصّة
  *  GET  /api/diploma?program=<id>            → الهيكل كاملًا (للطاقم ومنسّق الشعبة وأساتذة المواد: قراءة؛ التعديل للطاقم والمنسّق)
  *  GET  /api/diploma?list=1                  → برامجي التي أرى هيكلها (اختيار البرنامج)
- *  GET  /api/diploma?today=1                 → «ماذا عندي اليوم؟» (متدرّب أو أستاذ) — نصّ واحد + البنود
+ *  GET  /api/diploma?today=1                 → «ماذا عندي اليوم؟» (مشارك أو أستاذ) — نصّ واحد + البنود
  *  GET  /api/diploma?corridor=<session_id>   → «الممرّ»: بطاقة الشعبة القادمة لأستاذ المحاضرة (k ≥ 5، بلا أسماء)
  *  POST { action:'course', program_id, unit_id, level_no?, trainer_id?, code? | levels_count }     المقرّر: المستوى/أستاذ المادة/الرمز
  *  POST { action:'slot_save', program_id, id?, unit_id, classroom_id, trainer_id?, weekday, period_no, starts_at, minutes, from_day, to_day, room_ar?, provider? } ← يولّد المحاضرات القادمة
@@ -12,7 +12,7 @@
  *  POST { action:'suggest', program_id, level_no, weekdays:[..], times:[{period_no,starts_at,minutes}], from_day, to_day, sections?:[..], per_week? } → اقتراح (لا يُحفظ)
  *  POST { action:'adopt', program_id, proposed:[..] } → اعتماد الاقتراح (حفظ + توليد)
  *  POST { action:'substitutes', program_id, slot_id, day } · { action:'substitute', program_id, slot_id, day, trainer_id } → البديل بلمسة
- *  POST { action:'move_request', program_id, to_classroom?, reason_ar }  (المتدرّب) · { action:'move_decide', program_id, id, status, note_ar?, to_classroom? } (الطاقم/المنسّق)
+ *  POST { action:'move_request', program_id, to_classroom?, reason_ar }  (المشارك) · { action:'move_decide', program_id, id, status, note_ar?, to_classroom? } (الطاقم/المنسّق)
  *  المصادقة: Bearer. الحدّ: 60 كتابة/ساعة.
  */
 import { NextResponse } from 'next/server';

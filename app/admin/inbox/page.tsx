@@ -1,6 +1,6 @@
 'use client';
 
-// صندوق رسائل البوابة (أَثَر) — قراءة ومعالجة رسائل «تواصل معنا»
+// صندوق رسائل البوّابة (أَثَر) — قراءة ومعالجة رسائل «تواصل معنا»
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
@@ -79,7 +79,7 @@ export default function InboxPage() {
                   {r.handled_at && <span><Icon name="check" size={13} /> عولجت <bdi>{fmt(r.handled_at)}</bdi></span>}
                 </div>
                 <div className="ib-acts">
-                  <a className="rm-btn" href={`mailto:${r.email}?subject=${encodeURIComponent('رد من بوابة أَثَر: ' + subjectLabel(r.subject))}`}><Icon name="mail" size={15} /> الرد بالبريد</a>
+                  <a className="rm-btn" href={`mailto:${r.email}?subject=${encodeURIComponent('رد من بوّابة أَثَر: ' + subjectLabel(r.subject))}`}><Icon name="mail" size={15} /> الرد بالبريد</a>
                   {r.status !== 'handled' && <button type="button" className="rm-btn ok" disabled={busy === r.id} onClick={() => setStatus(r.id, 'handled')}><Icon name="check" size={15} /> تمّت المعالجة</button>}
                   {r.status !== 'spam' && <button type="button" className="rm-btn ghost" disabled={busy === r.id} onClick={() => setStatus(r.id, 'spam')}><Icon name="flag" size={15} /> مزعجة</button>}
                   {r.status !== 'new' && <button type="button" className="rm-btn ghost" disabled={busy === r.id} onClick={() => setStatus(r.id, 'new')}><Icon name="refresh" size={15} /> إعادة إلى جديدة</button>}

@@ -58,7 +58,7 @@ export default function HealthPage() {
     <div className="he rm-page" dir="rtl">
       <style>{CSS}</style>
       <RoomHead
-        title={<>صحة المنصة — هل كل شيء يعمل؟</>}
+        title={<>صحة البوّابة — هل كل شيء يعمل؟</>}
         desc={<><p>فحص فوري للإعدادات والمهام المجدولة والبريد وسلامة البيانات، بلغة واضحة: ما الذي يعمل، ما الذي يتعطل عند غيابه، وأين تصلحه. عند اكتشاف عطل يُضاف تنبيه إلى الجرس تلقائيًا ويُحل عند زواله.</p></>}
         actions={<>
           <button className="rm-btn primary" disabled={busy} onClick={run}><Icon name="refresh" size={16} /> {busy ? 'جارٍ الفحص…' : 'أعد الفحص'}</button>
@@ -73,7 +73,7 @@ export default function HealthPage() {
         <section className={`he-hero ${s.status}`}>
           <div className="he-score"><b>{s.score}</b><span dir="ltr">/100</span></div>
           <div className="he-hero-txt">
-            <h2>{s.status === 'ok' ? 'المنصة سليمة' : s.status === 'warn' ? 'تعمل مع تنبيهات' : 'يوجد عطل يحتاج تدخلًا'}</h2>
+            <h2>{s.status === 'ok' ? 'البوّابة سليمة' : s.status === 'warn' ? 'تعمل مع تنبيهات' : 'يوجد عطل يحتاج تدخلًا'}</h2>
             <p>{s.bad} عطل · {s.warn} تنبيه · {s.ok} فحص سليم · آخر فحص <bdi>{new Date(rep!.generatedAt).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { timeZone: 'Asia/Riyadh' })}</bdi>{rep!.alerts ? ` · الجرس: +${rep!.alerts.inserted} / حُل ${rep!.alerts.resolved}` : ''}</p>
           </div>
           <label className="he-toggle he-noprint"><input type="checkbox" checked={onlyIssues} onChange={e => setOnlyIssues(e.target.checked)} /> المشكلات فقط</label>
@@ -96,7 +96,7 @@ export default function HealthPage() {
         </div>
       </section>
 
-      {busy && !rep && <div className="rm-card rm-empty"><b>جارٍ فحص المنصة…</b></div>}
+      {busy && !rep && <div className="rm-card rm-empty"><b>جارٍ فحص البوّابة…</b></div>}
       {grouped.map(({ g, items }) => (
         <section className="rm-card" key={g}>
           <h3><Icon name={g === 'env' ? 'settings' : g === 'cron' ? 'clock' : g === 'mail' ? 'mail' : g === 'ai' ? 'star' : 'folder'} size={16} /> {GROUP_LABEL[g]} <small><bdi dir="ltr">{items.filter(i => i.status === 'ok').length}/{items.length}</bdi> سليم</small></h3>
@@ -114,7 +114,7 @@ export default function HealthPage() {
       {rep && grouped.length === 0 && <div className="rm-card rm-empty"><Icon name="check" size={34} /><b>لا توجد مشكلات</b><span>كل الفحوصات سليمة.</span></div>}
       {rep && (
         <footer className="he-foot">
-          قاعدة البيانات: {rep.raw?.db?.ok ? `${rep.raw.db.latencyMs} ms` : 'غير متاحة'} · برامج {rep.raw?.counts?.programs} (نشطة {rep.raw?.counts?.programs_active}) · قاعات {rep.raw?.counts?.classrooms} · مدربون {rep.raw?.counts?.trainers} · تقييمات {rep.raw?.counts?.evaluations} · شهادات {rep.raw?.counts?.certificates} · مؤشرات {rep.raw?.counts?.outcome_kpis}
+          قاعدة البيانات: {rep.raw?.db?.ok ? `${rep.raw.db.latencyMs} ms` : 'غير متاحة'} · برامج {rep.raw?.counts?.programs} (نشطة {rep.raw?.counts?.programs_active}) · شُعب {rep.raw?.counts?.classrooms} · مدرّبون {rep.raw?.counts?.trainers} · تقييمات {rep.raw?.counts?.evaluations} · شهادات {rep.raw?.counts?.certificates} · مؤشرات {rep.raw?.counts?.outcome_kpis}
         </footer>
       )}
     </div>

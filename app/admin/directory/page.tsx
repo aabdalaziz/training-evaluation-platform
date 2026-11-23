@@ -3,7 +3,7 @@
 /**
  * إدارة أَثَر — هيئة أَثَر (P31): لوحة اعتماد السير (بانتظار · معتمدة · تعديلات بانتظار المراجعة · موقوفة) مع المعاينة الكاملة والصورة وحقول الطاقم،
  *  قرار الاعتماد (ينشر الصورة ويصدر شهادة ATH-EX/ATH-TR) · طلب تعديلات · إيقاف/إعادة · عقود التعاون ATH-CO (اقتراح · تعديل · إنجاز · تسوية · إلغاء) · الطلبات الممهورة بأعضاء الهيئة
- *  · دعوات مدربي منصة التقييم القائمين (معاينة ثم تنفيذ). الإنسان يعتمد دائمًا — لا ترتيب ولا نجوم.
+ *  · دعوات مدرّبي منصة التقييم القائمين (معاينة ثم تنفيذ). الإنسان يعتمد دائمًا — لا ترتيب ولا نجوم.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -51,12 +51,12 @@ export default function AdminDirectoryPage() {
       <div className="am-wrap">
         <RoomHead
         title={<>هيئة أَثَر — الاعتماد وعقود التعاون</>}
-        desc={<><p>سيرة العضو بكلماته، و«ما شهده أَثَر» من السجلات. الطاقم يعتمد ويصدر شهادة التوثيق (ATH-EX للخبير · ATH-TR للمدرب)، ويقترح عقد تعاون على كل مهمة (ATH-CO) — الأجر لكل مشروع ولا يراه إلا الطرفان.</p></>}
+        desc={<><p>سيرة العضو بكلماته، و«ما شهده أَثَر» من السجلات. الطاقم يعتمد ويصدر شهادة التوثيق (ATH-EX للخبير · ATH-TR للمدرّب)، ويقترح عقد تعاون على كل مهمة (ATH-CO) — الأجر لكل مشروع ولا يراه إلا الطرفان.</p></>}
       />
         <PortalAdminTabs />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         {st && <div className="rm-kpis"><span><b>{st.total}</b> سيرة</span><span><b>{st.submitted}</b> بانتظار الاعتماد</span><span className="g"><b>{st.approved}</b> عضوًا معتمدًا</span><span><b>{st.review_pending}</b> تعديلات للمراجعة</span><span><b>{st.engagements_proposed}</b> عقد مقترح · <b>{st.engagements_active}</b> جارٍ</span><span><b>{st.requests_new}</b> طلب جديد</span>
-          <span className="am-cycle"><button className="rm-btn ghost small" disabled={!!busy} onClick={() => invite(true)}>معاينة دعوات المدربين</button><button className="rm-btn small" disabled={!!busy} onClick={() => { if (confirm('إرسال الدعوات والتذكيرات الآن؟')) invite(false); }}>نفّذ الآن</button></span></div>}
+          <span className="am-cycle"><button className="rm-btn ghost small" disabled={!!busy} onClick={() => invite(true)}>معاينة دعوات المدرّبين</button><button className="rm-btn small" disabled={!!busy} onClick={() => { if (confirm('إرسال الدعوات والتذكيرات الآن؟')) invite(false); }}>نفّذ الآن</button></span></div>}
         <div className="am-tabs" role="tablist">{([['profiles', 'السير'], ['engagements', 'عقود التعاون'], ['requests', 'الطلبات']] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
 
         {tab === 'profiles' && (<div className="am-grid2">
@@ -70,7 +70,7 @@ export default function AdminDirectoryPage() {
           <div className="rm-card" aria-live="polite">
             {!sel ? <div className="rm-empty">اختر سيرة لمعاينتها كاملة والقرار فيها.</div> : (<div data-testid="ad-detail">
               <div className="ad-head">{sel.photo_private_url || sel.photo_public_url ? <img src={sel.photo_private_url || sel.photo_public_url} alt={`صورة ${sel.name_ar}`} className="ad-photo" /> : <div className="ad-photo none">لا صورة</div>}
-                <div><h3>{sel.name_ar} {sel.name_en && <small dir="ltr">{sel.name_en}</small>}</h3><p className="ad-sub">{sel.title_ar} · {sel.city || '—'} · {(sel.faces || []).map((f: string) => data.faces_ar[f]).join(' + ')}</p><p className="ad-sub">{sel.email} · أُنشئت {fmt(sel.created_at)}{sel.legacy_trainer_id && ' · مدرب في منصة التقييم'}</p>
+                <div><h3>{sel.name_ar} {sel.name_en && <small dir="ltr">{sel.name_en}</small>}</h3><p className="ad-sub">{sel.title_ar} · {sel.city || '—'} · {(sel.faces || []).map((f: string) => data.faces_ar[f]).join(' + ')}</p><p className="ad-sub">{sel.email} · أُنشئت {fmt(sel.created_at)}{sel.legacy_trainer_id && ' · مدرّب في منصة التقييم'}</p>
                   <p className="ad-sub">{sel.photo_path ? (sel.photo_consent_at ? `موافقة الصورة: ${fmt(sel.photo_consent_at)}` : 'صورة بلا موافقة بعد') : 'لا صورة'}{sel.public_url && sel.status === 'approved' && <> · <a href={sel.public_url} target="_blank" rel="noreferrer">الصفحة العامة</a></>}</p></div></div>
               {sel.issues?.length > 0 && <ul className="ad-issues">{sel.issues.map((i: string) => <li key={i}>{i}</li>)}</ul>}
               <h4>ملخص السيرة</h4><blockquote>{sel.summary_ar || '—'}</blockquote>

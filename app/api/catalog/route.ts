@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /api/catalog — الكتالوج المفتوح لبوابة أَثَر (P8-ج) — عام، للقراءة فقط، بمفتاح anon (يخضع لسياسات RLS العامة)
+ * /api/catalog — الكتالوج المفتوح لبوّابة أَثَر (P8-ج) — عام، للقراءة فقط، بمفتاح anon (يخضع لسياسات RLS العامة)
  *  GET /api/catalog                      → JSON: البرامج العامة + الجلسات العامة القادمة + الحقائب العامة + القطاعات + المهارات
  *  GET /api/catalog?format=jsonld        → schema.org ItemList (Course + Event)
  *  GET /api/catalog?type=programs|sessions|resources|skills|sectors → قسم واحد

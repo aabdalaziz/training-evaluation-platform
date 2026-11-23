@@ -86,7 +86,7 @@ export default function AdminObservatoryPage() {
             {a?.issues.length ? <table className="rm-table"><thead><tr><th>الربع</th><th>الحالة</th><th>النشر</th><th>التوقيع</th><th></th></tr></thead><tbody>{a.issues.map(i => <tr key={i.id}><td><b>{i.quarter}</b></td><td>{i.status === 'published' ? 'منشور' : 'مسودة'}</td><td>{fmt(i.published_at)}</td><td>{i.vc_code ? <a href={`/verify/vc?code=${encodeURIComponent(i.vc_code)}`} target="_blank" rel="noreferrer">{i.vc_code}</a> : '—'}</td><td>{i.status === 'published' && <a href={`/observatory?issue=${encodeURIComponent(i.quarter)}`} target="_blank" rel="noreferrer">عرض</a>}</td></tr>)}</tbody></table> : <p className="ob-hint">لا أعداد بعد — احفظ مسودة ثم اعتمدها.</p>}
           </section>
           <section className="rm-card" data-testid="obs-contributors"><h3><Icon name="users" size={16} /> مساهمون في المرصد (بإذنهم)</h3>
-            {a?.contributors.length ? <ul>{a.contributors.map(c => <li key={c.id}>{c.name_ar} <small>{c.sector}</small></li>)}</ul> : <p className="ob-hint">لم تختر أي جهة الظهور بالاسم بعد — الخيار في بوابة الجهة → المرصد.</p>}
+            {a?.contributors.length ? <ul>{a.contributors.map(c => <li key={c.id}>{c.name_ar} <small>{c.sector}</small></li>)}</ul> : <p className="ob-hint">لم تختر أي جهة الظهور بالاسم بعد — الخيار في بوّابة الجهة → المرصد.</p>}
           </section>
         </div>
         <p className="ob-foot">© 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — مرصد أَثَر للقدرة البشرية · البيانات المفتوحة CC BY 4.0</p>

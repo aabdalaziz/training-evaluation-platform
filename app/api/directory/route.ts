@@ -39,7 +39,7 @@ async function who(req: Request, db: any): Promise<Who | null> {
   return { id: data.user.id, email: lower(data.user.email), name: String((prof as any)?.full_name || data.user.user_metadata?.full_name || '') };
 }
 const RULES = { version: DIRECTORY_VERSION, cv: { accept: CV_ACCEPT, max_bytes: CV_MAX_BYTES, privacy_ar: CV_PRIVACY_AR, ai: aiStatus().enabled }, tagline_ar: TAGLINE_AR, faces_ar: FACE_AR, face_titles_ar: FACE_TITLE_AR, status_ar: STATUS_AR, services: SERVICES.map(s => ({ code: s, name_ar: SERVICE_AR[s] })), modes: MODES.map(m => ({ code: m, name_ar: MODE_AR[m] })), languages: Object.entries(LANG_AR).map(([code, name_ar]) => ({ code, name_ar })), sections: SECTIONS.map(s => ({ code: s, name_ar: SECTION_AR[s], default: DEFAULT_VISIBILITY[s] })), summary_min: SUMMARY_MIN, summary_max: SUMMARY_MAX, achievements_max: ACHIEVEMENTS_MAX, achievement_len: ACHIEVEMENT_LEN, skills_max: SKILLS_MAX, sectors_max: SECTORS_MAX, photo_max_bytes: PHOTO_MAX_BYTES, photo_types: PHOTO_TYPES, page: SEARCH_PAGE };
-const PRIVACY_AR = 'لا يظهر بريدك ولا هاتفك لأحد؛ الطلبات تصل عبر أَثَر وحده. كل قسم من سيرتك له مفتاح ظهور بيدك، و«ما شهده أَثَر» يُشتقّ من سجلات المنصة ولا يُكتب باليد.';
+const PRIVACY_AR = 'لا يظهر بريدك ولا هاتفك لأحد؛ الطلبات تصل عبر أَثَر وحده. كل قسم من سيرتك له مفتاح ظهور بيدك، و«ما شهده أَثَر» يُشتقّ من سجلات البوّابة ولا يُكتب باليد.';
 
 async function witnessOf(db: any, p: Profile, engagements?: Engagement[]) {
   const legacy = p.legacy_trainer_id ? { id: p.legacy_trainer_id, name: null, email: p.email } : await legacyTrainer(db, p.email);

@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — تقارير الأثر القطاعية (P8-ج + موجز ذكي P9-أ): مؤشرات موحّدة بحسب القطاع/المهارة/الجهة/الفترة، مقارنة الجهات، سرد تنفيذي، Excel وطباعة، وتصنيف البرامج بالقطاعات
+// بوّابة أَثَر — تقارير الأثر القطاعية (P8-ج + موجز ذكي P9-أ): مؤشرات موحّدة بحسب القطاع/المهارة/الجهة/الفترة، مقارنة الجهات، سرد تنفيذي، Excel وطباعة، وتصنيف البرامج بالقطاعات
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -120,7 +120,7 @@ function SectorImpact() {
               ['learners', tt.learners, ''], ['programs', tt.programs, ''], ['orgs', tt.orgs, ''], ['hours', tt.hours, ''],
               ['attendance', tt.attendance.rate, '%'], ['satisfaction', tt.satisfaction.mean, '/5'], ['improvement', tt.prepost.improvement, '%'], ['transfer', tt.transfer.mean, '%'],
               ['proven', tt.skillsProven, ''], ['credentials', tt.credentials, ''], ['placements', tt.placements.total, ''], ['events', tt.events.total, ''],
-            ].map(([k, v, suf]) => <div key={String(k)} className={`im-kpi ${v === null ? 'na' : ''}`}><b>{n0(v as number | null, String(suf))}</b><span>{kpiLabel(String(k), 'ar')}</span>{k === 'satisfaction' && tt.satisfaction.n > 0 && <small>{tt.satisfaction.n} استبانة</small>}{k === 'improvement' && tt.prepost.pre !== null && <small>{tt.prepost.pre} ← {tt.prepost.post}</small>}{k === 'transfer' && tt.transfer.n > 0 && <small>{tt.transfer.n} استجابة</small>}{k === 'attendance' && tt.attendance.sessions > 0 && <small>{tt.attendance.sessions} جلسة</small>}{k === 'proven' && <small>{tt.skillsApproved} معتمدة</small>}</div>)}
+            ].map(([k, v, suf]) => <div key={String(k)} className={`im-kpi ${v === null ? 'na' : ''}`}><b>{n0(v as number | null, String(suf))}</b><span>{kpiLabel(String(k), 'ar')}</span>{k === 'satisfaction' && tt.satisfaction.n > 0 && <small>{tt.satisfaction.n} استبيان</small>}{k === 'improvement' && tt.prepost.pre !== null && <small>{tt.prepost.pre} ← {tt.prepost.post}</small>}{k === 'transfer' && tt.transfer.n > 0 && <small>{tt.transfer.n} استجابة</small>}{k === 'attendance' && tt.attendance.sessions > 0 && <small>{tt.attendance.sessions} جلسة</small>}{k === 'proven' && <small>{tt.skillsApproved} معتمدة</small>}</div>)}
           </div>
           {/* السرد التنفيذي */}
           <div className="rm-card im-story"><h3><Icon name="doc" size={16} /> الخلاصة التنفيذية</h3><ul>{story.map((s, i) => <li key={i}>{s}</li>)}</ul>
@@ -132,7 +132,7 @@ function SectorImpact() {
                 {brief.data.risks.length > 0 && <div><h4>مخاطر وفجوات قياس</h4><ul>{brief.data.risks.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
                 {brief.data.next_quarter.length > 0 && <div><h4>الربع القادم</h4><ul>{brief.data.next_quarter.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
               </div><small className="im-disc">{AI_DISCLAIMER.ar} · <Link href="/ai">سياسة الذكاء الاصطناعي المسؤول</Link></small></div>}
-            <small className="rm-muted">المنهجية: المتعلمون = تسجيلات مقبولة ضمن الفترة؛ الساعات = ساعات البرنامج × متعلموه؛ الحضور = حاضرون ÷ (جلسات × متعلمون)؛ الرضا من بنود التقويم (1–5)؛ القبلي/البعدي من أداة قياس الأثر (0–100)؛ نقل الأثر = متوسط نسبة التطبيق من المشرفين والمتدربين؛ المهارة «مُثبتة» عند مستوى ≥ 3 وثقة ≥ 35%.</small></div>
+            <small className="rm-muted">المنهجية: المتعلّمون = تسجيلات مقبولة ضمن الفترة؛ الساعات = ساعات البرنامج × متعلّموه؛ الحضور = حاضرون ÷ (جلسات × متعلّمون)؛ الرضا من بنود التقويم (1–5)؛ القبلي/البعدي من أداة قياس الأثر (0–100)؛ نقل الأثر = متوسط نسبة التطبيق من المشرفين والمشاركين؛ المهارة «مُثبتة» عند مستوى ≥ 3 وثقة ≥ 35%.</small></div>
 
           {/* الجداول */}
           <div className="en-tabs no-print">
@@ -144,29 +144,29 @@ function SectorImpact() {
           </div>
 
           <div className={`rm-card sk-table im-sec ${tab === 'programs' ? '' : 'print-only'}`}><h3 className="print-only">البرامج</h3>
-            {pRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا برامج في هذا النطاق.</p> : <table><thead><tr><th>البرنامج</th><th>القطاع</th><th>المتعلمون</th><th>الساعات</th><th>الحضور</th><th>الرضا</th><th>قبلي ← بعدي</th><th>نقل الأثر</th><th>شهادات</th></tr></thead><tbody>
+            {pRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا برامج في هذا النطاق.</p> : <table><thead><tr><th>البرنامج</th><th>القطاع</th><th>المتعلّمون</th><th>الساعات</th><th>الحضور</th><th>الرضا</th><th>قبلي ← بعدي</th><th>نقل الأثر</th><th>شهادات</th></tr></thead><tbody>
               {pRows.map(p => <tr key={p.id}><td><b>{p.name_ar}</b><small>{typeLabel(p.program_type, 'ar')}{p.cefr_level ? ` · ${p.cefr_level}` : ''}{p.start_date ? ` · ${p.start_date}` : ''}{p.pending ? ` · ${p.pending} قيد المراجعة` : ''}</small></td><td>{sectors.find(s => s.code === p.sector)?.name_ar || '—'}</td><td><b>{p.learners}</b>{p.orgs ? <small>{p.orgs} جهة</small> : null}</td><td>{p.hoursDelivered || '—'}</td><td>{p.attendanceRate === null ? '—' : <span className="im-bar"><i style={{ width: `${p.attendanceRate}%` }} /><em>{p.attendanceRate}%</em></span>}</td><td>{p.satisfaction?.mean ?? '—'}{p.satisfaction?.n ? <small>{p.satisfaction.n}</small> : null}</td><td>{p.prepost?.pre ?? '—'} ← {p.prepost?.post ?? '—'}{p.improvement !== null && <small className={p.improvement >= 0 ? 'up' : 'down'}>{p.improvement > 0 ? '+' : ''}{p.improvement}%</small>}</td><td>{p.transfer?.mean === null || p.transfer?.mean === undefined ? '—' : `${p.transfer.mean}%`}</td><td>{p.credentials}</td></tr>)}
             </tbody></table>}</div>
 
           <div className={`rm-card sk-table im-sec ${tab === 'orgs' ? '' : 'print-only'}`}><h3 className="print-only">مقارنة الجهات</h3>
-            {oRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا جهات مرتبطة بتسجيلات في هذا النطاق. (تُربط التسجيلات بالجهة تلقائيًا عبر نطاق البريد أو التسجيل الجماعي.)</p> : <table><thead><tr><th>الجهة</th><th>القطاع</th><th>المنسوبون</th><th>المتعلمون</th><th>التسجيلات</th><th>الشهادات</th><th>متوسط المستوى</th></tr></thead><tbody>
-              {oRows.map(o => <tr key={o.id}><td><b>{o.name_ar}</b>{o.city && <small>{o.city}</small>}</td><td>{sectors.find(s => s.code === o.sector)?.name_ar || '—'}</td><td>{o.members}</td><td><span className="im-bar wide"><i style={{ width: `${Math.round((o.learners / maxLearners) * 100)}%` }} /><em>{o.learners}</em></span></td><td>{o.enrollments}</td><td>{o.credentials}{o.credPerLearner !== null && <small>{o.credPerLearner}/متعلم</small>}</td><td>{o.avg_level ?? '—'}</td></tr>)}
+            {oRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا جهات مرتبطة بتسجيلات في هذا النطاق. (تُربط التسجيلات بالجهة تلقائيًا عبر نطاق البريد أو التسجيل الجماعي.)</p> : <table><thead><tr><th>الجهة</th><th>القطاع</th><th>المنسوبون</th><th>المتعلّمون</th><th>التسجيلات</th><th>الشهادات</th><th>متوسط المستوى</th></tr></thead><tbody>
+              {oRows.map(o => <tr key={o.id}><td><b>{o.name_ar}</b>{o.city && <small>{o.city}</small>}</td><td>{sectors.find(s => s.code === o.sector)?.name_ar || '—'}</td><td>{o.members}</td><td><span className="im-bar wide"><i style={{ width: `${Math.round((o.learners / maxLearners) * 100)}%` }} /><em>{o.learners}</em></span></td><td>{o.enrollments}</td><td>{o.credentials}{o.credPerLearner !== null && <small>{o.credPerLearner}/متعلّم</small>}</td><td>{o.avg_level ?? '—'}</td></tr>)}
             </tbody></table>}</div>
 
           <div className={`rm-card sk-table im-sec ${tab === 'skills' ? '' : 'print-only'}`}><h3 className="print-only">المهارات</h3>
-            {sRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا مهارات موسومة على برامج هذا النطاق — وسّم البرامج بالمهارات من «نشر البرامج».</p> : <table><thead><tr><th>الرمز</th><th>المهارة</th><th>المجال</th><th>الأطر</th><th>المتعلمون</th><th>مُثبتة</th><th>معتمدة</th><th>متوسط المستوى</th><th>البرامج</th></tr></thead><tbody>
+            {sRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا مهارات موسومة على برامج هذا النطاق — وسّم البرامج بالمهارات من «نشر البرامج».</p> : <table><thead><tr><th>الرمز</th><th>المهارة</th><th>المجال</th><th>الأطر</th><th>المتعلّمون</th><th>مُثبتة</th><th>معتمدة</th><th>متوسط المستوى</th><th>البرامج</th></tr></thead><tbody>
               {sRows.map(s => <tr key={s.id}><td dir="ltr">{s.code}</td><td><b>{skillName(s as any, 'ar')}</b></td><td>{domainLabel(s.domain, 'ar')}</td><td><small>{[s.saqf_level ? `SAQF ${s.saqf_level}` : '', s.cefr_level ? `CEFR ${s.cefr_level}` : '', s.sdaia_code || ''].filter(Boolean).join(' · ') || '—'}</small></td><td>{s.learners}</td><td>{s.proven}{s.provenPct !== null && <small>{s.provenPct}%</small>}</td><td>{s.approved}</td><td>{s.avg_level ?? '—'}</td><td>{s.programs}</td></tr>)}
             </tbody></table>}</div>
 
           <div className={`rm-card sk-table im-sec ${tab === 'sectors' ? '' : 'print-only'}`}><h3 className="print-only">القطاعات</h3>
-            {secRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا بيانات قطاعية بعد — صنّف البرامج بالقطاعات من تبويب «تصنيف البرامج»، أو اربط الجهات بقطاعاتها.</p> : <table><thead><tr><th>القطاع</th><th>البرامج</th><th>الجهات</th><th>المتعلمون</th></tr></thead><tbody>
+            {secRows.length === 0 ? <p className="rm-muted" style={{ padding: 12 }}>لا بيانات قطاعية بعد — صنّف البرامج بالقطاعات من تبويب «تصنيف البرامج»، أو اربط الجهات بقطاعاتها.</p> : <table><thead><tr><th>القطاع</th><th>البرامج</th><th>الجهات</th><th>المتعلّمون</th></tr></thead><tbody>
               {secRows.map(s => <tr key={s.code}><td><b>{s.name_ar}</b><small dir="ltr">{s.code}</small></td><td>{s.programs}</td><td>{s.orgs}</td><td><span className="im-bar wide"><i style={{ width: `${Math.round((s.learners / maxLearners) * 100)}%` }} /><em>{s.learners}</em></span></td></tr>)}
             </tbody></table>}</div>
 
           {canWrite && tab === 'classify' && <div className="rm-card sk-table no-print"><div className="en-tools" style={{ padding: 12 }}><span className="rm-muted">اختر قطاع كل برنامج — يُستخدم في هذا التقرير وفي الكتالوج المفتوح (JSON-LD). البرامج بلا قطاع تُحسب فقط عبر قطاع الجهة المسجّلة.</span><input placeholder="بحث باسم البرنامج…" value={classQ} onChange={e => setClassQ(e.target.value)} style={{ marginInlineStart: 'auto', border: '1px solid #D9CBC2', borderRadius: 10, padding: '7px 10px', font: 'inherit', fontSize: 13 }} /></div>
             <table><thead><tr><th>البرنامج</th><th>النوع</th><th>القطاع</th></tr></thead><tbody>{classRows.map(p => <tr key={p.id} className={p.sector ? '' : 'off'}><td><b>{p.name_ar}</b>{p.start_date && <small>{p.start_date}</small>}</td><td>{typeLabel(p.program_type, 'ar')}</td><td><select value={p.sector || ''} disabled={busy === 'cls' + p.id} onChange={e => setProgramSector(p.id, e.target.value)}><option value="">— بلا قطاع —</option>{sectors.map(s => <option key={s.code} value={s.code}>{s.name_ar}</option>)}</select></td></tr>)}</tbody></table></div>}
 
-          <div className="im-foot print-only">© 2026 د. أحمد محمد عبدالعزيز بدوي — بوابة أَثَر · تقرير مُولَّد آليًا من بيانات المنصة؛ المؤشرات التقويمية (الرضا/القبلي-البعدي/نقل الأثر) من منصة التقويم المتكاملة.</div>
+          <div className="im-foot print-only">© 2026 د. أحمد محمد عبدالعزيز بدوي — بوّابة أَثَر · تقرير مُولَّد آليًا من بيانات البوّابة؛ المؤشرات التقويمية (الرضا/القبلي-البعدي/نقل الأثر) من منصة التقويم المتكاملة.</div>
         </>}
       </div>
     </div>

@@ -110,7 +110,7 @@ function Inner() {
     if (!form.title_ar.trim()) { setError('اكتب عنوان الحملة'); return; }
     const valid = qs.filter(q => q.text_ar.trim());
     if (!valid.length) { setError('أضف بندًا واحدًا على الأقل'); return; }
-    if (!form.supervisor_open && !form.trainee_open) { setError('فعّل دورًا واحدًا على الأقل (مشرف أو متدرب)'); return; }
+    if (!form.supervisor_open && !form.trainee_open) { setError('فعّل دورًا واحدًا على الأقل (مشرف أو مشارك)'); return; }
     setBusy('save');
     try {
       const payload: any = { organization_id: orgId, program_id: form.program_id, classroom_id: form.classroom_id || null, title_ar: form.title_ar.trim(), title_en: form.title_en.trim() || null, intro_ar: form.intro_ar.trim() || null, due_days: form.due_days, open_at: form.open_at || null, supervisor_open: form.supervisor_open, trainee_open: form.trainee_open, auto_send: form.auto_send, remind_after_days: Math.max(0, Number(form.remind_after_days) || 0), scale_max: form.scale_max, status: form.status, recipients: rec.recipients };
@@ -169,7 +169,7 @@ function Inner() {
       const p = programs.find(x => x.id === form.program_id);
       const axes = ai.axes.split(/\r?\n/).map(x => x.trim()).filter(Boolean).slice(0, 6);
       if (!axes.length) throw new Error('حدد محورًا واحدًا على الأقل');
-      const spec = normalizeSpec({ program_name: p?.name_ar || form.title_ar, program_desc: p?.description_ar || '', objectives: ai.objectives, axes, count_mode: 'per_axis', scale_count: Math.min(6, Math.max(1, ai.per_axis)), mcq_count: 0, tf_count: 0, audience: 'المشرف المباشر والمتدرب بعد 60–90 يومًا من التدريب', level: 'intermediate', bilingual: true, notes: 'بنود ملاحظة سلوك وظيفي قابل للملاحظة في بيئة العمل بصيغة الغائب (يطبّق/يستخدم/يشارك…)، تقيس نقل أثر التدريب لا المعرفة النظرية.' });
+      const spec = normalizeSpec({ program_name: p?.name_ar || form.title_ar, program_desc: p?.description_ar || '', objectives: ai.objectives, axes, count_mode: 'per_axis', scale_count: Math.min(6, Math.max(1, ai.per_axis)), mcq_count: 0, tf_count: 0, audience: 'المشرف المباشر والمشارك بعد 60–90 يومًا من التدريب', level: 'intermediate', bilingual: true, notes: 'بنود ملاحظة سلوك وظيفي قابل للملاحظة في بيئة العمل بصيغة الغائب (يطبّق/يستخدم/يشارك…)، تقيس نقل أثر التدريب لا المعرفة النظرية.' });
       const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` };
       let j: any = null;
       for (let attempt = 1; attempt <= 3; attempt++) {
@@ -200,13 +200,13 @@ function Inner() {
       if (src === 'attendance') {
         let q = db.from('attendance_sessions').select('id').eq('program_id', form.program_id); if (form.classroom_id) q = q.eq('classroom_id', form.classroom_id);
         const { data: ss } = await q.limit(1000); const ids = (ss || []).map((x: any) => x.id);
-        if (ids.length) { const { data } = await db.from('attendance_records').select('full_name,email').in('session_id', ids).limit(20000); for (const r of (data || []) as any[]) { if (!r.email || seen.has(r.email)) continue; seen.add(r.email); lines.push(`${r.full_name}, ${r.email}, متدرب`); } }
+        if (ids.length) { const { data } = await db.from('attendance_records').select('full_name,email').in('session_id', ids).limit(20000); for (const r of (data || []) as any[]) { if (!r.email || seen.has(r.email)) continue; seen.add(r.email); lines.push(`${r.full_name}, ${r.email}, مشارك`); } }
       } else {
         let q = db.from('evaluations').select('guest_name,guest_email').eq('program_id', form.program_id).not('guest_email', 'is', null); if (form.classroom_id) q = q.eq('classroom_id', form.classroom_id);
-        const { data } = await q.limit(5000); for (const r of (data || []) as any[]) { const em = String(r.guest_email || '').toLowerCase().trim(); if (!em || seen.has(em)) continue; seen.add(em); lines.push(`${r.guest_name || em}, ${em}, متدرب`); }
+        const { data } = await q.limit(5000); for (const r of (data || []) as any[]) { const em = String(r.guest_email || '').toLowerCase().trim(); if (!em || seen.has(em)) continue; seen.add(em); lines.push(`${r.guest_name || em}, ${em}, مشارك`); }
       }
       if (!lines.length) { setError(src === 'attendance' ? 'لا توجد سجلات حضور ببريد إلكتروني لهذا البرنامج' : 'لا توجد تقييمات ببريد إلكتروني لهذا البرنامج'); return; }
-      setRecText(prev => [prev.trim(), ...lines].filter(Boolean).join('\n')); flash(`استُورد ${lines.length} متدربًا`);
+      setRecText(prev => [prev.trim(), ...lines].filter(Boolean).join('\n')); flash(`استُورد ${lines.length} مشاركًا`);
     } catch (e: any) { setError('تعذر الاستيراد: ' + e.message); } finally { setBusy(''); }
   }
 
@@ -220,7 +220,7 @@ function Inner() {
       <style>{CSS}</style>
       <RoomHead
         title={<>متابعة أثر التدريب في بيئة العمل</>}
-        desc={<><p>بعد 60–90 يومًا من ختام البرنامج يصل للمشرف المباشر وللمتدرب استبيان قصير: هل تغيّر السلوك والأداء فعلًا؟ تُرسل الروابط تلقائيًا في الموعد، وتُقرأ النتائج في «تقرير نقل الأثر» بجانب القياس القبلي/البعدي.</p></>}
+        desc={<><p>بعد 60–90 يومًا من ختام البرنامج يصل للمشرف المباشر وللمشارك استبيان قصير: هل تغيّر السلوك والأداء فعلًا؟ تُرسل الروابط تلقائيًا في الموعد، وتُقرأ النتائج في «تقرير نقل الأثر» بجانب القياس القبلي/البعدي.</p></>}
         actions={<>
           <Link href="/reports/transfer" className="rm-btn"><Icon name="chart" size={16} /> تقرير نقل الأثر</Link>
           {mode === 'edit' && <button className="rm-btn" onClick={() => { setMode('list'); setEditing(null); }}><Icon name="arrow" size={16} /> كل الحملات</button>}
@@ -243,7 +243,7 @@ function Inner() {
                   <div>
                     <div className="bf-item-title"><b>{f.title_ar}</b><span className={`bf-status ${f.status}`}>{f.status === 'open' ? 'مفتوحة' : f.status === 'closed' ? 'مغلقة' : 'مسودة'}</span></div>
                     <div className="rm-muted">{pName(f.program_id)}{f.classroom_id ? ` · ${cCode(f.classroom_id)}` : ''} · بعد {f.due_days} يومًا · {due} · المستلمون {n} · الرمز <bdi className="bf-token">{f.token}</bdi></div>
-                    <div className="bf-counts"><span>مشرفون <b>{c.supervisor}</b></span><span>متدربون <b>{c.trainee}</b></span><span className={c.trainees ? 'ok' : ''}>متدربون مقيَّمون <b>{c.trainees}</b></span>{f.auto_send ? <span className="ok">إرسال تلقائي</span> : <span>إرسال يدوي</span>}</div>
+                    <div className="bf-counts"><span>مشرفون <b>{c.supervisor}</b></span><span>مشاركون <b>{c.trainee}</b></span><span className={c.trainees ? 'ok' : ''}>مشاركون مقيَّمون <b>{c.trainees}</b></span>{f.auto_send ? <span className="ok">إرسال تلقائي</span> : <span>إرسال يدوي</span>}</div>
                   </div>
                   <div className="bf-actions">
                     <button className="rm-btn small" onClick={() => setLinksFor(f)}><Icon name="link" size={14} /> الروابط / QR</button>
@@ -269,7 +269,7 @@ function Inner() {
             <h2><Icon name="settings" size={18} /> 1) إعدادات الحملة</h2>
             <div className="bf-grid">
               <label><span>البرنامج <i>*</i></span><select value={form.program_id} onChange={e => pickProgram(e.target.value)}><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
-              <label><span>القاعة / المجموعة</span><select value={form.classroom_id} onChange={e => setForm({ ...form, classroom_id: e.target.value })}><option value="">— الكل —</option>{progClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
+              <label><span>الشعبة</span><select value={form.classroom_id} onChange={e => setForm({ ...form, classroom_id: e.target.value })}><option value="">— الكل —</option>{progClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select></label>
               <label><span>الحالة</span><select value={form.status} onChange={e => setForm({ ...form, status: e.target.value as any })}><option value="open">مفتوحة</option><option value="draft">مسودة</option><option value="closed">مغلقة</option></select></label>
               <label className="bf-span2"><span>عنوان الحملة <i>*</i></span><input value={form.title_ar} onChange={e => setForm({ ...form, title_ar: e.target.value })} /></label>
               <label><span>Title (EN)</span><input dir="ltr" value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })} /></label>
@@ -278,7 +278,7 @@ function Inner() {
               <label><span>موعد الإرسال التلقائي</span><input type="date" value={form.open_at} onChange={e => setForm({ ...form, open_at: e.target.value })} /></label>
               <label><span>تذكير بعد (أيام) — 0 = بدون</span><input type="number" min={0} max={60} value={form.remind_after_days} onChange={e => setForm({ ...form, remind_after_days: Number(e.target.value) })} /></label>
               <label className="bf-check"><input type="checkbox" checked={form.supervisor_open} onChange={e => setForm({ ...form, supervisor_open: e.target.checked })} /> استبيان المشرف المباشر</label>
-              <label className="bf-check"><input type="checkbox" checked={form.trainee_open} onChange={e => setForm({ ...form, trainee_open: e.target.checked })} /> التقييم الذاتي للمتدرب</label>
+              <label className="bf-check"><input type="checkbox" checked={form.trainee_open} onChange={e => setForm({ ...form, trainee_open: e.target.checked })} /> التقييم الذاتي للمشارك</label>
               <label className="bf-check"><input type="checkbox" checked={form.auto_send} onChange={e => setForm({ ...form, auto_send: e.target.checked })} /> إرسال تلقائي في الموعد (يتطلب قائمة مستلمين)</label>
             </div>
             <p className="rm-muted" style={{ marginTop: 8 }}>نهاية البرنامج المسجّلة: <b>{programs.find(p => p.id === form.program_id)?.end_date || 'غير محددة'}</b>. يعمل الإرسال التلقائي يوميًا الساعة 6 صباحًا (الرياض) عبر Vercel Cron.</p>
@@ -287,11 +287,11 @@ function Inner() {
           <section className="rm-card">
             <h2><Icon name="users" size={18} /> 2) المستلمون <span className="bf-pill">{rec.recipients.length}</span></h2>
             <div className="bf-row" style={{ marginTop: 0 }}>
-              <button className="rm-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('attendance')}><Icon name="check" size={14} /> متدربون من سجل الحضور</button>
-              <button className="rm-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('evaluations')}><Icon name="evaluations" size={14} /> متدربون من التقييمات</button>
-              <span className="rm-muted">سطر لكل مستلم: <b>الاسم, البريد, الدور</b> (مشرف/متدرب) — وللمشرف يمكن إضافة <b>, اسم المتدرب, بريد المتدرب</b></span>
+              <button className="rm-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('attendance')}><Icon name="check" size={14} /> مشاركون من سجل الحضور</button>
+              <button className="rm-btn small" disabled={!form.program_id || !!busy} onClick={() => importTrainees('evaluations')}><Icon name="evaluations" size={14} /> مشاركون من التقييمات</button>
+              <span className="rm-muted">سطر لكل مستلم: <b>الاسم, البريد, الدور</b> (مشرف/مشارك) — وللمشرف يمكن إضافة <b>, اسم المشارك, بريد المشارك</b></span>
             </div>
-            <textarea rows={6} value={recText} onChange={e => setRecText(e.target.value)} placeholder={'سارة القحطاني, sara@example.com, متدرب\nم. خالد العتيبي, khalid@example.com, مشرف, سارة القحطاني, sara@example.com'} />
+            <textarea rows={6} value={recText} onChange={e => setRecText(e.target.value)} placeholder={'سارة القحطاني, sara@example.com, مشارك\nم. خالد العتيبي, khalid@example.com, مشرف, سارة القحطاني, sara@example.com'} />
             {rec.warnings.length > 0 && <div className="bf-note bad">{rec.warnings.slice(0, 5).join(' · ')}{rec.warnings.length > 5 ? ` … (+${rec.warnings.length - 5})` : ''}</div>}
             <div className="bf-counts"><span>مشرفون <b>{rec.recipients.filter(r => r.role === 'supervisor').length}</b></span><span>متدربون <b>{rec.recipients.filter(r => r.role === 'trainee').length}</b></span><span>زملاء <b>{rec.recipients.filter(r => r.role === 'peer').length}</b></span></div>
           </section>
@@ -305,7 +305,7 @@ function Inner() {
             </div>
             {build === 'upload' && (
               <div className="bf-panel">
-                <textarea rows={7} value={upText} onChange={e => setUpText(e.target.value)} placeholder={'المحور: التطبيق\n1. يطبّق أساليب التقويم البديل في الفصل\n2. يستخدم أدوات رقمية لرصد تقدم الطلاب\nالمحور: نقل الأثر\n3. يدرّب زملاءه على ما تعلّمه'} />
+                <textarea rows={7} value={upText} onChange={e => setUpText(e.target.value)} placeholder={'المحور: التطبيق\n1. يطبّق أساليب التقويم البديل في الفصل\n2. يستخدم أدوات رقمية لرصد تقدم المشاركين\nالمحور: نقل الأثر\n3. يدرّب زملاءه على ما تعلّمه'} />
                 <div className="bf-row"><button className="rm-btn primary" onClick={() => importUpload(false)} disabled={!upText.trim()}><Icon name="check" size={15} /> استبدال بنود المقياس</button><button className="rm-btn" onClick={() => importUpload(true)} disabled={!upText.trim()}><Icon name="plus" size={15} /> إضافة إلى البنود الحالية</button></div>
               </div>
             )}
@@ -369,7 +369,7 @@ function Inner() {
                 </div>
               ))}
             </div>
-            <p className="rm-muted">رابط المشرف يسمح له بإدخال اسم المتدرب؛ ويمكن تخصيصه لمتدرب بعينه بإضافة <code dir="ltr" style={{ background: '#F6EBE0', padding: '1px 6px', borderRadius: 6 }}>?role=supervisor&amp;tn=NAME&amp;te=EMAIL</code> — وهو ما يفعله الإرسال بالبريد تلقائيًا.</p>
+            <p className="rm-muted">رابط المشرف يسمح له بإدخال اسم المشارك؛ ويمكن تخصيصه لمتدرب بعينه بإضافة <code dir="ltr" style={{ background: '#F6EBE0', padding: '1px 6px', borderRadius: 6 }}>?role=supervisor&amp;tn=NAME&amp;te=EMAIL</code> — وهو ما يفعله الإرسال بالبريد تلقائيًا.</p>
             <div className="bf-row" style={{ justifyContent: 'center' }}><button className="rm-btn primary" onClick={() => window.print()}><Icon name="print" size={16} /> طباعة</button><button className="rm-btn" onClick={() => setLinksFor(null)}><Icon name="x" size={16} /> إغلاق</button></div>
           </div>
         </div>

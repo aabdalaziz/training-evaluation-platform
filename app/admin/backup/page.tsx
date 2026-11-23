@@ -220,7 +220,7 @@ export default function BackupPage() {
               <button className="rm-btn small" disabled={!!busy} onClick={() => loadAll()}><Icon name="refresh" size={14} /> معاينة الأعداد</button>
             </div>
           </div>
-          {!canWrite && <div className="rm-muted">التصدير والأرشفة متاحان لمديري المنصة فقط؛ يمكنك الاطلاع على السجل.</div>}
+          {!canWrite && <div className="rm-muted">التصدير والأرشفة متاحان لمديري البوّابة فقط؛ يمكنك الاطلاع على السجل.</div>}
           {busy && <div className="bk-busy"><Icon name="refresh" size={14} /> {busy}</div>}
           {missing.length > 0 && <div className="rm-muted">جداول تعذّر قراءتها (تُستثنى من النسخة): {missing.join(' · ')}</div>}
 
@@ -234,7 +234,7 @@ export default function BackupPage() {
             <ul>
               <li><b>Excel:</b> ورقة «الفهرس» (التاريخ، النطاق، عدد صفوف كل جدول) + ورقة «الإجابات المفكوكة» (صف لكل تقييم وعمود لكل سؤال) + ورقة لكل جدول غير فارغ. الأعمدة الحساسة (رموز الجلسات، بصمة المستجيب) غير مضمّنة.</li>
               <li><b>JSON:</b> كل الجداول كما هي في قاعدة البيانات مع ملف فهرس داخلي — مناسب للاستعادة أو النقل.</li>
-              <li><b>التذكير:</b> تظهر «آخر نسخة احتياطية» في صحة المنصة، ويصلك تنبيه في الجرس تلقائيًا إن مضى أكثر من 30 يومًا.</li>
+              <li><b>التذكير:</b> تظهر «آخر نسخة احتياطية» في صحة البوّابة، ويصلك تنبيه في الجرس تلقائيًا إن مضى أكثر من 30 يومًا.</li>
             </ul>
           </div>
         </section>
@@ -281,7 +281,7 @@ export default function BackupPage() {
       {tab === 'restore' && (
         <section className="rm-card">
           <div className="rm-card-head"><h2><Icon name="refresh" size={18} /> الاستعادة من نسخة JSON</h2><span>ارفع ملف نسخة احتياطية (JSON) → افحصه بلا تغيير → ثم نفّذ. الاستعادة تعمل بصلاحيات الخادم وتُسجَّل كاملة في التدقيق.</span></div>
-          {!canRestore && <div className="rm-alert">الاستعادة متاحة لمدير المنصة (PLATFORM_ADMIN / SUPER_ADMIN) فقط.</div>}
+          {!canRestore && <div className="rm-alert">الاستعادة متاحة لمدير البوّابة (PLATFORM_ADMIN / SUPER_ADMIN) فقط.</div>}
           <div className="bk-form">
             <label>ملف النسخة (JSON)
               <input type="file" accept=".json,application/json" disabled={!canRestore} onChange={e => onFile(e.target.files?.[0] || null)} />
@@ -323,10 +323,10 @@ export default function BackupPage() {
           <div className="bk-how">
             <b>كيف تعمل الاستعادة؟</b>
             <ul>
-              <li>تُرسَل الصفوف على دفعات (400 صف) إلى الخادم الذي يكتبها بصلاحيات الخدمة بترتيب الاعتماديات (البرامج → القاعات → القوالب → التقييمات → الإجابات …).</li>
+              <li>تُرسَل الصفوف على دفعات (400 صف) إلى الخادم الذي يكتبها بصلاحيات الخدمة بترتيب الاعتماديات (البرامج → الشُّعب → القوالب → التقييمات → الإجابات …).</li>
               <li><b>إضافة الناقص</b>: الصفوف التي لها نفس المعرّف في قاعدة البيانات لا تُمس. <b>استبدال المطابق</b>: تُحدَّث بقيم النسخة.</li>
               <li>لا تُحذف أي بيانات أبدًا. كل تغيير يمرّ عبر محفّزات التدقيق ويُسجَّل ملخّص العملية في سجل التدقيق.</li>
-              <li>الاستعادة على مشروع Supabase مختلف تتطلب تنفيذ ملفات SQL للمنصة أولًا (الجداول نفسها).</li>
+              <li>الاستعادة على مشروع Supabase مختلف تتطلب تنفيذ ملفات SQL للبوّابة أولًا (الجداول نفسها).</li>
             </ul>
           </div>
         </section>

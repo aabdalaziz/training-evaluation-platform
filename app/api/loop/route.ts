@@ -3,7 +3,7 @@
  * /api/loop — منظومة التحسين المستمر القائمة على الأدلة «الحلقة المغلقة» (أَثَر · P15)
  *  GET  (موظفون)                       → { suggestions, learned, forecasts, stats }         لوحة /admin/loop
  *  GET  ?gaps=1 (موظفون)               → { gaps }                                            فجوات حقيقية لهندسة البرامج («من الذاكرة»)
- *  GET  ?session=<id> (موظف/مدرب/منشئ) → { cards, summary, focus, skills }                 بطاقة الصف للميسِّر (مفاتيح مجهولة، بلا درجات)
+ *  GET  ?session=<id> (موظف/مدرّب/منشئ) → { cards, summary, focus, skills }                 بطاقة الصف للميسِّر (مفاتيح مجهولة، بلا درجات)
  *  GET  ?org=<id> (موظف/عضو مؤكَّد)    → { forecasts, line, members, events, steps }        «مؤشر الأداء» لصفحة الجهة
  *  POST { action:'decide', id, status:'accepted'|'dismissed', note?, template_id?, emails? } → قرار بشري + أثر (مسودة برنامج / مهمات)
  *  POST { action:'run', dry? } (موظفون) → تشغيل الدورة الآن
@@ -141,7 +141,7 @@ export async function POST(req: Request) {
         const { data: dup } = await db.from('portal_missions').select('email').eq('template_id', tplId).in('email', emails); const dupSet = new Set(((dup || []) as any[]).map(d => String(d.email || '').toLowerCase()));
         for (const email of emails) { if (dupSet.has(email)) { skipped.push(email); continue; } const m = await assignMission(db, tpl as any, { email }, site); if (m) created++; else failed.push(email); }
         // لا نحسم الاقتراح إن لم يُسنَد شيء — يبقى بانتظار قرار كي يعاد بمتعلمين آخرين، مع سبب صريح
-        if (!created) return bad(skipped.length && !failed.length ? `لم تُسند أي مهمة: ${skipped.length === 1 ? 'هذا البريد لديه' : 'هذه العناوين لديها'} المهمة نفسها من هذا القالب مسبقًا (${skipped.join('، ')}). اختر متعلمين آخرين أو قالبًا آخر.` : `تعذّر إنشاء المهمة لـ ${failed.join('، ')}${skipped.length ? ` (ولدى ${skipped.join('، ')} المهمة مسبقًا)` : ''} — تحقق من القالب وأعد المحاولة.`, 409);
+        if (!created) return bad(skipped.length && !failed.length ? `لم تُسند أي مهمة: ${skipped.length === 1 ? 'هذا البريد لديه' : 'هذه العناوين لديها'} المهمة نفسها من هذا القالب مسبقًا (${skipped.join('، ')}). اختر متعلّمين آخرين أو قالبًا آخر.` : `تعذّر إنشاء المهمة لـ ${failed.join('، ')}${skipped.length ? ` (ولدى ${skipped.join('، ')} المهمة مسبقًا)` : ''} — تحقق من القالب وأعد المحاولة.`, 409);
         outcome = { kind: 'missions', created, template_id: tplId, emails: emails.length, skipped, failed };
       } else { outcome = { kind: (s as any).kind, noted: true }; }
     }

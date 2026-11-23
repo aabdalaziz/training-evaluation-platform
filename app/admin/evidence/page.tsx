@@ -73,7 +73,7 @@ export default function AdminEvidencePage() {
                 {!!ans.answer.chain.length && <div className="ev-chain">{ans.answer.chain.map((c, i) => <span key={i}><small>{c.label}</small><b>{c.value}</b></span>)}</div>}
                 {!!ans.answer.rows.length && <ul className="ev-rows">{ans.answer.rows.map((r, i) => <li key={i}><span className="ev-rank">{i + 1}</span><div><b>{r.label}</b>{r.sub && <small>{r.sub}</small>}</div><em>{r.value}</em>{r.id && <button type="button" className="ev-link no-print" onClick={() => { setTab('map'); openNode(r.id!); }}>افتح الدليل</button>}</li>)}</ul>}
                 <div className="ev-ansfoot"><div className="no-print">{ans.answer.suggestions.map(s => <button key={s} type="button" className="ev-sugg" onClick={() => ask(s)}>{s}</button>)}</div><button type="button" className="pt-btn light small no-print" onClick={printBrief}><Icon name="print" size={13} /> حوّله إلى موجز أدلة</button></div>
-                <footer className="ev-brieffoot print-only">موجز أدلة من قاعدة الأدلة المؤسسية — بوابة أَثَر · {new Date().toLocaleDateString('ar-SA-u-nu-latn-ca-gregory')} · الأرقام من أدلة تعلّم موزونة يعتمدها بشر؛ لا أسماء أفراد. © 2026 د. أحمد محمد عبدالعزيز بدوي</footer>
+                <footer className="ev-brieffoot print-only">موجز أدلة من قاعدة الأدلة المؤسسية — بوّابة أَثَر · {new Date().toLocaleDateString('ar-SA-u-nu-latn-ca-gregory')} · الأرقام من أدلة تعلّم موزونة يعتمدها بشر؛ لا أسماء أفراد. © 2026 د. أحمد محمد عبدالعزيز بدوي</footer>
               </article>
             )}
             {!ans && !!data?.recent?.length && <div className="ev-recent no-print"><h4>آخر الأسئلة</h4>{data.recent.slice(0, 8).map(r => <button key={r.id} type="button" onClick={() => ask(r.question)}><span>{r.question}</span><small>{r.template || '—'} · {r.source === 'ai' ? 'ذكاء اصطناعي' : 'محلي'}</small></button>)}</div>}
@@ -82,7 +82,7 @@ export default function AdminEvidencePage() {
 
         {tab === 'map' && con && (
           <section className="rm-card ev-mapcard">
-            <div className="ev-maphead"><div><h3>كوكبة الأثر</h3><p>المهارات ذهبية في الحلقة الوسطى، قنوات التعلّم بيضاء في المركز، والبرامج والجلسات والجهات والمدربون في المدار الخارجي. سُمك الخيط = وزن الدليل. اضغط نجمة لتقرأ قصتها.</p></div><div className="ev-legend">{(Object.keys(KIND_LABEL) as NodeKind[]).filter(k => k !== 'sector').map(k => <span key={k}><i style={{ background: KIND_COLOR[k] }} />{KIND_LABEL[k].ar}</span>)}</div></div>
+            <div className="ev-maphead"><div><h3>كوكبة الأثر</h3><p>المهارات ذهبية في الحلقة الوسطى، قنوات التعلّم بيضاء في المركز، والبرامج والجلسات والجهات والمدرّبون في المدار الخارجي. سُمك الخيط = وزن الدليل. اضغط نجمة لتقرأ قصتها.</p></div><div className="ev-legend">{(Object.keys(KIND_LABEL) as NodeKind[]).filter(k => k !== 'sector').map(k => <span key={k}><i style={{ background: KIND_COLOR[k] }} />{KIND_LABEL[k].ar}</span>)}</div></div>
             <div className="ev-mapgrid">
               <svg viewBox="0 0 900 520" className="ev-svg" data-testid="constellation" role="img" aria-label="كوكبة الأثر">
                 <defs><radialGradient id="evbg" cx="50%" cy="50%" r="70%"><stop offset="0" stopColor="#3A1F36" /><stop offset="1" stopColor="#22101F" /></radialGradient></defs>

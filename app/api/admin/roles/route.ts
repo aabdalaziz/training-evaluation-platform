@@ -79,8 +79,8 @@ export async function POST(req: Request) {
     const names = v.roles.map(r => catalog.find(x => x.code === r)?.name_ar || r);
     const url = inviteUrl(siteOf(req), token);
     const text = v.kind === 'group'
-      ? `السلام عليكم،\nدعوة «${v.label}» للانضمام إلى بوابة أَثَر بصفة: ${names.join(' · ')}.\n${v.message ? v.message + '\n' : ''}امسح رمز QR أو افتح الرابط وادخل ببريدك:\n${url}\n(${v.max_uses} مقعدًا · صالحة ${INVITE_DAYS} يومًا)`
-      : `السلام عليكم${v.full_name ? ' ' + v.full_name : ''}،\nدعوة للانضمام إلى بوابة أَثَر بصفة: ${names.join(' · ')}.\n${v.message ? v.message + '\n' : ''}افتح الرابط وادخل بالبريد ${v.email}:\n${url}\n(صالح ${INVITE_DAYS} يومًا)`;
+      ? `السلام عليكم،\nدعوة «${v.label}» للانضمام إلى بوّابة أَثَر بصفة: ${names.join(' · ')}.\n${v.message ? v.message + '\n' : ''}امسح رمز QR أو افتح الرابط وادخل ببريدك:\n${url}\n(${v.max_uses} مقعدًا · صالحة ${INVITE_DAYS} يومًا)`
+      : `السلام عليكم${v.full_name ? ' ' + v.full_name : ''}،\nدعوة للانضمام إلى بوّابة أَثَر بصفة: ${names.join(' · ')}.\n${v.message ? v.message + '\n' : ''}افتح الرابط وادخل بالبريد ${v.email}:\n${url}\n(صالح ${INVITE_DAYS} يومًا)`;
     return NextResponse.json({ success: true, invite_id: data.id, url, text, expires_at: data.expires_at, kind: v.kind, max_uses: v.max_uses, label: v.label });
   }
   if (action === 'revoke') {
