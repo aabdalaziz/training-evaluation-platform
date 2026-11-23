@@ -10,6 +10,7 @@ import { downloadCSV, safeFilename } from '../../../lib/export/csv';
 import { STATUS_LABEL, STATUS_ORDER, attendUrl, eligible, makeToken, riyadhToday, sessionCsvRows, summarize, summaryCsvRows } from '../../../lib/attendance/model';
 import type { AttendanceRecord, AttendanceSession, PersonSummary, RecordStatus } from '../../../lib/attendance/model';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Program = { id: string; name_ar: string; name_en?: string | null; status?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id?: string | null };
 type Trainer = { id: string; name: string };
@@ -225,27 +226,22 @@ function Inner() {
   const todayStr = riyadhToday();
   const openToday = sessions.filter(s => s.status === 'open' && s.session_date === todayStr).length;
 
-  if (!ready) return <div className="aa" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="aa rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
 
   return (
-    <div className="aa" dir="rtl">
+    <div className="aa rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="aa-head">
-        <div>
-          <div className="aa-kicker"><Icon name="check" size={14} /> مركز الإدارة</div>
-          <h1>الحضور الرقمي (QR)</h1>
-          <p>أنشئ جلسة حضور لكل لقاء تدريبي، اعرض رمز QR على الشاشة أو اطبعه، ويسجّل المتدربون حضورهم من جوالاتهم خلال ثوانٍ. تُحتسب نسبة الحضور تلقائيًا لكل متدرب وتُستخدم شرطًا لإصدار الشهادات.</p>
-        </div>
-        <nav className="aa-nav">
-          <Link href="/dashboard" className="aa-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/admin/certificates" className="aa-btn"><Icon name="certificate" size={16} /> الشهادات</Link>
-          {mode !== 'summary' && <button className="aa-btn" onClick={() => { setSumProgram(sumProgram || filterProgram || programs[0]?.id || ''); setMode('summary'); }}><Icon name="table" size={16} /> ملخص الحضور</button>}
-          {mode !== 'list' && <button className="aa-btn" onClick={backToList}><Icon name="arrow" size={16} /> كل الجلسات</button>}
-          {canWrite && mode === 'list' && <button className="aa-btn primary" onClick={() => startNew()}><Icon name="plus" size={16} /> جلسة جديدة</button>}
-        </nav>
-      </header>
-      {!allowed && <div className="aa-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج والمدربين.</div>}
-      {error && <div className="aa-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="aa-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
+      <RoomHead
+        title={<>الحضور الرقمي (QR)</>}
+        desc={<><p>أنشئ جلسة حضور لكل لقاء تدريبي، اعرض رمز QR على الشاشة أو اطبعه، ويسجّل المتدربون حضورهم من جوالاتهم خلال ثوانٍ. تُحتسب نسبة الحضور تلقائيًا لكل متدرب وتُستخدم شرطًا لإصدار الشهادات.</p></>}
+        actions={<>
+          {mode !== 'summary' && <button className="rm-btn" onClick={() => { setSumProgram(sumProgram || filterProgram || programs[0]?.id || ''); setMode('summary'); }}><Icon name="table" size={16} /> ملخص الحضور</button>}
+          {mode !== 'list' && <button className="rm-btn" onClick={backToList}><Icon name="arrow" size={16} /> كل الجلسات</button>}
+          {canWrite && mode === 'list' && <button className="rm-btn primary" onClick={() => startNew()}><Icon name="plus" size={16} /> جلسة جديدة</button>}
+        </>}
+      />
+      {!allowed && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج والمدربين.</div>}
+      {error && <div className="rm-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="aa-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
 
       {/* ===== قائمة الجلسات ===== */}
       {mode === 'list' && (
@@ -256,7 +252,7 @@ function Inner() {
             <div className="aa-stat"><span>سجلات الحضور</span><b>{Object.values(counts).reduce((a, c) => a + c.present + c.late, 0)}</b></div>
             <div className="aa-stat"><span>برامج لها حضور</span><b>{new Set(sessions.map(s => s.program_id)).size}</b></div>
           </section>
-          <section className="aa-card">
+          <section className="rm-card">
             <div className="aa-toolbar">
               <h2><Icon name="calendar" size={18} /> الجلسات <span className="aa-pill">{visible.length}</span></h2>
               <div className="aa-filters">
@@ -264,7 +260,7 @@ function Inner() {
                 <div className="aa-seg">{(['all', 'open', 'closed'] as const).map(k => <button key={k} className={filterStatus === k ? 'on' : ''} onClick={() => setFilterStatus(k)}>{k === 'all' ? 'الكل' : k === 'open' ? 'مفتوحة' : 'مغلقة'}</button>)}</div>
               </div>
             </div>
-            {!visible.length && <div className="aa-empty"><Icon name="check" size={34} /><b>لا توجد جلسات بعد</b><span>ابدأ بـ «جلسة جديدة»: اختر البرنامج والقاعة والوقت، ثم اعرض رمز QR على الشاشة.</span></div>}
+            {!visible.length && <div className="rm-empty"><Icon name="check" size={34} /><b>لا توجد جلسات بعد</b><span>ابدأ بـ «جلسة جديدة»: اختر البرنامج والقاعة والوقت، ثم اعرض رمز QR على الشاشة.</span></div>}
             <div className="aa-list">
               {visible.map(s => {
                 const c = counts[s.id] || { present: 0, late: 0, excused: 0, absent: 0 };
@@ -272,13 +268,13 @@ function Inner() {
                   <article key={s.id} className={`aa-item ${s.status}`}>
                     <div className="aa-item-main">
                       <div className="aa-item-title"><b>{s.title}</b><span className={`aa-status ${s.status}`}>{s.status === 'open' ? 'مفتوحة' : 'مغلقة'}</span>{s.session_date === todayStr && <span className="aa-today">اليوم</span>}</div>
-                      <div className="aa-muted">{pName(s.program_id)}{s.classroom_id ? ` · ${cCode(s.classroom_id)}` : ''}{s.trainer_id ? ` · ${tName(s.trainer_id)}` : ''} · {s.session_date}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? '–' + s.end_time.slice(0, 5) : ''}` : ''} · الرمز <bdi className="aa-token">{s.token}</bdi></div>
+                      <div className="rm-muted">{pName(s.program_id)}{s.classroom_id ? ` · ${cCode(s.classroom_id)}` : ''}{s.trainer_id ? ` · ${tName(s.trainer_id)}` : ''} · {s.session_date}{s.start_time ? ` · ${s.start_time.slice(0, 5)}${s.end_time ? '–' + s.end_time.slice(0, 5) : ''}` : ''} · الرمز <bdi className="aa-token">{s.token}</bdi></div>
                       <div className="aa-counts"><span className="ok">حاضر <b>{c.present}</b></span><span className="warn">متأخر <b>{c.late}</b></span><span>معتذر <b>{c.excused}</b></span><span className="bad">غائب <b>{c.absent}</b></span></div>
                     </div>
                     <div className="aa-item-actions">
-                      <button className="aa-btn small primary" onClick={() => openSession(s.id)}><Icon name="play" size={14} /> عرض / QR</button>
-                      {canWrite && <button className="aa-btn small" onClick={() => toggleStatus(s)}>{s.status === 'open' ? <><Icon name="pause" size={14} /> إغلاق</> : <><Icon name="refresh" size={14} /> إعادة فتح</>}</button>}
-                      {canWrite && <button className="aa-btn small danger" onClick={() => removeSession(s)}><Icon name="trash" size={14} /></button>}
+                      <button className="rm-btn small primary" onClick={() => openSession(s.id)}><Icon name="play" size={14} /> عرض / QR</button>
+                      {canWrite && <button className="rm-btn small" onClick={() => toggleStatus(s)}>{s.status === 'open' ? <><Icon name="pause" size={14} /> إغلاق</> : <><Icon name="refresh" size={14} /> إعادة فتح</>}</button>}
+                      {canWrite && <button className="rm-btn small danger" onClick={() => removeSession(s)}><Icon name="trash" size={14} /></button>}
                     </div>
                   </article>
                 );
@@ -290,7 +286,7 @@ function Inner() {
 
       {/* ===== جلسة جديدة ===== */}
       {mode === 'new' && (
-        <section className="aa-card">
+        <section className="rm-card">
           <h2><Icon name="plus" size={18} /> جلسة حضور جديدة</h2>
           <div className="aa-grid">
             <label><span>البرنامج <i>*</i></span><select value={form.program_id} onChange={e => setForm({ ...form, program_id: e.target.value, classroom_id: '' })}><option value="">— اختر —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
@@ -305,9 +301,9 @@ function Inner() {
             <label className="aa-span3"><span>ملاحظات داخلية</span><input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></label>
           </div>
           <div className="aa-row">
-            <button className="aa-btn primary" onClick={createSession} disabled={!!busy || !form.program_id}><Icon name="check" size={16} /> {busy === 'create' ? 'جارٍ الإنشاء…' : 'إنشاء الجلسة وعرض QR'}</button>
-            <button className="aa-btn" onClick={backToList}>إلغاء</button>
-            <span className="aa-muted">يُحتسب «متأخرًا» من يسجّل بعد وقت البداية + المهلة (بتوقيت الرياض). بدون وقت بداية يُسجَّل الجميع «حاضرًا».</span>
+            <button className="rm-btn primary" onClick={createSession} disabled={!!busy || !form.program_id}><Icon name="check" size={16} /> {busy === 'create' ? 'جارٍ الإنشاء…' : 'إنشاء الجلسة وعرض QR'}</button>
+            <button className="rm-btn" onClick={backToList}>إلغاء</button>
+            <span className="rm-muted">يُحتسب «متأخرًا» من يسجّل بعد وقت البداية + المهلة (بتوقيت الرياض). بدون وقت بداية يُسجَّل الجميع «حاضرًا».</span>
           </div>
         </section>
       )}
@@ -315,44 +311,44 @@ function Inner() {
       {/* ===== عرض جلسة ===== */}
       {mode === 'view' && current && (
         <>
-          <section className="aa-card aa-cur">
+          <section className="rm-card aa-cur">
             <div className="aa-cur-main">
               <div className="aa-item-title"><b style={{ fontSize: 19 }}>{current.title}</b><span className={`aa-status ${current.status}`}>{current.status === 'open' ? 'التسجيل مفتوح' : 'مغلقة'}</span></div>
-              <div className="aa-muted">{pName(current.program_id)}{current.classroom_id ? ` · ${cCode(current.classroom_id)}` : ''}{current.trainer_id ? ` · ${tName(current.trainer_id)}` : ''} · {current.session_date}{current.start_time ? ` · ${current.start_time.slice(0, 5)}${current.end_time ? '–' + current.end_time.slice(0, 5) : ''}` : ''} · مهلة {current.late_after_min} د</div>
+              <div className="rm-muted">{pName(current.program_id)}{current.classroom_id ? ` · ${cCode(current.classroom_id)}` : ''}{current.trainer_id ? ` · ${tName(current.trainer_id)}` : ''} · {current.session_date}{current.start_time ? ` · ${current.start_time.slice(0, 5)}${current.end_time ? '–' + current.end_time.slice(0, 5) : ''}` : ''} · مهلة {current.late_after_min} د</div>
               <div className="aa-url"><bdi>{attendUrl(current.token)}</bdi><button className="aa-ic" title="نسخ" onClick={() => copy(attendUrl(current.token))}><Icon name="copy" size={14} /></button></div>
               <div className="aa-row" style={{ marginTop: 10 }}>
-                <button className="aa-btn primary" onClick={() => setQrOpen(true)}><Icon name="play" size={16} /> عرض QR على الشاشة</button>
-                {canWrite && <button className="aa-btn" onClick={() => toggleStatus(current)}>{current.status === 'open' ? <><Icon name="pause" size={16} /> إغلاق التسجيل</> : <><Icon name="refresh" size={16} /> إعادة الفتح</>}</button>}
-                <button className="aa-btn" onClick={exportSession} disabled={!records.length}><Icon name="download" size={16} /> CSV</button>
-                {canWrite && <button className="aa-btn" onClick={importFromPrevious} disabled={!!busy}><Icon name="users" size={16} /> استيراد الأسماء من الجلسات السابقة</button>}
+                <button className="rm-btn primary" onClick={() => setQrOpen(true)}><Icon name="play" size={16} /> عرض QR على الشاشة</button>
+                {canWrite && <button className="rm-btn" onClick={() => toggleStatus(current)}>{current.status === 'open' ? <><Icon name="pause" size={16} /> إغلاق التسجيل</> : <><Icon name="refresh" size={16} /> إعادة الفتح</>}</button>}
+                <button className="rm-btn" onClick={exportSession} disabled={!records.length}><Icon name="download" size={16} /> CSV</button>
+                {canWrite && <button className="rm-btn" onClick={importFromPrevious} disabled={!!busy}><Icon name="users" size={16} /> استيراد الأسماء من الجلسات السابقة</button>}
               </div>
             </div>
             <div className="aa-live">
               <div className="aa-big"><b>{curCounts.present + curCounts.late}</b><span>حاضر</span></div>
               <div className="aa-counts"><span className="ok">حاضر <b>{curCounts.present}</b></span><span className="warn">متأخر <b>{curCounts.late}</b></span><span>معتذر <b>{curCounts.excused}</b></span><span className="bad">غائب <b>{curCounts.absent}</b></span></div>
-              <small className="aa-muted"><Icon name="refresh" size={12} /> تحديث تلقائي كل {LIVE_MS / 1000} ث{lastSync ? ` · آخر مزامنة ${lastSync.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : ''}</small>
+              <small className="rm-muted"><Icon name="refresh" size={12} /> تحديث تلقائي كل {LIVE_MS / 1000} ث{lastSync ? ` · آخر مزامنة ${lastSync.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : ''}</small>
             </div>
           </section>
 
           {canWrite && (
-            <section className="aa-card">
+            <section className="rm-card">
               <h2><Icon name="edit" size={18} /> تسجيل يدوي</h2>
               <div className="aa-manual">
                 <input placeholder="الاسم الكامل *" value={manual.name} onChange={e => setManual({ ...manual, name: e.target.value })} />
                 <input placeholder="البريد (اختياري)" dir="ltr" value={manual.email} onChange={e => setManual({ ...manual, email: e.target.value })} />
                 <input placeholder="الجوال (اختياري)" dir="ltr" value={manual.phone} onChange={e => setManual({ ...manual, phone: e.target.value })} />
                 <select value={manual.status} onChange={e => setManual({ ...manual, status: e.target.value as RecordStatus })}>{STATUS_ORDER.map(k => <option key={k} value={k}>{STATUS_LABEL[k].ar}</option>)}</select>
-                <button className="aa-btn primary" onClick={addManual} disabled={!!busy}><Icon name="plus" size={15} /> إضافة</button>
+                <button className="rm-btn primary" onClick={addManual} disabled={!!busy}><Icon name="plus" size={15} /> إضافة</button>
               </div>
             </section>
           )}
 
-          <section className="aa-card">
+          <section className="rm-card">
             <h2><Icon name="users" size={18} /> سجل الحضور <span className="aa-pill">{records.length}</span></h2>
-            {!records.length && <div className="aa-empty"><Icon name="users" size={30} /><b>لم يسجّل أحد بعد</b><span>اعرض رمز QR — سيظهر كل تسجيل هنا فورًا.</span></div>}
+            {!records.length && <div className="rm-empty"><Icon name="users" size={30} /><b>لم يسجّل أحد بعد</b><span>اعرض رمز QR — سيظهر كل تسجيل هنا فورًا.</span></div>}
             {!!records.length && (
               <div className="aa-tablewrap">
-                <table className="aa-table">
+                <table className="rm-table">
                   <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الجوال</th><th>الوقت</th><th>الطريقة</th><th>الحالة</th>{canWrite && <th></th>}</tr></thead>
                   <tbody>
                     {records.map((r, i) => (
@@ -381,9 +377,9 @@ function Inner() {
                 <div className="aa-qr-count"><b>{curCounts.present + curCounts.late}</b> سجّلوا حضورهم</div>
                 <small>امسح الرمز بكاميرا الجوال وسجّل اسمك — يستغرق أقل من 20 ثانية</small>
                 <div className="aa-row aa-noprint" style={{ justifyContent: 'center' }}>
-                  <button className="aa-btn primary" onClick={() => window.print()}><Icon name="print" size={16} /> طباعة</button>
-                  <button className="aa-btn" onClick={() => copy(attendUrl(current.token))}><Icon name="copy" size={16} /> نسخ الرابط</button>
-                  <button className="aa-btn" onClick={() => setQrOpen(false)}><Icon name="x" size={16} /> إغلاق</button>
+                  <button className="rm-btn primary" onClick={() => window.print()}><Icon name="print" size={16} /> طباعة</button>
+                  <button className="rm-btn" onClick={() => copy(attendUrl(current.token))}><Icon name="copy" size={16} /> نسخ الرابط</button>
+                  <button className="rm-btn" onClick={() => setQrOpen(false)}><Icon name="x" size={16} /> إغلاق</button>
                 </div>
               </div>
             </div>
@@ -393,18 +389,18 @@ function Inner() {
 
       {/* ===== ملخص الحضور لبرنامج ===== */}
       {mode === 'summary' && (
-        <section className="aa-card">
+        <section className="rm-card">
           <div className="aa-toolbar">
             <h2><Icon name="table" size={18} /> ملخص الحضور حسب المتدرب</h2>
             <div className="aa-filters">
               <select value={sumProgram} onChange={e => { setSumProgram(e.target.value); setSumClassroom(''); }}><option value="">— اختر البرنامج —</option>{programs.map(p => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select>
               <select value={sumClassroom} onChange={e => setSumClassroom(e.target.value)} disabled={!sumProgram}><option value="">كل القاعات</option>{sumClassrooms.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
               <label className="aa-inline">الحد الأدنى للشهادة <input type="number" min={0} max={100} value={minPct} onChange={e => setMinPct(Number(e.target.value))} /> %</label>
-              <button className="aa-btn" onClick={exportSummary} disabled={!summary.length}><Icon name="download" size={16} /> CSV</button>
+              <button className="rm-btn" onClick={exportSummary} disabled={!summary.length}><Icon name="download" size={16} /> CSV</button>
             </div>
           </div>
-          {!sumProgram && <div className="aa-empty"><Icon name="table" size={30} /><b>اختر برنامجًا</b></div>}
-          {sumProgram && !sumSessions.length && <div className="aa-empty"><Icon name="calendar" size={30} /><b>لا توجد جلسات حضور لهذا البرنامج</b><span>أنشئ جلسة لكل لقاء تدريبي أولًا.</span></div>}
+          {!sumProgram && <div className="rm-empty"><Icon name="table" size={30} /><b>اختر برنامجًا</b></div>}
+          {sumProgram && !sumSessions.length && <div className="rm-empty"><Icon name="calendar" size={30} /><b>لا توجد جلسات حضور لهذا البرنامج</b><span>أنشئ جلسة لكل لقاء تدريبي أولًا.</span></div>}
           {sumProgram && !!sumSessions.length && (
             <>
               <div className="aa-sumbar">
@@ -412,10 +408,10 @@ function Inner() {
                 <span className="ok">مستوفون ≥ {minPct}% <b>{okList.length}</b></span><span className="bad">غير مستوفين <b>{summary.length - okList.length}</b></span>
                 <span>متوسط الحضور <b>{summary.length ? Math.round(summary.reduce((a, p) => a + p.pct, 0) / summary.length) : 0}%</b></span>
                 {sumBusy && <span>جارٍ التحميل…</span>}
-                <Link href="/admin/certificates" className="aa-btn small primary" style={{ marginInlineStart: 'auto' }}><Icon name="certificate" size={14} /> إصدار الشهادات للمستوفين</Link>
+                <Link href="/admin/certificates" className="rm-btn small primary" style={{ marginInlineStart: 'auto' }}><Icon name="certificate" size={14} /> إصدار الشهادات للمستوفين</Link>
               </div>
               <div className="aa-tablewrap">
-                <table className="aa-table">
+                <table className="rm-table">
                   <thead><tr><th>#</th><th>الاسم</th><th>البريد</th><th>الجوال</th><th>حاضر</th><th>متأخر</th><th>معتذر</th><th>غائب</th><th>النسبة</th><th>الحالة</th></tr></thead>
                   <tbody>
                     {summary.map((p, i) => (
@@ -429,7 +425,7 @@ function Inner() {
                   </tbody>
                 </table>
               </div>
-              <p className="aa-muted" style={{ marginTop: 10 }}>النسبة = (حاضر + متأخر) ÷ (عدد الجلسات − الاعتذارات). من لم يسجّل في جلسة يُعدّ غائبًا فيها. في صفحة الشهادات استخدم «استيراد من سجل الحضور» بنفس الحد الأدنى.</p>
+              <p className="rm-muted" style={{ marginTop: 10 }}>النسبة = (حاضر + متأخر) ÷ (عدد الجلسات − الاعتذارات). من لم يسجّل في جلسة يُعدّ غائبًا فيها. في صفحة الشهادات استخدم «استيراد من سجل الحضور» بنفس الحد الأدنى.</p>
             </>
           )}
         </section>
@@ -441,25 +437,15 @@ function Inner() {
 }
 
 const CSS = `
-.aa{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.aa *{box-sizing:border-box}
-.aa-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid #D9A866;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.aa-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.aa-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:760px;line-height:1.7}
-.aa-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.aa-nav{display:flex;gap:8px;flex-wrap:wrap}
-.aa-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
-.aa-btn:disabled{opacity:.5;cursor:not-allowed}.aa-btn.primary{background:${NAVY};color:#fff;border-color:${NAVY}}.aa-btn.small{padding:6px 10px;font-size:12px}.aa-btn.danger{color:#b91c1c;border-color:#fecaca}
-.aa-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;font-weight:700;line-height:1.7}.aa-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.aa{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
+.aa *{box-sizing:border-box}.rm-btn.small{padding:6px 10px;font-size:12px}.rm-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .aa-x{border:0;background:transparent;cursor:pointer;color:inherit}
 .aa-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .aa-stat{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 16px;display:flex;flex-direction:column;gap:2px}.aa-stat span{font-size:12px;font-weight:800;color:#8E7F8A}.aa-stat b{font-size:24px;color:${NAVY}}
-.aa-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}.aa-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
 .aa-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.aa-toolbar h2{margin:0}
 .aa-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .aa-seg{display:inline-flex;background:#F6EBE0;border:1px solid #EADFD6;border-radius:10px;padding:3px;gap:2px}.aa-seg button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:800;color:#5C4858;padding:6px 11px;border-radius:8px;cursor:pointer}.aa-seg button.on{background:${NAVY};color:#fff}
 .aa-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858}
-.aa-muted{color:#8E7F8A;font-size:12.5px;font-weight:700;line-height:1.7}
-.aa-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:30px;text-align:center;color:#8E7F8A;border:1px dashed #D9CBC2;border-radius:14px}.aa-empty b{color:${NAVY};font-size:15px}
 .aa-list{display:flex;flex-direction:column;gap:10px}
 .aa-item{border:1px solid #EADFD6;border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;border-inline-start:5px solid #D4614A}.aa-item.closed{border-inline-start-color:#B3A5AE;opacity:.92}
 .aa-item-title{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.aa-item-title b{font-size:15px;color:${NAVY}}
@@ -475,14 +461,13 @@ const CSS = `
 .aa-check{flex-direction:row!important;align-items:center;gap:8px!important;font-size:13px!important;color:#4A3645!important;align-self:end;padding-bottom:10px}
 .aa-inline{flex-direction:row!important;align-items:center;gap:6px!important}.aa-inline input{width:70px;padding:7px 8px}
 .aa-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.aa-cur{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start}.aa-cur-main{min-width:0}.aa-cur-main .aa-muted{overflow-wrap:anywhere}
+.aa-cur{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start}.aa-cur-main{min-width:0}.aa-cur-main .rm-muted{overflow-wrap:anywhere}
 .aa-url{display:flex;align-items:center;gap:6px;margin-top:8px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:#4A3645;word-break:break-all}
 .aa-ic{width:30px;height:30px;border:1px solid #EADFD6;background:#fff;border-radius:8px;display:inline-grid;place-items:center;cursor:pointer;color:${NAVY};font:inherit;flex:none}.aa-ic.danger{color:#b91c1c}
 .aa-live{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:220px;background:#FBF4EE;border:1px solid #EADFD6;border-radius:14px;padding:14px}
 .aa-big{display:flex;flex-direction:column;align-items:center}.aa-big b{font-size:44px;line-height:1;color:#D4614A}.aa-big span{font-size:12px;font-weight:800;color:#8E7F8A}
 .aa-manual{display:grid;grid-template-columns:1.4fr 1.2fr 1fr auto auto;gap:8px;align-items:center}
-.aa-tablewrap{overflow:auto;border:1px solid #EADFD6;border-radius:12px}
-.aa-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}.aa-table th{background:#FBF4EE;color:#5C4858;font-size:12px;text-align:start;padding:9px 10px;border-bottom:1px solid #EADFD6;white-space:nowrap}.aa-table td{padding:8px 10px;border-bottom:1px solid #F6EBE0;vertical-align:middle}.aa-table tr.low td{background:#fff7f7}
+.aa-tablewrap{overflow:auto;border:1px solid #EADFD6;border-radius:12px}.rm-table tr.low td{background:#fff7f7}
 .aa-st{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:900;border:1px solid transparent}
 .aa-st.present{background:#ecfdf5;color:#047857;border-color:#a7f3d0}.aa-st.late{background:#fff7ed;color:#b45309;border-color:#fed7aa}.aa-st.excused{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe}.aa-st.absent{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
 select.aa-st{padding:4px 8px!important;font-size:12px!important}
@@ -498,6 +483,6 @@ select.aa-st{padding:4px 8px!important;font-size:12px!important}
 .aa-qr-count{font-size:14px;font-weight:800;color:#5C4858;margin-bottom:4px}.aa-qr-count b{font-size:22px;color:#D4614A}
 .aa-print small{display:block;color:#8E7F8A;font-weight:700;font-size:12px}
 .aa-toast{position:fixed;bottom:18px;inset-inline-start:18px;background:${NAVY};color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:120}
-@media print{.aa>*:not(.aa-modal){display:none!important}.aa{padding:0;background:#fff}.aa-modal{position:static;background:#fff;padding:0;display:block}.aa-modal-box{max-width:none;box-shadow:none;margin:0 auto}.aa-noprint{display:none!important}.aa-qr svg{width:420px;height:420px}.global-nav{display:none!important}}
-@media(max-width:980px){.aa{padding:12px}.aa-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.aa-grid{grid-template-columns:1fr}.aa-span2,.aa-span3{grid-column:auto}.aa-item{grid-template-columns:1fr}.aa-item-actions{flex-direction:row;flex-wrap:wrap}.aa-cur{grid-template-columns:1fr}.aa-live{min-width:0}.aa-manual{grid-template-columns:1fr 1fr}}
+@media print{.aa>*:not(.aa-modal){display:none!important}.aa{}.aa-modal{position:static;background:#fff;padding:0;display:block}.aa-modal-box{max-width:none;box-shadow:none;margin:0 auto}.aa-noprint{display:none!important}.aa-qr svg{width:420px;height:420px}.global-nav{display:none!important}}
+@media(max-width:980px){.aa{}.aa-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.aa-grid{grid-template-columns:1fr}.aa-span2,.aa-span3{grid-column:auto}.aa-item{grid-template-columns:1fr}.aa-item-actions{flex-direction:row;flex-wrap:wrap}.aa-cur{grid-template-columns:1fr}.aa-live{min-width:0}.aa-manual{grid-template-columns:1fr 1fr}}
 `;

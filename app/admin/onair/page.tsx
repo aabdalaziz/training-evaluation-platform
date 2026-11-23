@@ -14,6 +14,7 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { GRADE_LABEL, WEEKDAY_AR, P34_NAMES_AR, P35_NAMES_AR, P36_NAMES_AR } from '../../../lib/onair/registry';
 import type { Grade } from '../../../lib/onair/registry';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
 type Tab = 'now' | 'escalations' | 'faq' | 'people' | 'golden' | 'echo' | 'season' | 'week';   /* P36: week */
@@ -37,80 +38,83 @@ export default function AdminOnAirPage() {
 
   const present: any[] = data?.present || []; const queue: any[] = data?.queue || []; const esc: any[] = data?.escalations || []; const recent: any[] = data?.recent || []; const grounded: any[] = data?.grounded || []; const interpreters: any[] = data?.interpreters || []; const st = data?.stats;
   const faqCandidates = recent.filter(r => r.status === 'done' && r.kind === 'quick');
-  if (!ready) return <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="am-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  if (!ready) return <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="rm-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   return (
-    <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
-        <header className="am-head"><div><span className="am-kicker"><Icon name="chat" size={14} /> بوابة أَثَر · P33</span><h1>اسأل خبيرًا — «أَثَر معك» على الهواء</h1><p>الطاقم هنا حارسٌ لا مُشغِّل: يرى من على الهواء، ويتولّى ما صُعّد إليه والاستشارات، ويعتمد «أسئلة أجاب عنها الهواء» بصياغة عامة، ويعتمد مترجمي الإشارة. خيوط «عونٍ سريع» ملك لطرفيها.</p></div></header>
+        <RoomHead
+        title={<>اسأل خبيرًا — «أَثَر معك» على الهواء</>}
+        desc={<><p>الطاقم هنا حارسٌ لا مُشغِّل: يرى من على الهواء، ويتولّى ما صُعّد إليه والاستشارات، ويعتمد «أسئلة أجاب عنها الهواء» بصياغة عامة، ويعتمد مترجمي الإشارة. خيوط «عونٍ سريع» ملك لطرفيها.</p></>}
+      />
         <PortalAdminTabs counts={{ '/admin/onair': esc.length }} />
         {error && <div className="am-err" role="alert">{error}</div>}{ok && <div className="am-ok" role="status">{ok}</div>}
         {data?.pending_sql && <div className="am-err" role="alert">لم يُنفَّذ ملف SQL الخاص بـ P33 بعد (<code>20261210_portal_p33_onair.sql</code>) — نفّذه أولًا ثم أعد التحميل.</div>}
-        {st && <div className="am-kpis" data-testid="ao-kpis"><span className="g"><b>{st.present}</b> على الهواء الآن</span><span><b>{st.month.asked}</b> طلبًا هذا الشهر</span><span><b>{st.month.done}</b> اكتمل</span><span><b>{st.month.expired}</b> بلا ردّ</span><span><b>{st.month.escalated}</b> صُعّد</span><span><b>{st.month.avg_response_min ?? '—'}</b> د متوسط أول ردّ</span><span><b>{st.interpreters}</b> مترجمًا معتمَدًا</span><span className="am-cycle"><Link href="/on-air" className="am-btn ghost small">الصفحة العامة</Link></span></div>}
+        {st && <div className="rm-kpis" data-testid="ao-kpis"><span className="g"><b>{st.present}</b> على الهواء الآن</span><span><b>{st.month.asked}</b> طلبًا هذا الشهر</span><span><b>{st.month.done}</b> اكتمل</span><span><b>{st.month.expired}</b> بلا ردّ</span><span><b>{st.month.escalated}</b> صُعّد</span><span><b>{st.month.avg_response_min ?? '—'}</b> د متوسط أول ردّ</span><span><b>{st.interpreters}</b> مترجمًا معتمَدًا</span><span className="am-cycle"><Link href="/on-air" className="rm-btn ghost small">الصفحة العامة</Link></span></div>}
         <div className="am-tabs" role="tablist">{([['now', `الآن (${present.length} · صفّ ${queue.length})`], ['escalations', `التصعيدات والاستشارات (${esc.length})`], ['faq', 'أسئلة أجاب عنها الهواء'], ['people', 'المترجمون والإنزال'], ['golden', `✦ ${P34_NAMES_AR.golden}`], ['echo', `${P34_NAMES_AR.echo} (${(data?.echo_candidates || []).length})`], ['season', `❂ ${P35_NAMES_AR.season}`], ['week', `🔗 ${P36_NAMES_AR.week_question} (${(data?.week?.candidates || []).length})`]] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)} data-testid={`ao-tab-${k}`}>{l}</button>)}</div>
 
         {tab === 'now' && <div className="am-grid2">
-          <div className="am-card" data-testid="ao-present"><h3>من على الهواء الآن <small>— بالأسماء؛ لا أحد يُجبر على الصعود ولا يُسأل عن النزول</small></h3>
-            {!present.length && <div className="am-empty">لا أحد الآن.</div>}
-            {present.length > 0 && <table className="am-table"><thead><tr><th>الاسم</th><th>الوجه</th><th>يستقبل</th><th>المجالات</th><th>متبقٍ</th><th></th></tr></thead><tbody>{present.map(p => <tr key={p.user_id}><td><b>{p.name_ar}</b><br /><small>{p.email}</small></td><td>{p.face_ar}</td><td>{p.receives.map((g: Grade) => GRADE_LABEL[g]?.ar || g).join(' · ')}</td><td><small>{p.domains.join(' · ') || '—'}</small></td><td>{p.minutes_left} د</td><td><input placeholder="سبب الإنزال" value={note[p.user_id] || ''} onChange={e => setNote(n => ({ ...n, [p.user_id]: e.target.value }))} aria-label="سبب الإنزال" /><button type="button" className="am-btn danger small" disabled={!!busy || (note[p.user_id] || '').length < 5} onClick={() => post({ action: 'ground', user_id: p.user_id, note: note[p.user_id] })} data-testid="ao-ground">أنزِل</button></td></tr>)}</tbody></table>}
+          <div className="rm-card" data-testid="ao-present"><h3>من على الهواء الآن <small>— بالأسماء؛ لا أحد يُجبر على الصعود ولا يُسأل عن النزول</small></h3>
+            {!present.length && <div className="rm-empty">لا أحد الآن.</div>}
+            {present.length > 0 && <table className="rm-table"><thead><tr><th>الاسم</th><th>الوجه</th><th>يستقبل</th><th>المجالات</th><th>متبقٍ</th><th></th></tr></thead><tbody>{present.map(p => <tr key={p.user_id}><td><b>{p.name_ar}</b><br /><small>{p.email}</small></td><td>{p.face_ar}</td><td>{p.receives.map((g: Grade) => GRADE_LABEL[g]?.ar || g).join(' · ')}</td><td><small>{p.domains.join(' · ') || '—'}</small></td><td>{p.minutes_left} د</td><td><input placeholder="سبب الإنزال" value={note[p.user_id] || ''} onChange={e => setNote(n => ({ ...n, [p.user_id]: e.target.value }))} aria-label="سبب الإنزال" /><button type="button" className="rm-btn danger small" disabled={!!busy || (note[p.user_id] || '').length < 5} onClick={() => post({ action: 'ground', user_id: p.user_id, note: note[p.user_id] })} data-testid="ao-ground">أنزِل</button></td></tr>)}</tbody></table>}
           </div>
-          <div className="am-card" data-testid="ao-queue"><h3>الصفّ الحي <small>— يراه الحاضرون؛ الطاقم يراقب فقط</small></h3>
-            {!queue.length && <div className="am-empty">لا طلبات مفتوحة.</div>}
+          <div className="rm-card" data-testid="ao-queue"><h3>الصفّ الحي <small>— يراه الحاضرون؛ الطاقم يراقب فقط</small></h3>
+            {!queue.length && <div className="rm-empty">لا طلبات مفتوحة.</div>}
             {queue.map(r => <div key={r.id} className="ao-req"><b>{r.kind_ar}</b> · <span className="am-st" style={{ background: r.status === 'taken' ? '#0b6f69' : '#D9A866' }}>{r.status_ar}</span> · <small>{r.asker_alias}{r.domain ? ` · ${r.domain}` : ''} · {fmt(r.created_at)}{r.receiver_ar !== '—' ? ` · مع ${r.receiver_ar}` : ''}</small><p>{r.text_ar}</p></div>)}
           </div>
         </div>}
 
-        {tab === 'escalations' && <div className="am-card" data-testid="ao-esc"><h3>التصعيدات والاستشارات <small>— «يحتاج الطاقم» من مُستقبِل، أو «استشارة» من سائل؛ الطاقم يتولّاها ويغلقها بملاحظة تصل الخيط</small></h3>
-          {!esc.length && <div className="am-empty">لا شيء ينتظر.</div>}
+        {tab === 'escalations' && <div className="rm-card" data-testid="ao-esc"><h3>التصعيدات والاستشارات <small>— «يحتاج الطاقم» من مُستقبِل، أو «استشارة» من سائل؛ الطاقم يتولّاها ويغلقها بملاحظة تصل الخيط</small></h3>
+          {!esc.length && <div className="rm-empty">لا شيء ينتظر.</div>}
           {esc.map(r => <div key={r.id} className="ao-req" data-testid="ao-esc-row"><b>{r.kind_ar}</b> · <small>{r.asker_alias}{r.domain ? ` · ${r.domain}` : ''} · {fmt(r.created_at)}{r.receiver_ar !== '—' ? ` · صعّده ${r.receiver_ar}` : ''}{r.interpreter_wanted ? ' · يطلب مترجم إشارة' : ''}</small><p>{r.text_ar}</p>
             {thread[r.id] && <ul className="ao-thread">{thread[r.id].map((m: any) => <li key={m.id}><small>{m.from_role === 'asker' ? 'السائل' : m.from_role === 'receiver' ? 'المُستقبِل' : 'النظام'}:</small> {m.text_ar}</li>)}</ul>}
             <div className="am-decide">
-              {!thread[r.id] && r.kind === 'quick' && <button type="button" className="am-btn ghost small" disabled={!!busy} onClick={async () => { const j = await post({ action: 'thread', id: r.id }); if (j) setThread(t => ({ ...t, [r.id]: j.messages || [] })); }}>اقرأ الخيط المُصعَّد</button>}
+              {!thread[r.id] && r.kind === 'quick' && <button type="button" className="rm-btn ghost small" disabled={!!busy} onClick={async () => { const j = await post({ action: 'thread', id: r.id }); if (j) setThread(t => ({ ...t, [r.id]: j.messages || [] })); }}>اقرأ الخيط المُصعَّد</button>}
               <input placeholder="ملاحظة للطالب (اختياري)" value={note[r.id] || ''} onChange={e => setNote(n => ({ ...n, [r.id]: e.target.value }))} aria-label="ملاحظة" style={{ maxWidth: 360 }} />
-              <button type="button" className="am-btn small" disabled={!!busy} onClick={() => post({ action: 'resolve', id: r.id, note: note[r.id] })} data-testid="ao-resolve">تولّيته</button>
-              {r.kind === 'consult' && <Link href="/admin/consulting" className="am-btn ghost small">طلبات الاستشارة</Link>}
+              <button type="button" className="rm-btn small" disabled={!!busy} onClick={() => post({ action: 'resolve', id: r.id, note: note[r.id] })} data-testid="ao-resolve">تولّيته</button>
+              {r.kind === 'consult' && <Link href="/admin/consulting" className="rm-btn ghost small">طلبات الاستشارة</Link>}
             </div></div>)}
         </div>}
 
-        {tab === 'faq' && <div className="am-card" data-testid="ao-faq"><h3>أسئلة أجاب عنها الهواء <small>— خذ لقاءً اكتمل، وأعد صياغة السؤال والجواب بصيغة عامة بلا أسماء؛ يظهر في /on-air لينفع من يأتي بعده</small></h3>
-          {!faqCandidates.length && <div className="am-empty">لا لقاءات مكتملة هذا الشهر بعد.</div>}
+        {tab === 'faq' && <div className="rm-card" data-testid="ao-faq"><h3>أسئلة أجاب عنها الهواء <small>— خذ لقاءً اكتمل، وأعد صياغة السؤال والجواب بصيغة عامة بلا أسماء؛ يظهر في /on-air لينفع من يأتي بعده</small></h3>
+          {!faqCandidates.length && <div className="rm-empty">لا لقاءات مكتملة هذا الشهر بعد.</div>}
           {faqCandidates.map(r => <div key={r.id} className="ao-req" data-testid="ao-faq-row"><b>{r.kind_ar}</b> · <small>{r.domain || 'بلا مجال'} · {fmt(r.done_at)} · {r.outcome_ar}</small><p>{r.text_ar}</p>
             {r.faq ? <p className="am-ok">معتمَد: «{r.faq.question_ar}»</p> : <>
               <input placeholder="السؤال بصياغة عامة" value={faq[r.id]?.q ?? r.text_ar.slice(0, 160)} onChange={e => setFaq(f => ({ ...f, [r.id]: { q: e.target.value, a: f[r.id]?.a || '' } }))} aria-label="السؤال" />
               <textarea rows={3} placeholder="الجواب الذي يصلح لكل من يسأل مثله" value={faq[r.id]?.a || ''} onChange={e => setFaq(f => ({ ...f, [r.id]: { q: f[r.id]?.q ?? r.text_ar.slice(0, 160), a: e.target.value } }))} aria-label="الجواب" style={{ marginTop: 6 }} />
-              <div className="am-decide"><button type="button" className="am-btn small" disabled={!!busy || !(faq[r.id]?.a || '').trim()} onClick={() => post({ action: 'faq', id: r.id, question_ar: faq[r.id]?.q ?? r.text_ar.slice(0, 160), answer_ar: faq[r.id]?.a })} data-testid="ao-faq-approve">اعتمد ونشر</button></div>
+              <div className="am-decide"><button type="button" className="rm-btn small" disabled={!!busy || !(faq[r.id]?.a || '').trim()} onClick={() => post({ action: 'faq', id: r.id, question_ar: faq[r.id]?.q ?? r.text_ar.slice(0, 160), answer_ar: faq[r.id]?.a })} data-testid="ao-faq-approve">اعتمد ونشر</button></div>
             </>}
           </div>)}
         </div>}
 
         {tab === 'people' && <div className="am-grid2">
-          <div className="am-card" data-testid="ao-interp"><h3>مترجمو لغة الإشارة <small>— الوجه الثالث على الهواء؛ يعتمدهم الطاقم ببريدهم</small></h3>
-            <div className="am-decide"><input placeholder="بريد المترجم" value={interpEmail} onChange={e => setInterpEmail(e.target.value)} aria-label="بريد المترجم" dir="ltr" style={{ maxWidth: 320 }} /><button type="button" className="am-btn small" disabled={!!busy || !interpEmail.includes('@')} onClick={async () => { const j = await post({ action: 'interpreter', email: interpEmail.trim(), ok: true }); if (j) setInterpEmail(''); }} data-testid="ao-interp-add">اعتمد</button></div>
-            {!interpreters.length && <div className="am-empty">لا مترجمين معتمَدين بعد — انظر «شريك لغة الإشارة» في قرارات التشغيل.</div>}
-            <ul>{interpreters.map(i => <li key={i.user_id}><b>{i.name_ar}</b> <small>{i.email}</small> <button type="button" className="am-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'interpreter', user_id: i.user_id, ok: false })}>ألغِ</button></li>)}</ul>
+          <div className="rm-card" data-testid="ao-interp"><h3>مترجمو لغة الإشارة <small>— الوجه الثالث على الهواء؛ يعتمدهم الطاقم ببريدهم</small></h3>
+            <div className="am-decide"><input placeholder="بريد المترجم" value={interpEmail} onChange={e => setInterpEmail(e.target.value)} aria-label="بريد المترجم" dir="ltr" style={{ maxWidth: 320 }} /><button type="button" className="rm-btn small" disabled={!!busy || !interpEmail.includes('@')} onClick={async () => { const j = await post({ action: 'interpreter', email: interpEmail.trim(), ok: true }); if (j) setInterpEmail(''); }} data-testid="ao-interp-add">اعتمد</button></div>
+            {!interpreters.length && <div className="rm-empty">لا مترجمين معتمَدين بعد — انظر «شريك لغة الإشارة» في قرارات التشغيل.</div>}
+            <ul>{interpreters.map(i => <li key={i.user_id}><b>{i.name_ar}</b> <small>{i.email}</small> <button type="button" className="rm-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'interpreter', user_id: i.user_id, ok: false })}>ألغِ</button></li>)}</ul>
           </div>
-          <div className="am-card" data-testid="ao-grounded"><h3>المُنزَلون من الهواء <small>— بقرار الطاقم وسبب يصل العضو؛ يُرفع متى شئت</small></h3>
-            {!grounded.length && <div className="am-empty">لا أحد.</div>}
-            <ul>{grounded.map(g => <li key={g.user_id}><b>{g.name_ar}</b> ({g.face_ar}) <small>{g.email} · {fmt(g.grounded_at)} · {g.note}</small> <button type="button" className="am-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'unground', user_id: g.user_id })} data-testid="ao-unground">ارفع الإنزال</button></li>)}</ul>
+          <div className="rm-card" data-testid="ao-grounded"><h3>المُنزَلون من الهواء <small>— بقرار الطاقم وسبب يصل العضو؛ يُرفع متى شئت</small></h3>
+            {!grounded.length && <div className="rm-empty">لا أحد.</div>}
+            <ul>{grounded.map(g => <li key={g.user_id}><b>{g.name_ar}</b> ({g.face_ar}) <small>{g.email} · {fmt(g.grounded_at)} · {g.note}</small> <button type="button" className="rm-btn ghost small" disabled={!!busy} onClick={() => post({ action: 'unground', user_id: g.user_id })} data-testid="ao-unground">ارفع الإنزال</button></li>)}</ul>
           </div>
         </div>}
 
-        {tab === 'golden' && <div className="am-card" data-testid="ao-golden"><h3>✦ {P34_NAMES_AR.golden} <small>— موعد أسبوعي ثابت يتواعد فيه أعضاء الهيئة على الصعود معًا؛ يظهر عدّادًا تنازليًا في الرئيسة و/on-air، ويذكّر المتعهّدين قبله بساعة (عبر كرون الهيئة القائم)</small></h3>
-          {(data?.golden || []).map((g: any) => <div key={g.id} className="ao-req" data-testid="ao-golden-row"><b>{g.title_ar}</b> · {g.weekday_ar} {g.from} · {g.duration_min} دقيقة · <span className="am-st" style={{ background: g.live ? '#b45309' : '#3A1F36' }}>{g.live ? 'جارية الآن' : g.countdown_ar}</span> · <b>{g.pledged}</b> تعهّدوا هذا الأسبوع <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'golden_off', id: g.id })} data-testid="ao-golden-off">أوقفها</button></div>)}
-          {!(data?.golden || []).length && <div className="am-empty">لا ساعة ذهبية معلَنة.</div>}
+        {tab === 'golden' && <div className="rm-card" data-testid="ao-golden"><h3>✦ {P34_NAMES_AR.golden} <small>— موعد أسبوعي ثابت يتواعد فيه أعضاء الهيئة على الصعود معًا؛ يظهر عدّادًا تنازليًا في الرئيسة و/on-air، ويذكّر المتعهّدين قبله بساعة (عبر كرون الهيئة القائم)</small></h3>
+          {(data?.golden || []).map((g: any) => <div key={g.id} className="ao-req" data-testid="ao-golden-row"><b>{g.title_ar}</b> · {g.weekday_ar} {g.from} · {g.duration_min} دقيقة · <span className="am-st" style={{ background: g.live ? '#b45309' : '#3A1F36' }}>{g.live ? 'جارية الآن' : g.countdown_ar}</span> · <b>{g.pledged}</b> تعهّدوا هذا الأسبوع <button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'golden_off', id: g.id })} data-testid="ao-golden-off">أوقفها</button></div>)}
+          {!(data?.golden || []).length && <div className="rm-empty">لا ساعة ذهبية معلَنة.</div>}
           <form className="ao-form" onSubmit={e => { e.preventDefault(); const [h, m] = gold.from.split(':').map(Number); post({ action: 'golden_set', title_ar: gold.title_ar, weekday: gold.weekday, from_min: (h || 0) * 60 + (m || 0), duration_min: gold.duration_min }); }}>
             <label>العنوان<input value={gold.title_ar} onChange={e => setGold(g => ({ ...g, title_ar: e.target.value.slice(0, 80) }))} data-testid="ao-golden-title" /></label>
             <label>اليوم<select value={gold.weekday} onChange={e => setGold(g => ({ ...g, weekday: Number(e.target.value) }))} data-testid="ao-golden-day">{WEEKDAY_AR.map((n, i) => <option key={i} value={i}>{n}</option>)}</select></label>
             <label>الوقت (الرياض)<input type="time" value={gold.from} onChange={e => setGold(g => ({ ...g, from: e.target.value }))} data-testid="ao-golden-from" /></label>
             <label>المدة<select value={gold.duration_min} onChange={e => setGold(g => ({ ...g, duration_min: Number(e.target.value) }))}>{[30, 45, 60, 90, 120].map(m => <option key={m} value={m}>{m} دقيقة</option>)}</select></label>
-            <button type="submit" className="am-btn" disabled={!!busy} data-testid="ao-golden-set">{(data?.golden || []).length ? 'استبدلها بهذه' : 'أعلن الساعة الذهبية'}</button>
+            <button type="submit" className="rm-btn" disabled={!!busy} data-testid="ao-golden-set">{(data?.golden || []).length ? 'استبدلها بهذه' : 'أعلن الساعة الذهبية'}</button>
           </form>
         </div>}
 
-        {tab === 'season' && <div className="am-card" data-testid="ao-season"><h3>❂ {P35_NAMES_AR.season} <small>— أسبوع أو أسبوعان يعلن فيهما الطاقم موسمًا، فتعلن كلُّ جهةٍ ساعتها الذهبية من صفحتها؛ تضيء الخريطة جهةً بعد جهة، ويُذكَّر منسوبو الجهة الصاعدون قبل ساعتهم، وبعد الموسم تصدر الجهة «وثيقة موسم» موقَّعة (ATH-OS). لا تعهّد فردي ولا ترتيب</small></h3>
-          {data?.season && <div className="ao-req" data-testid="ao-season-row"><b>{data.season.title_ar}</b> · {data.season.from_day} → {data.season.to_day} · <span className="am-st" style={{ background: data.season.phase === 'live' ? '#0e7490' : data.season.phase === 'after' ? '#8E7F8A' : '#3A1F36' }}>{data.season.phrase}</span> · <b>{data.season.orgs}</b> جهات أعلنت{data.season.invite_ar ? <> · «{data.season.invite_ar}»</> : null} <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'season_off', id: data.season.id })} data-testid="ao-season-off">أغلق الموسم</button>
+        {tab === 'season' && <div className="rm-card" data-testid="ao-season"><h3>❂ {P35_NAMES_AR.season} <small>— أسبوع أو أسبوعان يعلن فيهما الطاقم موسمًا، فتعلن كلُّ جهةٍ ساعتها الذهبية من صفحتها؛ تضيء الخريطة جهةً بعد جهة، ويُذكَّر منسوبو الجهة الصاعدون قبل ساعتهم، وبعد الموسم تصدر الجهة «وثيقة موسم» موقَّعة (ATH-OS). لا تعهّد فردي ولا ترتيب</small></h3>
+          {data?.season && <div className="ao-req" data-testid="ao-season-row"><b>{data.season.title_ar}</b> · {data.season.from_day} → {data.season.to_day} · <span className="am-st" style={{ background: data.season.phase === 'live' ? '#0e7490' : data.season.phase === 'after' ? '#8E7F8A' : '#3A1F36' }}>{data.season.phrase}</span> · <b>{data.season.orgs}</b> جهات أعلنت{data.season.invite_ar ? <> · «{data.season.invite_ar}»</> : null} <button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'season_off', id: data.season.id })} data-testid="ao-season-off">أغلق الموسم</button>
             {(data.season.slots || []).length > 0 && <ul className="ao-slots">{data.season.slots.map((x: any) => <li key={x.id} data-testid="ao-season-slot"><b>{x.org_name_ar}</b> · {x.weekday_ar} {x.from} · {x.duration_min} دقيقة · {x.public_name ? 'بالاسم على الخريطة' : 'بلا اسم'}</li>)}</ul>}
           </div>}
-          {!data?.season && <div className="am-empty">لا موسم معلَنًا.</div>}
+          {!data?.season && <div className="rm-empty">لا موسم معلَنًا.</div>}
           {data?.whisper && <div className="ao-req" data-testid="ao-whisper-row">🤟 {P35_NAMES_AR.whisper} جارية الآن: <b>{data.whisper.title_ar}</b> · الغرفة {data.whisper.room_code}</div>}
           {(data?.echo_back || []).length > 0 && <div className="ao-req" data-testid="ao-echo-back"><b>↩ {P35_NAMES_AR.echo_back}</b> — {data.echo_back.map((e: any) => <span key={e.id}>يوم {e.day}: <b>{e.returns}</b> تدرّبوا · </span>)}<small>يُخطَر صاحب السؤال ومن حلّه عند 5 و25 و100 (من الكرون القائم)</small></div>}
           <form className="ao-form" onSubmit={e => { e.preventDefault(); post({ action: 'season_set', ...sea }); }}>
@@ -118,31 +122,31 @@ export default function AdminOnAirPage() {
             <label>من يوم<input type="date" value={sea.from_day} onChange={e => setSea(g => ({ ...g, from_day: e.target.value }))} required data-testid="ao-season-from" /></label>
             <label>إلى يوم<input type="date" value={sea.to_day} onChange={e => setSea(g => ({ ...g, to_day: e.target.value }))} required data-testid="ao-season-to" /></label>
             <label>دعوة قصيرة (اختياري)<input value={sea.invite_ar} onChange={e => setSea(g => ({ ...g, invite_ar: e.target.value.slice(0, 200) }))} placeholder="مثال: أسبوعٌ نرفع فيه أيدينا معًا" data-testid="ao-season-invite" /></label>
-            <button type="submit" className="am-btn" disabled={!!busy} data-testid="ao-season-set">{data?.season ? 'استبدله بموسم جديد' : 'أعلن الموسم'}</button>
+            <button type="submit" className="rm-btn" disabled={!!busy} data-testid="ao-season-set">{data?.season ? 'استبدله بموسم جديد' : 'أعلن الموسم'}</button>
           </form>
           <h4 className="ao-h4">📖 {P36_NAMES_AR.record} — المواسم المنتهية ({(data?.seasons_ended || []).length})</h4>
-          {!(data?.seasons_ended || []).length && <div className="am-empty">لم ينتهِ موسم بعد. السجلّ العامّ المجهَّل يُجمَّد وحده بعد نهاية كل موسم (<Link href="/on-air/seasons">/on-air/seasons</Link>).</div>}
+          {!(data?.seasons_ended || []).length && <div className="rm-empty">لم ينتهِ موسم بعد. السجلّ العامّ المجهَّل يُجمَّد وحده بعد نهاية كل موسم (<Link href="/on-air/seasons">/on-air/seasons</Link>).</div>}
           {(data?.seasons_ended || []).map((r: any) => <div key={r.id} className="ao-req" data-testid="ao-season-record"><b>{r.title_ar}</b> · {r.from_day} → {r.to_day} · <small>{r.line_ar}</small> · <Link href={r.url}>السجلّ العامّ</Link></div>)}
         </div>}
 
-        {tab === 'week' && <div className="am-card" data-testid="ao-week"><h3>🔗 {P36_NAMES_AR.chain} → {P36_NAMES_AR.week_question} <small>— أمانة مضت عليها 72 ساعة بلا مستلم، وأذن كاتبها عند كتابتها بنشرها مجهولةً. أنت تراجع الصياغة (بلا أسماء ولا تفاصيل) وتعتمد؛ سؤال واحد في الأسبوع، يجيب عنه من على الهواء بدوره لا باسمه، ويُبلَّغ كاتبها. لا يكتب الذكاء الاصطناعي هنا شيئًا</small></h3>
+        {tab === 'week' && <div className="rm-card" data-testid="ao-week"><h3>🔗 {P36_NAMES_AR.chain} → {P36_NAMES_AR.week_question} <small>— أمانة مضت عليها 72 ساعة بلا مستلم، وأذن كاتبها عند كتابتها بنشرها مجهولةً. أنت تراجع الصياغة (بلا أسماء ولا تفاصيل) وتعتمد؛ سؤال واحد في الأسبوع، يجيب عنه من على الهواء بدوره لا باسمه، ويُبلَّغ كاتبها. لا يكتب الذكاء الاصطناعي هنا شيئًا</small></h3>
           {data?.week?.published && <div className="ao-req ao-week-pub" data-testid="ao-week-published"><span className="am-st" style={{ background: '#6d28d9' }}>منشور هذا الأسبوع</span> <b>«{data.week.published.text_ar}»</b> · <small>منذ {data.week.published.week_start} · {data.week.published.line_ar}</small>
             {(data.week.published.answers || []).length > 0 && <ul className="ao-slots">{data.week.published.answers.map((a: any) => <li key={a.id}><b>{a.role_label_ar}</b>: {a.text_ar}</li>)}</ul>}
-            <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_retire', id: data.week.published.id })} data-testid="ao-week-retire">اطوِه الآن</button></div>}
-          {!data?.week?.published && <div className="am-empty" data-testid="ao-week-none">لا سؤال منشورًا هذا الأسبوع.</div>}
+            <button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_retire', id: data.week.published.id })} data-testid="ao-week-retire">اطوِه الآن</button></div>}
+          {!data?.week?.published && <div className="rm-empty" data-testid="ao-week-none">لا سؤال منشورًا هذا الأسبوع.</div>}
           <h4 className="ao-h4">أمانات انقضت وأذن أصحابها ({(data?.week?.candidates || []).length})</h4>
-          {!(data?.week?.candidates || []).length && <div className="am-empty">لا مرشَّحات — الأمانات كلها وجدت من يحملها، أو لم يأذن أصحابها.</div>}
+          {!(data?.week?.candidates || []).length && <div className="rm-empty">لا مرشَّحات — الأمانات كلها وجدت من يحملها، أو لم يأذن أصحابها.</div>}
           {(data?.week?.candidates || []).map((r: any) => <div key={r.id} className="ao-req" data-testid="ao-week-cand"><b>{r.kind_ar}</b>{r.domain ? ` · ${r.domain}` : ''}{r.org_scoped ? ' · كانت داخل جهة' : ''} · <small>{fmt(r.created_at)}</small>
             <label className="ao-wide">الصياغة العامة (حرّرها إن لزم — بلا أسماء)<textarea rows={2} value={wq[r.id] ?? r.text_ar} onChange={e => setWq(x => ({ ...x, [r.id]: e.target.value.slice(0, 300) }))} data-testid="ao-week-text" /></label>
-            <div className="ao-actions"><button type="button" className="am-btn" disabled={!!busy} onClick={() => post({ action: 'week_approve', id: r.id, text_ar: wq[r.id] ?? r.text_ar })} data-testid="ao-week-approve">اعتمد سؤالًا للأسبوع</button><button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_reject', id: r.id })} data-testid="ao-week-reject">لا تُعرض</button></div></div>)}
-          {(data?.week?.queued || []).length > 0 && <><h4 className="ao-h4">في الطابور ({data.week.queued.length})</h4>{data.week.queued.map((q: any) => <div key={q.id} className="ao-req" data-testid="ao-week-queued">«{q.text_ar}» <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_retire', id: q.id })}>احذفه من الطابور</button></div>)}</>}
-          {(data?.week?.retired || []).length > 0 && <><h4 className="ao-h4">أسابيع مضت — جدار الأسبوع <a href="/on-air/week" target="_blank" rel="noopener">(الصفحة العامة)</a></h4>{data.week.retired.map((q: any) => <div key={q.id} className="ao-req" data-testid="ao-week-retired" data-hidden={q.wall_hidden ? '1' : '0'}><small>{q.week_start}</small> «{q.text_ar}» · <small>{q.n || 0} إجابة{q.helped ? ' · أفادت صاحبها ✓' : ''}{!q.n ? ' · لا يظهر على الجدار (بلا إجابات)' : q.wall_hidden ? ' · مخفيّ عن الجدار' : ' · على الجدار'}</small> {!!q.n && <button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_wall_hide', id: q.id, hidden: !q.wall_hidden })} data-testid="ao-week-wall-toggle">{q.wall_hidden ? 'أعده إلى الجدار' : 'أخفِه عن الجدار'}</button>}</div>)}<p style={{ color: '#8E7F8A', fontSize: 13, margin: '6px 0 0' }}>الإخفاء لا يحذف الإجابات؛ السؤال بلا إجابات لا يُعلَّق أصلًا (P37 «عُمر الهواء»).</p></>}
+            <div className="ao-actions"><button type="button" className="rm-btn" disabled={!!busy} onClick={() => post({ action: 'week_approve', id: r.id, text_ar: wq[r.id] ?? r.text_ar })} data-testid="ao-week-approve">اعتمد سؤالًا للأسبوع</button><button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_reject', id: r.id })} data-testid="ao-week-reject">لا تُعرض</button></div></div>)}
+          {(data?.week?.queued || []).length > 0 && <><h4 className="ao-h4">في الطابور ({data.week.queued.length})</h4>{data.week.queued.map((q: any) => <div key={q.id} className="ao-req" data-testid="ao-week-queued">«{q.text_ar}» <button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_retire', id: q.id })}>احذفه من الطابور</button></div>)}</>}
+          {(data?.week?.retired || []).length > 0 && <><h4 className="ao-h4">أسابيع مضت — جدار الأسبوع <a href="/on-air/week" target="_blank" rel="noopener">(الصفحة العامة)</a></h4>{data.week.retired.map((q: any) => <div key={q.id} className="ao-req" data-testid="ao-week-retired" data-hidden={q.wall_hidden ? '1' : '0'}><small>{q.week_start}</small> «{q.text_ar}» · <small>{q.n || 0} إجابة{q.helped ? ' · أفادت صاحبها ✓' : ''}{!q.n ? ' · لا يظهر على الجدار (بلا إجابات)' : q.wall_hidden ? ' · مخفيّ عن الجدار' : ' · على الجدار'}</small> {!!q.n && <button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'week_wall_hide', id: q.id, hidden: !q.wall_hidden })} data-testid="ao-week-wall-toggle">{q.wall_hidden ? 'أعده إلى الجدار' : 'أخفِه عن الجدار'}</button>}</div>)}<p style={{ color: '#8E7F8A', fontSize: 13, margin: '6px 0 0' }}>الإخفاء لا يحذف الإجابات؛ السؤال بلا إجابات لا يُعلَّق أصلًا (P37 «عُمر الهواء»).</p></>}
         </div>}
 
-        {tab === 'echo' && <div className="am-card" data-testid="ao-echo"><h3>{P34_NAMES_AR.echo} <small>— سؤال حُلّ على الهواء وأذن صاحبه: يصوغ الذكاء الاصطناعي منه مسودّة «مهارة اليوم» (بعد تجهيل البريد والأرقام والروابط)، وأنت تراجع وتختار اليوم وتعتمد؛ في يومه يسبق التوليد الآلي</small></h3>
+        {tab === 'echo' && <div className="rm-card" data-testid="ao-echo"><h3>{P34_NAMES_AR.echo} <small>— سؤال حُلّ على الهواء وأذن صاحبه: يصوغ الذكاء الاصطناعي منه مسودّة «مهارة اليوم» (بعد تجهيل البريد والأرقام والروابط)، وأنت تراجع وتختار اليوم وتعتمد؛ في يومه يسبق التوليد الآلي</small></h3>
           <h4 className="ao-h4">أسئلة أذن أصحابها ({(data?.echo_candidates || []).length})</h4>
-          {!(data?.echo_candidates || []).length && <div className="am-empty">لا أسئلة بإذن بعد — الإذن يُعطى في خطوة «ما الذي تغيّر؟».</div>}
-          {(data?.echo_candidates || []).map((r: any) => <div key={r.id} className="ao-req" data-testid="ao-echo-cand"><b>{r.kind_ar}</b>{r.domain ? ` · ${r.domain}` : ''} · <small>{r.receiver_ar} · {fmt(r.done_at)}</small><p className="ao-text">{r.text_ar}</p><button type="button" className="am-btn" disabled={!!busy} onClick={() => post({ action: 'echo_make', id: r.id })} data-testid="ao-echo-make">صُغ مسودّة</button></div>)}
+          {!(data?.echo_candidates || []).length && <div className="rm-empty">لا أسئلة بإذن بعد — الإذن يُعطى في خطوة «ما الذي تغيّر؟».</div>}
+          {(data?.echo_candidates || []).map((r: any) => <div key={r.id} className="ao-req" data-testid="ao-echo-cand"><b>{r.kind_ar}</b>{r.domain ? ` · ${r.domain}` : ''} · <small>{r.receiver_ar} · {fmt(r.done_at)}</small><p className="ao-text">{r.text_ar}</p><button type="button" className="rm-btn" disabled={!!busy} onClick={() => post({ action: 'echo_make', id: r.id })} data-testid="ao-echo-make">صُغ مسودّة</button></div>)}
           <h4 className="ao-h4">المسودّات ({(data?.echoes || []).length})</h4>
           {(data?.echoes || []).map((e: any) => { const d = echoEdit[e.id] || e.draft || {}; return <div key={e.id} className="ao-req ao-echo" data-testid="ao-echo-row" data-status={e.status}>
             <span className="am-st" style={{ background: e.status === 'approved' ? '#0b6f69' : e.status === 'published' ? '#3A1F36' : e.status === 'rejected' ? '#b91c1c' : '#D9A866' }}>{e.status === 'draft' ? 'مسودّة' : e.status === 'approved' ? 'معتمَدة' : e.status === 'published' ? 'نُشرت' : 'مرفوضة'}</span> {e.day ? <small>· يوم {e.day}</small> : null} {e.model ? <small>· {e.model}</small> : <small>· صياغة محلية</small>}
@@ -152,15 +156,15 @@ export default function AdminOnAirPage() {
               <label className="wide">المطلوب<input value={d.ask_ar || ''} onChange={ev => setEchoEdit(x => ({ ...x, [e.id]: { ...d, ask_ar: ev.target.value } }))} /></label>
               <label className="wide">المعايير (سطر لكل معيار)<textarea rows={3} value={(d.rubric || []).join('\n')} onChange={ev => setEchoEdit(x => ({ ...x, [e.id]: { ...d, rubric: ev.target.value.split('\n') } }))} /></label>
               <label>يوم النشر<input type="date" value={echoDay[e.id] ?? e.day ?? ''} onChange={ev => setEchoDay(x => ({ ...x, [e.id]: ev.target.value }))} data-testid="ao-echo-day" /></label>
-              <div className="ao-actions"><button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'echo_set', id: e.id, draft: { ...d, rubric: (d.rubric || []).filter((r: string) => r.trim()) }, day: echoDay[e.id] ?? e.day ?? null })}>احفظ</button><button type="button" className="am-btn" disabled={!!busy} onClick={() => post({ action: 'echo_set', id: e.id, status: 'approved', draft: { ...d, rubric: (d.rubric || []).filter((r: string) => r.trim()) }, day: echoDay[e.id] ?? e.day ?? null })} data-testid="ao-echo-approve">اعتمد</button><button type="button" className="am-btn ghost" disabled={!!busy} onClick={() => post({ action: 'echo_set', id: e.id, status: 'rejected' })}>ارفض</button></div>
+              <div className="ao-actions"><button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'echo_set', id: e.id, draft: { ...d, rubric: (d.rubric || []).filter((r: string) => r.trim()) }, day: echoDay[e.id] ?? e.day ?? null })}>احفظ</button><button type="button" className="rm-btn" disabled={!!busy} onClick={() => post({ action: 'echo_set', id: e.id, status: 'approved', draft: { ...d, rubric: (d.rubric || []).filter((r: string) => r.trim()) }, day: echoDay[e.id] ?? e.day ?? null })} data-testid="ao-echo-approve">اعتمد</button><button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => post({ action: 'echo_set', id: e.id, status: 'rejected' })}>ارفض</button></div>
             </div>}
             {e.status === 'published' && <p className="ao-text"><b>{d.title_ar}</b> — {d.situation_ar}</p>}
           </div>; })}
         </div>}
 
-        <div className="am-card"><h3>آخر اللقاءات <small>— بلا نصوص الخيوط</small></h3>
-          {!recent.length && <div className="am-empty">لا شيء بعد.</div>}
-          {recent.length > 0 && <table className="am-table"><thead><tr><th>الدرجة</th><th>الحالة</th><th>السائل</th><th>المُستقبِل</th><th>المدة</th><th>النتيجة</th><th>متى</th></tr></thead><tbody>{recent.slice(0, 30).map(r => <tr key={r.id}><td>{r.kind_ar}</td><td>{r.status_ar}</td><td>{r.asker_alias}</td><td>{r.receiver_ar}</td><td>{r.duration_min ? `${r.duration_min} د` : '—'}</td><td>{r.outcome_ar || r.staff_note || '—'}</td><td><small>{fmt(r.done_at || r.created_at)}</small></td></tr>)}</tbody></table>}
+        <div className="rm-card"><h3>آخر اللقاءات <small>— بلا نصوص الخيوط</small></h3>
+          {!recent.length && <div className="rm-empty">لا شيء بعد.</div>}
+          {recent.length > 0 && <table className="rm-table"><thead><tr><th>الدرجة</th><th>الحالة</th><th>السائل</th><th>المُستقبِل</th><th>المدة</th><th>النتيجة</th><th>متى</th></tr></thead><tbody>{recent.slice(0, 30).map(r => <tr key={r.id}><td>{r.kind_ar}</td><td>{r.status_ar}</td><td>{r.asker_alias}</td><td>{r.receiver_ar}</td><td>{r.duration_min ? `${r.duration_min} د` : '—'}</td><td>{r.outcome_ar || r.staff_note || '—'}</td><td><small>{fmt(r.done_at || r.created_at)}</small></td></tr>)}</tbody></table>}
         </div>
       </div>
     </div>
@@ -172,20 +176,14 @@ const CSS = `
 .ao-slots{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:4px;font-size:13px}
 .ao-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;align-items:end;margin-top:10px}.ao-form label{font-weight:800;color:#3A1F36;font-size:13px}.ao-form label.wide{grid-column:1/-1}.ao-form input,.ao-form select,.ao-form textarea{display:block;width:100%;margin-top:4px;border:1.5px solid #D9CBC2;border-radius:10px;padding:9px;font:inherit;font-weight:400;min-height:44px;background:#fff}
 .ao-h4{margin:14px 0 6px;font-size:14px;color:#3A1F36}.ao-text{margin:6px 0;color:#4A3645;line-height:1.7}.ao-actions{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1}.ao-echo{display:block}
-.am{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
+.am{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
 .am :is(button,a,input,select,textarea):focus-visible{outline:3px solid #3A1F36;outline-offset:2px}
-.am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}
-.am-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.am-head p{margin:0;color:#5C4858;font-size:14px;line-height:1.7;max-width:900px}.am-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#0b6f69}
-.am-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;overflow-x:auto}.am-card h3{margin:0 0 10px;color:#3A1F36;font-size:17px}.am-card h3 small{font-size:12px;color:#5C4858}.am-card ul{margin:0;padding-inline-start:18px;font-size:13px;line-height:2;color:#3A2634}
-.am-empty{color:#5C4858;font-size:14px;text-align:center;padding:20px;line-height:1.8}.am-err{color:#991b1b;font-size:13px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:8px 12px}.am-ok{color:#065f46;font-size:13px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px}
-.am-kpis{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:13px;color:#5C4858}.am-kpis b{font-size:20px;color:#3A1F36;margin-inline-end:4px}.am-kpis .g b{color:#0b6f69}.am-cycle{margin-inline-start:auto;display:flex;gap:6px}
+.am-wrap{max-width:1160px;margin:0 auto;display:grid;gap:12px}.rm-card h3 small{font-size:12px;color:#5C4858}.rm-card ul{margin:0;padding-inline-start:18px;font-size:13px;line-height:2;color:#3A2634}.am-err{color:#991b1b;font-size:13px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:8px 12px}.am-ok{color:#065f46;font-size:13px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px}.rm-kpis .g b{color:#0b6f69}.am-cycle{margin-inline-start:auto;display:flex;gap:6px}
 .am-tabs{display:flex;gap:6px;flex-wrap:wrap}.am-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:9px 14px;font:inherit;font-size:13px;font-weight:800;color:#4A3645;cursor:pointer;min-height:44px}.am-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
-.am-table{width:100%;border-collapse:collapse;font-size:13px}.am-table th{text-align:right;color:#5C4858;font-weight:800;font-size:12px;padding:8px 10px;border-bottom:1px solid #EADFD6;white-space:nowrap}.am-table td{padding:9px 10px;border-bottom:1px solid #F6EBE0;vertical-align:top;color:#2A1626}.am-table small{color:#5C4858;font-size:11.5px}
-.am-st{color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px;white-space:nowrap}
-.am-btn{border:1px solid #3A1F36;background:#3A1F36;color:#fff;border-radius:10px;padding:7px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;min-height:36px}.am-btn.ghost{background:#fff;color:#3A1F36;border-color:#D9CBC2}.am-btn.small{padding:4px 9px;font-size:12px}.am-btn.danger{color:#991b1b;border-color:#fecaca;background:#fff}.am-btn:disabled{opacity:.5;cursor:not-allowed}
+.am-st{color:#fff;font-size:11px;font-weight:900;border-radius:999px;padding:2px 8px;white-space:nowrap}.rm-btn.small{padding:4px 9px;font-size:12px}
 .am-decide{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .am-grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;align-items:start}
-.am-card input:not([type=checkbox]),.am-card textarea{border:1px solid #B3A5AE;border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;font-weight:400;background:#fff;width:100%;box-sizing:border-box;color:#2A1626;min-height:36px}
+.rm-card input:not([type=checkbox]),.rm-card textarea{border:1px solid #B3A5AE;border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;font-weight:400;background:#fff;width:100%;box-sizing:border-box;color:#2A1626;min-height:36px}
 .ao-req{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13.5px;color:#4A3645}.ao-req b{color:#3A1F36}.ao-req p{margin:6px 0;line-height:1.8;color:#2A1626}
 .ao-thread{background:#FBF4EE;border-radius:10px;padding:8px 20px;margin:6px 0}
 code{font-size:12px;background:#F6EBE0;border-radius:6px;padding:1px 5px}

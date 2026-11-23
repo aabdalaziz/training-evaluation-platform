@@ -9,6 +9,7 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { AUDIENCE_LABEL, SIM_STATUS_LABEL, bandLabel } from '../../../lib/portal/sim';
 import type { Scenario, SimRun } from '../../../lib/portal/sim';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 type Q = { id: string; created_at: string; name: string | null; email: string | null; question: string; answer: string | null; source: string | null; handoff: boolean; page: string | null };
 const fmt = (iso: string) => new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' });
@@ -36,11 +37,14 @@ export default function AdminSimPage() {
     if (!j?.success) setError(j?.error || 'تعذّر الحفظ'); else { setNote(''); setOpen(null); await load(tok); } setBusy('');
   }
   const scenOf = (id: string | null) => scen.find(s => s.id === id);
-  if (!ready) return <div className="as"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="as-wrap"><div className="as-card">{error ? <span className="as-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  if (!ready) return <div className="as rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="as-wrap"><div className="rm-card">{error ? <span className="as-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   return (
-    <div className="as"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="as rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="as-wrap">
-        <header className="as-head"><div><span className="as-kicker"><Icon name="play" size={14} /> بوابة أَثَر · P10</span><h1>التدريب بالمحاكاة</h1><p>الذكاء الاصطناعي يمثّل الشخصية ويقترح الدرجة — والاعتماد بشري. التشغيلة المعتمدة تصبح دليلًا كامل الوزن (0.7) في الملف المهاري؛ غير المعتمدة تبقى دليلًا أوليًا (0.45).</p></div></header>
+        <RoomHead
+        title={<>التدريب بالمحاكاة</>}
+        desc={<><p>الذكاء الاصطناعي يمثّل الشخصية ويقترح الدرجة — والاعتماد بشري. التشغيلة المعتمدة تصبح دليلًا كامل الوزن (0.7) في الملف المهاري؛ غير المعتمدة تبقى دليلًا أوليًا (0.45).</p></>}
+      />
         <PortalAdminTabs counts={{ '/admin/sim': status === 'scored' ? runs.length : 0 }} />
         {error && <div className="as-err">{error}</div>}
         <div className="as-tabs">{([['runs', 'تشغيلات بانتظار القرار'], ['scenarios', `السيناريوهات (${scen.length})`], ['questions', `أسئلة «مستشارك» (${qs.length})`]] as const).map(([k, l]) => <button key={k} type="button" className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
@@ -48,9 +52,9 @@ export default function AdminSimPage() {
         {tab === 'runs' && (
           <>
             <div className="as-sub">{(['scored', 'approved', 'rejected'] as const).map(st => <button key={st} type="button" className={status === st ? 'on' : ''} onClick={async () => { setStatus(st); await load(tok, st); }}>{SIM_STATUS_LABEL[st].ar}</button>)}</div>
-            {runs.length === 0 && <div className="as-card as-empty">لا تشغيلات في هذه الحالة.</div>}
+            {runs.length === 0 && <div className="rm-card rm-empty">لا تشغيلات في هذه الحالة.</div>}
             {runs.map(r => { const s = scenOf(r.scenario_id); const sc = r.score; return (
-              <article key={r.id} className={`as-card as-run ${r.status}`}>
+              <article key={r.id} className={`rm-card as-run ${r.status}`}>
                 <div className="as-row" onClick={() => setOpen(open === r.id ? null : r.id)} role="button" tabIndex={0}>
                   <div className="as-who"><b>{s?.title_ar || 'سيناريو العرض'}</b><span dir="ltr">{r.email}</span><small>{fmt(r.created_at)} · {(r.turns || []).filter(t => t.role === 'learner').length} أدوار · {r.source === 'ai' ? 'تقييم ذكاء اصطناعي' : 'تقدير محلي'}</small></div>
                   <div className="as-meta">{sc && <b className="as-total">{sc.total}<small>/100 · {bandLabel(sc.total, 'ar')}</small></b>}<span className={`as-st ${r.status}`}>{SIM_STATUS_LABEL[r.status].ar}</span></div>
@@ -63,7 +67,7 @@ export default function AdminSimPage() {
                         <div className="as-crit">{sc.criteria.map(c => { const rb = s?.rubric.find(x => x.key === c.key); return <div key={c.key}><span>{rb?.title_ar || c.key} <em>{rb?.weight}%</em></span><i><b style={{ width: `${c.score}%` }} /></i><b>{c.score}</b>{c.note && <small>{c.note}</small>}</div>; })}</div>
                         {!!sc.strengths?.length && <p><b>قوة:</b> {sc.strengths.join(' · ')}</p>}{!!sc.improve?.length && <p><b>تحسين:</b> {sc.improve.join(' · ')}</p>}{sc.expert_path && <p><b>مسار الخبير:</b> {sc.expert_path}</p>}
                       </> : <p>لا تقييم.</p>}
-                        {r.status === 'scored' && <div className="as-decide"><input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتعلم (اختياري)" maxLength={400} /><button type="button" className="as-btn ok" disabled={busy === r.id} onClick={() => decide(r.id, 'approved')}><Icon name="check" size={14} /> اعتماد الدليل</button><button type="button" className="as-btn bad" disabled={busy === r.id} onClick={() => decide(r.id, 'rejected')}><Icon name="x" size={14} /> رفض</button></div>}
+                        {r.status === 'scored' && <div className="as-decide"><input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتعلم (اختياري)" maxLength={400} /><button type="button" className="rm-btn ok" disabled={busy === r.id} onClick={() => decide(r.id, 'approved')}><Icon name="check" size={14} /> اعتماد الدليل</button><button type="button" className="rm-btn bad" disabled={busy === r.id} onClick={() => decide(r.id, 'rejected')}><Icon name="x" size={14} /> رفض</button></div>}
                         {r.status !== 'scored' && <p className="as-note">{r.note ? `ملاحظة: ${r.note}` : ''} {r.approved_at ? `· ${fmt(r.approved_at)}` : ''}</p>}
                       </div>
                     </div>
@@ -74,15 +78,15 @@ export default function AdminSimPage() {
         )}
 
         {tab === 'scenarios' && (
-          <div className="as-grid">{scen.map(s => <article key={s.id} className="as-card"><div className="as-tags"><span className="as-tag">{AUDIENCE_LABEL[s.audience].ar}</span><span className="as-tag soft">{s.status}</span>{s.demo && <span className="as-tag gold">عرض للزوار</span>}<span className="as-tag soft">{s.max_turns} أدوار · {s.minutes} د</span></div><h3>{s.title_ar}</h3><p>{s.situation_ar}</p><p><b>الشخصية:</b> {s.persona.name} — {s.persona.role}</p><div className="as-tags">{s.rubric.map(r => <span key={r.key} className="as-tag soft">{r.title_ar} {r.weight}%</span>)}</div><small>المهارات المرتبطة: {s.skills.length} · <a href={`/sim/${s.slug}`} target="_blank" rel="noreferrer">فتح</a></small></article>)}
-            <div className="as-card as-empty">إضافة سيناريوهات جديدة: عبر جدول <code>portal_scenarios</code> في Supabase (مجموع أوزان المعيار 100). محرر مرئي في مرحلة لاحقة.</div></div>
+          <div className="as-grid">{scen.map(s => <article key={s.id} className="rm-card"><div className="as-tags"><span className="as-tag">{AUDIENCE_LABEL[s.audience].ar}</span><span className="as-tag soft">{s.status}</span>{s.demo && <span className="as-tag gold">عرض للزوار</span>}<span className="as-tag soft">{s.max_turns} أدوار · {s.minutes} د</span></div><h3>{s.title_ar}</h3><p>{s.situation_ar}</p><p><b>الشخصية:</b> {s.persona.name} — {s.persona.role}</p><div className="as-tags">{s.rubric.map(r => <span key={r.key} className="as-tag soft">{r.title_ar} {r.weight}%</span>)}</div><small>المهارات المرتبطة: {s.skills.length} · <a href={`/sim/${s.slug}`} target="_blank" rel="noreferrer">فتح</a></small></article>)}
+            <div className="rm-card rm-empty">إضافة سيناريوهات جديدة: عبر جدول <code>portal_scenarios</code> في Supabase (مجموع أوزان المعيار 100). محرر مرئي في مرحلة لاحقة.</div></div>
         )}
 
         {tab === 'questions' && (
           <>
-            {qs.length === 0 && <div className="as-card as-empty">لا أسئلة بعد.</div>}
-            {qs.map(q => <article key={q.id} className={`as-card as-q ${q.handoff ? 'hand' : ''}`}><div className="as-row"><div className="as-who"><b>{q.question}</b><small>{fmt(q.created_at)} · {q.page || '/'} · {q.source === 'ai' ? 'ذكاء اصطناعي' : 'قاعدة المعرفة'}{q.email ? ` · ${q.email}` : ''}</small></div><div className="as-meta">{q.handoff && <span className="as-tag gold">تحويل بشري</span>}</div></div>{q.answer && <p className="as-ans">{q.answer}</p>}</article>)}
-            <div className="as-card as-empty">طلبات التحويل البشري تصل أيضًا إلى <a href="/admin/inbox">رسائل التواصل</a> بموضوع «سؤال عبر مستشارك».</div>
+            {qs.length === 0 && <div className="rm-card rm-empty">لا أسئلة بعد.</div>}
+            {qs.map(q => <article key={q.id} className={`rm-card as-q ${q.handoff ? 'hand' : ''}`}><div className="as-row"><div className="as-who"><b>{q.question}</b><small>{fmt(q.created_at)} · {q.page || '/'} · {q.source === 'ai' ? 'ذكاء اصطناعي' : 'قاعدة المعرفة'}{q.email ? ` · ${q.email}` : ''}</small></div><div className="as-meta">{q.handoff && <span className="as-tag gold">تحويل بشري</span>}</div></div>{q.answer && <p className="as-ans">{q.answer}</p>}</article>)}
+            <div className="rm-card rm-empty">طلبات التحويل البشري تصل أيضًا إلى <a href="/admin/inbox">رسائل التواصل</a> بموضوع «سؤال عبر مستشارك».</div>
           </>
         )}
       </div>
@@ -91,10 +95,8 @@ export default function AdminSimPage() {
 }
 
 const CSS = `
-.as{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
-.as-wrap{max-width:1080px;margin:0 auto;display:grid;gap:12px}
-.as-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.as-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.7;max-width:820px}.as-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
-.as-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px}.as-empty{color:#8E7F8A;font-size:14px;text-align:center}.as-err{color:#b91c1c;font-size:13px}
+.as{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
+.as-wrap{max-width:1080px;margin:0 auto;display:grid;gap:12px}.as-err{color:#b91c1c;font-size:13px}
 .as-tabs,.as-sub{display:flex;gap:6px;flex-wrap:wrap}.as-tabs button,.as-sub button{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer;color:#4A3645}.as-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.as-sub button.on{background:#D4614A;color:#fff;border-color:#D4614A}
 .as-row{display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer}.as-who b{display:block;color:#3A1F36;font-size:15px}.as-who span{color:#5C4858;font-size:13px}.as-who small{display:block;color:#8E7F8A;font-size:12px}
 .as-meta{display:grid;justify-items:end;gap:4px}.as-total{font-size:22px;color:#D4614A}.as-total small{font-size:11px;color:#8E7F8A;margin-inline-start:4px}
@@ -102,8 +104,7 @@ const CSS = `
 .as-body{margin-top:12px;border-top:1px dashed #EADFD6;padding-top:12px}.as-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.as-cols h4{margin:0 0 8px;font-size:13px;color:#D4614A}
 .as-turns{display:grid;gap:8px;max-height:420px;overflow:auto}.as-turn small{font-size:11px;color:#8E7F8A;font-weight:800}.as-turn p{margin:2px 0 0;background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;font-size:13.5px;line-height:1.7}.as-turn.learner p{background:#F3E6DC}
 .as-crit{display:grid;gap:8px}.as-crit div{display:grid;grid-template-columns:1fr 36px;gap:2px 8px;font-size:13px;align-items:center}.as-crit span em{font-style:normal;color:#B3A5AE;font-size:11px}.as-crit i{grid-column:1;display:block;height:7px;border-radius:4px;background:#EADFD6;overflow:hidden}.as-crit i b{display:block;height:100%;background:linear-gradient(90deg,#D4614A,#D9A866)}.as-crit>div>b{grid-column:2;grid-row:1/3;font-weight:900;color:#3A1F36;text-align:center}.as-crit small{grid-column:1/3;color:#5C4858;font-size:12px;line-height:1.5}
-.as-body p{font-size:13.5px;line-height:1.7;color:#3A2634;margin:8px 0 0}.as-decide{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.as-decide input{flex:1;min-width:200px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px}
-.as-btn{display:inline-flex;align-items:center;gap:5px;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;color:#fff}.as-btn.ok{background:#D4614A}.as-btn.bad{background:#b91c1c}.as-btn:disabled{opacity:.5}.as-note{color:#8E7F8A;font-size:12.5px}
+.as-body p{font-size:13.5px;line-height:1.7;color:#3A2634;margin:8px 0 0}.as-decide{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.as-decide input{flex:1;min-width:200px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px}.as-note{color:#8E7F8A;font-size:12.5px}
 .as-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.as-grid h3{margin:8px 0 4px;font-size:16px;color:#3A1F36}.as-grid p{margin:4px 0;font-size:13px;line-height:1.7;color:#4A3645}.as-tags{display:flex;gap:4px;flex-wrap:wrap;margin:6px 0}.as-grid small{color:#8E7F8A;font-size:12px}.as-grid a{color:#D4614A}
 .as-q.hand{border-color:#F1D9A8}.as-ans{margin:8px 0 0;font-size:13.5px;line-height:1.7;color:#4A3645;background:#FBF4EE;border-radius:10px;padding:8px 10px}
 @media (max-width:860px){.as-cols,.as-grid{grid-template-columns:1fr}}

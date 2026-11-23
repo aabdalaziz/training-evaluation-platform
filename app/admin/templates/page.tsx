@@ -12,6 +12,7 @@ import {
 } from '../../../lib/templates/model';
 import type { Template, Question, TemplateLink, ProgramLite, QuestionDraft, TemplateKind } from '../../../lib/templates/model';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866';
 const EDIT_ROLES = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
 const VIEW_ROLES = [...EDIT_ROLES, 'QUALITY_ANALYST'];
@@ -148,7 +149,7 @@ export default function TemplatesPage() {
     } catch (e) { fail(e); } finally { setBusy(false); }
   }
 
-  if (!ready) return <div className="tp" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="tp rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
   const kindMeta = QUESTION_KINDS.find(k => k.id === draft.kind);
 
   const editor = (
@@ -167,41 +168,36 @@ export default function TemplatesPage() {
         {kindMeta?.isScale && <label>الحد الأعلى للمقياس<input type="number" min={3} max={10} value={draft.max_value} onChange={e => setDraft({ ...draft, max_value: Number(e.target.value) })} /></label>}
         <label className="tp-check"><input type="checkbox" checked={draft.is_required} onChange={e => setDraft({ ...draft, is_required: e.target.checked })} /> سؤال إلزامي</label>
       </div>
-      {draftErrors.length > 0 && <div className="tp-alert">{draftErrors.map(e => <div key={e}>• {e}</div>)}</div>}
-      <div className="tp-actions"><button className="tp-btn primary" disabled={busy} onClick={saveQuestion}><Icon name="save" size={15} /> {editingQ ? 'حفظ التعديل' : 'إضافة السؤال'}</button><button className="tp-btn" disabled={busy} onClick={cancelEdit}>إلغاء</button></div>
+      {draftErrors.length > 0 && <div className="rm-alert">{draftErrors.map(e => <div key={e}>• {e}</div>)}</div>}
+      <div className="tp-actions"><button className="rm-btn primary" disabled={busy} onClick={saveQuestion}><Icon name="save" size={15} /> {editingQ ? 'حفظ التعديل' : 'إضافة السؤال'}</button><button className="rm-btn" disabled={busy} onClick={cancelEdit}>إلغاء</button></div>
     </div>
   );
 
   return (
-    <div className="tp" dir="rtl">
+    <div className="tp rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="tp-head">
-        <div>
-          <div className="tp-kicker"><Icon name="doc" size={14} /> الاستدامة · قوالب التقييم</div>
-          <h1>قوالب التقييم والأسئلة</h1>
-          <p>من هنا تتحكم فيما يراه المشارك في استمارتي التقييم اليومي والختامي: أنشئ القوالب، حرّر الأسئلة ورتّبها، واربط كل برنامج بقالبه — بلا أي SQL. التعديلات تُطبَّق فورًا على الاستمارات العامة وتُسجَّل في سجل التدقيق.</p>
-        </div>
-        <nav className="tp-nav">
-          <Link href="/dashboard" className="tp-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/admin/management" className="tp-btn"><Icon name="admin" size={16} /> مركز الإدارة</Link>
-          <Link href="/evaluate/daily" target="_blank" className="tp-btn"><Icon name="link" size={16} /> فتح الاستمارة</Link>
-        </nav>
-      </header>
-      {error && <div className="tp-alert">{error}</div>}
-      {ok && <div className="tp-alert ok">{ok}</div>}
-      {!canEdit && <div className="tp-alert warn">عرض فقط — التحرير متاح لمديري المنصة والإداريين ومديري البرامج.</div>}
+      <RoomHead
+        title={<>قوالب التقييم والأسئلة</>}
+        desc={<><p>من هنا تتحكم فيما يراه المشارك في استمارتي التقييم اليومي والختامي: أنشئ القوالب، حرّر الأسئلة ورتّبها، واربط كل برنامج بقالبه — بلا أي SQL. التعديلات تُطبَّق فورًا على الاستمارات العامة وتُسجَّل في سجل التدقيق.</p></>}
+        actions={<>
+          <Link href="/evaluate/daily" target="_blank" className="rm-btn"><Icon name="link" size={16} /> فتح الاستمارة</Link>
+        </>}
+      />
+      {error && <div className="rm-alert">{error}</div>}
+      {ok && <div className="rm-alert ok">{ok}</div>}
+      {!canEdit && <div className="rm-alert warn">عرض فقط — التحرير متاح لمديري المنصة والإداريين ومديري البرامج.</div>}
 
-      <section className="tp-kpis">
-        <div className="tp-kpi"><b>{templates.length}</b><span>قالبًا</span></div>
-        <div className="tp-kpi"><b>{questions.length}</b><span>سؤالًا</span></div>
-        <div className={`tp-kpi ${gaps ? 'warn' : 'ok'}`}><b>{programs.length - gaps}/{programs.length}</b><span>برامج مكتملة التغطية</span></div>
-        <div className={`tp-kpi ${gaps ? 'warn' : ''}`}><b>{gaps}</b><span>برامج تحتاج ربطًا</span></div>
+      <section className="rm-kpis">
+        <div className="rm-kpi"><b>{templates.length}</b><span>قالبًا</span></div>
+        <div className="rm-kpi"><b>{questions.length}</b><span>سؤالًا</span></div>
+        <div className={`rm-kpi ${gaps ? 'warn' : 'ok'}`}><b>{programs.length - gaps}/{programs.length}</b><span>برامج مكتملة التغطية</span></div>
+        <div className={`rm-kpi ${gaps ? 'warn' : ''}`}><b>{gaps}</b><span>برامج تحتاج ربطًا</span></div>
       </section>
 
-      <section className="tp-card">
-        <div className="tp-card-head"><h2><Icon name="link" size={16} /> تغطية البرامج</h2><span>قالب واحد مفعّل لكل نوع — اختر من القائمة ليُحفظ فورًا</span></div>
+      <section className="rm-card">
+        <div className="rm-card-head"><h2><Icon name="link" size={16} /> تغطية البرامج</h2><span>قالب واحد مفعّل لكل نوع — اختر من القائمة ليُحفظ فورًا</span></div>
         <div className="tp-scroll">
-          <table className="tp-table">
+          <table className="rm-table">
             <thead><tr><th>البرنامج</th><th>القالب اليومي</th><th>القالب الختامي</th><th>نهاية البرنامج (عام)</th><th>الحالة</th></tr></thead>
             <tbody>
               {cov.map(c => (
@@ -222,21 +218,21 @@ export default function TemplatesPage() {
                   <td>{c.ok ? <span className="tp-st ok"><Icon name="check" size={12} /> جاهز</span> : <span className="tp-st warn"><Icon name="alert" size={12} /> {!c.daily ? 'بلا يومي' : !c.final ? 'بلا ختامي' : 'قالب بلا أسئلة'}</span>}</td>
                 </tr>
               ))}
-              {!cov.length && <tr><td colSpan={4} className="tp-empty-cell">لا توجد برامج بعد.</td></tr>}
+              {!cov.length && <tr><td colSpan={4} className="rm-empty-cell">لا توجد برامج بعد.</td></tr>}
             </tbody>
           </table>
         </div>
       </section>
 
       <div className="tp-split">
-        <aside className="tp-card tp-side">
-          <div className="tp-card-head"><h2><Icon name="folder" size={16} /> القوالب</h2>{canEdit && <button className="tp-btn small primary" onClick={() => setNewTpl({ ...newTpl, open: !newTpl.open })}><Icon name="plus" size={14} /> جديد</button>}</div>
+        <aside className="rm-card tp-side">
+          <div className="rm-card-head"><h2><Icon name="folder" size={16} /> القوالب</h2>{canEdit && <button className="rm-btn small primary" onClick={() => setNewTpl({ ...newTpl, open: !newTpl.open })}><Icon name="plus" size={14} /> جديد</button>}</div>
           {newTpl.open && canEdit && (
             <div className="tp-new">
               <label>الاسم<input value={newTpl.name} onChange={e => setNewTpl({ ...newTpl, name: e.target.value })} placeholder="مثال: التقييم اليومي — برنامج التفويض" /></label>
               <label>نسخ من قالب موجود (اختياري)<select value={newTpl.copyFrom} onChange={e => setNewTpl({ ...newTpl, copyFrom: e.target.value })}><option value="">— قالب فارغ —</option>{templates.map(t => <option key={t.id} value={t.id}>{templateKindLabel(t.kind)} · {templateName(t)}</option>)}</select></label>
               {!newTpl.copyFrom && <label>النوع<select value={newTpl.kind} onChange={e => setNewTpl({ ...newTpl, kind: e.target.value as TemplateKind })}>{TEMPLATE_KINDS.map(k => <option key={k.id} value={k.id}>{k.label}</option>)}</select></label>}
-              <div className="tp-actions"><button className="tp-btn primary" disabled={busy} onClick={createTemplate}><Icon name="save" size={14} /> إنشاء</button><button className="tp-btn" onClick={() => setNewTpl({ open: false, kind: 'DAILY', name: '', copyFrom: '' })}>إلغاء</button></div>
+              <div className="tp-actions"><button className="rm-btn primary" disabled={busy} onClick={createTemplate}><Icon name="save" size={14} /> إنشاء</button><button className="rm-btn" onClick={() => setNewTpl({ open: false, kind: 'DAILY', name: '', copyFrom: '' })}>إلغاء</button></div>
             </div>
           )}
           <div className="tp-tlist">
@@ -247,25 +243,25 @@ export default function TemplatesPage() {
                 <small>{s.questions} سؤال · {s.activePrograms} برنامج</small>
               </button>
             ))}
-            {!stats.length && <div className="tp-empty"><Icon name="folder" size={30} /><b>لا توجد قوالب</b><span>أنشئ قالبًا يوميًا وآخر ختاميًا ثم اربطهما بالبرامج.</span></div>}
+            {!stats.length && <div className="rm-empty"><Icon name="folder" size={30} /><b>لا توجد قوالب</b><span>أنشئ قالبًا يوميًا وآخر ختاميًا ثم اربطهما بالبرامج.</span></div>}
           </div>
         </aside>
 
-        <section className="tp-card tp-main">
-          {!current ? <div className="tp-empty"><Icon name="doc" size={30} /><b>اختر قالبًا من القائمة</b></div> : (
+        <section className="rm-card tp-main">
+          {!current ? <div className="rm-empty"><Icon name="doc" size={30} /><b>اختر قالبًا من القائمة</b></div> : (
             <>
-              <div className="tp-card-head wrap">
+              <div className="rm-card-head wrap">
                 <div className="tp-title">
                   <span className={`tp-kind ${current.kind}`}>{templateKindLabel(current.kind)}</span>
-                  {renaming ? <span className="tp-rename"><input value={renameVal} onChange={e => setRenameVal(e.target.value)} autoFocus /><button className="tp-btn small primary" disabled={busy} onClick={renameTemplate}>حفظ</button><button className="tp-btn small" onClick={() => setRenaming(false)}>إلغاء</button></span>
+                  {renaming ? <span className="tp-rename"><input value={renameVal} onChange={e => setRenameVal(e.target.value)} autoFocus /><button className="rm-btn small primary" disabled={busy} onClick={renameTemplate}>حفظ</button><button className="rm-btn small" onClick={() => setRenaming(false)}>إلغاء</button></span>
                     : <h2>{templateName(current)}</h2>}
                   <small>{currentQs.length} سؤال · {currentQs.filter(q => q.is_required).length} إلزامي · ≈ {estimateMinutes(currentQs)} دقيقة تعبئة · مرتبط بـ {currentPrograms.length} برنامج</small>
                 </div>
                 <div className="tp-actions">
                   <div className="tp-tabs"><button className={tab === 'questions' ? 'on' : ''} onClick={() => setTab('questions')}>الأسئلة</button><button className={tab === 'preview' ? 'on' : ''} onClick={() => setTab('preview')}>معاينة</button></div>
-                  {canEdit && !renaming && <button className="tp-btn small" onClick={() => { setRenaming(true); setRenameVal(templateName(current)); }}><Icon name="edit" size={13} /> إعادة تسمية</button>}
-                  {canEdit && <button className="tp-btn small" onClick={() => setNewTpl({ open: true, kind: current.kind as TemplateKind, name: `${templateName(current)} — نسخة`, copyFrom: current.id })}><Icon name="copy" size={13} /> نسخ</button>}
-                  {canEdit && <button className="tp-btn small danger" disabled={busy} onClick={deleteTemplate}><Icon name="trash" size={13} /> حذف</button>}
+                  {canEdit && !renaming && <button className="rm-btn small" onClick={() => { setRenaming(true); setRenameVal(templateName(current)); }}><Icon name="edit" size={13} /> إعادة تسمية</button>}
+                  {canEdit && <button className="rm-btn small" onClick={() => setNewTpl({ open: true, kind: current.kind as TemplateKind, name: `${templateName(current)} — نسخة`, copyFrom: current.id })}><Icon name="copy" size={13} /> نسخ</button>}
+                  {canEdit && <button className="rm-btn small danger" disabled={busy} onClick={deleteTemplate}><Icon name="trash" size={13} /> حذف</button>}
                 </div>
               </div>
               {currentPrograms.length > 0 && <div className="tp-chips">{currentPrograms.map(p => <span key={p.id} className="tp-chip">{p.name_ar}</span>)}</div>}
@@ -295,8 +291,8 @@ export default function TemplatesPage() {
                       </li>
                     ))}
                   </ol>
-                  {!currentQs.length && !adding && <div className="tp-empty"><Icon name="question" size={30} /><b>القالب بلا أسئلة</b><span>الاستمارة ستظهر فارغة للمشارك — أضف الأسئلة أو انسخ قالبًا جاهزًا.</span></div>}
-                  {canEdit && (adding ? editor : <button className="tp-btn primary tp-add" onClick={startAdd}><Icon name="plus" size={15} /> إضافة سؤال</button>)}
+                  {!currentQs.length && !adding && <div className="rm-empty"><Icon name="question" size={30} /><b>القالب بلا أسئلة</b><span>الاستمارة ستظهر فارغة للمشارك — أضف الأسئلة أو انسخ قالبًا جاهزًا.</span></div>}
+                  {canEdit && (adding ? editor : <button className="rm-btn primary tp-add" onClick={startAdd}><Icon name="plus" size={15} /> إضافة سؤال</button>)}
                 </>
               )}
 
@@ -317,7 +313,7 @@ export default function TemplatesPage() {
                       ))}
                     </div>
                   ))}
-                  {!currentQs.length && <div className="tp-empty"><b>لا شيء للمعاينة</b></div>}
+                  {!currentQs.length && <div className="rm-empty"><b>لا شيء للمعاينة</b></div>}
                 </div>
               )}
             </>
@@ -325,7 +321,7 @@ export default function TemplatesPage() {
         </section>
       </div>
 
-      <section className="tp-card tp-how">
+      <section className="rm-card tp-how">
         <b>ملاحظات:</b> الأسئلة التي عليها إجابات مسجلة لا يمكن حذفها (انسخ القالب وعدّل النسخة ثم اربطها بالبرنامج) · القالب الذي عليه تقييمات لا يمكن حذفه لكن يمكن فصله عن البرامج · البرامج الجديدة تُربط تلقائيًا بالقالبين الأكثر أسئلة ويمكنك تغيير ذلك من جدول التغطية · أنواع المقياس (رقمي/نجوم/ليكرت) هي التي تدخل في متوسط الرضا والتقارير.
       </section>
     </div>
@@ -333,22 +329,13 @@ export default function TemplatesPage() {
 }
 
 const CSS = `
-.tp{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.tp *{box-sizing:border-box}
-.tp-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.tp-head h1{margin:2px 0 4px;font-size:22px;color:${NAVY}}.tp-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:760px;line-height:1.7}
-.tp-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.tp-nav{display:flex;gap:8px;flex-wrap:wrap}
-.tp-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none;white-space:nowrap}.tp-btn:disabled{opacity:.5;cursor:default}.tp-btn.primary{background:${TEAL};border-color:${TEAL};color:#fff}.tp-btn.small{padding:6px 10px;font-size:12px}.tp-btn.danger{color:#b91c1c;border-color:#fecaca}
-.tp-alert{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:700;white-space:pre-line}.tp-alert.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}.tp-alert.warn{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
-.tp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.tp-kpi{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px}.tp-kpi b{display:block;font-size:22px;color:${NAVY}}.tp-kpi span{font-size:12px;font-weight:800;color:#8E7F8A}.tp-kpi.ok b{color:#047857}.tp-kpi.warn b{color:#b45309}
-.tp-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;margin-bottom:14px}
-.tp-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.tp-card-head h2{margin:0;font-size:16px;color:${NAVY};display:flex;align-items:center;gap:8px}.tp-card-head>span{font-size:12px;color:#8E7F8A;font-weight:700}
-.tp-scroll{overflow-x:auto}
-.tp-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}.tp-table th{text-align:right;background:#FBF4EE;color:#5C4858;font-size:12px;padding:9px 10px;border-bottom:1px solid #EADFD6}.tp-table td{padding:9px 10px;border-bottom:1px solid #F6EBE0;vertical-align:top}.tp-table td b{display:block}.tp-table td small{display:block;color:#8E7F8A;font-size:11.5px;margin-top:3px}.tp-table td small.bad{color:#b91c1c;font-weight:800}.tp-table tr.gap td{background:#fffbeb}
-.tp-table select,.tp-editor select,.tp-editor input,.tp-editor textarea,.tp-new select,.tp-new input,.tp-rename input{width:100%;border:1px solid #D9CBC2;border-radius:9px;padding:8px 10px;font:inherit;font-size:13px;background:#fff;color:#2A1626}
+.tp{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
+.tp *{box-sizing:border-box}.rm-btn.small{padding:6px 10px;font-size:12px}
+.rm-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.rm-card-head h2{margin:0;font-size:16px;color:${NAVY};display:flex;align-items:center;gap:8px}.rm-card-head>span{font-size:12px;color:#8E7F8A;font-weight:700}
+.tp-scroll{overflow-x:auto}.rm-table td small{display:block;color:#8E7F8A;font-size:11.5px;margin-top:3px}.rm-table td small.bad{color:#b91c1c;font-weight:800}.rm-table tr.gap td{background:#fffbeb}
+.rm-table select,.tp-editor select,.tp-editor input,.tp-editor textarea,.tp-new select,.tp-new input,.tp-rename input{width:100%;border:1px solid #D9CBC2;border-radius:9px;padding:8px 10px;font:inherit;font-size:13px;background:#fff;color:#2A1626}
 .tp-st{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:900;border-radius:999px;padding:3px 9px}.tp-st.ok{background:#ecfdf5;color:#047857}.tp-st.warn{background:#fff7ed;color:#b45309}
-.tp-empty-cell{text-align:center;color:#8E7F8A;padding:18px}
+.rm-empty-cell{text-align:center;color:#8E7F8A;padding:18px}
 .tp-split{display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start}
 .tp-tlist{display:flex;flex-direction:column;gap:6px}
 .tp-titem{display:flex;flex-direction:column;align-items:flex-start;gap:3px;border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;background:#fff;font:inherit;text-align:right;cursor:pointer;color:#2A1626}.tp-titem.on{border-color:${TEAL};background:#FBEDE7;box-shadow:inset 3px 0 0 ${TEAL}}.tp-titem b{font-size:13.5px}.tp-titem small{color:#8E7F8A;font-size:11.5px}
@@ -371,7 +358,6 @@ const CSS = `
 .tp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tp-check{flex-direction:row!important;align-items:center;gap:8px!important;font-size:13px!important;padding-top:20px}.tp-check input{width:auto!important}
 .tp-add{margin-top:10px}
-.tp-empty{text-align:center;padding:26px 14px;color:#8E7F8A;display:flex;flex-direction:column;align-items:center;gap:6px}.tp-empty b{color:${NAVY}}.tp-empty span{font-size:12.5px;max-width:420px;line-height:1.7}
 .tp-preview{border:1px solid #EADFD6;border-radius:14px;padding:14px;background:#FBF4EE}
 .tp-pv-head{text-align:center;margin-bottom:12px}.tp-pv-head b{display:block;font-size:17px;color:${NAVY}}.tp-pv-head span{font-size:12px;color:#8E7F8A}
 .tp-pv-sec{background:#fff;border:1px solid #EADFD6;border-radius:12px;padding:12px 14px;margin-bottom:10px}
@@ -381,5 +367,5 @@ const CSS = `
 .tp-pv-opts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.tp-pv-opts span{border:1px solid #D9CBC2;border-radius:8px;padding:5px 10px;font-size:12.5px}
 .tp-pv-text{border:1px solid #D9CBC2;border-radius:8px;padding:8px 10px;margin-top:6px;color:#B3A5AE;font-size:12.5px;background:#fff}.tp-pv-text.long{min-height:64px}
 .tp-how{font-size:12.5px;color:#5C4858;line-height:1.8}
-@media(max-width:900px){.tp{padding:12px}.tp-kpis{grid-template-columns:repeat(2,1fr)}.tp-split{grid-template-columns:1fr}.tp-grid2{grid-template-columns:1fr}.tp-check{padding-top:0}.tp-q{flex-wrap:wrap}.tp-qact{width:100%;justify-content:flex-end}.tp-rename input{min-width:0}}
+@media(max-width:900px){.tp{}.tp-split{grid-template-columns:1fr}.tp-grid2{grid-template-columns:1fr}.tp-check{padding-top:0}.tp-q{flex-wrap:wrap}.tp-qact{width:100%;justify-content:flex-end}.tp-rename input{min-width:0}}
 `;

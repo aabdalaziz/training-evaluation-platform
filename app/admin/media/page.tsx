@@ -9,6 +9,7 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { MEDIA_CONTEXT_LABEL, MEDIA_STATUS_LABEL, fmtDuration, transcriptScore, wordCount } from '../../../lib/portal/media';
 import type { MediaRow } from '../../../lib/portal/media';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 type Item = MediaRow & { url: string | null; mime: string; bytes: number; created_at: string };
 const fmt = (iso: string) => new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' });
@@ -35,19 +36,22 @@ export default function AdminMediaPage() {
     setBusy(id); const j = await fetch('/api/media', { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ id, action, note, score: score === '' ? undefined : score }) }).then(r => r.json());
     if (!j?.success) setError(j?.error || 'تعذّر الحفظ'); else { setNote(''); setScore(''); setOpen(null); await load(tok); } setBusy('');
   }
-  if (!ready) return <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="am-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
+  if (!ready) return <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="am-wrap"><div className="rm-card">{error ? <span className="am-err">{error}</span> : 'جارٍ التحميل…'}</div></div></div>;
   return (
-    <div className="am"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="am rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="am-wrap">
-        <header className="am-head"><div><span className="am-kicker"><Icon name="play" size={14} /> بوابة أَثَر · P13-ج</span><h1>مقاطع الأداء</h1><p>تسجيلات الفيديو والصوت التي سجّلها المتعلمون من «القناة الواحدة» في موقف اليوم و«ماذا لو؟» وغيرها. النص المفرَّغ يُقدَّر آليًا بمعايير شفافة، لكن الدليل لا يرتفع من 0.6 إلى 0.85 في التوأم المهاري إلا بعد أن يشاهده إنسان ويعتمده. المرفوض يُستبعد من الحساب. تُحذف التسجيلات غير المعتمدة تلقائيًا بعد 180 يومًا.</p></div></header>
+        <RoomHead
+        title={<>مقاطع الأداء</>}
+        desc={<><p>تسجيلات الفيديو والصوت التي سجّلها المتعلمون من «القناة الواحدة» في موقف اليوم و«ماذا لو؟» وغيرها. النص المفرَّغ يُقدَّر آليًا بمعايير شفافة، لكن الدليل لا يرتفع من 0.6 إلى 0.85 في التوأم المهاري إلا بعد أن يشاهده إنسان ويعتمده. المرفوض يُستبعد من الحساب. تُحذف التسجيلات غير المعتمدة تلقائيًا بعد 180 يومًا.</p></>}
+      />
         <PortalAdminTabs counts={{ '/admin/media': stats.pending }} />
         {error && <div className="am-err">{error}</div>}
-        <div className="am-kpis"><span><b>{stats.pending}</b> بانتظار المراجعة</span><span><b>{stats.approved}</b> معتمد</span></div>
-        {!items.length && <div className="am-card am-empty">لا تسجيلات بانتظار المراجعة الآن.</div>}
+        <div className="rm-kpis"><span><b>{stats.pending}</b> بانتظار المراجعة</span><span><b>{stats.approved}</b> معتمد</span></div>
+        {!items.length && <div className="rm-card rm-empty">لا تسجيلات بانتظار المراجعة الآن.</div>}
         {items.map(m => {
           const ts = m.transcript ? transcriptScore(m.transcript) : null; const isOpen = open === m.id;
           return (
-            <article key={m.id} className="am-card">
+            <article key={m.id} className="rm-card">
               <div className="am-row" onClick={() => { setOpen(isOpen ? null : m.id); setNote(''); setScore(ts ? ts.score : ''); }}>
                 <div className="am-who"><b>{m.title || MEDIA_CONTEXT_LABEL[m.context_type]?.ar}</b><span>{m.email || m.user_id}</span><small>{fmt(m.created_at)} · {MEDIA_CONTEXT_LABEL[m.context_type]?.ar}{m.context_id ? ` · ${m.context_id}` : ''}</small></div>
                 <div className="am-meta"><span className={`am-st ${m.status}`}>{MEDIA_STATUS_LABEL[m.status].ar}</span><span className="am-tag">{m.kind === 'video' ? 'فيديو' : 'صوت'} · {fmtDuration(m.duration_sec)} · {Math.round((m.bytes || 0) / 1024)} ك.ب</span>{ts && <span className="am-total">{ts.score}<small>/100 آلي</small></span>}{!!(m.skill_ids || []).length && <span className="am-tag soft">{m.skill_ids.length} مهارة</span>}</div>
@@ -69,8 +73,8 @@ export default function AdminMediaPage() {
                   <div className="am-decide">
                     <label>الدرجة النهائية <input type="number" min={0} max={100} value={score} onChange={e => setScore(e.target.value === '' ? '' : Math.max(0, Math.min(100, Number(e.target.value))))} /></label>
                     <input value={note} onChange={e => setNote(e.target.value)} placeholder="ملاحظة للمتعلم (اختياري)" maxLength={500} />
-                    <button type="button" className="am-btn ok" disabled={busy === m.id} onClick={() => decide(m.id, 'approve')}><Icon name="check" size={14} /> اعتمد (0.85)</button>
-                    <button type="button" className="am-btn bad" disabled={busy === m.id} onClick={() => decide(m.id, 'reject')}><Icon name="x" size={14} /> ارفض</button>
+                    <button type="button" className="rm-btn ok" disabled={busy === m.id} onClick={() => decide(m.id, 'approve')}><Icon name="check" size={14} /> اعتمد (0.85)</button>
+                    <button type="button" className="rm-btn bad" disabled={busy === m.id} onClick={() => decide(m.id, 'reject')}><Icon name="x" size={14} /> ارفض</button>
                   </div>
                 </div>
               )}
@@ -83,11 +87,8 @@ export default function AdminMediaPage() {
 }
 
 const CSS = `
-.am{padding:20px 16px 48px;background:#FBF4EE;min-height:60vh;font-family:inherit}
-.am-wrap{max-width:1080px;margin:0 auto;display:grid;gap:12px}
-.am-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.am-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.7;max-width:860px}.am-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
-.am-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px}.am-empty{color:#8E7F8A;font-size:14px;text-align:center}.am-err{color:#b91c1c;font-size:13px}
-.am-kpis{display:flex;gap:16px;font-size:14px;color:#5C4858}.am-kpis b{color:#3A1F36;font-size:20px;margin-inline-end:4px}
+.am{font-family:inherit}
+.am-wrap{max-width:1080px;margin:0 auto;display:grid;gap:12px}.am-err{color:#b91c1c;font-size:13px}
 .am-row{display:flex;justify-content:space-between;gap:12px;align-items:center;cursor:pointer;flex-wrap:wrap}.am-who b{display:block;color:#3A1F36;font-size:15px}.am-who span{color:#5C4858;font-size:13px}.am-who small{display:block;color:#8E7F8A;font-size:12px}
 .am-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.am-total{font-size:20px;color:#D4614A;font-weight:900}.am-total small{font-size:11px;color:#8E7F8A;margin-inline-start:4px;font-weight:600}
 .am-st,.am-tag{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#F3E6DC;color:#5C4858}.am-st.uploaded{background:#FBF4EE;color:#8A5A1E}.am-st.approved{background:#e6f4f1;color:#D4614A}.am-st.rejected{background:#fee2e2;color:#b91c1c}.am-tag.soft{background:#FBF4EE;border:1px solid #EADFD6}
@@ -96,6 +97,5 @@ const CSS = `
 .am-tr{margin:0;background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.8;color:#3A2634;max-height:300px;overflow:auto;white-space:pre-wrap}.am-tr em{color:#B3A5AE}
 .am-notes{margin:8px 0 0;padding-inline-start:18px;color:#8A5A1E;font-size:12.5px;line-height:1.7}
 .am-decide{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}.am-decide label{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:#5C4858}.am-decide label input{width:70px;border:1px solid #D9CBC2;border-radius:10px;padding:8px;font:inherit}.am-decide>input{flex:1;min-width:200px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px}
-.am-btn{display:inline-flex;align-items:center;gap:5px;border:0;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;color:#fff}.am-btn.ok{background:#D4614A}.am-btn.bad{background:#b91c1c}.am-btn:disabled{opacity:.5}
 @media (max-width:860px){.am-cols{grid-template-columns:1fr}}
 `;

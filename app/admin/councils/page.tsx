@@ -7,15 +7,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '../../../lib/ui/icons';
-import { PortalShell } from '../../components/PortalShell';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { fastToken } from '../../components/Pocket';
 import { supabase } from '../../../lib/supabase/client';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type Data = any;
 const fmt = (iso: string | null | undefined) => (iso ? new Date(iso).toLocaleDateString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium' }) : '—');
 
-export default function AdminCouncilsPage() { return <PortalShell><Inner /></PortalShell>; }
+export default function AdminCouncilsPage() { return <Inner />; } /* هـ-3 ل: غرفة إدارية داخل غلاف مركز القيادة — لا قشرة البوّابة العامة فوقها */
 function Inner() {
   const db = useMemo(() => supabase(), []);
   const [tok, setTok] = useState<string | null>(null); const [d, setD] = useState<Data | null>(null); const [err, setErr] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState('');
@@ -33,14 +33,17 @@ function Inner() {
   const orgName = (id: string | null | undefined) => d?.organizations?.find((o: any) => o.id === id)?.name_ar || (id ? id.slice(0, 8) : '—');
   const S = d?.summary; const C = d?.constants;
   return (
-    <main className="ac" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <main className="ac rm-page" dir="rtl"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <PortalAdminTabs counts={{ '/admin/councils': (d?.pending?.length || 0) + (d?.applicants?.length || 0) }} />
-      <header className="ac-head"><span className="pt-kicker"><Icon name="users" size={14} /> مجالس أَثَر · الإدارة</span><h1>المجالس</h1><p>المُوفِّق يقترح، والطاقم يعتمد التشكيل. ما يُقال في المجلس يبقى فيه — هنا تُدار الحالات لا المحتوى.</p></header>
+      <RoomHead
+        title={<>المجالس</>}
+        desc={<><span className="rm-muted"><Icon name="users" size={14} /> مجالس أَثَر · الإدارة</span><p>المُوفِّق يقترح، والطاقم يعتمد التشكيل. ما يُقال في المجلس يبقى فيه — هنا تُدار الحالات لا المحتوى.</p></>}
+      />
       {err && <div className="ac-err" role="alert">{err}</div>}{msg && <div className="ac-ok" role="status">{msg}</div>}
       {d && (
         <>
-          <section className="ac-kpis" data-testid="kpis">
-            {[['منعقدة', S.active], ['قيد التشكيل', S.proposed], ['أعضاء نشطون', S.members], ['متقدمون', S.applicants], ['شهادات بانتظار الطاقم', S.pending], ['قضايا', S.cases], ['عودات', S.returns]].map(([l, v]) => <div key={String(l)} className="ac-kpi"><b>{v}</b><small>{l}</small></div>)}
+          <section className="rm-kpis" data-testid="kpis">
+            {[['منعقدة', S.active], ['قيد التشكيل', S.proposed], ['أعضاء نشطون', S.members], ['متقدمون', S.applicants], ['شهادات بانتظار الطاقم', S.pending], ['قضايا', S.cases], ['عودات', S.returns]].map(([l, v]) => <div key={String(l)} className="rm-kpi"><b>{v}</b><small>{l}</small></div>)}
           </section>
           <nav className="ac-tabs">
             <button className={tab === 'councils' ? 'on' : ''} onClick={() => setTab('councils')}>المجالس ({d.councils.length})</button>
@@ -52,17 +55,17 @@ function Inner() {
 
           {tab === 'councils' && (
             <section className="ac-stack" data-testid="councils-tab">
-              {!d.councils.length && <div className="pt-box"><p className="ac-muted">لا مجالس بعد — ابدأ من «تشكيل مجلس».</p></div>}
+              {!d.councils.length && <div className="rm-card"><p className="rm-muted">لا مجالس بعد — ابدأ من «تشكيل مجلس».</p></div>}
               {d.councils.map((c: any) => (
-                <article key={c.id} className={`pt-box ac-council ${c.status}`} data-testid="council-row">
+                <article key={c.id} className={`rm-card ac-council ${c.status}`} data-testid="council-row">
                   <div className="ac-crow" onClick={() => setOpen(open === c.id ? '' : c.id)}>
-                    <div><b>{c.title_ar}</b> <span className={`ac-st ${c.status}`}>{c.status_ar}</span><p className="ac-muted">{c.members.length} أعضاء من {c.orgs} جهات · الدورة {c.cycle_no}{c.cycle_ends_at ? ` تنتهي ${fmt(c.cycle_ends_at)}` : ''} · الكرسي {c.chair_email || '—'} · {c.cases} قضايا / {c.returns} عودات{c.current_case ? ` · الآن: «${c.current_case.title_ar}»` : ''}</p>
+                    <div><b>{c.title_ar}</b> <span className={`ac-st ${c.status}`}>{c.status_ar}</span><p className="rm-muted">{c.members.length} أعضاء من {c.orgs} جهات · الدورة {c.cycle_no}{c.cycle_ends_at ? ` تنتهي ${fmt(c.cycle_ends_at)}` : ''} · الكرسي {c.chair_email || '—'} · {c.cases} قضايا / {c.returns} عودات{c.current_case ? ` · الآن: «${c.current_case.title_ar}»` : ''}</p>
                       <div className="ac-chips">{c.skills.map((s: any) => <span key={s.id} className="ac-chip">{s.name_ar}</span>)}</div></div>
-                    <span className="ac-muted">{open === c.id ? '▲' : '▼'}</span>
+                    <span className="rm-muted">{open === c.id ? '▲' : '▼'}</span>
                   </div>
                   {open === c.id && (
                     <div className="ac-detail">
-                      <table className="ac-table"><thead><tr><th>العضو</th><th>الجهة</th><th>الدور</th><th>الحالة</th><th>الميثاق</th><th>دورات</th><th></th></tr></thead><tbody>
+                      <table className="rm-table"><thead><tr><th>العضو</th><th>الجهة</th><th>الدور</th><th>الحالة</th><th>الميثاق</th><th>دورات</th><th></th></tr></thead><tbody>
                         {c.members.map((m: any) => <tr key={m.id}><td>{m.full_name || '—'}<br /><small>{m.email}</small></td><td>{m.org_name || '—'}</td><td>{m.role === 'chair' ? <b>الكرسي</b> : 'عضو'}</td><td>{m.status === 'active' ? 'نشط' : m.status === 'invited' ? 'مدعو' : m.status}</td><td>{m.signed ? '✓' : '—'}</td><td>{m.cycles_completed}</td><td className="ac-rowbtns">{m.status === 'active' && m.role !== 'chair' && <button className="pt-btn ghost small" disabled={!!busy} onClick={() => act({ action: 'set_chair', id: c.id, email: m.email }, 'عُيّن الكرسي')}>كرسي</button>}<button className="pt-btn ghost small" disabled={!!busy} onClick={() => { if (confirm(`إخراج ${m.email} من المجلس؟`)) act({ action: 'remove_member', id: c.id, email: m.email }, 'أُخرج العضو'); }}>إخراج</button></td></tr>)}
                       </tbody></table>
                       <div className="ac-add"><input className="ac-in" placeholder="بريد عضو جديد" value={addEmail.email} onChange={e => setAddEmail({ ...addEmail, email: e.target.value })} data-testid="add-email" /><input className="ac-in" placeholder="الاسم (اختياري)" value={addEmail.full_name} onChange={e => setAddEmail({ ...addEmail, full_name: e.target.value })} /><select className="ac-in" value={addEmail.organization_id} onChange={e => setAddEmail({ ...addEmail, organization_id: e.target.value })}><option value="">— الجهة —</option>{d.organizations.map((o: any) => <option key={o.id} value={o.id}>{o.name_ar}</option>)}</select><button className="pt-btn small" disabled={!!busy || !addEmail.email} onClick={async () => { const j = await act({ action: 'add_member', id: c.id, ...addEmail, organization_id: addEmail.organization_id || null }, 'أُرسلت الدعوة'); if (j) setAddEmail({ email: '', full_name: '', organization_id: '' }); }} data-testid="add-member">دعوة</button></div>
@@ -82,16 +85,16 @@ function Inner() {
 
           {tab === 'form' && (
             <section className="ac-stack" data-testid="form-tab">
-              <div className="pt-box"><h3><Icon name="plus" size={16} /> مجلس جديد — {C.min}–{C.max} أعضاء من ≥ {C.min_orgs} جهة · دورة {C.cycle_weeks} أسابيع</h3>
+              <div className="rm-card"><h3><Icon name="plus" size={16} /> مجلس جديد — {C.min}–{C.max} أعضاء من ≥ {C.min_orgs} جهة · دورة {C.cycle_weeks} أسابيع</h3>
                 <div className="ac-grid3">
                   <input className="ac-in" placeholder="اسم المجلس (مثال: مجلس قادة الصف الأول — التعليم)" value={form.title_ar} onChange={e => setForm({ ...form, title_ar: e.target.value })} data-testid="f-title" />
                   <input className="ac-in" placeholder="المجال (اختياري)" value={form.domain} onChange={e => setForm({ ...form, domain: e.target.value })} />
                   <input className="ac-in" placeholder="رمز القطاع (اختياري)" value={form.sector_code} onChange={e => setForm({ ...form, sector_code: e.target.value })} />
                 </div>
-                <p className="ac-muted">المهارات المحورية (اختر 1–4):</p>
+                <p className="rm-muted">المهارات المحورية (اختر 1–4):</p>
                 <div className="ac-skills">{d.skills.slice(0, 120).map((s: any) => <button key={s.id} type="button" className={form.skill_ids.includes(s.id) ? 'on' : ''} onClick={() => setForm({ ...form, skill_ids: form.skill_ids.includes(s.id) ? form.skill_ids.filter(x => x !== s.id) : form.skill_ids.length < 4 ? [...form.skill_ids, s.id] : form.skill_ids })} data-testid="f-skill">{s.name_ar}</button>)}</div>
-                <div className="ac-btns"><button className="pt-btn ghost" disabled={busy === 'propose'} onClick={propose} data-testid="propose"><Icon name="target" size={15} /> اقترح تشكيلات (المُوفِّق)</button><span className="ac-muted">{proposals ? `${candN} مرشحًا · ${proposals.length} اقتراحًا` : 'يقرأ محفظة القدرة والمتقدمين ويقترح تشكيلات متقاربة المستوى متنوعة الجهات.'}</span></div>
-                {proposals && !proposals.length && <p className="ac-muted">لا تشكيل مكتمل الآن — أضف الأعضاء يدويًا أو انتظر متقدمين من جهة ثانية.</p>}
+                <div className="ac-btns"><button className="pt-btn ghost" disabled={busy === 'propose'} onClick={propose} data-testid="propose"><Icon name="target" size={15} /> اقترح تشكيلات (المُوفِّق)</button><span className="rm-muted">{proposals ? `${candN} مرشحًا · ${proposals.length} اقتراحًا` : 'يقرأ محفظة القدرة والمتقدمين ويقترح تشكيلات متقاربة المستوى متنوعة الجهات.'}</span></div>
+                {proposals && !proposals.length && <p className="rm-muted">لا تشكيل مكتمل الآن — أضف الأعضاء يدويًا أو انتظر متقدمين من جهة ثانية.</p>}
                 {proposals && proposals.map((p: any, i: number) => <div key={i} className="ac-proposal" data-testid="proposal"><div><b>اقتراح {i + 1}</b> — {p.members.length} أعضاء من {p.orgs} جهات · متوسط المستوى {p.level_avg} (تباين {p.level_spread}) · {p.reason_ar}<ul>{p.members.map((m: any) => <li key={m.email}>{m.full_name || m.email} <small>{m.org_name || orgName(m.organization_id)} · م{m.level}{m.applied ? ' · متقدم' : ''}</small></li>)}</ul></div><button className="pt-btn small" onClick={() => setForm({ ...form, members: p.members.map((m: any) => ({ email: m.email, full_name: m.full_name, organization_id: m.organization_id, user_id: m.user_id })) })} data-testid="use-proposal">اعتمد هذا التشكيل</button></div>)}
                 <h4>الأعضاء ({form.members.length})</h4>
                 <ul className="ac-members">{form.members.map(m => <li key={m.email}>{m.full_name || m.email} <small>{m.email} · {orgName(m.organization_id)}</small><button type="button" onClick={() => setForm({ ...form, members: form.members.filter(x => x.email !== m.email) })}>×</button></li>)}</ul>
@@ -103,15 +106,15 @@ function Inner() {
 
           {tab === 'applicants' && (
             <section className="ac-stack" data-testid="applicants-tab">
-              <div className="pt-box">{!d.applicants.length && <p className="ac-muted">لا متقدمين الآن.</p>}
-                {!!d.applicants.length && <table className="ac-table"><thead><tr><th>المتقدم</th><th>الجهة</th><th>الرغبة</th><th>منذ</th><th></th></tr></thead><tbody>{d.applicants.map((a: any) => <tr key={a.id}><td>{a.full_name || '—'}<br /><small>{a.email}</small></td><td>{a.org_name || '—'}</td><td><small>{a.meta?.domain || ''} {a.meta?.sector || ''} {a.note || ''}</small></td><td>{fmt(a.created_at)}</td><td><button className="pt-btn ghost small" onClick={() => { setForm({ ...form, members: [...form.members.filter(x => x.email !== a.email), { email: a.email, full_name: a.full_name, organization_id: a.organization_id, user_id: a.user_id }] }); setTab('form'); }}>أضفه إلى التشكيل</button></td></tr>)}</tbody></table>}</div>
+              <div className="rm-card">{!d.applicants.length && <p className="rm-muted">لا متقدمين الآن.</p>}
+                {!!d.applicants.length && <table className="rm-table"><thead><tr><th>المتقدم</th><th>الجهة</th><th>الرغبة</th><th>منذ</th><th></th></tr></thead><tbody>{d.applicants.map((a: any) => <tr key={a.id}><td>{a.full_name || '—'}<br /><small>{a.email}</small></td><td>{a.org_name || '—'}</td><td><small>{a.meta?.domain || ''} {a.meta?.sector || ''} {a.note || ''}</small></td><td>{fmt(a.created_at)}</td><td><button className="pt-btn ghost small" onClick={() => { setForm({ ...form, members: [...form.members.filter(x => x.email !== a.email), { email: a.email, full_name: a.full_name, organization_id: a.organization_id, user_id: a.user_id }] }); setTab('form'); }}>أضفه إلى التشكيل</button></td></tr>)}</tbody></table>}</div>
             </section>
           )}
 
           {tab === 'pending' && (
             <section className="ac-stack" data-testid="pending-tab">
-              <div className="pt-box"><h3><Icon name="scale" size={16} /> شهادات أقران بانتظار الاعتماد</h3><p className="ac-muted">مدير جهة المشهود له يعتمد أولًا من قاعة مجلسه؛ الطاقم يعتمد احتياطًا (بعد 7 أيام أو حين لا مدير). الاعتماد يرفع وزن الدليل في خيط الأثر — ولا يغيّر المستوى المعتمد دون قرار بشري (P8).</p>
-                {!d.pending.length && <p className="ac-muted">لا شهادات معلّقة.</p>}
+              <div className="rm-card"><h3><Icon name="scale" size={16} /> شهادات أقران بانتظار الاعتماد</h3><p className="rm-muted">مدير جهة المشهود له يعتمد أولًا من قاعة مجلسه؛ الطاقم يعتمد احتياطًا (بعد 7 أيام أو حين لا مدير). الاعتماد يرفع وزن الدليل في خيط الأثر — ولا يغيّر المستوى المعتمد دون قرار بشري (P8).</p>
+                {!d.pending.length && <p className="rm-muted">لا شهادات معلّقة.</p>}
                 {d.pending.map((a: any) => <div key={a.id} className="ac-att" data-testid="pending-row"><div><b>{a.from_email}</b> ← <b>{a.to_email}</b> · «{a.skill_ar}» · {a.council_title} · {fmt(a.created_at)}<p>{a.evidence_ar}</p></div><div className="ac-rowbtns"><button className="pt-btn small" disabled={!!busy} onClick={() => act({ action: 'decide_attestation', id: a.id, approve: true }, 'اعتُمدت')} data-testid="approve">اعتماد</button><button className="pt-btn ghost small" disabled={!!busy} onClick={() => act({ action: 'decide_attestation', id: a.id, approve: false }, 'رُفضت')}>رفض</button></div></div>)}
               </div>
             </section>
@@ -119,30 +122,27 @@ function Inner() {
 
           {tab === 'wisdom' && (
             <section className="ac-stack" data-testid="wisdom-tab">
-              <div className="pt-box"><h3><Icon name="globe" size={16} /> خريطة الحكمة — ما يتكرر عبر المجالس</h3><p className="ac-muted">أنماط تظهر فقط حين تبلغ k ≥ {C.k} أشخاص من ≥ {C.min_orgs} جهة — بلا أسماء. النمط المتكرر = حاجة تدريبية حقيقية → مسودة في هندسة البرامج التدريبية.</p>
-                {!d.wisdom.length && <p className="ac-muted">لم تبلغ الأنماط عتبة الإظهار بعد.</p>}
+              <div className="rm-card"><h3><Icon name="globe" size={16} /> خريطة الحكمة — ما يتكرر عبر المجالس</h3><p className="rm-muted">أنماط تظهر فقط حين تبلغ k ≥ {C.k} أشخاص من ≥ {C.min_orgs} جهة — بلا أسماء. النمط المتكرر = حاجة تدريبية حقيقية → مسودة في هندسة البرامج التدريبية.</p>
+                {!d.wisdom.length && <p className="rm-muted">لم تبلغ الأنماط عتبة الإظهار بعد.</p>}
                 {d.wisdom.map((w: any) => <div key={w.pattern} className="ac-wis" data-testid="wisdom-row"><div><b>{w.label_ar}</b><small> {w.cases} قضية · {w.persons} شخصًا · {w.orgs} جهات · {w.councils} مجالس</small></div><button className="pt-btn small" disabled={!!busy} onClick={async () => { const j = await act({ action: 'wisdom_to_engineering', pattern: w.pattern }, 'أُرسل النمط إلى هندسة البرامج التدريبية'); if (j?.url) window.open(j.url, '_blank'); }} data-testid="to-engineering"><Icon name="send" size={14} /> إلى هندسة البرامج</button></div>)}
-                <p className="ac-muted"><Link href="/admin/program-engineering">فتح هندسة البرامج التدريبية ←</Link></p>
+                <p className="rm-muted"><Link href="/admin/program-engineering">فتح هندسة البرامج التدريبية ←</Link></p>
               </div>
             </section>
           )}
         </>
       )}
-      {tok === '' && <section className="pt-box"><p>سجّل الدخول بحساب طاقم. <Link href="/login?next=/admin/councils">تسجيل الدخول</Link></p></section>}
+      {tok === '' && <section className="rm-card"><p>سجّل الدخول بحساب طاقم. <Link href="/login?next=/admin/councils">تسجيل الدخول</Link></p></section>}
     </main>
   );
 }
 
 const CSS = `
-.ac{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;max-width:1100px;margin:0 auto;padding:22px 18px 60px}
-.ac-head h1{margin:4px 0 6px;font-size:28px;color:#3A1F36}.ac-head p{margin:0 0 14px;color:#5C4858;line-height:1.8}
-.ac-muted{color:#8E7F8A;font-size:13px;line-height:1.8}.ac-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.ac-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
-.ac-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:12px 0}.ac-kpi{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:10px;text-align:center}.ac-kpi b{display:block;font-size:22px;color:#3A1F36}.ac-kpi small{color:#8E7F8A;font-size:11px}
+.ac{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;max-width:1100px;margin:0 auto}.ac-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.ac-ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
 .ac-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.ac-tabs button{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-weight:900;color:#4A3645;display:inline-flex;gap:6px;align-items:center}.ac-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.ac-tabs i{font-style:normal;background:#D9A866;color:#1f2937;border-radius:999px;font-size:11px;padding:1px 7px}
 .ac-stack{display:grid;gap:12px}.ac-in{font:inherit;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;background:#fff;width:100%;box-sizing:border-box}
 .ac-crow{display:flex;justify-content:space-between;gap:12px;cursor:pointer}.ac-st{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:900;background:#EADFD6;margin-inline-start:6px}.ac-st.active{background:#ccfbf1;color:#D4614A}.ac-st.proposed{background:#fef3c7;color:#92400e}.ac-st.closed{background:#F6EBE0;color:#8E7F8A}
 .ac-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.ac-chip{background:#FBEDE7;color:#D4614A;border:1px solid #99f6e4;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800}
-.ac-detail{margin-top:12px;border-top:1px solid #EADFD6;padding-top:12px}.ac-table{width:100%;border-collapse:collapse;font-size:13px}.ac-table th{text-align:right;color:#8E7F8A;font-weight:800;padding:6px;border-bottom:1px solid #EADFD6}.ac-table td{padding:6px;border-bottom:1px solid #F6EBE0;vertical-align:top}.ac-rowbtns{display:flex;gap:4px;white-space:nowrap}
+.ac-detail{margin-top:12px;border-top:1px solid #EADFD6;padding-top:12px}.ac-rowbtns{display:flex;gap:4px;white-space:nowrap}
 .ac-add{display:grid;grid-template-columns:2fr 1.5fr 1.5fr auto;gap:6px;margin:10px 0;align-items:center}@media (max-width:720px){.ac-add{grid-template-columns:1fr}}
 .ac-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}.pt-btn.danger{color:#b91c1c;border-color:#fecaca}
 .ac-grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin:8px 0}@media (max-width:720px){.ac-grid3{grid-template-columns:1fr}}

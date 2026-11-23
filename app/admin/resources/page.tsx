@@ -16,6 +16,7 @@ import type { Resource, ResourceFile, ResForm, ResStatus, LearningEvent } from '
 import { SECTORS_FALLBACK, skillName, domainLabel, DOMAINS } from '../../../lib/portal/skills';
 import type { Skill, Sector, Organization } from '../../../lib/portal/skills';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
 const BUCKET = 'portal-resources';
@@ -109,21 +110,26 @@ function ResourcesAdmin() {
   const toggleSkill = (id: string) => setForm(f => f ? { ...f, skills: f.skills.includes(id) ? f.skills.filter(x => x !== id) : [...f.skills, id] } : f);
   const skillOptions = useMemo(() => skills.filter(s => s.active && (!skillQ.trim() || `${s.code} ${s.name_ar} ${s.name_en}`.toLowerCase().includes(skillQ.trim().toLowerCase()))), [skills, skillQ]);
 
-  if (!ready) return <div className="en"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="en-wrap"><div className="en-card en-muted">جارٍ التحميل…</div></div></div>;
+  if (!ready) return <div className="en rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="en-wrap"><div className="rm-card rm-muted">جارٍ التحميل…</div></div></div>;
   return (
-    <div className="en"><style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="en rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="en-wrap">
-        <header className="en-head"><div><span className="en-kicker"><Icon name="globe" size={14} /> بوابة أَثَر</span><h1>مستودع الحقائب</h1><p>كل مادة تحمل قطاعًا ومهارات ومستوى وصول — وكل تنزيل يُسجَّل في سجل أحداث التعلّم ليغذّي الملف المهاري وتقارير الأثر.</p></div>
-          <div className="en-acts">{canWrite && <button type="button" className="en-btn" onClick={startNew}><Icon name="plus" size={14} /> مادة جديدة</button>}<Link href="/admin/skills" className="en-btn ghost"><Icon name="target" size={14} /> المهارات والجهات</Link><Link href="/resources" target="_blank" className="en-btn ghost"><Icon name="globe" size={14} /> الصفحة العامة</Link></div></header>
+        <RoomHead
+        title={<>مستودع الحقائب</>}
+        desc={<><p>كل مادة تحمل قطاعًا ومهارات ومستوى وصول — وكل تنزيل يُسجَّل في سجل أحداث التعلّم ليغذّي الملف المهاري وتقارير الأثر.</p></>}
+        actions={<>
+{canWrite && <button type="button" className="rm-btn" onClick={startNew}><Icon name="plus" size={14} /> مادة جديدة</button>}<Link href="/admin/skills" className="rm-btn ghost"><Icon name="target" size={14} /> المهارات والجهات</Link><Link href="/resources" target="_blank" className="rm-btn ghost"><Icon name="globe" size={14} /> الصفحة العامة</Link>
+        </>}
+      />
         <PortalAdminTabs counts={{ '/admin/resources': stats.drafts }} />
         {error && <div className="en-err">{error}</div>}{notice && <div className="en-ok">{notice}</div>}
 
-        <div className="en-card en-seats">
+        <div className="rm-card en-seats">
           <span className="en-seat"><b>{stats.published}</b><span>منشورة</span></span><span className="en-seat"><b>{stats.drafts}</b><span>مسودات</span></span><span className="en-seat"><b>{stats.downloads}</b><span>تنزيلات</span></span><span className="en-seat"><b>{stats.views}</b><span>مشاهدات</span></span><span className="en-seat"><b>{stats.aiReady}</b><span>AI-ready</span></span>
-          <span className="en-muted" style={{ marginInlineStart: 'auto' }}>المهارات المعرّفة: {skills.length} · القطاعات: {sectors.length} · الجهات: {orgs.length}</span>
+          <span className="rm-muted" style={{ marginInlineStart: 'auto' }}>المهارات المعرّفة: {skills.length} · القطاعات: {sectors.length} · الجهات: {orgs.length}</span>
         </div>
 
-        {form && <div className="en-card rs-form">
+        {form && <div className="rm-card rs-form">
           <h2><Icon name={editing ? 'edit' : 'plus'} size={18} /> {editing ? 'تحرير المادة' : 'مادة جديدة'}</h2>
           <div className="rs-g2"><label className="en-note">العنوان (عربي) *<input value={form.title_ar} onChange={e => setForm({ ...form, title_ar: e.target.value })} /></label><label className="en-note">Title (English)<input dir="ltr" value={form.title_en} onChange={e => setForm({ ...form, title_en: e.target.value })} /></label></div>
           <div className="rs-g2"><label className="en-note">ملخص قصير (عربي)<textarea value={form.summary_ar} onChange={e => setForm({ ...form, summary_ar: e.target.value })} /></label><label className="en-note">Short summary (English)<textarea dir="ltr" value={form.summary_en} onChange={e => setForm({ ...form, summary_en: e.target.value })} /></label></div>
@@ -149,22 +155,22 @@ function ResourcesAdmin() {
           </div>
           <div className="rs-skills">
             <div className="rs-skhead"><b>المهارات التي تنمّيها ({form.skills.length})</b><input placeholder="تصفية المهارات…" value={skillQ} onChange={e => setSkillQ(e.target.value)} /></div>
-            <div className="rs-skgrid">{skillOptions.map(s => <button type="button" key={s.id} className={`rs-sk ${form.skills.includes(s.id) ? 'on' : ''}`} onClick={() => toggleSkill(s.id)}><small>{s.code}</small>{s.name_ar}<i>{domainLabel(s.domain, 'ar')} · م{s.level}</i></button>)}{skillOptions.length === 0 && <span className="en-muted">لا مهارات مطابقة — أضفها من صفحة المهارات.</span>}</div>
+            <div className="rs-skgrid">{skillOptions.map(s => <button type="button" key={s.id} className={`rs-sk ${form.skills.includes(s.id) ? 'on' : ''}`} onClick={() => toggleSkill(s.id)}><small>{s.code}</small>{s.name_ar}<i>{domainLabel(s.domain, 'ar')} · م{s.level}</i></button>)}{skillOptions.length === 0 && <span className="rm-muted">لا مهارات مطابقة — أضفها من صفحة المهارات.</span>}</div>
           </div>
-          <div className="en-acts"><button type="button" className="en-btn ok" disabled={busy === 'save'} onClick={save}><Icon name="save" size={14} /> {editing ? 'حفظ التعديلات' : 'إنشاء المسودة'}</button><button type="button" className="en-btn ghost" onClick={() => setForm(null)}>إلغاء</button></div>
+          <div className="en-acts"><button type="button" className="rm-btn ok" disabled={busy === 'save'} onClick={save}><Icon name="save" size={14} /> {editing ? 'حفظ التعديلات' : 'إنشاء المسودة'}</button><button type="button" className="rm-btn ghost" onClick={() => setForm(null)}>إلغاء</button></div>
         </div>}
 
         <div className="en-tools">
           <div className="en-tabs">{FILTERS.map(f => <button type="button" key={f.k} className={filter === f.k ? 'on' : ''} onClick={() => setFilter(f.k)}>{f.l} ({f.k === 'all' ? rows.length : rows.filter(r => r.status === f.k).length})</button>)}</div>
           <select value={type} onChange={e => setType(e.target.value)}><option value="all">كل الأنواع</option>{RES_TYPES.map(x => <option key={x.value} value={x.value}>{x.label.ar}</option>)}</select>
           <input placeholder="بحث: العنوان، الوسوم…" value={q} onChange={e => setQ(e.target.value)} />
-          <button type="button" className="en-btn ghost" onClick={exportXlsx} disabled={shown.length === 0}><Icon name="download" size={14} /> Excel ({shown.length})</button>
-          <button type="button" className="en-btn ghost" onClick={() => run('r', async () => undefined)}><Icon name="refresh" size={14} /> تحديث</button>
+          <button type="button" className="rm-btn ghost" onClick={exportXlsx} disabled={shown.length === 0}><Icon name="download" size={14} /> Excel ({shown.length})</button>
+          <button type="button" className="rm-btn ghost" onClick={() => run('r', async () => undefined)}><Icon name="refresh" size={14} /> تحديث</button>
         </div>
 
-        {shown.length === 0 && <div className="en-card en-muted">لا مواد ضمن هذه التصفية.{canWrite && rows.length === 0 && ' ابدأ بإنشاء أول مادة.'}</div>}
+        {shown.length === 0 && <div className="rm-card rm-muted">لا مواد ضمن هذه التصفية.{canWrite && rows.length === 0 && ' ابدأ بإنشاء أول مادة.'}</div>}
         {shown.map(r => { const isOpen = open === r.id; const sk = (r.skills || []).map(id => skillById.get(id)).filter(Boolean) as Skill[]; return (
-          <div key={r.id} className={`en-card en-row ${r.status}`}>
+          <div key={r.id} className={`rm-card en-row ${r.status}`}>
             <div className="en-top" onClick={() => setOpen(isOpen ? null : r.id)}>
               <div className="en-who"><span className={`rs-ti ${r.type}`}><Icon name={typeIcon(r.type) as IconName} size={16} /></span><b>{r.title_ar}</b><span className={`en-tag ${r.status}`}>{statusLabel(r.status, 'ar')}</span><span className={`en-tag acc-${r.access}`}>{accessLabel(r.access, 'ar')}</span>{r.ai_ready && <span className="en-tag ai">AI</span>}</div>
               <div className="en-meta"><span>{typeLabel(r.type, 'ar')}</span>·<span>{levelLabel(r.level, 'ar')}</span>{r.sector && <>·<span>{secName(r.sector)}</span></>}·<span>v{r.version}</span>·<span><Icon name="download" size={12} /> {r.downloads || 0}</span>·<span>{fmt(r.updated_at || r.created_at)}</span></div>
@@ -174,22 +180,22 @@ function ResourcesAdmin() {
               {sk.length > 0 && <div className="rs-chips">{sk.map(s => <span key={s.id} className="rs-chip">{s.code} · {skillName(s, 'ar')}</span>)}</div>}
               <div className="cs-grid2">
                 <div className="cs-sec"><h3><Icon name="folder" size={16} /> الملفات ({files.length})</h3>
-                  {files.length === 0 && <span className="en-muted">لا ملفات بعد — المادة لن تكون مفيدة للمتعلم حتى تُرفع ملفاتها.</span>}
-                  {files.map(f => <div key={f.id} className="rs-file"><Icon name="doc" size={16} /><div><b>{f.name}</b><small>{fmtSize(f.size, 'ar')} · v{f.version} · {f.downloads || 0} تنزيل</small></div><div className="en-acts"><button type="button" className="en-btn ghost" onClick={() => preview(f)} disabled={!!busy}>معاينة</button>{canWrite && <button type="button" className="cs-x" title="حذف" onClick={() => removeFile(f)} disabled={!!busy}>×</button>}</div></div>)}
+                  {files.length === 0 && <span className="rm-muted">لا ملفات بعد — المادة لن تكون مفيدة للمتعلم حتى تُرفع ملفاتها.</span>}
+                  {files.map(f => <div key={f.id} className="rs-file"><Icon name="doc" size={16} /><div><b>{f.name}</b><small>{fmtSize(f.size, 'ar')} · v{f.version} · {f.downloads || 0} تنزيل</small></div><div className="en-acts"><button type="button" className="rm-btn ghost" onClick={() => preview(f)} disabled={!!busy}>معاينة</button>{canWrite && <button type="button" className="cs-x" title="حذف" onClick={() => removeFile(f)} disabled={!!busy}>×</button>}</div></div>)}
                   {canWrite && <label className="rs-upload"><Icon name="plus" size={14} /> {progress || 'رفع ملفات (PDF، Word، PowerPoint، Excel، فيديو، ZIP — حتى 100 م.ب للملف)'}<input type="file" multiple style={{ display: 'none' }} onChange={e => { upload(r, e.target.files); e.currentTarget.value = ''; }} disabled={busy === 'up'} /></label>}
                 </div>
                 <div className="cs-sec"><h3><Icon name="trend" size={16} /> آخر التنزيلات ({events.length})</h3>
-                  {events.length === 0 && <span className="en-muted">لا تنزيلات مسجّلة بعد.</span>}
+                  {events.length === 0 && <span className="rm-muted">لا تنزيلات مسجّلة بعد.</span>}
                   <div className="rs-ev">{events.slice(0, 12).map(e => <div key={e.id}><small>{fmt(e.at)}</small><span dir="ltr">{e.email || 'زائر'}</span><em>{String(e.context?.file_name || '')}</em></div>)}</div>
-                  {events.length > 0 && <button type="button" className="en-btn ghost" onClick={() => exportEvents(r)}><Icon name="download" size={14} /> سجل التنزيلات Excel</button>}
+                  {events.length > 0 && <button type="button" className="rm-btn ghost" onClick={() => exportEvents(r)}><Icon name="download" size={14} /> سجل التنزيلات Excel</button>}
                 </div>
               </div>
               {canWrite && <div className="en-acts">
-                <button type="button" className="en-btn ghost" onClick={() => startEdit(r)}><Icon name="edit" size={14} /> تحرير</button>
-                {r.status !== 'published' && <button type="button" className="en-btn ok" disabled={!!busy} onClick={() => setStatus(r, 'published')}><Icon name="check" size={14} /> نشر</button>}
-                {r.status === 'published' && <button type="button" className="en-btn warn" disabled={!!busy} onClick={() => setStatus(r, 'archived')}><Icon name="pause" size={14} /> أرشفة</button>}
-                {r.status === 'archived' && <button type="button" className="en-btn ghost" disabled={!!busy} onClick={() => setStatus(r, 'draft')}>إعادة إلى المسودات</button>}
-                <button type="button" className="en-btn ghost" style={{ marginInlineStart: 'auto', color: '#991b1b' }} disabled={!!busy} onClick={() => remove(r)}><Icon name="trash" size={14} /> حذف</button>
+                <button type="button" className="rm-btn ghost" onClick={() => startEdit(r)}><Icon name="edit" size={14} /> تحرير</button>
+                {r.status !== 'published' && <button type="button" className="rm-btn ok" disabled={!!busy} onClick={() => setStatus(r, 'published')}><Icon name="check" size={14} /> نشر</button>}
+                {r.status === 'published' && <button type="button" className="rm-btn warn" disabled={!!busy} onClick={() => setStatus(r, 'archived')}><Icon name="pause" size={14} /> أرشفة</button>}
+                {r.status === 'archived' && <button type="button" className="rm-btn ghost" disabled={!!busy} onClick={() => setStatus(r, 'draft')}>إعادة إلى المسودات</button>}
+                <button type="button" className="rm-btn ghost" style={{ marginInlineStart: 'auto', color: '#991b1b' }} disabled={!!busy} onClick={() => remove(r)}><Icon name="trash" size={14} /> حذف</button>
               </div>}
             </div>}
           </div>
@@ -200,10 +206,8 @@ function ResourcesAdmin() {
 }
 
 const CSS = `
-.en{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
+.en{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .en-wrap{max-width:1080px;margin:0 auto;display:grid;gap:12px}
-.en-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.en-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.en-head p{margin:0;color:#8E7F8A;font-size:14px;max-width:720px}.en-kicker{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#D4614A}
-.en-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:14px 16px}.en-muted{color:#8E7F8A;font-size:13.5px}
 .en-seats{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.en-seat{text-align:start;border:1px solid #EADFD6;background:#FBF4EE;border-radius:12px;padding:8px 14px;display:grid;gap:2px;min-width:92px}.en-seat b{font-size:18px;color:#3A1F36}.en-seat span{font-size:11.5px;color:#8E7F8A}
 .en-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.en-tabs{display:flex;gap:6px;flex-wrap:wrap}.en-tabs button{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;color:#4A3645}.en-tabs button.on{background:#3A1F36;border-color:#3A1F36;color:#fff}
 .en-tools select,.en-tools input{font:inherit;font-size:13px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;background:#fff}.en-tools input{min-width:200px}
@@ -215,7 +219,6 @@ const CSS = `
 .en-details{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A}.en-details a{color:#D4614A;font-weight:800}
 .en-note{display:grid;gap:4px;font-size:12.5px;font-weight:800;color:#4A3645}.en-note textarea,.en-note input,.en-note select{font:inherit;font-size:13.5px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;background:#fff;font-weight:500}.en-note textarea{min-height:56px;resize:vertical}
 .en-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.en-btn{display:inline-flex;gap:6px;align-items:center;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;text-decoration:none;background:#3A1F36;color:#fff;border:1px solid #3A1F36}.en-btn.ok{background:#059669;border-color:#059669}.en-btn.warn{background:#d97706;border-color:#d97706}.en-btn.ghost{background:#fff;color:#3A1F36;border-color:#D9CBC2}.en-btn:disabled{opacity:.6;cursor:not-allowed}
 .en-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}.en-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:10px 14px;font-weight:800;font-size:13.5px}
 .cs-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cs-sec{border:1px solid #EADFD6;border-radius:12px;padding:12px 14px;display:grid;gap:10px;background:#fcfcfd;align-content:start}.cs-sec h3{margin:0;font-size:15px;color:#3A1F36;display:flex;gap:6px;align-items:center}
 .cs-x{border:0;background:#fee2e2;color:#991b1b;border-radius:8px;width:26px;height:26px;cursor:pointer;display:inline-grid;place-items:center}.cs-chk{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:#4A3645;font-weight:800}

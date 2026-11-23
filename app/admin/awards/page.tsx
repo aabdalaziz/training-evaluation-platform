@@ -14,6 +14,7 @@ import type { CertRow } from '../../../lib/certificates/issue';
 import { jpegsToPdf, downloadBytes, DEFAULT_SETTINGS } from '../../../lib/certificates/render';
 import type { CertSettings } from '../../../lib/certificates/render';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 type AwardRow = { id: string; period_key: string; period_label: string; category: AwardCategory; category_label: string; rank: number; trainer_id: string | null; trainer_name: string; metric_value: number | null; metric_label: string | null; responses: number | null; mean: number | null; certificate_id: string | null; note: string | null; created_by_name: string | null; created_at: string };
 type Raw = { evaluations: any[]; answers: any[]; questions: any[]; classrooms: any[]; trainers: any[]; programs: any[] };
 
@@ -126,28 +127,23 @@ export default function AwardsPage() {
   }
 
   const allowed = ALLOWED.includes(role.toUpperCase());
-  if (!ready) return <div className="aw" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="aw rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
   const periods = Array.from(new Map(history.map(h => [h.period_key, h.period_label])).entries());
 
   return (
-    <div className="aw" dir="rtl">
+    <div className="aw rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="aw-head">
-        <div>
-          <div className="aw-kicker"><Icon name="award" size={14} /> مركز الإدارة</div>
-          <h1>تكريم المدربين — لوحة الشرف</h1>
-          <p>اختيار آلي شفاف للمتميزين وفق قواعد معلنة (أعلى تقييم، الأكثر تحسنًا، الأعلى مشاركة، الأكثر ثباتًا)، مع إصدار شهادات تقدير رسمية.</p>
-        </div>
-        <nav className="aw-nav">
-          <Link href="/dashboard" className="aw-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/admin/certificates" className="aw-btn"><Icon name="certificate" size={16} /> الشهادات</Link>
-          <Link href="/reports/center?type=trainers" className="aw-btn"><Icon name="users" size={16} /> تقرير المدربين</Link>
-        </nav>
-      </header>
-      {!allowed && <div className="aw-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة.</div>}
-      {error && <div className="aw-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="aw-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
+      <RoomHead
+        title={<>تكريم المدربين — لوحة الشرف</>}
+        desc={<><p>اختيار آلي شفاف للمتميزين وفق قواعد معلنة (أعلى تقييم، الأكثر تحسنًا، الأعلى مشاركة، الأكثر ثباتًا)، مع إصدار شهادات تقدير رسمية.</p></>}
+        actions={<>
+          <Link href="/reports/center?type=trainers" className="rm-btn"><Icon name="users" size={16} /> تقرير المدربين</Link>
+        </>}
+      />
+      {!allowed && <div className="rm-alert err"><Icon name="alert" size={18} /> هذه الصفحة للإدارة ومديري البرامج ومحللي الجودة.</div>}
+      {error && <div className="rm-alert err"><Icon name="alert" size={18} /> <span style={{ flex: 1 }}>{error}</span><button className="aw-x" onClick={() => setError('')}><Icon name="x" size={14} /></button></div>}
 
-      <section className="aw-card">
+      <section className="rm-card">
         <h2><Icon name="calendar" size={18} /> فترة التكريم والقواعد</h2>
         <div className="aw-grid">
           <label>الفترة<select value={preset} onChange={e => setPreset(e.target.value as any)}><option value="last">الشهر الماضي</option><option value="this">الشهر الحالي</option><option value="custom">مخصصة</option></select></label>
@@ -166,12 +162,12 @@ export default function AwardsPage() {
           const list = cands.filter(c => c.category === cat); const m = CATEGORY_META[cat]; const w = wins.find(x => x.category === cat);
           return (
             <div key={cat} className={`aw-cat ${w ? 'has' : ''}`}>
-              <div className="aw-cat-head"><span className="aw-cat-ic"><Icon name={m.icon as any} size={18} /></span><div><b>{m.ar}</b><div className="aw-muted">{m.desc_ar}</div></div></div>
-              {list.length === 0 ? <div className="aw-muted" style={{ padding: '10px 0' }}>لا توجد بيانات كافية في هذه الفترة.</div> : (
+              <div className="aw-cat-head"><span className="aw-cat-ic"><Icon name={m.icon as any} size={18} /></span><div><b>{m.ar}</b><div className="rm-muted">{m.desc_ar}</div></div></div>
+              {list.length === 0 ? <div className="rm-muted" style={{ padding: '10px 0' }}>لا توجد بيانات كافية في هذه الفترة.</div> : (
                 <ol className="aw-list">{list.map((c, i) => (
                   <li key={c.trainer_id + i} className={`${c.eligible ? '' : 'inel'} ${w?.trainer_id === c.trainer_id ? 'win' : ''}`}>
                     <span className="aw-medal">{MEDAL[i] || i + 1}</span>
-                    <div className="aw-who"><b>{c.trainer_name}</b><div className="aw-muted">{c.metric_label} · متوسط {c.mean.toFixed(2)} · {c.responses} استجابة{!c.eligible && c.reason ? ` · غير مؤهل: ${c.reason}` : ''}</div></div>
+                    <div className="aw-who"><b>{c.trainer_name}</b><div className="rm-muted">{c.metric_label} · متوسط {c.mean.toFixed(2)} · {c.responses} استجابة{!c.eligible && c.reason ? ` · غير مؤهل: ${c.reason}` : ''}</div></div>
                     {w?.trainer_id === c.trainer_id && <span className="aw-pill ok">الفائز</span>}
                   </li>
                 ))}</ol>
@@ -181,25 +177,25 @@ export default function AwardsPage() {
         })}
       </section>
 
-      <section className="aw-card">
+      <section className="rm-card">
         <h2><Icon name="shield" size={18} /> اعتماد لوحة الشرف</h2>
-        {wins.length === 0 ? <div className="aw-muted">لا يوجد فائزون مؤهلون — خفّض الحد الأدنى للاستجابات أو وسّع الفترة.</div> : (
-          <div className="aw-winners">{wins.map(w => <div key={w.category} className="aw-win"><span className="aw-win-cat">{CATEGORY_META[w.category].ar}</span><b>{w.trainer_name}</b><span className="aw-muted">{w.metric_label}</span></div>)}</div>
+        {wins.length === 0 ? <div className="rm-muted">لا يوجد فائزون مؤهلون — خفّض الحد الأدنى للاستجابات أو وسّع الفترة.</div> : (
+          <div className="aw-winners">{wins.map(w => <div key={w.category} className="aw-win"><span className="aw-win-cat">{CATEGORY_META[w.category].ar}</span><b>{w.trainer_name}</b><span className="rm-muted">{w.metric_label}</span></div>)}</div>
         )}
         <label className="aw-check"><input type="checkbox" checked={emailWinners} onChange={e => setEmailWinners(e.target.checked)} /> إرسال شهادة التقدير بالبريد للمدربين الذين لديهم بريد مسجّل في جدول المدربين</label>
         <div className="aw-actions">
-          <button className="aw-btn primary" onClick={approve} disabled={!allowed || !!busy || !wins.length}><Icon name="award" size={16} /> {busy === 'approve' ? (progress || 'جارٍ الاعتماد…') : 'اعتماد الجوائز وإصدار شهادات التقدير'}</button>
+          <button className="rm-btn primary" onClick={approve} disabled={!allowed || !!busy || !wins.length}><Icon name="award" size={16} /> {busy === 'approve' ? (progress || 'جارٍ الاعتماد…') : 'اعتماد الجوائز وإصدار شهادات التقدير'}</button>
         </div>
-        <div className="aw-muted" style={{ marginTop: 8 }}>عند الاعتماد: تُحفظ الجوائز في السجل، وتصدر شهادة شكر وتقدير لكل فائز برقم تسلسلي ورمز تحقق، ويُنزَّل ملف PDF يجمعها للطباعة.</div>
+        <div className="rm-muted" style={{ marginTop: 8 }}>عند الاعتماد: تُحفظ الجوائز في السجل، وتصدر شهادة شكر وتقدير لكل فائز برقم تسلسلي ورمز تحقق، ويُنزَّل ملف PDF يجمعها للطباعة.</div>
       </section>
 
-      <section className="aw-card">
+      <section className="rm-card">
         <h2><Icon name="clock" size={18} /> سجل التكريم</h2>
-        {periods.length === 0 ? <div className="aw-muted">لا توجد فترات معتمدة بعد.</div> : periods.map(([key, label]) => (
+        {periods.length === 0 ? <div className="rm-muted">لا توجد فترات معتمدة بعد.</div> : periods.map(([key, label]) => (
           <div key={key} className="aw-period">
-            <div className="aw-period-head"><b>{label}</b><span className="aw-muted">{history.find(h => h.period_key === key)?.created_by_name || ''} · {new Date(history.find(h => h.period_key === key)!.created_at).toLocaleDateString('en-GB')}</span><button className="aw-ic" title="حذف من السجل" onClick={() => removePeriod(key)}><Icon name="trash" size={14} /></button></div>
+            <div className="aw-period-head"><b>{label}</b><span className="rm-muted">{history.find(h => h.period_key === key)?.created_by_name || ''} · {new Date(history.find(h => h.period_key === key)!.created_at).toLocaleDateString('en-GB')}</span><button className="aw-ic" title="حذف من السجل" onClick={() => removePeriod(key)}><Icon name="trash" size={14} /></button></div>
             <div className="aw-period-list">{history.filter(h => h.period_key === key).map(h => (
-              <div key={h.id} className="aw-hrow"><span className="aw-win-cat">{h.category_label}</span><b>{h.trainer_name}</b><span className="aw-muted">{h.metric_label}</span>{h.certificate_id && <button className="aw-ic" title="تنزيل شهادة التقدير" onClick={() => redownload(h)} disabled={!!busy}><Icon name="download" size={14} /></button>}</div>
+              <div key={h.id} className="aw-hrow"><span className="aw-win-cat">{h.category_label}</span><b>{h.trainer_name}</b><span className="rm-muted">{h.metric_label}</span>{h.certificate_id && <button className="aw-ic" title="تنزيل شهادة التقدير" onClick={() => redownload(h)} disabled={!!busy}><Icon name="download" size={14} /></button>}</div>
             ))}</div>
           </div>
         ))}
@@ -217,21 +213,12 @@ function explain(m: string): string {
 }
 
 const CSS = `
-.aw{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.aw-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.aw-head h1{margin:2px 0 4px;font-size:26px;color:${NAVY}}.aw-head p{margin:0;color:#8E7F8A;font-size:13px}
-.aw-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.aw-nav{display:flex;gap:8px;flex-wrap:wrap}
-.aw-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none}
-.aw-btn:disabled{opacity:.5;cursor:not-allowed}.aw-btn.primary{background:${NAVY};color:#fff;border-color:${NAVY}}
-.aw-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:0 0 14px;font-size:13px;font-weight:700;line-height:1.7}.aw-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.aw{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}.rm-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .aw-x{border:0;background:transparent;cursor:pointer;color:inherit}
-.aw-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 22px;margin-bottom:14px}.aw-card h2{margin:0 0 14px;font-size:17px;color:${NAVY};display:flex;align-items:center;gap:8px}
 .aw-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .aw label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:#5C4858}
 .aw select,.aw input{border:1px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-size:13px;font-weight:700;color:#2A1626;background:#fff}
 .aw-scope{margin:12px 0 0;font-size:12.5px;font-weight:800;color:#4A3645;background:#FBF4EE;border:1px dashed #D9CBC2;border-radius:10px;padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.aw-muted{color:#8E7F8A;font-size:12.5px;font-weight:700}
 .aw-pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:800;background:#F6EBE0;color:#5C4858}.aw-pill.ok{background:#ecfdf5;color:#047857}
 .aw-board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
 .aw-cat{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;border-top:4px solid #D9CBC2}.aw-cat.has{border-top-color:#D9A866}
@@ -241,7 +228,7 @@ const CSS = `
 .aw-list li{display:flex;gap:10px;align-items:center;background:#FBF4EE;border:1px solid #F3E6DC;border-radius:12px;padding:8px 12px}.aw-list li.win{background:#fffbeb;border-color:#fde68a}.aw-list li.inel{opacity:.6}
 .aw-medal{font-size:20px;width:28px;text-align:center}.aw-who{flex:1}.aw-who b{font-size:14px;color:#2A1626}
 .aw-winners{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.aw-win{display:flex;flex-direction:column;gap:4px;background:linear-gradient(135deg,#3A1F36,#D4614A);color:#fff;border-radius:14px;padding:12px 16px;min-width:200px}.aw-win b{font-size:16px}.aw-win .aw-muted{color:#dbeafe}
+.aw-win{display:flex;flex-direction:column;gap:4px;background:linear-gradient(135deg,#3A1F36,#D4614A);color:#fff;border-radius:14px;padding:12px 16px;min-width:200px}.aw-win b{font-size:16px}.aw-win .rm-muted{color:#dbeafe}
 .aw-win-cat{font-size:11px;font-weight:900;background:rgba(255,255,255,.18);border-radius:999px;padding:2px 10px;align-self:flex-start}
 .aw-hrow .aw-win-cat{background:#F3E6DC;color:${NAVY}}
 .aw-check{flex-direction:row!important;align-items:center;gap:8px!important;font-size:13px!important;color:#4A3645!important;margin:6px 0}
@@ -252,5 +239,5 @@ const CSS = `
 .aw-hrow{display:flex;gap:10px;align-items:center;font-size:13px}
 .aw-ic{width:28px;height:28px;border:1px solid #EADFD6;background:#fff;border-radius:8px;display:grid;place-items:center;cursor:pointer;color:${NAVY}}.aw-ic:disabled{opacity:.4}
 .aw-toast{position:fixed;bottom:18px;inset-inline-start:18px;background:${NAVY};color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.25);z-index:120}
-@media(max-width:900px){.aw-board{grid-template-columns:1fr}.aw-grid{grid-template-columns:1fr}.aw{padding:12px}}
+@media(max-width:900px){.aw-board{grid-template-columns:1fr}.aw-grid{grid-template-columns:1fr}.aw{}}
 `;

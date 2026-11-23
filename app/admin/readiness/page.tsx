@@ -9,12 +9,13 @@ import { downloadCSV, safeFilename } from '../../../lib/export/csv';
 import { STAGES, assessProgram, sortByUrgency, nextAction, phaseLabel, levelLabel, daysUntil, readinessRows } from '../../../lib/readiness/model';
 import type { Readiness, ReadinessInput, ProgramRow, Check } from '../../../lib/readiness/model';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866';
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || '';
 
 export default function ReadinessPage() {
-  return <Suspense fallback={<div className="rd" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>}><Inner /></Suspense>;
+  return <Suspense fallback={<div className="rd rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>}><Inner /></Suspense>;
 }
 
 function Inner() {
@@ -66,37 +67,32 @@ function Inner() {
   }
   const origin = typeof window !== 'undefined' ? window.location.origin : SITE;
 
-  if (!ready) return <div className="rd" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
+  if (!ready) return <div className="rd rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
   const act = cur ? nextAction(cur) : null;
   const dStart = cur ? daysUntil(cur.program.start_date, today) : null;
 
   return (
-    <div className="rd" dir="rtl">
+    <div className="rd rm-page" dir="rtl">
       <style>{CSS}</style>
-      <header className="rd-head">
-        <div>
-          <div className="rd-kicker"><Icon name="compass" size={14} /> الاستدامة · جاهزية البرنامج</div>
-          <h1>قائمة التحقق من الإعداد حتى الإغلاق</h1>
-          <p>فحص آلي لكل برنامج: هل القاعات والمدربون والقوالب والحضور والشهادات في مكانها؟ كل بند يحمل رابط إصلاح مباشر ورابط شرح في الدليل — حتى لا تُكتشف الثغرات في أول جلسة.</p>
-        </div>
-        <nav className="rd-nav">
-          <Link href="/dashboard" className="rd-btn"><Icon name="dashboard" size={16} /> لوحة التحكم</Link>
-          <Link href="/help" className="rd-btn"><Icon name="question" size={16} /> دليل الاستخدام</Link>
-          <button className="rd-btn" onClick={() => downloadCSV(safeFilename('program_readiness'), readinessRows(list))}><Icon name="download" size={16} /> CSV</button>
-        </nav>
-      </header>
-      {error && <div className="rd-alert">{error}</div>}
+      <RoomHead
+        title={<>قائمة التحقق من الإعداد حتى الإغلاق</>}
+        desc={<><p>فحص آلي لكل برنامج: هل القاعات والمدربون والقوالب والحضور والشهادات في مكانها؟ كل بند يحمل رابط إصلاح مباشر ورابط شرح في الدليل — حتى لا تُكتشف الثغرات في أول جلسة.</p></>}
+        actions={<>
+          <button className="rm-btn" onClick={() => downloadCSV(safeFilename('program_readiness'), readinessRows(list))}><Icon name="download" size={16} /> CSV</button>
+        </>}
+      />
+      {error && <div className="rm-alert">{error}</div>}
 
-      <section className="rd-kpis">
-        <div className="rd-kpi ok"><b>{summary.ready}</b><span>برامج جاهزة</span></div>
-        <div className="rd-kpi warn"><b>{summary.almost}</b><span>شبه جاهزة</span></div>
-        <div className="rd-kpi bad"><b>{summary.not}</b><span>غير جاهزة</span></div>
-        <div className={`rd-kpi ${summary.soon ? 'bad' : ''}`}><b>{summary.soon}</b><span>تنطلق خلال 14 يومًا وغير جاهزة</span></div>
+      <section className="rm-kpis">
+        <div className="rm-kpi ok"><b>{summary.ready}</b><span>برامج جاهزة</span></div>
+        <div className="rm-kpi warn"><b>{summary.almost}</b><span>شبه جاهزة</span></div>
+        <div className="rm-kpi bad"><b>{summary.not}</b><span>غير جاهزة</span></div>
+        <div className={`rm-kpi ${summary.soon ? 'bad' : ''}`}><b>{summary.soon}</b><span>تنطلق خلال 14 يومًا وغير جاهزة</span></div>
       </section>
 
       <div className="rd-split">
-        <aside className="rd-card rd-side">
-          <div className="rd-card-head"><h2><Icon name="book" size={16} /> البرامج</h2><span>مرتبة حسب الأولوية</span></div>
+        <aside className="rm-card rd-side">
+          <div className="rm-card-head"><h2><Icon name="book" size={16} /> البرامج</h2><span>مرتبة حسب الأولوية</span></div>
           <div className="rd-plist">
             {list.map(r => {
               const d = daysUntil(r.program.start_date, today);
@@ -107,12 +103,12 @@ function Inner() {
                 </button>
               );
             })}
-            {!list.length && <div className="rd-empty"><b>لا توجد برامج</b></div>}
+            {!list.length && <div className="rm-empty"><b>لا توجد برامج</b></div>}
           </div>
         </aside>
 
-        <section className="rd-card rd-main">
-          {!cur ? <div className="rd-empty"><b>اختر برنامجًا</b></div> : (
+        <section className="rm-card rd-main">
+          {!cur ? <div className="rm-empty"><b>اختر برنامجًا</b></div> : (
             <>
               <div className="rd-prog">
                 <span className={`rd-ring big ${cur.level}`} style={{ ['--p' as any]: cur.score }}><i>{cur.score}%</i></span>
@@ -122,9 +118,9 @@ function Inner() {
                   <small><bdi>{cur.program.start_date || '—'}</bdi> ← <bdi>{cur.program.end_date || '—'}</bdi> · {cur.ok} من {cur.applicable} بندًا مكتمل · {cur.blockers} عائق</small>
                 </div>
                 <div className="rd-links">
-                  <button className="rd-btn small" onClick={() => copy(`${origin}/evaluate/daily?program=${cur.program.id}`, 'd')}><Icon name="link" size={13} /> {copied === 'd' ? 'نُسخ ✓' : 'رابط التقييم اليومي'}</button>
-                  <button className="rd-btn small" onClick={() => copy(`${origin}/evaluate/final?program=${cur.program.id}`, 'f')}><Icon name="link" size={13} /> {copied === 'f' ? 'نُسخ ✓' : 'رابط التقييم الختامي'}</button>
-                  <Link href={`/reports/program?program=${cur.program.id}`} className="rd-btn small"><Icon name="doc" size={13} /> بطاقة البرنامج</Link>
+                  <button className="rm-btn small" onClick={() => copy(`${origin}/evaluate/daily?program=${cur.program.id}`, 'd')}><Icon name="link" size={13} /> {copied === 'd' ? 'نُسخ ✓' : 'رابط التقييم اليومي'}</button>
+                  <button className="rm-btn small" onClick={() => copy(`${origin}/evaluate/final?program=${cur.program.id}`, 'f')}><Icon name="link" size={13} /> {copied === 'f' ? 'نُسخ ✓' : 'رابط التقييم الختامي'}</button>
+                  <Link href={`/reports/program?program=${cur.program.id}`} className="rm-btn small"><Icon name="doc" size={13} /> بطاقة البرنامج</Link>
                 </div>
               </div>
 
@@ -132,7 +128,7 @@ function Inner() {
                 <div className={`rd-next ${act.status}`}>
                   <Icon name={act.status === 'missing' ? 'alert' : 'compass'} size={18} />
                   <div><b>الخطوة التالية: {act.label}</b><span>{act.fix || act.detail}</span></div>
-                  <Link href={act.href} className="rd-btn primary small">إصلاح الآن <Icon name="arrow" size={13} /></Link>
+                  <Link href={act.href} className="rm-btn primary small">إصلاح الآن <Icon name="arrow" size={13} /></Link>
                 </div>
               )}
               {!act && <div className="rd-next ok"><Icon name="check" size={18} /><div><b>كل البنود المطبّقة مكتملة</b><span>البرنامج جاهز لمرحلته الحالية ({phaseLabel(cur.phase)}).</span></div></div>}
@@ -156,7 +152,7 @@ function Inner() {
         </section>
       </div>
 
-      <section className="rd-card rd-how">
+      <section className="rm-card rd-how">
         <b>كيف تُحسب الجاهزية؟</b> البنود المطبّقة على مرحلة البرنامج فقط (بنود الإغلاق لا تُحسب لبرنامج لم يبدأ). ✓ = نقطة كاملة، ! = نصف نقطة، ✗ = عائق. «جاهز» = بلا عوائق و≥85%. يعاد الحساب عند كل فتح للصفحة من البيانات الحية.
       </section>
     </div>
@@ -175,17 +171,9 @@ function CheckRow({ c }: { c: Check }) {
 }
 
 const CSS = `
-.rd{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:22px;color:#2A1626}
-.rd *{box-sizing:border-box}
-.rd-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;background:#fff;border:1px solid #EADFD6;border-top:4px solid ${GOLD};border-radius:16px;padding:18px 22px;margin-bottom:14px}
-.rd-head h1{margin:2px 0 4px;font-size:22px;color:${NAVY}}.rd-head p{margin:0;color:#8E7F8A;font-size:13px;max-width:760px;line-height:1.7}
-.rd-kicker{font-size:12px;font-weight:900;color:#078981;display:flex;align-items:center;gap:6px}
-.rd-nav{display:flex;gap:8px;flex-wrap:wrap}
-.rd-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px 13px;font:inherit;font-size:13px;font-weight:800;color:${NAVY};cursor:pointer;text-decoration:none;white-space:nowrap}.rd-btn.primary{background:${TEAL};border-color:${TEAL};color:#fff}.rd-btn.small{padding:6px 10px;font-size:12px}
-.rd-alert{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:12px 14px;margin-bottom:14px;font-weight:700}
-.rd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.rd-kpi{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px}.rd-kpi b{display:block;font-size:22px;color:${NAVY}}.rd-kpi span{font-size:12px;font-weight:800;color:#8E7F8A}.rd-kpi.ok b{color:#047857}.rd-kpi.warn b{color:#b45309}.rd-kpi.bad b{color:#b91c1c}
-.rd-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;margin-bottom:14px}
-.rd-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.rd-card-head h2{margin:0;font-size:16px;color:${NAVY};display:flex;align-items:center;gap:8px}.rd-card-head span{font-size:12px;color:#8E7F8A;font-weight:700}
+.rd{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626}
+.rd *{box-sizing:border-box}.rm-btn.small{padding:6px 10px;font-size:12px}
+.rm-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}.rm-card-head h2{margin:0;font-size:16px;color:${NAVY};display:flex;align-items:center;gap:8px}.rm-card-head span{font-size:12px;color:#8E7F8A;font-weight:700}
 .rd-split{display:grid;grid-template-columns:320px 1fr;gap:14px;align-items:start}
 .rd-plist{display:flex;flex-direction:column;gap:6px}
 .rd-pitem{display:flex;gap:10px;align-items:center;border:1px solid #EADFD6;border-radius:12px;padding:8px 10px;background:#fff;font:inherit;text-align:right;cursor:pointer;color:#2A1626}.rd-pitem.on{border-color:${TEAL};background:#FBEDE7;box-shadow:inset 3px 0 0 ${TEAL}}
@@ -205,8 +193,7 @@ const CSS = `
 .rd-ic{flex:0 0 22px;height:22px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;background:#EADFD6;color:#5C4858}.rd-check.ok .rd-ic{background:#d1fae5;color:#047857}.rd-check.warn .rd-ic{background:#fef3c7;color:#b45309}.rd-check.missing .rd-ic{background:#fee2e2;color:#b91c1c}
 .rd-cbody{flex:1;min-width:0}.rd-cbody b{display:block;font-size:12.5px}.rd-cbody span{display:block;font-size:11.5px;color:#8E7F8A;line-height:1.5}.rd-cbody em{display:block;font-style:normal;font-size:11.5px;color:#9a3412;margin-top:2px}
 .rd-cact{display:flex;gap:4px;align-items:center}.rd-link{font-size:11.5px;font-weight:900;color:${TEAL};text-decoration:none;border:1px solid #99f6e4;border-radius:7px;padding:3px 8px;background:#FBEDE7}.rd-link.muted{color:#8E7F8A;border-color:#EADFD6;background:#fff;padding:3px 7px}
-.rd-empty{text-align:center;padding:26px 14px;color:#8E7F8A}
 .rd-how{font-size:12.5px;color:#5C4858;line-height:1.8}
 @media(max-width:1100px){.rd-stages{grid-template-columns:1fr}}
-@media(max-width:900px){.rd{padding:12px}.rd-kpis{grid-template-columns:repeat(2,1fr)}.rd-split{grid-template-columns:1fr}.rd-prog{align-items:flex-start}}
+@media(max-width:900px){.rd{}.rd-split{grid-template-columns:1fr}.rd-prog{align-items:flex-start}}
 `;

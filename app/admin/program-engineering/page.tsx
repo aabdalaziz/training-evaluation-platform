@@ -12,6 +12,7 @@ import { HUMAN_DOMAINS, FAMILIES, HORIZONS, HORIZON_LABEL, SECTORS_2062, domainB
 import { STAGES, LIFE_STAGES, INSTITUTIONS, EMPTY_NEED, validateNeed, stageLabel, contractUrlFor } from '../../../lib/portal/factory';
 import type { Draft, Need, Stage } from '../../../lib/portal/factory';
 
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const fmt = (iso: string | null | undefined) => iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn-ca-gregory', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 type Data = { drafts: Draft[]; stats: { total: number; by_stage: Record<Stage, number>; by_domain: { code: string; h: string; n: number }[]; horizons: Record<string, number> }; skills: { id: string; code: string; name_ar: string; domain_code?: string | null }[] };
@@ -48,25 +49,28 @@ export default function ProgramEngineeringPage() {
   async function run(action: string, extra: any = {}) { if (!sel) return; const j = await post({ action, id: sel.id, ...extra }); if (j) setOk(action === 'publish' ? `نُشر البرنامج كمسودّة (${j.program_id}) — أكمل بياناته من «نشر البرامج»` : `${ACT[action] || 'تم'} (${j.source === 'ai' ? 'ذكاء اصطناعي' : j.source === 'local' ? 'البديل المحلي' : 'قرار بشري'})`); }
   async function del() { if (!sel || !confirm('حذف المسودّة نهائيًا؟')) return; const id = sel.id; setSelId(null); const j = await post({ action: 'delete', id }); if (j) setOk('حُذفت'); }
 
-  if (!ready) return <main className="fc"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="fc-wrap"><div className="fc-card fc-empty">جارٍ التحميل…</div></div></main>;
+  if (!ready) return <main className="fc rm-page"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="fc-wrap"><div className="rm-card rm-empty">جارٍ التحميل…</div></div></main>;
   const st = data?.stats;
   return (
-    <main className="fc">
+    <main className="fc rm-page">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="fc-wrap">
-        <header className="fc-head"><div><span className="fc-kicker"><Icon name="compass" size={14} /> بوابة أَثَر · P13-أ</span><h1>هندسة البرامج التدريبية</h1><p>منظومة تصميم البرامج المدعومة بالذكاء الاصطناعي: تبدأ من <b>الاحتياج الإنساني</b> لا من الموضوع (القطاع × المجال H1–H12 × المرحلة × المؤسسة × الأفق × الفجوة)، وتمرّ بأربع محطات — محلل الاحتياج، المصمم التعليمي، مراجع الجودة، ثم <b>الاعتماد البشري</b>. لكل محطة بديل محلي كامل؛ لا يُنشر شيء إلا بقرار إنسان مسمّى.</p></div></header>
+        <RoomHead
+        title={<>هندسة البرامج التدريبية</>}
+        desc={<><p>منظومة تصميم البرامج المدعومة بالذكاء الاصطناعي: تبدأ من <b>الاحتياج الإنساني</b> لا من الموضوع (القطاع × المجال H1–H12 × المرحلة × المؤسسة × الأفق × الفجوة)، وتمرّ بأربع محطات — محلل الاحتياج، المصمم التعليمي، مراجع الجودة، ثم <b>الاعتماد البشري</b>. لكل محطة بديل محلي كامل؛ لا يُنشر شيء إلا بقرار إنسان مسمّى.</p></>}
+      />
         <PortalAdminTabs />
         {error && <div className="fc-err">{error}</div>}{ok && <div className="fc-ok">{ok}</div>}
-        {st && <div className="fc-card fc-kpis"><span><b>{st.total}</b> مسودّة</span>{STAGES.map(s => <span key={s.code}><b style={{ color: STAGE_COLOR[s.code] }}>{st.by_stage[s.code] || 0}</b> {s.label_ar}</span>)}<span className="fc-sep" />{HORIZONS.map(h => <span key={h}><b>{st.horizons[String(h)] || 0}</b> {h}</span>)}</div>}
+        {st && <div className="rm-card rm-kpis"><span><b>{st.total}</b> مسودّة</span>{STAGES.map(s => <span key={s.code}><b style={{ color: STAGE_COLOR[s.code] }}>{st.by_stage[s.code] || 0}</b> {s.label_ar}</span>)}<span className="fc-sep" />{HORIZONS.map(h => <span key={h}><b>{st.horizons[String(h)] || 0}</b> {h}</span>)}</div>}
         <div className="fc-tabs"><button className={tab === 'board' ? 'on' : ''} onClick={() => setTab('board')}>لوحة الهندسة ({data?.drafts.length || 0})</button><button className={tab === 'new' ? 'on' : ''} onClick={() => setTab('new')}>احتياج جديد</button></div>
 
-        {tab === 'new' && <div className="fc-card fc-mem" data-testid="factory-memory">
+        {tab === 'new' && <div className="rm-card fc-mem" data-testid="factory-memory">
           <h3><Icon name="compass" size={14} /> من الذاكرة — فجوات حقيقية بدليل</h3>
-          <p className="fc-muted">قطاعات تحتاج مهارات لم يتركْ عليها أي برنامج دليلًا كافيًا. النقر يملأ الاحتياج أدناه؛ والقرار لك.</p>
-          {gaps === null ? <button type="button" className="pt-btn small" onClick={loadGaps} data-testid="factory-memory-load">اقرأ الذاكرة</button> : !gaps.length ? <p className="fc-muted">{gapsNote || 'لا دليل كافٍ بعد — لا فجوات مؤكَّدة في الذاكرة الآن.'}</p> : (
-            <><p className="fc-muted" data-testid="factory-memory-note">{gapsNote}</p><div className="fc-gaps">{gaps.map(g => <button key={g.fingerprint} type="button" className="fc-gap" onClick={() => useGap(g)}><b>{g.title_ar}</b><span>{g.why_ar}</span><small>{(g.evidence || []).slice(0, 4).map(e => `${e.label}: ${e.value}`).join(' · ')}</small></button>)}</div></>)}
+          <p className="rm-muted">قطاعات تحتاج مهارات لم يتركْ عليها أي برنامج دليلًا كافيًا. النقر يملأ الاحتياج أدناه؛ والقرار لك.</p>
+          {gaps === null ? <button type="button" className="pt-btn small" onClick={loadGaps} data-testid="factory-memory-load">اقرأ الذاكرة</button> : !gaps.length ? <p className="rm-muted">{gapsNote || 'لا دليل كافٍ بعد — لا فجوات مؤكَّدة في الذاكرة الآن.'}</p> : (
+            <><p className="rm-muted" data-testid="factory-memory-note">{gapsNote}</p><div className="fc-gaps">{gaps.map(g => <button key={g.fingerprint} type="button" className="fc-gap" onClick={() => useGap(g)}><b>{g.title_ar}</b><span>{g.why_ar}</span><small>{(g.evidence || []).slice(0, 4).map(e => `${e.label}: ${e.value}`).join(' · ')}</small></button>)}</div></>)}
         </div>}
-        {tab === 'new' && <div className="fc-card">
+        {tab === 'new' && <div className="rm-card">
           <h3>1) صِف الاحتياج — لا الموضوع</h3>
           <div className="fc-row">
             <label>القطاع<select value={need.sector} onChange={e => setNeed({ ...need, sector: e.target.value })}><optgroup label="قطاعات قائمة">{SECTORS_2062.filter(s => s.kind === 'existing').map(s => <option key={s.code} value={s.code}>{s.name.ar}</option>)}</optgroup><optgroup label="قطاعات مستحدثة">{SECTORS_2062.filter(s => s.kind === 'new').map(s => <option key={s.code} value={s.code}>{s.name.ar}</option>)}</optgroup></select></label>
@@ -79,29 +83,29 @@ export default function ProgramEngineeringPage() {
           <div className="fc-row"><label>الفئة المستهدفة<input value={need.audience_ar} onChange={e => setNeed({ ...need, audience_ar: e.target.value })} placeholder="مثال: مشرفو الأقسام في المستشفيات الحكومية" maxLength={200} /></label><label>الجهة (اختياري)<input value={need.org_name || ''} onChange={e => setNeed({ ...need, org_name: e.target.value })} maxLength={160} /></label></div>
           <label>فجوة الجدارات — ما الذي لا يستطيعونه اليوم وسيُدفع مقابله في هذا الأفق؟<textarea rows={4} value={need.gap_ar} onChange={e => setNeed({ ...need, gap_ar: e.target.value })} placeholder="مثال: يقبلون توصيات النظام الذكي بلا تحقق، ولا يكتبون حدود تفويض، ولا يوثّقون قراراتهم حين تتعارض الأنظمة…" maxLength={1200} /></label>
           {sector && dom && <div className="fc-preview"><b>ما يقوله الأطلس:</b> في {sector.name.ar} — {need.horizon === 2035 ? sector.w2035 : need.horizon === 2050 ? sector.w2050 : sector.w2070}. <b>الندرة في المجال:</b> {dom.scarce_2062.ar}.</div>}
-          <div className="fc-decide">{needErr && <small className="fc-muted">{needErr}</small>}<button className="fc-btn gold" disabled={!!needErr || busy === 'create'} onClick={create}><Icon name="play" size={14} /> {busy === 'create' ? 'محلل الاحتياج يعمل…' : 'أنشئ المسودّة وشغّل محلل الاحتياج'}</button></div>
+          <div className="fc-decide">{needErr && <small className="rm-muted">{needErr}</small>}<button className="rm-btn gold" disabled={!!needErr || busy === 'create'} onClick={create}><Icon name="play" size={14} /> {busy === 'create' ? 'محلل الاحتياج يعمل…' : 'أنشئ المسودّة وشغّل محلل الاحتياج'}</button></div>
         </div>}
 
         {tab === 'board' && <div className="fc-grid2">
-          <div className="fc-card">
-            {(data?.drafts.length || 0) === 0 && <div className="fc-empty">لا مسودّات بعد — ابدأ من «احتياج جديد».</div>}
+          <div className="rm-card">
+            {(data?.drafts.length || 0) === 0 && <div className="rm-empty">لا مسودّات بعد — ابدأ من «احتياج جديد».</div>}
             {(data?.drafts.length || 0) > 0 && <div className="fc-board">{STAGES.map(s => <div key={s.code} className="fc-col"><div className="fc-colhead" style={{ borderColor: STAGE_COLOR[s.code] }}><b>{s.label_ar}</b><small>{s.agent_ar}</small></div>
               {data!.drafts.filter(d => d.stage === s.code).map(d => { const dm = domainByCode(d.need.domain_code); return <button key={d.id} className={`fc-item ${selId === d.id ? 'sel' : ''}`} onClick={() => setSelId(d.id)}><b>{d.design?.brand_ar || d.title_ar}</b><small>{dm?.h} · {SECTORS_2062.find(x => x.code === d.need.sector)?.name.ar} · {d.need.horizon}</small>{d.review && <i style={{ color: d.review.verdict === 'approve' ? '#16a34a' : '#b45309' }}>مراجعة {d.review.score}%</i>}</button>; })}
             </div>)}</div>}
           </div>
-          <div className="fc-card fc-detail">
-            {!sel && <div className="fc-empty">اختر مسودّة من اللوحة لعرض محطاتها.</div>}
+          <div className="rm-card fc-detail">
+            {!sel && <div className="rm-empty">اختر مسودّة من اللوحة لعرض محطاتها.</div>}
             {sel && <>
               <div className="fc-dhead"><div><span className="fc-st" style={{ background: STAGE_COLOR[sel.stage] }}>{stageLabel(sel.stage)}</span><h3>{sel.design?.brand_ar || sel.title_ar}</h3><small>{sel.design?.subtitle_ar || sel.title_ar}</small></div><div className="fc-actions">
-                {sel.stage === 'foresight' && <button className="fc-btn gold" disabled={!!busy} onClick={() => run('approve')}><Icon name="check" size={14} /> اعتمد الاستشراف → صمّم</button>}
-                {sel.stage === 'designed' && <button className="fc-btn gold" disabled={!!busy} onClick={() => run('approve')}><Icon name="check" size={14} /> اعتمد المخطط → راجع</button>}
-                {sel.stage === 'reviewed' && <button className="fc-btn gold" disabled={!!busy} onClick={() => run('publish', { skill_ids: pubSkills })}><Icon name="globe" size={14} /> انشر برنامجًا مسودّة</button>}
-                {sel.stage === 'published' && sel.program_id && <a className="fc-btn ghost" href="/admin/catalog"><Icon name="link" size={14} /> نشر البرامج</a>}
-                {sel.stage === 'published' && <a className="fc-btn gold" href={contractUrlFor(sel)} title="مؤشرات الأثر تصبح أهداف عقد قائم على النتائج (60/25/15)"><Icon name="scale" size={14} /> اقترح عقد أثر</a>}
-                <button className="fc-btn ghost small" disabled={!!busy} onClick={() => run('foresight')}>أعد الاستشراف</button>
-                {sel.foresight && <button className="fc-btn ghost small" disabled={!!busy} onClick={() => run('design')}>أعد التصميم</button>}
-                {sel.design && <button className="fc-btn ghost small" disabled={!!busy} onClick={() => run('review')}>أعد المراجعة</button>}
-                <button className="fc-btn ghost small danger" disabled={!!busy} onClick={del}>حذف</button>
+                {sel.stage === 'foresight' && <button className="rm-btn gold" disabled={!!busy} onClick={() => run('approve')}><Icon name="check" size={14} /> اعتمد الاستشراف → صمّم</button>}
+                {sel.stage === 'designed' && <button className="rm-btn gold" disabled={!!busy} onClick={() => run('approve')}><Icon name="check" size={14} /> اعتمد المخطط → راجع</button>}
+                {sel.stage === 'reviewed' && <button className="rm-btn gold" disabled={!!busy} onClick={() => run('publish', { skill_ids: pubSkills })}><Icon name="globe" size={14} /> انشر برنامجًا مسودّة</button>}
+                {sel.stage === 'published' && sel.program_id && <a className="rm-btn ghost" href="/admin/catalog"><Icon name="link" size={14} /> نشر البرامج</a>}
+                {sel.stage === 'published' && <a className="rm-btn gold" href={contractUrlFor(sel)} title="مؤشرات الأثر تصبح أهداف عقد قائم على النتائج (60/25/15)"><Icon name="scale" size={14} /> اقترح عقد أثر</a>}
+                <button className="rm-btn ghost small" disabled={!!busy} onClick={() => run('foresight')}>أعد الاستشراف</button>
+                {sel.foresight && <button className="rm-btn ghost small" disabled={!!busy} onClick={() => run('design')}>أعد التصميم</button>}
+                {sel.design && <button className="rm-btn ghost small" disabled={!!busy} onClick={() => run('review')}>أعد المراجعة</button>}
+                <button className="rm-btn ghost small danger" disabled={!!busy} onClick={del}>حذف</button>
               </div></div>
               {busy && <div className="fc-think"><i /><i /><i /> {busy === 'approve' || busy === 'design' ? 'المصمم التعليمي يبني المخطط…' : busy === 'review' ? 'مراجع الجودة يفحص…' : busy === 'foresight' ? 'محلل الاحتياج يستشرف…' : 'جارٍ…'}</div>}
               <div className="fc-need"><b>الاحتياج:</b> {domainByCode(sel.need.domain_code)?.h} {domainByCode(sel.need.domain_code)?.name.ar} · {familyName(sel.need.family, 'ar')} · {SECTORS_2062.find(x => x.code === sel.need.sector)?.name.ar} · {LIFE_STAGES.find(x => x.code === sel.need.stage)?.label_ar} · {INSTITUTIONS.find(x => x.code === sel.need.institution)?.label_ar} · {HORIZON_LABEL[sel.need.horizon].ar}<br /><b>الفئة:</b> {sel.need.audience_ar}{sel.need.org_name ? ` · ${sel.need.org_name}` : ''}<br /><b>الفجوة:</b> {sel.need.gap_ar}{(sel.need as any).need_id ? <><br /><b style={{ color: '#9a7524' }}>وُلدت من حاجة معلَنة</b> — <a href={`/needs?n=${(sel.need as any).need_id}`} target="_blank" rel="noreferrer">الحاجة على اللوحة ↗</a> · عند النشر يُكتب على البرنامج «وُلد من حاجة» ويُبلَّغ المؤيّدون.</> : null}</div>
@@ -115,8 +119,8 @@ export default function ProgramEngineeringPage() {
                 <div className="fc-brand"><b>{sel.design.brand_ar}</b><span>{sel.design.subtitle_ar}</span><small>{sel.design.name_en} · سقف {sel.design.saqf_level} · {sel.design.hours} ساعة / {sel.design.weeks} أسابيع · {sel.design.delivery === 'remote' ? 'عن بُعد' : sel.design.delivery === 'onsite' ? 'حضوري' : 'هجين'} · تسعير استرشادي {sel.design.price_hint_sar.toLocaleString('en-US')} ر.س</small></div>
                 <p>{sel.design.intro_ar}</p>
                 <div className="fc-two"><div><b>الأهداف (أفعال قابلة للقياس):</b><ol>{sel.design.objectives_ar.map((o, k) => <li key={k}>{o}</li>)}</ol></div><div><b>المخرجات:</b><ul>{sel.design.outcomes_ar.map((o, k) => <li key={k}>{o}</li>)}</ul><b>التقويم:</b><ul>{sel.design.assessment_ar.map((o, k) => <li key={k}>{o}</li>)}</ul></div></div>
-                <table className="fc-table"><thead><tr><th>#</th><th>الوحدة</th><th>الناتج</th><th>المحاكاة/الموقف</th><th>المهمة التطبيقية</th><th>الشاهد</th><th>س</th></tr></thead><tbody>{sel.design.modules.map((m, k) => <tr key={k}><td>{k + 1}</td><td><b>{m.title_ar}</b></td><td>{m.outcome_ar}</td><td>{m.simulation_ar}</td><td>{m.mission_ar}</td><td>{m.evidence_ar}</td><td>{m.hours}</td></tr>)}</tbody></table>
-                <div className="fc-two"><div><b>مؤشرات الأثر (للعقد القائم على النتائج):</b><ul>{sel.design.impact_indicators_ar.map((o, k) => <li key={k}>{o}</li>)}</ul><small className="fc-muted">تقسيم العقد {sel.design.contract_split.delivery}/{sel.design.contract_split.evidence}/{sel.design.contract_split.impact}</small></div><div><b>البوابات البشرية:</b><ul>{sel.design.human_gates_ar.map((o, k) => <li key={k}>{o}</li>)}</ul></div></div>
+                <table className="rm-table"><thead><tr><th>#</th><th>الوحدة</th><th>الناتج</th><th>المحاكاة/الموقف</th><th>المهمة التطبيقية</th><th>الشاهد</th><th>س</th></tr></thead><tbody>{sel.design.modules.map((m, k) => <tr key={k}><td>{k + 1}</td><td><b>{m.title_ar}</b></td><td>{m.outcome_ar}</td><td>{m.simulation_ar}</td><td>{m.mission_ar}</td><td>{m.evidence_ar}</td><td>{m.hours}</td></tr>)}</tbody></table>
+                <div className="fc-two"><div><b>مؤشرات الأثر (للعقد القائم على النتائج):</b><ul>{sel.design.impact_indicators_ar.map((o, k) => <li key={k}>{o}</li>)}</ul><small className="rm-muted">تقسيم العقد {sel.design.contract_split.delivery}/{sel.design.contract_split.evidence}/{sel.design.contract_split.impact}</small></div><div><b>البوابات البشرية:</b><ul>{sel.design.human_gates_ar.map((o, k) => <li key={k}>{o}</li>)}</ul></div></div>
               </section>}
 
               {sel.review && <section className="fc-sec"><h4><Icon name="shield" size={14} /> مراجع الجودة — {sel.review.score}% · {sel.review.verdict === 'approve' ? 'جاهز للاعتماد' : 'يحتاج مراجعة'}</h4>
@@ -125,12 +129,12 @@ export default function ProgramEngineeringPage() {
               </section>}
 
               {sel.stage === 'reviewed' && <section className="fc-sec"><h4><Icon name="globe" size={14} /> الاعتماد البشري — النشر</h4>
-                <p className="fc-muted">سيُنشأ برنامج <b>مسودّة</b> (غير معلن، التسجيل مغلق) باسم «{sel.design?.brand_ar} — {sel.design?.subtitle_ar}» مع أهدافه ومخرجاته وفئته؛ تُكمل الرسوم والمواعيد من «نشر البرامج». اختر المهارات التي يُثبتها:</p>
+                <p className="rm-muted">سيُنشأ برنامج <b>مسودّة</b> (غير معلن، التسجيل مغلق) باسم «{sel.design?.brand_ar} — {sel.design?.subtitle_ar}» مع أهدافه ومخرجاته وفئته؛ تُكمل الرسوم والمواعيد من «نشر البرامج». اختر المهارات التي يُثبتها:</p>
                 <div className="fc-skills">{(data?.skills || []).map(s => <label key={s.id} className={pubSkills.includes(s.id) ? 'on' : ''}><input type="checkbox" checked={pubSkills.includes(s.id)} onChange={e => setPubSkills(p => e.target.checked ? [...p, s.id] : p.filter(x => x !== s.id))} /> {s.code} · {s.name_ar}</label>)}</div>
               </section>}
 
               <section className="fc-sec"><h4><Icon name="inbox" size={14} /> ملاحظات بشرية وسجل</h4>
-                <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="ملاحظات المصمم البشري…" /><div className="fc-decide"><button className="fc-btn ghost small" disabled={!!busy} onClick={() => run('update', { patch: { notes } })}>احفظ الملاحظات</button></div>
+                <textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} placeholder="ملاحظات المصمم البشري…" /><div className="fc-decide"><button className="rm-btn ghost small" disabled={!!busy} onClick={() => run('update', { patch: { notes } })}>احفظ الملاحظات</button></div>
                 <ul className="fc-log">{(sel.log || []).slice(-8).reverse().map((l, k) => <li key={k}><small>{fmt(l.at)}</small> {l.by} — {l.action}{l.source ? ` (${l.source === 'ai' ? 'ذكاء اصطناعي' : 'محلي'})` : ''}</li>)}</ul>
               </section>
             </>}
@@ -142,18 +146,13 @@ export default function ProgramEngineeringPage() {
 }
 
 const CSS = `
-.fc-mem{border-color:#F6D3C8;background:#f6fffe}.fc-muted{color:#8E7F8A;font-size:12px;margin:0 0 8px}.fc-gaps{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}.fc-gap{text-align:start;background:#fff;border:1px solid #EADFD6;border-inline-start:4px solid #D9A866;border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;display:grid;gap:4px}.fc-gap b{font-size:13px;color:#3A1F36}.fc-gap span{font-size:12px;color:#5C4858;line-height:1.6}.fc-gap small{font-size:11px;color:#B3A5AE}.fc-gap:hover{border-color:#D4614A}
-.fc{min-height:100vh;background:#FBF4EE;padding:92px 18px 40px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
-.fc-wrap{max-width:1200px;margin:0 auto;display:grid;gap:12px}
-.fc-head h1{margin:4px 0;font-size:26px;color:#3A1F36}.fc-head p{margin:0;color:#8E7F8A;font-size:14px;line-height:1.8;max-width:960px}.fc-kicker{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:900;color:#D4614A}
-.fc-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;overflow-x:auto}.fc-card h3{margin:0 0 10px;color:#3A1F36;font-size:17px}.fc-card h4{margin:0 0 8px;color:#D4614A;font-size:13.5px;display:flex;align-items:center;gap:8px}
-.fc-empty{color:#8E7F8A;font-size:14px;text-align:center;padding:20px;line-height:1.8}.fc-err{color:#b91c1c;font-size:13px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:8px 12px}.fc-ok{color:#065f46;font-size:13px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px}.fc-muted{color:#8E7F8A;font-size:12.5px}
-.fc-kpis{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:13px;color:#5C4858}.fc-kpis b{font-size:18px;color:#3A1F36;margin-inline-end:4px}.fc-sep{width:1px;height:20px;background:#EADFD6}
+.fc-mem{border-color:#F6D3C8;background:#f6fffe}.fc-gaps{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}.fc-gap{text-align:start;background:#fff;border:1px solid #EADFD6;border-inline-start:4px solid #D9A866;border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;display:grid;gap:4px}.fc-gap b{font-size:13px;color:#3A1F36}.fc-gap span{font-size:12px;color:#5C4858;line-height:1.6}.fc-gap small{font-size:11px;color:#B3A5AE}.fc-gap:hover{border-color:#D4614A}
+.fc{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;direction:rtl}
+.fc-wrap{max-width:1200px;margin:0 auto;display:grid;gap:12px}.rm-card h4{margin:0 0 8px;color:#D4614A;font-size:13.5px;display:flex;align-items:center;gap:8px}.fc-err{color:#b91c1c;font-size:13px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:8px 12px}.fc-ok{color:#065f46;font-size:13px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:8px 12px}.fc-sep{width:1px;height:20px;background:#EADFD6}
 .fc-tabs{display:flex;gap:6px;flex-wrap:wrap}.fc-tabs button{border:1px solid #EADFD6;background:#fff;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:800;color:#4A3645;cursor:pointer}.fc-tabs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
-.fc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.fc-card label{display:block;font-size:12.5px;color:#4A3645;font-weight:700;margin:8px 0}.fc-card label input,.fc-card label select,.fc-card textarea{display:block;width:100%;margin-top:4px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;font-weight:500;box-sizing:border-box}
+.fc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.rm-card label{display:block;font-size:12.5px;color:#4A3645;font-weight:700;margin:8px 0}.rm-card label input,.rm-card label select,.rm-card textarea{display:block;width:100%;margin-top:4px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;font-weight:500;box-sizing:border-box}
 .fc-preview{background:#FBEDE7;border:1px solid #F6D3C8;border-radius:12px;padding:10px 14px;font-size:13.5px;line-height:1.8;color:#2A1626;margin-top:8px}
-.fc-decide{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
-.fc-btn{border:1px solid #3A1F36;background:#3A1F36;color:#fff;border-radius:10px;padding:7px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}.fc-btn.ghost{background:#fff;color:#3A1F36;border-color:#D9CBC2}.fc-btn.small{padding:4px 9px;font-size:12px}.fc-btn.danger{color:#b91c1c;border-color:#fecaca}.fc-btn.gold{background:#D9A866;border-color:#D9A866;color:#3A1F36}.fc-btn:disabled{opacity:.5;cursor:not-allowed}
+.fc-decide{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}.rm-btn.small{padding:4px 9px;font-size:12px}
 .fc-grid2{display:grid;grid-template-columns:.9fr 1.1fr;gap:12px;align-items:start}
 .fc-board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;min-width:520px}.fc-col{display:grid;gap:6px;align-content:start}.fc-colhead{border-top:4px solid;border-radius:8px 8px 0 0;padding:6px 8px;background:#FBF4EE}.fc-colhead b{display:block;font-size:13px;color:#3A1F36}.fc-colhead small{color:#8E7F8A;font-size:11px}
 .fc-item{text-align:right;border:1px solid #EADFD6;background:#fff;border-radius:10px;padding:8px;font:inherit;cursor:pointer;display:grid;gap:2px}.fc-item b{font-size:12.5px;color:#3A1F36;line-height:1.5}.fc-item small{color:#8E7F8A;font-size:11px}.fc-item i{font-style:normal;font-size:11px;font-weight:800}.fc-item.sel{border-color:#D4614A;background:#FBEDE7}
@@ -164,7 +163,6 @@ const CSS = `
 .fc-sec{border-top:1px solid #EADFD6;padding-top:10px;font-size:13.5px;line-height:1.85;color:#2A1626}.fc-sec p{margin:0 0 8px}.fc-sec ul,.fc-sec ol{margin:4px 0 8px;padding-inline-start:18px}.fc-lead{font-weight:900;color:#3A1F36;font-size:15px}
 .fc-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .fc-brand{background:linear-gradient(135deg,#3A1F36,#163a66);color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:grid;gap:2px}.fc-brand b{font-size:20px;color:#F1D9A8}.fc-brand span{font-size:14px}.fc-brand small{font-size:12px;opacity:.85}
-.fc-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}.fc-table th{text-align:right;color:#8E7F8A;font-weight:800;font-size:11.5px;padding:6px 8px;border-bottom:1px solid #EADFD6}.fc-table td{padding:7px 8px;border-bottom:1px solid #F6EBE0;vertical-align:top;line-height:1.6}
 .fc-check{list-style:none;padding:0;margin:0;display:grid;gap:4px}.fc-check li{display:flex;gap:6px;align-items:flex-start;font-size:13px}.fc-check li.ok{color:#065f46}.fc-check li.no{color:#b45309}
 .fc-skills{display:flex;flex-wrap:wrap;gap:6px}.fc-skills label{display:inline-flex!important;align-items:center;gap:4px;border:1px solid #EADFD6;border-radius:999px;padding:3px 10px!important;margin:0!important;font-size:12px!important;cursor:pointer}.fc-skills label.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.fc-skills input{width:auto!important;display:inline!important;margin:0!important}
 .fc-log{list-style:none;padding:0;margin:8px 0 0;font-size:12px;color:#5C4858;display:grid;gap:2px}.fc-log small{color:#B3A5AE;margin-inline-end:6px}

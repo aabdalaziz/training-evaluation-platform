@@ -77,6 +77,12 @@ export const unassignedRooms = (): string[] => ROOMS.map(r => r.href).filter(h =
  * كل جناح يقسّم غرفه عناقيد صغيرة مسمّاة؛ جناح بلا عناقيد بعدُ → عنقود واحد بلا اسم. الغرف المشتركة → «أدواتي» في آخر الخطّ. */
 export type Cluster = { name: string; hrefs: string[] };
 export const CLUSTERS: Partial<Record<WingKey, Cluster[]>> = {
+  programs: [
+    { name: 'التشغيل', hrefs: ['/admin/management', '/admin/attendance', '/admin/readiness', '/admin/live', '/admin/resources'] },
+    { name: 'التصميم', hrefs: ['/admin/program-engineering', '/admin/catalog', '/admin/templates', '/admin/sim', '/admin/missions', '/admin/rehearsals'] },
+    { name: 'الحضور الحيّ', hrefs: ['/admin/onair', '/admin/media', '/admin/councils'] },
+    { name: 'المناخ', hrefs: ['/admin/pulse', '/admin/awards', '/admin/inclusion'] },
+  ],
   quality: [
     { name: 'الأثر', hrefs: ['/admin/impact', '/admin/followup', '/admin/after', '/admin/outcomes'] },
     { name: 'التقارير', hrefs: ['/reports/center', '/reports', '/reports/program', '/reports/chain', '/reports/cohorts', '/reports/remote-survey', '/final-analysis', '/admin/reports'] },

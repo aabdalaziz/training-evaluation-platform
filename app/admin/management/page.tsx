@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase/client";
 import GroupQr from "../../components/GroupQr";   /* P49-ب: QR الاستبيان لكل مجموعة */
 import LevelExitQr from "../../components/LevelExitQr";   /* م6 «عُبور»: اختبار نهاية المستوى لكل قاعة */
+import { Icon } from '../../../lib/ui/icons';
+import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ل «عدّة الغرفة» */
 
 const EMERALD = "#00897B", TEAL = "#1FA39A", NAVY = "#3A1F36", RED = "#dc2626";
 
@@ -217,24 +219,15 @@ export default function ManagementPage() {
   const remoteNoSched = classrooms.filter(c => c.delivery_mode === "remote" && !schedOf(c.id).length).length;
 
   return (
-    <div className="mg" style={{ direction: ar ? "rtl" : "ltr" }}>
+    <div className="mg rm-page" style={{ direction: ar ? "rtl" : "ltr" }}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <header className="top">
-        <div className="top-in">
-          <div className="brand-row">
-            <div className="logo-box"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
-            <div>
-              <div className="ttl">{ar ? "لوحة الإدارة المركزية" : "Central Admin Panel"}</div>
-              <div className="sub">{ar ? "المدربون · القاعات والمجموعات · المستويات · المواعيد — مصدر واحد لكل المنصة" : "Trainers · Rooms & groups · Levels · Schedules — one source for the whole platform"}</div>
-            </div>
-          </div>
-          <div className="top-actions">
-            <button className="ghost" onClick={() => setLang(ar ? "en" : "ar")}>🌐 {ar ? "English" : "العربية"}</button>
-            <button className="ghost" onClick={() => router.push("/reports/remote-survey")}>💻 {ar ? "نتائج استطلاع التعلم عن بُعد" : "Remote survey results"}</button>
-            <button className="ghost" onClick={() => router.push("/reports")}>📊 {ar ? "التقارير" : "Reports"}</button>
-          </div>
-        </div>
-      </header>
+      <RoomHead
+        title={<>{ar ? "مركز الإدارة" : "Management Center"}</>}
+        desc={<><p>{ar ? "المدربون · القاعات والمجموعات · المستويات · المواعيد — مصدر واحد لكل المنصة" : "Trainers · Rooms & groups · Levels · Schedules — one source for the whole platform"}</p></>}
+        actions={<>
+            <button className="rm-btn" onClick={() => setLang(ar ? "en" : "ar")}><Icon name="globe" size={16} /> {ar ? "English" : "العربية"}</button>
+        </>}
+      />
 
       {msg && <div className="toast">{msg}</div>}
 
@@ -528,7 +521,7 @@ export default function ManagementPage() {
 
 const CSS = `
 *{box-sizing:border-box;}
-:root{--upm-navy:#14466B;--upm-navy-2:#0d3049;--upm-emerald:#00897B;--upm-teal:#1FA39A;--upm-gold:#D9A866;}
+.mg{--upm-navy:#3A1F36;--upm-navy-2:#22101F;--upm-emerald:#2F6B66;--upm-teal:#5EA8A0;--upm-gold:#D9A866;}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .mode-badge{margin:10px 0 4px;padding:8px 12px;border-radius:10px;font-weight:800;font-size:13px;display:inline-block;}
 .mode-badge.onsite{background:#e0f2fe;color:#0369a1;}
@@ -562,27 +555,19 @@ const CSS = `
 .tog{border:0;border-radius:999px;padding:5px 12px;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer;}
 .tog.on{background:#d1fae5;color:#047857;}
 .tog.off{background:#F6EBE0;color:#8E7F8A;}
-body{margin:0;background:#f4f6f8;}
-.mg{min-height:100vh;background:#f4f6f8;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;padding-bottom:40px;}
+body{margin:0;background:#F6EBE0;}
+.mg{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;}
 .ls{display:flex;align-items:center;justify-content:center;background:var(--upm-navy);}
 .sp{width:64px;height:64px;border:6px solid rgba(255,255,255,.14);border-top-color:var(--upm-teal);border-radius:50%;animation:spin 1s linear infinite;}
-.top{background:linear-gradient(135deg,var(--upm-navy),var(--upm-navy-2));color:#fff;padding:22px 28px;border-bottom:3px solid var(--upm-gold);}
-.top-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;}
-.brand-row{display:flex;align-items:center;gap:16px;}
-.logo-box{background:#fff;border:2px solid var(--upm-gold);border-radius:16px;padding:8px;box-shadow:0 6px 18px rgba(0,0,0,.25);}
 .logo-box img{height:54px;width:auto;display:block;}
-.ttl{font-size:24px;font-weight:900;}
-.sub{color:#9fc3d6;font-size:13px;margin-top:4px;font-weight:700;}
-.top-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.ghost{background:rgba(255,255,255,.10);border:1px solid rgba(217,168,102,.35);color:#fff;border-radius:12px;padding:10px 16px;font-family:inherit;font-weight:800;cursor:pointer;}
 .ghost:hover{background:rgba(255,255,255,.18);}
 .toast{max-width:1240px;margin:16px auto 0;padding:12px 18px;border-radius:12px;font-weight:800;text-align:center;background:#d1fae5;color:#047857;}
-.tabs{max-width:1240px;margin:22px auto 0;padding:0 28px;display:flex;gap:10px;flex-wrap:wrap;}
+.tabs{max-width:1240px;margin:4px auto 0;padding:0;display:flex;gap:10px;flex-wrap:wrap;}
 .tab-on,.tab-off{border:0;border-radius:14px;padding:13px 20px;font-family:inherit;font-weight:900;font-size:15px;cursor:pointer;transition:.2s;}
 .tab-on{background:linear-gradient(135deg,var(--upm-emerald),var(--upm-teal));color:#fff;box-shadow:0 10px 24px rgba(0,137,123,.30);border:1px solid rgba(217,168,102,.35);}
 .tab-off{background:#fff;color:#5C4858;border:1px solid #EADFD6;}
 .tab-off:hover{background:#FBF4EE;}
-.wrap{max-width:1240px;margin:20px auto 0;padding:0 28px;}
+.wrap{max-width:1240px;margin:20px auto 0;padding:0;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
 .card{background:#fff;border:1px solid #EADFD6;border-radius:22px;padding:24px;box-shadow:0 8px 28px rgba(15,23,42,.04);margin-bottom:20px;}
 .card.full{grid-column:1 / -1;}
@@ -598,7 +583,7 @@ body{margin:0;background:#f4f6f8;}
 .stat-l{font-size:12px;font-weight:800;color:#8E7F8A;margin-top:6px;}
 .tw{width:100%;overflow-x:auto;}
 .tbl{width:100%;border-collapse:collapse;min-width:720px;}
-.th{padding:13px;font-weight:900;font-size:13px;color:#8E7F8A;border-bottom:2px solid #eef2f6;text-align:start;}
+.th{padding:13px;font-weight:900;font-size:13px;color:#8E7F8A;border-bottom:2px solid #EADFD6;text-align:start;}
 .td{padding:13px;font-size:14px;border-bottom:1px solid #F6EBE0;font-weight:700;vertical-align:top;}
 .nm{color:#2A1626;font-weight:900;}
 .lt{direction:ltr;unicode-bidi:plaintext;}
