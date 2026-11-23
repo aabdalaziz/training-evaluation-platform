@@ -12,7 +12,7 @@ import Nadi from './Nadi'; /* «نادِ»: تحدّث أو اطلب — الأ�
 const GuidePanel = dynamic(() => import('./GuidePanel'), { ssr: false });
 
 type Lang = 'ar' | 'en';
-const HIDE_ON = ['/room/', '/offline', '/m/', '/attend', '/survey', '/evaluate'];
+const HIDE_ON = ['/room/', '/offline', '/m/', '/attend', '/survey', '/evaluate', '/kids/demo' /* هـ-6 بَيان: وضع الطفل */];
 const LABEL: Record<Lang, string> = { ar: 'البحث في أَثَر', en: 'Search Athar' };
 
 export function GuideButton({ lang = 'ar', className = '', compact = false }: { lang?: Lang; className?: string; compact?: boolean }) {
