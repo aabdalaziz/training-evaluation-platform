@@ -88,9 +88,9 @@ function Inner() {
           </div>
           <select value={kind} onChange={e => setKind(e.target.value)}><option value="">{lang === 'ar' ? 'كل الأنواع' : 'All types'}</option>{KINDS.map(k => <option key={k.value} value={k.value}>{t(k.label, lang)}</option>)}</select>
           <select value={sector} onChange={e => setSector(e.target.value)}><option value="">{lang === 'ar' ? 'كل القطاعات' : 'All sectors'}</option>{sectors.filter(s => rows.some(r => r.sector === s.code)).map(s => <option key={s.code} value={s.code}>{lang === 'en' ? s.name_en : s.name_ar}</option>)}</select>
-          {!user && <Link href="/me" className="pt-btn ghost small"><Icon name="login" size={14} /> {lang === 'ar' ? 'دخول المتدرب لعرض جلسات شعبتك' : 'Sign in to see your section sessions'}</Link>}
+          {!user && <Link href="/me" className="pt-btn ghost small"><Icon name="login" size={14} /> {lang === 'ar' ? 'دخول المشارك لعرض جلسات شعبتك' : 'Sign in to see your section sessions'}</Link>}
           {user && view === 'mine' && mine.size > 0 && <button type="button" className="pt-btn ghost small" onClick={() => { const text = icsForSessions(rows.filter(r => mine.has(r.id) && timeState(r, n) !== 'ended'), window.location.origin, lang); const blob = new Blob([text], { type: 'text/calendar;charset=utf-8' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'athar-my-sessions.ics'; document.body.appendChild(a); a.click(); a.remove(); }}><Icon name="calendar" size={14} /> {lang === 'ar' ? 'أضف جلساتي إلى التقويم' : 'Add my sessions to calendar'}</button>}
-          <Link href="/live/trainer" className="pt-btn ghost small" style={{ marginInlineStart: 'auto' }}><Icon name="users" size={14} /> {lang === 'ar' ? 'جدول المدرب' : 'Trainer schedule'}</Link>
+          <Link href="/live/trainer" className="pt-btn ghost small" style={{ marginInlineStart: 'auto' }}><Icon name="users" size={14} /> {lang === 'ar' ? 'جدول المدرّب' : 'Trainer schedule'}</Link>
         </div>
 
         {view !== 'recordings' && <>

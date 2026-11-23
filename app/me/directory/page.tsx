@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /me/directory — «سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر» (P31 هيئة أَثَر): سيرتي الذاتية الكاملة بكلماتي —
- *  الوجه (خبير استشاري · مدرب) · الهوية والصورة (إلزامية بموافقة مؤرَّخة) · الملخص · أبرز الإنجازات · المؤهلات · الخبرات · الشهادات · المنشورات
+ *  الوجه (خبير استشاري · مدرّب) · الهوية والصورة (إلزامية بموافقة مؤرَّخة) · الملخص · أبرز الإنجازات · المؤهلات · الخبرات · الشهادات · المنشورات
  *  · مجالات الخبرة من مهارات أَثَر · القطاعات · الخدمات · النمط · التغطية · مفاتيح الظهور لكل قسم · «ما شهده أَثَر» (قراءة فقط) · «مهامي مع أَثَر» (عقود التعاون ATH-CO: توقيع · تعديل مرة · اعتذار).
  *  الحفظ مسودةً متى شئت؛ الإرسال للاعتماد حين تكتمل؛ بعد الاعتماد تبقى صفحتك ظاهرة وتعديلاتك تذهب للمراجعة.
  *  WCAG 2.2 AA: كل حقل بعنوان مرئي · أخطاء بنص وربط aria · لا رسائل تختفي بمؤقّت · تركيز مرئي · أزرار بنص · حجم الصورة ونوعها مذكوران قبل الرفع.
@@ -94,11 +94,11 @@ function Inner() {
       <header className="dr-hero">
         <span className="pt-kicker"><Icon name="users" size={14} /> هيئة أَثَر الاستشارية · {rules.tagline_ar}</span>
         <h1>سيرتي الذاتية في هيئة أَثَر الاستشارية</h1>
-        <p>اكتب سيرتك الذاتية بكلماتك، وأَثَر يضع بجانبها ما شهده لك من سجلاته. يراجعها الطاقم ويعتمدها بشهادة توثيق موقَّعة؛ ثم تُدرَج في <Link href="/experts">هيئة الخبراء</Link> و/أو <Link href="/trainers">هيئة المدربين</Link>. لا يظهر بريدك ولا هاتفك لأحد.</p>
+        <p>اكتب سيرتك الذاتية بكلماتك، وأَثَر يضع بجانبها ما شهده لك من سجلاته. يراجعها الطاقم ويعتمدها بشهادة توثيق موقَّعة؛ ثم تُدرَج في <Link href="/experts">هيئة الخبراء</Link> و/أو <Link href="/trainers">هيئة المدرّبين</Link>. لا يظهر بريدك ولا هاتفك لأحد.</p>
       </header>
       {/* الحالة */}
       <section className={`me-status s-${st}`} aria-labelledby="st-h" data-testid="me-status">
-        <h2 id="st-h"><Icon name={st === 'approved' ? 'certificate' : 'flag'} size={16} /> {p ? rules.status_ar[st] : 'لم تبدأ سيرتك بعد'}{d.summary.legacy_trainer && <span className="dr-chip svc">مدرب في منصة أَثَر للتقييم — عبّأنا لك البداية</span>}</h2>
+        <h2 id="st-h"><Icon name={st === 'approved' ? 'certificate' : 'flag'} size={16} /> {p ? rules.status_ar[st] : 'لم تبدأ سيرتك بعد'}{d.summary.legacy_trainer && <span className="dr-chip svc">مدرّب في بوّابة أَثَر للتقييم — عبّأنا لك البداية</span>}</h2>
         {p?.staff_note_ar && <p className="me-staffnote"><b>ملاحظة الطاقم:</b> {p.staff_note_ar}</p>}
         {st === 'approved' && p.meta?.review_pending && <p className="dr-muted">تعديلاتك الأخيرة بانتظار مراجعة الطاقم — صفحتك المعتمدة باقية كما هي حتى تُراجَع.</p>}
         {issues.length > 0 && st !== 'approved' && <div><p className="dr-muted">قبل الإرسال للاعتماد:</p><ul className="me-issues" data-testid="me-issues">{issues.map((i: string) => <li key={i}><Icon name="alert" size={12} /> {i}</li>)}</ul></div>}
@@ -139,7 +139,7 @@ function Inner() {
           <div className="me-grid2">
             <label className="dr-lbl">الاسم بالعربية *<input className="dr-in" value={f.name_ar} onChange={e => set('name_ar', e.target.value)} maxLength={120} required data-testid="me-name" /></label>
             <label className="dr-lbl">الاسم بالإنجليزية (يُشتقّ منه عنوان صفحتك)<input className="dr-in" dir="ltr" value={f.name_en} onChange={e => set('name_en', e.target.value)} maxLength={120} /></label>
-            <label className="dr-lbl">اللقب المهني *<input className="dr-in" value={f.title_ar} onChange={e => set('title_ar', e.target.value)} maxLength={120} placeholder="مثال: مستشار تطوير مؤسسي · مدرب معتمد في الجودة" required data-testid="me-title" /></label>
+            <label className="dr-lbl">اللقب المهني *<input className="dr-in" value={f.title_ar} onChange={e => set('title_ar', e.target.value)} maxLength={120} placeholder="مثال: مستشار تطوير مؤسسي · مدرّب معتمد في الجودة" required data-testid="me-title" /></label>
             <label className="dr-lbl">اللقب بالإنجليزية<input className="dr-in" dir="ltr" value={f.title_en} onChange={e => set('title_en', e.target.value)} maxLength={120} /></label>
             <label className="dr-lbl">المدينة<input className="dr-in" value={f.city} onChange={e => set('city', e.target.value)} maxLength={60} placeholder="المدينة المنورة" /></label>
             <div className="dr-lbl">اللغات<div className="me-chips">{rules.languages.map((l: any) => <button type="button" key={l.code} className={`me-chip ${f.languages.includes(l.code) ? 'on' : ''}`} aria-pressed={f.languages.includes(l.code)} onClick={() => set('languages', toggle(f.languages, l.code, 5))}>{l.name_ar}</button>)}</div></div>
@@ -213,7 +213,7 @@ function Inner() {
         <div className="me-savebar"><button type="submit" className="pt-btn" disabled={!!busy} data-testid="me-save"><Icon name="save" size={15} /> {busy === 'save' ? 'جارٍ الحفظ…' : p ? 'احفظ التعديلات' : 'احفظ المسودة'}</button>{dirty && <span className="dr-muted">تعديلات غير محفوظة</span>}</div>
       </form>
 
-      <section className="me-sec witness" aria-labelledby="h-wit"><h2 id="h-wit"><Icon name="check" size={16} /> ما شهده أَثَر <small>قراءة فقط — من سجلات المنصة</small></h2>
+      <section className="me-sec witness" aria-labelledby="h-wit"><h2 id="h-wit"><Icon name="check" size={16} /> ما شهده أَثَر <small>قراءة فقط — من سجلات البوّابة</small></h2>
         {d.witness.lines.length ? <ul className="dr-witness" data-testid="me-witness">{d.witness.lines.map((l: any) => <li key={l.key}><Icon name="check" size={13} /> {l.text}</li>)}</ul> : <p className="dr-muted">{d.witness.empty_ar}</p>}
       </section>
 

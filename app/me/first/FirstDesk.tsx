@@ -5,7 +5,7 @@
  *  0) «شكر وتقدير وأمنيات» — كلمة أَثَر نفسها أولًا (نصّ إنساني ثابت، موقَّع «— أَثَر»، يُخصَّص بالاسم الأول واسم البرنامج)
  *  1) الرأس: البرنامج · التاريخ · «اليوم يومك الأول» إن كان اليوم · اختيار برنامج آخر بدأ
  *  2) «قال من سبقك»: ≤ 7 سطور تخرّج من خرّيجي هذا البرنامج (k ≥ 5 أشخاص؛ بلا أسماء؛ خلط يومي) + «وقالوا بعد أشهر» (P38)
- *  3) «كلمة الاستقبال من مدرّبك» إن كتبها (P51 بعلامة welcome) · «شعبتك» أعداد فقط (k ≥ 5)
+ *  3) «كلمة الاستقبال من ميسّرك» إن كتبها (P51 بعلامة welcome) · «شعبتك» أعداد فقط (k ≥ 5)
  *  4) «لماذا جئتُ»: سطر 10–160 يُختم إلى يوم التخرّج (محرّك P62) — في الأسبوع الأول فقط · مرة واحدة
  *  5) «ما ينتظرك في أَثَر»: خارطة طريق ثابتة بروابط
  *  testids: fd-root[data-phase] fd-err fd-ok fd-athar fd-prog fd-today fd-said fd-said-line fd-said-below fd-after fd-welcome fd-mates fd-why fd-why-ta fd-why-save fd-why-sealed fd-why-open fd-why-closed fd-road fd-foot fd-empty · P71: fd-entry[data-lang] fd-entry-text fd-entry-voice fd-entry-play fd-entry-del fd-entry-copy
@@ -54,7 +54,7 @@ export default function FirstDesk() {
   return <main className="fd" dir="rtl" data-testid="fd-root" data-phase={v?.program.phase || ''}>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <nav className="fd-nav" aria-label="تنقّل"><Link href="/me" className="fd-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/letter" className="fd-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="fd-link"><Icon name="award" size={14} /> يوم تخرّجي</Link><Link href="/" className="fd-link"><Icon name="home" size={14} /> الرئيسة</Link></nav>
-    <header className="fd-head"><span className="pt-kicker"><Icon name="spark" size={14} /> {d?.names.official_ar || 'صفحة اليوم الأول للمتدرّب'}</span><h1>🌅 {d?.names.title || 'أول يوم'} <small>{d?.names.sub || 'قال من سبقك'}</small></h1>
+    <header className="fd-head"><span className="pt-kicker"><Icon name="spark" size={14} /> {d?.names.official_ar || 'صفحة اليوم الأول للمشارك'}</span><h1>🌅 {d?.names.title || 'أول يوم'} <small>{d?.names.sub || 'قال من سبقك'}</small></h1>
       <p>يوم يبدأ برنامجك يُفتح لك هذا الباب مرة واحدة: كلمة من أَثَر، وسطور تركها لك خرّيجو هذا البرنامج يوم تخرّجهم — بلا أسماء — ثم سطرٌ تكتبه أنت ويُفتح لك يوم تخرّجك. لا درجة، لا تقييم، لا ذكاء اصطناعي.</p></header>
     {err && <p className="fd-err" role="alert" data-testid="fd-err">{err}</p>}
     {msg && <p className="fd-ok" role="status" data-testid="fd-ok">{msg}</p>}
@@ -71,7 +71,7 @@ export default function FirstDesk() {
       </section>
 
       <section className="fd-prog" data-testid="fd-prog">
-        <div><b>{v.program.name_ar}</b><p className="fd-muted">{fmtDayAr(v.program.start_date)}{v.program.end_date ? ` ← ${fmtDayAr(v.program.end_date)}` : ''} · {PHASE_AR[v.program.phase]}{v.trainer_ar ? ` · مدرّبك ${v.trainer_ar}` : ''}</p></div>
+        <div><b>{v.program.name_ar}</b><p className="fd-muted">{fmtDayAr(v.program.start_date)}{v.program.end_date ? ` ← ${fmtDayAr(v.program.end_date)}` : ''} · {PHASE_AR[v.program.phase]}{v.trainer_ar ? ` · ميسّرك ${v.trainer_ar}` : ''}</p></div>
         {d.programs.length > 1 && <select className="fd-select" value={pid} onChange={(e) => setPid(e.target.value)} aria-label="برنامج آخر">{d.programs.map((p) => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select>}
       </section>
       {v.program.phase === 'first' && <section className="fd-today" data-testid="fd-today"><b>اليوم يومك الأول 🌅</b> — بدأ برنامجك اليوم. من سبقك ترك لك كلمة؛ وأنت ستترك سطرك لمن يأتي بعدك — يوم تخرّجك.</section>}

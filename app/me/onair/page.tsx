@@ -50,7 +50,7 @@ function Inner() {
   const p = d.presence; const hours = d.hours; const queue: any[] = d.queue || []; const active: any[] = d.active || []; const asks: any[] = d.asks || []; const wins: any[] = d.windows || [];
   return <main className="pt-main oam" dir={ar ? 'rtl' : 'ltr'}><style dangerouslySetInnerHTML={{ __html: CSS }} />
     <header className="oam-h"><span className="pt-kicker"><Icon name="chat" size={14} /> {ar ? 'أَثَر معك — على الهواء' : 'Athar with you — on air'}</span><h1>{ar ? (p?.on_air ? `أنت على الهواء · ${p.minutes_left} د` : 'أَثَر معك') : 'Athar with you'}</h1>
-      <p>{ar ? 'ترفع يدك ساعةً من يومك فتقول للبوابة كلها: «أنا هنا». تختار ما تستقبله ومجالك، وينطفئ الحضور وحده — ولا يُسأل أحد لماذا نزل.' : 'Raise your hand for an hour and tell the whole portal: “I am here.”'}</p>
+      <p>{ar ? 'ترفع يدك ساعةً من يومك فتقول للبوّابة كلها: «أنا هنا». تختار ما تستقبله ومجالك، وينطفئ الحضور وحده — ولا يُسأل أحد لماذا نزل.' : 'Raise your hand for an hour and tell the whole portal: “I am here.”'}</p>
       <nav className="oam-tabs" role="tablist">{([['receive', ar ? 'أستقبل' : 'Receive'], ['asks', ar ? `طلباتي (${asks.length})` : `My requests (${asks.length})`]] as [Tab, string][]).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => { setTab(k); setThread(null); }} data-testid={`oam-tab-${k}`}>{l}</button>)}<Link href="/on-air" className="pt-btn ghost small">{ar ? 'الصفحة العامة' : 'Public page'}</Link></nav>
       {err && <p className="oam-err" role="alert" data-testid="oam-err">{err}</p>}{ok && <p className="oam-ok" role="status" data-testid="oam-ok">{ok}</p>}
     </header>
@@ -121,7 +121,7 @@ function Inner() {
           </div></li>)}</ul>
       </section>}
 
-      {d.can_receive && <section className="pt-box" data-testid="oam-windows"><h2>{ar ? 'نوافذي المعلنة' : 'My announced windows'} <small className="pt-muted">{ar ? `— حتى ${MAX_WINDOWS}؛ تظهر للجميع في /on-air وتذكّرك البوابة قبلها` : ''}</small></h2>
+      {d.can_receive && <section className="pt-box" data-testid="oam-windows"><h2>{ar ? 'نوافذي المعلنة' : 'My announced windows'} <small className="pt-muted">{ar ? `— حتى ${MAX_WINDOWS}؛ تظهر للجميع في /on-air وتذكّرك البوّابة قبلها` : ''}</small></h2>
         <ul className="oam-wins">{wins.map(w => <li key={w.id}><b>{w.weekday_ar} {w.from}–{w.to}</b>{w.note_ar ? <small> · {w.note_ar}</small> : null} <button type="button" className="pt-btn ghost small" onClick={() => post({ action: 'window_remove', id: w.id })} aria-label={ar ? 'احذف النافذة' : 'Remove'}>✕</button></li>)}</ul>
         {wins.length < MAX_WINDOWS && <form className="oam-win" onSubmit={e => { e.preventDefault(); post({ action: 'window_add', weekday: win.weekday, from_min: toMin(win.from), to_min: toMin(win.to), note_ar: win.note }); }}>
           <label>{ar ? 'اليوم' : 'Day'}<select value={win.weekday} onChange={e => setWin(w => ({ ...w, weekday: Number(e.target.value) }))} data-testid="oam-win-day">{WEEKDAY_AR.map((n, i) => <option key={i} value={i}>{n}</option>)}</select></label>

@@ -1,9 +1,9 @@
 'use client';
 /**
- * /evaluate/daily و /evaluate/final — استبيان المتدرب (ضيف بلا تسجيل دخول)
+ * /evaluate/daily و /evaluate/final — استبيان المشارك (ضيف بلا تسجيل دخول)
  * الهوية البصرية الموحّدة (نفس أسلوب نموذج قياس الأثر): شعارات، ترويسة، أقسام مرقّمة، مقياس 1–5 بتسميات، عربي/إنجليزي.
- * منطق الحفظ كما هو: منع التكرار (اليومي: نفس البريد + القاعة + اليوم / النهائي: نفس البريد + البرنامج)، ثم evaluations + evaluation_answers.
- * يدعم ?program=<id>&classroom=<id> لاختيار البرنامج/القاعة مسبقًا (روابط بوابة المتدرب وQR).
+ * منطق الحفظ كما هو: منع التكرار (اليومي: نفس البريد + الشعبة + اليوم / النهائي: نفس البريد + البرنامج)، ثم evaluations + evaluation_answers.
+ * يدعم ?program=<id>&classroom=<id> لاختيار البرنامج/الشعبة مسبقًا (روابط بوّابة المتعلّم وQR).
  * P49: /evaluate/end «استبيان نهاية البرنامج» (بلا خدمات/إقامة) · ?link=<رمز> «الرابط الذي لا يُخطئ»: بطاقة مقفلة بالبرنامج/الشعبة بلا قوائم، نافذة زمنية، link_id يُحفظ مع الاستجابة.
  *      ليكرت END: «موافق بقوة»=5 … «غير موافق بقوة»=1 · NPS_10: 0–10 يُحفظ نصًّا حتى لا يُفسد متوسّطات 1–5.
  */
@@ -34,12 +34,12 @@ type Info = { full_name: string; phone: string; email: string; nationality: stri
 
 const STR = {
   dailyTitle: ['التقييم اليومي لجلسات التدريب', 'Daily Session Evaluation'], finalTitle: ['التقييم الختامي للبرنامج التدريبي', 'Final Program Evaluation'],
-  kicker: ['منصة تقويم البرامج التدريبية', 'Training Evaluation Platform'],
+  kicker: ['بوّابة أَثَر', 'Training Evaluation Platform'],
   intro: ['رأيك يساعدنا على تطوير جودة البرامج. الحقول المعلَّمة بـ * إلزامية، وتستغرق التعبئة نحو 3 دقائق.', 'Your feedback helps us improve program quality. Fields marked * are required; this takes about 3 minutes.'],
   introEnd: ['رأيك يساعدنا على تطوير كل تفاصيل البيئة التدريبية — من الاستقبال إلى الشهادة. الحقول المعلَّمة بـ * إلزامية، والبنود الموسومة «إن انطبق» اتركها إن لم تنطبق عليك؛ تستغرق التعبئة نحو 6 دقائق.', 'Your feedback helps us improve every detail of the training environment — from reception to certificate. Fields marked * are required; leave items marked “if applicable” if they do not apply to you. It takes about 6 minutes.'],
   participant: ['بيانات المشارك', 'Participant information'], name: ['الاسم الكامل الثلاثي', 'Full name'], email: ['البريد الإلكتروني', 'Email address'], phone: ['رقم الجوال', 'Mobile number'],
   nationality: ['الجنسية', 'Nationality'], gender: ['النوع الاجتماعي', 'Gender'], male: ['ذكر', 'Male'], female: ['أنثى', 'Female'], choose: ['— اختر —', '— Select —'],
-  accommodation: ['مكان الإقامة أثناء البرنامج', 'Accommodation during the program'], program: ['البرنامج التدريبي', 'Training program'], classroom: ['القاعة الدراسية', 'Classroom'], room: ['قاعة', 'Room'],
+  accommodation: ['مكان الإقامة أثناء البرنامج', 'Accommodation during the program'], program: ['البرنامج التدريبي', 'Training program'], classroom: ['الشعبة', 'Classroom'], room: ['شعبة', 'Room'],
   noTemplate: ['لا يوجد قالب تقييم مفعّل لهذا البرنامج حاليًا — تواصل مع إدارة البرنامج.', 'No active evaluation template for this program yet — please contact the program office.'],
   journey: ['رحلتك في الاستبيان', 'Your survey journey'],
   journeyHint: ['اضغط قسمًا للانتقال إليه', 'Tap a section to jump to it'],
@@ -105,13 +105,13 @@ export default function GuestEvaluationPage() {
       let preP = sp.get('program') || ''; setPreClassroom(sp.get('classroom') || '');
       if (sp.get('lang') === 'en') setLang('en');
       const code = (sp.get('link') || '').trim();
-      if (code) {   // P49: حلّ الرمز أوّلًا — البرنامج والشعبة يأتيان من الرابط لا من المتدرّب
+      if (code) {   // P49: حلّ الرمز أوّلًا — البرنامج والشعبة يأتيان من الرابط لا من المشارك
         try {
           const r = await fetch(`/api/evaluation-links?code=${encodeURIComponent(code)}`, { cache: 'no-store' }); const j = await r.json();
           if (!on) return;
           if (!j?.link) { setLinkStatus('invalid'); setLoading(false); return; }
           setLink(j.link); setLinkStatus(j.state); setLinkRooms(j.classrooms || []); setLinkProgram(j.program || null);
-          /* P49-ب «بلغة المتدرّب»: غير الناطق بالعربية يفتح الإنجليزية مباشرة */
+          /* P49-ب «بلغة المشارك»: غير الناطق بالعربية يفتح الإنجليزية مباشرة */
           if (!sp.get('lang')) setLang(resolveOpenLang(j.link.lang, typeof navigator !== 'undefined' ? navigator.language : ''));
           preP = j.link.program_id; if (j.classroom?.id) setPreClassroom(j.classroom.id); else if ((j.classrooms || []).length === 1) setPreClassroom(j.classrooms[0].id);
           if (j.state !== 'open') { setLoading(false); return; }

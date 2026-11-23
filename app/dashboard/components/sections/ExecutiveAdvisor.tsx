@@ -84,7 +84,7 @@ export default function ExecutiveAdvisor() {
               color: '#8E7F8A',
             }}
           >
-            توصيات مبنية على بيانات المنصة.
+            توصيات مبنية على بيانات البوّابة.
           </p>
         </div>
       </div>

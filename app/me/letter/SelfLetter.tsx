@@ -62,7 +62,7 @@ export default function SelfLetter() {
   return <main className="sl" dir="rtl" data-testid="sl-root" data-sealed={sealed.length}>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <nav className="sl-nav" aria-label="تنقّل"><Link href="/me" className="sl-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/journey" className="sl-link"><Icon name="compass" size={14} /> رحلتي</Link><Link href="/me/athar-map" className="sl-link"><Icon name="spark" size={14} /> خريطة أثرك</Link><Link href="/" className="sl-link"><Icon name="home" size={14} /> الرئيسة</Link></nav>
-    <header className="sl-head"><span className="pt-kicker"><Icon name="mail" size={14} /> {d?.names.official_ar || 'الرسالة المؤجَّلة للمتدرّب'}</span><h1>{d?.names.title || 'رسالة إلى نفسي بعد سنة'} <small>{d?.names.sub || 'إلى مَن سأكون'}</small></h1>
+    <header className="sl-head"><span className="pt-kicker"><Icon name="mail" size={14} /> {d?.names.official_ar || 'الرسالة المؤجَّلة للمشارك'}</span><h1>{d?.names.title || 'رسالة إلى نفسي بعد سنة'} <small>{d?.names.sub || 'إلى مَن سأكون'}</small></h1>
       <p>تكتب اليوم لنفسك القادمة — نصًّا أو صوتًا — وتختار متى تعود إليك. تُختم فلا يقرؤها أحد، ولا أنت، حتى موعدها؛ وتُفتح في ساعة كتابتها نفسها، ومعها «ما حدث فعلًا» منذ يومها: أعدادٌ من رحلتك أنت، لا أحكام.</p></header>
     {err && <p className="sl-err" role="alert" data-testid="sl-err">{err}</p>}
     {msg && <p className="sl-ok" role="status" data-testid="sl-ok">{msg}</p>}

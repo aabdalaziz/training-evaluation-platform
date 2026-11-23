@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P66 «أيام التدريب وفترات التطبيق» — مكتب المتدرّب «سطري» (يُحمَّل ديناميكيًا بلا SSR)
+ * P66 «أيام التدريب وفترات التطبيق» — مكتب المشارك «سطري» (يُحمَّل ديناميكيًا بلا SSR)
  *  لكل شعبة من شُعبي: كلمة أَثَر القصيرة بحسب الطور · «الطريق» (الكتل وفترات التطبيق) ·
  *   يوم تدريب → «سطر اليوم» (واحد لليوم، يُعدَّل في يومه) · آخر يوم الكتلة → «التزامي حتى نلتقي» · فترة تطبيق → «سطر التطبيق» الأسبوعي (ماذا طبّقتُ / ما الذي منعني) + موقف ميداني
  *   «هذا ما وعدتَ به نفسك» حين يُفتح التزام (يوم العودة) → فعلت / جزئيًا / لم أفعل بعد · سطوري (آخر 60) · حذف فوري
@@ -65,8 +65,8 @@ export default function LineDesk() {
   return <main className="ln" dir="rtl" data-testid="ln-root">
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <nav className="ln-nav" aria-label="تنقّل"><Link href="/me" className="ln-link"><Icon name="arrow" size={14} /> ملفّي</Link><button type="button" className="ln-link ln-btnlink" data-testid="ln-today" aria-expanded={todayOpen} onClick={() => setTodayOpen((v) => !v)}><Icon name="clock" size={14} /> ماذا عندي اليوم؟</button><Link href="/me#prefs" className="ln-link"><Icon name="bell" size={14} /> تفضيلاتي</Link><Link href="/me/level" className="ln-link" data-testid="ln-level"><Icon name="school" size={14} /> بكلماتي عبر المستوى</Link><Link href="/me/first" className="ln-link"><Icon name="spark" size={14} /> أول يوم</Link><Link href="/me/letter" className="ln-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/grad" className="ln-link"><Icon name="award" size={14} /> يوم تخرّجي</Link></nav>
-    <header className="ln-head"><span className="pt-kicker"><Icon name="edit" size={14} /> سجلّ التعلّم والتطبيق للمتدرّب</span><h1>✍️ {d?.names.page || 'سطري'} <small>سطر في يوم التدريب · سطر في الأسبوع من موقعك</small></h1>
-      <p>في أيام التدريب تكتب سطرًا واحدًا: ماذا أخذتَ من اليوم. وحين تعود إلى موقعك بين الكتل يصبح البرنامج معك هناك: سطر في الأسبوع — ماذا طبّقتَ وما الذي منعك — وموقف ميداني تكتب كيف تصرّفت فيه فعلًا. مدرّبك يرى المجمَّع بلا أسماء، ويبدأ الكتلة القادمة بما جرى في مواقعكم.</p></header>
+    <header className="ln-head"><span className="pt-kicker"><Icon name="edit" size={14} /> سجلّ التعلّم والتطبيق للمشارك</span><h1>✍️ {d?.names.page || 'سطري'} <small>سطر في يوم التدريب · سطر في الأسبوع من موقعك</small></h1>
+      <p>في أيام التدريب تكتب سطرًا واحدًا: ماذا أخذتَ من اليوم. وحين تعود إلى موقعك بين الكتل يصبح البرنامج معك هناك: سطر في الأسبوع — ماذا طبّقتَ وما الذي منعك — وموقف ميداني تكتب كيف تصرّفت فيه فعلًا. ميسّرك يرى المجمَّع بلا أسماء، ويبدأ الكتلة القادمة بما جرى في مواقعكم.</p></header>
     {echo && <aside className="pt-box ln-echo" data-testid="ln-echo" data-level={echo.level_no}><small>{echo.intro_ar}</small><blockquote>«{echo.line_ar}»</blockquote><p>واليوم تبدأ المستوى {echo.next_level_no}. <Link href={echo.href}>صفحة المستوى {echo.level_no}</Link> · <Link href="/me/level">بكلماتي عبر المستوى</Link></p></aside>}
     {eword && <aside className="pt-box ln-echo ln-echo-word" data-testid="ln-echo-word" data-level={eword.level_no} data-chip={echip || ''}><small>{eword.title_ar}</small>{eword.text_ar && <blockquote>«{eword.text_ar}»</blockquote>}{!eword.text_ar && eword.voice_sec ? <p>🎙️ كلمة صوتية ({Math.round(eword.voice_sec)} ث) — تسمعها من 🔔 تنبيهاتي.</p> : null}
       <p className="ln-echo-chips">{echip ? <span data-testid="ln-echo-replied">وصل ردّك {echip === 'got_it' ? '🌱' : echip === 'need_help' ? '✋' : '🕐'} إلى أستاذك ✓</span> : <>ردّ بلمسة: {[['got_it', '🌱 وصلت'], ['need_help', '✋ أحتاج مساعدة'], ['will_attend', '🕐 سأحضر']].map(([k, l]) => <button key={k} type="button" className="ln-chip" data-testid={`ln-echo-chip-${k}`} disabled={echipBusy} onClick={() => void replyChip(k)}>{l}</button>)}</>}</p></aside>}
@@ -85,7 +85,7 @@ export default function LineDesk() {
         {r.commit_open && <div className="ln-commit" data-testid="ln-commit-open" role="group" aria-label="التزامي">
           <h3>✉️ هذا ما وعدتَ به نفسك {r.commit_open.day_ar && <small>كتبتَه {r.commit_open.day_ar}</small>}</h3>
           <blockquote>{r.commit_open.body_ar}</blockquote>
-          <p className="ln-muted">هل فعلت؟ الإجابة لك وحدك — لا يراها مدرّبك ولا تدخل في أي تقييم.</p>
+          <p className="ln-muted">هل فعلت؟ الإجابة لك وحدك — لا يراها ميسّرك ولا تدخل في أي تقييم.</p>
           <div className="ln-row"><button type="button" className="ln-btn ln-yes" data-testid="ln-commit-yes" disabled={busy} onClick={() => answer(r.commit_open!, 'yes')}>فعلت</button><button type="button" className="ln-btn" data-testid="ln-commit-part" disabled={busy} onClick={() => answer(r.commit_open!, 'part')}>جزئيًا</button><button type="button" className="ln-btn ln-ghost" data-testid="ln-commit-no" disabled={busy} onClick={() => answer(r.commit_open!, 'no')}>لم أفعل بعد</button></div>
         </div>}
         {r.lectures.length > 0 && <div className="ln-lectures" data-testid="ln-lectures" role="group" aria-label="محاضرات اليوم">
@@ -104,7 +104,7 @@ export default function LineDesk() {
         {r.program_id && (r.lectures.length > 0 || r.move_open) && <div className="ln-move" data-testid="ln-move">
           {r.move_open ? <p className="ln-muted" data-testid="ln-move-open">⏳ طلب نقلك إلى شعبة أخرى عند منسّق الشعبة — يصلك الردّ في إشعاراتك.</p>
             : !mv[r.classroom_id]?.open ? <button type="button" className="ln-link ln-btnlink" data-testid="ln-move-btn" onClick={() => setMv((s) => ({ ...s, [r.classroom_id]: { open: true, reason: '' } }))}><Icon name="users" size={13} /> أطلب نقلي إلى شعبة أخرى</button>
-            : <div><p className="ln-muted">شعبتك ثابتة طوال المستوى؛ النقل بطلب يقرّره منسّق الشعبة. اكتب سببك (5–200 حرفًا):</p><input data-testid="ln-move-reason" className="ln-input" value={mv[r.classroom_id]?.reason || ''} maxLength={200} onChange={(e) => setMv((s) => ({ ...s, [r.classroom_id]: { open: true, reason: e.target.value } }))} placeholder="مثال: تعارض مع دوامي الصباحي" /><div className="ln-row"><button type="button" className="ln-btn ln-primary" data-testid="ln-move-send" disabled={busy} onClick={() => requestMove(r)}>أرسل الطلب</button><button type="button" className="ln-btn ln-ghost" onClick={() => setMv((s) => ({ ...s, [r.classroom_id]: { open: false, reason: '' } }))}>إلغاء</button></div></div>}
+            : <div><p className="ln-muted">شعبتك ثابتة طوال المستوى؛ النقل بطلب يقرّره منسّق الشعبة. اكتب سببك (5–200 حرفًا):</p><input data-testid="ln-move-reason" className="ln-input" value={mv[r.classroom_id]?.reason || ''} maxLength={200} onChange={(e) => setMv((s) => ({ ...s, [r.classroom_id]: { open: true, reason: e.target.value } }))} placeholder="مثال: تعارض مع دوامي الصباحي" /><div className="ln-row"><button type="button" className="ln-btn ln-primary" data-testid="ln-move-send" disabled={busy} onClick={() => requestMove(r)}>إرسال الطلب</button><button type="button" className="ln-btn ln-ghost" onClick={() => setMv((s) => ({ ...s, [r.classroom_id]: { open: false, reason: '' } }))}>إلغاء</button></div></div>}
         </div>}
         {kinds.length > 0 && <div className="ln-write" data-testid="ln-write" data-kind={kind}>
           {kinds.length > 1 && <div className="ln-tabs" role="tablist">{kinds.map((k) => <button key={k} type="button" role="tab" aria-selected={k === kind} className={`ln-tab${k === kind ? ' on' : ''}`} onClick={() => setKindSel((s) => ({ ...s, [r.classroom_id]: k }))}>{KIND_AR[k]}</button>)}</div>}

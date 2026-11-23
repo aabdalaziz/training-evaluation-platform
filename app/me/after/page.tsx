@@ -4,7 +4,7 @@
  * /me/after — «الشهادة التي تكبر» في حسابي (P38 · متابعة أثر التدريب)
  *  لكل برنامج أتممته: ثلاث محطات (بعد شهر · بعد ثلاثة أشهر · بعد سنة). في نافذة المحطة أكتب بكلماتي «ما الذي فعلته بما تعلّمت؟»
  *  وأختار حالة واحدة بالكلمات — و«لم ينفعني» مرحَّب بها. ثم: شاهد يوقّع بجملة · إظهار الفصل في شهادتي الحيّة · وثيقة «أثر بعد» عند محطة السنة.
- *  #witness: دعوات الشهادة التي وصلتني من متدرّبين.
+ *  #witness: دعوات الشهادة التي وصلتني من مشاركين.
  *  P39 «أصوات حول الشهادة»: رسالة إلى نفسي بعد سنة (تُفتح فوق محطة السنة) · البرنامج يردّ (ورشة تطبيق) · قياسك في مِعيار — في Voices.tsx
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -94,7 +94,7 @@ function Inner() {
 
     <section className="pt-box oaf-inv" id="witness" data-testid="oaf-invites">
       <h2><Icon name="users" size={18} /> {ar ? 'دعوات الشهادة إليّ' : 'Witness invitations to me'} {invites.length ? <i>{invites.length}</i> : null}</h2>
-      {invites.length === 0 && <p className="pt-muted">{ar ? 'حين يدعوك متدرّب شاهدًا على محطة كتبها، تراها هنا وحدها — لا محطاته الأخرى.' : 'When a learner invites you to witness a station, it appears here alone.'}</p>}
+      {invites.length === 0 && <p className="pt-muted">{ar ? 'حين يدعوك مشارك شاهدًا على محطة كتبها، تراها هنا وحدها — لا محطاته الأخرى.' : 'When a learner invites you to witness a station, it appears here alone.'}</p>}
       {invites.map(i => <div key={i.id} className="oaf-invite" data-testid="oaf-invite">
         <p><b>{i.learner_ar}</b> · {i.program_ar} · {i.station_ar} · <span className="oaf-state">{i.state_ar}</span></p><blockquote>{i.text_ar}</blockquote>
         <label>{ar ? 'جملة شهادتك (ما رأيته أنت)' : 'Your one-sentence witness'}<input value={ans[i.id] || ''} onChange={e => setAns(x => ({ ...x, [i.id]: e.target.value }))} maxLength={300} data-testid="oaf-ans-text" /></label>

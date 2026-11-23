@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P70 «بكلماتي عبر المستوى» — مكتب المتدرّب (يُحمَّل ديناميكيًا بلا SSR)
+ * P70 «بكلماتي عبر المستوى» — مكتب المشارك (يُحمَّل ديناميكيًا بلا SSR)
  *  1) الرأس: الدبلوم : المستوى N — الشعبة · من/إلى · المرحلة (تُفتح في… / مفتوحة / للقراءة والختم) · اختيار مستوى آخر
  *  2) «بكلماتي»: بطاقات مما كتبه وقاله صاحبها (سطوره · تطبيقه · التزاماته · نصّه وصوته في عُبور · «عبرتُ» بالكلمات) — أُبقي/أُخفي لكل بطاقة
  *  3) «سطر المستوى» (≤ 200) + 🎙️ ≤ 30 ث يبقى معه → «أختم صفحة المستوى» → رمز ATH-LV + وجه عام خاصّ افتراضيًا
@@ -56,7 +56,7 @@ export default function LevelDesk() {
   return <main className="lv" dir="rtl" data-testid="lv-root" data-phase={L?.phase || ''} data-sealed={v?.seal && !v.seal.revoked_at ? 1 : 0}>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <nav className="lv-nav" aria-label="تنقّل"><Link href="/me" className="lv-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/line" className="lv-link"><Icon name="edit" size={14} /> سطري</Link><Link href="/me/grad" className="lv-link"><Icon name="award" size={14} /> يوم تخرّجي</Link><Link href="/miaar" className="lv-link"><Icon name="compass" size={14} /> مِعيار</Link></nav>
-    <header className="lv-head"><span className="pt-kicker"><Icon name="school" size={14} /> {d?.names.official_ar || 'صفحة المستوى — بكلمات المتدرّب'}</span><h1>🪜 {d?.names.title || 'بكلماتي عبر المستوى'} <small>{d?.names.sub || 'ما كتبتُه وقلتُه في هذا المستوى — لا ما كُتب عنّي'}</small></h1>
+    <header className="lv-head"><span className="pt-kicker"><Icon name="school" size={14} /> {d?.names.official_ar || 'صفحة المستوى — بكلمات المشارك'}</span><h1>🪜 {d?.names.title || 'بكلماتي عبر المستوى'} <small>{d?.names.sub || 'ما كتبتُه وقلتُه في هذا المستوى — لا ما كُتب عنّي'}</small></h1>
       <p>في الأسبوع الأخير من كل مستوى تُفتح لك صفحة تجمع ما كتبتَه وقلتَه أنت فيه: سطور أيامك، سطور تطبيقك في موقعك، التزامك «حتى نلتقي» وهل أوفيتَ به، ونصّك وصوتك في اختبار نهاية المستوى — كما هي، بلا درجة. تُبقي ما تشاء، تكتب سطرًا تحمله معك، وتختمه إن شئت؛ وكلمتك تعبر معك إلى أول أسبوع في المستوى التالي.</p></header>
     {err && <p className="lv-err" role="alert" data-testid="lv-err">{err}</p>}
     {msg && <p className="lv-ok" role="status" data-testid="lv-ok">{msg}</p>}

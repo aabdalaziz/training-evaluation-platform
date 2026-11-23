@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * /lv/<ATH-LV-XXXX-XXXX> — الوجه العام لـ«صفحة المستوى — بكلمات المتدرّب» (P70): يظهر فقط إن فتحه صاحبه، وبما اختاره هو — الافتراضي سطر المستوى والأعداد.
+ * /lv/<ATH-LV-XXXX-XXXX> — الوجه العام لـ«صفحة المستوى — بكلمات المشارك» (P70): يظهر فقط إن فتحه صاحبه، وبما اختاره هو — الافتراضي سطر المستوى والأعداد.
  *  لا درجة ولا نسبة ولا قرار عبور ولا جهة. صوت صاحبه ونصّ اختباره لا يظهران أبدًا. المُبطل يُقال عنه «أُبطلت» فورًا.
  */
 import { useEffect, useState } from 'react';
@@ -33,7 +33,7 @@ function Inner() {
       {f.line_ar && <blockquote className="pl-line" data-testid="pl-line">«{f.line_ar}»</blockquote>}
       {f.counts && <p className="pl-counts" data-testid="pl-counts">{f.counts.training_days > 0 && <span>📅 {f.counts.training_days} يوم تدريب</span>}{f.counts.day_lines > 0 && <span>✍️ {f.counts.day_lines} سطور أيام</span>}{f.counts.apply_lines > 0 && <span>🧭 {f.counts.apply_lines} سطور تطبيق</span>}{f.counts.commits > 0 && <span>🤝 {f.counts.commits_done}/{f.counts.commits} التزامات</span>}</p>}
       {f.cards.length > 0 && <section className="pl-cards" data-testid="pl-cards">{f.cards.map((c) => <article key={c.key} className={`pl-card k-${c.key}`} data-testid="pl-card" data-key={c.key}><b>{c.title_ar}</b>{c.text_ar && <p>{c.text_ar}</p>}{c.items && <ul>{c.items.map((it, i) => <li key={i}>{it.text_ar}{it.state_ar ? <small> · {it.state_ar}</small> : null}</li>)}</ul>}{c.state_ar && <small className="pl-muted">{c.state_ar}</small>}</article>)}</section>}
-      <footer className="pl-foot"><p>ما كتبه المتدرّب بيده وقاله في مستواه — لا درجة، لا نسبة، لا قرار عبور، لا ذكاء اصطناعي. يُثبت الختم أن النصّ لم يتغيّر منذ {fmt(f.sealed_at, 'medium')}. <Link href={`/verify/level?code=${encodeURIComponent(f.code)}`}>تحقّق من الرمز {f.code}</Link></p></footer>
+      <footer className="pl-foot"><p>ما كتبه المشارك بيده وقاله في مستواه — لا درجة، لا نسبة، لا قرار عبور، لا ذكاء اصطناعي. يُثبت الختم أن النصّ لم يتغيّر منذ {fmt(f.sealed_at, 'medium')}. <Link href={`/verify/level?code=${encodeURIComponent(f.code)}`}>تحقّق من الرمز {f.code}</Link></p></footer>
     </>}
   </main>;
 }

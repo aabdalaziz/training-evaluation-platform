@@ -47,7 +47,7 @@ export default function DetailReport({ code, fontClass }: { code: string; fontCl
         {d.items.map((it) => <tr key={it.code} className={it.result} data-testid="dr-item"><td>{it.no}</td><td><code dir="ltr">{it.code}</code></td><td>{it.skill_ar}</td><td>{it.level}</td><td><small>{it.descriptor_ar || (it.descriptor_code ? <code dir="ltr">{it.descriptor_code}</code> : '—')}</small></td>{grader ? <td className="dr-text">{it.text || '—'}</td> : null}<td><b>{it.result === 'correct' ? '✓' : it.result === 'wrong' ? '✗' : '○'}</b> {it.result_ar}</td><td>{sec(it.seconds)}</td></tr>)}
       </tbody></table>
       <p className="dr-note">{d.note_ar} الزمن تقريبي من فروق أوقات الإجابة. هذا التقرير لا يغيّر النتيجة ولا الدرجة — هو مرآة لما جرى في الجلسة.</p>
-      <footer className="dr-foot">مِعيار — من أَثَر · بوابة أَثَر · © 2026 د. أحمد محمد عبدالعزيز بدوي</footer>
+      <footer className="dr-foot">مِعيار — من أَثَر · بوّابة أَثَر · © 2026 د. أحمد محمد عبدالعزيز بدوي</footer>
     </article>}
   </div>;
 }

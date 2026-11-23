@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * أَثَر في الجيب (P19) — «بطاقة القدرة»: بطاقة بحجم الشاشة تُعرض في المقابلة أو عند بوابة الجهة بلا اتصال
+ * أَثَر في الجيب (P19) — «بطاقة القدرة»: بطاقة بحجم الشاشة تُعرض في المقابلة أو عند بوّابة الجهة بلا اتصال
  *  الاسم · أعلى 3 مستويات (المعتمَد بشريًا أولًا) · QR لرابط التحقق المستقل للقطة الموقَّعة · بصمة مفتاح أَثَر
  *  البيانات من حزمة الجيب (/api/pocket?view=bundle) — يخزّنها sw.js فتعمل بلا اتصال، مع سطر صدق صريح عن عمر النسخة
  *  حفظ PNG للمعرض (SVG → Canvas) · مشاركة عبر Web Share إن وُجد
@@ -32,7 +32,7 @@ function Inner() {
     <main className="pt-main" dir={ar ? 'rtl' : 'ltr'} style={{ maxWidth: 720, margin: '0 auto', padding: '18px 16px 96px' }}>
       <style dangerouslySetInnerHTML={{ __html: `.cd-wrap{background:#22101F;border-radius:24px;padding:14px;display:grid;place-items:center}.cd-wrap svg{width:100%;height:auto;max-width:600px;border-radius:20px}.cd-acts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.cd-line{font-size:13px;color:#5C4858;line-height:1.8}` }} />
       <h1 style={{ color: '#3A1F36', fontSize: 22, margin: '0 0 4px' }}>{ar ? 'بطاقة قدرتي' : 'My capability card'}</h1>
-      <p className="pt-muted" style={{ marginTop: 0 }}>{ar ? 'أرِها في المقابلة أو عند بوابة الجهة — من يمسحها يتحقق مستقلًا من توقيع أَثَر دون أن يدخل أَثَر.' : 'Show it at an interview — scanning verifies Athar’s signature independently.'}</p>
+      <p className="pt-muted" style={{ marginTop: 0 }}>{ar ? 'أرِها في المقابلة أو عند بوّابة الجهة — من يمسحها يتحقق مستقلًا من توقيع أَثَر دون أن يدخل أَثَر.' : 'Show it at an interview — scanning verifies Athar’s signature independently.'}</p>
       {tok === '' && <div className="pt-box">{ar ? 'سجّل الدخول لعرض بطاقتك.' : 'Sign in to see your card.'} <Link href="/login">{ar ? 'تسجيل الدخول' : 'Sign in'}</Link></div>}
       {tok && !b && status > 0 && <div className="pt-box" data-testid="card-none">{status === 503 ? (ar ? 'لا نسخة محلية بعد — افتح هذه الصفحة مرة مع اتصال وستبقى في جيبك.' : 'No local copy yet — open once online.') : (ar ? 'تعذّر تحميل البطاقة.' : 'Could not load.')}</div>}
       {card && <>

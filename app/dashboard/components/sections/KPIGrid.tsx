@@ -21,7 +21,7 @@ export default function KPIGrid() {
       />
 
       <StatCard
-        title="المدربون"
+        title="المدرّبون"
         value={42}
         subtitle="Trainers"
         icon="👨‍🏫"
@@ -30,7 +30,7 @@ export default function KPIGrid() {
       />
 
       <StatCard
-        title="المتدربون"
+        title="المشاركون"
         value={1823}
         subtitle="Students"
         icon="👨‍🎓"

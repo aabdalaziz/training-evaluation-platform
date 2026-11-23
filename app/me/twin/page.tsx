@@ -80,7 +80,7 @@ function Inner() {
   return (
     <main className="pt-main tw">
       <section className="pt-pagehead tw-head"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <Link href="/me">{ar ? 'بوابة المتدرب' : 'Student portal'}</Link> / <span>{ar ? 'توأمي المهاري' : 'My skills twin'}</span></div>
+        <div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <Link href="/me">{ar ? 'بوّابة المتعلّم' : 'Student portal'}</Link> / <span>{ar ? 'توأمي المهاري' : 'My skills twin'}</span></div>
         <h1>{ar ? 'توأمي المهاري' : 'My Skills Digital Twin'}</h1>
         <p>{ar ? 'ملفك المهاري كان صورة ثابتة؛ التوأم نموذج حيّ: يعرف متى تصدأ كل مهارة إن توقفت، وأين ستكون بعد 90 يومًا، وما أرخص مسار إلى المستوى الذي تريده. حساب شفاف من أدلتك الحقيقية — بلا نموذج لغوي، وبياناتك ملكك: تصدّرها أو تمحوها متى شئت.' : 'Your profile was a snapshot; the twin is a living model: when each skill rusts if you stop, where you will be in 90 days, and the cheapest path to the level you want. Transparent math over your real evidence — no language model — and the data is yours to export or erase.'}</p>
         {user && twins.length > 0 && <div className="tw-kpis"><span><b>{pulse}%</b> {ar ? 'نبض التوأم' : 'twin pulse'}</span><span className="bright"><b>{counts.bright}</b> {ar ? 'متوهّجة' : 'bright'}</span><span className="fading"><b>{counts.fading}</b> {ar ? 'تخفت' : 'fading'}</span><span className="rusty"><b>{counts.rusty}</b> {ar ? 'صدئة' : 'rusty'}</span><span><b>{twins.filter(x => x.approved).length}</b> {ar ? 'معتمدة' : 'approved'}</span></div>}

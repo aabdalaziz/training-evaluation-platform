@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /me/pair — «عهدان متقابلان — خطوة لك وخطوة لي» (P29 العهد المتقابل): خمس حركات في صفحة واحدة —
- *  من دائرتي (دعوة بالبريد؛ الردّ واحد لا يكشف عضوية أحد) → خطوة أطلبها منك (كلٌّ يقترح لصاحبه من خطوات تشهدها المنصة) → توقيعان (وثيقة ATH-MP واحدة بحاملَين)
+ *  من دائرتي (دعوة بالبريد؛ الردّ واحد لا يكشف عضوية أحد) → خطوة أطلبها منك (كلٌّ يقترح لصاحبه من خطوات تشهدها البوّابة) → توقيعان (وثيقة ATH-MP واحدة بحاملَين)
  *  → أين نحن من عهدنا (دربي كاملًا · حالة خطوة صاحبي فقط · مرآة مشتركة بلا حكم) → ما وعدنا بعضَنا / ما وقع (كلمات صاحبي تُفتح بعد كلماتي → نجدّد أو نطوي).
  *  لا ذكاء اصطناعي بين الإنسانين؛ الكلمات لهما.
  *  P30: تبويب «مع جهتي» (?with=org) — عهد الممارس وجهته عبر مكوّن OrgPair.
@@ -30,7 +30,7 @@ const STATUS_AR: Record<string, string> = { renewed: 'جُدّد', closed: 'طُ
 /** الحركات الخمس — معاينة تُفتح بالنقر على الرقم (قبل الأهلية وبعدها) */
 const MOVES: { title: string; what: string; see: string }[] = [
   { title: 'من دائرتي', what: 'تدعو زميلًا من مجلس تشاركانه أو من جهتك — ببريده الذي يستخدمه في أَثَر — وتكتب له «لماذا أنت» بكلماتك.', see: 'الردّ واحد دائمًا ولا يكشف عضوية أحد؛ إن لم يكن في دائرتك أو لم تسمح رحلته انقضت الدعوة بصمت.' },
-  { title: 'خطوة أطلبها منك', what: 'بعد القبول يقترح كلٌّ منكما خطوةً لصاحبه من خطوات تشهدها المنصة: مجلس أقران · مهمة من قلب العمل · كل يوم مهارة · مستوى معتمد · شهادة قرين.', see: 'المنصة تقترح وأنت تختار أو تكتب؛ ولصاحبك أن يقول «اطلب مني غيرها» مرةً واحدة.' },
+  { title: 'خطوة أطلبها منك', what: 'بعد القبول يقترح كلٌّ منكما خطوةً لصاحبه من خطوات تشهدها البوّابة: مجلس أقران · مهمة من قلب العمل · كل يوم مهارة · مستوى معتمد · شهادة قرين.', see: 'البوّابة تقترح وأنت تختار أو تكتب؛ ولصاحبك أن يقول «اطلب مني غيرها» مرةً واحدة.' },
   { title: 'توقيعان', what: 'وثيقة واحدة بحاملَين (ATH-MP) تحمل خطوتيكما، تُوقَّع بمفتاح أَثَر حين يوقّع الثاني.', see: 'تُتحقَّق علنًا من رمزها بلا كشف كلمات «لماذا» — وتظهر في رحلتيكما ومحفظتيكما.' },
   { title: 'أين نحن من عهدنا', what: 'دربك كاملًا بتفاصيله، وحالة خطوة صاحبك فقط (تمّت أم لا) — ومرآة مشتركة تُقرأ بلا حكم.', see: 'في منتصف السنة تذكير هادئ، وحين تقع خطوة صاحبك يصلك «خطوة صاحبك وقعت».' },
   { title: 'ما وعدنا / ما وقع', what: 'بعد سنة يكتب كلٌّ منكما ما وقع بكلماته؛ وكلمات صاحبك تُفتح بعد كلماتك.', see: 'ثم تقرّران معًا: نجدّد عهدًا جديدًا، أو نطوي هذا بسلام — والوثيقة تبقى شاهدة.' },
@@ -127,7 +127,7 @@ function Inner() {
                 <h3>ما أطلبه من {p.partner_name}</h3>
                 {ptStep ? (<><div className="pp-stepcard"><span className="pp-kind"><Icon name={KIND_ICON[ptStep.kind] || 'flag'} size={13} /> {d.rules.kinds_ar[ptStep.kind] || ptStep.kind}</span><b>«{ptStep.title_ar}»</b><small>{ptStep.why_ar}</small></div>
                   <p className="pp-muted">{ptSigned ? <><Icon name="check" size={12} /> وقّع {p.partner_name}.</> : `ننتظر توقيع ${p.partner_name} — أو طلبه غيرها (مرة واحدة).`}</p></>)
-                : !p.options?.length ? (<><p className="pp-muted">المنصة تقترح من فصول {p.partner_name} ثلاث خطوات تشهدها هي — وأنت تختار وتكتب لماذا. لا تُطلب خطوة لا تشهدها المنصة.</p><button className="pt-btn" disabled={!!busy} data-testid="pp-suggest" onClick={() => act({ action: 'suggest' })}><Icon name="compass" size={14} /> خطوات يمكن أن أطلبها</button></>)
+                : !p.options?.length ? (<><p className="pp-muted">البوّابة تقترح من فصول {p.partner_name} ثلاث خطوات تشهدها هي — وأنت تختار وتكتب لماذا. لا تُطلب خطوة لا تشهدها البوّابة.</p><button className="pt-btn" disabled={!!busy} data-testid="pp-suggest" onClick={() => act({ action: 'suggest' })}><Icon name="compass" size={14} /> خطوات يمكن أن أطلبها</button></>)
                 : (<>
                   <div className="pp-opts">{p.options.map((op, i) => (<label key={i} className={`pp-opt ${pick === i ? 'on' : ''}`} data-testid="pp-opt"><input type="radio" name="opt" checked={pick === i} onChange={() => { setPick(i); setPtitle(op.title_ar); }} /><span className="pp-kind"><Icon name={KIND_ICON[op.kind] || 'flag'} size={13} /> {d.rules.kinds_ar[op.kind] || op.kind}</span><b>{op.title_ar}</b></label>))}</div>
                   {pick >= 0 && (<>

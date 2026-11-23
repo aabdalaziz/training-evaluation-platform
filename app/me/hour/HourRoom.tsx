@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P73 «ساعة أَثَر» — غرفة الساعة (تُحمَّل ديناميكيًا بلا SSR) — صفحة واحدة للمتدرّب والأستاذ بصلاحيات مختلفة
+ * P73 «ساعة أَثَر» — غرفة الساعة (تُحمَّل ديناميكيًا بلا SSR) — صفحة واحدة للمشارك والأستاذ بصلاحيات مختلفة
  *  /me/hour                      → شُعبي: بطاقة لكل شعبة (الطور الآن · الموعد · سطر آخر ساعة)
  *  /me/hour?classroom=<id>       → الغرفة بالترتيب: 1 «ما كتبناه هذا الأسبوع» (k ≥ 5 · أحمله معي) → 2 «دقيقة الصمت ثم كلمة واحدة» (مؤقّت 60 ث · سحابة حيّة)
  *                                  → 3 «سطر ساعتنا» (اقتراح · تصويت بلمسة لغيري) → 4 الختم (الأستاذ) → «الساعة في البيت» لمن غاب (24 ساعة)
@@ -108,7 +108,7 @@ export default function HourRoom() {
         {!screen && canW && !v.my_word && <div className="hr-sil">{silence === null ? <button type="button" className="hr-btn ghost" onClick={startSilence}>ابدأ دقيقة الصمت</button> : silence > 0 ? <b className="hr-sil-left" data-testid="hr-silence-left">{silence}</b> : <span className="hr-muted">انتهت الدقيقة — كلمة واحدة عن أسبوعك:</span>}</div>}
         {screen && ph === 'open' && !v.cloud.shown && <p className="hr-screen-cue">دقيقة صمت… ثم كلمة واحدة على جوّالك</p>}
         {!screen && canW && !v.my_word && (silence === 0 || silence === null) && <form className="hr-form" onSubmit={(e) => { e.preventDefault(); if (word.trim()) void act({ action: 'word', text: word }, 'كلمتك في السحابة.').then((j) => { if (j) setWord(''); }); }}>
-          <input className="hr-input" value={word} onChange={(e) => setWord(e.target.value)} maxLength={v.limits.wordMax} placeholder="كلمة واحدة" data-testid="hr-word-input" aria-label="كلمة واحدة عن أسبوعك" /><button type="submit" className="hr-btn" disabled={busy || !word.trim()} data-testid="hr-word-send">أرسل</button></form>}
+          <input className="hr-input" value={word} onChange={(e) => setWord(e.target.value)} maxLength={v.limits.wordMax} placeholder="كلمة واحدة" data-testid="hr-word-input" aria-label="كلمة واحدة عن أسبوعك" /><button type="submit" className="hr-btn" disabled={busy || !word.trim()} data-testid="hr-word-send">إرسال</button></form>}
         {v.my_word && !screen && <p className="hr-my" data-testid="hr-my-word">كلمتي: <b>{v.my_word}</b></p>}
         <p className="hr-muted">{v.cloud.head_ar}</p>
         {v.cloud.shown ? <div className="hr-cloud" data-testid="hr-cloud">{v.cloud.items.map((c) => <span key={c.word} data-testid="hr-cloud-word" data-n={c.n} style={{ fontSize: `${Math.min(screen ? 72 : 34, (screen ? 22 : 15) + c.n * (screen ? 10 : 5))}px` }}>{c.word}{c.n > 1 && <i>{c.n}</i>}</span>)}</div> : <p className="hr-below" data-testid="hr-cloud-below">تظهر السحابة حين يكتب خمسة.</p>}
@@ -128,12 +128,12 @@ export default function HourRoom() {
           {v.seal.voice ? <>
             <button type="button" className="hr-btn gold" data-testid="hr-voice-play" onClick={() => play(v.seal!.voice_url, v.seal!.id)}>{playing && playUrl ? '🔊 يُقرأ الآن…' : `▶️ ${P74_NAMES_AR.voice} · ${v.seal.voice.sec} ث`}</button>
             <small data-testid="hr-voice-who">{v.seal.voice.mine ? 'هذه قراءتك — لزملائك وأستاذك داخل الشعبة فقط' : 'قرأه واحدٌ منّا — بلا اسم'}</small>
-            {!screen && (v.seal.voice.mine || v.role === 'instructor') && <button type="button" className="hr-btn sm ghost" disabled={busy} data-testid="hr-voice-del" onClick={() => { if (confirm(v.seal!.voice!.mine ? 'تُحذف قراءتك فورًا ولا تُستعاد. نتابع؟' : 'تُحذف قراءة المتدرّب فورًا (بقرار الأستاذ). نتابع؟')) void act({ action: 'voice_delete', seal_id: v.seal!.id }, v.seal!.voice!.mine ? 'حُذفت قراءتك.' : 'حُذفت القراءة.'); }}>{v.seal.voice.mine ? '🗑️ احذف قراءتي' : '🗑️ احذف القراءة'}</button>}
+            {!screen && (v.seal.voice.mine || v.role === 'instructor') && <button type="button" className="hr-btn sm ghost" disabled={busy} data-testid="hr-voice-del" onClick={() => { if (confirm(v.seal!.voice!.mine ? 'تُحذف قراءتك فورًا ولا تُستعاد. نتابع؟' : 'تُحذف قراءة المشارك فورًا (بقرار الأستاذ). نتابع؟')) void act({ action: 'voice_delete', seal_id: v.seal!.id }, v.seal!.voice!.mine ? 'حُذفت قراءتك.' : 'حُذفت القراءة.'); }}>{v.seal.voice.mine ? '🗑️ احذف قراءتي' : '🗑️ احذف القراءة'}</button>}
           </> : !screen && v.can_voice && (ph === 'open' || ph === 'home') && <>
             {!rec && <button type="button" className="hr-btn ghost light" data-testid="hr-voice-btn" onClick={() => setRec(true)}>🎙️ {P74_NAMES_AR.voice_btn}</button>}
             {rec && <div className="hr-voice-rec"><p className="hr-consent" data-testid="hr-voice-consent">{P74_NAMES_AR.consent}</p><VoiceRecorder ar maxSec={v.voice_limits.sec} hint="اقرأ سطر شعبتنا بصوتك — قراءة واحدة، لا تعليق ولا إضافة" sendLabel="أرسل قراءتي" testid="hr-voice-rec" onSend={onVoice} onCancel={() => setRec(false)} /></div>}
           </>}
-          {!v.seal.voice && screen && <small className="hr-muted">لم يقرأه أحد بعد — «بصوتِ واحدٍ منّا» من جوّال متدرّب</small>}
+          {!v.seal.voice && screen && <small className="hr-muted">لم يقرأه أحد بعد — «بصوتِ واحدٍ منّا» من جوّال مشارك</small>}
           {playUrl && <audio ref={audioRef} src={playUrl} controls={screen} preload="auto" onEnded={() => setPlaying(false)} onPause={() => setPlaying(false)} onPlay={() => setPlaying(true)} data-testid="hr-voice-audio" style={{ width: '100%', marginTop: 8 }} />}
         </div>}
         {!screen && v.role === 'instructor' && <label className="hr-check light" data-testid="hr-seal-public-toggle"><input type="checkbox" checked={v.seal.public} disabled={busy} onChange={(e) => void act({ action: 'seal_public', seal_id: v.seal!.id, public: e.target.checked }, e.target.checked ? 'يجوز ظهور السطر في «سمعناكم».' : 'أُخرج السطر من «سمعناكم».')} /> {P74_NAMES_AR.public_label}</label>}

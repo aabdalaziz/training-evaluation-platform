@@ -7,7 +7,7 @@ type ScoreItem = {
 
 const scores: ScoreItem[] = [
   { title: 'الجودة التعليمية', score: 96 },
-  { title: 'رضا المتدربين', score: 94 },
+  { title: 'رضا المشاركين', score: 94 },
   { title: 'الحضور', score: 93 },
   { title: 'استكمال التقييمات', score: 88 },
 ];

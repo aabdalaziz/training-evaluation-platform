@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * «بوابة الجهة» — م7 «عُبور للجهات»: ما يراه منسّق الجهة الطالبة برابطه السرّي (قراءة فقط، يتحدّث كل 30 ث):
+ * «بوّابة الجهة» — م7 «عُبور للجهات»: ما يراه منسّق الجهة الطالبة برابطه السرّي (قراءة فقط، يتحدّث كل 30 ث):
  *  العدّادات · جدول طلابه (الحكم · الكلّي · المهارات الخمس · الشهادة) · «تقرير الجهة» A4 (توزيع · أضعف محورين · المعيار المرجعي · توصية) · CSV · «ختم المراقب».
  *  لا يرى بنودًا ولا مفاتيح ولا طلاب جهة أخرى. الرابط يُبطل من لوحة الطاقم.
  *  م9: «خريطة المنهج» للجهة (حرارة الوحدات بلا أسماء · وحدات كل طالب · جلسات التعويض وأثرها) في اللوحة والتقرير A4 وCSV.
@@ -39,12 +39,12 @@ export default function ClientBoard({ token, fontClass = '' }: { token: string; 
     /* م9: الوحدات (خريطة المنهج) + جلسات التعويض وأثرها — مجاميع بلا أسماء */
     const un = d.units; const unitRows = (un?.units || []).map((x: any) => `<tr><td>${esc(x.code)}</td><td>${esc(x.title_ar)}</td><td>${x.percent}%</td><td>${esc(x.state_ar)}</td></tr>`).join('');
     const sessRows = (un?.sessions || []).map((x: any) => `<tr><td>${esc(dt(x.starts_at))}</td><td>${esc(x.title_ar)}</td><td>${esc(x.units.join(' · '))}</td><td>${x.duration_min} د</td><td>${x.joined}</td><td>${x.effect.map((e: any) => esc(e.text)).join('<br>') || '—'}</td></tr>`).join('');
-    const unitsHtml = unitRows ? `<h2>خريطة المنهج — أين ضعفت المجموعة؟</h2><table><thead><tr><th>الوحدة</th><th>العنوان</th><th>نسبة المجموعة</th><th>الحالة</th></tr></thead><tbody>${unitRows}</tbody></table>${un.scoped ? `<p><small>نطاق الدعوة: ما دُرّس فقط (${esc(un.scope.join(' · '))})</small></p>` : ''}${sessRows ? `<h2>جلسات التعويض وأثرها</h2><table><thead><tr><th>الموعد</th><th>الجلسة</th><th>الوحدات</th><th>المدّة</th><th>انضمّ</th><th>الأثر</th></tr></thead><tbody>${sessRows}</tbody></table>` : ''}<p><small>${esc(un.note_ar)}</small></p>` : '';
+    const unitsHtml = unitRows ? `<h2>خريطة المنهج — أين ضعفت المجموعة؟</h2><table><thead><tr><th>الوحدة</th><th>العنوان</th><th>نسبة الشعبة</th><th>الحالة</th></tr></thead><tbody>${unitRows}</tbody></table>${un.scoped ? `<p><small>نطاق الدعوة: ما دُرّس فقط (${esc(un.scope.join(' · '))})</small></p>` : ''}${sessRows ? `<h2>جلسات التعويض وأثرها</h2><table><thead><tr><th>الموعد</th><th>الجلسة</th><th>الوحدات</th><th>المدّة</th><th>انضمّ</th><th>الأثر</th></tr></thead><tbody>${sessRows}</tbody></table>` : ''}<p><small>${esc(un.note_ar)}</small></p>` : '';
     const grades = Object.entries(rp.grades).map(([g, n]) => `<li>${esc(g)}: <b>${n}</b></li>`).join('');
     w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير الجهة — ${esc(d.invite.client_name)}</title><style>@page{size:A4;margin:14mm}body{font-family:Tahoma,Arial,sans-serif;color:#3A1F36;line-height:1.7}h1{font-size:22px;margin:0}h2{font-size:16px;margin:18px 0 6px;color:#D4614A}.k{color:#D9A866;font-weight:800;font-size:13px}table{width:100%;border-collapse:collapse;font-size:13px}td,th{border:1px solid #EADFD6;padding:6px 8px;text-align:start}th{background:#FBF4EE}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.g div{border:1px solid #EADFD6;border-radius:8px;padding:8px;text-align:center}.g b{display:block;font-size:22px}.rec{background:#FBF4EE;border:1px dashed #D9A866;border-radius:8px;padding:8px 12px}.f{margin-top:18px;font-size:11px;color:#8E7F8A;border-top:1px solid #EADFD6;padding-top:8px}</style></head><body>
 <p class="k">${esc(d.service.ar)} · ${esc(d.service.en)}</p><h1>تقرير الجهة — ${esc(d.invite.client_name)}</h1><p>${esc(d.official.ar)} · المستوى <b>${esc(rp.level)}</b> · جدول المواصفات ${esc(rp.spec.version)} · الدعوة ${esc(d.invite.code)} · ${esc(dt(rp.generated_at))}</p>
 <div class="g"><div><small>مدعو/ظهر</small><b>${rp.summary.invited}</b></div><div><small>أنهى</small><b>${rp.summary.finished}</b></div><div><small>اجتاز</small><b>${rp.summary.passed}</b></div><div><small>مشروط</small><b>${rp.summary.conditional}</b></div><div><small>لم يجتز</small><b>${rp.summary.failed}</b></div><div><small>قيد التصحيح</small><b>${rp.summary.pending}</b></div><div><small>متوسط الكلّي</small><b>${rp.summary.avg ?? '—'}${rp.summary.avg !== null ? '%' : ''}</b></div><div><small>المعيار المرجعي (أَثَر)</small><b>${rp.benchmark.avg ?? '—'}${rp.benchmark.avg !== null ? '%' : ''}</b><small>${rp.benchmark.avg !== null ? `ن=${rp.benchmark.n}` : 'عيّنة < 30'}</small></div></div>
-<h2>المحاور</h2><table><thead><tr><th>المحور</th><th>متوسط المجموعة</th><th>دون 50%</th><th>المعيار المرجعي</th><th>الفارق</th></tr></thead><tbody>${skills}</tbody></table>
+<h2>المحاور</h2><table><thead><tr><th>المحور</th><th>متوسط الشعبة</th><th>دون 50%</th><th>المعيار المرجعي</th><th>الفارق</th></tr></thead><tbody>${skills}</tbody></table>
 <h2>التقديرات</h2><ul>${grades || '<li>لا أحكام نهائية بعد</li>'}</ul>
 ${unitsHtml}${d.practice?.text_ar ? `<h2>مِران — تدريب ما بعد الحكم</h2><p>${esc(d.practice.text_ar)}${d.practice.request ? ` · طلبت الجهة مِران في ${esc(dt(d.practice.request.at))}${d.practice.request.approved_after ? ` واعتُمدت ${d.practice.request.approved_after} خطّة` : ''}` : ''} — مِران تدريب لا اختبار؛ لا يغيّر النتائج الرسمية.</p>` : ''}<h2>التوصية</h2><div class="rec">${rp.recommendations_ar.map((r: string) => `<p>${esc(r)}</p>`).join('')}</div>
 <p class="f">${d.order?.proctor_signed_at ? `أُدّي بحضور مراقب — ${esc(d.order.proctor_name)} · ` : ''}الحكم المركّب: 60% استقبالي · 20% كتابة · 20% تحدّث — اجتياز ≥ 60% ولا مهارة دون 50%. التصحيح البشري بمصحّحين معايَرين. البنود ومفاتيحها لا تُشارك. © 2026 مِعيار — من أَثَر · د. أحمد محمد عبدالعزيز بدوي.</p></body></html>`);
@@ -59,7 +59,7 @@ ${unitsHtml}${d.practice?.text_ar ? `<h2>مِران — تدريب ما بعد �
       {d && <>
         <header className="cb-head" data-testid="cb-head">
           <p className="cb-k">{d.service.ar} · {d.service.en}</p>
-          <h1>بوابة الجهة — {d.invite.client_name}</h1>
+          <h1>بوّابة الجهة — {d.invite.client_name}</h1>
           <p className="cb-sub">{d.official.ar} · المستوى <b>{d.invite.level}</b> · الدعوة <code dir="ltr">{d.invite.code}</code> · <span className={`cb-pill ${d.invite.status === 'closed' ? 'after' : d.window}`}>{d.invite.status === 'closed' ? 'أُغلقت' : d.window === 'before' ? 'لم تُفتح بعد' : d.window === 'open' ? 'مفتوحة الآن' : 'انتهت'}</span>{d.order && <> · حالة الخدمة: <b>{d.order.status_ar}</b></>}{d.invite.has_pin && <> · <span className="cb-pill">رمز قاعة</span></>}</p>
           <div className="cb-actions">
             <a className="cb-btn" href={`/api/miaar/client?t=${encodeURIComponent(token)}&csv=1`} data-testid="cb-csv">تصدير CSV</a>
@@ -124,7 +124,7 @@ ${unitsHtml}${d.practice?.text_ar ? `<h2>مِران — تدريب ما بعد �
             : <div className="cb-signrow"><label>اسم المراقب الذي حضر القاعة<input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} data-testid="cb-sign-name" /></label><button type="button" className="cb-btn" disabled={name.trim().length < 3} onClick={() => void sign()} data-testid="cb-sign-btn">توقيع كشف الحضور</button><small>بالتوقيع تؤكّد الجهة أن الطلاب أدّوا الاختبار في قاعة بحضور مراقب — وهذا يظهر على شهاداتهم.</small></div>}
           {msg && <p className="cb-ok" role="status">{msg}</p>}
         </section>
-        <p className="cb-foot">هذه البوابة للجهة الطالبة فقط · لا تُعرض بنود الاختبار ولا مفاتيحه · يتحدّث كل 30 ثانية · © 2026 مِعيار — من أَثَر.</p>
+        <p className="cb-foot">هذه البوّابة للجهة الطالبة فقط · لا تُعرض بنود الاختبار ولا مفاتيحه · يتحدّث كل 30 ثانية · © 2026 مِعيار — من أَثَر.</p>
       </>}
     </div>
   </main>;

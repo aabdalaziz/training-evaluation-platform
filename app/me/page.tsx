@@ -1,6 +1,6 @@
 'use client';
 /**
- * /me — بوابة المتدرب
+ * /me — بوّابة المتعلّم
  * دخول برابط آمن (OTP) بالبريد، ثم: المهام المطلوبة الآن، برامجي (حضور · تقييمات · قياس الأثر · متابعة الأثر)، شهاداتي.
  * البيانات من RPC واحدة: me_portal() (تعتمد على بريد المستخدم المسجّل)
  */
@@ -65,13 +65,13 @@ export default function MePage() {
   const shell = (child: React.ReactNode) => <main className="me" dir="rtl"><style>{CSS}</style><div className="me-wrap">{child}</div></main>;
   const head = (
     <header className="me-card me-head">
-      <div className="me-brand"><a href="/" className="me-brandlink"><AtharMark size={36} /><span><b>أَثَر</b><small>بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ</small></span></a><nav className="me-quick"><a href="/me/skills"><Icon name="target" size={14} /> ملفي المهاري</a><a href="/me/twin"><Icon name="star" size={14} /> توأمي</a><a href="/live"><Icon name="play" size={14} /> الجلسات</a><a href="/resources"><Icon name="folder" size={14} /> الحقائب</a><a href="/programs"><Icon name="programs" size={14} /> البرامج</a><a href="/org"><Icon name="users" size={14} /> بوابة الجهات</a></nav></div>
-      <div className="me-kicker"><Icon name="school" size={14} /> بوابة المتدرب — حسابك الموحّد في أَثَر</div>
+      <div className="me-brand"><a href="/" className="me-brandlink"><AtharMark size={36} /><span><b>أَثَر</b><small>بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ</small></span></a><nav className="me-quick"><a href="/me/skills"><Icon name="target" size={14} /> ملفي المهاري</a><a href="/me/twin"><Icon name="star" size={14} /> توأمي</a><a href="/live"><Icon name="play" size={14} /> الجلسات</a><a href="/resources"><Icon name="folder" size={14} /> الحقائب</a><a href="/programs"><Icon name="programs" size={14} /> البرامج</a><a href="/org"><Icon name="users" size={14} /> بوّابة الجهات</a></nav></div>
+      <div className="me-kicker"><Icon name="school" size={14} /> بوّابة المتعلّم — حسابك الموحّد في أَثَر</div>
       {me ? <>
         <h1>مرحبًا، {me.name}</h1>
         <p className="me-sub">{/^\d+@[a-z0-9-]+\.id\.athar-portal\.sa$/i.test(me.email || '') ? <span data-testid="me-code-id">رقمك التدريبي <b dir="ltr">{String(me.email).split('@')[0]}</b> — لا بريد ولا اسم في حسابك (P67)</span> : <span dir="ltr">{me.email}</span>} · {me.programs.length} برنامج · {allCerts.length} شهادة{running.length ? ` · ${running.length} برنامج جارٍ` : ''}</p>
       </> : <>
-        <h1>بوابة المتدرب</h1>
+        <h1>بوّابة المتعلّم</h1>
         <p className="me-sub">كل ما يخصك في مكان واحد: التقييمات المطلوبة، تسجيل الحضور، نسبة حضورك، قياس الأثر، وشهاداتك — بالدخول ببريدك فقط، بلا كلمة مرور.</p>
       </>}
     </header>
@@ -91,7 +91,7 @@ export default function MePage() {
       <small className="me-muted"><Icon name="shield" size={12} /> الرابط صالح لفترة قصيرة ويُستخدم مرة واحدة. لا نشارك بريدك مع أي جهة.</small>
     </form>
     <section className="me-card me-help">
-      <b>هل وصلك رابط أو رمز QR من المدرب؟</b>
+      <b>هل وصلك رابط أو رمز QR من الميسّر؟</b>
       <p className="me-muted">يمكنك فتحه مباشرة دون تسجيل دخول: <a href="/evaluate/daily">التقييم اليومي</a> · <a href="/evaluate/final">التقييم النهائي</a> · <a href="/verify">التحقق من شهادة</a></p>
     </section>
   </>);

@@ -11,7 +11,7 @@ const items: PulseItem[] = [
     status: 'success',
   },
   {
-    title: 'الحضور منتظم في جميع القاعات',
+    title: 'الحضور منتظم في جميع الشُّعب',
     status: 'success',
   },
   {

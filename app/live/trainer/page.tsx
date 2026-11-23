@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — جدول المدرب: جلساتي اليوم وهذا الأسبوع عبر كل القاعات، برابط المضيف، وبدء البث وتصدير التقويم — ومنه «الميسِّر الحي» لكل جلسة (P13-ب)
+// أَثَر — جدول المدرّب: جلساتي اليوم وهذا الأسبوع عبر كل الشُّعب، برابط المضيف، وبدء البث وتصدير التقويم — ومنه «الميسِّر الحي» لكل جلسة (P13-ب)
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -61,14 +61,14 @@ function Inner() {
   return (
     <main className="pt-main tr">
       <section className="pt-pagehead"><div className="pt-wrap">
-        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/live">{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</Link> / <span>{lang === 'ar' ? 'جدول المدرب' : 'Trainer schedule'}</span></div>
-        <h1>{lang === 'ar' ? 'جدول المدرب' : 'Trainer schedule'}</h1>
-        <p>{user ? (lang === 'ar' ? `مرحبًا ${trainerName} — جلساتك اليوم وهذا الأسبوع عبر كل القاعات، برابط المضيف الخاص بك.` : `Welcome ${trainerName} — your sessions today and this week across all rooms, with your host link.`) : (lang === 'ar' ? 'سجّل الدخول ببريدك المسجّل كمدرب لعرض جدولك.' : 'Sign in with your trainer email to see your schedule.')}</p>
+        <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/live">{lang === 'ar' ? 'التعلّم المباشر' : 'Live learning'}</Link> / <span>{lang === 'ar' ? 'جدول المدرّب' : 'Trainer schedule'}</span></div>
+        <h1>{lang === 'ar' ? 'جدول المدرّب' : 'Trainer schedule'}</h1>
+        <p>{user ? (lang === 'ar' ? `مرحبًا ${trainerName} — جلساتك اليوم وهذا الأسبوع عبر كل الشُّعب، برابط المضيف الخاص بك.` : `Welcome ${trainerName} — your sessions today and this week across all rooms, with your host link.`) : (lang === 'ar' ? 'سجّل الدخول ببريدك المسجّل كمدرب لعرض جدولك.' : 'Sign in with your trainer email to see your schedule.')}</p>
       </div></section>
       <section className="pt-sec"><div className="pt-wrap">
         {!loaded && <div className="pt-empty">…</div>}
-        {loaded && !user && <div className="pt-box" style={{ maxWidth: 420 }}>{sent ? <div className="pt-alert ok">{lang === 'ar' ? 'أرسلنا رابط الدخول إلى بريدك.' : 'Sign-in link sent.'}</div> : <form onSubmit={sendLink} className="pt-form"><label>{lang === 'ar' ? 'بريد المدرب' : 'Trainer email'}<input dir="ltr" type="email" value={email} onChange={e => setEmail(e.target.value)} required /></label><button className="pt-btn" disabled={busy === 'link'}><Icon name="mail" size={15} /> {lang === 'ar' ? 'أرسل رابط الدخول' : 'Send sign-in link'}</button>{err && <div className="pt-alert err">{err}</div>}</form>}</div>}
-        {loaded && user && !staff && trainerIds.length === 0 && <div className="pt-alert err">{lang === 'ar' ? `بريدك (${user.email}) غير مرتبط بسجل مدرب. اطلب من الإدارة إضافة بريدك في بيانات المدرب.` : `Your email (${user.email}) is not linked to a trainer record. Ask the admin to add it.`}</div>}
+        {loaded && !user && <div className="pt-box" style={{ maxWidth: 420 }}>{sent ? <div className="pt-alert ok">{lang === 'ar' ? 'أرسلنا رابط الدخول إلى بريدك.' : 'Sign-in link sent.'}</div> : <form onSubmit={sendLink} className="pt-form"><label>{lang === 'ar' ? 'بريد المدرّب' : 'Trainer email'}<input dir="ltr" type="email" value={email} onChange={e => setEmail(e.target.value)} required /></label><button className="pt-btn" disabled={busy === 'link'}><Icon name="mail" size={15} /> {lang === 'ar' ? 'أرسل رابط الدخول' : 'Send sign-in link'}</button>{err && <div className="pt-alert err">{err}</div>}</form>}</div>}
+        {loaded && user && !staff && trainerIds.length === 0 && <div className="pt-alert err">{lang === 'ar' ? `بريدك (${user.email}) غير مرتبط بسجل مدرّب. اطلب من الإدارة إضافة بريدك في بيانات المدرّب.` : `Your email (${user.email}) is not linked to a trainer record. Ask the admin to add it.`}</div>}
         {loaded && user && (staff || trainerIds.length > 0) && <>
           <div className="tr-tools"><Link href="/me/day" className="pt-btn small" data-testid="tr-daybook">📒 {lang === 'ar' ? 'افتح دفتر اليوم' : 'Open day book'}</Link><span className="pt-tag">{lang === 'ar' ? `اليوم: ${wk.today.length} جلسة` : `Today: ${wk.today.length}`}</span>{staff && !trainerIds.length && <span className="pt-muted">{lang === 'ar' ? 'عرض إداري: كل جلسات اليوم (بريدك غير مرتبط بمدرب).' : 'Admin view: all sessions today.'}</span>}<button type="button" className="pt-btn ghost small" onClick={exportIcs} disabled={!rows.length}><Icon name="calendar" size={14} /> {lang === 'ar' ? 'تصدير الأسبوع إلى التقويم' : 'Export week (ICS)'}</button>{err && <span className="pt-alert err">{err}</span>}</div>
           <h2 className="tr-h2"><Icon name="calendar" size={16} /> {lang === 'ar' ? 'اليوم' : 'Today'} — <bdi>{fmtWhen(n.toISOString(), lang, { date: true, weekday: true })}</bdi></h2>

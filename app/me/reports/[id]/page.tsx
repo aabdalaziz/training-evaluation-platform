@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /me/reports/[id] — محرّر تقرير التعلّم الأسبوعي (P46 ر1): 8 أقسام + «سطر لكل متدرّب» + معاينة الطباعة */
+/** /me/reports/[id] — محرّر تقرير التعلّم الأسبوعي (P46 ر1): 8 أقسام + «سطر لكل مشارك» + معاينة الطباعة */
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PortalShell } from '../../../components/PortalShell';

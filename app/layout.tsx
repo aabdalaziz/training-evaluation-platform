@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   icons: { icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }], apple: '/icons/apple-touch-icon.png' },
 };
 
-/** بيانات منظّمة (schema.org) — تُعرّف محرّكات البحث بأن «بوابة الأثر» و«Athar Portal» أسماء بديلة للمنصّة نفسها (SEO 2026-11-15) */
+/** بيانات منظّمة (schema.org) — تُعرّف محرّكات البحث بأن «بوابة الأثر» و«Athar Portal» أسماء بديلة للبوّابة نفسها (SEO 2026-11-15) */
 export const SITE_NAME = 'أَثَر';
 export const SITE_ALT_NAMES = ['بوابة الأثر', 'بوابة أثر', 'منصة أثر', 'أثر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ', 'Athar Portal', 'Athar', 'athar-portal'];
 export function siteJsonLd(site: string) {

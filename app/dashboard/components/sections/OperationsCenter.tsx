@@ -61,7 +61,7 @@ export default function OperationsCenter() {
         />
 
         <ActionCard
-          title="إنشاء قاعة"
+          title="إنشاء شعبة"
           subtitle="Classroom"
           icon="🏫"
           color="#2F6B66"
@@ -69,7 +69,7 @@ export default function OperationsCenter() {
         />
 
         <ActionCard
-          title="إضافة مدرب"
+          title="إضافة مدرّب"
           subtitle="Trainer"
           icon="👨‍🏫"
           color="#8E4A68"

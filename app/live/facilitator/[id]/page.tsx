@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// أَثَر — «الميسِّر الحي» (P13-ب): شاشة المدرب أثناء الجلسة المباشرة — نبض الجلسة، مقترحات بضغطة واحدة، لحظات مهمة، ومحضر الأثر بعد الجلسة (يعتمده الإنسان)
+// أَثَر — «الميسِّر الحي» (P13-ب): شاشة المدرّب أثناء الجلسة المباشرة — نبض الجلسة، مقترحات بضغطة واحدة، لحظات مهمة، ومحضر الأثر بعد الجلسة (يعتمده الإنسان)
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -32,7 +32,7 @@ function Inner() {
   const loadRooms = useCallback(async (t: string) => { try { const j = await fetch(`/api/rooms?session=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()); if (j?.success) setRooms(j.rooms || []); } catch { /* ignore */ } }, [id]);
   async function openRooms(prompt?: string) { setBusy('rooms'); try { const j = await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'breakouts', session_id: id, count: roomN, minutes: roomMin, prompt: (prompt ?? roomPrompt) || undefined }) }).then(r => r.json()); if (j?.success) { setFlash(ar ? `فُتحت ${(j.rooms || []).length} غرف — ظهرت للمشاركين في صفحة الجلسة.` : `${(j.rooms || []).length} rooms opened — visible to participants on the session page.`); await loadRooms(tok); await load(tok); } else setErr(j?.error || 'x'); } catch { /* ignore */ } setBusy(''); }
   async function closeRooms() { setBusy('rooms'); for (const r of rooms.filter(x => x.status === 'open')) await fetch('/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` }, body: JSON.stringify({ action: 'close', code: r.code }) }); await loadRooms(tok); setBusy(''); }
-  // P15 — بطاقة الصف من الذاكرة الحية: ما أثبته كل متعلم (بمفتاح مجهول) · ما لم يُفحص · قناته الأقوى — بلا درجات
+  // P15 — بطاقة الصف من الذاكرة الحية: ما أثبته كل متعلّم (بمفتاح مجهول) · ما لم يُفحص · قناته الأقوى — بلا درجات
   type ClassCard = { cards: { key: string; proven: { name_ar: string; weight: number }[]; unexamined: { name_ar: string }[]; best_channel_ar: string | null; evidence: number; one_channel: boolean }[]; summary: { never: { name_ar: string; unexamined: number }[]; one_channel: number; no_evidence: number; hints: string[] }; focus: { name_ar: string; evidence: number; status: 'strong' | 'weak' | 'none' }[]; skills: { id: string; name_ar: string }[]; learners: number; note: string | null };
   const [cls, setCls] = useState<ClassCard | null>(null); const [clsOpen, setClsOpen] = useState(false);
   const loadClass = useCallback(async (t: string) => { try { const j = await fetch(`/api/loop?session=${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${t}` }, cache: 'no-store' }).then(r => r.json()); if (j?.success) setCls(j); } catch { /* ignore */ } }, [id]);
@@ -54,7 +54,7 @@ function Inner() {
     <main className="pt-main cp" dir={ar ? 'rtl' : 'ltr'}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="pt-wrap">
-        <nav className="cp-crumbs"><Link href="/live/trainer">{ar ? 'جدول المدرب' : 'Trainer schedule'}</Link> › <span>{ar ? 'الميسِّر الحي' : 'Live facilitator'}</span></nav>
+        <nav className="cp-crumbs"><Link href="/live/trainer">{ar ? 'جدول المدرّب' : 'Trainer schedule'}</Link> › <span>{ar ? 'الميسِّر الحي' : 'Live facilitator'}</span></nav>
         {err === 'login' && <div className="pt-box pt-empty">{ar ? 'سجّل الدخول كمدرب أو موظف.' : 'Sign in as trainer or staff.'} <Link className="pt-btn gold small" href="/login?next=/live/facilitator/">{ar ? 'تسجيل الدخول' : 'Sign in'}</Link></div>}
         {err && err !== 'login' && err !== 'x' && <div className="cp-err">{err}</div>}
         {d && s && p && (
@@ -80,8 +80,8 @@ function Inner() {
 
             {/* P15 — بطاقة الصف */}
             <section className="cp-class" data-testid="class-card">
-              <div className="cp-classhead"><h2><Icon name="compass" size={16} /> {ar ? 'بطاقة الصف — من الذاكرة الحية' : 'Class card — from the living memory'} <small>{ar ? 'ما أثبته كل متعلم قبل اليوم، وما لم يُفحص قط — مفاتيح مجهولة وبلا درجات' : 'What each learner has proven before today, and what was never examined — anonymous keys, no grades'}</small></h2>
-                {cls && cls.cards.length > 0 && <button type="button" className="pt-btn light small" onClick={() => setClsOpen(o => !o)} data-testid="class-toggle">{clsOpen ? (ar ? 'إخفاء المتعلمين' : 'Hide learners') : (ar ? `بطاقات المتعلمين (${cls.cards.length})` : `Learner cards (${cls.cards.length})`)}</button>}</div>
+              <div className="cp-classhead"><h2><Icon name="compass" size={16} /> {ar ? 'بطاقة الصف — من الذاكرة الحية' : 'Class card — from the living memory'} <small>{ar ? 'ما أثبته كل متعلّم قبل اليوم، وما لم يُفحص قط — مفاتيح مجهولة وبلا درجات' : 'What each learner has proven before today, and what was never examined — anonymous keys, no grades'}</small></h2>
+                {cls && cls.cards.length > 0 && <button type="button" className="pt-btn light small" onClick={() => setClsOpen(o => !o)} data-testid="class-toggle">{clsOpen ? (ar ? 'إخفاء المتعلّمين' : 'Hide learners') : (ar ? `بطاقات المتعلّمين (${cls.cards.length})` : `Learner cards (${cls.cards.length})`)}</button>}</div>
               {!cls ? <div className="cp-empty">{ar ? 'جارٍ قراءة الذاكرة…' : 'Reading memory…'}</div> : !cls.cards.length ? <div className="cp-empty">{cls.note || (ar ? 'لا دليل كافٍ بعد.' : 'Not enough evidence yet.')}</div> : (
                 <>
                   <ul className="cp-hints">{cls.summary.hints.length ? cls.summary.hints.map((h, i) => <li key={i}>{h}</li>) : <li>{ar ? 'لا دليل كافٍ بعد لتوجيه محدّد — الصف يبدأ من نقطة متقاربة.' : 'Not enough evidence for a specific hint yet.'}</li>}</ul>
@@ -121,7 +121,7 @@ function Inner() {
                   {!!d.notes.length && <ul className="cp-notes">{d.notes.map((n, i) => <li key={i}><span dir="ltr">د{n.min}</span> {n.text}</li>)}</ul>}
                 </div>
                 <div className="cp-rooms" data-testid="rooms-panel">
-                  <b><Icon name="users" size={14} /> {ar ? 'غرف أَثَر الصغيرة' : 'Athar small rooms'} <small>{ar ? 'فيديو من داخل المنصة · حتى 6 في الغرفة · يوزَّع المشاركون تلقائيًا' : 'In-platform video · up to 6 per room · auto-assigned'}</small></b>
+                  <b><Icon name="users" size={14} /> {ar ? 'غرف أَثَر الصغيرة' : 'Athar small rooms'} <small>{ar ? 'فيديو من داخل البوّابة · حتى 6 في الغرفة · يوزَّع المشاركون تلقائيًا' : 'In-platform video · up to 6 per room · auto-assigned'}</small></b>
                   <div className="cp-roomctl">
                     <label>{ar ? 'عدد الغرف' : 'Rooms'} <input type="number" min={1} max={12} value={roomN} onChange={e => setRoomN(Math.max(1, Math.min(12, Number(e.target.value) || 1)))} /></label>
                     <label>{ar ? 'الدقائق' : 'Minutes'} <input type="number" min={3} max={30} value={roomMin} onChange={e => setRoomMin(Math.max(3, Math.min(30, Number(e.target.value) || 5)))} /></label>
@@ -142,7 +142,7 @@ function Inner() {
                 {!m && <div className="cp-empty">{s.status === 'ended' ? (ar ? 'انتهت الجلسة. أنشئ المحضر: ما حدث فعلًا، ما ظهر، الفجوات، الخطوة التالية.' : 'Session ended. Create the memo.') : (ar ? 'يُنشأ المحضر بعد انتهاء الجلسة.' : 'The memo is created after the session ends.')} {s.status === 'ended' && <button type="button" className="pt-btn gold small" disabled={busy === 'memo'} onClick={makeMemo}><Icon name="doc" size={14} /> {busy === 'memo' ? (ar ? 'أكتب المحضر…' : 'Writing…') : (ar ? 'أنشئ محضر الأثر' : 'Create impact memo')}</button>}</div>}
                 {m && (
                   <article className="cp-memo">
-                    <div className="cp-memohead"><b>{m.memo.title_ar}</b><small>{m.memo.source === 'ai' ? (ar ? 'مسودة بالذكاء الاصطناعي من بيانات الجلسة' : 'AI draft from session data') : m.memo.source === 'human' ? (ar ? 'راجعه المدرب' : 'Reviewed by trainer') : (ar ? 'مسودة محلية من بيانات الجلسة' : 'Local draft')}</small></div>
+                    <div className="cp-memohead"><b>{m.memo.title_ar}</b><small>{m.memo.source === 'ai' ? (ar ? 'مسودة بالذكاء الاصطناعي من بيانات الجلسة' : 'AI draft from session data') : m.memo.source === 'human' ? (ar ? 'راجعه المدرّب' : 'Reviewed by trainer') : (ar ? 'مسودة محلية من بيانات الجلسة' : 'Local draft')}</small></div>
                     <div className="cp-att"><span><b>{m.memo.attendance.joined}</b>{ar ? 'حضروا' : 'joined'}</span><span><b>{m.memo.attendance.registered}</b>{ar ? 'مسجّل' : 'registered'}</span><span><b>{m.memo.attendance.rate}%</b>{ar ? 'نسبة' : 'rate'}</span></div>
                     <svg className="cp-curve" viewBox={`0 0 ${Math.max(1, m.memo.engagement.length) * 24} 48`} preserveAspectRatio="none" aria-label="engagement">{m.memo.engagement.map((e, i) => <rect key={i} x={i * 24 + 3} y={48 - Math.round(44 * e.responses / maxResp) - 2} width={18} height={Math.round(44 * e.responses / maxResp) + 2} rx={3} />)}</svg>
                     {m.status === 'draft' && memoEdit ? <textarea className="cp-edit big" rows={6} value={memoEdit.summary_ar} onChange={e => setMemoEdit(x => ({ ...(x as any), summary_ar: e.target.value }))} /> : <><p className="cp-sum">{m.memo.summary_ar}</p><div className="cp-readrow"><ReadAloud lang={lang} text={[m.memo.summary_ar, ...(m.memo.highlights_ar || []), ...(m.memo.gaps_ar || []), ...(m.memo.next_ar || [])].join('. ')} /></div></>}
@@ -150,7 +150,7 @@ function Inner() {
                     {!!m.memo.gaps_ar.length && <div className="cp-blk warn"><b>{ar ? 'الفجوات' : 'Gaps'}</b><ul>{m.memo.gaps_ar.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
                     {!!m.memo.next_ar.length && <div className="cp-blk"><b>{ar ? 'الخطوة التالية' : 'Next'}</b><ul>{m.memo.next_ar.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
                     {!!m.memo.moments_ar.length && <div className="cp-blk"><b>{ar ? 'لحظات مهمة' : 'Moments'}</b><ul>{m.memo.moments_ar.map((x, i) => <li key={i}>{x}</li>)}</ul></div>}
-                    {m.memo.trainer_note_ar && <p className="cp-tnote"><b>{ar ? 'كلمة المدرب:' : 'Trainer:'}</b> {m.memo.trainer_note_ar}</p>}
+                    {m.memo.trainer_note_ar && <p className="cp-tnote"><b>{ar ? 'كلمة المدرّب:' : 'Trainer:'}</b> {m.memo.trainer_note_ar}</p>}
                     {m.status === 'draft' && (
                       <div className="cp-memoacts">
                         {memoEdit ? <>

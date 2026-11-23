@@ -7,7 +7,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
     <html lang="ar" dir="rtl"><body style={{ margin: 0, fontFamily: 'system-ui, "Noto Naskh Arabic", serif', background: '#FBF4EE', color: '#3A1F36' }}>
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div role="alert" style={{ maxWidth: 560, width: '100%', background: '#fff', border: '1px solid #EADFD6', borderRadius: 18, padding: 28, boxShadow: '0 10px 30px rgba(42,22,38,.08)' }}>
-          <h1 style={{ margin: '0 0 8px', fontSize: '1.3rem' }}>{chunk ? 'صدر تحديث جديد للبوابة' : 'تعذّر عرض البوابة الآن'}</h1>
+          <h1 style={{ margin: '0 0 8px', fontSize: '1.3rem' }}>{chunk ? 'صدر تحديث جديد للبوّابة' : 'تعذّر عرض البوّابة الآن'}</h1>
           <p style={{ margin: '0 0 16px', color: '#3A1F36', lineHeight: 1.8 }}>{chunk ? 'اضغط «تحديث» لتحميل النسخة الجديدة.' : 'لم تُفقد بياناتك. جرّب التحديث؛ وإن تكرّر أرسل المُعرِّف للدعم.'}</p>
           {error?.digest ? <div style={{ fontSize: '.78rem', color: '#8E4A68', marginBottom: 14 }}>المُعرِّف: {error.digest}</div> : null}
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>

@@ -128,7 +128,7 @@ function Inner() {
             <h4>{ar ? 'المعيار — معلن قبل البدء' : 'The standard — published up front'}</h4>
             <ol className="ms-rubric">{m.rubric.map((c, i) => <li key={i}><span>{c.c}</span><i title={ar ? `الوزن ${c.w}` : `weight ${c.w}`}>{'●'.repeat(c.w)}</i></li>)}</ol>
             {!!v?.skills?.length && <div className="pt-chips ms-sk">{v.skills.map(s => <span key={s.id} className="ms-skill">{lang === 'en' && s.name_en ? s.name_en : s.name_ar}</span>)}</div>}
-            <small className="ms-priv">{ar ? 'الدليل يراه مشرفك وفريق أَثَر فقط. لا يُنشر ولا يُستخدم لتدريب نماذج. لا تصوّر وجوه طلاب أو بيانات شخصية.' : 'Only your supervisor and the Athar team see this evidence. Never photograph students’ faces or personal data.'}</small>
+            <small className="ms-priv">{ar ? 'الدليل يراه مشرفك وفريق أَثَر فقط. لا يُنشر ولا يُستخدم لتدريب نماذج. لا تصوّر وجوه مشاركين أو بيانات شخصية.' : 'Only your supervisor and the Athar team see this evidence. Never photograph students’ faces or personal data.'}</small>
           </aside>
 
           <div className="pt-box ms-capture">

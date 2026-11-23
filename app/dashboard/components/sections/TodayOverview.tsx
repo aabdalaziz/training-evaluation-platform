@@ -53,7 +53,7 @@ export default function TodayOverview() {
           fontSize: 28,
         }}
       >
-        ☀️ اليوم في البوابة
+        ☀️ اليوم في البوّابة
       </h2>
 
       <p

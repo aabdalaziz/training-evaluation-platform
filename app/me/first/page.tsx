@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /me/first?program=<id> — «أول يوم — قال من سبقك» (P64 · الاسم الرسمي: صفحة اليوم الأول للمتدرّب) — داخل صدفة البوابة؛ كلمة أَثَر ثم سطور من سبقك ثم سطرك «لماذا جئتُ» */
+/** /me/first?program=<id> — «أول يوم — قال من سبقك» (P64 · الاسم الرسمي: صفحة اليوم الأول للمشارك) — داخل صدفة البوّابة؛ كلمة أَثَر ثم سطور من سبقك ثم سطرك «لماذا جئتُ» */
 import dynamic from 'next/dynamic';
 import { PortalShell } from '../../components/PortalShell';
 

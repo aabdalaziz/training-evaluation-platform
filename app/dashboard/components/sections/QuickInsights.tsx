@@ -9,13 +9,13 @@ const insights = [
   },
   {
     icon: '⭐',
-    title: 'أفضل مدرب',
+    title: 'أفضل مدرّب',
     value: 'د. محمد أحمد',
     color: '#8E4A68',
   },
   {
     icon: '🏫',
-    title: 'أفضل قاعة',
+    title: 'أفضل شعبة',
     value: 'القاعة 203',
     color: '#8E4A68',
   },

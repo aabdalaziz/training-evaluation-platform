@@ -3,7 +3,7 @@
 /**
  * P63 «يوم تخرّجي — بكلماتي» — مكتب الخرّيج (يُحمَّل ديناميكيًا بلا SSR)
  *  1) الرأس: البرنامج · التاريخ · «اليوم يومك» إن كان اليوم · اختيار برنامج آخر منتهٍ
- *  2) «بكلماتي»: بطاقات مما كتبه صاحبها بيده (كلمة الوداع وكلمة الاستقبال من مدرّبه هما الاستثناء) — أُبقي/أُخفي لكل بطاقة · P64: بطاقة «ما كتبتُه أول يوم»
+ *  2) «بكلماتي»: بطاقات مما كتبه صاحبها بيده (كلمة الوداع وكلمة الاستقبال من ميسّره هما الاستثناء) — أُبقي/أُخفي لكل بطاقة · P64: بطاقة «ما كتبتُه أول يوم»
  *  3) «سطر التخرّج» (≤ 160) + 🎙️ ≤ 15 ث يبقى معه → «اختم صفحتي» → رمز ATH-GD + وجه عام خاصّ افتراضيًا (السطر والأعداد فقط حين يُفتح)
  *  4) «منذ ذلك اليوم»: أعداد حيّة بعد الختم · «N من دفعتك ختموا» (k ≥ 5) · رسالة P39 القديمة إن وُجدت (قراءة فقط)
  *  testids: gd-root[data-phase][data-sealed] gd-err gd-ok gd-prog gd-today gd-cards gd-card[data-key][data-keep] gd-keep gd-line gd-line-save gd-voice-start gd-voice-hear gd-voice-del
@@ -54,12 +54,12 @@ export default function GradDesk() {
   return <main className="gd" dir="rtl" data-testid="gd-root" data-phase={v?.program.phase || ''} data-sealed={v?.seal && !v.seal.revoked_at ? 1 : 0}>
     <style dangerouslySetInnerHTML={{ __html: CSS }} />
     <nav className="gd-nav" aria-label="تنقّل"><Link href="/me" className="gd-link"><Icon name="arrow" size={14} /> ملفّي</Link><Link href="/me/after" className="gd-link"><Icon name="compass" size={14} /> ما بعد البرنامج</Link><Link href="/me/letter" className="gd-link"><Icon name="mail" size={14} /> رسالة إلى نفسي</Link><Link href="/me/athar-map" className="gd-link"><Icon name="spark" size={14} /> خريطة أثري</Link></nav>
-    <header className="gd-head"><span className="pt-kicker"><Icon name="award" size={14} /> {d?.names.official_ar || 'صفحة التخرّج الذاتية للمتدرّب'}</span><h1>🎓 {d?.names.title || 'يوم تخرّجي'} <small>{d?.names.sub || 'ما كتبتُه بيدي في هذا البرنامج — لا ما كُتب عنّي'}</small></h1>
-      <p>يوم انتهاء برنامجك تُفتح لك صفحة تجمع ما كتبتَه أنت فيه: أول «لأن…» على خيطك، ردودك على كلمات مدرّبك، فصول رحلتك، سطرك في ظرف الدفعة. لا درجة ولا تقييم ولا كلمة كُتبت عنك — إلا كلمة الوداع من مدرّبك إن كتبها. تُبقي ما شئت، وتختمها بسطرٍ واحد لمن سيأتي بعدك.</p></header>
+    <header className="gd-head"><span className="pt-kicker"><Icon name="award" size={14} /> {d?.names.official_ar || 'صفحة التخرّج الذاتية للمشارك'}</span><h1>🎓 {d?.names.title || 'يوم تخرّجي'} <small>{d?.names.sub || 'ما كتبتُه بيدي في هذا البرنامج — لا ما كُتب عنّي'}</small></h1>
+      <p>يوم انتهاء برنامجك تُفتح لك صفحة تجمع ما كتبتَه أنت فيه: أول «لأن…» على خيطك، ردودك على كلمات ميسّرك، فصول رحلتك، سطرك في ظرف الدفعة. لا درجة ولا تقييم ولا كلمة كُتبت عنك — إلا كلمة الوداع من ميسّرك إن كتبها. تُبقي ما شئت، وتختمها بسطرٍ واحد لمن سيأتي بعدك.</p></header>
     {err && <p className="gd-err" role="alert" data-testid="gd-err">{err}</p>}
     {msg && <p className="gd-ok" role="status" data-testid="gd-ok">{msg}</p>}
     {!tok && tok !== null && <section className="pt-box"><p>سجّل الدخول لتفتح صفحة تخرّجك. <Link href="/me">مساحتي</Link></p></section>}
-    {d && !v && <section className="pt-box gd-empty" data-testid="gd-empty"><b>لم ينتهِ برنامج لك بعد.</b><p className="gd-muted">تُفتح هذه الصفحة يوم end_date لكل برنامج أنت مسجَّل فيه — ولمن تخرّج قبل اليوم أيضًا. حتى ذلك اليوم اكتب «لأن…» على خيوطك، وردّ على كلمات مدرّبك: هي ما سيملأ صفحتك.</p><p><Link href="/me/athar-map" className="pt-btn ghost small">خريطة أثري</Link> <Link href="/me/letter?door=grad" className="pt-btn ghost small">رسالة إلى نفسي عند تخرّجي</Link></p></section>}
+    {d && !v && <section className="pt-box gd-empty" data-testid="gd-empty"><b>لم ينتهِ برنامج لك بعد.</b><p className="gd-muted">تُفتح هذه الصفحة يوم end_date لكل برنامج أنت مسجَّل فيه — ولمن تخرّج قبل اليوم أيضًا. حتى ذلك اليوم اكتب «لأن…» على خيوطك، وردّ على كلمات ميسّرك: هي ما سيملأ صفحتك.</p><p><Link href="/me/athar-map" className="pt-btn ghost small">خريطة أثري</Link> <Link href="/me/letter?door=grad" className="pt-btn ghost small">رسالة إلى نفسي عند تخرّجي</Link></p></section>}
     {d && v && <>
       <section className="gd-prog" data-testid="gd-prog">
         <div><b>{v.program.name_ar}</b><p className="gd-muted">{v.program.start_date ? `${fmtDayAr(v.program.start_date)} ← ` : ''}{fmtDayAr(v.program.end_date)}{v.program.phase === 'after' ? ` · منذ ${v.since.days_since} يومًا` : ''}</p></div>

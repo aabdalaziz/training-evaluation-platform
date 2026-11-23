@@ -53,7 +53,7 @@ export default function JoinPage({ params }: { params: { token: string } }) {
   return (
     <PortalShell><main className="jn" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <section className="jn-card" data-testid="join-card">
-        <div className="jn-kicker"><Icon name="mail" size={14} /> دعوة إلى بوابة أَثَر</div>
+        <div className="jn-kicker"><Icon name="mail" size={14} /> دعوة إلى بوّابة أَثَر</div>
         {err && !inv && <p className="jn-err" data-testid="join-error">{err}</p>}
         {!inv && !err && <p className="jn-muted">جارٍ فتح الدعوة…</p>}
         {inv && (<>
@@ -87,7 +87,7 @@ export default function JoinPage({ params }: { params: { token: string } }) {
             </div>
           )}
         </>)}
-        <p className="jn-foot"><Link href="/">بوابة أَثَر</Link> · <Link href="/help">مساعدة</Link></p>
+        <p className="jn-foot"><Link href="/">بوّابة أَثَر</Link> · <Link href="/help">مساعدة</Link></p>
       </section>
     </main></PortalShell>
   );

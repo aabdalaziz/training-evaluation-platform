@@ -28,10 +28,10 @@ export default function RoomCalendar({ roomId, code, hdr, readOnly, autoOpen }: 
   async function save() {
     if (!preview) return; if (!window.confirm(`حفظ تقويم شعبة ${code}: ${preview.days.length} يوم تدريب في ${preview.blocks.length} ${preview.blocks.length === 1 ? 'كتلة' : 'كتل'}${preview.applies.length ? ` و${preview.applies.length} ${preview.applies.length === 1 ? 'فترة تطبيق' : 'فترات تطبيق'}` : ''}؟ يستبدل التقويم السابق إن وُجد.`)) return;
     setBusy(true); const H = await hdr(); if (!H) { setBusy(false); return; } const j = await fetch('/api/me/calendar', { method: 'POST', headers: H, body: JSON.stringify({ action: 'save', classroom_id: roomId, days: preview.days }) }).then((r) => r.json()).catch(() => null); setBusy(false);
-    if (j?.success) { setOk('حُفظ التقويم — سيعرف متدرّبوك متى تلتقون ومتى يطبّقون.'); setEdit(false); setText(''); void load(); setTimeout(() => setOk(''), 7000); } else setErr(j?.error || 'تعذّر الحفظ');
+    if (j?.success) { setOk('حُفظ التقويم — سيعرف مشاركوك متى تلتقون ومتى يطبّقون.'); setEdit(false); setText(''); void load(); setTimeout(() => setOk(''), 7000); } else setErr(j?.error || 'تعذّر الحفظ');
   }
   async function clear() {
-    if (!window.confirm(`إزالة تقويم شعبة ${code}؟ يعود البرنامج متّصلًا من بدايته إلى نهايته. سطور المتدرّبين تبقى.`)) return;
+    if (!window.confirm(`إزالة تقويم شعبة ${code}؟ يعود البرنامج متّصلًا من بدايته إلى نهايته. سطور المشاركين تبقى.`)) return;
     setBusy(true); const H = await hdr(); if (!H) { setBusy(false); return; } const j = await fetch('/api/me/calendar', { method: 'POST', headers: H, body: JSON.stringify({ action: 'clear', classroom_id: roomId }) }).then((r) => r.json()).catch(() => null); setBusy(false);
     if (j?.success) { setOk('أُزيل التقويم.'); void load(); setTimeout(() => setOk(''), 7000); } else setErr(j?.error || 'تعذّر الحذف');
   }
@@ -57,14 +57,14 @@ export default function RoomCalendar({ roomId, code, hdr, readOnly, autoOpen }: 
         </div>
         <div className="rc-cell"><h4>اليوم</h4>
           {ph?.phase === 'training' && <p>كتب «سطر اليوم» <b>{v.learn_today}</b> من {v.roster}.</p>}
-          {ph?.phase === 'apply' && ph.apply && <p>متدرّبوك في مواقعهم — الأسبوع {ph.apply.week_no} من {ph.apply.weeks}. يصلك «{P66_NAMES_AR.field}» قبل العودة بثلاثة أيام.</p>}
+          {ph?.phase === 'apply' && ph.apply && <p>مشاركوك في مواقعهم — الأسبوع {ph.apply.week_no} من {ph.apply.weeks}. يصلك «{P66_NAMES_AR.field}» قبل العودة بثلاثة أيام.</p>}
           {ph?.phase === 'before' && ph.next && <p>يبدأ أول يوم {fmtShortAr(ph.next.start)}.</p>}
           {ph?.phase === 'after' && <p>انتهى التقويم — ما بعده في «يوم تخرّجي» و«ما بعد البرنامج».</p>}
           {ph?.phase === 'rest' && <p>استراحة قصيرة — لا شيء يُطلب من أحد.</p>}
           {v.commits_pending > 0 && <p className="rc-muted">التزامات «حتى نلتقي» تنتظر يوم العودة: {v.commits_pending} — يُفتح كلٌّ لصاحبه وحده؛ أنت ترى العدد فقط.</p>}
         </div>
       </div>}
-      {!cal && <p className="rc-muted">إن كانت أيام هذا البرنامج موزّعة على كتل تفصلها أسابيع عمل، ضع التقويم هنا: يعرف المتدرّب متى يلتقيكم ومتى يطبّق، ويتحوّل «سطر اليوم» في الفجوات إلى «سطر التطبيق» الأسبوعي، ويصلك قبل كل كتلة «{P66_NAMES_AR.field}».</p>}
+      {!cal && <p className="rc-muted">إن كانت أيام هذا البرنامج موزّعة على كتل تفصلها أسابيع عمل، ضع التقويم هنا: يعرف المشارك متى يلتقيكم ومتى يطبّق، ويتحوّل «سطر اليوم» في الفجوات إلى «سطر التطبيق» الأسبوعي، ويصلك قبل كل كتلة «{P66_NAMES_AR.field}».</p>}
       {!readOnly && !edit && <div className="rc-row"><button type="button" className="rc-btn" data-testid="rc-edit" onClick={() => setEdit(true)}>{cal ? 'تعديل التقويم' : 'ضع تقويم الشعبة'}</button>{cal && <button type="button" className="rc-btn rc-ghost" data-testid="rc-clear" disabled={busy} onClick={clear}>إزالة التقويم</button>}</div>}
       {!readOnly && edit && <div className="rc-edit">
         <div className="rc-tabs" role="tablist" data-testid="rc-mode">{(['pattern', 'n', 'text'] as Mode[]).map((m) => <button key={m} type="button" role="tab" aria-selected={mode === m} className={`rc-tab${mode === m ? ' on' : ''}`} onClick={() => setMode(m)}>{m === 'pattern' ? 'نمط كتل' : m === 'n' ? 'N أيام من تاريخ' : 'لصق تواريخ'}</button>)}</div>

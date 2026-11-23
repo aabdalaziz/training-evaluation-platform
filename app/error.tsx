@@ -1,5 +1,5 @@
 'use client';
-// حدود الخطأ العامة للبوابة — بدل شاشة Next.js الصامتة «Application error: a client-side exception has occurred»
+// حدود الخطأ العامة للبوّابة — بدل شاشة Next.js الصامتة «Application error: a client-side exception has occurred»
 // تعرض سبب العطل بالعربية (رسالة الخطأ + المُعرِّف) مع أزرار: إعادة المحاولة · الرئيسة · نسخ التفاصيل.
 // لا تعتمد على أي سياق أو مكوّن آخر (قد يكون هو نفسه سبب العطل) — تنسيق مضمّن فقط.
 import { useEffect, useState } from 'react';
@@ -34,14 +34,14 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
     } catch { window.location.reload(); }
   }
   if (recovering) return (
-    <div className="pe-wrap"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="pe-card" role="status" data-testid="pe-recovering"><h1>صدر تحديث جديد للبوابة</h1><p>نعيد تحميل الصفحة تلقائيًا… لم تُفقد بياناتك.</p></div></div>
+    <div className="pe-wrap"><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="pe-card" role="status" data-testid="pe-recovering"><h1>صدر تحديث جديد للبوّابة</h1><p>نعيد تحميل الصفحة تلقائيًا… لم تُفقد بياناتك.</p></div></div>
   );
   const chunk = isChunkError(error);
   return (
     <div className="pe-wrap">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="pe-card" role="alert">
-        <h1>{chunk ? 'صدر تحديث جديد للبوابة' : 'حدث خطأ في عرض هذه الصفحة'}</h1>
+        <h1>{chunk ? 'صدر تحديث جديد للبوّابة' : 'حدث خطأ في عرض هذه الصفحة'}</h1>
         {chunk && <p>اضغط «تحديث كامل» لتحميل النسخة الجديدة — لم تُفقد بياناتك.</p>}
         <p>لم تُفقد بياناتك. جرّب «إعادة المحاولة» أولًا؛ وإن تكرّر الخطأ انسخ التفاصيل أدناه وأرسلها للدعم.</p>
         <div className="pe-msg" data-testid="pe-msg">{(error?.name || 'Error') + ': ' + (error?.message || '—')}</div>

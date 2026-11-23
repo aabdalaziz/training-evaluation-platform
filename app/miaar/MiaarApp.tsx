@@ -50,7 +50,7 @@ const QR_DEMO = ['111111101011001111111','100000100110101000001','10111010110110
 const SAMPLES: Record<Level, string> = { A1: 'أنا من الولايات المتحدة الأمريكية.', A2: 'أريد تذكرة إلى جدة يوم الخميس، من فضلك.', B1: 'سافرت إلى القاهرة في الصيف الماضي، وكانت الرحلة مفيدة.', B2: 'قد يكون التأخير بسبب الزحام، وقد يكون بسبب عطل في القطار.', C1: 'لم يكن الإشكال في قلة الوقت، بل في أن الخطة لم تُراجَع قبل الاجتماع.', C2: 'قال إن الأمر بخير، غير أن طريقة كلامه أوحت بغير ذلك.' };
 /** نصوص م1 الجديدة (عربية/إنجليزية؛ بقية اللغات تأخذ الإنجليزية) */
 const X: Record<string, { ar: string; en: string }> = {
-  product: { ar: 'مِعيار — من أَثَر', en: 'Mi’yar — by Athar' }, athar: { ar: 'بوابة أَثَر', en: 'Athar gateway' }, back_home: { ar: 'إلى أَثَر', en: 'Athar home' },
+  product: { ar: 'مِعيار — من أَثَر', en: 'Mi’yar — by Athar' }, athar: { ar: 'بوّابة أَثَر', en: 'Athar gateway' }, back_home: { ar: 'إلى أَثَر', en: 'Athar home' },
   invite_for: { ar: 'دعوة', en: 'Invitation' }, invite_bad: { ar: 'هذه الدعوة غير صالحة أو انتهت أو استُهلكت. تواصل مع الجهة التي أرسلتها.', en: 'This invitation is invalid, expired or already used. Contact the organisation that sent it.' },
   access_k: { ar: 'احتياجاتي', en: 'My needs' }, access_h: { ar: 'تُطلب بلا إثبات وتُسجَّل في التقرير بسطر محايد.', en: 'Requested without proof; noted neutrally in the report.' },
   access_time: { ar: 'وقت إضافي', en: 'Extra time' }, access_none: { ar: 'بلا', en: 'None' }, access_simple: { ar: 'تعليمات أبسط', en: 'Simpler instructions' }, access_contrast: { ar: 'تباين عالٍ', en: 'High contrast' }, access_large: { ar: 'خطّ أكبر', en: 'Larger text' },
@@ -666,7 +666,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   </main>;
 }
 
-/** الإطار الأوروبي — الصفحة الأولى (نص المالك: الوصف العام للمتعلم + الكفاءة التواصلية المستهدفة) */
+/** الإطار الأوروبي — الصفحة الأولى (نص المالك: الوصف العام للمتعلّم + الكفاءة التواصلية المستهدفة) */
 const CEFR_AR: Record<Level, { title: string; en: string; desc: string; can: string }> = {
   A1: { title: 'مبتدئ', en: 'Breakthrough', desc: 'مستخدم أساسي', can: 'فهم واستخدام تعبيرات مألوفة يومية، تقديم النفس والآخرين، طرح أسئلة شخصية بسيطة.' },
   A2: { title: 'دون المتوسط', en: 'Waystage', desc: 'مستخدم أساسي', can: 'فهم الجمل والعبارات الشائعة المتعلقة بالمجالات ذات الأهمية المباشرة (المعلومات الشخصية، التسوق).' },
@@ -837,7 +837,7 @@ function ExitStrip({ ex, code, ar, x, svc = null, practice = null }: { ex: any; 
 function PracticeBox({ practice, ar }: { practice: any; ar: boolean }) {
   const start = practice.النوع === 'placement';
   return <div className={`mi-exit-practice ${start ? 'start' : ''}`} data-testid="mi-practice" data-kind={practice.النوع || 'exit'}>
-      <p><b>{ar ? (start ? 'مِران البداية' : 'مِران') : (start ? 'Miran Start' : 'Miran')}</b> · {practice.انتهت ? (ar ? `انتهت أيام التمرين — أنجزت ${practice.أُنجز} من ${practice.الأيام}` : `Practice days ended — ${practice.أُنجز} of ${practice.الأيام} done`) : (ar ? `خطّة تمرين ${practice.الأيام} يومًا اعتمدها مدرّبك — اليوم ${practice.اليوم} · أنجزت ${practice.أُنجز}` : `A ${practice.الأيام}-day practice plan approved by your trainer — day ${practice.اليوم} · ${practice.أُنجز} done`)}</p>
+      <p><b>{ar ? (start ? 'مِران البداية' : 'مِران') : (start ? 'Miran Start' : 'Miran')}</b> · {practice.انتهت ? (ar ? `انتهت أيام التمرين — أنجزت ${practice.أُنجز} من ${practice.الأيام}` : `Practice days ended — ${practice.أُنجز} of ${practice.الأيام} done`) : (ar ? `خطّة تمرين ${practice.الأيام} يومًا اعتمدها ميسّرك — اليوم ${practice.اليوم} · أنجزت ${practice.أُنجز}` : `A ${practice.الأيام}-day practice plan approved by your trainer — day ${practice.اليوم} · ${practice.أُنجز} done`)}</p>
       <a className="mi-btn" href={practice.الرابط} data-testid="mi-practice-open">{practice.انتهت ? (ar ? 'افتح مرآتك' : 'Open your mirror') : (ar ? 'ابدأ مِران اليوم' : 'Start today’s practice')}</a>
       <small>{ar ? (start ? 'تمرين أول أسبوعين على وحدات مستواك الضعيفة قبل أول درس — لا يغيّر نتيجتك الرسمية.' : 'مِران تدريب لا اختبار — لا يغيّر نتيجتك الرسمية.') : 'Practice, not a test — it does not change your official result.'}</small>
     </div>;

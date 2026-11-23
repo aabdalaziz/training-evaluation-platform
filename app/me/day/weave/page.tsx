@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /me/day/weave — «نسيج الشعبة — ما نسجه متعلّموك معًا» (P59 · الاسم الرسمي: خريطة الأثر المجمَّعة للشعبة) — صفحة المدرّب داخل صدفة البوابة */
+/** /me/day/weave — «نسيج الشعبة — ما نسجه متعلّموك معًا» (P59 · الاسم الرسمي: خريطة الأثر المجمَّعة للشعبة) — صفحة المدرّب داخل صدفة البوّابة */
 import dynamic from 'next/dynamic';
 import { PortalShell } from '../../../components/PortalShell';
 

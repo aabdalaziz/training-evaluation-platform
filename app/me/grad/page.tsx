@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /me/grad?program=<id> — «يوم تخرّجي — بكلماتي» (P63 · الاسم الرسمي: صفحة التخرّج الذاتية للمتدرّب) — داخل صدفة البوابة؛ ما كتبه المتدرّب بيده في برنامجه + سطر التخرّج + ختم ATH-GD */
+/** /me/grad?program=<id> — «يوم تخرّجي — بكلماتي» (P63 · الاسم الرسمي: صفحة التخرّج الذاتية للمشارك) — داخل صدفة البوّابة؛ ما كتبه المشارك بيده في برنامجه + سطر التخرّج + ختم ATH-GD */
 import dynamic from 'next/dynamic';
 import { PortalShell } from '../../components/PortalShell';
 

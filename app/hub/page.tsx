@@ -65,14 +65,14 @@ export default function HubPage() {
   return (
     <PortalShell><main className="hb" dir="rtl" id="main"><style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="hb-wrap">
-        <header className="hb-head"><span className="hb-kicker"><Icon name="compass" size={14} /> صفحاتي · بوابة أَثَر</span><h1>صفحاتك</h1><p>{email ? <>داخل باسم <code dir="ltr">{email}</code> — </> : null}لك أكثر من دور؛ اختر الصفحة التي تريد الدخول إليها الآن.</p></header>
+        <header className="hb-head"><span className="hb-kicker"><Icon name="compass" size={14} /> صفحاتي · بوّابة أَثَر</span><h1>صفحاتك</h1><p>{email ? <>داخل باسم <code dir="ltr">{email}</code> — </> : null}لك أكثر من دور؛ اختر الصفحة التي تريد الدخول إليها الآن.</p></header>
         {err && <p className="hb-err">{err}</p>}
         {!roles && !err && <p className="hb-muted">جارٍ تحميل صفحاتك…</p>}
         {roles && (
           <div className="hb-grid" data-testid="hub-grid">
             {roles.map(r => (
               <Link key={r.code} href={r.landing} className={`hb-card ${r.code === 'ADMIN' ? 'hb-command' : ''}`} data-testid={`hub-door-${r.code}`}>
-                <span className="hb-scope">{r.scope === 'platform' ? 'المنصة' : r.scope === 'org' ? 'الجهة' : 'شخصي'}</span>
+                <span className="hb-scope">{r.scope === 'platform' ? 'البوّابة' : r.scope === 'org' ? 'الجهة' : 'شخصي'}</span>
                 <b>{doorLabel(r)}</b><span className="hb-en">{r.code === 'ADMIN' ? 'Athar Command Center' : r.name_en}</span>
                 {COMMAND_CODES.includes(r.code) && pending !== null && <span className="hb-pending" data-testid="hub-pending">ينتظر قرارك: <b>{pending}</b></span>}
                 <span className="hb-go">ادخل <Icon name="arrow" size={14} /></span>

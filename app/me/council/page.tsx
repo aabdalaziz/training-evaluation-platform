@@ -100,7 +100,7 @@ function Inner() {
                     <div className="pt-box hl-compose" data-testid="compose">
                       <div className="hl-kinds">{(['question', 'advice', 'evidence'] as const).map(k => <button key={k} className={post.kind === k ? 'on' : ''} onClick={() => setPost({ ...post, kind: k })}>{KIND_AR[k]}</button>)}<span className="hl-muted">{post.kind === 'question' ? 'سؤال يساعد صاحب القضية على الرؤية' : post.kind === 'advice' ? 'نصيحة — بعد أن سُئل' : 'دليل: تجربة موثَّقة أو مرجع أو رقم'}</span></div>
                       <Channel lang={lang} value={post.body} onChange={v => setPost({ ...post, body: v })} tok={tok || undefined} context={{ type: 'dialogue', id: c.id, title: c.title_ar }} rows={3} maxLength={3000} compact placeholder="اكتب أو تكلّم…" onMedia={m => setPost({ ...post, media_id: m.id })} testId="post-body" />
-                      <button className="pt-btn small" disabled={!!busy} onClick={async () => { const j = await act({ action: 'post', case_id: c.id, ...post }); if (j) setPost({ kind: 'question', body: '', media_id: '' }); }} data-testid="post-send"><Icon name="send" size={14} /> أرسل</button>
+                      <button className="pt-btn small" disabled={!!busy} onClick={async () => { const j = await act({ action: 'post', case_id: c.id, ...post }); if (j) setPost({ kind: 'question', body: '', media_id: '' }); }} data-testid="post-send"><Icon name="send" size={14} />إرسال</button>
                     </div>
                   )}
                   {c.mine && c.status === 'open' && (

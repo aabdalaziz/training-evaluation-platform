@@ -2,7 +2,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * /me/horizon — «أفقي» (P27 أفق الممارس · «رسالتي من 2036»): خمس حركات في صفحة واحدة —
- *  الأفق (أكتب نفسي بعد عشر سنوات من فصولي، بصوتي) → ثلاث خطوات لسنة (تعرفها المنصة) → العهد (وثيقة ATH-HZ موقَّعة · 365 يومًا · تُسحب بنقرة)
+ *  الأفق (أكتب نفسي بعد عشر سنوات من فصولي، بصوتي) → ثلاث خطوات لسنة (تعرفها البوّابة) → العهد (وثيقة ATH-HZ موقَّعة · 365 يومًا · تُسحب بنقرة)
  *  → الدرب (يُشتق من الأحداث لا من التصريح؛ بلا نسبة) → المراجعة السنوية (ما وعدتُ / ما وقع → أجدّد أو أطوي).
  *  الأفق لا يُنشر أبدًا؛ الوثيقة تعرض عنوان العهد وتاريخه فقط.
  */
@@ -78,7 +78,7 @@ function Inner() {
           {h && h.status === 'draft' && (
             <section className="pt-box hz-sec" data-testid="hz-options">
               <div className="hz-sechead"><h2><Icon name="target" size={16} /> ثلاث خطوات لسنة واحدة</h2><span className="hz-pill">تختار واحدة</span></div>
-              <p className="hz-muted">خطوات تعرفها المنصة فقط — لأن الدرب يُقاس مما يقع لا مما يُقال. لا «اقرأ كتابًا»؛ بل مجلس، مهمة، مواقف، مستوى، شهادة قرين.</p>
+              <p className="hz-muted">خطوات تعرفها البوّابة فقط — لأن الدرب يُقاس مما يقع لا مما يُقال. لا «اقرأ كتابًا»؛ بل مجلس، مهمة، مواقف، مستوى، شهادة قرين.</p>
               {!options.length ? <button className="pt-btn" disabled={!!busy} onClick={() => act({ action: 'options' })} data-testid="hz-propose"><Icon name="compass" size={14} /> اقترحوا لي ثلاث خطوات من أفقي وفصولي</button> : (<>
                 <div className="hz-opts">{options.map((o, i) => (
                   <label key={i} className={`hz-opt ${pick === i ? 'on' : ''}`} data-testid="hz-opt"><input type="radio" name="opt" checked={pick === i} onChange={() => { setPick(i); setTitle(o.title_ar); }} />

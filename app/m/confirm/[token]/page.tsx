@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // أَثَر — تأكيد المشرف (P12-أ): صفحة بلا تسجيل دخول برابط موقّع. يرى الدليل الحقيقي والمعيار والفحص الأولي، ويؤكد أو يعيد بضغطة واحدة.
-// «الذكاء الاصطناعي يقترح — والإنسان يعتمد»: تأكيد المشرف هو ما يرفع وزن الدليل في ملف المتدرب وتوأمه وشهادته الحية.
+// «الذكاء الاصطناعي يقترح — والإنسان يعتمد»: تأكيد المشرف هو ما يرفع وزن الدليل في ملف المشارك وتوأمه وشهادته الحية.
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -30,16 +30,16 @@ function Inner() {
     <main className="pt-main mc">
       <section className="pt-pagehead"><div className="pt-wrap"><div className="pt-crumbs"><Link href="/">{ar ? 'الرئيسة' : 'Home'}</Link> / <span>{ar ? 'تأكيد دليل من قلب العمل' : 'Confirm workplace evidence'}</span></div>
         <h1>{ar ? 'دقيقة واحدة تُثبت الأثر' : 'One minute to confirm impact'}</h1>
-        <p className="pt-lead">{ar ? 'أنجز متدربك مهمة صغيرة من عمله الحقيقي بعد برنامج تدريبي. اطّلع على الدليل مقابل المعيار، ثم أكّد أو أعِد. تأكيدك — لا الخوارزمية — هو ما يُعتمد.' : 'Your trainee completed a small real-work mission after a training program. Review the evidence against the standard, then confirm or return. Your confirmation — not the algorithm — is what counts.'}</p>
+        <p className="pt-lead">{ar ? 'أنجز مشاركك مهمة صغيرة من عمله الحقيقي بعد برنامج تدريبي. اطّلع على الدليل مقابل المعيار، ثم أكّد أو أعِد. تأكيدك — لا الخوارزمية — هو ما يُعتمد.' : 'Your trainee completed a small real-work mission after a training program. Review the evidence against the standard, then confirm or return. Your confirmation — not the algorithm — is what counts.'}</p>
       </div></section>
       <section className="pt-sec"><div className="pt-wrap" style={{ maxWidth: 820 }}>
         {!v && <div className="pt-empty">…</div>}
         {v && !v.ok && <div className="pt-box pt-empty"><Icon name="alert" size={30} /><h3>{ar ? 'الرابط غير صالح' : 'Invalid link'}</h3></div>}
         {m && <>
-          {done && <div className="pt-alert ok mc-done"><Icon name="check" size={16} /> {done === 'confirmed' ? (ar ? 'شكرًا — تم التأكيد. أصبح الدليل كامل الوزن في ملف المتدرب، وأُبلغ بذلك.' : 'Thank you — confirmed. The evidence is now full-weight in the trainee’s profile.') : (ar ? 'أُعيدت المهمة إلى المتدرب مع ملاحظتك.' : 'Returned to the trainee with your note.')}</div>}
+          {done && <div className="pt-alert ok mc-done"><Icon name="check" size={16} /> {done === 'confirmed' ? (ar ? 'شكرًا — تم التأكيد. أصبح الدليل كامل الوزن في ملف المشارك، وأُبلغ بذلك.' : 'Thank you — confirmed. The evidence is now full-weight in the trainee’s profile.') : (ar ? 'أُعيدت المهمة إلى المشارك مع ملاحظتك.' : 'Returned to the trainee with your note.')}</div>}
           {!done && m.status !== 'submitted' && <div className="pt-alert ok mc-done">{ar ? `حالة المهمة: ${statusLabel(m.status, lang)}${m.confirmed_by ? ` — بواسطة ${m.confirmed_by}` : ''}` : `Status: ${statusLabel(m.status, lang)}`}</div>}
           <div className="pt-box mc-card">
-            <div className="mc-head"><div><small>{v?.program ? (ar ? `بعد برنامج «${v.program}»` : `After “${v.program}”`) : (ar ? 'مهمة من قلب العمل' : 'Workflow mission')}</small><h2>{m.title_ar}</h2><p>{ar ? 'المتدرب:' : 'Trainee:'} <b>{m.full_name || m.email}</b> · {ar ? 'أُرسل في' : 'Submitted'} {fmtDate(m.submitted_at || m.created_at, lang)}</p></div><span className="mc-st" style={{ ['--c' as any]: STATUS_LABEL[m.status].color }}>{statusLabel(m.status, lang)}</span></div>
+            <div className="mc-head"><div><small>{v?.program ? (ar ? `بعد برنامج «${v.program}»` : `After “${v.program}”`) : (ar ? 'مهمة من قلب العمل' : 'Workflow mission')}</small><h2>{m.title_ar}</h2><p>{ar ? 'المشارك:' : 'Trainee:'} <b>{m.full_name || m.email}</b> · {ar ? 'أُرسل في' : 'Submitted'} {fmtDate(m.submitted_at || m.created_at, lang)}</p></div><span className="mc-st" style={{ ['--c' as any]: STATUS_LABEL[m.status].color }}>{statusLabel(m.status, lang)}</span></div>
             <div className="mc-two">
               <div>
                 <h4>{ar ? 'ما طُلب منه' : 'What was asked'}</h4><p className="mc-brief">{m.brief_ar}</p>
@@ -59,12 +59,12 @@ function Inner() {
             </div>
             {canAct && <div className="mc-form">
               {err && <div className="pt-alert err">{err}</div>}
-              <div className="mc-row"><input value={name} onChange={e => setName(e.target.value)} placeholder={ar ? 'اسمك (يظهر للمتدرب)' : 'Your name'} /><input value={note} onChange={e => setNote(e.target.value)} placeholder={ar ? 'ملاحظة للمتدرب (اختيارية عند التأكيد، مطلوبة عند الإعادة)' : 'Note to trainee'} /></div>
+              <div className="mc-row"><input value={name} onChange={e => setName(e.target.value)} placeholder={ar ? 'اسمك (يظهر للمشارك)' : 'Your name'} /><input value={note} onChange={e => setNote(e.target.value)} placeholder={ar ? 'ملاحظة للمشارك (اختيارية عند التأكيد، مطلوبة عند الإعادة)' : 'Note to trainee'} /></div>
               <div className="mc-btns"><button className="pt-btn gold" disabled={!!busy || name.trim().length < 2} onClick={() => decide('confirm')}><Icon name="check" size={16} /> {busy === 'confirm' ? '…' : (ar ? 'أؤكد: رأيت هذا في عمله' : 'I confirm: I saw this at work')}</button><button className="pt-btn ghost" disabled={!!busy || name.trim().length < 2} onClick={() => decide('return')}><Icon name="refresh" size={16} /> {busy === 'return' ? '…' : (ar ? 'أعِدها إليه مع ملاحظة' : 'Return with a note')}</button></div>
-              <small>{ar ? 'بتأكيدك تقرّ أنك شاهدت هذا الدليل أو ما يدل عليه في بيئة العمل. لا يُستخدم الدليل خارج ملف المتدرب.' : 'By confirming you attest you have seen this evidence (or its effect) at work.'}</small>
+              <small>{ar ? 'بتأكيدك تقرّ أنك شاهدت هذا الدليل أو ما يدل عليه في بيئة العمل. لا يُستخدم الدليل خارج ملف المشارك.' : 'By confirming you attest you have seen this evidence (or its effect) at work.'}</small>
             </div>}
           </div>
-          <p className="mc-foot">{ar ? 'ما «المهمات في قلب العمل»؟ بدل استبانة «هل طبّقت؟» بعد التدريب، تطلب منصة أَثَر دليلًا صغيرًا حقيقيًا، وتبني من مجموع الأدلة المؤكَّدة أول قاعدة عربية لانتقال أثر التدريب.' : 'Instead of a “did you apply it?” survey, Athar asks for a small real piece of evidence and builds the first Arabic base of confirmed training-transfer evidence.'}</p>
+          <p className="mc-foot">{ar ? 'ما «المهمات في قلب العمل»؟ بدل استبيان «هل طبّقت؟» بعد التدريب، تطلب بوّابة أَثَر دليلًا صغيرًا حقيقيًا، وتبني من مجموع الأدلة المؤكَّدة أول قاعدة عربية لانتقال أثر التدريب.' : 'Instead of a “did you apply it?” survey, Athar asks for a small real piece of evidence and builds the first Arabic base of confirmed training-transfer evidence.'}</p>
         </>}
       </div></section>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />

@@ -49,7 +49,7 @@ export default function Journey({ code, fontClass = '' }: { code: string; fontCl
   const startIdx = cmp ? idx(cmp.first.level) : j ? idx(j.latest.demonstrated) : 0; const endIdx = cmp ? idx(cmp.second.level) : startIdx;
 
   return <div className={`mg ${fontClass}`} dir={ar ? 'rtl' : 'ltr'} lang={lang} data-testid="mg-page">
-    <div className="mg-top"><header className="mg-head"><div className="mg-brandside"><a className="mg-brand" href="/">أَثَر<small>{ar ? 'بوابة التميّز للاستشارات والتدريب' : 'Athar · TRACE'}</small></a><a className="mg-mark" href="/miaar">مِعيار</a></div>
+    <div className="mg-top"><header className="mg-head"><div className="mg-brandside"><a className="mg-brand" href="/">أَثَر<small>{ar ? 'بوّابة التميّز للاستشارات والتدريب' : 'Athar · TRACE'}</small></a><a className="mg-mark" href="/miaar">مِعيار</a></div>
       <div className="mg-left"><button type="button" className="mg-lang" onClick={() => setLang(ar ? 'en' : 'ar')} data-testid="mg-lang">{ar ? 'English' : 'العربية'}</button></div></header><WayBar lang={lang} /></div>
     {!j && !err && <p className="mg-wait" role="status">{t.loading}</p>}
     {err && <section className="mg-wrap"><div className="mg-card"><p className="mg-err" role="alert" data-testid="mg-nf">{err}</p><a className="mg-btn" href="/miaar">{ar ? 'إلى مِعيار' : 'Go to Miaar'}</a></div></section>}

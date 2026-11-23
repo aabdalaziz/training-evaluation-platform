@@ -1,6 +1,6 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** /me/reports/line/[id] — «صفحتي في التقرير الختامي» (P46 ر2 «خاتمة الرحلة») · «كشف كفاياتي» كاملًا (P46 ر4-ب): مسار المتدرّب مهارةً مهارة · فقرة المسار · سطر المعلّم · «أظهِر في شهادتي» */
+/** /me/reports/line/[id] — «صفحتي في التقرير الختامي» (P46 ر2 «خاتمة الرحلة») · «كشف كفاياتي» كاملًا (P46 ر4-ب): مسار المشارك مهارةً مهارة · فقرة المسار · سطر المعلّم · «أظهِر في شهادتي» */
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PortalShell } from '../../../../components/PortalShell';

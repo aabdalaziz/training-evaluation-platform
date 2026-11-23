@@ -165,7 +165,7 @@ export default function IqraApp({ fontClass = '' }: { fontClass?: string }) {
         {(home.مكتبة || 0) > 0 && <button type="button" className={screen.s === 'library' ? 'on' : ''} onClick={() => setScreen({ s: 'library' })} data-testid="iq-nav-library">مكتبتي</button>}</>}
         {code ? <a className="iq-lnk" href={`/miaar/result/${encodeURIComponent(code)}`}>بطاقة نتيجتي</a> : <a className="iq-lnk" href="/me">صفحتي</a>}<ReadSize /></nav></div><WayBar /></header>
     <p className="iq-live" aria-live="polite" role="status">{live}</p>
-    {(offline || pending > 0) && <p className="iq-offline" data-testid="iq-offline" data-pending={pending}>{offline ? 'بلا اتصال — تعمل الحلقات المحمَّلة، وتُحفَظ إجاباتك ونبضات وقتك هنا حتى يعود الاتصال' : 'عاد الاتصال — نرسل ما حفظته'}{pending > 0 ? ` · في الصندوق ${pending}` : ''}{!offline && pending > 0 ? <button type="button" className="iq-mini" onClick={() => void drain()}>أرسل الآن</button> : null}</p>}
+    {(offline || pending > 0) && <p className="iq-offline" data-testid="iq-offline" data-pending={pending}>{offline ? 'بلا اتصال — تعمل الحلقات المحمَّلة، وتُحفَظ إجاباتك ونبضات وقتك هنا حتى يعود الاتصال' : 'عاد الاتصال — نرسل ما حفظته'}{pending > 0 ? ` · في الصندوق ${pending}` : ''}{!offline && pending > 0 ? <button type="button" className="iq-mini" onClick={() => void drain()}>إرسال الآن</button> : null}</p>}
     {screen.s === 'home' && <ZoneTape compact />} {/* هـ-1/4 «شريط أخبار المنطقة» */}
     {!ready || (!home && !err) ? <p className="iq-wait">نفتح مستواك…</p> : null}
     {err && <section className="iq-wrap"><div className="iq-card"><p className="iq-err" role="alert">{err}</p></div></section>}

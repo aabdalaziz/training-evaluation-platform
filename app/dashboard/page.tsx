@@ -55,7 +55,7 @@ const STATUS_STYLE: Record<Program['status'], { bg: string; color: string; label
 const APPROVAL_STYLE: Record<ApprovalStatus, { bg: string; color: string; label: string; hint: string }> = {
   DRAFT: { bg: '#F6EBE0', color: '#5C4858', label: 'بانتظار الإرسال', hint: 'البرنامج مسودة ولم يُرسل للمراجعة والاعتماد بعد' },
   PENDING_REVIEW: { bg: '#FBF4EE', color: '#8A5A1E', label: 'بانتظار المراجعة', hint: 'أُرسل من مدير البرامج وينتظر المراجعة' },
-  REVIEWED: { bg: '#F3E8EF', color: '#6A3350', label: 'تمت المراجعة', hint: 'روجع وينتظر اعتماد محلل الجودة / مدير المنصة' },
+  REVIEWED: { bg: '#F3E8EF', color: '#6A3350', label: 'تمت المراجعة', hint: 'روجع وينتظر اعتماد محلل الجودة / مدير البوّابة' },
   APPROVED: { bg: '#E6F3F1', color: '#2F6B66', label: 'معتمد', hint: 'معتمد — يمكن تفعيله' },
   REJECTED: { bg: '#FBEDE7', color: '#B9544A', label: 'مرفوض', hint: 'رُفض — راجع السبب وعدّل ثم أعد الإرسال' },
 };
@@ -67,7 +67,7 @@ const myRoleLabel = (my: { roles: string[]; catalog: { code: string; name_ar: st
   const names = my.roles.filter(c => c !== 'PARTICIPANT').map(c => my.catalog.find(x => x.code === c)?.name_ar || '').filter(Boolean);
   return names.slice(0, 2).join(' · ');
 };
-const ROLE_LABEL: Record<string, string> = { PLATFORM_ADMIN: 'مدير المنصة', SUPER_ADMIN: 'مدير عام', ADMIN: 'مدير', PROGRAM_MANAGER: 'مدير برامج', QUALITY_ANALYST: 'محلل جودة', MANAGER: 'مدير برامج', TRAINER: 'مدرب', USER: 'مستخدم' };
+const ROLE_LABEL: Record<string, string> = { PLATFORM_ADMIN: 'مدير البوّابة', SUPER_ADMIN: 'مدير عام', ADMIN: 'مدير', PROGRAM_MANAGER: 'مدير برامج', QUALITY_ANALYST: 'محلل جودة', MANAGER: 'مدير برامج', TRAINER: 'مدرّب', USER: 'مستخدم' };
 
 /* الأيقونات: من المكتبة الموحّدة lib/ui/icons */
 const REPORT_ICON: Record<string, IconName> = { trainer_card: 'star', executive: 'shield', trainers: 'users', programs: 'book', classrooms: 'school', axes: 'compass', questions: 'question', trend: 'trend', comparison: 'scale', participation: 'users', qualitative: 'chat', actions: 'target', raw: 'folder' };
@@ -190,7 +190,7 @@ export default function Dashboard() {
   }
   const pendingMine = programs.filter(p => (canApprove && ['PENDING_REVIEW', 'REVIEWED'].includes(p.approval_status || 'DRAFT')) || (roleU === 'PROGRAM_MANAGER' && (p.approval_status || 'DRAFT') === 'REJECTED'));
   async function deleteProgram(p: Program) {
-    if (!window.confirm(`حذف البرنامج "${p.name_ar}" نهائيًا؟\nإن كانت له تقييمات أو قاعات مرتبطة فقد يرفض النظام الحذف حفاظًا على البيانات.`)) return;
+    if (!window.confirm(`حذف البرنامج "${p.name_ar}" نهائيًا؟\nإن كانت له تقييمات أو شُعب مرتبطة فقد يرفض النظام الحذف حفاظًا على البيانات.`)) return;
     const { error } = await db.from('programs').delete().eq('id', p.id);
     if (error) { notify('تعذر الحذف (قد تكون هناك بيانات مرتبطة): ' + error.message); return; }
     notify('✓ تم حذف البرنامج'); load();
@@ -262,17 +262,17 @@ export default function Dashboard() {
     const recent = applyFilters(allEvals, { from: addDays(today, -2), to: today }, lk);
     const recentRooms = new Set(recent.map(e => e.classroom_id));
     const silent = raw.classrooms.filter(c => c.program_id && activeIds.has(c.program_id) && !recentRooms.has(c.id));
-    if (silent.length) out.push({ level: 'amber', text: `${silent.length} قاعة/مجموعة في برامج نشطة بلا أي استجابة خلال آخر 3 أيام: ${silent.slice(0, 4).map(c => c.code).join('، ')}${silent.length > 4 ? '…' : ''}`, href: '/reports/center?type=participation&preset=7d', cta: 'تقرير المشاركة' });
+    if (silent.length) out.push({ level: 'amber', text: `${silent.length} شعبة في برامج نشطة بلا أي استجابة خلال آخر 3 أيام: ${silent.slice(0, 4).map(c => c.code).join('، ')}${silent.length > 4 ? '…' : ''}`, href: '/reports/center?type=participation&preset=7d', cta: 'تقرير المشاركة' });
     for (const a of actions.filter(x => x.priority === 'HIGH').slice(0, 3)) out.push({ level: 'red', text: `${a.label}: متوسط ${a.mean.toFixed(2)}/5 و${a.lowPct.toFixed(0)}% تقييمات منخفضة (n=${a.responses})`, href: `/reports/center?type=${a.area === 'trainer' ? 'trainers' : a.area === 'classroom' ? 'classrooms' : a.area === 'program' ? 'programs' : 'axes'}&preset=${range === 'all' ? 'all' : range}`, cta: 'افتح التقرير' });
     const declining = trainers.filter(t => t.delta !== null && (t.delta as number) <= -0.3);
-    if (declining.length) out.push({ level: 'amber', text: `اتجاه تنازلي لدى ${declining.map(t => `${t.label} (${(t.delta as number).toFixed(2)})`).join('، ')}`, href: `/reports/center?type=trainers&preset=${range === 'all' ? 'all' : range}`, cta: 'أداء المدربين' });
+    if (declining.length) out.push({ level: 'amber', text: `اتجاه تنازلي لدى ${declining.map(t => `${t.label} (${(t.delta as number).toFixed(2)})`).join('، ')}`, href: `/reports/center?type=trainers&preset=${range === 'all' ? 'all' : range}`, cta: 'أداء المدرّبين' });
     const noTrainer = raw.classrooms.filter(c => !c.trainer_id && c.program_id && activeIds.has(c.program_id));
-    if (noTrainer.length) out.push({ level: 'amber', text: `${noTrainer.length} قاعة بدون مدرب مرتبط (${noTrainer.slice(0, 3).map(c => c.code).join('، ')})`, href: '/admin/management?tab=rooms', cta: 'لوحة الإدارة' });
+    if (noTrainer.length) out.push({ level: 'amber', text: `${noTrainer.length} شعبة بدون مدرّب مرتبط (${noTrainer.slice(0, 3).map(c => c.code).join('، ')})`, href: '/admin/management?tab=rooms', cta: 'لوحة الإدارة' });
     const schedRooms = new Set(raw.schedules.filter(s => s.is_active !== false).map(s => s.classroom_id));
     const remoteIncomplete = raw.classrooms.filter(c => c.delivery_mode === 'remote' && (!(c.level_id || c.level) || !schedRooms.has(c.id)));
-    if (remoteIncomplete.length) out.push({ level: 'amber', text: `${remoteIncomplete.length} مجموعة عن بُعد لن تظهر في الاستطلاع (بدون مستوى أو مواعيد)`, href: '/admin/management?tab=rooms', cta: 'أكمل البيانات' });
+    if (remoteIncomplete.length) out.push({ level: 'amber', text: `${remoteIncomplete.length} مجموعة عن بُعد لن تظهر في الاستبيان (بدون مستوى أو مواعيد)`, href: '/admin/management?tab=rooms', cta: 'أكمل البيانات' });
     const activeNoRooms = programs.filter(p => p.status === 'ACTIVE' && !raw.classrooms.some(c => c.program_id === p.id));
-    if (activeNoRooms.length) out.push({ level: 'blue', text: `برامج نشطة بلا قاعات: ${activeNoRooms.map(p => p.name_ar).join('، ')}`, href: '/admin/management?tab=rooms', cta: 'أضف قاعة' });
+    if (activeNoRooms.length) out.push({ level: 'blue', text: `برامج نشطة بلا شُعب: ${activeNoRooms.map(p => p.name_ar).join('، ')}`, href: '/admin/management?tab=rooms', cta: 'أضف شعبة' });
     const drafts = programs.filter(p => p.status === 'DRAFT').length;
     if (drafts) out.push({ level: 'blue', text: `${drafts} برنامج في حالة مسودة بانتظار التفعيل`, cta: 'البرامج' });
     if (k.responses > 0 && k.responses < THRESHOLDS.minSample) out.push({ level: 'blue', text: `حجم العينة في الفترة المختارة صغير (${k.responses}) — القرارات تُبنى على مؤشرات أولية` });
@@ -310,7 +310,7 @@ export default function Dashboard() {
             <p className="db-modal-p"><b>{apModal.program.name_ar}</b>{apModal.program.name_en ? <small className="db-muted"> · {apModal.program.name_en}</small> : null}</p>
             <p className="db-modal-help">{AP_ACTION[apModal.to].help}</p>
             <label className="db-modal-field">{apModal.to === 'REJECTED' ? 'سبب الرفض *' : 'ملاحظة (اختياري)'}
-              <textarea rows={3} value={apModal.note} onChange={e => setApModal(m => m && { ...m, note: e.target.value })} placeholder={apModal.to === 'REJECTED' ? 'مثال: الأهداف غير قابلة للقياس، ويلزم تحديد الفئة المستهدفة.' : 'مثال: روجع الجدول الزمني مع المدربين.'} />
+              <textarea rows={3} value={apModal.note} onChange={e => setApModal(m => m && { ...m, note: e.target.value })} placeholder={apModal.to === 'REJECTED' ? 'مثال: الأهداف غير قابلة للقياس، ويلزم تحديد الفئة المستهدفة.' : 'مثال: روجع الجدول الزمني مع المدرّبين.'} />
             </label>
             <div className="db-row" style={{ justifyContent: 'flex-end' }}>
               <button className="db-btn" onClick={() => setApModal(null)} disabled={apModal.busy}>إلغاء</button>
@@ -332,7 +332,7 @@ export default function Dashboard() {
         </div>
         <div className="db-user">
           <div className="db-avatar">{(profile.full_name || 'م').trim().charAt(0)}</div>
-          <div><b>{profile.full_name || 'مدير المنصة'}</b><small>{myRoleLabel(my) || ROLE_LABEL[profile.role] || profile.role}</small></div>
+          <div><b>{profile.full_name || 'مدير البوّابة'}</b><small>{myRoleLabel(my) || ROLE_LABEL[profile.role] || profile.role}</small></div>
         </div>
         <nav className="db-nav">
           {NAV.filter(n => !wing || VIEWS_BY_WING[wing.key].includes(n.id)).map(n => (
@@ -408,7 +408,7 @@ export default function Dashboard() {
               <Kpi icon="users" label="المشاركون (فريد)" value={k.participants} sub={`${k.perDay} استجابة/يوم`} />
               <Kpi icon="check" label="رضا مرتفع (4–5)" value={`${k.highPct.toFixed(0)}%`} sub="من القياسات" delta={cmp?.deltaHighPct ?? null} suffix="%" />
               <Kpi icon="alert" label="تقييمات منخفضة (1–2)" value={`${k.lowPct.toFixed(0)}%`} sub={k.lowPct >= 10 ? 'فوق حد الإنذار 10%' : 'ضمن الحد الآمن'} delta={cmp?.deltaLowPct ?? null} suffix="%" good="down" color={k.lowPct >= 10 ? '#B9544A' : undefined} />
-              <Kpi icon="school" label="التغطية" value={k.rooms} sub={`قاعة · ${k.trainers} مدرب · ${k.programs} برنامج`} />
+              <Kpi icon="school" label="التغطية" value={k.rooms} sub={`شعبة · ${k.trainers} مدرّب · ${k.programs} برنامج`} />
               <Kpi icon="book" label="البرامج النشطة" value={programs.filter(p => p.status === 'ACTIVE').length} sub={`من ${programs.length} برنامج`} />
             </section>
 
@@ -450,7 +450,7 @@ export default function Dashboard() {
 
             {/* traffic light board */}
             <div className="db-g2">
-              <Board title="لوحة المدربين" icon="users" rows={trainers} href={`/reports/center?type=trainers&preset=${range === 'all' ? 'all' : range}`} />
+              <Board title="لوحة المدرّبين" icon="users" rows={trainers} href={`/reports/center?type=trainers&preset=${range === 'all' ? 'all' : range}`} />
               <Board title="لوحة الشُّعب والمجموعات" icon="school" rows={rooms.map(r => ({ ...r, label: `${r.label}${r.meta?.trainer_id ? ' — ' + labelFor('trainer', String(r.meta.trainer_id), lk, 'ar') : ''}` }))} href={`/reports/center?type=classrooms&preset=${range === 'all' ? 'all' : range}`} />
             </div>
 
@@ -495,7 +495,7 @@ export default function Dashboard() {
                   <label>تاريخ النهاية<input type="date" value={form.end_date} onChange={e => setForm({ ...form, end_date: e.target.value })} /></label>
                   <label className="wide">الوصف<textarea rows={3} value={form.description_ar} onChange={e => setForm({ ...form, description_ar: e.target.value })} /></label>
                   <details className="wide db-details" open={!!(form.intro_ar || form.objectives_ar || form.outcomes_ar)}>
-                    <summary><Icon name="book" size={16} /> المحتوى المهني للتقرير (يظهر تلقائيًا في الموجز التنفيذي ومقارنة البرامج وبطاقة المدرب)</summary>
+                    <summary><Icon name="book" size={16} /> المحتوى المهني للتقرير (يظهر تلقائيًا في الموجز التنفيذي ومقارنة البرامج وبطاقة المدرّب)</summary>
                     <div className="db-form-grid">
                       <label>مقدمة البرنامج (عربي)<textarea rows={3} value={form.intro_ar} onChange={e => setForm({ ...form, intro_ar: e.target.value })} /></label>
                       <label>Program overview (English)<textarea rows={3} dir="ltr" value={form.intro_en} onChange={e => setForm({ ...form, intro_en: e.target.value })} /></label>
@@ -569,14 +569,14 @@ export default function Dashboard() {
             <section className="db-kpis four">
               <Kpi icon="evaluations" label="تقييمات يومية" value={kAll.daily} sub="إجمالي" />
               <Kpi icon="flag" label="ختامية + نهاية البرنامج" value={kAll.final + kAll.end} sub={`ختامي ${kAll.final} · نهاية برنامج ${kAll.end}`} />
-              <Kpi icon="laptop" label="استطلاع التعلم عن بُعد" value={raw?.remoteResponses || 0} sub="استجابة" />
+              <Kpi icon="laptop" label="استبيان التعلم عن بُعد" value={raw?.remoteResponses || 0} sub="استجابة" />
               <Kpi icon="star" label="المتوسط العام" value={kAll.responses ? kAll.mean.toFixed(2) : '—'} sub={`الهدف ${TARGET}`} />
             </section>
             <div className="db-g3 db-g4">
-              <FormCard icon="evaluations" title="الاستبيان اليومي" desc="يُعبأ بعد كل حصة تدريبية — يرتبط بالقاعة والمدرب تلقائيًا." href="/evaluate/daily" admin="#eval-links" />
+              <FormCard icon="evaluations" title="الاستبيان اليومي" desc="يُعبأ بعد كل جلسة تدريبية — يرتبط بالشعبة والمدرّب تلقائيًا." href="/evaluate/daily" admin="#eval-links" />
               <FormCard icon="flag" title="الاستبيان الختامي" desc="يُعبأ مرة واحدة في نهاية البرنامج ويشمل الخدمات والإقامة." href="/evaluate/final" admin="#eval-links" />
               <FormCard icon="check" title="استبيان نهاية البرنامج" desc="عام لأيّ برنامج: الدورة والمدرّب (ليكرت) + ثلاثة آراء + تقدير عام + ترشيح 0–10. بلا خدمات ولا إقامة." href="/evaluate/end" admin="#eval-links" />
-              <FormCard icon="laptop" title="استطلاع التعلم عن بُعد" desc="للطلاب عبر Teams — مجهول الهوية، ثنائي اللغة، بروابط لكل مجموعة/موعد." href="/survey/remote-learning" admin="/admin/management?tab=rooms" />
+              <FormCard icon="laptop" title="استبيان التعلم عن بُعد" desc="للطلاب عبر Teams — مجهول الهوية، ثنائي اللغة، بروابط لكل مجموعة/موعد." href="/survey/remote-learning" admin="/admin/management?tab=rooms" />
             </div>
             <EvalLinks programs={programs as any} classrooms={(raw?.classrooms || []) as any} />
           </div>
@@ -600,7 +600,7 @@ export default function Dashboard() {
             ))}
             <div className="db-row">
               <Link href="/reports" className="db-btn">اللوحة التحليلية التفصيلية</Link>
-              <Link href="/reports/remote-survey" className="db-btn">نتائج استطلاع التعلم عن بُعد</Link>
+              <Link href="/reports/remote-survey" className="db-btn">نتائج استبيان التعلم عن بُعد</Link>
               <Link href="/reports/impact" className="db-btn">تقرير أثر التدريب (قبلي/بعدي)</Link>
             </div>
           </div>
@@ -640,7 +640,7 @@ export default function Dashboard() {
 /* ============================================================ pieces */
 function heroText(k: Kpis, cmp: ReturnType<typeof periodComparison>): string {
   if (!k.responses) return 'لا توجد استجابات في الفترة المختارة. وسّع النطاق الزمني أو تأكد من مشاركة روابط التقييم.';
-  const base = `${k.responses} استجابة من ${k.participants} مشاركًا عبر ${k.rooms} قاعة و${k.trainers} مدرب. نسبة الرضا المرتفع ${k.highPct.toFixed(0)}% والمنخفض ${k.lowPct.toFixed(0)}%.`;
+  const base = `${k.responses} استجابة من ${k.participants} مشاركًا عبر ${k.rooms} شعبة و${k.trainers} مدرّب. نسبة الرضا المرتفع ${k.highPct.toFixed(0)}% والمنخفض ${k.lowPct.toFixed(0)}%.`;
   const verdict = k.responses < THRESHOLDS.minSample ? ' العينة صغيرة — المؤشرات أولية.' : k.perf === 'EXCELLENT' ? ' الأداء يتجاوز الهدف؛ وثّق الممارسات الناجحة وعمّمها.' : k.perf === 'GOOD' ? ` أداء جيد والفجوة إلى الامتياز ${k.gap.toFixed(2)} درجة.` : k.perf === 'WATCH' ? ` الأداء دون الهدف بفجوة ${k.gap.toFixed(2)} — تلزم خطة تحسين خلال أسبوعين.` : ' مستوى خطر يستدعي تدخلًا عاجلًا.';
   const trend = cmp && cmp.deltaMean !== null ? ` ${cmp.deltaMean >= 0 ? 'تحسّن' : 'تراجع'} بمقدار ${Math.abs(cmp.deltaMean).toFixed(2)} مقارنة بالفترة السابقة.` : '';
   return base + verdict + trend;
@@ -710,7 +710,7 @@ function FormCard({ icon, title, desc, href, admin }: { icon: IconName; title: s
         <a className="db-btn primary" href={href} target="_blank" rel="noreferrer">فتح النموذج</a>
         <button className="db-btn" onClick={copy}><Icon name="link" size={14} /> {copied ? 'تم النسخ' : 'نسخ الرابط'}</button>
         <a className="db-btn" href={`https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=10&data=${encodeURIComponent(full)}`} target="_blank" rel="noreferrer">QR</a>
-        {admin && (admin.startsWith('#') ? <a className="db-link" href={admin}><Icon name="qr" size={13} /> QR لكل مجموعة</a> : <Link className="db-link" href={admin}>روابط المجموعات</Link>)}
+        {admin && (admin.startsWith('#') ? <a className="db-link" href={admin}><Icon name="qr" size={13} /> QR لكل مجموعة</a> : <Link className="db-link" href={admin}>روابط الشُّعب</Link>)}
       </div>
     </section>
   );

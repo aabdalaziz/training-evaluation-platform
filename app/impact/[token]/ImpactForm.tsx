@@ -15,7 +15,7 @@ type Result = { ok: boolean; error?: string; score?: number; scale_mean?: number
 
 const ERR: Record<string, string> = {
   not_found: 'الرابط غير صحيح أو انتهت صلاحيته.', closed: 'هذه الأداة مغلقة حاليًا.', bad_phase: 'مرحلة غير صحيحة.',
-  phase_closed: 'هذه المرحلة غير مفتوحة الآن — راجع المدرب.', bad_identity: 'أدخل معرّفًا صحيحًا (4 رموز على الأقل).', empty: 'أجب عن بند واحد على الأقل.',
+  phase_closed: 'هذه المرحلة غير مفتوحة الآن — راجع الميسّر.', bad_identity: 'أدخل معرّفًا صحيحًا (4 رموز على الأقل).', empty: 'أجب عن بند واحد على الأقل.',
 };
 
 export function ImpactForm({ token, initialPhase }: { token: string; initialPhase: Phase | null }) {
@@ -80,7 +80,7 @@ export function ImpactForm({ token, initialPhase }: { token: string; initialPhas
   );
 
   if (state === 'loading') return shell(<div className="fl-card fl-center fl-muted">جارٍ التحميل…</div>);
-  if (state === 'none') return shell(<div className="fl-card fl-center"><div className="fl-ok off"><Icon name="alert" size={28} /></div><h2>الرابط غير صحيح أو الأداة غير متاحة</h2><p className="fl-muted">تأكد من الرابط المرسل من المدرب أو إدارة البرنامج.</p></div>);
+  if (state === 'none') return shell(<div className="fl-card fl-center"><div className="fl-ok off"><Icon name="alert" size={28} /></div><h2>الرابط غير صحيح أو الأداة غير متاحة</h2><p className="fl-muted">تأكد من الرابط المرسل من الميسّر أو إدارة البرنامج.</p></div>);
   if (state === 'error' || !a) return shell(<div className="fl-card fl-center"><div className="fl-ok off"><Icon name="alert" size={28} /></div><h2>تعذر التحميل</h2><p className="fl-muted">{err}</p></div>);
 
   if (result) {

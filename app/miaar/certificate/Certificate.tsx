@@ -50,7 +50,7 @@ export default function Certificate({ code, fontClass = '' }: { code: string; fo
         <div><small>رمز التحقّق · Verification code</small><b dir="ltr">{code}</b></div>
         <div><small>التحقّق · Verify</small><b dir="ltr" className="cert-url">{verifyUrl.replace(/^https?:\/\//, '')}</b></div>
       </footer>
-      <p className="cert-legal">تصدر هذه الشهادة من منصّة أَثَر بناءً على اختبار معياري مُحكَم؛ التصحيح البشري للكتابة والتحدّث بمصحّحين معايَرين. © 2026 د. أحمد محمد عبدالعزيز بدوي — جميع الحقوق محفوظة.</p>
+      <p className="cert-legal">تصدر هذه الشهادة من بوّابة أَثَر بناءً على اختبار معياري مُحكَم؛ التصحيح البشري للكتابة والتحدّث بمصحّحين معايَرين. © 2026 د. أحمد محمد عبدالعزيز بدوي — جميع الحقوق محفوظة.</p>
     </article>}
   </main>;
 }

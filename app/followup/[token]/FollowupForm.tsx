@@ -16,11 +16,11 @@ type Result = { ok: boolean; error?: string; scale_mean?: number | null; applica
 const T = {
   ar: {
     kicker: 'متابعة أثر التدريب في بيئة العمل', loading: 'جارٍ التحميل…', none: 'الرابط غير صحيح أو انتهت صلاحيته.', closed: 'انتهت فترة المتابعة لهذه الحملة.',
-    whoAreYou: 'بصفتك:', you: 'بياناتك', yourName: 'اسمك', yourEmail: 'بريدك الإلكتروني', trainee: 'المتدرب الذي تقيّمه', traineeName: 'اسم المتدرب', traineeEmail: 'بريد المتدرب (إن وُجد — يساعد في مطابقة التقييمين)',
+    whoAreYou: 'بصفتك:', you: 'بياناتك', yourName: 'اسمك', yourEmail: 'بريدك الإلكتروني', trainee: 'المشارك الذي تقيّمه', traineeName: 'اسم المشارك', traineeEmail: 'بريد المشارك (إن وُجد — يساعد في مطابقة التقييمين)',
     intro: 'مرّ وقت كافٍ منذ ختام البرنامج. نرجو تقييم ما تم تطبيقه فعليًا في العمل — إجاباتك تُستخدم لتحسين البرامج القادمة فقط.',
     scaleHint: '1 = لا ينطبق إطلاقًا · 5 = ينطبق بدرجة كبيرة', submit: 'إرسال التقييم', saving: 'جارٍ الإرسال…', required: 'يرجى الإجابة عن البنود المطلوبة', thanks: 'شكرًا لك — تم استلام تقييمك', thanksSub: 'مساهمتك تساعدنا على قياس الأثر الحقيقي للتدريب وتحسينه.',
     yourMean: 'متوسط تقديرك', yourApp: 'نسبة التطبيق', optional: 'اختياري', other: 'أخرى (اكتب)',
-    errors: { not_found: 'الرابط غير صحيح.', closed: 'انتهت فترة المتابعة.', bad_role: 'دور غير صحيح.', role_closed: 'هذا الدور غير مفعّل في هذه الحملة.', bad_name: 'اكتب اسمك الكامل.', bad_trainee: 'اكتب اسم المتدرب.', empty: 'أجب عن بند واحد على الأقل.' } as Record<string, string>,
+    errors: { not_found: 'الرابط غير صحيح.', closed: 'انتهت فترة المتابعة.', bad_role: 'دور غير صحيح.', role_closed: 'هذا الدور غير مفعّل في هذه الحملة.', bad_name: 'اكتب اسمك الكامل.', bad_trainee: 'اكتب اسم المشارك.', empty: 'أجب عن بند واحد على الأقل.' } as Record<string, string>,
   },
   en: {
     kicker: 'On-the-job training impact follow-up', loading: 'Loading…', none: 'Invalid or expired link.', closed: 'This follow-up campaign has ended.',

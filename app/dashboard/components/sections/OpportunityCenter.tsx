@@ -12,7 +12,7 @@ const opportunities = [
     title: 'تحسين إدارة الوقت',
     impact: 'مرتفع',
     expected: '+0.35',
-    action: 'اجتماع مع المدربين',
+    action: 'اجتماع مع المدرّبين',
     color: '#8A5A1E',
   },
   {

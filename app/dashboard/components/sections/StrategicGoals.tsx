@@ -2,7 +2,7 @@
 
 const goals = [
   {
-    title: 'رفع رضا المتدربين',
+    title: 'رفع رضا المشاركين',
     target: 95,
     current: 91,
     color: '#8E4A68',

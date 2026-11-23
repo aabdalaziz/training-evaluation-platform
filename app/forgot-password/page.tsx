@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
       {sent ? (
         <>
           <AuthMessage kind="ok">
-            إذا كان البريد <bdi dir="ltr">{email}</bdi> مسجَّلًا في المنصة فستصلك رسالة خلال دقيقة تحتوي على رابط إعادة التعيين.
+            إذا كان البريد <bdi dir="ltr">{email}</bdi> مسجَّلًا في البوّابة فستصلك رسالة خلال دقيقة تحتوي على رابط إعادة التعيين.
             <br />الرابط صالح لمدة محدودة ولاستخدام واحد فقط.
           </AuthMessage>
           <p style={{ color: '#8E7F8A', fontSize: 14, lineHeight: 1.9, marginTop: 16 }}>

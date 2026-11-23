@@ -8,13 +8,13 @@ const areas = [
     value: 96,
   },
   {
-    title: 'المدربون',
+    title: 'المدرّبون',
     status: 'جيد',
     color: '#8E4A68',
     value: 90,
   },
   {
-    title: 'المتدربون',
+    title: 'المشاركون',
     status: 'ممتاز',
     color: '#3F7F79',
     value: 95,
