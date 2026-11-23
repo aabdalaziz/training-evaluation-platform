@@ -17,10 +17,10 @@ export const KPI_TEMPLATES: { group: string; items: Omit<OutcomeKpi, 'id' | 'pro
     { name_ar: 'نسبة اجتياز اختبار المستوى', name_en: 'Placement/level test pass rate', unit: '%', direction: 'up', weight: 3 },
     { name_ar: 'متوسط درجة الاختبار المعياري', name_en: 'Average standardized test score', unit: 'درجة', direction: 'up', weight: 3 },
     { name_ar: 'نسبة الاستمرار حتى نهاية المستوى', name_en: 'Retention to end of level', unit: '%', direction: 'up', weight: 2 },
-    { name_ar: 'نسبة المتدربين المنتقلين للمستوى التالي', name_en: 'Progression to next level', unit: '%', direction: 'up', weight: 2 },
+    { name_ar: 'نسبة المشاركين المنتقلين للمستوى التالي', name_en: 'Progression to next level', unit: '%', direction: 'up', weight: 2 },
   ] },
   { group: 'الأداء الوظيفي والتشغيل', items: [
-    { name_ar: 'رضا المستفيدين من خدمة المتدرب', name_en: 'Beneficiary satisfaction', unit: '%', direction: 'up', weight: 3 },
+    { name_ar: 'رضا المستفيدين من خدمة المشارك', name_en: 'Beneficiary satisfaction', unit: '%', direction: 'up', weight: 3 },
     { name_ar: 'نسبة الأخطاء / إعادة العمل', name_en: 'Error / rework rate', unit: '%', direction: 'down', weight: 2 },
     { name_ar: 'زمن إنجاز المهمة', name_en: 'Task completion time', unit: 'دقيقة', direction: 'down', weight: 2 },
     { name_ar: 'نسبة الالتزام بالإجراءات', name_en: 'Procedure compliance', unit: '%', direction: 'up', weight: 2 },
@@ -119,9 +119,9 @@ export function chainScore(c: ChainLevels): ChainScore {
 }
 
 export const LEVEL_META: Record<1 | 2 | 3 | 4, { ar: string; en: string; what: string; source: string; href: string }> = {
-  1: { ar: 'رد الفعل', en: 'Reaction', what: 'رضا المتدربين عن البرنامج والمدرب والبيئة', source: 'التقييم اليومي/النهائي', href: '/reports/center' },
+  1: { ar: 'رد الفعل', en: 'Reaction', what: 'رضا المشاركين عن البرنامج والمدرّب والبيئة', source: 'التقييم اليومي/النهائي', href: '/reports/center' },
   2: { ar: 'التعلم', en: 'Learning', what: 'الكسب في المعرفة والمهارة (قبلي/بعدي)', source: 'أداة قياس الأثر', href: '/reports/impact' },
-  3: { ar: 'السلوك', en: 'Behavior', what: 'تطبيق ما تم تعلّمه في بيئة العمل', source: 'متابعة المشرف والمتدرب', href: '/reports/transfer' },
+  3: { ar: 'السلوك', en: 'Behavior', what: 'تطبيق ما تم تعلّمه في بيئة العمل', source: 'متابعة المشرف والمشارك', href: '/reports/transfer' },
   4: { ar: 'النتائج', en: 'Results', what: 'أثر البرنامج على مؤشرات المؤسسة', source: 'مؤشرات النتائج', href: '/admin/outcomes' },
 };
 
@@ -140,7 +140,7 @@ export function chainRecommendations(c: ChainLevels, s: ChainScore): string[] {
   if (s.s1 != null && s.s2 != null && s.s1 >= 75 && s.s2 < 40) out.push('رضا مرتفع مع كسب تعلّم منخفض: راجع عمق المحتوى والأنشطة التطبيقية — الرضا وحده لا يعني التعلم.');
   if (s.s2 != null && s.s3 != null && s.s2 >= 60 && s.s3 < 50) out.push('تعلّم جيد لكنه لا يُنقل إلى العمل: السلسلة تنكسر عند التطبيق — فعّل خطة عمل فردية ودعم المشرف المباشر وراجع معوقات النقل.');
   if (s.s3 != null && s.s4 != null && s.s3 >= 60 && s.s4 < 50) out.push('سلوك متغيّر دون أثر على المؤشرات بعد: قد يحتاج الأثر وقتًا أطول، أو المؤشرات المختارة غير مرتبطة مباشرة بالسلوكيات المستهدفة — راجع اختيار المؤشرات.');
-  if (s.weakest === 1 && s.s1 != null && s.s1 < 70) out.push('رد الفعل هو الأضعف: راجع تعليقات المتدربين في التقييم اليومي/النهائي (المدرب، المحتوى، البيئة) وعالج أقل محور.');
+  if (s.weakest === 1 && s.s1 != null && s.s1 < 70) out.push('رد الفعل هو الأضعف: راجع تعليقات المشاركين في التقييم اليومي/النهائي (المدرّب، المحتوى، البيئة) وعالج أقل محور.');
   if (s.weakest === 2 && s.s2 != null && s.s2 < 70) out.push('التعلم هو الأضعف (كسب معياري متوسط أو منخفض): راجع مواءمة الأسئلة مع الأهداف، وزد التدريب العملي والتغذية الراجعة أثناء البرنامج.');
   if (s.weakest === 3 && s.s3 != null && s.s3 < 70) out.push('السلوك هو الأضعف: راجع معوقات النقل المبلّغ عنها في تقرير المستوى 3، وفعّل خطة التطبيق ومتابعة المشرف.');
   if (s.weakest === 4 && s.s4 != null && s.s4 < 70) out.push('النتائج هي الأضعف: تحقق من جودة خط الأساس والمستهدفات، وسجّل قياسًا جديدًا بعد فترة كافية (3–6 أشهر).');

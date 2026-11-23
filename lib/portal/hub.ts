@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * «مؤشرات أَثَر» — الأبواب الحيّة (P42-ب)
- *  كل باب (/hub/<slug>) يعرض: مؤشرات أَثَر (أرقام حيّة من جداول البوابة تخصّ الصفة وحدها)
+ *  كل باب (/hub/<slug>) يعرض: مؤشرات أَثَر (أرقام حيّة من جداول البوّابة تخصّ الصفة وحدها)
  *  + «ينتظر قرارك» (صفوف تنتظر قرارًا بشريًا، برابط مكانها) + «أول ثلاث خطوات» لمن يدخل أول مرة.
  *  القراءة بصلاحية الخدمة بعد التحقق من الصفة في المسار — ولا يُحتسب إلا عدّ/مجموع، لا أسماء.
  *  أي جدول غائب أو خطأ → المؤشر يعود null ويُعرض «—» (لا يُفشل الباب).
@@ -15,20 +15,20 @@ export type DoorLive = { slug: DoorSlug; indicators: Indicator[]; decisions: Dec
 export const DOOR_SLUGS: DoorSlug[] = ['leadership', 'programs', 'diplomas', 'quality', 'operations', 'finance', 'expert', 'trainer'];
 export const DOORS: Record<DoorSlug, Door> = {
   leadership: { title_ar: 'القيادة', title_en: 'Leadership', roles: ['LEADERSHIP'], lead: 'نظرة الأثر لا التفاصيل: أين نقف اليوم؟ وما الذي يحتاج قرارًا بشريًا؟', links: [
-    { href: '/admin/impact', label: 'أثر البرامج', hint: 'ما الذي تغيّر فعلًا' }, { href: '/admin/observatory', label: 'مرصد القدرة البشرية', hint: 'القطاعات والفجوات' }, { href: '/admin/sector-impact', label: 'الأثر القطاعي', hint: 'بالقطاع والجهة' }, { href: '/admin/health', label: 'صحة المنصة', hint: 'إشارات تحتاج قرارًا' }, { href: '/admin/councils', label: 'مجالس أَثَر', hint: 'الدورة الحالية' }] },
+    { href: '/admin/impact', label: 'أثر البرامج', hint: 'ما الذي تغيّر فعلًا' }, { href: '/admin/observatory', label: 'مرصد القدرة البشرية', hint: 'القطاعات والفجوات' }, { href: '/admin/sector-impact', label: 'الأثر القطاعي', hint: 'بالقطاع والجهة' }, { href: '/admin/health', label: 'صحة البوّابة', hint: 'إشارات تحتاج قرارًا' }, { href: '/admin/councils', label: 'مجالس أَثَر', hint: 'الدورة الحالية' }] },
   programs: { title_ar: 'البرامج', title_en: 'Programs', roles: ['EXEC_PROGRAMS', 'EXEC_ARABIC'], lead: 'من التصميم إلى الشهادة: هندسة البرنامج، التسجيل، الحضور، التقييم.', links: [
     { href: '/admin/program-engineering', label: 'هندسة البرامج التدريبية', hint: 'تصميم ومراجعة' }, { href: '/admin/enrollments', label: 'التسجيل والقبول', hint: 'الطلبات والشُّعب' }, { href: '/admin/attendance', label: 'الحضور', hint: 'بالجلسة' }, { href: '/admin/live', label: 'الجلسات الحيّة', hint: 'Teams · Zoom · Meet' }, { href: '/admin/certificates', label: 'الشهادات', hint: 'إصدار وتحقق' }, { href: '/admin/miaar', label: 'مِعيار', hint: 'تحديد المستوى' }] },
   diplomas: { title_ar: 'الدبلومات', title_en: 'Diplomas', roles: ['EXEC_DIPLOMAS'], lead: 'المسارات الطويلة: الدفعات، التقدّم، الشهادة التي تكبر.', links: [
     { href: '/admin/program-engineering', label: 'هندسة البرامج', hint: 'مسارات الدبلوم' }, { href: '/admin/enrollments', label: 'الدفعات والقبول', hint: 'بالدبلوم' }, { href: '/admin/outcomes', label: 'المخرجات', hint: 'نواتج التعلّم' }, { href: '/admin/credentials', label: 'الاعتمادات', hint: 'الشهادة التي تكبر' }] },
   quality: { title_ar: 'الجودة', title_en: 'Quality', roles: ['QUALITY_MANAGER'], lead: 'الأدلة قبل الانطباعات: التقييمات، حلقة التحسين، قاعدة الأدلة.', links: [
-    { href: '/admin/survey-settings', label: 'الاستبانات', hint: 'النماذج والمواعيد' }, { href: '/admin/evidence', label: 'قاعدة الأدلة', hint: 'ما يثبت الأثر' }, { href: '/admin/loop', label: 'التحسين المستمر', hint: 'اقتراحات بالأدلة' }, { href: '/admin/pulse', label: 'نبض البيئة', hint: 'أين تتسرّب الجودة؟' }, { href: '/admin/readiness', label: 'الجاهزية', hint: 'قبل الانطلاق' }, { href: '/admin/audit', label: 'سجل التدقيق', hint: 'من فعل ماذا' }] },
+    { href: '/admin/survey-settings', label: 'الاستبيانات', hint: 'النماذج والمواعيد' }, { href: '/admin/evidence', label: 'قاعدة الأدلة', hint: 'ما يثبت الأثر' }, { href: '/admin/loop', label: 'التحسين المستمر', hint: 'اقتراحات بالأدلة' }, { href: '/admin/pulse', label: 'نبض البيئة', hint: 'أين تتسرّب الجودة؟' }, { href: '/admin/readiness', label: 'الجاهزية', hint: 'قبل الانطلاق' }, { href: '/admin/audit', label: 'سجل التدقيق', hint: 'من فعل ماذا' }] },
   operations: { title_ar: 'العمليات', title_en: 'Operations', roles: ['ADMIN_SUPERVISOR'], lead: 'اليوم التشغيلي: الوارد، التنبيهات، المهام، الإبلاغ.', links: [
     { href: '/admin/inbox', label: 'الوارد', hint: 'ما وصل اليوم' }, { href: '/admin/missions', label: 'المهام', hint: 'مَن يتابع ماذا' }, { href: '/admin/notifications', label: 'التنبيهات', hint: 'الإرسال والقنوات' }, { href: '/admin/outreach', label: 'الإبلاغ متعدد القنوات', hint: 'بريد · واتساب' }, { href: '/admin/followup', label: 'المتابعة', hint: 'بعد البرنامج' }] },
   finance: { title_ar: 'المالية', title_en: 'Finance', roles: ['FINANCE_MANAGER'], lead: 'المدفوعات والعقود والتحصيل — بلا الوصول إلى ما لا يخصّ المالية.', links: [
     { href: '/admin/payments', label: 'المدفوعات', hint: 'الحالة والتحصيل' }, { href: '/admin/contracts', label: 'العقود', hint: 'عقود التعاون' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'الطلبات والعروض' }] },
   expert: { title_ar: 'الخبراء والمستشارون', title_en: 'Experts & consultants', roles: ['CONSULTANT', 'EXPERT'], lead: 'سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر — ومهامك عقدٌ على كل مهمة.', links: [
     { href: '/experts', label: 'خبراء أَثَر', hint: 'ملفك العام' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك ومهامك' }, { href: '/admin/consulting', label: 'الاستشارات', hint: 'المهام المسندة' }] },
-  trainer: { title_ar: 'المدرّبون', title_en: 'Trainers', roles: ['TRAINER'], lead: 'برامجك، جلساتك الحيّة، حضور متدرّبيك، وما قاله المتدرّبون عن الأثر.', links: [
+  trainer: { title_ar: 'المدرّبون', title_en: 'Trainers', roles: ['TRAINER'], lead: 'برامجك، جلساتك الحيّة، حضور مشاركيك، وما قاله المشاركون عن الأثر.', links: [
     { href: '/me/day', label: 'دفتر اليوم', hint: 'صباحك في صفحة واحدة: جلساتك، من غاب، من توقّف، و«كلمة»' }, /* P51 */ { href: '/trainers', label: 'هيئة أَثَر — المدرّبون', hint: 'ملفك العام' }, { href: '/admin/live', label: 'جلساتي الحيّة', hint: 'الغرف والروابط' }, { href: '/admin/attendance', label: 'الحضور', hint: 'جلساتك' }, { href: '/me', label: 'مساحتي', hint: 'سيرتك وشهاداتك' }] },
 };
 
@@ -36,11 +36,11 @@ export const DOOR_STEPS: Record<DoorSlug, [string, string, string]> = {
   leadership: ['افتح «أثر البرامج» واقرأ ما تغيّر فعلًا في آخر 30 يومًا', 'راجع «ما ينتظر قرارك» — القرار البشري هو ما يحوّل الاقتراح إلى فعل', 'اطلب من «أثير» ملخّصًا تنفيذيًا: Ctrl+K ثم اكتب سؤالك بعلامة ؟'],
   programs: ['ابدأ بطلبات التسجيل المعلّقة — كل طلب هو إنسان ينتظر', 'افتح جلسات اليوم وتأكّد من روابط الغرف قبل موعدها بساعة', 'راجع مسودّات هندسة البرامج الجاهزة للنشر'],
   diplomas: ['راجع دفعات الدبلوم وطلبات القبول المعلّقة', 'تابع المخرجات: أيّ ناتج تعلّم لم يُقَس بعد؟', 'اعتمد الشهادات التي اكتملت شروطها — «الشهادة التي تكبر» تبدأ من هنا'],
-  quality: ['اقرأ اقتراحات حلقة التحسين — اقبل أو ارفض بالأدلة', 'اعتمد بنود بنك مِعيار «قيد المراجعة» مستوى مستوى', 'تحقّق من الاستبانات المفتوحة ومواعيد إغلاقها'],
+  quality: ['اقرأ اقتراحات حلقة التحسين — اقبل أو ارفض بالأدلة', 'اعتمد بنود بنك مِعيار «قيد المراجعة» مستوى مستوى', 'تحقّق من الاستبيانات المفتوحة ومواعيد إغلاقها'],
   operations: ['ابدأ بالوارد الجديد ثم المهام المتأخرة', 'طلبات حقوق البيانات لها 30 يومًا نظامًا — الأقدم أولًا', 'راجع التنبيهات: ما أُرسل وما فشل وما ينتظر قناة بديلة'],
   finance: ['الفواتير «قيد المراجعة» تحتاج تأكيد الدفع يدويًا', 'راجع المتأخّر عن موعده وتواصل عبر قناة المشارك المفضّلة', 'عقود الأثر النشطة: ما الدفعة التالية وما دليلها؟'],
   expert: ['أكمل سيرتك الذاتية في هيئة أَثَر الاستشارية — الصورة شرط للاعتماد', 'راجع عقود المهام المقترحة ووقّع ما توافق عليه', 'فعّل «أثر معك» ليصلك ما يخصّك فقط'],
-  trainer: ['راجع جلساتك القادمة وجرّب رابط الغرفة', 'سجّل الحضور في نهاية كل جلسة — هو دليل الأثر الأول', 'اقرأ ما قاله متدرّبوك في مرآة الأداء'],
+  trainer: ['راجع جلساتك القادمة وجرّب رابط الغرفة', 'سجّل الحضور في نهاية كل جلسة — هو دليل الأثر الأول', 'اقرأ ما قاله مشاركوك في مرآة الأداء'],
 };
 
 export const doorFor = (slug: string): Door | null => (DOOR_SLUGS as string[]).includes(slug) ? DOORS[slug as DoorSlug] : null;

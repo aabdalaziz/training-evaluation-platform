@@ -59,7 +59,7 @@ const topTheme = (evs: OrgEvent[]) => { const m = new Map<string, number>(); for
 
 const WHAT: Record<Exclude<OrgChapterKind, 'charter' | 'twinning' | 'contract' | 'org_pledge' | 'org_after'>, (n: number, theme: string | null) => [string, string]> = {
   daily: n => [`${nPeople(n)} واجهوا أول موقف لهم`, `في «كل يوم مهارة» كتب ${nPeople(n)} من منسوبيكم — لأول مرة — كيف يتصرّفون في موقف حقيقي، بكلماتهم لا بخيارات جاهزة.`],
-  mission: n => [`${nPeople(n)} نقلوا التعلّم إلى قلب العمل`, `مهام أكّد المشرفون أنها حدثت فعلًا لـ${nPeople(n)} — الأثر هنا شهادة مشرف لا تقرير متدرب.`],
+  mission: n => [`${nPeople(n)} نقلوا التعلّم إلى قلب العمل`, `مهام أكّد المشرفون أنها حدثت فعلًا لـ${nPeople(n)} — الأثر هنا شهادة مشرف لا تقرير مشارك.`],
   council: n => [`${nPeople(n)} جلسوا مع أقران من جهات أخرى`, `وقّع ${nPeople(n)} ميثاق مجلس أقران وجلسوا إلى طاولة لا تضم جهتهم وحدها.`],
   return: (n, t) => [`${nPeople(n)} عادوا إلى مجالسهم بما حدث`, `بعد التزام علني في مجلس، عاد ${nPeople(n)} ليقولوا ما حدث فعلًا — نجح أو تعثّر أو تغيّر الفهم${t ? ` — الموضوع الغالب: ${t}` : ''}.`],
   attestation: n => [`أقرانٌ شهدوا لـ${nPeople(n)}`, `شهادات أقران على سلوك رُئي فعلًا، اعتمدها إنسان، لـ${nPeople(n)} من منسوبيكم.`],

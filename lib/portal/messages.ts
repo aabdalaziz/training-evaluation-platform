@@ -12,7 +12,7 @@ export const WA_TEMPLATES: WaTemplate[] = [
     body_ar: 'مرحبًا {{1}}، أُسندت إليك مهمة من أَثَر: «{{2}}». المهلة: {{3}}. افتح المهمة وارفع دليلك من هنا: {{4}}' },
   { name: 'athar_mission_reminder', label_ar: 'تذكير بمهمة', category: 'UTILITY', vars: ['الاسم', 'عنوان المهمة', 'المتبقي', 'الرابط'],
     body_ar: 'تذكير من أَثَر يا {{1}}: مهمة «{{2}}» تنتهي خلال {{3}}. خمس دقائق تكفي: {{4}}' },
-  { name: 'athar_confirm_request', label_ar: 'طلب تأكيد مشرف', category: 'UTILITY', vars: ['اسم المشرف', 'اسم المتعلم', 'عنوان المهمة', 'الرابط'],
+  { name: 'athar_confirm_request', label_ar: 'طلب تأكيد مشرف', category: 'UTILITY', vars: ['اسم المشرف', 'اسم المتعلّم', 'عنوان المهمة', 'الرابط'],
     body_ar: 'مرحبًا {{1}}، يطلب أَثَر تأكيدك لدليل قدّمه {{2}} في مهمة «{{3}}». يستغرق دقيقة: {{4}}' },
   { name: 'athar_live_reminder', label_ar: 'تذكير بجلسة مباشرة', category: 'UTILITY', vars: ['الاسم', 'عنوان الجلسة', 'الموعد', 'الرابط'],
     body_ar: 'مرحبًا {{1}}، جلستك المباشرة في أَثَر «{{2}}» تبدأ {{3}}. رابط الدخول: {{4}}' },
@@ -42,7 +42,7 @@ export function waParams(kind: string, d: Record<string, string>): string[] {
   switch (t.name) {
     case 'athar_mission_assigned': return [name, d.title || subject, d.due || 'حسب المهمة', url];
     case 'athar_mission_reminder': return [name, d.title || subject, d.left || 'أيام قليلة', url];
-    case 'athar_confirm_request': return [name, d.learner || 'متعلم', d.title || subject, url];
+    case 'athar_confirm_request': return [name, d.learner || 'متعلّم', d.title || subject, url];
     case 'athar_live_reminder': return [name, d.title || subject, d.when || 'قريبًا', url];
     case 'athar_certificate': return [name, d.title || subject, url];
     case 'athar_contract_release': return [name, subject, url];
@@ -57,7 +57,7 @@ export const KIND_LABEL_AR: Record<string, string> = {
   certificate_issued: 'شهادة صادرة', certificate: 'شهادة', enrollment_ack: 'استلام طلب تسجيل', enrollment_accepted: 'قبول تسجيل', enrollment_rejected: 'اعتذار تسجيل', enrollment_waitlisted: 'قائمة انتظار',
   invoice: 'فاتورة', receipt: 'إيصال', consult_received: 'استلام طلب استشارة', consult_new: 'طلب استشارة جديد', consult_quote: 'عرض سعر', consult_response: 'ردّ على عرض', consult_status: 'حالة استشارة', consult_update: 'تحديث استشارة',
   agent_request: 'طلب وكيل', org_invite: 'دعوة جهة', org_admin: 'تعيين مدير جهة', org_bulk: 'طلب تسجيل جماعي', notice: 'إشعار', test: 'إرسال تجريبي',
-  behavior_followup: 'متابعة أثر التدريب', final_open: 'فتح التقييم الختامي', copilot_remind: 'تذكير الميسِّر', live_reminder_auto: 'تذكير جلسة (تلقائي)', credential_issued: 'شهادة رقمية صادرة', digest: 'موجز التقارير', observatory_weather: 'تغيّر مؤشر أداء القطاع (المرصد)', report: 'تقرير', notifications: 'تنبيهات المنصة', receipt_review: 'إيصال للمراجعة', enrollment_new: 'طلب تسجيل جديد',
+  behavior_followup: 'متابعة أثر التدريب', final_open: 'فتح التقييم الختامي', copilot_remind: 'تذكير الميسِّر', live_reminder_auto: 'تذكير جلسة (تلقائي)', credential_issued: 'شهادة رقمية صادرة', digest: 'موجز التقارير', observatory_weather: 'تغيّر مؤشر أداء القطاع (المرصد)', report: 'تقرير', notifications: 'تنبيهات البوّابة', receipt_review: 'إيصال للمراجعة', enrollment_new: 'طلب تسجيل جديد',
   dsr_received: 'طلب بيانات (الخزنة)', dsr_due: 'مهلة طلب بيانات', erasure_confirm: 'تأكيد النسيان', erasure_receipt: 'إيصال النسيان', incident_due: 'حادثة بيانات', correction_received: 'استلام طلب تصحيح',
 };
 export const kindLabel = (k: string) => KIND_LABEL_AR[k] || k;

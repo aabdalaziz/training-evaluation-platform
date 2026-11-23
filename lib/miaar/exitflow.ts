@@ -166,7 +166,7 @@ export async function skillRetakeInvite(db: Db, reportId: string, actorId: strin
   return { ok: true, url, invite: r.invite, skill, expires_at };
 }
 
-/* ---------- لوحة المجموعة ---------- */
+/* ---------- لوحة الشعبة ---------- */
 export async function boardFor(db: Db, inviteId: string) {
   const { data: inv } = await db.from('placement_invites').select('*').eq('id', inviteId).maybeSingle(); if (!inv) return null;
   const [{ data: sessions }, { data: reports }, { data: recipients }] = await Promise.all([

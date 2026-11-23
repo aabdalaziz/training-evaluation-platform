@@ -2,8 +2,8 @@
 /**
  * P70-ب «رجع الصدى» — الاسم الرسمي: «صدى المستوى للأستاذ — موجز الشعبة بلا أسماء» / Level Echo — Anonymous Section Digest for the Instructor
  *  - في الأسبوع الأول من مستوى ≥ 2 يرى أستاذ المحاضرة، داخل «الممرّ»، ما قالته الشعبة عبر المستوى الماضي كلّه: أعداد وعبارات مجمَّعة (k ≥ 5)
- *    من كلمات المتدرّبين وحدها (سطور P66 · التزاماتهم · ما كتبوه عن عبورهم في صفحة المستوى P70). لا أسماء · لا درجات · لا قراءة من سجلّات مِعيار.
- *  - يردّ بـ «كلمة العبور» (آلية «كلمة المدرّب» P51/P55 بعلامة echo) فتصل كلَّ متدرّب في «سطري» تحت «الكلمة التي تعبر»؛ يردّ عليها المتدرّب بلمسات P53.
+ *    من كلمات المشاركين وحدها (سطور P66 · التزاماتهم · ما كتبوه عن عبورهم في صفحة المستوى P70). لا أسماء · لا درجات · لا قراءة من سجلّات مِعيار.
+ *  - يردّ بـ «كلمة العبور» (آلية «كلمة المدرّب» P51/P55 بعلامة echo) فتصل كلَّ مشارك في «سطري» تحت «الكلمة التي تعبر»؛ يردّ عليها المشارك بلمسات P53.
  *  - «صدى الصدى»: بعد الإرسال يرى الأستاذ الوصول واللمسات — ليعرف أثر كلمته قبل أن يكتب التالية.
  *  - يُحسب عند الفتح ولا يُخزَّن. صفر جداول جديدة · صفر كرون · صفر ذكاء اصطناعي.
  *  الجزء الصرف: echoPhase · buildInstructorEcho · echoWordTitleAr · echoDedupeKey · ECHO_LIMITS — الغراء: instructorEcho · learnerEchoWord · echoReach · levelEvidence
@@ -92,7 +92,7 @@ export async function echoReach(db: Db, classroomId: string, levelNo: number): P
   const v = first.meta && (first.meta as any).voice; const voice_sec = v && typeof v.sec === 'number' ? Number(v.sec) : null;
   return { text_ar: voice_sec && !String(first.body_ar || '').trim() ? null : String(first.body_ar || ''), voice_sec, at: String(first.created_at || ''), sent: ns.length, reach: { replies: replies.length, chips } };
 }
-/** للمتدرّب في «سطري»: كلمة العبور التي وصلته في مستواه الحالي (إن وُجدت) — له وحده */
+/** للمشارك في «سطري»: كلمة العبور التي وصلته في مستواه الحالي (إن وُجدت) — له وحده */
 export async function learnerEchoWord(db: Db, email: string, classroomId: string, levelNo: number): Promise<{ notice_id: string; title_ar: string; text_ar: string; voice_sec: number | null; at: string; level_no: number } | null> {
   const em = String(email || '').trim().toLowerCase();
   const rows = await safe<any[]>(db.from('portal_learner_notices').select('id,title_ar,body_ar,created_at,meta,dedupe_key').eq('email', em).eq('kind', 'trainer_word').like('dedupe_key', `${echoDedupePrefix(classroomId, levelNo)}%`).limit(10), []);
@@ -100,7 +100,7 @@ export async function learnerEchoWord(db: Db, email: string, classroomId: string
   return { notice_id: String(n.id), title_ar: String(n.title_ar || ''), text_ar: String(n.body_ar || ''), voice_sec: v && typeof v.sec === 'number' ? Number(v.sec) : null, at: String(n.created_at || ''), level_no: levelNo };
 }
 /* ───────── الاعتماد (P61 · 3.5) ───────── */
-export const levelEvidenceLineAr = (n: number, levels: number): string | null => n < ECHO_LIMITS.k ? null : `${ECHO_NAMES_AR.evidence}: صفحات المستوى التي ختمها المتدرّبون بأيديهم ${n} (عبر ${arN(levels, 'مستوى واحد', 'مستويين', 'مستويات', 'مستوى')}) — عدد فقط، بلا محتوى.`;
+export const levelEvidenceLineAr = (n: number, levels: number): string | null => n < ECHO_LIMITS.k ? null : `${ECHO_NAMES_AR.evidence}: صفحات المستوى التي ختمها المشاركون بأيديهم ${n} (عبر ${arN(levels, 'مستوى واحد', 'مستويين', 'مستويات', 'مستوى')}) — عدد فقط، بلا محتوى.`;
 export async function levelEvidence(db: Db, programId: string): Promise<Array<{ id: string; kind: 'level'; codes: string[]; label_ar: string; at: null; href: null; n: number }>> {
   const rows = await safe<any[]>(db.from('portal_level_pages').select('level_no').eq('program_id', programId).not('sealed_at', 'is', null).is('revoked_at', null).limit(2000), []);
   const line = levelEvidenceLineAr(rows.length, new Set(rows.map((r) => Number(r.level_no))).size); if (!line) return [];

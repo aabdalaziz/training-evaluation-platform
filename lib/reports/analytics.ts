@@ -103,7 +103,7 @@ export const RISK_LABEL: Record<RiskKey, { ar: string; en: string; color: string
   NA: { ar: 'غير محدد', en: 'N/A', color: '#8E7F8A', bg: '#F6EBE0' },
 };
 export const CATEGORY_LABEL: Record<Category, { ar: string; en: string }> = {
-  trainer: { ar: 'المدرب', en: 'Trainer' }, education: { ar: 'التعليم والمحتوى', en: 'Teaching & content' },
+  trainer: { ar: 'المدرّب', en: 'Trainer' }, education: { ar: 'التعليم والمحتوى', en: 'Teaching & content' },
   facility: { ar: 'القاعات والتجهيزات', en: 'Facilities' }, arrival: { ar: 'الوصول والاستقبال', en: 'Arrival' },
   hospitality: { ar: 'الضيافة والخدمات', en: 'Hospitality' }, transport: { ar: 'النقل', en: 'Transport' },
   housing: { ar: 'السكن', en: 'Housing' }, tours: { ar: 'الجولات والزيارات', en: 'Tours' }, umrah: { ar: 'العمرة', en: 'Umrah' },
@@ -156,7 +156,7 @@ export function weekKey(ymd: string): string {
 export function axisCategory(ar = '', en = ''): Category {
   const s = `${ar} ${en}`.toLowerCase();
   const has = (...k: string[]) => k.some(x => s.includes(x));
-  if (has('مدرب', 'معلم', 'teacher', 'trainer', 'instructor')) return 'trainer';
+  if (has('مدرّب', 'معلم', 'teacher', 'trainer', 'instructor')) return 'trainer';
   if (has('تعليم', 'تعلم', 'مادة', 'محتوى', 'درس', 'حصة', 'learning', 'content', 'lesson', 'session')) return 'education';
   if (has('قاعة', 'تجهيز', 'facilit', 'room', 'equipment')) return 'facility';
   if (has('وصول', 'استقبال', 'airport', 'arrival', 'reception')) return 'arrival';
@@ -261,7 +261,7 @@ export function buildComments(evals: Evaluation[], answers: RawAnswer[], questio
 export function keywordFrequency(comments: Comment[], top = 25): { word: string; count: number }[] {
   const freq = new Map<string, number>();
   for (const c of comments) {
-    const words = c.text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length >= 3 && !STOP.has(w));
+    const words = c.text.toLowerCase().replace(/[^\p{L}\p{M}\p{N}\s]/gu, ' ').split(/\s+/).filter(w => w.length >= 3 && !STOP.has(w));
     for (const w of new Set(words)) freq.set(w, (freq.get(w) || 0) + 1);
   }
   return Array.from(freq.entries()).map(([word, count]) => ({ word, count })).sort((a, b) => b.count - a.count).slice(0, top);
@@ -318,8 +318,8 @@ export type Dimension = 'trainer' | 'classroom' | 'program' | 'axis' | 'category
 export function labelFor(dim: Dimension, key: string, lk: Lookups, lang: Lang): string {
   const ar = lang === 'ar';
   switch (dim) {
-    case 'trainer': return lk.trainers.find(t => t.id === key)?.name || (ar ? 'بدون مدرب' : 'No trainer');
-    case 'classroom': return lk.classrooms.find(c => c.id === key)?.code || (ar ? 'بدون قاعة' : 'No room');
+    case 'trainer': return lk.trainers.find(t => t.id === key)?.name || (ar ? 'بدون مدرّب' : 'No trainer');
+    case 'classroom': return lk.classrooms.find(c => c.id === key)?.code || (ar ? 'بدون شعبة' : 'No room');
     case 'program': { const p = lk.programs.find(p => p.id === key); return p ? (ar ? p.name_ar : (p.name_en || p.name_ar)) : (ar ? 'غير محدد' : 'Unspecified'); }
     case 'kind': return KIND_LABEL[key]?.[lang] || key;
     case 'category': return CATEGORY_LABEL[key as Category]?.[lang] || key;
@@ -417,8 +417,8 @@ export function riskRegister(evals: Evaluation[], facts: Fact[], lk: Lookups, la
     });
   };
   for (const r of groupBy('axis', evals, facts, lk, lang)) add('axis', r, (r.meta?.category as Category) || 'general');
-  for (const r of groupBy('trainer', evals, facts, lk, lang)) if (r.key) add('trainer', r, 'trainer', ar ? 'المدرب' : 'Trainer');
-  for (const r of groupBy('classroom', evals, facts, lk, lang)) if (r.key) add('classroom', r, 'facility', ar ? 'القاعة' : 'Room');
+  for (const r of groupBy('trainer', evals, facts, lk, lang)) if (r.key) add('trainer', r, 'trainer', ar ? 'المدرّب' : 'Trainer');
+  for (const r of groupBy('classroom', evals, facts, lk, lang)) if (r.key) add('classroom', r, 'facility', ar ? 'الشعبة' : 'Room');
   for (const r of groupBy('program', evals, facts, lk, lang)) if (r.key) add('program', r, 'administration', ar ? 'البرنامج' : 'Program');
   const order = { HIGH: 0, MED: 1, LOW: 2 };
   return out.sort((a, b) => order[a.priority] - order[b.priority] || b.impact - a.impact);
@@ -491,7 +491,7 @@ export function kpisToTable(k: Kpis, lang: Lang): (string | number)[][] {
     [ar ? 'المتوسط العام' : 'Overall mean', k.mean], [ar ? 'الوسيط' : 'Median', k.median], [ar ? 'الانحراف المعياري' : 'SD', k.sd],
     [ar ? 'مرتفع %' : 'High %', k.highPct], [ar ? 'منخفض %' : 'Low %', k.lowPct], [ar ? 'الهدف' : 'Target', TARGET], [ar ? 'الفجوة' : 'Gap', k.gap],
     [ar ? 'التصنيف' : 'Performance', PERF_LABEL[k.perf][lang]], [ar ? 'المخاطر' : 'Risk', RISK_LABEL[k.risk][lang]],
-    [ar ? 'القاعات' : 'Rooms', k.rooms], [ar ? 'المدربون' : 'Trainers', k.trainers], [ar ? 'البرامج' : 'Programs', k.programs],
+    [ar ? 'الشُّعب' : 'Rooms', k.rooms], [ar ? 'المدرّبون' : 'Trainers', k.trainers], [ar ? 'البرامج' : 'Programs', k.programs],
     [ar ? 'من' : 'From', k.firstDate], [ar ? 'إلى' : 'To', k.lastDate], [ar ? 'استجابة/يوم' : 'Responses/day', k.perDay],
   ];
   return [[ar ? 'المؤشر' : 'Indicator', ar ? 'القيمة' : 'Value'], ...rows];
@@ -504,7 +504,7 @@ export function actionsToTable(actions: Action[], lang: Lang): (string | number)
 }
 export function rawToTable(evals: Evaluation[], lk: Lookups, lang: Lang): (string | number)[][] {
   const ar = lang === 'ar';
-  const head = ar ? ['التاريخ', 'النوع', 'البرنامج', 'القاعة', 'المدرب', 'الجنس', 'الإقامة', 'عدد الإجابات', 'متوسط الاستجابة', 'المعرف']
+  const head = ar ? ['التاريخ', 'النوع', 'البرنامج', 'الشعبة', 'المدرّب', 'الجنس', 'الإقامة', 'عدد الإجابات', 'متوسط الاستجابة', 'المعرف']
     : ['Date', 'Kind', 'Program', 'Room', 'Trainer', 'Gender', 'Accommodation', 'Answers', 'Response mean', 'ID'];
   return [head, ...evals.map(e => [
     e.date, KIND_LABEL[e.kind]?.[lang] || e.kind, labelFor('program', e.program_id || '', lk, lang), e.classroom_id ? labelFor('classroom', e.classroom_id, lk, lang) : '',
@@ -513,7 +513,7 @@ export function rawToTable(evals: Evaluation[], lk: Lookups, lang: Lang): (strin
 }
 export function commentsToTable(comments: Comment[], lk: Lookups, lang: Lang): (string | number)[][] {
   const ar = lang === 'ar';
-  const head = ar ? ['التاريخ', 'النوع', 'البرنامج', 'القاعة', 'المدرب', 'السؤال', 'التعليق', 'الانطباع'] : ['Date', 'Kind', 'Program', 'Room', 'Trainer', 'Question', 'Comment', 'Sentiment'];
+  const head = ar ? ['التاريخ', 'النوع', 'البرنامج', 'الشعبة', 'المدرّب', 'السؤال', 'التعليق', 'الانطباع'] : ['Date', 'Kind', 'Program', 'Room', 'Trainer', 'Question', 'Comment', 'Sentiment'];
   const sent = { positive: ar ? 'إيجابي' : 'Positive', negative: ar ? 'سلبي' : 'Negative', neutral: ar ? 'محايد' : 'Neutral' };
   return [head, ...comments.map(c => [c.date, KIND_LABEL[c.kind]?.[lang] || c.kind, labelFor('program', c.program_id || '', lk, lang), c.classroom_id ? labelFor('classroom', c.classroom_id, lk, lang) : '', c.trainer_id ? labelFor('trainer', c.trainer_id, lk, lang) : '', ar ? c.question_ar : c.question_en, c.text, sent[c.sentiment]])];
 }

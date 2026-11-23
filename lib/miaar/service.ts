@@ -5,7 +5,7 @@
  *  الاختبار نفسه (SYS-EXIT-<L>) لا يتغيّر حرفًا — ما يتغيّر هو «الوعاء»: دعوة مرتبطة بـ«طلب خدمة» له جهة طالبة ومراقب وتقرير وسجلّ.
  *  - الجزء الصرف (بلا قاعدة بيانات): clientReport · benchmarkOf · maskEmail · SERVICE_STATUS · normalizePin
  *  - الغراء: createServiceInvite · listOrders · setOrderStatus · rotateClientToken · revokeClientToken · signProctor · clientBoard · verifyPin · requestPractice (م12 «مِران للجهات»)
- *  لا يقرّر الذكاء الاصطناعي هنا شيئًا؛ لا مدفوعات داخل المنصّة (قرار قائم) — العدّاد يكفي للفوترة اليدوية.
+ *  لا يقرّر الذكاء الاصطناعي هنا شيئًا؛ لا مدفوعات داخل البوّابة (قرار قائم) — العدّاد يكفي للفوترة اليدوية.
  */
 import { createHash, randomBytes } from 'node:crypto';
 import { createInvite, inviteUrl } from './invites';
@@ -63,7 +63,7 @@ export function clientReport(level: ExitLevel, rows: readonly BoardRow[], bench:
   if (weakest.length) rec_ar.push(`أضعف محورين في المجموعة: ${weakest.map((w) => `${w.name_ar} (${w.avg}%)`).join(' و')} — يُقترح تركيز 3–4 أسابيع عليهما قبل الانتقال إلى ${nextLevel(level) || 'المستوى التالي'}.`);
   if (summary.conditional) rec_ar.push(`${summary.conditional} متعلّمًا اجتياز مشروط — تتاح لهم إعادة مهارة واحدة خلال 14 يومًا بقرار المشرف.`);
   if (summary.failed) rec_ar.push(`${summary.failed} لم يجتازوا — تُنصح الجهة بإعادة الاختبار كاملًا بعد 7 أيام على الأقل.`);
-  if (bench?.shown && summary.avg !== null && bench.avg !== null) rec_ar.push(summary.avg >= bench.avg ? `متوسط المجموعة (${summary.avg}%) أعلى من المعيار المرجعي لأَثَر للمستوى ${level} (${bench.avg}%).` : `متوسط المجموعة (${summary.avg}%) دون المعيار المرجعي لأَثَر للمستوى ${level} (${bench.avg}%) بفارق ${bench.avg - summary.avg} نقطة.`);
+  if (bench?.shown && summary.avg !== null && bench.avg !== null) rec_ar.push(summary.avg >= bench.avg ? `متوسط الشعبة (${summary.avg}%) أعلى من المعيار المرجعي لأَثَر للمستوى ${level} (${bench.avg}%).` : `متوسط الشعبة (${summary.avg}%) دون المعيار المرجعي لأَثَر للمستوى ${level} (${bench.avg}%) بفارق ${bench.avg - summary.avg} نقطة.`);
   if (!finals.length) rec_ar.push('لم يكتمل التصحيح بعد — يكتمل التقرير حين تصدر الأحكام النهائية.');
   return { level, official: EXIT_TITLE, spec: specTable(level), summary, finals: finals.length, skills, weakest: weakest.map((w) => w.skill), grades, benchmark: bench && bench.shown ? { n: bench.n, avg: bench.avg, pass_rate: bench.pass_rate } : { n: bench?.n || 0, avg: null, pass_rate: null }, recommendations_ar: rec_ar, generated_at: nowIso() };
 }
@@ -124,7 +124,7 @@ export async function setOrderStatus(db: Db, orderId: string, status: unknown, a
   if (status === 'delivered' || status === 'cancelled') { await db.from('placement_invites').update({ status: 'closed', updated_at: nowIso() }).eq('id', o.invite_id); }
   const up = await pushEvent(db, o, { type: 'status', to: status, by: actorId }, patch); return up ? { ok: true, order: up } : { ok: false, error: 'تعذّر التحديث' };
 }
-/** رابط بوابة الجهة: يُولَّد من جديد (يُبطل القديم) — يُعرض مرة واحدة */
+/** رابط بوّابة الجهة: يُولَّد من جديد (يُبطل القديم) — يُعرض مرة واحدة */
 export async function rotateClientToken(db: Db, orderId: string, actorId: string | null, site: string): Promise<{ ok: true; client_url: string } | { ok: false; error: string }> {
   const o = await orderById(db, orderId); if (!o) return { ok: false, error: 'طلب الخدمة غير موجود' };
   const token = randomBytes(18).toString('base64url');
@@ -152,7 +152,7 @@ export async function benchmarkFromDb(db: Db, level: ExitLevel) {
   const { data } = await db.from('placement_reports').select('report, source').order('created_at', { ascending: false }).limit(1000);
   return benchmarkOf(Array.isArray(data) ? data : [], level);
 }
-/** بوابة الجهة: برابط سرّي — قراءة فقط · نتائج طلابها فقط · لا بنود ولا مفاتيح */
+/** بوّابة الجهة: برابط سرّي — قراءة فقط · نتائج طلابها فقط · لا بنود ولا مفاتيح */
 /** م9: ما تراه الجهة عن الوحدات — خريطة حرارة المجموعة (بلا أسماء) + جلسات التعويض وأثرها (مجاميع فقط) */
 export function clientUnitsView(heat: readonly any[], sessions: readonly any[], scope: readonly string[] | null | undefined) {
   const units = heat.map((h) => ({ code: String(h.code), title_ar: String(h.title_ar || ''), percent: Number(h.percent) || 0, state: String(h.state || 'ok'), state_ar: String(h.state_ar || ''), n_students: Number(h.n_students) || 0 }));

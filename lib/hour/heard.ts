@@ -43,8 +43,8 @@ export function heardOf(seals: SealLite[], excludedOrgs: Set<string>, now: Date)
   const byDay = new Map<string, SealLite>(); for (const s of ok) { const cur = byDay.get(s.day); if (!cur || s.people > cur.people || (s.people === cur.people && s.id > cur.id)) byDay.set(s.day, s); }
   const items = [...byDay.values()].sort((a, b) => (a.day < b.day ? 1 : a.day > b.day ? -1 : 0)).slice(0, HEARD_LIMITS.items).map((s) => ({ weekday_ar: weekdayAr(s.day), day: s.day, line: s.line as string }));
   const head_ar = week_sections > 0
-    ? `هذا الأسبوع ختمت ${nAr(week_sections, 'شعبة واحدة', 'شعبتان', 'شُعب', 'شعبة')} سطورها بمشاركة ${nAr(week_people, 'متدرّب واحد', 'متدرّبين', 'متدرّبين', 'متدرّبًا')}`
-    : `في الأسابيع الأخيرة ختمت ${nAr(sections, 'شعبة واحدة', 'شعبتان', 'شُعب', 'شعبة')} سطورها بمشاركة ${nAr(people, 'متدرّب واحد', 'متدرّبين', 'متدرّبين', 'متدرّبًا')}`;
+    ? `هذا الأسبوع ختمت ${nAr(week_sections, 'شعبة واحدة', 'شعبتان', 'شُعب', 'شعبة')} سطورها بمشاركة ${nAr(week_people, 'طالب واحد', 'طالبان', 'طلاب', 'طالبًا')}`
+    : `في الأسابيع الأخيرة ختمت ${nAr(sections, 'شعبة واحدة', 'شعبتان', 'شُعب', 'شعبة')} سطورها بمشاركة ${nAr(people, 'طالب واحد', 'طالبان', 'طلاب', 'طالبًا')}`;
   return { shown: true, items, sections, people, week_sections, week_people, head_ar, why };
 }
 

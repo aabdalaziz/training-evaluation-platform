@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — مستودع الحقائب: الأنواع، التسميات، التحقق، الفلاتر، قرار الوصول، Excel
+// بوّابة أَثَر — مستودع الحقائب: الأنواع، التسميات، التحقق، الفلاتر، قرار الوصول، Excel
 import type { Lang, T } from './content';
 import { t } from './content';
 import type { Skill, Sector } from './skills';

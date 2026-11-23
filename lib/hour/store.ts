@@ -2,8 +2,8 @@
 /**
  * P73 «ساعة أَثَر» — طبقة القاعدة (صفر جداول جديدة)
  *  الساعة = portal_sessions (kind = athar_hour · series_id واحد للشعبة) تُولَّد أسبوعيًّا من التثبيت حتى نهاية البرنامج.
- *  ما يُكتب فيها = portal_learning_lines: hour_word · hour_line · hour_vote · carry · hour_seal (القيد الفريد = واحد لكل متدرّب في اليوم).
- *  الصلاحيات: الأستاذ = مدرّب الشعبة (classrooms.trainer_id ∈ بطاقاته) أو الطاقم · المتدرّب = مسجَّل في الشعبة (portal_enrollments).
+ *  ما يُكتب فيها = portal_learning_lines: hour_word · hour_line · hour_vote · carry · hour_seal (القيد الفريد = واحد لكل طالب في اليوم).
+ *  الصلاحيات: الأستاذ = مدرّب الشعبة (classrooms.trainer_id ∈ بطاقاته) أو الطاقم · الطالب = مسجَّل في الشعبة (portal_enrollments).
  *  hourRole · myHourRooms · pinHour/unpinHour · hourView · act(carry|word|line|vote|seal) · hourSeals (النسيج) · hourEvidence (الاعتماد)
  *  P74: actSeal(public) · setHourVoice/clearHourVoice «بصوتِ واحدٍ منّا» (meta.voice) · heardThread «سمعناكم» (الرئيسة)
  */
@@ -27,12 +27,12 @@ const toSes = (s: any): HourSession => ({ id: String(s.id), starts_at: String(s.
 
 export type Room = { id: string; code: string; section_name: string | null; program_id: string | null; trainer_id: string | null };
 export type Role = 'instructor' | 'learner';
-/** من أنا في هذه الشعبة؟ الأستاذ أولًا (أو الطاقم) ثم المتدرّب المسجَّل */
+/** من أنا في هذه الشعبة؟ الأستاذ أولًا (أو الطاقم) ثم الطالب المسجَّل */
 export async function hourRole(db: Db, me: Me, classroomId: string): Promise<{ role: Role; room: Room } | null> {
   const r = await safe<any>(db.from('classrooms').select('id,code,section_name,program_id,trainer_id').eq('id', classroomId).maybeSingle(), null); if (!r) return null;
   const room: Room = { id: String(r.id), code: String(r.code || ''), section_name: r.section_name || null, program_id: r.program_id ? String(r.program_id) : null, trainer_id: r.trainer_id ? String(r.trainer_id) : null };
   if (room.trainer_id && (me.trainerIds || []).includes(room.trainer_id)) return { role: 'instructor', room };
-  /* المسجَّل في الشعبة متدرّبٌ فيها ولو كان من الطاقم (طاقم يحضر برنامجًا) — ثم الطاقم غير المسجَّل أستاذٌ مطّلع يفتح ويختم */
+  /* المسجَّل في الشعبة طالبٌ فيها ولو كان من الطاقم (طاقم يحضر برنامجًا) — ثم الطاقم غير المسجَّل أستاذٌ مطّلع يفتح ويختم */
   const en = await safe<any[]>(db.from('portal_enrollments').select('id').eq('email', lower(me.email)).eq('classroom_id', classroomId).in('status', ENROLLED).limit(1), []);
   if (en.length) return { role: 'learner', room }; return me.staff ? { role: 'instructor', room } : null;
 }
@@ -124,7 +124,7 @@ export async function hourView(db: Db, me: Me, classroomId: string, now = new Da
 type Ctx = { who: { role: Role; room: Room }; info: PhaseInfo; day: string; session: HourSession };
 async function ctxOf(db: Db, me: Me, classroomId: string, now: Date, needLearner = true): Promise<Ctx | Fail> {
   const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404);
-  if (needLearner && who.role !== 'learner') return fail('هذا للمتدرّبين — الأستاذ يفتح ويختم ولا يكتب', 403);
+  if (needLearner && who.role !== 'learner') return fail('هذا للطلاب — الأستاذ يفتح ويختم ولا يكتب', 403);
   const { info } = await phaseFor(db, classroomId, now); if (!info.session || (info.phase !== 'open' && info.phase !== 'home')) return fail(info.phase === 'before' ? 'الساعة لم تُفتح بعد' : 'لا ساعة مفتوحة الآن', 409);
   return { who, info, day: info.session.day, session: info.session };
 }
@@ -179,9 +179,9 @@ async function sealRowOf(db: Db, classroomId: string, sealId: number): Promise<a
 async function voiceUrl(db: Db, v: { path: string } | null): Promise<string | null> { if (!v?.path) return null; try { const { data, error } = await db.storage.from(HEARD_LIMITS.bucket).createSignedUrl(v.path, HEARD_LIMITS.signedSeconds); return error || !data?.signedUrl ? null : String(data.signedUrl); } catch { return null; } }
 async function lastVoiceUrl(db: Db, seals: any[]): Promise<string | null> { const s = seals.find((x) => voiceOfMeta(x.meta)); return s ? voiceUrl(db, voiceOfMeta(s.meta)) : null; }
 async function removeVoiceFile(db: Db, path: string) { try { await db.storage.from(HEARD_LIMITS.bucket).remove([path]); } catch { /* لا شيء */ } }
-/** متدرّبٌ واحد يقرأ السطر المختوم بصوته (≤ 15 ث) — ما دامت الساعة مفتوحة أو في البيت؛ ختم بلا سطر لا يُقرأ؛ من سبق فقراءته تبقى */
+/** طالبٌ واحد يقرأ السطر المختوم بصوته (≤ 15 ث) — ما دامت الساعة مفتوحة أو في البيت؛ ختم بلا سطر لا يُقرأ؛ من سبق فقراءته تبقى */
 export async function setHourVoice(db: Db, me: Me, classroomId: string, sealId: number, file: { buf: Buffer; mime: string; bytes: number; sec: number }, now = new Date()): Promise<{ ok: true; voice: HourVoicePublic; url: string | null } | Fail> {
-  const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404); if (who.role !== 'learner') return fail('القراءة بصوت واحدٍ من المتدرّبين — الأستاذ يسمع ويحذف', 403);
+  const who = await hourRole(db, me, classroomId); if (!who) return fail('هذه الشعبة ليست من شُعبك', 404); if (who.role !== 'learner') return fail('القراءة بصوت واحدٍ من الطلاب — الأستاذ يسمع ويحذف', 403);
   const row = await sealRowOf(db, classroomId, sealId); if (!row) return fail('لا ختم بهذا الرقم', 404); if (!row.body_ar || row.body_ar === '—') return fail('خُتمت الساعة بلا سطر — لا شيء يُقرأ', 409);
   const { info } = await phaseFor(db, classroomId, now); const live = info.session && String(row.meta?.session_id) === info.session.id && (info.phase === 'open' || info.phase === 'home');
   if (!live) return fail('انتهت «الساعة في البيت» — القراءة تكون في يوم الختم وما بعده بأربع وعشرين ساعة', 409);
@@ -239,6 +239,6 @@ export async function hourEvidence(db: Db, programId: string): Promise<Array<{ i
   const rows = await safe<any[]>(db.from('portal_learning_lines').select('kind,classroom_id,user_id').eq('program_id', programId).in('kind', ['hour_seal', 'carry']).limit(5000), []);
   const seals = rows.filter((r) => r.kind === 'hour_seal'); const carries = rows.filter((r) => r.kind === 'carry'); if (!seals.length) return [];
   const rooms = new Set(seals.map((r) => String(r.classroom_id))).size; const carriers = new Set(carries.map((r) => String(r.user_id))).size;
-  const label = `ساعة أَثَر: ${seals.length} ${seals.length === 1 ? 'ساعة مختومة' : seals.length === 2 ? 'ساعتان مختومتان' : 'ساعات مختومة'} في ${rooms} ${rooms === 1 ? 'شعبة' : 'شُعب'}${carriers >= HOUR_LIMITS.k ? ` — حمل ${carriers} متدرّبًا سطورًا من زملائهم (${carries.length} سطرًا)` : ''} · لقاء تأمل أسبوعي بلا تقييم`;
+  const label = `ساعة أَثَر: ${seals.length} ${seals.length === 1 ? 'ساعة مختومة' : seals.length === 2 ? 'ساعتان مختومتان' : 'ساعات مختومة'} في ${rooms} ${rooms === 1 ? 'شعبة' : 'شُعب'}${carriers >= HOUR_LIMITS.k ? ` — حمل ${carriers} طالبًا سطورًا من زملائهم (${carries.length} سطرًا)` : ''} · لقاء تأمل أسبوعي بلا تقييم`;
   return [{ id: 'hour:seals', kind: 'hour', codes: ['3.5'], label_ar: label, at: null, href: null, n: seals.length }];
 }

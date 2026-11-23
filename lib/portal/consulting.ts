@@ -1,4 +1,4 @@
-// بوابة أَثَر — الاستشارات: الأنواع، التسميات، الحسابات، البريد، عرض السعر PDF
+// بوّابة أَثَر — الاستشارات: الأنواع، التسميات، الحسابات، البريد، عرض السعر PDF
 import type { Lang, T } from './content';
 import { t } from './content';
 import { money, num } from './payments';
@@ -39,14 +39,14 @@ export const STEPS: { label: T; desc: T }[] = [
 
 export const REQ_STATUS: Record<ReqStatus, T> = {
   new: { ar: 'جديد', en: 'New' }, reviewing: { ar: 'قيد الدراسة', en: 'Under review' }, quoted: { ar: 'أُرسل عرض السعر', en: 'Proposal sent' }, accepted: { ar: 'مقبول — بانتظار السداد', en: 'Accepted — awaiting payment' },
-  declined: { ar: 'اعتذر العميل', en: 'Declined by client' }, in_progress: { ar: 'قيد التنفيذ', en: 'In progress' }, completed: { ar: 'مكتمل', en: 'Completed' }, closed: { ar: 'مغلق', en: 'Closed' }, cancelled: { ar: 'ملغى', en: 'Cancelled' },
+  declined: { ar: 'اعتذرت الجهة', en: 'Declined by client' }, in_progress: { ar: 'قيد التنفيذ', en: 'In progress' }, completed: { ar: 'مكتمل', en: 'Completed' }, closed: { ar: 'مغلق', en: 'Closed' }, cancelled: { ar: 'ملغى', en: 'Cancelled' },
 };
 export const reqStatusLabel = (s: string, lang: Lang) => t(REQ_STATUS[s as ReqStatus] || { ar: s, en: s }, lang);
 export const QUOTE_STATUS: Record<QuoteStatus, T> = { draft: { ar: 'مسودة', en: 'Draft' }, sent: { ar: 'مُرسل', en: 'Sent' }, accepted: { ar: 'مقبول', en: 'Accepted' }, declined: { ar: 'مرفوض', en: 'Declined' }, superseded: { ar: 'مستبدل', en: 'Superseded' } };
 export const areaLabel = (v: string | null | undefined, lang: Lang) => t(AREAS.find(a => a.value === v)?.label || { ar: v || '', en: v || '' }, lang);
 export const sectorLabel = (v: string | null | undefined, lang: Lang) => t(SECTORS.find(a => a.value === v)?.label || { ar: v || '—', en: v || '—' }, lang);
 export const budgetLabel = (v: string | null | undefined, lang: Lang) => t(BUDGETS.find(a => a.value === v)?.label || { ar: v || '—', en: v || '—' }, lang);
-/** مسار الحالة لعرض الخط الزمني للعميل */
+/** مسار الحالة لعرض الخط الزمني للجهة */
 export const TIMELINE: ReqStatus[] = ['new', 'reviewing', 'quoted', 'accepted', 'in_progress', 'completed'];
 export function timelineIndex(s: ReqStatus): number { if (s === 'declined' || s === 'cancelled') return -1; if (s === 'closed') return TIMELINE.length - 1; return TIMELINE.indexOf(s); }
 
@@ -97,7 +97,7 @@ function shell(lang: Lang, inner: string): string {
   return `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #EADFD6;border-radius:14px;overflow:hidden">
   <div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'الاستشارات' : 'Consulting'}</div></div>
   <div style="padding:22px;color:#2A1626;line-height:1.9;font-size:15px">${inner}</div>
-  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
+  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوّابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
 }
 const btn = (href: string, label: string) => `<p style="margin:18px 0"><a href="${href}" style="background:#D4614A;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:800;display:inline-block">${label}</a></p>`;
 const link = (siteUrl: string, r: ConsultingRequest) => `${siteUrl}/consulting/${r.id}`;
@@ -119,7 +119,7 @@ export function quoteSentEmail(r: ConsultingRequest, q: Quote, siteUrl: string) 
     : { subject: `Consulting proposal — ${r.title}`, html: shell('en', `<p>Hello ${esc(r.full_name)},</p><p>We prepared the proposal (v${q.version}) for "<b>${esc(r.title)}</b>".</p><p>Total incl. VAT: <b>${total}</b>${q.duration ? ` · Duration: ${esc(q.duration)}` : ''}${q.valid_until ? ` · valid until <bdi>${q.valid_until}</bdi>` : ''}</p>${btn(u, 'View proposal & respond')}`) };
 }
 export function quoteRespondedAdminEmail(r: ConsultingRequest, q: Quote, accepted: boolean, siteUrl: string) {
-  return { subject: `${accepted ? '✅ قبول' : '✖ اعتذار'} عرض السعر — ${r.organization || r.full_name}: ${r.title}`, html: shell('ar', `<p><b>${esc(r.full_name)}</b> ${accepted ? 'قبل' : 'اعتذر عن'} عرض السعر (الإصدار ${q.version}) بقيمة <b>${money(q.total, q.currency, 'ar')}</b>.</p>${r.client_note ? `<p>ملاحظة العميل: ${esc(r.client_note)}</p>` : ''}${accepted ? '<p>صدرت الفاتورة تلقائيًا وأُرسلت للعميل. ابدأ بإضافة مراحل التنفيذ.</p>' : ''}${btn(`${siteUrl}/admin/consulting?open=${r.id}`, 'فتح الطلب')}`) };
+  return { subject: `${accepted ? '✅ قبول' : '✖ اعتذار'} عرض السعر — ${r.organization || r.full_name}: ${r.title}`, html: shell('ar', `<p><b>${esc(r.full_name)}</b> ${accepted ? 'قبل' : 'اعتذر عن'} عرض السعر (الإصدار ${q.version}) بقيمة <b>${money(q.total, q.currency, 'ar')}</b>.</p>${r.client_note ? `<p>ملاحظة الجهة: ${esc(r.client_note)}</p>` : ''}${accepted ? '<p>صدرت الفاتورة تلقائيًا وأُرسلت للجهة. ابدأ بإضافة مراحل التنفيذ.</p>' : ''}${btn(`${siteUrl}/admin/consulting?open=${r.id}`, 'فتح الطلب')}`) };
 }
 export function statusEmail(r: ConsultingRequest, status: ReqStatus, note: string | null, siteUrl: string) {
   const lang = L(r); const u = link(siteUrl, r); const st = reqStatusLabel(status, lang);

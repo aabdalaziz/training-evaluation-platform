@@ -50,7 +50,7 @@ export function channelGaps(g: Graph, max = 6): Suggestion[] {
     if (!total || pct(transfer, total) >= 30) continue; // قناة النقل موجودة بما يكفي
     const top = chans.sort((a, b) => b.evidence - a.evidence)[0];
     out.push({ kind: 'mission', fingerprint: `mission|${s.id}`, title_ar: `مهمة عمل تُغلق قناة النقل لمهارة «${s.label_ar}»`,
-      why_ar: `${peopleN(s.people)} تركوا ${evN(total)} على «${s.label_ar}» — ${pct(transfer, total)}% منها فقط من قنوات النقل إلى العمل (مهمة/أداء مُشاهَد/محاكٍ). أغلب الدليل من «${CHANNEL_LABEL[ref(top.src)]?.ar || ref(top.src)}». مهمة واحدة مؤكَّدة لكل متعلم ترفع ثقة الأثر.`,
+      why_ar: `${peopleN(s.people)} تركوا ${evN(total)} على «${s.label_ar}» — ${pct(transfer, total)}% منها فقط من قنوات النقل إلى العمل (مهمة/أداء مُشاهَد/محاكٍ). أغلب الدليل من «${CHANNEL_LABEL[ref(top.src)]?.ar || ref(top.src)}». مهمة واحدة مؤكَّدة لكل متعلّم ترفع ثقة الأثر.`,
       evidence: [{ label: 'المهارة', value: s.label_ar }, { label: 'الأدلة', value: String(total) }, { label: 'نسبة النقل', value: `${pct(transfer, total)}%` }, { label: 'القناة المهيمنة', value: CHANNEL_LABEL[ref(top.src)]?.ar || ref(top.src) }, { label: 'الأشخاص', value: String(s.people) }],
       target: { skill_id: ref(s.id), skill_name: s.label_ar, dominant_channel: ref(top.src) }, score: Math.min(100, 50 + Math.min(30, s.people) + (30 - pct(transfer, total))) });
   }
@@ -66,7 +66,7 @@ export function sessionFocus(g: Graph, programId: string, programSkills: string[
   }).sort((a, b) => a.evidence - b.evidence);
 }
 
-// ---------------------------------------------------------------- 4) بطاقة الصف للميسِّر: لكل متعلم — ما أثبته · ما لم يُفحص · القناة التي ينجح فيها
+// ---------------------------------------------------------------- 4) بطاقة الصف للميسِّر: لكل متعلّم — ما أثبته · ما لم يُفحص · القناة التي ينجح فيها
 export type LearnerCard = { key: string; proven: { skill_id: string; name_ar: string; weight: number }[]; unexamined: { skill_id: string; name_ar: string }[]; best_channel: string | null; best_channel_ar: string | null; evidence: number; one_channel: boolean };
 export function learnerCards(events: LearningEventRow[], sessionSkills: string[], skillMeta: Map<string, { level: number; code: string; name_ar: string }>, learners: { key: string; user_id?: string | null; email?: string | null }[]): LearnerCard[] {
   return learners.map(l => {
@@ -85,7 +85,7 @@ export function classSummary(cards: LearnerCard[], sessionSkills: string[], skil
   const channels = new Map<string, number>(); for (const c of cards) if (c.best_channel) channels.set(c.best_channel, (channels.get(c.best_channel) || 0) + 1);
   const focus = never[0]; const hints: string[] = [];
   if (focus && focus.unexamined / n >= 0.5) hints.push(`ابدأ بـ«${focus.name_ar}»: ${focus.unexamined} من ${cards.length} لم يتركوا عليها دليلًا قط.`);
-  if (oneChannel / n >= 0.4) hints.push(`${oneChannel} متعلمًا دليلهم من قناة واحدة فقط — نشاط تطبيقي قصير اليوم يفتح قناة ثانية.`);
+  if (oneChannel / n >= 0.4) hints.push(`${oneChannel} متعلّمًا دليلهم من قناة واحدة فقط — نشاط تطبيقي قصير اليوم يفتح قناة ثانية.`);
   if (noEvidence) hints.push(`${noEvidence} بلا أي دليل سابق — سؤال تشخيصي سريع في أول 10 دقائق.`);
   const topCh = [...channels.entries()].sort((a, b) => b[1] - a[1])[0]; if (topCh) hints.push(`أغلب الصف ينجح عبر «${CHANNEL_LABEL[topCh[0]]?.ar || topCh[0]}» — صمّم التمرين بهذه الروح.`);
   return { never, one_channel: oneChannel, no_evidence: noEvidence, hints: hints.slice(0, 3) };

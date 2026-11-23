@@ -208,7 +208,7 @@ export function probeScore(answers: unknown): number {
   const a = answers as Record<string, unknown>;
   return PROBE_ITEMS.filter((item) => a[item.id] === item.correct).length;
 }
-/** الفرقة الأولية كما في بوابة التحدّي (0–1 → A1 · 2 → A2 · 3 → B1 · 4 → B2 · 5 → C1) */
+/** الفرقة الأولية كما في بوّابة التحدّي (0–1 → A1 · 2 → A2 · 3 → B1 · 4 → B2 · 5 → C1) */
 export function probeBand(score: number): Level { return score <= 1 ? 'A1' : score === 2 ? 'A2' : score === 3 ? 'B1' : score === 4 ? 'B2' : 'C1'; }
 /** نقطة البداية: الشامل يبدأ من A1 دائمًا؛ التكيفي يبدأ من فرقة المِسبار بحدّ أقصى B1 (لا نستنتج أكثر من مستويين) */
 export function probeStartIndex(score: number, mode: ExamMode): number { return mode === 'comprehensive' ? 0 : Math.min(levelIndex(probeBand(score)), 2); }

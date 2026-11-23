@@ -146,7 +146,7 @@ export function decisionEmail(e: Enrollment, programName: string, status: Enroll
     ${note ? `<div style="background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:10px 14px;margin:10px 0"><b>${lang === 'ar' ? 'ملاحظة من الإدارة:' : 'Note from our team:'}</b><br>${esc(note)}</div>` : ''}
     <p style="margin:14px 0 0"><a href="${siteUrl}/programs/${e.program_id}" style="background:#D4614A;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'صفحة البرنامج' : 'Program page'}</a></p>
   </div>
-  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'هذه رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div>
+  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'هذه رسالة آلية من بوّابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div>
 </div>`;
   return { subject: t(subj[status], lang), html };
 }

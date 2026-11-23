@@ -2,7 +2,7 @@
 /**
  * العهد المتقابل (P29) — الاسم الرسمي «العهد المتقابل» · السردي «عهدان متقابلان — خطوة لك وخطوة لي»
  * «لا أحد يفي بعهده وحده: ممارسان من دائرة واحدة يطلب كلٌّ منهما من صاحبه خطوة واحدة لسنة، ويوقّعان وثيقة واحدة بتوقيعين — والدرب يشهد للاثنين، والمراجعة تُقرأ معًا».
- * الحركات الخمس: من دائرتي (دعوة بالبريد داخل مجلس مشترك أو جهة واحدة) → خطوة أطلبها منك (كلٌّ يقترح لصاحبه من الأنواع التي تشهدها المنصة) → توقيعان (وثيقة ATH-MP بحاملَين · 365 يومًا)
+ * الحركات الخمس: من دائرتي (دعوة بالبريد داخل مجلس مشترك أو جهة واحدة) → خطوة أطلبها منك (كلٌّ يقترح لصاحبه من الأنواع التي تشهدها البوّابة) → توقيعان (وثيقة ATH-MP بحاملَين · 365 يومًا)
  *   → أين نحن من عهدنا (درب مزدوج من الأحداث؛ صاحبك يرى حالة خطوتك فقط) → ما وعدنا بعضَنا / ما وقع (مراجعة مشتركة: لا يقرأ أحدكما كلمات الآخر حتى يكتب كلماته).
  * قواعد ثابتة: 3 فصول لكل طرف · عهد متقابل واحد نشط لكل شخص · الدعوة لا تكشف عضوية أحد · لا ذكاء اصطناعي بين إنسانين · لا اسم للطرف الآخر في فصول الرحلة · لا نسبة إنجاز.
  * الطرف (a) الداعي · الطرف (b) المدعوّ · a_step = ما يؤدّيه (a) واقترحه (b) · b_step = ما يؤدّيه (b) واقترحه (a).
@@ -12,7 +12,7 @@ import { PLEDGE_KIND_AR, proposePledges, buildPath } from '../horizon/registry';
 import type { PledgeKind, PledgeTarget, PledgeOption, Path } from '../horizon/registry';
 
 export const PAIR_VERSION = '2026-10';
-export const PAIR_MIN_CHAPTERS = 3;            // لكل طرف — بوابة P27 نفسها
+export const PAIR_MIN_CHAPTERS = 3;            // لكل طرف — بوّابة P27 نفسها
 export const PAIR_INVITE_DAYS = 14;            // الدعوة تنقضي بصمت
 export const PAIR_PROPOSE_DAYS = 14;           // مهلة الاقتراح والتوقيع بعد القبول
 export const PAIR_PLEDGE_DAYS = 365;
@@ -76,7 +76,7 @@ export const isLive = (s: PairStatus) => s === 'proposing' || s === 'active' || 
 /** أهلية العهد المتقابل: 3 فصول حقيقية — لكل طرف */
 export function pairEligibility(chapters: Chapter[]): { ok: boolean; chapters: number; min: number; read_ar: string } {
   const n = chapters.length; const ok = n >= PAIR_MIN_CHAPTERS;
-  return { ok, chapters: n, min: PAIR_MIN_CHAPTERS, read_ar: ok ? 'يمكنك أن تدعو زميلًا من دائرتك إلى عهد متقابل.' : `العهد المتقابل يُقطع بعد ${PAIR_MIN_CHAPTERS} فصول في رحلتك — ${n === 0 ? 'ولم يُكتب فصلك الأول بعد' : `لديك ${n === 1 ? 'فصل واحد' : n === 2 ? 'فصلان' : `${n} فصول`}`}. ما وعدتَ به إنسانًا يعرفك أثقل — فليكن بعد أن تعرفك المنصة أولًا.` };
+  return { ok, chapters: n, min: PAIR_MIN_CHAPTERS, read_ar: ok ? 'يمكنك أن تدعو زميلًا من دائرتك إلى عهد متقابل.' : `العهد المتقابل يُقطع بعد ${PAIR_MIN_CHAPTERS} فصول في رحلتك — ${n === 0 ? 'ولم يُكتب فصلك الأول بعد' : `لديك ${n === 1 ? 'فصل واحد' : n === 2 ? 'فصلان' : `${n} فصول`}`}. ما وعدتَ به إنسانًا يعرفك أثقل — فليكن بعد أن تعرفك البوّابة أولًا.` };
 }
 
 export function validateInvite(b: { email?: unknown; why_ar?: unknown; name_mode?: unknown }, myEmail: string): string | null {
@@ -86,7 +86,7 @@ export function validateInvite(b: { email?: unknown; why_ar?: unknown; name_mode
   if (b.name_mode !== undefined && !['full', 'first', 'anon'].includes(String(b.name_mode))) return 'وضع الاسم: full أو first أو anon';
   return null;
 }
-/** اقتراح لصاحبي: من الخيارات التي اقترحتها المنصة من فصوله هو — الاختيار والكلمات لي */
+/** اقتراح لصاحبي: من الخيارات التي اقترحتها البوّابة من فصوله هو — الاختيار والكلمات لي */
 export function suggestForPartner(partnerChapters: Chapter[], partnerInput: Pick<JourneyInput, 'levels' | 'skills'>): PledgeOption[] { return proposePledges(partnerChapters, partnerInput); }
 export function validateProposal(b: { index?: unknown; title_ar?: unknown; why_ar?: unknown }, options: PledgeOption[]): string | null {
   const i = Number(b.index); if (!Number.isInteger(i) || i < 0 || i >= options.length) return 'اختر واحدة من الخطوات المقترحة لصاحبك';

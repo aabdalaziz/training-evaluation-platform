@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — جواز المهارات (P8-ج): بناء بيانات الجواز من الملف المهاري (دوال نقية) + رسمه على Canvas A4 عمودي وتحويله إلى PDF بلا اعتماديات
+// بوّابة أَثَر — جواز المهارات (P8-ج): بناء بيانات الجواز من الملف المهاري (دوال نقية) + رسمه على Canvas A4 عمودي وتحويله إلى PDF بلا اعتماديات
 import type { Lang } from './content';
 import { BRAND } from './content';
 import { DOMAINS, domainLabel, frameworkBadges, skillName } from './skills';
@@ -39,11 +39,11 @@ export function buildPassport(inp: PassportInput): PassportData {
   const sharePublic = profile.share_mode === 'public' || profile.share_mode === 'link'; const url = `${site}/p/${profile.public_id}`;
   const ar = lang === 'ar';
   return {
-    lang, name: profile.display_name || inp.email || (ar ? 'متعلم في أَثَر' : 'Athar learner'), headline: profile.headline || '', meta: [profile.organization, profile.city].filter(Boolean).join(' · '),
+    lang, name: profile.display_name || inp.email || (ar ? 'متعلّم في أَثَر' : 'Athar learner'), headline: profile.headline || '', meta: [profile.organization, profile.city].filter(Boolean).join(' · '),
     publicId: profile.public_id, url, qrText: sharePublic ? url : `${site}/me/skills`, issuedAt: fmtDay(now, lang), sharePublic,
     kpis: { skills: levels.length, strong: levels.filter(l => l.confidence >= 70).length, approved: levels.filter(l => l.approved_level).length, credentials: credentials.length },
     domains, credentials,
-    footer: ar ? `${BRAND.motto.ar} · صادر إلكترونيًا من بوابة أَثَر بتاريخ ${fmtDay(now, 'ar')} · © ${BRAND.copyrightYear} ${BRAND.owner.ar}` : `${BRAND.motto.en} · Issued electronically by Athar · TRACE on ${fmtDay(now, 'en')} · © ${BRAND.copyrightYear} ${BRAND.owner.en}`,
+    footer: ar ? `${BRAND.motto.ar} · صادر إلكترونيًا من بوّابة أَثَر بتاريخ ${fmtDay(now, 'ar')} · © ${BRAND.copyrightYear} ${BRAND.owner.ar}` : `${BRAND.motto.en} · Issued electronically by Athar · TRACE on ${fmtDay(now, 'en')} · © ${BRAND.copyrightYear} ${BRAND.owner.en}`,
     verifyHint: sharePublic ? (ar ? 'امسح الرمز لعرض الملف المهاري الحي والتحقق من الشهادات.' : 'Scan to open the live skills profile and verify credentials.') : (ar ? 'الملف خاص؛ تحقق من كل شهادة عبر رمزها في athar-portal.com/credential' : 'Profile is private; verify each credential by its code at athar-portal.com/credential'),
   };
 }
@@ -86,7 +86,7 @@ export async function renderPassportPage(canvas: HTMLCanvasElement, p: PassportP
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, PW, PH);
   // الرأس
   const headH = p.cover ? 420 : 170; ctx.fillStyle = NAVY; ctx.fillRect(0, 0, PW, headH); ctx.fillStyle = GOLD; ctx.fillRect(0, headH, PW, 8);
-  txt(ctx, ar ? 'بوابة أَثَر · Athar · TRACE' : 'Athar · TRACE — Portal for Education, Training, Development & Quality', X, 70, { size: 26, weight: 800, color: GOLD, align, dir });
+  txt(ctx, ar ? 'بوّابة أَثَر · Athar · TRACE' : 'Athar · TRACE — Portal for Education, Training, Development & Quality', X, 70, { size: 26, weight: 800, color: GOLD, align, dir });
   txt(ctx, ar ? 'جواز المهارات' : 'Skills Passport', X, p.cover ? 150 : 128, { size: p.cover ? 74 : 44, weight: 900, color: '#fff', align, dir });
   if (!p.cover) txt(ctx, d.name, X2, 128, { size: 30, weight: 700, color: 'rgba(255,255,255,.85)', align: align2, dir, maxW: 700 });
   if (p.cover) {
@@ -103,7 +103,7 @@ export async function renderPassportPage(canvas: HTMLCanvasElement, p: PassportP
   // المهارات
   let y = p.cover ? 690 : 240; const rowH = 62;
   if (p.domains.length) {
-    txt(ctx, ar ? 'خريطة المهارات' : 'Skills map', X, y, { size: 34, weight: 900, color: NAVY, align, dir }); txt(ctx, ar ? 'المستوى من 5 · «معتمد» = أقرّه مدرب أو الإدارة' : 'Level out of 5 · “approved” = confirmed by a trainer or admin', X2, y, { size: 20, color: MUTED, align: align2, dir }); y += 30;
+    txt(ctx, ar ? 'خريطة المهارات' : 'Skills map', X, y, { size: 34, weight: 900, color: NAVY, align, dir }); txt(ctx, ar ? 'المستوى من 5 · «معتمد» = أقرّه مدرّب أو الإدارة' : 'Level out of 5 · “approved” = confirmed by a trainer or admin', X2, y, { size: 20, color: MUTED, align: align2, dir }); y += 30;
     for (const dom of p.domains) {
       y += 30; ctx.fillStyle = TONE[dom.tone] || NAVY; ctx.beginPath(); ctx.arc(ar ? R - 12 : L + 12, y - 10, 10, 0, Math.PI * 2); ctx.fill(); txt(ctx, `${dom.label} (${dom.items.length})`, ar ? R - 34 : L + 34, y, { size: 27, weight: 800, color: INK, align, dir }); y += 14;
       for (const it of dom.items) {

@@ -63,7 +63,7 @@ export type DecisionTarget = 'transfer' | 'gain' | 'attendance' | null;
 export type DecisionOption = { key: string; text_ar: string; target: DecisionTarget; why_ar: string };
 export const DECISIONS: DecisionOption[] = [
   { key: 'protected_time', text_ar: 'وقت تطبيق أسبوعي محمي (ساعتان) لمن أنهى البرنامج', target: 'transfer', why_ar: 'أكثر ما يرفع الانتقال إلى الميدان: وقت مخصَّص لا ينافسه عمل آخر' },
-  { key: 'buddy_supervisor', text_ar: 'مشرف مرافق لكل متدرّب في أوّل 30 يومًا بعد التدريب', target: 'transfer', why_ar: 'متابعة الأثر تُظهر أن تقدير المشرف يسبق تقدير المتدرّب' },
+  { key: 'buddy_supervisor', text_ar: 'مشرف مرافق لكل مشارك في أوّل 30 يومًا بعد التدريب', target: 'transfer', why_ar: 'متابعة الأثر تُظهر أن تقدير المشرف يسبق تقدير المشارك' },
   { key: 'review_30', text_ar: 'اجتماع متابعة للقيادة بعد 30 يومًا لقراءة الانتقال', target: 'transfer', why_ar: 'سؤال واحد من القيادة في الوقت المناسب يغيّر السلوك' },
   { key: 'equipment', text_ar: 'توفير التجهيزات التي ذكرها الميدان عائقًا', target: 'transfer', why_ar: 'كثير من «لم أطبّق» سببه أداة ناقصة لا مهارة ناقصة' },
   { key: 'circular', text_ar: 'تعميم داخلي يعتمد الممارسة الجديدة إجراءً رسميًّا', target: 'transfer', why_ar: 'المهارة تبقى حين تصير إجراءً' },
@@ -122,7 +122,7 @@ export function numbersOf(r: ImpactReport | null, att: { pct: number | null; ses
 /** «ثلاثة أرقام» — ثلاث جُمَل بالترتيب نفسه دائمًا */
 export function threeLines(n: ReportNumbers): string[] {
   return [
-    n.transfer.pct === null ? `الانتقال إلى الميدان: ${n.transfer.note_ar}.` : `الانتقال إلى الميدان ${pctAr(n.transfer.pct)} (متابعة الأثر لـ ${countAr(n.transfer.n, { one: 'متدرّب', two: 'متدرّبين', few: 'متدرّبين', many: 'متدرّبًا' })}${n.transfer.supervisor !== null && n.transfer.trainee !== null ? ` — تقدير المشرف ${n.transfer.supervisor} والمتدرّب ${n.transfer.trainee} من 5` : ''}).`,
+    n.transfer.pct === null ? `الانتقال إلى الميدان: ${n.transfer.note_ar}.` : `الانتقال إلى الميدان ${pctAr(n.transfer.pct)} (متابعة الأثر لـ ${countAr(n.transfer.n, { one: 'مشارك', two: 'مشاركين', few: 'مشاركين', many: 'مشاركًا' })}${n.transfer.supervisor !== null && n.transfer.trainee !== null ? ` — تقدير المشرف ${n.transfer.supervisor} والمشارك ${n.transfer.trainee} من 5` : ''}).`,
     n.gain.pct === null ? `الكسب المعياري: ${n.gain.note_ar}.` : `الكسب المعياري ${n.gain.pct > 0 ? '+' : ''}${n.gain.pct}% (قبلي ${n.gain.pre} ← بعدي ${n.gain.post}، n=${n.gain.n}).`,
     n.attendance.pct === null ? `الالتزام بالحضور: ${n.attendance.note_ar}.` : `الالتزام بالحضور ${pctAr(n.attendance.pct)} عبر ${n.attendance.sessions === 1 ? 'جلسة واحدة' : countAr(n.attendance.sessions, { one: 'جلسة', two: 'جلستين', few: 'جلسات', many: 'جلسة' })} (${n.attendance.n} منسوبًا).`,
   ];
@@ -134,7 +134,7 @@ export function questionsFor(inp: { numbers: ReportNumbers; skills: ReportSkill[
   const withLearners = inp.programs.filter((p) => p.learners > 0); const noPost = withLearners.filter((p) => !p.post_n);
   if (withLearners.length && noPost.length) qs.push(`${countAr(noPost.length, { one: 'برنامج', two: 'برنامجان', few: 'برامج', many: 'برنامجًا' })} من ${withLearners.length} لم يُقَس بعديًّا — من يملك قرار القياس البعدي قبل التقرير التالي؟`);
   const top = inp.skills[0]; if (top && top.learners >= K && !top.proven) qs.push(`أعلى مهارة مكتسبة «${top.name_ar}» لم تُثبَت في الميدان بعد — أين فرصة التطبيق الأولى؟`);
-  if (n.transfer.pct === null && n.gain.pct !== null) qs.push('قِيس الكسب ولم يُقَس الانتقال — من يفتح حملة متابعة الأثر (مشرف + متدرّب) بعد 30 يومًا؟');
+  if (n.transfer.pct === null && n.gain.pct !== null) qs.push('قِيس الكسب ولم يُقَس الانتقال — من يفتح حملة متابعة الأثر (مشرف + مشارك) بعد 30 يومًا؟');
   if (n.attendance.pct !== null && n.attendance.pct < 70) qs.push(`الالتزام بالحضور ${pctAr(n.attendance.pct)} — ما الذي ينافس وقت التدريب في جدول المنسوبين؟`);
   if (inp.pulse_replied_pct !== null && inp.pulse_replied_pct < 30) qs.push(`ردّ المنسوبون على ${Math.round(inp.pulse_replied_pct)}% فقط من كلمات مدرّبيهم — هل يعرفون أن الكلمة تصل؟`);
   if (inp.pending >= 1) qs.push(`${countAr(inp.pending, { one: 'طلب انضمام', two: 'طلبا انضمام', few: 'طلبات انضمام', many: 'طلب انضمام' })} ما زال معلّقًا — من يؤكّد المنسوبين الجدد؟`);
@@ -175,7 +175,7 @@ export async function fieldVoices(db: Db, orgId: string, ids: string[], bounds: 
     const seals: any[] = []; for (const part of chunk(roomIds)) seals.push(...await safe<any[]>(() => db.from('portal_learning_lines').select('classroom_id,body_ar,meta,day').in('classroom_id', part).eq('kind', 'hour_seal').gte('day', bounds.day_from).lt('day', bounds.day_to).limit(1000), []));
     if (seals.length) {
       const voices = seals.filter((x) => x.meta?.voice?.path).length; const secs = new Set(seals.map((x) => String(x.classroom_id))).size; const hp = seals.reduce((a, x) => a + Number(x.meta?.people || 0), 0);
-      lines.push(`ساعة أَثَر: ${seals.length} ${seals.length === 1 ? 'ساعة مختومة' : seals.length === 2 ? 'ساعتان مختومتان' : 'ساعات مختومة'} في ${secs} ${secs === 1 ? 'شعبة' : 'شُعب'}${voices ? ` — قرأ ${voices} ${voices === 1 ? 'متدرّبٌ سطرَ شعبته بصوته' : 'متدرّبين سطور شُعبهم بأصواتهم'}` : ''}`);
+      lines.push(`ساعة أَثَر: ${seals.length} ${seals.length === 1 ? 'ساعة مختومة' : seals.length === 2 ? 'ساعتان مختومتان' : 'ساعات مختومة'} في ${secs} ${secs === 1 ? 'شعبة' : 'شُعب'}${voices ? ` — قرأ ${voices} ${voices === 1 ? 'مشاركٌ سطرَ شعبته بصوته' : 'مشاركين سطور شُعبهم بأصواتهم'}` : ''}`);
       if (hp >= K) { const pick = seals.map((x) => String(x.body_ar || '').trim()).filter((t) => t.length >= 8 && t !== '—'); const one = shuffle(pick, seed)[0]; if (one) lines.push(one); }
       sources.add('سطور «ساعة أَثَر» المختومة'); people = Math.max(people, hp);
     }

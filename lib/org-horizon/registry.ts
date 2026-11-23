@@ -93,7 +93,7 @@ export function validateOrgScenario(b: { scenario_ar?: unknown; source?: unknown
   return null;
 }
 
-/** الخطوات الثلاث: ما تستطيع المنصة أن تشهده عن جهة — ما لم تعشه الجهة أولًا، ثم ما يمكنها تعميقه؛ أنواع متمايزة؛ ثلاث بالضبط */
+/** الخطوات الثلاث: ما تستطيع البوّابة أن تشهده عن جهة — ما لم تعشه الجهة أولًا، ثم ما يمكنها تعميقه؛ أنواع متمايزة؛ ثلاث بالضبط */
 export function proposeOrgPledges(chapters: OrgChapter[], members: number, n = ORG_PLEDGE_OPTIONS, ctx: { inclusive_programs?: number } = {}): OrgPledgeOption[] {
   const has = (kind: OrgChapterKind) => chapters.some(c => c.kind === kind); const P = ORG_PLEDGE_PEOPLE;
   const out: OrgPledgeOption[] = [];

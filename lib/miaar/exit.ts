@@ -195,7 +195,7 @@ export function levelFromRoom(code: unknown, name: unknown = ''): ExitLevel | nu
   const n = String(name || ''); if (/مبتدئ\s*2|أساسي/.test(n)) return 'A2'; if (/مبتدئ/.test(n)) return 'A1'; if (/متوسط\s*2|فوق المتوسط/.test(n)) return 'B2'; if (/متوسط/.test(n)) return 'B1'; if (/متقدم|متقدّم/.test(n)) return 'C1';
   return null;
 }
-/** صفّ لوحة المجموعة من جلسة + تقرير */
+/** صفّ لوحة الشعبة من جلسة + تقرير */
 export type BoardRow = { email: string; name: string; status: 'invited' | 'started' | 'finished' | 'expired'; started_at: string | null; finished_at: string | null; answered: number; total: number; idle_min: number | null; report_code: string | null; exit: ExitBlockT | null };
 export function boardSummary(rows: readonly BoardRow[]) {
   const finished = rows.filter((r) => r.exit); const final = finished.filter((r) => r.exit!.الحالة === 'final');

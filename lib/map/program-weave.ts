@@ -1,18 +1,18 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * P61 «نسيج البرنامج — ما نسجه متدرّبوه بأيديهم» (الرسمي: خريطة الأثر المجمَّعة للبرنامج) — النواة الصِّرفة (بلا قاعدة بيانات)
+ * P61 «نسيج البرنامج — ما نسجه مشاركوه بأيديهم» (الرسمي: خريطة الأثر المجمَّعة للبرنامج) — النواة الصِّرفة (بلا قاعدة بيانات)
  *  • المدخل: صفوف portal_map_threads المبقاة (kept) لمنسوبي البرنامج + نطاق محطاته (البرنامج · جلساته · مهامّه)
  *  • يَعُدّ ولا يَقتبس: لا «لأن…» هنا إطلاقًا (إذن P59 كان للمدرّب لا لملف الاعتماد) — أعداد فقط، وبقاعدة الخمسة
  *  • اليدوي (manual) لا يُحتسب؛ المستبعَد لا يُقرأ أصلًا؛ لا أسماء ولا بريد ولا تواريخ فردية في أي مخرج
  *  • الخيط «للبرنامج» إذا كان أحد طرفيه محطةً من محطاته (program:<pid> · session:<id> · mission:<id>)
- *  • «خرّيج ما زال ينسج»: متدرّب قرّر خيطًا (أيّ خيط غير يدوي) بعد تاريخ انتهاء البرنامج — متابعة الخرّيجين بأيديهم (3.5)
+ *  • «خرّيج ما زال ينسج»: مشارك قرّر خيطًا (أيّ خيط غير يدوي) بعد تاريخ انتهاء البرنامج — متابعة الخرّيجين بأيديهم (3.5)
  *  • «عبر الدفعات»: نسبة الناسجين في كل دفعة التحاق (سنة القبول) — لا تظهر دفعة تحت خمسة
  */
 import { RULE_AR } from './registry';
 import type { RuleKey } from './registry';
 import type { Evidence } from '../accreditation/registry';
 
-export const P61_NAMES_AR = { title: 'نسيج البرنامج', sub: 'ما نسجه متدرّبوه بأيديهم', official: 'خريطة الأثر المجمَّعة للبرنامج', en: 'Program-level aggregated impact weave', motto: 'لا نقول إن برنامجنا أثّر؛ نُري ما نسجه متدرّبوه بأيديهم' } as const;
+export const P61_NAMES_AR = { title: 'نسيج البرنامج', sub: 'ما نسجه مشاركوه بأيديهم', official: 'خريطة الأثر المجمَّعة للبرنامج', en: 'Program-level aggregated impact weave', motto: 'لا نقول إن برنامجنا أثّر؛ نُري ما نسجه مشاركوه بأيديهم' } as const;
 export const K_PROGRAM = 5;
 export const PROGRAM_WEAVE_LIMITS = { k: K_PROGRAM, maxRoster: 1000, maxThreads: 5000, ttlMs: 10 * 60 * 1000 } as const;
 export const PROGRAM_WEAVE_ANCHOR = '#weave';
@@ -22,13 +22,13 @@ export const WEAVE_EVIDENCE_CODES: Partial<Record<RuleKey, string[]>> = {
   program_skill: ['3.2', '1.6'], program_credential: ['3.2', '1.6'], session_skill: ['2.1', '1.5'], hand_session: ['3.4', '3.1'],
   placement_program: ['3.3'], daily_mission: ['3.5', '2.4'], simulation_skill: ['2.1'], skill_credential: ['1.6'],
 };
-/** نصّ الدليل لكل خيط — بصيغة المتدرّبين لا البرنامج */
+/** نصّ الدليل لكل خيط — بصيغة المشاركين لا البرنامج */
 export const WEAVE_EVIDENCE_AR: Partial<Record<RuleKey, (n: number) => string>> = {
-  program_skill: (n) => `${n} من متدرّبي البرنامج نسجوا بأيديهم: «البرنامج قاد إلى مهارة معتمدة»`,
-  program_credential: (n) => `${n} من متدرّبي البرنامج نسجوا بأيديهم: «البرنامج قاد إلى شهادة»`,
-  session_skill: (n) => `${n} خيطًا نسجه المتدرّبون: «جلسة من البرنامج قادت إلى مهارة معتمدة»`,
-  hand_session: (n) => `${n} خيطًا نسجه المتدرّبون: «✋ على كلمة المدرّب قادت إلى حضور الجلسة التالية»`,
-  placement_program: (n) => `${n} متدرّبًا نسجوا: «تحديد المستوى قاد إلى إتمام البرنامج»`,
+  program_skill: (n) => `${n} من مشاركي البرنامج نسجوا بأيديهم: «البرنامج قاد إلى مهارة معتمدة»`,
+  program_credential: (n) => `${n} من مشاركي البرنامج نسجوا بأيديهم: «البرنامج قاد إلى شهادة»`,
+  session_skill: (n) => `${n} خيطًا نسجه المشاركون: «جلسة من البرنامج قادت إلى مهارة معتمدة»`,
+  hand_session: (n) => `${n} خيطًا نسجه المشاركون: «✋ على كلمة المدرّب قادت إلى حضور الجلسة التالية»`,
+  placement_program: (n) => `${n} مشاركًا نسجوا: «تحديد المستوى قاد إلى إتمام البرنامج»`,
   daily_mission: (n) => `${n} خيطًا: «حالة يوم قادت إلى مهمة ميدانية» من مهامّ البرنامج`,
   simulation_skill: (n) => `${n} خيطًا: «محاكاة قادت إلى مهارة معتمدة»`,
   skill_credential: (n) => `${n} خيطًا: «مهارة قادت إلى شهادة»`,
@@ -90,13 +90,13 @@ export function programWeave(rows: ThreadRow[], roster: RosterRow[], scope: Prog
   const strongest = threads[0] || null;
   const below_k = rosterSet.size < k || (!threads.length && weavers_n === 0);
   const lines_ar: string[] = [];
-  const strongest_ar = strongest ? `أقوى خيط نسجه متدرّبو البرنامج: ${strongest.title_ar} — نسجه ${strongest.n} منهم` : null;
+  const strongest_ar = strongest ? `أقوى خيط نسجه مشاركو البرنامج: ${strongest.title_ar} — نسجه ${strongest.n} منهم` : null;
   const belowk_ar = hidden ? `${hidden === 1 ? 'خيطٌ واحد لم يبلغ' : `${hidden} خيوط لم تبلغ`} خمسة بعد — لا يُعرض عدده` : null;
-  const weavers_ar = weavers_n ? `${weavers_n} من ${rosterSet.size} متدرّبًا نسجوا خيطًا واحدًا على الأقل من هذا البرنامج` : null;
+  const weavers_ar = weavers_n ? `${weavers_n} من ${rosterSet.size} مشاركًا نسجوا خيطًا واحدًا على الأقل من هذا البرنامج` : null;
   const graduates_ar = graduates.n ? `${graduates.n} خرّيجًا ما زالوا ينسجون أثرهم بعد انتهاء البرنامج (${graduates.rules} ${graduates.rules === 1 ? 'نوع خيط' : 'أنواع خيوط'})` : null;
   if (!rosterSet.size) lines_ar.push('لا منسوبون للبرنامج بعد — النسيج يبدأ حين يبدأ القبول.');
   else if (rosterSet.size < k) lines_ar.push(`حين يبلغ منسوبو البرنامج ${k} يبدأ النسيج بالظهور — لا أعداد قبل ذلك.`);
-  else if (!threads.length && !weavers_n) lines_ar.push('لم ينسج خمسةٌ من المتدرّبين خيطًا من هذا البرنامج بعد — الخريطة بيد المتعلّم، لا بيد البرنامج.');
+  else if (!threads.length && !weavers_n) lines_ar.push('لم ينسج خمسةٌ من المشاركين خيطًا من هذا البرنامج بعد — الخريطة بيد المتعلّم، لا بيد البرنامج.');
   for (const l of [strongest_ar, weavers_ar, graduates_ar, belowk_ar]) if (l) lines_ar.push(l);
   const sources = [...bySrc.entries()].map(([sk, n]) => { const [from, to] = sk.split('|'); return { from, to, n }; }).filter((s) => s.n >= k).sort((a, b) => b.n - a.n);
   return { k, roster_n: rosterSet.size, weavers_n, threads_n: threads.reduce((a, t) => a + t.n, 0), below_k, threads, strongest, graduates, cohorts, mirror: { strongest_ar, belowk_ar, weavers_ar, graduates_ar, lines_ar }, sources };
@@ -119,4 +119,4 @@ export function programPeersOf(mine: Array<{ from: string; to: string }>, counts
   for (const t of mine) { const key = kindOf(t.from) === 'program' ? t.from : kindOf(t.to) === 'program' ? t.to : null; if (!key) continue; const n = counts[key] || 0; if (n >= k) out[`${t.from}>${t.to}`] = { n, program_ar: titles[key] || 'برنامج' }; }
   return out;
 }
-export const programPeersLine = (p: { n: number; program_ar: string }) => `خيطك هذا جزء من نسيج برنامج «${p.program_ar}» — نسجه معك ${p.n} من متدرّبيه، بلا أسماء`;
+export const programPeersLine = (p: { n: number; program_ar: string }) => `خيطك هذا جزء من نسيج برنامج «${p.program_ar}» — نسجه معك ${p.n} من مشاركيه، بلا أسماء`;

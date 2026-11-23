@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — تقارير الأثر القطاعية (P8-ج): تجميع مؤشرات RPC portal_impact_report، المقارنات، النص التنفيذي، Excel
+// بوّابة أَثَر — تقارير الأثر القطاعية (P8-ج): تجميع مؤشرات RPC portal_impact_report، المقارنات، النص التنفيذي، Excel
 import type { Lang, T } from './content';
 import { t } from './content';
 
@@ -75,7 +75,7 @@ export function totals(r: ImpactReport): ImpactTotals {
   };
 }
 
-/** صفوف البرامج مع المؤشرات المشتقة (نسبة الحضور، التحسّن…) — مرتبة بعدد المتعلمين */
+/** صفوف البرامج مع المؤشرات المشتقة (نسبة الحضور، التحسّن…) — مرتبة بعدد المتعلّمين */
 export type ProgramRow = ImpactProgram & { attendanceRate: number | null; improvement: number | null; satisfactionPct: number | null; hoursDelivered: number };
 export function programRows(r: ImpactReport): ProgramRow[] {
   return (r.programs || []).map(p => ({
@@ -84,7 +84,7 @@ export function programRows(r: ImpactReport): ProgramRow[] {
     improvement: improvementPct(p.prepost?.pre, p.prepost?.post), satisfactionPct: satisfactionPct(p.satisfaction?.mean ?? null),
   })).sort((a, b) => b.learners - a.learners || a.name_ar.localeCompare(b.name_ar));
 }
-/** مقارنة الجهات: ترتيب بعدد المتعلمين ثم متوسط المستوى */
+/** مقارنة الجهات: ترتيب بعدد المتعلّمين ثم متوسط المستوى */
 export function orgRows(r: ImpactReport): (ImpactOrg & { credPerLearner: number | null })[] {
   return (r.orgs || []).map(o => ({ ...o, credPerLearner: o.learners ? Math.round((num(o.credentials) / o.learners) * 100) / 100 : null })).sort((a, b) => b.learners - a.learners || num(b.avg_level) - num(a.avg_level));
 }
@@ -116,14 +116,14 @@ export function rpcParams(f: ImpactFilters) { return { p_from: f.from || null, p
 const fmtN = (n: number, lang: Lang) => n.toLocaleString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US');
 export function narrative(tt: ImpactTotals, lang: Lang, scopeLabel: string): string[] {
   const ar = lang === 'ar'; const out: string[] = [];
-  out.push(ar ? `خلال ${scopeLabel}، استفاد ${fmtN(tt.learners, lang)} متعلمًا من ${fmtN(tt.programs, lang)} برنامجًا${tt.orgs ? ` عبر ${fmtN(tt.orgs, lang)} جهة` : ''}، بإجمالي ${fmtN(tt.hours, lang)} ساعة تدريبية مقدَّمة.`
+  out.push(ar ? `خلال ${scopeLabel}، استفاد ${fmtN(tt.learners, lang)} متعلّمًا من ${fmtN(tt.programs, lang)} برنامجًا${tt.orgs ? ` عبر ${fmtN(tt.orgs, lang)} جهة` : ''}، بإجمالي ${fmtN(tt.hours, lang)} ساعة تدريبية مقدَّمة.`
     : `During ${scopeLabel}, ${fmtN(tt.learners, lang)} learners benefited from ${fmtN(tt.programs, lang)} programs${tt.orgs ? ` across ${fmtN(tt.orgs, lang)} organizations` : ''}, totalling ${fmtN(tt.hours, lang)} delivered training hours.`);
   if (tt.attendance.rate !== null) out.push(ar ? `بلغت نسبة الحضور ${tt.attendance.rate}% (${fmtN(tt.attendance.present, lang)} حضورًا من ${fmtN(tt.attendance.expected, lang)} متوقعًا في ${fmtN(tt.attendance.sessions, lang)} جلسة).` : `Attendance reached ${tt.attendance.rate}% (${fmtN(tt.attendance.present, lang)} of ${fmtN(tt.attendance.expected, lang)} expected across ${fmtN(tt.attendance.sessions, lang)} sessions).`);
-  if (tt.satisfaction.mean !== null) out.push(ar ? `متوسط الرضا ${tt.satisfaction.mean} من 5 (${tt.satisfaction.pct}%) من ${fmtN(tt.satisfaction.n, lang)} استبانة.` : `Average satisfaction ${tt.satisfaction.mean}/5 (${tt.satisfaction.pct}%) from ${fmtN(tt.satisfaction.n, lang)} evaluations.`);
+  if (tt.satisfaction.mean !== null) out.push(ar ? `متوسط الرضا ${tt.satisfaction.mean} من 5 (${tt.satisfaction.pct}%) من ${fmtN(tt.satisfaction.n, lang)} استبيان.` : `Average satisfaction ${tt.satisfaction.mean}/5 (${tt.satisfaction.pct}%) from ${fmtN(tt.satisfaction.n, lang)} evaluations.`);
   if (tt.prepost.improvement !== null) out.push(ar ? `القياس القبلي ${tt.prepost.pre} ← البعدي ${tt.prepost.post} (تحسّن ${tt.prepost.improvement > 0 ? '+' : ''}${tt.prepost.improvement}%).` : `Pre ${tt.prepost.pre} → post ${tt.prepost.post} (${tt.prepost.improvement > 0 ? '+' : ''}${tt.prepost.improvement}% improvement).`);
-  if (tt.transfer.mean !== null) out.push(ar ? `نقل الأثر إلى العمل: ${tt.transfer.mean}% متوسط التطبيق وفق ${fmtN(tt.transfer.n, lang)} استجابة من المشرفين والمتدربين.` : `Transfer to work: ${tt.transfer.mean}% average application across ${fmtN(tt.transfer.n, lang)} supervisor/trainee responses.`);
+  if (tt.transfer.mean !== null) out.push(ar ? `نقل الأثر إلى العمل: ${tt.transfer.mean}% متوسط التطبيق وفق ${fmtN(tt.transfer.n, lang)} استجابة من المشرفين والمشاركين.` : `Transfer to work: ${tt.transfer.mean}% average application across ${fmtN(tt.transfer.n, lang)} supervisor/trainee responses.`);
   if (tt.skillsProven || tt.credentials) out.push(ar ? `أُثبتت ${fmtN(tt.skillsProven, lang)} مهارة بأدلة كافية (منها ${fmtN(tt.skillsApproved, lang)} معتمدة)، وصدرت ${fmtN(tt.credentials, lang)} شهادة رقمية قابلة للتحقق.` : `${fmtN(tt.skillsProven, lang)} skills were proven with sufficient evidence (${fmtN(tt.skillsApproved, lang)} approved) and ${fmtN(tt.credentials, lang)} verifiable digital credentials were issued.`);
-  if (tt.placements.total) out.push(ar ? `مستويات مِعيار للمتعلمين: ${tt.placements.levels.map(l => `${l.level} (${l.n})`).join('، ')}.` : `Mi‘yar levels: ${tt.placements.levels.map(l => `${l.level} (${l.n})`).join(', ')}.`);
+  if (tt.placements.total) out.push(ar ? `مستويات مِعيار للمتعلّمين: ${tt.placements.levels.map(l => `${l.level} (${l.n})`).join('، ')}.` : `Mi‘yar levels: ${tt.placements.levels.map(l => `${l.level} (${l.n})`).join(', ')}.`);
   if (out.length === 1 && tt.learners === 0) out.push(ar ? 'لا توجد بيانات كافية في هذا النطاق بعد — وسّع الفترة أو أزل المرشحات.' : 'Not enough data in this scope yet — widen the period or clear filters.');
   return out;
 }
@@ -142,30 +142,30 @@ export function impactSheets(r: ImpactReport, f: ImpactFilters, names: { sector?
   const tt = totals(r);
   const summary: Sheet = { name: 'الملخص', rtl: true, widths: [34, 20], rows: [
     ['تقرير الأثر القطاعي — أَثَر', ''], ['النطاق', scopeLabel(f, names, 'ar')], ['تاريخ الإنشاء', (r.generated_at || new Date().toISOString()).slice(0, 10)], ['', ''],
-    ['البرامج', tt.programs], ['المتعلمون', tt.learners], ['طلبات قيد المراجعة', tt.pending], ['الجهات', tt.orgs], ['الساعات التدريبية المقدَّمة', tt.hours],
-    ['نسبة الحضور %', v(tt.attendance.rate)], ['الرضا (من 5)', v(tt.satisfaction.mean)], ['عدد استبانات الرضا', tt.satisfaction.n],
+    ['البرامج', tt.programs], ['المتعلّمون', tt.learners], ['طلبات قيد المراجعة', tt.pending], ['الجهات', tt.orgs], ['الساعات التدريبية المقدَّمة', tt.hours],
+    ['نسبة الحضور %', v(tt.attendance.rate)], ['الرضا (من 5)', v(tt.satisfaction.mean)], ['عدد استبيانات الرضا', tt.satisfaction.n],
     ['القياس القبلي', v(tt.prepost.pre)], ['القياس البعدي', v(tt.prepost.post)], ['التحسّن %', v(tt.prepost.improvement)], ['نقل الأثر (تطبيق %)', v(tt.transfer.mean)],
     ['مهارات مُثبتة', tt.skillsProven], ['مهارات معتمدة', tt.skillsApproved], ['شهادات رقمية', tt.credentials], ['اختبارات مِعيار', tt.placements.total], ['أحداث تعلّم', tt.events.total],
     ...narrative(tt, 'ar', scopeLabel(f, names, 'ar')).map((s, i) => [i === 0 ? 'الخلاصة' : '', s] as Cell[]),
   ] };
   const programs: Sheet = { name: 'البرامج', rtl: true, widths: [40, 14, 10, 10, 8, 10, 10, 10, 10, 10, 10, 10, 10, 10], rows: [
-    ['البرنامج', 'القطاع', 'النوع', 'المستوى', 'الساعات', 'المتعلمون', 'قيد المراجعة', 'الجهات', 'الحضور %', 'الرضا/5', 'قبلي', 'بعدي', 'تحسّن %', 'نقل الأثر %', 'شهادات'],
+    ['البرنامج', 'القطاع', 'النوع', 'المستوى', 'الساعات', 'المتعلّمون', 'قيد المراجعة', 'الجهات', 'الحضور %', 'الرضا/5', 'قبلي', 'بعدي', 'تحسّن %', 'نقل الأثر %', 'شهادات'],
     ...programRows(r).map(p => [p.name_ar, p.sector || '', p.program_type || '', p.cefr_level || '', v(p.hours), p.learners, p.pending, p.orgs, v(p.attendanceRate), v(p.satisfaction?.mean), v(p.prepost?.pre), v(p.prepost?.post), v(p.improvement), v(p.transfer?.mean), p.credentials] as Cell[]),
   ] };
   const orgs: Sheet = { name: 'مقارنة الجهات', rtl: true, widths: [36, 14, 14, 10, 10, 10, 10, 12], rows: [
-    ['الجهة', 'القطاع', 'المدينة', 'المنسوبون', 'المتعلمون', 'التسجيلات', 'الشهادات', 'متوسط المستوى /5'],
+    ['الجهة', 'القطاع', 'المدينة', 'المنسوبون', 'المتعلّمون', 'التسجيلات', 'الشهادات', 'متوسط المستوى /5'],
     ...orgRows(r).map(o => [o.name_ar, o.sector || '', o.city || '', o.members, o.learners, o.enrollments, o.credentials, v(o.avg_level)] as Cell[]),
   ] };
   const skills: Sheet = { name: 'المهارات', rtl: true, widths: [14, 36, 14, 8, 8, 10, 10, 10, 12, 10], rows: [
-    ['الرمز', 'المهارة', 'المجال', 'SAQF', 'CEFR', 'المتعلمون', 'مُثبتة', 'معتمدة', 'متوسط المستوى', 'البرامج'],
+    ['الرمز', 'المهارة', 'المجال', 'SAQF', 'CEFR', 'المتعلّمون', 'مُثبتة', 'معتمدة', 'متوسط المستوى', 'البرامج'],
     ...skillRows(r).map(s => [s.code, s.name_ar, s.domain, v(s.saqf_level), s.cefr_level || '', s.learners, s.proven, s.approved, v(s.avg_level), s.programs] as Cell[]),
   ] };
-  const sectors: Sheet = { name: 'القطاعات', rtl: true, widths: [30, 10, 10, 10], rows: [['القطاع', 'البرامج', 'الجهات', 'المتعلمون'], ...sectorRows(r).map(s => [s.name_ar, s.programs, s.orgs, s.learners] as Cell[])] };
+  const sectors: Sheet = { name: 'القطاعات', rtl: true, widths: [30, 10, 10, 10], rows: [['القطاع', 'البرامج', 'الجهات', 'المتعلّمون'], ...sectorRows(r).map(s => [s.name_ar, s.programs, s.orgs, s.learners] as Cell[])] };
   return [summary, programs, orgs, skills, sectors];
 }
 
 export const KPI_LABEL: Record<string, T> = {
-  learners: { ar: 'متعلمون', en: 'Learners' }, programs: { ar: 'برامج', en: 'Programs' }, orgs: { ar: 'جهات', en: 'Organizations' }, hours: { ar: 'ساعة تدريبية', en: 'Training hours' },
+  learners: { ar: 'متعلّمون', en: 'Learners' }, programs: { ar: 'برامج', en: 'Programs' }, orgs: { ar: 'جهات', en: 'Organizations' }, hours: { ar: 'ساعة تدريبية', en: 'Training hours' },
   attendance: { ar: 'نسبة الحضور', en: 'Attendance' }, satisfaction: { ar: 'الرضا', en: 'Satisfaction' }, improvement: { ar: 'التحسّن القبلي/البعدي', en: 'Pre/post gain' }, transfer: { ar: 'نقل الأثر', en: 'Transfer' },
   proven: { ar: 'مهارات مُثبتة', en: 'Skills proven' }, credentials: { ar: 'شهادات رقمية', en: 'Credentials' }, placements: { ar: 'اختبارات مِعيار', en: 'Mi‘yar tests' }, events: { ar: 'أحداث تعلّم', en: 'Learning events' },
 };

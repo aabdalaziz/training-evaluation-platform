@@ -1,5 +1,5 @@
 /**
- * بوابة المتدرب (/me) — الأنواع وبناء قائمة المهام ونسبة الحضور (بدون تبعيات)
+ * بوّابة المتعلّم (/me) — الأنواع وبناء قائمة المهام ونسبة الحضور (بدون تبعيات)
  */
 export type MeCertificate = { serial: string | null; verify_code: string | null; kind: string; issued_at: string; award_title?: string | null; hours?: number | null; program_name?: string | null; revoked: boolean };
 export type MeProgram = {
@@ -37,7 +37,7 @@ export function isRunning(p: Pick<MeProgram, 'start_date' | 'end_date' | 'status
   return true;
 }
 
-/** المهام المطلوبة من المتدرب الآن (مرتبة: العاجل أولًا) */
+/** المهام المطلوبة من المشارك الآن (مرتبة: العاجل أولًا) */
 export function buildTasks(me: Pick<MePortal, 'programs' | 'today'>): Task[] {
   const out: Task[] = [];
   for (const p of me.programs) {
@@ -52,7 +52,7 @@ export function buildTasks(me: Pick<MePortal, 'programs' | 'today'>): Task[] {
     }
     if (running) {
       const todayDone = p.evals?.last_at ? String(p.evals.last_at).slice(0, 10) === me.today : false;
-      if (!todayDone) out.push({ id: `daily:${p.id}`, program_id: p.id, program_name: p.name_ar, kind: 'daily', title: 'التقييم اليومي', hint: 'رأيك في جلسة اليوم يساعد المدرب على التحسين', href: `/evaluate/daily?program=${p.id}`, urgent: false });
+      if (!todayDone) out.push({ id: `daily:${p.id}`, program_id: p.id, program_name: p.name_ar, kind: 'daily', title: 'التقييم اليومي', hint: 'رأيك في جلسة اليوم يساعد المدرّب على التحسين', href: `/evaluate/daily?program=${p.id}`, urgent: false });
     }
     if (p.is_final_open && !(p.evals?.final > 0)) out.push({ id: `final:${p.id}`, program_id: p.id, program_name: p.name_ar, kind: 'final', title: 'التقييم النهائي للبرنامج', hint: 'مفتوح الآن — مطلوب لإصدار الشهادة', href: `/evaluate/final?program=${p.id}`, urgent: true });
     for (const f of p.followups || []) {

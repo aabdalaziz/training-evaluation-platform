@@ -25,14 +25,14 @@ export function tokens(q: string): string[] { return normalizeAr(q).split(' ').m
 /* ---------- الفهرس الثابت: الصفحات (الأسماء الرسمية + المرادفات السردية/القديمة) ---------- */
 const P = (id: string, href: string, ar: string, en: string, syn: string[] = [], need?: Need, group: Group = 'page'): Entry => ({ id, href, ar, en, syn, group, need });
 export const ROUTES: Entry[] = [
-  P('home', '/', 'الصفحة الرئيسة', 'Home', ['الرئيسة', 'home', 'athar', 'اثر', 'بوابة']),
+  P('home', '/', 'الصفحة الرئيسة', 'Home', ['الرئيسة', 'home', 'athar', 'اثر', 'بوّابة']),
   P('programs', '/programs', 'البرامج والدبلومات', 'Programs & diplomas', ['دورات', 'دبلوم', 'تسجيل', 'courses', 'catalog', 'برنامج']),
   P('services', '/services', 'الخدمات', 'Services', ['trace', 'خدماتنا', 'استشارات', 'حقائب']),
   P('arabic', '/services/arabic', 'تعليم العربية للناطقين بغيرها', 'Arabic for non-native speakers', ['عربية', 'arabic', 'ناطقين']),
   P('resources', '/resources', 'مستودع الحقائب التدريبية', 'Training resources library', ['حقيبة', 'مواد', 'library', 'resources', 'مستودع']),
   P('consulting', '/consulting', 'الاستشارات', 'Consulting', ['استشارة', 'مستشار', 'consulting']),
   P('live', '/live', 'البث المباشر والجلسات', 'Live sessions', ['جلسة', 'ندوة', 'بث', 'webinar', 'zoom', 'teams', 'meet', 'مباشر']),
-  P('sim', '/sim', 'التدريب بالمحاكاة', 'Simulation training', ['محاكي', 'محاكيات', 'مواقف', 'سيناريو', 'تدريب عملي', 'simulation', 'الميسر']),
+  P('sim', '/sim', 'التدريب بالمحاكاة', 'Simulation training', ['محاكي', 'محاكيات', 'مواقف', 'سيناريو', 'تدريب عملي', 'simulation', 'الميسّر']),
   P('councils', '/councils', 'مجالس أَثَر', 'Athar councils', ['مجلس', 'council', 'زملاء']),
   P('onair', '/on-air', 'أَثَر معك — على الهواء', 'Athar with you — on air', ['على الهواء', 'on air', 'مساعد', 'دعم', 'مستشار', 'امانة']),
   P('onair-week', '/on-air/week', 'سؤال الأسبوع', 'Question of the week', ['اسبوع', 'week'], undefined),
@@ -40,8 +40,8 @@ export const ROUTES: Entry[] = [
   P('miaar', '/miaar', 'مِعيار — حدّد مستواك في اللغة العربية', 'Miaar — Arabic placement test', ['معيار', 'miaar', 'اختبار', 'تحديد المستوى', 'placement', 'cefr', 'مستواك', 'a1', 'c2']),
   P('miaar-trust', '/miaar/trust', 'مِعيار — سجلّ الصدق (موثوقية كل مستوى)', 'Miaar — trust ledger (reliability per level)', ['صدق', 'موثوقية', 'trust', 'reliability', 'معيار']),
   P('experts', '/experts', 'خبراء أَثَر', 'Athar experts', ['خبير', 'expert', 'هيئة']),
-  P('trainers', '/trainers', 'مدرّبو أَثَر', 'Athar trainers', ['مدرب', 'trainer', 'هيئة', 'سيرة']),
-  P('org', '/org', 'بوابة الجهات والمؤسسات', 'Organizations portal', ['مؤسسة', 'جهة', 'منظمة', 'org', 'organization', 'شركة', 'جامعة']),
+  P('trainers', '/trainers', 'مدرّبو أَثَر', 'Athar trainers', ['مدرّب', 'trainer', 'هيئة', 'سيرة']),
+  P('org', '/org', 'بوّابة الجهات والمؤسسات', 'Organizations portal', ['مؤسسة', 'جهة', 'منظمة', 'org', 'organization', 'شركة', 'جامعة']),
   P('verify', '/verify', 'التحقق من شهادة', 'Verify a credential', ['تحقق', 'شهادة', 'verify', 'qr', 'رمز']),
   P('ai', '/ai', 'الذكاء الاصطناعي المسؤول', 'Responsible AI', ['ai', 'ذكاء', 'اثير', 'athir', 'gemini']),
   P('agents', '/agents', 'أَثَر للوكلاء — المكتب الزجاجي', 'Athar for agents', ['وكيل', 'agent', 'mcp', 'api']),
@@ -54,9 +54,9 @@ export const ROUTES: Entry[] = [
   P('observatory', '/observatory', 'مرصد القدرة البشرية', 'Human capability observatory', ['مرصد', 'observatory', 'مؤشر', 'قطاع']),
   P('privacy', '/privacy', 'الخصوصية', 'Privacy', ['خصوصية', 'privacy', 'pdpl', 'بيانات']),
   P('login', '/login', 'تسجيل الدخول', 'Sign in', ['دخول', 'login', 'sign in', 'حساب']),
-  P('student', '/student', 'بوابة المتدرّب', 'Trainee portal', ['متدرب', 'طالب', 'student', 'trainee']),
+  P('student', '/student', 'بوّابة المتعلّم', 'Trainee portal', ['متدرب', 'طالب', 'student', 'trainee']),
   /* ---- حسابي ---- */
-  P('me', '/me', 'حسابي — بوابة المشارك', 'My account', ['حسابي', 'ملفي', 'me', 'profile', 'مشارك'], 'user', 'me'),
+  P('me', '/me', 'حسابي — بوّابة المشارك', 'My account', ['حسابي', 'ملفي', 'me', 'profile', 'مشارك'], 'user', 'me'),
   P('me-skills', '/me/skills', 'ملفي المهاري', 'My skills profile', ['مهارات', 'skills', 'مستوى'], 'user', 'me'),
   P('me-twin', '/me/twin', 'توأمي المهاري', 'My skills twin', ['توام', 'twin'], 'user', 'me'),
   P('me-journey', '/me/journey', 'رحلتي', 'My journey', ['رحلة', 'journey', 'مسار'], 'user', 'me'),
@@ -68,19 +68,19 @@ export const ROUTES: Entry[] = [
   P('me-data', '/me/data', 'بياناتي وحقوقي', 'My data & rights', ['بيانات', 'data', 'حذف', 'تصدير', 'pdpl'], 'user', 'me'),
   P('me-access', '/me/access', 'تفضيلات الوصول', 'Access preferences', ['وصول', 'access', 'تباين', 'خط'], 'user', 'me'),
   P('me-horizon', '/me/horizon', 'أفقي', 'My horizon', ['افق', 'horizon', 'عهد'], 'user', 'me'),
-  P('me-directory', '/me/directory', 'سيرتي الذاتية في هيئة أَثَر الاستشارية', 'My faculty CV', ['سيرة', 'cv', 'هيئة', 'خبير', 'مدرب'], 'user', 'me'),
+  P('me-directory', '/me/directory', 'سيرتي الذاتية في هيئة أَثَر الاستشارية', 'My faculty CV', ['سيرة', 'cv', 'هيئة', 'خبير', 'مدرّب'], 'user', 'me'),
   P('me-agents', '/me/agents', 'وكلائي المفوَّضون', 'My delegated agents', ['وكيل', 'agent', 'مفتاح'], 'user', 'me'),
   P('me-onair', '/me/onair', 'أَثَر معك — طلباتي', 'On air — my requests', ['طلب', 'مساعد', 'on air'], 'user', 'me'),
   P('me-pair', '/me/pair', 'شريكي', 'My pair', ['شريك', 'pair', 'زميل'], 'user', 'me'),
   /* ---- الإدارة (للطاقم) ---- */
   P('dashboard', '/dashboard', 'لوحة القيادة', 'Dashboard', ['لوحة التحكم', 'dashboard', 'ادارة', 'admin'], 'staff', 'admin'),
   P('command-center', '/command-center', 'غرفة القيادة', 'Command center', ['غرفة', 'قيادة'], 'staff', 'admin'),
-  P('admin-management', '/admin/management', 'مركز الإدارة', 'Management center', ['ادارة', 'برامج', 'مدربون', 'قاعات'], 'staff', 'admin'),
+  P('admin-management', '/admin/management', 'مركز الإدارة', 'Management center', ['ادارة', 'برامج', 'مدرّبون', 'شُعب'], 'staff', 'admin'),
   P('admin-attendance', '/admin/attendance', 'الحضور', 'Attendance', ['حضور', 'غياب', 'attendance'], 'staff', 'admin'),
   P('admin-followup', '/admin/followup', 'نقل الأثر', 'Transfer follow-up', ['متابعة', 'نقل', 'followup'], 'staff', 'admin'),
   P('reports-center', '/reports/center', 'مركز التقارير', 'Reports center', ['تقرير', 'reports', 'تحليل'], 'staff', 'admin'),
   P('reports', '/reports', 'اللوحة التحليلية', 'Analytics', ['تحليلات', 'analytics', 'مؤشر الاداء'], 'staff', 'admin'),
-  P('reports-remote', '/reports/remote-survey', 'استطلاع عن بُعد', 'Remote survey', ['استطلاع', 'survey'], 'staff', 'admin'),
+  P('reports-remote', '/reports/remote-survey', 'استبيان عن بُعد', 'Remote survey', ['استبيان', 'survey'], 'staff', 'admin'),
   P('admin-lifecycle', '/admin/data-lifecycle', 'دورة حياة البيانات', 'Data lifecycle', ['حذف', 'احتفاظ', 'retention'], 'staff', 'admin'),
   P('admin-enrollments', '/admin/enrollments', 'طلبات التسجيل', 'Enrollment requests', ['تسجيل', 'قبول', 'enroll'], 'staff', 'admin'),
   P('admin-payments', '/admin/payments', 'المدفوعات', 'Payments', ['دفع', 'فاتورة', 'payment', 'invoice', 'مالي'], 'staff', 'admin'),
@@ -101,7 +101,7 @@ export const ROUTES: Entry[] = [
   P('admin-sim', '/admin/sim', 'التدريب بالمحاكاة', 'Simulation training', ['محاكي', 'محاكيات', 'اثير', 'سيناريو'], 'staff', 'admin'),
   P('admin-twin', '/admin/twin', 'خريطة قدرات المؤسسة', 'Organization capability map', ['توام', 'توأم المؤسسة', 'قدرات', 'twin'], 'staff', 'admin'),
   P('admin-missions', '/admin/missions', 'مهمات العمل', 'Workflow missions', ['مهمة'], 'staff', 'admin'),
-  P('admin-directory', '/admin/directory', 'هيئة أَثَر الاستشارية — توثيق أَثَر', 'Advisory body — approvals', ['هيئة', 'خبير', 'مدرب', 'سيرة', 'اعتماد'], 'staff', 'admin'),
+  P('admin-directory', '/admin/directory', 'هيئة أَثَر الاستشارية — توثيق أَثَر', 'Advisory body — approvals', ['هيئة', 'خبير', 'مدرّب', 'سيرة', 'اعتماد'], 'staff', 'admin'),
   P('admin-inclusion', '/admin/inclusion', 'إتاحة الوصول — البلاغات', 'Accessibility reports', ['وصول', 'أثر للجميع', 'إتاحة', 'عائق', 'wcag'], 'staff', 'admin'),
   P('admin-onair', '/admin/onair', 'اسأل خبيرًا — الإدارة', 'Ask an expert — admin', ['على الهواء', 'أثر معك', 'خبير', 'مساعد', 'امانة'], 'staff', 'admin'),
   P('admin-after', '/admin/after', 'المتابعة بعد التدريب', 'Post-training follow-up', ['محطات', 'متابعة', 'بعد البرنامج', 'بعد'], 'staff', 'admin'),
@@ -132,7 +132,7 @@ export const ROUTES: Entry[] = [
   P('admin-awards', '/admin/awards', 'تكريم المدرّبين', 'Trainer awards', ['تكريم', 'جائزة'], 'staff', 'admin'),
   P('admin-factory', '/admin/factory', 'مسودّات البرامج', 'Program drafts', ['مسودة', 'هندسة'], 'staff', 'admin'),
   P('admin-access', '/admin/access', 'تفضيلات الوصول — الإدارة', 'Access admin', ['وصول'], 'staff', 'admin'),
-  P('admin-survey', '/admin/survey-settings', 'إعدادات الاستبانات', 'Survey settings', ['استبانة', 'survey'], 'staff', 'admin'),
+  P('admin-survey', '/admin/survey-settings', 'إعدادات الاستبيانات', 'Survey settings', ['استبيان', 'survey'], 'staff', 'admin'),
 ];
 
 /* ---------- الأوامر ---------- */
@@ -194,7 +194,7 @@ export const GROUP_LABEL: Record<Group, { ar: string; en: string }> = {
   page: { ar: 'صفحات', en: 'Pages' }, me: { ar: 'حسابي', en: 'My account' }, admin: { ar: 'الإدارة', en: 'Admin' }, command: { ar: 'أوامر', en: 'Commands' },
   program: { ar: 'برامج', en: 'Programs' }, resource: { ar: 'حقائب', en: 'Resources' }, person: { ar: 'هيئة أَثَر الاستشارية', en: 'Faculty' }, sim: { ar: 'محاكيات', en: 'Simulations' },
   session: { ar: 'جلسات', en: 'Sessions' }, credential: { ar: 'شهاداتي', en: 'My credentials' }, result: { ar: 'نتائج مِعيار', en: 'Miaar results' }, org: { ar: 'مؤسسات', en: 'Organizations' },
-  invite: { ar: 'دعوات', en: 'Invitations' }, item: { ar: 'بنود البنك', en: 'Bank items' }, trainee: { ar: 'متدرّبون', en: 'Trainees' }, answer: { ar: 'إجابة أثير', en: 'Athir answer' },
+  invite: { ar: 'دعوات', en: 'Invitations' }, item: { ar: 'بنود البنك', en: 'Bank items' }, trainee: { ar: 'مشاركون', en: 'Trainees' }, answer: { ar: 'إجابة أثير', en: 'Athir answer' },
 };
 export const GROUP_ORDER: Group[] = ['answer', 'command', 'result', 'credential', 'page', 'me', 'program', 'session', 'resource', 'sim', 'person', 'org', 'trainee', 'invite', 'item', 'admin'];
 export function groupHits<T extends { group: Group }>(hits: T[]): { group: Group; items: T[] }[] {

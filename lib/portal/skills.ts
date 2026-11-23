@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — نواة اقتصاد المهارات: تصنيف المهارات الداخلي (مربوط بـ SAQF / SDAIA / CEFR)، القطاعات، الجهات
+// بوّابة أَثَر — نواة اقتصاد المهارات: تصنيف المهارات الداخلي (مربوط بـ SAQF / SDAIA / CEFR)، القطاعات، الجهات
 import type { Lang, T } from './content';
 import { t } from './content';
 

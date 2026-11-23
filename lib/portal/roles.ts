@@ -32,7 +32,7 @@ export const SYSTEM_ROLES: Role[] = [
   { code: 'TRAINER', name_ar: 'المدرّب', name_en: 'Trainer', scope: 'platform', landing: '/hub/trainer', permissions: ['sessions.host', 'rooms.host', 'attendance.write', 'directory.self'], is_staff: true, legacy_role: 'TRAINER', is_system: true, active: true, sort: 72 },
   { code: 'ORG_ADMIN', name_ar: 'مسؤول المؤسسة', name_en: 'Organization administrator', scope: 'org', landing: '/org', permissions: ['org.members', 'org.reports', 'org.invites'], is_staff: false, legacy_role: null, is_system: true, active: true, sort: 80 },
   { code: 'PARTICIPANT', name_ar: 'المشارك', name_en: 'Participant', scope: 'personal', landing: '/me', permissions: ['me'], is_staff: false, legacy_role: null, is_system: true, active: true, sort: 90 },
-  { code: 'TRAINEE', name_ar: 'المتدرّب', name_en: 'Trainee', scope: 'personal', landing: '/me', permissions: ['me'], is_staff: false, legacy_role: null, is_system: true, active: true, sort: 91 },
+  { code: 'TRAINEE', name_ar: 'المشارك', name_en: 'Trainee', scope: 'personal', landing: '/me', permissions: ['me'], is_staff: false, legacy_role: null, is_system: true, active: true, sort: 91 },
   { code: 'STUDENT', name_ar: 'الطالب', name_en: 'Student', scope: 'personal', landing: '/me', permissions: ['me', 'miaar'], is_staff: false, legacy_role: null, is_system: true, active: true, sort: 92 },
 ];
 export const ROLE_BY_CODE: Record<string, Role> = Object.fromEntries(SYSTEM_ROLES.map(r => [r.code, r]));
@@ -106,7 +106,7 @@ export function validateInvite(body: any, catalog: Role[]): { ok: true; email: s
   const kind: 'personal' | 'group' = body?.kind === 'group' ? 'group' : 'personal';
   const email = kind === 'group' ? '' : normEmail(body?.email); if (kind === 'personal' && !emailOk(email)) return { ok: false, error: 'بريد غير صالح' };
   const max_uses = kind === 'group' ? Math.floor(Number(body?.max_uses)) : 1; if (kind === 'group' && !(max_uses >= 2 && max_uses <= GROUP_MAX_SEATS)) return { ok: false, error: `عدد المقاعد بين 2 و${GROUP_MAX_SEATS}` };
-  const label = kind === 'group' ? String(body?.label || '').trim().slice(0, 80) : null; if (kind === 'group' && (label || '').length < 2) return { ok: false, error: 'اكتب اسم المجموعة (مثل: ورشة مدرّبي الرياض — نوفمبر)' };
+  const label = kind === 'group' ? String(body?.label || '').trim().slice(0, 80) : null; if (kind === 'group' && (label || '').length < 2) return { ok: false, error: 'اكتب اسم الشعبة (مثل: ورشة مدرّبي الرياض — نوفمبر)' };
   const roles = [...new Set((Array.isArray(body?.roles) ? body.roles : [body?.role]).map((x: any) => String(x || '').toUpperCase()).filter(Boolean))] as string[];
   if (!roles.length) return { ok: false, error: 'اختر صفة واحدة على الأقل' }; if (roles.length > MAX_ROLES_PER_INVITE) return { ok: false, error: `حتى ${MAX_ROLES_PER_INVITE} صفات في الدعوة الواحدة` };
   const bad = roles.filter(r => !catalog.some(c => c.code === r && c.active)); if (bad.length) return { ok: false, error: `صفة غير معروفة: ${bad.join(', ')}` };

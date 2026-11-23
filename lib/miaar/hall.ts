@@ -35,7 +35,7 @@ export function sortHall(rows: HallRow[]): HallRow[] {
 }
 export type GroupBy = 'single' | 'room' | 'place';
 export const GROUP_AR: Record<GroupBy, string> = { single: 'فردي', room: 'حسب القاعات', place: 'حسب الأماكن' };
-/** التجميع: فردي (مجموعة واحدة) · حسب القاعات (الدعوة/القاعة الدراسية/الجهة) · حسب الأماكن (حقل المكان ← القاعة ← عن بُعد — المدينة) */
+/** التجميع: فردي (مجموعة واحدة) · حسب القاعات (الدعوة/الشعبة/الجهة) · حسب الأماكن (حقل المكان ← القاعة ← عن بُعد — المدينة) */
 export function groupHall(rows: HallRow[], by: GroupBy): Array<{ key: string; label: string; rows: HallRow[]; review: number; active: number }> {
   const m = new Map<string, { key: string; label: string; rows: HallRow[] }>();
   for (const r of rows) {

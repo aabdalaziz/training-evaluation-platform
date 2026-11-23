@@ -30,7 +30,7 @@ export type ChainRow = { program: ChainInput['programs'][number]; c: ChainLevels
 const r2 = (x: number) => Math.round(x * 100) / 100;
 
 export function buildChain(d: ChainInput): ChainRow[] {
-  // L1: متوسط تقييم كل استبانة (متوسط إجاباتها أو overall_rating) ثم متوسط البرنامج
+  // L1: متوسط تقييم كل استبيان (متوسط إجاباتها أو overall_rating) ثم متوسط البرنامج
   const byEval = new Map<string, number[]>();
   for (const a of d.answers) { const v = safeRating(a.rating_value); if (v == null) continue; const arr = byEval.get(a.evaluation_id) || []; arr.push(v); byEval.set(a.evaluation_id, arr); }
   const evalMeans = new Map<string, number[]>();

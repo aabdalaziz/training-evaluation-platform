@@ -19,7 +19,7 @@ export const GRADE_HINT: Record<Grade, { ar: string; en: string }> = {
 
 export type Face = 'expert' | 'trainer' | 'interpreter' | 'staff';
 export const FACES: Face[] = ['expert', 'trainer', 'interpreter', 'staff'];
-export const FACE_AR: Record<Face, string> = { expert: 'خبير استشاري', trainer: 'مدرب', interpreter: 'مترجم لغة إشارة', staff: 'طاقم أَثَر' };
+export const FACE_AR: Record<Face, string> = { expert: 'خبير استشاري', trainer: 'مدرّب', interpreter: 'مترجم لغة إشارة', staff: 'طاقم أَثَر' };
 export const FACE_EN: Record<Face, string> = { expert: 'Consulting expert', trainer: 'Trainer', interpreter: 'Sign-language interpreter', staff: 'Athar staff' };
 
 export type Status = 'open' | 'taken' | 'done' | 'escalated' | 'expired' | 'cancelled';
@@ -254,7 +254,7 @@ export function liveMap(present: { user_id: string }[], cityOf: Record<string, s
 /** 3) صدى السؤال — مطالبة صياغة «مهارة اليوم» من خيط مجهّل */
 export function echoPrompt(input: { text_ar: string; summary_ar: string; domain: string | null }) {
   return {
-    system: 'أنت مصمّم «مهارة اليوم» في أَثَر. من سؤال واقعي حُلّ على الهواء، اكتب موقفًا تدريبيًا قصيرًا بالعربية الفصحى بلا أسماء ولا جهات ولا تفاصيل تعريفية. أعد JSON فقط: {"title_ar":"عنوان ≤ 60 حرفًا","situation_ar":"الموقف في 2–3 جمل","ask_ar":"ما المطلوب من المتدرّب؟ جملة واحدة","rubric":["معيار 1","معيار 2","معيار 3"]}',
+    system: 'أنت مصمّم «مهارة اليوم» في أَثَر. من سؤال واقعي حُلّ على الهواء، اكتب موقفًا تدريبيًا قصيرًا بالعربية الفصحى بلا أسماء ولا جهات ولا تفاصيل تعريفية. أعد JSON فقط: {"title_ar":"عنوان ≤ 60 حرفًا","situation_ar":"الموقف في 2–3 جمل","ask_ar":"ما المطلوب من المشارك؟ جملة واحدة","rubric":["معيار 1","معيار 2","معيار 3"]}',
     user: `المجال: ${input.domain || 'عام'}\nالسؤال: ${input.text_ar.slice(0, 500)}\nخلاصة الحلّ: ${input.summary_ar.slice(0, 600)}`,
   };
 }
@@ -334,7 +334,7 @@ export function seasonLine(x: { orgs: number; meetings: number; phase: 'before' 
 export const seasonCode = (rnd: () => string) => `ATH-OS-${rnd().slice(0, 4).toUpperCase()}-${rnd().slice(0, 4).toUpperCase()}`;
 export function seasonDocTitle(orgName: string, season: Pick<Season, 'title_ar' | 'from_day'>) { return `وثيقة موسم — ${orgName} · ${season.title_ar} ${season.from_day.slice(0, 4)}`; }
 export function seasonDocNarrative(orgName: string, season: Pick<Season, 'title_ar' | 'from_day' | 'to_day'>, meetings: number) {
-  return `شاركت ${orgName} في «${season.title_ar}» (${season.from_day} → ${season.to_day}) بساعة هواء ذهبية أعلنها مديرها${meetings >= SEASON_K ? `، واستقبل منسوبوها ${meetings} لقاءً على الهواء خلاله` : ''}. الحضور قرار شخصي لمنسوبيها، والأرقام من لقاءات فعلية سجّلتها المنصة.`;
+  return `شاركت ${orgName} في «${season.title_ar}» (${season.from_day} → ${season.to_day}) بساعة هواء ذهبية أعلنها مديرها${meetings >= SEASON_K ? `، واستقبل منسوبوها ${meetings} لقاءً على الهواء خلاله` : ''}. الحضور قرار شخصي لمنسوبيها، والأرقام من لقاءات فعلية سجّلتها البوّابة.`;
 }
 
 /** 3) أمانة إلى جهة: تبقى في عهدة الجهة ORG_HOLD_HOURS ثم تصير عامة — بالقراءة */
@@ -489,12 +489,12 @@ export function timeGrid(logs: { user_id: string; started_at: string; ended_at: 
   if (shown) for (const [key, u] of Object.entries(cellUsers)) { const [d, h] = key.split(':').map(Number); if (u.size < k) { cells[d][h] = -1; continue; } const ratio = cellWeeks[key].size / weeks; cells[d][h] = ratio >= 0.5 ? 3 : ratio >= 0.2 ? 2 : 1; }
   return { weeks, users: users.size, shown, cells };
 }
-/** «أنسب ثلاث ساعات لموسمكم»: حساب خالص من كثافة الجهة (×2) والمنصّة (×1) — الساعات 8–22 بتوقيت الرياض؛ القرار لمدير الجهة */
+/** «أنسب ثلاث ساعات لموسمكم»: حساب خالص من كثافة الجهة (×2) والبوّابة (×1) — الساعات 8–22 بتوقيت الرياض؛ القرار لمدير الجهة */
 export function bestHours(org: number[][] | null, platform: number[][] | null, top = 3): { weekday: number; hour: number; score: number; why_ar: string }[] {
   const out: { weekday: number; hour: number; score: number; why_ar: string }[] = [];
   for (let d = 0; d < 7; d++) for (let h = 8; h <= 22; h++) {
     const o = Math.max(0, org?.[d]?.[h] || 0), p = Math.max(0, platform?.[d]?.[h] || 0); const score = o * 2 + p; if (!score) continue;
-    out.push({ weekday: d, hour: h, score, why_ar: o && p ? 'منسوبوكم والمنصّة معًا يُضيئون هذه الساعة' : o ? 'منسوبوكم يُضيئون هذه الساعة' : 'المنصّة مضاءة هنا — ومنسوبوكم بعدُ لا' });
+    out.push({ weekday: d, hour: h, score, why_ar: o && p ? 'منسوبوكم والبوّابة معًا يُضيئون هذه الساعة' : o ? 'منسوبوكم يُضيئون هذه الساعة' : 'البوّابة مضاءة هنا — ومنسوبوكم بعدُ لا' });
   }
   return out.sort((a, b) => b.score - a.score || a.weekday - b.weekday || a.hour - b.hour).slice(0, top);
 }
@@ -533,7 +533,7 @@ export function canShareInvite(mine: Pick<SeasonSlot37, 'org_id' | 'shared_statu
 }
 /** تسمية الساعة المشتركة على الخريطة: بالاسمين إن أذن الطرفان، وإلا «بين جهتين» */
 export const sharedLabel = (a: string | null | undefined, b: string | null | undefined) => a && b ? `ساعة مشتركة: ${a} + ${b}` : 'ساعة مشتركة بين جهتين';
-/** عدد المجموعات المشتركة المقبولة بين الساعات (كل مجموعة = جهتان) */
+/** عدد الشُّعب المشتركة المقبولة بين الساعات (كل مجموعة = جهتان) */
 export const sharedGroups = (slots: Pick<SeasonSlot37, 'shared_status' | 'shared_group'>[]) => new Set(slots.filter(s => s.shared_status === 'accepted' && s.shared_group).map(s => String(s.shared_group))).size;
 
 /** (4) مترجم الموسم: التحقق من التعهّد */

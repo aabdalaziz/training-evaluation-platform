@@ -116,7 +116,7 @@ export const STATIONS_AR = ['أسمع وأقرأ', 'كلماتي', 'القاعد
 export const EXERCISE_KINDS = ['mcq', 'matching', 'ordering', 'picture_choice', 'cloze_bank', 'true_false_notgiven', 'word_tap', 'short_dictation', 'picture_sequence'] as const;
 export const KIND_AR: Record<(typeof EXERCISE_KINDS)[number], string> = { mcq: 'اختيار', matching: 'مطابقة', ordering: 'ترتيب الجملة', picture_choice: 'اختيار بالصورة', cloze_bank: 'ملء الفراغ', true_false_notgiven: 'صحيح · خطأ · غير مذكور', word_tap: 'المس الكلمة', short_dictation: 'إملاء قصير', picture_sequence: 'ترتيب الصور' };
 
-/** «مِئة ساعة» — عقد الزمن (قرار 2026-11-17، السلّم المتدرّج): ساعات تعلّم ذاتي مقيسة داخل البوابة لكلّ مستوى.
+/** «مِئة ساعة» — عقد الزمن (قرار 2026-11-17، السلّم المتدرّج): ساعات تعلّم ذاتي مقيسة داخل البوّابة لكلّ مستوى.
  *  مرجعيًّا: Cambridge GLH التراكمي A1 90–100 · A2 180–200 · B1 350–400 · B2 500–600 · C1 700–800 · C2 1000–1200؛ والعربية فئة FSI الرابعة فالسلّم يصعد. */
 export const HOURS_TARGET: Record<IqraLevel, number> = { PRE_A1: 40, A1: 100, A2: 120, B1: 180, B2: 200, C1: 220, C2: 240 };
 /** العَتَبة المرنة: الاختبار المبكّر يُفتح عند ≥ 70% من الساعات مع إتقان ≥ 90% من الحلقات؛ وإلّا الأرضية كاملة + الإتقان */

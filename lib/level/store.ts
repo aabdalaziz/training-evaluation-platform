@@ -230,7 +230,7 @@ export async function levelEcho(db: Db, me: Me, now = new Date()): Promise<{ int
     return { intro_ar: echoIntroAr(it.level_no), line_ar: String(row.line_ar), level_no: it.level_no, next_level_no: it.level_no + 1, href: `${LEVEL_PATH}?level=${encodeURIComponent(it.key)}` }; }
   return null;
 }
-/** P70-ب: ما يراه المتدرّب في «سطري» — كلمته التي تعبر (P70) + كلمة العبور من أستاذه + تذكير لطيف إن كانت صفحة مستواه ما زالت مفتوحة */
+/** P70-ب: ما يراه المشارك في «سطري» — كلمته التي تعبر (P70) + كلمة العبور من أستاذه + تذكير لطيف إن كانت صفحة مستواه ما زالت مفتوحة */
 export type LearnerEchoView = {
   own: { intro_ar: string; line_ar: string; level_no: number; next_level_no: number; href: string } | null;
   word: { notice_id: string; title_ar: string; text_ar: string; voice_sec: number | null; at: string; level_no: number } | null;

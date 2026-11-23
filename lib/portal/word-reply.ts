@@ -189,7 +189,7 @@ export async function sweepVoiceStorage(db: Db, days: number, opts: { now?: Date
   } catch { /* يُعاد غدًا */ }
   return { removed: old.length };
 }
-/** P55 «أُجيب 🎙️»: المتعلّم الذي رفع يده ✋ ثلاثًا وجاءته كلمة صوتية من مدرّبه بعد آخر ✋ — تهدأ شارته (بلا تخزين: من إشعارات الكلمة نفسها) */
+/** P55 «أُجيب 🎙️»: المتعلّم الذي رفع يده ✋ ثلاثًا وجاءته كلمة صوتية من ميسّره بعد آخر ✋ — تهدأ شارته (بلا تخزين: من إشعارات الكلمة نفسها) */
 export async function answeredByVoice(db: Db, trainerIds: string[], hands: Map<string, number>, lastHandAt: Map<string, string>, now: Date): Promise<Set<string>> {
   const out = new Set<string>(); const emails = [...hands].filter(([, n]) => n >= HANDS_WEEK_MIN).map(([e]) => e); if (!emails.length || !trainerIds.length) return out;
   const since = new Date(now.getTime() - HANDS_WEEK_DAYS * 86400000).toISOString();

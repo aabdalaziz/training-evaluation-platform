@@ -39,7 +39,7 @@ export const MODE_HINT: Record<EvidenceMode, T> = {
 };
 export const STATUS_LABEL: Record<MissionStatus, T & { color: string }> = {
   assigned: { ar: 'بانتظار الدليل', en: 'Awaiting evidence', color: '#D9A866' }, submitted: { ar: 'بانتظار تأكيد المشرف', en: 'Awaiting supervisor', color: '#8E4A68' },
-  confirmed: { ar: 'مؤكَّدة', en: 'Confirmed', color: '#3F7F79' }, returned: { ar: 'أُعيدت للمتدرب', en: 'Returned', color: '#D4614A' }, expired: { ar: 'انتهت مهلتها', en: 'Expired', color: '#8E7F8A' },
+  confirmed: { ar: 'مؤكَّدة', en: 'Confirmed', color: '#3F7F79' }, returned: { ar: 'أُعيدت للمشارك', en: 'Returned', color: '#D4614A' }, expired: { ar: 'انتهت مهلتها', en: 'Expired', color: '#8E7F8A' },
 };
 export const modeLabel = (m: string, lang: Lang) => t(MODE_LABEL[m as EvidenceMode] || { ar: m, en: m }, lang);
 export const statusLabel = (s: string, lang: Lang) => t(STATUS_LABEL[s as MissionStatus] || { ar: s, en: s }, lang);
@@ -93,14 +93,14 @@ export function localCheck(m: Pick<Mission, 'rubric' | 'evidence_mode'>, ev: Mis
   score = Math.min(84, Math.round(score)); // الفاحص المحلي لا يمنح «فوق المستوى» — ذلك للذكاء الاصطناعي أو المشرف
   const missing = criteria.filter(c => c.met !== 'yes').map(c => c.c);
   const feedback_ar = score >= 75 ? 'دليل واضح يربط التعلم بالعمل. ' : score >= 45 ? 'بداية جيدة؛ بعض عناصر المعيار تحتاج تفصيلًا. ' : 'الدليل عام؛ اربطه بموقف محدد ونتيجة ملموسة. ';
-  const questions_ar = missing.slice(0, 2).map(c => `هل ترى أثر «${c}» في عمل المتدرب فعلًا؟`);
+  const questions_ar = missing.slice(0, 2).map(c => `هل ترى أثر «${c}» في عمل المشارك فعلًا؟`);
   if (!questions_ar.length) questions_ar.push('هل يعكس هذا الدليل ممارسة متكررة لا مرة واحدة؟');
   return { score, criteria, feedback_ar: feedback_ar + (missing.length ? `ينقص: ${missing.join('، ')}.` : ''), questions_ar, source: 'local' };
 }
 
 // ---------- الفاحص بالذكاء الاصطناعي (نصيّ: التأمل/النسخة الصوتية/التعليق) — الإنسان يعتمد
 export function aiCheckPrompt(m: Pick<Mission, 'title_ar' | 'brief_ar' | 'rubric' | 'evidence_mode'>, ev: MissionEvidence): { system: string; user: string } {
-  const system = 'أنت فاحص أدلة انتقال أثر التدريب في منصة أَثَر. تقرأ دليلًا من بيئة عمل المتدرب وتقيّمه مقابل معيار معلن. كن منصفًا ومحددًا؛ لا تخترع ما لم يرد. لا تذكر معلومات شخصية. أعد JSON فقط بالصيغة: {"score":0-100,"criteria":[{"c":"نص المعيار","met":"yes|partly|no","note":"≤15 كلمة"}],"feedback_ar":"≤40 كلمة للمتدرب","questions_ar":["سؤالان قصيران للمشرف يتحقق بهما"]}';
+  const system = 'أنت فاحص أدلة انتقال أثر التدريب في بوّابة أَثَر. تقرأ دليلًا من بيئة عمل المشارك وتقيّمه مقابل معيار معلن. كن منصفًا ومحددًا؛ لا تخترع ما لم يرد. لا تذكر معلومات شخصية. أعد JSON فقط بالصيغة: {"score":0-100,"criteria":[{"c":"نص المعيار","met":"yes|partly|no","note":"≤15 كلمة"}],"feedback_ar":"≤40 كلمة للمشارك","questions_ar":["سؤالان قصيران للمشرف يتحقق بهما"]}';
   const user = `المهمة: ${m.title_ar}\nالتعليمات: ${m.brief_ar}\nنوع الدليل: ${MODE_LABEL[m.evidence_mode].ar}${ev.file_path ? ' (ملف مرفق سيراه المشرف)' : ''}${ev.duration_s ? ` · مدة التسجيل ${ev.duration_s} ث` : ''}\nالمعيار:\n${m.rubric.map((c, i) => `${i + 1}. ${c.c} (وزن ${c.w})`).join('\n')}\n\nنص الدليل:\n"""\n${evidenceText(ev).slice(0, 4000)}\n"""`;
   return { system, user };
 }
@@ -125,7 +125,7 @@ export const missionUrl = (site: string, token: string) => `${site}/m/${token}`;
 export const confirmUrl = (site: string, confirmToken: string) => `${site}/m/confirm/${confirmToken}`;
 export function waShare(text: string, phone?: string): string { const p = String(phone || '').replace(/\D/g, ''); return `https://wa.me/${p}?text=${encodeURIComponent(text)}`; }
 export function supervisorShareText(m: Pick<Mission, 'title_ar' | 'full_name'>, url: string): string {
-  return `السلام عليكم، أنجزتُ مهمة «${m.title_ar}» ضمن برنامج تدريبي عبر منصة أَثَر، وأرفقتُ دليلًا من عملي. أرجو تأكيدها بضغطة واحدة (دقيقة واحدة): ${url}`;
+  return `السلام عليكم، أنجزتُ مهمة «${m.title_ar}» ضمن برنامج تدريبي عبر بوّابة أَثَر، وأرفقتُ دليلًا من عملي. أرجو تأكيدها بضغطة واحدة (دقيقة واحدة): ${url}`;
 }
 const esc = (s: string) => String(s ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch] as string));
 const shell = (title: string, body: string) => `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.9;color:#2A1626;max-width:640px"><h2 style="color:#3A1F36;margin:0 0 6px">${esc(title)}</h2>${body}<p style="color:#8E7F8A;font-size:12px;margin-top:18px">أَثَر | التدريب ما بعد الذكاء الاصطناعي — نبني القدرة ونُثبت الأثر · © 2026 د. أحمد محمد عبدالعزيز بدوي</p></div>`;
@@ -139,7 +139,7 @@ export function reminderMailHtml(m: Pick<Mission, 'title_ar' | 'due_at' | 'full_
 }
 export function supervisorMailHtml(m: Pick<Mission, 'title_ar' | 'full_name' | 'evidence_mode'>, ai: AiCheck | null, url: string): { subject: string; html: string } {
   const qs = (ai?.questions_ar || []).map(q => `<li>${esc(q)}</li>`).join('');
-  return { subject: `تأكيد بضغطة: ${m.full_name || 'متدرب'} أنجز مهمة «${m.title_ar}»`, html: shell('تأكيد دليل من قلب العمل', `<p>أنجز <b>${esc(m.full_name || 'المتدرب')}</b> مهمة «${esc(m.title_ar)}» وأرفق ${esc(MODE_LABEL[m.evidence_mode].ar)}.${ai ? ` الفحص الأولي: <b>${ai.score}%</b>.` : ''}</p>${qs ? `<p>ما نرجو أن تتحقق منه (دقيقة واحدة):</p><ul style="margin:0;padding-inline-start:20px">${qs}</ul>` : ''}${btn(url, 'اعرض الدليل وأكّد')}<p style="color:#5C4858;font-size:13px">تأكيدك هو ما يجعل الدليل كامل الوزن في ملف المتدرب — الذكاء الاصطناعي يقترح، والإنسان يعتمد.</p>`) };
+  return { subject: `تأكيد بضغطة: ${m.full_name || 'مشارك'} أنجز مهمة «${m.title_ar}»`, html: shell('تأكيد دليل من قلب العمل', `<p>أنجز <b>${esc(m.full_name || 'المشارك')}</b> مهمة «${esc(m.title_ar)}» وأرفق ${esc(MODE_LABEL[m.evidence_mode].ar)}.${ai ? ` الفحص الأولي: <b>${ai.score}%</b>.` : ''}</p>${qs ? `<p>ما نرجو أن تتحقق منه (دقيقة واحدة):</p><ul style="margin:0;padding-inline-start:20px">${qs}</ul>` : ''}${btn(url, 'اعرض الدليل وأكّد')}<p style="color:#5C4858;font-size:13px">تأكيدك هو ما يجعل الدليل كامل الوزن في ملف المشارك — الذكاء الاصطناعي يقترح، والإنسان يعتمد.</p>`) };
 }
 export function confirmedMailHtml(m: Pick<Mission, 'title_ar' | 'full_name' | 'confirmed_by'>, twinUrl: string, returned: boolean, note?: string | null): { subject: string; html: string } {
   return returned
@@ -161,12 +161,12 @@ export function transferStats(rows: Pick<Mission, 'status' | 'program_id' | 'cre
 // ---------- قوالب بدء سريعة لكل مجال (بديل محلي لـ«اقترح مهمات») — المدرّب يعدّل ويعتمد
 export const STARTER_TEMPLATES: Record<string, Omit<MissionTemplate, 'id' | 'skills' | 'program_id' | 'active'>[]> = {
   pedagogy: [
-    { title_ar: 'خطة درس تُظهر التعلم النشط', brief_ar: 'صوّر خطة درسك لهذا الأسبوع وأشِر بسهم أو دائرة إلى الموضع الذي وظّفت فيه استراتيجية تعلم نشط تعلّمتها في البرنامج، ثم اكتب: لماذا هنا؟ وماذا لاحظت على الطلاب؟', evidence_mode: 'photo', rubric: [{ c: 'تحديد موضع الاستراتيجية في الخطة', w: 2 }, { c: 'تبرير الاختيار بسلوك المتعلمين', w: 2 }, { c: 'وصف ملاحظة فعلية من التطبيق', w: 1 }], days_after: 7, due_days: 7 },
+    { title_ar: 'خطة درس تُظهر التعلم النشط', brief_ar: 'صوّر خطة درسك لهذا الأسبوع وأشِر بسهم أو دائرة إلى الموضع الذي وظّفت فيه استراتيجية تعلم نشط تعلّمتها في البرنامج، ثم اكتب: لماذا هنا؟ وماذا لاحظت على الطلاب؟', evidence_mode: 'photo', rubric: [{ c: 'تحديد موضع الاستراتيجية في الخطة', w: 2 }, { c: 'تبرير الاختيار بسلوك المتعلّمين', w: 2 }, { c: 'وصف ملاحظة فعلية من التطبيق', w: 1 }], days_after: 7, due_days: 7 },
     { title_ar: 'قرار تدريسي اتخذته هذا الأسبوع', brief_ar: 'سجّل 60 ثانية تشرح فيها قرارًا تدريسيًا اتخذته هذا الأسبوع بناءً على ما تعلمته: الموقف، القرار، وما تغيّر.', evidence_mode: 'audio', rubric: [{ c: 'وصف موقف صفي محدد', w: 1 }, { c: 'ربط القرار بما تعلمه', w: 2 }, { c: 'ذكر نتيجة أو تغيّر ملحوظ', w: 2 }], days_after: 21, due_days: 7 },
   ],
   arabic: [
-    { title_ar: 'نشاط تواصلي طبّقته مع متعلمين', brief_ar: 'صوّر منتج نشاط تواصلي (حوار، بطاقات، كتابة موجّهة) نفّذته مع متعلمي العربية، واكتب: ما المستوى؟ وما الهدف اللغوي؟ وكيف قوّمت الأداء؟', evidence_mode: 'photo', rubric: [{ c: 'ملاءمة النشاط للمستوى', w: 2 }, { c: 'وضوح الهدف اللغوي', w: 1 }, { c: 'أداة تقويم محددة', w: 2 }], days_after: 10, due_days: 7 },
-    { title_ar: 'تغذية راجعة لغوية سجّلتها', brief_ar: 'سجّل 60 ثانية تحكي فيها كيف قدّمت تغذية راجعة على خطأ لغوي شائع لدى متعلم، ولماذا اخترت هذه الطريقة.', evidence_mode: 'audio', rubric: [{ c: 'تشخيص الخطأ بدقة', w: 2 }, { c: 'اختيار أسلوب تصحيح مناسب', w: 2 }, { c: 'أثر على المتعلم', w: 1 }], days_after: 21, due_days: 7 },
+    { title_ar: 'نشاط تواصلي طبّقته مع متعلّمين', brief_ar: 'صوّر منتج نشاط تواصلي (حوار، بطاقات، كتابة موجّهة) نفّذته مع متعلّمي العربية، واكتب: ما المستوى؟ وما الهدف اللغوي؟ وكيف قوّمت الأداء؟', evidence_mode: 'photo', rubric: [{ c: 'ملاءمة النشاط للمستوى', w: 2 }, { c: 'وضوح الهدف اللغوي', w: 1 }, { c: 'أداة تقويم محددة', w: 2 }], days_after: 10, due_days: 7 },
+    { title_ar: 'تغذية راجعة لغوية سجّلتها', brief_ar: 'سجّل 60 ثانية تحكي فيها كيف قدّمت تغذية راجعة على خطأ لغوي شائع لدى متعلّم، ولماذا اخترت هذه الطريقة.', evidence_mode: 'audio', rubric: [{ c: 'تشخيص الخطأ بدقة', w: 2 }, { c: 'اختيار أسلوب تصحيح مناسب', w: 2 }, { c: 'أثر على المتعلّم', w: 1 }], days_after: 21, due_days: 7 },
   ],
   leadership: [
     { title_ar: 'اجتماع أدرته بطريقة مختلفة', brief_ar: 'اكتب 100 كلمة عن اجتماع أو قرار قيادي أدرته هذا الشهر بطريقة مختلفة بسبب البرنامج: ماذا غيّرت؟ وكيف استجاب الفريق؟', evidence_mode: 'text', rubric: [{ c: 'تغيير سلوكي محدد', w: 2 }, { c: 'استجابة الفريق', w: 2 }, { c: 'درس مستفاد', w: 1 }], days_after: 14, due_days: 10 },
@@ -194,7 +194,7 @@ export function starterFor(domains: string[]): Omit<MissionTemplate, 'id' | 'ski
 }
 export function suggestPrompt(program: { name_ar: string; description?: string | null }, skills: { name_ar: string; domain: string }[]): { system: string; user: string } {
   return {
-    system: 'أنت مصمم «مهمات في قلب العمل» لمنصة أَثَر: مهمات صغيرة (5–10 دقائق) تُنجز في بيئة العمل الحقيقية بعد البرنامج وتنتج دليلًا ملموسًا. أعد JSON فقط: {"templates":[{"title_ar":"","brief_ar":"تعليمات دقيقة بصيغة المخاطب","evidence_mode":"photo|audio|text|link","rubric":[{"c":"معيار قابل للملاحظة","w":1-3}],"days_after":7-45,"due_days":7-14}]} بثلاث مهمات متدرجة زمنيًا (أسبوع، ثلاثة أسابيع، ستة أسابيع).',
+    system: 'أنت مصمم «مهمات في قلب العمل» لبوّابة أَثَر: مهمات صغيرة (5–10 دقائق) تُنجز في بيئة العمل الحقيقية بعد البرنامج وتنتج دليلًا ملموسًا. أعد JSON فقط: {"templates":[{"title_ar":"","brief_ar":"تعليمات دقيقة بصيغة المخاطب","evidence_mode":"photo|audio|text|link","rubric":[{"c":"معيار قابل للملاحظة","w":1-3}],"days_after":7-45,"due_days":7-14}]} بثلاث مهمات متدرجة زمنيًا (أسبوع، ثلاثة أسابيع، ستة أسابيع).',
     user: `البرنامج: ${program.name_ar}\n${program.description ? `الوصف: ${String(program.description).slice(0, 600)}\n` : ''}المهارات: ${skills.map(s => `${s.name_ar} (${s.domain})`).join('، ')}`,
   };
 }
@@ -211,7 +211,7 @@ export type TemplateForm = { program_id: string; skills: string[]; title_ar: str
 export const EMPTY_TEMPLATE: TemplateForm = { program_id: '', skills: [], title_ar: '', brief_ar: '', evidence_mode: 'text', rubric: [{ c: '', w: 2 }, { c: '', w: 1 }], days_after: '7', due_days: '7', active: true };
 export function validateTemplate(f: TemplateForm): string | null {
   if (f.title_ar.trim().length < 6) return 'اكتب عنوانًا واضحًا للمهمة';
-  if (f.brief_ar.trim().length < 30) return 'التعليمات قصيرة — صف بدقة ما يفعله المتدرب وما يرفقه';
+  if (f.brief_ar.trim().length < 30) return 'التعليمات قصيرة — صف بدقة ما يفعله المشارك وما يرفقه';
   if (!f.skills.length) return 'اختر مهارة واحدة على الأقل تثبتها المهمة';
   const rub = f.rubric.filter(r => r.c.trim()); if (rub.length < 2) return 'المعيار يحتاج بندين على الأقل';
   const da = Number(f.days_after), dd = Number(f.due_days); if (!(da >= 1 && da <= 60)) return 'أيام ما بعد الإتمام بين 1 و60'; if (!(dd >= 3 && dd <= 21)) return 'المهلة بين 3 و21 يومًا';

@@ -1,5 +1,5 @@
 // أَثَر — بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ: المحتوى والهوية (ملف واحد قابل للتعديل)
-// كل النصوص ثنائية اللغة: { ar, en }. غيّر النصوص هنا فقط وتنعكس على كل صفحات البوابة.
+// كل النصوص ثنائية اللغة: { ar, en }. غيّر النصوص هنا فقط وتنعكس على كل صفحات البوّابة.
 import type { IconName } from '../ui/icons';
 
 export type Lang = 'ar' | 'en';
@@ -15,8 +15,8 @@ export const BRAND = {
   motto: { ar: 'نبني القدرة ونُثبت الأثر', en: 'Build capability. Prove impact.' } as T,
   /** صيغة التوقيع في الشهادات والجواز */
   signature: { ar: 'أَثَر | التدريب ما بعد الذكاء الاصطناعي — نبني القدرة ونُثبت الأثر', en: 'Athar · TRACE — Post-AI Training: Build capability. Prove impact.' } as T,
-  promise: { ar: 'بوابة واحدة تجمع تعليم العربية للناطقين بغيرها، والبرامج التدريبية والدبلومات، والاستشارات، والحقائب، والبث المباشر — ويحكمها قياس حقيقي للأثر قبل التعلّم وأثناءه وبعده.', en: 'One portal for Arabic for non-native speakers, professional training and diplomas, consulting, resources and live channels — governed by real impact measurement before, during and after learning.' } as T,
-  /** مالك الحقوق الفكرية للمنصة والهوية والمنهجيات */
+  promise: { ar: 'بوّابة واحدة تجمع تعليم العربية للناطقين بغيرها، والبرامج التدريبية والدبلومات، والاستشارات، والحقائب، والبث المباشر — ويحكمها قياس حقيقي للأثر قبل التعلّم وأثناءه وبعده.', en: 'One portal for Arabic for non-native speakers, professional training and diplomas, consulting, resources and live channels — governed by real impact measurement before, during and after learning.' } as T,
+  /** مالك الحقوق الفكرية للبوّابة والهوية والمنهجيات */
   owner: { ar: 'د. أحمد محمد عبدالعزيز بدوي', en: 'Dr. Ahmed Mohamed Abdelaziz Badawi' } as T,
   /** الكيان التجاري المشغِّل حاليًا (الفواتير والتعاقدات) — لا يحمل أي حق ملكية */
   legal: { ar: 'بوّابة أَثَر للتعليم والتدريب والتطوير والجودة', en: 'Athar Portal for Education, Training, Development & Quality' } as T, /* هـ-3 ز: الكيان المشغِّل يُضاف بعد الاتفاق */
@@ -31,7 +31,7 @@ export const BRAND = {
   command: { ar: 'مركز قيادة أَثَر', en: 'Athar Command Center' } as T,
   /** المؤسسة المستضيفة الظاهرة في ترويسة مركز القيادة — قيمة إعداد واحدة هنا إلى أن تُنقل إلى شاشة الإعدادات */
   institution: { ar: 'أَثَر', en: 'Athar' } as T, /* هـ-3 ز: لا جهة قبل الاتفاق */
-  placementUrl: '/miaar', // مِعيار — من أَثَر: منتج أَثَر القائم بذاته داخل البوابة منذ م1 (مستقلّ عن أي مشروع خارجي — الفصل 2026-11-02)
+  placementUrl: '/miaar', // مِعيار — من أَثَر: منتج أَثَر القائم بذاته داخل البوّابة منذ م1 (مستقلّ عن أي مشروع خارجي — الفصل 2026-11-02)
 };
 
 export const CONTACT = {
@@ -49,7 +49,7 @@ export const CONTACT = {
 export const ABOUT = {
   /** بيان الملكية — يُعرض في «من نحن» */
   ownership: { ar: 'أَثَر مشروع فكري ومهني للدكتور أحمد محمد عبدالعزيز بدوي: فكرته ومنهجيته (TRACE) وتصميمه ومحتواه ملك حصري له. يُعلَن عن الكيان المشغِّل والشركاء بعد اكتمال الاتفاقات.', en: 'Athar is the intellectual and professional project of Dr. Ahmed Mohamed Abdelaziz Badawi; its concept, TRACE methodology, design and content are his exclusive property. The operating entity and partners will be announced once agreements are finalised.' } as T,
-  intro: { ar: 'أَثَر بوابة متكاملة تجمع تحت سقف واحد ثلاث رحلات: التعليم، والتدريب، والتطوير المؤسسي — وتربطها بمنظومة قياس تبدأ قبل الرحلة باختبار «مِعيار»، وتستمر أثناءها بتقويم البرامج وقياس الأثر، وتُثبت نتائجها بعدها بقياس الأثر وفق مستويات كيركباتريك الأربعة.', en: 'Athar is an integrated portal bringing together three journeys — education, training and institutional development — bound by a measurement system that starts before the journey (Miaar placement test), continues during it (the Evaluation Platform) and proves results after it through Kirkpatrick levels 1–4.' } as T,
+  intro: { ar: 'أَثَر بوّابة متكاملة تجمع تحت سقف واحد ثلاث رحلات: التعليم، والتدريب، والتطوير المؤسسي — وتربطها بمنظومة قياس تبدأ قبل الرحلة باختبار «مِعيار»، وتستمر أثناءها بتقييم البرامج وقياس الأثر، وتُثبت نتائجها بعدها بقياس الأثر وفق مستويات كيركباتريك الأربعة.', en: 'Athar is an integrated portal bringing together three journeys — education, training and institutional development — bound by a measurement system that starts before the journey (Miaar placement test), continues during it (the Evaluation Platform) and proves results after it through Kirkpatrick levels 1–4.' } as T,
   vision: { ar: 'أن نكون المرجع الأول في المنطقة لحلول التعليم والتدريب التي تُثبت أثرها بالأرقام.', en: 'To be the region’s first reference for education and training solutions that prove their impact with numbers.' } as T,
   mission: { ar: 'تقديم برامج وخدمات تعليمية وتدريبية واستشارية عالية الجودة، تُصمَّم على احتياج حقيقي، وتُنفَّذ بخبرات متخصصة، وتُقاس نتائجها بشفافية.', en: 'To deliver high-quality education, training and consulting services designed on real needs, delivered by specialists, and measured transparently.' } as T,
   values: [
@@ -60,7 +60,7 @@ export const ABOUT = {
   ],
   method: [
     { n: 1, icon: 'target' as IconName, title: { ar: 'قبل: نقيس المستوى', en: 'Before: measure the level' }, desc: { ar: 'اختبار مِعيار التكيفي وفق الإطار الأوروبي CEFR، وتحليل الاحتياج للمؤسسات.', en: 'Miaar adaptive CEFR test for learners; needs analysis for institutions.' } },
-    { n: 2, icon: 'evaluations' as IconName, title: { ar: 'أثناء: نُحسّن باستمرار', en: 'During: improve continuously' }, desc: { ar: 'تقييمات يومية وختامية، حضور رقمي، ومؤشرات لحظية للمدرب والإدارة.', en: 'Daily and final evaluations, digital attendance, live indicators for trainers and management.' } },
+    { n: 2, icon: 'evaluations' as IconName, title: { ar: 'أثناء: نُحسّن باستمرار', en: 'During: improve continuously' }, desc: { ar: 'تقييمات يومية وختامية، حضور رقمي، ومؤشرات لحظية للمدرّب والإدارة.', en: 'Daily and final evaluations, digital attendance, live indicators for trainers and management.' } },
     { n: 3, icon: 'trend' as IconName, title: { ar: 'بعد: نُثبت الأثر', en: 'After: prove the impact' }, desc: { ar: 'قياس قبلي/بعدي، متابعة نقل الأثر بعد 60–90 يومًا، ومؤشرات النتائج المؤسسية.', en: 'Pre/post measurement, 60–90 day transfer follow-up and institutional KPIs.' } },
   ],
 };
@@ -90,9 +90,9 @@ export const SERVICES: Service[] = [
     short: { ar: 'برامج مكثفة ومستويات متدرجة وفق الإطار الأوروبي CEFR — حضوريًا وعن بُعد.', en: 'Intensive programs and graded CEFR levels — on-site and online.' },
     long: [
       { ar: 'نبدأ بتحديد مستواك باختبار «مِعيار» التكيفي، ثم نضعك في المستوى المناسب داخل برنامج يجمع المهارات الأربع (الاستماع، التحدث، القراءة، الكتابة) مع ثقافة عربية حية.', en: 'We start by placing you with the adaptive Miaar test, then enrol you at the right level in a program covering the four skills with living Arabic culture.' },
-      { ar: 'كل برنامج يُقوَّم يوميًا وختاميًا، وتُصدر شهادته برمز تحقق، وتتابعه بوابة المتدرب.', en: 'Every program is evaluated daily and at completion, certified with a verifiable code, and tracked in the student portal.' },
+      { ar: 'كل برنامج يُقوَّم يوميًا وختاميًا، وتُصدر شهادته برمز تحقق، وتتابعه بوّابة المتعلّم.', en: 'Every program is evaluated daily and at completion, certified with a verifiable code, and tracked in the student portal.' },
     ],
-    features: [{ ar: 'مستويات A1 → C1', en: 'Levels A1 → C1' }, { ar: 'معلمون متخصصون', en: 'Specialist teachers' }, { ar: 'شهادة موثّقة برمز تحقق', en: 'Verified certificate' }, { ar: 'بوابة المتدرب لمتابعة الرحلة', en: 'Student portal' }],
+    features: [{ ar: 'مستويات A1 → C1', en: 'Levels A1 → C1' }, { ar: 'معلمون متخصصون', en: 'Specialist teachers' }, { ar: 'شهادة موثّقة برمز تحقق', en: 'Verified certificate' }, { ar: 'بوّابة المتعلّم لمتابعة الرحلة', en: 'Student portal' }],
     modes: [{ ar: 'حضوري', en: 'On-site' }, { ar: 'عن بُعد', en: 'Online' }],
     cta: { label: { ar: 'حدّد مستواك أولًا', en: 'Find your level first' }, href: BRAND.placementUrl, external: false },
   },
@@ -101,7 +101,7 @@ export const SERVICES: Service[] = [
     title: { ar: 'البرامج التدريبية التطويرية', en: 'Professional Development Programs' },
     short: { ar: 'برامج قصيرة ومتوسطة لتطوير المهارات القيادية والإدارية والتعليمية — حضوريًا وعن بُعد.', en: 'Short and mid-length programs for leadership, management and teaching skills — on-site and online.' },
     long: [
-      { ar: 'برامج تُصمَّم على احتياج فعلي، يقدمها مدربون معتمدون، ويُقاس أثرها قبل وبعد، ثم تُتابَع في بيئة العمل بعد 60–90 يومًا لقياس نقل الأثر.', en: 'Programs designed on real needs, delivered by certified trainers, measured pre/post, then followed up at the workplace after 60–90 days.' },
+      { ar: 'برامج تُصمَّم على احتياج فعلي، يقدمها مدرّبون معتمدون، ويُقاس أثرها قبل وبعد، ثم تُتابَع في بيئة العمل بعد 60–90 يومًا لقياس نقل الأثر.', en: 'Programs designed on real needs, delivered by certified trainers, measured pre/post, then followed up at the workplace after 60–90 days.' },
     ],
     features: [{ ar: 'تحليل احتياج قبل التصميم', en: 'Needs analysis first' }, { ar: 'قياس قبلي/بعدي', en: 'Pre/post measurement' }, { ar: 'متابعة نقل الأثر', en: 'Transfer follow-up' }, { ar: 'تقرير أثر للجهة', en: 'Impact report for the client' }],
     modes: [{ ar: 'حضوري', en: 'On-site' }, { ar: 'عن بُعد', en: 'Online' }],
@@ -133,7 +133,7 @@ export const SERVICES: Service[] = [
     title: { ar: 'مستودع الحقائب التدريبية', en: 'Training Resources Repository' },
     short: { ar: 'حقائب تدريبية وأدلة ومواد تعليمية جاهزة، مصنّفة بمستويات وصول.', en: 'Ready training kits, guides and learning materials with tiered access.' },
     long: [
-      { ar: 'مكتبة رقمية منظمة: حقائب كاملة (دليل المدرب، دليل المتدرب، العروض، الأنشطة، أدوات التقييم)، مع نسخ وإصدارات، وبحث، وروابط تحميل آمنة.', en: 'An organised digital library: complete kits (trainer guide, trainee guide, slides, activities, assessment tools) with versions, search and secure download links.' },
+      { ar: 'مكتبة رقمية منظمة: حقائب كاملة (دليل المدرّب، دليل المشارك، العروض، الأنشطة، أدوات التقييم)، مع نسخ وإصدارات، وبحث، وروابط تحميل آمنة.', en: 'An organised digital library: complete kits (trainer guide, trainee guide, slides, activities, assessment tools) with versions, search and secure download links.' },
     ],
     features: [{ ar: 'موسومة بالمهارات والقطاع', en: 'Tagged by skill and sector' }, { ar: 'إصدارات وتحديثات', en: 'Versions and updates' }, { ar: 'وصول عام / مسجّل / برنامج / جهة', en: 'Public / member / program / organization' }, { ar: 'روابط تحميل آمنة وسجل تعلّم', en: 'Secure downloads & learning log' }],
     cta: { label: { ar: 'تصفّح المستودع', en: 'Browse the repository' }, href: '/resources' },
@@ -143,14 +143,14 @@ export const SERVICES: Service[] = [
     title: { ar: 'التعلّم المباشر والهجين', en: 'Live & Hybrid Learning' },
     short: { ar: 'جلسات الشعب والندوات والورش عبر Teams وZoom وMeet وقاعة أَثَر — بقاعات متوازية وحضور رقمي وتسجيلات.', en: 'Class sessions, webinars and workshops on Teams, Zoom, Meet and Athar Room — parallel rooms, digital attendance and recordings.' },
     long: [
-      { ar: 'كل شعبة قاعة مستقلة بمدربها ورابطها، والمتدرب يُسكن في شعبته تلقائيًا بعد السداد ويرى جلساته في بوابته. جدول واضح، انضمام بنقرة قبل الموعد بـ15 دقيقة، حضور رقمي مرتبط بالجلسة، تسجيلات لاحقة، وكل جلسة موسومة بالمهارات التي تنمّيها.', en: 'Every section is an independent room with its own trainer and link; trainees are auto-placed after payment and see their sessions in their portal. Clear schedule, one-click join 15 minutes before start, session-linked digital attendance, recordings, and skill tagging for every session.' },
+      { ar: 'كل شعبة قاعة مستقلة بمدربها ورابطها، والمشارك يُسكن في شعبته تلقائيًا بعد السداد ويرى جلساته في بوابته. جدول واضح، انضمام بنقرة قبل الموعد بـ15 دقيقة، حضور رقمي مرتبط بالجلسة، تسجيلات لاحقة، وكل جلسة موسومة بالمهارات التي تنمّيها.', en: 'Every section is an independent room with its own trainer and link; trainees are auto-placed after payment and see their sessions in their portal. Clear schedule, one-click join 15 minutes before start, session-linked digital attendance, recordings, and skill tagging for every session.' },
     ],
     features: [{ ar: 'قاعات متوازية بلا حد', en: 'Unlimited parallel rooms' }, { ar: 'Teams · Zoom · Meet · قاعة أَثَر', en: 'Teams · Zoom · Meet · Athar Room' }, { ar: 'حضور رقمي', en: 'Digital attendance' }, { ar: 'تسجيلات ومهارات', en: 'Recordings & skills' }],
     cta: { label: { ar: 'جدول الجلسات', en: 'Session schedule' }, href: '/live' },
   },
   {
     slug: 'evaluation', icon: 'scale', tone: 'navy', status: 'live',
-    title: { ar: 'تقويم البرامج وقياس الأثر', en: 'Program Evaluation & Impact Measurement' },
+    title: { ar: 'تقييم البرامج وقياس الأثر', en: 'Program Evaluation & Impact Measurement' },
     short: { ar: 'منصة متكاملة لإدارة البرامج وتقييمها وقياس أثرها وفق كيركباتريك 1→4.', en: 'An integrated platform to manage, evaluate and measure programs across Kirkpatrick 1→4.' },
     long: [
       { ar: 'المحرّك الذي يشغّل كل خدمات أَثَر: تقييمات ثنائية اللغة، حضور رقمي، قياس قبلي/بعدي، متابعة نقل الأثر، مؤشرات مؤسسية، شهادات موثّقة، وتقارير تنفيذية — بجاهزية وصحة وتدقيق ونسخ احتياطي.', en: 'The engine behind every Athar service: bilingual evaluations, digital attendance, pre/post measurement, transfer follow-up, institutional KPIs, verified certificates and executive reports — with readiness, health, audit and backup built in.' },
@@ -173,7 +173,7 @@ export const SERVICES: Service[] = [
 export const CROSS = [
   { icon: 'shield' as IconName, title: { ar: 'الدفع الآمن', en: 'Secure payment' }, desc: { ar: 'فاتورة إلكترونية فور قبولك، وسداد بتحويل بنكي موثّق بالإيصال أو عبر مدى والبطاقات وApple Pay.', en: 'An e-invoice the moment you are accepted; pay by verified bank transfer or via mada, cards and Apple Pay.' } },
   { icon: 'users' as IconName, title: { ar: 'حساب واحد لكل شيء', en: 'One account for everything' }, desc: { ar: 'برامجك وفواتيرك وشهاداتك ونتيجة مِعيار في مكان واحد.', en: 'Your programs, invoices, certificates and Miaar result in one place.' } },
-  { icon: 'globe' as IconName, title: { ar: 'عربي / English', en: 'Arabic / English' }, desc: { ar: 'واجهة واستمارات ثنائية اللغة للمتعلمين الدوليين.', en: 'Bilingual interface and forms for international learners.' } },
+  { icon: 'globe' as IconName, title: { ar: 'عربي / English', en: 'Arabic / English' }, desc: { ar: 'واجهة واستمارات ثنائية اللغة للمتعلّمين الدوليين.', en: 'Bilingual interface and forms for international learners.' } },
 ];
 
 export const NAV: { href: string; label: T }[] = [
@@ -190,7 +190,7 @@ export const NAV: { href: string; label: T }[] = [
 ];
 
 export const UI = {
-  student: { ar: 'بوابة المتدرب', en: 'Student portal' } as T,
+  student: { ar: 'بوّابة المتعلّم', en: 'Student portal' } as T,
   admin: { ar: 'دخول', en: 'Sign in' } as T,   /* P43-أ: باب واحد للجميع — لا «دخول الإدارة» */
   verify: { ar: 'التحقق من الشهادات', en: 'Verify certificate' } as T,
   services: { ar: 'خدماتنا', en: 'Our services' } as T,
@@ -265,7 +265,7 @@ export const CONTACT_SUBJECTS: { value: string; label: T }[] = [
   { value: 'consulting', label: { ar: 'استشارة', en: 'Consulting' } },
   { value: 'resources', label: { ar: 'الحقائب التدريبية', en: 'Training resources' } },
   { value: 'live', label: { ar: 'البث المتزامن', en: 'Live channels' } },
-  { value: 'evaluation', label: { ar: 'تقويم البرامج وقياس الأثر', en: 'Program evaluation & impact' } },
+  { value: 'evaluation', label: { ar: 'تقييم البرامج وقياس الأثر', en: 'Program evaluation & impact' } },
   { value: 'advisor', label: { ar: 'سؤال عبر «مستشارك»', en: 'Question via Your Advisor' } },
   { value: 'other', label: { ar: 'أخرى', en: 'Other' } },
 ];

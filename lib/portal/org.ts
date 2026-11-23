@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — بوابة الجهات (B2B): الأعضاء، الدعوات، التسجيل الجماعي، مؤشرات لوحة الأثر، Excel
+// بوّابة أَثَر — بوّابة الجهات (B2B): الأعضاء، الدعوات، التسجيل الجماعي، مؤشرات لوحة الأثر، Excel
 import type { Lang, T } from './content';
 import { t } from './content';
 
@@ -16,7 +16,7 @@ export type Dashboard = {
 };
 
 export const MEMBER_STATUS: Record<MemberStatus, T> = { pending: { ar: 'بانتظار التأكيد', en: 'Pending' }, confirmed: { ar: 'مؤكد', en: 'Confirmed' }, rejected: { ar: 'مرفوض', en: 'Rejected' } };
-export const MEMBER_ROLE: Record<MemberRole, T> = { learner: { ar: 'متعلم', en: 'Learner' }, org_admin: { ar: 'مدير الجهة', en: 'Org admin' } };
+export const MEMBER_ROLE: Record<MemberRole, T> = { learner: { ar: 'متعلّم', en: 'Learner' }, org_admin: { ar: 'مدير الجهة', en: 'Org admin' } };
 export const MEMBER_SOURCE: Record<Member['source'], T> = { domain: { ar: 'نطاق البريد', en: 'Email domain' }, invite: { ar: 'دعوة', en: 'Invite' }, admin: { ar: 'إدارة أَثَر', en: 'Athar admin' }, bulk: { ar: 'تسجيل جماعي', en: 'Bulk' } };
 export const REQ_STATUS: Record<string, T> = { new: { ar: 'جديد', en: 'New' }, reviewing: { ar: 'قيد الدراسة', en: 'Reviewing' }, quoted: { ar: 'أُرسل العرض', en: 'Quoted' }, approved: { ar: 'معتمد', en: 'Approved' }, enrolled: { ar: 'تم التسجيل', en: 'Enrolled' }, cancelled: { ar: 'ملغى', en: 'Cancelled' } };
 export const memberStatusLabel = (s: MemberStatus, lang: Lang) => t(MEMBER_STATUS[s] || { ar: s, en: s }, lang);
@@ -38,7 +38,7 @@ export function parsePeople(text: string): { email: string; full_name: string }[
 }
 /** هل البريد من نطاق الجهة؟ */
 export function inDomain(email: string, domain?: string | null): boolean { if (!domain) return false; return email.toLowerCase().split('@')[1] === domain.toLowerCase(); }
-export function validateBulk(programId: string, people: { email: string }[]): string | null { if (!programId) return 'اختر البرنامج'; if (!people.length) return 'أدخل بريدًا واحدًا صالحًا على الأقل'; if (people.length > 300) return 'الحد الأقصى 300 متدرب في الطلب الواحد'; return null; }
+export function validateBulk(programId: string, people: { email: string }[]): string | null { if (!programId) return 'اختر البرنامج'; if (!people.length) return 'أدخل بريدًا واحدًا صالحًا على الأقل'; if (people.length > 300) return 'الحد الأقصى 300 مشارك في الطلب الواحد'; return null; }
 
 /** مؤشرات لوحة الأثر */
 export function orgKpis(d: Dashboard) {

@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — الملف المهاري: احتساب مستويات المهارات من الأدلة، الشهادات الرقمية (Open Badges 3.0)، المشاركة، Excel
+// بوّابة أَثَر — الملف المهاري: احتساب مستويات المهارات من الأدلة، الشهادات الرقمية (Open Badges 3.0)، المشاركة، Excel
 import type { Lang, T } from './content';
 import { t } from './content';
 import type { Skill } from './skills';
@@ -12,7 +12,7 @@ export const EVIDENCE_WEIGHT: Record<EvidenceKind, number> = { placement: 1.0, c
 export const PEER_APPROVED_WEIGHT = 0.75;
 /** وزن تسجيل أداء (فيديو/صوت) بعد اعتماد مراجع بشري (P13-ج) — أداء مُشاهَد لا مكتوب */
 export const MEDIA_APPROVED_WEIGHT = 0.85;
-/** وزن المحاكاة بعد اعتماد مدرب بشري (P10) */
+/** وزن المحاكاة بعد اعتماد مدرّب بشري (P10) */
 export const SIMULATION_APPROVED_WEIGHT = 0.7;
 /** وزن مهمة من قلب العمل بعد تأكيد المشرف المباشر (P12-أ) — أقوى دليل عملي بعد اختبار مِعيار */
 export const MISSION_CONFIRMED_WEIGHT = 0.85;

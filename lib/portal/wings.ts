@@ -2,7 +2,7 @@
 /**
  * «أقسام مركز القيادة» (هـ-3 و) — «الكلّ لا يرى الكلّ»:
  *  مركز القيادة خمسة بيوت بحسب المستوى الذي يديره الشخص، لكلّ بيت بابه وعلامته ولونه وغرفه:
- *  برامج أَثَر (يدير التنفيذ) · تقييم أَثَر (يدير المستوى) · جودة أَثَر (يدير الأثر) · إدارة أَثَر (يدير العلاقة) · نظام أَثَر (يدير المنصّة)
+ *  برامج أَثَر (يدير التنفيذ) · تقييم أَثَر (يدير المستوى) · جودة أَثَر (يدير الأثر) · إدارة أَثَر (يدير العلاقة) · نظام أَثَر (يدير البوّابة)
  *  · من يملك قسمًا واحدًا يدخله مباشرة؛ ومن يملك أكثر يعود إلى آخر قسم فتحه، ومن «الردهة» يبدّل.
  *  · داخل القسم لا تظهر إلّا غرفه + الغرف المشتركة (توقيعي · الإشعارات · الدليل · لوحة القيادة).
  *  · الغرفة الواحدة قد تسكن قسمين (شواهد الأثر: تقييم وجودة) — تبقى غرفةً واحدة بمصدر واحد.
@@ -14,7 +14,7 @@ export type WingKey = 'programs' | 'assess' | 'quality' | 'people' | 'system';
 export type Wing = { key: WingKey; name: string; verb: string; line: string; zone: string; tone: string; tone_soft: string; tone_dark: string; hrefs: string[] };
 
 export const WINGS: Wing[] = [
-  { key: 'programs', name: 'برامج أَثَر', verb: 'يدير التنفيذ', line: 'البرامج والجلسات والقاعات والحقائب والحضور', zone: 'programs', tone: '#D4614A', tone_soft: '#FBEDE7', tone_dark: '#E8795C',
+  { key: 'programs', name: 'برامج أَثَر', verb: 'يدير التنفيذ', line: 'البرامج والجلسات والشُعب والحقائب والحضور', zone: 'programs', tone: '#D4614A', tone_soft: '#FBEDE7', tone_dark: '#E8795C',
     hrefs: ['/admin/management', '/admin/catalog', '/admin/program-engineering', '/admin/resources', '/admin/live', '/admin/onair', '/admin/attendance', '/admin/readiness', '/admin/templates', '/admin/awards', '/admin/rehearsals', '/admin/sim', '/admin/councils', '/admin/pulse', '/admin/media', '/admin/missions', '/admin/inclusion'] },
   { key: 'assess', name: 'تقييم أَثَر', verb: 'يدير المستوى', line: 'مِعيار واقْرَأْ والتسكين والشواهد والشهادات', zone: 'miaar', tone: '#E8795C', tone_soft: '#FBEDE7', tone_dark: '#F0A48C',
     hrefs: ['/admin/miaar', '/admin/miaar/rating', '/admin/iqra', '/admin/placements', '/admin/needs', '/admin/evidence', '/admin/credentials', '/admin/certificates', '/admin/skills'] },
@@ -22,7 +22,7 @@ export const WINGS: Wing[] = [
     hrefs: ['/command-center', '/admin/followup', '/admin/impact', '/admin/outcomes', '/admin/after', '/admin/loop', '/admin/contracts', '/admin/twin', '/admin/evidence', '/admin/reports', '/reports', '/reports/center', '/reports/chain', '/reports/program', '/reports/cohorts', '/reports/remote-survey', '/final-analysis', '/admin/sector-impact', '/admin/observatory'] },
   { key: 'people', name: 'إدارة أَثَر', verb: 'يدير العلاقة', line: 'التسجيل والمالية والوارد والاستشارات وهيئة أَثَر الاستشارية', zone: 'org', tone: '#6A3350', tone_soft: '#F3E8EF', tone_dark: '#B07A9A',
     hrefs: ['/admin/enrollments', '/admin/payments', '/admin/inbox', '/admin/consulting', '/admin/directory', '/admin/org/letters', '/admin/outreach'] },
-  { key: 'system', name: 'نظام أَثَر', verb: 'يدير المنصّة', line: 'الأدوار والدرع والبيانات والتدقيق والصحّة', zone: 'staff', tone: '#D9A866', tone_soft: '#FBF4EE', tone_dark: '#F1D9A8',
+  { key: 'system', name: 'نظام أَثَر', verb: 'يدير البوّابة', line: 'الأدوار والدرع والبيانات والتدقيق والصحّة', zone: 'staff', tone: '#D9A866', tone_soft: '#FBF4EE', tone_dark: '#F1D9A8',
     hrefs: ['/admin/roles', '/admin/shield', '/admin/vault', '/admin/data-lifecycle', '/admin/agents', '/admin/audit', '/admin/health', '/admin/backup', '/admin/access', '/admin/demo'] },
 ];
 /** غرف مشتركة تظهر في كلّ قسم (ولا تُحسب قسمًا) */

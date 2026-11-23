@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * أَثَر — محاكيات الأداء (P10): أنواع السيناريو والتشغيل، معايير التقييم، تحويل الدرجة إلى دليل قدرة، وبدائل محلية للشخصية والتقييم — دوال نقية
- *  المبدأ: «لا نسألك ماذا تعرف، نضعك في الموقف». الدرجة ليست نهاية؛ هي دليل يراجعه مدرب بشري ويعتمده.
+ *  المبدأ: «لا نسألك ماذا تعرف، نضعك في الموقف». الدرجة ليست نهاية؛ هي دليل يراجعه مدرّب بشري ويعتمده.
  */
 import type { Lang } from './content';
 
@@ -16,14 +16,14 @@ export type CriterionScore = { key: string; score: number; note: string };
 export type SimScore = { total: number; criteria: CriterionScore[]; strengths: string[]; improve: string[]; expert_path: string; closing_ar?: string };
 export type SimRun = { id: string; created_at: string; user_id?: string | null; email?: string | null; scenario_id: string; turns: Turn[]; score?: SimScore | null; status: 'running' | 'scored' | 'approved' | 'rejected'; source?: string | null; model?: string | null; ended_at?: string | null; approved_by?: string | null; approved_at?: string | null; note?: string | null };
 
-export const AUDIENCE_LABEL: Record<Scenario['audience'], { ar: string; en: string }> = { teacher: { ar: 'للمعلمين', en: 'Teachers' }, trainer: { ar: 'للمدربين', en: 'Trainers' }, consultant: { ar: 'للمستشارين', en: 'Consultants' }, learner: { ar: 'للمتعلمين', en: 'Learners' } };
+export const AUDIENCE_LABEL: Record<Scenario['audience'], { ar: string; en: string }> = { teacher: { ar: 'للمعلمين', en: 'Teachers' }, trainer: { ar: 'للمدرّبين', en: 'Trainers' }, consultant: { ar: 'للمستشارين', en: 'Consultants' }, learner: { ar: 'للمتعلّمين', en: 'Learners' } };
 export const SIM_STATUS_LABEL: Record<SimRun['status'], { ar: string; en: string }> = { running: { ar: 'جارية', en: 'Running' }, scored: { ar: 'مُقيَّمة — بانتظار الاعتماد', en: 'Scored — pending approval' }, approved: { ar: 'معتمدة', en: 'Approved' }, rejected: { ar: 'مرفوضة', en: 'Rejected' } };
 
-/** عدد أدوار المتعلم حتى الآن */
+/** عدد أدوار المتعلّم حتى الآن */
 export const learnerTurns = (turns: Turn[]) => turns.filter(t => t.role === 'learner').length;
-/** هل انتهت المحاكاة؟ (بلغ الحد أو أعلن المتعلم الإنهاء) */
+/** هل انتهت المحاكاة؟ (بلغ الحد أو أعلن المتعلّم الإنهاء) */
 export const isFinished = (s: Pick<Scenario, 'max_turns'>, turns: Turn[]) => learnerTurns(turns) >= s.max_turns;
-/** تنظيف نص المتعلم: حد 600 حرف، بلا وسوم */
+/** تنظيف نص المتعلّم: حد 600 حرف، بلا وسوم */
 export const cleanUtterance = (v: unknown) => String(v ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 600);
 
 /** المجموع المرجّح من معايير 0–100 (يتجاهل مفاتيح غير معروفة) */
@@ -81,7 +81,7 @@ export function localScore(s: Scenario, turns: Turn[]): SimScore {
   const base = Math.min(100, 30 + Math.min(30, len / 25) + Math.min(15, asks * 5) + Math.min(15, warm * 5) + Math.min(20, concrete * 5) + (closes ? 10 : 0));
   const criteria: CriterionScore[] = s.rubric.map((r, i) => {
     let sc = base; if (/empathy|safety|listen|relationship/.test(r.key)) sc = Math.min(100, base + warm * 6 - 5); if (/technique|model|task|outcomes|options|pilot/.test(r.key)) sc = Math.min(100, base + concrete * 5 - 8); if (/check|feedback|honesty|needs|turns/.test(r.key)) sc = Math.min(100, base + (closes ? 10 : -10) + asks * 2);
-    return { key: r.key, score: Math.max(10, Math.round(sc - i)), note: 'تقدير محلي أولي — بانتظار مراجعة المدرب.' };
+    return { key: r.key, score: Math.max(10, Math.round(sc - i)), note: 'تقدير محلي أولي — بانتظار مراجعة المدرّب.' };
   });
   const total = weightedTotal(s.rubric, criteria);
   return {

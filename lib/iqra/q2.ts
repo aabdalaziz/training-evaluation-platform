@@ -125,7 +125,7 @@ export async function adminThresholds(db: Db, now = new Date()) {
   const pub = (r: ThresholdRow) => ({ ...r, status_ar: THRESHOLD_STATUS_AR[r.status], level_label: levelLabel(r.level), target: HOURS_TARGET[r.level], days: Math.floor((now.getTime() - Date.parse(r.created_at)) / 86400e3) });
   return { live: live.map(pub), done: done.map(pub), stats, open_invites, statuses_ar: THRESHOLD_STATUS_AR };
 }
-/** قبول الطلب: دعوة «عُبور» شخصية (الافتراضي) أو ضمّ إلى دعوة مستوى مفتوحة (قاعة/موعد) */
+/** قبول الطلب: دعوة «عُبور» شخصية (الافتراضي) أو ضمّ إلى دعوة مستوى مفتوحة (شعبة/موعد) */
 export async function acceptThreshold(db: Db, id: unknown, actor: { id: string; email: string }, site: string, opts: { invite_id?: unknown; opens_at?: unknown; note?: unknown } = {}) {
   if (!isId(id)) return { ok: false as const, error: 'bad_input' };
   const { data: r } = await db.from('iqra_threshold_requests').select(REQ_COLS).eq('id', id).maybeSingle(); const req = r as ThresholdRow | null;

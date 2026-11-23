@@ -1,7 +1,7 @@
 /**
- * بريد المتدربين التلقائي (H2) — يعمل داخل Cron المتابعة اليومي (بلا Cron جديد)
- *  R-A  فتح التقييم النهائي: لكل برنامج is_final_open=true → بريد لكل متدرب (بريد من سجلات الحضور) مرة واحدة لكل (برنامج، بريد)
- *  R-B  إصدار الشهادة: شهادة لها recipient_email ولم تُرسل يدويًا خلال GRACE_HOURS → بريد برابط التحقق وبوابة المتدرب، مرة واحدة لكل شهادة
+ * بريد المشاركين التلقائي (H2) — يعمل داخل Cron المتابعة اليومي (بلا Cron جديد)
+ *  R-A  فتح التقييم النهائي: لكل برنامج is_final_open=true → بريد لكل مشارك (بريد من سجلات الحضور) مرة واحدة لكل (برنامج، بريد)
+ *  R-B  إصدار الشهادة: شهادة لها recipient_email ولم تُرسل يدويًا خلال GRACE_HOURS → بريد برابط التحقق وبوّابة المتعلّم، مرة واحدة لكل شهادة
  * التعطيل: TRAINEE_MAIL=0 · الحد الأقصى لكل تشغيل: MAX_PER_RUN
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -15,7 +15,7 @@ export type RunResult = { enabled: boolean; planned: number; sent: number; faile
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const esc = (s: string) => String(s ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch] as string));
-const firstName = (n: string) => (n || '').trim().split(/\s+/)[0] || 'عزيزي المتدرب';
+const firstName = (n: string) => (n || '').trim().split(/\s+/)[0] || 'عزيزي المشارك';
 
 export function isEnabled(env: Record<string, string | undefined> = process.env): boolean {
   const v = String(env.TRAINEE_MAIL ?? '1').trim().toLowerCase();
@@ -64,22 +64,22 @@ export function buildMail(site: string, p: Plan): { subject: string; html: strin
   const me = `${site}/me`;
   const shell = (title: string, body: string, cta: { href: string; label: string }) => `<!doctype html><html dir="rtl" lang="ar"><body style="margin:0;background:#F6EBE0;font-family:Tahoma,Arial,sans-serif;color:#2A1626">
 <div style="max-width:620px;margin:24px auto;background:#fff;border-radius:16px;border-top:5px solid #D9A866;padding:28px 30px">
-<div style="font-size:12px;font-weight:bold;color:#D4614A">منصة تقييم التدريب</div>
+<div style="font-size:12px;font-weight:bold;color:#D4614A">بوّابة أَثَر</div>
 <h1 style="margin:6px 0 12px;font-size:21px;color:#3A1F36">${title}</h1>
 <div style="font-size:15px;line-height:1.9">${body}</div>
 <p style="margin:22px 0"><a href="${cta.href}" style="background:#D4614A;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold;display:inline-block">${cta.label}</a></p>
-<p style="font-size:12px;color:#8E7F8A;line-height:1.8">إن لم يعمل الزر، انسخ الرابط: <span dir="ltr">${cta.href}</span><br>هذه رسالة تلقائية من بوابة المتدرب — يمكنك الدخول بالبريد نفسه عبر رمز تحقق.</p>
+<p style="font-size:12px;color:#8E7F8A;line-height:1.8">إن لم يعمل الزر، انسخ الرابط: <span dir="ltr">${cta.href}</span><br>هذه رسالة تلقائية من بوّابة المتعلّم — يمكنك الدخول بالبريد نفسه عبر رمز تحقق.</p>
 </div></body></html>`;
   if (p.kind === 'final_open') {
     return {
       subject: `التقييم النهائي مفتوح الآن — ${p.program_name}`,
-      html: shell('التقييم النهائي للبرنامج مفتوح الآن', `<p>${esc(firstName(p.name))}، شكرًا لمشاركتك في <b>${esc(p.program_name)}</b>.</p><p>فُتح الآن <b>التقييم النهائي</b> للبرنامج، ورأيك مطلوب لإصدار شهادتك ولتطوير الدفعات القادمة. يستغرق أقل من 5 دقائق.</p><p>يمكنك أيضًا متابعة مهامك وشهاداتك من <a href="${me}">بوابة المتدرب</a>.</p>`, { href: `${site}/evaluate/final?program=${encodeURIComponent(p.program_id || '')}`, label: 'ابدأ التقييم النهائي' }),
+      html: shell('التقييم النهائي للبرنامج مفتوح الآن', `<p>${esc(firstName(p.name))}، شكرًا لمشاركتك في <b>${esc(p.program_name)}</b>.</p><p>فُتح الآن <b>التقييم النهائي</b> للبرنامج، ورأيك مطلوب لإصدار شهادتك ولتطوير الدفعات القادمة. يستغرق أقل من 5 دقائق.</p><p>يمكنك أيضًا متابعة مهامك وشهاداتك من <a href="${me}">بوّابة المتعلّم</a>.</p>`, { href: `${site}/evaluate/final?program=${encodeURIComponent(p.program_id || '')}`, label: 'ابدأ التقييم النهائي' }),
     };
   }
   const verify = `${site}/verify/${encodeURIComponent(p.extra?.verify_code || '')}`;
   return {
     subject: `صدرت شهادتك — ${p.program_name}`,
-    html: shell('مبارك! صدرت شهادتك', `<p>${esc(firstName(p.name))}، يسعدنا إبلاغك بصدور شهادة إتمام <b>${esc(p.program_name)}</b>${p.extra?.serial ? ` برقم <span dir="ltr">${esc(p.extra.serial)}</span>` : ''}.</p><p>يمكنك عرض الشهادة وتنزيلها من <a href="${me}">بوابة المتدرب</a>، والتحقق من صحتها في أي وقت عبر الرابط أدناه.</p>`, { href: verify, label: 'عرض الشهادة والتحقق منها' }),
+    html: shell('مبارك! صدرت شهادتك', `<p>${esc(firstName(p.name))}، يسعدنا إبلاغك بصدور شهادة إتمام <b>${esc(p.program_name)}</b>${p.extra?.serial ? ` برقم <span dir="ltr">${esc(p.extra.serial)}</span>` : ''}.</p><p>يمكنك عرض الشهادة وتنزيلها من <a href="${me}">بوّابة المتعلّم</a>، والتحقق من صحتها في أي وقت عبر الرابط أدناه.</p>`, { href: verify, label: 'عرض الشهادة والتحقق منها' }),
   };
 }
 

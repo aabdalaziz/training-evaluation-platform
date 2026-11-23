@@ -19,7 +19,7 @@ export async function loadSources(db: any, today: string): Promise<GraphSources>
     safe<any[]>(db.from('portal_skills').select('id,code,name_ar,name_en,level,sector,domain').eq('active', true).limit(LIM.rows), []),
     safe<any[]>(db.from('programs').select('id,name_ar,name_en,sector').is('archived_at', null).limit(LIM.rows), []).then(async r => r.length ? r : safe<any[]>(db.from('programs').select('id,name_ar,name_en').is('archived_at', null).limit(LIM.rows), [])),
     safe<any[]>(db.from('portal_sessions').select('id,title_ar,trainer_id,sector,skills,program_id,organization_id').limit(LIM.rows), []),
-    safe<any[]>(db.from('trainers').select('id,name').limit(LIM.rows), []).then(r => r.map((t: any) => ({ id: t.id, full_name: String(t.name || t.full_name || 'مدرب') }))),
+    safe<any[]>(db.from('trainers').select('id,name').limit(LIM.rows), []).then(r => r.map((t: any) => ({ id: t.id, full_name: String(t.name || t.full_name || 'مدرّب') }))),
     safe<any[]>(db.from('portal_scenarios').select('id,title_ar,skills').limit(LIM.rows), []),
     safe<any[]>(db.from('portal_missions').select('id,template_id,title_ar,skills,status,program_id').limit(LIM.rows), []),
     safe<any[]>(db.from('portal_session_registrations').select('session_id,organization,user_id').limit(LIM.rows), []),

@@ -20,7 +20,7 @@ export async function runNotificationScan(db: SupabaseClient, opts: { source: 'c
   } catch (e: any) { return { ...res, emailed: 0, email_error: e?.message || String(e) }; }
 }
 
-/** مستلمو بريد الإشعارات: NOTIFY_EMAILS (مفصولة بفواصل) وإلا مديرو المنصة من profiles */
+/** مستلمو بريد الإشعارات: NOTIFY_EMAILS (مفصولة بفواصل) وإلا مديرو البوّابة من profiles */
 export async function adminEmails(db: SupabaseClient): Promise<string[]> {
   const env = (process.env.NOTIFY_EMAILS || '').split(/[,\s;]+/).map(s => s.trim().toLowerCase()).filter(s => /@/.test(s));
   if (env.length) return Array.from(new Set(env));

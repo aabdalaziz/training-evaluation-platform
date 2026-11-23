@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — التعلّم المباشر والهجين: الجلسات، المزوّدون، الحالة الزمنية، السلاسل، التعارض، الإسكان، البريد، Excel
+// بوّابة أَثَر — التعلّم المباشر والهجين: الجلسات، المزوّدون، الحالة الزمنية، السلاسل، التعارض، الإسكان، البريد، Excel
 import type { Lang, T } from './content';
 import { t } from './content';
 
@@ -36,7 +36,7 @@ export const KINDS: { value: SessionKind; label: T }[] = [
   { value: 'remedial', label: { ar: 'جلسة مراجعة (تعويض)', en: 'Review (remediation) session' } },
 ];
 export const SESSION_ACCESS: { value: SessionAccess; label: T }[] = [
-  { value: 'program', label: { ar: 'متدربو الشعبة/البرنامج', en: 'Section / program trainees' } },
+  { value: 'program', label: { ar: 'مشاركو الشعبة/البرنامج', en: 'Section / program trainees' } },
   { value: 'public', label: { ar: 'عامة (بتسجيل مفتوح)', en: 'Public (open registration)' } },
   { value: 'registered', label: { ar: 'للمسجّلين في أَثَر', en: 'Athar members' } },
   { value: 'org', label: { ar: 'لجهة محددة', en: 'Organization' } },
@@ -122,7 +122,7 @@ export function expandSeries(spec: SeriesSpec): string[] {
   }
   return out;
 }
-/** تعارض: نفس المدرب أو نفس الشعبة في فترة متداخلة */
+/** تعارض: نفس المدرّب أو نفس الشعبة في فترة متداخلة */
 export function conflicts(existing: LiveSession[], cand: Pick<LiveSession, 'starts_at' | 'duration_min' | 'trainer_id' | 'classroom_id'> & { id?: string }): LiveSession[] {
   const s = new Date(cand.starts_at).getTime(); const e = s + cand.duration_min * 60000;
   return existing.filter(x => x.id !== cand.id && x.status !== 'cancelled' && ((cand.trainer_id && x.trainer_id === cand.trainer_id) || (cand.classroom_id && x.classroom_id === cand.classroom_id)) && new Date(x.starts_at).getTime() < e && endsAt(x).getTime() > s);
@@ -152,7 +152,7 @@ export function validateSession(f: SessionForm): string | null {
   if (!/^\d{2}:\d{2}$/.test(f.time)) return 'اختر وقت البداية';
   if (!(f.duration_min >= 15 && f.duration_min <= 600)) return 'المدة بين 15 و600 دقيقة';
   if (f.kind === 'class' && !f.program_id) return 'جلسة الشعبة تحتاج برنامجًا';
-  if (f.kind === 'class' && !f.classroom_id) return 'اختر الشعبة (القاعة)';
+  if (f.kind === 'class' && !f.classroom_id) return 'اختر الشعبة';
   if (f.access === 'org' && !f.organization_id) return 'اختر الجهة المرتبطة';
   if (f.capacity && !(Number(f.capacity) > 0)) return 'السعة رقم موجب';
   const u = validateJoinUrl(f.provider, f.join_url); if (u) return u;
@@ -190,11 +190,11 @@ export function liveBoard(rows: LiveSession[], now: Date) {
 
 // ---------- Excel ----------
 export function sessionsSheet(rows: LiveSession[], rooms: Map<string, Classroom>, trainers: Map<string, Trainer>, programs: Map<string, string>) {
-  const header = ['التاريخ', 'الوقت', 'المدة', 'العنوان', 'النوع', 'البرنامج', 'الشعبة', 'المدرب', 'المنصة', 'الوصول', 'الحالة', 'رابط الانضمام'];
+  const header = ['التاريخ', 'الوقت', 'المدة', 'العنوان', 'النوع', 'البرنامج', 'الشعبة', 'المدرّب', 'البوّابة', 'الوصول', 'الحالة', 'رابط الانضمام'];
   return { name: 'الجلسات', rtl: true, widths: [12, 14, 8, 40, 12, 30, 16, 22, 16, 18, 10, 40], rows: [header, ...rows.map(s => { const { date, time } = isoToRiyadh(s.starts_at); return [date, time, s.duration_min, s.title_ar, kindLabel(s.kind, 'ar'), programs.get(s.program_id || '') || '', classroomLabel(rooms.get(s.classroom_id || ''), 'ar'), trainerName(trainers.get(s.trainer_id || '')), providerLabel(s.provider, 'ar'), sessionAccessLabel(s.access, 'ar'), s.status, s.join_url || (s.provider === 'athar' ? atharRoomUrl(s.id, s.title_ar) : '')]; })] };
 }
 export function roomsSheet(rooms: Classroom[], counts: Record<string, number>, trainers: Map<string, Trainer>, programs: Map<string, string>) {
-  const header = ['البرنامج', 'الشعبة', 'الاسم', 'المدرب', 'السعة', 'المُسكَنون', 'المتاح', 'الإسكان مفتوح', 'المنصة'];
+  const header = ['البرنامج', 'الشعبة', 'الاسم', 'المدرّب', 'السعة', 'المُسكَنون', 'المتاح', 'الإسكان مفتوح', 'البوّابة'];
   return { name: 'الشعب', rtl: true, widths: [30, 12, 16, 22, 8, 10, 8, 12, 16], rows: [header, ...rooms.map(c => [programs.get(c.program_id) || '', c.code, c.section_name || '', trainerName(trainers.get(c.trainer_id || '')), c.capacity || 30, counts[c.id] || 0, Math.max(0, (c.capacity || 30) - (counts[c.id] || 0)), c.placement_open === false ? 'لا' : 'نعم', providerLabel(c.provider || 'teams', 'ar')])] };
 }
 
@@ -280,7 +280,7 @@ export function dueForReminder(rows: LiveSession[], now: Date, windowHours = 30)
   return rows.filter(s => s.status === 'scheduled' && !s.reminder_sent_at && new Date(s.starts_at).getTime() > lo && new Date(s.starts_at).getTime() <= hi);
 }
 
-// ---------- جدول المدرب ----------
+// ---------- جدول المدرّب ----------
 export function trainerWeek(rows: LiveSession[], trainerIds: string[], now: Date): { today: LiveSession[]; week: { day: string; items: LiveSession[] }[] } {
   const mine = rows.filter(s => s.trainer_id && trainerIds.includes(s.trainer_id) && s.status !== 'cancelled');
   const today = localDay(now.toISOString()); const end = new Date(now.getTime() + 7 * 86400000);

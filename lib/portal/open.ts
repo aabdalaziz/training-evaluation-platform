@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — الكتالوج المفتوح (P8-ج): تشكيل بيانات الكتالوج العام، JSON-LD (Course/Event/Organization/Person)، ملف المُصدِر (/.well-known/athar.json)
+// بوّابة أَثَر — الكتالوج المفتوح (P8-ج): تشكيل بيانات الكتالوج العام، JSON-LD (Course/Event/Organization/Person)، ملف المُصدِر (/.well-known/athar.json)
 // دوال نقية بلا اعتماديات — تُستخدم في /api/catalog وصفحات البرنامج والجلسة والملف العام.
 import { BRAND, CONTACT } from './content';
 import type { CatalogProgram } from './catalog';

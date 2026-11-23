@@ -2,7 +2,7 @@
 /**
  * عهد الممارس وجهته (P30) — الاسم الرسمي «عهد الممارس وجهته» · السردي «خطوة مني وخطوة من جهتي» (وعلى جهة الإدارة: «خطوة منّا وخطوة من منسوبنا»)
  * «المنسوب لا يطلب من جهته تدريبًا؛ يطلب منها خطوة واحدة له لسنة — والجهة تطلب منه خطوة واحدة لها — ويوقّعان وثيقة واحدة: توقيعه وتوقيع الجهة بصفتها».
- * الحركات الخمس: الطلب (من المنسوب أو من الجهة) → خطوة أطلبها (الجهة تطلب خطوة شخصية من أنواع P27 · المنسوب يطلب خطوة تشهدها المنصة عن جهة تجاهه: مقعد · مستوى · شهادة قرين · مهام في مهلتها)
+ * الحركات الخمس: الطلب (من المنسوب أو من الجهة) → خطوة أطلبها (الجهة تطلب خطوة شخصية من أنواع P27 · المنسوب يطلب خطوة تشهدها البوّابة عن جهة تجاهه: مقعد · مستوى · شهادة قرين · مهام في مهلتها)
  *   → توقيعان (المنسوب باسمه · مدير الجهة بصفته — وثيقة ATH-PO واحدة بحاملَين: شخص + جهة) → أين نحن من عهدنا (دربان من الأحداث؛ الجهة ترى حالة خطوة المنسوب فقط) → ما وعدنا بعضَنا / ما وقع.
  * قواعد ثابتة: 3 فصول للمنسوب · ميثاق موقَّع للجهة · عهد حيّ واحد لكل منسوب مع جهته · مدير الجهة لا يوقّع عن نفسه (الموقّع عن الجهة ≠ المنسوب) · لا ذكاء اصطناعي بين الطرفين.
  * الطرفان: member (المنسوب) · org (الجهة). member_step = ما يؤدّيه المنسوب (اقترحته الجهة) · org_step = ما تؤدّيه الجهة له (اقترحه المنسوب).
@@ -14,7 +14,7 @@ import { PAIR_MIN_CHAPTERS, PAIR_WHY_MIN, PAIR_WHY_MAX, PAIR_TITLE_MIN, PAIR_TIT
 import type { StepState, NameMode } from '../pair/registry';
 
 export const ORG_PAIR_VERSION = '2026-10';
-export const ORG_PAIR_MIN_CHAPTERS = PAIR_MIN_CHAPTERS;   // للمنسوب — بوابة P27/P29 نفسها
+export const ORG_PAIR_MIN_CHAPTERS = PAIR_MIN_CHAPTERS;   // للمنسوب — بوّابة P27/P29 نفسها
 export const ORG_PAIR_INVITE_DAYS = 14;                    // الطلب/الدعوة تنقضي بصمت
 export const ORG_PAIR_PROPOSE_DAYS = 14;                   // مهلة الاقتراح والتوقيع بعد القبول
 export const ORG_PAIR_PLEDGE_DAYS = 365;
@@ -28,7 +28,7 @@ export { PAIR_WHY_MIN as ORG_PAIR_WHY_MIN, PAIR_WHY_MAX as ORG_PAIR_WHY_MAX, PAI
 
 export type OrgSide = 'member' | 'org';
 export type OrgPairStatus = 'invited' | 'proposing' | 'active' | 'review' | 'renewed' | 'closed' | 'declined' | 'expired' | 'revoked';
-/** ما تؤدّيه الجهة لمنسوبها — أفعال تشهدها المنصة عن جهة تجاه شخص */
+/** ما تؤدّيه الجهة لمنسوبها — أفعال تشهدها البوّابة عن جهة تجاه شخص */
 export type OrgStepKind = 'seat' | 'level' | 'attestation' | 'missions';
 export type OrgStepTarget = PledgeTarget & { sla_days?: number };
 export type OrgStepOption = { kind: OrgStepKind; title_ar: string; why_ar: string; target: OrgStepTarget };
@@ -48,7 +48,7 @@ export const MEMBER_KIND_AR = PLEDGE_KIND_AR;
 export const ORG_STEP_KIND_AR: Record<OrgStepKind, string> = { seat: 'مقعد مجلس أقران', level: 'اعتماد مستوى', attestation: 'اعتماد شهادة قرين', missions: 'تأكيد المهام في مهلتها' };
 export const PRIVACY_ORG_PAIR_AR = [
   'الطلب بين منسوب مؤكَّد وجهته فقط — ولا يُفتح إلا لمنسوب له 3 فصول وجهة وقّعت ميثاقها',
-  'الجهة تطلب خطوة شخصية من خطوات تشهدها المنصة؛ والمنسوب يطلب من جهته فعلًا تشهده المنصة تجاهه (مقعد · مستوى · شهادة قرين · مهام في مهلتها)',
+  'الجهة تطلب خطوة شخصية من خطوات تشهدها البوّابة؛ والمنسوب يطلب من جهته فعلًا تشهده البوّابة تجاهه (مقعد · مستوى · شهادة قرين · مهام في مهلتها)',
   'الوثيقة بحاملَين: اسم المنسوب (بالوضع الذي يختاره) واسم الجهة والخطوتان والتاريخان — كلمات «لماذا» ليست فيها، ومن وقّع عن الجهة يظهر بصفته لا ببريده',
   'الجهة ترى حالة خطوة المنسوب فقط (وقعت / لم تقع بعد) — لا أحداثه ولا مواقفه؛ والمنسوب يرى ما فعلته الجهة له',
   'لا يقرأ أحد الطرفين كلمات مراجعة الآخر حتى يكتب كلماته؛ ومدير الجهة لا يوقّع عهدًا مع نفسه',
@@ -78,7 +78,7 @@ export const reviewedOf = (p: OrgPair, side: OrgSide) => (side === 'member' ? p.
 /** أهلية المنسوب: 3 فصول حقيقية */
 export function memberEligibility(chapters: Chapter[]): { ok: boolean; chapters: number; min: number; read_ar: string } {
   const n = chapters.length; const ok = n >= ORG_PAIR_MIN_CHAPTERS;
-  return { ok, chapters: n, min: ORG_PAIR_MIN_CHAPTERS, read_ar: ok ? 'يمكنك أن تطلب من جهتك خطوة لسنة — وتطلب هي منك.' : `العهد مع جهتك يُقطع بعد ${ORG_PAIR_MIN_CHAPTERS} فصول في رحلتك — ${n === 0 ? 'ولم يُكتب فصلك الأول بعد' : `لديك ${nCh(n)}`}. ما وعدت به إنسانًا يعرفك أثقل — فليكن بعد أن تعرفك المنصة أولًا.` };
+  return { ok, chapters: n, min: ORG_PAIR_MIN_CHAPTERS, read_ar: ok ? 'يمكنك أن تطلب من جهتك خطوة لسنة — وتطلب هي منك.' : `العهد مع جهتك يُقطع بعد ${ORG_PAIR_MIN_CHAPTERS} فصول في رحلتك — ${n === 0 ? 'ولم يُكتب فصلك الأول بعد' : `لديك ${nCh(n)}`}. ما وعدت به إنسانًا يعرفك أثقل — فليكن بعد أن تعرفك البوّابة أولًا.` };
 }
 /** أهلية الجهة: ميثاق موقَّع نافذ (P24) */
 export function orgEligibility(charter: { status: string; expires_at: string | null } | null, now = Date.now()): { ok: boolean; reason: 'no_charter' | 'expired' | null; read_ar: string } {
@@ -93,29 +93,29 @@ export function validateOrgInvite(b: { why_ar?: unknown; name_mode?: unknown }):
   if (b.name_mode !== undefined && !['full', 'first', 'anon'].includes(String(b.name_mode))) return 'وضع الاسم: full أو first أو anon';
   return null;
 }
-/** ما تقترحه المنصة للجهة لتطلبه من منسوبها — من فصوله هو (محرّك P27) */
+/** ما تقترحه البوّابة للجهة لتطلبه من منسوبها — من فصوله هو (محرّك P27) */
 export function suggestForMember(memberChapters: Chapter[], memberInput: Pick<JourneyInput, 'levels' | 'skills'>): PledgeOption[] { return proposePledges(memberChapters, memberInput); }
-/** ما تقترحه المنصة للمنسوب ليطلبه من جهته — أربعة أفعال تشهدها المنصة عن جهة تجاه شخص، مرتّبة بما ينقصه */
+/** ما تقترحه البوّابة للمنسوب ليطلبه من جهته — أربعة أفعال تشهدها البوّابة عن جهة تجاه شخص، مرتّبة بما ينقصه */
 export function suggestForOrg(inp: Pick<JourneyInput, 'levels' | 'skills' | 'attestations' | 'missions' | 'memberships'>, n = 3): OrgStepOption[] {
   const out: OrgStepOption[] = [];
   const pendingLevel = inp.levels.find(l => (l.computed_level || 0) >= 2 && (l.approved_level == null || (l.approved_level || 0) < Math.floor(l.computed_level || 0)));
   const pendingAtt = inp.attestations.some(a => a.status === 'pending');
   const inCouncil = inp.memberships.some(m => m.joined_at && m.status !== 'applied' && m.status !== 'invited');
   const hadMissions = inp.missions.length > 0;
-  if (!inCouncil) out.push({ kind: 'seat', title_ar: 'مقعد لي في مجلس أقران تموّله الجهة هذه السنة', why_ar: 'لم تجلس بعد إلى طاولة لا تضم جهتك وحدها — المقعد خطوة تشهدها المنصة من طلبه إلى جلوسك.', target: { count: 1 } });
+  if (!inCouncil) out.push({ kind: 'seat', title_ar: 'مقعد لي في مجلس أقران تموّله الجهة هذه السنة', why_ar: 'لم تجلس بعد إلى طاولة لا تضم جهتك وحدها — المقعد خطوة تشهدها البوّابة من طلبه إلى جلوسك.', target: { count: 1 } });
   if (pendingLevel) out.push({ kind: 'level', title_ar: `اعتماد إنساني لمستواي في «${inp.skills[pendingLevel.skill_id] || 'المهارة'}» خلال السنة`, why_ar: `مستواك المحسوب ${Number(pendingLevel.computed_level).toFixed(1)} ولم يعتمده إنسان بعد — الاعتماد قرار جهتك لا حساب المنصة.`, target: { skill_id: pendingLevel.skill_id, skill_ar: inp.skills[pendingLevel.skill_id] || null as any, to: Math.max(1, Math.floor(pendingLevel.computed_level || 1)), from: pendingLevel.approved_level ?? null } });
   if (pendingAtt || inCouncil) out.push({ kind: 'attestation', title_ar: 'اعتماد شهادة قرين عني حين تصل — بقرار إنسان من جهتي', why_ar: pendingAtt ? 'لديك شهادة قرين بانتظار الاعتماد — ما يراه أقرانك فيك يصير أثرًا حين يعتمده إنسان.' : 'أنت في مجلس؛ حين يشهد لك قرين، فلتكن جهتك من يعتمدها لا الطاقم.', target: { count: 1 } });
   if (hadMissions || out.length < n) out.push({ kind: 'missions', title_ar: `تأكيد مهامي خلال ${ORG_PAIR_MISSION_SLA_DAYS} أيام من تسليمها — ${ORG_PAIR_MISSIONS_COUNT} مهام متتالية`, why_ar: hadMissions ? 'سلّمتَ مهامًا من قبل — سرعة تأكيد المشرف هي ما يجعل الأثر حيًّا لا متأخرًا.' : 'حين تسلّم مهمة من قلب العمل، تَعِدك جهتك ألّا تنتظر أكثر من أسبوع.', target: { count: ORG_PAIR_MISSIONS_COUNT, sla_days: ORG_PAIR_MISSION_SLA_DAYS } });
-  if (out.length < n && !out.some(o => o.kind === 'seat')) out.push({ kind: 'seat', title_ar: 'مقعد لي في مجلس أقران جديد تموّله الجهة', why_ar: 'مجلس آخر، طاولة أخرى — المقعد خطوة تشهدها المنصة من طلبه إلى جلوسك.', target: { count: 1 } });
+  if (out.length < n && !out.some(o => o.kind === 'seat')) out.push({ kind: 'seat', title_ar: 'مقعد لي في مجلس أقران جديد تموّله الجهة', why_ar: 'مجلس آخر، طاولة أخرى — المقعد خطوة تشهدها البوّابة من طلبه إلى جلوسك.', target: { count: 1 } });
   if (out.length < n && !out.some(o => o.kind === 'level')) { const any = inp.levels[0]; if (any) out.push({ kind: 'level', title_ar: `مراجعة إنسانية لمستواي في «${inp.skills[any.skill_id] || 'المهارة'}» خلال السنة`, why_ar: 'اعتماد المستوى قرار بشري — اطلب من جهتك أن تنظر فيه هذه السنة.', target: { skill_id: any.skill_id, skill_ar: inp.skills[any.skill_id] || null as any, to: Math.max(1, (any.approved_level || 0) + 1), from: any.approved_level ?? null } }); }
-  if (out.length < n && !out.some(o => o.kind === 'attestation')) out.push({ kind: 'attestation', title_ar: 'اعتماد شهادة قرين عني حين تصل — بقرار إنسان من جهتي', why_ar: 'حين يشهد لك قرين يومًا، فلتكن جهتك من يعتمد شهادته لا الطاقم — الاعتماد فعل تشهده المنصة.', target: { count: 1 } });
+  if (out.length < n && !out.some(o => o.kind === 'attestation')) out.push({ kind: 'attestation', title_ar: 'اعتماد شهادة قرين عني حين تصل — بقرار إنسان من جهتي', why_ar: 'حين يشهد لك قرين يومًا، فلتكن جهتك من يعتمد شهادته لا الطاقم — الاعتماد فعل تشهده البوّابة.', target: { count: 1 } });
   return out.slice(0, n);
 }
 export const validateOrgProposal = (b: { index?: unknown; title_ar?: unknown; why_ar?: unknown }, options: { kind: string }[]) => validateProposal(b, options as any);
 export const validateOrgSign = validateSign;
 export const validateOrgReview = validatePairReview;
 
-/** ما تشهده المنصة عن فعل الجهة تجاه المنسوب */
+/** ما تشهده البوّابة عن فعل الجهة تجاه المنسوب */
 export type OrgWitness = {
   seat_requests: { created_at: string; status: string; matched_council_id: string | null; includes_member: boolean }[];
   input: JourneyInput;  // مدخلات رحلة المنسوب: المستويات · شهادات الأقران · المهام · العضويات

@@ -4,7 +4,7 @@ export const dict = {
     dir: "rtl",
     lang: "عربي",
     switchLang: "English",
-    platformName: "منصة الجودة والتقييم",
+    platformName: "بوّابة أَثَر",
     systemCentral: "النظام المركزي الموحد",
     back: "← رجوع",
     save: "حفظ",
@@ -18,8 +18,8 @@ export const dict = {
     dailyReport: "التقرير اليومي",
     finalReport: "التقرير النهائي",
     teachers: "أداء المعلمين",
-    management: "إدارة القاعات",
-    mainGate: "البوابة الرئيسة",
+    management: "إدارة الشُّعب",
+    mainGate: "البوّابة الرئيسة",
     
     // لوحة القيادة والمؤشرات
     totalResponses: "إجمالي الاستجابات الحية",
@@ -44,9 +44,9 @@ export const dict = {
     good: "جيد",
     needsImprovement: "تدخل مطلوب",
     
-    // بوابة التقييم
+    // بوّابة التقييم
     evalDailyTitle: "التقييم اليومي",
-    evalDailySub: "خاص بتقييم المدرب وأداء الحصة التدريبية لهذا اليوم.",
+    evalDailySub: "خاص بتقييم المدرّب وأداء الجلسة التدريبية لهذا اليوم.",
     evalFinalTitle: "التقييم النهائي",
     evalFinalSub: "خاص بالتقييم الشامل للبرنامج التدريبي والخدمات.",
     startEval: "ابدأ التقييم",

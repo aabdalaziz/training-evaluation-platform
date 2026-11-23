@@ -17,7 +17,7 @@ export type ReportDef = {
   id: ReportId; icon: string; group: 'executive' | 'operations' | 'analysis' | 'decision';
   title: { ar: string; en: string }; desc: { ar: string; en: string };
   audience: { ar: string; en: string }; decision: { ar: string; en: string };
-  /** الفئة المستهدفة للتبديل السريع (القيادة / المشرف / المدرب) */
+  /** الفئة المستهدفة للتبديل السريع (القيادة / المشرف / المدرّب) */
   audienceKey: 'leadership' | 'supervisor' | 'trainer';
   sections: SectionId[];
   /** default filter overrides when opening this report */
@@ -28,7 +28,7 @@ export const AUDIENCES: { id: 'all' | ReportDef['audienceKey']; ar: string; en: 
   { id: 'all', ar: 'الكل', en: 'All' },
   { id: 'leadership', ar: 'القيادة', en: 'Leadership' },
   { id: 'supervisor', ar: 'المشرف', en: 'Supervisor' },
-  { id: 'trainer', ar: 'المدرب', en: 'Trainer' },
+  { id: 'trainer', ar: 'المدرّب', en: 'Trainer' },
 ];
 
 export const REPORT_GROUPS: { id: ReportDef['group']; ar: string; en: string }[] = [
@@ -50,8 +50,8 @@ export const REPORTS: ReportDef[] = [
   },
   {
     id: 'trainers', audienceKey: 'supervisor', icon: '👨‍🏫', group: 'operations',
-    title: { ar: 'أداء المدربين', en: 'Trainer performance' },
-    desc: { ar: 'ترتيب المدربين بالمتوسط والعينة ونسبة التقييمات المنخفضة والتفاوت والاتجاه، مع تصنيف المخاطر.', en: 'Trainer ranking by mean, sample, low-rating %, variance and trend, with risk flags.' },
+    title: { ar: 'أداء المدرّبين', en: 'Trainer performance' },
+    desc: { ar: 'ترتيب المدرّبين بالمتوسط والعينة ونسبة التقييمات المنخفضة والتفاوت والاتجاه، مع تصنيف المخاطر.', en: 'Trainer ranking by mean, sample, low-rating %, variance and trend, with risk flags.' },
     audience: { ar: 'المشرف الأكاديمي', en: 'Academic supervision' },
     decision: { ar: 'من يستحق التكريم؟ ومن يحتاج دعمًا أو زيارة صفية؟', en: 'Who to recognise? Who needs coaching or observation?' },
     sections: ['kpis', 'trainerBars', 'trainerTable', 'heatmap', 'actions'],
@@ -67,10 +67,10 @@ export const REPORTS: ReportDef[] = [
   },
   {
     id: 'classrooms', audienceKey: 'supervisor', icon: '🏫', group: 'operations',
-    title: { ar: 'القاعات والمجموعات', en: 'Rooms & groups' },
-    desc: { ar: 'أداء كل قاعة/مجموعة مع مدربها، وخريطة حرارية للمحاور × القاعات.', en: 'Each room/group with its trainer, plus an axes × rooms heat map.' },
+    title: { ar: 'الشُّعب', en: 'Rooms & groups' },
+    desc: { ar: 'أداء كل شعبة مع ميسّرها، وخريطة حرارية للمحاور × الشُّعب.', en: 'Each room/group with its trainer, plus an axes × rooms heat map.' },
     audience: { ar: 'التشغيل اليومي', en: 'Daily operations' },
-    decision: { ar: 'أي قاعة تحتاج تدخلًا هذا الأسبوع؟', en: 'Which room needs intervention this week?' },
+    decision: { ar: 'أي شعبة تحتاج تدخلًا هذا الأسبوع؟', en: 'Which room needs intervention this week?' },
     sections: ['kpis', 'classroomTable', 'heatmap', 'actions'],
     defaults: { kind: 'DAILY' },
   },
@@ -110,7 +110,7 @@ export const REPORTS: ReportDef[] = [
   {
     id: 'participation', audienceKey: 'supervisor', icon: '👥', group: 'operations',
     title: { ar: 'المشاركة والاستجابة', en: 'Participation & response' },
-    desc: { ar: 'حجم الاستجابات حسب اليوم/القاعة/البرنامج/النوع، المشاركون الفريدون، والجنس والإقامة.', en: 'Response volume by day/room/program/kind, unique participants, gender and accommodation.' },
+    desc: { ar: 'حجم الاستجابات حسب اليوم/الشعبة/البرنامج/النوع، المشاركون الفريدون، والجنس والإقامة.', en: 'Response volume by day/room/program/kind, unique participants, gender and accommodation.' },
     audience: { ar: 'التشغيل', en: 'Operations' },
     decision: { ar: 'هل العينة كافية وممثلة قبل اتخاذ القرار؟', en: 'Is the sample sufficient and representative?' },
     sections: ['kpis', 'participationTables'],
@@ -133,10 +133,10 @@ export const REPORTS: ReportDef[] = [
   },
   {
     id: 'trainer_card', audienceKey: 'trainer', icon: '🪪', group: 'operations',
-    title: { ar: 'بطاقة تغذية راجعة للمدرب', en: 'Trainer feedback card' },
-    desc: { ar: 'نتائج القاعة/المدرب المختار بصياغة تطويرية ودون هوية المشاركين: المحاور، نقاط القوة، فرص التحسين، والتعليقات مجمّعة.', en: 'Selected room/trainer results in developmental language without participant identity: axes, strengths, improvement areas and aggregated comments.' },
-    audience: { ar: 'المدرب', en: 'Trainer' },
-    decision: { ar: 'ما الذي يحافظ عليه المدرب وما الذي يطوّره في الأسبوع القادم؟', en: 'What should the trainer keep doing and improve next week?' },
+    title: { ar: 'بطاقة تغذية راجعة للمدرّب', en: 'Trainer feedback card' },
+    desc: { ar: 'نتائج الشعبة/المدرّب المختار بصياغة تطويرية ودون هوية المشاركين: المحاور، نقاط القوة، فرص التحسين، والتعليقات مجمّعة.', en: 'Selected room/trainer results in developmental language without participant identity: axes, strengths, improvement areas and aggregated comments.' },
+    audience: { ar: 'المدرّب', en: 'Trainer' },
+    decision: { ar: 'ما الذي يحافظ عليه المدرّب وما الذي يطوّره في الأسبوع القادم؟', en: 'What should the trainer keep doing and improve next week?' },
     sections: ['programProfile', 'kpis', 'verdict', 'axisBars', 'strengthsGaps', 'questionTable', 'keywords', 'actions'],
     defaults: { kind: 'DAILY', compare: true },
   },

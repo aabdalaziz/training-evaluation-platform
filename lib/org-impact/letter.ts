@@ -90,7 +90,7 @@ export function composeLines(b: Omit<LetterBody, 'lines_ar' | 'ask_suggested_ar'
 }
 /** «ما نحتاجه منكم» — طلب واحد مقترَح من الواقع */
 export function suggestAsk(b: { people: { members: number; pending: number; active_raw: number }; pulse?: OrgPulse | null }): string | null {
-  if (b.people.pending > 0) { const n = b.people.pending; const v = n === 1 ? 'ينتظر' : n === 2 ? 'ينتظران' : 'ينتظرون'; const h = n === 1 ? 'تأكيده يفتح له' : n === 2 ? 'تأكيدهما يفتح لهما' : 'تأكيدهم يفتح لهم'; return `${countAr(n, PERSON)} من نطاق بريدكم ${v} تأكيدكم في بوابة الجهات — ${h} التعلّم.`; }
+  if (b.people.pending > 0) { const n = b.people.pending; const v = n === 1 ? 'ينتظر' : n === 2 ? 'ينتظران' : 'ينتظرون'; const h = n === 1 ? 'تأكيده يفتح له' : n === 2 ? 'تأكيدهما يفتح لهما' : 'تأكيدهم يفتح لهم'; return `${countAr(n, PERSON)} من نطاق بريدكم ${v} تأكيدكم في بوّابة الجهات — ${h} التعلّم.`; }
   if (b.people.members >= MIN_MEMBERS && b.people.active_raw < b.people.members / 2) return 'كلمة من إدارتكم لمنسوبيكم عن أهمّية الحضور — نصف المقيَّدين لم يتعلّموا هذا الشهر.';
   if (b.pulse?.ask_ar) return b.pulse.ask_ar; /* P57: ردّ دون 30٪ على كلمات المدرّبين */
   return null;
@@ -105,7 +105,7 @@ export function frozenDoc(l: { organization_id: string; month: string; body: Let
 export const digestOf = (doc: unknown): string => createHash('sha256').update(jcs(doc)).digest('hex');
 /** نصّ إشعار الجهة */
 export function orgNoticeText(month: string, orgName: string): { title_ar: string; body_ar: string; url: string } {
-  return { title_ar: `وصلت رسالة شهر ${monthLabelAr(month)} من أَثَر`, body_ar: `${orgName}: ثلاثة أرقام، خيوط الشهر، سطر موقَّع، ووعد للشهر القادم — افتحوها من بوابة الجهات.`, url: '/org?tab=letters' };
+  return { title_ar: `وصلت رسالة شهر ${monthLabelAr(month)} من أَثَر`, body_ar: `${orgName}: ثلاثة أرقام، خيوط الشهر، سطر موقَّع، ووعد للشهر القادم — افتحوها من بوّابة الجهات.`, url: '/org?tab=letters' };
 }
 
 /* ============================ الغراء ============================ */

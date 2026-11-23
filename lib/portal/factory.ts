@@ -49,7 +49,7 @@ export function draftTitle(n: Need): string { const d = domainByCode(n.domain_co
 
 // ====================================================================== 1) محلل الاحتياج (استشراف)
 const EVIDENCE_BY_DOMAIN: Record<DomainCode, string[]> = {
-  purpose: ['تصديق مرشد/أسرة', 'سجل زمني'], judgment: ['محاكاة قرار مهني', 'مهمة قلب العمل مؤكَّدة', 'سجل دقة القرارات'], integrity: ['تصديق مشرف على موقف أمانة', 'إفصاح موثَّق'], resilience: ['التزام ممارسة مشهود', 'تحدٍّ بطيء موثَّق'], vitality: ['أداء مشهود أمام مدرب', 'سجل انتباه طوعي'], relational: ['تصديق الطرف الآخر', 'شبكة الشهادة'], language: ['مِعيار', 'نص أصيل مشهود', 'خطابة مُقيَّمة'], professional: ['مهمة قلب العمل مؤكَّدة', 'حدود تفويض معتمدة', 'عقد أثر'], financial: ['تصديق الشريك على ميزانية مُفوَّضة', 'التزام عطاء'], civic: ['ساعات تطوع مشهودة', 'حوار عبر الاختلاف مُقيَّم'], creative: ['عمل يدوي مشهود', 'سرد أصالة'], digital_sovereignty: ['ميثاق تفويض مكتوب ومُراجَع', 'انفصال موثَّق'],
+  purpose: ['تصديق مرشد/أسرة', 'سجل زمني'], judgment: ['محاكاة قرار مهني', 'مهمة قلب العمل مؤكَّدة', 'سجل دقة القرارات'], integrity: ['تصديق مشرف على موقف أمانة', 'إفصاح موثَّق'], resilience: ['التزام ممارسة مشهود', 'تحدٍّ بطيء موثَّق'], vitality: ['أداء مشهود أمام مدرّب', 'سجل انتباه طوعي'], relational: ['تصديق الطرف الآخر', 'شبكة الشهادة'], language: ['مِعيار', 'نص أصيل مشهود', 'خطابة مُقيَّمة'], professional: ['مهمة قلب العمل مؤكَّدة', 'حدود تفويض معتمدة', 'عقد أثر'], financial: ['تصديق الشريك على ميزانية مُفوَّضة', 'التزام عطاء'], civic: ['ساعات تطوع مشهودة', 'حوار عبر الاختلاف مُقيَّم'], creative: ['عمل يدوي مشهود', 'سرد أصالة'], digital_sovereignty: ['ميثاق تفويض مكتوب ومُراجَع', 'انفصال موثَّق'],
 };
 export function localForesight(n: Need): Foresight {
   const d = domainByCode(n.domain_code)!; const f = familyByCode(n.family)!; const s = sectorByCode(n.sector)!; const wave = n.horizon === 2035 ? s.w2035 : n.horizon === 2050 ? s.w2050 : s.w2070;
@@ -66,7 +66,7 @@ export function localForesight(n: Need): Foresight {
 }
 export function buildForesightPrompt(n: Need): { system: string; user: string } {
   const d = domainByCode(n.domain_code)!; const f = familyByCode(n.family)!; const s = sectorByCode(n.sector)!;
-  const system = 'أنت «محلل الاحتياج» في منظومة تصميم البرامج ببوابة أَثَر (التدريب ما بعد الذكاء الاصطناعي). تُحلّل احتياجًا إنسانيًا لا موضوعًا، بلغة الجدارات (مهارة → كفاية → جدارة → قدرة → أداء → أثر)، ولا تختلق أرقامًا. JSON فقط.';
+  const system = 'أنت «محلل الاحتياج» في منظومة تصميم البرامج ببوّابة أَثَر (التدريب ما بعد الذكاء الاصطناعي). تُحلّل احتياجًا إنسانيًا لا موضوعًا، بلغة الجدارات (مهارة → كفاية → جدارة → قدرة → أداء → أثر)، ولا تختلق أرقامًا. JSON فقط.';
   const schema = '{"headline_ar": string, "why_now_ar": string (4 جمل), "scarce_ar": string, "risks_ar": string[3], "competencies_ar": string[3-5], "indicators_ar": string[3], "evidence_kinds": string[2-4], "wave_ar": string}';
   const user = `القطاع: ${s.name.ar} — مصيره: 2035: ${s.w2035} · 2050: ${s.w2050} · 2070: ${s.w2070}\nالمجال: ${d.h} ${d.name.ar} (الندرة في 2062: ${d.scarce_2062.ar})\nالعائلة: ${f.f} ${f.name.ar}\nالمرحلة: ${LIFE_STAGES.find(x => x.code === n.stage)?.label_ar} · المؤسسة: ${INSTITUTIONS.find(x => x.code === n.institution)?.label_ar} · الأفق: ${HORIZON_LABEL[n.horizon].ar}\nالفئة: ${n.audience_ar}${n.org_name ? ` · الجهة: ${n.org_name}` : ''}\nالفجوة: ${n.gap_ar}\nالمخطط:\n${schema}`;
   return { system, user };
@@ -109,7 +109,7 @@ export function localDesign(n: Need, fs: Foresight): Design {
 }
 export function buildDesignPrompt(n: Need, fs: Foresight): { system: string; user: string } {
   const d = domainByCode(n.domain_code)!;
-  const system = 'أنت «المصمم التعليمي» في بوابة أَثَر. تصمّم برنامج بناء جدارة لا دورة محتوى: أهداف بأفعال قابلة للقياس (يُقرّر، يُفوِّض، يُراجِع، يُصدِّق، يُطبّق)، وحدات كلٌّ منها محاكاة + مهمة تطبيقية + شاهد أداء، تقويم بلا اختبار معرفي، بوابات بشرية، ومؤشرات أثر لعقد قائم على النتائج. ممنوع: «مهارات ناعمة»، «اختبار»، «ثوري»، «سحري». JSON فقط.';
+  const system = 'أنت «المصمم التعليمي» في بوّابة أَثَر. تصمّم برنامج بناء جدارة لا دورة محتوى: أهداف بأفعال قابلة للقياس (يُقرّر، يُفوِّض، يُراجِع، يُصدِّق، يُطبّق)، وحدات كلٌّ منها محاكاة + مهمة تطبيقية + شاهد أداء، تقويم بلا اختبار معرفي، بوابات بشرية، ومؤشرات أثر لعقد قائم على النتائج. ممنوع: «مهارات ناعمة»، «اختبار»، «ثوري»، «سحري». JSON فقط.';
   const schema = '{"brand_ar": string (اسم علامة قصير), "subtitle_ar": string (عنوان مهني فرعي), "name_en": string, "saqf_level": number (2-8), "hours": number, "weeks": number, "delivery": "remote|onsite|hybrid", "audience_ar": string, "intro_ar": string, "objectives_ar": string[4], "outcomes_ar": string[3-4], "modules": [{"title_ar", "outcome_ar", "simulation_ar", "mission_ar", "evidence_ar", "hours": number}] (5), "assessment_ar": string[3-4], "impact_indicators_ar": string[3], "contract_split": {"delivery": 60, "evidence": 25, "impact": 15}, "price_hint_sar": number, "human_gates_ar": string[3-4]}';
   const user = `الاحتياج: ${draftTitle(n)} · الفئة: ${n.audience_ar} · الفجوة: ${n.gap_ar}\nالاستشراف: ${fs.headline_ar} — ${fs.why_now_ar}\nالجدارات: ${fs.competencies_ar.join('، ')} · الشواهد: ${fs.evidence_kinds.join('، ')} · المؤشرات: ${fs.indicators_ar.join('، ')}\nالمجال السردي: «${d.story.ar}».\nالمخطط:\n${schema}`;
   return { system, user };
@@ -148,7 +148,7 @@ export function localReview(n: Need, d: Design): Review {
   return { score, verdict, items, lexicon, summary_ar: verdict === 'approve' ? `المخطط جاهز للاعتماد البشري (${ok}/${items.length}). راجع البنود غير المطابقة إن وُجدت ثم انشر.` : `المخطط يحتاج مراجعة قبل الاعتماد (${ok}/${items.length}): ${items.filter(i => !i.ok).map(i => i.label_ar).join('، ')}.` };
 }
 export function buildReviewPrompt(n: Need, d: Design, local: Review): { system: string; user: string } {
-  const system = 'أنت «مراجع الجودة» في بوابة أَثَر. تراجع مخطط برنامج بناء جدارة وفق: قابلية قياس الأهداف، تغطية الشواهد، البوابات البشرية، ملاءمة الأفق الزمني، دليل الأسلوب. لا تُعدّل المخطط؛ أعطِ ملاحظات محددة يعتمدها الإنسان. JSON فقط.';
+  const system = 'أنت «مراجع الجودة» في بوّابة أَثَر. تراجع مخطط برنامج بناء جدارة وفق: قابلية قياس الأهداف، تغطية الشواهد، البوابات البشرية، ملاءمة الأفق الزمني، دليل الأسلوب. لا تُعدّل المخطط؛ أعطِ ملاحظات محددة يعتمدها الإنسان. JSON فقط.';
   const schema = '{"summary_ar": string (3–4 جمل: أقوى ما فيه، أخطر ما ينقصه، توصية), "extra_items": [{"code": string, "label_ar": string, "ok": boolean, "note_ar": string}] (0-3)}';
   const user = `الاحتياج: ${draftTitle(n)}\nالمخطط: ${JSON.stringify({ brand: d.brand_ar, subtitle: d.subtitle_ar, objectives: d.objectives_ar, modules: d.modules.map(m => m.title_ar), assessment: d.assessment_ar, indicators: d.impact_indicators_ar })}\nنتيجة الفحص الحتمي: ${local.score}% — ${local.items.filter(i => !i.ok).map(i => i.label_ar).join('، ') || 'كل البنود مطابقة'}\nالمخطط:\n${schema}`;
   return { system, user };
@@ -191,7 +191,7 @@ export function contractProposalFrom(d: Draft): ContractProposal {
   const horizonDays = d.need.horizon >= 2050 ? 120 : 90;
   const targets = { evidence_rate: des && des.saqf_level >= 6 ? 70 : 60, impact_days: horizonDays, impact_rate: 50 };
   const title = `عقد أثر — ${des?.brand_ar || d.title_ar}`;
-  const notes = [`مُقترح من هندسة البرامج التدريبية (مسودة ${d.id.slice(0, 8)}).`, indicators.length ? `مؤشرات الأثر المتعاقد عليها: ${indicators.map((x, i) => `${i + 1}) ${x}`).join(' ')}` : '', des ? `المدة: ${des.hours} ساعة / ${des.weeks} أسابيع · مستوى الإطار الوطني للمؤهلات: ${des.saqf_level} · السعر الاسترشادي للمتدرب: ${des.price_hint_sar} ر.س` : '', fs?.scarce_ar ? `القدرة النادرة المستهدفة: ${fs.scarce_ar}` : ''].filter(Boolean).join('\n');
+  const notes = [`مُقترح من هندسة البرامج التدريبية (مسودة ${d.id.slice(0, 8)}).`, indicators.length ? `مؤشرات الأثر المتعاقد عليها: ${indicators.map((x, i) => `${i + 1}) ${x}`).join(' ')}` : '', des ? `المدة: ${des.hours} ساعة / ${des.weeks} أسابيع · مستوى الإطار الوطني للمؤهلات: ${des.saqf_level} · السعر الاسترشادي للمشارك: ${des.price_hint_sar} ر.س` : '', fs?.scarce_ar ? `القدرة النادرة المستهدفة: ${fs.scarce_ar}` : ''].filter(Boolean).join('\n');
   return { title_ar: title, program_id: d.program_id || null, split: sp, targets, notes, indicators, price_hint_sar: des?.price_hint_sar || 0, factory_draft_id: d.id };
 }
 /** رابط صفحة العقود مع التعبئة المسبقة (يُقرأ من window.location في صفحة العقود) */

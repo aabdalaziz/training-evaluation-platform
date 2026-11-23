@@ -1,8 +1,8 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * أَثَر — «الميسِّر الحي» (P13-ب): يجلس بجوار المدرب أثناء الجلسة المباشرة.
+ * أَثَر — «الميسِّر الحي» (P13-ب): يجلس بجوار المدرّب أثناء الجلسة المباشرة.
  *  يقرأ نبض الجلسة (الحضور، الاستجابات، آخر نشاط، الزمن المنقضي) ويقترح — لا يقرّر —: سؤال نبض، موقفًا قصيرًا، تأملًا، غرف نقاش، تذكيرًا للغائبين، تغيير إيقاع.
- *  بعد الجلسة يولّد «محضر الأثر»: ما حدث فعلًا (حضور، منحنى التفاعل، ما ظهر من الجدارات، الفجوات، الخطوة التالية) — ويعتمده المدرب قبل أن يراه المشاركون.
+ *  بعد الجلسة يولّد «محضر الأثر»: ما حدث فعلًا (حضور، منحنى التفاعل، ما ظهر من الجدارات، الفجوات، الخطوة التالية) — ويعتمده المدرّب قبل أن يراه المشاركون.
  *  القواعد محلية وشفافة؛ الذكاء الاصطناعي يحسّن سرد المحضر فقط. المبدأ: الآلة تقترح، والإنسان يقرّر.
  */
 import { parseJsonLoose } from '../ai/prompts';
@@ -80,7 +80,7 @@ export function suggest(p: Pulse, ctx: { title_ar: string; skills: SkillRef[]; d
   const push = (s: Suggestion) => { if (!done.has(s.code) && !skip.has(s.code)) out.push(s); };
   if (p.status !== 'live') {
     if (p.status === 'ended') push({ code: 'memo', kind: 'close', priority: 1, title_ar: 'أنشئ محضر الأثر', why_ar: 'انتهت الجلسة — المحضر يحوّلها من «حدث» إلى «شاهد».', how_ar: 'اضغط «أنشئ محضر الأثر»، راجعه، ثم اعتمده ليراه المشاركون.' });
-    else push({ code: 'start', kind: 'pace', priority: 2, title_ar: 'ابدأ الجلسة من جدول المدرب', why_ar: 'الميسِّر يقرأ النبض فقط حين تكون الجلسة «جارية».', how_ar: 'من جدول المدرب اضغط «بدء» ثم عُد هنا.' });
+    else push({ code: 'start', kind: 'pace', priority: 2, title_ar: 'ابدأ الجلسة من جدول المدرّب', why_ar: 'الميسِّر يقرأ النبض فقط حين تكون الجلسة «جارية».', how_ar: 'من جدول المدرّب اضغط «بدء» ثم عُد هنا.' });
     return out;
   }
   // 1) الافتتاح
@@ -95,7 +95,7 @@ export function suggest(p: Pulse, ctx: { title_ar: string; skills: SkillRef[]; d
   if (p.fraction >= 0.35 && p.fraction <= 0.8 && p.responses_last10 === 0 && (p.last_activity_min_ago === null || p.last_activity_min_ago >= 18)) { const c = caseFor(ctx.skills); if (c) push({ code: 'mini_case', kind: 'activity', priority: 2, title_ar: 'غيّر الإيقاع بموقف', why_ar: 'لا استجابة خلال 10 دقائق؛ الموقف القصير يعيد الانتباه ويُظهر طريقة التفكير لا الحفظ.', how_ar: 'يُنشأ نشاط تأمل بموقف من بنك مواقف أَثَر المرتبط بمجال الجلسة.', activity: { kind: 'reflection', prompt_ar: c.prompt, skill_id: skill?.id || null } }); }
   // 6) الختام
   if (p.fraction >= 0.75 && p.reflections === 0) push({ code: 'close_reflection', kind: 'activity', priority: 1, title_ar: 'اختم بالتزام واحد', why_ar: 'الربع الأخير بلا تأمل؛ سؤال الالتزام يحوّل الحضور إلى شاهد تطبيق.', how_ar: 'يُنشأ نشاط تأمل ختامي؛ إجاباته تدخل المحضر وملفات المشاركين.', activity: { kind: 'reflection', prompt_ar: 'ما الشيء الواحد الذي ستطبّقه غدًا مما تعلّمته اليوم؟ ومن سيلاحظ أنك طبّقته؟', skill_id: skill?.id || null } });
-  if (p.fraction >= 0.9) push({ code: 'wrap', kind: 'close', priority: 2, title_ar: 'أنهِ الجلسة وأنشئ المحضر', why_ar: 'اقترب الوقت من نهايته.', how_ar: 'اضغط «إنهاء» من جدول المدرب ثم «أنشئ محضر الأثر» هنا.' });
+  if (p.fraction >= 0.9) push({ code: 'wrap', kind: 'close', priority: 2, title_ar: 'أنهِ الجلسة وأنشئ المحضر', why_ar: 'اقترب الوقت من نهايته.', how_ar: 'اضغط «إنهاء» من جدول المدرّب ثم «أنشئ محضر الأثر» هنا.' });
   // 7) زخم عالٍ: استثمره
   if (p.responses_last10 >= Math.max(5, Math.round(p.joined * 0.6)) && p.fraction < 0.75) push({ code: 'momentum', kind: 'pace', priority: 3, title_ar: 'الزخم مرتفع — ادفع أعمق', why_ar: `${p.responses_last10} استجابة في 10 دقائق. هذه لحظة للسؤال الصعب لا للملخص.`, how_ar: 'اطرح السؤال «لماذا يفشل هذا عمليًا؟» شفهيًا، واطلب مثالًا من عمل أحدهم.' });
   return out.sort((a, b) => a.priority - b.priority).slice(0, 4);
@@ -124,7 +124,7 @@ export function buildLocalMemo(input: {
   if (p.join_rate >= 0.7) highlights.push(`حضور قوي: انضمّ ${p.joined} من ${p.registered} مسجّلًا (${Math.round(p.join_rate * 100)}%).`);
   if (peak.responses > 0) highlights.push(`ذروة التفاعل في الدقيقة ${peak.min}–${peak.min + 10} (${peak.responses} استجابة).`);
   if (refTexts.length) highlights.push(`${refTexts.length} التزامًا مكتوبًا بالتطبيق — تدخل ملفات المشاركين شواهدَ.`);
-  if (input.accepted.length) highlights.push(`المدرب استجاب لمقترحات الميسِّر (${input.accepted.length}) أثناء الجلسة — تيسير حيّ لا سيناريو جامد.`);
+  if (input.accepted.length) highlights.push(`المدرّب استجاب لمقترحات الميسِّر (${input.accepted.length}) أثناء الجلسة — تيسير حيّ لا سيناريو جامد.`);
   const gaps: string[] = [];
   if (p.registered >= 5 && p.join_rate < 0.6) gaps.push(`غاب ${p.registered - p.joined} من المسجّلين — راجع التوقيت أو التذكير قبل 24 ساعة.`);
   if (acts.length === 0) gaps.push('لم يُطرح أي نشاط قياس؛ لا يمكن إثبات الفهم من الحضور وحده.');
@@ -139,7 +139,7 @@ export function buildLocalMemo(input: {
   return { title_ar: `محضر الأثر — ${s.title_ar}`, summary_ar: summary, attendance: { registered: p.registered, joined: p.joined, rate: Math.round(p.join_rate * 100) }, engagement: curve, activities: acts, skills_ar: skillsAr, highlights_ar: highlights.slice(0, 4), gaps_ar: gaps.slice(0, 4), next_ar: next.slice(0, 3), moments_ar: input.notes.map(n => `د${n.min}: ${n.text}`).slice(0, 8), source: 'local', model: null };
 }
 export function buildMemoPrompt(local: SessionMemo, reflections: string[]): { system: string; user: string } {
-  const system = 'أنت كاتب «محضر أثر» في بوابة أَثَر لجلسة تدريب مباشرة. اكتب للمدرب والمشاركين معًا: صادق، محدد، بلا مجاملة ولا وعظ، وبلغة مهنية عربية. لا تخترع أرقامًا؛ استعمل الأرقام المعطاة فقط. JSON فقط.';
+  const system = 'أنت كاتب «محضر أثر» في بوّابة أَثَر لجلسة تدريب مباشرة. اكتب للمدرّب والمشاركين معًا: صادق، محدد، بلا مجاملة ولا وعظ، وبلغة مهنية عربية. لا تخترع أرقامًا؛ استعمل الأرقام المعطاة فقط. JSON فقط.';
   const schema = '{"summary_ar": string (4–6 جمل تروي ما حدث فعلًا وما ظهر من قدرة), "highlights_ar": string[2-4], "gaps_ar": string[1-3], "next_ar": string[2-3] (خطوات محددة بزمن ومسؤول)}';
   const user = `المحضر المحلي:\n${JSON.stringify({ summary: local.summary_ar, attendance: local.attendance, activities: local.activities, highlights: local.highlights_ar, gaps: local.gaps_ar, next: local.next_ar, moments: local.moments_ar, skills: local.skills_ar })}\n\nعيّنة من تأملات المشاركين (بلا أسماء):\n${reflections.slice(0, 8).map(t => `- ${t.slice(0, 220)}`).join('\n') || '- (لا تأملات)'}\n\nالمخطط:\n${schema}`;
   return { system, user };

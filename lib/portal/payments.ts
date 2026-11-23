@@ -66,7 +66,7 @@ export function verifyGatewayPayment(payment: { status?: string; amount?: number
 
 /** ورقة Excel للفواتير */
 export function invoicesSheet(rows: (Invoice & { program_name?: string })[]) {
-  const header = ['رقم الفاتورة', 'التاريخ', 'العميل', 'البريد', 'البرنامج', 'قبل الضريبة', 'الضريبة', 'الإجمالي', 'العملة', 'الحالة', 'طريقة الدفع', 'تاريخ السداد', 'مرجع التحويل'];
+  const header = ['رقم الفاتورة', 'التاريخ', 'الجهة', 'البريد', 'البرنامج', 'قبل الضريبة', 'الضريبة', 'الإجمالي', 'العملة', 'الحالة', 'طريقة الدفع', 'تاريخ السداد', 'مرجع التحويل'];
   return { name: 'الفواتير', rtl: true, widths: [16, 12, 24, 28, 34, 12, 10, 12, 8, 14, 14, 12, 18],
     rows: [header, ...rows.map(r => [r.invoice_no, r.created_at.slice(0, 10), r.customer_name, r.customer_email, r.program_name || r.description, num(r.subtotal), num(r.vat_amount), num(r.total), r.currency, invStatusLabel(r.status, 'ar'), methodLabel(r.method, 'ar'), r.paid_at ? r.paid_at.slice(0, 10) : '', r.transfer_ref || ''])] };
 }
@@ -77,7 +77,7 @@ function shell(lang: Lang, inner: string): string {
   return `<div dir="${lang === 'ar' ? 'rtl' : 'ltr'}" style="font-family:Tahoma,Arial,sans-serif;max-width:600px;margin:auto;border:1px solid #EADFD6;border-radius:14px;overflow:hidden">
   <div style="background:#3A1F36;color:#fff;padding:18px 22px"><div style="font-size:20px;font-weight:900">${lang === 'ar' ? 'أَثَر' : 'Athar · TRACE'}</div><div style="font-size:12px;opacity:.8">${lang === 'ar' ? 'بَوَّابَةُ أَثَرٍ لِلتَّعْلِيمِ وَالتَّدْرِيبِ وَالتَّطْوِيرِ وَالْجَوْدَةِ' : 'Athar Portal for Education, Training, Development & Quality'}</div></div>
   <div style="padding:22px;color:#2A1626;line-height:1.9;font-size:15px">${inner}</div>
-  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
+  <div style="background:#FBF4EE;color:#8E7F8A;font-size:12px;padding:12px 22px">${lang === 'ar' ? 'رسالة آلية من بوّابة أَثَر — للاستفسار ردّ على هذا البريد.' : 'Automated message from the Athar portal — reply to this email for help.'}</div></div>`;
 }
 export function invoiceEmail(inv: Invoice, programName: string, siteUrl: string): { subject: string; html: string } {
   const lang: Lang = inv.lang === 'en' ? 'en' : 'ar'; const url = `${siteUrl}/pay/${inv.id}`;
@@ -162,7 +162,7 @@ export function renderInvoice(canvas: HTMLCanvasElement, d: InvoiceRender): void
   text(rtl ? `${d.legal.name_ar} · ${d.legal.email}` : `${d.legal.name_en} · ${d.legal.email}`, IW / 2, IH - 36, 22, { color: 'rgba(255,255,255,.85)', weight: '700', align: 'center' });
 }
 
-/** PDF صفحة واحدة A4 عمودية من صورة JPEG (نفس أسلوب شهادات المنصة، بلا اعتماديات) */
+/** PDF صفحة واحدة A4 عمودية من صورة JPEG (نفس أسلوب شهادات البوّابة، بلا اعتماديات) */
 export function jpegToPortraitPdf(jpeg: Uint8Array, w: number, h: number, title: string): Uint8Array {
   const PW = 595.28, PH = 841.89; const enc = new TextEncoder();
   const chunks: Uint8Array[] = []; const offsets: number[] = []; let pos = 0;

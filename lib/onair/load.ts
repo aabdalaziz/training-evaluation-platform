@@ -488,7 +488,7 @@ export async function insertWeekAnswer(db: any, qid: string | number, me: { id: 
 export async function orgTimeGridOf(db: any, orgId: string, now = new Date()) {
   const ids = await orgMemberIds(db, orgId); const since = new Date(now.getTime() - WHEN_WEEKS * 7 * 86400000).toISOString();
   const rows = await safe<any[]>(db.from('portal_onair_presence_log').select('user_id,started_at,ended_at').gte('started_at', since).limit(20000), []);
-  const org = timeGrid(rows.filter(r => ids.has(String(r.user_id))), now); const platform = timeGrid(rows, now, WHEN_WEEKS, 1, 1);   // شبكة المنصّة كلها بلا أسماء (مستويات فقط)
+  const org = timeGrid(rows.filter(r => ids.has(String(r.user_id))), now); const platform = timeGrid(rows, now, WHEN_WEEKS, 1, 1);   // شبكة البوّابة كلها بلا أسماء (مستويات فقط)
   return { org, platform: { weeks: platform.weeks, cells: platform.cells }, best: bestHours(org.shown ? org.cells : null, platform.cells) };
 }
 

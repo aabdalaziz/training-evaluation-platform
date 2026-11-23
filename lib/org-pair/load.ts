@@ -36,7 +36,7 @@ export async function isConfirmedMember(db: any, orgId: string, who: { id: strin
 export async function memberChapters(db: any, p: { id: string; email: string }): Promise<{ input: JourneyInput; chapters: Chapter[] }> {
   const input = await loadJourneyInput(db, { id: p.id || NIL, email: p.email }); return { input, chapters: buildChapters(input) };
 }
-/** ما تشهده المنصة عن أفعال الجهة تجاه المنسوب: طلبات المقاعد التي تذكره + مدخلات رحلته */
+/** ما تشهده البوّابة عن أفعال الجهة تجاه المنسوب: طلبات المقاعد التي تذكره + مدخلات رحلته */
 export async function orgWitness(db: any, orgId: string, member: { id: string; email: string }, input?: JourneyInput): Promise<OrgWitness> {
   const [inp, sr] = await Promise.all([input ? Promise.resolve(input) : loadJourneyInput(db, { id: member.id || NIL, email: member.email }), safe(db.from('portal_org_seat_requests').select('created_at,status,matched_council_id,people').eq('organization_id', orgId).order('created_at', { ascending: true }).limit(200))]);
   const e = lower(member.email);
@@ -81,7 +81,7 @@ export async function loadMemberOrgPairState(db: any, me: Me, now = Date.now()):
   const paths = live ? await orgPairPaths(db, live, now, mineJ.input) : { member_path: null, member_state: null, org_path: null, org_state: null };
   return { me, org, is_org_admin: adm, eligible: memberEligibility(mineJ.chapters), org_eligible: orgEligibility(org?.charter || null, now), chapters: mineJ.chapters.length, chapter_kinds: Array.from(new Set(mineJ.chapters.map(c => c.kind))), input: mineJ.input, live, invites_in: invites.filter(p => p.invited_by === 'org' && !(p.meta || {}).blind), invite_out: invites.find(p => p.invited_by === 'member') || null, past, paths };
 }
-/** مديرو الجهة المؤكَّدون (لإشعارات الجهة — داخل المنصة/push) */
+/** مديرو الجهة المؤكَّدون (لإشعارات الجهة — داخل البوّابة/push) */
 export async function orgAdmins(db: any, orgId: string): Promise<{ email: string; name: string | null; user_id: string | null }[]> {
   return arr<any>(await safe(db.from('portal_org_members').select('email,full_name,user_id').eq('organization_id', orgId).eq('role', 'org_admin').eq('status', 'confirmed').limit(20))).map(r => ({ email: lower(r.email), name: r.full_name || null, user_id: r.user_id || null }));
 }

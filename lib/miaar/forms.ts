@@ -77,7 +77,7 @@ export async function twinItems(db: Db, formId: string): Promise<{ a: FormItem[]
 export const isTwin = (b: readonly unknown[]) => b.length > 0;
 async function inviteOf(db: Db, inviteId: string): Promise<any | null> { if (!UUID.test(inviteId)) return null; const { data } = await db.from('placement_invites').select('*').eq('id', inviteId).maybeSingle(); return data || null; }
 
-/* ───────────── ★5 «المثبَّت يتذكّر»: بنود ورقة سابقة لنفس القاعة/المجموعة تُستبعد من السحب الجديد ───────────── */
+/* ───────────── ★5 «المثبَّت يتذكّر»: بنود ورقة سابقة لنفس الشعبة تُستبعد من السحب الجديد ───────────── */
 export async function priorFormCodes(db: Db, invite: any): Promise<Set<string>> {
   const out = new Set<string>(); if (!invite) return out;
   const keys: Array<[string, string]> = []; if (invite.classroom_id) keys.push(['classroom_id', String(invite.classroom_id)]); else if (invite.program_id && invite.org_id) keys.push(['program_id', String(invite.program_id)]);

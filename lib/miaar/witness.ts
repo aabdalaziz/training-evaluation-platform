@@ -226,7 +226,7 @@ export function resolveMode(session: { proctor_mode?: string | null } | null | u
 }
 
 const PULSE_KINDS = new Set(['tab_hidden', 'focus_lost', 'fullscreen_exit', 'camera_lost', 'camera_back', 'still_frame', 'paste', 'screen_extended', 'whisper', 'section_start']);
-/** الحالة الحيّة لمجموعة جلسات (لوحة المجموعة + قاعة الشاهد) */
+/** الحالة الحيّة لمجموعة جلسات (لوحة الشعبة + قاعة الشاهد) */
 export async function liveFor(db: Db, sessionIds: string[]): Promise<Record<string, { section: string | null; level: string; level_ar: string; signals: number; frames: number; last_frame_at: string | null; last_frame_url: string | null; camera: 'on' | 'off' | 'none'; counters: Record<string, number>; pulse: Array<{ k: string; at: string }> }>> {
   const out: Record<string, any> = {}; const ids = sessionIds.filter(Boolean).slice(0, 200); if (!ids.length) return out;
   const { data } = await db.from('miaar_witness_events').select('session_id, seq, kind, at, media_path, meta').in('session_id', ids).order('at', { ascending: false }).limit(4000);

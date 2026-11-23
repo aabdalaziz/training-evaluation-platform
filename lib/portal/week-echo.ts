@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * P56 «صدى الأسبوع» — خلاصة التفاعل الأسبوعية بين المدرّب والمتعلّم / Weekly trainer–learner interaction echo
- *  - المتعلّم: كل خميس (الرياض) إشعار 🪞 «صدى أسبوعك»: كلمات مدرّبه خلال 7 أيام · لمساته · يده المرفوعة وهل أُجيبت · «كلمتك القادمة؟»
+ *  - المتعلّم: كل خميس (الرياض) إشعار 🪞 «صدى أسبوعك»: كلمات ميسّره خلال 7 أيام · لمساته · يده المرفوعة وهل أُجيبت · «كلمتك القادمة؟»
  *    يُرسل من الكرون اليومي القائم (لا كرون جديد) · dedupe week_echo:<email>:<تاريخ الخميس> · لمن وصلته كلمة واحدة على الأقل.
  *  - المدرّب: بطاقة «صدى الأسبوع» في دفتر اليوم (آخر 7 أيام) + سطر «مرآة» واحد بلا حكم + سطر الخميس في الخلاصة الصباحية.
  *  - صفر تخزين جديد: يُحسب من portal_learner_notices (kind trainer_word · meta.voice) وportal_word_replies.
@@ -49,12 +49,12 @@ const n2 = (n: number, one: string, two: string, many: string) => (n === 1 ? one
 /** نصّ الصدى — صادق بلا لوم · سؤال واحد في الختام */
 export function learnerEchoText(x: LearnerEcho): { title_ar: string; body_ar: string; url: string } | null {
   if (!x.words) return null; /* من لم تصله كلمة لا يُزعَج */
-  const wordsTxt = `${n2(x.words, 'كلمة واحدة', 'كلمتان', 'كلمات')} من مدرّبك${x.voice_words ? ` (🎙️ ${x.voice_words})` : ''}`;
+  const wordsTxt = `${n2(x.words, 'كلمة واحدة', 'كلمتان', 'كلمات')} من ميسّرك${x.voice_words ? ` (🎙️ ${x.voice_words})` : ''}`;
   let body: string;
   if (!x.replies) body = `${wordsTxt} ولم تردّ بعد — لمسة واحدة تكفي 🌱`;
   else {
     const chips: string[] = []; if (x.by_chip.got_it) chips.push(`🌱 ${x.by_chip.got_it}`); if (x.by_chip.need_help) chips.push(`✋ ${x.by_chip.need_help}`); if (x.by_chip.will_attend) chips.push(`🕐 ${x.by_chip.will_attend}`); if (x.voice_replies) chips.push(`🎙️ ${x.voice_replies}`);
-    const hand = x.by_chip.need_help ? (x.voice_after_hand ? ' · أُجبتَ 🎙️ ✓' : ' · يدك ما زالت مرفوعة — مدرّبك يراها') : '';
+    const hand = x.by_chip.need_help ? (x.voice_after_hand ? ' · أُجبتَ 🎙️ ✓' : ' · يدك ما زالت مرفوعة — ميسّرك يراها') : '';
     body = `${wordsTxt} · ردودك: ${chips.join(' · ')}${hand} — كلمتك القادمة؟`;
   }
   return { title_ar: 'صدى أسبوعك 🪞', body_ar: body, url: ECHO_PATH };

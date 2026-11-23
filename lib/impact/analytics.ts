@@ -181,10 +181,10 @@ export function buckets(rows: ImpactResponse[]): Bucket[] {
 /** سرد تفسيري قصير بالعربية */
 export function narrative(s: ImpactSummary, title: string): string[] {
   const out: string[] = [];
-  if (s.nPaired < 3) { out.push(`لا تتوفر بعد استجابات مزدوجة كافية (قبلي وبعدي لنفس المتدرب) لأداة «${title}». القياس القبلي: ${s.nPre} · البعدي: ${s.nPost} · المزدوج: ${s.nPaired}.`); return out; }
-  out.push(`شارك ${s.nPaired} متدربًا في القياسين؛ ارتفع المتوسط من ${s.pre.mean} إلى ${s.post.mean} من 100 (${s.gain! >= 0 ? '+' : ''}${s.gain} نقطة، ${s.gainPct}%).`);
+  if (s.nPaired < 3) { out.push(`لا تتوفر بعد استجابات مزدوجة كافية (قبلي وبعدي لنفس المشارك) لأداة «${title}». القياس القبلي: ${s.nPre} · البعدي: ${s.nPost} · المزدوج: ${s.nPaired}.`); return out; }
+  out.push(`شارك ${s.nPaired} مشاركًا في القياسين؛ ارتفع المتوسط من ${s.pre.mean} إلى ${s.post.mean} من 100 (${s.gain! >= 0 ? '+' : ''}${s.gain} نقطة، ${s.gainPct}%).`);
   out.push(`الكسب المعياري (Hake g) = ${s.hake?.toFixed(2)} → ${s.verdict.ar}؛ حجم الأثر (Cohen's d) = ${s.cohenD} (${cohenLabel(s.cohenD)}).`);
   if (s.p !== null) out.push(s.p < 0.05 ? `الفرق دال إحصائيًا (t = ${s.t}, df = ${s.df}, p = ${s.p < 0.001 ? '< 0.001' : s.p}).` : `الفرق غير دال إحصائيًا عند مستوى 0.05 (t = ${s.t}, p = ${s.p}) — يُنصح بزيادة العينة أو مراجعة الأداة.`);
-  out.push(`تحسّن ${s.improved} متدربًا، وثبت ${s.same}، وتراجع ${s.declined}.`);
+  out.push(`تحسّن ${s.improved} مشاركًا، وثبت ${s.same}، وتراجع ${s.declined}.`);
   return out;
 }

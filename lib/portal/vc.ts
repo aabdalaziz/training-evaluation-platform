@@ -125,7 +125,7 @@ export function buildCredentialDoc(c: Omit<Credential, 'badge'>, skills: SkillMe
 }
 
 export type SnapshotLevel = { skill: SkillMeta; level: number; approved: boolean; confidence: number; evidence_count: number };
-/** «لقطة قدرة» يُصدرها المتعلم بنفسه: مستوياته المعتمَدة/المحسوبة بتاريخ اليوم، صالحة 90 يومًا */
+/** «لقطة قدرة» يُصدرها المتعلّم بنفسه: مستوياته المعتمَدة/المحسوبة بتاريخ اليوم، صالحة 90 يومًا */
 export function buildSnapshotDoc(inp: { code: string; name: string; email: string; levels: SnapshotLevel[]; site: string; did: string; now?: Date; statusIndex: number | null }) {
   const now = inp.now || new Date(); const until = new Date(now.getTime() + SNAPSHOT_DAYS * 86400000); const url = `${inp.site}/verify/vc?code=${encodeURIComponent(inp.code)}`;
   const skills = inp.levels.map(l => l.skill);

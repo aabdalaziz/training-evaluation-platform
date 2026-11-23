@@ -23,7 +23,7 @@ export const KIND_LABEL: Record<string, { ar: string; icon: string }> = {
   impact_post_pending:  { ar: 'قياس الأثر', icon: 'target' },
   low_transfer:         { ar: 'نقل الأثر', icon: 'alert' },
   program_overdue:      { ar: 'البرامج', icon: 'programs' },
-  system_health:        { ar: 'صحة المنصة', icon: 'shield' },
+  system_health:        { ar: 'صحة البوّابة', icon: 'shield' },
   manual:               { ar: 'عام', icon: 'bell' },
 };
 export const SEVERITY_LABEL: Record<Severity, string> = { info: 'معلومة', warn: 'تنبيه', critical: 'حرج' };

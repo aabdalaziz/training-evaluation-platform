@@ -86,12 +86,12 @@ export function assessProgram(inp: ReadinessInput): Readiness {
     status: missingInfo.length ? (missingInfo.length >= 2 ? 'missing' : 'warn') : 'ok',
     detail: missingInfo.length ? `ناقص: ${missingInfo.join('، ')}` : `${p.start_date} → ${p.end_date} · ${p.delivery_mode}`, fix: missingInfo.length ? 'أكمل الحقول من مركز الإدارة → البرامج' : undefined });
   add({ id: 'rooms', stage: 'setup', label: remote ? 'الفصول الافتراضية' : 'القاعات الدراسية', href: '/admin/management?tab=rooms', help: '/help#rooms',
-    status: rooms.length ? 'ok' : 'missing', detail: rooms.length ? `${rooms.length} قاعة` : 'لا توجد قاعة — التقييم اليومي والحضور يحتاجان قاعة واحدة على الأقل', fix: rooms.length ? undefined : 'أضف قاعة من مركز الإدارة → القاعات' });
-  add({ id: 'trainers', stage: 'setup', label: 'المدربون مُعيَّنون على القاعات', href: '/admin/management?tab=rooms', help: '/help#rooms',
+    status: rooms.length ? 'ok' : 'missing', detail: rooms.length ? `${rooms.length} شعبة` : 'لا توجد شعبة — التقييم اليومي والحضور يحتاجان شعبة واحدة على الأقل', fix: rooms.length ? undefined : 'أضف شعبة من مركز الإدارة → الشُّعب' });
+  add({ id: 'trainers', stage: 'setup', label: 'المدرّبون مُعيَّنون على الشُّعب', href: '/admin/management?tab=rooms', help: '/help#rooms',
     status: !rooms.length ? 'na' : withoutTrainer.length === 0 ? 'ok' : withoutTrainer.length === rooms.length ? 'missing' : 'warn',
-    detail: !rooms.length ? 'بانتظار إضافة القاعات' : withoutTrainer.length ? `${withoutTrainer.length} قاعة بلا مدرب (${withoutTrainer.map(r => r.code || r.id).join('، ')})` : 'كل قاعة لها مدرب', fix: withoutTrainer.length ? 'عيّن مدربًا لكل قاعة — تقارير عدالة المدربين تعتمد عليه' : undefined });
-  add({ id: 'schedule', stage: 'setup', label: 'الجدول الأسبوعي للقاعات', href: '/admin/management?tab=rooms', help: '/help#rooms',
-    status: !rooms.length ? 'na' : scheduled ? 'ok' : 'warn', detail: !rooms.length ? '—' : scheduled ? `${scheduled} موعد مفعّل` : 'لا توجد مواعيد — اختياري لكنه يحسّن استطلاع التعلم عن بُعد والتذكيرات' });
+    detail: !rooms.length ? 'بانتظار إضافة الشُّعب' : withoutTrainer.length ? `${withoutTrainer.length} شعبة بلا مدرّب (${withoutTrainer.map(r => r.code || r.id).join('، ')})` : 'كل شعبة لها مدرّب', fix: withoutTrainer.length ? 'عيّن مدرّبًا لكل شعبة — تقارير عدالة المدرّبين تعتمد عليه' : undefined });
+  add({ id: 'schedule', stage: 'setup', label: 'الجدول الأسبوعي للشُعب', href: '/admin/management?tab=rooms', help: '/help#rooms',
+    status: !rooms.length ? 'na' : scheduled ? 'ok' : 'warn', detail: !rooms.length ? '—' : scheduled ? `${scheduled} موعد مفعّل` : 'لا توجد مواعيد — اختياري لكنه يحسّن استبيان التعلم عن بُعد والتذكيرات' });
   add({ id: 'tpl-daily', stage: 'setup', label: 'قالب التقييم اليومي', href: '/admin/templates', help: '/help#templates',
     status: daily && dq ? 'ok' : daily ? 'missing' : 'missing', detail: daily ? (dq ? `${dq} سؤال` : 'القالب مرتبط لكنه بلا أسئلة') : 'لا يوجد قالب يومي مفعّل — ستظهر للمشارك رسالة «لا يوجد قالب»', fix: daily && dq ? undefined : 'اربط القالب من صفحة قوالب التقييم → تغطية البرامج' });
   add({ id: 'tpl-final', stage: 'setup', label: 'قالب التقييم الختامي', href: '/admin/templates', help: '/help#templates',
@@ -101,7 +101,7 @@ export function assessProgram(inp: ReadinessInput): Readiness {
 
   // ---------- التنفيذ ----------
   add({ id: 'attendance', stage: 'delivery', label: 'جلسات الحضور الرقمي', href: '/admin/attendance', help: '/help#attendance',
-    status: att ? 'ok' : phase === 'before' ? 'na' : phase === 'during' ? 'warn' : 'missing', detail: att ? `${att} جلسة` : phase === 'before' ? 'تُفتح عند بدء البرنامج' : 'لا توجد جلسات حضور مسجلة', fix: att ? undefined : 'افتح جلسة لكل لقاء وشارك رمز QR مع المتدربين' });
+    status: att ? 'ok' : phase === 'before' ? 'na' : phase === 'during' ? 'warn' : 'missing', detail: att ? `${att} جلسة` : phase === 'before' ? 'تُفتح عند بدء البرنامج' : 'لا توجد جلسات حضور مسجلة', fix: att ? undefined : 'افتح جلسة لكل لقاء وشارك رمز QR مع المشاركين' });
   add({ id: 'ev-daily', stage: 'delivery', label: 'استجابات التقييم اليومي', href: '/evaluate/daily', help: '/help#evaluate',
     status: evDaily ? 'ok' : phase === 'before' ? 'na' : phase === 'during' ? 'warn' : 'missing', detail: evDaily ? `${evDaily} استجابة` : phase === 'before' ? 'تبدأ مع أول جلسة' : 'لم تصل أي استجابة بعد', fix: evDaily ? undefined : 'اعرض رابط/QR الاستمارة في نهاية كل جلسة' });
 

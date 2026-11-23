@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// بوابة أَثَر — تكامل مِعيار: تحويل تقرير مِعيار إلى نتيجة موحّدة، المستويات، التوصية بالبرامج، Excel
+// بوّابة أَثَر — تكامل مِعيار: تحويل تقرير مِعيار إلى نتيجة موحّدة، المستويات، التوصية بالبرامج، Excel
 import type { Lang, T } from './content';
 import { t } from './content';
 
@@ -61,7 +61,7 @@ export function evidenceSkills(p: Pick<Placement, 'skills'>, codeToId: Map<strin
 /** مستوى الالتحاق الفعّال */
 export function effectiveLevel(p: Pick<Placement, 'entry_level' | 'demonstrated_level'> | null | undefined): Cefr | null { return p ? (p.entry_level || p.demonstrated_level || null) : null; }
 
-/** ملاءمة برنامج لمستوى المتعلم: match | stretch | below | unknown */
+/** ملاءمة برنامج لمستوى المتعلّم: match | stretch | below | unknown */
 export type Fit = 'match' | 'stretch' | 'below' | 'unknown';
 export function programFit(programLevel: string | null | undefined, learnerLevel: string | null | undefined): Fit {
   const p = levelRank(programLevel); const l = levelRank(learnerLevel); if (p < 0 || l < 0) return 'unknown';

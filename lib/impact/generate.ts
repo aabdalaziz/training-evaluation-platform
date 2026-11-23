@@ -238,10 +238,10 @@ export function pickStems(n: number, axisIndex: number): Stem[] {
   return out;
 }
 
-/** "أن يتمكن المتدرب من إعداد خطة" → "أستطيع إعداد خطة" ؛ "أن يميز المتدرب بين…" → "أستطيع أن أميز بين…" */
+/** "أن يتمكن المشارك من إعداد خطة" → "أستطيع إعداد خطة" ؛ "أن يميز المشارك بين…" → "أستطيع أن أميز بين…" */
 export function objectiveToItem(o: string): string {
   let t = o.replace(/[.؛;]$/, '').trim();
-  const who = '(?:\\s+(?:المتدرب|المتدربة|المشارك|المشاركة|الطالب|الطالبة|المتعلم))?';
+  const who = '(?:\\s+(?:المشارك|المشاركة|المشارك|المشاركة|الطالب|الطالبة|المتعلّم))?';
   const m1 = t.match(new RegExp(`^أن\\s+(?:يتمكن|تتمكن|يستطيع|تستطيع|يكون قادرًا|يكون قادرا|تكون قادرة)${who}\\s+(?:من|على)\\s+(.+)$`, 'u'));
   if (m1) return `أستطيع ${m1[1].trim()}`;
   const m2 = t.match(new RegExp(`^أن\\s+[يت](\\S+)${who}\\s*(.*)$`, 'u'));
@@ -265,7 +265,7 @@ export function offlineGenerate(s: GenerateSpec): { questions: DraftQuestion[]; 
   plan.forEach((p, ai) => {
     for (const st of pickStems(p.scale, ai)) out.push({ order_no: out.length + 1, kind: 'scale', domain_ar: p.axis, text_ar: st.f(p.axis), text_en: null, options: [], correct_key: null, weight: 1 });
   });
-  // بنود من الأهداف مباشرة: "أن يتمكن المتدرب من …" → "أستطيع …" (تُنسب لأقرب محور)
+  // بنود من الأهداف مباشرة: "أن يتمكن المشارك من …" → "أستطيع …" (تُنسب لأقرب محور)
   for (const o of objs.slice(0, 20)) {
     const t = objectiveToItem(o);
     if (t) out.push({ order_no: out.length + 1, kind: 'scale', domain_ar: nearestAxis(o, s.axes), text_ar: t, text_en: null, options: [], correct_key: null, weight: 1 });
