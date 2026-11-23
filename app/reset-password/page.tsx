@@ -122,7 +122,7 @@ export default function ResetPasswordPage() {
       )}
 
       <div style={{ textAlign: 'center', marginTop: 22 }}>
-        <Link href="/login" style={{ color: '#0E7C86', fontWeight: 800, textDecoration: 'none' }}>← العودة إلى تسجيل الدخول</Link>
+        <Link href="/login" style={{ color: '#2F6B66', fontWeight: 800, textDecoration: 'none' }}>← العودة إلى تسجيل الدخول</Link>
       </div>
     </AuthCard>
   );
@@ -138,7 +138,7 @@ function Strength({ value }: { value: string }) {
   if (/[^A-Za-z0-9]/.test(value)) score++;
   const level = score <= 1 ? 0 : score <= 3 ? 1 : 2;
   const label = ['ضعيفة', 'متوسطة', 'قوية'][level];
-  const color = ['#dc2626', '#d97706', '#059669'][level];
+  const color = ['#D4614A', '#8A5A1E', '#2F6B66'][level];
   return (
     <div style={{ marginTop: 12 }}>
       <div style={{ display: 'flex', gap: 6 }}>

@@ -27,7 +27,7 @@ export default function ProctorStamp({ code, token }: { code: string; token: str
     <div style={{ maxWidth: 520, margin: '0 auto' }}>
       <p style={{ margin: 0, color: '#D4614A', fontWeight: 800 }}>مِعيار — من أَثَر · ختم المراقب</p>
       <h1 style={{ margin: '4px 0 0', fontSize: 22 }}>حضور القاعة بأثر رقمي</h1>
-      {err && !st && <div role="alert" style={{ ...box, borderColor: '#fecaca', background: '#fef2f2' }} data-testid="ps-err">{err}<div><button type="button" style={btn(false)} onClick={() => void load()}>إعادة المحاولة</button></div></div>}
+      {err && !st && <div role="alert" style={{ ...box, borderColor: '#F3C4B6', background: '#FBEDE7' }} data-testid="ps-err">{err}<div><button type="button" style={btn(false)} onClick={() => void load()}>إعادة المحاولة</button></div></div>}
       {st && <>
         <div style={box} data-testid="ps-head">
           <b>{st.invite.label_ar}</b> <small style={{ color: '#5C4858' }}>· الدعوة <bdi dir="ltr">{st.invite.code}</bdi></small>
@@ -43,8 +43,8 @@ export default function ProctorStamp({ code, token }: { code: string; token: str
           {st.open_halls.length > 0 && <datalist id="ps-halls">{st.open_halls.map((h) => <option key={h} value={h} />)}</datalist>}
           {mode === 'close' && <label style={{ display: 'block', marginTop: 10, fontWeight: 700 }}>عدّ القاعة — كم شخصًا حاضرًا فعليًا؟<input value={count} onChange={(e) => setCount(e.target.value.replace(/[^0-9]/g, ''))} inputMode="numeric" placeholder="0" style={{ ...input, marginTop: 4 }} data-testid="ps-count" /><small style={{ color: '#5C4858', fontWeight: 400 }}>يُقارن تلقائيًا بعدد الجلسات التي بدأت منذ ختم الفتح لهذه القاعة.</small></label>}
           <button type="button" style={btn()} disabled={busy || !hall.trim() || (mode === 'close' && count === '')} data-testid="ps-go" onClick={() => void stamp()}>{busy ? '…' : mode === 'open' ? 'اختم بدء المراقبة' : 'اختم نهاية المراقبة'}</button>
-          {msg && <p role="status" style={{ margin: '8px 0 0', color: '#047857', fontWeight: 700 }} data-testid="ps-msg">{msg}</p>}
-          {err && <p role="alert" style={{ margin: '8px 0 0', color: '#b91c1c', fontWeight: 700 }} data-testid="ps-err">{err}</p>}
+          {msg && <p role="status" style={{ margin: '8px 0 0', color: '#2F6B66', fontWeight: 700 }} data-testid="ps-msg">{msg}</p>}
+          {err && <p role="alert" style={{ margin: '8px 0 0', color: '#B9544A', fontWeight: 700 }} data-testid="ps-err">{err}</p>}
         </div>
         {st.stamps.length > 0 && <div style={box} data-testid="ps-list"><b>الأختام على هذه الدعوة</b>
           <ul style={{ margin: '6px 0 0', paddingInlineStart: 18 }}>{st.stamps.map((s, i) => <li key={i} data-testid={`ps-stamp-${s.kind}`}>{s.kind === 'open' ? 'فتح' : 'إغلاق'} · القاعة {s.hall} · {fmt(s.at)}{s.kind === 'close' ? ` · عدّ ${s.count}${s.diff === 0 ? ' = الجلسات ✓' : ` مقابل ${s.sessions} جلسة (فرق ${s.diff! > 0 ? '+' : ''}${s.diff})`}` : ''}</li>)}</ul>

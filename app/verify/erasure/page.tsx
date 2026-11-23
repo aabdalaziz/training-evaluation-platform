@@ -18,15 +18,15 @@ function Inner() {
   const rc = r?.receipt;
   return <main className="pt-main" dir="rtl" data-testid="ve-root">
     <section className="pt-box" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#b45309', fontWeight: 800 }}>أَثَر · خزنة أَثَر · إيصال محو جهة</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#8A5A1E', fontWeight: 800 }}>أَثَر · خزنة أَثَر · إيصال محو جهة</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «إيصال المحو»</h1>
       <p className="pt-muted">أدخل رمز الإيصال (مثل ATH-ER-7K2Q-9M4X). نُظهر ماذا مُحي (أسماء الجداول وأعداد الصفوف) ومتى، وسلامة البصمة — ولا نُظهر اسم الجهة ولا أي محتوى.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
         <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-ER-XXXX-XXXX" aria-label="رمز الإيصال" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '8px 10px', font: 'inherit' }} data-testid="ve-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="ve-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
-      {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="ve-invalid"><b>لا يوجد إيصال بهذا الرمز.</b></div>}
-      {r && r.valid && rc && <div role="status" style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 12, padding: '12px 14px' }} data-testid="ve-valid">
+      {r && !r.valid && <div role="alert" style={{ background: '#FBEDE7', border: '1px solid #F3C4B6', borderRadius: 12, padding: '10px 14px' }} data-testid="ve-invalid"><b>لا يوجد إيصال بهذا الرمز.</b></div>}
+      {r && r.valid && rc && <div role="status" style={{ background: '#E6F3F1', border: '1px solid #BFE1DC', borderRadius: 12, padding: '12px 14px' }} data-testid="ve-valid">
         <b>✓ إيصال صادر من أَثَر{rc.signed ? ' · موقَّع Ed25519' : ''}</b>
         <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', margin: '8px 0 0' }}>
           <dt>طُلب في</dt><dd style={{ margin: 0 }}>{fmt(rc.requested_at)}</dd>

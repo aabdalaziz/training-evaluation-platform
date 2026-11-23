@@ -154,24 +154,24 @@ const CSS = `
 .at-lang{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;color:#3A1F36;cursor:pointer}
 .at-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .at-center{align-items:center;text-align:center;justify-content:center}
-.at-bad{color:#991b1b;background:#fef2f2;border-color:#fecaca}.at-warn{color:#9a3412;background:#fff7ed;border-color:#fed7aa}
+.at-bad{color:#9A3A2A;background:#FBEDE7;border-color:#F3C4B6}.at-warn{color:#9A3A2A;background:#FBF4EE;border-color:#F1D9A8}
 .at-info h1{margin:0;font-size:22px;color:#3A1F36;line-height:1.4}.at-prog{margin:0;color:#D4614A;font-weight:800;font-size:14px}
 .at-meta{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12.5px;color:#5C4858;font-weight:700}.at-meta span{display:inline-flex;align-items:center;gap:5px}.at-meta b{color:#3A1F36}
-.at-count{background:#ecfdf5;border:1px solid #a7f3d0;border-radius:999px;padding:3px 10px;color:#047857}
-.at label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;color:#4A3645}.at label i{color:#b91c1c;font-style:normal}.at label small{color:#B3A5AE;font-weight:700}
+.at-count{background:#E6F3F1;border:1px solid #BFE1DC;border-radius:999px;padding:3px 10px;color:#2F6B66}
+.at label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:800;color:#4A3645}.at label i{color:#B9544A;font-style:normal}.at label small{color:#B3A5AE;font-weight:700}
 .at input{border:1px solid #D9CBC2;border-radius:12px;padding:13px 14px;font:inherit;font-size:16px;font-weight:700;color:#2A1626;background:#fff;min-width:0}
 .at input:focus{outline:2px solid #D4614A;border-color:#D4614A}
 .at-hint{margin:0;font-size:12.5px;color:#8E7F8A;font-weight:700;display:flex;gap:6px;align-items:flex-start;line-height:1.7}
-.at-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:800;display:flex;gap:6px;align-items:center}
+.at-err{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:800;display:flex;gap:6px;align-items:center}
 .at-btn{border:0;background:#3A1F36;color:#fff;border-radius:12px;padding:15px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 .at-btn:disabled{opacity:.6;cursor:wait}
 .at-privacy{margin:0;text-align:center;font-size:11.5px;color:#B3A5AE;font-weight:700}
-.at-done{align-items:center;text-align:center;border-color:#a7f3d0;background:linear-gradient(180deg,#f0fdf9,#fff)}
-.at-done.late{border-color:#fed7aa;background:linear-gradient(180deg,#fff7ed,#fff)}
+.at-done{align-items:center;text-align:center;border-color:#BFE1DC;background:linear-gradient(180deg,#E6F3F1,#fff)}
+.at-done.late{border-color:#F1D9A8;background:linear-gradient(180deg,#FBF4EE,#fff)}
 .at-ring{width:84px;height:84px;border-radius:50%;background:#D4614A;color:#fff;display:grid;place-items:center;box-shadow:0 10px 30px rgba(212,97,74,.35)}
-.at-done.late .at-ring{background:#d97706;box-shadow:0 10px 30px rgba(217,119,6,.35)}
+.at-done.late .at-ring{background:#8A5A1E;box-shadow:0 10px 30px rgba(217,119,6,.35)}
 .at-done h2{margin:4px 0 0;font-size:21px;color:#3A1F36}.at-name{margin:0;font-size:16px;font-weight:800;color:#4A3645}
-.at-pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:900;background:#ecfdf5;color:#047857!important}
-.at-pill.late{background:#fff7ed;color:#b45309!important}.at-pill.excused{background:#eff6ff;color:#1d4ed8!important}.at-pill.absent{background:#fef2f2;color:#b91c1c!important}
-.at-latenote{margin:0;font-size:12.5px;color:#9a3412;font-weight:700;line-height:1.7}
+.at-pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:900;background:#E6F3F1;color:#2F6B66!important}
+.at-pill.late{background:#FBF4EE;color:#8A5A1E!important}.at-pill.excused{background:#F3E8EF;color:#6A3350!important}.at-pill.absent{background:#FBEDE7;color:#B9544A!important}
+.at-latenote{margin:0;font-size:12.5px;color:#9A3A2A;font-weight:700;line-height:1.7}
 `;

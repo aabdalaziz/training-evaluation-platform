@@ -10,28 +10,28 @@ export default function ProgramHealthCard({
   const status =
     score >= 90
       ? {
-          color: '#16a34a',
-          bg: '#dcfce7',
+          color: '#3F7F79',
+          bg: '#E6F3F1',
           text: 'ممتاز',
           icon: '🟢',
         }
       : score >= 75
       ? {
-          color: '#2563eb',
-          bg: '#dbeafe',
+          color: '#8E4A68',
+          bg: '#F3E8EF',
           text: 'جيد',
           icon: '🔵',
         }
       : score >= 60
       ? {
-          color: '#f59e0b',
-          bg: '#fef3c7',
+          color: '#D9A866',
+          bg: '#F1D9A8',
           text: 'يحتاج متابعة',
           icon: '🟠',
         }
       : {
-          color: '#dc2626',
-          bg: '#fee2e2',
+          color: '#D4614A',
+          bg: '#FBEDE7',
           text: 'خطر',
           icon: '🔴',
         };
@@ -42,7 +42,7 @@ export default function ProgramHealthCard({
         background: '#fff',
         borderRadius: 24,
         padding: 30,
-        boxShadow: '0 12px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 12px 30px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -67,7 +67,7 @@ export default function ProgramHealthCard({
           <h2
             style={{
               margin: '10px 0',
-              color: '#14466B',
+              color: '#3A1F36',
               fontWeight: 900,
               fontSize: 30,
             }}
@@ -189,7 +189,7 @@ function Metric({
       <div
         style={{
           marginTop: 10,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 28,
           fontWeight: 900,
         }}

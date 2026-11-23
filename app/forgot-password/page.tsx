@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
           <p style={{ color: '#8E7F8A', fontSize: 14, lineHeight: 1.9, marginTop: 16 }}>
             لم تصلك الرسالة؟ تحقق من مجلد الرسائل غير المرغوبة (Spam)، أو أعد المحاولة بعد 60 ثانية.
           </p>
-          <button type="button" onClick={() => setSent(false)} style={{ ...authButton, background: '#fff', color: '#14466B', border: '1px solid #D9CBC2' }}>
+          <button type="button" onClick={() => setSent(false)} style={{ ...authButton, background: '#fff', color: '#3A1F36', border: '1px solid #D9CBC2' }}>
             إعادة الإرسال
           </button>
         </>
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
       )}
 
       <div style={{ textAlign: 'center', marginTop: 22 }}>
-        <Link href="/login" style={{ color: '#0E7C86', fontWeight: 800, textDecoration: 'none' }}>← العودة إلى تسجيل الدخول</Link>
+        <Link href="/login" style={{ color: '#2F6B66', fontWeight: 800, textDecoration: 'none' }}>← العودة إلى تسجيل الدخول</Link>
       </div>
     </AuthCard>
   );

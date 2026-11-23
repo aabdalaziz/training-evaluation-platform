@@ -55,11 +55,11 @@ function Inner() {
 
 const CSS = `
 .pp{max-width:1100px;margin:0 auto;padding:8px 0 40px;display:grid;gap:12px}.pp-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.pp-head h1{margin:0;font-size:26px;color:#3A1F36}
-.pp-kpis{display:flex;gap:10px;flex-wrap:wrap}.pp-kpis span{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:8px 12px;font-size:13px;color:#4A3645}.pp-kpis b{color:#3A1F36;font-size:16px}
-.pp-cat{background:#fff;border:1px solid #e5e9f0;border-radius:16px;padding:14px 16px}.pp-cat h2{margin:0 0 6px;font-size:17px;color:#3A1F36}
-.pp-table{width:100%;border-collapse:collapse;font-size:13px}.pp-table th{text-align:start;color:#8E7F8A;font-weight:700;font-size:12px;padding:6px 8px;border-bottom:1px solid #e5e9f0}.pp-table td{padding:6px 8px;border-bottom:1px solid #F6EBE0;vertical-align:top;line-height:1.6}
-.pp-note{margin-top:10px;border:1px dashed #D9A866;border-radius:12px;padding:10px 12px;background:#fffdf5;font-size:13px;color:#4A3645;line-height:1.8}
-.pt-btn{display:inline-flex;align-items:center;gap:6px;border:0;background:#3A1F36;color:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}.pt-btn.light{background:#FBEDE7;color:#0b6f69}
+.pp-kpis{display:flex;gap:10px;flex-wrap:wrap}.pp-kpis span{background:#fff;border:1px solid #EADFD6;border-radius:12px;padding:8px 12px;font-size:13px;color:#4A3645}.pp-kpis b{color:#3A1F36;font-size:16px}
+.pp-cat{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:14px 16px}.pp-cat h2{margin:0 0 6px;font-size:17px;color:#3A1F36}
+.pp-table{width:100%;border-collapse:collapse;font-size:13px}.pp-table th{text-align:start;color:#8E7F8A;font-weight:700;font-size:12px;padding:6px 8px;border-bottom:1px solid #EADFD6}.pp-table td{padding:6px 8px;border-bottom:1px solid #F6EBE0;vertical-align:top;line-height:1.6}
+.pp-note{margin-top:10px;border:1px dashed #D9A866;border-radius:12px;padding:10px 12px;background:#FBF4EE;font-size:13px;color:#4A3645;line-height:1.8}
+.pt-btn{display:inline-flex;align-items:center;gap:6px;border:0;background:#3A1F36;color:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}.pt-btn.light{background:#FBEDE7;color:#2F6B66}
 @media print{.no-print,nav,footer,header{display:none!important}.pp-cat{break-inside:avoid;border:0;padding:0}.pp{padding:0}}
 @media (max-width:640px){.pp-table{display:block;overflow-x:auto}}
 `;

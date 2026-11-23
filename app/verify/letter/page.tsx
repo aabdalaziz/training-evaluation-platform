@@ -16,15 +16,15 @@ function Inner() {
   useEffect(() => { const c = new URLSearchParams(window.location.search).get('code') || ''; if (c) { setCode(c.toUpperCase()); void check(c); } }, []);
   return <main className="pt-main" dir="rtl" data-testid="vl-root">
     <section className="pt-box" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#b45309', fontWeight: 800 }}>أَثَر · P52 · التقرير الشهري لأثر الجهة</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#8A5A1E', fontWeight: 800 }}>أَثَر · P52 · التقرير الشهري لأثر الجهة</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «رسالة الشهر»</h1>
       <p className="pt-muted">أدخل رمز الرسالة (مثل ATH-ML-7K2Q-9M4X). نُظهر الجهة والشهر وتاريخ التوقيع وسلامة البصمة — <b>ولا نُظهر محتوى الرسالة</b>؛ المحتوى للجهة وحدها.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
         <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-ML-XXXX-XXXX" aria-label="رمز الرسالة" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '10px 12px', font: 'inherit', letterSpacing: 1 }} data-testid="vl-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vl-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
-      {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vl-invalid"><b>لا توجد رسالة موقَّعة بهذا الرمز.</b> تأكد من الرمز كما ورد في ذيل الرسالة.</div>}
-      {r && r.valid && <div role="status" style={{ background: r.intact ? '#ecfdf5' : '#fffbeb', border: `1px solid ${r.intact ? '#a7f3d0' : '#fcd34d'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vl-valid" data-intact={r.intact ? '1' : '0'}>
+      {r && !r.valid && <div role="alert" style={{ background: '#FBEDE7', border: '1px solid #F3C4B6', borderRadius: 12, padding: '10px 14px' }} data-testid="vl-invalid"><b>لا توجد رسالة موقَّعة بهذا الرمز.</b> تأكد من الرمز كما ورد في ذيل الرسالة.</div>}
+      {r && r.valid && <div role="status" style={{ background: r.intact ? '#E6F3F1' : '#FBF4EE', border: `1px solid ${r.intact ? '#BFE1DC' : '#E9C98A'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vl-valid" data-intact={r.intact ? '1' : '0'}>
         <b>{r.intact ? '✓ رسالة موقَّعة وسليمة' : '⚠ رسالة موقَّعة لكن بصمتها لا تطابق'}</b>
         <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', margin: '8px 0 0' }}>
           <dt>الجهة</dt><dd style={{ margin: 0 }}>{r.org_name}</dd>

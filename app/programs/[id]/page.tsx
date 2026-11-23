@@ -108,7 +108,7 @@ function Inner() {
         <h1>{programName(p, lang)}</h1>
         {intro && <p>{intro}</p>}
         {intro && p && <SimplerText source="program_intro" id={p.id} lang={lang} />}
-        {feats.length > 0 && <div className="pt-chips" data-testid="prog-feats" aria-label={lang === 'ar' ? 'ما يوفّره البرنامج للجميع' : 'Access features'}>{feats.map(f => <span key={f} className="pt-chip" style={{ background: '#f0fbfa', color: '#0b6f69' }}>✓ {FEATURE_LABEL[f][lang]}</span>)}</div>}
+        {feats.length > 0 && <div className="pt-chips" data-testid="prog-feats" aria-label={lang === 'ar' ? 'ما يوفّره البرنامج للجميع' : 'Access features'}>{feats.map(f => <span key={f} className="pt-chip" style={{ background: '#E6F3F1', color: '#2F6B66' }}>✓ {FEATURE_LABEL[f][lang]}</span>)}</div>}
       </div></section>
 
       <section className="pt-sec"><div className="pt-wrap pt-two">
@@ -192,7 +192,7 @@ function Inner() {
 const CSS = `
 .pt-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.pt-facts>div{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;color:#D4614A}.pt-facts span{display:flex;flex-direction:column;color:#2A1626}.pt-facts small{font-size:11.5px;color:#8E7F8A;font-weight:800}.pt-facts b{font-size:14px}
 .pt-sticky{position:sticky;top:84px}
-.pt-status{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;background:#F6EBE0;color:#4A3645}.pt-status.approved{background:#ecfdf5;color:#065f46}.pt-status.pending{background:#eff6ff;color:#1e40af}.pt-status.waitlisted{background:#fff7ed;color:#9a3412}.pt-status.rejected,.pt-status.cancelled{background:#F6EBE0;color:#5C4858}.pt-status b{font-size:16px}.pt-paybox{display:grid;gap:6px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:13px;color:#78350f}.pt-paybox b{color:#3A1F36;font-size:14px}.pt-paybox a{justify-self:start}.pt-status small{font-size:12px;opacity:.85}
+.pt-status{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;background:#F6EBE0;color:#4A3645}.pt-status.approved{background:#E6F3F1;color:#1F4F4A}.pt-status.pending{background:#F3E8EF;color:#6A3350}.pt-status.waitlisted{background:#FBF4EE;color:#9A3A2A}.pt-status.rejected,.pt-status.cancelled{background:#F6EBE0;color:#5C4858}.pt-status b{font-size:16px}.pt-paybox{display:grid;gap:6px;background:#FBF4EE;border:1px solid #E9C98A;border-radius:12px;padding:12px 14px;font-size:13px;color:#8A5A1E}.pt-paybox b{color:#3A1F36;font-size:14px}.pt-paybox a{justify-self:start}.pt-status small{font-size:12px;opacity:.85}
 .pt-muted{color:#8E7F8A;font-size:13.5px;line-height:1.8;margin:8px 0}.pt-note{background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:10px 12px;font-size:13.5px;color:#4A3645;line-height:1.7}
 .pt-aside-foot{margin-top:14px;padding-top:12px;border-top:1px dashed #EADFD6;font-size:12.5px;color:#8E7F8A;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pt-aside-foot a{color:#D4614A;font-weight:800}
 .pt-tag.off{background:#F6EBE0;color:#5C4858}

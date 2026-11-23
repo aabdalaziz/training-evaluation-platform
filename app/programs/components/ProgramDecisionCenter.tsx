@@ -3,21 +3,21 @@
 const decisions = [
   {
     priority: 'عالية',
-    color: '#dc2626',
+    color: '#D4614A',
     title: 'متابعة إدارة الوقت',
     description:
       'انخفض متوسط مؤشر إدارة الوقت إلى 3.62 من 5.',
   },
   {
     priority: 'متوسطة',
-    color: '#ea580c',
+    color: '#8A5A1E',
     title: 'استكمال التقييمات',
     description:
       'تبقى 18 متدربًا لم يرسلوا التقييم اليومي.',
   },
   {
     priority: 'منخفضة',
-    color: '#16a34a',
+    color: '#3F7F79',
     title: 'إصدار الشهادات',
     description:
       'يمكن إصدار 12 شهادة مكتملة.',
@@ -31,14 +31,14 @@ export default function ProgramDecisionCenter() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 30,
         }}
@@ -71,7 +71,7 @@ export default function ProgramDecisionCenter() {
             >
               <strong
                 style={{
-                  color: '#14466B',
+                  color: '#3A1F36',
                   fontSize: 18,
                 }}
               >

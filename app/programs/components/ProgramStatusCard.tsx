@@ -10,9 +10,9 @@ type Props = {
 };
 
 const colors = {
-  ACTIVE: '#16a34a',
-  DRAFT: '#f59e0b',
-  COMPLETED: '#2563eb',
+  ACTIVE: '#3F7F79',
+  DRAFT: '#D9A866',
+  COMPLETED: '#8E4A68',
 };
 
 export default function ProgramStatusCard(props: Props) {
@@ -23,13 +23,13 @@ export default function ProgramStatusCard(props: Props) {
         borderRadius: 24,
         padding: 24,
         borderTop: `6px solid ${colors[props.status]}`,
-        boxShadow: '0 12px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 12px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 24,
           fontWeight: 900,
         }}
@@ -57,7 +57,7 @@ export default function ProgramStatusCard(props: Props) {
           width: '100%',
           border: 0,
           borderRadius: 14,
-          background: '#14466B',
+          background: '#3A1F36',
           color: '#fff',
           padding: 14,
           fontWeight: 800,
@@ -98,7 +98,7 @@ function Item({
       <div
         style={{
           marginTop: 8,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 28,
         }}

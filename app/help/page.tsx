@@ -147,12 +147,12 @@ const CSS = `
 .hp-split{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start}
 .hp-toc{position:sticky;top:80px;background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 100px);overflow:auto}.hp-toc b{font-size:12px;color:#8E7F8A;margin:0 6px 6px}.hp-toc a{display:flex;align-items:center;gap:6px;text-decoration:none;color:#4A3645;font-size:12.5px;font-weight:700;padding:7px 8px;border-radius:8px}.hp-toc a.on,.hp-toc a:hover{background:#FBEDE7;color:${TEAL}}
 .hp-main{display:flex;flex-direction:column;gap:12px;min-width:0}
-.hp-sec{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;scroll-margin-top:84px}.hp-sec.on{border-color:${TEAL};box-shadow:0 0 0 3px #ccfbf1}
+.hp-sec{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:16px 18px;scroll-margin-top:84px}.hp-sec.on{border-color:${TEAL};box-shadow:0 0 0 3px #BFE1DC}
 .hp-sec-h{display:flex;gap:10px;align-items:center;margin-bottom:8px}.hp-sec-h h2{margin:0;font-size:17px;color:${NAVY}}.hp-sec-h small{color:#8E7F8A;font-size:12px}
-.hp-ic{width:38px;height:38px;border-radius:11px;background:#e0f2fe;color:#075985;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.hp-ic{width:38px;height:38px;border-radius:11px;background:#E6F3F1;color:#2F6B66;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .hp-sum{margin:0 0 8px;color:#4A3645;font-size:13.5px;line-height:1.7}
 .hp-steps{margin:0;padding:0 20px 0 0;display:flex;flex-direction:column;gap:5px;font-size:13px;line-height:1.7}
-.hp-tips{margin-top:10px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 12px;font-size:12.5px;color:#78350f;display:flex;flex-direction:column;gap:4px}.hp-tips div{display:flex;gap:6px;align-items:flex-start}
+.hp-tips{margin-top:10px;background:#FBF4EE;border:1px solid #E9C98A;border-radius:10px;padding:8px 12px;font-size:12.5px;color:#8A5A1E;display:flex;flex-direction:column;gap:4px}.hp-tips div{display:flex;gap:6px;align-items:flex-start}
 .hp-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .hp-faq{border:1px solid #EADFD6;border-radius:10px;padding:8px 12px;margin-top:8px}.hp-faq summary{cursor:pointer;font-weight:800;font-size:13.5px;color:${NAVY}}.hp-faq p{margin:8px 0;font-size:13px;color:#4A3645;line-height:1.7}
 @media(max-width:1000px){.hp-journey{grid-template-columns:repeat(4,1fr)}}

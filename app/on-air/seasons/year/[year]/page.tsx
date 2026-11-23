@@ -50,11 +50,11 @@ function Inner({ year }: { year: string }) {
   </main>;
 }
 const CSS = `
-.oyr{max-width:900px;margin:0 auto;padding:28px 18px 60px}.oyr-crumb{color:#8E7F8A;font-size:13px;margin:0 0 8px}.oyr-crumb a{color:#0b6f69}.oyr-err{color:#b91c1c;font-weight:800}
-.oyr-h h1{margin:6px 0 6px;font-size:30px;color:#3A1F36}.oyr-hijri{font-size:15px;color:#5C4858;font-weight:600}.oyr-line{background:#3A1F36;color:#fde68a;border-radius:999px;padding:6px 14px;display:inline-block;font-weight:800;margin:0 0 14px;line-height:1.8}
+.oyr{max-width:900px;margin:0 auto;padding:28px 18px 60px}.oyr-crumb{color:#8E7F8A;font-size:13px;margin:0 0 8px}.oyr-crumb a{color:#2F6B66}.oyr-err{color:#B9544A;font-weight:800}
+.oyr-h h1{margin:6px 0 6px;font-size:30px;color:#3A1F36}.oyr-hijri{font-size:15px;color:#5C4858;font-weight:600}.oyr-line{background:#3A1F36;color:#E9C98A;border-radius:999px;padding:6px 14px;display:inline-block;font-weight:800;margin:0 0 14px;line-height:1.8}
 .oyr .pt-box{margin-bottom:16px}.oyr h2{font-size:19px;color:#3A1F36;margin:0 0 10px}
 .oyr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.oyr-kpis div{background:#FBF4EE;border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;color:#4A3645;font-size:13px}.oyr-kpis b{font-size:22px;color:#3A1F36}
 .oyr-two{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:700px){.oyr-two{grid-template-columns:1fr}}
-.oyr-cities,.oyr-seasons{list-style:none;margin:0;padding:0;display:grid;gap:6px;color:#4A3645}.oyr-seasons a{color:#0b6f69;min-height:44px;display:inline-flex;align-items:center}.oyr-peak{color:#4A3645;line-height:1.8;margin:0}
+.oyr-cities,.oyr-seasons{list-style:none;margin:0;padding:0;display:grid;gap:6px;color:#4A3645}.oyr-seasons a{color:#2F6B66;min-height:44px;display:inline-flex;align-items:center}.oyr-peak{color:#4A3645;line-height:1.8;margin:0}
 .oyr-years{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 `;

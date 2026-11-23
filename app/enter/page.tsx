@@ -141,7 +141,7 @@ const CSS = `
 .en-label{font-weight:700;font-size:14px;color:#4A3645}.en-input{border:1.5px solid #D9CBC2;border-radius:12px;padding:14px;font-size:20px;width:100%;box-sizing:border-box;text-align:center;letter-spacing:.06em}
 .en-pin{letter-spacing:.5em;font-size:26px}.en-input:focus{outline:3px solid #D9A866;border-color:#D4614A}
 .en-btn{margin-top:6px;border:0;border-radius:12px;background:#D4614A;color:#fff;font-weight:800;font-size:18px;padding:14px;cursor:pointer;width:100%}.en-btn:disabled{opacity:.5;cursor:default}.en-btn.ghost{background:#EADFD6;color:#3A1F36}
-.en-hint{margin:2px 0 0;color:#8E7F8A;font-size:12.5px}.en-err{margin:4px 0;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:8px 10px;font-size:14px}.en-ok{color:#047857;font-weight:800}
+.en-hint{margin:2px 0 0;color:#8E7F8A;font-size:12.5px}.en-err{margin:4px 0;background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A;border-radius:10px;padding:8px 10px;font-size:14px}.en-ok{color:#2F6B66;font-weight:800}
 .en-charter{margin:0;padding-inline-start:20px;color:#4A3645;line-height:1.7;font-size:14.5px}.en-charter li{margin-bottom:6px}
 .en-chips{display:flex;flex-wrap:wrap;gap:6px}.en-chip{border:1.5px solid #D9CBC2;background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer}.en-chip.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
 .en-links{display:flex;gap:16px;justify-content:center;margin-top:16px;font-size:13px}.en-links a{color:#D4614A;text-decoration:none;font-weight:700}

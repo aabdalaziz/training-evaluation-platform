@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 /* م17-ب: أرقام مجمّعة تتغيّر مع الوزن فقط → تُصيَّر وتُخزَّن على الحافّة وتتجدّد كلّ 5 دقائق */
 export const revalidate = 300;
 
-const LIGHT_COLOR: Record<string, string> = { green: '#D4614A', yellow: '#D9A866', red: '#b42318', gray: '#B3A5AE' };
+const LIGHT_COLOR: Record<string, string> = { green: '#D4614A', yellow: '#D9A866', red: '#B9544A', gray: '#B3A5AE' };
 const LIGHT_LABEL: Record<string, string> = { green: 'معتمد', yellow: 'مقبول', red: 'يحتاج مراجعة', gray: 'قيد المعايرة' };
 const LEVEL_AR: Record<string, string> = { A1: 'المبتدئ', A2: 'الأساسي', B1: 'المتوسط', B2: 'فوق المتوسط', C1: 'المتقدّم', C2: 'الإتقان' };
 /* ملاحظة: الأسماء العربية للمستويات هنا تتبع الجدول المعتمد في مقدّمة مِعيار (مستخدم أساسي/مستقل/متمكّن) */
@@ -28,19 +28,19 @@ export default async function Page() {
   const rows = ORDER.map((L) => byLevel.get(L) || { level: L, n: 0, k: 0, rel: 0, sem: 0, decision: 0, light: 'gray', light_ar: 'قيد المعايرة', method: null });
   const when = data?.computed_at ? new Date(data.computed_at).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
   const pct = (x: number) => (x > 0 ? `${Math.round(x * 100)}%` : '—');
-  return <main dir="rtl" lang="ar" style={{ fontFamily: 'var(--font-ar, "IBM Plex Sans Arabic"), system-ui, sans-serif', background: '#f6f3ea', minHeight: '100vh', color: '#2A1626' }} data-testid="mi-trust-page">
+  return <main dir="rtl" lang="ar" style={{ fontFamily: 'var(--font-ar, "IBM Plex Sans Arabic"), system-ui, sans-serif', background: '#FBF4EE', minHeight: '100vh', color: '#2A1626' }} data-testid="mi-trust-page">
     <style dangerouslySetInnerHTML={{ __html: `
 .tr-wrap{max-width:880px;margin:0 auto;padding:40px 20px 72px}.tr-hero{background:#3A1F36;color:#fff;border-radius:22px;padding:34px 30px;position:relative;overflow:hidden}
 .tr-hero:after{content:'';position:absolute;inset:auto -60px -80px auto;width:260px;height:260px;border-radius:50%;border:26px solid rgba(217,168,102,.18)}
-.tr-kicker{font-size:13px;letter-spacing:.08em;color:#D9A866;margin:0}.tr-hero h1{margin:8px 0 0;font-size:clamp(28px,4vw,38px);font-weight:900}.tr-hero p{margin:12px 0 0;max-width:620px;line-height:1.9;color:#d5e0ea;font-size:15px}
+.tr-kicker{font-size:13px;letter-spacing:.08em;color:#D9A866;margin:0}.tr-hero h1{margin:8px 0 0;font-size:clamp(28px,4vw,38px);font-weight:900}.tr-hero p{margin:12px 0 0;max-width:620px;line-height:1.9;color:#E2CBDA;font-size:15px}
 .tr-meta{display:flex;gap:18px;flex-wrap:wrap;margin:18px 0 0;font-size:13px;color:#D9A866}
 .tr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin:22px 0 0}
-.tr-card{background:#fff;border:1px solid #e7e2d2;border-radius:18px;padding:18px 18px 16px;position:relative}
+.tr-card{background:#fff;border:1px solid #F1D9A8;border-radius:18px;padding:18px 18px 16px;position:relative}
 .tr-card header{display:flex;align-items:center;justify-content:space-between;gap:10px}.tr-card b{font-size:30px;font-weight:900;color:#3A1F36}.tr-card small{display:block;color:#8E7F8A;font-size:13px}
 .tr-light{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;padding:5px 10px;border-radius:999px;background:#F6EBE0}.tr-light i{width:11px;height:11px;border-radius:50%;display:inline-block}
-.tr-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0 0}.tr-stats div{background:#f8f7f2;border-radius:12px;padding:8px 10px;text-align:center}.tr-stats span{display:block;font-size:11px;color:#8E7F8A}.tr-stats strong{font-size:18px;color:#3A1F36}
+.tr-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0 0}.tr-stats div{background:#FBF4EE;border-radius:12px;padding:8px 10px;text-align:center}.tr-stats span{display:block;font-size:11px;color:#8E7F8A}.tr-stats strong{font-size:18px;color:#3A1F36}
 .tr-n{margin:10px 0 0;font-size:12px;color:#8E7F8A}
-.tr-how{background:#fff;border:1px solid #e7e2d2;border-radius:18px;padding:20px 22px;margin:22px 0 0;line-height:1.95;font-size:15px}.tr-how h2{margin:0 0 8px;font-size:19px;color:#3A1F36}.tr-how dt{font-weight:800;color:#D4614A;margin-top:8px}.tr-how dd{margin:0}
+.tr-how{background:#fff;border:1px solid #F1D9A8;border-radius:18px;padding:20px 22px;margin:22px 0 0;line-height:1.95;font-size:15px}.tr-how h2{margin:0 0 8px;font-size:19px;color:#3A1F36}.tr-how dt{font-weight:800;color:#D4614A;margin-top:8px}.tr-how dd{margin:0}
 .tr-h2{margin:30px 0 0;font-size:21px;color:#3A1F36}.tr-sub{margin:6px 0 0;color:#5C4858;font-size:14px;line-height:1.8;max-width:720px}
 .tr-grid{margin-top:14px}
 .tr-foot{margin:26px 0 0;font-size:13px;color:#8E7F8A;line-height:1.8;text-align:center}.tr-foot a{color:#D4614A}

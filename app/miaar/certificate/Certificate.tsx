@@ -64,8 +64,8 @@ const CSS = `
 .cert-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}.cert-brand b{display:block;font-size:26px;color:#3A1F36}.cert-brand small{display:block;color:#D4614A;font-weight:700}
 .cert-k{margin:0;color:#D9A866;font-weight:800;letter-spacing:.3px;text-align:center}.cert h1{margin:8px 0 18px;text-align:center;font-size:34px;color:#3A1F36}
 .cert-line{margin:0 0 10px;font-size:17px;line-height:1.9;text-align:center}.cert-line.en{color:#4A3645;font-size:15px}
-.cert-table{width:100%;border-collapse:collapse;margin:18px 0 10px;font-size:14px}.cert-table th,.cert-table td{border:1px solid #EADFD6;padding:7px 10px;text-align:start}.cert-table th{background:#FBF4EE}.cert-table tr.tot td{font-weight:800;background:#fffdf5}
-.cert-growth{margin:10px 0 0;padding:10px 14px;border:1px dashed #D9A866;border-radius:10px;font-weight:700;background:#fffdf5}
+.cert-table{width:100%;border-collapse:collapse;margin:18px 0 10px;font-size:14px}.cert-table th,.cert-table td{border:1px solid #EADFD6;padding:7px 10px;text-align:start}.cert-table th{background:#FBF4EE}.cert-table tr.tot td{font-weight:800;background:#FBF4EE}
+.cert-growth{margin:10px 0 0;padding:10px 14px;border:1px dashed #D9A866;border-radius:10px;font-weight:700;background:#FBF4EE}
 .cert-svc{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:12px 0 0;font-size:13px;color:#4A3645}.cert-seal{display:inline-flex;align-items:center;padding:4px 10px;border:1.5px solid #D4614A;border-radius:999px;color:#D4614A;font-weight:800}
 .cert-foot{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px;padding-top:14px;border-top:1px solid #EADFD6}.cert-foot small{display:block;color:#8E7F8A;font-size:12px}.cert-foot b{display:block;font-size:14px;word-break:break-all}.cert-url{font-size:12px}
 .cert-legal{margin:16px 0 0;font-size:11px;color:#8E7F8A;line-height:1.7;text-align:center}

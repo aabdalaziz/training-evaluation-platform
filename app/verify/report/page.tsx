@@ -24,8 +24,8 @@ function Inner() {
         <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-LR-XXXX-XXXX" aria-label="رمز التقرير" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '10px 12px', font: 'inherit', letterSpacing: '.06em' }} data-testid="vr-input" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vr-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
-      {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vr-invalid"><b>لا يوجد تقرير بهذا الرمز.</b> تأكّد من الحروف (لا تُستخدم O/I/0/1).</div>}
-      {r && r.valid && s && <div role="status" style={{ background: live && r.intact ? '#ecfdf5' : '#fffbeb', border: `1px solid ${live && r.intact ? '#a7f3d0' : '#fcd34d'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vr-valid">
+      {r && !r.valid && <div role="alert" style={{ background: '#FBEDE7', border: '1px solid #F3C4B6', borderRadius: 12, padding: '10px 14px' }} data-testid="vr-invalid"><b>لا يوجد تقرير بهذا الرمز.</b> تأكّد من الحروف (لا تُستخدم O/I/0/1).</div>}
+      {r && r.valid && s && <div role="status" style={{ background: live && r.intact ? '#E6F3F1' : '#FBF4EE', border: `1px solid ${live && r.intact ? '#BFE1DC' : '#E9C98A'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vr-valid">
         <b data-testid="vr-state">{!r.intact ? '⚠ تقرير موجود لكن بصمته لا تطابق' : live ? '✓ تقرير صادر من أَثَر وبصمته سليمة — وهو التقرير الحيّ لهذه الفترة' : '✓ بصمة سليمة — لكن هذا التقرير مُلغى: صدر بعده تقرير أحدث للفترة نفسها'}{s.signed ? ' · موقَّع Ed25519' : ''}</b>
         <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', margin: '8px 0 0' }}>
           <dt>الجهة</dt><dd style={{ margin: 0 }}>{s.organization}{s.pseudonymous ? ' · أرقام تدريبية لا أسماء' : ''}</dd>

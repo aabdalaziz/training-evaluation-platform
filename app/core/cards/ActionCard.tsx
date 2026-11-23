@@ -31,17 +31,17 @@ export default function ActionCard({
         cursor: 'pointer',
         transition: 'all .25s ease',
         textAlign: 'center',
-        boxShadow: '0 8px 24px rgba(15,23,42,.05)',
+        boxShadow: '0 8px 24px rgba(42,22,38,.05)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-5px)';
         e.currentTarget.style.boxShadow =
-          '0 18px 35px rgba(15,23,42,.12)';
+          '0 18px 35px rgba(42,22,38,.12)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translateY(0)';
         e.currentTarget.style.boxShadow =
-          '0 8px 24px rgba(15,23,42,.05)';
+          '0 8px 24px rgba(42,22,38,.05)';
       }}
     >
       <div
@@ -65,7 +65,7 @@ export default function ActionCard({
         style={{
           fontSize: 18,
           fontWeight: 900,
-          color: '#14466B',
+          color: '#3A1F36',
           marginBottom: 6,
         }}
       >

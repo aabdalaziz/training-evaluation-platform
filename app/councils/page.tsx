@@ -123,11 +123,11 @@ function CircleCard({ c }: { c: Circle }) {
 const CSS = `
 .cn-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:12px}.cn-book{display:flex;flex-direction:column;gap:4px;background:linear-gradient(160deg,#3A1F36,#D4614A);color:#fff;border-radius:16px;padding:16px;text-decoration:none;min-height:150px;position:relative;overflow:hidden;box-shadow:inset 6px 0 0 #D9A866}.cn-book:hover{transform:translateY(-2px)}.cn-bookyear{color:#D9A866;font-weight:900;font-size:20px}.cn-book b{font-size:16px;line-height:1.5}.cn-book small{color:#D9CBC2;font-size:12px}.cn-book p{margin:6px 0 0;font-size:12.5px;line-height:1.75;color:#EADFD6}.cn-book i{margin-top:auto;font-style:normal;font-size:11px;color:#D9CBC2;padding-top:8px}
 .cn{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;max-width:1100px;margin:0 auto;padding:28px 18px 60px}
-.cn-hero{background:radial-gradient(1200px 400px at 80% -20%,rgba(212,97,74,.18),transparent),linear-gradient(135deg,#3A1F36,#123a66);color:#fff;border-radius:24px;padding:36px 30px;margin-bottom:28px}
+.cn-hero{background:radial-gradient(1200px 400px at 80% -20%,rgba(212,97,74,.18),transparent),linear-gradient(135deg,#3A1F36,#3A1F36);color:#fff;border-radius:24px;padding:36px 30px;margin-bottom:28px}
 .cn-hero .pt-kicker{color:#D9A866}.cn-hero h1{margin:6px 0 10px;font-size:34px;line-height:1.3}.cn-hero p{margin:0;max-width:820px;line-height:1.95;font-size:16px;color:#EADFD6}
 .cn-kpis{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.cn-kpis span{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 14px;font-size:13px}.cn-kpis b{color:#D9A866;font-size:16px}
 .cn-sec{margin:34px 0}.cn-sec h2{display:flex;align-items:center;gap:8px;font-size:22px;color:#3A1F36;margin:0 0 6px}.cn-sec h2 small{font-size:12px;color:#8E7F8A;font-weight:700}.cn-muted{color:#8E7F8A;font-size:14px;line-height:1.9;margin:0 0 14px}.cn-quiet{color:#8E7F8A;font-size:14px;line-height:1.9}
-.cn-err{color:#b91c1c;font-weight:800}.cn-ok{color:#D4614A;font-weight:800;display:flex;gap:8px;align-items:center}.cn-ok a{margin-inline-start:8px}
+.cn-err{color:#B9544A;font-weight:800}.cn-ok{color:#D4614A;font-weight:800;display:flex;gap:8px;align-items:center}.cn-ok a{margin-inline-start:8px}
 .cn-circles{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
 .cn-circle{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid #EADFD6;border-radius:20px;padding:14px 16px;transition:transform .2s}.cn-circle:hover{transform:translateY(-2px)}
 .cn-ring{fill:none;stroke:#D9CBC2;stroke-width:1.5;stroke-dasharray:3 4}.cn-circle.active .cn-ring{stroke:#D4614A}

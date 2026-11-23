@@ -5,37 +5,37 @@ const cards = [
     icon: '👨‍🎓',
     title: 'المتدربون',
     value: '126',
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     icon: '👨‍🏫',
     title: 'المدربون',
     value: '6',
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
   {
     icon: '🏫',
     title: 'القاعات',
     value: '8',
-    color: '#16a34a',
+    color: '#3F7F79',
   },
   {
     icon: '📝',
     title: 'التقييمات',
     value: '38',
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
   {
     icon: '✅',
     title: 'الحضور',
     value: '94%',
-    color: '#0891b2',
+    color: '#3F7F79',
   },
   {
     icon: '⭐',
     title: 'متوسط الرضا',
     value: '4.82',
-    color: '#f59e0b',
+    color: '#D9A866',
   },
 ];
 
@@ -56,7 +56,7 @@ export default function ProgramKPIBoard() {
             borderRadius: 20,
             padding: 22,
             borderTop: `5px solid ${card.color}`,
-            boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+            boxShadow: '0 10px 25px rgba(42,22,38,.05)',
           }}
         >
           <div
@@ -91,7 +91,7 @@ export default function ProgramKPIBoard() {
                 style={{
                   fontSize: 34,
                   fontWeight: 900,
-                  color: '#14466B',
+                  color: '#3A1F36',
                 }}
               >
                 {card.value}

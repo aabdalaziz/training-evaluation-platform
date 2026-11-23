@@ -21,7 +21,7 @@ export default function ProgramToolbar({
         flexWrap: 'wrap',
         alignItems: 'center',
         justifyContent: 'space-between',
-        boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 25px rgba(42,22,38,.05)',
       }}
     >
       <input
@@ -41,7 +41,7 @@ export default function ProgramToolbar({
 
       <button
         style={{
-          background: '#14466B',
+          background: '#3A1F36',
           color: '#fff',
           border: 0,
           borderRadius: 12,

@@ -22,7 +22,7 @@ const REFRESH_SEC = 60;
 const RANGES: { id: Range; label: string; days: number | null }[] = [
   { id: 'today', label: 'اليوم', days: 1 }, { id: '7d', label: '7 أيام', days: 7 }, { id: '30d', label: '30 يومًا', days: 30 }, { id: 'all', label: 'الكل', days: null },
 ];
-const TONE: Record<string, string> = { EXCELLENT: '#34d399', GOOD: '#8FD0C8', WATCH: '#fbbf24', RISK: '#f87171', NA: '#B3A5AE' };
+const TONE: Record<string, string> = { EXCELLENT: '#5EA8A0', GOOD: '#8FD0C8', WATCH: '#D9A866', RISK: '#F0A48C', NA: '#B3A5AE' };
 
 export default function CommandCenterPage() {
   const db = useMemo(() => supabase(), []);
@@ -177,15 +177,15 @@ export default function CommandCenterPage() {
                 <small>المؤشر العام للرضا · {RANGES.find(r => r.id === range)!.label}</small>
                 <div className="cc-hero-val"><b className="ltr">{k.measurements ? k.mean.toFixed(2) : '—'}</b><span>/ 5</span><em style={{ background: tone }}>{perf.ar}</em></div>
                 <p>
-                  {k.responses ? <>{k.responses} استجابة من {k.participants} مشاركًا · {k.rooms} قاعة · {k.trainers} مدرب · الفجوة عن المستهدف {TARGET}: <b className="ltr" style={{ color: k.gap > 0 ? '#fbbf24' : '#34d399' }}>{k.gap > 0 ? '-' : '+'}{Math.abs(k.gap).toFixed(2)}</b></> : 'لا توجد استجابات في هذا النطاق — وسّع النطاق الزمني أو شارك روابط التقييم.'}
-                  {cmp && cmp.deltaMean !== null && <> · مقارنة بالفترة السابقة <b className="ltr" style={{ color: cmp.deltaMean >= 0 ? '#34d399' : '#f87171' }}>{cmp.deltaMean >= 0 ? '▲' : '▼'} {Math.abs(cmp.deltaMean).toFixed(2)}</b></>}
+                  {k.responses ? <>{k.responses} استجابة من {k.participants} مشاركًا · {k.rooms} قاعة · {k.trainers} مدرب · الفجوة عن المستهدف {TARGET}: <b className="ltr" style={{ color: k.gap > 0 ? '#D9A866' : '#5EA8A0' }}>{k.gap > 0 ? '-' : '+'}{Math.abs(k.gap).toFixed(2)}</b></> : 'لا توجد استجابات في هذا النطاق — وسّع النطاق الزمني أو شارك روابط التقييم.'}
+                  {cmp && cmp.deltaMean !== null && <> · مقارنة بالفترة السابقة <b className="ltr" style={{ color: cmp.deltaMean >= 0 ? '#5EA8A0' : '#F0A48C' }}>{cmp.deltaMean >= 0 ? '▲' : '▼'} {Math.abs(cmp.deltaMean).toFixed(2)}</b></>}
                 </p>
                 <div className="cc-dist" aria-label="توزيع التقييمات">
-                  <i style={{ width: `${k.highPct}%`, background: '#34d399' }} title={`مرتفع ${k.highPct.toFixed(0)}%`} />
-                  <i style={{ width: `${Math.max(0, 100 - k.highPct - k.lowPct)}%`, background: '#fbbf24' }} title="محايد" />
-                  <i style={{ width: `${k.lowPct}%`, background: '#f87171' }} title={`منخفض ${k.lowPct.toFixed(0)}%`} />
+                  <i style={{ width: `${k.highPct}%`, background: '#5EA8A0' }} title={`مرتفع ${k.highPct.toFixed(0)}%`} />
+                  <i style={{ width: `${Math.max(0, 100 - k.highPct - k.lowPct)}%`, background: '#D9A866' }} title="محايد" />
+                  <i style={{ width: `${k.lowPct}%`, background: '#F0A48C' }} title={`منخفض ${k.lowPct.toFixed(0)}%`} />
                 </div>
-                <div className="cc-dist-l"><span><i style={{ background: '#34d399' }} />مرتفع 4–5: {k.highPct.toFixed(0)}%</span><span><i style={{ background: '#fbbf24' }} />محايد 3</span><span><i style={{ background: '#f87171' }} />منخفض 1–2: {k.lowPct.toFixed(0)}%</span></div>
+                <div className="cc-dist-l"><span><i style={{ background: '#5EA8A0' }} />مرتفع 4–5: {k.highPct.toFixed(0)}%</span><span><i style={{ background: '#D9A866' }} />محايد 3</span><span><i style={{ background: '#F0A48C' }} />منخفض 1–2: {k.lowPct.toFixed(0)}%</span></div>
               </div>
             </div>
             <div className="cc-tiles">
@@ -193,7 +193,7 @@ export default function CommandCenterPage() {
               <Tile icon="evaluations" label="استجابات النطاق" value={k.responses} sub={`يومي ${k.daily} · ختامي ${k.final}`} delta={cmp?.deltaResponses ?? null} />
               <Tile icon="programs" label="برامج نشطة" value={activePrograms} sub={`${raw.programs.length} إجمالي البرامج`} />
               <Tile icon="school" label="القاعات / المدربون" value={`${raw.classrooms.length} / ${raw.trainers.length}`} sub={`${k.rooms} قاعة نشطة في النطاق`} />
-              <Tile icon="alert" label="محاور تحتاج تدخلًا" value={actions.filter(a => a.priority === 'HIGH').length} sub={`${actions.length} إجراء مقترح`} tone={actions.some(a => a.priority === 'HIGH') ? '#f87171' : '#34d399'} />
+              <Tile icon="alert" label="محاور تحتاج تدخلًا" value={actions.filter(a => a.priority === 'HIGH').length} sub={`${actions.length} إجراء مقترح`} tone={actions.some(a => a.priority === 'HIGH') ? '#F0A48C' : '#5EA8A0'} />
               <Tile icon="laptop" label="استطلاع التعلم عن بُعد" value={raw.remoteResponses} sub="إجمالي الاستجابات" />
             </div>
           </section>
@@ -245,7 +245,7 @@ export default function CommandCenterPage() {
               <div className="cc-ticker-in">
                 {(latest.length ? [...latest, ...latest] : []).map((e, i) => {
                   const room = raw.classrooms.find((c: any) => c.id === e.classroom_id)?.code || '—';
-                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#B3A5AE' : e.mean >= TARGET ? '#34d399' : e.mean >= THRESHOLDS.good ? '#8FD0C8' : e.mean >= THRESHOLDS.watch ? '#fbbf24' : '#f87171' }} />{timeAgo(String(e.submitted_at))} · قاعة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
+                  return <span key={`${e.id}-${i}`}><i style={{ background: e.mean === null ? '#B3A5AE' : e.mean >= TARGET ? '#5EA8A0' : e.mean >= THRESHOLDS.good ? '#8FD0C8' : e.mean >= THRESHOLDS.watch ? '#D9A866' : '#F0A48C' }} />{timeAgo(String(e.submitted_at))} · قاعة {room} · {e.kind === 'FINAL' ? 'ختامي' : 'يومي'} · <b className="ltr">{e.mean === null ? '—' : e.mean.toFixed(2)}</b></span>;
                 })}
                 {!latest.length && <span>لا توجد استجابات بعد</span>}
               </div>
@@ -265,7 +265,7 @@ function Tile({ icon, label, value, sub, delta, tone }: { icon: IconName; label:
       <span className="cc-tile-ico"><Icon name={icon} size={18} /></span>
       <small>{label}</small>
       <b className="ltr" style={tone ? { color: tone } : undefined}>{value}</b>
-      <span>{sub}{delta !== null && delta !== undefined && delta !== 0 && <em style={{ color: delta > 0 ? '#34d399' : '#f87171' }}> {delta > 0 ? '▲' : '▼'} {Math.abs(delta)}</em>}</span>
+      <span>{sub}{delta !== null && delta !== undefined && delta !== 0 && <em style={{ color: delta > 0 ? '#5EA8A0' : '#F0A48C' }}> {delta > 0 ? '▲' : '▼'} {Math.abs(delta)}</em>}</span>
     </div>
   );
 }
@@ -299,7 +299,7 @@ function Trend({ series }: { series: { key: string; label: string; mean: number 
       <line x1={P} x2={W - P} y1={y(TARGET)} y2={y(TARGET)} stroke="#D9A866" strokeDasharray="6 4" strokeWidth="1.5" />
       <path d={area} fill="url(#ccg)" /><path d={d} fill="none" stroke="#8FD0C8" strokeWidth="3" />
       {pts.map((p, i) => <g key={p.key}>
-        <circle cx={x(i)} cy={y(p.mean as number)} r="4.5" fill={(p.mean as number) >= TARGET ? '#34d399' : (p.mean as number) >= THRESHOLDS.good ? '#8FD0C8' : '#f87171'} stroke="#3A1F36" strokeWidth="2"><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
+        <circle cx={x(i)} cy={y(p.mean as number)} r="4.5" fill={(p.mean as number) >= TARGET ? '#5EA8A0' : (p.mean as number) >= THRESHOLDS.good ? '#8FD0C8' : '#F0A48C'} stroke="#3A1F36" strokeWidth="2"><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
         <text x={x(i)} y={y(p.mean as number) - 10} fontSize="10" textAnchor="middle" fill="#EADFD6" fontWeight="700">{(p.mean as number).toFixed(2)}</text>
         <text x={x(i)} y={H - 10} fontSize="9" textAnchor="middle" fill="#B3A5AE">{p.label.slice(-5)}</text>
       </g>)}
@@ -325,7 +325,7 @@ function Rank({ rows, empty }: { rows: GroupRow[]; empty: string }) {
       {rows.map((r, i) => <li key={r.key}>
         <span className="cc-rank-n">{i + 1}</span>
         <span className="cc-rank-l">{r.label}<small>n={r.responses}</small></span>
-        {r.delta !== null && <em style={{ color: (r.delta as number) >= 0 ? '#34d399' : '#f87171' }}>{(r.delta as number) >= 0 ? '▲' : '▼'} {Math.abs(r.delta as number).toFixed(2)}</em>}
+        {r.delta !== null && <em style={{ color: (r.delta as number) >= 0 ? '#5EA8A0' : '#F0A48C' }}>{(r.delta as number) >= 0 ? '▲' : '▼'} {Math.abs(r.delta as number).toFixed(2)}</em>}
         <b className="ltr" style={{ color: TONE[r.perf] }}>{r.mean.toFixed(2)}</b>
       </li>)}
     </ol>
@@ -366,9 +366,9 @@ body.cc-present .global-nav{display:none !important;}
 .cc-btn:disabled{opacity:.6;cursor:wait;}
 .cc-btn.ghost{background:transparent;color:var(--muted);}
 .cc-ring{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:conic-gradient(var(--teal) var(--p),rgba(255,255,255,.12) 0);position:relative;}
-.cc-ring::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#15345e;}
+.cc-ring::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#3A1F36;}
 .cc-ring svg{position:relative;}
-.cc-err{background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.4);color:#fecaca;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:13px;display:flex;gap:8px;align-items:center;}
+.cc-err{background:rgba(240,164,140,.14);border:1px solid rgba(240,164,140,.4);color:#F3C4B6;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:700;font-size:13px;display:flex;gap:8px;align-items:center;}
 .cc-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:50vh;color:var(--muted);font-weight:700;}
 .cc-spin{width:48px;height:48px;border:5px solid rgba(255,255,255,.12);border-top-color:var(--teal);border-radius:50%;animation:ccspin 1s linear infinite;}
 @keyframes ccspin{to{transform:rotate(360deg);}}
@@ -401,7 +401,7 @@ body.cc-present .global-nav{display:none !important;}
 /* tiles */
 .cc-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .cc-tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:10px;align-items:center;}
-.cc-tile-ico{grid-row:1/4;width:38px;height:38px;border-radius:10px;background:rgba(45,212,191,.14);color:var(--teal);display:inline-flex;align-items:center;justify-content:center;align-self:start;}
+.cc-tile-ico{grid-row:1/4;width:38px;height:38px;border-radius:10px;background:rgba(94,168,160,.14);color:var(--teal);display:inline-flex;align-items:center;justify-content:center;align-self:start;}
 .cc-tile small{color:var(--muted);font-weight:700;font-size:12px;}
 .cc-tile b{font-size:26px;font-weight:900;color:#fff;line-height:1.15;}
 .cc-tile span{color:#B3A5AE;font-size:11.5px;font-weight:600;}
@@ -420,9 +420,9 @@ body.cc-present .global-nav{display:none !important;}
 .cc-alerts ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;}
 .cc-alerts li{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:12.5px;line-height:1.6;font-weight:600;color:#EADFD6;}
 .cc-alerts li i{width:9px;height:9px;border-radius:50%;margin-top:6px;flex-shrink:0;}
-.cc-alerts li.red i{background:#f87171;box-shadow:0 0 0 4px rgba(248,113,113,.2);}
-.cc-alerts li.amber i{background:#fbbf24;box-shadow:0 0 0 4px rgba(251,191,36,.2);}
-.cc-alerts li.blue i{background:#60a5fa;box-shadow:0 0 0 4px rgba(96,165,250,.2);}
+.cc-alerts li.red i{background:#F0A48C;box-shadow:0 0 0 4px rgba(240,164,140,.2);}
+.cc-alerts li.amber i{background:#D9A866;box-shadow:0 0 0 4px rgba(217,168,102,.2);}
+.cc-alerts li.blue i{background:#C9A6B6;box-shadow:0 0 0 4px rgba(96,165,250,.2);}
 
 /* rank */
 .cc-rank{list-style:none;margin:0;padding:0;display:grid;gap:7px;}
@@ -437,12 +437,12 @@ body.cc-present .global-nav{display:none !important;}
 /* decision */
 .cc-decision{border-inline-start:4px solid var(--gold);}
 .cc-pri{display:inline-block;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;margin-bottom:8px;}
-.cc-pri.HIGH{background:rgba(248,113,113,.18);color:#fca5a5;} .cc-pri.MED{background:rgba(251,191,36,.18);color:#fde68a;} .cc-pri.LOW{background:rgba(52,211,153,.18);color:#a7f3d0;}
+.cc-pri.HIGH{background:rgba(240,164,140,.18);color:#F3C4B6;} .cc-pri.MED{background:rgba(217,168,102,.18);color:#E9C98A;} .cc-pri.LOW{background:rgba(94,168,160,.18);color:#BFE1DC;}
 .cc-decision b{display:block;font-size:17px;font-weight:800;color:#fff;margin-bottom:6px;}
 .cc-decision p{margin:0;color:#D9CBC2;font-size:13px;line-height:1.8;font-weight:600;}
 .cc-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font-size:12px;font-weight:700;}
 .cc-meta span{display:inline-flex;align-items:center;gap:5px;}
-.cc-ok{display:flex;gap:8px;align-items:center;color:#a7f3d0 !important;}
+.cc-ok{display:flex;gap:8px;align-items:center;color:#BFE1DC !important;}
 .cc-best{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;color:#EADFD6;font-size:12.5px;font-weight:600;}
 .cc-best svg{color:var(--gold);flex-shrink:0;}
 .cc-best b{display:inline;font-size:inherit;margin:0;}

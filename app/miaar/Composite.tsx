@@ -107,6 +107,6 @@ export const COMPOSITE_CSS = `
 .mi-order-btns button{min-width:44px;min-height:44px;border-radius:10px;border:1px solid #D9CBC2;background:#FBF4EE;font-size:18px;cursor:pointer}.mi-order-btns button:disabled{opacity:.35;cursor:default}
 .mi-order-keep{margin-top:4px}
 .mi-order.pics .mi-order-item img{width:84px;height:84px}
-.mi-cloze-text{font-size:1.15em;line-height:2.4}.mi-cloze-slot{font:inherit;font-size:.95em;margin:0 4px;padding:4px 8px;border:2px dashed #B3A5AE;border-radius:8px;background:#fff;min-width:110px;vertical-align:middle}.mi-cloze-slot.on{border-style:solid;border-color:#D4614A;background:#ecfdf5}
+.mi-cloze-text{font-size:1.15em;line-height:2.4}.mi-cloze-slot{font:inherit;font-size:.95em;margin:0 4px;padding:4px 8px;border:2px dashed #B3A5AE;border-radius:8px;background:#fff;min-width:110px;vertical-align:middle}.mi-cloze-slot.on{border-style:solid;border-color:#D4614A;background:#E6F3F1}
 .mi-cloze-bank{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}.mi-chip{border:1px solid #D9CBC2;border-radius:999px;padding:2px 10px;background:#FBF4EE;font-size:.95em}.mi-chip.used{opacity:.45;text-decoration:line-through}
 `;

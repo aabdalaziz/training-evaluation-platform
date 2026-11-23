@@ -68,7 +68,7 @@ function Inner() {
                 <div className="pt-meta"><span className="pt-tag navy">{typeLabel(p.program_type, lang)}</span>{p.delivery_mode && <span className="pt-chip">{deliveryLabel(p.delivery_mode, lang)}</span>}<span className={`pt-tag ${s === 'open' ? '' : s === 'waitlist' ? 'soon' : 'off'}`}>{t(REG_LABEL[s], lang)}</span></div>
                 <h3><Link href={`/programs/${p.id}`} style={{ textDecoration: 'none' }}>{programName(p, lang)}</Link></h3>
                 <p>{intro}</p>
-                {(feats[p.id] || []).length > 0 && <div className="pt-chips" data-testid="cat-feats">{(feats[p.id] || []).filter(isFeature).map(f => <span key={f} className="pt-chip" style={{ background: '#f0fbfa', color: '#0b6f69' }}>{FEATURE_LABEL[f][lang]}</span>)}</div>}
+                {(feats[p.id] || []).length > 0 && <div className="pt-chips" data-testid="cat-feats">{(feats[p.id] || []).filter(isFeature).map(f => <span key={f} className="pt-chip" style={{ background: '#E6F3F1', color: '#2F6B66' }}>{FEATURE_LABEL[f][lang]}</span>)}</div>}
                 <div className="pt-dates">
                   <span><Icon name="calendar" size={13} /> <bdi>{fmtDate(p.start_date, lang)}</bdi>{p.end_date && <> → <bdi>{fmtDate(p.end_date, lang)}</bdi></>}</span>
                   {durationLabel(p, lang) && <span><Icon name="clock" size={13} /> {durationLabel(p, lang)}</span>}

@@ -25,8 +25,8 @@ function Inner() {
         <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-OP-XXXX-XXXX" aria-label="رمز الختم" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '10px 12px', fontSize: 16 }} data-testid="vp-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vp-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
-      {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vp-invalid"><b>لا يوجد ختم بهذا الرمز.</b> تأكّد من الحروف (لا نستعمل 0 و O و 1 و I).</div>}
-      {r && r.valid && s && <div role="status" style={{ background: r.intact ? '#ecfdf5' : '#fffbeb', border: `1px solid ${r.intact ? '#a7f3d0' : '#fcd34d'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vp-valid">
+      {r && !r.valid && <div role="alert" style={{ background: '#FBEDE7', border: '1px solid #F3C4B6', borderRadius: 12, padding: '10px 14px' }} data-testid="vp-invalid"><b>لا يوجد ختم بهذا الرمز.</b> تأكّد من الحروف (لا نستعمل 0 و O و 1 و I).</div>}
+      {r && r.valid && s && <div role="status" style={{ background: r.intact ? '#E6F3F1' : '#FBF4EE', border: `1px solid ${r.intact ? '#BFE1DC' : '#E9C98A'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vp-valid">
         <b>{r.intact ? '✓ ختم صادر من أَثَر وبصمته سليمة' : '⚠ ختم موجود لكن بصمته لا تطابق'}{s.signed ? ' · موقَّع Ed25519' : ''}{s.latest ? '' : ' · (صدر بعده ختم أحدث)'}</b>
         <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', margin: '8px 0 0' }}>
           <dt>الجهة</dt><dd style={{ margin: 0 }}>{s.organization}</dd>

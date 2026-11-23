@@ -6,25 +6,25 @@ export default function ProgramStatistics() {
       title: 'البرامج النشطة',
       value: 12,
       icon: '📚',
-      color: '#2563eb',
+      color: '#8E4A68',
     },
     {
       title: 'إجمالي المتدربين',
       value: 1823,
       icon: '👨‍🎓',
-      color: '#16a34a',
+      color: '#3F7F79',
     },
     {
       title: 'إجمالي المدربين',
       value: 42,
       icon: '👨‍🏫',
-      color: '#7c3aed',
+      color: '#8E4A68',
     },
     {
       title: 'متوسط الرضا',
       value: '4.82',
       icon: '⭐',
-      color: '#f59e0b',
+      color: '#D9A866',
     },
   ];
 
@@ -45,7 +45,7 @@ export default function ProgramStatistics() {
             borderRadius: 22,
             padding: 24,
             borderTop: `6px solid ${item.color}`,
-            boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+            boxShadow: '0 10px 25px rgba(42,22,38,.05)',
           }}
         >
           <div
@@ -80,7 +80,7 @@ export default function ProgramStatistics() {
                 style={{
                   fontSize: 34,
                   fontWeight: 900,
-                  color: '#14466B',
+                  color: '#3A1F36',
                 }}
               >
                 {item.value}

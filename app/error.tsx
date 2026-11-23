@@ -7,11 +7,11 @@ import { isChunkError, autoRecoverChunk } from '../lib/ui/chunk';
 
 const CSS = `
 .pe-wrap{min-height:70vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit;direction:rtl}
-.pe-card{max-width:640px;width:100%;background:#fff;border:1px solid #e3e8ef;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(42,22,38,.08)}
+.pe-card{max-width:640px;width:100%;background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(42,22,38,.08)}
 .pe-card h1{margin:0 0 6px;font-size:1.35rem;color:#3A1F36}
-.pe-card p{margin:0 0 14px;color:#4a5568;line-height:1.8}
-.pe-msg{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 14px;direction:ltr;text-align:left;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem;color:#7c2d12;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
-.pe-meta{font-size:.78rem;color:#718096;margin:8px 0 16px}
+.pe-card p{margin:0 0 14px;color:#3A1F36;line-height:1.8}
+.pe-msg{background:#FBF4EE;border:1px solid #F1D9A8;border-radius:12px;padding:12px 14px;direction:ltr;text-align:left;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem;color:#9A3A2A;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
+.pe-meta{font-size:.78rem;color:#8E4A68;margin:8px 0 16px}
 .pe-row{display:flex;gap:10px;flex-wrap:wrap}
 .pe-btn{border:0;border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;background:#D4614A;color:#fff;font-size:.92rem}
 .pe-btn.alt{background:#F3E6DC;color:#3A1F36}

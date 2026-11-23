@@ -93,7 +93,7 @@ function Inner() {
 const CSS = `
 .pt-muted{color:#8E7F8A;font-size:13px;line-height:1.8}.pt-box ul{margin:0;padding:0 18px 0 0;font-size:13.5px;line-height:1.8;color:#4A3645}
 .ai-status{display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-size:13px}
-.ai-dot{width:9px;height:9px;border-radius:50%;background:#D9A866}.ai-dot.on{background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.25)}
+.ai-dot{width:9px;height:9px;border-radius:50%;background:#D9A866}.ai-dot.on{background:#5EA8A0;box-shadow:0 0 0 4px rgba(94,168,160,.25)}
 .ai-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.ai-grid .pt-box p{margin:0;font-size:13.5px;line-height:1.7}
 .ai-table{overflow:auto}.ai-table table{width:100%;border-collapse:collapse;font-size:13px}.ai-table th,.ai-table td{padding:8px 10px;border-bottom:1px solid #F3E6DC;text-align:start}.ai-table th{background:#FBF4EE;color:#3A1F36;font-size:12px}
 .ai-src{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:#F6EBE0;color:#5C4858}.ai-src.ai{background:#e6f4f1;color:#D4614A}

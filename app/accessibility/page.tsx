@@ -64,10 +64,10 @@ function Inner() {
 }
 
 const CSS = `
-.as-credit{font-size:13px;color:#5C4858;margin-top:10px}.as-credit a{color:#0f5c57;font-weight:800}
+.as-credit{font-size:13px;color:#5C4858;margin-top:10px}.as-credit a{color:#1F4F4A;font-weight:800}
 .as{max-width:960px;margin:0 auto;padding:28px 18px 60px}.as-head h1{margin:6px 0 8px;font-size:32px;color:#3A1F36}.as-head p{color:#4A3645;line-height:1.9;font-size:16px;margin:0 0 14px}.as-cta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .as .pt-box{margin-bottom:16px}.as h2{font-size:19px;color:#3A1F36;margin:0 0 10px;display:flex;align-items:center;gap:8px}.as p{line-height:1.9;color:#3A2634}
-.as-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}.as-list li{display:flex;gap:8px;align-items:flex-start;line-height:1.8;color:#3A2634}.as-list li svg{flex:0 0 auto;margin-top:7px;color:#0b6f69}
+.as-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}.as-list li{display:flex;gap:8px;align-items:flex-start;line-height:1.8;color:#3A2634}.as-list li svg{flex:0 0 auto;margin-top:7px;color:#2F6B66}
 .as-list.gaps li{border-inline-start:3px solid #D9A866;padding-inline-start:10px}
 .as-dl{margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}.as-dl div{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px}.as-dl dt{font-weight:800;color:#3A1F36}.as-dl dd{margin:4px 0 0;color:#5C4858;line-height:1.7;font-size:14px}
 .as-chips{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}.as-chips li{background:#F6EBE0;border-radius:999px;padding:6px 12px;font-size:13.5px;color:#3A1F36;font-weight:700}

@@ -17,15 +17,15 @@ function Inner() {
   const b = r?.seal?.body || {};
   return <main className="pt-main" dir="rtl" data-testid="vs-root">
     <section className="pt-box" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <p className="pt-muted" style={{ margin: 0, color: '#b45309', fontWeight: 800 }}>أَثَر · درع أَثَر · شهادة الدرع الشهرية</p>
+      <p className="pt-muted" style={{ margin: 0, color: '#8A5A1E', fontWeight: 800 }}>أَثَر · درع أَثَر · شهادة الدرع الشهرية</p>
       <h1 style={{ margin: '4px 0' }}>تحقّق من «شهادة الدرع»</h1>
       <p className="pt-muted">أدخل رمز الختم (مثل ATH-SH-7K2Q-9M4X). نُظهر الشهر وأيام التمرين وأيام النجاح الكامل وسلامة البصمة — ولا نُظهر أي تفصيل داخلي.</p>
       <form onSubmit={(e) => { e.preventDefault(); void check(code); }} style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
         <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="ATH-SH-XXXX-XXXX" aria-label="رمز الختم" dir="ltr" style={{ flex: 1, minWidth: 220, border: '1.5px solid #D9CBC2', borderRadius: 10, padding: '8px 10px', font: 'inherit' }} data-testid="vs-code" />
         <button type="submit" className="pt-btn" disabled={busy} data-testid="vs-check"><Icon name="search" size={14} /> {busy ? '…' : 'تحقّق'}</button>
       </form>
-      {r && !r.valid && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '10px 14px' }} data-testid="vs-invalid"><b>لا يوجد ختم بهذا الرمز.</b> تأكّد من الأحرف (لا تحوي 0 أو O أو 1 أو I).</div>}
-      {r && r.valid && r.seal && <div role="status" style={{ background: r.intact ? '#ecfdf5' : '#fffbeb', border: `1px solid ${r.intact ? '#a7f3d0' : '#fcd34d'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vs-valid">
+      {r && !r.valid && <div role="alert" style={{ background: '#FBEDE7', border: '1px solid #F3C4B6', borderRadius: 12, padding: '10px 14px' }} data-testid="vs-invalid"><b>لا يوجد ختم بهذا الرمز.</b> تأكّد من الأحرف (لا تحوي 0 أو O أو 1 أو I).</div>}
+      {r && r.valid && r.seal && <div role="status" style={{ background: r.intact ? '#E6F3F1' : '#FBF4EE', border: `1px solid ${r.intact ? '#BFE1DC' : '#E9C98A'}`, borderRadius: 12, padding: '12px 14px' }} data-testid="vs-valid">
         <b>{r.intact ? '✓ ختم صادر من أَثَر وبصمته سليمة' : '⚠ ختم موجود لكن بصمته لا تطابق'}{r.seal.signed ? ' · موقَّع Ed25519' : ''}</b>
         <dl style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px', margin: '8px 0 0' }}>
           <dt>الشهر</dt><dd style={{ margin: 0 }}>{b.month_ar || r.seal.month}{b.partial ? ' (ختم جزئي — الشهر لم يكتمل)' : ''}</dd>

@@ -34,7 +34,7 @@ export default function ProgramDashboard() {
   return (
     <main
       style={{
-        background: '#F4F7FB',
+        background: '#F3E8EF',
         minHeight: '100vh',
         padding: 30,
       }}
@@ -53,7 +53,7 @@ export default function ProgramDashboard() {
           <h1
             style={{
               margin: 0,
-              color: '#14466B',
+              color: '#3A1F36',
               fontSize: 42,
               fontWeight: 900,
             }}
