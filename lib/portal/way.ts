@@ -10,7 +10,7 @@ const NAMES: Record<string, L> = {
   resources: { ar: 'الحقائب', en: 'Resources' }, live: { ar: 'البث المباشر', en: 'Live' }, sim: { ar: 'التدريب بالمحاكاة', en: 'Simulation training' }, councils: { ar: 'المجالس', en: 'Councils' },
   about: { ar: 'عن أَثَر', en: 'About' }, contact: { ar: 'تواصل', en: 'Contact' }, ai: { ar: 'الذكاء الاصطناعي المسؤول', en: 'Responsible AI' },
   needs: { ar: 'ما يحتاجه الممارسون', en: 'What practitioners need' }, 'admin/needs': { ar: 'الاحتياجات التدريبية', en: 'Training needs' },
-  'admin/pulse': { ar: 'نبض البيئة التدريبية', en: 'Training-environment pulse' },   // P49-هـ
+  'admin/env-pulse': { ar: 'نبض البيئة التدريبية', en: 'Training-environment pulse' }, 'admin/pulse': { ar: 'نبض أَثَر', en: 'Athar pulse' },   // P49-هـ
   'admin/demo': { ar: 'غرفة العرض', en: 'Demo room' },   // P69
   rehearsal: { ar: 'تدريباتي التبادلية', en: 'My peer practice' }, 'me/rehearsal': { ar: 'تدريباتي التبادلية', en: 'My peer practice' }, 'admin/rehearsals': { ar: 'التدريب التبادلي', en: 'Peer practice' },
   'e': { ar: 'رابط تقويم', en: 'Evaluation link' }, 'evaluate': { ar: 'التقويم', en: 'Evaluation' }, 'evaluate/end': { ar: 'استبيان نهاية البرنامج', en: 'End-of-program survey' }, 'evaluate/daily': { ar: 'التقييم اليومي', en: 'Daily evaluation' }, 'evaluate/final': { ar: 'التقييم الختامي', en: 'Final evaluation' },   // P49

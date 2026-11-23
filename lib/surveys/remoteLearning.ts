@@ -78,6 +78,15 @@ export const STATEMENTS: { key: string; ar: string; en: string }[] = [
 ];
 export const SATISFACTION_KEY = 'q13_satisfied';
 
+/* هـ-3 ن «محطّات»: محاور العبارات — شاشة لكل محور بدل النموذج الطولي. كل عبارة في محور واحد فقط. */
+export const STATEMENT_AXES: { key: string; ar: string; en: string; hint_ar: string; hint_en: string; keys: string[] }[] = [
+  { key: 'platform', ar: 'المنصّة والدرس',  en: 'Platform & lesson',   hint_ar: 'Teams والصوت والصورة ووضوح المدرّس',        hint_en: 'Teams, audio/video and the teacher', keys: ['q01_teams_easy', 'q02_av_clear', 'q03_teacher_clear'] },
+  { key: 'skills',   ar: 'المهارات اللغوية', en: 'Language skills',     hint_ar: 'المفردات والاستماع والتحدّث والقراءة والكتابة', hint_en: 'Vocabulary, listening, speaking, reading, writing', keys: ['q04_new_words', 'q05_listening', 'q06_speaking', 'q07_reading', 'q08_writing'] },
+  { key: 'support',  ar: 'المواد والدعم',    en: 'Materials & support', hint_ar: 'مناسبة المواد ووضوح التعليمات والمساعدة',      hint_en: 'Level fit, clear instructions, getting help', keys: ['q09_materials_level', 'q10_instructions', 'q11_help'] },
+  { key: 'outcome',  ar: 'الحصيلة',          en: 'Outcome',             hint_ar: 'التحسّن والرضا',                               hint_en: 'Improvement and satisfaction', keys: ['q12_improved', 'q13_satisfied'] },
+];
+export function statementsOfAxis(axisKey: string) { const ax = STATEMENT_AXES.find(a => a.key === axisKey); return ax ? STATEMENTS.filter(s => ax.keys.includes(s.key)) : []; }
+
 export type DifficultyCode =
   | 'poor_internet' | 'teams_difficulty' | 'arabic_in_class' | 'few_speaking'
   | 'activities_unclear' | 'concentration' | 'none' | 'other';
@@ -108,6 +117,15 @@ export const UI: Record<string, Bi> = {
   sectionRating:    { ar: 'تقييم التجربة',                        en: 'Rating your experience' },
   sectionDiff:      { ar: 'الصعوبات',                             en: 'Difficulties' },
   sectionOpen:      { ar: 'رأيك (اختياري)',                       en: 'Your opinion (optional)' },
+  sectionAbout:     { ar: 'عنك',                                  en: 'About you' },
+  start:            { ar: 'ابدأ',                                 en: 'Start' },
+  next:             { ar: 'التالي',                               en: 'Next' },
+  back:             { ar: 'السابق',                               en: 'Back' },
+  stepOf:           { ar: 'المحور {i} من {n}',                     en: 'Step {i} of {n}' },
+  minutes:          { ar: 'نحو ٣ دقائق · ٨ محاور قصيرة',           en: 'About 3 minutes · 8 short steps' },
+  answered:         { ar: 'أجبت عن {a} من {n}',                   en: '{a} of {n} answered' },
+  completeStep:     { ar: 'أكمل هذا المحور قبل المتابعة',          en: 'Complete this step before continuing' },
+  optionalStep:     { ar: 'هذا المحور اختياري — يمكنك الإرسال مباشرة.', en: 'This step is optional — you can submit right away.' },
   program:          { ar: 'البرنامج',                             en: 'Program' },
   level:            { ar: 'المستوى',                              en: 'Level' },
   trainer:          { ar: 'اسم المدرب/المدربة',                   en: 'Trainer' },

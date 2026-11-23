@@ -73,11 +73,11 @@ test('P49-هـ · تصفية ببرنامج · درجات اللون · المف
 });
 
 test('P49-هـ · الشكل: صفحة /admin/pulse بالمعرّفات · الغرفة والبحث والمسار · الجدول في سجلّ المعالجة · SQL بقيد k ≥ 5 وسياسات الطاقم', () => {
-  const page = readFileSync('app/admin/pulse/page.tsx', 'utf8');
+  const page = readFileSync('app/admin/env-pulse/page.tsx', 'utf8') /* هـ-3 ن: استُعيدت الصفحة إلى /admin/env-pulse بعد أن حلّ «نبض أَثَر» محلّها في /admin/pulse */;
   for (const id of ['pl-program', 'pl-kpis', 'pl-few', 'pl-week', 'pl-week-record', 'pl-sections', 'pl-weakest', 'pl-strongest', 'pl-cohorts', 'pl-actions']) assert.ok(page.includes(`data-testid="${id}"`), id);
   assert.ok(page.includes("from('end_survey_actions')") && page.includes('length < 5'), 'الإغلاق بملاحظة ≥ 5 أحرف');
-  assert.ok(readFileSync('lib/portal/rooms.ts', 'utf8').includes("'/admin/pulse'") && readFileSync('lib/portal/search.ts', 'utf8').includes("'admin-pulse'") && readFileSync('lib/portal/way.ts', 'utf8').includes("'admin/pulse'") && readFileSync('lib/portal/hub.ts', 'utf8').includes("'/admin/pulse'"));
+  assert.ok(readFileSync('lib/portal/rooms.ts', 'utf8').includes("'/admin/env-pulse'") && readFileSync('lib/portal/search.ts', 'utf8').includes("'admin-pulse'") && readFileSync('lib/portal/way.ts', 'utf8').includes("'admin/env-pulse'") && readFileSync('lib/portal/hub.ts', 'utf8').includes("'/admin/pulse'"));
   assert.ok(readFileSync('lib/vault/registry.ts', 'utf8').includes("'end_survey_actions'"));
   const sql = readFileSync('supabase/p49e-pulse.sql', 'utf8'); assert.ok(sql.includes('check (n >= 5)') && sql.includes('esa_open_uidx') && sql.includes('portal_is_staff()') && sql.includes("status <> 'done' or"));
-  const ev = readFileSync('app/evaluate/[kind]/page.tsx', 'utf8'); assert.ok(ev.includes('data-testid="ev-journey"') && ev.includes('ev-jchip') && ev.includes('id={`sec-${gi}`}') && ev.includes('scroll-margin-top'), 'شريط الرحلة');
+  const ev = readFileSync('app/evaluate/[kind]/page.tsx', 'utf8'); assert.ok(ev.includes('testid="ev-journey"') && ev.includes('ev-jchip') && ev.includes('id={`sec-${gi}`}') && ev.includes('scroll-margin-top'), 'شريط الرحلة'); /* هـ-3 ن: شريط المحطّات من StepFlow */
 });

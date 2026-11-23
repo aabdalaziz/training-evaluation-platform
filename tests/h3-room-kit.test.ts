@@ -11,7 +11,7 @@ const ROOT = path.resolve(__dirname, '..'); const R = (p: string) => fs.readFile
 const PEOPLE_PAGES = ['enrollments', 'payments', 'inbox', 'consulting', 'directory', 'outreach'].map(p => `app/admin/${p}/page.tsx`).concat(['app/admin/org/letters/LettersDesk.tsx']);
 const ASSESS_PAGES = ['placements', 'needs', 'evidence', 'credentials', 'certificates', 'skills'].map(p => `app/admin/${p}/page.tsx`).concat(['app/admin/miaar/AdminMiaar.tsx']);
 const QUALITY_PAGES = ['admin/followup', 'admin/impact', 'admin/outcomes', 'reports/chain', 'reports/program', 'reports/cohorts', 'admin/contracts', 'admin/observatory', 'admin/loop', 'final-analysis', 'admin/sector-impact', 'admin/twin', 'admin/after', 'admin/reports', 'reports/center', 'reports', 'reports/remote-survey'].map(p => `app/${p}/page.tsx`);
-const PROGRAM_PAGES = ['management', 'attendance', 'awards', 'templates', 'pulse', 'readiness', 'inclusion', 'live', 'resources', 'catalog', 'sim', 'missions', 'onair', 'rehearsals', 'program-engineering', 'media', 'councils'].map(p => `app/admin/${p}/page.tsx`);
+const PROGRAM_PAGES = ['management', 'attendance', 'awards', 'templates', 'pulse', 'env-pulse', 'readiness', 'inclusion', 'live', 'resources', 'catalog', 'sim', 'missions', 'onair', 'rehearsals', 'program-engineering', 'media', 'councils'].map(p => `app/admin/${p}/page.tsx`);
 const SYSTEM_PAGES = ['roles', 'audit', 'health', 'access', 'demo', 'backup', 'data-lifecycle', 'agents', 'shield', 'vault', 'notifications'].map(p => `app/admin/${p}/page.tsx`).concat(['app/help/page.tsx']);
 
 test('هـ-3 ح: عناقيد «نظام أَثَر» تغطّي غرفه العشر بلا تكرار، وكل عنقود غرفه معروفة', () => {
