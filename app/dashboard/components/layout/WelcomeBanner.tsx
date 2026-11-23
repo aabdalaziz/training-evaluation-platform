@@ -14,11 +14,11 @@ export default function WelcomeBanner() {
     <section
       style={{
         background:
-          'linear-gradient(135deg,#14466B,#0B3552)',
+          'linear-gradient(135deg,#3A1F36,#1F4F4A)',
         borderRadius: 28,
         color: '#fff',
         padding: '40px',
-        boxShadow: '0 20px 45px rgba(20,70,107,.25)',
+        boxShadow: '0 20px 45px rgba(58,31,54,.25)',
       }}
     >
       <div

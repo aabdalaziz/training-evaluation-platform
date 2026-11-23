@@ -74,10 +74,10 @@ const CSS = `
 .ax-page{max-width:900px;margin:0 auto;padding:28px 18px 60px}.ax-ph h1{margin:6px 0 8px;font-size:30px;color:#3A1F36}.ax-ph p{color:#4A3645;line-height:1.9;margin:0 0 18px;font-size:16px}
 .ax-page .pt-box{margin-bottom:16px}.ax-page h2{font-size:19px;color:#3A1F36;margin:0 0 12px;display:flex;align-items:center;gap:8px}
 .ax-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
-.ax-grid label{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #EADFD6;border-radius:12px;padding:12px;cursor:pointer;min-height:44px;height:100%}.ax-grid label:has(input:checked){border-color:#0b6f69;background:#f0fbfa}
-.ax-grid input,.ax-share input{width:22px;height:22px;flex:0 0 auto;accent-color:#0b6f69;margin-top:2px}.ax-grid b,.ax-share b{display:block;color:#3A1F36}.ax-grid small,.ax-share small{display:block;color:#5C4858;line-height:1.65;margin-top:3px}
+.ax-grid label{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #EADFD6;border-radius:12px;padding:12px;cursor:pointer;min-height:44px;height:100%}.ax-grid label:has(input:checked){border-color:#2F6B66;background:#E6F3F1}
+.ax-grid input,.ax-share input{width:22px;height:22px;flex:0 0 auto;accent-color:#2F6B66;margin-top:2px}.ax-grid b,.ax-share b{display:block;color:#3A1F36}.ax-grid small,.ax-share small{display:block;color:#5C4858;line-height:1.65;margin-top:3px}
 .ax-helps{display:block;margin-top:16px;font-weight:800;color:#3A1F36}.ax-helps textarea{display:block;width:100%;margin-top:6px;border:1.5px solid #D9CBC2;border-radius:10px;padding:10px;font:inherit;font-weight:400;min-height:44px}.ax-helps small{font-weight:400;color:#5C4858}
 .ax-share{display:flex;gap:10px;align-items:flex-start;margin-top:14px;border:1.5px dashed #D9CBC2;border-radius:12px;padding:12px;cursor:pointer}
-.ax-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ax-ok{color:#0b6f69;font-weight:800;margin:10px 0 0}.ax-err{color:#b91c1c;font-weight:800;margin:10px 0 0}
+.ax-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ax-ok{color:#2F6B66;font-weight:800;margin:10px 0 0}.ax-err{color:#B9544A;font-weight:800;margin:10px 0 0}
 .ax-privacy{margin:0;padding-inline-start:20px;line-height:1.9;color:#4A3645}.ax-note p{margin:0;line-height:1.8}
 `;

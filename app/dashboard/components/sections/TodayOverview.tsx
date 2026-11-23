@@ -12,25 +12,25 @@ const items: Item[] = [
     icon: '📚',
     title: 'البرامج النشطة',
     value: 3,
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     icon: '👨‍🎓',
     title: 'الحضور اليوم',
     value: '142',
-    color: '#059669',
+    color: '#2F6B66',
   },
   {
     icon: '📝',
     title: 'التقييمات المستلمة',
     value: '36',
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
   {
     icon: '📜',
     title: 'الشهادات الصادرة',
     value: '5',
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
 ];
 
@@ -41,14 +41,14 @@ export default function TodayOverview() {
         background: '#fff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 8,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 28,
         }}
@@ -116,7 +116,7 @@ export default function TodayOverview() {
                 style={{
                   fontSize: 28,
                   fontWeight: 900,
-                  color: '#14466B',
+                  color: '#3A1F36',
                 }}
               >
                 {item.value}

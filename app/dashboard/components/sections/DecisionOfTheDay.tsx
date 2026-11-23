@@ -4,7 +4,7 @@ export default function DecisionOfTheDay() {
   return (
     <section
       style={{
-        background: 'linear-gradient(135deg,#F59E0B,#EA580C)',
+        background: 'linear-gradient(135deg,#D9A866,#8A5A1E)',
         color: '#fff',
         borderRadius: 24,
         padding: 30,
@@ -62,7 +62,7 @@ export default function DecisionOfTheDay() {
             borderRadius: 16,
             padding: '16px 28px',
             background: '#ffffff',
-            color: '#EA580C',
+            color: '#8A5A1E',
             fontWeight: 900,
             cursor: 'pointer',
             fontSize: 16,

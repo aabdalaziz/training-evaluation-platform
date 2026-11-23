@@ -4,25 +4,25 @@ const indicators = [
   {
     title: 'جودة البرامج',
     status: 'ممتاز',
-    color: '#16a34a',
+    color: '#3F7F79',
     icon: '🟢',
   },
   {
     title: 'الحضور',
     status: 'جيد',
-    color: '#2563eb',
+    color: '#8E4A68',
     icon: '🔵',
   },
   {
     title: 'التقييمات اليومية',
     status: 'يحتاج متابعة',
-    color: '#f59e0b',
+    color: '#D9A866',
     icon: '🟠',
   },
   {
     title: 'خطط التحسين',
     status: 'أولوية عاجلة',
-    color: '#dc2626',
+    color: '#D4614A',
     icon: '🔴',
   },
 ];
@@ -34,14 +34,14 @@ export default function TrafficLightBoard() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 30,
           fontWeight: 900,
         }}
@@ -87,7 +87,7 @@ export default function TrafficLightBoard() {
             <div>
               <div
                 style={{
-                  color: '#14466B',
+                  color: '#3A1F36',
                   fontWeight: 900,
                 }}
               >

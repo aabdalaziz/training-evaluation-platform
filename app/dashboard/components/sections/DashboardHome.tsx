@@ -80,13 +80,13 @@ export default function DashboardHome({
           background: '#ffffff',
           borderRadius: 20,
           padding: 24,
-          boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+          boxShadow: '0 10px 30px rgba(42,22,38,.05)',
         }}
       >
         <h2
           style={{
             marginTop: 0,
-            color: '#14466B',
+            color: '#3A1F36',
             fontSize: 24,
             fontWeight: 900,
           }}
@@ -162,13 +162,13 @@ export default function DashboardHome({
           background: '#fff',
           borderRadius: 20,
           padding: 24,
-          boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+          boxShadow: '0 10px 30px rgba(42,22,38,.05)',
         }}
       >
         <h2
           style={{
             marginTop: 0,
-            color: '#14466B',
+            color: '#3A1F36',
           }}
         >
           ⚡ إجراءات سريعة
@@ -227,7 +227,7 @@ function QuickButton({
   return (
     <button
       style={{
-        background: '#14466B',
+        background: '#3A1F36',
         color: '#fff',
         border: 0,
         borderRadius: 16,

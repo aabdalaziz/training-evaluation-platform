@@ -4,37 +4,37 @@ const areas = [
   {
     title: 'البرامج',
     status: 'ممتاز',
-    color: '#16a34a',
+    color: '#3F7F79',
     value: 96,
   },
   {
     title: 'المدربون',
     status: 'جيد',
-    color: '#2563eb',
+    color: '#8E4A68',
     value: 90,
   },
   {
     title: 'المتدربون',
     status: 'ممتاز',
-    color: '#16a34a',
+    color: '#3F7F79',
     value: 95,
   },
   {
     title: 'التقييمات',
     status: 'يحتاج متابعة',
-    color: '#ea580c',
+    color: '#8A5A1E',
     value: 78,
   },
   {
     title: 'الحضور',
     status: 'ممتاز',
-    color: '#16a34a',
+    color: '#3F7F79',
     value: 94,
   },
   {
     title: 'خطط التحسين',
     status: 'متأخر',
-    color: '#dc2626',
+    color: '#D4614A',
     value: 68,
   },
 ];
@@ -46,13 +46,13 @@ export default function EnterpriseRadar() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 30,
           fontWeight: 900,
         }}
@@ -108,7 +108,7 @@ export default function EnterpriseRadar() {
             <div
               style={{
                 height: 10,
-                background: '#e5e7eb',
+                background: '#EADFD6',
                 borderRadius: 20,
                 overflow: 'hidden',
               }}

@@ -62,11 +62,11 @@ const CSS = `
 .mm-kpis{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;color:#fff;font-size:13px}.mm-kpis b{font-size:20px;margin-inline-end:4px;color:#D9A866}
 .mm-h{display:flex;align-items:center;gap:8px;color:#3A1F36;font-size:18px;margin:18px 0 10px}.mm-h small{background:#EADFD6;color:#4A3645;border-radius:999px;padding:1px 9px;font-size:12px}.mm-h.muted{color:#8E7F8A}
 .mm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.mm-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:14px 16px;display:grid;gap:8px;box-shadow:0 4px 16px rgba(15,23,42,.05)}.mm-card.assigned,.mm-card.returned{border-color:#D9A866}.mm-card.confirmed{border-color:#10b981}
+.mm-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:14px 16px;display:grid;gap:8px;box-shadow:0 4px 16px rgba(42,22,38,.05)}.mm-card.assigned,.mm-card.returned{border-color:#D9A866}.mm-card.confirmed{border-color:#3F7F79}
 .mm-top{display:flex;justify-content:space-between;align-items:center}.mm-top small{color:#8E7F8A;font-size:12px}.mm-st{box-shadow:inset 0 0 0 2px var(--c);color:var(--c);border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:900}
 .mm-card h3{margin:0;font-size:16px;color:#3A1F36}.mm-card p{margin:0;color:#5C4858;font-size:13px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mm-sk span{font-size:11px;background:#FBEDE7;color:#6A3350;border-radius:999px;padding:2px 9px;font-weight:800}
-.mm-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px dashed #EADFD6;padding-top:8px}.mm-foot small{display:inline-flex;align-items:center;gap:4px;color:#8E7F8A;font-size:12px}.mm-foot small.ok{color:#047857}.mm-foot small.bad{color:#b91c1c}.mm-due.soon{color:#b45309!important}.mm-due.late{color:#b91c1c!important}
+.mm-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px dashed #EADFD6;padding-top:8px}.mm-foot small{display:inline-flex;align-items:center;gap:4px;color:#8E7F8A;font-size:12px}.mm-foot small.ok{color:#2F6B66}.mm-foot small.bad{color:#B9544A}.mm-due.soon{color:#8A5A1E!important}.mm-due.late{color:#B9544A!important}
 .mm-login{max-width:520px;margin:0 auto}.mm-form{display:grid;grid-template-columns:1fr auto;gap:8px}.mm-form input{border:1px solid #D9CBC2;border-radius:12px;padding:10px 12px;font:inherit}
 .mm-empty .pt-chips{justify-content:center;margin-top:10px}
 `;

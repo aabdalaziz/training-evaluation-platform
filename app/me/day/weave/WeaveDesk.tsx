@@ -95,15 +95,15 @@ export default function WeaveDesk() {
 const CSS = `
 .wv{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;max-width:1040px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.wv *{box-sizing:border-box}
 .wv-nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px}.wv-link{color:#4A3645;text-decoration:none;font-size:13px;display:inline-flex;gap:4px;align-items:center}.wv-link:hover{text-decoration:underline}
-.wv-head h1{margin:6px 0 6px;font-size:26px}.wv-head h1 small{display:block;font-size:14px;color:#b45309;font-weight:700;margin-top:2px}.wv-head p{color:#4A3645;line-height:1.8;margin:0 0 14px;max-width:820px}
-.wv-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:8px 12px;margin:8px 0}.wv-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:8px 12px;margin:8px 0}
+.wv-head h1{margin:6px 0 6px;font-size:26px}.wv-head h1 small{display:block;font-size:14px;color:#8A5A1E;font-weight:700;margin-top:2px}.wv-head p{color:#4A3645;line-height:1.8;margin:0 0 14px;max-width:820px}
+.wv-err{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A;border-radius:10px;padding:8px 12px;margin:8px 0}.wv-ok{background:#E6F3F1;border:1px solid #BFE1DC;color:#1F4F4A;border-radius:10px;padding:8px 12px;margin:8px 0}
 .wv-rooms{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}.wv-room{font-family:inherit;border:1.5px solid #D9CBC2;background:#fff;border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;font-weight:700}.wv-room.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.wv-room small{opacity:.8}
-.wv-mirror{background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:12px 16px;margin:0 0 12px}.wv-line{margin:0 0 4px;font-weight:800;color:#92400e}.wv-line.sub{font-weight:600;color:#78350f}
-.wv-sky{margin:0 0 10px}.wv-star{background:#fef3c7;border:1px solid #fcd34d;border-radius:10px;padding:8px 12px;margin:0 0 12px;font-weight:700;color:#78350f}
+.wv-mirror{background:#FBF4EE;border:1px solid #E9C98A;border-radius:14px;padding:12px 16px;margin:0 0 12px}.wv-line{margin:0 0 4px;font-weight:800;color:#8A5A1E}.wv-line.sub{font-weight:600;color:#8A5A1E}
+.wv-sky{margin:0 0 10px}.wv-star{background:#F1D9A8;border:1px solid #E9C98A;border-radius:10px;padding:8px 12px;margin:0 0 12px;font-weight:700;color:#8A5A1E}
 .wv-block{background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:14px 16px;margin:0 0 12px}.wv-block h2{margin:0 0 8px;font-size:17px;display:flex;gap:6px;align-items:center}.wv-block h2 i{font-style:normal;background:#F6EBE0;border-radius:999px;padding:0 8px;font-size:13px}
-.wv-cards{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}.wv-card{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;display:grid;gap:3px}.wv-card.woven{border-color:#fcd34d;background:#fffdf5}.wv-card.untaken{border-style:dashed}
-.wv-kind{font-size:12px;color:#0e7490;font-weight:800}.wv-arrow{color:#B3A5AE;font-size:12px}.wv-n{margin:4px 0 0;font-size:13px;color:#5C4858;font-weight:700}
-.wv-quotes{list-style:none;margin:8px 0;padding:0;display:grid;gap:8px}.wv-quotes li{border-inline-start:3px solid #fbbf24;padding:4px 10px}.wv-quotes p{margin:2px 0 0;font-size:15px}
+.wv-cards{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}.wv-card{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;display:grid;gap:3px}.wv-card.woven{border-color:#E9C98A;background:#FBF4EE}.wv-card.untaken{border-style:dashed}
+.wv-kind{font-size:12px;color:#2F6B66;font-weight:800}.wv-arrow{color:#B3A5AE;font-size:12px}.wv-n{margin:4px 0 0;font-size:13px;color:#5C4858;font-weight:700}
+.wv-quotes{list-style:none;margin:8px 0;padding:0;display:grid;gap:8px}.wv-quotes li{border-inline-start:3px solid #D9A866;padding:4px 10px}.wv-quotes p{margin:2px 0 0;font-size:15px}
 .wv-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}.wv-form textarea{width:100%;font-family:inherit;font-size:15px;padding:10px;border:1.5px solid #D9CBC2;border-radius:10px;resize:vertical}
 .wv-muted{color:#8E7F8A;font-size:13px;line-height:1.7}.wv-foot{margin-top:18px;border-top:1px dashed #EADFD6;padding-top:10px}
 @media (prefers-reduced-motion:no-preference){.wv-card.woven{transition:transform .2s}.wv-card.woven:hover{transform:translateY(-1px)}}

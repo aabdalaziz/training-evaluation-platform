@@ -24,12 +24,12 @@ export default function DashboardHeader({
     <div
       style={{
         background:
-          'linear-gradient(135deg,#14466B,#0B3552)',
+          'linear-gradient(135deg,#3A1F36,#1F4F4A)',
         color: '#fff',
         borderRadius: 22,
         padding: '28px 32px',
         marginBottom: 28,
-        boxShadow: '0 12px 30px rgba(20,70,107,.25)',
+        boxShadow: '0 12px 30px rgba(58,31,54,.25)',
       }}
     >
       <div
@@ -99,7 +99,7 @@ export default function DashboardHeader({
           <button
             style={{
               ...buttonStyle,
-              background: '#10B981',
+              background: '#3F7F79',
             }}
           >
             📊 التقرير التنفيذي
@@ -116,7 +116,7 @@ const buttonStyle = {
   padding: '12px 18px',
   cursor: 'pointer',
   color: '#fff',
-  background: '#1FA39A',
+  background: '#3F7F79',
   fontWeight: 800,
   fontFamily: 'inherit',
   fontSize: 14,

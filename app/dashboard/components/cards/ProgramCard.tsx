@@ -25,18 +25,18 @@ const STATUS = {
   },
   ACTIVE: {
     label: 'نشط',
-    color: '#047857',
-    bg: '#dcfce7',
+    color: '#2F6B66',
+    bg: '#E6F3F1',
   },
   COMPLETED: {
     label: 'مكتمل',
-    color: '#1d4ed8',
-    bg: '#dbeafe',
+    color: '#6A3350',
+    bg: '#F3E8EF',
   },
   CANCELLED: {
     label: 'ملغي',
-    color: '#b91c1c',
-    bg: '#fee2e2',
+    color: '#B9544A',
+    bg: '#FBEDE7',
   },
 };
 
@@ -47,10 +47,10 @@ export default function ProgramCard(props: ProgramCardProps) {
     <div
       style={{
         background: '#fff',
-        border: '1px solid #e5e7eb',
+        border: '1px solid #EADFD6',
         borderRadius: 20,
         padding: 22,
-        boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 25px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -66,7 +66,7 @@ export default function ProgramCard(props: ProgramCardProps) {
           <h3
             style={{
               margin: 0,
-              color: '#14466B',
+              color: '#3A1F36',
               fontSize: 22,
               fontWeight: 900,
             }}
@@ -190,7 +190,7 @@ function Info({
 
       <div
         style={{
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 22,
         }}
@@ -216,7 +216,7 @@ function Action({
         cursor: 'pointer',
         borderRadius: 12,
         padding: '10px 18px',
-        background: '#14466B',
+        background: '#3A1F36',
         color: '#fff',
         fontWeight: 800,
         fontSize: 13,

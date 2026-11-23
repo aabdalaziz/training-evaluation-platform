@@ -9,7 +9,7 @@ export default function OperationsCenter() {
         background: '#ffffff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -26,7 +26,7 @@ export default function OperationsCenter() {
           <h2
             style={{
               margin: 0,
-              color: '#14466B',
+              color: '#3A1F36',
               fontSize: 28,
               fontWeight: 900,
             }}
@@ -56,7 +56,7 @@ export default function OperationsCenter() {
           title="إنشاء برنامج"
           subtitle="Training Program"
           icon="📚"
-          color="#2563eb"
+          color="#8E4A68"
           href="/dashboard?view=programs"
         />
 
@@ -64,7 +64,7 @@ export default function OperationsCenter() {
           title="إنشاء قاعة"
           subtitle="Classroom"
           icon="🏫"
-          color="#059669"
+          color="#2F6B66"
           href="/admin/management"
         />
 
@@ -72,7 +72,7 @@ export default function OperationsCenter() {
           title="إضافة مدرب"
           subtitle="Trainer"
           icon="👨‍🏫"
-          color="#7c3aed"
+          color="#8E4A68"
           href="/admin/management"
         />
 
@@ -80,7 +80,7 @@ export default function OperationsCenter() {
           title="التقييم اليومي"
           subtitle="Daily Evaluation"
           icon="📝"
-          color="#ea580c"
+          color="#8A5A1E"
           href="/evaluate/daily"
         />
 
@@ -88,7 +88,7 @@ export default function OperationsCenter() {
           title="التقييم النهائي"
           subtitle="Final Evaluation"
           icon="🏁"
-          color="#dc2626"
+          color="#D4614A"
           href="/evaluate/final"
         />
 
@@ -96,7 +96,7 @@ export default function OperationsCenter() {
           title="التقارير"
           subtitle="Executive Reports"
           icon="📊"
-          color="#0891b2"
+          color="#3F7F79"
           href="/reports"
         />
       </div>

@@ -16,7 +16,7 @@ export default function KPIGrid() {
         value={26}
         subtitle="Active Programs"
         icon="📚"
-        color="#2563eb"
+        color="#8E4A68"
         trend="+2"
       />
 
@@ -25,7 +25,7 @@ export default function KPIGrid() {
         value={42}
         subtitle="Trainers"
         icon="👨‍🏫"
-        color="#7c3aed"
+        color="#8E4A68"
         trend="+1"
       />
 
@@ -34,7 +34,7 @@ export default function KPIGrid() {
         value={1823}
         subtitle="Students"
         icon="👨‍🎓"
-        color="#16a34a"
+        color="#3F7F79"
         trend="+48"
       />
 
@@ -43,7 +43,7 @@ export default function KPIGrid() {
         value="4.82"
         subtitle="Average Rating"
         icon="⭐"
-        color="#f59e0b"
+        color="#D9A866"
         trend="+0.12"
       />
 
@@ -52,7 +52,7 @@ export default function KPIGrid() {
         value="94%"
         subtitle="Attendance"
         icon="✅"
-        color="#0891b2"
+        color="#3F7F79"
         trend="+3%"
       />
 
@@ -61,7 +61,7 @@ export default function KPIGrid() {
         value={38}
         subtitle="Today's Evaluations"
         icon="📝"
-        color="#dc2626"
+        color="#D4614A"
         trend="+12"
       />
     </section>

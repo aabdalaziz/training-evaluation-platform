@@ -68,12 +68,12 @@ const CSS = `
 .ma{max-width:900px;margin:0 auto;padding:26px 16px 64px;display:grid;gap:16px}
 .ma-head h1{margin:6px 0 6px;font-size:28px;color:#3A1F36}.ma-head p{margin:0;color:#5C4858;font-size:14.5px;line-height:1.9;max-width:720px}
 .ma-box{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:18px 20px;display:grid;gap:12px}.ma-box h2{margin:0;font-size:17px;color:#3A1F36;display:flex;gap:8px;align-items:center}.ma-n{background:#e6f4f1;color:#D4614A;border-radius:999px;padding:1px 10px;font-size:12.5px}
-.ma-muted{color:#8E7F8A;font-size:13.5px;line-height:1.8;margin:0}.ma-err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:12px;padding:10px 12px}
+.ma-muted{color:#8E7F8A;font-size:13.5px;line-height:1.8;margin:0}.ma-err{background:#FBEDE7;color:#9A3A2A;border:1px solid #F3C4B6;border-radius:12px;padding:10px 12px}
 .ma-del{border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;display:grid;gap:8px;background:#FBF4EE}.ma-delhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}.ma-delhead b{color:#3A1F36;font-size:15px}.ma-delhead small{color:#B3A5AE;font-size:11.5px}
-.ma-chips{display:flex;gap:6px;flex-wrap:wrap}.ma-chip{font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 9px;background:#e6f4f1;color:#D4614A}.ma-chip.medium{background:#FBF4EE;color:#8A5A1E}.ma-chip.high{background:#fef2f2;color:#b91c1c}
+.ma-chips{display:flex;gap:6px;flex-wrap:wrap}.ma-chip{font-size:11.5px;font-weight:800;border-radius:999px;padding:2px 9px;background:#e6f4f1;color:#D4614A}.ma-chip.medium{background:#FBF4EE;color:#8A5A1E}.ma-chip.high{background:#FBEDE7;color:#B9544A}
 .ma-meta{display:flex;gap:14px;flex-wrap:wrap;color:#8E7F8A;font-size:12.5px}.ma-del .pt-btn{justify-self:start}
 .ma-old summary{cursor:pointer;color:#8E7F8A;font-size:13px}.ma-oldrow{display:flex;justify-content:space-between;font-size:13px;color:#B3A5AE;padding:4px 0}
-.ma-log{margin:0;padding:0;list-style:none;display:grid;gap:6px}.ma-log li{font-size:13.5px;color:#3A2634;padding:8px 12px;border-radius:10px;background:#FBF4EE;border:1px solid #EADFD6}.ma-log li.bad{border-color:#fecaca;color:#991b1b}
+.ma-log{margin:0;padding:0;list-style:none;display:grid;gap:6px}.ma-log li{font-size:13.5px;color:#3A2634;padding:8px 12px;border-radius:10px;background:#FBF4EE;border:1px solid #EADFD6}.ma-log li.bad{border-color:#F3C4B6;color:#9A3A2A}
 .ma-url{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.ma-url code{background:#2A1626;color:#EADFD6;border-radius:10px;padding:8px 12px;font-size:13px}.ma-url small{color:#8E7F8A;font-size:12px}
 .ma-scopes{margin:0;padding-inline-start:18px;font-size:13px;color:#4A3645;line-height:1.9}.ma-scopes b{color:#3A1F36}
 .ma .pt-btn.small{padding:6px 12px;font-size:12.5px}

@@ -19,7 +19,7 @@ export default function PerformanceTrends() {
         background: '#fff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -34,7 +34,7 @@ export default function PerformanceTrends() {
           <h2
             style={{
               margin: 0,
-              color: '#14466B',
+              color: '#3A1F36',
               fontWeight: 900,
               fontSize: 28,
             }}
@@ -54,8 +54,8 @@ export default function PerformanceTrends() {
 
         <div
           style={{
-            background: '#dcfce7',
-            color: '#047857',
+            background: '#E6F3F1',
+            color: '#2F6B66',
             padding: '8px 16px',
             borderRadius: 30,
             fontWeight: 800,
@@ -85,7 +85,7 @@ export default function PerformanceTrends() {
               style={{
                 height: `${(item.value / max) * 180}px`,
                 background:
-                  'linear-gradient(180deg,#1FA39A,#14466B)',
+                  'linear-gradient(180deg,#3F7F79,#3A1F36)',
                 borderRadius: '14px 14px 0 0',
                 transition: '.3s',
               }}
@@ -95,7 +95,7 @@ export default function PerformanceTrends() {
               style={{
                 marginTop: 10,
                 fontWeight: 900,
-                color: '#14466B',
+                color: '#3A1F36',
               }}
             >
               {item.value}

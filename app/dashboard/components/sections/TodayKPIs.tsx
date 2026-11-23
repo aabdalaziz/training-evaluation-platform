@@ -5,25 +5,25 @@ const kpis = [
     title: 'الجلسات المنفذة',
     value: '8',
     icon: '🎓',
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     title: 'الحضور اليوم',
     value: '142',
     icon: '✅',
-    color: '#16a34a',
+    color: '#3F7F79',
   },
   {
     title: 'التقييمات المستلمة',
     value: '38',
     icon: '📝',
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
   {
     title: 'الشهادات الصادرة',
     value: '6',
     icon: '📜',
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
 ];
 
@@ -34,14 +34,14 @@ export default function TodayKPIs() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 30,
           fontWeight: 900,
         }}
@@ -88,7 +88,7 @@ export default function TodayKPIs() {
                 marginTop: 18,
                 fontSize: 36,
                 fontWeight: 900,
-                color: '#14466B',
+                color: '#3A1F36',
               }}
             >
               {item.value}

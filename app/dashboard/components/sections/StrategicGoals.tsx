@@ -5,25 +5,25 @@ const goals = [
     title: 'رفع رضا المتدربين',
     target: 95,
     current: 91,
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     title: 'استكمال التقييمات',
     target: 100,
     current: 88,
-    color: '#16a34a',
+    color: '#3F7F79',
   },
   {
     title: 'الالتزام بالحضور',
     target: 95,
     current: 93,
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
   {
     title: 'تنفيذ خطط التحسين',
     target: 100,
     current: 82,
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
 ];
 
@@ -34,13 +34,13 @@ export default function StrategicGoals() {
         background: '#fff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 28,
           fontWeight: 900,
         }}
@@ -89,7 +89,7 @@ export default function StrategicGoals() {
             <div
               style={{
                 height: 12,
-                background: '#e5e7eb',
+                background: '#EADFD6',
                 borderRadius: 20,
                 overflow: 'hidden',
               }}

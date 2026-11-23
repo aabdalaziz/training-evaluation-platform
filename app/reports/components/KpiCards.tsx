@@ -18,25 +18,25 @@ export default function KpiCards({
       title: 'إجمالي المشاركين',
       value: participants,
       icon: '👨‍🎓',
-      color: '#2563eb',
+      color: '#8E4A68',
     },
     {
       title: 'التقييمات اليومية',
       value: daily,
       icon: '📝',
-      color: '#16a34a',
+      color: '#3F7F79',
     },
     {
       title: 'التقييمات النهائية',
       value: final,
       icon: '🏁',
-      color: '#7c3aed',
+      color: '#8E4A68',
     },
     {
       title: 'متوسط الرضا',
       value: average.toFixed(2),
       icon: '⭐',
-      color: '#f59e0b',
+      color: '#D9A866',
     },
   ];
 
@@ -57,7 +57,7 @@ export default function KpiCards({
             borderRadius: 22,
             padding: 24,
             borderTop: `6px solid ${card.color}`,
-            boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+            boxShadow: '0 10px 25px rgba(42,22,38,.05)',
           }}
         >
           <div
@@ -88,7 +88,7 @@ export default function KpiCards({
                 style={{
                   fontSize: 36,
                   fontWeight: 900,
-                  color: '#14466B',
+                  color: '#3A1F36',
                 }}
               >
                 {card.value}

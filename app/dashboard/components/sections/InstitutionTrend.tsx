@@ -4,25 +4,25 @@ const items = [
   {
     title: 'الرضا العام',
     value: '+4%',
-    color: '#16a34a',
+    color: '#3F7F79',
     icon: '📈',
   },
   {
     title: 'الحضور',
     value: '+2%',
-    color: '#2563eb',
+    color: '#8E4A68',
     icon: '✅',
   },
   {
     title: 'استكمال التقييمات',
     value: '+9%',
-    color: '#7c3aed',
+    color: '#8E4A68',
     icon: '📝',
   },
   {
     title: 'تنفيذ التحسينات',
     value: '-3%',
-    color: '#ea580c',
+    color: '#8A5A1E',
     icon: '🎯',
   },
 ];
@@ -34,14 +34,14 @@ export default function InstitutionTrend() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 30,
           fontWeight: 900,
         }}
@@ -77,7 +77,7 @@ export default function InstitutionTrend() {
 
             <div
               style={{
-                color: '#14466B',
+                color: '#3A1F36',
                 fontWeight: 900,
                 fontSize: 18,
               }}

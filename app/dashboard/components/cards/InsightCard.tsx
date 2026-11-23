@@ -9,23 +9,23 @@ type InsightCardProps = {
 
 const styles = {
   excellent: {
-    color: '#15803d',
-    bg: '#dcfce7',
+    color: '#2F6B66',
+    bg: '#E6F3F1',
     label: 'ممتاز',
   },
   good: {
-    color: '#2563eb',
-    bg: '#dbeafe',
+    color: '#8E4A68',
+    bg: '#F3E8EF',
     label: 'جيد',
   },
   warning: {
-    color: '#d97706',
-    bg: '#fef3c7',
+    color: '#8A5A1E',
+    bg: '#F1D9A8',
     label: 'يحتاج متابعة',
   },
   critical: {
-    color: '#b91c1c',
-    bg: '#fee2e2',
+    color: '#B9544A',
+    bg: '#FBEDE7',
     label: 'أولوية عاجلة',
   },
 };
@@ -44,7 +44,7 @@ export default function InsightCard({
         background: '#fff',
         borderRadius: 20,
         padding: 24,
-        boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 25px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -58,7 +58,7 @@ export default function InsightCard({
         <h3
           style={{
             margin: 0,
-            color: '#14466B',
+            color: '#3A1F36',
             fontWeight: 900,
           }}
         >
@@ -83,7 +83,7 @@ export default function InsightCard({
         style={{
           fontSize: 42,
           fontWeight: 900,
-          color: '#14466B',
+          color: '#3A1F36',
         }}
       >
         {value}

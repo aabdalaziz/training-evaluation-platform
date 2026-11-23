@@ -26,18 +26,18 @@ const items: PulseItem[] = [
 
 const COLORS = {
   success: {
-    color: '#16a34a',
-    bg: '#dcfce7',
+    color: '#3F7F79',
+    bg: '#E6F3F1',
     icon: '✅',
   },
   warning: {
-    color: '#d97706',
-    bg: '#fef3c7',
+    color: '#8A5A1E',
+    bg: '#F1D9A8',
     icon: '⚠️',
   },
   danger: {
-    color: '#dc2626',
-    bg: '#fee2e2',
+    color: '#D4614A',
+    bg: '#FBEDE7',
     icon: '🚨',
   },
 };
@@ -49,7 +49,7 @@ export default function OrganizationPulse() {
         background: '#ffffff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 12px 30px rgba(15,23,42,.06)',
+        boxShadow: '0 12px 30px rgba(42,22,38,.06)',
       }}
     >
       <div
@@ -76,7 +76,7 @@ export default function OrganizationPulse() {
           <h2
             style={{
               margin: '8px 0',
-              color: '#14466B',
+              color: '#3A1F36',
               fontSize: 32,
               fontWeight: 900,
             }}
@@ -97,8 +97,8 @@ export default function OrganizationPulse() {
 
         <div
           style={{
-            background: '#dcfce7',
-            color: '#15803d',
+            background: '#E6F3F1',
+            color: '#2F6B66',
             borderRadius: 20,
             padding: '18px 28px',
             textAlign: 'center',
@@ -177,7 +177,7 @@ export default function OrganizationPulse() {
       <div
         style={{
           marginTop: 28,
-          background: '#14466B',
+          background: '#3A1F36',
           color: '#fff',
           borderRadius: 18,
           padding: 22,

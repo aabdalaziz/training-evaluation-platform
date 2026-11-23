@@ -5,37 +5,37 @@ const actions = [
     icon: '📚',
     title: 'اعتماد برنامج',
     description: 'اعتماد البرامج الجديدة',
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     icon: '👨‍🏫',
     title: 'تعيين مدرب',
     description: 'ربط المدربين بالبرامج',
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
   {
     icon: '🏫',
     title: 'إدارة القاعات',
     description: 'ربط القاعات والجداول',
-    color: '#16a34a',
+    color: '#3F7F79',
   },
   {
     icon: '📝',
     title: 'متابعة التقييمات',
     description: 'التقييم اليومي والنهائي',
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
   {
     icon: '📜',
     title: 'إصدار الشهادات',
     description: 'الشهادات المكتملة',
-    color: '#0891b2',
+    color: '#3F7F79',
   },
   {
     icon: '🎯',
     title: 'خطة التحسين',
     description: 'متابعة الإجراءات التصحيحية',
-    color: '#dc2626',
+    color: '#D4614A',
   },
 ];
 
@@ -46,14 +46,14 @@ export default function ActionCenter() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 10,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 30,
         }}
@@ -109,7 +109,7 @@ export default function ActionCenter() {
 
             <div
               style={{
-                color: '#14466B',
+                color: '#3A1F36',
                 fontWeight: 900,
                 fontSize: 18,
               }}

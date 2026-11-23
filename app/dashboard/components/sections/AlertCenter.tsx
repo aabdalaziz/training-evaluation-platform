@@ -30,21 +30,21 @@ const alerts: AlertItem[] = [
 
 const styles = {
   critical: {
-    bg: '#fef2f2',
-    border: '#fecaca',
-    color: '#b91c1c',
+    bg: '#FBEDE7',
+    border: '#F3C4B6',
+    color: '#B9544A',
     icon: '🔴',
   },
   warning: {
-    bg: '#fffbeb',
-    border: '#fde68a',
-    color: '#b45309',
+    bg: '#FBF4EE',
+    border: '#E9C98A',
+    color: '#8A5A1E',
     icon: '🟠',
   },
   info: {
-    bg: '#eff6ff',
-    border: '#bfdbfe',
-    color: '#1d4ed8',
+    bg: '#F3E8EF',
+    border: '#E2CBDA',
+    color: '#6A3350',
     icon: '🔵',
   },
 };
@@ -56,14 +56,14 @@ export default function AlertCenter() {
         background: '#fff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 20,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 26,
         }}

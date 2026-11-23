@@ -5,25 +5,25 @@ const insights = [
     icon: '📈',
     title: 'أفضل برنامج',
     value: 'تعليم اللغة العربية',
-    color: '#16a34a',
+    color: '#3F7F79',
   },
   {
     icon: '⭐',
     title: 'أفضل مدرب',
     value: 'د. محمد أحمد',
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     icon: '🏫',
     title: 'أفضل قاعة',
     value: 'القاعة 203',
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
   {
     icon: '🎯',
     title: 'أكبر فجوة',
     value: 'إدارة الوقت',
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
 ];
 
@@ -34,14 +34,14 @@ export default function QuickInsights() {
         background: '#ffffff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 30,
         }}
@@ -97,7 +97,7 @@ export default function QuickInsights() {
               <div
                 style={{
                   marginTop: 6,
-                  color: '#14466B',
+                  color: '#3A1F36',
                   fontWeight: 900,
                   fontSize: 18,
                 }}

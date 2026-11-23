@@ -24,7 +24,7 @@ export default function StatCard({
         borderRadius: 22,
         padding: 24,
         borderTop: `6px solid ${color}`,
-        boxShadow: '0 12px 30px rgba(15,23,42,.06)',
+        boxShadow: '0 12px 30px rgba(42,22,38,.06)',
         transition: '.25s',
       }}
     >
@@ -55,8 +55,8 @@ export default function StatCard({
         {trend && (
           <div
             style={{
-              background: '#dcfce7',
-              color: '#15803d',
+              background: '#E6F3F1',
+              color: '#2F6B66',
               padding: '6px 10px',
               borderRadius: 20,
               fontWeight: 800,
@@ -72,7 +72,7 @@ export default function StatCard({
         style={{
           fontSize: 42,
           fontWeight: 900,
-          color: '#14466B',
+          color: '#3A1F36',
           lineHeight: 1,
         }}
       >

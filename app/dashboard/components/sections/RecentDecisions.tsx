@@ -28,14 +28,14 @@ export default function RecentDecisions() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 30,
         }}
@@ -58,7 +58,7 @@ export default function RecentDecisions() {
             <div
               style={{
                 fontWeight: 800,
-                color: '#14466B',
+                color: '#3A1F36',
               }}
             >
               {item.title}
@@ -82,7 +82,7 @@ export default function RecentDecisions() {
           >
             <div
               style={{
-                color: '#16a34a',
+                color: '#3F7F79',
                 fontWeight: 800,
               }}
             >

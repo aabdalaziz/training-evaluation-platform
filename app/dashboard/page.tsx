@@ -49,15 +49,15 @@ const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866';
 const PROFILE_KEYS = ['intro_ar', 'intro_en', 'objectives_ar', 'objectives_en', 'outcomes_ar', 'outcomes_en', 'audience_ar', 'audience_en'] as const;
 const emptyForm: FormState = { name_ar: '', name_en: '', description_ar: '', start_date: '', end_date: '', delivery_mode: 'onsite', intro_ar: '', intro_en: '', objectives_ar: '', objectives_en: '', outcomes_ar: '', outcomes_en: '', audience_ar: '', audience_en: '' };
 const STATUS_STYLE: Record<Program['status'], { bg: string; color: string; label: string }> = {
-  DRAFT: { bg: '#F6EBE0', color: '#5C4858', label: 'مسودة' }, ACTIVE: { bg: '#d1fae5', color: '#047857', label: 'نشط' },
-  COMPLETED: { bg: '#dbeafe', color: '#1d4ed8', label: 'مكتمل' }, CANCELLED: { bg: '#fee2e2', color: '#b91c1c', label: 'ملغى' },
+  DRAFT: { bg: '#F6EBE0', color: '#5C4858', label: 'مسودة' }, ACTIVE: { bg: '#BFE1DC', color: '#2F6B66', label: 'نشط' },
+  COMPLETED: { bg: '#F3E8EF', color: '#6A3350', label: 'مكتمل' }, CANCELLED: { bg: '#FBEDE7', color: '#B9544A', label: 'ملغى' },
 };
 const APPROVAL_STYLE: Record<ApprovalStatus, { bg: string; color: string; label: string; hint: string }> = {
   DRAFT: { bg: '#F6EBE0', color: '#5C4858', label: 'بانتظار الإرسال', hint: 'البرنامج مسودة ولم يُرسل للمراجعة والاعتماد بعد' },
-  PENDING_REVIEW: { bg: '#fff7e6', color: '#b45309', label: 'بانتظار المراجعة', hint: 'أُرسل من مدير البرامج وينتظر المراجعة' },
-  REVIEWED: { bg: '#eef4ff', color: '#1d4ed8', label: 'تمت المراجعة', hint: 'روجع وينتظر اعتماد محلل الجودة / مدير المنصة' },
-  APPROVED: { bg: '#eafaf0', color: '#15803d', label: 'معتمد', hint: 'معتمد — يمكن تفعيله' },
-  REJECTED: { bg: '#fef2f2', color: '#b91c1c', label: 'مرفوض', hint: 'رُفض — راجع السبب وعدّل ثم أعد الإرسال' },
+  PENDING_REVIEW: { bg: '#FBF4EE', color: '#8A5A1E', label: 'بانتظار المراجعة', hint: 'أُرسل من مدير البرامج وينتظر المراجعة' },
+  REVIEWED: { bg: '#F3E8EF', color: '#6A3350', label: 'تمت المراجعة', hint: 'روجع وينتظر اعتماد محلل الجودة / مدير المنصة' },
+  APPROVED: { bg: '#E6F3F1', color: '#2F6B66', label: 'معتمد', hint: 'معتمد — يمكن تفعيله' },
+  REJECTED: { bg: '#FBEDE7', color: '#B9544A', label: 'مرفوض', hint: 'رُفض — راجع السبب وعدّل ثم أعد الإرسال' },
 };
 const APPROVER_ROLES = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'QUALITY_ANALYST'];
 const SUBMITTER_ROLES = [...APPROVER_ROLES, 'PROGRAM_MANAGER'];
@@ -389,14 +389,14 @@ export default function Dashboard() {
                 <div className="db-hero-row">
                   <span className="db-hero-score" style={{ color: k.responses ? perf.color : '#B3A5AE' }}>{k.responses ? k.mean.toFixed(2) : '—'}<small>/5</small></span>
                   <div>
-                    <div className="db-hero-badges"><span className="db-badge" style={{ background: perf.bg, color: perf.color }}>{perf.ar}</span><span className="db-badge" style={{ background: risk.bg, color: risk.color }}>مخاطر: {risk.ar}</span>{cmp?.deltaMean !== null && cmp?.deltaMean !== undefined && <span className="db-badge" style={{ background: cmp.deltaMean >= 0 ? '#d1fae5' : '#fee2e2', color: cmp.deltaMean >= 0 ? '#047857' : '#b91c1c' }}>{cmp.deltaMean >= 0 ? '▲' : '▼'} {Math.abs(cmp.deltaMean).toFixed(2)} عن الفترة السابقة</span>}</div>
+                    <div className="db-hero-badges"><span className="db-badge" style={{ background: perf.bg, color: perf.color }}>{perf.ar}</span><span className="db-badge" style={{ background: risk.bg, color: risk.color }}>مخاطر: {risk.ar}</span>{cmp?.deltaMean !== null && cmp?.deltaMean !== undefined && <span className="db-badge" style={{ background: cmp.deltaMean >= 0 ? '#BFE1DC' : '#FBEDE7', color: cmp.deltaMean >= 0 ? '#2F6B66' : '#B9544A' }}>{cmp.deltaMean >= 0 ? '▲' : '▼'} {Math.abs(cmp.deltaMean).toFixed(2)} عن الفترة السابقة</span>}</div>
                     <p className="db-hero-text">{heroText(k, cmp)}</p>
                   </div>
                 </div>
               </div>
               <div className="db-hero-side">
                 <div><small>الهدف المرجعي</small><b>{TARGET}</b></div>
-                <div><small>الفجوة</small><b style={{ color: k.gap > 0 ? '#fca5a5' : '#86efac' }}>{k.responses ? (k.gap > 0 ? '-' : '+') + Math.abs(k.gap).toFixed(2) : '—'}</b></div>
+                <div><small>الفجوة</small><b style={{ color: k.gap > 0 ? '#F3C4B6' : '#8FD0C8' }}>{k.responses ? (k.gap > 0 ? '-' : '+') + Math.abs(k.gap).toFixed(2) : '—'}</b></div>
                 <div><small>الاستجابات اليوم</small><b>{kToday.responses}</b></div>
                 <div><small>إجمالي الاستجابات</small><b>{kAll.responses}</b></div>
               </div>
@@ -407,7 +407,7 @@ export default function Dashboard() {
               <Kpi icon="evaluations" label="الاستجابات" value={k.responses} sub={`${k.daily} يومي · ${k.final} ختامي`} delta={cmp ? cmp.deltaResponses : null} />
               <Kpi icon="users" label="المشاركون (فريد)" value={k.participants} sub={`${k.perDay} استجابة/يوم`} />
               <Kpi icon="check" label="رضا مرتفع (4–5)" value={`${k.highPct.toFixed(0)}%`} sub="من القياسات" delta={cmp?.deltaHighPct ?? null} suffix="%" />
-              <Kpi icon="alert" label="تقييمات منخفضة (1–2)" value={`${k.lowPct.toFixed(0)}%`} sub={k.lowPct >= 10 ? 'فوق حد الإنذار 10%' : 'ضمن الحد الآمن'} delta={cmp?.deltaLowPct ?? null} suffix="%" good="down" color={k.lowPct >= 10 ? '#b91c1c' : undefined} />
+              <Kpi icon="alert" label="تقييمات منخفضة (1–2)" value={`${k.lowPct.toFixed(0)}%`} sub={k.lowPct >= 10 ? 'فوق حد الإنذار 10%' : 'ضمن الحد الآمن'} delta={cmp?.deltaLowPct ?? null} suffix="%" good="down" color={k.lowPct >= 10 ? '#B9544A' : undefined} />
               <Kpi icon="school" label="التغطية" value={k.rooms} sub={`قاعة · ${k.trainers} مدرب · ${k.programs} برنامج`} />
               <Kpi icon="book" label="البرامج النشطة" value={programs.filter(p => p.status === 'ACTIVE').length} sub={`من ${programs.length} برنامج`} />
             </section>
@@ -417,7 +417,7 @@ export default function Dashboard() {
               <section className="db-card db-decision">
                 <div className="db-ct"><Icon name="target" size={18} color={TEAL} /> قرار اليوم</div>
                 {decision ? (<>
-                  <div className="db-decision-head"><span className="db-badge" style={{ background: decision.priority === 'HIGH' ? '#fee2e2' : '#fef3c7', color: decision.priority === 'HIGH' ? '#b91c1c' : '#b45309' }}>أولوية {decision.priority === 'HIGH' ? 'عالية' : 'متوسطة'}</span><b>{decision.label}</b></div>
+                  <div className="db-decision-head"><span className="db-badge" style={{ background: decision.priority === 'HIGH' ? '#FBEDE7' : '#F1D9A8', color: decision.priority === 'HIGH' ? '#B9544A' : '#8A5A1E' }}>أولوية {decision.priority === 'HIGH' ? 'عالية' : 'متوسطة'}</span><b>{decision.label}</b></div>
                   <div className="db-decision-nums"><span>المتوسط: <bdi>{decision.mean.toFixed(2)}/5</bdi></span><span>تقييمات منخفضة: <bdi>{decision.lowPct.toFixed(0)}%</bdi></span><span>العينة: <bdi>n={decision.responses}</bdi></span><span>مؤشر الأثر: <bdi>{decision.impact}</bdi></span></div>
                   <p>{decision.recommendation}</p>
                   <div className="db-decision-meta"><span><Icon name="users" size={14} /> {decision.owner}</span><span><Icon name="clock" size={14} /> {decision.dueDays} يوم</span><span><Icon name="flag" size={14} /> الوصول إلى ≥ {TARGET}</span></div>
@@ -429,7 +429,7 @@ export default function Dashboard() {
               </section>
 
               <section className="db-card">
-                <div className="db-ct"><Icon name="alert" size={18} color="#b45309" /> مركز التنبيهات <span className="db-count">{alerts.length}</span></div>
+                <div className="db-ct"><Icon name="alert" size={18} color="#8A5A1E" /> مركز التنبيهات <span className="db-count">{alerts.length}</span></div>
                 {alerts.length ? <div className="db-alerts">{alerts.map((a, i) => (
                   <div key={i} className={`db-alert ${a.level}`}><span className="db-alert-dot" /><div style={{ flex: 1 }}>{a.text}</div>{a.href ? <Link href={a.href} className="db-alert-cta">{a.cta}</Link> : a.cta ? <button className="db-alert-cta" onClick={() => setView('programs')}>{a.cta}</button> : null}</div>
                 ))}</div> : <div className="db-empty">لا توجد تنبيهات — كل شيء ضمن النطاق الطبيعي.</div>}
@@ -524,7 +524,7 @@ export default function Dashboard() {
                   return (<Fragment key={p.id}>
                     <tr>
                       <td className="l"><b>{p.name_ar}</b>{p.name_en && <small className="db-muted">{p.name_en}</small>}</td>
-                      <td><span className="db-badge" style={{ background: p.delivery_mode === 'remote' ? '#ede9fe' : '#e0f2fe', color: p.delivery_mode === 'remote' ? '#6d28d9' : '#0369a1' }}>{p.delivery_mode === 'remote' ? 'عن بُعد' : 'حضوري'}</span></td>
+                      <td><span className="db-badge" style={{ background: p.delivery_mode === 'remote' ? '#F3E8EF' : '#E6F3F1', color: p.delivery_mode === 'remote' ? '#8E4A68' : '#2F6B66' }}>{p.delivery_mode === 'remote' ? 'عن بُعد' : 'حضوري'}</span></td>
                       <td className="ltr">{p.start_date || '—'}{p.end_date ? ` → ${p.end_date}` : ''}</td>
                       <td>{nRooms}</td><td>{pk.responses}</td>
                       <td className="ltr" style={{ fontWeight: 900, color: pk.responses ? PERF_LABEL[pk.perf].color : '#B3A5AE' }}>{pk.responses ? pk.mean.toFixed(2) : '—'}</td>
@@ -659,7 +659,7 @@ function Kpi({ icon, label, value, sub, delta, suffix = '', good = 'up', color }
         <small>{label}</small>
         <b style={{ color: color || NAVY }}>{value}</b>
         <span>{sub}</span>
-        {delta !== null && delta !== undefined && <em style={{ color: delta === 0 ? '#8E7F8A' : pos ? '#047857' : '#b91c1c' }}>{delta > 0 ? '▲' : delta < 0 ? '▼' : '•'} {Number.isInteger(delta) ? Math.abs(delta) : Math.abs(delta).toFixed(suffix ? 1 : 2)}{suffix} <i>عن الفترة السابقة</i></em>}
+        {delta !== null && delta !== undefined && <em style={{ color: delta === 0 ? '#8E7F8A' : pos ? '#2F6B66' : '#B9544A' }}>{delta > 0 ? '▲' : delta < 0 ? '▼' : '•'} {Number.isInteger(delta) ? Math.abs(delta) : Math.abs(delta).toFixed(suffix ? 1 : 2)}{suffix} <i>عن الفترة السابقة</i></em>}
       </div>
     </div>
   );
@@ -678,7 +678,7 @@ function Spark({ series }: { series: { key: string; label: string; mean: number 
       {[1, 2, 3, 4, 5].map(v => <g key={v}><line x1={P} x2={W - P} y1={y(v)} y2={y(v)} stroke="#F3E6DC" /><text x={P - 6} y={y(v) + 3} fontSize="9" textAnchor="end" fill="#B3A5AE">{v}</text></g>)}
       <line x1={P} x2={W - P} y1={y(TARGET)} y2={y(TARGET)} stroke={GOLD} strokeDasharray="5 4" strokeWidth="1.5" />
       <path d={area} fill="url(#dbg)" /><path d={d} fill="none" stroke={NAVY} strokeWidth="2.5" />
-      {pts.map((p, i) => <g key={p.key}><circle cx={x(i)} cy={y(p.mean as number)} r="3.5" fill={(p.mean as number) >= TARGET ? '#059669' : (p.mean as number) >= THRESHOLDS.good ? NAVY : '#dc2626'}><title>{p.label}: {p.mean} (n={p.responses})</title></circle><text x={x(i)} y={H - P + 12} fontSize="8" textAnchor="middle" fill="#B3A5AE">{p.label.slice(5)}</text></g>)}
+      {pts.map((p, i) => <g key={p.key}><circle cx={x(i)} cy={y(p.mean as number)} r="3.5" fill={(p.mean as number) >= TARGET ? '#2F6B66' : (p.mean as number) >= THRESHOLDS.good ? NAVY : '#D4614A'}><title>{p.label}: {p.mean} (n={p.responses})</title></circle><text x={x(i)} y={H - P + 12} fontSize="8" textAnchor="middle" fill="#B3A5AE">{p.label.slice(5)}</text></g>)}
     </svg>
   );
 }
@@ -691,7 +691,7 @@ function Board({ title, icon, rows, href }: { title: string; icon: IconName; row
           <span className="db-light" style={{ background: m.color }} />
           <span className="db-board-l">{r.label}</span>
           <span className="db-muted">n={r.responses}</span>
-          {r.delta !== null && <span style={{ color: (r.delta as number) >= 0 ? '#047857' : '#b91c1c', fontSize: 11, fontWeight: 900 }}>{(r.delta as number) >= 0 ? '▲' : '▼'} {Math.abs(r.delta as number).toFixed(2)}</span>}
+          {r.delta !== null && <span style={{ color: (r.delta as number) >= 0 ? '#2F6B66' : '#B9544A', fontSize: 11, fontWeight: 900 }}>{(r.delta as number) >= 0 ? '▲' : '▼'} {Math.abs(r.delta as number).toFixed(2)}</span>}
           <b className="ltr" style={{ color: m.color }}>{r.mean.toFixed(2)}</b>
           <span className="db-badge" style={{ background: m.bg, color: m.color }}>{m.ar}</span>
         </div>); })}</div> : <div className="db-empty">لا توجد بيانات في الفترة المختارة</div>}
@@ -770,13 +770,13 @@ const CSS = `
 /* هـ-3 و: الردهة وباب القسم */
 .lb{min-height:100vh;position:relative;overflow:hidden;background:linear-gradient(135deg,#22101F 0%,#3A1F36 55%,#4A2946 100%);color:#FBF4EE;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif}
 .lb-hz{position:absolute;inset:0 0 auto 0;opacity:.5;pointer-events:none}.lb-in{position:relative;max-width:1100px;margin:0 auto;padding:60px 20px 40px}
-.lb-k{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:#F6D9A8;margin:0 0 10px}.lb h1{margin:0 0 8px;font-size:34px;font-weight:900}.lb-lead{margin:0 0 28px;color:rgba(251,244,238,.8);font-size:15px;line-height:1.9}
+.lb-k{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:900;color:#F1D9A8;margin:0 0 10px}.lb h1{margin:0 0 8px;font-size:34px;font-weight:900}.lb-lead{margin:0 0 28px;color:rgba(251,244,238,.8);font-size:15px;line-height:1.9}
 .lb-doors{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
 .lb-door{display:grid;justify-items:start;gap:4px;text-align:start;font:inherit;color:#FBF4EE;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-top:4px solid var(--w);border-radius:18px 18px 24px 24px;padding:18px 16px 16px;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),background .3s;animation:lbin .5s cubic-bezier(.2,.8,.2,1) both}
 @keyframes lbin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .lb-door:hover{transform:translateY(-4px);background:rgba(255,255,255,.12)}.lb-door.last{box-shadow:0 0 0 2px #D9A866 inset}
 .lb-door b{font-size:19px;font-weight:900;margin-top:8px}.lb-door em{font-style:normal;color:var(--w);font-weight:800;font-size:13px}.lb-door small{color:rgba(251,244,238,.75);font-size:12.5px;line-height:1.7;min-height:42px}
-.lb-n{margin-top:8px;font-size:11.5px;font-weight:800;color:#F6D9A8;background:rgba(217,168,102,.15);border:1px solid rgba(217,168,102,.4);border-radius:999px;padding:3px 10px}
+.lb-n{margin-top:8px;font-size:11.5px;font-weight:800;color:#F1D9A8;background:rgba(217,168,102,.15);border:1px solid rgba(217,168,102,.4);border-radius:999px;padding:3px 10px}
 .lb-foot{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}.lb .db-hall{font:inherit;cursor:pointer}
 .db-wd{background:linear-gradient(90deg,var(--ws),#fff 60%);border:1px solid var(--line);border-inline-start:5px solid var(--w);border-radius:16px 16px 22px 22px;padding:14px 16px}
 .db-wd-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}.db-wd-head b{display:block;font-size:17px;color:var(--navy);font-weight:900}.db-wd-head small{color:var(--muted);font-size:12.5px}.db-wd-n{margin-inline-start:auto;font-size:12px;font-weight:800;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px}
@@ -792,12 +792,12 @@ const CSS = `
 /* ---------- sidebar ---------- */
 .db-side{background:linear-gradient(180deg,var(--navy) 0%,var(--deep,#22101F) 100%);color:#fff;padding:16px 14px;display:flex;flex-direction:column;gap:14px;position:sticky;top:0;height:100vh;overflow:auto;align-self:start;border-inline-start:1px solid rgba(255,255,255,.06)}
 .db-brand{display:flex;flex-direction:column;gap:10px}.db-brand-text{text-align:center}
-.db-logos svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}.db-hall{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(217,168,102,.6);background:rgba(217,168,102,.12);color:#fde68a;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:800;text-decoration:none}.db-hall:hover{background:rgba(217,168,102,.22)}.db-owner{display:block;text-align:center;color:#8fb0c9;font-size:10.5px;font-weight:700;line-height:1.6;padding:0 6px}
+.db-logos svg{filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}.db-hall{display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(217,168,102,.6);background:rgba(217,168,102,.12);color:#E9C98A;border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:800;text-decoration:none}.db-hall:hover{background:rgba(217,168,102,.22)}.db-owner{display:block;text-align:center;color:#C9A6B6;font-size:10.5px;font-weight:700;line-height:1.6;padding:0 6px}
 .db-logos{background:rgba(255,255,255,.07);border-radius:var(--r);padding:9px 10px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid rgba(217,168,102,.35)}.db-logos img{background:#fff;border-radius:8px;padding:3px}
 .db-logos img{height:46px;width:auto;max-width:128px;object-fit:contain;display:block}
 .db-brand b{display:block;font-size:16px;letter-spacing:.2px}.db-brand small,.db-user small{display:block;color:#D9C6CF;font-size:11px;font-weight:700}
 .db-user{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:10px}
-.db-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#e6c979);color:var(--navy);font-weight:900;display:grid;place-items:center;font-size:17px}
+.db-avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#E9C98A);color:var(--navy);font-weight:900;display:grid;place-items:center;font-size:17px}
 .db-user b{display:block;font-size:14px}
 .db-nav{display:flex;flex-direction:column;gap:3px;flex:1}
 .db-nav button,.db-navlink{display:flex;gap:10px;align-items:center;width:100%;background:transparent;border:1px solid transparent;color:#EADFD6;border-radius:10px;padding:9px 10px;cursor:pointer;text-align:start;text-decoration:none;position:relative;transition:.15s}
@@ -805,7 +805,7 @@ const CSS = `
 .db-nav button:hover,.db-navlink:hover{background:rgba(255,255,255,.07);color:#fff}
 .db-nav button.on{background:linear-gradient(90deg,rgba(212,97,74,.28),rgba(255,255,255,.06));color:#fff}
 .db-nav button.on::before{content:'';position:absolute;inset-inline-start:-14px;top:9px;bottom:9px;width:4px;border-radius:0 3px 3px 0;background:var(--gold)}.db-nav button.on::after{content:'';position:absolute;inset-inline-end:10px;top:50%;width:7px;height:7px;transform:translateY(-50%) rotate(45deg);background:var(--gold);border-radius:1px}
-.db-nav button.on svg{opacity:1;color:#f1dfa6}
+.db-nav button.on svg{opacity:1;color:#F1D9A8}
 .db-nav span{display:flex;flex-direction:column;min-width:0}.db-nav b{font-size:14px}.db-nav small{font-size:11px;color:#D9C6CF;font-weight:700}
 .db-nav-sep{font-size:10.5px;font-weight:800;color:#C9A6B6;letter-spacing:.6px;padding:12px 10px 4px;border-top:1px solid rgba(255,255,255,.08);margin-top:6px;text-transform:uppercase}
 .db-cl{margin-top:10px;position:relative}.db-cl:first-of-type{margin-top:4px}
@@ -815,8 +815,8 @@ const CSS = `
 .db-stop{position:relative;padding-inline-start:16px!important}.db-stn{position:absolute;inset-inline-start:-2px;top:50%;width:6px;height:6px;margin-top:-5px;border-radius:50%;background:#3A1F36;border:2px solid var(--cl);box-sizing:content-box;transition:transform .15s,background .15s;z-index:1}
 .db-stop:hover .db-stn,.db-stop.on .db-stn{background:var(--cl);transform:scale(1.25);box-shadow:0 0 0 4px color-mix(in srgb,var(--cl) 30%,transparent)}
 .db-wd-cl{margin-top:10px}.db-wd-cl-name{margin:0 0 6px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:900;color:var(--w)}.db-wd-cl-name i{width:7px;height:7px;transform:rotate(45deg);background:var(--w);border-radius:1px}
-.db-logout{display:flex;gap:8px;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,.18);color:#fbd5d5;border-radius:10px;padding:10px;cursor:pointer;font-weight:800;transition:.15s}
-.db-logout:hover{background:rgba(220,38,38,.18);border-color:rgba(252,165,165,.4);color:#fff}
+.db-logout{display:flex;gap:8px;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(255,255,255,.18);color:#FBEDE7;border-radius:10px;padding:10px;cursor:pointer;font-weight:800;transition:.15s}
+.db-logout:hover{background:rgba(212,97,74,.18);border-color:rgba(252,165,165,.4);color:#fff}
 /* ---------- main ---------- */
 .db-main{min-width:0}
 .db-loaderr{margin:14px 24px -6px;background:var(--bad-soft);border:1px solid var(--bad-line);color:var(--bad);border-radius:var(--r);padding:10px 14px;display:flex;gap:8px;align-items:center;font-weight:800;font-size:13px}
@@ -833,7 +833,7 @@ const CSS = `
 .db-seg button.on{background:var(--navy);color:#fff;box-shadow:var(--shadow-sm)}
 /* buttons */
 .db-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink-2);border-radius:10px;padding:9px 14px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;transition:.15s;line-height:1.3}
-.db-btn:hover{background:var(--surface-2);border-color:#b9c7d8;color:var(--navy)}
+.db-btn:hover{background:var(--surface-2);border-color:#E2CBDA;color:var(--navy)}
 .db-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 4px 12px rgba(42,22,38,.18)}
 .db-btn.primary:hover{background:var(--navy-2);border-color:var(--navy-2);color:#fff}
 .db-btn.teal{background:var(--teal);color:#fff;border-color:var(--teal)}.db-btn.teal:hover{background:var(--teal-2);color:#fff}
@@ -845,7 +845,7 @@ const CSS = `
 .db-btn.soft.warn{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn)}
 .db-btn.soft:hover{filter:brightness(.97)}
 .db-ic{display:inline-grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--ink-2);text-decoration:none;transition:.15s}
-.db-ic:hover{background:var(--navy-soft);border-color:#b9c7d8;color:var(--navy)}
+.db-ic:hover{background:var(--navy-soft);border-color:#E2CBDA;color:var(--navy)}
 .db-ic.danger{color:var(--bad)}.db-ic.danger:hover{background:var(--bad-soft);border-color:var(--bad-line)}
 .db-link{display:inline-flex;align-items:center;gap:4px;color:var(--teal);font-weight:800;text-decoration:none;font-size:13px;background:transparent;border:0;cursor:pointer}
 .db-link:hover{text-decoration:underline}
@@ -900,9 +900,9 @@ const CSS = `
 .db-alerts{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow:auto}
 .db-alert{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:13px;font-weight:700;background:var(--surface-2)}
 .db-alert-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px rgba(0,0,0,.04)}
-.db-alert.red{border-color:var(--bad-line);background:var(--bad-soft)}.db-alert.red .db-alert-dot{background:#dc2626}
-.db-alert.amber{border-color:var(--warn-line);background:var(--warn-soft)}.db-alert.amber .db-alert-dot{background:#f59e0b}
-.db-alert.blue{border-color:var(--info-line);background:var(--info-soft)}.db-alert.blue .db-alert-dot{background:#3b82f6}
+.db-alert.red{border-color:var(--bad-line);background:var(--bad-soft)}.db-alert.red .db-alert-dot{background:#D4614A}
+.db-alert.amber{border-color:var(--warn-line);background:var(--warn-soft)}.db-alert.amber .db-alert-dot{background:#D9A866}
+.db-alert.blue{border-color:var(--info-line);background:var(--info-soft)}.db-alert.blue .db-alert-dot{background:#8E4A68}
 .db-alert-cta{white-space:nowrap;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:800;color:var(--navy);text-decoration:none;cursor:pointer}
 .db-alert-cta:hover{border-color:var(--navy)}
 /* bars / spark / board */
@@ -936,15 +936,15 @@ const CSS = `
 .db-ap-pill{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;border-radius:10px;padding:4px 10px;font:inherit;font-size:11.5px;font-weight:800;cursor:pointer;white-space:nowrap;line-height:1.5;text-align:start}
 .db-ap-pill small{font-weight:700;font-size:10.5px;opacity:.85;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .db-ap-pill:hover{filter:brightness(.96)}
-.db-btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}.db-btn.danger:hover{background:#991b1b;color:#fff}
+.db-btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}.db-btn.danger:hover{background:#9A3A2A;color:#fff}
 .db-hist-row td{background:var(--surface-2)!important;text-align:start!important;padding:12px 16px!important}
 .db-hist-head{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--navy);margin-bottom:8px}.db-hist-head .db-link{margin-inline-start:auto}
 .db-timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .db-timeline li{display:flex;gap:10px;align-items:flex-start;font-size:13px}
-.db-tl-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;box-shadow:0 0 0 3px rgba(15,23,42,.05)}
+.db-tl-dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0;box-shadow:0 0 0 3px rgba(42,22,38,.05)}
 .db-hist-note{margin-top:3px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-weight:700;color:var(--ink-2)}
-.db-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:120;padding:16px}
-.db-modal-box{width:min(540px,100%);background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;box-shadow:0 24px 60px rgba(15,23,42,.3)}
+.db-modal{position:fixed;inset:0;background:rgba(42,22,38,.45);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:120;padding:16px}
+.db-modal-box{width:min(540px,100%);background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;box-shadow:0 24px 60px rgba(42,22,38,.3)}
 .db-modal-p{margin:0 0 4px;font-size:15px}.db-modal-help{margin:0 0 12px;font-size:12.5px;color:var(--muted);font-weight:700;line-height:1.7}
 .db-modal-field{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:12px}
 .db-modal-field textarea{border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;line-height:1.7;resize:vertical}
@@ -956,7 +956,7 @@ const CSS = `
 .db-tbl th:first-child{text-align:start}
 .db-tbl td{padding:10px;border-bottom:1px solid var(--line);text-align:center;font-weight:700;vertical-align:middle;font-variant-numeric:tabular-nums}
 .db-tbl tbody tr:last-child td{border-bottom:0}
-.db-tbl tbody tr:hover td{background:#fbfcfe}
+.db-tbl tbody tr:hover td{background:#F3E8EF}
 .db-tbl td.l{text-align:start}.db-tbl td.ltr{white-space:nowrap}
 .db-tbl td.l b{color:var(--navy);display:block;font-size:13.5px}
 .db-tbl td.l small{display:block;margin-top:1px;direction:ltr;text-align:start;font-weight:600}

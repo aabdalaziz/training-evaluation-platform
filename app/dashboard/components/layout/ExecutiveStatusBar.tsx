@@ -11,28 +11,28 @@ export default function ExecutiveStatusBar() {
       }}
     >
       <Status
-        color="#16a34a"
+        color="#3F7F79"
         icon="🟢"
         title="حالة المنصة"
         value="جميع الخدمات تعمل"
       />
 
       <Status
-        color="#2563eb"
+        color="#8E4A68"
         icon="🎓"
         title="البرامج اليوم"
         value="3 برامج نشطة"
       />
 
       <Status
-        color="#ea580c"
+        color="#8A5A1E"
         icon="📝"
         title="التقييمات"
         value="36 تقييماً مستلماً"
       />
 
       <Status
-        color="#7c3aed"
+        color="#8E4A68"
         icon="📅"
         title="آخر تحديث"
         value="قبل دقيقة واحدة"
@@ -59,7 +59,7 @@ function Status({
         borderRadius: 18,
         padding: 18,
         borderTop: `5px solid ${color}`,
-        boxShadow: '0 8px 24px rgba(15,23,42,.05)',
+        boxShadow: '0 8px 24px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -90,7 +90,7 @@ function Status({
 
           <div
             style={{
-              color: '#14466B',
+              color: '#3A1F36',
               fontSize: 17,
               fontWeight: 900,
             }}

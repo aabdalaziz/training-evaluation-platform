@@ -29,9 +29,9 @@ const items: ProgramAlert[] = [
 ];
 
 const colors = {
-  عالية: '#dc2626',
-  متوسطة: '#f59e0b',
-  منخفضة: '#16a34a',
+  عالية: '#D4614A',
+  متوسطة: '#D9A866',
+  منخفضة: '#3F7F79',
 };
 
 export default function ProgramsNeedingAttention() {
@@ -41,14 +41,14 @@ export default function ProgramsNeedingAttention() {
         background: '#fff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 8,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 28,
         }}
@@ -70,7 +70,7 @@ export default function ProgramsNeedingAttention() {
           <div
             key={item.program}
             style={{
-              border: '1px solid #e5e7eb',
+              border: '1px solid #EADFD6',
               borderRight: `6px solid ${colors[item.priority]}`,
               borderRadius: 16,
               padding: 18,
@@ -87,7 +87,7 @@ export default function ProgramsNeedingAttention() {
             >
               <strong
                 style={{
-                  color: '#14466B',
+                  color: '#3A1F36',
                   fontSize: 18,
                 }}
               >
@@ -120,7 +120,7 @@ export default function ProgramsNeedingAttention() {
             <button
               style={{
                 border: 0,
-                background: '#14466B',
+                background: '#3A1F36',
                 color: '#fff',
                 borderRadius: 10,
                 padding: '10px 16px',

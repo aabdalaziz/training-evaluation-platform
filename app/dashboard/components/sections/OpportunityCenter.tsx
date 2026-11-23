@@ -6,21 +6,21 @@ const opportunities = [
     impact: 'مرتفع',
     expected: '+8%',
     action: 'إرسال تذكير للمشاركين',
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     title: 'تحسين إدارة الوقت',
     impact: 'مرتفع',
     expected: '+0.35',
     action: 'اجتماع مع المدربين',
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
   {
     title: 'زيادة الحضور',
     impact: 'متوسط',
     expected: '+4%',
     action: 'إشعار قبل بداية الجلسة',
-    color: '#16a34a',
+    color: '#3F7F79',
   },
 ];
 
@@ -31,13 +31,13 @@ export default function OpportunityCenter() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
-          color: '#14466B',
+          color: '#3A1F36',
           fontWeight: 900,
           fontSize: 30,
         }}
@@ -81,7 +81,7 @@ export default function OpportunityCenter() {
             >
               <strong
                 style={{
-                  color: '#14466B',
+                  color: '#3A1F36',
                   fontSize: 18,
                 }}
               >
@@ -114,7 +114,7 @@ export default function OpportunityCenter() {
             <button
               style={{
                 border: 0,
-                background: '#14466B',
+                background: '#3A1F36',
                 color: '#fff',
                 borderRadius: 12,
                 padding: '12px 18px',

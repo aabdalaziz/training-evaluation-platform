@@ -29,21 +29,21 @@ const recommendations: Recommendation[] = [
 
 const COLORS = {
   success: {
-    bg: '#ecfdf5',
-    border: '#bbf7d0',
-    color: '#047857',
+    bg: '#E6F3F1',
+    border: '#BFE1DC',
+    color: '#2F6B66',
     icon: '✅',
   },
   warning: {
-    bg: '#fffbeb',
-    border: '#fde68a',
-    color: '#b45309',
+    bg: '#FBF4EE',
+    border: '#E9C98A',
+    color: '#8A5A1E',
     icon: '⚠️',
   },
   critical: {
-    bg: '#fef2f2',
-    border: '#fecaca',
-    color: '#b91c1c',
+    bg: '#FBEDE7',
+    border: '#F3C4B6',
+    color: '#B9544A',
     icon: '🚨',
   },
 };
@@ -55,7 +55,7 @@ export default function ExecutiveAdvisor() {
         background: '#ffffff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -70,7 +70,7 @@ export default function ExecutiveAdvisor() {
           <h2
             style={{
               margin: 0,
-              color: '#14466B',
+              color: '#3A1F36',
               fontSize: 28,
               fontWeight: 900,
             }}
@@ -91,7 +91,7 @@ export default function ExecutiveAdvisor() {
 
       <div
         style={{
-          background: '#0B3552',
+          background: '#1F4F4A',
           color: '#fff',
           borderRadius: 18,
           padding: 24,

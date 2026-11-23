@@ -19,7 +19,7 @@ import SovereignWallet from '../../components/SovereignWallet';
 export default function TwinPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 const RESUME_KEY = 'athar_resume';
 type Bundle = { user: { id: string; name: string; email: string }; levels: any[]; skills: Skill[]; credentials: any[]; programs: any[]; scenarios: any[]; sessions: any[] };
-const DOMAIN_COLOR: Record<string, string> = { arabic: '#D4614A', pedagogy: '#3b82f6', leadership: '#D9A866', quality: '#10b981', data_ai: '#8b5cf6', digital: '#38bdf8', research: '#f59e0b', wellbeing: '#f43f5e' };
+const DOMAIN_COLOR: Record<string, string> = { arabic: '#D4614A', pedagogy: '#8E4A68', leadership: '#D9A866', quality: '#3F7F79', data_ai: '#C9A6B6', digital: '#5EA8A0', research: '#D9A866', wellbeing: '#D4614A' };
 const MARKS = [-365, -180, -90, 0, 90, 180, 365];
 
 function Inner() {
@@ -97,7 +97,7 @@ function Inner() {
             <div className="pt-box tw-sky">
               <div className="tw-skyhead"><h3><Icon name="star" size={18} /> {ar ? 'كوكبة مهاراتي' : 'My skills constellation'}</h3><span className="tw-day">{dayLabel(day)} · <bdi>{fmtDate(new Date(now.getTime() + day * 86400000).toISOString(), lang)}</bdi></span></div>
               <svg viewBox="0 0 520 520" className="tw-svg" role="img" aria-label={ar ? 'كوكبة المهارات' : 'Skills constellation'}>
-                <defs><radialGradient id="twbg" cx="50%" cy="50%" r="60%"><stop offset="0" stopColor="#15396b" /><stop offset="1" stopColor="#22101F" /></radialGradient><filter id="twglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
+                <defs><radialGradient id="twbg" cx="50%" cy="50%" r="60%"><stop offset="0" stopColor="#3A1F36" /><stop offset="1" stopColor="#22101F" /></radialGradient><filter id="twglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
                 <rect width="520" height="520" rx="22" fill="url(#twbg)" />
                 {[0, 1, 2, 3, 4].map(r => <circle key={r} cx="260" cy="260" r={520 * (0.12 + 0.075 * r)} fill="none" stroke="rgba(255,255,255,.08)" strokeDasharray={r === 0 ? '0' : '3 5'} />)}
                 {[5, 4, 3, 2, 1].map((lv, i) => <text key={lv} x="262" y={260 - 520 * (0.12 + 0.075 * i) + 4} fontSize="9" fill="rgba(255,255,255,.35)">{lv}</text>)}
@@ -105,13 +105,13 @@ function Inner() {
                 {stars.map(st => { const x = atDay.find(a => a.tw.skill_id === st.skill_id)!; const sk = skills.get(st.skill_id)!; const col = DOMAIN_COLOR[sk.domain] || '#fff'; const rusty = x.freshness < RUST_THRESHOLD; const on = sel === st.skill_id; return (
                   <g key={st.skill_id} className={`tw-star ${on ? 'on' : ''}`} transform={`translate(${st.x} ${st.y})`} onClick={() => setSel(st.skill_id)} style={{ cursor: 'pointer' }}>
                     {on && <circle r={st.r + 10} fill="none" stroke="#fff" strokeWidth="1.5" strokeDasharray="4 3" className="tw-ring" />}
-                    <circle r={st.r + 4} fill={rusty ? '#b45309' : col} opacity={0.18} />
-                    <circle r={st.r} fill={rusty ? '#b45309' : col} opacity={st.opacity} filter="url(#twglow)" stroke={x.tw.approved ? '#fff' : 'none'} strokeWidth="1.5" />
+                    <circle r={st.r + 4} fill={rusty ? '#8A5A1E' : col} opacity={0.18} />
+                    <circle r={st.r} fill={rusty ? '#8A5A1E' : col} opacity={st.opacity} filter="url(#twglow)" stroke={x.tw.approved ? '#fff' : 'none'} strokeWidth="1.5" />
                     <text y={st.r + 13} fontSize="9.5" fill="rgba(255,255,255,.85)" textAnchor="middle">{skillName(sk, lang).slice(0, 18)}</text>
                   </g>); })}
               </svg>
               <div className="tw-time"><input type="range" min={-365} max={365} step={15} value={day} onChange={e => setDay(Number(e.target.value))} aria-label={ar ? 'الخط الزمني' : 'Timeline'} /><div className="tw-marks">{MARKS.map(m => <button key={m} type="button" className={day === m ? 'on' : ''} onClick={() => setDay(m)}>{m === 0 ? (ar ? 'الآن' : 'Now') : m > 0 ? `+${m}` : m}</button>)}</div></div>
-              <div className="tw-legend"><span><i style={{ background: '#fff' }} /> {ar ? 'الحجم = قوة الأدلة · الإضاءة = الطزاجة · الحلقة البيضاء = معتمدة' : 'Size = evidence · glow = freshness · white ring = approved'}</span><span><i style={{ background: '#b45309' }} /> {ar ? 'نحاسية = صدئة' : 'copper = rusty'}</span></div>
+              <div className="tw-legend"><span><i style={{ background: '#fff' }} /> {ar ? 'الحجم = قوة الأدلة · الإضاءة = الطزاجة · الحلقة البيضاء = معتمدة' : 'Size = evidence · glow = freshness · white ring = approved'}</span><span><i style={{ background: '#8A5A1E' }} /> {ar ? 'نحاسية = صدئة' : 'copper = rusty'}</span></div>
             </div>
 
             <aside className="tw-side">
@@ -129,7 +129,7 @@ function Inner() {
                 <svg viewBox="0 0 300 90" className="tw-curve" aria-hidden>{(() => { const X = (d: number) => 10 + (d / 180) * 280; const Y = (l: number) => 80 - ((l - 1) / 4) * 70; const base = projectSkill(cur, 180, []); return <>
                   {[1, 2, 3, 4, 5].map(l => <line key={l} x1="10" x2="290" y1={Y(l)} y2={Y(l)} stroke="#EADFD6" />)}
                   <path d={`M${curve.map(p => `${X(p.day)},${Y(p.hi)}`).join(' L')} L${[...curve].reverse().map(p => `${X(p.day)},${Y(p.lo)}`).join(' L')} Z`} fill="rgba(212,97,74,.12)" />
-                  <path d={`M${base.map(p => `${X(p.day)},${Y(p.level)}`).join(' L')}`} fill="none" stroke="#b45309" strokeWidth="1.5" strokeDasharray="4 3" />
+                  <path d={`M${base.map(p => `${X(p.day)},${Y(p.level)}`).join(' L')}`} fill="none" stroke="#8A5A1E" strokeWidth="1.5" strokeDasharray="4 3" />
                   <path d={`M${curve.map(p => `${X(p.day)},${Y(p.level)}`).join(' L')}`} fill="none" stroke="#D4614A" strokeWidth="2.5" />
                   {plan.filter(a => a.skills.includes(cur.skill_id) && a.day <= 180).map((a, i) => <circle key={i} cx={X(a.day)} cy={Y(curve.find(p => p.day === a.day)?.level || cur.level_now)} r="4" fill="#D9A866" />)}
                   <text x="10" y="10" fontSize="8" fill="#8E7F8A">{ar ? 'الآن' : 'now'}</text><text x="282" y="10" fontSize="8" fill="#8E7F8A" textAnchor="end">+180</text>
@@ -163,29 +163,29 @@ function Inner() {
 }
 
 const CSS = `
-.tw-head{background:radial-gradient(1200px 500px at 70% -20%,#1d4a85 0,#3A1F36 55%,#22101F 100%)}
-.tw-kpis{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:13.5px;color:rgba(255,255,255,.85);align-items:center}.tw-kpis b{font-size:20px;color:#fff;margin-inline-end:4px}.tw-kpis .bright b{color:#5eead4}.tw-kpis .fading b{color:#fde68a}.tw-kpis .rusty b{color:#fdba74}
-.tw-alerts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tw-alert{border:1px solid #fcd9b6;background:#fff7ed;color:#9a3412;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;display:inline-flex;gap:6px;align-items:center;cursor:pointer}.tw-alert.rusty{background:#7c2d12;color:#fff;border-color:#7c2d12}
+.tw-head{background:radial-gradient(1200px 500px at 70% -20%,#3A1F36 0,#3A1F36 55%,#22101F 100%)}
+.tw-kpis{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:13.5px;color:rgba(255,255,255,.85);align-items:center}.tw-kpis b{font-size:20px;color:#fff;margin-inline-end:4px}.tw-kpis .bright b{color:#8FD0C8}.tw-kpis .fading b{color:#E9C98A}.tw-kpis .rusty b{color:#E9C98A}
+.tw-alerts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.tw-alert{border:1px solid #F1D9A8;background:#FBF4EE;color:#9A3A2A;border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:700;display:inline-flex;gap:6px;align-items:center;cursor:pointer}.tw-alert.rusty{background:#9A3A2A;color:#fff;border-color:#9A3A2A}
 .tw-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:16px;align-items:start}
 .tw-sky{padding:14px}.tw-skyhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}.tw-skyhead h3{margin:0;display:flex;gap:8px;align-items:center}.tw-day{font-size:12.5px;color:#D4614A;font-weight:800}
 .tw-svg{width:100%;height:auto;display:block;border-radius:22px}.tw-star circle,.tw-star{transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .9s,r .6s}.tw-star text{pointer-events:none}.tw-ring{animation:twspin 12s linear infinite;transform-origin:center}@keyframes twspin{to{stroke-dashoffset:-70}}
 .tw-time{margin-top:10px}.tw-time input{width:100%;accent-color:#D4614A}.tw-marks{display:flex;justify-content:space-between;margin-top:4px}.tw-marks button{border:0;background:transparent;font:inherit;font-size:11.5px;color:#8E7F8A;cursor:pointer;padding:2px 6px;border-radius:6px}.tw-marks button.on{background:#3A1F36;color:#fff}
 .tw-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:#8E7F8A}.tw-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:4px;vertical-align:middle}
 .tw-side{display:grid;gap:14px}.tw-focus h3{margin:2px 0 10px;font-size:20px;color:#3A1F36}.tw-focus h4{margin:16px 0 6px;font-size:13.5px;color:#D4614A}.tw-dom{font-weight:800;font-size:12px}
-.tw-now{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}.tw-big b{font-size:40px;line-height:1;color:#3A1F36;font-weight:900}.tw-big small{display:block;color:#8E7F8A;font-size:12.5px;margin-top:4px}.tw-big em{color:#065f46;font-style:normal;font-weight:900}
+.tw-now{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}.tw-big b{font-size:40px;line-height:1;color:#3A1F36;font-weight:900}.tw-big small{display:block;color:#8E7F8A;font-size:12.5px;margin-top:4px}.tw-big em{color:#1F4F4A;font-style:normal;font-weight:900}
 .tw-fresh{width:84px;height:84px;border-radius:50%;display:grid;place-content:center;text-align:center;background:conic-gradient(var(--c) calc(var(--p)*1%),#EADFD6 0);position:relative}.tw-fresh::before{content:'';position:absolute;inset:7px;border-radius:50%;background:#fff}.tw-fresh b,.tw-fresh small{position:relative}.tw-fresh b{font-size:16px;color:#2A1626}.tw-fresh small{font-size:10.5px;color:#8E7F8A;display:block}
 .tw-rust{margin:10px 0 6px;font-size:13.5px;color:#4A3645;line-height:1.8;border-inline-start:3px solid #D9A866;padding-inline-start:10px}
 .tw-facts{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#8E7F8A}.tw-facts b{color:#2A1626;font-size:13px;display:block}.tw-kinds{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.tw-kinds span{font-size:11px;background:#F6EBE0;border-radius:999px;padding:2px 8px;color:#4A3645}
 .tw-proj{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tw-proj div{border:1px solid #EADFD6;border-radius:12px;padding:8px 10px;background:#FBF4EE}.tw-proj div.on{border-color:#D4614A;background:#FBEDE7}.tw-proj small{display:block;font-size:11px;color:#8E7F8A}.tw-proj b{font-size:22px;color:#3A1F36}.tw-proj i{display:block;font-size:11px;color:#B3A5AE;font-style:normal}
 .tw-curve{width:100%;height:auto;margin-top:6px}
 .tw-whatif{display:grid;gap:6px}.tw-opt{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;border:1px solid #EADFD6;border-radius:12px;padding:8px 10px;background:#fff;font:inherit;text-align:start;cursor:pointer}.tw-opt.on{border-color:#D4614A;background:#FBEDE7}.tw-opt b{font-size:13px;color:#2A1626;display:block}.tw-opt small{display:block;font-size:11px;color:#8E7F8A}.tw-opt i{font-style:normal;font-weight:900;color:#D4614A;font-size:16px}
-.tw-k{font-size:10.5px;font-weight:900;border-radius:999px;padding:2px 8px;background:#EADFD6;color:#4A3645;white-space:nowrap}.tw-k.program{background:#dcfce7;color:#166534}.tw-k.simulation{background:#ede9fe;color:#5b21b6}.tw-k.session{background:#dbeafe;color:#1e40af}.tw-k.daily{background:#fef3c7;color:#92400e}
+.tw-k{font-size:10.5px;font-weight:900;border-radius:999px;padding:2px 8px;background:#EADFD6;color:#4A3645;white-space:nowrap}.tw-k.program{background:#E6F3F1;color:#2F6B66}.tw-k.simulation{background:#F3E8EF;color:#6A3350}.tw-k.session{background:#F3E8EF;color:#6A3350}.tw-k.daily{background:#F1D9A8;color:#8A5A1E}
 .tw-pathform{display:flex;gap:8px;flex-wrap:wrap}.tw-pathform label{display:grid;gap:3px;font-size:11.5px;color:#8E7F8A;flex:1}.tw-pathform select{border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px}
-.tw-path{margin-top:8px;border-radius:12px;padding:10px 12px;border:1px solid #EADFD6;background:#FBF4EE}.tw-path.ok{border-color:#a7f3d0;background:#ecfdf5}.tw-path.no{border-color:#fde68a;background:#fffbeb}.tw-path p{margin:0 0 6px;font-size:13px;font-weight:700;color:#2A1626}.tw-path ol{margin:0;padding-inline-start:18px;display:grid;gap:4px}.tw-path li{font-size:12.5px;color:#4A3645;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.tw-path li a{color:#3A1F36;font-weight:800}.tw-path li small{color:#8E7F8A}.tw-path>small{display:block;margin-top:6px;color:#8E7F8A}
+.tw-path{margin-top:8px;border-radius:12px;padding:10px 12px;border:1px solid #EADFD6;background:#FBF4EE}.tw-path.ok{border-color:#BFE1DC;background:#E6F3F1}.tw-path.no{border-color:#E9C98A;background:#FBF4EE}.tw-path p{margin:0 0 6px;font-size:13px;font-weight:700;color:#2A1626}.tw-path ol{margin:0;padding-inline-start:18px;display:grid;gap:4px}.tw-path li{font-size:12.5px;color:#4A3645;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.tw-path li a{color:#3A1F36;font-weight:800}.tw-path li small{color:#8E7F8A}.tw-path>small{display:block;margin-top:6px;color:#8E7F8A}
 .tw-list{display:grid;gap:4px}.tw-list h3{margin:0 0 6px;font-size:14px;display:flex;gap:6px;align-items:center}.tw-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;border:0;background:transparent;font:inherit;text-align:start;padding:6px 8px;border-radius:10px;cursor:pointer}.tw-row.on{background:#F6EBE0}.tw-row i{width:9px;height:9px;border-radius:50%}.tw-row b{font-size:13px;color:#2A1626}.tw-row span{font-weight:900;color:#3A1F36}.tw-row small{color:#8E7F8A;width:34px;text-align:end}
 .tw-bottom{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.tw-creds{display:grid;gap:8px}.tw-cred{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid #EADFD6;border-radius:12px;padding:10px 14px}.tw-cred.off{opacity:.55}.tw-cred b{display:block;font-size:14px;color:#2A1626}.tw-cred small{color:#8E7F8A;font-size:12px}
 .tw-switch{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:800;color:#8E7F8A;cursor:pointer}.tw-switch input{display:none}.tw-switch span{width:34px;height:20px;border-radius:999px;background:#D9CBC2;position:relative;transition:.2s}.tw-switch span::after{content:'';position:absolute;top:3px;inset-inline-start:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:.2s}.tw-switch.on span{background:#D4614A}.tw-switch.on span::after{inset-inline-start:17px}.tw-switch.on{color:#D4614A}
-.tw-rightsrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.tw-forget{display:flex;gap:6px;flex:1;min-width:260px}.tw-forget input{flex:1;border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px}.pt-btn.danger{color:#991b1b;border-color:#fecaca}.pt-btn.danger:disabled{opacity:.5}
+.tw-rightsrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.tw-forget{display:flex;gap:6px;flex:1;min-width:260px}.tw-forget input{flex:1;border:1px solid #D9CBC2;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px}.pt-btn.danger{color:#9A3A2A;border-color:#F3C4B6}.pt-btn.danger:disabled{opacity:.5}
 .tw-empty h3{margin:8px 0 4px}.pt-muted{color:#8E7F8A;font-size:13px;line-height:1.8}
 @media(max-width:900px){.tw-grid,.tw-bottom{grid-template-columns:1fr}}
 `;

@@ -61,17 +61,17 @@ function buildStats(values,respondents=0){
     lowCount:low,neutralCount:mid,highCount:high,dist};
 }
 function perfLevel(m,lang){
-  if(m>=4.2)return{label:lang==="ar"?"ممتاز":"Excellent",bg:"#eafaf0",fg:"#15803d"};
-  if(m>=3.7)return{label:lang==="ar"?"جيد":"Good",bg:"#ccfbf1",fg:"#086f69"};
-  if(m>=3.0)return{label:lang==="ar"?"مراقبة":"Watch",bg:"#fff7e6",fg:"#b45309"};
-  return{label:lang==="ar"?"خطر":"At risk",bg:"#fef2f2",fg:"#b91c1c"};
+  if(m>=4.2)return{label:lang==="ar"?"ممتاز":"Excellent",bg:"#E6F3F1",fg:"#2F6B66"};
+  if(m>=3.7)return{label:lang==="ar"?"جيد":"Good",bg:"#BFE1DC",fg:"#2F6B66"};
+  if(m>=3.0)return{label:lang==="ar"?"مراقبة":"Watch",bg:"#FBF4EE",fg:"#8A5A1E"};
+  return{label:lang==="ar"?"خطر":"At risk",bg:"#FBEDE7",fg:"#B9544A"};
 }
 function riskLevel(s,lang){
   const n=s?.respondents||0,m=s?.mean||0,sd=s?.stddev||0,low=s?.lowPct||0;
   if(n<5)return{key:"NA",score:0,label:lang==="ar"?"بيانات غير كافية":"Insufficient",bg:"#F6EBE0",fg:"#8E7F8A"};
-  if(m<3||low>=20||sd>=1.2)return{key:"HIGH",score:3,label:lang==="ar"?"منطقة قلق":"High risk",bg:"#fef2f2",fg:"#b91c1c"};
-  if(m<3.7||low>=10||sd>=1)return{key:"MED",score:2,label:lang==="ar"?"تحتاج مراقبة":"Watch",bg:"#fff7e6",fg:"#b45309"};
-  return{key:"LOW",score:1,label:lang==="ar"?"مطمئن":"Good",bg:"#eafaf0",fg:"#15803d"};
+  if(m<3||low>=20||sd>=1.2)return{key:"HIGH",score:3,label:lang==="ar"?"منطقة قلق":"High risk",bg:"#FBEDE7",fg:"#B9544A"};
+  if(m<3.7||low>=10||sd>=1)return{key:"MED",score:2,label:lang==="ar"?"تحتاج مراقبة":"Watch",bg:"#FBF4EE",fg:"#8A5A1E"};
+  return{key:"LOW",score:1,label:lang==="ar"?"مطمئن":"Good",bg:"#E6F3F1",fg:"#2F6B66"};
 }
 function summaryFrom(ca, lang) {
   const xs = (ca || [])
@@ -302,10 +302,10 @@ function buildHeatMap(ca,rows,classrooms,lang){
 }
 function heatColor(avg,count){
   if(!count||avg===null)return{bg:"#FBF4EE",fg:"#B3A5AE"};
-  if(avg<3)return{bg:"#fef2f2",fg:"#b91c1c"};
-  if(avg<3.7)return{bg:"#fff7e6",fg:"#b45309"};
-  if(avg<4.2)return{bg:"#dcfce7",fg:"#15803d"};
-  return{bg:"#bbf7d0",fg:"#166534"};
+  if(avg<3)return{bg:"#FBEDE7",fg:"#B9544A"};
+  if(avg<3.7)return{bg:"#FBF4EE",fg:"#8A5A1E"};
+  if(avg<4.2)return{bg:"#E6F3F1",fg:"#2F6B66"};
+  return{bg:"#BFE1DC",fg:"#2F6B66"};
 }
 function maskEmail(e){if(!e||!e.includes("@"))return"—";const[u,d]=e.split("@");return`${u.slice(0,2)}***@${d}`;}
 function maskPhone(p){if(!p)return"—";const c=String(p).replace(/\s+/g,"");if(c.length<6)return"***";return c.replace(/(\d{2})\d+(\d{2})/,"$1******$2");}
@@ -329,7 +329,7 @@ function downloadCSV(filename,rows){
 }
 
 /* ============ Identity & i18n ============ */
-const TEAL="#D4614A",TEAL_DARK="#086f69",BLUE="#1d4ed8",NAVY="#3A1F36",GOLD="#D9A866",RED="#b91c1c",ORANGE="#b45309",GREEN="#15803d";
+const TEAL="#D4614A",TEAL_DARK="#2F6B66",BLUE="#6A3350",NAVY="#3A1F36",GOLD="#D9A866",RED="#B9544A",ORANGE="#8A5A1E",GREEN="#2F6B66";
 
 const dict={
   ar:{dir:"rtl",font:"inherit",title:"لوحة ذكاء الأعمال",sub:"النظام المركزي للتحليلات",
@@ -365,9 +365,9 @@ function MetricCard({title,value,sub,color=BLUE,icon="chart",badge,tooltip}:{tit
 function DistributionChart({stats,lang}){
   const isAr=lang==="ar";const total=stats?.measurements||0;
   const items=[
-    {label:isAr?"منخفض 1–2":"Low 1–2",value:stats?.lowCount||0,pct:stats?.lowPct||0,color:"#b91c1c"},
-    {label:isAr?"محايد 3":"Neutral 3",value:stats?.neutralCount||0,pct:stats?.neutralPct||0,color:"#b45309"},
-    {label:isAr?"مرتفع 4–5":"High 4–5",value:stats?.highCount||0,pct:stats?.highPct||0,color:"#10b981"}
+    {label:isAr?"منخفض 1–2":"Low 1–2",value:stats?.lowCount||0,pct:stats?.lowPct||0,color:"#B9544A"},
+    {label:isAr?"محايد 3":"Neutral 3",value:stats?.neutralCount||0,pct:stats?.neutralPct||0,color:"#8A5A1E"},
+    {label:isAr?"مرتفع 4–5":"High 4–5",value:stats?.highCount||0,pct:stats?.highPct||0,color:"#3F7F79"}
   ];
   if(!total)return<div className="empty">{isAr?"لا توجد استجابات.":"No responses."}</div>;
   return(
@@ -457,13 +457,13 @@ function LeadershipVisuals({items,summary,lang}){
   const W=420,H=300,cx=210,cy=145,R=100;
   const points=(vals)=>vals.map((v,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/vals.length);const r=R*(v/5);return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`}).join(" ");
   const grid=(n)=>points(items.map(()=>n));
-  return <div className="card" style={{marginTop:16,border:"2px solid #dbe7ef",background:"linear-gradient(135deg,#fbfdff,#f4fbfa)"}}>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 style={{margin:0,color:NAVY}}>{isAr?"لوحة القيادة البصرية للتقرير الختامي":"Executive visual dashboard"}</h2><p style={{margin:"6px 0",color:"#8E7F8A"}}>{isAr?"قراءة بصرية للمحاور النهائية مقابل المستهدف القيادي 4.20/5":"Final axes versus 4.20/5 leadership benchmark"}</p></div><span className="rbadge" style={{background:summary.mean>=TARGET?"#eafaf0":"#fff7e6",color:summary.mean>=TARGET?"#15803d":"#b45309"}}>{isAr?`المؤشر العام ${summary.mean.toFixed(2)}/5`:`Overall ${summary.mean.toFixed(2)}/5`}</span></div>
+  return <div className="card" style={{marginTop:16,border:"2px solid #BFE1DC",background:"linear-gradient(135deg,#F3E8EF,#E6F3F1)"}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 style={{margin:0,color:NAVY}}>{isAr?"لوحة القيادة البصرية للتقرير الختامي":"Executive visual dashboard"}</h2><p style={{margin:"6px 0",color:"#8E7F8A"}}>{isAr?"قراءة بصرية للمحاور النهائية مقابل المستهدف القيادي 4.20/5":"Final axes versus 4.20/5 leadership benchmark"}</p></div><span className="rbadge" style={{background:summary.mean>=TARGET?"#E6F3F1":"#FBF4EE",color:summary.mean>=TARGET?"#2F6B66":"#8A5A1E"}}>{isAr?`المؤشر العام ${summary.mean.toFixed(2)}/5`:`Overall ${summary.mean.toFixed(2)}/5`}</span></div>
     <div className="g2" style={{marginTop:18}}>
-      <div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"المخطط الراداري للمحاور":"Axis radar"}</h3><svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxHeight:330}}>{[1,2,3,4,5].map(n=><polygon key={n} points={grid(n)} fill="none" stroke="#dbe5ec" strokeWidth="1"/>)}{items.map((x,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/items.length);const tx=cx+(R+23)*Math.cos(a),ty=cy+(R+23)*Math.sin(a);return <g key={x.axisLabel}><line x1={cx} y1={cy} x2={cx+R*Math.cos(a)} y2={cy+R*Math.sin(a)} stroke="#e5edf2"/><text x={tx} y={ty} textAnchor="middle" fontSize="11" fill="#45566e">{x.axisLabel}</text></g>})}<polygon points={points(items.map(x=>x.mean))} fill="rgba(13,148,136,.20)" stroke="#D4614A" strokeWidth="3"/>{items.map((x,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/items.length),r=R*(x.mean/5);return <circle key={i} cx={cx+r*Math.cos(a)} cy={cy+r*Math.sin(a)} r="4" fill="#D4614A"/>})}</svg></div>
-      <div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"خريطة أولويات القرار":"Decision priority map"}</h3><div style={{position:"relative",height:285,border:"1px solid #dbe5ec",borderRadius:12,background:"linear-gradient(135deg,#fff1f2 0 50%,#f0fdf4 50% 100%)",overflow:"hidden"}}><div style={{position:"absolute",inset:"50% 0 auto 0",borderTop:"1px dashed #B3A5AE"}}/><div style={{position:"absolute",top:8,right:10,fontSize:11,color:"#b91c1c",fontWeight:800}}>{isAr?"مخاطر أعلى":"Higher risk"}</div><div style={{position:"absolute",bottom:8,left:10,fontSize:11,color:"#15803d",fontWeight:800}}>{isAr?"أداء أعلى":"Higher performance"}</div>{items.map((x,i)=>{const left=Math.max(5,Math.min(87,(x.mean/5)*88));const top=Math.max(8,Math.min(82,100-x.lowPct));return <div key={i} title={`${x.axisLabel}: ${x.mean.toFixed(2)}/5`} style={{position:"absolute",left:`${left}%`,top:`${top}%`,transform:"translate(-50%,-50%)",width:34,height:34,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:11,fontWeight:900,color:"#fff",background:x.risk?.key==="HIGH"?"#b91c1c":x.mean>=TARGET?"#15803d":"#b45309",boxShadow:"0 3px 8px #0003"}}>{x.axisLabel.slice(0,2)}</div>})}</div><p style={{fontSize:12,color:"#8E7F8A",lineHeight:1.7}}>{isAr?"كل نقطة تمثل محوراً؛ اليسار يعني أداء أقل، والأعلى يعني نسبة تقييمات منخفضة أكبر.":"Each dot is an axis: left means lower performance, top means more low ratings."}</p></div>
+      <div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"المخطط الراداري للمحاور":"Axis radar"}</h3><svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",maxHeight:330}}>{[1,2,3,4,5].map(n=><polygon key={n} points={grid(n)} fill="none" stroke="#EADFD6" strokeWidth="1"/>)}{items.map((x,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/items.length);const tx=cx+(R+23)*Math.cos(a),ty=cy+(R+23)*Math.sin(a);return <g key={x.axisLabel}><line x1={cx} y1={cy} x2={cx+R*Math.cos(a)} y2={cy+R*Math.sin(a)} stroke="#EADFD6"/><text x={tx} y={ty} textAnchor="middle" fontSize="11" fill="#3A1F36">{x.axisLabel}</text></g>})}<polygon points={points(items.map(x=>x.mean))} fill="rgba(13,148,136,.20)" stroke="#D4614A" strokeWidth="3"/>{items.map((x,i)=>{const a=(-Math.PI/2)+(i*2*Math.PI/items.length),r=R*(x.mean/5);return <circle key={i} cx={cx+r*Math.cos(a)} cy={cy+r*Math.sin(a)} r="4" fill="#D4614A"/>})}</svg></div>
+      <div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"خريطة أولويات القرار":"Decision priority map"}</h3><div style={{position:"relative",height:285,border:"1px solid #EADFD6",borderRadius:12,background:"linear-gradient(135deg,#FBEDE7 0 50%,#E6F3F1 50% 100%)",overflow:"hidden"}}><div style={{position:"absolute",inset:"50% 0 auto 0",borderTop:"1px dashed #B3A5AE"}}/><div style={{position:"absolute",top:8,right:10,fontSize:11,color:"#B9544A",fontWeight:800}}>{isAr?"مخاطر أعلى":"Higher risk"}</div><div style={{position:"absolute",bottom:8,left:10,fontSize:11,color:"#2F6B66",fontWeight:800}}>{isAr?"أداء أعلى":"Higher performance"}</div>{items.map((x,i)=>{const left=Math.max(5,Math.min(87,(x.mean/5)*88));const top=Math.max(8,Math.min(82,100-x.lowPct));return <div key={i} title={`${x.axisLabel}: ${x.mean.toFixed(2)}/5`} style={{position:"absolute",left:`${left}%`,top:`${top}%`,transform:"translate(-50%,-50%)",width:34,height:34,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:11,fontWeight:900,color:"#fff",background:x.risk?.key==="HIGH"?"#B9544A":x.mean>=TARGET?"#2F6B66":"#8A5A1E",boxShadow:"0 3px 8px #0003"}}>{x.axisLabel.slice(0,2)}</div>})}</div><p style={{fontSize:12,color:"#8E7F8A",lineHeight:1.7}}>{isAr?"كل نقطة تمثل محوراً؛ اليسار يعني أداء أقل، والأعلى يعني نسبة تقييمات منخفضة أكبر.":"Each dot is an axis: left means lower performance, top means more low ratings."}</p></div>
     </div>
-    <div className="g2" style={{marginTop:16}}><div className="card" style={{boxShadow:"none",borderTop:"4px solid #15803d"}}><h3 className="ctitle">{isAr?"أعلى المحاور أداءً":"Top strengths"}</h3>{top.map((x,i)=><div key={x.axisLabel} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #edf2f5"}}><span>{i+1}. {x.axisLabel}</span><b style={{color:"#15803d"}}>{x.mean.toFixed(2)}/5</b></div>)}</div><div className="card" style={{boxShadow:"none",borderTop:"4px solid #b91c1c"}}><h3 className="ctitle">{isAr?"أولويات التحسين":"Improvement priorities"}</h3>{bottom.map((x,i)=><div key={x.axisLabel} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #edf2f5"}}><span>{i+1}. {x.axisLabel}</span><b style={{color:x.mean<3?"#b91c1c":"#b45309"}}>{x.mean.toFixed(2)}/5</b></div>)}</div></div>
+    <div className="g2" style={{marginTop:16}}><div className="card" style={{boxShadow:"none",borderTop:"4px solid #2F6B66"}}><h3 className="ctitle">{isAr?"أعلى المحاور أداءً":"Top strengths"}</h3>{top.map((x,i)=><div key={x.axisLabel} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #EADFD6"}}><span>{i+1}. {x.axisLabel}</span><b style={{color:"#2F6B66"}}>{x.mean.toFixed(2)}/5</b></div>)}</div><div className="card" style={{boxShadow:"none",borderTop:"4px solid #B9544A"}}><h3 className="ctitle">{isAr?"أولويات التحسين":"Improvement priorities"}</h3>{bottom.map((x,i)=><div key={x.axisLabel} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid #EADFD6"}}><span>{i+1}. {x.axisLabel}</span><b style={{color:x.mean<3?"#B9544A":"#8A5A1E"}}>{x.mean.toFixed(2)}/5</b></div>)}</div></div>
   </div>
 }
 
@@ -480,31 +480,31 @@ function AccommodationComparison({rows,answers,lang}){
   const data=Object.entries(groups).map(([name,vals])=>{const m=mean(vals),high=vals.length?vals.filter(v=>v>=4).length/vals.length*100:0,low=vals.length?vals.filter(v=>v<=2).length/vals.length*100:0;return{name,vals,m,high,low,count:new Set((rows||[]).filter(r=>r.accommodation_type===name).map(r=>r.id)).size}});
   const valid=data.filter(x=>x.vals.length);if(!valid.length)return <div className="card"><h3 className="ctitle"><Icon name="home" size={18}/><span>{isAr?"تحليل الإقامة والسكن":"Accommodation comparison"}</span></h3><div className="empty">{isAr?"لا توجد بيانات سكن مصنفة بعد. سيظهر التحليل بعد أن يحدد المشاركون مكان الإقامة في التقييم النهائي.":"No classified accommodation data yet."}</div></div>;
   const best=[...valid].sort((a,b)=>b.m-a.m)[0],worst=[...valid].sort((a,b)=>a.m-b.m)[0];
-  return <div className="card" style={{border:"1px solid #F1D9A8",borderInlineStart:"4px solid #D9A866",background:"#fffdf7"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 className="ctitle" style={{margin:0,color:"#8a6518"}}><Icon name="home" size={18}/><span>{isAr?"تحليل الإقامة والسكن":"Accommodation comparison"}</span></h2><p style={{color:"#8E7F8A",margin:"6px 0"}}>{isAr?"مقارنة عادلة بين فندق المنار وشقق الإسكان العزيزية وفق مكان إقامة المشارك الفعلي.":"Fair comparison based on each participant's actual accommodation."}</p></div><span className="rbadge" style={{background:"#fff3cd",color:"#8a6518"}}>{isAr?`الأفضل: ${best.name}`:`Best: ${best.name}`}</span></div><div className="g2" style={{marginTop:16}}>{data.map(x=>{const good=x.m>=4.2;return <div key={x.name} className="card" style={{boxShadow:"none",borderTop:`5px solid ${x.name===best.name?"#15803d":"#b45309"}`}}><h3 className="ctitle">{x.name}</h3><div className="g2"><MetricCard icon="star" color={good?TEAL:ORANGE} title={isAr?"المتوسط":"Mean"} value={x.vals.length?`${x.m.toFixed(2)}/5`:"—"} sub={isAr?`${x.count} مشارك`:`${x.count} participants`}/><MetricCard icon="trend" color={TEAL} title={isAr?"رضا مرتفع":"High rating"} value={`${x.high.toFixed(0)}%`} sub={isAr?`منخفض: ${x.low.toFixed(0)}%`:`Low: ${x.low.toFixed(0)}%`}/></div><div style={{height:16,background:"#EADFD6",borderRadius:10,overflow:"hidden",marginTop:12}}><div style={{height:"100%",width:`${x.m/5*100}%`,background:x.name===best.name?"#D4614A":"#b45309"}}/></div></div>})}</div><div className="verdict" style={{marginTop:16,borderInlineStart:"5px solid #8a6518"}}><b>{isAr?"القراءة التنفيذية: ":"Executive reading: "}</b>{best.name===worst.name?(isAr?"تتوفر بيانات لسكن واحد فقط؛ يلزم جمع بيانات السكن الآخر قبل المقارنة.":"Only one accommodation group has data."):(isAr?`تفوق ${best.name} على ${worst.name} بفارق ${(best.m-worst.m).toFixed(2)} نقطة. يوصى بمراجعة أسباب الفجوة وملاحظات المشاركين في ${worst.name}.`:`${best.name} outperformed ${worst.name} by ${(best.m-worst.m).toFixed(2)} points.`)}</div></div>
+  return <div className="card" style={{border:"1px solid #F1D9A8",borderInlineStart:"4px solid #D9A866",background:"#FBF4EE"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 className="ctitle" style={{margin:0,color:"#8A5A1E"}}><Icon name="home" size={18}/><span>{isAr?"تحليل الإقامة والسكن":"Accommodation comparison"}</span></h2><p style={{color:"#8E7F8A",margin:"6px 0"}}>{isAr?"مقارنة عادلة بين فندق المنار وشقق الإسكان العزيزية وفق مكان إقامة المشارك الفعلي.":"Fair comparison based on each participant's actual accommodation."}</p></div><span className="rbadge" style={{background:"#FBF4EE",color:"#8A5A1E"}}>{isAr?`الأفضل: ${best.name}`:`Best: ${best.name}`}</span></div><div className="g2" style={{marginTop:16}}>{data.map(x=>{const good=x.m>=4.2;return <div key={x.name} className="card" style={{boxShadow:"none",borderTop:`5px solid ${x.name===best.name?"#2F6B66":"#8A5A1E"}`}}><h3 className="ctitle">{x.name}</h3><div className="g2"><MetricCard icon="star" color={good?TEAL:ORANGE} title={isAr?"المتوسط":"Mean"} value={x.vals.length?`${x.m.toFixed(2)}/5`:"—"} sub={isAr?`${x.count} مشارك`:`${x.count} participants`}/><MetricCard icon="trend" color={TEAL} title={isAr?"رضا مرتفع":"High rating"} value={`${x.high.toFixed(0)}%`} sub={isAr?`منخفض: ${x.low.toFixed(0)}%`:`Low: ${x.low.toFixed(0)}%`}/></div><div style={{height:16,background:"#EADFD6",borderRadius:10,overflow:"hidden",marginTop:12}}><div style={{height:"100%",width:`${x.m/5*100}%`,background:x.name===best.name?"#D4614A":"#8A5A1E"}}/></div></div>})}</div><div className="verdict" style={{marginTop:16,borderInlineStart:"5px solid #8A5A1E"}}><b>{isAr?"القراءة التنفيذية: ":"Executive reading: "}</b>{best.name===worst.name?(isAr?"تتوفر بيانات لسكن واحد فقط؛ يلزم جمع بيانات السكن الآخر قبل المقارنة.":"Only one accommodation group has data."):(isAr?`تفوق ${best.name} على ${worst.name} بفارق ${(best.m-worst.m).toFixed(2)} نقطة. يوصى بمراجعة أسباب الفجوة وملاحظات المشاركين في ${worst.name}.`:`${best.name} outperformed ${worst.name} by ${(best.m-worst.m).toFixed(2)} points.`)}</div></div>
 }
 
 function IndicatorAnalysis({items,lang}){
   const isAr=lang==="ar";
   if(!items?.length)return null;
   const gaps=[...items].sort((a,b)=>b.gap-a.gap).slice(0,10), strengths=[...items].sort((a,b)=>b.mean-a.mean).slice(0,5);
-  return <div className="card" style={{marginTop:16,border:"2px solid #1d4ed8",background:"linear-gradient(135deg,#f8fbff,#fff)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 className="ctitle" style={{margin:0,color:"#1d4ed8"}}><Icon name="search" size={18}/><span>{isAr?"تحليل المؤشرات التفصيلية":"Indicator-level analysis"}</span></h2><p style={{margin:"6px 0",color:"#8E7F8A"}}>{isAr?"التحليل لكل سؤال على حدة؛ المحور للتصنيف فقط.":"Each question is analyzed independently; axes are only for grouping."}</p></div><span className="rbadge" style={{background:"#eef4ff",color:"#1d4ed8"}}>{items.length} {isAr?"مؤشر":"indicators"}</span></div><div className="g2" style={{marginTop:16}}><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"أكبر فجوات الأداء":"Largest performance gaps"}</h3>{gaps.map((x,i)=><div key={x.id} style={{padding:"10px 0",borderBottom:"1px solid #e5edf5"}}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{i+1}. {x.indicator}</b><span style={{color:x.gap>0.5?"#b91c1c":"#b45309",fontWeight:900}}>{x.mean.toFixed(2)}/5</span></div><small style={{color:"#8E7F8A"}}>{x.axis} · {isAr?"الفجوة":"Gap"}: {Math.max(0,x.gap).toFixed(2)} · {isAr?"منخفض":"Low"}: {x.lowPct.toFixed(0)}%</small><div style={{height:9,background:"#EADFD6",borderRadius:8,overflow:"hidden",marginTop:6}}><div style={{height:"100%",width:`${x.mean/5*100}%`,background:x.gap>0.5?"#b91c1c":"#b45309"}}/></div></div>)}</div><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"أقوى المؤشرات":"Top performing indicators"}</h3>{strengths.map((x,i)=><div key={x.id} style={{padding:"10px 0",borderBottom:"1px solid #e5edf5"}}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{i+1}. {x.indicator}</b><span style={{color:"#15803d",fontWeight:900}}>{x.mean.toFixed(2)}/5</span></div><small style={{color:"#8E7F8A"}}>{x.axis} · {isAr?"رضا مرتفع":"High rating"}: {x.highPct.toFixed(0)}%</small><div style={{height:9,background:"#EADFD6",borderRadius:8,overflow:"hidden",marginTop:6}}><div style={{height:"100%",width:`${x.mean/5*100}%`,background:"#15803d"}}/></div></div>)}</div></div><div className="twrap" style={{marginTop:16}}><table className="tbl"><thead><tr><th className="th">{isAr?"المحور":"Axis"}</th><th className="th">{isAr?"المؤشر / السؤال":"Indicator / Question"}</th><th className="th">N</th><th className="th">{isAr?"المتوسط":"Mean"}</th><th className="th">{isAr?"الوسيط":"Median"}</th><th className="th">{isAr?"الانحراف":"SD"}</th><th className="th">{isAr?"منخفض":"Low"}</th><th className="th">{isAr?"مرتفع":"High"}</th><th className="th">{isAr?"الفجوة":"Gap"}</th><th className="th">{isAr?"القرار":"Decision"}</th></tr></thead><tbody>{items.map(x=><tr key={x.id}><td className="td">{x.axis}</td><td className="td" style={{fontWeight:800,minWidth:250}}>{x.indicator}</td><td className="td ltr">{x.respondents}</td><td className="td ltr">{x.mean.toFixed(2)}</td><td className="td ltr">{x.median.toFixed(2)}</td><td className="td ltr">{x.stddev.toFixed(2)}</td><td className="td ltr">{x.lowPct.toFixed(0)}%</td><td className="td ltr">{x.highPct.toFixed(0)}%</td><td className="td ltr" style={{color:x.gap>0.5?"#b91c1c":"#15803d"}}>{Math.abs(x.gap).toFixed(2)}</td><td className="td"><span className="rbadge" style={{background:x.risk.bg,color:x.risk.fg}}>{x.risk.label}</span></td></tr>)}</tbody></table></div></div>
+  return <div className="card" style={{marginTop:16,border:"2px solid #6A3350",background:"linear-gradient(135deg,#F3E8EF,#fff)"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><div><h2 className="ctitle" style={{margin:0,color:"#6A3350"}}><Icon name="search" size={18}/><span>{isAr?"تحليل المؤشرات التفصيلية":"Indicator-level analysis"}</span></h2><p style={{margin:"6px 0",color:"#8E7F8A"}}>{isAr?"التحليل لكل سؤال على حدة؛ المحور للتصنيف فقط.":"Each question is analyzed independently; axes are only for grouping."}</p></div><span className="rbadge" style={{background:"#F3E8EF",color:"#6A3350"}}>{items.length} {isAr?"مؤشر":"indicators"}</span></div><div className="g2" style={{marginTop:16}}><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"أكبر فجوات الأداء":"Largest performance gaps"}</h3>{gaps.map((x,i)=><div key={x.id} style={{padding:"10px 0",borderBottom:"1px solid #F3E8EF"}}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{i+1}. {x.indicator}</b><span style={{color:x.gap>0.5?"#B9544A":"#8A5A1E",fontWeight:900}}>{x.mean.toFixed(2)}/5</span></div><small style={{color:"#8E7F8A"}}>{x.axis} · {isAr?"الفجوة":"Gap"}: {Math.max(0,x.gap).toFixed(2)} · {isAr?"منخفض":"Low"}: {x.lowPct.toFixed(0)}%</small><div style={{height:9,background:"#EADFD6",borderRadius:8,overflow:"hidden",marginTop:6}}><div style={{height:"100%",width:`${x.mean/5*100}%`,background:x.gap>0.5?"#B9544A":"#8A5A1E"}}/></div></div>)}</div><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"أقوى المؤشرات":"Top performing indicators"}</h3>{strengths.map((x,i)=><div key={x.id} style={{padding:"10px 0",borderBottom:"1px solid #F3E8EF"}}><div style={{display:"flex",justifyContent:"space-between",gap:12}}><b>{i+1}. {x.indicator}</b><span style={{color:"#2F6B66",fontWeight:900}}>{x.mean.toFixed(2)}/5</span></div><small style={{color:"#8E7F8A"}}>{x.axis} · {isAr?"رضا مرتفع":"High rating"}: {x.highPct.toFixed(0)}%</small><div style={{height:9,background:"#EADFD6",borderRadius:8,overflow:"hidden",marginTop:6}}><div style={{height:"100%",width:`${x.mean/5*100}%`,background:"#2F6B66"}}/></div></div>)}</div></div><div className="twrap" style={{marginTop:16}}><table className="tbl"><thead><tr><th className="th">{isAr?"المحور":"Axis"}</th><th className="th">{isAr?"المؤشر / السؤال":"Indicator / Question"}</th><th className="th">N</th><th className="th">{isAr?"المتوسط":"Mean"}</th><th className="th">{isAr?"الوسيط":"Median"}</th><th className="th">{isAr?"الانحراف":"SD"}</th><th className="th">{isAr?"منخفض":"Low"}</th><th className="th">{isAr?"مرتفع":"High"}</th><th className="th">{isAr?"الفجوة":"Gap"}</th><th className="th">{isAr?"القرار":"Decision"}</th></tr></thead><tbody>{items.map(x=><tr key={x.id}><td className="td">{x.axis}</td><td className="td" style={{fontWeight:800,minWidth:250}}>{x.indicator}</td><td className="td ltr">{x.respondents}</td><td className="td ltr">{x.mean.toFixed(2)}</td><td className="td ltr">{x.median.toFixed(2)}</td><td className="td ltr">{x.stddev.toFixed(2)}</td><td className="td ltr">{x.lowPct.toFixed(0)}%</td><td className="td ltr">{x.highPct.toFixed(0)}%</td><td className="td ltr" style={{color:x.gap>0.5?"#B9544A":"#2F6B66"}}>{Math.abs(x.gap).toFixed(2)}</td><td className="td"><span className="rbadge" style={{background:x.risk.bg,color:x.risk.fg}}>{x.risk.label}</span></td></tr>)}</tbody></table></div></div>
 }
 
 function FinalAxisDetail({item,lang}){
   const isAr=lang==="ar";
   if(!item)return null;
-  const level=item.mean>=TARGET?{t:isAr?"ممتاز":"Excellent",c:"#15803d",bg:"#ecfdf5"}:item.mean>=3.7?{t:isAr?"جيد":"Good",c:"#086f69",bg:"#ecfeff"}:item.mean>=3?{t:isAr?"يحتاج متابعة":"Watch",c:"#b45309",bg:"#fffbeb"}:{t:isAr?"أولوية عاجلة":"Urgent",c:"#b91c1c",bg:"#fff1f2"};
+  const level=item.mean>=TARGET?{t:isAr?"ممتاز":"Excellent",c:"#2F6B66",bg:"#E6F3F1"}:item.mean>=3.7?{t:isAr?"جيد":"Good",c:"#2F6B66",bg:"#E6F3F1"}:item.mean>=3?{t:isAr?"يحتاج متابعة":"Watch",c:"#8A5A1E",bg:"#FBF4EE"}:{t:isAr?"أولوية عاجلة":"Urgent",c:"#B9544A",bg:"#FBEDE7"};
   const bars=(item.dist||[0,0,0,0,0]);
   const action=item.mean>=TARGET?(isAr?"توثيق الممارسات الناجحة وتعميمها على البرامج القادمة.":"Document and scale the successful practice."):item.mean>=3.7?(isAr?"خطة تحسين مستهدفة لرفع المحور إلى المستوى الممتاز خلال الدورة القادمة.":"Targeted improvement plan for the next cycle."):(isAr?"خطة معالجة محددة بمسؤول واضح ومراجعة أسبوعية حتى بلوغ المستهدف.":"Named owner and weekly remediation review until target is met.");
   return <div className="card" style={{border:"2px solid #D4614A",background:"linear-gradient(135deg,#FBEDE7,#fff)",marginTop:16}}>
-    <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}><div><h2 style={{margin:0,color:"#086f69"}}>{isAr?"التحليل التفصيلي للمحور: ":"Axis drilldown: "}{item.axisLabel}</h2><p style={{color:"#8E7F8A",margin:"6px 0 0"}}>{isAr?"يتم تحديث هذا التحليل من بيانات التقييم النهائي فقط.":"This drilldown uses final-evaluation data only."}</p></div><span className="rbadge" style={{background:level.bg,color:level.c,fontSize:14}}>{level.t}</span></div>
+    <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}><div><h2 style={{margin:0,color:"#2F6B66"}}>{isAr?"التحليل التفصيلي للمحور: ":"Axis drilldown: "}{item.axisLabel}</h2><p style={{color:"#8E7F8A",margin:"6px 0 0"}}>{isAr?"يتم تحديث هذا التحليل من بيانات التقييم النهائي فقط.":"This drilldown uses final-evaluation data only."}</p></div><span className="rbadge" style={{background:level.bg,color:level.c,fontSize:14}}>{level.t}</span></div>
     <div className="g4" style={{marginTop:18}}>
       <MetricCard icon="chart" color={TEAL} title={isAr?"المتوسط":"Mean"} value={`${item.mean.toFixed(2)}/5`} sub={isAr?"نتيجة المحور":"Axis score"}/>
       <MetricCard icon="users" color={BLUE} title={isAr?"العينة":"Responses"} value={item.respondents} sub={isAr?"مشارك أجابوا على المحور":"Participants"}/>
       <MetricCard icon="star" color={TEAL} title={isAr?"رضا مرتفع":"High ratings"} value={`${item.highPct.toFixed(0)}%`} sub={isAr?"تقييم 4 أو 5":"Ratings 4–5"}/>
       <MetricCard icon="alert" color={item.gap>0?RED:TEAL} title={isAr?"الفجوة عن الهدف":"Gap to target"} value={`${Math.abs(item.gap).toFixed(2)}`} sub={item.gap>0?(isAr?"دون الهدف 4.20":"Below 4.20 target"):(isAr?"حقق المستهدف":"Target met")}/>
     </div>
-    <div className="g2" style={{marginTop:12}}><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"توزيع الدرجات 1–5":"Rating distribution"}</h3>{bars.map((n,i)=>{const pct=item.measurements?Math.round(n/item.measurements*100):0;return <div key={i} style={{display:"grid",gridTemplateColumns:"80px 1fr 70px",gap:10,alignItems:"center",margin:"10px 0"}}><b>{i+1} / 5</b><div style={{height:12,background:"#EADFD6",borderRadius:9,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:i<2?"#b91c1c":i===2?"#b45309":"#D4614A"}}/></div><span>{n} ({pct}%)</span></div>})}</div><div className="card" style={{boxShadow:"none",background:level.bg}}><h3 className="ctitle">{isAr?"القراءة والتوصية":"Insight & action"}</h3><p style={{lineHeight:2,color:"#4A3645"}}>{isAr?`حقق محور ${item.axisLabel} متوسطاً قدره ${item.mean.toFixed(2)} من 5، بوسيط ${item.median.toFixed(2)} وانحراف معياري ${item.stddev.toFixed(2)}. بلغت نسبة التقييمات المنخفضة ${item.lowPct.toFixed(0)}%.`:`${item.axisLabel} achieved ${item.mean.toFixed(2)}/5 with median ${item.median.toFixed(2)} and standard deviation ${item.stddev.toFixed(2)}.`}</p><hr style={{border:0,borderTop:"1px solid #D9CBC2"}}/><p style={{lineHeight:1.8}}><b>{isAr?"الإجراء التنفيذي: ":"Action: "}</b>{action}</p><p><b>{isAr?"المسؤول: ":"Owner: "}</b>{item.owner|| (isAr?"إدارة البرنامج":"Program management")}</p><p><b>{isAr?"الأولوية: ":"Priority: "}</b>{item.risk?.label}</p></div></div>
+    <div className="g2" style={{marginTop:12}}><div className="card" style={{boxShadow:"none"}}><h3 className="ctitle">{isAr?"توزيع الدرجات 1–5":"Rating distribution"}</h3>{bars.map((n,i)=>{const pct=item.measurements?Math.round(n/item.measurements*100):0;return <div key={i} style={{display:"grid",gridTemplateColumns:"80px 1fr 70px",gap:10,alignItems:"center",margin:"10px 0"}}><b>{i+1} / 5</b><div style={{height:12,background:"#EADFD6",borderRadius:9,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:i<2?"#B9544A":i===2?"#8A5A1E":"#D4614A"}}/></div><span>{n} ({pct}%)</span></div>})}</div><div className="card" style={{boxShadow:"none",background:level.bg}}><h3 className="ctitle">{isAr?"القراءة والتوصية":"Insight & action"}</h3><p style={{lineHeight:2,color:"#4A3645"}}>{isAr?`حقق محور ${item.axisLabel} متوسطاً قدره ${item.mean.toFixed(2)} من 5، بوسيط ${item.median.toFixed(2)} وانحراف معياري ${item.stddev.toFixed(2)}. بلغت نسبة التقييمات المنخفضة ${item.lowPct.toFixed(0)}%.`:`${item.axisLabel} achieved ${item.mean.toFixed(2)}/5 with median ${item.median.toFixed(2)} and standard deviation ${item.stddev.toFixed(2)}.`}</p><hr style={{border:0,borderTop:"1px solid #D9CBC2"}}/><p style={{lineHeight:1.8}}><b>{isAr?"الإجراء التنفيذي: ":"Action: "}</b>{action}</p><p><b>{isAr?"المسؤول: ":"Owner: "}</b>{item.owner|| (isAr?"إدارة البرنامج":"Program management")}</p><p><b>{isAr?"الأولوية: ":"Priority: "}</b>{item.risk?.label}</p></div></div>
   </div>
 }
 function AllFinalAxisPrintDetails({items,lang}){
@@ -518,7 +518,7 @@ function AllFinalAxisPrintDetails({items,lang}){
       return <article key={item.axisLabel} className="print-axis-card">
         <div className="print-axis-head"><b>{i+1}. {item.axisLabel}</b><span>{level}</span></div>
         <div className="print-axis-kpis"><span>{isAr?"المتوسط":"Mean"}: <b>{item.mean.toFixed(2)}/5</b></span><span>{isAr?"الوسيط":"Median"}: <b>{item.median.toFixed(2)}</b></span><span>{isAr?"العينة":"Sample"}: <b>{item.respondents}</b></span><span>{isAr?"رضا مرتفع":"High ratings"}: <b>{item.highPct.toFixed(0)}%</b></span><span>{isAr?"تقييم منخفض":"Low ratings"}: <b>{item.lowPct.toFixed(0)}%</b></span><span>{isAr?"الانحراف":"Std Dev"}: <b>{item.stddev.toFixed(2)}</b></span><span>{isAr?"الفجوة":"Gap"}: <b>{Math.abs(item.gap).toFixed(2)}</b></span></div>
-        <div className="print-axis-chart"><div className="print-chart-title">{isAr?"الدليل الإحصائي: توزيع درجات المحور":"Statistical evidence: rating distribution"}</div><div className="print-legend"><span className="l-red">1–2 {isAr?"منخفض":"Low"}</span><span className="l-amber">3 {isAr?"متوسط":"Medium"}</span><span className="l-green">4–5 {isAr?"مرتفع":"High"}</span></div>{(item.dist||[0,0,0,0,0]).map((n,j)=>{const pct=item.measurements?Math.round(n/item.measurements*100):0;return <div className="print-chart-row" key={j}><span>{j+1}/5</span><div className="print-chart-track"><i style={{width:`${pct}%`,background:j<2?"#b91c1c":j===2?"#b45309":"#D4614A"}}/></div><b>{n} · {pct}%</b></div>})}<div className="print-target-row"><span>{isAr?"مقارنة بالهدف 4.20/5":"Benchmark 4.20/5"}</span><div className="print-chart-track"><i style={{width:`${Math.min(100,item.mean/5*100)}%`,background:item.mean>=TARGET?"#15803d":"#b45309"}}/></div><b>{item.mean.toFixed(2)}/5</b></div></div>
+        <div className="print-axis-chart"><div className="print-chart-title">{isAr?"الدليل الإحصائي: توزيع درجات المحور":"Statistical evidence: rating distribution"}</div><div className="print-legend"><span className="l-red">1–2 {isAr?"منخفض":"Low"}</span><span className="l-amber">3 {isAr?"متوسط":"Medium"}</span><span className="l-green">4–5 {isAr?"مرتفع":"High"}</span></div>{(item.dist||[0,0,0,0,0]).map((n,j)=>{const pct=item.measurements?Math.round(n/item.measurements*100):0;return <div className="print-chart-row" key={j}><span>{j+1}/5</span><div className="print-chart-track"><i style={{width:`${pct}%`,background:j<2?"#B9544A":j===2?"#8A5A1E":"#D4614A"}}/></div><b>{n} · {pct}%</b></div>})}<div className="print-target-row"><span>{isAr?"مقارنة بالهدف 4.20/5":"Benchmark 4.20/5"}</span><div className="print-chart-track"><i style={{width:`${Math.min(100,item.mean/5*100)}%`,background:item.mean>=TARGET?"#2F6B66":"#8A5A1E"}}/></div><b>{item.mean.toFixed(2)}/5</b></div></div>
         <p>{isAr?`حقق محور ${item.axisLabel} متوسطاً قدره ${item.mean.toFixed(2)} من 5. بلغت نسبة التقييمات المرتفعة ${item.highPct.toFixed(0)}%، ومنخفضة التقييم ${item.lowPct.toFixed(0)}%.`:`${item.axisLabel} scored ${item.mean.toFixed(2)}/5 with ${item.highPct.toFixed(0)}% high ratings and ${item.lowPct.toFixed(0)}% low ratings.`}</p>
         <p><b>{isAr?"التوصية التنفيذية: ":"Action: "}</b>{action} <b>{isAr?"المسؤول: ":"Owner: "}</b>{item.owner|| (isAr?"إدارة البرنامج":"Program management")}.</p>
       </article>
@@ -590,14 +590,14 @@ function ComparisonBars({title,icon,data,avgLine,lang}){
       <p className="cdesc">{isAr?`مقارنة بالمتوسط ${avgLine.toFixed(2)} والهدف ${TARGET}`:`Compared to average ${avgLine.toFixed(2)} and target ${TARGET}`}</p>
       {data.map((r)=>{
         const diff=r.avg-avgLine;
-        const col=r.avg>=TARGET?TEAL:r.avg>=3.7?"#0ea5e9":r.avg>=3?ORANGE:RED;
+        const col=r.avg>=TARGET?TEAL:r.avg>=3.7?"#3F7F79":r.avg>=3?ORANGE:RED;
         return(
         <div key={r.id} style={{marginBottom:13}}>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:5,fontSize:14,fontWeight:800,gap:8}}>
             <span>{r.label} <span style={{color:"#8E7F8A",fontWeight:700}}>({r.sub})</span></span>
             <span style={{direction:"ltr",fontWeight:900}}>
               <span style={{color:col}}>{r.avg.toFixed(2)}</span>
-              <span style={{color:diff>=0?"#15803d":"#b91c1c",fontSize:12,marginInlineStart:8}}>{diff>=0?"▲":"▼"} {Math.abs(diff).toFixed(2)}</span>
+              <span style={{color:diff>=0?"#2F6B66":"#B9544A",fontSize:12,marginInlineStart:8}}>{diff>=0?"▲":"▼"} {Math.abs(diff).toFixed(2)}</span>
             </span>
           </div>
           <div className="cmptrack">
@@ -905,7 +905,7 @@ const setLang = (v: string) => {
       <div className="card noprint" style={{padding:16}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:10,alignItems:"center",gap:10}}>
           <b style={{color:"#2A1626"}}>{t.filters}</b>
-          <span className="badge" style={{background:"#eef2ff",color:"#3730a3",direction:"ltr"}}>{t.sample}: {count??0}</span>
+          <span className="badge" style={{background:"#F3E8EF",color:"#6A3350",direction:"ltr"}}>{t.sample}: {count??0}</span>
         </div>
         <div className="fgrid">
           <select className="sel" value={value.trainerId} onChange={e=>setValue(f=>({...f,trainerId:e.target.value,classroomId:"ALL"}))}>
@@ -995,7 +995,7 @@ const setLang = (v: string) => {
               <NarrativeCard narrative={dashNarr} lang={lang} accent={GOLD}/>
 
               <div className="g4">
-                <MetricCard icon="doc" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={dashRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={dashRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#eafaf0",fg:"#15803d"}:dashRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fff7e6",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fef2f2",fg:"#b91c1c"}}/>
+                <MetricCard icon="doc" color={BLUE} title={isAr?"حجم العينة":"Sample"} value={dashRows.length} sub={isAr?"استبانة ضمن الفلاتر":"Forms in filters"} badge={dashRows.length>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:dashRows.length>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
                 <MetricCard icon="chart" color={dashSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المؤشر العام":"Overall Index"} value={`${dashSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dashSummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`:`Median: ${dashSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dashSummary.mean).toFixed(2)}`} badge={{label:dashSummary.perf.label,bg:dashSummary.perf.bg,fg:dashSummary.perf.fg}}/>
                 <MetricCard icon="alert" color={dashHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={dashHighRisk} sub={isAr?"محاور تتطلب تدخلًا فوريًا":"Axes needing immediate action"}/>
                 <MetricCard icon="trend" color={ORANGE} title={isAr?"منخفض 1–2":"Low 1–2"} value={`${dashSummary.lowPct.toFixed(0)}%`} sub={isAr?"نسبة عدم الرضا":"Dissatisfaction share"}/>
@@ -1033,7 +1033,7 @@ const setLang = (v: string) => {
               <NarrativeCard narrative={dailyNarr} lang={lang} accent={BLUE}/>
 
               <div className="g4">
-                <MetricCard icon="doc" color={BLUE} title={isAr?"الاستبانات":"Forms"} value={dailySummary.respondents} sub={isAr?"استجابات يومية صالحة":"Valid daily forms"} badge={dailySummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#eafaf0",fg:"#15803d"}:dailySummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fff7e6",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fef2f2",fg:"#b91c1c"}}/>
+                <MetricCard icon="doc" color={BLUE} title={isAr?"الاستبانات":"Forms"} value={dailySummary.respondents} sub={isAr?"استجابات يومية صالحة":"Valid daily forms"} badge={dailySummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:dailySummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
                 <MetricCard icon="chart" color={dailySummary.mean>=TARGET?TEAL:BLUE} title={isAr?"المتوسط":"Mean"} value={`${dailySummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${dailySummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-dailySummary.mean).toFixed(2)}`:`Median: ${dailySummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-dailySummary.mean).toFixed(2)}`} badge={{label:dailySummary.perf.label,bg:dailySummary.perf.bg,fg:dailySummary.perf.fg}}/>
                 <MetricCard icon="↔️" color={ORANGE} title={isAr?"الانحراف المعياري":"Std Dev"} value={dailySummary.stddev.toFixed(2)} sub={isAr?"ارتفاعه = تذبذب التجربة":"Higher = less consistent"}/>
                 <MetricCard icon="alert" color={dailyHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={dailyHighRisk} sub={isAr?`منخفض 1–2: ${dailySummary.lowPct.toFixed(0)}%`:`Low 1–2: ${dailySummary.lowPct.toFixed(0)}%`}/>
@@ -1071,7 +1071,7 @@ const setLang = (v: string) => {
               <NarrativeCard narrative={finalNarr} lang={lang} accent={TEAL}/>
 
               <div className="g4">
-                <MetricCard icon="doc" color={TEAL} title={isAr?"الاستبانات":"Forms"} value={finalSummary.respondents} sub={isAr?"استجابات ختامية صالحة":"Valid final forms"} badge={finalSummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#eafaf0",fg:"#15803d"}:finalSummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#fff7e6",fg:"#b45309"}:{label:isAr?"عينة صغيرة":"Small",bg:"#fef2f2",fg:"#b91c1c"}}/>
+                <MetricCard icon="doc" color={TEAL} title={isAr?"الاستبانات":"Forms"} value={finalSummary.respondents} sub={isAr?"استجابات ختامية صالحة":"Valid final forms"} badge={finalSummary.respondents>=30?{label:isAr?"عينة قوية":"Strong",bg:"#E6F3F1",fg:"#2F6B66"}:finalSummary.respondents>=10?{label:isAr?"عينة مقبولة":"Fair",bg:"#FBF4EE",fg:"#8A5A1E"}:{label:isAr?"عينة صغيرة":"Small",bg:"#FBEDE7",fg:"#B9544A"}}/>
                 <MetricCard icon="chart" color={finalSummary.mean>=TARGET?TEAL:ORANGE} title={isAr?"المتوسط":"Mean"} value={`${finalSummary.mean.toFixed(2)}/5`} sub={isAr?`الوسيط: ${finalSummary.median.toFixed(2)} — الفجوة: ${Math.max(0,TARGET-finalSummary.mean).toFixed(2)}`:`Median: ${finalSummary.median.toFixed(2)} — Gap: ${Math.max(0,TARGET-finalSummary.mean).toFixed(2)}`} badge={{label:finalSummary.perf.label,bg:finalSummary.perf.bg,fg:finalSummary.perf.fg}}/>
                 <MetricCard icon="↔️" color={ORANGE} title={isAr?"الانحراف المعياري":"Std Dev"} value={finalSummary.stddev.toFixed(2)} sub={isAr?"تذبذب تجربة المشاركين":"Experience consistency"}/>
                 <MetricCard icon="alert" color={finalHighRisk?RED:TEAL} title={isAr?"محاور القلق":"Risk Areas"} value={finalHighRisk} sub={isAr?`منخفض 1–2: ${finalSummary.lowPct.toFixed(0)}%`:`Low 1–2: ${finalSummary.lowPct.toFixed(0)}%`}/>
@@ -1122,7 +1122,7 @@ const setLang = (v: string) => {
                     downloadCSV(buildExportFilename("Participants", partF.classroomId !== "ALL" ? partF.classroomId : "All"),[[isAr?"القاعة":"Room",isAr?"المدرب":"Trainer",isAr?"الاسم":"Name",isAr?"الجوال":"Phone",isAr?"البريد":"Email"],...flat]);
                   }}><Icon name="download" size={16}/> {t.export}</button>
                   <button className="btn2" onClick={()=>{setPartF({trainerId:"ALL",classroomId:"ALL",from:"",to:"",q:""});setPartKind("ALL");setRevealPII(false);}}><Icon name="refresh" size={16}/> {t.clear}</button>
-                  <button className="btn2" style={{borderColor:"#fca5a5",color:RED}} onClick={()=>setPurgeOpen(true)}><Icon name="trash" size={16}/> {t.purge}</button>
+                  <button className="btn2" style={{borderColor:"#F3C4B6",color:RED}} onClick={()=>setPurgeOpen(true)}><Icon name="trash" size={16}/> {t.purge}</button>
                 </div>
                 <div className="badge" style={{background:"#F6EBE0",color:"#2A1626"}}>{isAr?"قاعات":"Rooms"}: {partRoomData.length}</div>
               </div>
@@ -1132,7 +1132,7 @@ const setLang = (v: string) => {
                   <div style={{background:"#FBF4EE",padding:16,borderBottom:"1px solid #EADFD6",display:"flex",gap:16,alignItems:"center"}}>
                     <b style={{fontSize:18,color:TEAL}}>{r.id==="FINAL_PARTICIPANTS"?r.code:((isAr?"قاعة ":"Room ")+r.code)}</b>
                     <span style={{color:"#8E7F8A"}}>{(isAr?"المدرب: ":"Trainer: ")+r.trainer}</span>
-                    <span style={{background:"#eef4ff",color:"#1d4ed8",padding:"4px 12px",borderRadius:999,fontSize:12,fontWeight:900,marginInlineStart:"auto"}}>
+                    <span style={{background:"#F3E8EF",color:"#6A3350",padding:"4px 12px",borderRadius:999,fontSize:12,fontWeight:900,marginInlineStart:"auto"}}>
                       {r.students.length} {isAr?"مشارك":"participants"}
                     </span>
                   </div>
@@ -1157,7 +1157,7 @@ const setLang = (v: string) => {
           {tab==="cert"&&(
             <div>
               <div className="card" style={{borderInlineStart:`6px solid ${GOLD}`}}>
-                <h1 style={{fontSize:26,fontWeight:900,marginBottom:8,color:"#8a6a14"}}>{t.tab5}</h1>
+                <h1 style={{fontSize:26,fontWeight:900,marginBottom:8,color:"#8A5A1E"}}>{t.tab5}</h1>
                 <p style={{color:"#8E7F8A",margin:0}}>{isAr?"اختيار أفضل مدرب من محاور التعليم فقط — تقييم عادل.":"Best trainer from education axes only — fair evaluation."}</p>
               </div>
 
@@ -1169,7 +1169,7 @@ const setLang = (v: string) => {
                     <img src="/brand/athar-mark.svg" alt="أَثَر" style={{height:64}}/>
                     
                   </div>
-                  <h1 style={{fontSize:34,fontWeight:900,color:"#8a6a14",marginBottom:8}}>{isAr?"شهادة تميز وإشادة":"Certificate of Excellence"}</h1>
+                  <h1 style={{fontSize:34,fontWeight:900,color:"#8A5A1E",marginBottom:8}}>{isAr?"شهادة تميز وإشادة":"Certificate of Excellence"}</h1>
                   <p style={{color:"#8E7F8A",marginBottom:24}}>{isAr?"تُمنح لأفضل مدرب وفق محاور التعليم وحجم العينة":"Awarded to the best trainer by education axes and sample size"}</p>
                   <h2 style={{fontSize:48,fontWeight:900,color:TEAL,marginBottom:16}}>{certBest.trainer}</h2>
                   <p style={{fontSize:20,color:"#4A3645"}}>
@@ -1236,7 +1236,7 @@ const setLang = (v: string) => {
 const CSS=`
 *{box-sizing:border-box;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.rw{--navy:#3A1F36;--teal:#D4614A;--teal-soft:#FBEDE7;--teal-line:#F0C9BC;--gold:#D9A866;--gold-soft:#FBF4EE;--gold-line:#F1D9A8;--bg:#F6EBE0;--line:#EADFD6;--line-2:#D9CBC2;--ink:#2A1626;--ink-2:#4A3645;--muted:#8E7F8A;--ok:#15803d;--ok-soft:#eafaf0;--ok-line:#b7e4c7;--info:#1d4ed8;--info-soft:#eef4ff;--info-line:#c3d4fb;--warn:#b45309;--warn-soft:#fff7e6;--warn-line:#f5d9a3;--bad:#b91c1c;--bad-soft:#fef2f2;--bad-line:#f6c4c4;--r:14px;--sh:0 1px 2px rgba(42,22,38,.05),0 6px 18px rgba(42,22,38,.05);
+.rw{--navy:#3A1F36;--teal:#D4614A;--teal-soft:#FBEDE7;--teal-line:#F0C9BC;--gold:#D9A866;--gold-soft:#FBF4EE;--gold-line:#F1D9A8;--bg:#F6EBE0;--line:#EADFD6;--line-2:#D9CBC2;--ink:#2A1626;--ink-2:#4A3645;--muted:#8E7F8A;--ok:#2F6B66;--ok-soft:#E6F3F1;--ok-line:#BFE1DC;--info:#6A3350;--info-soft:#F3E8EF;--info-line:#E2CBDA;--warn:#8A5A1E;--warn-soft:#FBF4EE;--warn-line:#F1D9A8;--bad:#B9544A;--bad-soft:#FBEDE7;--bad-line:#F3C4B6;--r:14px;--sh:0 1px 2px rgba(42,22,38,.05),0 6px 18px rgba(42,22,38,.05);
   background:var(--bg);min-height:100vh;padding:20px max(16px,calc((100% - 1320px)/2)) 40px;color:var(--ink);font-family:inherit;}
 .lay{display:flex;flex-direction:column;gap:16px;}
 .main{flex:1;min-width:0;}
@@ -1277,7 +1277,7 @@ const CSS=`
 .rp-act{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:10px;border:1px solid var(--line-2);background:#fff;color:var(--ink-2);font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s;}
 .rp-act:hover{background:#FBF4EE;border-color:var(--teal-line);color:var(--navy);}
 .rp-act.primary{background:var(--teal);border-color:var(--teal);color:#fff;}
-.rp-act.primary:hover{background:#086f69;color:#fff;}
+.rp-act.primary:hover{background:#2F6B66;color:#fff;}
 
 /* Tabs strip */
 .side{display:flex;gap:6px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:8px;box-shadow:var(--sh);}
@@ -1348,7 +1348,7 @@ const CSS=`
 .ibox.danger h4 svg{color:var(--bad);}
 .ibox.success{background:var(--ok-soft);border-color:var(--ok-line);}
 .ibox.success h4 svg{color:var(--ok);}
-.irow{display:grid;gap:4px;padding:10px 0;border-bottom:1px solid rgba(148,163,184,.22);}
+.irow{display:grid;gap:4px;padding:10px 0;border-bottom:1px solid rgba(179,165,174,.22);}
 .irow:last-child{border-bottom:0;}
 .irow span{color:var(--ink-2);font-size:13px;font-weight:600;}
 
@@ -1388,7 +1388,7 @@ const CSS=`
 .rep-footer{background:#fff;border:1px solid var(--line);border-top:4px solid var(--navy);border-radius:var(--r);padding:16px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--ink-2);font-size:12px;font-weight:600;line-height:1.8;}
 
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.7);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;animation:fadeIn .2s ease;}
+.modal-overlay{position:fixed;inset:0;background:rgba(42,22,38,0.7);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;animation:fadeIn .2s ease;}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 @keyframes slideUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
 .modal-box{background:#fff;border-radius:16px;width:100%;max-width:520px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.35);animation:slideUp .25s ease;}
@@ -1398,7 +1398,7 @@ const CSS=`
 .modal-head p{margin:4px 0 0;font-size:13px;opacity:.9;font-weight:600;}
 .modal-body{padding:22px 24px;}
 .modal-warning-list{background:var(--bad-soft);border:1px solid var(--bad-line);border-radius:12px;padding:14px 18px;margin:0 0 18px;padding-inline-start:34px;}
-.modal-warning-list li{color:#991b1b;font-size:13.5px;font-weight:600;margin-bottom:6px;line-height:1.7;}
+.modal-warning-list li{color:#9A3A2A;font-size:13.5px;font-weight:600;margin-bottom:6px;line-height:1.7;}
 .modal-warning-list li:last-child{margin-bottom:0;}
 .modal-label{display:block;font-size:13px;font-weight:800;color:var(--ink-2);margin-bottom:6px;}
 .kind-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
@@ -1407,13 +1407,13 @@ const CSS=`
 .kind-option:hover{border-color:var(--bad-line);}
 .kind-option.selected{border-color:var(--bad);background:var(--bad-soft);color:var(--bad);}
 .code-input{width:100%;padding:14px;border-radius:12px;border:2px solid var(--line);font-size:22px;font-weight:900;text-align:center;letter-spacing:10px;direction:ltr;outline:none;transition:border .15s ease;font-family:inherit;}
-.code-input:focus{border-color:var(--bad);box-shadow:0 0 0 4px rgba(185,28,28,.1);}
+.code-input:focus{border-color:var(--bad);box-shadow:0 0 0 4px rgba(185,84,74,.1);}
 .code-input.error{border-color:var(--bad);background:var(--bad-soft);animation:shake .3s ease;}
 @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
 .modal-footer{padding:16px 24px 22px;display:flex;gap:12px;}
 .modal-btn-cancel{flex:1;padding:13px;border-radius:10px;border:1px solid var(--line-2);background:#fff;color:var(--ink-2);font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}
 .modal-btn-delete{flex:1;padding:13px;border-radius:10px;border:none;background:var(--bad);color:#fff;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;}
-.modal-btn-delete:disabled{background:#f6c4c4;cursor:not-allowed;}
+.modal-btn-delete:disabled{background:#F3C4B6;cursor:not-allowed;}
 .modal-result{margin-top:14px;padding:12px 16px;border-radius:10px;font-weight:700;font-size:14px;line-height:1.7;}
 .modal-result.success{background:var(--ok-soft);color:var(--ok);}
 .modal-result.error{background:var(--bad-soft);color:var(--bad);}
@@ -1430,6 +1430,6 @@ const CSS=`
 .verdict{flex-direction:column;align-items:flex-start;}
 .vscore{margin-inline-start:0;}
 }
-.print-axis-all{display:none}.print-axis-card{border:1px solid #D9CBC2;border-radius:8px;padding:14px;margin:12px 0;background:#fff}.print-axis-head{display:flex;justify-content:space-between;border-bottom:1px solid #EADFD6;padding-bottom:8px;color:#3A1F36}.print-axis-kpis{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin:10px 0}.print-axis-card p{font-size:13px;line-height:1.8;margin:7px 0;color:#4A3645}.print-axis-chart{margin:12px 0;padding:12px;background:#FBF4EE;border:1px solid #EADFD6;border-radius:8px}.print-chart-title{font-weight:800;color:#3A1F36;margin-bottom:8px}.print-legend{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0 10px}.print-legend span{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:800}.l-red{background:#fef2f2!important;color:#991b1b!important;border:1px solid #b91c1c}.l-amber{background:#fff7e6!important;color:#92400e!important;border:1px solid #b45309}.l-green{background:#eafaf0!important;color:#065f46!important;border:1px solid #15803d}.print-chart-row,.print-target-row{display:grid;grid-template-columns:65px 1fr 70px;gap:8px;align-items:center;margin:7px 0;font-size:12px}.print-chart-track{height:10px;background:#EADFD6;border-radius:8px;overflow:hidden}.print-chart-track i{display:block;height:100%;border-radius:8px}
+.print-axis-all{display:none}.print-axis-card{border:1px solid #D9CBC2;border-radius:8px;padding:14px;margin:12px 0;background:#fff}.print-axis-head{display:flex;justify-content:space-between;border-bottom:1px solid #EADFD6;padding-bottom:8px;color:#3A1F36}.print-axis-kpis{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin:10px 0}.print-axis-card p{font-size:13px;line-height:1.8;margin:7px 0;color:#4A3645}.print-axis-chart{margin:12px 0;padding:12px;background:#FBF4EE;border:1px solid #EADFD6;border-radius:8px}.print-chart-title{font-weight:800;color:#3A1F36;margin-bottom:8px}.print-legend{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0 10px}.print-legend span{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:800}.l-red{background:#FBEDE7!important;color:#9A3A2A!important;border:1px solid #B9544A}.l-amber{background:#FBF4EE!important;color:#8A5A1E!important;border:1px solid #8A5A1E}.l-green{background:#E6F3F1!important;color:#1F4F4A!important;border:1px solid #2F6B66}.print-chart-row,.print-target-row{display:grid;grid-template-columns:65px 1fr 70px;gap:8px;align-items:center;margin:7px 0;font-size:12px}.print-chart-track{height:10px;background:#EADFD6;border-radius:8px;overflow:hidden}.print-chart-track i{display:block;height:100%;border-radius:8px}
 @media print{html,body,*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.side,.noprint,.rp-head{display:none !important;}.print-only{display:flex;}.rw{padding:0;background:#fff;}.card,.verdict,.rep-meta,.mcard{box-shadow:none !important;break-inside:avoid;}.print-axis-all{display:block;break-before:page}.print-axis-card{break-inside:avoid;background:#fff!important}.print-chart-track{border:1px solid #D9CBC2!important;background:#EADFD6!important}.print-chart-track i{opacity:1!important}.print-legend{display:flex!important;}}
 `;

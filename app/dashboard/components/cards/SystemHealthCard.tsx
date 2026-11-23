@@ -11,23 +11,23 @@ const CONFIG = {
   healthy: {
     title: 'ممتاز',
     icon: '🟢',
-    color: '#047857',
-    bg: '#ecfdf5',
-    border: '#a7f3d0',
+    color: '#2F6B66',
+    bg: '#E6F3F1',
+    border: '#BFE1DC',
   },
   warning: {
     title: 'يحتاج متابعة',
     icon: '🟠',
-    color: '#b45309',
-    bg: '#fffbeb',
-    border: '#fcd34d',
+    color: '#8A5A1E',
+    bg: '#FBF4EE',
+    border: '#E9C98A',
   },
   critical: {
     title: 'يحتاج تدخل',
     icon: '🔴',
-    color: '#b91c1c',
-    bg: '#fef2f2',
-    border: '#fca5a5',
+    color: '#B9544A',
+    bg: '#FBEDE7',
+    border: '#F3C4B6',
   },
 };
 

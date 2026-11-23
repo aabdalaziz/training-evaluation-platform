@@ -30,9 +30,9 @@ const tasks: Task[] = [
 ];
 
 const priorityColor = {
-  high: '#dc2626',
-  medium: '#f59e0b',
-  low: '#16a34a',
+  high: '#D4614A',
+  medium: '#D9A866',
+  low: '#3F7F79',
 };
 
 export default function TodaysMission() {
@@ -45,7 +45,7 @@ export default function TodaysMission() {
         background: '#ffffff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -62,7 +62,7 @@ export default function TodaysMission() {
           <h2
             style={{
               margin: 0,
-              color: '#14466B',
+              color: '#3A1F36',
               fontSize: 28,
               fontWeight: 900,
             }}
@@ -89,7 +89,7 @@ export default function TodaysMission() {
             style={{
               fontSize: 42,
               fontWeight: 900,
-              color: '#14466B',
+              color: '#3A1F36',
             }}
           >
             {progress}%
@@ -108,7 +108,7 @@ export default function TodaysMission() {
       <div
         style={{
           height: 12,
-          background: '#e5e7eb',
+          background: '#EADFD6',
           borderRadius: 30,
           overflow: 'hidden',
           marginBottom: 28,
@@ -118,7 +118,7 @@ export default function TodaysMission() {
           style={{
             width: `${progress}%`,
             height: '100%',
-            background: '#16a34a',
+            background: '#3F7F79',
           }}
         />
       </div>
@@ -154,7 +154,7 @@ export default function TodaysMission() {
               <div
                 style={{
                   fontWeight: 800,
-                  color: '#14466B',
+                  color: '#3A1F36',
                 }}
               >
                 {task.title}

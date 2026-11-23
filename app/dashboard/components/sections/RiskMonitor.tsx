@@ -5,21 +5,21 @@ const risks = [
     level: 'مرتفع',
     title: 'برنامج بدون تقييمات يومية',
     description: 'برنامج تعليم اللغة العربية لم يستقبل أي تقييم اليوم.',
-    color: '#DC2626',
+    color: '#D4614A',
     icon: '🔴',
   },
   {
     level: 'متوسط',
     title: 'انخفاض مؤشر إدارة الوقت',
     description: 'متوسط المؤشر 3.62 من 5 ويحتاج متابعة.',
-    color: '#F59E0B',
+    color: '#D9A866',
     icon: '🟠',
   },
   {
     level: 'منخفض',
     title: 'اكتمال النسخ الاحتياطي',
     description: 'آخر نسخة احتياطية تمت بنجاح.',
-    color: '#16A34A',
+    color: '#3F7F79',
     icon: '🟢',
   },
 ];
@@ -31,14 +31,14 @@ export default function RiskMonitor() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 30,
           fontWeight: 900,
         }}
@@ -75,7 +75,7 @@ export default function RiskMonitor() {
               <div>
                 <div
                   style={{
-                    color: '#14466B',
+                    color: '#3A1F36',
                     fontWeight: 900,
                     marginBottom: 6,
                   }}

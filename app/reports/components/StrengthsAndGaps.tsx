@@ -33,13 +33,13 @@ export default function StrengthsAndGaps() {
     >
       <Panel
         title="🟢 أقوى المؤشرات"
-        color="#16A34A"
+        color="#3F7F79"
         items={strengths}
       />
 
       <Panel
         title="🔴 أكبر الفجوات"
-        color="#DC2626"
+        color="#D4614A"
         items={gaps}
       />
     </section>
@@ -62,7 +62,7 @@ function Panel({
         borderRadius: 22,
         padding: 24,
         borderTop: `6px solid ${color}`,
-        boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 25px rgba(42,22,38,.05)',
       }}
     >
       <h2
@@ -94,7 +94,7 @@ function Panel({
           <div>
             <strong
               style={{
-                color: '#14466B',
+                color: '#3A1F36',
               }}
             >
               {item.name}

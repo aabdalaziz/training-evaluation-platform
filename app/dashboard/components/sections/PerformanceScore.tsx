@@ -19,14 +19,14 @@ export default function PerformanceScore() {
         background: '#fff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 24,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 28,
           fontWeight: 900,
         }}
@@ -52,7 +52,7 @@ export default function PerformanceScore() {
               <strong>{item.title}</strong>
               <span
                 style={{
-                  color: '#14466B',
+                  color: '#3A1F36',
                   fontWeight: 900,
                 }}
               >
@@ -63,7 +63,7 @@ export default function PerformanceScore() {
             <div
               style={{
                 height: 10,
-                background: '#e5e7eb',
+                background: '#EADFD6',
                 borderRadius: 20,
                 overflow: 'hidden',
               }}
@@ -72,7 +72,7 @@ export default function PerformanceScore() {
                 style={{
                   width: `${item.score}%`,
                   height: '100%',
-                  background: '#16a34a',
+                  background: '#3F7F79',
                 }}
               />
             </div>

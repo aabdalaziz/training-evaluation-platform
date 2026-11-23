@@ -14,8 +14,8 @@ export default function ErrorState({
       style={{
         textAlign: "center",
         padding: "48px 24px",
-        background: "#fef2f2",
-        border: "1px solid #fecaca",
+        background: "#FBEDE7",
+        border: "1px solid #F3C4B6",
         borderRadius: 20,
         margin: "20px 0",
       }}
@@ -24,7 +24,7 @@ export default function ErrorState({
       <h3
         style={{
           margin: "0 0 8px",
-          color: "#991b1b",
+          color: "#9A3A2A",
           fontSize: 20,
           fontWeight: 900,
         }}
@@ -33,7 +33,7 @@ export default function ErrorState({
       </h3>
       <p
         style={{
-          color: "#b91c1c",
+          color: "#B9544A",
           fontSize: 14,
           fontWeight: 700,
           margin: "0 0 20px",
@@ -46,7 +46,7 @@ export default function ErrorState({
       <button
         onClick={onRetry}
         style={{
-          background: "#dc2626",
+          background: "#D4614A",
           color: "#fff",
           border: "none",
           borderRadius: 12,

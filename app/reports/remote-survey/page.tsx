@@ -14,7 +14,7 @@ import {
   type Schedule, type Trainer,
 } from '../../../lib/surveys/remoteLearning';
 
-const NAVY = '#3A1F36', TEAL = '#D4614A', RED = '#dc2626', AMBER = '#d97706', GREEN = '#16a34a';
+const NAVY = '#3A1F36', TEAL = '#D4614A', RED = '#D4614A', AMBER = '#8A5A1E', GREEN = '#3F7F79';
 
 export default function RemoteSurveyReportPage() {
   const router = useRouter();
@@ -171,7 +171,7 @@ export default function RemoteSurveyReportPage() {
           <Kpi title={ar ? 'متوسط الموافقة (1–5)' : 'Average agreement (1–5)'} value={summary.overallAvg ?? '—'} color={TEAL} icon="⭐" />
           <Kpi title={ar ? 'نسبة الموافقة العامة' : 'Overall agree %'} value={summary.overallAgreePct == null ? '—' : `${summary.overallAgreePct}%`} color={pctColor(summary.overallAgreePct)} icon="👍" />
           <Kpi title={ar ? 'الرضا عن التجربة' : 'Satisfied with experience'} value={summary.satisfactionAgreePct == null ? '—' : `${summary.satisfactionAgreePct}%`} color={pctColor(summary.satisfactionAgreePct)} icon="😊" />
-          <Kpi title={ar ? 'عدد المجموعات' : 'Groups'} value={groups.length} color="#7c3aed" icon="🧩" />
+          <Kpi title={ar ? 'عدد المجموعات' : 'Groups'} value={groups.length} color="#8E4A68" icon="🧩" />
         </section>
 
         {/* ================= Group comparison ================= */}
@@ -248,7 +248,7 @@ export default function RemoteSurveyReportPage() {
           <div className="rr-card">
             <h3>🎚️ {ar ? 'المستوى (برأي الطالب)' : 'Self-reported level'}</h3>
             {Object.entries(summary.selfLevels).sort((a, b) => b[1] - a[1]).map(([k, n]) => (
-              <Row key={k} label={k === 'unknown' ? t(UI.notSure, lang) : levelLabel(levels.find(l => l.id === k), lang) || k} n={n} total={summary.count} color="#7c3aed" />
+              <Row key={k} label={k === 'unknown' ? t(UI.notSure, lang) : levelLabel(levels.find(l => l.id === k), lang) || k} n={n} total={summary.count} color="#8E4A68" />
             ))}
             {!Object.keys(summary.selfLevels).length && <div className="rr-empty">—</div>}
           </div>
@@ -316,28 +316,28 @@ const CSS = `
 *{box-sizing:border-box;}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .rr{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;}
-.rr-load{display:flex;align-items:center;justify-content:center;background:#14466B;}
-.rr-spin{width:64px;height:64px;border:6px solid rgba(255,255,255,.14);border-top-color:#1FA39A;border-radius:50%;animation:spin 1s linear infinite;}
+.rr-load{display:flex;align-items:center;justify-content:center;background:#3A1F36;}
+.rr-spin{width:64px;height:64px;border:6px solid rgba(255,255,255,.14);border-top-color:#3F7F79;border-radius:50%;animation:spin 1s linear infinite;}
 
 
  
 
 
 .rr-wrap{max-width:1240px;margin:20px auto 0;padding:0 28px;}
-.rr-err{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:12px 16px;font-weight:800;margin-bottom:16px;}
-.rr-card{background:#fff;border:1px solid #EADFD6;border-radius:22px;padding:22px;box-shadow:0 8px 28px rgba(15,23,42,.04);margin-bottom:18px;}
-.rr-card h3{margin:0 0 14px;font-size:18px;font-weight:900;color:#14466B;}
+.rr-err{background:#FBEDE7;color:#B9544A;border:1px solid #F3C4B6;border-radius:12px;padding:12px 16px;font-weight:800;margin-bottom:16px;}
+.rr-card{background:#fff;border:1px solid #EADFD6;border-radius:22px;padding:22px;box-shadow:0 8px 28px rgba(42,22,38,.04);margin-bottom:18px;}
+.rr-card h3{margin:0 0 14px;font-size:18px;font-weight:900;color:#3A1F36;}
 .rr-muted{color:#8E7F8A;font-weight:600;font-size:12px;}
 .rr-filters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .rr-filters label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;color:#5C4858;}
 .rr-filters select,.rr-filters input{border:1px solid #D9CBC2;border-radius:10px;padding:9px 10px;font-family:inherit;font-weight:700;background:#fff;color:#2A1626;}
 .rr-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center;}
-.rr-mini{border:1px solid #D9CBC2;background:#fff;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer;color:#14466B;}
+.rr-mini{border:1px solid #D9CBC2;background:#fff;border-radius:8px;padding:5px 10px;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer;color:#3A1F36;}
 .rr-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px;}
 .rr-kpi{background:#fff;border:1px solid #EADFD6;border-top:5px solid;border-radius:18px;padding:16px;text-align:center;}
 .rr-kpi-icon{font-size:22px;} .rr-kpi-val{font-size:30px;font-weight:900;margin:4px 0;} .rr-kpi-ttl{font-size:12px;font-weight:800;color:#8E7F8A;}
 .rr-tw{overflow-x:auto;} table{width:100%;border-collapse:collapse;min-width:640px;}
-th{padding:11px;font-weight:900;font-size:12px;color:#8E7F8A;border-bottom:2px solid #eef2f6;text-align:start;}
+th{padding:11px;font-weight:900;font-size:12px;color:#8E7F8A;border-bottom:2px solid #EADFD6;text-align:start;}
 td{padding:11px;font-size:13.5px;border-bottom:1px solid #F6EBE0;font-weight:700;vertical-align:middle;}
 .rr-empty{color:#B3A5AE;text-align:center;font-weight:800;padding:16px;}
 .rr-bar{position:relative;height:22px;background:#F6EBE0;border-radius:6px;min-width:110px;overflow:hidden;}
@@ -346,7 +346,7 @@ td{padding:11px;font-size:13.5px;border-bottom:1px solid #F6EBE0;font-weight:700
 .rr-bar span{position:relative;display:block;text-align:center;font-size:12px;font-weight:900;line-height:22px;color:#2A1626;}
 .rr-dist{display:flex;height:20px;border-radius:6px;overflow:hidden;min-width:160px;background:#F6EBE0;}
 .rr-seg{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;min-width:14px;}
-.rr-seg-SA{background:#15803d;} .rr-seg-A{background:#4ade80;color:#064e3b;} .rr-seg-N{background:#facc15;color:#422006;} .rr-seg-D{background:#fb923c;} .rr-seg-SD{background:#dc2626;} .rr-seg-NA{background:#B3A5AE;}
+.rr-seg-SA{background:#2F6B66;} .rr-seg-A{background:#5EA8A0;color:#1F4F4A;} .rr-seg-N{background:#D9A866;color:#5C3B12;} .rr-seg-D{background:#D9A866;} .rr-seg-SD{background:#D4614A;} .rr-seg-NA{background:#B3A5AE;}
 .rr-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;font-weight:800;color:#5C4858;}
 .rr-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:middle;}
 .rr-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}

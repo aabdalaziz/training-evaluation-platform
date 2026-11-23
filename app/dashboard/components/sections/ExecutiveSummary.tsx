@@ -4,11 +4,11 @@ export default function ExecutiveSummary() {
   return (
     <section
       style={{
-        background: 'linear-gradient(135deg,#14466B,#0B3552)',
+        background: 'linear-gradient(135deg,#3A1F36,#1F4F4A)',
         color: '#fff',
         borderRadius: 24,
         padding: 32,
-        boxShadow: '0 15px 35px rgba(20,70,107,.20)',
+        boxShadow: '0 15px 35px rgba(58,31,54,.20)',
       }}
     >
       <div

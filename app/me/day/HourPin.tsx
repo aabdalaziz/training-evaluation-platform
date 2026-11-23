@@ -43,7 +43,7 @@ export default function HourPin({ roomId, code, hdr, readOnly }: Props) {
   </div>;
 }
 const CSS = `
-.hp{border-top:1px dashed #EADFD6;margin-top:10px;padding-top:10px}.hp-row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}.hp-row b{color:#3A1F36}.hp-sum{color:#4A3645;font-size:13px}.hp-sum.muted{color:#B3A5AE}.hp-sum i{font-style:normal;color:#b45309;font-weight:700}.hp-acts{display:inline-flex;gap:6px;flex-wrap:wrap;margin-inline-start:auto}
+.hp{border-top:1px dashed #EADFD6;margin-top:10px;padding-top:10px}.hp-row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}.hp-row b{color:#3A1F36}.hp-sum{color:#4A3645;font-size:13px}.hp-sum.muted{color:#B3A5AE}.hp-sum i{font-style:normal;color:#8A5A1E;font-weight:700}.hp-acts{display:inline-flex;gap:6px;flex-wrap:wrap;margin-inline-start:auto}
 .hp-form{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:8px;background:#FBF4EE;border-radius:12px;padding:8px 12px}.hp-form label{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:#4A3645}.hp-form select,.hp-form input{border:1px solid #D9CBC2;border-radius:10px;padding:6px 8px;font:inherit}.hp-hint{flex-basis:100%;color:#B3A5AE;font-size:12px}
-.hp-ok{margin:6px 0 0;color:#065f46;font-size:13px}.hp-err{margin:6px 0 0;color:#991b1b;font-size:13px}
+.hp-ok{margin:6px 0 0;color:#1F4F4A;font-size:13px}.hp-err{margin:6px 0 0;color:#9A3A2A;font-size:13px}
 `;

@@ -13,28 +13,28 @@ const timeline: TimelineItem[] = [
     time: '08:00',
     title: 'بدء البرنامج',
     description: 'تم افتتاح الجلسات التدريبية لهذا اليوم.',
-    color: '#2563eb',
+    color: '#8E4A68',
     icon: '🚀',
   },
   {
     time: '08:30',
     title: 'تسجيل الحضور',
     description: 'حضر 126 متدرباً حتى الآن.',
-    color: '#16a34a',
+    color: '#3F7F79',
     icon: '✅',
   },
   {
     time: '09:20',
     title: 'استلام التقييمات',
     description: 'تم استلام 18 تقييماً يومياً.',
-    color: '#ea580c',
+    color: '#8A5A1E',
     icon: '📝',
   },
   {
     time: '10:15',
     title: 'تحديث التقرير',
     description: 'تم تحديث المؤشرات التنفيذية.',
-    color: '#7c3aed',
+    color: '#8E4A68',
     icon: '📊',
   },
 ];
@@ -46,14 +46,14 @@ export default function DailyTimeline() {
         background: '#fff',
         borderRadius: 22,
         padding: 24,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
           marginBottom: 8,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 28,
           fontWeight: 900,
         }}
@@ -122,7 +122,7 @@ export default function DailyTimeline() {
 
               <div
                 style={{
-                  color: '#14466B',
+                  color: '#3A1F36',
                   fontSize: 18,
                   fontWeight: 900,
                 }}

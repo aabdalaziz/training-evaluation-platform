@@ -10,27 +10,27 @@ const metrics: Metric[] = [
   {
     title: 'جودة البرامج',
     value: 96,
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     title: 'رضا المتدربين',
     value: 95,
-    color: '#16a34a',
+    color: '#3F7F79',
   },
   {
     title: 'الحضور',
     value: 93,
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
   {
     title: 'استكمال التقييمات',
     value: 88,
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
   {
     title: 'تنفيذ التحسينات',
     value: 82,
-    color: '#dc2626',
+    color: '#D4614A',
   },
 ];
 
@@ -43,7 +43,7 @@ export default function InstitutionalExcellence() {
         background: '#ffffff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <div
@@ -71,7 +71,7 @@ export default function InstitutionalExcellence() {
             style={{
               margin: '6px 0',
               fontSize: 30,
-              color: '#14466B',
+              color: '#3A1F36',
               fontWeight: 900,
             }}
           >
@@ -93,14 +93,14 @@ export default function InstitutionalExcellence() {
             height: 170,
             borderRadius: '50%',
             background:
-              'linear-gradient(135deg,#16a34a,#22c55e)',
+              'linear-gradient(135deg,#3F7F79,#3F7F79)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             color: '#fff',
             flexDirection: 'column',
             boxShadow:
-              '0 12px 30px rgba(34,197,94,.35)',
+              '0 12px 30px rgba(94,168,160,.35)',
           }}
         >
           <div
@@ -192,7 +192,7 @@ function MetricCard({
       <div
         style={{
           height: 10,
-          background: '#e5e7eb',
+          background: '#EADFD6',
           borderRadius: 20,
           overflow: 'hidden',
         }}

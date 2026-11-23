@@ -5,25 +5,25 @@ const goals = [
     title: 'رفع رضا المتدربين',
     current: 94,
     target: 95,
-    color: '#16a34a',
+    color: '#3F7F79',
   },
   {
     title: 'استكمال التقييمات',
     current: 88,
     target: 100,
-    color: '#2563eb',
+    color: '#8E4A68',
   },
   {
     title: 'الالتزام بالحضور',
     current: 93,
     target: 95,
-    color: '#7c3aed',
+    color: '#8E4A68',
   },
   {
     title: 'تنفيذ خطط التحسين',
     current: 82,
     target: 100,
-    color: '#ea580c',
+    color: '#8A5A1E',
   },
 ];
 
@@ -34,13 +34,13 @@ export default function GoalsProgress() {
         background: '#ffffff',
         borderRadius: 24,
         padding: 28,
-        boxShadow: '0 10px 30px rgba(15,23,42,.05)',
+        boxShadow: '0 10px 30px rgba(42,22,38,.05)',
       }}
     >
       <h2
         style={{
           margin: 0,
-          color: '#14466B',
+          color: '#3A1F36',
           fontSize: 30,
           fontWeight: 900,
           marginBottom: 10,
@@ -94,7 +94,7 @@ export default function GoalsProgress() {
               <div
                 style={{
                   height: 12,
-                  background: '#e5e7eb',
+                  background: '#EADFD6',
                   borderRadius: 20,
                   overflow: 'hidden',
                 }}

@@ -57,20 +57,20 @@ const CSS = `
 .xc{display:grid;gap:12px;margin-bottom:12px}
 .xc-card{background:linear-gradient(135deg,#FBF4EE,#F6EBE0);border:1px solid #EADFD6;border-radius:18px;padding:16px 18px;box-shadow:0 10px 28px rgba(42,22,38,.06)}
 .xc-card.exited{background:linear-gradient(135deg,#3A1F36,#6A3350);color:#FBF4EE;border-color:transparent}
-.xc-card header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.xc-k{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#8A5A1E}.xc-card.exited .xc-k{color:#F6D9A8}
+.xc-card header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.xc-k{display:inline-flex;gap:6px;align-items:center;font-size:12px;font-weight:900;color:#8A5A1E}.xc-card.exited .xc-k{color:#F1D9A8}
 .xc-state{font-size:11.5px;font-weight:900;border-radius:999px;padding:3px 10px;background:#fff;color:#3A1F36}.xc-state.exited{background:#D9A866;color:#2A1626}.xc-state.graduate{background:#3A1F36;color:#FBF4EE}
 .xc-ladder{list-style:none;margin:0 0 10px;padding:0;display:flex;gap:6px;flex-wrap:wrap}.xc-ladder li{flex:1;min-width:92px;display:grid;grid-template-columns:26px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.6);border:1px solid #EADFD6;opacity:.65}
-.xc-ladder li i{grid-row:1/3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:12px;background:#E8DCD2;color:#5C4858}.xc-ladder li span{font-size:12px;font-weight:800;color:#2A1626}.xc-ladder li small{font-size:11px;color:#8C7A86}
+.xc-ladder li i{grid-row:1/3;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:12px;background:#F1D9A8;color:#5C4858}.xc-ladder li span{font-size:12px;font-weight:800;color:#2A1626}.xc-ladder li small{font-size:11px;color:#8E7F8A}
 .xc-ladder li.done{opacity:1;border-color:#D9A866;background:#fff}.xc-ladder li.done i{background:#D9A866;color:#2A1626}.xc-ladder li.now{opacity:1;border-color:#D4614A}.xc-ladder li.now i{background:#D4614A;color:#fff;animation:xcPulse 1.8s infinite}
 .xc-card.exited .xc-ladder li{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}.xc-card.exited .xc-ladder li span{color:#FBF4EE}.xc-card.exited .xc-ladder li small{color:rgba(251,244,238,.7)}
 .xc-line{margin:0 0 8px;font-size:13.5px;font-weight:700;line-height:1.7;color:#2A1626}.xc-card.exited .xc-line{color:#FBF4EE}
-.xc-link{background:none;border:0;color:#8C7A86;font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
+.xc-link{background:none;border:0;color:#8E7F8A;font:inherit;font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
 .xc-ask{margin-top:8px;padding:12px;border-radius:14px;background:#fff;border:1px solid #EADFD6;display:grid;gap:8px}.xc-ask b{font-size:13px;color:#3A1F36}
 .xc-reasons{display:flex;flex-wrap:wrap;gap:6px}.xc-reasons button{border:1px solid #EADFD6;background:#FBF4EE;border-radius:999px;padding:4px 11px;font:inherit;font-size:12.5px;font-weight:700;color:#5C4858;cursor:pointer}.xc-reasons button.on{background:#3A1F36;color:#FBF4EE;border-color:#3A1F36}
 .xc-ask textarea{border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;resize:vertical}
 .xc-acts{display:flex;gap:8px;flex-wrap:wrap}.xc-btn{border:0;border-radius:999px;padding:9px 18px;font:inherit;font-weight:900;font-size:13px;cursor:pointer;background:#D9A866;color:#2A1626}.xc-btn.danger{background:#D4614A;color:#fff}.xc-btn.ghost{background:transparent;color:#5C4858;border:1px solid #EADFD6}.xc-btn:disabled{opacity:.6}
-.xc-exit p{margin:0 0 6px;font-size:13px;line-height:1.7}.xc-exit a{color:#F6D9A8}
-.xc-msg{margin:8px 0 0;font-size:13px;font-weight:800;color:#065f46}.xc-card.exited .xc-msg{color:#F6D9A8}
+.xc-exit p{margin:0 0 6px;font-size:13px;line-height:1.7}.xc-exit a{color:#F1D9A8}
+.xc-msg{margin:8px 0 0;font-size:13px;font-weight:800;color:#1F4F4A}.xc-card.exited .xc-msg{color:#F1D9A8}
 @keyframes xcPulse{0%{box-shadow:0 0 0 0 rgba(212,97,74,.5)}100%{box-shadow:0 0 0 10px rgba(212,97,74,0)}}
 @media(prefers-reduced-motion:reduce){.xc-ladder li.now i{animation:none}}
 `;

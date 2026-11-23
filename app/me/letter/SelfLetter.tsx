@@ -153,39 +153,39 @@ export default function SelfLetter() {
 
 /** الظرف المختوم — SVG خفيف: ختم شمعي يحمل تاريخ الفتح وساعته */
 function EnvelopeSvg({ state, date, hour }: { state: string; date: string; hour: string }) {
-  const c = state === 'ready' ? '#b45309' : state === 'today' ? '#D4614A' : '#7c2d12';
+  const c = state === 'ready' ? '#8A5A1E' : state === 'today' ? '#D4614A' : '#9A3A2A';
   return <svg className="sl-svg" viewBox="0 0 160 110" width="160" height="110" role="img" aria-label={`ظرف مختوم يُفتح ${date} الساعة ${hour}`} direction="rtl">
-    <rect x="6" y="18" width="148" height="86" rx="8" fill="#fffbeb" stroke="#fcd34d" />
-    <path d="M6 26 L80 70 L154 26" fill="none" stroke="#fcd34d" strokeWidth="2" />
-    <path d="M6 26 L80 70 L154 26 L154 18 L6 18 Z" fill="#fef3c7" stroke="#fcd34d" />
+    <rect x="6" y="18" width="148" height="86" rx="8" fill="#FBF4EE" stroke="#E9C98A" />
+    <path d="M6 26 L80 70 L154 26" fill="none" stroke="#E9C98A" strokeWidth="2" />
+    <path d="M6 26 L80 70 L154 26 L154 18 L6 18 Z" fill="#F1D9A8" stroke="#E9C98A" />
     <circle cx="80" cy="66" r="17" fill={c} stroke="#fff" strokeWidth="2" />
     <text x="80" y="63" textAnchor="middle" fontSize="7.5" fontWeight="800" fill="#fff">{hour}</text>
     <text x="80" y="73" textAnchor="middle" fontSize="6" fill="#fff">{state === 'ready' ? 'افتحها' : state === 'today' ? 'اليوم' : 'مختومة'}</text>
-    <text x="80" y="98" textAnchor="middle" fontSize="7" fontWeight="800" fill="#7c2d12">{date}</text>
+    <text x="80" y="98" textAnchor="middle" fontSize="7" fontWeight="800" fill="#9A3A2A">{date}</text>
   </svg>;
 }
 
 const CSS = `
 .sl{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;max-width:1040px;margin:0 auto;padding:22px 16px 60px;overflow-wrap:anywhere;min-width:0}.sl *{box-sizing:border-box}
 .sl-nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}.sl-link{color:#3A1F36;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;gap:5px;font-size:14px}.sl-link:hover{text-decoration:underline}
-.sl-head h1{margin:4px 0 6px;font-size:32px;color:#3A1F36}.sl-head h1 small{display:block;font-size:15px;color:#b45309;font-weight:800;margin-top:2px}.sl-head p{margin:0 0 14px;color:#5C4858;line-height:1.9;max-width:760px}
-.sl-muted{color:#8E7F8A;font-size:13px;line-height:1.8;margin:4px 0}.sl-err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.sl-ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
-.sl-sealed{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:0 0 14px}.sl-env{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #fde68a;border-radius:16px;padding:12px}.sl-env.ready{border-color:#b45309;box-shadow:0 0 0 3px #fef3c7}.sl-env.today{border-color:#D4614A}.sl-env b{display:block;font-size:15px;color:#3A1F36;margin-bottom:2px}.sl-svg{flex:0 0 auto}
+.sl-head h1{margin:4px 0 6px;font-size:32px;color:#3A1F36}.sl-head h1 small{display:block;font-size:15px;color:#8A5A1E;font-weight:800;margin-top:2px}.sl-head p{margin:0 0 14px;color:#5C4858;line-height:1.9;max-width:760px}
+.sl-muted{color:#8E7F8A;font-size:13px;line-height:1.8;margin:4px 0}.sl-err{background:#FBEDE7;color:#B9544A;border:1px solid #F3C4B6;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}.sl-ok{background:#E6F3F1;color:#2F6B66;border:1px solid #BFE1DC;border-radius:12px;padding:10px 14px;margin:10px 0;font-weight:800}
+.sl-sealed{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:0 0 14px}.sl-env{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid #E9C98A;border-radius:16px;padding:12px}.sl-env.ready{border-color:#8A5A1E;box-shadow:0 0 0 3px #F1D9A8}.sl-env.today{border-color:#D4614A}.sl-env b{display:block;font-size:15px;color:#3A1F36;margin-bottom:2px}.sl-svg{flex:0 0 auto}
 .sl-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.sl-opened{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 14px}.sl-page{border-radius:18px;padding:18px 20px;position:relative;min-width:0}.sl-then{background:linear-gradient(160deg,#fffbeb,#fff7ed);border:1px solid #fed7aa}.sl-now{background:#fff;border:1px solid #EADFD6}
-.sl-tag{display:inline-block;font-size:12px;font-weight:800;color:#9a3412;background:#fff;border:1px solid #fed7aa;border-radius:999px;padding:2px 10px;margin-bottom:8px}.sl-now .sl-tag{color:#3A1F36;border-color:#D9CBC2}
-.sl-early{display:inline-block;margin-inline-start:6px;font-size:12px;font-weight:800;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:999px;padding:2px 10px}
+.sl-opened{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 14px}.sl-page{border-radius:18px;padding:18px 20px;position:relative;min-width:0}.sl-then{background:linear-gradient(160deg,#FBF4EE,#FBF4EE);border:1px solid #F1D9A8}.sl-now{background:#fff;border:1px solid #EADFD6}
+.sl-tag{display:inline-block;font-size:12px;font-weight:800;color:#9A3A2A;background:#fff;border:1px solid #F1D9A8;border-radius:999px;padding:2px 10px;margin-bottom:8px}.sl-now .sl-tag{color:#3A1F36;border-color:#D9CBC2}
+.sl-early{display:inline-block;margin-inline-start:6px;font-size:12px;font-weight:800;color:#B9544A;background:#FBEDE7;border:1px solid #F3C4B6;border-radius:999px;padding:2px 10px}
 .sl-body{margin:8px 0;font-size:19px;line-height:2;color:#3b1d0e;white-space:pre-wrap;font-weight:600;border:0;padding:0}.sl-audio{width:100%;margin:8px 0}
-.sl-sum{font-weight:800;color:#3A1F36;font-size:16px;line-height:1.9;margin:0 0 8px}.sl-lines{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:6px}.sl-lines li{background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:8px 12px;font-size:14px}.sl-lines b{font-size:18px;color:#b45309;margin-inline-end:6px}
+.sl-sum{font-weight:800;color:#3A1F36;font-size:16px;line-height:1.9;margin:0 0 8px}.sl-lines{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:6px}.sl-lines li{background:#FBF4EE;border:1px solid #EADFD6;border-radius:10px;padding:8px 12px;font-size:14px}.sl-lines b{font-size:18px;color:#8A5A1E;margin-inline-end:6px}
 .sl-reply{border-top:1px dashed #D9CBC2;margin-top:12px;padding-top:12px}.sl-reply>b{display:block;margin-bottom:6px;color:#3A1F36}
 .sl-write h2{margin:0 0 8px;font-size:20px;color:#3A1F36}.sl-invite{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .sl-prompts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}.sl-chip{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:800;color:#4A3645;cursor:pointer}.sl-chip.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
-.sl-horizons{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}.sl-h{border:1px solid #EADFD6;background:#fff;border-radius:12px;padding:10px;text-align:center;font:inherit;cursor:pointer}.sl-h b{display:block;font-size:14px;color:#3A1F36}.sl-h small{display:block;color:#8E7F8A;font-size:11.5px;margin-top:2px}.sl-h.on{border-color:#b45309;background:#fffbeb;box-shadow:0 0 0 2px #fde68a}.sl-h:disabled{opacity:.5;cursor:not-allowed}
+.sl-horizons{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}.sl-h{border:1px solid #EADFD6;background:#fff;border-radius:12px;padding:10px;text-align:center;font:inherit;cursor:pointer}.sl-h b{display:block;font-size:14px;color:#3A1F36}.sl-h small{display:block;color:#8E7F8A;font-size:11.5px;margin-top:2px}.sl-h.on{border-color:#8A5A1E;background:#FBF4EE;box-shadow:0 0 0 2px #E9C98A}.sl-h:disabled{opacity:.5;cursor:not-allowed}
 .sl-select,.sl-input{font:inherit;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;width:100%;max-width:520px}
 .sl-chain h2,.sl-cohort h2{margin:0 0 10px;font-size:18px;color:#3A1F36}.sl-chain h2 small,.sl-cohort h2 small{font-size:12px;color:#8E7F8A;font-weight:600;margin-inline-start:6px}
-.sl-timeline{list-style:none;margin:0;padding:0 14px 0 0;border-right:2px solid #fde68a}.sl-timeline li{position:relative;padding:4px 14px 12px 0}.sl-timeline li.on b{color:#b45309}.sl-dot{position:absolute;right:-20px;top:9px;width:10px;height:10px;border-radius:50%;background:#b45309;border:2px solid #fff}.sl-timeline small{color:#8E7F8A;font-size:12px}
-.sl-coprog{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;margin:0 0 8px}.sl-coprog>b{color:#3A1F36}.sl-corow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.sl-corow .sl-input{flex:1 1 260px}.sl-myline{margin:6px 0;color:#3b1d0e;font-weight:700}.sl-x{border:0;background:none;color:#b91c1c;font:inherit;font-size:12px;cursor:pointer;text-decoration:underline}
-.sl-colines{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:6px}.sl-colines li{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 12px;font-weight:700;color:#3b1d0e}
+.sl-timeline{list-style:none;margin:0;padding:0 14px 0 0;border-right:2px solid #E9C98A}.sl-timeline li{position:relative;padding:4px 14px 12px 0}.sl-timeline li.on b{color:#8A5A1E}.sl-dot{position:absolute;right:-20px;top:9px;width:10px;height:10px;border-radius:50%;background:#8A5A1E;border:2px solid #fff}.sl-timeline small{color:#8E7F8A;font-size:12px}
+.sl-coprog{border:1px solid #EADFD6;border-radius:12px;padding:10px 12px;margin:0 0 8px}.sl-coprog>b{color:#3A1F36}.sl-corow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.sl-corow .sl-input{flex:1 1 260px}.sl-myline{margin:6px 0;color:#3b1d0e;font-weight:700}.sl-x{border:0;background:none;color:#B9544A;font:inherit;font-size:12px;cursor:pointer;text-decoration:underline}
+.sl-colines{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:6px}.sl-colines li{background:#FBF4EE;border:1px solid #E9C98A;border-radius:10px;padding:8px 12px;font-weight:700;color:#3b1d0e}
 .sl-foot{margin-top:18px;color:#8E7F8A;font-size:12.5px;line-height:1.8;display:flex;gap:6px;align-items:flex-start}.sl-foot a{color:#D4614A}
 @media(max-width:760px){.sl-opened{grid-template-columns:1fr}.sl-head h1{font-size:26px}.sl-body{font-size:17px}}
 @media print{.sl-nav,.sl-acts,.sl-write,.sl-reply .pt-btn{display:none}}

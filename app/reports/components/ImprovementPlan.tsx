@@ -53,8 +53,8 @@ export default function ImprovementPlan() {
         background: '#fff',
         borderRadius: 22,
         padding: 24,
-        borderTop: '6px solid #2563EB',
-        boxShadow: '0 10px 25px rgba(15,23,42,.05)',
+        borderTop: '6px solid #8E4A68',
+        boxShadow: '0 10px 25px rgba(42,22,38,.05)',
         marginBottom: 30,
       }}
     >
@@ -62,7 +62,7 @@ export default function ImprovementPlan() {
         style={{
           margin: 0,
           marginBottom: 20,
-          color: '#2563EB',
+          color: '#8E4A68',
           fontSize: 24,
           fontWeight: 900,
         }}
@@ -79,7 +79,7 @@ export default function ImprovementPlan() {
           }}
         >
           <thead>
-            <tr style={{ background: '#F6EBE0', color: '#14466B' }}>
+            <tr style={{ background: '#F6EBE0', color: '#3A1F36' }}>
               <th style={th}>#</th>
               <th style={th}>المؤشر</th>
               <th style={th}>الدرجة</th>
@@ -100,13 +100,13 @@ export default function ImprovementPlan() {
                 }}
               >
                 <td style={td}>{index + 1}</td>
-                <td style={{ ...td, fontWeight: 900, color: '#14466B' }}>
+                <td style={{ ...td, fontWeight: 900, color: '#3A1F36' }}>
                   {item.indicator}
                 </td>
                 <td style={td}>
                   <span
                     style={{
-                      background: '#DC2626',
+                      background: '#D4614A',
                       color: '#fff',
                       borderRadius: 20,
                       padding: '4px 12px',

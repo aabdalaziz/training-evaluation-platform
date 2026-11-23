@@ -32,7 +32,7 @@ export default function CommandCenter() {
   return (
     <main
       style={{
-        background: '#F4F7FB',
+        background: '#F3E8EF',
         minHeight: '100vh',
         padding: '24px',
       }}

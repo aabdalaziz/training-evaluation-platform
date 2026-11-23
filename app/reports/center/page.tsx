@@ -535,7 +535,7 @@ function PriorityGauge({ actions, k, lang }: { actions: Action[]; k: Kpis; lang:
   const riskScore = Math.min(1, highCount / 3) * 20;
   const score = Math.round(gapScore + lowScore + riskScore);
   const level = score >= 60 ? 2 : score >= 30 ? 1 : 0;
-  const color = ['#059669', '#d97706', '#dc2626'][level];
+  const color = ['#2F6B66', '#8A5A1E', '#D4614A'][level];
   const label = ar ? ['متابعة اعتيادية', 'تدخل خلال الأسبوع', 'تدخل فوري'][level] : ['Routine follow-up', 'Act this week', 'Immediate action'][level];
   const r = 44, c = 2 * Math.PI * r, dash = (score / 100) * c;
   return (
@@ -567,7 +567,7 @@ function Badge({ kind, value, lang }: { kind: 'perf' | 'risk'; value: string; la
 const Delta = ({ v, suffix = '', good = 'up' }: { v: number | null; suffix?: string; good?: 'up' | 'down' }) => {
   if (v === null || v === undefined) return <span className="rc-muted">—</span>;
   const pos = good === 'up' ? v >= 0 : v <= 0;
-  return <span className="rc-delta" style={{ color: v === 0 ? '#8E7F8A' : pos ? '#047857' : '#b91c1c' }}>{v > 0 ? '▲' : v < 0 ? '▼' : '•'} {Number.isInteger(v) ? Math.abs(v) : Math.abs(v).toFixed(suffix === '%' ? 1 : 2)}{suffix}</span>;
+  return <span className="rc-delta" style={{ color: v === 0 ? '#8E7F8A' : pos ? '#2F6B66' : '#B9544A' }}>{v > 0 ? '▲' : v < 0 ? '▼' : '•'} {Number.isInteger(v) ? Math.abs(v) : Math.abs(v).toFixed(suffix === '%' ? 1 : 2)}{suffix}</span>;
 };
 
 function KpiStrip({ k, cmp, lang }: { k: Kpis; cmp: Comparison | null; lang: Lang }) {
@@ -577,7 +577,7 @@ function KpiStrip({ k, cmp, lang }: { k: Kpis; cmp: Comparison | null; lang: Lan
     { l: ar ? 'الاستجابات' : 'Responses', v: k.responses, s: `${k.participants} ${ar ? 'مشارك' : 'participants'}`, d: cmp ? cmp.deltaResponses : null },
     { l: ar ? 'رضا مرتفع' : 'High ratings', v: `${k.highPct.toFixed(0)}%`, s: ar ? 'درجات 4–5' : 'scores 4–5', d: cmp?.deltaHighPct ?? null, suffix: '%' },
     { l: ar ? 'تقييمات منخفضة' : 'Low ratings', v: `${k.lowPct.toFixed(0)}%`, s: ar ? 'درجات 1–2' : 'scores 1–2', d: cmp?.deltaLowPct ?? null, suffix: '%', good: 'down' as const },
-    { l: ar ? 'الفجوة للهدف' : 'Gap to target', v: (k.gap > 0 ? '-' : '+') + Math.abs(k.gap).toFixed(2), s: ar ? 'درجة' : 'points', color: k.gap > 0 ? '#b91c1c' : '#047857' },
+    { l: ar ? 'الفجوة للهدف' : 'Gap to target', v: (k.gap > 0 ? '-' : '+') + Math.abs(k.gap).toFixed(2), s: ar ? 'درجة' : 'points', color: k.gap > 0 ? '#B9544A' : '#2F6B66' },
     { l: ar ? 'التغطية' : 'Coverage', v: k.rooms, s: `${ar ? 'قاعة' : 'rooms'} · ${k.trainers} ${ar ? 'مدرب' : 'trainers'} · ${k.days} ${ar ? 'يوم' : 'days'}` },
   ];
   return (
@@ -619,7 +619,7 @@ function StrengthsGaps({ axes, lang }: { axes: GroupRow[]; lang: Lang }) {
     <div className="rc-box" style={{ borderTopColor: color }}><h4>{t}</h4>
       {rows.length ? rows.map(r => <div key={r.key} className="rc-row"><b>{r.label}</b><span className="ltr">{r.mean.toFixed(2)}/5 · {ar ? 'مرتفع' : 'high'} {r.highPct.toFixed(0)}% · n={r.responses}</span></div>) : <div className="rc-muted">{ar ? 'لا يوجد' : 'None'}</div>}
     </div>);
-  return <div className="rc-g2"><Box t={ar ? '💪 أبرز نقاط القوة' : '💪 Top strengths'} rows={s} color="#059669" /><Box t={ar ? '⚠️ أبرز الفجوات' : '⚠️ Top gaps'} rows={g} color="#dc2626" /></div>;
+  return <div className="rc-g2"><Box t={ar ? '💪 أبرز نقاط القوة' : '💪 Top strengths'} rows={s} color="#2F6B66" /><Box t={ar ? '⚠️ أبرز الفجوات' : '⚠️ Top gaps'} rows={g} color="#D4614A" /></div>;
 }
 
 function Bars({ rows, lang, showN }: { rows: GroupRow[]; lang: Lang; showN?: boolean }) {
@@ -662,7 +662,7 @@ function LineChart({ series, lang }: { series: SeriesPoint[]; lang: Lang }) {
       <text x={W - P} y={y(TARGET) - 6} fontSize="10" textAnchor="end" fill={GOLD}>{ar ? 'الهدف' : 'target'} {TARGET}</text>
       <path d={path(p => p.mean)} fill="none" stroke={NAVY} strokeWidth="2.5" />
       <path d={path(p => p.ma)} fill="none" stroke={TEAL} strokeWidth="2" strokeDasharray="3 3" />
-      {pts.map((p, i) => <g key={p.key}><circle cx={x(i)} cy={y(p.mean as number)} r="4" fill={(p.mean as number) >= TARGET ? '#059669' : (p.mean as number) >= THRESHOLDS.good ? NAVY : '#dc2626'}><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
+      {pts.map((p, i) => <g key={p.key}><circle cx={x(i)} cy={y(p.mean as number)} r="4" fill={(p.mean as number) >= TARGET ? '#2F6B66' : (p.mean as number) >= THRESHOLDS.good ? NAVY : '#D4614A'}><title>{p.label}: {p.mean} (n={p.responses})</title></circle>
         {i % step === 0 && <text x={x(i)} y={H - P + 14} fontSize="9" textAnchor="middle" fill="#8E7F8A">{p.label.slice(5)}</text>}</g>)}
       <text x={P} y={14} fontSize="10" fill={NAVY}>— {ar ? 'المتوسط اليومي' : 'daily mean'}</text>
       <text x={P + 120} y={14} fontSize="10" fill={TEAL}>- - {ar ? 'متوسط متحرك' : 'moving avg'}</text>
@@ -679,7 +679,7 @@ function VolumeBars({ series, lang }: { series: SeriesPoint[]; lang: Lang }) {
 
 function Distribution({ dist, lang }: { dist: number[]; lang: Lang }) {
   const total = dist.reduce((a, b) => a + b, 0) || 1;
-  const colors = ['#dc2626', '#f97316', '#eab308', '#22c55e', '#059669'];
+  const colors = ['#D4614A', '#D9A866', '#8A5A1E', '#3F7F79', '#2F6B66'];
   return <div className="rc-dist">{dist.map((c, i) => <div key={i} className="rc-dist-row"><span className="rc-dist-l">{i + 1} ★</span><div className="rc-dist-track"><div style={{ width: `${(c / total) * 100}%`, background: colors[i] }} /></div><span className="ltr rc-dist-v">{c} ({((c / total) * 100).toFixed(0)}%)</span></div>)}<div className="rc-muted" style={{ fontSize: 11 }}>{lang === 'ar' ? `إجمالي القياسات ${total}` : `Total measurements ${total}`}</div></div>;
 }
 
@@ -696,8 +696,8 @@ function GroupTable({ rows, lang, dim, compact, extra, extraLabel }: { rows: Gro
         <tr key={r.key}>
           <td>{i + 1}</td><td className="rc-td-l">{r.label}</td>{extra && <td className="rc-td-l rc-muted">{extra(r)}</td>}<td className="ltr">{r.responses}</td>{!compact && <td className="ltr">{r.participants}</td>}
           <td className="ltr" style={{ fontWeight: 900, color: PERF_LABEL[r.perf].color }}>{r.mean.toFixed(2)}</td>{!compact && <td className="ltr">{r.sd.toFixed(2)}</td>}
-          <td className="ltr">{r.highPct.toFixed(0)}%</td><td className="ltr" style={{ color: r.lowPct >= 10 ? '#b91c1c' : undefined }}>{r.lowPct.toFixed(0)}%</td>
-          <td className="ltr" style={{ color: r.gap > 0 ? '#b91c1c' : '#047857' }}>{r.gap > 0 ? '-' : '+'}{Math.abs(r.gap).toFixed(2)}</td>
+          <td className="ltr">{r.highPct.toFixed(0)}%</td><td className="ltr" style={{ color: r.lowPct >= 10 ? '#B9544A' : undefined }}>{r.lowPct.toFixed(0)}%</td>
+          <td className="ltr" style={{ color: r.gap > 0 ? '#B9544A' : '#2F6B66' }}>{r.gap > 0 ? '-' : '+'}{Math.abs(r.gap).toFixed(2)}</td>
           {!compact && <td><Delta v={r.delta} /></td>}<td><Badge kind="perf" value={r.perf} lang={lang} /></td><td><Badge kind="risk" value={r.risk} lang={lang} /></td>
         </tr>))}</tbody>
     </table></div>
@@ -718,7 +718,7 @@ function HeatMap({ evals, facts, lk, lang }: { evals: Evaluation[]; facts: Fact[
   if (!rooms.length || !axesKeys.length) return <div className="rc-muted">{ar ? 'لا توجد بيانات كافية' : 'Not enough data'}</div>;
   const cell = new Map<string, number[]>();
   for (const f of fx) { const e = eMap.get(f.evaluation_id); if (!e?.classroom_id) continue; const key = `${e.classroom_id}|${ar ? f.section_ar : f.section_en}`; const arr = cell.get(key) || []; arr.push(f.value); cell.set(key, arr); }
-  const color = (m: number) => m >= THRESHOLDS.excellent ? '#bbf7d0' : m >= THRESHOLDS.good ? '#d9f99d' : m >= THRESHOLDS.watch ? '#fde68a' : '#fecaca';
+  const color = (m: number) => m >= THRESHOLDS.excellent ? '#BFE1DC' : m >= THRESHOLDS.good ? '#BFE1DC' : m >= THRESHOLDS.watch ? '#E9C98A' : '#F3C4B6';
   return (
     <div className="rc-tw"><table className="rc-tbl rc-heat">
       <thead><tr><th>{ar ? 'القاعة \\ المحور' : 'Room \\ Axis'}</th>{axesKeys.map(a => <th key={a}>{a}</th>)}</tr></thead>
@@ -763,7 +763,7 @@ function Comments({ comments, lk, lang }: { comments: Comment[]; lk: Lookups; la
   const [filter, setFilter] = useState<'all' | 'positive' | 'negative' | 'neutral'>('all');
   const list = comments.filter(c => filter === 'all' || c.sentiment === filter);
   const counts = { positive: comments.filter(c => c.sentiment === 'positive').length, negative: comments.filter(c => c.sentiment === 'negative').length, neutral: comments.filter(c => c.sentiment === 'neutral').length };
-  const col = { positive: '#047857', negative: '#b91c1c', neutral: '#8E7F8A' };
+  const col = { positive: '#2F6B66', negative: '#B9544A', neutral: '#8E7F8A' };
   return (
     <Card title={ar ? `💬 التعليقات المفتوحة (${comments.length})` : `💬 Open comments (${comments.length})`}>
       <div className="rc-seg noprint">
@@ -780,7 +780,7 @@ function Comments({ comments, lk, lang }: { comments: Comment[]; lk: Lookups; la
 
 function Actions({ actions, lang }: { actions: Action[]; lang: Lang }) {
   const ar = lang === 'ar';
-  const pr = { HIGH: { ar: 'عالية', en: 'High', c: '#b91c1c', bg: '#fee2e2' }, MED: { ar: 'متوسطة', en: 'Medium', c: '#b45309', bg: '#fef3c7' }, LOW: { ar: 'منخفضة', en: 'Low', c: '#B9544A', bg: '#ccfbf1' } };
+  const pr = { HIGH: { ar: 'عالية', en: 'High', c: '#B9544A', bg: '#FBEDE7' }, MED: { ar: 'متوسطة', en: 'Medium', c: '#8A5A1E', bg: '#F1D9A8' }, LOW: { ar: 'منخفضة', en: 'Low', c: '#B9544A', bg: '#BFE1DC' } };
   return (
     <Card title={ar ? `🎯 خطة الإجراءات (${actions.length})` : `🎯 Action plan (${actions.length})`}>
       {actions.length ? actions.map((a, i) => (
@@ -879,12 +879,12 @@ const CSS = `
 .rc-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal);box-shadow:0 4px 12px rgba(212,97,74,.22)}
 .rc-btn.primary svg{color:#fff;opacity:1}
 .rc-btn.primary:hover{background:var(--teal-2);border-color:var(--teal-2);color:#fff}
-.rc-btn.gold{background:var(--gold-soft);border-color:var(--gold-line);color:#7a5c0f}.rc-btn.gold svg{color:var(--gold);opacity:1}
+.rc-btn.gold{background:var(--gold-soft);border-color:var(--gold-line);color:#8A5A1E}.rc-btn.gold svg{color:var(--gold);opacity:1}
 .rc-btn.navy{background:var(--navy);border-color:var(--navy);color:#fff}.rc-btn.navy svg{color:#fff;opacity:1}.rc-btn.navy:hover{background:var(--navy-2);color:#fff}
 .rc-btn:disabled{opacity:.6;cursor:not-allowed}
 /* ---------- email modal ---------- */
-.rc-modal{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:200;padding:16px}
-.rc-modal-box{width:min(620px,100%);background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;box-shadow:0 24px 60px rgba(15,23,42,.3);max-height:92vh;overflow:auto}
+.rc-modal{position:fixed;inset:0;background:rgba(42,22,38,.45);backdrop-filter:blur(2px);display:grid;place-items:center;z-index:200;padding:16px}
+.rc-modal-box{width:min(620px,100%);background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;box-shadow:0 24px 60px rgba(42,22,38,.3);max-height:92vh;overflow:auto}
 .rc-modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.rc-modal-head b{display:inline-flex;align-items:center;gap:8px;font-size:16px;color:var(--navy)}.rc-modal-head b svg{color:var(--teal)}
 .rc-modal-sub{margin:4px 0 14px;font-size:12.5px;font-weight:700;color:var(--muted)}
 .rc-field{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:10px}
@@ -908,7 +908,7 @@ const CSS = `
 .rc-doc-title h1{margin:8px 0 4px;font-size:26px;color:var(--navy);font-weight:800;letter-spacing:-.2px}
 .rc-doc-title p{margin:0 0 8px;color:var(--ink-2);font-weight:700;font-size:13px;line-height:1.7}
 .rc-meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;font-weight:800;color:var(--ink-2)}
-.rc-empty{display:flex;gap:12px;align-items:center;background:var(--warn-soft);border:1px solid var(--warn-line);color:#7c4a03;border-radius:var(--r);padding:14px 16px;font-weight:800;margin-bottom:14px}
+.rc-empty{display:flex;gap:12px;align-items:center;background:var(--warn-soft);border:1px solid var(--warn-line);color:#8A5A1E;border-radius:var(--r);padding:14px 16px;font-weight:800;margin-bottom:14px}
 .rc-empty::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--warn);flex-shrink:0}
 .rc-hint{display:flex;gap:10px;align-items:center;background:var(--info-soft);border:1px solid var(--info-line);color:var(--info);border-radius:var(--r);padding:10px 14px;font-size:13px;font-weight:700}
 .rc-profile-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;font-weight:800;color:var(--ink-2);margin-bottom:8px}
@@ -956,7 +956,7 @@ const CSS = `
 .rc-tbl th:first-child{text-align:start}
 .rc-tbl td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:center;font-weight:700;vertical-align:middle;font-variant-numeric:tabular-nums}
 .rc-tbl tbody tr:last-child td{border-bottom:0}
-.rc-tbl tbody tr:hover td{background:#fbfcfe}
+.rc-tbl tbody tr:hover td{background:#F3E8EF}
 .rc-td-l{text-align:start!important;font-weight:800!important;color:var(--navy)}
 .rc-heat td{font-size:12px}
 .rc-cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:12px}
