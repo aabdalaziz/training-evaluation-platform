@@ -11,7 +11,7 @@ import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
 import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
 import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, ACT_CSS } from './activities';
 import { COMMON } from '../../../lib/kids/common';
-import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled } from './Talk';
+import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled, type TalkOutcome } from './Talk';
 import type { Game, HarfActivity } from '../../../lib/kids/types';
 
 /* ───────── صوت (+ قياس شدّة الصوت لتحريك لؤلؤ) ───────── */
@@ -49,7 +49,9 @@ function useAudio(onLevel: (v: number) => void, onSpeaking: (v: boolean) => void
 }
 
 /* ───────── المكوّن الرئيس ───────── */
-export default function BayanSession({ session }: { session: SessionData }) {
+/** وضع «بَيْتُ بَيان»: طفل معروف من البوّابة الأبوية — لا بوّابة اسم، التعرّف على الصوت بإذن speech_recog، النصّ يُبلَّغ بإذن save_text، ونتيجة الجلسة تُبلَّغ إلى /api/kids */
+export type KidChild = { id: string; nick: string; gender: 'm' | 'f'; consents: { speech_recog: boolean; save_text: boolean }; exitHref: string; playHref: (slug: string) => string; report: (p: Record<string, unknown>) => void };
+export default function BayanSession({ session, child }: { session: SessionData; child?: KidChild }) {
   const S = session;
   const img = useCallback((n: string) => kidsImg(S.slug, n), [S.slug]);
   const snd = useCallback((n: string) => kidsSnd(S.slug, n), [S.slug]);
@@ -58,8 +60,10 @@ export default function BayanSession({ session }: { session: SessionData }) {
   const onLevel = useCallback((v: number) => { rootRef.current?.style.setProperty('--ll-amp', v.toFixed(3)); }, []);
   const { play, stop } = useAudio(onLevel, setSpeaking);
   const [idx, setIdx] = useState(0);
-  const [name, setName] = useState('');
-  const [gender, setGender] = useState<'m' | 'f'>('m');
+  const [name, setName] = useState(child?.nick || '');
+  const [gender, setGender] = useState<'m' | 'f'>(child?.gender || 'm');
+  const startedAt = useRef(new Date().toISOString());
+  const doneRef = useRef<Record<string, boolean>>({});
   const [pose, setPose] = useState<LuluPose>('wave');
   const [lstate, setLstate] = useState<LuluState>('idle');
   const [say, setSay] = useState('');
@@ -69,7 +73,14 @@ export default function BayanSession({ session }: { session: SessionData }) {
   const hero = gender === 'f' ? 'يا بَطَلَةْ' : 'يا بَطَلْ';
   const waitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { try { const s = localStorage.getItem('bayan_demo_child'); if (s) { const j = JSON.parse(s); setName(j.name || ''); setGender(j.gender || 'm'); } } catch { /* ignore */ } }, []);
+  useEffect(() => { if (child) return; try { const s = localStorage.getItem('bayan_demo_child'); if (s) { const j = JSON.parse(s); setName(j.name || ''); setGender(j.gender || 'm'); } } catch { /* ignore */ } }, [child]);
+  /** تبليغ «بَيْتُ بَيان» (إن كان طفلًا معروفًا): المحطّات المنجزة + ما يُضاف (الحوار/التقييم الذاتي). لا صوت ولا صورة أبدًا؛ النصّ بإذن save_text فقط */
+  const report = useCallback((extra: Record<string, unknown> = {}) => {
+    if (!child) return;
+    const talk = Array.isArray(extra.talk) ? (extra.talk as TalkOutcome['results']).map(r => child.consents.save_text ? { role: r.role, matched: r.matched, attempts: r.attempts, heard: r.heard } : { role: r.role, matched: r.matched, attempts: r.attempts }) : undefined;
+    const stations = { ...doneRef.current, ...((extra.stations as Record<string, boolean>) || {}) };
+    child.report({ session: S.slug, badge: S.meta.badge.title, startedAt: startedAt.current, ...extra, stations, ...(talk ? { talk } : {}) });
+  }, [child, S]);
 
   /** لؤلؤ تقول عبارة: الوضعية + الحالة بعد الكلام (افتراضيًا: ساكنة) */
   const lulu = useCallback((k: LuluKey, p: LuluPose = 'cheer', onEnd?: () => void, after: LuluState = 'idle') => {
@@ -91,20 +102,20 @@ export default function BayanSession({ session }: { session: SessionData }) {
   const speak = useCallback((src: string, onEnd?: () => void) => { if (!quiet) setLstate('listen'); play(src, () => { if (!quiet) setLstate('idle'); onEnd?.(); }); }, [play, quiet]);
 
   const go = useCallback((n: number) => { stop(); stopWaiting(); setSay(''); setIdx(Math.max(0, Math.min(STATIONS.length - 1, n))); window.scrollTo({ top: 0 }); }, [stop, stopWaiting]);
-  const finish = useCallback((k: StationKey) => { setDone(d => ({ ...d, [k]: true })); if (k !== 'hadith' && k !== 'quran') lulu('next', 'cheer', undefined, 'idle'); }, [lulu]);
+  const finish = useCallback((k: StationKey) => { doneRef.current[k] = true; setDone(d => ({ ...d, [k]: true })); if (k !== 'hadith' && k !== 'quran') lulu('next', 'cheer', undefined, 'idle'); }, [lulu]);
   const next = useCallback(() => go(idx + 1), [go, idx]);
 
   useEffect(() => { if (quiet) { setLstate('calm'); setSay(''); } else setLstate('idle'); }, [quiet]);
   useEffect(() => { if (!speaking && lstate === 'talk') setLstate('idle'); }, [speaking, lstate]);
   useEffect(() => () => { if (waitTimer.current) clearTimeout(waitTimer.current); }, []);
 
-  const ctx: Ctx = { S, img, snd, play: speak, lulu, luluSay, awaitAnswer, stopWaiting, next, finish, name, gender, hero, setPose, setLstate, setSay };
+  const ctx: Ctx = { S, img, snd, play: speak, lulu, luluSay, awaitAnswer, stopWaiting, next, finish, name, gender, hero, setPose, setLstate, setSay, child, report };
   const others = SESSIONS.filter(x => x.slug !== S.slug);
   return (
     <div className="by" dir="rtl" data-station={station} data-session={S.slug} ref={rootRef}>
       <style dangerouslySetInnerHTML={{ __html: BAYAN_CSS + LULU_CSS + ACT_CSS + TALK_CSS }} />
       <header className="by-top">
-        <Link href="/kids" className="by-exit" aria-label="خروج">✕</Link>
+        <Link href={child ? child.exitHref : '/kids'} className="by-exit" aria-label="خروج">✕</Link>
         <ol className="by-stations" aria-label="محطّات الرحلة">
           {STATIONS.map((s, i) => (
             <li key={s.key} className={i === idx ? 'on' : done[s.key] ? 'ok' : ''} title={s.title}>
@@ -141,12 +152,13 @@ type Ctx = {
   next: () => void; finish: (k: StationKey) => void;
   name: string; gender: 'm' | 'f'; hero: string;
   setPose: (p: LuluPose) => void; setLstate: (s: LuluState) => void; setSay: (s: string) => void;
+  child?: KidChild; report: (extra?: Record<string, unknown>) => void;
 };
 
 /* ───────── 1) هيّا نبدأ ───────── */
 function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f') => void }) {
   const { S } = p;
-  const [step, setStep] = useState<'gate' | 'hello' | 'anthem'>(p.name ? 'hello' : 'gate');
+  const [step, setStep] = useState<'gate' | 'hello' | 'anthem'>(p.child || p.name ? 'hello' : 'gate');
   const [line, setLine] = useState(-1);
   const save = () => { try { localStorage.setItem('bayan_demo_child', JSON.stringify({ name: p.name.trim(), gender: p.gender })); } catch { /* ignore */ } setStep('hello'); };
   const hello = () => { p.lulu('welcome', 'wave', undefined, 'wait'); };
@@ -525,16 +537,16 @@ function Athari(p: Ctx & { others: SessionData[] }) {
   const [self, setSelf] = useState<string | null>(null);
   const [talked, setTalked] = useState(!S.talk);
   const [talkReady, setTalkReady] = useState(false);
-  useEffect(() => { const t = setTimeout(() => p.lulu('athari', 'dance', () => setTalkReady(true), 'dance'), 400); try { localStorage.setItem(`bayan_demo_done_${S.slug}`, new Date().toISOString()); } catch { /* ignore */ } return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { const t = setTimeout(() => p.lulu('athari', 'dance', () => setTalkReady(true), 'dance'), 400); if (p.child) p.report({ stations: { athari: true } }); else { try { localStorage.setItem(`bayan_demo_done_${S.slug}`, new Date().toISOString()); } catch { /* ignore */ } } return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   return (
     <section className="by-card">
       <div className="by-badge"><img src={p.img(S.meta.badge.img)} alt="" /><h1 className="by-huge">شارَةُ «{S.meta.badge.title}»</h1><p className="by-sub">مُبارَكْ يا {p.name || p.hero}!</p></div>
       <ul className="by-summary">{A.summary.map(s => <li key={s}>🌱 {s}</li>)}</ul>
-      {S.talk && !talked && talkReady && <div className="by-talk"><Talk p={p} T={S.talk} onDone={() => { setTalked(true); window.scrollTo({ top: 0 }); }} /></div>}
+      {S.talk && !talked && talkReady && <div className="by-talk"><Talk p={p} T={S.talk} recogAllowed={p.child ? p.child.consents.speech_recog : undefined} onDone={o => { setTalked(true); if (o && o.results.length) p.report({ talk: o.results, selfVoice: o.selfVoice }); window.scrollTo({ top: 0 }); }} /></div>}
       {talked && <>
       <div className="by-self">
         <p className="by-q">{A.selfCheck.q}</p>
-        <div className="by-row">{A.selfCheck.options.map(o => <button key={o.key} className={`by-face ${self === o.key ? 'on' : ''}`} onClick={() => { setSelf(o.key); p.setLstate('cheer'); try { localStorage.setItem(`bayan_demo_self_${S.slug}`, o.key); } catch { /* ignore */ } }}><span>{o.emoji}</span>{o.text}</button>)}</div>
+        <div className="by-row">{A.selfCheck.options.map(o => <button key={o.key} className={`by-face ${self === o.key ? 'on' : ''}`} onClick={() => { setSelf(o.key); p.setLstate('cheer'); if (p.child) p.report({ self: o.key }); else { try { localStorage.setItem(`bayan_demo_self_${S.slug}`, o.key); } catch { /* ignore */ } } }}><span>{o.emoji}</span>{o.text}</button>)}</div>
         {self && <p className="by-muted">شُكْرًا! سَيَراها الْميسِّرُ وَماما أَوْ بابا في مِلَفِّ إِنْجازِكْ.</p>}
       </div>
       <div className="by-task"><h3>مُهِمَّةُ الْبَيْت 🏠</h3><p>{A.homeTask}</p></div>
@@ -547,8 +559,8 @@ function Athari(p: Ctx & { others: SessionData[] }) {
       </>}
       <nav className="by-nav end">
         <Link className="by-ghost" href="/contact?topic=bayan">رأي وليّ الأمر في التجربة ✍️</Link>
-        {p.others.map(o => <Link key={o.slug} className="by-ghost" href={`/kids/demo/${o.slug}`}>الجلسة {o.meta.order}: «في {o.meta.world}» ▶</Link>)}
-        <Link className="by-big" href="/kids">اِنْتَهَيْنا ✨</Link>
+        {p.others.map(o => <Link key={o.slug} className="by-ghost" href={p.child ? p.child.playHref(o.slug) : `/kids/demo/${o.slug}`}>الجلسة {o.meta.order}: «في {o.meta.world}» ▶</Link>)}
+        <Link className="by-big" href={p.child ? p.child.exitHref : '/kids'}>اِنْتَهَيْنا ✨</Link>
       </nav>
     </section>
   );

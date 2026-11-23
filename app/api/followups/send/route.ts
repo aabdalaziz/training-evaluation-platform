@@ -47,6 +47,7 @@ import { runOrgHorizon } from '../../../../lib/org-horizon/cron';
 import { runPair } from '../../../../lib/pair/cron';
 import { runOrgPair } from '../../../../lib/org-pair/cron';
 import { runDirectory } from '../../../../lib/directory/cron';
+import { runKids } from '../../../../lib/kids/cron';
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -231,7 +232,10 @@ export async function GET(req: Request) {
   // P31 هيئة أَثَر: دعوة مدرّبي منصة التقييم القائمين (مرة لكل بريد) · تذكير سنوي بتحديث السيرة
   let directory: any = null;
   try { directory = await runDirectory(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { directory = { ok: false, error: e?.message || String(e) }; }
+  // هـ-6-و «بَيْتُ بَيان»: محو «قالَ لِلُؤلُؤ» بعد 90 يومًا · إطفاء الأمانات المنتهية · رسالة لؤلؤ الأسبوعية
+  let kids: any = null;
+  try { kids = await runKids(db, { dry }); } catch (e: any) { kids = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة البوّابة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, level_close, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, level_close, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory, kids });
 }

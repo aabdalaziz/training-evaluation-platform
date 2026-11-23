@@ -14,14 +14,16 @@ const MAX_SEC = 8;
 export const TALK_RECOG_KEY = 'bayan_demo_talk_recog';
 export const talkRecogEnabled = () => { try { return localStorage.getItem(TALK_RECOG_KEY) === '1'; } catch { return false; } };
 
-export function Talk({ p, T, onDone }: { p: ActCtx; T: TalkScript; onDone: () => void }) {
+export type TalkOutcome = { results: TalkResult[]; selfVoice: string | null };
+/** recogAllowed: من أمانة «التعرّف على الصوت» في بَيْتُ بَيان؛ إن لم تُمرَّر (العرض العامّ) فمن مفتاح العرض المحلّي */
+export function Talk({ p, T, onDone, recogAllowed }: { p: ActCtx; T: TalkScript; onDone: (o?: TalkOutcome) => void; recogAllowed?: boolean }) {
   const [step, setStep] = useState<Step>('hello');
   const [attempt, setAttempt] = useState<1 | 2>(1);
   const [rec, setRec] = useState(false);
   const [ring, setRing] = useState(0);              // 0..1 حلقة تفرغ
   const [needParent, setNeedParent] = useState(false);
   const [model, setModel] = useState<string | null>(null);
-  const [recog] = useState<boolean>(() => talkRecogEnabled() && !!speechRecognitionCtor());
+  const [recog] = useState<boolean>(() => (recogAllowed ?? talkRecogEnabled()) && !!speechRecognitionCtor());
   const [results, setResults] = useState<TalkResult[]>([]);
   const [clips, setClips] = useState<Clip[]>([]);
   const [face, setFace] = useState<string | null>(null);
@@ -184,7 +186,7 @@ export function Talk({ p, T, onDone }: { p: ActCtx; T: TalkScript; onDone: () =>
           {[{ k: 'clear', e: '😄', t: 'قُلْتُها واضِحَةْ' }, { k: 'near', e: '🙂', t: 'قَريبْ' }, { k: 'again', e: '😌', t: 'أُعيدُها غَدًا' }].map(f => <button key={f.k} className="by-face" onClick={() => rate(f.k)}><span>{f.e}</span>{f.t}</button>)}
         </div>
       )}
-      {step === 'done' && <div className="by-center"><p className="by-sub">{TALK_COMMON.bye.text}</p><button className="by-big" onClick={onDone}>التّالي ◀</button></div>}
+      {step === 'done' && <div className="by-center"><p className="by-sub">{TALK_COMMON.bye.text}</p><button className="by-big" onClick={() => onDone({ results, selfVoice: face })}>التّالي ◀</button></div>}
       {step !== 'done' && <button className="by-ghost tk-skip" onClick={skip}>غَدًا 😌</button>}
       <p className="by-parent">🔒 {recog ? 'التعرّف على الكلام عبر خدمة المتصفّح (قد يُرسَل الصوت لمزوّد المتصفّح لتحويله إلى نصّ).' : 'لا يغادر الجهاز أيّ صوت: التسجيل محلّيّ ويُمحى عند مغادرة الصفحة.'} يُحفَظ النصّ والتقييم فقط لبطاقة وليّ الأمر.</p>
     </div>

@@ -75,7 +75,9 @@ test('بَيْتُ بَيان: SQL — 5 جداول · RLS على كلّها · 
     assert.ok(sql.includes(`alter table public.${t} enable row level security`), `rls ${t}`);
     assert.ok(new RegExp(`create policy ${t}_parent_read on public.${t} for select to authenticated`).test(sql), `policy ${t}`);
   }
-  assert.ok(/revoke insert, update, delete on public\.kids_children, public\.kids_consents, public\.kids_progress, public\.kids_talks, public\.kids_letters from anon, authenticated/.test(sql));
+  assert.ok(/revoke all on public\.kids_children, public\.kids_consents, public\.kids_progress, public\.kids_talks, public\.kids_letters from anon;/.test(sql));
+  assert.ok(/revoke all on [^;]*kids_letters from authenticated;\s*grant select on [^;]*kids_letters to authenticated;/.test(sql));
+  assert.ok(/create index if not exists kids_letters_child_idx/.test(sql));
   assert.ok(!/audio|image_url|photo/.test(sql), 'لا أعمدة وسائط');
   assert.equal((sql.match(/union all/g) || []).length, 3);
   assert.ok(sql.startsWith('-- © 2026'));

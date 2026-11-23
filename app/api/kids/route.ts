@@ -63,14 +63,15 @@ export async function GET(req: Request) {
   const { data: kids } = await db.from('kids_children').select('id,nick,gender,birth_year,avatar,created_at').eq('parent_id', me.id).is('archived_at', null).order('created_at');
   const ids = (kids || []).map((k: any) => k.id);
   if (!ids.length) return NextResponse.json({ success: true, children: [], consents_meta: CONSENTS, limits: LIMITS, sessions: SESSIONS.map(s => ({ slug: s.slug, world: s.meta.world, order: s.meta.order, letter: s.meta.letterName, value: s.meta.value })) });
-  const [{ data: progress }, { data: consents }, { data: talks }] = await Promise.all([
+  const [{ data: progress }, { data: consents }, { data: talks }, { data: letters }] = await Promise.all([
     db.from('kids_progress').select('*').in('child_id', ids).order('started_at', { ascending: false }).limit(400),
+    db.from('kids_letters').select('id,child_id,week_start,body_ar,sentence_ar,created_at').in('child_id', ids).order('week_start', { ascending: false }).limit(ids.length * 6),
     db.from('kids_consents').select('child_id,kind,granted,granted_at,expires_at,text_version').in('child_id', ids).order('granted_at').limit(2000),
     db.from('kids_talks').select('id,child_id,session_slug,at,results,self_voice').in('child_id', ids).gt('purge_after', new Date().toISOString()).order('at', { ascending: false }).limit(300),
   ]);
   let views = (kids || []).map((c: any) => childView(c, progress || [], (consents || []) as any, talks || []));
   const one = sp.get('child'); if (one) { views = views.filter(v => v.id === one); if (!views.length) return bad('الطفل غير موجود', 404); }
-  return NextResponse.json({ success: true, children: views.map(v => ({ ...v, letter: letterFor(v) })), consents_meta: CONSENTS, limits: LIMITS, sessions: SESSIONS.map(s => ({ slug: s.slug, world: s.meta.world, order: s.meta.order, letter: s.meta.letterName, value: s.meta.value })) });
+  return NextResponse.json({ success: true, children: views.map(v => ({ ...v, letter: letterFor(v), letters: ((letters || []) as any[]).filter(l => l.child_id === v.id).slice(0, 6).map(l => ({ id: l.id, week_start: l.week_start, body: l.body_ar, sentence: l.sentence_ar })) })), consents_meta: CONSENTS, limits: LIMITS, sessions: SESSIONS.map(s => ({ slug: s.slug, world: s.meta.world, order: s.meta.order, letter: s.meta.letterName, value: s.meta.value })) });
 }
 
 export async function POST(req: Request) {

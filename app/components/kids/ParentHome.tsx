@@ -13,11 +13,12 @@ type Child = {
   progress: { id: string; session: string; world: string; started_at: string; finished_at: string | null; stations: Record<string, boolean>; badge: string | null; self_check: string | null; self_voice: string | null; home_task: string | null; home_task_done_at: string | null }[];
   talks: { id: string; session: string; at: string; results: { role: string; matched: string; attempts: number; heard?: string }[]; self_voice: string | null }[];
   letter: { week_start: string; body: string; sentence: string | null };
+  letters?: { id: string; week_start: string; body: string; sentence: string | null }[];
 };
 type Home = { children: Child[]; sessions: { slug: string; world: string; order: number; letter: string; value: string }[] };
 
 async function token(): Promise<string> { try { const sb = await sbLazy(); const { data } = await sb.auth.getSession(); return data.session?.access_token || ''; } catch { return ''; } }
-async function api(path: string, body?: unknown) {
+export async function api(path: string, body?: unknown) {
   const t = await token(); if (!t) return { success: false, error: 'سجّل الدخول', unauth: true };
   const r = await fetch(path, { method: body ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
   try { const j = await r.json(); return { ...j, unauth: r.status === 401 }; } catch { return { success: false, error: 'استجابة غير صالحة' }; }
@@ -90,6 +91,9 @@ export function ParentHome({ childId }: { childId?: string }) {
           <h2>💌 رِسالَةُ لُؤْلُؤ هذا الأسبوع</h2>
           <p className="kp-letter">{c.letter.body}</p>
           {c.letter.sentence && <p className="kp-sentence">جملة الأسبوع: <b>{c.letter.sentence}</b></p>}
+          {!!c.letters?.length && <details className="kp-past"><summary>رسائل الأسابيع الماضية ({c.letters.length})</summary>
+            {c.letters.map(l => <div key={l.id} className="kp-past-one"><small>أسبوع {fmt(l.week_start)}</small><p className="kp-letter">{l.body}</p></div>)}
+          </details>}
         </section>
 
         <section className="kp-card">
@@ -202,6 +206,7 @@ export const PARENT_CSS = `
 .kp-play{background:#5EA8A0;color:#fff;border-radius:999px;padding:6px 12px;font-size:14px;margin-top:4px}
 .kp-badge{background:#F1D9A8;color:#3A1F36;border-radius:999px;padding:3px 10px;font-size:13px}
 .kp-crumb{color:#8E7F8A}.kp-crumb a{color:#5EA8A0;text-decoration:none}
+.kp-past{margin-top:10px}.kp-past summary{cursor:pointer;color:#5EA8A0;font-size:14px}.kp-past-one{margin-top:10px}.kp-past-one small{color:#8E7F8A}
 .kp-letter{font-size:17px;line-height:1.9;background:#FBF4EE;border-radius:16px;padding:12px 14px;margin:0}.kp-sentence{margin:8px 0 0;color:#3A1F36}.kp-sentence b{color:#E8795C;font-size:20px}
 .kp-sess{border-top:1px dashed #F1D9A8;padding:10px 0;display:grid;gap:6px}.kp-sess-h{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .kp-ok{color:#3f7f78;font-weight:700}.kp-mid{color:#b9854a}

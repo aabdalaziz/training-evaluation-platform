@@ -88,10 +88,12 @@ create policy kids_talks_parent_read on public.kids_talks for select to authenti
 drop policy if exists kids_letters_parent_read on public.kids_letters;
 create policy kids_letters_parent_read on public.kids_letters for select to authenticated using (exists (select 1 from public.kids_children c where c.id = child_id and c.parent_id = auth.uid()));
 
-revoke insert, update, delete on public.kids_children, public.kids_consents, public.kids_progress, public.kids_talks, public.kids_letters from anon, authenticated;
-revoke select on public.kids_children, public.kids_consents, public.kids_progress, public.kids_talks, public.kids_letters from anon;
+revoke all on public.kids_children, public.kids_consents, public.kids_progress, public.kids_talks, public.kids_letters from anon;
+revoke all on public.kids_children, public.kids_consents, public.kids_progress, public.kids_talks, public.kids_letters from authenticated;
+grant select on public.kids_children, public.kids_consents, public.kids_progress, public.kids_talks, public.kids_letters to authenticated;
+create index if not exists kids_letters_child_idx on public.kids_letters(child_id, week_start desc);
 
--- تشخيص (المتوقّع: tables=5 · policies=5 · indexes>=6 · anon_grants=0)
+-- تشخيص (المتوقّع: tables=5 · policies=5 · indexes=6 · anon_grants=0)
 select 'tables' as k, count(*)::int as n from information_schema.tables where table_schema='public' and table_name in ('kids_children','kids_consents','kids_progress','kids_talks','kids_letters')
 union all select 'policies', count(*)::int from pg_policies where schemaname='public' and tablename like 'kids\_%' and policyname like '%parent_read'
 union all select 'indexes', count(*)::int from pg_indexes where schemaname='public' and tablename like 'kids\_%' and indexname like 'kids\_%\_idx'
