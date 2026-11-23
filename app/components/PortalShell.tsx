@@ -19,7 +19,8 @@ import { SignCounter } from './SignCounter'; /* P50 «توقيعي» */
 import WayBar from './WayBar';
 import ZoneTape from './ZoneTape'; /* هـ-1/4: «شريط أخبار المنطقة» تحت الطريق في كل منطقة */
 import AtharBackdrop from './AtharBackdrop'; /* هوية v1.2: ورق أَثَر خلف كل صفحة */
-import AtharVeil from './AtharVeil';         /* ستار الأثر: مرّة عند الدخول وبعد سكون */  /* «الطريق»: رجوع · الرئيسة · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسة */
+import AtharVeil from './AtharVeil';
+import { TourVeil, NowStrip, TourButton, COMPASS_CSS } from './Compass'; /* هـ-5 «بوصلة»: الجولة التعريفية + الساعة في الرأس */         /* ستار الأثر: مرّة عند الدخول وبعد سكون */  /* «الطريق»: رجوع · الرئيسة · مسار الصفحة — تحت الرأس في كل صفحة غير الرئيسة */
 
 const LangCtx = createContext<{ lang: Lang; setLang: (l: Lang) => void }>({ lang: 'ar', setLang: () => {} });
 export const useLang = () => useContext(LangCtx);
@@ -60,10 +61,11 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
     <LangCtx.Provider value={{ lang, setLang }}>
       <AccessProvider>
       <div className={`pt ${lang}`} dir={dir} lang={lang}>
-        <style dangerouslySetInnerHTML={{ __html: CSS + ACCESS_CSS + ONAIR_CSS + NOTICES_CSS }} />
+        <style dangerouslySetInnerHTML={{ __html: CSS + ACCESS_CSS + ONAIR_CSS + NOTICES_CSS + COMPASS_CSS }} />
         <SkipLink lang={lang} />
         <AtharBackdrop />
         <AtharVeil />
+        <TourVeil lang={lang} />
         <header className="pt-header">
           <Link href="/" className="pt-brand" aria-label={t(BRAND.full, lang)}>
             <AtharMark size={38} />
@@ -78,6 +80,8 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             </div>
           </nav>
           <div className="pt-headright">
+            <NowStrip lang={lang} compact />
+            <TourButton lang={lang} compact />
             <DoorBadge lang={lang} />
             <GuideButton lang={lang} compact />
             <OnAirButton lang={lang} />
