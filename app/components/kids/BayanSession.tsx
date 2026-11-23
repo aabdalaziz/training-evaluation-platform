@@ -14,6 +14,7 @@ import { COMMON } from '../../../lib/kids/common';
 import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled, type TalkOutcome } from './Talk';
 import { BayanIntro } from './BayanIntro';
 import { INTRO_DEMO_KEY } from '../../../lib/kids/intro';
+import { nameClip } from '../../../lib/kids/names';
 import type { Game, HarfActivity } from '../../../lib/kids/types';
 
 /* ───────── صوت (+ قياس شدّة الصوت لتحريك لؤلؤ) ───────── */
@@ -165,7 +166,8 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
   const save = () => { try { localStorage.setItem('bayan_demo_child', JSON.stringify({ name: p.name.trim(), gender: p.gender })); } catch { /* ignore */ } let seen = true; try { seen = localStorage.getItem(INTRO_DEMO_KEY) === '1'; } catch { /* ignore */ } if (seen || p.child) setStep('hello'); else setIntro(true); };
   const introDone = () => { try { localStorage.setItem(INTRO_DEMO_KEY, '1'); } catch { /* ignore */ } setIntro(false); setStep('hello'); };
   const [line, setLine] = useState(-1);
-  const hello = () => { p.lulu('welcome', 'wave', undefined, 'wait'); };
+  /** لؤلؤ تسلّم باسم الطفل بصوتها إن كان اسمه في البنك (200 اسم)، ثمّ جملة الترحيب؛ وإلّا الترحيب العامّ */
+  const hello = () => { const clip = nameClip(p.name); if (clip) p.luluSay(`أَهْلًا يا ${p.name.trim()}!`, clip, 'wave', () => p.lulu('welcome', 'wave', undefined, 'wait')); else p.lulu('welcome', 'wave', undefined, 'wait'); };
   const ready = () => { p.lulu('yasalam', 'cheer', () => { setStep('anthem'); }, 'dance'); };
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const sing = useCallback(() => {

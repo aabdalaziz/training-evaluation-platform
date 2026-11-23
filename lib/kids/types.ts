@@ -81,7 +81,7 @@ export interface SessionData {
 }
 
 export const kidsImg = (slug: string, n: string) => `/kids/${slug}/img/${n}.jpg`;
-export const kidsSnd = (slug: string, n: string) => (n.startsWith('common:') ? `/kids/common/audio/${n.slice(7)}.mp3` : `/kids/${slug}/audio/${n}.mp3`);
+export const kidsSnd = (slug: string, n: string) => (n.startsWith('/') ? n : n.startsWith('common:') ? `/kids/common/audio/${n.slice(7)}.mp3` : `/kids/${slug}/audio/${n}.mp3`);
 /** وضعيات لؤلؤ الشفّافة المشتركة بين كل الجلسات (من ورقة النموذج المعتمدة) */
 export type LuluPose = 'wave' | 'cheer' | 'sleep' | 'point' | 'think' | 'dance' | 'date' | 'calm';
 export const luluPose = (p: LuluPose) => `/kids/lulu/${p}.png`;

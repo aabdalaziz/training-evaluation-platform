@@ -8,7 +8,8 @@
  *  التشغيل يبدأ بلمسة (سياسة المتصفّحات)، ويمكن التخطّي في أيّ وقت. لا شيء يُرسَل إلى الخادم من هنا.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { INTRO_CHILD, INTRO_PARENTS, INTRO_SPEAKER_AR, FOUNDER_SIGN, introImg, introSnd, type IntroScene } from '../../../lib/kids/intro';
+import { INTRO_CHILD, INTRO_PARENTS, INTRO_SPEAKER_AR, FOUNDER_SIGN, INTRO_GREET_FALLBACK, introImg, introSnd, type IntroScene } from '../../../lib/kids/intro';
+import { nameClip } from '../../../lib/kids/names';
 import { luluPose } from '../../../lib/kids/types';
 
 export function BayanIntro({ mode, name, onDone, onSkip }: { mode: 'child' | 'parents'; name?: string; onDone: () => void; onSkip?: () => void }) {
@@ -33,10 +34,18 @@ export function BayanIntro({ mode, name, onDone, onSkip }: { mode: 'child' | 'pa
   useEffect(() => {
     if (!started || ended) return;
     clear();
-    const a = new Audio(introSnd(line.audio)); audio.current = a;
-    a.onended = () => timers.current.push(setTimeout(advance, 450));
-    a.onerror = () => timers.current.push(setTimeout(advance, 3500));
-    a.play().catch(() => timers.current.push(setTimeout(advance, 3500)));
+    const playMain = () => {
+      const a = new Audio(introSnd(line.audio)); audio.current = a;
+      a.onended = () => timers.current.push(setTimeout(advance, 450));
+      a.onerror = () => timers.current.push(setTimeout(advance, 3500));
+      a.play().catch(() => timers.current.push(setTimeout(advance, 3500)));
+    };
+    if (line.greet) {
+      // «أَهْلًا يا (اسم)!» بصوت لؤلؤ من البنك، وإلّا «أَهْلًا بِكْ!»
+      const g = new Audio((name && nameClip(name)) || introSnd(INTRO_GREET_FALLBACK)); audio.current = g;
+      g.onended = () => timers.current.push(setTimeout(playMain, 150)); g.onerror = playMain;
+      g.play().catch(playMain);
+    } else playMain();
     if (scene.icons) scene.icons.forEach((ic, i) => timers.current.push(setTimeout(() => setLit(i + 1), ic.at * 1000)));
     return clear; /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [started, si, li, ended]);
@@ -85,7 +94,7 @@ export function BayanIntro({ mode, name, onDone, onSkip }: { mode: 'child' | 'pa
 }
 
 export const INTRO_CSS = `
-.bi{position:fixed;inset:0;z-index:60;background:radial-gradient(1200px 600px at 50% -10%,#fff 0%,#FBF4EE 60%);color:#2A1626;font-family:var(--font-read,var(--font-ar,sans-serif));display:flex;align-items:center;justify-content:center;overflow:auto}
+.bi{position:fixed;inset:0;z-index:130;background:radial-gradient(1200px 600px at 50% -10%,#fff 0%,#FBF4EE 60%);color:#2A1626;font-family:var(--font-read,var(--font-ar,sans-serif));display:flex;align-items:center;justify-content:center;overflow:auto}
 .bi *{box-sizing:border-box}
 .bi-cover{text-align:center;max-width:560px;padding:24px;animation:bi-in .5s ease-out}
 .bi-cover h1{font-size:34px;color:#3A1F36;margin:8px 0}.bi-cover p{font-size:19px;line-height:1.8;color:#5b4a57;margin:0 0 18px}
