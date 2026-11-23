@@ -11,6 +11,7 @@ import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
 import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
 import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, ACT_CSS } from './activities';
 import { COMMON } from '../../../lib/kids/common';
+import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled } from './Talk';
 import type { Game, HarfActivity } from '../../../lib/kids/types';
 
 /* ───────── صوت (+ قياس شدّة الصوت لتحريك لؤلؤ) ───────── */
@@ -101,7 +102,7 @@ export default function BayanSession({ session }: { session: SessionData }) {
   const others = SESSIONS.filter(x => x.slug !== S.slug);
   return (
     <div className="by" dir="rtl" data-station={station} data-session={S.slug} ref={rootRef}>
-      <style dangerouslySetInnerHTML={{ __html: BAYAN_CSS + LULU_CSS + ACT_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: BAYAN_CSS + LULU_CSS + ACT_CSS + TALK_CSS }} />
       <header className="by-top">
         <Link href="/kids" className="by-exit" aria-label="خروج">✕</Link>
         <ol className="by-stations" aria-label="محطّات الرحلة">
@@ -170,6 +171,7 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
             <button className={`by-chip ${p.gender === 'm' ? 'on' : ''}`} onClick={() => p.setGender('m')}>ولد</button>
             <button className={`by-chip ${p.gender === 'f' ? 'on' : ''}`} onClick={() => p.setGender('f')}>بنت</button>
           </div>
+          {S.talk && <label className="by-toggle"><input type="checkbox" defaultChecked={talkRecogEnabled()} onChange={e => { try { localStorage.setItem(TALK_RECOG_KEY, e.target.checked ? '1' : '0'); } catch { /* ignore */ } }} /> <span>تعرّف تلقائي على كلام الطفل في «حَديثٌ مَعَ لُؤْلُؤ» عبر خدمة المتصفّح <small>(قد يُرسَل الصوت لمزوّد المتصفّح لتحويله إلى نصّ — بدونه يؤكّد وليّ الأمر بنفسه ولا يغادر الجهاز شيء)</small></span></label>}
           <button className="by-big" disabled={!p.name.trim()} onClick={save}>هَيّا نَبْدَأ ☀️</button>
         </div>
       )}
@@ -521,11 +523,15 @@ function Quran(p: Ctx) {
 function Athari(p: Ctx & { others: SessionData[] }) {
   const { S } = p; const A = S.athari;
   const [self, setSelf] = useState<string | null>(null);
-  useEffect(() => { const t = setTimeout(() => p.lulu('athari', 'dance', undefined, 'dance'), 400); try { localStorage.setItem(`bayan_demo_done_${S.slug}`, new Date().toISOString()); } catch { /* ignore */ } return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const [talked, setTalked] = useState(!S.talk);
+  const [talkReady, setTalkReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => p.lulu('athari', 'dance', () => setTalkReady(true), 'dance'), 400); try { localStorage.setItem(`bayan_demo_done_${S.slug}`, new Date().toISOString()); } catch { /* ignore */ } return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   return (
     <section className="by-card">
       <div className="by-badge"><img src={p.img(S.meta.badge.img)} alt="" /><h1 className="by-huge">شارَةُ «{S.meta.badge.title}»</h1><p className="by-sub">مُبارَكْ يا {p.name || p.hero}!</p></div>
       <ul className="by-summary">{A.summary.map(s => <li key={s}>🌱 {s}</li>)}</ul>
+      {S.talk && !talked && talkReady && <div className="by-talk"><Talk p={p} T={S.talk} onDone={() => { setTalked(true); window.scrollTo({ top: 0 }); }} /></div>}
+      {talked && <>
       <div className="by-self">
         <p className="by-q">{A.selfCheck.q}</p>
         <div className="by-row">{A.selfCheck.options.map(o => <button key={o.key} className={`by-face ${self === o.key ? 'on' : ''}`} onClick={() => { setSelf(o.key); p.setLstate('cheer'); try { localStorage.setItem(`bayan_demo_self_${S.slug}`, o.key); } catch { /* ignore */ } }}><span>{o.emoji}</span>{o.text}</button>)}</div>
@@ -538,6 +544,7 @@ function Athari(p: Ctx & { others: SessionData[] }) {
         <p><b>كيف تدعمه:</b></p><ul>{A.parentCard.support.map(s => <li key={s}>{s}</li>)}</ul>
         <p className="by-muted">🌙 {A.bedtime}</p>
       </div>
+      </>}
       <nav className="by-nav end">
         <Link className="by-ghost" href="/contact?topic=bayan">رأي وليّ الأمر في التجربة ✍️</Link>
         {p.others.map(o => <Link key={o.slug} className="by-ghost" href={`/kids/demo/${o.slug}`}>الجلسة {o.meta.order}: «في {o.meta.world}» ▶</Link>)}

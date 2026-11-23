@@ -1,3 +1,4 @@
+import type { TalkScript } from './talk';
 /* بَيان (هـ-6-ج) — نموذج بيانات الجلسة الموحّد. كل جلسة (البيت، السوق، …) ملف بيانات يملأ هذا الشكل،
  * ومحرّك BayanSession يعرضه. كل النصوص المنطوقة وفق «قاعدة الوقف» (kids/bible/voices.md). */
 
@@ -69,6 +70,8 @@ export interface SessionData {
     goodLabel: string;
   };
   quran: { intro: Said; meaning: Said; closing: Said; newKidsAyat: number };
+  /** «حَديثٌ مَعَ لُؤْلُؤ» (ت1) — اختياري حتى تُسجَّل أصوات الجلسة */
+  talk?: TalkScript;
   athari: {
     summary: string[]; homeTask: string;
     parentCard: { learned: string; support: string[] };
