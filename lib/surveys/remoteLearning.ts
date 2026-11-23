@@ -33,7 +33,7 @@ export type Schedule = {
  * Static content
  * ------------------------------------------------------------------------- */
 export const SURVEY_TITLE: Bi = {
-  ar: 'استطلاع رأي الطلاب: تعلم اللغة العربية عن بُعد عبر Teams',
+  ar: 'استبيان رأي الطلاب: تعلم اللغة العربية عن بُعد عبر Teams',
   en: 'Student Survey: Learning Arabic Online through Teams',
 };
 
@@ -128,8 +128,8 @@ export const UI: Record<string, Bi> = {
   optionalStep:     { ar: 'هذا المحور اختياري — يمكنك الإرسال مباشرة.', en: 'This step is optional — you can submit right away.' },
   program:          { ar: 'البرنامج',                             en: 'Program' },
   level:            { ar: 'المستوى',                              en: 'Level' },
-  trainer:          { ar: 'اسم المدرب/المدربة',                   en: 'Trainer' },
-  group:            { ar: 'المجموعة/الشعبة',                      en: 'Class group/section' },
+  trainer:          { ar: 'اسم الميسّر/الميسّرة',                   en: 'Trainer' },
+  group:            { ar: 'الشعبة',                      en: 'Class group/section' },
   schedule:         { ar: 'موعد المحاضرة',                        en: 'Class schedule' },
   lectureDate:      { ar: 'تاريخ المحاضرة (اختياري)',             en: 'Class date (optional)' },
   selfLevel:        { ar: 'ما مستواك في اللغة العربية؟',          en: 'What is your Arabic level?' },
@@ -147,11 +147,11 @@ export const UI: Record<string, Bi> = {
   fixErrors:        { ar: 'يرجى إكمال ما يلي:',                    en: 'Please complete the following:' },
   thanksTitle:      { ar: 'شكرًا لك!',                             en: 'Thank you!' },
   thanksBody:       { ar: 'تم استلام إجاباتك. رأيك يساعدنا على تحسين البرنامج.', en: 'Your answers have been received. Your opinion helps us improve the program.' },
-  noGroups:         { ar: 'لا توجد مجموعات مسجلة لهذا الاختيار. تواصل مع إدارة البرنامج.', en: 'No groups are registered for this selection. Please contact the program office.' },
+  noGroups:         { ar: 'لا توجد شُعب مسجلة لهذا الاختيار. تواصل مع إدارة البرنامج.', en: 'No groups are registered for this selection. Please contact the program office.' },
   langToggle:       { ar: 'English first',                        en: 'العربية أولًا' },
-  loading:          { ar: 'جارٍ تحميل الاستطلاع…',                 en: 'Loading the survey…' },
+  loading:          { ar: 'جارٍ تحميل الاستبيان…',                 en: 'Loading the survey…' },
   errorLoad:        { ar: 'تعذر تحميل البيانات. حاول مرة أخرى.',   en: 'Could not load data. Please try again.' },
-  anonymous:        { ar: 'هذا الاستطلاع مجهول الهوية ولا يحفظ أي بيانات شخصية.', en: 'This survey is anonymous and does not store any personal data.' },
+  anonymous:        { ar: 'هذا الاستبيان مجهول الهوية ولا يحفظ أي بيانات شخصية.', en: 'This survey is anonymous and does not store any personal data.' },
 };
 
 /* ----------------------------------------------------------------------------
@@ -323,8 +323,8 @@ export function validateDraft(
   const errors: ValidationError[] = [];
   if (!d.programId)   errors.push({ field: 'programId',   ar: 'اختر البرنامج',            en: 'Select the program' });
   if (!d.levelId)     errors.push({ field: 'levelId',     ar: 'اختر المستوى',             en: 'Select the level' });
-  if (!d.trainerId)   errors.push({ field: 'trainerId',   ar: 'اختر المدرب/المدربة',      en: 'Select the trainer' });
-  if (!d.classroomId) errors.push({ field: 'classroomId', ar: 'اختر المجموعة/الشعبة',     en: 'Select the class group' });
+  if (!d.trainerId)   errors.push({ field: 'trainerId',   ar: 'اختر الميسّر/الميسّرة',      en: 'Select the trainer' });
+  if (!d.classroomId) errors.push({ field: 'classroomId', ar: 'اختر الشعبة',     en: 'Select the class group' });
 
   const available = schedulesFor(ctx.schedules, d.classroomId);
   const mustPickSchedule = ctx.requireSchedule ?? available.length > 0;
@@ -616,7 +616,7 @@ export function responsesToCsvRows(
     L === 'ar' ? 'وقت الإرسال (الرياض)' : 'Submitted (Riyadh)',
     L === 'ar' ? 'البرنامج' : 'Program',
     L === 'ar' ? 'المستوى' : 'Level',
-    L === 'ar' ? 'المدرب' : 'Trainer',
+    L === 'ar' ? 'الميسّر' : 'Trainer',
     L === 'ar' ? 'المجموعة' : 'Group',
     L === 'ar' ? 'اليوم' : 'Day',
     L === 'ar' ? 'من' : 'Start',

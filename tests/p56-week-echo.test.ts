@@ -31,10 +31,10 @@ test('P56: صدى المتعلّم — التجميع والنصوص', () => {
   const replies = [R('a@x.sa', 1, 'got_it'), R('a@x.sa', 3, 'need_help'), R('a@x.sa', 4, 'need_help', true), R('c@x.sa', 1, 'need_help'), R('d@x.sa', 1, 'need_help'), R('zz@x.sa', 1, 'got_it')];
   const m = buildLearnerEchoes(words, replies);
   const a = m.get('a@x.sa')!; assert.equal(a.words, 3); assert.equal(a.voice_words, 1); assert.equal(a.replies, 3); assert.deepEqual(a.by_chip, { got_it: 1, need_help: 2, will_attend: 0 }); assert.equal(a.voice_replies, 1); assert.equal(a.voice_after_hand, true, 'كلمة صوتية (قبل 3 أيام) بعد آخر ✋ (قبل 3 أيام) — نفس اللحظة تُعدّ بعدها');
-  const ta = learnerEchoText(a)!; assert.equal(ta.title_ar, 'صدى أسبوعك 🪞'); assert.equal(ta.body_ar, '3 كلمات من مدرّبك (🎙️ 1) · ردودك: 🌱 1 · ✋ 2 · 🎙️ 1 · أُجبتَ 🎙️ ✓ — كلمتك القادمة؟'); assert.equal(ta.url, '/me#notices');
-  const b = learnerEchoText(m.get('b@x.sa')!)!; assert.equal(b.body_ar, 'كلمة واحدة من مدرّبك ولم تردّ بعد — لمسة واحدة تكفي 🌱');
-  const c = learnerEchoText(m.get('c@x.sa')!)!; assert.equal(c.body_ar, 'كلمة واحدة من مدرّبك · ردودك: ✋ 1 · يدك ما زالت مرفوعة — مدرّبك يراها — كلمتك القادمة؟');
-  const d = m.get('d@x.sa')!; assert.equal(d.voice_after_hand, true, 'الكلمة الصوتية جاءت بعد ✋'); assert.match(learnerEchoText(d)!.body_ar, /^كلمتان من مدرّبك \(🎙️ 1\) · ردودك: ✋ 1 · أُجبتَ 🎙️ ✓/);
+  const ta = learnerEchoText(a)!; assert.equal(ta.title_ar, 'صدى أسبوعك 🪞'); assert.equal(ta.body_ar, '3 كلمات من ميسّرك (🎙️ 1) · ردودك: 🌱 1 · ✋ 2 · 🎙️ 1 · أُجبتَ 🎙️ ✓ — كلمتك القادمة؟'); assert.equal(ta.url, '/me#notices');
+  const b = learnerEchoText(m.get('b@x.sa')!)!; assert.equal(b.body_ar, 'كلمة واحدة من ميسّرك ولم تردّ بعد — لمسة واحدة تكفي 🌱');
+  const c = learnerEchoText(m.get('c@x.sa')!)!; assert.equal(c.body_ar, 'كلمة واحدة من ميسّرك · ردودك: ✋ 1 · يدك ما زالت مرفوعة — ميسّرك يراها — كلمتك القادمة؟');
+  const d = m.get('d@x.sa')!; assert.equal(d.voice_after_hand, true, 'الكلمة الصوتية جاءت بعد ✋'); assert.match(learnerEchoText(d)!.body_ar, /^كلمتان من ميسّرك \(🎙️ 1\) · ردودك: ✋ 1 · أُجبتَ 🎙️ ✓/);
   assert.equal(learnerEchoText(m.get('zz@x.sa')!), null, 'ردّ بلا كلمة في النافذة → لا صدى');
   assert.equal(echoSpeech('كلماتك 3 (🎙️ 1) · ردّ 50٪ · ✋ 2 ✓'), 'كلماتك 3 ( 1)، ردّ 50٪، 2');
 });
@@ -60,11 +60,11 @@ test('P56: runWeekEcho — ليس الخميس → لا شيء · force · إش�
   const r0 = await runWeekEcho(db, { now: SAT }); assert.deepEqual(r0, { day: false, learners: 0, sent: 0, errors: [] });
   const r1 = await runWeekEcho(db, { now: SAT, force: true, dry: true }); assert.equal(r1.learners, 2); assert.equal(r1.sent, 2); assert.equal(T.portal_learner_notices.filter((n) => n.kind === 'week_echo').length, 0, 'dry لا يكتب');
   const r2 = await runWeekEcho(db, { now: THU }); assert.equal(r2.day, true); assert.equal(r2.learners, 2, 'a وb (old خارج 7 أيام · zz بلا كلمة)'); assert.equal(r2.sent, 2);
-  const echoes = T.portal_learner_notices.filter((n) => n.kind === 'week_echo'); assert.equal(echoes.length, 2); const ea = echoes.find((n) => n.email === 'a@x.sa')!; assert.equal(ea.dedupe_key, 'week_echo:a@x.sa:2026-11-05'); assert.equal(ea.body_ar, 'كلمتان من مدرّبك (🎙️ 1) · ردودك: 🌱 1 — كلمتك القادمة؟'); assert.equal(ea.url, '/me#notices');
+  const echoes = T.portal_learner_notices.filter((n) => n.kind === 'week_echo'); assert.equal(echoes.length, 2); const ea = echoes.find((n) => n.email === 'a@x.sa')!; assert.equal(ea.dedupe_key, 'week_echo:a@x.sa:2026-11-05'); assert.equal(ea.body_ar, 'كلمتان من ميسّرك (🎙️ 1) · ردودك: 🌱 1 — كلمتك القادمة؟'); assert.equal(ea.url, '/me#notices');
   const r3 = await runWeekEcho(db, { now: THU }); assert.equal(r3.sent, 0, 'الخميس نفسه مرّة ثانية → لا تكرار'); assert.equal(T.portal_learner_notices.filter((n) => n.kind === 'week_echo').length, 2);
   T.portal_learner_notices.push(W('a@x.sa', 2, 't1', false, new Date('2026-11-12T06:00:00Z')));
   const r4 = await runWeekEcho(db, { now: new Date('2026-11-12T06:00:00Z') }); assert.equal(r4.learners, 1, 'الخميس التالي: a وحدها لها كلمة في النافذة الجديدة'); assert.equal(r4.sent, 1, 'مفتاح أسبوع جديد → إشعار جديد'); assert.equal(T.portal_learner_notices.filter((n) => n.kind === 'week_echo').length, 3);
-  assert.equal(T.portal_learner_notices.find((n) => n.kind === 'week_echo' && n.email === 'a@x.sa' && n.dedupe_key.endsWith('2026-11-12'))!.body_ar, 'كلمة واحدة من مدرّبك ولم تردّ بعد — لمسة واحدة تكفي 🌱');
+  assert.equal(T.portal_learner_notices.find((n) => n.kind === 'week_echo' && n.email === 'a@x.sa' && n.dedupe_key.endsWith('2026-11-12'))!.body_ar, 'كلمة واحدة من ميسّرك ولم تردّ بعد — لمسة واحدة تكفي 🌱');
 });
 
 test('P56: صدى المدرّب — الإحصاء والسطر والمرآة', () => {

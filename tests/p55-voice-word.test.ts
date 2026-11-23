@@ -65,7 +65,7 @@ test('P55: الحدود · validateTrainerVoice · trainerVoicePath · الاس�
 test('P55: sendWord بصوت — ملف واحد ← 3 إشعارات بـ meta.voice/transcript · المتن الافتراضي 🎙️ · نصّ+صوت · كلمة نصّية لاحقة تُزيل الصوت · voice_sec في النتيجة · بلا شيء → خطأ', async () => {
   const db = fakeDb();
   const r1: any = await sendWord(db, me, room, { mode: 'all', voice: V('one'), transcript: 'أحسنتم اليوم' }, { now: NOW });
-  assert.equal(r1.sent, 3); assert.equal(r1.recipients, 3); assert.equal(r1.voice_sec, 14); assert.match(r1.text_ar, /🎙️ كلمة صوتية من مدرّبك \(14 ث\)/);
+  assert.equal(r1.sent, 3); assert.equal(r1.recipients, 3); assert.equal(r1.voice_sec, 14); assert.match(r1.text_ar, /🎙️ كلمة صوتية من ميسّرك \(14 ث\)/);
   const ns = db.T.portal_learner_notices; assert.equal(ns.length, 3); assert.ok(ns.every((n: any) => n.kind === 'trainer_word' && n.meta?.voice?.path === 'word-voice/t1/w-one.webm' && n.meta?.transcript === 'أحسنتم اليوم'), 'المسار نفسه مرجعًا في كل إشعار');
   assert.equal(new Set(ns.map((n: any) => n.meta.voice.path)).size, 1, 'ملف واحد لا ثلاثة');
   const r2: any = await sendWord(db, me, room, { mode: 'one', email: 'reem@x.sa', text: 'ريم، نطقك تحسّن', voice: V('two', 9) }, { now: NOW });
@@ -149,10 +149,10 @@ test('P55: «نادِ» سجّل كلمة · السجلّ · الكرون · ا�
   const route = read('app/api/me/day/route.ts'); assert.match(route, /multipart\/form-data/); assert.match(route, /validateTrainerVoice/); assert.match(route, /trainerVoicePath\(me\.trainerIds\[0\] \|\| me\.id, randomUUID\(\), v\.ext\)/); assert.match(route, /voice_sec: voice \? voice\.sec : null/); assert.match(route, /remove\(\[voice\.path\]\)/, 'لا مستلم → حذف الملف');
   const nr = read('app/api/notices/route.ts'); assert.match(nr, /searchParams\.get\('voice'\)/); assert.match(nr, /noticeVoiceUrl\(db, user\.email, vid\)/); assert.match(nr, /voice: tv \? \{ sec: tv\.sec, transcript: transcriptOf\(n\.meta\) \} : null/);
   const nt = read('lib/portal/notices.ts'); assert.match(nt, /meta\?: Record<string, unknown> \| null/); assert.match(nt, /NOTICE_COLS \+ ',meta'/);
-  const day = read('lib/portal/day.ts'); assert.match(day, /🎙️ كلمة صوتية من مدرّبك/); assert.match(day, /answered_week/);
+  const day = read('lib/portal/day.ts'); assert.match(day, /🎙️ كلمة صوتية من ميسّرك/); assert.match(day, /answered_week/);
   const vr = read('app/components/VoiceRecorder.tsx'); for (const t of ['-start', '-stop', '-send', '-redo', '-tr', '-cancel']) assert.ok(vr.includes(`T('${t}')`), `VoiceRecorder testid ${t}`); assert.match(vr, /export const VOICE_RECORDER_CSS/); assert.match(vr, /export type VoiceTake/);
   const db = read('app/me/day/DayBook.tsx'); for (const t of ['dy-word-voice', 'dy-word-voice-take', 'dy-word-voice-redo', 'dy-word-voice-del', 'dy-answered', 'dy-hands3']) assert.ok(db.includes(`data-testid="${t}"`), `DayBook ${t}`);
   assert.match(db, /testid="dy-rec"/); assert.match(db, /maxSec=\{TRAINER_VOICE_SEC\}/); assert.match(db, /أُجيب 🎙️/); assert.match(db, /أُجيبوا 🎙️/); assert.match(db, /أرسل الكلمة بصوتك/); assert.match(db, /fd\.append\('file', take\.blob, voiceFileName\(take\.blob\)\)/); assert.match(db, /fd\.append\('duration_sec'/); assert.match(db, /import VoiceRecorder/);
-  const n = read('app/components/Notices.tsx'); assert.match(n, /import VoiceRecorder/); assert.ok(!/function VoiceReply\(/.test(n), 'المسجّل القديم أُزيل لصالح المشترك'); for (const t of ['nt-tvoice', 'nt-tvoice-play', 'nt-tvoice-tr']) assert.ok(n.includes(`data-testid="${t}"`), `Notices ${t}`); assert.match(n, /\/api\/notices\?voice=/); assert.match(n, /استمع إلى مدرّبك/);
+  const n = read('app/components/Notices.tsx'); assert.match(n, /import VoiceRecorder/); assert.ok(!/function VoiceReply\(/.test(n), 'المسجّل القديم أُزيل لصالح المشترك'); for (const t of ['nt-tvoice', 'nt-tvoice-play', 'nt-tvoice-tr']) assert.ok(n.includes(`data-testid="${t}"`), `Notices ${t}`); assert.match(n, /\/api\/notices\?voice=/); assert.match(n, /استمع إلى ميسّرك/);
   assert.equal(VOICE_LIMITS.maxSeconds, 15, 'حدّ المتعلّم كما هو');
 });

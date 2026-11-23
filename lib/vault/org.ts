@@ -44,7 +44,7 @@ export async function exportOrg(db: any, org: { id: string; name_ar: string }, b
   if (error) return { ok: false as const, error: /function|does not exist/i.test(error.message) ? 'نفّذ supabase/p65-shield-layer2.sql أولًا' : error.message };
   const tables = (data || {}) as Record<string, any[]>; const counts: Record<string, number> = {}; for (const [t, rows] of Object.entries(tables)) counts[t] = Array.isArray(rows) ? rows.length : 0;
   const code = orgCode(EXPORT_PREFIX);
-  const doc = await signReceipt({ type: 'AtharOrgExport', kind: 'org_export', code, organization: { id: org.id, name_ar: org.name_ar }, exported_by_role: 'staff', tables: counts, truncated_at: 2000, note_ar: 'ملف تصدير الجهة من بوابة أَثَر — الأعمدة السرّية (رموز/بصمات/كلمات مرور) محذوفة؛ الوسائط الصوتية ليست صفوفًا فلا تُضمَّن.', data: tables }, env, site);
+  const doc = await signReceipt({ type: 'AtharOrgExport', kind: 'org_export', code, organization: { id: org.id, name_ar: org.name_ar }, exported_by_role: 'staff', tables: counts, truncated_at: 2000, note_ar: 'ملف تصدير الجهة من بوّابة أَثَر — الأعمدة السرّية (رموز/بصمات/كلمات مرور) محذوفة؛ الوسائط الصوتية ليست صفوفًا فلا تُضمَّن.', data: tables }, env, site);
   await securityEvent(db, { severity: 'warn', kind: 'org_export', actor: by.email, user_id: by.id, meta: { code, org_id: org.id, org_name: org.name_ar, tables: counts, hash: (doc as any).hash } }, env);
   return { ok: true as const, code, doc, counts };
 }

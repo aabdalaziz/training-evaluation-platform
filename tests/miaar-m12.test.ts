@@ -79,7 +79,7 @@ test('م12: خطّة اعتُمدت بعد «طلب مِران» من الجهة
   const txt = practiceText(f as any); assert.match(txt, /منها 1 بطلب من جهة/); assert.doesNotMatch(practiceText({ ...f, client_requested: 0 } as any), /بطلب من جهة/);
 });
 
-test('م12: عقد المصدر — المسار العام يقبل practice_request ولا يفتح خطّة؛ approve_all يقبل day1_note بحدّ NOTE_MAX؛ بوابة الجهة لا تعرض نسب مِران؛ CSV +2 عمودان؛ شارة «طلب مِران معلّق»', () => {
+test('م12: عقد المصدر — المسار العام يقبل practice_request ولا يفتح خطّة؛ approve_all يقبل day1_note بحدّ NOTE_MAX؛ بوّابة الجهة لا تعرض نسب مِران؛ CSV +2 عمودان؛ شارة «طلب مِران معلّق»', () => {
   const route = read('app/api/miaar/client/route.ts'); assert.match(route, /action === 'practice_request'/); assert.match(route, /requestPractice\(/); assert.doesNotMatch(route, /approvePlan|draftPlan/, 'لا اعتماد من مسار الجهة');
   assert.match(route, /'مِران: الأيام المنجزة', 'مِران: الجاهزية'/);
   const svc = read('lib/miaar/service.ts'); assert.match(svc, /export async function requestPractice/); assert.match(svc, /type: 'practice_request'/); assert.match(svc, /kind: 'practice_requested'/); assert.match(svc, /miaar_practice_client_request/); assert.doesNotMatch(svc.slice(svc.indexOf('export async function requestPractice')), /approvePlan|draftPlan/, 'طلب الجهة يسجّل ويُشعر فقط');

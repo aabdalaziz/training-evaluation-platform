@@ -118,12 +118,12 @@ function buildRecommendations(r: Pick<ProgramReport, 'attendance' | 'evaluation'
   const out: string[] = [];
   const k = r.evaluation.k;
   if (k && k.mean < TARGET) out.push(`متوسط الرضا ${k.mean.toFixed(2)} دون المستهدف ${TARGET} — ركّز على: ${r.evaluation.questionsLow.map(q => q.label).slice(0, 2).join('، ') || 'أقل المحاور'}.`);
-  if (k && k.lowPct >= 15) out.push(`${Math.round(k.lowPct)}% من التقييمات منخفضة (≤2) — راجع التعليقات السلبية واتصل بعينة من المتدربين.`);
-  if (r.attendance.participants && r.attendance.avgPct != null && r.attendance.avgPct < 80) out.push(`متوسط الحضور ${r.attendance.avgPct}% — ${r.attendance.participants - r.attendance.eligible80} متدربًا دون 80% (شرط الشهادة)؛ فعّل التذكير قبل الجلسات.`);
+  if (k && k.lowPct >= 15) out.push(`${Math.round(k.lowPct)}% من التقييمات منخفضة (≤2) — راجع التعليقات السلبية واتصل بعينة من المشاركين.`);
+  if (r.attendance.participants && r.attendance.avgPct != null && r.attendance.avgPct < 80) out.push(`متوسط الحضور ${r.attendance.avgPct}% — ${r.attendance.participants - r.attendance.eligible80} مشاركًا دون 80% (شرط الشهادة)؛ فعّل التذكير قبل الجلسات.`);
   if (r.learning.s && r.learning.s.nPaired > 0 && r.learning.s.hake != null && r.learning.s.hake < 0.3) out.push(`الكسب المعياري g = ${r.learning.s.hake} (منخفض) — زد الأنشطة التطبيقية والتغذية الراجعة أثناء البرنامج.`);
-  if (r.transfer.s && r.transfer.s.gap != null && r.transfer.s.gap <= -0.5) out.push('المتدربون يقدّرون تطبيقهم أعلى من تقدير مشرفيهم — نسّق مع المشرفين على معايير تطبيق واضحة.');
+  if (r.transfer.s && r.transfer.s.gap != null && r.transfer.s.gap <= -0.5) out.push('المشاركون يقدّرون تطبيقهم أعلى من تقدير مشرفيهم — نسّق مع المشرفين على معايير تطبيق واضحة.');
   if (r.transfer.s && r.transfer.s.barriers[0] && r.transfer.s.barriers[0].pct >= 30) out.push(`أبرز معوّق للنقل: «${r.transfer.s.barriers[0].label}» (${r.transfer.s.barriers[0].pct}%) — عالجه مؤسسيًا.`);
-  if (r.certificates.coveragePct != null && r.certificates.coveragePct < 60 && r.attendance.eligible80 > r.certificates.issued) out.push(`${r.attendance.eligible80 - r.certificates.issued} متدربًا مستوفيًا للحضور بلا شهادة — أصدر الشهادات من صفحة الشهادات.`);
+  if (r.certificates.coveragePct != null && r.certificates.coveragePct < 60 && r.attendance.eligible80 > r.certificates.issued) out.push(`${r.attendance.eligible80 - r.certificates.issued} مشاركًا مستوفيًا للحضور بلا شهادة — أصدر الشهادات من صفحة الشهادات.`);
   for (const s of chainRecommendations(r.chain.c, r.chain.s)) if (!out.includes(s)) out.push(s);
   return out.slice(0, 7);
 }
@@ -133,9 +133,9 @@ export function programSheets(rep: ProgramReport): Sheet[] {
   const p = rep.program; const k = rep.evaluation.k; const l = rep.learning.s; const t = rep.transfer.s; const c = rep.chain;
   const summary: (string | number | null)[][] = [
     ['البند', 'القيمة'],
-    ['البرنامج', p.name_ar], ['الحالة', p.status || ''], ['البداية', p.start_date || ''], ['النهاية', p.end_date || ''], ['القاعات', rep.rooms.map(r => r.code).join('، ')], ['المدربون', rep.trainers.join('، ')],
+    ['البرنامج', p.name_ar], ['الحالة', p.status || ''], ['البداية', p.start_date || ''], ['النهاية', p.end_date || ''], ['الشُّعب', rep.rooms.map(r => r.code).join('، ')], ['المدرّبون', rep.trainers.join('، ')],
     ['الجلسات', rep.attendance.sessions], ['المشاركون (حضور)', rep.attendance.participants], ['متوسط الحضور %', rep.attendance.avgPct], ['مستوفو 80%', rep.attendance.eligible80],
-    ['استبانات التقييم', k?.responses ?? 0], ['متوسط الرضا (1–5)', k ? r1(k.mean) : null], ['% تقييمات مرتفعة', k ? Math.round(k.highPct) : null], ['% تقييمات منخفضة', k ? Math.round(k.lowPct) : null],
+    ['استبيانات التقييم', k?.responses ?? 0], ['متوسط الرضا (1–5)', k ? r1(k.mean) : null], ['% تقييمات مرتفعة', k ? Math.round(k.highPct) : null], ['% تقييمات منخفضة', k ? Math.round(k.lowPct) : null],
     ['أزواج قبلي/بعدي', l?.nPaired ?? 0], ['متوسط قبلي', l?.pre.mean ?? null], ['متوسط بعدي', l?.post.mean ?? null], ['الكسب المعياري g', l?.hake ?? null], ['Cohen d', l?.cohenD ?? null],
     ['استجابات المتابعة', t?.n ?? 0], ['مؤشر نقل الأثر', t?.transfer_index ?? null], ['نسبة التطبيق %', t?.app_all == null ? null : Math.round(t.app_all)],
     ['مؤشرات النتائج', rep.outcomes.rows.length], ['مؤشر النتائج %', rep.outcomes.index],

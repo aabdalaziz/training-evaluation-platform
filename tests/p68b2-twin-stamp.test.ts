@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /** P68-ب-2 «توأم النموذج» و«ختم المراقب» — التوزيع حتمي بالبريد · التوأم بالخلايا نفسها بلا بند مشترك وإصدار جديد بالرمز نفسه · البصمة تشمل الورقتين
- *  · التبديل داخل ورقة واحدة والبدائل تستبعد الورقتين · إعادة السحب تعيد سحب التوأم · القفل · «ميزان التكافؤ» · الختم الموقَّع (403/404/410) · «عدّ القاعة» · الحدّ · الدرع · شكل المصدر */
+ *  · التبديل داخل ورقة واحدة والبدائل تستبعد الورقتين · إعادة السحب تعيد سحب التوأم · القفل · «ميزان التكافؤ» · الختم الموقَّع (403/404/410) · «عدّ الشعبة» · الحدّ · الدرع · شكل المصدر */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
@@ -159,7 +159,7 @@ test('P68-ب-2: شكل المصدر — SQL (عمودان + قيد + تشخيص 
   const api = read('app/api/miaar/proctor/route.ts'); assert.match(api, /rateLimit\(/); assert.match(api, /crossSiteBrowserWrite\(req\)/); assert.match(api, /addStamp\(/); assert.doesNotMatch(api, /authorization/i, 'بلا دخول — الرمز الموقَّع هو الهوية');
   const staff = read('app/api/admin/miaar/frozen/route.ts'); assert.match(staff, /action === 'twin'/); assert.match(staff, /equivalenceOf\(/);
   assert.match(read('lib/portal/way.ts'), /'miaar\/proctor'/);
-  const app = read('app/miaar/MiaarApp.tsx'); assert.match(app, /data-testid="mi-paper"/); assert.match(app, /\.mi-paper\.a\{background:#0b8a83\}/); assert.match(app, /\.mi-paper\.b\{background:#c9a24b/);
+  const app = read('app/miaar/MiaarApp.tsx'); assert.match(app, /data-testid="mi-paper"/); assert.match(app, /\.mi-paper\.a\{background:#D4614A\}/); assert.match(app, /\.mi-paper\.b\{background:#D9A866/);
   const desk = read('app/admin/miaar/FormDesk.tsx'); for (const s of ['fm-twin-go', 'fm-paper-', 'fm-equiv', 'fm-hall', 'stamp_url', "action: 'twin'"]) assert.ok(desk.includes(s), s);
   const vf = read('app/verify/form/page.tsx'); assert.match(vf, /vf-twin/); assert.match(vf, /vf-proctoring/); assert.doesNotMatch(vf, /questionText|\.text\b/);
   assert.match(read('lib/miaar/detail.ts'), /paper: sess\.candidate\.frozenForm\.twin/); assert.match(read('app/miaar/DetailReport.tsx'), /الورقة \$\{d\.form\.paper\}/);

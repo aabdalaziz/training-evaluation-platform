@@ -15,7 +15,7 @@ const W = new Date('2026-03-10T18:40:00Z'); /* كُتبت 21:40 بتوقيت ا�
 const row = (o: Partial<LetterRow> = {}): LetterRow => ({ id: 1, created_at: W.toISOString(), user_id: 'u1', email: 'me@x.sa', body_ar: 'سرّ لا يُقرأ قبل موعده — ' + 'x'.repeat(40), media_id: null, kind: 'text', deliver_at: new Date(W.getTime() + 365 * 86400000).toISOString(), delivered_at: null, status: 'sealed', horizon: '1y', opened_at: null, opened_early: false, scope: 'self', ...o });
 
 test('P62 · الأسماء والآفاق والحدود وبذرة اليوم', () => {
-  assert.equal(P62_NAMES_AR.title, 'رسالة إلى نفسي بعد سنة'); assert.equal(P62_NAMES_AR.sub, 'إلى مَن سأكون'); assert.equal(P62_NAMES_AR.official_ar, 'الرسالة المؤجَّلة للمتدرّب'); assert.equal(P62_NAMES_AR.mirror, 'ما حدث فعلًا');
+  assert.equal(P62_NAMES_AR.title, 'رسالة إلى نفسي بعد سنة'); assert.equal(P62_NAMES_AR.sub, 'إلى مَن سأكون'); assert.equal(P62_NAMES_AR.official_ar, 'الرسالة المؤجَّلة للمشارك'); assert.equal(P62_NAMES_AR.mirror, 'ما حدث فعلًا');
   assert.deepEqual(HORIZONS.map((h) => h.key), ['3m', '6m', '1y', 'grad']); assert.equal(HORIZON_DAYS['1y'], 365); assert.equal(LETTER_LIMITS.maxSealed, 3); assert.equal(LETTER_LIMITS.kCohort, 5); assert.equal(LETTER_LIMITS.cohortMax, 160); assert.equal(LETTER_PATH, '/me/letter');
   assert.equal(PROMPTS.length, 3); const a = promptOfDay(new Date('2026-01-01T12:00:00Z')); const b = promptOfDay(new Date('2026-01-02T12:00:00Z')); assert.notEqual(a.key, b.key, 'تتناوب يومًا بيوم'); assert.equal(promptOfDay(new Date('2026-01-01T01:00:00Z')).key, a.key, 'ثابتة خلال اليوم');
 });

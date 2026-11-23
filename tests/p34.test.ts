@@ -90,7 +90,7 @@ test('P34 — 6) خريطة الحضور الحيّة: مدن بأعداد، ب�
 
 test('P34 — 3) صدى السؤال: التجهيل قبل النموذج · المطالبة بلا أسماء · التحليل يرفض الناقص · البديل المحلي', () => {
   assert.equal(scrubPii('راسلني على x@y.sa أو 0551234567 أو https://a.b/c'), 'راسلني على [بريد] أو [رقم] أو [رابط]');
-  const p = echoPrompt({ text_ar: 'كيف أقنع الإدارة بمؤشر أداء بدل استبانة الرضا؟', summary_ar: 'اعرض مؤشرًا واحدًا من العمل', domain: 'تقويم' });
+  const p = echoPrompt({ text_ar: 'كيف أقنع الإدارة بمؤشر أداء بدل استبيان الرضا؟', summary_ar: 'اعرض مؤشرًا واحدًا من العمل', domain: 'تقويم' });
   assert.match(p.system, /بلا أسماء/); assert.match(p.user, /المجال: تقويم/); assert.match(p.system, /title_ar/);
   assert.equal(parseEcho({ title_ar: 'x' }), null, 'ناقص'); assert.equal(parseEcho({ title_ar: 'x', situation_ar: 'y', ask_ar: 'z', rubric: ['1'] }), null, 'معيار واحد لا يكفي');
   const ok = parseEcho({ title_ar: ' عنوان ', situation_ar: 'موقف', ask_ar: 'مطلوب', rubric: ['أ', ' ب ', '', 'ج'] }); assert.ok(ok && ok.title_ar === 'عنوان' && ok.rubric.length === 3, 'تنظيف');

@@ -8,9 +8,9 @@
  */
 
 export const P46_NAMES_AR = {
-  axis: 'محور التقارير', official: 'توثيق الجودة والأداء', weekly: 'تقرير التعلّم الأسبوعي', weekly_full: 'تقرير التعلّم الشامل', final: 'التقرير الختامي لأداء المتدربين',
+  axis: 'محور التقارير', official: 'توثيق الجودة والأداء', weekly: 'تقرير التعلّم الأسبوعي', weekly_full: 'تقرير التعلّم الشامل', final: 'التقرير الختامي لأداء الطلاب',
   mission: 'تقرير إنجاز المهمة', diploma: 'ملف الدبلوم', page: 'تقاريري', admin: 'التقارير', start: 'ابدأ تقرير هذا الأسبوع', line: 'سطر لك من تقرير الأسبوع',
-  submit: 'أرسل للاعتماد', approve: 'اعتمد', return: 'أعد بملاحظة', recompute: 'حدّث الأرقام', print: 'اطبع', phrase: 'صِغ لي من الأرقام',
+  submit: 'أرسل للاعتماد', approve: 'اعتماد', return: 'أعد بملاحظة', recompute: 'حدّث الأرقام', print: 'اطبع', phrase: 'صِغ لي من الأرقام',
   /* ر2 */ final_story: 'خاتمة الرحلة', final_start: 'ابدأ التقرير الختامي', maturity: 'نضج التقرير', final_line: 'سطر لك من التقرير الختامي', my_page: 'صفحتي في التقرير الختامي',
   promote_btn: 'حوّل التوصيات إلى قرارات تنسيب', sign_quality: 'توقيع الجودة', sign_manager: 'توقيع مدير البرنامج', chain: 'سلسلة الثقة', show_cred: 'أظهِر في شهادتي',
 } as const;
@@ -189,10 +189,10 @@ export function missingBeforeSubmit(body: Body, students: StudentRow[]): string[
 export type Phrase = { section: 'strengths' | 'challenges' | 'admin_attendance' | 'common_errors' | 'general_notes'; text: string };
 export function localPhrases(c: Pick<Computed, 'enrolled' | 'regular' | 'sessions' | 'hours' | 'week_no'>, students: StudentRow[], skills: Skill[]): Phrase[] {
   const out: Phrase[] = []; const st = summativeStats(students); const sa = skillAverages(students, skills).filter(x => x.avg !== null);
-  if (c.sessions) out.push({ section: 'admin_attendance', text: `نُفِّذت ${c.sessions} جلسات (${c.hours} ساعة) في هذا الأسبوع، وانتظم ${c.regular} من ${c.enrolled} متدرّبًا بنسبة حضور ${REGULAR_PCT}% فأكثر.` });
+  if (c.sessions) out.push({ section: 'admin_attendance', text: `نُفِّذت ${c.sessions} جلسات (${c.hours} ساعة) في هذا الأسبوع، وانتظم ${c.regular} من ${c.enrolled} طالبًا بنسبة حضور ${REGULAR_PCT}% فأكثر.` });
   if (sa.length) { const hi = [...sa].sort((a, b) => (b.avg! - a.avg!))[0]; const lo = [...sa].sort((a, b) => (a.avg! - b.avg!))[0]; if (hi && hi.avg! >= 70) out.push({ section: 'strengths', text: `أعلى متوسط للمجموعة في مهارة ${hi.skill.name_ar} (${hi.avg}%).` }); if (lo && hi && lo.skill.code !== hi.skill.code) out.push({ section: 'challenges', text: `أدنى متوسط للمجموعة في مهارة ${lo.skill.name_ar} (${lo.avg}%) — تستحق وقتًا أطول الأسبوع القادم.` }); }
-  if (st.n) out.push({ section: 'general_notes', text: `رُصدت درجات ${st.n} متدرّبًا: المتوسط ${st.avg}% (أعلى ${st.max}% · أدنى ${st.min}%)، ونسبة من بلغ حدّ النجاح ${st.pass_pct}%.` });
-  const low = students.filter(s => s.attendance_pct !== null && s.attendance_pct < REGULAR_PCT).length; if (low) out.push({ section: 'admin_attendance', text: `${low} من المتدرّبين دون حدّ الانتظام هذا الأسبوع — يُستحسن التواصل معهم قبل الأسبوع القادم.` });
+  if (st.n) out.push({ section: 'general_notes', text: `رُصدت درجات ${st.n} طالبًا: المتوسط ${st.avg}% (أعلى ${st.max}% · أدنى ${st.min}%)، ونسبة من بلغ حدّ النجاح ${st.pass_pct}%.` });
+  const low = students.filter(s => s.attendance_pct !== null && s.attendance_pct < REGULAR_PCT).length; if (low) out.push({ section: 'admin_attendance', text: `${low} من الطلاب دون حدّ الانتظام هذا الأسبوع — يُستحسن التواصل معهم قبل الأسبوع القادم.` });
   return out.slice(0, 6);
 }
 export function parsePhrases(raw: string): Phrase[] | null {
@@ -227,10 +227,10 @@ export function listLineAr(r: { week_no: number; period_from: string; period_to:
   return `الأسبوع ${r.week_no} · ${fmtDayAr(r.period_from)} → ${fmtDayAr(r.period_to)} · ${String(r.computed?.program_ar || '')}${r.computed?.classroom_ar ? ` · ${r.computed.classroom_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`;
 }
 
-/* ═════════════════════════════ ر2 — التقرير الختامي لأداء المتدرّبين («خاتمة الرحلة») ═════════════════════════════
- *  لا يُكتب في الأسبوع الأخير؛ ينمو من الأسبوعيات المعتمدة للشعبة نفسها: مسار كل متدرّب في كل مهارة أسبوعًا بأسبوع،
+/* ═════════════════════════════ ر2 — التقرير الختامي لأداء الطلاب («خاتمة الرحلة») ═════════════════════════════
+ *  لا يُكتب في الأسبوع الأخير؛ ينمو من الأسبوعيات المعتمدة للشعبة نفسها: مسار كل طالب في كل مهارة أسبوعًا بأسبوع،
  *  وعنوانه «الفرق لا الدرجة». المعلّم يُدخل التقييم الختامي ويكتب التوصية، والذكاء الاصطناعي يصوغ فقرة المسار من الأرقام فقط،
- *  ويعتمده توقيعان (الجودة ثم مدير البرنامج). لماذا «خاتمة الرحلة»: الاسم السردي للصفحة الرئيسة وأثير؛ الرسمي في العقود «التقرير الختامي لأداء المتدرّبين».
+ *  ويعتمده توقيعان (الجودة ثم مدير البرنامج). لماذا «خاتمة الرحلة»: الاسم السردي للصفحة الرئيسة وأثير؛ الرسمي في العقود «التقرير الختامي لأداء الطلاب».
  */
 export const RECS = ['promote', 'continue', 'support', 'repeat'] as const; export type Rec = (typeof RECS)[number];
 export const REC_AR: Record<Rec, string> = { promote: 'رفع للمستوى الأعلى', continue: 'استمرار في المستوى', support: 'خطة دعم', repeat: 'إعادة المستوى' };
@@ -267,7 +267,7 @@ export function maturityOf(approved: number, start: string | null, end: string |
 export function finalSuggested(progress: number | null, end: string | null, today: string, approvedWeeks: number): boolean { if (approvedWeeks >= 2) return true; if (progress !== null && progress >= FINAL_READY_PCT) return true; if (end && daysBetween(today, end) <= FINAL_READY_DAYS) return true; return false; }
 export function trendOf(first: number | null, last: number | null): Trend | null { if (first === null || last === null) return null; const d = last - first; return d >= 3 ? 'up' : d <= -3 ? 'down' : 'flat'; }
 export const TREND_AR: Record<Trend, string> = { up: 'صاعد', flat: 'ثابت', down: 'هابط' }; export const TREND_SIGN: Record<Trend, string> = { up: '↑', flat: '→', down: '↓' };
-/** مسار كل متدرّب من الأسبوعيات المعتمدة (مرتّبة زمنيًا) */
+/** مسار كل طالب من الأسبوعيات المعتمدة (مرتّبة زمنيًا) */
 export function buildTrajectories(roster: StudentRow[], weeks: WeekSrc[], skills: Skill[]): Trajectory[] {
   const ws = [...weeks].sort((a, b) => a.week_no - b.week_no || a.period_from.localeCompare(b.period_from));
   return roster.map(r => {
@@ -310,7 +310,7 @@ export function missingBeforeFinalSubmit(body: FinalBody, students: FinalStudent
   const m: string[] = [];
   if (!body.summary.overview) m.push('ملخّص البرنامج (القسم الثاني)');
   if (!students.some(s => s.avg !== null)) m.push('درجة ختامية واحدة على الأقل (القسم الرابع)');
-  const graded = students.filter(s => s.avg !== null); if (graded.length && graded.some(s => !s.rec)) m.push(`توصية لكل متدرّب له درجة (${graded.filter(s => !s.rec).length} بلا توصية — القسم الخامس)`);
+  const graded = students.filter(s => s.avg !== null); if (graded.length && graded.some(s => !s.rec)) m.push(`توصية لكل طالب له درجة (${graded.filter(s => !s.rec).length} بلا توصية — القسم الخامس)`);
   if (!body.strengths.strengths.length) m.push('نقطة قوة واحدة على الأقل (القسم السادس)');
   return m;
 }
@@ -318,12 +318,12 @@ export function missingBeforeFinalSubmit(body: FinalBody, students: FinalStudent
 export type WhoSign = Who & { admin?: boolean };
 export function canSign(r: { kind: string; status: string; body: any }, me: WhoSign, as: SignAs): boolean {
   if (r.kind !== 'final' || r.status !== 'submitted' || !me.staff) return false; const so = r.body?.signoff || {}; if (so[as]?.at) return false;
-  const other = so[as === 'quality' ? 'manager' : 'quality']; if (other?.at && !me.admin && ((me.id && other.id === me.id) || (me.email && other.email === me.email))) return false;   // التوقيع الثاني من شخص آخر — إلا مدير المنصة
+  const other = so[as === 'quality' ? 'manager' : 'quality']; if (other?.at && !me.admin && ((me.id && other.id === me.id) || (me.email && other.email === me.email))) return false;   // التوقيع الثاني من شخص آخر — إلا مدير البوّابة
   return true;
 }
 export function signoffComplete(body: any): boolean { return !!(body?.signoff?.quality?.at && body?.signoff?.manager?.at); }
 export function signoffView(body: any): { quality: { name: string; at: string } | null; manager: { name: string; at: string } | null } { const so = body?.signoff || {}; return { quality: so.quality?.at ? { name: String(so.quality.name || ''), at: String(so.quality.at) } : null, manager: so.manager?.at ? { name: String(so.manager.name || ''), at: String(so.manager.at) } : null }; }
-/* ───────── «صِغ لي من الأرقام» للمتدرّب — فقرة وصفية من مساره (لا تقدير ولا توصية) ───────── */
+/* ───────── «صِغ لي من الأرقام» للطالب — فقرة وصفية من مساره (لا تقدير ولا توصية) ───────── */
 const FORBID = /توصي|أوصي|ينقل|يُنقل|يُرفع|يرسب|راسب|تقدير|ممتاز|ضعيف|مقبول|جيد جدًا/;
 export function localParagraph(t: Trajectory, skills: Skill[], s: { avg: number | null; attendance_pct: number | null }): string {
   const nm = (c: string | null) => skills.find(k => k.code === c)?.name_ar || ''; const parts: string[] = [];
@@ -337,12 +337,12 @@ export function localParagraph(t: Trajectory, skills: Skill[], s: { avg: number 
 }
 export function paragraphPrompt(t: Trajectory, skills: Skill[], s: { avg: number | null; attendance_pct: number | null; scores: Record<string, number | null> }): { system: string; user: string } {
   return {
-    system: `أنت كاتب تقارير تعليمية بالعربية الفصحى. اكتب فقرة واحدة (≤ ${PARA_MAX} حرفًا) تصف مسار متدرّب خلال برنامج من أرقام معطاة فقط: من أين بدأ وإلى أين وصل في كل مهارة، وحضوره، وما كُتب له سابقًا. ممنوع: اقتراح تقدير أو توصية (نقل/رسوب/رفع)، أو أي رقم غير معطى، أو مجاملات عامة. أعد JSON فقط: {"text": "…"}.`,
+    system: `أنت كاتب تقارير تعليمية بالعربية الفصحى. اكتب فقرة واحدة (≤ ${PARA_MAX} حرفًا) تصف مسار طالب خلال برنامج من أرقام معطاة فقط: من أين بدأ وإلى أين وصل في كل مهارة، وحضوره، وما كُتب له سابقًا. ممنوع: اقتراح تقدير أو توصية (نقل/رسوب/رفع)، أو أي رقم غير معطى، أو مجاملات عامة. أعد JSON فقط: {"text": "…"}.`,
     user: JSON.stringify({ name: t.name, weeks: t.weeks, skills: skills.map(k => ({ skill: k.name_ar, by_week: t.skills[k.code] })), avg_by_week: t.avgs, first: t.first, last: t.last, delta: t.delta, attendance_pct: s.attendance_pct, final_scores: Object.fromEntries(skills.map(k => [k.name_ar, s.scores?.[k.code] ?? null])), final_avg: s.avg, previous_lines: t.lines }),
   };
 }
 export function parseParagraph(raw: string): string | null { try { const m = raw.match(/\{[\s\S]*\}/); const j = JSON.parse(m ? m[0] : raw); const t = T(j?.text, PARA_MAX); return t.length >= 20 && !FORBID.test(t) ? t : null; } catch { const t = T(raw, PARA_MAX); return t.length >= 20 && t.length <= PARA_MAX && !FORBID.test(t) && !/[{}\[\]]/.test(t) ? t : null; } }
-/** ما يراه المتدرّب في صفحته (ولا شيء عن غيره) */
+/** ما يراه الطالب في صفحته (ولا شيء عن غيره) */
 export function studentPageData(t: Trajectory, skills: Skill[], s: FinalStudent): any { return { weeks: t.weeks, skills: skills.map(k => ({ code: k.code, name_ar: k.name_ar, by_week: t.skills[k.code], final: s.scores?.[k.code] ?? null })), avgs: t.avgs, first: t.first, last: t.last, delta: t.delta, trend: t.trend, attendance_pct: s.attendance_pct, final_avg: s.avg, grade_ar: s.grade_ar, rec: s.rec || null, rec_ar: s.rec ? REC_AR[s.rec] : null, paragraph: s.paragraph || '' }; }
 
 /* ═════════════════════════════ ر3 — تقرير إنجاز المهمة («أثرُ المهمة») ═════════════════════════════
@@ -478,7 +478,7 @@ export const DOC_NAMES_AR = {
   bullets: 'من نقاطي إلى فقرة', consistency: 'فحص الاتساق', client_docs: 'وثائق أَثَر المعتمَدة', pick_doc: 'اختر وثيقة معتمَدة من أَثَر', chain: 'سلسلة الوثائق', rec_to_request: 'اطلب تنفيذها من أَثَر', work: 'مهماتي وطلباتي', docs_written: 'وثائق استشارية معتمَدة',
 } as const;
 export const METHOD_TOOLS = ['interviews', 'survey', 'documents', 'observation', 'athar_data', 'focus_group', 'benchmark'] as const; export type MethodTool = (typeof METHOD_TOOLS)[number];
-export const METHOD_TOOL_AR: Record<MethodTool, string> = { interviews: 'مقابلات', survey: 'استبانة', documents: 'تحليل وثائق', observation: 'ملاحظة ميدانية', athar_data: 'بيانات أَثَر', focus_group: 'مجموعة تركيز', benchmark: 'مقارنة مرجعية' };
+export const METHOD_TOOL_AR: Record<MethodTool, string> = { interviews: 'مقابلات', survey: 'استبيان', documents: 'تحليل وثائق', observation: 'ملاحظة ميدانية', athar_data: 'بيانات أَثَر', focus_group: 'مجموعة تركيز', benchmark: 'مقارنة مرجعية' };
 export const COST_AR: Record<string, string> = { low: 'منخفضة', mid: 'متوسطة', high: 'مرتفعة' };
 export const ADV_MAX_ASSUMPTIONS = 5; export const ADV_MAX_INPUTS = 8; export const ADV_MAX_OPTIONS = 4; export const ADV_MIN_OPTIONS = 2; export const ADV_MAX_STEPS = 5; export const ADV_MAX_RISKS = 3; export const ADV_RATIONALE_MAX = 600; export const ADV_QUESTION_MAX = 300;
 export const STU_MAX_OBJ = 6; export const STU_MAX_Q = 6; export const STU_MAX_FINDINGS = 12; export const STU_MAX_KPIS = 6; export const STU_MAX_GAPS = 10; export const STU_MAX_RECS = 10; export const STU_MAX_PHASES = 8; export const STU_MAX_RISKS = 5; export const STU_MAX_ANNEX = 10; export const STU_READING_MAX = 900; export const STU_SUMMARY_MAX = 900;
@@ -563,7 +563,7 @@ export function missingBeforeStudySubmit(b: StudyBody): string[] {
   const linked = b.recommendations.items.filter(r => r.ref).length; if (linked < 2) out.push('توصيتان على الأقل مربوطتان بنتيجة أو فجوة'); if (!b.plan.phases.length) out.push('مرحلة تنفيذ واحدة على الأقل');
   return out;
 }
-/** صلاحية الاعتماد للوثائق: الطاقم، غير الكاتب — إلا مدير المنصة */
+/** صلاحية الاعتماد للوثائق: الطاقم، غير الكاتب — إلا مدير البوّابة */
 export function canDecideDoc(r: { status: string; author_id?: string | null; author_email: string }, me: WhoSign): boolean { return canDecide(r, me) && (!isAuthor(r, me) || !!me.admin); }
 export const isDocKind = (k: unknown): k is DocKind => (DOC_KINDS as readonly string[]).includes(String(k));
 export const isClientKind = (k: unknown) => k === 'mission' || isDocKind(k);
@@ -597,7 +597,7 @@ export function docPublicView(r: { kind: string; verify_code: string | null; aut
 export function docListLineAr(r: { kind: string; computed: any; status: string }): string { const c = r.computed || {}; return `${r.kind === 'advisory' ? DOC_NAMES_AR.advisory : DOC_NAMES_AR.study} · ${String(c.title || '')}${c.org_ar ? ` · ${c.org_ar}` : ''} · ${STATUS_AR[r.status as ReportStatus] || r.status}`; }
 
 /* ═════════════════════════════ ر4-أ — «ملف الدبلوم» (وحدات الدبلوم · نبض الأسبوع · تقرير الوحدة) — «أثرُ الدبلوم» ═════════════════════════════
- *  الدبلوم طويل فلا يُختصر في تقرير؛ هو ملف يتراكم: نبض نصف صفحة كل أسبوع، وتقرير عند إغلاق كل وحدة، وكشف كفايات لكل متدرّب (ر4-ب).
+ *  الدبلوم طويل فلا يُختصر في تقرير؛ هو ملف يتراكم: نبض نصف صفحة كل أسبوع، وتقرير عند إغلاق كل وحدة، وكشف كفايات لكل طالب (ر4-ب).
  *  لماذا «نبض» لا «تقرير»: الأسبوع في دبلوم من 12–40 أسبوعًا يحتاج متابعة لا توثيقًا رسميًا (التقرير الأسبوعي الكامل ر1 يبقى بزرّ).
  *  لماذا الوحدة: هي وحدة الحكم التعليمي الحقيقية — لها ناتج ومهارات ومدّة — وتُغلق باعتماد تقريرها لا بزرّ منفصل: الإغلاق هو التوثيق.
  *  «سلسلة الانتباه»: من ذُكر في «من يحتاج انتباهًا» يظهر في نبض الأسبوع التالي بخانة «ما الذي تغيّر؟» حتى يُغلق — لا أحد يسقط بين الأسابيع.
@@ -732,7 +732,7 @@ export function unitPublicView(r: { verify_code: string | null; status: string; 
 export type DiplomaCard = { program_id: string; classroom_id: string | null; program_ar: string; classroom_ar: string; level: string | null; units: { unit: Unit; state: UnitState; report_id: string | null; report_status: string | null }[]; current: Unit | null; pulse: { id: string; status: string } | null; weekly: { id: string; status: string } | null; week: { from: string; to: string; week_no: number }; attention_open: number; can_edit_units: boolean };
 
 /* ═════════════════════════════ ر4-ب — «كشف الكفايات» («العودة إلى الجواز») ═════════════════════════════
- *  لكل متدرّب مقبول كشفٌ واحد حيّ: يُنشأ مسودّةً عند اعتماد أول تقرير وحدة، ويُعاد حسابه بعد كل وحدة، ويُعتمد مرّة واحدة في آخر الدبلوم (ونسخة جديدة تَنسخه عند الحاجة).
+ *  لكل طالب مقبول كشفٌ واحد حيّ: يُنشأ مسودّةً عند اعتماد أول تقرير وحدة، ويُعاد حسابه بعد كل وحدة، ويُعتمد مرّة واحدة في آخر الدبلوم (ونسخة جديدة تَنسخه عند الحاجة).
  *  لماذا «كشف» لا «شهادة»: الشهادة تقول «أتمّ»، والكشف يقول «ماذا يستطيع الآن وبأيّ شاهد» — وهو ما يُعاد إلى جواز المهارات (P8) مستوىً معتمَدًا بملاحظة تحمل رمزه.
  *  القاعدة: الأدلّة تُجمع آليًا (كشوف الوحدات · المهمات المصدَّقة · «كل يوم مهارة» · البروفات · المحطات · الجواز المحسوب)، والاقتراح يُحسب محليًا بقاعدة مُعلنة،
  *  والمستوى النهائي يكتبه المعلّم على سُلّم الجواز نفسه (أساسي · مبتدئ متقدم · متوسط · متقدم · خبير) أو «لم يُثبت بعد»، ومن «متوسط» فأعلى تلزم جملةُ شاهد.
@@ -793,7 +793,7 @@ export function passportWrites(b: ProfileBody, c: ProfileComputed): { skill_id: 
   const byCode = new Map((c.competencies || []).map(k => [k.code, k])); const out: { skill_id: string; level: number; code: string }[] = [];
   for (const l of b.levels) { const k = byCode.get(l.code); if (k?.skill_id && l.level && l.level >= 1 && l.level <= 5) out.push({ skill_id: k.skill_id, level: l.level, code: l.code }); } return out;
 }
-/** ما يصل المتدرّب (سطر + صفحة كاملة) — بلا ملاحظات الإدارة */
+/** ما يصل الطالب (سطر + صفحة كاملة) — بلا ملاحظات الإدارة */
 export function profileLineData(b: ProfileBody, c: ProfileComputed): any {
   const names = new Map((c.competencies || []).map(k => [k.code, k.name_ar]));
   return { levels: b.levels.map(l => ({ code: l.code, name_ar: names.get(l.code) || l.code, level: l.level ?? 0, level_ar: levelAr(l.level ?? 0), evidence: l.evidence })), quotes: b.quotes, strengths: b.strengths, keep: b.keep, recommendation: b.recommendation, recommendation_ar: b.recommendation ? PROFILE_REC_AR[b.recommendation] : '', plan: b.plan,
@@ -842,7 +842,7 @@ export function evidencePrompt(name_ar: string, items: EvidenceItem[]): { system
  */
 export const P47_NAMES_AR = {
   review: 'مراجعة البرنامج بعد الدفعة', official: 'مراجعة البرنامج المعتمَدة', story: 'البرنامج الذي يراجع نفسه', promise: 'وعد التصميم', proven: 'ما ثبت', gap: 'الفجوة', proposals: 'اقتراحات التعديل', propose: 'اقترح التعديلات',
-  context: 'ما لا تراه الأرقام', version: 'نسخة الدفعة', open: 'راجع الدفعة', changed: 'هذا البرنامج تغيّر', decisions: 'القرارات', cohort: 'الدفعة', motto: 'البرنامج لا يُراجَع في اجتماع؛ يراجع نفسه من متدرّبيه، والإنسان يوقّع',
+  context: 'ما لا تراه الأرقام', version: 'نسخة الدفعة', open: 'راجع الدفعة', changed: 'هذا البرنامج تغيّر', decisions: 'القرارات', cohort: 'الدفعة', motto: 'البرنامج لا يُراجَع في اجتماع؛ يراجع نفسه من طلابه، والإنسان يوقّع',
 } as const;
 export const GAP_GRADES = ['kept', 'near', 'missed'] as const; export type GapGrade = (typeof GAP_GRADES)[number];
 export const GAP_GRADE_AR: Record<GapGrade, string> = { kept: 'وفى', near: 'قارب', missed: 'أخلف' };
@@ -952,7 +952,7 @@ export function reviewPrompt(c: ReviewComputed): { system: string; user: string 
  *  - النسخة = الوحدات بعد التعديلات (مفتوحة من جديد للدفعة القادمة) + كفايات القالب بعد الحذف؛ القديمة تُؤرشَف لا تُحذف (تقاريرها تبقى تشير إليها).
  *  - ما يُطبَّق آليًا: زِد ساعات (وحدة) · قسّم الوحدة · أضف نشاط دليل (يُلحق بناتج الوحدة) · احذف الكفاية · أبقِ.
  *    ما يحتاج يدًا (يُسجَّل في النسخة ويُعرض للمصمّم): انقل الكفاية · أعد الترتيب · أضف محطة دعم · ساعات على مستوى البرنامج بلا رقم.
- *  - «رسالة إلى الدفعة القادمة»: سطر يكتبه المصمّم (≤ 300) يراه متدرّبو الدفعة التالية — لا أسماء ولا أرقام أفراد.
+ *  - «رسالة إلى الدفعة القادمة»: سطر يكتبه المصمّم (≤ 300) يراه طلاب الدفعة التالية — لا أسماء ولا أرقام أفراد.
  * =================================================================================================== */
 export const P47B_NAMES_AR = { version: 'نسخة الدفعة', apply: 'طبّق على النسخة القادمة', applied: 'طُبِّقت', message: 'رسالة إلى الدفعة القادمة', manual: 'يحتاج يدك في لوحة الوحدات', history: 'سجلّ النسخ', because: 'بسبب من سبقوكم تغيّر في هذا البرنامج' } as const;
 export const VERSION_MESSAGE_MAX = 300; export const VERSION_MESSAGE_MIN = 10;

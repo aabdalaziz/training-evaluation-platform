@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** P70-ب «رجع الصدى» — النواة: النافذة (أول أسبوع من مستوى ≥ 2) · الموجز من كلمات المتدرّبين وحدها (k ≥ 5 · بلا أسماء · بلا أرقام مِعيار) · كلمة العبور (علامة echo على آلية P51) · صدى الصدى · ما يراه المتدرّب في «سطري» · شاهد الاعتماد 3.5 · شكل المصدر */
+/** P70-ب «رجع الصدى» — النواة: النافذة (أول أسبوع من مستوى ≥ 2) · الموجز من كلمات المشاركين وحدها (k ≥ 5 · بلا أسماء · بلا أرقام مِعيار) · كلمة العبور (علامة echo على آلية P51) · صدى الصدى · ما يراه المشارك في «سطري» · شاهد الاعتماد 3.5 · شكل المصدر */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -57,7 +57,7 @@ test('P70-ب · النافذة: لا صدى في المستوى الأول · أ
   assert.equal(echoPhase([SPANS[1], SPANS[0], SPANS[2]], 2, '2026-10-05').prev?.level_no, 1, 'الترتيب لا يهمّ');
 });
 
-test('P70-ب · الموجز: أعداد وعبارات فقط · k ≥ 5 لكل مكوّن · لا أسماء · «عبروا» من كلمات المتدرّبين وبلا أرقام', () => {
+test('P70-ب · الموجز: أعداد وعبارات فقط · k ≥ 5 لكل مكوّن · لا أسماء · «عبروا» من كلمات المشاركين وبلا أرقام', () => {
   const e = buildInstructorEcho(input());
   assert.equal(e.title_ar, '🔁 رجع الصدى — المستوى 2'); assert.equal(e.shown, true); assert.equal(e.people, 6); assert.equal(e.roster, 14); assert.equal(e.silent_ar, null);
   assert.equal(e.sealed_ar, 'ختم صفحةَ مستواهم 11 من 14.'); assert.match(String(e.lines_ar), /^قالت الشعبة عبر المستوى 2 \(6 من 14 — 6 سطور\):$/); assert.equal(e.lines.length, 3, 'ثلاث عبارات');
@@ -95,7 +95,7 @@ test('P70-ب · الغراء: الموجز من قاعدة وهمية — سطو
   assert.equal(await instructorEcho(db as any, { program_id: 'p1', classroom_id: 'c1', level_no: 3, can_write: true }, [], '2026-11-16'), null, 'بلا مدى لا صدى');
 });
 
-test('P70-ب · كلمة العبور: صدى الصدى من الإشعارات والردود · المتدرّب يرى كلمته وحده · شاهد الاعتماد 3.5 عدد فقط', async () => {
+test('P70-ب · كلمة العبور: صدى الصدى من الإشعارات والردود · المشارك يرى كلمته وحده · شاهد الاعتماد 3.5 عدد فقط', async () => {
   const db = fakeDb({ ...seed(), portal_learner_notices: [
     ...users.map((u, i) => ({ id: `n${i}`, email: `${u}@x.sa`, kind: 'trainer_word', title_ar: echoWordTitleAr('سارة', 3), body_ar: 'أهلًا بكم في المستوى الثالث', created_at: '2026-11-16T07:00:00Z', dedupe_key: echoDedupeKey('c1', 3, 't1', `${u}@x.sa`), meta: { echo: 3 } })),
     { id: 'n-old', email: 'u1@x.sa', kind: 'trainer_word', title_ar: 'كلمة', body_ar: 'كلمة عادية', created_at: '2026-11-16T08:00:00Z', dedupe_key: 'trainer_word:t1:u1@x.sa:2026-11-16', meta: {} },
@@ -108,14 +108,14 @@ test('P70-ب · كلمة العبور: صدى الصدى من الإشعارات
   const w = await learnerEchoWord(db as any, 'U1@x.sa', 'c1', 3); assert.ok(w); if (!w) return; assert.equal(w.notice_id, 'n0'); assert.equal(w.text_ar, 'أهلًا بكم في المستوى الثالث'); assert.equal(w.level_no, 3); assert.match(w.title_ar, /كلمة العبور من أستاذك سارة/);
   assert.equal(await learnerEchoWord(db as any, 'u9@x.sa', 'c1', 3), null, 'ليست له'); assert.equal((await learnerEchoWord(db as any, 'u1@x.sa', 'c1', 2))?.text_ar, 'عبور المستوى الثاني');
   /* الاعتماد */
-  assert.equal(levelEvidenceLineAr(4, 1), null); assert.equal(levelEvidenceLineAr(5, 1), 'عبروا بكلماتهم: صفحات المستوى التي ختمها المتدرّبون بأيديهم 5 (عبر مستوى واحد) — عدد فقط، بلا محتوى.'); assert.match(String(levelEvidenceLineAr(23, 2)), /23 \(عبر مستويين\)/); assert.match(String(levelEvidenceLineAr(40, 3)), /\(عبر 3 مستويات\)/);
+  assert.equal(levelEvidenceLineAr(4, 1), null); assert.equal(levelEvidenceLineAr(5, 1), 'عبروا بكلماتهم: صفحات المستوى التي ختمها المشاركون بأيديهم 5 (عبر مستوى واحد) — عدد فقط، بلا محتوى.'); assert.match(String(levelEvidenceLineAr(23, 2)), /23 \(عبر مستويين\)/); assert.match(String(levelEvidenceLineAr(40, 3)), /\(عبر 3 مستويات\)/);
   const ev = await levelEvidence(db as any, 'p1'); assert.equal(ev.length, 1); assert.deepEqual({ id: ev[0].id, kind: ev[0].kind, codes: ev[0].codes, n: ev[0].n, href: ev[0].href }, { id: 'level:pages', kind: 'level', codes: ['3.5'], n: 6, href: null }); assert.match(ev[0].label_ar, /6 \(عبر مستويين\)/);
-  assert.deepEqual(await levelEvidence(db as any, 'p-none'), []); assert.equal(EVIDENCE_KIND_AR.level, 'صفحات المستوى — بكلمات المتدرّبين أنفسهم (P70)');
+  assert.deepEqual(await levelEvidence(db as any, 'p-none'), []); assert.equal(EVIDENCE_KIND_AR.level, 'صفحات المستوى — بكلمات المشاركين أنفسهم (P70)');
 });
 
 test('P70-ب · شكل المصدر: echo.ts لا يقرأ مِعيار ولا الدرجات · الممرّ يحمل الصدى · كلمة العبور علامة على sendWord · الواجهتان · لا SQL جديد', () => {
   const echo = read('lib/level/echo.ts');
-  assert.doesNotMatch(echo, /miaar_|placement_reports|score|rating|band|cut/i, 'الأستاذ يرى ما كتبه المتدرّبون فقط'); assert.doesNotMatch(echo, /insert\(|upsert\(|update\(|delete\(/, 'لا يُخزَّن الموجز'); assert.doesNotMatch(echo, /openai|anthropic|gemini|fetch\(/i);
+  assert.doesNotMatch(echo, /miaar_|placement_reports|score|rating|band|cut/i, 'الأستاذ يرى ما كتبه المشاركون فقط'); assert.doesNotMatch(echo, /insert\(|upsert\(|update\(|delete\(/, 'لا يُخزَّن الموجز'); assert.doesNotMatch(echo, /openai|anthropic|gemini|fetch\(/i);
   assert.match(echo, /from\('portal_level_pages'\)/); assert.match(echo, /from\('portal_learning_lines'\)/); assert.match(echo, /like\('dedupe_key'/);
   const dip = read('lib/diploma/store.ts'); assert.match(dip, /instructorEcho\(db, \{ program_id/); assert.match(dip, /can_write: isOwn/);
   const day = read('lib/portal/day.ts'); assert.match(day, /echo\?: number \| null/); assert.match(day, /echoWordTitleAr\(me\.name, Number\(input\.echo\)\)/); assert.match(day, /echoDedupeKey\(room\.id, Number\(input\.echo\), tid, l\.email\)/); assert.match(day, /url: input\.echo \? '\/me\/line'/);

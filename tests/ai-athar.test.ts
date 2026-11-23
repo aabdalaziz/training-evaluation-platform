@@ -37,7 +37,7 @@ test('P9-أ: parseJsonLoose يتعامل مع الأسوار والنص المح
 
 test('P9-أ: الحدود والتسميات والشعار', () => {
   for (const p of ['impact_brief', 'learner_plan', 'org_brief', 'activity_draft'] as const) { assert.ok(AI_LIMITS[p] > 0); assert.ok(AI_PURPOSE_LABEL[p].ar && AI_PURPOSE_LABEL[p].en); }
-  assert.ok(AI_LIMITS.learner_plan < AI_LIMITS.activity_draft, 'حد المتعلم أضيق من حد المدرب');
+  assert.ok(AI_LIMITS.learner_plan < AI_LIMITS.activity_draft, 'حد المتعلّم أضيق من حد المدرّب');
   assert.match(AI_DISCLAIMER.ar, /الذكاء الاصطناعي/); assert.match(BRAND.tagline.ar, /ما بعد الذكاء الاصطناعي/); assert.match(BRAND.motto.en, /Prove impact/);
 });
 
@@ -59,13 +59,13 @@ test('P9-أ: مطالبة الأثر تحمل قواعد الحوكمة والح
 
 test('P9-أ: البديل المحلي للأثر يذكر الأرقام ويكشف فجوات القياس', () => {
   const b = localImpactBrief(IMPACT, 'ar');
-  assert.match(b.headline, /40 متعلمًا/); assert.ok(b.findings.some(x => x.includes('82%'))); assert.ok(b.findings.some(x => x.includes('30.5%')));
+  assert.match(b.headline, /40 متعلّمًا/); assert.ok(b.findings.some(x => x.includes('82%'))); assert.ok(b.findings.some(x => x.includes('30.5%')));
   assert.ok(b.risks.some(x => /نقل الأثر/.test(x)), 'غياب نقل الأثر يظهر كمخاطرة'); assert.ok(!b.findings.some(x => /0 متابعة/.test(x)), 'المؤشر الغائب لا يُعرض صفرًا');
   assert.equal(sanitizeImpactFacts({ ...IMPACT, totals: { ...IMPACT.totals, transferMean: null } })!.totals.transferMean, null); assert.ok(b.recommendations.length >= 3); assert.ok(b.next_quarter.length >= 2);
   const e = localImpactBrief(IMPACT, 'en'); assert.match(e.headline, /40 learners/);
 });
 
-test('P9-أ: خطة المتعلم — لا روابط مختلقة، وتحويل المعرّفات غير المعروفة إلى practice', () => {
+test('P9-أ: خطة المتعلّم — لا روابط مختلقة، وتحويل المعرّفات غير المعروفة إلى practice', () => {
   const { user } = buildLearnerPrompt(LEARNER, 'ar'); assert.match(user, /ref_id/); assert.ok(user.includes('"p1"'));
   const raw = { goal: 'هدف', strengths: ['التقويم'], gaps: ['تصميم الأنشطة'], weekly_hours: 50, message: 'م', steps: [
     { title: 'حقيبة', why: 'لأن', kind: 'resource', ref_id: 'r1', hours: 2 }, { title: 'مختلق', why: 'x', kind: 'program', ref_id: 'p999' }, { title: 'جلسة', why: 'y', kind: 'session', ref_id: 'l1' }, { title: 'تطبيق', why: 'z', kind: 'practice' }] };
@@ -74,7 +74,7 @@ test('P9-أ: خطة المتعلم — لا روابط مختلقة، وتحوي
   assert.equal(parseLearnerPlan({ goal: 'x' }, LEARNER), null); assert.equal(parseLearnerPlan({ steps: [{ title: '' }] }, LEARNER), null);
 });
 
-test('P9-أ: البديل المحلي للمتعلم يستهدف أضعف مهارة ويعرض حقيبة وجلسة وبرنامجًا غير مسجّل فيه', () => {
+test('P9-أ: البديل المحلي للمتعلّم يستهدف أضعف مهارة ويعرض حقيبة وجلسة وبرنامجًا غير مسجّل فيه', () => {
   const p = localLearnerPlan(LEARNER, 'ar');
   assert.ok(p.gaps[0].includes('تصميم الأنشطة')); assert.ok(p.strengths[0].includes('التقويم'));
   const kinds = p.steps.map(s => s.kind); assert.ok(kinds.includes('resource') && kinds.includes('session') && kinds.includes('program') && kinds.includes('practice'));

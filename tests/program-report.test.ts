@@ -6,7 +6,7 @@ import { buildXlsx } from '../lib/export/xlsx';
 
 const program = { id: 'p1', name_ar: 'برنامج أ', name_en: 'Program A', start_date: '2026-09-01', end_date: '2026-10-01', status: 'ACTIVE' };
 const questions = [
-  { id: 'q1', text_ar: 'وضوح الشرح', text_en: 'Clarity', section_ar: 'المدرب', section_en: 'Trainer', kind: 'RATING_5' },
+  { id: 'q1', text_ar: 'وضوح الشرح', text_en: 'Clarity', section_ar: 'المدرّب', section_en: 'Trainer', kind: 'RATING_5' },
   { id: 'q2', text_ar: 'ملاءمة المحتوى', text_en: 'Content', section_ar: 'المحتوى', section_en: 'Content', kind: 'RATING_5' },
   { id: 'q3', text_ar: 'ملاحظات', text_en: 'Comments', section_ar: 'رأيك', section_en: 'Opinion', kind: 'LONG_TEXT' },
 ];

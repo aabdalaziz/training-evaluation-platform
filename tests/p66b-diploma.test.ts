@@ -157,11 +157,11 @@ const salem = { id: 'u-salem', email: 'salem@x.sa', name: 'د. سالم', staff:
 const hind = { id: 'u-hind', email: 'hind@x.sa', name: 'د. هند', staff: false, trainerIds: [T2] };
 const reem = { id: 'u-reem', email: 'reem@x.sa', name: 'ريم', staff: false, trainerIds: [] as string[] };
 
-test('P66-ب · المخزن: الصلاحيات (طاقم/منسّق يحرّر · أستاذ يقرأ · متدرّب 403) · حفظ سطر يولّد المحاضرات القادمة فقط · الفترة الخاصّة تعيد التوليد · الحذف يبقي الماضي', async () => {
+test('P66-ب · المخزن: الصلاحيات (طاقم/منسّق يحرّر · أستاذ يقرأ · مشارك 403) · حفظ سطر يولّد المحاضرات القادمة فقط · الفترة الخاصّة تعيد التوليد · الحذف يبقي الماضي', async () => {
   const { db, tables } = fakeDb(seed()); const now = new Date('2026-11-20T06:00:00Z'); /* الجمعة 20/11 */
   const v0 = await structureView(db, staff, P, now); assert.ok(!('error' in v0)); assert.equal(v0.can_edit, true); assert.equal(v0.courses.length, 3); assert.equal(v0.sections.length, 2); assert.equal(v0.instructors.length, 3); assert.equal(v0.program.is_diploma, true);
   const vS = await structureView(db, salem, P, now); assert.ok(!('error' in vS) && vS.can_edit === true, 'منسّق الشعبة 1 يحرّر'); const vH = await structureView(db, hind, P, now); assert.ok(!('error' in vH) && vH.can_edit === false, 'أستاذ المادة يقرأ فقط');
-  const vR = await structureView(db, reem, P, now); assert.ok('error' in vR && vR.status === 403, 'المتدرّب لا يفتح الهيكل');
+  const vR = await structureView(db, reem, P, now); assert.ok('error' in vR && vR.status === 403, 'المشارك لا يفتح الهيكل');
   assert.equal(((await saveSlot(db, hind, { program_id: P, unit_id: C1, classroom_id: S1, weekday: 0, period_no: 1, starts_at: '16:00', minutes: 110, from_day: '2026-11-15', to_day: '2026-12-13' }, now)) as any).status, 403);
   const r1 = await saveSlot(db, staff, { program_id: P, unit_id: C1, classroom_id: S1, weekday: 0, period_no: 1, starts_at: '16:00', minutes: 110, from_day: '2026-11-15', to_day: '2026-12-13', room_ar: 'قاعة 3' }, now);
   assert.ok(r1.ok); assert.equal(r1.lectures, 4, 'الأحد 15/11 مضى → 22، 29/11، 6، 13/12'); assert.equal(r1.conflicts.length, 0);
@@ -183,7 +183,7 @@ test('P66-ب · المخزن: الصلاحيات (طاقم/منسّق يحرّر
   const lst = await myPrograms(db, hind); assert.deepEqual(lst.map((p) => [p.id, p.courses, p.sections, p.role_ar]), [[P, 3, 2, 'أستاذ مادة']]); assert.equal((await myPrograms(db, salem))[0].role_ar, 'منسّق شعبة'); assert.equal((await myPrograms(db, staff)).length, 1); assert.equal((await myPrograms(db, reem)).length, 0);
 });
 
-test('P66-ب · المخزن: الاقتراح → الاعتماد يولّد · «البديل بلمسة» يبدّل أستاذ محاضرة واحدة ويبلّغ الشعبة · «الممرّ» · «ماذا عندي اليوم؟» للمتدرّبة والأستاذ · بطاقات «قبل أن تغادر» · وضع الوردية', async () => {
+test('P66-ب · المخزن: الاقتراح → الاعتماد يولّد · «البديل بلمسة» يبدّل أستاذ محاضرة واحدة ويبلّغ الشعبة · «الممرّ» · «ماذا عندي اليوم؟» للمشاركة والأستاذ · بطاقات «قبل أن تغادر» · وضع الوردية', async () => {
   const { db, tables, notices } = fakeDb(seed()); const now = new Date('2026-11-20T06:00:00Z');
   const sg = await suggest(db, staff, { program_id: P, level_no: 1, weekdays: [0, 1], times: [{ period_no: 1, starts_at: '16:00', minutes: 110 }, { period_no: 2, starts_at: '18:00', minutes: 110 }], from_day: '2026-11-22', to_day: '2026-12-20' }); assert.ok(sg.ok); assert.equal(sg.proposed.length, 4); assert.match(sg.proposed[0].line_ar, /^دبلوم الإشراف التربوي : المستوى 1 — /);
   assert.equal(((await suggest(db, staff, { program_id: P, level_no: 1, weekdays: [0], times: [], from_day: '2026-11-22', to_day: '2026-12-20' })) as any).ok, false, 'بلا أوقات لا اقتراح — المشرف يكتبها');
@@ -199,7 +199,7 @@ test('P66-ب · المخزن: الاقتراح → الاعتماد يولّد �
   const tr = await myLecturesToday(db, reem, sunday); assert.equal(tr.items.length, 2, 'مقرّران للشعبة 2 يوم الأحد'); assert.equal(tr.items[0].state, 'live'); assert.equal(tr.items[1].state, 'upcoming'); assert.match(tr.answer_ar, /^محاضرتان: /); assert.match(tr.items[0].line_ar, /شعبة 2/);
   const tt = await myLecturesToday(db, { ...salem, trainerIds: [T1] }, sunday); assert.equal(tt.items.length, slotS2.weekday === 0 ? 1 : 2, 'د. سالم: شعبتاه يوم الأحد إلا ما أُسند لبديل'); assert.ok(tt.items.every((i) => i.course === 'القيادة التربوية'));
   const th = await myLecturesToday(db, { ...hind, trainerIds: [T3] }, sunday); assert.equal(th.items.length, slotS2.weekday === 0 ? 1 : 0, 'البديل يرى محاضرة اليوم إن كانت اليوم');
-  /* بطاقات المتدرّبة · «قبل أن تغادر» · الخيط يظهر حين يبلغ من كتبوا خمسة */
+  /* بطاقات المشاركة · «قبل أن تغادر» · الخيط يظهر حين يبلغ من كتبوا خمسة */
   const cards0 = await lectureCardsFor(db, reem, [S2], sunday); const c0 = cards0.get(S2)!; assert.equal(c0.lectures.length, 2); assert.equal(c0.lectures[0].written, false); assert.equal(c0.lectures[0].thread.shown, false); assert.equal(c0.move_open, false); assert.equal(c0.lectures[0].question_ar, 'قبل أن تغادر: ماذا ستفعل بهذا غدًا؟ — سطر واحد.');
   for (let i = 0; i < 5; i += 1) tables.portal_learning_lines.push({ id: 500 + i, user_id: `x${i}`, email: `x${i}@x.sa`, classroom_id: S2, unit_id: c0.lectures[0].unit_id, kind: 'learn', day: '2026-11-15', body_ar: `سأبدأ درسي بسؤال ${i}`, blocker_ar: null });
   tables.portal_learning_lines.push({ id: 600, user_id: 'u-reem', email: 'reem@x.sa', classroom_id: S2, unit_id: c0.lectures[0].unit_id, kind: 'learn', day: '2026-11-22', body_ar: 'سطري اليوم', blocker_ar: null });
@@ -238,7 +238,7 @@ test('P66-ب · المخزن: طلب نقل الشعبة (سبب 5–200 · وا
 });
 
 test('P66-ب · الصوت والطريق · سجلّ الخزنة · شكل المصدر: SQL واحد · الكرون بعد room_calendar · سطري يقرأ التقويم المشتق ويحمل unit_id · الممرّ في دفتر اليوم', () => {
-  assert.equal(parseCommand('ماذا عندي اليوم')?.href, '/me/day', 'P51 كما هو — وفي دفتر اليوم رابط للمتدرّب'); assert.equal(parseCommand('محاضراتي اليوم')?.href, '/me/line#today'); assert.equal(parseCommand('افتح محاضراتي')?.href, '/me/line#today'); assert.equal(parseCommand('وش عندي اليوم')?.href, '/me/line#today'); assert.equal(parseCommand('هيكل الدبلوم')?.href, '/me/diploma'); assert.equal(parseCommand('افتح طلبات النقل')?.href, '/me/diploma');
+  assert.equal(parseCommand('ماذا عندي اليوم')?.href, '/me/day', 'P51 كما هو — وفي دفتر اليوم رابط للمشارك'); assert.equal(parseCommand('محاضراتي اليوم')?.href, '/me/line#today'); assert.equal(parseCommand('افتح محاضراتي')?.href, '/me/line#today'); assert.equal(parseCommand('وش عندي اليوم')?.href, '/me/line#today'); assert.equal(parseCommand('هيكل الدبلوم')?.href, '/me/diploma'); assert.equal(parseCommand('افتح طلبات النقل')?.href, '/me/diploma');
   assert.equal(parseCommand('سطري')?.href, '/me/line', 'P66 كما هو');
   assert.equal(crumbsFor('/me/diploma').at(-1)?.label, 'هيكل الدبلوم');
   assert.ok(NON_PERSONAL_TABLES.includes('portal_unit_schedules') && NON_PERSONAL_TABLES.includes('portal_schedule_periods'), 'الجدول تنظيمي بلا أفراد');

@@ -9,7 +9,7 @@ const lk: Lookups = {
   programs: [{ id: 'p1', name_ar: 'برنامج أ' }, { id: 'p2', name_ar: 'برنامج ب (صعب)' }],
   classrooms: [{ id: 'c1', code: 'A-1', program_id: 'p1', trainer_id: 't1' }, { id: 'c2', code: 'A-2', program_id: 'p1', trainer_id: 't2' }, { id: 'c3', code: 'B-1', program_id: 'p2', trainer_id: 't3' }],
   trainers: [{ id: 't1', name: 'خالد' }, { id: 't2', name: 'منى' }, { id: 't3', name: 'سعد' }],
-  questions: [{ id: 'q1', text_ar: 'الشرح', section_ar: 'المدرب', kind: 'RATING_5' }, { id: 'q2', text_ar: 'المحتوى', section_ar: 'المحتوى', kind: 'RATING_5' }],
+  questions: [{ id: 'q1', text_ar: 'الشرح', section_ar: 'المدرّب', kind: 'RATING_5' }, { id: 'q2', text_ar: 'المحتوى', section_ar: 'المحتوى', kind: 'RATING_5' }],
 };
 let seq = 0;
 function evalsFor(classroom: string, program: string, n: number, score: number, month: string) {
@@ -61,13 +61,13 @@ test('trainerFairness: shrinkage, context adjustment, ranks and confidence', () 
 });
 
 test('exec summary: facts → prompt → parse; local fallback; html; generate with/without AI', async () => {
-  const f = factsFrom({ scope: 'كل البرامج', period: 'آخر 30 يومًا', generatedAt: '2026-10-23', k: { responses: 30, participants: 28, mean: 3.9, highPct: 60, lowPct: 18, programs: 2, trainers: 3, rooms: 3, median: 4, sd: 1, gap: 0.3, perf: 'GOOD', risk: 'MED', daily: 30, final: 0, measurements: 60, firstDate: '', lastDate: '', days: 30, perDay: 1, dist: [1, 2, 3, 4, 5] } as any, cmp: { deltaMean: -0.2 } as any, axes: [{ label: 'المدرب', mean: 4.5, n: 30 }, { label: 'المحتوى', mean: 3.2, n: 30 }] as any, programs: [{ label: 'أ', mean: 4.4, responses: 20, n: 40 }, { label: 'ب', mean: 3.1, responses: 10, n: 20 }] as any, trainers: [] as any, actions: [{ label: 'المحتوى', recommendation: 'راجع المادة', priority: 'HIGH' }] as any, extras: { chain_index: 64, open_notifications: 3 } });
+  const f = factsFrom({ scope: 'كل البرامج', period: 'آخر 30 يومًا', generatedAt: '2026-10-23', k: { responses: 30, participants: 28, mean: 3.9, highPct: 60, lowPct: 18, programs: 2, trainers: 3, rooms: 3, median: 4, sd: 1, gap: 0.3, perf: 'GOOD', risk: 'MED', daily: 30, final: 0, measurements: 60, firstDate: '', lastDate: '', days: 30, perDay: 1, dist: [1, 2, 3, 4, 5] } as any, cmp: { deltaMean: -0.2 } as any, axes: [{ label: 'المدرّب', mean: 4.5, n: 30 }, { label: 'المحتوى', mean: 3.2, n: 30 }] as any, programs: [{ label: 'أ', mean: 4.4, responses: 20, n: 40 }, { label: 'ب', mean: 3.1, responses: 10, n: 20 }] as any, trainers: [] as any, actions: [{ label: 'المحتوى', recommendation: 'راجع المادة', priority: 'HIGH' }] as any, extras: { chain_index: 64, open_notifications: 3 } });
   assert.equal(f.kpis?.mean, 3.9); assert.equal(f.axesLow[0].label, 'المحتوى'); assert.equal(f.programs.length, 2);
   const p = buildSummaryPrompt(f); assert.ok(p.system.includes('4.2')); assert.ok(p.user.includes('"mean":3.9'));
   assert.deepEqual(parseSummary('نص قبل {"headline":"عنوان","bullets":["أ","ب"],"risks":[],"actions":["افعل"]} نص بعد'), { headline: 'عنوان', bullets: ['أ', 'ب'], risks: [], actions: ['افعل'] });
   assert.equal(parseSummary('لا يوجد json'), null); assert.equal(parseSummary('{"bullets":[]}'), null);
   const loc = localSummary(f);
-  assert.equal(loc.source, 'local'); assert.ok(loc.headline.includes('30 استبانة')); assert.ok(loc.headline.includes('بتراجع')); assert.ok(loc.risks.some(r => r.includes('18%'))); assert.ok(loc.risks.some(r => r.includes('3 تنبيه'))); assert.ok(loc.bullets.some(b => b.includes('64/100')));
+  assert.equal(loc.source, 'local'); assert.ok(loc.headline.includes('30 استبيان')); assert.ok(loc.headline.includes('بتراجع')); assert.ok(loc.risks.some(r => r.includes('18%'))); assert.ok(loc.risks.some(r => r.includes('3 تنبيه'))); assert.ok(loc.bullets.some(b => b.includes('64/100')));
   const html = summaryHtml(loc); assert.ok(html.includes('تحليل آلي') && html.includes(loc.headline));
   const empty = localSummary({ ...f, kpis: null }); assert.ok(empty.headline.includes('لا توجد تقييمات'));
   // AI path

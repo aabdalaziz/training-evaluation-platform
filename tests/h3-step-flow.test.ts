@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/* هـ-3 ن «محطّات»: أدوات التقييم والاستطلاع الأربع على عدّة التدفّق — شاشة لكل محور، ونفس الهوية */
+/* هـ-3 ن «محطّات»: أدوات التقييم والاستبيان الأربع على عدّة التدفّق — شاشة لكل محور، ونفس الهوية */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { STATEMENTS, STATEMENT_AXES, statementsOfAxis } from '../lib/surveys/rem
 const R = (p: string) => readFileSync(p, 'utf8');
 const TOOLS = ['app/survey/remote-learning/page.tsx', 'app/evaluate/[kind]/page.tsx', 'app/impact/[token]/ImpactForm.tsx', 'app/followup/[token]/FollowupForm.tsx'];
 
-test('هـ-3 ن: محاور الاستطلاع عن بُعد تغطّي العبارات الثلاث عشرة مرة واحدة', () => {
+test('هـ-3 ن: محاور الاستبيان عن بُعد تغطّي العبارات الثلاث عشرة مرة واحدة', () => {
   const keys = STATEMENT_AXES.flatMap(a => a.keys);
   assert.equal(new Set(keys).size, keys.length);
   assert.deepEqual([...keys].sort(), STATEMENTS.map(s => s.key).sort());

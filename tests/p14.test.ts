@@ -46,7 +46,7 @@ test('P14-أ · بناء الشبكة: عقد بأنواعها، أدلة موز
   const missionCh = g.edges.find(e => e.src === 'channel:mission' && e.dst === `skill:${SK1}`); assert.ok(missionCh, 'قناة المهمات');
   assert.equal(Number((missionCh!.meta as any).transfer), 7, 'كل المهمات المؤكَّدة نُقلت إلى العمل');
   assert.ok(!g.edges.some(e => e.src === 'channel:viewed'), 'المشاهدة لا تُحتسب دليلًا');
-  const trainer = g.edges.find(e => e.src === `trainer:${TR1}` && e.dst === `skill:${SK2}` && e.rel === 'raised'); assert.ok(trainer, 'المدرب رفع المهارة عبر جلسته');
+  const trainer = g.edges.find(e => e.src === `trainer:${TR1}` && e.dst === `skill:${SK2}` && e.rel === 'raised'); assert.ok(trainer, 'المدرّب رفع المهارة عبر جلسته');
   const sessProg = g.edges.find(e => e.src === `session:${S1}` && e.dst === `program:${P2}` && e.rel === 'belongs'); assert.ok(sessProg, 'الجلسة تنتمي للبرنامج');
   const inv = g.edges.find(e => e.src === `org:${ORG1}` && e.dst === `program:${P1}` && e.rel === 'invested'); assert.ok(inv, 'الجهة استثمرت في البرنامج'); assert.equal(inv!.weight, 1.5, 'معتمد 1 + معلّق 0.5');
   assert.ok(g.edges.some(e => e.src === 'contract:c1' && e.dst === `program:${P1}` && e.rel === 'targets'), 'العقد يستهدف البرنامج');
@@ -145,6 +145,6 @@ test('P14-ب · بطاقة الاكتشاف + JSON-LD + المكتب الزجا�
 
 test('P14 · العدد والمعدود بالعربية في نصوص الأدلة (المصطلح الصحيح)', () => {
   assert.equal(evN(1), 'دليل واحد', 'مفرد'); assert.equal(evN(2), 'دليلان', 'مثنى'); assert.equal(evN(7), '7 أدلة', 'جمع 3–10'); assert.equal(evN(21), '21 دليلًا', 'مفرد منصوب 11–99'); assert.equal(evN(100), '100 دليل', 'المئات'); assert.equal(evN(0), '0 أدلة', 'صفر');
-  assert.equal(peopleN(5), '5 أشخاص', 'أشخاص'); assert.equal(learnerN(12), '12 متعلمًا', 'متعلمًا'); assert.equal(arCount(3.6, 'a', 'b', 'c', 'd', 'e'), '4 c', 'تقريب');
-  const g = buildGraph(sources()); const a = runTemplate('top_programs_for_skill', g, { skill: SK1 })!; assert.ok(!/\d+ دليلًا\b/.test(a.answer_ar.replace(/\d{2,} دليلًا/g, '')), 'لا «7 دليلًا» في الإجابات'); assert.match(JSON.stringify(a), /7 أدلة|7 أشخاص|7 متعلمين/, 'الصيغة الصحيحة تظهر');
+  assert.equal(peopleN(5), '5 أشخاص', 'أشخاص'); assert.equal(learnerN(12), '12 متعلّمًا', 'متعلّمًا'); assert.equal(arCount(3.6, 'a', 'b', 'c', 'd', 'e'), '4 c', 'تقريب');
+  const g = buildGraph(sources()); const a = runTemplate('top_programs_for_skill', g, { skill: SK1 })!; assert.ok(!/\d+ دليلًا\b/.test(a.answer_ar.replace(/\d{2,} دليلًا/g, '')), 'لا «7 دليلًا» في الإجابات'); assert.match(JSON.stringify(a), /7 أدلة|7 أشخاص|7 متعلّمين/, 'الصيغة الصحيحة تظهر');
 });

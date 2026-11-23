@@ -1,5 +1,5 @@
 /**
- * المرحلة I — مقارنة الدفعات ومقارنة المدربين بعدالة إحصائية — دوال نقية بلا تبعيات
+ * المرحلة I — مقارنة الدفعات ومقارنة المدرّبين بعدالة إحصائية — دوال نقية بلا تبعيات
  */
 import { applyFilters, groupBy, kpis, factsOf, mean, sd, TARGET, THRESHOLDS } from './analytics';
 import type { Evaluation, Fact, Lookups, GroupRow, Lang } from './analytics';
@@ -21,7 +21,7 @@ const AR_MONTHS = ['يناير', 'فبراير', 'مارس', 'أبريل', 'ما
 export function monthLabel(k: string): string { const m = Number(k.slice(5, 7)); return `${AR_MONTHS[m - 1] || k} ${k.slice(0, 4)}`; }
 export function perfOf(m: number | null, n: number): CohortRow['perf'] { if (m == null || n < THRESHOLDS.minSample) return 'na'; return m >= THRESHOLDS.excellent ? 'ok' : m >= THRESHOLDS.good ? 'info' : m >= THRESHOLDS.watch ? 'warn' : 'bad'; }
 
-/** تقسيم تقييمات برنامج إلى دفعات (حسب القاعة أو الشهر أو الربع) ومقارنتها */
+/** تقسيم تقييمات برنامج إلى دفعات (حسب الشعبة أو الشهر أو الربع) ومقارنتها */
 export function cohorts(programId: string, all: Evaluation[], facts: Fact[], lk: Lookups, mode: CohortMode, lang: Lang = 'ar'): CohortRow[] {
   const evals = applyFilters(all, { programId, kind: 'ALL' }, lk);
   const groups = new Map<string, Evaluation[]>();
@@ -36,7 +36,7 @@ export function cohorts(programId: string, all: Evaluation[], facts: Fact[], lk:
     const axes = groupBy('axis', es, fx, lk, lang).filter(a => a.n >= 3).sort((a, b) => b.mean - a.mean).map(a => ({ label: a.label, mean: Math.round(a.mean * 100) / 100 }));
     const dates = es.map(e => e.date).filter(Boolean).sort();
     const trainers = Array.from(new Set(es.map(e => e.trainer_id).filter(Boolean).map(t => lk.trainers.find(x => x.id === t)?.name || ''))).filter(Boolean);
-    const label = mode === 'classroom' ? (lk.classrooms.find(c => c.id === key)?.code || (lang === 'ar' ? 'بدون قاعة' : 'No room')) : mode === 'month' ? monthLabel(key) : key;
+    const label = mode === 'classroom' ? (lk.classrooms.find(c => c.id === key)?.code || (lang === 'ar' ? 'بدون شعبة' : 'No room')) : mode === 'month' ? monthLabel(key) : key;
     rows.push({ key, label, from: dates[0] || '', to: dates[dates.length - 1] || '', n: k.responses, participants: k.participants, mean: k.responses ? Math.round(k.mean * 100) / 100 : null, highPct: Math.round(k.highPct), lowPct: Math.round(k.lowPct), sd: Math.round(k.sd * 100) / 100, trainers, delta: null, vsBest: null, axes, perf: perfOf(k.responses ? k.mean : null, k.responses) });
   });
   rows.sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : a.label.localeCompare(b.label, 'ar')));
@@ -52,10 +52,10 @@ export function cohorts(programId: string, all: Evaluation[], facts: Fact[], lk:
 export type CohortInsight = { kind: 'ok' | 'info' | 'warn' | 'bad'; text: string };
 export function cohortInsights(rows: CohortRow[]): CohortInsight[] {
   const out: CohortInsight[] = []; const valid = rows.filter(r => r.mean != null && r.n >= THRESHOLDS.minSample);
-  if (valid.length < 2) return [{ kind: 'info', text: 'تحتاج دفعتين على الأقل (بعينة ≥ 5 استبانات لكل منهما) لإجراء مقارنة موثوقة.' }];
+  if (valid.length < 2) return [{ kind: 'info', text: 'تحتاج دفعتين على الأقل (بعينة ≥ 5 استبيانات لكل منهما) لإجراء مقارنة موثوقة.' }];
   const best = valid.reduce((a, b) => ((b.mean as number) > (a.mean as number) ? b : a)); const worst = valid.reduce((a, b) => ((b.mean as number) < (a.mean as number) ? b : a));
   const spread = Math.round(((best.mean as number) - (worst.mean as number)) * 100) / 100;
-  out.push({ kind: spread >= 0.5 ? 'warn' : 'ok', text: spread >= 0.5 ? `تفاوت كبير بين الدفعات (${spread} نقطة): الأفضل «${best.label}» ${best.mean} والأدنى «${worst.label}» ${worst.mean} — ابحث عن الفرق في المدرب/التوقيت/المحتوى.` : `اتساق جيد بين الدفعات (الفارق ${spread} نقطة فقط) — جودة التنفيذ مستقرة.` });
+  out.push({ kind: spread >= 0.5 ? 'warn' : 'ok', text: spread >= 0.5 ? `تفاوت كبير بين الدفعات (${spread} نقطة): الأفضل «${best.label}» ${best.mean} والأدنى «${worst.label}» ${worst.mean} — ابحث عن الفرق في المدرّب/التوقيت/المحتوى.` : `اتساق جيد بين الدفعات (الفارق ${spread} نقطة فقط) — جودة التنفيذ مستقرة.` });
   const last = valid[valid.length - 1]; const first = valid[0];
   if (valid.length >= 3) { const trend = (last.mean as number) - (first.mean as number); out.push({ kind: trend >= 0.2 ? 'ok' : trend <= -0.2 ? 'bad' : 'info', text: trend >= 0.2 ? `اتجاه تحسّن عبر الزمن: من ${first.mean} إلى ${last.mean} (+${Math.round(trend * 100) / 100}).` : trend <= -0.2 ? `اتجاه تراجع عبر الزمن: من ${first.mean} إلى ${last.mean} (${Math.round(trend * 100) / 100}) — تدخّل مطلوب قبل الدفعة القادمة.` : 'الأداء مستقر عبر الزمن دون اتجاه واضح.' }); }
   const below = valid.filter(r => (r.mean as number) < TARGET);
@@ -67,8 +67,8 @@ export function cohortInsights(rows: CohortRow[]): CohortInsight[] {
   return out;
 }
 
-/* ------------------------------------------------------------------ المدربون بعدالة */
-export const SHRINK_K = 10; // قوة الانكماش نحو المتوسط العام (تعادل 10 استبانات)
+/* ------------------------------------------------------------------ المدرّبون بعدالة */
+export const SHRINK_K = 10; // قوة الانكماش نحو المتوسط العام (تعادل 10 استبيانات)
 export type TrainerRow = {
   id: string; name: string; n: number; participants: number; programs: number; rooms: number;
   raw: number | null;        // المتوسط الخام
@@ -88,7 +88,7 @@ export function trainerFairness(all: Evaluation[], facts: Fact[], lk: Lookups, o
   const rows: TrainerRow[] = byTrainer.filter(t => t.key && t.key !== '').map(t => {
     const mine = evals.filter(e => e.trainer_id === t.key);
     const progs = new Set(mine.map(e => e.program_id || '')); const rooms = new Set(mine.map(e => e.classroom_id || ''));
-    // السياق: متوسط (متوسط المدرب في البرنامج − متوسط البرنامج) موزونًا بعدد الاستبانات
+    // السياق: متوسط (متوسط المدرّب في البرنامج − متوسط البرنامج) موزونًا بعدد الاستبيانات
     let acc = 0, w = 0;
     progs.forEach(pid => { const es = mine.filter(e => e.program_id === pid); const fx = factsOf(es, facts); if (!fx.length) return; const m = mean(fx.map(f => f.value)); const pm = progMean.get(pid); if (pm == null) return; acc += (m - pm) * es.length; w += es.length; });
     const context = w ? Math.round((acc / w) * 100) / 100 : null;
@@ -106,21 +106,21 @@ export function trainerFairness(all: Evaluation[], facts: Fact[], lk: Lookups, o
 export function fairnessNotes(res: ReturnType<typeof trainerFairness>): string[] {
   const out: string[] = [];
   const r = res.rows; const ranked = r.filter(x => x.rank);
-  if (!ranked.length) return ['لا توجد عينات كافية (≥ 5 استبانات لكل مدرب) لترتيب عادل.'];
+  if (!ranked.length) return ['لا توجد عينات كافية (≥ 5 استبيانات لكل مدرّب) لترتيب عادل.'];
   const flipped = r.filter(x => x.raw != null && x.adjusted != null && x.rank && Math.abs(x.raw - x.adjusted) >= 0.15);
-  if (flipped.length) out.push(`${flipped.length} مدربًا تغيّر تقديرهم بعد التصحيح الإحصائي (عينات صغيرة): لا تعتمد المتوسط الخام وحده — ${flipped.slice(0, 3).map(x => `${x.name} ${x.raw}→${x.adjusted}`).join('، ')}.`);
+  if (flipped.length) out.push(`${flipped.length} مدرّبًا تغيّر تقديرهم بعد التصحيح الإحصائي (عينات صغيرة): لا تعتمد المتوسط الخام وحده — ${flipped.slice(0, 3).map(x => `${x.name} ${x.raw}→${x.adjusted}`).join('، ')}.`);
   const hardCtx = r.filter(x => x.context != null && x.context >= 0.2 && x.raw != null && res.globalMean != null && x.raw < res.globalMean);
   if (hardCtx.length) out.push(`${hardCtx.map(x => x.name).join('، ')}: متوسط خام دون العام لكنهم يتفوقون على متوسط برامجهم (برامج أصعب) — يستحقون تقديرًا سياقيًا.`);
   const lowConf = r.filter(x => x.confidence === 'low' || x.confidence === 'none');
-  if (lowConf.length) out.push(`${lowConf.length} مدربًا بعينة صغيرة (< 10 استبانات) — فواصل الثقة واسعة؛ تجنّب القرارات الفردية قبل اكتمال العينة.`);
-  const top = ranked[0]; if (top) out.push(`الأعلى بعد التصحيح: ${top.name} (${top.adjusted} ± ${top.ci ?? '—'}) على ${top.n} استبانة في ${top.programs} برنامج.`);
+  if (lowConf.length) out.push(`${lowConf.length} مدرّبًا بعينة صغيرة (< 10 استبيانات) — فواصل الثقة واسعة؛ تجنّب القرارات الفردية قبل اكتمال العينة.`);
+  const top = ranked[0]; if (top) out.push(`الأعلى بعد التصحيح: ${top.name} (${top.adjusted} ± ${top.ci ?? '—'}) على ${top.n} استبيان في ${top.programs} برنامج.`);
   return out;
 }
 
 export function cohortsCsv(programName: string, rows: CohortRow[]): (string | number | null)[][] {
-  return [['البرنامج', 'الدفعة', 'من', 'إلى', 'استبانات', 'مشاركون', 'المتوسط', '% مرتفع', '% منخفض', 'الانحراف', 'الفرق عن السابقة', 'الفرق عن الأفضل', 'المدربون'], ...rows.map(r => [programName, r.label, r.from, r.to, r.n, r.participants, r.mean, r.highPct, r.lowPct, r.sd, r.delta, r.vsBest, r.trainers.join('، ')])];
+  return [['البرنامج', 'الدفعة', 'من', 'إلى', 'استبيانات', 'مشاركون', 'المتوسط', '% مرتفع', '% منخفض', 'الانحراف', 'الفرق عن السابقة', 'الفرق عن الأفضل', 'المدرّبون'], ...rows.map(r => [programName, r.label, r.from, r.to, r.n, r.participants, r.mean, r.highPct, r.lowPct, r.sd, r.delta, r.vsBest, r.trainers.join('، ')])];
 }
 export function trainersCsv(rows: TrainerRow[]): (string | number | null)[][] {
-  return [['الترتيب', 'المدرب', 'استبانات', 'مشاركون', 'برامج', 'قاعات', 'المتوسط الخام', 'المعدّل (انكماش)', 'السياق (± عن البرنامج)', '± ثقة 95%', '% منخفض', 'الثقة', 'الاتجاه'], ...rows.map(r => [r.rank, r.name, r.n, r.participants, r.programs, r.rooms, r.raw, r.adjusted, r.context, r.ci, r.lowPct, r.confidence, r.delta])];
+  return [['الترتيب', 'المدرّب', 'استبيانات', 'مشاركون', 'برامج', 'شُعب', 'المتوسط الخام', 'المعدّل (انكماش)', 'السياق (± عن البرنامج)', '± ثقة 95%', '% منخفض', 'الثقة', 'الاتجاه'], ...rows.map(r => [r.rank, r.name, r.n, r.participants, r.programs, r.rooms, r.raw, r.adjusted, r.context, r.ci, r.lowPct, r.confidence, r.delta])];
 }
 export { sd };

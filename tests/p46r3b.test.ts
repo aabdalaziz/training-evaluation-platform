@@ -25,11 +25,11 @@ function fullStudy(): StudyBody {
     summary: { executive: LONG + LONG },
     problem: { statement: 'ضعف توثيق الإجراءات', objectives: ['تشخيص الوضع'], questions: ['ما نسبة الإجراءات الموثَّقة؟'] },
     method: { tools: ['interviews', 'documents', 'athar_data', 'bogus'], sample: '12 مقابلة', period: 'أكتوبر 2026', limits: '' },
-    findings: { items: [{ text: 'نسبة التوثيق 30%', evidence: 'جرد 40 إجراء', source: 'وثائق' }, { text: 'غياب مؤشّرات', evidence: 'لا لوحة مؤشّرات', source: 'ملاحظة' }, { text: 'رضا المتدرّبين 72%', evidence: 'استبانة أَثَر', source: 'بيانات أَثَر' }], kpis: [{ name: 'نسبة التوثيق', value: '30', unit: '%', source: 'جرد' }] },
+    findings: { items: [{ text: 'نسبة التوثيق 30%', evidence: 'جرد 40 إجراء', source: 'وثائق' }, { text: 'غياب مؤشّرات', evidence: 'لا لوحة مؤشّرات', source: 'ملاحظة' }, { text: 'رضا المشاركين 72%', evidence: 'استبيان أَثَر', source: 'بيانات أَثَر' }], kpis: [{ name: 'نسبة التوثيق', value: '30', unit: '%', source: 'جرد' }] },
     analysis: { gaps: [{ target: 'توثيق 100%', current: '30%', gap: '70 نقطة', priority: 'high' }, { target: 'لوحة مؤشّرات', current: 'لا شيء', gap: 'غياب كامل', priority: 'mid' }], reading: 'الفجوة الأكبر في التوثيق.' },
     recommendations: { items: [{ text: 'إطلاق مشروع توثيق', ref: 'g:0', horizon: 'near', priority: 'high', owner: 'وحدة الجودة', cost: 'mid', indicator: 'نسبة التوثيق ≥ 80% خلال 6 أشهر' }, { text: 'بناء لوحة مؤشّرات', ref: 'f:1', horizon: 'mid', priority: 'mid', owner: 'التخطيط', cost: 'low', indicator: 'لوحة شهرية' }] },
     plan: { phases: [{ title: 'التهيئة', duration: '4 أسابيع', owner: 'الجودة', output: 'خطة' }], risks: ['انشغال الفريق'], followup: 'مراجعة ربع سنوية' },
-    annexes: ['أداة الاستبانة'],
+    annexes: ['أداة الاستبيان'],
   }, emptyStudyBody());
 }
 const ME = { id: 'u2', email: 'staff@x.sa', staff: true, admin: false }; const ADMIN = { id: 'u1', email: 'admin@x.sa', staff: true, admin: true };
@@ -81,7 +81,7 @@ test('ر3-ب: من نقاطي إلى فقرة — محلي · البرومبت �
   assert.equal(parseBulletsParagraph(JSON.stringify({ text: ('نسبة التوثيق 30% و12 مقابلة ولا لوحة مؤشّرات. ').repeat(12) }), inp), null, `too long (> ${BULLETS_RATIO}×)`);
   assert.equal(parseBulletsParagraph('not json', inp), null);
 });
-test('ر3-ب: من يعتمد — الطاقم غير الكاتب، ومدير المنصة يعتمد حتى ما كتبه', () => {
+test('ر3-ب: من يعتمد — الطاقم غير الكاتب، ومدير البوّابة يعتمد حتى ما كتبه', () => {
   const r = { status: 'submitted', author_id: 'u2', author_email: 'staff@x.sa' };
   assert.ok(canDecide(r, ME), 'ر3: canDecide لا يستثني الكاتب'); assert.equal(canDecideDoc(r, ME), false, 'ر3-ب: الكاتب لا يعتمد'); assert.ok(canDecideDoc(r, { ...ME, id: 'u3', email: 'other@x.sa' }), 'زميل'); assert.ok(canDecideDoc({ ...r, author_id: 'u1', author_email: 'admin@x.sa' }, ADMIN), 'admin self');
   assert.equal(canDecideDoc({ ...r, status: 'draft' }, { ...ME, id: 'u3' }), false);

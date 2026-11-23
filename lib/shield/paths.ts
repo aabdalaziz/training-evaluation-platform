@@ -5,7 +5,7 @@
  */
 /** المسارات الإدارية التي تعرض بيانات شخصية (بادئة → عنوان عربي). ما ليس هنا لا يُسجَّل (كتالوجات/إعدادات/تجميعات بلا أسماء). */
 export const PII_PATHS: { prefix: string; title_ar: string }[] = [
-  { prefix: '/admin/enrollments', title_ar: 'التسجيلات' }, { prefix: '/admin/management', title_ar: 'القاعات والمجموعات' }, { prefix: '/admin/attendance', title_ar: 'الحضور' },
+  { prefix: '/admin/enrollments', title_ar: 'التسجيلات' }, { prefix: '/admin/management', title_ar: 'الشُّعب' }, { prefix: '/admin/attendance', title_ar: 'الحضور' },
   { prefix: '/admin/placements', title_ar: 'التسكين' }, { prefix: '/admin/payments', title_ar: 'المدفوعات' }, { prefix: '/admin/contracts', title_ar: 'العقود' },
   { prefix: '/admin/consulting', title_ar: 'طلبات الاستشارة' }, { prefix: '/admin/certificates', title_ar: 'الشهادات' }, { prefix: '/admin/awards', title_ar: 'الجوائز' },
   { prefix: '/admin/reports', title_ar: 'التقارير' }, { prefix: '/admin/vault', title_ar: 'خزنة أَثَر' }, { prefix: '/admin/audit', title_ar: 'سجلّ التدقيق' },

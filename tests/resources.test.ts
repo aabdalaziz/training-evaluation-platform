@@ -65,7 +65,7 @@ test('resources: catalogs, labels, icons exist', () => {
 test('resources: file helpers', () => {
   assert.equal(fmtSize(0, 'ar'), '—'); assert.equal(fmtSize(900, 'en'), '900 B'); assert.equal(fmtSize(1536, 'en'), '1.5 KB'); assert.equal(fmtSize(5 * 1024 * 1024, 'ar'), '5.0 م.ب'); assert.equal(fmtSize(120 * 1024 * 1024, 'en'), '120 MB');
   assert.equal(fileKind('a.PDF'), 'pdf'); assert.equal(fileKind('x.docx'), 'doc'); assert.equal(fileKind('x.pptx'), 'slides'); assert.equal(fileKind('x.xlsx'), 'sheet'); assert.equal(fileKind('x.mp4'), 'video'); assert.equal(fileKind('x.bin', 'image/png'), 'image'); assert.equal(fileKind('x.zip'), 'zip'); assert.equal(fileKind('x.unknown'), 'file');
-  const n = storageName('دليل المدرب (نسخة 2).pdf'); assert.ok(/^[0-9a-z]+-/.test(n)); assert.ok(!n.includes(' ')); assert.ok(n.endsWith('.pdf')); assert.ok(n.includes('دليل_المدرب'));
+  const n = storageName('دليل المدرّب (نسخة 2).pdf'); assert.ok(/^[0-9a-z]+-/.test(n)); assert.ok(!n.includes(' ')); assert.ok(n.endsWith('.pdf')); assert.ok(n.includes('دليل_المدرّب'));
   assert.ok(storageName('!!!').endsWith('-file') || storageName('!!!').length > 2);
 });
 

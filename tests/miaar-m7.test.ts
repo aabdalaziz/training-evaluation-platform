@@ -61,7 +61,7 @@ test('م7: رقم الهوية يُقبل في بيانات المتقدّم م�
   const c3 = normalizeCandidate({ name: 'سارة', email: 's@x.io' }); assert.equal(c3?.idNumber, undefined);
 });
 
-test('م7: حالات الخدمة الست بأسمائها العربية · والطريق إلى بوابة الجهة', () => {
+test('م7: حالات الخدمة الست بأسمائها العربية · والطريق إلى بوّابة الجهة', () => {
   assert.deepEqual([...SERVICE_STATUS], ['prepared', 'open', 'rating', 'delivered', 'invoiced', 'cancelled']); assert.equal(SERVICE_STATUS_AR.delivered, 'سُلِّم'); assert.ok(isServiceStatus('rating')); assert.ok(!isServiceStatus('paid'));
-  const c = crumbsFor('/miaar/client/abcdef', 'ar'); assert.ok(c.some((x: any) => x.label === 'بوابة الجهة' && x.dead === true), JSON.stringify(c)); assert.equal(c[c.length - 1].current, true);
+  const c = crumbsFor('/miaar/client/abcdef', 'ar'); assert.ok(c.some((x: any) => x.label === 'بوّابة الجهة' && x.dead === true), JSON.stringify(c)); assert.equal(c[c.length - 1].current, true);
 });

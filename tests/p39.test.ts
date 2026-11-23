@@ -48,7 +48,7 @@ test('محطة الجهة: لا تُفتح دون خمسة منسوبين · ا�
   assert.match(orgSaidLine({ org_ar: 'جامعة أَثَر', state: 'partly', state_ar: 'تغيّر جزئي', text_ar: 'ن', written_at: 'x' }), /^وقالت جامعة أَثَر بعد سنة — تغيّر جزئي/);
 });
 
-test('القياس: الالتحاق ↔ أول قياس بعد البرنامج · سطر المتدرّب · سطر البرنامج من خمسة بالكلمات لا نسب', () => {
+test('القياس: الالتحاق ↔ أول قياس بعد البرنامج · سطر المشارك · سطر البرنامج من خمسة بالكلمات لا نسب', () => {
   const m = measureOf('A2', { level: 'B1', at: '2026-10-12T09:00:00Z', code: 'ML-AAAA-BBBB' }); assert.equal(m.steps, 1); assert.equal(m.line_ar, 'كنت A2 عند الالتحاق، وقِست B1 في 2026-10-12 — تقدّمت مستوى.');
   assert.equal(measureOf('PRE_A1', { level: 'A2', at: '2026-10-12', code: null }).steps, 2); assert.equal(measureOf('B1', { level: 'B1', at: '2026-10-12', code: null }).line_ar.includes('المستوى نفسه'), true);
   const none = measureOf('A2', null); assert.equal(none.has_after, false); assert.match(none.line_ar, /لم تقِس/);

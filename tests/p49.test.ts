@@ -27,7 +27,7 @@ test('P49 · الرمز: 6 أحرف من أبجدية بلا التباس (لا 
   assert.equal(normalizeCode(' ab-c2 34 '), 'ABC234'); assert.equal(normalizeCode('abc10'), 'ABC'); assert.equal(normalizeCode(null), ''); assert.equal(normalizeCode('A'.repeat(20)).length, 12);
   assert.equal(shortUrl('https://athar-portal.vercel.app/', 'ABC234'), 'https://athar-portal.vercel.app/e/ABC234'); assert.equal(shortUrl('', 'X'), '/e/X');
 });
-test('P49 · الحالة الزمنية: مفتوح/لم يُفتح/أُغلق/موقوف + النصّ للمتدرّب', () => {
+test('P49 · الحالة الزمنية: مفتوح/لم يُفتح/أُغلق/موقوف + النصّ للمشارك', () => {
   assert.equal(linkState(L(), NOW), 'open'); assert.equal(linkState(L({ active: false }), NOW), 'off'); assert.equal(linkState(null, NOW), 'off');
   assert.equal(linkState(L({ opens_at: '2026-11-05T00:00:00Z' }), NOW), 'before'); assert.equal(linkState(L({ closes_at: '2026-11-03T00:00:00Z' }), NOW), 'after');
   assert.equal(linkState(L({ opens_at: '2026-11-01T00:00:00Z', closes_at: '2026-11-30T00:00:00Z' }), NOW), 'open');
@@ -76,7 +76,7 @@ test('P49 · NPS 0–10: المروّجون 9–10 · المحايدون 7–8 �
   assert.equal(npsSummary([10, 10, 9]).score, 100); assert.equal(npsSummary([0, 1]).score, -100); assert.equal(npsSummary([]).score, null);
   assert.equal(NPS_BAND_AR(50), 'ممتاز'); assert.equal(NPS_BAND_AR(0), 'جيد'); assert.equal(NPS_BAND_AR(-1), 'يحتاج انتباهًا'); assert.equal(NPS_BAND_AR(null), '—');
 });
-test('P49-د · بذرة الاستبيان الختامي الشامل: 53 بندًا = 47 ليكرت + 4 آراء + تقدير عام + ترشيح؛ مفاتيح فريدة؛ 8 أقسام بترتيب رحلة المتدرّب؛ المفاتيح القديمة باقية؛ لا «أكاديمية»', () => {
+test('P49-د · بذرة الاستبيان الختامي الشامل: 53 بندًا = 47 ليكرت + 4 آراء + تقدير عام + ترشيح؛ مفاتيح فريدة؛ 8 أقسام بترتيب رحلة المشارك؛ المفاتيح القديمة باقية؛ لا «أكاديمية»', () => {
   const st = endSurveyStats(); assert.equal(st.total, 53); assert.equal(st.likert, 47); assert.equal(st.text, 4); assert.equal(st.choice, 1); assert.equal(st.nps, 1);
   assert.equal(new Set(END_SURVEY_SEED.map(q => q.key)).size, 53);
   const sections = Array.from(new Set(END_SURVEY_SEED.filter(q => q.kind === 'LIKERT_5').map(q => q.section_ar))); assert.deepEqual(sections, END_SURVEY_SECTIONS_AR); assert.equal(sections.length, 8);
@@ -99,7 +99,7 @@ test('P49 · صفّ الإجابة: NPS نصًّا (لا يُفسد متوسّط
   assert.equal(answerRow('SINGLE_CHOICE', 'ممتاز').selected_option, 'ممتاز'); assert.deepEqual(answerRow('MULTI_CHOICE', ['a', 'b']).selected_options, ['a', 'b']); assert.equal(answerRow('LONG_TEXT', ' رأي ').text_value, ' رأي ');
   assert.equal(likertValue(0), 5); assert.equal(likertValue(4), 1); assert.equal(likertLabel(5), 'موافق بقوة'); assert.equal(likertLabel(1, 'en'), 'Strongly disagree'); assert.equal(likertLabel(9), '9');
 });
-test('P49-ب · بلغة المتدرّب: auto/ar/en · لغة المتصفّح تُحسم فقط عند auto · التحقّق يحمل lang', () => {
+test('P49-ب · بلغة المشارك: auto/ar/en · لغة المتصفّح تُحسم فقط عند auto · التحقّق يحمل lang', () => {
   assert.deepEqual([...LINK_LANGS], ['auto', 'ar', 'en']); assert.equal(normalizeLinkLang('EN'), 'en'); assert.equal(normalizeLinkLang('fr'), 'auto'); assert.equal(normalizeLinkLang(null), 'auto'); assert.equal(LINK_LANG_AR.en, 'English');
   assert.equal(resolveOpenLang('auto', 'en-US'), 'en'); assert.equal(resolveOpenLang('auto', 'ur-PK'), 'en'); assert.equal(resolveOpenLang('auto', 'ar-SA'), 'ar'); assert.equal(resolveOpenLang('auto', ''), 'ar'); assert.equal(resolveOpenLang('auto', null, 'en'), 'en');
   assert.equal(resolveOpenLang('ar', 'en-US'), 'ar'); assert.equal(resolveOpenLang('en', 'ar-SA'), 'en');

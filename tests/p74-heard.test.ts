@@ -22,7 +22,7 @@ test('P74 · العتبتان معًا: 5 شُعب و20 فردًا — وإلا 
   assert.equal(heardOf([], new Set(), now).why, 'empty');
   const fourRooms = week(1, ['a', 'b', 'c', 'd'], 10); const v4 = heardOf(fourRooms, new Set(), now); assert.equal(v4.shown, false); assert.equal(v4.why, 'sections'); assert.equal(v4.sections, 4); assert.equal(v4.people, 40);
   const fiveSmall = week(1, ['a', 'b', 'c', 'd', 'e'], 3); const v5 = heardOf(fiveSmall, new Set(), now); assert.equal(v5.shown, false); assert.equal(v5.why, 'people'); assert.equal(v5.people, 15);
-  const ok = week(1, ['a', 'b', 'c', 'd', 'e'], 4); const v = heardOf(ok, new Set(), now); assert.equal(v.shown, true); assert.equal(v.why, 'ok'); assert.equal(v.people, 20); assert.equal(v.sections, 5); assert.ok(v.head_ar.includes('5 شُعب')); assert.ok(v.head_ar.includes('20 متدرّبًا'));
+  const ok = week(1, ['a', 'b', 'c', 'd', 'e'], 4); const v = heardOf(ok, new Set(), now); assert.equal(v.shown, true); assert.equal(v.why, 'ok'); assert.equal(v.people, 20); assert.equal(v.sections, 5); assert.ok(v.head_ar.includes('5 شُعب')); assert.ok(v.head_ar.includes('20 طالبًا'));
 });
 
 test('P74 · يوم الأسبوع فقط، بلا اسم شعبة ولا برنامج؛ سطر واحد لكل يوم (الأكثر حضورًا) وأحدث 7 أيام', () => {

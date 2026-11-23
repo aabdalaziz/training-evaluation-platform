@@ -50,7 +50,7 @@ test('P61 · خمسة فأكثر: الخيوط بالعدد والترتيب · 
   const w = programWeave(rows, roster(es), scope());
   assert.equal(w.below_k, false); assert.deepEqual(w.threads.map((t) => [t.rule, t.n]), [['program_skill', 8], ['hand_session', 6]]);
   assert.equal(w.strongest!.rule, 'program_skill'); assert.match(w.mirror.strongest_ar!, /برنامج قاد إلى مهارة معتمدة — نسجه 8 منهم/);
-  assert.equal(w.weavers_n, 8); assert.match(w.mirror.weavers_ar!, /8 من 8 متدرّبًا/); assert.equal(w.threads_n, 14);
+  assert.equal(w.weavers_n, 8); assert.match(w.mirror.weavers_ar!, /8 من 8 مشاركًا/); assert.equal(w.threads_n, 14);
   assert.deepEqual(w.sources, [{ from: 'البرنامج', to: 'مهارة معتمدة', n: 8 }, { from: '✋ يد مرفوعة', to: 'جلسة', n: 6 }]);
   assert.deepEqual(w.threads[0].codes, ['3.2', '1.6']);
   const json = JSON.stringify(w); for (const e of es) assert.equal(json.includes(e), false, 'لا بريد في النسيج'); assert.equal(json.includes('stranger'), false); assert.equal(json.includes('lأن'), false);
@@ -80,7 +80,7 @@ test('P61 · عبر الدفعات: نسبة الناسجين لكل سنة قب
 test('P61 · أدلة الاعتماد: تدخل التغطية تحت معاييرها · لا دليل تحت خمسة · النسخة المختومة تحمل سطر النسيج', () => {
   const es = emails(7); const rows = [...es.map((e) => row(e, 'program_skill')), ...es.slice(0, 5).map((e) => row(e, 'hand_session', 'hand:n1', 'session:s1')), ...es.slice(0, 4).map((e) => row(e, 'placement_program', 'placement:x', PK))];
   const w = programWeave(rows, roster(es), scope(D(200))); const ev = weaveEvidence(w);
-  assert.deepEqual(ev.map((e) => e.id), ['weave:program_skill', 'weave:hand_session']); assert.match(ev[0].label_ar, /7 من متدرّبي البرنامج نسجوا بأيديهم/); assert.equal(ev.every((e) => e.kind === 'weave' && e.href === '#weave' && e.at === null), true);
+  assert.deepEqual(ev.map((e) => e.id), ['weave:program_skill', 'weave:hand_session']); assert.match(ev[0].label_ar, /7 من مشاركي البرنامج نسجوا بأيديهم/); assert.equal(ev.every((e) => e.kind === 'weave' && e.href === '#weave' && e.at === null), true);
   const cov = coverageOf(DEFAULT_STANDARDS, ev, new Set()); const sub = (code: string) => cov.flatMap((c) => c.subs).find((s) => s.code === code)!;
   assert.equal(sub('3.2').n, 1); assert.equal(sub('3.4').state, 'met'); assert.equal(sub('3.1').n, 1); assert.equal(sub('3.3').n, 0, 'placement_program تحت خمسة لا يُحتسب');
   const line = weaveSnapshotLine(w); assert.equal(line.weave_n, 7); assert.match(line.weave_ar!, /نسجه 7 منهم/);
@@ -92,7 +92,7 @@ test('P61 · أدلة الاعتماد: تدخل التغطية تحت معاي�
 test('P61 · الشفافية للمتعلّم: «جزء من نسيج برنامج …» على الخيط الذي يمسّ برنامجًا فقط · k ≥ 5 · بلا أسماء', () => {
   const mine = [{ from: PK, to: SK }, { from: 'session:s1', to: 'daily:d1' }, { from: SK, to: 'credential:c1' }];
   const p = programPeersOf(mine, { [PK]: 12 }, { [PK]: 'دبلوم التدريس' });
-  assert.deepEqual(Object.keys(p), [`${PK}>${SK}`]); assert.equal(p[`${PK}>${SK}`].n, 12); assert.match(programPeersLine(p[`${PK}>${SK}`]), /نسيج برنامج «دبلوم التدريس» — نسجه معك 12 من متدرّبيه، بلا أسماء/);
+  assert.deepEqual(Object.keys(p), [`${PK}>${SK}`]); assert.equal(p[`${PK}>${SK}`].n, 12); assert.match(programPeersLine(p[`${PK}>${SK}`]), /نسيج برنامج «دبلوم التدريس» — نسجه معك 12 من مشاركيه، بلا أسماء/);
   assert.deepEqual(programPeersOf(mine, { [PK]: 4 }, {}), {});
 });
 

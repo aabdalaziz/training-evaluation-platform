@@ -14,7 +14,7 @@ test('P48 · سجلّ الاعتماد البرامجي: 4 معايير رئيس
   const tops = topsOf(PAS_STANDARDS, 'pas'); assert.equal(tops.length, 4); assert.deepEqual(tops.map(t => t.code), ['1', '2', '3', '4']);
   assert.deepEqual(tops.map(t => subsOf(PAS_STANDARDS, 'pas', t.code).length), [6, 6, 5, 4]); assert.equal(PAS_STANDARDS.length, 25);
   assert.equal(new Set(PAS_STANDARDS.map(s => s.code)).size, 25); assert.ok(PAS_STANDARDS.every(s => s.text_ar.length >= 10 && s.title_ar.length >= 4), 'نصوص وعناوين');
-  assert.match(tops[0].title_ar, /تصميم/); assert.match(tops[1].title_ar, /تقويم|جودة/); assert.match(tops[2].title_ar, /المتدرب/); assert.match(tops[3].title_ar, /المدرب/);
+  assert.match(tops[0].title_ar, /تصميم/); assert.match(tops[1].title_ar, /تقويم|جودة/); assert.match(tops[2].title_ar, /المشارك/); assert.match(tops[3].title_ar, /المدرّب/);
   assert.ok(PAS_STANDARDS.every(s => s.source === 'official'), 'المصدر الرسمي');
 });
 test('P48 · سجلّ معايير المعلّم: 3 مجالات بأوزان 21/40/39 · 10 معايير عامة · 21 فرعيًّا', () => {

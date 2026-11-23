@@ -112,7 +112,7 @@ test('P32: «نسخة أبسط» — البصمة تتغيّر بتغيّر ال
   assert.equal(isSimpleSource('program_intro'), true); assert.equal(isSimpleSource('anything'), false);
 });
 test('P32: requestSimpleText يحمّل الأصل من القاعدة · يحفظ pending · لا يعيد التوليد لنفس الأصل · يعيد التوليد إن تغيّر الأصل · daily_case بالتاريخ فقط', async () => {
-  const db = fakeDb({ programs: [{ id: 'p1', intro_ar: 'يهدف البرنامج إلى تمكين المشاركين من تصميم التدريب، كما يتناول أدوات القياس.', objectives_ar: null, is_public: true }], portal_daily_cases: [{ id: 'c1', day: '2026-10-28', scene_ar: 'قاعة تدريب', role_ar: 'أنت مدرب', situation_ar: 'متدرب كفيف لم تصله المواد قبل الجلسة.', ask_ar: 'ماذا تفعل؟' }] });
+  const db = fakeDb({ programs: [{ id: 'p1', intro_ar: 'يهدف البرنامج إلى تمكين المشاركين من تصميم التدريب، كما يتناول أدوات القياس.', objectives_ar: null, is_public: true }], portal_daily_cases: [{ id: 'c1', day: '2026-10-28', scene_ar: 'قاعة تدريب', role_ar: 'أنت مدرّب', situation_ar: 'مشارك كفيف لم تصله المواد قبل الجلسة.', ask_ar: 'ماذا تفعل؟' }] });
   const r1 = await requestSimpleText(db, { id: 'u1' }, 'program_intro', 'p1');
   assert.equal(r1.created, true); assert.equal(r1.text?.status, 'pending'); assert.equal(r1.source, 'local');
   const r2 = await requestSimpleText(db, { id: 'u2' }, 'program_intro', 'p1'); assert.equal(r2.created, false); assert.equal(r2.source, 'cache');

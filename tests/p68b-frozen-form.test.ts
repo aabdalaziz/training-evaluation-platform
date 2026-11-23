@@ -95,12 +95,12 @@ test('P68-ب: البدائل من الخليّة نفسها (الواصف أول
   const onOld = await swapItem(db, { form_id: r.form.id, from: sw.items[1].code, to: alts.alternatives[1].code, reason: 'مكرّر', by: BY, env: ENV }); assert.equal(onOld.ok, false, 'لا تعديل على إصدار قديم');
 });
 
-test('P68-ب: الاستبدال الكامل يستبعد بنود الإصدار السابق (تداخل 0 حين يكفي البنك) ويولّد v2 · ★5 الدعوة الثانية لنفس القاعة تستبعد ورقة الأولى', async () => {
+test('P68-ب: الاستبدال الكامل يستبعد بنود الإصدار السابق (تداخل 0 حين يكفي البنك) ويولّد v2 · ★5 الدعوة الثانية لنفس الشعبة تستبعد ورقة الأولى', async () => {
   invalidatePoolCache(); const { db } = seeded();
   const r = await freezeForm(db, { invite_id: U(701), by: BY, env: ENV }); assert.equal(r.ok, true); if (!r.ok) return;
   const rd = await redrawForm(db, { form_id: r.form.id, reason: 'ورقة جديدة', by: BY, env: ENV }); assert.equal(rd.ok, true, JSON.stringify(rd)); if (!rd.ok) return;
   assert.equal(rd.form.version, 2); assert.equal(rd.overlap, 0); assert.equal(rd.items.length, 4); const oldSet = new Set(r.items.map((i) => i.code)); assert.ok(rd.items.every((i) => !oldSet.has(i.code)));
-  /* ★5: دعوة ثانية لنفس القاعة c1 — سحبها يستبعد بنود نموذج الدعوة الأولى (الحيّ والقديم) */
+  /* ★5: دعوة ثانية لنفس الشعبة c1 — سحبها يستبعد بنود نموذج الدعوة الأولى (الحيّ والقديم) */
   const r2 = await freezeForm(db, { invite_id: U(702), by: BY, env: ENV }); assert.equal(r2.ok, true); if (!r2.ok) return;
   const prior = new Set([...r.items, ...rd.items].map((i) => i.code)); assert.equal(prior.size, 8);
   assert.ok(r2.items.every((i) => !prior.has(i.code)), `ورقة الدعوة الثانية ${r2.items.map((i) => i.code).join(',')} لا تتقاطع مع ${[...prior].join(',')}`);

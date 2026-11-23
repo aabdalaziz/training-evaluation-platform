@@ -1,8 +1,8 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // اختبارات P31 — «هيئة أَثَر» («سيرتك توثّقها بنفسك، وشهادة توثيقها أَثَر»): تنقية السيرة وحدودها · شروط الاعتماد (الصورة والموافقة إلزاميتان) · الظهور العام بمفاتيح الأقسام (لا بريد ولا هاتف)
-//                 · البحث (معتمد+مدرج فقط · ترتيب آخر تحديث ثم الاسم · 60/صفحة · لا نجوم) · «ما شهده أَثَر» من السجلات فقط (مدرب منصة التقييم · رئاسة مجالس · اعتمادات · مهام · عقود · ميثاق الجهة)
+//                 · البحث (معتمد+مدرج فقط · ترتيب آخر تحديث ثم الاسم · 60/صفحة · لا نجوم) · «ما شهده أَثَر» من السجلات فقط (مدرّب منصة التقييم · رئاسة مجالس · اعتمادات · مهام · عقود · ميثاق الجهة)
 //                 · الرموز ATH-HM/EX/TR/CO · عقد التعاون: الأجر إلزامي (0 مقبول) · تعديل مرة واحدة · الانتقالات · وثيقة ATH-CO بحاملَين بلا أجر · شهادة ATH-EX موقَّعة Ed25519 وتتحقق
-//                 · الكرون: دعوة مدربي منصة التقييم مرة واحدة · تذكير سنوي مرة في السنة · خزنة أَثَر تعرف الجدولين
+//                 · الكرون: دعوة مدرّبي منصة التقييم مرة واحدة · تذكير سنوي مرة في السنة · خزنة أَثَر تعرف الجدولين
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SUMMARY_MIN, SEARCH_PAGE, CODE_PREFIX_MEMBER, CODE_PREFIX_EXPERT, CODE_PREFIX_TRAINER, CODE_PREFIX_COLLAB, DEFAULT_VISIBILITY, SECTIONS, sanitizeProfileInput, profileIssues, canSubmit, isPublic, publicView, cardView, ownerView, searchPlain, matches, sortProfiles, search, witnessLines, witnessCounts, EMPTY_WITNESS, memberCode, cardCode, collabCode, slugFor, privatePhotoPath, publicPhotoPath, mimeOfPath, sanitizeEngagementInput, engagementIssues, memberTransition, staffTransition, engagementMemberView, engagementFacts, prefillFromLegacyTrainer, summaryOf } from '../lib/directory/registry';
@@ -89,8 +89,8 @@ test('P31 الظهور العام: معتمد+مدرج+صورة بموافقة �
 });
 
 test('P31 البحث: نص · وجه · مهارة · قطاع · خدمة · نمط · مدينة — الترتيب آخر تحديث ثم الاسم · 60 في الصفحة · لا حقل تقييم', () => {
-  const a = prof({ id: 'a', name_ar: 'أحمد', updated_at: ago(5), search_plain: searchPlain({ name_ar: 'أحمد', title_ar: 'مدرب جودة', city: 'جدة' } as any, ['ضمان الجودة'], ['التعليم']) });
-  const b = prof({ id: 'b', name_ar: 'بدر', updated_at: ago(1), faces: ['trainer'], skill_ids: ['sk-9'], sectors: ['health'], services: ['training'], modes: ['onsite'], city: 'الرياض', search_plain: 'بدر مدرب الرياض الصحة' });
+  const a = prof({ id: 'a', name_ar: 'أحمد', updated_at: ago(5), search_plain: searchPlain({ name_ar: 'أحمد', title_ar: 'مدرّب جودة', city: 'جدة' } as any, ['ضمان الجودة'], ['التعليم']) });
+  const b = prof({ id: 'b', name_ar: 'بدر', updated_at: ago(1), faces: ['trainer'], skill_ids: ['sk-9'], sectors: ['health'], services: ['training'], modes: ['onsite'], city: 'الرياض', search_plain: 'بدر مدرّب الرياض الصحة' });
   const c = prof({ id: 'c', name_ar: 'آمنة', updated_at: ago(5), search_plain: 'آمنة' });
   const all = [a, b, c];
   assert.deepEqual(sortProfiles(all).map(p => p.id), ['b', 'c', 'a'], 'آخر تحديث ثم الاسم');
@@ -111,7 +111,7 @@ test('P31 «ما شهده أَثَر»: سطور من الأعداد فقط · �
   assert.deepEqual(ef, { engagements_consult: 1, engagements_train: 1, engagement_years: ['2025', '2026'] }, 'المنجَز والمسوّى فقط');
 });
 
-test('P31 «ما شهده أَثَر» من الجداول: مدرب منصة التقييم (شُعب → برامج → سنوات) · رئاسة مجلس · اعتمادات · مهام مؤكَّدة · ميثاق الجهة', async () => {
+test('P31 «ما شهده أَثَر» من الجداول: مدرّب منصة التقييم (شُعب → برامج → سنوات) · رئاسة مجلس · اعتمادات · مهام مؤكَّدة · ميثاق الجهة', async () => {
   const db = fakeDb({
     trainers: [{ id: 't1', name: 'د. نورة الشهري', email: ME.email }], classrooms: [{ program_id: 'p1', trainer_id: 't1' }, { program_id: 'p1', trainer_id: 't1' }, { program_id: 'p2', trainer_id: 't1' }, { program_id: 'p3', trainer_id: 't9' }],
     programs: [{ id: 'p1', start_date: '2023-02-01' }, { id: 'p2', start_date: '2026-01-10' }].map(p => ({ ...p })),
@@ -125,7 +125,7 @@ test('P31 «ما شهده أَثَر» من الجداول: مدرب منصة ا
   const legacy = await legacyTrainer(db, ME.email); assert.equal(legacy?.id, 't1');
   const f = await witnessFacts(db, ME, legacy, [{ kind: 'consult', status: 'completed', completed_at: '2026-05-05' } as any]);
   assert.equal(f.classrooms, 3); assert.equal(f.programs, 2); assert.deepEqual(f.program_years, ['2023', '2026']); assert.equal(f.councils_chaired, 1, 'رئاسة فقط'); assert.equal(f.attestations_approved, 1); assert.equal(f.levels_approved, 1); assert.equal(f.missions_confirmed, 1, 'المؤكَّدة فقط · بريد بلا حساسية حالة'); assert.equal(f.org_charter, 'جامعة أَثَر'); assert.equal(f.engagements_consult, 1);
-  const pre = prefillFromLegacyTrainer(legacy!, f); assert.deepEqual(pre.faces, ['trainer']); assert.ok(pre.summary_ar!.includes('قدّم برنامجين تدريبيَّين (3 شعبة) بين 2023 و2026') && pre.summary_ar!.startsWith('مدرب في أَثَر:'), pre.summary_ar);
+  const pre = prefillFromLegacyTrainer(legacy!, f); assert.deepEqual(pre.faces, ['trainer']); assert.ok(pre.summary_ar!.includes('قدّم برنامجين تدريبيَّين (3 شعبة) بين 2023 و2026') && pre.summary_ar!.startsWith('مدرّب في أَثَر:'), pre.summary_ar);
   const none = await witnessFacts(fakeDb(), { id: 'nobody', email: 'x@y.z' }, null, []); assert.deepEqual(none, EMPTY_WITNESS, 'لا سجلات = لا شهادة');
   const mine = await loadMyProfile(fakeDb({ portal_directory_profiles: [{ user_id: 'other', email: ME.email, created_at: ago(2) }, { user_id: ME.id, email: 'old@x.y', created_at: ago(1) }] }), ME); assert.equal(mine?.user_id, ME.id, 'سيرتي بمعرّفي أولًا');
   assert.deepEqual(summaryOf(prof(), true), { version: 'p31.1', status: 'approved', faces: ['expert', 'trainer'], listed: true, legacy_trainer: true, slug: 'noura-alshehri-q001' });
@@ -154,19 +154,19 @@ test('P31 الوثائق: شهادة التوثيق ATH-EX (kind=directory_card 
   const doc = buildCardDoc({ code: 'ATH-EX-Q001-Q002', face: 'expert', profile: prof(), facts, site: SITE, did: DID, now: NOW, statusIndex: 3 }) as any;
   assert.equal(doc._athar.kind, 'directory_card'); assert.equal(doc._athar.face_ar, 'خبير استشاري'); assert.deepEqual(doc._athar.witnessed, witnessCounts(facts)); assert.equal(doc.credentialStatus.statusListIndex, '3'); assert.ok(!JSON.stringify(doc).includes(ME.email), 'لا بريد في الوثيقة'); assert.ok(doc._athar.page.endsWith('/experts/noura-alshehri-q001'));
   const db = fakeDb(); const r = await issueCard(db, prof(), 'trainer', facts, signer, SITE, DID, rnd, 'adm', NOW); assert.ok(r.ok, 'إصدار'); if (!r.ok) return;
-  assert.ok(r.card.code.startsWith('ATH-TR-'), r.card.code); const row = db.T.portal_vc_issuances[0]; assert.equal(row.kind, 'directory_card'); assert.ok(row.title_ar.includes('مدرب'));
+  assert.ok(r.card.code.startsWith('ATH-TR-'), r.card.code); const row = db.T.portal_vc_issuances[0]; assert.equal(row.kind, 'directory_card'); assert.ok(row.title_ar.includes('مدرّب'));
   assert.equal(structuralChecks(row.vc).filter((c: any) => !c.ok).length, 0, 'بنية سليمة'); assert.equal((await verifySignature(row.vc, localResolver(signer, []))).ok, true, 'التوقيع يتحقق'); assert.ok(row.digest.length === 64, 'بصمة');
   const unsigned = await issueCard(fakeDb(), prof(), 'expert', facts, null, SITE, DID, rnd, 'adm', NOW); assert.ok(unsigned.ok && unsigned.card.vc_issuance_id === null, 'بلا مفتاح: رمز بلا وثيقة');
   const eng: Engagement = { id: 'e1', created_at: ago(1), updated_at: ago(1), profile_id: 'pr-1', user_id: ME.id, email: ME.email, kind: 'consult', consulting_request_id: null, title_ar: 'مراجعة نظام الجودة — جامعة أَثَر', scope_ar: 'مراجعة شاملة لنظام الجودة في الكليات الصحية بجامعة أَثَر', deliverables: ['تقرير تشخيصي', 'خطة تحسين'], start_at: '2026-11-15', end_at: '2027-01-15', mode: 'hybrid', fee_amount: 48000, currency: 'SAR', terms_ar: 'دفعتان', status: 'proposed', change_note_ar: null, token: 'tok-secret', member_signed_at: null, athar_signed_at: null, completed_at: null, settled_at: null, code: null, vc_issuance_id: null, created_by: 'adm', meta: {} };
   const cdoc = buildCollabDoc({ code: 'ATH-CO-Q001-Q002', e: eng, memberName: ME.name, site: SITE, did: DID, now: NOW, statusIndex: 1 }) as any; const cj = JSON.stringify(cdoc);
-  assert.equal(cdoc._athar.holders.length, 2); assert.equal(cdoc._athar.holders[1].signed_as_ar, 'بصفتها'); assert.ok(cdoc._athar.holder.includes('أَثَر') && !cdoc._athar.holder.includes('بوابة التميز'), 'أَثَر بصفته القانونية — بلا كيان مشغِّل قديم'); assert.ok(!cj.includes('48000') && !/fee_amount|tok-secret|دفعتان/.test(cj), 'لا أجر ولا رمز ولا شروط في الوثيقة'); assert.equal(cdoc.validUntil, '2027-01-15T23:59:59.000Z');
+  assert.equal(cdoc._athar.holders.length, 2); assert.equal(cdoc._athar.holders[1].signed_as_ar, 'بصفتها'); assert.ok(cdoc._athar.holder.includes('أَثَر') && !cdoc._athar.holder.includes('بوّابة التميز'), 'أَثَر بصفته القانونية — بلا كيان مشغِّل قديم'); assert.ok(!cj.includes('48000') && !/fee_amount|tok-secret|دفعتان/.test(cj), 'لا أجر ولا رمز ولا شروط في الوثيقة'); assert.equal(cdoc.validUntil, '2027-01-15T23:59:59.000Z');
   const db2 = fakeDb({ portal_directory_engagements: [{ ...eng }] }); db2.T.portal_directory_engagements[0].id = 'e1';
   const s = await signEngagement(db2, eng, prof(), signer, SITE, DID, rnd, NOW); assert.ok(s.ok, 'توقيع'); if (!s.ok) return;
   assert.equal(s.engagement.status, 'active'); assert.equal(s.engagement.member_signed_at, NOW.toISOString()); assert.equal(s.engagement.athar_signed_at, NOW.toISOString()); assert.ok(s.engagement.code!.startsWith('ATH-CO-')); assert.equal(db2.T.portal_vc_issuances[0].kind, 'collaboration'); assert.ok(s.verify_url!.includes('/verify/vc?code=ATH-CO-'));
   assert.equal((await verifySignature(db2.T.portal_vc_issuances[0].vc, localResolver(signer, []))).ok, true, 'وثيقة العقد تتحقق');
 });
 
-test('P31 الكرون: دعوة مدربي منصة التقييم مرة واحدة لكل بريد (لا لمن له سيرة) · التذكير السنوي مرة في السنة · المعاينة لا تكتب', async () => {
+test('P31 الكرون: دعوة مدرّبي منصة التقييم مرة واحدة لكل بريد (لا لمن له سيرة) · التذكير السنوي مرة في السنة · المعاينة لا تكتب', async () => {
   const seed = () => fakeDb({
     trainers: [{ name: 'د. أحمد الحربي', email: 'ahmed@athar.university' }, { name: 'أ. سارة', email: null }, { name: 'د. محمد', email: 'm.otaibi@example.com' }, { name: 'نورة', email: ME.email }],
     portal_directory_profiles: [{ ...prof(), updated_at: ago(400), meta: {} }, { ...prof({ id: 'x' }), email: 'fresh@x.y', user_id: 'u9', updated_at: ago(10) }, { ...prof({ id: 'y' }), email: 'draft@x.y', user_id: 'u8', status: 'draft', updated_at: ago(900) }],

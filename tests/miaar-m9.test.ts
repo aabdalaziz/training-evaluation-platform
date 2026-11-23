@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/** م9 «أدلة مِعيار» — الحقائق → أدلة (k ≥ 5 · أحكام نهائية · ترقية موقَّعة) · الملخّص · الغراء على قاعدة وهمية · بوابة الجهة (الوحدات والجلسات والأثر) · جاهزية سلّة الخبير · التسجيل في الملف */
+/** م9 «أدلة مِعيار» — الحقائق → أدلة (k ≥ 5 · أحكام نهائية · ترقية موقَّعة) · الملخّص · الغراء على قاعدة وهمية · بوّابة الجهة (الوحدات والجلسات والأثر) · جاهزية سلّة الخبير · التسجيل في الملف */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -116,7 +116,7 @@ test('م9: beforeAfterRows و sessionsWithEffect — «بعد» = آخر إعا�
   assert.deepEqual(await beforeAfterRows(fakeDb({}), 'none'), []);
 });
 
-test('م9: بوابة الجهة — clientUnitsView: حرارة بلا أسماء · أضعف 3 · نطاق «ما دُرّس فقط» · الجلسات الملغاة تُستبعد · متوسط الأثر · نصّ التوضيح', () => {
+test('م9: بوّابة الجهة — clientUnitsView: حرارة بلا أسماء · أضعف 3 · نطاق «ما دُرّس فقط» · الجلسات الملغاة تُستبعد · متوسط الأثر · نصّ التوضيح', () => {
   const heat = [{ code: 'A1-U04', title_ar: 'الأسرة', percent: 25, state: 'weak', state_ar: 'ضعيفة', n_students: 12 }, { code: 'A1-U02', title_ar: 'التحية', percent: 90, state: 'ok', state_ar: 'جيدة', n_students: 12 }, { code: 'A1-U01', title_ar: 'أ', percent: 40, state: 'weak', state_ar: 'ضعيفة', n_students: 12 }, { code: 'A1-U03', title_ar: 'ب', percent: 45, state: 'weak', state_ar: 'ضعيفة', n_students: 12 }, { code: 'A1-U05', title_ar: 'ج', percent: 48, state: 'weak', state_ar: 'ضعيفة', n_students: 12 }];
   const sessions = [{ id: 's1', title_ar: 'ج1', starts_at: '2026-11-06T07:00:00Z', duration_min: 60, provider: 'teams', status: 'scheduled', miaar_unit_codes: ['A1-U04'], joined: 7, effect: [{ code: 'A1-U04', title_ar: 'الأسرة', n_retakes: 6, attended: { n: 4, delta: 20 }, others: { n: 2, delta: 2 }, text: 'الأسرة: الحاضرون +20 نقطة (4) · غير الحاضرين +2 نقطة (2).' }] }, { id: 's2', status: 'cancelled', miaar_unit_codes: [], effect: [{ code: 'x', attended: { n: 1, delta: -50 }, others: { n: 0, delta: null }, n_retakes: 1 }] }];
   const v = clientUnitsView(heat, sessions, ['A1-U01', 'A1-U02']);
@@ -134,7 +134,7 @@ test('م9: سلّة الخبير — expertReadiness: كل خلية مطلوبة
   assert.equal(expertReadiness({ levels: ['A1'] as any, counts: { A1: { listening: 0, reading: 0, grammar_vocab: 0 } } as any, pool: {}, draw: 'random' }).ready, false);
 });
 
-test('م9: السلك — ملف الاعتماد يستدعي أدلة مِعيار · التجميع المؤسسي يحمل سطر مِعيار · بوابة الجهة تُرجع units وتصدّر أعمدة الوحدات · البطاقات تحمل الشارات · لا تبعيات جديدة', () => {
+test('م9: السلك — ملف الاعتماد يستدعي أدلة مِعيار · التجميع المؤسسي يحمل سطر مِعيار · بوّابة الجهة تُرجع units وتصدّر أعمدة الوحدات · البطاقات تحمل الشارات · لا تبعيات جديدة', () => {
   const load = read('lib/accreditation/load.ts'); assert.match(load, /collectMiaarEvidence\(db, pid, rooms\.map/); assert.match(load, /miaar: miaarSummary\(miaar\.facts\)/); assert.match(load, /return \{ miaar, programs: files\.length/);
   const svc = read('lib/miaar/service.ts'); assert.match(svc, /sessionsWithEffect/); assert.match(svc, /clientReport\(level, b\.rows, bench\), units,/); assert.match(svc, /وحدات_للمراجعة: Array\.isArray/);
   const route = read('app/api/miaar/client/route.ts'); assert.match(route, /'وحدات تحتاج مراجعة'/); assert.match(route, /`وحدة \$\{c\}`/);

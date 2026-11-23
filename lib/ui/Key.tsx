@@ -1,6 +1,6 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * «مفاتيح أَثَر» (P40) — مكوّن الزر الموحّد؛ الأيقونات من مكتبة المنصة القائمة lib/ui/icons.tsx (أُضيفت إليها upload/qr/next/mic/camera/spark/spinner).
+ * «مفاتيح أَثَر» (P40) — مكوّن الزر الموحّد؛ الأيقونات من مكتبة البوّابة القائمة lib/ui/icons.tsx (أُضيفت إليها upload/qr/next/mic/camera/spark/spinner).
  *  <Key icon="plus" tone="gold" onClick=…>إضافة بند</Key>   → زر .pt-btn بأيقونة في قرص (الأنماط في app/style.css)
  *  <Key href="/miaar" icon="play">حدّد مستواك</Key>         → رابط بنفس الهيئة
  *  <Icon name="save" />                                      → الأيقونة وحدها (20px، تأخذ لون النص)

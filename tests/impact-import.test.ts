@@ -71,7 +71,7 @@ test('generate: model output parsing tolerates fences and index answers', () => 
 });
 
 test('generate: offline generator + spec normalization + prompt', () => {
-  const spec = normalizeSpec({ program_name: 'إدارة المشاريع', axes: 'التخطيط\nالتنفيذ', scale_per_axis: 3, mcq_per_axis: 2, objectives: 'أن يتمكن المتدرب من إعداد خطة مشروع\nأن يميز المتدرب بين أنواع المخاطر' });
+  const spec = normalizeSpec({ program_name: 'إدارة المشاريع', axes: 'التخطيط\nالتنفيذ', scale_per_axis: 3, mcq_per_axis: 2, objectives: 'أن يتمكن المشارك من إعداد خطة مشروع\nأن يميز المشارك بين أنواع المخاطر' });
   assert.deepEqual(spec.axes, ['التخطيط', 'التنفيذ']); assert.equal(spec.scale_count, 3); assert.equal(spec.count_mode, 'per_axis');
   const g = offlineGenerate(spec);
   assert.equal(g.questions.filter(q => q.kind === 'scale').length, g.questions.length);

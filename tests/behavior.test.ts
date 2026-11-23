@@ -13,7 +13,7 @@ test('parseRecipients reads name, email, role and trainee linkage; dedupes; warn
   const txt = [
     'أحمد علي, ahmed@x.sa, مشرف, سارة محمد, sara@x.sa',
     'سارة محمد, Sara@X.sa',
-    'سارة محمد, sara@x.sa, متدرب',
+    'سارة محمد, sara@x.sa, مشارك',
     'بدون بريد, ---',
     'خالد, khalid@x.sa; supervisor; نورة',
   ].join('\n');

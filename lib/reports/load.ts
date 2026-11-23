@@ -2,7 +2,7 @@
 /**
  * P46 «محور التقارير» — القراءة والكتابة بمفتاح الخدمة (ر1: تقرير التعلّم الأسبوعي · ر2: الختامي · ر3: تقرير إنجاز المهمة · ر3-ب: التقرير الاستشاري — آخر الملف)
  *  من أنا: مدرّب (trainers.email) له شُعب (classrooms.trainer_id) · أو طاقم (كل البرامج النشطة).
- *  اللقطة (computed): البرنامج · الجهة · الشعبة · المسجَّلون المقبولون · جلسات الحضور في الفترة وساعاتها وعناوينها · الحضور لكل متدرّب · المنتظمون.
+ *  اللقطة (computed): البرنامج · الجهة · الشعبة · المسجَّلون المقبولون · جلسات الحضور في الفترة وساعاتها وعناوينها · الحضور لكل مشارك · المنتظمون.
  *  الدورة: مسودّة → مُرسَل → معتمَد (رمز تحقّق + إرسال «سطر لك» بإذن المعلّم) أو مُعاد بملاحظة.
  */
 import { notify } from '../portal/notify';
@@ -161,7 +161,7 @@ export async function submitReport(db: any, me: Me, id: string, site: string, st
   return { ok: true };
 }
 export async function decideReport(db: any, me: Me, id: string, decision: 'approve' | 'return', note: string, site: string, signAs?: SignAs | null): Promise<{ ok: true; verify_code?: string | null; lines_sent?: number; signed?: SignAs; pending?: SignAs } | { ok: false; error: string }> {
-  const r = await reportById(db, id); if (!r) return { ok: false, error: 'التقرير غير موجود' }; if (!(isClientKind(r.kind) || r.kind === 'diploma_profile' || r.kind === 'program_review' ? canDecideDoc(r, me) : canDecide(r, me))) return { ok: false, error: (isClientKind(r.kind) || r.kind === 'diploma_profile' || r.kind === 'program_review') && isAuthorOf(r, me) ? 'كاتب الوثيقة لا يعتمدها بنفسه — يعتمدها زميل من الطاقم أو مدير المنصة' : 'التقرير ليس بانتظار الاعتماد أو لست من الطاقم' };
+  const r = await reportById(db, id); if (!r) return { ok: false, error: 'التقرير غير موجود' }; if (!(isClientKind(r.kind) || r.kind === 'diploma_profile' || r.kind === 'program_review' ? canDecideDoc(r, me) : canDecide(r, me))) return { ok: false, error: (isClientKind(r.kind) || r.kind === 'diploma_profile' || r.kind === 'program_review') && isAuthorOf(r, me) ? 'كاتب الوثيقة لا يعتمدها بنفسه — يعتمدها زميل من الطاقم أو مدير البوّابة' : 'التقرير ليس بانتظار الاعتماد أو لست من الطاقم' };
   const fin = r.kind === 'final';
   if (decision === 'return') {
     const n = String(note || '').replace(/\s+/g, ' ').trim().slice(0, 400); if (n.length < 3) return { ok: false, error: 'اكتب ملاحظة الإعادة' };
@@ -191,7 +191,7 @@ export async function decideReport(db: any, me: Me, id: string, decision: 'appro
   }
   if (r.kind === 'mission') { try { await completeEngagementFromReport(db, r, code); await completeRequestFromReport(db, r, code); } catch { /* داخلي */ } }
   if (isDocKind(r.kind)) { try { await markSuperseded(db, r, code); } catch { /* داخلي */ } }   // ر3-ب
-  if (r.kind === 'diploma_unit') { try { await closeUnitFromReport(db, { ...r, id }); } catch { /* داخلي */ } try { await ensureProfilesFromUnit(db, { ...r, id }); } catch { /* داخلي */ } }   // ر4-ب: كشف لكل متدرّب من أول وحدة معتمَدة
+  if (r.kind === 'diploma_unit') { try { await closeUnitFromReport(db, { ...r, id }); } catch { /* داخلي */ } try { await ensureProfilesFromUnit(db, { ...r, id }); } catch { /* داخلي */ } }   // ر4-ب: كشف لكل مشارك من أول وحدة معتمَدة
   if (r.kind === 'diploma_profile') { try { await afterProfileApproved(db, me, { ...r, id }, code, site); } catch { /* داخلي */ } }   // ر4-ب: «العودة إلى الجواز»   // ر4: الإغلاق هو التوثيق: النسخة الجديدة تَنسخ السابقة ولا تغيّر حالة الطلب
   try { await notify(db, { kind: 'report_approved', to: { email: r.author_email }, ref: `rep:approved:${id}`, subject: r.kind === 'program_review' ? `اعتُمدت ${P47_NAMES_AR.review} — ${r.computed?.program_ar || ''}` : isDiplomaKind(r.kind) ? `اعتُمد ${diplomaKindAr(r.kind)}` : isDocKind(r.kind) ? `اعتُمد ${docKindAr(r.kind)}` : r.kind === 'mission' ? `اعتُمد ${P46_NAMES_AR.mission}` : fin ? `اعتُمد ${P46_NAMES_AR.final}` : `اعتُمد تقرير الأسبوع ${r.week_no}`, text: isDiplomaKind(r.kind) ? `اعتمد ${me.name || 'الطاقم'} ${diplomaKindAr(r.kind)} (${r.computed?.program_ar || ''}). رمز التحقّق: ${code}.` : isDocKind(r.kind) ? `اعتمد ${me.name || 'الطاقم'} ${docKindAr(r.kind)} («${r.computed?.title || ''}»). رمز التحقّق: ${code}. تصل للجهة بعد إرسال الطاقم.` : r.kind === 'mission' ? `اعتمد ${me.name || 'الطاقم'} ${P46_NAMES_AR.mission} («${r.computed?.title_ar || ''}»). رمز التحقّق: ${code}. ${MISSION_NAMES_AR.ack} يصل بعد إرسال الطاقم للجهة.` : fin ? `اكتمل توقيعا ${P46_NAMES_AR.final} (${r.computed?.program_ar || ''}). رمز التحقّق: ${code}.` : `اعتمد ${me.name || 'مدير البرنامج'} ${P46_NAMES_AR.weekly} (${r.computed?.program_ar || ''}). رمز التحقّق: ${code}.`, url: `${site}/me/reports/${id}` }); } catch { /* داخلي */ }
   if (r.kind === 'weekly') { try { await maybeNotifyFinalReady(db, r, site); } catch { /* داخلي */ } }
@@ -210,7 +210,7 @@ export async function weeksFor(db: any, programId: string, classroomId: string |
   const rows = await safe<any[]>(db.from('portal_reports').select(REPORT_COLS).eq('kind', 'weekly').eq('status', 'approved').eq('program_id', programId).order('period_from', { ascending: true }).limit(60), []);
   return rows.filter(r => String(r.classroom_id || '') === String(classroomId || '')).map(r => ({ id: String(r.id), week_no: Number(r.week_no || 1), period_from: String(r.period_from), period_to: String(r.period_to), verify_code: r.verify_code || null, students: Array.isArray(r.students) ? r.students : [], strengths: Array.isArray(r.body?.strengths?.strengths) ? r.body.strengths.strengths : [], challenges: Array.isArray(r.body?.strengths?.challenges) ? r.body.strengths.challenges : [], lines: Array.isArray(r.lines) ? r.lines : [], promote: Array.isArray(r.body?.recommendations?.promote) ? r.body.recommendations.promote : [], support: Array.isArray(r.body?.recommendations?.support) ? r.body.recommendations.support : [] }));
 }
-/** لقطة الختامي: لقطة البرنامج كلّه (الحضور من أول يوم) + الأسبوعيات المعتمدة + مسارات المتدرّبين + النضج */
+/** لقطة الختامي: لقطة البرنامج كلّه (الحضور من أول يوم) + الأسبوعيات المعتمدة + مسارات المشاركين + النضج */
 export async function computeFinalSnapshot(db: any, me: Me, programId: string, classroomId: string | null): Promise<{ computed: FinalComputed; roster: StudentRow[]; program: any } | { error: string }> {
   const program = await safe<any>(db.from('programs').select('id,name_ar,start_date,end_date,hours').eq('id', programId).maybeSingle(), null); if (!program) return { error: 'البرنامج غير موجود' };
   const weeks = await weeksFor(db, programId, classroomId); const td = today();
@@ -252,7 +252,7 @@ export async function maybeNotifyFinalReady(db: any, weekly: any, site: string):
   if (!finalSuggested(progressPct(start, end, td), end, td, weeks.length)) return false;
   const fin = (await safe<any[]>(db.from('portal_reports').select('id,classroom_id').eq('kind', 'final').eq('program_id', pid).limit(20), [])).find(d => String(d.classroom_id || '') === String(cid || '')); if (fin) return false;
   const m = maturityOf(weeks.length, start, end, td);
-  await notify(db, { kind: 'report_final_ready', to: { email: weekly.author_email }, ref: `rep:final_ready:${pid}:${cid || 'all'}`, subject: `${P46_NAMES_AR.final} يكاد يكتب نفسه — ${m.approved}/${m.expected} أسابيع معتمدة`, text: `بلغت شعبة ${weekly.computed?.classroom_ar || weekly.computed?.program_ar || ''} نضجًا يكفي لبدء ${P46_NAMES_AR.final}: مسارات المتدرّبين جاهزة من ${m.approved} أسابيع معتمدة، ويبقى حكمك الختامي وتوصياتك.`, url: `${site}/me/reports` });
+  await notify(db, { kind: 'report_final_ready', to: { email: weekly.author_email }, ref: `rep:final_ready:${pid}:${cid || 'all'}`, subject: `${P46_NAMES_AR.final} يكاد يكتب نفسه — ${m.approved}/${m.expected} أسابيع معتمدة`, text: `بلغت شعبة ${weekly.computed?.classroom_ar || weekly.computed?.program_ar || ''} نضجًا يكفي لبدء ${P46_NAMES_AR.final}: مسارات المشاركين جاهزة من ${m.approved} أسابيع معتمدة، ويبقى حكمك الختامي وتوصياتك.`, url: `${site}/me/reports` });
   return true;
 }
 /** «من التوصية إلى القرار»: المرشَّحون للرفع يُسجَّلون معلَّقين في برنامج الهدف — ويعتمدهم الطاقم من مسار القبول المعتاد */
@@ -268,7 +268,7 @@ export async function promoteFromFinal(db: any, me: Me, id: string, targetProgra
   await db.from('portal_reports').update({ body: { ...(r.body || {}), promotion }, updated_at: nowIso() }).eq('id', id);
   return { ok: true, created, skipped, program_ar: String(target.name_ar || '') };
 }
-/* ───────── صفحة المتدرّب و«شهادتي» ───────── */
+/* ───────── صفحة المشارك و«شهادتي» ───────── */
 const LINE_COLS = 'id,created_at,report_id,program_id,user_id,email,text_ar,week_no,period_to,kind,data,verify_code,show_on_credential';
 export async function lineById(db: any, me: Me, id: string): Promise<any | null> {
   const l = await safe<any>(db.from('portal_report_lines').select(LINE_COLS).eq('id', id).maybeSingle(), null); if (!l) return null; if (lower(l.email) !== me.email && !me.staff) return null;
@@ -507,7 +507,7 @@ export async function importUnitsFromDesign(db: any, me: Me, programId: string):
   const units = unitsFromDesign(d.design, tpl.skills); if (!units.length) return { ok: false, error: 'التصميم بلا وحدات صالحة' };
   const r = await saveUnits(db, me, programId, units); if (!r.ok) return r; return { ok: true, units: r.units, imported: units.length };
 }
-/** ما جرى حول الدبلوم في فترة: مهمات سُلِّمت/صُدِّقت · بروفات بدائرة البرنامج · إجابات «كل يوم مهارة» · محطات — أعداد لكل متدرّب (بالبريد) */
+/** ما جرى حول الدبلوم في فترة: مهمات سُلِّمت/صُدِّقت · بروفات بدائرة البرنامج · إجابات «كل يوم مهارة» · محطات — أعداد لكل مشارك (بالبريد) */
 async function aroundDiploma(db: any, programId: string, emails: string[], from: string, to: string): Promise<{ total: Around; per: Map<string, Around> }> {
   const lo = emails.map(lower).filter(Boolean); const fromTs = from + 'T00:00:00Z'; const toTs = to + 'T23:59:59Z'; const per = new Map<string, Around>(); const z = (): Around => ({ missions: 0, rehearsals: 0, cases: 0, stations: 0 }); const total = z();
   const bump = (email: unknown, k: keyof Around) => { const e = lower(email); if (!e) return; total[k]++; if (lo.includes(e)) { const a = per.get(e) || z(); a[k]++; per.set(e, a); } };
@@ -611,11 +611,11 @@ async function userIdOf(db: any, programId: string, email: string): Promise<stri
   const any = await safe<any[]>(db.from('portal_enrollments').select('user_id').ilike('email', e).not('user_id', 'is', null).limit(1), []); if (any[0]?.user_id) return String(any[0].user_id);
   const cr = await safe<any[]>(db.from('portal_credentials').select('user_id').ilike('email', e).not('user_id', 'is', null).limit(1), []); return cr[0]?.user_id ? String(cr[0].user_id) : null;
 }
-/** لقطة الكشف: مسار المتدرّب عبر الوحدات المعتمَدة + أدلّة كل كفاية (الدرجات · المهمات · كل يوم مهارة · الجواز) + اقتراح محلي */
+/** لقطة الكشف: مسار المشارك عبر الوحدات المعتمَدة + أدلّة كل كفاية (الدرجات · المهمات · كل يوم مهارة · الجواز) + اقتراح محلي */
 export async function computeProfileSnapshot(db: any, me: Me, programId: string, classroomId: string | null, email: string): Promise<{ computed: ProfileComputed } | { error: string }> {
   const e = lower(email); const program = await safe<any>(db.from('programs').select('id,start_date').eq('id', programId).maybeSingle(), null); if (!program) return { error: 'البرنامج غير موجود' };
   const td = today(); const from = program.start_date ? String(program.start_date).slice(0, 10) : td; const snap = await computeSnapshot(db, me, programId, classroomId, from <= td ? from : td, td); if ('error' in snap) return snap; const c = snap.computed;
-  const row = snap.roster.find(r => lower(r.email || '') === e); if (!row) return { error: 'المتدرّب ليس في قائمة هذه الشعبة' };
+  const row = snap.roster.find(r => lower(r.email || '') === e); if (!row) return { error: 'المشارك ليس في قائمة هذه الشعبة' };
   const units = await unitsOf(db, programId); const states = unitStates(units, td);
   const reps = await safe<any[]>(db.from('portal_reports').select('id,unit_id,classroom_id,status,verify_code,students,approved_at').eq('kind', 'diploma_unit').eq('program_id', programId).eq('status', 'approved').limit(100), []);
   const myRep = (uid: string | null) => { const of = reps.filter(r => String(r.unit_id || '') === String(uid || '')); return of.find(r => String(r.classroom_id || '') === String(classroomId || '')) || of[0] || null; };
@@ -649,16 +649,16 @@ export async function computeProfileSnapshot(db: any, me: Me, programId: string,
 }
 /** الكشف الحيّ (غير المنسوخ) لمتدرّب في برنامج */
 async function liveProfile(db: any, programId: string, email: string): Promise<any | null> { const rows = await safe<any[]>(db.from('portal_reports').select(REPORT_COLS).eq('kind', 'diploma_profile').eq('program_id', programId).ilike('subject_email', lower(email)).order('created_at', { ascending: false }).limit(10), []); return rows.find(r => !r.body?.superseded_by) || null; }
-/** إنشاء كشف (أو استئنافه): مسودّة واحدة حيّة لكل (برنامج، متدرّب)؛ بعد الاعتماد تُنشأ نسخة جديدة تحمل supersedes_id */
+/** إنشاء كشف (أو استئنافه): مسودّة واحدة حيّة لكل (برنامج، مشارك)؛ بعد الاعتماد تُنشأ نسخة جديدة تحمل supersedes_id */
 export async function createProfile(db: any, me: Me, b: { program_id: string; classroom_id?: string | null; email: string; renew?: boolean }): Promise<{ ok: true; report: any; resumed?: boolean } | { ok: false; error: string }> {
-  const pid = String(b.program_id || ''); const cid = b.classroom_id ? String(b.classroom_id) : null; const e = lower(b.email); if (!e) return { ok: false, error: 'اختر المتدرّب' };
+  const pid = String(b.program_id || ''); const cid = b.classroom_id ? String(b.classroom_id) : null; const e = lower(b.email); if (!e) return { ok: false, error: 'اختر المشارك' };
   const scope = await myScope(db, me); if (!mayReportOn(scope, me, pid, cid)) return { ok: false, error: 'لست مدرّب هذا البرنامج/الشعبة' };
   const live = await liveProfile(db, pid, e); if (live && (live.status !== 'approved' || !b.renew)) return { ok: true, report: live, resumed: true };
   const snap = await computeProfileSnapshot(db, me, pid, cid, e); if ('error' in snap) return { ok: false, error: snap.error };
   const row = { kind: 'diploma_profile', program_id: pid, classroom_id: cid, subject_email: e, supersedes_id: live ? String(live.id) : null, author_id: me.id, author_email: me.email, author_name: me.name || snap.computed.trainer_ar, week_no: 1, period_from: today(), period_to: today(), status: 'draft', computed: snap.computed, body: emptyProfileBody(snap.computed), students: [], lines: [], lines_ok: true };
   const { data, error } = await db.from('portal_reports').insert(row).select(REPORT_COLS).maybeSingle(); if (error) return { ok: false, error: error.message }; return { ok: true, report: data || { ...row, id: '' } };
 }
-/** عند اعتماد تقرير وحدة: كشف مسودّة لكل متدرّب في كشفها (إن لم يكن له كشف حيّ) + إعادة حساب الكشوف غير المعتمَدة */
+/** عند اعتماد تقرير وحدة: كشف مسودّة لكل مشارك في كشفها (إن لم يكن له كشف حيّ) + إعادة حساب الكشوف غير المعتمَدة */
 export async function ensureProfilesFromUnit(db: any, r: any): Promise<{ created: number; refreshed: number }> {
   const pid = String(r.program_id); const cid = r.classroom_id ? String(r.classroom_id) : null; const me: Me = { id: String(r.author_id || ''), email: String(r.author_email || ''), name: String(r.author_name || ''), staff: true };
   const students: StudentRow[] = Array.isArray(r.students) ? r.students : []; let created = 0, refreshed = 0;
@@ -669,7 +669,7 @@ export async function ensureProfilesFromUnit(db: any, r: any): Promise<{ created
     const { error } = await db.from('portal_reports').insert(row); if (!error) created++; }
   return { created, refreshed };
 }
-/** قائمة كشوف الشعبة (للبطاقة): كل متدرّب وحالة كشفه */
+/** قائمة كشوف الشعبة (للبطاقة): كل مشارك وحالة كشفه */
 export async function profilesOf(db: any, me: Me, programId: string, classroomId: string | null): Promise<{ ok: true; rows: { key: string; name: string; email: string; profile: { id: string; status: string; verify_code: string | null; approved_at: string | null; proven: number; total: number } | null }[] } | { ok: false; error: string }> {
   const scope = await myScope(db, me); if (!mayReportOn(scope, me, programId, classroomId)) return { ok: false, error: 'لست مدرّب هذا البرنامج/الشعبة' };
   const program = await safe<any>(db.from('programs').select('id,start_date').eq('id', programId).maybeSingle(), null); const td = today(); const from = program?.start_date ? String(program.start_date).slice(0, 10) : td;
@@ -696,7 +696,7 @@ export async function arrangeEvidence(db: any, me: Me, id: string, code: string,
   if (raw) { const cl = cleanEvidenceQuotes(code, raw, items); if (cl.quotes.length) return { ok: true, quotes: cl.quotes, source: 'ai', items: items.length, rejected: cl.rejected }; }
   return { ok: true, quotes: localEvidenceQuotes(code, items), source: 'local', items: items.length, rejected: 0 };
 }
-/** بعد اعتماد الكشف: «العودة إلى الجواز» + سطر المتدرّب + نسخ الكشف السابق */
+/** بعد اعتماد الكشف: «العودة إلى الجواز» + سطر المشارك + نسخ الكشف السابق */
 async function afterProfileApproved(db: any, me: Me, r: any, code: string | null, site: string): Promise<void> {
   const c = r.computed as ProfileComputed; const b = r.body as ProfileBody; const note = `${R4B_NAMES_AR.profile} ${code || ''}`.trim();
   if (c.subject.user_id) for (const w of passportWrites(b, c)) { const k = c.competencies.find(x => x.code === w.code); await db.from('portal_skill_levels').upsert({ user_id: c.subject.user_id, skill_id: w.skill_id, computed_level: k?.passport_computed ?? w.level, approved_level: w.level, approved_by: me.id, approved_at: nowIso(), approved_note: note, updated_at: nowIso() }, { onConflict: 'user_id,skill_id' }); }

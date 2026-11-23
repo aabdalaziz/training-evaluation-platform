@@ -120,7 +120,7 @@ test('ق٢ — الالتقاط لا يرقّي إلا بقرار بمستوى �
 test('ق٢ — القبول بضمّ إلى دعوة مستوى مفتوحة: يجب أن تكون جماعية · level_exit · للمستوى نفسه', async () => {
   const { db, e } = await seeded(); await masterAll(db, e); await addHours(db, e, 100);
   const r = await requestThreshold(db, e); assert.ok(r.ok); const id = (r as any).request.id;
-  db.T.placement_invites.push({ id: INV_G, code: 'ABCD2345', kind: 'group', purpose: 'level_exit', level_target: 'A2', status: 'open', label_ar: 'قاعة' });
+  db.T.placement_invites.push({ id: INV_G, code: 'ABCD2345', kind: 'group', purpose: 'level_exit', level_target: 'A2', status: 'open', label_ar: 'شعبة' });
   let a = await acceptThreshold(db, id, STAFF, 'https://x', { invite_id: INV_G }); assert.equal(a.ok, false); assert.equal((a as any).error, 'invite_mismatch');
   db.T.placement_invites[0].level_target = 'A1'; a = await acceptThreshold(db, id, STAFF, 'https://x', { invite_id: INV_G }); assert.ok(a.ok); assert.equal((a as any).url, '/miaar/d/ABCD2345');
   assert.equal(db.T.placement_invites.length, 1, 'لم تُنشأ دعوة جديدة');

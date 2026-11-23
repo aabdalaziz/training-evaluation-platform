@@ -35,7 +35,7 @@ const src = (o: Partial<Sources> = {}): Sources => ({
 });
 
 test('P70 · الأسماء والحدود والمسارات والرمز والمفاتيح', () => {
-  assert.equal(P70_NAMES_AR.title, 'بكلماتي عبر المستوى'); assert.equal(P70_NAMES_AR.official_ar, 'صفحة المستوى — بكلمات المتدرّب'); assert.equal(P70_NAMES_AR.official_en, "Level Page — In the Learner's Own Words"); assert.equal(P70_NAMES_AR.crossed, 'عبرتُ');
+  assert.equal(P70_NAMES_AR.title, 'بكلماتي عبر المستوى'); assert.equal(P70_NAMES_AR.official_ar, 'صفحة المستوى — بكلمات المشارك'); assert.equal(P70_NAMES_AR.official_en, "Level Page — In the Learner's Own Words"); assert.equal(P70_NAMES_AR.crossed, 'عبرتُ');
   assert.equal(LEVEL_PATH, '/me/level'); assert.equal(LEVEL_PUBLIC_PREFIX, '/lv');
   assert.equal(LEVEL_LIMITS.lineMax, 200); assert.equal(LEVEL_LIMITS.lineMin, 10); assert.equal(LEVEL_LIMITS.voiceSec, 30); assert.equal(LEVEL_LIMITS.k, 5); assert.equal(LEVEL_LIMITS.openBeforeDays, 7); assert.equal(LEVEL_LIMITS.openAfterDays, 7);
   for (let i = 0; i < 30; i++) assert.match(levelCode(), CODE_RE); assert.ok(!CODE_RE.test('ATH-GD-AAAA-BBBB'), 'عائلة مستقلّة عن P63'); assert.ok(!CODE_RE.test('ATH-LV-0000-1111'), 'بلا 0 و1');

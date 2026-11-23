@@ -51,7 +51,7 @@ test('الوثيقة ATH-AF: عند محطة السنة (نافذتها) إن ك
   assert.ok(docEligible(end, [ROW({ station: 90 }), ROW({ station: 365 })], at('2026-11-20')).ok);
 });
 
-test('«ما قاله من تدرّب هنا»: من 5 متدرّبين مختلفين كتبوا محطة الـ90 · شرائح بالكلمات لا نسب · الاقتباسات ما اعتمده إنسان من بين ما أذن أصحابه · حتى 3', () => {
+test('«ما قاله من تدرّب هنا»: من 5 مشاركين مختلفين كتبوا محطة الـ90 · شرائح بالكلمات لا نسب · الاقتباسات ما اعتمده إنسان من بين ما أذن أصحابه · حتى 3', () => {
   assert.equal(bandAr(0, 10), 'لا أحد'); assert.equal(bandAr(8, 10), 'أكثرهم'); assert.equal(bandAr(5, 10), 'نحو النصف أو أكثر'); assert.equal(bandAr(3, 10), 'قرابة الربع إلى النصف'); assert.equal(bandAr(1, 10), 'قلّة');
   const four = [1, 2, 3, 4].map(i => ROW({ id: i, user_id: `u${i}`, email: `u${i}@x.sa` })); const a4 = programAfter(four); assert.equal(a4.shown, false); assert.equal(a4.n, 4); assert.ok(a4.states.every(s => s.n === 0), 'لا أعداد تحت 5'); assert.ok(a4.line_ar.includes('5'));
   const five = [...four, ROW({ id: 5, user_id: 'u5', email: 'u5@x.sa', state: 'not_useful', may_publish: true, published_at: '2026-11-01T00:00:00Z' }), ROW({ id: 6, user_id: 'u1', station: 30, may_publish: true, published_at: null }), ROW({ id: 7, user_id: 'u2', station: 30, may_publish: false, published_at: '2026-11-01T00:00:00Z' })];
@@ -77,6 +77,6 @@ test('خزنة أَثَر: المحطات شخصية (تجهيل، self+staff+pu
   const vercel = JSON.parse(fs.readFileSync('vercel.json', 'utf8')); assert.ok(!(vercel.crons || []).some((c: any) => /p38|after|station/.test(String(c.path))), 'لا كرون جديد');
   const cron = fs.readFileSync('lib/journey/cron.ts', 'utf8'); assert.ok(cron.includes('openStations'), 'فتح المحطات داخل كرون الرحلة القائم');
   const sql = fs.readFileSync('supabase/migrations/20261216_portal_p38_after.sql', 'utf8'); assert.ok(sql.includes('portal_after_stations') && sql.includes("station in (30, 90, 365)") && sql.includes('not_useful') && sql.includes('shown_on_credential') && sql.includes('unique (enrollment_id, station)'));
-  const srv = fs.readFileSync('lib/portal/mcp-server.ts', 'utf8'); assert.ok(srv.indexOf("name === 'program_after'") < srv.indexOf("if (c.actor.tier !== 'personal') return toolContent("), 'تُخدم قبل بوابة المستوى الشخصي');
+  const srv = fs.readFileSync('lib/portal/mcp-server.ts', 'utf8'); assert.ok(srv.indexOf("name === 'program_after'") < srv.indexOf("if (c.actor.tier !== 'personal') return toolContent("), 'تُخدم قبل بوّابة المستوى الشخصي');
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); assert.ok(!Object.keys(pkg.dependencies || {}).some(d => /survey|form|chart/.test(d)), 'بلا حزم جديدة');
 });

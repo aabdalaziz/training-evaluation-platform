@@ -80,7 +80,7 @@ test('P30 الأهلية: 3 فصول للمنسوب · ميثاق نافذ لل�
   assert.equal(memberName(basePair()), 'نورة', 'الاسم الأول'); assert.equal(memberName(basePair({ member_name_mode: 'anon' })), 'ممارس', 'بلا اسم'); assert.equal(orgName(basePair({ org_name: null })), 'الجهة', 'جهة بلا اسم');
 });
 
-test('P30 ما يقترحه أَثَر للمنسوب ليطلبه من جهته: أربعة أفعال تشهدها المنصة · مرتّبة بما ينقصه · 3 كحد أقصى · لا تكرار', () => {
+test('P30 ما يقترحه أَثَر للمنسوب ليطلبه من جهته: أربعة أفعال تشهدها البوّابة · مرتّبة بما ينقصه · 3 كحد أقصى · لا تكرار', () => {
   const none = suggestForOrg(emptyInput()); assert.equal(none.length, 3, 'ثلاثة'); assert.equal(none[0].kind, 'seat', 'لا مجلس → المقعد أولًا'); assert.equal(new Set(none.map(o => o.kind)).size, 3, 'بلا تكرار'); assert.ok(none.some(o => o.kind === 'missions'), 'تأكيد المهام دائمًا متاح');
   const lv = suggestForOrg(emptyInput({ levels: [{ skill_id: SK, computed_level: 3.4, approved_level: 1, approved_at: ago(300) }] as any, memberships: [{ council_id: C1, joined_at: ago(50), status: 'active', council_title: 'مجلس' }] as any }));
   assert.equal(lv[0].kind, 'level', 'في مجلس + مستوى محسوب أعلى من المعتمد → الاعتماد أولًا'); assert.match(lv[0].title_ar, /قيادة التغيير/, 'اسم المهارة'); assert.equal(lv[0].target.to, 3, 'إلى المستوى المحسوب'); assert.ok(lv.some(o => o.kind === 'attestation'), 'في مجلس → اعتماد شهادة قرين'); assert.equal(lv.some(o => o.kind === 'seat'), false, 'له مجلس → لا مقعد');
@@ -125,7 +125,7 @@ test('P30 الزاوية: المنسوب لا يرى بريد موقّع الج�
   assert.equal(orgPairEvents([basePair(), basePair({ status: 'revoked' }), basePair({ signed_at: null })]).length, 1, 'أحداث رحلة الجهة: الموقَّع غير المسحوب فقط');
 });
 
-test('P30 القراءة: جهتي وميثاقها · منسوب مؤكَّد · شهادة المنصة (طلب مقعد يذكر بريده) · مديرو الجهة · الدعوة العمياء لا تظهر للمنسوب · عهد حيّ واحد', async () => {
+test('P30 القراءة: جهتي وميثاقها · منسوب مؤكَّد · شهادة البوّابة (طلب مقعد يذكر بريده) · مديرو الجهة · الدعوة العمياء لا تظهر للمنسوب · عهد حيّ واحد', async () => {
   const db = fakeDb({
     portal_organizations: [{ id: ORG, name_ar: 'جامعة أَثَر' }],
     portal_org_charters: [{ organization_id: ORG, status: 'active', signed_at: ago(100), expires_at: addDays(new Date(NOW), 265) }],

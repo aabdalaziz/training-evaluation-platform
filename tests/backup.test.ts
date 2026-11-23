@@ -53,7 +53,7 @@ test('backup: columnsOf hides sensitive/technical columns, id first', () => {
 test('backup: wideAnswers = one row per evaluation, one column per used question', () => {
   const sh = wideAnswers(data());
   assert.equal(sh.rows.length, 3);
-  const head = sh.rows[0]; assert.deepEqual(head.slice(0, 6), ['التقييم', 'البرنامج', 'القاعة', 'النوع', 'التاريخ', 'المتوسط']);
+  const head = sh.rows[0]; assert.deepEqual(head.slice(0, 6), ['التقييم', 'البرنامج', 'الشعبة', 'النوع', 'التاريخ', 'المتوسط']);
   assert.deepEqual(head.slice(6), ['وضوح الشرح', 'ملاحظات', 'ختامي']);
   const r1 = sh.rows[1]; assert.equal(r1[1], 'التفويض'); assert.equal(r1[2], 'A-1'); assert.equal(r1[4], '2026-10-20'); assert.equal(r1[6], 5); assert.equal(r1[7], 'ممتاز'); assert.equal(r1[8], null);
   const r2 = sh.rows[2]; assert.equal(r2[4], '2026-04-30'); assert.equal(r2[8], 3);

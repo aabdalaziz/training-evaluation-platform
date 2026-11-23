@@ -118,7 +118,7 @@ test('4) خريطة الزمن للجهة: لا شبكة تحت 5 أشخاص · 
   const old = timeGrid([log('q1', '2026-06-01T10:00:00Z')], NOW); assert.equal(old.users, 0, 'خارج الأسابيع الثمانية');
 });
 
-test('4) أنسب ثلاث ساعات: الجهة ×2 + المنصّة ×1 · 8–22 فقط · لماذا', () => {
+test('4) أنسب ثلاث ساعات: الجهة ×2 + البوّابة ×1 · 8–22 فقط · لماذا', () => {
   const z = () => Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
   const org = z(), plat = z(); org[2][20] = 3; plat[2][20] = 1; plat[4][19] = 3; org[0][10] = -1; plat[1][3] = 3; org[6][9] = 1;
   const b = bestHours(org, plat); assert.equal(b.length, 3);

@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// اختبارات P46 ر4-ب — «كشف الكفايات» («العودة إلى الجواز»): الاقتراح من الأدلّة · تنظيف الكشف · النواقص · الكتابة في الجواز · سطر المتدرّب · التحقّق العام · قراءة الدفعة · «رتّب الأدلّة» (تنقية صارمة) · شاهد الهيئة
+// اختبارات P46 ر4-ب — «كشف الكفايات» («العودة إلى الجواز»): الاقتراح من الأدلّة · تنظيف الكشف · النواقص · الكتابة في الجواز · سطر المشارك · التحقّق العام · قراءة الدفعة · «رتّب الأدلّة» (تنقية صارمة) · شاهد الهيئة
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -46,7 +46,7 @@ test('ر4-ب · passportWrites: مستويات 1..5 لكفايات لها مها
   const c = C(); const b = cleanProfileBody({ levels: [{ code: 'a', level: 4 }, { code: 'b', level: 5 }] }, c); const w = passportWrites(b, c); assert.deepEqual(w, [{ skill_id: 'sk-a', level: 4, code: 'a' }]);
   assert.deepEqual(passportWrites(cleanProfileBody({ levels: [{ code: 'a', level: 0 }] }, c), c), []);
 });
-test('ر4-ب · سطر المتدرّب وبياناته · سطر القائمة', () => {
+test('ر4-ب · سطر المشارك وبياناته · سطر القائمة', () => {
   const c = C(); const b = cleanProfileBody({ levels: [{ code: 'a', level: 4, evidence: 'ش' }, { code: 'b', level: 0 }], strengths: 's', keep: 'k', recommendation: 'complete_plan', plan: 'p', admin: 'سرّي' }, c);
   const t = profileLineText(b, c); assert.ok(t.includes('أثبتَ 1 من 2') && t.includes('إتمام مع خطة متابعة') && t.includes('كفاية a'), t); assert.ok(t.length <= 300);
   const d = profileLineData(b, c); assert.equal(d.levels[0].level_ar, 'متقدم'); assert.equal(d.levels[1].level_ar, 'لم يُثبت بعد'); assert.equal(d.recommendation_ar, 'إتمام مع خطة متابعة'); assert.equal(d.units_reached, 1); assert.equal(JSON.stringify(d).includes('سرّي'), false, 'admin notes never leave');
@@ -66,11 +66,11 @@ test('ر4-ب · cohortReading: مخفيّة تحت 5 · توزيع ومتوسط 
   const a = r.competencies.find(k => k.code === 'a')!; assert.deepEqual(a.dist, [1, 0, 0, 1, 2, 1]); assert.equal(a.avg_level, 4); assert.equal(r.competencies.find(k => k.code === 'b')!.avg_level, null);
 });
 test('ر4-ب · «رتّب الأدلّة»: محلي أول جملة · تنقية صارمة (مصدر · حكم · رقم غريب · طول · ≤3)', () => {
-  const items: EvidenceItem[] = [{ source: 'تقرير الوحدة 1', text: 'الوحدة 1 «المدخل»: 85% في «كفاية a» · بلغ ناتج الوحدة' }, { source: 'كل يوم مهارة 3 نوفمبر', text: 'تعاملت مع الموقف بالاستماع أولًا ثم اقترحت حلًّا. وبعدها كتبت خطة.' }, { source: 'مهمة مصدَّقة «درس»', text: 'قدّم درسًا كاملًا أمام 12 متدرّبًا وسجّله.' }, { source: 'x', text: 'رابع' }];
+  const items: EvidenceItem[] = [{ source: 'تقرير الوحدة 1', text: 'الوحدة 1 «المدخل»: 85% في «كفاية a» · بلغ ناتج الوحدة' }, { source: 'كل يوم مهارة 3 نوفمبر', text: 'تعاملت مع الموقف بالاستماع أولًا ثم اقترحت حلًّا. وبعدها كتبت خطة.' }, { source: 'مهمة مصدَّقة «درس»', text: 'قدّم درسًا كاملًا أمام 12 مشاركًا وسجّله.' }, { source: 'x', text: 'رابع' }];
   const loc = localEvidenceQuotes('a', items); assert.equal(loc.length, 3); assert.equal(loc[1].text, 'تعاملت مع الموقف بالاستماع أولًا ثم اقترحت حلًّا.'); assert.equal(loc[0].source, 'تقرير الوحدة 1');
-  const raw = { quotes: [{ text: 'قدّم درسًا كاملًا أمام 12 متدرّبًا.', source: 'مهمة مصدَّقة «درس»' }, { text: 'أداء ممتاز في الوحدة الأولى بنسبة 85%.', source: 'تقرير الوحدة 1' }, { text: 'حصل على 97% في الوحدة.', source: 'تقرير الوحدة 1' }, { text: 'استمع أولًا ثم اقترح حلًّا.', source: 'مصدر مختلق' }, { text: 'قصير', source: 'تقرير الوحدة 1' }, { text: 'بلغ ناتج الوحدة الأولى بنسبة 85%.', source: 'تقرير الوحدة 1' }] };
+  const raw = { quotes: [{ text: 'قدّم درسًا كاملًا أمام 12 مشاركًا.', source: 'مهمة مصدَّقة «درس»' }, { text: 'أداء ممتاز في الوحدة الأولى بنسبة 85%.', source: 'تقرير الوحدة 1' }, { text: 'حصل على 97% في الوحدة.', source: 'تقرير الوحدة 1' }, { text: 'استمع أولًا ثم اقترح حلًّا.', source: 'مصدر مختلق' }, { text: 'قصير', source: 'تقرير الوحدة 1' }, { text: 'بلغ ناتج الوحدة الأولى بنسبة 85%.', source: 'تقرير الوحدة 1' }] };
   const cl = cleanEvidenceQuotes('a', raw, items); assert.equal(cl.quotes.length, 2, JSON.stringify(cl)); assert.equal(cl.rejected, 4); assert.ok(cl.quotes.every(q => !q.text.includes('ممتاز') && !q.text.includes('97')));
-  assert.deepEqual(cleanEvidenceQuotes('a', null, items), { quotes: [], rejected: 0 }); assert.equal(cleanEvidenceQuotes('a', { quotes: Array.from({ length: 6 }, () => ({ text: 'قدّم درسًا كاملًا أمام 12 متدرّبًا.', source: 'مهمة مصدَّقة «درس»' })) }, items).quotes.length, 1, 'dedupe');
+  assert.deepEqual(cleanEvidenceQuotes('a', null, items), { quotes: [], rejected: 0 }); assert.equal(cleanEvidenceQuotes('a', { quotes: Array.from({ length: 6 }, () => ({ text: 'قدّم درسًا كاملًا أمام 12 مشاركًا.', source: 'مهمة مصدَّقة «درس»' })) }, items).quotes.length, 1, 'dedupe');
   const p = evidencePrompt('كفاية a', items); assert.ok(p.system.includes('ممنوع') && p.user.includes('كفاية a') && JSON.parse(p.user).evidence.length === 4);
 });
 test('ر4-ب · شاهد الهيئة: «قاد دبلومًا موثَّقًا بـ…»', () => {

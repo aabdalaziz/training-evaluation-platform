@@ -9,7 +9,7 @@ import { retentionText } from './subject';
 export type NoticeOrg = { name: string; legal: string; owner: string; contact: string; site: string };
 export function orgFromEnv(env: Record<string, string | undefined> = process.env, site = ''): NoticeOrg {
   const S = (site || env.NEXT_PUBLIC_SITE_URL || 'https://athar-portal.com').replace(/\/$/, '');
-  return { name: 'بوابة أَثَر', legal: 'أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة', owner: 'د. أحمد محمد عبدالعزيز بدوي', contact: String(env.DATA_PROTECTION_CONTACT || env.SECURITY_CONTACT || (env.ADMIN_EMAILS || '').split(/[,;\s]+/)[0] || '').trim(), site: S };
+  return { name: 'بوّابة أَثَر', legal: 'أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة', owner: 'د. أحمد محمد عبدالعزيز بدوي', contact: String(env.DATA_PROTECTION_CONTACT || env.SECURITY_CONTACT || (env.ADMIN_EMAILS || '').split(/[,;\s]+/)[0] || '').trim(), site: S };
 }
 
 export function noticeModel(org: NoticeOrg) {

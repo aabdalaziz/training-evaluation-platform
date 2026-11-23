@@ -230,5 +230,5 @@ test('م10: سلامة الملفات — الصفحة واللوحة والمس
   const way = read('lib/portal/way.ts'); assert.ok(way.includes("'miaar/practice'"), 'الخريطة');
   assert.ok(read('app/api/followups/send/route.ts').includes('runPracticeReminders'), 'الكرون اليومي'); assert.ok(read('lib/ai/prompts.ts').includes('miaar_practice_feedback'), 'غرض الذكاء');
   assert.ok(read('lib/miaar/engine.ts').includes('exposedCodes'), 'المحرّك يستثني المكشوف'); assert.ok(read('lib/miaar/exitflow.ts').includes('mergeRetakeUnits'), 'دمج الإعادة');
-  assert.ok(read('app/miaar/client/ClientBoard.tsx').includes('cb-practice'), 'بوابة الجهة'); assert.ok(read('app/miaar/MiaarApp.tsx').includes('mi-practice'), 'بطاقة النتيجة');
+  assert.ok(read('app/miaar/client/ClientBoard.tsx').includes('cb-practice'), 'بوّابة الجهة'); assert.ok(read('app/miaar/MiaarApp.tsx').includes('mi-practice'), 'بطاقة النتيجة');
 });

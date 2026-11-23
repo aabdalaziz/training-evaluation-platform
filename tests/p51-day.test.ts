@@ -18,7 +18,7 @@ test('P51: cleanWord (وسوم · روابط · مسافات · ≤200) · fillT
   assert.equal(cleanWord('  <b>أهلًا</b>  بك https://x.y/z  و www.a.b  '), 'أهلًا بك و'); assert.equal(cleanWord('<i>أمل</i>، أهلًا'), 'أمل، أهلًا'); assert.equal(cleanWord('ن'.repeat(300)).length, WORD_MAX); assert.equal(cleanWord(null), '');
   assert.equal(fillTemplate(WORD_TEMPLATES[0], 'سارة'), 'افتقدناك أمس يا سارة. مقعدك محفوظ، والدرس القادم يبدأ من حيث توقّفنا — أراك فيه.'); assert.match(fillTemplate(WORD_TEMPLATES[1], ''), /يا صديقي/);
   assert.deepEqual(WORD_TEMPLATES.map((t) => t.key), ['absent', 'idle', 'cheer']); assert.ok(WORD_TEMPLATES.every((t) => !/\d+\s*%|درجة/.test(t.text_ar)), 'لا درجات ولا نسب');
-  assert.equal(DAY_OFFICIAL.en, 'Trainer Daily Ledger'); assert.equal(KIND_AR.trainer_word, 'كلمة من مدرّبك'); assert.equal(KIND_ICON.day_digest, '📒');
+  assert.equal(DAY_OFFICIAL.en, 'Trainer Daily Ledger'); assert.equal(KIND_AR.trainer_word, 'كلمة من ميسّرك'); assert.equal(KIND_ICON.day_digest, '📒');
 });
 
 test('P51: greeting بساعة الرياض · yesterdayOf · riyadhDayBounds · digestText', () => {
@@ -88,7 +88,7 @@ test('P51: collectDayBook — بريد غير مربوط → linked:false وفا
 test('P51: sendWord — صيغة بالاسم الأول · نصّ حرّ منقّى · dedupe لكل متعلّم/مدرّب/يوم مع merge (الأحدث تحلّ محلّ الأقدم) · لا مستلم → خطأ · dry لا يكتب · كلمة للشعبة كلها', async () => {
   const db = fakeDb(); const me = await resolveTrainer(db as any, { id: 'u1', email: 'trainer@x.sa', staff: false }); const b = await collectDayBook(db as any, me, 'https://x', { now: NOW }); const room = b.classrooms[0];
   const r1 = await sendWord(db as any, me, room, { mode: 'absent', template: 'absent' }, { now: NOW }); assert.ok(!('error' in r1)); assert.equal(r1.sent, 2); assert.equal(r1.recipients, 2);
-  const n = db.T.portal_learner_notices; assert.equal(n.length, 2); const a = n.find((x: any) => x.email === 'a@x.sa'); assert.equal(a.kind, 'trainer_word'); assert.equal(a.title_ar, 'كلمة من مدرّبك د. أحمد'); assert.match(a.body_ar, /^افتقدناك أمس يا أمل\./); assert.equal(a.url, '/me'); assert.equal(a.dedupe_key, 'trainer_word:t1:a@x.sa:2026-11-06'); assert.equal(a.ref_id, 'c1');
+  const n = db.T.portal_learner_notices; assert.equal(n.length, 2); const a = n.find((x: any) => x.email === 'a@x.sa'); assert.equal(a.kind, 'trainer_word'); assert.equal(a.title_ar, 'كلمة من ميسّرك د. أحمد'); assert.match(a.body_ar, /^افتقدناك أمس يا أمل\./); assert.equal(a.url, '/me'); assert.equal(a.dedupe_key, 'trainer_word:t1:a@x.sa:2026-11-06'); assert.equal(a.ref_id, 'c1');
   const r2 = await sendWord(db as any, me, room, { mode: 'one', email: 'a@x.sa', text: '<i>أمل</i>، ننتظرك غدًا https://bad.link' }, { now: NOW }); assert.ok(!('error' in r2)); assert.equal(db.T.portal_learner_notices.length, 2, 'لا صفّ جديد — تحديث'); assert.equal(db.T.portal_learner_notices.find((x: any) => x.email === 'a@x.sa').body_ar, 'أمل، ننتظرك غدًا');
   const r3 = await sendWord(db as any, me, room, { mode: 'one', email: 'nope@x.sa', text: 'x' }, { now: NOW }); assert.deepEqual(r3, { error: 'لا مستلم لهذه الكلمة' });
   const r4 = await sendWord(db as any, me, room, { mode: 'idle', text: '' }, { now: NOW }); assert.deepEqual(r4, { error: 'اكتب كلمة أو اختر صيغة أو قُلها بصوتك' });

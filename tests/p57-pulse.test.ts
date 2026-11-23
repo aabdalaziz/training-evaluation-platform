@@ -35,7 +35,7 @@ test('p57: الأيدي — باقية ≥ 7 أيام بلا كلمة صوتية
   const p = computePulse([...five, W('a@x.sa', 10, 't1', true)], [R('a@x.sa', 'need_help', 15), R('b@x.sa', 'need_help', 12), R('c@x.sa', 'need_help', 3), R('d@x.sa', 'got_it', 5)], ASOF);
   assert.equal(p.hands, 3); assert.equal(p.hands_open, 1); assert.match(p.mirror_ar, /^يد واحدة بقيت مرفوعة أكثر من أسبوع/); assert.match(p.mirror_ar, /نذكرها لكم عددًا/);
   const q = computePulse([...five, W('a@x.sa', 10, 't1', true), W('b@x.sa', 11, 't1', true)], [R('a@x.sa', 'need_help', 15), R('b@x.sa', 'need_help', 12), R('c@x.sa', 'got_it', 3), R('d@x.sa', 'got_it', 5)], ASOF);
-  assert.equal(q.hands_open, 0); assert.match(q.mirror_ar, /^كل يد مرفوعة لقيت كلمة من مدرّبها ✓/);
+  assert.equal(q.hands_open, 0); assert.match(q.mirror_ar, /^كل يد مرفوعة لقيت كلمة من ميسّرها ✓/);
   assert.equal(OPEN_HAND_DAYS, 7);
 });
 

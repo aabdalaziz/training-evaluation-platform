@@ -71,7 +71,7 @@ test('الترحيل والمسارات والتركيب', () => {
   const sql = R('supabase/migrations/20270219_portal_h1_b5_diploma_exit.sql');
   for (const s of ['add column if not exists linked_program_id', 'create table if not exists public.portal_unit_completions', 'create table if not exists public.portal_diploma_exits', "'achievement_record'", 'unique (unit_id, email)', "where state = 'exited'"]) assert.ok(sql.includes(s), s);
   const api = R('app/api/diploma/exit/route.ts'); for (const a of ["'auto'", "'complete'", "'link'", "'exit'", "'return'", 'mine']) assert.ok(api.includes(a), a);
-  assert.ok(api.includes("const self = !c.writer")); // المتدرّب يخرج من قيده هو فقط
+  assert.ok(api.includes("const self = !c.writer")); // المشارك يخرج من قيده هو فقط
   const st = R('lib/diploma/exit-store.ts'); assert.ok(st.includes("kind: 'program_completion'") && st.includes("kind: 'achievement_record'") && st.includes('signAndStoreCredential'));
   assert.ok(st.includes("cur.source === 'manual'")); // الآلي لا يمسّ اليدوي
   assert.ok(R('app/me/page.tsx').includes('<ExitCard />')); assert.ok(R('app/components/PortalAdminTabs.tsx').includes("'/admin/diplomas'")); assert.ok(R('lib/portal/rooms.ts').includes("'/admin/diplomas'"));

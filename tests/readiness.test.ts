@@ -32,7 +32,7 @@ test('برنامج قادم مكتمل الإعداد = جاهز وبنود ال
   assert.equal(nextAction(r), null);
 });
 
-test('بلا قاعات وبلا قالب يومي = عوائق والخطوة التالية هي القاعات', () => {
+test('بلا شُعب وبلا قالب يومي = عوائق والخطوة التالية هي الشُّعب', () => {
   const r = assessProgram(base({ classrooms: [], links: [{ program_id: 'p1', template_id: 'f', is_active: true }] }));
   const ids = r.checks.filter(c => c.status === 'missing').map(c => c.id);
   assert.deepEqual(ids, ['rooms', 'tpl-daily']);
@@ -40,7 +40,7 @@ test('بلا قاعات وبلا قالب يومي = عوائق والخطوة �
   assert.equal(nextAction(r)!.id, 'rooms'); assert.equal(r.level, 'not');
 });
 
-test('قالب مرتبط بلا أسئلة = عائق، وقاعة بلا مدرب = تحذير', () => {
+test('قالب مرتبط بلا أسئلة = عائق، وقاعة بلا مدرّب = تحذير', () => {
   const r = assessProgram(base({ questions: [{ template_id: 'd' }], classrooms: [{ id: 'c1', program_id: 'p1', trainer_id: 't1' }, { id: 'c2', program_id: 'p1', trainer_id: null, code: 'B-2' }] }));
   assert.equal(r.checks.find(c => c.id === 'tpl-final')!.status, 'missing');
   const tr = r.checks.find(c => c.id === 'trainers')!; assert.equal(tr.status, 'warn'); assert.ok(tr.detail.includes('B-2'));

@@ -28,7 +28,7 @@ test('P41 rank: مِعيار بأي رسم، والمرادفات القديمة
   assert.equal(rank('المِعيار', ROUTES, guest)[0].href, '/miaar', 'with al + tashkeel');
   assert.equal(rank('miaar', ROUTES, guest)[0].href, '/miaar', 'latin');
   assert.ok(rank('مصنع البرامج', ROUTES, { ...guest, staff: true }).some(h => h.href === '/admin/program-engineering'), 'old narrative name → official page');
-  assert.ok(rank('الميسر', ROUTES, guest).some(h => h.href === '/sim'), 'synonym');
+  assert.ok(rank('الميسّر', ROUTES, guest).some(h => h.href === '/sim'), 'synonym');
   assert.equal(rank('xyzqq', ROUTES, guest).length, 0, 'no junk');
 });
 

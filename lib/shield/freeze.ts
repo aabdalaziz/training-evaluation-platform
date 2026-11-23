@@ -1,7 +1,7 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
  * درع أَثَر — الطبقة الثانية (P65) ★3 «زرّ التجميد»: جهة واحدة في وضع القراءة فقط أثناء حادثة.
- *  علمٌ على portal_organizations (frozen_at/reason/by) + فحص في مسارات الكتابة للمتدرّبين (423 Locked) برسالة إنسانية.
+ *  علمٌ على portal_organizations (frozen_at/reason/by) + فحص في مسارات الكتابة للمشاركين (423 Locked) برسالة إنسانية.
  *  المسار السريع: إن لم تكن أيّ جهة مجمَّدة (الحالة الطبيعية) فاستعلام واحد خفيف ولا شيء بعده.
  *  العضوية تُحسب من portal_org_members (مؤكَّدة) أو portal_enrollments.organization_id. التجميد/الرفع حدثان أمنيان (حرج/معلومة).
  */

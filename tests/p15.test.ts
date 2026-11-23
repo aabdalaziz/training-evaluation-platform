@@ -76,7 +76,7 @@ test('p15: بطاقة الصف — مفاتيح مجهولة، ما أثبته/�
   assert.equal(cards[2].evidence, 0); assert.equal(cards[2].unexamined.length, 2);
   assert.ok(!JSON.stringify(cards).includes('91'), 'لا درجات في البطاقة');
   const sum = classSummary(cards, [SK1, SK2], META);
-  assert.equal(sum.no_evidence, 1); assert.equal(sum.one_channel, 1); assert.ok(sum.hints.length >= 1 && sum.hints.length <= 3, 'تلميحات 1–3'); assert.ok(sum.hints.some(h => h.includes('بلا أي دليل سابق')), 'تلميح للمتعلم بلا دليل');
+  assert.equal(sum.no_evidence, 1); assert.equal(sum.one_channel, 1); assert.ok(sum.hints.length >= 1 && sum.hints.length <= 3, 'تلميحات 1–3'); assert.ok(sum.hints.some(h => h.includes('بلا أي دليل سابق')), 'تلميح للمتعلّم بلا دليل');
 });
 
 test('p15: طقس القدرة — تذوي/ترتفع من نافذتي 45 يومًا، و«لا دليل كافٍ» تحت 3 أشخاص، وخطوات تغيّر التوقع', () => {

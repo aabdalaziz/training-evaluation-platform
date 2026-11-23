@@ -159,8 +159,8 @@ test('P22 الحوادث: مهلة 72 ساعة من العلم، لا تكرار
   const i = await openIncident(db, { summary: 'تسريب محتمل لجدول التسجيلات عبر مفتاح وكيل مسرَّب', tables: ['portal_enrollments', 'portal_profiles'], affected_count: 120, security_event_id: 55, discovered_at: disc });
   assert.ok(i.row, 'فُتحت'); assert.ok(Math.abs(hoursLeft(i.row!.deadline_at) - (INCIDENT_HOURS - 10)) < 0.1, 'المهلة تُحسب من لحظة العلم');
   const dup = await openIncident(db, { summary: 'نفس الحدث مرة أخرى بوصف مختلف', security_event_id: 55 }); assert.equal(dup.row!.id, i.row!.id, 'لا تكرار لحدث الدرع');
-  const d = sdaiaDraft(i.row!, { name: 'شركة بوابة التميز', contact: 'dpo@x', site: 'https://t' }); assert.ok(d.includes('طلبات التسجيل') && d.includes('ملفي العام') && d.includes('72 ساعة') && d.includes('120'), 'المسودة عربية بالفئات');
-  const n = affectedNotice(i.row!, { name: 'شركة بوابة التميز', contact: 'dpo@x' }); assert.ok(n.subject.includes('بياناتك') && n.text.includes('dpo@x'), 'إشعار المتأثرين');
+  const d = sdaiaDraft(i.row!, { name: 'شركة بوّابة التميز', contact: 'dpo@x', site: 'https://t' }); assert.ok(d.includes('طلبات التسجيل') && d.includes('ملفي العام') && d.includes('72 ساعة') && d.includes('120'), 'المسودة عربية بالفئات');
+  const n = affectedNotice(i.row!, { name: 'شركة بوّابة التميز', contact: 'dpo@x' }); assert.ok(n.subject.includes('بياناتك') && n.text.includes('dpo@x'), 'إشعار المتأثرين');
   const rep = await markReported(db, i.row!.id, 'SDAIA-2026-001', true); assert.ok(rep.ok && rep.row!.status === 'reported' && rep.row!.affected_notified_at, 'أُبلغت الهيئة');
   const rep2 = await markReported(db, i.row!.id, 'x'); assert.equal(rep2.ok, false, 'لا إبلاغ مرتين');
   const cl = await closeIncident(db, i.row!.id, 'closed', 'دُوِّر المفتاح وأُبطلت التفويضات'); assert.ok(cl.ok && cl.row!.status === 'closed', 'أُغلقت');

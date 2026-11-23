@@ -1,5 +1,5 @@
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-// اختبارات P46 ر2 — التقرير الختامي لأداء المتدرّبين («خاتمة الرحلة»): الأسماء · النضج والتقدّم · المسارات من الأسبوعيات · الاقتراح الآلي · التنظيف · النواقص · التوقيعان · الفقرة · العرض العام · المسارات والخزنة
+// اختبارات P46 ر2 — التقرير الختامي لأداء الطلاب («خاتمة الرحلة»): الأسماء · النضج والتقدّم · المسارات من الأسبوعيات · الاقتراح الآلي · التنظيف · النواقص · التوقيعان · الفقرة · العرض العام · المسارات والخزنة
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -16,7 +16,7 @@ const W = (week_no: number, avgA: number | null, avgB: number | null, extra: Par
 const skills = ARABIC_SKILLS.slice(0, 2);
 
 test('الأسماء والثوابت: خاتمة الرحلة · التوصيات الأربع · قاعدة 80/75/60 · 75% أو 14 يومًا · توقيعان', () => {
-  assert.equal(P46_NAMES_AR.final, 'التقرير الختامي لأداء المتدربين'); assert.equal(P46_NAMES_AR.final_story, 'خاتمة الرحلة'); assert.equal(P46_NAMES_AR.maturity, 'نضج التقرير'); assert.ok(P46_NAMES_AR.promote_btn.includes('تنسيب'));
+  assert.equal(P46_NAMES_AR.final, 'التقرير الختامي لأداء الطلاب'); assert.equal(P46_NAMES_AR.final_story, 'خاتمة الرحلة'); assert.equal(P46_NAMES_AR.maturity, 'نضج التقرير'); assert.ok(P46_NAMES_AR.promote_btn.includes('تنسيب'));
   assert.deepEqual([...RECS], ['promote', 'continue', 'support', 'repeat']); assert.equal(REC_AR.promote, 'رفع للمستوى الأعلى'); assert.equal(PROMOTE_MIN, 80); assert.equal(PROMOTE_ATT, 75); assert.equal(SUPPORT_MAX, 60); assert.equal(FINAL_READY_PCT, 75); assert.equal(FINAL_READY_DAYS, 14);
   assert.deepEqual([...SIGNS], ['quality', 'manager']); assert.equal(SIGN_AR.manager, 'مدير البرنامج'); assert.equal(PARA_MAX, 420); assert.equal(TREND_AR.up, 'صاعد');
 });
@@ -57,13 +57,13 @@ test('النواقص قبل الإرسال: الملخّص · درجة ختام�
   b.summary.overview = 'x'; b.strengths.strengths = [{ point: 'أ', evidence: '' }]; const st2 = cleanFinalStudents([{ key: 'e:a@x.sa', scores: { listening: 70 } }], [S()], skills); assert.deepEqual(missingBeforeFinalSubmit(b, st2).map(m => m.includes('توصية')), [true]);
   const st3 = cleanFinalStudents([{ key: 'e:a@x.sa', scores: { listening: 70 }, rec: 'continue' }], [S()], skills); assert.deepEqual(missingBeforeFinalSubmit(b, st3), []);
 });
-test('التوقيعان: طاقم فقط · على مُرسَل ختامي · لا توقيع مرّتين · الثاني من شخص آخر إلا مدير المنصة · الاكتمال بالاثنين', () => {
+test('التوقيعان: طاقم فقط · على مُرسَل ختامي · لا توقيع مرّتين · الثاني من شخص آخر إلا مدير البوّابة · الاكتمال بالاثنين', () => {
   const r = (so: any = {}) => ({ kind: 'final', status: 'submitted', body: { signoff: { quality: null, manager: null, ...so } } });
   const noura = { id: 'u2', email: 'n@x.sa', staff: true }; const admin = { id: 'u1', email: 'a@x.sa', staff: true, admin: true }; const reem = { id: 'u5', email: 'r@x.sa', staff: false };
   assert.equal(canSign(r(), noura, 'quality'), true); assert.equal(canSign(r(), reem, 'quality'), false); assert.equal(canSign({ ...r(), status: 'draft' }, noura, 'quality'), false); assert.equal(canSign({ ...r(), kind: 'weekly' }, noura, 'quality'), false);
   const q = { name: 'نورة', email: 'n@x.sa', id: 'u2', at: '2026-11-01T00:00:00Z' };
   assert.equal(canSign(r({ quality: q }), noura, 'quality'), false); assert.equal(canSign(r({ quality: q }), noura, 'manager'), false); assert.equal(canSign(r({ quality: q }), admin, 'manager'), true);
-  assert.equal(canSign(r({ quality: { ...q, id: 'u1', email: 'a@x.sa' } }), admin, 'manager'), true);   // مدير المنصة يوقّع الاثنين
+  assert.equal(canSign(r({ quality: { ...q, id: 'u1', email: 'a@x.sa' } }), admin, 'manager'), true);   // مدير البوّابة يوقّع الاثنين
   assert.equal(signoffComplete({ signoff: { quality: q, manager: null } }), false); assert.equal(signoffComplete({ signoff: { quality: q, manager: q } }), true);
   assert.deepEqual(signoffView({ signoff: { quality: q, manager: null } }), { quality: { name: 'نورة', at: q.at }, manager: null });
 });
@@ -72,14 +72,14 @@ test('فقرة المسار: المحلية تصف الأرقام فقط · ال
   const p = localParagraph(t, skills, { avg: 82, attendance_pct: 80 }); assert.ok(p.includes('من 60%') && p.includes('إلى 75%') && p.includes('+15') && p.includes('حضر 80%') && p.includes('82%') && p.includes('سطر 2'), p); assert.ok(p.length <= PARA_MAX); assert.ok(!/ممتاز|توصي/.test(p));
   const pr = paragraphPrompt(t, skills, { avg: 82, attendance_pct: 80, scores: { listening: 90, speaking: 74 } }); assert.ok(pr.system.includes('ممنوع') && pr.system.includes('توصية')); const u = JSON.parse(pr.user); assert.equal(u.first, 60); assert.equal(u.final_scores['استماع'], 90); assert.deepEqual(u.previous_lines, ['سطر 1', 'سطر 2']);
   assert.equal(parseParagraph('{"text":"انتقل من 60% إلى 75% خلال أسبوعين وحضر 80% من الجلسات."}'), 'انتقل من 60% إلى 75% خلال أسبوعين وحضر 80% من الجلسات.'); assert.equal(parseParagraph('{"text":"طالب ممتاز يستحق الرفع للمستوى الأعلى بكل تأكيد"}'), null); assert.equal(parseParagraph('قصير'), null);
-  assert.equal(parseParagraph('تقدّم المتدرّب في الاستماع من ستين إلى خمسة وسبعين بالمئة خلال أسبوعين.'), 'تقدّم المتدرّب في الاستماع من ستين إلى خمسة وسبعين بالمئة خلال أسبوعين.');
+  assert.equal(parseParagraph('تقدّم المشارك في الاستماع من ستين إلى خمسة وسبعين بالمئة خلال أسبوعين.'), 'تقدّم المشارك في الاستماع من ستين إلى خمسة وسبعين بالمئة خلال أسبوعين.');
 });
-test('صفحة المتدرّب: مساره وحده بلا غيره · العرض العام للختامي يحمل عدد الأسابيع وسلسلة الثقة والتوقيعين · سطر القائمة', () => {
+test('صفحة المشارك: مساره وحده بلا غيره · العرض العام للختامي يحمل عدد الأسابيع وسلسلة الثقة والتوقيعين · سطر القائمة', () => {
   const t = buildTrajectories([S()], [W(1, 60, 50), W(2, 75, 50)], skills)[0]; const fs: FinalStudent = { ...S({ avg: 82, scores: { listening: 90, speaking: 74 }, grade_ar: 'جيد جدًا' }), rec: 'promote', reason: 'x', paragraph: 'فقرة' };
   const pg = studentPageData(t, skills, fs); assert.deepEqual(pg.weeks, [1, 2]); assert.equal(pg.skills[0].name_ar, 'استماع'); assert.deepEqual(pg.skills[0].by_week, [60, 75]); assert.equal(pg.skills[0].final, 90); assert.equal(pg.delta, 15); assert.equal(pg.rec_ar, 'رفع للمستوى الأعلى'); assert.equal(pg.paragraph, 'فقرة'); assert.ok(!('name' in pg) && !('students' in pg));
   const q = { name: 'نورة', email: 'n@x.sa', id: 'u2', at: '2026-11-01T00:00:00Z' }; const v = publicVerifyView({ verify_code: 'RABC', status: 'approved', week_no: 2, period_from: '2026-10-01', period_to: '2026-11-01', author_name: 'ريم', approved_name: 'أحمد', approved_at: '2026-11-02', kind: 'final', computed: { program_ar: 'ع', weeks: [{ verify_code: 'R1' }, { verify_code: 'R2' }], sessions: 9, hours: 13.5, enrolled: 8 }, body: { signoff: { quality: q, manager: { ...q, name: 'أحمد' } } } } as any);
-  assert.equal(v.kind_ar, 'التقرير الختامي لأداء المتدربين'); assert.equal(v.weeks, 2); assert.deepEqual(v.chain, ['R1', 'R2']); assert.equal(v.signoff.quality.name, 'نورة'); assert.equal(v.signoff.manager.name, 'أحمد'); assert.ok(!('students' in v));
-  assert.ok(listLineAr({ kind: 'final', week_no: 2, period_from: '2026-10-01', period_to: '2026-11-01', computed: { program_ar: 'ع', classroom_ar: 'ش', weeks: [1, 2] }, status: 'draft' }).startsWith('التقرير الختامي لأداء المتدربين · ع · ش · 2 أسابيع معتمدة · مسودّة'));
+  assert.equal(v.kind_ar, 'التقرير الختامي لأداء الطلاب'); assert.equal(v.weeks, 2); assert.deepEqual(v.chain, ['R1', 'R2']); assert.equal(v.signoff.quality.name, 'نورة'); assert.equal(v.signoff.manager.name, 'أحمد'); assert.ok(!('students' in v));
+  assert.ok(listLineAr({ kind: 'final', week_no: 2, period_from: '2026-10-01', period_to: '2026-11-01', computed: { program_ar: 'ع', classroom_ar: 'ش', weeks: [1, 2] }, status: 'draft' }).startsWith('التقرير الختامي لأداء الطلاب · ع · ش · 2 أسابيع معتمدة · مسودّة'));
 });
 test('المسارات والخزنة: /me/reports/line بلا صفحة · الفتات · organizations غير شخصية · سطر التقرير في السجلّ', () => {
   assert.ok(NO_PAGE.has('/me/reports/line') && NO_PAGE.has('/verify/report'));

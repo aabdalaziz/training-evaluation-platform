@@ -23,8 +23,8 @@ const lk: Lookups = {
     { id: 'c3', code: 'G-1', program_id: 'p2', trainer_id: 't2', delivery_mode: 'remote' },
   ],
   questions: [
-    { id: 'q1', section_ar: 'المدرب', section_en: 'Trainer', text_ar: 'شرح المدرب واضح', text_en: 'Clear explanation' },
-    { id: 'q2', section_ar: 'المدرب', section_en: 'Trainer', text_ar: 'يتفاعل مع المتدربين', text_en: 'Engages trainees' },
+    { id: 'q1', section_ar: 'المدرّب', section_en: 'Trainer', text_ar: 'شرح المدرّب واضح', text_en: 'Clear explanation' },
+    { id: 'q2', section_ar: 'المدرّب', section_en: 'Trainer', text_ar: 'يتفاعل مع المشاركين', text_en: 'Engages trainees' },
     { id: 'q3', section_ar: 'القاعة والتجهيزات', section_en: 'Facilities', text_ar: 'القاعة مناسبة', text_en: 'Room suitable' },
     { id: 'q4', section_ar: 'الرضا العام', section_en: 'Satisfaction', text_ar: 'راضٍ عمومًا', text_en: 'Overall satisfied' },
     { id: 'q5', section_ar: 'عام', section_en: 'General', text_ar: 'ملاحظات', text_en: 'Comments', kind: 'LONG_TEXT' },
@@ -44,7 +44,7 @@ function ans(evaluation_id: string, vals: Record<string, number | null>, text?: 
 // Build a dataset: room c1 (t1) strong; room c2 (t2) weak on facilities; remote group c3.
 const rawE: RawEvaluation[] = [];
 const rawA: RawAnswer[] = [];
-for (let i = 0; i < 8; i++) { const e = ev({ classroom_id: 'c1', submitted_at: `2026-10-${String(10 + (i % 4)).padStart(2, '0')}T08:00:00Z` }); rawE.push(e); rawA.push(...ans(e.id, { q1: 5, q2: 5, q3: 4, q4: 5, qd: 2 }, i === 0 ? 'المدرب ممتاز وشرحه واضح' : undefined)); }
+for (let i = 0; i < 8; i++) { const e = ev({ classroom_id: 'c1', submitted_at: `2026-10-${String(10 + (i % 4)).padStart(2, '0')}T08:00:00Z` }); rawE.push(e); rawA.push(...ans(e.id, { q1: 5, q2: 5, q3: 4, q4: 5, qd: 2 }, i === 0 ? 'المدرّب ممتاز وشرحه واضح' : undefined)); }
 for (let i = 0; i < 6; i++) { const e = ev({ classroom_id: 'c2', submitted_at: `2026-10-${String(10 + (i % 3)).padStart(2, '0')}T08:00:00Z` }); rawE.push(e); rawA.push(...ans(e.id, { q1: 4, q2: 3, q3: i < 4 ? 1 : 2, q4: 3 }, i === 0 ? 'التكييف سيء والقاعة ضيقة' : undefined)); }
 for (let i = 0; i < 3; i++) { const e = ev({ program_id: 'p2', classroom_id: 'c3', submitted_at: `2026-10-13T08:00:00Z`, guest_gender: 'female' }); rawE.push(e); rawA.push(...ans(e.id, { q1: 4, q2: 4, q4: 4 })); }
 // previous period data (for comparison)
@@ -70,7 +70,7 @@ describe('helpers', () => {
     assert.equal(weekKey('2026-10-20'), '2026-10-18', 'weeks start on Sunday');
   });
   test('axisCategory maps Arabic/English section names', () => {
-    assert.equal(axisCategory('المدرب'), 'trainer');
+    assert.equal(axisCategory('المدرّب'), 'trainer');
     assert.equal(axisCategory('', 'Facilities'), 'facility');
     assert.equal(axisCategory('السكن'), 'housing');
     assert.equal(axisCategory('xyz'), 'general');
@@ -161,8 +161,8 @@ describe('breakdowns', () => {
     assert.ok(s.every(p => p.ma !== null));
   });
   test('groupRowsToTable produces header + rows with same width', () => {
-    const t = groupRowsToTable(groupBy('trainer', cur, facts, lk, 'ar'), 'ar', 'المدرب');
-    assert.equal(t[0][0], 'المدرب');
+    const t = groupRowsToTable(groupBy('trainer', cur, facts, lk, 'ar'), 'ar', 'المدرّب');
+    assert.equal(t[0][0], 'المدرّب');
     assert.ok(t.every(r => r.length === t[0].length));
   });
 });
@@ -220,7 +220,7 @@ describe('qualitative', () => {
     assert.equal(c.find(x => x.text.includes('سيء'))!.sentiment, 'negative');
     assert.equal(sentimentOf('ok'), 'neutral');
     const kw = keywordFrequency(c);
-    assert.ok(kw.some(k => k.word === 'المدرب' || k.word === 'القاعة'));
+    assert.ok(kw.some(k => k.word === 'المدرّب' || k.word === 'المدرّب' || k.word === 'الشعبة' || k.word === 'الشعبة'));
   });
 });
 

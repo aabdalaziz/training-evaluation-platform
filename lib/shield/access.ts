@@ -2,7 +2,7 @@
 /**
  * درع أَثَر — الطبقة الثانية (P65): سجلّ الوصول الإداري «مَن فتح بيانات مَن؟»
  *  صفّ واحد لكل (مستخدم × مسار إداري يحمل بيانات شخصية × شخص × يوم) — خفيف، لا يسجّل كل نقرة، ولا يخزّن بريد الشخص بل بصمته.
- *  يُستهلك في ثلاثة مواضع: /admin/audit (الطاقم) · /me/data «مَن نظر إلى بياناتي؟» (المتدرّب: أدوار لا أسماء) · الكنس 180 يومًا داخل shield_gc.
+ *  يُستهلك في ثلاثة مواضع: /admin/audit (الطاقم) · /me/data «مَن نظر إلى بياناتي؟» (المشارك: أدوار لا أسماء) · الكنس 180 يومًا داخل shield_gc.
  */
 import { hashEmail } from '../vault/erasure';
 
@@ -65,13 +65,13 @@ export async function accessForSubject(db: any, email: string, days = 30): Promi
 }
 
 export const ROLE_AR: Record<string, string> = {
-  PLATFORM_ADMIN: 'إدارة المنصّة', SUPER_ADMIN: 'الإدارة العليا', ADMIN: 'إداري', QUALITY_ANALYST: 'محلّل جودة', PROGRAM_MANAGER: 'مدير برنامج', TRAINER: 'مدرّب',
-  SUPERVISOR: 'مشرف', ORG_ADMIN: 'مسؤول جهة', LEARNER: 'متدرّب', STUDENT: 'متدرّب',
+  PLATFORM_ADMIN: 'إدارة البوّابة', SUPER_ADMIN: 'الإدارة العليا', ADMIN: 'إداري', QUALITY_ANALYST: 'محلّل جودة', PROGRAM_MANAGER: 'مدير برنامج', TRAINER: 'مدرّب',
+  SUPERVISOR: 'مشرف', ORG_ADMIN: 'مسؤول جهة', LEARNER: 'مشارك', STUDENT: 'مشارك',
 };
 export const roleAr = (r: string) => ROLE_AR[String(r || '').toUpperCase()] || (r ? String(r) : 'طاقم');
 
 const fmtAr = (iso: string) => { try { return new Intl.DateTimeFormat('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', timeZone: 'Asia/Riyadh' }).format(new Date(iso)); } catch { return iso.slice(0, 10); } };
-/** السطر الصادق للمتدرّب — صفر صادق أيضًا */
+/** السطر الصادق للمشارك — صفر صادق أيضًا */
 export function subjectAccessLineAr(a: SubjectAccess): string {
   if (!a.count) return `لم يفتح أحدٌ من الطاقم ملفّك بعينه خلال ${a.days} يومًا الماضية.`;
   const who = a.staff === 1 ? 'عضو واحد من الطاقم' : a.staff === 2 ? 'عضوان من الطاقم' : `${a.staff} من الطاقم`;

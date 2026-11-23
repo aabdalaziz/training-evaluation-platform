@@ -66,7 +66,7 @@ test('ر4 · تقرير الوحدة: الجسم الفارغ · التنظيف 
 test('ر4 · تقرير الوحدة: النواقص قبل الإرسال', () => {
   const st = cleanUnitStudents([{ key: 'k1', scores: { listening: 90 } }], roster, UC.unit_skills, new Map());
   const m = missingBeforeUnitSubmit(emptyUnitBody(UC), st); assert.equal(m.length, 5, m.join(' | '));
-  const ok = cleanUnitBody({ assessment: { tools: [{ tool: 'اختبار', skill: '', desc: '' }] }, outcome: { judgment: 'بلغ أغلب المتدرّبين ناتج الوحدة بدليل مشاريعهم', pct: 67, evidence: 'ع' }, attention: [{ key: 'k2', decision: 'تستمرّ خطة الدعم' }] }, UC, roster);
+  const ok = cleanUnitBody({ assessment: { tools: [{ tool: 'اختبار', skill: '', desc: '' }] }, outcome: { judgment: 'بلغ أغلب المشاركين ناتج الوحدة بدليل مشاريعهم', pct: 67, evidence: 'ع' }, attention: [{ key: 'k2', decision: 'تستمرّ خطة الدعم' }] }, UC, roster);
   const st2 = cleanUnitStudents([{ key: 'k1', scores: { listening: 90 }, decision: 'completed' }], roster, UC.unit_skills, new Map()); assert.deepEqual(missingBeforeUnitSubmit(ok, st2), []);
 });
 test('ر4 · التحقّق العام لتقرير الوحدة: أعداد بلا أسماء · القوائم', () => {

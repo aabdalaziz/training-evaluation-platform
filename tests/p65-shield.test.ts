@@ -65,7 +65,7 @@ test('P65 المسارات: تطبيع (استعلام/معرّفات) · قائ
   for (const p of PII_PATHS) assert.ok(p.prefix.startsWith('/admin/') && p.title_ar, p.prefix);
 });
 
-test('P65 الوصول الإداري: صفّ واحد لكل (مستخدم×مسار×شخص×يوم) يزداد hits · التجميع · بصمة الشخص لا بريده · سطر المتدرّب الصادق · CSV', async () => {
+test('P65 الوصول الإداري: صفّ واحد لكل (مستخدم×مسار×شخص×يوم) يزداد hits · التجميع · بصمة الشخص لا بريده · سطر المشارك الصادق · CSV', async () => {
   const db = fakeDb();
   assert.ok(await recordAccess(db, { user_id: U(1), role: 'admin', path: '/admin/enrollments?page=2', ip: '10.1.2.3' }));
   assert.ok(await recordAccess(db, { user_id: U(1), role: 'ADMIN', path: '/admin/enrollments', ip: '10.1.2.3' }));
@@ -154,13 +154,13 @@ test('P65 خروج الجهة: بصمة من المفاتيح الأجنبية �
 });
 
 /* ———— شكل المصدر ———— */
-test('P65 شكل المصدر: SQL (الجداول والدوال والأعمدة) · التمرين 17 · بوابة التجميد في مسارات الكتابة · السجلّ يعرف الجداول الجديدة · الكرون يختم ويمحو · المنارة في AdminShell · الصفحات العامة', () => {
+test('P65 شكل المصدر: SQL (الجداول والدوال والأعمدة) · التمرين 17 · بوّابة التجميد في مسارات الكتابة · السجلّ يعرف الجداول الجديدة · الكرون يختم ويمحو · المنارة في AdminShell · الصفحات العامة', () => {
   const sql = read('supabase/p65-shield-layer2.sql');
   for (const k of ['create table if not exists public.portal_admin_access', 'constraint portal_admin_access_uniq unique (user_id, path, subject_hash, day)', 'function public.shield_access_touch', 'function public.shield_policy_report', 'function public.vault_org_footprint', 'function public.vault_org_export', 'function public.vault_org_erase', 'create table if not exists public.portal_shield_seals', 'add column if not exists frozen_at', 'add column if not exists erase_at', "interval '180 days'", 'digest       text', "confrelid = 'public.portal_organizations'::regclass"]) assert.ok(sql.includes(k), k);
   assert.ok((sql.match(/revoke all on function/g) || []).length >= 6, 'كل الدوال محجوبة عن anon/authenticated'); assert.ok(sql.includes('alter table public.portal_admin_access enable row level security') && sql.includes('alter table public.portal_shield_seals enable row level security'));
   assert.ok(!/^\s*do \$\$ declare r record; begin\s*$/m.test(sql) || sql.includes('-- do $$'), 'حلقة تفعيل RLS تبقى معلَّقة (اختيارية بعد المراجعة)');
   const drill = read('lib/shield/drill.ts'); for (const id of ["'rls_all'", "'anon_write'", "'unauth_pii'"]) assert.ok(drill.includes(id), id); assert.ok(drill.includes("'/api/vault/admin?view=all'") && drill.includes("'/api/diploma?list=1'"));
-  for (const f of ['app/api/diploma/route.ts', 'app/api/me/line/route.ts', 'app/api/me/day/route.ts', 'app/api/me/map/route.ts', 'app/api/me/letter/route.ts', 'app/api/me/grad/route.ts', 'app/api/me/first/route.ts']) { const s = read(f); assert.ok(s.includes('freezeGate(db, ') && s.includes("lib/shield/freeze'"), f); const i = s.indexOf('export async function POST'); assert.ok(s.indexOf('freezeGate(db, ', i) - i < 400, `${f}: البوابة بعد التحقّق مباشرة`); }
+  for (const f of ['app/api/diploma/route.ts', 'app/api/me/line/route.ts', 'app/api/me/day/route.ts', 'app/api/me/map/route.ts', 'app/api/me/letter/route.ts', 'app/api/me/grad/route.ts', 'app/api/me/first/route.ts']) { const s = read(f); assert.ok(s.includes('freezeGate(db, ') && s.includes("lib/shield/freeze'"), f); const i = s.indexOf('export async function POST'); assert.ok(s.indexOf('freezeGate(db, ', i) - i < 400, `${f}: البوّابة بعد التحقّق مباشرة`); }
   assert.ok(REGISTRY.some(r => r.table === 'portal_admin_access' && r.retentionDays === 180 && r.access.includes('self')), 'السجلّ يعرف الوصول الإداري ويعطي الشخص حقّ رؤيته'); assert.ok(NON_PERSONAL_TABLES.includes('portal_shield_seals'));
   const cron = read('lib/shield/cron.ts'); assert.ok(cron.includes('sealLastMonthIfDue(db') && cron.includes('!opts.dry'), 'الختم داخل الكرون الموجود وليس في الوضع الجاف');
   const vcron = read('lib/vault/cron.ts'); assert.ok(vcron.includes('dueOrgErasures(db, now)') && vcron.includes('executeOrgErase(db, o'));
@@ -174,7 +174,7 @@ test('P65 شكل المصدر: SQL (الجداول والدوال والأعمد
 });
 
 /* ———— P65-ب تصلّب السياسات (نتيجة أول تقرير حيّ) ———— */
-test('P65-ب تصلّب السياسات: الاستمارات العامة الأربع معلنة في التمرين · SQL يسحب كتابة anon ويعيد الإدراج لها فقط · أعمدة trainers/classrooms الحسّاسة محجوبة · كتابة القاعات للطاقم', () => {
+test('P65-ب تصلّب السياسات: الاستمارات العامة الأربع معلنة في التمرين · SQL يسحب كتابة anon ويعيد الإدراج لها فقط · أعمدة trainers/classrooms الحسّاسة محجوبة · كتابة الشُّعب للطاقم', () => {
   assert.deepStrictEqual([...PUBLIC_FORM_TABLES].sort(), ['evaluation_answers', 'evaluations', 'portal_contact_messages', 'remote_learning_survey_responses'], 'القائمة المعلنة = ما يكتبه الزائر فعلًا من المتصفّح');
   const drill = read('lib/shield/drill.ts'); assert.ok(drill.includes('!PUBLIC_FORM_TABLES.includes(t)'), 'التمرين يستثني الاستمارات المعلنة فقط');
   const sql = read('supabase/p65-policy-hardening.sql');
@@ -187,5 +187,5 @@ test('P65-ب تصلّب السياسات: الاستمارات العامة ال
   assert.ok(!/^\s*(delete from|drop table|truncate )/im.test(sql), 'لا حذف بيانات');
   // الأعمدة التي تطلبها الصفحات العامة من المتصفّح تبقى مسموحة
   const survey = read('app/survey/remote-learning/page.tsx'); assert.ok(survey.includes("from('trainers').select('id,name')") && !survey.includes("from('trainers').select('*')"), 'الاستبيان يطلب أعمدة محدَّدة من المدرّبين');
-  assert.ok(!/from\('classrooms'\)\.select\('\*'\)/.test(survey) && !/from\('classrooms'\)\.select\('\*'\)/.test(read('app/evaluate/[kind]/page.tsx')), 'الصفحات العامة لا تطلب كل أعمدة القاعات');
+  assert.ok(!/from\('classrooms'\)\.select\('\*'\)/.test(survey) && !/from\('classrooms'\)\.select\('\*'\)/.test(read('app/evaluate/[kind]/page.tsx')), 'الصفحات العامة لا تطلب كل أعمدة الشُّعب');
 });

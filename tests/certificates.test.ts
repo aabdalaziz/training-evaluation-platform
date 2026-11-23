@@ -58,7 +58,7 @@ function row(key: string, label: string, mean: number, responses: number, sd = 0
   return { key, label, n: responses * 8, mean, median: mean, sd, min: 1, max: 5, lowPct: 5, neutralPct: 20, highPct: 75, dist: [0, 0, 0, 0, 0], responses, participants: responses, gap: 4.2 - mean, perf: 'GOOD', risk: 'LOW', delta: null };
 }
 describe('Trainer awards rules', () => {
-  const cur = [row('t1', 'أحمد', 4.6, 40, 0.4), row('t2', 'سارة', 4.3, 60, 0.3), row('t3', 'محمد', 3.9, 8, 0.9), row('', 'بدون مدرب', 4.9, 100)];
+  const cur = [row('t1', 'أحمد', 4.6, 40, 0.4), row('t2', 'سارة', 4.3, 60, 0.3), row('t3', 'محمد', 3.9, 8, 0.9), row('', 'بدون مدرّب', 4.9, 100)];
   const prev = [row('t1', 'أحمد', 4.5, 30), row('t2', 'سارة', 3.8, 50), row('t3', 'محمد', 4.2, 20)];
   const c = computeAwards(cur, prev, DEFAULT_RULES);
   test('top_mean ranks by mean and excludes empty key', () => {

@@ -172,7 +172,7 @@ test('p39: remedialAudience — تقاطع الوحدات الضعيفة/الم�
   assert.deepEqual(remedialAudience(rows, ['A1-U05']).map((r) => r.email), ['c@c.c', 'a@a.a'], 'محاولة ثانية بلا خريطة ولم تجتز → تُبلَّغ');
 });
 
-test('p39: announceExitFinal — المتعلّم يُبلَّغ بالحكم (بلا درجات) · منشئ الدعوة ومدرّب القاعة ملخّص داخل أَثَر فقط يتحدّث مع كل نتيجة', async () => {
+test('p39: announceExitFinal — المتعلّم يُبلَّغ بالحكم (بلا درجات) · منشئ الدعوة ومدرّب الشعبة ملخّص داخل أَثَر فقط يتحدّث مع كل نتيجة', async () => {
   const db = fakeDb({
     profiles: [{ id: 'u1', email: 'admin@upm.edu.sa' }], trainers: [{ id: 't1', email: 'trainer@upm.edu.sa' }], classrooms: [{ id: 'c5', trainer_id: 't1' }],
     placement_invites: [{ id: 'inv1', label_ar: 'عُبور A1 — SEC-01', code: 'ABCD', created_by: 'u1', classroom_id: 'c5' }],

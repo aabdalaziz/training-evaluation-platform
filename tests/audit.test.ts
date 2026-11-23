@@ -13,9 +13,9 @@ const rows: AuditRow[] = [
 
 test('audit describe() produces Arabic sentences per action', () => {
   assert.equal(describe(rows[0]), 'a@x.sa عدّل برنامج «برنامج أ» (2 حقول: الحالة، تاريخ النهاية)');
-  assert.equal(describe(rows[1]), 'a@x.sa أنشأ مدرب «سعد»');
+  assert.equal(describe(rows[1]), 'a@x.sa أنشأ مدرّب «سعد»');
   assert.equal(describe(rows[2]), 'الكرون أرسل التقرير الدوري «weekly» إلى 2 مشترك');
-  assert.equal(describe(rows[3]), 'q@x.sa حذف قاعة/شعبة «B-1»');
+  assert.equal(describe(rows[3]), 'q@x.sa حذف شعبة/شعبة «B-1»');
   assert.equal(describe(rows[4]), 'q@x.sa فرّغ 120 تقييمًا (DAILY)');
   assert.equal(actionLabel('UPDATE'), 'تعديل'); assert.equal(entityLabel('zzz'), 'zzz'); assert.equal(entityLabel(null), '—');
 });

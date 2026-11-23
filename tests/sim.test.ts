@@ -55,7 +55,7 @@ test('P10 sim: evidence event shape', () => {
 });
 test('P10 prompts: sim turn/score prompts keep persona in character and parse replies', () => {
   const t = turnsOf('أهلًا'); const p = buildSimTurnPrompt(S, t, 'ar');
-  assert.ok(p.system.includes(S.persona.name) && p.system.includes('JSON') && p.system.includes('ابقَ في الشخصية')); assert.ok(p.user.includes('المتعلم: أهلًا')); assert.ok(!p.system.includes('آخر دور'));
+  assert.ok(p.system.includes(S.persona.name) && p.system.includes('JSON') && p.system.includes('ابقَ في الشخصية')); assert.ok(p.user.includes('المتعلّم: أهلًا')); assert.ok(!p.system.includes('آخر دور'));
   assert.ok(buildSimTurnPrompt(S, turnsOf('1', '2', '3'), 'ar').system.includes('آخر دور'));
   assert.equal(parseSimTurn('{"reply":"طيب أستاذ"}'), 'طيب أستاذ'); assert.equal(parseSimTurn({ reply: '' }), null); assert.equal(parseSimTurn('garbage'), null);
   const sp = buildSimScorePrompt(S, t, 'ar'); assert.ok(sp.user.includes('"key":"empathy"') || sp.user.includes('"key": "empathy"')); assert.ok(sp.user.includes('لا تُكافئ الطول'));

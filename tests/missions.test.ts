@@ -7,7 +7,7 @@ import type { Mission } from '../lib/portal/missions';
 import { evidenceFromEvent, MISSION_CONFIRMED_WEIGHT, EVIDENCE_WEIGHT } from '../lib/portal/profile';
 
 const NOW = new Date('2026-12-10T08:00:00Z');
-const base: Mission = { id: 'm1', email: 'a@b.sa', full_name: 'أحمد', skills: ['s1'], title_ar: 'خطة درس تُظهر التعلم النشط', brief_ar: 'صوّر خطة درسك…', evidence_mode: 'text', rubric: [{ c: 'تحديد موضع الاستراتيجية في الخطة', w: 2 }, { c: 'تبرير الاختيار بسلوك المتعلمين', w: 2 }, { c: 'وصف ملاحظة فعلية من التطبيق', w: 1 }], token: 'T'.repeat(24), confirm_token: 'C'.repeat(24), status: 'assigned', due_at: '2026-12-17T08:00:00Z', reminders: 0, created_at: '2026-12-10T08:00:00Z' };
+const base: Mission = { id: 'm1', email: 'a@b.sa', full_name: 'أحمد', skills: ['s1'], title_ar: 'خطة درس تُظهر التعلم النشط', brief_ar: 'صوّر خطة درسك…', evidence_mode: 'text', rubric: [{ c: 'تحديد موضع الاستراتيجية في الخطة', w: 2 }, { c: 'تبرير الاختيار بسلوك المتعلّمين', w: 2 }, { c: 'وصف ملاحظة فعلية من التطبيق', w: 1 }], token: 'T'.repeat(24), confirm_token: 'C'.repeat(24), status: 'assigned', due_at: '2026-12-17T08:00:00Z', reminders: 0, created_at: '2026-12-10T08:00:00Z' };
 
 test('missions: token/due/urgency', () => {
   const tk = missionToken(); assert.equal(tk.length, 24); assert.match(tk, /^[A-Z0-9]+$/);
@@ -27,7 +27,7 @@ test('missions: evidence readiness per mode', () => {
   assert.ok(evidenceReady('link', { link: 'ftp://x' })); assert.equal(evidenceReady('link', { link: 'https://docs.x/y', text: Array(16).fill('كلمة').join(' ') }), null);
 });
 test('missions: local checker rewards rubric coverage and penalizes generic text', () => {
-  const good = localCheck(base, { text: 'في خطة الدرس حددت موضع استراتيجية التعلم التعاوني في نشاط المجموعات، واخترتها لأن سلوك المتعلمين في الحصة السابقة أظهر تشتتًا، ولاحظت عند التطبيق أن المشاركة ارتفعت بوضوح.' });
+  const good = localCheck(base, { text: 'في خطة الدرس حددت موضع استراتيجية التعلم التعاوني في نشاط المجموعات، واخترتها لأن سلوك المتعلّمين في الحصة السابقة أظهر تشتتًا، ولاحظت عند التطبيق أن المشاركة ارتفعت بوضوح.' });
   const weak = localCheck(base, { text: 'استفدت كثيرًا من البرنامج وسأطبق ما تعلمته قريبًا إن شاء الله.' });
   assert.ok(good.score > weak.score, `${good.score} > ${weak.score}`); assert.equal(good.criteria.length, 3); assert.equal(good.source, 'local'); assert.ok(good.questions_ar.length >= 1);
   assert.ok(keywords('تحديد موضع الاستراتيجية في الخطة').includes('موضع'));

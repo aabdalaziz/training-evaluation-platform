@@ -42,7 +42,7 @@ test('impact: rows sorted and derived', () => {
   const sec = sectorRows(R); assert.deepEqual(sec.map(x => x.code), ['education', 'health']);
 });
 test('impact: narrative + scope label + sheets', () => {
-  const t = totals(R); const ar = narrative(t, 'ar', 'هذه السنة'); assert.ok(ar[0].includes('30 متعلمًا') && ar[0].includes('860 ساعة')); assert.ok(ar.some(x => x.includes('84.5%'))); assert.ok(ar.some(x => x.includes('+40%'))); assert.ok(ar.some(x => x.includes('B1 (5)')));
+  const t = totals(R); const ar = narrative(t, 'ar', 'هذه السنة'); assert.ok(ar[0].includes('30 متعلّمًا') && ar[0].includes('860 ساعة')); assert.ok(ar.some(x => x.includes('84.5%'))); assert.ok(ar.some(x => x.includes('+40%'))); assert.ok(ar.some(x => x.includes('B1 (5)')));
   const en = narrative(t, 'en', 'this year'); assert.ok(en[0].startsWith('During this year, 30 learners'));
   const empty = narrative(totals(EMPTY_REPORT), 'ar', 'x'); assert.equal(empty.length, 2); assert.ok(empty[1].includes('لا توجد بيانات'));
   assert.equal(scopeLabel(F, { sector: 'التعليم' }, 'ar'), 'الفترة 2026-01-01 → 2026-11-25 · قطاع: التعليم'); assert.equal(scopeLabel({ ...F, from: '', to: '', sector: '' }, {}, 'en'), 'all time');

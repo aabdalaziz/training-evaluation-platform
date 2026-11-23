@@ -1,6 +1,6 @@
 import React from 'react';
 
-/** مجموعة أيقونات SVG خطّية موحّدة للمنصة (بدل الرموز التعبيرية) */
+/** مجموعة أيقونات SVG خطّية موحّدة للبوّابة (بدل الرموز التعبيرية) */
 export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send' | 'bell' | 'inbox' | 'upload' | 'qr' | 'next' | 'mic' | 'camera' | 'spark' | 'spinner';
 
 export const ICON_PATHS: Record<IconName, string> = {

@@ -19,7 +19,7 @@ test('org: parsePeople handles lines, names, duplicates, invalid', () => {
   assert.equal(p[1].full_name, 'أحمد'); assert.equal(p[2].full_name, 'Ali'); assert.equal(p[0].full_name, '');
   assert.deepEqual(parsePeople(''), []); assert.equal(parsePeople('mailto:x@y.co')[0].email, 'x@y.co');
   assert.ok(inDomain('a@MOE.gov.sa', 'moe.gov.sa')); assert.ok(!inDomain('a@gmail.com', 'moe.gov.sa')); assert.ok(!inDomain('a@x.co', null));
-  assert.equal(validateBulk('', [{ email: 'a@b.co' }]), 'اختر البرنامج'); assert.equal(validateBulk('p1', []), 'أدخل بريدًا واحدًا صالحًا على الأقل'); assert.equal(validateBulk('p1', new Array(301).fill({ email: 'a@b.co' })), 'الحد الأقصى 300 متدرب في الطلب الواحد'); assert.equal(validateBulk('p1', [{ email: 'a@b.co' }]), null);
+  assert.equal(validateBulk('', [{ email: 'a@b.co' }]), 'اختر البرنامج'); assert.equal(validateBulk('p1', []), 'أدخل بريدًا واحدًا صالحًا على الأقل'); assert.equal(validateBulk('p1', new Array(301).fill({ email: 'a@b.co' })), 'الحد الأقصى 300 مشارك في الطلب الواحد'); assert.equal(validateBulk('p1', [{ email: 'a@b.co' }]), null);
 });
 
 test('org: KPIs, top skills, member rows', () => {

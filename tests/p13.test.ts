@@ -61,7 +61,7 @@ test('lexicon: domain map + indices from skill levels', () => {
 });
 
 test('lexicon: style guide catches forbidden terms; sectors have 3 domains and roles', () => {
-  assert.ok(lexiconIssues('ورشة مهارات ناعمة سحرية لتأهيل المتدربين').length >= 3);
+  assert.ok(lexiconIssues('ورشة مهارات ناعمة سحرية لتأهيل المشاركين').length >= 3);
   assert.equal(lexiconIssues('برنامج بناء جدارة الحكم المهني للمشاركين').length, 0);
   assert.ok(SECTORS_2062.length >= 20); assert.ok(SECTORS_2062.some(s => s.kind === 'new'));
   for (const s of SECTORS_2062) { assert.equal(s.domains.length, 3, s.code); assert.ok(s.roles.length >= 2 && s.decision_2062, s.code); }
@@ -150,7 +150,7 @@ test('factory: local foresight → design → review chain is complete and appro
   for (const m of d.modules) assert.ok(m.title_ar && m.outcome_ar && m.simulation_ar && m.mission_ar && m.evidence_ar && m.hours > 0);
   assert.equal(lexiconIssues([d.brand_ar, d.subtitle_ar, d.intro_ar, ...d.objectives_ar].join(' ')).length, 0, 'local design obeys the lexicon');
   const r = localReview(NEED, d); assert.ok(r.items.length >= 8); assert.ok(r.score >= 80, `local design must pass its own review (${r.score}): ${r.items.filter(i => !i.ok).map(i => i.code).join(',')}`); assert.equal(r.verdict, 'approve');
-  const broken = localReview(NEED, { ...d, objectives_ar: ['فهم الذكاء الاصطناعي', 'الإلمام بالمفاهيم', 'معرفة الأدوات', 'التعرف على المخاطر'], assessment_ar: ['اختبار معرفي نهائي'], human_gates_ar: [], brand_ar: 'ورشة مهارات ناعمة للمتدربين' });
+  const broken = localReview(NEED, { ...d, objectives_ar: ['فهم الذكاء الاصطناعي', 'الإلمام بالمفاهيم', 'معرفة الأدوات', 'التعرف على المخاطر'], assessment_ar: ['اختبار معرفي نهائي'], human_gates_ar: [], brand_ar: 'ورشة مهارات ناعمة للمشاركين' });
   assert.ok(broken.score <= 60, `broken ${broken.score}`); assert.equal(broken.verdict, 'revise'); assert.ok(broken.lexicon.length >= 1); assert.equal(broken.items.find(i => i.code === 'objectives')!.ok, false); assert.equal(broken.items.find(i => i.code === 'human_gates')!.ok, false); assert.ok(broken.items.find(i => i.code === 'no_test')!.ok === false);
 });
 

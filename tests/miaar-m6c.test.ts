@@ -89,7 +89,7 @@ test('م6-ج: effectFor/effectText — فرق بعد−قبل للحاضرين �
 });
 
 test('م6-ج: suggestProgramLinks/programUnitFor — تطابق كلمات العنوان/الناتج · المعتمدة فقط · ≤ 3 مرتّبة · الوحدة البرنامجية المقابلة', () => {
-  const us = units(); const s = suggestProgramLinks('الأسبوع 2: العائلة والتعريف بالنفس', 'يعرّف المتدرّب بنفسه وبعائلته', us);
+  const us = units(); const s = suggestProgramLinks('الأسبوع 2: العائلة والتعريف بالنفس', 'يعرّف المشارك بنفسه وبعائلته', us);
   assert.ok(s.length >= 1 && s.length <= 3); assert.equal(s[0].code, 'A1-U01', JSON.stringify(s));
   assert.deepEqual(suggestProgramLinks('', '', us), []); assert.deepEqual(suggestProgramLinks('العائلة', '', us.map((u) => ({ ...u, status: 'draft' as const }))), [], 'المسوَّدة لا تُقترح');
   const pus = [{ idx: 1, title_ar: 'التعارف', miaar_unit_codes: ['A1-U01'], starts_on: '2026-11-01' }, { idx: 3, title_ar: 'المكان', miaar_unit_codes: ['A1-U04', 'A1-U05'], starts_on: null }];
