@@ -119,6 +119,17 @@ test('هـ-6: التعليمات العامّة للبنك (/kids/common/audio) 
   assert.deepEqual(bad, []);
 });
 
+test('هـ-6: نشيد بَيان له صوت (/kids/common/audio/anthem.mp3) وتوقيتات الأسطر تصاعدية داخل المدّة', () => {
+  const f = path.join(ROOT, 'public/kids/common/audio/anthem.mp3');
+  assert.ok(fs.existsSync(f), 'anthem.mp3');
+  assert.ok(fs.statSync(f).size > 150_000, 'الملف أطول من بضع ثوانٍ');
+  const src = fs.readFileSync(path.join(ROOT, 'app/components/kids/BayanSession.tsx'), 'utf8');
+  const m = src.match(/ANTHEM_AT = \[([^\]]+)\]/); assert.ok(m);
+  const at = m![1].split(',').map(Number);
+  assert.equal(at.length, 4); at.forEach((t, i) => assert.ok(t > 0 && t < 21 && (i === 0 || t > at[i - 1])));
+  assert.ok(/anthem\.mp3/.test(src) && /ANTHEM_AT\.forEach/.test(src), 'النشيد يُشغَّل ويُزامَن');
+});
+
 test('هـ-6: معجم أَثَر محفوظ في ملفات بَيان (وليّ الأمر · الطفل · الميسّر)', () => {
   for (const f of ['lib/kids/souq.ts', 'lib/kids/bayt.ts', 'lib/kids/sessions.ts', 'lib/kids/common.ts', 'app/components/kids/activities.tsx', 'app/components/kids/BayanSession.tsx', 'app/components/kids/LuluLive.tsx', 'app/kids/page.tsx']) {
     const s = fs.readFileSync(path.join(ROOT, f), 'utf8');

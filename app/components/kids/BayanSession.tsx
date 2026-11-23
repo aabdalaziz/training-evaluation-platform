@@ -133,7 +133,7 @@ export default function BayanSession({ session }: { session: SessionData }) {
 type Ctx = {
   S: SessionData;
   img: (n: string) => string; snd: (n: string) => string;
-  play: (src: string, onEnd?: () => void) => void;
+  play: (src: string, onEnd?: () => void, meter?: boolean) => void;
   lulu: (k: LuluKey, p?: LuluPose, onEnd?: () => void, after?: LuluState) => void;
   luluSay: (text: string, audio: string, p?: LuluPose, onEnd?: () => void) => void;
   awaitAnswer: () => void; stopWaiting: () => void;
@@ -150,7 +150,14 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
   const save = () => { try { localStorage.setItem('bayan_demo_child', JSON.stringify({ name: p.name.trim(), gender: p.gender })); } catch { /* ignore */ } setStep('hello'); };
   const hello = () => { p.lulu('welcome', 'wave', undefined, 'wait'); };
   const ready = () => { p.lulu('yasalam', 'cheer', () => { setStep('anthem'); }, 'dance'); };
-  useEffect(() => { if (step !== 'anthem') return; setLine(0); const t = setInterval(() => setLine(l => (l < ANTHEM.length - 1 ? l + 1 : l)), 1800); return () => clearInterval(t); }, [step]);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const sing = useCallback(() => {
+    timers.current.forEach(clearTimeout); timers.current = [];
+    setLine(-1); p.setPose('dance'); p.setLstate('dance'); p.setSay(ANTHEM_INTRO);
+    p.play('/kids/common/audio/anthem.mp3', () => { setLine(ANTHEM.length); p.setLstate('cheer'); p.setSay('صَفَّقْتَ مَعي؟ يا سَلامْ! 👏'); }, true);
+    ANTHEM_AT.forEach((t, i) => timers.current.push(setTimeout(() => { setLine(i); p.setSay(ANTHEM[i]); }, t * 1000)));
+  }, [p]);
+  useEffect(() => { if (step !== 'anthem') return; sing(); return () => { timers.current.forEach(clearTimeout); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [step]);
   const start = () => { p.lulu('today', 'dance', () => { p.finish('start'); p.next(); }); };
   return (
     <section className="by-card">
@@ -178,8 +185,11 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
         <div className="by-center">
           <h2 className="by-h2">نَشيدُ بَيان 👏</h2>
           <div className="by-anthem">{ANTHEM.map((l, i) => <p key={i} className={i === line ? 'on' : i < line ? 'past' : ''}>{l}</p>)}</div>
-          <p className="by-sub">صَفِّقْ مَعَ الْإيقاعْ!</p>
-          <button className="by-big" onClick={start}>{S.goLabel}</button>
+          <p className="by-sub">صَفِّقْ مَعَ الْإيقاعْ! 👏</p>
+          <div className="by-row">
+            <button className="by-ghost" onClick={sing}>🔁 مَرَّةً أُخْرى</button>
+            <button className="by-big" onClick={() => { timers.current.forEach(clearTimeout); start(); }}>{S.goLabel}</button>
+          </div>
         </div>
       )}
     </section>
@@ -187,6 +197,9 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
 }
 /** نشيد الافتتاح (إيقاع تصفيق) — مشترك */
 const ANTHEM = ['بَيانْ بَيانْ، هَيّا نَبْدَأْ', 'نَقْرَأْ نَلْعَبْ، ثُمَّ نَهْدَأْ', 'حَرْفٌ وَكَلِمَةْ، وَآيَةٌ طَيِّبَةْ', 'وَأَثَرٌ يَبْقى، في قَلْبي وَلِسانْ'];
+const ANTHEM_INTRO = 'هَيّا نُنْشِدُ نَشيدَ بَيانْ! صَفِّقْ مَعي 👏';
+/** بدايات الأسطر داخل /kids/common/audio/anthem.mp3 بالثواني (من kids/common/audio/cut/anthem-times.json) */
+export const ANTHEM_AT = [4.33, 7.49, 11.35, 15.98];
 
 /* ───────── 2) الحكاية ───────── */
 function Story(p: Ctx) {
