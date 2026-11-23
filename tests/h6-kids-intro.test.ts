@@ -80,3 +80,18 @@ test('لؤلؤ تسلّم باسم الطفل: في «هيّا نبدأ» قبل
   assert.ok(/وَشَريحَتانِ عُمْرِيَّتانِ:/.test(INTRO_PARENTS[1].lines[0].text), 'إظهار نون «شريحتان»');
   assert.ok(/n\.startsWith\('\/'\) \? n :/.test(read('lib/kids/types.ts')), 'kidsSnd يقبل مسارًا مطلقًا لمقطع الاسم');
 });
+
+test('(ج) دليل الميسّر: 6 مشاهد بصوت سالم مع لوحات c-1…c-6 وصوت i-c1…i-c6، صفحة /kids/facilitator للمسجّلين، ورقة اللقاء 3+7+7+3 = 20 د، رابط من /kids', async () => {
+  const { INTRO_FACILITATORS, FACILITATOR_SHEET, introAudioFiles } = await import('../lib/kids/intro');
+  assert.equal(INTRO_FACILITATORS.length, 6);
+  for (const sc of INTRO_FACILITATORS) { assert.ok(/^c-[1-6]$/.test(sc.img) && exists(`public/kids/intro/${sc.img}.jpg`), sc.img); for (const l of sc.lines) assert.equal(l.who, 'salem'); }
+  for (const a of introAudioFiles(INTRO_FACILITATORS)) assert.ok(exists(`public/kids/intro/audio/${a}.mp3`), a);
+  assert.equal(FACILITATOR_SHEET.steps.reduce((t, s) => t + s.min, 0), 20); assert.equal(FACILITATOR_SHEET.raise.length, 4);
+  assert.ok(/«قُلْها مَعي» لا «غَلَطْ»/.test(INTRO_FACILITATORS[2].lines[0].text) && /كَرامَةُ طِفْلْ/.test(INTRO_FACILITATORS[1].lines[0].text));
+  const g = read('app/components/kids/FacilitatorGuide.tsx'); const bi = read('app/components/kids/BayanIntro.tsx');
+  assert.ok(/hasStoredSession\(\)/.test(g) && /\/login\?next=\$\{encodeURIComponent\('\/kids\/facilitator'\)\}/.test(g), 'للمسجّلين فقط — بلا دور جديد');
+  assert.ok(/<BayanIntro mode="facilitator"/.test(g) && /window\.print\(\)/.test(g) && /FACILITATOR_SEEN_KEY/.test(g));
+  assert.ok(/'child' \| 'parents' \| 'facilitator'/.test(bi) && /mode === 'facilitator' \? INTRO_FACILITATORS/.test(bi));
+  assert.ok(exists('app/kids/facilitator/page.tsx') && /href="\/kids\/facilitator"/.test(read('app/kids/page.tsx')));
+  assert.ok(!/fetch\(/.test(g), 'لا شيء يُرسَل إلى الخادم');
+});

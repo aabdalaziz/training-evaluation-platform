@@ -40,6 +40,7 @@ export default function KidsPage() {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 12 }}>
             <Link href="/contact?topic=bayan" className="rm-btn" style={{ border: '2px solid #5EA8A0', color: '#2F6B66', borderRadius: 999, padding: '12px 22px', fontSize: 18, textDecoration: 'none' }}>سجّل اهتمامك</Link>
           </div>
+          <p style={{ color: '#8E7F8A', fontSize: 14, marginTop: 14 }}><Link href="/kids/facilitator" style={{ color: '#2F6B66' }}>للميسّرين: دليل اللقاء الأسبوعيّ 📋</Link></p>
           <p style={{ color: '#8E7F8A', fontSize: 14, marginTop: 14 }}>الجلستان التجريبيتان للمسار (أ) 4–6 سنوات — 20 دقيقة لكلٍّ منهما، يُفضَّل حضور وليّ الأمر. صوت الشاشة مطلوب 🔊</p>
         </section>
       </div>

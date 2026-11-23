@@ -5,15 +5,18 @@
  *  لوحة لكلّ مشهد + حركة CSS خفيفة (Ken Burns ودخول المتكلّم) + مقاطع صوت متسلسلة + النصّ مكتوبًا.
  *  mode='child': «رسالة لؤلؤ» ≈ 90 ث، تُنادي الطفل باسمه كتابةً، وفي الختام زرّ «هَيّا بِنا!».
  *  mode='parents': «كيف يصنع بَيان أثرًا» ≈ 3 د بصوت جدّ سالم + كلمة المؤسّس مكتوبة.
+ *  mode='facilitator': «دليل اللقاء الأسبوعيّ» ≈ 3 د بصوت جدّ سالم للميسّرين (/kids/facilitator).
  *  التشغيل يبدأ بلمسة (سياسة المتصفّحات)، ويمكن التخطّي في أيّ وقت. لا شيء يُرسَل إلى الخادم من هنا.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { INTRO_CHILD, INTRO_PARENTS, INTRO_SPEAKER_AR, FOUNDER_SIGN, INTRO_GREET_FALLBACK, introImg, introSnd, type IntroScene } from '../../../lib/kids/intro';
+import { INTRO_CHILD, INTRO_PARENTS, INTRO_FACILITATORS, INTRO_SPEAKER_AR, FOUNDER_SIGN, INTRO_GREET_FALLBACK, introImg, introSnd, type IntroScene } from '../../../lib/kids/intro';
 import { nameClip } from '../../../lib/kids/names';
 import { luluPose } from '../../../lib/kids/types';
 
-export function BayanIntro({ mode, name, onDone, onSkip }: { mode: 'child' | 'parents'; name?: string; onDone: () => void; onSkip?: () => void }) {
-  const scenes: IntroScene[] = mode === 'child' ? INTRO_CHILD : INTRO_PARENTS;
+export type IntroMode = 'child' | 'parents' | 'facilitator';
+const TITLE: Record<IntroMode, string> = { child: 'رسالة لؤلؤ', parents: 'كيف يصنع بَيان أثرًا', facilitator: 'دليل اللقاء الأسبوعيّ' };
+export function BayanIntro({ mode, name, onDone, onSkip }: { mode: IntroMode; name?: string; onDone: () => void; onSkip?: () => void }) {
+  const scenes: IntroScene[] = mode === 'child' ? INTRO_CHILD : mode === 'facilitator' ? INTRO_FACILITATORS : INTRO_PARENTS;
   const [started, setStarted] = useState(false);
   const [si, setSi] = useState(0);
   const [li, setLi] = useState(0);
@@ -57,14 +60,16 @@ export function BayanIntro({ mode, name, onDone, onSkip }: { mode: 'child' | 'pa
   const n = scenes.length;
 
   return (
-    <div className={`bi bi-${mode}`} dir="rtl" role="dialog" aria-label={mode === 'child' ? 'رسالة لؤلؤ' : 'كيف يصنع بَيان أثرًا'}>
+    <div className={`bi bi-${mode}`} dir="rtl" role="dialog" aria-label={TITLE[mode]}>
       <style dangerouslySetInnerHTML={{ __html: INTRO_CSS }} />
       {!started && (
         <div className="bi-cover">
           <img src={luluPose('wave')} alt="" width={140} height={140} />
           {mode === 'child'
             ? <><h1>{name ? `يا ${name}!` : 'يا صَديقي!'}</h1><p>عِنْدي لَكَ رِسالَةٌ قَصيرَةْ… اِسْمَعْها مَعَ ماما أَوْ بابا.</p><button className="bi-big" onClick={() => setStarted(true)}>اِفْتَحِ الرِّسالَةَ 💌</button></>
-            : <><h1>كيف يصنع بَيان أثرًا؟</h1><p>ثلاث دقائق بصوت جدّ سالم — ما نفعله، ولماذا دوركم في البيت هو الأهمّ.</p><button className="bi-big" onClick={() => setStarted(true)}>شاهِدوا ▶</button></>}
+            : mode === 'facilitator'
+              ? <><h1>دليل اللقاء الأسبوعيّ</h1><p>ثلاث دقائق بصوت جدّ سالم — دورك، وما تراه وما لا تراه، وعشرون دقيقة في أربع خطوات.</p><button className="bi-big" onClick={() => setStarted(true)}>شاهِد ▶</button></>
+              : <><h1>كيف يصنع بَيان أثرًا؟</h1><p>ثلاث دقائق بصوت جدّ سالم — ما نفعله، ولماذا دوركم في البيت هو الأهمّ.</p><button className="bi-big" onClick={() => setStarted(true)}>شاهِدوا ▶</button></>}
           <button className="bi-skip" onClick={skip}>{mode === 'child' ? 'لاحِقًا' : 'إغلاق'}</button>
         </div>
       )}
@@ -84,7 +89,7 @@ export function BayanIntro({ mode, name, onDone, onSkip }: { mode: 'child' | 'pa
             <ol className="bi-dots" aria-label="المشاهد">{scenes.map((s, i) => <li key={s.key} className={i === si ? 'on' : i < si ? 'ok' : ''} />)}</ol>
             {!ended && <button className="bi-skip" onClick={skip}>{mode === 'child' ? 'تَخَطّي ◀' : 'تخطّي'}</button>}
             {!ended && <button className="bi-ghost" onClick={() => { clear(); advance(); }}>التّالي</button>}
-            {ended && <button className="bi-big" onClick={finish}>{mode === 'child' ? 'هَيّا بِنا! ☀️' : 'ابدؤوا اليوم 🌱'}</button>}
+            {ended && <button className="bi-big" onClick={finish}>{mode === 'child' ? 'هَيّا بِنا! ☀️' : mode === 'facilitator' ? 'إلى ورقة اللقاء 📋' : 'ابدؤوا اليوم 🌱'}</button>}
           </footer>
           <span className="bi-count" aria-hidden>{si + 1}/{n}</span>
         </div>
