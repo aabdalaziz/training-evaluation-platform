@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
+import { FlowShell, Stations, StepCard, FlowNav, useStepScroll, type Station, type StationState } from '../../components/StepFlow'; /* هـ-3 ن «محطّات» */
 import { isUniqueViolation, markDone, onceMessage, ONCE_SHARED, ONCE_TITLE, riyadhToday, wasDone, type OnceKind } from '../../../lib/evaluation/once';
 import { kindFromPath, KIND_AR, KIND_EN, resolveOpenLang, linkStateText, linkTitle, scopeText, pickTemplate, answerRow, LIKERT_AR, LIKERT_EN, NPS_MIN, NPS_MAX, type EvalLink, type LinkState } from '../../../lib/evaluation/links';
 
@@ -64,7 +65,6 @@ export default function GuestEvaluationPage() {
   const db = supabase();
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
   const t = (k: keyof typeof STR) => STR[k][lang === 'en' ? 1 : 0];
-  const dir = lang === 'en' ? 'ltr' : 'rtl';
 
   const [programs, setPrograms] = useState<any[]>([]);
   const [programId, setProgramId] = useState('');
@@ -81,6 +81,9 @@ export default function GuestEvaluationPage() {
   /* P49-ج «مرّة واحدة»: ذاكرة الجهاز + فحص البريد المبكّر */
   const [onceAt, setOnceAt] = useState<string | null>(null); const [onceOverride, setOnceOverride] = useState(false);
   const [dupEmail, setDupEmail] = useState<string | null>(null);
+  /* هـ-3 ن «محطّات»: 0 بيانات المشارك · 1..n قسم لكل محطّة — والإرسال في الأخيرة */
+  const [step, setStep] = useState(0); const [reached, setReached] = useState(0); const [stepErr, setStepErr] = useState('');
+  useStepScroll(step);
   const onceScope = { kind: kindLabel as OnceKind, programId, classroomId: kind === 'daily' ? classroomId : null };   /* الختامي/النهاية: للبرنامج كلّه */
   useEffect(() => { if (programId) setOnceAt(wasDone(onceScope)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [programId, classroomId]);
   async function checkEmailEarly(raw: string) {
@@ -174,8 +177,7 @@ export default function GuestEvaluationPage() {
   const ratingQuestions = questions.filter(q => RATING_KINDS.includes(q.kind) && !EXCLUDED_FROM_RATING.includes(q.question_key || ''));
   const L = (ar: string | null | undefined, en?: string | null) => (lang === 'en' && en ? en : (ar || ''));
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  function infoMissing(): string[] {
     const missing: string[] = [];
     const isEnd = kind === 'end';   // P49: نهاية البرنامج — البريد وحده إلزامي (منع التكرار)؛ الاسم والجوال والجنس اختيارية
     if (!isEnd && !info.full_name.trim()) missing.push(t('name'));
@@ -185,22 +187,30 @@ export default function GuestEvaluationPage() {
     if (isEnd && info.phone.trim() && digits.length < 7) missing.push(t('phone'));
     if (!isEnd && !info.gender) missing.push(t('gender'));
     if (kind === 'final' && !info.accommodation_type) missing.push(t('accommodation'));
+    if (!link && !programId) missing.push(t('program'));
     if (kind === 'daily' && !classroomId) missing.push(t('classroom'));
     if (link && kind !== 'daily' && classrooms.length > 1 && !classroomId) missing.push(t('section'));   // P49: رابط «كل الشعب» يطلب الشعبة
-    if (missing.length) { setMessage(`${t('missingFields')}\n• ${missing.join('\n• ')}`); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    return missing;
+  }
+  async function submit(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (dupEmail) { setStep(0); setStepErr(kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')); return; }
+    const missing = infoMissing();
+    if (missing.length) { setStep(0); setStepErr(`${t('missingFields')}\n• ${missing.join('\n• ')}`); return; }
     const requiredMissing = questions.filter(q => q.is_required && !hasAnswer(answers[q.id]));
     if (requiredMissing.length) {
       setMissIds(requiredMissing.map(q => q.id));
-      /* P49-هـ: مع شريط الرحلة تكفي خلاصة بالأقسام (لا قائمة طويلة) — والمحطّات الناقصة تتلوّن */
-      const missSecs = Array.from(new Set(requiredMissing.map(q => L(q.section_ar || STR.general[0], q.section_en))));
-      setMessage(requiredMissing.length > 6
-        ? `${t('missingQs')} (${requiredMissing.length})\n• ${missSecs.join(' · ')}`
-        : `${t('missingQs')}\n${requiredMissing.map(q => `• ${L(q.text_ar, q.text_en)}`).join('\n')}`);
-      document.getElementById(`q-${requiredMissing[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+      /* هـ-3 ن: نعود إلى أول محطّة ناقصة ونلوّن ما ينقصها — والمحطّات الأخرى تتلوّن في الشريط */
+      const gi = grouped.findIndex(g => g.items.some(q => q.id === requiredMissing[0].id));
+      setStep(Math.max(0, gi + 1));
+      const inStep = requiredMissing.filter(q => grouped[gi]?.items.includes(q));
+      setStepErr(`${t('missingQs')}\n${inStep.map(q => `• ${L(q.text_ar, q.text_en)}`).join('\n')}`);
+      return;
     }
     setSaving(true); setMessage('');
     try {
       const guestEmail = info.email.trim().toLowerCase();
+      const digits = (info.phone || '').replace(/\D/g, '');
       const fullPhone = `${info.country_dial}${digits}`;
       const ratings = ratingQuestions.map(q => Number(answers[q.id])).filter(x => !isNaN(x) && x > 0);
       const today = riyadhToday();   /* P49-ج: تاريخ الرياض لا UTC */
@@ -227,228 +237,153 @@ export default function GuestEvaluationPage() {
   }
 
   const program = programs.find(p => p.id === programId);
-  const shell = (child: React.ReactNode) => <main className="ev" dir={dir}><style>{CSS}</style><div className="ev-wrap">{child}</div></main>;
-  const header = (
-    <header className="ev-card ev-head">
-      <div className="ev-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
-      <div className="ev-kicker"><Icon name={kind === 'daily' ? 'calendar' : 'flag'} size={14} /> {t('kicker')}</div>
-      <h1>{kind === 'daily' ? t('dailyTitle') : kind === 'end' ? t('endTitle') : t('finalTitle')}</h1>
-      {program && <div className="ev-prog"><Icon name="book" size={14} /> {L(program.name_ar, program.name_en)}</div>}
-      <p className="ev-intro">{t(kind === 'end' ? 'introEnd' : 'intro')}</p>
-      <div className="ev-langs"><button type="button" className={lang === 'ar' ? 'on' : ''} onClick={() => setLang('ar')}>العربية</button><button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>English</button></div>
-    </header>
+  const kicker = <><Icon name={kind === 'daily' ? 'calendar' : 'flag'} size={14} /> {t('kicker')}</>;
+  const title = kind === 'daily' ? t('dailyTitle') : kind === 'end' ? t('endTitle') : t('finalTitle');
+  const progLine = program ? <><Icon name="book" size={14} /> {L(program.name_ar, program.name_en)}</> : undefined;
+  const shell = (child: React.ReactNode, opts: { sub?: React.ReactNode; langs?: boolean } = {}) => (
+    <FlowShell lang={lang} kicker={kicker} title={title} sub={opts.sub} line={progLine} langs={opts.langs} onLang={setLang} testid="ev-flow"><style dangerouslySetInnerHTML={{ __html: CSS }} />{child}</FlowShell>
   );
 
-  if (loading) return shell(<div className="ev-card ev-center ev-muted">{t('loading')}</div>);
-  if (linkStatus === 'invalid' || (link && linkStatus !== 'open')) return shell(<>
-    {header}
-    <section className="ev-card ev-center" data-testid="ev-link-closed" data-state={linkStatus}>
-      <div className="ev-ok off"><Icon name="clock" size={30} /></div>
-      <h2>{linkStatus === 'before' ? (lang === 'ar' ? 'لم يُفتح بعد' : 'Not open yet') : linkStatus === 'after' ? (lang === 'ar' ? 'أُغلق الرابط' : 'Link closed') : (lang === 'ar' ? 'انتهى هذا الرابط' : 'This link has expired')}</h2>
-      <p className="ev-muted" style={{ fontSize: 14 }}>{linkStateText(linkStatus === 'invalid' ? 'off' : linkStatus as LinkState, link, lang)}</p>
-      {linkProgram && <div className="ev-prog"><Icon name="book" size={14} /> {L(linkProgram.name_ar, linkProgram.name_en)}</div>}
-    </section>
-  </>);
+  if (loading) return shell(<div className="fl-card fl-center fl-muted">{t('loading')}</div>);
+  if (linkStatus === 'invalid' || (link && linkStatus !== 'open')) return shell(
+    <section className="fl-card fl-center" data-testid="ev-link-closed" data-state={linkStatus}>
+      <div className="fl-ok off"><Icon name="clock" size={30} /></div>
+      <h2>{linkStatus === 'before' ? (lang === 'ar' ? 'لم يُفتح بعد' : 'Not open yet') : linkStatus === 'after' ? (lang === 'ar' ? 'أُغلق الرابط' : 'Link closed') : (lang === 'ar' ? 'انتهى هذا الرابط أو غير صالح' : 'This link is closed or invalid')}</h2>
+      <p className="fl-muted" style={{ fontSize: 14 }}>{linkStateText(linkStatus === 'invalid' ? 'off' : linkStatus as LinkState, link, lang)}</p>
+      {linkProgram && <div className="fl-line"><Icon name="book" size={14} /> {L(linkProgram.name_ar, linkProgram.name_en)}</div>}
+    </section>, { langs: true });
   const lockedRoom = link?.classroom_id ? (linkRooms.find(x => x.id === link.classroom_id) || classrooms.find(c => c.id === link.classroom_id) || null) : null;
   const lockCard = link && linkProgram ? (
-    <section className="ev-card ev-lock" data-testid="ev-locked">
-      <div className="ev-lock-k"><Icon name="shield" size={14} /> {t('locked')}</div>
-      <div className="ev-lock-t">{linkTitle(link, L(linkProgram.name_ar, linkProgram.name_en), lockedRoom)}</div>
-      <div className="ev-lock-m">{L(linkProgram.name_ar, linkProgram.name_en)} · {lang === 'ar' ? KIND_AR[kindFromPath(kind)] : KIND_EN[kindFromPath(kind)]} · {scopeText(link, lockedRoom, lang)}{link.slot_ar ? ` · ${link.slot_ar}` : ''}</div>
-      <small className="ev-muted">{t('lockedHint')}</small>
+    <section className="fl-lock" data-testid="ev-locked">
+      <div className="fl-lock-k"><Icon name="shield" size={14} /> {t('locked')}</div>
+      <div className="fl-lock-t">{linkTitle(link, L(linkProgram.name_ar, linkProgram.name_en), lockedRoom)}</div>
+      <div className="fl-lock-m">{L(linkProgram.name_ar, linkProgram.name_en)} · {lang === 'ar' ? KIND_AR[kindFromPath(kind)] : KIND_EN[kindFromPath(kind)]} · {scopeText(link, lockedRoom, lang)}{link.slot_ar ? ` · ${link.slot_ar}` : ''}</div>
+      <small className="fl-muted">{t('lockedHint')}</small>
     </section>) : null;
-  if (isSuccess) return shell(<>
-    {header}
-    <section className="ev-card ev-center">
-      <div className="ev-ok"><Icon name="check" size={34} /></div>
+  if (isSuccess) return shell(
+    <section className="fl-card fl-center" data-testid="ev-done">
+      <div className="fl-ok"><Icon name="check" size={34} /></div>
       <h2>{t('thanks')}</h2>
-      <p className="ev-muted" style={{ fontSize: 14 }}>{t('thanksBody')}</p>
-      <button type="button" className="ev-btn ghost" onClick={() => { setIsSuccess(false); setAnswers({}); setInfo(i => ({ ...i, full_name: '', email: '', phone: '' })); }}><Icon name="refresh" size={14} /> {t('another')}</button>
-    </section>
-  </>);
+      <p className="fl-muted" style={{ fontSize: 14 }}>{t('thanksBody')}</p>
+      <button type="button" className="fl-btn ghost" onClick={() => { setIsSuccess(false); setAnswers({}); setInfo(i => ({ ...i, full_name: '', email: '', phone: '' })); setStep(0); setReached(0); }}><Icon name="refresh" size={14} /> {t('another')}</button>
+    </section>);
 
   if (onceAt && !onceOverride) return shell(<>
-    {header}
     {lockCard}
-    <section className="ev-card ev-center" data-testid="ev-once" data-at={onceAt}>
-      <div className="ev-ok"><Icon name="check" size={34} /></div>
+    <section className="fl-card fl-center" data-testid="ev-once" data-at={onceAt}>
+      <div className="fl-ok"><Icon name="check" size={34} /></div>
       <h2>{ONCE_TITLE[lang === 'en' ? 1 : 0]}</h2>
-      <p className="ev-muted" style={{ fontSize: 14 }}>{onceMessage(kindLabel as OnceKind, lang)}</p>
-      <button type="button" className="ev-btn ghost" onClick={() => setOnceOverride(true)} data-testid="ev-once-override"><Icon name="users" size={14} /> {ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
+      <p className="fl-muted" style={{ fontSize: 14 }}>{onceMessage(kindLabel as OnceKind, lang)}</p>
+      <button type="button" className="fl-btn ghost" onClick={() => setOnceOverride(true)} data-testid="ev-once-override"><Icon name="users" size={14} /> {ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
     </section>
   </>);
 
-  const field = (label: string, required: boolean, control: React.ReactNode, span?: boolean) => <label className={`ev-field${span ? ' span' : ''}`}><span>{label}{required && <span className="ev-req"> *</span>}</span>{control}</label>;
+  const field = (label: string, required: boolean, control: React.ReactNode, span?: boolean) => <label className={`fl-field${span ? ' span' : ''}`}><span>{label}{required && <span className="fl-req"> *</span>}</span>{control}</label>;
+
+  /* ---------------- محطّات: بيانات المشارك ثم قسم لكل محطّة ---------------- */
+  const infoDoneCount = [kind !== 'end' ? !!info.full_name.trim() : true, !!info.email.trim(), kind !== 'end' ? !!info.phone.trim() : true, kind !== 'end' ? !!info.gender : true, link ? true : !!programId].filter(Boolean).length;
+  const infoTotal = 5;
+  const st = (done: number, total: number, missNow: boolean): StationState => missNow ? 'miss' : total === 0 ? 'todo' : done >= total ? 'done' : done > 0 ? 'part' : 'todo';
+  const stations: Station[] = [
+    { key: 'info', title: t('participant'), state: st(infoDoneCount, infoTotal, step === 0 && !!stepErr), done: infoDoneCount, total: infoTotal },
+    ...grouped.map((g, gi) => {
+      const done = g.items.filter(q => hasAnswer(answers[q.id])).length; const req = g.items.filter(q => q.is_required).length;
+      const reqDone = g.items.filter(q => q.is_required && hasAnswer(answers[q.id])).length; const miss = g.items.some(q => missIds.includes(q.id));
+      const state: StationState = miss ? 'miss' : (req ? reqDone === req : done === g.items.length) ? 'done' : done > 0 ? 'part' : 'todo';
+      return { key: g.key, title: L(g.key, g.en), state, done, total: g.items.length, optional: req === 0 };
+    }),
+  ];
+  const N = stations.length;
+  function stepErrors(i: number): string | '' {
+    if (i === 0) { const m = infoMissing(); return m.length ? `${t('missingFields')}\n• ${m.join('\n• ')}` : (!qLoading && programId && !templateId ? t('noTemplate') : ''); }
+    const g = grouped[i - 1]; if (!g) return '';
+    const miss = g.items.filter(q => q.is_required && !hasAnswer(answers[q.id]));
+    if (miss.length) { setMissIds(m => Array.from(new Set([...m, ...miss.map(q => q.id)]))); return `${t('missingQs')}\n${miss.map(q => `• ${L(q.text_ar, q.text_en)}`).join('\n')}`; }
+    return '';
+  }
+  function go(i: number) { setStepErr(''); setStep(i); setReached(r => Math.max(r, i)); }
+  function next() { const err = stepErrors(step); if (err) { setStepErr(err); return; } if (step === 0 && (qLoading || !questions.length)) { setStepErr(qLoading ? t('loading') : t('noTemplate')); return; } go(Math.min(N - 1, step + 1)); }
+  function prev() { setStepErr(''); setStep(s => Math.max(0, s - 1)); }
+  const scaleLabel = (q: Q, v: number) => q.kind === 'LIKERT_5' && kind === 'end' ? (lang === 'en' ? LIKERT_EN : LIKERT_AR)[5 - v] : SCALE_LABELS[v]?.[lang === 'en' ? 1 : 0];
 
   return shell(<>
-    {header}
-    <form onSubmit={submit} className="ev-form" noValidate>
-      {lockCard}
-      {message && <div className={`ev-msg${message.startsWith('⚠️') ? ' warn' : ' bad'}`}><Icon name="alert" size={16} /><span>{message.replace(/^⚠️\s*/, '')}</span></div>}
+    {lockCard}
+    {message && <div className={`fl-msg${message.startsWith('⚠️') ? ' warn' : ' bad'}`}><Icon name="alert" size={16} /><span>{message.replace(/^⚠️\s*/, '')}</span></div>}
+    {/* هـ-3 ن: شريط المحطّات — محطّة لكل قسم: مكتمل/جارٍ/لم يبدأ/ينقصه إلزامي (WCAG 2.4 التنقّل · 3.3.1 تحديد الخطأ) */}
+    {N > 1 && <Stations lang={lang} stations={stations} index={step} reached={reached} onGo={go} testid="ev-journey" chipTestid="ev-jchip" />}
 
-      {/* P49-هـ: «شريط الرحلة» — محطّة لكل قسم: مكتمل/جارٍ/لم يبدأ/ينقصه إلزامي؛ الضغط ينقل إلى القسم (WCAG 2.4 التنقّل · 3.3.1 تحديد الخطأ) */}
-      {!qLoading && grouped.length > 1 && (
-        <nav className="ev-journey" aria-label={t('journey')} data-testid="ev-journey">
-          <div className="ev-jhead"><strong>{t('journey')}</strong><small className="ev-muted">{t('journeyHint')} · {Math.round(100 * answered / Math.max(1, questions.length))}%</small></div>
-          <ol className="ev-jlist">
-            {grouped.map((g, gi) => {
-              const done = g.items.filter(q => hasAnswer(answers[q.id])).length; const req = g.items.filter(q => q.is_required).length;
-              const reqDone = g.items.filter(q => q.is_required && hasAnswer(answers[q.id])).length; const miss = g.items.some(q => missIds.includes(q.id));
-              const state = miss ? 'miss' : (req ? reqDone === req : done === g.items.length) ? 'done' : done > 0 ? 'part' : 'todo';
-              return (
-                <li key={g.key}>
-                  <button type="button" className={`ev-jchip ${state}`} data-testid={`ev-jchip-${gi}`} aria-current={state === 'part' ? 'step' : undefined}
-                    title={miss ? t('journeyMissing') : undefined}
-                    onClick={() => document.getElementById(`sec-${gi}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-                    <i>{state === 'done' ? '✓' : gi + 1}</i><span>{L(g.key, g.en)}</span><b>{done}/{g.items.length}</b>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
-      )}
-      <section className="ev-card">
-        <h2><span className="ev-n">1</span>{t('participant')}</h2>
-        <div className="ev-grid">
+    {step === 0 && (
+      <StepCard lang={lang} n={1} title={t('participant')} hint={t(kind === 'end' ? 'introEnd' : 'intro')} id="sec-info" miss={!!stepErr}>
+        <div className="fl-grid">
           {field(t('name'), kind !== 'end', <input value={info.full_name} onChange={e => setInfo({ ...info, full_name: e.target.value })} autoComplete="name" />)}
-          {field(t('email'), true, <><input type="email" dir="ltr" placeholder="name@example.com" value={info.email} onChange={e => { setInfo({ ...info, email: e.target.value }); if (dupEmail) setDupEmail(null); }} onBlur={e => void checkEmailEarly(e.target.value)} autoComplete="email" aria-invalid={!!dupEmail} data-testid="ev-email" />{dupEmail && <small className="ev-dup" role="alert" data-testid="ev-dup">⚠️ {kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}</small>}</>)}
+          {field(t('email'), true, <><input type="email" dir="ltr" placeholder="name@example.com" value={info.email} onChange={e => { setInfo({ ...info, email: e.target.value }); if (dupEmail) setDupEmail(null); }} onBlur={e => void checkEmailEarly(e.target.value)} autoComplete="email" aria-invalid={!!dupEmail} data-testid="ev-email" />{dupEmail && <small className="ev-dup" role="alert" data-testid="ev-dup" style={{ color: '#9A3A2A' }}>⚠️ {kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}</small>}</>)}
           {field(t('phone'), kind !== 'end', <div className="ev-phone" dir="ltr">
             <select value={info.country_dial} onChange={e => setInfo({ ...info, country_dial: e.target.value })} aria-label="Country code">{COUNTRIES.map(c => <option key={c[0] + c[1]} value={c[0]}>{c[0]} · {lang === 'en' ? c[2] : c[1]}</option>)}</select>
             <input inputMode="numeric" placeholder="5xxxxxxxx" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value.replace(/[^\d]/g, '') })} autoComplete="tel-national" />
           </div>)}
           {field(t('nationality'), false, <input value={info.nationality} onChange={e => setInfo({ ...info, nationality: e.target.value })} />)}
-          {field(t('gender'), kind !== 'end', <div className="ev-seg">{[['ذكر', t('male')], ['أنثى', t('female')]].map(([v, l]) => <button type="button" key={v} className={info.gender === v ? 'on' : ''} onClick={() => setInfo({ ...info, gender: v })}>{l}</button>)}</div>)}
-          {kind === 'final' && !link && field(t('accommodation'), true, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
-            <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'en' ? 'Al-Manar Hotel' : 'فندق المنار'}</option><option value="شقق الإسكان العزيزية">{lang === 'en' ? 'Al-Aziziyah Apartments' : 'شقق الإسكان العزيزية'}</option><option value="إقامة أخرى">{lang === 'en' ? 'Other accommodation' : 'إقامة أخرى'}</option>
+          {field(t('gender'), kind !== 'end', <div className="fl-pills">{[['ذكر', t('male')], ['أنثى', t('female')]].map(([v, l]) => <button type="button" key={v} className={`fl-pill ${info.gender === v ? 'on' : ''}`} onClick={() => setInfo({ ...info, gender: v })}><span className="fl-k">{info.gender === v && <Icon name="check" size={12} />}</span>{l}</button>)}</div>)}
+          {kind === 'final' && field(t('accommodation'), !link, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
+            <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'en' ? 'Al-Manar Hotel' : 'فندق المنار'}</option><option value="شقق الإسكان العزيزية">{lang === 'en' ? 'Al-Aziziyah Housing' : 'شقق الإسكان العزيزية'}</option><option value="سكن خاص">{lang === 'en' ? 'Private accommodation' : 'سكن خاص'}</option>
           </select>)}
-          {kind === 'final' && link && field(t('accommodation'), false, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
-            <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'en' ? 'Al-Manar Hotel' : 'فندق المنار'}</option><option value="شقق الإسكان العزيزية">{lang === 'en' ? 'Al-Aziziyah Apartments' : 'شقق الإسكان العزيزية'}</option><option value="إقامة أخرى">{lang === 'en' ? 'Other accommodation' : 'إقامة أخرى'}</option>
-          </select>)}
-          {!link && field(t('program'), true, <select data-testid="ev-program" value={programId} onChange={e => setProgramId(e.target.value)}><option value="">{t('choose')}</option>{programs.map(p => <option key={p.id} value={p.id}>{L(p.name_ar, p.name_en)}</option>)}</select>, kind !== 'daily')}
-          {!link && kind === 'daily' && field(t('classroom'), true, <select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{t('room')} {c.code}{c.level ? ` (${c.level})` : ''}</option>)}</select>)}
-          {link && classrooms.length > 1 && field(t('section'), kind === 'daily', <select data-testid="ev-link-rooms" value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{c.section_name || `${t('room')} ${c.code}`}{c.level ? ` (${c.level})` : ''}</option>)}</select>, true)}
+          {!link && field(t('program'), true, <select data-testid="ev-program" value={programId} onChange={e => setProgramId(e.target.value)}><option value="">{t('choose')}</option>{programs.map(p => <option key={p.id} value={p.id}>{L(p.name_ar, p.name_en)}</option>)}</select>)}
+          {!link && kind === 'daily' && field(t('classroom'), true, <select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{c.section_name ? `${c.code} · ${c.section_name}` : c.code}</option>)}</select>)}
+          {link && classrooms.length > 1 && field(t('section'), kind === 'daily', <select data-testid="ev-link-rooms" value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{c.section_name ? `${c.code} · ${c.section_name}` : c.code}</option>)}</select>)}
         </div>
-      </section>
+        {qLoading && programId && <p className="fl-hint" style={{ marginTop: 12 }}>{t('loading')}</p>}
+        {!qLoading && programId && !templateId && <div className="fl-msg warn" style={{ marginTop: 12 }}><Icon name="alert" size={16} /><span>{t('noTemplate')}</span></div>}
+        <p className="fl-hint" style={{ margin: '14px 0 0' }}><Icon name="shield" size={12} /> {t('privacy')}</p>
+      </StepCard>
+    )}
 
-      {qLoading && <div className="ev-card ev-center ev-muted">{t('loading')}</div>}
-      {!qLoading && programId && !templateId && <div className="ev-msg warn"><Icon name="alert" size={16} /><span>{t('noTemplate')}</span></div>}
+    {step > 0 && grouped[step - 1] && (() => { const g = grouped[step - 1]; const gi = step - 1; return (
+      <StepCard lang={lang} n={gi + 2} title={L(g.key, g.en)} optional={!g.items.some(q => q.is_required)} hint={`${g.items.length} ${t('questions')}`} id={`sec-${gi}`} miss={!!stepErr}>
+        {g.items.map(q => {
+          const miss = missIds.includes(q.id); const val = answers[q.id];
+          return (
+            <div key={q.id} id={`q-${q.id}`} className={`fl-q${miss ? ' miss' : ''}`}>
+              <div className="fl-qt"><span className="fl-qn">{questions.indexOf(q) + 1}</span><span>{L(q.text_ar, q.text_en)}{q.is_required && <span className="fl-req" title={t('required')}> *</span>}</span></div>
+              {lang === 'ar' && q.text_en && <div className="fl-qen" dir="ltr">{q.text_en}</div>}
+              {RATING_KINDS.includes(q.kind) && (
+                <div className="fl-scale" style={{ gridTemplateColumns: `repeat(${q.max_value || 5}, minmax(0,1fr))` }} role="radiogroup">
+                  {(q.kind === 'LIKERT_5' && kind === 'end' ? [5, 4, 3, 2, 1] : Array.from({ length: q.max_value || 5 }, (_, i) => i + 1)).map(v => (
+                    <button key={v} type="button" role="radio" className={val === String(v) ? 'on' : ''} onClick={() => { set(q.id, String(v)); setStepErr(''); }} aria-checked={val === String(v)}>
+                      {q.kind === 'STARS' ? <Icon name="star" size={14} /> : null}<b>{v}</b>{(q.max_value || 5) === 5 && <small>{scaleLabel(q, v)}</small>}
+                    </button>
+                  ))}
+                  {(q.max_value || 5) === 5 && <div className="fl-legend" aria-hidden="true"><small>1 = {scaleLabel(q, 1)}</small><small>5 = {scaleLabel(q, 5)}</small></div>}
+                </div>
+              )}
+              {q.kind === 'NPS_10' && (
+                <div className="fl-nps" data-testid="ev-nps">
+                  {Array.from({ length: NPS_MAX - NPS_MIN + 1 }, (_, i) => NPS_MIN + i).map(v => <button key={v} type="button" className={val === String(v) ? 'on' : ''} onClick={() => { set(q.id, String(v)); setStepErr(''); }} aria-pressed={val === String(v)}>{v}</button>)}
+                  <div className="fl-nps-l"><small>{t('npsLow')}</small><small>{t('npsHigh')}</small></div>
+                </div>
+              )}
+              {['SINGLE_CHOICE', 'YES_NO'].includes(q.kind) && (
+                <div className="fl-pills" role="radiogroup">
+                  {(q.kind === 'YES_NO' ? ['نعم', 'لا'] : q.options).map(o => <button key={o} type="button" role="radio" aria-checked={val === o} className={`fl-pill ${val === o ? 'on' : ''}`} onClick={() => { set(q.id, o); setStepErr(''); }}><span className="fl-k">{val === o && <Icon name="check" size={12} />}</span>{q.kind === 'YES_NO' ? (o === 'نعم' ? t('yes') : t('no')) : o}</button>)}
+                </div>
+              )}
+              {q.kind === 'MULTI_CHOICE' && (
+                <div className="fl-pills">
+                  {q.options.map(o => { const on = Array.isArray(val) && val.includes(o); return <button key={o} type="button" className={`fl-pill multi ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => { toggleMulti(q.id, o); setMissIds(m => m.filter(i => i !== q.id)); setStepErr(''); }}><span className="fl-k">{on && <Icon name="check" size={12} />}</span>{o}</button>; })}
+                </div>
+              )}
+              {q.kind === 'SHORT_TEXT' && <input className="fl-text" placeholder={t('writeHere')} value={val || ''} onChange={e => set(q.id, e.target.value)} />}
+              {q.kind === 'LONG_TEXT' && <textarea className="fl-text" rows={4} placeholder={t('writeHere')} value={val || ''} onChange={e => set(q.id, e.target.value)} />}
+            </div>
+          );
+        })}
+      </StepCard>
+    ); })()}
 
-      {grouped.map((g, gi) => (
-        <section key={g.key} id={`sec-${gi}`} className="ev-card ev-sec">
-          <h2><span className="ev-n">{gi + 2}</span>{L(g.key, g.en)}<span className="ev-count">{g.items.length}</span></h2>
-          {g.items.map(q => {
-            const miss = missIds.includes(q.id); const val = answers[q.id];
-            return (
-              <div key={q.id} id={`q-${q.id}`} className={`ev-q${miss ? ' miss' : ''}`}>
-                <div className="ev-qt"><span className="ev-qn">{questions.indexOf(q) + 1}</span><span>{L(q.text_ar, q.text_en)}{q.is_required && <span className="ev-req" title={t('required')}> *</span>}</span></div>
-                {lang === 'ar' && q.text_en && <div className="ev-qen">{q.text_en}</div>}
-                {RATING_KINDS.includes(q.kind) && (
-                  <div className="ev-scale" style={{ gridTemplateColumns: `repeat(${q.max_value || 5}, minmax(0,1fr))` }}>
-                    {(q.kind === 'LIKERT_5' && kind === 'end' ? [5, 4, 3, 2, 1] : Array.from({ length: q.max_value || 5 }, (_, i) => i + 1)).map(v => (
-                      <button key={v} type="button" className={val === String(v) ? 'on' : ''} onClick={() => set(q.id, String(v))} aria-pressed={val === String(v)}>
-                        {q.kind === 'STARS' ? <Icon name="star" size={14} /> : null}<b>{v}</b>{(q.max_value || 5) === 5 && <small>{q.kind === 'LIKERT_5' && kind === 'end' ? (lang === 'en' ? LIKERT_EN : LIKERT_AR)[5 - v] : SCALE_LABELS[v][lang === 'en' ? 1 : 0]}</small>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {q.kind === 'NPS_10' && (
-                  <div className="ev-nps" data-testid="ev-nps">
-                    <div className="ev-nps-row">{Array.from({ length: NPS_MAX - NPS_MIN + 1 }, (_, i) => NPS_MIN + i).map(v => <button key={v} type="button" className={val === String(v) ? 'on' : ''} onClick={() => set(q.id, String(v))} aria-pressed={val === String(v)} aria-label={String(v)}>{v}</button>)}</div>
-                    <div className="ev-nps-l"><small>{t('npsLow')}</small><small>{t('npsHigh')}</small></div>
-                  </div>
-                )}
-                {['SINGLE_CHOICE', 'YES_NO'].includes(q.kind) && (
-                  <div className="ev-opts">
-                    {(q.kind === 'YES_NO' ? ['نعم', 'لا'] : q.options).map(o => <button key={o} type="button" className={val === o ? 'on' : ''} onClick={() => set(q.id, o)}><span className="ev-k">{val === o ? <Icon name="check" size={13} /> : ''}</span>{q.kind === 'YES_NO' ? (o === 'نعم' ? t('yes') : t('no')) : o}</button>)}
-                  </div>
-                )}
-                {q.kind === 'MULTI_CHOICE' && (
-                  <div className="ev-opts">
-                    {q.options.map(o => { const on = Array.isArray(val) && val.includes(o); return <button key={o} type="button" className={on ? 'on' : ''} onClick={() => { toggleMulti(q.id, o); setMissIds(m => m.filter(i => i !== q.id)); }}><span className="ev-k sq">{on ? <Icon name="check" size={13} /> : ''}</span>{o}</button>; })}
-                  </div>
-                )}
-                {q.kind === 'SHORT_TEXT' && <input className="ev-text" placeholder={t('writeHere')} value={val || ''} onChange={e => set(q.id, e.target.value)} />}
-                {q.kind === 'LONG_TEXT' && <textarea className="ev-text" rows={4} placeholder={t('writeHere')} value={val || ''} onChange={e => set(q.id, e.target.value)} />}
-              </div>
-            );
-          })}
-        </section>
-      ))}
-
-      {questions.length > 0 && (
-        <section className="ev-card ev-submit">
-          <div className="ev-progress"><div className="ev-bar"><i style={{ width: `${Math.round(100 * answered / Math.max(1, questions.length))}%` }} /></div><small className="ev-muted">{t('progress')} {answered} {t('of')} {questions.length} {t('questions')}</small></div>
-          <button type="submit" className="ev-btn" disabled={saving || !!dupEmail}><Icon name="send" size={16} /> {saving ? t('sending') : t('submit')}</button>
-          <small className="ev-muted"><Icon name="shield" size={12} /> {t('privacy')}</small>
-        </section>
-      )}
-    </form>
-  </>);
+    <FlowNav lang={lang} index={step} count={N} onPrev={prev} onNext={next} onSubmit={() => void submit()} saving={saving} first={step === 0} last={N > 1 && step === N - 1}
+      submitLabel={t('submit')} error={stepErr || undefined} />
+  </>, { langs: step === 0 });
 }
 
 const CSS = `
-.ev-journey{position:sticky;top:64px;z-index:5;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border:1px solid #EADFD6;border-radius:16px;padding:10px 12px;margin:0 0 12px}
-.ev-jhead{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;margin-bottom:6px}
-.ev-jlist{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
-.ev-jlist li{flex:0 0 auto}
-.ev-jchip{display:flex;align-items:center;gap:6px;border:1px solid #EADFD6;background:#FBF4EE;color:#3A1F36;border-radius:999px;padding:5px 10px 5px 6px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
-.ev-jchip i{width:20px;height:20px;border-radius:50%;background:#EADFD6;display:grid;place-items:center;font-style:normal;font-size:11px}
-.ev-jchip b{font-weight:700;color:#8E7F8A;font-size:11px}
-.ev-jchip.part{border-color:#3A1F36;background:#fff}
-.ev-jchip.done{border-color:#BFE1DC;background:#E6F3F1;color:#2F6B66}.ev-jchip.done i{background:#3F7F79;color:#fff}
-.ev-jchip.miss{border-color:#F1D9A8;background:#FBF4EE;color:#9A3A2A}.ev-jchip.miss i{background:#8A5A1E;color:#fff}
-.ev-jchip:focus-visible{outline:2px solid #3A1F36;outline-offset:2px}
-.ev-sec{scroll-margin-top:160px}
-@media print{.ev-journey{display:none}}
-
-.ev-center p.ev-muted{display:block;font-size:14px;line-height:1.8;max-width:560px;margin:0 auto}.ev-center .ev-btn.ghost{display:inline-flex;margin-top:16px}
-.ev-dup{display:block;color:#B9544A;font-weight:800;font-size:12.5px;margin-top:4px;line-height:1.6}.ev-field input[aria-invalid=true]{border-color:#D4614A;background:#FBEDE7}
-.ev-lock{border:1.5px solid #D9A866;background:linear-gradient(180deg,#FBF4EE,#fff);display:grid;gap:4px}.ev-lock-k{font-size:12px;font-weight:900;color:#8A5A1E;display:inline-flex;gap:6px;align-items:center}.ev-lock-t{font-size:18px;font-weight:900;color:#3A1F36}.ev-lock-m{font-size:13px;font-weight:700;color:#4A3645}
-.ev-nps-row{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}.ev-nps-row button{border:1px solid #D9CBC2;background:#fff;border-radius:8px;padding:9px 0;font:inherit;font-weight:900;font-size:13px;color:#3A1F36;cursor:pointer;min-width:0}.ev-nps-row button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.ev-nps-l{display:flex;justify-content:space-between;margin-top:4px;color:#8E7F8A}@media(max-width:480px){.ev-nps-row{grid-template-columns:repeat(6,minmax(0,1fr))}}
-.ev-ok.off{background:#EADFD6;color:#5C4858}
-.ev{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:18px 12px 60px;color:#2A1626}
-.ev-wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.ev-form{display:flex;flex-direction:column;gap:12px}
-.ev-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 20px}
-.ev-head{border-top:5px solid #D9A866}
-.ev-logos{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}.ev-logos img{height:46px;object-fit:contain}
-.ev-kicker{font-size:12px;font-weight:900;color:#2F6B66;display:flex;align-items:center;gap:6px}
-.ev-head h1{margin:4px 0;font-size:22px;color:#3A1F36}
-.ev-prog{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#3A1F36;background:#F6EBE0;border-radius:999px;padding:4px 12px;margin:2px 0 4px}
-.ev-intro{margin:8px 0 0;font-size:13.5px;line-height:1.8;color:#4A3645;background:#FBF4EE;border-radius:10px;padding:10px 12px}
-.ev-muted{color:#8E7F8A;font-size:12.5px;font-weight:700;margin:0;display:inline-flex;align-items:center;gap:5px}
-.ev-langs{display:flex;gap:6px;margin-top:10px}.ev-langs button{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:4px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;color:#3A1F36}.ev-langs button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
-.ev-card h2{margin:0 0 12px;font-size:16px;color:#3A1F36;display:flex;align-items:center;gap:8px}
-.ev-n{width:26px;height:26px;border-radius:8px;background:#3A1F36;color:#fff;display:grid;place-items:center;font-size:13px;flex-shrink:0}
-.ev-count{margin-inline-start:auto;font-size:11.5px;font-weight:800;color:#8E7F8A;background:#F6EBE0;border-radius:999px;padding:2px 10px}
-.ev-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
-.ev-field{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800;color:#4A3645}.ev-field.span{grid-column:1/-1}.ev-req{color:#B9544A}
-.ev-field input,.ev-field select,.ev-text{border:1px solid #D9CBC2;border-radius:10px;padding:10px 11px;font:inherit;font-size:14px;font-weight:700;color:#2A1626;background:#fff;width:100%;min-height:42px}
-.ev-field input:focus,.ev-field select:focus,.ev-text:focus{outline:none;border-color:#D4614A;box-shadow:0 0 0 3px rgba(212,97,74,.16)}
-.ev-phone{display:flex;gap:6px}.ev-phone select{width:150px;flex-shrink:0}.ev-phone input{flex:1}
-.ev-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}.ev-seg button{border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:10px;font:inherit;font-size:13.5px;font-weight:800;color:#2A1626;cursor:pointer;min-height:42px}.ev-seg button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}
-.ev-msg{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;font-size:13.5px;font-weight:800;white-space:pre-line;line-height:1.8}
-.ev-msg.bad{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A}.ev-msg.warn{background:#FBF4EE;border:1px solid #F1D9A8;color:#9A3A2A}.ev-msg svg{flex-shrink:0;margin-top:4px}
-.ev-q{border-top:1px solid #F6EBE0;padding:14px 0}.ev-q:first-of-type{border-top:0}
-.ev-q.miss{background:#FBF4EE;border-radius:10px;padding:12px;outline:1px solid #F1D9A8;margin:6px 0}
-.ev-qt{display:flex;gap:8px;align-items:flex-start;font-size:14.5px;font-weight:800;color:#2A1626;margin-bottom:8px;line-height:1.7}
-.ev-qn{min-width:24px;height:24px;border-radius:999px;background:#F3E6DC;color:#3A1F36;display:grid;place-items:center;font-size:12px;flex-shrink:0;margin-top:2px}
-.ev-qen{font-size:12.5px;color:#8E7F8A;font-weight:700;direction:ltr;text-align:left;margin:-4px 0 8px 32px}
-.ev-scale{display:grid;gap:6px}
-.ev-scale button{border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font:inherit;cursor:pointer;color:#2A1626;min-height:54px;justify-content:center}
-.ev-scale button b{font-size:16px}.ev-scale button small{font-size:10.5px;font-weight:700;color:#8E7F8A}
-.ev-scale button.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.ev-scale button.on small{color:#D9CBC2}
-.ev-opts{display:flex;flex-wrap:wrap;gap:6px}
-.ev-opts button{border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:8px 12px 8px 10px;display:flex;gap:8px;align-items:center;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;color:#2A1626;text-align:start}
-.ev-k{width:20px;height:20px;border-radius:999px;border:1.5px solid #D9CBC2;display:grid;place-items:center;flex-shrink:0;color:#fff}.ev-k.sq{border-radius:6px}
-.ev-opts button.on{background:#E6F3F1;border-color:#D4614A;color:#1F4F4A}.ev-opts button.on .ev-k{background:#D4614A;border-color:#D4614A}
-.ev-submit{display:flex;flex-direction:column;gap:10px;align-items:center}
-.ev-progress{width:100%;display:flex;flex-direction:column;gap:4px;align-items:center}
-.ev-bar{width:100%;height:8px;background:#F3E6DC;border-radius:999px;overflow:hidden}.ev-bar i{display:block;height:100%;background:linear-gradient(90deg,#D4614A,#3A1F36);border-radius:999px;transition:width .25s}
-.ev-btn{display:inline-flex;align-items:center;gap:8px;background:#3A1F36;color:#fff;border:0;border-radius:12px;padding:13px 28px;font:inherit;font-size:15px;font-weight:900;cursor:pointer;min-width:240px;justify-content:center}.ev-btn:disabled{opacity:.5;cursor:not-allowed}
-.ev-btn.ghost{background:#fff;color:#3A1F36;border:1px solid #D9CBC2;margin-top:10px;min-width:0;padding:10px 18px;font-size:13.5px}
-.ev-center{text-align:center;padding:36px 20px}.ev-center h2{justify-content:center;margin-top:10px}
-.ev-ok{width:64px;height:64px;border-radius:999px;background:#E6F3F1;color:#2F6B66;display:grid;place-items:center;margin:0 auto 10px}
-@media(max-width:620px){.ev-grid{grid-template-columns:1fr}.ev-scale button small{display:none}.ev-phone select{width:118px}.ev-card{padding:14px}.ev-qen{margin-left:0}}
+.ev-phone{display:flex;gap:6px}.ev-phone select{flex:0 0 150px}.ev-phone input{flex:1}
+.fl-step{scroll-margin-top:120px}
 `;

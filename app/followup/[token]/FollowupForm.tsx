@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
+import { FlowShell, Stations, StepCard, FlowNav, useStepScroll, type Station, type StationState } from '../../components/StepFlow'; /* هـ-3 ن «محطّات» */
 import { PERCENT_STEPS, ROLE_LABEL } from '../../../lib/behavior/model';
 import type { BehaviorQuestion, Role } from '../../../lib/behavior/model';
 
@@ -46,6 +47,9 @@ export function FollowupForm({ token, initialRole, traineeName, traineeEmail }: 
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   const [result, setResult] = useState<Result | null>(null);
+  /* هـ-3 ن «محطّات»: 0 الصفة والبيانات · 1..n مجال لكل محطّة — والإرسال في الأخيرة */
+  const [step, setStep] = useState(0); const [reached, setReached] = useState(0); const [stepErr, setStepErr] = useState('');
+  useStepScroll(step);
 
   useEffect(() => {
     (async () => {
@@ -68,162 +72,129 @@ export function FollowupForm({ token, initialRole, traineeName, traineeEmail }: 
     setAnswers(a => { const cur: string[] = Array.isArray(a[qid]) ? a[qid] : []; return { ...a, [qid]: cur.includes(opt) ? cur.filter(x => x !== opt) : [...cur, opt] }; });
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault(); setErr('');
-    if (!role) return;
-    const miss = qs.filter(q => q.required !== false && q.kind !== 'text' && (answers[q.id] == null || (Array.isArray(answers[q.id]) && !answers[q.id].length))).map(q => q.id);
-    if (me.name.trim().length < 3) { setErr(t.errors.bad_name); return; }
-    if (role !== 'trainee' && tr.name.trim().length < 3) { setErr(t.errors.bad_trainee); return; }
-    if (miss.length) { setMissing(miss); setErr(t.required); document.getElementById('q-' + miss[0])?.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    setMissing([]); setSaving(true);
+  const domains = useMemo(() => { const m = new Map<string, BehaviorQuestion[]>(); qs.forEach(q => { const k = q.domain_ar || (lang === 'en' ? 'General' : 'عام'); if (!m.has(k)) m.set(k, []); m.get(k)!.push(q); }); return Array.from(m.entries()); }, [qs, lang]);
+  const unanswered = (q: BehaviorQuestion) => q.required !== false && q.kind !== 'text' && (answers[q.id] == null || (Array.isArray(answers[q.id]) && !answers[q.id].length));
+  const has = (q: BehaviorQuestion) => !(answers[q.id] == null || answers[q.id] === '' || (Array.isArray(answers[q.id]) && !answers[q.id].length));
+  function infoErr(): string { if (!role) return t.errors.bad_role; if (me.name.trim().length < 3) return t.errors.bad_name; if (role !== 'trainee' && tr.name.trim().length < 3) return t.errors.bad_trainee; return ''; }
+
+  async function submit() {
+    setErr('');
+    const ie = infoErr(); if (ie) { setStep(0); setStepErr(ie); return; }
+    const miss = qs.filter(unanswered).map(q => q.id);
+    if (miss.length) { setMissing(miss); const di = domains.findIndex(([, items]) => items.some(q => miss.includes(q.id))); setStep(di + 1); setStepErr(t.required); return; }
+    setMissing([]); setStepErr(''); setSaving(true);
     try {
       const payload: Record<string, any> = { ...answers };
       for (const q of qs) if (q.kind === 'multi' && other[q.id]?.trim()) payload[q.id] = [...(Array.isArray(payload[q.id]) ? payload[q.id] : []), other[q.id].trim()];
       const { data: d, error } = await db.rpc('behavior_submit', { p_token: token, p_role: role, p_respondent_name: me.name.trim(), p_respondent_email: me.email.trim() || null, p_trainee_name: role === 'trainee' ? me.name.trim() : tr.name.trim(), p_trainee_email: role === 'trainee' ? (me.email.trim() || null) : (tr.email.trim() || null), p_answers: payload });
       if (error) throw new Error(error.message);
       const r = d as Result;
-      if (!r.ok) { setErr(t.errors[r.error || ''] || r.error || 'error'); return; }
+      if (!r.ok) { setStepErr(t.errors[r.error || ''] || r.error || 'error'); return; }
       setResult(r); window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (ex: any) { setErr(ex.message || 'error'); } finally { setSaving(false); }
+    } catch (ex: any) { setStepErr(ex.message || 'error'); } finally { setSaving(false); }
   }
 
-  return (
-    <div className="fu" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      <style>{CSS}</style>
-      <div className="fu-wrap">
-        <header className="fu-head">
-          <div className="fu-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
-          <div className="fu-kicker"><Icon name="trend" size={14} /> {t.kicker}</div>
-          <button type="button" className="fu-lang" onClick={() => setLang(l => (l === 'ar' ? 'en' : 'ar'))}>{lang === 'ar' ? 'English' : 'العربية'}</button>
-        </header>
+  /* ---------------- محطّات ---------------- */
+  const st = (done: number, total: number, missNow: boolean): StationState => missNow ? 'miss' : done >= total ? 'done' : done > 0 ? 'part' : 'todo';
+  const infoDone = (role ? 1 : 0) + (me.name.trim().length >= 3 ? 1 : 0) + (role === 'trainee' || tr.name.trim().length >= 3 ? 1 : 0);
+  const stations: Station[] = [
+    { key: 'info', title: t.you, state: st(infoDone, 3, step === 0 && !!stepErr), done: infoDone, total: 3 },
+    ...domains.map(([dom, items], di) => { const done = items.filter(has).length; const req = items.filter(q => q.required !== false && q.kind !== 'text'); return { key: dom, title: dom, state: st(done, items.length, (step === di + 1 && !!stepErr) || items.some(q => missing.includes(q.id) && unanswered(q))), done, total: items.length, optional: req.length === 0 }; }),
+  ];
+  const N = stations.length;
+  function go(i: number) { setStepErr(''); setStep(i); setReached(r => Math.max(r, i)); }
+  function next() {
+    if (step === 0) { const e = infoErr(); if (e) { setStepErr(e); return; } if (!qs.length) { setStepErr(t.errors.empty || t.required); return; } }
+    else { const m = (domains[step - 1]?.[1] || []).filter(unanswered).map(q => q.id); if (m.length) { setMissing(x => Array.from(new Set([...x, ...m]))); setStepErr(t.required); return; } }
+    go(Math.min(N - 1, step + 1));
+  }
+  function prev() { setStepErr(''); setStep(s => Math.max(0, s - 1)); }
+  const pick = (qid: string, v: any) => { setAnswers(a => ({ ...a, [qid]: v })); setMissing(m => m.filter(x => x !== qid)); setStepErr(''); };
 
-        {state === 'loading' && <div className="fu-card fu-center">{t.loading}</div>}
-        {state === 'none' && <div className="fu-card fu-center fu-bad"><Icon name="alert" size={30} /><b>{t.none}</b></div>}
-        {state === 'error' && <div className="fu-card fu-center fu-bad"><Icon name="alert" size={30} /><b>{err}</b></div>}
-
-        {state === 'ready' && f && (
-          <>
-            <section className="fu-card fu-info">
-              <h1>{lang === 'en' && f.title_en ? f.title_en : f.title_ar}</h1>
-              <p className="fu-prog">{lang === 'en' && f.program_name_en ? f.program_name_en : f.program_name}{f.classroom_code ? ` · ${f.classroom_code}` : ''}</p>
-              <p className="fu-intro">{f.intro_ar && lang === 'ar' ? f.intro_ar : t.intro}</p>
-            </section>
-
-            {f.status !== 'open' && !result && <div className="fu-card fu-center fu-warn"><Icon name="pause" size={28} /><b>{t.closed}</b></div>}
-
-            {result && (
-              <section className="fu-card fu-done">
-                <div className="fu-ring"><Icon name="check" size={40} stroke={3} /></div>
-                <h2>{t.thanks}</h2><p>{t.thanksSub}</p>
-                <div className="fu-res">
-                  {result.scale_mean != null && <span>{t.yourMean}: <b>{Number(result.scale_mean).toFixed(2)} / {max}</b></span>}
-                  {result.application_pct != null && <span>{t.yourApp}: <b>{Math.round(Number(result.application_pct))}%</b></span>}
-                </div>
-              </section>
-            )}
-
-            {f.status === 'open' && !result && (
-              <form onSubmit={submit} noValidate>
-                <section className="fu-card">
-                  <h2>{t.whoAreYou}</h2>
-                  <div className="fu-roles">
-                    {f.supervisor_open && <button type="button" className={`fu-role ${role === 'supervisor' ? 'on' : ''}`} onClick={() => setRole('supervisor')}><Icon name="users" size={18} /><b>{ROLE_LABEL.supervisor[lang]}</b></button>}
-                    {f.trainee_open && <button type="button" className={`fu-role ${role === 'trainee' ? 'on' : ''}`} onClick={() => setRole('trainee')}><Icon name="school" size={18} /><b>{ROLE_LABEL.trainee[lang]}</b></button>}
-                  </div>
-                  {role && (
-                    <div className="fu-grid">
-                      <label><span>{t.yourName} <i>*</i></span><input value={me.name} onChange={e => setMe({ ...me, name: e.target.value })} autoComplete="name" /></label>
-                      <label><span>{t.yourEmail} <small>({t.optional})</small></span><input type="email" dir="ltr" value={me.email} onChange={e => setMe({ ...me, email: e.target.value })} autoComplete="email" /></label>
-                      {role !== 'trainee' && (
-                        <>
-                          <div className="fu-sub">{t.trainee}</div>
-                          <label><span>{t.traineeName} <i>*</i></span><input value={tr.name} onChange={e => setTr({ ...tr, name: e.target.value })} /></label>
-                          <label><span>{t.traineeEmail}</span><input type="email" dir="ltr" value={tr.email} onChange={e => setTr({ ...tr, email: e.target.value })} /></label>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </section>
-
-                {role && qs.map((q, i) => (
-                  <section key={q.id} id={'q-' + q.id} className={`fu-card fu-q ${missing.includes(q.id) ? 'miss' : ''}`}>
-                    <div className="fu-q-head"><span className="fu-n">{i + 1}</span><div><div className="fu-dom">{q.domain_ar}</div><b>{label(q)}{q.required === false && <small> ({t.optional})</small>}</b></div></div>
-                    {q.kind === 'scale' && (
-                      <>
-                        <div className="fu-scale">
-                          {Array.from({ length: max }, (_, k) => k + 1).map(v => (
-                            <button type="button" key={v} className={`fu-dot ${answers[q.id] === v ? 'on' : ''}`} onClick={() => setAnswers(a => ({ ...a, [q.id]: v }))}>{v}</button>
-                          ))}
-                        </div>
-                        <small className="fu-hint">{t.scaleHint}</small>
-                      </>
-                    )}
-                    {q.kind === 'percent' && (
-                      <div className="fu-pct">
-                        {PERCENT_STEPS.map(p => <button type="button" key={p} className={`fu-chip ${answers[q.id] === p ? 'on' : ''}`} onClick={() => setAnswers(a => ({ ...a, [q.id]: p }))}>{p}%</button>)}
-                      </div>
-                    )}
-                    {q.kind === 'multi' && (
-                      <div className="fu-multi">
-                        {(q.options || []).map(o => <label key={o} className={`fu-opt ${Array.isArray(answers[q.id]) && answers[q.id].includes(o) ? 'on' : ''}`}><input type="checkbox" checked={Array.isArray(answers[q.id]) && answers[q.id].includes(o)} onChange={() => toggleMulti(q.id, o)} /> {o}</label>)}
-                        <input className="fu-other" placeholder={t.other} value={other[q.id] || ''} onChange={e => setOther({ ...other, [q.id]: e.target.value })} />
-                      </div>
-                    )}
-                    {q.kind === 'text' && <textarea rows={3} value={answers[q.id] || ''} onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))} />}
-                  </section>
-                ))}
-
-                {role && (
-                  <section className="fu-card">
-                    {err && <div className="fu-err"><Icon name="alert" size={16} /> {err}</div>}
-                    <button type="submit" className="fu-btn" disabled={saving}><Icon name="send" size={18} /> {saving ? t.saving : t.submit}</button>
-                  </section>
-                )}
-              </form>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+  const kicker = <><Icon name="trend" size={14} /> {t.kicker}</>;
+  const title = f ? (lang === 'en' && f.title_en ? f.title_en : f.title_ar) : t.kicker;
+  const line = f ? <><Icon name="book" size={14} /> {lang === 'en' && f.program_name_en ? f.program_name_en : f.program_name}{f.classroom_code ? ` · ${f.classroom_code}` : ''}</> : undefined;
+  const shell = (child: React.ReactNode, opts: { langs?: boolean; sub?: React.ReactNode } = {}) => (
+    <FlowShell lang={lang} kicker={kicker} title={title} sub={opts.sub} line={line} langs={opts.langs} onLang={setLang} testid="fu-flow"><style dangerouslySetInnerHTML={{ __html: CSS }} />{child}</FlowShell>
   );
+
+  if (state === 'loading') return shell(<div className="fl-card fl-center fl-muted">{t.loading}</div>);
+  if (state === 'none') return shell(<div className="fl-card fl-center"><div className="fl-ok off"><Icon name="alert" size={30} /></div><h2>{t.none}</h2></div>);
+  if (state === 'error' || !f) return shell(<div className="fl-card fl-center"><div className="fl-ok off"><Icon name="alert" size={30} /></div><h2>{err}</h2></div>);
+  if (result) return shell(
+    <section className="fl-card fl-center" data-testid="fu-done">
+      <div className="fl-ok"><Icon name="check" size={34} /></div>
+      <h2>{t.thanks}</h2><p className="fl-muted">{t.thanksSub}</p>
+      <div className="fu-res">
+        {result.scale_mean != null && <span>{t.yourMean}: <b>{Number(result.scale_mean).toFixed(2)} / {max}</b></span>}
+        {result.application_pct != null && <span>{t.yourApp}: <b>{Math.round(Number(result.application_pct))}%</b></span>}
+      </div>
+    </section>);
+  if (f.status !== 'open') return shell(<div className="fl-card fl-center"><div className="fl-ok off"><Icon name="pause" size={28} /></div><h2>{t.closed}</h2></div>, { langs: true });
+
+  return shell(<>
+    {N > 1 && <Stations lang={lang} stations={stations} index={step} reached={reached} onGo={go} testid="fu-stations" chipTestid="fu-chip" />}
+
+    {step === 0 && (
+      <StepCard lang={lang} n={1} title={t.whoAreYou} hint={f.intro_ar && lang === 'ar' ? f.intro_ar : t.intro} id="fu-step-0" miss={!!stepErr}>
+        <div className="fu-roles">
+          {f.supervisor_open && <button type="button" className={`fu-role ${role === 'supervisor' ? 'on' : ''}`} aria-pressed={role === 'supervisor'} onClick={() => { setRole('supervisor'); setStepErr(''); }}><Icon name="users" size={18} /><b>{ROLE_LABEL.supervisor[lang]}</b></button>}
+          {f.trainee_open && <button type="button" className={`fu-role ${role === 'trainee' ? 'on' : ''}`} aria-pressed={role === 'trainee'} onClick={() => { setRole('trainee'); setStepErr(''); }}><Icon name="school" size={18} /><b>{ROLE_LABEL.trainee[lang]}</b></button>}
+        </div>
+        {role && (
+          <div className="fl-grid" style={{ marginTop: 14 }}>
+            <label className="fl-field"><span>{t.yourName}<span className="fl-req"> *</span></span><input value={me.name} onChange={e => { setMe({ ...me, name: e.target.value }); setStepErr(''); }} autoComplete="name" /></label>
+            <label className="fl-field"><span>{t.yourEmail} <small>({t.optional})</small></span><input type="email" dir="ltr" value={me.email} onChange={e => setMe({ ...me, email: e.target.value })} autoComplete="email" /></label>
+            {role !== 'trainee' && (
+              <>
+                <div className="fu-sub">{t.trainee}</div>
+                <label className="fl-field"><span>{t.traineeName}<span className="fl-req"> *</span></span><input value={tr.name} onChange={e => { setTr({ ...tr, name: e.target.value }); setStepErr(''); }} /></label>
+                <label className="fl-field"><span>{t.traineeEmail}</span><input type="email" dir="ltr" value={tr.email} onChange={e => setTr({ ...tr, email: e.target.value })} /></label>
+              </>
+            )}
+          </div>
+        )}
+      </StepCard>
+    )}
+
+    {step > 0 && domains[step - 1] && (() => { const [dom, items] = domains[step - 1]; return (
+      <StepCard lang={lang} n={step + 1} title={dom} hint={`${items.length} ${lang === 'en' ? 'items' : 'بنود'} · ${t.scaleHint}`} optional={!items.some(q => q.required !== false && q.kind !== 'text')} id={`fu-step-${step}`} miss={!!stepErr}>
+        {items.map(q => (
+          <div key={q.id} id={'q-' + q.id} className={`fl-q ${missing.includes(q.id) ? 'miss' : ''}`}>
+            <div className="fl-qt"><span className="fl-qn">{qs.indexOf(q) + 1}</span><span>{label(q)}{q.required === false && <small className="fl-muted"> ({t.optional})</small>}</span></div>
+            {q.kind === 'scale' && (
+              <div className="fl-scale" style={{ gridTemplateColumns: `repeat(${max}, minmax(0,1fr))` }} role="radiogroup">
+                {Array.from({ length: max }, (_, k) => k + 1).map(v => (
+                  <button type="button" key={v} role="radio" aria-checked={answers[q.id] === v} className={answers[q.id] === v ? 'on' : ''} onClick={() => pick(q.id, v)}><b>{v}</b></button>
+                ))}
+              </div>
+            )}
+            {q.kind === 'percent' && (
+              <div className="fl-pills" role="radiogroup">
+                {PERCENT_STEPS.map(p => <button type="button" key={p} role="radio" aria-checked={answers[q.id] === p} className={`fl-pill ${answers[q.id] === p ? 'on' : ''}`} onClick={() => pick(q.id, p)}>{p}%</button>)}
+              </div>
+            )}
+            {q.kind === 'multi' && (
+              <div className="fl-pills">
+                {(q.options || []).map(o => { const on = Array.isArray(answers[q.id]) && answers[q.id].includes(o); return <button key={o} type="button" aria-pressed={on} className={`fl-pill multi ${on ? 'on' : ''}`} onClick={() => { toggleMulti(q.id, o); setMissing(m => m.filter(x => x !== q.id)); setStepErr(''); }}><span className="fl-k">{on && <Icon name="check" size={12} />}</span>{o}</button>; })}
+                <input className="fl-text" style={{ marginTop: 6 }} placeholder={t.other} value={other[q.id] || ''} onChange={e => setOther({ ...other, [q.id]: e.target.value })} />
+              </div>
+            )}
+            {q.kind === 'text' && <textarea className="fl-text" rows={3} value={answers[q.id] || ''} onChange={e => pick(q.id, e.target.value)} />}
+          </div>
+        ))}
+      </StepCard>
+    ); })()}
+
+    <FlowNav lang={lang} index={step} count={N} onPrev={prev} onNext={next} onSubmit={() => void submit()} saving={saving} first={step === 0} last={step === N - 1}
+      submitLabel={t.submit} error={stepErr || undefined} />
+  </>, { langs: step === 0 });
 }
 
 const CSS = `
-.fu{min-height:100vh;background:radial-gradient(900px 500px at 90% -10%,rgba(212,97,74,.18),transparent 60%),#F6EBE0;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;padding:18px 14px 40px}
-.fu *{box-sizing:border-box}
-.fu-wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.fu form{display:flex;flex-direction:column;gap:12px}
-.fu-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #EADFD6;border-top:4px solid #D9A866;border-radius:16px;padding:12px 16px}
-.fu-logos{display:flex;gap:10px;align-items:center}.fu-logos img{height:36px;object-fit:contain}
-.fu-kicker{font-size:12.5px;font-weight:900;color:#D4614A;display:flex;align-items:center;gap:6px;text-align:center}
-.fu-lang{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;color:#3A1F36;cursor:pointer}
-.fu-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-.fu-card h2{margin:0;font-size:15px;color:#3A1F36}
-.fu-center{align-items:center;text-align:center}
-.fu-bad{color:#9A3A2A;background:#FBEDE7;border-color:#F3C4B6}.fu-warn{color:#9A3A2A;background:#FBF4EE;border-color:#F1D9A8}
-.fu-info h1{margin:0;font-size:21px;color:#3A1F36;line-height:1.4}.fu-prog{margin:0;color:#D4614A;font-weight:800;font-size:14px}.fu-intro{margin:0;color:#5C4858;font-size:13.5px;line-height:1.8;font-weight:600}
 .fu-roles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.fu-role{border:2px solid #EADFD6;background:#fff;border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;cursor:pointer;color:#3A1F36}.fu-role.on{border-color:#D4614A;background:#E6F3F1}.fu-role b{font-size:14px}
-.fu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fu-sub{grid-column:1/-1;font-size:13px;font-weight:900;color:#D4614A;margin-top:4px}
-.fu label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:800;color:#4A3645}.fu label i{color:#B9544A;font-style:normal}.fu label small{color:#B3A5AE;font-weight:700}
-.fu input,.fu textarea{border:1px solid #D9CBC2;border-radius:12px;padding:12px 14px;font:inherit;font-size:15px;font-weight:700;color:#2A1626;background:#fff;min-width:0;width:100%}
-.fu input:focus,.fu textarea:focus{outline:2px solid #D4614A;border-color:#D4614A}
-.fu-q.miss{border-color:#F3C4B6;box-shadow:0 0 0 3px #FBEDE7}
-.fu-q-head{display:flex;gap:10px;align-items:flex-start}.fu-q-head b{font-size:15px;color:#2A1626;line-height:1.6}.fu-q-head b small{color:#B3A5AE;font-weight:700}
-.fu-n{min-width:28px;height:28px;border-radius:9px;background:#3A1F36;color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:900;flex:none}
-.fu-dom{font-size:11.5px;font-weight:900;color:#D4614A;margin-bottom:2px}
-.fu-scale{display:flex;gap:8px;flex-wrap:wrap}
-.fu-dot{width:52px;height:48px;border-radius:12px;border:2px solid #EADFD6;background:#fff;font:inherit;font-size:17px;font-weight:900;color:#3A1F36;cursor:pointer}.fu-dot.on{background:#D4614A;border-color:#D4614A;color:#fff}
-.fu-hint{color:#B3A5AE;font-weight:700;font-size:11.5px}
-.fu-pct{display:flex;gap:8px;flex-wrap:wrap}
-.fu-chip{border:2px solid #EADFD6;background:#fff;border-radius:999px;padding:9px 16px;font:inherit;font-size:14px;font-weight:900;color:#3A1F36;cursor:pointer}.fu-chip.on{background:#D9A866;border-color:#D9A866;color:#3A1F36}
-.fu-multi{display:flex;flex-direction:column;gap:6px}
-.fu-opt{flex-direction:row!important;align-items:center;gap:8px!important;border:1px solid #EADFD6;border-radius:10px;padding:10px 12px;cursor:pointer;font-size:13.5px!important;color:#2A1626!important}.fu-opt.on{background:#E6F3F1;border-color:#BFE1DC}.fu-opt input{width:18px;height:18px}
-.fu-other{margin-top:4px;font-size:13px!important}
-.fu-err{background:#FBEDE7;border:1px solid #F3C4B6;color:#9A3A2A;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:800;display:flex;gap:6px;align-items:center}
-.fu-btn{border:0;background:#3A1F36;color:#fff;border-radius:12px;padding:15px;font:inherit;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}.fu-btn:disabled{opacity:.6}
-.fu-done{align-items:center;text-align:center;border-color:#BFE1DC;background:linear-gradient(180deg,#E6F3F1,#fff)}.fu-done h2{font-size:21px}.fu-done p{margin:0;color:#5C4858;font-weight:700}
-.fu-ring{width:84px;height:84px;border-radius:50%;background:#D4614A;color:#fff;display:grid;place-items:center;box-shadow:0 10px 30px rgba(212,97,74,.35)}
-.fu-res{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:13px;font-weight:700;color:#5C4858}.fu-res b{color:#3A1F36}
-@media(max-width:640px){.fu-grid,.fu-roles{grid-template-columns:1fr}.fu-dot{width:44px;height:44px}}
+.fu-role{border:2px solid #EADFD6;background:#fff;border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;cursor:pointer;color:#3A1F36;min-height:64px}.fu-role.on{border-color:#D4614A;background:#FBEDE7}.fu-role b{font-size:14px}
+.fu-sub{grid-column:1/-1;font-size:13px;font-weight:900;color:#D4614A;margin-top:4px}
+.fu-res{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-size:13px;font-weight:700;color:#5C4858;margin-top:10px}.fu-res b{color:#3A1F36}
+@media(max-width:640px){.fu-roles{grid-template-columns:1fr}}
 `;

@@ -1,38 +1,23 @@
 'use client';
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
+import { FlowShell, Stations, StepCard, FlowNav, useStepScroll, type Station, type StationState } from '../../components/StepFlow'; /* هـ-3 ن «محطّات» */
+import { Icon } from '../../../lib/ui/icons';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
 import { resolveOpenLang } from '../../../lib/evaluation/links';
 import { markDone, onceMessage, ONCE_SHARED, ONCE_TITLE, wasDone } from '../../../lib/evaluation/once';
 import {
-  ATTENDANCE, DIFFICULTIES, SCALE, STATEMENTS, SURVEY_INTRO, SURVEY_TITLE, UI,
+  ATTENDANCE, DIFFICULTIES, SCALE, STATEMENTS, STATEMENT_AXES, SURVEY_INTRO, SURVEY_TITLE, UI,
   buildPayload, classroomLabel, classroomsFor, emptyDraft, levelLabel, levelsForProgram,
   remotePrograms, resolveLevelId, scheduleLabel, schedulesFor, t, toggleDifficulty, trainersFor, validateDraft,
   type Classroom, type Draft, type Lang, type Level, type Program, type Schedule, type Trainer,
   type ValidationError,
 } from '../../../lib/surveys/remoteLearning';
 
-/* ----------------------------------------------------------------------------
- * Bilingual label: primary language first (bold), secondary below (muted)
- * ------------------------------------------------------------------------- */
-function Bi({ ar, en, lang, required, as = 'span' }: { ar: string; en: string; lang: Lang; required?: boolean; as?: 'span' | 'h2' }) {
-  const primary = lang === 'ar' ? ar : en;
-  const secondary = lang === 'ar' ? en : ar;
-  const Tag = as;
-  return (
-    <Tag className={as === 'h2' ? 'rs-h2' : 'rs-bi'}>
-      <span className="rs-primary" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-        {primary}{required && <span className="rs-req"> *</span>}
-      </span>
-      <span className="rs-secondary" dir={lang === 'ar' ? 'ltr' : 'rtl'}>{secondary}</span>
-    </Tag>
-  );
-}
-
 export default function RemoteLearningSurveyPage() {
   return (
-    <Suspense fallback={<main className="rs-center">…</main>}>
+    <Suspense fallback={<main className="fl" style={{ minHeight: '60vh' }} />}>
       <SurveyForm />
     </Suspense>
   );
@@ -45,7 +30,6 @@ function SurveyForm() {
   /* P49-ب «بلغة المتدرّب»: بلا ?lang يُفتح بلغة المتصفّح (غير العربي → الإنجليزية) */
   const [lang, setLang] = useState<Lang>(() => (params.get('lang') === 'en' ? 'en' : 'ar'));
   useEffect(() => { if (!params.get('lang')) setLang(resolveOpenLang('auto', navigator.language)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
-  const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [levels, setLevels] = useState<Level[]>([]);
@@ -60,6 +44,9 @@ function SurveyForm() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [done, setDone] = useState(false);
+  /* هـ-3 ن «محطّات»: 0 البداية · 1 المجموعة · 2 عنك · 3..6 محاور العبارات · 7 الصعوبات · 8 رأيك+إرسال */
+  const [step, setStep] = useState(0); const [reached, setReached] = useState(0); const [stepErr, setStepErr] = useState('');
+  useStepScroll(step);
   /* P49-ج «مرّة واحدة في اليوم»: الاستطلاع مجهول الهوية، فالطبقة الوحيدة هنا ذاكرة الجهاز (لكل مجموعة/يوم) */
   const [onceAt, setOnceAt] = useState<string | null>(null); const [onceOverride, setOnceOverride] = useState(false);
   useEffect(() => { if (!loading && draft.classroomId) setOnceAt(wasDone({ kind: 'REMOTE', programId: draft.programId, classroomId: draft.classroomId })); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [loading, draft.classroomId]);
@@ -142,15 +129,12 @@ function SurveyForm() {
   const hasError = (field: string) => errors.some(e => e.field === field);
 
   /* ---------------- submit ---------------- */
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(e?: React.FormEvent) {
+    e?.preventDefault();
     setSaveError('');
     const errs = validateDraft(draft, { schedules });
     setErrors(errs);
-    if (errs.length) {
-      document.getElementById('rs-errors')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
-    }
+    if (errs.length) { const i = firstStepWithErrors(errs); setStep(i); setStepErr(t(UI.fixErrors, lang) + ' ' + errs.filter(e => stepOfField(e.field) === i).map(e => t(e, lang)).join(' · ')); return; }
     setSaving(true);
     try {
       const payload = buildPayload(draft, { programs, levels, trainers, classrooms, schedules, lang });
@@ -167,298 +151,222 @@ function SurveyForm() {
   }
 
   /* ---------------- render ---------------- */
-  if (loading) return (<main className="rs-center" dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} />{t(UI.loading, lang)}</main>);
+  if (loading) return (<FlowShell lang={lang} kicker={<><Icon name="laptop" size={14} /> Microsoft Teams</>} title={t(SURVEY_TITLE, lang)}><div className="fl-card fl-center fl-muted">{t(UI.loading, lang)}</div></FlowShell>);
 
   if (onceAt && !onceOverride && !done) return (
-    <main className="rs-wrap" dir={dir}>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <section className="rs-card rs-thanks" data-testid="rs-once" data-at={onceAt}>
-        <div className="rs-thanks-icon">✅</div>
-        <h1>{ONCE_TITLE[lang === 'en' ? 1 : 0]}</h1>
-        <p>{onceMessage('REMOTE', lang)}</p>
-        <button type="button" className="rs-once-btn" onClick={() => setOnceOverride(true)} data-testid="rs-once-override">{ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
+    <FlowShell lang={lang} kicker={<><Icon name="laptop" size={14} /> Microsoft Teams</>} title={t(SURVEY_TITLE, lang)}>
+      <section className="fl-card fl-center" data-testid="rs-once" data-at={onceAt}>
+        <div className="fl-ok"><Icon name="check" size={30} /></div>
+        <h2>{ONCE_TITLE[lang === 'en' ? 1 : 0]}</h2>
+        <p className="fl-muted">{onceMessage('REMOTE', lang)}</p>
+        <button type="button" className="fl-btn ghost" onClick={() => setOnceOverride(true)} data-testid="rs-once-override"><Icon name="users" size={14} /> {ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
       </section>
-    </main>
+    </FlowShell>
   );
 
   if (done) return (
-    <main className="rs-wrap" dir={dir}>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <section className="rs-card rs-thanks">
-        <div className="rs-thanks-icon">✅</div>
-        <h1><Bi ar={UI.thanksTitle.ar} en={UI.thanksTitle.en} lang={lang} /></h1>
-        <p><Bi ar={UI.thanksBody.ar} en={UI.thanksBody.en} lang={lang} /></p>
+    <FlowShell lang={lang} kicker={<><Icon name="laptop" size={14} /> Microsoft Teams</>} title={t(SURVEY_TITLE, lang)}>
+      <section className="fl-card fl-center" data-testid="rs-done">
+        <div className="fl-ok"><Icon name="check" size={30} /></div>
+        <h2>{t(UI.thanksTitle, lang)}</h2>
+        <p className="fl-muted">{t(UI.thanksBody, lang)}</p>
       </section>
-    </main>
+    </FlowShell>
   );
 
-  return (
-    <main className="rs-wrap" dir={dir}>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+  /* ---------------- محطّات ---------------- */
+  const groupFields = ['programId', 'levelId', 'trainerId', 'classroomId', 'scheduleId', 'lectureDate'];
+  const aboutFields = ['selfLevelId', 'attendance'];
+  function stepOfField(field: string): number { if (groupFields.includes(field)) return 1; if (aboutFields.includes(field)) return 2; if (field === 'ratings') return 3; if (field === 'difficulties') return 7; return 8; }
+  function firstStepWithErrors(errs: ValidationError[]): number { return Math.min(...errs.map(e => stepOfField(e.field))); }
+  const axisDone = (keys: string[]) => keys.filter(k => !!draft.ratings[k]).length;
+  const groupDone = () => ['programId', 'levelId', 'trainerId', 'classroomId'].filter(k => !!(draft as any)[k]).length + (scheduleOptions.length === 0 || draft.scheduleId ? 1 : 0);
+  const st = (done: number, total: number, missNow: boolean): StationState => missNow ? 'miss' : done >= total ? 'done' : done > 0 ? 'part' : 'todo';
+  const stations: Station[] = [
+    { key: 'start', title: lang === 'ar' ? 'البداية' : 'Start', state: reached > 0 ? 'done' : 'todo' },
+    { key: 'group', title: t(UI.sectionGroup, lang), state: st(groupDone(), 5, step === 1 && !!stepErr), done: groupDone(), total: 5 },
+    { key: 'about', title: t(UI.sectionAbout, lang), state: st((draft.selfLevelId ? 1 : 0) + (draft.attendance ? 1 : 0), 2, step === 2 && !!stepErr), done: (draft.selfLevelId ? 1 : 0) + (draft.attendance ? 1 : 0), total: 2 },
+    ...STATEMENT_AXES.map((ax, i) => ({ key: ax.key, title: lang === 'ar' ? ax.ar : ax.en, hint: lang === 'ar' ? ax.hint_ar : ax.hint_en, state: st(axisDone(ax.keys), ax.keys.length, step === 3 + i && !!stepErr), done: axisDone(ax.keys), total: ax.keys.length })),
+    { key: 'diff', title: t(UI.sectionDiff, lang), state: st(draft.difficulties.length ? 1 : 0, 1, step === 7 && !!stepErr), done: draft.difficulties.length ? 1 : 0, total: 1 },
+    { key: 'open', title: t(UI.sectionOpen, lang), state: reached >= 8 ? 'done' : 'todo', optional: true },
+  ];
+  const N = stations.length;
 
-      <header className="rs-header">
-        <div className="rs-badge">💻 Microsoft Teams</div>
-        <h1 className="rs-title">
-          <span dir="rtl">{SURVEY_TITLE.ar}</span>
-          <span dir="ltr" className="rs-title-en">{SURVEY_TITLE.en}</span>
-        </h1>
-        <button type="button" className="rs-lang" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}>
-          🌐 {t(UI.langToggle, lang)}
+  /** تحقّق المحطّة الحالية فقط — فلا يُطلب من المتعلّم شيء لم يصل إليه بعد */
+  function stepErrors(i: number): string[] {
+    const errs = validateDraft(draft, { schedules });
+    if (i >= 3 && i <= 6) { const ax = STATEMENT_AXES[i - 3]; const missing = ax.keys.filter(k => !draft.ratings[k]).length; return missing ? [lang === 'ar' ? `بقي ${missing} من ${ax.keys.length} عبارات بلا إجابة` : `${missing} of ${ax.keys.length} statements unanswered`] : []; }
+    return errs.filter(e => stepOfField(e.field) === i).map(e => t(e, lang));
+  }
+  function go(i: number) { setStepErr(''); setStep(i); setReached(r => Math.max(r, i)); }
+  function next() { const errs = stepErrors(step); if (errs.length) { setStepErr(errs.join(' · ')); return; } go(Math.min(N - 1, step + 1)); }
+  function prev() { setStepErr(''); setStep(s => Math.max(0, s - 1)); }
+
+  const scaleBtn = (key: string) => (
+    <div className="fl-scale" role="radiogroup">
+      {SCALE.map(sc => (
+        <button key={sc.code} type="button" role="radio" aria-checked={draft.ratings[key] === sc.code}
+          className={`${draft.ratings[key] === sc.code ? 'on' : ''} ${sc.code === 'NA' ? 'na' : ''}`}
+          onClick={() => { setStepErr(''); upd({ ratings: { ...draft.ratings, [key]: sc.code } }); }}>
+          {sc.code !== 'NA' && <b>{sc.value}</b>}<small>{lang === 'ar' ? sc.ar : sc.en}</small>
         </button>
-      </header>
+      ))}
+      <div className="fl-legend" aria-hidden="true"><small>1 = {lang === 'ar' ? SCALE[4].ar : SCALE[4].en}</small><small>5 = {lang === 'ar' ? SCALE[0].ar : SCALE[0].en}</small></div>
+    </div>
+  );
 
-      {loadError && <div className="rs-alert rs-alert-err">{loadError}</div>}
+  const head = {
+    kicker: <><Icon name="laptop" size={14} /> Microsoft Teams</>,
+    title: lang === 'ar' ? SURVEY_TITLE.ar : SURVEY_TITLE.en,
+    sub: step === 0 ? (lang === 'ar' ? SURVEY_TITLE.en : SURVEY_TITLE.ar) : undefined,
+  };
 
-      <section className="rs-card rs-intro">
-        <p dir="rtl" className={lang === 'ar' ? 'rs-primary' : 'rs-secondary'}>{SURVEY_INTRO.ar}</p>
-        <p dir="ltr" className={lang === 'en' ? 'rs-primary' : 'rs-secondary'}>{SURVEY_INTRO.en}</p>
-        <div className="rs-anon">🔒 <Bi ar={UI.anonymous.ar} en={UI.anonymous.en} lang={lang} /></div>
-      </section>
+  return (
+    <FlowShell lang={lang} kicker={head.kicker} title={head.title} sub={head.sub} langs={step === 0} onLang={setLang} testid="rs-flow">
+      {loadError && <div className="fl-msg bad"><Icon name="alert" size={16} /><span>{loadError}</span></div>}
+      {step > 0 && <Stations lang={lang} stations={stations} index={step} reached={reached} onGo={go} testid="rs-stations" chipTestid="rs-chip" />}
 
-      <form onSubmit={submit} noValidate>
-        <p className="rs-hint"><Bi ar={UI.required.ar} en={UI.required.en} lang={lang} /></p>
-
-        {(errors.length > 0 || saveError) && (
-          <div id="rs-errors" className="rs-alert rs-alert-err">
-            {saveError ? <div>{saveError}</div> : (
-              <>
-                <b><Bi ar={UI.fixErrors.ar} en={UI.fixErrors.en} lang={lang} /></b>
-                <ul>{errors.map((er, i) => <li key={i}><Bi ar={er.ar} en={er.en} lang={lang} /></li>)}</ul>
-              </>
-            )}
+      {step === 0 && (
+        <StepCard lang={lang} title={lang === 'ar' ? 'قبل أن تبدأ' : 'Before you start'} id="rs-step-0">
+          <div className="fl-intro">
+            <p dir={lang === 'ar' ? 'rtl' : 'ltr'}>{t(SURVEY_INTRO, lang)}</p>
+            <div className="fl-anon"><Icon name="shield" size={16} /><span>{t(UI.anonymous, lang)}</span></div>
+            <div className="fl-meta"><span><Icon name="clock" size={13} /> {t(UI.minutes, lang)}</span><span><Icon name="check" size={13} /> {t(UI.required, lang)}</span></div>
           </div>
-        )}
+          <div style={{ marginTop: 18 }}><button type="button" className="fl-btn primary wide" onClick={() => go(1)} data-testid="rs-start">{t(UI.start, lang)} <Icon name={lang === 'ar' ? 'next' : 'arrow'} size={16} /></button></div>
+        </StepCard>
+      )}
 
-        {/* ================= Group & class information ================= */}
-        <section className="rs-card">
-          <Bi as="h2" ar={UI.sectionGroup.ar} en={UI.sectionGroup.en} lang={lang} />
-          <div className="rs-grid">
+      {step === 1 && (
+        <StepCard lang={lang} n={1} title={t(UI.sectionGroup, lang)} id="rs-step-1" miss={!!stepErr}>
+          <div className="fl-grid">
             {programs.length !== 1 && (
-              <label className={`rs-field ${hasError('programId') ? 'rs-invalid' : ''}`}>
-                <Bi ar={UI.program.ar} en={UI.program.en} lang={lang} required />
+              <label className={`fl-field ${hasError('programId') ? 'invalid' : ''}`}>
+                <span>{t(UI.program, lang)}<span className="fl-req"> *</span></span>
                 <select value={draft.programId} onChange={e => onProgram(e.target.value)}>
                   <option value="">{t(UI.choose, lang)}</option>
                   {programs.map(p => <option key={p.id} value={p.id}>{lang === 'ar' ? p.name_ar : (p.name_en || p.name_ar)}</option>)}
                 </select>
               </label>
             )}
-
-            <label className={`rs-field ${hasError('levelId') ? 'rs-invalid' : ''}`}>
-              <Bi ar={UI.level.ar} en={UI.level.en} lang={lang} required />
+            <label className={`fl-field ${hasError('levelId') ? 'invalid' : ''}`}>
+              <span>{t(UI.level, lang)}<span className="fl-req"> *</span></span>
               <select value={draft.levelId} onChange={e => onLevel(e.target.value)} disabled={!draft.programId}>
                 <option value="">{t(UI.choose, lang)}</option>
                 {levelOptions.map(l => <option key={l.id} value={l.id}>{levelLabel(l, lang)}</option>)}
               </select>
             </label>
-
-            <label className={`rs-field ${hasError('trainerId') ? 'rs-invalid' : ''}`}>
-              <Bi ar={UI.trainer.ar} en={UI.trainer.en} lang={lang} required />
+            <label className={`fl-field ${hasError('trainerId') ? 'invalid' : ''}`}>
+              <span>{t(UI.trainer, lang)}<span className="fl-req"> *</span></span>
               <select value={draft.trainerId} onChange={e => onTrainer(e.target.value)} disabled={!draft.levelId}>
                 <option value="">{t(UI.choose, lang)}</option>
                 {trainerOptions.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
               </select>
             </label>
-
-            <label className={`rs-field ${hasError('classroomId') ? 'rs-invalid' : ''}`}>
-              <Bi ar={UI.group.ar} en={UI.group.en} lang={lang} required />
+            <label className={`fl-field ${hasError('classroomId') ? 'invalid' : ''}`}>
+              <span>{t(UI.group, lang)}<span className="fl-req"> *</span></span>
               <select value={draft.classroomId} onChange={e => onGroup(e.target.value)} disabled={!draft.trainerId}>
                 <option value="">{t(UI.choose, lang)}</option>
                 {groupOptions.map(c => <option key={c.id} value={c.id}>{classroomLabel(c, { trainers, levels }, lang)}</option>)}
               </select>
-              {draft.trainerId && groupOptions.length === 0 && <small className="rs-warn">{t(UI.noGroups, lang)}</small>}
+              {draft.trainerId && groupOptions.length === 0 && <small style={{ color: '#8A5A1E' }}>{t(UI.noGroups, lang)}</small>}
             </label>
-
-            <label className={`rs-field ${hasError('scheduleId') ? 'rs-invalid' : ''}`}>
-              <Bi ar={UI.schedule.ar} en={UI.schedule.en} lang={lang} required={scheduleOptions.length > 0} />
+            <label className={`fl-field ${hasError('scheduleId') ? 'invalid' : ''}`}>
+              <span>{t(UI.schedule, lang)}{scheduleOptions.length > 0 && <span className="fl-req"> *</span>}</span>
               <select value={draft.scheduleId} onChange={e => upd({ scheduleId: e.target.value })} disabled={!draft.classroomId || scheduleOptions.length === 0}>
                 <option value="">{scheduleOptions.length === 0 && draft.classroomId ? '—' : t(UI.choose, lang)}</option>
                 {scheduleOptions.map(s => <option key={s.id} value={s.id}>{scheduleLabel(s, lang)}</option>)}
               </select>
             </label>
-
-            <label className={`rs-field ${hasError('lectureDate') ? 'rs-invalid' : ''}`}>
-              <Bi ar={UI.lectureDate.ar} en={UI.lectureDate.en} lang={lang} />
+            <label className={`fl-field ${hasError('lectureDate') ? 'invalid' : ''}`}>
+              <span>{t(UI.lectureDate, lang)}</span>
               <input type="date" value={draft.lectureDate} onChange={e => upd({ lectureDate: e.target.value })} />
             </label>
           </div>
-        </section>
+        </StepCard>
+      )}
 
-        {/* ================= General questions ================= */}
-        <section className="rs-card">
-          <Bi as="h2" ar={UI.sectionChoice.ar} en={UI.sectionChoice.en} lang={lang} />
-
-          <div className={`rs-q ${hasError('selfLevelId') ? 'rs-invalid' : ''}`}>
-            <Bi ar={UI.selfLevel.ar} en={UI.selfLevel.en} lang={lang} required />
-            <div className="rs-pills">
+      {step === 2 && (
+        <StepCard lang={lang} n={2} title={t(UI.sectionAbout, lang)} id="rs-step-2" miss={!!stepErr}>
+          <div className={`fl-q ${hasError('selfLevelId') ? 'miss' : ''}`}>
+            <div className="fl-qt"><span className="fl-qn">1</span><span>{t(UI.selfLevel, lang)}<span className="fl-req"> *</span></span></div>
+            <div className="fl-pills" role="radiogroup">
               {levelOptions.map(l => (
-                <button key={l.id} type="button" className={`rs-pill ${draft.selfLevelId === l.id ? 'on' : ''}`} onClick={() => upd({ selfLevelId: l.id })}>
-                  {levelLabel(l, lang)}
+                <button key={l.id} type="button" role="radio" aria-checked={draft.selfLevelId === l.id} className={`fl-pill ${draft.selfLevelId === l.id ? 'on' : ''}`} onClick={() => { setStepErr(''); upd({ selfLevelId: l.id }); }}>
+                  <span className="fl-k">{draft.selfLevelId === l.id && <Icon name="check" size={12} />}</span>{levelLabel(l, lang)}
                 </button>
               ))}
-              <button type="button" className={`rs-pill ${draft.selfLevelId === 'unknown' ? 'on' : ''}`} onClick={() => upd({ selfLevelId: 'unknown' })}>
-                {UI.notSure.ar} | {UI.notSure.en}
+              <button type="button" role="radio" aria-checked={draft.selfLevelId === 'unknown'} className={`fl-pill ${draft.selfLevelId === 'unknown' ? 'on' : ''}`} onClick={() => { setStepErr(''); upd({ selfLevelId: 'unknown' }); }}>
+                <span className="fl-k">{draft.selfLevelId === 'unknown' && <Icon name="check" size={12} />}</span>{t(UI.notSure, lang)}
               </button>
             </div>
           </div>
-
-          <div className={`rs-q ${hasError('attendance') ? 'rs-invalid' : ''}`}>
-            <Bi ar={UI.attendance.ar} en={UI.attendance.en} lang={lang} required />
-            <div className="rs-pills">
+          <div className={`fl-q ${hasError('attendance') ? 'miss' : ''}`}>
+            <div className="fl-qt"><span className="fl-qn">2</span><span>{t(UI.attendance, lang)}<span className="fl-req"> *</span></span></div>
+            <div className="fl-pills" role="radiogroup">
               {ATTENDANCE.map(a => (
-                <button key={a.code} type="button" className={`rs-pill ${draft.attendance === a.code ? 'on' : ''}`} onClick={() => upd({ attendance: a.code })}>
-                  <Bi ar={a.ar} en={a.en} lang={lang} />
+                <button key={a.code} type="button" role="radio" aria-checked={draft.attendance === a.code} className={`fl-pill ${draft.attendance === a.code ? 'on' : ''}`} onClick={() => { setStepErr(''); upd({ attendance: a.code }); }}>
+                  <span className="fl-k">{draft.attendance === a.code && <Icon name="check" size={12} />}</span>{lang === 'ar' ? a.ar : a.en}
                 </button>
               ))}
             </div>
           </div>
-        </section>
+        </StepCard>
+      )}
 
-        {/* ================= Rating statements ================= */}
-        <section className={`rs-card ${hasError('ratings') ? 'rs-invalid' : ''}`}>
-          <Bi as="h2" ar={UI.sectionRating.ar} en={UI.sectionRating.en} lang={lang} />
-          <p className="rs-hint"><Bi ar={UI.ratingHint.ar} en={UI.ratingHint.en} lang={lang} /></p>
-
-          {STATEMENTS.map((s, i) => {
-            const answered = !!draft.ratings[s.key];
-            return (
-              <div key={s.key} className={`rs-q rs-statement ${errors.length && !answered ? 'rs-invalid' : ''}`}>
-                <div className="rs-num">{i + 1}</div>
-                <div className="rs-statement-body">
-                  <Bi ar={s.ar} en={s.en} lang={lang} required />
-                  <div className="rs-scale">
-                    {SCALE.map(sc => (
-                      <button
-                        key={sc.code} type="button"
-                        className={`rs-scale-btn ${draft.ratings[s.key] === sc.code ? 'on' : ''} ${sc.code === 'NA' ? 'na' : ''}`}
-                        onClick={() => upd({ ratings: { ...draft.ratings, [s.key]: sc.code } })}
-                        aria-pressed={draft.ratings[s.key] === sc.code}
-                      >
-                        <span dir="rtl">{sc.ar}</span>
-                        <span dir="ltr" className="rs-scale-en">{sc.en}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </section>
-
-        {/* ================= Difficulties ================= */}
-        <section className={`rs-card ${hasError('difficulties') ? 'rs-invalid' : ''}`}>
-          <Bi as="h2" ar={UI.sectionDiff.ar} en={UI.sectionDiff.en} lang={lang} />
-          <div className="rs-q">
-            <Bi ar={UI.difficulties.ar} en={UI.difficulties.en} lang={lang} required />
-            <div className="rs-checks">
-              {DIFFICULTIES.map(d => {
-                const on = draft.difficulties.includes(d.code);
-                return (
-                  <button key={d.code} type="button" className={`rs-check ${on ? 'on' : ''}`} onClick={() => upd({ difficulties: toggleDifficulty(draft.difficulties, d.code) })} aria-pressed={on}>
-                    <span className="rs-box">{on ? '✓' : ''}</span>
-                    <Bi ar={d.ar} en={d.en} lang={lang} />
-                  </button>
-                );
-              })}
+      {step >= 3 && step <= 6 && (() => { const ax = STATEMENT_AXES[step - 3]; const items = STATEMENTS.filter(s => ax.keys.includes(s.key)); return (
+        <StepCard lang={lang} n={step} title={lang === 'ar' ? ax.ar : ax.en} hint={`${lang === 'ar' ? ax.hint_ar : ax.hint_en} · ${t(UI.ratingHint, lang)}`} id={`rs-step-${step}`} miss={!!stepErr}>
+          {items.map(s => (
+            <div key={s.key} className={`fl-q ${stepErr && !draft.ratings[s.key] ? 'miss' : ''}`} data-testid={`rs-q-${s.key}`}>
+              <div className="fl-qt"><span className="fl-qn">{STATEMENTS.indexOf(s) + 1}</span><span>{lang === 'ar' ? s.ar : s.en}<span className="fl-req"> *</span></span></div>
+              {lang === 'ar' && <div className="fl-qen" dir="ltr">{s.en}</div>}
+              {scaleBtn(s.key)}
             </div>
-            {draft.difficulties.includes('other') && (
-              <label className="rs-field" style={{ marginTop: 12 }}>
-                <Bi ar={UI.otherText.ar} en={UI.otherText.en} lang={lang} />
-                <input value={draft.difficultyOther} maxLength={300} onChange={e => upd({ difficultyOther: e.target.value })} />
-              </label>
-            )}
-          </div>
-        </section>
+          ))}
+        </StepCard>
+      ); })()}
 
-        {/* ================= Open questions ================= */}
-        <section className="rs-card">
-          <Bi as="h2" ar={UI.sectionOpen.ar} en={UI.sectionOpen.en} lang={lang} />
-          <label className="rs-field">
-            <Bi ar={UI.likedMost.ar} en={UI.likedMost.en} lang={lang} />
+      {step === 7 && (
+        <StepCard lang={lang} n={7} title={t(UI.sectionDiff, lang)} hint={t(UI.difficulties, lang)} id="rs-step-7" miss={!!stepErr}>
+          <div className="fl-pills">
+            {DIFFICULTIES.map(d => {
+              const on = draft.difficulties.includes(d.code);
+              return (
+                <button key={d.code} type="button" className={`fl-pill multi ${on ? 'on' : ''}`} onClick={() => { setStepErr(''); upd({ difficulties: toggleDifficulty(draft.difficulties, d.code) }); }} aria-pressed={on}>
+                  <span className="fl-k">{on && <Icon name="check" size={12} />}</span>{lang === 'ar' ? d.ar : d.en}
+                </button>
+              );
+            })}
+          </div>
+          {draft.difficulties.includes('other') && (
+            <label className="fl-field" style={{ marginTop: 14 }}>
+              <span>{t(UI.otherText, lang)}</span>
+              <input value={draft.difficultyOther} maxLength={300} onChange={e => upd({ difficultyOther: e.target.value })} />
+            </label>
+          )}
+        </StepCard>
+      )}
+
+      {step === 8 && (
+        <StepCard lang={lang} n={8} title={t(UI.sectionOpen, lang)} hint={t(UI.optionalStep, lang)} optional id="rs-step-8">
+          <label className="fl-field span">
+            <span>{t(UI.likedMost, lang)}</span>
             <textarea rows={3} maxLength={1000} value={draft.likedMost} onChange={e => upd({ likedMost: e.target.value })} />
           </label>
-          <label className="rs-field">
-            <Bi ar={UI.suggestion.ar} en={UI.suggestion.en} lang={lang} />
+          <label className="fl-field span" style={{ marginTop: 12 }}>
+            <span>{t(UI.suggestion, lang)}</span>
             <textarea rows={3} maxLength={1000} value={draft.suggestion} onChange={e => upd({ suggestion: e.target.value })} />
           </label>
-        </section>
+          <ul className="fl-review" style={{ marginTop: 16 }} aria-label={lang === 'ar' ? 'خلاصة' : 'Summary'}>
+            {stations.slice(1, 8).map(s => <li key={s.key}><span>{s.title}</span><b className={s.state === 'done' ? '' : 'bad'}>{typeof s.total === 'number' ? `${s.done}/${s.total}` : ''}{s.state === 'done' ? ' ✓' : ''}</b></li>)}
+          </ul>
+        </StepCard>
+      )}
 
-        <button type="submit" className="rs-submit" disabled={saving}>
-          {saving ? t(UI.submitting, lang) : <Bi ar={UI.submit.ar} en={UI.submit.en} lang={lang} />}
-        </button>
-      </form>
-    </main>
+      {step > 0 && (
+        <FlowNav lang={lang} index={step} count={N} onPrev={prev} onNext={next} onSubmit={() => void submit()} saving={saving} last={step === N - 1}
+          error={stepErr || saveError || undefined} />
+      )}
+    </FlowShell>
   );
 }
-
-/* ----------------------------------------------------------------------------
- * Styles (responsive, RTL/LTR aware via logical properties)
- * ------------------------------------------------------------------------- */
-const CSS = `
-.rs-wrap{max-width:860px;margin:0 auto;padding:20px 16px 60px;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;color:#2A1626;}
-.rs-center{min-height:60vh;display:flex;align-items:center;justify-content:center;color:#8E7F8A;font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;font-weight:700;}
-.rs-header{text-align:center;margin-bottom:18px;position:relative;}
-.rs-badge{display:inline-block;background:#F3E8EF;color:#8E4A68;font-weight:800;font-size:12px;padding:4px 12px;border-radius:999px;margin-bottom:10px;}
-.rs-title{margin:0;font-size:22px;font-weight:900;color:#3A1F36;display:flex;flex-direction:column;gap:4px;}
-.rs-title-en{font-size:15px;color:#8E7F8A;font-weight:700;}
-.rs-lang{margin-top:12px;border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:8px 16px;font:inherit;font-weight:800;color:#3A1F36;cursor:pointer;}
-.rs-lang:hover{background:#F6EBE0;}
-.rs-card{background:#fff;border:1px solid #EADFD6;border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(42,22,38,.04);}
-.rs-card.rs-invalid{border-color:#F3C4B6;}
-.rs-intro p{margin:0 0 10px;line-height:1.9;font-size:15px;}
-.rs-anon{margin-top:8px;padding:10px 12px;background:#E6F3F1;border-radius:10px;color:#2F6B66;font-size:13px;font-weight:700;}
-.rs-h2{display:flex;flex-direction:column;gap:2px;margin:0 0 16px;padding-bottom:10px;border-bottom:2px solid #2F6B66;}
-.rs-h2 .rs-primary{font-size:18px;font-weight:900;color:#3A1F36;}
-.rs-bi{display:flex;flex-direction:column;gap:2px;}
-.rs-primary{font-weight:800;font-size:15px;line-height:1.6;}
-.rs-secondary{font-weight:600;font-size:13px;color:#8E7F8A;line-height:1.5;}
-.rs-req{color:#D4614A;}
-.rs-hint{color:#8E7F8A;font-size:13px;margin:0 0 14px;}
-.rs-alert{padding:14px 16px;border-radius:12px;margin-bottom:16px;font-weight:700;line-height:1.7;}
-.rs-alert-err{background:#FBEDE7;color:#B9544A;border:1px solid #F3C4B6;}
-.rs-alert ul{margin:8px 0 0;padding-inline-start:20px;}
-.rs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.rs-field{display:flex;flex-direction:column;gap:6px;}
-.rs-field select,.rs-field input,.rs-field textarea{width:100%;padding:11px 12px;border:1px solid #D9CBC2;border-radius:10px;font:inherit;font-weight:700;background:#fff;color:#2A1626;outline:none;box-sizing:border-box;}
-.rs-field select:disabled{background:#F6EBE0;color:#B3A5AE;}
-.rs-field select:focus,.rs-field input:focus,.rs-field textarea:focus{border-color:#2F6B66;box-shadow:0 0 0 3px rgba(13,148,136,.15);}
-.rs-field.rs-invalid select,.rs-field.rs-invalid input{border-color:#D4614A;background:#FBEDE7;}
-.rs-warn{color:#8A5A1E;font-weight:700;font-size:12px;}
-.rs-q{padding:14px 0;border-bottom:1px solid #F6EBE0;}
-.rs-q:last-child{border-bottom:0;}
-.rs-q.rs-invalid{background:#FBEDE7;border-radius:10px;padding-inline:10px;}
-.rs-pills,.rs-checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
-.rs-pill{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;color:#5C4858;cursor:pointer;text-align:start;}
-.rs-pill .rs-primary{font-size:13px;} .rs-pill .rs-secondary{font-size:11px;}
-.rs-pill.on{border:2px solid #8E4A68;background:#F3E8EF;color:#6A3350;}
-.rs-check{display:flex;align-items:center;gap:10px;border:1px solid #D9CBC2;background:#fff;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;text-align:start;flex:1 1 calc(50% - 8px);min-width:220px;color:#5C4858;}
-.rs-check .rs-primary{font-size:13px;} .rs-check .rs-secondary{font-size:11px;}
-.rs-check.on{border:2px solid #2F6B66;background:#FBEDE7;color:#B9544A;}
-.rs-box{width:22px;height:22px;border-radius:6px;border:2px solid #B3A5AE;display:flex;align-items:center;justify-content:center;font-weight:900;flex-shrink:0;}
-.rs-check.on .rs-box{border-color:#2F6B66;background:#2F6B66;color:#fff;}
-.rs-statement{display:flex;gap:12px;align-items:flex-start;}
-.rs-num{width:30px;height:30px;border-radius:50%;background:#3A1F36;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;margin-top:2px;}
-.rs-statement-body{flex:1;min-width:0;}
-.rs-scale{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px;}
-.rs-scale-btn{border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:8px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#5C4858;min-height:58px;}
-.rs-scale-btn span:first-child{font-weight:800;font-size:12px;line-height:1.3;text-align:center;}
-.rs-scale-en{font-size:10px;color:#B3A5AE;line-height:1.2;text-align:center;}
-.rs-scale-btn.on{border:2px solid #3F7F79;background:#BFE1DC;color:#2F6B66;}
-.rs-scale-btn.on .rs-scale-en{color:#2F6B66;}
-.rs-scale-btn.na{background:#FBF4EE;}
-.rs-scale-btn.na.on{border-color:#8E7F8A;background:#EADFD6;color:#4A3645;}
-.rs-submit{width:100%;border:0;border-radius:14px;padding:16px;background:linear-gradient(135deg,#2F6B66,#3F7F79);color:#fff;font:inherit;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 10px 24px rgba(47,107,102,.25);}
-.rs-submit .rs-primary,.rs-submit .rs-secondary{color:#fff;}
-.rs-submit:disabled{opacity:.7;cursor:wait;}
-.rs-once-btn{margin-top:14px;font:inherit;font-weight:800;font-size:13px;color:#3A1F36;background:#fff;border:1.5px solid #D9CBC2;border-radius:999px;padding:9px 16px;cursor:pointer}.rs-once-btn:hover{border-color:#3A1F36}
-.rs-thanks{text-align:center;padding:40px 24px;border-top:8px solid #3F7F79;}
-.rs-thanks-icon{font-size:64px;margin-bottom:10px;}
-.rs-thanks h1{margin:0 0 10px;color:#2F6B66;} .rs-thanks h1 .rs-primary{font-size:26px;}
-.rs-thanks p{margin:0;color:#5C4858;}
-@media(max-width:700px){
-  .rs-grid{grid-template-columns:1fr;}
-  .rs-scale{grid-template-columns:repeat(3,1fr);}
-  .rs-check{flex-basis:100%;}
-  .rs-card{padding:16px;}
-  .rs-title{font-size:18px;}
-}
-`;
