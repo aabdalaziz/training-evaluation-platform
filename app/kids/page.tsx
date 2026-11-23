@@ -11,7 +11,10 @@ export default function KidsPage() {
     <PortalShell>
       <div className="rm-page" dir="rtl" style={{ maxWidth: 960, margin: '0 auto', padding: '24px 16px' }}>
         <section className="rm-card" style={{ padding: 24, borderRadius: 24 }}>
-          <p style={{ color: '#8E7F8A', margin: 0 }}>برنامج أَثَر للأطفال · 4–9 سنوات</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <p style={{ color: '#8E7F8A', margin: 0 }}>برنامج أَثَر للأطفال · 4–9 سنوات</p>
+            <Link href="/kids/parent" style={{ background: '#5EA8A0', color: '#fff', borderRadius: 999, padding: '8px 16px', textDecoration: 'none', fontWeight: 700 }}>🏡 بَيْتُ بَيان لِأُسْرَتي</Link>
+          </div>
           <h1 style={{ color: '#3A1F36', margin: '6px 0' }}>بَيان — لغةٌ تُحَبّ… وأثرٌ يبقى</h1>
           <p style={{ fontSize: 18, lineHeight: 1.9 }}>
             أَثير ونُور ويُوسُف ولُؤلُؤ وجَدّ سالِم وحَرْف يأخذون طفلك في رحلة من ثماني محطّات في كل جلسة: حكاية في موقف حياتي، حرف وكلمات، لعبة، تمثيل،
