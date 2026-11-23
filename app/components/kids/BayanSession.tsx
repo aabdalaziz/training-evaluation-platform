@@ -1,71 +1,104 @@
 'use client';
-/* بَيان (هـ-6-ب) — محرّك الجلسة النموذجية «في السوق» · وضع الطفل (شاشة كاملة، أزرار كبيرة، صوت في كل شيء)
- * المحطّات: هيّا نبدأ → الحكاية → حَرْف يرسم → نلعب → نمثّل → مدرسة المصطفى ﷺ → نتلو → أثري اليوم
- * لؤلؤ: طبقة دائمة (ترحيب/تشجيع/تلميح/انتقال/احتفال) وتصمت في محطّتي الحديث والقرآن. */
+/* بَيان (هـ-6-ج) — محرّك الجلسة الموحّد · وضع الطفل (شاشة كاملة، أزرار كبيرة، صوت في كل شيء)
+ * يعرض أي جلسة من lib/kids/sessions (البيت أولًا ثم السوق). المحطّات: هيّا نبدأ → الحكاية → حَرْف يرسم → نلعب → نمثّل → مدرسة المصطفى ﷺ → نتلو → أثري اليوم
+ * «لؤلؤ الحيّة» (LuluLive): طبقة دائمة بآلة حالات — تتكلّم مع صوتها، تنتظر، تلمّح، تحتفل، ترقص، وتهدأ في محطّتي الحديث والقرآن. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import {
-  SESSION, STATIONS, type StationKey, ANTHEM, LULU, PANELS, STORY_CHOICE, HARF, VOCAB, ROLES, HADITH,
-  FATIHA, QURAN, RECITER, ayahUrl, ATHARI, img, snd,
-} from '../../../lib/kids/souq';
+import type { SessionData, LuluKey, LuluPose } from '../../../lib/kids/types';
+import { kidsImg, kidsSnd } from '../../../lib/kids/types';
+import { STATIONS, type StationKey, SESSIONS } from '../../../lib/kids/sessions';
+import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
+import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
 
-/* ───────── صوت ───────── */
-function useAudio() {
+/* ───────── صوت (+ قياس شدّة الصوت لتحريك لؤلؤ) ───────── */
+function useAudio(onLevel: (v: number) => void, onSpeaking: (v: boolean) => void) {
   const ref = useRef<HTMLAudioElement | null>(null);
-  const play = useCallback((src: string, onEnd?: () => void) => {
+  const ctx = useRef<AudioContext | null>(null);
+  const raf = useRef<number | null>(null);
+  const stopMeter = useCallback(() => { if (raf.current) cancelAnimationFrame(raf.current); raf.current = null; onLevel(0); onSpeaking(false); }, [onLevel, onSpeaking]);
+  const play = useCallback((src: string, onEnd?: () => void, meter = false) => {
     try {
       if (ref.current) { ref.current.pause(); ref.current.onended = null; }
-      const a = new Audio(src); ref.current = a;
-      a.onended = () => { onEnd?.(); };
-      a.onerror = () => { onEnd?.(); };
-      void a.play().catch(() => onEnd?.());
+      stopMeter();
+      const a = new Audio(src); a.crossOrigin = 'anonymous'; ref.current = a;
+      const done = () => { stopMeter(); onEnd?.(); };
+      a.onended = done; a.onerror = done;
+      if (meter) {
+        onSpeaking(true);
+        try {
+          const AC = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+          if (!ctx.current) ctx.current = new AC();
+          const an = ctx.current.createAnalyser(); an.fftSize = 512;
+          const srcNode = ctx.current.createMediaElementSource(a); srcNode.connect(an); an.connect(ctx.current.destination);
+          const buf = new Uint8Array(an.frequencyBinCount);
+          const tick = () => { an.getByteTimeDomainData(buf); let s = 0; for (let i = 0; i < buf.length; i++) { const d = (buf[i] - 128) / 128; s += d * d; } onLevel(Math.min(1, Math.sqrt(s / buf.length) * 3.2)); raf.current = requestAnimationFrame(tick); };
+          raf.current = requestAnimationFrame(tick);
+          void ctx.current.resume();
+        } catch { /* المتصفّح لا يدعم — تبقى الحركة الافتراضية */ }
+      }
+      void a.play().catch(() => done());
     } catch { onEnd?.(); }
-  }, []);
-  const stop = useCallback(() => { ref.current?.pause(); }, []);
-  useEffect(() => () => { ref.current?.pause(); }, []);
+  }, [stopMeter, onLevel, onSpeaking]);
+  const stop = useCallback(() => { ref.current?.pause(); stopMeter(); }, [stopMeter]);
+  useEffect(() => () => { ref.current?.pause(); if (raf.current) cancelAnimationFrame(raf.current); }, []);
   return { play, stop };
 }
 
-type Mood = 'wave' | 'cheer' | 'sleep' | 'point' | 'think' | 'dance' | 'date' | 'quiet';
-
-/* ───────── لؤلؤ — الطبقة الدائمة ───────── */
-function Lulu({ mood, say, quiet }: { mood: Mood; say: string; quiet?: boolean }) {
-  return (
-    <div className={`by-lulu ${quiet ? 'quiet' : ''}`} aria-live="polite">
-      {say && !quiet && <div className="by-bubble">{say}</div>}
-      <img src={img(`lulu-${mood}`)} alt="لؤلؤ" width={120} height={120} />
-    </div>
-  );
-}
-
 /* ───────── المكوّن الرئيس ───────── */
-export default function BayanSession() {
-  const { play, stop } = useAudio();
+export default function BayanSession({ session }: { session: SessionData }) {
+  const S = session;
+  const img = useCallback((n: string) => kidsImg(S.slug, n), [S.slug]);
+  const snd = useCallback((n: string) => kidsSnd(S.slug, n), [S.slug]);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [speaking, setSpeaking] = useState(false);
+  const onLevel = useCallback((v: number) => { rootRef.current?.style.setProperty('--ll-amp', v.toFixed(3)); }, []);
+  const { play, stop } = useAudio(onLevel, setSpeaking);
   const [idx, setIdx] = useState(0);
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'m' | 'f'>('m');
-  const [mood, setMood] = useState<Mood>('wave');
+  const [pose, setPose] = useState<LuluPose>('wave');
+  const [lstate, setLstate] = useState<LuluState>('idle');
   const [say, setSay] = useState('');
   const [done, setDone] = useState<Record<string, boolean>>({});
   const station = STATIONS[idx].key as StationKey;
   const quiet = station === 'hadith' || station === 'quran';
   const hero = gender === 'f' ? 'يا بَطَلَةْ' : 'يا بَطَلْ';
+  const waitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { try { const s = localStorage.getItem('bayan_demo_child'); if (s) { const j = JSON.parse(s); setName(j.name || ''); setGender(j.gender || 'm'); } } catch { /* ignore */ } }, []);
-  const lulu = useCallback((k: keyof typeof LULU, m: Mood = 'cheer', onEnd?: () => void) => {
-    const L = LULU[k]; setMood(m); setSay(L.text.replace('يا بَطَلْ', hero)); play(snd(L.audio), onEnd);
-  }, [play, hero]);
 
-  const go = useCallback((n: number) => { stop(); setSay(''); setIdx(Math.max(0, Math.min(STATIONS.length - 1, n))); window.scrollTo({ top: 0 }); }, [stop]);
-  const finish = useCallback((k: StationKey) => { setDone(d => ({ ...d, [k]: true })); if (k !== 'hadith' && k !== 'quran') lulu('next', 'cheer'); }, [lulu]);
+  /** لؤلؤ تقول عبارة: الوضعية + الحالة بعد الكلام (افتراضيًا: ساكنة) */
+  const lulu = useCallback((k: LuluKey, p: LuluPose = 'cheer', onEnd?: () => void, after: LuluState = 'idle') => {
+    const L = S.lulu[k]; setPose(p); setLstate('talk'); setSay(L.text.replace('يا بَطَلْ', hero).replace('يا بَطَلَةْ', hero));
+    play(snd(L.audio), () => { setLstate(after); onEnd?.(); }, true);
+  }, [S, play, snd, hero]);
+  /** لؤلؤ تنتظر إجابة: بعد 5 ث «…» وبعد 10 ث تلميح */
+  const awaitAnswer = useCallback(() => {
+    if (waitTimer.current) clearTimeout(waitTimer.current);
+    setLstate('wait');
+    waitTimer.current = setTimeout(() => { setLstate('hint'); setPose('point'); }, 7000);
+  }, []);
+  const stopWaiting = useCallback(() => { if (waitTimer.current) clearTimeout(waitTimer.current); waitTimer.current = null; }, []);
+  /** لؤلؤ تنطق نصًّا حرًّا (سطر في الحكاية أو كلمة) بصوتها المقيس */
+  const luluSay = useCallback((text: string, audio: string, p: LuluPose = 'wave', onEnd?: () => void) => {
+    setPose(p); setLstate('talk'); setSay(text); play(snd(audio), () => { setLstate('idle'); onEnd?.(); }, true);
+  }, [play, snd]);
+  /** غيرها يتكلّم: لؤلؤ تُصغي */
+  const speak = useCallback((src: string, onEnd?: () => void) => { if (!quiet) setLstate('listen'); play(src, () => { if (!quiet) setLstate('idle'); onEnd?.(); }); }, [play, quiet]);
+
+  const go = useCallback((n: number) => { stop(); stopWaiting(); setSay(''); setIdx(Math.max(0, Math.min(STATIONS.length - 1, n))); window.scrollTo({ top: 0 }); }, [stop, stopWaiting]);
+  const finish = useCallback((k: StationKey) => { setDone(d => ({ ...d, [k]: true })); if (k !== 'hadith' && k !== 'quran') lulu('next', 'cheer', undefined, 'idle'); }, [lulu]);
   const next = useCallback(() => go(idx + 1), [go, idx]);
 
-  useEffect(() => { if (quiet) { setMood('quiet'); setSay(''); } }, [quiet]);
+  useEffect(() => { if (quiet) { setLstate('calm'); setSay(''); } else setLstate('idle'); }, [quiet]);
+  useEffect(() => { if (!speaking && lstate === 'talk') setLstate('idle'); }, [speaking, lstate]);
+  useEffect(() => () => { if (waitTimer.current) clearTimeout(waitTimer.current); }, []);
 
-  const ctx = { play, lulu, next, finish, name, gender, hero, setMood, setSay };
+  const ctx: Ctx = { S, img, snd, play: speak, lulu, luluSay, awaitAnswer, stopWaiting, next, finish, name, gender, hero, setPose, setLstate, setSay };
+  const others = SESSIONS.filter(x => x.slug !== S.slug);
   return (
-    <div className="by" dir="rtl" data-station={station}>
-      <style dangerouslySetInnerHTML={{ __html: BAYAN_CSS }} />
+    <div className="by" dir="rtl" data-station={station} data-session={S.slug} ref={rootRef}>
+      <style dangerouslySetInnerHTML={{ __html: BAYAN_CSS + LULU_CSS }} />
       <header className="by-top">
         <Link href="/kids" className="by-exit" aria-label="خروج">✕</Link>
         <ol className="by-stations" aria-label="محطّات الرحلة">
@@ -75,7 +108,7 @@ export default function BayanSession() {
             </li>
           ))}
         </ol>
-        <div className="by-brand"><img src="/brand/athar-mark.svg" alt="" width={22} height={22} /><b>بَيان</b></div>
+        <div className="by-brand"><img src="/brand/athar-mark.svg" alt="" width={22} height={22} /><b>بَيان</b><small className="by-sess">{S.meta.order} · {S.meta.world}</small></div>
       </header>
 
       <main className="by-stage">
@@ -86,29 +119,34 @@ export default function BayanSession() {
         {station === 'act' && <Act {...ctx} />}
         {station === 'hadith' && <Hadith {...ctx} />}
         {station === 'quran' && <Quran {...ctx} />}
-        {station === 'athari' && <Athari {...ctx} />}
+        {station === 'athari' && <Athari {...ctx} others={others} />}
       </main>
 
-      <Lulu mood={mood} say={say} quiet={quiet} />
+      <LuluLive pose={lstate === 'calm' ? 'calm' : (lstate === 'talk' || lstate === 'idle' || lstate === 'listen') ? pose : POSE_FOR[lstate]} state={quiet ? 'calm' : lstate} say={say} />
     </div>
   );
 }
 
 type Ctx = {
+  S: SessionData;
+  img: (n: string) => string; snd: (n: string) => string;
   play: (src: string, onEnd?: () => void) => void;
-  lulu: (k: keyof typeof LULU, m?: Mood, onEnd?: () => void) => void;
+  lulu: (k: LuluKey, p?: LuluPose, onEnd?: () => void, after?: LuluState) => void;
+  luluSay: (text: string, audio: string, p?: LuluPose, onEnd?: () => void) => void;
+  awaitAnswer: () => void; stopWaiting: () => void;
   next: () => void; finish: (k: StationKey) => void;
   name: string; gender: 'm' | 'f'; hero: string;
-  setMood: (m: Mood) => void; setSay: (s: string) => void;
+  setPose: (p: LuluPose) => void; setLstate: (s: LuluState) => void; setSay: (s: string) => void;
 };
 
 /* ───────── 1) هيّا نبدأ ───────── */
 function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f') => void }) {
+  const { S } = p;
   const [step, setStep] = useState<'gate' | 'hello' | 'anthem'>(p.name ? 'hello' : 'gate');
   const [line, setLine] = useState(-1);
   const save = () => { try { localStorage.setItem('bayan_demo_child', JSON.stringify({ name: p.name.trim(), gender: p.gender })); } catch { /* ignore */ } setStep('hello'); };
-  const hello = () => { p.lulu('welcome', 'wave'); };
-  const ready = () => { p.lulu('yasalam', 'cheer', () => { setStep('anthem'); }); };
+  const hello = () => { p.lulu('welcome', 'wave', undefined, 'wait'); };
+  const ready = () => { p.lulu('yasalam', 'cheer', () => { setStep('anthem'); }, 'dance'); };
   useEffect(() => { if (step !== 'anthem') return; setLine(0); const t = setInterval(() => setLine(l => (l < ANTHEM.length - 1 ? l + 1 : l)), 1800); return () => clearInterval(t); }, [step]);
   const start = () => { p.lulu('today', 'dance', () => { p.finish('start'); p.next(); }); };
   return (
@@ -116,7 +154,7 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
       {step === 'gate' && (
         <div className="by-gate">
           <h1>مَرْحَبًا في بَيان</h1>
-          <p className="by-parent">لوليّ الأمر: اكتب اسم طفلك ليناديه الأصدقاء به. (تجربة الجلسة النموذجية «في السوق» · 20 دقيقة · المسار أ · 4–6 سنوات)</p>
+          <p className="by-parent">لوليّ الأمر: اكتب اسم طفلك ليناديه الأصدقاء به. (الجلسة {S.meta.order}: «في {S.meta.world}» · حرف {S.meta.letterName} · {S.meta.minutes} دقيقة · المسار أ · 4–6 سنوات)</p>
           <input className="by-input" value={p.name} onChange={e => p.setName(e.target.value)} placeholder="اسم الطفل" maxLength={20} autoFocus />
           <div className="by-row">
             <button className={`by-chip ${p.gender === 'm' ? 'on' : ''}`} onClick={() => p.setGender('m')}>ولد</button>
@@ -129,7 +167,7 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
         <div className="by-center">
           <h1 className="by-huge">أَهْلًا يا {p.name}!</h1>
           <p className="by-sub">اِضْغَطْ عَلى لُؤْلُؤ لِتُسَلِّمَ عَلَيْكْ</p>
-          <button className="by-tap" onClick={hello}><img src={img('lulu-wave')} alt="" width={180} height={180} /></button>
+          <button className="by-tap" onClick={hello}><img src="/kids/lulu/wave.png" alt="" width={180} height={180} /></button>
           <button className="by-big" onClick={ready}>أَنا جاهِزْ! ✋</button>
         </div>
       )}
@@ -138,50 +176,56 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
           <h2 className="by-h2">نَشيدُ بَيان 👏</h2>
           <div className="by-anthem">{ANTHEM.map((l, i) => <p key={i} className={i === line ? 'on' : i < line ? 'past' : ''}>{l}</p>)}</div>
           <p className="by-sub">صَفِّقْ مَعَ الْإيقاعْ!</p>
-          <button className="by-big" onClick={start}>إِلَى السّوقْ! 🧺</button>
+          <button className="by-big" onClick={start}>{S.goLabel}</button>
         </div>
       )}
     </section>
   );
 }
+/** نشيد الافتتاح (إيقاع تصفيق) — مشترك */
+const ANTHEM = ['بَيانْ بَيانْ، هَيّا نَبْدَأْ', 'نَقْرَأْ نَلْعَبْ، ثُمَّ نَهْدَأْ', 'حَرْفٌ وَكَلِمَةْ، وَآيَةٌ طَيِّبَةْ', 'وَأَثَرٌ يَبْقى، في قَلْبي وَلِسانْ'];
 
 /* ───────── 2) الحكاية ───────── */
 function Story(p: Ctx) {
+  const { S } = p;
   const [i, setI] = useState(0);
   const [li, setLi] = useState(0);
   const [asked, setAsked] = useState(false);
   const [choice, setChoice] = useState<string | null>(null);
-  const panel = PANELS[i];
+  const panel = S.panels[i];
   const playLine = useCallback((k: number) => {
     const l = panel.lines[k]; if (!l) return; setLi(k);
-    if (l.audio) p.play(snd(l.audio), () => { if (k + 1 < panel.lines.length) playLine(k + 1); });
+    if (!l.audio) return;
+    const after = () => { if (k + 1 < panel.lines.length) playLine(k + 1); };
+    if (l.who === 'لؤلؤ') p.luluSay(l.text, l.audio, 'cheer', after);
+    else p.play(p.snd(l.audio), after);
   }, [panel, p]);
   useEffect(() => { setLi(0); const t = setTimeout(() => playLine(0), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [i]);
   const forward = () => {
-    if (panel.n === STORY_CHOICE.after && !asked) { setAsked(true); p.lulu('question', 'think'); return; }
-    if (i + 1 < PANELS.length) setI(i + 1); else { p.finish('story'); p.next(); }
+    if (panel.n === S.storyChoice.after && !asked) { setAsked(true); p.lulu('question', 'think', p.awaitAnswer); return; }
+    if (i + 1 < S.panels.length) setI(i + 1); else { p.finish('story'); p.next(); }
   };
-  const pick = (k: string) => { setChoice(k); p.lulu('letsee', 'point', () => setI(i + 1)); };
+  const pick = (k: string) => { p.stopWaiting(); setChoice(k); p.lulu('letsee', 'point', () => setI(i + 1)); };
   return (
     <section className="by-story">
-      <figure className="by-panel"><img src={img(`panel-0${panel.n}`)} alt={`لوحة ${panel.n}`} /></figure>
+      <figure className="by-panel"><img src={p.img(`panel-0${panel.n}`)} alt={`لوحة ${panel.n}`} /></figure>
       <div className="by-lines">
         {panel.lines.map((l, k) => (
-          <button key={k} className={`by-line ${k === li ? 'on' : ''}`} onClick={() => playLine(k)}>
+          <button key={k} className={`by-line ${k === li ? 'on' : ''} ${l.who === 'جدّ سالم' ? 'salem' : ''}`} onClick={() => playLine(k)}>
             <span className="who">{l.who}</span><span className="txt">{l.text}</span><span className="spk">🔊</span>
           </button>
         ))}
       </div>
-      {asked && !choice && panel.n === STORY_CHOICE.after ? (
+      {asked && !choice && panel.n === S.storyChoice.after ? (
         <div className="by-choices">
-          <p className="by-q">{LULU.question.text}</p>
-          {STORY_CHOICE.options.map(o => <button key={o.key} className="by-opt" onClick={() => pick(o.key)}><span className="em">{o.emoji}</span>{o.text}</button>)}
+          <p className="by-q">{S.lulu.question.text}</p>
+          {S.storyChoice.options.map(o => <button key={o.key} className="by-opt" onClick={() => pick(o.key)}><span className="em">{o.emoji}</span>{o.text}</button>)}
         </div>
       ) : (
         <nav className="by-nav">
           <button className="by-ghost" disabled={i === 0} onClick={() => setI(i - 1)}>السّابِق</button>
-          <span className="by-count">{panel.n} / {PANELS.length}</span>
-          <button className="by-big" onClick={forward}>{i + 1 < PANELS.length ? 'التّالي ◀' : 'اِنْتَهَتِ الْحِكايَة ✨'}</button>
+          <span className="by-count">{panel.n} / {S.panels.length}</span>
+          <button className="by-big" onClick={forward}>{i + 1 < S.panels.length ? 'التّالي ◀' : 'اِنْتَهَتِ الْحِكايَة ✨'}</button>
         </nav>
       )}
     </section>
@@ -189,37 +233,44 @@ function Story(p: Ctx) {
 }
 
 /* ───────── 3) حَرْف يرسم ───────── */
+function Glyph({ g }: { g: 'baa' | 'alif' }) {
+  if (g === 'alif') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M100 26 L100 126" fill="none" stroke="#3A1F36" strokeWidth="16" strokeLinecap="round" /><text x="100" y="22" textAnchor="middle" fontSize="30" fontWeight="700" fill="#E8795C">ء</text></svg>;
+  return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="118" r="9" fill="#E8795C" /></svg>;
+}
 function Harf(p: Ctx) {
+  const { S } = p; const H = S.harf;
   const [wi, setWi] = useState(-1);
   const [vi, setVi] = useState(-1);
   const [heard, setHeard] = useState<Record<string, boolean>>({});
-  useEffect(() => { const t = setTimeout(() => p.play(snd(HARF.intro.audio)), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
-  const allHeard = VOCAB.every(v => heard[v.key]);
+  useEffect(() => { const t = setTimeout(() => p.play(p.snd(H.intro.audio)), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const allHeard = S.vocab.every(v => heard[v.key]);
+  const mark = (w: string) => { const m = w.match(/^(.[\u064B-\u0652]*)/); const n = m ? m[1].length : 1; return [w.slice(0, n), w.slice(n)]; };
   return (
     <section className="by-card">
       <div className="by-harf">
-        <div className="by-letter" onClick={() => p.play(snd(HARF.intro.audio))} role="button" aria-label="اسمع الحرف">
-          <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="118" r="9" fill="#E8795C" /></svg>
-          <b>باءْ</b>
-          <small>قارِبٌ صَغيرْ، وَتَحْتَهُ نُقْطَةْ</small>
+        <div className="by-letter" onClick={() => p.play(p.snd(H.intro.audio))} role="button" aria-label="اسمع الحرف">
+          <Glyph g={H.glyph} />
+          <b>{H.name}</b>
+          <small>{H.hint}</small>
         </div>
-        <p className="by-speech">{HARF.intro.text}</p>
+        <p className="by-speech">{H.intro.text}</p>
         <div className="by-words">
-          {HARF.words.map((w, k) => (
-            <button key={w.w} className={`by-word ${wi === k ? 'on' : ''}`} onClick={() => { setWi(k); p.play(snd(w.audio)); }}>
-              <span className="em">{w.emoji}</span><span className="w"><mark>{w.w.slice(0, 1)}</mark>{w.w.slice(1)}</span>
+          {H.words.map((w, k) => { const [a, b] = mark(w.w); return (
+            <button key={w.w} className={`by-word ${wi === k ? 'on' : ''}`} onClick={() => { setWi(k); p.play(p.snd(w.audio)); }}>
+              <span className="em">{w.emoji}</span><span className="w"><mark>{a}</mark>{b}</span>
             </button>
-          ))}
+          ); })}
         </div>
-        <div className="by-harakat" onClick={() => p.play(snd(HARF.harakat.audio))} role="button">
-          {HARF.harakat.items.map(h => <span key={h.h} style={{ background: h.color }}><b>{h.h}</b><i>{h.name}</i><small>{h.w}</small></span>)}
+        <div className="by-harakat" onClick={() => p.play(p.snd(H.harakat.audio))} role="button">
+          {H.harakat.items.map(h => <span key={h.h} style={{ background: h.color }}><b>{h.h}</b><i>{h.name}</i><small>{h.w}</small></span>)}
         </div>
+        {H.glyph === 'alif' && <p className="by-muted">الْهَمْزَةُ صَديقَةُ الْأَلِفْ — تَرْكَبُ فَوْقَهُ مَعَ الْفَتْحَةِ وَالضَّمَّةْ، وَتَحْتَهُ مَعَ الْكَسْرَةْ.</p>}
       </div>
       <h3 className="by-h3">كَلِماتُ الْيَوْم — لُؤْلُؤ تُرَدِّدْ، وَأَنْتَ تُرَدِّدْ</h3>
       <div className="by-vocab">
-        {VOCAB.map((v, k) => (
-          <button key={v.key} className={`by-vcard ${vi === k ? 'on' : ''} ${heard[v.key] ? 'ok' : ''}`} onClick={() => { setVi(k); setHeard(h => ({ ...h, [v.key]: true })); p.play(snd(v.audio)); }}>
-            <img src={img(v.img)} alt="" /><b>{v.w}</b><span className="spk">🔊</span>
+        {S.vocab.map((v, k) => (
+          <button key={v.key} className={`by-vcard ${vi === k ? 'on' : ''} ${heard[v.key] ? 'ok' : ''}`} onClick={() => { setVi(k); setHeard(h => ({ ...h, [v.key]: true })); p.luluSay(v.w, v.audio, 'wave'); }}>
+            <img src={p.img(v.img)} alt="" /><b>{v.w}</b><span className="spk">🔊</span>
           </button>
         ))}
       </div>
@@ -228,43 +279,59 @@ function Harf(p: Ctx) {
   );
 }
 
-/* ───────── 4) هيّا بنا نلعب: مطابقة صورة–كلمة (لمس الكلمة ثم الصورة) ───────── */
+/* ───────── 4) هيّا بنا نلعب: مطابقة (كلمة → بطاقة) أو مشهد (كلمة → مكانها) ───────── */
 function shuffle<T>(a: T[], seed = 3): T[] { const r = [...a]; let s = seed; for (let i = r.length - 1; i > 0; i--) { s = (s * 9301 + 49297) % 233280; const j = Math.floor((s / 233280) * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; }
 function Play(p: Ctx) {
-  const words = useMemo(() => shuffle(VOCAB, 5), []);
-  const pics = useMemo(() => shuffle(VOCAB, 11), []);
+  const { S } = p; const G = S.game; const V = S.vocab;
+  const words = useMemo(() => shuffle(V, 5), [V]);
+  const pics = useMemo(() => shuffle(V, 11), [V]);
   const [sel, setSel] = useState<string | null>(null);
   const [matched, setMatched] = useState<Record<string, boolean>>({});
   const [shake, setShake] = useState<string | null>(null);
   const [round, setRound] = useState<1 | 2 | 3>(1); // 2 = لؤلؤ تلعب وتخطئ · 3 = الطفل يصحّح
   const [brk, setBrk] = useState(false);
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => { const t = setTimeout(() => p.lulu('play', 'point'), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
-  const armIdle = useCallback(() => { if (idle.current) clearTimeout(idle.current); idle.current = setTimeout(() => p.lulu('hint', 'point'), 8000); }, [p]);
-  useEffect(() => { armIdle(); return () => { if (idle.current) clearTimeout(idle.current); }; }, [armIdle, sel, matched]);
-  const complete = Object.keys(matched).length === VOCAB.length;
-  useEffect(() => { if (complete && round === 1) { setTimeout(() => { setRound(2); p.lulu('mistake', 'think'); }, 900); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [complete, round]);
+  const wordOf = (k: string) => V.find(x => x.key === k)!;
+  const mistakeWord = wordOf(G.luluMistake.word), mistakeOnto = wordOf(G.luluMistake.onto);
+  useEffect(() => { const t = setTimeout(() => p.lulu('play', 'point', p.awaitAnswer), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const armIdle = useCallback(() => { if (idle.current) clearTimeout(idle.current); idle.current = setTimeout(() => p.lulu('hint', 'point', undefined, 'hint'), 9000); }, [p]);
+  useEffect(() => { if (round === 1 && !brk) armIdle(); return () => { if (idle.current) clearTimeout(idle.current); }; }, [armIdle, sel, matched, round, brk]);
+  const complete = Object.keys(matched).length === V.length;
+  useEffect(() => { if (complete && round === 1) { setTimeout(() => { setRound(2); p.lulu('mistake', 'think', p.awaitAnswer); }, 900); } /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [complete, round]);
 
-  const tapWord = (k: string) => { if (matched[k]) return; setSel(k); const v = VOCAB.find(x => x.key === k)!; p.play(snd(v.audio)); };
-  const tapPic = (k: string) => {
+  const tapWord = (k: string) => { if (matched[k]) return; p.stopWaiting(); setSel(k); p.play(p.snd(wordOf(k).audio)); };
+  const tapTarget = (k: string) => {
     if (round !== 1 || !sel || matched[k]) return;
-    if (sel === k) { setMatched(m => ({ ...m, [k]: true })); setSel(null); p.lulu('correct', 'cheer'); }
-    else { setShake(k); setTimeout(() => setShake(null), 500); p.lulu('tryagain', 'think'); }
+    if (sel === k) { setMatched(m => ({ ...m, [k]: true })); setSel(null); p.lulu('correct', 'cheer', undefined, 'cheer'); }
+    else { setShake(k); setTimeout(() => setShake(null), 500); p.lulu('tryagain', 'think', undefined, 'encourage'); }
   };
-  const answerLulu = (yes: boolean) => { if (yes) { p.lulu('hmm', 'think'); } else { setRound(3); p.lulu('thanks', 'dance'); } };
-  const fix = (k: string) => { if (round !== 3) return; if (k === 'khubz') { p.lulu('correct', 'cheer', () => { setBrk(true); p.lulu('brk', 'dance'); }); } else p.lulu('tryagain', 'think'); };
+  const answerLulu = (yes: boolean) => { p.stopWaiting(); if (yes) { p.lulu('hmm', 'think', p.awaitAnswer); } else { setRound(3); p.lulu('thanks', 'dance', p.awaitAnswer); } };
+  const fix = (k: string) => { if (round !== 3) return; p.stopWaiting(); if (k === G.luluMistake.word) { p.lulu('correct', 'cheer', () => { setBrk(true); p.lulu('brk', 'dance', undefined, 'dance'); }, 'cheer'); } else p.lulu('tryagain', 'think', undefined, 'encourage'); };
+  const label = (k: string) => (round === 2 && k === G.luluMistake.onto ? `${mistakeWord.w} ؟` : wordOf(k).w);
+  const cls = (k: string) => `${matched[k] ? 'ok' : ''} ${shake === k ? 'shake' : ''} ${round === 2 && k === G.luluMistake.onto ? 'lulu-wrong' : ''}`;
+  const onTarget = (k: string) => (round === 3 ? fix(k) : tapTarget(k));
   return (
     <section className="by-card">
-      <h2 className="by-h2">{round === 1 ? 'اِلْمِسِ الْكَلِمَةَ… ثُمَّ صورَتَها' : round === 2 ? 'دَوْرُ لُؤْلُؤ!' : 'صَحِّحْ لِلُؤْلُؤ: أَيْنَ الْخُبْزْ؟'}</h2>
-      <div className="by-pics">
-        {pics.map(v => (
-          <button key={v.key} className={`by-pic ${matched[v.key] ? 'ok' : ''} ${shake === v.key ? 'shake' : ''} ${round === 2 && v.key === 'halib' ? 'lulu-wrong' : ''}`} onClick={() => (round === 3 ? fix(v.key) : tapPic(v.key))} aria-label={v.w}>
-            <img src={img(v.img)} alt="" />
-            {matched[v.key] && round === 1 && <span className="lbl">{v.w}</span>}
-            {round !== 1 && <span className="lbl">{v.key === 'halib' && round === 2 ? 'خُبْزْ ؟' : v.w}</span>}
-          </button>
-        ))}
-      </div>
+      <h2 className="by-h2">{round === 1 ? G.title : round === 2 ? 'دَوْرُ لُؤْلُؤ!' : `صَحِّحْ لِلُؤْلُؤ: أَيْنَ «${mistakeWord.w}»؟`}</h2>
+      {G.kind === 'match' ? (
+        <div className="by-pics">
+          {pics.map(v => (
+            <button key={v.key} className={`by-pic ${cls(v.key)}`} onClick={() => onTarget(v.key)} aria-label={v.w}>
+              <img src={p.img(v.img)} alt="" />
+              {(matched[v.key] || round !== 1) && <span className="lbl">{label(v.key)}</span>}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="by-scene">
+          <img src={p.img(G.img)} alt="" />
+          {G.hotspots.map(h => (
+            <button key={h.key} className={`by-spot ${cls(h.key)}`} style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%` }} onClick={() => onTarget(h.key)} aria-label={wordOf(h.key).w}>
+              {(matched[h.key] || round !== 1) && <span className="lbl">{label(h.key)}</span>}
+            </button>
+          ))}
+        </div>
+      )}
       {round === 1 && (
         <div className="by-chips">
           {words.map(v => <button key={v.key} className={`by-chip big ${sel === v.key ? 'on' : ''} ${matched[v.key] ? 'gone' : ''}`} onClick={() => tapWord(v.key)} disabled={!!matched[v.key]}>{v.w} 🔊</button>)}
@@ -272,14 +339,14 @@ function Play(p: Ctx) {
       )}
       {round === 2 && (
         <div className="by-choices row">
-          <p className="by-q">لُؤْلُؤ وَضَعَتْ «خُبْزْ» عَلى صورَةِ الْحَليبْ… هَلْ أَصابَتْ؟</p>
+          <p className="by-q">لُؤْلُؤ وَضَعَتْ «{mistakeWord.w}» عَلى «{mistakeOnto.w}»… هَلْ أَصابَتْ؟</p>
           <button className="by-opt" onClick={() => answerLulu(true)}>نَعَمْ 👍</button>
           <button className="by-opt" onClick={() => answerLulu(false)}>لا 👎</button>
         </div>
       )}
       {brk && (
         <div className="by-break">
-          <p>🤸 اِسْتِراحَةُ الْحَيَوِيَّةْ: قِفْ! صَفِّقْ ثَلاثًا… وَاقْفِزْ كَالْأَرْنَبْ! … وَاجْلِسْ.</p>
+          <p>🤸 اِسْتِراحَةُ الْحَيَوِيَّةْ: {S.lulu.brk.text}</p>
           <button className="by-big" onClick={() => { p.finish('play'); p.next(); }}>جَلَسْتُ! هَيّا نُمَثِّلْ 🎭</button>
         </div>
       )}
@@ -289,18 +356,19 @@ function Play(p: Ctx) {
 
 /* ───────── 5) هيّا بنا نمثّل ───────── */
 function Act(p: Ctx) {
+  const { S } = p; const R = S.roles;
   const [swap, setSwap] = useState(false);
   useEffect(() => { const t = setTimeout(() => p.lulu('act', 'point'), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
-  const me = swap ? ROLES.buyer : ROLES.seller, you = swap ? ROLES.seller : ROLES.buyer;
+  const me = swap ? R.you : R.me, you = swap ? R.me : R.you;
   return (
     <section className="by-card">
-      <h2 className="by-h2">{LULU.act.text}</h2>
+      <h2 className="by-h2">{R.mePrompt}</h2>
       <div className="by-roles">
         <div className="by-role me"><span className="tag">{p.name || 'أَنا'}</span><h3>{me.title}</h3>{me.lines.map(l => <p key={l}>{l}</p>)}</div>
         <div className="by-role you"><span className="tag">ماما / بابا</span><h3>{you.title}</h3>{you.lines.map(l => <p key={l}>{l}</p>)}</div>
       </div>
       <button className="by-ghost" onClick={() => setSwap(s => !s)}>بَدِّلُوا الْأَدْوارْ 🔁</button>
-      <p className="by-parent">💡 لوليّ الأمر: {ROLES.parentTip}</p>
+      <p className="by-parent">💡 لوليّ الأمر: {R.parentTip}</p>
       <nav className="by-nav end"><button className="by-big" onClick={() => { p.finish('act'); p.next(); }}>مَثَّلْنا! إِلى جَدّ سالِم 🕌</button></nav>
     </section>
   );
@@ -308,43 +376,45 @@ function Act(p: Ctx) {
 
 /* ───────── 6) في مدرسة المصطفى ﷺ (لؤلؤ صامتة) ───────── */
 function Hadith(p: Ctx) {
+  const { S } = p; const H = S.hadith;
   const [rep, setRep] = useState(0);
   const [ans, setAns] = useState<string | null>(null);
-  useEffect(() => { const t = setTimeout(() => p.play(snd(HADITH.story.audio)), 400); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
-  const repeat = () => { p.play(snd(HADITH.repeat.audio)); setRep(r => Math.min(3, r + 1)); };
-  const opt = HADITH.options.find(o => o.key === ans);
+  useEffect(() => { const t = setTimeout(() => p.play(p.snd(H.story.audio)), 400); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const repeat = () => { p.play(p.snd(H.repeat.audio)); setRep(r => Math.min(3, r + 1)); };
+  const opt = H.options.find(o => o.key === ans);
   return (
     <section className="by-card calm">
-      <div className="by-salem"><img src={img('lulu-quiet')} alt="" className="by-quietlulu" /><h2 className="by-h2">في مَدْرَسَةِ الْمُصْطَفى ﷺ</h2></div>
-      <button className="by-line salem on" onClick={() => p.play(snd(HADITH.story.audio))}><span className="who">جدّ سالم</span><span className="txt">{HADITH.story.text}</span><span className="spk">🔊</span></button>
+      <div className="by-salem"><img src="/kids/lulu/calm.png" alt="" className="by-quietlulu" /><h2 className="by-h2">في مَدْرَسَةِ الْمُصْطَفى ﷺ</h2></div>
+      <button className="by-line salem on" onClick={() => p.play(p.snd(H.story.audio))}><span className="who">جدّ سالم</span><span className="txt">{H.story.text}</span><span className="spk">🔊</span></button>
       <div className="by-hadith">
-        <p className="txt">«{HADITH.text}»</p><p className="src">{HADITH.source}</p>
+        <p className="txt">«{H.text}»</p><p className="src">{H.source}</p>
         <button className="by-big" onClick={repeat}>رَدِّدْ مَعي 🔊 {rep > 0 && <small>{'⭐'.repeat(rep)}</small>}</button>
       </div>
-      <p className="by-speech">{HADITH.lesson.text}</p>
+      <button className="by-speech by-speech-btn" onClick={() => p.play(p.snd(H.lesson.audio))}>{H.lesson.text} 🔊</button>
       <div className="by-choices">
-        <p className="by-q">{HADITH.question.text}</p>
-        {HADITH.options.map(o => <button key={o.key} className={`by-opt ${ans === o.key ? (o.good ? 'good' : 'soft') : ''}`} onClick={() => { setAns(o.key); p.play(snd(`s-opt-${o.key}`)); }}><span className="em">{o.emoji}</span>{o.text}</button>)}
+        <button className="by-q by-speech-btn" onClick={() => p.play(p.snd(H.question.audio))}>{H.question.text} 🔊</button>
+        {H.options.map(o => <button key={o.key} className={`by-opt ${ans === o.key ? (o.good ? 'good' : 'soft') : ''}`} onClick={() => { setAns(o.key); p.play(p.snd(`s-opt-${o.key}`)); }}><span className="em">{o.emoji}</span>{o.text}</button>)}
         {opt && <p className="by-reply">{opt.reply}</p>}
       </div>
-      <nav className="by-nav end"><button className="by-big" disabled={rep < 3 || !opt?.good} onClick={() => { p.finish('hadith'); p.next(); }}>{rep < 3 ? 'رَدِّدِ الْحَديثَ ثَلاثَ مَرّاتْ' : !opt?.good ? 'اِخْتَرْ فِعْلَ الْأَمينْ' : 'هَيّا بِنا نَتْلو 📿'}</button></nav>
+      <nav className="by-nav end"><button className="by-big" disabled={rep < 3 || !opt?.good} onClick={() => { p.finish('hadith'); p.next(); }}>{rep < 3 ? 'رَدِّدِ الْحَديثَ ثَلاثَ مَرّاتْ' : !opt?.good ? H.goodLabel : 'هَيّا بِنا نَتْلو 📿'}</button></nav>
     </section>
   );
 }
 
-/* ───────── 7) هيّا بنا نتلو: الفاتحة (لؤلؤ صامتة · تلاوة قارئ بشري) ───────── */
+/* ───────── 7) هيّا بنا نتلو: الفاتحة (لؤلؤ صامتة · «المصحف المعلّم») ───────── */
 function Quran(p: Ctx) {
-  const [n, setN] = useState(0); // الآية الجارية (1..)
+  const { S } = p; const Q = S.quran;
+  const [n, setN] = useState(0);
   const [heard, setHeard] = useState<Record<number, boolean>>({});
   const [all, setAll] = useState(false);
-  const count = all ? FATIHA.length : QURAN.newKidsAyat;
-  useEffect(() => { const t = setTimeout(() => p.play(snd(QURAN.intro.audio)), 400); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const count = all ? FATIHA.length : Q.newKidsAyat;
+  useEffect(() => { const t = setTimeout(() => p.play(p.snd(Q.intro.audio)), 400); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   const listen = (k: number) => { setN(k); p.play(ayahUrl(k), () => setHeard(h => ({ ...h, [k]: true }))); };
   const ok = Array.from({ length: count }, (_, i) => i + 1).every(k => heard[k]);
   return (
     <section className="by-card calm">
-      <div className="by-salem"><img src={img('lulu-quiet')} alt="" className="by-quietlulu" /><h2 className="by-h2">هَيّا بِنا نَتْلو — سورَةُ الْفاتِحَة</h2></div>
-      <p className="by-speech">{QURAN.intro.text}</p>
+      <div className="by-salem"><img src="/kids/lulu/calm.png" alt="" className="by-quietlulu" /><h2 className="by-h2">هَيّا بِنا نَتْلو — سورَةُ الْفاتِحَة</h2></div>
+      <p className="by-speech">{Q.intro.text}</p>
       <div className="by-ayat">
         {FATIHA.slice(0, count).map((a, i) => {
           const k = i + 1;
@@ -356,44 +426,45 @@ function Quran(p: Ctx) {
         })}
       </div>
       <div className="by-row">
-        <button className="by-ghost" onClick={() => p.play(snd(QURAN.meaning.audio))}>مَعْنى بِكَلِمَة: {QURAN.meaning.text}</button>
+        <button className="by-ghost" onClick={() => p.play(p.snd(Q.meaning.audio))}>مَعْنى بِكَلِمَة: {Q.meaning.text}</button>
         {!all && <button className="by-ghost" onClick={() => setAll(true)}>أَحْفَظُها كامِلَةً — أَظْهِرِ السّورَة</button>}
       </div>
-      <p className="by-parent">🎙️ بعد كل آية: دَوْرُكْ — ردّد الآية بصوتك مع ماما أو بابا. التلاوة: {RECITER.name}.</p>
-      <nav className="by-nav end"><button className="by-big" disabled={!ok} onClick={() => { p.play(snd(QURAN.closing.audio)); p.finish('quran'); p.next(); }}>{ok ? 'صَدَقَ اللهُ الْعَظيمْ ✨' : 'اِسْتَمِعْ لِكُلِّ آيَةٍ ثُمَّ رَدِّدْ'}</button></nav>
+      <p className="by-parent">🎙️ بعد كل آية: دَوْرُكْ — ردّد الآية بصوتك مع ماما أو بابا (في «المصحف المعلّم» يقرأ الشيخ ثم يردّد الأطفال). التلاوة: {RECITER.name}.</p>
+      <nav className="by-nav end"><button className="by-big" disabled={!ok} onClick={() => { p.play(p.snd(Q.closing.audio)); p.finish('quran'); p.next(); }}>{ok ? 'صَدَقَ اللهُ الْعَظيمْ ✨' : 'اِسْتَمِعْ لِكُلِّ آيَةٍ ثُمَّ رَدِّدْ'}</button></nav>
     </section>
   );
 }
 
 /* ───────── 8) أثري اليوم ───────── */
-function Athari(p: Ctx) {
+function Athari(p: Ctx & { others: SessionData[] }) {
+  const { S } = p; const A = S.athari;
   const [self, setSelf] = useState<string | null>(null);
-  useEffect(() => { const t = setTimeout(() => p.lulu('athari', 'dance'), 400); try { localStorage.setItem('bayan_demo_done', new Date().toISOString()); } catch { /* ignore */ } return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { const t = setTimeout(() => p.lulu('athari', 'dance', undefined, 'dance'), 400); try { localStorage.setItem(`bayan_demo_done_${S.slug}`, new Date().toISOString()); } catch { /* ignore */ } return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   return (
     <section className="by-card">
-      <div className="by-badge"><img src={img(SESSION.badge.img)} alt="" /><h1 className="by-huge">شارَةُ «{SESSION.badge.title}»</h1><p className="by-sub">مُبارَكْ يا {p.name || p.hero}!</p></div>
-      <ul className="by-summary">{ATHARI.summary.map(s => <li key={s}>🌱 {s}</li>)}</ul>
+      <div className="by-badge"><img src={p.img(S.meta.badge.img)} alt="" /><h1 className="by-huge">شارَةُ «{S.meta.badge.title}»</h1><p className="by-sub">مُبارَكْ يا {p.name || p.hero}!</p></div>
+      <ul className="by-summary">{A.summary.map(s => <li key={s}>🌱 {s}</li>)}</ul>
       <div className="by-self">
-        <p className="by-q">{ATHARI.selfCheck.q}</p>
-        <div className="by-row">{ATHARI.selfCheck.options.map(o => <button key={o.key} className={`by-face ${self === o.key ? 'on' : ''}`} onClick={() => { setSelf(o.key); try { localStorage.setItem('bayan_demo_self', o.key); } catch { /* ignore */ } }}><span>{o.emoji}</span>{o.text}</button>)}</div>
+        <p className="by-q">{A.selfCheck.q}</p>
+        <div className="by-row">{A.selfCheck.options.map(o => <button key={o.key} className={`by-face ${self === o.key ? 'on' : ''}`} onClick={() => { setSelf(o.key); p.setLstate('cheer'); try { localStorage.setItem(`bayan_demo_self_${S.slug}`, o.key); } catch { /* ignore */ } }}><span>{o.emoji}</span>{o.text}</button>)}</div>
         {self && <p className="by-muted">شُكْرًا! سَيَراها الْميسِّرُ وَماما أَوْ بابا في مِلَفِّ إِنْجازِكْ.</p>}
       </div>
-      <div className="by-task"><h3>مُهِمَّةُ الْبَيْت 🏠</h3><p>{ATHARI.homeTask}</p></div>
+      <div className="by-task"><h3>مُهِمَّةُ الْبَيْت 🏠</h3><p>{A.homeTask}</p></div>
       <div className="by-pcard">
         <h3>بطاقة وليّ الأمر</h3>
-        <p><b>تعلّمنا اليوم:</b> {ATHARI.parentCard.learned}</p>
-        <p><b>كيف تدعمه:</b></p><ul>{ATHARI.parentCard.support.map(s => <li key={s}>{s}</li>)}</ul>
-        <p className="by-muted">🌙 {ATHARI.bedtime}</p>
+        <p><b>تعلّمنا اليوم:</b> {A.parentCard.learned}</p>
+        <p><b>كيف تدعمه:</b></p><ul>{A.parentCard.support.map(s => <li key={s}>{s}</li>)}</ul>
+        <p className="by-muted">🌙 {A.bedtime}</p>
       </div>
       <nav className="by-nav end">
         <Link className="by-ghost" href="/contact?topic=bayan">رأي وليّ الأمر في التجربة ✍️</Link>
+        {p.others.map(o => <Link key={o.slug} className="by-ghost" href={`/kids/demo/${o.slug}`}>الجلسة {o.meta.order}: «في {o.meta.world}» ▶</Link>)}
         <Link className="by-big" href="/kids">اِنْتَهَيْنا ✨</Link>
       </nav>
     </section>
   );
 }
 
-/* ───────── CSS ───────── */
 export const BAYAN_CSS = `
 .by{--plum:#3A1F36;--coral:#E8795C;--sand:#F1D9A8;--sea:#5EA8A0;--shell:#FBF4EE;--sky:#7FC8E8;--ink:#2A1626;min-height:100vh;background:radial-gradient(1200px 600px at 50% -10%,#fff 0%,var(--shell) 60%);color:var(--ink);font-family:var(--font-read,var(--font-ar,sans-serif));font-size:20px;padding-bottom:160px}
 .by *{box-sizing:border-box}
@@ -404,7 +475,7 @@ export const BAYAN_CSS = `
 .by-stations li.on button{border-color:var(--coral);opacity:1;background:#fff5f0}.by-stations li.ok button{opacity:1;border-color:var(--sea)}
 .by-stations .ic{font-size:20px}.by-stations .tt{font-size:11px;white-space:nowrap}
 .by-brand{display:flex;align-items:center;gap:6px;color:var(--plum)}
-.by-stage{max-width:960px;margin:0 auto;padding:14px}
+.by-stage{max-width:960px;margin:0 auto;padding:14px 14px 190px}
 .by-card{background:#fff;border:2px solid var(--sand);border-radius:24px;padding:20px;box-shadow:0 8px 30px rgba(58,31,54,.06)}
 .by-card.calm{background:linear-gradient(180deg,#fff,#fdf7ef);border-color:#e6d2b5}
 .by-center{text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
@@ -471,6 +542,13 @@ export const BAYAN_CSS = `
 .by-lulu img{width:120px;height:120px;object-fit:cover;border-radius:50%;border:3px solid #fff;box-shadow:0 6px 20px rgba(58,31,54,.18);background:#fff}
 .by-lulu.quiet img{opacity:.55;filter:grayscale(.3)}
 .by-bubble{background:#fff;border:2px solid var(--sand);border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:19px;max-width:min(60vw,420px);box-shadow:0 6px 20px rgba(58,31,54,.12);line-height:1.7}
-@media (max-width:700px){.by{font-size:18px}.by-vocab,.by-pics{grid-template-columns:repeat(2,1fr)}.by-roles{grid-template-columns:1fr}.by-stations .tt{display:none}.by-lulu img{width:84px;height:84px}.by-bubble{font-size:16px;max-width:66vw}.by-ayah{font-size:24px}.by-hadith .txt{font-size:26px}}
+.by-sess{font-size:12px;color:#8E7F8A;margin-inline-start:4px}
+.by-scene{position:relative;border-radius:20px;overflow:hidden;border:3px solid var(--sand);background:#fff}.by-scene>img{width:100%;display:block}
+.by-spot{position:absolute;border:3px dashed rgba(232,121,92,.55);background:rgba(255,255,255,.04);border-radius:16px;cursor:pointer;display:grid;place-items:end center;padding:4px;color:var(--ink)}
+.by-spot:hover{background:rgba(232,121,92,.12)}.by-spot.ok{border:3px solid var(--sea);background:rgba(94,168,160,.12)}.by-spot.lulu-wrong{border-color:var(--coral);background:rgba(232,121,92,.18)}
+.by-spot .lbl{background:#fff;border:2px solid var(--sand);border-radius:999px;padding:2px 12px;font-size:20px;box-shadow:0 3px 10px rgba(58,31,54,.12)}
+.by-spot.shake{animation:by-shake .45s}
+.by-speech-btn{background:none;border:0;cursor:pointer;font-family:inherit;width:100%}
+@media (max-width:700px){.by{font-size:18px}.by-spot .lbl{font-size:14px;padding:0 8px}.by-vocab,.by-pics{grid-template-columns:repeat(2,1fr)}.by-roles{grid-template-columns:1fr}.by-stations .tt{display:none}.by-lulu img{width:84px;height:84px}.by-bubble{font-size:16px;max-width:66vw}.by-ayah{font-size:24px}.by-hadith .txt{font-size:26px}}
 @media (prefers-reduced-motion:reduce){.by *{animation:none!important}}
 `;

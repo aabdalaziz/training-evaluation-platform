@@ -1,6 +1,8 @@
 /* بَيان (هـ-6-ب) — بيانات الجلسة النموذجية «في السوق» · الأسبوع 2 (أ) · المسار أ · 4–6
  * كل النصوص المنطوقة وفق «قاعدة الوقف» (kids/bible/voices.md). الصور والأصوات تحت /public/kids/souq. */
 
+import type { SessionData } from './types';
+
 export const KIDS_BASE = '/kids/souq';
 export const img = (n: string) => `${KIDS_BASE}/img/${n}.jpg`;
 export const snd = (n: string) => `${KIDS_BASE}/audio/${n}.mp3`;
@@ -84,7 +86,7 @@ export const VOCAB = [
 /** هيّا بنا نمثّل */
 export const ROLES = {
   seller: { title: 'الْبائِعْ', lines: ['أَهْلًا وَسَهْلًا!', 'تَمْرٌ طازَجْ!', 'تَفَضَّلْ.'] },
-  buyer:  { title: 'الْمُشْتَري', lines: ['السَّلامُ عَلَيْكُمْ.', 'كَمْ ثَمَنُهُ؟', 'شُكْرًا!'] },
+  buyer:  { title: 'الْمُشْتَري', lines: ['السَّلامُ عَلَيْكُمْ.', 'كَمْ ثَمَنُهْ؟', 'شُكْرًا!'] },
   parentTip: 'اطلب من طفلك أن يُعيد لك شيئًا سقط منك… ولاحظ ماذا يقول.',
 };
 
@@ -101,8 +103,8 @@ export const HADITH = {
   ],
 };
 
-/** هيّا بنا نتلو: الفاتحة — التلاوة من قارئ بشري (مؤقّتًا: everyayah · المنشاوي مرتّل) بانتظار اعتماد القارئ والترخيص */
-export const RECITER = { name: 'الشيخ محمد صدّيق المنشاوي (مرتّل) — مؤقّت للتجربة', base: 'https://everyayah.com/data/Minshawy_Murattal_128kbps/' };
+/** هيّا بنا نتلو: الفاتحة — «المصحف المعلّم» للشيخ محمد صدّيق المنشاوي (يقرأ الشيخ ثم يردّد الأطفال) — اعتماد المالك 2026-11-23. المصدر الحالي everyayah؛ يُستبدل بنسخة مستضافة لدينا بعد تأكيد الترخيص */
+export const RECITER = { name: 'الشيخ محمد صدّيق المنشاوي — المصحف المعلّم', base: 'https://everyayah.com/data/Minshawy_Teacher_128kbps/' };
 export const FATIHA = [
   'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
   'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ',
@@ -131,4 +133,21 @@ export const ATHARI = {
   bedtime: 'النُّقودُ الَّتي سَقَطَتْ — قصّة الليلة بصوت جدّ سالم (قريبًا)',
   /** التقييم الذاتي للطفل (معيار التقويم 6/20 في وثيقة الخليج · شبكات «أستطيع» في CEFR) */
   selfCheck: { q: 'كَيْفَ كانَ أَدائي الْيَوْمْ؟', options: [{ key: 'easy', emoji: '😄', text: 'سَهْلْ!' }, { key: 'good', emoji: '🙂', text: 'جَيِّدْ' }, { key: 'help', emoji: '🤔', text: 'أَحْتاجُ مُساعَدَةْ' }] },
+};
+
+/* ───────── هـ-6-ج: تجميع الجلسة في النموذج الموحّد (lib/kids/types.ts) ───────── */
+export const SOUQ: SessionData = {
+  slug: 'souq',
+  meta: { ...SESSION, program: 'بَيان', letterName: 'باءْ', order: 2, storyTitle: 'النُّقودُ الَّتي سَقَطَتْ' },
+  lulu: { ...LULU, chant: LULU.amin },
+  goLabel: 'إِلَى السّوقْ! 🧺',
+  panels: PANELS,
+  storyChoice: STORY_CHOICE,
+  harf: { glyph: 'baa', name: 'باءْ', hint: 'قارِبٌ صَغيرْ، وَتَحْتَهُ نُقْطَةْ', ...HARF },
+  vocab: VOCAB,
+  game: { kind: 'match', title: 'اِلْمِسِ الْكَلِمَةَ… ثُمَّ صورَتَها', luluMistake: { word: 'khubz', onto: 'halib' } },
+  roles: { me: ROLES.seller, you: ROLES.buyer, parentTip: ROLES.parentTip, mePrompt: LULU.act.text },
+  hadith: { ...HADITH, story: { ...HADITH.story, who: 'جدّ سالم' }, goodLabel: 'اِخْتَرْ فِعْلَ الْأَمينْ' },
+  quran: QURAN,
+  athari: ATHARI,
 };
