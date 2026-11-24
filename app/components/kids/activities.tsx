@@ -3,7 +3,7 @@
  * كل نشاط مكوّن مستقلّ يعمل لأي جلسة: يأخذ بيانات الجلسة + سياق الصوت/لؤلؤ، وينادي onDone عند الاكتمال.
  * قواعد 4–6: لمس ثم لمس (لا سحب دقيق) · قاعدة واحدة · تغذية راجعة فورية («يا سَلااامْ!» / «قَريبْ!») · ≤ 3 دقائق. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SessionData, LuluKey, LuluPose, SoundItem, VocabItem } from '../../../lib/kids/types';
+import type { SessionData, LuluKey, LuluPose, SoundItem, VocabItem, Game } from '../../../lib/kids/types';
 import { COMMON, type CommonKey } from '../../../lib/kids/common';
 import type { LuluState } from './LuluLive';
 
@@ -324,7 +324,43 @@ export function Basket({ p, items, onDone }: { p: ActCtx; items: SoundItem[]; on
   );
 }
 
+/* ═══════════ ل9) نكتشف: «ابحث عن الحرف في بيتك» (الأسبوع 3) ═══════════
+ * لؤلؤ تسمّي ثلاثة أشياء حقيقيّة فيها حرف اليوم؛ الطفل يحضرها أو يشير إليها ثم يضغط «وَجَدْتُها!» — بلا كاميرا ولا صورة.
+ * مؤقّت لطيف 60 ث للعرض فقط (لا يُخسَر شيء). عند الثلاث: مقطع «وَجَدْتَ الثَّلاثَةْ…» ثم onDone. */
+export function Discover({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind: 'discover' }>; onDone: () => void }) {
+  const [found, setFound] = useState<Record<number, boolean>>({});
+  const [sec, setSec] = useState(60);
+  useEffect(() => { const t = setTimeout(() => p.luluSay(G.prompt.text, G.prompt.audio, 'point', p.awaitAnswer), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { if (sec <= 0) return; const t = setTimeout(() => setSec(s => s - 1), 1000); return () => clearTimeout(t); }, [sec]);
+  const hear = (k: number) => { p.stopWaiting(); p.luluSay(G.items[k].w, G.items[k].audio, 'wave'); };
+  const got = (k: number) => {
+    if (found[k]) return; p.stopWaiting();
+    const nf = { ...found, [k]: true }; setFound(nf);
+    if (Object.keys(nf).length === G.items.length) p.luluSay(G.done.text, G.done.audio, 'cheer', onDone);
+    else p.lulu('correct', 'cheer', undefined, 'cheer');
+  };
+  const n = Object.keys(found).length;
+  return (
+    <div className="ac ac-discover">
+      <p className="by-speech">{G.prompt.text}</p>
+      <img src={p.img(G.img)} alt="" className="ac-discover-img" />
+      <Stars n={n} of={G.items.length} />
+      <div className="ac-items">
+        {G.items.map((it, k) => (
+          <div key={k} className={`ac-find ${found[k] ? 'ok' : ''}`}>
+            <button className="ac-item" onClick={() => hear(k)}><span className="em">{it.emoji}</span><b>{it.w}</b></button>
+            <button className="ac-found" onClick={() => got(k)} disabled={!!found[k]} aria-label={`وجدت ${it.w}`}>{found[k] ? '✅ وَجَدْتُها' : 'وَجَدْتُها!'}</button>
+          </div>
+        ))}
+      </div>
+      <p className="by-muted">⏳ {sec > 0 ? `${sec} ث` : 'خُذْ وَقْتَكْ…'} · 👨‍👩‍👧 وليّ الأمر: أكّد بلمسة «وَجَدْتُها» بعد أن يُحضر الطفل الشيء أو يشير إليه</p>
+    </div>
+  );
+}
+
 export const ACT_CSS = `
+.ac-discover-img{width:100%;max-width:560px;border-radius:22px;border:3px solid #F1D9A8}
+.ac-find{display:grid;gap:6px;justify-items:center}.ac-found{border:0;border-radius:14px;padding:10px 16px;font-size:18px;font-weight:800;background:#E8795C;color:#fff;cursor:pointer}.ac-found:disabled{background:#5EA8A0;cursor:default}.ac-find.ok .ac-item{border-color:#5EA8A0;background:#E6F3F1}
 .ac{display:grid;gap:12px;justify-items:center}
 .ac-stars{display:flex;gap:4px;font-size:26px;color:#e9ddd0}.ac-stars .on{color:#D9A866;text-shadow:0 2px 0 #b9854a}
 .ac-svg{width:min(78vw,360px);height:min(78vw,360px);background:#FBF4EE;border:3px dashed #F1D9A8;border-radius:28px;cursor:crosshair}

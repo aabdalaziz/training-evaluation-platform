@@ -115,7 +115,7 @@ export const FATIHA = [
   'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ',
   'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ',
 ];
-export const ayahUrl = (n: number) => `${RECITER.base}001${String(n).padStart(3, '0')}.mp3`;
+export const ayahUrl = (n: number, surah = 1) => `${RECITER.base}${String(surah).padStart(3, '0')}${String(n).padStart(3, '0')}.mp3`;
 export const QURAN = {
   intro:   { text: 'وَالْآنَ نَقْرَأُ مَعًا سورَةَ الْفاتِحَةْ. اِسْتَمِعْ أَوَّلًا… ثُمَّ رَدِّدْ.', audio: 's-quran-intro' },
   meaning: { text: 'الْحَمْدُ لِلّٰهِ… يَعْني: شُكْرًا يا اللهْ.', audio: 's-meaning' },

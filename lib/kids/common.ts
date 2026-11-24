@@ -35,4 +35,6 @@ export const COMMON_WORDS = {
   baqara:  { w: 'بَقَرَةْ',    emoji: '🐄', audio: 'common:w-baqara' },
   bahr:    { w: 'بَحْرْ',      emoji: '🌊', audio: 'common:w-bahr' },
   tuffaha: { w: 'تُفّاحَةْ',   emoji: '🍎', audio: 'common:w-tuffaha' },
+  bint:    { w: 'بِنْتْ',      emoji: '👧', audio: 'common:w-bint' },
+  tin:     { w: 'تينْ',        emoji: '🟣', audio: 'common:w-tin' },
 } as const;

@@ -2,7 +2,7 @@ import type { TalkScript } from './talk';
 /* بَيان (هـ-6-ج) — نموذج بيانات الجلسة الموحّد. كل جلسة (البيت، السوق، …) ملف بيانات يملأ هذا الشكل،
  * ومحرّك BayanSession يعرضه. كل النصوص المنطوقة وفق «قاعدة الوقف» (kids/bible/voices.md). */
 
-export type Speaker = 'لؤلؤ' | 'جدّ سالم' | 'أَثير' | 'نُور' | 'يُوسُف' | 'حَرْف' | 'البائع' | 'الرجل' | 'أَبْ' | 'أُمّْ';
+export type Speaker = 'لؤلؤ' | 'جدّ سالم' | 'أَثير' | 'نُور' | 'يُوسُف' | 'حَرْف' | 'البائع' | 'الرجل' | 'أَبْ' | 'أُمّْ' | 'الْمُعَلِّمَة';
 
 export interface Line { who: Speaker; text: string; audio?: string }
 export interface Panel { n: number; lines: Line[] }
@@ -33,7 +33,9 @@ export type Game =
   | { kind: 'listen'; title: string; rounds: number }
   | { kind: 'clap'; title: string; items: { w: string; audio: string; syllables: string[] }[] }
   | { kind: 'jump'; title: string; items: SoundItem[] }
-  | { kind: 'basket'; title: string; items: SoundItem[] };
+  | { kind: 'basket'; title: string; items: SoundItem[] }
+  /** نكتشف (الأسبوع 3): «ابحث عن الحرف في بيتك» — أشياء حقيقيّة يحضرها الطفل، بلا كاميرا؛ prompt/done بصوت لؤلؤ */
+  | { kind: 'discover'; title: string; img: string; items: SoundItem[]; prompt: Said; done: Said };
 
 export interface SessionData {
   slug: string;                       // bayt | souq — مجلد الأصول تحت /public/kids/<slug>
@@ -50,7 +52,7 @@ export interface SessionData {
   panels: Panel[];
   storyChoice: { after: number; options: { key: string; text: string; emoji: string }[] };
   harf: {
-    glyph: 'baa' | 'alif'; name: string; hint: string;
+    glyph: 'baa' | 'alif' | 'taa'; name: string; hint: string;
     activities: HarfActivity[];
     intro: Said;
     words: { w: string; emoji: string; audio: string }[];
@@ -69,7 +71,8 @@ export interface SessionData {
     options: { key: string; text: string; emoji: string; good: boolean; reply: string }[];
     goodLabel: string;
   };
-  quran: { intro: Said; meaning: Said; closing: Said; newKidsAyat: number };
+  /** surah اختياري: بدونه تُعرَض الفاتحة (الجلستان 1–2). مع الأسبوع 3: سورة الناس (114) */
+  quran: { intro: Said; meaning: Said; closing: Said; newKidsAyat: number; surah?: { num: number; name: string; ayat: string[] } };
   /** «حَديثٌ مَعَ لُؤْلُؤ» (ت1) — اختياري حتى تُسجَّل أصوات الجلسة */
   talk?: TalkScript;
   athari: {

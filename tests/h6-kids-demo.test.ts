@@ -13,14 +13,18 @@ const ROOT = path.join(__dirname, '..');
 const exists = (p: string) => fs.existsSync(path.join(ROOT, 'public', p));
 
 test('هـ-6: سجلّ الجلسات — البيت (ا) أولًا ثم السوق (ب) · 8 محطّات · الفاتحة 7 آيات · المصحف المعلّم', () => {
-  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq']);
+  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa']);
   assert.equal(DEFAULT_SESSION.slug, 'bayt');
   assert.equal(getSession('souq')?.meta.letter, 'ب'); assert.equal(getSession('bayt')?.meta.letter, 'ا');
   assert.equal(getSession('bayt')?.meta.value, 'النظام'); assert.equal(getSession('souq')?.meta.value, 'الأمانة');
+  assert.equal(getSession('madrasa')?.meta.letter, 'ت'); assert.equal(getSession('madrasa')?.meta.value, 'التعاون');
   assert.equal(STATIONS.length, 8);
   assert.deepEqual(STATIONS.map(s => s.key), ['start', 'story', 'harf', 'play', 'act', 'hadith', 'quran', 'athari']);
   assert.equal(FATIHA.length, 7);
   assert.equal(ayahUrl(7), 'https://everyayah.com/data/Minshawy_Teacher_128kbps/001007.mp3');
+  assert.equal(ayahUrl(3, 114), 'https://everyayah.com/data/Minshawy_Teacher_128kbps/114003.mp3');
+  const M = getSession('madrasa')!; assert.equal(M.quran.surah?.num, 114); assert.equal(M.quran.surah?.ayat.length, 6);
+  assert.ok(M.games.some(g => g.kind === 'discover'), 'لعبة نكتشف');
 });
 
 for (const S of SESSIONS) {
@@ -42,7 +46,7 @@ for (const S of SESSIONS) {
     for (let i = 1; i <= 8; i++) assert.ok(exists(kidsImg(S.slug, `panel-0${i}`)), `panel-0${i}`);
     for (const v of S.vocab) assert.ok(exists(kidsImg(S.slug, v.img)), v.img);
     assert.ok(exists(kidsImg(S.slug, S.meta.badge.img)), S.meta.badge.img);
-    for (const g of [...S.games, ...(S.extraGame ? [S.extraGame] : [])]) if (g.kind === 'scene') assert.ok(exists(kidsImg(S.slug, g.img)), g.img);
+    for (const g of [...S.games, ...(S.extraGame ? [S.extraGame] : [])]) if (g.kind === 'scene' || g.kind === 'discover') assert.ok(exists(kidsImg(S.slug, g.img)), g.img);
     const audio = new Set<string>([
       ...Object.values(S.lulu).map(l => l.audio),
       ...S.panels.flatMap(p => p.lines.map(l => l.audio!).filter(Boolean)),
@@ -51,6 +55,7 @@ for (const S of SESSIONS) {
       S.quran.intro.audio, S.quran.meaning.audio, S.quran.closing.audio,
       ...S.harf.activities.flatMap(a => (a.kind === 'hear' ? a.items.map(x => x.audio) : [])),
       ...[...S.games, ...(S.extraGame ? [S.extraGame] : [])].flatMap(g => ('items' in g ? g.items.map(x => x.audio) : [])),
+      ...S.games.flatMap(g => (g.kind === 'discover' ? [g.prompt.audio, g.done.audio] : [])),
     ]);
     const missing = [...audio].filter(a => !exists(kidsSnd(S.slug, a)));
     assert.deepEqual(missing, [], `أصوات ناقصة: ${missing.join(' ')}`);
