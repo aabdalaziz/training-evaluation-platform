@@ -9,7 +9,7 @@ import { kidsImg, kidsSnd } from '../../../lib/kids/types';
 import { STATIONS, type StationKey, SESSIONS } from '../../../lib/kids/sessions';
 import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
 import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
-import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, Discover, ColorLetter, Count, ACT_CSS } from './activities';
+import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, Discover, ColorLetter, Count, Paint, ACT_CSS } from './activities';
 import { COMMON } from '../../../lib/kids/common';
 import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled, type TalkOutcome } from './Talk';
 import { BayanIntro } from './BayanIntro';
@@ -271,7 +271,8 @@ function Story(p: Ctx) {
 }
 
 /* ───────── 3) حَرْف يرسم ───────── */
-function Glyph({ g }: { g: 'baa' | 'alif' | 'taa' }) {
+function Glyph({ g }: { g: 'baa' | 'alif' | 'taa' | 'thaa' }) {
+  if (g === 'thaa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="18" r="9" fill="#E8795C" /><circle cx="84" cy="44" r="9" fill="#E8795C" /><circle cx="116" cy="44" r="9" fill="#E8795C" /></svg>;
   if (g === 'taa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="86" cy="38" r="9" fill="#E8795C" /><circle cx="114" cy="38" r="9" fill="#E8795C" /></svg>;
   if (g === 'alif') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M100 26 L100 126" fill="none" stroke="#3A1F36" strokeWidth="16" strokeLinecap="round" /><text x="100" y="22" textAnchor="middle" fontSize="30" fontWeight="700" fill="#E8795C">ء</text></svg>;
   return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="118" r="9" fill="#E8795C" /></svg>;
@@ -320,7 +321,7 @@ function HarfMorph(p: Ctx & { onDone: () => void }) {
 }
 
 const ACT_NAMES: Record<HarfActivity['kind'], string> = { morph: 'الحرف يتحوّل', trace: 'تتبّع بإصبعك', hear: 'أسمع الصوت', name: 'الحرف في اسمي', color: 'لوّن الحرف' };
-const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ', discover: 'نكتشف', count: 'عُدّ' };
+const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ', discover: 'نكتشف', count: 'عُدّ', paint: 'لوّن حسب الكلمة' };
 function Bar({ items, at }: { items: string[]; at: number }) { return <div className="ac-bar" aria-label="تقدّم النشاط">{items.map((t, i) => <span key={i} className={i === at ? 'on' : i < at ? 'ok' : ''}>{i < at ? '★ ' : ''}{t}</span>)}</div>; }
 
 /** حَرْف يرسم — سلسلة أنشطة من البنك (HARF-PLAY-BANK.md) */
@@ -432,6 +433,7 @@ function GameView({ p, G, onDone }: { p: Ctx; G: Game; onDone: () => void }) {
     case 'basket': return <Basket p={p} items={G.items} onDone={onDone} />;
     case 'discover': return <Discover p={p} G={G} onDone={onDone} />;
     case 'count': return <Count p={p} G={G} onDone={onDone} />;
+    case 'paint': return <Paint p={p} G={G} onDone={onDone} />;
   }
 }
 function Play(p: Ctx) {

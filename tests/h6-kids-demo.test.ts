@@ -13,7 +13,7 @@ const ROOT = path.join(__dirname, '..');
 const exists = (p: string) => fs.existsSync(path.join(ROOT, 'public', p));
 
 test('هـ-6: سجلّ الجلسات — البيت (ا) أولًا ثم السوق (ب) · 8 محطّات · الفاتحة 7 آيات · المصحف المعلّم', () => {
-  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2']);
+  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2', 'hadiqa']);
   assert.equal(DEFAULT_SESSION.slug, 'bayt');
   assert.equal(getSession('souq')?.meta.letter, 'ب'); assert.equal(getSession('bayt')?.meta.letter, 'ا');
   assert.equal(getSession('bayt')?.meta.value, 'النظام'); assert.equal(getSession('souq')?.meta.value, 'الأمانة');
@@ -26,6 +26,9 @@ test('هـ-6: سجلّ الجلسات — البيت (ا) أولًا ثم الس
   const M = getSession('madrasa')!; assert.equal(M.quran.surah?.num, 114); assert.equal(M.quran.surah?.ayat.length, 6);
   assert.ok(M.games.some(g => g.kind === 'discover'), 'لعبة نكتشف');
   const M2 = getSession('madrasa2')!; assert.equal(M2.quran.surah?.from, 4); assert.ok(M2.games.some(g => g.kind === 'count') && M2.harf.activities.some(a => a.kind === 'color'), 'عُدّ + لوّن');
+  const H5 = getSession('hadiqa')!; assert.equal(H5.meta.letter, 'ث'); assert.equal(H5.quran.surah?.num, 113); assert.equal(H5.quran.surah?.ayat.length, 5); assert.equal(H5.quran.newKidsAyat, 2); assert.equal(H5.quran.meaning.ayah, 1);
+  const P = H5.games.find(g => g.kind === 'paint'); assert.ok(P && P.kind === 'paint', 'لعبة لوّن حسب الكلمة');
+  if (P && P.kind === 'paint') { assert.equal(P.items.length, 4); const vk = new Set(H5.vocab.map(v => v.key)); P.items.forEach(it => { assert.ok(vk.has(it.key), it.key); assert.ok(it.box.x >= 0 && it.box.x + it.box.w <= 100 && it.box.y >= 0 && it.box.y + it.box.h <= 100, it.key); }); assert.ok(exists(kidsImg('hadiqa', P.line)) && exists(kidsImg('hadiqa', P.color))); }
   const C = M2.games.find(g => g.kind === 'count'); if (C && C.kind === 'count') { assert.ok(C.choices.includes(C.items.filter(i => i.yes).length)); assert.ok(C.nums.length >= C.items.filter(i => i.yes).length); C.items.forEach(h => assert.ok(h.box.x >= 0 && h.box.x + h.box.w <= 100 && h.box.y >= 0 && h.box.y + h.box.h <= 100, h.key)); }
 });
 
@@ -35,7 +38,7 @@ for (const S of SESSIONS) {
     assert.equal(S.vocab.length, 4); assert.equal(new Set(S.vocab.map(v => v.key)).size, 4);
     assert.ok(S.storyChoice.after >= 3 && S.storyChoice.after <= 6); assert.equal(S.storyChoice.options.length, 2);
     assert.equal(S.hadith.options.filter(o => o.good).length, 1);
-    assert.equal(S.quran.newKidsAyat, 3);
+    assert.ok(S.quran.newKidsAyat === 3 || (S.quran.newKidsAyat === 2 && S.quran.surah?.num === 113), 'آيات جديدة 3 (أو 2 للفلق أ)');
     assert.equal(S.harf.words.length, 4); assert.equal(S.harf.harakat.items.length, 3);
     const keys = new Set(S.vocab.map(v => v.key));
     const G0 = S.games[0];
@@ -57,7 +60,7 @@ for (const S of SESSIONS) {
       S.quran.intro.audio, S.quran.meaning.audio, S.quran.closing.audio,
       ...S.harf.activities.flatMap(a => (a.kind === 'hear' ? a.items.map(x => x.audio) : [])),
       ...[...S.games, ...(S.extraGame ? [S.extraGame] : [])].flatMap(g => ('items' in g ? g.items.map(x => x.audio) : [])),
-      ...S.games.flatMap(g => (g.kind === 'discover' ? [g.prompt.audio, g.done.audio] : g.kind === 'count' ? [g.prompt.audio, g.ask.audio, g.done.audio, ...g.nums.map(x => x.audio)] : [])),
+      ...S.games.flatMap(g => (g.kind === 'discover' ? [g.prompt.audio, g.done.audio] : g.kind === 'count' ? [g.prompt.audio, g.ask.audio, g.done.audio, ...g.nums.map(x => x.audio)] : g.kind === 'paint' ? [g.prompt.audio, g.ask.audio, g.near.audio, g.done.audio, ...g.items.map(x => x.ok.audio)] : [])),
       ...S.harf.activities.flatMap(a => (a.kind === 'color' ? [a.prompt.audio, a.done.audio, ...a.words.map(x => x.audio)] : [])),
     ]);
     const missing = [...audio].filter(a => !exists(kidsSnd(S.slug, a)));
@@ -86,6 +89,8 @@ for (const S of SESSIONS) {
       S.quran.intro.text, S.quran.meaning.text, S.quran.closing.text,
       ...S.harf.activities.flatMap(a => (a.kind === 'hear' ? a.items.map(x => x.w) : [])),
       ...[...S.games, ...(S.extraGame ? [S.extraGame] : [])].flatMap(g => ('items' in g ? g.items.map(x => x.w) : [])),
+      ...S.games.flatMap(g => (g.kind === 'paint' ? [g.prompt.text, g.near.text, g.done.text, ...g.items.map(x => x.ok.text)] : [])),
+      ...(S.talk ? [S.talk.final.text, ...S.talk.turns.flatMap(t => [t.q.text, t.yes.text, t.model.text, ...(t.alt ? [t.alt.reply.text] : [])])] : []),
     ];
     const bad: string[] = [];
     for (const t of spoken) {

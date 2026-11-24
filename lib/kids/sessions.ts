@@ -1,11 +1,12 @@
-/* بَيان (هـ-6-ج) — سجلّ الجلسات التجريبية بترتيب المنهج: البيت (ا) ثم السوق (ب) ثم المدرسة (ت) ثم المدرسة 2 (ت ب) */
+/* بَيان (هـ-6-ج) — سجلّ الجلسات التجريبية بترتيب المنهج: البيت (ا) ثم السوق (ب) ثم المدرسة (ت) ثم المدرسة 2 (ت ب) ثم الحديقة (ث) */
 import type { SessionData } from './types';
 import { BAYT } from './bayt';
 import { SOUQ } from './souq';
 import { MADRASA } from './madrasa';
 import { MADRASA2 } from './madrasa2';
+import { HADIQA } from './hadiqa';
 
-export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2].sort((a, b) => a.meta.order - b.meta.order);
+export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2, HADIQA].sort((a, b) => a.meta.order - b.meta.order);
 export const DEFAULT_SESSION = SESSIONS[0];
 export const getSession = (slug: string | undefined): SessionData | undefined => SESSIONS.find(s => s.slug === slug);
 export const STATIONS = [

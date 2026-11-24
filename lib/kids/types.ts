@@ -39,7 +39,9 @@ export type Game =
   /** نكتشف (الأسبوع 3): «ابحث عن الحرف في بيتك» — أشياء حقيقيّة يحضرها الطفل، بلا كاميرا؛ prompt/done بصوت لؤلؤ */
   | { kind: 'discover'; title: string; img: string; items: SoundItem[]; prompt: Said; done: Said }
   /** نكتشف/عُدّ (الأسبوع 3 ب): مشهد مرسوم بمواقع لمس؛ الطفل يلمس ما يبدأ بحرف اليوم فيُعَدّ بصوت لؤلؤ (nums[0..]) ثمّ يختار العدد */
-  | { kind: 'count'; title: string; img: string; items: (SoundItem & { key: string; box: { x: number; y: number; w: number; h: number } })[]; prompt: Said; ask: Said; nums: Said[]; done: Said; choices: number[] };
+  | { kind: 'count'; title: string; img: string; items: (SoundItem & { key: string; box: { x: number; y: number; w: number; h: number } })[]; prompt: Said; ask: Said; nums: Said[]; done: Said; choices: number[] }
+  /** نلوّن حسب الكلمة (الأسبوع 4): مشهد خطّي + المشهد نفسه ملوّنًا؛ لؤلؤ تقول الكلمة (ask + صوت الكلمة)، الطفل يلمس الشيء في المشهد فيتلوّن (يُكشَف من الصورة الملوّنة) ويُقال ok؛ لمس غيره → near */
+  | { kind: 'paint'; title: string; line: string; color: string; items: { key: string; w: string; audio: string; box: { x: number; y: number; w: number; h: number }; ok: Said }[]; prompt: Said; ask: Said; near: Said; done: Said };
 
 export interface SessionData {
   slug: string;                       // bayt | souq — مجلد الأصول تحت /public/kids/<slug>
@@ -56,7 +58,7 @@ export interface SessionData {
   panels: Panel[];
   storyChoice: { after: number; options: { key: string; text: string; emoji: string }[] };
   harf: {
-    glyph: 'baa' | 'alif' | 'taa'; name: string; hint: string;
+    glyph: 'baa' | 'alif' | 'taa' | 'thaa'; name: string; hint: string;
     activities: HarfActivity[];
     intro: Said;
     words: { w: string; emoji: string; audio: string }[];

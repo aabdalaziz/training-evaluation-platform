@@ -433,7 +433,43 @@ export function Count({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind: 'c
   );
 }
 
+/* ═══════════ ل11) نلوّن حسب الكلمة: لوّن حسب الكلمة (الأسبوع 4) ═══════════
+ * صورتان بالمشهد نفسه: خطّية (أسفل) وملوّنة (أعلى، مقصوصة بـ clip-path على مواقع ما تلوّن). لؤلؤ تقول «لَوِّنِ…» + الكلمة،
+ * الطفل يلمس الشيء → يُكشَف لونه + ok؛ لمس غيره → near. عند اكتمال الأربعة تُكشَف الصورة كلّها → done. */
+export function Paint({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind: 'paint' }>; onDone: () => void }) {
+  const [i, setI] = useState(-1);                       // الكلمة الجارية (-1 قبل البدء)
+  const [done, setDone] = useState<Record<string, boolean>>({});
+  const [shake, setShake] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
+  const cur = i >= 0 ? G.items[i] : null;
+  const ask = (k: number) => { setI(k); const it = G.items[k]; p.luluSay(`${G.ask.text} ${it.w}!`, G.ask.audio, 'point', () => p.play(p.snd(it.audio), p.awaitAnswer)); };
+  useEffect(() => { const t = setTimeout(() => p.luluSay(G.prompt.text, G.prompt.audio, 'wave', () => ask(0)), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const tap = (k: string) => {
+    if (!cur || done[k]) return; p.stopWaiting();
+    if (k !== cur.key) { setShake(k); setTimeout(() => setShake(null), 500); p.luluSay(G.near.text, G.near.audio, 'think', () => p.play(p.snd(cur.audio), p.awaitAnswer)); return; }
+    const nd = { ...done, [k]: true }; setDone(nd);
+    p.luluSay(cur.ok.text, cur.ok.audio, 'cheer', () => {
+      if (i + 1 < G.items.length) ask(i + 1);
+      else { setAll(true); p.luluSay(G.done.text, G.done.audio, 'dance', onDone); }
+    });
+  };
+  const n = Object.keys(done).length;
+  return (
+    <div className="ac ac-paint">
+      <p className="by-speech">{cur ? `${G.ask.text} ${cur.w}!` : G.prompt.text}</p>
+      <div className={`by-scene ac-paint-scene ${all ? 'all' : ''}`}>
+        <img src={p.img(G.line)} alt="" />
+        {all ? <img src={p.img(G.color)} alt="" className="ac-paint-color" />
+          : G.items.filter(it => done[it.key]).map(it => <img key={it.key} src={p.img(G.color)} alt="" className="ac-paint-color" style={{ clipPath: `inset(${it.box.y}% ${100 - it.box.x - it.box.w}% ${100 - it.box.y - it.box.h}% ${it.box.x}%)` }} />)}
+        {G.items.map(it => <button key={it.key} className={`by-spot ac-paint-spot ${done[it.key] ? 'ok' : ''} ${shake === it.key ? 'shake' : ''}`} style={{ left: `${it.box.x}%`, top: `${it.box.y}%`, width: `${it.box.w}%`, height: `${it.box.h}%` }} onClick={() => tap(it.key)} aria-label={it.w}>{done[it.key] && <span className="lbl">{it.w}</span>}</button>)}
+      </div>
+      <Stars n={n} of={G.items.length} />
+    </div>
+  );
+}
+
 export const ACT_CSS = `
+.ac-paint .by-scene{width:100%;max-width:640px}.ac-paint-scene img{width:100%;display:block;border-radius:22px}.ac-paint-color{position:absolute;inset:0;animation:ac-pop .5s ease}@keyframes ac-pop{from{opacity:0;transform:scale(1.02)}to{opacity:1;transform:none}}.ac-paint-spot{border-style:dotted;border-color:rgba(58,31,54,.25)}.ac-paint-spot.ok{border-color:#5EA8A0}
 .ac-count .by-scene{position:relative;width:100%;max-width:640px}.ac-count .by-scene img{width:100%;border-radius:22px;border:3px solid #F1D9A8;display:block}
 .ac-counter{display:flex;gap:10px;font-size:34px;font-weight:800;color:#e9ddd0}.ac-counter .on{color:#E8795C}
 .ac-bigname span[role=button]{cursor:pointer}.ac-bigname span.shake{animation:ac-shake .4s}
