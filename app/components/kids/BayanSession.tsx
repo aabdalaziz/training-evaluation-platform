@@ -9,7 +9,7 @@ import { kidsImg, kidsSnd } from '../../../lib/kids/types';
 import { STATIONS, type StationKey, SESSIONS } from '../../../lib/kids/sessions';
 import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
 import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
-import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, Discover, ColorLetter, Count, Paint, ACT_CSS } from './activities';
+import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, Discover, ColorLetter, Count, Paint, Catch, Draw, ACT_CSS } from './activities';
 import { COMMON } from '../../../lib/kids/common';
 import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled, type TalkOutcome } from './Talk';
 import { BayanIntro } from './BayanIntro';
@@ -104,7 +104,11 @@ export default function BayanSession({ session, child }: { session: SessionData;
   /** غيرها يتكلّم: لؤلؤ تُصغي */
   const speak = useCallback((src: string, onEnd?: () => void) => { if (!quiet) setLstate('listen'); play(src, () => { if (!quiet) setLstate('idle'); onEnd?.(); }); }, [play, quiet]);
 
-  const go = useCallback((n: number) => { stop(); stopWaiting(); setSay(''); setIdx(Math.max(0, Math.min(STATIONS.length - 1, n))); window.scrollTo({ top: 0 }); }, [stop, stopWaiting]);
+  /** طبقة خلفيّة (مؤثّر مثل الأذان من بعيد) تُسمَع تحت الكلام ولا تقطعه؛ تتوقّف عند تغيير المحطّة */
+  const bgRef = useRef<HTMLAudioElement | null>(null);
+  const bg = useCallback((src?: string, vol = 0.5) => { if (bgRef.current) { bgRef.current.pause(); bgRef.current = null; } if (!src) return; try { const a = new Audio(src); a.volume = vol; bgRef.current = a; void a.play().catch(() => {}); } catch { /* ignore */ } }, []);
+  useEffect(() => () => { bgRef.current?.pause(); }, []);
+  const go = useCallback((n: number) => { bg(); stop(); stopWaiting(); setSay(''); setIdx(Math.max(0, Math.min(STATIONS.length - 1, n))); window.scrollTo({ top: 0 }); }, [stop, stopWaiting]);
   const finish = useCallback((k: StationKey) => { doneRef.current[k] = true; setDone(d => ({ ...d, [k]: true })); if (k !== 'hadith' && k !== 'quran') lulu('next', 'cheer', undefined, 'idle'); }, [lulu]);
   const next = useCallback(() => go(idx + 1), [go, idx]);
 
@@ -112,7 +116,7 @@ export default function BayanSession({ session, child }: { session: SessionData;
   useEffect(() => { if (!speaking && lstate === 'talk') setLstate('idle'); }, [speaking, lstate]);
   useEffect(() => () => { if (waitTimer.current) clearTimeout(waitTimer.current); }, []);
 
-  const ctx: Ctx = { S, img, snd, play: speak, lulu, luluSay, awaitAnswer, stopWaiting, next, finish, name, gender, hero, setPose, setLstate, setSay, child, report };
+  const ctx: Ctx = { S, img, snd, play: speak, bg, lulu, luluSay, awaitAnswer, stopWaiting, next, finish, name, gender, hero, setPose, setLstate, setSay, child, report };
   const others = SESSIONS.filter(x => x.slug !== S.slug);
   return (
     <div className="by" dir="rtl" data-station={station} data-session={S.slug} ref={rootRef}>
@@ -149,6 +153,7 @@ type Ctx = {
   S: SessionData;
   img: (n: string) => string; snd: (n: string) => string;
   play: (src: string, onEnd?: () => void, meter?: boolean) => void;
+  bg: (src?: string, vol?: number) => void;
   lulu: (k: LuluKey, p?: LuluPose, onEnd?: () => void, after?: LuluState) => void;
   luluSay: (text: string, audio: string, p?: LuluPose, onEnd?: () => void) => void;
   awaitAnswer: () => void; stopWaiting: () => void;
@@ -177,7 +182,7 @@ function Start(p: Ctx & { setName: (s: string) => void; setGender: (g: 'm' | 'f'
     ANTHEM_AT.forEach((t, i) => timers.current.push(setTimeout(() => { setLine(i); p.setSay(ANTHEM[i]); }, t * 1000)));
   }, [p]);
   useEffect(() => { if (step !== 'anthem') return; sing(); return () => { timers.current.forEach(clearTimeout); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [step]);
-  const start = () => { p.lulu('today', 'dance', () => { p.finish('start'); p.next(); }); };
+  const start = () => { if (S.startSfx) p.bg(p.snd(S.startSfx), 0.45); p.lulu('today', 'dance', () => { p.finish('start'); p.next(); }); };
   return (
     <section className="by-card">
       {step === 'gate' && (
@@ -238,7 +243,7 @@ function Story(p: Ctx) {
     if (l.who === 'لؤلؤ') p.luluSay(l.text, l.audio, 'cheer', after);
     else p.play(p.snd(l.audio), after);
   }, [panel, p]);
-  useEffect(() => { setLi(0); const t = setTimeout(() => playLine(0), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [i]);
+  useEffect(() => { setLi(0); if (panel.sfx) p.bg(p.snd(panel.sfx), 0.5); const t = setTimeout(() => playLine(0), panel.sfx ? 1800 : 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [i]);
   const forward = () => {
     if (panel.n === S.storyChoice.after && !asked) { setAsked(true); p.lulu('question', 'think', p.awaitAnswer); return; }
     if (i + 1 < S.panels.length) setI(i + 1); else { p.finish('story'); p.next(); }
@@ -271,7 +276,8 @@ function Story(p: Ctx) {
 }
 
 /* ───────── 3) حَرْف يرسم ───────── */
-function Glyph({ g }: { g: 'baa' | 'alif' | 'taa' | 'thaa' }) {
+function Glyph({ g }: { g: 'baa' | 'alif' | 'taa' | 'thaa' | 'jeem' }) {
+  if (g === 'jeem') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M62 38 Q118 30 150 46" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M150 46 Q60 70 44 84 Q24 110 60 128 Q110 146 160 110" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="96" cy="102" r="9" fill="#E8795C" /></svg>;
   if (g === 'thaa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="18" r="9" fill="#E8795C" /><circle cx="84" cy="44" r="9" fill="#E8795C" /><circle cx="116" cy="44" r="9" fill="#E8795C" /></svg>;
   if (g === 'taa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="86" cy="38" r="9" fill="#E8795C" /><circle cx="114" cy="38" r="9" fill="#E8795C" /></svg>;
   if (g === 'alif') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M100 26 L100 126" fill="none" stroke="#3A1F36" strokeWidth="16" strokeLinecap="round" /><text x="100" y="22" textAnchor="middle" fontSize="30" fontWeight="700" fill="#E8795C">ء</text></svg>;
@@ -321,7 +327,7 @@ function HarfMorph(p: Ctx & { onDone: () => void }) {
 }
 
 const ACT_NAMES: Record<HarfActivity['kind'], string> = { morph: 'الحرف يتحوّل', trace: 'تتبّع بإصبعك', hear: 'أسمع الصوت', name: 'الحرف في اسمي', color: 'لوّن الحرف' };
-const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ', discover: 'نكتشف', count: 'عُدّ', paint: 'لوّن حسب الكلمة' };
+const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ', discover: 'نكتشف', count: 'عُدّ', paint: 'لوّن حسب الكلمة', catch: 'صيد الكلمة', draw: 'ارسم ما سمعت' };
 function Bar({ items, at }: { items: string[]; at: number }) { return <div className="ac-bar" aria-label="تقدّم النشاط">{items.map((t, i) => <span key={i} className={i === at ? 'on' : i < at ? 'ok' : ''}>{i < at ? '★ ' : ''}{t}</span>)}</div>; }
 
 /** حَرْف يرسم — سلسلة أنشطة من البنك (HARF-PLAY-BANK.md) */
@@ -434,6 +440,8 @@ function GameView({ p, G, onDone }: { p: Ctx; G: Game; onDone: () => void }) {
     case 'discover': return <Discover p={p} G={G} onDone={onDone} />;
     case 'count': return <Count p={p} G={G} onDone={onDone} />;
     case 'paint': return <Paint p={p} G={G} onDone={onDone} />;
+    case 'catch': return <Catch p={p} G={G} onDone={onDone} />;
+    case 'draw': return <Draw p={p} G={G} onDone={onDone} />;
   }
 }
 function Play(p: Ctx) {
@@ -478,7 +486,10 @@ function Act(p: Ctx) {
         <div className="by-role me"><span className="tag">{p.name || 'أَنا'}</span><h3>{me.title}</h3>{me.lines.map(l => <p key={l}>{l}</p>)}</div>
         <div className="by-role you"><span className="tag">ماما / بابا</span><h3>{you.title}</h3>{you.lines.map(l => <p key={l}>{l}</p>)}</div>
       </div>
-      <button className="by-ghost" onClick={() => setSwap(s => !s)}>بَدِّلُوا الْأَدْوارْ 🔁</button>
+      <div className="by-row">
+        {R.model && <button className="by-ghost" onClick={() => p.play(p.snd(R.model!.audio))}>{R.model.label} 🔊</button>}
+        <button className="by-ghost" onClick={() => setSwap(s => !s)}>بَدِّلُوا الْأَدْوارْ 🔁</button>
+      </div>
       <p className="by-parent">💡 لوليّ الأمر: {R.parentTip}</p>
       <nav className="by-nav end"><button className="by-big" onClick={() => { p.finish('act'); p.next(); }}>مَثَّلْنا! إِلى جَدّ سالِم 🕌</button></nav>
     </section>
@@ -567,6 +578,7 @@ function Quran(p: Ctx) {
 function Athari(p: Ctx & { others: SessionData[] }) {
   const { S } = p; const A = S.athari;
   const [self, setSelf] = useState<string | null>(null);
+  const drawings = useMemo(() => { const out: { w: string; src: string }[] = []; for (const g of [...S.games, ...(S.extraGame ? [S.extraGame] : [])]) { if (g.kind !== 'draw') continue; for (const r of g.rounds) { try { const v = localStorage.getItem(`bayan_draw_${S.slug}_${r.key}`); if (v) out.push({ w: r.w, src: v }); } catch { /* ignore */ } } } return out; }, [S]);
   const [talked, setTalked] = useState(!S.talk);
   const [talkReady, setTalkReady] = useState(false);
   const [letterHeard, setLetterHeard] = useState(!S.letter);
@@ -598,6 +610,7 @@ function Athari(p: Ctx & { others: SessionData[] }) {
         <h3>بطاقة وليّ الأمر</h3>
         <p><b>تعلّمنا اليوم:</b> {A.parentCard.learned}</p>
         <p><b>كيف تدعمه:</b></p><ul>{A.parentCard.support.map(s => <li key={s}>{s}</li>)}</ul>
+        {drawings.length > 0 && <div className="by-drawings">{drawings.map(d => <figure key={d.w}><img src={d.src} alt={`رسم الطفل: ${d.w}`} /><figcaption>🖼️ {d.w}</figcaption></figure>)}</div>}
         {B ? (
           <div className="by-bedtime">
             <img src={B.img} alt="" />
@@ -694,6 +707,7 @@ export const BAYAN_CSS = `
 .by-hreview{margin-top:6px}.by-hreview .small{font-size:20px;margin:6px 0 0}.by-hreview .src{font-size:13px;color:#8E7F8A}
 @media (max-width:700px){.by-letter{grid-template-columns:80px 1fr}.by-letter img{width:80px;height:80px}}
 .by-pcard{background:#f6f0f4;border-radius:18px;padding:12px 16px;margin-top:12px;font-size:17px}.by-pcard h3{margin:0 0 6px;color:var(--plum)}.by-pcard ul{margin:4px 0;padding-inline-start:20px}
+.by-drawings{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}.by-drawings figure{margin:0;text-align:center}.by-drawings img{width:140px;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:2px solid var(--sand)}.by-drawings figcaption{font-size:14px;color:var(--plum)}
 .by-lulu{position:fixed;bottom:10px;inset-inline-start:10px;z-index:6;display:flex;align-items:flex-end;gap:8px;pointer-events:none}
 .by-lulu img{width:120px;height:120px;object-fit:cover;border-radius:50%;border:3px solid #fff;box-shadow:0 6px 20px rgba(58,31,54,.18);background:#fff}
 .by-lulu.quiet img{opacity:.55;filter:grayscale(.3)}

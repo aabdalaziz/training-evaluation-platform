@@ -468,7 +468,115 @@ export function Paint({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind: 'p
   );
 }
 
+/* ═══════════ ل12) صَيْدُ الْكَلِمَةْ (الأسبوع 5 — المسجد) ═══════════
+ * فوانيس تصعد ببطء في سماء المشهد؛ على كلّ فانوس صورة وكلمة. الطفل يلمس الفانوس الذي تبدأ كلمته بحرف اليوم:
+ * صحيح → يضيء ويثبت في صفّ «اصطدتُ» ويُقال اسمه؛ خطأ → يهتزّ و«هِمْمْ». بعد صيد الكلّ: جولة «لؤلؤ تخطئ» (تدّعي كلمةً لا تبدأ بالحرف) والطفل يصحّحها بزرّ. */
+export function Catch({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind: 'catch' }>; onDone: () => void }) {
+  const [caught, setCaught] = useState<Record<number, boolean>>({});
+  const [shake, setShake] = useState<number | null>(null);
+  const [phase, setPhase] = useState<'play' | 'lulu' | 'end'>('play');
+  const order = useMemo(() => shuffle(G.items.map((_, i) => i), 11), [G.items]);
+  const need = G.items.filter(it => it.yes).length;
+  const got = Object.keys(caught).length;
+  useEffect(() => { const t = setTimeout(() => p.luluSay(G.prompt.text, G.prompt.audio, 'point', p.awaitAnswer), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const tap = (k: number) => {
+    if (phase !== 'play' || caught[k]) return; p.stopWaiting();
+    const it = G.items[k];
+    if (!it.yes) { setShake(k); setTimeout(() => setShake(null), 500); p.lulu('hmm', 'think', p.awaitAnswer, 'encourage'); return; }
+    const nc = { ...caught, [k]: true }; setCaught(nc);
+    p.play(p.snd(it.audio), () => {
+      if (Object.keys(nc).length < need) { p.lulu('correct', 'cheer', p.awaitAnswer, 'cheer'); return; }
+      setPhase('lulu'); p.luluSay(G.mistake.say.text, G.mistake.say.audio, 'think', p.awaitAnswer);
+    });
+  };
+  const judge = (right: boolean) => {
+    if (phase !== 'lulu') return; p.stopWaiting();
+    if (right) { p.lulu('hmm', 'think', p.awaitAnswer, 'encourage'); return; }   // الطفل وافق لؤلؤ على الخطأ → تلميح
+    setPhase('end'); p.lulu('thanks', 'cheer', onDone, 'cheer');
+  };
+  return (
+    <div className="ac ac-catch">
+      <p className="by-speech">{phase === 'lulu' ? G.mistake.say.text : G.prompt.text} <b>({p.S.meta.letter})</b></p>
+      <Stars n={got} of={need} />
+      <div className="ac-sky" style={{ backgroundImage: `url(${p.img(G.img)})` }} aria-label="سماء المسجد">
+        {order.map((k, slot) => { const it = G.items[k]; const on = !!caught[k]; return (
+          <button key={k} className={`ac-lantern ${on ? 'lit' : ''} ${shake === k ? 'shake' : ''}`} style={{ left: `${6 + (slot % 4) * 23}%`, animationDelay: `${(slot * 1.7) % 9}s`, animationDuration: `${11 + (slot % 3) * 2}s` }} onClick={() => tap(k)} aria-label={it.w} disabled={on}>
+            <span className="em">{it.emoji}</span><b>{it.w}</b>
+          </button>
+        ); })}
+      </div>
+      {phase === 'lulu' && (
+        <div className="by-choices row">
+          <button className="by-opt" onClick={() => judge(false)}>لا يا لُؤْلُؤ… {G.mistake.w} لا تَبْدَأُ بِـ{p.S.meta.letter} ✋</button>
+          <button className="by-opt" onClick={() => judge(true)}>نَعَمْ أَصَبْتِ 👍</button>
+        </div>
+      )}
+      <p className="by-muted">اِلْمِسِ الْفانوسَ الَّذي تَبْدَأُ كَلِمَتُهُ بِحَرْفِ الْيَوْمْ</p>
+    </div>
+  );
+}
+
+/* ═══════════ ر2) اِرْسَمْ ما سَمِعْتْ (الأسبوع 5 — المسجد) ═══════════
+ * لؤلؤ تقول الكلمة (بلا صورة)؛ الطفل يرسم بإصبعه على لوحة (3 ألوان + ممحاة + مسح)؛ «اِنْتَهَيْتْ!» → تُكشَف بطاقة الكلمة بجانب رسمه
+ * ولؤلؤ تحتفي (بلا تقييم آليّ). الرسم يُحفَظ محلّيًّا (localStorage: bayan_draw_<slug>_<key>) ليظهر في بطاقة وليّ الأمر. */
+export function Draw({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind: 'draw' }>; onDone: () => void }) {
+  const COLORS = ['#3A1F36', '#E8795C', '#5EA8A0', '#D9A866'];
+  const cv = useRef<HTMLCanvasElement | null>(null);
+  const [i, setI] = useState(0);
+  const [color, setColor] = useState(COLORS[0]);
+  const [eraser, setEraser] = useState(false);
+  const [reveal, setReveal] = useState(false);
+  const [marks, setMarks] = useState(0);
+  const down = useRef(false); const last = useRef<{ x: number; y: number } | null>(null);
+  const R = G.rounds[i];
+  const clear = () => { const c = cv.current; if (!c) return; const g = c.getContext('2d')!; g.fillStyle = '#FBF4EE'; g.fillRect(0, 0, c.width, c.height); setMarks(0); };
+  const ask = (k: number) => { setI(k); setReveal(false); setEraser(false); setTimeout(clear, 0); const r = G.rounds[k]; p.luluSay(`${G.prompt.text} ${r.w}!`, G.prompt.audio, 'point', () => p.play(p.snd(r.audio), p.awaitAnswer)); };
+  useEffect(() => { clear(); const t = setTimeout(() => ask(0), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const pos = (e: React.PointerEvent) => { const c = cv.current!; const b = c.getBoundingClientRect(); return { x: (e.clientX - b.left) * (c.width / b.width), y: (e.clientY - b.top) * (c.height / b.height) }; };
+  const stroke = (q: { x: number; y: number }) => { const g = cv.current!.getContext('2d')!; g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = eraser ? 34 : 12; g.strokeStyle = eraser ? '#FBF4EE' : color; g.beginPath(); const l = last.current || q; g.moveTo(l.x, l.y); g.lineTo(q.x, q.y); g.stroke(); last.current = q; };
+  const onDown = (e: React.PointerEvent) => { if (reveal) return; down.current = true; last.current = null; stroke(pos(e)); setMarks(m => m + 1); p.stopWaiting(); };
+  const onMove = (e: React.PointerEvent) => { if (!down.current || reveal) return; stroke(pos(e)); };
+  const onUp = () => { down.current = false; last.current = null; };
+  const finish = () => {
+    if (reveal) return; setReveal(true);
+    try { localStorage.setItem(`bayan_draw_${p.S.slug}_${R.key}`, cv.current!.toDataURL('image/jpeg', 0.6)); } catch { /* تخزين ممتلئ — لا يهمّ */ }
+    p.luluSay(R.done.text, R.done.audio, 'cheer', () => { if (i + 1 < G.rounds.length) ask(i + 1); else onDone(); });
+  };
+  return (
+    <div className="ac ac-draw">
+      <p className="by-speech">{reveal ? R.done.text : `${G.prompt.text} ${R.w}!`}</p>
+      <Stars n={i + (reveal ? 1 : 0)} of={G.rounds.length} />
+      <div className={`ac-draw-wrap ${reveal ? 'reveal' : ''}`}>
+        <canvas ref={cv} width={480} height={360} className="ac-canvas" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp} style={{ touchAction: 'none' }} aria-label={`لوحة رسم: ${R.w}`} />
+        {reveal && <figure className="ac-draw-card"><img src={p.img(R.img)} alt={R.w} /><figcaption>{R.w}</figcaption></figure>}
+      </div>
+      {!reveal && (
+        <div className="ac-palette" role="toolbar" aria-label="ألوان">
+          {COLORS.map(c => <button key={c} className={`ac-swatch ${!eraser && color === c ? 'on' : ''}`} style={{ background: c }} onClick={() => { setColor(c); setEraser(false); }} aria-label="لون" />)}
+          <button className={`ac-tool ${eraser ? 'on' : ''}`} onClick={() => setEraser(true)} aria-label="ممحاة">🧽</button>
+          <button className="ac-tool" onClick={clear} aria-label="امسح الكلّ">🗑️</button>
+          <button className="by-big" onClick={finish} disabled={marks === 0}>اِنْتَهَيْتْ! ✅</button>
+        </div>
+      )}
+      <p className="by-muted">{reveal ? 'رَسْمُكَ عَلَى الْيَمينْ… وَبِطاقَةُ لُؤْلُؤ عَلَى الْيَسارْ!' : 'اِرْسُمْ بِإِصْبَعِكَ ما قالَتْهُ لُؤْلُؤ… ثُمَّ اضْغَطْ اِنْتَهَيْتْ'}</p>
+    </div>
+  );
+}
+
 export const ACT_CSS = `
+.ac-sky{position:relative;width:100%;max-width:640px;aspect-ratio:4/3;border-radius:22px;overflow:hidden;background:#2a1a3a center/cover no-repeat;border:3px solid #F1D9A8}
+.ac-lantern{position:absolute;bottom:-30%;width:19%;aspect-ratio:3/4;border:0;border-radius:40% 40% 46% 46%;background:linear-gradient(#f6d58a,#e59a3c);box-shadow:inset 0 -10px 0 rgba(0,0,0,.12),0 6px 18px rgba(0,0,0,.35);display:grid;place-items:center;align-content:center;gap:2px;cursor:pointer;color:#3A1F36;padding:6px 2px;animation:ac-rise linear infinite}
+.ac-lantern .em{font-size:clamp(22px,5vw,38px);line-height:1}.ac-lantern b{font-size:clamp(12px,2.4vw,17px)}
+.ac-lantern.lit{animation-play-state:paused;background:linear-gradient(#fff3c4,#ffc54d);box-shadow:0 0 0 4px #5EA8A0,0 0 30px 10px rgba(255,210,90,.75);transform:scale(1.08)}
+.ac-lantern.shake{animation:ac-rise linear infinite,ac-shake .45s}
+@keyframes ac-rise{from{transform:translateY(0)}to{transform:translateY(-460%)}}
+@media (prefers-reduced-motion:reduce){.ac-lantern{animation:none;bottom:auto;top:calc(12% + var(--i,0)*0%)}}
+.ac-draw-wrap{display:grid;grid-template-columns:1fr;gap:12px;width:100%;max-width:640px;justify-items:center}.ac-draw-wrap.reveal{grid-template-columns:1fr 1fr;align-items:center}
+.ac-canvas{width:100%;max-width:480px;aspect-ratio:4/3;background:#FBF4EE;border:3px dashed #F1D9A8;border-radius:22px;cursor:crosshair}
+.ac-draw-card{margin:0;display:grid;justify-items:center;gap:6px;animation:ac-pop .5s ease}.ac-draw-card img{width:100%;max-width:300px;border-radius:18px;border:3px solid #5EA8A0}.ac-draw-card figcaption{font-size:26px;font-weight:800;color:#3A1F36}
+.ac-palette{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.ac-swatch{width:44px;height:44px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 0 2px #F1D9A8;cursor:pointer}.ac-swatch.on{box-shadow:0 0 0 4px #5EA8A0;transform:scale(1.12)}
+.ac-tool{width:48px;height:48px;border-radius:14px;border:3px solid #F1D9A8;background:#fff;font-size:24px;cursor:pointer}.ac-tool.on{border-color:#5EA8A0;background:#E6F3F1}
 .ac-paint .by-scene{width:100%;max-width:640px}.ac-paint-scene img{width:100%;display:block;border-radius:22px}.ac-paint-color{position:absolute;inset:0;animation:ac-pop .5s ease}@keyframes ac-pop{from{opacity:0;transform:scale(1.02)}to{opacity:1;transform:none}}.ac-paint-spot{border-style:dotted;border-color:rgba(58,31,54,.25)}.ac-paint-spot.ok{border-color:#5EA8A0}
 .ac-count .by-scene{position:relative;width:100%;max-width:640px}.ac-count .by-scene img{width:100%;border-radius:22px;border:3px solid #F1D9A8;display:block}
 .ac-counter{display:flex;gap:10px;font-size:34px;font-weight:800;color:#e9ddd0}.ac-counter .on{color:#E8795C}

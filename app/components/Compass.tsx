@@ -16,7 +16,7 @@ import type { Lang } from '../../lib/portal/content';
 
 export const TOUR_SRC = '/brand/athar-tour.mp4';
 export const TOUR_POSTER = '/brand/athar-tour.jpg';
-export const TOUR_SECONDS = 65;
+export const TOUR_SECONDS = 92; // هـ-6-ج: الفيلم V2 (91.5 ث)
 const TOUR_KEY = 'athar_tour_seen';
 const TOUR_EVENT = 'athar:tour';
 export const RIYADH_TZ = 'Asia/Riyadh';

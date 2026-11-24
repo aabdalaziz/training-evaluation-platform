@@ -30,11 +30,11 @@ test('هـ-5: التوقيت والتاريخ — ساعة الرياض 24 سا�
   const e = nowParts(d, 'en'); assert.match(e.weekday, /Monday/); assert.match(e.hijri, /1448/);
 });
 
-test('هـ-5: الفيديو التعريفي — ملف خفيف (≤ 3 MB) مع صورة غلاف، ودقيقة واحدة', () => {
+test('هـ-5/هـ-6-ج: الفيديو التعريفي V2 — ملف ≤ 8 MB مع صورة غلاف، ودقيقة ونصف', () => {
   const v = path.join(ROOT, 'public', TOUR_SRC); const img = path.join(ROOT, 'public', TOUR_POSTER);
   assert.ok(fs.existsSync(v) && fs.existsSync(img));
-  assert.ok(fs.statSync(v).size < 3 * 1024 * 1024, 'الفيديو أثقل من 3 MB');
-  assert.ok(TOUR_SECONDS >= 60 && TOUR_SECONDS <= 70);
+  assert.ok(fs.statSync(v).size < 8 * 1024 * 1024, 'الفيديو أثقل من 8 MB');
+  assert.ok(TOUR_SECONDS >= 60 && TOUR_SECONDS <= 100);
 });
 
 test('هـ-5: الصدفة تحمل الجولة والساعة في كل صفحة، والواجهة تحمل البوصلة قبل الأبواب', () => {

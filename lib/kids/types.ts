@@ -5,7 +5,7 @@ import type { TalkScript } from './talk';
 export type Speaker = 'لؤلؤ' | 'جدّ سالم' | 'ياسين' | 'أَميرَة' | 'مُحَمَّد' | 'حَرْف' | 'البائع' | 'الرجل' | 'أَبْ' | 'أُمّْ' | 'الْمُعَلِّمَة' | 'أَثير';
 
 export interface Line { who: Speaker; text: string; audio?: string }
-export interface Panel { n: number; lines: Line[] }
+export interface Panel { n: number; lines: Line[]; /** مؤثّر صوتيّ يُشغَّل قبل سطور اللوحة (مثل الأذان من بعيد) */ sfx?: string }
 export interface Said { text: string; audio: string }
 
 export type LuluKey =
@@ -41,7 +41,11 @@ export type Game =
   /** نكتشف/عُدّ (الأسبوع 3 ب): مشهد مرسوم بمواقع لمس؛ الطفل يلمس ما يبدأ بحرف اليوم فيُعَدّ بصوت لؤلؤ (nums[0..]) ثمّ يختار العدد */
   | { kind: 'count'; title: string; img: string; items: (SoundItem & { key: string; box: { x: number; y: number; w: number; h: number } })[]; prompt: Said; ask: Said; nums: Said[]; done: Said; choices: number[] }
   /** نلوّن حسب الكلمة (الأسبوع 4): مشهد خطّي + المشهد نفسه ملوّنًا؛ لؤلؤ تقول الكلمة (ask + صوت الكلمة)، الطفل يلمس الشيء في المشهد فيتلوّن (يُكشَف من الصورة الملوّنة) ويُقال ok؛ لمس غيره → near */
-  | { kind: 'paint'; title: string; line: string; color: string; items: { key: string; w: string; audio: string; box: { x: number; y: number; w: number; h: number }; ok: Said }[]; prompt: Said; ask: Said; near: Said; done: Said };
+  | { kind: 'paint'; title: string; line: string; color: string; items: { key: string; w: string; audio: string; box: { x: number; y: number; w: number; h: number }; ok: Said }[]; prompt: Said; ask: Said; near: Said; done: Said }
+  /** صَيْدُ الْكَلِمَةْ (الأسبوع 5): فوانيس تصعد في سماء المشهد (img خلفيّة)، على كلّ فانوس صورة وكلمة؛ الطفل يصطاد ما يبدأ بحرف اليوم (yes). ثمّ جولة «لؤلؤ تخطئ»: تدّعي أنّ كلمة (mistake.w) تبدأ بالحرف والطفل يصحّح */
+  | { kind: 'catch'; title: string; img: string; items: SoundItem[]; prompt: Said; mistake: { w: string; say: Said } }
+  /** اِرْسَمْ ما سَمِعْتْ (الأسبوع 5): لؤلؤ تقول الكلمة بلا صورة، الطفل يرسم بإصبعه، ثمّ تُكشَف بطاقة الكلمة بجانب رسمه (بلا تقييم آليّ)؛ الرسم يُحفَظ محلّيًّا لبطاقة وليّ الأمر */
+  | { kind: 'draw'; title: string; prompt: Said; rounds: { key: string; w: string; audio: string; img: string; done: Said }[] };
 
 export interface SessionData {
   slug: string;                       // bayt | souq — مجلد الأصول تحت /public/kids/<slug>
@@ -55,10 +59,12 @@ export interface SessionData {
   lulu: Record<LuluKey, Said>;
   /** زرّ الانتقال من النشيد إلى الحكاية («إِلَى السّوقْ! 🧺») */
   goLabel: string;
+  /** مؤثّر يُشغَّل بعد «الْيَوْمَ…» في الافتتاح (الأذان من بعيد) */
+  startSfx?: string;
   panels: Panel[];
   storyChoice: { after: number; options: { key: string; text: string; emoji: string }[] };
   harf: {
-    glyph: 'baa' | 'alif' | 'taa' | 'thaa'; name: string; hint: string;
+    glyph: 'baa' | 'alif' | 'taa' | 'thaa' | 'jeem'; name: string; hint: string;
     activities: HarfActivity[];
     intro: Said;
     words: { w: string; emoji: string; audio: string }[];
@@ -69,7 +75,7 @@ export interface SessionData {
   games: Game[];
   /** لعبة اختيارية بزرّ «لُعْبَةٌ أُخْرى؟» خارج زمن الجلسة */
   extraGame?: Game;
-  roles: { me: { title: string; lines: string[] }; you: { title: string; lines: string[] }; parentTip: string; mePrompt: string };
+  roles: { me: { title: string; lines: string[] }; you: { title: string; lines: string[] }; parentTip: string; mePrompt: string; /** نموذج يسمعه الطفل قبل أن يمثّل (مثل صوت المؤذّن) */ model?: { label: string; audio: string } };
   hadith: {
     story: { who: Speaker; text: string; audio: string };
     text: string; source: string; repeat: { audio: string };
