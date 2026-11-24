@@ -3,7 +3,7 @@
  * كل نشاط مكوّن مستقلّ يعمل لأي جلسة: يأخذ بيانات الجلسة + سياق الصوت/لؤلؤ، وينادي onDone عند الاكتمال.
  * قواعد 4–6: لمس ثم لمس (لا سحب دقيق) · قاعدة واحدة · تغذية راجعة فورية («يا سَلااامْ!» / «قَريبْ!») · ≤ 3 دقائق. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { SessionData, LuluKey, LuluPose, SoundItem, VocabItem, Game } from '../../../lib/kids/types';
+import type { SessionData, LuluKey, LuluPose, SoundItem, VocabItem, Game, HarfActivity } from '../../../lib/kids/types';
 import { COMMON, type CommonKey } from '../../../lib/kids/common';
 import type { LuluState } from './LuluLive';
 
@@ -358,7 +358,86 @@ export function Discover({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind:
   );
 }
 
+/* ═══════════ ح5) نلوّن: لَوِّنِ الحرف (الأسبوع 3 ب) ═══════════
+ * كلمة كبيرة حرفًا حرفًا (كما في «الحرف في اسمي»)؛ الطفل يلمس كلّ حرف يوم فيتلوّن مرجانيًّا. ثلاث كلمات، ثمّ done. */
+export function ColorLetter({ p, A, onDone }: { p: ActCtx; A: Extract<HarfActivity, { kind: 'color' }>; onDone: () => void }) {
+  const L = p.S.meta.letter; const rx = useMemo(() => new RegExp(L === 'ا' ? '[اأإآ]' : L), [L]);
+  const [wi, setWi] = useState(0);
+  const [hit, setHit] = useState<Record<number, boolean>>({});
+  const [shake, setShake] = useState<number | null>(null);
+  const word = A.words[wi];
+  const chars = useMemo(() => Array.from(word.w.match(/.[\u064B-\u0652\u0670]*/g) || []), [word.w]);
+  const targets = chars.map((c, i) => (rx.test(c[0]) ? i : -1)).filter(i => i >= 0);
+  useEffect(() => { const t = setTimeout(() => p.luluSay(A.prompt.text, A.prompt.audio, 'point', () => p.play(p.snd(word.audio))), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { if (wi > 0) p.play(p.snd(word.audio)); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [wi]);
+  const tap = (i: number) => {
+    if (hit[i]) return;
+    if (!targets.includes(i)) { setShake(i); setTimeout(() => setShake(null), 500); p.lulu('tryagain', 'think', undefined, 'encourage'); return; }
+    const nh = { ...hit, [i]: true }; setHit(nh);
+    const doneWord = targets.every(t => nh[t]);
+    if (!doneWord) { p.lulu('yasalam', 'cheer', undefined, 'cheer'); return; }
+    if (wi + 1 < A.words.length) p.lulu('correct', 'cheer', () => { setHit({}); setWi(wi + 1); }, 'cheer');
+    else p.luluSay(A.done.text, A.done.audio, 'dance', onDone);
+  };
+  return (
+    <div className="ac ac-color">
+      <p className="by-speech">{A.prompt.text}</p>
+      <Stars n={wi + (targets.every(t => hit[t]) ? 1 : 0)} of={A.words.length} />
+      <div className="ac-bigname on" dir="rtl">
+        {chars.map((c, i) => <span key={i} className={`${hit[i] ? 'hit' : ''} ${shake === i ? 'shake' : ''}`} onClick={() => tap(i)} role="button" aria-label={c}>{c}</span>)}
+      </div>
+      <button className="by-ghost" onClick={() => p.play(p.snd(word.audio))}>🔊 {word.w}</button>
+      <p className="by-muted">اِلْمِسْ كُلَّ «{L}» في الْكَلِمَةْ · {wi + 1} / {A.words.length}</p>
+    </div>
+  );
+}
+
+/* ═══════════ ل10) نكتشف/عُدّ: عُدَّ ما يبدأ بحرف اليوم في المشهد (الأسبوع 3 ب) ═══════════
+ * مشهد مرسوم بمواقع لمس (٪). لمس شيء يبدأ بالحرف → يُعَدّ بصوت لؤلؤ (nums[n-1]) ويُعلَّم؛ غيره → «قَريبْ!».
+ * عند اكتمال العدّ: سؤال «كَمْ؟» بخيارات أرقام؛ الصحيح = عدد الأشياء الصحيحة → done. */
+export function Count({ p, G, onDone }: { p: ActCtx; G: Extract<Game, { kind: 'count' }>; onDone: () => void }) {
+  const [found, setFound] = useState<Record<string, boolean>>({});
+  const [shake, setShake] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [pick, setPick] = useState<number | null>(null);
+  const total = G.items.filter(i => i.yes).length;
+  const n = Object.keys(found).length;
+  useEffect(() => { const t = setTimeout(() => p.luluSay(G.prompt.text, G.prompt.audio, 'point', p.awaitAnswer), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const tap = (k: string) => {
+    if (asking || found[k]) return; p.stopWaiting();
+    const it = G.items.find(i => i.key === k)!;
+    if (!it.yes) { setShake(k); setTimeout(() => setShake(null), 500); p.luluSay(it.w, it.audio, 'think', () => p.lulu('tryagain', 'think', undefined, 'encourage')); return; }
+    const nf = { ...found, [k]: true }; setFound(nf); const c = Object.keys(nf).length;
+    const num = G.nums[Math.min(c, G.nums.length) - 1];
+    p.luluSay(`${it.w}… ${num.text}`, num.audio, 'cheer', () => { if (c === total) { setAsking(true); p.luluSay(G.ask.text, G.ask.audio, 'think', p.awaitAnswer); } });
+  };
+  const answer = (v: number) => {
+    p.stopWaiting(); setPick(v);
+    if (v === total) p.luluSay(G.done.text, G.done.audio, 'dance', onDone); else p.lulu('hmm', 'think', p.awaitAnswer);
+  };
+  const AR = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return (
+    <div className="ac ac-count">
+      <p className="by-speech">{asking ? G.ask.text : G.prompt.text} <b>({p.S.meta.letter})</b></p>
+      <div className="by-scene">
+        <img src={p.img(G.img)} alt="" />
+        {G.items.map(it => <button key={it.key} className={`by-spot ${found[it.key] ? 'ok' : ''} ${shake === it.key ? 'shake' : ''}`} style={{ left: `${it.box.x}%`, top: `${it.box.y}%`, width: `${it.box.w}%`, height: `${it.box.h}%` }} onClick={() => tap(it.key)} aria-label={it.w}>{found[it.key] && <span className="lbl">{AR[Object.keys(found).indexOf(it.key) + 1]}</span>}</button>)}
+      </div>
+      <div className="ac-counter" aria-live="polite">{Array.from({ length: total }, (_, i) => <span key={i} className={i < n ? 'on' : ''}>{AR[i + 1]}</span>)}</div>
+      {asking && (
+        <div className="by-choices row">
+          {G.choices.map(v => <button key={v} className={`by-opt ${pick === v ? (v === total ? 'good' : 'soft') : ''}`} onClick={() => answer(v)}>{AR[v]}</button>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const ACT_CSS = `
+.ac-count .by-scene{position:relative;width:100%;max-width:640px}.ac-count .by-scene img{width:100%;border-radius:22px;border:3px solid #F1D9A8;display:block}
+.ac-counter{display:flex;gap:10px;font-size:34px;font-weight:800;color:#e9ddd0}.ac-counter .on{color:#E8795C}
+.ac-bigname span[role=button]{cursor:pointer}.ac-bigname span.shake{animation:ac-shake .4s}
+@keyframes ac-shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .ac-discover-img{width:100%;max-width:560px;border-radius:22px;border:3px solid #F1D9A8}
 .ac-find{display:grid;gap:6px;justify-items:center}.ac-found{border:0;border-radius:14px;padding:10px 16px;font-size:18px;font-weight:800;background:#E8795C;color:#fff;cursor:pointer}.ac-found:disabled{background:#5EA8A0;cursor:default}.ac-find.ok .ac-item{border-color:#5EA8A0;background:#E6F3F1}
 .ac{display:grid;gap:12px;justify-items:center}

@@ -9,7 +9,7 @@ import { kidsImg, kidsSnd } from '../../../lib/kids/types';
 import { STATIONS, type StationKey, SESSIONS } from '../../../lib/kids/sessions';
 import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
 import { LuluLive, LULU_CSS, POSE_FOR, type LuluState } from './LuluLive';
-import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, Discover, ACT_CSS } from './activities';
+import { Trace, Hear, NameLetter, Memory, Missing, Listen, Clap, Jump, Basket, Discover, ColorLetter, Count, ACT_CSS } from './activities';
 import { COMMON } from '../../../lib/kids/common';
 import { Talk, TALK_CSS, TALK_RECOG_KEY, talkRecogEnabled, type TalkOutcome } from './Talk';
 import { BayanIntro } from './BayanIntro';
@@ -319,8 +319,8 @@ function HarfMorph(p: Ctx & { onDone: () => void }) {
   );
 }
 
-const ACT_NAMES: Record<HarfActivity['kind'], string> = { morph: 'الحرف يتحوّل', trace: 'تتبّع بإصبعك', hear: 'أسمع الصوت', name: 'الحرف في اسمي' };
-const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ', discover: 'نكتشف' };
+const ACT_NAMES: Record<HarfActivity['kind'], string> = { morph: 'الحرف يتحوّل', trace: 'تتبّع بإصبعك', hear: 'أسمع الصوت', name: 'الحرف في اسمي', color: 'لوّن الحرف' };
+const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ', discover: 'نكتشف', count: 'عُدّ' };
 function Bar({ items, at }: { items: string[]; at: number }) { return <div className="ac-bar" aria-label="تقدّم النشاط">{items.map((t, i) => <span key={i} className={i === at ? 'on' : i < at ? 'ok' : ''}>{i < at ? '★ ' : ''}{t}</span>)}</div>; }
 
 /** حَرْف يرسم — سلسلة أنشطة من البنك (HARF-PLAY-BANK.md) */
@@ -337,6 +337,7 @@ function Harf(p: Ctx) {
       {a.kind === 'trace' && <Trace key={ai} p={p} strokes={a.strokes} onDone={star} />}
       {a.kind === 'hear' && <Hear key={ai} p={p} items={a.items} onDone={onDone} />}
       {a.kind === 'name' && <NameLetter key={ai} p={p} re={a.letterRe} fallback={a.fallback} onDone={onDone} />}
+      {a.kind === 'color' && <ColorLetter key={ai} p={p} A={a} onDone={onDone} />}
       {ai + 1 === acts.length && a.kind !== 'morph' && <p className="by-muted">بَعْدَ هٰذا النَّشاطْ: هَيّا نَلْعَبْ 🎲</p>}
     </section>
   );
@@ -430,6 +431,7 @@ function GameView({ p, G, onDone }: { p: Ctx; G: Game; onDone: () => void }) {
     case 'jump': return <Jump p={p} items={G.items} onDone={onDone} />;
     case 'basket': return <Basket p={p} items={G.items} onDone={onDone} />;
     case 'discover': return <Discover p={p} G={G} onDone={onDone} />;
+    case 'count': return <Count p={p} G={G} onDone={onDone} />;
   }
 }
 function Play(p: Ctx) {
@@ -515,17 +517,26 @@ function Quran(p: Ctx) {
   const [heard, setHeard] = useState<Record<number, boolean>>({});
   const [all, setAll] = useState(false);
   const AYAT = Q.surah?.ayat ?? FATIHA; const SNUM = Q.surah?.num ?? 1; const SNAME = Q.surah?.name ?? 'الْفاتِحَة';
+  const FROM = Q.surah?.from ?? 1; // الجلسة (ب): الآيات السابقة مراجعة مطويّة، والجديد يبدأ من FROM
+  const [review, setReview] = useState(false);
   const count = all ? AYAT.length : Q.newKidsAyat;
+  const shown = all ? AYAT.map((a, i) => ({ a, k: i + 1 })) : AYAT.slice(FROM - 1, FROM - 1 + count).map((a, i) => ({ a, k: FROM + i }));
+  const prev = FROM > 1 && !all ? AYAT.slice(0, FROM - 1).map((a, i) => ({ a, k: i + 1 })) : [];
   useEffect(() => { const t = setTimeout(() => p.play(p.snd(Q.intro.audio)), 400); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   const listen = (k: number) => { setN(k); p.play(ayahUrl(k, SNUM), () => setHeard(h => ({ ...h, [k]: true }))); };
-  const ok = Array.from({ length: count }, (_, i) => i + 1).every(k => heard[k]);
+  const ok = shown.every(x => heard[x.k]);
   return (
     <section className="by-card calm">
       <div className="by-salem"><img src="/kids/lulu/calm.png" alt="" className="by-quietlulu" /><h2 className="by-h2">هَيّا بِنا نَتْلو — سورَةُ {SNAME}</h2></div>
       <p className="by-speech">{Q.intro.text}</p>
+      {prev.length > 0 && (
+        <div className="by-review">
+          <button className="by-ghost" onClick={() => setReview(r => !r)}>{review ? 'أَخْفِ الْمُراجَعَةْ ▴' : `مُراجَعَةْ: الْآياتُ ١–${['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][prev.length] ?? prev.length} ▾`}</button>
+          {review && <div className="by-ayat small">{prev.map(({ a, k }) => <button key={k} className={`by-ayah ${n === k ? 'on' : ''}`} onClick={() => listen(k)}><span className="num">{k}</span><span className="txt">{a}</span><span className="spk">🔊</span></button>)}</div>}
+        </div>
+      )}
       <div className="by-ayat">
-        {AYAT.slice(0, count).map((a, i) => {
-          const k = i + 1;
+        {shown.map(({ a, k }) => {
           return (
             <button key={k} className={`by-ayah ${n === k ? 'on' : ''} ${heard[k] ? 'ok' : ''}`} onClick={() => listen(k)}>
               <span className="num">{k}</span><span className="txt">{a}</span><span className="spk">{heard[k] ? '✅' : '🔊'}</span>
@@ -534,7 +545,7 @@ function Quran(p: Ctx) {
         })}
       </div>
       <div className="by-row">
-        <button className="by-ghost" onClick={() => p.play(p.snd(Q.meaning.audio))}>مَعْنى بِكَلِمَة: {Q.meaning.text}</button>
+        <button className="by-ghost" onClick={() => Q.meaning.ayah ? p.play(ayahUrl(Q.meaning.ayah, SNUM), () => p.play(p.snd(Q.meaning.audio))) : p.play(p.snd(Q.meaning.audio))}>مَعْنى بِكَلِمَة: {Q.meaning.text}</button>
         {!all && <button className="by-ghost" onClick={() => setAll(true)}>أَحْفَظُها كامِلَةً — أَظْهِرِ السّورَة</button>}
       </div>
       <p className="by-parent">🎙️ بعد كل آية: دَوْرُكْ — ردّد الآية بصوتك مع ماما أو بابا (في «المصحف المعلّم» يقرأ الشيخ ثم يردّد الأطفال). التلاوة: {RECITER.name}.</p>
@@ -657,6 +668,7 @@ export const BAYAN_CSS = `
 .by-bubble{background:#fff;border:2px solid var(--sand);border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:19px;max-width:min(60vw,420px);box-shadow:0 6px 20px rgba(58,31,54,.12);line-height:1.7}
 .by-sess{font-size:12px;color:#8E7F8A;margin-inline-start:4px}
 .by-scene{position:relative;border-radius:20px;overflow:hidden;border:3px solid var(--sand);background:#fff}.by-scene>img{width:100%;display:block}
+.by-review{display:grid;gap:8px;justify-items:center;margin-bottom:8px}.by-ayat.small .by-ayah .txt{font-size:22px;opacity:.8}
 .by-spot{position:absolute;border:3px dashed rgba(232,121,92,.55);background:rgba(255,255,255,.04);border-radius:16px;cursor:pointer;display:grid;place-items:end center;padding:4px;color:var(--ink)}
 .by-spot:hover{background:rgba(232,121,92,.12)}.by-spot.ok{border:3px solid var(--sea);background:rgba(94,168,160,.12)}.by-spot.lulu-wrong{border-color:var(--coral);background:rgba(232,121,92,.18)}
 .by-spot .lbl{background:#fff;border:2px solid var(--sand);border-radius:999px;padding:2px 12px;font-size:20px;box-shadow:0 3px 10px rgba(58,31,54,.12)}

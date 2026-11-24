@@ -19,7 +19,9 @@ export type HarfActivity =
   | { kind: 'morph' }
   | { kind: 'trace'; strokes: string[] }
   | { kind: 'hear'; items: SoundItem[] }
-  | { kind: 'name'; letterRe: string; fallback: string };
+  | { kind: 'name'; letterRe: string; fallback: string }
+  /** نلوّن (الأسبوع 3 ب): «لَوِّنِ الحرف» — كلمة كبيرة حرفًا حرفًا، الطفل يلمس كلّ حرف يوم فيتلوّن */
+  | { kind: 'color'; words: { w: string; audio: string }[]; prompt: Said; done: Said };
 
 /** عنصر صوتي عامّ: كلمة + مفتاح صوتها ('common:' = من /kids/common/audio) + هل تبدأ بحرف اليوم */
 export interface SoundItem { w: string; emoji: string; audio: string; yes: boolean }
@@ -35,7 +37,9 @@ export type Game =
   | { kind: 'jump'; title: string; items: SoundItem[] }
   | { kind: 'basket'; title: string; items: SoundItem[] }
   /** نكتشف (الأسبوع 3): «ابحث عن الحرف في بيتك» — أشياء حقيقيّة يحضرها الطفل، بلا كاميرا؛ prompt/done بصوت لؤلؤ */
-  | { kind: 'discover'; title: string; img: string; items: SoundItem[]; prompt: Said; done: Said };
+  | { kind: 'discover'; title: string; img: string; items: SoundItem[]; prompt: Said; done: Said }
+  /** نكتشف/عُدّ (الأسبوع 3 ب): مشهد مرسوم بمواقع لمس؛ الطفل يلمس ما يبدأ بحرف اليوم فيُعَدّ بصوت لؤلؤ (nums[0..]) ثمّ يختار العدد */
+  | { kind: 'count'; title: string; img: string; items: (SoundItem & { key: string; box: { x: number; y: number; w: number; h: number } })[]; prompt: Said; ask: Said; nums: Said[]; done: Said; choices: number[] };
 
 export interface SessionData {
   slug: string;                       // bayt | souq — مجلد الأصول تحت /public/kids/<slug>
@@ -72,7 +76,7 @@ export interface SessionData {
     goodLabel: string;
   };
   /** surah اختياري: بدونه تُعرَض الفاتحة (الجلستان 1–2). مع الأسبوع 3: سورة الناس (114) */
-  quran: { intro: Said; meaning: Said; closing: Said; newKidsAyat: number; surah?: { num: number; name: string; ayat: string[] } };
+  quran: { intro: Said; meaning: Said & { ayah?: number /* يتلو الشيخ هذه الآية أولًا ثم يشرح جدّ سالم — الصوت الصناعي لا يتلو القرآن */ }; closing: Said; newKidsAyat: number; surah?: { num: number; name: string; ayat: string[]; from?: number } };
   /** «حَديثٌ مَعَ لُؤْلُؤ» (ت1) — اختياري حتى تُسجَّل أصوات الجلسة */
   talk?: TalkScript;
   athari: {
