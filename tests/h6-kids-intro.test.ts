@@ -10,12 +10,13 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const exists = (p: string) => fs.existsSync(path.join(ROOT, p));
 
 test('افتتاحية بَيان: (أ) لؤلؤ أوّلًا ثمّ الأصدقاء الأربعة ثمّ جدّ سالم ثمّ المحطّات الخمس ثمّ الوعد — بقاعدة الوقف وبلا نداء مُذكَّر', () => {
-  assert.equal(INTRO_CHILD.length, 5);
+  assert.equal(INTRO_CHILD.length, 6);
   assert.equal(INTRO_CHILD[0].lines[0].who, 'lulu');
-  assert.deepEqual(INTRO_CHILD[1].lines.map(l => l.who), ['athir', 'nour', 'yusuf', 'harf']);
+  assert.deepEqual(INTRO_CHILD[1].lines.map(l => l.who), ['yasin', 'amira', 'muhammad', 'athir', 'harf']);
+  assert.equal(INTRO_CHILD[3].key, 'far'); assert.deepEqual(INTRO_CHILD[3].lines.map(l => l.who), ['salem', 'omar', 'nour', 'yusuf'], 'أحفاد جدّ سالم من بعيد');
   assert.equal(INTRO_CHILD[2].lines[0].who, 'salem');
-  assert.equal(INTRO_CHILD[3].icons!.length, 5); const ats = INTRO_CHILD[3].icons!.map(i => i.at); assert.deepEqual([...ats].sort((a, b) => a - b), ats);
-  assert.equal(INTRO_CHILD[4].img, 'lulu');
+  assert.equal(INTRO_CHILD[4].icons!.length, 5); const ats = INTRO_CHILD[4].icons!.map(i => i.at); assert.deepEqual([...ats].sort((a, b) => a - b), ats);
+  assert.equal(INTRO_CHILD[5].img, 'lulu');
   for (const sc of INTRO_CHILD) for (const l of sc.lines) {
     const t = l.text.replace(/[!؟.…]+$/, '');
     // آخر كلمة قبل الوقف: سكون صريح، أو حرف مدّ، أو ﷺ

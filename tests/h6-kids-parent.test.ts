@@ -56,7 +56,7 @@ test('بَيْتُ بَيان: حمولة التقدّم ترفض أيّ وسا�
 });
 
 test('بَيْتُ بَيان: رسالة لؤلؤ قالبيّة — بلا أرقام طويلة، تحترم إذن النصّ، وتعرف الأسبوع من السبت', () => {
-  const s = [{ world: 'البيت', badge: 'مُرَتِّبُ الْبَيْتْ', homeTask: 'ضَعْ حِذاءَكَ في مَكانِهْ', supportQ: 'أين وجد أَثير حذاءه؟', weekSentence: 'حِذائي في مَكانِهْ' }];
+  const s = [{ world: 'البيت', badge: 'مُرَتِّبُ الْبَيْتْ', homeTask: 'ضَعْ حِذاءَكَ في مَكانِهْ', supportQ: 'أين وجد ياسين حذاءه؟', weekSentence: 'حِذائي في مَكانِهْ' }];
   const withText = luluLetter({ nick: 'ريم', gender: 'f', sessions: s, said: ['حذائي في الدولاب'], talkCount: 1 });
   assert.ok(withText.body.includes('لعبت ريم') && withText.body.includes('«حذائي في الدولاب»') && withText.sentence === 'حِذائي في مَكانِهْ');
   const noText = luluLetter({ nick: 'فهد', gender: 'm', sessions: s, said: [], talkCount: 1 });

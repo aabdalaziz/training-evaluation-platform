@@ -5,8 +5,9 @@
  *  (ب) للوالدين «كيف يصنع بَيان أثرًا» ≈ 3 د بصوت جدّ سالم + نصّ مكتوب + كلمة المؤسّس مكتوبة في الختام.
  *  لا صوت باسم الطفل (نكتبه فقط)؛ النداء الصوتي محايد الجنس بقاعدة الوقف.
  */
-export type IntroSpeaker = 'lulu' | 'salem' | 'athir' | 'nour' | 'yusuf' | 'harf';
-export const INTRO_SPEAKER_AR: Record<IntroSpeaker, string> = { lulu: 'لُؤْلُؤ', salem: 'جَدّ سالِم', athir: 'أَثير', nour: 'نُور', yusuf: 'يُوسُف', harf: 'حَرْف' };
+export type IntroSpeaker = 'lulu' | 'salem' | 'yasin' | 'amira' | 'muhammad' | 'athir' | 'omar' | 'nour' | 'yusuf' | 'harf';
+export const INTRO_SPEAKER_AR: Record<IntroSpeaker, string> = { lulu: 'لُؤْلُؤ', salem: 'جَدّ سالِم', yasin: 'ياسين', amira: 'أَميرَة', muhammad: 'مُحَمَّد', athir: 'أَثير', omar: 'عُمَر', nour: 'نُور', yusuf: 'يُوسُف', harf: 'حَرْف' };
+/** أبطال الحكايات: الإخوة ياسين وأَميرَة ومُحَمَّد، وجارهم أَثير · أحفاد جدّ سالم من بعيد (عُمَر ونُور في أمريكا، يُوسُف في فرنسا) يتعلّمون العربية من بُعد ويتّصلون كلّ أسبوع — قرار المالك 2026-11-24 */
 export type IntroLine = { who: IntroSpeaker; text: string; audio: string; pose?: 'wave' | 'cheer' | 'dance' | 'point' | 'think' | 'calm'; greet?: boolean };
 /** greet: يسبق السطر مقطعُ «أَهْلًا يا (اسم)!» من بنك الأسماء إن وُجد الاسم، وإلّا «أَهْلًا بِكْ!» العامّ (i-a1-hi) */
 export type IntroScene = { key: string; img: string; title?: string; lines: IntroLine[]; icons?: { at: number; icon: string; label: string }[]; written?: string };
@@ -18,12 +19,19 @@ export const introSnd = (n: string) => `/kids/intro/audio/${n}.mp3`;
 export const INTRO_CHILD: IntroScene[] = [
   { key: 'open', img: 'a-1', lines: [{ who: 'lulu', pose: 'wave', greet: true, text: 'أَهْلًا بِكْ! أَنا لُؤْلُؤْ… الْبَبَّغاءُ الَّتي تُحِبُّ الْكَلِماتْ. اِشْتَقْتُ إِلَيْكْ! تَعالَ أُعَرِّفُكَ بِأَصْدِقائي.', audio: 'i-a1-rest' }] },
   { key: 'friends', img: 'a-2', lines: [
-    { who: 'athir', text: 'أَنا أَثيرْ. عُمْري سَبْعُ سَنَواتْ، وَأُحِبُّ الدَّرّاجاتْ!', audio: 'i-a2-athir' },
-    { who: 'nour', text: 'وَأَنا نُورْ. أُحِبُّ أَنْ أُفَكِّرْ… وَأَسْأَلْ: لِماذا؟', audio: 'i-a2-nour' },
-    { who: 'yusuf', text: 'أَنا يُوسُفْ، جارُكُمُ الْجَديدْ. أَتَعَلَّمُ الْعَرَبِيَّةَ مَعَكُمْ!', audio: 'i-a2-yusuf' },
+    { who: 'yasin', text: 'أَنا ياسينْ. أُحِبُّ الْجَرْيَ وَاللَّعِبْ… وَأُحِبُّ أَنْ أَكونَ الْأَوَّلْ!', audio: 'i-a2-yasin' },
+    { who: 'amira', text: 'وَأَنا أَميرَةْ. أُحِبُّ التَّرْتيبْ… وَأُساعِدُ أَصْدِقائي.', audio: 'i-a2-amira' },
+    { who: 'muhammad', text: 'أَنا مُحَمَّدْ، أَخوهُما. أُحِبُّ الْكُتُبْ… وَأَتَعَلَّمُ مَعَكُمْ!', audio: 'i-a2-muhammad' },
+    { who: 'athir', text: 'وَأَنا أَثيرْ، جارُهُمْ. عُمْري سَبْعُ سَنَواتْ، وَأُحِبُّ الدَّرّاجاتْ!', audio: 'i-a2-athir' },
     { who: 'harf', text: 'وَأَنا حَرْفْ، الْقَلَمُ الظَّريفْ! أَرْسُمُ الْحُروفَ وَأَقْفِزْ!', audio: 'i-a2-harf' },
   ] },
   { key: 'tree', img: 'a-3', lines: [{ who: 'salem', text: 'أَهْلًا يا صِغاري، أَنا جَدُّ سالِمْ. اُنْظُروا إِلى هذِهِ الشَّجَرَةْ: شَجَرَةُ أَثَرْ. تَبْدَأُ بَذْرَةً صَغيرَةْ… ثُمَّ بُرْعُمًا… ثُمَّ غُصْنًا أَخْضَرْ. كُلَّ يَوْمٍ نَزْرَعُ كَلِمَةْ، وَفي النِّهايَةِ تَكْبُرُ شَجَرَتُكُمْ!', audio: 'i-a3-salem' }] },
+  { key: 'far', img: 'a-6', lines: [
+    { who: 'salem', pose: 'calm', text: 'وَهٰؤُلاءِ أَحْفادي… يَعيشونَ بَعيدًا، وَيَتَعَلَّمونَ الْعَرَبِيَّةَ مِثْلَكُمْ، وَيَتَّصِلونَ بِنا كُلَّ أُسْبوعْ! عُمَرْ وَنورْ في أَمْريكا… وَيوسُفْ في فَرَنْسا.', audio: 'i-a6-salem' },
+    { who: 'omar', text: 'أَنا عُمَرْ. أَعيشُ في أَمْريكا مَعَ أُخْتي نورْ… وَأُحِبُّ كُرَةَ الْقَدَمْ!', audio: 'i-a6-omar' },
+    { who: 'nour', text: 'وَأَنا نورْ. أُحِبُّ أَنْ أُفَكِّرْ… وَأَسْأَلْ: لِماذا؟', audio: 'i-a2-nour' },
+    { who: 'yusuf', text: 'أَنا يوسُفْ، مِنْ فَرَنْسا. أَتَعَلَّمُ الْعَرَبِيَّةَ مَعَكُمْ!', audio: 'i-a2-yusuf' },
+  ] },
   { key: 'stations', img: 'a-4', lines: [{ who: 'lulu', pose: 'point', text: 'وَفي كُلِّ مَرَّةٍ نَفْعَلُ خَمْسَةَ أَشْياءْ: نَسْمَعُ حِكايَةْ… وَنَرْسُمُ حَرْفًا مَعَ حَرْفْ… وَنَلْعَبْ… وَنَسْمَعُ كَلامَ النَّبِيِّ مُحَمَّدْ ﷺ… وَفي الْخِتامِ دائِمًا، نَقْرَأُ الْقُرْآنَ مَعَ الشَّيْخْ!', audio: 'i-a4-lulu' }],
     // أزمنة إضاءة الأيقونات مقيسة من الملف الناتج (silencedetect)
     icons: [{ at: 3.9, icon: '📖', label: 'حِكايَة' }, { at: 5.8, icon: '✏️', label: 'حَرْف' }, { at: 8.3, icon: '🧺', label: 'نَلْعَب' }, { at: 9.6, icon: '🕌', label: 'حَديث' }, { at: 14.4, icon: '📗', label: 'نَتْلو' }] },

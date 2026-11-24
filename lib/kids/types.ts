@@ -2,7 +2,7 @@ import type { TalkScript } from './talk';
 /* بَيان (هـ-6-ج) — نموذج بيانات الجلسة الموحّد. كل جلسة (البيت، السوق، …) ملف بيانات يملأ هذا الشكل،
  * ومحرّك BayanSession يعرضه. كل النصوص المنطوقة وفق «قاعدة الوقف» (kids/bible/voices.md). */
 
-export type Speaker = 'لؤلؤ' | 'جدّ سالم' | 'أَثير' | 'نُور' | 'يُوسُف' | 'حَرْف' | 'البائع' | 'الرجل' | 'أَبْ' | 'أُمّْ' | 'الْمُعَلِّمَة';
+export type Speaker = 'لؤلؤ' | 'جدّ سالم' | 'ياسين' | 'أَميرَة' | 'مُحَمَّد' | 'حَرْف' | 'البائع' | 'الرجل' | 'أَبْ' | 'أُمّْ' | 'الْمُعَلِّمَة';
 
 export interface Line { who: Speaker; text: string; audio?: string }
 export interface Panel { n: number; lines: Line[] }
