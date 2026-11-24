@@ -1,4 +1,4 @@
-/* بَيان (هـ-6-ج) — سجلّ الجلسات التجريبية بترتيب المنهج: البيت (ا) ثم السوق (ب) ثم المدرسة (ت) ثم المدرسة 2 (ت ب) ثم الحديقة (ث) ثم المسجد (ج) */
+/* بَيان (هـ-6-ج) — سجلّ الجلسات التجريبية بترتيب المنهج: البيت (ا) ثم السوق (ب) ثم المدرسة (ت) ثم المدرسة 2 (ت ب) ثم الحديقة (ث) ثم المسجد (ج) والمسجد ب */
 import type { SessionData } from './types';
 import { BAYT } from './bayt';
 import { SOUQ } from './souq';
@@ -7,8 +7,9 @@ import { MADRASA2 } from './madrasa2';
 import { HADIQA } from './hadiqa';
 import { HADIQA2 } from './hadiqa2';
 import { MASJID } from './masjid';
+import { MASJID2 } from './masjid2';
 
-export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2, HADIQA, HADIQA2, MASJID].sort((a, b) => a.meta.order - b.meta.order);
+export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2, HADIQA, HADIQA2, MASJID, MASJID2].sort((a, b) => a.meta.order - b.meta.order);
 export const DEFAULT_SESSION = SESSIONS[0];
 export const getSession = (slug: string | undefined): SessionData | undefined => SESSIONS.find(s => s.slug === slug);
 export const STATIONS = [

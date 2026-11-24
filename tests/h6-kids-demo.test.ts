@@ -13,7 +13,7 @@ const ROOT = path.join(__dirname, '..');
 const exists = (p: string) => fs.existsSync(path.join(ROOT, 'public', p));
 
 test('هـ-6: سجلّ الجلسات — البيت (ا) أولًا ثم السوق (ب) · 8 محطّات · الفاتحة 7 آيات · المصحف المعلّم', () => {
-  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2', 'hadiqa', 'hadiqa2', 'masjid']);
+  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2', 'hadiqa', 'hadiqa2', 'masjid', 'masjid2']);
   assert.equal(DEFAULT_SESSION.slug, 'bayt');
   assert.equal(getSession('souq')?.meta.letter, 'ب'); assert.equal(getSession('bayt')?.meta.letter, 'ا');
   assert.equal(getSession('bayt')?.meta.value, 'النظام'); assert.equal(getSession('souq')?.meta.value, 'الأمانة');
@@ -36,6 +36,10 @@ test('هـ-6: سجلّ الجلسات — البيت (ا) أولًا ثم الس
   assert.ok(M7.panels.some(p => p.lines.some(l => l.who === 'أَبْ')), 'الأب يتكلّم في المسجد');
   const CT = M7.games.find(g => g.kind === 'catch'); assert.ok(CT && CT.kind === 'catch'); if (CT && CT.kind === 'catch') { assert.equal(CT.items.filter(i => i.yes).length, 4); assert.ok(CT.items.filter(i => !i.yes).some(i => i.w === CT.mistake.w), 'كلمة خطأ لؤلؤ من الفوانيس الخاطئة'); CT.items.filter(i => i.yes).forEach(i => assert.ok(i.w.startsWith('ج'), i.w)); }
   const DR = M7.games.find(g => g.kind === 'draw'); assert.ok(DR && DR.kind === 'draw'); if (DR && DR.kind === 'draw') { const vk = new Set(M7.vocab.map(v => v.key)); DR.rounds.forEach(r => assert.ok(vk.has(r.key), r.key)); assert.equal(DR.rounds.length, 2); }
+  const M8 = getSession('masjid2')!; assert.equal(M8.meta.order, 8); assert.equal(M8.meta.part, 'ب'); assert.equal(M8.quran.surah?.from, 3); assert.equal(M8.quran.meaning.ayah, 4); assert.equal(M8.quran.newKidsAyat, 2);
+  assert.ok(M8.hadith.review && M8.hadith.review.text === 'الصَّلاةُ نورْ' && M8.letter && M8.letter.from === 'يُوسُف', 'تسميع الصَّلاةُ نورْ + رسالة يُوسُف');
+  assert.ok(M8.panels.some(p => p.lines.some(l => l.who === 'الْإِمامْ')) && M8.roles.model, 'الإمام يتكلّم + زرّ اسمع الإمام');
+  const CL = M8.harf.activities.find(a => a.kind === 'color'); assert.ok(CL && CL.kind === 'color' && CL.words.some(w => (w.w.match(/ج/g) || []).length === 2), 'كلمة فيها جيمان (دَجاجَةْ)');
   const C = M2.games.find(g => g.kind === 'count'); if (C && C.kind === 'count') { assert.ok(C.choices.includes(C.items.filter(i => i.yes).length)); assert.ok(C.nums.length >= C.items.filter(i => i.yes).length); C.items.forEach(h => assert.ok(h.box.x >= 0 && h.box.x + h.box.w <= 100 && h.box.y >= 0 && h.box.y + h.box.h <= 100, h.key)); }
 });
 
