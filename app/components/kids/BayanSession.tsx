@@ -490,6 +490,7 @@ function Hadith(p: Ctx) {
   const { S } = p; const H = S.hadith;
   const [rep, setRep] = useState(0);
   const [ans, setAns] = useState<string | null>(null);
+  const [rev, setRev] = useState(false);
   useEffect(() => { const t = setTimeout(() => p.play(p.snd(H.story.audio)), 400); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   const repeat = () => { p.play(p.snd(H.repeat.audio)); setRep(r => Math.min(3, r + 1)); };
   const opt = H.options.find(o => o.key === ans);
@@ -501,6 +502,12 @@ function Hadith(p: Ctx) {
         <p className="txt">«{H.text}»</p><p className="src">{H.source}</p>
         <button className="by-big" onClick={repeat}>رَدِّدْ مَعي 🔊 {rep > 0 && <small>{'⭐'.repeat(rep)}</small>}</button>
       </div>
+      {H.review && (
+        <div className="by-review by-hreview">
+          <button className="by-ghost" onClick={() => { setRev(true); p.play(p.snd(H.review!.intro.audio), () => p.play(p.snd(H.review!.audio))); }}>🔁 حَديثُ الْأُسْبوعِ الْماضي</button>
+          {rev && <p className="txt small">«{H.review.text}» <span className="src">{H.review.source}</span></p>}
+        </div>
+      )}
       <button className="by-speech by-speech-btn" onClick={() => p.play(p.snd(H.lesson.audio))}>{H.lesson.text} 🔊</button>
       <div className="by-choices">
         <button className="by-q by-speech-btn" onClick={() => p.play(p.snd(H.question.audio))}>{H.question.text} 🔊</button>
@@ -562,12 +569,24 @@ function Athari(p: Ctx & { others: SessionData[] }) {
   const [self, setSelf] = useState<string | null>(null);
   const [talked, setTalked] = useState(!S.talk);
   const [talkReady, setTalkReady] = useState(false);
+  const [letterHeard, setLetterHeard] = useState(!S.letter);
+  const B = typeof A.bedtime === 'string' ? null : A.bedtime;
   useEffect(() => { const t = setTimeout(() => p.lulu('athari', 'dance', () => setTalkReady(true), 'dance'), 400); if (p.child) p.report({ stations: { athari: true } }); else { try { localStorage.setItem(`bayan_demo_done_${S.slug}`, new Date().toISOString()); } catch { /* ignore */ } } return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   return (
     <section className="by-card">
       <div className="by-badge"><img src={p.img(S.meta.badge.img)} alt="" /><h1 className="by-huge">شارَةُ «{S.meta.badge.title}»</h1><p className="by-sub">مُبارَكْ يا {p.name || p.hero}!</p></div>
       <ul className="by-summary">{A.summary.map(s => <li key={s}>🌱 {s}</li>)}</ul>
-      {S.talk && !talked && talkReady && <div className="by-talk"><Talk p={p} T={S.talk} recogAllowed={p.child ? p.child.consents.speech_recog : undefined} onDone={o => { setTalked(true); if (o && o.results.length) p.report({ talk: o.results, selfVoice: o.selfVoice }); window.scrollTo({ top: 0 }); }} /></div>}
+      {S.letter && talkReady && !talked && (
+        <div className="by-mail">
+          <img src={S.letter.img} alt="" />
+          <div>
+            <h3>📬 رِسالَةٌ مِنْ بَعيدْ — مِنْ {S.letter.from}</h3>
+            <button className="by-big" onClick={() => { setLetterHeard(false); let done = false; const ok = () => { if (!done) { done = true; setLetterHeard(true); } }; p.play(p.snd(S.letter!.audio), ok); setTimeout(ok, 20000); }}>{S.letter.button}</button>
+            <p className="by-muted">{S.letter.text}</p>
+          </div>
+        </div>
+      )}
+      {S.talk && !talked && talkReady && letterHeard && <div className="by-talk"><Talk p={p} T={S.talk} recogAllowed={p.child ? p.child.consents.speech_recog : undefined} onDone={o => { setTalked(true); if (o && o.results.length) p.report({ talk: o.results, selfVoice: o.selfVoice }); window.scrollTo({ top: 0 }); }} /></div>}
       {talked && <>
       <div className="by-self">
         <p className="by-q">{A.selfCheck.q}</p>
@@ -579,7 +598,13 @@ function Athari(p: Ctx & { others: SessionData[] }) {
         <h3>بطاقة وليّ الأمر</h3>
         <p><b>تعلّمنا اليوم:</b> {A.parentCard.learned}</p>
         <p><b>كيف تدعمه:</b></p><ul>{A.parentCard.support.map(s => <li key={s}>{s}</li>)}</ul>
-        <p className="by-muted">🌙 {A.bedtime}</p>
+        {B ? (
+          <div className="by-bedtime">
+            <img src={B.img} alt="" />
+            <div><h3>🌙 قِصَّةُ اللَّيْلَةْ: «{B.title}»</h3><p className="by-muted">بصوت جدّ سالم · {B.minutes} دقائق · للاستماع في الفراش</p>
+              <audio controls preload="none" src={B.audio} style={{ width: '100%' }} /></div>
+          </div>
+        ) : <p className="by-muted">🌙 {String(A.bedtime)}</p>}
       </div>
       </>}
       <nav className="by-nav end">
@@ -663,6 +688,10 @@ export const BAYAN_CSS = `
 .by-self{background:#E6F3F1;border-radius:18px;padding:12px 16px;margin-bottom:12px;text-align:center}
 .by-face{display:grid;justify-items:center;gap:4px;font-size:18px;border:2px solid var(--sand);background:#fff;border-radius:18px;padding:10px 18px;cursor:pointer;color:var(--ink);min-width:120px}.by-face span{font-size:36px}.by-face.on{border-color:var(--sea);background:#fff}
 .by-task{background:#fff8ea;border-radius:18px;padding:12px 16px;border:2px solid var(--sand)}.by-task h3{margin:0 0 6px;color:var(--plum)}
+.by-mail{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;background:#fff;border:3px solid var(--sand);border-radius:22px;padding:14px;margin:8px 0}.by-mail img{width:120px;height:120px;object-fit:cover;border-radius:50%;border:3px solid var(--sky)}.by-mail h3{margin:0 0 8px;color:var(--plum)}
+.by-bedtime{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;margin-top:10px}.by-bedtime img{width:96px;height:96px;object-fit:cover;border-radius:16px}.by-bedtime h3{margin:0 0 4px;color:var(--plum);font-size:17px}
+.by-hreview{margin-top:6px}.by-hreview .small{font-size:20px;margin:6px 0 0}.by-hreview .src{font-size:13px;color:#8E7F8A}
+@media (max-width:700px){.by-letter{grid-template-columns:80px 1fr}.by-letter img{width:80px;height:80px}}
 .by-pcard{background:#f6f0f4;border-radius:18px;padding:12px 16px;margin-top:12px;font-size:17px}.by-pcard h3{margin:0 0 6px;color:var(--plum)}.by-pcard ul{margin:4px 0;padding-inline-start:20px}
 .by-lulu{position:fixed;bottom:10px;inset-inline-start:10px;z-index:6;display:flex;align-items:flex-end;gap:8px;pointer-events:none}
 .by-lulu img{width:120px;height:120px;object-fit:cover;border-radius:50%;border:3px solid #fff;box-shadow:0 6px 20px rgba(58,31,54,.18);background:#fff}

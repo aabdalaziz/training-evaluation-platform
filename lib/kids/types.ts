@@ -2,7 +2,7 @@ import type { TalkScript } from './talk';
 /* بَيان (هـ-6-ج) — نموذج بيانات الجلسة الموحّد. كل جلسة (البيت، السوق، …) ملف بيانات يملأ هذا الشكل،
  * ومحرّك BayanSession يعرضه. كل النصوص المنطوقة وفق «قاعدة الوقف» (kids/bible/voices.md). */
 
-export type Speaker = 'لؤلؤ' | 'جدّ سالم' | 'ياسين' | 'أَميرَة' | 'مُحَمَّد' | 'حَرْف' | 'البائع' | 'الرجل' | 'أَبْ' | 'أُمّْ' | 'الْمُعَلِّمَة';
+export type Speaker = 'لؤلؤ' | 'جدّ سالم' | 'ياسين' | 'أَميرَة' | 'مُحَمَّد' | 'حَرْف' | 'البائع' | 'الرجل' | 'أَبْ' | 'أُمّْ' | 'الْمُعَلِّمَة' | 'أَثير';
 
 export interface Line { who: Speaker; text: string; audio?: string }
 export interface Panel { n: number; lines: Line[] }
@@ -76,7 +76,11 @@ export interface SessionData {
     lesson: Said; question: Said;
     options: { key: string; text: string; emoji: string; good: boolean; reply: string }[];
     goodLabel: string;
+    /** مراجعة مطويّة (الجلسة ب): حديث الأسبوع الماضي — جدّ سالم يقدّمه ثمّ يُردَّد مرّة بصوته المسجَّل (audio قد يكون مسارًا مطلقًا من مجلّد الجلسة السابقة) */
+    review?: { text: string; source: string; intro: Said; audio: string };
   };
+  /** «رِسالَةٌ مِنْ بَعيدْ» 📬 (المرحلة ج من خطّة الأحفاد): مقطع من أحد أحفاد جدّ سالم في «أثري اليوم» قبل «حديث مع لؤلؤ» */
+  letter?: { from: string; img: string; text: string; audio: string; button: string };
   /** surah اختياري: بدونه تُعرَض الفاتحة (الجلستان 1–2). مع الأسبوع 3: سورة الناس (114) */
   quran: { intro: Said; meaning: Said & { ayah?: number /* يتلو الشيخ هذه الآية أولًا ثم يشرح جدّ سالم — الصوت الصناعي لا يتلو القرآن */ }; closing: Said; newKidsAyat: number; surah?: { num: number; name: string; ayat: string[]; from?: number } };
   /** «حَديثٌ مَعَ لُؤْلُؤ» (ت1) — اختياري حتى تُسجَّل أصوات الجلسة */
@@ -84,7 +88,8 @@ export interface SessionData {
   athari: {
     summary: string[]; homeTask: string;
     parentCard: { learned: string; support: string[] };
-    bedtime: string;
+    /** قصّة قبل النوم: نصّ (قريبًا) أو كائن قابل للتشغيل 🌙 (/kids/bedtime/<file>) */
+    bedtime: string | { title: string; audio: string; img: string; minutes: number };
     selfCheck: { q: string; options: { key: string; emoji: string; text: string }[] };
   };
 }
