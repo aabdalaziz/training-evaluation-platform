@@ -158,7 +158,7 @@ export const HADIQA2: SessionData = {
       learned: 'الثاء في الكلمات (أوّل/وسط/آخر) · كلمات (درّاجة، فراشة، نملة، عصفور) · حديث «الطُّهور شطر الإيمان» ومراجعة «إماطة الأذى» · سورة الفلق كاملة · رسالة من عُمَر',
       support: ['اسأله: «لماذا غسل الأصدقاء أيديهم؟»', 'اجعلا غسل اليدين عدًّا: ثَلاثَةْ… اِثْنانْ… واحِدْ', 'ردّدا سورة الفلق كاملة قبل النوم'],
     },
-    bedtime: { title: 'سَلَّةُ الْمُهْمَلات', audio: '/kids/bedtime/salla.mp3', img: '/kids/bedtime/salla.jpg', minutes: 4 },
+    bedtime: { title: 'سَلَّةُ الْمُهْمَلات', audio: '/kids/bedtime/salla.mp3', img: '/kids/bedtime/salla.jpg', minutes: 4, video: '/kids/films/bayan-bedtime-salla.mp4' },
     selfCheck: { q: 'كَيْفَ كانَ أَدائي الْيَوْمْ؟', options: [{ key: 'easy', emoji: '😄', text: 'سَهْلْ!' }, { key: 'good', emoji: '🙂', text: 'جَيِّدْ' }, { key: 'help', emoji: '🤔', text: 'أَحْتاجُ مُساعَدَةْ' }] },
   },
 };

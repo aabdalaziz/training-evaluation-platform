@@ -56,6 +56,10 @@
     - **Not «تقليدي».** The owner rejects dashboards/tables/reports as the shape of new features. Build experiences (story chapters, rooms, mirrors, councils, letters to one's future self); official terminology stays in admin/contract surfaces.
     - **Every interaction accepts text, voice or video** through the single `Channel` component (`app/components/Channel.tsx`, media in `portal_media`).
 
+11. **Smallest complete change (owner-adopted 2026-11-24, after the «ponytail» discipline).** Before writing: list every place the change must reach (callers, tests, fixtures, data). Then take the first option that fully works — reuse a house helper/component → platform built-in → an installed dependency → the minimum new code. No abstraction, option, wrapper or «for later» code nobody asked for. Never cut: validation at trust boundaries, error handling, RLS/security, accessibility, anything the owner asked for. New non-trivial logic ships with one small test. End each delivery with one line: what was skipped or not checked, and any risk the owner must know.
+12. **Third-party agent skills, plugins and MCP servers are read, never installed** into this repository. Anything the owner wants to adopt is scanned first with NVIDIA SkillSpector (`docs/security/SKILLSPECTOR-AR.md`) and its principles are transcribed into our own `.agents/skills/*`. House skills are re-scanned after every edit (same doc).
+13. **No third-party «free LLM» aggregators or personal-use API gateways** (e.g. freellmapi-style routers) in production: children's and learners' data, provider ToS («personal experimentation only») and reliability forbid it. AI goes only through `callWithFallback`/`runAi` with the owner's own keys.
+
 ## 3. Map of the code
 | Area | Path | Notes |
 |---|---|---|

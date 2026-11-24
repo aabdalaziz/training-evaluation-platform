@@ -602,7 +602,8 @@ function Athari(p: Ctx & { others: SessionData[] }) {
           <div className="by-bedtime">
             <img src={B.img} alt="" />
             <div><h3>🌙 قِصَّةُ اللَّيْلَةْ: «{B.title}»</h3><p className="by-muted">بصوت جدّ سالم · {B.minutes} دقائق · للاستماع في الفراش</p>
-              <audio controls preload="none" src={B.audio} style={{ width: '100%' }} /></div>
+              <audio controls preload="none" src={B.audio} style={{ width: '100%' }} />
+              {B.video && <a className="by-ghost" href={B.video} target="_blank" rel="noopener" style={{ display: 'inline-block', marginTop: 6 }}>🎬 شاهِدْها فيديو — للمشاركة مع الأسرة</a>}</div>
           </div>
         ) : <p className="by-muted">🌙 {String(A.bedtime)}</p>}
       </div>
@@ -706,5 +707,19 @@ export const BAYAN_CSS = `
 .by-spot.shake{animation:by-shake .45s}
 .by-speech-btn{background:none;border:0;cursor:pointer;font-family:inherit;width:100%}
 @media (max-width:700px){.by{font-size:18px}.by-spot .lbl{font-size:14px;padding:0 8px}.by-vocab,.by-pics{grid-template-columns:repeat(2,1fr)}.by-roles{grid-template-columns:1fr}.by-stations .tt{display:none}.by-lulu img{width:84px;height:84px}.by-bubble{font-size:16px;max-width:66vw}.by-ayah{font-size:24px}.by-hadith .txt{font-size:26px}}
-@media (prefers-reduced-motion:reduce){.by *{animation:none!important}}
+/* ── لمسات حركة (2026-11-24، من روح 60fps: قصيرة · هادئة · لها معنى) ── */
+@keyframes by-enter{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+@keyframes by-pop{0%{opacity:0;transform:scale(.86)}70%{transform:scale(1.04)}100%{opacity:1;transform:none}}
+@keyframes by-reveal{0%{opacity:0;transform:scale(.5) rotate(-10deg)}60%{opacity:1;transform:scale(1.08) rotate(3deg)}100%{transform:none}}
+@keyframes by-okpop{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes by-twinkle{0%,100%{opacity:.35;transform:scale(.9)}50%{opacity:1;transform:scale(1.15)}}
+.by-card{animation:by-enter .22s cubic-bezier(.2,.8,.2,1) both}
+.by-vcard,.by-pic{animation:by-pop .32s cubic-bezier(.2,.8,.2,1) both;transition:transform .15s ease,box-shadow .15s ease}
+.by-vcard:nth-child(2),.by-pic:nth-child(2){animation-delay:.05s}.by-vcard:nth-child(3),.by-pic:nth-child(3){animation-delay:.1s}.by-vcard:nth-child(4),.by-pic:nth-child(4){animation-delay:.15s}.by-vcard:nth-child(5),.by-pic:nth-child(5){animation-delay:.2s}.by-vcard:nth-child(6),.by-pic:nth-child(6){animation-delay:.25s}.by-vcard:nth-child(n+7),.by-pic:nth-child(n+7){animation-delay:.3s}
+@media (hover:hover){.by-vcard:hover,.by-pic:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(58,31,54,.10)}}
+.by-vcard.ok,.by-pic.ok,.by-spot.ok{animation:by-okpop .35s ease}
+.by-badge img{animation:by-reveal .9s cubic-bezier(.2,.8,.2,1) both,by-bob 2s ease-in-out .9s infinite}
+.by-big{transition:transform .08s ease,box-shadow .08s ease}.by-big:active{transform:translateY(3px);box-shadow:0 3px 0 #b9544a}
+.by-bedtime h3::before{content:'✦ ';color:#C9A227;display:inline-block;animation:by-twinkle 2.2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.by *{animation:none!important;transition:none!important}}
 `;

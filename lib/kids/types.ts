@@ -89,7 +89,7 @@ export interface SessionData {
     summary: string[]; homeTask: string;
     parentCard: { learned: string; support: string[] };
     /** قصّة قبل النوم: نصّ (قريبًا) أو كائن قابل للتشغيل 🌙 (/kids/bedtime/<file>) */
-    bedtime: string | { title: string; audio: string; img: string; minutes: number };
+    bedtime: string | { title: string; audio: string; img: string; minutes: number; video?: string };
     selfCheck: { q: string; options: { key: string; emoji: string; text: string }[] };
   };
 }

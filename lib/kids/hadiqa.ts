@@ -155,7 +155,7 @@ export const HADIQA: SessionData = {
       learned: 'حرف الثاء (ثلاث نقاط، الفرق عن التاء) · كلمات (شجرة، زهرة، عشب، أرجوحة) · حديث «إماطة الأذى عن الطريق صدقة» وقصّة غصن الشوك · سورة الفلق 1–2',
       support: ['اسأله: «لماذا زلق مُحَمَّد؟»', 'ارفعا شيئًا من الأرض معًا وقولا: صدقة', 'ردّدا الفلق 1–2 قبل النوم'],
     },
-    bedtime: { title: 'سَلَّةُ الْمُهْمَلات', audio: '/kids/bedtime/salla.mp3', img: '/kids/bedtime/salla.jpg', minutes: 4 },
+    bedtime: { title: 'سَلَّةُ الْمُهْمَلات', audio: '/kids/bedtime/salla.mp3', img: '/kids/bedtime/salla.jpg', minutes: 4, video: '/kids/films/bayan-bedtime-salla.mp4' },
     selfCheck: { q: 'كَيْفَ كانَ أَدائي الْيَوْمْ؟', options: [{ key: 'easy', emoji: '😄', text: 'سَهْلْ!' }, { key: 'good', emoji: '🙂', text: 'جَيِّدْ' }, { key: 'help', emoji: '🤔', text: 'أَحْتاجُ مُساعَدَةْ' }] },
   },
 };
