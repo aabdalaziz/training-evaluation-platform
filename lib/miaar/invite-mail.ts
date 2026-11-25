@@ -105,15 +105,21 @@ async function defaultNotify(db: any, msg: any) { const { notify } = await impor
 
 /** يرسل رسائل جاهزة (روابطها معلومة) ويسجّل النتيجة على المستلمين وعلى الدعوة. */
 export async function deliverInviteMail(db: any, invite: InviteRow, items: MailItem[], opts: SendOpts): Promise<{ outcomes: MailOutcome[]; sent: number; failed: number }> {
-  const notifyFn = opts.notifyFn || defaultNotify; const now = (opts.now || new Date()).toISOString(); const outcomes: MailOutcome[] = [];
-  for (const it of items) {
-    const mail = buildInviteMail({ invite, url: it.url, name: it.name, timeZone: opts.timeZone });
-    let d: { ok: boolean; channel: string; error?: string | null };
-    try { d = await notifyFn(db, { kind: 'miaar_invite', to: { email: it.email, name: it.name }, subject: mail.subject, html: mail.html, url: it.url, ref: invite.id, params: { title: invite.label_ar, when: '' } }); } catch (e: any) { d = { ok: false, channel: 'manual', error: String(e?.message || e) }; }
-    const ok = d.ok && d.channel !== 'manual'; const err = ok ? null : (d.error || 'لم تصل عبر قناة آلية — في «قائمة اليد»');
-    outcomes.push({ email: it.email, name: it.name, ok, channel: d.channel || null, error: err });
-    if (it.recipient_id) { try { const { data: cur } = await db.from('placement_invite_recipients').select('mail_count').eq('id', it.recipient_id).maybeSingle(); await db.from('placement_invite_recipients').update(ok ? { mailed_at: now, mail_count: (Number((cur as any)?.mail_count) || 0) + 1, mail_channel: d.channel, mail_error: null } : { mail_error: err, mail_channel: d.channel || null }).eq('id', it.recipient_id); } catch { /* ignore */ } }
-  }
+  const notifyFn = opts.notifyFn || defaultNotify; const now = (opts.now || new Date()).toISOString(); const outcomes: MailOutcome[] = new Array(items.length);
+  /* إرسال متوازٍ بحدّ 4 في آنٍ واحد (12 رسالة ≈ 3 دورات) حتى لا تبلغ الدفعة مهلة الدالة؛ الترتيب محفوظ */
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < items.length) {
+      const k = cursor++; const it = items[k];
+      const mail = buildInviteMail({ invite, url: it.url, name: it.name, timeZone: opts.timeZone });
+      let d: { ok: boolean; channel: string; error?: string | null };
+      try { d = await notifyFn(db, { kind: 'miaar_invite', to: { email: it.email, name: it.name }, subject: mail.subject, html: mail.html, url: it.url, ref: invite.id, params: { title: invite.label_ar, when: '' } }); } catch (e: any) { d = { ok: false, channel: 'manual', error: String(e?.message || e) }; }
+      const ok = d.ok && d.channel !== 'manual'; const err = ok ? null : (d.error || 'لم تصل عبر قناة آلية — في «قائمة اليد»');
+      outcomes[k] = { email: it.email, name: it.name, ok, channel: d.channel || null, error: err };
+      if (it.recipient_id) { try { const { data: cur } = await db.from('placement_invite_recipients').select('mail_count').eq('id', it.recipient_id).maybeSingle(); await db.from('placement_invite_recipients').update(ok ? { mailed_at: now, mail_count: (Number((cur as any)?.mail_count) || 0) + 1, mail_channel: d.channel, mail_error: null } : { mail_error: err, mail_channel: d.channel || null }).eq('id', it.recipient_id); } catch { /* ignore */ } }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, items.length) }, worker));
   const sent = outcomes.filter((o) => o.ok).length; const failed = outcomes.length - sent;
   if (sent) { try { await db.from('placement_invites').update({ mail_sent_at: now, mail_count: (Number(invite.mail_count) || 0) + sent }).eq('id', invite.id); } catch { /* ignore */ } }
   return { outcomes, sent, failed };
