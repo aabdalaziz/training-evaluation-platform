@@ -67,7 +67,7 @@ test('شخصية: رمز جديد لكل مستحقّ، تخطّي من بدأ/�
     { id: 'r4', invite_id: 'i1', email: 'd@x.com', name: null, token_hash: 'old4', opened_at: null, started_at: null, report_id: null, mailed_at: '2026-11-24T10:00:00Z', mail_count: 1 },
   ];
   const db = fakeDb(invite, rec); const log: any[] = []; let n = 0;
-  const r = await sendInviteMail(db, 'i1', { site: SITE, notifyFn: okNotify(log), tokenFn: () => `tok${++n}`, now: new Date('2026-11-25T12:00:00Z') });
+  const r = await sendInviteMail(db, 'i1', { site: SITE, paceMs: 0, notifyFn: okNotify(log), tokenFn: () => `tok${++n}`, now: new Date('2026-11-25T12:00:00Z') });
   assert.ok(r.ok); if (!r.ok) return;
   assert.equal(r.sent, 1); assert.equal(r.failed, 0); assert.deepEqual(r.skipped, { finished: 1, started: 1, mailed: 1 });
   assert.equal(log.length, 1); assert.equal(log[0].kind, 'miaar_invite'); assert.equal(log[0].to.email, 'a@x.com'); assert.equal(log[0].url, `${SITE}/miaar/d/XZ89FDXX?t=tok1`); assert.equal(log[0].ref, 'i1');
@@ -83,29 +83,40 @@ test('وضع unopened: يعيد لمن أُرسل له ولم يفتح، ويت�
     { id: 'r2', invite_id: 'i1', email: 'b@x.com', name: 'B', token_hash: 'o', opened_at: '2026-11-24T11:00:00Z', started_at: null, report_id: null, mailed_at: '2026-11-24T10:00:00Z', mail_count: 1 },
   ];
   const db = fakeDb(invite, rec); const log: any[] = [];
-  const r = await sendInviteMail(db, 'i1', { site: SITE, mode: 'unopened', notifyFn: okNotify(log), tokenFn: () => 'z', now: new Date('2026-11-25T12:00:00Z') });
+  const r = await sendInviteMail(db, 'i1', { site: SITE, paceMs: 0, mode: 'unopened', notifyFn: okNotify(log), tokenFn: () => 'z', now: new Date('2026-11-25T12:00:00Z') });
   assert.ok(r.ok); if (!r.ok) return; assert.equal(r.sent, 1); assert.equal(log[0].to.email, 'a@x.com'); assert.equal(rec[0].mail_count, 2);
 });
 
 test('فشل القناة الآلية (manual) → failed ويُسجَّل الخطأ ولا يُحدَّث mailed_at', async () => {
   const rec: any[] = [{ id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'o', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 }];
   const db = fakeDb(invite, rec);
-  const r = await sendInviteMail(db, 'i1', { site: SITE, notifyFn: async () => ({ ok: true, channel: 'manual', error: 'RESEND_API_KEY غير مضبوط' }), tokenFn: () => 'z', now: new Date('2026-11-25T12:00:00Z') });
+  const r = await sendInviteMail(db, 'i1', { site: SITE, paceMs: 0, notifyFn: async () => ({ ok: true, channel: 'manual', error: 'RESEND_API_KEY غير مضبوط' }), tokenFn: () => 'z', now: new Date('2026-11-25T12:00:00Z') });
   assert.ok(r.ok); if (!r.ok) return; assert.equal(r.sent, 0); assert.equal(r.failed, 1); assert.equal(rec[0].mailed_at, null); assert.ok(String(rec[0].mail_error).includes('RESEND'));
 });
 
 test('حراسة: دعوة مغلقة أو منتهية لا تُرسَل · جماعية بلا بريد ترفض · جماعية بقائمة ترسل الرابط العام', async () => {
-  const closed = await sendInviteMail(fakeDb({ ...invite, status: 'closed' }, []), 'i1', { site: SITE, notifyFn: okNotify([]) }); assert.equal(closed.ok, false);
-  const expired = await sendInviteMail(fakeDb(invite, []), 'i1', { site: SITE, notifyFn: okNotify([]), now: new Date('2026-12-05T00:00:00Z') }); assert.equal(expired.ok, false);
+  const closed = await sendInviteMail(fakeDb({ ...invite, status: 'closed' }, []), 'i1', { site: SITE, paceMs: 0, notifyFn: okNotify([]) }); assert.equal(closed.ok, false);
+  const expired = await sendInviteMail(fakeDb(invite, []), 'i1', { site: SITE, paceMs: 0, notifyFn: okNotify([]), now: new Date('2026-12-05T00:00:00Z') }); assert.equal(expired.ok, false);
   const g = { ...invite, kind: 'group', code: 'ZN32HCWZ' };
-  const none = await sendInviteMail(fakeDb(g, []), 'i1', { site: SITE, notifyFn: okNotify([]), now: new Date('2026-11-25T12:00:00Z') }); assert.equal(none.ok, false);
-  const log: any[] = []; const r = await sendInviteMail(fakeDb(g, []), 'i1', { site: SITE, emails: ['x@y.com', 'z@y.com'], notifyFn: okNotify(log), now: new Date('2026-11-25T12:00:00Z') });
+  const none = await sendInviteMail(fakeDb(g, []), 'i1', { site: SITE, paceMs: 0, notifyFn: okNotify([]), now: new Date('2026-11-25T12:00:00Z') }); assert.equal(none.ok, false);
+  const log: any[] = []; const r = await sendInviteMail(fakeDb(g, []), 'i1', { site: SITE, paceMs: 0, emails: ['x@y.com', 'z@y.com'], notifyFn: okNotify(log), now: new Date('2026-11-25T12:00:00Z') });
   assert.ok(r.ok); if (!r.ok) return; assert.equal(r.sent, 2); assert.ok(log.every((m) => m.url === `${SITE}/miaar/d/ZN32HCWZ`)); assert.ok(!log[0].html.includes('usage unique'));
 });
 
 test('mailFreshLinks: بعد الإنشاء يرسل الروابط كما هي ويربطها بالمستلمين', async () => {
   const rec: any[] = [{ id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'h', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 }];
   const db = fakeDb(invite, rec); const log: any[] = [];
-  const r = await mailFreshLinks(db, invite, [{ email: 'A@x.com', name: 'A', url: `${SITE}/miaar/d/XZ89FDXX?t=fresh` }], { site: SITE, notifyFn: okNotify(log), now: new Date('2026-11-25T12:00:00Z') });
+  const r = await mailFreshLinks(db, invite, [{ email: 'A@x.com', name: 'A', url: `${SITE}/miaar/d/XZ89FDXX?t=fresh` }], { site: SITE, paceMs: 0, notifyFn: okNotify(log), now: new Date('2026-11-25T12:00:00Z') });
   assert.ok(r.ok); if (!r.ok) return; assert.equal(r.sent, 1); assert.equal(log[0].url, `${SITE}/miaar/d/XZ89FDXX?t=fresh`); assert.equal(rec[0].token_hash, 'h', 'لا تجديد للرمز'); assert.equal(rec[0].mail_count, 1);
+});
+
+test('P76-ب: حدّ المعدّل (429) → إعادة حتى تنجح، وطيّ صفوف قائمة اليد السابقة قبل كل محاولة', async () => {
+  const rec: any[] = [{ id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'o', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 }];
+  const db = fakeDb(invite, rec); let calls = 0;
+  const flaky = async () => { calls += 1; return calls < 3 ? { ok: true, channel: 'manual', error: 'Too many requests. You can only make 10 requests per second.' } : { ok: true, channel: 'email', error: null }; };
+  const t0 = Date.now();
+  const r = await sendInviteMail(db, 'i1', { site: SITE, paceMs: 0, notifyFn: flaky, tokenFn: () => 'z', now: new Date('2026-11-25T12:00:00Z') });
+  assert.ok(r.ok); if (!r.ok) return; assert.equal(r.sent, 1); assert.equal(calls, 3); assert.ok(Date.now() - t0 >= 4000, 'انتظر 1.5+3 ث قبل المحاولتين');
+  assert.equal(rec[0].mail_count, 1);
+  const sup = db._updates.filter((u: any) => u.table === 'portal_message_log' && u.patch.status === 'done'); assert.equal(sup.length, 3, 'طيّ قبل كل محاولة');
 });
