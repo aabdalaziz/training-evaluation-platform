@@ -48,6 +48,8 @@ const nextConfig = {
   experimental: { instrumentationHook: true }, /* instrumentation.ts: تصحيح القيمة الحيّة للمتغير على Vercel عند الإقلاع */
   poweredByHeader: false,
   reactStrictMode: true,
+  /* P79: مهلة توليد الصفحات الثابتة 180 ثانية (الافتراضي 60) — بناء Vercel 2026-11-25 سقط بمهلة /miaar/trust و/admin عند ازدحام العامل، لا بخطأ في الشيفرة */
+  staticPageGenerationTimeout: 180,
   async headers() {
     return [
       // صفحات قابلة للتضمين (التحقق من الشهادات + تأكيد الرسائل) — قبل القاعدة العامة
