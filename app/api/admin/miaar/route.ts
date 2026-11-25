@@ -5,6 +5,8 @@
  *  POST {action}
  *   invite_create {kind, label_ar, lang, exam_mode, purpose?, expires_at?, max_seats?, org_id?, program_id?, note?, recipients?}  → الدعوة + الرابط (+ روابط شخصية)
  *   invite_status {id, status: open|closed}
+ *   invite_mail {id, mode?: unsent|unopened|all, emails?} → P76 «رسول مِعيار»: إرسال الروابط بالبريد (شخصية: رمز جديد لكل مستلم مستحقّ · جماعية: إلى قائمة بريد)
+ *   invite_create {… send_mail?: true, emails?} → يرسل الروابط فور الإنشاء
  *   retake_approve {email, note?} → موافقة إعادة اختبار
  *  لا يقرّر الذكاء الاصطناعي هنا شيئًا.
  */
@@ -15,6 +17,7 @@ import { normalizeSite } from '../../../../lib/portal/open';
 import { MIAAR_NAMES_AR } from '../../../../lib/miaar/registry';
 import { bankCoverage } from '../../../../lib/miaar/bank';
 import { createInvite, listInvites, setInviteStatus, shareText } from '../../../../lib/miaar/invites';
+import { sendInviteMail, mailFreshLinks, parseEmails } from '../../../../lib/miaar/invite-mail'; /* P76 */
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -53,7 +56,15 @@ export async function POST(req: Request) {
   const action = String(b.action || '');
   if (action === 'invite_create') {
     const r = await createInvite(db, b, user.id, site); if (!r.ok) return bad(r.error);
-    return NextResponse.json({ success: true, invite: r.invite, url: r.url, links: r.links, share_text: shareText(r.invite, r.url), note_ar: r.invite.kind === 'personal' ? `أُنشئت ${r.links.length} دعوة شخصية — انسخ الروابط الآن؛ لا تُعرض الرموز مرة أخرى.` : 'أُنشئت الدعوة — انسخ الرابط أو نزّل الباركود أو اطبع الملصق.' });
+    /* P76: إرسال فوري بالبريد إن طُلب — شخصية: الروابط المولَّدة للتوّ · جماعية: الرابط العام إلى قائمة emails */
+    let mail: any = null;
+    if (b.send_mail === true || b.send_mail === 'true') mail = r.invite.kind === 'personal' ? await mailFreshLinks(db, r.invite, r.links, { site }) : await sendInviteMail(db, r.invite.id, { site, emails: parseEmails(b.emails) });
+    const base = r.invite.kind === 'personal' ? `أُنشئت ${r.links.length} دعوة شخصية — انسخ الروابط الآن؛ لا تُعرض الرموز مرة أخرى.` : 'أُنشئت الدعوة — انسخ الرابط أو نزّل الباركود أو اطبع الملصق.';
+    return NextResponse.json({ success: true, invite: r.invite, url: r.url, links: r.links, share_text: shareText(r.invite, r.url), mail, note_ar: mail ? `${base} ${mail.ok ? mail.note_ar : `(البريد: ${mail.error})`}` : base });
+  }
+  if (action === 'invite_mail') { /* P76 */
+    const r = await sendInviteMail(db, b.id, { site, mode: b.mode as any, emails: parseEmails(b.emails) }); if (!r.ok) return bad(r.error);
+    return NextResponse.json({ success: true, mail: r, note_ar: r.note_ar });
   }
   if (action === 'invite_status') { const ok = await setInviteStatus(db, b.id, b.status); return ok ? NextResponse.json({ success: true }) : bad('تعذّر تغيير حالة الدعوة'); }
   if (action === 'retake_approve') {

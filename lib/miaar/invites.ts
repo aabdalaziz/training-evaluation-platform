@@ -13,8 +13,8 @@ import type { ExamMode } from './registry';
 
 export type InviteRow = { id: string; code: string; kind: 'group' | 'personal'; label_ar: string; org_id: string | null; program_id: string | null; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; max_seats: number | null; status: 'open' | 'closed'; note: string | null; created_by: string | null; created_at: string;
   /* م6 «عُبور» */ classroom_id?: string | null; opens_at?: string | null; level_target?: string | null; reuse_key?: string | null; retake_of?: string | null; /* م6-ب */ unit_scope?: string[] | null;
-  /* م7 «عُبور للجهات» */ location?: string | null; /* م8-ب */ client_name?: string | null; client_contact?: string | null; service_mode?: 'internal' | 'external' | null; proctor_pin_hash?: string | null; client_token_hash?: string | null; identity_mode?: 'email' | 'email_id' | null; /* م8 «شاهِد» */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null; /* P68-ب */ form_id?: string | null };
-export type RecipientRow = { id: string; invite_id: string; email: string; name: string | null; opened_at: string | null; started_at: string | null; report_id: string | null; created_at: string };
+  /* م7 «عُبور للجهات» */ location?: string | null; /* م8-ب */ client_name?: string | null; client_contact?: string | null; service_mode?: 'internal' | 'external' | null; proctor_pin_hash?: string | null; client_token_hash?: string | null; identity_mode?: 'email' | 'email_id' | null; /* م8 «شاهِد» */ proctor_mode?: 'room' | 'camera' | 'remote' | null; witness_interval?: number | null; /* P68-ب */ form_id?: string | null; /* P76 */ mail_sent_at?: string | null; mail_count?: number | null };
+export type RecipientRow = { id: string; invite_id: string; email: string; name: string | null; opened_at: string | null; started_at: string | null; report_id: string | null; created_at: string; /* P76 */ mailed_at?: string | null; mail_count?: number | null; mail_channel?: string | null; mail_error?: string | null };
 export type InvitePublic = { code: string; kind: 'group' | 'personal'; label_ar: string; lang: string; exam_mode: ExamMode; blueprint_id?: string | null; purpose: string | null; expires_at: string | null; recipient: { id: string; email: string; name: string | null; used: boolean } | null;
   /* م8-ب: المراقبة صفة لكل دعوة (الوضع الفعلي بعد الافتراضي العام) · المكان */ witness?: WitnessPublic | null; location?: string | null;
   /* م6: معلومات اختبار نهاية المستوى (إن كانت الدعوة له) */ exit?: { level: string; minutes: number; counts: Record<string, number>; opens_at: string | null; official_ar: string; official_en: string; retake_skill?: string | null;
@@ -129,7 +129,7 @@ export async function listInvites(db: any, site: string) {
   const [{ data: sessions }, { data: reports }, { data: recipients }, { data: forms }] = await Promise.all([
     db.from('placement_secure_sessions').select('invite_id, status').in('invite_id', ids),
     db.from('placement_reports').select('invite_id, report').in('invite_id', ids),
-    db.from('placement_invite_recipients').select('invite_id, email, name, opened_at, started_at, report_id').in('invite_id', ids),
+    db.from('placement_invite_recipients').select('invite_id, email, name, opened_at, started_at, report_id, mailed_at, mail_count, mail_error').in('invite_id', ids),  /* P76: حالة البريد */
     formIds.length ? db.from('question_bank_forms').select('id, code, version, status, frozen_at').in('id', formIds) : Promise.resolve({ data: [] }),  /* P68-ب */
   ]);
   return rows.map((r) => {
@@ -137,7 +137,7 @@ export async function listInvites(db: any, site: string) {
     const levels: Record<string, number> = {}; for (const x of rp) { const lv = String(x.report?.ملخص_التسكين?.مستوى_الالتحاق_المقترح || x.report?.المستوى_العام || '—'); levels[lv] = (levels[lv] || 0) + 1; }
     const rc = ((recipients || []) as any[]).filter((x) => x.invite_id === r.id);
     const fm = r.form_id ? ((forms || []) as any[]).find((f) => f.id === r.form_id) || null : null;  /* P68-ب: ملخّص النموذج المثبَّت (locked = بدأت جلسة) */
-    return { ...r, url: inviteUrl(site, r.code), started: s.length, finished: rp.length, levels, form: fm ? { code: fm.code, version: fm.version, status: fm.status, locked: s.length > 0 } : null, recipients: r.kind === 'personal' ? rc.map((x) => ({ email: x.email, name: x.name, opened: !!x.opened_at, started: !!x.started_at, finished: !!x.report_id })) : undefined, opened: rc.filter((x) => x.opened_at).length };
+    return { ...r, url: inviteUrl(site, r.code), started: s.length, finished: rp.length, levels, form: fm ? { code: fm.code, version: fm.version, status: fm.status, locked: s.length > 0 } : null, recipients: r.kind === 'personal' ? rc.map((x) => ({ email: x.email, name: x.name, opened: !!x.opened_at, started: !!x.started_at, finished: !!x.report_id, mailed: !!x.mailed_at, mailed_at: x.mailed_at || null, mail_count: Number(x.mail_count) || 0, mail_error: x.mail_error || null })) : undefined, opened: rc.filter((x) => x.opened_at).length, mailed: rc.filter((x) => x.mailed_at).length /* P76 */ };
   });
 }
 export async function setInviteStatus(db: any, id: unknown, status: unknown): Promise<boolean> {
