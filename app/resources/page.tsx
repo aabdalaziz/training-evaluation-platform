@@ -10,7 +10,7 @@ import { Icon } from '../../lib/ui/icons';
 import type { IconName } from '../../lib/ui/icons';
 import { PortalShell, useLang } from '../components/PortalShell';
 import { UI, t } from '../../lib/portal/content';
-import { RES_TYPES, RES_LEVELS, RES_LANGS, EMPTY_FILTERS, filterResources, sortResources, typeLabel, typeIcon, levelLabel, accessLabel, resTitle, resSummary } from '../../lib/portal/resources';
+import { RES_TYPES, RES_LEVELS, RES_LANGS, EMPTY_FILTERS, filterResources, sortResources, typeLabel, typeIcon, levelLabel, accessLabel, resTitle, resSummary, priceLabel, priceNum } from '../../lib/portal/resources';
 import type { Resource, ResFilters } from '../../lib/portal/resources';
 import { SECTORS_FALLBACK, skillName, domainLabel } from '../../lib/portal/skills';
 import type { Skill, Sector } from '../../lib/portal/skills';
@@ -50,10 +50,10 @@ function Inner() {
       <section className="pt-pagehead"><div className="pt-wrap">
         <div className="pt-crumbs"><Link href="/">{lang === 'ar' ? 'الرئيسة' : 'Home'}</Link> / <Link href="/services">{t(UI.services, lang)}</Link> / <span>{lang === 'ar' ? 'مستودع الحقائب' : 'Resources'}</span></div>
         <h1>{lang === 'ar' ? 'مستودع الحقائب التدريبية' : 'Training Resources Repository'}</h1>
-        <p>{lang === 'ar' ? 'حقائب وأدلة وأدوات تقويم ونماذج جاهزة — مصنّفة بالمهارة والقطاع والمستوى، بمستويات وصول واضحة وروابط تحميل آمنة.' : 'Kits, guides, assessment tools and templates — tagged by skill, sector and level, with clear access tiers and secure downloads.'}</p>
+        <p>{lang === 'ar' ? 'حقائب وأدلة وأدوات تقويم ونماذج جاهزة — مصنّفة بالمهارة والقطاع والمستوى، تتصفّح اسم كلّ حقيبة ونواتجها وقائمة ملفّاتها مجّانًا، ويُفتح التنزيل بترخيص استخدام شخصيّ.' : 'Kits, guides, assessment tools and templates — tagged by skill, sector and level, browse each kit’s title, outcomes and file list freely; downloads unlock with a personal licence.'}</p>
         <div className="rs-kpis">
           <span><b>{rows.length}</b> {lang === 'ar' ? 'مادة منشورة' : 'published items'}</span>
-          <span><b>{rows.filter(r => r.access === 'public').length}</b> {lang === 'ar' ? 'متاحة للجميع' : 'open to all'}</span>
+          <span><b>{rows.filter(r => r.access === 'paid').length}</b> {lang === 'ar' ? 'حقيبة مرخَّصة' : 'licensed kits'}</span>
           <span><b>{usedSkills.length}</b> {lang === 'ar' ? 'مهارة مغطاة' : 'skills covered'}</span>
           <span><b>{rows.filter(r => r.ai_ready).length}</b> {lang === 'ar' ? 'مهيأة للذكاء الاصطناعي' : 'AI-ready'}</span>
         </div>
@@ -81,7 +81,7 @@ function Inner() {
             return (
               <Link key={r.id} href={`/resources/${r.id}`} className={`rs-card ${r.access}`}>
                 <div className="rs-cover">{r.cover_url ? <img src={r.cover_url} alt="" /> : <span className={`pt-ic ${r.type === 'package' ? 'navy' : r.type === 'assessment' ? 'gold' : 'teal'}`}><Icon name={typeIcon(r.type) as IconName} size={22} /></span>}
-                  <span className={`rs-access ${r.access}`}><Icon name={r.access === 'public' ? 'globe' : 'shield'} size={12} /> {accessLabel(r.access, lang)}</span>
+                  <span className={`rs-access ${r.access}`}><Icon name={r.access === 'public' ? 'globe' : 'shield'} size={12} /> {accessLabel(r.access, lang)}{r.access === 'paid' && priceNum(r.price_sar) > 0 && <> · <bdi>{priceLabel(r.price_sar, lang)}</bdi></>}</span>
                   {r.ai_ready && <span className="rs-ai">AI</span>}
                 </div>
                 <div className="rs-body">
@@ -113,7 +113,7 @@ const CSS = `
 .rs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .rs-card{background:#fff;border:1px solid #EADFD6;border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}.rs-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(42,22,38,.1)}
 .rs-cover{position:relative;height:120px;background:linear-gradient(135deg,#F3E8EF,#FBEDE7);display:flex;align-items:center;justify-content:center}.rs-cover img{width:100%;height:100%;object-fit:cover}
-.rs-access{position:absolute;top:10px;inset-inline-start:10px;font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;background:#E6F3F1;color:#1F4F4A;display:inline-flex;gap:4px;align-items:center}.rs-access.registered{background:#F3E8EF;color:#6A3350}.rs-access.program{background:#FBF4EE;color:#9A3A2A}.rs-access.org{background:#F3E8EF;color:#6A3350}.rs-access.staff{background:#F6EBE0;color:#4A3645}
+.rs-access{position:absolute;top:10px;inset-inline-start:10px;font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px;background:#E6F3F1;color:#1F4F4A;display:inline-flex;gap:4px;align-items:center}.rs-access.registered{background:#F3E8EF;color:#6A3350}.rs-access.program{background:#FBF4EE;color:#9A3A2A}.rs-access.org{background:#F3E8EF;color:#6A3350}.rs-access.staff{background:#F6EBE0;color:#4A3645}.rs-access.paid{background:#3A1F36;color:#D9A866}
 .rs-ai{position:absolute;top:10px;inset-inline-end:10px;font-size:10px;font-weight:900;letter-spacing:.5px;border-radius:6px;padding:3px 7px;background:#3A1F36;color:#D9A866}
 .rs-body{padding:16px 18px 14px;display:flex;flex-direction:column;gap:8px;flex:1}.rs-kind{color:#D4614A;font-weight:800;font-size:12px}.rs-body h3{margin:0;font-size:16.5px;line-height:1.5;color:#2A1626}.rs-body p{margin:0;color:#5C4858;font-size:13.5px;line-height:1.8;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .rs-foot{margin-top:auto;padding-top:10px;border-top:1px dashed #EADFD6;display:flex;gap:14px;align-items:center;font-size:12.5px;color:#8E7F8A}.rs-foot span{display:inline-flex;align-items:center;gap:4px}.rs-more{margin-inline-start:auto;color:#3A1F36;font-weight:800}

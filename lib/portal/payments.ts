@@ -15,6 +15,7 @@ export type Invoice = {
   due_date?: string | null; paid_at?: string | null; receipt_path?: string | null; receipt_uploaded_at?: string | null; transfer_ref?: string | null; payer_note?: string | null;
   gateway_payment_id?: string | null; notes?: string | null; lang?: string | null;
   service?: string | null; plan_code?: string | null; /* هـ-1/3: فاتورة خدمة (اقْرَأْ) بلا تسجيل برنامج */
+  resource_id?: string | null; /* P5-ب: فاتورة ترخيص حقيبة من المستودع */
 };
 
 export const INV_STATUS: Record<InvoiceStatus, T> = {
@@ -92,8 +93,8 @@ export function receiptEmail(inv: Invoice, programName: string, siteUrl: string)
   const lang: Lang = inv.lang === 'en' ? 'en' : 'ar';
   const subject = lang === 'ar' ? `تأكيد السداد — ${inv.invoice_no}` : `Payment confirmed — ${inv.invoice_no}`;
   const html = shell(lang, `<p style="margin:0 0 10px">${lang === 'ar' ? 'مرحبًا' : 'Dear'} ${esc(inv.customer_name)}،</p>
-    <p style="margin:0 0 10px">${lang === 'ar' ? `تم تأكيد سداد الفاتورة <b>${esc(inv.invoice_no)}</b> بمبلغ <b>${money(inv.total, inv.currency, lang)}</b> ${inv.program_id ? 'لبرنامج' : 'عن'} <b>${esc(programName || inv.description)}</b>. شكرًا لك${inv.program_id ? ' — مقعدك مؤكّد' : ' — سنباشر العمل وفق الاتفاق'}.` : `Payment of <b>${money(inv.total, inv.currency, lang)}</b> for invoice <b>${esc(inv.invoice_no)}</b> (<b>${esc(programName || inv.description)}</b>) is confirmed. Thank you${inv.program_id ? ' — your seat is secured' : ' — work will proceed as agreed'}.`}</p>
-    <p style="margin:14px 0 0"><a href="${siteUrl}/pay/${inv.id}" style="background:#3A1F36;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'تنزيل الفاتورة PDF' : 'Download invoice PDF'}</a></p>`);
+    <p style="margin:0 0 10px">${lang === 'ar' ? `تم تأكيد سداد الفاتورة <b>${esc(inv.invoice_no)}</b> بمبلغ <b>${money(inv.total, inv.currency, lang)}</b> ${inv.program_id ? 'لبرنامج' : 'عن'} <b>${esc(programName || inv.description)}</b>. شكرًا لك${inv.program_id ? ' — مقعدك مؤكّد' : inv.resource_id ? ' — ترخيص الحقيبة مفعّل باسمك، ويمكنك تنزيل ملفّاتها الآن من صفحتها' : ' — سنباشر العمل وفق الاتفاق'}.` : `Payment of <b>${money(inv.total, inv.currency, lang)}</b> for invoice <b>${esc(inv.invoice_no)}</b> (<b>${esc(programName || inv.description)}</b>) is confirmed. Thank you${inv.program_id ? ' — your seat is secured' : inv.resource_id ? ' — your kit licence is active; download the files from the kit page' : ' — work will proceed as agreed'}.`}</p>
+    <p style="margin:14px 0 0"><a href="${siteUrl}/pay/${inv.id}" style="background:#3A1F36;color:#fff;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block">${lang === 'ar' ? 'تنزيل الفاتورة PDF' : 'Download invoice PDF'}</a>${inv.resource_id ? ` <a href="${siteUrl}/resources/${inv.resource_id}" style="background:#D9A866;color:#2A1626;text-decoration:none;padding:10px 18px;border-radius:10px;font-weight:800;display:inline-block;margin-inline-start:8px">${lang === 'ar' ? 'إلى الحقيبة' : 'Open the kit'}</a>` : ''}</p>`);
   return { subject, html };
 }
 

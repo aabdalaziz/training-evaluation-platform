@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { sendViaResend } from '../../../lib/email/resend';
 import { invoiceEmail, receiptEmail, verifyGatewayPayment, money } from '../../../lib/portal/payments';
 import type { Invoice, InvoiceStatus } from '../../../lib/portal/payments';
+import { deliverResourceFiles } from '../../../lib/portal/resource-delivery'; /* P5-ب */
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,7 +77,8 @@ export async function POST(req: Request) {
     const { error } = await a.db.from('portal_invoices').update(patch).eq('id', id); if (error) return bad(error.message, 500);
     let mail_error: string | null = null;
     if (status === 'paid' && body?.notify !== false) { const m = receiptEmail({ ...inv, status, method }, pname, site); mail_error = await mail(() => sendViaResend({ to: [inv.customer_email], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: 'receipt' }] })); }
-    return NextResponse.json({ success: true, status, mail_error });
+    let delivery: any = null; if ((status === 'paid' || status === 'waived') && inv.resource_id) delivery = await deliverResourceFiles(a.db, { invoiceId: id }, site).catch((e: any) => ({ sent: false, error: String(e?.message || e) })); /* P5-ب: ملفّات الحقيبة إلى بريد الفاتورة */
+    return NextResponse.json({ success: true, status, mail_error, delivery });
   }
 
   if (action === 'submitted') {
@@ -100,7 +102,8 @@ export async function POST(req: Request) {
     if (error) return bad(error.message, 500);
     const m = receiptEmail({ ...inv, status: 'paid', method: 'card' }, pname, site);
     const mail_error = await mail(() => sendViaResend({ to: [inv.customer_email], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: 'receipt' }] }));
-    return NextResponse.json({ success: true, status: 'paid', mail_error });
+    const delivery = inv.resource_id ? await deliverResourceFiles(a.db, { invoiceId: id }, site).catch((e: any) => ({ sent: false, error: String(e?.message || e) })) : null; /* P5-ب */
+    return NextResponse.json({ success: true, status: 'paid', mail_error, delivery });
   }
   return bad('action غير معروف');
 }

@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DOMAINS, SKILL_LEVELS, CEFR, SAQF_LEVELS, SECTORS_FALLBACK, domainLabel, skillLevelLabel, skillName, sectorName, frameworkBadges, nextSkillCode, EMPTY_SKILL, validateSkill, skillPayload, skillToForm, EMPTY_ORG, validateOrg, orgPayload, skillsSheet, orgsSheet } from '../lib/portal/skills';
 import type { Skill, Organization } from '../lib/portal/skills';
-import { RES_TYPES, RES_LEVELS, RES_DELIVERY, RES_LANGS, RES_ACCESS, RES_STATUS, typeLabel, typeIcon, levelLabel, accessLabel, statusLabel, resTitle, resSummary, resBody, fmtSize, fileKind, storageName, EMPTY_FILTERS, filterResources, sortResources, accessState, ACCESS_MSG, EMPTY_RES, validateResource, resourcePayload, resourceToForm, resourcesSheet, eventsSheet, resourceStats } from '../lib/portal/resources';
+import { RES_TYPES, RES_LEVELS, RES_DELIVERY, RES_LANGS, RES_ACCESS, RES_STATUS, typeLabel, typeIcon, levelLabel, accessLabel, statusLabel, resTitle, resSummary, resBody, fmtSize, fileKind, storageName, EMPTY_FILTERS, filterResources, sortResources, accessState, ACCESS_MSG, EMPTY_RES, validateResource, resourcePayload, resourceToForm, resourcesSheet, eventsSheet, resourceStats, priceLabel, rpcErrAr, GRANT_SOURCE } from '../lib/portal/resources';
 import type { Resource, LearningEvent } from '../lib/portal/resources';
 import { SERVICES, NAV, serviceBySlug } from '../lib/portal/content';
 import { ICON_PATHS } from '../lib/ui/icons';
@@ -53,7 +53,7 @@ test('organizations: validation + payload', () => {
 });
 
 test('resources: catalogs, labels, icons exist', () => {
-  assert.equal(RES_TYPES.length, 8); assert.equal(RES_LEVELS.length, 3); assert.equal(RES_DELIVERY.length, 3); assert.equal(RES_LANGS.length, 3); assert.equal(RES_ACCESS.length, 5); assert.equal(Object.keys(RES_STATUS).length, 3);
+  assert.equal(RES_TYPES.length, 8); assert.equal(RES_LEVELS.length, 3); assert.equal(RES_DELIVERY.length, 3); assert.equal(RES_LANGS.length, 3); assert.equal(RES_ACCESS.length, 6); assert.equal(RES_ACCESS[0].value, 'paid'); assert.equal(Object.keys(RES_STATUS).length, 3);
   for (const tp of RES_TYPES) assert.ok(tp.icon in ICON_PATHS, `icon ${tp.icon}`);
   assert.equal(typeLabel('assessment', 'ar'), 'أداة تقويم'); assert.equal(typeLabel('assessment', 'en'), 'Assessment tool'); assert.equal(typeIcon('video'), 'play'); assert.equal(typeIcon('zzz'), 'folder');
   assert.equal(levelLabel('advanced', 'en'), 'Advanced'); assert.equal(accessLabel('org', 'ar'), 'لجهة محددة'); assert.equal(statusLabel('draft', 'en'), 'Draft');
@@ -94,11 +94,20 @@ test('resources: client-side access state mirrors SQL rules', () => {
   assert.equal(accessState(R({ access: 'registered' }), anon), 'login'); assert.equal(accessState(R({ access: 'registered' }), learner), 'ok');
   assert.equal(accessState(R({ access: 'program', program_id: 'p1' }), learner), 'ok'); assert.equal(accessState(R({ access: 'program', program_id: 'p2' }), learner), 'program'); assert.equal(accessState(R({ access: 'program', program_id: null }), learner), 'ok');
   assert.equal(accessState(R({ access: 'org', organization_id: 'o1' }), learner), 'ok'); assert.equal(accessState(R({ access: 'org', organization_id: 'o9' }), learner), 'org'); assert.equal(accessState(R({ access: 'org', organization_id: null }), learner), 'ok');
+  assert.equal(accessState(R({ access: 'paid' }), anon), 'login'); assert.equal(accessState(R({ access: 'paid' }), learner), 'purchase'); assert.equal(accessState(R({ id: 'r1', access: 'paid' }), { ...learner, granted: ['r1'] }), 'ok'); assert.equal(accessState(R({ access: 'paid' }), trainer), 'ok');
   assert.equal(accessState(R({ access: 'staff' }), learner), 'staff'); assert.equal(accessState(R({ access: 'staff' }), trainer), 'ok'); assert.equal(accessState(R({ access: 'program', program_id: 'p9' }), trainer), 'ok');
 });
 
 test('resources: admin form validation + payload round-trip', () => {
   assert.equal(validateResource({ ...EMPTY_RES }), 'العنوان العربي مطلوب (4 أحرف على الأقل)');
+  assert.equal(EMPTY_RES.access, 'paid'); assert.equal(EMPTY_RES.price_sar, '990');
+  assert.equal(validateResource({ ...EMPTY_RES, title_ar: 'حقيبة تدريبية', price_sar: '' }), 'سعر الحقيبة مطلوب (ريال سعودي، أكبر من صفر)');
+  assert.equal(validateResource({ ...EMPTY_RES, title_ar: 'حقيبة تدريبية', access: 'public', price_sar: 'abc' }), 'السعر غير صالح');
+  assert.equal(validateResource({ ...EMPTY_RES, title_ar: 'حقيبة تدريبية', access: 'public', price_sar: '' }), null);
+  assert.equal(resourcePayload({ ...EMPTY_RES, title_ar: 'حقيبة تدريبية', price_sar: ' 1,250.5 ' }).price_sar, 1250.5);
+  assert.equal(resourceToForm(R({ price_sar: 500 })).price_sar, '500'); assert.equal(resourceToForm(R({})).price_sar, '990');
+  assert.equal(priceLabel(990, 'ar'), '990 ر.س'); assert.equal(priceLabel(0, 'en'), 'No price'); assert.equal(priceLabel('1250.5', 'en'), 'SAR 1,250.5');
+  assert.equal(rpcErrAr('ERROR: already_granted'), 'لديك ترخيص لهذه الحقيبة بالفعل — حمّل مباشرة'); assert.equal(rpcErrAr('weird'), 'weird'); assert.equal(GRANT_SOURCE.staff.ar, 'منح من الطاقم');
   const base = { ...EMPTY_RES, title_ar: 'حقيبة تدريبية' };
   assert.equal(validateResource(base), null);
   assert.equal(validateResource({ ...base, access: 'program' }), 'اختر البرنامج المرتبط لمستوى الوصول «لمتدربي البرنامج»');
@@ -123,4 +132,27 @@ test('resources: sheets and stats', () => {
 test('resources: portal content exposes the repository as live', () => {
   const s = serviceBySlug('resources')!; assert.equal(s.status, 'live'); assert.equal(s.cta.href, '/resources'); assert.equal((s as any).phase, undefined);
   assert.ok(NAV.some(n => n.href === '/resources')); assert.equal(SERVICES.filter(x => x.status === 'soon').length, 0);
+});
+
+/* P5-ب — التسليم بالبريد وحدّ التنزيل */
+import { fileExhausted } from '../lib/portal/resources';
+import { deliveryEmail } from '../lib/portal/resource-delivery';
+
+test('fileExhausted: الحدّ الافتراضي مرّة واحدة لكلّ ملفّ، والطاقم/بلا ترخيص غير محدود', () => {
+  const g = { id: 'g1', downloads: { f1: 1 }, download_limit: 1, delivered_at: null, email: 'a@b.c' };
+  assert.equal(fileExhausted(g, 'f1'), true);
+  assert.equal(fileExhausted(g, 'f2'), false);
+  assert.equal(fileExhausted({ ...g, download_limit: 3 }, 'f1'), false);
+  assert.equal(fileExhausted(null, 'f1'), false);
+});
+
+test('deliveryEmail: مرفقات أو روابط، وشروط الترخيص، وبريد صاحب الترخيص', () => {
+  const base = { title: 'حقيبة أثر التدريب', version: '1.0', email: 'x@y.z', site: 'https://athar-portal.com', resourceId: 'r1', invoiceNo: 'INV-1' };
+  const a = deliveryEmail({ ...base, mode: 'attachments', files: [{ name: '01-file.docx', size: 2048 }] });
+  assert.match(a.subject, /حقيبة أثر التدريب/);
+  assert.ok(a.html.includes('مرفقة') && a.html.includes('01-file.docx') && a.html.includes('x@y.z') && a.html.includes('INV-1'));
+  assert.ok(a.html.includes('مرّة واحدة لكلّ ملفّ') && a.html.includes('/resources/r1'));
+  const l = deliveryEmail({ ...base, mode: 'links', files: [{ name: 'big.zip', size: 30 * 1048576, url: 'https://s/u' }] });
+  assert.ok(l.html.includes('href="https://s/u"') && l.html.includes('٧ أيام') && l.html.includes('م.ب'));
+  assert.ok(!deliveryEmail({ ...base, mode: 'attachments', files: [{ name: '<b>', size: 1 }] }).html.includes('<b></b>'));
 });

@@ -9,17 +9,23 @@ export type ResType = 'package' | 'guide' | 'slides' | 'template' | 'video' | 'a
 export type ResLevel = 'foundation' | 'intermediate' | 'advanced';
 export type ResDelivery = 'self' | 'live' | 'hybrid';
 export type ResLang = 'ar' | 'en' | 'both';
-export type ResAccess = 'public' | 'registered' | 'program' | 'org' | 'staff';
+export type ResAccess = 'paid' | 'public' | 'registered' | 'program' | 'org' | 'staff';
 export type ResStatus = 'draft' | 'published' | 'archived';
-export type AccessState = 'ok' | 'login' | 'program' | 'org' | 'staff' | 'not_found';
+export type AccessState = 'ok' | 'login' | 'purchase' | 'program' | 'org' | 'staff' | 'not_found';
 
 export type Resource = {
   id: string; created_at: string; updated_at?: string; created_by?: string | null; slug?: string | null;
   title_ar: string; title_en?: string | null; summary_ar?: string | null; summary_en?: string | null; body_ar?: string | null; body_en?: string | null;
   type: ResType; sector?: string | null; skills: string[]; level: ResLevel; delivery: ResDelivery; ai_ready: boolean; lang: ResLang; access: ResAccess;
   program_id?: string | null; organization_id?: string | null; cover_url?: string | null; version: string; tags: string[]; status: ResStatus;
-  published_at?: string | null; downloads: number; views: number;
+  published_at?: string | null; downloads: number; views: number; price_sar?: number | string | null;
 };
+/** P5-ب: ترخيص حقيبة (فاتورة مدفوعة أو منح يدوي) */
+export type ResourceGrant = { id: string; resource_id: string; user_id?: string | null; email: string; source: 'invoice' | 'staff'; invoice_id?: string | null; note?: string | null; created_at: string; downloads?: Record<string, number>; download_limit?: number; delivered_at?: string | null };
+/** P5-ب: ما يُعرَض لصاحب الترخيص في صفحة الحقيبة */
+export type GrantInfo = { id: string; downloads: Record<string, number>; download_limit: number; delivered_at: string | null; email: string };
+/** هل استُنفدت مرّات تنزيل هذا الملفّ من الموقع؟ */
+export function fileExhausted(g: GrantInfo | null | undefined, fileId: string): boolean { if (!g) return false; return Number(g.downloads?.[fileId] || 0) >= Number(g.download_limit ?? 1); }
 export type ResourceFile = { id: string; resource_id: string; created_at?: string; name: string; path: string; size: number; mime?: string | null; version: string; sort: number; downloads: number };
 export type LearningEvent = { id: number; at: string; user_id?: string | null; email?: string | null; verb: string; object_type: string; object_id: string; skills: string[]; context: Record<string, unknown> };
 
@@ -49,6 +55,7 @@ export const RES_LANGS: { value: ResLang; label: T }[] = [
   { value: 'both', label: { ar: 'ثنائي اللغة', en: 'Bilingual' } },
 ];
 export const RES_ACCESS: { value: ResAccess; label: T; hint: T }[] = [
+  { value: 'paid', label: { ar: 'مرخَّصة (شراء)', en: 'Licensed (purchase)' }, hint: { ar: 'الزائر يرى الاسم والنواتج وقائمة الملفّات؛ التنزيل بعد الشراء أو إذن الطاقم', en: 'Visitors see title, outcomes and file list; download after purchase or staff grant' } },
   { value: 'public', label: { ar: 'عام', en: 'Public' }, hint: { ar: 'متاح للجميع دون تسجيل', en: 'Anyone, no sign-in' } },
   { value: 'registered', label: { ar: 'للمسجّلين', en: 'Members' }, hint: { ar: 'يتطلب الدخول بالبريد', en: 'Email sign-in required' } },
   { value: 'program', label: { ar: 'لمتدربي البرنامج', en: 'Program trainees' }, hint: { ar: 'للمقبولين في البرنامج المرتبط', en: 'Approved trainees of the linked program' } },
@@ -92,6 +99,18 @@ export function storageName(name: string): string {
   return `${Date.now().toString(36)}-${base}`;
 }
 
+/** P5-ب: السعر */
+export const priceNum = (v: number | string | null | undefined): number => { const c = String(v ?? '').replace(/[,\s]|ر\.س|SAR/gi, ''); if (!c) return NaN; const n = Number(c); return isFinite(n) ? Math.round(n * 100) / 100 : NaN; };
+export function priceLabel(v: number | string | null | undefined, lang: Lang): string {
+  const n = priceNum(v); if (!(n > 0)) return lang === 'ar' ? 'بلا سعر' : 'No price';
+  const s = n.toLocaleString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return lang === 'ar' ? `${s} ر.س` : `SAR ${s}`;
+}
+export const GRANT_SOURCE: Record<'invoice' | 'staff', T> = { invoice: { ar: 'فاتورة مدفوعة', en: 'Paid invoice' }, staff: { ar: 'منح من الطاقم', en: 'Staff grant' } };
+/** ترجمة أخطاء RPC الشراء/المنح إلى العربية */
+export const RPC_ERR_AR: Record<string, string> = { sign_in_required: 'يرجى تسجيل الدخول أولًا', resource_not_found: 'الحقيبة غير متاحة', not_paid_resource: 'هذه الحقيبة ليست للبيع', price_not_set: 'لم يُحدَّد سعر لهذه الحقيبة بعد', email_required: 'حسابك بلا بريد — تواصل معنا', already_granted: 'لديك ترخيص لهذه الحقيبة بالفعل — حمّل مباشرة', not_allowed: 'غير مصرّح', bad_email: 'البريد الإلكتروني غير صالح' };
+export const rpcErrAr = (msg: string) => { const k = Object.keys(RPC_ERR_AR).find(k => msg.includes(k)); return k ? RPC_ERR_AR[k] : msg; };
+
 // ---------- الفلاتر (صفحة /resources) ----------
 export type ResFilters = { q: string; type: string; sector: string; level: string; lang: string; skill: string; program: string };
 export const EMPTY_FILTERS: ResFilters = { q: '', type: '', sector: '', level: '', lang: '', skill: '', program: '' };
@@ -118,13 +137,14 @@ export function sortResources(rows: Resource[]): Resource[] {
 
 // ---------- قرار الوصول (يُستخدم في العميل للعرض فقط؛ القرار الفعلي في SQL/الخادم) ----------
 /** orgIds = معرّفات الجهات التي ينتمي إليها المستخدم (عبر التسجيل أو مطابقة نطاق البريد — يحسبها المستدعي) */
-export type AccessCtx = { user: { id: string; email: string } | null; role?: string | null; approvedPrograms: string[]; orgIds: string[] };
-export function accessState(r: Pick<Resource, 'access' | 'program_id' | 'organization_id' | 'status'>, ctx: AccessCtx): AccessState {
+export type AccessCtx = { user: { id: string; email: string } | null; role?: string | null; approvedPrograms: string[]; orgIds: string[]; granted?: string[] };
+export function accessState(r: Pick<Resource, 'access' | 'program_id' | 'organization_id' | 'status'> & { id?: string }, ctx: AccessCtx): AccessState {
   if (r.status !== 'published') return 'not_found';
   if (r.access === 'public') return 'ok';
   if (!ctx.user) return 'login';
   const role = (ctx.role || '').toUpperCase();
   if (['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST', 'TRAINER'].includes(role)) return 'ok';
+  if (r.access === 'paid') return (ctx.granted || []).includes((r as any).id || '') ? 'ok' : 'purchase';
   if (r.access === 'registered') return 'ok';
   if (r.access === 'staff') return 'staff';
   if (r.access === 'program') return !r.program_id || ctx.approvedPrograms.includes(r.program_id) ? 'ok' : 'program';
@@ -132,7 +152,8 @@ export function accessState(r: Pick<Resource, 'access' | 'program_id' | 'organiz
   return 'staff';
 }
 export const ACCESS_MSG: Record<Exclude<AccessState, 'ok' | 'not_found'>, T> = {
-  login: { ar: 'هذه الحقيبة للمسجّلين — أدخل بريدك لاستلام رابط دخول ثم حمّل مباشرة.', en: 'Members only — enter your email for a sign-in link, then download.' },
+  login: { ar: 'للتنزيل تحتاج حسابًا — أدخل بريدك لاستلام رابط دخول، ثمّ أكمل الشراء أو حمّل مباشرة إن كان لديك ترخيص.', en: 'Sign in to continue — enter your email for a sign-in link, then purchase or download if you already hold a licence.' },
+  purchase: { ar: 'هذه الحقيبة مرخَّصة: تطّلع هنا على اسمها ونواتجها وقائمة ملفّاتها، ويُفتح التنزيل بعد سداد فاتورة الترخيص (أو إذن من فريق أَثَر). الترخيص شخصيّ لبريدك ولا يُنقل.', en: 'Licensed kit: you can review its title, outcomes and file list here; downloads unlock after the licence invoice is paid (or an Athar team grant). The licence is personal to your email.' },
   program: { ar: 'هذه الحقيبة مخصصة لمتدربي البرنامج المرتبط. سجّل في البرنامج أو انتظر قبول طلبك.', en: 'Reserved for trainees of the linked program. Enrol or wait for approval.' },
   org: { ar: 'هذه الحقيبة مخصصة لمنسوبي جهة محددة. استخدم بريد جهتك أو تواصل معنا.', en: 'Reserved for a specific organization. Use your organization email or contact us.' },
   staff: { ar: 'مادة داخلية لفريق أَثَر.', en: 'Internal material for the Athar team.' },
@@ -142,13 +163,15 @@ export const ACCESS_MSG: Record<Exclude<AccessState, 'ok' | 'not_found'>, T> = {
 export type ResForm = {
   title_ar: string; title_en: string; summary_ar: string; summary_en: string; body_ar: string; body_en: string;
   type: ResType; sector: string; skills: string[]; level: ResLevel; delivery: ResDelivery; ai_ready: boolean; lang: ResLang; access: ResAccess;
-  program_id: string; organization_id: string; cover_url: string; version: string; tags: string;
+  program_id: string; organization_id: string; cover_url: string; version: string; tags: string; price_sar: string;
 };
-export const EMPTY_RES: ResForm = { title_ar: '', title_en: '', summary_ar: '', summary_en: '', body_ar: '', body_en: '', type: 'package', sector: '', skills: [], level: 'foundation', delivery: 'self', ai_ready: false, lang: 'ar', access: 'public', program_id: '', organization_id: '', cover_url: '', version: '1.0', tags: '' };
+export const EMPTY_RES: ResForm = { title_ar: '', title_en: '', summary_ar: '', summary_en: '', body_ar: '', body_en: '', type: 'package', sector: '', skills: [], level: 'foundation', delivery: 'self', ai_ready: false, lang: 'ar', access: 'paid', program_id: '', organization_id: '', cover_url: '', version: '1.0', tags: '', price_sar: '990' };
 export function validateResource(f: ResForm): string | null {
   if (f.title_ar.trim().length < 4) return 'العنوان العربي مطلوب (4 أحرف على الأقل)';
   if (!RES_TYPES.some(x => x.value === f.type)) return 'نوع المادة غير صالح';
   if (!RES_ACCESS.some(x => x.value === f.access)) return 'مستوى الوصول غير صالح';
+  if (f.access === 'paid' && !(priceNum(f.price_sar) > 0)) return 'سعر الحقيبة مطلوب (ريال سعودي، أكبر من صفر)';
+  if (f.price_sar.trim() && !(priceNum(f.price_sar) >= 0)) return 'السعر غير صالح';
   if (f.access === 'program' && !f.program_id) return 'اختر البرنامج المرتبط لمستوى الوصول «لمتدربي البرنامج»';
   if (f.access === 'org' && !f.organization_id) return 'اختر الجهة المرتبطة لمستوى الوصول «لجهة محددة»';
   if (!/^\d+(\.\d+)*$/.test(f.version.trim())) return 'رقم الإصدار بصيغة 1.0 أو 2.1';
@@ -158,13 +181,13 @@ export function validateResource(f: ResForm): string | null {
 export function resourcePayload(f: ResForm) {
   return {
     title_ar: f.title_ar.trim(), title_en: f.title_en.trim() || null, summary_ar: f.summary_ar.trim() || null, summary_en: f.summary_en.trim() || null, body_ar: f.body_ar.trim() || null, body_en: f.body_en.trim() || null,
-    type: f.type, sector: f.sector || null, skills: f.skills, level: f.level, delivery: f.delivery, ai_ready: f.ai_ready, lang: f.lang, access: f.access,
+    type: f.type, sector: f.sector || null, skills: f.skills, level: f.level, delivery: f.delivery, ai_ready: f.ai_ready, lang: f.lang, access: f.access, price_sar: priceNum(f.price_sar),
     program_id: f.program_id || null, organization_id: f.organization_id || null, cover_url: f.cover_url.trim() || null, version: f.version.trim(),
     tags: f.tags.split(/[,،]/).map(s => s.trim()).filter(Boolean).slice(0, 15), updated_at: new Date().toISOString(),
   };
 }
 export function resourceToForm(r: Resource): ResForm {
-  return { title_ar: r.title_ar, title_en: r.title_en || '', summary_ar: r.summary_ar || '', summary_en: r.summary_en || '', body_ar: r.body_ar || '', body_en: r.body_en || '', type: r.type, sector: r.sector || '', skills: r.skills || [], level: r.level, delivery: r.delivery, ai_ready: !!r.ai_ready, lang: r.lang, access: r.access, program_id: r.program_id || '', organization_id: r.organization_id || '', cover_url: r.cover_url || '', version: r.version || '1.0', tags: (r.tags || []).join('، ') };
+  return { title_ar: r.title_ar, title_en: r.title_en || '', summary_ar: r.summary_ar || '', summary_en: r.summary_en || '', body_ar: r.body_ar || '', body_en: r.body_en || '', type: r.type, sector: r.sector || '', skills: r.skills || [], level: r.level, delivery: r.delivery, ai_ready: !!r.ai_ready, lang: r.lang, access: r.access, program_id: r.program_id || '', organization_id: r.organization_id || '', cover_url: r.cover_url || '', price_sar: r.price_sar == null ? '990' : String(r.price_sar), version: r.version || '1.0', tags: (r.tags || []).join('، ') };
 }
 
 // ---------- Excel ----------

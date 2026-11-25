@@ -1,6 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 // بوّابة أَثَر — إدارة مستودع الحقائب: إنشاء/تحرير · وسم المهارات والقطاع · مستوى الوصول · رفع الملفات · نشر/أرشفة · إحصاءات التنزيل · Excel
+// P5-ب: السعر (ر.س) · مستوى «مرخَّصة (شراء)» · لوحة التراخيص (فواتير مدفوعة + منح يدوي بالبريد + سحب)
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -11,8 +12,8 @@ import type { IconName } from '../../../lib/ui/icons';
 import { downloadXlsx } from '../../../lib/export/xlsx';
 import { safeFilename } from '../../../lib/export/csv';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
-import { RES_TYPES, RES_LEVELS, RES_DELIVERY, RES_LANGS, RES_ACCESS, EMPTY_RES, validateResource, resourcePayload, resourceToForm, typeLabel, typeIcon, levelLabel, accessLabel, statusLabel, fmtSize, storageName, resourcesSheet, eventsSheet, resourceStats } from '../../../lib/portal/resources';
-import type { Resource, ResourceFile, ResForm, ResStatus, LearningEvent } from '../../../lib/portal/resources';
+import { RES_TYPES, RES_LEVELS, RES_DELIVERY, RES_LANGS, RES_ACCESS, EMPTY_RES, validateResource, resourcePayload, resourceToForm, typeLabel, typeIcon, levelLabel, accessLabel, statusLabel, fmtSize, storageName, resourcesSheet, eventsSheet, resourceStats, priceLabel, GRANT_SOURCE, rpcErrAr } from '../../../lib/portal/resources';
+import type { Resource, ResourceFile, ResForm, ResStatus, LearningEvent, ResourceGrant } from '../../../lib/portal/resources';
 import { SECTORS_FALLBACK, skillName, domainLabel, DOMAINS } from '../../../lib/portal/skills';
 import type { Skill, Sector, Organization } from '../../../lib/portal/skills';
 
@@ -31,7 +32,7 @@ function ResourcesAdmin() {
   const [ready, setReady] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [me, setMe] = useState<{ id: string; role: string } | null>(null);
   const [rows, setRows] = useState<Resource[]>([]); const [skills, setSkills] = useState<Skill[]>([]); const [sectors, setSectors] = useState<Sector[]>(SECTORS_FALLBACK); const [orgs, setOrgs] = useState<Organization[]>([]); const [progs, setProgs] = useState<Prog[]>([]);
   const [filter, setFilter] = useState<ResStatus | 'all'>('all'); const [type, setType] = useState('all'); const [q, setQ] = useState('');
-  const [open, setOpen] = useState<string | null>(sp.get('open')); const [files, setFiles] = useState<ResourceFile[]>([]); const [events, setEvents] = useState<LearningEvent[]>([]);
+  const [open, setOpen] = useState<string | null>(sp.get('open')); const [files, setFiles] = useState<ResourceFile[]>([]); const [events, setEvents] = useState<LearningEvent[]>([]); const [grants, setGrants] = useState<ResourceGrant[]>([]); const [grantEmail, setGrantEmail] = useState(''); const [grantNote, setGrantNote] = useState('');
   const [form, setForm] = useState<ResForm | null>(null); const [editing, setEditing] = useState<string | null>(null); const [busy, setBusy] = useState(''); const [skillQ, setSkillQ] = useState(''); const [progress, setProgress] = useState('');
   const canWrite = !!me && WRITERS.includes(me.role);
 
@@ -47,11 +48,12 @@ function ResourcesAdmin() {
     setRows((r || []) as Resource[]); setSkills((s || []) as Skill[]); if (sec && (sec as any[]).length) setSectors(sec as Sector[]); setOrgs((o || []) as Organization[]); setProgs((p || []) as Prog[]);
   }
   async function loadDetail(id: string) {
-    const [{ data: f }, { data: ev }] = await Promise.all([
+    const [{ data: f }, { data: ev }, { data: g }] = await Promise.all([
       db.from('portal_resource_files').select('*').eq('resource_id', id).order('sort'),
       db.from('portal_learning_events').select('*').eq('object_type', 'resource_file').contains('context', { resource_id: id }).order('at', { ascending: false }).limit(50),
+      db.from('portal_resource_grants').select('*').eq('resource_id', id).order('created_at', { ascending: false }).limit(300),
     ]);
-    setFiles((f || []) as ResourceFile[]); setEvents((ev || []) as LearningEvent[]);
+    setFiles((f || []) as ResourceFile[]); setEvents((ev || []) as LearningEvent[]); setGrants((g || []) as ResourceGrant[]);
   }
   useEffect(() => {
     (async () => {
@@ -62,7 +64,7 @@ function ResourcesAdmin() {
       setMe({ id: user.id, role }); await load(); setReady(true);
     })();
   }, [db, router]);
-  useEffect(() => { if (open) loadDetail(open); else { setFiles([]); setEvents([]); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) loadDetail(open); else { setFiles([]); setEvents([]); setGrants([]); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const run = async (key: string, fn: () => Promise<string | void>) => { setBusy(key); setError(''); setNotice(''); try { const m = await fn(); if (m) setNotice(m); await load(); if (open) await loadDetail(open); } catch (e: any) { setError(e.message || String(e)); } setBusy(''); };
   const shown = useMemo(() => rows.filter(r => (filter === 'all' || r.status === filter) && (type === 'all' || r.type === type) && (!q.trim() || `${r.title_ar} ${r.title_en || ''} ${(r.tags || []).join(' ')}`.toLowerCase().includes(q.trim().toLowerCase()))), [rows, filter, type, q]);
@@ -91,7 +93,7 @@ function ResourcesAdmin() {
     const { error } = await db.from('portal_resources').delete().eq('id', r.id); if (error) throw error; if (open === r.id) setOpen(null); return 'حُذفت المادة.';
   });
   const upload = (r: Resource, list: FileList | null) => run('up', async () => {
-    if (!list || list.length === 0) return; const arr = Array.from(list); let n = 0;
+    if (!list || list.length === 0) return; const arr = Array.from(list).sort((a, b) => a.name.localeCompare(b.name, 'en', { numeric: true })); let n = 0; /* P5-ب: الترتيب باسم الملفّ (01→99) لا بترتيب التحديد */
     for (const file of arr) {
       setProgress(`رفع ${n + 1}/${arr.length}: ${file.name}`);
       const path = `${r.id}/${storageName(file.name)}`;
@@ -103,6 +105,25 @@ function ResourcesAdmin() {
   const removeFile = (f: ResourceFile) => run('rf' + f.id, async () => {
     if (!window.confirm(`حذف الملف «${f.name}»؟`)) return;
     await db.storage.from(BUCKET).remove([f.path]); const { error } = await db.from('portal_resource_files').delete().eq('id', f.id); if (error) throw error; return 'حُذف الملف.';
+  });
+  const grant = (r: Resource) => run('gr' + r.id, async () => {
+    const em = grantEmail.trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) throw new Error('البريد الإلكتروني غير صالح');
+    const { error } = await db.rpc('portal_grant_resource', { p_resource: r.id, p_email: em, p_note: grantNote.trim() || null }); if (error) throw new Error(rpcErrAr(error.message));
+    setGrantEmail(''); setGrantNote(''); return `مُنح ترخيص «${r.title_ar}» للبريد ${em}.`;
+  });
+  /* P5-ب: إعادة إرسال ملفّات الحقيبة إلى بريد الترخيص (عبر الخادم) · إعادة ضبط مرّات التنزيل */
+  const resend = (g: ResourceGrant) => run('rs' + g.id, async () => {
+    const { data: { session } } = await db.auth.getSession(); if (!session?.access_token) throw new Error('انتهت الجلسة — أعد تسجيل الدخول');
+    const res = await fetch('/api/resources', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ action: 'deliver', resource_id: g.resource_id, grant_id: g.id }) });
+    const j = await res.json(); if (!j.success) throw new Error(j.error || 'تعذّر الإرسال');
+    return `أُرسلت ملفّات الحقيبة (${j.files}) إلى ${g.email}${j.mode === 'links' ? ' كروابط (الحجم كبير للإرفاق)' : ' مرفقةً'}.`;
+  });
+  const resetDl = (g: ResourceGrant) => run('rd' + g.id, async () => {
+    const { error } = await db.from('portal_resource_grants').update({ downloads: {} }).eq('id', g.id); if (error) throw error; return `أُعيد ضبط مرّات التنزيل لـ ${g.email}.`;
+  });
+  const revoke = (g: ResourceGrant) => run('rv' + g.id, async () => {
+    if (!window.confirm(`سحب ترخيص ${g.email}؟ لن يتمكّن من التنزيل بعد الآن.`)) return;
+    const { error } = await db.from('portal_resource_grants').delete().eq('id', g.id); if (error) throw error; return 'سُحب الترخيص.';
   });
   const preview = (f: ResourceFile) => run('pv' + f.id, async () => { const { data, error } = await db.storage.from(BUCKET).createSignedUrl(f.path, 120); if (error || !data?.signedUrl) throw new Error(error?.message || 'تعذّر إنشاء الرابط'); window.open(data.signedUrl, '_blank', 'noopener'); });
   const exportXlsx = () => downloadXlsx(safeFilename('athar_resources', 'xlsx'), [resourcesSheet(shown, skills, sectors)]);
@@ -141,6 +162,7 @@ function ResourcesAdmin() {
             <label className="en-note">نمط التقديم<select value={form.delivery} onChange={e => setForm({ ...form, delivery: e.target.value as any })}>{RES_DELIVERY.map(x => <option key={x.value} value={x.value}>{x.label.ar}</option>)}</select></label>
             <label className="en-note">اللغة<select value={form.lang} onChange={e => setForm({ ...form, lang: e.target.value as any })}>{RES_LANGS.map(x => <option key={x.value} value={x.value}>{x.label.ar}</option>)}</select></label>
             <label className="en-note">الإصدار<input dir="ltr" value={form.version} onChange={e => setForm({ ...form, version: e.target.value })} /></label>
+            <label className="en-note">السعر (ر.س قبل الضريبة) {form.access === 'paid' && '*'}<input dir="ltr" inputMode="decimal" value={form.price_sar} onChange={e => setForm({ ...form, price_sar: e.target.value })} placeholder="990" /></label>
             <label className="en-note">رابط صورة الغلاف (اختياري)<input dir="ltr" value={form.cover_url} onChange={e => setForm({ ...form, cover_url: e.target.value })} placeholder="https://…" /></label>
             <label className="en-note">وسوم (مفصولة بفاصلة)<input value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder="تقويم، CEFR، دليل مدرّب" /></label>
           </div>
@@ -172,7 +194,7 @@ function ResourcesAdmin() {
         {shown.map(r => { const isOpen = open === r.id; const sk = (r.skills || []).map(id => skillById.get(id)).filter(Boolean) as Skill[]; return (
           <div key={r.id} className={`rm-card en-row ${r.status}`}>
             <div className="en-top" onClick={() => setOpen(isOpen ? null : r.id)}>
-              <div className="en-who"><span className={`rs-ti ${r.type}`}><Icon name={typeIcon(r.type) as IconName} size={16} /></span><b>{r.title_ar}</b><span className={`en-tag ${r.status}`}>{statusLabel(r.status, 'ar')}</span><span className={`en-tag acc-${r.access}`}>{accessLabel(r.access, 'ar')}</span>{r.ai_ready && <span className="en-tag ai">AI</span>}</div>
+              <div className="en-who"><span className={`rs-ti ${r.type}`}><Icon name={typeIcon(r.type) as IconName} size={16} /></span><b>{r.title_ar}</b><span className={`en-tag ${r.status}`}>{statusLabel(r.status, 'ar')}</span><span className={`en-tag acc-${r.access}`}>{accessLabel(r.access, 'ar')}{r.access === 'paid' && <> · {priceLabel(r.price_sar, 'ar')}</>}</span>{r.ai_ready && <span className="en-tag ai">AI</span>}</div>
               <div className="en-meta"><span>{typeLabel(r.type, 'ar')}</span>·<span>{levelLabel(r.level, 'ar')}</span>{r.sector && <>·<span>{secName(r.sector)}</span></>}·<span>v{r.version}</span>·<span><Icon name="download" size={12} /> {r.downloads || 0}</span>·<span>{fmt(r.updated_at || r.created_at)}</span></div>
             </div>
             {isOpen && <div className="en-body">
@@ -189,6 +211,11 @@ function ResourcesAdmin() {
                   <div className="rs-ev">{events.slice(0, 12).map(e => <div key={e.id}><small>{fmt(e.at)}</small><span dir="ltr">{e.email || 'زائر'}</span><em>{String(e.context?.file_name || '')}</em></div>)}</div>
                   {events.length > 0 && <button type="button" className="rm-btn ghost" onClick={() => exportEvents(r)}><Icon name="download" size={14} /> سجل التنزيلات Excel</button>}
                 </div>
+              </div>
+              <div className="cs-sec"><h3><Icon name="shield" size={16} /> التراخيص ({grants.length}) <span className="rm-muted" style={{ fontWeight: 500, fontSize: 12 }}>· {r.access === 'paid' ? `السعر ${priceLabel(r.price_sar, 'ar')} — الفاتورة المدفوعة تمنح الترخيص تلقائيًّا` : 'المادة ليست بمستوى «مرخَّصة» — التراخيص هنا لا تؤثّر'}</span></h3>
+                {grants.length === 0 && <span className="rm-muted">لا تراخيص بعد.</span>}
+                <div className="rs-ev">{grants.map(g => <div key={g.id} className="rs-grant"><small>{fmt(g.created_at)}</small><span dir="ltr">{g.email}</span><em>{GRANT_SOURCE[g.source]?.ar || g.source}{g.note ? ` · ${g.note}` : ''} · {g.delivered_at ? <span className="rs-ok" title={fmt(g.delivered_at)}>أُرسلت الملفّات</span> : <span className="rs-warn">لم تُرسل بعد</span>} · تنزيلات {Object.values(g.downloads || {}).reduce((a, n) => a + Number(n || 0), 0)}</em>{canWrite && <span className="rs-gact"><button type="button" className="rm-btn ghost" title="إرسال ملفّات الحقيبة إلى هذا البريد" onClick={() => resend(g)} disabled={!!busy}>{busy === 'rs' + g.id ? '…' : 'إرسال الملفّات'}</button><button type="button" className="rm-btn ghost" title="السماح بالتنزيل من الموقع مرّة أخرى" onClick={() => resetDl(g)} disabled={!!busy}>إعادة ضبط التنزيل</button><button type="button" className="cs-x" title="سحب الترخيص" onClick={() => revoke(g)} disabled={!!busy}>×</button></span>}</div>)}</div>
+                {canWrite && <div className="rs-grantform"><input dir="ltr" type="email" placeholder="name@example.com" value={grantEmail} onChange={e => setGrantEmail(e.target.value)} /><input placeholder="ملاحظة (اختياري): جهة، اتّفاق، إهداء…" value={grantNote} onChange={e => setGrantNote(e.target.value)} /><button type="button" className="rm-btn ok" disabled={!!busy || !grantEmail.trim()} onClick={() => grant(r)}><Icon name="plus" size={14} /> منح ترخيص</button></div>}
               </div>
               {canWrite && <div className="en-acts">
                 <button type="button" className="rm-btn ghost" onClick={() => startEdit(r)}><Icon name="edit" size={14} /> تحرير</button>
@@ -214,7 +241,7 @@ const CSS = `
 .en-row.published{border-inline-start:4px solid #2F6B66}.en-row.draft{border-inline-start:4px solid #8A5A1E}.en-row.archived{opacity:.7}
 .en-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer}.en-who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#8E7F8A}.en-who b{color:#3A1F36;font-size:15px}
 .en-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A}
-.en-tag{border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:900;background:#F6EBE0;color:#5C4858}.en-tag.published{background:#E6F3F1;color:#1F4F4A}.en-tag.draft{background:#FBF4EE;color:#9A3A2A}.en-tag.acc-public{background:#E6F3F1;color:#1F4F4A}.en-tag.acc-registered{background:#F3E8EF;color:#6A3350}.en-tag.acc-program{background:#FBF4EE;color:#9A3A2A}.en-tag.acc-org{background:#F3E8EF;color:#6A3350}.en-tag.ai{background:#3A1F36;color:#D9A866}
+.en-tag{border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:900;background:#F6EBE0;color:#5C4858}.en-tag.published{background:#E6F3F1;color:#1F4F4A}.en-tag.draft{background:#FBF4EE;color:#9A3A2A}.en-tag.acc-public{background:#E6F3F1;color:#1F4F4A}.en-tag.acc-registered{background:#F3E8EF;color:#6A3350}.en-tag.acc-program{background:#FBF4EE;color:#9A3A2A}.en-tag.acc-org{background:#F3E8EF;color:#6A3350}.en-tag.acc-paid{background:#3A1F36;color:#D9A866}.en-tag.ai{background:#3A1F36;color:#D9A866}
 .en-body{margin-top:12px;border-top:1px dashed #EADFD6;padding-top:12px;display:grid;gap:12px}
 .en-details{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A}.en-details a{color:#D4614A;font-weight:800}
 .en-note{display:grid;gap:4px;font-size:12.5px;font-weight:800;color:#4A3645}.en-note textarea,.en-note input,.en-note select{font:inherit;font-size:13.5px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;background:#fff;font-weight:500}.en-note textarea{min-height:56px;resize:vertical}
@@ -225,7 +252,7 @@ const CSS = `
 .rs-form{display:grid;gap:12px;border:2px solid #D4614A}.rs-form h2{margin:0;font-size:18px;color:#3A1F36;display:flex;gap:8px;align-items:center}
 .rs-g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rs-g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .rs-access{display:grid;gap:10px;border:1px solid #EADFD6;border-radius:12px;padding:12px;background:#FBF4EE}.rs-access>b{font-size:13.5px;color:#3A1F36}
-.rs-accgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.rs-acc{border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;cursor:pointer;background:#fff}.rs-acc.on{border-color:#D4614A;background:#FBEDE7}.rs-acc span{display:grid;gap:2px}.rs-acc b{font-size:13px;color:#2A1626}.rs-acc small{font-size:11px;color:#8E7F8A;line-height:1.5}
+.rs-accgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.rs-acc{border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start;cursor:pointer;background:#fff}.rs-acc.on{border-color:#D4614A;background:#FBEDE7}.rs-acc span{display:grid;gap:2px}.rs-acc b{font-size:13px;color:#2A1626}.rs-acc small{font-size:11px;color:#8E7F8A;line-height:1.5}
 .rs-skills{display:grid;gap:8px}.rs-skhead{display:flex;justify-content:space-between;gap:8px;align-items:center}.rs-skhead b{font-size:13.5px;color:#3A1F36}.rs-skhead input{font:inherit;font-size:13px;border:1px solid #D9CBC2;border-radius:10px;padding:6px 10px;min-width:220px}
 .rs-skgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:260px;overflow:auto;padding:2px}.rs-sk{text-align:start;border:1px solid #EADFD6;background:#fff;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px;color:#2A1626;cursor:pointer;display:grid;gap:1px}.rs-sk small{color:#D4614A;font-weight:900;font-size:11px;direction:ltr;text-align:start}.rs-sk i{font-style:normal;color:#8E7F8A;font-size:11px}.rs-sk.on{border-color:#3A1F36;background:#3A1F36;color:#fff}.rs-sk.on small,.rs-sk.on i{color:#D9A866}
 .rs-ti{width:30px;height:30px;border-radius:9px;background:#FBEDE7;color:#D4614A;display:inline-grid;place-items:center}.rs-ti.package{background:#FBF4EE;color:#8A5A1E}.rs-ti.assessment{background:#F3E8EF;color:#3A1F36}
@@ -233,6 +260,7 @@ const CSS = `
 .rs-file{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid #EADFD6;border-radius:10px;padding:8px 10px;background:#fff;color:#3A1F36}.rs-file b{display:block;font-size:13px;color:#2A1626;word-break:break-all}.rs-file small{color:#8E7F8A;font-size:11.5px}
 .rs-upload{display:flex;gap:8px;align-items:center;justify-content:center;border:2px dashed #D4614A;border-radius:12px;padding:14px;cursor:pointer;color:#D4614A;font-weight:800;font-size:13px;background:#FBEDE7}
 .rs-ev{display:grid;gap:4px;font-size:12.5px}.rs-ev div{display:grid;grid-template-columns:auto 1fr auto;gap:10px;border-bottom:1px solid #F6EBE0;padding:4px 0}.rs-ev small{color:#8E7F8A}.rs-ev em{font-style:normal;color:#D4614A;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:900px){.rs-g4{grid-template-columns:1fr 1fr}.rs-accgrid{grid-template-columns:1fr 1fr}.rs-skgrid{grid-template-columns:1fr}}
+.rs-grant{grid-template-columns:auto 1fr auto auto!important;align-items:center}.rs-gact{display:inline-flex;gap:6px;align-items:center}.rs-ok{color:#2E7D6E;font-weight:700}.rs-warn{color:#9A3A2A;font-weight:700}.rs-grantform{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}.rs-grantform input{font:inherit;font-size:13px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px;background:#fff}
+@media(max-width:900px){.rs-g4{grid-template-columns:1fr 1fr}.rs-accgrid{grid-template-columns:1fr 1fr 1fr}.rs-skgrid{grid-template-columns:1fr}.rs-grantform{grid-template-columns:1fr}}
 @media(max-width:760px){.cs-grid2,.rs-g2{grid-template-columns:1fr}}
 `;

@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import { sendViaResend } from '../../../../lib/email/resend';
 import { receiptEmail, verifyGatewayPayment } from '../../../../lib/portal/payments';
 import type { Invoice } from '../../../../lib/portal/payments';
+import { deliverResourceFiles } from '../../../../lib/portal/resource-delivery'; /* P5-ب */
 import { safeEqual, eventAction, invoiceIdFrom } from '../../../../lib/portal/webhook';
 import type { MoyasarEvent } from '../../../../lib/portal/webhook';
 
@@ -56,7 +57,8 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   let mail_error: string | null = null;
   try { const { data: p } = await db.from('programs').select('name_ar').eq('id', inv.program_id || '').maybeSingle(); const m = receiptEmail({ ...inv, status: 'paid', method: 'card' }, String((p as any)?.name_ar || ''), (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, '')); await sendViaResend({ to: [inv.customer_email], subject: m.subject, html: m.html, tags: [{ name: 'kind', value: 'receipt' }] }); } catch (e: any) { mail_error = String(e?.message || e); }
-  return NextResponse.json({ ok: true, status: 'paid', mail_error });
+  let delivery: any = null; if ((inv as any).resource_id) delivery = await deliverResourceFiles(db, { invoiceId: inv.id }, (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, '')).catch((e: any) => ({ sent: false, error: String(e?.message || e) })); /* P5-ب */
+  return NextResponse.json({ ok: true, status: 'paid', mail_error, delivery });
 }
 
 export async function GET(req: Request) {
