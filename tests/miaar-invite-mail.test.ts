@@ -60,7 +60,7 @@ const sha = (t: string) => createHash('sha256').update(t).digest('hex');
 const okNotify = (log: any[]) => async (_db: any, msg: any) => { log.push(msg); return { ok: true, channel: 'email', error: null }; };
 
 test('شخصية: رمز جديد لكل مستحقّ، تخطّي من بدأ/أنهى/سبق إرساله، وتسجيل mailed_at', async () => {
-  const rec = [
+  const rec: any[] = [
     { id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'old1', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 },
     { id: 'r2', invite_id: 'i1', email: 'b@x.com', name: 'B', token_hash: 'old2', opened_at: '2026-11-25T10:00:00Z', started_at: '2026-11-25T10:01:00Z', report_id: null, mailed_at: null, mail_count: 0 },
     { id: 'r3', invite_id: 'i1', email: 'c@x.com', name: 'C', token_hash: 'old3', opened_at: null, started_at: null, report_id: 'rep', mailed_at: null, mail_count: 0 },
@@ -78,7 +78,7 @@ test('شخصية: رمز جديد لكل مستحقّ، تخطّي من بدأ/�
 });
 
 test('وضع unopened: يعيد لمن أُرسل له ولم يفتح، ويتخطّى من فتح', async () => {
-  const rec = [
+  const rec: any[] = [
     { id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'o', opened_at: null, started_at: null, report_id: null, mailed_at: '2026-11-24T10:00:00Z', mail_count: 1 },
     { id: 'r2', invite_id: 'i1', email: 'b@x.com', name: 'B', token_hash: 'o', opened_at: '2026-11-24T11:00:00Z', started_at: null, report_id: null, mailed_at: '2026-11-24T10:00:00Z', mail_count: 1 },
   ];
@@ -88,7 +88,7 @@ test('وضع unopened: يعيد لمن أُرسل له ولم يفتح، ويت�
 });
 
 test('فشل القناة الآلية (manual) → failed ويُسجَّل الخطأ ولا يُحدَّث mailed_at', async () => {
-  const rec = [{ id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'o', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 }];
+  const rec: any[] = [{ id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'o', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 }];
   const db = fakeDb(invite, rec);
   const r = await sendInviteMail(db, 'i1', { site: SITE, notifyFn: async () => ({ ok: true, channel: 'manual', error: 'RESEND_API_KEY غير مضبوط' }), tokenFn: () => 'z', now: new Date('2026-11-25T12:00:00Z') });
   assert.ok(r.ok); if (!r.ok) return; assert.equal(r.sent, 0); assert.equal(r.failed, 1); assert.equal(rec[0].mailed_at, null); assert.ok(String(rec[0].mail_error).includes('RESEND'));
@@ -104,7 +104,7 @@ test('حراسة: دعوة مغلقة أو منتهية لا تُرسَل · ج�
 });
 
 test('mailFreshLinks: بعد الإنشاء يرسل الروابط كما هي ويربطها بالمستلمين', async () => {
-  const rec = [{ id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'h', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 }];
+  const rec: any[] = [{ id: 'r1', invite_id: 'i1', email: 'a@x.com', name: 'A', token_hash: 'h', opened_at: null, started_at: null, report_id: null, mailed_at: null, mail_count: 0 }];
   const db = fakeDb(invite, rec); const log: any[] = [];
   const r = await mailFreshLinks(db, invite, [{ email: 'A@x.com', name: 'A', url: `${SITE}/miaar/d/XZ89FDXX?t=fresh` }], { site: SITE, notifyFn: okNotify(log), now: new Date('2026-11-25T12:00:00Z') });
   assert.ok(r.ok); if (!r.ok) return; assert.equal(r.sent, 1); assert.equal(log[0].url, `${SITE}/miaar/d/XZ89FDXX?t=fresh`); assert.equal(rec[0].token_hash, 'h', 'لا تجديد للرمز'); assert.equal(rec[0].mail_count, 1);
