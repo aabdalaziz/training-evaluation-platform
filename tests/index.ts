@@ -146,3 +146,4 @@ import './p75-why.test'; /* P75 «لماذا جاؤوا» */
 import './domain.test'; /* النطاق الرسمي athar-portal.com (2026-11-15): الافتراضيات · المُرسِل · robots/sitemap */
 import './iqra-pre-t3.test'; /* اقْرَأْ تمهيديّ ت٣: سقف 40 + تحديث المعتمدة */
 import './miaar-invite-mail.test';
+import './miaar-cleanup.test';

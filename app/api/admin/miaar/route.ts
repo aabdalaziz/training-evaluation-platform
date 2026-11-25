@@ -5,6 +5,8 @@
  *  POST {action}
  *   invite_create {kind, label_ar, lang, exam_mode, purpose?, expires_at?, max_seats?, org_id?, program_id?, note?, recipients?}  → الدعوة + الرابط (+ روابط شخصية)
  *   invite_status {id, status: open|closed}
+ *   cleanup_footprint {ids} · cleanup_purge {ids, with_results?, confirm} · cleanup_sessions {days} · cleanup_orphan_reports {days, confirm} → P77 «المكنسة» (مدير النظام)
+ *   GET ?cleanup=1[&ids=..] → اقتراحات التنظيف + البصمة
  *   invite_mail {id, mode?: unsent|unopened|all, emails?} → P76 «رسول مِعيار»: إرسال الروابط بالبريد (شخصية: رمز جديد لكل مستلم مستحقّ · جماعية: إلى قائمة بريد)
  *   invite_create {… send_mail?: true, emails?} → يرسل الروابط فور الإنشاء
  *   retake_approve {email, note?} → موافقة إعادة اختبار
@@ -18,6 +20,7 @@ import { MIAAR_NAMES_AR } from '../../../../lib/miaar/registry';
 import { bankCoverage } from '../../../../lib/miaar/bank';
 import { createInvite, listInvites, setInviteStatus, shareText } from '../../../../lib/miaar/invites';
 import { sendInviteMail, mailFreshLinks, parseEmails } from '../../../../lib/miaar/invite-mail'; /* P76 */
+import { inviteFootprint, cleanupSuggestions, purgeInvites, purgeOrphanSessions, purgeOrphanReports } from '../../../../lib/miaar/cleanup'; /* P77 */
 
 export const runtime = 'nodejs'; export const dynamic = 'force-dynamic'; export const maxDuration = 60;
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
@@ -41,6 +44,8 @@ export async function GET(req: Request) {
   if (u.searchParams.get('detail')) { const { detailByCode } = await import('../../../../lib/miaar/detail'); const d = await detailByCode(db, String(u.searchParams.get('detail') || '').toUpperCase(), { withText: true }); return d ? NextResponse.json({ success: true, detail: d }, { headers: { 'Cache-Control': 'no-store' } }) : NextResponse.json({ success: false, error: 'not_found' }, { status: 404 }); }
   /* P68-ج: الجهات (الاسم + هل لها شعار) — لاختيار الجهة على بطاقة الدعوة */
   if (u.searchParams.get('orgs')) { const { data } = await db.from('portal_organizations').select('id,name_ar,logo').eq('active', true).order('name_ar').limit(300); return NextResponse.json({ success: true, orgs: ((data || []) as any[]).map((o) => ({ id: o.id, name_ar: o.name_ar, logo: o.logo || null })) }, { headers: { 'Cache-Control': 'no-store' } }); }
+  /* P77 «المكنسة»: الاقتراحات + بصمة دعوات بعينها (ids=a,b,c) */
+  if (u.searchParams.get('cleanup')) { const ids = String(u.searchParams.get('ids') || '').split(',').filter(Boolean); const [sugg, fp] = await Promise.all([cleanupSuggestions(db), inviteFootprint(db, ids.length ? ids : [])]); return NextResponse.json({ success: true, suggestions: sugg, footprint: fp }, { headers: { 'Cache-Control': 'no-store' } }); }
   const [coverage, invites, reports, sessions] = await Promise.all([
     bankCoverage(db).catch(() => null), listInvites(db, site).catch(() => []),
     db.from('placement_reports').select('id, candidate_email, created_at, access_code, invite_id, report').order('created_at', { ascending: false }).limit(50),
@@ -62,6 +67,10 @@ export async function POST(req: Request) {
     const base = r.invite.kind === 'personal' ? `أُنشئت ${r.links.length} دعوة شخصية — انسخ الروابط الآن؛ لا تُعرض الرموز مرة أخرى.` : 'أُنشئت الدعوة — انسخ الرابط أو نزّل الباركود أو اطبع الملصق.';
     return NextResponse.json({ success: true, invite: r.invite, url: r.url, links: r.links, share_text: shareText(r.invite, r.url), mail, note_ar: mail ? `${base} ${mail.ok ? mail.note_ar : `(البريد: ${mail.error})`}` : base });
   }
+  if (action === 'cleanup_footprint') { const fp = await inviteFootprint(db, b.ids); return NextResponse.json({ success: true, footprint: fp }); } /* P77 */
+  if (action === 'cleanup_purge') { const r = await purgeInvites(db, b.ids, user, { with_results: b.with_results === true, confirm: b.confirm }); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, ...r }); }
+  if (action === 'cleanup_sessions') { const r = await purgeOrphanSessions(db, user, Number(b.days) || 30); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, ...r }); }
+  if (action === 'cleanup_orphan_reports') { const r = await purgeOrphanReports(db, user, Number(b.days) || 30, b.confirm); if (!r.ok) return bad(r.error); return NextResponse.json({ success: true, ...r }); }
   if (action === 'invite_mail') { /* P76 */
     const r = await sendInviteMail(db, b.id, { site, mode: b.mode as any, emails: parseEmails(b.emails) }); if (!r.ok) return bad(r.error);
     return NextResponse.json({ success: true, mail: r, note_ar: r.note_ar });
