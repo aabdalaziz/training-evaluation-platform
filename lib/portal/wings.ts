@@ -23,7 +23,7 @@ export const WINGS: Wing[] = [
   { key: 'people', name: 'إدارة أَثَر', verb: 'يدير العلاقة', line: 'التسجيل والمالية والوارد والاستشارات وهيئة أَثَر الاستشارية', zone: 'org', tone: '#6A3350', tone_soft: '#F3E8EF', tone_dark: '#B07A9A',
     hrefs: ['/admin/enrollments', '/admin/payments', '/admin/inbox', '/admin/consulting', '/admin/directory', '/admin/org/letters', '/admin/outreach'] },
   { key: 'system', name: 'نظام أَثَر', verb: 'يدير البوّابة', line: 'الأدوار والدرع والبيانات والتدقيق والصحّة', zone: 'staff', tone: '#D9A866', tone_soft: '#FBF4EE', tone_dark: '#F1D9A8',
-    hrefs: ['/admin/roles', '/admin/shield', '/admin/vault', '/admin/data-lifecycle', '/admin/agents', '/admin/audit', '/admin/health', '/admin/backup', '/admin/access', '/admin/demo'] },
+    hrefs: ['/admin/roles', '/admin/shield', '/admin/vault', '/admin/data-lifecycle', '/admin/agents', '/admin/audit', '/admin/health', '/admin/backup', '/admin/access', '/admin/gate', '/admin/demo'] },
 ];
 /** غرف مشتركة تظهر في كلّ قسم (ولا تُحسب قسمًا) */
 export const SHARED_HREFS = ['/dashboard', '/admin/sign', '/admin/notifications', '/help'];
@@ -102,7 +102,7 @@ export const CLUSTERS: Partial<Record<WingKey, Cluster[]>> = {
     { name: 'الوصول', hrefs: ['/admin/outreach'] },
   ],
   system: [
-    { name: 'الأبواب', hrefs: ['/admin/roles', '/admin/access', '/admin/agents'] },
+    { name: 'الأبواب', hrefs: ['/admin/roles', '/admin/access', '/admin/gate', '/admin/agents'] },
     { name: 'الرقابة', hrefs: ['/admin/audit', '/admin/shield', '/admin/vault'] },
     { name: 'السلامة', hrefs: ['/admin/health', '/admin/backup', '/admin/data-lifecycle'] },
     { name: 'العرض', hrefs: ['/admin/demo'] },

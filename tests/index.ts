@@ -147,3 +147,4 @@ import './domain.test'; /* النطاق الرسمي athar-portal.com (2026-11-1
 import './iqra-pre-t3.test'; /* اقْرَأْ تمهيديّ ت٣: سقف 40 + تحديث المعتمدة */
 import './miaar-invite-mail.test';
 import './miaar-cleanup.test';
+import './gate.test'; /* P79 */

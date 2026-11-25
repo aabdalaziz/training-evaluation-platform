@@ -39,11 +39,15 @@ export const CONTACT = {
   phone: '+966 56 444 0406',
   city: { ar: 'المدينة المنورة، المملكة العربية السعودية', en: 'Madinah, Saudi Arabia' } as T,
   hours: { ar: 'الأحد – الخميس · 8:00 ص – 4:00 م', en: 'Sun – Thu · 8:00 – 16:00' } as T,
+  /* P78: حسابات التواصل — المعرّف الموحّد @atharportal. يُعرض في التذييل وفي sameAs فقط ما كان live=true (أُنشئ فعلًا)؛
+     عند إنشاء كل حساب غيّر live إلى true. فيسبوك أُنشئ 2026-11-25 (اسم المستخدم atharportal). */
   social: [
-    { name: 'X', href: 'https://x.com/' },
-    { name: 'LinkedIn', href: 'https://linkedin.com/' },
-    { name: 'YouTube', href: 'https://youtube.com/' },
-  ],
+    { name: 'Facebook', href: 'https://www.facebook.com/atharportal', live: true },
+    { name: 'Instagram', href: 'https://www.instagram.com/atharportal', live: false },
+    { name: 'X', href: 'https://x.com/atharportal', live: false },
+    { name: 'LinkedIn', href: 'https://www.linkedin.com/company/atharportal', live: false },
+    { name: 'YouTube', href: 'https://www.youtube.com/@atharportal', live: false },
+  ].filter((s) => s.live),
 };
 
 export const ABOUT = {

@@ -5,6 +5,7 @@ import './athar-identity.css'; /* هوية v1.2 «غروب الحجاز»: ال�
 import GlobalNavigation from './components/GlobalNavigation';
 import { PocketProvider } from './components/Pocket';
 import Guide from './components/Guide';
+import GateTrialBadge from './components/GateTrialBadge'; /* P79: عدّاد التجربة */
 import { normalizeSite } from '../lib/portal/open'; /* النطاق الرسمي للـ JSON-LD */ /* «دليل أَثَر» (P41): البحث والأوامر في كل صفحة — Ctrl+K */
 
 // «خطّ أَثَر» (2026-11-17): خطّان مستضافان ذاتيًّا مع البناء (بلا طلبات خارجية ولا وميض):
@@ -54,6 +55,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <GlobalNavigation />
           {children}
           <Guide />
+          <GateTrialBadge />
         </PocketProvider>
       </body>
     </html>

@@ -45,6 +45,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/audit', label: 'سجلّ التدقيق', hint: 'من فعل ماذا ومتى · تتبّع تلقائي', icon: 'shield', perms: ['admin'], side: true },
   { href: '/admin/health', label: 'صحة البوّابة', hint: 'الإعدادات · الكرون · البريد · سلامة البيانات', icon: 'check', perms: ['admin'], side: true },
   { href: '/admin/access', label: 'نطاق الوصول', hint: 'ربط مديري البرامج ببرامجهم', icon: 'users', perms: ['admin'], side: true },
+  { href: '/admin/gate', label: 'تصاريح الدخول', hint: 'أبواب المنتجات · الطلبات · التصاريح', icon: 'shield', perms: ['admin'], side: true }, /* P79 */
   { href: '/admin/templates', label: 'قوالب التقييم', hint: 'الأسئلة · الربط بالبرامج · معاينة', icon: 'doc', perms: ['programs.write', 'evidence.write'], side: true },
   { href: '/admin/env-pulse', label: 'نبض البيئة التدريبية', hint: 'أقسام الاستبيان الختامي عبر الدفعات · بند الأسبوع', icon: 'trend', perms: ['programs.write', 'evidence.write'], side: true },   // P49-هـ
   { href: '/admin/demo', label: 'غرفة العرض', hint: 'مشهد «قيادة افتراضية — المنطقة س»: ابنِ · امحُ · مسار العرض · بطاقات العارضين', icon: 'play', perms: ['admin'], side: true },   // P69
