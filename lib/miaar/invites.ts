@@ -5,6 +5,7 @@
  *  ما يراه المتقدّم: اسم الدعوة ولغتها ونمطها؛ ما يراه الطاقم: فتح/بدء/إنهاء ومستوى كل مشارك.
  */
 import { createHash, randomBytes } from 'node:crypto';
+import type { InvitePreview } from './welcome';
 import { validateScope } from './syllabus'; /* م6-ب */
 import { witnessPublic, defaultWitnessMode, type WitnessMode } from './witness'; /* م8 · م8-ب */
 import { shortCode, isShortCode, cleanText, isExamMode } from './registry';
@@ -22,6 +23,10 @@ export type InvitePublic = { code: string; kind: 'group' | 'personal'; label_ar:
 export type WitnessPublic = { mode: 'room' | 'camera' | 'remote'; camera: boolean; interval: number; identity: boolean; fullscreen: boolean; retention_days: number; mode_ar: string; mode_en: string };
 export const publicWitness = (w: ReturnType<typeof witnessPublic>): WitnessPublic => ({ mode: w.mode, camera: w.camera, interval: w.interval, identity: w.identity, fullscreen: w.fullscreen, retention_days: w.retention_days, mode_ar: w.mode_ar, mode_en: w.mode_en });
 const hash = (t: string) => createHash('sha256').update(t).digest('hex');
+/** معاينة عامة للدعوة قبل فتح نافذتها — لا أسرار (بطاقة الترحيب). */
+export function invitePreview(row: InviteRow, recipient_name: string | null = null): InvitePreview {
+  return { code: row.code, label_ar: row.label_ar, lang: row.lang, opens_at: row.opens_at || null, expires_at: row.expires_at || null, location: row.location || null, client_name: row.service_mode === 'external' ? row.client_name || null : null, recipient_name };
+}
 export const inviteUrl = (site: string, code: string, token?: string | null) => `${site.replace(/\/$/, '')}/miaar/d/${code}${token ? `?t=${encodeURIComponent(token)}` : ''}`;
 const LANGS = new Set(['ar', 'az', 'bn', 'bs', 'de', 'en', 'es', 'fa', 'fil', 'fr', 'ha', 'hi', 'id', 'it', 'ku', 'ms', 'nl', 'pl', 'ps', 'pt', 'ro', 'ru', 'so', 'sq', 'sw', 'tr', 'uk', 'ur', 'uz', 'zh']);
 
@@ -89,13 +94,17 @@ async function exitInfo(db: any, row: InviteRow, fallback: WitnessMode): Promise
   return { level, minutes: Number(data.duration_minutes) || 0, counts: { listening: Number(c.listening) || 0, reading: Number(c.reading) || 0, grammar_vocab: Number(c.grammar_vocab) || 0, writing: Number(p.writing) || 0, speaking: Number(p.speaking) || 0 }, opens_at: row.opens_at || null, official_ar: EXIT_TITLE.ar, official_en: EXIT_TITLE.en, client_name: row.service_mode === 'external' ? row.client_name || null : null, needs_pin: !!row.proctor_pin_hash, identity_mode: row.identity_mode === 'email_id' ? 'email_id' : 'email', retake_skill: typeof req.retake_skill === 'string' ? req.retake_skill : null, witness: (() => { const w = witnessPublic(row, fallback); return { mode: w.mode, camera: w.camera, interval: w.interval, identity: w.identity, fullscreen: w.fullscreen, retention_days: w.retention_days, mode_ar: w.mode_ar, mode_en: w.mode_en }; })() };
 }
 /** ما يراه المتقدّم عند فتح الرابط (ويُسجَّل الفتح للشخصية) */
-export async function openInvite(db: any, code: unknown, token: unknown): Promise<{ ok: true; invite: InvitePublic; row: InviteRow; recipient: RecipientRow | null } | { ok: false; error: 'not_found' | 'closed' | 'expired' | 'full' | 'used' | 'bad_token' | 'not_open' }> {
+export async function openInvite(db: any, code: unknown, token: unknown): Promise<{ ok: true; invite: InvitePublic; row: InviteRow; recipient: RecipientRow | null } | { ok: false; error: 'not_found' | 'closed' | 'expired' | 'full' | 'used' | 'bad_token' | 'not_open'; preview?: InvitePreview }> {
   if (!isShortCode(code)) return { ok: false, error: 'not_found' };
   const { data } = await db.from('placement_invites').select('*').eq('code', code).maybeSingle(); if (!data) return { ok: false, error: 'not_found' };
   const row = data as InviteRow;
   if (row.status !== 'open') return { ok: false, error: 'closed' };
   if (row.expires_at && Date.parse(row.expires_at) < Date.now()) return { ok: false, error: 'expired' };
-  if (row.opens_at && Date.parse(row.opens_at) > Date.now()) return { ok: false, error: 'not_open' };   /* م6: نافذة البدء */
+  if (row.opens_at && Date.parse(row.opens_at) > Date.now()) {   /* م6: نافذة البدء — مع معاينة للترحيب قبل الموعد */
+    let recipient_name: string | null = null;
+    if (row.kind === 'personal' && typeof token === 'string' && token) { try { const { data: rc } = await db.from('placement_invite_recipients').select('name').eq('token_hash', hash(token)).eq('invite_id', row.id).maybeSingle(); recipient_name = rc?.name || null; } catch { recipient_name = null; } }
+    return { ok: false, error: 'not_open', preview: invitePreview(row, recipient_name) };
+  }
   let recipient: RecipientRow | null = null;
   if (row.kind === 'personal') {
     if (typeof token !== 'string' || token.length < 8) return { ok: false, error: 'bad_token' };

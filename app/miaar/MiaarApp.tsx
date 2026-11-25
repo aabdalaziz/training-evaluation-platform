@@ -28,6 +28,8 @@ import Witness from './Witness'; /* م8 «شاهِد» */
 import { Matcher, Orderer, Cloze, COMPOSITE_CSS, COMP_LABELS_AR, COMP_LABELS_EN } from './Composite'; /* م13-ب: المطابقة والترتيب · م14: الفراغات وتسلسل الصور */
 const COMPOSITE = new Set(['matching', 'ordering', 'cloze_bank', 'picture_sequence']);
 import type { WitnessApi, WitnessCfg } from './Witness';
+import InviteWelcome from './InviteWelcome';
+import type { InvitePreview } from '../../lib/miaar/welcome';
 const PerformanceRoom = dynamic(() => import('./PerformanceRoom'), { ssr: false, loading: () => <p className="mi-note" style={{ padding: 24 }}>…</p> }); /* م4-ب: غرفة الأداء تُحمَّل عند الحاجة */
 const ProductiveBlock = dynamic(() => import('./ProductiveBlock'), { ssr: false }); /* كتلة «المهارات الإنتاجية» — فقط حين تحملها البطاقة (ميزانية P40) */
 
@@ -145,7 +147,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const [copy, setCopy] = useState<Copy | null>(null);
   const [lang, setLangState] = useState('en');
   const [step, setStep] = useState<Step>('loading');
-  const [invite, setInvite] = useState<Invite | null>(null); const [inviteErr, setInviteErr] = useState<false | string>(false);
+  const [invite, setInvite] = useState<Invite | null>(null); const [inviteErr, setInviteErr] = useState<false | string>(false); const [preview, setPreview] = useState<InvitePreview | null>(null);
   const [examMode, setExamMode] = useState<'comprehensive' | 'adaptive'>('adaptive'); const [blueprint, setBlueprint] = useState<string | null>(null); const [doors, setDoors] = useState<Door[]>(DEFAULT_DOORS);
   const [cand, setCand] = useState({ name: '', email: '', phone: '', nativeLanguage: '', studiedBefore: null as boolean | null, purpose: '', idNumber: '', city: '' });
   const [pin, setPin] = useState(''); /* م7: رمز القاعة */
@@ -191,7 +193,13 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     if (inviteCode) {
       const r = await fetch(`/api/miaar?invite=${encodeURIComponent(inviteCode)}${inviteToken ? `&t=${encodeURIComponent(inviteToken)}` : ''}`, { cache: 'no-store' }).then((r) => r.json()).catch(() => null);
       if (r?.ok) { setInvite(r.invite); setExamMode(r.invite.exam_mode); if (!langPicked.current && (await copyHas(r.invite.lang))) { initialLang = r.invite.lang; c = (await loadCopy(c, [initialLang])) || c; setCopy(c); } if (r.invite.recipient) setCand((v) => ({ ...v, email: r.invite.recipient.email, name: r.invite.recipient.name || v.name })); }
-      else { setInviteErr(r?.error === 'invite_not_open' ? 'not_open' : 'bad'); setLangState(initialLang); setStep('blocked'); return; }
+      else {
+        if (r?.error === 'invite_not_open') { /* بطاقة الترحيب قبل الموعد — بلغة الدعوة */
+          setInviteErr('not_open'); setPreview(r.preview || null); const pl = r.preview?.lang;
+          if (pl && !langPicked.current && (await copyHas(pl))) { initialLang = pl; c = (await loadCopy(c, [initialLang])) || c; setCopy(c); }
+        } else setInviteErr('bad');
+        setLangState(initialLang); setStep('blocked'); return;
+      }
     }
     setLangState(initialLang);
     /* م8-ج: ?preview=rules → معاينة صفحة التعليمات كما يراها الممتحن (من محرِّر الطاقم) بلا جلسة — قبل الاستئناف */
@@ -371,7 +379,7 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
   const Foot = () => <footer className="mi-foot">© 2026 {x('product')} · {x('athar')} · <a href="/accessibility">{lang === 'ar' ? 'الوصولية' : 'Accessibility'}</a></footer>;
 
   if (step === 'loading' || !copy) return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><div className="mi-wrap"><p className="mi-muted" role="status">{err === 'copy' ? 'تعذّر تحميل مِعيار — أعد تحميل الصفحة.' : x('loading')}</p></div></main>;
-  if (step === 'blocked') return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><Header /><Hero kicker={x('product')} title={x('invite_for')} /><div className="mi-wrap"><section className="mi-card"><p className="mi-err" role="alert">{inviteErr === 'not_open' ? x('invite_not_open') : inviteErr ? x('invite_bad') : x('not_found')}</p><a className="mi-btn ghost" href="/miaar">{x('product')}</a></section></div><Foot /></main>;
+  if (step === 'blocked') return <main className={cls} dir={dir}><style dangerouslySetInnerHTML={{ __html: CSS }} /><Header /><Hero kicker={x('product')} title={x('invite_for')} /><div className="mi-wrap">{inviteErr === 'not_open' && preview ? <InviteWelcome preview={preview} lang={lang} /> : <section className="mi-card"><p className="mi-err" role="alert">{inviteErr === 'not_open' ? x('invite_not_open') : inviteErr ? x('invite_bad') : x('not_found')}</p><a className="mi-btn ghost" href="/miaar">{x('product')}</a></section>}</div><Foot /></main>;
 
   const sampleQ = EXAMS[(door ? door.door : examMode) === 'adaptive' ? 'adaptive' : 'comprehensive'];
   const doorName = (d: Door) => d.door === 'adaptive' && d.type === 'placement' ? t('intro', 'adap') : d.door === 'comprehensive' && d.code === 'SYS-COMPREHENSIVE' ? t('intro', 'comp') : lang === 'ar' ? d.name_ar : d.name_en || d.name_ar;
