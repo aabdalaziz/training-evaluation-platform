@@ -150,3 +150,8 @@ import './miaar-cleanup.test';
 import './gate.test'; /* P79 */
 import './p80-shield.test'; /* P80 */
 import './p82-reader.test'; /* P82 */
+import './p84-live.test'; /* P84 */
+import './p83-finance.test'; /* P83 */
+import './p85-insight.test'; /* P85 */
+import './p85-docx.test'; /* P85 */
+import './p85-charts.test'; /* P85 */

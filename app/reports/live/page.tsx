@@ -97,6 +97,7 @@ function Inner() {
       <RoomHead title={<>التقرير الحيّ</>} desc={<><p>هرم كيركباتريك بمستوياته الأربعة معًا، توزيع كلّ بند، مقارنة بالدفعة السابقة، تنبيهات تتحوّل إلى مهامّ، وخمسة قوالب بحسب القارئ — من البيانات نفسها، بزرّ واحد PDF أو بريد.</p></>}
         actions={<>
           <Link href={`/reports/program${programId ? `?program=${programId}` : ''}`} className="rm-btn"><Icon name="doc" size={16} /> التقرير الشامل</Link>
+          <Link href={`/reports/studio${programId ? `?program=${programId}` : ''}`} className="rm-btn"><Icon name="chart" size={16} /> استوديو التحليل</Link>{/* P85 */}
           <button className="rm-btn" onClick={() => setMailOpen(o => !o)} disabled={!live || !canWrite}><Icon name="mail" size={16} /> أرسل للجهة</button>
           <button className="rm-btn primary" onClick={() => window.print()} disabled={!live}><Icon name="print" size={16} /> PDF بالهوية</button>
         </>} />

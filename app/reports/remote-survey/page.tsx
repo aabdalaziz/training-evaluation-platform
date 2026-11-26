@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabase/client';
@@ -106,6 +107,7 @@ export default function RemoteSurveyReportPage() {
         title={<>{ar ? 'نتائج استبيان التعلم عن بُعد عبر Teams' : 'Remote Learning (Teams) Survey Results'}</>}
         desc={<><p>{ar ? 'التوقيت: الرياض (Asia/Riyadh) — الإجابات مجهولة الهوية' : 'Time zone: Asia/Riyadh — anonymous responses'}</p></>}
         actions={<>
+            <Link href={`/reports/studio${f.programId ? `?program=${f.programId}` : ''}`} className="rm-btn"><Icon name="chart" size={16} /> {ar ? 'استوديو التحليل' : 'Analysis studio'}</Link>{/* P85 */}
             <button className="rm-btn" onClick={() => setLang(ar ? 'en' : 'ar')}><Icon name="globe" size={16} /> {ar ? 'English' : 'العربية'}</button>
             <button className="rm-btn" onClick={() => window.print()}><Icon name="print" size={16} /> {ar ? 'طباعة' : 'Print'}</button>
         </>}
