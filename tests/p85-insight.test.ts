@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildEvaluations, buildFacts, buildComments } from '../lib/reports/analytics';
 import type { Lookups } from '../lib/reports/analytics';
-import { fromEvaluations, fromRemote, merge, describe, cronbach, drivers, dynamics, segments, segmentGap, themes, analyze, compose, reportText, pearson, pFromT } from '../lib/reports/insight';
+import { fromEvaluations, fromRemote, merge, filterScope, describe, cronbach, drivers, dynamics, segments, segmentGap, themes, analyze, compose, reportText, pearson, pFromT } from '../lib/reports/insight';
 import type { ResponseRow } from '../lib/surveys/remoteLearning';
 
 /* مولّد شبه عشوائي ثابت */
@@ -26,7 +26,7 @@ days.forEach((d, di) => { for (let p = 0; p < 12; p++) { const room = p < 6 ? 'c
   if (p % 3 === 0) answers.push({ evaluation_id: id, question_id: 'q7', rating_value: null, text_value: room === 'cB' ? 'الوقت قصير جدًا ونتمنى زيادة مدة التطبيق العملي' : 'شرح المدرّب ممتاز وواضح' }); } });
 for (let p = 0; p < 10; p++) { const id = `f${p}`; evaluations.push({ id, program_id: 'p1', classroom_id: p < 5 ? 'cA' : 'cB', kind: 'FINAL', submitted_at: '2026-11-07T12:00:00Z', guest_email: `t${p}@x.sa` }); for (const q of ['q1', 'q2', 'q3', 'q4', 'q5', 'q6']) answers.push({ evaluation_id: id, question_id: q, rating_value: clamp((q === 'q4' ? 2.8 : 4.2) + (rnd() - 0.5)) }); }
 for (let p = 0; p < 6; p++) { const id = `n${p}`; evaluations.push({ id, program_id: 'p1', classroom_id: null, kind: 'END', submitted_at: '2026-11-08T12:00:00Z', guest_email: `t${p}@x.sa` }); for (const q of ['q3', 'q6']) answers.push({ evaluation_id: id, question_id: q, rating_value: clamp(4.3 + (rnd() - 0.5)) }); }
-const lk: Lookups = { classrooms: [{ id: 'cA', code: 'الفصل أ', program_id: 'p1', trainer_id: 't1' }, { id: 'cB', code: 'الفصل ب', program_id: 'p1', trainer_id: 't2' }], trainers: [{ id: 't1', name: 'أ. سارة' }, { id: 't2', name: 'أ. خالد' }], programs: [{ id: 'p1', name_ar: 'العربية للناطقين بغيرها (عن بُعد)' }], questions } as any;
+const lk: Lookups = { classrooms: [{ id: 'cA', code: 'الفصل أ', program_id: 'p1', trainer_id: 't1', level_id: 'L1', section_name: 'صباحي' }, { id: 'cB', code: 'الفصل ب', program_id: 'p1', trainer_id: 't2', level: 'L2' }], trainers: [{ id: 't1', name: 'أ. سارة' }, { id: 't2', name: 'أ. خالد' }], programs: [{ id: 'p1', name_ar: 'العربية للناطقين بغيرها (عن بُعد)' }], questions } as any;
 const evals = buildEvaluations(evaluations, answers, lk); const facts = buildFacts(answers, questions as any); const comments = buildComments(evals, answers, questions as any);
 const remoteRows: ResponseRow[] = Array.from({ length: 9 }, (_, i) => ({ id: `r${i}`, program_id: 'p1', level_id: i < 5 ? 'L1' : 'L2', trainer_id: 't1', classroom_id: 'cA', schedule_id: null, lecture_date: days[i % 6], self_level_id: null, self_level_unknown: false, attendance: 'most', ratings: { q01_teams_easy: 'A', q02_av_clear: i % 3 ? 'SA' : 'N', q03_teacher_clear: 'SA', q04_new_words: 'SA', q05_listening: 'A', q06_speaking: i % 2 ? 'D' : 'N', q07_reading: 'A', q08_writing: 'A', q09_materials_level: 'A', q10_instructions: 'A', q11_help: 'SA', q12_improved: 'A', q13_satisfied: i % 2 ? 'A' : 'SA' } as any, difficulties: i % 2 ? ['few_speaking', 'poor_internet'] : ['none'], difficulty_other: null, liked_most: i % 2 ? 'المدرّسة صبورة وواضحة' : null, suggestion: i % 3 === 0 ? 'أتمنى فرصًا أكثر للتحدث بالعربية في الدرس' : null, submitted_at: `${days[i % 6]}T18:00:00Z` }));
 const ds = merge(fromEvaluations(evals, facts, comments, lk), fromRemote(remoteRows, { classrooms: lk.classrooms, trainers: lk.trainers, levels: [{ id: 'L1', name_ar: 'المستوى الأوّل' }, { id: 'L2', name_ar: 'المستوى الثاني' }] }));
@@ -62,7 +62,7 @@ test('dynamics: fatigue in the last third detected; worst day among the last two
 });
 
 test('segments: classroom gap significant with large effect; labels resolved', () => {
-  const rows = segments(ds, 'classroom'); assert.equal(rows[0].label, 'الفصل أ'); const gap = segmentGap(ds, 'classroom')!; assert.equal(gap.significant, true); assert.ok(gap.d > 0.5, `d=${gap.d}`); assert.equal(gap.worst.label, 'الفصل ب');
+  const rows = segments(ds, 'classroom'); assert.equal(rows[0].label, 'الفصل أ · صباحي'); const gap = segmentGap(ds, 'classroom')!; assert.equal(gap.significant, true); assert.ok(gap.d > 0.5, `d=${gap.d}`); assert.equal(gap.worst.label, 'الفصل ب');
   const kinds = segments(ds, 'kind'); assert.ok(kinds.length >= 3);
 });
 
@@ -82,4 +82,15 @@ test('analyze + compose: findings reference evidence, recommendations prioritize
   assert.ok(full.sections.some(s => s.id === 'quality') && full.sections.some(s => s.id === 'drivers') && full.sections.some(s => s.id === 'dynamics'));
   const charts = full.sections.flatMap(s => s.blocks).filter(b => b.type === 'chart'); assert.ok(charts.length >= 5);
   const txt = reportText(full); assert.ok(txt.includes('الملخّص التنفيذي') && txt.includes('R1') && txt.includes('F1'));
+});
+
+test('P85-ب: نطاق المستوى/المدرّب/الشعبة — مستوى الفصل يُشتقّ من classrooms (level_id أو الرمز النصّي) والتسمية تشمل اسم الشعبة', () => {
+  assert.equal(ds.labels['cA'], 'الفصل أ · صباحي');
+  const dailyA = ds.obs.filter((o) => o.kind === 'DAILY' && o.classroom === 'cA'); assert.ok(dailyA.length > 0 && dailyA.every((o) => o.level === 'L1'));
+  const dailyB = ds.obs.filter((o) => o.kind === 'DAILY' && o.classroom === 'cB'); assert.ok(dailyB.length > 0 && dailyB.every((o) => o.level === 'L2'));
+  const byTrainer = filterScope(ds, { trainer: 't2' }); assert.ok(byTrainer.obs.length > 0 && byTrainer.obs.every((o) => o.trainer === 't2'));
+  const byRoom = filterScope(ds, { classroom: 'cA', level: 'L1' }); assert.ok(byRoom.obs.length > 0 && byRoom.obs.every((o) => o.classroom === 'cA' && o.level === 'L1'));
+  assert.equal(filterScope(ds, { classroom: 'cB', trainer: 't1' }).obs.length, 0, 'شعبة ب ليست للمدرّب t1');
+  const a = analyze(byRoom); const rep = compose(a, { program: 'ب', period: '', generatedAt: '', depth: 'executive', scope: ['المستوى الأوّل', 'الشعبة الفصل أ · صباحي'] });
+  assert.ok(rep.subtitle.includes('الشعبة الفصل أ · صباحي') && reportText(rep).includes('(المستوى الأوّل · الشعبة الفصل أ · صباحي)'));
 });

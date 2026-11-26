@@ -14,7 +14,7 @@ import { Icon } from '../../../lib/ui/icons';
 import { RoomHead } from '../../components/RoomKit';
 import { buildEvaluations, buildFacts, buildComments, applyFilters, factsOf } from '../../../lib/reports/analytics';
 import type { Lookups, Program } from '../../../lib/reports/analytics';
-import { fromEvaluations, fromRemote, merge, filterKinds, analyze, compose, reportText, KIND_AR, DEPTH_AR, QUADRANT_AR } from '../../../lib/reports/insight';
+import { fromEvaluations, fromRemote, merge, filterKinds, filterScope, analyze, compose, reportText, KIND_AR, DEPTH_AR, QUADRANT_AR } from '../../../lib/reports/insight';
 import type { ObsKind, Depth, Report, RBlock, Dataset, Analysis } from '../../../lib/reports/insight';
 import type { ResponseRow } from '../../../lib/surveys/remoteLearning';
 import { Chart, svgToPng } from '../components/Charts';
@@ -23,7 +23,8 @@ import { downloadPptx, type PptSlide } from '../../../lib/export/pptx';
 import { downloadXlsx, type Sheet } from '../../../lib/export/xlsx';
 import { safeFilename } from '../../../lib/export/csv';
 
-type Raw = { programs: Program[]; lk: Lookups; evaluations: any[]; answers: any[]; remote: ResponseRow[]; levels: { id: string; name_ar: string; program_id: string | null }[] };
+type Raw = { programs: Program[]; lk: Lookups; evaluations: any[]; answers: any[]; remote: ResponseRow[]; levels: { id: string; code: string; name_ar: string; program_id: string | null }[] };
+type Room = { id: string; code: string; program_id: string | null; trainer_id: string | null; delivery_mode: string | null; level: string | null; level_id: string | null; section_name: string | null };
 const ALL_KINDS: ObsKind[] = ['DAILY', 'FINAL', 'END', 'REMOTE'];
 const fmtDate = (s: string) => (s ? new Date(s + 'T00:00:00').toLocaleDateString('ar-SA-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
 
@@ -33,7 +34,8 @@ function Inner() {
   const db = useMemo(() => supabase(), []); const router = useRouter(); const sp = useSearchParams();
   const [ready, setReady] = useState(false); const [raw, setRaw] = useState<Raw | null>(null); const [error, setError] = useState(''); const [flash, setFlash] = useState('');
   const [programId, setProgramId] = useState(sp.get('program') || ''); const [kinds, setKinds] = useState<ObsKind[]>(ALL_KINDS); const [depth, setDepth] = useState<Depth>((sp.get('depth') as Depth) || 'detailed');
-  const [from, setFrom] = useState(''); const [to, setTo] = useState(''); const [busy, setBusy] = useState(''); const sheetRef = useRef<HTMLElement>(null);
+  const [from, setFrom] = useState(''); const [to, setTo] = useState('');
+  const [levelId, setLevelId] = useState(sp.get('level') || ''); const [trainerId, setTrainerId] = useState(sp.get('trainer') || ''); const [roomId, setRoomId] = useState(sp.get('classroom') || ''); /* P85-ب: نطاق الدبلومات */ const [busy, setBusy] = useState(''); const sheetRef = useRef<HTMLElement>(null);
   const say = (m: string) => { setFlash(m); setTimeout(() => setFlash(''), 3500); };
   const generatedAt = useMemo(() => new Date().toLocaleDateString('ar-SA-u-nu-latn', { year: 'numeric', month: 'long', day: 'numeric' }), []);
 
@@ -41,8 +43,8 @@ function Inner() {
     (async () => {
       const { data: { user } } = await db.auth.getUser(); if (!user) { router.replace('/login?next=/reports/studio'); return; }
       const [pg, cl, tr, qs, ev, an, rm, lv] = await Promise.all([
-        db.from('programs').select('id,name_ar,name_en,delivery_mode,status,start_date,end_date').order('name_ar'), db.from('classrooms').select('id,code,program_id,trainer_id,delivery_mode,level'), db.from('trainers').select('id,name'), db.from('questions').select('*'),
-        db.from('evaluations').select('*').limit(20000), db.from('evaluation_answers').select('*').limit(200000), db.from('remote_learning_survey_responses').select('*').limit(20000), db.from('program_levels').select('id,name_ar,program_id'),
+        db.from('programs').select('id,name_ar,name_en,delivery_mode,status,start_date,end_date').order('name_ar'), db.from('classrooms').select('id,code,program_id,trainer_id,delivery_mode,level,level_id,section_name').order('code'), db.from('trainers').select('id,name'), db.from('questions').select('*'),
+        db.from('evaluations').select('*').limit(20000), db.from('evaluation_answers').select('*').limit(200000), db.from('remote_learning_survey_responses').select('*').limit(20000), db.from('program_levels').select('id,code,name_ar,program_id,sort_order').order('sort_order'),
       ]);
       const err = [pg, cl, tr, qs, ev, an].find((r) => r.error)?.error; if (err) setError(err.message);
       const programs = ((pg.data || []) as Program[]).filter((p: any) => p.status !== 'CANCELLED');
@@ -60,15 +62,19 @@ function Inner() {
     const evals = applyFilters(evalsAll, { programId, kind: 'ALL', from: from || undefined, to: to || undefined }, raw.lk); const pf = factsOf(evals, facts); const comments = buildComments(evals, raw.answers, raw.lk.questions);
     const remote = raw.remote.filter((r) => r.program_id === programId && (!from || (r.lecture_date || r.submitted_at.slice(0, 10)) >= from) && (!to || (r.lecture_date || r.submitted_at.slice(0, 10)) <= to));
     const full = merge(fromEvaluations(evals, pf, comments, raw.lk), fromRemote(remote, { classrooms: raw.lk.classrooms, trainers: raw.lk.trainers, levels: raw.levels }));
-    const availableKinds = ALL_KINDS.filter((k) => full.obs.some((o) => o.kind === k)); const ds = filterKinds(full, kinds);
+    /* رموز المستويات النصّية القديمة (classrooms.level) → معرّف المستوى حتى يعمل المرشّح والتسمية */
+    const codeToId = new Map(raw.levels.filter((l) => !l.program_id || l.program_id === programId).map((l) => [l.code.toLowerCase(), l.id]));
+    for (const o of full.obs) if (o.level && !full.labels[o.level]) { const id = codeToId.get(String(o.level).toLowerCase()); if (id) o.level = id; }
+    const availableKinds = ALL_KINDS.filter((k) => full.obs.some((o) => o.kind === k)); const ds = filterScope(filterKinds(full, kinds), { level: levelId, trainer: trainerId, classroom: roomId });
+    const scope: string[] = []; if (levelId) scope.push(full.labels[levelId] || raw.levels.find((l) => l.id === levelId)?.name_ar || 'مستوى'); if (trainerId) scope.push(full.labels[trainerId] || 'مدرّب'); if (roomId) scope.push(`الشعبة ${full.labels[roomId] || ''}`);
     /* مرجعية: متوسّط كلّ برنامج آخر (التقييمات الاعتيادية) */
     const others: number[] = []; for (const p of raw.programs) { if (p.id === programId) continue; const e = applyFilters(evalsAll, { programId: p.id, kind: 'ALL' }, raw.lk); if (e.length < 5) continue; const vals = e.flatMap((x) => x.ratings); if (vals.length) others.push(vals.reduce((s, v) => s + v, 0) / vals.length); }
     const a = analyze(ds, { benchmarkOthers: others });
     const dates = ds.obs.map((o) => o.date).filter(Boolean).sort(); const period = dates.length ? `${fmtDate(dates[0])} – ${fmtDate(dates[dates.length - 1])}` : '';
     const trainers = Array.from(new Set(ds.obs.map((o) => o.trainer).filter(Boolean))).map((t) => ds.labels[t as string] || (t as string));
-    const rep = compose(a, { program: program.name_ar, period, generatedAt, depth, trainers, delivery: program.delivery_mode === 'remote' || /عن ب/.test(program.name_ar) ? 'عن بُعد' : null });
+    const rep = compose(a, { program: program.name_ar, period, generatedAt, depth, trainers, scope, delivery: program.delivery_mode === 'remote' || /عن ب/.test(program.name_ar) ? 'عن بُعد' : null });
     return { ds, a, rep, program, availableKinds };
-  }, [raw, programId, kinds, depth, from, to, generatedAt]);
+  }, [raw, programId, kinds, depth, from, to, generatedAt, levelId, trainerId, roomId]);
 
   /* التصدير */
   const chartPngs = async (): Promise<Map<string, { png: Uint8Array; w: number; h: number }>> => { const out = new Map(); const svgs = sheetRef.current?.querySelectorAll<SVGSVGElement>('svg.ch') || []; for (const s of Array.from(svgs)) { try { out.set(s.getAttribute('data-chart') || '', await svgToPng(s, 2)); } catch { /* يُتجاوز */ } } return out; };
@@ -101,6 +107,13 @@ function Inner() {
   ]; downloadXlsx(safeFilename(`athar_analysis_${rep.program}`, 'xlsx'), sheets); say('نُزّل ملفّ Excel'); }
   async function copyText() { if (!built) return; try { await navigator.clipboard.writeText(reportText(built.rep)); say('نُسخ نصّ التقرير'); } catch { setError('تعذّر النسخ'); } }
 
+  /* P85-ب: خيارات النطاق مقيّدة بالبرنامج (وبالمستوى/المدرّب عند اختيارهما) */
+  const rooms = ((raw?.lk.classrooms || []) as Room[]).filter((c) => c.program_id === programId);
+  const levelOpts = (raw?.levels || []).filter((l) => (!l.program_id || l.program_id === programId) && rooms.some((c) => c.level_id === l.id || (c.level || '').toLowerCase() === l.code.toLowerCase()));
+  const roomMatches = (c: Room) => (!levelId || c.level_id === levelId || levelOpts.some((l) => l.id === levelId && (c.level || '').toLowerCase() === l.code.toLowerCase())) && (!trainerId || c.trainer_id === trainerId);
+  const trainerOpts = (raw?.lk.trainers || []).filter((t) => rooms.some((c) => c.trainer_id === t.id && (!levelId || roomMatches({ ...c, trainer_id: null }))));
+  const roomOpts = rooms.filter(roomMatches);
+  const changeProgram = (id: string) => { setProgramId(id); setLevelId(''); setTrainerId(''); setRoomId(''); };
   if (!ready) return <div className="st rm-page" style={{ padding: 40, textAlign: 'center' }}>جارٍ التحميل…</div>;
   const toggleKind = (k: ObsKind) => setKinds((l) => (l.includes(k) ? (l.length > 1 ? l.filter((x) => x !== k) : l) : [...l, k]));
   return (
@@ -118,14 +131,17 @@ function Inner() {
       {error && <div className="rm-alert st-noprint" onClick={() => setError('')}>{error}</div>}{flash && <div className="st-flash st-noprint">{flash}</div>}
 
       <section className="rm-card st-noprint st-bar">
-        <label className="st-sel">البرنامج<select value={programId} onChange={(e) => setProgramId(e.target.value)}>{raw?.programs.map((p) => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
+        <label className="st-sel">البرنامج<select value={programId} onChange={(e) => changeProgram(e.target.value)}>{raw?.programs.map((p) => <option key={p.id} value={p.id}>{p.name_ar}</option>)}</select></label>
         <div className="st-kinds" role="group" aria-label="أنواع الاستبيانات">{ALL_KINDS.map((k) => { const n = built ? built.ds.obs.filter((o) => o.kind === k).length : 0; const avail = built?.availableKinds.includes(k); return <button key={k} type="button" className={`st-kind ${kinds.includes(k) ? 'on' : ''} ${avail ? '' : 'none'}`} onClick={() => toggleKind(k)} aria-pressed={kinds.includes(k)}>{KIND_AR[k]}<small>{avail ? `${n}` : 'لا بيانات'}</small></button>; })}</div>
+        <label className="st-sel sm">المستوى<select value={levelId} onChange={(e) => { setLevelId(e.target.value); setRoomId(''); }} disabled={!levelOpts.length}><option value="">{levelOpts.length ? 'كلّ المستويات' : '— لا مستويات —'}</option>{levelOpts.map((l) => <option key={l.id} value={l.id}>{l.name_ar}</option>)}</select></label>
+        <label className="st-sel sm">المدرّب<select value={trainerId} onChange={(e) => { setTrainerId(e.target.value); setRoomId(''); }} disabled={!trainerOpts.length}><option value="">كلّ المدرّبين</option>{trainerOpts.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+        <label className="st-sel sm">القاعة / الشعبة<select value={roomId} onChange={(e) => setRoomId(e.target.value)} disabled={!roomOpts.length}><option value="">كلّ الشُّعب</option>{roomOpts.map((c) => <option key={c.id} value={c.id}>{c.code}{c.section_name ? ` · ${c.section_name}` : ''}</option>)}</select></label>
         <label className="st-date">من<input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label><label className="st-date">إلى<input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>
         <div className="st-depth" role="tablist" aria-label="عمق التقرير">{(Object.keys(DEPTH_AR) as Depth[]).map((d) => <button key={d} role="tab" aria-selected={depth === d} className={`st-tab ${depth === d ? 'on' : ''}`} onClick={() => setDepth(d)}><b>{DEPTH_AR[d].label}</b><small>{DEPTH_AR[d].reader} · {DEPTH_AR[d].pages}</small></button>)}</div>
       </section>
 
       {!built && <div className="rm-card rm-empty"><Icon name="chart" size={34} /><b>اختر برنامجًا</b></div>}
-      {built && built.a.n === 0 && <div className="rm-card rm-empty"><Icon name="chart" size={34} /><b>لا استجابات في هذا النطاق</b><span>غيّر الأنواع أو الفترة.</span></div>}
+      {built && built.a.n === 0 && <div className="rm-card rm-empty"><Icon name="chart" size={34} /><b>لا استجابات في هذا النطاق</b><span>غيّر الأنواع أو الفترة أو المستوى/المدرّب/الشعبة.</span>{(levelId || trainerId || roomId) && <button className="rm-btn" onClick={() => { setLevelId(''); setTrainerId(''); setRoomId(''); }}>إلغاء النطاق</button>}</div>}
       {built && built.a.n > 0 && <article className="st-sheet" ref={sheetRef}>
         <header className="st-top"><img src="/brand/athar-mark.svg" alt="أَثَر" className="st-logo" /><div><div className="st-kicker">{built.rep.title} · {built.rep.audience} · <bdi>{built.rep.generated_at}</bdi></div><h2>{built.rep.program}</h2><div className="st-meta"><span>{built.rep.subtitle}</span><span><bdi>{built.rep.period}</bdi></span><span>{built.a.n} استجابة</span></div></div></header>
         <nav className="st-toc st-noprint" aria-label="أقسام التقرير">{built.rep.sections.map((s) => <a key={s.id} href={`#st-${s.id}`}>{s.title}</a>)}</nav>
@@ -150,7 +166,7 @@ function BlockView({ b }: { b: RBlock }) {
 
 const CSS = `
 .st{max-width:1120px;margin:0 auto}.st-bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
-.st-sel{display:flex;flex-direction:column;gap:4px;font-weight:800;color:#3A1F36;font-size:13px}.st-sel select{min-width:280px;padding:8px 10px;border:1px solid #e6d5c6;border-radius:10px;font:inherit}
+.st-sel{display:flex;flex-direction:column;gap:4px;font-weight:800;color:#3A1F36;font-size:13px}.st-sel.sm select{min-width:160px;max-width:220px}.st-sel select{min-width:280px;padding:8px 10px;border:1px solid #e6d5c6;border-radius:10px;font:inherit}
 .st-kinds{display:flex;gap:6px;flex-wrap:wrap}.st-kind{display:flex;flex-direction:column;align-items:flex-start;padding:6px 10px;border-radius:10px;border:1px solid #e6d5c6;background:#fff;color:#3A1F36;font:inherit;font-weight:800;font-size:12.5px;cursor:pointer;min-height:44px}.st-kind.on{background:#5EA8A0;border-color:#5EA8A0;color:#fff}.st-kind.none{opacity:.5}.st-kind small{font-size:11px;font-weight:700;opacity:.8}
 .st-date{display:flex;flex-direction:column;gap:4px;font-weight:800;color:#3A1F36;font-size:13px}.st-date input{padding:7px 8px;border:1px solid #e6d5c6;border-radius:10px;font:inherit}
 .st-depth{display:flex;gap:6px;flex-wrap:wrap;margin-inline-start:auto}.st-tab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 12px;border-radius:12px;border:1px solid #e6d5c6;background:#fff;color:#3A1F36;font:inherit;cursor:pointer;min-height:44px}.st-tab.on{background:#3A1F36;color:#fff;border-color:#3A1F36}.st-tab small{font-size:11px;opacity:.75}

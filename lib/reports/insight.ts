@@ -33,23 +33,26 @@ const variance = (xs: number[]) => { if (xs.length < 2) return 0; const m = mean
 const sd = (xs: number[]) => Math.sqrt(variance(xs));
 
 /** من التقييمات الاعتيادية (يومي/نهائي/ختامي) — يعتمد على الحقائق المبنية في analytics. */
+/** اسم القاعة/الشعبة: الرمز + اسم الشعبة إن وُجد (P85-ب) */
+export const roomLabel = (c: { code: string; section_name?: string | null }) => (c.section_name ? `${c.code} · ${c.section_name}` : c.code);
 export function fromEvaluations(evals: Evaluation[], facts: Fact[], comments: Comment[], lk: Lookups): Dataset {
   const byEval = new Map<string, Fact[]>(); for (const f of facts) { const l = byEval.get(f.evaluation_id) || []; l.push(f); byEval.set(f.evaluation_id, l); }
   const byEvalC = new Map<string, Comment[]>(); for (const c of comments) { const l = byEvalC.get(c.evaluation_id) || []; l.push(c); byEvalC.set(c.evaluation_id, l); }
   const items = new Map<string, ItemDef>(); const labels: Record<string, string> = {};
-  for (const c of lk.classrooms) labels[c.id] = c.code; for (const t of lk.trainers) labels[t.id] = t.name;
+  for (const c of lk.classrooms) labels[c.id] = roomLabel(c); for (const t of lk.trainers) labels[t.id] = t.name;
+  const levelOfRoom = new Map(lk.classrooms.map((c) => [c.id, ((c as any).level_id as string | null) || c.level || null])); /* P85-ب: مستوى الفصل (معرّف أو رمز نصّي قديم) */
   const obs: Obs[] = [];
   for (const e of evals) {
     const fs = byEval.get(e.id) || []; if (!fs.length && !(byEvalC.get(e.id) || []).length) continue;
     const kind = (['DAILY', 'FINAL', 'END'].includes(String(e.kind)) ? e.kind : 'FINAL') as ObsKind; const it: Record<string, number> = {};
     for (const f of fs) { it[f.question_id] = f.value; const d = items.get(f.question_id); if (!d) items.set(f.question_id, { key: f.question_id, label: f.text_ar || f.text_en || f.question_key, axis: f.section_ar || f.section_en || 'عام', kinds: [kind] }); else if (!d.kinds.includes(kind)) d.kinds.push(kind); }
-    obs.push({ id: e.id, kind, date: e.date, program_id: e.program_id, classroom: e.classroom_id, trainer: e.trainer_id, level: null, gender: e.guest_gender || null, items: it, texts: (byEvalC.get(e.id) || []).map((c) => ({ key: c.question_id, label: c.question_ar, text: c.text })), tags: [] });
+    obs.push({ id: e.id, kind, date: e.date, program_id: e.program_id, classroom: e.classroom_id, trainer: e.trainer_id, level: (e.classroom_id && levelOfRoom.get(e.classroom_id)) || null, gender: e.guest_gender || null, items: it, texts: (byEvalC.get(e.id) || []).map((c) => ({ key: c.question_id, label: c.question_ar, text: c.text })), tags: [] });
   }
   return { obs, items: Array.from(items.values()), labels };
 }
 /** من استبيان التعلّم عن بُعد (SA..SD → 5..1، NA تُهمل). */
 export function fromRemote(rows: ResponseRow[], ctx: { classrooms: { id: string; code: string }[]; trainers: { id: string; name: string }[]; levels: { id: string; name_ar: string }[] }): Dataset {
-  const labels: Record<string, string> = {}; for (const c of ctx.classrooms) labels[c.id] = c.code; for (const t of ctx.trainers) labels[t.id] = t.name; for (const l of ctx.levels) labels[l.id] = l.name_ar;
+  const labels: Record<string, string> = {}; for (const c of ctx.classrooms) labels[c.id] = roomLabel(c); for (const t of ctx.trainers) labels[t.id] = t.name; for (const l of ctx.levels) labels[l.id] = l.name_ar;
   const axisOf = (k: string) => STATEMENT_AXES.find((a) => a.keys.includes(k))?.ar || 'عام';
   const items: ItemDef[] = STATEMENTS.map((s) => ({ key: s.key, label: s.ar, axis: axisOf(s.key), kinds: ['REMOTE'] }));
   const obs: Obs[] = rows.map((r) => {
@@ -66,6 +69,9 @@ export function merge(...ds: Dataset[]): Dataset {
   for (const d of ds) { obs.push(...d.obs); Object.assign(labels, d.labels); for (const i of d.items) { const p = items.get(i.key); if (!p) items.set(i.key, { ...i, kinds: [...i.kinds] }); else for (const k of i.kinds) if (!p.kinds.includes(k)) p.kinds.push(k); } }
   return { obs, items: Array.from(items.values()), labels };
 }
+/** P85-ب: نطاق التقرير — مستوى/مدرّب/قاعة-شعبة (للدبلومات متعدّدة الشُّعب) */
+export type Scope = { level?: string | null; trainer?: string | null; classroom?: string | null };
+export const filterScope = (d: Dataset, sc: Scope): Dataset => ({ ...d, obs: d.obs.filter((o) => (!sc.level || o.level === sc.level) && (!sc.trainer || o.trainer === sc.trainer) && (!sc.classroom || o.classroom === sc.classroom)) });
 export const filterKinds = (d: Dataset, kinds: ObsKind[]): Dataset => ({ ...d, obs: d.obs.filter((o) => kinds.includes(o.kind)) });
 
 /* ────────────────────────────── الإحصاء الوصفي ────────────────────────────── */
@@ -256,10 +262,10 @@ export type Depth = 'executive' | 'detailed' | 'comprehensive';
 export const DEPTH_AR: Record<Depth, { label: string; reader: string; pages: string }> = { executive: { label: 'التقرير التنفيذي', reader: 'صانع القرار', pages: 'صفحتان' }, detailed: { label: 'التقرير التفصيلي', reader: 'مدير التدريب والجودة', pages: '6–8 صفحات' }, comprehensive: { label: 'التقرير الشامل', reader: 'ملفّ الاعتماد والجهة', pages: '10+ صفحات' } };
 const f2 = (x: number | null | undefined) => (x == null ? '—' : x.toFixed(2));
 const verdict = (m: number) => (m >= 4.5 ? 'ممتاز' : m >= TARGET ? 'فوق المستهدف' : m >= 3.7 ? 'جيّد' : m >= 3 ? 'يحتاج متابعة' : 'حرج');
-export function compose(a: Analysis, meta: { program: string; period: string; generatedAt: string; depth: Depth; trainers?: string[]; delivery?: string | null; attendanceNote?: string }): Report {
+export function compose(a: Analysis, meta: { program: string; period: string; generatedAt: string; depth: Depth; trainers?: string[]; delivery?: string | null; attendanceNote?: string; scope?: string[] }): Report {
   const d = meta.depth; const S: RSection[] = []; const sec = (id: string, title: string, blocks: RBlock[]) => { if (blocks.length) S.push({ id, title, blocks }); };
   const kindsAr = a.kinds.map((k) => KIND_AR[k]).join(' + ');
-  const lead = `خضع برنامج «${meta.program}» لـ${a.n} استجابة عبر ${kindsAr}${meta.period ? ` خلال ${meta.period}` : ''}. المتوسّط العامّ ${f2(a.overall.mean)} من 5 (${verdict(a.overall.mean)}؛ فاصل الثقة 95%: ${f2(a.overall.lo)}–${f2(a.overall.hi)})، وصافي الرضا ${a.overall.net} نقطة (${a.overall.top2}% راضون جدًّا مقابل ${a.overall.bottom2}% غير راضين).`;
+  const lead = `خضع برنامج «${meta.program}»${meta.scope?.length ? ` (${meta.scope.join(' · ')})` : ''} لـ${a.n} استجابة عبر ${kindsAr}${meta.period ? ` خلال ${meta.period}` : ''}. المتوسّط العامّ ${f2(a.overall.mean)} من 5 (${verdict(a.overall.mean)}؛ فاصل الثقة 95%: ${f2(a.overall.lo)}–${f2(a.overall.hi)})، وصافي الرضا ${a.overall.net} نقطة (${a.overall.top2}% راضون جدًّا مقابل ${a.overall.bottom2}% غير راضين).`;
   const topAx = a.axes[0], lowAx = a.axes[a.axes.length - 1];
   const second = a.axes.length ? ` أقوى المحاور «${topAx.axis}» (${f2(topAx.mean)}) وأضعفها «${lowAx.axis}» (${f2(lowAx.mean)})${a.drivers.find((x) => x.quadrant === 'fix_first') ? `، وأعلى عائد تحسين يكمن في «${a.drivers.find((x) => x.quadrant === 'fix_first')!.label}» لأنّه أشدّ البنود ارتباطًا بالرضا العامّ مع أداء دون الوسيط` : ''}.` : '';
   const third = a.dyn.days.length >= 3 ? ` عبر الأيام كان الاتجاه ${a.dyn.trend === 'up' ? 'صاعدًا' : a.dyn.trend === 'down' ? 'هابطًا' : 'مستقرًّا'} (ميل ${a.dyn.slope}/يوم)${a.dyn.fatigue ? ' مع تراجع واضح في الثلث الأخير' : ''}.` : '';
@@ -278,7 +284,7 @@ export function compose(a: Analysis, meta: { program: string; period: string; ge
   sec('voices', 'أصوات المشاركين', vb);
   sec('recs', 'التوصيات وخطّة العمل', [{ type: 'recs', items: a.recs.slice(0, d === 'executive' ? 4 : 10) }]);
   if (d === 'comprehensive') sec('quality', 'الجودة الإحصائية والحدود', [{ type: 'list', items: [`حجم العيّنة ${a.n} استجابة؛ ${a.n < 5 ? 'دون الحدّ الأدنى (5) — النتائج استرشادية.' : a.n < 20 ? 'كافٍ للاتجاهات لا للفروق الدقيقة.' : 'كافٍ للاستدلال على مستوى البرنامج.'}`, ...a.axes.map((x) => `ثبات «${x.axis}»: ${x.alpha == null ? 'غير محسوب' : `α=${x.alpha} (${x.alphaLabel})`}`), 'تحليل المشاعر والمواضيع قواعديّ (معجمي) لا نموذج لغوي — دقّته جيّدة للعربية الفصحى والعامية الشائعة ويُراجَع بشريًّا عند الحسم.', 'الفروق بين الشرائح وصفية؛ الدلالة الإحصائية لا تعني سببية.', a.bench ? `المرجعية: الترتيب ${a.bench.rank} من ${a.bench.of} برنامجًا (المئين ${a.bench.percentile}).` : 'لا مرجعية بين البرامج في هذا النطاق.'] }, { type: 'findings', items: a.findings }]);
-  return { title: DEPTH_AR[d].label, program: meta.program, subtitle: `${kindsAr}${meta.delivery ? ` · ${meta.delivery}` : ''}${meta.trainers?.length ? ` · ${meta.trainers.join('، ')}` : ''}`, period: meta.period, generated_at: meta.generatedAt, audience: DEPTH_AR[d].reader, sections: S };
+  return { title: DEPTH_AR[d].label, program: meta.program, subtitle: `${kindsAr}${meta.delivery ? ` · ${meta.delivery}` : ''}${meta.scope?.length ? ` · ${meta.scope.join(' · ')}` : ''}${meta.trainers?.length && !meta.scope?.length ? ` · ${meta.trainers.join('، ')}` : ''}`, period: meta.period, generated_at: meta.generatedAt, audience: DEPTH_AR[d].reader, sections: S };
 }
 function overallLabel(a: Analysis): string { const k = a.items.find((i) => i.key === SATISFACTION_KEY) || a.items.find((i) => /(رضا|راضٍ|بشكل عام|أوصي|overall|recommend|satisf)/i.test(i.label)); return k ? `بند «${k.label}»` : 'متوسّط بقيّة البنود'; }
 /** نصّ خام (للنسخ/البريد) من المستند. */
