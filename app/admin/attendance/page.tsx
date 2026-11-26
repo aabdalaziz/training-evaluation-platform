@@ -11,6 +11,8 @@ import { STATUS_LABEL, STATUS_ORDER, attendUrl, eligible, makeToken, riyadhToday
 import type { AttendanceRecord, AttendanceSession, PersonSummary, RecordStatus } from '../../../lib/attendance/model';
 
 import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
+import { MicButton } from '../../components/Dictate'; /* P82-ب */
+import { ScanButton, type ScanHit } from '../../components/Scan'; /* P82 «أَثَر يقرأ»: مسح بطاقة أَثَر الرقمية → تعبئة التسجيل اليدوي */
 type Program = { id: string; name_ar: string; name_en?: string | null; status?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id?: string | null };
 type Trainer = { id: string; name: string };
@@ -45,6 +47,18 @@ function Inner() {
   const [current, setCurrent] = useState<AttendanceSession | null>(null);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [manual, setManual] = useState({ name: '', email: '', phone: '', status: 'present' as RecordStatus });
+  /* P82: حلّ بطاقة أَثَر الرقمية على الخادم → تعبئة الاسم/البريد/الجوال (المستخدم يراجع ثمّ يضغط «إضافة») */
+  const fillFromPass = async (h: ScanHit) => {
+    if (h.kind !== 'pass' || !h.code) return;
+    try {
+      const { data: s } = await db.auth.getSession();
+      const r = await fetch('/api/reader/card', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token || ''}` }, body: JSON.stringify({ token: h.code }) });
+      const j = await r.json().catch(() => null);
+      if (!j?.success) { setError(j?.error || 'تعذّر حلّ البطاقة'); return; }
+      setManual((m) => ({ ...m, name: j.person.name || m.name, email: j.person.email || m.email, phone: j.person.phone || m.phone }));
+      flash(`قُرئت بطاقة ${j.person.name || ''}${j.person.org ? ' — ' + j.person.org : ''} · راجع ثمّ أضف`);
+    } catch { setError('تعذّر الاتصال بالخادم'); }
+  };
   const [qrOpen, setQrOpen] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const liveRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -332,9 +346,9 @@ function Inner() {
 
           {canWrite && (
             <section className="rm-card">
-              <h2><Icon name="edit" size={18} /> تسجيل يدوي</h2>
+              <h2><Icon name="edit" size={18} /> تسجيل يدوي <ScanButton compact accept={['pass']} title="أَثَر يقرأ — بطاقة المشارك" hint="امسح رمز «بطاقة أَثَر الرقمية» من جوال المشارك (/me/pass)" onHit={fillFromPass} /></h2>
               <div className="aa-manual">
-                <input placeholder="الاسم الكامل *" value={manual.name} onChange={e => setManual({ ...manual, name: e.target.value })} />
+<span style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input placeholder="الاسم الكامل *" value={manual.name} onChange={e => setManual({ ...manual, name: e.target.value })} style={{ flex: 1 }} /><MicButton kind="name" onText={(v) => setManual((m) => ({ ...m, name: v }))} /></span>
                 <input placeholder="البريد (اختياري)" dir="ltr" value={manual.email} onChange={e => setManual({ ...manual, email: e.target.value })} />
                 <input placeholder="الجوال (اختياري)" dir="ltr" value={manual.phone} onChange={e => setManual({ ...manual, phone: e.target.value })} />
                 <select value={manual.status} onChange={e => setManual({ ...manual, status: e.target.value as RecordStatus })}>{STATUS_ORDER.map(k => <option key={k} value={k}>{STATUS_LABEL[k].ar}</option>)}</select>

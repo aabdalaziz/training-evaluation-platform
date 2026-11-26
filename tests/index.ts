@@ -149,3 +149,4 @@ import './miaar-invite-mail.test';
 import './miaar-cleanup.test';
 import './gate.test'; /* P79 */
 import './p80-shield.test'; /* P80 */
+import './p82-reader.test'; /* P82 */

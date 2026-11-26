@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { STATUS_LABEL } from '../../../lib/attendance/model';
 import type { RecordStatus } from '../../../lib/attendance/model';
+import { MicButton, VoiceFill } from '../../components/Dictate'; /* P82-ب «قُل بدل أن تكتب» */
 
 type Info = {
   id: string; title: string; status: 'open' | 'closed'; session_date: string; start_time: string | null; end_time: string | null;
@@ -115,9 +116,10 @@ export function CheckinForm({ token }: { token: string }) {
 
             {info.status === 'open' && !result && (
               <form className="at-card" onSubmit={submit} noValidate>
-                <label><span>{t.name} <i>*</i></span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" required /></label>
-                <label><span>{t.email} <small>({t.optional})</small></span><input type="email" inputMode="email" dir="ltr" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} autoComplete="email" /></label>
-                <label><span>{t.phone} <small>({info.require_phone ? t.required : t.optional})</small>{info.require_phone && <i>*</i>}</span><input type="tel" inputMode="tel" dir="ltr" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} autoComplete="tel" /></label>
+                <div style={{ marginBottom: 8 }}><VoiceFill lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} title={lang === 'ar' ? 'املأ النموذج بالكلام' : 'Fill by voice'} fields={[{ key: 'name', label: t.name, kind: 'name', required: true }, { key: 'email', label: t.email, kind: 'email' }, { key: 'phone', label: t.phone, kind: 'phone', required: !!info.require_phone }]} onFill={(v) => setForm({ name: v.name || form.name, email: v.email || form.email, phone: v.phone || form.phone })} /></div>
+                <label><span>{t.name} <i>*</i> <MicButton kind="name" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, name: v })} /></span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" required /></label>
+                <label><span>{t.email} <small>({t.optional})</small> <MicButton kind="email" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, email: v })} /></span><input type="email" inputMode="email" dir="ltr" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} autoComplete="email" /></label>
+                <label><span>{t.phone} <small>({info.require_phone ? t.required : t.optional})</small>{info.require_phone && <i>*</i>} <MicButton kind="phone" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, phone: v })} /></span><input type="tel" inputMode="tel" dir="ltr" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} autoComplete="tel" /></label>
                 <p className="at-hint"><Icon name="question" size={14} /> {t.hint}</p>
                 {err && <div className="at-err"><Icon name="alert" size={16} /> {err}</div>}
                 <button type="submit" className="at-btn" disabled={saving}><Icon name="check" size={18} /> {saving ? t.saving : t.submit}</button>

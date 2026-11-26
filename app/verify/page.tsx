@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '../../lib/ui/icons';
 import { VERIFY_CSS } from './[code]/VerifyCard';
+import { ScanButton } from '../components/Scan'; /* P82 «أَثَر يقرأ» */
 
 export default function VerifyIndexPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function VerifyIndexPage() {
           <input dir="ltr" value={code} onChange={e => setCode(e.target.value)} placeholder="ATH-2026-000123" autoFocus />
           <button type="submit" className="vf-btn"><Icon name="search" size={16} /> تحقق</button>
         </form>
+        <div style={{ marginTop: 10 }}><ScanButton accept={['verify']} label="امسح رمز الشهادة بالكاميرا" title="أَثَر يقرأ — تحقّق" hint="وجّه الكاميرا إلى رمز QR المطبوع على الشهادة" onHit={(h) => { if (h.href) router.push(h.href); }} /></div>
         <div className="vf-foot">أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة</div>
       </div>
     </div>
