@@ -208,6 +208,8 @@ export async function GET(req: Request) {
   // P80-ج — النسخة الاحتياطية اليومية: تُطلق في طلب مستقلّ (مهلة 60 ثانية خاصّة بها) ولا تنتظر
   let backup: any = null;
   try { if (!dry && process.env.CRON_SECRET) { const site = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, ''); void fetch(`${site}/api/cron/backup`, { headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` }, cache: 'no-store' }).catch(() => null); backup = { triggered: true }; } else backup = { triggered: false, dry }; } catch (e: any) { backup = { ok: false, error: e?.message || String(e) }; }
+  // P83 — المهمّة المالية اليومية (تحرير المقاعد المنتهية مهلتها + تذكير السداد): طلب مستقلّ لا ننتظره
+  try { if (!dry && process.env.CRON_SECRET) { const site = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, ''); void fetch(`${site}/api/cron/finance`, { headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` }, cache: 'no-store' }).catch(() => null); } } catch { /* ثانوي */ }
   // P22 خزنة أَثَر: الاحتفاظ · تنفيذ النسيان بعد الحجر · تذكير الطلبات والحوادث
   let vault: any = null;
   try { vault = await runVault(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { vault = { ok: false, error: e?.message || String(e) }; }

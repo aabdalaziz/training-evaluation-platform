@@ -12,6 +12,8 @@ import { BRAND, CONTACT, UI, t } from '../../../lib/portal/content';
 import { money, invStatusLabel, methodLabel, formatIban, receiptPath, renderInvoice, jpegToPortraitPdf, toHalalas, IW, IH } from '../../../lib/portal/payments';
 import type { Invoice, PaymentSettings } from '../../../lib/portal/payments';
 import { canvasToJpeg, downloadBytes } from '../../../lib/certificates/render';
+import { ReceiptScan, type ReceiptUse } from '../../components/ReceiptScan'; /* P83 */
+import { receiptMeta, VERDICT_AR } from '../../../lib/finance/receipt'; /* P83 */
 
 export default function PayPage() { return <PortalShell><Suspense fallback={null}><Inner /></Suspense></PortalShell>; }
 
@@ -26,6 +28,7 @@ function Inner() {
   const [loaded, setLoaded] = useState(false); const [err, setErr] = useState(''); const [ok, setOk] = useState(''); const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState(''); const [sent, setSent] = useState(false);
   const [file, setFile] = useState<File | null>(null); const [ref, setRef] = useState(''); const [payerNote, setPayerNote] = useState('');
+  const [scan, setScan] = useState<ReceiptUse | null>(null); /* P83: ما قرأه القارئ من الإيصال */
   const [tab, setTab] = useState<'bank' | 'card'>('bank'); const [cardReady, setCardReady] = useState(false); const canvasRef = useRef<HTMLCanvasElement>(null);
 
   async function load() {
@@ -85,10 +88,11 @@ function Inner() {
     setBusy(true);
     let path: string | null = inv.receipt_path || null;
     if (file) { const p = receiptPath(user.id, inv.invoice_no, file.name); const { error } = await db.storage.from('portal-receipts').upload(p, file, { upsert: false, contentType: file.type || undefined }); if (error) { setErr((lang === 'ar' ? 'تعذّر رفع الإيصال: ' : 'Upload failed: ') + error.message); setBusy(false); return; } path = p; }
-    const { error } = await db.from('portal_invoices').update({ status: 'under_review', method: 'bank_transfer', receipt_path: path, receipt_uploaded_at: new Date().toISOString(), transfer_ref: ref.trim() || null, payer_note: payerNote.trim() || null }).eq('id', inv.id);
+    const { error } = await db.from('portal_invoices').update({ status: 'under_review', method: 'bank_transfer', receipt_path: path, receipt_uploaded_at: new Date().toISOString(), transfer_ref: ref.trim() || null, payer_note: payerNote.trim() || null, ...(scan ? { receipt_meta: receiptMeta(scan.parsed, scan.match, scan.rawText ? 'ocr' : 'manual'), receipt_match: scan.match.verdict } : {}) }).eq('id', inv.id);
     if (error) { setErr(error.message); setBusy(false); return; }
-    try { const { data: s } = await db.auth.getSession(); await fetch('/api/payments', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token || ''}` }, body: JSON.stringify({ action: 'submitted', id: inv.id }) }); } catch { /* اختياري */ }
-    setOk(lang === 'ar' ? 'استلمنا إيصالك — سنؤكد السداد خلال يوم عمل ويصلك بريد بذلك.' : 'Receipt received — we will confirm within one business day and email you.'); setFile(null); setRef(''); setPayerNote('');
+    let autoMsg = '';
+    try { const { data: s } = await db.auth.getSession(); const r = await fetch('/api/payments', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token || ''}` }, body: JSON.stringify({ action: 'submitted', id: inv.id, receipt: scan ? scan.parsed : null }) }); const j = await r.json().catch(() => null); if (j?.auto_confirmed) autoMsg = lang === 'ar' ? 'تطابق إيصالك مع الفاتورة واعتُمد السداد تلقائيًّا — مقعدك مؤكَّد وسيصلك بريد التأكيد.' : 'Your receipt matched the invoice and payment was confirmed automatically — your seat is confirmed.'; } catch { /* اختياري */ }
+    setOk(autoMsg || (lang === 'ar' ? 'استلمنا إيصالك — سنؤكد السداد خلال يوم عمل ويصلك بريد بذلك.' : 'Receipt received — we will confirm within one business day and email you.')); setFile(null); setRef(''); setPayerNote(''); setScan(null);
     await load(); setBusy(false);
   }
 
@@ -154,7 +158,10 @@ function Inner() {
                     <div><small>{lang === 'ar' ? 'وصف التحويل' : 'Transfer description'}</small><b dir="ltr">{inv.invoice_no}</b></div>
                   </div>
                   <form className="pt-form" onSubmit={submitTransfer} style={{ marginTop: 12 }}>
-                    <label>{lang === 'ar' ? 'صورة الإيصال (JPG/PNG/PDF حتى 5MB)' : 'Receipt (JPG/PNG/PDF up to 5MB)'}<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={e => setFile(e.target.files?.[0] || null)} /></label>
+                    {/* P83: قراءة الإيصال على الجهاز → تعبئة المرجع + مطابقة فورية */}
+                    <div className="pt-scanrow"><ReceiptScan lang={lang === 'en' ? 'en' : 'ar'} invoice={{ total: inv.total, currency: inv.currency, created_at: inv.created_at, due_date: inv.due_date }} iban={settings.iban} onUse={(r) => { setScan(r); if (r.parsed.ref && !ref.trim()) setRef(r.parsed.ref); if (r.file && !file) setFile(r.file); }} />
+                      {scan && <span className={`pt-match ${scan.match.verdict}`}><Icon name={scan.match.verdict === 'match' ? 'check' : 'alert'} size={13} /> {lang === 'ar' ? VERDICT_AR[scan.match.verdict] : scan.match.verdict}{scan.parsed.amount != null && <> · <bdi>{scan.parsed.amount}</bdi></>}{scan.parsed.date && <> · <bdi>{scan.parsed.date}</bdi></>}</span>}</div>
+                    <label>{lang === 'ar' ? 'صورة الإيصال (JPG/PNG/PDF حتى 5MB)' : 'Receipt (JPG/PNG/PDF up to 5MB)'}<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={e => setFile(e.target.files?.[0] || null)} />{file && <small className="pt-muted">{file.name}</small>}</label>
                     <label>{lang === 'ar' ? 'رقم مرجع التحويل' : 'Transfer reference'}<input dir="ltr" value={ref} onChange={e => setRef(e.target.value)} /></label>
                     <label>{lang === 'ar' ? 'ملاحظة (اختياري)' : 'Note (optional)'}<input value={payerNote} onChange={e => setPayerNote(e.target.value)} /></label>
                     <button className="pt-btn" disabled={busy}><Icon name="send" size={16} /> {busy ? '…' : (lang === 'ar' ? 'أرسلت التحويل — رفع الإيصال' : 'I have transferred — submit receipt')}</button>
@@ -179,6 +186,7 @@ const CSS = `
 .pt-invtable{width:100%;border-collapse:collapse;font-size:14px}.pt-invtable td{padding:9px 0;border-bottom:1px solid #F6EBE0}.pt-invtable td:first-child{color:#8E7F8A;width:45%}.pt-invtable td:last-child{font-weight:800;color:#2A1626}.pt-invtable tr.tot td{font-size:17px;color:#3A1F36;border-bottom:2px solid #D9A866}
 .pt-paytabs{display:flex;gap:6px;margin:8px 0 12px}.pt-paytabs button{flex:1;display:inline-flex;justify-content:center;align-items:center;gap:6px;border:1px solid #D9CBC2;background:#fff;border-radius:10px;padding:9px;font:inherit;font-size:13px;font-weight:900;color:#4A3645;cursor:pointer}.pt-paytabs button.on{background:#3A1F36;border-color:#3A1F36;color:#fff}
 .pt-bank{display:grid;gap:8px;background:#FBF4EE;border:1px solid #EADFD6;border-radius:12px;padding:12px}.pt-bank div{display:flex;flex-direction:column;gap:2px}.pt-bank small{font-size:11.5px;color:#8E7F8A;font-weight:800}.pt-bank b{font-size:14px;color:#2A1626;word-break:break-all}
+.pt-scanrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}.pt-match{display:inline-flex;gap:4px;align-items:center;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;background:#F6ECD9;color:#6B4A12}.pt-match.match{background:#E6F3F1;color:#1F4F4A}.pt-match.mismatch{background:#F8D7D3;color:#8b1e14}
 .pt-ibanrow{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.pt-copy{border:1px solid #D9CBC2;background:#fff;border-radius:8px;padding:3px 8px;font:inherit;font-size:11.5px;font-weight:800;color:#3A1F36;cursor:pointer;display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
 .pt-aside-foot{margin-top:14px;padding-top:12px;border-top:1px dashed #EADFD6;font-size:12.5px;color:#8E7F8A;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pt-aside-foot a{color:#D4614A;font-weight:800}
 .pt-form input[type=file]{padding:8px}

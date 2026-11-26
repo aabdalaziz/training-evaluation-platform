@@ -11,12 +11,14 @@ import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { money, invStatusLabel, methodLabel, totals, invoicesSheet, isValidIban, isOverdue, computeAmounts } from '../../../lib/portal/payments';
 import type { Invoice, InvoiceStatus, PaymentSettings } from '../../../lib/portal/payments';
 import type { Enrollment } from '../../../lib/portal/catalog';
+import { VERDICT_AR, type GatewayStatus } from '../../../lib/finance/receipt'; /* P83 */
 
 import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 const STAFF = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER', 'QUALITY_ANALYST'];
 const WRITERS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN', 'PROGRAM_MANAGER'];
 const ADMINS = ['PLATFORM_ADMIN', 'SUPER_ADMIN', 'ADMIN'];
-type Row = Invoice & { program_name?: string };
+type Row = Invoice & { program_name?: string; receipt_match?: string | null; receipt_meta?: any; auto_confirmed?: boolean | null };
+type PS = PaymentSettings & { auto_confirm_receipts?: boolean; seat_grace_days?: number; auto_release_seats?: boolean }; /* P83 */
 type Tab = 'invoices' | 'pending' | 'settings';
 const FILTERS: { k: InvoiceStatus | 'all' | 'overdue'; l: string }[] = [{ k: 'under_review', l: 'إيصالات للمراجعة' }, { k: 'unpaid', l: 'بانتظار الدفع' }, { k: 'overdue', l: 'متأخرة' }, { k: 'paid', l: 'مدفوعة' }, { k: 'waived', l: 'معفاة' }, { k: 'cancelled', l: 'ملغاة' }, { k: 'refunded', l: 'مستردّة' }, { k: 'all', l: 'الكل' }];
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString('ar-SA-u-nu-latn', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
@@ -29,7 +31,9 @@ export default function PaymentsPage() {
   const [tab, setTab] = useState<Tab>('invoices'); const [filter, setFilter] = useState<InvoiceStatus | 'all' | 'overdue'>('under_review'); const [q, setQ] = useState('');
   const [rows, setRows] = useState<Row[]>([]); const [programs, setPrograms] = useState<Record<string, { name_ar: string; fee: number | null; currency: string | null }>>({});
   const [pending, setPending] = useState<(Enrollment & { program_name?: string; fee?: number | null })[]>([]);
-  const [settings, setSettings] = useState<PaymentSettings | null>(null); const [form, setForm] = useState<PaymentSettings | null>(null);
+  const [settings, setSettings] = useState<PS | null>(null); const [form, setForm] = useState<PS | null>(null);
+  const [gw, setGw] = useState<{ gateway: GatewayStatus; webhook_url: string } | null>(null); const [gwBusy, setGwBusy] = useState(false); /* P83 */
+  const fetchGateway = async () => { setGwBusy(true); try { const { data: s } = await db.auth.getSession(); const r = await fetch('/api/payments?gateway=1', { headers: { Authorization: `Bearer ${s.session?.access_token || ''}` } }); const j = await r.json().catch(() => null); if (j?.success) setGw(j); else setError(j?.error || `HTTP ${r.status}`); } finally { setGwBusy(false); } };
   const [open, setOpen] = useState<string | null>(null); const [note, setNote] = useState(''); const [busy, setBusy] = useState(''); const [receiptUrl, setReceiptUrl] = useState<Record<string, string>>({});
   const today = new Date().toISOString().slice(0, 10);
   const canWrite = WRITERS.includes(role); const isAdmin = ADMINS.includes(role);
@@ -44,7 +48,7 @@ export default function PaymentsPage() {
     if (e1) { setError(e1.message); return; }
     const pm: Record<string, any> = {}; for (const p of (ps || []) as any[]) pm[p.id] = p; setPrograms(pm);
     const invs = ((inv || []) as Invoice[]).map(r => ({ ...r, program_name: pm[r.program_id || '']?.name_ar || r.description })); setRows(invs);
-    setSettings((s as PaymentSettings) || null); setForm((s as PaymentSettings) || null);
+    setSettings((s as PS) || null); setForm((s as PS) || null);
     const withInv = new Set(invs.filter(i => i.status !== 'cancelled').map(i => i.enrollment_id));
     setPending(((en || []) as Enrollment[]).filter(e => !withInv.has(e.id)).map(e => ({ ...e, program_name: pm[e.program_id]?.name_ar, fee: pm[e.program_id]?.fee ?? null })));
   }
@@ -84,7 +88,7 @@ export default function PaymentsPage() {
     e.preventDefault(); if (!form) return; setError(''); setNotice('');
     if (form.iban && !isValidIban(form.iban)) { setError('صيغة IBAN غير صحيحة — يجب أن يبدأ بـ SA ويتبعه 22 رقمًا.'); return; }
     setBusy('settings');
-    const { error: err } = await db.from('portal_payment_settings').update({ bank_name: form.bank_name, account_name: form.account_name, iban: form.iban.replace(/\s+/g, '').toUpperCase(), swift: form.swift || null, vat_rate: Number(form.vat_rate), vat_number: form.vat_number || null, prices_include_vat: form.prices_include_vat, invoice_prefix: form.invoice_prefix.trim() || 'ATH', due_days: Number(form.due_days) || 7, bank_transfer_enabled: form.bank_transfer_enabled, card_enabled: form.card_enabled, terms_ar: form.terms_ar, terms_en: form.terms_en }).eq('id', 1);
+    const { error: err } = await db.from('portal_payment_settings').update({ bank_name: form.bank_name, account_name: form.account_name, iban: form.iban.replace(/\s+/g, '').toUpperCase(), swift: form.swift || null, vat_rate: Number(form.vat_rate), vat_number: form.vat_number || null, prices_include_vat: form.prices_include_vat, invoice_prefix: form.invoice_prefix.trim() || 'ATH', due_days: Number(form.due_days) || 7, bank_transfer_enabled: form.bank_transfer_enabled, card_enabled: form.card_enabled, terms_ar: form.terms_ar, terms_en: form.terms_en , auto_confirm_receipts: !!form.auto_confirm_receipts, seat_grace_days: Math.max(0, Math.min(60, Number(form.seat_grace_days ?? 3) || 0)), auto_release_seats: form.auto_release_seats !== false /* P83 */ }).eq('id', 1);
     if (err) setError(err.message); else { setNotice('تم حفظ الإعدادات.'); await load(); }
     setBusy('');
   }
@@ -113,11 +117,12 @@ export default function PaymentsPage() {
             <article key={r.id} className={`rm-card py-row ${r.status} ${isOverdue(r, today) ? 'overdue' : ''}`}>
               <div className="py-top" role="button" tabIndex={0} onClick={() => { setOpen(open === r.id ? null : r.id); setNote(''); }}>
                 <div className="py-who"><b dir="ltr">{r.invoice_no}</b><span>{r.customer_name}</span><span dir="ltr">{r.customer_email}</span></div>
-                <div className="py-meta"><span className="py-prog">{r.program_name}</span><b><bdi>{money(r.total, r.currency, 'ar')}</bdi></b><span className={`py-tag ${r.status}`}>{invStatusLabel(r.status, 'ar')}</span>{isOverdue(r, today) && <span className="py-tag overdue">متأخرة</span>}<bdi>{fmt(r.created_at)}</bdi></div>
+                <div className="py-meta"><span className="py-prog">{r.program_name}</span><b><bdi>{money(r.total, r.currency, 'ar')}</bdi></b><span className={`py-tag ${r.status}`}>{invStatusLabel(r.status, 'ar')}</span>{isOverdue(r, today) && <span className="py-tag overdue">متأخرة</span>}{r.status === 'under_review' && r.receipt_match && <span className={`py-tag rm-${r.receipt_match}`} title={r.receipt_meta?.summary_ar || ''}>{r.receipt_match === 'match' ? 'إيصال مطابق' : r.receipt_match === 'partial' ? 'مطابقة جزئية' : 'غير مطابق'}</span>}{r.auto_confirmed && <span className="py-tag rm-auto">اعتماد آلي</span>}<bdi>{fmt(r.created_at)}</bdi></div>
               </div>
               {open === r.id && (
                 <div className="py-body">
                   <div className="py-details"><span>قبل الضريبة: <bdi>{money(r.subtotal, r.currency, 'ar')}</bdi></span><span>الضريبة ({Number(r.vat_rate)}%): <bdi>{money(r.vat_amount, r.currency, 'ar')}</bdi></span><span>الاستحقاق: <bdi>{r.due_date || '—'}</bdi></span><span>الطريقة: {methodLabel(r.method, 'ar')}</span>{r.paid_at && <span>السداد: <bdi>{fmt(r.paid_at)}</bdi></span>}{r.transfer_ref && <span>مرجع التحويل: <bdi>{r.transfer_ref}</bdi></span>}{r.gateway_payment_id && <span>Moyasar: <bdi>{r.gateway_payment_id}</bdi></span>}{r.receipt_uploaded_at && <span>رفع الإيصال: <bdi>{fmt(r.receipt_uploaded_at)}</bdi></span>}{r.payer_note && <span>ملاحظة الجهة: {r.payer_note}</span>}{r.notes && <span>ملاحظات: {r.notes}</span>}</div>
+                  {r.receipt_meta && <div className="py-details py-rmeta"><span>قراءة الإيصال{r.receipt_meta.source === 'manual' ? ' (يدوي)' : ''}:</span>{r.receipt_meta.amount != null && <span>المبلغ <bdi>{r.receipt_meta.amount}</bdi></span>}{r.receipt_meta.date && <span>التاريخ <bdi>{r.receipt_meta.date}</bdi></span>}{r.receipt_meta.ref && <span>المرجع <bdi>{r.receipt_meta.ref}</bdi></span>}{r.receipt_meta.bank && <span>{r.receipt_meta.bank}</span>}{r.receipt_meta.iban_tail && <span>إلى حساب …{r.receipt_meta.iban_tail}</span>}<span>الثقة {r.receipt_meta.confidence}٪ · {VERDICT_AR[(r.receipt_meta.verdict as keyof typeof VERDICT_AR)] || ''}</span></div>}
                   {canWrite && <label className="py-note">ملاحظة داخلية (اختياري)<input value={note} onChange={e => setNote(e.target.value)} /></label>}
                   <div className="py-acts">
                     {r.receipt_path && <button type="button" className="rm-btn ghost" onClick={() => viewReceipt(r)}><Icon name="doc" size={15} /> عرض الإيصال</button>}
@@ -171,6 +176,19 @@ export default function PaymentsPage() {
               </div>}
               <div className="py-preview" style={{ gridColumn: '1/-1' }}>لتفعيل البطاقات: أنشئ حسابًا في moyasar.com، ثم أضف في Vercel المتغيرين <code>NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY</code> و<code>MOYASAR_SECRET_KEY</code> وأعد النشر، ثم فعّل الخيار أعلاه. للتأكيد الآلي حتى لو أغلقت الجهة المتصفح: في لوحة Moyasar → Settings → Webhooks أضف <code>{typeof window !== 'undefined' ? window.location.origin : ''}/api/payments/webhook</code> (POST، حدث payment_paid وpayment_refunded) مع Secret token تضعه أيضًا في Vercel باسم <code>MOYASAR_WEBHOOK_SECRET</code>. {process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY ? <b style={{ color: '#2F6B66' }}>المفتاح العام مضبوط ✓</b> : <b style={{ color: '#9A3A2A' }}>المفتاح العام غير مضبوط بعد</b>}</div>
             </div>
+            <h3><Icon name="spark" size={18} /> الاعتماد الآلي والمقاعد <small className="rm-muted">(P83)</small></h3>
+            <div className="g3">
+              <label className="chk"><input type="checkbox" checked={!!form.auto_confirm_receipts} onChange={e => setForm({ ...form, auto_confirm_receipts: e.target.checked })} disabled={!isAdmin} /> اعتماد السداد آليًّا حين يكون الإيصال الممسوح <b>مطابقًا تمامًا</b> (المبلغ + حساب المستفيد/المرجع + التاريخ) ومرفقًا بصورة — تصلك رسالة «راجع خلال 48 ساعة»</label>
+              <label className="chk"><input type="checkbox" checked={form.auto_release_seats !== false} onChange={e => setForm({ ...form, auto_release_seats: e.target.checked })} disabled={!isAdmin} /> تحرير المقعد آليًّا حين تنقضي مهلة السداد (الطلب → قائمة الانتظار، الفاتورة → ملغاة، بريد للمتقدّم)</label>
+              <label>أيام السماح بعد الاستحقاق<input dir="ltr" inputMode="numeric" value={String(form.seat_grace_days ?? 3)} onChange={e => setForm({ ...form, seat_grace_days: Number(e.target.value) })} disabled={!isAdmin} /></label>
+              <div className="py-preview" style={{ gridColumn: '1/-1' }}>المقعد يُحجز عند القبول، ويُغلق تلقائيًّا عند تأكيد السداد أو الإعفاء (بطاقة أو تحويل)، ويُحرَّر عند الاسترداد أو انقضاء المهلة. تذكير بالسداد يُرسل قبل الاستحقاق بيومين. الحالة تظهر في «طلبات التسجيل».</div>
+            </div>
+            <h3><Icon name="shield" size={18} /> جاهزية بوّابة الدفع (Moyasar) <small className="rm-muted">(P83)</small></h3>
+            <div className="py-preview" style={{ display: 'grid', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}><button type="button" className="rm-btn" onClick={() => void fetchGateway()} disabled={gwBusy}><Icon name="refresh" size={15} /> {gwBusy ? '…' : 'افحص الجاهزية الآن'}</button>{gw && <span className={`py-tag ${gw.gateway.ready ? 'paid' : 'under_review'}`}>{gw.gateway.ready ? 'جاهزة — الدفع بالبطاقة يعمل' : 'غير مكتملة'}</span>}{gw && gw.gateway.mode !== 'none' && <span className="py-tag">{gw.gateway.mode === 'live' ? 'مفاتيح حيّة' : 'مفاتيح تجريبية'}</span>}</div>
+              {gw && <ol className="py-steps">{gw.gateway.steps_ar.map((st, i) => <li key={i} className={st.ok === true ? 'ok' : st.ok === false ? 'bad' : ''}><Icon name={st.ok === true ? 'check' : st.ok === false ? 'x' : 'question'} size={14} /> {st.label}{i === 2 && gw.gateway.api_note ? <small> — {gw.gateway.api_note}</small> : null}</li>)}</ol>}
+              {gw && <small>عنوان الـWebhook الذي تُلصقه في لوحة Moyasar: <code dir="ltr">{gw.webhook_url}</code> — الأحداث: payment_paid · payment_refunded.</small>}
+            </div>
             <h3><Icon name="doc" size={18} /> الشروط على الفاتورة</h3>
             <div className="g2"><label>عربي<textarea value={form.terms_ar} onChange={e => setForm({ ...form, terms_ar: e.target.value })} disabled={!isAdmin} /></label><label>English<textarea dir="ltr" value={form.terms_en} onChange={e => setForm({ ...form, terms_en: e.target.value })} disabled={!isAdmin} /></label></div>
             {isAdmin ? <div><button className="rm-btn ok" disabled={busy === 'settings'}><Icon name="save" size={15} /> حفظ الإعدادات</button></div> : <p className="rm-muted">تعديل الإعدادات لمديري البوّابة فقط.</p>}
@@ -189,6 +207,7 @@ const CSS = `
 .py-row.under_review{border-inline-start:4px solid #8A5A1E}.py-row.paid{border-inline-start:4px solid #2F6B66}.py-row.unpaid{border-inline-start:4px solid #8E4A68}.py-row.overdue{border-inline-start-color:#D4614A}.py-row.cancelled,.py-row.refunded,.py-row.waived{opacity:.75}
 .py-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer;align-items:center}.py-who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#8E7F8A}.py-who b{color:#3A1F36;font-size:14px}
 .py-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A}.py-meta>b{color:#3A1F36;font-size:14px}.py-prog{font-weight:800;color:#4A3645;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.py-tag.rm-match{background:#E6F3F1;color:#1F4F4A}.py-tag.rm-partial{background:#F6ECD9;color:#6B4A12}.py-tag.rm-mismatch{background:#F8D7D3;color:#8b1e14}.py-tag.rm-auto{background:#F3E8EF;color:#6A3350}.py-rmeta{background:#FBF4EE;border-radius:10px;padding:6px 10px}.py-steps{margin:0;padding-inline-start:18px;display:grid;gap:3px;font-size:13px}.py-steps li{color:#5C4858}.py-steps li.ok{color:#1F4F4A}.py-steps li.bad{color:#8b1e14}
 .py-tag{border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:900;background:#F6EBE0;color:#5C4858}.py-tag.unpaid{background:#F3E8EF;color:#6A3350}.py-tag.under_review{background:#FBF4EE;color:#9A3A2A}.py-tag.paid{background:#E6F3F1;color:#1F4F4A}.py-tag.overdue{background:#FBEDE7;color:#9A3A2A}
 .py-body{margin-top:12px;border-top:1px dashed #EADFD6;padding-top:12px;display:grid;gap:10px}.py-details{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A}
 .py-note{display:grid;gap:4px;font-size:12.5px;font-weight:800;color:#4A3645}.py-note input{font:inherit;font-size:13.5px;border:1px solid #D9CBC2;border-radius:10px;padding:8px 10px}

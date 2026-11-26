@@ -3,7 +3,8 @@
  *  POST { action: 'issue',   enrollment_id }                   → موظف: إصدار فاتورة لطلب مقبول + بريد الفاتورة
  *  POST { action: 'send',    id }                              → موظف: إعادة إرسال بريد الفاتورة
  *  POST { action: 'set',     id, status, method?, note? }      → موظف: paid | cancelled | refunded | waived | unpaid (+ بريد تأكيد عند paid)
- *  POST { action: 'submitted', id }                            → المالك: تنبيه الإدارة بإيصال تحويل جديد
+ *  POST { action: 'submitted', id, receipt? }                  → المالك: تنبيه الإدارة بإيصال تحويل جديد (+P83: مطابقة ما قرأه القارئ على الخادم؛ اعتماد آلي إن فُعِّل وكان مطابقًا وأُرفقت صورة)
+ *  GET  ?gateway=1                                             → موظف (P83): جاهزية بوّابة Moyasar (مفاتيح · اتصال · webhook · تفعيل)
  *  POST { action: 'verify_card', id, payment_id }              → المالك: التحقق من عملية Moyasar عبر المفتاح السري ثم اعتماد السداد
  * الأخطاء البريدية لا تُفشل العملية (mail_error في الاستجابة)
  */
@@ -13,6 +14,7 @@ import { sendViaResend } from '../../../lib/email/resend';
 import { invoiceEmail, receiptEmail, verifyGatewayPayment, money } from '../../../lib/portal/payments';
 import type { Invoice, InvoiceStatus } from '../../../lib/portal/payments';
 import { deliverResourceFiles } from '../../../lib/portal/resource-delivery'; /* P5-ب */
+import { sanitizeParsed, matchReceipt, receiptMeta, gatewayStatus } from '../../../lib/finance/receipt'; /* P83 */
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,6 +40,19 @@ async function who(req: Request) {
 }
 async function programName(db: any, inv: { program_id?: string | null; description?: string | null }) { if (!inv.program_id) return String(inv.description || ''); const { data } = await db.from('programs').select('name_ar').eq('id', inv.program_id).maybeSingle(); return String((data as any)?.name_ar || inv.description || ''); }
 async function mail(fn: () => Promise<any>): Promise<string | null> { try { await fn(); return null; } catch (e: any) { return String(e?.message || e); } }
+
+/* P83: جاهزية بوّابة الدفع — للطاقم */
+export async function GET(req: Request) {
+  if (new URL(req.url).searchParams.get('gateway') !== '1') return bad('غير معروف', 404);
+  const a = await who(req); if ('error' in a) return a.error; if (!a.staff) return bad('غير مصرح', 403);
+  const env = { pk: process.env.NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY, sk: process.env.MOYASAR_SECRET_KEY, wh: process.env.MOYASAR_WEBHOOK_SECRET };
+  const { data: st } = await a.db.from('portal_payment_settings').select('card_enabled').eq('id', 1).maybeSingle();
+  let api: { ok: boolean | null; note: string } = { ok: null, note: 'لا مفتاح سرّي' };
+  if (env.sk) { try { const r = await fetch('https://api.moyasar.com/v1/payments?per=1', { headers: { Authorization: `Basic ${Buffer.from(`${env.sk}:`).toString('base64')}` }, cache: 'no-store' }); api = r.ok ? { ok: true, note: 'متّصل' } : { ok: false, note: `Moyasar HTTP ${r.status}${r.status === 401 ? ' — المفتاح مرفوض' : ''}` }; } catch (e: any) { api = { ok: false, note: `تعذّر الاتصال: ${String(e?.message || e).slice(0, 80)}` }; } }
+  const { data: wh } = await a.db.from('audit_logs').select('created_at,metadata').eq('action', 'moyasar_webhook_verification').order('created_at', { ascending: false }).limit(1).maybeSingle();
+  const g = gatewayStatus(env, st as any, api, { at: (wh as any)?.created_at || null, secret_ok: (wh as any)?.metadata?.secret_ok ?? null });
+  return NextResponse.json({ success: true, gateway: g, webhook_url: `${siteUrl(req)}/api/payments/webhook` }, { headers: { 'Cache-Control': 'no-store' } });
+}
 
 export async function POST(req: Request) {
   const a = await who(req); if ('error' in a) return a.error;
@@ -83,9 +98,23 @@ export async function POST(req: Request) {
 
   if (action === 'submitted') {
     if (!isOwner && !a.staff) return bad('غير مصرح', 403);
-    const to = admins(); if (!to.length) return NextResponse.json({ success: true, mail_error: null });
-    const mail_error = await mail(() => sendViaResend({ to, subject: `إيصال تحويل جديد للمراجعة — ${inv.invoice_no}`, html: `<div dir="rtl" style="font-family:Tahoma,Arial;line-height:1.9"><p>رفع <b>${inv.customer_name}</b> إيصال تحويل لفاتورة <b>${inv.invoice_no}</b> (${money(inv.total, inv.currency, 'ar')}) — ${pname}.</p>${inv.transfer_ref ? `<p>مرجع التحويل: ${inv.transfer_ref}</p>` : ''}<p><a href="${site}/admin/payments">فتح المدفوعات</a></p></div>`, tags: [{ name: 'kind', value: 'receipt_review' }] }));
-    return NextResponse.json({ success: true, mail_error });
+    /* P83: إعادة المطابقة على الخادم (لا نثق بحكم العميل) ثم اعتماد آلي مشروط */
+    let verdictLine = ''; let auto = false;
+    const parsed = sanitizeParsed(body?.receipt);
+    if (parsed && inv.status === 'under_review') {
+      const { data: st } = await a.db.from('portal_payment_settings').select('iban,auto_confirm_receipts').eq('id', 1).maybeSingle();
+      const m = matchReceipt(parsed, inv, { iban: (st as any)?.iban });
+      const meta = receiptMeta(parsed, m, 'ocr');
+      await a.db.from('portal_invoices').update({ receipt_meta: meta, receipt_match: m.verdict }).eq('id', id);
+      verdictLine = `<p>مطابقة القارئ: <b>${m.verdict === 'match' ? 'مطابق' : m.verdict === 'partial' ? 'جزئي' : 'غير مطابق'}</b> (${m.score}/100) — ${m.summary_ar}</p>`;
+      if ((st as any)?.auto_confirm_receipts && m.verdict === 'match' && inv.receipt_path && Number(inv.total) > 0) {
+        const { error } = await a.db.from('portal_invoices').update({ status: 'paid', method: 'bank_transfer', paid_at: new Date().toISOString(), auto_confirmed: true, notes: `${inv.notes ? inv.notes + ' · ' : ''}اعتماد آلي بمطابقة الإيصال (${m.score}/100) — يُراجع خلال 48 ساعة` }).eq('id', id).eq('status', 'under_review');
+        if (!error) { auto = true; const rm = receiptEmail({ ...inv, status: 'paid', method: 'bank_transfer' }, pname, site); await mail(() => sendViaResend({ to: [inv.customer_email], subject: rm.subject, html: rm.html, tags: [{ name: 'kind', value: 'receipt' }] })); if (inv.resource_id) await deliverResourceFiles(a.db, { invoiceId: id }, site).catch(() => null); }
+      }
+    }
+    const to = admins(); if (!to.length) return NextResponse.json({ success: true, mail_error: null, auto_confirmed: auto });
+    const mail_error = await mail(() => sendViaResend({ to, subject: `${auto ? 'اعتُمد آليًّا — راجع خلال 48 ساعة' : 'إيصال تحويل جديد للمراجعة'} — ${inv.invoice_no}`, html: `<div dir="rtl" style="font-family:Tahoma,Arial;line-height:1.9"><p>رفع <b>${inv.customer_name}</b> إيصال تحويل لفاتورة <b>${inv.invoice_no}</b> (${money(inv.total, inv.currency, 'ar')}) — ${pname}.</p>${inv.transfer_ref ? `<p>مرجع التحويل: ${inv.transfer_ref}</p>` : ''}${verdictLine}${auto ? '<p><b>اعتُمد السداد آليًّا</b> وأُغلق المقعد — يُرجى مراجعة صورة الإيصال خلال 48 ساعة، ويمكن الرجوع عنه من «المدفوعات».</p>' : ''}<p><a href="${site}/admin/payments">فتح المدفوعات</a></p></div>`, tags: [{ name: 'kind', value: 'receipt_review' }] }));
+    return NextResponse.json({ success: true, mail_error, auto_confirmed: auto });
   }
 
   if (action === 'verify_card') {

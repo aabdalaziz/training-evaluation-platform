@@ -9,6 +9,7 @@ import { downloadXlsx } from '../../../lib/export/xlsx';
 import { safeFilename } from '../../../lib/export/csv';
 import PortalAdminTabs from '../../components/PortalAdminTabs';
 import { statusLabel, enrollmentsSheet, seatsLeft } from '../../../lib/portal/catalog';
+import { SEAT_AR, seatCounts, type SeatStatus } from '../../../lib/finance/receipt'; /* P83 */
 import type { Enrollment, EnrollStatus, CatalogProgram, Counts } from '../../../lib/portal/catalog';
 
 import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
@@ -73,7 +74,7 @@ export default function EnrollmentsPage() {
         <div className="rm-card en-seats">
           {programs.filter(p => counts.some(c => c.program_id === p.id)).map(p => { const c = counts.find(x => x.program_id === p.id); const left = seatsLeft(p, c); return (
             <button type="button" key={p.id} className={`en-seat ${prog === p.id ? 'on' : ''}`} onClick={() => setProg(prog === p.id ? 'all' : p.id)}>
-              <b>{p.name_ar}</b><span>مقبول {c?.approved || 0}{p.seats ? ` / ${p.seats}` : ''} · انتظار {c?.waitlisted || 0} · مراجعة {c?.pending || 0}{left !== null ? ` · متاح ${left}` : ''}</span>
+              <b>{p.name_ar}</b><span>مقبول {c?.approved || 0}{p.seats ? ` / ${p.seats}` : ''}{(() => { const sc = seatCounts(rows.filter(x => x.program_id === p.id && x.status === 'approved') as any[]); return sc.confirmed || sc.held ? ` (مؤكَّد ${sc.confirmed} · بانتظار السداد ${sc.held})` : ''; })()} · انتظار {c?.waitlisted || 0} · مراجعة {c?.pending || 0}{left !== null ? ` · متاح ${left}` : ''}</span>
             </button>); })}
           {counts.length === 0 && <span className="rm-muted">لا توجد طلبات بعد.</span>}
         </div>
@@ -90,7 +91,7 @@ export default function EnrollmentsPage() {
           <article key={r.id} className={`rm-card en-row ${r.status}`}>
             <div className="en-top" role="button" tabIndex={0} onClick={() => { setOpen(open === r.id ? null : r.id); setNote(''); }}>
               <div className="en-who"><b>{r.full_name}</b><span dir="ltr">{r.email}</span><span dir="ltr">{r.phone}</span>{r.organization && <span>· {r.organization}</span>}</div>
-              <div className="en-meta"><span className="en-prog">{r.program_name}</span><span className={`en-tag ${r.status}`}>{statusLabel(r.status, 'ar')}</span><bdi>{fmt(r.created_at)}</bdi></div>
+              <div className="en-meta"><span className="en-prog">{r.program_name}</span><span className={`en-tag ${r.status}`}>{statusLabel(r.status, 'ar')}</span>{(r as any).seat_status && (r as any).seat_status !== 'none' && <span className={`en-tag seat-${(r as any).seat_status}`} title="حالة المقعد (P83)">{SEAT_AR[(r as any).seat_status as SeatStatus]}</span>}<bdi>{fmt(r.created_at)}</bdi></div>
             </div>
             {open === r.id && (
               <div className="en-body">
@@ -122,6 +123,7 @@ const CSS = `
 .en-row.pending{border-inline-start:4px solid #8E4A68}.en-row.approved{border-inline-start:4px solid #2F6B66}.en-row.waitlisted{border-inline-start:4px solid #8A5A1E}.en-row.rejected,.en-row.cancelled{opacity:.75}
 .en-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;cursor:pointer}.en-who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:#8E7F8A}.en-who b{color:#3A1F36;font-size:15px}
 .en-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A}.en-prog{font-weight:800;color:#4A3645;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.en-tag.seat-confirmed{background:#E6F3F1;color:#1F4F4A}.en-tag.seat-held{background:#F6ECD9;color:#6B4A12}.en-tag.seat-released{background:#F8D7D3;color:#8b1e14}
 .en-tag{border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:900;background:#F6EBE0;color:#5C4858}.en-tag.pending{background:#F3E8EF;color:#6A3350}.en-tag.approved{background:#E6F3F1;color:#1F4F4A}.en-tag.waitlisted{background:#FBF4EE;color:#9A3A2A}
 .en-body{margin-top:12px;border-top:1px dashed #EADFD6;padding-top:12px;display:grid;gap:10px}.en-body p{margin:0;font-size:14px;line-height:1.8;color:#2A1626}
 .en-details{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8E7F8A}
