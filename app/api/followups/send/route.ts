@@ -6,6 +6,7 @@
  *                            ثم بريد المشاركين التلقائي (فتح التقييم النهائي · إصدار الشهادة) — TRAINEE_MAIL=0 للتعطيل
  *                            ثم تذكيرات جلسات البث المباشر لبوّابة أَثَر (خلال 30 ساعة)
  *                            ثم نبض «الشهادة الحية» للمشتركين (أَثَر · P11): بريد مجمّع عند تغيّر مستوى/حالة مهارة (أسبوعيًا على الأكثر)
+ *                            (P81) وقبلها كلّها: «ساعة البرنامج» — أحداث T-7/T0/T+1/T+30/T+90 المستحقّة اليوم
  *                            ثم إشعار «موقف اليوم» (Web Push · أَثَر · P13-ب) لكل اشتراك نشط — يعمل فقط إن كانت VAPID_* مضبوطة
  * يحتاج: SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, (للـ Cron) CRON_SECRET, (اختياري) NEXT_PUBLIC_SITE_URL
  */
@@ -48,6 +49,7 @@ import { runPair } from '../../../../lib/pair/cron';
 import { runOrgPair } from '../../../../lib/org-pair/cron';
 import { runDirectory } from '../../../../lib/directory/cron';
 import { runKids } from '../../../../lib/kids/cron';
+import { runProgramClock } from '../../../../lib/clock/cron'; /* P81 */
 import type { BehaviorFollowup } from '../../../../lib/behavior/model';
 
 export const runtime = 'nodejs';
@@ -95,9 +97,11 @@ export async function GET(req: Request) {
   if (!db) return bad('SUPABASE_SERVICE_ROLE_KEY مطلوب', 500);
   const dry = url.searchParams.get('dry') === '1';
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const site = siteOf(req);
+  // P81 «ساعة البرنامج»: قبل حملات المتابعة حتى تُرسل الحملة التي تنشئها الساعة في التشغيل نفسه (CLOCK=0 للتعطيل)
+  let program_clock: any = null; if (String(process.env.CLOCK ?? '1') !== '0') { try { program_clock = await runProgramClock(db, { site, dry, now: new Date(today + 'T06:00:00Z') }); } catch (e: any) { program_clock = { ok: false, error: e?.message || String(e) }; } }
   const { data, error } = await db.from('behavior_followups').select('*').eq('status', 'open').eq('auto_send', true);
   if (error) return bad(error.message, 500);
-  const site = siteOf(req);
   const out: any[] = [];
   for (const f of (data || []) as BehaviorFollowup[]) {
     const recipients = Array.isArray(f.recipients) ? f.recipients.length : 0;
@@ -242,5 +246,5 @@ export async function GET(req: Request) {
   try { kids = await runKids(db, { dry }); } catch (e: any) { kids = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة البوّابة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, level_close, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory, kids, backup });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, program_clock, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, level_close, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory, kids, backup });
 }

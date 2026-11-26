@@ -24,6 +24,7 @@ export const ROOMS: Room[] = [
   { href: '/command-center', label: 'غرفة القيادة', hint: 'شاشة عرض حية · تحديث تلقائي', icon: 'play', perms: ['reports.read', 'sessions.write'], nav: true, side: true },
   { href: '/admin/management', label: 'مركز الإدارة', hint: 'المدرّبون · الشُّعب · المستويات', icon: 'admin', perms: ['programs.write'], nav: true, side: true, match: p => p.startsWith('/admin/management') || p.startsWith('/admin/survey-settings') },
   { href: '/admin/attendance', label: 'الحضور الرقمي', hint: 'جلسات QR · نسب الحضور', icon: 'check', perms: ['attendance.write', 'programs.write'], nav: true, side: true },
+  { href: '/admin/clock', label: 'ساعة البرنامج', hint: 'T-7 تذكير · T0 انطلاق · T+1 تقييم · T+30 متابعة · T+90 أثر — تلقائيًّا لكلّ برنامج', icon: 'clock', perms: ['programs.write', 'impact.read'], side: true }, /* P81 */
   { href: '/admin/followup', label: 'نقل أثر التدريب', hint: 'متابعة المشرف والمشارك بعد 60–90 يومًا', icon: 'trend', perms: ['impact.read', 'evidence.write', 'programs.write'], nav: true, side: true, match: p => p.startsWith('/admin/followup') || p.startsWith('/reports/transfer') },
   { href: '/reports/center', label: 'مركز التقارير', hint: 'تنفيذية · تشغيلية · تحليلية', icon: 'reports', perms: ['reports.read'], nav: true, side: true },
   { href: '/reports', label: 'اللوحة التحليلية', hint: 'المؤشرات التحليلية', icon: 'chart', perms: ['reports.read'], nav: true, match: p => p === '/reports' || p.startsWith('/reports/executive') },

@@ -31,6 +31,7 @@ export default function MePage() {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'tasks' | 'programs' | 'certs'>('tasks');
+  const [kids, setKids] = useState<number>(0); /* P81: أطفال وليّ الأمر في كيدز → «أطفالي» */
 
   async function load() {
     const { data, error } = await db.rpc('me_portal');
@@ -45,6 +46,7 @@ export default function MePage() {
       if (!user) { setLoading(false); return; }
       setLogged(true);
       try { await db.rpc('attach_existing_rostered_student'); } catch { /* اختياري */ }
+      try { const { count } = await db.from('kids_children').select('id', { count: 'exact', head: true }).eq('parent_id', user.id).is('archived_at', null); setKids(count || 0); } catch { /* كيدز اختياري */ }
       await load(); setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -125,6 +127,7 @@ export default function MePage() {
         <a className="me-tablink" href="/me/first" data-testid="me-first"><Icon name="spark" size={16} /> أول يوم</a>
         <a className="me-tablink" href="/me/line" data-testid="me-line"><Icon name="edit" size={16} /> سطري</a>
         <a className="me-tablink" href="/me/level" data-testid="me-level"><Icon name="school" size={16} /> بكلماتي عبر المستوى</a>
+        {kids > 0 && <a className="me-tablink" href="/kids/parent" data-testid="me-kids"><Icon name="home" size={16} /> أطفالي <i>{kids}</i></a>}{/* P81 */}
         <a className="me-tablink" href="/me/grad" data-testid="me-grad"><Icon name="award" size={16} /> يوم تخرّجي</a>
         <a className="me-tablink" href="/me/horizon"><Icon name="flag" size={16} /> أفقي</a>
         <a className="me-tablink" href="/me/pair"><Icon name="users" size={16} /> عهدان متقابلان</a>

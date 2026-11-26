@@ -80,6 +80,7 @@ export const ROUTES: Entry[] = [
   P('admin-followup', '/admin/followup', 'نقل الأثر', 'Transfer follow-up', ['متابعة', 'نقل', 'followup'], 'staff', 'admin'),
   P('reports-center', '/reports/center', 'مركز التقارير', 'Reports center', ['تقرير', 'reports', 'تحليل'], 'staff', 'admin'),
   P('reports', '/reports', 'اللوحة التحليلية', 'Analytics', ['تحليلات', 'analytics', 'مؤشر الاداء'], 'staff', 'admin'),
+  P('admin-clock', '/admin/clock', 'ساعة البرنامج', 'Program clock', ['ساعة', 'تذكير', 'متابعة', 'أثر', 'clock', 'reminder', 'followup'], 'staff', 'admin'), /* P81 */
   P('reports-studio', '/reports/studio', 'استوديو التحليل والتقارير', 'Analysis & reports studio', ['تحليل', 'استبيان', 'تقرير', 'توصيات', 'analysis', 'insight', 'report'], 'staff', 'admin'), /* P85 */
   P('reports-remote', '/reports/remote-survey', 'استبيان عن بُعد', 'Remote survey', ['استبيان', 'survey'], 'staff', 'admin'),
   P('admin-lifecycle', '/admin/data-lifecycle', 'دورة حياة البيانات', 'Data lifecycle', ['حذف', 'احتفاظ', 'retention'], 'staff', 'admin'),

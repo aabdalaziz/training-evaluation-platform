@@ -155,3 +155,4 @@ import './p83-finance.test'; /* P83 */
 import './p85-insight.test'; /* P85 */
 import './p85-docx.test'; /* P85 */
 import './p85-charts.test'; /* P85 */
+import './p81-clock.test'; /* P81 */
