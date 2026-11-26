@@ -46,6 +46,8 @@ export default function LoginPage() {
     try {
       const { error } = await supabase().auth.signInWithPassword({ email: email.trim(), password });
       if (error) { setError(explain(error.message)); setLoading(false); return; }
+      /* P80: لدى المستخدم توثيق ثنائي؟ → صفحة الرمز قبل الوجهة */
+      try { const { data: a } = await supabase().auth.mfa.getAuthenticatorAssuranceLevel(); if (a && a.nextLevel === 'aal2' && a.currentLevel !== 'aal2') { router.push(`/security/mfa?challenge=1&next=${encodeURIComponent(next)}`); return; } } catch { /* ignore */ }
       router.push(next); router.refresh();
     } catch (e: any) { setError(explain(e?.message || String(e))); setLoading(false); }
   }

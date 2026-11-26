@@ -11,6 +11,7 @@ import { sealLastMonthIfDue } from './seal';
 export async function runShield(db: any, opts: { dry?: boolean; site: string; env?: Record<string, string | undefined> } = { site: '' }) {
   const env = opts.env || process.env; const out: any = { ok: true };
   try { const { data } = await db.rpc('shield_gc'); out.gc = data ?? null; } catch (e: any) { out.gc_error = e?.message || String(e); }
+  try { const { data, error } = await db.rpc('kids_gc'); out.kids_gc = error ? { error: error.message } : (data ?? null); } catch (e: any) { out.kids_gc = { error: e?.message || String(e) }; } /* P80-د */
   try {
     const d = await runDrill(opts.site, env, db); out.drill = { passed: d.passed, total: d.total, failed: d.checks.filter(c => !c.ok).map(c => c.id), ms: d.ms };
     if (!opts.dry) await securityEvent(db, { severity: d.passed === d.total ? 'info' : 'warn', kind: 'drill', actor: 'cron', meta: { passed: d.passed, total: d.total, ms: d.ms, checks: d.checks } }, env);

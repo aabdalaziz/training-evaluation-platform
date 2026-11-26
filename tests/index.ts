@@ -148,3 +148,4 @@ import './iqra-pre-t3.test'; /* اقْرَأْ تمهيديّ ت٣: سقف 40 + 
 import './miaar-invite-mail.test';
 import './miaar-cleanup.test';
 import './gate.test'; /* P79 */
+import './p80-shield.test'; /* P80 */

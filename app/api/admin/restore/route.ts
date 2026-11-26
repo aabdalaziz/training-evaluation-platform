@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { CATALOG } from '../../../../lib/backup/model';
+import { requireMfa } from '../../../../lib/shield/mfa'; /* P80 */
 import { conflictKey, rowKey, BATCH } from '../../../../lib/backup/restore';
 
 export const runtime = 'nodejs';
@@ -27,6 +28,7 @@ async function authorize(req: Request) {
   const { data: profile } = await userClient.from('profiles').select('role,full_name').eq('id', u.user.id).single();
   const role = String((profile as any)?.role || '').toUpperCase();
   if (!ALLOWED.includes(role)) return { error: bad('غير مصرح — الاستعادة لمدير البوّابة فقط', 403) };
+  const mfa = await requireMfa(userClient, token, role); if (!mfa.ok) return { error: NextResponse.json({ success: false, error: mfa.error, code: mfa.code }, { status: mfa.status }) }; /* P80 */
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!service) return { error: bad('SUPABASE_SERVICE_ROLE_KEY غير مضبوط في Vercel — الاستعادة تحتاجه', 500) };
   return { user: u.user, role, name: String((profile as any)?.full_name || u.user.email || ''), db: createClient(SUPABASE_URL, service) };

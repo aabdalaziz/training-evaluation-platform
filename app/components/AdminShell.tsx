@@ -9,7 +9,8 @@
  *  bare: للوحة القيادة (/dashboard) التي تملك قائمتها الجانبية بهوية أَثَر — الحارس فقط بلا شريط ولا تذييل.
  */
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { MFA_ROLES, mfaDecision, requiredFrom } from '../../lib/shield/mfa'; /* P80 */
 import { usePathname } from 'next/navigation';
 import { Icon } from '../../lib/ui/icons';
 import { BRAND } from '../../lib/portal/content';
@@ -45,6 +46,19 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
       await fetch('/api/shield/access', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tk}` }, body: JSON.stringify({ path: pathname }) }); } catch { /* صامت */ } })();
     return () => { alive = false; };
   }, [pathname, denied, my]);
+  /* P80: حارس التوثيق الثنائي — تحدٍّ إن كان للمستخدم عامل وجلسته aal1؛ إلزام التفعيل للأدوار الإدارية بعد تاريخ الإلزام؛ وإلا تنبيه */
+  const [mfaNote, setMfaNote] = useState<string | null>(null);
+  useEffect(() => {
+    if (!my || denied) return; let alive = true;
+    (async () => { try { const sb = await sbLazy(); const { data: a } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); if (!a || !alive) return;
+      const role = (my.roles || []).map((r: string) => String(r).toUpperCase()).find((r: string) => MFA_ROLES.includes(r)) || String(my.roles?.[0] || '').toUpperCase(); const verified = a.nextLevel === 'aal2' ? 1 : 0;
+      const d = mfaDecision({ role, aal: a.currentLevel === 'aal2' ? 'aal2' : 'aal1', verifiedFactors: verified, requiredFrom: requiredFrom(process.env as any) });
+      if (d === 'challenge') { window.location.assign(`/security/mfa?challenge=1&next=${encodeURIComponent(pathname)}`); return; }
+      if (d === 'enrol') { window.location.assign(`/security/mfa?next=${encodeURIComponent(pathname)}`); return; }
+      if (d === 'enrol_soft' && MFA_ROLES.includes(role)) setMfaNote('دورك إداري — فعّل التوثيق الثنائي لحماية البوّابة.');
+    } catch { /* ignore */ } })();
+    return () => { alive = false; };
+  }, [my, denied, pathname]);
   if (denied) {
     const mine = ROOMS.filter(r => (r.nav || r.side) && canOpen(r, my!.permissions, my!.staff)).slice(0, 6);
     return (
@@ -72,7 +86,7 @@ export function AdminShell({ children, bare = false }: { children: React.ReactNo
         </nav>
         <span className="as-right"><SignCounter lang="ar" tone="strip" /><Link href={HALL} className="as-hall" data-testid="as-hall"><Icon name="compass" size={14} /> صفحاتي</Link><button type="button" className="as-hall as-back" onClick={() => { if (typeof window !== 'undefined') { if (window.history.length > 1) window.history.back(); else window.location.assign('/dashboard'); } }} data-testid="as-back" aria-label="رجوع إلى الصفحة السابقة"><Icon name="arrow" size={14} /> رجوع</button></span>
       </div>
-      <div className="as-body">{children}</div>
+      <div className="as-body">{mfaNote ? <div className="as-mfa-note" role="status" style={{ margin: '0 0 12px', background: '#FBF0DC', border: '2px solid #D9A866', borderRadius: 14, padding: '10px 14px', color: '#8A5A1E', fontWeight: 700, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}><Icon name="shield" size={16} /> {mfaNote} <Link href="/security/mfa" className="pt-btn small">فعّل الآن</Link></div> : null}{children}</div>
       <footer className="as-foot" data-testid="as-foot">
         <span><b>{BRAND.name.ar} · مركز القيادة</b></span>
         <span>© {BRAND.copyrightYear} {BRAND.owner.ar}</span>

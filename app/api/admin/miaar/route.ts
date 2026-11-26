@@ -15,6 +15,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { readJson } from '../../../../lib/shield/body';
+import { requireMfa } from '../../../../lib/shield/mfa'; /* P80 */
 import { normalizeSite } from '../../../../lib/portal/open';
 import { MIAAR_NAMES_AR } from '../../../../lib/miaar/registry';
 import { bankCoverage } from '../../../../lib/miaar/bank';
@@ -34,6 +35,7 @@ async function ctx(req: Request) {
   const userDb = createClient(URL_, ANON, { global: { headers: { Authorization: `Bearer ${token}` } } }); const { data } = await userDb.auth.getUser(token); if (!data?.user) return { error: bad('جلسة غير صالحة', 401) };
   const { data: prof } = await userDb.from('profiles').select('role,full_name').eq('id', data.user.id).maybeSingle(); const role = String((prof as any)?.role || '').toUpperCase();
   if (!STAFF.includes(role)) return { error: bad('غير مصرّح — للطاقم فقط', 403) };
+  const mfa = await requireMfa(userDb, token, role); if (!mfa.ok) return { error: NextResponse.json({ success: false, error: mfa.error, code: mfa.code }, { status: mfa.status }) }; /* P80 */
   return { db, user: { id: data.user.id, email: String(data.user.email || '').toLowerCase(), role } };
 }
 

@@ -29,6 +29,12 @@ const CSP_REPORT_ONLY = [
   `report-uri /api/shield/csp`,
 ].join('; ');
 
+/* P80-أ: SHIELD_CSP_ENFORCE=1 في Vercel يقلب السياسة من Report-Only إلى إلزامية (بعد أسبوع نظيف في /admin/shield) — بلا تغيير شيفرة لاحقًا */
+const CSP_ENFORCE = process.env.SHIELD_CSP_ENFORCE === '1';
+const cspFor = (frameAncestors) => CSP_ENFORCE
+  ? [{ key: 'Content-Security-Policy', value: `frame-ancestors ${frameAncestors}; ${CSP_REPORT_ONLY}` }]
+  : [{ key: 'Content-Security-Policy', value: `frame-ancestors ${frameAncestors}` }, { key: 'Content-Security-Policy-Report-Only', value: CSP_REPORT_ONLY }];
+
 const BASE = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -36,7 +42,7 @@ const BASE = [
   { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(), payment=(self "https://api.moyasar.com"), usb=(), browsing-topics=(), interest-cohort=()' },
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
-  { key: 'X-Shield', value: 'athar-p21' },
+  { key: 'X-Shield', value: CSP_ENFORCE ? 'athar-p80-enforced' : 'athar-p21' },
 ];
 
 const CANONICAL_SITE = 'https://athar-portal.com';
@@ -53,15 +59,15 @@ const nextConfig = {
   async headers() {
     return [
       // صفحات قابلة للتضمين (التحقق من الشهادات + تأكيد الرسائل) — قبل القاعدة العامة
-      { source: '/verify/:path*', headers: [...BASE, { key: 'Content-Security-Policy', value: "frame-ancestors *" }, { key: 'Content-Security-Policy-Report-Only', value: CSP_REPORT_ONLY }] },
-      { source: '/m/:path*', headers: [...BASE, { key: 'Content-Security-Policy', value: "frame-ancestors *" }, { key: 'Content-Security-Policy-Report-Only', value: CSP_REPORT_ONLY }] },
+      { source: '/verify/:path*', headers: [...BASE, ...cspFor('*')] },
+      { source: '/m/:path*', headers: [...BASE, ...cspFor('*')] },
       // API: لا تخزين افتراضيًا (المسارات العامة تضيف s-maxage بنفسها فتتغلب)
       { source: '/api/:path*', headers: [...BASE, { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }] },
       { source: '/mcp/:path*', headers: [...BASE, { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }] },
       { source: '/mcp', headers: [...BASE, { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }] },
       { source: '/oauth/:path*', headers: [...BASE, { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }] },
       // القاعدة العامة لكل الصفحات (باستثناء المسارات أعلاه — Next يطبّق كل القواعد المطابقة والأخيرة تغلب، لذا نستثني صراحة)
-      { source: '/((?!verify(?:/|$)|m(?:/|$)|api/|mcp(?:/|$)|oauth/).*)', headers: [...BASE, { key: 'X-Frame-Options', value: 'DENY' }, { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" }, { key: 'Content-Security-Policy-Report-Only', value: CSP_REPORT_ONLY }] },
+      { source: '/((?!verify(?:/|$)|m(?:/|$)|api/|mcp(?:/|$)|oauth/).*)', headers: [...BASE, { key: 'X-Frame-Options', value: 'DENY' }, ...cspFor("'none'")] },
     ];
   },
 };

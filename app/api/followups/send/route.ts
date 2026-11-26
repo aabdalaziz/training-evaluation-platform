@@ -205,6 +205,9 @@ export async function GET(req: Request) {
   // P21 — درع أَثَر: تنظيف + تمرين ذاتي يومي + تنبيه بالأحداث الحرجة المعلّقة
   let shield: any = null;
   try { shield = await runShield(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { shield = { ok: false, error: e?.message || String(e) }; }
+  // P80-ج — النسخة الاحتياطية اليومية: تُطلق في طلب مستقلّ (مهلة 60 ثانية خاصّة بها) ولا تنتظر
+  let backup: any = null;
+  try { if (!dry && process.env.CRON_SECRET) { const site = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, ''); void fetch(`${site}/api/cron/backup`, { headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` }, cache: 'no-store' }).catch(() => null); backup = { triggered: true }; } else backup = { triggered: false, dry }; } catch (e: any) { backup = { ok: false, error: e?.message || String(e) }; }
   // P22 خزنة أَثَر: الاحتفاظ · تنفيذ النسيان بعد الحجر · تذكير الطلبات والحوادث
   let vault: any = null;
   try { vault = await runVault(db, { dry, site: (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/+$/, '') }); } catch (e: any) { vault = { ok: false, error: e?.message || String(e) }; }
@@ -237,5 +240,5 @@ export async function GET(req: Request) {
   try { kids = await runKids(db, { dry }); } catch (e: any) { kids = { ok: false, error: e?.message || String(e) }; }
   // نبضة الكرون اليومي (لصفحة صحة البوّابة)
   if (!dry) await cronHeartbeat(db, 'followups', { processed: out.length, notifications: notifications?.inserted ?? null, trainee_mail: trainee_mail?.sent ?? null });
-  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, level_close, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory, kids });
+  return NextResponse.json({ success: true, today, processed: out.length, results: out, notifications, trainee_mail, live_reminders, credential_pulse, missions, contracts, placements, daily_push, learner_notices, practice, sign_digest, day_digest, week_echo, org_letters, self_letters, map_nudges, media_cleanup, grad_days, first_days, room_calendar, evidence, level_close, loop, outreach, observatory, shield, vault, councils, journey, org_journey, horizon, org_horizon, pair, org_pair, directory, kids, backup });
 }
