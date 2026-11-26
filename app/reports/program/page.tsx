@@ -80,6 +80,7 @@ function Inner() {
         desc={<><p>صفحة واحدة تجمع الحضور، رضا المشاركين، الكسب المعرفي، نقل الأثر، الشهادات، ومؤشرات النتائج — مع خلاصة وتوصيات. للطباعة PDF أو التصدير Excel بملف واحد.</p></>}
         actions={<>
           <Link href={`/reports/chain${programId ? `?program=${programId}` : ''}`} className="rm-btn"><Icon name="trend" size={16} /> سلسلة الأثر</Link>
+          <Link href={`/reports/live${programId ? `?program=${programId}` : ''}`} className="rm-btn"><Icon name="spark" size={16} /> التقرير الحيّ</Link>{/* P84 */}
           <button className="rm-btn" onClick={() => window.print()} disabled={!rep}><Icon name="print" size={16} /> طباعة / PDF</button>
           <button className="rm-btn primary" onClick={exportXlsx} disabled={!rep}><Icon name="table" size={16} /> Excel موحّد</button>
         </>}

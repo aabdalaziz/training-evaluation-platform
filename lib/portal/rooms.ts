@@ -41,6 +41,7 @@ export const ROOMS: Room[] = [
   { href: '/admin/outcomes', label: 'مؤشرات النتائج', hint: 'المستوى 4 · خط أساس ومستهدف', icon: 'flag', perms: ['impact.read', 'evidence.write', 'programs.write'], side: true },
   { href: '/reports/chain', label: 'سلسلة الأثر 1→4', hint: 'كيركباتريك في صفحة واحدة', icon: 'trend', perms: ['reports.read'], side: true },
   { href: '/reports/program', label: 'بطاقة البرنامج الشاملة', hint: 'صفحة واحدة لصانع القرار · PDF · Excel', icon: 'doc', perms: ['reports.read'], side: true },
+  { href: '/reports/live', label: 'التقرير الحيّ', hint: 'كيركباتريك 1–4 · توزيع البنود · تنبيهات → مهامّ · 5 قوالب · PDF/بريد', icon: 'spark', perms: ['reports.read'], side: true }, /* P84 */
   { href: '/reports/cohorts', label: 'الذكاء التحليلي', hint: 'الدفعات · عدالة المدرّبين · ملخص ذكي', icon: 'scale', perms: ['reports.read'], side: true },
   { href: '/admin/audit', label: 'سجلّ التدقيق', hint: 'من فعل ماذا ومتى · تتبّع تلقائي', icon: 'shield', perms: ['admin'], side: true },
   { href: '/admin/health', label: 'صحة البوّابة', hint: 'الإعدادات · الكرون · البريد · سلامة البيانات', icon: 'check', perms: ['admin'], side: true },
