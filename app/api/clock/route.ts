@@ -11,7 +11,7 @@
  */
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { cronAuthorized } from '../../../lib/shield/body';
+import { cronAuthorized, readJson, crossSiteBrowserWrite } from '../../../lib/shield/body';
 import { runProgramClock } from '../../../lib/clock/cron';
 
 export const runtime = 'nodejs';
@@ -36,7 +36,8 @@ export async function POST(req: Request) {
   const { data: u, error: uErr } = await userClient.auth.getUser(token); if (uErr || !u?.user) return bad('جلسة المستخدم غير صالحة', 401);
   const { data: profile } = await userClient.from('profiles').select('role').eq('id', u.user.id).single(); if (!ALLOWED.includes(String((profile as any)?.role || '').toUpperCase())) return bad('غير مصرح', 403);
   const db = serviceDb(); if (!db) return bad('SUPABASE_SERVICE_ROLE_KEY مطلوب', 500);
-  const body = await req.json().catch(() => ({})); const action = String(body.action || ''); const site = siteOf(req);
+  if (crossSiteBrowserWrite(req)) return bad('طلب عبر المواقع مرفوض', 403); /* S6 */
+  const rj = await readJson(req, { maxBytes: 16 * 1024, allowEmpty: true }); if (!rj.ok) return bad(rj.error, rj.status); const body = rj.body || {}; const action = String(body.action || ''); const site = siteOf(req);
   if (action === 'preview') return NextResponse.json({ success: true, ...(await runProgramClock(db, { site, dry: true })) });
   if (action === 'generate') { const { data, error } = body.program_id ? await db.rpc('program_clock_generate', { p_program: body.program_id }) : await db.rpc('program_clock_generate_all'); if (error) return bad(error.message, 500); return NextResponse.json({ success: true, generated: Number(data) || 0 }); }
   if (!body.event_id || !/^[0-9a-f-]{36}$/i.test(String(body.event_id))) return bad('event_id مطلوب');
