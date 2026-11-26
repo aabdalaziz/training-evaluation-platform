@@ -75,3 +75,39 @@ test('إملاء: كلمات الأرقام والأرقام الهندية → 
   assert.equal(fromSpeech('number', 'خمسة وعشرون 25'), '25');
   assert.equal(voiceCommand('التالي'), 'next'); assert.equal(voiceCommand('نعم.'), 'next'); assert.equal(voiceCommand('أعد'), 'repeat'); assert.equal(voiceCommand('رجوع'), 'back'); assert.equal(voiceCommand('أرسل'), 'submit'); assert.equal(voiceCommand('تخطى'), 'skip'); assert.equal(voiceCommand('أحمد'), null);
 });
+
+/* P82-ج/د: كشف ورقي · بطاقة عمل · مطابقة · مسار الإشارة */
+import { parseRoster, extractContact, matchRow, nameSimilarity, normalizePhone, normName } from '../lib/ocr/roster';
+import { parseSignVideos, signSteps, embedUrl, whatsappVideoLink, signRoomUrl } from '../lib/inclusion/sign';
+test('كشف ورقي: عناوين تُهمل · تسلسل وأرقام هندية · بريد/جوال/هوية تُستخرج · أعلام الجودة', () => {
+  const rows = parseRoster(`كشف حضور — برنامج القيادة\nم | الاسم | الجوال | التوقيع\n1. أحمد محمد بدوي 0564440406\n٢) سارة عبدالله العتيبي ٠٥٥١٢٣٤٥٦٧ sara@example.com\n3 - Mohammed Al-Qahtani +966 50 123 4567\n4. خالد\n5. 1098765432 فهد بن سعد الدوسري\n1. أحمد محمد بدوي 0564440406\n----`);
+  assert.equal(rows.length, 6);
+  assert.deepEqual([rows[0].name, rows[0].phone], ['أحمد محمد بدوي', '0564440406']);
+  assert.deepEqual([rows[1].name, rows[1].phone, rows[1].email], ['سارة عبدالله العتيبي', '0551234567', 'sara@example.com']);
+  assert.deepEqual([rows[2].name, rows[2].phone], ['Mohammed Al-Qahtani', '0501234567']);
+  assert.ok(rows[3].flags.includes('اسم قصير')); assert.equal(rows[4].national_id, '1098765432'); assert.ok(rows[5].flags.includes('مكرّر'));
+  assert.equal(normalizePhone('00966 56 444 0406'), '0564440406'); assert.equal(normalizePhone('abc'), null);
+});
+test('بطاقة عمل: اسم/منصب/جهة/بريد/جوال', () => {
+  const c = extractContact('د. أحمد محمد بدوي\nمدير التدريب والتطوير\nشركة أَثَر للتدريب\ninfo@athar-portal.com\n+966 56 444 0406\nwww.athar-portal.com');
+  assert.equal(c.email, 'info@athar-portal.com'); assert.equal(c.phone, '0564440406'); assert.ok(c.name.includes('أحمد محمد بدوي')); assert.ok(c.org!.includes('شركة')); assert.ok(c.title!.includes('مدير'));
+});
+test('مطابقة الأسماء: تطبيع عربي · دايس · بريد/جوال قاطع · عتبة', () => {
+  assert.equal(normName('الدكتور أحمد بن محمد البدوي'), 'دكتور احمد محمد بدوي'); assert.equal(normName('د. سارة العتيبي'), 'ساره عتيبي');
+  assert.equal(nameSimilarity('احمد محمد بدوى', 'أحمد محمد بدوي'), 1); assert.ok(nameSimilarity('سارة العتيبي', 'سارة عبدالله العتيبي') > 0.72); assert.ok(nameSimilarity('خالد', 'فهد الدوسري') < 0.3);
+  const known = [{ id: 'a', name: 'أحمد محمد بدوي', email: 'x@y.com', phone: '0564440406' }, { id: 'b', name: 'فهد الدوسري' }];
+  assert.equal(matchRow({ name: 'شخص آخر', email: 'X@Y.com' }, known)!.by, 'email'); assert.equal(matchRow({ name: 'شخص آخر', phone: '+966564440406' }, known)!.by, 'phone');
+  assert.equal(matchRow({ name: 'احمد بدوى' }, known)!.id, 'a'); assert.equal(matchRow({ name: 'نورة القحطاني' }, known), null);
+});
+test('مسار الإشارة: فكّ روابط الفيديو · تضمين YouTube · واتساب · غرفة', () => {
+  const m = parseSignVideos('checkin=https://youtu.be/abc123XYZ; register = https://cdn.x/sign/reg.mp4 ,bad=http://x, evil=javascript:1');
+  assert.deepEqual(Object.keys(m).sort(), ['checkin', 'register']);
+  const st = signSteps('checkin=https://youtu.be/abc123XYZ'); assert.equal(st.length, 5); assert.equal(st[0].video, 'https://youtu.be/abc123XYZ'); assert.equal(st[1].video, null);
+  assert.deepEqual(embedUrl('https://www.youtube.com/watch?v=abc123XYZ'), { kind: 'iframe', src: 'https://www.youtube.com/embed/abc123XYZ?rel=0' }); assert.equal(embedUrl('https://cdn.x/a.mp4').kind, 'video');
+  assert.ok(whatsappVideoLink('/attend/x').startsWith('https://wa.me/966564440406?text=')); assert.match(signRoomUrl('Ab1-2'), /^https:\/\/meet\.jit\.si\/athar-sign-ab12$/);
+});
+import { ocrPaths, OCR_HOSTS } from '../lib/ocr/engine';
+test('OCR: مسارات المحرّك — CDN مثبَّت الإصدار افتراضيًّا، وذاتي عند NEXT_PUBLIC_OCR_BASE', () => {
+  const cdn = ocrPaths(''); assert.ok(cdn.script.startsWith('https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/')); assert.ok(cdn.langPath.startsWith('https://tessdata.projectnaptha.com/')); assert.ok(OCR_HOSTS.every((h) => [cdn.script, cdn.langPath].some((u) => u.startsWith(h))));
+  assert.deepEqual(ocrPaths('/ocr/'), { script: '/ocr/tesseract.min.js', workerPath: '/ocr/worker.min.js', corePath: '/ocr', langPath: '/ocr/lang' });
+});

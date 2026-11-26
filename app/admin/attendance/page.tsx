@@ -12,7 +12,9 @@ import type { AttendanceRecord, AttendanceSession, PersonSummary, RecordStatus }
 
 import { RoomHead } from '../../components/RoomKit'; /* هـ-3 ح «عدّة الغرفة» */
 import { MicButton } from '../../components/Dictate'; /* P82-ب */
-import { ScanButton, type ScanHit } from '../../components/Scan'; /* P82 «أَثَر يقرأ»: مسح بطاقة أَثَر الرقمية → تعبئة التسجيل اليدوي */
+import { ScanButton, type ScanHit } from '../../components/Scan';
+import { RosterImport, OcrContactButton, type ImportRow } from '../../components/RosterImport'; /* P82-ج: كشف ورقي → OCR → جدول → استيراد */
+import type { Known } from '../../../lib/ocr/roster'; /* P82 «أَثَر يقرأ»: مسح بطاقة أَثَر الرقمية → تعبئة التسجيل اليدوي */
 type Program = { id: string; name_ar: string; name_en?: string | null; status?: string | null };
 type Classroom = { id: string; code: string; program_id: string | null; trainer_id?: string | null };
 type Trainer = { id: string; name: string };
@@ -59,6 +61,27 @@ function Inner() {
       flash(`قُرئت بطاقة ${j.person.name || ''}${j.person.org ? ' — ' + j.person.org : ''} · راجع ثمّ أضف`);
     } catch { setError('تعذّر الاتصال بالخادم'); }
   };
+  /* P82-ج: الأسماء المعروفة للمطابقة = سجلّات هذه الجلسة + الجلسات السابقة للبرنامج نفسه */
+  const [knownNames, setKnownNames] = useState<Known[]>([]);
+  async function loadKnown(sid: string, programId: string | null) {
+    try {
+      const ids = sessions.filter(s => s.id === sid || (programId && s.program_id === programId)).map(s => s.id); if (!ids.length) { setKnownNames([]); return; }
+      const { data } = await db.from('attendance_records').select('identity_key,full_name,email,phone').in('session_id', ids).limit(10000);
+      const seen = new Set<string>(); const out: Known[] = [];
+      for (const r of (data || []) as any[]) { if (seen.has(r.identity_key)) continue; seen.add(r.identity_key); out.push({ id: r.identity_key, name: r.full_name, email: r.email, phone: r.phone }); }
+      setKnownNames(out);
+    } catch { setKnownNames([]); }
+  }
+  async function importRoster(rows: ImportRow[]) {
+    if (!current) return { ok: 0, failed: 0 };
+    let ok = 0, failed = 0;
+    for (const r of rows) {
+      const k = r.use_match && r.match ? knownNames.find(x => x.id === r.match!.id) : null; /* عند الربط: نستعمل بيانات السجلّ المعروف ليتوحّد مفتاح الهوية */
+      const row = { session_id: current.id, full_name: (k?.name || r.name).trim(), email: (k?.email || r.email || '').trim() || null, phone: (k?.phone || r.phone || '').trim() || null, status: 'present', method: 'import' };
+      const { error } = await db.from('attendance_records').insert(row); if (error) failed++; else ok++;
+    }
+    await loadRecords(current.id); flash(`استُورد ${ok} من الكشف الورقي${failed ? ` · تعذّر ${failed}` : ''}`); return { ok, failed };
+  }
   const [qrOpen, setQrOpen] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const liveRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -335,6 +358,7 @@ function Inner() {
                 {canWrite && <button className="rm-btn" onClick={() => toggleStatus(current)}>{current.status === 'open' ? <><Icon name="pause" size={16} /> إغلاق التسجيل</> : <><Icon name="refresh" size={16} /> إعادة الفتح</>}</button>}
                 <button className="rm-btn" onClick={exportSession} disabled={!records.length}><Icon name="download" size={16} /> CSV</button>
                 {canWrite && <button className="rm-btn" onClick={importFromPrevious} disabled={!!busy}><Icon name="users" size={16} /> استيراد الأسماء من الجلسات السابقة</button>}
+                {canWrite && <span onClickCapture={() => { if (current) loadKnown(current.id, current.program_id); }}><RosterImport known={knownNames} onImport={importRoster} /></span>}
               </div>
             </div>
             <div className="aa-live">
@@ -346,7 +370,7 @@ function Inner() {
 
           {canWrite && (
             <section className="rm-card">
-              <h2><Icon name="edit" size={18} /> تسجيل يدوي <ScanButton compact accept={['pass']} title="أَثَر يقرأ — بطاقة المشارك" hint="امسح رمز «بطاقة أَثَر الرقمية» من جوال المشارك (/me/pass)" onHit={fillFromPass} /></h2>
+              <h2><Icon name="edit" size={18} /> تسجيل يدوي <ScanButton compact accept={['pass']} title="أَثَر يقرأ — بطاقة المشارك" hint="امسح رمز «بطاقة أَثَر الرقمية» من جوال المشارك (/me/pass)" onHit={fillFromPass} /> <OcrContactButton compact onContact={(c) => setManual((m) => ({ ...m, name: c.name || m.name, email: c.email || m.email, phone: c.phone || m.phone }))} /></h2>
               <div className="aa-manual">
 <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}><input placeholder="الاسم الكامل *" value={manual.name} onChange={e => setManual({ ...manual, name: e.target.value })} style={{ flex: 1 }} /><MicButton kind="name" onText={(v) => setManual((m) => ({ ...m, name: v }))} /></span>
                 <input placeholder="البريد (اختياري)" dir="ltr" value={manual.email} onChange={e => setManual({ ...manual, email: e.target.value })} />

@@ -13,12 +13,12 @@ const AI_BASE = (process.env.AI_BASE_URL || '').replace(/\/+$/, '');
 
 const CSP_REPORT_ONLY = [
   `default-src ${SELF}`,
-  `script-src ${SELF} 'unsafe-inline' https://cdn.moyasar.com`, // Next inline runtime + نموذج الدفع
+  `script-src ${SELF} 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.moyasar.com https://cdn.jsdelivr.net`, // Next inline runtime + نموذج الدفع + OCR على الجهاز (Tesseract من jsDelivr + WebAssembly، P82-ج)
   `style-src ${SELF} 'unsafe-inline' https://fonts.googleapis.com`,
   `font-src ${SELF} data: https://fonts.gstatic.com`,
   `img-src ${SELF} data: blob: https:`,
   `media-src ${SELF} blob: data:`,
-  `connect-src ${SELF} ${SUPABASE} ${SUPABASE_WS} https://api.moyasar.com https://miaar-placement-test.vercel.app https://api.qrserver.com${AI_BASE ? ' ' + AI_BASE : ''}`,
+  `connect-src ${SELF} ${SUPABASE} ${SUPABASE_WS} https://api.moyasar.com https://miaar-placement-test.vercel.app https://api.qrserver.com https://cdn.jsdelivr.net https://tessdata.projectnaptha.com${AI_BASE ? ' ' + AI_BASE : ''}`, // P82-ج: محرّك OCR وبيانات اللغة
   `frame-src ${SELF} https://meet.jit.si https://*.jit.si https://www.youtube.com https://youtube.com https://api.moyasar.com https://miaar-placement-test.vercel.app`,
   `worker-src ${SELF} blob:`,
   `manifest-src ${SELF}`,

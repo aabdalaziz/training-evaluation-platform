@@ -6,6 +6,7 @@ import { Icon } from '../../../lib/ui/icons';
 import { STATUS_LABEL } from '../../../lib/attendance/model';
 import type { RecordStatus } from '../../../lib/attendance/model';
 import { MicButton, VoiceFill } from '../../components/Dictate'; /* P82-ب «قُل بدل أن تكتب» */
+import { SignHelpButton } from '../../components/SignHelp'; /* P82-د */
 
 type Info = {
   id: string; title: string; status: 'open' | 'closed'; session_date: string; start_time: string | null; end_time: string | null;
@@ -116,7 +117,7 @@ export function CheckinForm({ token }: { token: string }) {
 
             {info.status === 'open' && !result && (
               <form className="at-card" onSubmit={submit} noValidate>
-                <div style={{ marginBottom: 8 }}><VoiceFill lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} title={lang === 'ar' ? 'املأ النموذج بالكلام' : 'Fill by voice'} fields={[{ key: 'name', label: t.name, kind: 'name', required: true }, { key: 'email', label: t.email, kind: 'email' }, { key: 'phone', label: t.phone, kind: 'phone', required: !!info.require_phone }]} onFill={(v) => setForm({ name: v.name || form.name, email: v.email || form.email, phone: v.phone || form.phone })} /></div>
+                <div style={{ marginBottom: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}><SignHelpButton always step="checkin" lang={lang} /><VoiceFill lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} title={lang === 'ar' ? 'املأ النموذج بالكلام' : 'Fill by voice'} fields={[{ key: 'name', label: t.name, kind: 'name', required: true }, { key: 'email', label: t.email, kind: 'email' }, { key: 'phone', label: t.phone, kind: 'phone', required: !!info.require_phone }]} onFill={(v) => setForm({ name: v.name || form.name, email: v.email || form.email, phone: v.phone || form.phone })} /></div>
                 <label><span>{t.name} <i>*</i> <MicButton kind="name" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, name: v })} /></span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" required /></label>
                 <label><span>{t.email} <small>({t.optional})</small> <MicButton kind="email" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, email: v })} /></span><input type="email" inputMode="email" dir="ltr" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} autoComplete="email" /></label>
                 <label><span>{t.phone} <small>({info.require_phone ? t.required : t.optional})</small>{info.require_phone && <i>*</i>} <MicButton kind="phone" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, phone: v })} /></span><input type="tel" inputMode="tel" dir="ltr" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} autoComplete="tel" /></label>

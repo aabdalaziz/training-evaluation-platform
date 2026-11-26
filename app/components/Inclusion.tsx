@@ -8,6 +8,7 @@ import { lazyToken } from './Pocket';
 import { Icon } from '../../lib/ui/icons';
 import { ACCESS_STORAGE_KEY, NEEDS, NEED_LABEL, NEED_EFFECT_AR, cleanNeeds, accessAttr, CAPTION_LANG, CAPTION_TTL_MS, mergeCaption } from '../../lib/inclusion/registry';
 import type { Need, SimpleSource, SimpleText, CaptionMsg } from '../../lib/inclusion/registry';
+import { SignHelpButton } from './SignHelp'; /* P82-د */
 
 type Lang = 'ar' | 'en';
 type Ctx = { needs: Need[]; has: (n: Need) => boolean; setNeeds: (n: Need[]) => void; saveToAccount: (n: Need[], extra?: { helps_ar?: string; share_staff?: boolean }) => Promise<string | null>; signedIn: boolean; synced: boolean; open: boolean; setOpen: (o: boolean, tab?: 'needs' | 'report') => void; tab: 'needs' | 'report' };
@@ -95,6 +96,7 @@ export function AccessPanel({ lang }: { lang: Lang }) {
             {draft.length > 0 && <button type="button" className="pt-btn ghost small" onClick={() => setDraft([])}>{ar ? 'امسح الكل' : 'Clear'}</button>}
           </div>
           {msg && <p className="ax-msg" role="status" data-testid="ax-msg">{msg}</p>}
+          {draft.includes('sign_language') && <div style={{ margin: '8px 0' }}><SignHelpButton always lang={lang} /></div>}
           <p className="ax-foot"><Link href="/me/access">{ar ? 'ملفي الكامل («ما يساعدني» ومشاركته مع الطاقم)' : 'My full profile'}</Link> · <Link href="/accessibility">{ar ? 'بيان الوصول' : 'Accessibility statement'}</Link></p>
         </div> : <div className="ax-body">
           <p className="ax-lead">{ar ? 'شيء لم يعمل معك؟ زر لا يُقرأ، لون لا يُرى، خطوة لم تفهمها. اكتبه كما هو — نقرؤه بأنفسنا.' : 'Something did not work for you? Tell us as it is — we read it ourselves.'}</p>
