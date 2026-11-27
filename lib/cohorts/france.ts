@@ -11,7 +11,12 @@ export const FRANCE = {
   weekdays: [0, 1, 2, 3, 4] as number[],          // JS getUTCDay: 0=الأحد … 4=الخميس
   periods: [['08:00', '10:00'], ['11:00', '13:00']],
   breakAt: ['10:00', '11:00'] as [string, string],
-  lateAfter: '08:15',
+  lateAfter: '08:30', /* قرار المالك 27/11: التأخير بعد 8:30 */
+  certificate: { /* P91 — قرارات المالك 27/11 */
+    lang2: 'fr' as const,
+    programNameAr: 'برنامج الانغماس اللغوي — ديسمبر 2026', programNameFr: 'Programme d’immersion en arabe — Décembre 2026',
+    wishTo: 'لها', sign1: { name: 'د/ أحمد عبدالعزيز', title: 'المدير الأكاديمي', title_fr: 'Directeur académique' } /* يمين */, sign2: { name: 'د/ عبدالله العتيبي', title: 'المدير العام', title_fr: 'Directeur général' } /* يسار */,
+  },
   hours: 60,
   trainer: { ar: 'د. آلاء', en: 'Dr. Alaa', fr: 'Dr Alaa' },
   organiser: { ar: 'أ. عمرو سنبل', en: 'Mr. Amr Sunbul', fr: 'M. Amr Sunbul' },
@@ -76,7 +81,7 @@ export const T: Record<HubLang, HubText> = {
     stepsTitle: 'Four steps — that’s all', steps: [
       ['Take the Miaar test', 'Open the invitation e-mail from reports@athar-portal.com (subject “Miaar”). 30 minutes, in your language. It sets your group.'],
       ['Sign in once', 'Here, with the same e-mail. Your journey, level and certificate live in this space.'],
-      ['Check in every morning', 'Scan the QR code shown by the trainer, enter your name and e-mail. After 08:15 you are marked “late”.'],
+      ['Check in every morning', 'Scan the QR code shown by the trainer, enter your name and e-mail. After 08:30 you are marked “late”.'],
       ['Rate your day', 'Last 15 minutes: scan the daily code (FRDAILY). Anonymous, two minutes, and it changes tomorrow.'],
     ],
     lostInvite: 'Lost the invitation? Ask us to resend it', scheduleTitle: 'Schedule — 15 days', scheduleHint: 'Sunday to Thursday · 08:00–10:00 · break 10:00–11:00 · 11:00–13:00', today: 'today', dayCol: 'Day', dateCol: 'Date', timeCol: 'Time',
@@ -102,7 +107,7 @@ export const T: Record<HubLang, HubText> = {
     stepsTitle: 'Quatre étapes — c’est tout', steps: [
       ['Passez le test Miaar', 'Ouvrez l’e-mail d’invitation de reports@athar-portal.com (objet « Miaar »). 30 minutes, dans votre langue. Il détermine votre groupe.'],
       ['Connectez-vous une fois', 'Ici, avec le même e-mail. Votre parcours, votre niveau et votre certificat vivent dans cet espace.'],
-      ['Émargez chaque matin', 'Scannez le QR code affiché par la formatrice, saisissez nom et e-mail. Après 08h15, vous êtes notée « en retard ».'],
+      ['Émargez chaque matin', 'Scannez le QR code affiché par la formatrice, saisissez nom et e-mail. Après 08h30, vous êtes notée « en retard ».'],
       ['Évaluez votre journée', 'Les 15 dernières minutes : scannez le code du jour (FRDAILY). Anonyme, deux minutes, et cela change le lendemain.'],
     ],
     lostInvite: 'Invitation perdue ? Demandez-nous de la renvoyer', scheduleTitle: 'Planning — 15 jours', scheduleHint: 'Du dimanche au jeudi · 08h00–10h00 · pause 10h00–11h00 · 11h00–13h00', today: 'aujourd’hui', dayCol: 'Jour', dateCol: 'Date', timeCol: 'Horaires',
@@ -128,7 +133,7 @@ export const T: Record<HubLang, HubText> = {
     stepsTitle: 'أربع خطوات — لا أكثر', steps: [
       ['أدّي اختبار مِعيار', 'افتحي بريد الدعوة من reports@athar-portal.com (الموضوع «مِعيار»). 30 دقيقة بلغتكِ. يحدّد شعبتكِ.'],
       ['ادخلي مرّة واحدة', 'هنا، بالبريد نفسه. رحلتكِ ومستواكِ وشهادتكِ في هذه المساحة.'],
-      ['سجّلي حضوركِ كلّ صباح', 'امسحي رمز QR الذي تعرضه المدرّبة، واكتبي اسمكِ وبريدكِ. بعد 8:15 يُسجَّل «متأخّر».'],
+      ['سجّلي حضوركِ كلّ صباح', 'امسحي رمز QR الذي تعرضه المدرّبة، واكتبي اسمكِ وبريدكِ. بعد 8:30 يُسجَّل «متأخّر».'],
       ['قيّمي يومكِ', 'آخر 15 دقيقة: امسحي رمز اليوم (FRDAILY). مجهول، دقيقتان، ويغيّر الغد.'],
     ],
     lostInvite: 'ضاعت الدعوة؟ اطلبي إعادة إرسالها', scheduleTitle: 'الجدول — 15 يومًا', scheduleHint: 'الأحد إلى الخميس · 8:00–10:00 · استراحة 10:00–11:00 · 11:00–13:00', today: 'اليوم', dayCol: 'اليوم', dateCol: 'التاريخ', timeCol: 'الوقت',

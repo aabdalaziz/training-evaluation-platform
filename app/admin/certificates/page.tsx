@@ -8,6 +8,7 @@ import { Icon } from '../../../lib/ui/icons';
 import { renderCertificate, jpegsToPdf, downloadBytes, DEFAULT_SETTINGS, KIND_LABEL, fmtDate } from '../../../lib/certificates/render';
 import type { CertKind, CertSettings } from '../../../lib/certificates/render';
 import { loadSettings, saveSettings, insertCertificates, renderRows, emailRendered, previewData, rowToData, verifyUrl, pdfFilename, SETTINGS_FIELDS } from '../../../lib/certificates/issue';
+import { certProfile, profileMeta } from '../../../lib/certificates/locale'; /* P91 */
 import type { CertRow, IssueInput } from '../../../lib/certificates/issue';
 import { summarize, eligible } from '../../../lib/attendance/model';
 import type { AttendanceRecord } from '../../../lib/attendance/model';
@@ -101,18 +102,19 @@ export default function CertificatesPage() {
   useEffect(() => { if (program) { setStart(program.start_date || ''); setEnd(program.end_date || ''); } setClassroomId(''); }, [programId]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setRecipients(parseRecipients(recText)); setPreviewIdx(0); }, [recText]);
 
+  const prof = certProfile(program?.id, program?.name_en); /* P91: ملفّ الشهادة بحسب البرنامج */
   const baseInput = (r?: Recipient): IssueInput => ({
     kind, recipient_name: r?.name || '', recipient_name_en: r?.name_en || null, recipient_email: r?.email || null,
-    program_id: program?.id || null, program_name: program?.name_ar || '', classroom_id: room?.id || null, classroom_code: room?.code || null,
-    trainer_id: trainer?.id || null, trainer_name: trainer?.name || null, start_date: start || null, end_date: end || null,
-    hours: kind === 'appreciation' ? null : hours || null, organization_id: orgId, meta: { program_en: program?.name_en || null, source: r?.source || 'manual' },
+    program_id: program?.id || null, program_name: prof.program_ar || program?.name_ar || '', classroom_id: room?.id || null, classroom_code: prof.hide_classroom ? null : (room?.code || null),
+    trainer_id: trainer?.id || null, trainer_name: prof.hide_trainer ? null : (trainer?.name || null), start_date: start || null, end_date: end || null,
+    hours: kind === 'appreciation' ? null : hours || null, organization_id: orgId, meta: { ...profileMeta(prof), source: r?.source || 'manual' },
   });
 
   // live preview
   useEffect(() => {
     if (tab !== 'issue' || !canvasRef.current) return;
     const r = recipients[previewIdx]; let cancelled = false;
-    (async () => { if (!cancelled) await renderCertificate(canvasRef.current!, previewData(baseInput(r), program?.name_en), settings); })();
+    (async () => { if (!cancelled) await renderCertificate(canvasRef.current!, previewData(baseInput(r), prof.program_en, prof.lang2), settings); })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, recipients, previewIdx, kind, hours, start, end, programId, classroomId, settings, ready]);

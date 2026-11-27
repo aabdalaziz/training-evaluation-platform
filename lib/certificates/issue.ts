@@ -44,14 +44,15 @@ export function verifyUrl(code: string): string {
 }
 export function rowToData(r: CertRow): CertData {
   return {
-    kind: r.kind, recipient_name: r.recipient_name, recipient_name_en: r.recipient_name_en, program_ar: r.program_name || '', program_en: (r.meta && r.meta.program_en) || null,
+    kind: r.kind, recipient_name: r.recipient_name, recipient_name_en: r.recipient_name_en, program_ar: r.program_name || '', program_en: (r.meta && r.meta.program_en) || null, lang2: (r.meta && r.meta.lang2) || null, wish_to: (r.meta && r.meta.wish_to) || null, sign1: (r.meta && r.meta.sign1) || null, sign2: (r.meta && r.meta.sign2) || null, /* P91 */
     classroom: r.classroom_code, trainer: r.trainer_name, start: r.start_date, end: r.end_date, hours: r.hours, issued_at: r.issued_at, serial: r.serial,
     verify_url: verifyUrl(r.verify_code), award_title: r.award_title,
   };
 }
-export function previewData(i: IssueInput, programEn?: string | null): CertData {
+export function previewData(i: IssueInput, programEn?: string | null, lang2?: 'en' | 'fr' | null): CertData {
+  const m: any = i.meta || {};
   return {
-    kind: i.kind, recipient_name: i.recipient_name || 'اسم المشارك', recipient_name_en: i.recipient_name_en || null, program_ar: i.program_name || 'اسم البرنامج', program_en: programEn || null,
+    lang2: lang2 || m.lang2 || null, wish_to: m.wish_to || null, sign1: m.sign1 || null, sign2: m.sign2 || null, kind: i.kind, recipient_name: i.recipient_name || 'اسم المشارك', recipient_name_en: i.recipient_name_en || null, program_ar: i.program_name || 'اسم البرنامج', program_en: programEn || null,
     classroom: i.classroom_code || null, trainer: i.trainer_name || null, start: i.start_date || null, end: i.end_date || null, hours: i.hours || null,
     issued_at: new Date().toISOString().slice(0, 10), serial: 'ATH-2026-000000', verify_url: verifyUrl('PREVIEW'), award_title: i.award_title || null,
   };

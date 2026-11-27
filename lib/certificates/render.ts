@@ -17,6 +17,8 @@ export type CertData = {
   program_ar: string; program_en?: string | null; classroom?: string | null; trainer?: string | null;
   start?: string | null; end?: string | null; hours?: number | null; issued_at: string; serial: string; verify_url: string;
   award_title?: string | null; // للشهادات التقديرية: مثل «أفضل مدرّب للشهر»
+  wish_to?: string | null; sign1?: { name: string; title: string; title_fr?: string | null } | null; sign2?: { name: string; title: string; title_fr?: string | null } | null; // P91: «متمنين لها» وتوقيعان خاصّان بالبرنامج (يطغيان على الإعدادات)
+  lang2?: 'en' | 'fr' | null; // P91: اللغة الثانية على الشهادة (افتراضيًّا الإنجليزيّة؛ فرنسيّة لمجموعة فرنسا) — program_en/recipient_name_en يحملان النصّ بتلك اللغة
 };
 
 export const DEFAULT_SETTINGS: CertSettings = {
@@ -27,11 +29,13 @@ export const DEFAULT_SETTINGS: CertSettings = {
   footer_ar: 'هذه الشهادة صادرة إلكترونيًا ويمكن التحقق من صحتها عبر رمز الاستجابة السريعة أو الرقم التسلسلي.',
 };
 
-export const KIND_LABEL: Record<CertKind, { ar: string; en: string; verb_ar: string; verb_en: string }> = {
-  completion: { ar: 'شهادة إتمام', en: 'Certificate of Completion', verb_ar: 'وذلك لإتمام البرنامج التدريبي', verb_en: 'for successfully completing the training program' },
-  attendance: { ar: 'شهادة حضور', en: 'Certificate of Attendance', verb_ar: 'وذلك لحضور البرنامج التدريبي', verb_en: 'for attending the training program' },
-  appreciation: { ar: 'شهادة شكر وتقدير', en: 'Certificate of Appreciation', verb_ar: 'تقديرًا للجهود المتميزة والأداء الرفيع في تنفيذ برنامج', verb_en: 'in recognition of outstanding effort and performance in delivering' },
+export const KIND_LABEL: Record<CertKind, { ar: string; en: string; fr: string; verb_ar: string; verb_en: string; verb_fr: string }> = {
+  completion: { ar: 'شهادة إتمام', en: 'Certificate of Completion', fr: 'Certificat de réussite', verb_ar: 'وذلك لإتمام البرنامج التدريبي', verb_en: 'for successfully completing the training program', verb_fr: 'pour avoir suivi avec succès le programme de formation' },
+  attendance: { ar: 'شهادة حضور', en: 'Certificate of Attendance', fr: 'Certificat de participation', verb_ar: 'وذلك لحضور البرنامج التدريبي', verb_en: 'for attending the training program', verb_fr: 'pour avoir participé au programme de formation' },
+  appreciation: { ar: 'شهادة شكر وتقدير', en: 'Certificate of Appreciation', fr: 'Certificat de reconnaissance', verb_ar: 'تقديرًا للجهود المتميزة والأداء الرفيع في تنفيذ برنامج', verb_en: 'in recognition of outstanding effort and performance in delivering', verb_fr: 'en reconnaissance des efforts remarquables et de la qualité de la mise en œuvre du programme' },
 };
+/** P91: سطر المُصدِر بالفرنسيّة (اسم المؤسّسة ثابت؛ الوصف يُترجَم) */
+export const ISSUER_FR = 'Athar — Portail pour l’éducation, la formation, le développement et la qualité';
 
 export const W = 2480, H = 1754;
 const NAVY = '#3A1F36', TEAL = '#D4614A', GOLD = '#D9A866', INK = '#3A2634', MUTED = '#8E7F8A';
@@ -50,6 +54,20 @@ export function fmtDate(ymd?: string | null): string {
   if (!ymd) return '';
   const [y, m, d] = ymd.slice(0, 10).split('-'); return `${d}/${m}/${y}`;
 }
+/** P91: تاريخ بالفرنسيّة «6 décembre 2026» */
+export function fmtDateFr(ymd?: string | null): string {
+  if (!ymd) return ''; const d = new Date(ymd + 'T00:00:00Z'); if (Number.isNaN(d.getTime())) return String(ymd);
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+export function periodFr(start?: string | null, end?: string | null, hours?: number | null): string {
+  const parts: string[] = [];
+  if (start && end) { const a = fmtDateFr(start), b = fmtDateFr(end); const sameMY = a.split(' ').slice(1).join(' ') === b.split(' ').slice(1).join(' '); parts.push(`Du ${sameMY ? a.split(' ')[0] : a} au ${b}`); }
+  else if (start) parts.push(`Le ${fmtDateFr(start)}`);
+  if (hours) parts.push(`${hours} heures de formation`);
+  return parts.join(' · ');
+}
+export const WISH_FR = 'Avec nos meilleurs vœux de réussite';
+export const FOOTER_FR = 'Certificat délivré électroniquement — vérifiable via le QR code ou le numéro de série sur athar-portal.com/verify';
 function fitText(ctx: CanvasRenderingContext2D, text: string, maxW: number, weight: number, size: number, min = 28): number {
   let s = size;
   for (; s > min; s -= 2) { ctx.font = `${weight} ${s}px ${fontFamily()}`; if (ctx.measureText(text).width <= maxW) break; }
@@ -76,7 +94,7 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
   const ctx = canvas.getContext('2d')!;
   if (typeof document !== 'undefined' && document.fonts) { try { await document.fonts.ready; await Promise.all([400, 700, 800].map(w => document.fonts.load(`${w} 40px ${fontFamily().split(',')[0]}`))); } catch { /* ignore */ } }
   const logoAthar = await loadImage('/brand/athar-mark.png'); /* هـ-3 ز: شعار أَثَر وحده */
-  const K = KIND_LABEL[d.kind];
+  const K = KIND_LABEL[d.kind]; const fr = d.lang2 === 'fr'; /* P91 */
 
   /* background + frame */
   ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
@@ -94,12 +112,12 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
   if (logoAthar) { const w = logoAthar.width * (logoH / logoAthar.height); ctx.drawImage(logoAthar, W - 200 - w, 150, w, logoH); }
   text(ctx, s.issuer_ar, W / 2, 205, { size: 50, weight: 800, color: NAVY, maxW: 1200 });
   if (s.unit_ar) text(ctx, s.unit_ar, W / 2, 262, { size: 34, weight: 700, color: TEAL, maxW: 1200 });
-  if (s.show_en) text(ctx, [s.issuer_en, s.unit_en].filter(Boolean).join(' · '), W / 2, 306, { size: 24, weight: 400, color: MUTED, dir: 'ltr', maxW: 1300 });
+  if (s.show_en) text(ctx, fr ? ISSUER_FR : [s.issuer_en, s.unit_en].filter(Boolean).join(' · '), W / 2, 306, { size: 24, weight: 400, color: MUTED, dir: 'ltr', maxW: 1300 });
 
   /* title */
   ctx.fillStyle = GOLD; ctx.fillRect(W / 2 - 160, 352, 320, 5);
   text(ctx, K.ar, W / 2, 462, { size: 116, weight: 800, color: NAVY });
-  if (s.show_en) text(ctx, K.en, W / 2, 552, { size: 40, weight: 700, color: TEAL, dir: 'ltr' });
+  if (s.show_en) text(ctx, fr ? K.fr : K.en, W / 2, 552, { size: 40, weight: 700, color: TEAL, dir: 'ltr' });
 
   /* body */
   text(ctx, d.kind === 'appreciation' ? `تتقدم ${s.unit_ar || s.issuer_ar} بخالص الشكر والتقدير إلى` : 'تُمنح هذه الشهادة إلى', W / 2, 640, { size: 42, weight: 400, color: INK, maxW: 1700 });
@@ -107,36 +125,43 @@ export async function renderCertificate(canvas: HTMLCanvasElement, d: CertData, 
   ctx.save(); ctx.font = `800 ${nameSize}px ${fontFamily()}`; const nw = Math.min(1800, ctx.measureText(d.recipient_name).width); ctx.restore();
   ctx.fillStyle = GOLD; ctx.fillRect(W / 2 - nw / 2 - 20, 790, nw + 40, 4);
   if (s.show_en && d.recipient_name_en) text(ctx, d.recipient_name_en, W / 2, 840, { size: 34, weight: 700, color: MUTED, dir: 'ltr', maxW: 1600 });
-  let y = d.recipient_name_en && s.show_en ? 920 : 890;
+  let y = d.recipient_name_en && s.show_en ? (fr ? 900 : 920) : 890;
   if (d.kind === 'appreciation' && d.award_title) { text(ctx, d.award_title, W / 2, y, { size: 48, weight: 800, color: NAVY, maxW: 1700 }); y += 70; }
-  text(ctx, K.verb_ar, W / 2, y, { size: 40, weight: 400, color: INK, maxW: 1800 }); y += 96;
+  text(ctx, K.verb_ar, W / 2, y, { size: 40, weight: 400, color: INK, maxW: 1800 }); y += fr ? 84 : 96;
   const progSize = text(ctx, d.program_ar, W / 2, y, { size: 66, weight: 800, color: NAVY, maxW: 1900, min: 40 }); y += progSize * 0.3;
-  if (s.show_en && d.program_en) { y += 44; text(ctx, d.program_en, W / 2, y, { size: 30, weight: 700, color: MUTED, dir: 'ltr', maxW: 1700 }); }
-  y += 74;
+  if (s.show_en && d.program_en) { y += fr ? 40 : 44; text(ctx, d.program_en, W / 2, y, { size: fr ? 34 : 30, weight: 700, color: fr ? NAVY : MUTED, dir: 'ltr', maxW: 1700 }); } /* P91: الفرنسيّة بلون الهويّة */
+  if (s.show_en && fr) { y += 32; text(ctx, K.verb_fr, W / 2, y, { size: 26, weight: 400, color: INK, dir: 'ltr', maxW: 1700 }); } /* P91: الفعل بالفرنسيّة */
+  y += fr ? 46 : 74;
   const parts: string[] = [];
   if (d.start && d.end) parts.push(`المنفّذ خلال الفترة من ${fmtDate(d.start)} إلى ${fmtDate(d.end)}`);
   else if (d.start) parts.push(`بتاريخ ${fmtDate(d.start)}`);
   if (d.hours && d.kind !== 'appreciation') parts.push(`بواقع ${d.hours} ساعة تدريبية`);
   if (d.classroom) parts.push(`الشعبة ${d.classroom}`);
   if (d.trainer && d.kind !== 'appreciation') parts.push(`بإشراف المدرّب ${d.trainer}`);
-  if (parts.length) y = paragraph(ctx, parts.join(' · '), W / 2, y, 1900, 34, 400, MUTED, 1.5) + 10;
-  text(ctx, `متمنين لهم دوام التوفيق والنجاح`, W / 2, y + 60, { size: 32, weight: 400, color: INK });
+  if (parts.length) y = paragraph(ctx, parts.join(' · '), W / 2, y, 1900, fr ? 32 : 34, 400, MUTED, 1.5) + 10;
+  const qrSize = fr ? 160 : 200, qy = fr ? H - 430 : H - 475; /* P91: في الفرنسيّة الرمز أصغر قليلًا ليتّسع سطرا الفترة والختام */
+  if (fr) { const pf = periodFr(d.start, d.end, d.kind === 'appreciation' ? null : d.hours); if (pf) { y += 30; text(ctx, pf, W / 2, y, { size: 26, weight: 400, color: INK, dir: 'ltr', maxW: 1800 }); } }
+  const wishY = Math.min(y + (fr ? 48 : 60), qy - 14 - (fr ? 52 : 40));
+  text(ctx, `متمنين ${d.wish_to || 'لهم'} دوام التوفيق والنجاح`, W / 2, wishY, { size: 32, weight: 400, color: INK }); /* P91: لا تلامس صندوق رمز التحقّق */
+  if (fr) text(ctx, WISH_FR, W / 2, wishY + 32, { size: 24, weight: 400, color: INK, dir: 'ltr' });
 
   /* footer: signatures + QR + serial */
   const baseY = H - 330;
-  const sig = (cx: number, name: string, title: string) => {
+  const sig = (cx: number, name: string, title: string, titleFr?: string | null) => {
     ctx.fillStyle = NAVY; ctx.fillRect(cx - 220, baseY, 440, 3);
     if (name) text(ctx, name, cx, baseY + 56, { size: 36, weight: 800, color: NAVY, maxW: 460 });
-    text(ctx, title, cx, baseY + (name ? 104 : 56), { size: 28, weight: 700, color: MUTED, maxW: 460 });
+    const ty = baseY + (name ? 104 : 56); text(ctx, title, cx, ty, { size: 28, weight: 700, color: MUTED, maxW: 460 });
+    if (fr && titleFr) text(ctx, titleFr, cx, ty + 34, { size: 22, weight: 400, color: MUTED, dir: 'ltr', maxW: 460 }); /* P91 */
   };
-  sig(W - 480, s.sign1_name, s.sign1_title);
-  sig(480, s.sign2_name, s.sign2_title);
-  const qrSize = 200, qx = W / 2 - qrSize / 2, qy = H - 475;
+  sig(W - 480, d.sign1 ? d.sign1.name : s.sign1_name, d.sign1 ? d.sign1.title : s.sign1_title, d.sign1?.title_fr); /* P91: توقيعا البرنامج إن وُجدا */
+  sig(480, d.sign2 ? d.sign2.name : s.sign2_name, d.sign2 ? d.sign2.title : s.sign2_title, d.sign2?.title_fr);
+  const qx = W / 2 - qrSize / 2;
   ctx.fillStyle = '#fff'; ctx.strokeStyle = '#EADFD6'; ctx.lineWidth = 3; ctx.fillRect(qx - 14, qy - 14, qrSize + 28, qrSize + 28); ctx.strokeRect(qx - 14, qy - 14, qrSize + 28, qrSize + 28);
   drawQr(ctx, d.verify_url, qx, qy, qrSize, 'M', NAVY);
   text(ctx, `الرقم التسلسلي: ${d.serial}`, W / 2, qy + qrSize + 48, { size: 28, weight: 800, color: NAVY });
   text(ctx, `تاريخ الإصدار: ${fmtDate(d.issued_at)} · ${s.city_ar}`, W / 2, qy + qrSize + 84, { size: 26, weight: 400, color: MUTED });
   text(ctx, s.footer_ar, W / 2, H - 150, { size: 22, weight: 400, color: MUTED, maxW: 1900 });
+  if (fr) text(ctx, FOOTER_FR, W / 2, H - 120, { size: 20, weight: 400, color: MUTED, dir: 'ltr', maxW: 1900 }); /* P91 */
 }
 
 /* ---------- JPEG / PDF ---------- */
