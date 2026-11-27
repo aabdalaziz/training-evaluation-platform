@@ -54,3 +54,11 @@ test('هـ-5: الصدفة تحمل الجولة والساعة في كل صفح
   assert.match(c, /data-testid="cp-tour-skip"/); assert.match(c, /data-testid="cp-tour-unmute"/);
   assert.ok(!/المتدرب|المنصة|استطلاع|القاعة/.test(c), 'المعجم: لا صيغة متقاعدة في البوصلة');
 });
+
+test('P87-ب: الجولة لا تُعرض تلقائيًّا لمتصفّح غير عربيّ ولا على /login · صفحة الحضور تفرّق بين «لم يُفتح بعد» و«انتهى»', () => {
+  const cp = read('app/components/Compass.tsx');
+  assert.ok(cp.includes('const nonArabic =') && cp.includes('|| nonArabic ||') && /\(login\|join\|gate/.test(cp), 'الجولة: nonArabic + /login في noAuto');
+  const at = read('app/attend/[token]/CheckinForm.tsx');
+  assert.ok(at.includes('notyet:') && at.includes('isFuture(info.session_date) ? t.notyet : t.closed'), 'الحضور: رسالة «لم يُفتح بعد» للجلسة المستقبليّة');
+  assert.ok(/notyet: 'Check-in is not open yet/.test(at), 'نسخة إنجليزيّة');
+});

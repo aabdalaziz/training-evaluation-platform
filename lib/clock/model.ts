@@ -13,7 +13,7 @@ export type ClockStatus = 'pending' | 'done' | 'skipped' | 'failed';
 export type Offsets = Record<ClockKind, number>;
 export type Channels = { participants: boolean; trainer: boolean; admin: boolean };
 export type ClockConfig = { enabled: boolean; offsets: Offsets; channels: Channels };
-export type ClockProgram = { id: string; name_ar: string; start_date?: string | null; end_date?: string | null; status?: string | null; delivery_mode?: string | null; location_ar?: string | null; hours?: number | null; is_final_open?: boolean | null };
+export type ClockProgram = { id: string; name_ar: string; name_en?: string | null; location_en?: string | null; start_date?: string | null; end_date?: string | null; status?: string | null; delivery_mode?: string | null; location_ar?: string | null; hours?: number | null; is_final_open?: boolean | null };
 export type ClockEvent = { id: string; program_id: string; kind: ClockKind; due_date: string; status: ClockStatus; result?: any; done_at?: string | null };
 export type Audience = 'participant' | 'trainer' | 'admin';
 
@@ -78,8 +78,25 @@ const fmt = (d?: string | null) => (d ? new Date(d + 'T00:00:00Z').toLocaleDateS
 const first = (n?: string | null) => (n || '').trim().split(/\s+/)[0] || '';
 export const wrap = (title: string, body: string, cta?: { href: string; label: string } | null) => `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;line-height:1.9;color:#22101F;max-width:620px;margin:auto"><div style="border-top:4px solid #D9A866;padding:14px 0 4px"><b style="color:#D4614A;font-size:12px">بوّابة أَثَر · ساعة البرنامج</b><h2 style="margin:4px 0 10px;font-size:19px;color:#3A1F36">${esc(title)}</h2>${body}${cta ? `<p style="margin:16px 0"><a href="${esc(cta.href)}" style="background:#3A1F36;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:800">${esc(cta.label)}</a></p>` : ''}<p style="color:#8a7580;font-size:12px;border-top:1px solid #f0e4d8;padding-top:8px;margin-top:16px">بوّابة أَثَر للتعليم والتدريب والتطوير والجودة · athar-portal.com · «نبني القدرة ونُثبت الأثر»</p></div></div>`;
 
-export type MailCtx = { site: string; program: ClockProgram; name?: string | null; counts?: { participants?: number; attendance?: number; responses?: number }; links?: Record<string, string>; extra?: Record<string, string | number | null | undefined> };
+export type MailCtx = { site: string; program: ClockProgram; name?: string | null; lang?: 'ar' | 'en' | null; /* P87-ب: لغة المستلم */ counts?: { participants?: number; attendance?: number; responses?: number }; links?: Record<string, string>; extra?: Record<string, string | number | null | undefined> };
+/* P87-ب: نسخة إنجليزيّة لرسائل المشاركين غير الناطقين بالعربيّة (lang = en في التسجيل) */
+const fmtEn = (d?: string | null) => (d ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : '');
+export const wrapEn = (title: string, body: string, cta?: { href: string; label: string } | null) => `<div dir="ltr" style="font-family:Tahoma,Arial,sans-serif;line-height:1.8;color:#22101F;max-width:620px;margin:auto"><div style="border-top:4px solid #D9A866;padding:14px 0 4px"><b style="color:#D4614A;font-size:12px">Athar Portal · Program Clock</b><h2 style="margin:4px 0 10px;font-size:19px;color:#3A1F36">${esc(title)}</h2>${body}${cta ? `<p style="margin:16px 0"><a href="${esc(cta.href)}" style="background:#3A1F36;color:#fff;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:800">${esc(cta.label)}</a></p>` : ''}<p style="color:#8a7580;font-size:12px;border-top:1px solid #f0e4d8;padding-top:8px;margin-top:16px">Athar — Education, Training, Development &amp; Quality · athar-portal.com · "We build capacity and prove impact"</p></div></div>`;
+export function mailForEn(kind: ClockKind, c: MailCtx): { subject: string; html: string; url: string } {
+  const p = c.program; const name = p.name_en || p.name_ar; const nm = esc(name); const remote = p.delivery_mode === 'remote';
+  const where = remote ? 'Online (the session link will be sent to you)' : esc(p.location_en || p.location_ar || 'as communicated to you');
+  const dates = `<p><b>When:</b> ${fmtEn(p.start_date)}${p.end_date && p.end_date !== p.start_date ? ` — ${fmtEn(p.end_date)}` : ''}${p.hours ? ` · ${p.hours} hours` : ''}<br/><b>Where:</b> ${where}</p>`;
+  const me = `${c.site}/me`; const hi = c.name ? `${esc(first(c.name))}, ` : '';
+  switch (kind) {
+    case 'remind': return { subject: `One week to go — ${name}`, url: me, html: wrapEn(`One week to go: ${name}`, `<p>${hi}your seat is confirmed and we look forward to meeting you.</p>${dates}<p><b>Before you come:</b> sign in once to your Athar space with this e-mail (no password — you receive a login link), so your journey, placement report and certificate are ready for you.</p>`, { href: me, label: 'Open my space' }) };
+    case 'start': return { subject: `We start today — ${name}`, url: me, html: wrapEn(`Today we start: ${name}`, `<p>${hi}see you today.</p>${dates}<p>Check in with the QR code your trainer shows, and rate your day at the end from the daily survey code.</p>`, { href: me, label: 'My space' }) };
+    case 'evaluate': return { subject: `Your opinion matters — ${name}`, url: c.links?.final || me, html: wrapEn(`Thank you for joining ${name}`, `<p>${hi}the program has ended; your feedback shapes the next cohort and completes your certificate.</p><p>The final evaluation takes about five minutes.</p>`, { href: c.links?.final || me, label: 'Final evaluation' }) };
+    case 'followup': return { subject: `What stayed with you? — ${name}`, url: me, html: wrapEn(`One month after ${name}`, `<p>${hi}a short follow-up link will reach you about what you have actually used since the program.</p>`, { href: me, label: 'My space' }) };
+    case 'impact': return { subject: `Three months on — the impact of ${name}`, url: c.links?.impact || me, html: wrapEn(`Three months after ${name}`, `<p>${hi}we now measure what remains of the program's impact — five minutes that prove it.</p>`, { href: c.links?.impact || me, label: 'Impact survey' }) };
+  }
+}
 export function mailFor(kind: ClockKind, to: Audience, c: MailCtx): { subject: string; html: string; url: string } {
+  if (to === 'participant' && c.lang === 'en') return mailForEn(kind, c); /* P87-ب */
   const p = c.program; const nm = esc(p.name_ar); const remote = p.delivery_mode === 'remote' || /عن ب/.test(p.name_ar);
   const where = remote ? 'عن بُعد (سيصلك رابط الجلسة)' : p.location_ar ? esc(p.location_ar) : 'بحسب ما أُبلغت به';
   const dates = `<p><b>الموعد:</b> ${fmt(p.start_date)}${p.end_date && p.end_date !== p.start_date ? ` — ${fmt(p.end_date)}` : ''}${p.hours ? ` · ${p.hours} ساعة` : ''}<br/><b>المكان:</b> ${where}</p>`;

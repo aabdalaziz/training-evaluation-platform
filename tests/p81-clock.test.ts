@@ -109,3 +109,17 @@ test('runProgramClock على قاعدة وهمية: T-7 يرسل للمعتمد�
   /* متوقّفة */
   T.program_clock_config[0].enabled = false; const off = await runProgramClock(db, { site: 's', now: new Date('2026-12-01T06:00:00Z') }); assert.equal(off.enabled, false); assert.equal(off.results.length, 0);
 });
+
+test('P87-ب: مشاركة lang=en تصلها رسالة إنجليزيّة LTR بلا HTML مكسور؛ العربيّة والمدرّب والإدارة كما هي', () => {
+  const P: any = { id: 'p1', name_ar: 'برنامج الانغماس', name_en: 'Arabic Immersion', start_date: '2026-12-06', end_date: '2026-12-26', delivery_mode: 'onsite', location_ar: 'المدينة', location_en: 'Madinah', hours: 60 };
+  const kinds = ['remind', 'start', 'evaluate', 'followup', 'impact'] as const;
+  for (const k of kinds) {
+    const en = mailFor(k, 'participant', { site: 'https://athar-portal.com', program: P, name: 'Ines Della-Vittoria', lang: 'en', links: { final: 'https://x/f', impact: 'https://x/i' } });
+    assert.ok(/Arabic Immersion/.test(en.subject) && !/[\u0600-\u06FF]/.test(en.subject), `${k}: موضوع إنجليزيّ`);
+    assert.ok(en.html.includes('dir="ltr"') && en.html.includes('Ines,'), `${k}: LTR + الاسم الأوّل`);
+    assert.equal((en.html.match(/<div/g) || []).length, (en.html.match(/<\/div>/g) || []).length, `${k}: HTML متوازن`);
+    const ar = mailFor(k, 'participant', { site: 's', program: P, name: 'سارة', lang: 'ar' }); assert.ok(/[\u0600-\u06FF]/.test(ar.subject), `${k}: العربيّة كما هي`);
+    const tr = mailFor(k, 'trainer', { site: 's', program: P, lang: 'en' }); assert.ok(/[\u0600-\u06FF]/.test(tr.subject), `${k}: المدرّب عربيّ دائمًا`);
+  }
+  assert.ok(mailFor('remind', 'participant', { site: 's', program: P, lang: 'en' }).html.includes('Madinah'), 'الموقع بالإنجليزيّة');
+});

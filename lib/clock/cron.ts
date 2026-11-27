@@ -17,7 +17,7 @@ import { decide, normalizeConfig, mailFor, KIND_AR, type ClockConfig, type Clock
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const safe = async <T,>(q: PromiseLike<{ data: T | null; error: any }>, fb: T): Promise<T> => { try { const { data, error } = await q; return error || data == null ? fb : data; } catch { return fb; } };
-type Person = { name: string; email: string };
+type Person = { name: string; email: string; lang?: 'ar' | 'en' | null }; /* P87-ب: lang من التسجيل */
 export type RunOpts = { site: string; dry?: boolean; now?: Date; limit?: number; eventId?: string | null };
 export type EventResult = { event_id: string; program: string; kind: ClockKind; action: 'run' | 'skip' | 'wait'; ok?: boolean; sent?: Record<string, number>; note?: string; error?: string };
 export type RunResult = { enabled: boolean; dry: boolean; generated: number; due: number; results: EventResult[]; error?: string };
@@ -26,10 +26,10 @@ export async function loadConfig(db: any): Promise<ClockConfig> { return normali
 
 /** المشاركون: المعتمدون في البوّابة + بريد سجلّات الحضور (بلا تكرار) */
 async function participantsOf(db: any, programId: string): Promise<{ approved: Person[]; attendance: Person[]; all: Person[]; pending: number; attendanceEmails: Set<string> }> {
-  const enr = await safe<any[]>(db.from('portal_enrollments').select('full_name,email,status').eq('program_id', programId).limit(2000), []);
+  const enr = await safe<any[]>(db.from('portal_enrollments').select('full_name,email,status,lang').eq('program_id', programId).limit(2000), []);
   const sessions = await safe<any[]>(db.from('attendance_sessions').select('id').eq('program_id', programId).limit(500), []);
   const recs = sessions.length ? await safe<any[]>(db.from('attendance_records').select('full_name,email').in('session_id', sessions.map((s) => s.id)).limit(5000), []) : [];
-  const seen = new Set<string>(); const pick = (rows: any[]): Person[] => { const out: Person[] = []; for (const r of rows) { const em = String(r.email || '').trim().toLowerCase(); if (!EMAIL_RE.test(em) || seen.has(em)) continue; seen.add(em); out.push({ name: String(r.full_name || '').trim(), email: em }); } return out; };
+  const seen = new Set<string>(); const pick = (rows: any[]): Person[] => { const out: Person[] = []; for (const r of rows) { const em = String(r.email || '').trim().toLowerCase(); if (!EMAIL_RE.test(em) || seen.has(em)) continue; seen.add(em); out.push({ name: String(r.full_name || '').trim(), email: em, lang: String(r.lang || '').toLowerCase() === 'en' ? 'en' : 'ar' }); } return out; };
   const approved = pick(enr.filter((e) => e.status === 'approved')); const attendance = pick(recs);
   const attendanceEmails = new Set(recs.map((r) => String(r.email || '').trim().toLowerCase()).filter((x) => EMAIL_RE.test(x)));
   return { approved, attendance, all: [...approved, ...attendance], pending: enr.filter((e) => e.status === 'pending').length, attendanceEmails };
@@ -51,17 +51,17 @@ export async function executeEvent(db: any, e: ClockEvent, p: ClockProgram, cfg:
   try {
     const [pp, trs, adm] = await Promise.all([participantsOf(db, p.id), trainersOf(db, p.id), admins(db)]);
     const ch = cfg.channels; const sent: Record<string, number> = {}; const ref = `${p.id}:${e.kind}`; let note = '';
-    const ctx = (name?: string | null, extra?: Record<string, any>, links?: Record<string, string>) => ({ site: o.site, program: p, name, counts: { participants: pp.approved.length || pp.all.length, attendance: pp.attendance.length }, extra: { pending: pp.pending, ...(extra || {}) }, links });
+    const ctx = (name?: string | null, extra?: Record<string, any>, links?: Record<string, string>, lang?: 'ar' | 'en' | null) => ({ site: o.site, program: p, name, lang: lang || 'ar', counts: { participants: pp.approved.length || pp.all.length, attendance: pp.attendance.length }, extra: { pending: pp.pending, ...(extra || {}) }, links });
     if (e.kind === 'remind' || e.kind === 'start') {
       const people = e.kind === 'remind' ? pp.approved : pp.all;
-      if (ch.participants) sent.participants = await send(db, dry, e.kind, people, (x) => mailFor(e.kind, 'participant', ctx(x.name)), ref);
+      if (ch.participants) sent.participants = await send(db, dry, e.kind, people, (x) => mailFor(e.kind, 'participant', ctx(x.name, undefined, undefined, x.lang)), ref);
       if (ch.trainer) sent.trainers = await send(db, dry, e.kind, trs, (x) => mailFor(e.kind, 'trainer', ctx(x.name)), ref);
       if (ch.admin) sent.admins = await send(db, dry, e.kind, adm, () => mailFor(e.kind, 'admin', ctx(null)), ref);
     } else if (e.kind === 'evaluate') {
       if (!p.is_final_open && !dry) { const { error } = await db.from('programs').update({ is_final_open: true }).eq('id', p.id); note = error ? `تعذّر فتح التقييم: ${error.message}` : 'فُتح التقييم النهائي'; } else note = p.is_final_open ? 'التقييم النهائي مفتوح أصلًا' : 'معاينة';
       const direct = pp.approved.filter((x) => !pp.attendanceEmails.has(x.email)); /* من في سجلّات الحضور يصله بريد المشاركين الموجود */
       const links = { final: `${o.site}/evaluate/final?program=${encodeURIComponent(p.id)}` };
-      if (ch.participants) sent.participants = await send(db, dry, e.kind, direct, (x) => mailFor('evaluate', 'participant', ctx(x.name, {}, links)), ref);
+      if (ch.participants) sent.participants = await send(db, dry, e.kind, direct, (x) => mailFor('evaluate', 'participant', ctx(x.name, {}, links, x.lang)), ref);
       if (ch.trainer) sent.trainers = await send(db, dry, e.kind, trs, (x) => mailFor('evaluate', 'trainer', ctx(x.name)), ref);
       if (ch.admin) sent.admins = await send(db, dry, e.kind, adm, () => mailFor('evaluate', 'admin', ctx(null)), ref);
     } else if (e.kind === 'followup' || e.kind === 'impact') {
@@ -69,7 +69,7 @@ export async function executeEvent(db: any, e: ClockEvent, p: ClockProgram, cfg:
       if (e.kind === 'impact') { /* أداة أثر قبلية موجودة؟ افتح البعدي */
         const ia = await safe<any[]>(db.from('impact_assessments').select('id,token,post_open,status').eq('program_id', p.id).neq('status', 'closed').limit(1), []);
         if (ia[0]) { opened = true; links.impact = `${o.site}/impact/${ia[0].token}?phase=post`; if (!ia[0].post_open && !dry) await db.from('impact_assessments').update({ post_open: true }).eq('id', ia[0].id);
-          if (ch.participants) sent.participants = await send(db, dry, 'impact', pp.all, (x) => mailFor('impact', 'participant', ctx(x.name, {}, links)), ref); }
+          if (ch.participants) sent.participants = await send(db, dry, 'impact', pp.all, (x) => mailFor('impact', 'participant', ctx(x.name, {}, links, x.lang)), ref); }
       }
       if (!opened) {
         const prior = await safe<any[]>(db.from('behavior_followups').select('id,title_ar').eq('program_id', p.id).ilike('title_ar', `%${days} يوم%`).limit(1), []);
@@ -101,7 +101,7 @@ export async function runProgramClock(db: any, o: RunOpts): Promise<RunResult> {
     let q = db.from('program_clock_events').select('*').eq('status', 'pending').order('due_date', { ascending: true }).limit(o.limit || 25);
     q = o.eventId ? db.from('program_clock_events').select('*').eq('id', o.eventId) : q.lte('due_date', today);
     const events = await safe<ClockEvent[]>(q, []); if (!events.length) return out;
-    const progs = await safe<ClockProgram[]>(db.from('programs').select('id,name_ar,start_date,end_date,status,delivery_mode,location_ar,hours,is_final_open').in('id', Array.from(new Set(events.map((e) => e.program_id)))), []);
+    const progs = await safe<ClockProgram[]>(db.from('programs').select('id,name_ar,name_en,start_date,end_date,status,delivery_mode,location_ar,location_en,hours,is_final_open').in('id', Array.from(new Set(events.map((e) => e.program_id)))), []);
     const pm = new Map(progs.map((p) => [p.id, p]));
     const decisions: Decision[] = o.eventId ? events.map((event) => ({ event, action: 'run' as const })) /* تشغيل يدوي: يتجاوز قرار الصلاحية */ : decide(events, pm, today);
     out.due = decisions.filter((d) => d.action === 'run').length;

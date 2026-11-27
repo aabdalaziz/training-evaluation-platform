@@ -90,7 +90,8 @@ export function TourVeil({ lang }: { lang: Lang }) {
     window.addEventListener(TOUR_EVENT, on);
     let first = false; try { first = localStorage.getItem(TOUR_KEY) !== '1'; } catch { /* ignore */ }
     let reduce = false; try { reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches; } catch { /* ignore */ }
-    const noAuto = document.documentElement.dataset.engrave === 'none' || /\/(evaluate|survey|impact|followup|attend|m|e|g|p|lv|kids)\//.test(location.pathname);
+    const nonArabic = !/^ar\b/i.test(String((typeof navigator !== 'undefined' && navigator.language) || 'ar')) && document.documentElement.lang !== 'ar'; /* P87-ب */
+    const noAuto = document.documentElement.dataset.engrave === 'none' || nonArabic || /\/(login|join|gate|verify|forgot-password|reset-password)(\/|$)/.test(location.pathname) || /\/(evaluate|survey|impact|followup|attend|m|e|g|p|lv|kids)\//.test(location.pathname);
     let t: ReturnType<typeof setTimeout> | null = null;
     if (first && !reduce && !noAuto) { t = setTimeout(() => { setAuto(true); setMuted(true); setOpen(true); try { localStorage.setItem(TOUR_KEY, '1'); } catch { /* ignore */ } }, 2200); }
     return () => { window.removeEventListener(TOUR_EVENT, on); if (t) clearTimeout(t); };

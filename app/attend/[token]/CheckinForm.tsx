@@ -8,6 +8,9 @@ import type { RecordStatus } from '../../../lib/attendance/model';
 import { MicButton, VoiceFill } from '../../components/Dictate'; /* P82-ب «قُل بدل أن تكتب» */
 import { SignHelpButton } from '../../components/SignHelp'; /* P82-د */
 
+/* P87-ب: هل تاريخ الجلسة بعد اليوم (بتوقيت الرياض)؟ */
+const isFuture = (d?: string | null) => { if (!d) return false; const today = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10); return d > today; };
+
 type Info = {
   id: string; title: string; status: 'open' | 'closed'; session_date: string; start_time: string | null; end_time: string | null;
   late_after_min: number; require_phone: boolean; program_name: string | null; program_name_en: string | null; classroom_code: string | null; trainer_name: string | null; count: number;
@@ -16,7 +19,7 @@ type Result = { ok: boolean; error?: string; already?: boolean; status?: RecordS
 
 const T = {
   ar: {
-    kicker: 'تسجيل الحضور', loading: 'جارٍ التحميل…', none: 'الرابط غير صحيح أو انتهت صلاحيته.', closed: 'انتهى تسجيل الحضور لهذه الجلسة.',
+    kicker: 'تسجيل الحضور', loading: 'جارٍ التحميل…', none: 'الرابط غير صحيح أو انتهت صلاحيته.', closed: 'انتهى تسجيل الحضور لهذه الجلسة.', notyet: 'لم يُفتح تسجيل الحضور بعد — يُفتح صباح يوم الجلسة. احتفظ بالرمز وامسحه عند الوصول.',
     name: 'الاسم الثلاثي', email: 'البريد الإلكتروني', phone: 'رقم الجوال', optional: 'اختياري', required: 'مطلوب',
     hint: 'استخدم نفس البريد/الجوال في كل الجلسات حتى تُحتسب نسبة حضورك بدقة.', submit: 'تسجيل حضوري', saving: 'جارٍ التسجيل…',
     done: 'تم تسجيل حضورك', again: 'سبق تسجيل حضورك في هذه الجلسة', at: 'وقت التسجيل', status: 'الحالة', late: 'تم احتساب الحضور متأخرًا لأن التسجيل جاء بعد مهلة السماح.',
@@ -24,7 +27,7 @@ const T = {
     errors: { not_found: 'الرابط غير صحيح.', closed: 'انتهى تسجيل الحضور لهذه الجلسة.', bad_name: 'اكتب اسمك الكامل (3 أحرف على الأقل).', bad_email: 'البريد الإلكتروني غير صحيح.', bad_phone: 'رقم الجوال مطلوب (9 أرقام على الأقل).' } as Record<string, string>,
   },
   en: {
-    kicker: 'Attendance check-in', loading: 'Loading…', none: 'Invalid or expired link.', closed: 'Check-in for this session has ended.',
+    kicker: 'Attendance check-in', loading: 'Loading…', none: 'Invalid or expired link.', closed: 'Check-in for this session has ended.', notyet: 'Check-in is not open yet — it opens on the morning of the session. Keep this code and scan it when you arrive.',
     name: 'Full name', email: 'Email', phone: 'Mobile number', optional: 'optional', required: 'required',
     hint: 'Use the same email/mobile in every session so your attendance rate is calculated correctly.', submit: 'Check me in', saving: 'Saving…',
     done: 'You are checked in', again: 'You were already checked in for this session', at: 'Checked in at', status: 'Status', late: 'Marked late because check-in came after the grace period.',
@@ -113,7 +116,7 @@ export function CheckinForm({ token }: { token: string }) {
               </div>
             </section>
 
-            {info.status !== 'open' && !result && <div className="at-card at-center at-warn"><Icon name="pause" size={28} /><b>{t.closed}</b></div>}
+            {info.status !== 'open' && !result && <div className="at-card at-center at-warn"><Icon name={isFuture(info.session_date) ? 'calendar' : 'pause'} size={28} /><b>{isFuture(info.session_date) ? t.notyet : t.closed}</b>{isFuture(info.session_date) && <small className="at-muted">{t.date}: {info.session_date} · {info.start_time || '08:00'}</small>}</div>} {/* P87-ب: جلسة مستقبليّة ≠ منتهية */}
 
             {info.status === 'open' && !result && (
               <form className="at-card" onSubmit={submit} noValidate>
@@ -157,7 +160,7 @@ const CSS = `
 .at-lang{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;color:#3A1F36;cursor:pointer}
 .at-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .at-center{align-items:center;text-align:center;justify-content:center}
-.at-bad{color:#9A3A2A;background:#FBEDE7;border-color:#F3C4B6}.at-warn{color:#9A3A2A;background:#FBF4EE;border-color:#F1D9A8}
+.at-bad{color:#9A3A2A;background:#FBEDE7;border-color:#F3C4B6}.at-warn{color:#9A3A2A;background:#FBF4EE;border-color:#F1D9A8}.at-warn .at-muted{display:block;margin-top:6px;color:#6A3350;font-weight:600}
 .at-info h1{margin:0;font-size:22px;color:#3A1F36;line-height:1.4}.at-prog{margin:0;color:#D4614A;font-weight:800;font-size:14px}
 .at-meta{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12.5px;color:#5C4858;font-weight:700}.at-meta span{display:inline-flex;align-items:center;gap:5px}.at-meta b{color:#3A1F36}
 .at-count{background:#E6F3F1;border:1px solid #BFE1DC;border-radius:999px;padding:3px 10px;color:#2F6B66}
