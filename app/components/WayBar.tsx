@@ -1,11 +1,11 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
-/* «الطريق» — شريط تنقّل موحّد تحت الرأس في كل صفحة غير الرئيسة: سهم رجوع (تاريخ المتصفح وإلا المسار الأب) · الرئيسة · فتات الطريق.
+/* «الطريق» — شريط تنقّل موحّد تحت الرأس في كل صفحة غير الرئيسة: سهم رجوع (تاريخ المتصفح وإلا المسار الأب) · سهم «التالي» بعد الرجوع (P86) · زرّ الرئيسة · فتات الطريق.
    WCAG: nav معنون، aria-current على الصفحة الحالية، أهداف لمس ≥ 36px، حلقة تركيز ظاهرة. يُخفى عند قفل المسار (أثناء اختبار مِعيار) عبر wayLock. */
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { crumbsFor, parentOf, showWay, recordWay, hasWayHistory, type Crumb } from '../../lib/portal/way';
+import { crumbsFor, parentOf, showWay, recordWay, hasWayHistory, rememberForward, arriveWay, nextWay, type Crumb } from '../../lib/portal/way';
 
 const LOCK_EVENT = 'athar:waylock';
 /** قفل الشريط أثناء مهمة لا يجوز مغادرتها بسهو (اختبار جارٍ) */
@@ -22,7 +22,8 @@ export default function WayBar({ lang = 'ar', tone = 'light', onBack, extra, loc
     const special = !!(onBack || (extra && extra.length)); const idx = all.indexOf(ref.current);
     setDup(special ? false : all.some((el, i) => i !== idx && el.getAttribute('data-way-special') === '1') || idx > 0);
   }, [pathname, onBack, extra]);
-  useEffect(() => { recordWay(pathname); }, [pathname]);
+  const [fwd, setFwd] = useState<string | null>(null);
+  useEffect(() => { recordWay(pathname); arriveWay(pathname); setFwd(nextWay()); }, [pathname]);
   useEffect(() => { setLocked(!!(window as any).__wayLock); const on = (e: Event) => setLocked(!!(e as CustomEvent).detail); window.addEventListener(LOCK_EVENT, on); return () => window.removeEventListener(LOCK_EVENT, on); }, []);
   if (!showWay(pathname) || locked || lock) return null;
   const special = !!(onBack || (extra && extra.length));
@@ -30,9 +31,11 @@ export default function WayBar({ lang = 'ar', tone = 'light', onBack, extra, loc
   const crumbs: Crumb[] = extra && extra.length ? [...base.map((c) => ({ ...c, current: false })), ...extra.map((label, i) => ({ href: `${pathname}#${i}`, label, current: i === extra.length - 1 }))] : base;
   const back = () => {
     if (onBack) { onBack(); return; }
+    rememberForward(pathname);
     if (hasWayHistory()) { router.back(); return; }
     router.push(parentOf(pathname));
   };
+  const forward = () => { if (fwd) router.push(fwd); };
   return (
     <nav ref={ref} className={`way ${tone}`} aria-label={ar ? 'مسار الصفحة' : 'Page path'} data-testid="way-bar" data-way-special={special ? '1' : undefined} dir={ar ? 'rtl' : 'ltr'} hidden={dup}>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
@@ -40,8 +43,15 @@ export default function WayBar({ lang = 'ar', tone = 'light', onBack, extra, loc
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: ar ? 'none' : 'scaleX(-1)' }}><path d="M14 6l6 6-6 6M20 12H4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
         <span>{ar ? 'رجوع' : 'Back'}</span>
       </button>
+      {fwd && !special && <button type="button" className="way-back way-fwd" onClick={forward} data-testid="way-forward" aria-label={ar ? 'التالي: العودة إلى الصفحة التي غادرتها' : 'Forward: return to the page you left'} title={fwd}>
+        <span>{ar ? 'التالي' : 'Next'}</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: ar ? 'scaleX(-1)' : 'none' }}><path d="M14 6l6 6-6 6M20 12H4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>}
+      <Link href="/" className="way-back way-home" data-testid="way-home" aria-label={ar ? 'الرئيسة' : 'Home'} title={ar ? 'الرئيسة' : 'Home'}>
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V11z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>
+      </Link>
       <ol className="way-crumbs">
-        {crumbs.map((c, i) => <li key={c.href}>{i > 0 && <span className="way-sep" aria-hidden="true">›</span>}{c.current ? <span aria-current="page" className="way-cur">{c.label}</span> : c.dead ? <span className="way-dead">{c.label}</span> : <Link href={c.href} className="way-link">{i === 0 && <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1V11z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" /></svg>}{c.label}</Link>}</li>)}
+        {crumbs.map((c, i) => <li key={c.href}>{i > 0 && <span className="way-sep" aria-hidden="true">›</span>}{c.current ? <span aria-current="page" className="way-cur">{c.label}</span> : c.dead ? <span className="way-dead">{c.label}</span> : <Link href={c.href} className="way-link">{c.label}</Link>}</li>)}
       </ol>
     </nav>
   );
@@ -52,13 +62,14 @@ const CSS = `
 .way-back{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid rgba(42,22,38,.18);background:#fff;color:#3A1F36;font:inherit;font-weight:700;cursor:pointer;flex:none}
 .way-back:hover{background:#F6EBE0}.way-back:focus-visible,.way-link:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px #D4614A}
 .way.dark .way-back{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff}
+.way-fwd{color:#D4614A;border-color:rgba(212,97,74,.45)}.way-home{padding:0 10px}.way-home:focus-visible{outline:none;box-shadow:0 0 0 3px #fff,0 0 0 6px #D4614A}
 .way-crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:4px;list-style:none;margin:0;padding:0;min-width:0}
 .way-crumbs li{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .way-dead{color:#8E7F8A}
 .way-link{display:inline-flex;align-items:center;gap:4px;color:#D4614A;text-decoration:none;padding:6px 4px;border-radius:6px;min-height:36px}
 .way-link:hover{text-decoration:underline}.way.dark .way-link{color:#EADFD6}
 .way-sep{color:#8E4A68;margin:0 2px}.way-cur{color:#3A1F36;font-weight:700;padding:6px 4px}.way.dark .way-cur{color:#fff}
-@media (max-width:640px){.way{font-size:12px}.way-back span{display:none}.way-back{padding:0 10px}.way-crumbs li:not(:last-child):not(:first-child){display:none}}
+@media (max-width:640px){.way{font-size:12px}.way-back span{display:none}.way-back{min-width:40px;justify-content:center}.way-back{padding:0 10px}.way-crumbs li:not(:last-child):not(:first-child){display:none}}
 @media print{.way{display:none}}
 .way[hidden]{display:none}
 `;

@@ -9,8 +9,10 @@ const ROOT = path.join(__dirname, '..');
 const read = (f: string) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 test('هـ-5: كل خدمة سريعة وكل باب «من أنت؟» يشير إلى مسار موجود فعلًا', () => {
-  assert.equal(QUICK_SERVICES.length, 10);
-  assert.equal(new Set(QUICK_SERVICES.map((s) => s.key)).size, 10);
+  assert.equal(QUICK_SERVICES.length, 15, 'P86: 15 خدمة = 3 صفوف × 5');
+  assert.equal(new Set(QUICK_SERVICES.map((s) => s.key)).size, 15);
+  for (const k of ['login', 'bayan', 'resources', 'sim', 'councils']) assert.ok(QUICK_SERVICES.some((s) => s.key === k), `P86: الخدمة ${k} لها أيقونة على الرئيسة`);
+  assert.equal(QUICK_SERVICES[0].key, 'login', 'P86: بوّابة الدخول أوّل البلاطات');
   for (const s of [...QUICK_SERVICES, ...WHERE_TO]) {
     const seg = s.href.replace(/^\//, '').split('#')[0];
     const dir = path.join(ROOT, 'app', seg);

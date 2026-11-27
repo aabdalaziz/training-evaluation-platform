@@ -2,7 +2,7 @@
 /** «الطريق» — فتات المسار والرجوع والإظهار */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { crumbsFor, parentOf, showWay, looksLikeId, updateStack } from '../lib/portal/way';
+import { crumbsFor, parentOf, showWay, looksLikeId, updateStack, pushForward, settleForward } from '../lib/portal/way';
 
 test('الطريق: فتات عربية بالأسماء الرسمية، والمركّب يسبق المفرد', () => {
   assert.deepEqual(crumbsFor('/miaar/result/ML-AB12-CD34').map((c) => c.label), ['الرئيسة', 'مِعيار', 'النتيجة', 'التفاصيل'], 'رمز النتيجة لا يُعرض');
@@ -26,4 +26,11 @@ test('الطريق: سجلّ التبويب يميّز الرجوع عن الت�
   let st = updateStack([], '/'); st = updateStack(st, '/services'); st = updateStack(st, '/programs'); assert.deepEqual(st, ['/', '/services', '/programs']);
   st = updateStack(st, '/services'); assert.deepEqual(st, ['/', '/services'], 'العودة لما قبلها = رجوع (pop)');
   st = updateStack(st, '/services'); assert.equal(st.length, 2, 'التكرار لا يُضاف'); assert.equal(updateStack(Array.from({ length: 60 }, (_, i) => `/p${i}`), '/x').length, 40, 'سقف 40');
+});
+test('P86 الطريق: سهم «التالي» — يظهر بعد الرجوع، ويُستهلك بالتقدّم، ويُمسح بانتقال جديد', () => {
+  let f = pushForward([], '/programs/x'); assert.deepEqual(f, ['/programs/x'], 'الرجوع يحفظ الصفحة المغادَرة');
+  /* الوصول بالرجوع نفسه لا يمرّ بـ settleForward (يميّزه WayBar بعلامة viaBack) */
+  assert.deepEqual(settleForward(f, '/programs/x'), [], 'التقدّم إلى القمّة يستهلكها');
+  assert.deepEqual(settleForward(f, '/resources'), [], 'انتقال جديد يمسح السجلّ');
+  f = pushForward(['/a', '/b'], '/a'); assert.deepEqual(f, ['/b', '/a'], 'بلا تكرار'); assert.equal(pushForward(Array.from({ length: 30 }, (_, i) => `/p${i}`), '/z').length, 20, 'سقف 20');
 });

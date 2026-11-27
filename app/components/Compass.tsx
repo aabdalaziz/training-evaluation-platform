@@ -128,16 +128,22 @@ export function TourVeil({ lang }: { lang: Lang }) {
 /* ───────────────────────── الخدمات السريعة ───────────────────────── */
 export type QuickService = { key: string; href: string; icon: string; ar: string; en: string; hint_ar: string; hint_en: string; tone: 'coral' | 'sea' | 'sand' | 'plum' };
 export const QUICK_SERVICES: QuickService[] = [
-  { key: 'verify', href: '/verify', icon: 'shield', ar: 'تحقّق من شهادة', en: 'Verify a certificate', hint_ar: 'رمز أو QR — نتيجة فورية', hint_en: 'Code or QR — instant', tone: 'sea' },
+  /* P86: أيقونة لكلّ خدمة (15 = 3 صفوف × 5) — الصفّ الأوّل «ابدأ»: بوّابة الدخول ثمّ ما يبدأ به المستفيد · الثاني «الخدمات» · الثالث «التحقّق والدعم» */
+  { key: 'login', href: '/login', icon: 'door', ar: 'بوّابة الدخول', en: 'Sign-in gate', hint_ar: 'متعلّم · جهة · خبير · طاقم', hint_en: 'Learner · org · expert · staff', tone: 'plum' },
   { key: 'programs', href: '/programs', icon: 'book', ar: 'سجّل في برنامج', en: 'Enrol in a program', hint_ar: 'البرامج المفتوحة الآن', hint_en: 'Open programs now', tone: 'coral' },
+  { key: 'bayan', href: '/kids', icon: 'kids', ar: 'بَيان — للأطفال', en: 'Bayan — for kids', hint_ar: 'العربيّة لأطفال ٤–٩ سنوات', hint_en: 'Arabic for ages 4–9', tone: 'sand' },
+  { key: 'iqra', href: '/iqra/start', icon: 'school', ar: 'تعلّم — اقْرَأْ', en: 'Learn — Iqra', hint_ar: 'حلقة مجّانية على مستواك', hint_en: 'A free lesson at your level', tone: 'sea' },
   { key: 'miaar', href: '/miaar', icon: 'scale', ar: 'قيّم مستواك — مِعيار', en: 'Assess your level — Miaar', hint_ar: '3 دقائق · بلا رسوم', hint_en: '3 minutes · free', tone: 'plum' },
-  { key: 'iqra', href: '/iqra/start', icon: 'school', ar: 'تعلّم — اقْرَأْ', en: 'Learn — Iqra', hint_ar: 'حلقة مجّانية على مستواك', hint_en: 'A free lesson at your level', tone: 'sand' },
-  { key: 'sessions', href: '/live', icon: 'laptop', ar: 'جلسات اليوم', en: "Today's sessions", hint_ar: 'المباشر والقادم', hint_en: 'Live and upcoming', tone: 'coral' },
+  { key: 'resources', href: '/resources', icon: 'kit', ar: 'مستودع الحقائب', en: 'Resource kits', hint_ar: 'حقائب تدريبيّة وأدوات جاهزة', hint_en: 'Training kits and ready tools', tone: 'coral' },
+  { key: 'sessions', href: '/live', icon: 'laptop', ar: 'جلسات اليوم', en: "Today's sessions", hint_ar: 'المباشر والقادم', hint_en: 'Live and upcoming', tone: 'sea' },
+  { key: 'sim', href: '/sim', icon: 'play', ar: 'تدرّب بالمحاكاة', en: 'Simulation training', hint_ar: 'موقف حقيقيّ في 3 دقائق', hint_en: 'A real situation in 3 min', tone: 'sand' },
   { key: 'consulting', href: '/consulting', icon: 'chat', ar: 'اطلب استشارة', en: 'Request consulting', hint_ar: 'من الطلب إلى عرض السعر', hint_en: 'From request to quote', tone: 'plum' },
+  { key: 'org', href: '/org', icon: 'executive', ar: 'بوّابة الجهات', en: 'Organizations portal', hint_ar: 'منسوبوكم وأثر برامجكم', hint_en: 'Your people and impact', tone: 'coral' },
+  { key: 'verify', href: '/verify', icon: 'shield', ar: 'تحقّق من شهادة', en: 'Verify a certificate', hint_ar: 'رمز أو QR — نتيجة فورية', hint_en: 'Code or QR — instant', tone: 'sea' },
   { key: 'pay', href: '/pay', icon: 'doc', ar: 'الرسوم والفواتير', en: 'Fees & invoices', hint_ar: 'ادفع أو حمّل فاتورتك', hint_en: 'Pay or download', tone: 'sand' },
-  { key: 'org', href: '/org', icon: 'executive', ar: 'بوّابة الجهات', en: 'Organizations portal', hint_ar: 'منسوبوكم وأثر برامجكم', hint_en: 'Your people and impact', tone: 'sea' },
-  { key: 'help', href: '/help', icon: 'question', ar: 'المساعدة', en: 'Help', hint_ar: 'إجابات خطوة بخطوة', hint_en: 'Step-by-step answers', tone: 'plum' },
-  { key: 'contact', href: '/contact', icon: 'mail', ar: 'تواصل معنا', en: 'Contact us', hint_ar: 'بريد · هاتف · موقع', hint_en: 'Email · phone · location', tone: 'coral' },
+  { key: 'councils', href: '/councils', icon: 'circle_users', ar: 'مجالس الأقران', en: 'Peer councils', hint_ar: 'مجلس حول موقف حقيقيّ', hint_en: 'A council around a real case', tone: 'plum' },
+  { key: 'help', href: '/help', icon: 'question', ar: 'المساعدة', en: 'Help', hint_ar: 'إجابات خطوة بخطوة', hint_en: 'Step-by-step answers', tone: 'coral' },
+  { key: 'contact', href: '/contact', icon: 'mail', ar: 'تواصل معنا', en: 'Contact us', hint_ar: 'بريد · هاتف · موقع', hint_en: 'Email · phone · location', tone: 'sea' },
 ];
 
 export function QuickServices({ lang }: { lang: Lang }) {

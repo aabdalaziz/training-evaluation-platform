@@ -73,3 +73,24 @@ export function hasWayHistory(): boolean {
   if (typeof window === 'undefined') return false;
   try { const cur = JSON.parse(sessionStorage.getItem(STACK_KEY) || '[]'); return Array.isArray(cur) && cur.length > 1 && window.history.length > 1; } catch { return false; }
 }
+
+/* ───────── P86: سهم «التالي» — سجلّ تقدّم داخل التبويب ─────────
+   حين يرجع المستفيد بسهم «رجوع» نحفظ الصفحة التي غادرها؛ فيظهر سهم «التالي» ويعيده إليها.
+   أيّ انتقال جديد (غير العودة إلى قمّة السجلّ) يمسح السجلّ — كما يفعل المتصفح. منطق خالص قابل للاختبار. */
+export function pushForward(fwd: readonly string[], leaving: string): string[] { if (!leaving) return [...fwd]; return [...fwd.filter((p) => p !== leaving).slice(-19), leaving]; }
+/** عند الوصول إلى مسار: إن كان قمّة سجلّ التقدّم فهو «تقدّم» (pop)، وإلّا فهو انتقال جديد يمسح السجلّ */
+export function settleForward(fwd: readonly string[], arrived: string): string[] { if (!fwd.length) return []; return fwd[fwd.length - 1] === arrived ? fwd.slice(0, -1) : []; }
+const FWD_KEY = 'athar:way-fwd';
+const readFwd = (): string[] => { try { const v = JSON.parse(sessionStorage.getItem(FWD_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; } };
+const writeFwd = (v: string[]) => { try { sessionStorage.setItem(FWD_KEY, JSON.stringify(v)); } catch { /* خاص */ } };
+/** قبل الرجوع: احفظ الصفحة الحالية ليظهر «التالي» */
+export function rememberForward(leaving: string): void { if (typeof window === 'undefined') return; writeFwd(pushForward(readFwd(), leaving)); (window as any).__wayBackNav = true; }
+/** عند كلّ وصول: سوِّ السجلّ — يُستدعى من WayBar مع pathname */
+export function arriveWay(pathname: string): void {
+  if (typeof window === 'undefined') return;
+  const viaBack = !!(window as any).__wayBackNav; (window as any).__wayBackNav = false;
+  const cur = readFwd(); if (viaBack) { writeFwd(cur.filter((p) => p !== pathname)); return; } /* وصلنا بالرجوع: الصفحة المغادَرة بقيت في السجلّ */
+  writeFwd(settleForward(cur, pathname));
+}
+/** هل يوجد «تالٍ»؟ وما هو؟ */
+export function nextWay(): string | null { if (typeof window === 'undefined') return null; const v = readFwd(); return v.length ? v[v.length - 1] : null; }

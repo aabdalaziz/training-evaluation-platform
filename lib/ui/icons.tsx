@@ -1,7 +1,7 @@
 import React from 'react';
 
 /** مجموعة أيقونات SVG خطّية موحّدة للبوّابة (بدل الرموز التعبيرية) */
-export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send' | 'bell' | 'inbox' | 'upload' | 'qr' | 'next' | 'mic' | 'camera' | 'spark' | 'spinner';
+export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send' | 'bell' | 'inbox' | 'upload' | 'qr' | 'next' | 'mic' | 'camera' | 'spark' | 'spinner' | 'kids' | 'kit' | 'door' | 'circle_users';
 
 export const ICON_PATHS: Record<IconName, string> = {
   dashboard: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
@@ -66,6 +66,11 @@ export const ICON_PATHS: Record<IconName, string> = {
   camera: 'M4 8h4l2-3h4l2 3h4v11H4zM12 11a3 3 0 1 1 0 6 3 3 0 0 1 0-6z',
   spark: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',
   spinner: 'M12 3a9 9 0 0 1 9 9',
+  /* P86 «بوصلة الرئيسة»: بَيان (وجه طفل مبتسم) · مستودع الحقائب (حقيبة) · بوّابة الدخول (باب) · المجالس (حلقة أقران) */
+  kids: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 10h.01M15.5 10h.01M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8',
+  kit: 'M4 8h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18M12 12v3',
+  door: 'M5 21V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17M3 21h18M15 8h4v13M11.5 12h.01',
+  circle_users: 'M12 5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM5 13a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM19 13a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM12 12v3M8.5 15.5l1.5-1M15.5 15.5l-1.5-1',
 };
 
 export function Icon({ name, size = 20, color = 'currentColor', stroke = 2, className }: { name: IconName; size?: number; color?: string; stroke?: number; className?: string }) {
