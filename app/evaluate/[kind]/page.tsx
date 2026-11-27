@@ -148,13 +148,14 @@ export default function GuestEvaluationPage() {
       if (!on) return;
       if (!activeTemplateId) { setQLoading(false); return; }
       setTemplateId(activeTemplateId);
+      /* P89-ب: تحت الرابط تأتي الشعب من واجهة /api/evaluation-links (مفتاح الخادم) — جدول classrooms غير مقروء للضيف بعد التحصين S6، فكان اليومي يتعطّل عند «الشعبة» */
       const [qRes, cRes] = await Promise.all([
         db.from('questions').select('*').eq('template_id', activeTemplateId).order('order_index'),
-        db.from('classrooms').select('id,code,level,section_name').eq('program_id', programId).order('code'),
+        link ? Promise.resolve({ data: linkRooms as any[] }) : db.from('classrooms').select('id,code,level,section_name').eq('program_id', programId).order('code'),
       ]);
       if (!on) return;
       setQuestions(((qRes.data || []) as any[]).map(item => ({ ...item, options: Array.isArray(item.options) ? item.options : [] })));
-      const rooms = link ? ((cRes.data || []) as any[]).filter(r => linkRooms.some(x => x.id === r.id)) : (cRes.data || []) as any[]; setClassrooms(rooms);   // P49: الشعب المسموحة تحت الرابط فقط
+      const rooms = (cRes.data || []) as any[]; setClassrooms(rooms);   // P49: الشعب المسموحة تحت الرابط فقط (الواجهة ترشّحها)
       setClassroomId(preClassroom && rooms.some(r => r.id === preClassroom) ? preClassroom : (rooms[0]?.id || ''));
       setAnswers({}); setMissIds([]); setQLoading(false);
     })();

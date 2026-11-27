@@ -55,3 +55,9 @@ test('P89: الصفحة والعدّة — FlowLang يشمل fr، أزرار ا�
   assert.ok(!pg.includes('L(q.text_ar, q.text_en)') && !pg.includes('linkStateText('), 'لا بقايا من المسار القديم');
   const fr = read('app/france/page.tsx'); assert.ok(fr.includes('?lang=${lang}') && !fr.includes("lang === 'ar' ? 'ar' : 'en'"));
 });
+
+test('P89-ب: تحت الرابط لا تُستعلم classrooms من المتصفّح (غير مقروءة للضيف) — الشعب من واجهة الروابط', () => {
+  const pg = read('app/evaluate/[kind]/page.tsx');
+  assert.ok(pg.includes("link ? Promise.resolve({ data: linkRooms as any[] }) : db.from('classrooms')"), 'الشعب من linkRooms تحت الرابط');
+  assert.ok(!pg.includes("filter(r => linkRooms.some(x => x.id === r.id))"), 'لا ترشيح على نتيجة استعلام فارغة');
+});
