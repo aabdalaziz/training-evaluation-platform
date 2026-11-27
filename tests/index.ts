@@ -159,3 +159,4 @@ import './p81-clock.test'; /* P81 */
 import './p88-france.test'; /* P88 */
 import './p89-eval-fr.test'; /* P89 */
 import './p91-cert-fr.test'; /* P91 */
+import './p92-attend-fr.test'; /* P92 */

@@ -7,6 +7,7 @@ import { STATUS_LABEL } from '../../../lib/attendance/model';
 import type { RecordStatus } from '../../../lib/attendance/model';
 import { MicButton, VoiceFill } from '../../components/Dictate'; /* P82-ب «قُل بدل أن تكتب» */
 import { SignHelpButton } from '../../components/SignHelp'; /* P82-د */
+import { FRANCE, isFranceSession, attendTitleFr, ATTEND_PROGRAM_FR, pickLang, fmtDay } from '../../../lib/cohorts/france'; /* P92 */
 
 /* P87-ب: هل تاريخ الجلسة بعد اليوم (بتوقيت الرياض)؟ */
 const isFuture = (d?: string | null) => { if (!d) return false; const today = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10); return d > today; };
@@ -34,13 +35,30 @@ const T = {
     attendees: 'checked in so far', trainer: 'Trainer', room: 'Room', date: 'Date', time: 'Time', privacy: 'Your data is used for attendance and certificates only.',
     errors: { not_found: 'Invalid link.', closed: 'Check-in for this session has ended.', bad_name: 'Enter your full name (at least 3 characters).', bad_email: 'Invalid email address.', bad_phone: 'Mobile number is required (at least 9 digits).' } as Record<string, string>,
   },
+  fr: {
+    kicker: 'Enregistrement de présence', loading: 'Chargement…', none: 'Lien invalide ou expiré.', closed: 'L’enregistrement de présence pour cette séance est terminé.', notyet: 'L’enregistrement n’est pas encore ouvert — il ouvre le matin de la séance. Gardez ce QR code et scannez-le à votre arrivée.',
+    name: 'Nom complet', email: 'E-mail', phone: 'Numéro de mobile', optional: 'facultatif', required: 'obligatoire',
+    hint: 'Utilisez le même e-mail / mobile à chaque séance pour que votre taux de présence soit calculé correctement.', submit: 'Enregistrer ma présence', saving: 'Enregistrement…',
+    done: 'Votre présence est enregistrée', again: 'Votre présence était déjà enregistrée pour cette séance', at: 'Enregistrée à', status: 'Statut', late: 'Notée « en retard » : l’enregistrement est arrivé après le délai de tolérance (8h30).',
+    attendees: 'présentes jusqu’ici', trainer: 'Formatrice', room: 'Groupe', date: 'Date', time: 'Horaire', privacy: 'Vos données servent uniquement à la présence et aux certificats.',
+    errors: { not_found: 'Lien invalide.', closed: 'L’enregistrement pour cette séance est terminé.', bad_name: 'Écrivez votre nom complet (au moins 3 caractères).', bad_email: 'Adresse e-mail invalide.', bad_phone: 'Le numéro de mobile est obligatoire (au moins 9 chiffres).' } as Record<string, string>,
+  },
 };
+/* P92: حالة الحضور بالفرنسيّة (STATUS_LABEL عربيّ/إنجليزيّ فقط) */
+const STATUS_FR: Record<RecordStatus, string> = { present: 'Présente', late: 'En retard', excused: 'Excusée', absent: 'Absente' };
+type Lang = 'ar' | 'en' | 'fr';
+const LANG_NAME: Record<Lang, string> = { ar: 'العربية', en: 'English', fr: 'Français' };
+const LS_LANG = 'tep.attend.lang';
 const LS = 'tep.attend.me';
 
 export function CheckinForm({ token }: { token: string }) {
   const db = supabase();
-  const [lang, setLang] = useState<'ar' | 'en'>('ar');
+  const [lang, setLangState] = useState<Lang>('ar');
+  const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem(LS_LANG, l); } catch { /* ignore */ } };
   const t = T[lang];
+  const fr = !!info && isFranceSession({ token, title: info.title, program_name: info.program_name, program_name_en: info.program_name_en }); /* P92 */
+  const langs: Lang[] = fr ? ['fr', 'en', 'ar'] : ['ar', 'en'];
+  const voiceLang = lang === 'ar' ? 'ar-SA' : lang === 'fr' ? 'fr-FR' : 'en-GB';
   const [info, setInfo] = useState<Info | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'none' | 'error'>('loading');
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
@@ -65,6 +83,13 @@ export function CheckinForm({ token }: { token: string }) {
       if (error) { setErr(error.message); setState('error'); return; }
       if (!data || !(data as any).id) { setState('none'); return; }
       setInfo(data as Info); setState('ready');
+      /* P92: مجموعة فرنسا ⇒ ?lang → المحفوظة → لغة المتصفّح (fr/ar) → en؛ بقيّة الجلسات تبقى عربيّة افتراضيًّا (أو ?lang=en) */
+      try {
+        const q = new URLSearchParams(location.search).get('lang'); const saved = localStorage.getItem(LS_LANG);
+        const d = data as Info;
+        if (isFranceSession({ token, title: d.title, program_name: d.program_name, program_name_en: d.program_name_en })) setLangState(pickLang(q, saved, navigator.language));
+        else if (q === 'en' || (saved === 'en' && !q)) setLangState('en');
+      } catch { /* ignore */ }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
@@ -86,7 +111,7 @@ export function CheckinForm({ token }: { token: string }) {
   }
 
   const fmtTime = (s: string | null) => (s ? s.slice(0, 5) : '');
-  const fmtAt = (iso?: string) => iso ? new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA' : 'en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Riyadh' }).format(new Date(iso)) : '';
+  const fmtAt = (iso?: string) => iso ? new Intl.DateTimeFormat(lang === 'ar' ? 'ar-SA' : lang === 'fr' ? 'fr-FR' : 'en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Riyadh' }).format(new Date(iso)) : '';
 
   return (
     <div className="at" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -95,7 +120,7 @@ export function CheckinForm({ token }: { token: string }) {
         <header className="at-head">
           <div className="at-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" /></div>
           <div className="at-kicker"><Icon name="check" size={14} /> {t.kicker}</div>
-          <button type="button" className="at-lang" onClick={() => setLang(l => (l === 'ar' ? 'en' : 'ar'))}>{lang === 'ar' ? 'English' : 'العربية'}</button>
+          <div className="at-langs" role="group" aria-label="Language">{langs.map(l => <button key={l} type="button" className={`at-lang ${l === lang ? 'on' : ''}`} onClick={() => setLang(l)} aria-pressed={l === lang} lang={l}>{LANG_NAME[l]}</button>)}</div>
         </header>
 
         {state === 'loading' && <div className="at-card at-center">{t.loading}</div>}
@@ -105,13 +130,13 @@ export function CheckinForm({ token }: { token: string }) {
         {state === 'ready' && info && (
           <>
             <section className="at-card at-info">
-              <h1>{info.title}</h1>
-              <p className="at-prog">{lang === 'en' && info.program_name_en ? info.program_name_en : info.program_name}</p>
+              <h1>{fr && lang === 'fr' ? attendTitleFr(info.session_date) : info.title}</h1>
+              <p className="at-prog">{fr && lang === 'fr' ? ATTEND_PROGRAM_FR : lang === 'en' && info.program_name_en ? info.program_name_en : info.program_name}</p>
               <div className="at-meta">
-                <span><Icon name="calendar" size={14} /> {t.date}: <b>{info.session_date}</b></span>
+                <span><Icon name="calendar" size={14} /> {t.date}: <b>{lang === 'fr' ? fmtDay(info.session_date, 'fr', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : info.session_date}</b></span>
                 {(info.start_time || info.end_time) && <span><Icon name="clock" size={14} /> {t.time}: <b>{fmtTime(info.start_time)}{info.end_time ? ` – ${fmtTime(info.end_time)}` : ''}</b></span>}
                 {info.classroom_code && <span><Icon name="school" size={14} /> {t.room}: <b>{info.classroom_code}</b></span>}
-                {info.trainer_name && <span><Icon name="users" size={14} /> {t.trainer}: <b>{info.trainer_name}</b></span>}
+                {info.trainer_name && <span><Icon name="users" size={14} /> {t.trainer}: <b>{fr && lang === 'fr' ? FRANCE.trainer.fr : info.trainer_name}</b></span>}
                 <span className="at-count"><Icon name="users" size={14} /> <b>{info.count}</b> {t.attendees}</span>
               </div>
             </section>
@@ -120,10 +145,10 @@ export function CheckinForm({ token }: { token: string }) {
 
             {info.status === 'open' && !result && (
               <form className="at-card" onSubmit={submit} noValidate>
-                <div style={{ marginBottom: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}><SignHelpButton always step="checkin" lang={lang} /><VoiceFill lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} title={lang === 'ar' ? 'املأ النموذج بالكلام' : 'Fill by voice'} fields={[{ key: 'name', label: t.name, kind: 'name', required: true }, { key: 'email', label: t.email, kind: 'email' }, { key: 'phone', label: t.phone, kind: 'phone', required: !!info.require_phone }]} onFill={(v) => setForm({ name: v.name || form.name, email: v.email || form.email, phone: v.phone || form.phone })} /></div>
-                <label><span>{t.name} <i>*</i> <MicButton kind="name" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, name: v })} /></span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" required /></label>
-                <label><span>{t.email} <small>({t.optional})</small> <MicButton kind="email" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, email: v })} /></span><input type="email" inputMode="email" dir="ltr" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} autoComplete="email" /></label>
-                <label><span>{t.phone} <small>({info.require_phone ? t.required : t.optional})</small>{info.require_phone && <i>*</i>} <MicButton kind="phone" lang={lang === 'ar' ? 'ar-SA' : 'en-GB'} onText={(v) => setForm({ ...form, phone: v })} /></span><input type="tel" inputMode="tel" dir="ltr" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} autoComplete="tel" /></label>
+                <div style={{ marginBottom: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}><SignHelpButton always step="checkin" lang={lang === 'ar' ? 'ar' : 'en'} /><VoiceFill lang={voiceLang} title={lang === 'ar' ? 'املأ النموذج بالكلام' : lang === 'fr' ? 'Remplir à la voix' : 'Fill by voice'} fields={[{ key: 'name', label: t.name, kind: 'name', required: true }, { key: 'email', label: t.email, kind: 'email' }, { key: 'phone', label: t.phone, kind: 'phone', required: !!info.require_phone }]} onFill={(v) => setForm({ name: v.name || form.name, email: v.email || form.email, phone: v.phone || form.phone })} /></div>
+                <label><span>{t.name} <i>*</i> <MicButton kind="name" lang={voiceLang} onText={(v) => setForm({ ...form, name: v })} /></span><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} autoComplete="name" required /></label>
+                <label><span>{t.email} <small>({t.optional})</small> <MicButton kind="email" lang={voiceLang} onText={(v) => setForm({ ...form, email: v })} /></span><input type="email" inputMode="email" dir="ltr" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} autoComplete="email" /></label>
+                <label><span>{t.phone} <small>({info.require_phone ? t.required : t.optional})</small>{info.require_phone && <i>*</i>} <MicButton kind="phone" lang={voiceLang} onText={(v) => setForm({ ...form, phone: v })} /></span><input type="tel" inputMode="tel" dir="ltr" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} autoComplete="tel" /></label>
                 <p className="at-hint"><Icon name="question" size={14} /> {t.hint}</p>
                 {err && <div className="at-err"><Icon name="alert" size={16} /> {err}</div>}
                 <button type="submit" className="at-btn" disabled={saving}><Icon name="check" size={18} /> {saving ? t.saving : t.submit}</button>
@@ -137,7 +162,7 @@ export function CheckinForm({ token }: { token: string }) {
                 <h2>{result.already ? t.again : t.done}</h2>
                 <p className="at-name">{result.name || form.name}</p>
                 <div className="at-meta at-center">
-                  <span>{t.status}: <b className={`at-pill ${result.status || 'present'}`}>{STATUS_LABEL[result.status || 'present'][lang]}</b></span>
+                  <span>{t.status}: <b className={`at-pill ${result.status || 'present'}`}>{lang === 'fr' ? STATUS_FR[result.status || 'present'] : STATUS_LABEL[result.status || 'present'][lang]}</b></span>
                   <span>{t.at}: <b>{fmtAt(result.checked_in_at)}</b></span>
                 </div>
                 {result.status === 'late' && <p className="at-latenote">{t.late}</p>}
@@ -157,7 +182,8 @@ const CSS = `
 .at-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #EADFD6;border-top:4px solid #D9A866;border-radius:16px;padding:12px 16px}
 .at-logos{display:flex;gap:10px;align-items:center}.at-logos img{height:36px;object-fit:contain}
 .at-kicker{font-size:12.5px;font-weight:900;color:#D4614A;display:flex;align-items:center;gap:6px}
-.at-lang{border:1px solid #D9CBC2;background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:12px;font-weight:800;color:#3A1F36;cursor:pointer}
+.at-langs{display:flex;gap:4px;background:#F6EBE0;border:1px solid #EADFD6;border-radius:999px;padding:3px}
+.at-lang{border:0;background:transparent;border-radius:999px;padding:6px 11px;font:inherit;font-size:12px;font-weight:800;color:#6A3350;cursor:pointer}.at-lang.on{background:#3A1F36;color:#fff}
 .at-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
 .at-center{align-items:center;text-align:center;justify-content:center}
 .at-bad{color:#9A3A2A;background:#FBEDE7;border-color:#F3C4B6}.at-warn{color:#9A3A2A;background:#FBF4EE;border-color:#F1D9A8}.at-warn .at-muted{display:block;margin-top:6px;color:#6A3350;font-weight:600}

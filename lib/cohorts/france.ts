@@ -58,6 +58,23 @@ export function fmtDay(date: string, lang: HubLang, o: Intl.DateTimeFormatOption
   return new Date(date + 'T00:00:00Z').toLocaleDateString(LOCALE[lang], { ...o, timeZone: 'UTC' });
 }
 
+/* ───────── P92: صفحة الحضور /attend بالفرنسيّة ───────── */
+/** هل هذه الجلسة لمجموعة فرنسا؟ (الـRPC العامّ لا يُعيد program_id؛ نستدلّ من الرمز/العنوان/اسم البرنامج) */
+export function isFranceSession(x: { token?: string | null; title?: string | null; program_name?: string | null; program_name_en?: string | null }): boolean {
+  const tk = String(x.token || '').toUpperCase();
+  if (/^FR\d{2}[0-9A-Z]{6}$/.test(tk)) return true;
+  if ((x.title || '').includes('مجموعة فرنسا')) return true;
+  return /france cohort/i.test(x.program_name_en || '') || (x.program_name || '').includes('مجموعة فرنسا');
+}
+/** عنوان الجلسة الفرنسيّ: «Jour 3 · mardi 8 décembre» (يُشتقّ من التاريخ، لا من العنوان العربيّ) */
+export function attendTitleFr(session_date: string, days: HubDay[] = cohortDays()): string {
+  const d = days.find(x => x.date === session_date);
+  const day = fmtDay(session_date, 'fr');
+  return d ? `Jour ${d.n} / ${days.length} · ${day}` : day;
+}
+/** اسم البرنامج كما يظهر للطالبة الفرنسيّة */
+export const ATTEND_PROGRAM_FR = FRANCE.certificate.programNameFr;
+
 /* ───────── النصوص ───────── */
 export type HubText = {
   dir: 'ltr' | 'rtl'; brand: string; brandSub: string; kicker: string; title: string; subtitle: string; dates: string; place: string; when: string; hoursLabel: string; hoursVal: string; trainerLabel: string; organiserLabel: string;
