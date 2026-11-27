@@ -17,7 +17,10 @@ import { decide, normalizeConfig, mailFor, KIND_AR, type ClockConfig, type Clock
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const safe = async <T,>(q: PromiseLike<{ data: T | null; error: any }>, fb: T): Promise<T> => { try { const { data, error } = await q; return error || data == null ? fb : data; } catch { return fb; } };
+import { FRANCE } from '../cohorts/france'; /* P88 */
 type Person = { name: string; email: string; lang?: 'ar' | 'en' | null }; /* P87-ب: lang من التسجيل */
+/** P88: مساحة خاصّة بالمجموعة (بلغتها) بدل /me العربيّة */
+const spaceOf = (site: string, programId: string): Record<string, string> => (programId === FRANCE.programId ? { space: `${site}/france` } : {});
 export type RunOpts = { site: string; dry?: boolean; now?: Date; limit?: number; eventId?: string | null };
 export type EventResult = { event_id: string; program: string; kind: ClockKind; action: 'run' | 'skip' | 'wait'; ok?: boolean; sent?: Record<string, number>; note?: string; error?: string };
 export type RunResult = { enabled: boolean; dry: boolean; generated: number; due: number; results: EventResult[]; error?: string };
@@ -51,7 +54,7 @@ export async function executeEvent(db: any, e: ClockEvent, p: ClockProgram, cfg:
   try {
     const [pp, trs, adm] = await Promise.all([participantsOf(db, p.id), trainersOf(db, p.id), admins(db)]);
     const ch = cfg.channels; const sent: Record<string, number> = {}; const ref = `${p.id}:${e.kind}`; let note = '';
-    const ctx = (name?: string | null, extra?: Record<string, any>, links?: Record<string, string>, lang?: 'ar' | 'en' | null) => ({ site: o.site, program: p, name, lang: lang || 'ar', counts: { participants: pp.approved.length || pp.all.length, attendance: pp.attendance.length }, extra: { pending: pp.pending, ...(extra || {}) }, links });
+    const ctx = (name?: string | null, extra?: Record<string, any>, links?: Record<string, string>, lang?: 'ar' | 'en' | null) => ({ site: o.site, program: p, name, lang: lang || 'ar', counts: { participants: pp.approved.length || pp.all.length, attendance: pp.attendance.length }, extra: { pending: pp.pending, ...(extra || {}) }, links: { ...spaceOf(o.site, p.id), ...(links || {}) } });
     if (e.kind === 'remind' || e.kind === 'start') {
       const people = e.kind === 'remind' ? pp.approved : pp.all;
       if (ch.participants) sent.participants = await send(db, dry, e.kind, people, (x) => mailFor(e.kind, 'participant', ctx(x.name, undefined, undefined, x.lang)), ref);

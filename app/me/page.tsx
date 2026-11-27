@@ -18,6 +18,7 @@ import { AtharMark } from '../components/PortalShell';
 import type { IconName } from '../../lib/ui/icons';
 import { CERT_KIND_AR, STATUS_AR, attendancePct, attendanceTone, buildTasks, isRunning, type MePortal, type Task } from '../../lib/me/model';
 import ExitCard from './ExitCard'; /* هـ-1/5 */
+import { FRANCE } from '../../lib/cohorts/france'; /* P88 */
 
 const TASK_ICON: Record<Task['kind'], IconName> = { attend: 'check', daily: 'calendar', final: 'flag', impact_pre: 'target', impact_post: 'target', followup: 'trend' };
 
@@ -101,6 +102,7 @@ export default function MePage() {
   return shell(<>
     {head}
     {error && <div className="me-msg bad"><Icon name="alert" size={16} /><span>{error}</span></div>}
+    {me && me.programs.some(p => p.id === FRANCE.programId) && <a href="/france" className="me-card me-cohort" data-testid="me-france" dir="ltr"><Icon name="flag" size={18} /><span><b>France cohort · Cohorte France</b><small>Your space in English / French — level, attendance, daily survey, certificate → <u>athar-portal.com/france</u></small></span></a>} {/* P88 */}
     {me && <PlacementCard />}
     {me && <NoticesCard />}
     {me && <div id="prefs"><ContactPrefs /></div>}
@@ -207,7 +209,7 @@ const CSS = `
 .me{font-family:var(--font-ar),"IBM Plex Sans Arabic",Arial,sans-serif;background:#F6EBE0;min-height:100vh;padding:18px 12px 60px;color:#2A1626}
 .me *{box-sizing:border-box}
 .me-wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.me-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.me-card{background:#fff;border:1px solid #EADFD6;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}.me-cohort{flex-direction:row;align-items:center;gap:12px;text-decoration:none;color:#3A1F36;background:linear-gradient(135deg,#FFF7F3,#FBF4EE);border-color:#F3C4B6}.me-cohort span{display:grid}.me-cohort small{color:#6A3350;font-size:12.5px}
 .me-head{border-top:5px solid #D9A866;gap:4px}
 .me-brand{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}.me-brandlink{display:flex;gap:10px;align-items:center;text-decoration:none;color:#3A1F36}.me-brandlink b{display:block;font-size:20px;line-height:1}.me-brandlink small{color:#8E7F8A;font-size:11.5px}.me-quick{display:flex;gap:6px;flex-wrap:wrap}.me-quick a{display:inline-flex;gap:5px;align-items:center;border:1px solid #EADFD6;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:800;color:#3A1F36;text-decoration:none;background:#FBF4EE}.me-quick a:hover{border-color:#D4614A}
 .me-kicker{font-size:12px;font-weight:900;color:#2F6B66;display:flex;align-items:center;gap:6px}

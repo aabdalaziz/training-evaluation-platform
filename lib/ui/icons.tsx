@@ -1,7 +1,7 @@
 import React from 'react';
 
 /** مجموعة أيقونات SVG خطّية موحّدة للبوّابة (بدل الرموز التعبيرية) */
-export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send' | 'bell' | 'inbox' | 'upload' | 'qr' | 'next' | 'mic' | 'camera' | 'spark' | 'spinner' | 'kids' | 'kit' | 'door' | 'circle_users';
+export type IconName = 'dashboard' | 'programs' | 'evaluations' | 'reports' | 'admin' | 'settings' | 'logout' | 'login' | 'refresh' | 'alert' | 'target' | 'users' | 'trend' | 'check' | 'calendar' | 'book' | 'school' | 'laptop' | 'link' | 'star' | 'chart' | 'clock' | 'arrow' | 'shield' | 'plus' | 'edit' | 'trash' | 'home' | 'compass' | 'question' | 'scale' | 'chat' | 'folder' | 'flag' | 'download' | 'print' | 'doc' | 'slides' | 'copy' | 'table' | 'globe' | 'filter' | 'save' | 'mail' | 'phone' | 'x' | 'play' | 'pause' | 'stop' | 'award' | 'certificate' | 'search' | 'send' | 'bell' | 'inbox' | 'upload' | 'qr' | 'next' | 'mic' | 'camera' | 'spark' | 'spinner' | 'kids' | 'kit' | 'door' | 'circle_users';
 
 export const ICON_PATHS: Record<IconName, string> = {
   dashboard: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',
@@ -48,6 +48,7 @@ export const ICON_PATHS: Record<IconName, string> = {
   filter: 'M3 5h18l-7 8v6l-4 2v-8L3 5z',
   save: 'M5 3h11l3 3v15H5zM8 3v6h7V3M8 21v-7h8v7',
   mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
+  phone: 'M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6.2 6.2l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 1.9z', /* P88 */
   x: 'M6 6l12 12M18 6L6 18',
   play: 'M7 5l12 7-12 7z',
   pause: 'M7 5h4v14H7zM13 5h4v14h-4z',

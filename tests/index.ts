@@ -156,3 +156,4 @@ import './p85-insight.test'; /* P85 */
 import './p85-docx.test'; /* P85 */
 import './p85-charts.test'; /* P85 */
 import './p81-clock.test'; /* P81 */
+import './p88-france.test'; /* P88 */

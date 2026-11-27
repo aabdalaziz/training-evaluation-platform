@@ -86,7 +86,7 @@ export function mailForEn(kind: ClockKind, c: MailCtx): { subject: string; html:
   const p = c.program; const name = p.name_en || p.name_ar; const nm = esc(name); const remote = p.delivery_mode === 'remote';
   const where = remote ? 'Online (the session link will be sent to you)' : esc(p.location_en || p.location_ar || 'as communicated to you');
   const dates = `<p><b>When:</b> ${fmtEn(p.start_date)}${p.end_date && p.end_date !== p.start_date ? ` — ${fmtEn(p.end_date)}` : ''}${p.hours ? ` · ${p.hours} hours` : ''}<br/><b>Where:</b> ${where}</p>`;
-  const me = `${c.site}/me`; const hi = c.name ? `${esc(first(c.name))}, ` : '';
+  const me = c.links?.space || `${c.site}/me`; /* P88: مساحة المجموعة إن وُجدت */ const hi = c.name ? `${esc(first(c.name))}, ` : '';
   switch (kind) {
     case 'remind': return { subject: `One week to go — ${name}`, url: me, html: wrapEn(`One week to go: ${name}`, `<p>${hi}your seat is confirmed and we look forward to meeting you.</p>${dates}<p><b>Before you come:</b> sign in once to your Athar space with this e-mail (no password — you receive a login link), so your journey, placement report and certificate are ready for you.</p>`, { href: me, label: 'Open my space' }) };
     case 'start': return { subject: `We start today — ${name}`, url: me, html: wrapEn(`Today we start: ${name}`, `<p>${hi}see you today.</p>${dates}<p>Check in with the QR code your trainer shows, and rate your day at the end from the daily survey code.</p>`, { href: me, label: 'My space' }) };

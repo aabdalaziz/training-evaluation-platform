@@ -123,3 +123,9 @@ test('P87-ب: مشاركة lang=en تصلها رسالة إنجليزيّة LTR 
   }
   assert.ok(mailFor('remind', 'participant', { site: 's', program: P, lang: 'en' }).html.includes('Madinah'), 'الموقع بالإنجليزيّة');
 });
+
+test('P88: رابط «مساحتي» في البريد الإنجليزيّ يصبح مساحة المجموعة إن مُرّر links.space', () => {
+  const P: any = { id: 'p1', name_ar: 'ب', name_en: 'Program' };
+  assert.ok(mailFor('remind', 'participant', { site: 'https://a', program: P, lang: 'en', links: { space: 'https://a/france' } }).html.includes('https://a/france'));
+  assert.ok(mailFor('remind', 'participant', { site: 'https://a', program: P, lang: 'en' }).html.includes('https://a/me'));
+});
