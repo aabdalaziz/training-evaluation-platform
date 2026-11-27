@@ -51,7 +51,7 @@ export function linkState(link: Pick<EvalLink, 'active' | 'opens_at' | 'closes_a
 }
 export function fmtWhen(iso: string | null | undefined, lang: 'ar' | 'en' = 'ar'): string {
   if (!iso) return ''; const d = new Date(iso); if (Number.isNaN(d.getTime())) return '';
-  return d.toLocaleString(lang === 'ar' ? 'ar-SA-u-nu-latn' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+  return d.toLocaleString(lang === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Riyadh' });   /* P89: بتوقيت الرياض دائمًا (كان بتوقيت الخادم/المتصفّح) */
 }
 export function linkStateText(state: LinkState, link: Pick<EvalLink, 'opens_at' | 'closes_at'> | null | undefined, lang: 'ar' | 'en' = 'ar'): string {
   if (state === 'open') return '';

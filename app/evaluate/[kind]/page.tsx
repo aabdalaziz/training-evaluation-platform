@@ -13,7 +13,8 @@ import { supabase } from '../../../lib/supabase/client';
 import { Icon } from '../../../lib/ui/icons';
 import { FlowShell, Stations, StepCard, FlowNav, useStepScroll, type Station, type StationState } from '../../components/StepFlow'; /* هـ-3 ن «محطّات» */
 import { isUniqueViolation, markDone, onceMessage, ONCE_SHARED, ONCE_TITLE, riyadhToday, wasDone, type OnceKind } from '../../../lib/evaluation/once';
-import { kindFromPath, KIND_AR, KIND_EN, resolveOpenLang, linkStateText, linkTitle, scopeText, pickTemplate, answerRow, LIKERT_AR, LIKERT_EN, NPS_MIN, NPS_MAX, type EvalLink, type LinkState } from '../../../lib/evaluation/links';
+import { kindFromPath, KIND_AR, KIND_EN, linkTitle, scopeText, pickTemplate, answerRow, LIKERT_AR, LIKERT_EN, NPS_MIN, NPS_MAX, type EvalLink, type LinkState } from '../../../lib/evaluation/links';
+import { resolveEvalLang, windowText, frQuestion, frSection, frOption, STR_FR, SCALE_FR, LIKERT_FR, ONCE_FR, KIND_FR, FR_PROGRAMS, type EvalLang } from '../../../lib/evaluation/fr'; /* P89: الفرنسيّة + نافذة الرياض */
 
 const COUNTRIES = [
   ['+966', 'السعودية', 'Saudi Arabia'], ['+971', 'الإمارات', 'UAE'], ['+965', 'الكويت', 'Kuwait'], ['+974', 'قطر', 'Qatar'], ['+973', 'البحرين', 'Bahrain'], ['+968', 'عُمان', 'Oman'],
@@ -63,8 +64,8 @@ export default function GuestEvaluationPage() {
   const kind = params.kind === 'final' ? 'final' : params.kind === 'end' ? 'end' : 'daily';   // P49: end
   const kindLabel = kind === 'daily' ? 'DAILY' : kind === 'final' ? 'FINAL' : 'END';
   const db = supabase();
-  const [lang, setLang] = useState<'ar' | 'en'>('ar');
-  const t = (k: keyof typeof STR) => STR[k][lang === 'en' ? 1 : 0];
+  const [lang, setLang] = useState<EvalLang>('ar');
+  const t = (k: keyof typeof STR) => lang === 'fr' ? (STR_FR[k] || STR[k][1]) : STR[k][lang === 'en' ? 1 : 0];   /* P89: fr مع الرجوع إلى en */
 
   const [programs, setPrograms] = useState<any[]>([]);
   const [programId, setProgramId] = useState('');
@@ -103,7 +104,7 @@ export default function GuestEvaluationPage() {
     (async () => {
       const sp = new URLSearchParams(window.location.search);
       let preP = sp.get('program') || ''; setPreClassroom(sp.get('classroom') || '');
-      if (sp.get('lang') === 'en') setLang('en');
+      const qLang = sp.get('lang'); if (qLang === 'en' || qLang === 'fr') setLang(qLang);   /* P89 */
       const code = (sp.get('link') || '').trim();
       if (code) {   // P49: حلّ الرمز أوّلًا — البرنامج والشعبة يأتيان من الرابط لا من المشارك
         try {
@@ -112,7 +113,7 @@ export default function GuestEvaluationPage() {
           if (!j?.link) { setLinkStatus('invalid'); setLoading(false); return; }
           setLink(j.link); setLinkStatus(j.state); setLinkRooms(j.classrooms || []); setLinkProgram(j.program || null);
           /* P49-ب «بلغة المشارك»: غير الناطق بالعربية يفتح الإنجليزية مباشرة */
-          if (!sp.get('lang')) setLang(resolveOpenLang(j.link.lang, typeof navigator !== 'undefined' ? navigator.language : ''));
+          if (!sp.get('lang')) setLang(resolveEvalLang({ linkLang: j.link.lang, programId: j.link.program_id, browser: typeof navigator !== 'undefined' ? navigator.language : '' }));   /* P89: برنامج فرنسيّ ← فرنسيّة */
           preP = j.link.program_id; if (j.classroom?.id) setPreClassroom(j.classroom.id); else if ((j.classrooms || []).length === 1) setPreClassroom(j.classrooms[0].id);
           if (j.state !== 'open') { setLoading(false); return; }
         } catch { if (on) { setLinkStatus('invalid'); setLoading(false); } return; }
@@ -175,7 +176,12 @@ export default function GuestEvaluationPage() {
   const hasAnswer = (v: any) => Array.isArray(v) ? v.length > 0 : !!String(v || '').trim();
   const answered = questions.filter(q => hasAnswer(answers[q.id])).length;
   const ratingQuestions = questions.filter(q => RATING_KINDS.includes(q.kind) && !EXCLUDED_FROM_RATING.includes(q.question_key || ''));
-  const L = (ar: string | null | undefined, en?: string | null) => (lang === 'en' && en ? en : (ar || ''));
+  const L = (ar: string | null | undefined, en?: string | null) => (lang === 'ar' ? (ar || '') : (en || ar || ''));
+  const LQ = (q: Q): string => lang === 'fr' ? frQuestion(q) : LQ(q);   /* P89: نصّ السؤال بلغة المشاركة */
+  const LS = (ar: string, en?: string | null) => lang === 'fr' ? frSection(ar, en) : L(ar, en);
+  const LO = (o: string) => lang === 'fr' ? frOption(o) : o;
+  const frProgram = FR_PROGRAMS.includes(programId) || (!!link && FR_PROGRAMS.includes(link.program_id));
+  const langButtons: EvalLang[] = frProgram || lang === 'fr' ? ['fr', 'ar', 'en'] : ['ar', 'en'];
 
   function infoMissing(): string[] {
     const missing: string[] = [];
@@ -204,7 +210,7 @@ export default function GuestEvaluationPage() {
       const gi = grouped.findIndex(g => g.items.some(q => q.id === requiredMissing[0].id));
       setStep(Math.max(0, gi + 1));
       const inStep = requiredMissing.filter(q => grouped[gi]?.items.includes(q));
-      setStepErr(`${t('missingQs')}\n${inStep.map(q => `• ${L(q.text_ar, q.text_en)}`).join('\n')}`);
+      setStepErr(`${t('missingQs')}\n${inStep.map(q => `• ${LQ(q)}`).join('\n')}`);
       return;
     }
     setSaving(true); setMessage('');
@@ -240,7 +246,7 @@ export default function GuestEvaluationPage() {
   const kicker = <><Icon name={kind === 'daily' ? 'calendar' : 'flag'} size={14} /> {t('kicker')}</>;
   const title = kind === 'daily' ? t('dailyTitle') : kind === 'end' ? t('endTitle') : t('finalTitle');
   const progLine = program ? <><Icon name="book" size={14} /> {L(program.name_ar, program.name_en)}</> : undefined;
-  const shell = (child: React.ReactNode, opts: { sub?: React.ReactNode; langs?: boolean } = {}) => (
+  const shell = (child: React.ReactNode, opts: { sub?: React.ReactNode; langs?: boolean | EvalLang[] } = {}) => (
     <FlowShell lang={lang} kicker={kicker} title={title} sub={opts.sub} line={progLine} langs={opts.langs} onLang={setLang} testid="ev-flow"><style dangerouslySetInnerHTML={{ __html: CSS }} />{child}</FlowShell>
   );
 
@@ -248,16 +254,17 @@ export default function GuestEvaluationPage() {
   if (linkStatus === 'invalid' || (link && linkStatus !== 'open')) return shell(
     <section className="fl-card fl-center" data-testid="ev-link-closed" data-state={linkStatus}>
       <div className="fl-ok off"><Icon name="clock" size={30} /></div>
-      <h2>{linkStatus === 'before' ? (lang === 'ar' ? 'لم يُفتح بعد' : 'Not open yet') : linkStatus === 'after' ? (lang === 'ar' ? 'أُغلق الرابط' : 'Link closed') : (lang === 'ar' ? 'انتهى هذا الرابط أو غير صالح' : 'This link is closed or invalid')}</h2>
-      <p className="fl-muted" style={{ fontSize: 14 }}>{linkStateText(linkStatus === 'invalid' ? 'off' : linkStatus as LinkState, link, lang)}</p>
+      <h2>{linkStatus === 'before' ? (lang === 'ar' ? 'لم يُفتح بعد' : lang === 'fr' ? STR_FR.notOpen : 'Not open yet') : linkStatus === 'after' ? (lang === 'ar' ? 'أُغلق الرابط' : lang === 'fr' ? STR_FR.closed : 'Link closed') : (lang === 'ar' ? 'انتهى هذا الرابط أو غير صالح' : lang === 'fr' ? STR_FR.invalid : 'This link is closed or invalid')}</h2>
+      <p className="fl-muted" style={{ fontSize: 14 }}>{windowText(linkStatus === 'invalid' ? 'off' : linkStatus as LinkState, link, lang)}</p>
       {linkProgram && <div className="fl-line"><Icon name="book" size={14} /> {L(linkProgram.name_ar, linkProgram.name_en)}</div>}
-    </section>, { langs: true });
+    </section>, { langs: langButtons });
+  const scopeTextL = (l: EvalLink, room: any) => lang === 'fr' ? (l.classroom_id ? `${STR_FR.scopeOne} : ${room ? [room.section_name || room.code, room.level].filter(Boolean).join(' — ') : '—'}` : l.level ? `${STR_FR.scopeLevel} : ${l.level}` : STR_FR.scopeAll) : scopeText(l, room, lang === 'ar' ? 'ar' : 'en');
   const lockedRoom = link?.classroom_id ? (linkRooms.find(x => x.id === link.classroom_id) || classrooms.find(c => c.id === link.classroom_id) || null) : null;
   const lockCard = link && linkProgram ? (
     <section className="fl-lock" data-testid="ev-locked">
       <div className="fl-lock-k"><Icon name="shield" size={14} /> {t('locked')}</div>
       <div className="fl-lock-t">{linkTitle(link, L(linkProgram.name_ar, linkProgram.name_en), lockedRoom)}</div>
-      <div className="fl-lock-m">{L(linkProgram.name_ar, linkProgram.name_en)} · {lang === 'ar' ? KIND_AR[kindFromPath(kind)] : KIND_EN[kindFromPath(kind)]} · {scopeText(link, lockedRoom, lang)}{link.slot_ar ? ` · ${link.slot_ar}` : ''}</div>
+      <div className="fl-lock-m">{L(linkProgram.name_ar, linkProgram.name_en)} · {lang === 'ar' ? KIND_AR[kindFromPath(kind)] : lang === 'fr' ? KIND_FR[kindFromPath(kind)] : KIND_EN[kindFromPath(kind)]} · {scopeTextL(link, lockedRoom)}{link.slot_ar ? ` · ${link.slot_ar}` : ''}</div>
       <small className="fl-muted">{t('lockedHint')}</small>
     </section>) : null;
   if (isSuccess) return shell(
@@ -272,9 +279,9 @@ export default function GuestEvaluationPage() {
     {lockCard}
     <section className="fl-card fl-center" data-testid="ev-once" data-at={onceAt}>
       <div className="fl-ok"><Icon name="check" size={34} /></div>
-      <h2>{ONCE_TITLE[lang === 'en' ? 1 : 0]}</h2>
-      <p className="fl-muted" style={{ fontSize: 14 }}>{onceMessage(kindLabel as OnceKind, lang)}</p>
-      <button type="button" className="fl-btn ghost" onClick={() => setOnceOverride(true)} data-testid="ev-once-override"><Icon name="users" size={14} /> {ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
+      <h2>{lang === 'fr' ? ONCE_FR.title : ONCE_TITLE[lang === 'en' ? 1 : 0]}</h2>
+      <p className="fl-muted" style={{ fontSize: 14 }}>{lang === 'fr' ? (kind === 'daily' ? ONCE_FR.perDay : ONCE_FR.once) : onceMessage(kindLabel as OnceKind, lang)}</p>
+      <button type="button" className="fl-btn ghost" onClick={() => setOnceOverride(true)} data-testid="ev-once-override"><Icon name="users" size={14} /> {lang === 'fr' ? ONCE_FR.shared : ONCE_SHARED[lang === 'en' ? 1 : 0]}</button>
     </section>
   </>);
 
@@ -290,7 +297,7 @@ export default function GuestEvaluationPage() {
       const done = g.items.filter(q => hasAnswer(answers[q.id])).length; const req = g.items.filter(q => q.is_required).length;
       const reqDone = g.items.filter(q => q.is_required && hasAnswer(answers[q.id])).length; const miss = g.items.some(q => missIds.includes(q.id));
       const state: StationState = miss ? 'miss' : (req ? reqDone === req : done === g.items.length) ? 'done' : done > 0 ? 'part' : 'todo';
-      return { key: g.key, title: L(g.key, g.en), state, done, total: g.items.length, optional: req === 0 };
+      return { key: g.key, title: LS(g.key, g.en), state, done, total: g.items.length, optional: req === 0 };
     }),
   ];
   const N = stations.length;
@@ -298,13 +305,13 @@ export default function GuestEvaluationPage() {
     if (i === 0) { const m = infoMissing(); return m.length ? `${t('missingFields')}\n• ${m.join('\n• ')}` : (!qLoading && programId && !templateId ? t('noTemplate') : ''); }
     const g = grouped[i - 1]; if (!g) return '';
     const miss = g.items.filter(q => q.is_required && !hasAnswer(answers[q.id]));
-    if (miss.length) { setMissIds(m => Array.from(new Set([...m, ...miss.map(q => q.id)]))); return `${t('missingQs')}\n${miss.map(q => `• ${L(q.text_ar, q.text_en)}`).join('\n')}`; }
+    if (miss.length) { setMissIds(m => Array.from(new Set([...m, ...miss.map(q => q.id)]))); return `${t('missingQs')}\n${miss.map(q => `• ${LQ(q)}`).join('\n')}`; }
     return '';
   }
   function go(i: number) { setStepErr(''); setStep(i); setReached(r => Math.max(r, i)); }
   function next() { const err = stepErrors(step); if (err) { setStepErr(err); return; } if (step === 0 && (qLoading || !questions.length)) { setStepErr(qLoading ? t('loading') : t('noTemplate')); return; } go(Math.min(N - 1, step + 1)); }
   function prev() { setStepErr(''); setStep(s => Math.max(0, s - 1)); }
-  const scaleLabel = (q: Q, v: number) => q.kind === 'LIKERT_5' && kind === 'end' ? (lang === 'en' ? LIKERT_EN : LIKERT_AR)[5 - v] : SCALE_LABELS[v]?.[lang === 'en' ? 1 : 0];
+  const scaleLabel = (q: Q, v: number) => q.kind === 'LIKERT_5' && kind === 'end' ? (lang === 'fr' ? LIKERT_FR : lang === 'en' ? LIKERT_EN : LIKERT_AR)[5 - v] : lang === 'fr' ? SCALE_FR[v] : SCALE_LABELS[v]?.[lang === 'en' ? 1 : 0];
 
   return shell(<>
     {lockCard}
@@ -318,13 +325,13 @@ export default function GuestEvaluationPage() {
           {field(t('name'), kind !== 'end', <input value={info.full_name} onChange={e => setInfo({ ...info, full_name: e.target.value })} autoComplete="name" />)}
           {field(t('email'), true, <><input type="email" dir="ltr" placeholder="name@example.com" value={info.email} onChange={e => { setInfo({ ...info, email: e.target.value }); if (dupEmail) setDupEmail(null); }} onBlur={e => void checkEmailEarly(e.target.value)} autoComplete="email" aria-invalid={!!dupEmail} data-testid="ev-email" />{dupEmail && <small className="ev-dup" role="alert" data-testid="ev-dup" style={{ color: '#9A3A2A' }}>⚠️ {kind === 'daily' ? t('dupDaily') : kind === 'end' ? t('dupEnd') : t('dupFinal')}</small>}</>)}
           {field(t('phone'), kind !== 'end', <div className="ev-phone" dir="ltr">
-            <select value={info.country_dial} onChange={e => setInfo({ ...info, country_dial: e.target.value })} aria-label="Country code">{COUNTRIES.map(c => <option key={c[0] + c[1]} value={c[0]}>{c[0]} · {lang === 'en' ? c[2] : c[1]}</option>)}</select>
+            <select value={info.country_dial} onChange={e => setInfo({ ...info, country_dial: e.target.value })} aria-label="Country code">{COUNTRIES.map(c => <option key={c[0] + c[1]} value={c[0]}>{c[0]} · {lang === 'ar' ? c[1] : c[2]}</option>)}</select>
             <input inputMode="numeric" placeholder="5xxxxxxxx" value={info.phone} onChange={e => setInfo({ ...info, phone: e.target.value.replace(/[^\d]/g, '') })} autoComplete="tel-national" />
           </div>)}
           {field(t('nationality'), false, <input value={info.nationality} onChange={e => setInfo({ ...info, nationality: e.target.value })} />)}
           {field(t('gender'), kind !== 'end', <div className="fl-pills">{[['ذكر', t('male')], ['أنثى', t('female')]].map(([v, l]) => <button type="button" key={v} className={`fl-pill ${info.gender === v ? 'on' : ''}`} onClick={() => setInfo({ ...info, gender: v })}><span className="fl-k">{info.gender === v && <Icon name="check" size={12} />}</span>{l}</button>)}</div>)}
           {kind === 'final' && field(t('accommodation'), !link, <select value={info.accommodation_type} onChange={e => setInfo({ ...info, accommodation_type: e.target.value })}>
-            <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'en' ? 'Al-Manar Hotel' : 'فندق المنار'}</option><option value="شقق الإسكان العزيزية">{lang === 'en' ? 'Al-Aziziyah Housing' : 'شقق الإسكان العزيزية'}</option><option value="سكن خاص">{lang === 'en' ? 'Private accommodation' : 'سكن خاص'}</option>
+            <option value="">{t('choose')}</option><option value="فندق المنار">{lang === 'ar' ? 'فندق المنار' : 'Al-Manar Hotel'}</option><option value="شقق الإسكان العزيزية">{lang === 'ar' ? 'شقق الإسكان العزيزية' : 'Al-Aziziyah Housing'}</option><option value="سكن خاص">{lang === 'ar' ? 'سكن خاص' : 'Private accommodation'}</option>
           </select>)}
           {!link && field(t('program'), true, <select data-testid="ev-program" value={programId} onChange={e => setProgramId(e.target.value)}><option value="">{t('choose')}</option>{programs.map(p => <option key={p.id} value={p.id}>{L(p.name_ar, p.name_en)}</option>)}</select>)}
           {!link && kind === 'daily' && field(t('classroom'), true, <select value={classroomId} onChange={e => setClassroomId(e.target.value)}><option value="">{t('choose')}</option>{classrooms.map(c => <option key={c.id} value={c.id}>{c.section_name ? `${c.code} · ${c.section_name}` : c.code}</option>)}</select>)}
@@ -337,12 +344,12 @@ export default function GuestEvaluationPage() {
     )}
 
     {step > 0 && grouped[step - 1] && (() => { const g = grouped[step - 1]; const gi = step - 1; return (
-      <StepCard lang={lang} n={gi + 2} title={L(g.key, g.en)} optional={!g.items.some(q => q.is_required)} hint={`${g.items.length} ${t('questions')}`} id={`sec-${gi}`} miss={!!stepErr}>
+      <StepCard lang={lang} n={gi + 2} title={LS(g.key, g.en)} optional={!g.items.some(q => q.is_required)} hint={`${g.items.length} ${t('questions')}`} id={`sec-${gi}`} miss={!!stepErr}>
         {g.items.map(q => {
           const miss = missIds.includes(q.id); const val = answers[q.id];
           return (
             <div key={q.id} id={`q-${q.id}`} className={`fl-q${miss ? ' miss' : ''}`}>
-              <div className="fl-qt"><span className="fl-qn">{questions.indexOf(q) + 1}</span><span>{L(q.text_ar, q.text_en)}{q.is_required && <span className="fl-req" title={t('required')}> *</span>}</span></div>
+              <div className="fl-qt"><span className="fl-qn">{questions.indexOf(q) + 1}</span><span>{LQ(q)}{q.is_required && <span className="fl-req" title={t('required')}> *</span>}</span></div>
               {lang === 'ar' && q.text_en && <div className="fl-qen" dir="ltr">{q.text_en}</div>}
               {RATING_KINDS.includes(q.kind) && (
                 <div className="fl-scale" style={{ gridTemplateColumns: `repeat(${q.max_value || 5}, minmax(0,1fr))` }} role="radiogroup">
@@ -362,12 +369,12 @@ export default function GuestEvaluationPage() {
               )}
               {['SINGLE_CHOICE', 'YES_NO'].includes(q.kind) && (
                 <div className="fl-pills" role="radiogroup">
-                  {(q.kind === 'YES_NO' ? ['نعم', 'لا'] : q.options).map(o => <button key={o} type="button" role="radio" aria-checked={val === o} className={`fl-pill ${val === o ? 'on' : ''}`} onClick={() => { set(q.id, o); setStepErr(''); }}><span className="fl-k">{val === o && <Icon name="check" size={12} />}</span>{q.kind === 'YES_NO' ? (o === 'نعم' ? t('yes') : t('no')) : o}</button>)}
+                  {(q.kind === 'YES_NO' ? ['نعم', 'لا'] : q.options).map(o => <button key={o} type="button" role="radio" aria-checked={val === o} className={`fl-pill ${val === o ? 'on' : ''}`} onClick={() => { set(q.id, o); setStepErr(''); }}><span className="fl-k">{val === o && <Icon name="check" size={12} />}</span>{q.kind === 'YES_NO' ? (o === 'نعم' ? t('yes') : t('no')) : LO(o)}</button>)}
                 </div>
               )}
               {q.kind === 'MULTI_CHOICE' && (
                 <div className="fl-pills">
-                  {q.options.map(o => { const on = Array.isArray(val) && val.includes(o); return <button key={o} type="button" className={`fl-pill multi ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => { toggleMulti(q.id, o); setMissIds(m => m.filter(i => i !== q.id)); setStepErr(''); }}><span className="fl-k">{on && <Icon name="check" size={12} />}</span>{o}</button>; })}
+                  {q.options.map(o => { const on = Array.isArray(val) && val.includes(o); return <button key={o} type="button" className={`fl-pill multi ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => { toggleMulti(q.id, o); setMissIds(m => m.filter(i => i !== q.id)); setStepErr(''); }}><span className="fl-k">{on && <Icon name="check" size={12} />}</span>{LO(o)}</button>; })}
                 </div>
               )}
               {q.kind === 'SHORT_TEXT' && <input className="fl-text" placeholder={t('writeHere')} value={val || ''} onChange={e => set(q.id, e.target.value)} />}
@@ -380,7 +387,7 @@ export default function GuestEvaluationPage() {
 
     <FlowNav lang={lang} index={step} count={N} onPrev={prev} onNext={next} onSubmit={() => void submit()} saving={saving} first={step === 0} last={N > 1 && step === N - 1}
       submitLabel={t('submit')} error={stepErr || undefined} />
-  </>, { langs: step === 0 });
+  </>, { langs: step === 0 ? langButtons : false });
 }
 
 const CSS = `

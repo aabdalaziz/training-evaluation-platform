@@ -11,21 +11,22 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Icon } from '../../lib/ui/icons';
 
-export type FlowLang = 'ar' | 'en';
+export type FlowLang = 'ar' | 'en' | 'fr'; /* P89: فرنسيّة */
 export type StationState = 'done' | 'part' | 'todo' | 'miss';
 export type Station = { key: string; title: string; hint?: string; state: StationState; done?: number; total?: number; optional?: boolean };
 
 const T = {
-  stepOf: { ar: (i: number, n: number) => `المحور ${i} من ${n}`, en: (i: number, n: number) => `Step ${i} of ${n}` },
-  next: { ar: 'التالي', en: 'Next' }, back: { ar: 'السابق', en: 'Back' }, start: { ar: 'ابدأ', en: 'Start' },
-  submit: { ar: 'إرسال الإجابات', en: 'Submit answers' }, sending: { ar: 'جارٍ الإرسال…', en: 'Submitting…' },
-  journey: { ar: 'محطّات الاستبيان', en: 'Survey stations' }, progress: { ar: 'التقدّم', en: 'Progress' },
-  optional: { ar: 'اختياري', en: 'Optional' }, missing: { ar: 'ينقصه إلزامي', en: 'Required missing' },
+  stepOf: { ar: (i: number, n: number) => `المحور ${i} من ${n}`, en: (i: number, n: number) => `Step ${i} of ${n}`, fr: (i: number, n: number) => `Étape ${i} sur ${n}` },
+  next: { ar: 'التالي', en: 'Next', fr: 'Suivant' }, back: { ar: 'السابق', en: 'Back', fr: 'Précédent' }, start: { ar: 'ابدأ', en: 'Start', fr: 'Commencer' },
+  submit: { ar: 'إرسال الإجابات', en: 'Submit answers', fr: 'Envoyer les réponses' }, sending: { ar: 'جارٍ الإرسال…', en: 'Submitting…', fr: 'Envoi…' },
+  journey: { ar: 'محطّات الاستبيان', en: 'Survey stations', fr: 'Étapes du questionnaire' }, progress: { ar: 'التقدّم', en: 'Progress', fr: 'Progression' },
+  optional: { ar: 'اختياري', en: 'Optional', fr: 'Facultatif' }, missing: { ar: 'ينقصه إلزامي', en: 'Required missing', fr: 'Obligatoire manquant' },
 };
+const LANG_NAME: Record<FlowLang, string> = { ar: 'العربية', en: 'English', fr: 'Français' };
 
 export function FlowShell({ lang, kicker, title, sub, line, langs, onLang, children, testid }: {
   lang: FlowLang; kicker: ReactNode; title: ReactNode; sub?: ReactNode; line?: ReactNode;
-  langs?: boolean; onLang?: (l: FlowLang) => void; children: ReactNode; testid?: string;
+  langs?: boolean | FlowLang[]; /* P89: true = عربي/إنجليزي · مصفوفة = الأزرار المطلوبة (مثل ['fr','ar','en']) */ onLang?: ((l: FlowLang) => void) | ((l: 'ar' | 'en') => void); /* P89: الصفحات القديمة ذات ar/en تمرّ بلا تغيير (لا تعرض زرّ fr) */ children: ReactNode; testid?: string;
 }) {
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
   return (
@@ -40,8 +41,7 @@ export function FlowShell({ lang, kicker, title, sub, line, langs, onLang, child
           {line && <div className="fl-line">{line}</div>}
           {langs && onLang && (
             <div className="fl-langs" role="group" aria-label="Language">
-              <button type="button" className={lang === 'ar' ? 'on' : ''} onClick={() => onLang('ar')}>العربية</button>
-              <button type="button" className={lang === 'en' ? 'on' : ''} onClick={() => onLang('en')}>English</button>
+              {(Array.isArray(langs) ? langs : (['ar', 'en'] as FlowLang[])).map(l => <button key={l} type="button" className={lang === l ? 'on' : ''} onClick={() => (onLang as (x: FlowLang) => void)(l)} data-testid={`fl-lang-${l}`}>{LANG_NAME[l]}</button>)}
             </div>
           )}
         </header>

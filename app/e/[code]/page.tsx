@@ -3,12 +3,13 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { KIND_PATH, normalizeCode, normalizeLinkLang, type LinkKind } from '../../../lib/evaluation/links';
+import { FR_PROGRAMS } from '../../../lib/evaluation/fr'; /* P89 */
 
 export const dynamic = 'force-dynamic';
 
 export default async function ShortEvalLink({ params }: { params: { code: string } }) {
   const code = normalizeCode(params.code); let kind: LinkKind = 'DAILY'; let lang = '';
   const U = process.env.NEXT_PUBLIC_SUPABASE_URL, S = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (code && U && S) { try { const { data } = await createClient(U, S).from('evaluation_links').select('kind,lang').eq('code', code).maybeSingle(); if (data?.kind) kind = String((data as any).kind).toUpperCase() as LinkKind; const l = normalizeLinkLang((data as any)?.lang); if (l !== 'auto') lang = l; } catch { /* يُعرض الخطأ في صفحة الاستبيان */ } }
+  if (code && U && S) { try { const { data } = await createClient(U, S).from('evaluation_links').select('kind,lang,program_id').eq('code', code).maybeSingle(); if (data?.kind) kind = String((data as any).kind).toUpperCase() as LinkKind; const l = normalizeLinkLang((data as any)?.lang); if (l !== 'auto' && !(l === 'en' && FR_PROGRAMS.includes(String((data as any)?.program_id || '')))) lang = l; /* P89: برنامج فرنسيّ — لا نفرض الإنجليزيّة؛ المتصفّح يحسم (عربيّ/فرنسيّ) */ } catch { /* يُعرض الخطأ في صفحة الاستبيان */ } }
   redirect(`/evaluate/${KIND_PATH[kind] || 'daily'}?link=${encodeURIComponent(code || params.code || '')}${lang ? `&lang=${lang}` : ''}`);   // P49-ب: لغة صريحة من الرابط؛ auto تُحسم في المتصفح
 }
