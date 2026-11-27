@@ -1,7 +1,7 @@
 'use client';
 // © 2026 Dr. Ahmed Mohamed Abdelaziz Badawi — All rights reserved. See COPYRIGHT.md
 /**
- * أبواب أَثَر الأربعة على الرئيسية (هوية v1.2 · 2026-11-23): مِعيار · اقْرَأْ · البرامج والدبلومات · تحقّق
+ * أبواب أَثَر الأربعة على الرئيسية (هوية v1.2 · 2026-11-23 · P86-ب 2026-11-27): مِعيار · اقْرَأْ · البرامج والدبلومات · بَيان — و«تحقّق» ضمن الخدمات (لا تكرار)
  *  كل باب بطاقة تنقلب: الوجه = ما هو، الظهر = شرط الدخول (مجّاني / يتطلّب تحديد المستوى / اشتراك) + الدخول.
  *  اقْرَأْ يحمل نقطة «جديد» الذهبية؛ شرطه يظهر بوضوح (تحديد المستوى أو حلقة مجّانية) — لا مفاجآت بعد النقر.
  */
@@ -15,7 +15,7 @@ export const HOME_DOORS: Door[] = [
   { id: 'miaar', href: '/miaar', icon: 'target', title: ['مِعيار', 'Miaar'], what: ['قيّم نفسك — 3 دقائق', 'Assess yourself — 3 minutes'], cond: ['مجّاني · تحصل على مستواك بلونه وشهادة مستوى قابلة للتحقّق. التقييم المشهود (بشاهد) يُفتح للجهات وبالاشتراك.', 'Free · get your level in its colour and a verifiable level certificate. Witnessed assessment opens for organisations and by subscription.'], cta: ['ابدأ التقييم', 'Start the assessment'], grad: 'linear-gradient(135deg,#E8795C,#D4614A)', ink: '#fff', free: true, testId: 'door-miaar' },
   { id: 'iqra', href: '/iqra/start', icon: 'book', title: ['اقْرَأْ', 'Iqra'], what: ['تعلّم العربية على مستواك', 'Learn Arabic at your level'], cond: ['الدخول حاليًّا بتصريح من إدارة أَثَر إلى حين إطلاق الاشتراكات · جرّب دقيقتين مجّانًا ثم اطلب تصريحك، ويُشترط تحديد المستوى في مِعيار.', 'Access is currently by permit from the Athar team until subscriptions launch · try two minutes free, then request your permit; a Miaar level is required.'], cta: ['جرّب دقيقتين', 'Try two minutes'] /* P79 */, grad: 'linear-gradient(135deg,#D9A866,#E8795C)', ink: '#22101F', isNew: true, testId: 'door-iqra' },
   { id: 'programs', href: '/programs', icon: 'star', title: ['البرامج والدبلومات', 'Programs & diplomas'], what: ['مسارات موثّقة، شهادة لكل برنامج', 'Documented paths, a certificate per program'], cond: ['التسجيل مفتوح للأفراد والجهات · الدبلوم مسار برامج متوائمة: كل برنامج تُكمله تحمل شهادته معك حتى لو توقّفت في منتصف الطريق.', 'Open to individuals and organisations · a diploma is a path of twinned programs: every program you complete gives you its certificate, even if you pause midway.'], cta: ['تصفّح البرامج', 'Browse programs'], grad: 'linear-gradient(135deg,#D4614A,#6A3350)', ink: '#F6EBE0', testId: 'door-programs' },
-  { id: 'verify', href: '/verify', icon: 'shield', title: ['تحقّق', 'Verify'], what: ['تحقّق من أي شهادة أو اعتماد بلمسة', 'Verify any certificate or credential in one tap'], cond: ['مجّاني وبلا دخول · امسح رمز QR أو أدخل رقم الشهادة؛ تظهر الحالة والتوقيع والختم.', 'Free, no sign-in · scan the QR or enter the certificate number; status, signature and seal appear.'], cta: ['تحقّق الآن', 'Verify now'], grad: 'linear-gradient(135deg,#6A3350,#3A1F36)', ink: '#F6EBE0', free: true, testId: 'door-verify' },
+  { id: 'bayan', href: '/kids', icon: 'kids', title: ['بَيان — للأطفال', 'Bayan — for kids'], what: ['العربيّة لأطفال ٤–٩ سنوات: لغةٌ تُحَبّ… وأثرٌ يبقى', 'Arabic for ages 4–9: a language to love'], cond: ['جلسة تجريبيّة مجّانيّة (٢٠ دقيقة، بصوت الشاشة) للمسار ٤–٦ سنوات · مساران: أطفال عرب وغير ناطقين · مستويات بَذرة → بُرعم → غُصن → شجرة · لوليّ الأمر لوحة متابعة ودليل.', 'Free 20-minute demo session (sound on) for ages 4–6 · two tracks: Arab and non-Arabic-speaking children · levels Seed → Bud → Branch → Tree · parent dashboard and guide.'], cta: ['جرّب جلسة مجّانًا', 'Try a free session'], grad: 'linear-gradient(135deg,#6A3350,#3A1F36)', ink: '#F6EBE0', free: true, testId: 'door-bayan' },
 ];
 
 function DoorCard({ d, lang, i }: { d: Door; lang: Lang; i: number }) {
@@ -48,7 +48,7 @@ export default function HomeDoors({ lang }: { lang: Lang }) {
     <section className="pt-sec hd" id="doors" data-testid="home-doors">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="pt-wrap">
-        <div className="hd-head"><span className="pt-kicker"><Icon name="compass" size={14} /> {ar ? 'أبواب أَثَر' : 'The doors of Athar'}</span><h2>{ar ? 'من أين تبدأ؟ أربعة أبواب، وكل باب يخبرك شرطه قبل أن تطرقه' : 'Where to begin? Four doors — each tells you its condition before you knock'}</h2></div>
+        <div className="hd-head"><span className="pt-kicker"><Icon name="compass" size={14} /> {ar ? 'أبواب أَثَر' : 'The doors of Athar'}</span><h2>{ar ? 'من أين تبدأ؟ أربعة أبواب للتعلّم، وكل باب يخبرك شرطه قبل أن تطرقه' : 'Where to begin? Four learning doors — each tells you its condition before you knock'}</h2></div>
         <ul className="hd-grid">{HOME_DOORS.map((d, i) => <DoorCard key={d.id} d={d} lang={lang} i={i} />)}</ul>
       </div>
     </section>

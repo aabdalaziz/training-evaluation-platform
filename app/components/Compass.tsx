@@ -126,36 +126,41 @@ export function TourVeil({ lang }: { lang: Lang }) {
 }
 
 /* ───────────────────────── الخدمات السريعة ───────────────────────── */
-export type QuickService = { key: string; href: string; icon: string; ar: string; en: string; hint_ar: string; hint_en: string; tone: 'coral' | 'sea' | 'sand' | 'plum' };
+export type QuickService = { key: string; href: string; icon: string; ar: string; en: string; hint_ar: string; hint_en: string; tone: 'coral' | 'sea' | 'sand' | 'plum'; group: 'practice' | 'pro' | 'account' };
+/* P86-ب «الرئيسة بلا تكرار»: الأبواب الأربعة (مِعيار · اقْرَأْ · البرامج · بَيان) لها بطاقاتها الكبيرة، وبوّابة الدخول لها شريطها —
+   فلا تتكرّر هنا. الخدمات 9 في ثلاث مجموعات مسمّاة (3 × 3). */
+export const SERVICE_GROUPS: { key: QuickService['group']; icon: string; ar: string; en: string; sub_ar: string; sub_en: string }[] = [
+  { key: 'practice', icon: 'play', ar: 'تدرّب وشارك', en: 'Practise & take part', sub_ar: 'مواقف حقيقيّة · جلسات حيّة · أقران', sub_en: 'Real situations · live sessions · peers' },
+  { key: 'pro', icon: 'kit', ar: 'للمدرّبين والجهات', en: 'For trainers & organisations', sub_ar: 'حقائب · استشارات · تحقّق', sub_en: 'Kits · consulting · verification' },
+  { key: 'account', icon: 'question', ar: 'حسابك والدعم', en: 'Your account & support', sub_ar: 'رسوم · مساعدة · تواصل', sub_en: 'Fees · help · contact' },
+];
 export const QUICK_SERVICES: QuickService[] = [
-  /* P86: أيقونة لكلّ خدمة (15 = 3 صفوف × 5) — الصفّ الأوّل «ابدأ»: بوّابة الدخول ثمّ ما يبدأ به المستفيد · الثاني «الخدمات» · الثالث «التحقّق والدعم» */
-  { key: 'login', href: '/login', icon: 'door', ar: 'بوّابة الدخول', en: 'Sign-in gate', hint_ar: 'متعلّم · جهة · خبير · طاقم', hint_en: 'Learner · org · expert · staff', tone: 'plum' },
-  { key: 'programs', href: '/programs', icon: 'book', ar: 'سجّل في برنامج', en: 'Enrol in a program', hint_ar: 'البرامج المفتوحة الآن', hint_en: 'Open programs now', tone: 'coral' },
-  { key: 'bayan', href: '/kids', icon: 'kids', ar: 'بَيان — للأطفال', en: 'Bayan — for kids', hint_ar: 'العربيّة لأطفال ٤–٩ سنوات', hint_en: 'Arabic for ages 4–9', tone: 'sand' },
-  { key: 'iqra', href: '/iqra/start', icon: 'school', ar: 'تعلّم — اقْرَأْ', en: 'Learn — Iqra', hint_ar: 'حلقة مجّانية على مستواك', hint_en: 'A free lesson at your level', tone: 'sea' },
-  { key: 'miaar', href: '/miaar', icon: 'scale', ar: 'قيّم مستواك — مِعيار', en: 'Assess your level — Miaar', hint_ar: '3 دقائق · بلا رسوم', hint_en: '3 minutes · free', tone: 'plum' },
-  { key: 'resources', href: '/resources', icon: 'kit', ar: 'مستودع الحقائب', en: 'Resource kits', hint_ar: 'حقائب تدريبيّة وأدوات جاهزة', hint_en: 'Training kits and ready tools', tone: 'coral' },
-  { key: 'sessions', href: '/live', icon: 'laptop', ar: 'جلسات اليوم', en: "Today's sessions", hint_ar: 'المباشر والقادم', hint_en: 'Live and upcoming', tone: 'sea' },
-  { key: 'sim', href: '/sim', icon: 'play', ar: 'تدرّب بالمحاكاة', en: 'Simulation training', hint_ar: 'موقف حقيقيّ في 3 دقائق', hint_en: 'A real situation in 3 min', tone: 'sand' },
-  { key: 'consulting', href: '/consulting', icon: 'chat', ar: 'اطلب استشارة', en: 'Request consulting', hint_ar: 'من الطلب إلى عرض السعر', hint_en: 'From request to quote', tone: 'plum' },
-  { key: 'org', href: '/org', icon: 'executive', ar: 'بوّابة الجهات', en: 'Organizations portal', hint_ar: 'منسوبوكم وأثر برامجكم', hint_en: 'Your people and impact', tone: 'coral' },
-  { key: 'verify', href: '/verify', icon: 'shield', ar: 'تحقّق من شهادة', en: 'Verify a certificate', hint_ar: 'رمز أو QR — نتيجة فورية', hint_en: 'Code or QR — instant', tone: 'sea' },
-  { key: 'pay', href: '/pay', icon: 'doc', ar: 'الرسوم والفواتير', en: 'Fees & invoices', hint_ar: 'ادفع أو حمّل فاتورتك', hint_en: 'Pay or download', tone: 'sand' },
-  { key: 'councils', href: '/councils', icon: 'circle_users', ar: 'مجالس الأقران', en: 'Peer councils', hint_ar: 'مجلس حول موقف حقيقيّ', hint_en: 'A council around a real case', tone: 'plum' },
-  { key: 'help', href: '/help', icon: 'question', ar: 'المساعدة', en: 'Help', hint_ar: 'إجابات خطوة بخطوة', hint_en: 'Step-by-step answers', tone: 'coral' },
-  { key: 'contact', href: '/contact', icon: 'mail', ar: 'تواصل معنا', en: 'Contact us', hint_ar: 'بريد · هاتف · موقع', hint_en: 'Email · phone · location', tone: 'sea' },
+  { key: 'sim', href: '/sim', icon: 'play', ar: 'تدرّب بالمحاكاة', en: 'Simulation training', hint_ar: 'موقف حقيقيّ في 3 دقائق', hint_en: 'A real situation in 3 min', tone: 'coral', group: 'practice' },
+  { key: 'sessions', href: '/live', icon: 'laptop', ar: 'جلسات اليوم', en: "Today's sessions", hint_ar: 'المباشر والقادم', hint_en: 'Live and upcoming', tone: 'sea', group: 'practice' },
+  { key: 'councils', href: '/councils', icon: 'circle_users', ar: 'مجالس الأقران', en: 'Peer councils', hint_ar: 'مجلس حول موقف حقيقيّ', hint_en: 'A council around a real case', tone: 'plum', group: 'practice' },
+  { key: 'resources', href: '/resources', icon: 'kit', ar: 'مستودع الحقائب', en: 'Resource kits', hint_ar: 'حقائب تدريبيّة وأدوات جاهزة', hint_en: 'Training kits and ready tools', tone: 'coral', group: 'pro' },
+  { key: 'consulting', href: '/consulting', icon: 'chat', ar: 'اطلب استشارة', en: 'Request consulting', hint_ar: 'من الطلب إلى عرض السعر', hint_en: 'From request to quote', tone: 'plum', group: 'pro' },
+  { key: 'verify', href: '/verify', icon: 'shield', ar: 'تحقّق من شهادة', en: 'Verify a certificate', hint_ar: 'رمز أو QR — نتيجة فورية', hint_en: 'Code or QR — instant', tone: 'sea', group: 'pro' },
+  { key: 'pay', href: '/pay', icon: 'doc', ar: 'الرسوم والفواتير', en: 'Fees & invoices', hint_ar: 'ادفع أو حمّل فاتورتك', hint_en: 'Pay or download', tone: 'sand', group: 'account' },
+  { key: 'help', href: '/help', icon: 'question', ar: 'المساعدة', en: 'Help', hint_ar: 'إجابات خطوة بخطوة', hint_en: 'Step-by-step answers', tone: 'coral', group: 'account' },
+  { key: 'contact', href: '/contact', icon: 'mail', ar: 'تواصل معنا', en: 'Contact us', hint_ar: 'بريد · هاتف · موقع', hint_en: 'Email · phone · location', tone: 'sea', group: 'account' },
 ];
 
 export function QuickServices({ lang }: { lang: Lang }) {
   const ar = lang === 'ar';
   return (
     <div className="cp-quick" data-testid="cp-quick">
-      {QUICK_SERVICES.map((s) => (
-        <Link key={s.key} href={s.href} className={`cp-q ${s.tone}`} data-testid={`cp-q-${s.key}`}>
-          <i><Icon name={s.icon as any} size={20} /></i>
-          <b>{ar ? s.ar : s.en}</b>
-          <small>{ar ? s.hint_ar : s.hint_en}</small>
-        </Link>
+      {SERVICE_GROUPS.map((g) => (
+        <div key={g.key} className={`cp-group ${g.key}`} data-testid={`cp-group-${g.key}`}>
+          <div className="cp-ghead"><i><Icon name={g.icon as any} size={16} /></i><div><b>{ar ? g.ar : g.en}</b><small>{ar ? g.sub_ar : g.sub_en}</small></div></div>
+          {QUICK_SERVICES.filter((s) => s.group === g.key).map((s) => (
+            <Link key={s.key} href={s.href} className={`cp-q ${s.tone}`} data-testid={`cp-q-${s.key}`}>
+              <i><Icon name={s.icon as any} size={20} /></i>
+              <span><b>{ar ? s.ar : s.en}</b><small>{ar ? s.hint_ar : s.hint_en}</small></span>
+              <em aria-hidden="true"><Icon name="arrow" size={14} /></em>
+            </Link>
+          ))}
+        </div>
       ))}
     </div>
   );
@@ -172,9 +177,10 @@ export const WHERE_TO = [
 export function WhereTo({ lang }: { lang: Lang }) {
   const ar = lang === 'ar';
   return (
-    <div className="cp-where" data-testid="cp-where">
-      <span className="cp-whereq"><Icon name="compass" size={16} /> {ar ? 'من أنت؟ — بابك بنقرة' : 'Who are you? — your door in one click'}</span>
+    <div className="cp-where" data-testid="cp-where" id="gate">
+      <span className="cp-whereq"><i><Icon name="door" size={18} /></i><span><b>{ar ? 'بوّابة الدخول' : 'Sign-in gate'}</b><small>{ar ? 'من أنت؟ — بابك بنقرة' : 'Who are you? — your door in one click'}</small></span></span>
       {WHERE_TO.map((w) => <Link key={w.key} href={w.href} className="cp-w" data-testid={`cp-w-${w.key}`}><Icon name={w.icon as any} size={16} /><b>{ar ? w.ar : w.en}</b><small>{ar ? w.sub_ar : w.sub_en}</small></Link>)}
+      <Link href="/login" className="cp-login" data-testid="cp-login"><Icon name="login" size={16} /> {ar ? 'تسجيل الدخول' : 'Sign in'}</Link>
     </div>
   );
 }
@@ -189,6 +195,18 @@ export default function CompassSection({ lang }: { lang: Lang }) {
           <NowStrip lang={lang} />
           <TourButton lang={lang} />
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* P86-ب: الخدمات وبوّابة الدخول — قسم مستقلّ يأتي بعد الأبواب الأربعة (الأبواب = ابدأ · الخدمات = كلّ ما عدا ذلك · البوّابة = حسابك) */
+export function ServicesGate({ lang }: { lang: Lang }) {
+  const ar = lang === 'ar';
+  return (
+    <section className="pt-sec cp-svc" id="services-gate" aria-label={ar ? 'الخدمات وبوّابة الدخول' : 'Services and sign-in gate'} data-testid="cp-services">
+      <div className="pt-wrap">
+        <div className="cp-svchead"><span className="pt-kicker"><Icon name="compass" size={14} /> {ar ? 'كلّ الخدمات' : 'All services'}</span><h2>{ar ? 'وما وراء الأبواب: تسع خدمات في ثلاث مجموعات' : 'Beyond the doors: nine services in three groups'}</h2></div>
         <QuickServices lang={lang} />
         <WhereTo lang={lang} />
       </div>
@@ -207,16 +225,23 @@ export const COMPASS_CSS = `
 .cp-now.compact{gap:6px;padding:5px 10px;border-radius:999px;text-decoration:none;min-height:0;color:#3A1F36}.cp-now.compact b{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums}.cp-now.compact small{font-size:11px;color:#8E7F8A;font-weight:700}
 .cp-tourbtn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;background:#3A1F36;color:#F6EBE0;font-weight:900;font-size:14px;padding:11px 16px;border-radius:999px;box-shadow:0 8px 24px rgba(58,31,54,.22)}
 .cp-tourbtn:hover{background:#4A2946}.cp-tourbtn.compact{padding:6px 10px;font-size:13px;box-shadow:none;background:#F6EBE0;color:#3A1F36;border:1px solid #EADFD6}.cp-tourbtn.compact:hover{background:#F1D9A8}
-.cp-quick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-.cp-q{display:grid;grid-template-rows:auto auto auto;gap:6px;text-decoration:none;background:#FBF4EE;border:1px solid #EADFD6;border-radius:16px;padding:14px 14px 12px;color:#2A1626;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
-.cp-q:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(58,31,54,.12)}
-.cp-q i{display:inline-flex;width:40px;height:40px;border-radius:12px;align-items:center;justify-content:center;color:#fff}
-.cp-q b{font-size:14px;font-weight:900}.cp-q small{font-size:12px;color:#5C4858}
+.cp-svc{padding:26px 0 8px;position:relative;z-index:1}
+.cp-svchead h2{font-size:clamp(18px,2.2vw,24px);color:#3A1F36;margin:6px 0 16px}
+.cp-quick{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.cp-group{display:grid;gap:8px;align-content:start;background:#FBF4EE;border:1px solid #EADFD6;border-radius:20px;padding:12px}
+.cp-ghead{display:flex;align-items:center;gap:10px;padding:4px 6px 8px;border-bottom:1px dashed #EADFD6;margin-bottom:2px}
+.cp-ghead i{display:inline-flex;width:30px;height:30px;border-radius:10px;align-items:center;justify-content:center;background:#3A1F36;color:#fff;flex:none}
+.cp-ghead b{display:block;font-size:14.5px;font-weight:900;color:#3A1F36}.cp-ghead small{font-size:12px;color:#8E7F8A}
+.cp-q{display:grid;grid-template-columns:40px 1fr 16px;align-items:center;gap:10px;text-decoration:none;background:#fff;border:1px solid #EADFD6;border-radius:14px;padding:10px 12px;color:#2A1626;transition:transform .15s,box-shadow .15s,border-color .15s;position:relative;overflow:hidden;min-height:60px}
+.cp-q:hover{transform:translateX(-2px);box-shadow:0 10px 24px rgba(58,31,54,.10);border-color:#D4614A}
+[dir=ltr] .cp-q:hover{transform:translateX(2px)}
+.cp-q i{display:inline-flex;width:40px;height:40px;border-radius:12px;align-items:center;justify-content:center;color:#fff;flex:none}
+.cp-q span{display:grid;gap:2px;min-width:0}.cp-q b{font-size:14px;font-weight:900}.cp-q small{font-size:12px;color:#5C4858}
+.cp-q em{color:#C9B8C2;display:inline-flex;transform:scaleX(-1)}[dir=ltr] .cp-q em{transform:none}.cp-q:hover em{color:#D4614A}
 .cp-q.coral i{background:#D4614A}.cp-q.sea i{background:#5EA8A0}.cp-q.sand i{background:#D9A866}.cp-q.plum i{background:#6A3350}
-.cp-q::after{content:"";position:absolute;inset:auto -20px -20px auto;width:70px;height:70px;border-radius:50%;opacity:.12}
-.cp-q.coral::after{background:#D4614A}.cp-q.sea::after{background:#5EA8A0}.cp-q.sand::after{background:#D9A866}.cp-q.plum::after{background:#6A3350}
 .cp-where{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding:10px 14px;border-radius:16px;background:#3A1F36;color:#F6EBE0}
-.cp-whereq{display:inline-flex;align-items:center;gap:8px;font-weight:900;font-size:14px;margin-inline-end:6px}
+.cp-whereq{display:inline-flex;align-items:center;gap:10px;margin-inline-end:auto}.cp-whereq>i{display:inline-flex;width:38px;height:38px;border-radius:12px;align-items:center;justify-content:center;background:#D4614A;color:#fff;flex:none}.cp-whereq>span{display:grid}.cp-whereq b{font-size:15px;font-weight:900}.cp-whereq small{font-size:12px;color:#F1D9A8}
+.cp-login{display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:#D4614A;color:#fff;font-weight:900;font-size:14px;border-radius:999px;padding:10px 16px;border:1px solid rgba(255,255,255,.2)}.cp-login:hover{background:#E8795C}
 .cp-w{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-decoration:none;color:#F6EBE0;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:8px 12px}
 .cp-w:hover{background:rgba(255,255,255,.16)}.cp-w svg{grid-row:1/3}.cp-w b{font-size:14px;font-weight:900}.cp-w small{font-size:11px;color:#F1D9A8;grid-column:2}
 .cp-tour{position:fixed;inset:0;z-index:120;background:rgba(34,16,31,.78);backdrop-filter:blur(6px);display:grid;place-items:center;padding:18px}
@@ -227,6 +252,7 @@ export const COMPASS_CSS = `
 .cp-unmute{position:absolute;inset-inline-start:14px;bottom:56px;border:0;cursor:pointer;background:#D9A866;color:#22101F;font-weight:900;padding:9px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
 .cp-muted{font-size:12px;color:#F1D9A8}
 @media(max-width:900px){.cp-now.compact small,.cp-tourbtn.compact span{display:none}}
-@media(max-width:1000px){.cp-quick{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:640px){.cp-quick{grid-template-columns:repeat(2,1fr)}.cp-clock b{font-size:24px}.cp-now{gap:10px}.cp-w small{display:none}}
+@media(max-width:1000px){.cp-quick{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.cp-quick{grid-template-columns:1fr}}
+@media(max-width:640px){.cp-clock b{font-size:24px}.cp-now{gap:10px}.cp-w small{display:none}.cp-whereq{width:100%;margin-inline-end:0}.cp-login{width:100%;justify-content:center}}
 `;

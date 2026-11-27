@@ -18,8 +18,8 @@ import { useOutbox, valueMoment } from './components/Pocket';
 import { Channel, ReadAloud, VoiceButton } from './components/Channel';
 import { SimplerText } from './components/Inclusion';
 import { OnAirLine } from './components/OnAir';
-import CompassSection from './components/Compass'; /* هـ-5 «بوصلة أَثَر»: الوقت والتاريخ · الخدمات الدائمة · من أنت؟ · الجولة */
-import HomeDoors from './components/HomeDoors'; /* هوية v1.2: أبواب أَثَر الأربعة (مِعيار · اقْرَأْ · البرامج · تحقّق) */
+import CompassSection, { ServicesGate } from './components/Compass'; /* هـ-5 «بوصلة أَثَر»: الوقت والتاريخ · الخدمات الدائمة · من أنت؟ · الجولة */
+import HomeDoors from './components/HomeDoors'; /* هوية v1.2: أبواب أَثَر الأربعة (مِعيار · اقْرَأْ · البرامج · بَيان) */
 import { Horizon } from '../lib/ui/motion'; /* أفق الأثر في الترويسة */
 
 export default function HomePage() { return <PortalShell><Home /></PortalShell>; }
@@ -51,6 +51,7 @@ function Home() {
       <Hero feed={feed} now={now} lang={lang} counters={{ open: openCount, sessions: upcoming, ...counters }} />
       <CompassSection lang={lang} />
       <HomeDoors lang={lang} />
+      <ServicesGate lang={lang} /> {/* P86-ب: الخدمات التسع في ثلاث مجموعات + بوّابة الدخول — بعد الأبواب، بلا تكرار */}
       <DailyCase lang={lang} tok={tok} />
       <Advisor lang={lang} tok={tok} />
       <Memory lang={lang} />

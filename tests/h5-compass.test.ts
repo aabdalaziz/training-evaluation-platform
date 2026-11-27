@@ -3,16 +3,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { QUICK_SERVICES, WHERE_TO, nowParts, TOUR_SRC, TOUR_POSTER, TOUR_SECONDS, RIYADH_TZ } from '../app/components/Compass';
+import { QUICK_SERVICES, SERVICE_GROUPS, WHERE_TO, nowParts, TOUR_SRC, TOUR_POSTER, TOUR_SECONDS, RIYADH_TZ } from '../app/components/Compass';
 
 const ROOT = path.join(__dirname, '..');
 const read = (f: string) => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
 test('هـ-5: كل خدمة سريعة وكل باب «من أنت؟» يشير إلى مسار موجود فعلًا', () => {
-  assert.equal(QUICK_SERVICES.length, 15, 'P86: 15 خدمة = 3 صفوف × 5');
-  assert.equal(new Set(QUICK_SERVICES.map((s) => s.key)).size, 15);
-  for (const k of ['login', 'bayan', 'resources', 'sim', 'councils']) assert.ok(QUICK_SERVICES.some((s) => s.key === k), `P86: الخدمة ${k} لها أيقونة على الرئيسة`);
-  assert.equal(QUICK_SERVICES[0].key, 'login', 'P86: بوّابة الدخول أوّل البلاطات');
+  assert.equal(QUICK_SERVICES.length, 9, 'P86-ب: 9 خدمات = 3 مجموعات × 3');
+  assert.equal(new Set(QUICK_SERVICES.map((s) => s.key)).size, 9);
+  for (const g of SERVICE_GROUPS) assert.equal(QUICK_SERVICES.filter((s) => s.group === g.key).length, 3, `المجموعة ${g.key} فيها 3`);
+  /* لا تكرار: ما في الأبواب الأربعة (مِعيار · اقْرَأْ · البرامج · بَيان) وما في بوّابة الدخول (متعلّم · جهة · خبير · طاقم · دخول) لا يظهر في الخدمات */
+  for (const k of ['miaar', 'iqra', 'programs', 'bayan', 'login', 'org']) assert.ok(!QUICK_SERVICES.some((s) => s.key === k), `P86-ب: ${k} مكرَّر`);
+  for (const h of ['/miaar', '/iqra/start', '/programs', '/kids', '/login', '/org', '/me']) assert.ok(!QUICK_SERVICES.some((s) => s.href === h), `P86-ب: المسار ${h} مكرَّر`);
   for (const s of [...QUICK_SERVICES, ...WHERE_TO]) {
     const seg = s.href.replace(/^\//, '').split('#')[0];
     const dir = path.join(ROOT, 'app', seg);
@@ -43,8 +45,9 @@ test('هـ-5: الصدفة تحمل الجولة والساعة في كل صفح
   const shell = read('app/components/PortalShell.tsx');
   assert.match(shell, /<TourVeil lang=\{lang\} \/>/); assert.match(shell, /<NowStrip lang=\{lang\} compact \/>/); assert.match(shell, /<TourButton lang=\{lang\} compact \/>/); assert.match(shell, /COMPASS_CSS/);
   const home = read('app/page.tsx');
-  const i = home.indexOf('<CompassSection lang={lang} />'); const j = home.indexOf('<HomeDoors lang={lang} />');
-  assert.ok(i > 0 && j > i, 'البوصلة قبل الأبواب');
+  const i = home.indexOf('<CompassSection lang={lang} />'); const j = home.indexOf('<HomeDoors lang={lang} />'); const k = home.indexOf('<ServicesGate lang={lang} />');
+  assert.ok(i > 0 && j > i && k > j, 'P86-ب: البوصلة (الوقت والجولة) ثمّ الأبواب ثمّ الخدمات وبوّابة الدخول');
+  const doors = read('app/components/HomeDoors.tsx'); assert.ok(doors.includes("id: 'bayan', href: '/kids'") && !doors.includes("id: 'verify'"), 'P86-ب: باب بَيان بدل باب تحقّق (تحقّق في الخدمات)');
   const c = read('app/components/Compass.tsx');
   assert.match(c, /localStorage\.getItem\(TOUR_KEY\)/); // مرّة لكل جهاز
   assert.match(c, /prefers-reduced-motion/);
