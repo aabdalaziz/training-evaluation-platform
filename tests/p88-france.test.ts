@@ -47,3 +47,9 @@ test('P88: الصفحة /france موجودة وتستخدم me_portal والرم
   const me = read('app/me/page.tsx'); assert.ok(me.includes('FRANCE.programId') && me.includes('href="/france"') && me.includes('data-testid="me-france"'));
   assert.ok(/^  phone: '/m.test(read('lib/ui/icons.tsx')), 'أيقونة الهاتف');
 });
+
+test('P88-ب: /france بلا شريط عربيّ فوقها — مستثناة من GlobalNavigation وGuide/نادِ، ولها عنوان مشاركة فرنسيّ', () => {
+  assert.ok(/PORTAL_PREFIXES = \[[^\]]*'\/france'/.test(read('app/components/GlobalNavigation.tsx')), 'GlobalNavigation');
+  assert.ok(/HIDE_ON = \[[^\]]*'\/france'/.test(read('app/components/Guide.tsx')), 'Guide');
+  const lay = read('app/france/layout.tsx'); assert.ok(lay.includes("title: 'Programme d’immersion en arabe") && lay.includes("locale: 'fr_FR'"));
+});
