@@ -56,10 +56,10 @@ export function CheckinForm({ token }: { token: string }) {
   const [lang, setLangState] = useState<Lang>('ar');
   const setLang = (l: Lang) => { setLangState(l); try { localStorage.setItem(LS_LANG, l); } catch { /* ignore */ } };
   const t = T[lang];
+  const [info, setInfo] = useState<Info | null>(null);
   const fr = !!info && isFranceSession({ token, title: info.title, program_name: info.program_name, program_name_en: info.program_name_en }); /* P92 */
   const langs: Lang[] = fr ? ['fr', 'en', 'ar'] : ['ar', 'en'];
   const voiceLang = lang === 'ar' ? 'ar-SA' : lang === 'fr' ? 'fr-FR' : 'en-GB';
-  const [info, setInfo] = useState<Info | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'none' | 'error'>('loading');
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [saving, setSaving] = useState(false);
