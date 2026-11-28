@@ -21,7 +21,27 @@ export type HarfActivity =
   | { kind: 'hear'; items: SoundItem[] }
   | { kind: 'name'; letterRe: string; fallback: string }
   /** نلوّن (الأسبوع 3 ب): «لَوِّنِ الحرف» — كلمة كبيرة حرفًا حرفًا، الطفل يلمس كلّ حرف يوم فيتلوّن */
-  | { kind: 'color'; words: { w: string; audio: string }[]; prompt: Said; done: Said };
+  | { kind: 'color'; words: { w: string; audio: string }[]; prompt: Said; done: Said }
+  /** ضَعِ النُّقْطَة (الأسبوع 7 ب): الأختان — حرف اليوم (glyph الجلسة) وأخته بلا نقطة `from`؛ لمس فوق الحرف يضع النقطة ويُسمَع `toSound`، ولمسها يزيلها ويُسمَع `fromSound`؛ `rounds` ذهابًا وإيابًا ثمّ `done` */
+  | { kind: 'pair'; from: GlyphKey; prompt: Said; fromSound: string; toSound: string; rounds: number; done: Said };
+
+/** رسوم الحروف المتاحة في المحرّك (Glyph) */
+export type GlyphKey = 'baa' | 'alif' | 'taa' | 'thaa' | 'jeem' | 'haa' | 'khaa';
+
+/** نَشيدُ الْجَلْسَة (اقتراح المالك 28/11 — NASHEED-JALSA-PROPOSAL.md): 4 أبيات على إيقاع «دُمْ تَكْ تَكْ» وقافية واحدة.
+ *  الدرجة أ: الطفل يُصَفِّق الإيقاع مع الأبيات الثلاثة (نقاط تُضيء) · الدرجة ب: البيت الرابع ناقص كلمته الأخيرة، 3 بطاقات: fits='yes' توزن وتصحّ معنًى · 'rhyme' توزن ولا تصحّ · 'no' لا توزن.
+ *  لؤلؤ تُنشد اختيار الطفل كما هو (audio كلّ خيار = البيت الرابع كاملًا بتلك الكلمة) ثمّ تعلّق؛ البيت المختار يُحفَظ في «ديوان الطفل» (verse). */
+export interface Nasheed {
+  title: string;
+  /** الأبيات الثلاثة الأولى (نصّ + صوت لؤلؤ تُنشد) */
+  lines: [Said, Said, Said];
+  /** صدر البيت الرابع بلا كلمته الأخيرة («وَالْحَمامَةُ عادَتْ…») */
+  stem: string;
+  /** القافية التي نبحث عنها (تُعرَض تلميحًا: «…ـَةْ») */
+  rhyme: string;
+  options: { key: string; w: string; emoji: string; fits: 'yes' | 'rhyme' | 'no'; audio: string }[];
+  intro: Said; ask: Said; good: Said; onlyRhyme: Said; noRhyme: Said; done: Said;
+}
 
 /** عنصر صوتي عامّ: كلمة + مفتاح صوتها ('common:' = من /kids/common/audio) + هل تبدأ بحرف اليوم */
 export interface SoundItem { w: string; emoji: string; audio: string; yes: boolean }
@@ -63,10 +83,12 @@ export interface SessionData {
   startSfx?: string;
   /** نشيد الختام (هـ-6-ي): السطر الثالث الخاصّ بالجلسة (حرفها وقيمتها) على وزن «حَرْفٌ وَكَلِمَةْ، وَآيَةٌ طَيِّبَةْ» — يُغنّى بين سطرَي النشيد المشتركَين؛ الصوت مفتاح في مجلّد الجلسة */
   closing?: { line: string; audio: string };
+  /** نَشيدُ الْجَلْسَة 🎶 — محطّة بعد «حَرْف يرسم» (تظهر فقط إن وُجدت) */
+  nasheed?: Nasheed;
   panels: Panel[];
   storyChoice: { after: number; options: { key: string; text: string; emoji: string }[] };
   harf: {
-    glyph: 'baa' | 'alif' | 'taa' | 'thaa' | 'jeem' | 'haa'; name: string; hint: string;
+    glyph: GlyphKey; name: string; hint: string;
     activities: HarfActivity[];
     intro: Said;
     words: { w: string; emoji: string; audio: string }[];

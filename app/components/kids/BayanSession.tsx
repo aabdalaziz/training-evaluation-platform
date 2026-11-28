@@ -4,7 +4,7 @@
  * «لؤلؤ الحيّة» (LuluLive): طبقة دائمة بآلة حالات — تتكلّم مع صوتها، تنتظر، تلمّح، تحتفل، ترقص، وتهدأ في محطّتي الحديث والقرآن. */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import type { SessionData, LuluKey, LuluPose } from '../../../lib/kids/types';
+import type { SessionData, GlyphKey, Nasheed, LuluKey, LuluPose } from '../../../lib/kids/types';
 import { kidsImg, kidsSnd } from '../../../lib/kids/types';
 import { STATIONS, type StationKey, SESSIONS } from '../../../lib/kids/sessions';
 import { FATIHA, RECITER, ayahUrl } from '../../../lib/kids/souq';
@@ -71,18 +71,23 @@ export default function BayanSession({ session, child }: { session: SessionData;
   const [lstate, setLstate] = useState<LuluState>('idle');
   const [say, setSay] = useState('');
   const [done, setDone] = useState<Record<string, boolean>>({});
-  const station = STATIONS[idx].key as StationKey;
+  const stations = useMemo(() => (S.nasheed ? STATIONS : STATIONS.filter(x => x.key !== 'nasheed')), [S]);
+  const station = stations[idx].key as StationKey;
   const quiet = station === 'hadith' || station === 'quran';
   const hero = gender === 'f' ? 'يا بَطَلَةْ' : 'يا بَطَلْ';
   const waitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { if (child) return; try { const s = localStorage.getItem('bayan_demo_child'); if (s) { const j = JSON.parse(s); setName(j.name || ''); setGender(j.gender || 'm'); } } catch { /* ignore */ } }, [child]);
   /** تبليغ «بَيْتُ بَيان» (إن كان طفلًا معروفًا): المحطّات المنجزة + ما يُضاف (الحوار/التقييم الذاتي). لا صوت ولا صورة أبدًا؛ النصّ بإذن save_text فقط */
+  /** بيت الطفل من «نَشيدُ الْجَلْسَة» (يُحفَظ في ديوانه ويُقرَأ في «أثري اليوم») */
+  const [verse, setVerseState] = useState('');
+  const verseRef = useRef('');
+  const setVerse = useCallback((v: string) => { verseRef.current = v; setVerseState(v); }, []);
   const report = useCallback((extra: Record<string, unknown> = {}) => {
     if (!child) return;
     const talk = Array.isArray(extra.talk) ? (extra.talk as TalkOutcome['results']).map(r => child.consents.save_text ? { role: r.role, matched: r.matched, attempts: r.attempts, heard: r.heard } : { role: r.role, matched: r.matched, attempts: r.attempts }) : undefined;
     const stations = { ...doneRef.current, ...((extra.stations as Record<string, boolean>) || {}) };
-    child.report({ session: S.slug, badge: S.meta.badge.title, startedAt: startedAt.current, ...extra, stations, ...(talk ? { talk } : {}) });
+    child.report({ session: S.slug, badge: S.meta.badge.title, startedAt: startedAt.current, ...(verseRef.current ? { verse: verseRef.current } : {}), ...extra, stations, ...(talk ? { talk } : {}) });
   }, [child, S]);
 
   /** لؤلؤ تقول عبارة: الوضعية + الحالة بعد الكلام (افتراضيًا: ساكنة) */
@@ -108,7 +113,7 @@ export default function BayanSession({ session, child }: { session: SessionData;
   const bgRef = useRef<HTMLAudioElement | null>(null);
   const bg = useCallback((src?: string, vol = 0.5) => { if (bgRef.current) { bgRef.current.pause(); bgRef.current = null; } if (!src) return; try { const a = new Audio(src); a.volume = vol; bgRef.current = a; void a.play().catch(() => {}); } catch { /* ignore */ } }, []);
   useEffect(() => () => { bgRef.current?.pause(); }, []);
-  const go = useCallback((n: number) => { bg(); stop(); stopWaiting(); setSay(''); setIdx(Math.max(0, Math.min(STATIONS.length - 1, n))); window.scrollTo({ top: 0 }); }, [stop, stopWaiting]);
+  const go = useCallback((n: number) => { bg(); stop(); stopWaiting(); setSay(''); setIdx(Math.max(0, Math.min(stations.length - 1, n))); window.scrollTo({ top: 0 }); }, [stop, stopWaiting, stations.length]);
   const finish = useCallback((k: StationKey) => { doneRef.current[k] = true; setDone(d => ({ ...d, [k]: true })); if (k !== 'hadith' && k !== 'quran') lulu('next', 'cheer', undefined, 'idle'); }, [lulu]);
   const next = useCallback(() => go(idx + 1), [go, idx]);
 
@@ -116,7 +121,7 @@ export default function BayanSession({ session, child }: { session: SessionData;
   useEffect(() => { if (!speaking && lstate === 'talk') setLstate('idle'); }, [speaking, lstate]);
   useEffect(() => () => { if (waitTimer.current) clearTimeout(waitTimer.current); }, []);
 
-  const ctx: Ctx = { S, img, snd, play: speak, bg, lulu, luluSay, awaitAnswer, stopWaiting, next, finish, name, gender, hero, setPose, setLstate, setSay, child, report };
+  const ctx: Ctx = { S, img, snd, play: speak, bg, lulu, luluSay, awaitAnswer, stopWaiting, next, finish, name, gender, hero, setPose, setLstate, setSay, child, report, verse, setVerse };
   const others = SESSIONS.filter(x => x.slug !== S.slug);
   return (
     <div className="by" dir="rtl" data-station={station} data-session={S.slug} ref={rootRef}>
@@ -124,7 +129,7 @@ export default function BayanSession({ session, child }: { session: SessionData;
       <header className="by-top">
         <Link href={child ? child.exitHref : '/kids'} className="by-exit" aria-label="خروج">✕</Link>
         <ol className="by-stations" aria-label="محطّات الرحلة">
-          {STATIONS.map((s, i) => (
+          {stations.map((s, i) => (
             <li key={s.key} className={i === idx ? 'on' : done[s.key] ? 'ok' : ''} title={s.title}>
               <button onClick={() => go(i)} aria-current={i === idx ? 'step' : undefined}><span className="ic">{s.icon}</span><span className="tt">{s.title}</span></button>
             </li>
@@ -137,6 +142,7 @@ export default function BayanSession({ session, child }: { session: SessionData;
         {station === 'start' && <Start {...ctx} setName={setName} setGender={setGender} />}
         {station === 'story' && <Story {...ctx} />}
         {station === 'harf' && <Harf {...ctx} />}
+        {station === 'nasheed' && S.nasheed && <NasheedStation {...ctx} N={S.nasheed} />}
         {station === 'play' && <Play {...ctx} />}
         {station === 'act' && <Act {...ctx} />}
         {station === 'hadith' && <Hadith {...ctx} />}
@@ -161,6 +167,7 @@ type Ctx = {
   name: string; gender: 'm' | 'f'; hero: string;
   setPose: (p: LuluPose) => void; setLstate: (s: LuluState) => void; setSay: (s: string) => void;
   child?: KidChild; report: (extra?: Record<string, unknown>) => void;
+  verse: string; setVerse: (v: string) => void;
 };
 
 /* ───────── 1) هيّا نبدأ ───────── */
@@ -255,6 +262,109 @@ function ClosingAnthem(p: Ctx) {
   );
 }
 
+/* ───────── ح6) ضَعِ النُّقْطَة! — الأختان (الأسبوع 7 ب): حاء ↔ خاء ───────── */
+function Pair(p: Ctx & { A: Extract<HarfActivity, { kind: 'pair' }>; onDone: () => void }) {
+  const { A, S } = p;
+  const [dot, setDot] = useState(false);
+  const [n, setN] = useState(0); // عدد التحوّلات (ذهابًا وإيابًا)
+  const [busy, setBusy] = useState(false);
+  const need = A.rounds * 2;
+  useEffect(() => { const t = setTimeout(() => p.play(p.snd(A.prompt.audio)), 300); return () => clearTimeout(t); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const toggle = () => {
+    if (busy || n >= need) return;
+    const nd = !dot; setDot(nd); setBusy(true);
+    const k = n + 1; setN(k);
+    p.play(p.snd(nd ? A.toSound : A.fromSound), () => {
+      setBusy(false);
+      if (k >= need) p.play(p.snd(A.done.audio), () => p.lulu('yasalam', 'cheer', p.onDone, 'cheer'));
+    });
+  };
+  return (
+    <div className="ac ac-pair">
+      <p className="by-speech">{n >= need ? A.done.text : A.prompt.text}</p>
+      <div className="by-pairbox" role="button" aria-label={dot ? S.harf.name : 'بلا نقطة'} onClick={toggle}>
+        <div className="by-pairdot" aria-hidden>{!dot && n < need && <span className="hint">اِلْمِسْ هُنا ☝️</span>}</div>
+        <Glyph g={dot ? S.harf.glyph : A.from} />
+        <b className={dot ? 'on' : ''}>{dot ? S.harf.name : A.prompt.text.includes('حاء') ? 'حاءْ' : '…'}</b>
+      </div>
+      <div className="ac-stars" aria-label={`${n} من ${need}`}>{Array.from({ length: need }, (_, i) => <span key={i} className={i < n ? 'on' : ''}>★</span>)}</div>
+      <p className="by-muted">اِلْمِسْ فَوْقَ الْحَرْفِ لِتَضَعَ النُّقْطَةْ… وَالْمِسْها لِتُزيلَها · {n} / {need}</p>
+    </div>
+  );
+}
+
+/* ───────── 3ب) نَشيدُ الْجَلْسَة 🎶 — إيقاع ثمّ قافية (NASHEED-JALSA-PROPOSAL.md) ───────── */
+const BEATS = ['دُمْ', 'تَكْ', 'تَكْ'];
+function NasheedStation(p: Ctx & { N: Nasheed }) {
+  const { N, S } = p;
+  const [phase, setPhase] = useState<'intro' | 'beat' | 'rhyme' | 'sing' | 'done'>('intro');
+  const [line, setLine] = useState(-1);     // البيت الذي يُنشَد الآن
+  const [beat, setBeat] = useState(-1);     // النقطة المضيئة
+  const [claps, setClaps] = useState(0);
+  const [pick, setPick] = useState<string | null>(null);
+  const [tried, setTried] = useState<Record<string, boolean>>({});
+  const timers = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopBeat = () => { if (timers.current) clearInterval(timers.current); timers.current = null; setBeat(-1); };
+  useEffect(() => { const t = setTimeout(() => p.luluSay(N.intro.text, N.intro.audio, 'dance'), 300); return () => { clearTimeout(t); stopBeat(); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  const good = N.options.find(o => o.fits === 'yes')!;
+  const fourth = (w: string) => `${N.stem} ${w}`;
+  /** إنشاد الأبيات الثلاثة مع نبض الإيقاع، ثمّ (إن وُجد بيت رابع) إنشاده */
+  const sing = (withFourth: boolean, after: () => void) => {
+    const seq: { text: string; audio: string }[] = [...N.lines];
+    if (withFourth) seq.push({ text: fourth(good.w), audio: good.audio });
+    let i = 0;
+    const step = () => {
+      if (i >= seq.length) { stopBeat(); setLine(-1); after(); return; }
+      const k = i++; setLine(k); p.setPose('dance'); p.setLstate('dance'); p.setSay(seq[k].text);
+      stopBeat(); let b = 0; setBeat(0); timers.current = setInterval(() => { b = (b + 1) % 3; setBeat(b); }, 420);
+      p.play(p.snd(seq[k].audio), step, true);
+    };
+    step();
+  };
+  const startBeat = () => { setPhase('beat'); setClaps(0); sing(false, () => { setPhase('rhyme'); p.luluSay(N.ask.text, N.ask.audio, 'point', p.awaitAnswer); }); };
+  const choose = (key: string) => {
+    if (pick) return;
+    const o = N.options.find(x => x.key === key)!; p.stopWaiting(); setPick(key);
+    // لؤلؤ تُنشد البيت كما اختاره الطفل — ثمّ تعلّق
+    p.setPose('dance'); p.setLstate('dance'); p.setSay(fourth(o.w));
+    p.play(p.snd(o.audio), () => {
+      if (o.fits === 'yes') {
+        const v = `${N.lines.map(l => l.text).join(' · ')} · ${fourth(o.w)}`; p.setVerse(v);
+        p.luluSay(N.good.text, N.good.audio, 'cheer', () => setPhase('sing'));
+      } else {
+        setTried(t => ({ ...t, [key]: true }));
+        const F = o.fits === 'rhyme' ? N.onlyRhyme : N.noRhyme;
+        p.luluSay(F.text, F.audio, 'think', () => { setPick(null); p.awaitAnswer(); });
+      }
+    }, true);
+  };
+  const singAll = () => sing(true, () => { setPhase('done'); p.luluSay(N.done.text, N.done.audio, 'cheer'); });
+  const leave = () => { p.finish('nasheed'); p.next(); };
+  return (
+    <section className="by-card">
+      <h2 className="by-h2">{N.title} 🎶</h2>
+      <div className="by-nasheed">
+        {N.lines.map((l, i) => <p key={i} className={i === line ? 'on' : (phase !== 'intro' && (i < line || line === -1)) ? 'past' : ''}>{l.text}</p>)}
+        <p className={`fourth ${line === 3 ? 'on' : ''} ${phase === 'sing' || phase === 'done' ? 'past' : ''}`}>
+          {N.stem} {phase === 'sing' || phase === 'done' ? <b>{good.w}</b> : pick ? <b className="try">{N.options.find(o => o.key === pick)?.w}</b> : <span className="blank">؟</span>}
+        </p>
+      </div>
+      {phase !== 'intro' && phase !== 'rhyme' && <div className="by-beats" aria-label="الإيقاع">{BEATS.map((b, i) => <span key={i} className={beat === i ? 'on' : ''}>{b}</span>)}</div>}
+      {phase === 'intro' && <nav className="by-nav end"><button className="by-big" onClick={startBeat}>نُنْشِدْ وَنُصَفِّقْ! 👏</button></nav>}
+      {phase === 'beat' && <div className="by-center"><button className="by-clap" onClick={() => setClaps(c => c + 1)} aria-label="صفّق">👏<small>{claps}</small></button><p className="by-muted">صَفِّقْ مَعَ النُّقْطَةِ الْمُضيئَةْ: دُمْ… تَكْ… تَكْ</p></div>}
+      {phase === 'rhyme' && <>
+        <p className="by-speech">{N.ask.text} <span className="by-rhyme">…{N.rhyme}</span></p>
+        <div className="by-choices">
+          {N.options.map(o => <button key={o.key} className={`by-opt ${tried[o.key] ? 'dim' : ''} ${pick === o.key ? 'on' : ''}`} disabled={!!pick} onClick={() => choose(o.key)}><span className="em">{o.emoji}</span> {o.w}</button>)}
+        </div>
+      </>}
+      {phase === 'sing' && <nav className="by-nav end"><button className="by-big" onClick={singAll}>نُنْشِدُها كامِلَةً! 🎵</button></nav>}
+      {phase === 'done' && <nav className="by-nav end"><button className="by-ghost" onClick={singAll}>مَرَّةً أُخْرى 🔁</button><button className="by-big" onClick={leave}>بَيْتي في ديواني ✍️ — هَيّا نَلْعَبْ 🎲</button></nav>}
+      <p className="by-parent">💡 لوليّ الأمر: صفّقا معًا على «دُمْ تَكْ تَكْ»؛ وعند الاختيار دَعْه يسمع البيت بكلمته هو أوّلًا — الأذن تكتشف القافية قبل العقل. بيته يُحفَظ في «ديوان {p.name || 'الطفل'}» في بيت بَيان.</p>
+    </section>
+  );
+}
+
 /* ───────── 2) الحكاية ───────── */
 function Story(p: Ctx) {
   const { S } = p;
@@ -303,7 +413,8 @@ function Story(p: Ctx) {
 }
 
 /* ───────── 3) حَرْف يرسم ───────── */
-function Glyph({ g }: { g: 'baa' | 'alif' | 'taa' | 'thaa' | 'jeem' | 'haa' }) {
+function Glyph({ g }: { g: GlyphKey }) {
+  if (g === 'khaa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M62 38 Q118 30 150 46" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M150 46 Q60 70 44 84 Q24 110 60 128 Q110 146 160 110" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="106" cy="14" r="9" fill="#E8795C" /></svg>;
   if (g === 'haa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M62 38 Q118 30 150 46" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M150 46 Q60 70 44 84 Q24 110 60 128 Q110 146 160 110" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /></svg>;
   if (g === 'jeem') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M62 38 Q118 30 150 46" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M150 46 Q60 70 44 84 Q24 110 60 128 Q110 146 160 110" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="96" cy="102" r="9" fill="#E8795C" /></svg>;
   if (g === 'thaa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="18" r="9" fill="#E8795C" /><circle cx="84" cy="44" r="9" fill="#E8795C" /><circle cx="116" cy="44" r="9" fill="#E8795C" /></svg>;
@@ -354,7 +465,7 @@ function HarfMorph(p: Ctx & { onDone: () => void }) {
   );
 }
 
-const ACT_NAMES: Record<HarfActivity['kind'], string> = { morph: 'الحرف يتحوّل', trace: 'تتبّع بإصبعك', hear: 'أسمع الصوت', name: 'الحرف في اسمي', color: 'لوّن الحرف' };
+const ACT_NAMES: Record<HarfActivity['kind'], string> = { morph: 'الحرف يتحوّل', trace: 'تتبّع بإصبعك', hear: 'أسمع الصوت', name: 'الحرف في اسمي', color: 'لوّن الحرف', pair: 'ضَعِ النُّقْطَة' };
 const GAME_NAMES: Record<Game['kind'], string> = { match: 'طابِق', scene: 'في مكانها', memory: 'الذاكرة', missing: 'ماذا اختفى؟', listen: 'اسمع واختر', clap: 'صفّق المقاطع', jump: 'الجسد يلعب', basket: 'سلّة لؤلؤ', discover: 'نكتشف', count: 'عُدّ', paint: 'لوّن حسب الكلمة', catch: 'صيد الكلمة', draw: 'ارسم ما سمعت' };
 function Bar({ items, at }: { items: string[]; at: number }) { return <div className="ac-bar" aria-label="تقدّم النشاط">{items.map((t, i) => <span key={i} className={i === at ? 'on' : i < at ? 'ok' : ''}>{i < at ? '★ ' : ''}{t}</span>)}</div>; }
 
@@ -373,6 +484,7 @@ function Harf(p: Ctx) {
       {a.kind === 'hear' && <Hear key={ai} p={p} items={a.items} onDone={onDone} />}
       {a.kind === 'name' && <NameLetter key={ai} p={p} re={a.letterRe} fallback={a.fallback} onDone={onDone} />}
       {a.kind === 'color' && <ColorLetter key={ai} p={p} A={a} onDone={onDone} />}
+      {a.kind === 'pair' && <Pair key={ai} {...p} A={a} onDone={onDone} />}
       {ai + 1 === acts.length && a.kind !== 'morph' && <p className="by-muted">بَعْدَ هٰذا النَّشاطْ: هَيّا نَلْعَبْ 🎲</p>}
     </section>
   );
@@ -616,6 +728,7 @@ function Athari(p: Ctx & { others: SessionData[] }) {
     <section className="by-card">
       <div className="by-badge"><img src={p.img(S.meta.badge.img)} alt="" /><h1 className="by-huge">شارَةُ «{S.meta.badge.title}»</h1><p className="by-sub">مُبارَكْ يا {p.name || p.hero}!</p></div>
       <ul className="by-summary">{A.summary.map(s => <li key={s}>🌱 {s}</li>)}</ul>
+      {p.verse && <p className="by-verse">✍️ <b>وَبَيْتي الْيَوْمْ:</b> {p.verse}</p>}
       {S.letter && talkReady && !talked && (
         <div className="by-mail">
           <img src={S.letter.img} alt="" />
@@ -685,6 +798,15 @@ export const BAYAN_CSS = `
 .by-ghost{font-size:18px;padding:12px 20px;border-radius:999px;border:2px solid var(--sea);background:#fff;color:#2F6B66;cursor:pointer;text-decoration:none}
 .by-tap{background:none;border:0;cursor:pointer;animation:by-bob 1.6s ease-in-out infinite}
 @keyframes by-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.by-pairbox{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px auto;padding:30px 28px 14px;border:3px dashed var(--sand);border-radius:28px;background:#fff;cursor:pointer;user-select:none;max-width:320px}
+.by-pairbox .by-pairdot{position:absolute;top:8px;left:50%;transform:translateX(-50%);min-width:120px;text-align:center}.by-pairbox .hint{font-size:15px;color:var(--coral);animation:by-bob 1s infinite}
+.by-pairbox b{font-size:30px;color:#9a8a95}.by-pairbox b.on{color:var(--coral)}
+@keyframes by-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.by-nasheed{text-align:center;margin:8px 0}.by-nasheed p{font-size:26px;margin:8px 0;color:#9a8a95;transition:.3s}.by-nasheed p.on{color:var(--plum);font-weight:700;transform:scale(1.06)}.by-nasheed p.past{color:var(--sea)}
+.by-nasheed .blank{display:inline-block;min-width:70px;border-bottom:3px dashed var(--coral);color:var(--coral)}.by-nasheed .try{color:var(--coral)}.by-nasheed .fourth b{color:var(--plum)}
+.by-beats{display:flex;justify-content:center;gap:14px;margin:8px 0}.by-beats span{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:#f1e7df;color:#9a8a95;font-weight:700;font-size:18px;transition:.15s}.by-beats span.on{background:var(--coral);color:#fff;transform:scale(1.15);box-shadow:0 0 0 8px rgba(232,121,92,.25)}
+.by-clap{font-size:54px;width:120px;height:120px;border-radius:50%;border:4px solid var(--sand);background:#fff;cursor:pointer;display:grid;place-items:center;line-height:1;margin:6px auto}.by-clap:active{transform:scale(.92);background:#fff5f0}.by-clap small{font-size:16px;color:var(--sea)}
+.by-rhyme{display:inline-block;background:var(--gold,#F1D9A8);border-radius:10px;padding:0 10px;color:var(--plum)}.by-opt.dim{opacity:.45}
 .by-anthem p{font-size:26px;margin:6px 0;color:#9a8a95;transition:.3s}.by-anthem p.on{color:var(--plum);font-weight:700;transform:scale(1.06)}.by-anthem p.past{color:var(--sea)}
 .by-story{display:grid;gap:12px}
 .by-panel{margin:0;border-radius:24px;overflow:hidden;border:3px solid var(--sand);background:#fff}.by-panel img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
@@ -727,6 +849,7 @@ export const BAYAN_CSS = `
 .by-ayah{display:flex;gap:12px;align-items:center;text-align:start;border:2px solid #e6d2b5;background:#fff;border-radius:16px;padding:12px 14px;font-size:30px;cursor:pointer;color:var(--ink);line-height:1.9}
 .by-ayah.on{border-color:var(--coral);background:#fff5f0}.by-ayah.ok{border-color:var(--sea)}.by-ayah .num{font-size:14px;background:var(--plum);color:#fff;border-radius:50%;width:28px;height:28px;display:grid;place-items:center;flex:none}.by-ayah .txt{flex:1}
 .by-badge{text-align:center;display:grid;justify-items:center;gap:6px}.by-badge img{width:200px;height:200px;object-fit:contain;animation:by-bob 2s ease-in-out infinite}
+.by-verse{background:#fff;border:2px solid var(--sand);border-radius:16px;padding:10px 14px;font-size:20px;color:var(--plum);margin:6px 0 12px}
 .by-summary{list-style:none;padding:0;margin:14px 0;display:grid;gap:6px;font-size:21px}
 .by-self{background:#E6F3F1;border-radius:18px;padding:12px 16px;margin-bottom:12px;text-align:center}
 .by-face{display:grid;justify-items:center;gap:4px;font-size:18px;border:2px solid var(--sand);background:#fff;border-radius:18px;padding:10px 18px;cursor:pointer;color:var(--ink);min-width:120px}.by-face span{font-size:36px}.by-face.on{border-color:var(--sea);background:#fff}

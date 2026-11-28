@@ -11,7 +11,7 @@ import { AVATARS, CONSENTS, STAGE_AR, LIMITS, ageOf, type ConsentKind, type Stag
 type Child = {
   id: string; nick: string; gender: 'm' | 'f'; birth_year: number; avatar: number; stage: Stage; finished: number; fruits: number;
   consents: Record<ConsentKind, boolean>; next: { slug: string; world: string; order: number };
-  progress: { id: string; session: string; world: string; started_at: string; finished_at: string | null; stations: Record<string, boolean>; badge: string | null; self_check: string | null; self_voice: string | null; home_task: string | null; home_task_done_at: string | null }[];
+  progress: { id: string; session: string; world: string; started_at: string; finished_at: string | null; verse?: string | null; stations: Record<string, boolean>; badge: string | null; self_check: string | null; self_voice: string | null; home_task: string | null; home_task_done_at: string | null }[];
   talks: { id: string; session: string; at: string; results: { role: string; matched: string; attempts: number; heard?: string }[]; self_voice: string | null }[];
   letter: { week_start: string; body: string; sentence: string | null };
   letters?: { id: string; week_start: string; body: string; sentence: string | null }[];
@@ -97,13 +97,20 @@ export function ParentHome({ childId }: { childId?: string }) {
           </details>}
         </section>
 
+        {c.progress.some(p => p.verse) && <section className="kp-card kp-diwan">
+          <h2>📖 ديوانُ {c.nick}</h2>
+          <p className="kp-muted">من «نَشيدُ الْجَلْسَة»: في كلّ جلسة يُكمل الطفل البيت الرابع بقافيته — هذه أبياته حتى اليوم. {c.progress.filter(p => p.verse).length >= 5 ? 'خمسة أبيات فأكثر: صار صاحب ديوان 🪶' : `أوّل بيت = «شاعِرٌ صَغيرْ» 🪶 (${c.progress.filter(p => p.verse).length}/5 حتى «صاحِبُ ديوانْ»)`}</p>
+          <ol className="kp-verses">{[...c.progress].filter(p => p.verse).reverse().map(p => <li key={p.id}><b>«في {p.world}»</b> <span className="kp-muted">{fmt(p.started_at)}</span><div className="kp-vlines">{p.verse!.split(' · ').map((l, i) => <span key={i}>{l}</span>)}</div></li>)}</ol>
+        </section>}
+
         <section className="kp-card">
           <h2>🧭 رِحْلَةُ الْجَلَسات</h2>
           {!c.progress.length && <p className="kp-muted">لم تبدأ بعد. اضغط «اِلْعَبْ» أعلاه من جهاز الطفل.</p>}
           {c.progress.map(p => (
             <div key={p.id} className="kp-sess">
               <div className="kp-sess-h"><b>«في {p.world}»</b> <span className="kp-muted">{fmt(p.started_at)}</span> {p.finished_at ? <span className="kp-ok">مكتملة ✓</span> : <span className="kp-mid">جارية</span>} {p.badge && <span className="kp-badge">🏅 {p.badge}</span>}</div>
-              <div className="kp-stations">{['start', 'story', 'harf', 'play', 'act', 'hadith', 'quran', 'athari'].map(k => <span key={k} className={p.stations?.[k] ? 'on' : ''} />)}</div>
+              <div className="kp-stations">{['start', 'story', 'harf', ...(p.stations && 'nasheed' in p.stations ? ['nasheed'] : []), 'play', 'act', 'hadith', 'quran', 'athari'].map(k => <span key={k} className={p.stations?.[k] ? 'on' : ''} />)}</div>
+              {p.verse && <div className="kp-verse">✍️ بيته في نشيد الجلسة: <q>{p.verse}</q></div>}
               <div className="kp-faces">{p.self_check && <span>أداؤه: {FACE[p.self_check]}</span>}{p.self_voice && <span>صوته: {FACE[p.self_voice]}</span>}</div>
               {p.home_task && <div className="kp-task">🏠 {p.home_task} {p.home_task_done_at ? <span className="kp-ok">تمّت 🍎 {fmt(p.home_task_done_at)}</span> : <button className="kp-small" disabled={busy} onClick={() => act({ action: 'task', child: c.id, progress: p.id })}>تَمَّتْ ✓</button>}</div>}
             </div>
@@ -212,6 +219,7 @@ export const PARENT_CSS = `
 .kp-letter{font-size:17px;line-height:1.9;background:#FBF4EE;border-radius:16px;padding:12px 14px;margin:0}.kp-sentence{margin:8px 0 0;color:#3A1F36}.kp-sentence b{color:#E8795C;font-size:20px}
 .kp-sess{border-top:1px dashed #F1D9A8;padding:10px 0;display:grid;gap:6px}.kp-sess-h{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .kp-ok{color:#3f7f78;font-weight:700}.kp-mid{color:#b9854a}
+.kp-verse{font-size:15px;color:#3A1F36;margin-top:4px}.kp-verse q{quotes:none}.kp-diwan{background:#fffaf3}.kp-verses{padding-inline-start:18px;margin:6px 0}.kp-verses li{margin:8px 0}.kp-vlines{display:flex;flex-direction:column;gap:2px;font-size:17px;color:#3A1F36;margin-top:2px}
 .kp-stations{display:flex;gap:4px}.kp-stations span{width:22px;height:8px;border-radius:4px;background:#f1e7df}.kp-stations span.on{background:#5EA8A0}
 .kp-faces{display:flex;gap:14px;font-size:14px;color:#6b5a66}.kp-task{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:15px}
 .kp-talk{border-top:1px dashed #F1D9A8;padding:8px 0}.kp-talk ul{margin:4px 0 0;padding-inline-start:18px}

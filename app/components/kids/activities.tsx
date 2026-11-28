@@ -284,7 +284,7 @@ export function Jump({ p, items, onDone }: { p: ActCtx; items: SoundItem[]; onDo
         <>
           <div className={`ac-bigcard ${reveal ? (it.yes ? 'ok' : 'no') : ''}`}><span className="em">{reveal ? it.emoji : '🔊'}</span>{reveal && <b>{it.w}</b>}</div>
           {!reveal && <div className="by-choices row">
-            <button className="by-opt" onClick={() => answer(true)}>قَفَزْتُ! 🦘</button>
+            <button className="by-opt" onClick={() => answer(true)}>قَفَزْتُ! 🙌</button>
             <button className="by-opt" onClick={() => answer(false)}>بَقيتُ واقِفًا 🧍</button>
           </div>}
         </>

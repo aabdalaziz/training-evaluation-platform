@@ -13,13 +13,13 @@ const ROOT = path.join(__dirname, '..');
 const exists = (p: string) => fs.existsSync(path.join(ROOT, 'public', p));
 
 test('هـ-6: سجلّ الجلسات — البيت (ا) أولًا ثم السوق (ب) · 8 محطّات · الفاتحة 7 آيات · المصحف المعلّم', () => {
-  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2', 'hadiqa', 'hadiqa2', 'masjid', 'masjid2', 'mazraa']);
+  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2', 'hadiqa', 'hadiqa2', 'masjid', 'masjid2', 'mazraa', 'mazraa2']);
   assert.equal(DEFAULT_SESSION.slug, 'bayt');
   assert.equal(getSession('souq')?.meta.letter, 'ب'); assert.equal(getSession('bayt')?.meta.letter, 'ا');
   assert.equal(getSession('bayt')?.meta.value, 'النظام'); assert.equal(getSession('souq')?.meta.value, 'الأمانة');
   assert.equal(getSession('madrasa')?.meta.letter, 'ت'); assert.equal(getSession('madrasa')?.meta.value, 'التعاون');
-  assert.equal(STATIONS.length, 8);
-  assert.deepEqual(STATIONS.map(s => s.key), ['start', 'story', 'harf', 'play', 'act', 'hadith', 'quran', 'athari']);
+  assert.equal(STATIONS.length, 9); // هـ-6-ك: + «نَشيدُ الْجَلْسَة» بعد حَرْف (تظهر فقط للجلسات التي فيها nasheed)
+  assert.deepEqual(STATIONS.map(s => s.key), ['start', 'story', 'harf', 'nasheed', 'play', 'act', 'hadith', 'quran', 'athari']);
   assert.equal(FATIHA.length, 7);
   assert.equal(ayahUrl(7), 'https://everyayah.com/data/Minshawy_Teacher_128kbps/001007.mp3');
   assert.equal(ayahUrl(3, 114), 'https://everyayah.com/data/Minshawy_Teacher_128kbps/114003.mp3');
@@ -77,6 +77,8 @@ for (const S of SESSIONS) {
       ...(S.hadith.review ? [S.hadith.review.intro.audio, S.hadith.review.audio] : []),
       ...(S.letter ? [S.letter.audio] : []),
       ...(S.startSfx ? [S.startSfx] : []), ...S.panels.flatMap(p => (p.sfx ? [p.sfx] : [])), ...(S.roles.model ? [S.roles.model.audio] : []),
+      ...S.harf.activities.flatMap(a => (a.kind === 'pair' ? [a.prompt.audio, a.fromSound, a.toSound, a.done.audio] : [])),
+      ...(S.nasheed ? [...S.nasheed.lines.map(l => l.audio), ...S.nasheed.options.map(o => o.audio), S.nasheed.intro.audio, S.nasheed.ask.audio, S.nasheed.good.audio, S.nasheed.onlyRhyme.audio, S.nasheed.noRhyme.audio, S.nasheed.done.audio] : []),
     ]);
     if (S.letter) assert.ok(exists(S.letter.img), S.letter.img);
     if (typeof S.athari.bedtime !== 'string') { assert.ok(exists(S.athari.bedtime.audio), S.athari.bedtime.audio); assert.ok(exists(S.athari.bedtime.img), S.athari.bedtime.img); }
@@ -187,4 +189,36 @@ test('هـ-6-ي: نشيد الختام — 5 مقاطع مشتركة + سطر خ
   }
   const src = fs.readFileSync(path.join(ROOT, 'app/components/kids/BayanSession.tsx'), 'utf8');
   assert.ok(/function ClosingAnthem/.test(src) && /<ClosingAnthem \{\.\.\.p\} \/>/.test(src) && /anthem-close-/.test(src));
+});
+
+test('هـ-6-ك: الجلسة 10 «المزرعة ب» — الخاء أخت الحاء · ضَعِ النُّقْطَة · نَشيدُ الْجَلْسَة (إيقاع + قافية) · ديوان الطفل', () => {
+  const S = getSession('mazraa2')!; assert.ok(S); assert.equal(S.meta.order, 10); assert.equal(S.meta.letter, 'خ'); assert.equal(S.harf.glyph, 'khaa');
+  assert.equal(SESSIONS.length, 10); assert.equal(SESSIONS[9].slug, 'mazraa2');
+  // ضَعِ النُّقْطَة: من الحاء إلى الخاء، 3 جولات، صوتان
+  const pair = S.harf.activities.find(a => a.kind === 'pair'); assert.ok(pair && pair.kind === 'pair'); assert.equal(pair.from, 'haa'); assert.equal(pair.rounds, 3); assert.equal(pair.toSound, 'h-khaa'); assert.equal(pair.fromSound, 'h-haa');
+  // التتبّع 3 ضربات (الثالثة النقطة) · التمييز السمعيّ ح/خ: 3 نعم (خ) و3 لا (ح من الجلسة 9)
+  const tr = S.harf.activities.find(a => a.kind === 'trace'); assert.ok(tr && tr.kind === 'trace' && tr.strokes.length === 3);
+  const hear = S.harf.activities.find(a => a.kind === 'hear'); assert.ok(hear && hear.kind === 'hear'); assert.equal(hear.items.filter(i => i.yes).length, 3); assert.ok(hear.items.filter(i => !i.yes).every(i => /^\/kids\/mazraa\/audio\/w-h/.test(i.audio)));
+  // نشيد الجلسة: 3 أبيات + صدر + 3 خيارات (واحد yes، واحد rhyme، واحد no) وكلّها بأصوات
+  const N = S.nasheed!; assert.ok(N); assert.equal(N.lines.length, 3); assert.equal(N.options.length, 3);
+  assert.deepEqual(N.options.map(o => o.fits).sort(), ['no', 'rhyme', 'yes']);
+  const yes = N.options.find(o => o.fits === 'yes')!; assert.equal(yes.w, 'فَرْحانَةْ');
+  // الأبيات الثلاثة والخيار الصحيح على القافية نفسها (ـَةْ) — والخيار «no» ليس عليها
+  for (const l of N.lines) assert.ok(/َةْ$/.test(l.text), l.text); assert.ok(/َةْ$/.test(yes.w)); assert.ok(!/َةْ$/.test(N.options.find(o => o.fits === 'no')!.w), 'خيار «لا توزن» لا ينتهي بالقافية'); assert.ok(/َةْ$/.test(N.options.find(o => o.fits === 'rhyme')!.w));
+  assert.ok(N.stem.endsWith('…'));
+  // الجلسات التسع السابقة بلا نشيد (يُلحَق لاحقًا) — والمحطّة تُخفى لها
+  for (const x of SESSIONS.slice(0, 9)) assert.equal(x.nasheed, undefined, x.slug);
+  const src = fs.readFileSync(path.join(process.cwd(), 'app/components/kids/BayanSession.tsx'), 'utf8');
+  assert.ok(src.includes("STATIONS.filter(x => x.key !== 'nasheed')"), 'المحطّة تُخفى للجلسات بلا نشيد');
+  assert.ok(src.includes('function NasheedStation') && src.includes('function Pair') && src.includes("g === 'khaa'"), 'المكوّنات');
+  assert.ok(src.includes("p.setVerse(v)") && src.includes('verse: verseRef.current') && src.includes('وَبَيْتي الْيَوْمْ'), 'البيت يُحفَظ ويُقرَأ في أثري اليوم');
+  // وليّ الأمر: الديوان + العمود
+  const ph = fs.readFileSync(path.join(process.cwd(), 'app/components/kids/ParentHome.tsx'), 'utf8'); assert.ok(ph.includes('kp-diwan') && ph.includes('ديوانُ'));
+  const api = fs.readFileSync(path.join(process.cwd(), 'app/api/kids/route.ts'), 'utf8'); assert.ok(api.includes('verse: p.verse || null') && api.includes('r.p.verse'));
+  assert.ok(fs.existsSync(path.join(process.cwd(), 'supabase/migrations/20271128_kids_verse.sql')));
+  // ختام + قصّة النوم مشتركة مع الجلسة 9
+  assert.equal(S.closing?.line, 'حَرْفُ الْخاءْ، وَرَحْمَةٌ لِلطَّيْرْ');
+  assert.deepEqual(S.athari.bedtime, getSession('mazraa')!.athari.bedtime);
+  // الخيار في الحكاية بعد اللوحة 2 · عُمَر يعود · الشارة
+  assert.equal(S.storyChoice.after, 2); assert.equal(S.letter?.from, 'عُمَر'); assert.equal(S.meta.badge.title, 'صَديقُ الْعُشّْ');
 });

@@ -67,6 +67,8 @@ export type ProgressPayload = {
   self?: 'easy' | 'good' | 'hard' | null; selfVoice?: 'clear' | 'near' | 'again' | 'skip' | null;
   talk?: { role: string; matched: string; attempts: number; heard?: string }[];
   startedAt?: string;
+  /** بيت الطفل من «نَشيدُ الْجَلْسَة» (نصّ الجلسة بكلمته المختارة — ليس كلامًا حرًّا) → ديوانه */
+  verse?: string | null;
 };
 const MEDIA_KEYS = /^(audio|blob|image|photo|video|picture|base64|data|file|recording|clip)s?$/i;
 export function hasMedia(v: unknown, depth = 0): boolean {
@@ -91,7 +93,8 @@ export function cleanProgress(body: unknown, saveText: boolean): { ok: true; p: 
     if (JSON.stringify(talk).length > LIMITS.resultsBytes) return { ok: false, error: 'نتائج الحوار أطول من المسموح' };
   }
   const startedAt = b.startedAt && !Number.isNaN(Date.parse(String(b.startedAt))) ? new Date(String(b.startedAt)).toISOString() : undefined;
-  return { ok: true, p: { session, stations, badge, self, selfVoice, talk, startedAt } };
+  const verse = typeof b.verse === 'string' && b.verse.trim() ? b.verse.trim().replace(/[<>]/g, '').slice(0, 240) : null;
+  return { ok: true, p: { session, stations, badge, self, selfVoice, talk, startedAt, verse } };
 }
 /** تنقية نصّ الطفل قبل الحفظ: بريد/أرقام/روابط، وقصّ إلى 120 حرفًا */
 export const scrubChildText = (s: string) => String(s || '').replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '').replace(/[0-9٠-٩]{3,}/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim().slice(0, 120);

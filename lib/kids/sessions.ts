@@ -9,14 +9,16 @@ import { HADIQA2 } from './hadiqa2';
 import { MASJID } from './masjid';
 import { MASJID2 } from './masjid2';
 import { MAZRAA } from './mazraa';
+import { MAZRAA2 } from './mazraa2';
 
-export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2, HADIQA, HADIQA2, MASJID, MASJID2, MAZRAA].sort((a, b) => a.meta.order - b.meta.order);
+export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2, HADIQA, HADIQA2, MASJID, MASJID2, MAZRAA, MAZRAA2].sort((a, b) => a.meta.order - b.meta.order);
 export const DEFAULT_SESSION = SESSIONS[0];
 export const getSession = (slug: string | undefined): SessionData | undefined => SESSIONS.find(s => s.slug === slug);
 export const STATIONS = [
   { key: 'start',  title: 'هَيّا نَبْدَأ',          icon: '☀️' },
   { key: 'story',  title: 'الحِكاية',               icon: '📖' },
   { key: 'harf',   title: 'حَرْف يَرْسُم',           icon: '✏️' },
+  { key: 'nasheed', title: 'نَشيدُ الْجَلْسَة',       icon: '🎶' },
   { key: 'play',   title: 'هَيّا بِنا نَلْعَب',      icon: '🎲' },
   { key: 'act',    title: 'هَيّا بِنا نُمَثِّل',      icon: '🎭' },
   { key: 'hadith', title: 'في مَدْرَسَةِ المُصْطَفى ﷺ', icon: '🕌' },

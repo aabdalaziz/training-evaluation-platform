@@ -5,7 +5,7 @@
  *  GET ?child=<id>             → بذرة طفل واحد بالتفصيل
  *  POST child    {nick, gender, birth_year, avatar, id?}      → إضافة/تعديل
  *  POST consent  {child, kind, granted}                       → صفّ موافقة جديد (سجلّ إلحاقي)
- *  POST progress {child, session, stations, badge, self, selfVoice, talk, startedAt} → حدث نهاية جلسة (من جهاز الطفل بجلسة وليّ الأمر)
+ *  POST progress {child, session, stations, badge, self, selfVoice, talk, startedAt, verse} → حدث نهاية جلسة (من جهاز الطفل بجلسة وليّ الأمر) · verse = بيت «نَشيدُ الْجَلْسَة» → ديوان الطفل
  *  POST task     {child, progress}                            → «تَمَّتْ ✓» مهمّة البيت
  *  POST intro    {child}                                      → شاهد «رسالة لؤلؤ» (افتتاحية بَيان) — مرّة
  *  POST delete   {child}                                      → حذف كلّ بيانات الطفل فعليًّا (cascade)
@@ -45,7 +45,7 @@ function childView(c: any, progress: any[], consents: ConsentRow[], talks: any[]
   return {
     id: c.id, nick: c.nick, gender: c.gender, birth_year: c.birth_year, avatar: c.avatar, intro_seen_at: c.intro_seen_at || null,
     stage: stageOf(finished), finished, fruits, consents: eff, next: { slug: next.slug, world: next.meta.world, order: next.meta.order },
-    progress: mine.map(p => { const S = getSession(p.session_slug); return { id: p.id, session: p.session_slug, world: S?.meta.world || p.session_slug, started_at: p.started_at, finished_at: p.finished_at, stations: p.stations, badge: p.badge, self_check: p.self_check, self_voice: p.self_voice, home_task: S?.athari.homeTask || null, home_task_done_at: p.home_task_done_at }; }),
+    progress: mine.map(p => { const S = getSession(p.session_slug); return { id: p.id, session: p.session_slug, world: S?.meta.world || p.session_slug, started_at: p.started_at, finished_at: p.finished_at, stations: p.stations, verse: p.verse || null, badge: p.badge, self_check: p.self_check, self_voice: p.self_voice, home_task: S?.athari.homeTask || null, home_task_done_at: p.home_task_done_at }; }),
     talks: myTalks.map(t => ({ id: t.id, session: t.session_slug, at: t.at, results: eff.save_text ? t.results : (t.results || []).map((r: any) => ({ role: r.role, matched: r.matched, attempts: r.attempts })), self_voice: t.self_voice })),
   };
 }
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
     const { count } = await db.from('kids_progress').select('id', { count: 'exact', head: true }).eq('child_id', child.id).gte('started_at', since);
     if ((count || 0) >= LIMITS.eventsPerDay) return bad('حدّ اليوم');
     const done = Object.values(r.p.stations).filter(Boolean).length >= 7;
-    const row = { child_id: child.id, session_slug: r.p.session, started_at: r.p.startedAt || new Date().toISOString(), finished_at: done ? new Date().toISOString() : null, stations: r.p.stations, badge: done ? r.p.badge : null, self_check: r.p.self, self_voice: r.p.selfVoice };
+    const row = { child_id: child.id, session_slug: r.p.session, started_at: r.p.startedAt || new Date().toISOString(), finished_at: done ? new Date().toISOString() : null, stations: r.p.stations, badge: done ? r.p.badge : null, self_check: r.p.self, self_voice: r.p.selfVoice, ...(r.p.verse ? { verse: r.p.verse } : {}) };
     const { data: prog, error } = await db.from('kids_progress').upsert(row, { onConflict: 'child_id,session_slug,started_at' }).select('id').single(); if (error) return bad(error.message, 500);
     if (r.p.talk && r.p.talk.length) { const { error: e2 } = await db.from('kids_talks').insert({ child_id: child.id, session_slug: r.p.session, results: r.p.talk, self_voice: r.p.selfVoice }); if (e2) return bad(e2.message, 500); }
     return NextResponse.json({ success: true, id: prog.id, finished: done });
