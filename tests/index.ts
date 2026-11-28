@@ -160,3 +160,4 @@ import './p88-france.test'; /* P88 */
 import './p89-eval-fr.test'; /* P89 */
 import './p91-cert-fr.test'; /* P91 */
 import './p92-attend-fr.test'; /* P92 */
+import './p95-verify-i18n.test'; /* P95 */

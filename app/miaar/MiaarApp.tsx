@@ -183,6 +183,9 @@ export default function MiaarApp({ inviteCode = null, inviteToken = null, result
     const navLang = typeof navigator !== 'undefined' ? navigator.language.slice(0, 2) : 'en';
     await loadCopy(null, []); /* الفهرس أولًا */
     let initialLang = readLang((await copyHas(navLang)) ? navLang : 'en');
+    /* P95: ?lang=fr في الرابط يسبق كلّ شيء (المحفوظ · لغة الدعوة · المتصفّح) — روابط /france و«دليل المشارك» تمرّره */
+    const urlLang = typeof window !== 'undefined' ? (new URLSearchParams(window.location.search).get('lang') || '').toLowerCase().slice(0, 3) : '';
+    if (urlLang && (await copyHas(urlLang))) { initialLang = urlLang; langPicked.current = true; try { localStorage.setItem('athar-page-lang', urlLang); } catch { /* خاص */ } }
     /* م3-د (خِفّة): العربية مكتملة المفاتيح (361/361) فلا يُحمَّل الاحتياطي en إلا لغير العربية — طلب أقل وبايتات أقل على /miaar */
     let c = await loadCopy(null, initialLang === 'ar' ? ['ar'] : ['en', initialLang]); if (!c) { setErr('copy'); return; } setCopy(c);
     if (resultCode) {

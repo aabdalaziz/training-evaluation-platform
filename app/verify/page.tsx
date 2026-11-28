@@ -3,26 +3,29 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '../../lib/ui/icons';
-import { VERIFY_CSS } from './[code]/VerifyCard';
+import { VERIFY_CSS, useVerifyLang, VerifyLangSwitch } from './[code]/VerifyCard';
+import { VERIFY_T, verifyDir } from '../../lib/certificates/verify-i18n';
 import { ScanButton } from '../components/Scan'; /* P82 «أَثَر يقرأ» */
 
 export default function VerifyIndexPage() {
   const router = useRouter();
   const [code, setCode] = useState('');
-  const go = (e: React.FormEvent) => { e.preventDefault(); const c = code.trim(); if (c) router.push(`/verify/${encodeURIComponent(c)}`); };
+  const [lang, setLang] = useVerifyLang(); const T = VERIFY_T[lang]; /* P95 */
+  const go = (e: React.FormEvent) => { e.preventDefault(); const c = code.trim(); if (c) router.push(`/verify/${encodeURIComponent(c)}?lang=${lang}`); };
   return (
-    <div className="vf" dir="rtl">
+    <div className="vf" dir={verifyDir(lang)} lang={lang} data-lang={lang}>
       <style>{VERIFY_CSS}</style>
       <div className="vf-box">
+        <VerifyLangSwitch lang={lang} onPick={setLang} />
         <div className="vf-logos"><img src="/brand/athar-mark.svg" alt="أَثَر" onError={e => { e.currentTarget.style.display = 'none'; }} /></div>
-        <h1><Icon name="shield" size={22} /> التحقق من صحة شهادة</h1>
-        <p className="vf-muted">أدخل الرقم التسلسلي المطبوع على الشهادة (مثل <code>ATH-2026-000123</code>) أو رمز التحقق المكوّن من 10 رموز، أو امسح رمز QR الموجود على الشهادة.</p>
+        <h1><Icon name="shield" size={22} /> {T.title}</h1>
+        <p className="vf-muted">{T.hint}</p>
         <form onSubmit={go} className="vf-form">
-          <input dir="ltr" value={code} onChange={e => setCode(e.target.value)} placeholder="ATH-2026-000123" autoFocus />
-          <button type="submit" className="vf-btn"><Icon name="search" size={16} /> تحقق</button>
+          <input dir="ltr" value={code} onChange={e => setCode(e.target.value)} placeholder={T.placeholder} autoFocus />
+          <button type="submit" className="vf-btn"><Icon name="search" size={16} /> {T.check}</button>
         </form>
-        <div style={{ marginTop: 10 }}><ScanButton accept={['verify']} label="امسح رمز الشهادة بالكاميرا" title="أَثَر يقرأ — تحقّق" hint="وجّه الكاميرا إلى رمز QR المطبوع على الشهادة" onHit={(h) => { if (h.href) router.push(h.href); }} /></div>
-        <div className="vf-foot">أَثَر — بوّابة أَثَر للتعليم والتدريب والتطوير والجودة</div>
+        <div style={{ marginTop: 10 }}><ScanButton accept={['verify']} label={T.scan} title={T.scanTitle} hint={T.scanHint} onHit={(h) => { if (h.href) router.push(h.href); }} /></div>
+        <div className="vf-foot">{T.footer}</div>
       </div>
     </div>
   );

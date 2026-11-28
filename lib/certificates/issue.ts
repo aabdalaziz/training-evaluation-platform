@@ -38,15 +38,16 @@ export async function saveSettings(db: SupabaseClient, orgId: string | null, s: 
   return error ? error.message : null;
 }
 
-export function verifyUrl(code: string): string {
+export function verifyUrl(code: string, lang2?: string | null): string {
   const base = (typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || '')).replace(/\/$/, '');
-  return `${base}/verify/${encodeURIComponent(code)}`;
+  /* P95: شهادة بلغة ثانية فرنسيّة → صفحة التحقّق تُفتح بالفرنسيّة من رمز QR مباشرة */
+  return `${base}/verify/${encodeURIComponent(code)}${lang2 === 'fr' ? '?lang=fr' : ''}`;
 }
 export function rowToData(r: CertRow): CertData {
   return {
     kind: r.kind, recipient_name: r.recipient_name, recipient_name_en: r.recipient_name_en, program_ar: r.program_name || '', program_en: (r.meta && r.meta.program_en) || null, lang2: (r.meta && r.meta.lang2) || null, wish_to: (r.meta && r.meta.wish_to) || null, sign1: (r.meta && r.meta.sign1) || null, sign2: (r.meta && r.meta.sign2) || null, /* P91 */
     classroom: r.classroom_code, trainer: r.trainer_name, start: r.start_date, end: r.end_date, hours: r.hours, issued_at: r.issued_at, serial: r.serial,
-    verify_url: verifyUrl(r.verify_code), award_title: r.award_title,
+    verify_url: verifyUrl(r.verify_code, (r.meta && r.meta.lang2) || null), award_title: r.award_title,
   };
 }
 export function previewData(i: IssueInput, programEn?: string | null, lang2?: 'en' | 'fr' | null): CertData {

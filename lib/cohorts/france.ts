@@ -22,7 +22,7 @@ export const FRANCE = {
   organiser: { ar: 'أ. عمرو سنبل', en: 'Mr. Amr Sunbul', fr: 'M. Amr Sunbul' },
   location: { ar: 'المدينة المنوّرة — مقرّ أَثَر', en: 'Madinah — Athar premises', fr: 'Médine — locaux d’Athar' },
   codes: { daily: 'FRDAILY', final: 'FRFINAL' },
-  links: { daily: '/e/FRDAILY', final: '/e/FRFINAL', miaar: '/miaar', login: '/france', verify: '/verify' },
+  links: { daily: '/e/FRDAILY', final: '/e/FRFINAL', miaar: '/miaar', login: '/france', verify: '/verify' }, /* P95: /miaar و/verify يقبلان ?lang=fr|en|ar */
   contact: { email: 'info@athar-portal.com', phone: '+966 56 444 0406', whatsapp: 'https://wa.me/966564440406' },
 } as const;
 
@@ -116,7 +116,7 @@ export const T: Record<HubLang, HubText> = {
       ['What should I bring?', 'A notebook, a pen, your phone (for the QR codes) and something warm — mornings in December are cool.'],
       ['I don’t have a phone / no network?', 'Tell the trainer — she records your attendance manually. Nothing is lost.'],
       ['Which e-mail should I use everywhere?', 'Always the one that received the Miaar invitation. Attendance, surveys and certificate are linked to it.'],
-      ['How do I get my certificate?', 'Attend, complete the final evaluation on the last day, and the certificate (60 hours, bilingual Arabic/English, with a verification code) appears in your space.'],
+      ['How do I get my certificate?', 'Attend, complete the final evaluation on the last day, and the certificate (60 hours, bilingual Arabic/French, with a verification code) appears in your space.'],
       ['Who do I contact?', 'The Athar team: e-mail, phone or WhatsApp below — Sunday to Thursday, 08:00–16:00 (Madinah time).'],
     ],
     contact: 'Contact', footer: 'Athar Portal · athar-portal.com · “We build capacity and prove impact”',
@@ -142,7 +142,7 @@ export const T: Record<HubLang, HubText> = {
       ['Que dois-je apporter ?', 'Un cahier, un stylo, votre téléphone (pour les QR codes) et un vêtement chaud — les matinées de décembre sont fraîches.'],
       ['Pas de téléphone / pas de réseau ?', 'Dites-le à la formatrice — elle enregistre votre présence manuellement. Rien n’est perdu.'],
       ['Quel e-mail utiliser partout ?', 'Toujours celui qui a reçu l’invitation Miaar. Présence, sondages et certificat y sont rattachés.'],
-      ['Comment obtenir mon certificat ?', 'Soyez présente, complétez l’évaluation finale le dernier jour, et le certificat (60 heures, bilingue arabe/anglais, avec code de vérification) apparaît dans votre espace.'],
+      ['Comment obtenir mon certificat ?', 'Soyez présente, complétez l’évaluation finale le dernier jour, et le certificat (60 heures, bilingue arabe/français, avec code de vérification) apparaît dans votre espace.'],
       ['Qui contacter ?', 'L’équipe Athar : e-mail, téléphone ou WhatsApp ci-dessous — du dimanche au jeudi, 08h00–16h00 (heure de Médine).'],
     ],
     contact: 'Contact', footer: 'Portail Athar · athar-portal.com · « Nous bâtissons la capacité et prouvons l’impact »',
