@@ -228,6 +228,33 @@ const ANTHEM_INTRO = 'هَيّا نُنْشِدُ نَشيدَ بَيانْ! ص�
 /** بدايات الأسطر داخل /kids/common/audio/anthem.mp3 بالثواني (من kids/common/audio/cut/anthem-times.json) */
 export const ANTHEM_AT = [4.33, 7.49, 11.35, 15.98];
 
+/* نشيد الختام (هـ-6-ي): يعكس ما عمله الطفل — سطران مشتركان، ثمّ سطر الجلسة (حرفها وقيمتها)، ثمّ سطر الأثر والوداع. يُشغَّل متسلسلًا (ملفّ لكلّ سطر) فلا يحتاج توقيتات */
+export const CLOSE_ANTHEM = ['بَيانْ بَيانْ، هٰذا أَثَري', 'قَرَأْنا لَعِبْنا، وَالْآنَ نَهْدَأْ', 'حَرْفٌ وَكَلِمَةْ، وَآيَةٌ طَيِّبَةْ', 'وَالْأَثَرُ باقٍ، في قَلْبي وَلِساني', 'بَيانْ… إِلَى اللِّقاءْ!'];
+const CLOSE_SRC = (i: number) => `/kids/common/audio/anthem-close-${i}.mp3`;
+function ClosingAnthem(p: Ctx) {
+  const { S } = p;
+  const [line, setLine] = useState(-2); // -2 لم يبدأ · -1 يبدأ · 0..4 السطر الحاليّ · 5 انتهى
+  const lines = useMemo(() => [CLOSE_ANTHEM[0], CLOSE_ANTHEM[1], S.closing?.line || CLOSE_ANTHEM[2], CLOSE_ANTHEM[3], CLOSE_ANTHEM[4]], [S]);
+  const srcs = useMemo(() => [CLOSE_SRC(1), CLOSE_SRC(2), S.closing ? p.snd(S.closing.audio) : CLOSE_SRC(3), CLOSE_SRC(4), CLOSE_SRC(5)], [S, p]);
+  const sing = () => {
+    setLine(-1); p.setPose('dance'); p.setLstate('dance'); p.setSay('نَشيدُ الْخِتامْ! صَفِّقْ مَعي 👏');
+    let i = 0;
+    const step = () => {
+      if (i >= srcs.length) { setLine(lines.length); p.setLstate('cheer'); p.setSay('صَفَّقْتَ مَعي؟ يا سَلامْ! إِلَى اللِّقاءْ 👋'); if (p.child) p.report({ closing: true }); return; }
+      const k = i++; setLine(k); p.setSay(lines[k]); p.play(srcs[k], step, true);
+    };
+    step();
+  };
+  return (
+    <div className="by-close">
+      <h2 className="by-h2">نَشيدُ الْخِتامْ 👏</h2>
+      <div className="by-anthem">{lines.map((l, i) => <p key={i} className={i === line ? 'on' : i < line ? 'past' : ''}>{l}</p>)}</div>
+      {line === -2 && <button className="by-big" onClick={sing}>نُنْشِدُ مَعًا! 🎵</button>}
+      {line >= lines.length && <button className="by-ghost" onClick={sing}>مَرَّةً أُخْرى 🔁</button>}
+    </div>
+  );
+}
+
 /* ───────── 2) الحكاية ───────── */
 function Story(p: Ctx) {
   const { S } = p;
@@ -601,6 +628,7 @@ function Athari(p: Ctx & { others: SessionData[] }) {
       )}
       {S.talk && !talked && talkReady && letterHeard && <div className="by-talk"><Talk p={p} T={S.talk} recogAllowed={p.child ? p.child.consents.speech_recog : undefined} onDone={o => { setTalked(true); if (o && o.results.length) p.report({ talk: o.results, selfVoice: o.selfVoice }); window.scrollTo({ top: 0 }); }} /></div>}
       {talked && <>
+      <ClosingAnthem {...p} />
       <div className="by-self">
         <p className="by-q">{A.selfCheck.q}</p>
         <div className="by-row">{A.selfCheck.options.map(o => <button key={o.key} className={`by-face ${self === o.key ? 'on' : ''}`} onClick={() => { setSelf(o.key); p.setLstate('cheer'); if (p.child) p.report({ self: o.key }); else { try { localStorage.setItem(`bayan_demo_self_${S.slug}`, o.key); } catch { /* ignore */ } } }}><span>{o.emoji}</span>{o.text}</button>)}</div>

@@ -142,6 +142,7 @@ export const SOUQ: SessionData = {
   meta: { ...SESSION, program: 'بَيان', letterName: 'باءْ', order: 2, storyTitle: 'النُّقودُ الَّتي سَقَطَتْ' },
   lulu: { ...LULU, chant: LULU.amin },
   goLabel: 'إِلَى السّوقْ! 🧺',
+  closing: { line: 'حَرْفُ الْباءْ، وَأَمينٌ في السّوقْ', audio: 'anthem-line' },
   panels: PANELS,
   storyChoice: STORY_CHOICE,
   harf: {

@@ -178,3 +178,13 @@ test('نشيد بَيان: السطر الأخير «في قَلْبي وَلِ�
   assert.ok(/في قَلْبي وَلِساني'/.test(fs.readFileSync(path.join(ROOT, 'lib/kids/souq.ts'), 'utf8')));
   assert.ok(fs.statSync(path.join(ROOT, 'public/kids/common/audio/anthem.mp3')).size > 200000);
 });
+
+test('هـ-6-ي: نشيد الختام — 5 مقاطع مشتركة + سطر خاصّ لكلّ جلسة (حرفها) موجود صوته، والمحرّك يعرضه بعد حديث لؤلؤ', () => {
+  for (let i = 1; i <= 5; i++) assert.ok(fs.existsSync(path.join(ROOT, `public/kids/common/audio/anthem-close-${i}.mp3`)), `anthem-close-${i}`);
+  for (const S of SESSIONS) {
+    assert.ok(S.closing && S.closing.line.includes('حَرْفُ'), `${S.slug}: سطر الختام`);
+    assert.ok(fs.existsSync(path.join(ROOT, `public/kids/${S.slug}/audio/${S.closing!.audio}.mp3`)), `${S.slug}: صوت سطر الختام`);
+  }
+  const src = fs.readFileSync(path.join(ROOT, 'app/components/kids/BayanSession.tsx'), 'utf8');
+  assert.ok(/function ClosingAnthem/.test(src) && /<ClosingAnthem \{\.\.\.p\} \/>/.test(src) && /anthem-close-/.test(src));
+});

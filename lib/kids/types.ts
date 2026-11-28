@@ -61,6 +61,8 @@ export interface SessionData {
   goLabel: string;
   /** مؤثّر يُشغَّل بعد «الْيَوْمَ…» في الافتتاح (الأذان من بعيد) */
   startSfx?: string;
+  /** نشيد الختام (هـ-6-ي): السطر الثالث الخاصّ بالجلسة (حرفها وقيمتها) على وزن «حَرْفٌ وَكَلِمَةْ، وَآيَةٌ طَيِّبَةْ» — يُغنّى بين سطرَي النشيد المشتركَين؛ الصوت مفتاح في مجلّد الجلسة */
+  closing?: { line: string; audio: string };
   panels: Panel[];
   storyChoice: { after: number; options: { key: string; text: string; emoji: string }[] };
   harf: {

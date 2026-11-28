@@ -42,6 +42,7 @@ export const HADIQA2: SessionData = {
     next:     { text: 'اِنْتَهَيْنا! هَيّا إِلَى الْمَحَطَّةِ التّالِيَةْ!', audio: 'l-next' },
   },
   goLabel: 'إِلَى الْحَديقَةْ! 🚲',
+  closing: { line: 'حَرْفُ الثّاءْ، وَالطُّهورُ إيمانْ', audio: 'anthem-line' },
   panels: [
     { n: 1, lines: [{ who: 'أَثير', text: 'أَهْلًا يا أَصْدِقائي! اُنْظُروا… دَرّاجَتي الْجَديدَةْ!', audio: 'p1-athir' }, { who: 'لؤلؤ', text: 'يا سَلامْ! دَرّاجَةٌ زَرْقاءْ!', audio: 'p1-lulu' }] },
     { n: 2, lines: [{ who: 'مُحَمَّد', text: 'يا أَثيرْ… سَقَطَتْ عُلْبَتُكْ!', audio: 'p2-muhammad' }, { who: 'أَثير', text: 'ها؟ … هِيَ فارِغَةْ… لا تُهِمّْ!', audio: 'p2-athir' }] },

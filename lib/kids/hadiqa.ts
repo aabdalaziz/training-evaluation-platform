@@ -39,6 +39,7 @@ export const HADIQA: SessionData = {
     next:     { text: 'اِنْتَهَيْنا! هَيّا إِلَى الْمَحَطَّةِ التّالِيَةْ!', audio: 'l-next' },
   },
   goLabel: 'إِلَى الْحَديقَةْ! 🌳',
+  closing: { line: 'حَرْفُ الثّاءْ، وَطَريقٌ نَظيفْ', audio: 'anthem-line' },
   panels: [
     { n: 1, lines: [{ who: 'مُحَمَّد', text: 'الْحَديقَةْ! اُنْظُروا… أُرْجوحَةْ!', audio: 'p1-muhammad' }, { who: 'لؤلؤ', text: 'وَشَجَرَةٌ كَبيرَةْ… وَزَهْرَةٌ حَمْراءْ!', audio: 'p1-lulu' }] },
     { n: 2, lines: [{ who: 'ياسين', text: 'ما هٰذا؟ قِشْرُ مَوْزْ… وَوَرَقْ… وَغُصْنٌ فيهِ شَوْكْ!', audio: 'p2-yasin' }] },

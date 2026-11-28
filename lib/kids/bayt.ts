@@ -32,6 +32,7 @@ export const BAYT: SessionData = {
     next:     { text: 'اِنْتَهَيْنا! هَيّا إِلَى الْمَحَطَّةِ التّالِيَةْ!', audio: 'l-next' },
   },
   goLabel: 'إِلَى الْبَيْتْ! 🏠',
+  closing: { line: 'حَرْفُ الْأَلِفْ، وَبَيْتٌ مُرَتَّبْ', audio: 'anthem-line' },
   panels: [
     { n: 1, lines: [{ who: 'أُمّْ', text: 'ياسينْ! أَميرَةْ! الْمَدْرَسَةُ بَعْدَ قَليلْ!', audio: 'p1-umm' }] },
     { n: 2, lines: [{ who: 'ياسين', text: 'أَيْنَ حِذائي؟ … أَيْنَ حَقيبَتي؟', audio: 'p2-athir' }, { who: 'لؤلؤ', text: 'أَيْنْ؟ أَيْنْ؟', audio: 'p2-lulu' }] },

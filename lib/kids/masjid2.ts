@@ -41,6 +41,7 @@ export const MASJID2: SessionData = {
     next:     { text: 'اِنْتَهَيْنا! هَيّا إِلَى الْمَحَطَّةِ التّالِيَةْ!', audio: H6('l-next') },
   },
   goLabel: 'إِلَى الْمَسْجِدْ! 🕌',
+  closing: { line: 'حَرْفُ الْجيمْ، وَصَفٌّ مُسْتَقيمْ', audio: 'anthem-line' },
   startSfx: M7('sfx-adhan-far'),   // الأذان من بعيد (الجلسة 7) تحت كلام لؤلؤ
   panels: [
     { n: 1, lines: [{ who: 'أَثير', text: 'جِئْنا قَبْلَ الْإِقامَةْ!', audio: 'p1-athir' }, { who: 'جدّ سالم', text: 'أَحْسَنْتُمْ… وَهَلْ تَوَضَّأْتُمْ؟', audio: 'p1-salem' }] },
