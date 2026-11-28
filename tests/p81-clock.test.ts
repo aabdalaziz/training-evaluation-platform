@@ -4,7 +4,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { planEvents, validUntil, decide, stageOf, nextEvent, mailFor, normalizeConfig, DEFAULT_OFFSETS } from '../lib/clock/model';
 import type { ClockEvent, ClockProgram } from '../lib/clock/model';
-import { runProgramClock } from '../lib/clock/cron';
+import { runProgramClock, personLang } from '../lib/clock/cron';
+import { FRANCE } from '../lib/cohorts/france'; /* P96 */
 
 const P: ClockProgram = { id: 'p1', name_ar: 'برنامج العربية للناطقين بغيرها (عن بعد)', start_date: '2026-12-01', end_date: '2026-12-05', status: 'ACTIVE', delivery_mode: 'remote', hours: 20 };
 
@@ -128,4 +129,23 @@ test('P88: رابط «مساحتي» في البريد الإنجليزيّ يص
   const P: any = { id: 'p1', name_ar: 'ب', name_en: 'Program' };
   assert.ok(mailFor('remind', 'participant', { site: 'https://a', program: P, lang: 'en', links: { space: 'https://a/france' } }).html.includes('https://a/france'));
   assert.ok(mailFor('remind', 'participant', { site: 'https://a', program: P, lang: 'en' }).html.includes('https://a/me'));
+});
+
+test('P96: مشاركات فرنسا تصلهنّ رسائل الساعة بالفرنسيّة (الخمس) — مع مساحة /france وتذكير مِعيار قبل 3 ديسمبر؛ en وar كما هما', () => {
+  const P: any = { id: 'p', name_ar: 'برنامج الانغماس اللغوي', name_en: 'Arabic Immersion', start_date: '2026-12-06', end_date: '2026-12-26', hours: 60, location_ar: 'المدينة المنوّرة', location_en: 'Madinah', delivery_mode: 'onsite' };
+  const links = { space: 'https://a/france', miaar: 'https://a/miaar?lang=fr', miaar_deadline: 'jeudi 3 décembre', program_fr: 'Programme d’immersion en arabe — Décembre 2026', location_fr: 'Médine — locaux d’Athar', last_day_fr: 'jeudi 24 décembre 2026', final: 'https://a/e/FRFINAL', impact: 'https://a/i' };
+  for (const k of ['remind', 'start', 'evaluate', 'followup', 'impact'] as const) {
+    const fr = mailFor(k, 'participant', { site: 'https://a', program: P, name: 'Inès Dubois', lang: 'fr', links });
+    assert.ok(!/[\u0600-\u06FF]/.test(fr.subject) && !/[\u0600-\u06FF]/.test(fr.html), `${k}: لا عربيّة في الفرنسيّة`);
+    assert.ok(fr.html.includes('lang="fr"') && fr.html.includes('Programme d’immersion en arabe'), `${k}: غلاف فرنسيّ واسم البرنامج الفرنسيّ`);
+    assert.ok(fr.html.includes('Inès'), `${k}: الاسم الأوّل`);
+    assert.ok(!/One week|Today we|Your opinion|My space/.test(fr.html), `${k}: لا إنجليزيّة`);
+  }
+  const r = mailFor('remind', 'participant', { site: 'https://a', program: P, name: 'Inès Dubois', lang: 'fr', links });
+  assert.ok(r.subject.startsWith('Dans une semaine') && r.html.includes('https://a/france') && r.html.includes('https://a/miaar?lang=fr') && r.html.includes('jeudi 3 décembre') && r.html.includes('8h30') && r.html.includes('du dimanche 6 décembre 2026 au jeudi 24 décembre 2026') && r.html.includes('Médine'));
+  const noMiaar = mailFor('remind', 'participant', { site: 'https://a', program: P, lang: 'fr', links: { space: 'https://a/france' } }); assert.ok(!noMiaar.html.includes('Miaar'), 'بلا رابط مِعيار لا فقرة مِعيار');
+  assert.ok(mailFor('evaluate', 'participant', { site: 'https://a', program: P, lang: 'fr', links }).html.includes('https://a/e/FRFINAL'));
+  assert.ok(/One week/.test(mailFor('remind', 'participant', { site: 's', program: P, lang: 'en' }).subject) && /[\u0600-\u06FF]/.test(mailFor('remind', 'participant', { site: 's', program: P, lang: 'ar' }).subject));
+  assert.ok(/[\u0600-\u06FF]/.test(mailFor('remind', 'trainer', { site: 's', program: P, lang: 'fr' }).subject), 'المدرّبة عربيّ دائمًا');
+  assert.equal(personLang('en', 'other'), 'en'); assert.equal(personLang(null, 'other'), 'ar'); assert.equal(personLang('fr', 'other'), 'fr'); assert.equal(personLang('en', FRANCE.programId), 'fr');
 });

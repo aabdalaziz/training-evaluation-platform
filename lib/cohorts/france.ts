@@ -21,6 +21,7 @@ export const FRANCE = {
   trainer: { ar: 'د. آلاء', en: 'Dr. Alaa', fr: 'Dr Alaa' },
   organiser: { ar: 'أ. عمرو سنبل', en: 'Mr. Amr Sunbul', fr: 'M. Amr Sunbul' },
   location: { ar: 'المدينة المنوّرة — مقرّ أَثَر', en: 'Madinah — Athar premises', fr: 'Médine — locaux d’Athar' },
+  miaarDeadline: '2026-12-03', miaarDeadlineFr: 'jeudi 3 décembre', lastDay: '2026-12-24', lastDayFr: 'jeudi 24 décembre 2026', /* P96: آخر يوم دراسيّ */ /* P96: آخر موعد لمِعيار (انتهاء الدعوة XZ89FDXX) */
   codes: { daily: 'FRDAILY', final: 'FRFINAL' },
   links: { daily: '/e/FRDAILY', final: '/e/FRFINAL', miaar: '/miaar', login: '/france', verify: '/verify' }, /* P95: /miaar و/verify يقبلان ?lang=fr|en|ar */
   contact: { email: 'info@athar-portal.com', phone: '+966 56 444 0406', whatsapp: 'https://wa.me/966564440406' },

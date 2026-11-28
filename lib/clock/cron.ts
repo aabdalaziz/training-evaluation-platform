@@ -18,9 +18,11 @@ import { decide, normalizeConfig, mailFor, KIND_AR, type ClockConfig, type Clock
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const safe = async <T,>(q: PromiseLike<{ data: T | null; error: any }>, fb: T): Promise<T> => { try { const { data, error } = await q; return error || data == null ? fb : data; } catch { return fb; } };
 import { FRANCE } from '../cohorts/france'; /* P88 */
-type Person = { name: string; email: string; lang?: 'ar' | 'en' | null }; /* P87-ب: lang من التسجيل */
+type Person = { name: string; email: string; lang?: 'ar' | 'en' | 'fr' | null }; /* P87-ب: lang من التسجيل · P96: fr */
 /** P88: مساحة خاصّة بالمجموعة (بلغتها) بدل /me العربيّة */
-const spaceOf = (site: string, programId: string): Record<string, string> => (programId === FRANCE.programId ? { space: `${site}/france` } : {});
+const spaceOf = (site: string, programId: string): Record<string, string> => (programId === FRANCE.programId ? { space: `${site}/france`, miaar: `${site}/miaar?lang=fr`, miaar_deadline: FRANCE.miaarDeadlineFr, program_fr: FRANCE.certificate.programNameFr, location_fr: FRANCE.location.fr, last_day_fr: FRANCE.lastDayFr, days_fr: '15 matinées, du dimanche au jeudi, 8h00 → 13h00' } : {});
+/** P96: لغة المشارِكة — fr إن سُجّلت كذلك أو كان البرنامج برنامج فرنسا (تسجيلات P87 حُفظت en)؛ en كما كانت؛ وإلا ar */
+export const personLang = (lang: unknown, programId: string): 'ar' | 'en' | 'fr' => { const l = String(lang || '').toLowerCase(); if (l === 'fr' || programId === FRANCE.programId) return 'fr'; return l === 'en' ? 'en' : 'ar'; };
 export type RunOpts = { site: string; dry?: boolean; now?: Date; limit?: number; eventId?: string | null };
 export type EventResult = { event_id: string; program: string; kind: ClockKind; action: 'run' | 'skip' | 'wait'; ok?: boolean; sent?: Record<string, number>; note?: string; error?: string };
 export type RunResult = { enabled: boolean; dry: boolean; generated: number; due: number; results: EventResult[]; error?: string };
@@ -32,7 +34,7 @@ async function participantsOf(db: any, programId: string): Promise<{ approved: P
   const enr = await safe<any[]>(db.from('portal_enrollments').select('full_name,email,status,lang').eq('program_id', programId).limit(2000), []);
   const sessions = await safe<any[]>(db.from('attendance_sessions').select('id').eq('program_id', programId).limit(500), []);
   const recs = sessions.length ? await safe<any[]>(db.from('attendance_records').select('full_name,email').in('session_id', sessions.map((s) => s.id)).limit(5000), []) : [];
-  const seen = new Set<string>(); const pick = (rows: any[]): Person[] => { const out: Person[] = []; for (const r of rows) { const em = String(r.email || '').trim().toLowerCase(); if (!EMAIL_RE.test(em) || seen.has(em)) continue; seen.add(em); out.push({ name: String(r.full_name || '').trim(), email: em, lang: String(r.lang || '').toLowerCase() === 'en' ? 'en' : 'ar' }); } return out; };
+  const seen = new Set<string>(); const pick = (rows: any[]): Person[] => { const out: Person[] = []; for (const r of rows) { const em = String(r.email || '').trim().toLowerCase(); if (!EMAIL_RE.test(em) || seen.has(em)) continue; seen.add(em); out.push({ name: String(r.full_name || '').trim(), email: em, lang: personLang(r.lang, programId) }); } return out; };
   const approved = pick(enr.filter((e) => e.status === 'approved')); const attendance = pick(recs);
   const attendanceEmails = new Set(recs.map((r) => String(r.email || '').trim().toLowerCase()).filter((x) => EMAIL_RE.test(x)));
   return { approved, attendance, all: [...approved, ...attendance], pending: enr.filter((e) => e.status === 'pending').length, attendanceEmails };
@@ -54,7 +56,7 @@ export async function executeEvent(db: any, e: ClockEvent, p: ClockProgram, cfg:
   try {
     const [pp, trs, adm] = await Promise.all([participantsOf(db, p.id), trainersOf(db, p.id), admins(db)]);
     const ch = cfg.channels; const sent: Record<string, number> = {}; const ref = `${p.id}:${e.kind}`; let note = '';
-    const ctx = (name?: string | null, extra?: Record<string, any>, links?: Record<string, string>, lang?: 'ar' | 'en' | null) => ({ site: o.site, program: p, name, lang: lang || 'ar', counts: { participants: pp.approved.length || pp.all.length, attendance: pp.attendance.length }, extra: { pending: pp.pending, ...(extra || {}) }, links: { ...spaceOf(o.site, p.id), ...(links || {}) } });
+    const ctx = (name?: string | null, extra?: Record<string, any>, links?: Record<string, string>, lang?: 'ar' | 'en' | 'fr' | null) => ({ site: o.site, program: p, name, lang: lang || 'ar', counts: { participants: pp.approved.length || pp.all.length, attendance: pp.attendance.length }, extra: { pending: pp.pending, ...(extra || {}) }, links: { ...spaceOf(o.site, p.id), ...(links || {}) } });
     if (e.kind === 'remind' || e.kind === 'start') {
       const people = e.kind === 'remind' ? pp.approved : pp.all;
       if (ch.participants) sent.participants = await send(db, dry, e.kind, people, (x) => mailFor(e.kind, 'participant', ctx(x.name, undefined, undefined, x.lang)), ref);
