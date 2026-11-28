@@ -206,8 +206,20 @@ test('هـ-6-ك: الجلسة 10 «المزرعة ب» — الخاء أخت ا�
   // الأبيات الثلاثة والخيار الصحيح على القافية نفسها (ـَةْ) — والخيار «no» ليس عليها
   for (const l of N.lines) assert.ok(/َةْ$/.test(l.text), l.text); assert.ok(/َةْ$/.test(yes.w)); assert.ok(!/َةْ$/.test(N.options.find(o => o.fits === 'no')!.w), 'خيار «لا توزن» لا ينتهي بالقافية'); assert.ok(/َةْ$/.test(N.options.find(o => o.fits === 'rhyme')!.w));
   assert.ok(N.stem.endsWith('…'));
-  // الجلسات التسع السابقة بلا نشيد (يُلحَق لاحقًا) — والمحطّة تُخفى لها
-  for (const x of SESSIONS.slice(0, 9)) assert.equal(x.nasheed, undefined, x.slug);
+  // هـ-6-ل: النشيد في الجلسات العشر كلّها — في كلّ جلسة: 3 أبيات + صدر بـ«…» + 3 خيارات (yes/rhyme/no) والقافية = آخر حرفين من الأبيات
+  for (const x of SESSIONS) {
+    const M = x.nasheed!; assert.ok(M, x.slug); assert.equal(M.lines.length, 3, x.slug); assert.ok(M.stem.endsWith('…') || /نَحْنُ$/.test(M.stem), x.slug);
+    assert.deepEqual(M.options.map(o => o.fits).sort(), ['no', 'rhyme', 'yes'], x.slug);
+    const bare = (w: string) => w.replace(/\u0670/g, 'ا').replace(/[\u064B-\u0652\u0640]/g, ''); // بلا حركات ولا تطويل (الألف الخنجرية = ألف)
+    const q = bare(M.rhyme); assert.ok(q.length >= 1 && q.length <= 2, x.slug + ' rhyme');
+    const tail = (w: string) => bare(w).slice(-q.length);
+    for (const l of M.lines) assert.equal(tail(l.text), q, `${x.slug}: ${l.text}`);
+    assert.equal(tail(M.options.find(o => o.fits === 'yes')!.w), q, x.slug + ' yes');
+    assert.equal(tail(M.options.find(o => o.fits === 'rhyme')!.w), q, x.slug + ' rhyme');
+    assert.notEqual(tail(M.options.find(o => o.fits === 'no')!.w), q, x.slug + ' no');
+    for (const o of M.options) assert.equal(o.audio, 'n-opt-' + o.key, x.slug);
+    assert.ok(M.ask.text.includes(M.stem.replace(/…$/, '').trim()), x.slug + ' ask يذكر الصدر');
+  }
   const src = fs.readFileSync(path.join(process.cwd(), 'app/components/kids/BayanSession.tsx'), 'utf8');
   assert.ok(src.includes("STATIONS.filter(x => x.key !== 'nasheed')"), 'المحطّة تُخفى للجلسات بلا نشيد');
   assert.ok(src.includes('function NasheedStation') && src.includes('function Pair') && src.includes("g === 'khaa'"), 'المكوّنات');
