@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase/client';
 import { Icon } from '../../lib/ui/icons';
 import { AtharMark } from '../components/PortalShell';
-import { FRANCE, T, HUB_LANGS, cohortDays, phaseOf, pickLang, riyadhToday, fmtDay, type HubLang } from '../../lib/cohorts/france';
+import { FRANCE, T, HUB_LANGS, VIDEO, videoFor, cohortDays, phaseOf, pickLang, riyadhToday, fmtDay, type HubLang } from '../../lib/cohorts/france';
 import { attendancePct, type MePortal, type MeProgram } from '../../lib/me/model';
 import { effectiveLevel, type Placement } from '../../lib/portal/placement';
 
@@ -113,6 +113,11 @@ export default function FrancePage() {
           </form>
         )}
 
+        <section className="fh-card fh-video" data-testid="fh-video">{/* P93 */}
+          <h2><Icon name="play" size={18} /> {t.videoTitle}</h2><p className="fh-muted">{t.videoHint}</p>
+          <video controls playsInline preload="none" poster={VIDEO.poster} src={videoFor(lang).src} lang={videoFor(lang).lang} />
+        </section>
+
         <section className="fh-card">
           <h2>{t.stepsTitle}</h2>
           <ol className="fh-steps">{t.steps.map(([h, p], i) => <li key={i}><i>{i + 1}</i><div><b>{h}</b><p>{p}</p></div></li>)}</ol>
@@ -153,6 +158,7 @@ const CSS = `
 .fh-mehead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.fh-mehead h2{font-size:24px;margin-top:2px}
 .fh-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.fh-tile{background:#FBF4EE;border:1px solid #EADFD6;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-height:104px}.fh-tile small{font-size:12px;color:#6A3350;font-weight:800}.fh-level{font-size:30px;line-height:1;color:#3A1F36}.fh-tile.act{background:#FFF7F3;border-color:#F3C4B6}
 .fh-btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none;border:1px solid #EADFD6;background:#fff;color:#3A1F36;border-radius:12px;padding:9px 14px;font-weight:800;font-size:14px;cursor:pointer;width:max-content;max-width:100%}.fh-btn.primary{background:#D4614A;border-color:#D4614A;color:#fff}.fh-btn:disabled{opacity:.6}
+.fh-video video{display:block;width:100%;max-width:360px;margin:6px auto 0;aspect-ratio:9/16;border-radius:16px;background:#2A1626;box-shadow:0 10px 30px rgba(58,31,54,.18)}
 .fh-link{display:inline-flex;align-items:center;gap:6px;background:transparent;border:0;color:#6A3350;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;padding:0}
 .fh-msg{display:flex;gap:8px;align-items:flex-start;border-radius:12px;padding:10px 12px;font-size:14px}.fh-msg.ok{background:#eef7f6;color:#1f5e58}.fh-msg.bad{background:#FBEDE7;color:#9A3A2A}
 .fh-row{display:flex;gap:8px;flex-wrap:wrap}.fh-row input{flex:1;min-width:220px;border:1px solid #EADFD6;border-radius:12px;padding:11px 12px;font-size:15px;background:#FBF4EE}

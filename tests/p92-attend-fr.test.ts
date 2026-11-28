@@ -32,3 +32,13 @@ test('P92: نصوص الصفحة الفرنسيّة ومبدّل اللغات ا
   assert.ok(f.includes('pickLang(q, saved, navigator.language)'));
   assert.ok(f.includes("lang={lang === 'ar' ? 'ar' : 'en'}"), 'SignHelp يبقى ar/en');
 });
+
+/* P93: فيديو الرحلة على /france */
+test('P93: فيديو «Votre parcours» — ملفّ لكلّ لغة مع الرجوع إلى الفرنسيّ', async () => {
+  const { VIDEO, videoFor, T } = await import('../lib/cohorts/france');
+  assert.equal(videoFor('fr').src, '/video/parcours-fr.mp4');
+  assert.equal(videoFor('en').src, VIDEO.available.includes('en') ? '/video/parcours-en.mp4' : '/video/parcours-fr.mp4');
+  for (const l of ['fr', 'en', 'ar'] as const) { assert.ok(T[l].videoTitle.length > 5); assert.ok(T[l].videoHint.length > 10); }
+  const page = read('app/france/page.tsx');
+  assert.ok(page.includes('data-testid="fh-video"') && page.includes('preload="none"') && page.includes('playsInline'));
+});

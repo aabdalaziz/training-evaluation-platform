@@ -58,6 +58,16 @@ export function fmtDay(date: string, lang: HubLang, o: Intl.DateTimeFormatOption
   return new Date(date + 'T00:00:00Z').toLocaleDateString(LOCALE[lang], { ...o, timeZone: 'UTC' });
 }
 
+/* ───────── P93: فيديو «Votre parcours en cinq étapes» (P90) على صفحة المجموعة ───────── */
+export const VIDEO = {
+  files: { fr: '/video/parcours-fr.mp4', en: '/video/parcours-en.mp4', ar: '/video/parcours-ar.mp4' } as Record<HubLang, string>,
+  poster: '/video/parcours-poster.jpg',
+  available: ['fr'] as HubLang[],   // تُضاف en/ar عند نشرهما
+  minutes: 3,
+};
+/** ملفّ الفيديو للغة المطلوبة — وإلّا الفرنسيّ (الأصل) */
+export function videoFor(lang: HubLang): { src: string; lang: HubLang } { const l = VIDEO.available.includes(lang) ? lang : 'fr'; return { src: VIDEO.files[l], lang: l }; }
+
 /* ───────── P92: صفحة الحضور /attend بالفرنسيّة ───────── */
 /** هل هذه الجلسة لمجموعة فرنسا؟ (الـRPC العامّ لا يُعيد program_id؛ نستدلّ من الرمز/العنوان/اسم البرنامج) */
 export function isFranceSession(x: { token?: string | null; title?: string | null; program_name?: string | null; program_name_en?: string | null }): boolean {
@@ -81,7 +91,7 @@ export type HubText = {
   startsIn: (n: number) => string; dayOf: (d: number, t: number) => string; restDay: string; finished: string;
   helloTitle: string; hello: (n: string) => string; notEnrolled: string; level: string; levelNone: string; levelHint: string; attendance: string; attendanceOf: (p: number, s: number) => string; noSessions: string;
   todayOpen: string; checkIn: string; dailyNow: string; dailyHint: string; finalOpen: string; finalBtn: string; finalHint: string; certs: string; certVerify: string; certNone: string; signOut: string; fullSpace: string;
-  signInTitle: string; signInHint: string; email: string; send: string; sending: string; sent: string; sendErr: string; stepsTitle: string; steps: [string, string][]; lostInvite: string;
+  signInTitle: string; signInHint: string; email: string; send: string; sending: string; sent: string; sendErr: string; videoTitle: string; videoHint: string; stepsTitle: string; steps: [string, string][]; lostInvite: string;
   scheduleTitle: string; scheduleHint: string; today: string; dayCol: string; dateCol: string; timeCol: string; faqTitle: string; faq: [string, string][]; contact: string; footer: string;
 };
 export const T: Record<HubLang, HubText> = {
@@ -95,7 +105,7 @@ export const T: Record<HubLang, HubText> = {
     todayOpen: 'Check-in is open now', checkIn: 'Check in', dailyNow: 'Rate today', dailyHint: '2 minutes · at the end of each day', finalOpen: 'Final evaluation is open', finalBtn: 'Final evaluation', finalHint: 'Required for your certificate',
     certs: 'Your certificate', certVerify: 'Verify', certNone: 'Issued after the final evaluation (end of December).', signOut: 'Sign out', fullSpace: 'Full Athar space (Arabic)',
     signInTitle: 'Sign in to your space', signInHint: 'Use the e-mail address that received your Miaar invitation. No password — we send you a one-time link.', email: 'E-mail', send: 'Send me the link', sending: 'Sending…', sent: 'Link sent — open it from this device.', sendErr: 'Could not send the link: ',
-    stepsTitle: 'Four steps — that’s all', steps: [
+    videoTitle: 'Your journey in 3 minutes', videoHint: 'French voice-over with Arabic subtitles — the five steps from the first e-mail to the certificate.', stepsTitle: 'Four steps — that’s all', steps: [
       ['Take the Miaar test', 'Open the invitation e-mail from reports@athar-portal.com (subject “Miaar”). 30 minutes, in your language. It sets your group.'],
       ['Sign in once', 'Here, with the same e-mail. Your journey, level and certificate live in this space.'],
       ['Check in every morning', 'Scan the QR code shown by the trainer, enter your name and e-mail. After 08:30 you are marked “late”.'],
@@ -121,7 +131,7 @@ export const T: Record<HubLang, HubText> = {
     todayOpen: 'L’émargement est ouvert', checkIn: 'Émarger', dailyNow: 'Évaluer la journée', dailyHint: '2 minutes · en fin de journée', finalOpen: 'L’évaluation finale est ouverte', finalBtn: 'Évaluation finale', finalHint: 'Nécessaire pour votre certificat',
     certs: 'Votre certificat', certVerify: 'Vérifier', certNone: 'Délivré après l’évaluation finale (fin décembre).', signOut: 'Se déconnecter', fullSpace: 'Espace Athar complet (en arabe)',
     signInTitle: 'Connectez-vous à votre espace', signInHint: 'Utilisez l’adresse e-mail qui a reçu votre invitation Miaar. Sans mot de passe — nous vous envoyons un lien à usage unique.', email: 'E-mail', send: 'Recevoir le lien', sending: 'Envoi…', sent: 'Lien envoyé — ouvrez-le depuis cet appareil.', sendErr: 'Impossible d’envoyer le lien : ',
-    stepsTitle: 'Quatre étapes — c’est tout', steps: [
+    videoTitle: 'Votre parcours en 3 minutes', videoHint: 'Les cinq étapes, du premier e-mail au certificat — sous-titres français et arabes.', stepsTitle: 'Quatre étapes — c’est tout', steps: [
       ['Passez le test Miaar', 'Ouvrez l’e-mail d’invitation de reports@athar-portal.com (objet « Miaar »). 30 minutes, dans votre langue. Il détermine votre groupe.'],
       ['Connectez-vous une fois', 'Ici, avec le même e-mail. Votre parcours, votre niveau et votre certificat vivent dans cet espace.'],
       ['Émargez chaque matin', 'Scannez le QR code affiché par la formatrice, saisissez nom et e-mail. Après 08h30, vous êtes notée « en retard ».'],
@@ -147,7 +157,7 @@ export const T: Record<HubLang, HubText> = {
     todayOpen: 'تسجيل الحضور مفتوح الآن', checkIn: 'سجّلي حضوركِ', dailyNow: 'قيّمي يومكِ', dailyHint: 'دقيقتان · في نهاية كلّ يوم', finalOpen: 'التقييم الختامي مفتوح', finalBtn: 'التقييم الختامي', finalHint: 'شرط إصدار الشهادة',
     certs: 'شهادتكِ', certVerify: 'تحقّق', certNone: 'تصدر بعد التقييم الختامي (نهاية ديسمبر).', signOut: 'خروج', fullSpace: 'مساحة أَثَر الكاملة',
     signInTitle: 'ادخلي إلى مساحتكِ', signInHint: 'استخدمي البريد الذي وصلته دعوة مِعيار. بلا كلمة مرور — نرسل لكِ رابطًا لمرّة واحدة.', email: 'البريد الإلكتروني', send: 'أرسلي لي الرابط', sending: 'جارٍ الإرسال…', sent: 'أُرسل الرابط — افتحيه من هذا الجهاز.', sendErr: 'تعذّر إرسال الرابط: ',
-    stepsTitle: 'أربع خطوات — لا أكثر', steps: [
+    videoTitle: 'رحلتكِ في 3 دقائق', videoHint: 'الخطوات الخمس من أوّل بريد حتّى الشهادة — تعليق فرنسيّ مع ترجمة عربيّة مكتوبة.', stepsTitle: 'أربع خطوات — لا أكثر', steps: [
       ['أدّي اختبار مِعيار', 'افتحي بريد الدعوة من reports@athar-portal.com (الموضوع «مِعيار»). 30 دقيقة بلغتكِ. يحدّد شعبتكِ.'],
       ['ادخلي مرّة واحدة', 'هنا، بالبريد نفسه. رحلتكِ ومستواكِ وشهادتكِ في هذه المساحة.'],
       ['سجّلي حضوركِ كلّ صباح', 'امسحي رمز QR الذي تعرضه المدرّبة، واكتبي اسمكِ وبريدكِ. بعد 8:30 يُسجَّل «متأخّر».'],
