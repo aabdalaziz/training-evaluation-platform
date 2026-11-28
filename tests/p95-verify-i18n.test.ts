@@ -31,3 +31,10 @@ test('P95 — wiring: /verify pages use the dictionary, /france passes ?lang to 
   assert.ok(read('app/france/page.tsx').includes('${FRANCE.links.miaar}?lang=${lang}'));
   assert.ok(read('app/miaar/MiaarApp.tsx').includes("get('lang')"));
 });
+test('P95-ب — قاموس مِعيار الفرنسيّ مكتمل المفاتيح كالإنجليزيّ (الواجهة الأولى لا تسقط إلى الإنجليزيّة)', () => {
+  const read = (f: string) => JSON.parse(readFileSync(new URL('../' + f, import.meta.url), 'utf8'));
+  const en = read('public/miaar/copy/en.json'); const fr = read('public/miaar/copy/fr.json');
+  for (const sec of Object.keys(en)) { const miss = Object.keys(en[sec]).filter((k) => !(k in fr[sec])); assert.deepEqual(miss, [], `fr.${sec} missing: ${miss.join(',')}`); }
+  for (const k of Object.keys(en.intro)) { const ph = (s: string) => (String(s).match(/\{\w+\}/g) || []).sort().join(); assert.equal(ph(fr.intro[k]), ph(en.intro[k]), `placeholders ${k}`); }
+  assert.ok(String(fr.intro.v3h1).includes('|') && !/Find your Arabic/.test(fr.intro.v3h1));
+});
