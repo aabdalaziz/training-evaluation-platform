@@ -13,7 +13,7 @@ const ROOT = path.join(__dirname, '..');
 const exists = (p: string) => fs.existsSync(path.join(ROOT, 'public', p));
 
 test('هـ-6: سجلّ الجلسات — البيت (ا) أولًا ثم السوق (ب) · 8 محطّات · الفاتحة 7 آيات · المصحف المعلّم', () => {
-  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2', 'hadiqa', 'hadiqa2', 'masjid', 'masjid2']);
+  assert.deepEqual(SESSIONS.map(s => s.slug), ['bayt', 'souq', 'madrasa', 'madrasa2', 'hadiqa', 'hadiqa2', 'masjid', 'masjid2', 'mazraa']);
   assert.equal(DEFAULT_SESSION.slug, 'bayt');
   assert.equal(getSession('souq')?.meta.letter, 'ب'); assert.equal(getSession('bayt')?.meta.letter, 'ا');
   assert.equal(getSession('bayt')?.meta.value, 'النظام'); assert.equal(getSession('souq')?.meta.value, 'الأمانة');

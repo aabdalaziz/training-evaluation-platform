@@ -276,7 +276,8 @@ function Story(p: Ctx) {
 }
 
 /* ───────── 3) حَرْف يرسم ───────── */
-function Glyph({ g }: { g: 'baa' | 'alif' | 'taa' | 'thaa' | 'jeem' }) {
+function Glyph({ g }: { g: 'baa' | 'alif' | 'taa' | 'thaa' | 'jeem' | 'haa' }) {
+  if (g === 'haa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M62 38 Q118 30 150 46" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M150 46 Q60 70 44 84 Q24 110 60 128 Q110 146 160 110" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /></svg>;
   if (g === 'jeem') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M62 38 Q118 30 150 46" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M150 46 Q60 70 44 84 Q24 110 60 128 Q110 146 160 110" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="96" cy="102" r="9" fill="#E8795C" /></svg>;
   if (g === 'thaa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="100" cy="18" r="9" fill="#E8795C" /><circle cx="84" cy="44" r="9" fill="#E8795C" /><circle cx="116" cy="44" r="9" fill="#E8795C" /></svg>;
   if (g === 'taa') return <svg viewBox="0 0 200 140" width="220" height="154" aria-hidden><path d="M20 70 Q100 130 180 70" fill="none" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><path d="M20 70 L20 40" stroke="#3A1F36" strokeWidth="14" strokeLinecap="round" /><circle cx="86" cy="38" r="9" fill="#E8795C" /><circle cx="114" cy="38" r="9" fill="#E8795C" /></svg>;

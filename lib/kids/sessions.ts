@@ -8,8 +8,9 @@ import { HADIQA } from './hadiqa';
 import { HADIQA2 } from './hadiqa2';
 import { MASJID } from './masjid';
 import { MASJID2 } from './masjid2';
+import { MAZRAA } from './mazraa';
 
-export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2, HADIQA, HADIQA2, MASJID, MASJID2].sort((a, b) => a.meta.order - b.meta.order);
+export const SESSIONS: SessionData[] = [BAYT, SOUQ, MADRASA, MADRASA2, HADIQA, HADIQA2, MASJID, MASJID2, MAZRAA].sort((a, b) => a.meta.order - b.meta.order);
 export const DEFAULT_SESSION = SESSIONS[0];
 export const getSession = (slug: string | undefined): SessionData | undefined => SESSIONS.find(s => s.slug === slug);
 export const STATIONS = [
